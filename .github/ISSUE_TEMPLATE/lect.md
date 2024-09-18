@@ -11,7 +11,7 @@ assignees: ''
 _Update this_
 
 **Date and Time**
-_Date_ at _time_
+_Date_ at 12:30PM
 
 **Attendance**
 
