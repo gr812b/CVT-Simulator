@@ -15,10 +15,10 @@ _Date_ at 12:30PM
 
 **Attendance**
 
-- [] Kai Arseneau
-- [] Travis Wing
-- [] Cameron Dunn
-- [] Grace McKenna
+- [ ] Kai Arseneau
+- [ ] Travis Wing
+- [ ] Cameron Dunn
+- [ ] Grace McKenna
 
 **Questions to Ask**
 -
