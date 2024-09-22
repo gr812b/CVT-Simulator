@@ -22,8 +22,8 @@
 \toprule
 \textbf{Date} & \textbf{Developer(s)} & \textbf{Change}\\
 \midrule
-Date1 & Name(s) & Description of changes\\
-Date2 & Name(s) & Description of changes\\
+Sept 19 & Travis & Wrote down Problem, stakeholders and potential extras/challenge level\\
+Sept 22 & Travis, Kai & Intial Draft of Problem Statement and Goals\\
 ... & ... & ...\\
 \bottomrule
 \end{tabularx}
@@ -37,62 +37,116 @@ The McMaster Baja engineering team is seeking to improve the tuning process for 
 
 \subsection{Inputs and Outputs}
 
-\wss{Characterize the problem in terms of ``high level'' inputs and outputs.  
-Use abstraction so that you can avoid details.}
+\subsubsection{Inputs}
+\begin{itemize}
+    \item CVT parameters
+    \begin{itemize}
+        \item Primary weight
+        \item Primary Ramp Geometry
+        \item Primary Spring Rate
+        \item Primary Spring Pretension
+        \item Secondary Helix Geometry
+        \item Secondary Spring Rate
+        \item Secondary Spring Pretension
+    \end{itemize}
+    \item Vehicle and Driver Weight
+    \item Traction
+    \item Angle of Incline
+\end{itemize}
+\subsubsection{Outputs}
+\begin{itemize}
+    \item Graphs
+    \begin{itemize}
+        \item Accleration
+        \item Speed
+        \item Distance
+        \item Clamping Force
+        \item CVT Ratio
+        \item RPM
+        \item Torque
+        \item Belt Slippage
+    \end{itemize}
+\end{itemize}
 
 \subsection{Stakeholders}
-McMaster Baja Racing Team
+\begin{itemize}
+    \item McMaster Baja Racing Team
+    \item Dr. Spencer Smith
+\end{itemize}
 
 \subsection{Environment}
-
-\wss{Hardware and software environment}
+\subsubsection{Hardware}
+\begin{itemize}
+    \item Device can be configured through the use of a personal computer or laptop.
+\end{itemize}
+    \subsubsection{Software}
+\begin{itemize}
+    \item The application will be supported on both Mac, Windows and Linux operating
+    systems.
+\end{itemize}
 
 \section{Goals}
 
+Develop a 3D simulation of the CVT system, which will include the driven pulley, driving pulley, belt, and engine, and will be implemented within a graphical user interface.
+\subsection{Matthematical Model}
+    \begin{itemize}
+        \item Develop a mathematical model of the CVT system
+        \item Implement the mathematical model in the simulation
+    \end{itemize}
+\subsection{Graphical User Interface}
+The graphical user interface will allow users to input various parameters such as CVT specifications, vehicle and driver weight, traction, and angle of incline, while also displaying graphs of the simulation output and enabling the export of simulation data. 
+Users will then be able to see the output of there simulation in the form of graphs and export the data for further analysis. 
+
+\subsection{Data Output and Visualization}
+After the simulation is complete, the application will display graphs of the simulation output and allow users to export simulation data.
+\subsection{Data Validation}
+Validation of the simulation data against real-world data is crucial to ensure the accuracy of the simulation.
+Will need to gather data from the McMaster Baja Racing Team to validate the simulation data.
+
 \section{Stretch Goals}
+\subsection{Simulating Heat}
+\subsection{Simulating Inertia of Non Rigid Components}
+\subsection{3D model something something}
+\subsection{Optimization Algorithm}
+Implement an optimization algorithm to find the optimal CVT parameters for a given set of conditions.
+\subsection{Advanced Data Validation somethign something}
 
 \section{Challenge Level and Extras}
 
+\subsection{Challenge Level}
+
 The challenge level for this capstone project is General
 
-\noindent The extras for this capstone project are:
+\subsection{Extras}
+The extras for this capstone project are:
 \begin{itemize}
-    \item Design Thinking (need to decide)
-    \item Code walkthroughs (need to decide)
-    \item Validation Report (need to decide)
+    \item Code walkthroughs
+    \item Validation Report
 \end{itemize}
 
-\wss{State your expected challenge level (advanced, general or basic).  The
-challenge can come through the required domain knowledge, the implementation or
-something else.  Usually the greater the novelty of a project the greater its
-challenge level.  You should include your rationale for the selected level.
-Approval of the level will be part of the discussion with the instructor for
-approving the project.  The challenge level, with the approval (or request) of
-the instructor, can be modified over the course of the term.}
-
-\wss{Teams may wish to include extras as either potential bonus grades, or to
-make up for a less advanced challenge level.  Potential extras include usability
-testing, code walkthroughs, user documentation, formal proof, GenderMag
-personas, Design Thinking, etc.  Normally the maximum number of extras will be
-two.  Approval of the extras will be part of the discussion with the instructor
-for approving the project.  The extras, with the approval (or request) of the
-instructor, can be modified over the course of the term.}
 
 \newpage{}
 
 \section*{Appendix --- Reflection}
 
-\wss{Not required for CAS 741}
-
 \input{../Reflection.tex}
 
 \begin{enumerate}
     \item What went well while writing this deliverable? 
+    \begin{itemize}
+        \item Defining problem, inputs, stakeholders, goals and environemnt were very easy. That part was well defined.
+    \end{itemize}
     \item What pain points did you experience during this deliverable, and how
     did you resolve them?
-    \item How did you and your team adjust the scope of your goals to ensure
+    \begin{itemize}
+        \item Determing ouputs, stretch goals and extras were hard
+    \end{itemize}
+        \item How did you and your team adjust the scope of your goals to ensure
     they are suitable for a Capstone project (not overly ambitious but also of
     appropriate complexity for a senior design project)?
+    \begin{itemize}
+        \item Had to turn some goals into stretch goals to ensure it was suitable for capstone (optimaztion, etc)
+    \end{itemize}
 \end{enumerate}  
 
 \end{document}
