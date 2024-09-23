@@ -1,11 +1,3 @@
----
-name: Pull Request
-about: Submit a pull request
-title: '[PR] <description>'
-labels: ''
-assignees: ''
----
-
 **Description**
 A clear and concise description of what your pull request does.
 
