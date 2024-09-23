@@ -20,4 +20,23 @@ The folders and files for this project are as follows:
 
 ## Setup
 
+## Python setup
 
+1. Create and activate a virtual environment:
+```bash
+python -m venv venv
+venv\Scripts\activate # or source venv/bin/activate on Mac
+```
+2. Install the dependencies
+```bash
+pip install -r requirements.txt
+```
+3. Run the tests
+```bash
+python -m unittest discover -s tests
+```
+4. Manually run linter and formatter
+```bash
+flake8 src/ test/
+black src/ test/
+```
