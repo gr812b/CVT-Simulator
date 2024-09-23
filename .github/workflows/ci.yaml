@@ -28,14 +28,14 @@ jobs:
       - name: Run flake8
         run: |
           source venv/bin/activate
-          flake8 src tests
+          flake8 src test
 
       - name: Run black (check)
         run: |
           source venv/bin/activate
-          black --check src tests
+          black --check src test
 
       - name: Run unit tests
         run: |
           source venv/bin/activate
-          python -m unittest discover -s tests
+          python -m unittest discover -s test
