@@ -1,14 +1,9 @@
 ---
 name: Pull Request
 about: Submit a pull request
-title: '[PR] '
+title: '[PR] <description>'
 labels: ''
 assignees: ''
-reviewers: 
-  - gr812b
-  - camdnnn
-  - t-wing11
-  - gr4cem
 ---
 
 **Description**
