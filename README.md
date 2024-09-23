@@ -22,7 +22,7 @@ The folders and files for this project are as follows:
 
 ## Python setup
 
-1. Create and activate a virtual environment:
+1. Create and activate a virtual environment
 ```bash
 python -m venv venv
 venv\Scripts\activate # or source venv/bin/activate on Mac
@@ -39,4 +39,8 @@ python -m unittest discover -s tests
 ```bash
 flake8 src/ test/
 black src/ test/
+```
+5. If you want to setup the pre-commit, run:
+```bash
+pre-commit install
 ```
