@@ -44,5 +44,3 @@ black src/ test/
 ```bash
 pre-commit install
 ```
-
-Testing
