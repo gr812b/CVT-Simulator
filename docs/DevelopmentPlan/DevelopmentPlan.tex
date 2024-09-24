@@ -40,12 +40,11 @@ what is contained in the report.}
 
 \section{Confidential Information?}
 
+This project does not contain any confidential information.
+
 \wss{State whether your project has confidential information from industry, or
 not.  If there is confidential information, point to the agreement you have in
 place.}
-
-  %Yes: We don't want to leak our current tunning settings for the CVT so the default will be set to differnet values.
-  %No: I don't think we have any true confidential information otherwise and don't want to do the work to make it confidential.
 
 \wss{For most teams this section will just state that there is no confidential
 information to protect.}
@@ -55,7 +54,7 @@ information to protect.}
 All students who are working on a project that requires an IP agreement are also
 required to sign the ``Intellectual Property Guide Acknowledgement.''}
 
-We do not have any IP to protect.
+\noindent We do not have any IP to protect.
 
 \section{Copyright License}
 
@@ -81,51 +80,92 @@ in-person.}
 \section{Team Communication Plan}
 
 The team will use a structured Discord server with specific channels to organize conversations and content. 
-This discord server has structured channels seperating scheduling, resources, meetings and general questions and communication. 
+This discord server has structured channels separating scheduling, resources, meetings and general questions and communication. 
 Additionally, the team will communicate through the use of GitHub issues and commits. 
-The team will use specific labels to improve the communication of GitHub issues, for example using labels to seperate backend and frontend issues. 
+The team will use specific labels to improve the communication of GitHub issues, for example using labels to separate backend and frontend issues. 
+The team will also use GitHub Projects to communicate the status of issues. 
 
 \section{Team Member Roles}
 
+The team has decided to give specific roles for both deliverables as well as meetings. 
+The first role given to each team member corresponds to their meeting role and the second is their deliverable role.
+
 \subsection*{Grace McKenna}
 \begin{itemize}
-	\item Notetaker
+	\item Note taker - The responsibility of this role is to take notes based on meeting discussion. These notes are then uploaded to the corresponding meeting GitHub Issue as a comment. 
+  \item Project Manager - The responsibility of this role is to manage the project timeline and resource allocation. 
 \end{itemize}
 
 \subsection*{Travis Wing}
 \begin{itemize}
-	\item GitHub issue manager
+	\item Issue manager - The responsibility of this role is to review and present the issues that are related to the meeting. 
+	\item Frontend Lead - This role is responsible for managing the implementation of the frontend of the application.
 \end{itemize}
 
 \subsection*{Cameron Dunn}
 \begin{itemize}
-	\item Meeting chair
+	\item Meeting chair - The responsibility of this role is to facilitate meeting discussion and ensure all points on the meeting agenda are covered. 
+  \item Product Owner - The responsibility of this role is to ensure that the product meets it's requirements.  
 \end{itemize}
 
 \subsection*{Kai Arseneau}
 \begin{itemize}
-	\item GitHub Reviewer
+	\item Reviewer - The responsibility of this role is to review the ideas discussed and evaluate their quality.  
+	\item Backend Lead - This role is responsible for managing the implementation of the backend of the application.
 \end{itemize}
 
-\noindent Although some roles are listed above, the team will plan to rotate larger roles throughout the project to ensure all team members have an equal role in the project.
-Additionally, this will ensure all team members have knowledge about all parts of the project. 
+\noindent The roles listed above relate to decision making and organization but all team members are expected to be able to contribute to each aspect. 
+This will ensure all team members have knowledge about all parts of the project. 
 
 
 \section{Workflow Plan}
-Main branch - releases + mandatory 3 code reviews (everybody)
-Develop branch - development + mandatory 1 review
-Feature branches - individual features being added to develop
 
-CI or linting and automatic testing once implemented
-CD doesnt really make sense since we are making a local application and doesn't really apply to our stakeholders
+\subsection{Branches}
+The team will use three categories of branches: 
 
-Make our own code template for bug report, new features, etc. Same for PRs 
-Ticket types: Bug, New feature, Refactor, Documentation, Testing
-Backend, frontend, testing
+\begin{enumerate}
+  \item Main branch
+  \\
+  This branch is a unique branch it holds the production version of the application.
+  Merging into this branch requires unanimous approval (mandatory 3 code reviews).
+  Version updates will be merged into this branch from the develop branch. 
+  \item Develop branch
+  \\ This branch is a unique branch which contains the most recent stable version of the project. 
+  Merging into this branch requires at least one approval from another team member. 
+  Version updates will come from merging releases from this branch into main.  
+  \item Feature branches
+  \\
+  These branches relate to individual features that are currently being developed. These branches will branch off and merge into the develop branch. 
+\end{enumerate}
 
-In cases where teammates collaborate on an issue or document, the team will use co-authored commits in GitHub
+\subsection{Issues}
+The team will use issue tags to help organize issues by their category. The issue tags are:
+\begin{itemize}
+  \item Bug
+  \item Enhancement
+  \item Refactor
+  \item Documentation
+  \item Testing
+  \item Backend
+  \item Frontend
+  \item Meeting
+\end{itemize}
 
-integration tests on full features, then run on each PR for regression testing
+Additionally, for making new issues we set up issue templates. The templates we will use:
+\begin{itemize}
+  \item Bug report
+  \item Feature
+  \item Lecture
+  \item Peer Review 
+  \item Supervisor Meeting
+  \item TA meeting
+  \item Team meeting
+\end{itemize}
+
+\subsection{CI/CD}
+
+For this project the team will only use CI and automatic testing once implemented. 
+Integration tests will be performed on full features and then run on each PR for regression testing. 
 
 \begin{itemize}
 	\item How will you be using git, including branches, pull request, etc.?
@@ -199,10 +239,10 @@ for deadlines.}
 
 \section{Proof of Concept Demonstration Plan}
 
-The main risks include not being able to validate our simulation, not being able to successfully reflect real world factors such as friction and having limitations due to the level of the mathematics our team is able to simulate.
-During our proof of concept demonstration our team will demonstrate the mathematics and compare our calculations to existing data that is available to our team through McMaster's Baja team. 
-Our proof of concept will aim to simulate the math behind our team's project. 
-
+The three main risks include being able to calculate complex mathematical models, getting animations to occur in unity representative of mathematical models and handling the communication between the two. 
+\\
+\noindent Our proof of concept will aim to use python to simulate a feature which will then be sent to Unity leading to an animation based on the result of the calculation. 
+This will be a sufficient proof of concept as once the team is able to complete this the rest of the project will expand on this existing system. 
 
 What is the main risk, or risks, for the success of your project?  What will you
 demonstrate during your proof of concept demonstration to convince yourself that
@@ -215,18 +255,26 @@ libraries?  }
 
 \begin{itemize}
 \item Python
+\begin{itemize}
+  \item Math
+  \item Numpy
+  \item Matplotlib
+  \item Flake8
+\end{itemize}
 \item C\#
-\item Framework: Unity
-\item Unity test framework
-\item Math
-\item Version Control: git
+\item Unity
+\begin{itemize}
+  \item Unity test framework
+\end{itemize}
 \item GitHub
-\item GitHub Projects
+\begin{itemize}
+  \item GitHub Projects
+  \item Version Control: git
+\end{itemize}
 \item 3D model - CAD
 \item Microsoft Excel
 \item VS Code
 \item The Data Viewer - pre-existing website to graph and view data, designed by McMaster's Baja Racing Team.
-\item Linter tool: Flake8
 \item Specific unit testing framework
 \item Investigation of code coverage measuring tools
 \end{itemize}
@@ -264,12 +312,6 @@ The team will adhere to Google Python style guide in order to help format code c
     \item What disagreements did your group have in this deliverable, if any,
     and how did you resolve them?
 
-    There were disagreements regarding the scope of the project and the level of detail that should be included in the development plan. 
-    Some team members had concerned about the level of difficultly of the project and if we would be able to complete it. On the other hand,
-    other team members felt that we were capable of completing the project and needed to add more details for the deliverable.
-    We resolved these issues by meeting as a team and doing a walkthrough of the entire project and its components.
-    This helped the concerned team members understand the project better and made it feel more attainable. 
-    This walkthrough ended up serving as the basis for the development plan.
     
 \end{enumerate}
 
@@ -289,10 +331,12 @@ goals on what the team wishes to achieve with the project.  Potential goals are
 to win a prize at the Capstone EXPO, or to have something to talk about in
 interviews, or to get an A+, etc.}
 
-%Discuss with all team memebers at meeting
-% Show technical ability to solve complex problems
-% Be able to deliver a large project on time
-% Learn how to work in a team
+\begin{itemize}
+  \item The team wants to be able to score higher at Baja competitions.
+  \item The team wants to be successful within the course.
+  \item The team wants to have an interesting presentation at the Capstone EXPO.
+  \item The team wants to be able to show their employers they can solve complex problems on a team within a short time span.
+\end{itemize}
 
 \subsection*{Attendance}
 
@@ -307,15 +351,15 @@ Team members are expected to communicate with one another if they will be late o
 \wss{What constitutes an acceptable excuse for missing a meeting or a deadline?
 What types of excuses will not be considered acceptable?}
 
-Acceptable excuses for missing a meeting or deadline without prior notice include:
+\noindent Acceptable excuses for missing a meeting or deadline without prior notice include:
 \begin{itemize}
   \item Sudden illness or injury requiring medical attention
   \item Family emergency needing immediate attention
-  \item Unexpected technical difficultlies
-  \item Other extreme unfourseen circumstances
+  \item Unexpected technical difficulties
+  \item Other extreme unforeseen circumstances
 \end{itemize}
 
-With prior notice ($>$24 hours before), it is acceptable to miss a meeting for any scheduled event or obligation that cannot be rescheduled such as:
+\noindent With prior notice ($>$24 hours before), it is acceptable to miss a meeting for any scheduled event or obligation that cannot be rescheduled such as:
 \begin{itemize}
   \item Medical appointments
   \item Planned family events or support
@@ -323,7 +367,7 @@ With prior notice ($>$24 hours before), it is acceptable to miss a meeting for a
   \item Other scheduled events
 \end{itemize}
 
-It is unacceptable to miss a meeting or deadline outside of the above circumstances.
+\noindent It is unacceptable to miss a meeting or deadline outside of the above circumstances.
 
 \subsubsection*{In Case of Emergency}
 
@@ -331,7 +375,7 @@ It is unacceptable to miss a meeting or deadline outside of the above circumstan
 attend a team meeting or complete their individual work promised for a team
 deliverable?}
 
-In a case of emergency where a team member cannot deiver on their responsibilities, the team will handle resdistributing that work.
+\noindent In a case of emergency where a team member cannot deliver on their responsibilities, the team will handle redistributing that work.
 In the case of a meeting, one or more team members will assume the responsibilities of the missing team member and will debrief them afterwards.
 In the case of a deliverable, the team will redistribute what cannot be completed by the missing team member to the rest of the team.
 
@@ -342,7 +386,6 @@ In the case of a deliverable, the team will redistribute what cannot be complete
 The process for addressing teammates who do not meet expectations will be as follows. 
 The team will meet with the individual who did not meet the expectations and address why the expectations have not been met yet.  
 The team member will be given an additional day to complete the work if this is time permitted. 
-The penalty for this unmet expectation will be for future deliverables the individual must take on a bigger chunk of the work to make up for the missed work on the current deliverable.  
 
 \wss{What are your team's expectations regarding the quality
 of team members' preparation for team meetings and the quality of the
@@ -351,6 +394,7 @@ deliverables that members bring to the team?}
 \subsubsection*{Attitude}
 
 Team members will always treat one another with respect and have a positive attitude towards one another. 
+All team members must be respectful when listening to others ideas. 
 
 \wss{What are your team's expectations regarding team members' ideas,
 interactions with the team, cooperation, attitudes, and anything else regarding
@@ -373,26 +417,26 @@ consequences if someone doesn't hit their targets?  Do they need to bring the
 coffee to the next team meeting?  Does the team need to make an appointment with
 their TA, or the instructor?  Are there incentives for reaching targets early?}
 
-Team meetings as well as the GitHub project board, issues and commit history will be used to monitor each team member's progress.
+\noindent Team meetings as well as the GitHub project board, issues and commit history will be used to monitor each team member's progress.
 At each meeting, the team will discuss the progress of each member and evaulte if they are on track to meet the project deadlines.
 If a team member is found to not be meeting their expectations, the team will discuss what can be done to get them back on track in the regular meeting.
 If the issue continues, a special meeting will be scheduled to understand that member's problems and how to resolve them.
 If after this the issues still persist then the team will meet with a TA or the professor to address the team member's failure to meet their responsibilities.
 
-To incentivize performance, control over decision making of team celebration will be given proportionally to the quality and timeliness of work completed by each team member.
+\noindent To incentivize performance, control over decision making of team celebration will be given proportionally to the quality and timeliness of work completed by each team member.
 
-The metrics used to measure a team performance will be their attendance at meetings, the subjective quality of their work and how well they are able to meet deadlines.
-Other quantitivate metrics such as commits and lines of code will only be used to supplmement the above metrics or in extreme cases such as having no commits or lines of code.
+\noindent The metrics used to measure a team performance will be their attendance at meetings, the subjective quality of their work and how well they are able to meet deadlines.
+Other quantitative metrics such as commits and lines of code will only be used to supplmement the above metrics or in extreme cases such as having no commits or lines of code.
 \subsubsection*{Team Building}
 
 \wss{How will you build team cohesion (fun time, group rituals, etc.)? }
 
-The team will celebrate their accomplishments through team dinners or other social events.
+\noindent The team will celebrate their accomplishments through team dinners or other social events.
 
 \subsubsection*{Decision Making} 
 
 \wss{How will you make decisions in your group? Consensus?  Vote? How will you
 handle disagreements? }
 
-When there are disagreements, the team will meet to discuss the issue until an absolute majority ($>$50\%) of the team agrees on a solution.
+\noindent When there are disagreements, the team will meet to discuss the issue until an absolute majority ($>$50\%) of the team agrees on a solution.
 \end{document}
