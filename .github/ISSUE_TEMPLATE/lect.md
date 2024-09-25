@@ -8,17 +8,17 @@ assignees: ''
 ---
 
 **Topic**
+_Update this_
 
 **Date and Time**
+_Date_ at 12:30PM
 
 **Attendance**
 
-- [ ] team member1
-- [ ] team member2
-- [ ] team member3
-- [ ] team member4
-- [ ] team member5
+- [ ] Kai Arseneau
+- [ ] Travis Wing
+- [ ] Cameron Dunn
+- [ ] Grace McKenna
 
 **Questions to Ask**
-
 -

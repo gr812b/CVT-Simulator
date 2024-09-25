@@ -22,219 +22,362 @@
 \toprule
 \textbf{Date} & \textbf{Developer(s)} & \textbf{Change}\\
 \midrule
-Date1 & Name(s) & Description of changes\\
-Date2 & Name(s) & Description of changes\\
-... & ... & ...\\
+Sept 24 & All & Initial Draft\\
 \bottomrule
 \end{tabularx}
 \end{table}
 
 \newpage{}
 
-\wss{Put your introductory blurb here.  Often the blurb is a brief roadmap of
-what is contained in the report.}
+This document provides a summary of how we plan to approach this project.
+It covers both the managerial and technical aspects of the project.
+On the management side, we discuss how we will communicate, organize ourselves and divide up responsibilities.
+On the development end, we list out our POC goals and what tools we expect to use.
+Overall, this document serves as a summary of how we will accomplish this project.
 
-\wss{Additional information on the development plan can be found in the
-\href{https://gitlab.cas.mcmaster.ca/courses/capstone/-/blob/main/Lectures/L02b_POCAndDevPlan/POCAndDevPlan.pdf?ref_type=heads}
-{lecture slides}.}
+\section{Confidential Information}
 
-\section{Confidential Information?}
+This project does not contain any confidential information.
 
-\wss{State whether your project has confidential information from industry, or
-not.  If there is confidential information, point to the agreement you have in
-place.}
-
-\wss{For most teams this section will just state that there is no confidential
-information to protect.}
 \section{IP to Protect}
 
-\wss{State whether there is IP to protect.  If there is, point to the agreement.
-All students who are working on a project that requires an IP agreement are also
-required to sign the ``Intellectual Property Guide Acknowledgement.''}
+We do not have any IP to protect.
 
 \section{Copyright License}
 
-\wss{What copyright license is your team adopting.  Point to the license in your
-repo.}
+\href{https://github.com/gr812b/CVT-Simulator}{CVT Simulator} © 2024 by 
+Kai Arseneau, Cameron Dunn, Travis Wing and Grace McKenna is licensed under 
+\href{https://creativecommons.org/licenses/by-nc/4.0/?ref=chooser-v1}{Creative Commons Attribution-NonCommercial 4.0 International}
 
 \section{Team Meeting Plan}
 
-\wss{How often will you meet? where?}
-
-\wss{If the meeting is a physical location (not virtual), out of an abundance of
-caution for safety reasons you shouldn't put the location online}
-
-\wss{How often will you meet with your industry advisor?  when?  where?}
-
-\wss{Will meetings be virtual?  At least some meetings should likely be
-in-person.}
-
-\wss{How will the meetings be structured?  There should be a chair for all meetings.  There should be an agenda for all meetings.}
+The team will meet in person on Mondays between 2:30-4:30pm on a weekly basis. 
+Additionally, the team will plan to meet virtually or in person as the team sees fit on Fridays at 1:30-2:30pm.
+Additional meetings may be scheduled as needed, based on the current status of the team's progress towards upcoming course deadlines. 
+All meetings held will have corresponding GitHub issue templates that are to be filled out by the meeting chair. The issues will serve as documentation of the meeting and contain the meeting agenda.
+The role of the meeting chair will rotate depending on the content being covered during the meeting. 
+The default role of meeting chair will be designated to Cameron Dunn. 
 
 \section{Team Communication Plan}
 
-\wss{Issues on GitHub should be part of your communication plan.}
+The team will use a structured Discord server with specific channels to organize conversations and content. 
+This discord server has structured channels separating scheduling, resources, meetings and general questions and communication. 
+Additionally, the team will communicate through the use of GitHub issues and commits. 
+The team will enhance communication around GitHub issues by implementing a clear labeling system. 
+Labels will help distinguish between different types of tasks, such as separating backend and frontend issues, ensuring better organization and prioritization across the project. 
+The team will also use GitHub Projects to communicate the status of issues. 
 
 \section{Team Member Roles}
 
-\wss{You should identify the types of roles you anticipate, like notetaker,
-leader, meeting chair, reviewer.  Assigning specific people to those roles is
-not necessary at this stage.  In a student team the role of the individuals will
-likely change throughout the year.}
+The team has decided to give specific roles for both deliverables as well as meetings. 
+The first role given to each team member corresponds to their meeting role and the second is their deliverable role.
+
+\subsection*{Grace McKenna}
+\begin{itemize}
+	\item Note taker - The responsibility of this role is to take notes based on meeting discussion. These notes are then uploaded to the corresponding meeting GitHub Issue as a comment. 
+  \item Project Manager - The responsibility of this role is to manage the project timeline and resource allocation. 
+\end{itemize}
+
+\subsection*{Travis Wing}
+\begin{itemize}
+	\item Issue manager - The responsibility of this role is to review and present the issues that are related to the meeting. 
+	\item Frontend Lead - This role is responsible for managing the implementation of the frontend of the application.
+\end{itemize}
+
+\subsection*{Cameron Dunn}
+\begin{itemize}
+	\item Meeting chair - The responsibility of this role is to facilitate meeting discussion and ensure all points on the meeting agenda are covered. 
+  \item Product Owner - The responsibility of this role is to ensure that the product meets it's requirements.  
+\end{itemize}
+
+\subsection*{Kai Arseneau}
+\begin{itemize}
+	\item Reviewer - The responsibility of this role is to review the ideas discussed and evaluate their quality.  
+	\item Backend Lead - This role is responsible for managing the implementation of the backend of the application.
+\end{itemize}
+
+\noindent The roles listed above relate to decision making and organization, but all team members are expected to contribute to each aspect. 
+This is to ensure all team members have knowledge about all parts of the project. 
+
 
 \section{Workflow Plan}
 
+\subsection{Branches}
+The team will use three categories of branches: 
+
+\begin{enumerate}
+  \item Main branch
+  \\
+  This branch is a unique branch which holds the production version of the application.
+  Merging into this branch requires unanimous approval (mandatory 3 code reviews).
+  Version updates will be merged into this branch from the develop branch. 
+  \item Develop branch
+  \\ This branch is a unique branch which contains the most recent version of the project. 
+  Merging into this branch requires at least one approval from another team member. 
+  Version updates will come from merging releases from this branch into main.  
+  \item Feature branches
+  \\
+  These branches relate to individual features that are currently being developed. These branches will branch off and merge into the develop branch. 
+\end{enumerate}
+
+\subsection{Issues}
+The team will use issue tags to help organize issues by their category. The issue tags are:
 \begin{itemize}
-	\item How will you be using git, including branches, pull request, etc.?
-	\item How will you be managing issues, including template issues, issue
-	classification, etc.?
-  \item Use of CI/CD
+  \item Bug
+  \item Enhancement
+  \item Refactor
+  \item Documentation
+  \item Testing
+  \item Backend
+  \item Frontend
+  \item Meeting
 \end{itemize}
 
+Additionally, for making new issues we set up issue templates. The templates we will use:
+\begin{itemize}
+  \item Bug report
+  \item Feature
+  \item Lecture
+  \item Peer Review 
+  \item Supervisor Meeting
+  \item TA meeting
+  \item Team meeting
+\end{itemize}
+
+\subsection{CI/CD}
+
+For this project, the team will use continous integration for automatic testing and code quality checks via Github Actions. 
+Integration tests will be performed on full features and then run on each PR for regression testing. 
+
+Continuous deployment does not apply to this project as it will be a standalone application. New releases will
+be released on Github.
 \section{Project Decomposition and Scheduling}
 
-\begin{itemize}
-  \item How will you be using GitHub projects?
-  \item Include a link to your GitHub project
-\end{itemize}
+\subsection{Project Schedule}
 
-\wss{How will the project be scheduled?  This is the big picture schedule, not
-details. You will need to reproduce information that is in the course outline
-for deadlines.}
+\noindent \begin{tabular}{ p{9 cm} l r}
+
+  Team Formed, Project Selected & September 16 \\
+
+  Problem Statement, POC Plan, Development Plan & September 24  \\
+
+  Requirements Document Revision 0 & October 9  \\
+
+  Hazard Analysis 0 & October 23 \\
+
+  V\&V Plan Revision 0 & November 1  \\
+
+  Proof of Concept Demonstration & November 11--22  \\
+
+  Design Document Revision 0 & January 15  \\
+
+  Revision 0 Demonstration & February 3--February 14 \\
+
+  V\&V Report Revision 0 & March 7  \\
+
+  Final Demonstration (Revision 1) & March 24--March 30 \\
+
+  EXPO Demonstration & April TBD \\
+
+  Final Documentation (Revision 1)\newline 
+   - Problem Statement\newline
+   - Development Plan\newline
+   - Proof of Concept (POC) Plan\newline
+   - Requirements Document\newline
+   - Hazard Analysis\newline
+   - Design Document\newline
+   - V\&V Plan\newline
+   - V\&V Report\newline
+   - User's Guide\newline
+   - Source Code\newline &  April 2 \\
+ 
+\end{tabular}
+
+\subsection{GitHub Projects}
+
+The team will be using a GitHub project titled CVT Simulator Planner. 
+This project will track items based current existing items to be assigned, items that are in progress and completed items. Each item is intended to have a description and, once in progress, the name of the team member/members who will be working on the item.
+The goal of this GitHub project is to ensure all team members are on the same page regarding what needs to be started for upcoming project deliverables and project features. 
+Team members are also able to see which items are in progress, helping communicate what team members are actively working on.
+This will increase communication between team members, as everyone can see what their colleagues are currently working on.
+This project also has a section to show the items that have been completed. 
+
+\noindent GitHub Project Link: \url{https://github.com/users/gr812b/projects/1}
 
 \section{Proof of Concept Demonstration Plan}
 
-What is the main risk, or risks, for the success of your project?  What will you
-demonstrate during your proof of concept demonstration to convince yourself that
-you will be able to overcome this risk?
+Our main concern for this project is handling the two-way communication between the mathematical model and the Unity animation, as well as working with unfamiliar tools such as ODE solvers and Unity.
+Our proof of concept will aim to have a GUI in Unity send and receive data from a python script, which plays the role of the model.
+The GUI will have a setting for a feature which will be sent to the python script. 
+Once received, the python script will perform a calculation using the ODE solver and send the result back to Unity.
+When Unity receives the result, a corresponding animation will be displayed.
+\\
+\noindent
+This will be a sufficient proof of concept as once the team is able to complete this task the rest of the project will expand on this existing system. 
 
 \section{Expected Technology}
 
-\wss{What programming language or languages do you expect to use?  What external
-libraries?  What frameworks?  What technologies.  Are there major components of
-the implementation that you expect you will implement, despite the existence of
-libraries that provide the required functionality.  For projects with machine
-learning, will you use pre-trained models, or be training your own model?  }
-
-\wss{The implementation decisions can, and likely will, change over the course
-of the project.  The initial documentation should be written in an abstract way;
-it should be agnostic of the implementation choices, unless the implementation
-choices are project constraints.  However, recording our initial thoughts on
-implementation helps understand the challenge level and feasibility of a
-project.  It may also help with early identification of areas where project
-members will need to augment their training.}
-
-Topics to discuss include the following:
-
 \begin{itemize}
-\item Specific programming language
-\item Specific libraries
-\item Pre-trained models
-\item Specific linter tool (if appropriate)
+\item Python
+\begin{itemize}
+  \item Flake8
+  \item Black
+  \item Math
+  \item Numpy
+  \item Matplotlib
+  \item Scipy.integrate.solve\_ivp
+  \item Unittest
+\end{itemize}
+\item C\#
+\begin{itemize}
+  \item SonarLint
+  \item StyleCop
+  \item Pythonnet
+\end{itemize}
+\item Unity
+\begin{itemize}
+  \item Unity test framework
+\end{itemize}
+\item GitHub
+\begin{itemize}
+  \item GitHub Projects
+  \item Version Control: git
+\end{itemize}
+\item 3D model - CAD
+\begin{itemize}
+  \item Solidworks
+\end{itemize}
+\item Microsoft Excel
+\item VS Code
+\item The Data Viewer - pre-existing website to graph and view data, designed by McMaster's Baja Racing Team.
 \item Specific unit testing framework
 \item Investigation of code coverage measuring tools
-\item Specific plans for Continuous Integration (CI), or an explanation that CI
-  is not being done
-\item Specific performance measuring tools (like Valgrind), if
-  appropriate
-\item Tools you will likely be using?
 \end{itemize}
-
-\wss{git, GitHub and GitHub projects should be part of your technology.}
 
 \section{Coding Standard}
 
-\wss{What coding standard will you adopt?}
+The team will follow the PEP 8 coding standards for Python.
+\\
+\url{https://peps.python.org/pep-0008/}
+\\
+\noindent The team will also adhere to the C\# coding standards outlined in the Unity standards.
+\\
+\url{https://unity.com/how-to/naming-and-code-style-tips-c-scripting-unity}
 
 \newpage{}
 
 \section*{Appendix --- Reflection}
-
-\wss{Not required for CAS 741}
 
 \input{../Reflection.tex}
 
 \begin{enumerate}
     \item Why is it important to create a development plan prior to starting the
     project?
+
+    It is important to create a development plan prior to the start of large team projects, as it helps set the tone for the project, organize and breaks it down into smaller tasks and outlines individual responsibilities. 
+    The development plan also highlights key deadlines and identifies potential risks, ensuring that mitigation strategies are discussed in advance.
+    Additionally, a development plan aids in the success of team communication by specifying the frequency of meetings, methods of communication, and other measures to enhance collaboration.
+    Ultimately, a development plan acts as a roadmap that keeps the team on track throughout deliverables, supports effective problem solving, and supports risk management.
+
     \item In your opinion, what are the advantages and disadvantages of using
     CI/CD?
+
+    The advantages of using CI/CD are for large projects where the needs of the users are constantly changing because they makes it easier to test and deploy code quickly and efficiently.
+    CI helps to automate testing and integration, while CD helps to automate the deployment of code.
+    This helps on large projects where the can be many systems interacting with each other in complex and unpredictable ways.
+    On the other side, the disadvantages are more felt on smaller projects where the needs of the users are more static.
+    In these cases, the overhead of CI/CD slows down development more than it helps.
+    Additionally since these projects are smaller, it is less helpful due to the system being more predictable.
+
+
     \item What disagreements did your group have in this deliverable, if any,
     and how did you resolve them?
+
+    For this deliverable we had some disagreements about how we should update the Revision History.
+    We had an even split 50/50 on whether we should update it on each commit or each major revision.
+    We resolved it by asking the professor for clarification at our next meeting.
+    The professor recommended that we update it on each major revision, so we decided to go with that.
+
+    
 \end{enumerate}
 
 \newpage{}
 
 \section*{Appendix --- Team Charter}
 
-\wss{borrows from
-\href{https://engineering.up.edu/industry_partnerships/files/team-charter.pdf}
-{University of Portland Team Charter}}
-
 \subsection*{External Goals}
 
-\wss{What are your team's external goals for this project? These are not the
-goals related to the functionality or quality fo the project.  These are the
-goals on what the team wishes to achieve with the project.  Potential goals are
-to win a prize at the Capstone EXPO, or to have something to talk about in
-interviews, or to get an A+, etc.}
+\begin{itemize}
+  \item The team wants to be able to score higher at Baja competitions.
+  \item The team wants to be successful within the course.
+  \item The team wants to have an interesting presentation at the Capstone EXPO.
+  \item The team wants to be able to show their employers they can solve complex problems on a team within a short time span.
+\end{itemize}
 
 \subsection*{Attendance}
 
 \subsubsection*{Expectations}
 
-\wss{What are your team's expectations regarding meeting attendance (being on
-time, leaving early, missing meetings, etc.)?}
+All team members are to communicate regarding their attendance of team meetings.
+If a team member is unable to attend a meeting, the meeting will either be rescheduled, depending on the importance of the content being covered in the meeting, or the team member will be debriefed by another team member. 
+Team members are expected to communicate with one another if they will be late or need to leave the team meeting early. 
 
 \subsubsection*{Acceptable Excuse}
 
-\wss{What constitutes an acceptable excuse for missing a meeting or a deadline?
-What types of excuses will not be considered acceptable?}
+\noindent Acceptable excuses for missing a meeting or deadline without prior notice include:
+\begin{itemize}
+  \item Sudden illness or injury requiring medical attention
+  \item Family emergency needing immediate attention
+  \item Unexpected technical difficulties
+  \item Other extreme unforeseen circumstances
+\end{itemize}
+
+\noindent With prior notice ($>$24 hours before), it is acceptable to miss a meeting for any scheduled event or obligation that cannot be rescheduled such as:
+\begin{itemize}
+  \item Medical appointments
+  \item Planned family events or support
+  \item Academic obligations (exams, projects, presentations, etc.)
+  \item Other scheduled events
+\end{itemize}
+
+\noindent It is unacceptable to miss a meeting or deadline outside of the above circumstances.
 
 \subsubsection*{In Case of Emergency}
 
-\wss{What process will team members follow if they have an emergency and cannot
-attend a team meeting or complete their individual work promised for a team
-deliverable?}
+In a case of emergency where a team member cannot deliver on their responsibilities, the team will handle redistributing that work.
+In the case of a meeting, one or more team members will assume the responsibilities of the missing team member and will debrief them afterwards.
+In the case of a deliverable, the team will redistribute what cannot be completed by the missing team member to the rest of the team.
 
 \subsection*{Accountability and Teamwork}
 
 \subsubsection*{Quality} 
 
-\wss{What are your team's expectations regarding the quality
-of team members' preparation for team meetings and the quality of the
-deliverables that members bring to the team?}
+The process for addressing teammates who do not meet expectations will be as follows. 
+The team will meet with the individual who did not meet the expectations and address why the expectations have not been met yet.  
+The team member will be given an additional day to complete the work if this is time permitted. 
 
 \subsubsection*{Attitude}
 
-\wss{What are your team's expectations regarding team members' ideas,
-interactions with the team, cooperation, attitudes, and anything else regarding
-team member contributions?  Do you want to introduce a code of conduct?  Do you
-want a conflict resolution plan?  Can adopt existing codes of conduct.}
+Team members will always treat one another with respect and have a positive attitude towards one another. 
+All team members must be respectful when listening to others ideas. 
 
 \subsubsection*{Stay on Track}
 
-\wss{What methods will be used to keep the team on track? How will your team
-ensure that members contribute as expected to the team and that the team
-performs as expected? How will your team reward members who do well and manage
-members whose performance is below expectations?  What are the consequences for
-someone not contributing their fair share?}
+Team meetings as well as the GitHub project board, issues and commit history will be used to monitor each team member's progress.
+At each meeting, the team will discuss the progress of each member and evaluate if they are on track to meet the project deadlines.
+If a team member is found to not be meeting their expectations, the team will discuss what can be done to get them back on track in the regular meeting.
+If the issue continues, a special meeting will be scheduled to understand that member's problems and how to resolve them.
+If after this the issues still persist then the team will meet with a TA or the professor to address the team member's failure to meet their responsibilities.
 
-\wss{You may wish to use the project management metrics collected for the TA and
-instructor for this.}
+\noindent To incentivize performance, control over decision making of team celebration will be given proportionally to the quality and timeliness of work completed by each team member.
 
-\wss{You can set target metrics for attendance, commits, etc.  What are the
-consequences if someone doesn't hit their targets?  Do they need to bring the
-coffee to the next team meeting?  Does the team need to make an appointment with
-their TA, or the instructor?  Are there incentives for reaching targets early?}
-
+\noindent The metrics used to measure a team performance will be their attendance at meetings, the subjective quality of their work and how well they are able to meet deadlines.
+Other quantitative metrics such as commits and lines of code will only be used to supplement the above metrics or in extreme cases such as having no commits or lines of code.
 \subsubsection*{Team Building}
 
-\wss{How will you build team cohesion (fun time, group rituals, etc.)? }
+The team will celebrate their accomplishments through team dinners or other social events.
 
 \subsubsection*{Decision Making} 
 
-\wss{How will you make decisions in your group? Consensus?  Vote? How will you
-handle disagreements? }
-
+When there are disagreements, the team will meet to discuss the issue until an absolute majority ($>$50\%) of the team agrees on a solution.
 \end{document}
