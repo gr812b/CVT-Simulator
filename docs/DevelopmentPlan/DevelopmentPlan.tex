@@ -35,7 +35,7 @@ On the management side, we discuss how we will communicate, organize ourselves a
 On the development end, we list out our POC goals and what tools we expect to use.
 Overall, this document serves as a summary of how we will accomplish this project.
 
-\section{Confidential Information?}
+\section{Confidential Information}
 
 This project does not contain any confidential information.
 
@@ -63,7 +63,8 @@ The default role of meeting chair will be designated to Cameron Dunn.
 The team will use a structured Discord server with specific channels to organize conversations and content. 
 This discord server has structured channels separating scheduling, resources, meetings and general questions and communication. 
 Additionally, the team will communicate through the use of GitHub issues and commits. 
-The team will use specific labels to improve the communication of GitHub issues, for example using labels to separate backend and frontend issues. 
+The team will enhance communication around GitHub issues by implementing a clear labeling system. 
+Labels will help distinguish between different types of tasks, such as separating backend and frontend issues, ensuring better organization and prioritization across the project. 
 The team will also use GitHub Projects to communicate the status of issues. 
 
 \section{Team Member Roles}
@@ -95,8 +96,8 @@ The first role given to each team member corresponds to their meeting role and t
 	\item Backend Lead - This role is responsible for managing the implementation of the backend of the application.
 \end{itemize}
 
-\noindent The roles listed above relate to decision making and organization but all team members are expected to be able to contribute to each aspect. 
-This will ensure all team members have knowledge about all parts of the project. 
+\noindent The roles listed above relate to decision making and organization, but all team members are expected to contribute to each aspect. 
+This is to ensure all team members have knowledge about all parts of the project. 
 
 
 \section{Workflow Plan}
@@ -107,11 +108,11 @@ The team will use three categories of branches:
 \begin{enumerate}
   \item Main branch
   \\
-  This branch is a unique branch it holds the production version of the application.
+  This branch is a unique branch which holds the production version of the application.
   Merging into this branch requires unanimous approval (mandatory 3 code reviews).
   Version updates will be merged into this branch from the develop branch. 
   \item Develop branch
-  \\ This branch is a unique branch which contains the most recent stable version of the project. 
+  \\ This branch is a unique branch which contains the most recent version of the project. 
   Merging into this branch requires at least one approval from another team member. 
   Version updates will come from merging releases from this branch into main.  
   \item Feature branches
@@ -145,9 +146,11 @@ Additionally, for making new issues we set up issue templates. The templates we 
 
 \subsection{CI/CD}
 
-For this project the team will only use CI and automatic testing once implemented. 
+For this project, the team will use continous integration for automatic testing and code quality checks via Github Actions. 
 Integration tests will be performed on full features and then run on each PR for regression testing. 
 
+Continuous deployment does not apply to this project as it will be a standalone application. New releases will
+be released on Github.
 \section{Project Decomposition and Scheduling}
 
 \subsection{Project Schedule}
@@ -193,10 +196,10 @@ Integration tests will be performed on full features and then run on each PR for
 \subsection{GitHub Projects}
 
 The team will be using a GitHub project titled CVT Simulator Planner. 
-This project will track items based current existing items to be assigned, items that are in progress and completed items. Each item is intended to have a description and once in progress the name of the team member/members who will be working on the item.
+This project will track items based current existing items to be assigned, items that are in progress and completed items. Each item is intended to have a description and, once in progress, the name of the team member/members who will be working on the item.
 The goal of this GitHub project is to ensure all team members are on the same page regarding what needs to be started for upcoming project deliverables and project features. 
-Team members are also able to see which items are in progress which will help communicate what team members are actively working on.
-This will increase communication between team members as all members are able to see what each other are currently working on.
+Team members are also able to see which items are in progress, helping communicate what team members are actively working on.
+This will increase communication between team members, as everyone can see what their colleagues are currently working on.
 This project also has a section to show the items that have been completed. 
 
 \noindent GitHub Project Link: \url{https://github.com/users/gr812b/projects/1}
@@ -204,7 +207,7 @@ This project also has a section to show the items that have been completed.
 \section{Proof of Concept Demonstration Plan}
 
 Our main concern for this project is handling the two-way communication between the mathematical model and the Unity animation.
-Our proof of concept will aim to have a GUI in Unity send and receive data from the python script.
+Our proof of concept will aim to have a GUI in Unity send and receive data from a python script, which plays the role of the model.
 The GUI will have a setting for a feature which will be sent to the python script. 
 Once received, the python script will perform a calculation and send the result back to Unity.
 When Unity receives the result, a corresponding animation will be displayed.
@@ -223,7 +226,7 @@ This will be a sufficient proof of concept as once the team is able to complete 
   \item Numpy
   \item Matplotlib
   \item Scipy.integrate.solve\_ivp
-  \item Unit test
+  \item Unittest
 \end{itemize}
 \item C\#
 \begin{itemize}
