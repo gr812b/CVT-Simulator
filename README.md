@@ -10,6 +10,15 @@
 
 Our project aims to create an advanced CVT simulation tool that integrates complex mathematical models, a rendering engine, and a user-friendly interface to accurately model the transmission's dynamics. The objective is to streamline the tuning process, allowing for faster adjustments to the transmission and reducing the need for labor-intensive physical testing. By simulating real-world behavior, the tool will help engineers experiment with different tuning parameters to achieve optimal performance, improving vehicle acceleration and torque output.
 
+## License
+
+This project is licensed under the **Creative Commons Attribution-NonCommercial 4.0 International (CC BY-NC 4.0)** license.
+
+- Free for use in personal, educational, or non-commercial projects.
+- **Commercial use requires a separate license**. Please contact Kai Arseneau, Cameron Dunn, Travis Wing or Grace McKenna for inquiries regarding commercial licenses.
+
+For more details, see the [LICENSE](./LICENSE) file.
+
 ## Project Structure
 The folders and files for this project are as follows:
 
