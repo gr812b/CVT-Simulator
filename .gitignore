@@ -277,3 +277,6 @@ TSWLatexianTemp*
 
 # DS_Store file from Mac computers
 .DS_Store
+
+# Python
+venv/
