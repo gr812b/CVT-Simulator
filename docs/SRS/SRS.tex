@@ -355,7 +355,7 @@ expect in the Introduction section.}
   purpose of the SRS, including communication, planning for the design stage,
   etc.}
 
-\subsection{Scope of Requirements} 
+\subsection{Scope of Requirements}
 
 \plt{Modelling the real world requires simplification.  The full complexity of
   the actual physics, chemistry, biology is too much for existing models, and
@@ -373,6 +373,17 @@ expect in the Introduction section.}
   describes, all of the assumptions.}
 
 \plt{The scope section is relevant for later determining typical values of inputs. The scope should make it clear what inputs are reasonable to expect. This is a distinction between scope and context (context is a later section).  Scope affects the inputs while context affects how the software will be used.}
+
+Assumptions
+\begin{itemize}
+  \item \textbf{Temperature variations}: Ignore the effect of temperature on the material properties, excluding the belt.
+  \item \textbf{negligible Gravitational Influence}: The orientation of the CVT system and gravitational effects are considered negligible due to the high rotational speeds involved in the system's operation.
+  \item \textbf{Elasticity of Belts}: Elasticity of belts are assumed negligible, and the components are considered ideally rigid under normal operating conditions.
+  \item \textbf{Vibrational Effects}: Vibrational effects from the vehicle or external environment are assumed to be minimal and are not factored into the transmission’s operation in this model.
+  \item \textbf{Wear and Tear}: Component wear over time, including belt/chain wear and pulley degradation, is assumed negligible in the short-term operational model.
+  \item \textbf{Frictional Losses in Non-critical Components}: Frictional losses in non-critical components (e.g., bearings, shafts) are assumed negligible, focusing only on friction relevant to the CVT system's core mechanics.
+  \item \textbf{Engine Behavior Assumption:} The engine is modeled to operate at full throttle with consistent power curves and peak performance, maintaining a uniform response throughout the analysis. Load feedback will be integrated to adjust RPM and power output as necessary.
+\end{itemize}
 
 \subsection{Characteristics of Intended Reader} \label{sec_IntendedReader}
 
