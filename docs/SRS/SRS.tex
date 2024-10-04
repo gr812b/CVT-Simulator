@@ -338,6 +338,19 @@ which heat is transferred in
 
 \section{Introduction}
 
+The McMaster Baja engineering team is facing challenges in tuning their Continuous Variable Transmission (CVT). 
+The current process of tuning the CVT is extensive, time consuming and requires testing of multiple physical components leading to possible inconsistencies due to weather and wear. 
+These inconsistences then complicate the tuning process of the CVT’s torque transfer directly affecting the performance of the Baja vehicles. 
+To address these issues, our team aims to develop a CVT simulation tool that uses mathematical models, a rendering engine and a user-friendly interface. 
+Our solution aims to streamline the optimization process allowing Baja members to simulate real-world factors and virtually test various tuning parameters. 
+Our simulation tool will be validated against data collected by the McMaster Baja Data Acquisition team to ensure reliability and accuracy.  
+\\
+\\
+This introduction will outline the key objectives of this document to provide a structured guide for the development of the CVT tool and outline of the system’s requirements. 
+Additionally, the scope will explore technical and functional assumptions and will intend to streamline the complex tuning process of a CVT. 
+A detailed overview of this document will provide guidance to the reader regarding the structure and flow of the document. 
+
+
 \plt{The introduction section is written to introduce the problem.  It starts
   general and focuses on the problem domain. The general advice is to start with
 a paragraph or two that describes the problem, followed by a ``roadmap''
@@ -345,6 +358,11 @@ paragraph.  A roadmap orients the reader by telling them what sub-sections to
 expect in the Introduction section.}
 
 \subsection{Purpose of Document}
+
+The purpose of this Software Requirements Specification (SRS) is to provide an outline of the system requirements given for the development of a CVT simulation tool. 
+This ensures that all stakeholders including members of the Baja team, Dr.Smith and the developers understand the projects objectives and constraints. 
+This document will serve as a communication tool to align expectations, provide guidance during the design of this tool and aid in the development and testing phases of this project. 
+This SRS will be referenced throughout the development of the system to ensure the tool is within the scope and meets the outlined requirements. 
 
 \plt{This section summarizes the purpose of the SRS document.  It does not focus
   on the problem itself.  The problem is described in the ``Problem
@@ -1073,6 +1091,30 @@ qualities that the software is expected to exhibit.
 \subsection{Functional Requirements}
 
 \noindent \begin{itemize}
+
+\item[R\refstepcounter{reqnum}\thereqnum \label{R_Inputs}:] The system shall simulate the behavior of the McMaster Baja Team's Continuous Variable Transmission(CVT) using mathematical models.
+
+\item[R\refstepcounter{reqnum}\thereqnum \label{R_Inputs}:] The system shall allow users to adjust the following CVT tunning parameters: primary weight, primary ramp geometry, primary spring rate, primary spring Pretension, secondary helix geometry, secondary spring rate, secondary spring pretension. 
+
+\item[R\refstepcounter{reqnum}\thereqnum \label{R_Inputs}:] The system shall allow users to adjust vehicle and driver weight, traction and angle of incline in addition to the CVT tuning parameters.
+
+\item[R\refstepcounter{reqnum}\thereqnum \label{R_Inputs}:] The system shall provide users with an interface to input tuning parameters.
+
+\item[R\refstepcounter{reqnum}\thereqnum \label{R_Inputs}:] The system shall display graphs of simulation output based on the user inputted tuning parameters.
+
+\item[R\refstepcounter{reqnum}\thereqnum \label{R_Inputs}:] The system shall allow users to compare results of simulations with different CVT tuning parameters.
+
+\item[R\refstepcounter{reqnum}\thereqnum \label{R_Inputs}:] The system shall check the validity of the simulation tool against speed, RPM and torque data collected from the McMaster Baja Data Acquisition Team.
+
+\item[R\refstepcounter{reqnum}\thereqnum \label{R_Inputs}:] The system shall calculate the CVT ratio, clamping force, RPM, torque and belt slippage as functions of time.
+
+\item[R\refstepcounter{reqnum}\thereqnum \label{R_Inputs}:] The system shall use the CVT ratio, RPM, torque, and belt slippage combined with engine input to calculate distance, speed and acceleration as functions of time.
+
+\item[R\refstepcounter{reqnum}\thereqnum \label{R_Inputs}:] The system shall allow users to export outputted simulated graphical data.
+
+\item[R\refstepcounter{reqnum}\thereqnum \label{R_Inputs}:] The system shall allow users to access the application through the use of a personal computer or laptop.
+
+\item[R\refstepcounter{reqnum}\thereqnum \label{R_Inputs}:] The system shall be compatible with Windows, MacOS and Linux.
 
 \item[R\refstepcounter{reqnum}\thereqnum \label{R_Inputs}:] \plt{Requirements
     for the inputs that are supplied by the user.  This information has to be
