@@ -1090,43 +1090,6 @@ instance models.
 
 We do not have any general definitions at this time.
 
-~\newline
-
-\noindent
-\begin{minipage}{\textwidth}
-\renewcommand*{\arraystretch}{1.5}
-\begin{tabular}{| p{\colAwidth} | p{\colBwidth}|}
-\hline
-\rowcolor[gray]{0.9}
-Number& GD\refstepcounter{defnum}\thedefnum \label{NL}\\
-\hline
-Label &\bf Newton's law of cooling \\
-\hline
-% Units&$MLt^{-3}T^0$\\
-% \hline
-SI Units&\si{\watt\per\square\metre}\\
-\hline
-Equation&$ q(t) = h \Delta T(t)$  \\
-\hline
-Description &
-Newton's law of cooling describes convective cooling from a surface.  The law is
-stated as: the rate of heat loss from a body is proportional to the difference
-in temperatures between the body and its surroundings.
-\\
-& $q(t)$ is the thermal flux (\si{\watt\per\square\metre}).\\
-& $h$ is the heat transfer coefficient, assumed independent of $T$ (\aref{A_hcoeff})
-	(\si{\watt\per\square\metre\per\celsius}).\\
-&$\Delta T(t)$= $T(t) - T_{\text{env}}(t)$ is the time-dependent thermal gradient
-between the environment and the object (\si{\celsius}).
-\\
-\hline
-  Source & Citation here \\
-  \hline
-  Ref.\ By & \ddref{FluxCoil}, \ddref{FluxPCM}\\
-  \hline
-\end{tabular}
-\end{minipage}\\
-
 \subsubsection*{Detailed derivation of simplified rate of change of temperature}
 
 \plt{This may be necessary when the necessary information does not fit in the
@@ -1256,18 +1219,6 @@ The goals \plt{reference your goals} are solved by \plt{reference your instance
 \plt{Modify the examples below for your problem, and add additional models as
   appropriate.}
 
-\begin {itemize}
-\item velocity
-\item acceleration
-\item distance
-\item clamping force
-\item belt slippage
-\item CVT ratio
-\item Torque transferred
-\item RPM and torque of engine
-\end {itemize}
-
-
 ~\newline
 
 %Instance Model 1
@@ -1299,6 +1250,198 @@ The goals \plt{reference your goals} are solved by \plt{reference your instance
   $0<T_W<100^o\text{C}$, where $0^o\text{C}$ and $100^o\text{C}$ are the melting
   and boiling points of water, respectively (\aref{A_OpRange}, \aref{A_Pressure}).
   \\
+  \hline
+  Sources& Citation here \\
+  \hline
+  Ref.\ By & \iref{epcm}\\
+  \hline
+\end{tabular}
+\end{minipage}\\
+
+~\newline
+\noindent
+\begin{minipage}{\textwidth}
+\renewcommand*{\arraystretch}{1.5}
+\begin{tabular}{| p{\colAwidth} | p{\colBwidth}|}
+  \hline
+  \rowcolor[gray]{0.9}
+  Number& IM\refstepcounter{instnum}\theinstnum \label{ewat}\\
+  \hline
+  Label& \bf Velocity \\
+  \hline
+  Input&something\\
+  \hline
+  Output&Something
+  \hline
+  Description&Something
+  \hline
+  Sources& Citation here \\
+  \hline
+  Ref.\ By & \iref{epcm}\\
+  \hline
+\end{tabular}
+\end{minipage}\\
+
+~\newline
+\noindent
+\begin{minipage}{\textwidth}
+\renewcommand*{\arraystretch}{1.5}
+\begin{tabular}{| p{\colAwidth} | p{\colBwidth}|}
+  \hline
+  \rowcolor[gray]{0.9}
+  Number& IM\refstepcounter{instnum}\theinstnum \label{ewat}\\
+  \hline
+  Label& \bf Distance \\
+  \hline
+  Input&something\\
+  \hline
+  Output&Something
+  \hline
+  Description&Something
+  \hline
+  Sources& Citation here \\
+  \hline
+  Ref.\ By & \iref{epcm}\\
+  \hline
+\end{tabular}
+\end{minipage}\\
+
+~\newline
+\noindent
+\begin{minipage}{\textwidth}
+\renewcommand*{\arraystretch}{1.5}
+\begin{tabular}{| p{\colAwidth} | p{\colBwidth}|}
+  \hline
+  \rowcolor[gray]{0.9}
+  Number& IM\refstepcounter{instnum}\theinstnum \label{ewat}\\
+  \hline
+  Label& \bf Acceleration \\
+  \hline
+  Input&something\\
+  \hline
+  Output&Something
+  \hline
+  Description&Something
+  \hline
+  Sources& Citation here \\
+  \hline
+  Ref.\ By & \iref{epcm}\\
+  \hline
+\end{tabular}
+\end{minipage}\\
+
+~\newline
+\noindent
+\begin{minipage}{\textwidth}
+\renewcommand*{\arraystretch}{1.5}
+\begin{tabular}{| p{\colAwidth} | p{\colBwidth}|}
+  \hline
+  \rowcolor[gray]{0.9}
+  Number& IM\refstepcounter{instnum}\theinstnum \label{ewat}\\
+  \hline
+  Label& \bf Clamping Force \\
+  \hline
+  Input&something\\
+  \hline
+  Output&Something
+  \hline
+  Description&Something
+  \hline
+  Sources& Citation here \\
+  \hline
+  Ref.\ By & \iref{epcm}\\
+  \hline
+\end{tabular}
+\end{minipage}\\
+
+~\newline
+\noindent
+\begin{minipage}{\textwidth}
+\renewcommand*{\arraystretch}{1.5}
+\begin{tabular}{| p{\colAwidth} | p{\colBwidth}|}
+  \hline
+  \rowcolor[gray]{0.9}
+  Number& IM\refstepcounter{instnum}\theinstnum \label{ewat}\\
+  \hline
+  Label& \bf Belt Slippage \\
+  \hline
+  Input&something\\
+  \hline
+  Output&Something
+  \hline
+  Description&Something
+  \hline
+  Sources& Citation here \\
+  \hline
+  Ref.\ By & \iref{epcm}\\
+  \hline
+\end{tabular}
+\end{minipage}\\
+
+~\newline
+\noindent
+\begin{minipage}{\textwidth}
+\renewcommand*{\arraystretch}{1.5}
+\begin{tabular}{| p{\colAwidth} | p{\colBwidth}|}
+  \hline
+  \rowcolor[gray]{0.9}
+  Number& IM\refstepcounter{instnum}\theinstnum \label{ewat}\\
+  \hline
+  Label& \bf CVT Ratio \\
+  \hline
+  Input&something\\
+  \hline
+  Output&Something
+  \hline
+  Description&Something
+  \hline
+  Sources& Citation here \\
+  \hline
+  Ref.\ By & \iref{epcm}\\
+  \hline
+\end{tabular}
+\end{minipage}\\
+
+~\newline
+\noindent
+\begin{minipage}{\textwidth}
+\renewcommand*{\arraystretch}{1.5}
+\begin{tabular}{| p{\colAwidth} | p{\colBwidth}|}
+  \hline
+  \rowcolor[gray]{0.9}
+  Number& IM\refstepcounter{instnum}\theinstnum \label{ewat}\\
+  \hline
+  Label& \bf Torque Transferred \\
+  \hline
+  Input&something\\
+  \hline
+  Output&Something
+  \hline
+  Description&Something
+  \hline
+  Sources& Citation here \\
+  \hline
+  Ref.\ By & \iref{epcm}\\
+  \hline
+\end{tabular}
+\end{minipage}\\
+
+~\newline
+\noindent
+\begin{minipage}{\textwidth}
+\renewcommand*{\arraystretch}{1.5}
+\begin{tabular}{| p{\colAwidth} | p{\colBwidth}|}
+  \hline
+  \rowcolor[gray]{0.9}
+  Number& IM\refstepcounter{instnum}\theinstnum \label{ewat}\\
+  \hline
+  Label& \bf RPM and Torque of Engine \\
+  \hline
+  Input&something\\
+  \hline
+  Output&Something
+  \hline
+  Description&Something
   \hline
   Sources& Citation here \\
   \hline
