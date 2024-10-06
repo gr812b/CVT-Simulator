@@ -493,13 +493,12 @@ characteristics and lists the system constraints.  \plt{This text can likely be
 \begin{itemize}
 \item User Responsibilities:
 \begin{itemize}
-\item 
+\item Provide the necessary input data in a correct format.
 \end{itemize}
 \item \progname{} Responsibilities:
 \begin{itemize}
-\item Detect data type mismatch, such as a string of characters instead of a
-  floating point number
-\item 
+\item Accept user input data to simulate the CVT system.
+\item Display the results of the simulation.
 \end{itemize}
 \end{itemize}
 
@@ -539,8 +538,6 @@ On the software side, the user should be able to navigate a GUI and know how to 
   included if they are truly required.}
 
 The system should be able to run on any machine that supports Python 3.9 or later and Unity projects.
-It should be able to run on Windows, MacOS, and Linux operating systems.
-The software should be able to run on any computer that has at least 8GB of RAM and 1GB of storage space.
 
 \section{Specific System Description}
 
@@ -694,13 +691,16 @@ models can be verified.
 
 \plt{This section is optional. Defining types can make the document easier to
 understand.}
+N/A
 
 \subsubsection{Scope Decisions}
 
 \plt{This section is optional.}
+N/A
 \subsubsection{Modelling Decisions}
 
 \plt{This section is optional.}
+N/A
 
 \subsubsection{Assumptions} \label{sec_assumpt}
 
@@ -742,6 +742,16 @@ change [LC], in which the respective assumption is used.
 This section focuses on the general equations and laws that \progname{} is based
 on.  \plt{Modify the examples below for your problem, and add additional models
   as appropriate.}
+\begin {itemize}
+\item hookes law linear and torsional
+\item effective coef of friction (5)
+\item Wrap angle
+\item vehicle torque load on CVT
+\item engine torque (11)
+\item torque and rpm (gear reduction) (12)
+\item centrifugal force
+\item air resistance
+\end{itemize}
 
 ~\newline
 
@@ -812,6 +822,8 @@ instance models.
   heading should be kept.}  \plt{Modify the examples below for your problem, and
   add additional definitions as appropriate.}
 
+We do not have any general definitions at this time.
+
 ~\newline
 
 \noindent
@@ -871,6 +883,15 @@ This section collects and defines all the data needed to build the instance
 models. The dimension of each quantity is also given.  \plt{Modify the examples
   below for your problem, and add additional definitions as appropriate.}
 
+data definitions so far, more to be added later
+\begin {itemize}
+\item velocity
+\item acceleration
+\item torque
+\item friction
+\item rpm
+\end {itemize}
+
 ~\newline
 
 \noindent
@@ -929,6 +950,8 @@ This section collects and defines all the data types needed to document the
 models. \plt{Modify the examples below for your problem, and add additional
   definitions as appropriate.}
 
+N/A
+
 ~\newline
 
 \noindent
@@ -966,6 +989,18 @@ The goals \plt{reference your goals} are solved by \plt{reference your instance
   models}.  \plt{other details, with cross-references where appropriate.}
 \plt{Modify the examples below for your problem, and add additional models as
   appropriate.}
+
+\begin {itemize}
+\item velocity
+\item acceleration
+\item distance
+\item clamping force
+\item belt slippage
+\item CVT ratio
+\item Torque transferred
+\item RPM and torque of engine
+\end {itemize}
+
 
 ~\newline
 
@@ -1114,11 +1149,7 @@ qualities that the software is expected to exhibit.
 
 \item[R\refstepcounter{reqnum}\thereqnum \label{R_Inputs}:] The system shall allow users to compare results of simulations with different CVT tuning parameters.
 
-\item[R\refstepcounter{reqnum}\thereqnum \label{R_Inputs}:] The system shall check the validity of the simulation tool against speed, RPM and torque data collected from the McMaster Baja Data Acquisition Team.
-
-\item[R\refstepcounter{reqnum}\thereqnum \label{R_Inputs}:] The system shall calculate the CVT ratio, clamping force, RPM, torque and belt slippage as functions of time.
-
-\item[R\refstepcounter{reqnum}\thereqnum \label{R_Inputs}:] The system shall use the CVT ratio, RPM, torque, and belt slippage combined with engine input to calculate distance, speed and acceleration as functions of time.
+\item[R\refstepcounter{reqnum}\thereqnum \label{R_Inputs}:] The system shall calculate the CVT ratio, clamping force, RPM, torque and belt slippage as functions of time. Combined with engine input, the system shall calculate distance, speed and acceleration as functions of time.
 
 \item[R\refstepcounter{reqnum}\thereqnum \label{R_Inputs}:] The system shall allow users to export outputted simulated graphical data.
 
@@ -1169,37 +1200,12 @@ be covered in the Verification and Validation document.}
 
 \noindent \begin{itemize}
 
-\item[NFR\refstepcounter{nfrnum}\thenfrnum \label{NFR_Accuracy}:]
-  \textbf{Accuracy} \plt{Characterize the accuracy by giving the context/use for
-    the software.  Maybe something like, ``The accuracy of the computed
-    solutions should meet the level needed for $<$engineering or scientific
-    application$>$.  The level of accuracy achieved by \progname{} shall be
-    described following the procedure given in Section~X of the Verification and
-    Validation Plan.''  A link to the VnV plan would be a nice extra.}
-
-\item[NFR\refstepcounter{nfrnum}\thenfrnum \label{NFR_Usability}:] \textbf{Usability}
-  \plt{Characterize the usability by giving the context/use for the software.
-    You should likely reference the user characteristics section.  The level of
-    usability achieved by the software shall be described following the
-    procedure given in Section~X of the Verification and Validation Plan.  A
-    link to the VnV plan would be a nice extra.}
-
-\item[NFR\refstepcounter{nfrnum}\thenfrnum \label{NFR_Maintainability}:]
-  \textbf{Maintainability} \plt{The effort required to make any of the likely
-    changes listed for \progname{} should be less than FRACTION of the original
-    development time.  FRACTION is then a symbolic constant that can be defined
-    at the end of the report.}
-
-\item[NFR\refstepcounter{nfrnum}\thenfrnum \label{NFR_Portability}:]
-  \textbf{Portability} \plt{This NFR is easier to write than the others.  The
-    systems that \progname{} should run on should be listed here.  When possible
-    the specific versions of the potential operating environments should be
-    given.  To make the NFR verifiable a statement could be made that the tests
-    from a given section of the VnV plan can be successfully run on all of the
-    possible operating environments.}
-
-\item Other NFRs that might be discussed include verifiability,
-  understandability and reusability.
+\item[NFR\refstepcounter{nfrnum}\thenfrnum \label{NFR_Accuracy}:] The system shall be acccurate.
+\item[NFR\refstepcounter{nfrnum}\thenfrnum \label{NFR_Usability}:] The system shall be user-friendly and straight forward to use.
+\item[NFR\refstepcounter{nfrnum}\thenfrnum \label{NFR_Maintainability}:] The system shall be easy to maintain and update.
+\item[NFR\refstepcounter{nfrnum}\thenfrnum \label{NFR_Verifiability}:] The systems shall output results that are verifiable.
+\item[NFR\refstepcounter{nfrnum}\thenfrnum \label{NFR_Understandability}:] The system shall be easy to understand.
+\item[NFR\refstepcounter{nfrnum}\thenfrnum \label{NFR_Reusability}:] The system shall be reusable.
 
 \end{itemize}
 
