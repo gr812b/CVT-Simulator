@@ -627,81 +627,88 @@ includes the following elements:
 
 \item[PS1:] Fly weights
 \begin{itemize}
-  \item [PS1a:] mass ($m_{\text{fly}}$)
-  \item [PS1b:] initial radius ($r_{\text{fly\_init}}$)
-  \item [PS1c:] final radius ($r_{\text{fly\_final}}$)
+  \item [PS1a:] mass ($m_{\text{fly}}$) in kg.
+  \item [PS1b:] initial radius ($r_{\text{fly\_init}}$) in m.
+  \item [PS1c:] final radius ($r_{\text{fly\_final}}$) in m. Might not be needed, just a limit
 \end{itemize}
 
 \item[PS2:] Primary spring
 
 \begin{itemize}
-  \item [PS2a:] spring constant ($k_{\text{prim}}$)
-  \item [PS2b:] pretension ($d_{\text{prim}}$)
+  \item [PS2a:] spring constant ($k_{\text{prim}}$), unitless.
+  \item [PS2b:] pretension ($d_{\text{prim}}$) in m.
 \end{itemize}
 
-\item[PS3:] Primary ramp geometry function ($f_{\text{prim}}$)
+\item[PS3:] Primary ramp geometry function ($f_{\text{prim\_angle}}$)
 
 \begin{itemize}
-  \item [PS3a:] input distance ($d_{\text{prim\_in}}$)
-  \item [PS3b:] output angle ($\theta_{\text{prim\_out}}$)
-  \item [PS3c:] output height ($h_{\text{prim}}$)
+  \item [PS3a:] input distance ($d_{\text{prim\_in}}$) in m.
+  \item [PS3b:] output angle ($\theta_{\text{prim\_out}}$) in radians.
+\end{itemize}
+
+\item[PS3:] Primary ramp height function ($f_{\text{prim\_height}}$)
+
+\begin{itemize}
+  \item [PS3a:] input distance ($d_{\text{prim\_in}}$) in m.
+  \item [PS3c:] output height ($h_{\text{prim\_out}}$) in m.
 \end{itemize}
 
 \item[PS4:] Secondary spring
 
 \begin{itemize}
-  \item [PS4a:] compression spring constant ($k_{\text{sec\_comp}}$)
-  \item [PS4b:] torsional spring rate ($k_{\text{sec\_tor}}$)
-  \item [PS4c:] pretension ($d_{\text{sec}}$)
+  \item [PS4a:] compression spring constant ($k_{\text{sec\_comp}}$), unitless.
+  \item [PS4b:] torsional spring rate ($k_{\text{sec\_tor}}$), unitless.
+  \item [PS4c:] pretension ($d_{\text{sec}}$) in m.
 \end{itemize}
 
 \item[PS5:] Secondary ramp geometry function ($f_{\text{sec}}$)
 
 \begin{itemize}
-  \item [PS5a:] input angle ($\theta_{\text{sec\_in}}$)
-  \item [PS5b:] output angle ($\theta_{\text{sec\_out}}$)
+  \item [PS5a:] input distance ($d_{\text{sec\_in}}$) in m.
+  \item [PS5b:] output angle ($\theta_{\text{sec\_out}}$) in radians.
 \end{itemize}
 
 \item[PS6:] Weight
 
 \begin{itemize}
-  \item [PS6a:] driver weight ($m_{\text{driver}}$)
-  \item [PS6b:] car weight ($m_{\text{car}}$)
+  \item [PS6a:] driver weight ($m_{\text{driver}}$) in kg.
+  \item [PS6b:] car weight ($m_{\text{car}}$) in kg.
 \end{itemize}
 
 \item[PS7:] Engine torque function ($f_{\text{engine}}$)
 
 \begin{itemize}
-  \item [PS7a:] input rpm ($\text{rpm}_{\text{engine}}$)
-  \item [PS7b:] output torque ($T_{\text{engine}}$)
+  \item [PS7a:] input angular velocity ($\omega_{\text{engine}}$) in rad/s.
+  \item [PS7b:] output torque ($T_{\text{engine}}$) in Nm.
 \end{itemize}
 
 \item[PS8:] Belt
 
 \begin{itemize}
-  \item [PS8a:] angle with sheave ($\theta_{\text{belt}}$)
-  \item [PS8b:] friction coefficient ($\mu_{\text{belt}}$)
+  \item [PS8a:] angle with sheave ($\theta_{\text{belt}}$). I think this does not need to exist, it matches the sheave angle?
+  \item [PS8b:] friction coefficient ($\mu_{\text{belt}}$), unitless.
 \end{itemize}
 
 \item[PS9:] Total reduction
 
 \begin{itemize}
-  \item [PS9a:] gearbox reduction ratio ($r_{\text{gearbox}}$)
-  \item [PS9b:] wheel radius ($r_{\text{wheel}}$)
+  \item [PS9a:] gearbox reduction ratio ($r_{\text{gearbox}}$), unitless.
+  \item [PS9b:] wheel radius ($r_{\text{wheel}}$) in m.
 \end{itemize}
 
-\item[PS10:] Coefficient of air resistance ($\mu_{\text{air}}$)
+\item[PS10:] Coefficient of air resistance ($\mu_{\text{air}}$), unitless.
 
-\item[PS11:] Center to Center distance ($d_{\text{center}}$)
+\item[PS11:] Center to Center distance ($d_{\text{center}}$) in m.
 
-\item[PS12:] Angle on Incline ($\theta_{\text{incline}}$)
+\item[PS12:] Angle on Incline ($\theta_{\text{incline}}$) in radians.
 
-\item[PS13:] Secondary Ramp Radius ($r_{\text{sec\_ramp}}$)
+\item[PS13:] Secondary Ramp Radius ($r_{\text{sec\_ramp}}$) in m.
 
-\item[PS14:] Traction ($\mu_{\text{traction}}$)
-
+\item[PS14:] Traction ($\mu_{\text{traction}}$), unitless.
 
 \end{itemize}
+We might also want belt length, belt width, belt weight?, other properties
+
 
 \plt{A figure here makes sense for most SRS documents}
 
@@ -840,7 +847,8 @@ This section focuses on the general equations and laws that \progname{} is based
 on.  \plt{Modify the examples below for your problem, and add additional models
   as appropriate.}
 
-~\newline
+\subsubsection*{General Theories}
+This portion will specify the existing theories that are used in the development of the CVT simulation tool.
 
 \noindent
 \deftheory
@@ -1135,6 +1143,15 @@ None
 }
 % #1 derivation - not applicable by default
 {}
+
+\subsubsection*{Helper Theories}
+This portion will define auxiliary theories to aid in further derivation below.
+
+
+Add here stuff like:
+- in: shift distance, out: radius of pulley
+- in: shift distance, out: angle of ramp
+- in: shift distance, out: angle of helix
 
 \plt{``Ref.\ By'' is used repeatedly with the different types of information.
   This stands for Referenced By.  It means that the models, definitions and
