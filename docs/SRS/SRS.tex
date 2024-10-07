@@ -1336,163 +1336,62 @@ The goals \plt{reference your goals} are solved by \plt{reference your instance
 {Citation here}
 {\iref{epcm}}
 
-~\newline
-\noindent
-\begin{minipage}{\textwidth}
-\renewcommand*{\arraystretch}{1.5}
-\begin{tabular}{| p{\colAwidth} | p{\colBwidth}|}
-  \hline
-  \rowcolor[gray]{0.9}
-  Number& IM\refstepcounter{instnum}\theinstnum \label{ewat}\\
-  \hline
-  Label& \bf Acceleration \\
-  \hline
-  Input&$r_{\text{gear}}, r_{\text{wheel}}, \rho, C_D, A, \theta, T_{\text{CVT}}, C_{\text{rr}}, m_v, m_d$ \\
-  \hline
-  Equation&$a = \frac{\left( \frac{T_{\text{CVT}}}{r_{\text{gear}} + r_{\text{wheel}}} \right) - (C_{\text{rr}} F_g \sin(\theta)) - \left( \frac{1}{2} \rho v^2 C_D A \right) - (F_g \cos(\theta))}{m_v + m_d}$ \\
-  \hline
-  Output&acceleration a \\
-  \hline
-  Description&$r_{\text{gear}}$ is the radius of the gear (m)\\
-   &$r_{\text{wheel}}$ is the radius of the wheel (m)\\
-    &$\rho$ is the density of the fluid (kg/m$^3$)\\
-    &$C_D$ is the drag coefficient\\
-    &A is the cross-sectional area of the object (m$^2$)\\
-    &$\theta$ is the angle of incline ($\theta$)\\
-     &$T_{\text{CVT}}$ is the torque transferred to the wheel (N-m)\\
-      &$C_{\text{rr}}$ is the coefficient of rolling resistance\\
-       &$m_v$ is the mass of the vehicle (kg)\\
-       &$m_d$ is the mass of the driver(kg)\\
-  \hline
-  Sources& Citation here \\
-  \hline
-  Ref.\ By & \iref{epcm}\\
-  \hline
-\end{tabular}
-\end{minipage}\\
+\definstance
+{Acceleration}
+{$r_{\text{gear}}, r_{\text{wheel}}, \rho, C_D, A, \theta, T_{\text{CVT}}, C_{\text{rr}}, m_v, m_d$}
+{$a = \frac{\left( \frac{T_{\text{CVT}}}{r_{\text{gear}} + r_{\text{wheel}}} \right) - (C_{\text{rr}} F_g \sin(\theta)) - \left( \frac{1}{2} \rho v^2 C_D A \right) - (F_g \cos(\theta))}{m_v + m_d}$}
+{acceleration a}
+{$r_{\text{gear}}$ is the radius of the gear (m)\\
+& $r_{\text{wheel}}$ is the radius of the wheel (m)\\
+& $\rho$ is the density of the fluid (kg/m$^3$)\\
+& $C_D$ is the drag coefficient\\
+& A is the cross-sectional area of the object (m$^2$)\\
+& $\theta$ is the angle of incline ($\theta$)\\
+& $T_{\text{CVT}}$ is the torque transferred to the wheel (N-m)\\
+& $C_{\text{rr}}$ is the coefficient of rolling resistance\\
+& $m_v$ is the mass of the vehicle (kg)\\
+& $m_d$ is the mass of the driver(kg)}
+{Citation here}
+{\iref{epcm}}
+
 
 \subsubsection*{Derivation of acceleration}
 
+\definstance
+{Clamping Force}
+{} % Input
+{} % Output
+{} % Description
+{} % Sources
+{} % Citation
+{\iref{epcm}}
 
-~\newline
-\noindent
-\begin{minipage}{\textwidth}
-\renewcommand*{\arraystretch}{1.5}
-\begin{tabular}{| p{\colAwidth} | p{\colBwidth}|}
-  \hline
-  \rowcolor[gray]{0.9}
-  Number& IM\refstepcounter{instnum}\theinstnum \label{ewat}\\
-  \hline
-  Label& \bf Clamping Force \\
-  \hline
-  Input&something\\
-  \hline
-  Output&Something \\
-  \hline
-  Description&Something \\
-  \hline
-  Sources& Citation here \\
-  \hline
-  Ref.\ By & \iref{epcm}\\
-  \hline
-\end{tabular}
-\end{minipage}\\
+\definstance
+{CVT Ratio}
+{} % Input
+{} % Output
+{} % Description
+{} % Sources
+{} % Citation
+{\iref{epcm}}
 
-~\newline
-\noindent
-\begin{minipage}{\textwidth}
-\renewcommand*{\arraystretch}{1.5}
-\begin{tabular}{| p{\colAwidth} | p{\colBwidth}|}
-  \hline
-  \rowcolor[gray]{0.9}
-  Number& IM\refstepcounter{instnum}\theinstnum \label{ewat}\\
-  \hline
-  Label& \bf Belt Slippage \\
-  \hline
-  Input&something\\
-  \hline
-  Output&Something \\
-  \hline
-  Description&Something \\
-  \hline
-  Sources& Citation here \\
-  \hline
-  Ref.\ By & \iref{epcm}\\
-  \hline
-\end{tabular}
-\end{minipage}\\
+\definstance
+{Torque Transferred}
+{} % Input
+{} % Output
+{} % Description
+{} % Sources
+{} % Citation
+{\iref{epcm}}
 
-~\newline
-\noindent
-\begin{minipage}{\textwidth}
-\renewcommand*{\arraystretch}{1.5}
-\begin{tabular}{| p{\colAwidth} | p{\colBwidth}|}
-  \hline
-  \rowcolor[gray]{0.9}
-  Number& IM\refstepcounter{instnum}\theinstnum \label{ewat}\\
-  \hline
-  Label& \bf CVT Ratio \\
-  \hline
-  Input&something\\
-  \hline
-  Output&Something \\
-  \hline
-  Description&Something \\
-  \hline
-  Sources& Citation here \\
-  \hline
-  Ref.\ By & \iref{epcm}\\
-  \hline
-\end{tabular}
-\end{minipage}\\
-
-~\newline
-\noindent
-\begin{minipage}{\textwidth}
-\renewcommand*{\arraystretch}{1.5}
-\begin{tabular}{| p{\colAwidth} | p{\colBwidth}|}
-  \hline
-  \rowcolor[gray]{0.9}
-  Number& IM\refstepcounter{instnum}\theinstnum \label{ewat}\\
-  \hline
-  Label& \bf Torque Transferred \\
-  \hline
-  Input&something\\
-  \hline
-  Output&Something \\
-  \hline
-  Description&Something \\
-  \hline
-  Sources& Citation here \\
-  \hline
-  Ref.\ By & \iref{epcm}\\
-  \hline
-\end{tabular}
-\end{minipage}\\
-
-~\newline
-\noindent
-\begin{minipage}{\textwidth}
-\renewcommand*{\arraystretch}{1.5}
-\begin{tabular}{| p{\colAwidth} | p{\colBwidth}|}
-  \hline
-  \rowcolor[gray]{0.9}
-  Number& IM\refstepcounter{instnum}\theinstnum \label{ewat}\\
-  \hline
-  Label& \bf RPM and Torque of Engine \\
-  \hline
-  Input&something\\
-  \hline
-  Output&Something \\
-  \hline
-  Description&Something \\
-  \hline
-  Sources& Citation here \\
-  \hline
-  Ref.\ By & \iref{epcm}\\
-  \hline
-\end{tabular}
-\end{minipage}\\
+\definstance
+{RPM and Torque of Engine}
+{} % Input
+{} % Output
+{} % Description
+{} % Sources
+{} % Citation
+{\iref{epcm}}
 
 %~\newline
 
