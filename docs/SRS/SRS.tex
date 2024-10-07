@@ -182,11 +182,6 @@ Date 2 & 1.1 & Notes\\
 \end{tabularx}
 
 ~\\
-\plt{This template is intended for use by CAS 741.  For CAS 741 the template
-should be used exactly as given, except the Reflection Appendix can be deleted.
-For the capstone course it is a source of ideas, but shouldn't be followed
-exactly.  The exception is the reflection appendix.  All capstone SRS documents
-should have a refelection appendix.}
 
 ~\newpage
 
@@ -278,26 +273,17 @@ which heat is transferred in
   PS & Physical System Description\\
   R & Requirement\\
   SRS & Software Requirements Specification\\
-  \progname{} & \plt{put an expanded version of your program name here (as appropriate)}\\
   TM & Theoretical Model\\
+  RPM & Revolutions Per Minute\\
+  CVT & Continuous Variable Transmission\\
+  SEC & Secondary\\
+  PRIM & Primary\\
   \bottomrule
 \end{tabular}\\
 
-\plt{Add any other abbreviations or acronyms that you add}
-
 \subsection{Mathematical Notation}
 
-\plt{This section is optional, but should be included for projects that make use
-  of notation to convey mathematical information.  For instance, if typographic
-  conventions (like bold face font) are used to distinguish matrices, this
-  should be stated here.  If symbols are used to show mathematical operations,
-  these should be summarized here.  In some cases the easiest way to summarize
-  the notation is to point to a text or other source that explains the
-  notation.}
-
-\plt{This section was added to the template because some students use very
-  domain specific notation.  This notation will not be readily understandable to
-  people outside of your domain.  It should be explained.}
+N/A
 
 \newpage
 
@@ -381,29 +367,12 @@ This introduction will outline the key objectives of this document to provide a 
 Additionally, the scope will explore technical and functional assumptions and will intend to streamline the complex tuning process of a CVT. 
 A detailed overview of this document will provide guidance to the reader regarding the structure and flow of the document. 
 
-
-\plt{The introduction section is written to introduce the problem.  It starts
-  general and focuses on the problem domain. The general advice is to start with
-a paragraph or two that describes the problem, followed by a ``roadmap''
-paragraph.  A roadmap orients the reader by telling them what sub-sections to
-expect in the Introduction section.}
-
 \subsection{Purpose of Document}
 
 The purpose of this Software Requirements Specification (SRS) is to provide an outline of the system requirements given for the development of a CVT simulation tool. 
 This ensures that all stakeholders including members of the Baja team, Dr.Smith and the developers understand the projects objectives and constraints. 
 This document will serve as a communication tool to align expectations, provide guidance during the design of this tool and aid in the development and testing phases of this project. 
 This SRS will be referenced throughout the development of the system to ensure the tool is within the scope and meets the outlined requirements. 
-
-\plt{This section summarizes the purpose of the SRS document.  It does not focus
-  on the problem itself.  The problem is described in the ``Problem
-  Description'' section (Section~\ref{Sec_pd}).  The purpose is for the document
-  in the context of the project itself, not in the context of this course.
-  Although the ``purpose'' of the document is to get a grade, you should not
-  mention this.  Instead, ``fake it'' as if this is a real project.  The purpose
-  section will be similar between projects.  The purpose of the document is the
-  purpose of the SRS, including communication, planning for the design stage,
-  etc.}
 
 \subsection{Scope of Requirements}
 
@@ -426,21 +395,9 @@ This SRS will be referenced throughout the development of the system to ensure t
 
 \subsection{Characteristics of Intended Reader} \label{sec_IntendedReader}
 
-Readers or reviewers of this SRS document should have a solid understanding of the principles of physics and calculus. Knowledge of the components in a Continuous Variable Transmission (CVT) and a basic understanding of how these parts work together will also be beneficial. Proficiency in these areas will enough to comprehend the material in this document.
-\plt{This section summarizes the skills and knowledge of the readers of the
-  SRS.  It does NOT have the same purpose as the ``User Characteristics''
-  section (Section~\ref{SecUserCharacteristics}).  The intended readers are the
-  people that will read, review and maintain the SRS.  They are the people that
-  will conceivably design the software that is intended to meet the
-  requirements.  The user, on the other hand, is the person that uses the
-  software that is built.  They may never read this SRS document.  Of course,
-  the same person could be a ``user'' and an ``intended reader.''}
-
-\plt{The intended reader characteristics should be written as unambiguously and
-  as specifically as possible.  Rather than say, the user should have an
-  understanding of physics, say what kind of physics and at what level.  For
-  instance, is high school physics adequate, or should the reader have had a
-  graduate course on advanced quantum mechanics?}
+Readers or reviewers of this SRS document should have a solid understanding of the principles of physics and calculus.
+Knowledge of the components in a Continuous Variable Transmission (CVT) and a basic understanding of how these parts work together will also be beneficial. 
+Proficiency in these areas will enough to comprehend the material in this document.
 
 \subsection{Organization of Document}
 
@@ -454,61 +411,21 @@ This document is structured as follows:
   \item Section 8 covers the traceability of the requirements
 \end{itemize}
 
-\plt{This section provides a roadmap of the SRS document.  It will help the
-  reader orient themselves.  It will provide direction that will help them
-  select which sections they want to read, and in what order.  This section will
-  be similar between project.}
-
 \section{General System Description}
 
 This section provides general information about the system.  It identifies the
 interfaces between the system and its environment, describes the user
-characteristics and lists the system constraints.  \plt{This text can likely be
-  borrowed verbatim.}
-
-\plt{The purpose of this section is to provide general information about the
-  system so the specific requirements in the next section will be easier to
-  understand. The general system description section is designed to be
-  changeable independent of changes to the functional requirements documented in
-  the specific system description. The general system description provides a
-  context for a family of related models.  The general description can stay the
-  same, while specific details are changed between family members.}
+characteristics and lists the system constraints.
 
 \subsection{System Context}
 
-\plt{Your system context will include a figure that shows the abstract view of
-  the software.  Often in a scientific context, the program can be viewed
-  abstractly following the design pattern of Inputs $\rightarrow$ Calculations
-  $\rightarrow$ Outputs.  The system context will therefore often follow this
-  pattern.  The user provides inputs, the system does the calculations, and then
-  provides the outputs to the user.  The figure should not show all of the
-  inputs, just an abstract view of the main categories of inputs (like material
-  properties, geometry, etc.).  Likewise, the outputs should be presented from
-  an abstract point of view.  In some cases the diagram will show other external
-  entities, besides the user.  For instance, when the software product is a
-  library, the user will be another software program, not an actual end user.
-  If there are system constraints that the software must work with external
-  libraries, these libraries can also be shown on the System Context diagram.
-  They should only be named with a specific library name if this is required by
-  the system constraint.}
-
 \begin{figure}[h!]
 \begin{center}
- \includegraphics[width=0.6\textwidth]{SystemContextFigure}
+ \includegraphics[width=0.9\textwidth]{{SystemContextFigure}}
 \caption{System Context}
 \label{Fig_SystemContext} 
 \end{center}
 \end{figure}
-
-\plt{For each of the entities in the system context diagram its responsibilities
-  should be listed.  Whenever possible the system should check for data quality,
-  but for some cases the user will need to assume that responsibility.  The list
-  of responsibilities should be about the inputs and outputs only, and they
-  should be abstract.  Details should not be presented here.  However, the
-  information should not be so abstract as to just say ``inputs'' and
-  ``outputs''.  A summarizing phrase can be used to characterize the inputs.
-  For instance, saying ``material properties'' provides some information, but it
-  stays away from the detail of listing every required properties.}
 
 \begin{itemize}
 \item User Responsibilities:
@@ -522,26 +439,7 @@ characteristics and lists the system constraints.  \plt{This text can likely be
 \end{itemize}
 \end{itemize}
 
-\plt{Identify in what context the software will typically be used.  Is it for
-exploration? education? engineering work? scientific work?. Identify whether it
-will be used for mission-critical or safety-critical applications.} \plt{This
-additional context information is needed to determine how much effort should be
-devoted to the rationale section.  If the application is safety-critical, the
-bar is higher.  This is currently less structured, but analogous to, the idea to
-the Automotive Safety Integrity Levels (ASILs) that McSCert uses in their
-automotive hazard analyses.}
-
-\wss{The }
 \subsection{User Characteristics} \label{SecUserCharacteristics}
-
-\plt{This section summarizes the knowledge/skills expected of the user.
-  Measuring usability, which is often a required non-function requirement,
-  requires knowledge of a typical user.  As mentioned above, the user is a
-  different role from the ``intended reader,'' as given in
-  Section~\ref{sec_IntendedReader}.  As in Section~\ref{sec_IntendedReader}, the
-  user characteristics should be specific an unambiguous.  For instance, ``The
-  end user of \progname{} should have an understanding of undergraduate Level 1
-  Calculus and Physics.''}
 
 The expected user of this application is someone who is very familiar with drivetrains and CVTs but not necessarily familiar with software.
 The software expects the user to know all of the components of a CVT and how they can be modified or adjusted.
@@ -550,13 +448,6 @@ On the software side, the user should be able to navigate a GUI and know how to 
 
 \subsection{System Constraints}
 
-\plt{System constraints differ from other type of requirements because they
-  limit the developers' options in the system design and they identify how the
-  eventual system must fit into the world. This is the only place in the SRS
-  where design decisions can be specified.  That is, the quality requirement for
-  abstraction is relaxed here.  However, system constraints should only be
-  included if they are truly required.}
-
 The system should be able to run on any machine that supports Python 3.9 or later and Unity projects.
 
 \section{Specific System Description}
@@ -564,8 +455,7 @@ The system should be able to run on any machine that supports Python 3.9 or late
 This section first presents the problem description, which gives a high-level
 view of the problem to be solved.  This is followed by the solution characteristics
 specification, which presents the assumptions, theories, definitions and finally
-the instance models.  \plt{Add any project specific details that are relevant
-  for the section overview.}
+the instance models. 
 
 \subsection{Problem Description} \label{Sec_pd}
 
@@ -600,27 +490,44 @@ easier to correctly understand the requirements:
 \item 
 
 \end{itemize}
+\begin{figure}[h!]
+  \begin{center}
+      \begin{minipage}{0.45\textwidth}
+          \includegraphics[scale=0.5]{primaryCVT.png}
+          \caption{Primary CVT}
+          \label{Fig_PrimaryCVT}
+      \end{minipage}
+      \hfill % This adds space between the figures
+      \begin{minipage}{0.45\textwidth}
+          \includegraphics[scale=0.5]{primaryCVTSideView.png}
+          \caption{Primary CVT Side View}
+          \label{Fig_PrimaryCVTSideView}
+      \end{minipage}
+  \end{center}
+\end{figure}
+
+\begin{figure}[h!]
+  \begin{center}
+      \begin{minipage}{0.45\textwidth}
+          \includegraphics[scale=0.5]{secondaryCVT.png}
+          \caption{Secondary CVT}
+          \label{Fig_SecondaryCVT}
+      \end{minipage}
+      \hfill % This adds space between the figures
+      \begin{minipage}{0.45\textwidth}
+          \includegraphics[scale=0.5]{secondaryCVTSideView.png}
+          \caption{Secondary CVT Side View}
+          \label{Fig_SecondaryCVTSideView}
+      \end{minipage}
+  \end{center}
+\end{figure}
+
+Note: The CVT that the McMaster Baja Team uses is slightly different from these figures but its mechanics are the same.
+
 
 \subsubsection{Physical System Description} \label{sec_phySystDescrip}
 
-\plt{The purpose of this section is to clearly and unambiguously state the
-  physical system that is to be modelled. Effective problem solving requires a
-  logical and organized approach. The statements on the physical system to be
-  studied should cover enough information to solve the problem. The physical
-  description involves element identification, where elements are defined as
-  independent and separable items of the physical system. Some example elements
-  include acceleration due to gravity, the mass of an object, and the size and
-  shape of an object. Each element should be identified and labelled, with their
-  interesting properties specified clearly. The physical description can also
-  include interactions of the elements, such as the following: i) the
-  interactions between the elements and their physical environment; ii) the
-  interactions between elements; and, iii) the initial or boundary conditions.}
-
-\plt{The elements of the physical system do not have to correspond to an actual
-physical entity.  They can be conceptual.  This is particularly important when
-the documentation is for a numerical method. }
-
-The physical system of \progname{}, as shown in Figure~?,
+The physical system of \progname{}, as shown in Figures 2-5,
 includes the following elements:
 
 \begin{itemize}
@@ -798,40 +705,28 @@ N/A
 
 \subsubsection{Assumptions} \label{sec_assumpt}
 
-\plt{The assumptions are a refinement of the scope.  The scope is general, where
-  the assumptions are specific.  All assumptions should be listed, even those
-  that domain experts know so well that they are rarely (if ever) written down.}
-\plt{The document should not take for granted that the reader knows which
-  assumptions have been made. In the case of unusual assumptions, it is
-  recommended that the documentation either include, or point to, an explanation
-  and justification for the assumption.}
-\plt{If it helps with the organization and understandability, the assumptions can be presented as sub sections.  The following sub-sections are options: background theory assumptions, helper theory assumptions, generic theory assumptions, problem specific assumptions, and rationale assumptions}
-
-This section simplifies the original problem and helps in developing the
-theoretical model by filling in the missing information for the physical system.
-The numbers given in the square brackets refer to the theoretical model [TM],
-general definition [GD], data definition [DD], instance model [IM], or likely
-change [LC], in which the respective assumption is used.
-
 \begin{itemize}
 
-\item[A\refstepcounter{assumpnum}\theassumpnum \label{A_meaningfulLabel}:]
-  \plt{Short description of each assumption.  Each assumption
-    should have a meaningful label.  Use cross-references to identify the
-    appropriate traceability to TM, GD, DD etc., using commands like dref, ddref
-    etc.  Each assumption should be atomi- that is, there should not be an
-    explicit (or implicit) ``and'' in the text of an assumption.}
+\item[A\refstepcounter{assumpnum}\theassumpnum \label{A_1}:]
+\textbf{Temperature variations} Ignore the effect of temperature on the material properties, excluding the belt.
 
-\end{itemize}
+\item[A\refstepcounter{assumpnum}\theassumpnum \label{A_2}:]
+\textbf{negligible Gravitational Influence}: The orientation of the CVT system and gravitational effects are considered negligible due to the high rotational speeds involved in the system's operation.
 
-\begin{itemize}
-  \item \textbf{Temperature variations}: Ignore the effect of temperature on the material properties, excluding the belt.
-  \item \textbf{negligible Gravitational Influence}: The orientation of the CVT system and gravitational effects are considered negligible due to the high rotational speeds involved in the system's operation.
-  \item \textbf{Elasticity of Belts}: Elasticity of belts are assumed negligible, and the components are considered ideally rigid under normal operating conditions.
-  \item \textbf{Vibrational Effects}: Vibrational effects from the vehicle or external environment are assumed to be minimal and are not factored into the transmission’s operation in this model.
-  \item \textbf{Wear and Tear}: Component wear over time, including belt/chain wear and pulley degradation, is assumed negligible in the short-term operational model.
-  \item \textbf{Frictional Losses in Non-critical Components}: Frictional losses in non-critical components (e.g., bearings, shafts) are assumed negligible, focusing only on friction relevant to the CVT system's core mechanics.
-  \item \textbf{Engine Behavior Assumption:} The engine is modeled to operate at full throttle with consistent power curves and peak performance, maintaining a uniform response throughout the analysis. Load feedback will be integrated to adjust RPM and power output as necessary.
+\item[A\refstepcounter{assumpnum}\theassumpnum \label{A_3}:]
+\textbf{Elasticity of Belts}: Elasticity of belts are assumed negligible, and the components are considered ideally rigid under normal operating conditions.
+
+\item[A\refstepcounter{assumpnum}\theassumpnum \label{A_4}:]
+\textbf{Vibrational Effects}: Vibrational effects from the vehicle or external environment are assumed to be minimal and are not factored into the transmission’s operation in this model.
+
+\item[A\refstepcounter{assumpnum}\theassumpnum \label{A_5}:]
+\textbf{Wear and Tear}: Component wear over time, including belt/chain wear and pulley degradation, is assumed negligible in the short-term operational model.
+
+\item[A\refstepcounter{assumpnum}\theassumpnum \label{A_6}:]
+\textbf{Frictional Losses in Non-critical Components}: Frictional losses in non-critical components (e.g., bearings, shafts) are assumed negligible, focusing only on friction relevant to the CVT system's core mechanics.
+
+\item[A\refstepcounter{assumpnum}\theassumpnum \label{A_7}:]
+\textbf{Engine Behavior Assumption:} The engine is modeled to operate at full throttle with consistent power curves and peak performance, maintaining a uniform response throughout the analysis. Load feedback will be integrated to adjust RPM and power output as necessary.
 \end{itemize}
 
 \subsubsection{Theoretical Models}\label{sec_theoretical}
@@ -852,297 +747,146 @@ This portion will specify the existing theories that are used in the development
 
 \noindent
 \deftheory
-% #2 refname of theory
-{TM:HL}
-% #3 label
-{Hookes Law}
-% #4 equation
-{
-  $F = k \Delta x$
-}
-% #5 description
-{
-  F is the force (N)\\
+{TM:HL}% #2 refname of theory
+{Hookes Law}% #3 label
+{$F = k \Delta x$}% #4 equation
+{F is the force (N)\\
   k is the spring constant (N/m)\\
-  $\Delta x$ is the displacement (m)\\
-}
-% #6 Notes
-{
-In the context of this project Hookes law is used in both a torsional and linear way.
-}
-% #7 Source
-{
-  \url{https://www.britannica.com/science/Hookes-law}
-}
-% #8 Referenced by
-{
-  
-}
-% #9 Preconditions
-{
-None
-}
-% #1 derivation - not applicable by default
-{}
+  $\Delta x$ is the displacement (m)\\}% #5 description
+{In the context of this project Hookes law is used in both a torsional and linear way.}% #6 Notes
+{\url{https://www.britannica.com/science/Hookes-law}}% #7 Source
+{}% #8 Referenced by
+{None}% #9 Preconditions
+{}% #1 derivation - not applicable by default
 
 ~\newline
 
 \noindent
 \deftheory
-% #2 refname of theory
-{TM:CF}
-% #3 label
-{Centrifugal Force}
-% #4 equation
-{
-  $F_c = m \omega^2 r$
-}
-% #5 description
-{
-  F is the force (N) \\
+{TM:CF}% #2 refname of theory
+{Centrifugal Force}% #3 label
+{$F_c = m \omega^2 r$}% #4 equation
+{F is the force (N) \\
   m is the mass (kg)\\
   $\omega$ is the angular velocity (rad/s)\\
-  r is the radius (m)\\
-}
-% #6 Notes
-{
-None.
-}
-% #7 Source
-{
-  \url{https://www.omnicalculator.com/physics/centrifugal-force}
-}
-% #8 Referenced by
-{
-  
-}
-% #9 Preconditions
-{
-None
-}
-% #1 derivation - not applicable by default
-{}
+  r is the radius (m)\\}% #5 description
+{None.}% #6 Notes
+{\url{https://www.omnicalculator.com/physics/centrifugal-force}}% #7 Source
+{}% #8 Referenced by
+{None}% #9 Preconditions
+{}% #1 derivation - not applicable by default
 
 ~\newline
 
 \noindent
 \deftheory
-% #2 refname of theory
-{TM:AR}
-% #3 label
-{Air Resistance}
-% #4 equation
-{
-  $F_d = \frac{1}{2} \rho v^2 C_d A$
-}
-% #5 description
-{
-  F is the force (N)\\
+{TM:AR}% #2 refname of theory
+{Air Resistance}% #3 label
+{$F_d = \frac{1}{2} \rho v^2 C_d A$}% #4 equation
+{F is the force (N)\\
   $\rho$ is the density of the fluid (kg/m$^3$)\\
   v is the velocity of the object (m/s)\\
   $C_d$ is the drag coefficient\\
-  A is the cross-sectional area of the object (m$^2$)\\
-}
-% #6 Notes
-{
-None.
-}
-% #7 Source
-{
-  \url{https://softschools.com/formulas/physics/air_resistance_formula/85/}
-}
-% #8 Referenced by
-{
-  
-}
-% #9 Preconditions
-{
-None
-}
-% #1 derivation - not applicable by default
-{}
+  A is the cross-sectional area of the object (m$^2$)\\}% #5 description
+{None.}% #6 Notes
+{\url{https://softschools.com/formulas/physics/air_resistance_formula/85/}}% #7 Source
+{}% #8 Referenced by
+{None}% #9 Preconditions
+{}% #1 derivation - not applicable by default
 
 ~\newline
 
 \noindent
 \deftheory
-% #2 refname of theory
-{TM:ET}
-% #3 label
-{Engine Torque}
-% #4 equation
-{
-$\tau = \frac{P}{\omega}$
-}
-% #5 description
-{
-  $\tau$ is the torque (N-m)\\
+{TM:ET} % #2 refname of theory
+{Engine Torque} % #3 label
+{$\tau = \frac{P}{\omega}$} % #4 equation
+{$\tau$ is the torque (N-m)\\
   P is the power (W)\\
-  $\omega$ is the angular velocity (rad/s)\\
-}
-% #6 Notes
-{
-None.
-}
-% #7 Source
-{
-  \url{https://powertestdyno.com/how-to-calculate-horsepower/}
-}
-% #8 Referenced by
-{
-  
-}
-% #9 Preconditions
-{
-None
-}
-% #1 derivation - not applicable by default
-{}
+  $\omega$ is the angular velocity (rad/s)\\}% #5 description
+{None.}% #6 Notes
+{\url{https://powertestdyno.com/how-to-calculate-horsepower/}}% #7 Source
+{}% #8 Referenced by
+{None}% #9 Preconditions
+{}% #1 derivation - not applicable by default
 
 ~\newline
 
 \noindent
 \deftheory
-% #2 refname of theory
-{TM:GR}
-% #3 label
-{Secondary Torque}
-% #4 equation
-{
-$\tau_{\text{output}} = \tau_{\text{input}} \times \text{gear reduction}$
-}
-% #5 description
-{
-  $\tau_{\text{output}}$ is the output torque (N-m)\\
-  $\tau_{\text{input}}$ is the input torque (N-m)\\
-}
-% #6 Notes
-{
-None.
-}
-% #7 Source
-{
-}
-% #8 Referenced by
-{
-  
-}
-% #9 Preconditions
-{
-None
-}
-% #1 derivation - not applicable by default
-{}
+{TM:GR}% #2 refname of theory
+{Secondary Torque}% #3 label
+{$\tau_{\text{output}} = \tau_{\text{input}} \times \text{gear reduction}$}% #4 equation
+{$\tau_{\text{output}}$ is the output torque (N-m)\\
+  $\tau_{\text{input}}$ is the input torque (N-m)\\}% #5 description
+{None.}% #6 Notes
+{}% #7 Source
+{}% #8 Referenced by
+{None}% #9 Preconditions
+{}% #1 derivation - not applicable by default
 
 ~\newline
 
 \noindent
 \deftheory
-% #2 refname of theory
-{TM:FR}
-% #3 label
-{Friction Formula}
-% #4 equation
-{
-$F_f = \mu F_n$
-}
-% #5 description
-{
-  $\mu_{\text{effective}}$ is the effective coefficient of friction\\
+{TM:FR}% #2 refname of theory
+{Friction Formula}% #3 label
+{$F_f = \mu F_n$}% #4 equation
+{$\mu_{\text{effective}}$ is the effective coefficient of friction\\
   $\mu_{\text{nominal}}$ is the nominal coefficient of friction\\
-  $\phi$ is the angle of wrap of the belt (radians)\\
-}
-% #6 Notes
-{
-None.
-}
-% #7 Source
-{
-
-}
-% #8 Referenced by
-{
-  
-}
-% #9 Preconditions
-{
-None
-}
-% #1 derivation - not applicable by default
-{}
+  $\phi$ is the angle of wrap of the belt (radians)\\}% #5 description
+{None.}% #6 Notes
+{}% #7 Source
+{}% #8 Referenced by
+{None}% #9 Preconditions
+{}% #1 derivation - not applicable by default
 
 \noindent
 \deftheory
-% #2 refname of theory
-{TM:DE}
-% #3 label
-{Density}
-% #4 equation
-{
-  $\rho = \frac{m}{V}$
-}
-% #5 description
-{
-  $\rho$ is the density (kg/m$^3$)\\
+{TM:DE}% #2 refname of theory
+{Density}% #3 label
+{$\rho = \frac{m}{V}$}% #4 equation
+{$\rho$ is the density (kg/m$^3$)\\
   m is the mass (kg)\\
-  V is the volume (m$^3$)\\
-}
-% #6 Notes
-{
-None.
-}
-% #7 Source
-{
-\url{https://www.britannica.com/science/density-physics}
-}
-% #8 Referenced by
-{
-  
-}
-% #9 Preconditions
-{
-None
-}
-% #1 derivation - not applicable by default
-{}
+  V is the volume (m$^3$)\\}% #5 description
+{None.}% #6 Notes
+{\url{https://www.britannica.com/science/density-physics}}% #7 Source
+{}% #8 Referenced by
+{None}% #9 Preconditions
+{}% #1 derivation - not applicable by default
 
 ~\newline
 
 \noindent
 \deftheory
-% #2 refname of theory
-{TM:CE}
-% #3 label
-{Capstan Equation}
-% #4 equation
-{
-  $T_1 = T_2 e^{\mu \theta}$
-}
-% #5 description
-{
-  $T_1$ is the tension on the first side of the belt (N)\\
+{TM:CE}% #2 refname of theory
+{Capstan Equation}% #3 label
+{$T_1 = T_2 e^{\mu \theta}$}% #4 equation
+{$T_1$ is the tension on the first side of the belt (N)\\
   $T_2$ is the tension on the second side of the belt (N)\\
   $\mu$ is the coefficient of friction\\
-  $\theta$ is the angle of wrap of the belt (radians)\\
-}
-% #6 Notes
-{
-None.
-}
-% #7 Source
-{
-\url{https://hackaday.com/2021/01/26/cable-mechanism-maths-designing-against-the-capstan-equation/}
-}
-% #8 Referenced by
-{
-  
-}
-% #9 Preconditions
-{
-None
-}
-% #1 derivation - not applicable by default
-{}
+  $\theta$ is the angle of wrap of the belt (radians)\\}% #5 description
+{None.}% #6 Notes
+{\url{https://hackaday.com/2021/01/26/cable-mechanism-maths-designing-against-the-capstan-equation/}}% #7 Source
+{}% #8 Referenced by
+{None}% #9 Preconditions
+{}% #1 derivation - not applicable by default
+
+~\newline
+
+\noindent
+\deftheory
+{TM:N2}% #2 refname of theory
+{Newtons 2nd Law}% #3 label
+{$F = ma$}% #4 equation
+{  F is the force (N)\\
+  m is the mass (kg)\\
+  a is the acceleration (m/s$^2$)\\}% #5 description
+{Newtons 2nd law is used repeatedly in several Instance models}% #6 Notes
+{\url{https://www.physicsclassroom.com/class/newtlaws/lesson-3/newton-s-second-law}}% #7 Source
+{}% #8 Referenced by
+{None}% #9 Preconditions
+{}% #1 derivation - not applicable by default
 
 \subsubsection*{Helper Theories}
 This portion will define auxiliary theories to aid in further derivation below.
@@ -1468,9 +1212,6 @@ A correct solution must exhibit \plt{fill in the details}.  \plt{These
 
 \section{Requirements}
 
-\plt{The requirements refine the goal statement.  They will make heavy use of
-  references to the instance models.}
-
 This section provides the functional requirements, the business tasks that the
 software is expected to complete, and the nonfunctional requirements, the
 qualities that the software is expected to exhibit.
@@ -1498,47 +1239,9 @@ qualities that the software is expected to exhibit.
 \item[R\refstepcounter{reqnum}\thereqnum \label{R_Inputs}:] The system shall allow users to access the application through the use of a personal computer or laptop.
 
 \item[R\refstepcounter{reqnum}\thereqnum \label{R_Inputs}:] The system shall be compatible with Windows, MacOS and Linux.
-
-\item[R\refstepcounter{reqnum}\thereqnum \label{R_Inputs}:] \plt{Requirements
-    for the inputs that are supplied by the user.  This information has to be
-    explicit.}
-
-\item[R\refstepcounter{reqnum}\thereqnum \label{R_OutputInputs}:] \plt{It isn't
-    always required, but often echoing the inputs as part of the output is a
-    good idea.}
-
-\item[R\refstepcounter{reqnum}\thereqnum \label{R_Calculate}:] \plt{Calculation
-    related requirements.}
-
-\item[R\refstepcounter{reqnum}\thereqnum \label{R_VerifyOutput}:]
-  \plt{Verification related requirements.}
-
-\item[R\refstepcounter{reqnum}\thereqnum \label{R_Output}:] \plt{Output related
-    requirements.}
-
 \end{itemize}
 
-\plt{Every IM should map to at least one requirement, but not every requirement
-  has to map to a corresponding IM.}
-
 \subsection{Nonfunctional Requirements}
-
-\plt{List your nonfunctional requirements.  You may consider using a fit
-  criterion to make them verifiable.}
-\plt{The goal is for the nonfunctional requirements to be unambiguous, abstract
-  and verifiable.  This isn't easy to show succinctly, so a good strategy may be
-to give a ``high level'' view of the requirement, but allow for the details to
-be covered in the Verification and Validation document.}
-\plt{An absolute requirement on a quality of the system is rarely needed.  For
-  instance, an accuracy of 0.0101 \% is likely fine, even if the requirement is
-  for 0.01 \% accuracy.  Therefore, the emphasis will often be more on
-  describing now well the quality is achieved, through experimentation, and
-  possibly theory, rather than meeting some bar that was defined a priori.}
-\plt{You do not need an entry for correctness in your NFRs.  The purpose of the
-  SRS is to record the requirements that need to be satisfied for correctness.
-  Any statement of correctness would just be redundant. Rather than discuss
-  correctness, you can characterize how far away from the correct (true)
-  solution you are allowed to be.  This is discussed under accuracy.}
 
 \noindent \begin{itemize}
 
@@ -1562,10 +1265,6 @@ Wear and tear of components, including the belt and pulley are disregarded for s
 Frictional losses in non-critical components, are deemed negligible, allowing the focus to frictional effects that directly impact the CVT’s core mechanics (A6). 
 Finally, the engine is assumed to operate at full throttle with consistent power delivery, simplifying the model by maintaining uniform engine behavior (A4).
 These simplifications affect the process of formulating equations governing velocity, distance, primary clamping force, secondary clamping force, CVT Ratio, Torque transfer and RPM and Torque of the Engine(IM1-IM8)
-
-\plt{Provide a rationale for the decisions made in the documentation.  Rationale
-should be provided for scope decisions, modelling decisions, assumptions and
-typical values.}
 
 \section{Likely Changes}    
 
