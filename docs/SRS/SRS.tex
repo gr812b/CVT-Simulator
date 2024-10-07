@@ -185,8 +185,8 @@ description of the unit and the SI name.
     \si{\celsius} & temperature & centigrade\\
     \si{\joule} & energy & joule\\
     \si{\watt} & power & watt (W = \si{\joule\per\second})\\
-    \si{\newton} & force & N (N = \si{\kilogram \metre\per\square\second} )\\
-    \si{torque} & torque & Nm (Nm = \si{\newton\metre})\\
+    \si{\newton} & force & newtons (N = \si{\kilogram \metre\per\square\second} )\\
+    Nm & torque & newton metre (Nm = \si{\kilogram \square\metre\per\square\second})\\
     \si{\radian} & angle & radian\\
     \bottomrule
   \end{tabular}
@@ -607,29 +607,82 @@ The physical system of \progname{}, as shown in Figure~?,
 includes the following elements:
 
 \begin{itemize}
-  \item Fly weights (with mass $m_{\text{fly}}$ and initial radius $r_{\text{fly initial}}$ and final radius $r_{\text{fly final}}$)
-  \item Primary spring (with spring constant $k_{\text{primary}}$ and pretension $d_{\text{primary}}$)
-  \item Primary ramp geometry (with function $f_{\text{primary}}$ taking in distance $d_{\text{primary in}}$ returning angle $\theta_{\text{primary out}}$ and height $h_{\text{primary}}$)
-  \item Secondary spring (with compression spring constant $k_{\text{secondary comp}}$, torsional spring rate $k_{\text{secondary tor}}$ and pretension $d_{\text{secondary}}$)
-  \item Secondary ramp geometry (with function $f_{\text{secondary}}$ taking in angle $\theta_{\text{secondary in}}$ returning angle $\theta_{\text{secondary out}}$)
-  \item Center to Center distance (with distance $d_{\text{center}}$)
-  \item Traction (with coefficient of friction $\mu_{traction}$)
-  \item Driver Weight (with mass $m_{\text{driver}}$)
-  \item Angle on Incline (with angle $\theta_{\text{incline}}$)
-  \item Car Weight (with mass $m_{\text{car}}$)
-  \item Total reduction (with gearbox reduction ratio $r_{\text{gearbox}}$ and wheel radius $r_{\text{wheel}}$) relative to the ground
-  \item Engine (with torque function over rpm $P_{\text{engine}}$ return torque $T_{\text{engine}}$)
-  \item Sheave / Belt (with angle $\theta_{\text{sheave}}$)
-  \item Secondary Ramp Radius (with radius $r_{\text{secondary ramp}}$)
-  \item Coefficient of air resistance (with coefficient $\mu_{air}$)
-  \item Belt sheave friction (with coefficient $\mu_{\text{belt sheave}}$)
+
+\item[PS1:] Fly weights
+\begin{itemize}
+  \item [PS1a:] mass ($m_{\text{fly}}$)
+  \item [PS1b:] initial radius ($r_{\text{fly\_init}}$)
+  \item [PS1c:] final radius ($r_{\text{fly\_final}}$)
 \end{itemize}
 
+\item[PS2:] Primary spring
+
 \begin{itemize}
+  \item [PS2a:] spring constant ($k_{\text{prim}}$)
+  \item [PS2b:] pretension ($d_{\text{prim}}$)
+\end{itemize}
 
-\item[PS1:]
+\item[PS3:] Primary ramp geometry function ($f_{\text{prim}}$)
 
-\item[PS2:] ...
+\begin{itemize}
+  \item [PS3a:] input distance ($d_{\text{prim\_in}}$)
+  \item [PS3b:] output angle ($\theta_{\text{prim\_out}}$)
+  \item [PS3c:] output height ($h_{\text{prim}}$)
+\end{itemize}
+
+\item[PS4:] Secondary spring
+
+\begin{itemize}
+  \item [PS4a:] compression spring constant ($k_{\text{sec\_comp}}$)
+  \item [PS4b:] torsional spring rate ($k_{\text{sec\_tor}}$)
+  \item [PS4c:] pretension ($d_{\text{sec}}$)
+\end{itemize}
+
+\item[PS5:] Secondary ramp geometry function ($f_{\text{sec}}$)
+
+\begin{itemize}
+  \item [PS5a:] input angle ($\theta_{\text{sec\_in}}$)
+  \item [PS5b:] output angle ($\theta_{\text{sec\_out}}$)
+\end{itemize}
+
+\item[PS6:] Weight
+
+\begin{itemize}
+  \item [PS6a:] driver weight ($m_{\text{driver}}$)
+  \item [PS6b:] car weight ($m_{\text{car}}$)
+\end{itemize}
+
+\item[PS7:] Engine torque function ($f_{\text{engine}}$)
+
+\begin{itemize}
+  \item [PS7a:] input rpm ($\text{rpm}_{\text{engine}}$)
+  \item [PS7b:] output torque ($T_{\text{engine}}$)
+\end{itemize}
+
+\item[PS8:] Belt
+
+\begin{itemize}
+  \item [PS8a:] angle with sheave ($\theta_{\text{belt}}$)
+  \item [PS8b:] friction coefficient ($\mu_{\text{belt}}$)
+\end{itemize}
+
+\item[PS9:] Total reduction
+
+\begin{itemize}
+  \item [PS9a:] gearbox reduction ratio ($r_{\text{gearbox}}$)
+  \item [PS9b:] wheel radius ($r_{\text{wheel}}$)
+\end{itemize}
+
+\item[PS10:] Coefficient of air resistance ($\mu_{\text{air}}$)
+
+\item[PS11:] Center to Center distance ($d_{\text{center}}$)
+
+\item[PS12:] Angle on Incline ($\theta_{\text{incline}}$)
+
+\item[PS13:] Secondary Ramp Radius ($r_{\text{sec\_ramp}}$)
+
+\item[PS14:] Traction ($\mu_{\text{traction}}$)
+
 
 \end{itemize}
 
