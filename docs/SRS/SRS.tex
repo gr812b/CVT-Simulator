@@ -186,6 +186,8 @@ description of the unit and the SI name.
     \si{\joule} & energy & joule\\
     \si{\watt} & power & watt (W = \si{\joule\per\second})\\
     \si{\newton} & force & N (N = \si{\kilogram \metre\per\square\second} )\\
+    \si{\torque} & torque & Nm (Nm = \si{\newton\metre})\\
+    \si{\radian} & angle & radian\\
     \bottomrule
   \end{tabular}
   %	\caption{Provide a caption}
@@ -566,6 +568,15 @@ sections and their meaning, with the purpose of reducing ambiguity and making it
 easier to correctly understand the requirements:
 
 \begin{itemize}
+  \item rpm
+  \item CVT
+  \item torque
+  \item Primary RPM
+  \item Secondary RPM
+  \item Belt
+  \item Ramp
+  \item Fly Weight
+\begin{itemize}
 
 \item 
 
@@ -690,17 +701,13 @@ models can be verified.
 
 \subsubsection{Types}
 
-\plt{This section is optional. Defining types can make the document easier to
-understand.}
 N/A
 
 \subsubsection{Scope Decisions}
 
-\plt{This section is optional.}
 N/A
 \subsubsection{Modelling Decisions}
 
-\plt{This section is optional.}
 N/A
 
 \subsubsection{Assumptions} \label{sec_assumpt}
@@ -801,11 +808,13 @@ None
 }
 % #5 description
 {
-  Something about hookes law
+  F is the force (N)
+  k is the spring constant (N/m)
+  $\Delta x$ is the displacement (m)
 }
 % #6 Notes
 {
-None.
+In the context of this project Hookes law is used in both a torsional and linear way.
 }
 % #7 Source
 {
@@ -836,7 +845,10 @@ None
 }
 % #5 description
 {
-  something about CF
+  F is the force (N)
+  m is the mass (kg)
+  $\omega$ is the angular velocity (rad/s)
+  r is the radius (m)
 }
 % #6 Notes
 {
@@ -871,7 +883,11 @@ None
 }
 % #5 description
 {
-  something about air resistance
+  F is the force (N)
+  $\rho$ is the density of the fluid (kg/m$^3$)
+  v is the velocity of the object (m/s)
+  $C_d$ is the drag coefficient
+  A is the cross-sectional area of the object (m$^2$)
 }
 % #6 Notes
 {
@@ -902,11 +918,13 @@ None
 {Engine Torque}
 % #4 equation
 {
-
+$\tau = \frac{P}{\omega}$
 }
 % #5 description
 {
-  something about primary torque
+  $\tau$ is the torque (N-m)
+  P is the power (W)
+  $\omega$ is the angular velocity (rad/s)
 }
 % #6 Notes
 {
@@ -914,6 +932,7 @@ None.
 }
 % #7 Source
 {
+  \url{https://powertestdyno.com/how-to-calculate-horsepower/}
 }
 % #8 Referenced by
 {
@@ -933,14 +952,15 @@ None
 % #2 refname of theory
 {TM:GR}
 % #3 label
-{Gear Reduction}
+{Secondary Torque}
 % #4 equation
 {
-
+$\tau_{\text{output}} = \tau_{\text{input}} \times \text{gear reduction}$
 }
 % #5 description
 {
-  something about gear reduction
+  $\tau_{\text{output}}$ is the output torque (N-m)
+  $\tau_{\text{input}}$ is the input torque (N-m)
 }
 % #6 Notes
 {
@@ -970,11 +990,13 @@ None
 {Friction Formula}
 % #4 equation
 {
-
+  \mu_{\text{effective}} = \mu_{\text{nominal}} \sin \left( \frac{\phi}{2} \right)
 }
 % #5 description
 {
-  something about friction
+  $\mu_{\text{effective}}$ is the effective coefficient of friction
+  $\mu_{\text{nominal}}$ is the nominal coefficient of friction
+  $\phi$ is the angle of wrap of the belt (radians)
 }
 % #6 Notes
 {
@@ -999,16 +1021,18 @@ None
 \noindent
 \deftheory
 % #2 refname of theory
-{TM:WA}
+{TM:DE}
 % #3 label
-{Wrap Angle}
+{Density}
 % #4 equation
 {
-
+  $\rho = \frac{m}{V}$
 }
 % #5 description
 {
-  something about wrap angle
+  $\rho$ is the density (kg/m$^3$)
+  m is the mass (kg)
+  V is the volume (m$^3$)
 }
 % #6 Notes
 {
@@ -1016,6 +1040,7 @@ None.
 }
 % #7 Source
 {
+\url{https://www.britannica.com/science/density-physics}
 }
 % #8 Referenced by
 {
@@ -1033,16 +1058,19 @@ None
 \noindent
 \deftheory
 % #2 refname of theory
-{TM:TL}
+{TM:CE}
 % #3 label
-{Torque Load on CVT}
+{Capstan Equation}
 % #4 equation
 {
-
+  $T_1 = T_2 e^{\mu \theta}$
 }
 % #5 description
 {
-  something about vehicle torque load on CVT
+  $T_1$ is the tension on the first side of the belt (N)
+  $T_2$ is the tension on the second side of the belt (N)
+  $\mu$ is the coefficient of friction
+  $\theta$ is the angle of wrap of the belt (radians)
 }
 % #6 Notes
 {
@@ -1050,6 +1078,7 @@ None.
 }
 % #7 Source
 {
+\url{https://hackaday.com/2021/01/26/cable-mechanism-maths-designing-against-the-capstan-equation/}
 }
 % #8 Referenced by
 {
@@ -1061,6 +1090,8 @@ None
 }
 % #1 derivation - not applicable by default
 {}
+capstan equation
+
 
 \plt{``Ref.\ By'' is used repeatedly with the different types of information.
   This stands for Referenced By.  It means that the models, definitions and
