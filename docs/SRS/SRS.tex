@@ -607,8 +607,27 @@ The physical system of \progname{}, as shown in Figure~?,
 includes the following elements:
 
 \begin{itemize}
+  \item Fly weights (with mass $m_{\text{fly}}$ and initial radius $r_{\text{fly initial}}$ and final radius $r_{\text{fly final}}$)
+  \item Primary spring (with spring constant $k_{\text{primary}}$ and pretension $d_{\text{primary}}$)
+  \item Primary ramp geometry (with function $f_{\text{primary}}$ taking in distance $d_{\text{primary in}}$ returning angle $\theta_{\text{primary out}}$ and height $h_{\text{primary}}$)
+  \item Secondary spring (with compression spring constant $k_{\text{secondary comp}}$, torsional spring rate $k_{\text{secondary tor}}$ and pretension $d_{\text{secondary}}$)
+  \item Secondary ramp geometry (with function $f_{\text{secondary}}$ taking in angle $\theta_{\text{secondary in}}$ returning angle $\theta_{\text{secondary out}}$)
+  \item Center to Center distance (with distance $d_{\text{center}}$)
+  \item Traction (with coefficient of friction $\mu_{traction}$)
+  \item Driver Weight (with mass $m_{\text{driver}}$)
+  \item Angle on Incline (with angle $\theta_{\text{incline}}$)
+  \item Car Weight (with mass $m_{\text{car}}$)
+  \item Total reduction (with gearbox reduction ratio $r_{\text{gearbox}}$ and wheel radius $r_{\text{wheel}}$) relative to the ground
+  \item Engine (with torque function over rpm $P_{\text{engine}}$ return torque $T_{\text{engine}}$)
+  \item Sheave / Belt (with angle $\theta_{\text{sheave}}$)
+  \item Secondary Ramp Radius (with radius $r_{\text{secondary ramp}}$)
+  \item Coefficient of air resistance (with coefficient $\mu_{air}$)
+  \item Belt sheave friction (with coefficient $\mu_{\text{belt sheave}}$)
+\end{itemize}
 
-\item[PS1:] 
+\begin{itemize}
+
+\item[PS1:]
 
 \item[PS2:] ...
 
@@ -641,8 +660,14 @@ includes the following elements:
 \noindent Given the \plt{inputs}, the goal statements are:
 
 \begin{itemize}
+  \item Simulates the kinematics of the vehicle
+  \item Simulates the output of the engine
+  \item Simulates the CVT system over time
+\end{itemize}
 
-\item[GS\refstepcounter{goalnum}\thegoalnum \label{G_meaningfulLabel}:] \plt{One
+\begin{itemize}
+
+\item[GS\refstepcounter{goalnum}\thegoalnum \label{djaflkdsjfsad}:] \plt{One
     sentence description of the goal.  There may be more than one.  Each Goal
     should have a meaningful label.}
 
@@ -738,6 +763,16 @@ change [LC], in which the respective assumption is used.
     etc.  Each assumption should be atomi- that is, there should not be an
     explicit (or implicit) ``and'' in the text of an assumption.}
 
+\end{itemize}
+
+\begin{itemize}
+  \item \textbf{Temperature variations}: Ignore the effect of temperature on the material properties, excluding the belt.
+  \item \textbf{negligible Gravitational Influence}: The orientation of the CVT system and gravitational effects are considered negligible due to the high rotational speeds involved in the system's operation.
+  \item \textbf{Elasticity of Belts}: Elasticity of belts are assumed negligible, and the components are considered ideally rigid under normal operating conditions.
+  \item \textbf{Vibrational Effects}: Vibrational effects from the vehicle or external environment are assumed to be minimal and are not factored into the transmission’s operation in this model.
+  \item \textbf{Wear and Tear}: Component wear over time, including belt/chain wear and pulley degradation, is assumed negligible in the short-term operational model.
+  \item \textbf{Frictional Losses in Non-critical Components}: Frictional losses in non-critical components (e.g., bearings, shafts) are assumed negligible, focusing only on friction relevant to the CVT system's core mechanics.
+  \item \textbf{Engine Behavior Assumption:} The engine is modeled to operate at full throttle with consistent power curves and peak performance, maintaining a uniform response throughout the analysis. Load feedback will be integrated to adjust RPM and power output as necessary.
 \end{itemize}
 
 \subsubsection{Theoretical Models}\label{sec_theoretical}
