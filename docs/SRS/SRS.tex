@@ -810,9 +810,9 @@ None
 }
 % #5 description
 {
-  F is the force (N)
-  k is the spring constant (N/m)
-  $\Delta x$ is the displacement (m)
+  F is the force (N)\\
+  k is the spring constant (N/m)\\
+  $\Delta x$ is the displacement (m)\\
 }
 % #6 Notes
 {
@@ -847,10 +847,10 @@ None
 }
 % #5 description
 {
-  F is the force (N)
-  m is the mass (kg)
-  $\omega$ is the angular velocity (rad/s)
-  r is the radius (m)
+  F is the force (N) \\
+  m is the mass (kg)\\
+  $\omega$ is the angular velocity (rad/s)\\
+  r is the radius (m)\\
 }
 % #6 Notes
 {
@@ -885,11 +885,11 @@ None
 }
 % #5 description
 {
-  F is the force (N)
-  $\rho$ is the density of the fluid (kg/m$^3$)
-  v is the velocity of the object (m/s)
-  $C_d$ is the drag coefficient
-  A is the cross-sectional area of the object (m$^2$)
+  F is the force (N)\\
+  $\rho$ is the density of the fluid (kg/m$^3$)\\
+  v is the velocity of the object (m/s)\\
+  $C_d$ is the drag coefficient\\
+  A is the cross-sectional area of the object (m$^2$)\\
 }
 % #6 Notes
 {
@@ -924,9 +924,9 @@ $\tau = \frac{P}{\omega}$
 }
 % #5 description
 {
-  $\tau$ is the torque (N-m)
-  P is the power (W)
-  $\omega$ is the angular velocity (rad/s)
+  $\tau$ is the torque (N-m)\\
+  P is the power (W)\\
+  $\omega$ is the angular velocity (rad/s)\\
 }
 % #6 Notes
 {
@@ -961,8 +961,8 @@ $\tau_{\text{output}} = \tau_{\text{input}} \times \text{gear reduction}$
 }
 % #5 description
 {
-  $\tau_{\text{output}}$ is the output torque (N-m)
-  $\tau_{\text{input}}$ is the input torque (N-m)
+  $\tau_{\text{output}}$ is the output torque (N-m)\\
+  $\tau_{\text{input}}$ is the input torque (N-m)\\
 }
 % #6 Notes
 {
@@ -996,9 +996,9 @@ $F_f = \mu F_n$
 }
 % #5 description
 {
-  $\mu_{\text{effective}}$ is the effective coefficient of friction
-  $\mu_{\text{nominal}}$ is the nominal coefficient of friction
-  $\phi$ is the angle of wrap of the belt (radians)
+  $\mu_{\text{effective}}$ is the effective coefficient of friction\\
+  $\mu_{\text{nominal}}$ is the nominal coefficient of friction\\
+  $\phi$ is the angle of wrap of the belt (radians)\\
 }
 % #6 Notes
 {
@@ -1033,9 +1033,9 @@ None
 }
 % #5 description
 {
-  $\rho$ is the density (kg/m$^3$)
-  m is the mass (kg)
-  V is the volume (m$^3$)
+  $\rho$ is the density (kg/m$^3$)\\
+  m is the mass (kg)\\
+  V is the volume (m$^3$)\\
 }
 % #6 Notes
 {
@@ -1070,10 +1070,10 @@ None
 }
 % #5 description
 {
-  $T_1$ is the tension on the first side of the belt (N)
-  $T_2$ is the tension on the second side of the belt (N)
-  $\mu$ is the coefficient of friction
-  $\theta$ is the angle of wrap of the belt (radians)
+  $T_1$ is the tension on the first side of the belt (N)\\
+  $T_2$ is the tension on the second side of the belt (N)\\
+  $\mu$ is the coefficient of friction\\
+  $\theta$ is the angle of wrap of the belt (radians)\\
 }
 % #6 Notes
 {
@@ -1121,13 +1121,6 @@ instance models.
   add additional definitions as appropriate.}
 
 We do not have any general definitions at this time.
-
-\subsubsection*{Detailed derivation of simplified rate of change of temperature}
-
-\plt{This may be necessary when the necessary information does not fit in the
-  description field.}
-\plt{Derivations are important for justifying a given GD.  You want it to be
-  clear where the equation came from.}
 
 \subsubsection{Data Definitions}\label{sec_datadef}
 
@@ -1301,11 +1294,13 @@ The goals \plt{reference your goals} are solved by \plt{reference your instance
   \hline
   Label& \bf Velocity \\
   \hline
-  Input&something\\
+  Input&$a(t)$\\
   \hline
-  Output&Something \\
+  Equation&$v(t) = \int a(t) dt$\\
   \hline
-  Description&Something \\
+  Output&$v(t)$\\
+  \hline
+  Description& $a(t)$ is the function of acceleration over time \\
   \hline
   Sources& Citation here \\
   \hline
@@ -1325,11 +1320,13 @@ The goals \plt{reference your goals} are solved by \plt{reference your instance
   \hline
   Label& \bf Distance \\
   \hline
-  Input&something\\
+  Input&$v(t)$\\
   \hline
-  Output&Something \\
+  Equation&$d(t) = \int v(t) dt$\\
   \hline
-  Description&Something \\
+  Output&$d(t)$ \\
+  \hline
+  Description&$v(t)$ is the function of velocity over time\\
   \hline
   Sources& Citation here \\
   \hline
@@ -1338,29 +1335,8 @@ The goals \plt{reference your goals} are solved by \plt{reference your instance
 \end{tabular}
 \end{minipage}\\
 
-~\newline
-\noindent
-\begin{minipage}{\textwidth}
-\renewcommand*{\arraystretch}{1.5}
-\begin{tabular}{| p{\colAwidth} | p{\colBwidth}|}
-  \hline
-  \rowcolor[gray]{0.9}
-  Number& IM\refstepcounter{instnum}\theinstnum \label{ewat}\\
-  \hline
-  Label& \bf Acceleration \\
-  \hline
-  Input&something\\
-  \hline
-  Output&Something \\
-  \hline
-  Description&Something \\
-  \hline
-  Sources& Citation here \\
-  \hline
-  Ref.\ By & \iref{epcm}\\
-  \hline
-\end{tabular}
-\end{minipage}\\
+\subsubsection*{Derivation of acceleration}
+
 
 ~\newline
 \noindent
