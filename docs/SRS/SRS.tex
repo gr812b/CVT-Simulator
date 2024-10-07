@@ -152,7 +152,33 @@
   \hline
 \end{tabular}
 \end{minipage}\\
+}
 
+\newcommand{\defdata}[8] {
+  \noindent
+\begin{minipage}{\textwidth}
+\renewcommand*{\arraystretch}{1.5}
+\begin{tabular}{| p{\colAwidth} | p{\colBwidth}|}
+\hline
+\rowcolor[gray]{0.9}
+Number& DD\refstepcounter{datadefnum}\thedatadefnum \label{#1}\\
+\hline
+Label& \bf #2\\
+\hline
+Symbol & #3\\
+\hline
+SI Units & #4\\
+\hline
+Equation& #5\\
+\hline
+Description & #6\\
+\hline
+Sources& #7 \\
+\hline
+Ref.\ By & #8\\
+\hline
+\end{tabular}
+\end{minipage}\\
 }
 
 \begin{document}
@@ -480,21 +506,19 @@ sections and their meaning, with the purpose of reducing ambiguity and making it
 easier to correctly understand the requirements:
 
 \begin{itemize}
-  \item rpm
-  \item CVT
-  \item torque
-  \item Primary RPM
-  \item Secondary RPM
-  \item Belt
-  \item Ramp
-  \item Fly Weight
+  \item RPM - Revolutions Per Minute, a measure of rotational speed.
+  \item CVT - Continuous Variable Transmission
+  \item Torque - The rotational force produced by the engine or seen as load by the wheels. 
+  \item Primary RPM - The RPM of the primary CVT.
+  \item Secondary RPM - The RPM of the secondary CVT.
+  \item Belt - The rubber V-belt that connects the primary and secondary CVT.
+  \item Primary ramp - The ramp that the fly weights in the primary CVT push against. Highlighted green in Figure \ref{Fig_PrimaryCVT}.
+  \item Flyweight - The weights that experience centrifugal force and push against the primary ramp. Highlighted yellow in Figure \ref{Fig_PrimaryCVT}.
+  \item Helix - The helical ramp that the secondary CVT pushes against. Highlighted bronze in Figure \ref{Fig_SecondaryCVT}.
+  \item CVT System - This is the entire system that includes the primary and secondary CVT and the belt. The primary CVT is connected to the engine and the secondary CVT is connected to the wheels.
 \end{itemize}
-  \begin{itemize}
 
-\item 
-
-\end{itemize}
-\begin{figure}[h!]
+\begin{figure}[H]
   \begin{center}
       \begin{minipage}{0.45\textwidth}
           \includegraphics[scale=0.5]{primaryCVT.png}
@@ -510,7 +534,7 @@ easier to correctly understand the requirements:
   \end{center}
 \end{figure}
 
-\begin{figure}[h!]
+\begin{figure}[H]
   \begin{center}
       \begin{minipage}{0.45\textwidth}
           \includegraphics[scale=0.5]{secondaryCVT.png}
@@ -526,7 +550,7 @@ easier to correctly understand the requirements:
   \end{center}
 \end{figure}
 
-Note: The CVT that the McMaster Baja Team uses is slightly different from these figures but its mechanics are the same.
+Note: While the McMaster Baja Team's CVT differs slightly from these figures, its mechanics remain widely equivalent.
 
 
 \subsubsection{Physical System Description} \label{sec_phySystDescrip}
@@ -699,13 +723,13 @@ N/A
 \begin{itemize}
 
 \item[A\refstepcounter{assumpnum}\theassumpnum \label{A_1}:]
-\textbf{Temperature variations} Ignore the effect of temperature on the material properties, excluding the belt.
+\textbf{Temperature Variations} Ignore the effect of temperature on the material properties, excluding the belt.
 
 \item[A\refstepcounter{assumpnum}\theassumpnum \label{A_2}:]
-\textbf{negligible Gravitational Influence}: The orientation of the CVT system and gravitational effects are considered negligible due to the high rotational speeds involved in the system's operation.
+\textbf{Negligible Gravitational Influence}: The orientation of the CVT system and gravitational effects are considered negligible due to the high rotational speeds involved in the system's operation.
 
 \item[A\refstepcounter{assumpnum}\theassumpnum \label{A_3}:]
-\textbf{Elasticity of Belts}: Elasticity of belts are assumed negligible, and the components are considered ideally rigid under normal operating conditions.
+\textbf{Elasticity of Belts}: Elasticity of belts are assumed negligible through its length, and the components are considered ideally rigid under normal operating conditions. The belt may still rotate about the pulleys.
 
 \item[A\refstepcounter{assumpnum}\theassumpnum \label{A_4}:]
 \textbf{Vibrational Effects}: Vibrational effects from the vehicle or external environment are assumed to be minimal and are not factored into the transmission’s operation in this model.
@@ -806,12 +830,12 @@ This portion will specify the existing theories that are used in the development
 \noindent
 \deftheory
 {TM:GR}% #2 refname of theory
-{Secondary Torque}% #3 label
+{Gearing}% #3 label
 {$\tau_{\text{output}} = \tau_{\text{input}} \times \text{gear reduction}$}% #4 equation
 {$\tau_{\text{output}}$ is the output torque (N-m)\\
   $\tau_{\text{input}}$ is the input torque (N-m)\\}% #5 description
 {None.}% #6 Notes
-{}% #7 Source
+{\url{https://science.howstuffworks.com/transport/engines-equipment/gear-ratio.htm}}% #7 Source
 {}% #8 Referenced by
 {None}% #9 Preconditions
 {}% #1 derivation - not applicable by default
@@ -827,7 +851,7 @@ This portion will specify the existing theories that are used in the development
   $\mu_{\text{nominal}}$ is the nominal coefficient of friction\\
   $\phi$ is the angle of wrap of the belt (radians)\\}% #5 description
 {None.}% #6 Notes
-{}% #7 Source
+{\url{https://en.wikipedia.org/wiki/Friction}}% #7 Source
 {}% #8 Referenced by
 {None}% #9 Preconditions
 {}% #1 derivation - not applicable by default
@@ -884,9 +908,10 @@ This portion will define auxiliary theories to aid in further derivation below.
 
 
 Add here stuff like:
-- in: shift distance, out: radius of pulley
-- in: shift distance, out: angle of ramp
-- in: shift distance, out: angle of helix
+- in: shift distance, out: radius of pulley\\
+- in: shift distance, out: angle of ramp\\
+- in: shift distance, out: angle of helix\\
+- in: shift distance, out: shift radians\\
 
 \plt{``Ref.\ By'' is used repeatedly with the different types of information.
   This stands for Referenced By.  It means that the models, definitions and
@@ -929,42 +954,105 @@ data definitions so far, more to be added later
 
 ~\newline
 
-\noindent
-\begin{minipage}{\textwidth}
-\renewcommand*{\arraystretch}{1.5}
-\begin{tabular}{| p{\colAwidth} | p{\colBwidth}|}
-\hline
-\rowcolor[gray]{0.9}
-Number& DD\refstepcounter{datadefnum}\thedatadefnum \label{FluxCoil}\\
-\hline
-Label& \bf Heat flux out of coil\\
-\hline
-Symbol &$q_C$\\
-\hline
-% Units& $Mt^{-3}$\\
-% \hline
-  SI Units & \si{\watt\per\square\metre}\\
-  \hline
-  Equation&$q_C(t) = h_C (T_C - T_W(t))$, over area $A_C$\\
-  \hline
-  Description & 
-                $T_C$ is the temperature of the coil (\si{\celsius}).  $T_W$ is the temperature of the water (\si{\celsius}).  
-                The heat flux out of the coil, $q_C$ (\si{\watt\per\square\metre}), is found by
-                assuming that Newton's Law 
-                of Cooling applies (\aref{A_Newt_coil}).  This law (\dref{NL}) is used on the surface of
-                the coil, which has area $A_C$ (\si{\square\metre}) and heat 
-                transfer coefficient $h_C$
-                (\si{\watt\per\square\metre\per\celsius}).  This equation
-                assumes that the temperature of the coil is constant over time (\aref{A_tcoil}) and that it does not vary along the length
-                of the coil (\aref{A_tlcoil}).
-  \\
-  \hline
-  Sources& Citation here \\
-  \hline
-  Ref.\ By & \iref{ewat}\\
-  \hline
-\end{tabular}
-\end{minipage}\\
+\defdata
+{FluxCoil}% #1 refname of data
+{Flux in the coil}% #2 label
+{$\Phi$}% #3 symbol
+{\si[per-mode=symbol] {\weber}}% #4 units
+{$\Phi = N \cdot A \cdot B \cdot \cos(\theta)$}% #5 equation
+{$\Phi$ is the flux in the coil (\si[per-mode=symbol] {\weber})\\
+& N is the number of turns in the coil\\
+& A is the area of the coil (\si[per-mode=symbol] {\square\metre})\\
+& B is the magnetic field strength (\si[per-mode=symbol] {\tesla})\\
+& $\theta$ is the angle between the normal to the coil and the magnetic field (radians)}% #6 description
+{None.}% #7 Source
+{None.}% #8 Referenced by
+
+\defdata
+{Density} % #1 refname of data
+{Density} % #2 label
+{$\rho$} % #3 symbol
+{\si[per-mode=symbol] {\kilogram\per\cubic\metre}} % #4 units
+{$\rho = \frac{m}{V}$} % #5 equation
+{$\rho$ is the density (\si[per-mode=symbol] {\kilogram\per\cubic\metre})\\
+& m is the mass (\si[per-mode=symbol] {\kilogram})\\
+& V is the volume (\si[per-mode=symbol] {\cubic\metre})}% #6 description
+{None.}% #7 Source
+{None.}% #8 Referenced by
+
+\defdata 
+{Friction}% #1 refname of data
+{Coefficient of Friction} % #2 label
+{$\mu$} % #3 symbol
+{unitless} % #4 units
+{$F_f = \mu F_n$} % #5 equation
+{$\mu$ is the coefficient of friction\\
+& $F_f$ is the force of friction\\
+& $F_n$ is the normal force}% #6 description
+{None.}% #7 Source
+{None.}% #8 Referenced by
+
+\defdata 
+{SpringConstComp}% #1 refname of data
+{Compressionional Spring Constant} % #2 label
+{$k$} % #3 symbol
+{\si[per-mode=symbol] {\newton\per\metre}} % #4 units
+{$F = k \Delta x$} % #5 equation
+{$k$ is the spring constant (\si[per-mode=symbol] {\newton\per\metre})\\
+& F is the force (\si[per-mode=symbol] {\newton})\\
+& $\Delta x$ is the displacement (\si[per-mode=symbol] {\metre})}% #6 description
+{None.}% #7 Source
+{None.}% #8 Referenced by
+
+\defdata
+{SpringConstTors}% #1 refname of data
+{Torsional Spring Constant} % #2 label
+{$k$} % #3 symbol
+{\si[per-mode=symbol] {\newton\metre\per\radian}} % #4 units
+{$\tau = k \Delta \theta$} % #5 equation
+{$k$ is the torsional spring constant (\si[per-mode=symbol] {\newton\metre\per\radian})\\
+& $\tau$ is the torque (\si[per-mode=symbol] {\newton\metre})\\
+& $\theta$ is the angle of rotation (radians)} % #6 description
+{None.}% #7 Source
+{None.}% #8 Referenced by
+
+\defdata 
+{GravConst}
+{Gravitational Constant}
+{$g$}
+{\si[per-mode=symbol] {\metre\per\square\second}}
+{$F_g = m \cdot g$}
+{$g$ is the gravitational constant (\si[per-mode=symbol] {\metre\per\square\second})\\
+& $F_g$ is the force of gravity\\
+& $m$ is the mass}% #6 description
+{None.}% #7 Source
+{None.}% #8 Referenced by
+
+\defdata 
+{DragCoeff}
+{Drag Coefficient}
+{$C_d$}
+{unitless}
+{$F_d = \frac{1}{2} \rho v^2 C_d A$}
+{$C_d$ is the drag coefficient\\
+& $F_d$ is the force of drag\\
+& $\rho$ is the density of the fluid\\
+& $v$ is the velocity of the object\\
+& $A$ is the cross-sectional area of the object}% #6 description
+{None.}% #7 Source
+{None.}% #8 Referenced by
+
+\defdata 
+{RollCoeff}
+{Rolling Resistance Coefficient}
+{$C_{\text{rr}}$}
+{unitless}
+{$F_{\text{rr}} = C_{\text{rr}} F_n$}
+{$C_{\text{rr}}$ is the rolling resistance coefficient\\
+& $F_{\text{rr}}$ is the force of rolling resistance\\
+& $F_n$ is the normal force}% #6 description
+{None.}% #7 Source
+{None.}% #8 Referenced by
 
 \subsubsection{Data Types}\label{sec_datatypes}
 
@@ -1006,7 +1094,7 @@ The goal statement GS\ref{GS3} are solved by Instance Models \ref{inst:4} and \r
   $R_r = C_{\text{rr}} F_g \sin(\theta)$\\
   $F_D = \frac{1}{2} \rho v^2 C_D A$\\
   $m = m_v + m_d$\\
-  Substitute the above equations into the original equation to get the final equation for acceleration.\\
+  Substituting the above equations into the original equation, and then solving for acceleration lands us with this final equation.\\
   $a = \frac{\left( \frac{T_{\text{CVT}}}{r_{\text{gear}} + r_{\text{wheel}}} \right) - (C_{\text{rr}} F_g \sin(\theta)) - \left( \frac{1}{2} \rho v^2 C_D A \right) - (F_g \cos(\theta))}{m_v + m_d}$
 
 \definstance
