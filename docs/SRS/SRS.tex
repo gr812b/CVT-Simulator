@@ -560,86 +560,85 @@ includes the following elements:
 
 \begin{itemize}
 
-\item[PS1:] Fly weights
+\item[PS1:] Flyweights
 \begin{itemize}
   \item [PS1a:] mass ($m_{\text{fly}}$) in kg.
-  \item [PS1b:] initial radius ($r_{\text{fly\_init}}$) in m.
-  \item [PS1c:] final radius ($r_{\text{fly\_final}}$) in m. Might not be needed, just a limit
+  \item [PS1b:] initial radius ($r_{\text{fly}}$) in m.
 \end{itemize}
 
 \item[PS2:] Primary spring
 
 \begin{itemize}
   \item [PS2a:] spring constant ($k_{\text{prim}}$) in N/m.
-  \item [PS2b:] pretension ($d_{\text{prim}}$) in m.
+  \item [PS2b:] pre-compression distance ($d_{\text{prim}}$) in m.
 \end{itemize}
 
 \item[PS3:] Primary ramp geometry function ($f_{\text{prim\_angle}}$)
 
 \begin{itemize}
-  \item [PS3a:] input distance ($d_{\text{prim\_in}}$) in m.
-  \item [PS3b:] output angle ($\theta_{\text{prim\_out}}$) in radians.
+  \item [PS3a:] shift distance ($d_{\text{shift}}$) in m.
+  \item [PS3b:] output angle ($\theta_{\text{prim}}$) in radians.
 \end{itemize}
 
-\item[PS3:] Primary ramp height function ($f_{\text{prim\_height}}$)
+\item[PS4:] Primary ramp height function ($f_{\text{prim\_height}}$)
 
 \begin{itemize}
-  \item [PS3a:] input distance ($d_{\text{prim\_in}}$) in m.
-  \item [PS3c:] output height ($h_{\text{prim\_out}}$) in m.
+  \item [PS4a:] shift distance ($d_{\text{shift}}$) in m.
+  \item [PS4b:] output height ($h_{\text{prim}}$) in m.
 \end{itemize}
 
-\item[PS4:] Secondary spring
+\item[PS5:] Secondary spring
 
 \begin{itemize}
-  \item [PS4a:] compression spring constant ($k_{\text{sec\_comp}}$) in N/m.
-  \item [PS4b:] torsional spring rate ($k_{\text{sec\_tor}}$) in Nm/rad.
-  \item [PS4c:] pretension ($d_{\text{sec}}$) in m.
+  \item [PS5a:] compression spring constant ($k_{\text{sec\_comp}}$) in N/m.
+  \item [PS5b:] torsional spring rate ($k_{\text{sec\_tor}}$) in Nm/rad.
+  \item [PS5c:] pre-compression distance ($d_{\text{sec}}$) in m.
 \end{itemize}
 
-\item[PS5:] Secondary ramp geometry function ($f_{\text{sec}}$)
+\item[PS6:] Secondary ramp geometry function ($f_{\text{sec}}$)
 
 \begin{itemize}
-  \item [PS5a:] input distance ($d_{\text{sec\_in}}$) in m.
-  \item [PS5b:] output angle ($\theta_{\text{sec\_out}}$) in radians.
+  \item [PS6a:] shift distance ($d_{\text{shift}}$) in m.
+  \item [PS6b:] output angle ($\theta_{\text{sec}}$) in radians.
 \end{itemize}
 
 \item[PS6:] Weight
 
 \begin{itemize}
-  \item [PS6a:] driver weight ($m_{\text{driver}}$) in kg.
-  \item [PS6b:] car weight ($m_{\text{car}}$) in kg.
+  \item [PS7a:] driver weight ($m_{\text{d}}$) in kg.
+  \item [PS7b:] vehicle weight ($m_{\text{v}}$) in kg.
 \end{itemize}
 
-\item[PS7:] Engine torque function ($f_{\text{engine}}$)
+\item[PS8:] Engine torque function ($f_{\text{engine}}$)
 
 \begin{itemize}
-  \item [PS7a:] input angular velocity ($\omega_{\text{engine}}$) in rad/s.
-  \item [PS7b:] output torque ($T_{\text{engine}}$) in Nm.
+  \item [PS8a:] input angular velocity ($\omega_{\text{engine}}$) in rad/s.
+  \item [PS8b:] output torque ($T_{\text{engine}}$) in Nm.
 \end{itemize}
 
-\item[PS8:] Belt
+\item[PS9:] Belt
 
 \begin{itemize}
-  \item [PS8a:] angle with sheave ($\theta_{\text{belt}}$). I think this does not need to exist, it matches the sheave angle?
-  \item [PS8b:] friction coefficient ($\mu_{\text{belt}}$), unitless.
+  \item [PS9a:] angle with sheave ($\theta_{\text{belt}}$). I think this does not need to exist, it matches the sheave angle?
+  \item [PS9b:] friction coefficient ($\mu_{\text{belt}}$), unitless.
 \end{itemize}
 
-\item[PS9:] Total reduction
+\item[PS10:] Total reduction
 
 \begin{itemize}
-  \item [PS9a:] gearbox reduction ratio ($r_{\text{gearbox}}$), unitless.
-  \item [PS9b:] wheel radius ($r_{\text{wheel}}$) in m.
+  \item [PS10a:] gearbox reduction ratio ($r_{\text{gearbox}}$), unitless.
+  \item [PS10b:] wheel radius ($r_{\text{wheel}}$) in m.
 \end{itemize}
 
-\item[PS10:] Coefficient of air resistance ($\mu_{\text{air}}$), unitless.
+\item[PS11:] Coefficient of air resistance ($\mu_{\text{air}}$), unitless.
 
-\item[PS11:] Center to Center distance ($d_{\text{center}}$) in m.
+\item[PS12:] Center to Center distance ($d_{\text{center}}$) in m.
 
-\item[PS12:] Angle on Incline ($\theta_{\text{incline}}$) in radians.
+\item[PS13:] Angle on Incline ($\theta_{\text{inc}}$) in radians.
 
-\item[PS13:] Secondary Ramp Radius ($r_{\text{sec\_ramp}}$) in m.
+\item[PS14:] Secondary Ramp Radius ($r_{\text{sec\_ramp}}$) in m.
 
-\item[PS14:] Traction ($\mu_{\text{traction}}$), unitless.
+\item[PS15:] Traction ($\mu_{\text{traction}}$), unitless.
 
 \end{itemize}
 We might also want belt length, belt width, belt weight?, other properties
@@ -742,6 +741,7 @@ N/A
 
 \item[A\refstepcounter{assumpnum}\theassumpnum \label{A_7}:]
 \textbf{Engine Behavior Assumption:} The engine is modeled to operate at full throttle with consistent power curves and peak performance, maintaining a uniform response throughout the analysis. Load feedback will be integrated to adjust RPM and power output as necessary.
+
 \end{itemize}
 
 \subsubsection{Theoretical Models}\label{sec_theoretical}
@@ -1078,7 +1078,7 @@ The goal statement GS\ref{GS3} are solved by Instance Models \ref{inst:4} and \r
   & $\rho$ is the density of the fluid (kg/m$^3$)\\
   & $C_D$ is the drag coefficient\\
   & A is the cross-sectional area of the object (m$^2$)\\
-  & $\theta$ is the angle of incline ($\theta$)\\
+  & $\theta_{inc}$ is the angle of incline (rad)\\
   & $T_{\text{CVT}}$ is the torque transferred to the wheel (N-m)\\
   & $C_{\text{rr}}$ is the coefficient of rolling resistance\\
   & $m_v$ is the mass of the vehicle (kg)\\
@@ -1091,11 +1091,16 @@ The goal statement GS\ref{GS3} are solved by Instance Models \ref{inst:4} and \r
   $T_W - R_r - F_D - F_g \cos(\theta) = ma$\\
   Where $T_W$ is the torque of the wheel, $R_r$ is the rolling resistance, $F_D$ is the drag force, $F_g$ is the gravitational force, and $m$ is the mass of the vehicle.\\
   $T_W = \frac{T_{\text{CVT}}}{r_{\text{gear}} + r_{\text{wheel}}}$\\
-  $R_r = C_{\text{rr}} F_g \sin(\theta)$\\
+  $R_r = C_{\text{rr}} F_g \sin(\theta_{inc})$\\
   $F_D = \frac{1}{2} \rho v^2 C_D A$\\
   $m = m_v + m_d$\\
+<<<<<<< Updated upstream
   Substituting the above equations into the original equation, and then solving for acceleration lands us with this final equation.\\
   $a = \frac{\left( \frac{T_{\text{CVT}}}{r_{\text{gear}} + r_{\text{wheel}}} \right) - (C_{\text{rr}} F_g \sin(\theta)) - \left( \frac{1}{2} \rho v^2 C_D A \right) - (F_g \cos(\theta))}{m_v + m_d}$
+=======
+  Substitute the above equations into the original equation to get the final equation for acceleration.\\
+  $a = \frac{\left( \frac{T_{\text{CVT}}}{r_{\text{gear}} + r_{\text{wheel}}} \right) - (C_{\text{rr}} F_g \sin(\theta_{inc})) - \left( \frac{1}{2} \rho v^2 C_D A \right) - (F_g \cos(\theta))}{m_v + m_d}$
+>>>>>>> Stashed changes
 
 \definstance
 {Velocity}
@@ -1115,38 +1120,38 @@ The goal statement GS\ref{GS3} are solved by Instance Models \ref{inst:4} and \r
 
 \definstance
 {Primary Clamping Force}
-{$m$, $r_{\text{flyi}}$, $h_{\text{prim}}$, $F_{\text{prim}}(d_{\text{shift}})$, $K_{\text{prim}}$, $d_{\text{prc}}$, $d_{\text{shift}}$} % Input
-{$F_{FW} - F_S = m (r_{\text{flyi}} + F_{\text{primHeight}}({d_\text{{shift}}})) \cdot \tan(F_{\text{prim}}(d_{\text{shift}})) + K_{\text{prim}} (d_{\text{prc}} + d_{\text{shift}})$} % 
+{$m$, $r_{\text{fly}}$, $f_{\text{prim\_height}}(d_{\text{shift}})$, $f_{\text{prim\_angle}}(d_{\text{shift}})$, $k_{\text{prim}}$, $d_{\text{prim}}$, $d_{\text{shift}}$} % Input
+{$F_{FW} - F_S = m (r_{\text{fly}} + f_{\text{prim\_height}}({d_\text{{shift}}})) \cdot \tan(f_{\text{prim\_angle}}(d_{\text{shift}})) + k_{\text{prim}} (d_{\text{prim}} + d_{\text{shift}})$} % 
 {$F_{FW} - F_S$ where $F_{FW}$ is the flywheel force and $F_S$ is the spring force, representing the total primary clamping force.} % Output
 {$m$: Mass of the system. \\ 
-  &$r_{\text{flyi}}$: Radius related to the flywheel. \\ 
-  &$F_{\text{primHeight}}(d_{\text{shift}})$: Function that represents the height of the primary system. \\
-  &$F_{\text{prim}}(d_{\text{shift}})$: Primary function that represents the force dependent on the shifting distance. \\ 
-  &$K_{\text{prim}}$: Stiffness or coefficient related to the primary system. \\ 
-  &$d_{\text{prc}}$: Pre-compression or pre-load distance. \\ 
+  &$r_{\text{fly}}$: Radius related to the flywheel. \\ 
+  &$f_{\text{prim\_height}}(d_{\text{shift}})$: Function that represents the height of the primary system. \\
+  &$f_{\text{prim\_angle}}(d_{\text{shift}})$: Primary function that represents the force dependent on the shifting distance. \\ 
+  &$k_{\text{prim}}$: Stiffness or coefficient related to the primary system. \\ 
+  &$d_{\text{prim}}$: Pre-compression or pre-load distance. \\ 
   &$d_{\text{shift}}$: Displacement or shift in the system.} % Description
 {} % Sources
 {-}
 
 \subsubsection*{Derivation of Primary Clamping Force}
 The flywheel force is derived as such: \\
-$F_{FW} = m r \omega^2 \cdot \tan(F_{\text{prim}}(d_{\text{shift}}))$\\
-Where $r \omega^2$ can repersented by $r_{\text{flyi}}+h_{\text{prim}}$\\
-Then $F_{FW}$ becomes $m (r_{\text{flyi}} + h_{\text{prim}}) \cdot \tan(F_{\text{prim}}(d_{\text{shift}}))$\\
+$F_{FW} = m r \omega^2 \cdot \tan(f_{\text{prim\_angle}}(d_{\text{shift}}))$\\
+Where $r \omega^2$ can repersented by $r_{\text{fly}}+f_{\text{prim\_height}}(d_{\text{shift}})$\\
+Then $F_{FW}$ becomes $m (r_{\text{fly}} + f_{\text{prim\_height}}(d_{\text{shift}})) \cdot \tan(f_{\text{prim\_angle}}(d_{\text{shift}}))$\\
 {\newline}
 The spring force is derived as such: \\
-$-F_S$ = $+ K_{\text{prim}} (d_{\text{prc}} + d_{\text{shift}})$\\
+$-F_S$ = $+ k_{\text{prim}} (d_{\text{prim}} + d_{\text{shift}})$\\
 {\newline}
 Combine those two forces to get the total primary clamping force.\\
-$F_{FW} - F_S = m (r_{\text{flyi}} + h_{\text{prim}}) \cdot \tan(F_{\text{prim}}(d_{\text{shift}})) + K_{\text{prim}} (d_{\text{prc}} + d_{\text{shift}})$ 
+$F_{FW} - F_S = m (r_{\text{fly}} + f_{\text{prim\_height}}(d_{\text{shift}})) \cdot \tan(f_{\text{prim\_angle}}(d_{\text{shift}})) + k_{\text{prim}} (d_{\text{prim}} + d_{\text{shift}})$ 
 
 
 \definstance
 {Secondary Clamping Force}
-{$K_e$, $\theta_{\text{sec}}$, $\theta_{\text{shift}}$, $r_{\text{secramp}}$, $f_{\text{sec}}(d_{\text{shift}})$, $K_c$, $\delta_{\text{sec}}$, $d_{\text{shift}}$} % Input
-{$F_S + F_H = \frac{K_e (\theta_{\text{sec}} + \theta_{\text{shift}}) + T_{eng} CVT_{ratio}}{2 \cdot r_{\text{secramp}} \cdot \tan(f_{\text{sec}}(d_{\text{shift}}))} + K_c (\delta_{\text{sec}} + d_{\text{shift}})$} % 
+{$k_{\text{sec\_tor}}$, $\theta_{\text{sec}}$, $\theta_{\text{shift}}$, $r_{\text{secramp}}$, $f_{\text{sec}}(d_{\text{shift}})$, $K_c$, $\delta_{\text{sec}}$, $d_{\text{shift}}$} % Input
+{$F_S + F_H = \frac{k_{\text{sec\_tor}} (\theta_{\text{sec}} + \theta_{\text{shift}}) + T_{eng} CVT_{ratio}}{2 \cdot r_{\text{secramp}} \cdot \tan(f_{\text{sec}}(d_{\text{shift}}))} + K_c (\delta_{\text{sec}} + d_{\text{shift}})$} % 
 {$F_s + F_H$ where $F_S$ is spring clamping force and $F_H$ is the helix clamping force added together are the total the secondary clamping force } % Output
-{$K_e$: Stiffness or spring constant related to elastic deformation. \\
+{$k_{\text{sec\_tor}}$: Torsional spring rate \\
   &$\theta_{\text{sec}}$: Secondary angle or rotational position. \\
   &$\theta_{\text{shift}}$: Shift in the secondary angle. \\
   &$r_{\text{secramp}}$: Radius or ramp characteristic related to the secondary system. \\
@@ -1162,13 +1167,13 @@ $F_{FW} - F_S = m (r_{\text{flyi}} + h_{\text{prim}}) \cdot \tan(F_{\text{prim}}
 
 \subsubsection*{Derivation of Secondary Clamping Force}
 The spring force is derived as such: \\
-$F_S = \frac{K_e (\theta_{\text{sec}} + \theta_{\text{shift}})}{2 \cdot r_{\text{secramp}} \cdot \tan(f_{\text{sec}}(d_{\text{shift}}))} + K_c (\delta_{\text{sec}} + d_{\text{shift}})$\\
+$F_S = \frac{k_{\text{sec\_tor}} (\theta_{\text{sec}} + \theta_{\text{shift}})}{2 \cdot r_{\text{secramp}} \cdot \tan(f_{\text{sec}}(d_{\text{shift}}))} + K_c (\delta_{\text{sec}} + d_{\text{shift}})$\\
 {\newline}
 The helix force is derived as such: \\
 $F_H = \frac{T_{eng} CVT_{ratio}}{2 \cdot r_{\text{secramp}} \cdot \tan(f_{\text{sec}}(d_{\text{shift}}))}$\\
 {\newline}
 Combine those two forces to get the total secondary clamping force.\\
-$F_S + F_H = \frac{K_e (\theta_{\text{sec}} + \theta_{\text{shift}}) + T_{eng} CVT_{ratio}}{2 \cdot r_{\text{secramp}} \cdot \tan(f_{\text{sec}}(d_{\text{shift}}))} + K_c (\delta_{\text{sec}} + d_{\text{shift}})$
+$F_S + F_H = \frac{k_{\text{sec\_tor}} (\theta_{\text{sec}} + \theta_{\text{shift}}) + T_{eng} CVT_{ratio}}{2 \cdot r_{\text{secramp}} \cdot \tan(f_{\text{sec}}(d_{\text{shift}}))} + K_c (\delta_{\text{sec}} + d_{\text{shift}})$
 
 
 \definstance
