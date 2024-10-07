@@ -86,7 +86,7 @@
 \noindent \rule{\textwidth}{0.5mm}
 
 \paragraph{RefName: } \textbf{#2} \phantomsection 
-\label{#2}
+\refstepcounter{theorynum} \label{#2}
 
 \paragraph{Label:} #3
 
@@ -1347,7 +1347,7 @@ the assumptions.
 \hline
 	& \aref{A_1}& \aref{A_2}& \aref{A_3}& \aref{A_4}& \aref{A_5}& \aref{A_6}& \aref{A_7}\\
 \hline
-\tref{TM:HL}         & & & & & & & \\ \hline
+\tref{TM:HL}        & & & & & & & \\ \hline
 \tref{TM:CF}        & & & & & & & \\ \hline
 \tref{TM:AR}        & & & & & & & \\ \hline
 \tref{TM:ET}        & & & & & & & \\ \hline
@@ -1457,6 +1457,33 @@ the assumptions.
 \caption{Traceability Matrix Showing the Connections Between Requirements and Instance Models}
 \label{Table:R_trace}
 \end{table}
+
+\begin{table}[h!]
+  \centering
+  \begin{tabular}{|c|c|c|c|c|c|c|c|}
+  \hline
+    & \iref{ewat}& \iref{epcm}& \iref{I_HWAT}& \iref{I_HPCM}& \ref{sec_DataConstraints}& \rref{R_RawInputs}& \rref{R_MassInputs} \\
+  \hline
+  \iref{ewat}            & & X& & & & X& X \\ \hline
+  \iref{epcm}            & X& & & X& & X& X \\ \hline
+  \iref{I_HWAT}          & & & & & & X& X \\ \hline
+  \iref{I_HPCM}          & & X& & & & X& X \\ \hline
+  \rref{R_RawInputs}     & & & & & & & \\ \hline
+  \rref{R_MassInputs}    & & & & & & X& \\ \hline
+  \rref{R_CheckInputs}   & & & & & X& & \\ \hline
+  \rref{R_OutputInputs}  & X& X& & & & X& X \\ \hline
+  \rref{R_TempWater}     & X& & & & & & \\ \hline 
+  \rref{R_TempPCM}       & & X& & & & & \\ \hline
+  \rref{R_EnergyWater}   & & & X& & & & \\ \hline
+  \rref{R_EnergyPCM}     & & & & X& & & \\ \hline
+  \rref{R_VerifyOutput}  & & & X& X& & & \\ \hline
+  \rref{R_timeMeltBegin} & & X& & & & & \\ \hline
+  \rref{R_timeMeltEnd}   & & X& & & & & \\ 
+  \hline
+  \end{tabular}
+  \caption{Traceability Matrix Showing the Connections Between Requirements and Instance Models}
+  \label{Table:R_trace}
+  \end{table}
 
 The purpose of the traceability graphs is also to provide easy references on
 what has to be additionally modified if a certain component is changed.  The
