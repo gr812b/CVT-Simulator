@@ -126,6 +126,35 @@
 
 }
 
+\newcommand{\definstance}[7] {
+~\newline
+\noindent
+\begin{minipage}{\textwidth}
+\renewcommand*{\arraystretch}{1.5}
+\begin{tabular}{| p{\colAwidth} | p{\colBwidth}|}
+  \hline
+  \rowcolor[gray]{0.9}
+  Number& IM\refstepcounter{instnum}\theinstnum \label{ewat}\\
+  \hline
+  Label& \bf #1 \\
+  \hline
+  Input& #2\\
+  \hline
+  Equation& #3\\
+  \hline
+  Output& #4\\
+  \hline
+  Description& #5 \\
+  \hline
+  Sources& #6 \\
+  \hline
+  Ref.\ By & #7\\
+  \hline
+\end{tabular}
+\end{minipage}\\
+
+}
+
 \begin{document}
 
 \title{Software Requirements Specification for \progname: subtitle describing software} 
@@ -1287,31 +1316,16 @@ The goals \plt{reference your goals} are solved by \plt{reference your instance
 \plt{Modify the examples below for your problem, and add additional models as
   appropriate.}
 
-~\newline
-\noindent
-\begin{minipage}{\textwidth}
-\renewcommand*{\arraystretch}{1.5}
-\begin{tabular}{| p{\colAwidth} | p{\colBwidth}|}
-  \hline
-  \rowcolor[gray]{0.9}
-  Number& IM\refstepcounter{instnum}\theinstnum \label{ewat}\\
-  \hline
-  Label& \bf Velocity \\
-  \hline
-  Input&$a(t)$\\
-  \hline
-  Equation&$v(t) = \int a(t) dt$\\
-  \hline
-  Output&$v(t)$\\
-  \hline
-  Description& $a(t)$ is the function of acceleration over time \\
-  \hline
-  Sources& Citation here \\
-  \hline
-  Ref.\ By & \iref{epcm}\\
-  \hline
-\end{tabular}
-\end{minipage}\\
+
+
+\definstance
+{Velocity}
+{$a(t)$}
+{$v(t) = \int a(t) dt$}
+{$v(t)$}
+{$a(t)$ is the function of acceleration over time}
+{Citation here}
+{\iref{epcm}}
 
 ~\newline
 \noindent
