@@ -546,7 +546,7 @@ includes the following elements:
 \item[PS2:] Primary spring
 
 \begin{itemize}
-  \item [PS2a:] spring constant ($k_{\text{prim}}$), unitless.
+  \item [PS2a:] spring constant ($k_{\text{prim}}$) in N/m.
   \item [PS2b:] pretension ($d_{\text{prim}}$) in m.
 \end{itemize}
 
@@ -567,8 +567,8 @@ includes the following elements:
 \item[PS4:] Secondary spring
 
 \begin{itemize}
-  \item [PS4a:] compression spring constant ($k_{\text{sec\_comp}}$), unitless.
-  \item [PS4b:] torsional spring rate ($k_{\text{sec\_tor}}$), unitless.
+  \item [PS4a:] compression spring constant ($k_{\text{sec\_comp}}$) in N/m.
+  \item [PS4b:] torsional spring rate ($k_{\text{sec\_tor}}$) in Nm/rad.
   \item [PS4c:] pretension ($d_{\text{sec}}$) in m.
 \end{itemize}
 
@@ -1164,8 +1164,24 @@ Table~\ref{TblSpecParams}.
   \textbf{Var} & \textbf{Physical Constraints} & \textbf{Software Constraints} &
                              \textbf{Typical Value} & \textbf{Uncertainty}\\
   \midrule 
-  $L$ & $L > 0$ & $L_{\text{min}} \leq L \leq L_{\text{max}}$ & 1.5 \si[per-mode=symbol] {\metre} & 10\%
-  \\
+  $L$ & $L > 0$ & $L_{\text{min}} \leq L \leq L_{\text{max}}$ & 1.5 \si[per-mode=symbol] {\metre} & 10\%\\
+  % params
+  $m_{fly}$ & $0 \leq m_{fly}$ & $m_{fly} \leq 1$ & 0.2 kg\\
+  $\omega_{engine}$ & $0 \leq \omega_{engine}$ & $\omega_{engine} \leq \omega_\text{max}$ & 400 rad/s\\
+  % Cannot shift more than width of belt
+  $d_{shift}$ & $0 \leq d_{shift} \leq w_{belt}$ & & 0.1 m\\
+  % Angle of ramp cannot exceed 90 degrees
+  $\theta_{prim\_out}$ & $0 \leq \theta_{prim\_out} \leq \frac{\pi}{2}$ & & $\frac{\pi}{4}$ rad\\
+  % Pretension
+  $d_{\text{prim}}$ & $0 \leq d_{\text{prim}} \leq d_\text{max\_prim\_pre}$ & & 0.1 m\\
+  $d_{\text{sec}}$ & $0 \leq d_{\text{sec}} \leq d_\text{max\_sec\_pre}$ & & 0.1 rad\\
+  % Weight
+  $m_{\text{driver}}$ & $0 \leq m_{\text{driver}}$ & $ m_{\text{driver}} \leq m_\text{max\_human}$ & 75 kg\\
+  $m_{\text{car}}$ & $0 \leq m_{\text{car}}$ & $m_{\text{car}} \leq m_\text{max\_car}$ & 225 kg\\
+  % Spring rate
+  $k_{\text{prim}}$ & $0 \leq k_{\text{prim}}$ & $k_{\text{prim}} \leq k_\text{max\_comp\_spring}$ & 100 N/m\\
+  $k_{\text{sec\_comp}}$ & $0 \leq k_{\text{sec\_comp}}$ & $k_{\text{sec\_comp}} \leq k_\text{max\_comp\_spring}$ & 100 N/m\\
+  $k_{\text{sec\_tor}}$ & $0 \leq k_{\text{sec\_tor}}$ & $k_{\text{sec\_tor}} \leq k_\text{max\_tor\_spring}$ & 50 Nm/rad\\
   \bottomrule
 \end{longtable*}
 \end{table}
@@ -1183,6 +1199,16 @@ Table~\ref{TblSpecParams}.
   \textbf{Var} & \textbf{Value} \\
   \midrule 
   $L_\text{min}$ & 0.1 \si{\metre}\\
+  $\omega_\text{max}$ & 600 rad/s\\
+  $w_\text{belt}$ & UNKNOWN, see belt spec m\\
+  $d_\text{max\_prim\_pre}$ & UNKNOWN, see CAD m\\
+  $d_\text{max\_sec\_pre}$ & UNKNOWN, see CAD rad\\
+  $m_\text{max\_human}$ & 200 kg\\
+  $m_\text{max\_car}$ & 350 kg\\
+  $k_\text{max\_comp\_spring}$ & 1000 N/m\\
+  $k_\text{max\_tor\_spring}$ & 750 Nm/rad\\
+  $v_\text{max}$ & UNKNOWN, do gear calcs m/s\\
+  $f_\text{belt\_max}$ & UNKNOWN, see belt spec N\\
   \bottomrule
 \end{longtable*}
 \end{table}
@@ -1200,12 +1226,13 @@ A correct solution must exhibit \plt{fill in the details}.  \plt{These
 \begin{table}[!h]
 \caption{Output Variables} \label{TblOutputVar}
 \renewcommand{\arraystretch}{1.2}
-\noindent \begin{longtable*}{l l} 
+\noindent \begin{longtable*}{l l l} 
   \toprule
-  \textbf{Var} & \textbf{Physical Constraints} \\
+  \textbf{Var} & \textbf{Physical Constraints} & \textbf{unit}\\
   \midrule 
-  $T_W$ & $T_\text{init} \leq T_W \leq T_C$ (by~\aref{A_charge})
-  \\
+  $T_W$ & $T_\text{init} \leq T_W \leq T_C$ (by~\aref{A_charge}) & unitless\\
+  $v(t)$ & $0 \leq v(t) \leq v_\text{max}$& m/s\\
+  $\text{Sum of clamping forces}$ & $\text{Clamp} \leq f_\text{belt\_max}$ & N \\
   \bottomrule
 \end{longtable*}
 \end{table}
