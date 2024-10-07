@@ -424,18 +424,6 @@ This SRS will be referenced throughout the development of the system to ensure t
 
 \plt{The scope section is relevant for later determining typical values of inputs. The scope should make it clear what inputs are reasonable to expect. This is a distinction between scope and context (context is a later section).  Scope affects the inputs while context affects how the software will be used.}
 
-Assumptions
-\begin{itemize}
-  \item \textbf{Temperature variations}: Ignore the effect of temperature on the material properties, excluding the belt.
-  \item \textbf{negligible Gravitational Influence}: The orientation of the CVT system and gravitational effects are considered negligible due to the high rotational speeds involved in the system's operation.
-  \item \textbf{Elasticity of Belts}: Elasticity of belts are assumed negligible, and the components are considered ideally rigid under normal operating conditions.
-  \item \textbf{Vibrational Effects}: Vibrational effects from the vehicle or external environment are assumed to be minimal and are not factored into the transmission’s operation in this model.
-  \item \textbf{Wear and Tear}: Component wear over time, including belt/chain wear and pulley degradation, is assumed negligible in the short-term operational model.
-  \item \textbf{Frictional Losses in Non-critical Components}: Frictional losses in non-critical components (e.g., bearings, shafts) are assumed negligible, focusing only on friction relevant to the CVT system's core mechanics.
-  \item \textbf{Engine Behavior Assumption:} The engine is modeled to operate at full throttle with consistent power curves and peak performance, maintaining a uniform response throughout the analysis. Load feedback will be integrated to adjust RPM and power output as necessary.
-  \item \textbf{CVT Axis Alignment:} The CVT's axis are in line with each other. 
-\end{itemize}
-
 \subsection{Characteristics of Intended Reader} \label{sec_IntendedReader}
 
 Readers or reviewers of this SRS document should have a solid understanding of the principles of physics and calculus. Knowledge of the components in a Continuous Variable Transmission (CVT) and a basic understanding of how these parts work together will also be beneficial. Proficiency in these areas will enough to comprehend the material in this document.
@@ -729,29 +717,11 @@ includes the following elements:
 
 \subsubsection{Goal Statements}
 
-\plt{The goal statements refine the ``Problem Description''
-  (Section~\ref{Sec_pd}).  A goal is a functional objective the system under
-  consideration should achieve. Goals provide criteria for sufficient
-  completeness of a requirements specification and for requirements
-  pertinence. Goals will be refined in Section “Instanced Models”
-  (Section~\ref{sec_instance}). Large and complex goals should be decomposed
-  into smaller sub-goals.  The goals are written abstractly, with a minimal
-  amount of technical language.  They should be understandable by non-domain
-  experts.}
-
-\noindent Given the \plt{inputs}, the goal statements are:
-
-\begin{itemize}
-  \item Simulates the kinematics of the vehicle
-  \item Simulates the output of the engine
-  \item Simulates the CVT system over time
-\end{itemize}
-
 \begin{itemize}
 
-\item[GS\refstepcounter{goalnum}\thegoalnum \label{djaflkdsjfsad}:] \plt{One
-    sentence description of the goal.  There may be more than one.  Each Goal
-    should have a meaningful label.}
+\item[GS\refstepcounter{goalnum}\thegoalnum \label{GS1}:]  Simulates the kinematics of the vehicle
+\item[GS\refstepcounter{goalnum}\thegoalnum \label{GS2}:]  Simulates the output of the engine
+\item[GS\refstepcounter{goalnum}\thegoalnum \label{GS3}:]  Simulates the CVT system over time
 
 \end{itemize}
 
@@ -1179,19 +1149,6 @@ None
 
 \subsubsection{General Definitions}\label{sec_gendef}
 
-\plt{General Definitions (GDs) are a refinement of one or more TMs, and/or of
-  other GDs.  The GDs are less abstract than the TMs.  Generally the reduction
-  in abstraction is possible through invoking (using/referencing) Assumptions.
-  For instance, the TM could be Newton's Law of Cooling stated abstracting.  The
-  GD could take the general law and apply it to get a 1D equation.}
-
-This section collects the laws and equations that will be used in building the
-instance models.
-
-\plt{Some projects may not have any content for this section, but the section
-  heading should be kept.}  \plt{Modify the examples below for your problem, and
-  add additional definitions as appropriate.}
-
 We do not have any general definitions at this time.
 
 \subsubsection{Data Definitions}\label{sec_datadef}
@@ -1259,44 +1216,7 @@ Symbol &$q_C$\\
 
 \subsubsection{Data Types}\label{sec_datatypes}
 
-\plt{This section is optional.  In many scientific computing programs it isn't
-  necessary, since the inputs and outpus are straightforward types, like reals,
-  integers, and sequences of reals and integers.  However, for some problems it
-  is very helpful to capture the type information.}
-
-\plt{The data types are not derived; they are simply stated and used by other
-  models.}
-
-\plt{All data types must be used by at least one of the models.}
-
-\plt{For the mathematical notation for expressing types, the recommendation is
-  to use the notation of~\citet{HoffmanAndStrooper1995}.}
-
-This section collects and defines all the data types needed to document the
-models. \plt{Modify the examples below for your problem, and add additional
-  definitions as appropriate.}
-
 N/A
-
-~\newline
-
-\noindent
-\begin{minipage}{\textwidth}
-\renewcommand*{\arraystretch}{1.5}
-\begin{tabular}{| p{\colAwidth} | p{\colBwidth}|}
-  \hline
-  \rowcolor[gray]{0.9}
-  Type Name & Name for Type\\
-  \hline
-  Type Def & mathematical definition of the type\\
-  \hline
-  Description & description here
-  \\
-  \hline
-  Sources & Citation here, if the type is borrowed from another source\\
-  \hline
-\end{tabular}
-\end{minipage}\\
 
 \subsubsection{Instance Models} \label{sec_instance}    
 
@@ -1316,7 +1236,34 @@ The goals \plt{reference your goals} are solved by \plt{reference your instance
 \plt{Modify the examples below for your problem, and add additional models as
   appropriate.}
 
-
+  \definstance
+  {Acceleration}
+  {$r_{\text{gear}}, r_{\text{wheel}}, \rho, C_D, A, \theta, T_{\text{CVT}}, C_{\text{rr}}, m_v, m_d$}
+  {$a = \frac{\left( \frac{T_{\text{CVT}}}{r_{\text{gear}} + r_{\text{wheel}}} \right) - (C_{\text{rr}} F_g \sin(\theta)) - \left( \frac{1}{2} \rho v^2 C_D A \right) - (F_g \cos(\theta))}{m_v + m_d}$}
+  {acceleration a}
+  {$r_{\text{gear}}$ is the radius of the gear (m)\\
+  & $r_{\text{wheel}}$ is the radius of the wheel (m)\\
+  & $\rho$ is the density of the fluid (kg/m$^3$)\\
+  & $C_D$ is the drag coefficient\\
+  & A is the cross-sectional area of the object (m$^2$)\\
+  & $\theta$ is the angle of incline ($\theta$)\\
+  & $T_{\text{CVT}}$ is the torque transferred to the wheel (N-m)\\
+  & $C_{\text{rr}}$ is the coefficient of rolling resistance\\
+  & $m_v$ is the mass of the vehicle (kg)\\
+  & $m_d$ is the mass of the driver(kg)}
+  {\iref{epcm}}
+  
+  
+  \subsubsection*{Derivation of acceleration}
+  The acceleration of the vehicle is derived as such: \\
+  $T_W - R_r - F_D - F_g \cos(\theta) = ma$\\
+  Where $T_W$ is the torque of the wheel, $R_r$ is the rolling resistance, $F_D$ is the drag force, $F_g$ is the gravitational force, and $m$ is the mass of the vehicle.\\
+  $T_W = \frac{T_{\text{CVT}}}{r_{\text{gear}} + r_{\text{wheel}}}$\\
+  $R_r = C_{\text{rr}} F_g \sin(\theta)$\\
+  $F_D = \frac{1}{2} \rho v^2 C_D A$\\
+  $m = m_v + m_d$\\
+  Substitute the above equations into the original equation to get the final equation for acceleration.\\
+  $a = \frac{\left( \frac{T_{\text{CVT}}}{r_{\text{gear}} + r_{\text{wheel}}} \right) - (C_{\text{rr}} F_g \sin(\theta)) - \left( \frac{1}{2} \rho v^2 C_D A \right) - (F_g \cos(\theta))}{m_v + m_d}$
 
 \definstance
 {Velocity}
@@ -1324,7 +1271,6 @@ The goals \plt{reference your goals} are solved by \plt{reference your instance
 {$v(t) = \int a(t) dt$}
 {$v(t)$}
 {$a(t)$ is the function of acceleration over time}
-{Citation here}
 {\iref{epcm}}
 
 \definstance
@@ -1333,38 +1279,65 @@ The goals \plt{reference your goals} are solved by \plt{reference your instance
 {$d(t) = \int v(t) dt$}
 {$d(t)$}
 {$v(t)$ is the function of velocity over time}
-{Citation here}
 {\iref{epcm}}
 
 \definstance
-{Acceleration}
-{$r_{\text{gear}}, r_{\text{wheel}}, \rho, C_D, A, \theta, T_{\text{CVT}}, C_{\text{rr}}, m_v, m_d$}
-{$a = \frac{\left( \frac{T_{\text{CVT}}}{r_{\text{gear}} + r_{\text{wheel}}} \right) - (C_{\text{rr}} F_g \sin(\theta)) - \left( \frac{1}{2} \rho v^2 C_D A \right) - (F_g \cos(\theta))}{m_v + m_d}$}
-{acceleration a}
-{$r_{\text{gear}}$ is the radius of the gear (m)\\
-& $r_{\text{wheel}}$ is the radius of the wheel (m)\\
-& $\rho$ is the density of the fluid (kg/m$^3$)\\
-& $C_D$ is the drag coefficient\\
-& A is the cross-sectional area of the object (m$^2$)\\
-& $\theta$ is the angle of incline ($\theta$)\\
-& $T_{\text{CVT}}$ is the torque transferred to the wheel (N-m)\\
-& $C_{\text{rr}}$ is the coefficient of rolling resistance\\
-& $m_v$ is the mass of the vehicle (kg)\\
-& $m_d$ is the mass of the driver(kg)}
-{Citation here}
-{\iref{epcm}}
-
-
-\subsubsection*{Derivation of acceleration}
-
-\definstance
-{Clamping Force}
-{} % Input
-{} % Output
-{} % Description
+{Primary Clamping Force}
+{$m$, $r_{\text{flyi}}$, $h_{\text{prim}}$, $F_{\text{prim}}(d_{\text{shift}})$, $K_{\text{prim}}$, $d_{\text{prc}}$, $d_{\text{shift}}$} % Input
+{$F_{FW} - F_S = m (r_{\text{flyi}} + F_{\text{primHeight}}({d_\text{{shift}}})) \cdot \tan(F_{\text{prim}}(d_{\text{shift}})) + K_{\text{prim}} (d_{\text{prc}} + d_{\text{shift}})$} % 
+{$F_{FW} - F_S$ where $F_{FW}$ is the flywheel force and $F_S$ is the spring force, representing the total primary clamping force.} % Output
+{$m$: Mass of the system. \\ 
+  &$r_{\text{flyi}}$: Radius related to the flywheel. \\ 
+  &$F_{\text{primHeight}}(d_{\text{shift}})$: Function that represents the height of the primary system. \\
+  &$F_{\text{prim}}(d_{\text{shift}})$: Primary function that represents the force dependent on the shifting distance. \\ 
+  &$K_{\text{prim}}$: Stiffness or coefficient related to the primary system. \\ 
+  &$d_{\text{prc}}$: Pre-compression or pre-load distance. \\ 
+  &$d_{\text{shift}}$: Displacement or shift in the system.} % Description
 {} % Sources
-{} % Citation
 {\iref{epcm}}
+
+\subsubsection*{Derivation of Primary Clamping Force}
+The flywheel force is derived as such: \\
+$F_{FW} = m r \omega^2 \cdot \tan(F_{\text{prim}}(d_{\text{shift}}))$\\
+Where $r \omega^2$ can repersented by $r_{\text{flyi}}+h_{\text{prim}}$\\
+Then $F_{FW}$ becomes $m (r_{\text{flyi}} + h_{\text{prim}}) \cdot \tan(F_{\text{prim}}(d_{\text{shift}}))$\\
+{\newline}
+The spring force is derived as such: \\
+$-F_S$ = $+ K_{\text{prim}} (d_{\text{prc}} + d_{\text{shift}})$\\
+{\newline}
+Combine those two forces to get the total primary clamping force.\\
+$F_{FW} - F_S = m (r_{\text{flyi}} + h_{\text{prim}}) \cdot \tan(F_{\text{prim}}(d_{\text{shift}})) + K_{\text{prim}} (d_{\text{prc}} + d_{\text{shift}})$ 
+
+
+\definstance
+{Secondary Clamping Force}
+{$K_e$, $\theta_{\text{sec}}$, $\theta_{\text{shift}}$, $r_{\text{secramp}}$, $f_{\text{sec}}(d_{\text{shift}})$, $K_c$, $\delta_{\text{sec}}$, $d_{\text{shift}}$} % Input
+{$F_S + F_H = \frac{K_e (\theta_{\text{sec}} + \theta_{\text{shift}}) + T_{eng} CVT_{ratio}}{2 \cdot r_{\text{secramp}} \cdot \tan(f_{\text{sec}}(d_{\text{shift}}))} + K_c (\delta_{\text{sec}} + d_{\text{shift}})$} % 
+{$F_s + F_H$ where $F_S$ is spring clamping force and $F_H$ is the helix clamping force added together are the total the secondary clamping force } % Output
+{$K_e$: Stiffness or spring constant related to elastic deformation. \\
+  &$\theta_{\text{sec}}$: Secondary angle or rotational position. \\
+  &$\theta_{\text{shift}}$: Shift in the secondary angle. \\
+  &$r_{\text{secramp}}$: Radius or ramp characteristic related to the secondary system. \\
+  &$f_{\text{sec}}(d_{\text{shift}})$: Function representing the force as a function of the secondary displacement or shift. \\
+  &$K_c$: Stiffness or coefficient related to a damping or correction factor. \\
+  &$\delta_{\text{sec}}$: Secondary deflection or displacement variable. \\
+  &$d_{\text{shift}}$: Displacement or shift in the system.\\
+  &$T_{eng}$: Torque of the engine. \\
+  &$CVT_{ratio}$: Ratio of the CVT system.
+} % Description
+{} % Sources
+{\iref{epcm}}
+
+\subsubsection*{Derivation of Secondary Clamping Force}
+The spring force is derived as such: \\
+$F_S = \frac{K_e (\theta_{\text{sec}} + \theta_{\text{shift}})}{2 \cdot r_{\text{secramp}} \cdot \tan(f_{\text{sec}}(d_{\text{shift}}))} + K_c (\delta_{\text{sec}} + d_{\text{shift}})$\\
+{\newline}
+The helix force is derived as such: \\
+$F_H = \frac{T_{eng} CVT_{ratio}}{2 \cdot r_{\text{secramp}} \cdot \tan(f_{\text{sec}}(d_{\text{shift}}))}$\\
+{\newline}
+Combine those two forces to get the total secondary clamping force.\\
+$F_S + F_H = \frac{K_e (\theta_{\text{sec}} + \theta_{\text{shift}}) + T_{eng} CVT_{ratio}}{2 \cdot r_{\text{secramp}} \cdot \tan(f_{\text{sec}}(d_{\text{shift}}))} + K_c (\delta_{\text{sec}} + d_{\text{shift}})$
+
 
 \definstance
 {CVT Ratio}
