@@ -134,7 +134,7 @@
 \begin{tabular}{| p{\colAwidth} | p{\colBwidth}|}
   \hline
   \rowcolor[gray]{0.9}
-  Number& IM\refstepcounter{instnum}\theinstnum \label{ewat}\\
+  Number& IM\refstepcounter{instnum}\theinstnum \label{inst:\theinstnum}\\
   \hline
   Label& \bf #1 \\
   \hline
@@ -620,19 +620,6 @@ includes the following elements:
 \end{itemize}
 We might also want belt length, belt width, belt weight?, other properties
 
-
-\plt{A figure here makes sense for most SRS documents}
-
-% \begin{figure}[h!]
-% \begin{center}
-% %\rotatebox{-90}
-% {
-%  \includegraphics[width=0.5\textwidth]{<FigureName>}
-% }
-% \caption{\label{<Label>} <Caption>}
-% \end{center}
-% \end{figure}
-
 \subsubsection{Goal Statements}
 
 \begin{itemize}
@@ -985,22 +972,14 @@ N/A
 
 \subsubsection{Instance Models} \label{sec_instance}    
 
-\plt{The motivation for this section is to reduce the problem defined in
-  ``Physical System Description'' (Section~\ref{sec_phySystDescrip}) to one
-  expressed in mathematical terms. The IMs are built by refining the TMs and/or
-  GDs.  This section should remain abstract.  The SRS should specify the
-  requirements without considering the implementation.}
-
 This section transforms the problem defined in Section~\ref{Sec_pd} into 
 one which is expressed in mathematical terms. It uses concrete symbols defined 
 in Section~\ref{sec_datadef} to replace the abstract symbols in the models 
 identified in Sections~\ref{sec_theoretical} and~\ref{sec_gendef}.
+{\newline}
 
-The goals \plt{reference your goals} are solved by \plt{reference your instance
-  models}.  \plt{other details, with cross-references where appropriate.}
-\plt{Modify the examples below for your problem, and add additional models as
-  appropriate.}
-
+{\noindent}The goal statment GS\ref{GS1} are solved by Instance Models \ref{inst:1}, \ref{inst:2} and \ref{inst:3}\\
+The goal statment GS\ref{GS3} are solved by Instance Models \ref{inst:4} and \ref{inst:5}\\
   \definstance
   {Acceleration}
   {$r_{\text{gear}}, r_{\text{wheel}}, \rho, C_D, A, \theta, T_{\text{CVT}}, C_{\text{rr}}, m_v, m_d$}
@@ -1016,7 +995,7 @@ The goals \plt{reference your goals} are solved by \plt{reference your instance
   & $C_{\text{rr}}$ is the coefficient of rolling resistance\\
   & $m_v$ is the mass of the vehicle (kg)\\
   & $m_d$ is the mass of the driver(kg)}
-  {\iref{epcm}}
+  {-}
   
   
   \subsubsection*{Derivation of acceleration}
@@ -1036,7 +1015,7 @@ The goals \plt{reference your goals} are solved by \plt{reference your instance
 {$v(t) = \int a(t) dt$}
 {$v(t)$}
 {$a(t)$ is the function of acceleration over time}
-{\iref{epcm}}
+{-}
 
 \definstance
 {Distance}
@@ -1044,7 +1023,7 @@ The goals \plt{reference your goals} are solved by \plt{reference your instance
 {$d(t) = \int v(t) dt$}
 {$d(t)$}
 {$v(t)$ is the function of velocity over time}
-{\iref{epcm}}
+{-}
 
 \definstance
 {Primary Clamping Force}
@@ -1059,7 +1038,7 @@ The goals \plt{reference your goals} are solved by \plt{reference your instance
   &$d_{\text{prc}}$: Pre-compression or pre-load distance. \\ 
   &$d_{\text{shift}}$: Displacement or shift in the system.} % Description
 {} % Sources
-{\iref{epcm}}
+{-}
 
 \subsubsection*{Derivation of Primary Clamping Force}
 The flywheel force is derived as such: \\
@@ -1091,7 +1070,7 @@ $F_{FW} - F_S = m (r_{\text{flyi}} + h_{\text{prim}}) \cdot \tan(F_{\text{prim}}
   &$CVT_{ratio}$: Ratio of the CVT system.
 } % Description
 {} % Sources
-{\iref{epcm}}
+{-}
 
 \subsubsection*{Derivation of Secondary Clamping Force}
 The spring force is derived as such: \\
@@ -1111,7 +1090,7 @@ $F_S + F_H = \frac{K_e (\theta_{\text{sec}} + \theta_{\text{shift}}) + T_{eng} C
 {} % Description
 {} % Sources
 {} % Citation
-{\iref{epcm}}
+{-}
 
 \definstance
 {Torque Transferred}
@@ -1120,7 +1099,7 @@ $F_S + F_H = \frac{K_e (\theta_{\text{sec}} + \theta_{\text{shift}}) + T_{eng} C
 {} % Description
 {} % Sources
 {} % Citation
-{\iref{epcm}}
+{-}
 
 \definstance
 {RPM and Torque of Engine}
@@ -1129,15 +1108,7 @@ $F_S + F_H = \frac{K_e (\theta_{\text{sec}} + \theta_{\text{shift}}) + T_{eng} C
 {} % Description
 {} % Sources
 {} % Citation
-{\iref{epcm}}
-
-%~\newline
-
-\subsubsection*{Derivation of ...}
-
-\plt{The derivation shows how the IM is derived from the TMs/GDs.  In cases
-  where the derivation cannot be described under the Description field, it will
-  be necessary to include this subsection.}
+{-}
 
 \subsubsection{Input Data Constraints} \label{sec_DataConstraints}    
 
@@ -1301,21 +1272,16 @@ These simplifications affect the process of formulating equations governing velo
 
 \noindent \begin{itemize}
 
-\item[LC\refstepcounter{lcnum}\thelcnum\label{LC_meaningfulLabel}:] \plt{Give
-    the likely changes, with a reference to the related assumption (aref), as appropriate.}
+\item[LC\refstepcounter{lcnum}\thelcnum\label{LC_1}:] The effect of temperature on material properties might be included in the future, (A\ref{A_1})
+\item[LC\refstepcounter{lcnum}\thelcnum\label{LC_2}:] The elasticity of the belt might be considered in the future, (A\ref{A_3})
+\item[LC\refstepcounter{lcnum}\thelcnum\label{LC_3}:] Frictional losses in non-critical components might be considered in the future, (A\ref{A_6})
+\item[LC\refstepcounter{lcnum}\thelcnum\label{LC_4}:] Some of the math models will most likely change as the design is refined.
 
 \end{itemize}
 
 \section{Unlikely Changes}    
 
-\noindent \begin{itemize}
-
-\item[LC\refstepcounter{lcnum}\thelcnum\label{LC_meaningfulLabel}:] \plt{Give
-    the unlikely changes.  The design can assume that the changes listed will
-    not occur.}
-
-\end{itemize}
-
+None
 \section{Traceability Matrices and Graphs}
 
 The purpose of the traceability matrices is to provide easy references on what
