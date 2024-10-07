@@ -1542,16 +1542,26 @@ be covered in the Verification and Validation document.}
 
 \noindent \begin{itemize}
 
-\item[NFR\refstepcounter{nfrnum}\thenfrnum \label{NFR_Accuracy}:] The system shall be acccurate.
-\item[NFR\refstepcounter{nfrnum}\thenfrnum \label{NFR_Usability}:] The system shall be user-friendly and straight forward to use.
-\item[NFR\refstepcounter{nfrnum}\thenfrnum \label{NFR_Maintainability}:] The system shall be easy to maintain and update.
-\item[NFR\refstepcounter{nfrnum}\thenfrnum \label{NFR_Verifiability}:] The systems shall output results that are verifiable.
-\item[NFR\refstepcounter{nfrnum}\thenfrnum \label{NFR_Understandability}:] The system shall be easy to understand.
-\item[NFR\refstepcounter{nfrnum}\thenfrnum \label{NFR_Reusability}:] The system shall be reusable.
+\item[NFR\refstepcounter{nfrnum}\thenfrnum \label{NFR_Accuracy}:]\textbf{Accuracy} The system shall achieve an accuracy of at least 95 \% in correctly predicting CVT outputs.
+\item[NFR\refstepcounter{nfrnum}\thenfrnum \label{NFR_Usability}:] \textbf{Usability} 85 \% of a representative user group shall be able to successively input CVT parameters and receive CVT outputs on their first use.
+\item[NFR\refstepcounter{nfrnum}\thenfrnum \label{NFR_Maintainability}:]\textbf{Maintainability} If a likely change is made to the finished software, it will take at most 10 \% of the original development time, assuming the same development resources are available.
+\item[NFR\refstepcounter{nfrnum}\thenfrnum \label{NFR_Verifiability}:] \textbf{Verifiability} The system shall output the resulting tunned CVT outputs which must able to be cross-verified against data available through the McMaster Baja Team with a consistency rate of 95 \%.
+\item[NFR\refstepcounter{nfrnum}\thenfrnum \label{NFR_Understandability}:] \textbf{Understandability} The system shall be understood by at least 90 \% of a representative user group with no more than 15 minutes of initial training, as measured by assessing ability to generate and export tunned CVT output where users must score at least 90 \%
+\item[NFR\refstepcounter{nfrnum}\thenfrnum \label{NFR_Reusability}:] \textbf{Reusability} The system's components shall be designed for reuse in the case the McMaster Baja team acquires a new CVT. These modifications should be made with minimal modifications, defined as requiring modification to less than 30 \% of the code to configure these changes.
 
 \end{itemize}
 
 \subsection{Rationale}
+
+The assumptions made for the CVT (Continuously Variable Transmission) system model aim to simplify its dynamics, making it easier to analyze and develop a solution. 
+A key assumption is the exclusion of temperature effects on material properties, aside from the belt, which allows for a more straightforward focus on the mechanics of the interactions (A1). 
+The negligible influence of gravitational forces, further simplifies the problem by removing the need to eliminating the need to consider variations in position. 
+Additionally, the elasticity of belts is considered insignificant, treating components as ideally rigid, allowing the development of a model without accounting for material deformations (A3). 
+Vibrational effects from external sources are also assumed to be minimal, avoiding the complexity of vibration-induced disturbances in the transmission behavior (A4). 
+Wear and tear of components, including the belt and pulley are disregarded for short-term operational modeling, allowing for an idealized performance assumption (A5). 
+Frictional losses in non-critical components, are deemed negligible, allowing the focus to frictional effects that directly impact the CVT’s core mechanics (A6). 
+Finally, the engine is assumed to operate at full throttle with consistent power delivery, simplifying the model by maintaining uniform engine behavior (A4).
+These simplifications affect the process of formulating equations governing velocity, distance, primary clamping force, secondary clamping force, CVT Ratio, Torque transfer and RPM and Torque of the Engine(IM1-IM8)
 
 \plt{Provide a rationale for the decisions made in the documentation.  Rationale
 should be provided for scope decisions, modelling decisions, assumptions and
