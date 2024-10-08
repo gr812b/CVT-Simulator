@@ -616,12 +616,20 @@ includes the following elements:
 
 \item[PS13:] Angle on Incline ($\theta_{\text{inc}}$) in radians.
 
-\item[PS14:] Secondary Ramp Radius ($r_{\text{sec\_ramp}}$) in m.
+\item[PS14:] Secondary ramp radius ($r_{\text{sec\_ramp}}$) in m.
 
 \item[PS15:] Traction ($\mu_{\text{traction}}$), unitless.
 
+\item[PS16:] CVT Geometry
+\item[] \begin{itemize}
+  \item [PS16a:] Primary shaft initial radius ($r_{\text{prim\_shaft}}$) in m.
+  \item [PS16b:] Secondary shaft initial radius ($r_{\text{sec\_shaft}}$) in m.
 \end{itemize}
-We might also want belt length, belt width, belt weight?, other properties
+
+\item[PS17:] Angle between sheaves ($\theta_{\text{sheave}}$) in radians. 
+
+\end{itemize}
+We also want belt length, belt width, belt height, belt weight, other properties
 
 \subsubsection{Goal Statements}
 
@@ -701,7 +709,7 @@ This portion will specify the existing theories that are used in the development
 {$F = k \Delta x$}% #4 equation
 {F is the force (N)\\
   k is the spring constant (N/m)\\
-  $\Delta x$ is the displacement (m)\\}% #5 description
+  $\Delta x$ is the displacement (m)}% #5 description
 {In the context of this project Hookes law is used in both a torsional and linear way.}% #6 Notes
 {\url{https://www.britannica.com/science/Hookes-law}}% #7 Source
 {}% #8 Referenced by
@@ -718,7 +726,7 @@ This portion will specify the existing theories that are used in the development
 {F is the force (N) \\
   m is the mass (kg)\\
   $\omega$ is the angular velocity (rad/s)\\
-  r is the radius (m)\\}% #5 description
+  r is the radius (m)}% #5 description
 {None.}% #6 Notes
 {\url{https://www.omnicalculator.com/physics/centrifugal-force}}% #7 Source
 {}% #8 Referenced by
@@ -736,7 +744,7 @@ This portion will specify the existing theories that are used in the development
   $\rho$ is the density of the fluid (kg/m$^3$)\\
   v is the velocity of the object (m/s)\\
   $C_d$ is the drag coefficient\\
-  A is the cross-sectional area of the object (m$^2$)\\}% #5 description
+  A is the cross-sectional area of the object (m$^2$)}% #5 description
 {None.}% #6 Notes
 {\url{https://softschools.com/formulas/physics/air_resistance_formula/85/}}% #7 Source
 {}% #8 Referenced by
@@ -752,7 +760,7 @@ This portion will specify the existing theories that are used in the development
 {$\tau = \frac{P}{\omega}$} % #4 equation
 {$\tau$ is the torque (N-m)\\
   P is the power (W)\\
-  $\omega$ is the angular velocity (rad/s)\\}% #5 description
+  $\omega$ is the angular velocity (rad/s)}% #5 description
 {None.}% #6 Notes
 {\url{https://powertestdyno.com/how-to-calculate-horsepower/}}% #7 Source
 {}% #8 Referenced by
@@ -767,7 +775,7 @@ This portion will specify the existing theories that are used in the development
 {Gearing}% #3 label
 {$\tau_{\text{output}} = \tau_{\text{input}} \times \text{gear reduction}$}% #4 equation
 {$\tau_{\text{output}}$ is the output torque (N-m)\\
-  $\tau_{\text{input}}$ is the input torque (N-m)\\}% #5 description
+  $\tau_{\text{input}}$ is the input torque (N-m)}% #5 description
 {None.}% #6 Notes
 {\url{https://science.howstuffworks.com/transport/engines-equipment/gear-ratio.htm}}% #7 Source
 {}% #8 Referenced by
@@ -783,7 +791,7 @@ This portion will specify the existing theories that are used in the development
 {$F_f = \mu F_n$}% #4 equation
 {$\mu_{\text{effective}}$ is the effective coefficient of friction\\
   $\mu_{\text{nominal}}$ is the nominal coefficient of friction\\
-  $\phi$ is the angle of wrap of the belt (radians)\\}% #5 description
+  $\phi$ is the angle of wrap of the belt (radians)}% #5 description
 {None.}% #6 Notes
 {\url{https://en.wikipedia.org/wiki/Friction}}% #7 Source
 {}% #8 Referenced by
@@ -797,7 +805,7 @@ This portion will specify the existing theories that are used in the development
 {$\rho = \frac{m}{V}$}% #4 equation
 {$\rho$ is the density (kg/m$^3$)\\
   m is the mass (kg)\\
-  V is the volume (m$^3$)\\}% #5 description
+  V is the volume (m$^3$)}% #5 description
 {None.}% #6 Notes
 {\url{https://www.britannica.com/science/density-physics}}% #7 Source
 {}% #8 Referenced by
@@ -814,7 +822,7 @@ This portion will specify the existing theories that are used in the development
 {$T_1$ is the tension on the first side of the belt (N)\\
   $T_2$ is the tension on the second side of the belt (N)\\
   $\mu$ is the coefficient of friction\\
-  $\theta$ is the angle of wrap of the belt (radians)\\}% #5 description
+  $\theta$ is the angle of wrap of the belt (radians)}% #5 description
 {None.}% #6 Notes
 {\url{https://hackaday.com/2021/01/26/cable-mechanism-maths-designing-against-the-capstan-equation/}}% #7 Source
 {}% #8 Referenced by
@@ -830,7 +838,7 @@ This portion will specify the existing theories that are used in the development
 {$F = ma$}% #4 equation
 {  F is the force (N)\\
   m is the mass (kg)\\
-  a is the acceleration (m/s$^2$)\\}% #5 description
+  a is the acceleration (m/s$^2$)}% #5 description
 {Newtons 2nd law is used repeatedly in several Instance models}% #6 Notes
 {\url{https://www.physicsclassroom.com/class/newtlaws/lesson-3/newton-s-second-law}}% #7 Source
 {}% #8 Referenced by
@@ -839,6 +847,48 @@ This portion will specify the existing theories that are used in the development
 
 \subsubsection*{Helper Theories}
 This portion will define auxiliary theories to aid in further derivation below.
+
+\noindent
+\deftheory
+{TM:D2R}% #2 refname of theory
+{Shift Distance to Pulley Radius}% #3 label
+{$\Delta r = \frac{d_\text{shift}}{2\tan(\frac{\phi}{2})}$}% #4 equation
+{$d_\text{shift}$ is the axial shift distance, or sheave displacement (m)\\
+$\Delta r$ is the change in effective radius (m)\\
+$\phi$ is the angle between sheaves (rad)}% #5 description
+{Derived based on geometry of the sheaves and belt}% #6 Notes
+{See below for derivation}% #7 Source
+{}% #8 Referenced by
+{None}% #9 Preconditions
+{}% #1 derivation - not applicable by default
+
+\noindent
+\deftheory
+{TM:D2RA}% #2 refname of theory
+{Shift Distance to Ramp Angle}% #3 label
+{$\theta_\text{ramp} = f_\text{prim}(d_\text{shift})$}% #4 equation
+{$d_\text{shift}$ is the axial shift distance, or sheave displacement (m)\\
+$\theta_\text{ramp}$ is the instantaneous ramp angle (rad)\\
+$f_\text{prim}(d)$ is the function to express the ramp geometry (m $\rightarrow$ rad)}% #5 description
+{The user will input the geometry of the ramp, which will then be intepreted to generate $f_\text{prim}$}% #6 Notes
+{See below for derivation}% #7 Source
+{}% #8 Referenced by
+{None}% #9 Preconditions
+{}% #1 derivation - not applicable by default
+
+\noindent
+\deftheory
+{TM:D2HA}% #2 refname of theory
+{Shift Distance to Helix Angle}% #3 label
+{$\theta_\text{ramp} = f_\text{sec}(d_\text{shift})$}% #4 equation
+{$d_\text{shift}$ is the axial shift distance, or sheave displacement (m)\\
+$\theta_\text{ramp}$ is the instantaneous helix angle (rad)\\
+$f_\text{prim}(d)$ is the function to express the helix geometry (m $\rightarrow$ rad)}% #5 description
+{The user will input the geometry of the helix, which will then be intepreted to generate $f_\text{sec}$}% #6 Notes
+{See below for derivation}% #7 Source
+{}% #8 Referenced by
+{None}% #9 Preconditions
+{}% #1 derivation - not applicable by default
 
 
 Add here stuff like:
