@@ -154,6 +154,32 @@
 \end{minipage}\\
 }
 
+\newcommand{\defgeneral}[6] {
+~\newline
+\noindent
+\begin{minipage}{\textwidth}
+\renewcommand*{\arraystretch}{1.5}
+\begin{tabular}{| p{\colAwidth} | p{\colBwidth}|}
+  \hline
+  \rowcolor[gray]{0.9}
+  Number& GD\refstepcounter{defnum}\thedefnum \label{GD_\thedefnum}\\
+  \hline
+  Label& \bf #1 \\
+  \hline
+  SI Units& #2\\
+  \hline
+  Equation& #3\\
+  \hline
+  Description& #4 \\
+  \hline
+  Source& #5 \\
+  \hline
+  Ref.\ By & #6\\
+  \hline
+\end{tabular}
+\end{minipage}\\
+}
+
 \newcommand{\defdata}[8] {
 ~\newline
 \noindent
@@ -575,50 +601,57 @@ includes the following elements:
   \item [P55d:] pre-torsional rotation ($\theta_{\text{sec}}$) in radians.
 \end{itemize}
 
-\item[PS6:] Secondary ramp geometry function ($f_{\text{sec}}$)
+\item[PS6:] Secondary ramp geometry function ($f_{\text{sec\_ramp}}$)
 
 \begin{itemize}
   \item [PS6a:] shift distance ($d_{\text{shift}}$) in m.
-  \item [PS6b:] output angle ($\theta_{\text{sec}}$) in radians.
+  \item [PS6b:] output angle ($\theta_{\text{ramp}}$) in radians.
 \end{itemize}
 
-\item[PS6:] Weight
+\item[PS7:] Secondary ramp rotation function ($f_{\text{sec\_shift}}$)
 
 \begin{itemize}
-  \item [PS7a:] driver weight ($m_{\text{d}}$) in kg.
-  \item [PS7b:] vehicle weight ($m_{\text{v}}$) in kg.
+  \item [PS7a:] shift distance ($d_{\text{shift}}$) in m.
+  \item [PS7b:] output angle ($\theta_{\text{shift}}$) in radians.
 \end{itemize}
 
-\item[PS8:] Engine torque function ($f_{\text{engine}}$)
+\item[PS8:] Weight
 
 \begin{itemize}
-  \item [PS8a:] input angular velocity ($\omega_{\text{engine}}$) in rad/s.
-  \item [PS8b:] output torque ($T_{\text{engine}}$) in Nm.
+  \item [PS8a:] driver weight ($m_{\text{d}}$) in kg.
+  \item [PS8b:] vehicle weight ($m_{\text{v}}$) in kg.
 \end{itemize}
 
-\item[PS9:] Belt
+\item[PS9:] Engine torque function ($f_{\text{engine}}$)
 
 \begin{itemize}
-  \item [PS9a:] angle with sheave ($\theta_{\text{belt}}$). I think this does not need to exist, it matches the sheave angle?
-  \item [PS9b:] friction coefficient ($\mu_{\text{belt}}$), unitless.
+  \item [PS9a:] input angular velocity ($\omega_{\text{engine}}$) in rad/s.
+  \item [PS9b:] output torque ($T_{\text{engine}}$) in Nm.
 \end{itemize}
 
-\item[PS10:] Total reduction
+\item[PS10:] Belt
 
 \begin{itemize}
-  \item [PS10a:] gearbox reduction ratio ($r_{\text{gearbox}}$), unitless.
-  \item [PS10b:] wheel radius ($r_{\text{wheel}}$) in m.
+  \item [PS10a:] angle with sheave ($\theta_{\text{belt}}$). I think this does not need to exist, it matches the sheave angle?
+  \item [PS10b:] friction coefficient ($\mu_{\text{belt}}$), unitless.
 \end{itemize}
 
-\item[PS11:] Coefficient of air resistance ($\mu_{\text{air}}$), unitless.
+\item[PS11:] Total reduction
 
-\item[PS12:] Center to Center distance ($d_{\text{center}}$) in m.
+\begin{itemize}
+  \item [PS11a:] gearbox reduction ratio ($r_{\text{gearbox}}$), unitless.
+  \item [PS11b:] wheel radius ($r_{\text{wheel}}$) in m.
+\end{itemize}
 
-\item[PS13:] Angle on Incline ($\theta_{\text{inc}}$) in radians.
+\item[PS12:] Coefficient of air resistance ($\mu_{\text{air}}$), unitless.
 
-\item[PS14:] Secondary Ramp Radius ($r_{\text{sec\_ramp}}$) in m.
+\item[PS13:] Center to Center distance ($d_{\text{center}}$) in m.
 
-\item[PS15:] Traction ($\mu_{\text{traction}}$), unitless.
+\item[PS14:] Angle on Incline ($\theta_{\text{inc}}$) in radians.
+
+\item[PS15:] Secondary Ramp Radius ($r_{\text{sec\_ramp}}$) in m.
+
+\item[PS16:] Traction ($\mu_{\text{traction}}$), unitless.
 
 \end{itemize}
 We might also want belt length, belt width, belt weight?, other properties
@@ -853,6 +886,34 @@ Add here stuff like:
 
 We do not have any general definitions at this time.
 
+\defgeneral
+{Helix Side Force} % #1 label
+{N = \si{\kilogram \metre\per\square\second}} % #2 units
+{$F_H = \frac{T_{\text{eng}}CVT_{\text{ratio}}}{2r\tan(\beta)}$} % #3 equation
+{$F_H$ is the side force due to the helix (N) \\
+& $T_{\text{eng}}$ is the engine torque (N-m) \\
+& $CVT_{\text{ratio}}$ is the CVT ratio (unitless) \\
+& $r$ is the radius of the ramps from the shaft (m) \\
+& $\beta$ is the helix angle (rad)} % #4 description
+{} % #5 source
+{\iref{inst:5}} % #6 referenced by
+
+\defgeneral
+{Spring Side Force} % #1 label
+{N = \si{\kilogram \metre\per\square\second}} % #2 units
+{$F_S = \frac{k_{\text{tor}}(\theta_0 + \theta)}{2r\tan(\beta)} + k_\text{comp}(x_0 + x)$} % #3 equation
+{$F_S$ is the side force due to the spring (N) \\
+& $k_{\text{tor}}$ is the torsional spring constant (\si[per-mode=symbol] {\newton\metre\per\radian}) \\
+& $\theta_0$ is the initial torsion (rad) \\
+& $\theta$ is the amount of angular torsion (rad) \\
+& $k_{\text{comp}}$ is the compression spring constant (\si[per-mode=symbol] {\newton\per\metre}) \\
+& $x_0$ is the initial compression (m) \\
+& $x$ is the amount of compression (m) \\
+& $r$ is the radius of the ramps from the shaft (m) \\
+& $\theta$ is the amount of angular torsion (rad)} % #4 description
+{} % #5 source
+{\iref{inst:5}} % #6 referenced by
+
 \subsubsection{Data Definitions}\label{sec_datadef}
 
 This section collects and defines all the data needed to build the instance
@@ -1059,9 +1120,9 @@ F_{FW} - F_S = m (r_{\text{fly}} + f_{\text{prim\_height}}(d_{\text{shift}}))\om
 
 \definstance
 {Secondary Clamping Force}
-{$k_{\text{sec\_tor}}$, $\theta_{\text{sec}}$, $r_{\text{sec\_ramp}}$, $f_{\text{sec}}(d_{\text{shift}})$, $k_{\text{sec\_comp}}$, $d_{\text{sec}}$, $d_{\text{shift}}$} % Input
-{$F_S + F_H = \frac{k_{\text{sec\_tor}} (\theta_{\text{sec}} + f_{\text{sec}}(d_{\text{shift}})) + T_{eng} CVT_{ratio}}{2 \cdot r_{\text{sec\_ramp}} \cdot \tan(f_{\text{sec}}(d_{\text{shift}}))} + k_{\text{sec\_comp}} (d_{\text{sec}} + d_{\text{shift}})$} % 
-{$F_s + F_H$ where $F_S$ is spring clamping force and $F_H$ is the helix clamping force added together are the total the secondary clamping force } % Output
+{$k_{\text{sec\_tor}}$, $\theta_{\text{sec}}$, $r_{\text{sec\_ramp}}$, $f_{\text{sec\_ramp}}(d_{\text{shift}})$, $f_{\text{sec\_shift}}(d_{\text{shift}})$, $k_{\text{sec\_comp}}$, $d_{\text{sec}}$, $d_{\text{shift}}$} % Input
+{$F_{\text{sec\_clamp}} = \frac{k_{\text{sec\_tor}} (\theta_{\text{sec}} + f_{\text{sec\_shift}}(d_{\text{shift}})) + T_{eng} CVT_{ratio}}{2 r_{\text{sec\_ramp}} \tan(f_{\text{sec\_ramp}}(d_{\text{shift}}))} + k_{\text{sec\_comp}} (d_{\text{sec}} + d_{\text{shift}})$} % 
+{Secondary clamping force $F_{\text{sec\_clamp}}$} % Output
 {$k_{\text{sec\_tor}}$: Torsional spring rate. \\
   &$\theta_{\text{sec}}$: Initial torsional rotation. \\
   &$f_{\text{sec}}(d_{\text{shift}})$: Amount of torsional rotation based on the distance shifted. \\
@@ -1073,23 +1134,46 @@ F_{FW} - F_S = m (r_{\text{fly}} + f_{\text{prim\_height}}(d_{\text{shift}}))\om
   &$CVT_{ratio}$: Ratio of the CVT system.
 } % Description
 {} % Sources
-{IM6}
+{\iref{inst:6}}
 
 \subsubsection*{Derivation of Secondary Clamping Force}
 
-The spring force is derived as follows: 
+The secondary clamping force is derived as follows:
 \[
-F_S = \frac{k_{\text{sec\_tor}} (\theta_{\text{sec}} + \theta_{\text{shift}})}{2 \cdot r_{\text{secramp}} \cdot \tan(f_{\text{sec}}(d_{\text{shift}}))} + K_c (\delta_{\text{sec}} + d_{\text{shift}})
+F_{\text{sec\_clamp}}\ = F_H + F_S
 \]
 
-The helix force is derived as follows: 
+The helix force is derived as follows:
+
 \[
-F_H = \frac{T_{eng} \cdot CVT_{ratio}}{2 \cdot r_{\text{secramp}} \cdot \tan(f_{\text{sec}}(d_{\text{shift}}))}
+F_H = \frac{T_{\text{eng}}CVT_{\text{ratio}}}{2r\tan(\beta)}
+\]
+
+Substituting in our variables gives us the following equation:
+
+\[
+F_H = \frac{T_{eng} CVT_{ratio}}{2 r_{\text{sec\_ramp}} \tan(f_{\text{sec\_ramp}}(d_{\text{shift}}))}
+\]
+
+The spring force is derived as follows:
+
+\[
+F_S = \frac{k_{\text{tor}}(\theta_0 + \theta)}{2r\tan(\beta)} + k_\text{comp}(x_0 + x)
+\]
+
+Substituting in our variables gives us the following equation:
+\[
+F_S = \frac{k_{\text{sec\_tor}} (\theta_{\text{sec}} + f_{\text{sec\_shift}}(d_{\text{shift}}))}{2 r_{\text{sec\_ramp}} \tan(f_{\text{sec\_ramp}}(d_{\text{shift}}))} + k_{\text{sec\_comp}} (d_{\text{sec}} + d_{\text{shift}})
 \]
 
 Combining these two forces gives the total secondary clamping force:
 \[
-F_S + F_H = \frac{k_{\text{sec\_tor}} (\theta_{\text{sec}} + \theta_{\text{shift}}) + T_{eng} \cdot CVT_{ratio}}{2 \cdot r_{\text{secramp}} \cdot \tan(f_{\text{sec}}(d_{\text{shift}}))} + K_c (\delta_{\text{sec}} + d_{\text{shift}})
+F_H + F_S = \frac{T_{eng} CVT_{ratio}}{2 r_{\text{sec\_ramp}} \tan(f_{\text{sec\_ramp}}(d_{\text{shift}}))} + \frac{k_{\text{sec\_tor}} (\theta_{\text{sec}} + f_{\text{sec\_shift}}(d_{\text{shift}}))}{2 r_{\text{sec\_ramp}} \tan(f_{\text{sec\_ramp}}(d_{\text{shift}}))} + k_{\text{sec\_comp}} (d_{\text{sec}} + d_{\text{shift}})
+\]
+
+The final equation can be reached through simplifying the above equation by combining like terms:
+\[
+F_{\text{sec\_clamp}} = \frac{k_{\text{sec\_tor}} (\theta_{\text{sec}} + f_{\text{sec\_shift}}(d_{\text{shift}})) + T_{eng} CVT_{ratio}}{2 r_{\text{sec\_ramp}} \tan(f_{\text{sec\_ramp}}(d_{\text{shift}}))} + k_{\text{sec\_comp}} (d_{\text{sec}} + d_{\text{shift}})
 \]
 
 \definstance
