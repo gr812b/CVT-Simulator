@@ -1022,7 +1022,7 @@ models. The dimension of each quantity is also given.
 {Gravitational Constant}
 {$g$}
 {\si[per-mode=symbol] {\metre\per\square\second}}
-{$F_g = m \cdot g$}
+{$F_g = m g$}
 {$g$ is the gravitational constant (\si[per-mode=symbol] {\metre\per\square\second})\\
 & $F_g$ is the force of gravity\\
 & $m$ is the mass}% #6 description
@@ -1135,7 +1135,7 @@ a = \frac{\left( \frac{T_{\text{CVT}}}{r_{\text{gear}} + r_{\text{wheel}}} \righ
 \definstance
 {Primary Clamping Force}
 {$m$, $r_{\text{fly}}$, $f_{\text{prim\_height}}(d_{\text{shift}})$, $f_{\text{prim\_angle}}(d_{\text{shift}})$, $k_{\text{prim}}$, $d_{\text{prim}}$, $d_{\text{shift}}$} % Input
-{$F_{\text{prim\_clamp}} = m (r_{\text{fly}} + f_{\text{prim\_height}}({d_\text{{shift}}})) \cdot \tan(f_{\text{prim\_angle}}(d_{\text{shift}})) + k_{\text{prim}} (d_{\text{prim}} + d_{\text{shift}})$} % 
+{$F_{\text{prim\_clamp}} = m (r_{\text{fly}} + f_{\text{prim\_height}}({d_\text{{shift}}}))\omega^2 \tan(f_{\text{prim\_angle}}(d_{\text{shift}})) + k_{\text{prim}} (d_{\text{prim}} + d_{\text{shift}})$} % 
 {The primary clamping force $F_{\text{prim\_clamp}}$}
 {$m$: Mass of the system. \\ 
   &$r_{\text{fly}}$: Radius related to the flywheel. \\ 
@@ -1145,7 +1145,7 @@ a = \frac{\left( \frac{T_{\text{CVT}}}{r_{\text{gear}} + r_{\text{wheel}}} \righ
   &$d_{\text{shift}}$: Displacement or shift in the system.
 } % Description
 {} % Sources
-{IM6}
+{\iref{inst:6}}
 
 \subsubsection*{Derivation of Primary Clamping Force}
 
@@ -1156,11 +1156,11 @@ The axial force is what is responsible for moving the mechanism causing the flyw
 To find the flywheel force in this axial direction the tangent of the angle $f_{\text{prim\_angle}}(d_{\text{shift}})$ is used.
 The flywheel force is derived as follows: 
 \[
-F_{FW} = m r \omega^2 \cdot \tan(f_{\text{prim\_angle}}(d_{\text{shift}}))
+F_{FW} = m r \omega^2 \tan(f_{\text{prim\_angle}}(d_{\text{shift}}))
 \]
 Where \( r \) can be represented by \( r_{\text{fly}} + f_{\text{prim\_height}}(d_{\text{shift}}) \). Then \( F_{FW} \) becomes 
 \[
-F_{FW} = m (r_{\text{fly}} + f_{\text{prim\_height}}(d_{\text{shift}}))\omega^2 \cdot \tan(f_{\text{prim\_angle}}(d_{\text{shift}}))
+F_{FW} = m (r_{\text{fly}} + f_{\text{prim\_height}}(d_{\text{shift}}))\omega^2 \tan(f_{\text{prim\_angle}}(d_{\text{shift}}))
 \]
 
 The spring force is derived as follows: 
@@ -1170,12 +1170,12 @@ The spring force is derived as follows:
 
 Combining these two forces gives the total primary clamping force:
 \[
-F_{FW} - F_S = m (r_{\text{fly}} + f_{\text{prim\_height}}(d_{\text{shift}}))\omega^2 \cdot \tan(f_{\text{prim\_angle}}(d_{\text{shift}})) + k_{\text{prim}} (d_{\text{prim}} + d_{\text{shift}})
+F_{FW} - F_S = m (r_{\text{fly}} + f_{\text{prim\_height}}(d_{\text{shift}}))\omega^2 \tan(f_{\text{prim\_angle}}(d_{\text{shift}})) + k_{\text{prim}} (d_{\text{prim}} + d_{\text{shift}})
 \]
 
 The final equation can be written as:
 \[
-F_{\text{prim\_clamp}} = m (r_{\text{fly}} + f_{\text{prim\_height}}(d_{\text{shift}}))\omega^2 \cdot \tan(f_{\text{prim\_angle}}(d_{\text{shift}})) + k_{\text{prim}} (d_{\text{prim}} + d_{\text{shift}})
+F_{\text{prim\_clamp}} = m (r_{\text{fly}} + f_{\text{prim\_height}}(d_{\text{shift}}))\omega^2 \tan(f_{\text{prim\_angle}}(d_{\text{shift}})) + k_{\text{prim}} (d_{\text{prim}} + d_{\text{shift}})
 \]
 
 \definstance
@@ -1255,8 +1255,8 @@ F_{\text{sec\_clamp}} = \frac{k_{\text{sec\_tor}} (\theta_{\text{sec}} + f_{\tex
 
 \subsubsection*{Derivation of Sheave Acceleration}
 From Instance Model \ref{inst:7}'s derivation we get these torque equations:\\
-$T_T$ is defined as: \[T_T = T_s \cdot e^{\mu \theta}\]
-$T_s$ is defined as: \[T_s = \frac{T_{\text{eng}}}{r_{\text{prim}} \cdot (e^{\mu \theta} - 1)}\]
+$T_T$ is defined as: \[T_T = T_s e^{\mu \theta}\]
+$T_s$ is defined as: \[T_s = \frac{T_{\text{eng}}}{r_{\text{prim}} (e^{\mu \theta} - 1)}\]
 
 Using Newton's second law, the acceleration of the sheave is derived as follows:
 \[ma = F_{\text{clamp\_prim}} - F_{\text{clamp\_sec}} - \mu (T_T - T_s)\]
@@ -1268,7 +1268,7 @@ Rearranging the equation for acceleration gives the final equation:
 \definstance
 {Belt Acceleration}
 {$T_{\text{eng}}, r_{\text{prim}}, F_F, m$ } % Input
-{$a_{\text{belt}} = \frac{T_{\text{eng}}}{m \cdot r_{\text{prim}}} - F_F$} % Equation
+{$a_{\text{belt}} = \frac{T_{\text{eng}}}{m r_{\text{prim}}} - F_F$} % Equation
 {Belt Acceleration $a_{\text{belt}}$} % Output
 {$T_{\text{eng}}$: Engine torque\\
    &$r_{\text{prim}}$: Primary radiu\\
@@ -1279,27 +1279,27 @@ Rearranging the equation for acceleration gives the final equation:
 \subsubsection*{Derivation of Belt Acceleration}
 
 The torque of the engine equation is derived as such: \\
-\[T_{\text{eng}} = (T_T - T_s) \cdot r_{\text{prim}} \quad \Rightarrow \quad T_T - T_s = \frac{T_{\text{eng}}}{r_{\text{prim}}}\]
+\[T_{\text{eng}} = (T_T - T_s) r_{\text{prim}} \quad \Rightarrow \quad T_T - T_s = \frac{T_{\text{eng}}}{r_{\text{prim}}}\]
 Similarly, for the load torque: \\
-\[T_{\text{load}} = (T_T - T_s) \cdot r_{\text{sec}} \quad \Rightarrow \quad T_T - T_s = \frac{T_{\text{load}}}{r_{\text{sec}}}\]
+\[T_{\text{load}} = (T_T - T_s) r_{\text{sec}} \quad \Rightarrow \quad T_T - T_s = \frac{T_{\text{load}}}{r_{\text{sec}}}\]
 Equating the two torque equations: \\
 \[\frac{T_{\text{eng}}}{r_{\text{prim}}} = \frac{T_{\text{load}}}{r_{\text{sec}}}\]
 {\newline}
 
 The equation for the torque of the taut side is derived as: \\
-\[T_T = T_s \cdot e^{\mu \theta}\]
+\[T_T = T_s e^{\mu \theta}\]
 Substituting this into the torque balance equation: \\
-\[\frac{T_{\text{eng}}}{r_{\text{prim}}} + T_s = T_s \cdot e^{\mu \theta}\]
+\[\frac{T_{\text{eng}}}{r_{\text{prim}}} + T_s = T_s e^{\mu \theta}\]
 Solving for \(T_s\) (slack side): \\
-\[T_s = \frac{T_{\text{eng}}}{r_{\text{prim}} \cdot (e^{\mu \theta} - 1)}\]
+\[T_s = \frac{T_{\text{eng}}}{r_{\text{prim}} (e^{\mu \theta} - 1)}\]
 {\newline}
 
 Using Newtons 2nd law the final equation for belt acceleration is derived as: \\
-\[m \cdot a_{\text{belt}} = \frac{T_{\text{eng}} \cdot e^{\mu \theta}}{r_{\text{prim}} \cdot (e^{\mu \theta} - 1)} - \frac{T_{\text{eng}}}{r_{\text{prim}} \cdot (e^{\mu \theta} - 1)} - F_F\]
+\[m a_{\text{belt}} = \frac{T_{\text{eng}} e^{\mu \theta}}{r_{\text{prim}} (e^{\mu \theta} - 1)} - \frac{T_{\text{eng}}}{r_{\text{prim}} (e^{\mu \theta} - 1)} - F_F\]
 Rearranging: \\
-\[a_{\text{belt}} = \frac{T_{\text{eng}}}{m \cdot r_{\text{prim}} \cdot (e^{\mu \theta} - 1)} \cdot (e^{\mu \theta} - 1) - F_F\]
+\[a_{\text{belt}} = \frac{T_{\text{eng}}}{m r_{\text{prim}} (e^{\mu \theta} - 1)} (e^{\mu \theta} - 1) - F_F\]
 Thus, the final equation becomes: \\
-\[a_{\text{belt}} = \frac{T_{\text{eng}}}{m \cdot r_{\text{prim}}} - F_F\]
+\[a_{\text{belt}} = \frac{T_{\text{eng}}}{m r_{\text{prim}}} - F_F\]
 
 
 
