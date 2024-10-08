@@ -1095,19 +1095,31 @@ F_S + F_H = \frac{k_{\text{sec\_tor}} (\theta_{\text{sec}} + \theta_{\text{shift
 \definstance
 {Sheave Acceleration}
 {$F_{\text{clamp\_prim}}, F_{\text{clamp\_sec}}, \mu, T_T, T_s, m$} % Input
-{$a = \frac{F_{\text{clamp\_prim}} - F_{\text{clamp\_sec}} - \mu (T_T - T_s)}{m}$} % Equation
+{\[a = \frac{F_{\text{clamp\_prim}} - F_{\text{clamp\_sec}} - \mu (T_T - T_s)}{m}\]} % Equation
 {Sheave acceleration $a$} % Output
 {$F_{\text{clamp\_prim}}$: Primary clamping force\\
   &$F_{\text{clamp\_sec}}$: Secondary clamping force\\
   &$\mu$: Coefficient of friction\\
-  &$T_T$: Torque of the transmission\\
-  &$T_s$: Torque of the sheave\\
+  &$T_T$: Torque of the taut side of the belt\\
+  &$T_s$: Torque of the slack side of the belt\\
   &$m$: Mass of the system} % Description
 {} % Sources
 {-}
 {} % Sources
 {} % Citation
 {-}
+
+\subsubsection*{Derivation of Sheave Acceleration}
+From Instance Model \ref{inst:7}'s derivation we get these torque equations:\\
+$T_T$ is defined as: \[T_T = T_s \cdot e^{\mu \theta}\]
+$T_s$ is defined as: \[T_s = \frac{T_{\text{eng}}}{r_{\text{prim}} \cdot (e^{\mu \theta} - 1)}\]
+
+Using Newton's second law, the acceleration of the sheave is derived as follows:
+\[ma = F_{\text{clamp\_prim}} - F_{\text{clamp\_sec}} - \mu (T_T - T_s)\]
+Rearranging the equation for acceleration gives the final equation:
+\[a = \frac{F_{\text{clamp\_prim}} - F_{\text{clamp\_sec}} - \mu (T_T - T_s)}{m}\]
+
+
 
 \definstance
 {Belt Acceleration}
@@ -1119,50 +1131,31 @@ F_S + F_H = \frac{k_{\text{sec\_tor}} (\theta_{\text{sec}} + \theta_{\text{shift
    &$F_F$: Friction force\\
    &$m$: Mass of the system} % Description} % Description
 {} % Sources
-{} % Citation
-{-}
+{IM6} % Citation
 \subsubsection*{Derivation of Belt Acceleration}
 
 The torque of the engine equation is derived as such: \\
-\[
-T_{\text{eng}} = (T_T - T_s) \cdot r_{\text{prim}} \quad \Rightarrow \quad T_T - T_s = \frac{T_{\text{eng}}}{r_{\text{prim}}}
-\]
+\[T_{\text{eng}} = (T_T - T_s) \cdot r_{\text{prim}} \quad \Rightarrow \quad T_T - T_s = \frac{T_{\text{eng}}}{r_{\text{prim}}}\]
 Similarly, for the load torque: \\
-\[
-T_{\text{load}} = (T_T - T_s) \cdot r_{\text{sec}} \quad \Rightarrow \quad T_T - T_s = \frac{T_{\text{load}}}{r_{\text{sec}}}
-\]
+\[T_{\text{load}} = (T_T - T_s) \cdot r_{\text{sec}} \quad \Rightarrow \quad T_T - T_s = \frac{T_{\text{load}}}{r_{\text{sec}}}\]
 Equating the two torque equations: \\
-\[
-\frac{T_{\text{eng}}}{r_{\text{prim}}} = \frac{T_{\text{load}}}{r_{\text{sec}}}
-\]
+\[\frac{T_{\text{eng}}}{r_{\text{prim}}} = \frac{T_{\text{load}}}{r_{\text{sec}}}\]
 {\newline}
 
-The equation for the total torque is derived as: \\
-\[
-T_T = T_s \cdot e^{\mu \theta}
-\]
+The equation for the torque of the taut side is derived as: \\
+\[T_T = T_s \cdot e^{\mu \theta}\]
 Substituting this into the torque balance equation: \\
-\[
-\frac{T_{\text{eng}}}{r_{\text{prim}}} + T_s = T_s \cdot e^{\mu \theta}
-\]
-Solving for \(T_s\): \\
-\[
-T_s = \frac{T_{\text{eng}}}{r_{\text{prim}} \cdot (e^{\mu \theta} - 1)}
-\]
+\[\frac{T_{\text{eng}}}{r_{\text{prim}}} + T_s = T_s \cdot e^{\mu \theta}\]
+Solving for \(T_s\) (slack side): \\
+\[T_s = \frac{T_{\text{eng}}}{r_{\text{prim}} \cdot (e^{\mu \theta} - 1)}\]
 {\newline}
 
-The final equation for belt acceleration is derived as: \\
-\[
-m \cdot a_{\text{belt}} = \frac{T_{\text{eng}} \cdot e^{\mu \theta}}{r_{\text{prim}} \cdot (e^{\mu \theta} - 1)} - \frac{T_{\text{eng}}}{r_{\text{prim}} \cdot (e^{\mu \theta} - 1)}
-\]
-Simplifying: \\
-\[
-a_{\text{belt}} = \frac{T_{\text{eng}}}{m \cdot r_{\text{prim}} \cdot (e^{\mu \theta} - 1)} \cdot (e^{\mu \theta} - 1)
-\]
+Using Newtons 2nd law the final equation for belt acceleration is derived as: \\
+\[m \cdot a_{\text{belt}} = \frac{T_{\text{eng}} \cdot e^{\mu \theta}}{r_{\text{prim}} \cdot (e^{\mu \theta} - 1)} - \frac{T_{\text{eng}}}{r_{\text{prim}} \cdot (e^{\mu \theta} - 1)} - F_F\]
+Rearranging: \\
+\[a_{\text{belt}} = \frac{T_{\text{eng}}}{m \cdot r_{\text{prim}} \cdot (e^{\mu \theta} - 1)} \cdot (e^{\mu \theta} - 1) - F_F\]
 Thus, the final equation becomes: \\
-\[
-a_{\text{belt}} = \frac{T_{\text{eng}}}{m \cdot r_{\text{prim}}} - F_F
-\]
+\[a_{\text{belt}} = \frac{T_{\text{eng}}}{m \cdot r_{\text{prim}}} - F_F\]
 
 
 
