@@ -441,7 +441,7 @@ characteristics and lists the system constraints.
 
 Figure \ref{Fig_SystemContext} shows the system context. A circle represents an external entity outside the software. A rectangle represents the software system itself (\progname{}). Arrows are used to show the data flow between the system and its environment.
 
-\begin{figure}[h!]
+\begin{figure}[H]
 \begin{center}
  \includegraphics[width=0.9\textwidth]{{SystemContextFigure}}
 \caption{System Context}
@@ -615,7 +615,10 @@ includes the following elements:
 \item[PS10:] Belt
 
 \begin{itemize}
-  \item [PS10a:] angle with sheave ($\theta_{\text{belt}}$). I think this does not need to exist, it matches the sheave angle?
+  \item [PS18a:] belt length ($l_{\text{belt}}$) in m.
+  \item [PS18b:] belt width ($w_{\text{belt}}$) in m.
+  \item [PS18c:] belt height ($h_{\text{belt}}$) in m.
+  \item [PS18d:] belt weight ($m_{\text{belt}}$) in kg.
   \item [PS10b:] friction coefficient ($\mu_{\text{belt}}$), unitless.
 \end{itemize}
 
@@ -642,10 +645,9 @@ includes the following elements:
   \item [PS16b:] Secondary shaft initial radius ($r_{\text{sec\_shaft}}$) in m.
 \end{itemize}
 
-\item[PS17:] Angle between sheaves ($\theta_{\text{sheave}}$) in radians. 
+\item[PS17:] Angle between sheaves ($\phi_{\text{sheave}}$) in radians. 
 
 \end{itemize}
-We also want belt length, belt width, belt height, belt weight, other properties
 
 \subsubsection{Goal Statements}
 
@@ -906,18 +908,9 @@ $f_\text{prim}(d)$ is the function to express the helix geometry (m $\rightarrow
 {None}% #9 Preconditions
 {}% #1 derivation - not applicable by default
 
-
-Add here stuff like:
-- in: shift distance, out: radius of pulley\\
-- in: shift distance, out: angle of ramp\\
-- in: shift distance, out: angle of helix\\
-- in: shift distance, out: shift radians\\
-
 ~\newline
 
 \subsubsection{General Definitions}\label{sec_gendef}
-
-We do not have any general definitions at this time.
 
 \defgeneral
 {Helix Side Force} % #1 label
@@ -1073,29 +1066,29 @@ The goal statement GS\ref{GS3} are solved by Instance Models \ref{inst:4}, \ref{
   
   \subsubsection*{Derivation of Acceleration}
 
-The acceleration of the vehicle is derived as follows: 
+Using \hyperref[TM:N2]{Newton's 2nd Law}, the acceleration of the vehicle is derived as follows: 
 \[
 T_W - R_r - F_D - F_g \cos(\theta) = ma
 \]
 Where \( T_W \) is the torque of the wheel, \( R_r \) is the rolling resistance, \( F_D \) is the drag force, \( F_g \) is the gravitational force, and \( m \) is the mass of the vehicle. 
 
 \[
-T_W = \frac{T_{\text{CVT}}}{r_{\text{gear}} + r_{\text{wheel}}}
+T_W = \frac{T_{\text{CVT}}}{r_{\text{gear}} + r_{\text{wheel}}} \tag*{\text{(see \hyperref[TM:GR]{TM:GR})}}
+\],
+
+\[
+R_r = C_{\text{rr}} F_g \sin(\theta_{inc}) \tag*{\text{(see \hyperref[TM:FR]{TM:FR})}}
 \]
 
 \[
-R_r = C_{\text{rr}} F_g \sin(\theta_{inc})
-\]
-
-\[
-F_D = \frac{1}{2} \rho v^2 C_D A
+F_D = \frac{1}{2} \rho v^2 C_D A \tag*{\text{(see \hyperref[TM:AR]{TM:AR})}}
 \]
 
 \[
 m = m_v + m_d
 \]
 
-Substituting the above equations into the original equation, and then solving for acceleration gives us the final equation:
+Substituting the above equations in and solving for $a$ gives us the final equation:
 \[
 a = \frac{\left( \frac{T_{\text{CVT}}}{r_{\text{gear}} + r_{\text{wheel}}} \right) - (C_{\text{rr}} F_g \sin(\theta)) - \left( \frac{1}{2} \rho v^2 C_D A \right) - (F_g \cos(\theta))}{m_v + m_d}
 \]
@@ -1117,10 +1110,10 @@ a = \frac{\left( \frac{T_{\text{CVT}}}{r_{\text{gear}} + r_{\text{wheel}}} \righ
 
 \definstance
 {Primary Clamping Force}
-{$m$, $r_{\text{fly}}$, $f_{\text{prim\_height}}(d_{\text{shift}})$, $f_{\text{prim\_angle}}(d_{\text{shift}})$, $k_{\text{prim}}$, $d_{\text{prim}}$, $d_{\text{shift}}$} % Input
-{$F_{\text{prim\_clamp}} = m (r_{\text{fly}} + f_{\text{prim\_height}}({d_\text{{shift}}}))\omega^2 \tan(f_{\text{prim\_angle}}(d_{\text{shift}})) + k_{\text{prim}} (d_{\text{prim}} + d_{\text{shift}})$} % 
+{$m_\text{fly}$, $r_{\text{fly}}$, $f_{\text{prim\_height}}(d_{\text{shift}})$, $f_{\text{prim\_angle}}(d_{\text{shift}})$, $k_{\text{prim}}$, $d_{\text{prim}}$, $d_{\text{shift}}$} % Input
+{$F_{\text{prim\_clamp}} = m_\text{fly} (r_{\text{fly}} + f_{\text{prim\_height}}({d_\text{{shift}}}))\omega^2 \tan(f_{\text{prim\_angle}}(d_{\text{shift}})) + k_{\text{prim}} (d_{\text{prim}} + d_{\text{shift}})$} % 
 {The primary clamping force $F_{\text{prim\_clamp}}$}
-{$m$: Mass of the system. \\ 
+{$m_\text{fly}$: Mass of the flyweight system. \\ 
   &$r_{\text{fly}}$: Radius related to the flywheel. \\ 
   &$f_{\text{prim\_height}}(d_{\text{shift}})$: Function that represents the height of the primary system. \\
   &$f_{\text{prim\_angle}}(d_{\text{shift}})$: Primary function that represents the force dependent on the shifting distance. \\ 
@@ -1132,33 +1125,33 @@ a = \frac{\left( \frac{T_{\text{CVT}}}{r_{\text{gear}} + r_{\text{wheel}}} \righ
 
 \subsubsection*{Derivation of Primary Clamping Force}
 
-The flyweight experiences centrifugal force {$F_c = m r\omega^2 $} as it rotates. 
+The flyweight experiences see \hyperref[TM:CF]{centrifugal force} {$F_c = m r\omega^2 $} as it rotates. 
 The ramp angle $f_{\text{prim\_angle}}(d_{\text{shift}})$ is where the force applied by the flyweight meets the inclined surface.
-The force can be broken into the radial force which is perpendicular to the ramp and the axial force which acts in the direction of the ramp.
+The force can be broken into the radial force, which is perpendicular to the ramp, and the axial force which acts in the direction of the ramp.
 The axial force is what is responsible for moving the mechanism causing the flyweights to press against a ramp or surface, therefore the force we are interested in.
 To find the flywheel force in this axial direction the tangent of the angle $f_{\text{prim\_angle}}(d_{\text{shift}})$ is used.
 The flywheel force is derived as follows: 
 \[
-F_{FW} = m r \omega^2 \tan(f_{\text{prim\_angle}}(d_{\text{shift}}))
+F_{FW} = m r \omega^2 \tan(f_{\text{prim\_angle}}(d_{\text{shift}})) \tag*{\text{(see \hyperref[TM:CF]{TM:CF})}}
 \]
 Where \( r \) can be represented by \( r_{\text{fly}} + f_{\text{prim\_height}}(d_{\text{shift}}) \). Then \( F_{FW} \) becomes 
 \[
-F_{FW} = m (r_{\text{fly}} + f_{\text{prim\_height}}(d_{\text{shift}}))\omega^2 \tan(f_{\text{prim\_angle}}(d_{\text{shift}}))
+F_{FW} = m_\text{fly} (r_{\text{fly}} + f_{\text{prim\_height}}(d_{\text{shift}}))\omega^2 \tan(f_{\text{prim\_angle}}(d_{\text{shift}}))
 \]
 
 The spring force is derived as follows: 
 \[
--F_S = + k_{\text{prim}} (d_{\text{prim}} + d_{\text{shift}})
+-F_S = + k_{\text{prim}} (d_{\text{prim}} + d_{\text{shift}}) \tag*{\text{(see \hyperref[TM:HL]{TM:HL})}}
 \]
 
 Combining these two forces gives the total primary clamping force:
 \[
-F_{FW} - F_S = m (r_{\text{fly}} + f_{\text{prim\_height}}(d_{\text{shift}}))\omega^2 \tan(f_{\text{prim\_angle}}(d_{\text{shift}})) + k_{\text{prim}} (d_{\text{prim}} + d_{\text{shift}})
+F_{FW} - F_S =  m_\text{fly} (r_{\text{fly}} + f_{\text{prim\_height}}(d_{\text{shift}}))\omega^2 \tan(f_{\text{prim\_angle}}(d_{\text{shift}})) + k_{\text{prim}} (d_{\text{prim}} + d_{\text{shift}})
 \]
 
 The final equation can be written as:
 \[
-F_{\text{prim\_clamp}} = m (r_{\text{fly}} + f_{\text{prim\_height}}(d_{\text{shift}}))\omega^2 \tan(f_{\text{prim\_angle}}(d_{\text{shift}})) + k_{\text{prim}} (d_{\text{prim}} + d_{\text{shift}})
+F_{\text{prim\_clamp}} =  m_\text{fly} (r_{\text{fly}} + f_{\text{prim\_height}}(d_{\text{shift}}))\omega^2 \tan(f_{\text{prim\_angle}}(d_{\text{shift}})) + k_{\text{prim}} (d_{\text{prim}} + d_{\text{shift}})
 \]
 
 \definstance
@@ -1189,7 +1182,7 @@ F_{\text{sec\_clamp}}\ = F_H + F_S
 The helix force is derived as follows:
 
 \[
-F_H = \frac{T_{\text{eng}}CVT_{\text{ratio}}}{2r\tan(\beta)}
+F_H = \frac{T_{\text{eng}}CVT_{\text{ratio}}}{2r\tan(\beta)}  \tag*{\text{(see GD2)}}
 \]
 
 Substituting in our variables gives us the following equation:
@@ -1201,7 +1194,7 @@ F_H = \frac{T_{eng} CVT_{ratio}}{2 r_{\text{sec\_ramp}} \tan(f_{\text{sec\_ramp}
 The spring force is derived as follows:
 
 \[
-F_S = \frac{k_{\text{tor}}(\theta_0 + \theta)}{2r\tan(\beta)} + k_\text{comp}(x_0 + x)
+F_S = \frac{k_{\text{tor}}(\theta_0 + \theta)}{2r\tan(\beta)} + k_\text{comp}(x_0 + x) \tag*{\text{(see GD1)}}
 \]
 
 Substituting in our variables gives us the following equation:
@@ -1261,17 +1254,17 @@ Rearranging the equation for acceleration gives the final equation:
 {IM6} % Citation
 \subsubsection*{Derivation of Belt Acceleration}
 
-The torque of the engine equation is derived as such: \\
+The torque of the engine equation in terms of belt tension is derived as such: \\
 \[T_{\text{eng}} = (T_T - T_s) r_{\text{prim}} \quad \Rightarrow \quad T_T - T_s = \frac{T_{\text{eng}}}{r_{\text{prim}}}\]
 Similarly, for the load torque: \\
 \[T_{\text{load}} = (T_T - T_s) r_{\text{sec}} \quad \Rightarrow \quad T_T - T_s = \frac{T_{\text{load}}}{r_{\text{sec}}}\]
 Equating the two torque equations: \\
-\[\frac{T_{\text{eng}}}{r_{\text{prim}}} = \frac{T_{\text{load}}}{r_{\text{sec}}}\]
+\[\frac{T_{\text{eng}}}{r_{\text{prim}}} = \frac{T_{\text{load}}}{r_{\text{sec}}} \tag*{\text{(see (add eff assump))}}\] 
 {\newline}
 
-The equation for the torque of the taut side is derived as: \\
-\[T_T = T_s e^{\mu \theta}\]
-Substituting this into the torque balance equation: \\
+The equation for the torque of the taut side is derived using the \hyperref[TM:CE]{capstan equation}:
+\[T_T = T_s e^{\mu \theta} \tag*{\text{(\hyperref[TM:CE]{TM:CE})}}\]
+Substituting our engine torque into this: \\
 \[\frac{T_{\text{eng}}}{r_{\text{prim}}} + T_s = T_s e^{\mu \theta}\]
 Solving for \(T_s\) (slack side): \\
 \[T_s = \frac{T_{\text{eng}}}{r_{\text{prim}} (e^{\mu \theta} - 1)}\]
@@ -1279,9 +1272,9 @@ Solving for \(T_s\) (slack side): \\
 
 Using Newtons 2nd law the final equation for belt acceleration is derived as: \\
 \[m a_{\text{belt}} = \frac{T_{\text{eng}} e^{\mu \theta}}{r_{\text{prim}} (e^{\mu \theta} - 1)} - \frac{T_{\text{eng}}}{r_{\text{prim}} (e^{\mu \theta} - 1)} - F_F\]
-Rearranging: \\
+Solving for acceleration: \\
 \[a_{\text{belt}} = \frac{T_{\text{eng}}}{m r_{\text{prim}} (e^{\mu \theta} - 1)} (e^{\mu \theta} - 1) - F_F\]
-Thus, the final equation becomes: \\
+Finally, simplifying to get: \\
 \[a_{\text{belt}} = \frac{T_{\text{eng}}}{m r_{\text{prim}}} - F_F\]
 
 
@@ -1312,7 +1305,7 @@ uncertainty quantification exercise.
 The specification parameters in Table~\ref{TblInputVar} are listed in
 Table~\ref{TblSpecParams}.
 
-\begin{table}[!h]
+\begin{table}[H]
   \caption{Input Variables} \label{TblInputVar}
   \renewcommand{\arraystretch}{1.2}
 \noindent \begin{longtable*}{l l l l c} 
@@ -1320,7 +1313,6 @@ Table~\ref{TblSpecParams}.
   \textbf{Var} & \textbf{Physical Constraints} & \textbf{Software Constraints} &
                              \textbf{Typical Value} & \textbf{Uncertainty}\\
   \midrule 
-  $L$ & $L > 0$ & $L_{\text{min}} \leq L \leq L_{\text{max}}$ & 1.5 \si[per-mode=symbol] {\metre} & 10\%\\
   % params
   $m_{fly}$ & $0 \leq m_{fly}$ & $m_{fly} \leq 1$ & 0.2 kg\\
   $\omega_{engine}$ & $0 \leq \omega_{engine}$ & $\omega_{engine} \leq \omega_\text{max}$ & 400 rad/s\\
@@ -1344,7 +1336,7 @@ Table~\ref{TblSpecParams}.
 
 \noindent
 
-\begin{table}[!h]
+\begin{table}[H]
 \caption{Specification Parameter Values} \label{TblSpecParams}
 \renewcommand{\arraystretch}{1.2}
 \noindent \begin{longtable*}{l l} 
@@ -1370,7 +1362,7 @@ Table~\ref{TblSpecParams}.
 
 \noindent
 
-\begin{table}[!h]
+\begin{table}[H]
 \caption{Output Variables} \label{TblOutputVar}
 \renewcommand{\arraystretch}{1.2}
 \noindent \begin{longtable*}{l l l} 
@@ -1383,10 +1375,6 @@ Table~\ref{TblSpecParams}.
   \bottomrule
 \end{longtable*}
 \end{table}
-
-\plt{This section is not for test cases or techniques for verification and
-  validation.  Those topics will be addressed in the Verification and Validation
-  plan.}
 
 \section{Requirements}
 
