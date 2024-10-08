@@ -495,12 +495,6 @@ The CVT simulator will allow the Baja team to virtually test different tuning pa
 
 \subsubsection{Terminology and  Definitions}
 
-\plt{This section is expressed in words, not with equations.  It provide the
-  meaning of the different words and phrases used in the domain of the problem.
-The terminology is used to introduce concepts from the world outside of the
-mathematical model  The terminology provides a real world connection to give the
-mathematical model meaning.}
-
 This subsection provides a list of terms that are used in the subsequent
 sections and their meaning, with the purpose of reducing ambiguity and making it
 easier to correctly understand the requirements:
@@ -655,49 +649,6 @@ We might also want belt length, belt width, belt weight?, other properties
 \end{itemize}
 
 \subsection{Solution Characteristics Specification}
-
-\plt{This section specifies the information in the solution domain of the system
-  to be developed. This section is intended to express what is required in
-  such a way that analysts and stakeholders get a clear picture, and the
-  latter will accept it. The purpose of this section is to reduce the problem
-  into one expressed in mathematical terms. Mathematical expertise is used to
-  extract the essentials from the underlying physical description of the
-  problem, and to collect and substantiate all physical data pertinent to the
-  problem.}
-
-\plt{This section presents the solution characteristics by successively refining
-  models.  It starts with the abstract/general Theoretical Models (TMs) and
-  refines them to the concrete/specific Instance Models (IMs).  If necessary
-  there are intermediate refinements to General Definitions (GDs).  All of these
-  refinements can potentially use Assumptions (A) and Data Definitions (DD).
-  TMs are refined to create new models, that are called GMs or IMs. DDs are not
-  refined; they are just used. GDs and IMs are derived, or refined, from other
-  models. DDs are not derived; they are just given. TMs are also just given, but
-  they are refined, not used.  If a potential DD includes a derivation, then
-  that means it is refining other models, which would make it a GD or an IM.}
-
-\plt{The above makes a distinction between ``refined'' and ``used.'' A model is
-  refined to another model if it is changed by the refinement. When we change a
-  general 3D equation to a 2D equation, we are making a refinement, by applying
-  the assumption that the third dimension does not matter. If we use a
-  definition, like the definition of density, we aren't refining, or changing
-  that definition, we are just using it.}
-
-\plt{The same information can be a TM in one problem and a DD in another.  It is
-  about how the information is used.  In one problem the definition of
-  acceleration can be a TM, in another it would be a DD.}
-
-\plt{There is repetition between the information given in the different chunks
-  (TM, GDs etc) with other information in the document.  For instance, the
-  meaning of the symbols, the units etc are repeated.  This is so that the
-  chunks can stand on their own when being read by a reviewer/user.  It also
-  facilitates reuse of the models in a different context.}
-
-\noindent \plt{The relationships between the parts of the document are show in
-  the following figure.  In this diagram ``may ref'' has the same role as
-  ``uses'' above.  The figure adds ``Likely Changes,'' which are able to
-  reference (use) Assumptions.}
-
 \begin{figure}[H]
   \includegraphics[scale=0.9]{RelationsBetweenTM_GD_IM_DD_A.pdf}
 \end{figure}
@@ -753,17 +704,8 @@ N/A
 
 \subsubsection{Theoretical Models}\label{sec_theoretical}
 
-\plt{Theoretical models are sets of abstract mathematical equations or axioms
-  for solving the problem described in Section ``Physical System Description''
-  (Section~\ref{sec_phySystDescrip}). Examples of theoretical models are
-  physical laws, constitutive equations, relevant conversion factors, etc.}
-
-\plt{Optionally the theory section could be divided into subsections to provide more structure and improve understandability and reusability.  Potential subsections include the following: Context theories, background theories, helper theories, generic theories, problem specific theories, final theories and rationale theories.}
-
 This section focuses on the general equations and laws that \progname{} is based
-on.  \plt{Modify the examples below for your problem, and add additional models
-  as appropriate.}
-
+on. 
 \subsubsection*{General Theories}
 This portion will specify the existing theories that are used in the development of the CVT simulation tool.
 
@@ -937,27 +879,9 @@ We do not have any general definitions at this time.
 
 \subsubsection{Data Definitions}\label{sec_datadef}
 
-\plt{The Data Definitions are definitions of symbols and equations that are
-  given for the problem.  They are not derived; they are simply used by other
-  models.  For instance, if a problem depends on density, there may be a data
-  definition for the equation defining density.  The DDs are given information
-  that you can use in your other modules.}
-
-\plt{All Data Definitions should be used (referenced) by at least one other
-  model.}
-
 This section collects and defines all the data needed to build the instance
-models. The dimension of each quantity is also given.  \plt{Modify the examples
-  below for your problem, and add additional definitions as appropriate.}
+models. The dimension of each quantity is also given. 
 
-data definitions so far, more to be added later
-\begin {itemize}
-\item velocity
-\item acceleration
-\item torque
-\item friction
-\item rpm
-\end {itemize}
 
 ~\newline
 
@@ -975,6 +899,8 @@ data definitions so far, more to be added later
 {None.}% #7 Source
 {None.}% #8 Referenced by
 
+~\newline
+
 \defdata
 {Density} % #1 refname of data
 {Density} % #2 label
@@ -986,6 +912,8 @@ data definitions so far, more to be added later
 & V is the volume (\si[per-mode=symbol] {\cubic\metre})}% #6 description
 {None.}% #7 Source
 {None.}% #8 Referenced by
+
+~\newline
 
 \defdata 
 {Friction}% #1 refname of data
@@ -999,6 +927,8 @@ data definitions so far, more to be added later
 {None.}% #7 Source
 {None.}% #8 Referenced by
 
+~\newline
+
 \defdata 
 {SpringConstComp}% #1 refname of data
 {Compressionional Spring Constant} % #2 label
@@ -1010,6 +940,8 @@ data definitions so far, more to be added later
 & $\Delta x$ is the displacement (\si[per-mode=symbol] {\metre})}% #6 description
 {None.}% #7 Source
 {None.}% #8 Referenced by
+
+~\newline
 
 \defdata
 {SpringConstTors}% #1 refname of data
@@ -1023,6 +955,8 @@ data definitions so far, more to be added later
 {None.}% #7 Source
 {None.}% #8 Referenced by
 
+~\newline
+
 \defdata 
 {GravConst}
 {Gravitational Constant}
@@ -1034,6 +968,8 @@ data definitions so far, more to be added later
 & $m$ is the mass}% #6 description
 {None.}% #7 Source
 {None.}% #8 Referenced by
+
+~\newline
 
 \defdata 
 {DragCoeff}
@@ -1048,6 +984,8 @@ data definitions so far, more to be added later
 & $A$ is the cross-sectional area of the object}% #6 description
 {None.}% #7 Source
 {None.}% #8 Referenced by
+
+~\newline
 
 \defdata 
 {RollCoeff}
@@ -1074,7 +1012,8 @@ identified in Sections~\ref{sec_theoretical} and~\ref{sec_gendef}.
 {\newline}
 
 {\noindent}The goal statment GS\ref{GS1} are solved by Instance Models \ref{inst:1}, \ref{inst:2} and \ref{inst:3}\\
-The goal statement GS\ref{GS3} are solved by Instance Models \ref{inst:4} and \ref{inst:5}\\
+{\noindent}The goal statement GS\ref{GS2} are solved by Instance Models \ref{inst:8}\\
+The goal statement GS\ref{GS3} are solved by Instance Models \ref{inst:4}, \ref{inst:5}, \ref{inst:6} and \ref{inst:7}\\
   \definstance
   {Acceleration}
   {$r_{\text{gear}}, r_{\text{wheel}}, \rho, C_D, A, \theta, T_{\text{CVT}}, C_{\text{rr}}, m_v, m_d$}
@@ -1093,22 +1032,34 @@ The goal statement GS\ref{GS3} are solved by Instance Models \ref{inst:4} and \r
   {-}
   
   
-  \subsubsection*{Derivation of acceleration}
-  The acceleration of the vehicle is derived as such: \\
-  $T_W - R_r - F_D - F_g \cos(\theta) = ma$\\
-  Where $T_W$ is the torque of the wheel, $R_r$ is the rolling resistance, $F_D$ is the drag force, $F_g$ is the gravitational force, and $m$ is the mass of the vehicle.\\
-  $T_W = \frac{T_{\text{CVT}}}{r_{\text{gear}} + r_{\text{wheel}}}$\\
-  $R_r = C_{\text{rr}} F_g \sin(\theta_{inc})$\\
-  $F_D = \frac{1}{2} \rho v^2 C_D A$\\
-  $m = m_v + m_d$\\
-<<<<<<< Updated upstream
-  Substituting the above equations into the original equation, and then solving for acceleration lands us with this final equation.\\
-  $a = \frac{\left( \frac{T_{\text{CVT}}}{r_{\text{gear}} + r_{\text{wheel}}} \right) - (C_{\text{rr}} F_g \sin(\theta)) - \left( \frac{1}{2} \rho v^2 C_D A \right) - (F_g \cos(\theta))}{m_v + m_d}$
-=======
-  Substitute the above equations into the original equation to get the final equation for acceleration.\\
-  $a = \frac{\left( \frac{T_{\text{CVT}}}{r_{\text{gear}} + r_{\text{wheel}}} \right) - (C_{\text{rr}} F_g \sin(\theta_{inc})) - \left( \frac{1}{2} \rho v^2 C_D A \right) - (F_g \cos(\theta))}{m_v + m_d}$
->>>>>>> Stashed changes
+  \subsubsection*{Derivation of Acceleration}
 
+The acceleration of the vehicle is derived as follows: 
+\[
+T_W - R_r - F_D - F_g \cos(\theta) = ma
+\]
+Where \( T_W \) is the torque of the wheel, \( R_r \) is the rolling resistance, \( F_D \) is the drag force, \( F_g \) is the gravitational force, and \( m \) is the mass of the vehicle. 
+
+\[
+T_W = \frac{T_{\text{CVT}}}{r_{\text{gear}} + r_{\text{wheel}}}
+\]
+
+\[
+R_r = C_{\text{rr}} F_g \sin(\theta_{inc})
+\]
+
+\[
+F_D = \frac{1}{2} \rho v^2 C_D A
+\]
+
+\[
+m = m_v + m_d
+\]
+
+Substituting the above equations into the original equation, and then solving for acceleration gives us the final equation:
+\[
+a = \frac{\left( \frac{T_{\text{CVT}}}{r_{\text{gear}} + r_{\text{wheel}}} \right) - (C_{\text{rr}} F_g \sin(\theta)) - \left( \frac{1}{2} \rho v^2 C_D A \right) - (F_g \cos(\theta))}{m_v + m_d}
+\]
 \definstance
 {Velocity}
 {$a(t)$}
@@ -1138,20 +1089,28 @@ The goal statement GS\ref{GS3} are solved by Instance Models \ref{inst:4} and \r
   &$d_{\text{prim}}$: Pre-compression or pre-load distance. \\ 
   &$d_{\text{shift}}$: Displacement or shift in the system.} % Description
 {} % Sources
-{-}
+{IM6}
 
 \subsubsection*{Derivation of Primary Clamping Force}
-The flywheel force is derived as such: \\
-$F_{FW} = m r \omega^2 \cdot \tan(f_{\text{prim\_angle}}(d_{\text{shift}}))$\\
-Where $r \omega^2$ can repersented by $r_{\text{fly}}+f_{\text{prim\_height}}(d_{\text{shift}})$\\
-Then $F_{FW}$ becomes $m (r_{\text{fly}} + f_{\text{prim\_height}}(d_{\text{shift}})) \cdot \tan(f_{\text{prim\_angle}}(d_{\text{shift}}))$\\
-{\newline}
-The spring force is derived as such: \\
-$-F_S$ = $+ k_{\text{prim}} (d_{\text{prim}} + d_{\text{shift}})$\\
-{\newline}
-Combine those two forces to get the total primary clamping force.\\
-$F_{FW} - F_S = m (r_{\text{fly}} + f_{\text{prim\_height}}(d_{\text{shift}})) \cdot \tan(f_{\text{prim\_angle}}(d_{\text{shift}})) + k_{\text{prim}} (d_{\text{prim}} + d_{\text{shift}})$ 
 
+The flywheel force is derived as follows: 
+\[
+F_{FW} = m r \omega^2 \cdot \tan(f_{\text{prim\_angle}}(d_{\text{shift}}))
+\]
+Where \( r \omega^2 \) can be represented by \( r_{\text{fly}} + f_{\text{prim\_height}}(d_{\text{shift}}) \). Then \( F_{FW} \) becomes 
+\[
+F_{FW} = m (r_{\text{fly}} + f_{\text{prim\_height}}(d_{\text{shift}})) \cdot \tan(f_{\text{prim\_angle}}(d_{\text{shift}}))
+\]
+
+The spring force is derived as follows: 
+\[
+-F_S = + k_{\text{prim}} (d_{\text{prim}} + d_{\text{shift}})
+\]
+
+Combining these two forces gives the total primary clamping force:
+\[
+F_{FW} - F_S = m (r_{\text{fly}} + f_{\text{prim\_height}}(d_{\text{shift}})) \cdot \tan(f_{\text{prim\_angle}}(d_{\text{shift}})) + k_{\text{prim}} (d_{\text{prim}} + d_{\text{shift}})
+\]
 
 \definstance
 {Secondary Clamping Force}
@@ -1169,36 +1128,98 @@ $F_{FW} - F_S = m (r_{\text{fly}} + f_{\text{prim\_height}}(d_{\text{shift}})) \
   &$CVT_{ratio}$: Ratio of the CVT system.
 } % Description
 {} % Sources
-{-}
+{IM6}
 
 \subsubsection*{Derivation of Secondary Clamping Force}
-The spring force is derived as such: \\
-$F_S = \frac{k_{\text{sec\_tor}} (\theta_{\text{sec}} + f_{\text{sec}}(d_{\text{shift}}))}{2 \cdot r_{\text{sec\_ramp}} \cdot \tan(f_{\text{sec}}(d_{\text{shift}}))} + k_{\text{sec\_comp}} (d_{\text{sec}} + d_{\text{shift}})$\\
-{\newline}
-The helix force is derived as such: \\
-$F_H = \frac{T_{eng} CVT_{ratio}}{2 \cdot r_{\text{sec\_ramp}} \cdot \tan(f_{\text{sec}}(d_{\text{shift}}))}$\\
-{\newline}
-Combine those two forces to get the total secondary clamping force.\\
-$F_S + F_H = \frac{k_{\text{sec\_tor}} (\theta_{\text{sec}} + f_{\text{sec}}(d_{\text{shift}})) + T_{eng} CVT_{ratio}}{2 \cdot r_{\text{sec\_ramp}} \cdot \tan(f_{\text{sec}}(d_{\text{shift}}))} + k_{\text{sec\_comp}} (d_{\text{sec}} + d_{\text{shift}})$
 
+The spring force is derived as follows: 
+\[
+F_S = \frac{k_{\text{sec\_tor}} (\theta_{\text{sec}} + \theta_{\text{shift}})}{2 \cdot r_{\text{secramp}} \cdot \tan(f_{\text{sec}}(d_{\text{shift}}))} + K_c (\delta_{\text{sec}} + d_{\text{shift}})
+\]
+
+The helix force is derived as follows: 
+\[
+F_H = \frac{T_{eng} \cdot CVT_{ratio}}{2 \cdot r_{\text{secramp}} \cdot \tan(f_{\text{sec}}(d_{\text{shift}}))}
+\]
+
+Combining these two forces gives the total secondary clamping force:
+\[
+F_S + F_H = \frac{k_{\text{sec\_tor}} (\theta_{\text{sec}} + \theta_{\text{shift}}) + T_{eng} \cdot CVT_{ratio}}{2 \cdot r_{\text{secramp}} \cdot \tan(f_{\text{sec}}(d_{\text{shift}}))} + K_c (\delta_{\text{sec}} + d_{\text{shift}})
+\]
 
 \definstance
-{CVT Ratio}
-{} % Input
-{} % Output
-{} % Description
+{Sheave Acceleration}
+{$F_{\text{clamp\_prim}}, F_{\text{clamp\_sec}}, \mu, T_T, T_s, m$} % Input
+{$a = \frac{F_{\text{clamp\_prim}} - F_{\text{clamp\_sec}} - \mu (T_T - T_s)}{m}$} % Equation
+{Sheave acceleration $a$} % Output
+{$F_{\text{clamp\_prim}}$: Primary clamping force\\
+  &$F_{\text{clamp\_sec}}$: Secondary clamping force\\
+  &$\mu$: Coefficient of friction\\
+  &$T_T$: Torque of the transmission\\
+  &$T_s$: Torque of the sheave\\
+  &$m$: Mass of the system} % Description
+{} % Sources
+{-}
 {} % Sources
 {} % Citation
 {-}
 
 \definstance
-{Torque Transferred}
-{} % Input
-{} % Output
-{} % Description
+{Belt Acceleration}
+{$T_{\text{eng}}, r_{\text{prim}}, F_F, m$ } % Input
+{$a_{\text{belt}} = \frac{T_{\text{eng}}}{m \cdot r_{\text{prim}}} - F_F$} % Equation
+{Belt Acceleration $a_{\text{belt}}$} % Output
+{$T_{\text{eng}}$: Engine torque\\
+   &$r_{\text{prim}}$: Primary radiu\\
+   &$F_F$: Friction force\\
+   &$m$: Mass of the system} % Description} % Description
 {} % Sources
 {} % Citation
 {-}
+\subsubsection*{Derivation of Belt Acceleration}
+
+The torque of the engine equation is derived as such: \\
+\[
+T_{\text{eng}} = (T_T - T_s) \cdot r_{\text{prim}} \quad \Rightarrow \quad T_T - T_s = \frac{T_{\text{eng}}}{r_{\text{prim}}}
+\]
+Similarly, for the load torque: \\
+\[
+T_{\text{load}} = (T_T - T_s) \cdot r_{\text{sec}} \quad \Rightarrow \quad T_T - T_s = \frac{T_{\text{load}}}{r_{\text{sec}}}
+\]
+Equating the two torque equations: \\
+\[
+\frac{T_{\text{eng}}}{r_{\text{prim}}} = \frac{T_{\text{load}}}{r_{\text{sec}}}
+\]
+{\newline}
+
+The equation for the total torque is derived as: \\
+\[
+T_T = T_s \cdot e^{\mu \theta}
+\]
+Substituting this into the torque balance equation: \\
+\[
+\frac{T_{\text{eng}}}{r_{\text{prim}}} + T_s = T_s \cdot e^{\mu \theta}
+\]
+Solving for \(T_s\): \\
+\[
+T_s = \frac{T_{\text{eng}}}{r_{\text{prim}} \cdot (e^{\mu \theta} - 1)}
+\]
+{\newline}
+
+The final equation for belt acceleration is derived as: \\
+\[
+m \cdot a_{\text{belt}} = \frac{T_{\text{eng}} \cdot e^{\mu \theta}}{r_{\text{prim}} \cdot (e^{\mu \theta} - 1)} - \frac{T_{\text{eng}}}{r_{\text{prim}} \cdot (e^{\mu \theta} - 1)}
+\]
+Simplifying: \\
+\[
+a_{\text{belt}} = \frac{T_{\text{eng}}}{m \cdot r_{\text{prim}} \cdot (e^{\mu \theta} - 1)} \cdot (e^{\mu \theta} - 1)
+\]
+Thus, the final equation becomes: \\
+\[
+a_{\text{belt}} = \frac{T_{\text{eng}}}{m \cdot r_{\text{prim}}} - F_F
+\]
+
+
 
 \definstance
 {RPM and Torque of Engine}
@@ -1256,10 +1277,7 @@ Table~\ref{TblSpecParams}.
 \end{longtable*}
 \end{table}
 
-\noindent 
-\begin{description}
-\item[(*)] \plt{you might need to add some notes or clarifications}
-\end{description}
+\noindent
 
 \begin{table}[!h]
 \caption{Specification Parameter Values} \label{TblSpecParams}
@@ -1286,12 +1304,6 @@ Table~\ref{TblSpecParams}.
 \subsubsection{Properties of a Correct Solution} \label{sec_CorrectSolution}
 
 \noindent
-A correct solution must exhibit \plt{fill in the details}.  \plt{These
-  properties are in addition to the stated requirements.  There is no need to
-  repeat the requirements here.  These additional properties may not exist for
-  every problem.  Examples include conservation laws (like conservation of
-  energy or mass) and known constraints on outputs, which are usually summarized
-  in tabular form.  A sample table is shown in Table~\ref{TblOutputVar}}
 
 \begin{table}[!h]
 \caption{Output Variables} \label{TblOutputVar}
@@ -1616,6 +1628,8 @@ instance models, requirements, and data constraints on each other.
 % \end{figure}
 
 \section{Development Plan}
+
+N/A
 
 \plt{This section is optional.  It is used to explain the plan for developing
   the software.  In particular, this section gives a list of the order in which
