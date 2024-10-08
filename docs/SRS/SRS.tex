@@ -593,6 +593,7 @@ includes the following elements:
   \item [PS5a:] compression spring constant ($k_{\text{sec\_comp}}$) in N/m.
   \item [PS5b:] torsional spring rate ($k_{\text{sec\_tor}}$) in Nm/rad.
   \item [PS5c:] pre-compression distance ($d_{\text{sec}}$) in m.
+  \item [P55d:] pre-torsional rotation ($\theta_{\text{sec}}$) in radians.
 \end{itemize}
 
 \item[PS6:] Secondary ramp geometry function ($f_{\text{sec}}$)
@@ -1154,17 +1155,16 @@ $F_{FW} - F_S = m (r_{\text{fly}} + f_{\text{prim\_height}}(d_{\text{shift}})) \
 
 \definstance
 {Secondary Clamping Force}
-{$k_{\text{sec\_tor}}$, $\theta_{\text{sec}}$, $\theta_{\text{shift}}$, $r_{\text{secramp}}$, $f_{\text{sec}}(d_{\text{shift}})$, $K_c$, $\delta_{\text{sec}}$, $d_{\text{shift}}$} % Input
-{$F_S + F_H = \frac{k_{\text{sec\_tor}} (\theta_{\text{sec}} + \theta_{\text{shift}}) + T_{eng} CVT_{ratio}}{2 \cdot r_{\text{secramp}} \cdot \tan(f_{\text{sec}}(d_{\text{shift}}))} + K_c (\delta_{\text{sec}} + d_{\text{shift}})$} % 
+{$k_{\text{sec\_tor}}$, $\theta_{\text{sec}}$, $r_{\text{sec\_ramp}}$, $f_{\text{sec}}(d_{\text{shift}})$, $k_{\text{sec\_comp}}$, $d_{\text{sec}}$, $d_{\text{shift}}$} % Input
+{$F_S + F_H = \frac{k_{\text{sec\_tor}} (\theta_{\text{sec}} + f_{\text{sec}}(d_{\text{shift}})) + T_{eng} CVT_{ratio}}{2 \cdot r_{\text{sec\_ramp}} \cdot \tan(f_{\text{sec}}(d_{\text{shift}}))} + k_{\text{sec\_comp}} (d_{\text{sec}} + d_{\text{shift}})$} % 
 {$F_s + F_H$ where $F_S$ is spring clamping force and $F_H$ is the helix clamping force added together are the total the secondary clamping force } % Output
-{$k_{\text{sec\_tor}}$: Torsional spring rate \\
-  &$\theta_{\text{sec}}$: Secondary angle or rotational position. \\
-  &$\theta_{\text{shift}}$: Shift in the secondary angle. \\
-  &$r_{\text{secramp}}$: Radius or ramp characteristic related to the secondary system. \\
-  &$f_{\text{sec}}(d_{\text{shift}})$: Function representing the force as a function of the secondary displacement or shift. \\
-  &$K_c$: Stiffness or coefficient related to a damping or correction factor. \\
-  &$\delta_{\text{sec}}$: Secondary deflection or displacement variable. \\
-  &$d_{\text{shift}}$: Displacement or shift in the system.\\
+{$k_{\text{sec\_tor}}$: Torsional spring rate. \\
+  &$\theta_{\text{sec}}$: Initial torsional rotation. \\
+  &$f_{\text{sec}}(d_{\text{shift}})$: Amount of torsional rotation based on the distance shifted. \\
+  &$r_{\text{sec\_ramp}}$: Radius of the ramps from the shaft. \\
+  &$k_{\text{sec\_comp}}$: Compression spring rate. \\
+  &$d_{\text{sec}}$: Initial compression distance. \\
+  &$d_{\text{shift}}$: Displacement or shift in the system. \\
   &$T_{eng}$: Torque of the engine. \\
   &$CVT_{ratio}$: Ratio of the CVT system.
 } % Description
@@ -1173,13 +1173,13 @@ $F_{FW} - F_S = m (r_{\text{fly}} + f_{\text{prim\_height}}(d_{\text{shift}})) \
 
 \subsubsection*{Derivation of Secondary Clamping Force}
 The spring force is derived as such: \\
-$F_S = \frac{k_{\text{sec\_tor}} (\theta_{\text{sec}} + \theta_{\text{shift}})}{2 \cdot r_{\text{secramp}} \cdot \tan(f_{\text{sec}}(d_{\text{shift}}))} + K_c (\delta_{\text{sec}} + d_{\text{shift}})$\\
+$F_S = \frac{k_{\text{sec\_tor}} (\theta_{\text{sec}} + f_{\text{sec}}(d_{\text{shift}}))}{2 \cdot r_{\text{sec\_ramp}} \cdot \tan(f_{\text{sec}}(d_{\text{shift}}))} + k_{\text{sec\_comp}} (d_{\text{sec}} + d_{\text{shift}})$\\
 {\newline}
 The helix force is derived as such: \\
-$F_H = \frac{T_{eng} CVT_{ratio}}{2 \cdot r_{\text{secramp}} \cdot \tan(f_{\text{sec}}(d_{\text{shift}}))}$\\
+$F_H = \frac{T_{eng} CVT_{ratio}}{2 \cdot r_{\text{sec\_ramp}} \cdot \tan(f_{\text{sec}}(d_{\text{shift}}))}$\\
 {\newline}
 Combine those two forces to get the total secondary clamping force.\\
-$F_S + F_H = \frac{k_{\text{sec\_tor}} (\theta_{\text{sec}} + \theta_{\text{shift}}) + T_{eng} CVT_{ratio}}{2 \cdot r_{\text{secramp}} \cdot \tan(f_{\text{sec}}(d_{\text{shift}}))} + K_c (\delta_{\text{sec}} + d_{\text{shift}})$
+$F_S + F_H = \frac{k_{\text{sec\_tor}} (\theta_{\text{sec}} + f_{\text{sec}}(d_{\text{shift}})) + T_{eng} CVT_{ratio}}{2 \cdot r_{\text{sec\_ramp}} \cdot \tan(f_{\text{sec}}(d_{\text{shift}}))} + k_{\text{sec\_comp}} (d_{\text{sec}} + d_{\text{shift}})$
 
 
 \definstance
