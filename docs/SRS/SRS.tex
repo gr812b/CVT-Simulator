@@ -1135,20 +1135,25 @@ a = \frac{\left( \frac{T_{\text{CVT}}}{r_{\text{gear}} + r_{\text{wheel}}} \righ
 \definstance
 {Primary Clamping Force}
 {$m$, $r_{\text{fly}}$, $f_{\text{prim\_height}}(d_{\text{shift}})$, $f_{\text{prim\_angle}}(d_{\text{shift}})$, $k_{\text{prim}}$, $d_{\text{prim}}$, $d_{\text{shift}}$} % Input
-{$F_{FW} - F_S = m (r_{\text{fly}} + f_{\text{prim\_height}}({d_\text{{shift}}})) \cdot \tan(f_{\text{prim\_angle}}(d_{\text{shift}})) + k_{\text{prim}} (d_{\text{prim}} + d_{\text{shift}})$} % 
-{$F_{FW} - F_S$ where $F_{FW}$ is the flywheel force and $F_S$ is the spring force, representing the total primary clamping force.} % Output
+{$F_{\text{prim\_clamp}} = m (r_{\text{fly}} + f_{\text{prim\_height}}({d_\text{{shift}}})) \cdot \tan(f_{\text{prim\_angle}}(d_{\text{shift}})) + k_{\text{prim}} (d_{\text{prim}} + d_{\text{shift}})$} % 
+{The primary clamping force $F_{\text{prim\_clamp}}$}
 {$m$: Mass of the system. \\ 
   &$r_{\text{fly}}$: Radius related to the flywheel. \\ 
   &$f_{\text{prim\_height}}(d_{\text{shift}})$: Function that represents the height of the primary system. \\
   &$f_{\text{prim\_angle}}(d_{\text{shift}})$: Primary function that represents the force dependent on the shifting distance. \\ 
   &$k_{\text{prim}}$: Stiffness or coefficient related to the primary system. \\ 
-  &$d_{\text{prim}}$: Pre-compression or pre-load distance. \\ 
-  &$d_{\text{shift}}$: Displacement or shift in the system.} % Description
+  &$d_{\text{shift}}$: Displacement or shift in the system.
+} % Description
 {} % Sources
 {IM6}
 
 \subsubsection*{Derivation of Primary Clamping Force}
 
+The flyweight experiences centrifugal force {$F_c = m r\omega^2 $} as it rotates. 
+The ramp angle $f_{\text{prim\_angle}}(d_{\text{shift}})$ is where the force applied by the flyweight meets the inclined surface.
+The force can be broken into the radial force which is perpendicular to the ramp and the axial force which acts in the direction of the ramp.
+The axial force is what is responsible for moving the mechanism causing the flyweights to press against a ramp or surface, therefore the force we are interested in.
+To find the flywheel force in this axial direction the tangent of the angle $f_{\text{prim\_angle}}(d_{\text{shift}})$ is used.
 The flywheel force is derived as follows: 
 \[
 F_{FW} = m r \omega^2 \cdot \tan(f_{\text{prim\_angle}}(d_{\text{shift}}))
@@ -1166,6 +1171,11 @@ The spring force is derived as follows:
 Combining these two forces gives the total primary clamping force:
 \[
 F_{FW} - F_S = m (r_{\text{fly}} + f_{\text{prim\_height}}(d_{\text{shift}}))\omega^2 \cdot \tan(f_{\text{prim\_angle}}(d_{\text{shift}})) + k_{\text{prim}} (d_{\text{prim}} + d_{\text{shift}})
+\]
+
+The final equation can be written as:
+\[
+F_{\text{prim\_clamp}} = m (r_{\text{fly}} + f_{\text{prim\_height}}(d_{\text{shift}}))\omega^2 \cdot \tan(f_{\text{prim\_angle}}(d_{\text{shift}})) + k_{\text{prim}} (d_{\text{prim}} + d_{\text{shift}})
 \]
 
 \definstance
