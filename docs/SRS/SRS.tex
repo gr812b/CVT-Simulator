@@ -155,7 +155,8 @@
 }
 
 \newcommand{\defdata}[8] {
-  \noindent
+~\newline
+\noindent
 \begin{minipage}{\textwidth}
 \renewcommand*{\arraystretch}{1.5}
 \begin{tabular}{| p{\colAwidth} | p{\colBwidth}|}
@@ -243,24 +244,6 @@ description of the unit and the SI name.
   %	\caption{Provide a caption}
 %\end{table}
 
-\plt{Only include the units that your SRS actually uses.}
-
-\plt{Derived units, like newtons, pascal, etc, should show their derivation
-    (the units they are derived from) if their constituent units are in the
-    table of units (that is, if the units theye derived from are used in the
-    document).  For instance, the derivation of pascals as
-    $\si{\pascal}=\si{\newton\per\square\meter}$ is shown if newtons and m are
-    both in the table.  The derivations of newtons would not be shown if kg and
-    s are not both in the table.}
-
-\plt{The symbol for units named after people use capital letters, but the name
-  of the unit itself uses lower case.  For instance, pascals use the symbol Pa,
-  watts use the symbol W, teslas use the symbol T, newtons use the symbol N,
-  etc.  The one exception to this is degree Celsius.  Details on writing metric
-  units can be found on the 
-  \href{https://www.nist.gov/pml/weights-and-measures/writing-metric-units}
-  {NIST} web-page.}
-
 \subsection{Table of Symbols}
 
 The table that follows summarizes the symbols used in this document along with
@@ -280,8 +263,6 @@ which heat is transferred in
 \\ 
 \bottomrule
 \end{longtable*}
-\plt{Use your problems actual symbols.  The si package is a good idea to use for
-  units.}
 
 \subsection{Abbreviations and Acronyms}
 
@@ -396,7 +377,7 @@ A detailed overview of this document will provide guidance to the reader regardi
 \subsection{Purpose of Document}
 
 The purpose of this Software Requirements Specification (SRS) is to provide an outline of the system requirements given for the development of a CVT simulation tool. 
-This ensures that all stakeholders including members of the Baja team, Dr.Smith and the developers understand the projects objectives and constraints. 
+This ensures that all stakeholders including members of the Baja team, Dr. Smith and the developers understand the projects objectives and constraints. 
 This document will serve as a communication tool to align expectations, provide guidance during the design of this tool and aid in the development and testing phases of this project. 
 This SRS will be referenced throughout the development of the system to ensure the tool is within the scope and meets the outlined requirements. 
 
@@ -449,6 +430,8 @@ characteristics and lists the system constraints.
 
 \subsection{System Context}
 
+Figure \ref{Fig_SystemContext} shows the system context. A circle represents an external entity outside the software. A rectangle represents the software system itself (\progname{}). Arrows are used to show the data flow between the system and its environment.
+
 \begin{figure}[h!]
 \begin{center}
  \includegraphics[width=0.9\textwidth]{{SystemContextFigure}}
@@ -460,11 +443,13 @@ characteristics and lists the system constraints.
 \begin{itemize}
 \item User Responsibilities:
 \begin{itemize}
-\item Provide the necessary input data in a correct format.
+\item Provide the input data related to the tunable components of the CVT system.
+\item 
 \end{itemize}
 \item \progname{} Responsibilities:
 \begin{itemize}
-\item Accept user input data to simulate the CVT system.
+\item Accept user input data to simulate the CVT system, validating against set constraints.
+\item Calculate the output data based on the input data and the CVT system model.
 \item Display the results of the simulation.
 \end{itemize}
 \end{itemize}
@@ -862,15 +847,6 @@ Add here stuff like:
 - in: shift distance, out: angle of helix\\
 - in: shift distance, out: shift radians\\
 
-\plt{``Ref.\ By'' is used repeatedly with the different types of information.
-  This stands for Referenced By.  It means that the models, definitions and
-  assumptions listed reference the current model, definition or assumption.
-  This information is given for traceability.  Ref. By provides a pointer in the
-  opposite direction to what we commonly do.  You still need to have a reference
-  in the other direction pointing to the current model, definition or
-  assumption.  As an example, if TM1 is referenced by GD2, that means that GD2 will
-  explicitly include a reference to TM1.}
-
 ~\newline
 
 \subsubsection{General Definitions}\label{sec_gendef}
@@ -881,25 +857,6 @@ We do not have any general definitions at this time.
 
 This section collects and defines all the data needed to build the instance
 models. The dimension of each quantity is also given. 
-
-
-~\newline
-
-\defdata
-{FluxCoil}% #1 refname of data
-{Flux in the coil}% #2 label
-{$\Phi$}% #3 symbol
-{\si[per-mode=symbol] {\weber}}% #4 units
-{$\Phi = N \cdot A \cdot B \cdot \cos(\theta)$}% #5 equation
-{$\Phi$ is the flux in the coil (\si[per-mode=symbol] {\weber})\\
-& N is the number of turns in the coil\\
-& A is the area of the coil (\si[per-mode=symbol] {\square\metre})\\
-& B is the magnetic field strength (\si[per-mode=symbol] {\tesla})\\
-& $\theta$ is the angle between the normal to the coil and the magnetic field (radians)}% #6 description
-{None.}% #7 Source
-{None.}% #8 Referenced by
-
-~\newline
 
 \defdata
 {Density} % #1 refname of data
@@ -913,8 +870,6 @@ models. The dimension of each quantity is also given.
 {None.}% #7 Source
 {None.}% #8 Referenced by
 
-~\newline
-
 \defdata 
 {Friction}% #1 refname of data
 {Coefficient of Friction} % #2 label
@@ -926,8 +881,6 @@ models. The dimension of each quantity is also given.
 & $F_n$ is the normal force}% #6 description
 {None.}% #7 Source
 {None.}% #8 Referenced by
-
-~\newline
 
 \defdata 
 {SpringConstComp}% #1 refname of data
@@ -941,8 +894,6 @@ models. The dimension of each quantity is also given.
 {None.}% #7 Source
 {None.}% #8 Referenced by
 
-~\newline
-
 \defdata
 {SpringConstTors}% #1 refname of data
 {Torsional Spring Constant} % #2 label
@@ -955,8 +906,6 @@ models. The dimension of each quantity is also given.
 {None.}% #7 Source
 {None.}% #8 Referenced by
 
-~\newline
-
 \defdata 
 {GravConst}
 {Gravitational Constant}
@@ -968,8 +917,6 @@ models. The dimension of each quantity is also given.
 & $m$ is the mass}% #6 description
 {None.}% #7 Source
 {None.}% #8 Referenced by
-
-~\newline
 
 \defdata 
 {DragCoeff}
@@ -984,8 +931,6 @@ models. The dimension of each quantity is also given.
 & $A$ is the cross-sectional area of the object}% #6 description
 {None.}% #7 Source
 {None.}% #8 Referenced by
-
-~\newline
 
 \defdata 
 {RollCoeff}
@@ -1097,9 +1042,9 @@ The flywheel force is derived as follows:
 \[
 F_{FW} = m r \omega^2 \cdot \tan(f_{\text{prim\_angle}}(d_{\text{shift}}))
 \]
-Where \( r \omega^2 \) can be represented by \( r_{\text{fly}} + f_{\text{prim\_height}}(d_{\text{shift}}) \). Then \( F_{FW} \) becomes 
+Where \( r \) can be represented by \( r_{\text{fly}} + f_{\text{prim\_height}}(d_{\text{shift}}) \). Then \( F_{FW} \) becomes 
 \[
-F_{FW} = m (r_{\text{fly}} + f_{\text{prim\_height}}(d_{\text{shift}})) \cdot \tan(f_{\text{prim\_angle}}(d_{\text{shift}}))
+F_{FW} = m (r_{\text{fly}} + f_{\text{prim\_height}}(d_{\text{shift}}))\omega^2 \cdot \tan(f_{\text{prim\_angle}}(d_{\text{shift}}))
 \]
 
 The spring force is derived as follows: 
@@ -1109,7 +1054,7 @@ The spring force is derived as follows:
 
 Combining these two forces gives the total primary clamping force:
 \[
-F_{FW} - F_S = m (r_{\text{fly}} + f_{\text{prim\_height}}(d_{\text{shift}})) \cdot \tan(f_{\text{prim\_angle}}(d_{\text{shift}})) + k_{\text{prim}} (d_{\text{prim}} + d_{\text{shift}})
+F_{FW} - F_S = m (r_{\text{fly}} + f_{\text{prim\_height}}(d_{\text{shift}}))\omega^2 \cdot \tan(f_{\text{prim\_angle}}(d_{\text{shift}})) + k_{\text{prim}} (d_{\text{prim}} + d_{\text{shift}})
 \]
 
 \definstance
