@@ -281,12 +281,43 @@ systems.  The symbols are listed in alphabetical order.
 %\noindent \begin{tabularx}{1.0\textwidth}{l l X}
 \noindent \begin{longtable*}{l l p{12cm}} \toprule
 \textbf{symbol} & \textbf{unit} & \textbf{description}\\
-\midrule 
-$A_C$ & \si[per-mode=symbol] {\square\metre} & coil surface area
-\\
-$A_\text{in}$ & \si[per-mode=symbol] {\square\metre} & surface area over 
-which heat is transferred in
-\\ 
+\midrule
+$d_{\text{center}}$ & \si[per-mode=symbol] {\metre} & center to center distance \\
+$d_{\text{prim}}$ & \si[per-mode=symbol] {\metre} & primary spring pre-compression distance \\
+$d_{\text{sec}}$ & \si[per-mode=symbol] {\metre} & secondary spring pre-compression distance \\
+$d_{\text{shift}}$ & \si[per-mode=symbol] {\metre} & shift distance \\
+$f_{\text{engine}}$ & \si[per-mode=symbol] {\newton\metre} & engine torque function \\
+$f_{\text{prim\_angle}}$ & \si[per-mode=symbol] {\radian} & primary ramp geometry function \\
+$f_{\text{prim\_height}}$ & \si[per-mode=symbol] {\metre} & primary ramp height function \\
+$f_{\text{sec\_ramp}}$ & \si[per-mode=symbol] {\radian} & secondary ramp geometry function \\
+$f_{\text{sec\_shift}}$ & \si[per-mode=symbol] {\radian} & secondary ramp rotation function \\
+$h_{\text{belt}}$ & \si[per-mode=symbol] {\metre} & belt height \\
+$h_{\text{prim}}$ & \si[per-mode=symbol] {\metre} & primary ramp output height \\  
+$k_{\text{prim}}$ & \si[per-mode=symbol] {\newton\per\metre} & primary spring rate \\
+$k_{\text{sec\_comp}}$ & \si[per-mode=symbol] {\newton\per\metre} & secondary compression spring rate \\
+$k_{\text{sec\_tor}}$ & \si[per-mode=symbol] {\newton\metre\per\radian} & secondary torsional spring rate \\
+$l_{\text{belt}}$ & \si[per-mode=symbol] {\metre} & belt length \\
+$m_{\text{belt}}$ & \si[per-mode=symbol] {\kilogram} & belt weight \\
+$m_{\text{d}} $ & \si[per-mode=symbol] {\kilogram} & driver weight \\
+$m_{\text{fly}}$ & \si[per-mode=symbol] {\kilogram} & flyweight mass \\
+$m_{\text{v}}$ & \si[per-mode=symbol] {\kilogram} & vehicle weight \\
+$R_{\text{gearbox}}$ & \si[per-mode=symbol] {} & gearbox reduction ratio \\
+$r_{\text{fly}}$ & \si[per-mode=symbol] {\metre} & flyweight radius \\
+$r_{\text{prim\_shaft}}$ & \si[per-mode=symbol] {\metre} & primary shaft initial radius \\
+$r_{\text{sec\_shaft}}$ & \si[per-mode=symbol] {\metre} & secondary shaft initial radius \\
+$r_{\text{sec\_ramp}}$ & \si[per-mode=symbol] {\metre} & secondary ramp radius \\
+$T_{\text{eng}}$ & \si[per-mode=symbol] {\newton\metre} & engine torque \\
+$w_{\text{belt}}$ & \si[per-mode=symbol] {\metre} & belt width \\
+$\omega_{\text{engine}}$ & \si[per-mode=symbol] {\radian\per\second} & engine angular velocity \\
+$\mu_{\text{air}}$ & \si[per-mode=symbol] {} & air resistance coefficient \\
+$\mu_{\text{belt}}$ & \si[per-mode=symbol] {} & belt friction coefficient \\
+$\mu_{\text{traction}}$ & \si[per-mode=symbol] {} & traction coefficient \\
+$\phi_{\text{sheave}}$ & \si[per-mode=symbol] {\radian} & angle between sheaves \\
+$\theta_{\text{inc}}$ & \si[per-mode=symbol] {\radian} & angle on incline \\
+$\theta_{\text{prim}}$ & \si[per-mode=symbol] {\radian} & primary ramp output angle \\
+$\theta_{\text{sec}}$ & \si[per-mode=symbol] {\radian} & secondary spring pre-torsional rotation \\
+$\theta_{\text{shift}}$ & \si[per-mode=symbol] {\radian} & secondary shift rotation \\
+$\theta_{\text{ramp}}$ & \si[per-mode=symbol] {\radian} & secondary ramp output angle \\
 \bottomrule
 \end{longtable*}
 
@@ -545,7 +576,7 @@ includes the following elements:
 
 \begin{itemize}
   \item [PS9a:] input angular velocity ($\omega_{\text{engine}}$) in rad/s.
-  \item [PS9b:] output torque ($T_{\text{engine}}$) in Nm.
+  \item [PS9b:] output torque ($T_{\text{eng}}$) in Nm.
 \end{itemize}
 
 \item[PS10:] Belt
@@ -561,7 +592,7 @@ includes the following elements:
 \item[PS11:] Total reduction
 
 \begin{itemize}
-  \item [PS11a:] gearbox reduction ratio ($r_{\text{gearbox}}$), unitless.
+  \item [PS11a:] gearbox reduction ratio ($R_{\text{gearbox}}$), unitless.
   \item [PS11b:] wheel radius ($r_{\text{wheel}}$) in m.
 \end{itemize}
 
@@ -851,10 +882,10 @@ $f_\text{prim}(d)$ is the function to express the helix geometry (m $\rightarrow
 \defgeneral
 {Helix Side Force} % #1 label
 {N = \si{\kilogram \metre\per\square\second}} % #2 units
-{$F_H = \frac{T_{\text{eng}}CVT_{\text{ratio}}}{2r\tan(\beta)}$} % #3 equation
+{$F_H = \frac{T_{\text{eng}}R_{\text{CVT}}}{2r\tan(\beta)}$} % #3 equation
 {$F_H$ is the side force due to the helix (N) \\
 & $T_{\text{eng}}$ is the engine torque (N-m) \\
-& $CVT_{\text{ratio}}$ is the CVT ratio (unitless) \\
+& $R_{\text{CVT}}$ is the CVT ratio (unitless) \\
 & $r$ is the radius of the ramps from the shaft (m) \\
 & $\beta$ is the helix angle (rad)} % #4 description
 {} % #5 source
@@ -1004,16 +1035,16 @@ The goal statement GS\ref{GS3} are solved by Instance Models \ref{inst:4}, \ref{
 
 Using \hyperref[TM:N2]{Newton's 2nd Law}, the acceleration of the vehicle is derived as follows: 
 \[
-T_W - R_r - F_D - F_g \cos(\theta) = ma
+T_W - F_r - F_D - F_g \cos(\theta) = ma
 \]
-Where \( T_W \) is the torque of the wheel, \( R_r \) is the rolling resistance, \( F_D \) is the drag force, \( F_g \) is the gravitational force, and \( m \) is the mass of the vehicle. 
+Where \( T_W \) is the torque of the wheel, \( F_r \) is the rolling resistance, \( F_D \) is the drag force, \( F_g \) is the gravitational force, and \( m \) is the mass of the vehicle. 
 
 \[
 T_W = \frac{T_{\text{CVT}}}{r_{\text{gear}} + r_{\text{wheel}}} \tag*{\text{(see \hyperref[TM:GR]{TM:GR})}}
 \],
 
 \[
-R_r = C_{\text{rr}} F_g \sin(\theta_{inc}) \tag*{\text{(see \hyperref[TM:FR]{TM:FR})}}
+F_r = C_{\text{rr}} F_g \sin(\theta_{inc}) \tag*{\text{(see \hyperref[TM:FR]{TM:FR})}}
 \]
 
 \[
@@ -1118,7 +1149,7 @@ F_{\text{sec\_clamp}}\ = F_H + F_S
 The helix force is derived as follows:
 
 \[
-F_H = \frac{T_{\text{eng}}CVT_{\text{ratio}}}{2r\tan(\beta)}  \tag*{\text{(see GD2)}}
+F_H = \frac{T_{\text{eng}}R_{\text{CVT}}}{2r\tan(\beta)}  \tag*{\text{(see GD2)}}
 \]
 
 Substituting in our variables gives us the following equation:
