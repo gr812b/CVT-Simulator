@@ -322,70 +322,6 @@ N/A
 
 \pagenumbering{arabic}
 
-\plt{This SRS template is based on \citet{SmithAndLai2005, SmithEtAl2007,
-  SmithAndKoothoor2016}.  It will get you started.  You should not modify the
-  section headings, without first discussing the change with the course
-  instructor.  Modification means you are not following the template, which
-  loses some of the advantage of a template, especially standardization.
-  Although the bits shown below do not include type information, you may need to
-  add this information for your problem.  If you are unsure, please can ask the
-  instructor.}
-
-\plt{Feel free to change the appearance of the report by modifying the LaTeX
-  commands.}
-
-\plt{This template document assumes that a single program is being documented.
-  If you are documenting a family of models, you should start with a commonality
-  analysis.  A separate template is provided for this.  For program
-  families you should look at \cite{Smith2006, SmithMcCutchanAndCarette2017}.
-  Single family member programs are often programs based on a single physical
-  model.  General purpose tools are usually documented as a family.  Families of
-  physical models also come up.}
-
-\plt{The SRS is not generally written, or read, sequentially.  The SRS is a
-  reference document.  It is generally read in an ad hoc order, as the need
-  arises.  For writing an SRS, and for reading one for the first time, the
-  suggested order of sections is:
-\begin{itemize}
-\item Goal Statement
-\item Instance Models
-\item Requirements
-\item Introduction
-\item Specific System Description
-\end{itemize}
-}
-
-\plt{Guiding principles for the SRS document:
-\begin{itemize}
-\item Do not repeat the same information at the same abstraction level.  If
-  information is repeated, the repetition should be at a different abstraction
-  level.  For instance, there will be overlap between the scope section and the
-  assumptions, but the scope section will not go into as much detail as the
-  assumptions section.
-\end{itemize}
-}
-
-\plt{The template description comments should be disabled before submitting this
-  document for grading.}
-
-\plt{You can borrow any wording from the text given in the template.  It is part
-  of the template, and not considered an instance of academic integrity.  Of
-  course, you need to cite the source of the template.}
-
-\plt{When the documentation is done, it should be possible to trace back to the
-  source of every piece of information.  Some information will come from
-  external sources, like terminology.  Other information will be derived, like
-  General Definitions.}
-
-\plt{An SRS document should have the following qualities: unambiguous,
-  consistent, complete, validatable, abstract and traceable.}
-
-\plt{The overall goal of the SRS is that someone that meets the Characteristics
-  of the Intended Reader (Section~\ref{sec_IntendedReader}) can learn,
-  understand and verify the captured domain knowledge.  They should not have to
-  trust the authors of the SRS on any statements.  They should be able to
-  independently verify/derive every statement made.}
-
 \section{Introduction}
 
 The McMaster Baja engineering team is facing challenges in tuning their Continuous Variable Transmission (CVT). 
@@ -730,7 +666,7 @@ This portion will specify the existing theories that are used in the development
   $\Delta x$ is the displacement (m)}% #5 description
 {In the context of this project Hookes law is used in both a torsional and linear way.}% #6 Notes
 {\url{https://www.britannica.com/science/Hookes-law}}% #7 Source
-{}% #8 Referenced by
+{IM\ref{inst:4}}% #8 Referenced by
 {None}% #9 Preconditions
 {}% #1 derivation - not applicable by default
 
@@ -747,7 +683,7 @@ This portion will specify the existing theories that are used in the development
   r is the radius (m)}% #5 description
 {None.}% #6 Notes
 {\url{https://www.omnicalculator.com/physics/centrifugal-force}}% #7 Source
-{}% #8 Referenced by
+{IM\ref{inst:4}}% #8 Referenced by
 {None}% #9 Preconditions
 {}% #1 derivation - not applicable by default
 
@@ -765,7 +701,7 @@ This portion will specify the existing theories that are used in the development
   A is the cross-sectional area of the object (m$^2$)}% #5 description
 {None.}% #6 Notes
 {\url{https://softschools.com/formulas/physics/air_resistance_formula/85/}}% #7 Source
-{}% #8 Referenced by
+{IM\ref{inst:1}}% #8 Referenced by
 {None}% #9 Preconditions
 {}% #1 derivation - not applicable by default
 
@@ -796,7 +732,7 @@ This portion will specify the existing theories that are used in the development
   $\tau_{\text{input}}$ is the input torque (N-m)}% #5 description
 {None.}% #6 Notes
 {\url{https://science.howstuffworks.com/transport/engines-equipment/gear-ratio.htm}}% #7 Source
-{}% #8 Referenced by
+{IM\ref{inst:1}}% #8 Referenced by
 {None}% #9 Preconditions
 {}% #1 derivation - not applicable by default
 
@@ -812,7 +748,7 @@ This portion will specify the existing theories that are used in the development
   $\phi$ is the angle of wrap of the belt (radians)}% #5 description
 {None.}% #6 Notes
 {\url{https://en.wikipedia.org/wiki/Friction}}% #7 Source
-{}% #8 Referenced by
+{IM\ref{inst:1}, IM\ref{inst:7}}% #8 Referenced by
 {None}% #9 Preconditions
 {}% #1 derivation - not applicable by default
 
@@ -826,7 +762,7 @@ This portion will specify the existing theories that are used in the development
   V is the volume (m$^3$)}% #5 description
 {None.}% #6 Notes
 {\url{https://www.britannica.com/science/density-physics}}% #7 Source
-{}% #8 Referenced by
+{IM\ref{inst:1}}% #8 Referenced by
 {None}% #9 Preconditions
 {}% #1 derivation - not applicable by default
 
@@ -843,7 +779,7 @@ This portion will specify the existing theories that are used in the development
   $\theta$ is the angle of wrap of the belt (radians)}% #5 description
 {None.}% #6 Notes
 {\url{https://hackaday.com/2021/01/26/cable-mechanism-maths-designing-against-the-capstan-equation/}}% #7 Source
-{}% #8 Referenced by
+{IM\ref{inst:7}}% #8 Referenced by
 {None}% #9 Preconditions
 {}% #1 derivation - not applicable by default
 
@@ -859,7 +795,7 @@ This portion will specify the existing theories that are used in the development
   a is the acceleration (m/s$^2$)}% #5 description
 {Newtons 2nd law is used repeatedly in several Instance models}% #6 Notes
 {\url{https://www.physicsclassroom.com/class/newtlaws/lesson-3/newton-s-second-law}}% #7 Source
-{}% #8 Referenced by
+{IM\ref{inst:1}, IM\ref{inst:6}, IM\ref{inst:7}}% #8 Referenced by
 {None}% #9 Preconditions
 {}% #1 derivation - not applicable by default
 
@@ -955,7 +891,7 @@ models. The dimension of each quantity is also given.
 & m is the mass (\si[per-mode=symbol] {\kilogram})\\
 & V is the volume (\si[per-mode=symbol] {\cubic\metre})}% #6 description
 {None.}% #7 Source
-{None.}% #8 Referenced by
+{IM\ref{inst:1}}% #8 Referenced by
 
 \defdata 
 {Friction}% #1 refname of data
@@ -967,7 +903,7 @@ models. The dimension of each quantity is also given.
 & $F_f$ is the force of friction\\
 & $F_n$ is the normal force}% #6 description
 {None.}% #7 Source
-{None.}% #8 Referenced by
+{IM\ref{inst:1}, IM\ref{inst:7}}% #8 Referenced by
 
 \defdata 
 {SpringConstComp}% #1 refname of data
@@ -979,7 +915,7 @@ models. The dimension of each quantity is also given.
 & F is the force (\si[per-mode=symbol] {\newton})\\
 & $\Delta x$ is the displacement (\si[per-mode=symbol] {\metre})}% #6 description
 {None.}% #7 Source
-{None.}% #8 Referenced by
+{IM\ref{inst:4}}% #8 Referenced by
 
 \defdata
 {SpringConstTors}% #1 refname of data
@@ -991,7 +927,7 @@ models. The dimension of each quantity is also given.
 & $\tau$ is the torque (\si[per-mode=symbol] {\newton\metre})\\
 & $\theta$ is the angle of rotation (radians)} % #6 description
 {None.}% #7 Source
-{None.}% #8 Referenced by
+{IM\ref{inst:5}}% #8 Referenced by
 
 \defdata 
 {GravConst}
@@ -1003,7 +939,7 @@ models. The dimension of each quantity is also given.
 & $F_g$ is the force of gravity\\
 & $m$ is the mass}% #6 description
 {None.}% #7 Source
-{None.}% #8 Referenced by
+{IM\ref{inst:1}}% #8 Referenced by
 
 \defdata 
 {DragCoeff}
@@ -1017,7 +953,7 @@ models. The dimension of each quantity is also given.
 & $v$ is the velocity of the object\\
 & $A$ is the cross-sectional area of the object}% #6 description
 {None.}% #7 Source
-{None.}% #8 Referenced by
+{IM\ref{inst:1}}% #8 Referenced by
 
 \defdata 
 {RollCoeff}
@@ -1029,7 +965,7 @@ models. The dimension of each quantity is also given.
 & $F_{\text{rr}}$ is the force of rolling resistance\\
 & $F_n$ is the normal force}% #6 description
 {None.}% #7 Source
-{None.}% #8 Referenced by
+{IM\ref{inst:1}}% #8 Referenced by
 
 \subsubsection{Data Types}\label{sec_datatypes}
 
@@ -1685,14 +1621,6 @@ instance models, requirements, and data constraints on each other.
 \section{Development Plan}
 
 N/A
-
-\plt{This section is optional.  It is used to explain the plan for developing
-  the software.  In particular, this section gives a list of the order in which
-  the requirements will be implemented.  In the context of a course  this is
-  where you can indicate which requirements will be implemented as part of the
-  course, and which will be ``faked'' as future work.  This section can be
-  organized as a prioritized list of requirements, or it could should the
-  requirements that will be implemented for ``phase 1'', ``phase 2'', etc.}
 
 \section{Values of Auxiliary Constants}
 
