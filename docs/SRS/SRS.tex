@@ -1388,6 +1388,8 @@ qualities that the software is expected to exhibit.
 
 \item[R\refstepcounter{reqnum}\thereqnum \label{R_Inputs}:] The system shall simulate the behavior of the McMaster Baja Team's Continuous Variable Transmission(CVT) using mathematical models.
 
+\item[R\refstepcounter{reqnum}\thereqnum \label{R_Inputs}:] The system shall calculate the CVT ratio, clamping force, RPM, torque as functions of time. Combined with engine input, the system shall calculate distance, speed and acceleration as functions of time.
+
 \item[R\refstepcounter{reqnum}\thereqnum \label{R_Inputs}:] The system shall allow users to adjust the following CVT tunning parameters: primary weight, primary ramp geometry, primary spring rate, primary spring pretension, secondary helix geometry, secondary spring rate, secondary spring pretension. 
 
 \item[R\refstepcounter{reqnum}\thereqnum \label{R_Inputs}:] The system shall allow users to adjust vehicle and driver weight, traction and angle of incline in addition to the CVT tuning parameters.
@@ -1397,8 +1399,6 @@ qualities that the software is expected to exhibit.
 \item[R\refstepcounter{reqnum}\thereqnum \label{R_Inputs}:] The system shall display graphs of simulation output based on the user inputted tuning parameters.
 
 \item[R\refstepcounter{reqnum}\thereqnum \label{R_Inputs}:] The system shall allow users to compare results of simulations with different CVT tuning parameters.
-
-\item[R\refstepcounter{reqnum}\thereqnum \label{R_Inputs}:] The system shall calculate the CVT ratio, clamping force, RPM, torque and belt slippage as functions of time. Combined with engine input, the system shall calculate distance, speed and acceleration as functions of time.
 
 \item[R\refstepcounter{reqnum}\thereqnum \label{R_Inputs}:] The system shall allow users to export outputted simulated graphical data.
 
@@ -1422,15 +1422,17 @@ qualities that the software is expected to exhibit.
 
 \subsection{Rationale}
 
-The assumptions made for the CVT (Continuously Variable Transmission) system model aim to simplify its dynamics, making it easier to analyze and develop a solution. 
-A key assumption is the exclusion of temperature effects on material properties, aside from the belt, which allows for a more straightforward focus on the mechanics of the interactions (A1). 
-The negligible influence of gravitational forces, further simplifies the problem by removing the need to eliminating the need to consider variations in position. 
-Additionally, the elasticity of belts is considered insignificant, treating components as ideally rigid, allowing the development of a model without accounting for material deformations (A3). 
-Vibrational effects from external sources are also assumed to be minimal, avoiding the complexity of vibration-induced disturbances in the transmission behavior (A4). 
-Wear and tear of components, including the belt and pulley are disregarded for short-term operational modeling, allowing for an idealized performance assumption (A5). 
-Frictional losses in non-critical components, are deemed negligible, allowing the focus to frictional effects that directly impact the CVT’s core mechanics (A6). 
-Finally, the engine is assumed to operate at full throttle with consistent power delivery, simplifying the model by maintaining uniform engine behavior (A4).
-These simplifications affect the process of formulating equations governing velocity, distance, primary clamping force, secondary clamping force, CVT Ratio, Torque transfer and RPM and Torque of the Engine(IM1-IM8)
+The assumptions made for the CVT (Continuously Variable Transmission) system model aim to simplify it's dynamics, facilitating the development of mathematical models to simulate the behavior of the CVT(R1). 
+Many key assumptions are made to meet the requirement of developing these mathematical models. The following assumptions are also factored in to the calculations of the CVT ratio, clamping force, RPM, torque, engine input, distance, speed and acceleration(R2). 
+\\\\
+\noindent The systems excludes the effects of temperature on material properties, aside from the belt, which allows for a more straightforward focus on the mechanics of the interactions (A1).
+The influence of gravitational forces is negligible and the elasticity of belts is considered insignificant(A2, A3). 
+Vibrational effects from external sources are also assumed to be minimal, avoiding the complexity of vibration-induced disturbances in transmission behavior (A4).
+Wear and tear of components, including the belt and pulley are disregarded and frictional losses in non-critical components, are deemed negligible (A5, A6). 
+The engine is assumed to operate at full throttle with consistent power delivery, simplifying the model by maintaining uniform engine behavior (A4).
+Finally, the CVT axis are assumed to be in line and the belt slippage of the CVT is assumed as negligible (A8, A9). 
+\\\\
+\noindent These simplifications affect the process of creating our mathematical models and formulating equations governing velocity, distance, primary clamping force, secondary clamping force, CVT Ratio, Torque transfer and RPM and Torque of the Engine(IM1-IM8)
 
 \section{Likely Changes}    
 
