@@ -188,7 +188,7 @@
 \begin{tabular}{| p{\colAwidth} | p{\colBwidth}|}
 \hline
 \rowcolor[gray]{0.9}
-Number& DD\refstepcounter{datadefnum}\thedatadefnum \label{#1}\\
+Number& DD\refstepcounter{datadefnum}\thedatadefnum \label{DD_\thedatadefnum}\\
 \hline
 Label& \bf #2\\
 \hline
@@ -1588,71 +1588,62 @@ the assumptions.
 \plt{The traceability matrix is challenging to maintain manually.  Please do
   your best.  In the future tools (like Drasil) will make this much easier.}
 
-  \afterpage{
-    \begin{landscape}
-    \begin{table}[h!]
-    \centering
-    \begin{tabular}{|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|}
-    \hline
-      & \aref{A_OnlyThermalEnergy}& \aref{A_hcoeff}& \aref{A_mixed}& \aref{A_tpcm}& \aref{A_const_density}& \aref{A_const_C}& \aref{A_Newt_coil}& \aref{A_tcoil}& \aref{A_tlcoil}& \aref{A_Newt_pcm}& \aref{A_charge}& \aref{A_InitTemp}& \aref{A_OpRangePCM}& \aref{A_OpRange}& \aref{A_htank}& \aref{A_int_heat}& \aref{A_vpcm}& \aref{A_PCM_state}& \aref{A_Pressure} \\
-    \hline
-    \tref{T_COE}        & X& & & & & & & & & & & & & & & & & & \\ \hline
-    \tref{T_SHE}        & & & & & & & & & & & & & & & & & & & \\ \hline
-    \tref{T_LHE}        & & & & & & & & & & & & & & & & & & & \\ \hline
-    \dref{NL}           & & X& & & & & & & & & & & & & & & & & \\ \hline
-    \dref{ROCT}         & & & X& X& X& X& & & & & & & & & & & & & \\ \hline
-    \ddref{FluxCoil}    & & & & & & & X& X& X& & & & & & & & & & \\ \hline
-    \ddref{FluxPCM}     & & & X& X& & & & & & X& & & & & & & & & \\ \hline
-    \ddref{D_HOF}       & & & & & & & & & & & & & & & & & & & \\ \hline
-    \ddref{D_MF}        & & & & & & & & & & & & & & & & & & & \\ \hline
-    \iref{ewat}         & & & & & & & & & & & X& X& & X& X& X& & & X \\ \hline
-    \iref{epcm}         & & & & & & & & & & & & X& X& & & X& X& X& \\ \hline
-    \iref{I_HWAT}       & & & & & & & & & & & & & & X& & & & & X \\ \hline
-    \iref{I_HPCM}       & & & & & & & & & & & & & X& & & & & X & \\ \hline
-    \lcref{LC_tpcm}     & & & & X& & & & & & & & & & & & & & & \\ \hline
-    \lcref{LC_tcoil}    & & & & & & & & X& & & & & & & & & & & \\ \hline
-    \lcref{LC_tlcoil}   & & & & & & & & & X& & & & & & & & & & \\ \hline
-    \lcref{LC_charge}   & & & & & & & & & & & X& & & & & & & & \\ \hline
-    \lcref{LC_InitTemp} & & & & & & & & & & & & X& & & & & & & \\ \hline
-    \lcref{LC_htank}    & & & & & & & & & & & & & & & X& & & & \\
-    \hline
-    \end{tabular}
-    \caption{Traceability Matrix Showing the Connections Between Assumptions and Other Items}
-    \label{Table:A_trace}
-    \end{table}
-    \end{landscape}
-    }
+\afterpage{
+\begin{landscape}
+\begin{table}[h!]
+\centering
+\begin{tabular}{|c|c|c|c|c|c|c|c|c|c|c|}
+\hline
+	& \aref{A_1}& \aref{A_2}& \aref{A_3}& \aref{A_4}& \aref{A_5}& \aref{A_6}& \aref{A_7}& \aref{A_8}& \aref{A_9}& \aref{A_10}\\
+\hline
+\tref{TM:HL}        & & & & & & & & & & \\ \hline
+\tref{TM:CF}        & & & & & & & & & & \\ \hline
+\tref{TM:AR}        & & & & & & & & & & \\ \hline
+\tref{TM:ET}        & & & & & & & & & & \\ \hline
+\tref{TM:GR}        & & & & & & & & & & \\ \hline
+\tref{TM:FR}        & & & & & & & & & & \\ \hline
+\tref{TM:DE}        & & & & & & & & & & \\ \hline
+\tref{TM:CE}        & & & & & & & & & & \\ \hline
+\tref{TM:N2}        & & & & & & & & & & \\ \hline
+\tref{TM:D2R}       & & & & & & & & & & \\ \hline
+\tref{TM:D2RA}      & & & & & & & & & & \\ \hline
+\tref{TM:D2HA}      & & & & & & & & & & \\ \hline
+\tref{TM:HT}        & & & & & & & & & & \\ \hline
+\tref{TM:KE}        & & & & & & & & & & \\ \hline
+\dref{GD_1}         & & & & & & & & & & \\ \hline
+\dref{GD_2}         & & & & & & & & & & \\ \hline
+\ddref{DD_1}        & & & & & & & & & & \\ \hline
+\ddref{DD_2}        & & & & & & & & & & \\ \hline
+\ddref{DD_3}        & & & & & & & & & & \\ \hline
+\ddref{DD_4}        & & & & & & & & & & \\ \hline
+\ddref{DD_5}        & & & & & & & & & & \\ \hline
+\ddref{DD_6}        & & & & & & & & & & \\ \hline
+\end{tabular}
+\label{Table:A_trace}
+\end{table}
+\end{landscape}
+}
 
 \afterpage{
 \begin{landscape}
 \begin{table}[h!]
 \centering
-\begin{tabular}{|c|c|c|c|c|c|c|c|}
+\begin{tabular}{|c|c|c|c|c|c|c|c|c|c|c|}
 \hline
-	& \aref{A_1}& \aref{A_2}& \aref{A_3}& \aref{A_4}& \aref{A_5}& \aref{A_6}& \aref{A_7} \aref{A_8}\\
+	& \aref{A_1}& \aref{A_2}& \aref{A_3}& \aref{A_4}& \aref{A_5}& \aref{A_6}& \aref{A_7}& \aref{A_8}& \aref{A_9}& \aref{A_10}\\
 \hline
-\tref{TM:HL}        & & & & & & & \\ \hline
-\tref{TM:CF}        & & & & & & & \\ \hline
-\tref{TM:AR}        & & & & & & & \\ \hline
-\tref{TM:ET}        & & & & & & & \\ \hline
-\tref{TM:GR}        & & & & & & & \\ \hline
-\tref{TM:FR}        & & & & & & & \\ \hline
-\tref{TM:DE}        & & & & & & & \\ \hline
-\tref{TM:CE}        & & & & & & & \\ \hline
-\tref{TM:N2}        & & & & & & & \\ \hline
-\iref{inst:1}       & & & & & & & \\ \hline
-\iref{inst:2}       & & & & & & & \\ \hline
-\iref{inst:3}       & & & & & & & \\ \hline
-\iref{inst:4}       & & & & & & & \\ \hline
-\iref{inst:5}       & & & & & & & \\ \hline
-\iref{inst:6}       & & & & & & & \\ \hline
-\iref{inst:7}       & & & & & & & \\ \hline
-\iref{inst:8}       & & & & & & & \\ \hline
-\lcref{LC_1}        & & & & & & & \\ \hline
-\lcref{LC_2}        & & & & & & & \\ \hline
-\lcref{LC_3}        & & & & & & & \\ \hline
-\lcref{LC_4}        & & & & & & & \\
-\hline
+\iref{inst:1}       & & & & & & & & & & \\ \hline
+\iref{inst:2}       & & & & & & & & & & \\ \hline
+\iref{inst:3}       & & & & & & & & & & \\ \hline
+\iref{inst:4}       & & & & & & & & & & \\ \hline
+\iref{inst:5}       & & & & & & & & & & \\ \hline
+\iref{inst:6}       & & & & & & & & & & \\ \hline
+\iref{inst:7}       & & & & & & & & & & \\ \hline
+\iref{inst:8}       & & & & & & & & & & \\ \hline
+\lcref{LC_1}        & & & & & & & & & & \\ \hline
+\lcref{LC_2}        & & & & & & & & & & \\ \hline
+\lcref{LC_3}        & & & & & & & & & & \\ \hline
+\lcref{LC_4}        & & & & & & & & & & \\ \hline
 \end{tabular}
 \caption{Traceability Matrix Showing the Connections Between Assumptions and Other Items}
 \label{Table:A_trace}
@@ -1660,114 +1651,66 @@ the assumptions.
 \end{landscape}
 }
 
+\afterpage{
+\begin{landscape}
+  \begin{table}[H]
+    \centering
+    \begin{tabular}{|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|}
+    \hline        
+      & \tref{T_COE}& \tref{T_SHE}& \tref{T_LHE}& \dref{NL}& \dref{ROCT} & \ddref{FluxCoil}& \ddref{FluxPCM} & \ddref{D_HOF}& \ddref{D_MF}& \iref{ewat}& \iref{epcm}& \iref{I_HWAT}& \iref{I_HPCM} \\
+    \hline
+    \tref{T_COE}     & & & & & & & & & & & & & \\ \hline
+    \tref{T_SHE}     & & & X& & & & & & & & & & \\ \hline
+    \tref{T_LHE}     & & & & & & & & & & & & & \\ \hline
+    \dref{NL}        & & & & & & & & & & & & & \\ \hline
+    \dref{ROCT}      & X& & & & & & & & & & & & \\ \hline
+    \ddref{FluxCoil} & & & & X& & & & & & & & & \\ \hline
+    \ddref{FluxPCM}  & & & & X& & & & & & & & & \\ \hline
+    \ddref{D_HOF}    & & & & & & & & & & & & & \\ \hline
+    \ddref{D_MF}     & & & & & & & & X& & & & & \\ \hline
+    \iref{ewat}      & & & & & X& X& X& & & & X& & \\ \hline
+    \iref{epcm}      & & & & & X& & X& & X& X& & & X \\ \hline
+    \iref{I_HWAT}    & & X& & & & & & & & & & & \\ \hline
+    \iref{I_HPCM}    & & X& X& & & & X& X& X& & X& & \\
+    \hline
+    \end{tabular}
+    \caption{Traceability Matrix Showing the Connections Between Items of Different Sections}
+    \label{Table:trace}
+    \end{table}
+\end{landscape}
+}
 
-\begin{table}[H]
-  \centering
-  \begin{tabular}{|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|}
-  \hline        
-    & \tref{T_COE}& \tref{T_SHE}& \tref{T_LHE}& \dref{NL}& \dref{ROCT} & \ddref{FluxCoil}& \ddref{FluxPCM} & \ddref{D_HOF}& \ddref{D_MF}& \iref{ewat}& \iref{epcm}& \iref{I_HWAT}& \iref{I_HPCM} \\
-  \hline
-  \tref{T_COE}     & & & & & & & & & & & & & \\ \hline
-  \tref{T_SHE}     & & & X& & & & & & & & & & \\ \hline
-  \tref{T_LHE}     & & & & & & & & & & & & & \\ \hline
-  \dref{NL}        & & & & & & & & & & & & & \\ \hline
-  \dref{ROCT}      & X& & & & & & & & & & & & \\ \hline
-  \ddref{FluxCoil} & & & & X& & & & & & & & & \\ \hline
-  \ddref{FluxPCM}  & & & & X& & & & & & & & & \\ \hline
-  \ddref{D_HOF}    & & & & & & & & & & & & & \\ \hline
-  \ddref{D_MF}     & & & & & & & & X& & & & & \\ \hline
-  \iref{ewat}      & & & & & X& X& X& & & & X& & \\ \hline
-  \iref{epcm}      & & & & & X& & X& & X& X& & & X \\ \hline
-  \iref{I_HWAT}    & & X& & & & & & & & & & & \\ \hline
-  \iref{I_HPCM}    & & X& X& & & & X& X& X& & X& & \\
-  \hline
-  \end{tabular}
-  \caption{Traceability Matrix Showing the Connections Between Items of Different Sections}
-  \label{Table:trace}
-  \end{table}
-
-\begin{table}[h!]
-\centering
-\begin{tabular}{|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|}
-\hline        
-	& \tref{TM:HL}& \tref{TM:CF}& \tref{TM:AR}& \tref{TM:ET}& \tref{TM:GR}& \tref{TM:FR}& \tref{TM:DE}& \tref{TM:CE}& \tref{TM:N2}& \iref{inst:1}& \iref{inst:2}& \iref{inst:3}& \iref{inst:4}& \iref{inst:5}& \iref{inst:6}& \iref{inst:7}& \iref{inst:8}& \\
-\hline
-\tref{TM:HL}        & & & & & & & & & & & & & & & & & \\ \hline
-\tref{TM:CF}        & & & & & & & & & & & & & & & & & \\ \hline
-\tref{TM:AR}        & & & & & & & & & & & & & & & & & \\ \hline
-\tref{TM:ET}        & & & & & & & & & & & & & & & & & \\ \hline
-\tref{TM:GR}        & & & & & & & & & & & & & & & & & \\ \hline
-\tref{TM:FR}        & & & & & & & & & & & & & & & & & \\ \hline
-\tref{TM:DE}        & & & & & & & & & & & & & & & & & \\ \hline
-\tref{TM:CE}        & & & & & & & & & & & & & & & & & \\ \hline
-\tref{TM:N2}        & & & & & & & & & & & & & & & & & \\ \hline
-\iref{inst:1}       & & & & & & & & & & & & & & & & & \\ \hline
-\iref{inst:2}       & & & & & & & & & & & & & & & & & \\ \hline
-\iref{inst:3}       & & & & & & & & & & & & & & & & & \\ \hline
-\iref{inst:4}       & & & & & & & & & & & & & & & & & \\ \hline
-\iref{inst:5}       & & & & & & & & & & & & & & & & & \\ \hline
-\iref{inst:6}       & & & & & & & & & & & & & & & & & \\ \hline
-\iref{inst:7}       & & & & & & & & & & & & & & & & & \\ \hline
-\iref{inst:8}       & & & & & & & & & & & & & & & & & \\
-\hline
-\end{tabular}
-\caption{Traceability Matrix Showing the Connections Between Items of Different Sections}
-\label{Table:trace}
-\end{table}
-
-\begin{table}[h!]
-\centering
-\begin{tabular}{|c|c|c|c|c|c|c|c|}
-\hline
-	& \iref{ewat}& \iref{epcm}& \iref{I_HWAT}& \iref{I_HPCM}& \ref{sec_DataConstraints}& \rref{R_RawInputs}& \rref{R_MassInputs} \\
-\hline
-\iref{ewat}            & & X& & & & X& X \\ \hline
-\iref{epcm}            & X& & & X& & X& X \\ \hline
-\iref{I_HWAT}          & & & & & & X& X \\ \hline
-\iref{I_HPCM}          & & X& & & & X& X \\ \hline
-\rref{R_RawInputs}     & & & & & & & \\ \hline
-\rref{R_MassInputs}    & & & & & & X& \\ \hline
-\rref{R_CheckInputs}   & & & & & X& & \\ \hline
-\rref{R_OutputInputs}  & X& X& & & & X& X \\ \hline
-\rref{R_TempWater}     & X& & & & & & \\ \hline 
-\rref{R_TempPCM}       & & X& & & & & \\ \hline
-\rref{R_EnergyWater}   & & & X& & & & \\ \hline
-\rref{R_EnergyPCM}     & & & & X& & & \\ \hline
-\rref{R_VerifyOutput}  & & & X& X& & & \\ \hline
-\rref{R_timeMeltBegin} & & X& & & & & \\ \hline
-\rref{R_timeMeltEnd}   & & X& & & & & \\ 
-\hline
-\end{tabular}
-\caption{Traceability Matrix Showing the Connections Between Requirements and Instance Models}
-\label{Table:R_trace}
-\end{table}
-
-\begin{table}[h!]
-  \centering
-  \begin{tabular}{|c|c|c|c|c|c|c|c|}
-  \hline
-    & \iref{ewat}& \iref{epcm}& \iref{I_HWAT}& \iref{I_HPCM}& \ref{sec_DataConstraints}& \rref{R_RawInputs}& \rref{R_MassInputs} \\
-  \hline
-  \iref{ewat}            & & X& & & & X& X \\ \hline
-  \iref{epcm}            & X& & & X& & X& X \\ \hline
-  \iref{I_HWAT}          & & & & & & X& X \\ \hline
-  \iref{I_HPCM}          & & X& & & & X& X \\ \hline
-  \rref{R_RawInputs}     & & & & & & & \\ \hline
-  \rref{R_MassInputs}    & & & & & & X& \\ \hline
-  \rref{R_CheckInputs}   & & & & & X& & \\ \hline
-  \rref{R_OutputInputs}  & X& X& & & & X& X \\ \hline
-  \rref{R_TempWater}     & X& & & & & & \\ \hline 
-  \rref{R_TempPCM}       & & X& & & & & \\ \hline
-  \rref{R_EnergyWater}   & & & X& & & & \\ \hline
-  \rref{R_EnergyPCM}     & & & & X& & & \\ \hline
-  \rref{R_VerifyOutput}  & & & X& X& & & \\ \hline
-  \rref{R_timeMeltBegin} & & X& & & & & \\ \hline
-  \rref{R_timeMeltEnd}   & & X& & & & & \\ 
-  \hline
-  \end{tabular}
-  \caption{Traceability Matrix Showing the Connections Between Requirements and Instance Models}
-  \label{Table:R_trace}
-  \end{table}
+  
+\afterpage{
+\begin{landscape}
+  \begin{table}[h!]
+    \centering
+    \begin{tabular}{|c|c|c|c|c|c|c|c|}
+    \hline
+      & \iref{ewat}& \iref{epcm}& \iref{I_HWAT}& \iref{I_HPCM}& \ref{sec_DataConstraints}& \rref{R_RawInputs}& \rref{R_MassInputs} \\
+    \hline
+    \iref{ewat}            & & X& & & & X& X \\ \hline
+    \iref{epcm}            & X& & & X& & X& X \\ \hline
+    \iref{I_HWAT}          & & & & & & X& X \\ \hline
+    \iref{I_HPCM}          & & X& & & & X& X \\ \hline
+    \rref{R_RawInputs}     & & & & & & & \\ \hline
+    \rref{R_MassInputs}    & & & & & & X& \\ \hline
+    \rref{R_CheckInputs}   & & & & & X& & \\ \hline
+    \rref{R_OutputInputs}  & X& X& & & & X& X \\ \hline
+    \rref{R_TempWater}     & X& & & & & & \\ \hline 
+    \rref{R_TempPCM}       & & X& & & & & \\ \hline
+    \rref{R_EnergyWater}   & & & X& & & & \\ \hline
+    \rref{R_EnergyPCM}     & & & & X& & & \\ \hline
+    \rref{R_VerifyOutput}  & & & X& X& & & \\ \hline
+    \rref{R_timeMeltBegin} & & X& & & & & \\ \hline
+    \rref{R_timeMeltEnd}   & & X& & & & & \\ 
+    \hline
+    \end{tabular}
+    \caption{Traceability Matrix Showing the Connections Between Requirements and Instance Models}
+    \label{Table:R_trace}
+    \end{table}
+\end{landscape}
+}
 
 The purpose of the traceability graphs is also to provide easy references on
 what has to be additionally modified if a certain component is changed.  The
