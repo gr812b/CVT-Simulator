@@ -467,7 +467,7 @@ Figure \ref{Fig_SystemContext} shows the system context. A circle represents an 
 \item User Responsibilities:
 \begin{itemize}
 \item Provide the input data related to the tunable components of the CVT system.
-\item 
+\item Provide the input data related to the vehicle and driver, as well as the limited environment.
 \end{itemize}
 \item \progname{} Responsibilities:
 \begin{itemize}
@@ -478,15 +478,24 @@ Figure \ref{Fig_SystemContext} shows the system context. A circle represents an 
 \end{itemize}
 
 \subsection{User Characteristics} \label{SecUserCharacteristics}
-
-The expected user of this application is someone who is very familiar with drivetrains and CVTs but not necessarily familiar with software.
-The software expects the user to know all of the components of a CVT and how they can be modified or adjusted.
-The user should also have enough of an understanding of undergraduate physics and calculus to be able to make sense of the outputs of the software.
-On the software side, the user should be able to navigate a GUI and know how to input data into the software.
+The expected user of this application meets the following criteria:
+\begin{itemize}
+  \item Familiarity with drivetrains and CVTs.
+  \item Completed a secondary school education, completing final year calculus and advanced functions classes.
+  \item Basic understanding of physics and calculus.
+  \item Ability to navigate a GUI and input data into the software.
+\end{itemize}
+Additional criteria, which may provide the user with more context to the data outputted, includes:
+\begin{itemize}
+  \item First-year mechanics.
+  \item Calculus I.
+  \item Calculus II.
+  \item Calculus III.
+\end{itemize}
 
 \subsection{System Constraints}
 
-The system should be able to run on any machine that supports Python 3.9 or later and Unity projects.
+The system should be able to run on any machine that supports Python 3.9 or later as well as run basic Unity projects.
 
 \section{Specific System Description}
 
@@ -674,8 +683,15 @@ includes the following elements:
 \end{itemize}
 
 \subsection{Solution Characteristics Specification}
+
+Figure \ref{Fig_SolutionCharacteristics} outlines the key components and interactions within the system's architecture, 
+including theoretical models, general definitions, data definitions, assumptions, and instanced models.
+This specification defines the relationships between these elements, showing how they may reference, refine, or depend on each other. 
+
 \begin{figure}[H]
   \includegraphics[scale=0.9]{RelationsBetweenTM_GD_IM_DD_A.pdf}
+  \caption{Solution Characteristics}
+  \label{Fig_SolutionCharacteristics}
 \end{figure}
 
 The instance models that govern \progname{} are presented in
@@ -740,7 +756,7 @@ This portion will specify the existing theories that are used in the development
 \noindent
 \deftheory
 {TM:HL}% #2 refname of theory
-{Hookes Law (Displacement)}% #3 label
+{Hookes Law (Compressional)}% #3 label
 {$F = k \Delta x$}% #4 equation
 {$F$ is the force (N)\\
   $k$ is the spring constant (N/m)\\
