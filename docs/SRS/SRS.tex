@@ -210,7 +210,7 @@ Ref.\ By & #8\\
 
 \begin{document}
 
-\title{Software Requirements Specification for \progname: subtitle describing software} 
+\title{Software Requirements Specification for \progname} 
 \author{\authname}
 \date{\today}
 	
@@ -229,8 +229,7 @@ Ref.\ By & #8\\
 \begin{tabularx}{\textwidth}{p{3cm}p{2cm}X}
 \toprule {\bf Date} & {\bf Version} & {\bf Notes}\\
 \midrule
-Date 1 & 1.0 & Notes\\
-Date 2 & 1.1 & Notes\\
+Oct 12 & 1.0 & First Draft\\
 \bottomrule
 \end{tabularx}
 
@@ -462,7 +461,7 @@ Figure \ref{Fig_SystemContext} shows the system context. A circle represents an 
 \label{Fig_SystemContext} 
 \end{center}
 \end{figure}
-
+\pagebreak
 \begin{itemize}
 \item User Responsibilities:
 \begin{itemize}
@@ -914,6 +913,15 @@ $\phi$ is the angle between sheaves (rad)}% #5 description
 {None}% #9 Preconditions
 {}% #1 derivation - not applicable by default
 
+% Include a graphic
+\begin{figure}[H]
+  \begin{center}
+      \includegraphics[scale=0.25]{ShiftDistToRadius.png}
+      \caption{Sheave Geometry}
+      \label{Fig_Sheave}
+  \end{center}
+\end{figure}
+
 \noindent
 \deftheory
 {TM:D2RA}% #2 refname of theory
@@ -923,7 +931,7 @@ $\phi$ is the angle between sheaves (rad)}% #5 description
 $\theta_\text{ramp}$ is the instantaneous ramp angle (rad)\\
 $f_\text{prim}(d)$ is the function to express the ramp geometry (m $\rightarrow$ rad)}% #5 description
 {The user will input the geometry of the ramp, which will then be intepreted to generate $f_\text{prim}$}% #6 Notes
-{See below for derivation}% #7 Source
+{N/A}% #7 Source
 {}% #8 Referenced by
 {None}% #9 Preconditions
 {}% #1 derivation - not applicable by default
@@ -937,7 +945,7 @@ $f_\text{prim}(d)$ is the function to express the ramp geometry (m $\rightarrow$
 $\theta_\text{ramp}$ is the instantaneous helix angle (rad)\\
 $f_\text{prim}(d)$ is the function to express the helix geometry (m $\rightarrow$ rad)}% #5 description
 {The user will input the geometry of the helix, which will then be intepreted to generate $f_\text{sec}$}% #6 Notes
-{See below for derivation}% #7 Source
+{N/A}% #7 Source
 {}% #8 Referenced by
 {None}% #9 Preconditions
 {}% #1 derivation - not applicable by default
