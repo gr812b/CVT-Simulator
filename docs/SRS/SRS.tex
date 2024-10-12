@@ -895,6 +895,21 @@ $f_\text{prim}(d)$ is the function to express the helix geometry (m $\rightarrow
 {None}% #9 Preconditions
 {}% #1 derivation - not applicable by default
 
+\noindent
+\deftheory
+{TM:KE}% #2 refname of theory
+{Kinetic Energy}% #3 label
+{$KE = \frac{1}{2} m v^2$}% #4 equation
+{$KE$ is the kinetic energy (J)\\
+  $m$ is the mass (kg)\\
+  $v$ is the velocity (m/s)
+}% #5 description
+{None.}% #6 Notes
+{\url{https://www.physicsclassroom.com/class/energy/Lesson-1/Kinetic-Energy}}% #7 Source
+{}% #8 Referenced by
+{None}% #9 Preconditions
+{}% #1 derivation - not applicable by default
+
 ~\newline
 
 \subsubsection{General Definitions}\label{sec_gendef}
@@ -1304,22 +1319,22 @@ Table~\ref{TblSpecParams}.
                              \textbf{Typical Value} & \textbf{Uncertainty}\\
   \midrule 
   % params
-  $m_{fly}$ & $0 \leq m_{fly}$ & $m_{fly} \leq 1$ & 0.2 kg\\
-  $\omega_{engine}$ & $0 \leq \omega_{engine}$ & $\omega_{engine} \leq \omega_\text{max}$ & 400 rad/s\\
+  $m_{fly}$ & $0 \leq m_{fly}$ & $m_{fly} \leq 1$ & 0.2 kg & 10\%\\
+  $\omega_{engine}$ & $0 \leq \omega_{engine}$ & $\omega_{engine} \leq \omega_\text{max}$ & 400 rad/s & 10\%\\
   % Cannot shift more than width of belt
-  $d_{shift}$ & $0 \leq d_{shift} \leq w_{belt}$ & & 0.1 m\\
+  $d_{shift}$ & $0 \leq d_{shift} \leq w_{belt}$ & & 0.1 m & 10\%\\
   % Angle of ramp cannot exceed 90 degrees
-  $\theta_{prim\_out}$ & $0 \leq \theta_{prim\_out} \leq \frac{\pi}{2}$ & & $\frac{\pi}{4}$ rad\\
+  $\theta_{prim\_out}$ & $0 \leq \theta_{prim\_out} \leq \frac{\pi}{2}$ & & $\frac{\pi}{4}$ rad & 10\%\\
   % Pretension
-  $d_{\text{prim}}$ & $0 \leq d_{\text{prim}} \leq d_\text{max\_prim\_pre}$ & & 0.1 m\\
-  $d_{\text{sec}}$ & $0 \leq d_{\text{sec}} \leq d_\text{max\_sec\_pre}$ & & 0.1 rad\\
+  $d_{\text{prim}}$ & $0 \leq d_{\text{prim}} \leq d_\text{max\_prim\_pre}$ & & 0.1 m & 10\%\\
+  $d_{\text{sec}}$ & $0 \leq d_{\text{sec}} \leq d_\text{max\_sec\_pre}$ & & 0.1 rad & 10\%\\
   % Weight
-  $m_{\text{driver}}$ & $0 \leq m_{\text{driver}}$ & $ m_{\text{driver}} \leq m_\text{max\_human}$ & 75 kg\\
-  $m_{\text{car}}$ & $0 \leq m_{\text{car}}$ & $m_{\text{car}} \leq m_\text{max\_car}$ & 225 kg\\
+  $m_{\text{driver}}$ & $0 \leq m_{\text{driver}}$ & $ m_{\text{driver}} \leq m_\text{max\_human}$ & 75 kg & 10\%\\
+  $m_{\text{car}}$ & $0 \leq m_{\text{car}}$ & $m_{\text{car}} \leq m_\text{max\_car}$ & 225 kg & 10\%\\
   % Spring rate
-  $k_{\text{prim}}$ & $0 \leq k_{\text{prim}}$ & $k_{\text{prim}} \leq k_\text{max\_comp\_spring}$ & 100 N/m\\
-  $k_{\text{sec\_comp}}$ & $0 \leq k_{\text{sec\_comp}}$ & $k_{\text{sec\_comp}} \leq k_\text{max\_comp\_spring}$ & 100 N/m\\
-  $k_{\text{sec\_tor}}$ & $0 \leq k_{\text{sec\_tor}}$ & $k_{\text{sec\_tor}} \leq k_\text{max\_tor\_spring}$ & 50 Nm/rad\\
+  $k_{\text{prim}}$ & $0 \leq k_{\text{prim}}$ & $k_{\text{prim}} \leq k_\text{max\_comp\_spring}$ & 100 N/m & 10\%\\
+  $k_{\text{sec\_comp}}$ & $0 \leq k_{\text{sec\_comp}}$ & $k_{\text{sec\_comp}} \leq k_\text{max\_comp\_spring}$ & 100 N/m & 10\%\\
+  $k_{\text{sec\_tor}}$ & $0 \leq k_{\text{sec\_tor}}$ & $k_{\text{sec\_tor}} \leq k_\text{max\_tor\_spring}$ & 50 Nm/rad & 10\%\\
   \bottomrule
 \end{longtable*}
 \end{table}
@@ -1335,15 +1350,15 @@ Table~\ref{TblSpecParams}.
   \midrule 
   $L_\text{min}$ & 0.1 \si{\metre}\\
   $\omega_\text{max}$ & 600 rad/s\\
-  $w_\text{belt}$ & UNKNOWN, see belt spec m\\
-  $d_\text{max\_prim\_pre}$ & UNKNOWN, see CAD m\\
-  $d_\text{max\_sec\_pre}$ & UNKNOWN, see CAD rad\\
+  $w_\text{belt}$ & 0.0222 m\\
+  $d_\text{max\_prim\_pre}$ & 0.0254 m\\
+  $d_\text{max\_sec\_pre}$ & $\frac{5\pi}{4}$ rad\\
   $m_\text{max\_human}$ & 200 kg\\
   $m_\text{max\_car}$ & 350 kg\\
   $k_\text{max\_comp\_spring}$ & 1000 N/m\\
   $k_\text{max\_tor\_spring}$ & 750 Nm/rad\\
-  $v_\text{max}$ & UNKNOWN, do gear calcs m/s\\
-  $f_\text{belt\_max}$ & UNKNOWN, see belt spec N\\
+  $v_\text{max}$ & 19.44 m/s\\
+  $f_\text{belt\_max}$ & 25000 N\\
   \bottomrule
 \end{longtable*}
 \end{table}
@@ -1359,9 +1374,9 @@ Table~\ref{TblSpecParams}.
   \toprule
   \textbf{Var} & \textbf{Physical Constraints} & \textbf{unit}\\
   \midrule 
-  $T_W$ & $T_\text{init} \leq T_W \leq T_C$ (by~\aref{A_charge}) & unitless\\
   $v(t)$ & $0 \leq v(t) \leq v_\text{max}$& m/s\\
-  $\text{Sum of clamping forces}$ & $\text{Clamp} \leq f_\text{belt\_max}$ & N \\
+  $F_{\text{clamp\_prim}}, F_{\text{clamp\_sec}}$ & $F_{\text{clamp\_prim}} + F_{\text{clamp\_sec}} \leq f_\text{belt\_max}$ & N \\
+  $v(t)$ , $T_\text{eng}(t)$,  $\omega_\text{eng}(t)$ & $\frac{d}{dt}(\frac{1}{2}(m_\text{car}+m_\text{driver})v(t)^2) \leq T_\text{eng}(t) \omega_\text{eng}(t)$ & N\\
   \bottomrule
 \end{longtable*}
 \end{table}
