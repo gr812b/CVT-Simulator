@@ -930,12 +930,14 @@ $f_\text{prim}(d)$ is the function to express the helix geometry (m $\rightarrow
 \deftheory
 {TM:HT}% #2 refname of theory
 {Hookes Law (Torsional)}% #3 label
-{$F = k \Delta x$}% #4 equation
+{$F = \frac{k \Delta \theta}{r} $}% #4 equation
 {$F$ is the force (N)\\
-  $k$ is the spring constant (Nm/rad)\\
-  $\Delta x$ is the displacement (m)}% #5 description
-{In the context of this project Hookes law is used in both a torsional and linear way.}% #6 Notes
-{\url{https://www.britannica.com/science/Hookes-law}}% #7 Source
+  $k$ is the torsional spring constant (Nm/rad)\\
+  $\Delta \theta$ is the rotation (rad)
+  $r$ is the radius of the applied torque (m)
+  }% #5 description
+{}% #6 Notes
+{\url{https://www.drtempleman.com/spring-resources-old/spring-design-formulas-2}}% #7 Source
 {}% #8 Referenced by
 {None}% #9 Preconditions
 {}% #1 derivation - not applicable by default
@@ -962,7 +964,7 @@ $f_\text{prim}(d)$ is the function to express the helix geometry (m $\rightarrow
 \defgeneral
 {Helix Side Force} % #1 label
 {N = \si{\kilogram \metre\per\square\second}} % #2 units
-{$F_H = \frac{T_{\text{eng}}R_{\text{CVT}}}{2r\tan(\beta)}$} % #3 equation
+{$F_H = \frac{T_\text{eng} R_\text{cvt}}{2r\tan(\beta)}$} % #3 equation
 {$F_H$ is the side force due to the helix (N) \\
 & $T_{\text{eng}}$ is the engine torque (N-m) \\
 & $R_{\text{CVT}}$ is the CVT ratio (unitless) \\
@@ -971,12 +973,20 @@ $f_\text{prim}(d)$ is the function to express the helix geometry (m $\rightarrow
 {} % #5 source
 {\iref{inst:5}} % #6 referenced by
 
-% TODO: Add derivation
+\subsubsection*{Derivation of Helix Side Force}
+The helix side force can be derived from using the torque across the CVT system, then by dividing out the radius to get a force.
+
+\[ T_\text{CVT} = T_\text{eng} \cdot R_\text{cvt} \tag*{\text{(see \hyperref[TM:GR]{TM:GR})}}\]
+
+Since this is a torque, we can convert it to a force by dividing by the radius of the ramps. Further, since the ramps are angled at $\beta$, we divide by $\tan(\beta)$ to get the force in the direction of the helix (see \aref{A_10}). Finally, since only one of the two pulleys is moveable, and the force is acting on both, we must divide by a factor of 2.
+
+\[ F_H = \frac{T_\text{eng} R_\text{cvt}}{2r\tan(\beta)} \]
+
 
 \defgeneral
 {Spring Side Force} % #1 label
 {N = \si{\kilogram \metre\per\square\second}} % #2 units
-{$F_S = \frac{k_{\text{tor}}(\theta_0 + \theta)}{2r\tan(\beta)} + k_\text{comp}(x_0 + x)$} % #3 equation
+{\[F_S = \frac{k_{\text{tor}}(\theta_0 + \theta)}{2r\tan(\beta)} + k_\text{comp}(x_0 + x)\]} % #3 equation
 {$F_S$ is the side force due to the spring (N) \\
 & $k_{\text{tor}}$ is the torsional spring constant (\si[per-mode=symbol] {\newton\metre\per\radian}) \\
 & $\theta_0$ is the initial torsion (rad) \\
@@ -988,6 +998,34 @@ $f_\text{prim}(d)$ is the function to express the helix geometry (m $\rightarrow
 & $\theta$ is the amount of angular torsion (rad)} % #4 description
 {} % #5 source
 {\iref{inst:5}} % #6 referenced by
+
+\subsubsection*{Derivation of Spring Side Force}
+
+This portion of the secondary side force can be split into two components, the torsional spring force and the compression spring force. 
+Beginning with the compression spring force, we can use \hyperref[TM:HL]{Hooke's Law} to derive:
+
+\[ F_{\text{comp}} = k_{\text{comp}} \cdot x \tag*{\text{(see \hyperref[TM:HL]{TM:HL})}}\]
+
+Here, the displacement $x$ is the change in the compression of the spring added with the precompression based on the tune.
+
+\[ F_{\text{comp}} = k_{\text{comp}} \cdot (x_0 + x) \tag*{\text{(see \hyperref[TM:HL]{TM:HL})}}\]
+
+Next, we can derive the torsional spring force. We can use \hyperref[TM:HT]{Hooke's Law (Torsional)} to derive:
+
+\[ T_{\text{tor}} = \frac{k_{\text{tor}} \cdot \theta}{r} \tag*{\text{(see \hyperref[TM:HT]{TM:HT})}}\]
+
+Similarily, we have an initial torsional compression $\theta_0$ that is added to the current torsional compression $\theta$.
+
+\[ F_{\text{tor}} = \frac{k_{\text{tor}} \cdot (\theta_0 + \theta)}{r} \]
+
+Since this force is acting against the helix's angle, we must divide by $\tan(\beta)$ to get the force in the direction of the helix. Finally, since only one of the two pulleys is moveable, and the force is acting on both, we must divide by a factor of 2.
+
+\[ F_S = \frac{k_{\text{tor}}(\theta_0 + \theta)}{2r\tan(\beta)} + k_\text{comp}(x_0 + x) \]
+
+Combining the two forces, we get the total side force acting on the secondary CVT created by the spring.
+
+\[ F_S = \frac{k_{\text{tor}}(\theta_0 + \theta)}{2r\tan(\beta)} + k_\text{comp}(x_0 + x) \]
+
 
 % TODO: Add derivation
 
