@@ -379,10 +379,11 @@ This SRS will be referenced throughout the development of the system to ensure t
 This model will simulate as a closed system and will not consider environmental factors such as temperature, humidity, and wind.
 It also will not consider any unintended damage, forces or effects on the components of the CVT system.
 The system will not account for any relative displacement between the components of the CVT system due to driver input or external forces.
+Further, the system will be delimited to 2 spatial dimensions, being forwards/backwards and up/down, and will not consider any lateral movement of the vehicle.
 
 \subsection{Characteristics of Intended Reader} \label{sec_IntendedReader}
 
-Readers or reviewers of this SRS document should have a solid understanding of the principles of Newtoninan physics and basic calculus.
+Readers or reviewers of this SRS document should have a solid understanding of the principles of Newtonian physics and basic calculus.
 Specifically, it is recommended that they have completed courses in first-year mechanics, Calculus I, Calculus II, and Calculus III. 
 Knowledge of the components in a Continuous Variable Transmission (CVT) and a basic understanding of how these parts work together will also be beneficial. 
 Proficiency in these areas will be sufficient to comprehend the material in this document.
@@ -653,31 +654,34 @@ N/A
 \begin{itemize}
 
 \item[A\refstepcounter{assumpnum}\theassumpnum \label{A_1}:]
-\textbf{Temperature Variations} Ignore the effect of temperature on the material properties, excluding the belt.
+\textbf{No Material Variations By Temperature } Ignore the effect of temperature on the material properties, excluding the belt.
 
 \item[A\refstepcounter{assumpnum}\theassumpnum \label{A_2}:]
 \textbf{Negligible Gravitational Influence}: The orientation of the CVT system and gravitational effects are considered negligible due to the high rotational speeds involved in the system's operation.
 
 \item[A\refstepcounter{assumpnum}\theassumpnum \label{A_3}:]
-\textbf{Elasticity of Belts}: Elasticity of belts are assumed negligible through its length, and the components are considered ideally rigid under normal operating conditions. The belt may still rotate about the pulleys.
+\textbf{Rigidity of Belts}: Elasticity of belts are assumed negligible through its length, and the components are considered ideally rigid under normal operating conditions. The belt may still rotate about the pulleys.
 
 \item[A\refstepcounter{assumpnum}\theassumpnum \label{A_4}:]
-\textbf{Vibrational Effects}: Vibrational effects from the vehicle or external environment are assumed to be minimal and are not factored into the transmission’s operation in this model.
+\textbf{No Vibrational Effects}: Vibrational effects from the vehicle or external environment are assumed to be minimal and are not factored into the transmission’s operation in this model.
 
 \item[A\refstepcounter{assumpnum}\theassumpnum \label{A_5}:]
-\textbf{Wear and Tear}: Component wear over time, including belt/chain wear and pulley degradation, is assumed negligible in the short-term operational model.
+\textbf{Ignore Wear and Tear}: Component wear over time, including belt/chain wear and pulley degradation, is assumed negligible in the short-term operational model.
 
 \item[A\refstepcounter{assumpnum}\theassumpnum \label{A_6}:]
-\textbf{Frictional Losses in Non-critical Components}: Frictional losses in non-critical components (e.g., bearings, shafts) are assumed negligible, focusing only on friction relevant to the CVT system's core mechanics.
+\textbf{No Frictional Losses in Non-critical Components}: Frictional losses in non-critical components (e.g., bearings, shafts) are assumed negligible, focusing only on friction relevant to the CVT system's core mechanics.
 
 \item[A\refstepcounter{assumpnum}\theassumpnum \label{A_7}:]
-\textbf{Engine Behavior Assumption:} The engine is modeled to operate at full throttle with consistent power curves and peak performance, maintaining a uniform response throughout the analysis. Load feedback will be integrated to adjust RPM and power output as necessary.
+\textbf{Full Throttle Consistent Power Engine:} The engine is modeled to operate at full throttle with consistent power curves and peak performance, maintaining a uniform response throughout the analysis. Load feedback will be integrated to adjust RPM and power output as necessary.
 
 \item[A\refstepcounter{assumpnum}\theassumpnum \label{A_8}:]
-\textbf{Axis Alignment:} The CVT's axis are aligned with one another.
+\textbf{Perfect Axis Alignment:} The CVT's axes are aligned with one another.
 
 \item[A\refstepcounter{assumpnum}\theassumpnum \label{A_9}:]
-\textbf{Belt Slippage:} The CVT belt slippage is negligible.
+\textbf{No Belt Slippage:} The CVT will not slip relative to the sheaves.
+
+\item[A\refstepcounter{assumpnum}\theassumpnum \label{A_10}:]
+\textbf{Ignore Irrelevant Forces:} Only forces that directly contribute to the car's dynamics or the CVT's shifting behaviours are considered, allowing the simplification of dimensions where applicable.
 
 \end{itemize}
 
@@ -691,10 +695,10 @@ This portion will specify the existing theories that are used in the development
 \noindent
 \deftheory
 {TM:HL}% #2 refname of theory
-{Hookes Law}% #3 label
+{Hookes Law (Displacement)}% #3 label
 {$F = k \Delta x$}% #4 equation
-{F is the force (N)\\
-  k is the spring constant (N/m)\\
+{$F$ is the force (N)\\
+  $k$ is the spring constant (N/m)\\
   $\Delta x$ is the displacement (m)}% #5 description
 {In the context of this project Hookes law is used in both a torsional and linear way.}% #6 Notes
 {\url{https://www.britannica.com/science/Hookes-law}}% #7 Source
@@ -709,10 +713,10 @@ This portion will specify the existing theories that are used in the development
 {TM:CF}% #2 refname of theory
 {Centrifugal Force}% #3 label
 {$F_c = m \omega^2 r$}% #4 equation
-{F is the force (N) \\
-  m is the mass (kg)\\
+{$F$ is the force (N) \\
+  $m$ is the mass (kg)\\
   $\omega$ is the angular velocity (rad/s)\\
-  r is the radius (m)}% #5 description
+  $r$ is the radius (m)}% #5 description
 {None.}% #6 Notes
 {\url{https://www.omnicalculator.com/physics/centrifugal-force}}% #7 Source
 {IM\ref{inst:4}}% #8 Referenced by
@@ -728,9 +732,9 @@ This portion will specify the existing theories that are used in the development
 {$F_d = \frac{1}{2} \rho v^2 C_d A$}% #4 equation
 {F is the force (N)\\
   $\rho$ is the density of the fluid (kg/m$^3$)\\
-  v is the velocity of the object (m/s)\\
+  $v$ is the velocity of the object (m/s)\\
   $C_d$ is the drag coefficient\\
-  A is the cross-sectional area of the object (m$^2$)}% #5 description
+  $A$ is the cross-sectional area of the object (m$^2$)}% #5 description
 {None.}% #6 Notes
 {\url{https://softschools.com/formulas/physics/air_resistance_formula/85/}}% #7 Source
 {IM\ref{inst:1}}% #8 Referenced by
@@ -744,8 +748,8 @@ This portion will specify the existing theories that are used in the development
 {TM:ET} % #2 refname of theory
 {Engine Torque} % #3 label
 {$\tau = \frac{P}{\omega}$} % #4 equation
-{$\tau$ is the torque (N-m)\\
-  P is the power (W)\\
+{$\tau$ is the torque (Nm)\\
+  $P$ is the power (W)\\
   $\omega$ is the angular velocity (rad/s)}% #5 description
 {None.}% #6 Notes
 {\url{https://powertestdyno.com/how-to-calculate-horsepower/}}% #7 Source
@@ -759,9 +763,10 @@ This portion will specify the existing theories that are used in the development
 \deftheory
 {TM:GR}% #2 refname of theory
 {Gearing}% #3 label
-{$\tau_{\text{output}} = \tau_{\text{input}} \times \text{gear reduction}$}% #4 equation
-{$\tau_{\text{output}}$ is the output torque (N-m)\\
-  $\tau_{\text{input}}$ is the input torque (N-m)}% #5 description
+{$\tau_{\text{output}} = \tau_{\text{input}} \times R_\text{gear}$}% #4 equation
+{$\tau_{\text{output}}$ is the output torque (Nm)\\
+  $\tau_{\text{input}}$ is the input torque (Nm)\\
+  $R_\text{gear}$ is the gear reduction (unitless)}% #5 description
 {None.}% #6 Notes
 {\url{https://science.howstuffworks.com/transport/engines-equipment/gear-ratio.htm}}% #7 Source
 {IM\ref{inst:1}}% #8 Referenced by
@@ -773,11 +778,11 @@ This portion will specify the existing theories that are used in the development
 \noindent
 \deftheory
 {TM:FR}% #2 refname of theory
-{Friction Formula}% #3 label
-{$F_f = \mu F_n$}% #4 equation
-{$\mu_{\text{effective}}$ is the effective coefficient of friction\\
-  $\mu_{\text{nominal}}$ is the nominal coefficient of friction\\
-  $\phi$ is the angle of wrap of the belt (radians)}% #5 description
+{Static Friction Formula}% #3 label
+{$F_f = \mu_s F_n$}% #4 equation
+{$\mu_s$ is the coefficient of friction (unitless)\\
+  $F_f$ is the force of friction (N)\\
+  $F_n$ is the normal force (N)}% #5 description
 {None.}% #6 Notes
 {\url{https://en.wikipedia.org/wiki/Friction}}% #7 Source
 {IM\ref{inst:1}, IM\ref{inst:7}}% #8 Referenced by
@@ -790,8 +795,8 @@ This portion will specify the existing theories that are used in the development
 {Density}% #3 label
 {$\rho = \frac{m}{V}$}% #4 equation
 {$\rho$ is the density (kg/m$^3$)\\
-  m is the mass (kg)\\
-  V is the volume (m$^3$)}% #5 description
+  $m$ is the mass (kg)\\
+  $V$ is the volume (m$^3$)}% #5 description
 {None.}% #6 Notes
 {\url{https://www.britannica.com/science/density-physics}}% #7 Source
 {IM\ref{inst:1}}% #8 Referenced by
@@ -822,9 +827,9 @@ This portion will specify the existing theories that are used in the development
 {TM:N2}% #2 refname of theory
 {Newtons 2nd Law}% #3 label
 {$F = ma$}% #4 equation
-{  F is the force (N)\\
-  m is the mass (kg)\\
-  a is the acceleration (m/s$^2$)}% #5 description
+{  $F$ is the force (N)\\
+  $m$ is the mass (kg)\\
+  $a$ is the acceleration (m/s$^2$)}% #5 description
 {Newtons 2nd law is used repeatedly in several Instance models}% #6 Notes
 {\url{https://www.physicsclassroom.com/class/newtlaws/lesson-3/newton-s-second-law}}% #7 Source
 {IM\ref{inst:1}, IM\ref{inst:6}, IM\ref{inst:7}}% #8 Referenced by
@@ -876,6 +881,20 @@ $f_\text{prim}(d)$ is the function to express the helix geometry (m $\rightarrow
 {None}% #9 Preconditions
 {}% #1 derivation - not applicable by default
 
+\noindent
+\deftheory
+{TM:HT}% #2 refname of theory
+{Hookes Law (Torsional)}% #3 label
+{$F = k \Delta x$}% #4 equation
+{$F$ is the force (N)\\
+  $k$ is the spring constant (Nm/rad)\\
+  $\Delta x$ is the displacement (m)}% #5 description
+{In the context of this project Hookes law is used in both a torsional and linear way.}% #6 Notes
+{\url{https://www.britannica.com/science/Hookes-law}}% #7 Source
+{}% #8 Referenced by
+{None}% #9 Preconditions
+{}% #1 derivation - not applicable by default
+
 ~\newline
 
 \subsubsection{General Definitions}\label{sec_gendef}
@@ -891,6 +910,8 @@ $f_\text{prim}(d)$ is the function to express the helix geometry (m $\rightarrow
 & $\beta$ is the helix angle (rad)} % #4 description
 {} % #5 source
 {\iref{inst:5}} % #6 referenced by
+
+% TODO: Add derivation
 
 \defgeneral
 {Spring Side Force} % #1 label
@@ -908,22 +929,12 @@ $f_\text{prim}(d)$ is the function to express the helix geometry (m $\rightarrow
 {} % #5 source
 {\iref{inst:5}} % #6 referenced by
 
+% TODO: Add derivation
+
 \subsubsection{Data Definitions}\label{sec_datadef}
 
 This section collects and defines all the data needed to build the instance
 models. The dimension of each quantity is also given. 
-
-\defdata
-{Density} % #1 refname of data
-{Density} % #2 label
-{$\rho$} % #3 symbol
-{\si[per-mode=symbol] {\kilogram\per\cubic\metre}} % #4 units
-{$\rho = \frac{m}{V}$} % #5 equation
-{$\rho$ is the density (\si[per-mode=symbol] {\kilogram\per\cubic\metre})\\
-& m is the mass (\si[per-mode=symbol] {\kilogram})\\
-& V is the volume (\si[per-mode=symbol] {\cubic\metre})}% #6 description
-{None.}% #7 Source
-{IM\ref{inst:1}}% #8 Referenced by
 
 \defdata 
 {Friction}% #1 refname of data
@@ -944,7 +955,7 @@ models. The dimension of each quantity is also given.
 {\si[per-mode=symbol] {\newton\per\metre}} % #4 units
 {$F = k \Delta x$} % #5 equation
 {$k$ is the spring constant (\si[per-mode=symbol] {\newton\per\metre})\\
-& F is the force (\si[per-mode=symbol] {\newton})\\
+& $F$ is the force (\si[per-mode=symbol] {\newton})\\
 & $\Delta x$ is the displacement (\si[per-mode=symbol] {\metre})}% #6 description
 {None.}% #7 Source
 {IM\ref{inst:4}}% #8 Referenced by
@@ -1017,18 +1028,26 @@ The goal statement GS\ref{GS3} are solved by Instance Models \ref{inst:4}, \ref{
   \definstance
   {Acceleration}
   {$r_{\text{gear}}, r_{\text{wheel}}, \rho, C_D, A, \theta, T_{\text{CVT}}, C_{\text{rr}}, m_v, m_d$}
-  {$a = \frac{\left( \frac{T_{\text{CVT}}}{r_{\text{gear}} + r_{\text{wheel}}} \right) - (C_{\text{rr}} F_g \sin(\theta)) - \left( \frac{1}{2} \rho v^2 C_D A \right) - (F_g \cos(\theta))}{m_v + m_d}$}
-  {acceleration a}
-  {$r_{\text{gear}}$ is the radius of the gear (m)\\
+  {
+    \[ a(t) = \frac{\left( \frac{T_{\text{eng}}(t) \cdot R_\text{cvt}(t)}{r_{\text{gear}} + r_{\text{wheel}}} \right) - (C_{\text{rr}} F_g \sin(\theta_\text{inc})) - \left( \frac{1}{2} \rho v^2 C_D A \right) - (F_g \cos(\theta_\text{inc}))}{m_v + m_d} \]
+    }
+  {acceleration $a(t)$}
+  {
+  $r_{\text{gear}}$ is the radius of the gear (m)\\
   & $r_{\text{wheel}}$ is the radius of the wheel (m)\\
   & $\rho$ is the density of the fluid (kg/m$^3$)\\
-  & $C_D$ is the drag coefficient\\
-  & A is the cross-sectional area of the object (m$^2$)\\
+  & $C_D$ is the drag coefficient (unitless)\\
+  & $A$ is the cross-sectional area of the object (m$^2$)\\
   & $\theta_{inc}$ is the angle of incline (rad)\\
-  & $T_{\text{CVT}}$ is the torque transferred to the wheel (N-m)\\
-  & $C_{\text{rr}}$ is the coefficient of rolling resistance\\
+  & $C_{\text{rr}}$ is the coefficient of rolling resistance (unitless)\\
+  & $F_g$ is the force of gravity (N)\\
   & $m_v$ is the mass of the vehicle (kg)\\
-  & $m_d$ is the mass of the driver(kg)}
+  & $m_d$ is the mass of the driver(kg)\\
+  & $a(t)$ is the function of acceleration over time (m/s$^2$)\\
+  & $R_\text{cvt}(t)$ is the current ratio of the CVT as a function of time (unitless)\\
+  & $T_{\text{eng}}(t)$ is the torque seen at the engine as a function of time (Nm)
+}
+  {\iref{inst:5}}
   {-}
   
   
@@ -1036,12 +1055,12 @@ The goal statement GS\ref{GS3} are solved by Instance Models \ref{inst:4}, \ref{
 
 Using \hyperref[TM:N2]{Newton's 2nd Law}, the acceleration of the vehicle is derived as follows: 
 \[
-T_W - F_r - F_D - F_g \cos(\theta) = ma
+T_W - R_r - F_D - F_g \cos(\theta_\text{inc}) = ma
 \]
 Where \( T_W \) is the torque of the wheel, \( F_r \) is the rolling resistance, \( F_D \) is the drag force, \( F_g \) is the gravitational force, and \( m \) is the mass of the vehicle. 
 
 \[
-T_W = \frac{T_{\text{CVT}}}{r_{\text{gear}} + r_{\text{wheel}}} \tag*{\text{(see \hyperref[TM:GR]{TM:GR})}}
+T_W = \frac{T_{\text{eng}}(t) \cdot R_\text{cvt}(t)}{r_{\text{gear}} + r_{\text{wheel}}} \tag*{\text{(see \hyperref[TM:GR]{TM:GR})}}
 \],
 
 \[
@@ -1057,9 +1076,7 @@ m = m_v + m_d
 \]
 
 Substituting the above equations in and solving for $a$ gives us the final equation:
-\[
-a = \frac{\left( \frac{T_{\text{CVT}}}{r_{\text{gear}} + r_{\text{wheel}}} \right) - (C_{\text{rr}} F_g \sin(\theta)) - \left( \frac{1}{2} \rho v^2 C_D A \right) - (F_g \cos(\theta))}{m_v + m_d}
-\]
+\[ a(t) = \frac{\left( \frac{T_{\text{eng}}(t) \cdot R_\text{cvt}(t)}{r_{\text{gear}} + r_{\text{wheel}}} \right) - (C_{\text{rr}} F_g \sin(\theta_\text{inc})) - \left( \frac{1}{2} \rho v^2 C_D A \right) - (F_g \cos(\theta))}{m_v + m_d} \]
 \definstance
 {Velocity}
 {$a(t)$}
@@ -1078,25 +1095,28 @@ a = \frac{\left( \frac{T_{\text{CVT}}}{r_{\text{gear}} + r_{\text{wheel}}} \righ
 
 \definstance
 {Primary Clamping Force}
-{$m_\text{fly}$, $r_{\text{fly}}$, $f_{\text{prim\_height}}(d_{\text{shift}})$, $f_{\text{prim\_angle}}(d_{\text{shift}})$, $k_{\text{prim}}$, $d_{\text{prim}}$, $d_{\text{shift}}$} % Input
-{$F_{\text{prim\_clamp}} = m_\text{fly} (r_{\text{fly}} + f_{\text{prim\_height}}({d_\text{{shift}}}))\omega^2 \tan(f_{\text{prim\_angle}}(d_{\text{shift}})) + k_{\text{prim}} (d_{\text{prim}} + d_{\text{shift}})$} % 
+{$m_\text{fly}$, $r_{\text{fly}}$, $f_{\text{prim\_height}}(d_{\text{shift}})$, $f_{\text{prim\_angle}}(d_{\text{shift}}(t))$, $k_{\text{prim}}$, $d_{\text{prim}}$, $d_{\text{shift}}$} % Input
+{$F_{\text{prim\_clamp}}(t) = m_\text{fly} (r_{\text{fly}} + f_{\text{prim\_height}}({d_\text{shift}(t)}))(\omega_\text{eng}(t))^2 \tan(f_{\text{prim\_angle}}(d_\text{shift}(t))) + k_{\text{prim}} (d_{\text{prim}} + d_\text{shift}(t))$} % 
 {The primary clamping force $F_{\text{prim\_clamp}}$}
-{$m_\text{fly}$: Mass of the flyweight system. \\ 
-  &$r_{\text{fly}}$: Radius related to the flywheel. \\ 
-  &$f_{\text{prim\_height}}(d_{\text{shift}})$: Function that represents the height of the primary system. \\
-  &$f_{\text{prim\_angle}}(d_{\text{shift}})$: Primary function that represents the force dependent on the shifting distance. \\ 
-  &$k_{\text{prim}}$: Stiffness or coefficient related to the primary system. \\ 
-  &$d_{\text{shift}}$: Displacement or shift in the system.
+{$m_\text{fly}$: Mass of the flyweight system. (kg) \\ 
+  &$r_{\text{fly}}$: Initial radius of the flyweights. (m) \\ 
+  &$f_{\text{prim\_height}}(d_{\text{shift}})$: Function that represents the height of the flyweights based on the shift distance. (rad) \\
+  &$f_{\text{prim\_angle}}(d_{\text{shift}})$: Function that returns the instantaneous angle of the ramps based on the shifting distance. (rad) \\ 
+  &$k_{\text{prim}}$: Primary spring coefficient. (unitless) \\ 
+  &$d_\text{shift}(t)$: Displacement of the sheave as a function of time. (m)\\
+  &$\omega_\text{eng} (t)$: Angular velocity of the engine as a function of time. (rad/s)\\
+  &$d_{\text{prim}}$: Initial compression distance of the primary spring. (m)
 } % Description
 {} % Sources
 {\iref{inst:6}}
 
 \subsubsection*{Derivation of Primary Clamping Force}
 
-The flyweight experiences see \hyperref[TM:CF]{centrifugal force} {$F_c = m r\omega^2 $} as it rotates. 
+The flyweight experiences a \hyperref[TM:CF]{centrifugal force} {$F_c = m r\omega^2 $} as it rotates. 
 The ramp angle $f_{\text{prim\_angle}}(d_{\text{shift}})$ is where the force applied by the flyweight meets the inclined surface.
 The force can be broken into the radial force, which is perpendicular to the ramp, and the axial force which acts in the direction of the ramp.
 The axial force is what is responsible for moving the mechanism causing the flyweights to press against a ramp or surface, therefore the force we are interested in.
+We can ignore the radial force as it acts perpendicular to the ramp and does not contribute to the axial force. (see \aref{A_10})
 To find the flywheel force in this axial direction the tangent of the angle $f_{\text{prim\_angle}}(d_{\text{shift}})$ is used.
 The flywheel force is derived as follows: 
 \[
@@ -1119,23 +1139,25 @@ F_{FW} - F_S =  m_\text{fly} (r_{\text{fly}} + f_{\text{prim\_height}}(d_{\text{
 
 The final equation can be written as:
 \[
-F_{\text{prim\_clamp}} =  m_\text{fly} (r_{\text{fly}} + f_{\text{prim\_height}}(d_{\text{shift}}))\omega^2 \tan(f_{\text{prim\_angle}}(d_{\text{shift}})) + k_{\text{prim}} (d_{\text{prim}} + d_{\text{shift}})
+F_{\text{prim\_clamp}}(t) = m_\text{fly} (r_{\text{fly}} + f_{\text{prim\_height}}({d_\text{shift}(t)}))(\omega_\text{eng}(t))^2 \tan(f_{\text{prim\_angle}}(d_\text{shift}(t))) + k_{\text{prim}} (d_{\text{prim}} + d_\text{shift}(t))
 \]
 
 \definstance
 {Secondary Clamping Force}
-{$k_{\text{sec\_tor}}$, $\theta_{\text{sec}}$, $r_{\text{sec\_ramp}}$, $f_{\text{sec\_ramp}}(d_{\text{shift}})$, $f_{\text{sec\_shift}}(d_{\text{shift}})$, $k_{\text{sec\_comp}}$, $d_{\text{sec}}$, $d_{\text{shift}}$} % Input
-{$F_{\text{sec\_clamp}} = \frac{k_{\text{sec\_tor}} (\theta_{\text{sec}} + f_{\text{sec\_shift}}(d_{\text{shift}})) + T_{eng} CVT_{ratio}}{2 r_{\text{sec\_ramp}} \tan(f_{\text{sec\_ramp}}(d_{\text{shift}}))} + k_{\text{sec\_comp}} (d_{\text{sec}} + d_{\text{shift}})$} % 
+{$k_{\text{sec\_tor}}$, $\theta_{\text{sec}}$, $r_{\text{sec\_ramp}}$, $f_{\text{sec\_ramp}}(d_{\text{shift}})$, $f_{\text{sec\_shift}}(d_{\text{shift}})$, $k_{\text{sec\_comp}}$, $d_{\text{sec}}$, $d_{\text{shift}}(t)$, $T_{eng}(t)$, $R_{cvt}(t)$} % Input
+{\[
+F_{\text{sec\_clamp}}(t) = \frac{k_{\text{sec\_tor}} (\theta_{\text{sec}} + f_{\text{sec\_shift}}(d_\text{shift}(t))) + T_{eng}(t) R_{cvt}(t)}{2 r_{\text{sec\_ramp}} \tan(f_{\text{sec\_ramp}}(d_{\text{shift}}(t)))} + k_{\text{sec\_comp}} (d_{\text{sec}} + d_{\text{shift}}(t))
+\]} % 
 {Secondary clamping force $F_{\text{sec\_clamp}}$} % Output
-{$k_{\text{sec\_tor}}$: Torsional spring rate. \\
-  &$\theta_{\text{sec}}$: Initial torsional rotation. \\
-  &$f_{\text{sec}}(d_{\text{shift}})$: Amount of torsional rotation based on the distance shifted. \\
-  &$r_{\text{sec\_ramp}}$: Radius of the ramps from the shaft. \\
-  &$k_{\text{sec\_comp}}$: Compression spring rate. \\
-  &$d_{\text{sec}}$: Initial compression distance. \\
-  &$d_{\text{shift}}$: Displacement or shift in the system. \\
-  &$T_{eng}$: Torque of the engine. \\
-  &$CVT_{ratio}$: Ratio of the CVT system.
+{$k_{\text{sec\_tor}}$: Torsional spring rate. (Nm/rad)\\
+  &$\theta_{\text{sec}}$: Initial torsional rotation. (rad)\\
+  &$f_{\text{sec}}(d_{\text{shift}})$: Amount of torsional rotation based on the distance shifted. (rad) \\
+  &$r_{\text{sec\_ramp}}$: Radius of the helix from the shaft. (m)\\
+  &$k_{\text{sec\_comp}}$: Compression spring rate. (N/m)\\
+  &$d_{\text{sec}}$: Initial compression distance. (m)\\
+  &$d_{\text{shift}}$: Displacement of the sheave as a function of time. (m)\\
+  &$T_{eng}(t)$: Torque seen at the engine as a function of time. (Nm) \\
+  &$R_{cvt}(t)$: Ratio of the CVT as a function of time. (unitless)
 } % Description
 {} % Sources
 {\iref{inst:6}}
@@ -1150,47 +1172,45 @@ F_{\text{sec\_clamp}}\ = F_H + F_S
 The helix force is derived as follows:
 
 \[
-F_H = \frac{T_{\text{eng}}R_{\text{CVT}}}{2r\tan(\beta)}  \tag*{\text{(see GD2)}}
+F_H = \frac{T_{eng}(t) R_{cvt}(t)}{2r\tan(\beta)}  \tag*{\text{(see \dref{GD_2})}} % TODO: Fix reference
 \]
 
 Substituting in our variables gives us the following equation:
 
 \[
-F_H = \frac{T_{eng} CVT_{ratio}}{2 r_{\text{sec\_ramp}} \tan(f_{\text{sec\_ramp}}(d_{\text{shift}}))}
+F_H = \frac{T_{eng}(t) R_{cvt}(t)}{2 r_{\text{sec\_ramp}} \tan(f_{\text{sec\_ramp}}(d_\text{shift}(t)))}
 \]
 
 The spring force is derived as follows:
 
 \[
-F_S = \frac{k_{\text{tor}}(\theta_0 + \theta)}{2r\tan(\beta)} + k_\text{comp}(x_0 + x) \tag*{\text{(see GD1)}}
+F_S = \frac{k_{\text{tor}}(\theta_0 + \theta)}{2r\tan(\beta)} + k_\text{comp}(x_0 + x) \tag*{\text{(see \dref{GD_1})}} % TODO: Fix reference
 \]
 
 Substituting in our variables gives us the following equation:
 \[
-F_S = \frac{k_{\text{sec\_tor}} (\theta_{\text{sec}} + f_{\text{sec\_shift}}(d_{\text{shift}}))}{2 r_{\text{sec\_ramp}} \tan(f_{\text{sec\_ramp}}(d_{\text{shift}}))} + k_{\text{sec\_comp}} (d_{\text{sec}} + d_{\text{shift}})
+F_S = \frac{k_{\text{sec\_tor}} (\theta_{\text{sec}} + f_{\text{sec\_shift}}(d_\text{shift}(t)))}{2 r_{\text{sec\_ramp}} \tan(f_{\text{sec\_ramp}}(d_\text{shift}(t)))} + k_{\text{sec\_comp}} (d_{\text{sec}} + d_\text{shift}(t))
 \]
 
 Combining these two forces gives the total secondary clamping force:
 \[
-F_H + F_S = \frac{T_{eng} CVT_{ratio}}{2 r_{\text{sec\_ramp}} \tan(f_{\text{sec\_ramp}}(d_{\text{shift}}))} + \frac{k_{\text{sec\_tor}} (\theta_{\text{sec}} + f_{\text{sec\_shift}}(d_{\text{shift}}))}{2 r_{\text{sec\_ramp}} \tan(f_{\text{sec\_ramp}}(d_{\text{shift}}))} + k_{\text{sec\_comp}} (d_{\text{sec}} + d_{\text{shift}})
+F_H + F_S = \frac{T_{eng}(t) R_{cvt}(t)}{2 r_{\text{sec\_ramp}} \tan(f_{\text{sec\_ramp}}(d_\text{shift}(t)))} + \frac{k_{\text{sec\_tor}} (\theta_{\text{sec}} + f_{\text{sec\_shift}}(d_\text{shift}(t)))}{2 r_{\text{sec\_ramp}} \tan(f_{\text{sec\_ramp}}(d_\text{shift}(t)))} + k_{\text{sec\_comp}} (d_{\text{sec}} + d_\text{shift}(t))
 \]
 
 The final equation can be reached through simplifying the above equation by combining like terms:
 \[
-F_{\text{sec\_clamp}} = \frac{k_{\text{sec\_tor}} (\theta_{\text{sec}} + f_{\text{sec\_shift}}(d_{\text{shift}})) + T_{eng} CVT_{ratio}}{2 r_{\text{sec\_ramp}} \tan(f_{\text{sec\_ramp}}(d_{\text{shift}}))} + k_{\text{sec\_comp}} (d_{\text{sec}} + d_{\text{shift}})
+F_{\text{sec\_clamp}} = \frac{k_{\text{sec\_tor}} (\theta_{\text{sec}} + f_{\text{sec\_shift}}(d_\text{shift}(t))) + T_{eng}(t) R_{cvt}(t)}{2 r_{\text{sec\_ramp}} \tan(f_{\text{sec\_ramp}}(d_\text{shift}(t)))} + k_{\text{sec\_comp}} (d_{\text{sec}} + d_\text{shift}(t))
 \]
 
+% TODO: Clean up T_T and T_s, shouldnt's exist like this? These are forces that change over time, its why we derived them below
 \definstance
 {Sheave Acceleration}
-{$F_{\text{clamp\_prim}}, F_{\text{clamp\_sec}}, \mu, T_T, T_s, m$} % Input
-{\[a = \frac{F_{\text{clamp\_prim}} - F_{\text{clamp\_sec}} - \mu (T_T - T_s)}{m}\]} % Equation
+{$F_{\text{clamp\_prim}}, F_{\text{clamp\_sec}}, m_\text{sheaves}$} % Input
+{\[a(t) = \frac{F_{\text{clamp\_prim}}(t) - F_{\text{clamp\_sec}}(t)}{m_\text{sheaves}}\]} % Equation
 {Sheave acceleration $a$} % Output
 {$F_{\text{clamp\_prim}}$: Primary clamping force\\
   &$F_{\text{clamp\_sec}}$: Secondary clamping force\\
-  &$\mu$: Coefficient of friction\\
-  &$T_T$: Torque of the taut side of the belt\\
-  &$T_s$: Torque of the slack side of the belt\\
-  &$m$: Mass of the system} % Description
+  &$m_\text{sheaves}$: Mass of the movable sheaves, combined} % Description
 {} % Sources
 {-}
 {} % Sources
@@ -1198,36 +1218,33 @@ F_{\text{sec\_clamp}} = \frac{k_{\text{sec\_tor}} (\theta_{\text{sec}} + f_{\tex
 {-}
 
 \subsubsection*{Derivation of Sheave Acceleration}
-From Instance Model \ref{inst:7}'s derivation we get these torque equations:\\
-$T_T$ is defined as: \[T_T = T_s e^{\mu \theta}\]
-$T_s$ is defined as: \[T_s = \frac{T_{\text{eng}}}{r_{\text{prim}} (e^{\mu \theta} - 1)}\]
-
-Using Newton's second law, the acceleration of the sheave is derived as follows:
-\[ma = F_{\text{clamp\_prim}} - F_{\text{clamp\_sec}} - \mu (T_T - T_s)\]
+One can derive the accleration of the sheaves using \hyperref[TM:N2]{Newton's Second Law}. The forces acting on the built include 
+only the primary and secondary clamping forces, which act in opposite directions as they act out radially.
+The acceleration of the sheave is derived as follows:
+\[ma(t) = F_{\text{clamp\_prim}}(t) - F_{\text{clamp\_sec}}(t)\]
 Rearranging the equation for acceleration gives the final equation:
-\[a = \frac{F_{\text{clamp\_prim}} - F_{\text{clamp\_sec}} - \mu (T_T - T_s)}{m}\]
+\[a(t) = \frac{F_{\text{clamp\_prim}}(t) - F_{\text{clamp\_sec}}(t)}{m}\]
 
 
 
 \definstance
 {Belt Acceleration}
-{$T_{\text{eng}}, r_{\text{prim}}, F_F, m$ } % Input
-{$a_{\text{belt}} = \frac{T_{\text{eng}}}{m r_{\text{prim}}} - F_F$} % Equation
+{$T_{\text{eng}}, r_{\text{prim}}, m_\text{belt}$ } % Input
+{$a_{\text{belt}} = \frac{T_{\text{eng}}}{m r_{\text{prim}}}$} % Equation
 {Belt Acceleration $a_{\text{belt}}$} % Output
 {$T_{\text{eng}}$: Engine torque\\
    &$r_{\text{prim}}$: Primary radiu\\
-   &$F_F$: Friction force\\
-   &$m$: Mass of the system} % Description} % Description
+   &$m_\text{belt}$: Mass of the belt.} % Description} % Description
 {} % Sources
 {IM6} % Citation
 \subsubsection*{Derivation of Belt Acceleration}
 
 The torque of the engine equation in terms of belt tension is derived as such: \\
-\[T_{\text{eng}} = (T_T - T_s) r_{\text{prim}} \quad \Rightarrow \quad T_T - T_s = \frac{T_{\text{eng}}}{r_{\text{prim}}}\]
+\[T_{\text{eng}} = (T_T - T_s) r_{\text{prim}} \quad \Rightarrow \quad T_T - T_s = \frac{T_{\text{eng}}}{r_{\text{prim}}}\] % TODO: Add TM and reference here
 Similarly, for the load torque: \\
-\[T_{\text{load}} = (T_T - T_s) r_{\text{sec}} \quad \Rightarrow \quad T_T - T_s = \frac{T_{\text{load}}}{r_{\text{sec}}}\]
+\[T_{\text{load}} = (T_T - T_s) r_{\text{sec}} \quad \Rightarrow \quad T_T - T_s = \frac{T_{\text{load}}}{r_{\text{sec}}}\] % TODO: Add TM and reference here
 Equating the two torque equations: \\
-\[\frac{T_{\text{eng}}}{r_{\text{prim}}} = \frac{T_{\text{load}}}{r_{\text{sec}}} \tag*{\text{(see (add eff assump))}}\] 
+\[\frac{T_{\text{eng}}}{r_{\text{prim}}} = \frac{T_{\text{load}}}{r_{\text{sec}}} \tag*{\text{(see \aref{A_9})}}\] 
 {\newline}
 
 The equation for the torque of the taut side is derived using the \hyperref[TM:CE]{capstan equation}:
@@ -1238,20 +1255,25 @@ Solving for \(T_s\) (slack side): \\
 \[T_s = \frac{T_{\text{eng}}}{r_{\text{prim}} (e^{\mu \theta} - 1)}\]
 {\newline}
 
-Using Newtons 2nd law the final equation for belt acceleration is derived as: \\
-\[m a_{\text{belt}} = \frac{T_{\text{eng}} e^{\mu \theta}}{r_{\text{prim}} (e^{\mu \theta} - 1)} - \frac{T_{\text{eng}}}{r_{\text{prim}} (e^{\mu \theta} - 1)} - F_F\]
+Using \hyperref[TM:N2]{Newton's 2nd law} the final equation for belt acceleration is derived as: \\
+\[m_\text{belt} a_{\text{belt}} = \frac{T_{\text{eng}} e^{\mu \theta}}{r_{\text{prim}} (e^{\mu \theta} - 1)} - \frac{T_{\text{eng}}}{r_{\text{prim}} (e^{\mu \theta} - 1)}  \tag*{\text{(\hyperref[TM:N2]{TM:N2})}}\]
 Solving for acceleration: \\
-\[a_{\text{belt}} = \frac{T_{\text{eng}}}{m r_{\text{prim}} (e^{\mu \theta} - 1)} (e^{\mu \theta} - 1) - F_F\]
+\[a_{\text{belt}} = \frac{T_{\text{eng}}}{m_\text{belt} r_{\text{prim}} (e^{\mu \theta} - 1)} (e^{\mu \theta} - 1)\]
 Finally, simplifying to get: \\
-\[a_{\text{belt}} = \frac{T_{\text{eng}}}{m r_{\text{prim}}} - F_F\]
+\[a_{\text{belt}} = \frac{T_{\text{eng}}}{m_\text{belt} r_{\text{prim}}}\]
 
 
-
+% TODO: Probably need to define this if I can't find a source
 \definstance
 {RPM and Torque of Engine}
-{} % Input
-{} % Output
-{} % Description
+{$t, T_\text{load}$} % Input
+{{$T_{eng}$,  $\omega_\text{eng}$ } = $F(t, T_\text{load})$} % Equation
+{$T_{eng}$, $\omega_\text{eng}$} % Output
+{
+  $T_{eng}$: Torque seen at the engine\\
+& $\omega_\text{eng}$: Angular velocity of the engine\\
+& These are functions that are defined in a library. It will be passed the torque curve of the engine at 100\% load and calculate the torque and RPM at based on the time and the load of the system.
+} % Description
 {} % Sources
 {} % Citation
 {-}
