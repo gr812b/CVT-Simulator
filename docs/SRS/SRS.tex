@@ -1484,52 +1484,53 @@ Table~\ref{TblSpecParams}.
 
 This section provides the functional requirements, the business tasks that the
 software is expected to complete, and the nonfunctional requirements, the
-qualities that the software is expected to exhibit.
+qualities that the software is expected to exhibit. The priority for both sections 5.1 and 5.2 are in descending order, 
+which is to say that the top requirement is the most important and the bottom requirement is the least important.
 
 \subsection{Functional Requirements}
 
 \noindent \begin{itemize}
 
-\item[R\refstepcounter{reqnum}\thereqnum \label{R_Inputs}:] The system shall simulate the behavior of the McMaster Baja Team's Continuous Variable Transmission(CVT) using mathematical models.
+\item[R\refstepcounter{reqnum}\thereqnum \label{R_1}:] The system shall simulate the behavior of the McMaster Baja Team's Continuous Variable Transmission(CVT) using mathematical models.
 
-\item[R\refstepcounter{reqnum}\thereqnum \label{R_Inputs}:] The system shall calculate the acceleration of the vehicle as a function of time using inputs: gear radius, wheel radius, density of the fluid, drag coefficient, cross sectional area, angle of incline, torque transferred to the wheel, coefficient of rolling resistance, mass of the vehicle and driver. 
+\item[R\refstepcounter{reqnum}\thereqnum \label{R_2}:] The system shall calculate the acceleration of the vehicle as a function of time using inputs: gear radius, wheel radius, density of the fluid, drag coefficient, cross sectional area, angle of incline, torque transferred to the wheel, coefficient of rolling resistance, mass of the vehicle and driver. 
 
-\item[R\refstepcounter{reqnum}\thereqnum \label{R_Inputs}:] The system shall calculate the velocity of the vehicle as a function of time by taking the integral of acceleration with respect to time.
+\item[R\refstepcounter{reqnum}\thereqnum \label{R_3}:] The system shall calculate the velocity of the vehicle as a function of time by taking the integral of acceleration with respect to time.
 
-\item[R\refstepcounter{reqnum}\thereqnum \label{R_Inputs}:] The system shall calculate the distance as a function of time by taking the integral of the velocity with respect to time.
+\item[R\refstepcounter{reqnum}\thereqnum \label{R_4}:] The system shall calculate the distance as a function of time by taking the integral of the velocity with respect to time.
 
-\item[R\refstepcounter{reqnum}\thereqnum \label{R_Inputs}:] The system shall calculate the primary clamping force using inputs: mass of the flyweight, radius related to the flywheel, height of the primary system, force dependent of the shifting distance, stiffness of primary system and displacement or shift in the system. 
+\item[R\refstepcounter{reqnum}\thereqnum \label{R_5}:] The system shall calculate the primary clamping force using inputs: mass of the flyweight, radius related to the flywheel, height of the primary system, force dependent of the shifting distance, stiffness of primary system and displacement or shift in the system. 
 
-\item[R\refstepcounter{reqnum}\thereqnum \label{R_Inputs}:] The system shall calculate the secondary clamping force using inputs: torsional spring rate, initial torsional rotation, amount of torsional rotation based on the distance shifted, radius of the ramps from the shaft, compression spring rate, initial compression distance, displacement in system, torque of the engine and ratio of the CVT system.
+\item[R\refstepcounter{reqnum}\thereqnum \label{R_6}:] The system shall calculate the secondary clamping force using inputs: torsional spring rate, initial torsional rotation, amount of torsional rotation based on the distance shifted, radius of the ramps from the shaft, compression spring rate, initial compression distance, displacement in system, torque of the engine and ratio of the CVT system.
 
-\item[R\refstepcounter{reqnum}\thereqnum \label{R_Inputs}:] The system shall calculate the sheave acceleration using inputs: primary clamping force, secondary clamping force, coefficient of friction, torque of the taut side of the belt, torque of the slack side of the belt and mass of the system. 
+\item[R\refstepcounter{reqnum}\thereqnum \label{R_7}:] The system shall calculate the sheave acceleration using inputs: primary clamping force, secondary clamping force, coefficient of friction, torque of the taut side of the belt, torque of the slack side of the belt and mass of the system. 
 
-\item[R\refstepcounter{reqnum}\thereqnum \label{R_Inputs}:] The system shall calculate the belt acceleration using inputs engine torque, primary radius, friction force and mass of the system. 
+\item[R\refstepcounter{reqnum}\thereqnum \label{R_8}:] The system shall calculate the belt acceleration using inputs engine torque, primary radius, friction force and mass of the system. 
 
-\item[R\refstepcounter{reqnum}\thereqnum \label{R_Inputs}:] The system shall calculate RPM and Torque of the Engine using inputs time and load torque.
+\item[R\refstepcounter{reqnum}\thereqnum \label{R_9}:] The system shall calculate RPM and Torque of the Engine using inputs time and load torque.
 
-\item[R\refstepcounter{reqnum}\thereqnum \label{R_Inputs}:] The system shall allow users to adjust the following CVT tunning parameters: primary weight, primary ramp geometry, primary spring rate, primary spring pretension, secondary helix geometry, secondary spring rate, secondary spring pretension. 
+\item[R\refstepcounter{reqnum}\thereqnum \label{R_10}:] The system shall allow users to adjust the following CVT tunning parameters: primary weight, primary ramp geometry, primary spring rate, primary spring pretension, secondary helix geometry, secondary spring rate, secondary spring pretension. 
 
-\item[R\refstepcounter{reqnum}\thereqnum \label{R_Inputs}:] The system shall allow users to adjust vehicle and driver weight, traction and angle of incline in addition to the CVT tuning parameters.
+\item[R\refstepcounter{reqnum}\thereqnum \label{R_11}:] The system shall allow users to adjust vehicle and driver weight, traction and angle of incline in addition to the CVT tuning parameters.
 
-\item[R\refstepcounter{reqnum}\thereqnum \label{R_Inputs}:] The system shall provide users with an interface to input tuning parameters.
+\item[R\refstepcounter{reqnum}\thereqnum \label{R_12}:] The system shall provide users with an interface to input tuning parameters.
 
-\item[R\refstepcounter{reqnum}\thereqnum \label{R_Inputs}:] The system shall display graphs of simulation output based on the user inputted tuning parameters.
+\item[R\refstepcounter{reqnum}\thereqnum \label{R_13}:] The system shall display graphs of simulation output based on the user inputted tuning parameters.
 
-\item[R\refstepcounter{reqnum}\thereqnum \label{R_Inputs}:] The system shall allow users to compare results of simulations with different CVT tuning parameters.
+\item[R\refstepcounter{reqnum}\thereqnum \label{R_14}:] The system shall allow users to compare results of simulations with different CVT tuning parameters.
 
-\item[R\refstepcounter{reqnum}\thereqnum \label{R_Inputs}:] The system shall allow users to export outputted simulated graphical data.
+\item[R\refstepcounter{reqnum}\thereqnum \label{R_15}:] The system shall allow users to export outputted simulated graphical data.
 
-\item[R\refstepcounter{reqnum}\thereqnum \label{R_Inputs}:] The system shall allow users to access the application through the use of a personal computer or laptop.
+\item[R\refstepcounter{reqnum}\thereqnum \label{R_16}:] The system shall allow users to access the application through the use of a personal computer or laptop.
 
-\item[R\refstepcounter{reqnum}\thereqnum \label{R_Inputs}:] The system shall be compatible with Windows, MacOS and Linux.
+\item[R\refstepcounter{reqnum}\thereqnum \label{R_17}:] The system shall be compatible with Windows, MacOS and Linux.
 \end{itemize}
 
 \subsection{Nonfunctional Requirements}
 
 \noindent \begin{itemize}
 
-\item[NFR\refstepcounter{nfrnum}\thenfrnum \label{NFR_Accuracy}:]\textbf{Accuracy} The system shall achieve an accuracy of at least 95 \% in correctly predicting CVT outputs.
+\item[NFR\refstepcounter{nfrnum}\thenfrnum \label{NFR_Accuracy}:]\textbf{Accuracy} The system shall achieve an accuracy of at least 95 \% in correctly predicting CVT outputs. See VnV Plan Section 4.2 for the test procedure.
 \item[NFR\refstepcounter{nfrnum}\thenfrnum \label{NFR_Usability}:] \textbf{Usability} 85 \% of a representative user group shall be able to successfully input CVT parameters and receive CVT outputs on their first use.
 \item[NFR\refstepcounter{nfrnum}\thenfrnum \label{NFR_Maintainability}:]\textbf{Maintainability} If a likely change is made to the finished software, it will take at most 10 \% of the original development time, assuming the same development resources are available.
 \item[NFR\refstepcounter{nfrnum}\thenfrnum \label{NFR_Verifiability}:] \textbf{Verifiability} The system shall output the resulting tunned CVT outputs which must able to be cross-verified against data available through the McMaster Baja Team with a consistency rate of 95 \%.
@@ -1540,15 +1541,15 @@ qualities that the software is expected to exhibit.
 
 \subsection{Rationale}
 
-The assumptions made for the CVT (Continuously Variable Transmission) system model aim to simplify it's dynamics, facilitating the development of mathematical models to simulate the behavior of the CVT(R1). 
-Many key assumptions are made to meet the requirement of developing these mathematical models. The following assumptions are also factored in to the calculations of the CVT ratio, clamping force, RPM, torque, engine input, distance, speed and acceleration(R2). 
+The assumptions made for the CVT (Continuously Variable Transmission) system model aim to simplify it's dynamics, facilitating the development of mathematical models to simulate the behavior of the CVT(\rref{R_1}). 
+Many key assumptions are made to meet the requirement of developing these mathematical models. The following assumptions are also factored in to the calculations of the CVT ratio, clamping force, RPM, torque, engine input, distance, speed and acceleration(\rref{R_2}). 
 \\\\
-\noindent The systems excludes the effects of temperature on material properties, aside from the belt, which allows for a more straightforward focus on the mechanics of the interactions (A1).
-The influence of gravitational forces is negligible and the elasticity of belts is considered insignificant(A2, A3). 
-Vibrational effects from external sources are also assumed to be minimal, avoiding the complexity of vibration-induced disturbances in transmission behavior (A4).
-Wear and tear of components, including the belt and pulley are disregarded and frictional losses in non-critical components, are deemed negligible (A5, A6). 
-The engine is assumed to operate at full throttle with consistent power delivery, simplifying the model by maintaining uniform engine behavior (A4).
-Finally, the CVT axis are assumed to be in line and the belt slippage of the CVT is assumed as negligible (A8, A9). 
+\noindent The systems excludes the effects of temperature on material properties, aside from the belt, which allows for a more straightforward focus on the mechanics of the interactions (\aref{A_1}).
+The influence of gravitational forces is negligible and the elasticity of belts is considered insignificant(\aref{A_2}, \aref{A3}). 
+Vibrational effects from external sources are also assumed to be minimal, avoiding the complexity of vibration-induced disturbances in transmission behavior (\aref{A_4}).
+Wear and tear of components, including the belt and pulley are disregarded and frictional losses in non-critical components, are deemed negligible (\aref{A_5}, \aref{A_6}). 
+The engine is assumed to operate at full throttle with consistent power delivery, simplifying the model by maintaining uniform engine behavior (\aref{A_4}).
+Finally, the CVT axis are assumed to be in line and the belt slippage of the CVT is assumed as negligible (\aref{A_8},\aref{A_9}). 
 \\\\
 \noindent These simplifications affect the process of creating our mathematical models and formulating equations governing velocity, distance, primary clamping force, secondary clamping force, CVT Ratio, Torque transfer and RPM and Torque of the Engine(IM1-IM8)
 
@@ -1556,16 +1557,22 @@ Finally, the CVT axis are assumed to be in line and the belt slippage of the CVT
 
 \noindent \begin{itemize}
 
-\item[LC\refstepcounter{lcnum}\thelcnum\label{LC_1}:] The effect of temperature on material properties might be included in the future, (A\ref{A_1})
-\item[LC\refstepcounter{lcnum}\thelcnum\label{LC_2}:] The elasticity of the belt might be considered in the future, (A\ref{A_3})
-\item[LC\refstepcounter{lcnum}\thelcnum\label{LC_3}:] Frictional losses in non-critical components might be considered in the future, (A\ref{A_6})
+\item[LC\refstepcounter{lcnum}\thelcnum\label{LC_1}:] The effect of temperature on material properties might be included in the future, (A\ref{A_1}) Stakeholders would be interested in seeing this information in the future.
+\item[LC\refstepcounter{lcnum}\thelcnum\label{LC_2}:] The elasticity of the belt might be considered in the future, (A\ref{A_3}) This would provide a more accurate model of the CVT system.
+\item[LC\refstepcounter{lcnum}\thelcnum\label{LC_3}:] Frictional losses in non-critical components might be considered in the future, (A\ref{A_6}) This would provide a more accurate model of the CVT system.
 \item[LC\refstepcounter{lcnum}\thelcnum\label{LC_4}:] Some of the math models will most likely change as the design is refined.
 
 \end{itemize}
 
 \section{Unlikely Changes}    
 
-None
+\begin{itemize}
+
+  \item[ULC1:] The assumption that the CVT axis are in line is unlikely to change because tuning is simply not valuable in a system as poor as this. (A\ref{A_8})
+  \item[ULC2:] The assumption that the engine operates at full throttle is unlikely to change as different behaviour is simply not ideal. (A\ref{A_7})
+  \item[ULC3:] The assumption that the influence of gravitational forces is negligible is unlikely to change as it heavily reduces complexity and plays an incredibly small part on spinning objects at high rotational speeds. (A\ref{A_2})
+  
+  \end{itemize}
 \section{Traceability Matrices and Graphs}
 
 The purpose of the traceability matrices is to provide easy references on what
@@ -1748,13 +1755,7 @@ instance models, requirements, and data constraints on each other.
 N/A
 
 \section{Values of Auxiliary Constants}
-
-\plt{Show the values of the symbolic parameters introduced in the report.}
-
-\plt{The definition of the requirements will likely call for SYMBOLIC\_CONSTANTS.
-Their values are defined in this section for easy maintenance.}
-
-\plt{The value of FRACTION, for the Maintainability NFR would be given here.}
+N/A
 
 \newpage
 
@@ -1762,48 +1763,6 @@ Their values are defined in this section for easy maintenance.}
 \bibliography {../../refs/References}
 
 \newpage
-
-\noindent \plt{The following is not part of the template, just some things to consider
-  when filing in the template.}
-
-\noindent \plt{Grammar, flow and \LaTeX advice:
-\begin{itemize}
-\item For Mac users \texttt{*.DS\_Store} should be in \texttt{.gitignore}
-\item \LaTeX{} and formatting rules
-\begin{itemize}
-\item Variables are italic, everything else not, includes subscripts (link to
-  document)
-\begin{itemize}
-\item \href{https://physics.nist.gov/cuu/pdf/typefaces.pdf}{Conventions}
-\item Watch out for implied multiplication
-\end{itemize}
-\item Use BibTeX
-\item Use cross-referencing
-\end{itemize}
-\item Grammar and writing rules
-\begin{itemize}
-\item Acronyms expanded on first usage (not just in table of acronyms)
-\item ``In order to'' should be ``to''
-\end{itemize}
-\end{itemize}}
-
-\noindent \plt{Advice on using the template:
-\begin{itemize}
-\item Difference between physical and software constraints
-\item Properties of a correct solution means \emph{additional} properties, not
-  a restating of the requirements (may be ``not applicable'' for your problem).
-  If you have a table of output constraints, then these are properties of a
-  correct solution.
-\item Assumptions have to be invoked somewhere
-\item ``Referenced by'' implies that there is an explicit reference
-\item Think of traceability matrix, list of assumption invocations and list of
-  reference by fields as automatically generatable
-\item If you say the format of the output (plot, table etc), then your
-  requirement could be more abstract
-\end{itemize}
-}
-
-\newpage{}
 \section*{Appendix --- Reflection}
 
 \wss{Not required for CAS 741}
