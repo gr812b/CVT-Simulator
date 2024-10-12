@@ -1355,7 +1355,21 @@ qualities that the software is expected to exhibit.
 
 \item[R\refstepcounter{reqnum}\thereqnum \label{R_Inputs}:] The system shall simulate the behavior of the McMaster Baja Team's Continuous Variable Transmission(CVT) using mathematical models.
 
-\item[R\refstepcounter{reqnum}\thereqnum \label{R_Inputs}:] The system shall calculate the CVT ratio, clamping force, RPM, torque as functions of time. Combined with engine input, the system shall calculate distance, speed and acceleration as functions of time.
+\item[R\refstepcounter{reqnum}\thereqnum \label{R_Inputs}:] The system shall calculate the acceleration of the vehicle as a function of time using inputs: gear radius, wheel radius, density of the fluid, drag coefficient, cross sectional area, angle of incline, torque transferred to the wheel, coefficient of rolling resistance, mass of the vehicle and driver. 
+
+\item[R\refstepcounter{reqnum}\thereqnum \label{R_Inputs}:] The system shall calculate the velocity of the vehicle as a function of time by taking the integral of acceleration with respect to time.
+
+\item[R\refstepcounter{reqnum}\thereqnum \label{R_Inputs}:] The system shall calculate the distance as a function of time by taking the integral of the velocity with respect to time.
+
+\item[R\refstepcounter{reqnum}\thereqnum \label{R_Inputs}:] The system shall calculate the primary clamping force using inputs: mass of the flyweight, radius related to the flywheel, height of the primary system, force dependent of the shifting distance, stiffness of primary system and displacement or shift in the system. 
+
+\item[R\refstepcounter{reqnum}\thereqnum \label{R_Inputs}:] The system shall calculate the secondary clamping force using inputs: torsional spring rate, initial torsional rotation, amount of torsional rotation based on the distance shifted, radius of the ramps from the shaft, compression spring rate, initial compression distance, displacement in system, torque of the engine and ratio of the CVT system.
+
+\item[R\refstepcounter{reqnum}\thereqnum \label{R_Inputs}:] The system shall calculate the sheave acceleration using inputs: primary clamping force, secondary clamping force, coefficient of friction, torque of the taut side of the belt, torque of the slack side of the belt and mass of the system. 
+
+\item[R\refstepcounter{reqnum}\thereqnum \label{R_Inputs}:] The system shall calculate the belt acceleration using inputs engine torque, primary radius, friction force and mass of the system. 
+
+\item[R\refstepcounter{reqnum}\thereqnum \label{R_Inputs}:] The system shall calculate RPM and Torque of the Engine.
 
 \item[R\refstepcounter{reqnum}\thereqnum \label{R_Inputs}:] The system shall allow users to adjust the following CVT tunning parameters: primary weight, primary ramp geometry, primary spring rate, primary spring pretension, secondary helix geometry, secondary spring rate, secondary spring pretension. 
 
