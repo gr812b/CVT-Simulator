@@ -3,6 +3,11 @@
 \usepackage{booktabs}
 \usepackage{tabularx}
 \usepackage{hyperref}
+\usepackage{multirow}
+\usepackage{array}
+\usepackage{geometry}
+\usepackage{adjustbox} 
+\usepackage{caption}
 
 \hypersetup{
     colorlinks=true,       % false: boxed links; true: colored links
@@ -99,6 +104,44 @@ requirements.}
 \wss{If no safety requirement can be devised, other mitigation strategies can be
 entered in the table, including strategies involving providing additional
 documentation, and/or test cases.}
+
+
+\newgeometry{left=1cm, right=1cm, top=1cm, bottom=1cm}
+\begin{table}[htbp]
+    \centering
+    \caption{Failure Mode and Effects Analysis}
+    \renewcommand{\arraystretch}{1.5} % Increase row height for readability
+    
+    % Use adjustbox to expand the table to full page width
+    \begin{adjustbox}{max width=\textwidth}
+    % Set the last four columns with fixed width (compact) and let the first three grow
+    \begin{tabularx}{\textwidth}{|>{\raggedright\arraybackslash}X|>{\raggedright\arraybackslash}X|>{\raggedright\arraybackslash}X|p{0.8cm}|p{0.8cm}|p{0.8cm}|p{0.8cm}|p{0.8cm}|p{0.8cm}|p{0.8cm}|p{0.8cm}|}
+    \hline
+    \textbf{Process Step} & \textbf{Failure Mode} & \textbf{Possible Causes of Failure} & \multicolumn{4}{c|}{\textbf{Conventional Fractionation}} & \multicolumn{4}{c|}{\textbf{Hypofractionation}} \\
+    \cline{4-11}
+     &  &  & O & S & D & New & O & S & D & New \\
+    \hline
+    \multirow{4}{\linewidth}{1. Position Monitoring (PM) system estimates real-time target position} 
+     & i. Target moves outside spatial tolerance, beam-hold not asserted & (a) Beam-hold not sent by monitoring system to tracking system & 3.4 & 5.7 & 4.0 & 5.1 & 3.3 & 7.1 & 3.6 & 4.8 \\
+    \cline{2-11}
+     & ii. Communication with PM system lost, target not asserted & (a) PM system failure & 3.7 & 7.1 & 2.6 & 4.9 & 3.7 & 8.4 & 2.6 & 5.2 \\
+     &  & (b) Data transfer cable physically disconnected & & & & & & & & \\
+    \cline{2-11}
+     & iii. Error in coordinate system conversion & (a) System installation error & 1.7 & 8.6 & 4.3 & 5.3 & 1.7 & 9.3 & 3.9 & 5.5 \\
+    \hline
+    \multirow{2}{\linewidth}{2. Tracking system receives real-time target position} 
+     & iv. Optimal leaf-fitting not achieved & (a) Complex motion, highly modulated field & 5.4 & 4.0 & 6.7 & 4.5 & 5.3 & 5.0 & 6.7 & 5.7 \\
+    \cline{2-11}
+     & v. Beam-hold not asserted when fluence map under jaws & (a) Software crash or failure & 2.9 & 4.9 & 3.7 & 5.8 & 2.6 & 6.1 & 3.9 & 5.9 \\
+    \hline
+    \multirow{2}{\linewidth}{3. MLC controller actuates leaf motion} 
+     & vi. System latency outside expected range & (a) Hardware or software changes & 4.0 & 3.0 & 6.0 & 5.0 & 4.3 & 6.3 & 6.1 & 5.3 \\
+     & vii. Too many beam-holds & (a) MLC leaves cannot keep up with target motion & 6.0 & 2.9 & 1.6 & 4.7 & 6.0 & 2.9 & 1.6 & 4.9 \\
+    \hline
+    \end{tabularx}
+    \end{adjustbox}
+    \end{table}
+\restoregeometry
 
 \section{Safety and Security Requirements}
 
