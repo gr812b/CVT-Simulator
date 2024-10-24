@@ -134,53 +134,116 @@ documentation, and/or test cases.}
 \end{itemize}
 
 
-\newgeometry{left=0.5cm, right=0.5cm, top=1cm, bottom=1cm}
+\newgeometry{left=0cm, right=0cm, top=0cm, bottom=0cm}
 \begin{table}[ht]
     \centering
-    \setlength{\tabcolsep}{5pt} % Adjust space between columns
+    \setlength{\tabcolsep}{3pt} % Adjust space between columns
     \renewcommand{\arraystretch}{1.5} % Adjust row spacing
-    \begin{tabular}{|>{\centering\arraybackslash}m{1.5cm}|>{\centering\arraybackslash}m{2.5cm}|>{\centering\arraybackslash}m{2cm}|>{\arraybackslash}m{5cm}|>{\centering\arraybackslash}m{2cm}|>{\centering\arraybackslash}m{3cm}|>{\centering\arraybackslash}m{1cm}|>{\centering\arraybackslash}m{1cm}|}
+    \begin{tabular}{|>{\centering\arraybackslash}m{1.5cm}|>{\centering\arraybackslash}m{1.75cm}|>{\centering\arraybackslash}m{3.25cm}|>{\arraybackslash}m{5cm}|>{\centering\arraybackslash}m{3cm}|>{\centering\arraybackslash}m{3cm}|>{\centering\arraybackslash}m{0.5cm}|>{\centering\arraybackslash}m{0.75cm}|}
     \hline
     \textbf{Design Function} & \textbf{Failure Modes} & \textbf{Effects of Failure} & \textbf{Causes of Failure} & \textbf{Detection} & \textbf{Recommended Action} & \textbf{SR} & \textbf{Ref} \\ \hline
     
     {Simulates the CVT system} %\multirow{3}{*}
-    & Simulation crashes
-    & Hyperglycemia in patient 
-    & \begin{itemize}[left=5pt]
-        \item A
+    & Improper Load Balancing
+    & \begin{itemize}[left=0pt]
+        \item Increased wear over time leading to premature failure.
+        \item Suboptimal power transfer between the engine and the wheels.
     \end{itemize} 
-    & Continuous monitoring & 
-    \begin{itemize}[left=5pt]
-        \item A
+    & \begin{itemize}[left=0pt]
+        \item Incorrect distribution of forces across the pulleys due to inaccurate mass or load models.
+        \item Errors in simulating the torque requirements based on the load.
+        \item Inaccurate assumptions about load transfer between the pulleys.
     \end{itemize} 
-    & 8 & Ref1 \\ \cline{2-8} 
+    & \begin{itemize}[left=0pt]
+        \item Erratic changes in acceleration of the vehicle.
+        \item Excessive load on one component compared to another.
+        \item Validate with torque data.
+    \end{itemize} & 
+    \begin{itemize}[left=0pt]
+        \item Adjust load model to more accurately represent the vehicle.
+        \item Add dynamic load balancing checks to the simulation.
+    \end{itemize} 
+    & 1 & Ref1 \\ \cline{2-8} 
     
-    & Inaccurate simulation
-    & Bad tuning settings are outputted to the user, which could lead to damaging tunes on the vehicle.
-    & \begin{itemize}[left=5pt]
-        \item Poor assumptions lead to inaccurate calculations
-        \item Incorrect input from the user
-        \item Poorly handled edge cases in simulation
-        \item Incorrect implementation of the simulation
+    & Inaccurate power transfer between pulleys (belt dynamics)
+    & \begin{itemize}[left=0pt]
+        \item Increased wear over time leading to premature failure.
+        \item Suboptimal power transfer between the engine and the wheels.
     \end{itemize} 
-    & Validating output results with real-world limits (In comparison to known limits, energy conservation) & 
-    \begin{itemize}[left=5pt]
-        \item Implement more accurate calculations
-        \item Implement more accurate assumptions
-        \item Validate the simulation with data collected from the real-world, comparing the shapes and limits of various points.
+    & \begin{itemize}[left=0pt]
+        \item Inaccurate modelling of belt tension and friction.
+        \item Incorrect pulley geometry, taking advantage of belt assumptions to lead to impossible configurations.
     \end{itemize} 
-    & 9 & Ref2 \\ \cline{2-8} 
+    & \begin{itemize}[left=0pt]
+        \item Sudden drops in power transfer, or incredibly high torque differences.
+        \item Unreasonably high belt tension or slack.
+    \end{itemize} & 
+    \begin{itemize}[left=0pt]
+        \item Dynamically check if belt tension is within reasonable limits.
+    \end{itemize} 
+    & 2 & Ref2 \\ \cline{2-8} 
     
-    & Takes too long to deliver insulin 
-    & Hyperglycemia in patient 
-    & \begin{itemize}[left=5pt]
-        \item A
+    & Poor numerical precision 
+    & \begin{itemize}[left=0pt]
+        \item Inaccurate simulation results, leading to incorrect design decisions
+        \item Inconsistent behaviour of the system, leading to confusion and potential damage.
     \end{itemize} 
-    & Continuous glucose monitoring & 
-    \begin{itemize}[left=5pt]
-        \item A
+    & \begin{itemize}[left=0pt]
+        \item Insufficient precision in the ODE solver.
+        \item Inappropriate time-step size.
     \end{itemize} 
-    & 7 & Ref3 \\ \hline
+    & \begin{itemize}[left=0pt]
+        \item Erratic in times of high acceleration or deceleration.
+        \item Results that are inconsistent with the expected behaviour of the system.
+    \end{itemize} &
+    \begin{itemize}[left=0pt]
+        \item Manually verify precision is sufficient by a factor of safety.
+        \item Validate the ODE library's precision and accuracy.
+    \end{itemize} 
+    &  & Ref3 \\ \cline{2-8} 
+    
+    & Insufficient frictional forces
+    & \begin{itemize}[left=0pt]
+        \item Excessive belt slippage or tension, leading to wear and poor efficiency.
+        \item Simulations provide overly generous results.
+    \end{itemize} 
+    & \begin{itemize}[left=0pt]
+        \item Incorrect assumptions about the frictional forces between the belt and the pulleys.
+        \item Incorrect friction models for the pulleys due to false geometry or temperature assumptions.
+    \end{itemize} 
+    & \begin{itemize}[left=0pt]
+        \item Consistently high forces that would be reduced by friction.
+        \item Slip conditions met excessively while not being accounted for.
+        \item Compare to belt slip and RPM data.
+    \end{itemize} &
+    \begin{itemize}[left=0pt]
+        \item Investigate friction assumptions and models.
+        \item Validate simulation in simple cases to ensure friction is accounted for.
+    \end{itemize} 
+    & 3 & Ref3 \\ \cline{2-8} 
+    
+    & Software Crash
+    & \begin{itemize}[left=0pt]
+        \item Loss of data and work.
+        \item High frustration and loss of trust in the software.
+    \end{itemize} 
+    & \begin{itemize}[left=0pt]
+        \item Memory leaks or poor memory management.
+        \item Incorrect handling of edge cases, such as a division by 0.
+        \item Poor error handling, leading to system crashes rather than graceful failures.
+    \end{itemize} 
+    & \begin{itemize}[left=0pt]
+        \item Application crashes during normal use.
+        \item Program does not output data.
+        \item Unusually high memory or CPU usage.
+        \item Logs showing unhandled exceptions or errors.
+    \end{itemize} &
+    \begin{itemize}[left=0pt]
+        \item Implement robust error handling.
+        \item Conduct memory profiling and avoid loading large or unnecessary data.
+        \item Test the software in edge cases to ensure it fails gracefully.
+    \end{itemize} 
+    & 4 & Ref3 \\ \hline
     
     \end{tabular}
     \caption{Failure Modes, Effects, and Recommended Actions for Insulin Delivery}
