@@ -8,6 +8,7 @@
 \usepackage{geometry}
 \usepackage{adjustbox} 
 \usepackage{caption}
+\usepackage{enumitem}
 
 \hypersetup{
     colorlinks=true,       % false: boxed links; true: colored links
@@ -123,40 +124,66 @@ entered in the table, including strategies involving providing additional
 documentation, and/or test cases.}
 
 
-\newgeometry{left=1cm, right=1cm, top=1cm, bottom=1cm}
-\begin{table}[htbp]
+\begin{itemize}
+    \item Improper load balancing
+    \item Power transfer between pulleys (belt stuff)
+    \item Inaccurate ODE solving (check the library / precision)
+    \item Engine speed and torque calculations 
+    \item Realistic torque / force ratings of components
+    \item Insufficient frictional forces
+\end{itemize}
+
+
+\newgeometry{left=0.5cm, right=0.5cm, top=1cm, bottom=1cm}
+\begin{table}[ht]
     \centering
-    \caption{Failure Mode and Effects Analysis}
-    \renewcommand{\arraystretch}{1.5} % Increase row height for readability
+    \setlength{\tabcolsep}{5pt} % Adjust space between columns
+    \renewcommand{\arraystretch}{1.5} % Adjust row spacing
+    \begin{tabular}{|>{\centering\arraybackslash}m{1.5cm}|>{\centering\arraybackslash}m{2.5cm}|>{\centering\arraybackslash}m{2cm}|>{\arraybackslash}m{5cm}|>{\centering\arraybackslash}m{2cm}|>{\centering\arraybackslash}m{3cm}|>{\centering\arraybackslash}m{1cm}|>{\centering\arraybackslash}m{1cm}|}
+    \hline
+    \textbf{Design Function} & \textbf{Failure Modes} & \textbf{Effects of Failure} & \textbf{Causes of Failure} & \textbf{Detection} & \textbf{Recommended Action} & \textbf{SR} & \textbf{Ref} \\ \hline
     
-    % Use adjustbox to expand the table to full page width
-    \begin{adjustbox}{max width=\textwidth}
-    % Set the last four columns with fixed width (compact) and let the first three grow
-    \begin{tabularx}{\textwidth}{|>{\raggedright\arraybackslash}X|>{\raggedright\arraybackslash}X|>{\raggedright\arraybackslash}X|p{0.8cm}|p{0.8cm}|p{0.8cm}|p{0.8cm}|p{0.8cm}|p{0.8cm}|p{0.8cm}|p{0.8cm}|}
-    \hline
-    \textbf{Process Step} & \textbf{Failure Mode} & \textbf{Possible Causes of Failure} & \multicolumn{4}{c|}{\textbf{Conventional Fractionation}} & \multicolumn{4}{c|}{\textbf{Hypofractionation}} \\
-    \cline{4-11}
-     &  &  & O & S & D & New & O & S & D & New \\
-    \hline
-    \multirow{4}{\linewidth}{1. Position Monitoring (PM) system estimates real-time target position} 
-     & i. Target moves outside spatial tolerance, beam-hold not asserted & (a) Beam-hold not sent by monitoring system to tracking system & 3.4 & 5.7 & 4.0 & 5.1 & 3.3 & 7.1 & 3.6 & 4.8 \\
-    \cline{2-11}
-     & ii. Communication with PM system lost, target not asserted & (a) PM system failure & 3.7 & 7.1 & 2.6 & 4.9 & 3.7 & 8.4 & 2.6 & 5.2 \\
-     &  & (b) Data transfer cable physically disconnected & & & & & & & & \\
-    \cline{2-11}
-     & iii. Error in coordinate system conversion & (a) System installation error & 1.7 & 8.6 & 4.3 & 5.3 & 1.7 & 9.3 & 3.9 & 5.5 \\
-    \hline
-    \multirow{2}{\linewidth}{2. Tracking system receives real-time target position} 
-     & iv. Optimal leaf-fitting not achieved & (a) Complex motion, highly modulated field & 5.4 & 4.0 & 6.7 & 4.5 & 5.3 & 5.0 & 6.7 & 5.7 \\
-    \cline{2-11}
-     & v. Beam-hold not asserted when fluence map under jaws & (a) Software crash or failure & 2.9 & 4.9 & 3.7 & 5.8 & 2.6 & 6.1 & 3.9 & 5.9 \\
-    \hline
-    \multirow{2}{\linewidth}{3. MLC controller actuates leaf motion} 
-     & vi. System latency outside expected range & (a) Hardware or software changes & 4.0 & 3.0 & 6.0 & 5.0 & 4.3 & 6.3 & 6.1 & 5.3 \\
-     & vii. Too many beam-holds & (a) MLC leaves cannot keep up with target motion & 6.0 & 2.9 & 1.6 & 4.7 & 6.0 & 2.9 & 1.6 & 4.9 \\
-    \hline
-    \end{tabularx}
-    \end{adjustbox}
+    {Simulates the CVT system} %\multirow{3}{*}
+    & Simulation crashes
+    & Hyperglycemia in patient 
+    & \begin{itemize}[left=5pt]
+        \item A
+    \end{itemize} 
+    & Continuous monitoring & 
+    \begin{itemize}[left=5pt]
+        \item A
+    \end{itemize} 
+    & 8 & Ref1 \\ \cline{2-8} 
+    
+    & Inaccurate simulation
+    & Bad tuning settings are outputted to the user, which could lead to damaging tunes on the vehicle.
+    & \begin{itemize}[left=5pt]
+        \item Poor assumptions lead to inaccurate calculations
+        \item Incorrect input from the user
+        \item Poorly handled edge cases in simulation
+        \item Incorrect implementation of the simulation
+    \end{itemize} 
+    & Validating output results with real-world limits (In comparison to known limits, energy conservation) & 
+    \begin{itemize}[left=5pt]
+        \item Implement more accurate calculations
+        \item Implement more accurate assumptions
+        \item Validate the simulation with data collected from the real-world, comparing the shapes and limits of various points.
+    \end{itemize} 
+    & 9 & Ref2 \\ \cline{2-8} 
+    
+    & Takes too long to deliver insulin 
+    & Hyperglycemia in patient 
+    & \begin{itemize}[left=5pt]
+        \item A
+    \end{itemize} 
+    & Continuous glucose monitoring & 
+    \begin{itemize}[left=5pt]
+        \item A
+    \end{itemize} 
+    & 7 & Ref3 \\ \hline
+    
+    \end{tabular}
+    \caption{Failure Modes, Effects, and Recommended Actions for Insulin Delivery}
     \end{table}
 \restoregeometry
 
