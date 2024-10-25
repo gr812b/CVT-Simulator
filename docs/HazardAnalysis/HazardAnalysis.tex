@@ -59,7 +59,7 @@ Oct 23 & All & First Draft\\
 
 A hazard refers to any circumstance or occurence that has the potential to endanger, damage or cause a system to fail. Hazards may arise from errors in design, implementation or operation and may affect both the system and the user.
 
-In this document, we will examine the possible risks related to the creation and application of a software system intended to replicate the functionality of a Continuous Variable Transmission (CVT) for the car of the McMaster Baja Racing team. By systematically examining the components and assumptions of the software, this hazard analysis attempts to make sure that the finished solution satisfies performance objectives and is robust enough to manage the intricacies inherent in CVT modeling.
+\noindent In this document, we will examine the possible risks related to the creation and application of a software system intended to replicate the functionality of a Continuous Variable Transmission (CVT) for the car of the McMaster Baja Racing team. By systematically examining the components and assumptions of the software, this hazard analysis attempts to make sure that the finished solution satisfies performance objectives and is robust enough to manage the intricacies inherent in CVT modeling.
 
 \section{Scope and Purpose of Hazard Analysis}
 
@@ -70,8 +70,6 @@ These performance flaws could then lead to losses during Baja competitions.
 Through exploring the possible hazards involved, the project's code quality can be enhanced, potential risks can be mitigated and it ensures that the system will function as intended. 
 \\\\
 \noindent This document assumes that the user has access to a hard drive with sufficient storage space to download the software, an appropriate computer that meets the system requirements and a stable internet connection when downloading the software. 
-\wss{You should say what \textbf{loss} could be incurred because of the
-hazards.}
 
 \section{System Boundaries and Components}
 
@@ -89,18 +87,7 @@ This component handles the mathematical calculations required for the program. T
 ~\newline
 This component displays various models that are part of the CVT system, moving in accordance with the simulation.\\
 
-\wss{Dividing the system into components will help you brainstorm the hazards.
-You shouldn't do a full design of the components, just get a feel for the major
-ones.  For projects that involve hardware, the components will typically include
-each individual piece of hardware.  If your software will have a database, or an
-important library, these are also potential components.}
-
 \section{Critical Assumptions}
-
-\wss{These assumptions that are made about the software or system.  You should
-minimize the number of assumptions that remove potential hazards.  For instance,
-you could assume a part will never fail, but it is generally better to include
-this potential failure mode.}
 
 \begin{itemize}
     \item [A1:] Users will not intentionally misuse the software or purposefully try to find unsafe settings.
@@ -113,16 +100,6 @@ this potential failure mode.}
 
 
 \section{Failure Mode and Effect Analysis}
-
-\wss{Include your FMEA table here. This is the most important part of this document.}
-\wss{The safety requirements in the table do not have to have the prefix SR.
-The most important thing is to show traceability to your SRS. You might trace to
-requirements you have already written, or you might need to add new
-requirements.}
-\wss{If no safety requirement can be devised, other mitigation strategies can be
-entered in the table, including strategies involving providing additional
-documentation, and/or test cases.}
-
 
 \newgeometry{left=0cm, right=0cm, top=0cm, bottom=0cm}
 \begin{table}[ht]
@@ -190,7 +167,7 @@ documentation, and/or test cases.}
         \item Manually verify precision is sufficient by a factor of safety.
         \item Validate the ODE library's precision and accuracy.
     \end{itemize} 
-    &  & \\ \cline{2-8} 
+    & 3 & \\ \cline{2-8} 
     
     & Insufficient frictional forces
     & \begin{itemize}[left=0pt]
@@ -210,7 +187,7 @@ documentation, and/or test cases.}
         \item Investigate friction assumptions and models.
         \item Validate simulation in simple cases to ensure friction is accounted for.
     \end{itemize} 
-    & 3 & R20 \\ \cline{2-8} 
+    &  & R20 \\ \cline{2-8} 
     
     & Software Crash
     & \begin{itemize}[left=0pt]
@@ -247,13 +224,7 @@ documentation, and/or test cases.}
 \textbf{SR 3} Ensure that the precision exceeds the standard 32-bit level by using 64-bit to ensure greater accuracy. \\
 \textbf{SR 4} The software shall implement robust error handling mechanisms that detect and handle at least 95\% of all expected and unexpected errors, ensuring that no more than 5\% of critical system failures result in unhandled exceptions or system crashes.\\
 
-\wss{Newly discovered requirements.  These should also be added to the SRS.  (A
-rationale design process how and why to fake it.)}
-
 \section{Roadmap}
-
-\wss{Which safety requirements will be implemented as part of the capstone timeline?
-Which requirements will be implemented in the future?}
 
 We will implement SR1, SR2, SR3 and SR4 as part of the capstone timeline.
 We have chosen to implement all of these is that we believe that they are all relevant.
@@ -262,8 +233,6 @@ We also believe that they are all attainable within the project window.
 \newpage{}
 
 \section*{Appendix --- Reflection}
-
-\wss{Not required for CAS 741}
 
 \input{../Reflection.tex}
 
