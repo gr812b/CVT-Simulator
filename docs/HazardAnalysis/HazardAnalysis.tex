@@ -3,6 +3,12 @@
 \usepackage{booktabs}
 \usepackage{tabularx}
 \usepackage{hyperref}
+\usepackage{multirow}
+\usepackage{array}
+\usepackage{geometry}
+\usepackage{adjustbox} 
+\usepackage{caption}
+\usepackage{enumitem}
 
 \hypersetup{
     colorlinks=true,       % false: boxed links; true: colored links
@@ -36,9 +42,7 @@
 \toprule
 \textbf{Date} & \textbf{Developer(s)} & \textbf{Change}\\
 \midrule
-Date1 & Name(s) & Description of changes\\
-Date2 & Name(s) & Description of changes\\
-... & ... & ...\\
+Oct 25 & All & First Draft\\
 \bottomrule
 \end{tabularx}
 \end{table}
@@ -51,72 +55,230 @@ Date2 & Name(s) & Description of changes\\
 
 \pagenumbering{arabic}
 
-\wss{You are free to modify this template.}
-
 \section{Introduction}
 
-\wss{You can include your definition of what a hazard is here.}
+A hazard refers to any circumstance or occurence that has the potential to endanger, damage or cause a system to fail. Hazards may arise from errors in design, implementation or operation and may affect both the system and the user.
+
+\noindent In this document, we will examine the possible risks related to the creation and application of a software system intended to replicate the functionality of a Continuous Variable Transmission (CVT) for the car of the McMaster Baja Racing team. By systematically examining the components and assumptions of the software, this hazard analysis attempts to make sure that the finished solution satisfies performance objectives and is robust enough to manage the intricacies inherent in CVT modeling.
 
 \section{Scope and Purpose of Hazard Analysis}
 
-\wss{You should say what \textbf{loss} could be incurred because of the
-hazards.}
+The purpose of conducting a hazard analysis when designing software that aims to improve the
+McMaster Baja team's Continuous Variable Transmission(CVT), is to identify and become aware of potential risks that could negatively affect the project. 
+A hazard such as producing flawed simulations could delay the tuning process and create unreliable and incorrect outputs thus negatively impacting the vehicle performance and efficiency. 
+These performance flaws could then lead to losses during Baja competitions. 
+Through exploring the possible hazards involved, the project's code quality can be enhanced, potential risks can be mitigated and it ensures that the system will function as intended. 
+\\\\
+\noindent This document assumes that the user has access to a hard drive with sufficient storage space to download the software, an appropriate computer that meets the system requirements and a stable internet connection when downloading the software. 
 
 \section{System Boundaries and Components}
 
-\wss{Dividing the system into components will help you brainstorm the hazards.
-You shouldn't do a full design of the components, just get a feel for the major
-ones.  For projects that involve hardware, the components will typically include
-each individual piece of hardware.  If your software will have a database, or an
-important library, these are also potential components.}
+This system is divided into three main components:\\
+~\newline
+\textbf{User Interface Component}  
+~\newline
+This component is responsible for taking user input, providing the output to the user, and displaying the simulation of the 3D models.\\
+~\newline
+\textbf{Backend (Math) Component}  
+~\newline
+This component handles the mathematical calculations required for the program. The calculations will be done using Python and specifically the libraries NumPy and SciPy.\\
+~\newline
+\textbf{Simulation Component}  
+~\newline
+This component displays various models that are part of the CVT system, moving in accordance with the simulation.\\
 
 \section{Critical Assumptions}
 
-\wss{These assumptions that are made about the software or system.  You should
-minimize the number of assumptions that remove potential hazards.  For instance,
-you could assume a part will never fail, but it is generally better to include
-this potential failure mode.}
+\begin{itemize}
+    \item [A1:] Users will not intentionally misuse the software or purposefully try to find unsafe settings.
+    \item [A2:] The system that the software is running on will be not compromised and will function in a standard manner.
+    \item [A3:] Third party software and libraries used are trusted to be safe and free of vulnerabilities.
+    \item [A4:] Users will not leak information received from the application to other teams or organizations. 
+    \item [A5:] The software will not be connecting to the internet or any other network.
+    \item [A6:] The application will not be collecting any user data or personal information.
+\end{itemize}
+
 
 \section{Failure Mode and Effect Analysis}
 
-\wss{Include your FMEA table here. This is the most important part of this document.}
-\wss{The safety requirements in the table do not have to have the prefix SR.
-The most important thing is to show traceability to your SRS. You might trace to
-requirements you have already written, or you might need to add new
-requirements.}
-\wss{If no safety requirement can be devised, other mitigation strategies can be
-entered in the table, including strategies involving providing additional
-documentation, and/or test cases.}
+\newgeometry{left=0cm, right=0cm, top=0cm, bottom=0cm}
+\begin{table}[ht]
+    \centering
+    \setlength{\tabcolsep}{3pt} % Adjust space between columns
+    \renewcommand{\arraystretch}{1.5} % Adjust row spacing
+    \begin{tabular}{|>{\centering\arraybackslash}m{1.5cm}|>{\centering\arraybackslash}m{1.75cm}|>{\centering\arraybackslash}m{3.25cm}|>{\arraybackslash}m{5cm}|>{\centering\arraybackslash}m{3cm}|>{\centering\arraybackslash}m{3cm}|>{\centering\arraybackslash}m{0.5cm}|>{\centering\arraybackslash}m{0.75cm}|}
+    \hline
+    \textbf{Design Function} & \textbf{Failure Modes} & \textbf{Effects of Failure} & \textbf{Causes of Failure} & \textbf{Detection} & \textbf{Recommended Action} & \textbf{SR} & \textbf{Ref} \\ \hline
+    
+    {Simulates the CVT system} %\multirow{3}{*}
+    & Improper Load Balancing
+    & \begin{itemize}[left=0pt]
+        \item Increased wear over time leading to premature failure.
+        \item Suboptimal power transfer between the engine and the wheels.
+    \end{itemize} 
+    & \begin{itemize}[left=0pt]
+        \item Incorrect distribution of forces across the pulleys due to inaccurate mass or load models.
+        \item Errors in simulating the torque requirements based on the load.
+        \item Inaccurate assumptions about load transfer between the pulleys.
+    \end{itemize} 
+    & \begin{itemize}[left=0pt]
+        \item Erratic changes in acceleration of the vehicle.
+        \item Excessive load on one component compared to another.
+        \item Validate with torque data.
+    \end{itemize} & 
+    \begin{itemize}[left=0pt]
+        \item Adjust load model to more accurately represent the vehicle.
+        \item Add dynamic load balancing checks to the simulation.
+    \end{itemize} 
+    & 1 & R18 \\ \cline{2-8} 
+    
+    & Inaccurate power transfer between pulleys (belt dynamics)
+    & \begin{itemize}[left=0pt]
+        \item Increased wear over time leading to premature failure.
+        \item Suboptimal power transfer between the engine and the wheels.
+    \end{itemize} 
+    & \begin{itemize}[left=0pt]
+        \item Inaccurate modelling of belt tension and friction.
+        \item Incorrect pulley geometry, taking advantage of belt assumptions to lead to impossible configurations.
+    \end{itemize} 
+    & \begin{itemize}[left=0pt]
+        \item Sudden drops in power transfer, or incredibly high torque differences.
+        \item Unreasonably high belt tension or slack.
+    \end{itemize} & 
+    \begin{itemize}[left=0pt]
+        \item Dynamically check if belt tension is within reasonable limits.
+    \end{itemize} 
+    & 2 & R19 \\ \cline{2-8} 
+    
+    & Poor numerical precision 
+    & \begin{itemize}[left=0pt]
+        \item Inaccurate simulation results, leading to incorrect design decisions
+        \item Inconsistent behaviour of the system, leading to confusion and potential damage.
+    \end{itemize} 
+    & \begin{itemize}[left=0pt]
+        \item Insufficient precision in the ODE solver.
+        \item Inappropriate time-step size.
+    \end{itemize} 
+    & \begin{itemize}[left=0pt]
+        \item Erratic in times of high acceleration or deceleration.
+        \item Results that are inconsistent with the expected behaviour of the system.
+    \end{itemize} &
+    \begin{itemize}[left=0pt]
+        \item Manually verify precision is sufficient by a factor of safety.
+        \item Validate the ODE library's precision and accuracy.
+    \end{itemize} 
+    & 3 & \\ \cline{2-8} 
+    
+    & Insufficient frictional forces
+    & \begin{itemize}[left=0pt]
+        \item Excessive belt slippage or tension, leading to wear and poor efficiency.
+        \item Simulations provide overly generous results.
+    \end{itemize} 
+    & \begin{itemize}[left=0pt]
+        \item Incorrect assumptions about the frictional forces between the belt and the pulleys.
+        \item Incorrect friction models for the pulleys due to false geometry or temperature assumptions.
+    \end{itemize} 
+    & \begin{itemize}[left=0pt]
+        \item Consistently high forces that would be reduced by friction.
+        \item Slip conditions met excessively while not being accounted for.
+        \item Compare to belt slip and RPM data.
+    \end{itemize} &
+    \begin{itemize}[left=0pt]
+        \item Investigate friction assumptions and models.
+        \item Validate simulation in simple cases to ensure friction is accounted for.
+    \end{itemize} 
+    &  & R20 \\ \cline{2-8} 
+    
+    & Software Crash
+    & \begin{itemize}[left=0pt]
+        \item Loss of data and work.
+        \item High frustration and loss of trust in the software.
+    \end{itemize} 
+    & \begin{itemize}[left=0pt]
+        \item Memory leaks or poor memory management.
+        \item Incorrect handling of edge cases, such as a division by 0.
+        \item Poor error handling, leading to system crashes rather than graceful failures.
+    \end{itemize} 
+    & \begin{itemize}[left=0pt]
+        \item Application crashes during normal use.
+        \item Program does not output data.
+        \item Unusually high memory or CPU usage.
+        \item Logs showing unhandled exceptions or errors.
+    \end{itemize} &
+    \begin{itemize}[left=0pt]
+        \item Implement robust error handling.
+        \item Conduct memory profiling and avoid loading large or unnecessary data.
+        \item Test the software in edge cases to ensure it fails gracefully.
+    \end{itemize} 
+    & 4 & R21 \\ \hline
+    
+    \end{tabular}
+    \caption{Failure Modes, Effects, and Recommended Actions for Insulin Delivery}
+    \end{table}
+\restoregeometry
 
 \section{Safety and Security Requirements}
 
-\wss{Newly discovered requirements.  These should also be added to the SRS.  (A
-rationale design process how and why to fake it.)}
+\textbf{SR 1}  The simulation will dynamically check load balancing and adjust the computations accordingly.\\
+\textbf{SR 2} The simulation will dynamically check that the belt tension is within reasonable limits.\\ 
+\textbf{SR 3} Ensure that the precision exceeds the standard 32-bit level by using 64-bit to ensure greater accuracy. \\
+\textbf{SR 4} The software shall implement robust error handling mechanisms that detect and handle at least 95\% of all expected and unexpected errors, ensuring that no more than 5\% of critical system failures result in unhandled exceptions or system crashes.\\
 
 \section{Roadmap}
 
-\wss{Which safety requirements will be implemented as part of the capstone timeline?
-Which requirements will be implemented in the future?}
+We will implement SR1, SR2, SR3 and SR4 as part of the capstone timeline.
+We have chosen to implement all of these is that we believe that they are all relevant.
+We also believe that they are all attainable within the project window.
 
 \newpage{}
 
 \section*{Appendix --- Reflection}
 
-\wss{Not required for CAS 741}
-
 \input{../Reflection.tex}
 
 \begin{enumerate}
-    \item What went well while writing this deliverable? 
+    \item What went well while writing this deliverable?
+    
+    One strategy that went was dividing the roles for the initial sections of this deliverable. 
+    The sections Introduction, Scope and Purpose of Hazard Analysis, System Boundaries and Components and Critical Assumptions were divided among team members.
+    This allowed each team member to tackle a portion independently before reconvening to review everyone’s contributions.  
+    This approach made completing this document more efficient. 
+    For the FMEA table, we decided to work together as this was a large part of the document it was important to make sure all team members were on the same page. 
+    This collaborative approach was proved effective, especially for generating causes of failure, detection methods, and recommended actions for each failure mode.
+    Ultimately, this strategy ensured a thorough analysis but also helped us derive new failure modes, and requirements, which improved our understanding of the system.
+    
     \item What pain points did you experience during this deliverable, and how
     did you resolve them?
+    
+    One pain point we had while completing this document was debating on what we would define as a failure mode. 
+    Initially, we had two broad categories, but there was some debate about breaking these down further. 
+    Some team members felt that broad failure modes would be more manageable, while others advocated for more specific ones for clarity. 
+    Our team debated what was considered a failure mode and what was considered a cause of a failure. 
+    After discussing the pros and cons, we agreed to break down these failure modes, as it would enhance system clarity and provide a more accurate description. 
+    This compromise allowed us to move forward cohesively and improved our system documentation as well as improve the hazard analysis document.
+    
     \item Which of your listed risks had your team thought of before this
     deliverable, and which did you think of while doing this deliverable? For
     the latter ones (ones you thought of while doing the Hazard Analysis), how
     did they come about?
+
+    Before starting this deliverable, we had previously identified the risks of simulation failures and software crashes. 
+    While completing this deliverable, we realized that simulation failures was too broad and included multiple potential failure modes. 
+    Breaking it down allowed us to better identify and address specific risks, leading to a clearer and more detailed analysis.  
+    Our system now has a total of 5 failure modes improper load balancing, inaccurate power transfer between transfer between pulleys (belt dynamics), poor numerical precision, insufficient friction forces and software crashes. 
+    These various failure modes were the result of the pain points discussed above. 
+    By completing this document and sparking conversation about a failure mode vs a cause of a failure we were able to further derive failure modes thus making our system more accurate and further defined. 
+
     \item Other than the risk of physical harm (some projects may not have any
     appreciable risks of this form), list at least 2 other types of risk in
     software products. Why are they important to consider?
+
+    Two risk that should be considered when designing software products are data security risks and slow response times.  
+    These are very important to consider as they directly affect the users of the system and the system functionality.  
+    Data security risks such as data breaches compromise sensitive user information leading to legal and financial damages. 
+    Slow response times lead to negative user experience and an unreliable system. 
+    If a system is slow or unreliable, users are more likely to abandon it for alternatives. 
+    By addressing both security and performance ensures a reliable, user-friendly product that can maintain trust and meet operational demands.
 \end{enumerate}
 
 \end{document}
