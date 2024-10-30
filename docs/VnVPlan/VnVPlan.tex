@@ -1,5 +1,7 @@
 \documentclass[12pt, titlepage]{article}
 
+\usepackage{float}
+\usepackage{geometry}
 \usepackage{booktabs}
 \usepackage{tabularx}
 \usepackage{hyperref}
@@ -178,6 +180,38 @@ how they relate to your VnV efforts.}
 \wss{Your teammates.  Maybe your supervisor.
   You should do more than list names.  You should say what each person's role is
   for the project's verification.  A table is a good way to summarize this information.}
+
+\newgeometry{left=0.5cm, right=0.5cm, top=2cm, bottom=2cm}
+\begin{table}[h!]
+  \centering
+  \begin{tabular}{|p{3cm}|p{3cm}|p{10cm}|}
+  \hline
+  \textbf{Name} & \textbf{Role} & \textbf{Responsibilities} \\
+  \hline
+  Kai Arseneau & Data Verification Lead & Analyzes data outputs to ensure trends align with expected performance and validates consistency across simulation runs. \\
+  \hline
+  Travis Wing & GUI Verification Lead & Ensures user interface functionality and usability, verifying that GUI elements accurately reflect simulation data and respond as intended. \\
+  \hline
+  Cameron Dunn & Experimental Data Comparison Lead & Compares simulation outputs to real-world data and scripts, verifying the simulation's accuracy and adjusting model parameters as needed. \\
+  \hline
+  Grace McKenna & Quality Assurance Lead & Conducts comprehensive testing of simulation processes and components, identifying and documenting issues, and ensuring overall software reliability. \\
+  \hline
+  Ariel Wolle & Team Lead & Supports the project by overseeing resources and approving initiatives that facilitate enhanced data acquisition or other verification efforts. \\
+  \hline
+  Daksh Mathur &  Data Acquisition Lead & Acts as the primary contact for real-world data acquisition, providing essential data for validation and supporting data needs beyond the project group. \\
+  \hline
+  Benjamin Walde & Mechanical Advisor & Collaborates with the team to validate mathematical models within the simulation, ensuring mechanical accuracy and guiding technical correctness. \\
+  \hline
+  Duncan Shearer and Leonardo Ansari & Primary User & Utilizes the simulation tool to tune CVTs, providing feedback on tool usability and functionality to ensure it meets real-world tuning needs. \\
+  \hline
+  Dr. Spencer Smith & Project Advisor / Supervisor & Reviews and provides final feedback, ensuring verification meets project standards and advising on methodology improvements. \\
+  \hline
+  \end{tabular}
+  \caption{Verification and Validation Team for CVT Simulation Project}
+  \label{tab:vnv_team}
+\end{table}
+\restoregeometry
+    
 
 \subsection{SRS Verification Plan}
 
