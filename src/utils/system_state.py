@@ -11,15 +11,15 @@ class SystemState:
     def from_array(array):
         """Creates a DrivetrainState from an array."""
         return SystemState(angular_velocity=array[0], position=array[1])
-    
+
     @staticmethod
     def parse_solution(solution):
         """
         Parses the solution from solve_ivp into a list of DrivetrainState instances.
-        
+
         Parameters:
         - solution: The solution object from solve_ivp.
-        
+
         Returns:
         - A list of DrivetrainState instances representing each time step.
         """
