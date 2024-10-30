@@ -2,6 +2,7 @@ import math
 from scipy.interpolate import interp1d
 import matplotlib.pyplot as plt
 import numpy as np
+from utils.conversions import rpm_to_rad_s
 
 # Given engine specifications (torque in ft*lbs)
 engineSpecs = [
@@ -17,7 +18,7 @@ engineSpecs = [
 # SI Units engine specs
 engineData = [
     {
-        'angular_velocity': (angular_velocity := spec['rpm'] * (2 * math.pi) / 60),
+        'angular_velocity': (angular_velocity := rpm_to_rad_s(spec['rpm'])),
         'torque': (torque := spec['torque'] * 1.3558179483),
         'power': angular_velocity * torque
     }
