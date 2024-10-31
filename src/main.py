@@ -66,7 +66,7 @@ def angular_velocity_and_position_derivative(t, y):
 
 
 time_span = (0, 15)
-time_eval = np.linspace(*time_span, 1000)
+time_eval = np.linspace(*time_span, 10000)
 initial_state = SystemState(
     engine_angular_velocity=rpm_to_rad_s(2400), car_velocity=0.0, car_position=0.0
 )
@@ -83,9 +83,8 @@ states = SystemState.parse_solution(solution)
 
 positions = [state.car_velocity for state in states]
 
-plt.plot(solution.t, positions, label="Output Position (radians)")
+plt.plot(solution.t, positions)
 plt.xlabel("Time (s)")
-plt.legend()
-plt.title("Engine RPM and Output Position Over Time")
+plt.title("Car velocity Over Time")
 plt.grid()
 plt.show()
