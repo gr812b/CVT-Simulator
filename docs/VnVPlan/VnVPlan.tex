@@ -222,7 +222,7 @@ Overall this section details how we plan to verify and validate the system.
   \hline
   Daksh Mathur &  Data Acquisition Lead & Acts as the primary contact for real-world data acquisition, providing essential data for validation and supporting data needs beyond the project group. \\
   \hline
-  Benjamin Walde & Mechanical Advisor & Collaborates with the team to validate mathematical models within the simulation, ensuring mechanical accuracy and guiding technical correctness. \\
+  Benjamin Waldie & Mechanical Advisor & Collaborates with the team to validate mathematical models within the simulation, ensuring mechanical accuracy and guiding technical correctness. \\
   \hline
   Duncan Shearer and Leonardo Ansari & Primary User & Utilizes the simulation tool to tune CVTs, providing feedback on tool usability and functionality to ensure it meets real-world tuning needs. \\
   \hline
@@ -370,46 +370,50 @@ the contents of the subsections.}
 \wss{Include a blurb here to explain why the subsections below
   cover the requirements.  References to the SRS would be good here.}
 
-\subsubsection{Area of Testing1}
+\subsubsection{Vehicle Dynamics}
 
 \wss{It would be nice to have a blurb here to explain why the subsections below
   cover the requirements.  References to the SRS would be good here.  If a section
   covers tests for input constraints, you should reference the data constraints
   table in the SRS.}
 		
-\paragraph{Title for Test}
+\paragraph{Velocity}
 
 \begin{enumerate}
 
-\item{test-id1\\}
+\item{test-1\\}
 
-Control: Manual versus Automatic
+Control: Manual
 					
-Initial State: 
+Initial State: ??
 					
-Input: 
+Input: CVT inputs
 					
-Output: \wss{The expected result for the given inputs.  Output is not how you
+Output:  Velocity over time should be monotonically increasing function, beginning at zero and going no higher than our max speed. See example here!
+
+\wss{The expected result for the given inputs.  Output is not how you
 are going to return the results of the test.  The output is the expected
 result.}
 
-Test Case Derivation: \wss{Justify the expected value given in the Output field}
-					
-How test will be performed: 
-					
-\item{test-id2\\}
+Test Case Derivation: Based on assumption (never goes backwards) and the geometry of our vehicle limiting to (top speed)
 
-Control: Manual versus Automatic
+\wss{Justify the expected value given in the Output field}
 					
-Initial State: 
+How test will be performed: Manually inputting values and observing the output graph visually.
 					
-Input: 
-					
-Output: \wss{The expected result for the given inputs}
+\item{test-2\\}
 
-Test Case Derivation: \wss{Justify the expected value given in the Output field}
+Control: Manual or Automatic
 
-How test will be performed: 
+Initial State: ??
+
+Input: Experimental data (link to sample data), CVT inputs matching the physical car's settings
+
+Output: An array of points across time that represent the velocity of the simulated car.
+
+Test Case Derivation: Based on the physics simulation.
+
+How test will be performed: Data will be compared to experimental data from the physical car to ensure that the simulation is accurate. Mean squared error
 
 \end{enumerate}
 
