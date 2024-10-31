@@ -6,4 +6,18 @@
 ENGINE_INTERTIA = 0.5
 
 # Gear ratio of the rear gearbox (unitless)
-GEAR_RATIO = 4.0
+GEARBOX_RATIO = 7.556
+
+
+# Frontal area of the baja, in m^2
+FRONTAL_AREA = 1.11484
+# Estimate of drag coefficient
+DRAG_COEFFICIENT = 0.6
+
+
+# Weight in lbs
+CAR_WEIGHT = 500
+# Mass in kg
+CAR_MASS = CAR_WEIGHT * 0.45359237
+# Radius in meters
+WHEEL_RADIUS = 22 / 2 * 0.0254

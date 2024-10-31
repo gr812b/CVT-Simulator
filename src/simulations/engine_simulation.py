@@ -22,16 +22,17 @@ class EngineSimulator:
         """
         return self.torque_curve(angular_velocity)
 
-    def calculate_angular_acceleration(self, angular_velocity):
+    def calculate_angular_acceleration(self, angular_velocity, load_torque):
         """
         Calculate the angular acceleration based on the current angular velocity.
 
         Parameters:
         - angular_velocity: Current angular velocity of the engine in rad/s.
+        - load_torque: Load torque on the engine in Nm.
 
         Returns:
         - Angular acceleration in rad/s^2.
         """
         torque = self.get_torque(angular_velocity)
-        angular_acceleration = torque / self.inertia
+        angular_acceleration = (torque - load_torque) / self.inertia
         return angular_acceleration
