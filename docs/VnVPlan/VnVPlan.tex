@@ -116,6 +116,18 @@ so what are you going to prioritize?  As an example, if your system depends on a
 external library, you can explicitly state that you will assume that external library 
 has already been verified by its implementation team.}
 
+\noindent The objectives of testing our CVT system are to ensure the accuracy and reliability of our outputs. 
+This includes evaluating that our mathematical model provides correct outputs based on provided input parameters specifically looking at the calculations of RPM, velocity, acceleration, distance, torque of the engine, clamping forces, CVT ratio, Torque and Belt slippage. 
+We aim to emphasize the description over specification to make the CVT's system's behavior understandable by demonstrating how input changes influence the outputs.
+We will verify that our 3D model and user interface allow users to easily input parameters to the system and interpret meaningful results. 
+Our validation tests will focus on graphical models based on current available data to describe how the outputs should behave. 
+We will aim to quantify these results by analyzing the difference between expected versus actual output. 
+By referencing our outputs to real world data we can validate the accuracy of our mathematical model.
+We will conduct useability testing to ensure that the interface is intuitive and allows users to easily input parameters, visualize results and understand the performance of the CVT.
+\\
+\noindent For our project attempting to optimize our systems outputs will be considered out of scope. 
+Additionally, we will not verify any third party libraries used in our software as we assume that this has been previously validated. 
+
 \subsection{Challenge Level and Extras}
 
 The challenge level of this project is general.\\
