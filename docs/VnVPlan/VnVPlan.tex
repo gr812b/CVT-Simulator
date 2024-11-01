@@ -66,14 +66,30 @@ in.}
 
 \section{Symbols, Abbreviations, and Acronyms}
 
-\renewcommand{\arraystretch}{1.2}
-\begin{tabular}{l l} 
-  \toprule		
-  \textbf{symbol} & \textbf{description}\\
-  \midrule 
-  T & Test\\
-  \bottomrule
-\end{tabular}\\
+\begin{table}[h] % Optional [h] to place table here
+  \raggedright
+  \begin{tabular}{l l} 
+    \toprule		
+    \textbf{acronym} & \textbf{definition}\\
+    \midrule
+    CD & Continuous Development\\
+    CI & Continuous Integration\\ 
+    CVT & Continuous Variable Transmission\\
+    GUI & Graphical User Interface\\
+    IM & Instance Model\\
+    MG & Module Guide\\
+    MIS & Module Interface Specification\\
+    MSE & Mean Squared Error\\
+    NFR & Nonfunctional Requirement\\
+    PR & Pull Request\\
+    RPM & Revolutions Per Minute\\
+    SRS & Software Requirements Specification\\
+    VnV & Verification and Validation\\
+    \bottomrule
+  \end{tabular}
+  \caption{Verification and Validation Acronyms}
+  \label{tab:vnv_acronym}
+\end{table}
 
 \wss{symbols, abbreviations, or acronyms --- you can simply reference the SRS
   \citep{SRS} tables, if appropriate}
@@ -87,7 +103,22 @@ in.}
 This document ... \wss{provide an introductory blurb and roadmap of the
   Verification and Validation plan}
 
+\noindent This document serves as a guide for how we plan to verify and validate the \progname{} system.
+Within is a detailed plan of all the tests that will be conducted to ensure that the system is functioning as intended.
+The document is divided into several sections going from the general plan to the specific tests that will be conducted.
+On the verification side, the document lists all all the tests that will be conducted to verify the performance of the system.
+The tests are divided into functional and nonfunctional requirements and then separate system and unit test for each.
+There are also multiple checklist in place to verify that all the requirements both within and outside the document are met.
+On the validation side, the document outlines all the plans in place to validate the results of the system.
+This includes how we plan to compare our results against real world data and how we plan to validate the usability of the system.
+Overall, this document comprehensively outlines all the plans in place to verify the system and validate its results.
+
 \section{General Information}
+
+This section serves as an overall summary of the verification and validation plan.
+It includes a summary of the project and the overall objectives of the VnV plan.
+The relevant documentation and other specifications are also listed.
+In summary, this section provides a high level overview of the VnV plan.
 
 \subsection{Summary}
 
