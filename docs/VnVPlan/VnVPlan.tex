@@ -306,6 +306,76 @@ verified.  Techniques for this include review and mutation testing.}
 
 \wss{Create a checklists?}
 
+To ensure that the Verification and Validation Plan is sufficient, this document will undergo a verification plan.
+This plan will review the contents of the document to make sure that all necessary components are included.
+It will be reviewed by our team, supervisor, stakeholders and classmates.
+Below is a checklist to use as reference for the verification of the Verification and Validation Plan.
+\bigskip
+\newline
+\textbf{Overall}
+\begin{itemize}
+  \item The document is well organized and easy to follow
+  \item The document is free of spelling, grammatical and formatting errors
+  \item The document is consistent with all other documentation and implementation
+  \item The document is complete and has all components filled out
+  \item References are included and correct
+\end{itemize}
+\noindent
+\textbf{Section 1}
+\begin{itemize}
+  \item List of Tables included and correct
+  \item List of Abbreviations included and correct
+  \item List of Acronyms included and correct
+  \item Introduction sufficiently introduces the document
+\end{itemize}
+\noindent
+\textbf{Section 2}
+\begin{itemize}
+  \item Roadmap effective summarizes the section
+  \item Summary effectively summarizes the document
+  \item Objectives are clear and concise
+  \item Challenge Level correct and Extras are appropriate
+  \item Relevant Documentation is matching and descriptive
+\end{itemize}
+\noindent
+\textbf{Section 3}
+\begin{itemize}
+  \item Roadmap effective summarizes the section
+  \item Team roles allocated properly and effectively
+  \item SRS Verification Plan includes all necessary components in the checklist
+  \item Design Verification Plan includes all necessary components in the checklist
+  \item VnV Plan Verification Plan includes all necessary components in the checklist
+  \item Implementation Verification Plan includes all techniques that are used
+  \item Automated Testing and Verification Tools includes all tools that are used
+  \item Software Validation Plan includes all external data that is used
+\end{itemize}
+\noindent
+\textbf{Section 4}
+\begin{itemize}
+  \item Roadmap effective summarizes the section
+  \item All functional requirements have corresponding system tests
+  \item All nonfunctional requirements have corresponding system tests
+  \item Traceability table between test cases and requirements is clear
+\end{itemize}
+\noindent
+\textbf{Section 5}
+\begin{itemize}
+  \item Roadmap effective summarizes the section
+  \item Unit Testing Scope is correctly defined
+  \item All functional requirements have corresponding unit tests
+  \item All nonfunctional requirements have corresponding unit tests
+  \item Unit tests are properly grouped into their respective modules
+  \item Traceability table between test cases and modules is clear and includes all modules
+\end{itemize}
+\noindent
+\textbf{Section 6}
+\begin{itemize}
+  \item Roadmap effective summarizes the section and includes all additions
+  \item Additional information is relevant and necessary
+  \item Included sections are informative and properly filled out
+\end{itemize}
+
+
 \subsection{Implementation Verification Plan}
 
 \wss{You should at least point to the tests listed in this document and the unit
@@ -319,6 +389,13 @@ verified.  Techniques for this include review and mutation testing.}
 walkthrough.  There is also a possibility of using the final presentation (in
 CAS741) for a partial usability survey.}
 
+For the implementation verification plan, we will be using many techniques to ensure that the system is functioning as intended.
+We will use the unit tests listed in the this document as well as other common testing techniques.
+It will be required that all unit tests are run and pass for any PRs to be merged into their parent branch.
+We will be doing code inspections during development by ensuring that all code is reviewed by at least one other team member before merging.
+Static analyzers will also be used throughout development to ensure a high quality codebase and will be integrated into our CI/CD pipeline.
+Before major milestones, full code walkthroughs will be conducted which is enforced by all team members needing to approve merges into main.
+
 \subsection{Automated Testing and Verification Tools}
 
 \wss{What tools are you using for automated testing.  Likely a unit testing
@@ -329,6 +406,30 @@ CAS741) for a partial usability survey.}
   you select, you should look at the available linters.  There may also be tools
   that verify that coding standards have been respected, like flake9 for
   Python.}
+
+  \noindent We will be using a wide variety of tools for automated testing and verification.
+  We will use separate tools for our Unity C\# frontend and python backend.
+  \bigskip
+  \newline
+  For the python backend we will be using the following tools:
+  \begin{itemize}
+    \item [\textbf{flake8}] - A Python linter that checks for PEP8 compliance.
+    \item [\textbf{black}] - A Python code formatter that will ensure consistent code style.
+    \item [\textbf{unittest}] - Python's built-in testing framework that will be used for unit testing.
+    \item [\textbf{coverage}] - A testing framework for Python that will be used for code coverage.
+  \end{itemize}
+
+  \bigskip
+  \noindent For the Unity C\# frontend we will be using the following tools:
+  \begin{itemize}
+    \item [\textbf{SonarLint}] - C\# linter that checks for code quality and security vulnerabilities.
+    \item [\textbf{StyleCop}] - C\# linter that checks for code style and formatting.
+    \item [\textbf{UTF}] - A testing framework for C\# that will be used for unit testing.
+    \item [\textbf{UTR}] - A testing framework for Unity that will be used for unit testing and code coverage.
+  \end{itemize}
+
+  \noindent Additionally, we will be using GitHub Actions to automate our testing process.
+  This will be done to ensure CI/CD and that our tests are run automatically on every push to the repository.
 
 \wss{If you have already done this in the development plan, you can point to
 that document.}
@@ -355,6 +456,24 @@ The feedback from your supervisor will be very useful for improving your project
 as a Rev 0 demo for the supervisor.}
 
 \wss{This section might reference back to the SRS verification section.}
+
+\noindent We plan on using data collected from the McMaster Baja team to validate the accuracy of our simulation.
+Some of the values we are able to collect include:
+\begin{itemize}
+  \item Primary RPM
+  \item Secondary RPM
+  \item CVT Ratio (from Primary and Secondary RPM)
+  \item Wheel Speed
+  \item GPS Speed
+  \item GPS Position
+  \item GPS Time
+  \item Acceleration (from Speed and Time)
+\end{itemize}
+
+\noindent To validate this data against our simulation we plan on creating a script to compare them.
+This script will compute the MSE between the two datasets and also plot that error over time.
+Plotting the error will allow us to see in what scenarios the simulation is least accurate.
+This will allow us to better diagnose the issues and allocate our resources to fix them.
 
 \section{System Tests}
 
