@@ -583,6 +583,20 @@ The standard simulation state for the CVT system is as follows.
   
   How test will be performed: The script will run with the provided inputs. After execution is complete, the output position over time will be visualized as a graph which should show a smooth upward trend as time progresses. Its slope should increase over time as well. Visual inspection will follow against Figure~\ref{fig:position_graph} for confirmation of expected behaviour.
   
+  \item{test-2\\}
+
+  Control: Manual
+
+  Initial State: The state values from Section~\ref{sec:standard_state}.
+  
+  Input: Provided experimental data along with the input values from Section~\ref{sec:standard_inputs}, matching those of the vehicle during experimental data collection. Sample experimental data is located here: \href{https://github.com/gr812b/CVT-Simulator/experimental-data/GPS_LATITUDE.csv}{Latitude.csv}, \href{https://github.com/gr812b/CVT-Simulator/experimental-data/GPS_LONGITUDE.csv}{Longitude.csv}.
+
+  Output: Mean squared error between the simulated position and the experimental position.
+
+  Test Case Derivation: Data from the simulation should closely match the experimental data collected from the physical car.
+
+  How test will be performed: The script will run with the provided inputs. After execution is complete, the output of the simulation will be compared to experimental data from the physical car to ensure that the simulation is accurate.
+
 \end{enumerate}
 		
 \paragraph{Velocity}
