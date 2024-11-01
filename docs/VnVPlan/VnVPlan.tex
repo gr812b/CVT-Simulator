@@ -13,6 +13,7 @@
     urlcolor=blue
 }
 \usepackage[round]{natbib}
+\usepackage{amsmath, mathtools}
 
 \input{../Comments}
 \input{../Common}
@@ -520,12 +521,69 @@ the contents of the subsections.}
 \wss{Include a blurb here to explain why the subsections below
   cover the requirements.  References to the SRS would be good here.}
 
+\subsubsection*{Standard Simulation Inputs}
+\label{sec:standard_inputs}
+The standard simulation inputs for the CVT system are as follows.
+\begin{enumerate}
+  \item Primary Pulley System:
+  \begin{itemize}
+    \item Flyweight
+    \item Ramp Geometry
+    \item Spring rate
+    \item Spring pretension
+  \end{itemize}
+  \item Secondary Pulley System:
+  \begin{itemize}
+    \item Helix Geometry
+    \item Torsional spring rate
+    \item Compressional spring rate
+    \item Spring pretension
+  \end{itemize}
+  \item Vehicle Characteristics:
+  \begin{itemize}
+    \item Car weight
+    \item Driver weight
+    \item Traction
+    \item Angle of incline
+  \end{itemize}
+\end{enumerate}
+
+\subsubsection*{Standard Simulation State}
+\label{sec:standard_state}
+The standard simulation state for the CVT system is as follows.
+\begin{itemize}
+  \item Vehicle is stationary.
+  \item The engine's angular velocity is at $\omega_\text{idle}$.
+  \item The CVT system is in a neutral state, unshifted.
+  \item The belt is stationary.
+\end{itemize}
+
 \subsubsection{Vehicle Dynamics}
 
 \wss{It would be nice to have a blurb here to explain why the subsections below
   cover the requirements.  References to the SRS would be good here.  If a section
   covers tests for input constraints, you should reference the data constraints
   table in the SRS.}
+
+\paragraph{Position}
+
+\begin{enumerate}
+  
+  \item{test-1\\}
+  
+  Control: Manual
+            
+  Initial State: The state values from Section~\ref{sec:standard_state}.
+  
+  Input: The input values from Section~\ref{sec:standard_inputs}.
+            
+  Output: The resulting graph should show a position that is a monotonically increasing function over time, starting from 0. There is no upper bound. A typical output graph will look similar to the one shown in Figure~\ref{fig:position_graph}.
+  
+  Test Case Derivation: As long as the vehicle is able to overcome the initial force of the slope, the vehicle should continue to move forward indefinitely.
+  
+  How test will be performed: The script will run with the provided inputs. After execution is complete, the output position over time will be visualized as a graph which should show a smooth upward trend as time progresses. Its slope should increase over time as well. Visual inspection will follow against Figure~\ref{fig:position_graph} for confirmation of expected behaviour.
+  
+\end{enumerate}
 		
 \paragraph{Velocity}
 
@@ -535,21 +593,22 @@ the contents of the subsections.}
 
 Control: Manual
 					
-Initial State: ??
+Initial State: The state values from Section~\ref{sec:standard_state}.
+
+Input: The input values from Section~\ref{sec:standard_inputs}.
 					
-Input: CVT inputs
-					
-Output:  Velocity over time should be monotonically increasing function, beginning at zero and going no higher than our max speed. See example here!
+Output: The resulting graph should show a velocity that is a monotonically increasing function over time, starting from zero and remaining below $v_\text{max}$, which reflects the vehicle’s physical limits. A typical output graph will look similar to the one shown in Figure~\ref{fig:velocity_graph}.
 
 \wss{The expected result for the given inputs.  Output is not how you
 are going to return the results of the test.  The output is the expected
 result.}
 
-Test Case Derivation: Based on assumption (never goes backwards) and the geometry of our vehicle limiting to (top speed)
+Test Case Derivation: Based on assumption REF HERE that the vehicle should not move backward under normal conditions.
+Derived from the vehicle’s geometry and the CVT configuration, limiting the velocity to a defined top speed based on the system’s constraints.
 
 \wss{Justify the expected value given in the Output field}
-					
-How test will be performed: Manually inputting values and observing the output graph visually.
+
+How test will be performed: The script will run with the provided inputs. After execution is complete, the output velocity over time will be visualized as a graph which should show a smooth upward trend that begins at zero and approaches $v_\text{max}$ as time progresses. Visual inspection will follow against Figure~\ref{fig:velocity_graph} for confirmation of expected behaviour.
 					
 \item{test-2\\}
 
@@ -567,8 +626,86 @@ How test will be performed: Data will be compared to experimental data from the 
 
 \end{enumerate}
 
-\subsubsection{Area of Testing2}
+\paragraph{Acceleration}
 
+\begin{enumerate}
+
+  \item{test-1\\}
+  
+  Control: Manual
+            
+  Initial State: The state values from Section~\ref{sec:standard_state}.
+  
+  Input: The input values from Section~\ref{sec:standard_inputs}.
+            
+  Output: The resulting graph should show an acceleration that is a smooth monotonically decreasing function over time, starting from $a_\text{max}$ and remaining above $a_\text{min}$, which reflects the engine's limits along with the maximum and minimum transmission ratio. A typical output graph will look similar to the one shown in Figure~\ref{fig:acceleration_graph}.
+  
+  Test Case Derivation: Based on the engine's output limits, going no lower than $\omega_\text{idle}$ and no higher than $\omega_\text{max}$.
+  Based on air resistance, which increases with the square of velocity, alongside the diminishing torque output of the engine.
+  
+  How test will be performed: The script will run with the provided inputs. After execution is complete, the output will be visualized as a graph. Visual inspection will follow against Figure~\ref{fig:acceleration_graph} for confirmation of expected behaviour.
+  
+\end{enumerate}
+
+\subsubsection{CVT Dynamics}
+
+\paragraph{Clamping forces}
+
+\begin{enumerate}
+  
+  \item{test-1\\}
+  
+  Control: Manual
+            
+  Initial State: The state values from Section~\ref{sec:standard_state}.
+  
+  Input: The input values from Section~\ref{sec:standard_inputs}.
+            
+  Output: The resulting graphs should show a clamping force against engine angular velocity beginning from $f_\text{clamp\_min}$, which should then rise to a peak before falling during the shifting phase. Suboptimal parameters may lead to a clamping force that is too low or too high, but a similar shape nonetheless. A typical output graph will look similar to the one shown in Figure~\ref{fig:clamping_force_graph}.
+  
+  Test Case Derivation: This behaviour is resulting from ideal tuning parameters, and may vary depending on inputs. Ramp and helix geometry will both have a major impact on the shape of these graphs, while weight and spring constants will affect the magnitude.
+  
+  How test will be performed: The script will run with the provided inputs. After execution is complete, the output will be visualized as a graph. Visual inspection will follow against Figure~\ref{fig:clamping_force_graph} for confirmation of expected behaviour.
+  
+\end{enumerate}
+
+\paragraph{Shift}
+
+\begin{enumerate}
+  
+  \item{test-1\\}
+  
+  Control: Manual
+            
+  Initial State: The state values from Section~\ref{sec:standard_state}.
+  
+  Input: The input values from Section~\ref{sec:standard_inputs}.
+            
+  Output: The resulting graphs should show the shift distance against the engine's angular velocity. An ideal graph will look very similar to the leading edge of a square wave. A typical output graph will look similar to the one shown in Figure~\ref{fig:shift_distance_graph}.
+  
+  Test Case Derivation: This behaviour is resulting from the CVT's clamping forces overcoming the resistive forces just enough such that the CVT begins shifting. Once this has begun, ramp geometry is expected to cause shifting rather than the engine increasing in speed, maintaining a constant power output. With suboptimal tuning parameters passed in, one might observe a slanted shifting portion.
+  
+  How test will be performed: The script will run with the provided inputs. After execution is complete, the output will be visualized as a graph. Visual inspection will follow against Figure~\ref{fig:shift_distance_graph} for confirmation of expected behaviour.
+  
+\end{enumerate}
+
+\begin{enumerate}
+  
+  \item{test-1\\}
+  
+  Control: Manual
+            
+  Initial State: The state values from Section~\ref{sec:standard_state}.
+  
+  Input: The input values from Section~\ref{sec:standard_inputs}.
+            
+  Output: The resulting graph show show the engine's angular velocity against the vehicles velocity. The output should show a smooth trend upwards starting at $\omega_\text{idle}$ until reaching the shift point, in which it then moves horizontally until finally reaching full shift and bringing the engine's angular velocity to $\omega_\text{max}$. A typical output graph will look similar to the one shown in Figure~\ref{fig:shift_curve}.
+  
+  Test Case Derivation: This behaviour results from the CVT's shifting behaviour as a whole. An in-depth explanation of the phases can be found beneath Figure~\ref{fig:shift_curve}.
+  
+  How test will be performed: The script will run with the provided inputs. After execution is complete, the output will be visualized as a graph. Visual inspection will follow against Figure~\ref{fig:shift_curve} for confirmation of expected behaviour.
+  
+\end{enumerate}
 ...
 
 \subsection{Tests for Nonfunctional Requirements}
