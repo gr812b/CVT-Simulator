@@ -589,13 +589,13 @@ The standard simulation state for the CVT system is as follows.
 
   Initial State: The state values from Section~\ref{sec:standard_state}.
   
-  Input: Provided experimental data along with the input values from Section~\ref{sec:standard_inputs}, matching those of the vehicle during experimental data collection. Sample experimental data is located here: \href{https://github.com/gr812b/CVT-Simulator/experimental-data/GPS_LATITUDE.csv}{Latitude.csv}, \href{https://github.com/gr812b/CVT-Simulator/experimental-data/GPS_LONGITUDE.csv}{Longitude.csv}.
+  Input: Provided experimental data along with the input values from Section~\ref{sec:standard_inputs}, matching those of the vehicle during experimental data collection. Sample experimental data is located here: \href{https://github.com/gr812b/CVT-Simulator/experimental-data/GPS%20LATITUDE.csv}{Latitude.csv}, \href{https://github.com/gr812b/CVT-Simulator/experimental-data/GPS%20LONGITUDE.csv}{Longitude.csv}.
 
   Output: Mean squared error between the simulated position and the experimental position.
 
   Test Case Derivation: Data from the simulation should closely match the experimental data collected from the physical car.
 
-  How test will be performed: The script will run with the provided inputs. After execution is complete, the output of the simulation will be compared to experimental data from the physical car to ensure that the simulation is accurate.
+  How test will be performed: The script will run with the provided inputs. After execution is complete, the output of the simulation will be compared to experimental data from the physical car to ensure that the simulation is accurate. The experimental data will be configured to show the absolute distance travel since the start of the experiment.
 
 \end{enumerate}
 		
@@ -613,30 +613,25 @@ Input: The input values from Section~\ref{sec:standard_inputs}.
 					
 Output: The resulting graph should show a velocity that is a monotonically increasing function over time, starting from zero and remaining below $v_\text{max}$, which reflects the vehicle’s physical limits. A typical output graph will look similar to the one shown in Figure~\ref{fig:velocity_graph}.
 
-\wss{The expected result for the given inputs.  Output is not how you
-are going to return the results of the test.  The output is the expected
-result.}
-
 Test Case Derivation: Based on assumption REF HERE that the vehicle should not move backward under normal conditions.
 Derived from the vehicle’s geometry and the CVT configuration, limiting the velocity to a defined top speed based on the system’s constraints.
 
-\wss{Justify the expected value given in the Output field}
 
 How test will be performed: The script will run with the provided inputs. After execution is complete, the output velocity over time will be visualized as a graph which should show a smooth upward trend that begins at zero and approaches $v_\text{max}$ as time progresses. Visual inspection will follow against Figure~\ref{fig:velocity_graph} for confirmation of expected behaviour.
 					
 \item{test-2\\}
 
-Control: Manual or Automatic
+Control: Manual
 
-Initial State: ??
+Initial State: The state values from Section~\ref{sec:standard_state}.
 
-Input: Experimental data (link to sample data), CVT inputs matching the physical car's settings
+Input: Provided experimental data along with the input values from Section~\ref{sec:standard_inputs}, matching those of the vehicle during experimental data collection. Sample experimental data is located here: \href{https://github.com/gr812b/CVT-Simulator/experimental-data/GPS%20SPEED.csv}{Speed.csv}.
 
-Output: An array of points across time that represent the velocity of the simulated car.
+Output: Mean squared error between the simulated velocity and the experimental velocity.
 
-Test Case Derivation: Based on the physics simulation.
+Test Case Derivation: Data from the simulation should closely match the experimental data collected from the physical car.
 
-How test will be performed: Data will be compared to experimental data from the physical car to ensure that the simulation is accurate. Mean squared error
+How test will be performed: The script will run with the provided inputs. After execution is complete, the output of the simulation will be compared to experimental data from the physical car to ensure that the simulation is accurate.
 
 \end{enumerate}
 
@@ -658,7 +653,21 @@ How test will be performed: Data will be compared to experimental data from the 
   Based on air resistance, which increases with the square of velocity, alongside the diminishing torque output of the engine.
   
   How test will be performed: The script will run with the provided inputs. After execution is complete, the output will be visualized as a graph. Visual inspection will follow against Figure~\ref{fig:acceleration_graph} for confirmation of expected behaviour.
-  
+
+  \item{test-2\\}
+
+  Control: Manual
+
+  Initial State: The state values from Section~\ref{sec:standard_state}.
+
+  Input: Provided experimental data along with the input values from Section~\ref{sec:standard_inputs}, matching those of the vehicle during experimental data collection. Sample experimental data is located here: \href{https://github.com/gr812b/CVT-Simulator/experimental-data/IMU%20ACCEL%20X.csv}{Accel X.csv}, \href{https://github.com/gr812b/CVT-Simulator/experimental-data/IMU%20ACCEL%20Y.csv}{Accel Y.csv}, \href{https://github.com/gr812b/CVT-Simulator/experimental-data/IMU%20ACCEL%20Z.csv}{Accel Z.csv}.
+
+  Output: Mean squared error between the simulated acceleration and the experimental acceleration.
+
+  Test Case Derivation: Data from the simulation should closely match the experimental data collected from the physical car.
+
+  How test will be performed: The script will run with the provided inputs. After execution is complete, the output of the simulation will be compared to experimental data from the physical car to ensure that the simulation is accurate. The experimental data will be configured to display the acceleration in the direction of travel of the vehicle.
+
 \end{enumerate}
 
 \subsubsection{CVT Dynamics}
@@ -701,6 +710,20 @@ How test will be performed: Data will be compared to experimental data from the 
   
   How test will be performed: The script will run with the provided inputs. After execution is complete, the output will be visualized as a graph. Visual inspection will follow against Figure~\ref{fig:shift_distance_graph} for confirmation of expected behaviour.
   
+  \item{test-2\\}
+
+  Control: Manual
+
+  Initial State: The state values from Section~\ref{sec:standard_state}.
+
+  Input: Provided experimental data along with the input values from Section~\ref{sec:standard_inputs}, matching those of the vehicle during experimental data collection. Sample experimental data is located here: \href{https://github.com/gr812b/CVT-Simulator/experimental-data/RPM%20PRIM.csv}{Primary RPM.csv}, \href{https://github.com/gr812b/CVT-Simulator/experimental-data/RPM%20SEC.csv}{Secondary RPM.csv} 
+
+  Output: Mean squared error between the simulated shift against engine velocity compared to experimental data. Differences of shape and magnitude will be considered.
+
+  Test Case Derivation: Data from the simulation should closely match the experimental data collected from the physical car. Key points of interest include the shift point and the slope during the shifting phase.
+
+  How test will be performed: The script will run with the provided inputs. After execution is complete, the output of the simulation will be compared to experimental data from the physical car to ensure that the simulation is accurate. The experimental data will be configured to show the primary RPM divided by the secondary RPM on the y-axis, and the primary RPM on the x-axis.
+
 \end{enumerate}
 
 \begin{enumerate}
@@ -719,6 +742,20 @@ How test will be performed: Data will be compared to experimental data from the 
   
   How test will be performed: The script will run with the provided inputs. After execution is complete, the output will be visualized as a graph. Visual inspection will follow against Figure~\ref{fig:shift_curve} for confirmation of expected behaviour.
   
+  \item{test-2\\}
+
+  Control: Manual
+
+  Initial State: The state values from Section~\ref{sec:standard_state}.
+
+  Input: Provided experimental data along with the input values from Section~\ref{sec:standard_inputs}, matching those of the vehicle during experimental data collection. Sample experimental data is located here: \href{https://github.com/gr812b/CVT-Simulator/experimental-data/RPM%20PRIM.csv}{Primary RPM.csv}, \href{https://github.com/gr812b/CVT-Simulator/experimental-data/RPM%20SEC.csv}{Secondary RPM.csv} 
+
+  Output: Mean squared error between the simulated shift curve (see Figure~\ref{fig:shift_curve}) and the experimental data. Differences of key points, shape and magnitude will be considered.
+
+  Test Case Derivation: Data from the simulation should closely match the experimental data collected from the physical car. Key points include the shift point, slope during shifting phase, engagement point and the final shift point.
+
+  How test will be performed: The script will run with the provided inputs. After execution is complete, the output of the simulation will be compared to experimental data from the physical car to ensure that the simulation is accurate. The experimental data will be configured to show the primary RPM on the y-axis and the secondary RPM on the x-axis.
+
 \end{enumerate}
 
 \subsubsection{User Interface}
