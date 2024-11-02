@@ -76,6 +76,8 @@ in.}
     CD & Continuous Development\\
     CI & Continuous Integration\\ 
     CVT & Continuous Variable Transmission\\
+    FR & Functional Requirement\\
+    GPS & Global Positioning System\\
     GUI & Graphical User Interface\\
     IM & Instance Model\\
     MG & Module Guide\\
@@ -89,7 +91,20 @@ in.}
     \bottomrule
   \end{tabular}
   \caption{Verification and Validation Acronyms}
-  \label{tab:vnv_acronym}
+  \label{tab:vnv_acronyms}
+\end{table}
+
+\begin{table}[h] % Optional [h] to place table here
+  \raggedright
+  \begin{tabular}{l l} 
+    \toprule		
+    \textbf{constant} & \textbf{value}\\
+    \midrule
+    $m_{\text{max}}$ & $400 kg$\\
+    \bottomrule
+  \end{tabular}
+  \caption{Verification and Validation Constants}
+  \label{tab:vnv_constants}
 \end{table}
 
 \wss{symbols, abbreviations, or acronyms --- you can simply reference the SRS
@@ -281,29 +296,36 @@ issue tracker?}
 
 \wss{Maybe create an SRS checklist?}
 
-Do a quick intro for this section, stating that all issues with the SRS will be brought onto the github issue tracker. 
-For all below sections, there is also a checklist that can be used as follows:
+\noindent To ensure that the SRS document is accurate and complete, we will be conducting a series of reviews.
+These reviews will be conducted by the team, our supervisor, and our stakeholders.
+The team will use the below checklist to verify the quality of the SRS document:
 \begin{itemize}
-  \item Review the SRS document
-  \item Check the theoretical models
-  \item Check the data definitions
-  \item Check the instance models
+  \item Review the SRS document for spelling, grammatical and formatting errors
+  \item Check the applicability of each theoretical models
+  \item Check the usefulness of each data definitions
+  \item Check the validity of each instance models
 \end{itemize}
-This checklist is to be used by the team as well as our supervisor.
 
 \subsubsection*{Review Meetings}
-This section discusses sitting down with Ben and Ariel to review the SRS document, but specifically the theoretical models, data definitions and instance models. Alumni as well?
+We will conduct meetings with experienced team members and alumni to review the SRS document.
+These meetings will focus on the theoretical models, data definitions, and instance models.
+We will also conduct a practicality check to ensure that all requirements are feasible and measurable.
+Finally the assumptions will also be verified to ensure that they won't negatively impact the accuracy of the simulation.
 
-Practicality check on the requirements to ensure they are all feasible and measureable metrics. Assumptions check to ensure they will not have a massive impact on our simulations behaviour.
-
-\subsubsection*{Team Wide Review}
+\subsubsection*{Baja Team Review}
 Talk here about sharing the document to the team as a whole, include a checklist and receive issues on github.
 
-\subsubsection*{Us review}
+We will share the SRS document with the entire McMaster Baja Racing team for review.
+This will allow us to get feedback from a wide range of people with different backgrounds and experiences.
+The team will use the checklist provided above as a guide for their reviews.
+Afterwards we will compile all of their feedback and address any issues that they have raised.
 
-Perform unit analysis / dimension analysis inspections at each stage of mathematical models, ensuring consistency.
+\subsubsection*{Capstone Team Testing}
 
-Traceability matrix will be verified and use to make sure requirements map logically to our goals. Further using our asumptions in this will be sure they are all valid assumptions and are used somewhere.
+We will conduct unit tests on the mathematical models provided by the SRS document.
+These will be done on their implementations to ensure that they are functioning as intended.
+If any issues are found, we will reference the assumptions and requirements in the SRS document to determine the cause of the issue.
+Additionally, the traceability matrix will be used to ensure that the mapping between requirements and goals is logical. 
 
 \subsection{Design Verification Plan}
 
@@ -355,9 +377,8 @@ Below is a checklist to use as reference for the verification of the Verificatio
 \noindent
 \textbf{Section 1}
 \begin{itemize}
-  \item List of Tables included and correct
-  \item List of Abbreviations included and correct
-  \item List of Acronyms included and correct
+  \item Tables included are relevant and necessary
+  \item Tables include are correct and formatted properly
   \item Introduction sufficiently introduces the document
 \end{itemize}
 \noindent
@@ -498,8 +519,7 @@ Some of the values we are able to collect include:
   \item Wheel Speed
   \item GPS Speed
   \item GPS Position
-  \item GPS Time
-  \item Acceleration (from Speed and Time)
+  \item Acceleration
 \end{itemize}
 
 \noindent To validate this data against our simulation we plan on creating a script to compare them.
@@ -512,6 +532,9 @@ This will allow us to better diagnose the issues and allocate our resources to f
 \wss{There should be text between all headings, even if it is just a roadmap of
 the contents of the subsections.}
 
+Found below are all of the system tests that will be conducted to verify the system.
+These tests are split based on if they are for functional or nonfunctional requirements.
+
 \subsection{Tests for Functional Requirements}
 
 \wss{Subsets of the tests may be in related, so this section is divided into
@@ -520,6 +543,9 @@ the contents of the subsections.}
 
 \wss{Include a blurb here to explain why the subsections below
   cover the requirements.  References to the SRS would be good here.}
+
+This section outlines all the system tests that will be conducted to verify the requirements of the system.
+Each set of tests relate to one requirement from the SRS document.
 
 \subsubsection*{Standard Simulation Inputs}
 \label{sec:standard_inputs}
@@ -564,6 +590,16 @@ The standard simulation state for the CVT system is as follows.
   cover the requirements.  References to the SRS would be good here.  If a section
   covers tests for input constraints, you should reference the data constraints
   table in the SRS.}
+
+This section provides tests to verify the vehicle dynamics of the CVT system.
+They are based on the following functional requirements from the SRS document.
+Listed is each requirement and how the tests verify each one.
+\begin{itemize}
+  \item [R1:] Verifies the mathematical modeling of the CVT system
+  \item [R2:] Verifies the acceleration of the vehicle as a function of time
+  \item [R3:] Verifies the velocity of the vehicle as a function of time
+  \item [R4:] Verifies the position of the vehicle as a function of time
+\end{itemize}
 
 \paragraph{Position}
 
@@ -671,6 +707,18 @@ How test will be performed: The script will run with the provided inputs. After 
 \end{enumerate}
 
 \subsubsection{CVT Dynamics}
+
+This section provides tests to verify the CVT dynamics of the system.
+They are based on the following functional requirements from the SRS document.
+Listed is each requirement and how the tests verify each one.
+\begin{itemize}
+  \item [R1:] Verifies the mathematical modeling of the CVT system
+  \item [R5:] Verifies the calculations of the primary clamping force
+  \item [R6:] Verifies the calculations of the secondary clamping force
+  \item [R7:] Verifies the calculations of the sheave acceleration
+  \item [R8:] Verifies the calculations of the belt acceleration
+  \item [R9:] Verifies the calculations of RPM and engine torque
+\end{itemize}
 
 \paragraph{Clamping forces}
 
@@ -871,6 +919,9 @@ Referencing the SRS document Nonfunctional Requirement 1 (NFR1: Accuracy) and No
 The Nonfunctional requirements related to useability and understandability (NFR2 and NFR 5 respectively) will reference the useability/understandability survey linked in the appendix.
 
 \subsubsection{Accuracy}
+
+The below test are to verify the accuracy of the system.
+They are based on NFR1 from the SRS document.
 		
 \paragraph{Title for Test}
 
@@ -903,6 +954,9 @@ How test will be performed:
 \end{enumerate}
 
 \subsubsection{Useability}
+
+The below test are to verify the useability of the system.
+They are based on NFR2 from the SRS document.
 
 \begin{enumerate}
 
@@ -938,6 +992,9 @@ The average rating will then be calculated and must be above or equal to 4 for e
 
 \subsubsection{Maintainability}
 
+The below test are to verify the maintainability of the system.
+They are based on NFR3 from the SRS document.
+
 \begin{enumerate}
 
 \item{test-id1\\}
@@ -956,6 +1013,9 @@ How test will be performed: The test will be manually completed by the teams Qua
 
 \subsubsection{Verifiability}
 
+The below test are to verify the verifiability of the system.
+They are based on NFR4 from the SRS document.
+
 \begin{enumerate}
 
 \item{test-id1\\}
@@ -973,6 +1033,9 @@ How test will be performed:
 \end{enumerate}
 
 \subsubsection{Understandability}
+
+The below test are to verify the understandability of the system.
+They are based on NFR5 from the SRS document.
 
 \begin{enumerate}
 
@@ -1007,6 +1070,9 @@ The average rating will then be calculated and must be above or equal to 4 for e
 \end{enumerate}
 
 \subsubsection{Reusability}
+
+The below test are to verify the reusability of the system.
+They are based on NFR6 from the SRS document.
 
 \begin{enumerate}
 
