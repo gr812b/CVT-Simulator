@@ -915,7 +915,7 @@ How will they be done?  In cases like code (or document) walkthroughs, who will
 be involved? Be specific.}
 
 \noindent The nonfunctional requirements we will be testing for are accuracy, useability, maintainability, verifiability, understandability and reusability. 
-Referencing the SRS document Nonfunctional Requirement 1 (NFR1: Accuracy) and Nonfunctional Requirement 4 (NFR4: Verifiability) will reference (LINK TO TEST ABOVE). 
+Referencing the Nonfunctional requirements within the SRS document: NFR1: Accuracy, NFR4 Verifiability will reference the above tests given for the functional requirements. 
 The Nonfunctional requirements related to useability and understandability (NFR2 and NFR 5 respectively) will reference the useability/understandability survey linked in the appendix.
 
 \subsubsection{Accuracy}
@@ -927,29 +927,18 @@ They are based on NFR1 from the SRS document.
 
 \begin{enumerate}
 
-\item{test-id1\\}
+\item{test-1\\}
 
-Type: Functional, Dynamic, Manual, Static etc.
+Type: Manual
 					
-Initial State: 
+Initial State: The user has successfully installed the system on their device and completed the tests above for the functional requirements.
 					
-Input/Condition: 
+Input/Condition: The outputs of the functional tests: Position test2, Velocity test-2, Acceleration test-2, Shift test-2 and Shift test-4. 
 					
-Output/Result: 
+Output/Result: Based on the various input functional requirement tests we will look at the various MSE to estimate the accuracy. 
+Each MSE is within 0.2 of 0.
 					
-How test will be performed: 
-					
-\item{test-id2\\}
-
-Type: Functional, Dynamic, Manual, Static etc.
-					
-Initial State: 
-					
-Input: 
-					
-Output: 
-					
-How test will be performed: 
+How test will be performed: We will compare each MSE to the value of 0 as the closer the value to 0 the more accurate the prediction.
 
 \end{enumerate}
 
@@ -960,7 +949,7 @@ They are based on NFR2 from the SRS document.
 
 \begin{enumerate}
 
-\item{test-id1\\}
+\item{test-1\\}
 
 Type: Manual
 					
@@ -974,11 +963,11 @@ Output/Result: The average output rating from all users is greater than or equal
 How test will be performed: Each user in the test group will be provided with a survey which provides a series of questions and a scale for each option where 1 represents Poor, 2 represents below expectation, 3 represents satisfactory, 4 represents above average and 5 represents excellent.
 The average rating will then be calculated and must be above or equal to 4 for each criteria.  
 
-\item{test-id2\\}
+\item{test-2\\}
   
 Type: Manual
             
-Initial State: 
+Initial State: The user has successfully installed the system on their device.
             
 Input/Condition: Users within the Primary User role as well as Baja team members are asked to rate the features inputting parameters, adjusting parameters, viewing data outputs and saving and exporting data on how easy it was to use each feature.
 They are asked to rate this on a scale of (1-5) 1 being extremely difficult and 5 being extremely easy with the other options being 4: somewhat easy, 3: neutral and 2: somewhat difficult. 
@@ -997,7 +986,7 @@ They are based on NFR3 from the SRS document.
 
 \begin{enumerate}
 
-\item{test-id1\\}
+\item{test-1\\}
 
 Type: Manual
 					
@@ -1018,17 +1007,17 @@ They are based on NFR4 from the SRS document.
 
 \begin{enumerate}
 
-\item{test-id1\\}
+\item{test-1\\}
 
-Type: Functional, Dynamic, Manual, Static etc.
+Type: Manual
 					
-Initial State: 
+Initial State: The tests for the functional requirements and the Nonfunctional requirement test Accuracy test1 have been completed.
 					
-Input/Condition: 
+Input/Condition: The outputs of the functional tests: Position test1, Velocity test-1, Acceleration test-1, Shift test-, Shift test-1 and Shift test-3 will be run 30 times with the same input settings. 
 					
-Output/Result: 
+Output/Result: The graphed behavior of each run is consistent each time.
 					
-How test will be performed: 
+How test will be performed: The outputs will be compared after each run to ensure that the behaviour of each run is consistent for the same tunning settings.
 
 \end{enumerate}
 
@@ -1039,11 +1028,11 @@ They are based on NFR5 from the SRS document.
 
 \begin{enumerate}
 
-\item{test-id1\\}
+\item{test-1\\}
 
-Type: Functional, Dynamic, Manual, Static etc.
+Type: Manual.
 					
-Initial State: 
+Initial State: The user has successfully installed the system on their device.
 					
 Input/Condition: Users within the Primary User role as well as Baja team members are asked to rate how clear they found the features and functions within the system. 
 They are asked to rate this on a scale of (1-5) 1 being extremely unclear and 5 being extremely clear with the other options being 4: somewhat clear, 3: neutral and 2: somewhat unclear. 
@@ -1053,11 +1042,11 @@ Output/Result: The average output rating from all users for each listed feature 
 How test will be performed: Each user in the test group will be provided with a survey which provides a series of questions and a scale for each option where 1 represents Poor, 2 represents below expectation, 3 represents satisfactory, 4 represents above average and 5 represents excellent.
 The average rating will then be calculated and must be above or equal to 4 for each criteria.  
 
-\item{test-id2\\}
+\item{test-2\\}
 
 Type: Manual
 					
-Initial State: 
+Initial State: The user has successfully installed the system on their device.
 					
 Input/Condition: Users within the Primary User role as well as Baja team members are asked to rate their understanding of the simulation results and outputs. 
 They are asked to rate this on a scale of (1-5) 1 being extremely unclear and 5 being extremely clear with the other options being 4: somewhat clear, 3: neutral and 2: somewhat unclear. 
@@ -1076,7 +1065,7 @@ They are based on NFR6 from the SRS document.
 
 \begin{enumerate}
 
-\item{test-id1\\}
+\item{test-1\\}
     
 Type: Manual
               
@@ -1135,7 +1124,7 @@ needs to be well-documented, with meaningful names for all of the tests.}
 
 \begin{enumerate}
 
-\item{test-id1\\}
+\item{test-1\\}
 
 Type: \wss{Functional, Dynamic, Manual, Automatic, Static etc. Most will
   be automatic}
@@ -1150,7 +1139,7 @@ Test Case Derivation: \wss{Justify the expected value given in the Output field}
 
 How test will be performed: 
 					
-\item{test-id2\\}
+\item{test-2\\}
 
 Type: \wss{Functional, Dynamic, Manual, Automatic, Static etc. Most will
   be automatic}
@@ -1186,7 +1175,7 @@ How test will be performed:
 		
 \begin{enumerate}
 
-\item{test-id1\\}
+\item{test-1\\}
 
 Type: \wss{Functional, Dynamic, Manual, Automatic, Static etc. Most will
   be automatic}
@@ -1199,7 +1188,7 @@ Output/Result:
 					
 How test will be performed: 
 					
-\item{test-id2\\}
+\item{test-2\\}
 
 Type: Functional, Dynamic, Manual, Static etc.
 					
