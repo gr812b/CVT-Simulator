@@ -5,6 +5,7 @@
 \usepackage{booktabs}
 \usepackage{tabularx}
 \usepackage{hyperref}
+\usepackage{siunitx}
 \hypersetup{
     colorlinks,
     citecolor=blue,
@@ -66,7 +67,7 @@ in.}
 
 \section{Symbols, Abbreviations, and Acronyms}
 
-\begin{table}[h] % Optional [h] to place table here
+\begin{table}[h]
   \raggedright
   \begin{tabular}{l l} 
     \toprule		
@@ -99,17 +100,15 @@ in.}
     \toprule		
     \textbf{constant} & \textbf{value}\\
     \midrule
-    $m_{\text{max}}$ & $400 kg$\\
+    $f_{\text{clamp\_min}}$ & N \\
+    $v_\text{max}$ & 19.44 m/s \\
+    $\omega_{\text{idle}}$ & rad/s \\
+    $\omega_\text{max}$ & 600 rad/s \\
     \bottomrule
   \end{tabular}
   \caption{Verification and Validation Constants}
   \label{tab:vnv_constants}
 \end{table}
-
-\wss{symbols, abbreviations, or acronyms --- you can simply reference the SRS
-  \citep{SRS} tables, if appropriate}
-
-\wss{Remove this section if it isn't needed}
 
 \newpage
 
@@ -593,8 +592,6 @@ Listed is each requirement and how the tests verify each one.
   \item [R1:] Verifies the mathematical modeling of the CVT system
   \item [R5:] Verifies the calculations of the primary clamping force
   \item [R6:] Verifies the calculations of the secondary clamping force
-  \item [R7:] Verifies the calculations of the sheave acceleration
-  \item [R8:] Verifies the calculations of the belt acceleration
   \item [R9:] Verifies the calculations of RPM and engine torque
 \end{itemize}
 
@@ -619,6 +616,15 @@ Listed is each requirement and how the tests verify each one.
 \end{enumerate}
 
 \paragraph{Shift}
+
+This section provides tests to verify the shifting behaviour of the CVT system.
+They are based on the following functional requirements from the SRS document.
+Listed is each requirement and how the tests verify each one.
+
+\begin{itemize}
+  \item [R7:] Verifies the calculations of the sheave acceleration
+  \item [R8:] Verifies the calculations of the belt acceleration
+\end{itemize}
 
 \begin{enumerate}
   
