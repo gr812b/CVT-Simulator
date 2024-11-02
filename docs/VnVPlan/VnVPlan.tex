@@ -115,9 +115,6 @@ in.}
 
 \pagenumbering{arabic}
 
-This document ... \wss{provide an introductory blurb and roadmap of the
-  Verification and Validation plan}
-
 \noindent This document serves as a guide for how we plan to verify and validate the \progname{} system.
 Within is a detailed plan of all the tests that will be conducted to ensure that the system is functioning as intended.
 The document is divided into several sections going from the general plan to the specific tests that will be conducted.
@@ -144,23 +141,6 @@ There is also a 3D model component that will display the some models of the CVT 
 Each of these components covered will be verified and validated to ensure that the system is functioning as intended.
 
 \subsection{Objectives}
-
-\wss{State what is intended to be accomplished.  The objective will be around
-  the qualities that are most important for your project.  You might have
-  something like: ``build confidence in the software correctness,''
-  ``demonstrate adequate usability.'' etc.  You won't list all of the qualities,
-  just those that are most important.}
-
-\wss{You should also list the objectives that are out of scope.  You don't have 
-the resources to do everything, so what will you be leaving out.  For instance, 
-if you are not going to verify the quality of usability, state this.  It is also 
-worthwhile to justify why the objectives are left out.}
-
-\wss{The objectives are important because they highlight that you are aware of 
-limitations in your resources for verification and validation.  You can't do everything, 
-so what are you going to prioritize?  As an example, if your system depends on an 
-external library, you can explicitly state that you will assume that external library 
-has already been verified by its implementation team.}
 
 \noindent The objectives of testing our CVT system are to ensure the accuracy and reliability of our outputs. 
 This includes evaluating that our mathematical model provides correct outputs based on provided input parameters specifically looking at the calculations of RPM, velocity, acceleration, distance, torque of the engine, clamping forces, CVT ratio, Torque and Belt slippage. 
@@ -194,12 +174,6 @@ The extras for this project are the following:\\
 
 \subsection{Relevant Documentation}
 
-\wss{Reference relevant documentation.  This will definitely include your SRS
-  and your other project documents (design documents, like MG, MIS, etc).  You
-  can include these even before they are written, since by the time the project
-  is done, they will be written.  You can create BibTeX entries for your
-  documents and within those entries include a hyperlink to the documents.}
-
 \noindent \textbf{Software Requirements Specification} \citet{SRS}
 \newline
 This document is relevant because it it list all the requirements that the system should have and specifies how they should be achieved.
@@ -228,13 +202,7 @@ Each function and method listed in the MIS will have a corresponding test case i
 \newline
 The Verification and Validation Report will be referenced to ensure that all the components of the system have been verified and validated.
 
-\wss{Don't just list the other documents.  You should explain why they are relevant and 
-how they relate to your VnV efforts.}
-
 \section{Plan}
-
-\wss{Introduce this section.  You can provide a roadmap of the sections to
-  come.}
 
 This section outlines the overall plans for the verification and validation of the system.
 This includes our approaches, techniques and tools that will be used.
@@ -244,10 +212,6 @@ Any tools that we plan to use to automate the process are also listed in this se
 Overall this section details how we plan to verify and validate the system.
 
 \subsection{Verification and Validation Team}
-
-\wss{Your teammates.  Maybe your supervisor.
-  You should do more than list names.  You should say what each person's role is
-  for the project's verification.  A table is a good way to summarize this information.}
 
 \newgeometry{left=0.5cm, right=0.5cm, top=2cm, bottom=2cm}
 \begin{table}[h!]
@@ -283,18 +247,6 @@ Overall this section details how we plan to verify and validate the system.
 
 \subsection{SRS Verification Plan}
 
-\wss{List any approaches you intend to use for SRS verification.  This may
-  include ad hoc feedback from reviewers, like your classmates (like your
-  primary reviewer), or you may plan for something more rigorous/systematic.}
-
-\wss{If you have a supervisor for the project, you shouldn't just say they will
-read over the SRS.  You should explain your structured approach to the review.
-Will you have a meeting?  What will you present?  What questions will you ask?
-Will you give them instructions for a task-based inspection?  Will you use your
-issue tracker?}
-
-\wss{Maybe create an SRS checklist?}
-
 \noindent To ensure that the SRS document is accurate and complete, we will be conducting a series of reviews.
 These reviews will be conducted by the team, our supervisor, and our stakeholders.
 The team will use the below checklist to verify the quality of the SRS document:
@@ -328,12 +280,6 @@ Additionally, the traceability matrix will be used to ensure that the mapping be
 
 \subsection{Design Verification Plan}
 
-\wss{Plans for design verification}
-
-\wss{The review will include reviews by your classmates}
-
-\wss{Create a checklists?}
-
 \noindent To ensure that the CVT system is functional and accurate, a design verification plan will be conducted on the system. 
 The components of the system that will be tested are the graphical user interface, data output and visualization and the mathematical model. 
 The design verification plan will include, reviews from fellow classmates, stakeholder reviews and specification testing based on the functional and nonfunctional requirements of the system. 
@@ -351,13 +297,6 @@ A checklist has been designed below to which fellow classmates and stakeholders 
   \item There exists system tests for each component: user interface, mathematical model, data visualization and 3D model. 
 \end{enumerate}
 \subsection{Verification and Validation Plan Verification Plan}
-
-\wss{The verification and validation plan is an artifact that should also be
-verified.  Techniques for this include review and mutation testing.}
-
-\wss{The review will include reviews by your classmates}
-
-\wss{Create a checklists?}
 
 To ensure that the Verification and Validation Plan is sufficient, this document will undergo a verification plan.
 This plan will review the contents of the document to make sure that all necessary components are included.
@@ -430,17 +369,6 @@ Below is a checklist to use as reference for the verification of the Verificatio
 
 \subsection{Implementation Verification Plan}
 
-\wss{You should at least point to the tests listed in this document and the unit
-  testing plan.}
-
-\wss{In this section you would also give any details of any plans for static
-  verification of the implementation.  Potential techniques include code
-  walkthroughs, code inspection, static analyzers, etc.}
-
-\wss{The final class presentation in CAS 741 could be used as a code
-walkthrough.  There is also a possibility of using the final presentation (in
-CAS741) for a partial usability survey.}
-
 For the implementation verification plan, we will be using many techniques to ensure that the system is functioning as intended.
 We will use the unit tests listed in the this document as well as other common testing techniques.
 It will be required that all unit tests are run and pass for any PRs to be merged into their parent branch.
@@ -449,15 +377,6 @@ Static analyzers will also be used throughout development to ensure a high quali
 Before major milestones, full code walkthroughs will be conducted which is enforced by all team members needing to approve merges into main.
 
 \subsection{Automated Testing and Verification Tools}
-
-\wss{What tools are you using for automated testing.  Likely a unit testing
-  framework and maybe a profiling tool, like ValGrind.  Other possible tools
-  include a static analyzer, make, continuous integration tools, test coverage
-  tools, etc.  Explain your plans for summarizing code coverage metrics.
-  Linters are another important class of tools.  For the programming language
-  you select, you should look at the available linters.  There may also be tools
-  that verify that coding standards have been respected, like flake9 for
-  Python.}
 
   \noindent We will be using a wide variety of tools for automated testing and verification.
   We will use separate tools for our Unity C\# frontend and python backend.
@@ -482,32 +401,7 @@ Before major milestones, full code walkthroughs will be conducted which is enfor
 
   \noindent Additionally, we will be using GitHub Actions to automate our testing process.
   This will be done to ensure CI/CD and that our tests are run automatically on every push to the repository.
-
-\wss{If you have already done this in the development plan, you can point to
-that document.}
-
-\wss{The details of this section will likely evolve as you get closer to the
-  implementation.}
-
 \subsection{Software Validation Plan}
-
-\wss{If there is any external data that can be used for validation, you should
-  point to it here.  If there are no plans for validation, you should state that
-  here.}
-
-\wss{You might want to use review sessions with the stakeholder to check that
-the requirements document captures the right requirements.  Maybe task based
-inspection?}
-
-\wss{For those capstone teams with an external supervisor, the Rev 0 demo should 
-be used as an opportunity to validate the requirements.  You should plan on 
-demonstrating your project to your supervisor shortly after the scheduled Rev 0 demo.  
-The feedback from your supervisor will be very useful for improving your project.}
-
-\wss{For teams without an external supervisor, user testing can serve the same purpose 
-as a Rev 0 demo for the supervisor.}
-
-\wss{This section might reference back to the SRS verification section.}
 
 \noindent We plan on using data collected from the McMaster Baja team to validate the accuracy of our simulation.
 Some of the values we are able to collect include:
@@ -528,20 +422,10 @@ This will allow us to better diagnose the issues and allocate our resources to f
 
 \section{System Tests}
 
-\wss{There should be text between all headings, even if it is just a roadmap of
-the contents of the subsections.}
-
 Found below are all of the system tests that will be conducted to verify the system.
 These tests are split based on if they are for functional or nonfunctional requirements.
 
 \subsection{Tests for Functional Requirements}
-
-\wss{Subsets of the tests may be in related, so this section is divided into
-  different areas.  If there are no identifiable subsets for the tests, this
-  level of document structure can be removed.}
-
-\wss{Include a blurb here to explain why the subsections below
-  cover the requirements.  References to the SRS would be good here.}
 
 This section outlines all the system tests that will be conducted to verify the requirements of the system.
 Each set of tests relate to one requirement from the SRS document.
@@ -584,11 +468,6 @@ The standard simulation state for the CVT system is as follows.
 \end{itemize}
 
 \subsubsection{Vehicle Dynamics}
-
-\wss{It would be nice to have a blurb here to explain why the subsections below
-  cover the requirements.  References to the SRS would be good here.  If a section
-  covers tests for input constraints, you should reference the data constraints
-  table in the SRS.}
 
 This section provides tests to verify the vehicle dynamics of the CVT system.
 They are based on the following functional requirements from the SRS document.
@@ -807,6 +686,18 @@ Listed is each requirement and how the tests verify each one.
 
 \subsubsection{User Interface}
 
+This section provides tests to verify the User Interface of the system.
+They are based on the following functional requirements from the SRS document.
+Listed is each requirement and how the tests verify each one.
+\begin{itemize}
+  \item [R10:] Verifies the input parameters of the CVT can be adjusted
+  \item [R11:] Verifies the other input parameters can be adjusted
+  \item [R12:] Verifies the system provides a UI to change the input parameters
+  \item [R13:] Verifies the system provides output in the form of graphs
+  \item [R14:] Verifies the system lets users compare simulation data
+  \item [R15:] Verifies the system lets users export simulation data
+\end{itemize}
+
 \begin{enumerate}
   \item{User Interface test-1\\}
   
@@ -851,17 +742,17 @@ Listed is each requirement and how the tests verify each one.
   How test will be performed: The test will run the simulation with a set of pre made input parameters, then it will verify that whether or not a graph has been outputted. 
   \item {User Interface test-4\\}
   
-  Control: 
+  Control: Manual
             
-  Initial State:
+  Initial State: Simulation has completed
             
-  Input: 
+  Input: Another simulation is run with different input parameters
             
-  Output: 
+  Output: Both simulations are displayed to the user for comparison
   
-  Test Case Derivation: 
+  Test Case Derivation: Based on FR14 validate that the system lets users compare simulation data.
   
-  How test will be performed: 
+  How test will be performed: After running two simulations with different input parameters, the user will be able to compare the two simulations to see the differences in the output.
   \item {User Interface test-5\\}
   
   Control: Manual
@@ -879,6 +770,15 @@ Listed is each requirement and how the tests verify each one.
 \end{enumerate}
 
   \subsubsection{Compatability}
+
+  This section provides tests to verify the Compatability of the system.
+They are based on the following functional requirements from the SRS document.
+Listed is each requirement and how the tests verify each one.
+\begin{itemize}
+  \item [R16:] Verifies the application works on different types of computers
+  \item [R17:] Verifies the application works on different operating systems
+\end{itemize}
+
   \begin{enumerate}
   \item {Compatability test-1\\}
   
@@ -898,17 +798,6 @@ Listed is each requirement and how the tests verify each one.
 ...
 
 \subsection{Tests for Nonfunctional Requirements}
-
-\wss{The nonfunctional requirements for accuracy will likely just reference the
-  appropriate functional tests from above.  The test cases should mention
-  reporting the relative error for these tests.  Not all projects will
-  necessarily have nonfunctional requirements related to accuracy.}
-
-\wss{For some nonfunctional tests, you won't be setting a target threshold for
-passing the test, but rather describing the experiment you will do to measure
-the quality for different inputs.  For instance, you could measure speed versus
-the problem size.  The output of the test isn't pass/fail, but rather a summary
-table or graph.}
 
 \wss{Tests related to usability could include conducting a usability test and
   survey.  The survey will be in the Appendix.}
