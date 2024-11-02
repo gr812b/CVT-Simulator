@@ -605,7 +605,7 @@ Listed is each requirement and how the tests verify each one.
 
 \begin{enumerate}
   
-  \item{test-1\\}
+  \item{Position test-1\\}
   
   Control: Manual
             
@@ -619,7 +619,7 @@ Listed is each requirement and how the tests verify each one.
   
   How test will be performed: The script will run with the provided inputs. After execution is complete, the output position over time will be visualized as a graph which should show a smooth upward trend as time progresses. Its slope should increase over time as well. Visual inspection will follow against Figure~\ref{fig:position_graph} for confirmation of expected behaviour.
   
-  \item{test-2\\}
+  \item{Position test-2\\}
 
   Control: Manual
 
@@ -639,7 +639,7 @@ Listed is each requirement and how the tests verify each one.
 
 \begin{enumerate}
 
-\item{test-1\\}
+\item{Velocity test-1\\}
 
 Control: Manual
 					
@@ -655,7 +655,7 @@ Derived from the vehicle’s geometry and the CVT configuration, limiting the ve
 
 How test will be performed: The script will run with the provided inputs. After execution is complete, the output velocity over time will be visualized as a graph which should show a smooth upward trend that begins at zero and approaches $v_\text{max}$ as time progresses. Visual inspection will follow against Figure~\ref{fig:velocity_graph} for confirmation of expected behaviour.
 					
-\item{test-2\\}
+\item{Velocity test-2\\}
 
 Control: Manual
 
@@ -675,7 +675,7 @@ How test will be performed: The script will run with the provided inputs. After 
 
 \begin{enumerate}
 
-  \item{test-1\\}
+  \item{Acceleration test-1\\}
   
   Control: Manual
             
@@ -690,7 +690,7 @@ How test will be performed: The script will run with the provided inputs. After 
   
   How test will be performed: The script will run with the provided inputs. After execution is complete, the output will be visualized as a graph. Visual inspection will follow against Figure~\ref{fig:acceleration_graph} for confirmation of expected behaviour.
 
-  \item{test-2\\}
+  \item{Acceleration test-2\\}
 
   Control: Manual
 
@@ -724,7 +724,7 @@ Listed is each requirement and how the tests verify each one.
 
 \begin{enumerate}
   
-  \item{test-1\\}
+  \item{Clamping forces test-1\\}
   
   Control: Manual
             
@@ -744,7 +744,7 @@ Listed is each requirement and how the tests verify each one.
 
 \begin{enumerate}
   
-  \item{test-1\\}
+  \item{Shift test-1\\}
   
   Control: Manual
             
@@ -758,7 +758,7 @@ Listed is each requirement and how the tests verify each one.
   
   How test will be performed: The script will run with the provided inputs. After execution is complete, the output will be visualized as a graph. Visual inspection will follow against Figure~\ref{fig:shift_distance_graph} for confirmation of expected behaviour.
   
-  \item{test-2\\}
+  \item{Shift test-2\\}
 
   Control: Manual
 
@@ -776,7 +776,7 @@ Listed is each requirement and how the tests verify each one.
 
 \begin{enumerate}
   
-  \item{test-1\\}
+  \item{Shift test-3\\}
   
   Control: Manual
             
@@ -790,7 +790,7 @@ Listed is each requirement and how the tests verify each one.
   
   How test will be performed: The script will run with the provided inputs. After execution is complete, the output will be visualized as a graph. Visual inspection will follow against Figure~\ref{fig:shift_curve} for confirmation of expected behaviour.
   
-  \item{test-2\\}
+  \item{Shift test-4\\}
 
   Control: Manual
 
@@ -809,7 +809,10 @@ Listed is each requirement and how the tests verify each one.
 \subsubsection{User Interface}
 
 \begin{enumerate}
-  \item{test-1\\}
+  \item{User Interface test-1\\}
+  
+  Control: Manual
+
   Initial State: Default input parameters are loaded
             
   Input: Change the input parameters with new values
@@ -821,7 +824,7 @@ Listed is each requirement and how the tests verify each one.
   
   How test will be performed: Upon a fresh launch of the application, manually change each of the input parameters from the default values to a new value. 
              
-  \item{test-2\\}
+  \item{User Interface test-2\\}
  
   Control: Automatic
             
@@ -834,7 +837,7 @@ Listed is each requirement and how the tests verify each one.
   Test Case Derivation: Based on FR12 validate that the system provides the user with a UI to change the input parameters.
   
   How test will be performed: Upon a fresh launch of the software, the system will assert whether the input parameter page is displayed or not. 
-  \item {test-3\\}
+  \item {User Interface test-3\\}
   
   Control: Automatic
             
@@ -847,7 +850,7 @@ Listed is each requirement and how the tests verify each one.
   Test Case Derivation: Based on FR13, validate that the simulation produces output in the form of graphs.
   
   How test will be performed: The test will run the simulation with a set of pre made input parameters, then it will verify that whether or not a graph has been outputted. 
-  \item {test-4\\}
+  \item {User Interface test-4\\}
   
   Control: 
             
@@ -860,7 +863,7 @@ Listed is each requirement and how the tests verify each one.
   Test Case Derivation: 
   
   How test will be performed: 
-  \item {test-5\\}
+  \item {User Interface test-5\\}
   
   Control: Manual
             
@@ -874,7 +877,11 @@ Listed is each requirement and how the tests verify each one.
   
   How test will be performed: After simulation has completed successfully export the data and verify that it was exported in the correct format to the right location.
 
-  \item {test-6\\}
+\end{enumerate}
+
+  \subsubsection{Compatability}
+  \begin{enumerate}
+  \item {Compatability test-1\\}
   
   Control: Manual
             
@@ -1087,129 +1094,21 @@ This will indicate how long it will take for the system to be adapted to future 
 
 \section{Unit Test Description}
 
-\wss{This section should not be filled in until after the MIS (detailed design
-  document) has been completed.}
-
-\wss{Reference your MIS (detailed design document) and explain your overall
-philosophy for test case selection.}  
-
-\wss{To save space and time, it may be an option to provide less detail in this section.  
-For the unit tests you can potentially layout your testing strategy here.  That is, you 
-can explain how tests will be selected for each module.  For instance, your test building 
-approach could be test cases for each access program, including one test for normal behaviour 
-and as many tests as needed for edge cases.  Rather than create the details of the input 
-and output here, you could point to the unit testing code.  For this to work, you code 
-needs to be well-documented, with meaningful names for all of the tests.}
+This section is not applicable to this version of this document, as the system is not yet implemented.
+When implementation is completed, this section will be updated to include the unit tests that will be conducted.
 
 \subsection{Unit Testing Scope}
-
-\wss{What modules are outside of the scope.  If there are modules that are
-  developed by someone else, then you would say here if you aren't planning on
-  verifying them.  There may also be modules that are part of your software, but
-  have a lower priority for verification than others.  If this is the case,
-  explain your rationale for the ranking of module importance.}
+N/A
 
 \subsection{Tests for Functional Requirements}
-
-\wss{Most of the verification will be through automated unit testing.  If
-  appropriate specific modules can be verified by a non-testing based
-  technique.  That can also be documented in this section.}
-
-\subsubsection{Module 1}
-
-\wss{Include a blurb here to explain why the subsections below cover the module.
-  References to the MIS would be good.  You will want tests from a black box
-  perspective and from a white box perspective.  Explain to the reader how the
-  tests were selected.}
-
-\begin{enumerate}
-
-\item{test-1\\}
-
-Type: \wss{Functional, Dynamic, Manual, Automatic, Static etc. Most will
-  be automatic}
-					
-Initial State: 
-					
-Input: 
-					
-Output: \wss{The expected result for the given inputs}
-
-Test Case Derivation: \wss{Justify the expected value given in the Output field}
-
-How test will be performed: 
-					
-\item{test-2\\}
-
-Type: \wss{Functional, Dynamic, Manual, Automatic, Static etc. Most will
-  be automatic}
-					
-Initial State: 
-					
-Input: 
-					
-Output: \wss{The expected result for the given inputs}
-
-Test Case Derivation: \wss{Justify the expected value given in the Output field}
-
-How test will be performed: 
-
-\item{...\\}
-    
-\end{enumerate}
-
-\subsubsection{Module 2}
-
-...
+N/A
 
 \subsection{Tests for Nonfunctional Requirements}
-
-\wss{If there is a module that needs to be independently assessed for
-  performance, those test cases can go here.  In some projects, planning for
-  nonfunctional tests of units will not be that relevant.}
-
-\wss{These tests may involve collecting performance data from previously
-  mentioned functional tests.}
-
-\subsubsection{Module ?}
-		
-\begin{enumerate}
-
-\item{test-1\\}
-
-Type: \wss{Functional, Dynamic, Manual, Automatic, Static etc. Most will
-  be automatic}
-					
-Initial State: 
-					
-Input/Condition: 
-					
-Output/Result: 
-					
-How test will be performed: 
-					
-\item{test-2\\}
-
-Type: Functional, Dynamic, Manual, Static etc.
-					
-Initial State: 
-					
-Input: 
-					
-Output: 
-					
-How test will be performed: 
-
-\end{enumerate}
-
-\subsubsection{Module ?}
-
-...
+N/A
 
 \subsection{Traceability Between Test Cases and Modules}
+N/A	
 
-\wss{Provide evidence that all of the modules have been considered.}
-				
 \bibliographystyle{plainnat}
 
 \bibliography{../../refs/References}
