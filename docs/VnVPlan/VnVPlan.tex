@@ -655,10 +655,6 @@ Listed is each requirement and how the tests verify each one.
   Test Case Derivation: Data from the simulation should closely match the experimental data collected from the physical car. Key points of interest include the shift point and the slope during the shifting phase.
 
   How test will be performed: The script will run with the provided inputs. After execution is complete, the output of the simulation will be compared to experimental data from the physical car to ensure that the simulation is accurate. The experimental data will be configured to show the primary RPM divided by the secondary RPM on the y-axis, and the primary RPM on the x-axis.
-
-\end{enumerate}
-
-\begin{enumerate}
   
   \item{Shift test-3\\}
   
@@ -687,6 +683,26 @@ Listed is each requirement and how the tests verify each one.
   Test Case Derivation: Data from the simulation should closely match the experimental data collected from the physical car. Key points include the shift point, slope during shifting phase, engagement point and the final shift point.
 
   How test will be performed: The script will run with the provided inputs. After execution is complete, the output of the simulation will be compared to experimental data from the physical car to ensure that the simulation is accurate. The experimental data will be configured to show the primary RPM on the y-axis and the secondary RPM on the x-axis.
+
+\end{enumerate}
+
+\paragraph{Engine Dynamics}
+
+\begin{enumerate}
+
+  \item{Acceleration test-1\\}
+  
+  Control: Manual
+            
+  Initial State: The state values from Section~\ref{sec:standard_state}.
+  
+  Input: The input values from Section~\ref{sec:standard_inputs}.
+            
+  Output: The resulting graph should show a decreasing relationship with forque and engine angular velocity, while having a peak in power at $\omega_\text{peak\_power}$. A typical output graph will look similar to the one shown in Figure~\ref{fig:engine_graph}.
+  
+  Test Case Derivation: These are given values as specs of the engine at full load. The engine should not significantly leave the bounds of these angular velocities.
+  
+  How test will be performed: The script will run with the provided inputs. After execution is complete, the output will be visualized as a graph. Visual inspection will follow against Figure~\ref{fig:engine_graph} for confirmation of expected behaviour.
 
 \end{enumerate}
 
@@ -1146,6 +1162,13 @@ When the transmission is shifted all the way out into high ratio, engine speed m
 As the engine speed increases, the power curve goes off the peak on the back side and less power is available to propel the machine. Maximum speed cannot be obtained if you are off the peak; this means the machine is geared too low. There may be conditions where this is done on purpose because acceleration is more important than top speed. In most cases the machines are geared to give maximum top speed, which means they will seldom reach high ratio and over-run is not usually experienced.
 
 \textbf{In over-run, the clutches are shifted all the way out and the flyweight forces have no more influence on the engine speed. Engine speed will increase along the fixed high ratio line.} \citet{Aaen2007}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\textwidth]{graphs/engine.png}
+  \caption{Engine torque and power against engine angular velocity \citet{BajaSAEKohlerEngine2022}}
+  \label{fig:engine_graph}
+\end{figure}
 
 \newpage{}
 \section*{Appendix --- Reflection}
