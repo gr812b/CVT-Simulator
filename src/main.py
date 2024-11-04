@@ -7,7 +7,7 @@ from utils.system_state import SystemState
 from simulations.engine_simulation import EngineSimulator
 from constants.engine_specs import torque_curve
 from constants.car_specs import (
-    ENGINE_INTERTIA,
+    ENGINE_INERTIA,
     GEARBOX_RATIO,
     FRONTAL_AREA,
     DRAG_COEFFICIENT,
@@ -17,7 +17,7 @@ from constants.car_specs import (
 from utils.conversions import rpm_to_rad_s, deg_to_rad
 
 
-engine_simulator = EngineSimulator(torque_curve=torque_curve, inertia=ENGINE_INTERTIA)
+engine_simulator = EngineSimulator(torque_curve=torque_curve, inertia=ENGINE_INERTIA)
 load_simulator = LoadSimulator(
     frontal_area=FRONTAL_AREA,
     drag_coefficient=DRAG_COEFFICIENT,
@@ -28,8 +28,6 @@ load_simulator = LoadSimulator(
 )
 car_simulator = CarSimulator(car_mass=CAR_MASS)
 
-
-# TODO: If the engine acceleration is ever negative, the car will start moving backwards, this should not occur.
 # Define the system of differential equations
 def angular_velocity_and_position_derivative(t, y):
     state = SystemState.from_array(y)
@@ -58,7 +56,7 @@ def angular_velocity_and_position_derivative(t, y):
     if state.car_velocity > max_car_velocity:
         car_acceleration = 0
 
-    # Temporary solution to act as limiter for engine speed
+    # TODO: Remove temporary solution to act as limiter for engine speed
     if state.engine_angular_velocity > 400:
         engine_angular_acceleration = 0
 
