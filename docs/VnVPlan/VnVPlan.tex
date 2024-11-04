@@ -78,6 +78,7 @@ in.}
     CVT & Continuous Variable Transmission\\
     FR & Functional Requirement\\
     GPS & Global Positioning System\\
+    IMU & Inertial Measurement Unit\\
     GUI & Graphical User Interface\\
     IM & Instance Model\\
     MG & Module Guide\\
@@ -100,10 +101,9 @@ in.}
     \toprule		
     \textbf{constant} & \textbf{value}\\
     \midrule
-    $f_{\text{clamp\_min}}$ & N \\
-    $v_\text{max}$ & 19.44 m/s \\
-    $\omega_{\text{idle}}$ & rad/s \\
-    $\omega_\text{max}$ & 600 rad/s \\
+    $v_\text{max}$ & 16.67 m/s \\
+    $\omega_{\text{idle}}$ & 180 rad/s \\
+    $\omega_\text{max}$ & 420 rad/s \\
     \bottomrule
   \end{tabular}
   \caption{Verification and Validation Constants}
@@ -607,7 +607,7 @@ Listed is each requirement and how the tests verify each one.
   
   Input: The input values from Section~\ref{sec:standard_inputs}.
             
-  Output: The resulting graphs should show a clamping force against engine angular velocity beginning from $f_\text{clamp\_min}$, which should then rise to a peak before falling during the shifting phase. Suboptimal parameters may lead to a clamping force that is too low or too high, but a similar shape nonetheless. A typical output graph will look similar to the one shown in Figure~\ref{fig:clamping_force_graph}.
+  Output: The resulting graphs should show a clamping force against engine angular velocity beginning an initial minimum value, which should then rise to a peak before falling during the shifting phase. Suboptimal parameters may lead to a clamping force that is too low or too high, but a similar shape nonetheless. A typical output graph will look similar to the one shown in Figure~\ref{fig:clamping_force_graph}.
   
   Test Case Derivation: This behaviour is resulting from ideal tuning parameters, and may vary depending on inputs. Ramp and helix geometry will both have a major impact on the shape of these graphs, while weight and spring constants will affect the magnitude.
   
@@ -690,7 +690,7 @@ Listed is each requirement and how the tests verify each one.
 
 \begin{enumerate}
 
-  \item{Acceleration test-1\\}
+  \item{Engine test-1\\}
   
   Control: Manual
             
@@ -820,16 +820,6 @@ Listed is each requirement and how the tests verify each one.
 ...
 
 \subsection{Tests for Nonfunctional Requirements}
-
-\wss{Tests related to usability could include conducting a usability test and
-  survey.  The survey will be in the Appendix.}
-
-\wss{Static tests, review, inspections, and walkthroughs, will not follow the
-format for the tests given below.}
-
-\wss{If you introduce static tests in your plan, you need to provide details.
-How will they be done?  In cases like code (or document) walkthroughs, who will
-be involved? Be specific.}
 
 \noindent The nonfunctional requirements we will be testing for are accuracy, useability, maintainability, verifiability, understandability and reusability. 
 Referencing the Nonfunctional requirements within the SRS document: NFR1: Accuracy, NFR4 Verifiability will reference the above tests given for the functional requirements. 
@@ -997,9 +987,6 @@ This will indicate how long it will take for the system to be adapted to future 
 
 \subsection{Traceability Between Test Cases and Requirements}
 
-\wss{Provide a table that shows which test cases are supporting which
-  requirements.}
-
 
 \begin{table}[H]
 \centering
@@ -1014,7 +1001,7 @@ This will indicate how long it will take for the system to be adapted to future 
     R6 & Clamping forces test-1 \\ \hline
     R7 & Shift test-1, Shift test-2, Shift test-3 \\ \hline
     R8 & Shift test-1, Shift test-2, Shift test-3 \\ \hline
-    R9 & ?? \\ \hline
+    R9 & Engine test-1 \\ \hline
     R10 & User Interface test-1 \\ \hline
     R11 & User Interface test-1 \\ \hline
     R12 & User Interface test-2 \\ \hline
@@ -1122,7 +1109,7 @@ This section includes all referenced graphs for various tests. Please note that 
 \begin{figure}[H]
   \centering
   \includegraphics[width=\textwidth]{graphs/shift_curve.png}
-  \caption{Shift curve \citet{Aaen2007}}
+  \caption{Shift curve graph \citet{Aaen2007}}
   \label{fig:shift_curve}
 \end{figure}
 
