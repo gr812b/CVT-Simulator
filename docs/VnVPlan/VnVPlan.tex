@@ -19,6 +19,11 @@
 \input{../Comments}
 \input{../Common}
 
+\newcommand{\refdata}[2]{
+  \href{https://github.com/gr812b/CVT-Simulator/blob/main/experimental-data/#1
+  }{\texttt{#2}}}
+
+
 \begin{document}
 
 \title{System Verification and Validation Plan for \progname{}} 
@@ -478,7 +483,7 @@ Listed is each requirement and how the tests verify each one.
 
   Initial State: The state values from Section~\ref{sec:standard_state}.
   
-  Input: Provided experimental data along with the input values from Section~\ref{sec:standard_inputs}, matching those of the vehicle during experimental data collection. Sample experimental data is located here: \href{https://github.com/gr812b/CVT-Simulator/experimental-data/GPS%20LATITUDE.csv}{Latitude.csv}, \href{https://github.com/gr812b/CVT-Simulator/experimental-data/GPS%20LONGITUDE.csv}{Longitude.csv}.
+  Input: Provided experimental data along with the input values from Section~\ref{sec:standard_inputs}, matching those of the vehicle during experimental data collection. Sample experimental data is located here: \refdata{GPS\%20LATITUDE.csv}{Latitude.csv}, \refdata{GPS\%20LONGITUDE.csv}{Longitude.csv}.
 
   Output: Mean squared error between the simulated position and the experimental position.
 
@@ -514,7 +519,7 @@ Control: Manual
 
 Initial State: The state values from Section~\ref{sec:standard_state}.
 
-Input: Provided experimental data along with the input values from Section~\ref{sec:standard_inputs}, matching those of the vehicle during experimental data collection. Sample experimental data is located here: \href{https://github.com/gr812b/CVT-Simulator/experimental-data/GPS%20SPEED.csv}{Speed.csv}.
+Input: Provided experimental data along with the input values from Section~\ref{sec:standard_inputs}, matching those of the vehicle during experimental data collection. Sample experimental data is located here: \refdata{GPS\%20SPEED.csv}{Speed.csv}.
 
 Output: Mean squared error between the simulated velocity and the experimental velocity.
 
@@ -549,7 +554,7 @@ How test will be performed: The script will run with the provided inputs. After 
 
   Initial State: The state values from Section~\ref{sec:standard_state}.
 
-  Input: Provided experimental data along with the input values from Section~\ref{sec:standard_inputs}, matching those of the vehicle during experimental data collection. Sample experimental data is located here: \href{https://github.com/gr812b/CVT-Simulator/experimental-data/IMU%20ACCEL%20X.csv}{Accel X.csv}, \href{https://github.com/gr812b/CVT-Simulator/experimental-data/IMU%20ACCEL%20Y.csv}{Accel Y.csv}, \href{https://github.com/gr812b/CVT-Simulator/experimental-data/IMU%20ACCEL%20Z.csv}{Accel Z.csv}.
+  Input: Provided experimental data along with the input values from Section~\ref{sec:standard_inputs}, matching those of the vehicle during experimental data collection. Sample experimental data is located here: \refdata{IMU\%20ACCEL\%20X.csv}{Accel X.csv}, \refdata{IMU\%20ACCEL\%20Y.csv}{Accel Y.csv}, \refdata{IMU\%20ACCEL\%20Z.csv}{Accel Z.csv}.
 
   Output: Mean squared error between the simulated acceleration and the experimental acceleration.
 
@@ -617,7 +622,7 @@ Listed is each requirement and how the tests verify each one.
 
   Initial State: The state values from Section~\ref{sec:standard_state}.
 
-  Input: Provided experimental data along with the input values from Section~\ref{sec:standard_inputs}, matching those of the vehicle during experimental data collection. Sample experimental data is located here: \href{https://github.com/gr812b/CVT-Simulator/experimental-data/RPM%20PRIM.csv}{Primary RPM.csv}, \href{https://github.com/gr812b/CVT-Simulator/experimental-data/RPM%20SEC.csv}{Secondary RPM.csv} 
+  Input: Provided experimental data along with the input values from Section~\ref{sec:standard_inputs}, matching those of the vehicle during experimental data collection. Sample experimental data is located here: \refdata{RPM\%20PRIM.csv}{Primary RPM.csv}, \refdata{RPM\%20SEC.csv}{Secondary RPM.csv} 
 
   Output: Mean squared error between the simulated shift against engine velocity compared to experimental data. Differences of shape and magnitude will be considered.
 
@@ -645,7 +650,7 @@ Listed is each requirement and how the tests verify each one.
 
   Initial State: The state values from Section~\ref{sec:standard_state}.
 
-  Input: Provided experimental data along with the input values from Section~\ref{sec:standard_inputs}, matching those of the vehicle during experimental data collection. Sample experimental data is located here: \href{https://github.com/gr812b/CVT-Simulator/experimental-data/RPM%20PRIM.csv}{Primary RPM.csv}, \href{https://github.com/gr812b/CVT-Simulator/experimental-data/RPM%20SEC.csv}{Secondary RPM.csv} 
+  Input: Provided experimental data along with the input values from Section~\ref{sec:standard_inputs}, matching those of the vehicle during experimental data collection. Sample experimental data is located here: \refdata{RPM\%20PRIM.csv}{Primary RPM.csv}, \refdata{RPM\%20SEC.csv}{Secondary RPM.csv}
 
   Output: Mean squared error between the simulated shift curve (see Figure~\ref{fig:shift_curve}) and the experimental data. Differences of key points, shape and magnitude will be considered.
 
