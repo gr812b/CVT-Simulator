@@ -3,6 +3,7 @@ from constants.constants import GRAVITY, AIR_DENSITY
 
 # TODO: Consider direction, drag should never be applied in the opposite direction of velocity
 
+
 class LoadSimulator:
     def __init__(
         self,

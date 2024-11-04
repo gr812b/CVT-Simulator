@@ -28,6 +28,7 @@ load_simulator = LoadSimulator(
 )
 car_simulator = CarSimulator(car_mass=CAR_MASS)
 
+
 # Define the system of differential equations
 def angular_velocity_and_position_derivative(t, y):
     state = SystemState.from_array(y)

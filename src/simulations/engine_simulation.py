@@ -1,5 +1,6 @@
 from typing import Callable
 
+
 class EngineSimulator:
     def __init__(self, torque_curve: Callable[[float], float], inertia: float):
         """
@@ -24,7 +25,9 @@ class EngineSimulator:
         """
         return self.torque_curve(angular_velocity)
 
-    def calculate_angular_acceleration(self, angular_velocity: float, load_torque: float) -> float:
+    def calculate_angular_acceleration(
+        self, angular_velocity: float, load_torque: float
+    ) -> float:
         """
         Calculate the angular acceleration based on the current angular velocity.
 
