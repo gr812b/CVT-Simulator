@@ -15,7 +15,6 @@
 }
 \usepackage[round]{natbib}
 \usepackage{amsmath, mathtools}
-\usepackage{xr}
 
 \input{../Comments}
 \input{../Common}
@@ -38,8 +37,6 @@
 Date 1 & 1.0 & Notes\\
 \bottomrule
 \end{tabularx}
-
-\externaldocument{../SRS/SRS}
 
 ~\\
 \wss{The intention of the VnV plan is to increase confidence in the software.
@@ -96,21 +93,6 @@ in.}
   \end{tabular}
   \caption{Verification and Validation Acronyms}
   \label{tab:vnv_acronyms}
-\end{table}
-
-\begin{table}[h] % Optional [h] to place table here
-  \raggedright
-  \begin{tabular}{l l} 
-    \toprule		
-    \textbf{constant} & \textbf{value}\\
-    \midrule
-    $v_\text{max}$ & 16.67 m/s \\
-    $\omega_{\text{idle}}$ & 180 rad/s \\
-    $\omega_\text{max}$ & 420 rad/s \\
-    \bottomrule
-  \end{tabular}
-  \caption{Verification and Validation Constants}
-  \label{tab:vnv_constants}
 \end{table}
 
 \newpage
@@ -529,7 +511,7 @@ Input: The input values from Section~\ref{sec:standard_inputs}.
 					
 Output: The resulting graph should show a velocity that is a monotonically increasing function over time, starting from zero and remaining below $v_\text{max}$, which reflects the vehicle’s physical limits. A typical output graph will look similar to the one shown in Figure~\ref{fig:velocity_graph}.
 
-Test Case Derivation: Based on assumption \ref{A_11} that the vehicle should not move backward under normal conditions.
+Test Case Derivation: Based on assumption A11 that the vehicle should not move backward under normal conditions.
 Derived from the vehicle’s geometry and the CVT configuration, limiting the velocity to a defined top speed based on the system’s constraints.
 
 
@@ -595,6 +577,8 @@ Listed is each requirement and how the tests verify each one.
   \item [R1:] Verifies the mathematical modeling of the CVT system
   \item [R5:] Verifies the calculations of the primary clamping force
   \item [R6:] Verifies the calculations of the secondary clamping force
+  \item [R7:] Verifies the calculations of the sheave acceleration
+  \item [R8:] Verifies the calculations of the belt acceleration
   \item [R9:] Verifies the calculations of RPM and engine torque
 \end{itemize}
 
@@ -619,15 +603,6 @@ Listed is each requirement and how the tests verify each one.
 \end{enumerate}
 
 \paragraph{Shift}
-
-This section provides tests to verify the shifting behaviour of the CVT system.
-They are based on the following functional requirements from the SRS document.
-Listed is each requirement and how the tests verify each one.
-
-\begin{itemize}
-  \item [R7:] Verifies the calculations of the sheave acceleration
-  \item [R8:] Verifies the calculations of the belt acceleration
-\end{itemize}
 
 \begin{enumerate}
   
@@ -1066,6 +1041,22 @@ Useability/Understandability survey:
 
 The definition of the test cases will call for SYMBOLIC\_CONSTANTS.
 Their values are defined in this section for easy maintenance.
+
+\begin{table}[h]
+  \raggedright
+  \begin{tabular}{l l} 
+    \toprule		
+    \textbf{constant} & \textbf{value}\\
+    \midrule
+    $v_\text{max}$ & 16.67 m/s \\
+    $\omega_{\text{idle}}$ & 180 rad/s \\
+    $\omega_\text{max}$ & 420 rad/s \\
+    $\omega_\text{peak\_power}$ & 6987.24 W \\
+    \bottomrule
+  \end{tabular}
+  \caption{Verification and Validation Constants}
+  \label{tab:vnv_constants}
+\end{table}
 
 \subsection{Usability Survey Questions?}
 
