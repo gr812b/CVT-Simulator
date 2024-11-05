@@ -70,7 +70,6 @@ October 11th, 2024 & 0 & First version of VnV plan\\
     CD & Continuous Development\\
     CI & Continuous Integration\\ 
     CVT & Continuous Variable Transmission\\
-    FR & Functional Requirement\\
     GPS & Global Positioning System\\
     IMU & Inertial Measurement Unit\\
     GUI & Graphical User Interface\\
@@ -80,6 +79,7 @@ October 11th, 2024 & 0 & First version of VnV plan\\
     MSE & Mean Squared Error\\
     NFR & Nonfunctional Requirement\\
     PR & Pull Request\\
+    R & Functional Requirement\\
     RPM & Revolutions Per Minute\\
     SRS & Software Requirements Specification\\
     VnV & Verification and Validation\\
@@ -707,7 +707,7 @@ Listed is each requirement and how the tests verify each one.
             
   Output: Input parameters have been updated 
   
-  Test Case Derivation: Based on FR10 and FR11, the user should be able to adjust each of the input parameters (within the limitations of the input itself).
+  Test Case Derivation: Based on R10 and R11, the user should be able to adjust each of the input parameters (within the limitations of the input itself).
   This includes CVT parameters such as weight, ramp geometry, spring rate and spring pretension as well as other parameters such as vehicle weight, driver weight, traction and angle of incline. 
   
   How test will be performed: Upon a fresh launch of the application, manually change each of the input parameters from the default values to a new value. 
@@ -722,7 +722,7 @@ Listed is each requirement and how the tests verify each one.
             
   Output: User interface for changing the input parameters is displayed
   
-  Test Case Derivation: Based on FR12 validate that the system provides the user with a UI to change the input parameters.
+  Test Case Derivation: Based on R12 validate that the system provides the user with a UI to change the input parameters.
   
   How test will be performed: Upon a fresh launch of the software, the system will assert whether the input parameter page is displayed or not. 
   \item {User Interface test-3\\}
@@ -735,7 +735,7 @@ Listed is each requirement and how the tests verify each one.
             
   Output: Graphical representation of simulation data is displayed to the user
   
-  Test Case Derivation: Based on FR13, validate that the simulation produces output in the form of graphs.
+  Test Case Derivation: Based on R13, validate that the simulation produces output in the form of graphs.
   
   How test will be performed: The test will run the simulation with a set of pre made input parameters, then it will verify that whether or not a graph has been outputted. 
   \item {User Interface test-4\\}
@@ -748,7 +748,7 @@ Listed is each requirement and how the tests verify each one.
             
   Output: Both simulations are displayed to the user for comparison
   
-  Test Case Derivation: Based on FR14 validate that the system lets users compare simulation data.
+  Test Case Derivation: Based on R14 validate that the system lets users compare simulation data.
   
   How test will be performed: After running two simulations with different input parameters, the user will be able to compare the two simulations to see the differences in the output.
   \item {User Interface test-5\\}
@@ -761,7 +761,7 @@ Listed is each requirement and how the tests verify each one.
             
   Output: simulation data exported successfully
   
-  Test Case Derivation: Based on the FR15 validate user can export simulation data after simulation has completed.
+  Test Case Derivation: Based on the R15 validate user can export simulation data after simulation has completed.
   
   How test will be performed: After simulation has completed successfully export the data and verify that it was exported in the correct format to the right location.
 
@@ -788,7 +788,7 @@ Listed is each requirement and how the tests verify each one.
             
   Output: Applications installs and functions as expected
   
-  Test Case Derivation: Based on FR16 and FR17, validate that the application can be installed and ran on different operating systems and types of computers. 
+  Test Case Derivation: Based on R16 and R17, validate that the application can be installed and ran on different operating systems and types of computers. 
   
   How test will be performed: This test will be performed on two types of computers, a personal laptop and a desktop. On each of those types of computers it will be ran on each of the operating systems, Windows, Linux and MacOS to verify compatability with each OS and type of computer.
 
