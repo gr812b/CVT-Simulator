@@ -15,6 +15,8 @@
 }
 \usepackage[round]{natbib}
 \usepackage{amsmath, mathtools}
+\usepackage{xr}
+\externaldocument{../SRS/SRS}
 
 \input{../Comments}
 \input{../Common}
@@ -507,7 +509,7 @@ Input: The input values from Section~\ref{sec:standard_inputs}.
 					
 Output: The resulting graph should show a velocity that is a monotonically increasing function over time, starting from zero and remaining below $v_\text{max}$, which reflects the vehicle’s physical limits. A typical output graph will look similar to the one shown in Figure~\ref{fig:velocity_graph}.
 
-Test Case Derivation: Based on assumption A11 that the vehicle should not move backward under normal conditions.
+Test Case Derivation: Based on assumption \ref{A_11} that the vehicle should not move backward under normal conditions.
 Derived from the vehicle’s geometry and the CVT configuration, limiting the velocity to a defined top speed based on the system’s constraints.
 
 
