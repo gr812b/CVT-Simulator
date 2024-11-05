@@ -3,7 +3,7 @@
 **Authors:**
 - [Kai Arseneau](https://github.com/gr812b)
 - [Travis Wing]()
-- [Cameron Dunn]()
+- [Cameron Dunn](https://github.com/camdnnn)
 - [Grace McKenna]()
 
 **Date of project start**: September 10, 2024
