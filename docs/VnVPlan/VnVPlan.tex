@@ -50,10 +50,10 @@ October 11th, 2024 & 0 & First version of VnV plan\\
 \tableofcontents
 
 \listoftables
-
+\wss{Remove this section if it isn't needed}
 
 \listoffigures
-
+\wss{Remove this section if it isn't needed}
 
 \newpage
 
@@ -447,51 +447,21 @@ The standard simulation state for the CVT system is as follows.
   \item The belt is stationary.
 \end{itemize}
 
-\subsubsection{Vehicle Dynamics}
+\subsection{Tests for Functional Requirements}
 
-This section provides tests to verify the vehicle dynamics of the CVT system.
-They are based on the following functional requirements from the SRS document.
-Listed is each requirement and how the tests verify each one.
-\begin{itemize}
-  \item [R1:] Verifies the mathematical modeling of the CVT system
-  \item [R2:] Verifies the acceleration of the vehicle as a function of time
-  \item [R3:] Verifies the velocity of the vehicle as a function of time
-  \item [R4:] Verifies the position of the vehicle as a function of time
-\end{itemize}
+\wss{Subsets of the tests may be in related, so this section is divided into
+  different areas.  If there are no identifiable subsets for the tests, this
+  level of document structure can be removed.}
 
-\paragraph{Position}
+\wss{Include a blurb here to explain why the subsections below
+  cover the requirements.  References to the SRS would be good here.}
 
-\begin{enumerate}
-  
-  \item{Position test-1\\}
-  
-  Control: Manual
-            
-  Initial State: The state values from Section~\ref{sec:standard_state}.
-  
-  Input: The input values from Section~\ref{sec:standard_inputs}.
-            
-  Output: The resulting graph should show a position that is a monotonically increasing function over time, starting from 0. There is no upper bound. A typical output graph will look similar to the one shown in Figure~\ref{fig:position_graph}.
-  
-  Test Case Derivation: As long as the vehicle is able to overcome the initial force of the slope, the vehicle should continue to move forward indefinitely.
-  
-  How test will be performed: The script will run with the provided inputs. After execution is complete, the output position over time will be visualized as a graph which should show a smooth upward trend as time progresses. Its slope should increase over time as well. Visual inspection will follow against Figure~\ref{fig:position_graph} for confirmation of expected behaviour.
-  
-  \item{Position test-2\\}
+\subsubsection{Area of Testing1}
 
-  Control: Manual
-
-  Initial State: The state values from Section~\ref{sec:standard_state}.
-  
-  Input: Provided experimental data along with the input values from Section~\ref{sec:standard_inputs}, matching those of the vehicle during experimental data collection. Sample experimental data is located here: \refdata{GPS\%20LATITUDE.csv}{Latitude.csv}, \refdata{GPS\%20LONGITUDE.csv}{Longitude.csv}.
-
-  Output: Mean squared error between the simulated position and the experimental position.
-
-  Test Case Derivation: Data from the simulation should closely match the experimental data collected from the physical car.
-
-  How test will be performed: The script will run with the provided inputs. After execution is complete, the output of the simulation will be compared to experimental data from the physical car to ensure that the simulation is accurate. The experimental data will be configured to show the absolute distance travel since the start of the experiment.
-
-\end{enumerate}
+\wss{It would be nice to have a blurb here to explain why the subsections below
+  cover the requirements.  References to the SRS would be good here.  If a section
+  covers tests for input constraints, you should reference the data constraints
+  table in the SRS.}
 		
 \paragraph{Velocity}
 
@@ -507,19 +477,19 @@ Input: The input values from Section~\ref{sec:standard_inputs}.
 					
 Output: The resulting graph should show a velocity that is a monotonically increasing function over time, starting from zero and remaining below $v_\text{max}$, which reflects the vehicle’s physical limits. A typical output graph will look similar to the one shown in Figure~\ref{fig:velocity_graph}.
 
-Test Case Derivation: Based on assumption A11 that the vehicle should not move backward under normal conditions.
-Derived from the vehicle’s geometry and the CVT configuration, limiting the velocity to a defined top speed based on the system’s constraints.
-
-
-How test will be performed: The script will run with the provided inputs. After execution is complete, the output velocity over time will be visualized as a graph which should show a smooth upward trend that begins at zero and approaches $v_\text{max}$ as time progresses. Visual inspection will follow against Figure~\ref{fig:velocity_graph} for confirmation of expected behaviour.
+Test Case Derivation: \wss{Justify the expected value given in the Output field}
 					
-\item{Velocity test-2\\}
+How test will be performed: 
+					
+\item{test-id2\\}
 
-Control: Manual
-
-Initial State: The state values from Section~\ref{sec:standard_state}.
-
-Input: Provided experimental data along with the input values from Section~\ref{sec:standard_inputs}, matching those of the vehicle during experimental data collection. Sample experimental data is located here: \refdata{GPS\%20SPEED.csv}{Speed.csv}.
+Control: Manual versus Automatic
+					
+Initial State: 
+					
+Input: 
+					
+Output: \wss{The expected result for the given inputs}
 
 Output: Mean squared error between the simulated velocity and the experimental velocity.
 
@@ -529,40 +499,25 @@ How test will be performed: The script will run with the provided inputs. After 
 
 \end{enumerate}
 
-\paragraph{Acceleration}
+\subsubsection{Area of Testing2}
 
-\begin{enumerate}
+...
 
-  \item{Acceleration test-1\\}
-  
-  Control: Manual
-            
-  Initial State: The state values from Section~\ref{sec:standard_state}.
-  
-  Input: The input values from Section~\ref{sec:standard_inputs}.
-            
-  Output: The resulting graph should show an acceleration that is a smooth monotonically decreasing function over time, starting from $a_\text{max}$ and trending to 0, which reflects the engine's limits along with the maximum and minimum transmission ratio. A typical output graph will look similar to the one shown in Figure~\ref{fig:acceleration_graph}.
-  
-  Test Case Derivation: Based on the engine's output limits, going no lower than $\omega_\text{idle}$ and no higher than $\omega_\text{max}$.
-  Based on air resistance, which increases with the square of velocity, alongside the diminishing torque output of the engine.
-  
-  How test will be performed: The script will run with the provided inputs. After execution is complete, the output will be visualized as a graph. Visual inspection will follow against Figure~\ref{fig:acceleration_graph} for confirmation of expected behaviour.
+\subsection{Tests for Nonfunctional Requirements}
 
-  \item{Acceleration test-2\\}
+\wss{The nonfunctional requirements for accuracy will likely just reference the
+  appropriate functional tests from above.  The test cases should mention
+  reporting the relative error for these tests.  Not all projects will
+  necessarily have nonfunctional requirements related to accuracy.}
 
-  Control: Manual
+\wss{For some nonfunctional tests, you won't be setting a target threshold for
+passing the test, but rather describing the experiment you will do to measure
+the quality for different inputs.  For instance, you could measure speed versus
+the problem size.  The output of the test isn't pass/fail, but rather a summary
+table or graph.}
 
-  Initial State: The state values from Section~\ref{sec:standard_state}.
-
-  Input: Provided experimental data along with the input values from Section~\ref{sec:standard_inputs}, matching those of the vehicle during experimental data collection. Sample experimental data is located here: \refdata{IMU\%20ACCEL\%20X.csv}{Accel X.csv}, \refdata{IMU\%20ACCEL\%20Y.csv}{Accel Y.csv}, \refdata{IMU\%20ACCEL\%20Z.csv}{Accel Z.csv}.
-
-  Output: Mean squared error between the simulated acceleration and the experimental acceleration.
-
-  Test Case Derivation: Data from the simulation should closely match the experimental data collected from the physical car.
-
-  How test will be performed: The script will run with the provided inputs. After execution is complete, the output of the simulation will be compared to experimental data from the physical car to ensure that the simulation is accurate. The experimental data will be configured to display the acceleration in the direction of travel of the vehicle.
-
-\end{enumerate}
+\wss{Tests related to usability could include conducting a usability test and
+  survey.  The survey will be in the Appendix.}
 
 \subsubsection{CVT Dynamics}
 
@@ -598,69 +553,51 @@ Listed is each requirement and how the tests verify each one.
   
 \end{enumerate}
 
-\paragraph{Shift}
+\subsubsection{Area of Testing2}
 
-\begin{enumerate}
-  
-  \item{Shift test-1\\}
-  
-  Control: Manual
-            
-  Initial State: The state values from Section~\ref{sec:standard_state}.
-  
-  Input: The input values from Section~\ref{sec:standard_inputs}.
-            
-  Output: The resulting graphs should show the shift distance against the engine's angular velocity. An ideal graph will look very similar to the leading edge of a square wave. A typical output graph will look similar to the one shown in Figure~\ref{fig:shift_distance_graph}.
-  
-  Test Case Derivation: This behaviour is resulting from the CVT's clamping forces overcoming the resistive forces just enough such that the CVT begins shifting. Once this has begun, ramp geometry is expected to cause shifting rather than the engine increasing in speed, maintaining a constant power output. With suboptimal tuning parameters passed in, one might observe a slanted shifting portion.
-  
-  How test will be performed: The script will run with the provided inputs. After execution is complete, the output will be visualized as a graph. Visual inspection will follow against Figure~\ref{fig:shift_distance_graph} for confirmation of expected behaviour.
-  
-  \item{Shift test-2\\}
+...
 
-  Control: Manual
+\subsection{Traceability Between Test Cases and Requirements}
 
-  Initial State: The state values from Section~\ref{sec:standard_state}.
+\wss{Provide a table that shows which test cases are supporting which
+  requirements.}
 
-  Input: Provided experimental data along with the input values from Section~\ref{sec:standard_inputs}, matching those of the vehicle during experimental data collection. Sample experimental data is located here: \refdata{RPM\%20PRIM.csv}{Primary RPM.csv}, \refdata{RPM\%20SEC.csv}{Secondary RPM.csv} 
+\section{Unit Test Description}
 
-  Output: Mean squared error between the simulated shift against engine velocity compared to experimental data. Differences of shape and magnitude will be considered.
+\wss{This section should not be filled in until after the MIS (detailed design
+  document) has been completed.}
 
-  Test Case Derivation: Data from the simulation should closely match the experimental data collected from the physical car. Key points of interest include the shift point and the slope during the shifting phase.
+\wss{Reference your MIS (detailed design document) and explain your overall
+philosophy for test case selection.}  
 
-  How test will be performed: The script will run with the provided inputs. After execution is complete, the output of the simulation will be compared to experimental data from the physical car to ensure that the simulation is accurate. The experimental data will be configured to show the primary RPM divided by the secondary RPM on the y-axis, and the primary RPM on the x-axis.
-  
-  \item{Shift test-3\\}
-  
-  Control: Manual
-            
-  Initial State: The state values from Section~\ref{sec:standard_state}.
-  
-  Input: The input values from Section~\ref{sec:standard_inputs}.
-            
-  Output: The resulting graph show show the engine's angular velocity against the vehicles velocity. The output should show a smooth trend upwards starting at $\omega_\text{idle}$ until reaching the shift point, in which it then moves horizontally until finally reaching full shift and bringing the engine's angular velocity to $\omega_\text{max}$. A typical output graph will look similar to the one shown in Figure~\ref{fig:shift_curve}.
-  
-  Test Case Derivation: This behaviour results from the CVT's shifting behaviour as a whole. An in-depth explanation of the phases can be found beneath Figure~\ref{fig:shift_curve}.
-  
-  How test will be performed: The script will run with the provided inputs. After execution is complete, the output will be visualized as a graph. Visual inspection will follow against Figure~\ref{fig:shift_curve} for confirmation of expected behaviour.
-  
-  \item{Shift test-4\\}
+\wss{To save space and time, it may be an option to provide less detail in this section.  
+For the unit tests you can potentially layout your testing strategy here.  That is, you 
+can explain how tests will be selected for each module.  For instance, your test building 
+approach could be test cases for each access program, including one test for normal behaviour 
+and as many tests as needed for edge cases.  Rather than create the details of the input 
+and output here, you could point to the unit testing code.  For this to work, you code 
+needs to be well-documented, with meaningful names for all of the tests.}
 
-  Control: Manual
+\subsection{Unit Testing Scope}
 
-  Initial State: The state values from Section~\ref{sec:standard_state}.
+\wss{What modules are outside of the scope.  If there are modules that are
+  developed by someone else, then you would say here if you aren't planning on
+  verifying them.  There may also be modules that are part of your software, but
+  have a lower priority for verification than others.  If this is the case,
+  explain your rationale for the ranking of module importance.}
 
-  Input: Provided experimental data along with the input values from Section~\ref{sec:standard_inputs}, matching those of the vehicle during experimental data collection. Sample experimental data is located here: \refdata{RPM\%20PRIM.csv}{Primary RPM.csv}, \refdata{RPM\%20SEC.csv}{Secondary RPM.csv}
+\subsection{Tests for Functional Requirements}
 
-  Output: Mean squared error between the simulated shift curve (see Figure~\ref{fig:shift_curve}) and the experimental data. Differences of key points, shape and magnitude will be considered.
+\wss{Most of the verification will be through automated unit testing.  If
+  appropriate specific modules can be verified by a non-testing based
+  technique.  That can also be documented in this section.}
 
-  Test Case Derivation: Data from the simulation should closely match the experimental data collected from the physical car. Key points include the shift point, slope during shifting phase, engagement point and the final shift point.
+\subsubsection{Module 1}
 
-  How test will be performed: The script will run with the provided inputs. After execution is complete, the output of the simulation will be compared to experimental data from the physical car to ensure that the simulation is accurate. The experimental data will be configured to show the primary RPM on the y-axis and the secondary RPM on the x-axis.
-
-\end{enumerate}
-
-\paragraph{Engine Dynamics}
+\wss{Include a blurb here to explain why the subsections below cover the module.
+  References to the MIS would be good.  You will want tests from a black box
+  perspective and from a white box perspective.  Explain to the reader how the
+  tests were selected.}
 
 \begin{enumerate}
 
