@@ -36,9 +36,9 @@ The folders and files for this project are as follows:
 python -m venv venv
 venv\Scripts\activate # or source venv/bin/activate on Mac
 ```
-2. Install the dependencies
+2. Install the dependencies and setup package
 ```bash
-pip install -r requirements.txt
+pip install -e .
 ```
 3. Run the tests
 ```bash
