@@ -23,7 +23,23 @@ and the POC demo.
 
 \section{Demo Plans}
 
-\wss{What will you be demonstrating}
+We will have the following components for our POC demo:\\
+
+\noindent
+\textbf{Unity FrontEnd}
+\begin{itemize}
+  \item A Unity frontend that will allow for an input to send to the backend.
+  \item Will display a 3D model that will rotate based on the input.
+\end{itemize}
+\noindent
+\textbf{Python Backend}
+\begin{itemize}
+  \item A python backend that will receive the input from the frontend and send back a response.
+  \item The python backend will simulate a car without a transmission, simplfying our use case for the POC.
+\end{itemize}
+\noindent
+The demo will center around the communication protocol between the Unity frontend and the python backend.
+Demonstrating that the system can send information back and forth between these two components is the main focus.
 
 \section{Team Meeting Attendance}
 
@@ -207,9 +223,22 @@ Grace McKenna & 1 & 5 \\
 
 \section{CICD}
 
-\wss{Say how CICD will be used in your project}
+We will utilize CICD to automatically lint, format and test our code. 
 
-\wss{If your team has additional metrics of productivity, please feel free to
-add them to this report.}
+For the python backend we will be using the following tools:
+\begin{itemize}
+  \item [\textbf{flake8}] - A Python linter that checks for PEP8 compliance.
+  \item [\textbf{black}] - A Python code formatter that will ensure consistent code style.
+  \item [\textbf{unittest}] - Python's built-in testing framework that will be used for unit testing.
+  \item [\textbf{coverage}] - A testing framework for Python that will be used for code coverage.
+\end{itemize}
 
+\bigskip
+\noindent For the Unity C\# frontend we will be using the following tools:
+\begin{itemize}
+  \item [\textbf{SonarLint}] - C\# linter that checks for code quality and security vulnerabilities.
+  \item [\textbf{StyleCop}] - C\# linter that checks for code style and formatting.
+  \item [\textbf{UTF}] - A testing framework for C\# that will be used for unit testing.
+  \item [\textbf{UTR}] - A testing framework for Unity that will be used for unit testing and code coverage.
+\end{itemize}
 \end{document}
