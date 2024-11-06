@@ -7,16 +7,16 @@ from constants.constants import GRAVITY, AIR_DENSITY
 class LoadSimulator:
     def __init__(
         self,
-        car_mass: float,
-        drag_coefficient: float,
-        frontal_area: float,
-        wheel_radius: float,
-        gearbox_ratio: float,
-        incline_angle: float,
+        car_mass: float,  # kg
+        drag_coefficient: float,  # unitless
+        frontal_area: float,  # m^2
+        wheel_radius: float,  # m
+        gearbox_ratio: float,  # unitless
+        incline_angle: float,  # radians
     ):
         # Constants
-        self.g = GRAVITY
-        self.air_density = AIR_DENSITY
+        self.g = GRAVITY  # m/s^2
+        self.air_density = AIR_DENSITY  # kg/m^3
         # Car specs
         self.car_mass = car_mass
         self.drag_coefficient = drag_coefficient
