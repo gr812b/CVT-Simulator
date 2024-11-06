@@ -3,9 +3,9 @@ from typing import Callable
 
 class EngineSimulator:
     def __init__(
-            self, 
-            torque_curve: Callable[[float], float], # rad/s -> Nm
-            inertia: float # kg*m^2
+        self,
+        torque_curve: Callable[[float], float],  # rad/s -> Nm
+        inertia: float,  # kg*m^2
     ):
         self.torque_curve = torque_curve
         self.inertia = inertia
