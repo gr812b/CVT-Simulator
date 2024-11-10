@@ -4,11 +4,11 @@ using UnityEngine;
 
 public class PythonScriptRunner : MonoBehaviour
 {
-    public void RunPythonMain(string arguments = "")
+    public void RunPythonMain()
     {   
-        // Paths to the python environment and the main file of the python script
-        string pythonPath = Path.Combine(Application.streamingAssetsPath, "unity_env", "Scripts", "python.exe");
-        string scriptPath = Path.Combine(Application.streamingAssetsPath, "PythonScripts", "src", "main");
+        // Resolve the path to the python environment and main file of the python script
+        string pythonPath = Path.GetFullPath(Path.Combine(Application.dataPath, "../../../.venv/Scripts/python.exe"));
+        string scriptPath = Path.GetFullPath(Path.Combine(Application.dataPath, "../../main.py"));
 
         // Check if the python environment and the main file of the python script exist
         if (!File.Exists(pythonPath))
@@ -26,9 +26,10 @@ public class PythonScriptRunner : MonoBehaviour
         // Create a new process to run the python script
         ProcessStartInfo python = new ProcessStartInfo {
             FileName = pythonPath,
-            Arguments = scriptPath + " " + arguments,
+            Arguments = scriptPath,
             UseShellExecute = false,
             RedirectStandardOutput = true,
+            RedirectStandardError = true,
             CreateNoWindow = true
         };
 
