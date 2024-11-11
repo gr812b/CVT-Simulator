@@ -13,6 +13,9 @@ public class PythonScriptRunner : MonoBehaviour
     [SerializeField] private Button runButton;
     [SerializeField] private TMP_InputField inclineAngleInput;
 
+    private readonly string relativePythonPath = "../../../.venv/Scripts/python.exe";
+    private readonly string relativeScriptPath = "../../main.py";
+
     private void Start()
     {
         // Add a listener to the run button
@@ -37,8 +40,8 @@ public class PythonScriptRunner : MonoBehaviour
     public void RunPython()
     {   
         // Resolve the path to the python environment and main file of the python script
-        string pythonPath = Path.GetFullPath(Path.Combine(Application.dataPath, "../../../.venv/Scripts/python.exe"));
-        string scriptPath = Path.GetFullPath(Path.Combine(Application.dataPath, "../../main.py"));
+        string pythonPath = Path.GetFullPath(Path.Combine(Application.dataPath, relativePythonPath));
+        string scriptPath = Path.GetFullPath(Path.Combine(Application.dataPath, relativeScriptPath));
 
         // Check if the python environment and the main file of the python script exist
         if (!File.Exists(pythonPath))
