@@ -1,3 +1,4 @@
+import argparse
 import numpy as np
 from scipy.integrate import solve_ivp
 import matplotlib.pyplot as plt
@@ -16,7 +17,21 @@ from constants.car_specs import (
 )
 from utils.conversions import rpm_to_rad_s, deg_to_rad
 
+# Define parser
+parser = argparse.ArgumentParser(description="Simulate a Baja SAE car")
 
+# Define arguments
+parser.add_argument(
+    "--incline_angle",
+    type=float,
+    default=0.0,
+    help="Incline angle in degrees (default: 0.0)"
+)
+
+# Parse arguments
+args = parser.parse_args()
+
+# Pass arguments and constants into the simulators
 engine_simulator = EngineSimulator(torque_curve=torque_curve, inertia=ENGINE_INERTIA)
 load_simulator = LoadSimulator(
     frontal_area=FRONTAL_AREA,
@@ -24,7 +39,7 @@ load_simulator = LoadSimulator(
     car_mass=CAR_MASS,
     wheel_radius=WHEEL_RADIUS,
     gearbox_ratio=GEARBOX_RATIO,
-    incline_angle=deg_to_rad(0),
+    incline_angle=deg_to_rad(args.incline_angle),
 )
 car_simulator = CarSimulator(car_mass=CAR_MASS)
 

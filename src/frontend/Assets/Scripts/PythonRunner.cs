@@ -1,10 +1,40 @@
 using System.Diagnostics;
 using System.IO;
 using UnityEngine;
+using UnityEngine.UI;
+using TMPro;
 
 public class PythonScriptRunner : MonoBehaviour
 {
-    public void RunPythonMain()
+    // Serialize input parameters as private to make them visible in the Unity Editor
+    [SerializeField] private double inclineAngle = 0.0;
+
+    // Serialize reference objects
+    [SerializeField] private Button runButton;
+    [SerializeField] private TMP_InputField inclineAngleInput;
+
+    private void Start()
+    {
+        // Add a listener to the run button
+        runButton.onClick.AddListener(RunPython);
+
+        // Add listeners for parameter inputs
+        inclineAngleInput.onValueChanged.AddListener(UpdateInclineAngle);
+
+    }
+
+    private void UpdateInclineAngle(string value)
+    {
+        // Try to parse the input value to a double
+        if (double.TryParse(value, out double angle))
+        {
+            inclineAngle = angle;
+        } else {
+            UnityEngine.Debug.LogError("Invalid input for incline angle: " + value);
+        }
+    }
+
+    public void RunPython()
     {   
         // Resolve the path to the python environment and main file of the python script
         string pythonPath = Path.GetFullPath(Path.Combine(Application.dataPath, "../../../.venv/Scripts/python.exe"));
@@ -23,10 +53,13 @@ public class PythonScriptRunner : MonoBehaviour
             return;
         }
 
+        // Create a string with all of the arguments
+        string arguments = " --incline_angle " + inclineAngle;
+
         // Create a new process to run the python script
         ProcessStartInfo python = new ProcessStartInfo {
             FileName = pythonPath,
-            Arguments = scriptPath,
+            Arguments = scriptPath + arguments,
             UseShellExecute = false,
             RedirectStandardOutput = true,
             RedirectStandardError = true,
