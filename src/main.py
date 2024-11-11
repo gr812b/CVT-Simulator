@@ -16,20 +16,10 @@ from constants.car_specs import (
     WHEEL_RADIUS,
 )
 from utils.conversions import rpm_to_rad_s, deg_to_rad
-
-# Define parser
-parser = argparse.ArgumentParser(description="Simulate a Baja SAE car")
-
-# Define arguments
-parser.add_argument(
-    "--incline_angle",
-    type=float,
-    default=0.0,
-    help="Incline angle in degrees (default: 0.0)"
-)
+from utils.argument_parser import get_arguments
 
 # Parse arguments
-args = parser.parse_args()
+args = get_arguments()
 
 # Pass arguments and constants into the simulators
 engine_simulator = EngineSimulator(torque_curve=torque_curve, inertia=ENGINE_INERTIA)
