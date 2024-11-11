@@ -1,0 +1,2 @@
+AIR_DENSITY = 1.225  # kg/m^3
+GRAVITY = 9.80665  # m/s^2

@@ -2,7 +2,6 @@
 
 \usepackage{float}
 \restylefloat{table}
-
 \usepackage{booktabs}
 
 \title{Team Contributions: POC\\\progname}
@@ -24,41 +23,46 @@ and the POC demo.
 
 \section{Demo Plans}
 
-\wss{What will you be demonstrating}
+We will have the following components for our POC demo:\\
+
+\noindent
+\textbf{Unity FrontEnd}
+\begin{itemize}
+  \item A Unity frontend that will allow for an input to send to the backend.
+  \item Will display a 3D model that will rotate based on the input.
+\end{itemize}
+\noindent
+\textbf{Python Backend}
+\begin{itemize}
+  \item A python backend that will receive the input from the frontend and send back a response.
+  \item The python backend will simulate a car without a transmission, simplfying our use case for the POC.
+  \item Will implement ODE solver to solve a 2nd order ODE as per our supervisors suggestion.
+\end{itemize}
+\noindent
+The demo will center around the communication protocol between the Unity frontend and the python backend.
+Demonstrating that the system can send information back and forth between these two components is the main focus.
 
 \section{Team Meeting Attendance}
 
-\wss{For each team member how many team meetings have they attended over the
-time period of interest.  This number should be determined from the meeting
-issues in the team's repo.  The first entry in the table should be the total
-number of team meetings held by the team.}
-
 \begin{table}[H]
 \centering
 \begin{tabular}{ll}
 \toprule
 \textbf{Student} & \textbf{Meetings}\\
 \midrule
-Total & Num\\
-Name 1 & Num\\
-Name 2 & Num\\
-Name 3 & Num\\
-Name 4 & Num\\
-Name 5 & Num\\
+Total & 8\\
+Kai Arseneau & 7\\
+Travis Wing & 8\\
+Cameron Dunn & 8\\
+Grace McKenna & 8\\
 \bottomrule
 \end{tabular}
 \end{table}
 
-\wss{If needed, an explanation for the counts can be provided here.}
 
 \section{Supervisor/Stakeholder Meeting Attendance}
 
-\wss{For each team member how many supervisor/stakeholder team meetings have
-they attended over the time period of interest.  This number should be determined
-from the supervisor meeting issues in the team's repo.  The first entry in the
-table should be the total number of supervisor and team meetings held by the
-team.  If there is no supervisor, there will usually be meetings with
-stakeholders (potential users) that can serve a similar purpose.}
+
 
 \begin{table}[H]
 \centering
@@ -66,24 +70,18 @@ stakeholders (potential users) that can serve a similar purpose.}
 \toprule
 \textbf{Student} & \textbf{Meetings}\\
 \midrule
-Total & Num\\
-Name 1 & Num\\
-Name 2 & Num\\
-Name 3 & Num\\
-Name 4 & Num\\
-Name 5 & Num\\
+Total & 2\\
+Kai Arseneau & 2\\
+Travis Wing & 2\\
+Cameron Dunn & 2\\
+Grace McKenna & 2\\
 \bottomrule
 \end{tabular}
 \end{table}
 
-\wss{If needed, an explanation for the counts can be provided here.}
 
 \section{Lecture Attendance}
 
-\wss{For each team member how many lectures have they attended over the time
-period of interest.  This number should be determined from the lecture issues in
-the team's repo.  The first entry in the table should be the total number of
-lectures since the beginning of the term.}
 
 \begin{table}[H]
 \centering
@@ -91,22 +89,22 @@ lectures since the beginning of the term.}
 \toprule
 \textbf{Student} & \textbf{Lectures}\\
 \midrule
-Total & Num\\
-Name 1 & Num\\
-Name 2 & Num\\
-Name 3 & Num\\
-Name 4 & Num\\
-Name 5 & Num\\
+Total & 12\\
+Kai Arseneau & 9\\
+Travis Wing & 9\\
+Cameron Dunn & 5\\
+Grace McKenna & 11\\
 \bottomrule
 \end{tabular}
 \end{table}
 
-\wss{If needed, an explanation for the lecture attendance can be provided here.}
+
+
+Only software lectures are considered.
 
 \section{TA Document Discussion Attendance}
 
-\wss{For each team member how many of the informal document discussion meetings
-with the TA were attended over the time period of interest.}
+
 
 \begin{table}[H]
 \centering
@@ -114,24 +112,19 @@ with the TA were attended over the time period of interest.}
 \toprule
 \textbf{Student} & \textbf{Lectures}\\
 \midrule
-Total & Num\\
-Name 1 & Num\\
-Name 2 & Num\\
-Name 3 & Num\\
-Name 4 & Num\\
-Name 5 & Num\\
+Total & 3\\
+Kai Arseneau & 3\\
+Travis Wing & 3\\
+Cameron Dunn & 3\\
+Grace McKenna & 3\\
 \bottomrule
 \end{tabular}
 \end{table}
 
-\wss{If needed, an explanation for the attendance can be provided here.}
 
 \section{Commits}
 
-\wss{For each team member how many commits to the main branch have been made
-over the time period of interest.  The total is the total number of commits for
-the entire team since the beginning of the term.  The percentage is the
-percentage of the total commits made by each team member.}
+
 
 \begin{table}[H]
 \centering
@@ -139,26 +132,53 @@ percentage of the total commits made by each team member.}
 \toprule
 \textbf{Student} & \textbf{Commits} & \textbf{Percent}\\
 \midrule
-Total & Num & 100\% \\
-Name 1 & Num & \% \\
-Name 2 & Num & \% \\
-Name 3 & Num & \% \\
-Name 4 & Num & \% \\
-Name 5 & Num & \% \\
+Total & 87 & 100\% \\
+Kai Arseneau & 38 & 44\% \\
+Travis Wing & 16 & 18\% \\
+Cameron Dunn & 18 & 21\% \\
+Grace McKenna & 15 & 17\% \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-\wss{If needed, an explanation for the counts can be provided here.  For
-instance, if a team member has more commits to unmerged branches, these numbers
-can be provided here.  If multiple people contribute to a commit, git allows for
-multi-author commits.}
+For this table, as the repository was mirrored off of Dr.~Smith's \href{https://github.com/smiths/capTemplate}{capTemplate} repository, only commits after the mirroring on September 12th, 2024 are considered.
+
+The number of commits alone may not accurately reflect each team member’s contributions due to factors like our branching strategy, repository setup, and individual workflows. Additionally it should be noted that some of the above commits had been co-authored which is another factor that can alter the appearance of the number of commits per team member. For instance, Kai Arseneau shows a high number of commits, but this is largely because he initially set up the repository, configuring CI/CD and issue/PR templates directly on the main branch. Many of these commits also include co-authors, leading to overlap. Additionally, the use of squash and merge can make other contributions seem smaller by comparison, even when they represent substantial portions of work. Given that only documentation has been added so far, tracking additions and deletions provides a more accurate view of each member's contributions at this stage.
+\begin{table}[H]
+  \centering
+  \begin{tabular}{lll}
+  \toprule
+  \textbf{Student} & \textbf{Additions} & \textbf{Percent}\\
+  \midrule
+  Total & 21,301 & 100\% \\
+  Kai Arseneau & 5,835 & 27.39\% \\
+  Travis Wing & 5,171 & 24.28\% \\
+  Cameron Dunn & 5,190 & 24.37\% \\
+  Grace McKenna & 5,105 & 23.96\% \\
+  \bottomrule
+  \end{tabular}
+\end{table}
+
+\begin{table}[H]
+  \centering
+  \begin{tabular}{lll}
+  \toprule
+  \textbf{Student} & \textbf{Deletions} & \textbf{Percent}\\
+  \midrule
+  Total & 9763 & 100\% \\
+  Kai Arseneau & 2,725 & 27.87\% \\
+  Travis Wing & 2,351 & 24.04\% \\
+  Cameron Dunn & 2,367 & 24.21\% \\
+  Grace McKenna & 2,335 & 23.88\% \\
+  \bottomrule
+  \end{tabular}
+\end{table}
+
+
 
 \section{Issue Tracker}
 
-\wss{For each team member how many issues have they authored (including open and
-closed issues (O+C)) and how many have they been assigned (only counting closed
-issues (C only)) over the time period of interest.}
+
 
 \begin{table}[H]
 \centering
@@ -166,22 +186,33 @@ issues (C only)) over the time period of interest.}
 \toprule
 \textbf{Student} & \textbf{Authored (O+C)} & \textbf{Assigned (C only)}\\
 \midrule
-Name 1 & Num & Num \\
-Name 2 & Num & Num \\
-Name 3 & Num & Num \\
-Name 4 & Num & Num \\
-Name 5 & Num & Num \\
+Kai Arseneau & 31 & 7 \\
+Travis Wing & 11 & 6 \\
+Cameron Dunn & 1 & 5 \\
+Grace McKenna & 1 & 5 \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-\wss{If needed, an explanation for the counts can be provided here.}
 
 \section{CICD}
 
-\wss{Say how CICD will be used in your project}
+We will utilize CICD to automatically lint, format and test our code. 
 
-\wss{If your team has additional metrics of productivity, please feel free to
-add them to this report.}
+For the python backend we will be using the following tools:
+\begin{itemize}
+  \item [\textbf{flake8}] - A Python linter that checks for PEP8 compliance.
+  \item [\textbf{black}] - A Python code formatter that will ensure consistent code style.
+  \item [\textbf{unittest}] - Python's built-in testing framework that will be used for unit testing.
+  \item [\textbf{coverage}] - A testing framework for Python that will be used for code coverage.
+\end{itemize}
 
+\bigskip
+\noindent For the Unity C\# frontend we will be using the following tools:
+\begin{itemize}
+  \item [\textbf{SonarLint}] - C\# linter that checks for code quality and security vulnerabilities.
+  \item [\textbf{StyleCop}] - C\# linter that checks for code style and formatting.
+  \item [\textbf{UTF}] - A testing framework for C\# that will be used for unit testing.
+  \item [\textbf{UTR}] - A testing framework for Unity that will be used for unit testing and code coverage.
+\end{itemize}
 \end{document}
