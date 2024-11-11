@@ -72,8 +72,8 @@ crashlytics-build.properties
 /[Aa]ssets/[Ss]treamingAssets/aa/*
 
 # Ignore TextMesh Pro files
-/[Aa]ssets/TextMesh Pro/
-/[Ll]ibrary/TextMesh Pro/
+[Aa]ssets/TextMesh*Pro/
+/[Ll]ibrary/TextMesh*Pro/
 
 # Unity Addressable Assets Cache
 /[Ll]ibrary/com.unity.addressables/
