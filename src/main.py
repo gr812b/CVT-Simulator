@@ -78,12 +78,14 @@ solution = solve_ivp(
     t_eval=time_eval,
 )
 
-states = SystemState.parse_solution(solution)
+SystemState.write_csv(solution)
 
-positions = [state.car_velocity for state in states]
+# states = SystemState.parse_solution(solution)
 
-plt.plot(solution.t, positions)
-plt.xlabel("Time (s)")
-plt.title("Car velocity Over Time")
-plt.grid()
-plt.show()
+# positions = [state.car_velocity for state in states]
+
+# plt.plot(solution.t, positions)
+# plt.xlabel("Time (s)")
+# plt.title("Car velocity Over Time")
+# plt.grid()
+# plt.show()
