@@ -13,7 +13,7 @@ public class PythonScriptRunner : MonoBehaviour
     [SerializeField] private Button runButton;
     [SerializeField] private TMP_InputField inclineAngleInput;
 
-    private readonly string relativePythonPath = "../../../.venv/Scripts/python.exe";
+    private readonly string relativePythonPath = "../../../venv/Scripts/python.exe";
     private readonly string relativeScriptPath = "../../main.py";
 
     private void Start()
