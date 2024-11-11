@@ -69,7 +69,7 @@ crashlytics-build.properties
 /[Aa]ssets/[Ss]treamingAssets/aa/*
 
 # Ignore TextMesh Pro files
-/[Aa]ssets/TextMesh*Pro/
+/Assets/TextMesh\ Pro/
 
 # Exclude VS Code workspace files
 .vscode/
