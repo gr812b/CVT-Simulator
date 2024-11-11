@@ -1,9 +1,9 @@
 import numpy as np
 from scipy.integrate import solve_ivp
-import matplotlib.pyplot as plt
 from simulations.car_simulation import CarSimulator
 from simulations.load_simulation import LoadSimulator
 from utils.system_state import SystemState
+from utils.simulation_result import SimulationResult
 from simulations.engine_simulation import EngineSimulator
 from constants.engine_specs import torque_curve
 from constants.car_specs import (
@@ -78,5 +78,7 @@ solution = solve_ivp(
     t_eval=time_eval,
 )
 
-SystemState.write_csv(solution)
-SystemState.plot(solution, field="car_position")
+result = SimulationResult(solution)
+
+result.write_csv("simulation_output.csv")
+result.plot("car_position")
