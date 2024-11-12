@@ -3,6 +3,7 @@ using System.IO;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
+using UnityEngine.SceneManagement;
 
 public class PythonScriptRunner : MonoBehaviour
 {
@@ -85,5 +86,13 @@ public class PythonScriptRunner : MonoBehaviour
                 UnityEngine.Debug.LogError(error);
             }
         }
+
+        LoadNextScene();
+    }
+
+    private void LoadNextScene()
+    {
+        int nextSceneIndex = SceneManager.GetActiveScene().buildIndex + 1;
+        SceneManager.LoadScene(nextSceneIndex);
     }
 }
