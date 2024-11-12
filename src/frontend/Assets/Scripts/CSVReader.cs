@@ -23,6 +23,8 @@ public class CSVReader : MonoBehaviour
     private float screenLeftBound;
     private float screenRightBound;
 
+    
+
     private void Start()
     {
         // Set screen boundaries based on camera viewport
@@ -88,7 +90,7 @@ public class CSVReader : MonoBehaviour
     {
         if (dataPoints.Count == 0) return;
         isPlaying = true;
-        currentIndex = 0;
+        //currentIndex = 0;
         startTime = Time.time;
         StartCoroutine(PlaybackCoroutine());
         statusText.text = "Playing...";
@@ -110,6 +112,10 @@ public class CSVReader : MonoBehaviour
             while (currentIndex < dataPoints.Count - 1 && elapsedTime >= dataPoints[currentIndex + 1].Time)
             {
                 currentIndex++;
+                if (currentIndex == dataPoints.Count - 2)
+                {
+                    statusText.text = "Playback Finished";
+                }
             }
 
             // Interpolate the position based on time for smooth movement
@@ -127,12 +133,15 @@ public class CSVReader : MonoBehaviour
 
                 // Update the car's position in 3D space
                 carTransform.position = new Vector3(mappedPositionX, carTransform.position.y, carTransform.position.z);
-            }
 
+                // Calculate velocity based on change in position
+                float velocity = (posB - posA) / (timeB - timeA);
+
+                // Rotate the car based on velocity
+                carTransform.Rotate(Vector3.forward * velocity * 10f * Time.deltaTime);
+            }
             yield return null;
         }
-
-        statusText.text = "Playback Finished";
         isPlaying = false;
     }
 
