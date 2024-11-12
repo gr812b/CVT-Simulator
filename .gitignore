@@ -286,6 +286,3 @@ __pycache__/
 
 # VS Code
 .vscode/
-
-# TextMesh pro
-src/frontend/Assets/TextMesh*Pro/
