@@ -11,5 +11,6 @@ setup(
         "matplotlib",
         "black",
         "flake8",
+        "pandas",
     ],
 )

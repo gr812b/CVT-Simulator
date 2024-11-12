@@ -1,9 +1,9 @@
 import numpy as np
 from scipy.integrate import solve_ivp
-import matplotlib.pyplot as plt
 from simulations.car_simulation import CarSimulator
 from simulations.load_simulation import LoadSimulator
 from utils.system_state import SystemState
+from utils.simulation_result import SimulationResult
 from simulations.engine_simulation import EngineSimulator
 from constants.engine_specs import torque_curve
 from constants.car_specs import (
@@ -82,12 +82,7 @@ solution = solve_ivp(
     t_eval=time_eval,
 )
 
-states = SystemState.parse_solution(solution)
+result = SimulationResult(solution)
 
-positions = [state.car_velocity for state in states]
-
-plt.plot(solution.t, positions)
-plt.xlabel("Time (s)")
-plt.title("Car velocity Over Time")
-plt.grid()
-plt.show()
+result.write_csv("simulation_output.csv")
+result.plot("car_position")
