@@ -15,13 +15,20 @@ public class CSVReader : MonoBehaviour
     [SerializeField] private Transform carTransform;
 
 
-    private List<DataPoint> dataPoints = new List<DataPoint>(); // To store time and position data
+    private List<DataPoint> dataPoints = new List<DataPoint>();
     private bool isPlaying = false;
     private int currentIndex = 0;
     private float startTime;
 
+    private float screenLeftBound;
+    private float screenRightBound;
+
     private void Start()
     {
+        // Set screen boundaries based on camera viewport
+        screenLeftBound = Camera.main.ViewportToWorldPoint(new Vector3(0, 0, carTransform.position.z)).x;
+        screenRightBound = Camera.main.ViewportToWorldPoint(new Vector3(1, 0, carTransform.position.z)).x;
+
         playButton.onClick.AddListener(StartPlayback);
         pauseButton.onClick.AddListener(PausePlayback);
 
@@ -116,8 +123,10 @@ public class CSVReader : MonoBehaviour
                 float t = (elapsedTime - timeA) / (timeB - timeA);
                 float interpolatedPosition = Mathf.Lerp(posA, posB, t);
 
-                // Update the car's position
-                carTransform.position = new Vector3(interpolatedPosition, carTransform.position.y, carTransform.position.z);
+                float mappedPositionX = Mathf.Lerp(screenLeftBound, screenRightBound, interpolatedPosition / 200f);
+
+                // Update the car's position in 3D space
+                carTransform.position = new Vector3(mappedPositionX, carTransform.position.y, carTransform.position.z);
             }
 
             yield return null;
