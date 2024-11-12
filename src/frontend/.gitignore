@@ -6,7 +6,6 @@
 /[Bb]uilds/
 /[Ll]ogs/
 /[Uu]ser[Ss]ettings/
-/[Aa]ssets/
 # MemoryCaptures can get excessive in size.
 # They also could contain extremely sensitive data
 /[Mm]emoryCaptures/
@@ -69,7 +68,7 @@ crashlytics-build.properties
 /[Aa]ssets/[Ss]treamingAssets/aa/*
 
 # Ignore TextMesh Pro files
-[Aa]ssets/TextMesh*Pro/
+/[Aa]ssets/TextMesh*Pro/
 
 # Exclude VS Code workspace files
 .vscode/
