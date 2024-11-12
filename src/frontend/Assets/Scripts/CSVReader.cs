@@ -1,11 +1,10 @@
 using System.IO;
 using UnityEngine;
-using System.Collections.Generic;
 using System;
 using UnityEngine.UI;
 using TMPro;
 
-public class CSV : MonoBehaviour
+public class CSVReader : MonoBehaviour
 {
     private readonly string csvPath = Path.GetFullPath(Path.Combine(Application.dataPath, "../simulation_output.csv"));
 
