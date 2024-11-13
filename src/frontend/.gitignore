@@ -117,3 +117,25 @@ ProjectSettings/URPProjectSettings.asset
 ProjectSettings/VersionControlSettings.asset
 ProjectSettings/VFXManager.asset
 ProjectSettings/XRSettings.asset
+
+# Ignore specific Unity asset files in the frontend directory
+
+# Default Volume Profile
+Assets/DefaultVolumeProfile.asset
+Assets/DefaultVolumeProfile.asset.meta
+
+# Input System Actions
+Assets/InputSystem_Actions.inputactions
+Assets/InputSystem_Actions.inputactions.meta
+
+# Lit2D Scene Template
+Assets/Lit2DSceneTemplate.scenetemplate
+Assets/Lit2DSceneTemplate.scenetemplate.meta
+
+# URP2D Scene Template
+Assets/URP2DSceneTemplate.unity
+Assets/URP2DSceneTemplate.unity.meta
+
+# Universal Render Pipeline Global Settings
+Assets/UniversalRenderPipelineGlobalSettings.asset
+Assets/UniversalRenderPipelineGlobalSettings.asset.meta
