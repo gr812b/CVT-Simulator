@@ -4,6 +4,7 @@ using UnityEngine;
 using System;
 using UnityEngine.UI;
 using TMPro;
+using UnityEngine.SceneManagement;
 
 public class CSVReader : MonoBehaviour
 {
@@ -11,6 +12,8 @@ public class CSVReader : MonoBehaviour
 
     [SerializeField] private Button playButton;
     [SerializeField] private Button pauseButton;
+    [SerializeField] private Button restartButton;
+    [SerializeField] private Button nextSceneButton;
     [SerializeField] private TMP_Text statusText;
     [SerializeField] private Transform carTransform;
 
@@ -33,6 +36,8 @@ public class CSVReader : MonoBehaviour
 
         playButton.onClick.AddListener(StartPlayback);
         pauseButton.onClick.AddListener(PausePlayback);
+        restartButton.onClick.AddListener(RestartPlayback);
+        nextSceneButton.onClick.AddListener(backButton);
 
         LoadCSVData();
     }
@@ -102,6 +107,16 @@ public class CSVReader : MonoBehaviour
         statusText.text = "Paused";
     }
 
+    private void RestartPlayback()
+    {
+        isPlaying = false;
+        statusText.text = "Data Loaded. Ready to Play.";
+        carTransform.position = new Vector3(screenLeftBound, carTransform.position.y, carTransform.position.z);
+        currentIndex = 0;
+
+    }
+
+
     private System.Collections.IEnumerator PlaybackCoroutine()
     {
         while (isPlaying && currentIndex < dataPoints.Count - 1)
@@ -145,4 +160,12 @@ public class CSVReader : MonoBehaviour
         isPlaying = false;
     }
 
+    private void backButton()
+        {
+            int nextSceneIndex = SceneManager.GetActiveScene().buildIndex - 1;
+            SceneManager.LoadScene(nextSceneIndex);
+        }
+
 }
+
+
