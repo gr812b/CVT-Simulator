@@ -86,3 +86,5 @@ result = SimulationResult(solution)
 
 result.write_csv("simulation_output.csv")
 # result.plot("car_position")
+# result.plot("car_velocity")
+# result.plot("engine_angular_velocity")
