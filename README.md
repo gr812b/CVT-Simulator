@@ -3,7 +3,7 @@
 **Authors:**
 - [Kai Arseneau](https://github.com/gr812b)
 - [Travis Wing]()
-- [Cameron Dunn]()
+- [Cameron Dunn](https://github.com/camdnnn)
 - [Grace McKenna]()
 
 **Date of project start**: September 10, 2024
@@ -36,9 +36,9 @@ The folders and files for this project are as follows:
 python -m venv venv
 venv\Scripts\activate # or source venv/bin/activate on Mac
 ```
-2. Install the dependencies
+2. Install the dependencies and setup package
 ```bash
-pip install -r requirements.txt
+pip install -e .
 ```
 3. Run the tests
 ```bash
