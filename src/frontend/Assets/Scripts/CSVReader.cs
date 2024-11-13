@@ -16,6 +16,7 @@ public class CSVReader : MonoBehaviour
     [SerializeField] private Button nextSceneButton;
     [SerializeField] private TMP_Text statusText;
     [SerializeField] private Transform carTransform;
+    [SerializeField] private Transform carSpinTransform;
 
 
     private List<DataPoint> dataPoints = new List<DataPoint>();
@@ -153,7 +154,7 @@ public class CSVReader : MonoBehaviour
                 float velocity = (posB - posA) / (timeB - timeA);
 
                 // Rotate the car based on velocity
-                carTransform.Rotate(Vector3.forward * velocity * 10f * Time.deltaTime);
+                carSpinTransform.Rotate(Vector3.forward * velocity * 10f * Time.deltaTime);
             }
             yield return null;
         }

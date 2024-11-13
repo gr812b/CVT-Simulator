@@ -85,4 +85,4 @@ solution = solve_ivp(
 result = SimulationResult(solution)
 
 result.write_csv("simulation_output.csv")
-result.plot("car_position")
+# result.plot("car_position")
