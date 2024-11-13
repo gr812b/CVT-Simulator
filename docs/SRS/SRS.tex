@@ -1557,7 +1557,7 @@ The assumptions made for the CVT (Continuously Variable Transmission) system mod
 Many key assumptions are made to meet the requirement of developing these mathematical models. The following assumptions are also factored in to the calculations of the CVT ratio, clamping force, RPM, torque, engine input, distance, speed and acceleration(\rref{R_2}). 
 \\\\
 \noindent The systems excludes the effects of temperature on material properties, aside from the belt, which allows for a more straightforward focus on the mechanics of the interactions (\aref{A_1}).
-The influence of gravitational forces is negligible and the elasticity of belts is considered insignificant(\aref{A_2}, \aref{A3}). 
+The influence of gravitational forces is negligible and the elasticity of belts is considered insignificant(\aref{A_2}, \aref{A_3}). 
 Vibrational effects from external sources are also assumed to be minimal, avoiding the complexity of vibration-induced disturbances in transmission behavior (\aref{A_4}).
 Wear and tear of components, including the belt and pulley are disregarded and frictional losses in non-critical components, are deemed negligible (\aref{A_5}, \aref{A_6}). 
 The engine is assumed to operate at full throttle with consistent power delivery, simplifying the model by maintaining uniform engine behavior (\aref{A_4}).
@@ -1590,11 +1590,11 @@ Finally, the CVT axis are assumed to be in line and the belt slippage of the CVT
 The purpose of the traceability matrices is to provide easy references on what
 has to be additionally modified if a certain component is changed.  Every time a
 component is changed, the items in the column of that component that are marked
-with an ``X'' may have to be modified as well.  Table~\ref{Table:trace} shows the
+with an ``X'' may have to be modified as well.  Table~\ref{Table:A_trace} shows the
 dependencies of theoretical models, general definitions, data definitions, and
 instance models with each other. Table~\ref{Table:R_trace} shows the
 dependencies of instance models, requirements, and data constraints on each
-other. Table~\ref{Table:A_trace} shows the dependencies of theoretical models,
+other. Table~\ref{Table:trace_Assumptions} shows the dependencies of theoretical models,
 general definitions, data definitions, instance models, and likely changes on
 the assumptions.
 
@@ -1665,69 +1665,101 @@ the assumptions.
 \lcref{LC_4}        & & & & & & & & & & \\ \hline
 \end{tabular}
 \caption{Traceability Matrix Showing the Connections Between Assumptions and Other Items}
-\label{Table:A_trace}
+\label{Table:trace_Assumptions}
 \end{table}
 \end{landscape}
 }
 
 \afterpage{
 \begin{landscape}
-  \begin{table}[H]
-    \centering
-    \begin{tabular}{|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|}
-    \hline        
-      & \tref{T_COE}& \tref{T_SHE}& \tref{T_LHE}& \dref{NL}& \dref{ROCT} & \ddref{FluxCoil}& \ddref{FluxPCM} & \ddref{D_HOF}& \ddref{D_MF}& \iref{ewat}& \iref{epcm}& \iref{I_HWAT}& \iref{I_HPCM} \\
-    \hline
-    \tref{T_COE}     & & & & & & & & & & & & & \\ \hline
-    \tref{T_SHE}     & & & X& & & & & & & & & & \\ \hline
-    \tref{T_LHE}     & & & & & & & & & & & & & \\ \hline
-    \dref{NL}        & & & & & & & & & & & & & \\ \hline
-    \dref{ROCT}      & X& & & & & & & & & & & & \\ \hline
-    \ddref{FluxCoil} & & & & X& & & & & & & & & \\ \hline
-    \ddref{FluxPCM}  & & & & X& & & & & & & & & \\ \hline
-    \ddref{D_HOF}    & & & & & & & & & & & & & \\ \hline
-    \ddref{D_MF}     & & & & & & & & X& & & & & \\ \hline
-    \iref{ewat}      & & & & & X& X& X& & & & X& & \\ \hline
-    \iref{epcm}      & & & & & X& & X& & X& X& & & X \\ \hline
-    \iref{I_HWAT}    & & X& & & & & & & & & & & \\ \hline
-    \iref{I_HPCM}    & & X& X& & & & X& X& X& & X& & \\
-    \hline
-    \end{tabular}
-    \caption{Traceability Matrix Showing the Connections Between Items of Different Sections}
-    \label{Table:trace}
-    \end{table}
+\begin{table}[h!]
+\centering
+\begin{tabular}{|c|c|c|c|c|c|c|c|c|}
+\hline
+	& \iref{inst:1} & \iref{inst:2}& \iref{inst:3} & \iref{inst:4} & \iref{inst:5} & \iref{inst:6}& \iref{inst:7}& \iref{inst:8}\\
+\hline
+\tref{TM:HL}        & & & &X& & & &  \\ \hline
+\tref{TM:CF}        & & & &X& & & &  \\ \hline
+\tref{TM:AR}        &X& & & & & & &  \\ \hline
+\tref{TM:ET}        & & & & & & & &  \\ \hline
+\tref{TM:GR}        &X& & & & & & &  \\ \hline
+\tref{TM:FR}        &X& & & & & &X&  \\ \hline
+\tref{TM:DE}        &X& & & & & & &  \\ \hline
+\tref{TM:CE}        & & & & & & &X&  \\ \hline
+\tref{TM:N2}        &X& & & & &X&X&  \\ \hline
+\tref{TM:D2R}       & & & & & & & &  \\ \hline
+\tref{TM:D2RA}      & & & & & & & &  \\ \hline
+\tref{TM:D2HA}      & & & & & & & &  \\ \hline
+\tref{TM:HT}        & & & & & & & &  \\ \hline
+\tref{TM:KE}        & & & & & & & &  \\ \hline
+\dref{GD_1}         & & & & &X& & &  \\ \hline
+\dref{GD_2}         & & & & &X& & &  \\ \hline
+\ddref{DD_1}        &X& & & & & &X&  \\ \hline
+\ddref{DD_2}        & & & &X& & & &  \\ \hline
+\ddref{DD_3}        & & & & &X& & &  \\ \hline
+\ddref{DD_4}        &X& & & & & & &  \\ \hline
+\ddref{DD_5}        &X& & & & & & &  \\ \hline
+\ddref{DD_6}        &X& & & & & & &  \\ \hline
+\end{tabular}
+\caption{Traceability Matrix Showing the Connections Between Instance Models and Other Items}
+\label{Table:trace_IM_Others}
+\end{table}
 \end{landscape}
 }
 
-  
 \afterpage{
 \begin{landscape}
-  \begin{table}[h!]
-    \centering
-    \begin{tabular}{|c|c|c|c|c|c|c|c|}
-    \hline
-      & \iref{ewat}& \iref{epcm}& \iref{I_HWAT}& \iref{I_HPCM}& \ref{sec_DataConstraints}& \rref{R_RawInputs}& \rref{R_MassInputs} \\
-    \hline
-    \iref{ewat}            & & X& & & & X& X \\ \hline
-    \iref{epcm}            & X& & & X& & X& X \\ \hline
-    \iref{I_HWAT}          & & & & & & X& X \\ \hline
-    \iref{I_HPCM}          & & X& & & & X& X \\ \hline
-    \rref{R_RawInputs}     & & & & & & & \\ \hline
-    \rref{R_MassInputs}    & & & & & & X& \\ \hline
-    \rref{R_CheckInputs}   & & & & & X& & \\ \hline
-    \rref{R_OutputInputs}  & X& X& & & & X& X \\ \hline
-    \rref{R_TempWater}     & X& & & & & & \\ \hline 
-    \rref{R_TempPCM}       & & X& & & & & \\ \hline
-    \rref{R_EnergyWater}   & & & X& & & & \\ \hline
-    \rref{R_EnergyPCM}     & & & & X& & & \\ \hline
-    \rref{R_VerifyOutput}  & & & X& X& & & \\ \hline
-    \rref{R_timeMeltBegin} & & X& & & & & \\ \hline
-    \rref{R_timeMeltEnd}   & & X& & & & & \\ 
-    \hline
-    \end{tabular}
-    \caption{Traceability Matrix Showing the Connections Between Requirements and Instance Models}
-    \label{Table:R_trace}
-    \end{table}
+\begin{table}[h!]
+\centering
+\begin{tabular}{|c|c|c|c|c|c|c|c|c|}
+\hline
+	& \iref{inst:1} & \iref{inst:2}& \iref{inst:3} & \iref{inst:4} & \iref{inst:5} & \iref{inst:6}& \iref{inst:7}& \iref{inst:8}\\
+\hline
+
+\rref{R_1}          & & & & & & & &  \\ \hline
+\rref{R_2}          &X& & & & & & &  \\ \hline
+\rref{R_3}          & &X& & & & & &  \\ \hline
+\rref{R_4}          & & &X& & & & &  \\ \hline
+\rref{R_5}          & & & &X& & & &  \\ \hline
+\rref{R_6}          & & & & &X& & &  \\ \hline
+\rref{R_7}          & & & & & &X& &  \\ \hline
+\rref{R_8}          & & & & & & &X&  \\ \hline
+\rref{R_9}          & & & & & & & &X \\ \hline
+\rref{R_10}         & & & & & & & &  \\ \hline
+\rref{R_11}         & & & & & & & &  \\ \hline
+\rref{R_12}         & & & & & & & &  \\ \hline
+\rref{R_13}         & & & & & & & &  \\ \hline
+\rref{R_14}         & & & & & & & &  \\ \hline
+\rref{R_15}         & & & & & & & &  \\ \hline
+\rref{R_16}         & & & & & & & &  \\ \hline
+\rref{R_17}         & & & & & & & &  \\ \hline
+\end{tabular}
+\caption{Traceability Matrix Showing the Connections Between Instance Models and Functional Requirements}
+\label{Table:trace_requirements}
+\end{table}
+\end{landscape}
+}
+
+\afterpage{
+\begin{landscape}
+\begin{table}[h!]
+\centering
+\begin{tabular}{|c|c|c|c|c|c|c|c|c|}
+\hline
+	& \iref{inst:1} & \iref{inst:2}& \iref{inst:3} & \iref{inst:4} & \iref{inst:5} & \iref{inst:6}& \iref{inst:7}& \iref{inst:8}\\
+\hline
+\iref{inst:1}       &X& & & &X& & &  \\ \hline
+\iref{inst:2}       & &X& & & & & &  \\ \hline
+\iref{inst:3}       & & &X& & & & &  \\ \hline
+\iref{inst:4}       & & & &X& &X& &  \\ \hline
+\iref{inst:5}       &X& & & &X&X& &  \\ \hline
+\iref{inst:6}       & & & &X&X&X&X&  \\ \hline
+\iref{inst:7}       & & & & & &X&X&  \\ \hline
+\iref{inst:8}       & & & & & & & &X \\ \hline
+\end{tabular}
+\caption{Traceability Matrix Showing the Connections Between Instance Models}
+\label{Table:trace_IM}
+\end{table}
 \end{landscape}
 }
 
