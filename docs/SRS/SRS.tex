@@ -741,7 +741,7 @@ N/A
 \textbf{No Belt Slippage:} The CVT will not slip relative to the sheaves.
 
 \item[A\refstepcounter{assumpnum}\theassumpnum \label{A_10}:]
-\textbf{Ignore Irrelevant Forces:} Only forces that directly contribute to the car's dynamics or the CVT's shifting behaviours are considered, allowing the simplification of dimensions where applicable.
+\textbf{Ignore Irrelevant Forces:} Only forces that directly contribute to the car's dynamics or the CVT's shifting behaviors are considered, allowing the simplification of dimensions where applicable.
 
 \item[A\refstepcounter{assumpnum}\theassumpnum \label{A_11}:]
 \textbf{Positive Velocity Only:} The model assumes that the vehicle will only move forward, meaning that velocity will never be negative. Any dynamics related to reversing or backward movement are not considered in this analysis.
@@ -765,7 +765,7 @@ This portion will specify the existing theories that are used in the development
   $k$ is the spring constant (N/m)\\
   $\Delta x$ is the displacement (m)}% #5 description
 {In the context of this project Hookes law is used in both a torsional and linear way.}% #6 Notes
-{\url{https://www.britannica.com/science/Hookes-law}}% #7 Source
+{\citet{hookeslaw}}
 {IM\ref{inst:4}}% #8 Referenced by
 {None}% #9 Preconditions
 {}% #1 derivation - not applicable by default
@@ -782,7 +782,7 @@ This portion will specify the existing theories that are used in the development
   $\omega$ is the angular velocity (rad/s)\\
   $r$ is the radius (m)}% #5 description
 {None.}% #6 Notes
-{\url{https://www.omnicalculator.com/physics/centrifugal-force}}% #7 Source
+{\citet{CentrifugalForceCalculator2024}}% #7 Source
 {IM\ref{inst:4}}% #8 Referenced by
 {None}% #9 Preconditions
 {}% #1 derivation - not applicable by default
@@ -800,7 +800,7 @@ This portion will specify the existing theories that are used in the development
   $C_d$ is the drag coefficient\\
   $A$ is the cross-sectional area of the object (m$^2$)}% #5 description
 {None.}% #6 Notes
-{\url{https://softschools.com/formulas/physics/air_resistance_formula/85/}}% #7 Source
+{\citet{AirResistanceFormula}}% #7 Source
 {IM\ref{inst:1}}% #8 Referenced by
 {None}% #9 Preconditions
 {}% #1 derivation - not applicable by default
@@ -816,7 +816,7 @@ This portion will specify the existing theories that are used in the development
   $P$ is the power (W)\\
   $\omega$ is the angular velocity (rad/s)}% #5 description
 {None.}% #6 Notes
-{\url{https://powertestdyno.com/how-to-calculate-horsepower/}}% #7 Source
+{\citet{HorsepowerCalculation}}% #7 Source
 {}% #8 Referenced by
 {None}% #9 Preconditions
 {}% #1 derivation - not applicable by default
@@ -832,7 +832,7 @@ This portion will specify the existing theories that are used in the development
   $\tau_{\text{input}}$ is the input torque (Nm)\\
   $R_\text{gear}$ is the gear reduction (unitless)}% #5 description
 {None.}% #6 Notes
-{\url{https://science.howstuffworks.com/transport/engines-equipment/gear-ratio.htm}}% #7 Source
+{\citet{GearRatioExplanation}}% #7 Source
 {IM\ref{inst:1}}% #8 Referenced by
 {None}% #9 Preconditions
 {}% #1 derivation - not applicable by default
@@ -848,7 +848,7 @@ This portion will specify the existing theories that are used in the development
   $F_f$ is the force of friction (N)\\
   $F_n$ is the normal force (N)}% #5 description
 {None.}% #6 Notes
-{\url{https://en.wikipedia.org/wiki/Friction}}% #7 Source
+{\citet{FrictionWikipedia}}% #7 Source
 {IM\ref{inst:1}, IM\ref{inst:7}}% #8 Referenced by
 {None}% #9 Preconditions
 {}% #1 derivation - not applicable by default
@@ -862,7 +862,7 @@ This portion will specify the existing theories that are used in the development
   $m$ is the mass (kg)\\
   $V$ is the volume (m$^3$)}% #5 description
 {None.}% #6 Notes
-{\url{https://www.britannica.com/science/density-physics}}% #7 Source
+{\citet{BritannicaDensity}}% #7 Source
 {IM\ref{inst:1}}% #8 Referenced by
 {None}% #9 Preconditions
 {}% #1 derivation - not applicable by default
@@ -879,7 +879,7 @@ This portion will specify the existing theories that are used in the development
   $\mu$ is the coefficient of friction\\
   $\theta$ is the angle of wrap of the belt (radians)}% #5 description
 {None.}% #6 Notes
-{\url{https://hackaday.com/2021/01/26/cable-mechanism-maths-designing-against-the-capstan-equation/}}% #7 Source
+{\citet{CapstanEquation2021}}% #7 Source
 {IM\ref{inst:7}}% #8 Referenced by
 {None}% #9 Preconditions
 {}% #1 derivation - not applicable by default
@@ -895,7 +895,7 @@ This portion will specify the existing theories that are used in the development
   $m$ is the mass (kg)\\
   $a$ is the acceleration (m/s$^2$)}% #5 description
 {Newtons 2nd law is used repeatedly in several Instance models}% #6 Notes
-{\url{https://www.physicsclassroom.com/class/newtlaws/lesson-3/newton-s-second-law}}% #7 Source
+{\citet{NewtonsSecondLaw}}% #7 Source
 {IM\ref{inst:1}, IM\ref{inst:6}, IM\ref{inst:7}}% #8 Referenced by
 {None}% #9 Preconditions
 {}% #1 derivation - not applicable by default
@@ -934,7 +934,7 @@ $\phi$ is the angle between sheaves (rad)}% #5 description
 {$d_\text{shift}$ is the axial shift distance, or sheave displacement (m)\\
 $\theta_\text{ramp}$ is the instantaneous ramp angle (rad)\\
 $f_\text{prim}(d)$ is the function to express the ramp geometry (m $\rightarrow$ rad)}% #5 description
-{The user will input the geometry of the ramp, which will then be intepreted to generate $f_\text{prim}$}% #6 Notes
+{The user will input the geometry of the ramp, which will then be interpreted to generate $f_\text{prim}$}% #6 Notes
 {N/A}% #7 Source
 {}% #8 Referenced by
 {None}% #9 Preconditions
@@ -948,7 +948,7 @@ $f_\text{prim}(d)$ is the function to express the ramp geometry (m $\rightarrow$
 {$d_\text{shift}$ is the axial shift distance, or sheave displacement (m)\\
 $\theta_\text{ramp}$ is the instantaneous helix angle (rad)\\
 $f_\text{prim}(d)$ is the function to express the helix geometry (m $\rightarrow$ rad)}% #5 description
-{The user will input the geometry of the helix, which will then be intepreted to generate $f_\text{sec}$}% #6 Notes
+{The user will input the geometry of the helix, which will then be interpreted to generate $f_\text{sec}$}% #6 Notes
 {N/A}% #7 Source
 {}% #8 Referenced by
 {None}% #9 Preconditions
@@ -965,7 +965,7 @@ $f_\text{prim}(d)$ is the function to express the helix geometry (m $\rightarrow
   $r$ is the radius of the applied torque (m)
   }% #5 description
 {}% #6 Notes
-{\url{https://www.drtempleman.com/spring-resources-old/spring-design-formulas-2}}% #7 Source
+{\citet{SpringDesignFormulas}}% #7 Source
 {}% #8 Referenced by
 {None}% #9 Preconditions
 {}% #1 derivation - not applicable by default
@@ -980,7 +980,7 @@ $f_\text{prim}(d)$ is the function to express the helix geometry (m $\rightarrow
   $v$ is the velocity (m/s)
 }% #5 description
 {None.}% #6 Notes
-{\url{https://www.physicsclassroom.com/class/energy/Lesson-1/Kinetic-Energy}}% #7 Source
+{\citet{KineticEnergyPhysicsClassroom}}% #7 Source
 {}% #8 Referenced by
 {None}% #9 Preconditions
 {}% #1 derivation - not applicable by default
@@ -1042,7 +1042,7 @@ Next, we can derive the torsional spring force. We can use \hyperref[TM:HT]{Hook
 
 \[ T_{\text{tor}} = \frac{k_{\text{tor}} \cdot \theta}{r} \tag*{\text{(see \hyperref[TM:HT]{TM:HT})}}\]
 
-Similarily, we have an initial torsional compression $\theta_0$ that is added to the current torsional compression $\theta$.
+Similarly, we have an initial torsional compression $\theta_0$ that is added to the current torsional compression $\theta$.
 
 \[ F_{\text{tor}} = \frac{k_{\text{tor}} \cdot (\theta_0 + \theta)}{r} \]
 
@@ -1148,7 +1148,7 @@ in Section~\ref{sec_datadef} to replace the abstract symbols in the models
 identified in Sections~\ref{sec_theoretical} and~\ref{sec_gendef}.
 {\newline}
 
-{\noindent}The goal statment GS\ref{GS1} are solved by Instance Models \ref{inst:1}, \ref{inst:2} and \ref{inst:3}\\
+{\noindent}The goal statement GS\ref{GS1} are solved by Instance Models \ref{inst:1}, \ref{inst:2} and \ref{inst:3}\\
 {\noindent}The goal statement GS\ref{GS2} are solved by Instance Models \ref{inst:8}\\
 The goal statement GS\ref{GS3} are solved by Instance Models \ref{inst:4}, \ref{inst:5}, \ref{inst:6} and \ref{inst:7}\\
   \definstance
@@ -1344,7 +1344,7 @@ F_{\text{sec\_clamp}} = \frac{k_{\text{sec\_tor}} (\theta_{\text{sec}} + f_{\tex
 {-}
 
 \subsubsection*{Derivation of Sheave Acceleration}
-One can derive the accleration of the sheaves using \hyperref[TM:N2]{Newton's Second Law}. The forces acting on the built include 
+One can derive the acceleration of the sheaves using \hyperref[TM:N2]{Newton's Second Law}. The forces acting on the built include 
 only the primary and secondary clamping forces, which act in opposite directions as they act out radially.
 The acceleration of the sheave is derived as follows:
 \[ma(t) = F_{\text{clamp\_prim}}(t) - F_{\text{clamp\_sec}}(t)\]
@@ -1581,7 +1581,7 @@ Finally, the CVT axis are assumed to be in line and the belt slippage of the CVT
 \begin{itemize}
 
   \item[ULC1:] The assumption that the CVT axis are in line is unlikely to change because tuning is simply not valuable in a system as poor as this. (A\ref{A_8})
-  \item[ULC2:] The assumption that the engine operates at full throttle is unlikely to change as different behaviour is simply not ideal. (A\ref{A_7})
+  \item[ULC2:] The assumption that the engine operates at full throttle is unlikely to change as different behavior is simply not ideal. (A\ref{A_7})
   \item[ULC3:] The assumption that the influence of gravitational forces is negligible is unlikely to change as it heavily reduces complexity and plays an incredibly small part on spinning objects at high rotational speeds. (A\ref{A_2})
   
   \end{itemize}
@@ -1771,8 +1771,9 @@ N/A
 
 \newpage
 
-\bibliographystyle {plainnat}
-\bibliography {../../refs/References}
+\bibliographystyle{plainnat}
+
+\bibliography{../../refs/References}
 
 \newpage
 \section*{Appendix --- Reflection}
