@@ -15,8 +15,12 @@ from constants.car_specs import (
     WHEEL_RADIUS,
 )
 from utils.conversions import rpm_to_rad_s, deg_to_rad
+from utils.argument_parser import get_arguments
 
+# Parse arguments
+args = get_arguments()
 
+# Pass arguments and constants into the simulators
 engine_simulator = EngineSimulator(torque_curve=torque_curve, inertia=ENGINE_INERTIA)
 load_simulator = LoadSimulator(
     frontal_area=FRONTAL_AREA,
@@ -24,7 +28,7 @@ load_simulator = LoadSimulator(
     car_mass=CAR_MASS,
     wheel_radius=WHEEL_RADIUS,
     gearbox_ratio=GEARBOX_RATIO,
-    incline_angle=deg_to_rad(0),
+    incline_angle=deg_to_rad(args.incline_angle),
 )
 car_simulator = CarSimulator(car_mass=CAR_MASS)
 
@@ -81,4 +85,4 @@ solution = solve_ivp(
 result = SimulationResult(solution)
 
 result.write_csv("simulation_output.csv")
-result.plot("car_position")
+# result.plot("car_position")
