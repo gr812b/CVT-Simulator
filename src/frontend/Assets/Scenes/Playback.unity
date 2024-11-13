@@ -119,6 +119,68 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
+--- !u!1001 &85885702
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 0}
+    m_Modifications:
+    - target: {fileID: -8679921383154817045, guid: be5b8e4109865db44a4a396a1f7094a1, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: -10.7
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: be5b8e4109865db44a4a396a1f7094a1, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: be5b8e4109865db44a4a396a1f7094a1, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: be5b8e4109865db44a4a396a1f7094a1, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 0.4876276
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: be5b8e4109865db44a4a396a1f7094a1, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: -0.45349762
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: be5b8e4109865db44a4a396a1f7094a1, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: -0.5093945
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: be5b8e4109865db44a4a396a1f7094a1, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: -0.5450472
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: be5b8e4109865db44a4a396a1f7094a1, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 266
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: be5b8e4109865db44a4a396a1f7094a1, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 178
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: be5b8e4109865db44a4a396a1f7094a1, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 85.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: be5b8e4109865db44a4a396a1f7094a1, type: 3}
+      propertyPath: m_Name
+      value: Baja_Car
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: be5b8e4109865db44a4a396a1f7094a1, type: 3}
+--- !u!4 &85885703 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: be5b8e4109865db44a4a396a1f7094a1, type: 3}
+  m_PrefabInstance: {fileID: 85885702}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &197913342
 GameObject:
   m_ObjectHideFlags: 0
@@ -391,11 +453,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 608993668}
   m_CullTransparentMesh: 1
---- !u!4 &609000554 stripped
-Transform:
-  m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: 80e94579f335fd64ea213d4c24fd4395, type: 3}
-  m_PrefabInstance: {fileID: 1973656440}
-  m_PrefabAsset: {fileID: 0}
 --- !u!1 &688151606
 GameObject:
   m_ObjectHideFlags: 0
@@ -1129,7 +1186,7 @@ MonoBehaviour:
   restartButton: {fileID: 688151608}
   nextSceneButton: {fileID: 1298267052}
   statusText: {fileID: 608993670}
-  carTransform: {fileID: 609000554}
+  carTransform: {fileID: 85885703}
 --- !u!1 &1298267050
 GameObject:
   m_ObjectHideFlags: 0
@@ -1525,63 +1582,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1931223809}
   m_CullTransparentMesh: 1
---- !u!1001 &1973656440
-PrefabInstance:
-  m_ObjectHideFlags: 0
-  serializedVersion: 2
-  m_Modification:
-    serializedVersion: 3
-    m_TransformParent: {fileID: 0}
-    m_Modifications:
-    - target: {fileID: -8679921383154817045, guid: 80e94579f335fd64ea213d4c24fd4395, type: 3}
-      propertyPath: m_LocalPosition.x
-      value: -10
-      objectReference: {fileID: 0}
-    - target: {fileID: -8679921383154817045, guid: 80e94579f335fd64ea213d4c24fd4395, type: 3}
-      propertyPath: m_LocalPosition.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: -8679921383154817045, guid: 80e94579f335fd64ea213d4c24fd4395, type: 3}
-      propertyPath: m_LocalPosition.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: -8679921383154817045, guid: 80e94579f335fd64ea213d4c24fd4395, type: 3}
-      propertyPath: m_LocalRotation.w
-      value: 0.48445717
-      objectReference: {fileID: 0}
-    - target: {fileID: -8679921383154817045, guid: 80e94579f335fd64ea213d4c24fd4395, type: 3}
-      propertyPath: m_LocalRotation.x
-      value: -0.45364386
-      objectReference: {fileID: 0}
-    - target: {fileID: -8679921383154817045, guid: 80e94579f335fd64ea213d4c24fd4395, type: 3}
-      propertyPath: m_LocalRotation.y
-      value: -0.5126773
-      objectReference: {fileID: 0}
-    - target: {fileID: -8679921383154817045, guid: 80e94579f335fd64ea213d4c24fd4395, type: 3}
-      propertyPath: m_LocalRotation.z
-      value: -0.54467475
-      objectReference: {fileID: 0}
-    - target: {fileID: -8679921383154817045, guid: 80e94579f335fd64ea213d4c24fd4395, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.x
-      value: 266.4
-      objectReference: {fileID: 0}
-    - target: {fileID: -8679921383154817045, guid: 80e94579f335fd64ea213d4c24fd4395, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.y
-      value: 177.66
-      objectReference: {fileID: 0}
-    - target: {fileID: -8679921383154817045, guid: 80e94579f335fd64ea213d4c24fd4395, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.z
-      value: 85.5
-      objectReference: {fileID: 0}
-    - target: {fileID: 919132149155446097, guid: 80e94579f335fd64ea213d4c24fd4395, type: 3}
-      propertyPath: m_Name
-      value: Baja_Car
-      objectReference: {fileID: 0}
-    m_RemovedComponents: []
-    m_RemovedGameObjects: []
-    m_AddedGameObjects: []
-    m_AddedComponents: []
-  m_SourcePrefab: {fileID: 100100000, guid: 80e94579f335fd64ea213d4c24fd4395, type: 3}
 --- !u!1 &2067622403
 GameObject:
   m_ObjectHideFlags: 0
@@ -1724,7 +1724,7 @@ SceneRoots:
   m_ObjectHideFlags: 0
   m_Roots:
   - {fileID: 2067622406}
-  - {fileID: 1973656440}
+  - {fileID: 85885702}
   - {fileID: 1174346353}
   - {fileID: 1259239080}
   - {fileID: 701032256}
