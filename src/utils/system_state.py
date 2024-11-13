@@ -16,9 +16,3 @@ class SystemState:
             car_velocity=array[1],
             car_position=array[2],
         )
-
-    @staticmethod
-    def parse_solution(solution):
-        """Parses the solution from solve_ivp into a list of DrivetrainState instances."""
-        states = [SystemState.from_array(state) for state in solution.y.T]
-        return states

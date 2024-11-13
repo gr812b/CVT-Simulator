@@ -46,8 +46,8 @@ python -m unittest discover -s tests
 ```
 4. Manually run linter and formatter
 ```bash
-flake8 src/ test/
 black src/ test/
+flake8 src/ test/
 ```
 5. If you want to setup the pre-commit, run:
 ```bash

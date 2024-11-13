@@ -23,6 +23,7 @@
 \textbf{Date} & \textbf{Developer(s)} & \textbf{Change}\\
 \midrule
 Sept 24 & All & Initial Draft\\
+Nov 10 & Grace McKenna & Updated Proof of Concept Demonstration Plan\\
 \bottomrule
 \end{tabularx}
 \end{table}
@@ -207,14 +208,19 @@ This project also has a section to show the items that have been completed.
 \section{Proof of Concept Demonstration Plan}
 
 Our main concern for this project is handling the two-way communication between the mathematical model and the Unity animation, as well as working with unfamiliar tools such as ODE solvers and Unity.
-Our proof of concept will aim to have a GUI in Unity send and receive data from a python script, which plays the role of the model.
+Our proof of concept will aim to have a GUI in Unity send and receive data from a python script, which plays the role of the mathematical model.
 The GUI will have a setting for a feature which will be sent to the python script. 
 Once received, the python script will perform a calculation using the ODE solver and send the result back to Unity.
 When Unity receives the result, a corresponding animation will be displayed.
-\\
-\noindent
 This will be a sufficient proof of concept as once the team is able to complete this task the rest of the project will expand on this existing system. 
-
+\\\\
+\noindent One risk involved with this plan is ensuring the two way communication between the Unity frontend and the Python backend as these platforms require distinct handling protocols. 
+To mitigate this we will implement a phased integration strategy starting with a simple data exchange and gradually incorporating more complex interactions. 
+Additionally another risk is working with ODE solvers which would require the team to acquire new knowledge and skills.
+To mitigate this risk we plan to read documentation of existing Python libraries as well as set up meetings with Dr.\ Smith for any clarification as needed. 
+We will also start with solving a simple ODE and incrementally increase the complexity.
+Both of these risks will require a large time investment and continuous attention to ensure our proof of concept is successful. 
+However, the mitigation strategies discussed above will allow our team to have a successful proof of concept with minimal setbacks. 
 \section{Expected Technology}
 
 \begin{itemize}
