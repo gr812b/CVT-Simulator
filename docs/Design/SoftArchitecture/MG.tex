@@ -157,16 +157,15 @@ adapted here is called design for
 change.
 
 \begin{description}
-\item[\refstepcounter{acnum} \actheacnum \label{acHardware}:] The specific
-  hardware on which the software is running.
-\item[\refstepcounter{acnum} \actheacnum \label{acInput}:] The format of the
-  initial input data.
-\item ...
-\end{description}
-
-\wss{Anticipated changes relate to changes that would be made in requirements,
-design or implementation choices.  They are not related to changes that are made
-at run-time, like the values of parameters.}
+  \item[\refstepcounter{acnum} \actheacnum \label{acHardware}:] The specific hardware on which the software is running.
+  \item[\refstepcounter{acnum} \actheacnum \label{acInput}:] The format and structure of the initial input data.
+  \item[\refstepcounter{acnum} \actheacnum \label{acEngineSimulator}:] The engine simulator implementation could be updated or replaced as new models or technologies become available.
+  \item[\refstepcounter{acnum} \actheacnum \label{acExternalForces}:] External forces considered in the simulation could vary, depending on changes in design parameters or environmental considerations.
+  \item[\refstepcounter{acnum} \actheacnum \label{acCVTSimulator}:] The CVT simulator implementation is likely change during the validation and verification (VnV) process.
+  \item[\refstepcounter{acnum} \actheacnum \label{acVisualizations}:] The visualizations used and their implementation could be updated to improve the user experience or to accommodate new features.
+  \item[\refstepcounter{acnum} \actheacnum \label{acConstants}:] Constants used in the software could be updated based on changes to the car's physical design.
+  \item[\refstepcounter{acnum} \actheacnum \label{acInputParameters}:] Input parameters for the system could change to include more parameters based on new requirements or to improve the accuracy of the simulation.
+  \end{description}
 
 \subsection{Unlikely Changes} \label{SecUchange}
 
@@ -178,9 +177,9 @@ will potentially need to be modified. Hence, it is not intended that these
 decisions will be changed.
 
 \begin{description}
-\item[\refstepcounter{ucnum} \uctheucnum \label{ucIO}:] Input/Output devices
-  (Input: File and/or Keyboard, Output: File, Memory, and/or Screen).
-\item ...
+  \item[\refstepcounter{ucnum} \uctheucnum \label{ucIO}:] Input/Output devices (Input: File and/or Keyboard, Output: File, Memory, and/or Screen).
+  \item[\refstepcounter{ucnum} \uctheucnum \label{ucConstraints}:] Constraint parameters in our model/system will remain fixed and will not change.
+  \item[\refstepcounter{ucnum} \uctheucnum \label{ucExcelRun}:] The simulation will always be an acceleration run, i.e the car will always start from rest and accelerate.
 \end{description}
 
 \section{Module Hierarchy} \label{SecMH}
