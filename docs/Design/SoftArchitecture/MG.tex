@@ -299,7 +299,7 @@ to be implemented.
 \item[Secrets:]The format and structure of the input data.
 \item[Services:]Converts the input data into the data structure used by the
   input parameters module.
-\item[Implemented By:] [Your Program Name Here]
+\item[Implemented By:] \progname{}
 \item[Type of Module:] [Record, Library, Abstract Object, or Abstract Data Type]
   [Information to include for leaf modules in the decomposition by secrets tree.]
 \end{description}
@@ -307,83 +307,77 @@ to be implemented.
 \subsubsection{Engine Simulator Module (\mref{mEngineSim})}
 
 \begin{description}
-\item[Secrets:]
-\item[Services:]
-\item[Implemented By:]
-\item[Type of Module:] 
-  
+\item[Secrets:] The relationship between torque, RPM, and load in the engine's performance curve.
+\item[Services:] Simulates engine behavior by generating torque based on input RPM, throttle position, and load conditions.
+\item[Implemented By:] \progname{}
+\item[Type of Module:] Abstract Object
 \end{description}
 
 \subsubsection{External Forces Module (\mref{mExternalForces})}
 
 \begin{description}
-\item[Secrets:]
-\item[Services:]
-\item[Implemented By:]
-\item[Type of Module:] 
-  
+\item[Secrets:] The equations for calculating gravity, air resistance, and rolling resistance forces acting on the vehicle.
+\item[Services:] Computes the net external forces acting on the vehicle for given conditions like incline, speed, and drag coefficient.
+\item[Implemented By:] \progname{}
+\item[Type of Module:] Abstract Object
 \end{description}
 
 \subsubsection{CVT Simulation Module (\mref{mCVT})}
 
 \begin{description}
-\item[Secrets:]
-\item[Services:]
-\item[Implemented By:]
-\item[Type of Module:] 
-  
+\item[Secrets:] The dynamics of the CVT, including the relationship between clamping forces, belt ratios, and load transfer.
+\item[Services:] Simulates the CVT's behavior under changing conditions by calculating primary and secondary clamping forces and belt ratios.
+\item[Implemented By:] \progname{}
+\item[Type of Module:] Abstract Object
 \end{description}
+
 
 \subsubsection{ODE Solver Module (\mref{mODESolver})}
 
 \begin{description}
-\item[Secrets:]
-\item[Services:]
-\item[Implemented By:]
-\item[Type of Module:] 
-  
+\item[Secrets:] The numerical methods and parameters used by SciPy to solve ordinary differential equations.
+\item[Services:] Solves the system of differential equations governing the CVT system's dynamics over time.
+\item[Implemented By:] SciPy
+\item[Type of Module:] Library
 \end{description}
 
 \subsubsection{Main Module (\mref{mMain})}
 
 \begin{description}
-\item[Secrets:]
-\item[Services:]
-\item[Implemented By:]
-\item[Type of Module:] 
-  
+\item[Secrets:] The orchestration of various modules to achieve the simulation flow.
+\item[Services:] Manages the simulation's execution by calling the ODE solver, handling inputs/outputs, and coordinating between modules.
+\item[Implemented By:] \progname{}
+\item[Type of Module:] Abstract Object
 \end{description}
 
 \subsubsection{Playback Module (\mref{mPlayback})}
 
 \begin{description}
-\item[Secrets:]
-\item[Services:]
-\item[Implemented By:]
-\item[Type of Module:] 
-  
+\item[Secrets:] The format of simulation data and its mapping to Unity playback mechanisms.
+\item[Services:] Provides playback functionality by reading simulation data and rendering it in Unity.
+\item[Implemented By:] \progname{}
+\item[Type of Module:] Abstract Object
 \end{description}
 
 \subsubsection{Visualizer Module (\mref{mVisualizer})}
 
 \begin{description}
-\item[Secrets:]
-\item[Services:]
-\item[Implemented By:]
-\item[Type of Module:] 
-  
+\item[Secrets:] The graphical representation and rendering techniques used in Unity.
+\item[Services:] Visualizes simulation results through charts, graphs, and 3D models, integrating data from various modules.
+\item[Implemented By:] Unity
+\item[Type of Module:] Abstract Object
 \end{description}
 
-\subsubsection{ Constants Module (\mref{mConstants})}
+\subsubsection{Constants Module (\mref{mConstants})}
 
 \begin{description}
-\item[Secrets:]
-\item[Services:]
-\item[Implemented By:]
-\item[Type of Module:] 
-  
+\item[Secrets:] The storage and retrieval of constant values like engine torque curves, car weight, and drag coefficients.
+\item[Services:] Provides a centralized location for retrieving predefined constant values used across the simulation.
+\item[Implemented By:] \progname{}
+\item[Type of Module:] Library
 \end{description}
 
+MAYBE MISSING MODULES FOR WRITING DATA OUT TO CSV, DOWNLOADING DATA, READING DATA, ETC
 
 \subsection{Software Decision Module}
 
@@ -401,41 +395,38 @@ to be implemented.
 \subsubsection{GUI Module (\mref{mGUI})}
 
 \begin{description}
-\item[Secrets:]
-\item[Services:]
-\item[Implemented By:]
-\item[Type of Module:] 
-  
+\item[Secrets:] The graphical representation techniques and rendering optimizations used in Unity.
+\item[Services:] Displays simulation outputs to the user, enables interaction (e.g., input adjustments, playback controls), and visualizes simulation results in 3D and 2D formats.
+\item[Implemented By:] \progname{}
+\item[Type of Module:] Abstract Object
 \end{description}
 
 \subsubsection{File Output Module (\mref{mFileOutput})}
 
 \begin{description}
-\item[Secrets:]
-\item[Services:]
-\item[Implemented By:]
-\item[Type of Module:] 
-  
+\item[Secrets:] The format of the output data and the methods used for file serialization.
+\item[Services:] Saves simulation results (e.g., graphs, raw data) into user-friendly formats like CSV or JSON for external use and analysis.
+\item[Implemented By:] \progname{}
+\item[Type of Module:] Library
 \end{description}
 
 \subsubsection{Communication Module (\mref{mComm})}
 
 \begin{description}
-\item[Secrets:]
-\item[Services:]
-\item[Implemented By:]
-\item[Type of Module:] 
-  
+\item[Secrets:] The protocol and serialization methods used for data exchange between Unity and the Python backend.
+\item[Services:] Facilitates data transfer between the Unity-based GUI and the Python-based simulation modules, ensuring synchronization and integrity of inputs/outputs.
+\item[Implemented By:] \progname{}
+\item[Type of Module:] Abstract Object
 \end{description}
 
 \subsubsection{Controller Module (\mref{mController})}
+THIS ONE FEELS WEIRD AS CONTROLLER WAS REFERRING TO THE CONTROL MODULE IN THE OTHER ONE
 
 \begin{description}
-\item[Secrets:]
-\item[Services:]
-\item[Implemented By:]
-\item[Type of Module:] 
-  
+\item[Secrets:] The underlying mathematical models and algorithms that govern the simulation's control logic.
+\item[Services:] Implements the central mathematical framework for the simulation, orchestrating calculations for forces, engine behavior, and CVT dynamics.
+\item[Implemented By:] \progname{}
+\item[Type of Module:] Abstract Object
 \end{description}
 
 \section{Traceability Matrix} \label{SecTM}
