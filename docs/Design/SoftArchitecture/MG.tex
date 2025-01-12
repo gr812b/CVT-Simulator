@@ -304,7 +304,7 @@ to be implemented.
   [Information to include for leaf modules in the decomposition by secrets tree.]
 \end{description}
 
-\subsubsection{Input Format Module (\mref{mEngineSim})}
+\subsubsection{Engine Simulator Module (\mref{mEngineSim})}
 
 \begin{description}
 \item[Secrets:]
@@ -314,7 +314,7 @@ to be implemented.
   
 \end{description}
 
-\subsubsection{Input Format Module (\mref{mExternalForces})}
+\subsubsection{External Forces Module (\mref{mExternalForces})}
 
 \begin{description}
 \item[Secrets:]
@@ -324,7 +324,7 @@ to be implemented.
   
 \end{description}
 
-\subsubsection{Input Format Module (\mref{mCVT})}
+\subsubsection{CVT Simulation Module (\mref{mCVT})}
 
 \begin{description}
 \item[Secrets:]
@@ -334,7 +334,7 @@ to be implemented.
   
 \end{description}
 
-\subsubsection{Input Format Module (\mref{mODESolver})}
+\subsubsection{ODE Solver Module (\mref{mODESolver})}
 
 \begin{description}
 \item[Secrets:]
@@ -344,7 +344,7 @@ to be implemented.
   
 \end{description}
 
-\subsubsection{Input Format Module (\mref{mMain})}
+\subsubsection{Main Module (\mref{mMain})}
 
 \begin{description}
 \item[Secrets:]
@@ -354,7 +354,7 @@ to be implemented.
   
 \end{description}
 
-\subsubsection{Input Format Module (\mref{mPlayback})}
+\subsubsection{Playback Module (\mref{mPlayback})}
 
 \begin{description}
 \item[Secrets:]
@@ -364,7 +364,7 @@ to be implemented.
   
 \end{description}
 
-\subsubsection{Input Format Module (\mref{mVisualizer})}
+\subsubsection{Visualizer Module (\mref{mVisualizer})}
 
 \begin{description}
 \item[Secrets:]
@@ -374,7 +374,7 @@ to be implemented.
   
 \end{description}
 
-\subsubsection{Input Format Module (\mref{mConstants})}
+\subsubsection{ Constants Module (\mref{mConstants})}
 
 \begin{description}
 \item[Secrets:]
@@ -398,7 +398,7 @@ to be implemented.
 \item[Implemented By:] --
 \end{description}
 
-\subsubsection{Input Format Module (\mref{mGUI})}
+\subsubsection{GUI Module (\mref{mGUI})}
 
 \begin{description}
 \item[Secrets:]
@@ -408,7 +408,7 @@ to be implemented.
   
 \end{description}
 
-\subsubsection{Input Format Module (\mref{mFileOutput})}
+\subsubsection{File Output Module (\mref{mFileOutput})}
 
 \begin{description}
 \item[Secrets:]
@@ -418,7 +418,7 @@ to be implemented.
   
 \end{description}
 
-\subsubsection{Input Format Module (\mref{mComm})}
+\subsubsection{Communication Module (\mref{mComm})}
 
 \begin{description}
 \item[Secrets:]
@@ -428,7 +428,7 @@ to be implemented.
   
 \end{description}
 
-\subsubsection{Input Format Module (\mref{mController})}
+\subsubsection{Controller Module (\mref{mController})}
 
 \begin{description}
 \item[Secrets:]
@@ -475,17 +475,13 @@ R11 & \mref{mOutput}, \mref{mODEs}, \mref{mEnergy}, \mref{mControl}\\
 \textbf{AC} & \textbf{Modules}\\
 \midrule
 \acref{acHardware} & \mref{mHH}\\
-\acref{acInput} & \mref{mInput}\\
-\acref{acParams} & \mref{mParams}\\
-\acref{acVerify} & \mref{mVerify}\\
-\acref{acOutput} & \mref{mOutput}\\
-\acref{acVerifyOut} & \mref{mVerifyOut}\\
-\acref{acODEs} & \mref{mODEs}\\
-\acref{acEnergy} & \mref{mEnergy}\\
-\acref{acControl} & \mref{mControl}\\
-\acref{acSeqDS} & \mref{mSeqDS}\\
-\acref{acSolver} & \mref{mSolver}\\
-\acref{acPlot} & \mref{mPlot}\\
+\acref{acInput}\acref{acInputParameters} & \mref{mInput}\\
+\acref{acEngineSimulator} & \mref{mEngineSim}\\
+\acref{acExternalForces} & \mref{mExternalForces}\\
+\acref{acCVTSimulator} & \mref{mCVT}\\
+\acref{acVisualizations} & \mref{mVisualizer}\\
+\acref{acConstants} & \mref{mConstants}\\
+
 \bottomrule
 \end{tabular}
 \caption{Trace Between Anticipated Changes and Modules}
