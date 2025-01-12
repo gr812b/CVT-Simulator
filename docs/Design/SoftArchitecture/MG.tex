@@ -217,7 +217,7 @@ actually be implemented.
 {Hardware-Hiding Module} & ~ \\
 \midrule
 
-\multirow{7}{0.3\textwidth}{Behaviour-Hiding Module} & ?\\
+\multirow{7}{0.3\textwidth}{Behaviour-Hiding Module}
 & Engine Simulator Module\\
 & External Forces Module\\
 & CVT Simulation Module\\
@@ -451,17 +451,23 @@ requirements and between the modules and the anticipated changes.
 \toprule
 \textbf{Req.} & \textbf{Modules}\\
 \midrule
-R1 & \mref{mHH}, \mref{mInput}, \mref{mParams}, \mref{mControl}\\
-R2 & \mref{mInput}, \mref{mParams}\\
-R3 & \mref{mVerify}\\
-R4 & \mref{mOutput}, \mref{mControl}\\
-R5 & \mref{mOutput}, \mref{mODEs}, \mref{mControl}, \mref{mSeqDS}, \mref{mSolver}, \mref{mPlot}\\
-R6 & \mref{mOutput}, \mref{mODEs}, \mref{mControl}, \mref{mSeqDS}, \mref{mSolver}, \mref{mPlot}\\
-R7 & \mref{mOutput}, \mref{mEnergy}, \mref{mControl}, \mref{mSeqDS}, \mref{mPlot}\\
-R8 & \mref{mOutput}, \mref{mEnergy}, \mref{mControl}, \mref{mSeqDS}, \mref{mPlot}\\
-R9 & \mref{mVerifyOut}\\
-R10 & \mref{mOutput}, \mref{mODEs}, \mref{mControl}\\
-R11 & \mref{mOutput}, \mref{mODEs}, \mref{mEnergy}, \mref{mControl}\\
+R1 & \mref{mCVT}, \mref{mODESolver}, \mref{mConstants}\\
+R2 & \mref{mExternalForces}, \mref{mConstants}\\
+R3 & \mref{mExternalForces}, \mref{mConstants}\\
+R4 & \mref{mExternalForces}, \mref{mConstants}\\
+R5 & \mref{mCVT}, \mref{mConstants}\\
+R6 & \mref{mCVT}, \mref{mConstants}\\
+R7 & \mref{mCVT}, \mref{mConstants}\\
+R8 & \mref{mCVT}, \mref{mConstants}\\
+R9 & \mref{mEngineSim}, \mref{mConstants}\\
+R10 & \mref{mGUI}, \mref{mInput}\\
+R11 & \mref{mGUI}, \mref{mInput}\\
+R12 & \mref{mGUI}, \mref{mController}, \mref{mInput}\\
+R13 & \mref{mVisualizer}, \mref{mPlayback}\\
+R14 & \mref{mVisualizer}, \mref{mPlayback}\\
+R15 & \mref{mVisualizer}, \mref{mPlayback}\\
+R16 & \mref{mHH}\\
+R17 & \mref{mHH}\\
 \bottomrule
 \end{tabular}
 \caption{Trace Between Requirements and Modules}
