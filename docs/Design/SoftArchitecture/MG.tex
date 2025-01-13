@@ -522,8 +522,21 @@ arrows in the diagram typically correspond to the presence of import statement.}
 needed. Drawings, Sketches, Figma}
 
 \section{Design of Communication Protocols}
+There are two main communication protocols used in the system.
+One is for going from Unity to Python and the other is for going from Python to Unity.
+Outside of these two instances, the other modules communication is handled through standard Unity or Python internal communication.
 
-\wss{If appropriate}
+\subsection{Unity to Python}
+The Unity from Python communication is handled through passing parameters.
+Unity opens a terminal which calls the main Python script.
+This call also includes all of the parameters that are specified by the user.
+These parameters are then received by the Python script and are used to run the simulation.
+
+\subsection{Python to Unity}
+The Python to Unity communication is handled through a CSV file.
+After the simulation is ran, the Python script writes the results to a CSV file.
+Unity then reads from this CSV file and gets the results of the simulation.
+This data is used to display the results of the simulation to the user.
 
 \section{Timeline}
 
