@@ -162,7 +162,7 @@ change.
   \item[\refstepcounter{acnum} \actheacnum \label{acEngineSimulator}:] The engine simulator implementation could be updated or replaced as new models or technologies become available.
   \item[\refstepcounter{acnum} \actheacnum \label{acExternalForces}:] External forces considered in the simulation could vary, depending on changes in design parameters or environmental considerations.
   \item[\refstepcounter{acnum} \actheacnum \label{acCVTSimulator}:] The CVT simulator implementation is likely change during the validation and verification (VnV) process.
-  \item[\refstepcounter{acnum} \actheacnum \label{acVisualizations}:] The visualizations used and their implementation could be updated to improve the user experience or to accommodate new features.
+  \item[\refstepcounter{acnum} \actheacnum \label{acVisualizations}:] The visualizations used, and their implementation could be updated to improve the user experience or to accommodate new features.
   \item[\refstepcounter{acnum} \actheacnum \label{acConstants}:] Constants used in the software could be updated based on changes to the car's physical design.
   \item[\refstepcounter{acnum} \actheacnum \label{acInputParameters}:] Input parameters for the system could change to include more parameters based on new requirements or to improve the accuracy of the simulation.
   \end{description}
@@ -179,7 +179,7 @@ decisions will be changed.
 \begin{description}
   \item[\refstepcounter{ucnum} \uctheucnum \label{ucIO}:] Input/Output devices (Input: File and/or Keyboard, Output: File, Memory, and/or Screen).
   \item[\refstepcounter{ucnum} \uctheucnum \label{ucConstraints}:] Constraint parameters in our model/system will remain fixed and will not change.
-  \item[\refstepcounter{ucnum} \uctheucnum \label{ucExcelRun}:] The simulation will always be an acceleration run, i.e the car will always start from rest and accelerate.
+  \item[\refstepcounter{ucnum} \uctheucnum \label{ucExcelRun}:] The simulation will always be an acceleration run, i.e. the car will always start from rest and accelerate.
 \end{description}
 
 \section{Module Hierarchy} \label{SecMH}
@@ -286,8 +286,8 @@ to be implemented.
 \subsection{Behaviour-Hiding Module}
 
 \begin{description}
-\item[Secrets:]The contents of the required behaviours.
-\item[Services:]Includes programs that provide externally visible behaviour of
+\item[Secrets:]The contents of the required behaviors.
+\item[Services:]Includes programs that provide externally visible behavior of
   the system as specified in the software requirements specification (SRS)
   documents. This module serves as a communication layer between the
   hardware-hiding module and the software decision module. The programs in this
@@ -355,7 +355,7 @@ to be implemented.
 \subsubsection{Playback Module (\mref{mPlayback})}
 
 \begin{description}
-\item[Secrets:] The format of simulation data and its mapping to Unity playback mechanisms.
+\item[Secrets:] The format of simulation data and it's mapping to Unity playback mechanisms.
 \item[Services:] Provides playback functionality by reading simulation data and rendering it in Unity.
 \item[Implemented By:] \progname{}
 \item[Type of Module:] Abstract Object
@@ -497,7 +497,7 @@ R17 & \mref{mHH}\\
 
 \section{Use Hierarchy Between Modules} \label{SecUse}
 
-In this section, the uses hierarchy between modules is
+In this section, the uses' hierarchy between modules is
 provided. \citet{Parnas1978} said of two programs A and B that A {\em uses} B if
 correct execution of B may be necessary for A to complete the task described in
 its specification. That is, A {\em uses} B if there exist situations in which
@@ -510,7 +510,7 @@ because they use modules from the lower levels.
 
 \begin{figure}[H]
 \centering
-%\includegraphics[width=0.7\textwidth]{UsesHierarchy.png}
+\includegraphics[width=0.7\textwidth]{moduleDrawing.drawio.png}
 \caption{Use hierarchy among modules}
 \label{FigUH}
 \end{figure}
@@ -529,17 +529,17 @@ needed. Drawings, Sketches, Figma}
 \section{Design of Communication Protocols}
 There are two main communication protocols used in the system.
 One is for going from Unity to Python and the other is for going from Python to Unity.
-Outside of these two instances, the other modules communication is handled through standard Unity or Python internal communication.
+Outside of these two instances, the other modules' communication is handled through standard Unity or Python internal communication.
 
 \subsection{Unity to Python}
 The Unity from Python communication is handled through passing parameters.
 Unity opens a terminal which calls the main Python script.
-This call also includes all of the parameters that are specified by the user.
+This call also includes all the parameters that are specified by the user.
 These parameters are then received by the Python script and are used to run the simulation.
 
 \subsection{Python to Unity}
 The Python to Unity communication is handled through a CSV file.
-After the simulation is ran, the Python script writes the results to a CSV file.
+After the simulation is run, the Python script writes the results to a CSV file.
 Unity then reads from this CSV file and gets the results of the simulation.
 This data is used to display the results of the simulation to the user.
 
@@ -558,7 +558,7 @@ The Unity and user interface components will be developed collaboratively by Tra
 \subsection*{Connecting the Components}
 The integration of the backend and mathematical model with the Unity and UI components will involve all team members and will be completed by February 1st, 2025. This phase will ensure that the backend models connect seamlessly with their respective visualizations. Full playback functionality will also be implemented, allowing the system to operate as intended.
 
-Team-wide testing will take place during this phase to identify and resolve any integration issues. Clear communication and collaboration between sub-teams will be crucial to ensure that all components function harmoniously.
+Team-wide testing will take place during this phase to identify and resolve any integration issues. Clear communication and collaboration between subteams will be crucial to ensure that all components function harmoniously.
 
 \subsection*{Additional Notes}
 All updates and task tracking will be managed through the project GitHub repository. The repository can be accessed at \url{https://github.com/gr812b/CVT-Simulator/issues}. Between January 27th and February 1st, 2025, effective communication between sub-teams will be vital to ensure the integration process proceeds smoothly. Team members are encouraged to check in regularly to verify that progress aligns with the established timeline.
