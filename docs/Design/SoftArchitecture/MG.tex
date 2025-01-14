@@ -508,15 +508,6 @@ the modules. It can be seen that the graph is a directed acyclic graph
 system, and modules in the higher level of the hierarchy are essentially simpler
 because they use modules from the lower levels.
 
-\wss{The uses relation is not a data flow diagram.  In the code there will often
-be an import statement in module A when it directly uses module B.  Module B
-provides the services that module A needs.  The code for module A needs to be
-able to see these services (hence the import statement).  Since the uses
-relation is transitive, there is a use relation without an import, but the
-arrows in the diagram typically correspond to the presence of import statement.}
-
-\wss{If module A uses module B, the arrow is directed from A to B.}
-
 \begin{figure}[H]
 \centering
 %\includegraphics[width=0.7\textwidth]{UsesHierarchy.png}
