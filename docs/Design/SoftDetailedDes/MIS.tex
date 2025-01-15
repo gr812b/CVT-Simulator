@@ -837,16 +837,10 @@ None.
 
 \newpage
 
-\section{MIS of Constants Module} \label{Module_constants} \wss{Use labels for
-  cross-referencing}
-
-\wss{You can reference SRS labels, such as R\ref{R_Inputs}.}
-
-\wss{It is also possible to use \LaTeX for hypperlinks to external documents.}
-
+\section{MIS of Constants Module} \label{Module_constants} 
 \subsection{Module}
 
-\wss{Short name for the module}
+Constants
 
 \subsection{Uses}
 None.
@@ -854,6 +848,33 @@ None.
 \subsection{Syntax}
 
 \subsubsection{Exported Constants}
+
+\begin{itemize}
+  \item \texttt{ENGINE\_INERTIA}: A positive real value ($\mathbb{R}_{+}$) representing the inertia of the current car's engine (in $\text{kg}\cdot\text{m}^2$) used for calculations involving car specifications.
+  \item \texttt{GEARBOX\_RATIO}: A positive real value ($\mathbb{R}_{+}$) representing the current car's gearbox ratio (unitless) used for calculations involving car specifications.
+  \item \texttt{FRONTAL\_AREA}: A positive real value ($\mathbb{R}_{+}$) representing the current car's frontal area (in $\text{m}^2$) used for calculations involving car specifications.
+  \item \texttt{DRAG\_COEFFICIENT}: A positive real value ($\mathbb{R}_{+}$) representing the current car's drag coefficient (unitless) used for calculations involving car specifications.
+  \item \texttt{CAR\_WEIGHT}: A positive real value ($\mathbb{R}_{+}$) representing the current car's weight (in $\text{lbs}$) used for calculations involving car specifications.
+  \item \texttt{CAR\_MASS}: A positive real value ($\mathbb{R}_{+}$) representing the current car's weight converted to kilograms (in $\text{kg}$) used for calculations involving car specifications.
+  \item \texttt{WHEEL\_RADIUS}: A positive real value ($\mathbb{R}_{+}$) representing the current car's wheel radius (in $\text{m}$) used for calculations involving car specifications.
+  \item \texttt{AIR\_DENSITY}: A positive real value ($\mathbb{R}_{+}$), set at \texttt{1.225} (in $\text{kg/m}^3$).
+  \item \texttt{GRAVITY}: A positive real value ($\mathbb{R}_{+}$), set at \texttt{9.80665} (in $\text{m/s}^2$).
+  \item \texttt{engineSpecs} A list of dictionaries representing various engine rpm's and corresponding torque values (in $\text{ft*lbs}$):=[
+    {"rpm": 2400, "torque": 18.5},
+    {"rpm": 2600, "torque": 18.1},
+    {"rpm": 2800, "torque": 17.4},
+    {"rpm": 3000, "torque": 16.6},
+    {"rpm": 3200, "torque": 15.4},
+    {"rpm": 3400, "torque": 14.5},
+    {"rpm": 3600, "torque": 13.5}]
+  \item \texttt{engineData}: A list of dictionary values for angular velocity(in $\text{rad/s}$), torque(in $\text{N*m}$), and power($\text{torque*angular velocity}$) converting the above \texttt{engineSpecs} into SI units.
+  \item \texttt{angular\_velocities}: A list of angular velocity values (in rad/s) extracted from \texttt{engineData}.
+  \item \texttt{torques}: A list of torque values (in N*m) extracted from \texttt{engineData}.
+  \item \texttt{powers}: A list of power values (in watts) calculated from \texttt{engineData}.
+  \item \texttt{torque\_curve}: A cubic interpolation function that maps \texttt{angular\_velocities} to \texttt{torques}, created using the \texttt{interp1d} method with extrapolation for values outside the range.
+  
+\end{itemize}
+
 
 \subsubsection{Exported Access Programs}
 
