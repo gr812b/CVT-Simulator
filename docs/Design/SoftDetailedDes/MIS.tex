@@ -164,80 +164,6 @@ The following table is taken directly from the Module Guide document for this pr
 \newpage
 ~\newpage
 
-\section{MIS of Hardware Hiding Module} \label{Module_hardware_hiding} \wss{Use labels for
-  cross-referencing}
-
-\wss{You can reference SRS labels, such as R\ref{R_Inputs}.}
-
-\wss{It is also possible to use \LaTeX for hypperlinks to external documents.}
-
-\subsection{Module}
-
-\wss{Short name for the module}
-
-\subsection{Uses}
-None.
-
-\subsection{Syntax}
-
-\subsubsection{Exported Constants}
-
-\subsubsection{Exported Access Programs}
-
-\begin{center}
-\begin{tabular}{p{2cm} p{4cm} p{4cm} p{2cm}}
-\hline
-\textbf{Name} & \textbf{In} & \textbf{Out} & \textbf{Exceptions} \\
-\hline
-\wss{accessProg} & - & - & - \\
-\hline
-\end{tabular}
-\end{center}
-
-\subsection{Semantics}
-
-\subsubsection{State Variables}
-
-\wss{Not all modules will have state variables.  State variables give the module
-  a memory.}
-
-\subsubsection{Environment Variables}
-
-\wss{This section is not necessary for all modules.  Its purpose is to capture
-  when the module has external interaction with the environment, such as for a
-  device driver, screen interface, keyboard, file, etc.}
-
-\subsubsection{Assumptions}
-
-\wss{Try to minimize assumptions and anticipate programmer errors via
-  exceptions, but for practical purposes assumptions are sometimes appropriate.}
-
-\subsubsection{Access Routine Semantics}
-
-\noindent \wss{accessProg}():
-\begin{itemize}
-\item transition: \wss{if appropriate} 
-\item output: \wss{if appropriate} 
-\item exception: \wss{if appropriate} 
-\end{itemize}
-
-\wss{A module without environment variables or state variables is unlikely to
-  have a state transition.  In this case a state transition can only occur if
-  the module is changing the state of another module.}
-
-\wss{Modules rarely have both a transition and an output.  In most cases you
-  will have one or the other.}
-
-\subsubsection{Local Functions}
-
-\wss{As appropriate} \wss{These functions are for the purpose of specification.
-  They are not necessarily something that is going to be implemented
-  explicitly.  Even if they are implemented, they are not exported; they only
-  have local scope.}
-
-\newpage
-
-
 \section{Engine Simulator Module} \label{Module_engine_simulator} \wss{Use labels for
   cross-referencing}
 
@@ -247,7 +173,7 @@ None.
 
 \subsection{Module}
 
-\wss{Short name for the module}
+Engine Module
 
 \subsection{Uses}
 
@@ -258,15 +184,17 @@ None.
 \subsection{Syntax}
 
 \subsubsection{Exported Constants}
+None
 
 \subsubsection{Exported Access Programs}
 
 \begin{center}
-\begin{tabular}{p{2cm} p{4cm} p{4cm} p{2cm}}
+\begin{tabular}{p{4cm} p{4cm} p{4cm} p{2cm}}
 \hline
 \textbf{Name} & \textbf{In} & \textbf{Out} & \textbf{Exceptions} \\
 \hline
-\wss{accessProg} & - & - & - \\
+getTorque & angularVeloctiy ($\mathbb{R}$) & torque ($\mathbb{R}$) & - \\
+calcuAngularAccel & angularVeloctiy ($\mathbb{R}$), loadTorque ($\mathbb{R}$)  & angularAcceleration ($\mathbb{R}$) & - \\
 \hline
 \end{tabular}
 \end{center}
@@ -275,55 +203,44 @@ None.
 
 \subsubsection{State Variables}
 
-\wss{Not all modules will have state variables.  State variables give the module
-  a memory.}
+\begin{itemize}
+  \item Torque curve $\mathbb{R}$ $\rightarrow$ $\mathbb{R}$
+  \item Inertia $\mathbb{R}$
+\end{itemize}
 
 \subsubsection{Environment Variables}
 
-\wss{This section is not necessary for all modules.  Its purpose is to capture
-  when the module has external interaction with the environment, such as for a
-  device driver, screen interface, keyboard, file, etc.}
+None
 
 \subsubsection{Assumptions}
-
-\wss{Try to minimize assumptions and anticipate programmer errors via
-  exceptions, but for practical purposes assumptions are sometimes appropriate.}
+\begin{itemize}
+  \item Torque Curve is initialized from the constants module
+  \item Inertia is positive
+\end{itemize}
 
 \subsubsection{Access Routine Semantics}
 
-\noindent \wss{accessProg}():
+\noindent getTorque(angularVeloctiy):
 \begin{itemize}
-\item transition: \wss{if appropriate} 
-\item output: \wss{if appropriate} 
-\item exception: \wss{if appropriate} 
+\item output: torque:= torqueCurve(angularVeloctiy) 
 \end{itemize}
 
-\wss{A module without environment variables or state variables is unlikely to
-  have a state transition.  In this case a state transition can only occur if
-  the module is changing the state of another module.}
-
-\wss{Modules rarely have both a transition and an output.  In most cases you
-  will have one or the other.}
+\noindent calcAngularAccel(angularVeloctiy, loadTorque):
+\begin{itemize}
+\item output: angularAcceleration:= (loadTorque - getTorque(angularVeloctiy))/inertia
+\end{itemize}
 
 \subsubsection{Local Functions}
 
-\wss{As appropriate} \wss{These functions are for the purpose of specification.
-  They are not necessarily something that is going to be implemented
-  explicitly.  Even if they are implemented, they are not exported; they only
-  have local scope.}
+None
 
 \newpage
 
-\section{External Forces Module} \label{Module_external_forces} \wss{Use labels for
-  cross-referencing}
-
-\wss{You can reference SRS labels, such as R\ref{R_Inputs}.}
-
-\wss{It is also possible to use \LaTeX for hypperlinks to external documents.}
+\section{External Forces Module} \label{Module_external_forces} 
 
 \subsection{Module}
 
-\wss{Short name for the module}
+Load Simulator
 
 \subsection{Uses}
 
@@ -334,15 +251,19 @@ None.
 \subsection{Syntax}
 
 \subsubsection{Exported Constants}
+None
 
 \subsubsection{Exported Access Programs}
 
 \begin{center}
-\begin{tabular}{p{2cm} p{4cm} p{4cm} p{2cm}}
+\begin{tabular}{p{4cm} p{4cm} p{4cm} p{2cm}}
 \hline
 \textbf{Name} & \textbf{In} & \textbf{Out} & \textbf{Exceptions} \\
 \hline
-\wss{accessProg} & - & - & - \\
+calcInclineForce & - & inclineForce $\mathbb{F}$ & - \\
+calcDragForce & velocity $\mathbb{F}$ & dragForce $\mathbb{F}$ & - \\
+calcLoadTorque & velocity $\mathbb{F}$ & loadTorque $\mathbb{F}$ & - \\
+calcGearboxLoad & velocity $\mathbb{F}$ & gearboxLoad $\mathbb{F}$ & - \\
 \hline
 \end{tabular}
 \end{center}
@@ -351,42 +272,41 @@ None.
 
 \subsubsection{State Variables}
 
-\wss{Not all modules will have state variables.  State variables give the module
-  a memory.}
+None
 
 \subsubsection{Environment Variables}
 
-\wss{This section is not necessary for all modules.  Its purpose is to capture
-  when the module has external interaction with the environment, such as for a
-  device driver, screen interface, keyboard, file, etc.}
+None
 
 \subsubsection{Assumptions}
 
-\wss{Try to minimize assumptions and anticipate programmer errors via
-  exceptions, but for practical purposes assumptions are sometimes appropriate.}
+Constants are initialized from the constants module
 
 \subsubsection{Access Routine Semantics}
 
-\noindent \wss{accessProg}():
+\noindent calcInclineForce():
 \begin{itemize}
-\item transition: \wss{if appropriate} 
-\item output: \wss{if appropriate} 
-\item exception: \wss{if appropriate} 
+\item output: inclineForce:= carMass*gravity*sin(inclineAngle)
 \end{itemize}
 
-\wss{A module without environment variables or state variables is unlikely to
-  have a state transition.  In this case a state transition can only occur if
-  the module is changing the state of another module.}
+\noindent calcDragForce():
+\begin{itemize}
+\item output: dragForce:= 0.5*airDensity*frontalArea*dragCoefficient*velocity$^2$
+\end{itemize}
 
-\wss{Modules rarely have both a transition and an output.  In most cases you
-  will have one or the other.}
+\noindent calcLoadTorque():
+\begin{itemize}
+\item output: loadTorque:= dragForce + inclineForce
+\end{itemize}
+
+\noindent calcGearboxLoad():
+\begin{itemize}
+\item output: gearboxLoad:= (loadTorque*wheelRadius)/gearboxRatio 
+\end{itemize}
 
 \subsubsection{Local Functions}
 
-\wss{As appropriate} \wss{These functions are for the purpose of specification.
-  They are not necessarily something that is going to be implemented
-  explicitly.  Even if they are implemented, they are not exported; they only
-  have local scope.}
+None
 
 \newpage
 
@@ -619,9 +539,7 @@ None.
 
 \newpage
 
-\section{MIS of Main Module} \label{Module_main} \wss{Use labels for
-  cross-referencing}
-
+\section{MIS of Main Module} \label{Module_main}
 \subsection{Module}
 
 Main
