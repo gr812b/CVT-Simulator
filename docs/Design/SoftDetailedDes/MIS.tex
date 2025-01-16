@@ -577,16 +577,12 @@ None
 
 \newpage
 
-\section{MIS of Playback Module} \label{Module_playback} \wss{Use labels for
-  cross-referencing}
+\section{MIS of Playback Module} \label{Module_playback} 
 
-\wss{You can reference SRS labels, such as R\ref{R_Inputs}.}
-
-\wss{It is also possible to use \LaTeX for hypperlinks to external documents.}
 
 \subsection{Module}
 
-\wss{Short name for the module}
+Playback
 
 \subsection{Uses}
 None.
@@ -594,15 +590,19 @@ None.
 \subsection{Syntax}
 
 \subsubsection{Exported Constants}
+carSpinTransform: Transform
 
 \subsubsection{Exported Access Programs}
 
 \begin{center}
-\begin{tabular}{p{2cm} p{4cm} p{4cm} p{2cm}}
+\begin{tabular}{p{4cm} p{4cm} p{4cm} p{2cm}}
 \hline
 \textbf{Name} & \textbf{In} & \textbf{Out} & \textbf{Exceptions} \\
 \hline
-\wss{accessProg} & - & - & - \\
+StartPlayback & - & - & - \\
+RestartPlayback & - & - & - \\
+PausePlayback & - & - & - \\
+PlaybackCoroutine & - & - & - \\
 \hline
 \end{tabular}
 \end{center}
@@ -611,42 +611,49 @@ None.
 
 \subsubsection{State Variables}
 
-\wss{Not all modules will have state variables.  State variables give the module
-  a memory.}
+\begin{itemize}
+  \item isPlaying: $\mathbb{B}$
+  \item currentIndex: $\mathbb{I}$
+  \item startTime: $\mathbb{F}$ 
+  \item carTransform: Transform
+\end{itemize}
 
 \subsubsection{Environment Variables}
 
-\wss{This section is not necessary for all modules.  Its purpose is to capture
-  when the module has external interaction with the environment, such as for a
-  device driver, screen interface, keyboard, file, etc.}
+\begin{itemize}
+  \item Start Button: Button
+  \item Restart Button: Button
+  \item Pause Button: Button
+\end{itemize}
 
 \subsubsection{Assumptions}
 
-\wss{Try to minimize assumptions and anticipate programmer errors via
-  exceptions, but for practical purposes assumptions are sometimes appropriate.}
-
+Assume that there is data to playback.
 \subsubsection{Access Routine Semantics}
 
-\noindent \wss{accessProg}():
+\noindent StartPlayback():
 \begin{itemize}
-\item transition: \wss{if appropriate} 
-\item output: \wss{if appropriate} 
-\item exception: \wss{if appropriate} 
+\item transition: isPlaying:= True, currentIndex:= 0, startTime:= time.time()
 \end{itemize}
 
-\wss{A module without environment variables or state variables is unlikely to
-  have a state transition.  In this case a state transition can only occur if
-  the module is changing the state of another module.}
+\noindent PausePlayback():
+\begin{itemize}
+\item transition: isPlaying:= False
+\end{itemize}
 
-\wss{Modules rarely have both a transition and an output.  In most cases you
-  will have one or the other.}
+\noindent RestartPlayback():
+\begin{itemize}
+\item transition: isPlaying:= False, currentIndex:= 0, startTime:= time.time(), carTransform:= back to start position
+\end{itemize}
+
+\noindent PlaybackCoroutine():
+\begin{itemize}
+\item transition: carTransform updates to new positions, carSpinTransform updates to new rotations based on position
+\end{itemize}
 
 \subsubsection{Local Functions}
 
-\wss{As appropriate} \wss{These functions are for the purpose of specification.
-  They are not necessarily something that is going to be implemented
-  explicitly.  Even if they are implemented, they are not exported; they only
-  have local scope.}
+None
 
 \newpage
 
