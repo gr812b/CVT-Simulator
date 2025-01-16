@@ -110,6 +110,7 @@ integer & $\mathbb{Z}$ & a number without a fractional component in (-$\infty$, 
 natural number & $\mathbb{N}$ & a number without a fractional component in [1, $\infty$) \\
 real & $\mathbb{R}$ & any number in (-$\infty$, $\infty$)\\
 positive real & $\mathbf{R}_{+}$ & any real number ($\mathbf{R}$) in ($0$, $\infty$) \\
+input & $\mathbb{I}$ & a set of values \{$\mathbf{R}_{+}$, $\mathbb{R} \rightarrow \mathbb{R}$, $\mathbf{R}_{+}$, $\mathbf{R}_{+}$, $\mathbb{R} \rightarrow \mathbb{R}$, $\mathbf{R}_{+}$,$\mathbf{R}_{+}$, $\mathbf{R}_{+}$, $\mathbf{R}_{+}$, $\mathbf{R}_{+}$, $\mathbf{R}_{+}$\} that represent the input of the program \\
 \bottomrule
 \end{tabular} 
 \end{center}
@@ -1119,7 +1120,7 @@ None.
 \hline
 \textbf{Name} & \textbf{In} & \textbf{Out} & \textbf{Exceptions} \\
 \hline
-frontToBack & primWeight ($\mathbf{R}_{+}$), primRampGeo ($\mathbb{R} \rightarrow \mathbb{R}$), primSpringRate ($\mathbf{R}_{+}$), primSpringPre ($\mathbf{R}_{+}$), secHelixGeo ($\mathbb{R} \rightarrow \mathbb{R}$), secSpringRate ($\mathbf{R}_{+}$), secSpringPre ($\mathbf{R}_{+}$), vehicleWeight ($\mathbf{R}_{+}$), driverWeight ($\mathbf{R}_{+}$), traction ($\mathbf{R}_{+}$), inclineAngle ($\mathbf{R}_{+}$) & primWeight ($\mathbf{R}_{+}$), primRampGeo ($\mathbb{R} \rightarrow \mathbb{R}$), primSpringRate ($\mathbf{R}_{+}$), primSpringPre ($\mathbf{R}_{+}$), secHelixGeo ($\mathbb{R} \rightarrow \mathbb{R}$), secSpringRate ($\mathbf{R}_{+}$), secSpringPre ($\mathbf{R}_{+}$), vehicleWeight ($\mathbf{R}_{+}$), driverWeight ($\mathbf{R}_{+}$), traction ($\mathbf{R}_{+}$), inclineAngle ($\mathbf{R}_{+}$) & - \\
+frontToBack & input ($\mathbb{I}$) & ouput ($\mathbb{I}$) & - \\
 backToFront & - & states ($\mathbb{S}^n$) & - \\
 \hline
 \end{tabular}
@@ -1146,7 +1147,7 @@ All files are in the correct location matching the given paths.
 
 \subsubsection{Access Routine Semantics}
 
-\noindent frontToBack(primWeight, primRampGeo, primSpringRate, primSpringPre, secHelixGeo, secSpringRate, secSpringPre, vehicleWeight, driverWeight, traction, inclineAngle):
+\noindent frontToBack(input):
 \begin{itemize}
 \item transition: Sends the given parameters to the backend controller.
 \item exception: \wss{if appropriate} 
