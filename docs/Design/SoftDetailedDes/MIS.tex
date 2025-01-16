@@ -460,16 +460,11 @@ None.
 
 \newpage
 
-\section{MIS of ODE Solver Module} \label{Module_ODE_solver} \wss{Use labels for
-  cross-referencing}
-
-\wss{You can reference SRS labels, such as R\ref{R_Inputs}.}
-
-\wss{It is also possible to use \LaTeX for hypperlinks to external documents.}
+\section{MIS of ODE Solver Module} \label{Module_ODE_solver}
 
 \subsection{Module}
 
-\wss{Short name for the module}
+ODE Solver
 
 \subsection{Uses}
 
@@ -478,11 +473,13 @@ None.
   \item CVT Simulation Module (\ref{Module_cvt_simulation})
   \item External Forces Module (\ref{Module_external_forces})
   \item Engine Simulator Module (\ref{Module_engine_simulator})
+  \item State Module (\ref{Module_state})
 \end{itemize}
 
 \subsection{Syntax}
 
 \subsubsection{Exported Constants}
+None
 
 \subsubsection{Exported Access Programs}
 
@@ -491,7 +488,7 @@ None.
 \hline
 \textbf{Name} & \textbf{In} & \textbf{Out} & \textbf{Exceptions} \\
 \hline
-\wss{accessProg} & - & - & - \\
+solveIvp & list of enginerAngularAcceleration $\mathbb{R}$ and carAccleration $\mathbb{R}$ and carVelocity $\mathbb{S}$, timeSpan (tuple of $\mathbb{Z}$ and $\mathbb{Z}$), array of $\mathbb{S}$, array of $\mathbb{F}$  & list of States (State Module) & - \\
 \hline
 \end{tabular}
 \end{center}
@@ -500,42 +497,26 @@ None.
 
 \subsubsection{State Variables}
 
-\wss{Not all modules will have state variables.  State variables give the module
-  a memory.}
+None
 
 \subsubsection{Environment Variables}
 
-\wss{This section is not necessary for all modules.  Its purpose is to capture
-  when the module has external interaction with the environment, such as for a
-  device driver, screen interface, keyboard, file, etc.}
+None
 
 \subsubsection{Assumptions}
 
-\wss{Try to minimize assumptions and anticipate programmer errors via
-  exceptions, but for practical purposes assumptions are sometimes appropriate.}
+None
 
 \subsubsection{Access Routine Semantics}
 
-\noindent \wss{accessProg}():
+\noindent solveIVP():
 \begin{itemize}
-\item transition: \wss{if appropriate} 
-\item output: \wss{if appropriate} 
-\item exception: \wss{if appropriate} 
+\item output: states:= solve\_ivp(ode, initial\_state, time\_span, args)
 \end{itemize}
-
-\wss{A module without environment variables or state variables is unlikely to
-  have a state transition.  In this case a state transition can only occur if
-  the module is changing the state of another module.}
-
-\wss{Modules rarely have both a transition and an output.  In most cases you
-  will have one or the other.}
 
 \subsubsection{Local Functions}
 
-\wss{As appropriate} \wss{These functions are for the purpose of specification.
-  They are not necessarily something that is going to be implemented
-  explicitly.  Even if they are implemented, they are not exported; they only
-  have local scope.}
+None
 
 \newpage
 
