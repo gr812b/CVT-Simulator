@@ -403,12 +403,13 @@ None.
 \subsubsection{Exported Access Programs}
 
 \begin{center}
-\begin{tabular}{p{2.5cm} p{4cm} p{4cm} p{2cm}}
+\begin{tabular}{p{3cm} p{4cm} p{4cm} p{2cm}}
 \hline
 \textbf{Name} & \textbf{In} & \textbf{Out} & \textbf{Exceptions} \\
 \hline
-springForce & shiftDistance ($\mathbb{R}$) & force ($\mathbb{R}$) & - \\
-rampForce & shiftDistance ($\mathbb{R}$), angularVelocity ($\mathbb{R}$) & force ($\mathbb{R}$) & \\
+torsSpringForce & shiftDistance ($\mathbb{R}$) & force ($\mathbb{R}$) & - \\
+compSpringForce & shiftDistance ($\mathbb{R}$) & force ($\mathbb{R}$) & - \\
+rampForce & torque ($\mathbb{R}$), ratio ($\mathbb{R}$), shiftDistance ($\mathbb{R}$) & force ($\mathbb{R}$) & \\
 \hline
 \end{tabular}
 \end{center}
@@ -438,7 +439,7 @@ None.
 
 \noindent torsSpringForce():
 \begin{itemize}
-  \item Output: force $\coloneq \text{torsForce} (k_\text{tors}, \theta_\text{sec} + f_\text{sec}(\text{shiftDistance})) / (2 \cdot r_\text{sec} \cdot \tan(\theta))$
+  \item Output: force $\coloneq \text{torsForce} (k_\text{tors}, \theta_\text{sec} + f_\text{sec}(\text{shiftDistance})) / (2 \cdot r_\text{helix} \cdot \tan(g_{\text{sec}}(\text{shiftDistance})))$
 \end{itemize}
 
 \noindent compSpringForce():
