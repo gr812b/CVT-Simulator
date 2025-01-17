@@ -193,7 +193,8 @@ actually be implemented.
   \item [\refstepcounter{mnum} \mthemnum \label{mHH}:] Hardware-Hiding Module
   \item [\refstepcounter{mnum} \mthemnum \label{mEngineSim}:] Engine Simulator Module
   \item [\refstepcounter{mnum} \mthemnum \label{mExternalForces}:] External Forces Module
-  \item [\refstepcounter{mnum} \mthemnum \label{mCVT}:] CVT Simulation Module
+  \item [\refstepcounter{mnum} \mthemnum \label{mPrimCVT}:] Primary CVT Module
+  \item [\refstepcounter{mnum} \mthemnum \label{mSecCVT}:] Secondary CVT Module
   \item [\refstepcounter{mnum} \mthemnum \label{mInitialize}:] Initialize Module
   \item [\refstepcounter{mnum} \mthemnum \label{mODESolver}:] ODE Solver Module
   \item [\refstepcounter{mnum} \mthemnum \label{mMain}:] Main Module
@@ -221,7 +222,8 @@ actually be implemented.
 \multirow{7}{0.3\textwidth}{Behaviour-Hiding Module}
 & Engine Simulator Module\\
 & External Forces Module\\
-& CVT Simulation Module\\
+& Primary CVT Module\\
+& Secondary CVT Module\\
 & Initialize Module\\
 & ODE Solver Module\\
 & Main Module\\ 
@@ -295,15 +297,6 @@ to be implemented.
 \item[Implemented By:] --
 \end{description}
 
-\subsubsection{Initialize Module (\mref{mInitialize})}
-
-\begin{description}
-\item[Secrets:]The format and structure of the input data.
-\item[Services:]Converts the input data into the initial state of the simulation.
-\item[Implemented By:] \progname{}
-\item[Type of Module:] Record
-\end{description}
-
 \subsubsection{Engine Simulator Module (\mref{mEngineSim})}
 
 \begin{description}
@@ -322,13 +315,31 @@ to be implemented.
 \item[Type of Module:] Abstract Object
 \end{description}
 
-\subsubsection{CVT Simulation Module (\mref{mCVT})}
+\subsubsection{Primary CVT Module (\mref{mPrimCVT})}
 
 \begin{description}
-\item[Secrets:] The dynamics of the CVT, including the relationship between clamping forces, belt ratios, and load transfer.
-\item[Services:] Simulates the CVT's behavior under changing conditions by calculating primary and secondary clamping forces and belt ratios.
+\item[Secrets:] The dynamics of the primary CVT, including the relationship between clamping forces, belt ratios, and load transfer.
+\item[Services:] Simulates the primary CVT's behavior under changing conditions by calculating primary clamping forces and belt ratios.
 \item[Implemented By:] \progname{}
 \item[Type of Module:] Abstract Object
+\end{description}
+
+\subsubsection{Secondary CVT Module (\mref{mSecCVT})}
+
+\begin{description}
+\item[Secrets:] The dynamics of the secondary CVT, including the relationship between clamping forces, belt ratios, and load transfer.
+\item[Services:] Simulates the primary secondary CVT's behavior under changing conditions by calculating secondary clamping forces and belt ratios.
+\item[Implemented By:] \progname{}
+\item[Type of Module:] Abstract Object
+\end{description}
+
+\subsubsection{Initialize Module (\mref{mInitialize})}
+
+\begin{description}
+\item[Secrets:]The format and structure of the input data.
+\item[Services:]Converts the input data into the initial state of the simulation.
+\item[Implemented By:] \progname{}
+\item[Type of Module:] Record
 \end{description}
 
 
@@ -450,14 +461,14 @@ requirements and between the modules and the anticipated changes.
 \toprule
 \textbf{Req.} & \textbf{Modules}\\
 \midrule
-R1 & \mref{mCVT}, \mref{mODESolver}, \mref{mConstants}\\
+R1 & \mref{mPrimCVT}, \mref{mSecCVT}, \mref{mODESolver}, \mref{mConstants}\\
 R2 & \mref{mExternalForces}, \mref{mConstants}\\
 R3 & \mref{mExternalForces}, \mref{mConstants}\\
 R4 & \mref{mExternalForces}, \mref{mConstants}\\
-R5 & \mref{mCVT}, \mref{mConstants}\\
-R6 & \mref{mCVT}, \mref{mConstants}\\
-R7 & \mref{mCVT}, \mref{mConstants}\\
-R8 & \mref{mCVT}, \mref{mConstants}\\
+R5 & \mref{mPrimCVT}, \mref{mConstants}\\
+R6 & \mref{mSecCVT}, \mref{mConstants}\\
+R7 & \mref{mPrimCVT}, \mref{mSecCVT}, \mref{mConstants}\\
+R8 & \mref{mPrimCVT}, \mref{mSecCVT}, \mref{mConstants}\\
 R9 & \mref{mEngineSim}, \mref{mConstants}\\
 R10 & \mref{mGUI}, \mref{mInitialize}\\
 R11 & \mref{mGUI}, \mref{mInitialize}\\
@@ -483,7 +494,7 @@ R17 & \mref{mHH}\\
 \acref{acInput}\acref{acInputParameters} & \mref{mInitialize}\\
 \acref{acEngineSimulator} & \mref{mEngineSim}\\
 \acref{acExternalForces} & \mref{mExternalForces}\\
-\acref{acCVTSimulator} & \mref{mCVT}\\
+\acref{acCVTSimulator} & \mref{mPrimCVT}, \mref{mSecCVT},\\
 \acref{acVisualizations} & \mref{mVisualizer}\\
 \acref{acConstants} & \mref{mConstants}\\
 
