@@ -194,7 +194,7 @@ actually be implemented.
   \item [\refstepcounter{mnum} \mthemnum \label{mEngineSim}:] Engine Simulator Module
   \item [\refstepcounter{mnum} \mthemnum \label{mExternalForces}:] External Forces Module
   \item [\refstepcounter{mnum} \mthemnum \label{mCVT}:] CVT Simulation Module
-  \item [\refstepcounter{mnum} \mthemnum \label{mInput}:] Input Module
+  \item [\refstepcounter{mnum} \mthemnum \label{mInitialize}:] Initialize Module
   \item [\refstepcounter{mnum} \mthemnum \label{mODESolver}:] ODE Solver Module
   \item [\refstepcounter{mnum} \mthemnum \label{mMain}:] Main Module
   \item [\refstepcounter{mnum} \mthemnum \label{mPlayback}:] Playback Module
@@ -222,7 +222,7 @@ actually be implemented.
 & Engine Simulator Module\\
 & External Forces Module\\
 & CVT Simulation Module\\
-& Input Module\\
+& Initialize Module\\
 & ODE Solver Module\\
 & Main Module\\ 
 & Playback Module\\
@@ -295,12 +295,11 @@ to be implemented.
 \item[Implemented By:] --
 \end{description}
 
-\subsubsection{Input Format Module (\mref{mInput})}
+\subsubsection{Initialize Module (\mref{mInitialize})}
 
 \begin{description}
 \item[Secrets:]The format and structure of the input data.
-\item[Services:]Converts the input data into the data structure used by the
-  input parameters module.
+\item[Services:]Converts the input data into the initial state of the simulation.
 \item[Implemented By:] \progname{}
 \item[Type of Module:] [Record, Library, Abstract Object, or Abstract Data Type]
   [Information to include for leaf modules in the decomposition by secrets tree.]

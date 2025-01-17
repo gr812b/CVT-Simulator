@@ -142,7 +142,7 @@ The following table is taken directly from the Module Guide document for this pr
 & Engine Simulator Module\\
 & External Forces Module\\
 & CVT Simulation Module\\
-& Input Module\\
+& Initialize Module\\
 & ODE Solver Module\\
 & Main Module\\ 
 & Playback Module\\
@@ -382,7 +382,7 @@ None.
 \end{itemize}
 \newpage
 
-\section{MIS of Input Module} \label{Module_input}
+\section{MIS of Initialize Module} \label{Module_initialize}
 
 \subsection{Module}
 
@@ -404,6 +404,7 @@ None.
 \hline
 \textbf{Name} & \textbf{In} & \textbf{Out} & \textbf{Exceptions} \\
 \hline
+parse & receivedInput ($\mathbb{I}$) & parsedInput ($\mathbb{I}$) & - \\
 initialize & input ($\mathbb{I}$) & state ($\mathbb{S}$) & - \\
 \hline
 \end{tabular}
@@ -424,10 +425,15 @@ None.
 None.
 
 \subsubsection{Access Routine Semantics}
+\noindent parse(receivedInput):
+\begin{itemize}
+\item transition: parses the received input into the appropriate format.
+\item exception: \wss{if appropriate} 
+\end{itemize}
 
 \noindent initialize(input):
 \begin{itemize}
-\item transition: converts input into the initial state of the simulation
+\item output: converts input into the initial state of the simulation.
 \item exception: \wss{if appropriate} 
 \end{itemize}
 
@@ -857,7 +863,7 @@ None.
 \subsection{Uses}
 
 \begin{itemize}
-  \item Input Module (\ref{Module_input})
+  \item Initialize Module (\ref{Module_initialize})
   \item ODE Solver Module (\ref{Module_ODE_solver})
 \end{itemize}
 
