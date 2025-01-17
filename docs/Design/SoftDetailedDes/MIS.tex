@@ -267,7 +267,16 @@ calcGearboxLoad & velocity $\mathbb{R}$ & gearboxLoad $\mathbb{R}$ & - \\
 
 \subsubsection{State Variables}
 
-None
+\begin{itemize}
+  \item gavitational acceleration ($\mathbb{R}$) denoted as $g$
+  \item air density ($\mathbb{R}$) denoted as $\rho$
+  \item frontal area ($\mathbb{R}$) denoted as $A$
+  \item drag coefficient ($\mathbb{R}$) denoted as $C_{\text{d}}$
+  \item car mass ($\mathbb{R}$) denoted as $m$
+  \item wheel radius ($\mathbb{R}$) denoted as $r$
+  \item gearbox ratio ($\mathbb{R}$) denoted as $R$
+  \item incline angle ($\mathbb{R}$) denoted as $\theta$
+\end{itemize}
 
 \subsubsection{Environment Variables}
 
@@ -281,22 +290,22 @@ Constants are initialized from the constants module
 
 \noindent calcInclineForce():
 \begin{itemize}
-\item output: inclineForce:= carMass*gravity*sin(inclineAngle)
+\item output: inclineForce:= $m \times g \times sin(\theta)$
 \end{itemize}
 
-\noindent calcDragForce():
+\noindent calcDragForce(velocity):
 \begin{itemize}
-\item output: dragForce:= 0.5*airDensity*frontalArea*dragCoefficient*velocity$^2$
+\item output: dragForce:= $\frac{1}{2} \times \rho \times A \times C_{\text{d}} \times \text{velocity}^2$
 \end{itemize}
 
-\noindent calcLoadTorque():
+\noindent calcLoadTorque(velocity):
 \begin{itemize}
-\item output: loadTorque:= dragForce + inclineForce
+\item output: loadTorque:= calcInclineForce() + calcDragForce(velocity)
 \end{itemize}
 
-\noindent calcGearboxLoad():
+\noindent calcGearboxLoad(velocity):
 \begin{itemize}
-\item output: gearboxLoad:= (loadTorque*wheelRadius)/gearboxRatio 
+\item output: gearboxLoad:= $\frac{\text{calcLoadTorque(velocity)} \times r}{R}$
 \end{itemize}
 
 \subsubsection{Local Functions}
