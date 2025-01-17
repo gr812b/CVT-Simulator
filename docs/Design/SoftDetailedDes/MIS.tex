@@ -304,7 +304,7 @@ None
 
 \newpage
 
-\section{MIS of CVT Simulation Module} \label{Module_cvt_simulation} \wss{Use labels for
+\section{MIS of Primary CVT Simulation Module} \label{Module_cvt_simulation} \wss{Use labels for
   cross-referencing}
 
 \wss{You can reference SRS labels, such as R\ref{R_Inputs}.}
@@ -379,8 +379,88 @@ None.
 \end{itemize}
 \newpage
 
-\section{MIS of Initialize Module} \label{Module_initialize}
+\section{MIS of Secondary CVT Simulation Module} \label{Module_cvt_simulation} \wss{Use labels for
+  cross-referencing}
 
+\wss{You can reference SRS labels, such as R\ref{R_Inputs}.}
+
+\wss{It is also possible to use \LaTeX for hypperlinks to external documents.}
+
+\subsection{Module}
+
+\wss{Short name for the module}
+
+\subsection{Uses}
+
+\begin{itemize}
+  \item Constants Module (\ref{Module_constants})
+\end{itemize}
+
+\subsection{Syntax}
+
+\subsubsection{Exported Constants}
+
+\subsubsection{Exported Access Programs}
+
+\begin{center}
+\begin{tabular}{p{2.5cm} p{4cm} p{4cm} p{2cm}}
+\hline
+\textbf{Name} & \textbf{In} & \textbf{Out} & \textbf{Exceptions} \\
+\hline
+springForce & shiftDistance ($\mathbb{R}$) & force ($\mathbb{R}$) & - \\
+rampForce & shiftDistance ($\mathbb{R}$), angularVelocity ($\mathbb{R}$) & force ($\mathbb{R}$) & \\
+\hline
+\end{tabular}
+\end{center}
+
+\subsection{Semantics}
+
+\subsubsection{State Variables}
+
+\begin{enumerate}
+  \item sheaveMass ($\mathbb{R}$)
+  \item beltMass ($\mathbb{R}$)
+  \item springCoefficientTor ($\mathbb{R}$) denoted as $k_{\text{tors}}$
+  \item springCoefficientComp ($\mathbb{R}$) denoted as $k_{\text{comp}}$
+  \item Initial torsional rotation of secondary spring ($\mathbb{R}$) denoted as $\theta_{\text{sec}}$
+  \item Initial compression of secondary spring ($\mathbb{R}$) denoted as $d_{\text{sec}}$
+  \item helix radius ($\mathbb{R}$) denoted as $r_{\text{helix}}$
+  \item Torsional distance given by distance shifted ($\mathbb{R} \rightarrow \mathbb{R}$) denoted as $f_{\text{sec}}(d)$
+  \item Ramp angle given by distance shifted ($\mathbb{R} \rightarrow \mathbb{R}$) denoted as $g_{\text{sec}}(d)$
+\end{enumerate}
+
+\subsubsection{Environment Variables}
+None.
+
+\subsubsection{Assumptions}
+
+\subsubsection{Access Routine Semantics}
+
+\noindent torsSpringForce():
+\begin{itemize}
+  \item Output: force $\coloneq \text{torsForce} (k_\text{tors}, \theta_\text{sec} + f_\text{sec}(\text{shiftDistance})) / (2 \cdot r_\text{sec} \cdot \tan(\theta))$
+\end{itemize}
+
+\noindent compSpringForce():
+\begin{itemize}
+  \item output: force $\coloneq \text{springForce} (k_\text{comp}, \text{shiftDistance}) $
+\end{itemize}
+
+\noindent helixForce():
+\begin{itemize}
+  \item output: force $\coloneq \text{helixForce} (\text{torque}, \text{ratio}, r_{\text{helix}}, g_{\text{sec}}(\text{shiftDistance}))$
+\end{itemize}
+
+\subsubsection{Local Functions}
+
+\begin{itemize}
+  \item comp spring force: $\text{springForce(k, x)} \coloneq \text{k} \cdot \text{x}$
+  \item tors spring force: $\text{torsForce}(k, \theta, r) \coloneq \frac{k \cdot \theta}{r}$ 
+  \item helix force: $\text{helixForce}(T, R, r, \theta) \coloneq \frac{T \cdot R}{2r\tan(\theta)}$
+\end{itemize}
+
+\newpage
+\section{MIS of Initialize Module} \label{Module_initialize}
 \subsection{Module}
 
 initializer
