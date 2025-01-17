@@ -189,7 +189,7 @@ None
 \textbf{Name} & \textbf{In} & \textbf{Out} & \textbf{Exceptions} \\
 \hline
 getTorque & angularVeloctiy ($\mathbb{R}$) & torque ($\mathbb{R}$) & - \\
-calcuAngularAccel & angularVeloctiy ($\mathbb{R}$), loadTorque ($\mathbb{R}$)  & angularAcceleration ($\mathbb{R}$) & - \\
+calcuAngularAccel & angularVeloctiy ($\mathbb{R}$), loadTorque ($\mathbb{R}$)  & angularAcceleration ($\mathbb{R}$) & ValueError \\
 \hline
 \end{tabular}
 \end{center}
@@ -210,7 +210,6 @@ None
 \subsubsection{Assumptions}
 \begin{itemize}
   \item Torque Curve is initialized from the constants module
-  \item Inertia is positive
 \end{itemize}
 
 \subsubsection{Access Routine Semantics}
@@ -223,6 +222,7 @@ None
 \noindent calcAngularAccel(angularVeloctiy, loadTorque):
 \begin{itemize}
 \item output: angularAcceleration:= (loadTorque - getTorque(angularVeloctiy))/inertia
+\item error: ValueError iff inertia = 0
 \end{itemize}
 
 \subsubsection{Local Functions}

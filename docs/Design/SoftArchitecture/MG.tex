@@ -413,7 +413,7 @@ to be implemented.
 \subsubsection{GUI Module (\mref{mGUI})}
 
 \begin{description}
-\item[Secrets:] The graphical representation techniques and rendering optimizations used in Unity.
+\item[Secrets:] The layout and design of the user interface.
 \item[Services:] Displays simulation outputs to the user, enables interaction (e.g., input adjustments, playback controls), and visualizes simulation results in 3D and 2D formats.
 \item[Implemented By:] \progname{}
 \item[Type of Module:] Abstract Object
@@ -546,15 +546,30 @@ This data is used to display the results of the simulation to the user.
 Rev 0 of the product is due by February 3rd, 2025. To ensure adequate time for any last-minute adjustments or unforeseen issues, the goal is to complete all tasks by February 1st, 2025.
 
 \subsection*{Backend and Mathematical Model}
-The backend and mathematical model are primarily the responsibility of Kai, with support from Cameron. The team aims to complete this work by January 27th, 2025. This includes finalizing the CVT mathematical modules, which are critical to the product. Additionally, the engine and external forces modules, which are already complete, will be integrated into the system.
+The backend and mathematical model are primarily the responsibility of Kai, with support from Cameron. The team aims to complete this work by January 27th, 2025. 
 
-Initial validation and verification will also be conducted. These checks will include ensuring that values increase monotonically where expected, verifying the realism of generated values within the context of the problem, and performing quick automated tests that do not rely on realistic data. These steps will help ensure the robustness of the backend before integration.
+This includes:
+\begin{enumerate}
+\item Finalizing the CVT mathematical modules, which are critical to the product. Additionally, the engine and external forces modules, which are already complete, will be integrated into the system. This refers to modules \mref{mEngineSim}, \mref{mExternalForces}, and \mref{mCVT} and will be completed no later than January 22nd, 2025.
+\item Following this, modules \mref{mODESolver}, \mref{mConstants}, \mref{mState}, and \mref{mBCM} will be developed. This will connect the previous work together to create a complete backend. This will be completed by January 25th, 2025.
+\end{enumerate}
+
+Initial validation and verification will also be conducted. These checks will include ensuring that values increase monotonically where expected, verifying the realism of generated values within the context of the problem, and performing quick automated tests that do not rely on realistic data. These steps will help ensure the robustness of the backend before integration. This will take up the remaining time.
 
 \subsection*{Unity and User Interface (UI)}
-The Unity and user interface components will be developed collaboratively by Travis and Grace. The deadline for this section is also January 27th, 2025. The team will work to build the UI prototype based on the Figma design provided in Section 10 of the documentation. This prototype will handle user input effectively and include visualizations such as 3D models, graphs, gauges, and other essential elements. These features are intended to provide an intuitive and visually engaging user experience.
+The Unity and user interface components will be developed collaboratively by Travis and Grace. The deadline for this section is also January 27th, 2025. 
+
+This includes:
+\begin{enumerate}
+\item Building the UI prototype based on the Figma design provided in Section 10 of the documentation along with basic output features. This refers to modules \mref{mGUI} and \mref{mFileOutput}  and will be completed by January 22nd, 2025.
+\item Completing the Playback module (\mref{mPlayback}) by January 25th, 2025. This will involve using fed data from the backend with the Unity components to ensure that the simulation results are displayed accurately. This does not cover the communication module.
+\end{enumerate}
+
+
+This prototype will handle user input effectively and include visualizations such as 3D models, graphs, gauges, and other essential elements. These features are intended to provide an intuitive and visually engaging user experience. Initial testing of these will be done via early user feedback, ensuring simple bugs are caught and feedback can be acquired for later use. This will take the remaining time until January 27th, 2025.
 
 \subsection*{Connecting the Components}
-The integration of the backend and mathematical model with the Unity and UI components will involve all team members and will be completed by February 1st, 2025. This phase will ensure that the backend models connect seamlessly with their respective visualizations. Full playback functionality will also be implemented, allowing the system to operate as intended.
+The integration of the backend and mathematical model with the Unity and UI components will involve all team members and will be completed by February 1st, 2025. This phase will ensure that the backend models connect seamlessly with their respective visualizations. Full playback functionality will also be implemented, allowing the system to operate as intended. This should complete module \mref{mComm}.
 
 Team-wide testing will take place during this phase to identify and resolve any integration issues. Clear communication and collaboration between subteams will be crucial to ensure that all components function harmoniously.
 
