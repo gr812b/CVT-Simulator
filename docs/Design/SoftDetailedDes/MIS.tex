@@ -1160,11 +1160,6 @@ None.
 \bibliographystyle {plainnat}
 \bibliography {../../../refs/References}
 
-\newpage
-
-\section{Appendix} \label{Appendix}
-
-\wss{Extra information if required}
 
 \newpage{}
 
@@ -1181,21 +1176,24 @@ graduate attribute of Problem Analysis and Design.
   \item What went well while writing this deliverable? 
   \\
   During this deliverable the team was successfully able to document our design choices for the \progname. 
-  Creating this document helped identify gaps in our initial planning and lead our team to have a clearer idea and breakdown of our program going into Rev 0.
+  Creating this document helped identify gaps and flaws in our initial planning which lead our team to have a more clear idea and breakdown of our program.
   By organizing our design choices we now have a strong foundation and structured documentation to build on, setting us up for success in Rev 0 and future revisions. 
+  Additionally, our team was able to split up modules that we knew could be easily filled in and for more complex modules these were discussed as a team, ensuring each team member was on the same page. 
+  This strategy worked well for this document and allowed us to be time efficient.
   \item What pain points did you experience during this deliverable, and how
     did you resolve them?
   \\
   The main pain point our group faced was the discovered need to expand large modules, that had not been fully scoped out yet.
-  While writing these large modules this lead to the realization that having one module for these large parts did not make sense. 
+  While writing this document, specifically large modules such as what was initially the CVT Simulation Module, lead to the realization that having one large module did not make sense. 
   This pain point was resolved by realizing it was necessary to create additional modules and introduce helper functions within these modules to help simplify the expansion and organization of the module. 
+  This lead to the creation of additional modules such as the Primary CVT Simulation Module and Secondary CVT Simulation Module which solved this pain point. 
 
   \item Which of your design decisions stemmed from speaking to your client(s)
   or a proxy (e.g. your peers, stakeholders, potential users)? For those that
   were not, why, and where did they come from?
   \\
-  The design of the UI and what would be required by our interfaces was guided by client feedback. 
-  Based on discussions with the McMaster Baja team we knew how our interface should look and function.
+  The design of the UI and what would be required by our interfaces was guided by client feedback and needs. 
+  Based on discussions with the McMaster Baja team we knew how our interfaces should look and function.
   The other design decisions that did not stem from client input, the team relied on our own experiences and expertise. 
 
   \item While creating the design doc, what parts of your other documents (e.g.
@@ -1206,18 +1204,21 @@ graduate attribute of Problem Analysis and Design.
   \item What are the limitations of your solution?  Put another way, given
   unlimited resources, what could you do to make the project better? (LO\_ProbSolutions)
   \\
-  The two primary limitation of our teams' solution are the modelling accuracy and expertise in advanced mathematics. 
-  By increasing our computational power and having more precise measurements of time within the simulation would allow for more complex simulations with a higher precision.
-
+  The two primary limitations of our team's solution are the modeling accuracy and our teams' expertise in advanced mathematics. 
+  By increasing our computational power and having more precise(smaller) measurements of time within the simulation, we could allow for more complex simulations with a higher precision. 
+  This would enable the modeling of more complex scenarios, such as dynamic interactions between components or real-world variations, that are currently simplified or excluded. 
+  Additionally, incorporating improved numerical techniques and improving the level of detail in our simulations would significantly enhance the realism and reliability of the system's outputs.
+  
   \item Give a brief overview of other design solutions you considered.  What
-  are the benefits and trade offs of those other designs compared with the chosen
+  are the benefits and trade-offs of those other designs compared with the chosen
   design?  From all the potential options, why did you select the documented design?
   (LO\_Explores)
   \\
   Our team considered using alternative platforms such as Unreal Engine and React for the application. 
-  Although Unreal Engine would have likely worked well for the project needs this software was dismissed due it's cost. 
-  React was an additional option discussed, however the current communication protocol would need to be revised away from using CSV files.
-  Unity and Python were chosen as the most feasible and cost-effective solution, aligning with the projects constraints and needs. 
+  Although Unreal Engine would have likely worked well for the project needs this software was dismissed due it's licensing cost. 
+  React was an additional option that was discussed, however the current communication protocol which relies on CVS files for data exchange would likely need to be revised. 
+  Unity and Python were chosen as the most feasible and cost-effective solution.
+  These platforms aligned  with the projects constraints and needs but also were affordable and functional. 
 \end{enumerate}
 
 \end{document}
