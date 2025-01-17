@@ -390,8 +390,8 @@ to be implemented.
 \subsubsection{Backend Controller Module (\mref{mBCM})}
 
 \begin{description}
-\item[Secrets:] 
-\item[Services:] 
+\item[Secrets:] The orchestration of the backend simulation.
+\item[Services:] Control the backend simulation.
 \item[Implemented By:] \progname{}
 \item[Type of Module:] Abstract Object
 \end{description}
@@ -460,9 +460,9 @@ R6 & \mref{mCVT}, \mref{mConstants}\\
 R7 & \mref{mCVT}, \mref{mConstants}\\
 R8 & \mref{mCVT}, \mref{mConstants}\\
 R9 & \mref{mEngineSim}, \mref{mConstants}\\
-R10 & \mref{mGUI}, \mref{mInput}\\
-R11 & \mref{mGUI}, \mref{mInput}\\
-R12 & \mref{mGUI}, \mref{mInput}\\
+R10 & \mref{mGUI}, \mref{mInitialize}\\
+R11 & \mref{mGUI}, \mref{mInitialize}\\
+R12 & \mref{mGUI}, \mref{mInitialize}\\
 R13 & \mref{mVisualizer}, \mref{mPlayback}\\
 R14 & \mref{mVisualizer}, \mref{mPlayback}\\
 R15 & \mref{mVisualizer}, \mref{mPlayback}\\
@@ -481,7 +481,7 @@ R17 & \mref{mHH}\\
 \textbf{AC} & \textbf{Modules}\\
 \midrule
 \acref{acHardware} & \mref{mHH}\\
-\acref{acInput}\acref{acInputParameters} & \mref{mInput}\\
+\acref{acInput}\acref{acInputParameters} & \mref{mInitialize}\\
 \acref{acEngineSimulator} & \mref{mEngineSim}\\
 \acref{acExternalForces} & \mref{mExternalForces}\\
 \acref{acCVTSimulator} & \mref{mCVT}\\
