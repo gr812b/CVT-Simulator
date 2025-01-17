@@ -112,7 +112,7 @@ real & $\mathbb{R}$ & any number in (-$\infty$, $\infty$)\\
 positive real & $\mathbf{R}_{+}$ & any real number ($\mathbf{R}$) in ($0$, $\infty$) \\
 input & $\mathbb{I}$ & a set of values \{$\mathbf{R}_{+}$, $\mathbb{R} \rightarrow \mathbb{R}$, $\mathbf{R}_{+}$, $\mathbf{R}_{+}$, $\mathbb{R} \rightarrow \mathbb{R}$, $\mathbf{R}_{+}$,$\mathbf{R}_{+}$, $\mathbf{R}_{+}$, $\mathbf{R}_{+}$, $\mathbf{R}_{+}$, $\mathbf{R}_{+}$\} that represent the input of the program \\
 state & $\mathbb{S}$ & a set of values \{\} representing the state of the simulation \\
-\bottomrule
+dataPoint & $\mathbb{D}$ & Tuple of Time: $\mathbb{R}$, Position: $\mathbb{R}$\\
 \end{tabular} 
 \end{center}
 
@@ -166,12 +166,7 @@ The following table is taken directly from the Module Guide document for this pr
 \newpage
 ~\newpage
 
-\section{Engine Simulator Module} \label{Module_engine_simulator} \wss{Use labels for
-  cross-referencing}
-
-\wss{You can reference SRS labels, such as R\ref{R_Inputs}.}
-
-\wss{It is also possible to use \LaTeX for hypperlinks to external documents.}
+\section{Engine Simulator Module} \label{Module_engine_simulator}
 
 \subsection{Module}
 
@@ -262,10 +257,10 @@ None
 \hline
 \textbf{Name} & \textbf{In} & \textbf{Out} & \textbf{Exceptions} \\
 \hline
-calcInclineForce & - & inclineForce $\mathbb{F}$ & - \\
-calcDragForce & velocity $\mathbb{F}$ & dragForce $\mathbb{F}$ & - \\
-calcLoadTorque & velocity $\mathbb{F}$ & loadTorque $\mathbb{F}$ & - \\
-calcGearboxLoad & velocity $\mathbb{F}$ & gearboxLoad $\mathbb{F}$ & - \\
+calcInclineForce & - & inclineForce $\mathbb{R}$ & - \\
+calcDragForce & velocity $\mathbb{R}$ & dragForce $\mathbb{R}$ & - \\
+calcLoadTorque & velocity $\mathbb{R}$ & loadTorque $\mathbb{R}$ & - \\
+calcGearboxLoad & velocity $\mathbb{R}$ & gearboxLoad $\mathbb{R}$ & - \\
 \hline
 \end{tabular}
 \end{center}
@@ -470,7 +465,7 @@ None
 \hline
 \textbf{Name} & \textbf{In} & \textbf{Out} & \textbf{Exceptions} \\
 \hline
-solveIvp & list of enginerAngularAcceleration $\mathbb{R}$ and carAccleration $\mathbb{R}$ and carVelocity $\mathbb{S}$, timeSpan (tuple of $\mathbb{Z}$ and $\mathbb{Z}$), array of $\mathbb{S}$, array of $\mathbb{F}$  & list of States (State Module) & - \\
+solveIvp & list of enginerAngularAcceleration $\mathbb{R}$ and carAccleration $\mathbb{R}$ and carVelocity $\mathbb{S}$, timeSpan (tuple of $\mathbb{Z}$ and $\mathbb{Z}$), array of $\mathbb{S}$, array of $\mathbb{R}$  & list of States (State Module) & - \\
 \hline
 \end{tabular}
 \end{center}
@@ -595,8 +590,8 @@ PlaybackCoroutine & - & - & - \\
 
 \begin{itemize}
   \item isPlaying: $\mathbb{B}$
-  \item currentIndex: $\mathbb{I}$
-  \item startTime: $\mathbb{F}$ 
+  \item currentIndex: $\mathbb{Z}$
+  \item startTime: $\mathbb{R}$ 
   \item carTransform: Transform
 \end{itemize}
 
@@ -639,26 +634,23 @@ None
 
 \newpage
 
-\section{MIS of Visualizer Module} \label{Module_visualizer} \wss{Use labels for
-  cross-referencing}
-
-\wss{You can reference SRS labels, such as R\ref{R_Inputs}.}
-
-\wss{It is also possible to use \LaTeX for hypperlinks to external documents.}
+\section{MIS of Visualizer Module} \label{Module_visualizer} 
 
 \subsection{Module}
 
-\wss{Short name for the module}
+Visualizer
 
 \subsection{Uses}
 
 \begin{itemize}
   \item GUI Module (\ref{Module_GUI})
+  \item Playback Module (\ref{Module_playback})
 \end{itemize}
 
 \subsection{Syntax}
 
 \subsubsection{Exported Constants}
+None
 
 \subsubsection{Exported Access Programs}
 
@@ -667,7 +659,7 @@ None
 \hline
 \textbf{Name} & \textbf{In} & \textbf{Out} & \textbf{Exceptions} \\
 \hline
-\wss{accessProg} & - & - & - \\
+LoadCsvData & - & - & - \\
 \hline
 \end{tabular}
 \end{center}
@@ -676,42 +668,30 @@ None
 
 \subsubsection{State Variables}
 
-\wss{Not all modules will have state variables.  State variables give the module
-  a memory.}
+\begin{itemize}
+  \item dataPoints: list of $\mathbb{D}$ 
+\end{itemize}
 
 \subsubsection{Environment Variables}
-
-\wss{This section is not necessary for all modules.  Its purpose is to capture
-  when the module has external interaction with the environment, such as for a
-  device driver, screen interface, keyboard, file, etc.}
+None
 
 \subsubsection{Assumptions}
 
-\wss{Try to minimize assumptions and anticipate programmer errors via
-  exceptions, but for practical purposes assumptions are sometimes appropriate.}
+Assume that the simulation results are stored in a csv file.
 
 \subsubsection{Access Routine Semantics}
 
-\noindent \wss{accessProg}():
+\noindent LoadCsvData():
 \begin{itemize}
-\item transition: \wss{if appropriate} 
-\item output: \wss{if appropriate} 
-\item exception: \wss{if appropriate} 
+\item transition: dataPoints:= load data from csv file
+\item output: dataPoints
 \end{itemize}
 
-\wss{A module without environment variables or state variables is unlikely to
-  have a state transition.  In this case a state transition can only occur if
-  the module is changing the state of another module.}
-
-\wss{Modules rarely have both a transition and an output.  In most cases you
-  will have one or the other.}
+None
 
 \subsubsection{Local Functions}
 
-\wss{As appropriate} \wss{These functions are for the purpose of specification.
-  They are not necessarily something that is going to be implemented
-  explicitly.  Even if they are implemented, they are not exported; they only
-  have local scope.}
+None
 
 \newpage
 
