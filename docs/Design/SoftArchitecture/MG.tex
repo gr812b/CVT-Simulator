@@ -157,16 +157,15 @@ adapted here is called design for
 change.
 
 \begin{description}
-\item[\refstepcounter{acnum} \actheacnum \label{acHardware}:] The specific
-  hardware on which the software is running.
-\item[\refstepcounter{acnum} \actheacnum \label{acInput}:] The format of the
-  initial input data.
-\item ...
-\end{description}
-
-\wss{Anticipated changes relate to changes that would be made in requirements,
-design or implementation choices.  They are not related to changes that are made
-at run-time, like the values of parameters.}
+  \item[\refstepcounter{acnum} \actheacnum \label{acHardware}:] The specific hardware on which the software is running.
+  \item[\refstepcounter{acnum} \actheacnum \label{acInput}:] The format and structure of the initial input data.
+  \item[\refstepcounter{acnum} \actheacnum \label{acEngineSimulator}:] The engine simulator implementation could be updated or replaced as new models or technologies become available.
+  \item[\refstepcounter{acnum} \actheacnum \label{acExternalForces}:] External forces considered in the simulation could vary, depending on changes in design parameters or environmental considerations.
+  \item[\refstepcounter{acnum} \actheacnum \label{acCVTSimulator}:] The CVT simulator implementation is likely change during the validation and verification (VnV) process.
+  \item[\refstepcounter{acnum} \actheacnum \label{acVisualizations}:] The visualizations used, and their implementation could be updated to improve the user experience or to accommodate new features.
+  \item[\refstepcounter{acnum} \actheacnum \label{acConstants}:] Constants used in the software could be updated based on changes to the car's physical design.
+  \item[\refstepcounter{acnum} \actheacnum \label{acInputParameters}:] Input parameters for the system could change to include more parameters based on new requirements or to improve the accuracy of the simulation.
+  \end{description}
 
 \subsection{Unlikely Changes} \label{SecUchange}
 
@@ -178,9 +177,9 @@ will potentially need to be modified. Hence, it is not intended that these
 decisions will be changed.
 
 \begin{description}
-\item[\refstepcounter{ucnum} \uctheucnum \label{ucIO}:] Input/Output devices
-  (Input: File and/or Keyboard, Output: File, Memory, and/or Screen).
-\item ...
+  \item[\refstepcounter{ucnum} \uctheucnum \label{ucIO}:] Input/Output devices (Input: File and/or Keyboard, Output: File, Memory, and/or Screen).
+  \item[\refstepcounter{ucnum} \uctheucnum \label{ucConstraints}:] Constraint parameters in our model/system will remain fixed and will not change.
+  \item[\refstepcounter{ucnum} \uctheucnum \label{ucExcelRun}:] The simulation will always be an acceleration run, i.e. the car will always start from rest and accelerate.
 \end{description}
 
 \section{Module Hierarchy} \label{SecMH}
@@ -191,9 +190,23 @@ below, which are leaves in the hierarchy tree, are the modules that will
 actually be implemented.
 
 \begin{description}
-\item [\refstepcounter{mnum} \mthemnum \label{mHH}:] Hardware-Hiding Module
-\item ...
-\end{description}
+  \item [\refstepcounter{mnum} \mthemnum \label{mHH}:] Hardware-Hiding Module
+  \item [\refstepcounter{mnum} \mthemnum \label{mEngineSim}:] Engine Simulator Module
+  \item [\refstepcounter{mnum} \mthemnum \label{mExternalForces}:] External Forces Module
+  \item [\refstepcounter{mnum} \mthemnum \label{mPrimCVT}:] Primary CVT Module
+  \item [\refstepcounter{mnum} \mthemnum \label{mSecCVT}:] Secondary CVT Module
+  \item [\refstepcounter{mnum} \mthemnum \label{mInitialize}:] Initialize Module
+  \item [\refstepcounter{mnum} \mthemnum \label{mODESolver}:] ODE Solver Module
+  \item [\refstepcounter{mnum} \mthemnum \label{mMain}:] Main Module
+  \item [\refstepcounter{mnum} \mthemnum \label{mPlayback}:] Playback Module
+  \item [\refstepcounter{mnum} \mthemnum \label{mVisualizer}:] Visualizer Module
+  \item [\refstepcounter{mnum} \mthemnum \label{mConstants}:] Constants Module
+  \item [\refstepcounter{mnum} \mthemnum \label{mState}:] State Module
+  \item [\refstepcounter{mnum} \mthemnum \label{mBCM}:] Backend Controller Module
+  \item [\refstepcounter{mnum} \mthemnum \label{mGUI}:] GUI Module
+  \item [\refstepcounter{mnum} \mthemnum \label{mFileOutput}:] File Output Module
+  \item [\refstepcounter{mnum} \mthemnum \label{mComm}:] Communication Module
+  \end{description}
 
 
 \begin{table}[h!]
@@ -206,19 +219,25 @@ actually be implemented.
 {Hardware-Hiding Module} & ~ \\
 \midrule
 
-\multirow{7}{0.3\textwidth}{Behaviour-Hiding Module} & ?\\
-& ?\\
-& ?\\
-& ?\\
-& ?\\
-& ?\\
-& ?\\ 
-& ?\\
+\multirow{7}{0.3\textwidth}{Behaviour-Hiding Module}
+& Engine Simulator Module\\
+& External Forces Module\\
+& Primary CVT Module\\
+& Secondary CVT Module\\
+& Initialize Module\\
+& ODE Solver Module\\
+& Main Module\\ 
+& Playback Module\\
+& Visualizer Module\\
+& Constants Module\\
+& State Module\\
+& Backend Controller Module\\
 \midrule
 
-\multirow{3}{0.3\textwidth}{Software Decision Module} & {?}\\
-& ?\\
-& ?\\
+\multirow{3}{0.3\textwidth}{Software Decision Module}
+& GUI Module\\
+& File Output Module\\
+& Communication Module\\
 \bottomrule
 
 \end{tabular}
@@ -269,8 +288,8 @@ to be implemented.
 \subsection{Behaviour-Hiding Module}
 
 \begin{description}
-\item[Secrets:]The contents of the required behaviours.
-\item[Services:]Includes programs that provide externally visible behaviour of
+\item[Secrets:]The contents of the required behaviors.
+\item[Services:]Includes programs that provide externally visible behavior of
   the system as specified in the software requirements specification (SRS)
   documents. This module serves as a communication layer between the
   hardware-hiding module and the software decision module. The programs in this
@@ -278,18 +297,115 @@ to be implemented.
 \item[Implemented By:] --
 \end{description}
 
-\subsubsection{Input Format Module (\mref{mInput})}
+\subsubsection{Engine Simulator Module (\mref{mEngineSim})}
+
+\begin{description}
+\item[Secrets:] The relationship between torque, RPM, and load in the engine's performance curve.
+\item[Services:] Simulates engine behavior by generating torque based on input RPM, throttle position, and load conditions.
+\item[Implemented By:] \progname{}
+\item[Type of Module:] Abstract Object
+\end{description}
+
+\subsubsection{External Forces Module (\mref{mExternalForces})}
+
+\begin{description}
+\item[Secrets:] The equations for calculating gravity, air resistance, and rolling resistance forces acting on the vehicle.
+\item[Services:] Computes the net external forces acting on the vehicle for given conditions like incline, speed, and drag coefficient.
+\item[Implemented By:] \progname{}
+\item[Type of Module:] Abstract Object
+\end{description}
+
+\subsubsection{Primary CVT Module (\mref{mPrimCVT})}
+
+\begin{description}
+\item[Secrets:] The dynamics of the primary CVT, including the relationship between clamping forces, belt ratios, and load transfer.
+\item[Services:] Simulates the primary CVT's behavior under changing conditions by calculating primary clamping forces and belt ratios.
+\item[Implemented By:] \progname{}
+\item[Type of Module:] Abstract Object
+\end{description}
+
+\subsubsection{Secondary CVT Module (\mref{mSecCVT})}
+
+\begin{description}
+\item[Secrets:] The dynamics of the secondary CVT, including the relationship between clamping forces, belt ratios, and load transfer.
+\item[Services:] Simulates the primary secondary CVT's behavior under changing conditions by calculating secondary clamping forces and belt ratios.
+\item[Implemented By:] \progname{}
+\item[Type of Module:] Abstract Object
+\end{description}
+
+\subsubsection{Initialize Module (\mref{mInitialize})}
 
 \begin{description}
 \item[Secrets:]The format and structure of the input data.
-\item[Services:]Converts the input data into the data structure used by the
-  input parameters module.
-\item[Implemented By:] [Your Program Name Here]
-\item[Type of Module:] [Record, Library, Abstract Object, or Abstract Data Type]
-  [Information to include for leaf modules in the decomposition by secrets tree.]
+\item[Services:]Converts the input data into the initial state of the simulation.
+\item[Implemented By:] \progname{}
+\item[Type of Module:] Record
 \end{description}
 
-\subsubsection{Etc.}
+
+\subsubsection{ODE Solver Module (\mref{mODESolver})}
+
+\begin{description}
+\item[Secrets:] The numerical methods and parameters used by SciPy to solve ordinary differential equations.
+\item[Services:] Solves the system of differential equations governing the CVT system's dynamics over time.
+\item[Implemented By:] SciPy
+\item[Type of Module:] Library
+\end{description}
+
+\subsubsection{Main Module (\mref{mMain})}
+
+\begin{description}
+\item[Secrets:] The orchestration of various modules to achieve the simulation flow.
+\item[Services:] Manages the simulation's execution by calling the ODE solver, handling inputs/outputs, and coordinating between modules.
+\item[Implemented By:] \progname{}
+\item[Type of Module:] Abstract Object
+\end{description}
+
+\subsubsection{Playback Module (\mref{mPlayback})}
+
+\begin{description}
+\item[Secrets:] The format of simulation data and it's mapping to Unity playback mechanisms.
+\item[Services:] Provides playback functionality by reading simulation data and rendering it in Unity.
+\item[Implemented By:] \progname{}
+\item[Type of Module:] Abstract Object
+\end{description}
+
+\subsubsection{Visualizer Module (\mref{mVisualizer})}
+
+\begin{description}
+\item[Secrets:] The graphical representation and rendering techniques used in Unity.
+\item[Services:] Visualizes simulation results through charts, graphs, and 3D models, integrating data from various modules.
+\item[Implemented By:] Unity
+\item[Type of Module:] Abstract Object
+\end{description}
+
+\subsubsection{Constants Module (\mref{mConstants})}
+
+\begin{description}
+\item[Secrets:] The storage and retrieval of constant values like engine torque curves, car weight, and drag coefficients.
+\item[Services:] Provides a centralized location for retrieving predefined constant values used across the simulation.
+\item[Implemented By:] \progname{}
+\item[Type of Module:] Library
+\end{description}
+
+\subsubsection{State Module (\mref{mState})}
+
+\begin{description}
+\item[Secrets:] The format of the system state.
+\item[Services:] Stores and converts the system state between formats.
+\item[Implemented By:] \progname{}
+\item[Type of Module:] Record
+\end{description}
+
+\subsubsection{Backend Controller Module (\mref{mBCM})}
+
+\begin{description}
+\item[Secrets:] The orchestration of the backend simulation.
+\item[Services:] Control the backend simulation.
+\item[Implemented By:] \progname{}
+\item[Type of Module:] Abstract Object
+\end{description}
+
 
 
 \subsection{Software Decision Module}
@@ -305,7 +421,32 @@ to be implemented.
 \item[Implemented By:] --
 \end{description}
 
-\subsubsection{Etc.}
+\subsubsection{GUI Module (\mref{mGUI})}
+
+\begin{description}
+\item[Secrets:] The layout and design of the user interface.
+\item[Services:] Displays simulation outputs to the user, enables interaction (e.g., input adjustments, playback controls), and visualizes simulation results in 3D and 2D formats.
+\item[Implemented By:] \progname{}
+\item[Type of Module:] Abstract Object
+\end{description}
+
+\subsubsection{File Output Module (\mref{mFileOutput})}
+
+\begin{description}
+\item[Secrets:] The format of the output data and the methods used for file serialization.
+\item[Services:] Saves simulation results (e.g., graphs, raw data) into user-friendly formats like CSV or JSON for external use and analysis.
+\item[Implemented By:] \progname{}
+\item[Type of Module:] Library
+\end{description}
+
+\subsubsection{Communication Module (\mref{mComm})}
+
+\begin{description}
+\item[Secrets:] The protocol and serialization methods used for data exchange between Unity and the Python backend.
+\item[Services:] Facilitates data transfer between the Unity-based GUI and the Python-based simulation modules, ensuring synchronization and integrity of inputs/outputs.
+\item[Implemented By:] \progname{}
+\item[Type of Module:] Abstract Object
+\end{description}
 
 \section{Traceability Matrix} \label{SecTM}
 
@@ -320,17 +461,23 @@ requirements and between the modules and the anticipated changes.
 \toprule
 \textbf{Req.} & \textbf{Modules}\\
 \midrule
-R1 & \mref{mHH}, \mref{mInput}, \mref{mParams}, \mref{mControl}\\
-R2 & \mref{mInput}, \mref{mParams}\\
-R3 & \mref{mVerify}\\
-R4 & \mref{mOutput}, \mref{mControl}\\
-R5 & \mref{mOutput}, \mref{mODEs}, \mref{mControl}, \mref{mSeqDS}, \mref{mSolver}, \mref{mPlot}\\
-R6 & \mref{mOutput}, \mref{mODEs}, \mref{mControl}, \mref{mSeqDS}, \mref{mSolver}, \mref{mPlot}\\
-R7 & \mref{mOutput}, \mref{mEnergy}, \mref{mControl}, \mref{mSeqDS}, \mref{mPlot}\\
-R8 & \mref{mOutput}, \mref{mEnergy}, \mref{mControl}, \mref{mSeqDS}, \mref{mPlot}\\
-R9 & \mref{mVerifyOut}\\
-R10 & \mref{mOutput}, \mref{mODEs}, \mref{mControl}\\
-R11 & \mref{mOutput}, \mref{mODEs}, \mref{mEnergy}, \mref{mControl}\\
+R1 & \mref{mPrimCVT}, \mref{mSecCVT}, \mref{mODESolver}, \mref{mConstants}\\
+R2 & \mref{mExternalForces}, \mref{mConstants}\\
+R3 & \mref{mExternalForces}, \mref{mConstants}\\
+R4 & \mref{mExternalForces}, \mref{mConstants}\\
+R5 & \mref{mPrimCVT}, \mref{mConstants}\\
+R6 & \mref{mSecCVT}, \mref{mConstants}\\
+R7 & \mref{mPrimCVT}, \mref{mSecCVT}, \mref{mConstants}\\
+R8 & \mref{mPrimCVT}, \mref{mSecCVT}, \mref{mConstants}\\
+R9 & \mref{mEngineSim}, \mref{mConstants}\\
+R10 & \mref{mGUI}, \mref{mInitialize}\\
+R11 & \mref{mGUI}, \mref{mInitialize}\\
+R12 & \mref{mGUI}, \mref{mInitialize}\\
+R13 & \mref{mVisualizer}, \mref{mPlayback}\\
+R14 & \mref{mVisualizer}, \mref{mPlayback}\\
+R15 & \mref{mVisualizer}, \mref{mPlayback}\\
+R16 & \mref{mHH}\\
+R17 & \mref{mHH}\\
 \bottomrule
 \end{tabular}
 \caption{Trace Between Requirements and Modules}
@@ -344,17 +491,13 @@ R11 & \mref{mOutput}, \mref{mODEs}, \mref{mEnergy}, \mref{mControl}\\
 \textbf{AC} & \textbf{Modules}\\
 \midrule
 \acref{acHardware} & \mref{mHH}\\
-\acref{acInput} & \mref{mInput}\\
-\acref{acParams} & \mref{mParams}\\
-\acref{acVerify} & \mref{mVerify}\\
-\acref{acOutput} & \mref{mOutput}\\
-\acref{acVerifyOut} & \mref{mVerifyOut}\\
-\acref{acODEs} & \mref{mODEs}\\
-\acref{acEnergy} & \mref{mEnergy}\\
-\acref{acControl} & \mref{mControl}\\
-\acref{acSeqDS} & \mref{mSeqDS}\\
-\acref{acSolver} & \mref{mSolver}\\
-\acref{acPlot} & \mref{mPlot}\\
+\acref{acInput}\acref{acInputParameters} & \mref{mInitialize}\\
+\acref{acEngineSimulator} & \mref{mEngineSim}\\
+\acref{acExternalForces} & \mref{mExternalForces}\\
+\acref{acCVTSimulator} & \mref{mPrimCVT}, \mref{mSecCVT},\\
+\acref{acVisualizations} & \mref{mVisualizer}\\
+\acref{acConstants} & \mref{mConstants}\\
+
 \bottomrule
 \end{tabular}
 \caption{Trace Between Anticipated Changes and Modules}
@@ -363,7 +506,7 @@ R11 & \mref{mOutput}, \mref{mODEs}, \mref{mEnergy}, \mref{mControl}\\
 
 \section{Use Hierarchy Between Modules} \label{SecUse}
 
-In this section, the uses hierarchy between modules is
+In this section, the uses' hierarchy between modules is
 provided. \citet{Parnas1978} said of two programs A and B that A {\em uses} B if
 correct execution of B may be necessary for A to complete the task described in
 its specification. That is, A {\em uses} B if there exist situations in which
@@ -374,18 +517,9 @@ the modules. It can be seen that the graph is a directed acyclic graph
 system, and modules in the higher level of the hierarchy are essentially simpler
 because they use modules from the lower levels.
 
-\wss{The uses relation is not a data flow diagram.  In the code there will often
-be an import statement in module A when it directly uses module B.  Module B
-provides the services that module A needs.  The code for module A needs to be
-able to see these services (hence the import statement).  Since the uses
-relation is transitive, there is a use relation without an import, but the
-arrows in the diagram typically correspond to the presence of import statement.}
-
-\wss{If module A uses module B, the arrow is directed from A to B.}
-
 \begin{figure}[H]
 \centering
-%\includegraphics[width=0.7\textwidth]{UsesHierarchy.png}
+\includegraphics[width=0.7\textwidth]{moduleDrawing.drawio.png}
 \caption{Use hierarchy among modules}
 \label{FigUH}
 \end{figure}
@@ -393,15 +527,65 @@ arrows in the diagram typically correspond to the presence of import statement.}
 %\section*{References}
 
 \section{User Interfaces}
+\noindent Link to Figma:
+\url{https://www.figma.com/design/REbQeg2EuDxgU07C6aS5Os/Capstone?node-id=0-1&t=0Ay7pkvwNLkEgVxE-1}
+\\
+\noindent Note that the screenshots of each interface can be seen in the Appendix of this document.
 
-\wss{Design of user interface for software and hardware.  Attach an appendix if
+\noindent\wss{Design of user interface for software and hardware.  Attach an appendix if
 needed. Drawings, Sketches, Figma}
 
 \section{Design of Communication Protocols}
+There are two main communication protocols used in the system.
+One is for going from Unity to Python and the other is for going from Python to Unity.
+Outside these two instances, the other modules' communication is handled through standard Unity or Python internal communication.
 
-\wss{If appropriate}
+\subsection{Unity to Python}
+The Unity from Python communication is handled through passing parameters.
+Unity opens a terminal which calls the main Python script.
+This call also includes all the parameters that are specified by the user.
+These parameters are then received by the Python script and are used to run the simulation.
+
+\subsection{Python to Unity}
+The Python to Unity communication is handled through a CSV file.
+After the simulation is run, the Python script writes the results to a CSV file.
+Unity then reads from this CSV file and gets the results of the simulation.
+This data is used to display the results of the simulation to the user.
 
 \section{Timeline}
+
+Rev 0 of the product is due by February 3rd, 2025. To ensure adequate time for any last-minute adjustments or unforeseen issues, the goal is to complete all tasks by February 1st, 2025.
+
+\subsection*{Backend and Mathematical Model}
+The backend and mathematical model are primarily the responsibility of Kai, with support from Cameron. The team aims to complete this work by January 27th, 2025. 
+
+This includes:
+\begin{enumerate}
+\item Finalizing the CVT mathematical modules, which are critical to the product. Additionally, the engine and external forces modules, which are already complete, will be integrated into the system. This refers to modules \mref{mEngineSim}, \mref{mExternalForces}, and \mref{mCVT} and will be completed no later than January 22nd, 2025.
+\item Following this, modules \mref{mODESolver}, \mref{mConstants}, \mref{mState}, and \mref{mBCM} will be developed. This will connect the previous work together to create a complete backend. This will be completed by January 25th, 2025.
+\end{enumerate}
+
+Initial validation and verification will also be conducted. These checks will include ensuring that values increase monotonically where expected, verifying the realism of generated values within the context of the problem, and performing quick automated tests that do not rely on realistic data. These steps will help ensure the robustness of the backend before integration. This will take up the remaining time.
+
+\subsection*{Unity and User Interface (UI)}
+The Unity and user interface components will be developed collaboratively by Travis and Grace. The deadline for this section is also January 27th, 2025. 
+
+This includes:
+\begin{enumerate}
+\item Building the UI prototype based on the Figma design provided in Section 10 of the documentation along with basic output features. This refers to modules \mref{mGUI} and \mref{mFileOutput}  and will be completed by January 22nd, 2025.
+\item Completing the Playback module (\mref{mPlayback}) by January 25th, 2025. This will involve using fed data from the backend with the Unity components to ensure that the simulation results are displayed accurately. This does not cover the communication module.
+\end{enumerate}
+
+
+This prototype will handle user input effectively and include visualizations such as 3D models, graphs, gauges, and other essential elements. These features are intended to provide an intuitive and visually engaging user experience. Initial testing of these will be done via early user feedback, ensuring simple bugs are caught and feedback can be acquired for later use. This will take the remaining time until January 27th, 2025.
+
+\subsection*{Connecting the Components}
+The integration of the backend and mathematical model with the Unity and UI components will involve all team members and will be completed by February 1st, 2025. This phase will ensure that the backend models connect seamlessly with their respective visualizations. Full playback functionality will also be implemented, allowing the system to operate as intended. This should complete module \mref{mComm}.
+
+Team-wide testing will take place during this phase to identify and resolve any integration issues. Clear communication and collaboration between subteams will be crucial to ensure that all components function harmoniously.
+
+\subsection*{Additional Notes}
+All updates and task tracking will be managed through the project GitHub repository. The repository can be accessed at \url{https://github.com/gr812b/CVT-Simulator/issues}. Between January 27th and February 1st, 2025, effective communication between subteams will be vital to ensure the integration process proceeds smoothly. Team members are encouraged to check in regularly to verify that progress aligns with the established timeline.
 
 \wss{Schedule of tasks and who is responsible}
 
@@ -410,6 +594,31 @@ needed. Drawings, Sketches, Figma}
 \bibliographystyle {plainnat}
 \bibliography{../../../refs/References}
 
-\newpage{}
+\newpage
+\section*{Appendix}
+\begin{figure}[H]
+  \begin{center}
+   \includegraphics[width=0.7\textwidth]{{home.png}}
+  \caption{Home Page }
+  \label{Fig_Home} 
+  \end{center}
+  \end{figure}
+
+\begin{figure}[H]
+  \begin{center}
+   \includegraphics[width=0.7\textwidth]{{inputs.png}}
+  \caption{Inputs Page}
+  \label{Fig_Inputs} 
+  \end{center}
+  \end{figure}
+
+\begin{figure}[H]
+  \begin{center}
+   \includegraphics[width=0.7\textwidth]{{simulation.png}}
+  \caption{Simulation Page}
+  \label{Fig_Sim} 
+  \end{center}
+  \end{figure}
+
 
 \end{document}

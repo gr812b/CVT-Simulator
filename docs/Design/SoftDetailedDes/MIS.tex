@@ -20,6 +20,7 @@
 \usepackage{caption}
 \usepackage{fullpage}
 
+
 \hypersetup{
 bookmarks=true,     % show bookmarks bar?
 colorlinks=true,       % false: boxed links; true: colored links
@@ -53,8 +54,7 @@ urlcolor=cyan          % color of external links
 \begin{tabularx}{\textwidth}{p{3cm}p{2cm}X}
 \toprule {\bf Date} & {\bf Version} & {\bf Notes}\\
 \midrule
-Date 1 & 1.0 & Notes\\
-Date 2 & 1.1 & Notes\\
+January 17 & 1.0 & Initial Version\\
 \bottomrule
 \end{tabularx}
 
@@ -62,9 +62,7 @@ Date 2 & 1.1 & Notes\\
 
 \section{Symbols, Abbreviations and Acronyms}
 
-See SRS Documentation at \wss{give url}
-
-\wss{Also add any additional symbols, abbreviations or acronyms}
+See SRS Documentation at \url{https://github.com/gr812b/CVT-Simulator/blob/develop/docs/SRS/SRS.pdf}
 
 \newpage
 
@@ -77,16 +75,14 @@ See SRS Documentation at \wss{give url}
 \section{Introduction}
 
 The following document details the Module Interface Specifications for
-\wss{Fill in your project name and description}
+the \progname program which is designed for optimizing McMaster Baja vehicles. 
+This document specifies how each module interacts with one another throughout the program. 
 
 Complementary documents include the System Requirement Specifications
 and Module Guide.  The full documentation and implementation can be
-found at \url{...}.  \wss{provide the url for your repo}
+found at \url{https://github.com/gr812b/CVT-Simulator}.
 
 \section{Notation}
-
-\wss{You should describe your notation.  You can use what is below as
-  a starting point.}
 
 The structure of the MIS for modules comes from \citet{HoffmanAndStrooper1995},
 with the addition that template modules have been adapted from
@@ -108,7 +104,10 @@ character & char & a single symbol or digit\\
 integer & $\mathbb{Z}$ & a number without a fractional component in (-$\infty$, $\infty$) \\
 natural number & $\mathbb{N}$ & a number without a fractional component in [1, $\infty$) \\
 real & $\mathbb{R}$ & any number in (-$\infty$, $\infty$)\\
-\bottomrule
+positive real & $\mathbf{R}_{+}$ & any real number ($\mathbf{R}$) in ($0$, $\infty$) \\
+input & $\mathbb{I}$ & a set of values \{$\mathbf{R}_{+}$, $\mathbb{R} \rightarrow \mathbb{R}$, $\mathbf{R}_{+}$, $\mathbf{R}_{+}$, $\mathbb{R} \rightarrow \mathbb{R}$, $\mathbf{R}_{+}$,$\mathbf{R}_{+}$, $\mathbf{R}_{+}$, $\mathbf{R}_{+}$, $\mathbf{R}_{+}$, $\mathbf{R}_{+}$\} that represent the input of the program \\
+state & $\mathbb{S}$ & a set of values \{$\mathbb{R}$, $\mathbb{R}$, $\mathbb{R}$, $\mathbb{R}$, $\mathbb{R}$, $\mathbb{R}$, $\mathbb{R}$, $\mathbb{R}$\} representing the state of the simulation \\
+dataPoint & $\mathbb{D}$ & Tuple of Time: $\mathbb{R}$, Position: $\mathbb{R}$\\
 \end{tabular} 
 \end{center}
 
@@ -131,21 +130,28 @@ The following table is taken directly from the Module Guide document for this pr
 \textbf{Level 1} & \textbf{Level 2}\\
 \midrule
 
-{Hardware-Hiding} & ~ \\
+{Hardware-Hiding Module} & ~ \\
 \midrule
 
-\multirow{7}{0.3\textwidth}{Behaviour-Hiding} & Input Parameters\\
-& Output Format\\
-& Output Verification\\
-& Temperature ODEs\\
-& Energy Equations\\ 
-& Control Module\\
-& Specification Parameters Module\\
+\multirow{7}{0.3\textwidth}{Behaviour-Hiding Module}
+& Engine Simulator Module\\
+& External Forces Module\\
+& Primary CVT Module\\
+& Secondary CVT Module\\
+& Initialize Module\\
+& ODE Solver Module\\
+& Main Module\\ 
+& Playback Module\\
+& Visualizer Module\\
+& Constants Module\\
+& State Module\\
+& Backend Controller Module\\
 \midrule
 
-\multirow{3}{0.3\textwidth}{Software Decision} & {Sequence Data Structure}\\
-& ODE Solver\\
-& Plotting\\
+\multirow{3}{0.3\textwidth}{Software Decision Module}
+& GUI Module\\
+& File Output Module\\
+& Communication Module\\
 \bottomrule
 
 \end{tabular}
@@ -156,19 +162,435 @@ The following table is taken directly from the Module Guide document for this pr
 \newpage
 ~\newpage
 
-\section{MIS of \wss{Module Name}} \label{Module} \wss{Use labels for
-  cross-referencing}
-
-\wss{You can reference SRS labels, such as R\ref{R_Inputs}.}
-
-\wss{It is also possible to use \LaTeX for hypperlinks to external documents.}
+\section{Engine Simulator Module} \label{Module_engine_simulator}
 
 \subsection{Module}
 
-\wss{Short name for the module}
+Engine Module
 
 \subsection{Uses}
 
+\begin{itemize}
+  \item Constants Module (\ref{Module_constants})
+\end{itemize}
+
+\subsection{Syntax}
+
+\subsubsection{Exported Constants}
+None
+
+\subsubsection{Exported Access Programs}
+
+\begin{center}
+\begin{tabular}{p{4cm} p{4cm} p{4cm} p{2cm}}
+\hline
+\textbf{Name} & \textbf{In} & \textbf{Out} & \textbf{Exceptions} \\
+\hline
+getTorque & angularVeloctiy ($\mathbb{R}$) & torque ($\mathbb{R}$) & - \\
+calcuAngularAccel & angularVeloctiy ($\mathbb{R}$), loadTorque ($\mathbb{R}$)  & angularAcceleration ($\mathbb{R}$) & ValueError \\
+\hline
+\end{tabular}
+\end{center}
+
+\subsection{Semantics}
+
+\subsubsection{State Variables}
+
+\begin{itemize}
+  \item Torque curve $\mathbb{R}$ $\rightarrow$ $\mathbb{R}$
+  \item Inertia $\mathbb{R}$
+\end{itemize}
+
+\subsubsection{Environment Variables}
+
+None
+
+\subsubsection{Assumptions}
+\begin{itemize}
+  \item Torque Curve is initialized from the constants module
+\end{itemize}
+
+\subsubsection{Access Routine Semantics}
+
+\noindent getTorque(angularVeloctiy):
+\begin{itemize}
+\item output: torque:= torqueCurve(angularVeloctiy) 
+\end{itemize}
+
+\noindent calcAngularAccel(angularVeloctiy, loadTorque):
+\begin{itemize}
+\item output: angularAcceleration:= (loadTorque - getTorque(angularVeloctiy))/inertia
+\item error: ValueError iff inertia = 0
+\end{itemize}
+
+\subsubsection{Local Functions}
+
+None
+
+\newpage
+
+\section{External Forces Module} \label{Module_external_forces} 
+
+\subsection{Module}
+
+Load Simulator
+
+\subsection{Uses}
+
+\begin{itemize}
+  \item Constants Module (\ref{Module_constants})
+\end{itemize}
+
+\subsection{Syntax}
+
+\subsubsection{Exported Constants}
+None
+
+\subsubsection{Exported Access Programs}
+
+\begin{center}
+\begin{tabular}{p{4cm} p{4cm} p{4cm} p{2cm}}
+\hline
+\textbf{Name} & \textbf{In} & \textbf{Out} & \textbf{Exceptions} \\
+\hline
+calcInclineForce & - & inclineForce $\mathbb{R}$ & - \\
+calcDragForce & velocity $\mathbb{R}$ & dragForce $\mathbb{R}$ & - \\
+calcLoadTorque & velocity $\mathbb{R}$ & loadTorque $\mathbb{R}$ & - \\
+calcGearboxLoad & velocity $\mathbb{R}$ & gearboxLoad $\mathbb{R}$ & ValueError \\
+\hline
+\end{tabular}
+\end{center}
+
+\subsection{Semantics}
+
+\subsubsection{State Variables}
+
+\begin{itemize}
+  \item gavitational acceleration ($\mathbb{R}$) denoted as $g$
+  \item air density ($\mathbb{R}$) denoted as $\rho$
+  \item frontal area ($\mathbb{R}$) denoted as $A$
+  \item drag coefficient ($\mathbb{R}$) denoted as $C_{\text{d}}$
+  \item car mass ($\mathbb{R}$) denoted as $m$
+  \item wheel radius ($\mathbb{R}$) denoted as $r$
+  \item gearbox ratio ($\mathbb{R}$) denoted as $R$
+  \item incline angle ($\mathbb{R}$) denoted as $\theta$
+\end{itemize}
+
+\subsubsection{Environment Variables}
+
+None
+
+\subsubsection{Assumptions}
+
+Constants are initialized from the constants module
+
+\subsubsection{Access Routine Semantics}
+
+\noindent calcInclineForce():
+\begin{itemize}
+\item output: inclineForce:= $m \times g \times sin(\theta)$
+\end{itemize}
+
+\noindent calcDragForce(velocity):
+\begin{itemize}
+\item output: dragForce:= $\frac{1}{2} \times \rho \times A \times C_{\text{d}} \times \text{velocity}^2$
+\end{itemize}
+
+\noindent calcLoadTorque(velocity):
+\begin{itemize}
+\item output: loadTorque:= calcInclineForce() + calcDragForce(velocity)
+\end{itemize}
+
+\noindent calcGearboxLoad(velocity):
+\begin{itemize}
+\item output: gearboxLoad:= $\frac{\text{calcLoadTorque(velocity)} \times r}{R}$
+\item error: ValueError iff gearboxRatio = 0
+\end{itemize}
+
+\subsubsection{Local Functions}
+
+None
+
+\newpage
+
+\section{Primary CVT Module} \label{Primary_CVT_Module} 
+\subsection{Module}
+
+Primary Module
+
+\subsection{Uses}
+
+\begin{itemize}
+  \item Constants Module (\ref{Module_constants})
+\end{itemize}
+
+\subsection{Syntax}
+
+\subsubsection{Exported Constants}
+
+\subsubsection{Exported Access Programs}
+
+\begin{center}
+\begin{tabular}{p{2.5cm} p{4cm} p{4cm} p{2cm}}
+\hline
+\textbf{Name} & \textbf{In} & \textbf{Out} & \textbf{Exceptions} \\
+\hline
+springForce & shiftDistance ($\mathbb{R}$) & force ($\mathbb{R}$) & - \\
+rampForce & shiftDistance ($\mathbb{R}$), angularVelocity ($\mathbb{R}$) & force ($\mathbb{R}$) & - \\
+\hline
+\end{tabular}
+\end{center}
+
+\subsection{Semantics}
+
+\subsubsection{State Variables}
+
+\begin{enumerate}
+  \item flyweight radius ($\mathbb{R}$) (Initial) denoted as $r_{\text{fly}}$
+  \item Height of flyweights given by shift distance ($\mathbb{R} \rightarrow \mathbb{R}$) denoted as $f_{\text{prim\_height}}(d)$
+  \item Angle of flyweights given by shift distance ($\mathbb{R} \rightarrow \mathbb{R}$) denoted as $f_{\text{prim\_angle}}(d)$
+  \item spring coefficient ($\mathbb{R}$) denoted as $k_{\text{prim}}$
+
+  \item Initial compression of primary spring ($\mathbb{R}$) denoted as $d_{\text{prim}}$
+  \item flyweight mass ($\mathbb{R}$) denoted as $m_\text{fly}$
+\end{enumerate}
+
+\subsubsection{Environment Variables}
+None.
+
+\subsubsection{Assumptions}
+
+\subsubsection{Access Routine Semantics}
+
+\noindent springForce():
+\begin{itemize}
+  \item output: force $\coloneq \text{springForce} (k_{\text{prim}}, d_{\text{prim}} + d_{\text{shift}})$
+\end{itemize}
+
+\noindent rampForce():
+\begin{itemize}
+\item output: force $\coloneq \text{centForce}(m_\text{fly}, r_{\text{fly}}, \text{angularVelocity}) \times \tan(f_{\text{prim\_angle}}(\text{shiftDistance})) $
+\end{itemize}
+
+\subsubsection{Local Functions}
+
+\begin{itemize}
+  \item springForce: $\text{springForce(k, x)} \coloneq \text{k} \times \text{x}$
+  \item centrifugal force: $\text{centForce(m, r, w)} \coloneq \text{m} \times \text{r} \times \text{w}^2$
+\end{itemize}
+\newpage
+
+
+\section{Secondary CVT Module} \label{Secondary_CVT_Module} 
+\subsection{Module}
+
+Secondary Module
+
+\subsection{Uses}
+
+\begin{itemize}
+  \item Constants Module (\ref{Module_constants})
+\end{itemize}
+
+\subsection{Syntax}
+
+\subsubsection{Exported Constants}
+
+\subsubsection{Exported Access Programs}
+
+\begin{center}
+\begin{tabular}{p{3cm} p{4cm} p{4cm} p{2cm}}
+\hline
+\textbf{Name} & \textbf{In} & \textbf{Out} & \textbf{Exceptions} \\
+\hline
+torsSpringForce & shiftDistance ($\mathbb{R}$) & force ($\mathbb{R}$) & ValueError \\
+compSpringForce & shiftDistance ($\mathbb{R}$) & force ($\mathbb{R}$) & - \\
+rampForce & torque ($\mathbb{R}$), ratio ($\mathbb{R}$), shiftDistance ($\mathbb{R}$) & force ($\mathbb{R}$) & ValueError\\
+\hline
+\end{tabular}
+\end{center}
+
+\subsection{Semantics}
+
+\subsubsection{State Variables}
+
+\begin{enumerate}
+  \item springCoefficientTor ($\mathbb{R}$) denoted as $k_{\text{tors}}$
+  \item springCoefficientComp ($\mathbb{R}$) denoted as $k_{\text{comp}}$
+  \item Initial torsional rotation of secondary spring ($\mathbb{R}$) denoted as $\theta_{\text{sec}}$
+  \item Initial compression of secondary spring ($\mathbb{R}$) denoted as $d_{\text{sec}}$
+  \item helix radius ($\mathbb{R}$) denoted as $r_{\text{helix}}$
+  \item Torsional distance given by distance shifted ($\mathbb{R} \rightarrow \mathbb{R}$) denoted as $f_{\text{sec}}(d)$
+  \item Ramp angle given by distance shifted ($\mathbb{R} \rightarrow \mathbb{R}$) denoted as $g_{\text{sec}}(d)$
+\end{enumerate}
+
+\subsubsection{Environment Variables}
+None.
+
+\subsubsection{Assumptions}
+
+\subsubsection{Access Routine Semantics}
+
+\noindent torsSpringForce():
+\begin{itemize}
+  \item output: force $\coloneq \text{torsForce} (k_\text{tors}, \theta_\text{sec} + f_\text{sec}(\text{shiftDistance})) / (2 \cdot r_\text{helix} \cdot \tan(g_{\text{sec}}(\text{shiftDistance})))$
+  \item error: ValueError iff $\tan(g_{\text{sec}}(\text{shiftDistance})) = 0$
+\end{itemize}
+
+\noindent compSpringForce():
+\begin{itemize}
+  \item output: force $\coloneq \text{springForce} (k_\text{comp}, d_\text{comp} + \text{shiftDistance}) $
+\end{itemize}
+
+\noindent helixForce():
+\begin{itemize}
+  \item output: force $\coloneq \text{helixForce} (\text{torque}, \text{ratio}, r_{\text{helix}}, g_{\text{sec}}(\text{shiftDistance}))$
+  \item error: ValueError iff $\tan(g_{\text{sec}}(\text{shiftDistance})) = 0$
+\end{itemize}
+
+\subsubsection{Local Functions}
+
+\begin{itemize}
+  \item comp spring force: $\text{springForce(k, x)} \coloneq \text{k} \cdot \text{x}$
+  \item tors spring force: $\text{torsForce}(k, \theta, r) \coloneq \frac{k \cdot \theta}{r}$ 
+  \item helix force: $\text{helixForce}(T, R, r, \theta) \coloneq \frac{T \cdot R}{2r\tan(\theta)}$
+\end{itemize}
+
+\newpage
+\section{MIS of Initialize Module} \label{Module_initialize}
+\subsection{Module}
+
+initializer
+
+\subsection{Uses}
+
+None.
+
+\subsection{Syntax}
+
+\subsubsection{Exported Constants}
+None.
+
+\subsubsection{Exported Access Programs}
+
+\begin{center}
+\begin{tabular}{p{2cm} p{4cm} p{4cm} p{2cm}}
+\hline
+\textbf{Name} & \textbf{In} & \textbf{Out} & \textbf{Exceptions} \\
+\hline
+parse & receivedInput ($\mathbb{I}$) & parsedInput ($\mathbb{I}$) & - \\
+initialize & input ($\mathbb{I}$) & state ($\mathbb{S}$) & - \\
+\hline
+\end{tabular}
+\end{center}
+
+\subsection{Semantics}
+
+\subsubsection{State Variables}
+
+None.
+
+\subsubsection{Environment Variables}
+
+None.
+
+\subsubsection{Assumptions}
+
+None.
+
+\subsubsection{Access Routine Semantics}
+\noindent parse(receivedInput):
+\begin{itemize}
+\item transition: parses the received input into the appropriate format.
+\item exception: 
+\end{itemize}
+
+\noindent initialize(input):
+\begin{itemize}
+\item output: converts input into the initial state of the simulation.
+\item exception: 
+\end{itemize}
+
+\subsubsection{Local Functions}
+
+None.
+
+\newpage
+
+\section{MIS of ODE Solver Module} \label{Module_ODE_solver}
+
+\subsection{Module}
+
+ODE Solver
+
+\subsection{Uses}
+
+\begin{itemize}
+  \item Constants Module (\ref{Module_constants})
+  \item CVT Simulation Module (\ref{Module_cvt_simulation})
+  \item External Forces Module (\ref{Module_external_forces})
+  \item Engine Simulator Module (\ref{Module_engine_simulator})
+  \item State Module (\ref{Module_state})
+\end{itemize}
+
+\subsection{Syntax}
+
+\subsubsection{Exported Constants}
+None
+
+\subsubsection{Exported Access Programs}
+
+\begin{center}
+\begin{tabular}{p{2cm} p{4cm} p{4cm} p{2cm}}
+\hline
+\textbf{Name} & \textbf{In} & \textbf{Out} & \textbf{Exceptions} \\
+\hline
+simulate & initialState ($\mathbb{S}$) & result ($\mathbb{S}^n$) & - \\
+\hline
+\end{tabular}
+\end{center}
+
+\subsection{Semantics}
+
+\subsubsection{State Variables}
+
+\begin{itemize}
+  \item time: a tuple of ($\mathbf{R}_{+}$, $\mathbf{R}_{+}$) representing the start and end time of the simulation
+  \item step: a value of $\mathbf{R}_{+}$ representing the time step of the simulation
+\end{itemize}
+
+\subsubsection{Environment Variables}
+
+None
+
+\subsubsection{Assumptions}
+
+None
+
+\subsubsection{Access Routine Semantics}
+
+\noindent simulate(initialState):
+\begin{itemize}
+\item output: simulates the ODEs of the simulation for the given initial state, time and step size and returns the result.
+\end{itemize}
+
+\subsubsection{Local Functions}
+
+None
+
+\newpage
+
+\section{MIS of Main Module} \label{Module_main}
+\subsection{Module}
+
+Main
+
+\subsection{Uses}
+
+\begin{itemize}
+  \item Communication Module (\ref{Module_communication})
+  \item Visualizer Module (\ref{Module_visualizer})
+\end{itemize}
 
 \subsection{Syntax}
 
@@ -181,7 +603,7 @@ The following table is taken directly from the Module Guide document for this pr
 \hline
 \textbf{Name} & \textbf{In} & \textbf{Out} & \textbf{Exceptions} \\
 \hline
-\wss{accessProg} & - & - & - \\
+main & - & - & - \\
 \hline
 \end{tabular}
 \end{center}
@@ -190,59 +612,564 @@ The following table is taken directly from the Module Guide document for this pr
 
 \subsubsection{State Variables}
 
-\wss{Not all modules will have state variables.  State variables give the module
-  a memory.}
+None
 
 \subsubsection{Environment Variables}
 
-\wss{This section is not necessary for all modules.  Its purpose is to capture
-  when the module has external interaction with the environment, such as for a
-  device driver, screen interface, keyboard, file, etc.}
+None
 
 \subsubsection{Assumptions}
 
-\wss{Try to minimize assumptions and anticipate programmer errors via
-  exceptions, but for practical purposes assumptions are sometimes appropriate.}
+
+The GUI module is assumed to be running in the background and is used to display the results of the simulation.
 
 \subsubsection{Access Routine Semantics}
 
-\noindent \wss{accessProg}():
+\noindent main():
 \begin{itemize}
-\item transition: \wss{if appropriate} 
-\item output: \wss{if appropriate} 
-\item exception: \wss{if appropriate} 
+\item transition: Connects the backend controller module to the visualizer module.
 \end{itemize}
 
-\wss{A module without environment variables or state variables is unlikely to
-  have a state transition.  In this case a state transition can only occur if
-  the module is changing the state of another module.}
-
-\wss{Modules rarely have both a transition and an output.  In most cases you
-  will have one or the other.}
 
 \subsubsection{Local Functions}
 
-\wss{As appropriate} \wss{These functions are for the purpose of specification.
-  They are not necessarily something that is going to be implemented
-  explicitly.  Even if they are implemented, they are not exported; they only
-  have local scope.}
+None
+
+\newpage
+
+\section{MIS of Playback Module} \label{Module_playback} 
+
+
+\subsection{Module}
+
+Playback
+
+\subsection{Uses}
+None.
+
+\subsection{Syntax}
+
+\subsubsection{Exported Constants}
+carSpinTransform: Transform
+
+\subsubsection{Exported Access Programs}
+
+\begin{center}
+\begin{tabular}{p{4cm} p{4cm} p{4cm} p{2cm}}
+\hline
+\textbf{Name} & \textbf{In} & \textbf{Out} & \textbf{Exceptions} \\
+\hline
+StartPlayback & - & - & - \\
+RestartPlayback & - & - & - \\
+PausePlayback & - & - & - \\
+PlaybackCoroutine & - & - & - \\
+\hline
+\end{tabular}
+\end{center}
+
+\subsection{Semantics}
+
+\subsubsection{State Variables}
+
+\begin{itemize}
+  \item isPlaying: $\mathbb{B}$
+  \item currentIndex: $\mathbb{Z}$
+  \item startTime: $\mathbb{R}$ 
+  \item carTransform: Transform
+\end{itemize}
+
+\subsubsection{Environment Variables}
+
+\begin{itemize}
+  \item Start Button: Button
+  \item Restart Button: Button
+  \item Pause Button: Button
+\end{itemize}
+
+\subsubsection{Assumptions}
+
+Assume that there is data to playback.
+\subsubsection{Access Routine Semantics}
+
+\noindent StartPlayback():
+\begin{itemize}
+\item transition: isPlaying:= True, currentIndex:= 0, startTime:= time.time()
+\end{itemize}
+
+\noindent PausePlayback():
+\begin{itemize}
+\item transition: isPlaying:= False
+\end{itemize}
+
+\noindent RestartPlayback():
+\begin{itemize}
+\item transition: isPlaying:= False, currentIndex:= 0, startTime:= time.time(), carTransform:= back to start position
+\end{itemize}
+
+\noindent PlaybackCoroutine():
+\begin{itemize}
+\item transition: carTransform updates to new positions, carSpinTransform updates to new rotations based on position
+\end{itemize}
+
+\subsubsection{Local Functions}
+
+None
+
+\newpage
+
+\section{MIS of Visualizer Module} \label{Module_visualizer} 
+
+\subsection{Module}
+
+Visualizer
+
+\subsection{Uses}
+
+\begin{itemize}
+  \item GUI Module (\ref{Module_GUI})
+  \item Playback Module (\ref{Module_playback})
+\end{itemize}
+
+\subsection{Syntax}
+
+\subsubsection{Exported Constants}
+None
+
+\subsubsection{Exported Access Programs}
+
+\begin{center}
+\begin{tabular}{p{2cm} p{4cm} p{4cm} p{2cm}}
+\hline
+\textbf{Name} & \textbf{In} & \textbf{Out} & \textbf{Exceptions} \\
+\hline
+LoadCsvData & - & - & - \\
+\hline
+\end{tabular}
+\end{center}
+
+\subsection{Semantics}
+
+\subsubsection{State Variables}
+
+\begin{itemize}
+  \item dataPoints: list of $\mathbb{D}$ 
+\end{itemize}
+
+\subsubsection{Environment Variables}
+None
+
+\subsubsection{Assumptions}
+
+Assume that the simulation results are stored in a csv file.
+
+\subsubsection{Access Routine Semantics}
+
+\noindent LoadCsvData():
+\begin{itemize}
+\item transition: dataPoints:= load data from csv file
+\item output: dataPoints
+\end{itemize}
+
+None
+
+\subsubsection{Local Functions}
+
+None
+
+\newpage
+
+\section{MIS of Constants Module} \label{Module_constants} 
+\subsection{Module}
+
+Constants
+
+\subsection{Uses}
+None.
+
+\subsection{Syntax}
+
+\subsubsection{Exported Constants}
+
+\begin{itemize}
+  \item \texttt{ENGINE\_INERTIA}: A positive real value ($\mathbf{R}_{+}$) representing the inertia of the current car's engine (in $\text{kg}\cdot\text{m}^2$) used for calculations involving car specifications.
+  \item \texttt{GEARBOX\_RATIO}: A positive real value ($\mathbf{R}_{+}$) representing the current car's gearbox ratio (unitless) used for calculations involving car specifications.
+  \item \texttt{FRONTAL\_AREA}: A positive real value ($\mathbf{R}_{+}$) representing the current car's frontal area (in $\text{m}^2$) used for calculations involving car specifications.
+  \item \texttt{DRAG\_COEFFICIENT}: A positive real value ($\mathbf{R}_{+}$) representing the current car's drag coefficient (unitless) used for calculations involving car specifications.
+  \item \texttt{CAR\_WEIGHT}: A positive real value ($\mathbf{R}_{+}$) representing the current car's weight (in $\text{lbs}$) used for calculations involving car specifications.
+  \item \texttt{CAR\_MASS}: A positive real value ($\mathbf{R}_{+}$) representing the current car's weight converted to kilograms (in $\text{kg}$) used for calculations involving car specifications.
+  \item \texttt{WHEEL\_RADIUS}: A positive real value ($\mathbf{R}_{+}$) representing the current car's wheel radius (in $\text{m}$) used for calculations involving car specifications.
+  \item \texttt{AIR\_DENSITY}: A positive real value ($\mathbf{R}_{+}$), set at \texttt{1.225} (in $\text{kg/m}^3$).
+  \item \texttt{GRAVITY}: A positive real value ($\mathbf{R}_{+}$), set at \texttt{9.80665} (in $\text{m/s}^2$).
+  \item \texttt{engineSpecs} A list of dictionaries representing various engine rpm's and corresponding torque values (in $\text{ft*lbs}$):=[
+    {"rpm": 2400, "torque": 18.5},
+    {"rpm": 2600, "torque": 18.1},
+    {"rpm": 2800, "torque": 17.4},
+    {"rpm": 3000, "torque": 16.6},
+    {"rpm": 3200, "torque": 15.4},
+    {"rpm": 3400, "torque": 14.5},
+    {"rpm": 3600, "torque": 13.5}]
+  \item \texttt{engineData}: A list of dictionary values for angular velocity(in $\text{rad/s}$), torque(in $\text{N*m}$), and power($\text{torque*angular velocity}$) converting the above \texttt{engineSpecs} into SI units.
+  \item \texttt{angular\_velocities}: A list of angular velocity values (in rad/s) extracted from \texttt{engineData}.
+  \item \texttt{torques}: A list of torque values (in N*m) extracted from \texttt{engineData}.
+  \item \texttt{powers}: A list of power values (in watts) calculated from \texttt{engineData}.
+  \item \texttt{torque\_curve}: A cubic interpolation function that maps \texttt{angular\_velocities} to \texttt{torques}, created using the \texttt{interp1d} method with extrapolation for values outside the range.
+  
+\end{itemize}
+
+
+\subsubsection{Exported Access Programs}
+
+\begin{center}
+\begin{tabular}{p{2cm} p{4cm} p{4cm} p{2cm}}
+\hline
+\textbf{Name} & \textbf{In} & \textbf{Out} & \textbf{Exceptions} \\
+\hline
+constants & - & - & - \\
+\hline
+\end{tabular}
+\end{center}
+
+\subsection{Semantics}
+
+\subsubsection{State Variables}
+
+None.
+
+\subsubsection{Environment Variables}
+
+None.
+
+\subsubsection{Assumptions}
+
+None.
+
+\subsubsection{Access Routine Semantics}
+
+None.
+
+\subsubsection{Local Functions}
+
+None.
+
+\newpage
+
+\section{MIS of State Module} \label{Module_state}
+
+\subsection{Module}
+
+State
+
+\subsection{Uses}
+None.
+
+\subsection{Syntax}
+
+\subsubsection{Exported Constants}
+None.
+
+\subsubsection{Exported Access Programs}
+
+\begin{center}
+\begin{tabular}{p{2cm} p{4cm} p{4cm} p{2cm}}
+\hline
+\textbf{Name} & \textbf{In} & \textbf{Out} & \textbf{Exceptions} \\
+\hline
+toArray & - & outputState ($\mathbb{S}$) & - \\
+fromArrary & inputState ($\mathbb{S}$) & outputState ($\mathbb{S}$) & - \\
+\hline
+\end{tabular}
+\end{center}
+
+\subsection{Semantics}
+
+\subsubsection{State Variables}
+
+\begin{itemize}
+  \item currentState: A value of $\mathbb{S}$ representing the current state of the simulation.
+\end{itemize}
+
+\subsubsection{Environment Variables}
+
+None.
+
+\subsubsection{Assumptions}
+
+None.
+
+\subsubsection{Access Routine Semantics}
+
+\noindent toArray():
+\begin{itemize}
+\item output: outputState:= currentState
+\item exception: 
+\end{itemize}
+
+\noindent fromArray():
+\begin{itemize}
+\item transition: currentState:= inputState
+\item output: outputState:= currentState
+\item exception: 
+\end{itemize}
+
+\subsubsection{Local Functions}
+
+None.
+
+\newpage
+
+\section{MIS of Backend Controller Module} \label{Module_backend_controller} 
+
+\subsection{Module}
+
+Backend Controller
+
+\subsection{Uses}
+
+\begin{itemize}
+  \item Initialize Module (\ref{Module_initialize})
+  \item ODE Solver Module (\ref{Module_ODE_solver})
+  \item File Output Module (\ref{Module_file_output})
+\end{itemize}
+
+\subsection{Syntax}
+
+\subsubsection{Exported Constants}
+None
+
+\subsubsection{Exported Access Programs}
+
+\begin{center}
+\begin{tabular}{p{2cm} p{4cm} p{4cm} p{2cm}}
+\hline
+\textbf{Name} & \textbf{In} & \textbf{Out} & \textbf{Exceptions} \\
+\hline
+main & - & - & - \\
+\hline
+\end{tabular}
+\end{center}
+
+\subsection{Semantics}
+
+\subsubsection{State Variables}
+
+None
+
+\subsubsection{Environment Variables}
+
+None
+
+\subsubsection{Assumptions}
+Assume that the other modules are functioning correctly.
+
+\subsubsection{Access Routine Semantics}
+
+\noindent main():
+\begin{itemize}
+\item transition: Connects the different parts of the backend together
+\end{itemize}
+
+\subsubsection{Local Functions}
+
+None
+
+\newpage
+
+\section{MIS of GUI Module} \label{Module_GUI}
+
+\subsection{Module}
+
+\texttt{gui}
+
+\subsection{Uses}
+
+None.
+
+\subsection{Syntax}
+
+\subsubsection{Exported Constants}
+None.
+
+\subsubsection{Exported Access Programs}
+
+\begin{center}
+\begin{tabular}{p{2cm} p{4cm} p{4cm} p{2cm}}
+\hline
+\textbf{Name} & \textbf{In} & \textbf{Out} & \textbf{Exceptions} \\
+\hline
+gui & None & None & - \\
+\hline
+\end{tabular}
+\end{center}
+
+\subsection{Semantics}
+
+\subsubsection{State Variables}
+
+\begin{itemize}
+  \item Button states (Boolean for clicked state)
+  \item Input Fields ($\mathbb{I}$)
+  
+\end{itemize}
+
+\subsubsection{Environment Variables}
+
+\begin{itemize}
+  \item Keyboard ($\mathbf{Z}_{+}$ for keycodes describing the key pressed)
+  \item Mouse (Boolean for click state and  $\mathbf{Z}_{+}$ for cursor position)
+  \item Screen ($\mathbf{Z}_{+}$ for width and height in pixels)
+\end{itemize}
+
+\subsubsection{Assumptions}
+
+None.
+
+\subsubsection{Access Routine Semantics}
+
+\noindent \texttt{gui}():
+\begin{itemize}
+\item transition: Provides methods from Unity to build and deploy a GUI to the Visualizer Module \ref{Module_visualizer}
+\end{itemize}
+
+\subsubsection{Local Functions}
+
+None.
+
+\newpage
+
+\section{MIS of File Output Module} \label{Module_file_output}
+
+\subsection{Module}
+
+output
+
+\subsection{Uses}
+None.
+
+\subsection{Syntax}
+
+\subsubsection{Exported Constants}
+None.
+
+\subsubsection{Exported Access Programs}
+
+\begin{center}
+\begin{tabular}{p{2cm} p{4cm} p{4cm} p{2cm}}
+\hline
+\textbf{Name} & \textbf{In} & \textbf{Out} & \textbf{Exceptions} \\
+\hline
+write & outputPath (String) & - & - \\
+\hline
+\end{tabular}
+\end{center}
+
+\subsection{Semantics}
+
+\subsubsection{State Variables}
+
+\begin{itemize}
+  \item states: $\mathbb{S}^n$, where each entry represents the state of the car at a given time.
+\end{itemize}
+
+\subsubsection{Environment Variables}
+
+None.
+
+\subsubsection{Assumptions}
+
+The file path given can be written to.
+
+\subsubsection{Access Routine Semantics}
+
+\noindent write(outputPath):
+\begin{itemize}
+\item output: Writes the states to a file at the given path.
+\item exception: 
+\end{itemize}
+
+\subsubsection{Local Functions}
+
+None.
+
+\newpage
+
+\section{MIS of Communication Module} \label{Module_communication}
+
+\subsection{Module}
+
+communication
+
+\subsection{Uses}
+
+\begin{itemize}
+  \item Backend Controller Module (\ref{Module_backend_controller})
+\end{itemize}
+
+\subsection{Syntax}
+
+\subsubsection{Exported Constants}
+None.
+
+\subsubsection{Exported Access Programs}
+
+\begin{center}
+\begin{tabular}{p{2cm} p{4cm} p{4cm} p{2cm}}
+\hline
+\textbf{Name} & \textbf{In} & \textbf{Out} & \textbf{Exceptions} \\
+\hline
+frontToBack & input ($\mathbb{I}$) & ouput ($\mathbb{I}$) & - \\
+backToFront & - & states ($\mathbb{S}^n$) & - \\
+\hline
+\end{tabular}
+\end{center}
+
+\subsection{Semantics}
+
+\subsubsection{State Variables}
+
+\begin{itemize}
+  \item mainPath: a String representing the path to the main file.
+  \item outputPath: a String representing the path to the file to be read.
+\end{itemize}
+
+\subsubsection{Environment Variables}
+
+\begin{itemize}
+  \item pythonPath: a String representing the path to the python environment.
+\end{itemize}
+
+\subsubsection{Assumptions}
+
+All files are in the correct location matching the given paths.
+
+\subsubsection{Access Routine Semantics}
+
+\noindent frontToBack(input):
+\begin{itemize}
+\item transition: Sends the given parameters to the backend controller.
+\item exception: 
+\end{itemize}
+
+\noindent backToFront():
+\begin{itemize}
+  \item transition: Reads the states from the output file.
+  \item exception: 
+\end{itemize}
+
+\subsubsection{Local Functions}
+
+None.
 
 \newpage
 
 \bibliographystyle {plainnat}
 \bibliography {../../../refs/References}
 
-\newpage
-
-\section{Appendix} \label{Appendix}
-
-\wss{Extra information if required}
 
 \newpage{}
 
 \section*{Appendix --- Reflection}
 
-\wss{Not required for CAS 741 projects}
+
 
 The information in this section will be used to evaluate the team members on the
 graduate attribute of Problem Analysis and Design.
@@ -251,20 +1178,51 @@ graduate attribute of Problem Analysis and Design.
 
 \begin{enumerate}
   \item What went well while writing this deliverable? 
+  \\
+  During this deliverable the team was successfully able to document our design choices for the \progname. 
+  Creating this document helped identify gaps and flaws in our initial planning which lead our team to have a more clear idea and breakdown of our program.
+  By organizing our design choices we now have a strong foundation and structured documentation to build on, setting us up for success in Rev 0 and future revisions. 
+  Additionally, our team was able to split up modules that we knew could be easily filled in and for more complex modules these were discussed as a team, ensuring each team member was on the same page. 
+  This strategy worked well for this document and allowed us to be time efficient.
   \item What pain points did you experience during this deliverable, and how
     did you resolve them?
+  \\
+  The main pain point our group faced was the discovered need to expand large modules, that had not been fully scoped out yet.
+  While writing this document, specifically large modules such as what was initially the CVT Simulation Module, lead to the realization that having one large module did not make sense. 
+  This pain point was resolved by realizing it was necessary to create additional modules and introduce helper functions within these modules to help simplify the expansion and organization of the module. 
+  This lead to the creation of additional modules such as the Primary CVT Simulation Module and Secondary CVT Simulation Module which solved this pain point. 
+
   \item Which of your design decisions stemmed from speaking to your client(s)
   or a proxy (e.g. your peers, stakeholders, potential users)? For those that
   were not, why, and where did they come from?
+  \\
+  The design of the UI and what would be required by our interfaces was guided by client feedback and needs. 
+  Based on discussions with the McMaster Baja team we knew how our interfaces should look and function.
+  The other design decisions that did not stem from client input, the team relied on our own experiences and expertise. 
+
   \item While creating the design doc, what parts of your other documents (e.g.
   requirements, hazard analysis, etc), it any, needed to be changed, and why?
+  \\
+  During the creation of this document our team did not need to change any other parts of any existing document. 
+
   \item What are the limitations of your solution?  Put another way, given
   unlimited resources, what could you do to make the project better? (LO\_ProbSolutions)
+  \\
+  The two primary limitations of our team's solution are the modeling accuracy and our teams' expertise in advanced mathematics. 
+  By increasing our computational power and having more precise(smaller) measurements of time within the simulation, we could allow for more complex simulations with a higher precision. 
+  This would enable the modeling of more complex scenarios, such as dynamic interactions between components or real-world variations, that are currently simplified or excluded. 
+  Additionally, incorporating improved numerical techniques and improving the level of detail in our simulations would significantly enhance the realism and reliability of the system's outputs.
+  
   \item Give a brief overview of other design solutions you considered.  What
-  are the benefits and tradeoffs of those other designs compared with the chosen
+  are the benefits and trade-offs of those other designs compared with the chosen
   design?  From all the potential options, why did you select the documented design?
   (LO\_Explores)
+  \\
+  Our team considered using alternative platforms such as Unreal Engine and React for the application. 
+  Although Unreal Engine would have likely worked well for the project needs this software was dismissed due it's licensing cost. 
+  React was an additional option that was discussed, however the current communication protocol which relies on CVS files for data exchange would likely need to be revised. 
+  Unity and Python were chosen as the most feasible and cost-effective solution.
+  These platforms aligned  with the projects constraints and needs but also were affordable and functional. 
 \end{enumerate}
-
 
 \end{document}
