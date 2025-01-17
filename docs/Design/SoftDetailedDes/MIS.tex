@@ -258,7 +258,7 @@ None
 calcInclineForce & - & inclineForce $\mathbb{R}$ & - \\
 calcDragForce & velocity $\mathbb{R}$ & dragForce $\mathbb{R}$ & - \\
 calcLoadTorque & velocity $\mathbb{R}$ & loadTorque $\mathbb{R}$ & - \\
-calcGearboxLoad & velocity $\mathbb{R}$ & gearboxLoad $\mathbb{R}$ & - \\
+calcGearboxLoad & velocity $\mathbb{R}$ & gearboxLoad $\mathbb{R}$ & ValueError \\
 \hline
 \end{tabular}
 \end{center}
@@ -297,6 +297,7 @@ Constants are initialized from the constants module
 \noindent calcGearboxLoad():
 \begin{itemize}
 \item output: gearboxLoad:= (loadTorque*wheelRadius)/gearboxRatio 
+\item error: ValueError iff gearboxRatio = 0
 \end{itemize}
 
 \subsubsection{Local Functions}
