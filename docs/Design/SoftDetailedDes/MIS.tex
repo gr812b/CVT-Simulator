@@ -303,17 +303,9 @@ Constants are initialized from the constants module
 None
 
 \newpage
-
-\section{MIS of Primary CVT Simulation Module} \label{Module_cvt_simulation} \wss{Use labels for
-  cross-referencing}
-
-\wss{You can reference SRS labels, such as R\ref{R_Inputs}.}
-
-\wss{It is also possible to use \LaTeX for hypperlinks to external documents.}
-
 \subsection{Module}
 
-\wss{Short name for the module}
+Primary Module
 
 \subsection{Uses}
 
@@ -343,15 +335,13 @@ rampForce & shiftDistance ($\mathbb{R}$), angularVelocity ($\mathbb{R}$) & force
 \subsubsection{State Variables}
 
 \begin{enumerate}
-  \item sheaveMass ($\mathbb{R}$)
-  \item beltMass ($\mathbb{R}$)
-  \item flyweightRadius ($\mathbb{R}$) (Initial) denoted as $r_{\text{fly}}$
+  \item flyweight radius ($\mathbb{R}$) (Initial) denoted as $r_{\text{fly}}$
   \item Height of flyweights given by shift distance ($\mathbb{R} \rightarrow \mathbb{R}$) denoted as $f_{\text{prim\_height}}(d)$
   \item Angle of flyweights given by shift distance ($\mathbb{R} \rightarrow \mathbb{R}$) denoted as $f_{\text{prim\_angle}}(d)$
-  \item springCoefficient ($\mathbb{R}$) denoted as $k_{\text{prim}}$
+  \item spring coefficient ($\mathbb{R}$) denoted as $k_{\text{prim}}$
 
-  \item Initial compression of primary spring ($\mathbb{R}$)
-  \item flyweightMass ($\mathbb{R}$) denoted as $m_\text{fly}$
+  \item Initial compression of primary spring ($\mathbb{R}$) denoted as $d_{\text{prim}}$
+  \item flyweight mass ($\mathbb{R}$) denoted as $m_\text{fly}$
 \end{enumerate}
 
 \subsubsection{Environment Variables}
@@ -379,16 +369,11 @@ None.
 \end{itemize}
 \newpage
 
-\section{MIS of Secondary CVT Simulation Module} \label{Module_cvt_simulation} \wss{Use labels for
-  cross-referencing}
 
-\wss{You can reference SRS labels, such as R\ref{R_Inputs}.}
-
-\wss{It is also possible to use \LaTeX for hypperlinks to external documents.}
 
 \subsection{Module}
 
-\wss{Short name for the module}
+Secondary Module
 
 \subsection{Uses}
 
@@ -419,8 +404,6 @@ rampForce & torque ($\mathbb{R}$), ratio ($\mathbb{R}$), shiftDistance ($\mathbb
 \subsubsection{State Variables}
 
 \begin{enumerate}
-  \item sheaveMass ($\mathbb{R}$)
-  \item beltMass ($\mathbb{R}$)
   \item springCoefficientTor ($\mathbb{R}$) denoted as $k_{\text{tors}}$
   \item springCoefficientComp ($\mathbb{R}$) denoted as $k_{\text{comp}}$
   \item Initial torsional rotation of secondary spring ($\mathbb{R}$) denoted as $\theta_{\text{sec}}$
@@ -444,7 +427,7 @@ None.
 
 \noindent compSpringForce():
 \begin{itemize}
-  \item output: force $\coloneq \text{springForce} (k_\text{comp}, \text{shiftDistance}) $
+  \item output: force $\coloneq \text{springForce} (k_\text{comp}, d_\text{comp} + \text{shiftDistance}) $
 \end{itemize}
 
 \noindent helixForce():
