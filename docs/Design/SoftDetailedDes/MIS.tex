@@ -20,6 +20,7 @@
 \usepackage{caption}
 \usepackage{fullpage}
 
+
 \hypersetup{
 bookmarks=true,     % show bookmarks bar?
 colorlinks=true,       % false: boxed links; true: colored links
@@ -303,6 +304,8 @@ Constants are initialized from the constants module
 None
 
 \newpage
+
+\section{Primary CVT Module} \label{Primary_CVT_Module} 
 \subsection{Module}
 
 Primary Module
@@ -325,7 +328,7 @@ Primary Module
 \textbf{Name} & \textbf{In} & \textbf{Out} & \textbf{Exceptions} \\
 \hline
 springForce & shiftDistance ($\mathbb{R}$) & force ($\mathbb{R}$) & - \\
-rampForce & shiftDistance ($\mathbb{R}$), angularVelocity ($\mathbb{R}$) & force ($\mathbb{R}$) & \\
+rampForce & shiftDistance ($\mathbb{R}$), angularVelocity ($\mathbb{R}$) & force ($\mathbb{R}$) & - \\
 \hline
 \end{tabular}
 \end{center}
@@ -353,7 +356,7 @@ None.
 
 \noindent springForce():
 \begin{itemize}
-  \item Output: force $\coloneq \text{springForce} (k_{\text{prim}}, d_{\text{prim}} + d_{\text{shift}})$
+  \item output: force $\coloneq \text{springForce} (k_{\text{prim}}, d_{\text{prim}} + d_{\text{shift}})$
 \end{itemize}
 
 \noindent rampForce():
@@ -370,7 +373,7 @@ None.
 \newpage
 
 
-
+\section{Secondary CVT Module} \label{Secondary_CVT_Module} 
 \subsection{Module}
 
 Secondary Module
@@ -392,9 +395,9 @@ Secondary Module
 \hline
 \textbf{Name} & \textbf{In} & \textbf{Out} & \textbf{Exceptions} \\
 \hline
-torsSpringForce & shiftDistance ($\mathbb{R}$) & force ($\mathbb{R}$) & - \\
+torsSpringForce & shiftDistance ($\mathbb{R}$) & force ($\mathbb{R}$) & ValueError \\
 compSpringForce & shiftDistance ($\mathbb{R}$) & force ($\mathbb{R}$) & - \\
-rampForce & torque ($\mathbb{R}$), ratio ($\mathbb{R}$), shiftDistance ($\mathbb{R}$) & force ($\mathbb{R}$) & \\
+rampForce & torque ($\mathbb{R}$), ratio ($\mathbb{R}$), shiftDistance ($\mathbb{R}$) & force ($\mathbb{R}$) & ValueError\\
 \hline
 \end{tabular}
 \end{center}
@@ -422,7 +425,8 @@ None.
 
 \noindent torsSpringForce():
 \begin{itemize}
-  \item Output: force $\coloneq \text{torsForce} (k_\text{tors}, \theta_\text{sec} + f_\text{sec}(\text{shiftDistance})) / (2 \cdot r_\text{helix} \cdot \tan(g_{\text{sec}}(\text{shiftDistance})))$
+  \item output: force $\coloneq \text{torsForce} (k_\text{tors}, \theta_\text{sec} + f_\text{sec}(\text{shiftDistance})) / (2 \cdot r_\text{helix} \cdot \tan(g_{\text{sec}}(\text{shiftDistance})))$
+  \item error: ValueError iff $\tan(g_{\text{sec}}(\text{shiftDistance})) = 0$
 \end{itemize}
 
 \noindent compSpringForce():
@@ -433,6 +437,7 @@ None.
 \noindent helixForce():
 \begin{itemize}
   \item output: force $\coloneq \text{helixForce} (\text{torque}, \text{ratio}, r_{\text{helix}}, g_{\text{sec}}(\text{shiftDistance}))$
+  \item error: ValueError iff $\tan(g_{\text{sec}}(\text{shiftDistance})) = 0$
 \end{itemize}
 
 \subsubsection{Local Functions}
