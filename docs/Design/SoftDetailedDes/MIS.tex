@@ -468,7 +468,7 @@ None
 \hline
 \textbf{Name} & \textbf{In} & \textbf{Out} & \textbf{Exceptions} \\
 \hline
-solveIvp & list of enginerAngularAcceleration $\mathbb{R}$ and carAccleration $\mathbb{R}$ and carVelocity $\mathbb{S}$, timeSpan (tuple of $\mathbb{Z}$ and $\mathbb{Z}$), array of $\mathbb{S}$, array of $\mathbb{R}$  & list of States (State Module) & - \\
+simulate & initialState ($\mathbb{S}$) & result ($\mathbb{S}^n$) & - \\
 \hline
 \end{tabular}
 \end{center}
@@ -477,7 +477,10 @@ solveIvp & list of enginerAngularAcceleration $\mathbb{R}$ and carAccleration $\
 
 \subsubsection{State Variables}
 
-None
+\begin{itemize}
+  \item time: a tuple of ($\mathbf{R}_{+}$, $\mathbf{R}_{+}$) representing the start and end time of the simulation
+  \item step: a value of $\mathbf{R}_{+}$ representing the time step of the simulation
+\end{itemize}
 
 \subsubsection{Environment Variables}
 
@@ -489,9 +492,9 @@ None
 
 \subsubsection{Access Routine Semantics}
 
-\noindent solveIVP():
+\noindent simulate(initialState):
 \begin{itemize}
-\item output: states:= solve\_ivp(ode, initial\_state, time\_span, args)
+\item output: simulates the ODEs of the simulation for the given initial state, time and step size and returns the result.
 \end{itemize}
 
 \subsubsection{Local Functions}
