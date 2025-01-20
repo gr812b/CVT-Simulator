@@ -407,8 +407,8 @@ N/A
 \section{Introduction}
 
 The McMaster Baja engineering team is facing challenges in tuning their Continuous Variable Transmission (CVT). 
-The current process of tuning the CVT is extensive, time consuming and requires testing of multiple physical components leading to possible inconsistencies due to weather and wear. 
-These inconsistences then complicate the tuning process of the CVT’s torque transfer directly affecting the performance of the Baja vehicles. 
+The current process of tuning the CVT is extensive, time-consuming and requires testing of multiple physical components leading to possible inconsistencies due to weather and wear. 
+These inconsistencies then complicate the tuning process of the CVT’s torque transfer directly affecting the performance of the Baja vehicles. 
 To address these issues, our team aims to develop a CVT simulation tool that uses mathematical models, a rendering engine and a user-friendly interface. 
 Our solution aims to streamline the optimization process allowing Baja members to simulate real-world factors and virtually test various tuning parameters. 
 Our simulation tool will be validated against data collected by the McMaster Baja Data Acquisition team to ensure reliability and accuracy.  
@@ -422,7 +422,7 @@ A detailed overview of this document will provide guidance to the reader regardi
 
 The purpose of this Software Requirements Specification (SRS) is to provide an outline of the system requirements given for the development of a CVT simulation tool. 
 This ensures that all stakeholders including members of the Baja team, Dr. Smith and the developers understand the projects objectives and constraints. 
-This document will serve as a communication tool to align expectations, provide guidance during the design of this tool and aid in the development and testing phases of this project. 
+The document will serve as a communication tool to align expectations, provide guidance during the design of this tool and aid in the development and testing phases of this project. 
 This SRS will be referenced throughout the development of the system to ensure the tool is within the scope and meets the outlined requirements. 
 
 \subsection{Scope of Requirements}
@@ -766,12 +766,13 @@ This portion will specify the existing theories that are used in the development
 \noindent
 \deftheory
 {TM:HL}% #2 refname of theory
-{Hookes Law (Compressional)}% #3 label
+{Hooke's Law (Compressional)}% #3 label
 {$F = k \Delta x$}% #4 equation
 {$F$ is the force (N)\\
   $k$ is the spring constant (N/m)\\
   $\Delta x$ is the displacement (m)}% #5 description
-{In the context of this project Hookes law is used in both a torsional and linear way.}% #6 Notes
+{In the context of this project Hooke's law is used in both a torsional and linear way.}% #6 Notes
+
 {\citet{hookeslaw}}
 {IM\ref{inst:4}}% #8 Referenced by
 {None}% #9 Preconditions
@@ -789,6 +790,7 @@ This portion will specify the existing theories that are used in the development
   $\omega$ is the angular velocity (rad/s)\\
   $r$ is the radius (m)}% #5 description
 {None.}% #6 Notes
+
 {\citet{CentrifugalForceCalculator2024}}% #7 Source
 {IM\ref{inst:4}}% #8 Referenced by
 {None}% #9 Preconditions
@@ -823,6 +825,7 @@ This portion will specify the existing theories that are used in the development
   $P$ is the power (W)\\
   $\omega$ is the angular velocity (rad/s)}% #5 description
 {None.}% #6 Notes
+
 {\citet{HorsepowerCalculation}}% #7 Source
 {}% #8 Referenced by
 {None}% #9 Preconditions
@@ -839,6 +842,7 @@ This portion will specify the existing theories that are used in the development
   $\tau_{\text{input}}$ is the input torque (Nm)\\
   $R_\text{gear}$ is the gear reduction (unitless)}% #5 description
 {None.}% #6 Notes
+
 {\citet{GearRatioExplanation}}% #7 Source
 {IM\ref{inst:1}}% #8 Referenced by
 {None}% #9 Preconditions
@@ -855,6 +859,7 @@ This portion will specify the existing theories that are used in the development
   $F_f$ is the force of friction (N)\\
   $F_n$ is the normal force (N)}% #5 description
 {None.}% #6 Notes
+
 {\citet{FrictionWikipedia}}% #7 Source
 {IM\ref{inst:1}, IM\ref{inst:7}}% #8 Referenced by
 {None}% #9 Preconditions
@@ -869,6 +874,7 @@ This portion will specify the existing theories that are used in the development
   $m$ is the mass (kg)\\
   $V$ is the volume (m$^3$)}% #5 description
 {None.}% #6 Notes
+
 {\citet{BritannicaDensity}}% #7 Source
 {IM\ref{inst:1}}% #8 Referenced by
 {None}% #9 Preconditions
@@ -886,6 +892,7 @@ This portion will specify the existing theories that are used in the development
   $\mu$ is the coefficient of friction\\
   $\theta$ is the angle of wrap of the belt (radians)}% #5 description
 {None.}% #6 Notes
+
 {\citet{CapstanEquation2021}}% #7 Source
 {IM\ref{inst:7}}% #8 Referenced by
 {None}% #9 Preconditions
@@ -964,7 +971,7 @@ $f_\text{prim}(d)$ is the function to express the helix geometry (m $\rightarrow
 \noindent
 \deftheory
 {TM:HT}% #2 refname of theory
-{Hookes Law (Torsional)}% #3 label
+{Hooke's Law (Torsional)}% #3 label
 {$F = \frac{k \Delta \theta}{r} $}% #4 equation
 {$F$ is the force (N)\\
   $k$ is the torsional spring constant (Nm/rad)\\
@@ -1512,7 +1519,7 @@ which is to say that the top requirement is the most important and the bottom re
 
 \item[R\refstepcounter{reqnum}\thereqnum \label{R_1}:] The system shall simulate the behavior of the McMaster Baja Team's Continuous Variable Transmission(CVT) using mathematical models.
 
-\item[R\refstepcounter{reqnum}\thereqnum \label{R_2}:] The system shall calculate the acceleration of the vehicle as a function of time using inputs: gear radius, wheel radius, density of the fluid, drag coefficient, cross sectional area, angle of incline, torque transferred to the wheel, coefficient of rolling resistance, mass of the vehicle and driver. 
+\item[R\refstepcounter{reqnum}\thereqnum \label{R_2}:] The system shall calculate the acceleration of the vehicle as a function of time using inputs: gear radius, wheel radius, density of the fluid, drag coefficient, cross-sectional area, angle of incline, torque transferred to the wheel, coefficient of rolling resistance, mass of the vehicle and driver. 
 
 \item[R\refstepcounter{reqnum}\thereqnum \label{R_3}:] The system shall calculate the velocity of the vehicle as a function of time by taking the integral of acceleration with respect to time.
 
@@ -1549,12 +1556,24 @@ which is to say that the top requirement is the most important and the bottom re
 
 \noindent \begin{itemize}
 
-\item[NFR\refstepcounter{nfrnum}\thenfrnum \label{NFR_Accuracy}:]\textbf{Accuracy} The system shall achieve an accuracy of at least 95 \% in correctly predicting CVT outputs. See VnV Plan Section 4.2 for the test procedure.
+\item[NFR\refstepcounter{nfrnum}\thenfrnum \label{NFR_Accuracy}:]\textbf{Accuracy} The system shall achieve an accuracy of at least 95 \% in correctly predicting CVT outputs. 
+See VnV Plan Section 4.2 for the test procedure. An accuracy rate of 95\% ensures that the system is able to make reliable predictions, which are important to the performance optimization. 
 \item[NFR\refstepcounter{nfrnum}\thenfrnum \label{NFR_Usability}:] \textbf{Usability} 85 \% of a representative user group shall be able to successfully input CVT parameters and receive CVT outputs on their first use.
+An 85\% success rate was chosen for successfully inputting parameters and receiving outputs on their first use is realistic based on the complexity of the system. 
+This 85 \% acknowledges that some users may require trial and error, but the majority of users should still be able to effectively interact with the system. 
 \item[NFR\refstepcounter{nfrnum}\thenfrnum \label{NFR_Maintainability}:]\textbf{Maintainability} If a likely change is made to the finished software, it will take at most 10 \% of the original development time, assuming the same development resources are available.
-\item[NFR\refstepcounter{nfrnum}\thenfrnum \label{NFR_Verifiability}:] \textbf{Verifiability} The system shall output the resulting tunned CVT outputs which must able to be cross-verified against data available through the McMaster Baja Team with a consistency rate of 95 \%.
-\item[NFR\refstepcounter{nfrnum}\thenfrnum \label{NFR_Understandability}:] \textbf{Understandability} The system shall be understood by at least 90 \% of a representative user group with no more than 15 minutes of initial training, as measured by assessing ability to generate and export tunned CVT output where users must score at least 90 \%
-\item[NFR\refstepcounter{nfrnum}\thenfrnum \label{NFR_Reusability}:] \textbf{Reusability} The system's components shall be designed for reuse in the case the McMaster Baja team acquires a new CVT. These modifications should be made with minimal modifications, defined as requiring modification to less than 30 \% of the code to configure these changes.
+This 10\% figure is a reasonable expectation for maintainability. 
+Given that our system will evolve, this 10\% represents having a modular design that should be able to accommodate changes without significant extra effort and additions. 
+\item[NFR\refstepcounter{nfrnum}\thenfrnum \label{NFR_Verifiability}:] \textbf{Verifiability} The system shall output the resulting tunned CVT outputs which must be able to be cross-verified against data available through the McMaster Baja Team with a consistency rate of 95 \%.
+This 95\% reflects the need for a high level of precision and consistency of the system. 
+This number was chosen as the system must be valuable to its users through producing accurate reliable outputs. 
+\item[NFR\refstepcounter{nfrnum}\thenfrnum \label{NFR_Understandability}:] \textbf{Understandability} The system shall be understood by at least 90 \% of a representative user group with no more than 15 minutes of initial training, as measured by assessing ability to generate and export tunned CVT output where users must score at least 90 \%.
+A target of 90\% was chosen as this ensures that system is intuitive and user-friendly to a large majority of users. 
+By providing users with 15 minutes of training this demonstrates that the learning curve is minimal. 
+\item[NFR\refstepcounter{nfrnum}\thenfrnum \label{NFR_Reusability}:] \textbf{Reusability} The system's components shall be designed for reuse in the case the McMaster Baja team acquires a new CVT. 
+These modifications should be made with minimal modifications, defined as requiring modification to less than 30 \% of the code to configure these changes.
+By choosing 30\% this is a reasonable limit showing for flexibility and reusability of components. 
+This 30\% target ensures that future modifications such as accommodating for a new CVT, can be achieved without requiring a complete redesign of the system as majority if not all the mathematical calculations will remain the same.
 
 \end{itemize}
 
@@ -1563,7 +1582,7 @@ which is to say that the top requirement is the most important and the bottom re
 The assumptions made for the CVT (Continuously Variable Transmission) system model aim to simplify it's dynamics, facilitating the development of mathematical models to simulate the behavior of the CVT(\rref{R_1}). 
 Many key assumptions are made to meet the requirement of developing these mathematical models. The following assumptions are also factored in to the calculations of the CVT ratio, clamping force, RPM, torque, engine input, distance, speed and acceleration(\rref{R_2}). 
 \\\\
-\noindent The systems excludes the effects of temperature on material properties, aside from the belt, which allows for a more straightforward focus on the mechanics of the interactions (\aref{A_1}).
+\noindent The system excludes the effects of temperature on material properties, aside from the belt, which allows for a more straightforward focus on the mechanics of the interactions (\aref{A_1}).
 The influence of gravitational forces is negligible and the elasticity of belts is considered insignificant(\aref{A_2}, \aref{A_3}). 
 Vibrational effects from external sources are also assumed to be minimal, avoiding the complexity of vibration-induced disturbances in transmission behavior (\aref{A_4}).
 Wear and tear of components, including the belt and pulley are disregarded and frictional losses in non-critical components, are deemed negligible (\aref{A_5}, \aref{A_6}). 
@@ -1597,11 +1616,11 @@ Finally, the CVT axis are assumed to be in line and the belt slippage of the CVT
 The purpose of the traceability matrices is to provide easy references on what
 has to be additionally modified if a certain component is changed.  Every time a
 component is changed, the items in the column of that component that are marked
-with an ``X'' may have to be modified as well.  Table~\ref{Table:A_trace} shows the
+with an ``X'' may have to be modified as well.  Table~\ref{Table:trace_Assumptions_TM} shows the
 dependencies of theoretical models, general definitions, data definitions, and
-instance models with each other. Table~\ref{Table:R_trace} shows the
+instance models with each other. Table~\ref{Table:trace_IM} shows the
 dependencies of instance models, requirements, and data constraints on each
-other. Table~\ref{Table:trace_Assumptions} shows the dependencies of theoretical models,
+other. The table~\ref{Table:trace_Assumptions} shows the dependencies of theoretical models,
 general definitions, data definitions, instance models, and likely changes on
 the assumptions.
 
