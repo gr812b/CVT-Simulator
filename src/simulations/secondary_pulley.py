@@ -47,8 +47,10 @@ class SecondaryPulley:
         return tm.hookes_law_tors(
             self.spring_coeff_tors, self.initial_rotation + rotation, self.helix_radius
         )
-    
-    def calculate_force(self, torque: float, shift_distance: float, compression: float, rotation: float) -> float:
+
+    def calculate_force(
+        self, torque: float, shift_distance: float, compression: float, rotation: float
+    ) -> float:
         return (
             self.calculate_helix_force(torque, shift_distance)
             + self.calculate_spring_comp_force(compression)
