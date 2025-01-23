@@ -1,6 +1,11 @@
 import numpy as np
 from utils.theoretical_models import TheoreticalModels as tm
-
+from constants.car_specs import (
+    SHEAVE_ANGLE,
+    BELT_WIDTH,
+    INITIAL_PRIMARY_PULLEY_RADIUS,
+    INITIAL_SECONDARY_PULLEY_RADIUS,
+)
 
 class SecondaryPulley:
     def __init__(
@@ -19,8 +24,17 @@ class SecondaryPulley:
         self.helix_radius = helix_radius
 
     def calculate_helix_force(self, torque: float, shift_distance: float) -> float:
-        return tm.gearing(torque, CVT - RATIO) / (
-            2 * self.helix_radius * np.tan(HELIX - ANGLE / 2)
+        cvt_ratio = tm.current_cvt_ratio(
+            shift_distance,
+            SHEAVE_ANGLE,
+            BELT_WIDTH,
+            INITIAL_PRIMARY_PULLEY_RADIUS,
+            INITIAL_SECONDARY_PULLEY_RADIUS,
+        )
+        helix_angle = 0.5  # TODO: Calculate helix angle
+
+        return tm.gearing(torque, cvt_ratio) / (
+            2 * self.helix_radius * np.tan(helix_angle / 2)
         )
 
     def calculate_spring_comp_force(self, compression: float) -> float:
