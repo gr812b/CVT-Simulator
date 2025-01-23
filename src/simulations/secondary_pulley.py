@@ -49,7 +49,7 @@ class SecondaryPulley:
         )
 
     # TODO: Determine relationship between shift distance and rotation
-    def calculate_force(
+    def calculate_net_force(
         self, torque: float, shift_distance: float, rotation: float
     ) -> float:
         return (
