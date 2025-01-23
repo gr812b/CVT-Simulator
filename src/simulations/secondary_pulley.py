@@ -48,11 +48,12 @@ class SecondaryPulley:
             self.spring_coeff_tors, self.initial_rotation + rotation, self.helix_radius
         )
 
+    # TODO: Determine relationship between shift distance and rotation
     def calculate_force(
-        self, torque: float, shift_distance: float, compression: float, rotation: float
+        self, torque: float, shift_distance: float, rotation: float
     ) -> float:
         return (
             self.calculate_helix_force(torque, shift_distance)
-            + self.calculate_spring_comp_force(compression)
+            + self.calculate_spring_comp_force(shift_distance)
             + self.calculate_spring_tors_force(rotation)
         )

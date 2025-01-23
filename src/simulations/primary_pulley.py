@@ -26,10 +26,10 @@ class PrimaryPulley:
         )
         return centrifugal_force * np.tan(np.pi / 6)  # TODO: Calculate ramp angle
 
-    def calculate_spring_comp_force(self, shift_distance: float) -> float:
+    def calculate_spring_comp_force(self, compression: float) -> float:
         return tm.hookes_law_comp(
             self.spring_coeff_comp,
-            self.initial_compression + shift_distance,
+            self.initial_compression + compression,
         )
 
     def calculate_force(self, shift_distance: float, angular_velocity: float) -> float:
