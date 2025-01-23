@@ -43,5 +43,41 @@ class TheoreticalModels:
         return m * a
 
     @staticmethod  # See theoretical model TM:D2R
-    def shift_to_pulley_radius(d: float, Φ: float) -> float:
-        return d / (2 * np.tan(Φ / 2))
+    def shift_to_pulley_radius_prim(d: float, sheave_angle: float) -> float:
+        return d / (2 * np.tan(sheave_angle / 2))
+
+    @staticmethod  # See theoretical model TM:D2R
+    def shift_to_pulley_radius_sec(
+        d: float, sheave_angle: float, belt_width: float
+    ) -> float:
+        return (belt_width - d / 2) / np.tan(sheave_angle / 2)
+
+    @staticmethod
+    def current_primary_radius(
+        d: float, sheave_angle: float, initial_radius: float
+    ) -> float:
+        return initial_radius + TheoreticalModels.shift_to_pulley_radius_prim(
+            d, sheave_angle
+        )
+
+    @staticmethod
+    def current_secondary_radius(
+        d: float, sheave_angle: float, belt_width: float, initial_radius: float
+    ) -> float:
+        return initial_radius - TheoreticalModels.shift_to_pulley_radius_sec(
+            d, sheave_angle, belt_width
+        )
+
+    @staticmethod
+    def current_cvt_ratio(
+        d: float,
+        sheave_angle: float,
+        belt_width: float,
+        initial_primary_radius: float,
+        initial_secondary_radius: float,
+    ) -> float:
+        return TheoreticalModels.current_secondary_radius(
+            d, sheave_angle, belt_width, initial_primary_radius
+        ) / TheoreticalModels.current_primary_radius(
+            d, sheave_angle, initial_secondary_radius
+        )
