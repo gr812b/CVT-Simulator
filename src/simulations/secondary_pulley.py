@@ -7,6 +7,7 @@ from constants.car_specs import (
     INITIAL_SECONDARY_PULLEY_RADIUS,
 )
 
+
 class SecondaryPulley:
     def __init__(
         self,
