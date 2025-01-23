@@ -32,7 +32,9 @@ class PrimaryPulley:
             self.initial_compression + compression,
         )
 
-    def calculate_net_force(self, shift_distance: float, angular_velocity: float) -> float:
+    def calculate_net_force(
+        self, shift_distance: float, angular_velocity: float
+    ) -> float:
         return self.calculate_flyweight_force(
             shift_distance, angular_velocity
         ) - self.calculate_spring_comp_force(shift_distance)
