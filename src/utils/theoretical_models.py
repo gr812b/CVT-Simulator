@@ -7,11 +7,11 @@ class TheoreticalModels:
     """
 
     @staticmethod
-    def hookes_law(k: float, x: float) -> float:
+    def hookes_law_comp(k: float, x: float) -> float:
         return k * x
 
     @staticmethod
-    def hookes_law(k: float, θ: float, r: float) -> float:
+    def hookes_law_tors(k: float, θ: float, r: float) -> float:
         return k * θ / r
 
     @staticmethod
