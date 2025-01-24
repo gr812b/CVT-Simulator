@@ -28,7 +28,7 @@ load_simulator = LoadSimulator(
     car_mass=CAR_MASS,
     wheel_radius=WHEEL_RADIUS,
     gearbox_ratio=GEARBOX_RATIO,
-    incline_angle=deg_to_rad(args.incline_angle),
+    incline_angle=45,
 )
 car_simulator = CarSimulator(car_mass=CAR_MASS)
 
@@ -58,7 +58,7 @@ def angular_velocity_and_position_derivative(t, y):
     # Maximum car velocity at the current engine speed (Wheels can't spin faster than the engine + gearbox)
     max_car_velocity = state.engine_angular_velocity / GEARBOX_RATIO * WHEEL_RADIUS
 
-    if state.car_velocity > max_car_velocity:
+    if abs(state.car_velocity) > max_car_velocity:
         car_acceleration = 0
 
     # TODO: Remove temporary solution to act as limiter for engine speed
