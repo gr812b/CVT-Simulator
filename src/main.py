@@ -62,7 +62,7 @@ def angular_velocity_and_position_derivative(t, y):
         car_acceleration = 0
 
     # TODO: Remove temporary solution to act as limiter for engine speed
-    if state.engine_angular_velocity > 400:
+    if abs(state.engine_angular_velocity) > 400:
         engine_angular_acceleration = 0
 
     return [engine_angular_acceleration, car_acceleration, state.car_velocity]
