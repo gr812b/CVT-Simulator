@@ -56,5 +56,4 @@ class SecondaryPulley:
         helix_force = self.calculate_helix_force(torque, shift_distance)
         spring_comp_force = self.calculate_spring_comp_force(shift_distance)
         spring_tors_force = self.calculate_spring_tors_force(rotation)
-        print(f"Helix force: {helix_force}, Spring comp force: {spring_comp_force}, Spring tors force: {spring_tors_force}")
         return helix_force + spring_comp_force + spring_tors_force
