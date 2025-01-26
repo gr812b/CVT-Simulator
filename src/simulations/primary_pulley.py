@@ -35,6 +35,6 @@ class PrimaryPulley:
     def calculate_net_force(
         self, shift_distance: float, angular_velocity: float
     ) -> float:
-        return self.calculate_flyweight_force(
-            shift_distance, angular_velocity
-        ) - self.calculate_spring_comp_force(shift_distance)
+        centrifugal_force = self.calculate_flyweight_force(shift_distance, angular_velocity)
+        spring_force = self.calculate_spring_comp_force(shift_distance)
+        return centrifugal_force - spring_force

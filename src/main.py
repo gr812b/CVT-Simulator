@@ -5,6 +5,8 @@ from simulations.load_simulation import LoadSimulator
 from utils.system_state import SystemState
 from utils.simulation_result import SimulationResult
 from simulations.engine_simulation import EngineSimulator
+from simulations.primary_pulley import PrimaryPulley
+from simulations.secondary_pulley import SecondaryPulley
 from constants.engine_specs import torque_curve
 from constants.car_specs import (
     ENGINE_INERTIA,
@@ -13,6 +15,8 @@ from constants.car_specs import (
     DRAG_COEFFICIENT,
     CAR_MASS,
     WHEEL_RADIUS,
+    INITIAL_FLYWEIGHT_RADIUS,
+    HELIX_RADIUS,
 )
 from utils.conversions import rpm_to_rad_s, deg_to_rad
 from utils.argument_parser import get_arguments
@@ -28,9 +32,22 @@ load_simulator = LoadSimulator(
     car_mass=CAR_MASS,
     wheel_radius=WHEEL_RADIUS,
     gearbox_ratio=GEARBOX_RATIO,
-    incline_angle=45,
+    incline_angle=10, # deg_to_rad(args.incline_angle)
 )
 car_simulator = CarSimulator(car_mass=CAR_MASS)
+primary_simulator = PrimaryPulley(
+    spring_coeff_comp=1000, # TODO: Use args
+    initial_compression=0.2, # TODO: Use args
+    flyweight_mass=0.1, # TODO: Use args
+    initial_flyweight_radius=INITIAL_FLYWEIGHT_RADIUS,
+)
+secondary_simulator = SecondaryPulley(
+    spring_coeff_tors=1000, # TODO: Use args
+    spring_coeff_comp=1000, # TODO: Use args
+    initial_rotation=0.1, # TODO: Use args
+    initial_compression=0.1, # TODO: Use args
+    helix_radius=HELIX_RADIUS,
+)
 
 
 # Define the system of differential equations
@@ -54,6 +71,20 @@ def angular_velocity_and_position_derivative(t, y):
 
     # Vehicle acceleration
     car_acceleration = car_simulator.calculate_acceleration(force_at_wheel)
+
+    primary_force = primary_simulator.calculate_net_force(
+        0,
+        state.engine_angular_velocity, 
+    )
+
+    secondary_force = secondary_simulator.calculate_net_force(
+        gearbox_load, # TODO: Determine if this should be gearbox or engine torque
+        0,
+        0,
+    )
+
+    print(f"Secondary force: {secondary_force}")
+
 
     # Maximum car velocity at the current engine speed (Wheels can't spin faster than the engine + gearbox)
     max_car_velocity = state.engine_angular_velocity / GEARBOX_RATIO * WHEEL_RADIUS
@@ -85,6 +116,6 @@ solution = solve_ivp(
 result = SimulationResult(solution)
 
 result.write_csv("simulation_output.csv")
-# result.plot("car_position")
-# result.plot("car_velocity")
+result.plot("car_position")
+result.plot("car_velocity")
 # result.plot("engine_angular_velocity")
