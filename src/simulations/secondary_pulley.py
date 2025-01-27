@@ -33,7 +33,7 @@ class SecondaryPulley:
             INITIAL_SECONDARY_PULLEY_RADIUS,
         )
         helix_angle = np.pi / 6  # TODO: Calculate helix angle
-        
+
         return tm.gearing(torque, cvt_ratio) / (
             2 * self.helix_radius * np.tan(helix_angle / 2)
         )
@@ -46,7 +46,7 @@ class SecondaryPulley:
     def calculate_spring_tors_force(self, rotation: float) -> float:
         # TODO: Check if force applies at helix radius
         return tm.hookes_law_tors(
-            self.spring_coeff_tors, self.initial_rotation + rotation, self.helix_radius 
+            self.spring_coeff_tors, self.initial_rotation + rotation, self.helix_radius
         )
 
     # TODO: Determine relationship between shift distance and rotation

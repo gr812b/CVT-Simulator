@@ -32,20 +32,20 @@ load_simulator = LoadSimulator(
     car_mass=CAR_MASS,
     wheel_radius=WHEEL_RADIUS,
     gearbox_ratio=GEARBOX_RATIO,
-    incline_angle=17, # deg_to_rad(args.incline_angle)
+    incline_angle=deg_to_rad(args.incline_angle),
 )
 car_simulator = CarSimulator(car_mass=CAR_MASS)
 primary_simulator = PrimaryPulley(
-    spring_coeff_comp=1000, # TODO: Use args
-    initial_compression=0.2, # TODO: Use args
-    flyweight_mass=0.1, # TODO: Use args
+    spring_coeff_comp=1000,  # TODO: Use args
+    initial_compression=0.2,  # TODO: Use args
+    flyweight_mass=0.1,  # TODO: Use args
     initial_flyweight_radius=INITIAL_FLYWEIGHT_RADIUS,
 )
 secondary_simulator = SecondaryPulley(
-    spring_coeff_tors=2500, # TODO: Use args
-    spring_coeff_comp=500, # TODO: Use args
-    initial_rotation=np.pi/2, # TODO: Use args
-    initial_compression=0.1, # TODO: Use args
+    spring_coeff_tors=2500,  # TODO: Use args
+    spring_coeff_comp=500,  # TODO: Use args
+    initial_rotation=np.pi / 2,  # TODO: Use args
+    initial_compression=0.1,  # TODO: Use args
     helix_radius=HELIX_RADIUS,
 )
 
@@ -66,9 +66,7 @@ def angular_velocity_and_position_derivative(t, y):
     engine_torque = engine_simulator.get_torque(state.engine_angular_velocity)
 
     # Net force on the car
-    net_torque = (
-        engine_torque - gearbox_load
-    )
+    net_torque = engine_torque - gearbox_load
     force_at_wheel = net_torque * GEARBOX_RATIO / WHEEL_RADIUS
 
     # Vehicle acceleration
@@ -76,14 +74,16 @@ def angular_velocity_and_position_derivative(t, y):
 
     primary_force = primary_simulator.calculate_net_force(
         0,
-        state.engine_angular_velocity, 
+        state.engine_angular_velocity,
     )
     secondary_force = secondary_simulator.calculate_net_force(
         engine_torque,
         0,
         0,
     )
-    print(f"Primary force: {primary_force}, Secondary force: {secondary_force}, engine torque: {engine_torque}")
+    print(
+        f"Primary force: {primary_force}, Secondary force: {secondary_force}, engine torque: {engine_torque}"
+    )
     # TODO: Next steps
     # Difference in clamping forces causes shifting up to the CVTs limit.
     # Needs to accelerate both secondary and primary moving components + ?belt?
@@ -122,6 +122,6 @@ solution = solve_ivp(
 result = SimulationResult(solution)
 
 result.write_csv("simulation_output.csv")
-result.plot("car_position")
-result.plot("car_velocity")
+# result.plot("car_position")
+# result.plot("car_velocity")
 # result.plot("engine_angular_velocity")
