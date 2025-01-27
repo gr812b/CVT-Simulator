@@ -28,7 +28,7 @@ load_simulator = LoadSimulator(
     car_mass=CAR_MASS,
     wheel_radius=WHEEL_RADIUS,
     gearbox_ratio=GEARBOX_RATIO,
-    incline_angle=deg_to_rad(args.incline_angle),
+    incline_angle=deg_to_rad(args.angle_of_incline),
 )
 car_simulator = CarSimulator(car_mass=CAR_MASS)
 

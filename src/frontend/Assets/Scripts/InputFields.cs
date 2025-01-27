@@ -11,7 +11,8 @@ public class InputFields : MonoBehaviour
     private PythonRunner pythonRunner = new PythonRunner();
 
     // Parameters struct to store the input fields
-    private Parameters parameters = new Parameters({
+    private Parameters parameters = new Parameters
+    {
         PrimaryWeight = 0.0,
         PrimaryRampGeometry = 0.0,
         PrimarySpringRate = 0.0,
@@ -23,7 +24,7 @@ public class InputFields : MonoBehaviour
         DriverWeight = 0.0,
         Traction = 0.0,
         AngleOfIncline = 0.0
-    });
+    };
 
     // Buttons
     [SerializeField] private Button simulateButton;
@@ -56,7 +57,7 @@ public class InputFields : MonoBehaviour
 
 
     private void Start() {
-        simulateButton.onClick.AddListener(LoadNextScene);
+        simulateButton.onClick.AddListener(StartSimulation);
         primaryWeightInput.onValueChanged.AddListener((string value) => UpdateInputField(value, ref parameters.PrimaryWeight, ref primaryWeightInput, ref primaryWeightError));
         primaryRampGeometryInput.onValueChanged.AddListener((string value) => UpdateInputField(value, ref parameters.PrimaryRampGeometry, ref primaryRampGeometryInput, ref primaryRampGeometryError));
         primarySpringRateInput.onValueChanged.AddListener((string value) => UpdateInputField(value, ref parameters.PrimarySpringRate, ref primarySpringRateInput, ref primarySpringRateError));

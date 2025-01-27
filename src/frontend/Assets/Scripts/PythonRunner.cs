@@ -5,6 +5,7 @@ using UnityEngine;
 // Struct defining the parameters of the python script
 public struct Parameters
 {
+    // Parameter variables
     public double PrimaryWeight;
     public double PrimaryRampGeometry;
     public double PrimarySpringRate;
