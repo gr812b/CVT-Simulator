@@ -1,5 +1,6 @@
 import argparse
 
+
 def get_arguments():
     parser = argparse.ArgumentParser(description="Simulate a Baja SAE car")
     parser.add_argument(
