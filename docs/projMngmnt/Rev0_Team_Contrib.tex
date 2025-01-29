@@ -28,10 +28,7 @@ Demo.  The time period of interest is the time between the POC demo and the Rev
 
 \section{Team Meeting Attendance}
 
-\wss{For each team member how many team meetings have they attended over the
-time period of interest.  This number should be determined from the meeting
-issues in the team's repo.  The first entry in the table should be the total
-number of team meetings held by the team.}
+
 
 \begin{table}[H]
 \centering
@@ -48,16 +45,8 @@ Kai Arseneau & 1\\
 \end{tabular}
 \end{table}
 
-\wss{If needed, an explanation for the counts can be provided here.}
 
 \section{Supervisor/Stakeholder Meeting Attendance}
-
-\wss{For each team member how many supervisor/stakeholder team meetings have
-they attended over the time period of interest.  This number should be determined
-from the supervisor meeting issues in the team's repo.  The first entry in the
-table should be the total number of supervisor and team meetings held by the
-team.  If there is no supervisor, there will usually be meetings with
-stakeholders (potential users) that can serve a similar purpose.}
 
 \begin{table}[H]
 \centering
@@ -78,10 +67,6 @@ Kai Arseneau & 0\\
 
 \section{Lecture Attendance}
 
-\wss{For each team member how many lectures have they attended over the time
-period of interest.  This number should be determined from the lecture issues in
-the team's repo.  The first entry in the table should be the total number of
-lectures since the beginning of the term.}
 
 \begin{table}[H]
 \centering
@@ -102,8 +87,6 @@ Kai Arseneau & 0\\
 
 \section{TA Document Discussion Attendance}
 
-\wss{For each team member how many of the informal document discussion meetings
-with the TA were attended over the time period of interest.}
 
 \begin{table}[H]
 \centering
@@ -124,22 +107,17 @@ Kai Arseneau & 1\\
 
 \section{Commits}
 
-\wss{For each team member how many commits to the main branch have been made
-over the time period of interest.  The total is the total number of commits for
-the entire team since the beginning of the term.  The percentage is the
-percentage of the total commits made by each team member.}
-
 \begin{table}[H]
 \centering
 \begin{tabular}{lll}
 \toprule
 \textbf{Student} & \textbf{Commits} & \textbf{Percent}\\
 \midrule
-Total & Num & 100\% \\
-Grace McKenna & Num & \% \\
-Travis Wing & Num & \% \\
-Cameron Dunn & Num & \% \\
-Kai Arseneau & Num & \% \\
+Total & 40 & 100\% \\
+Grace McKenna & 8 & 20\% \\
+Travis Wing & 10 & 25\% \\
+Cameron Dunn & 8 & 20\% \\
+Kai Arseneau & 14 & 35\% \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -161,10 +139,10 @@ issues (C only)) over the time period of interest.}
 \toprule
 \textbf{Student} & \textbf{Authored (O+C)} & \textbf{Assigned (C only)}\\
 \midrule
-Grace McKenna & Num & Num \\
-Travis Wing & Num & Num \\
-Cameron Dunn & Num & Num \\
-Kai Arseneau & Num & Num \\
+Grace McKenna & 1 & Num \\
+Travis Wing & 5 & Num \\
+Cameron Dunn & 0 & Num \\
+Kai Arseneau & 17 & Num \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -173,9 +151,23 @@ Kai Arseneau & Num & Num \\
 
 \section{CICD}
 
-\wss{Say how CICD is used in your project}
+We will utilize CICD to automatically lint, format and test our code. 
 
-\wss{If your team has additional metrics of productivity, please feel free to
-add them to this report.}
+For the python backend we will be using the following tools:
+\begin{itemize}
+  \item [\textbf{flake8}] - A Python linter that checks for PEP8 compliance.
+  \item [\textbf{black}] - A Python code formatter that will ensure consistent code style.
+  \item [\textbf{unittest}] - Python's built-in testing framework that will be used for unit testing.
+  \item [\textbf{coverage}] - A testing framework for Python that will be used for code coverage.
+\end{itemize}
+
+\bigskip
+\noindent For the Unity C\# frontend we will be using the following tools:
+\begin{itemize}
+  \item [\textbf{SonarLint}] - C\# linter that checks for code quality and security vulnerabilities.
+  \item [\textbf{StyleCop}] - C\# linter that checks for code style and formatting.
+  \item [\textbf{UTF}] - A testing framework for C\# that will be used for unit testing.
+  \item [\textbf{UTR}] - A testing framework for Unity that will be used for unit testing and code coverage.
+\end{itemize}
 
 \end{document}
