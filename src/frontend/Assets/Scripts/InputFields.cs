@@ -11,7 +11,7 @@ public class InputFields : MonoBehaviour
     private PythonRunner pythonRunner = new PythonRunner();
 
     // Parameters struct to store the input fields
-    private Parameters parameters = new Parameters
+    public Parameters parameters = new Parameters
     {
         PrimaryWeight = 0.0,
         PrimaryRampGeometry = 0.0,
@@ -89,6 +89,7 @@ public class InputFields : MonoBehaviour
         pythonRunner.RunPython(parameters);
 
         // Go the the results scene
+        DontDestroyOnLoad(this.gameObject);
         int nextSceneIndex = SceneManager.GetActiveScene().buildIndex + 1;
         SceneManager.LoadScene(nextSceneIndex);
     }
