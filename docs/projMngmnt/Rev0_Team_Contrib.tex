@@ -24,14 +24,42 @@ Demo.  The time period of interest is the time between the POC demo and the Rev
 
 \section{Demo Plans}
 
-\wss{What will you be demonstrating}
+For the Rev 0 demo we will have a Unity application that can simulate a CVT.
+
+It is comprised of the following components:\\
+
+\textbf{Unity FrontEnd}
+
+\begin{itemize}
+  \item An input page that will take in 8 input parameters from the user.
+  \item The input page will have default values in each input field based on the cars current settings.
+  \item A results page that allows the user to play/pause the simulation.
+  \item On the results page there will also be the following features:
+  \begin{itemize}
+    \item Gauges that will display the current speed and RPM of the car.
+    \item A 3D model of the CVT that will animate based on the input parameters.
+    \item A mini car to show the position change and incline of the road.
+  \end{itemize}
+  \item A download button that will allow the user to download the results of the simulation in the form of a CSV.
+  \item An input table that displays the user there input parameters.
+\end{itemize}
+
+\textbf{Python Backend}
+
+Our demonstration will center around the simulation of the CVT and how the users inputs affect the results.
+The user will first use the default values provided, run the simulation and observe the visual results.
+Then the user will go back and change the inputs and then see how the results of the simulation change. 
+
+This aims to demonstrate how our simulation models the CVT based on the inputs provided by the user. The backend intends to function as follows:
+\begin{itemize}
+  \item The python backend will receive the input from the front end and send back a response.
+  \item It will then simulate the drivetrain and dynamics of our custom baja vehicle. This includes the engine, transmission, gearbox, wheels, air resistance, gravity and rolling resistance.
+  \item Includes an ODE solver to solve a 2nd order ODE given the inputs from the front end and writes all datapoints to a CSV file.
+\end{itemize}
 
 \section{Team Meeting Attendance}
 
-\wss{For each team member how many team meetings have they attended over the
-time period of interest.  This number should be determined from the meeting
-issues in the team's repo.  The first entry in the table should be the total
-number of team meetings held by the team.}
+
 
 \begin{table}[H]
 \centering
@@ -39,51 +67,40 @@ number of team meetings held by the team.}
 \toprule
 \textbf{Student} & \textbf{Meetings}\\
 \midrule
-Total & Num\\
-Name 1 & Num\\
-Name 2 & Num\\
-Name 3 & Num\\
-Name 4 & Num\\
-Name 5 & Num\\
+Total & 5\\
+Grace McKenna & 5\\
+Travis Wing & 5\\
+Cameron Dunn & 5\\
+Kai Arseneau & 5\\
 \bottomrule
 \end{tabular}
 \end{table}
 
-\wss{If needed, an explanation for the counts can be provided here.}
 
 \section{Supervisor/Stakeholder Meeting Attendance}
 
-\wss{For each team member how many supervisor/stakeholder team meetings have
-they attended over the time period of interest.  This number should be determined
-from the supervisor meeting issues in the team's repo.  The first entry in the
-table should be the total number of supervisor and team meetings held by the
-team.  If there is no supervisor, there will usually be meetings with
-stakeholders (potential users) that can serve a similar purpose.}
-
 \begin{table}[H]
 \centering
 \begin{tabular}{ll}
 \toprule
 \textbf{Student} & \textbf{Meetings}\\
 \midrule
-Total & Num\\
-Name 1 & Num\\
-Name 2 & Num\\
-Name 3 & Num\\
-Name 4 & Num\\
-Name 5 & Num\\
+Total & 0\\
+Grace McKenna & 0\\
+Travis Wing & 0\\
+Cameron Dunn & 0\\
+Kai Arseneau & 0\\
 \bottomrule
 \end{tabular}
 \end{table}
 
-\wss{If needed, an explanation for the counts can be provided here.}
+In between the POC and Rev 0 (as of now) there has not been a supervisor meeting. This is mainly due to the fact
+that we have been working on the software implemenation of the project and have not had any questions or concerns that we needed to ask our supervisor.
+However we do plan on meeting with our supervisor before we present Rev 0.
+
 
 \section{Lecture Attendance}
 
-\wss{For each team member how many lectures have they attended over the time
-period of interest.  This number should be determined from the lecture issues in
-the team's repo.  The first entry in the table should be the total number of
-lectures since the beginning of the term.}
 
 \begin{table}[H]
 \centering
@@ -91,22 +108,18 @@ lectures since the beginning of the term.}
 \toprule
 \textbf{Student} & \textbf{Lectures}\\
 \midrule
-Total & Num\\
-Name 1 & Num\\
-Name 2 & Num\\
-Name 3 & Num\\
-Name 4 & Num\\
-Name 5 & Num\\
+Total & 1\\
+Grace McKenna & 1\\
+Travis Wing & 0\\
+Cameron Dunn & 0\\
+Kai Arseneau & 0\\
 \bottomrule
 \end{tabular}
 \end{table}
 
-\wss{If needed, an explanation for the lecture attendance can be provided here.}
 
 \section{TA Document Discussion Attendance}
 
-\wss{For each team member how many of the informal document discussion meetings
-with the TA were attended over the time period of interest.}
 
 \begin{table}[H]
 \centering
@@ -114,24 +127,17 @@ with the TA were attended over the time period of interest.}
 \toprule
 \textbf{Student} & \textbf{Lectures}\\
 \midrule
-Total & Num\\
-Name 1 & Num\\
-Name 2 & Num\\
-Name 3 & Num\\
-Name 4 & Num\\
-Name 5 & Num\\
+Total & 1\\
+Grace McKenna & 1\\
+Travis Wing & 1\\
+Cameron Dunn & 1\\
+Kai Arseneau & 1\\
 \bottomrule
 \end{tabular}
 \end{table}
 
-\wss{If needed, an explanation for the attendance can be provided here.}
 
 \section{Commits}
-
-\wss{For each team member how many commits to the main branch have been made
-over the time period of interest.  The total is the total number of commits for
-the entire team since the beginning of the term.  The percentage is the
-percentage of the total commits made by each team member.}
 
 \begin{table}[H]
 \centering
@@ -139,26 +145,19 @@ percentage of the total commits made by each team member.}
 \toprule
 \textbf{Student} & \textbf{Commits} & \textbf{Percent}\\
 \midrule
-Total & Num & 100\% \\
-Name 1 & Num & \% \\
-Name 2 & Num & \% \\
-Name 3 & Num & \% \\
-Name 4 & Num & \% \\
-Name 5 & Num & \% \\
+Total & 40 & 100\% \\
+Grace McKenna & 8 & 20\% \\
+Travis Wing & 10 & 25\% \\
+Cameron Dunn & 8 & 20\% \\
+Kai Arseneau & 15 & 35\% \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-\wss{If needed, an explanation for the counts can be provided here.  For
-instance, if a team member has more commits to unmerged branches, these numbers
-can be provided here.  If multiple people contribute to a commit, git allows for
-multi-author commits.}
 
 \section{Issue Tracker}
 
-\wss{For each team member how many issues have they authored (including open and
-closed issues (O+C)) and how many have they been assigned (only counting closed
-issues (C only)) over the time period of interest.}
+
 
 \begin{table}[H]
 \centering
@@ -166,22 +165,42 @@ issues (C only)) over the time period of interest.}
 \toprule
 \textbf{Student} & \textbf{Authored (O+C)} & \textbf{Assigned (C only)}\\
 \midrule
-Name 1 & Num & Num \\
-Name 2 & Num & Num \\
-Name 3 & Num & Num \\
-Name 4 & Num & Num \\
-Name 5 & Num & Num \\
+Grace McKenna & 1 & 2 \\
+Travis Wing & 5 & 3 \\
+Cameron Dunn & 0 & 2 \\
+Kai Arseneau & 18 & 5 \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-\wss{If needed, an explanation for the counts can be provided here.}
+The issue tracker is a bit skewed because of how our team meetings were organized.
+
+Kai Arseneau has the most issue authors because during the meeting where we scoped out the project and made issues
+he was the one who was typing and creating the issues while the rest of us were dicussing each issue and what needed to be done.
+This is also why Travis Wing has some authors because after a while he took over the typing and creating of issues from Kai.
+
+As far as the assigned issue tracking that is much more even across the board as we have been evenly distributing the work amongst ourselves.
+
 
 \section{CICD}
 
-\wss{Say how CICD is used in your project}
+We will utilize CICD to automatically lint, format and test our code. 
 
-\wss{If your team has additional metrics of productivity, please feel free to
-add them to this report.}
+For the python backend we will be using the following tools:
+\begin{itemize}
+  \item [\textbf{flake8}] - A Python linter that checks for PEP8 compliance.
+  \item [\textbf{black}] - A Python code formatter that will ensure consistent code style.
+  \item [\textbf{unittest}] - Python's built-in testing framework that will be used for unit testing.
+  \item [\textbf{coverage}] - A testing framework for Python that will be used for code coverage.
+\end{itemize}
+
+\bigskip
+\noindent For the Unity C\# frontend we will be using the following tools:
+\begin{itemize}
+  \item [\textbf{SonarLint}] - C\# linter that checks for code quality and security vulnerabilities.
+  \item [\textbf{StyleCop}] - C\# linter that checks for code style and formatting.
+  \item [\textbf{UTF}] - A testing framework for C\# that will be used for unit testing.
+  \item [\textbf{UTR}] - A testing framework for Unity that will be used for unit testing and code coverage.
+\end{itemize}
 
 \end{document}

@@ -1,44 +1,60 @@
 using System.Diagnostics;
 using System.IO;
 using UnityEngine;
-using UnityEngine.UI;
-using TMPro;
-using UnityEngine.SceneManagement;
 
-public class PythonScriptRunner : MonoBehaviour
+// Struct defining the parameters of the python script
+public struct Parameters
 {
-    // Serialize input parameters as private to make them visible in the Unity Editor
-    [SerializeField] private double inclineAngle = 0.0;
+    // Parameter variables
+    public double PrimaryWeight;
+    public double PrimaryRampGeometry;
+    public double PrimarySpringRate;
+    public double PrimarySpringPretension;
+    public double SecondaryHelixGeometry;
+    public double SecondarySpringRate;
+    public double SecondarySpringPretension;
+    public double VehicleWeight;
+    public double DriverWeight;
+    public double Traction;
+    public double AngleOfIncline;
 
-    // Serialize reference objects
-    [SerializeField] private Button runButton;
-    [SerializeField] private TMP_InputField inclineAngleInput;
+    // Generates the argument string using the struct fields
+    public string GenerateArgumentString()
+    {
+        var fields = GetType().GetFields();
+        string arguments = "";
 
+        foreach (var field in fields)
+        {
+            string name = ConvertPascalToSnake(field.Name);
+            arguments += " --" + name + " " + field.GetValue(this);
+        }
+
+        return arguments;
+    }
+
+    // Convert a pascal case string to snake case
+    private string ConvertPascalToSnake(string name)
+    {
+        if (string.IsNullOrEmpty(name)) return name;
+
+        return System.Text.RegularExpressions.Regex.Replace(
+            name,
+            "(?<!^)([A-Z])",
+            "_$1"
+        ).ToLower();
+    }
+    
+}
+
+public class PythonRunner
+{
+    // Paths to python environment and script
     private readonly string relativePythonPath = "../../../venv/Scripts/python.exe";
     private readonly string relativeScriptPath = "../../main.py";
 
-    private void Start()
-    {
-        // Add a listener to the run button
-        runButton.onClick.AddListener(RunPython);
-
-        // Add listeners for parameter inputs
-        inclineAngleInput.onValueChanged.AddListener(UpdateInclineAngle);
-
-    }
-
-    private void UpdateInclineAngle(string value)
-    {
-        // Try to parse the input value to a double
-        if (double.TryParse(value, out double angle))
-        {
-            inclineAngle = angle;
-        } else {
-            UnityEngine.Debug.LogError("Invalid input for incline angle: " + value);
-        }
-    }
-
-    public void RunPython()
+    // Main function to run the python script
+    public void RunPython(Parameters parameters)
     {   
         // Resolve the path to the python environment and main file of the python script
         string pythonPath = Path.GetFullPath(Path.Combine(Application.dataPath, relativePythonPath));
@@ -57,13 +73,10 @@ public class PythonScriptRunner : MonoBehaviour
             return;
         }
 
-        // Create a string with all of the arguments
-        string arguments = " --incline_angle " + inclineAngle;
-
         // Create a new process to run the python script
         ProcessStartInfo python = new ProcessStartInfo {
             FileName = pythonPath,
-            Arguments = scriptPath + arguments,
+            Arguments = scriptPath + parameters.GenerateArgumentString(),
             UseShellExecute = false,
             RedirectStandardOutput = true,
             RedirectStandardError = true,
@@ -86,13 +99,5 @@ public class PythonScriptRunner : MonoBehaviour
                 UnityEngine.Debug.LogError(error);
             }
         }
-
-        LoadNextScene();
-    }
-
-    private void LoadNextScene()
-    {
-        int nextSceneIndex = SceneManager.GetActiveScene().buildIndex + 1;
-        SceneManager.LoadScene(nextSceneIndex);
     }
 }
