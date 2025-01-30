@@ -1,5 +1,6 @@
 import math
 from constants.constants import GRAVITY, AIR_DENSITY
+from utils.theoretical_models import TheoreticalModels as tm
 
 # TODO: Consider direction, drag should never be applied in the opposite direction of velocity
 
@@ -32,13 +33,14 @@ class LoadSimulator:
 
     def calculate_drag_force(self, velocity: float) -> float:
         """Calculate the drag force on the car."""
-        return (
-            0.5
-            * self.air_density
-            * self.drag_coefficient
-            * self.frontal_area
-            * velocity**2
+        drag_force = tm.air_resistance(
+            self.air_density, velocity, self.frontal_area, self.drag_coefficient
         )
+
+        if velocity < 0:
+            drag_force *= -1
+
+        return drag_force
 
     def calculate_total_load_torque(self, velocity: float) -> float:
         """Calculate the total load torque on the wheels due to drag and incline."""
