@@ -15,3 +15,5 @@ SHEAVE_ANGLE = 30  # degrees TODO: Check if this is in degrees or radians
 BELT_WIDTH = 0.5  # m
 INITIAL_PRIMARY_PULLEY_RADIUS = 0.1  # m
 INITIAL_SECONDARY_PULLEY_RADIUS = 0.15  # m
+INITIAL_FLYWEIGHT_RADIUS = 0.1  # m
+HELIX_RADIUS = 0.1  # m
