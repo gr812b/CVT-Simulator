@@ -31,14 +31,18 @@ public class CSVReader
         {
             // Read the header line
             string headerLine = reader.ReadLine();
-            if (headerLine == null) return dataPoints;
+            if (headerLine == null) {
+                throw new InvalidDataException("CSV file is empty");
+            }
 
             // Get the indices for the time and car_position columns
             string[] headers = headerLine.Split(',');
             int timeIndex = Array.IndexOf(headers, "time");
             int positionIndex = Array.IndexOf(headers, "car_position");
 
-            if (timeIndex == -1 || positionIndex == -1) return dataPoints;
+            if (timeIndex == -1 || positionIndex == -1) {
+                throw new InvalidDataException("CSV file does not contain time and car_position columns");
+            }
 
             // Read each line, parsing time and position
             while (!reader.EndOfStream)
