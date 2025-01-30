@@ -47,13 +47,17 @@ It is comprised of the following components:\\
 \end{itemize}
 
 \textbf{Python Backend}
-Kai fill out please\\
 
 Our demonstration will center around the simulation of the CVT and how the users inputs affect the results.
 The user will first use the default values provided, run the simulation and observe the visual results.
 Then the user will go back and change the inputs and then see how the results of the simulation change. 
 
-This aims to demonstrate how our simulation models the CVT based on the inputs provided by the user.
+This aims to demonstrate how our simulation models the CVT based on the inputs provided by the user. The backend intends to function as follows:
+\begin{itemize}
+  \item The python backend will receive the input from the front end and send back a response.
+  \item It will then simulate the drivetrain and dynamics of our custom baja vehicle. This includes the engine, transmission, gearbox, wheels, air resistance, gravity and rolling resistance.
+  \item Includes an ODE solver to solve a 2nd order ODE given the inputs from the front end and writes all datapoints to a CSV file.
+\end{itemize}
 
 \section{Team Meeting Attendance}
 
