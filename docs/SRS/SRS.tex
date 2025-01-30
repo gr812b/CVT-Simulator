@@ -18,6 +18,7 @@
 \usepackage{caption}
 \usepackage{pdflscape}
 \usepackage{afterpage}
+\usepackage{placeins}
 
 \usepackage[round]{natbib}
 
@@ -77,6 +78,10 @@
 \newcounter{lcnum} %Likely change number
 \newcommand{\lthelcnum}{LC\thelcnum}
 \newcommand{\lcref}[1]{LC\ref{#1}}
+
+\newcounter{ulcnum} %Unlikely change number
+\newcommand{\utheulcnum}{ULC\theulcnum}
+\newcommand{\ulcref}[1]{ULC\ref{#1}}
 
 \usepackage{fullpage}
 
@@ -230,6 +235,8 @@ Ref.\ By & #8\\
 \toprule {\bf Date} & {\bf Version} & {\bf Notes}\\
 \midrule
 Oct 12 & 1.0 & First Draft\\
+Nov 12 & 1.1 & Added references \\
+Jan 10 & 1.2 & Updated traceability matrices \\
 \bottomrule
 \end{tabularx}
 
@@ -400,8 +407,8 @@ N/A
 \section{Introduction}
 
 The McMaster Baja engineering team is facing challenges in tuning their Continuous Variable Transmission (CVT). 
-The current process of tuning the CVT is extensive, time consuming and requires testing of multiple physical components leading to possible inconsistencies due to weather and wear. 
-These inconsistences then complicate the tuning process of the CVT’s torque transfer directly affecting the performance of the Baja vehicles. 
+The current process of tuning the CVT is extensive, time-consuming and requires testing of multiple physical components leading to possible inconsistencies due to weather and wear. 
+These inconsistencies then complicate the tuning process of the CVT’s torque transfer directly affecting the performance of the Baja vehicles. 
 To address these issues, our team aims to develop a CVT simulation tool that uses mathematical models, a rendering engine and a user-friendly interface. 
 Our solution aims to streamline the optimization process allowing Baja members to simulate real-world factors and virtually test various tuning parameters. 
 Our simulation tool will be validated against data collected by the McMaster Baja Data Acquisition team to ensure reliability and accuracy.  
@@ -415,7 +422,7 @@ A detailed overview of this document will provide guidance to the reader regardi
 
 The purpose of this Software Requirements Specification (SRS) is to provide an outline of the system requirements given for the development of a CVT simulation tool. 
 This ensures that all stakeholders including members of the Baja team, Dr. Smith and the developers understand the projects objectives and constraints. 
-This document will serve as a communication tool to align expectations, provide guidance during the design of this tool and aid in the development and testing phases of this project. 
+The document will serve as a communication tool to align expectations, provide guidance during the design of this tool and aid in the development and testing phases of this project. 
 This SRS will be referenced throughout the development of the system to ensure the tool is within the scope and meets the outlined requirements. 
 
 \subsection{Scope of Requirements}
@@ -741,7 +748,7 @@ N/A
 \textbf{No Belt Slippage:} The CVT will not slip relative to the sheaves.
 
 \item[A\refstepcounter{assumpnum}\theassumpnum \label{A_10}:]
-\textbf{Ignore Irrelevant Forces:} Only forces that directly contribute to the car's dynamics or the CVT's shifting behaviours are considered, allowing the simplification of dimensions where applicable.
+\textbf{Ignore Irrelevant Forces:} Only forces that directly contribute to the car's dynamics or the CVT's shifting behaviors are considered, allowing the simplification of dimensions where applicable.
 
 \item[A\refstepcounter{assumpnum}\theassumpnum \label{A_11}:]
 \textbf{Positive Velocity Only:} The model assumes that the vehicle will only move forward, meaning that velocity will never be negative. Any dynamics related to reversing or backward movement are not considered in this analysis.
@@ -759,13 +766,14 @@ This portion will specify the existing theories that are used in the development
 \noindent
 \deftheory
 {TM:HL}% #2 refname of theory
-{Hookes Law (Compressional)}% #3 label
+{Hooke's Law (Compressional)}% #3 label
 {$F = k \Delta x$}% #4 equation
 {$F$ is the force (N)\\
   $k$ is the spring constant (N/m)\\
   $\Delta x$ is the displacement (m)}% #5 description
-{In the context of this project Hookes law is used in both a torsional and linear way.}% #6 Notes
-{\url{https://www.britannica.com/science/Hookes-law}}% #7 Source
+{In the context of this project Hooke's law is used in both a torsional and linear way.}% #6 Notes
+
+{\citet{hookeslaw}}
 {IM\ref{inst:4}}% #8 Referenced by
 {None}% #9 Preconditions
 {}% #1 derivation - not applicable by default
@@ -782,7 +790,8 @@ This portion will specify the existing theories that are used in the development
   $\omega$ is the angular velocity (rad/s)\\
   $r$ is the radius (m)}% #5 description
 {None.}% #6 Notes
-{\url{https://www.omnicalculator.com/physics/centrifugal-force}}% #7 Source
+
+{\citet{CentrifugalForceCalculator2024}}% #7 Source
 {IM\ref{inst:4}}% #8 Referenced by
 {None}% #9 Preconditions
 {}% #1 derivation - not applicable by default
@@ -800,7 +809,7 @@ This portion will specify the existing theories that are used in the development
   $C_d$ is the drag coefficient\\
   $A$ is the cross-sectional area of the object (m$^2$)}% #5 description
 {None.}% #6 Notes
-{\url{https://softschools.com/formulas/physics/air_resistance_formula/85/}}% #7 Source
+{\citet{AirResistanceFormula}}% #7 Source
 {IM\ref{inst:1}}% #8 Referenced by
 {None}% #9 Preconditions
 {}% #1 derivation - not applicable by default
@@ -816,7 +825,8 @@ This portion will specify the existing theories that are used in the development
   $P$ is the power (W)\\
   $\omega$ is the angular velocity (rad/s)}% #5 description
 {None.}% #6 Notes
-{\url{https://powertestdyno.com/how-to-calculate-horsepower/}}% #7 Source
+
+{\citet{HorsepowerCalculation}}% #7 Source
 {}% #8 Referenced by
 {None}% #9 Preconditions
 {}% #1 derivation - not applicable by default
@@ -832,7 +842,8 @@ This portion will specify the existing theories that are used in the development
   $\tau_{\text{input}}$ is the input torque (Nm)\\
   $R_\text{gear}$ is the gear reduction (unitless)}% #5 description
 {None.}% #6 Notes
-{\url{https://science.howstuffworks.com/transport/engines-equipment/gear-ratio.htm}}% #7 Source
+
+{\citet{GearRatioExplanation}}% #7 Source
 {IM\ref{inst:1}}% #8 Referenced by
 {None}% #9 Preconditions
 {}% #1 derivation - not applicable by default
@@ -848,7 +859,8 @@ This portion will specify the existing theories that are used in the development
   $F_f$ is the force of friction (N)\\
   $F_n$ is the normal force (N)}% #5 description
 {None.}% #6 Notes
-{\url{https://en.wikipedia.org/wiki/Friction}}% #7 Source
+
+{\citet{FrictionWikipedia}}% #7 Source
 {IM\ref{inst:1}, IM\ref{inst:7}}% #8 Referenced by
 {None}% #9 Preconditions
 {}% #1 derivation - not applicable by default
@@ -862,7 +874,8 @@ This portion will specify the existing theories that are used in the development
   $m$ is the mass (kg)\\
   $V$ is the volume (m$^3$)}% #5 description
 {None.}% #6 Notes
-{\url{https://www.britannica.com/science/density-physics}}% #7 Source
+
+{\citet{BritannicaDensity}}% #7 Source
 {IM\ref{inst:1}}% #8 Referenced by
 {None}% #9 Preconditions
 {}% #1 derivation - not applicable by default
@@ -879,7 +892,8 @@ This portion will specify the existing theories that are used in the development
   $\mu$ is the coefficient of friction\\
   $\theta$ is the angle of wrap of the belt (radians)}% #5 description
 {None.}% #6 Notes
-{\url{https://hackaday.com/2021/01/26/cable-mechanism-maths-designing-against-the-capstan-equation/}}% #7 Source
+
+{\citet{CapstanEquation2021}}% #7 Source
 {IM\ref{inst:7}}% #8 Referenced by
 {None}% #9 Preconditions
 {}% #1 derivation - not applicable by default
@@ -895,7 +909,7 @@ This portion will specify the existing theories that are used in the development
   $m$ is the mass (kg)\\
   $a$ is the acceleration (m/s$^2$)}% #5 description
 {Newtons 2nd law is used repeatedly in several Instance models}% #6 Notes
-{\url{https://www.physicsclassroom.com/class/newtlaws/lesson-3/newton-s-second-law}}% #7 Source
+{\citet{NewtonsSecondLaw}}% #7 Source
 {IM\ref{inst:1}, IM\ref{inst:6}, IM\ref{inst:7}}% #8 Referenced by
 {None}% #9 Preconditions
 {}% #1 derivation - not applicable by default
@@ -934,7 +948,7 @@ $\phi$ is the angle between sheaves (rad)}% #5 description
 {$d_\text{shift}$ is the axial shift distance, or sheave displacement (m)\\
 $\theta_\text{ramp}$ is the instantaneous ramp angle (rad)\\
 $f_\text{prim}(d)$ is the function to express the ramp geometry (m $\rightarrow$ rad)}% #5 description
-{The user will input the geometry of the ramp, which will then be intepreted to generate $f_\text{prim}$}% #6 Notes
+{The user will input the geometry of the ramp, which will then be interpreted to generate $f_\text{prim}$}% #6 Notes
 {N/A}% #7 Source
 {}% #8 Referenced by
 {None}% #9 Preconditions
@@ -948,7 +962,7 @@ $f_\text{prim}(d)$ is the function to express the ramp geometry (m $\rightarrow$
 {$d_\text{shift}$ is the axial shift distance, or sheave displacement (m)\\
 $\theta_\text{ramp}$ is the instantaneous helix angle (rad)\\
 $f_\text{prim}(d)$ is the function to express the helix geometry (m $\rightarrow$ rad)}% #5 description
-{The user will input the geometry of the helix, which will then be intepreted to generate $f_\text{sec}$}% #6 Notes
+{The user will input the geometry of the helix, which will then be interpreted to generate $f_\text{sec}$}% #6 Notes
 {N/A}% #7 Source
 {}% #8 Referenced by
 {None}% #9 Preconditions
@@ -957,7 +971,7 @@ $f_\text{prim}(d)$ is the function to express the helix geometry (m $\rightarrow
 \noindent
 \deftheory
 {TM:HT}% #2 refname of theory
-{Hookes Law (Torsional)}% #3 label
+{Hooke's Law (Torsional)}% #3 label
 {$F = \frac{k \Delta \theta}{r} $}% #4 equation
 {$F$ is the force (N)\\
   $k$ is the torsional spring constant (Nm/rad)\\
@@ -965,7 +979,7 @@ $f_\text{prim}(d)$ is the function to express the helix geometry (m $\rightarrow
   $r$ is the radius of the applied torque (m)
   }% #5 description
 {}% #6 Notes
-{\url{https://www.drtempleman.com/spring-resources-old/spring-design-formulas-2}}% #7 Source
+{\citet{SpringDesignFormulas}}% #7 Source
 {}% #8 Referenced by
 {None}% #9 Preconditions
 {}% #1 derivation - not applicable by default
@@ -980,7 +994,7 @@ $f_\text{prim}(d)$ is the function to express the helix geometry (m $\rightarrow
   $v$ is the velocity (m/s)
 }% #5 description
 {None.}% #6 Notes
-{\url{https://www.physicsclassroom.com/class/energy/Lesson-1/Kinetic-Energy}}% #7 Source
+{\citet{KineticEnergyPhysicsClassroom}}% #7 Source
 {}% #8 Referenced by
 {None}% #9 Preconditions
 {}% #1 derivation - not applicable by default
@@ -1042,7 +1056,7 @@ Next, we can derive the torsional spring force. We can use \hyperref[TM:HT]{Hook
 
 \[ T_{\text{tor}} = \frac{k_{\text{tor}} \cdot \theta}{r} \tag*{\text{(see \hyperref[TM:HT]{TM:HT})}}\]
 
-Similarily, we have an initial torsional compression $\theta_0$ that is added to the current torsional compression $\theta$.
+Similarly, we have an initial torsional compression $\theta_0$ that is added to the current torsional compression $\theta$.
 
 \[ F_{\text{tor}} = \frac{k_{\text{tor}} \cdot (\theta_0 + \theta)}{r} \]
 
@@ -1148,7 +1162,7 @@ in Section~\ref{sec_datadef} to replace the abstract symbols in the models
 identified in Sections~\ref{sec_theoretical} and~\ref{sec_gendef}.
 {\newline}
 
-{\noindent}The goal statment GS\ref{GS1} are solved by Instance Models \ref{inst:1}, \ref{inst:2} and \ref{inst:3}\\
+{\noindent}The goal statement GS\ref{GS1} are solved by Instance Models \ref{inst:1}, \ref{inst:2} and \ref{inst:3}\\
 {\noindent}The goal statement GS\ref{GS2} are solved by Instance Models \ref{inst:8}\\
 The goal statement GS\ref{GS3} are solved by Instance Models \ref{inst:4}, \ref{inst:5}, \ref{inst:6} and \ref{inst:7}\\
   \definstance
@@ -1344,7 +1358,7 @@ F_{\text{sec\_clamp}} = \frac{k_{\text{sec\_tor}} (\theta_{\text{sec}} + f_{\tex
 {-}
 
 \subsubsection*{Derivation of Sheave Acceleration}
-One can derive the accleration of the sheaves using \hyperref[TM:N2]{Newton's Second Law}. The forces acting on the built include 
+One can derive the acceleration of the sheaves using \hyperref[TM:N2]{Newton's Second Law}. The forces acting on the built include 
 only the primary and secondary clamping forces, which act in opposite directions as they act out radially.
 The acceleration of the sheave is derived as follows:
 \[ma(t) = F_{\text{clamp\_prim}}(t) - F_{\text{clamp\_sec}}(t)\]
@@ -1505,7 +1519,7 @@ which is to say that the top requirement is the most important and the bottom re
 
 \item[R\refstepcounter{reqnum}\thereqnum \label{R_1}:] The system shall simulate the behavior of the McMaster Baja Team's Continuous Variable Transmission(CVT) using mathematical models.
 
-\item[R\refstepcounter{reqnum}\thereqnum \label{R_2}:] The system shall calculate the acceleration of the vehicle as a function of time using inputs: gear radius, wheel radius, density of the fluid, drag coefficient, cross sectional area, angle of incline, torque transferred to the wheel, coefficient of rolling resistance, mass of the vehicle and driver. 
+\item[R\refstepcounter{reqnum}\thereqnum \label{R_2}:] The system shall calculate the acceleration of the vehicle as a function of time using inputs: gear radius, wheel radius, density of the fluid, drag coefficient, cross-sectional area, angle of incline, torque transferred to the wheel, coefficient of rolling resistance, mass of the vehicle and driver. 
 
 \item[R\refstepcounter{reqnum}\thereqnum \label{R_3}:] The system shall calculate the velocity of the vehicle as a function of time by taking the integral of acceleration with respect to time.
 
@@ -1542,12 +1556,24 @@ which is to say that the top requirement is the most important and the bottom re
 
 \noindent \begin{itemize}
 
-\item[NFR\refstepcounter{nfrnum}\thenfrnum \label{NFR_Accuracy}:]\textbf{Accuracy} The system shall achieve an accuracy of at least 95 \% in correctly predicting CVT outputs. See VnV Plan Section 4.2 for the test procedure.
+\item[NFR\refstepcounter{nfrnum}\thenfrnum \label{NFR_Accuracy}:]\textbf{Accuracy} The system shall achieve an accuracy of at least 95 \% in correctly predicting CVT outputs. 
+See VnV Plan Section 4.2 for the test procedure. An accuracy rate of 95\% ensures that the system is able to make reliable predictions, which are important to the performance optimization. 
 \item[NFR\refstepcounter{nfrnum}\thenfrnum \label{NFR_Usability}:] \textbf{Usability} 85 \% of a representative user group shall be able to successfully input CVT parameters and receive CVT outputs on their first use.
+An 85\% success rate was chosen for successfully inputting parameters and receiving outputs on their first use is realistic based on the complexity of the system. 
+This 85 \% acknowledges that some users may require trial and error, but the majority of users should still be able to effectively interact with the system. 
 \item[NFR\refstepcounter{nfrnum}\thenfrnum \label{NFR_Maintainability}:]\textbf{Maintainability} If a likely change is made to the finished software, it will take at most 10 \% of the original development time, assuming the same development resources are available.
-\item[NFR\refstepcounter{nfrnum}\thenfrnum \label{NFR_Verifiability}:] \textbf{Verifiability} The system shall output the resulting tunned CVT outputs which must able to be cross-verified against data available through the McMaster Baja Team with a consistency rate of 95 \%.
-\item[NFR\refstepcounter{nfrnum}\thenfrnum \label{NFR_Understandability}:] \textbf{Understandability} The system shall be understood by at least 90 \% of a representative user group with no more than 15 minutes of initial training, as measured by assessing ability to generate and export tunned CVT output where users must score at least 90 \%
-\item[NFR\refstepcounter{nfrnum}\thenfrnum \label{NFR_Reusability}:] \textbf{Reusability} The system's components shall be designed for reuse in the case the McMaster Baja team acquires a new CVT. These modifications should be made with minimal modifications, defined as requiring modification to less than 30 \% of the code to configure these changes.
+This 10\% figure is a reasonable expectation for maintainability. 
+Given that our system will evolve, this 10\% represents having a modular design that should be able to accommodate changes without significant extra effort and additions. 
+\item[NFR\refstepcounter{nfrnum}\thenfrnum \label{NFR_Verifiability}:] \textbf{Verifiability} The system shall output the resulting tunned CVT outputs which must be able to be cross-verified against data available through the McMaster Baja Team with a consistency rate of 95 \%.
+This 95\% reflects the need for a high level of precision and consistency of the system. 
+This number was chosen as the system must be valuable to its users through producing accurate reliable outputs. 
+\item[NFR\refstepcounter{nfrnum}\thenfrnum \label{NFR_Understandability}:] \textbf{Understandability} The system shall be understood by at least 90 \% of a representative user group with no more than 15 minutes of initial training, as measured by assessing ability to generate and export tunned CVT output where users must score at least 90 \%.
+A target of 90\% was chosen as this ensures that system is intuitive and user-friendly to a large majority of users. 
+By providing users with 15 minutes of training this demonstrates that the learning curve is minimal. 
+\item[NFR\refstepcounter{nfrnum}\thenfrnum \label{NFR_Reusability}:] \textbf{Reusability} The system's components shall be designed for reuse in the case the McMaster Baja team acquires a new CVT. 
+These modifications should be made with minimal modifications, defined as requiring modification to less than 30 \% of the code to configure these changes.
+By choosing 30\% this is a reasonable limit showing for flexibility and reusability of components. 
+This 30\% target ensures that future modifications such as accommodating for a new CVT, can be achieved without requiring a complete redesign of the system as majority if not all the mathematical calculations will remain the same.
 
 \end{itemize}
 
@@ -1556,8 +1582,8 @@ which is to say that the top requirement is the most important and the bottom re
 The assumptions made for the CVT (Continuously Variable Transmission) system model aim to simplify it's dynamics, facilitating the development of mathematical models to simulate the behavior of the CVT(\rref{R_1}). 
 Many key assumptions are made to meet the requirement of developing these mathematical models. The following assumptions are also factored in to the calculations of the CVT ratio, clamping force, RPM, torque, engine input, distance, speed and acceleration(\rref{R_2}). 
 \\\\
-\noindent The systems excludes the effects of temperature on material properties, aside from the belt, which allows for a more straightforward focus on the mechanics of the interactions (\aref{A_1}).
-The influence of gravitational forces is negligible and the elasticity of belts is considered insignificant(\aref{A_2}, \aref{A3}). 
+\noindent The system excludes the effects of temperature on material properties, aside from the belt, which allows for a more straightforward focus on the mechanics of the interactions (\aref{A_1}).
+The influence of gravitational forces is negligible and the elasticity of belts is considered insignificant(\aref{A_2}, \aref{A_3}). 
 Vibrational effects from external sources are also assumed to be minimal, avoiding the complexity of vibration-induced disturbances in transmission behavior (\aref{A_4}).
 Wear and tear of components, including the belt and pulley are disregarded and frictional losses in non-critical components, are deemed negligible (\aref{A_5}, \aref{A_6}). 
 The engine is assumed to operate at full throttle with consistent power delivery, simplifying the model by maintaining uniform engine behavior (\aref{A_4}).
@@ -1580,9 +1606,9 @@ Finally, the CVT axis are assumed to be in line and the belt slippage of the CVT
 
 \begin{itemize}
 
-  \item[ULC1:] The assumption that the CVT axis are in line is unlikely to change because tuning is simply not valuable in a system as poor as this. (A\ref{A_8})
-  \item[ULC2:] The assumption that the engine operates at full throttle is unlikely to change as different behaviour is simply not ideal. (A\ref{A_7})
-  \item[ULC3:] The assumption that the influence of gravitational forces is negligible is unlikely to change as it heavily reduces complexity and plays an incredibly small part on spinning objects at high rotational speeds. (A\ref{A_2})
+  \item[ULC\refstepcounter{ulcnum}\theulcnum\label{ULC_1}:] The assumption that the CVT axis are in line is unlikely to change because tuning is simply not valuable in a system as poor as this. (A\ref{A_8})
+  \item[ULC\refstepcounter{ulcnum}\theulcnum\label{ULC_2}:] The assumption that the engine operates at full throttle is unlikely to change as different behavior is simply not ideal. (A\ref{A_7})
+  \item[ULC\refstepcounter{ulcnum}\theulcnum\label{ULC_3}:] The assumption that the influence of gravitational forces is negligible is unlikely to change as it heavily reduces complexity and plays an incredibly small part on spinning objects at high rotational speeds. (A\ref{A_2})
   
   \end{itemize}
 \section{Traceability Matrices and Graphs}
@@ -1590,11 +1616,11 @@ Finally, the CVT axis are assumed to be in line and the belt slippage of the CVT
 The purpose of the traceability matrices is to provide easy references on what
 has to be additionally modified if a certain component is changed.  Every time a
 component is changed, the items in the column of that component that are marked
-with an ``X'' may have to be modified as well.  Table~\ref{Table:trace} shows the
+with an ``X'' may have to be modified as well.  Table~\ref{Table:trace_Assumptions_TM} shows the
 dependencies of theoretical models, general definitions, data definitions, and
-instance models with each other. Table~\ref{Table:R_trace} shows the
+instance models with each other. Table~\ref{Table:trace_IM} shows the
 dependencies of instance models, requirements, and data constraints on each
-other. Table~\ref{Table:A_trace} shows the dependencies of theoretical models,
+other. The table~\ref{Table:trace_Assumptions} shows the dependencies of theoretical models,
 general definitions, data definitions, instance models, and likely changes on
 the assumptions.
 
@@ -1607,9 +1633,11 @@ the assumptions.
 \plt{The traceability matrix is challenging to maintain manually.  Please do
   your best.  In the future tools (like Drasil) will make this much easier.}
 
-\afterpage{
-\begin{landscape}
-\begin{table}[h!]
+\clearpage
+\FloatBarrier
+
+
+\begin{table}[H]
 \centering
 \begin{tabular}{|c|c|c|c|c|c|c|c|c|c|c|}
 \hline
@@ -1629,7 +1657,7 @@ the assumptions.
 \tref{TM:D2HA}      & & & & & & & & & & \\ \hline
 \tref{TM:HT}        & & & & & & & & & & \\ \hline
 \tref{TM:KE}        & & & & & & & & & & \\ \hline
-\dref{GD_1}         & & & & & & & & & & \\ \hline
+\dref{GD_1}         & & & & & & & & & &X \\ \hline
 \dref{GD_2}         & & & & & & & & & & \\ \hline
 \ddref{DD_1}        & & & & & & & & & & \\ \hline
 \ddref{DD_2}        & & & & & & & & & & \\ \hline
@@ -1638,14 +1666,13 @@ the assumptions.
 \ddref{DD_5}        & & & & & & & & & & \\ \hline
 \ddref{DD_6}        & & & & & & & & & & \\ \hline
 \end{tabular}
-\label{Table:A_trace}
+\caption{Traceability Matrix Showing the Connections Between Assumptions, Theoretical Models, General Definitions, Data Definitions}
+\label{Table:trace_Assumptions_TM}
 \end{table}
-\end{landscape}
-}
 
-\afterpage{
-\begin{landscape}
-\begin{table}[h!]
+
+
+\begin{table}[H]
 \centering
 \begin{tabular}{|c|c|c|c|c|c|c|c|c|c|c|}
 \hline
@@ -1654,82 +1681,111 @@ the assumptions.
 \iref{inst:1}       & & & & & & & & & & \\ \hline
 \iref{inst:2}       & & & & & & & & & & \\ \hline
 \iref{inst:3}       & & & & & & & & & & \\ \hline
-\iref{inst:4}       & & & & & & & & & & \\ \hline
+\iref{inst:4}       & & & & & & & & & &X \\ \hline
 \iref{inst:5}       & & & & & & & & & & \\ \hline
 \iref{inst:6}       & & & & & & & & & & \\ \hline
-\iref{inst:7}       & & & & & & & & & & \\ \hline
+\iref{inst:7}       & & & & & & & & &X& \\ \hline
 \iref{inst:8}       & & & & & & & & & & \\ \hline
-\lcref{LC_1}        & & & & & & & & & & \\ \hline
-\lcref{LC_2}        & & & & & & & & & & \\ \hline
-\lcref{LC_3}        & & & & & & & & & & \\ \hline
+\lcref{LC_1}        &X& & & & & & & & & \\ \hline
+\lcref{LC_2}        & & &X& & & & & & & \\ \hline
+\lcref{LC_3}        & & & & & &X& & & & \\ \hline
 \lcref{LC_4}        & & & & & & & & & & \\ \hline
+\ulcref{ULC_1}      & & & & & & & &X& & \\ \hline
+\ulcref{ULC_2}      & & & & & & &X& & & \\ \hline
+\ulcref{ULC_3}      & &X& & & & & & & & \\ \hline
 \end{tabular}
-\caption{Traceability Matrix Showing the Connections Between Assumptions and Other Items}
-\label{Table:A_trace}
+\caption{Traceability Matrix Showing the Connections Between Assumptions and Instance Models and Likely Changes}
+\label{Table:trace_Assumptions}
 \end{table}
-\end{landscape}
-}
 
-\afterpage{
-\begin{landscape}
-  \begin{table}[H]
-    \centering
-    \begin{tabular}{|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|}
-    \hline        
-      & \tref{T_COE}& \tref{T_SHE}& \tref{T_LHE}& \dref{NL}& \dref{ROCT} & \ddref{FluxCoil}& \ddref{FluxPCM} & \ddref{D_HOF}& \ddref{D_MF}& \iref{ewat}& \iref{epcm}& \iref{I_HWAT}& \iref{I_HPCM} \\
-    \hline
-    \tref{T_COE}     & & & & & & & & & & & & & \\ \hline
-    \tref{T_SHE}     & & & X& & & & & & & & & & \\ \hline
-    \tref{T_LHE}     & & & & & & & & & & & & & \\ \hline
-    \dref{NL}        & & & & & & & & & & & & & \\ \hline
-    \dref{ROCT}      & X& & & & & & & & & & & & \\ \hline
-    \ddref{FluxCoil} & & & & X& & & & & & & & & \\ \hline
-    \ddref{FluxPCM}  & & & & X& & & & & & & & & \\ \hline
-    \ddref{D_HOF}    & & & & & & & & & & & & & \\ \hline
-    \ddref{D_MF}     & & & & & & & & X& & & & & \\ \hline
-    \iref{ewat}      & & & & & X& X& X& & & & X& & \\ \hline
-    \iref{epcm}      & & & & & X& & X& & X& X& & & X \\ \hline
-    \iref{I_HWAT}    & & X& & & & & & & & & & & \\ \hline
-    \iref{I_HPCM}    & & X& X& & & & X& X& X& & X& & \\
-    \hline
-    \end{tabular}
-    \caption{Traceability Matrix Showing the Connections Between Items of Different Sections}
-    \label{Table:trace}
-    \end{table}
-\end{landscape}
-}
+\begin{table}[H]
+\centering
+\begin{tabular}{|c|c|c|c|c|c|c|c|c|}
+\hline
+	& \iref{inst:1} & \iref{inst:2}& \iref{inst:3} & \iref{inst:4} & \iref{inst:5} & \iref{inst:6}& \iref{inst:7}& \iref{inst:8}\\
+\hline
+\tref{TM:HL}        & & & &X& & & &  \\ \hline
+\tref{TM:CF}        & & & &X& & & &  \\ \hline
+\tref{TM:AR}        &X& & & & & & &  \\ \hline
+\tref{TM:ET}        & & & & & & & &  \\ \hline
+\tref{TM:GR}        &X& & & & & & &  \\ \hline
+\tref{TM:FR}        &X& & & & & &X&  \\ \hline
+\tref{TM:DE}        &X& & & & & & &  \\ \hline
+\tref{TM:CE}        & & & & & & &X&  \\ \hline
+\tref{TM:N2}        &X& & & & &X&X&  \\ \hline
+\tref{TM:D2R}       & & & & & & & &  \\ \hline
+\tref{TM:D2RA}      & & & & & & & &  \\ \hline
+\tref{TM:D2HA}      & & & & & & & &  \\ \hline
+\tref{TM:HT}        & & & & & & & &  \\ \hline
+\tref{TM:KE}        & & & & & & & &  \\ \hline
+\dref{GD_1}         & & & & &X& & &  \\ \hline
+\dref{GD_2}         & & & & &X& & &  \\ \hline
+\ddref{DD_1}        &X& & & & & &X&  \\ \hline
+\ddref{DD_2}        & & & &X& & & &  \\ \hline
+\ddref{DD_3}        & & & & &X& & &  \\ \hline
+\ddref{DD_4}        &X& & & & & & &  \\ \hline
+\ddref{DD_5}        &X& & & & & & &  \\ \hline
+\ddref{DD_6}        &X& & & & & & &  \\ \hline
+\end{tabular}
+\caption{Traceability Matrix Showing the Connections Between Instance Models and Other Items}
+\label{Table:trace_IM_Others}
+\end{table}
 
-  
-\afterpage{
-\begin{landscape}
-  \begin{table}[h!]
-    \centering
-    \begin{tabular}{|c|c|c|c|c|c|c|c|}
-    \hline
-      & \iref{ewat}& \iref{epcm}& \iref{I_HWAT}& \iref{I_HPCM}& \ref{sec_DataConstraints}& \rref{R_RawInputs}& \rref{R_MassInputs} \\
-    \hline
-    \iref{ewat}            & & X& & & & X& X \\ \hline
-    \iref{epcm}            & X& & & X& & X& X \\ \hline
-    \iref{I_HWAT}          & & & & & & X& X \\ \hline
-    \iref{I_HPCM}          & & X& & & & X& X \\ \hline
-    \rref{R_RawInputs}     & & & & & & & \\ \hline
-    \rref{R_MassInputs}    & & & & & & X& \\ \hline
-    \rref{R_CheckInputs}   & & & & & X& & \\ \hline
-    \rref{R_OutputInputs}  & X& X& & & & X& X \\ \hline
-    \rref{R_TempWater}     & X& & & & & & \\ \hline 
-    \rref{R_TempPCM}       & & X& & & & & \\ \hline
-    \rref{R_EnergyWater}   & & & X& & & & \\ \hline
-    \rref{R_EnergyPCM}     & & & & X& & & \\ \hline
-    \rref{R_VerifyOutput}  & & & X& X& & & \\ \hline
-    \rref{R_timeMeltBegin} & & X& & & & & \\ \hline
-    \rref{R_timeMeltEnd}   & & X& & & & & \\ 
-    \hline
-    \end{tabular}
-    \caption{Traceability Matrix Showing the Connections Between Requirements and Instance Models}
-    \label{Table:R_trace}
-    \end{table}
-\end{landscape}
-}
+
+
+
+\begin{table}[h!]
+\centering
+\begin{tabular}{|c|c|c|c|c|c|c|c|c|}
+\hline
+	& \iref{inst:1} & \iref{inst:2}& \iref{inst:3} & \iref{inst:4} & \iref{inst:5} & \iref{inst:6}& \iref{inst:7}& \iref{inst:8}\\
+\hline
+
+\rref{R_1}          & & & & & & & &  \\ \hline
+\rref{R_2}          &X& & & & & & &  \\ \hline
+\rref{R_3}          & &X& & & & & &  \\ \hline
+\rref{R_4}          & & &X& & & & &  \\ \hline
+\rref{R_5}          & & & &X& & & &  \\ \hline
+\rref{R_6}          & & & & &X& & &  \\ \hline
+\rref{R_7}          & & & & & &X& &  \\ \hline
+\rref{R_8}          & & & & & & &X&  \\ \hline
+\rref{R_9}          & & & & & & & &X \\ \hline
+\rref{R_10}         & & & & & & & &  \\ \hline
+\rref{R_11}         & & & & & & & &  \\ \hline
+\rref{R_12}         & & & & & & & &  \\ \hline
+\rref{R_13}         & & & & & & & &  \\ \hline
+\rref{R_14}         & & & & & & & &  \\ \hline
+\rref{R_15}         & & & & & & & &  \\ \hline
+\rref{R_16}         & & & & & & & &  \\ \hline
+\rref{R_17}         & & & & & & & &  \\ \hline
+\end{tabular}
+\caption{Traceability Matrix Showing the Connections Between Instance Models and Functional Requirements}
+\label{Table:trace_requirements}
+\end{table}
+
+
+
+
+
+\begin{table}[h!]
+\centering
+\begin{tabular}{|c|c|c|c|c|c|c|c|c|}
+\hline
+	& \iref{inst:1} & \iref{inst:2}& \iref{inst:3} & \iref{inst:4} & \iref{inst:5} & \iref{inst:6}& \iref{inst:7}& \iref{inst:8}\\
+\hline
+\iref{inst:1}       &X& & & &X& & &  \\ \hline
+\iref{inst:2}       & &X& & & & & &  \\ \hline
+\iref{inst:3}       & & &X& & & & &  \\ \hline
+\iref{inst:4}       & & & &X& &X& &  \\ \hline
+\iref{inst:5}       &X& & & &X&X& &  \\ \hline
+\iref{inst:6}       & & & &X&X&X&X&  \\ \hline
+\iref{inst:7}       & & & & & &X&X&  \\ \hline
+\iref{inst:8}       & & & & & & & &X \\ \hline
+\end{tabular}
+\caption{Traceability Matrix Showing the Connections Between Instance Models}
+\label{Table:trace_IM}
+\end{table}
+
 
 The purpose of the traceability graphs is also to provide easy references on
 what has to be additionally modified if a certain component is changed.  The
@@ -1771,8 +1827,9 @@ N/A
 
 \newpage
 
-\bibliographystyle {plainnat}
-\bibliography {../../refs/References}
+\bibliographystyle{plainnat}
+
+\bibliography{../../refs/References}
 
 \newpage
 \section*{Appendix --- Reflection}
@@ -1801,7 +1858,7 @@ graduate attribute of Lifelong Learning.
   The main pain points of this deliverable were trying to understand the mathematical models and physics behind the CVT system.
   We resolved this by meeting together as a team and having a group discussion on the topic.
   We went through the math and derived the equations together, which helped us understand the material better.
-  We also reached out to our clients for clarifications and they provided us with help and resources to better understand the topic. 
+  We also reached out to our clients for clarifications, and they provided us with help and resources to better understand the topic. 
   As a result our team was more confident in deriving the mathematical models required for this project.   
   \item How many of your requirements were inspired by speaking to your
   client(s) or their proxies (e.g. your peers, stakeholders, potential users)?
@@ -1829,8 +1886,8 @@ graduate attribute of Lifelong Learning.
   \\\\
   To successfully complete this capstone project our team will need to acquire several important skills.
   We will need to learn and understand Unity to create a user-friendly interface which will use our created mathematical models in Python.
-  For Unity we need to learn how to make a GUI interface, animate 3D models, create and display graphs, and learn how to interface with a Python script to run the mathematical models.
-  For Python we need to learn how to create and implement these complex mathematical models and learn how to make these Python models interface with Unity.
+  For Unity, we need to learn how to make a GUI interface, animate 3D models, create and display graphs, and learn how to interface with a Python script to run the mathematical models.
+  For Python, we need to learn how to create and implement these complex mathematical models and learn how to make these Python models interface with Unity.
   It is important that each team member acquires a general knowledge of these skills as team members completing the Python code must be familiar with interfacing the code with Unity. 
   As well as team members completing the models within Unity must understand the mathematical Python models to use Unity to simulate them. 
   \item For each of the knowledge areas and skills identified in the previous
@@ -1838,11 +1895,11 @@ graduate attribute of Lifelong Learning.
   mastering the skill?  Of the identified approaches, which will each team
   member pursue, and why did they make this choice?
   \\\\
-  To familiarize ourselves with Unity projects, we will watch youtube tutorials and read guides provided by Unity.
+  To familiarize ourselves with Unity projects, we will watch YouTube tutorials and read guides provided by Unity.
   The team members who chose to do the videos did so because they are more visual learners and prefer to see the process in action.
   Those that chose to read the guides did so because they prefer to read and also prefer that it is from an official source.
   For learning the Python required, we will do research on relevant libraries and functions that will help us implement our mathematical models.
-  The team members who chose to do research did so because they are more comfortable with researching and learning on their own.
+  The team members who chose to do research did so because they are more comfortable researching and learning on their own.
   \\\\
   This approach allows us to take into account the different learning styles of each team member so that everyone can learn in a way that suits them best. 
   Additionally, this also allows our team to have a larger variety of resources and variation leading to a stronger final project.
