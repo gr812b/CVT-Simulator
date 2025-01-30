@@ -2,26 +2,25 @@ using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
 using System;
-using UnityEngine.UI;
-using TMPro;
-using UnityEngine.SceneManagement;
+
+public class DataPoint
+{
+    public float Time { get; }
+    public float Position { get; }
+    public float PrimaryPulleyAngle { get; }
+
+    public DataPoint(float time, float position, float primaryPulleyAngle)
+    {
+        Time = time;
+        Position = position;
+        PrimaryPulleyAngle = primaryPulleyAngle;
+    }
+}
 
 public class CSVReader
 {
 
     private readonly string csvPath = Path.GetFullPath(Path.Combine(Application.dataPath, "../simulation_output.csv"));
-
-    public class DataPoint
-    {
-        public float Time { get; }
-        public float Position { get; }
-
-        public DataPoint(float time, float position)
-        {
-            Time = time;
-            Position = position;
-        }
-    }
 
     public List<DataPoint> LoadCSVData()
     {
@@ -57,7 +56,7 @@ public class CSVReader
                     if (float.TryParse(values[timeIndex], out float time) &&
                         float.TryParse(values[positionIndex], out float position))
                     {
-                        dataPoints.Add(new DataPoint(time, position));
+                        dataPoints.Add(new DataPoint(time, position, 0));
                     }
                 }
             }

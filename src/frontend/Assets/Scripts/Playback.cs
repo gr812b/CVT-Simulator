@@ -6,34 +6,32 @@ using UnityEngine.UI;
 using TMPro;
 using UnityEngine.SceneManagement;
 
+// Interface encapsulating a component that displays playback data
+public interface IPlaybackView
+{
+    public void Display(DataPoint dataPoint);
+}
+
 public class PlayBack : MonoBehaviour
 {
     CSVReader csvReader = new CSVReader();
-    private List<CSVReader.DataPoint> dataPoints;
+    private List<DataPoint> dataPoints;
 
     [SerializeField] private Button playButton;
     [SerializeField] private Button pauseButton;
     [SerializeField] private Button restartButton;
     [SerializeField] private Button nextSceneButton;
     [SerializeField] private TMP_Text statusText;
-    [SerializeField] private Transform carTransform;
-    [SerializeField] private Transform carSpinTransform;
+    [SerializeField] private IPlaybackView[] playbackViews;
 
     private bool isPlaying = false;
     private int currentIndex = 0;
     private float startTime;
 
-    private float screenLeftBound;
-    private float screenRightBound;
-
     
 
     private void Start()
     {
-        // Set screen boundaries based on camera viewport
-        screenLeftBound = Camera.main.ViewportToWorldPoint(new Vector3(0, 0, carTransform.position.z)).x;
-        screenRightBound = Camera.main.ViewportToWorldPoint(new Vector3(1, 0, carTransform.position.z)).x;
-
         playButton.onClick.AddListener(StartPlayback);
         pauseButton.onClick.AddListener(PausePlayback);
         restartButton.onClick.AddListener(RestartPlayback);
@@ -62,7 +60,6 @@ public class PlayBack : MonoBehaviour
     {
         isPlaying = false;
         statusText.text = "Data Loaded. Ready to Play.";
-        carTransform.position = new Vector3(screenLeftBound, carTransform.position.y, carTransform.position.z);
         currentIndex = 0;
     }
 
@@ -75,40 +72,29 @@ public class PlayBack : MonoBehaviour
             // Move to the next data point if enough time has passed
             while (currentIndex < dataPoints.Count - 1 && elapsedTime >= dataPoints[currentIndex + 1].Time)
             {
+                // Updates views to the current index and then moves to the next index
+                UpdateViews();
                 currentIndex++;
-                if (currentIndex == dataPoints.Count - 2)
-                {
-                    statusText.text = "Playback Finished";
-                }
             }
 
-            // Interpolate the position based on time for smooth movement
-            if (currentIndex < dataPoints.Count - 1)
-            {
-                float timeA = dataPoints[currentIndex].Time;
-                float timeB = dataPoints[currentIndex + 1].Time;
-                float posA = dataPoints[currentIndex].Position;
-                float posB = dataPoints[currentIndex + 1].Position;
-
-                float t = (elapsedTime - timeA) / (timeB - timeA);
-                float interpolatedPosition = Mathf.Lerp(posA, posB, t);
-
-                float mappedPositionX = Mathf.Lerp(screenLeftBound, screenRightBound, interpolatedPosition / 200f);
-
-                // Update the car's position in 3D space
-                carTransform.position = new Vector3(mappedPositionX, carTransform.position.y, carTransform.position.z);
-
-                // Calculate velocity based on change in position
-                float velocity = (posB - posA) / (timeB - timeA);
-
-                // Rotate the car based on velocity
-                carSpinTransform.Rotate(Vector3.forward * velocity * 10f * Time.deltaTime);
-            }
             yield return null;
         }
+        
+        // Finishes playback and updates status text accordingly
+        statusText.text = "Playback Finished";
         isPlaying = false;
     }
 
+    // Updates all playback views with the current data point
+    private void UpdateViews()
+    {
+        foreach (IPlaybackView view in playbackViews)
+        {
+            view.Display(dataPoints[currentIndex]);
+        }
+    }
+
+    // Returns to the previous scene
     private void backButton()
         {
             int nextSceneIndex = SceneManager.GetActiveScene().buildIndex - 1;
