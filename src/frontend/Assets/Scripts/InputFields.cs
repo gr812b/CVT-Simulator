@@ -9,6 +9,7 @@ public class InputFields : MonoBehaviour
 {
     // Runner for the python script
     private PythonRunner pythonRunner = new PythonRunner();
+    private bool canSimulate = false;
 
     // Parameters struct to store the input fields
     public Parameters parameters = new Parameters
@@ -58,21 +59,20 @@ public class InputFields : MonoBehaviour
 
     private void Start() {
         simulateButton.onClick.AddListener(StartSimulation);
-        primaryWeightInput.onValueChanged.AddListener((string value) => UpdateInputField(value, ref parameters.PrimaryWeight, ref primaryWeightInput, ref primaryWeightError));
-        primaryRampGeometryInput.onValueChanged.AddListener((string value) => UpdateInputField(value, ref parameters.PrimaryRampGeometry, ref primaryRampGeometryInput, ref primaryRampGeometryError));
-        primarySpringRateInput.onValueChanged.AddListener((string value) => UpdateInputField(value, ref parameters.PrimarySpringRate, ref primarySpringRateInput, ref primarySpringRateError));
-        primarySpringPretensionInput.onValueChanged.AddListener((string value) => UpdateInputField(value, ref parameters.PrimarySpringPretension, ref primarySpringPretensionInput, ref primarySpringPretensionError));
-        secondaryHelixGeometryInput.onValueChanged.AddListener((string value) => UpdateInputField(value, ref parameters.SecondaryHelixGeometry, ref secondaryHelixGeometryInput, ref secondaryHelixGeometryError));
-        secondarySpringRateInput.onValueChanged.AddListener((string value) => UpdateInputField(value, ref parameters.SecondarySpringRate, ref secondarySpringRateInput, ref secondarySpringRateError));
-        secondarySpringPretensionInput.onValueChanged.AddListener((string value) => UpdateInputField(value, ref parameters.SecondarySpringPretension, ref secondarySpringPretensionInput, ref secondarySpringPretensionError));
-        vehicleWeightInput.onValueChanged.AddListener((string value) => UpdateInputField(value, ref parameters.VehicleWeight, ref vehicleWeightInput, ref vehicleWeightError));
-        driverWeightInput.onValueChanged.AddListener((string value) => UpdateInputField(value, ref parameters.DriverWeight, ref driverWeightInput, ref driverWeightError));
-        tractionInput.onValueChanged.AddListener((string value) => UpdateInputField(value, ref parameters.Traction, ref tractionInput, ref tractionError));
-        angleOfInclineInput.onValueChanged.AddListener((string value) => UpdateInputField(value, ref parameters.AngleOfIncline, ref angleOfInclineInput, ref angleOfInclineError));
-
+        primaryWeightInput.onValueChanged.AddListener((string value) => validInput(value, ref parameters.PrimaryWeight, ref primaryWeightInput, ref primaryWeightError));
+        primaryRampGeometryInput.onValueChanged.AddListener((string value) => validInput(value, ref parameters.PrimaryRampGeometry, ref primaryRampGeometryInput, ref primaryRampGeometryError));
+        primarySpringRateInput.onValueChanged.AddListener((string value) => validInput(value, ref parameters.PrimarySpringRate, ref primarySpringRateInput, ref primarySpringRateError));
+        primarySpringPretensionInput.onValueChanged.AddListener((string value) => validInput(value, ref parameters.PrimarySpringPretension, ref primarySpringPretensionInput, ref primarySpringPretensionError));
+        secondaryHelixGeometryInput.onValueChanged.AddListener((string value) => validInput(value, ref parameters.SecondaryHelixGeometry, ref secondaryHelixGeometryInput, ref secondaryHelixGeometryError));
+        secondarySpringRateInput.onValueChanged.AddListener((string value) => validInput(value, ref parameters.SecondarySpringRate, ref secondarySpringRateInput, ref secondarySpringRateError));
+        secondarySpringPretensionInput.onValueChanged.AddListener((string value) => validInput(value, ref parameters.SecondarySpringPretension, ref secondarySpringPretensionInput, ref secondarySpringPretensionError));
+        vehicleWeightInput.onValueChanged.AddListener((string value) => validInput(value, ref parameters.VehicleWeight, ref vehicleWeightInput, ref vehicleWeightError));
+        driverWeightInput.onValueChanged.AddListener((string value) => validInput(value, ref parameters.DriverWeight, ref driverWeightInput, ref driverWeightError));
+        tractionInput.onValueChanged.AddListener((string value) => validInput(value, ref parameters.Traction, ref tractionInput, ref tractionError));
+        angleOfInclineInput.onValueChanged.AddListener((string value) => validInput(value, ref parameters.AngleOfIncline, ref angleOfInclineInput, ref angleOfInclineError));
     }
 
-    private void UpdateInputField(string value, ref double field, ref TMP_InputField inputField, ref TMP_Text errorText) {
+    private void validInput(string value, ref double field, ref TMP_InputField inputField, ref TMP_Text errorText) {
         if (double.TryParse(value, out double val)) {
             field = val;
             inputField.image.color = Color.white;
@@ -84,8 +84,38 @@ public class InputFields : MonoBehaviour
         }
     }
 
+    private void verifyFieldNotEmpty(ref TMP_InputField inputField, ref TMP_Text errorText) {
+        if (inputField.text == "") {
+            inputField.image.color = Color.red;
+            errorText.text = "Required field";
+            canSimulate = false;
+        } else {
+            inputField.image.color = Color.white;
+            errorText.text = "";
+            canSimulate = true;
+        }
+    }
+
+    private void checkFields() {
+        verifyFieldNotEmpty(ref primaryWeightInput, ref primaryWeightError);
+        verifyFieldNotEmpty(ref primaryRampGeometryInput, ref primaryRampGeometryError);
+        verifyFieldNotEmpty(ref primarySpringRateInput, ref primarySpringRateError);
+        verifyFieldNotEmpty(ref primarySpringPretensionInput, ref primarySpringPretensionError);
+        verifyFieldNotEmpty(ref secondaryHelixGeometryInput, ref secondaryHelixGeometryError);
+        verifyFieldNotEmpty(ref secondarySpringRateInput, ref secondarySpringRateError);
+        verifyFieldNotEmpty(ref secondarySpringPretensionInput, ref secondarySpringPretensionError);
+        verifyFieldNotEmpty(ref vehicleWeightInput, ref vehicleWeightError);
+        verifyFieldNotEmpty(ref driverWeightInput, ref driverWeightError);
+        verifyFieldNotEmpty(ref tractionInput, ref tractionError);
+        verifyFieldNotEmpty(ref angleOfInclineInput, ref angleOfInclineError);
+    }
+
     private void StartSimulation() {
         // Run the python script with the input parameters
+        checkFields();
+        if (!canSimulate) {
+            return;
+        }
         pythonRunner.RunPython(parameters);
 
         // Go the the results scene
