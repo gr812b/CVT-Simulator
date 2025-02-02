@@ -5,7 +5,7 @@ using System;
 using UnityEngine.UI;
 using TMPro;
 using UnityEngine.SceneManagement;
-using SFB; // Namespace for StandaloneFileBrowser
+using SFB; 
 
 public class DownloadCSV : MonoBehaviour
 {
@@ -26,9 +26,8 @@ public class DownloadCSV : MonoBehaviour
             "csv"                  // Default file extension
         );
 
-        // If the user selects a path (not cancel)
+
         if (!string.IsNullOrEmpty(destinationPath)) {
-            // Copy the file to the selected location
             File.Copy(csvPath, destinationPath, true);
             Debug.Log("Downloaded CSV file to: " + destinationPath);
         } else {
