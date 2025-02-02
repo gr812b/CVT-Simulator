@@ -76,8 +76,12 @@ class TheoreticalModels:
         initial_primary_radius: float,
         initial_secondary_radius: float,
     ) -> float:
-        return TheoreticalModels.current_secondary_radius(
+        secondary_radius = TheoreticalModels.current_secondary_radius(
             d, sheave_angle, belt_width, initial_primary_radius
-        ) / TheoreticalModels.current_primary_radius(
+        )
+        primary_radius = TheoreticalModels.current_primary_radius(
             d, sheave_angle, initial_secondary_radius
         )
+        # TODO: Remove debug prints
+        # print(f"Primary: {primary_radius}, Secondary: {secondary_radius}, ratio: {primary_radius / secondary_radius}")
+        return primary_radius / secondary_radius
