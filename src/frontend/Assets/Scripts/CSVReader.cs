@@ -7,13 +7,15 @@ public class DataPoint
 {
     public float Time { get; }
     public float Position { get; }
-    public float PrimaryPulleyAngle { get; }
+    public float Angle { get; }
+    public float Distance { get; }
 
-    public DataPoint(float time, float position, float primaryPulleyAngle)
+    public DataPoint(float time, float position, float angle, float distance)
     {
         Time = time;
         Position = position;
-        PrimaryPulleyAngle = primaryPulleyAngle;
+        Angle = angle;
+        Distance = distance;
     }
 }
 
@@ -56,7 +58,7 @@ public class CSVReader
                     if (float.TryParse(values[timeIndex], out float time) &&
                         float.TryParse(values[positionIndex], out float position))
                     {
-                        dataPoints.Add(new DataPoint(time, position, 0));
+                        dataPoints.Add(new DataPoint(time, position, 0, 0));
                     }
                 }
             }
