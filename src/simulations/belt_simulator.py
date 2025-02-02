@@ -1,4 +1,5 @@
 import numpy as np
+import math
 from utils.theoretical_models import TheoreticalModels as tm
 
 class BeltSimulator:
@@ -20,5 +21,14 @@ class BeltSimulator:
   def calculate_net_radial_force(self, ω: float, shift_distance: float, sheave_angle: float, wrap_angle: float, clamping_force: float) -> float:
     centrifugal_force = self.calculate_centrifugal_force(ω, shift_distance, sheave_angle, wrap_angle)
     radial_force = self.radial_force_from_clamping(clamping_force, sheave_angle)
-    distribution_factor = 2 * np.sin(wrap_angle / 2)
+    distribution_factor = 2 * np.sin(wrap_angle / 2) # This comes from the integral based on the force distribution
     return (centrifugal_force + radial_force) * distribution_factor
+  
+  def calculate_slack_tension(self, ω: float, shift_distance: float, clamping_force: float, sheave_angle: float, wrap_angle: float, μ: float) -> float:
+    θ = abs((wrap_angle - np.pi) / 2)
+    denominator = np.cos(θ) * (1 + math.exp(μ * wrap_angle)) # Derived from tension, angles and capstan equation
+    radial_force = self.calculate_net_radial_force(ω, shift_distance, sheave_angle, wrap_angle, clamping_force)
+    return radial_force / denominator
+  
+  def calculate_max_transferable_torque(self, tension: float, μ: float, wrap_angle: float, r: float) -> float:
+    return tension * r * (np.exp(μ * wrap_angle) - 1)

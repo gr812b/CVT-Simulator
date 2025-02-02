@@ -24,6 +24,7 @@ class SecondaryPulley:
         self.initial_compression = initial_compression
         self.helix_radius = helix_radius
 
+    # TODO: Look into how the torsional sping affects this torque value
     def calculate_helix_force(self, torque: float, shift_distance: float) -> float:
         cvt_ratio = tm.current_cvt_ratio(
             shift_distance,
@@ -35,7 +36,7 @@ class SecondaryPulley:
         helix_angle = np.pi / 6  # TODO: Calculate helix angle
 
         return tm.gearing(torque, cvt_ratio) / (
-            2 * self.helix_radius * np.tan(helix_angle / 2)
+            2 * self.helix_radius * np.tan(helix_angle / 2) # TODO: Investigate helix_angle / 2
         )
 
     def calculate_spring_comp_force(self, compression: float) -> float:
