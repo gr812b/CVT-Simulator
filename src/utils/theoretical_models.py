@@ -16,7 +16,7 @@ class TheoreticalModels:
 
     @staticmethod
     def centrifugal_force(m: float, ω: float, r: float) -> float:
-        return m * ω**2 / r
+        return m * ω**2 * r    
 
     @staticmethod
     def air_resistance(ρ: float, v: float, A: float, C_d: float) -> float:

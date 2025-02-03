@@ -44,9 +44,9 @@ primary_simulator = PrimaryPulley(
     initial_flyweight_radius=INITIAL_FLYWEIGHT_RADIUS,
 )
 secondary_simulator = SecondaryPulley(
-    spring_coeff_tors=1000,  # TODO: Use args
-    spring_coeff_comp=250,  # TODO: Use args
-    initial_rotation=np.pi / 2,  # TODO: Use args
+    spring_coeff_tors=5,  # TODO: Use args
+    spring_coeff_comp=100,  # TODO: Use args
+    initial_rotation=np.pi/12,  # TODO: Use args
     initial_compression=0.1,  # TODO: Use args
     helix_radius=HELIX_RADIUS,
 )
@@ -81,7 +81,7 @@ def angular_velocity_and_position_derivative(t, y):
 
     # print(f"CVT ratio: {cvt_ratio}")
 
-    cvt_moving_mass = 10000000  # TODO: Use args
+    cvt_moving_mass = 1000  # TODO: Use args
     shift_acceleration = (primary_force - secondary_force) / cvt_moving_mass
 
     # Engines angular acceleration due to engine torque
