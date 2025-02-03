@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using Unity.Mathematics;
 using UnityEngine;
 
-public class CVTSimulator : MonoBehaviour, IPlaybackView
+public class CVTSimulator : PlaybackView
 {
     [SerializeField] private GameObject primaryMovable;
     [SerializeField] private GameObject primaryFixed;
@@ -16,11 +16,11 @@ public class CVTSimulator : MonoBehaviour, IPlaybackView
     private float minSecondaryShift = 0.0f;
     private float maxDistance = 1.0f;
 
-    // test data points
     private List<DataPoint> dataPoints = new List<DataPoint>();
     private int currentIndex = 0;
+
     
-    public void Display(DataPoint dataPoint)
+    public override void Display(DataPoint dataPoint)
     {
         SetAngles(dataPoint.Angle);
         SetShifts(dataPoint.Distance);
@@ -53,7 +53,7 @@ public class CVTSimulator : MonoBehaviour, IPlaybackView
         movableComponent.transform.localPosition = new Vector3(currentPosition.x, shift, currentPosition.z);
     }
 
-    private void Start()
+     private void Start()
     {
         for (int i = 0; i < 360; i++)
         {
