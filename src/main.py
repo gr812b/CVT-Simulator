@@ -163,6 +163,7 @@ result = SimulationResult(solution)
 result.write_csv("simulation_output.csv")
 result.plot("car_velocity")
 result.plot("shift_distance")
+result.plot("shift_velocity")
 result.plot("engine_angular_velocity")
 
 # Loop through the solution and recalculate the primary and secondary forces, then plot it
