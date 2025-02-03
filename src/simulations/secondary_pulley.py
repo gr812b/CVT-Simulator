@@ -24,7 +24,9 @@ class SecondaryPulley:
         self.initial_compression = initial_compression
         self.helix_radius = helix_radius
 
-    def calculate_helix_force(self, torque: float, spring_force: float, shift_distance: float) -> float:
+    def calculate_helix_force(
+        self, torque: float, spring_force: float, shift_distance: float
+    ) -> float:
         cvt_ratio = tm.current_cvt_ratio(
             shift_distance,
             SHEAVE_ANGLE,
@@ -54,7 +56,8 @@ class SecondaryPulley:
     ) -> float:
         spring_comp_force = self.calculate_spring_comp_force(shift_distance)
         spring_tors_force = self.calculate_spring_tors_force(rotation)
-        helix_force = self.calculate_helix_force(torque, spring_tors_force, shift_distance)
+        helix_force = self.calculate_helix_force(
+            torque, spring_tors_force, shift_distance
+        )
 
         return helix_force + spring_comp_force
-

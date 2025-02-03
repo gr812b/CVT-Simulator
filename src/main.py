@@ -46,10 +46,11 @@ primary_simulator = PrimaryPulley(
 secondary_simulator = SecondaryPulley(
     spring_coeff_tors=5,  # TODO: Use args
     spring_coeff_comp=100,  # TODO: Use args
-    initial_rotation=np.pi/12,  # TODO: Use args
+    initial_rotation=np.pi / 12,  # TODO: Use args
     initial_compression=0.1,  # TODO: Use args
     helix_radius=HELIX_RADIUS,
 )
+
 
 # Define the system of differential equations
 def angular_velocity_and_position_derivative(t, y):
@@ -119,18 +120,25 @@ def angular_velocity_and_position_derivative(t, y):
     if abs(state.engine_angular_velocity) > 400:
         engine_angular_acceleration = 0
 
-    return [engine_angular_acceleration, car_acceleration, state.car_velocity, shift_acceleration, state.shift_velocity]
+    return [
+        engine_angular_acceleration,
+        car_acceleration,
+        state.car_velocity,
+        shift_acceleration,
+        state.shift_velocity,
+    ]
 
 
 time_span = (0, 15)
 time_eval = np.linspace(*time_span, 10000)
 initial_state = SystemState(
-    engine_angular_velocity=rpm_to_rad_s(2400), 
-    car_velocity=0.0, 
+    engine_angular_velocity=rpm_to_rad_s(2400),
+    car_velocity=0.0,
     car_position=0.0,
     shift_velocity=0.0,
     shift_distance=0.0,
 )
+
 
 # Constraints
 def shift_constraint_event(t, y):
@@ -138,14 +146,15 @@ def shift_constraint_event(t, y):
     shift_distance = y[4]
 
     if shift_distance < 0:
-        y[3] = max(0, shift_velocity) 
+        y[3] = max(0, shift_velocity)
         y[4] = 0
-        
+
     elif shift_distance > 0.075:
         y[3] = min(0, shift_velocity)
         y[4] = 0.075
 
     return 1
+
 
 # Solve the system over the desired time span
 solution = solve_ivp(
