@@ -61,7 +61,7 @@ def angular_velocity_and_position_derivative(t, y):
     engine_torque = engine_simulator.get_torque(state.engine_angular_velocity)
 
     primary_force = primary_simulator.calculate_net_force(
-        0,
+        state.shift_distance,
         state.engine_angular_velocity,
     )
     secondary_force = secondary_simulator.calculate_net_force(
@@ -81,7 +81,7 @@ def angular_velocity_and_position_derivative(t, y):
 
     # print(f"CVT ratio: {cvt_ratio}")
 
-    cvt_moving_mass = 1000  # TODO: Use args
+    cvt_moving_mass = 1000  # TODO: Use constants
     shift_acceleration = (primary_force - secondary_force) / cvt_moving_mass
 
     # Engines angular acceleration due to engine torque
