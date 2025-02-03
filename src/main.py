@@ -81,7 +81,7 @@ def angular_velocity_and_position_derivative(t, y):
 
     # print(f"CVT ratio: {cvt_ratio}")
 
-    cvt_moving_mass = 100  # TODO: Use args
+    cvt_moving_mass = 10000000  # TODO: Use args
     shift_acceleration = (primary_force - secondary_force) / cvt_moving_mass
 
     # Engines angular acceleration due to engine torque
@@ -154,7 +154,7 @@ solution = solve_ivp(
     initial_state.to_array(),
     t_eval=time_eval,
     events=shift_constraint_event,
-    rtol=1e-7,
+    rtol=1e-6,
     atol=1e-9,
 )
 
