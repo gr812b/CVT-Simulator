@@ -53,7 +53,8 @@ class SecondaryPulley:
     def calculate_net_force(
         self, torque: float, shift_distance: float, rotation: float
     ) -> float:
-        helix_force = self.calculate_helix_force(torque, shift_distance)
-        spring_comp_force = self.calculate_spring_comp_force(shift_distance)
         spring_tors_force = self.calculate_spring_tors_force(rotation)
-        return helix_force + spring_comp_force + spring_tors_force
+        helix_force = self.calculate_helix_force(torque + spring_tors_force, shift_distance)
+        spring_comp_force = self.calculate_spring_comp_force(shift_distance)
+        return helix_force + spring_comp_force
+

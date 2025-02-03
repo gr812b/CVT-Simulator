@@ -1,3 +1,4 @@
+from matplotlib import pyplot as plt
 import numpy as np
 from scipy.integrate import solve_ivp
 from simulations.car_simulation import CarSimulator
@@ -37,19 +38,18 @@ load_simulator = LoadSimulator(
 )
 car_simulator = CarSimulator(car_mass=CAR_MASS)
 primary_simulator = PrimaryPulley(
-    spring_coeff_comp=1000,  # TODO: Use args
+    spring_coeff_comp=500,  # TODO: Use args
     initial_compression=0.2,  # TODO: Use args
-    flyweight_mass=0.1,  # TODO: Use args
+    flyweight_mass=0.05,  # TODO: Use args
     initial_flyweight_radius=INITIAL_FLYWEIGHT_RADIUS,
 )
 secondary_simulator = SecondaryPulley(
-    spring_coeff_tors=2500,  # TODO: Use args
-    spring_coeff_comp=500,  # TODO: Use args
+    spring_coeff_tors=1000,  # TODO: Use args
+    spring_coeff_comp=250,  # TODO: Use args
     initial_rotation=np.pi / 2,  # TODO: Use args
     initial_compression=0.1,  # TODO: Use args
     helix_radius=HELIX_RADIUS,
 )
-
 
 # Define the system of differential equations
 def angular_velocity_and_position_derivative(t, y):
@@ -61,7 +61,7 @@ def angular_velocity_and_position_derivative(t, y):
     engine_torque = engine_simulator.get_torque(state.engine_angular_velocity)
 
     primary_force = primary_simulator.calculate_net_force(
-        state.shift_distance,
+        0,
         state.engine_angular_velocity,
     )
     secondary_force = secondary_simulator.calculate_net_force(
@@ -81,7 +81,7 @@ def angular_velocity_and_position_derivative(t, y):
 
     # print(f"CVT ratio: {cvt_ratio}")
 
-    cvt_moving_mass = 1  # TODO: Use args
+    cvt_moving_mass = 100  # TODO: Use args
     shift_acceleration = (primary_force - secondary_force) / cvt_moving_mass
 
     # Engines angular acceleration due to engine torque
@@ -132,17 +132,63 @@ initial_state = SystemState(
     shift_distance=0.0,
 )
 
+# Constraints
+def shift_constraint_event(t, y):
+    shift_velocity = y[3]
+    shift_distance = y[4]
+
+    if shift_distance < 0:
+        y[3] = max(0, shift_velocity) 
+        y[4] = 0
+        
+    elif shift_distance > 0.075:
+        y[3] = min(0, shift_velocity)
+        y[4] = 0.075
+
+    return 1
+
 # Solve the system over the desired time span
 solution = solve_ivp(
     angular_velocity_and_position_derivative,
     time_span,
     initial_state.to_array(),
     t_eval=time_eval,
+    events=shift_constraint_event,
+    rtol=1e-7,
+    atol=1e-9,
 )
 
 result = SimulationResult(solution)
 
 result.write_csv("simulation_output.csv")
 result.plot("car_velocity")
-result.plot("car_position")
-# result.plot("engine_angular_velocity")
+result.plot("shift_distance")
+result.plot("engine_angular_velocity")
+
+# Loop through the solution and recalculate the primary and secondary forces, then plot it
+primary_forces = []
+secondary_forces = []
+
+for state in result.states:
+    primary_forces.append(
+        primary_simulator.calculate_net_force(
+            0,
+            state.engine_angular_velocity,
+        )
+    )
+    secondary_forces.append(
+        secondary_simulator.calculate_net_force(
+            engine_simulator.get_torque(state.engine_angular_velocity),
+            0,
+            0,
+        )
+    )
+
+plt.plot(result.time, primary_forces, label="Primary Force")
+plt.plot(result.time, secondary_forces, label="Secondary Force")
+plt.xlabel("Time (s)")
+plt.ylabel("Force (N)")
+plt.title("Primary and Secondary Forces Over Time")
+plt.legend()
+plt.grid()
+plt.show()
