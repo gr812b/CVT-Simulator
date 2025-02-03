@@ -4,9 +4,17 @@ from utils.theoretical_models import TheoreticalModels as tm
 
 
 class BeltSimulator:
-    def __init__(self, density: float, cross_sectional_area: float):
+    def __init__(
+        self,
+        density: float,
+        cross_sectional_area: float,
+        μ_static: float,
+        μ_kinetic: float,
+    ):
         self.density = density
         self.cross_sectional_area = cross_sectional_area
+        self.μ_static = μ_static
+        self.μ_kinetic = μ_kinetic
 
     def calculate_centrifugal_force(
         self, ω: float, shift_distance: float, sheave_angle: float, wrap_angle: float
@@ -25,27 +33,16 @@ class BeltSimulator:
 
     def calculate_net_radial_force(
         self,
-        ω: float,
-        shift_distance: float,
-        sheave_angle: float,
+        centrifugal_force: float,
+        radial_force: float,
         wrap_angle: float,
-        clamping_force: float,
     ) -> float:
-        centrifugal_force = self.calculate_centrifugal_force(
-            ω, shift_distance, sheave_angle, wrap_angle
-        )
-        radial_force = self.radial_force_from_clamping(clamping_force, sheave_angle)
-        distribution_factor = 2 * np.sin(
-            wrap_angle / 2
-        )  # This comes from the integral based on the force distribution
-        return (centrifugal_force + radial_force) * distribution_factor
+        # factor comes from the integral based on the force distribution
+        return (centrifugal_force + radial_force) * 2 * np.sin(wrap_angle / 2)
 
     def calculate_slack_tension(
         self,
-        ω: float,
-        shift_distance: float,
-        clamping_force: float,
-        sheave_angle: float,
+        radial_force: float,
         wrap_angle: float,
         μ: float,
     ) -> float:
@@ -53,12 +50,9 @@ class BeltSimulator:
         denominator = np.cos(θ) * (
             1 + math.exp(μ * wrap_angle)
         )  # Derived from tension, angles and capstan equation
-        radial_force = self.calculate_net_radial_force(
-            ω, shift_distance, sheave_angle, wrap_angle, clamping_force
-        )
         return radial_force / denominator
 
     def calculate_max_transferable_torque(
-        self, tension: float, μ: float, wrap_angle: float, r: float
+        self, tension: float, μ: float, wrap_angle: float, radius: float
     ) -> float:
-        return tension * r * (np.exp(μ * wrap_angle) - 1)
+        return tension * radius * (np.exp(μ * wrap_angle) - 1)

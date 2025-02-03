@@ -22,7 +22,7 @@ class PrimaryPulley:
         centrifugal_force = tm.centrifugal_force(
             self.flyweight_mass,
             angular_velocity,
-            self.initial_flyweight_radius + shift_distance,
+            self.initial_flyweight_radius + shift_distance, # TODO: Adding shift distance here is wrong
         )
         return centrifugal_force * np.tan(np.pi / 6)  # TODO: Calculate ramp angle
 
