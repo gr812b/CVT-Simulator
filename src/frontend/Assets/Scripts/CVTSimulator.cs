@@ -57,7 +57,7 @@ public class CVTSimulator : PlaybackView
     {
         for (int i = 0; i < 360; i++)
         {
-            dataPoints.Add(new DataPoint(0, 0, i, (float)math.abs((180 - i) / 180.0)));
+            dataPoints.Add(new DataPoint(0, 0, i, (float)math.abs((180 - i) / 180.0), 0));
         }
     }
 

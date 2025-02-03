@@ -1529,6 +1529,54 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 327068607}
   m_CullTransparentMesh: 1
+--- !u!1 &422853553
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 422853554}
+  - component: {fileID: 422853555}
+  m_Layer: 0
+  m_Name: Gauge Playback
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &422853554
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 422853553}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 1.0141151, y: -0.08468194, z: 0.22912697}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &422853555
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 422853553}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ba1348db28379fa4099b2ab12c52c44f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  velocityNeedle: {fileID: 2085820512}
+  rpmNeedle: {fileID: 1986391817}
+  velocityText: {fileID: 153565394}
+  rpmText: {fileID: 551262168}
 --- !u!1 &453010227
 GameObject:
   m_ObjectHideFlags: 0
@@ -4258,6 +4306,7 @@ MonoBehaviour:
   statusText: {fileID: 1398797982}
   playbackViews:
   - {fileID: 32465577}
+  - {fileID: 422853555}
   playImage: {fileID: 701652141}
   pauseImage: {fileID: 1928584235}
 --- !u!114 &1211284229
@@ -6993,7 +7042,7 @@ GameObject:
   - component: {fileID: 2062133413}
   - component: {fileID: 2062133414}
   m_Layer: 0
-  m_Name: VisualScripting SceneVariables
+  m_Name: Input Table
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -7146,3 +7195,4 @@ SceneRoots:
   - {fileID: 2062133412}
   - {fileID: 611944287}
   - {fileID: 1211284231}
+  - {fileID: 422853554}

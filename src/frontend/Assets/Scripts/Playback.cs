@@ -28,11 +28,13 @@ public class Playback : MonoBehaviour
     private bool isPlaying = false;
     private int currentIndex = 0;
     private float startTime;
+    private float pauseTime;
 
     
 
     private void Start()
     {
+
         statusText.text = "Data Loaded. Ready to Play.";
         playPauseButton.onClick.AddListener(TogglePlayPause);
         restartButton.onClick.AddListener(RestartPlayback);
@@ -49,7 +51,7 @@ public class Playback : MonoBehaviour
 
         if (isPlaying)
         {
-            startTime = Time.time;
+            startTime += Time.time - pauseTime;
             statusText.text = "Playing";
             playImage.gameObject.SetActive(false);
             pauseImage.gameObject.SetActive(true);
@@ -58,6 +60,7 @@ public class Playback : MonoBehaviour
         else
         {
             statusText.text = "Paused";
+            pauseTime = Time.time;
             playImage.gameObject.SetActive(true);  
             pauseImage.gameObject.SetActive(false); 
         }
@@ -68,6 +71,8 @@ public class Playback : MonoBehaviour
         isPlaying = false;
         statusText.text = "Data Loaded. Ready to Play.";
         currentIndex = 0;
+        startTime = 0f;   
+        pauseTime = 0f;   
         playImage.gameObject.SetActive(true);  
         pauseImage.gameObject.SetActive(false); 
     }

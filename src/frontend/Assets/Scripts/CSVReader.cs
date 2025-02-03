@@ -9,13 +9,15 @@ public class DataPoint
     public float Position { get; }
     public float Angle { get; }
     public float Distance { get; }
+    public float Velocity { get; }
 
-    public DataPoint(float time, float position, float angle, float distance)
+    public DataPoint(float time, float position, float angle, float distance, float velocity)
     {
         Time = time;
         Position = position;
         Angle = angle;
         Distance = distance;
+        Velocity = velocity;
     }
 }
 
@@ -39,6 +41,7 @@ public class CSVReader
             // Get the indices for the time and car_position columns
             string[] headers = headerLine.Split(',');
             int timeIndex = Array.IndexOf(headers, "time");
+            int velocityIndex = Array.IndexOf(headers, "car_velocity");
             int positionIndex = Array.IndexOf(headers, "car_position");
 
             if (timeIndex == -1 || positionIndex == -1) {
@@ -56,9 +59,9 @@ public class CSVReader
                 if (values.Length > Math.Max(timeIndex, positionIndex))
                 {
                     if (float.TryParse(values[timeIndex], out float time) &&
-                        float.TryParse(values[positionIndex], out float position))
+                        float.TryParse(values[positionIndex], out float position) && float.TryParse(values[velocityIndex], out float velocity))
                     {
-                        dataPoints.Add(new DataPoint(time, position, 0, 0));
+                        dataPoints.Add(new DataPoint(time, position, 0, 0, velocity));
                     }
                 }
             }
