@@ -57,13 +57,27 @@ def angular_velocity_and_position_derivative(t, y):
     # Load from external forces
     gearbox_load = load_simulator.calculate_gearbox_load(state.car_velocity)
 
+    engine_torque = engine_simulator.get_torque(state.engine_angular_velocity)
+
+    primary_force = primary_simulator.calculate_net_force(
+        state.shift_distance,
+        state.engine_angular_velocity,
+    )
+    secondary_force = secondary_simulator.calculate_net_force(
+        engine_torque,
+        state.shift_distance,
+        0,
+    )
+
+    cvt_moving_mass = 1  # TODO: Use args
+    shift_acceleration = (primary_force - secondary_force) / cvt_moving_mass
+
     # Engines angular acceleration due to engine torque
+    # TODO: Update to be torque seen through the CVT
     engine_angular_acceleration = engine_simulator.calculate_angular_acceleration(
         state.engine_angular_velocity,
         gearbox_load,
     )
-
-    engine_torque = engine_simulator.get_torque(state.engine_angular_velocity)
 
     # Net force on the car
     net_torque = engine_torque - gearbox_load
@@ -72,18 +86,9 @@ def angular_velocity_and_position_derivative(t, y):
     # Vehicle acceleration
     car_acceleration = car_simulator.calculate_acceleration(force_at_wheel)
 
-    primary_force = primary_simulator.calculate_net_force(
-        0,
-        state.engine_angular_velocity,
-    )
-    secondary_force = secondary_simulator.calculate_net_force(
-        engine_torque,
-        0,
-        0,
-    )
-    print(
-        f"Primary force: {primary_force}, Secondary force: {secondary_force}, engine torque: {engine_torque}"
-    )
+    # print(
+    #     f"Primary force: {primary_force}, Secondary force: {secondary_force}, engine torque: {engine_torque}"
+    # )
     # TODO: Next steps
     # Difference in clamping forces causes shifting up to the CVTs limit.
     # Needs to accelerate both secondary and primary moving components + ?belt?
@@ -102,13 +107,17 @@ def angular_velocity_and_position_derivative(t, y):
     if abs(state.engine_angular_velocity) > 400:
         engine_angular_acceleration = 0
 
-    return [engine_angular_acceleration, car_acceleration, state.car_velocity]
+    return [engine_angular_acceleration, car_acceleration, state.car_velocity, shift_acceleration, state.shift_velocity]
 
 
 time_span = (0, 15)
 time_eval = np.linspace(*time_span, 10000)
 initial_state = SystemState(
-    engine_angular_velocity=rpm_to_rad_s(2400), car_velocity=0.0, car_position=0.0
+    engine_angular_velocity=rpm_to_rad_s(2400), 
+    car_velocity=0.0, 
+    car_position=0.0,
+    shift_velocity=0.0,
+    shift_distance=0.0,
 )
 
 # Solve the system over the desired time span
@@ -122,6 +131,6 @@ solution = solve_ivp(
 result = SimulationResult(solution)
 
 result.write_csv("simulation_output.csv")
-# result.plot("car_position")
+result.plot("shift_distance")
 # result.plot("car_velocity")
 # result.plot("engine_angular_velocity")
