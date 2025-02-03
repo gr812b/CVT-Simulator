@@ -20,6 +20,7 @@ from constants.car_specs import (
 )
 from utils.conversions import rpm_to_rad_s, deg_to_rad
 from utils.argument_parser import get_arguments
+from utils.theoretical_models import TheoreticalModels as tm
 
 # Parse arguments
 args = get_arguments()
@@ -69,6 +70,17 @@ def angular_velocity_and_position_derivative(t, y):
         0,
     )
 
+    # TODO: Remove
+    cvt_ratio = tm.current_cvt_ratio(
+        state.shift_distance,
+        30,  # TODO: Use args
+        0.05,  # TODO: Use args
+        0.1,  # TODO: Use args
+        0.2,  # TODO: Use args
+    )
+
+    # print(f"CVT ratio: {cvt_ratio}")
+
     cvt_moving_mass = 1  # TODO: Use args
     shift_acceleration = (primary_force - secondary_force) / cvt_moving_mass
 
@@ -80,7 +92,7 @@ def angular_velocity_and_position_derivative(t, y):
     )
 
     # Net force on the car
-    net_torque = engine_torque - gearbox_load
+    net_torque = engine_torque / cvt_ratio - gearbox_load
     force_at_wheel = net_torque * GEARBOX_RATIO / WHEEL_RADIUS
 
     # Vehicle acceleration
@@ -131,6 +143,6 @@ solution = solve_ivp(
 result = SimulationResult(solution)
 
 result.write_csv("simulation_output.csv")
-result.plot("shift_distance")
-# result.plot("car_velocity")
+result.plot("car_velocity")
+result.plot("car_position")
 # result.plot("engine_angular_velocity")
