@@ -88,17 +88,26 @@ def angular_velocity_and_position_derivative(t, y):
         0,
     )
 
+    primary_wrap_angle = tm.primary_wrap_angle(
+        state.shift_distance,
+        CENTER_TO_CENTER,
+    )
+    secondary_wrap_angle = tm.secondary_wrap_angle(
+        state.shift_distance,
+        CENTER_TO_CENTER,
+    )
+
     primary_belt_radial = primary_belt.calculate_radial_force(
         state.engine_angular_velocity,
         state.shift_distance,
-        np.pi,
-        primary_force
+        primary_wrap_angle,
+        primary_force,
     )
     secondary_belt_radial = secondary_belt.calculate_radial_force(
         state.engine_angular_velocity,
         state.shift_distance,
-        np.pi,
-        secondary_force
+        secondary_wrap_angle,
+        secondary_force,
     )
 
     # TODO: Remove
@@ -129,15 +138,7 @@ def angular_velocity_and_position_derivative(t, y):
     # Vehicle acceleration
     car_acceleration = car_simulator.calculate_acceleration(force_at_wheel)
 
-    primary_wrap_angle = tm.primary_wrap_angle(
-        state.shift_distance,
-        CENTER_TO_CENTER,
-    )
-    secondary_wrap_angle = tm.secondary_wrap_angle(
-        state.shift_distance,
-        CENTER_TO_CENTER,
-    )
-    print(f"Primary wrap angle: {primary_wrap_angle}, Secondary wrap angle: {secondary_wrap_angle}")
+    # print(f"Primary wrap angle: {primary_wrap_angle}, Secondary wrap angle: {secondary_wrap_angle}")
 
     # print(
     #     f"Primary force: {primary_force}, Secondary force: {secondary_force}, engine torque: {engine_torque}"
@@ -216,18 +217,16 @@ for state in result.states:
     )
     primary_forces.append(primary_force)
     secondary_forces.append(secondary_force)
-    prim_radial.append(primary_belt.calculate_radial_force(
-        state.engine_angular_velocity,
-        state.shift_distance,
-        np.pi,
-        primary_force
-    ))
-    sec_radial.append(secondary_belt.calculate_radial_force(
-        state.engine_angular_velocity,
-        state.shift_distance,
-        np.pi,
-        secondary_force
-    ))
+    prim_radial.append(
+        primary_belt.calculate_radial_force(
+            state.engine_angular_velocity, state.shift_distance, np.pi, primary_force
+        )
+    )
+    sec_radial.append(
+        secondary_belt.calculate_radial_force(
+            state.engine_angular_velocity, state.shift_distance, np.pi, secondary_force
+        )
+    )
 
 plt.plot(result.time, primary_forces, label="Primary Force")
 plt.plot(result.time, secondary_forces, label="Secondary Force")

@@ -6,6 +6,7 @@ from constants.car_specs import (
     BELT_WIDTH,
 )
 
+
 class TheoreticalModels:
     """
     A collection of theoretical models and equations.
@@ -90,15 +91,17 @@ class TheoreticalModels:
         # TODO: Remove debug prints
         # print(f"Primary: {primary_radius}, Secondary: {secondary_radius}, ratio: {secondary_radius / primary_radius}")
         return secondary_radius / primary_radius
-    
+
     @staticmethod
     def wrap_angle(
         primary_radius: float,
         secondary_radius: float,
         center_to_center: float,
     ):
-        return 2 * np.arcsin((secondary_radius - primary_radius) / (2 * center_to_center))
-    
+        return 2 * np.arcsin(
+            (secondary_radius - primary_radius) / (2 * center_to_center)
+        )
+
     @staticmethod
     def primary_wrap_angle(
         shift_distance: float,
@@ -117,7 +120,7 @@ class TheoreticalModels:
             return np.pi - wrap_offset
         else:
             return np.pi + wrap_offset
-        
+
     @staticmethod
     def secondary_wrap_angle(
         shift_distance: float,
@@ -136,6 +139,3 @@ class TheoreticalModels:
             return np.pi + wrap_offset
         else:
             return np.pi - wrap_offset
-            
-        
-        
