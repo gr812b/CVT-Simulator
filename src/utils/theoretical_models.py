@@ -1,5 +1,10 @@
 import numpy as np
-
+from constants.car_specs import (
+    INNER_PRIMARY_PULLEY_RADIUS,
+    INNER_SECONDARY_PULLEY_RADIUS,
+    SHEAVE_ANGLE,
+    BELT_WIDTH,
+)
 
 class TheoreticalModels:
     """
@@ -77,11 +82,60 @@ class TheoreticalModels:
         initial_secondary_radius: float,
     ) -> float:
         secondary_radius = TheoreticalModels.current_secondary_radius(
-            d, sheave_angle, belt_width, initial_primary_radius
+            d, sheave_angle, belt_width, initial_secondary_radius
         )
         primary_radius = TheoreticalModels.current_primary_radius(
-            d, sheave_angle, initial_secondary_radius
+            d, sheave_angle, initial_primary_radius
         )
         # TODO: Remove debug prints
-        # print(f"Primary: {primary_radius}, Secondary: {secondary_radius}, ratio: {primary_radius / secondary_radius}")
-        return primary_radius / secondary_radius
+        # print(f"Primary: {primary_radius}, Secondary: {secondary_radius}, ratio: {secondary_radius / primary_radius}")
+        return secondary_radius / primary_radius
+    
+    @staticmethod
+    def wrap_angle(
+        primary_radius: float,
+        secondary_radius: float,
+        center_to_center: float,
+    ):
+        return 2 * np.arcsin((secondary_radius - primary_radius) / (2 * center_to_center))
+    
+    @staticmethod
+    def primary_wrap_angle(
+        shift_distance: float,
+        center_to_center: float,
+    ):
+        primary_radius = TheoreticalModels.current_primary_radius(
+            shift_distance, SHEAVE_ANGLE, INNER_PRIMARY_PULLEY_RADIUS
+        )
+        secondary_radius = TheoreticalModels.current_secondary_radius(
+            shift_distance, SHEAVE_ANGLE, BELT_WIDTH, INNER_SECONDARY_PULLEY_RADIUS
+        )
+        wrap_offset = TheoreticalModels.wrap_angle(
+            primary_radius, secondary_radius, center_to_center
+        )
+        if primary_radius <= secondary_radius:
+            return np.pi - wrap_offset
+        else:
+            return np.pi + wrap_offset
+        
+    @staticmethod
+    def secondary_wrap_angle(
+        shift_distance: float,
+        center_to_center: float,
+    ):
+        primary_radius = TheoreticalModels.current_primary_radius(
+            shift_distance, SHEAVE_ANGLE, INNER_PRIMARY_PULLEY_RADIUS
+        )
+        secondary_radius = TheoreticalModels.current_secondary_radius(
+            shift_distance, SHEAVE_ANGLE, BELT_WIDTH, INNER_SECONDARY_PULLEY_RADIUS
+        )
+        wrap_offset = TheoreticalModels.wrap_angle(
+            primary_radius, secondary_radius, center_to_center
+        )
+        if primary_radius <= secondary_radius:
+            return np.pi + wrap_offset
+        else:
+            return np.pi - wrap_offset
+            
+        
+        

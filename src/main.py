@@ -23,6 +23,7 @@ from constants.car_specs import (
     SHEAVE_ANGLE,
     INNER_PRIMARY_PULLEY_RADIUS,
     INNER_SECONDARY_PULLEY_RADIUS,
+    CENTER_TO_CENTER,
 )
 from utils.conversions import rpm_to_rad_s, deg_to_rad
 from utils.argument_parser import get_arguments
@@ -46,7 +47,7 @@ car_simulator = CarSimulator(car_mass=CAR_MASS)
 primary_simulator = PrimaryPulley(
     spring_coeff_comp=500,  # TODO: Use args
     initial_compression=0.2,  # TODO: Use args
-    flyweight_mass=0.6,  # TODO: Use args
+    flyweight_mass=0.8,  # TODO: Use args
     initial_flyweight_radius=INITIAL_FLYWEIGHT_RADIUS,
 )
 secondary_simulator = SecondaryPulley(
@@ -118,7 +119,7 @@ def angular_velocity_and_position_derivative(t, y):
     # TODO: Update to be torque seen through the CVT
     engine_angular_acceleration = engine_simulator.calculate_angular_acceleration(
         state.engine_angular_velocity,
-        gearbox_load,
+        gearbox_load / cvt_ratio,
     )
 
     # Net force on the car
@@ -127,6 +128,16 @@ def angular_velocity_and_position_derivative(t, y):
 
     # Vehicle acceleration
     car_acceleration = car_simulator.calculate_acceleration(force_at_wheel)
+
+    primary_wrap_angle = tm.primary_wrap_angle(
+        state.shift_distance,
+        CENTER_TO_CENTER,
+    )
+    secondary_wrap_angle = tm.secondary_wrap_angle(
+        state.shift_distance,
+        CENTER_TO_CENTER,
+    )
+    print(f"Primary wrap angle: {primary_wrap_angle}, Secondary wrap angle: {secondary_wrap_angle}")
 
     # print(
     #     f"Primary force: {primary_force}, Secondary force: {secondary_force}, engine torque: {engine_torque}"
@@ -183,7 +194,7 @@ result = SimulationResult(solution)
 
 result.write_csv("simulation_output.csv")
 # result.plot("car_velocity")
-# result.plot("shift_distance")
+result.plot("shift_distance")
 # result.plot("shift_velocity")
 # result.plot("engine_angular_velocity")
 
