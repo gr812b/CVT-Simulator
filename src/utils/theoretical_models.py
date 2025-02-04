@@ -50,7 +50,7 @@ class TheoreticalModels:
     def shift_to_pulley_radius_sec(
         d: float, sheave_angle: float, belt_width: float
     ) -> float:
-        return (belt_width - d / 2) / np.tan(sheave_angle / 2)
+        return (belt_width - d) / (2 * np.tan(sheave_angle / 2))
 
     @staticmethod
     def current_primary_radius(
@@ -64,7 +64,7 @@ class TheoreticalModels:
     def current_secondary_radius(
         d: float, sheave_angle: float, belt_width: float, initial_radius: float
     ) -> float:
-        return initial_radius - TheoreticalModels.shift_to_pulley_radius_sec(
+        return initial_radius + TheoreticalModels.shift_to_pulley_radius_sec(
             d, sheave_angle, belt_width
         )
 

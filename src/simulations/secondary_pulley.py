@@ -3,8 +3,8 @@ from utils.theoretical_models import TheoreticalModels as tm
 from constants.car_specs import (
     SHEAVE_ANGLE,
     BELT_WIDTH,
-    INITIAL_PRIMARY_PULLEY_RADIUS,
-    INITIAL_SECONDARY_PULLEY_RADIUS,
+    INNER_PRIMARY_PULLEY_RADIUS,
+    INNER_SECONDARY_PULLEY_RADIUS,
 )
 
 
@@ -32,8 +32,8 @@ class SecondaryPulley:
             shift_distance,
             SHEAVE_ANGLE,
             BELT_WIDTH,
-            INITIAL_PRIMARY_PULLEY_RADIUS,
-            INITIAL_SECONDARY_PULLEY_RADIUS,
+            INNER_PRIMARY_PULLEY_RADIUS,
+            INNER_SECONDARY_PULLEY_RADIUS,
         )
         helix_angle = np.pi / 6  # TODO: Calculate helix angle
 
