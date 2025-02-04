@@ -16,14 +16,11 @@ public class CVTSimulator : PlaybackView
     private float minSecondaryShift = 0.0f;
     private float maxDistance = 1.0f;
 
-    private List<DataPoint> dataPoints = new List<DataPoint>();
-    private int currentIndex = 0;
-
     
     public override void Display(DataPoint dataPoint)
     {
-        SetAngles(dataPoint.Angle);
-        SetShifts(dataPoint.Distance);
+        SetAngles(dataPoint.Position);
+        SetShifts(dataPoint.Position);
     }
 
     private void SetAngles(float angle)
@@ -51,24 +48,5 @@ public class CVTSimulator : PlaybackView
         float shift = math.lerp(minShift, maxShift, distance/maxDistance);
         Vector3 currentPosition = movableComponent.transform.localPosition;
         movableComponent.transform.localPosition = new Vector3(currentPosition.x, shift, currentPosition.z);
-    }
-
-     private void Start()
-    {
-        for (int i = 0; i < 360; i++)
-        {
-            dataPoints.Add(new DataPoint(0, 0, i, (float)math.abs((180 - i) / 180.0)));
-        }
-    }
-
-    private void Update()
-    {
-        if (currentIndex < dataPoints.Count)
-        {
-            Display(dataPoints[currentIndex]);
-            currentIndex++;
-        } else {
-            currentIndex = 0;
-        }
     }
 }
