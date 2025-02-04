@@ -27,6 +27,7 @@ from constants.car_specs import (
 from utils.conversions import rpm_to_rad_s, deg_to_rad
 from utils.argument_parser import get_arguments
 from utils.theoretical_models import TheoreticalModels as tm
+from utils.simulation_constraints import constraints
 
 # Parse arguments
 args = get_arguments()
@@ -167,31 +168,13 @@ initial_state = SystemState(
     shift_distance=0.0,
 )
 
-
-# Constraints
-def shift_constraint_event(t, y):
-    MAX_SHIFT = BELT_WIDTH
-    shift_velocity = y[3]
-    shift_distance = y[4]
-
-    if shift_distance < 0:
-        y[3] = max(0, shift_velocity)
-        y[4] = 0
-
-    elif shift_distance > MAX_SHIFT:
-        y[3] = min(0, shift_velocity)
-        y[4] = MAX_SHIFT
-
-    return 1
-
-
 # Solve the system over the desired time span
 solution = solve_ivp(
     angular_velocity_and_position_derivative,
     time_span,
     initial_state.to_array(),
     t_eval=time_eval,
-    events=shift_constraint_event,
+    events=constraints,
     rtol=1e-6,
     atol=1e-9,
 )
