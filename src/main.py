@@ -8,6 +8,7 @@ from utils.simulation_result import SimulationResult
 from simulations.engine_simulation import EngineSimulator
 from simulations.primary_pulley import PrimaryPulley
 from simulations.secondary_pulley import SecondaryPulley
+from simulations.belt_simulator import BeltSimulator
 from constants.engine_specs import torque_curve
 from constants.car_specs import (
     ENGINE_INERTIA,
@@ -50,6 +51,20 @@ secondary_simulator = SecondaryPulley(
     initial_compression=0.1,  # TODO: Use args
     helix_radius=HELIX_RADIUS,
 )
+primary_belt = BeltSimulator(
+    density=0.5,  # TODO: Use constants
+    cross_sectional_area=0.1,  # TODO: Use constants
+    μ_static=1.2,  # TODO: Use constants
+    μ_kinetic=0.9,  # TODO: Use constants
+    primary=True,
+)
+secondary_belt = BeltSimulator(
+    density=0.5,  # TODO: Use constants
+    cross_sectional_area=0.1,  # TODO: Use constants
+    μ_static=1.2,  # TODO: Use constants
+    μ_kinetic=0.9,  # TODO: Use constants
+    primary=False,
+)
 
 
 # Define the system of differential equations
@@ -65,16 +80,30 @@ def angular_velocity_and_position_derivative(t, y):
         state.shift_distance,
         state.engine_angular_velocity,
     )
+    primary_belt_radial = primary_belt.calculate_radial_force(
+        state.engine_angular_velocity,
+        state.shift_distance,
+        np.pi/4,
+        np.pi/2,
+        primary_force
+    )
     secondary_force = secondary_simulator.calculate_net_force(
         engine_torque,
         state.shift_distance,
         0,
     )
+    secondary_belt_radial = secondary_belt.calculate_radial_force(
+        state.engine_angular_velocity,
+        state.shift_distance,
+        np.pi/4,
+        np.pi/2,
+        secondary_force
+    )
 
     # TODO: Remove
     cvt_ratio = tm.current_cvt_ratio(
         state.shift_distance,
-        30,  # TODO: Use args
+        np.pi/6,  # TODO: Use args
         0.05,  # TODO: Use args
         0.1,  # TODO: Use args
         0.2,  # TODO: Use args
@@ -170,32 +199,46 @@ solution = solve_ivp(
 result = SimulationResult(solution)
 
 result.write_csv("simulation_output.csv")
-result.plot("car_velocity")
-result.plot("shift_distance")
-result.plot("shift_velocity")
-result.plot("engine_angular_velocity")
+# result.plot("car_velocity")
+# result.plot("shift_distance")
+# result.plot("shift_velocity")
+# result.plot("engine_angular_velocity")
 
 # Loop through the solution and recalculate the primary and secondary forces, then plot it
 primary_forces = []
 secondary_forces = []
+prim_radial = []
+sec_radial = []
 
 for state in result.states:
-    primary_forces.append(
-        primary_simulator.calculate_net_force(
-            0,
-            state.engine_angular_velocity,
-        )
+    primary_force = primary_simulator.calculate_net_force(
+        state.shift_distance,
+        state.engine_angular_velocity,
     )
-    secondary_forces.append(
-        secondary_simulator.calculate_net_force(
-            engine_simulator.get_torque(state.engine_angular_velocity),
-            0,
-            0,
-        )
+    secondary_force = secondary_simulator.calculate_net_force(
+        engine_simulator.get_torque(state.engine_angular_velocity),
+        state.shift_distance,
+        0,
     )
+    primary_forces.append(primary_force)
+    secondary_forces.append(secondary_force)
+    prim_radial.append(primary_belt.calculate_radial_force(
+        state.engine_angular_velocity,
+        state.shift_distance,
+        np.pi/4,
+        np.pi/2,
+        primary_force
+    ))
+    sec_radial.append(secondary_belt.calculate_radial_force(
+        state.engine_angular_velocity,
+        state.shift_distance,
+        np.pi/4,
+        np.pi/2,
+        secondary_force
+    ))
 
-plt.plot(result.time, primary_forces, label="Primary Force")
-plt.plot(result.time, secondary_forces, label="Secondary Force")
+plt.plot(result.time, prim_radial, label="Primary Force")
+plt.plot(result.time, sec_radial, label="Secondary Force")
 plt.xlabel("Time (s)")
 plt.ylabel("Force (N)")
 plt.title("Primary and Secondary Forces Over Time")
