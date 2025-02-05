@@ -1,31 +1,46 @@
 import argparse
+from dataclasses import dataclass
 
+@dataclass
+class SimulationArgs:
+    primary_weight: float
+    primary_ramp_geometry: float
+    primary_spring_rate: float
+    primary_spring_pretension: float
+    secondary_helix_geometry: float
+    secondary_torsion_spring_rate: float
+    secondary_compression_spring_rate: float
+    secondary_spring_pretension: float
+    vehicle_weight: float
+    driver_weight: float
+    traction: float
+    angle_of_incline: float
 
-def get_arguments():
+def get_arguments() -> SimulationArgs:
     parser = argparse.ArgumentParser(description="Simulate a Baja SAE car")
     parser.add_argument(
         "--primary_weight",
         type=float,
-        default=0.0,
-        help="Weight of the primary pulley in kilograms (default: 0.0 kg)",
+        default=0.8,
+        help="Weight of the primary pulley in kilograms (default: 0.8 kg)",
     )
     parser.add_argument(
         "--primary_ramp_geometry",
         type=float,
         default=0.0,
-        help="Ramp geometry of the primary pulley (default: 0.0)",
+        help="Ramp geometry of the primary pulley (default: ???)",
     )
     parser.add_argument(
         "--primary_spring_rate",
         type=float,
-        default=0.0,
-        help="Spring rate of the primary pulley in N/m (default: 0.0 N/m)",
+        default=500,
+        help="Spring rate of the primary pulley in N/m (default: 500.0 N/m)",
     )
     parser.add_argument(
         "--primary_spring_pretension",
         type=float,
-        default=0.0,
-        help="Spring pretension of the primary pulley in N (default: 0.0 N)",
+        default=0.2,
+        help="Spring pretension of the primary pulley in m (default: 0.2 m)",
     )
     parser.add_argument(
         "--secondary_helix_geometry",
@@ -34,40 +49,47 @@ def get_arguments():
         help="Helix geometry of the secondary pulley (default: 0.0)",
     )
     parser.add_argument(
-        "--secondary_spring_rate",
+        "--secondary_torsion_spring_rate",
         type=float,
-        default=0.0,
-        help="Spring rate of the secondary pulley in N/m (default: 0.0 N/m)",
+        default=5.0,
+        help="Spring rate of the secondary pulley in N/m (default: 5.0 Nm/rad)",
+    )
+    parser.add_argument(
+        "--secondary_compression_spring_rate",
+        type=float,
+        default=100.0,
+        help="Spring rate of the secondary pulley in N/m (default: 100.0 N/m)",
     )
     parser.add_argument(
         "--secondary_spring_pretension",
         type=float,
-        default=0.0,
-        help="Spring pretension of the secondary pulley in N (default: 0.0 N)",
+        default=15,
+        help="Spring pretension of the secondary pulley in degrees (default: 15 degrees)",
     )
     parser.add_argument(
         "--vehicle_weight",
         type=float,
-        default=0.0,
-        help="Weight of the vehicle in kilograms (default: 0.0 kg)",
+        default=225.0,
+        help="Weight of the vehicle in kilograms (default: 225.0 kg)",
     )
     parser.add_argument(
-        "driver_weight",
+        "--driver_weight",
         type=float,
-        default=0.0,
-        help="Weight of the driver in kilograms (default: 0.0 kg)",
+        default=75.0,
+        help="Weight of the driver in kilograms (default: 75.0 kg)",
     )
     parser.add_argument(
-        "traction",
+        "--traction",
         type=float,
-        default=0.0,
-        help="Traction force in N (default: 0.0 N)",
+        default=100.0,
+        help="Traction force in percentage (default: 100.0 %)",
     )
     parser.add_argument(
-        "angle_of_incline",
+        "--angle_of_incline",
         type=float,
         default=0.0,
         help="Angle of incline in degrees (default: 0.0 degrees)",
     )
 
-    return parser.parse_args()
+    args = parser.parse_args()
+    return SimulationArgs(**vars(args))

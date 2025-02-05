@@ -38,23 +38,23 @@ engine_simulator = EngineSimulator(torque_curve=torque_curve, inertia=ENGINE_INE
 load_simulator = LoadSimulator(
     frontal_area=FRONTAL_AREA,
     drag_coefficient=DRAG_COEFFICIENT,
-    car_mass=CAR_MASS,
+    car_mass=CAR_MASS + args.driver_weight,
     wheel_radius=WHEEL_RADIUS,
     gearbox_ratio=GEARBOX_RATIO,
     incline_angle=deg_to_rad(args.angle_of_incline),
 )
-car_simulator = CarSimulator(car_mass=CAR_MASS)
+car_simulator = CarSimulator(car_mass=CAR_MASS + args.driver_weight)
 primary_simulator = PrimaryPulley(
-    spring_coeff_comp=500,  # TODO: Use args
-    initial_compression=0.2,  # TODO: Use args
-    flyweight_mass=0.8,  # TODO: Use args
+    spring_coeff_comp=args.primary_spring_rate,
+    initial_compression=args.primary_spring_pretension,
+    flyweight_mass=args.primary_weight,
     initial_flyweight_radius=INITIAL_FLYWEIGHT_RADIUS,
 )
 secondary_simulator = SecondaryPulley(
-    spring_coeff_tors=5,  # TODO: Use args
-    spring_coeff_comp=100,  # TODO: Use args
-    initial_rotation=np.pi / 12,  # TODO: Use args
-    initial_compression=0.1,  # TODO: Use args
+    spring_coeff_tors=args.secondary_torsion_spring_rate,
+    spring_coeff_comp=args.secondary_compression_spring_rate,
+    initial_rotation=deg_to_rad(args.secondary_spring_pretension),
+    initial_compression=0.1,  # TODO: Use constants
     helix_radius=HELIX_RADIUS,
 )
 primary_belt = BeltSimulator(
@@ -113,7 +113,7 @@ def angular_velocity_and_position_derivative(t, y):
     cvt_moving_mass = 100000  # TODO: Use constants
     shift_acceleration = (
         primary_belt_radial - secondary_belt_radial
-    ) / cvt_moving_mass  # TODO: See if this is equal to shift accel
+    ) / cvt_moving_mass  # TODO: See if this belt acceleration is actually equal to shift accel
 
     cvt_ratio = tm.current_cvt_ratio(
         state.shift_distance,
