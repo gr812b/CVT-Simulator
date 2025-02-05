@@ -51,26 +51,34 @@ public class PositionPlayback : PlaybackView
         previousTime = dataPoint.Time;
     }
 
-// private void RenderTrackLine()
-//     {
+    private void RenderTrackLine()
+        {
 
-//         Vector3 worldStart = carTransform.rectTransform.TransformPoint(startPosition);
-//         Vector3 worldEnd = carTransform.rectTransform.TransformPoint(endPosition);
-//         trackRenderer.positionCount = 2;
-//         trackRenderer.SetPosition(0, worldStart);
-//         trackRenderer.SetPosition(1, worldEnd);
-//         trackRenderer.startWidth = 10f;
-//         trackRenderer.endWidth = 10f;
-//         trackRenderer.startColor = Color.green;
-//         trackRenderer.endColor = Color.green;
-//     }
+            Vector3 worldStart = new Vector3(-7, -3, 0);
+            Vector3 worldEnd = new Vector3(2, -3, 0);
+            trackRenderer.positionCount = 2;
+            trackRenderer.SetPosition(0, worldStart);
+            trackRenderer.SetPosition(1, worldEnd);
+            trackRenderer.startWidth = 10f;
+            trackRenderer.endWidth = 10f;
+            trackRenderer.startColor = Color.green;
+            trackRenderer.endColor = Color.green;
+        }
 
     private void calcEndPosition()
     {
-        float arcLength = endDistance/Mathf.Cos(angle);
-        float xPosition = startPosition.x + arcLength;
-        float yOffSet = arcLength * Mathf.Sin(angle);
-        endPosition = new Vector3(xPosition, startPosition.y + yOffSet, 0);
+        // Convert angle from degrees to radians
+        float angleRad = angle * Mathf.Deg2Rad;
+
+        // Calculate the radius of the circle based on the end distance
+        float radius = endDistance / angleRad;  // Radius = arc length / angle in radians
+
+        // Calculate the x and y position on the circle at the given angle
+        float xOffset = radius * Mathf.Cos(angleRad);
+        float yOffset = radius * Mathf.Sin(angleRad);
+
+        // The end position is relative to the start position (center of the circle)
+        endPosition = new Vector3(startPosition.x + xOffset, startPosition.y + yOffset, 0);
         
     }
 
