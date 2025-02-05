@@ -19,7 +19,7 @@ public class Playback : MonoBehaviour
 
     [SerializeField] private Button playPauseButton;
     [SerializeField] private Button restartButton;
-   // [SerializeField] private Button nextSceneButton;
+    [SerializeField] private Button nextSceneButton;
     [SerializeField] private TMP_Text statusText;
     [SerializeField] private PlaybackView[] playbackViews;
     [SerializeField] private RawImage playImage;
@@ -38,7 +38,7 @@ public class Playback : MonoBehaviour
         statusText.text = "Data Loaded. Ready to Play.";
         playPauseButton.onClick.AddListener(TogglePlayPause);
         restartButton.onClick.AddListener(RestartPlayback);
-        //nextSceneButton.onClick.AddListener(backButton);
+        nextSceneButton.onClick.AddListener(backButton);
 
         dataPoints = csvReader.LoadCSVData();
     }
