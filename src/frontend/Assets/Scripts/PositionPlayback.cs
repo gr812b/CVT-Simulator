@@ -10,7 +10,6 @@ public class PositionPlayback : PlaybackView
 {
     [SerializeField] private RawImage carTransform;
     [SerializeField] private RectTransform canvasRect;
-    // two circles
     [SerializeField] private RectTransform circle1;
     [SerializeField] private RectTransform circle2;
     [SerializeField] private LineRenderer lineRenderer;
@@ -20,6 +19,7 @@ public class PositionPlayback : PlaybackView
     private float totalDistance;
     InputFields inputFields;
     private float angle;
+    // Max Position will be changed
     private float maxPosition = 175;
     private float canvasWidth;
 
@@ -44,7 +44,6 @@ public class PositionPlayback : PlaybackView
             return;
         }
 
-         // Calculate elapsed time since the last update
         float elapsedTime = dataPoint.Time - previousTime;
 
         MoveCarAlongTrack(dataPoint.Position, angle);
@@ -56,15 +55,11 @@ public class PositionPlayback : PlaybackView
 
         float halfCanvasWidth = canvasRect.rect.width / 2;
         float halfCanvasHeight = canvasRect.rect.height / 2;
-        // Set start position at the left edge of the canvas
-        // Move the halfCanvasWidth to the left to make the car appear at the edge of the canvas
 
         startPosition = new Vector3(-halfCanvasWidth+25, -halfCanvasHeight, 0);
-        // Set default end position at the right edge of the canvas
-        // End the position a little early
+
         endPosition = new Vector3(halfCanvasWidth-25, -halfCanvasHeight, 0);
         
-        // Set total distance to canvas width (corner-to-corner distance is unnecessary now)
         totalDistance = canvasRect.rect.width-25;        
 
         if (angle != 0) {
@@ -75,14 +70,15 @@ public class PositionPlayback : PlaybackView
         }
         circle1.anchoredPosition = new Vector2(startPosition.x, startPosition.y);
         circle2.anchoredPosition = new Vector2(endPosition.x, endPosition.y);
-        Vector3 worldPos1 = circle1.position;  // Get world position
-        Vector3 worldPos2 = circle2.position;  // Get world position
+        Vector3 worldPos1 = circle1.position;  
+        Vector3 worldPos2 = circle2.position;  
         lineRenderer.useWorldSpace = true;
         lineRenderer.positionCount = 2;
         lineRenderer.SetPosition(0, worldPos1);
         lineRenderer.SetPosition(1, worldPos2);
-        // lineRenderer.SetPosition(0, circle1.anchoredPosition);
-        // lineRenderer.SetPosition(1, circle2.anchoredPosition);
+        circle1.gameObject.SetActive(false);
+        circle2.gameObject.SetActive(false);
+
      }
 
     private void MoveCarAlongTrack(float position, float angle)
@@ -107,7 +103,6 @@ public class PositionPlayback : PlaybackView
 
     private void UpdateAngle(float angle)
     {
-        // convert angle back to degrees
         carTransform.GetComponent<RectTransform>().rotation = Quaternion.Euler(0, 0, angle);
     }
 }
