@@ -7,19 +7,21 @@ public class DataPoint
 {
     public float Time { get; }
     public float Position { get; }
-    public float Angle { get; }
-    public float Distance { get; }
+    public float PrimaryAngle { get; }
+    public float SecondaryAngle { get; }
+    public float ShiftDistance { get; }
     public float Velocity { get; }
-    public float Angular_Velocity { get; }
+    public float AngularVelocity { get; }
 
-    public DataPoint(float time, float position, float angle, float distance, float velocity, float angular_velocity)
+    public DataPoint(float time, float position, float primaryAngle, float secondaryAngle, float shiftDistance, float velocity, float angularVelocity)
     {
         Time = time;
         Position = position;
-        Angle = angle;
-        Distance = distance;
+        PrimaryAngle = primaryAngle;
+        SecondaryAngle = secondaryAngle;
+        ShiftDistance = shiftDistance;
         Velocity = velocity;
-        Angular_Velocity = angular_velocity;
+        AngularVelocity = angularVelocity;
     }
 }
 
@@ -66,11 +68,21 @@ public class CSVReader
                         float.TryParse(values[velocityIndex], out float velocity) && 
                         float.TryParse(values[angularVelocityIndex], out float angular_velocity))
                     {
-                        dataPoints.Add(new DataPoint(time, position, 0, 0, velocity, angular_velocity));
+                        dataPoints.Add(new DataPoint(time, position, 0, 0, 0, velocity, angular_velocity));
                     }
                 }
             }
         }
         return dataPoints;
+    }
+
+    private float RadiansToDegrees(float radians)
+    {
+        return radians * 180.0f / Mathf.PI;
+    }
+
+    private float CarPositionToSecondaryAngle(float position)
+    {
+        return position * (22.0f * 0.0254f) / (2.0f * 7.556f);
     }
 }
