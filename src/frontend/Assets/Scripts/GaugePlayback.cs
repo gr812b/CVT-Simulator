@@ -23,7 +23,7 @@ public class GaugePlayback : PlaybackView
     {
         float velocity = Mathf.Clamp(dataPoint.Velocity, 0, maxVelocity);  
         //given angular velocity in rad/s, convert to rpm
-        float rpm = Mathf.Clamp(dataPoint.Angular_Velocity * 60 / (2 * Mathf.PI), 0, maxRPM);
+        float rpm = Mathf.Clamp(dataPoint.AngularVelocity * 60 / (2 * Mathf.PI), 0, maxRPM);
         SetVelocity(velocity);
         SetRPM(rpm);
     }
