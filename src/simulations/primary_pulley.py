@@ -19,7 +19,9 @@ class PrimaryPulley:
         # Initializing ramp
         self.ramp = PiecewiseRamp()
         self.ramp.add_segment(LinearSegment(x_start=0, x_end=0.01, slope=-0.75))
-        self.ramp.add_segment(CircularSegment(x_start=0.01, x_end=0.05, radius=0.25, theta_fraction=0.95))
+        self.ramp.add_segment(
+            CircularSegment(x_start=0.01, x_end=0.05, radius=0.25, theta_fraction=0.95)
+        )
 
     def calculate_flyweight_force(
         self, shift_distance: float, angular_velocity: float
@@ -29,9 +31,9 @@ class PrimaryPulley:
             angular_velocity,
             self.initial_flyweight_radius,  # TODO: Add some distance here
         )
-        if (shift_distance < 0):
+        if shift_distance < 0:
             shift_distance = 0
-        if (shift_distance > 0.05):
+        if shift_distance > 0.05:
             shift_distance = 0.05
         angle = np.arctan(np.abs(self.ramp.slope(shift_distance)))
         return centrifugal_force * np.sin(angle)  # TODO: Calculate ramp angle

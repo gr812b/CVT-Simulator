@@ -2,8 +2,10 @@ import numpy as np
 from typing import List
 import matplotlib.pyplot as plt
 
+
 class RampSegment:
     """Base class for ramp segments."""
+
     def __init__(self, x_start: float, x_end: float):
         self.x_start = x_start
         self.x_end = x_end
@@ -16,22 +18,28 @@ class RampSegment:
     def slope(self, x: float) -> float:
         """Returns derivative (slope) at given x."""
         raise NotImplementedError
-    
+
+
 class LinearSegment(RampSegment):
     """Linear segment: y = mx"""
+
     def __init__(self, x_start: float, x_end: float, slope: float):
         super().__init__(x_start, x_end)
         self.m = slope
 
     def height(self, x: float) -> float:
         return self.m * (x - self.x_start)
-    
+
     def slope(self, x: float) -> float:
         return self.m
-    
+
+
 class CircularSegment(RampSegment):
     """Circular segment where user defines only radius and rotation."""
-    def __init__(self, x_start: float, x_end: float, radius: float, theta_fraction: float):
+
+    def __init__(
+        self, x_start: float, x_end: float, radius: float, theta_fraction: float
+    ):
         """
         :param x_start: Start x position
         :param x_end: End x position (automatically inferred)
@@ -60,8 +68,10 @@ class CircularSegment(RampSegment):
         # Chain rule: d(height)/dx = R*cos(theta) * dtheta/dx.
         return self.radius * np.cos(theta) * dtheta_dx
 
+
 class PiecewiseRamp:
     """Handles multiple ramp segments and ensures continuity automatically."""
+
     def __init__(self):
         self.segments: List[RampSegment] = []
 
@@ -73,7 +83,7 @@ class PiecewiseRamp:
             segment.y_start = prev_y_end  # Auto-connect
         else:
             segment.y_start = 0  # Default start height
-        
+
         self.segments.append(segment)
 
     def height(self, x: float) -> float:
@@ -90,6 +100,7 @@ class PiecewiseRamp:
                 return segment.slope(x)
         raise ValueError(f"x={x} is out of ramp range!")
 
+
 if __name__ == "__main__":
     # Example usage
     x_midpoint = 0.02
@@ -98,8 +109,10 @@ if __name__ == "__main__":
     # Sample primary ramp
     ramp = PiecewiseRamp()
     ramp.add_segment(LinearSegment(x_start=0, x_end=0.01, slope=-1))
-    ramp.add_segment(CircularSegment(x_start=0.01, x_end=0.05, radius=0.25, theta_fraction=0.95))
-    
+    ramp.add_segment(
+        CircularSegment(x_start=0.01, x_end=0.05, radius=0.25, theta_fraction=0.95)
+    )
+
     # Evaluate ramp
     x_values = np.linspace(0, 0.05, 100)
     y_values = [ramp.height(x) for x in x_values]
@@ -122,4 +135,3 @@ if __name__ == "__main__":
     plt.title("Piecewise Ramp Slope Profile")
     plt.grid()
     plt.show()
-    
