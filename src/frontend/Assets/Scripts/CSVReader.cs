@@ -2,26 +2,31 @@ using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
 using System;
-using UnityEngine.UI;
-using TMPro;
-using UnityEngine.SceneManagement;
+
+public class DataPoint
+{
+    public float Time { get; }
+    public float Position { get; }
+    public float Angle { get; }
+    public float Distance { get; }
+    public float Velocity { get; }
+    public float Angular_Velocity { get; }
+
+    public DataPoint(float time, float position, float angle, float distance, float velocity, float angular_velocity)
+    {
+        Time = time;
+        Position = position;
+        Angle = angle;
+        Distance = distance;
+        Velocity = velocity;
+        Angular_Velocity = angular_velocity;
+    }
+}
 
 public class CSVReader
 {
 
     private readonly string csvPath = Path.GetFullPath(Path.Combine(Application.dataPath, "../simulation_output.csv"));
-
-    public class DataPoint
-    {
-        public float Time { get; }
-        public float Position { get; }
-
-        public DataPoint(float time, float position)
-        {
-            Time = time;
-            Position = position;
-        }
-    }
 
     public List<DataPoint> LoadCSVData()
     {
@@ -38,10 +43,12 @@ public class CSVReader
             // Get the indices for the time and car_position columns
             string[] headers = headerLine.Split(',');
             int timeIndex = Array.IndexOf(headers, "time");
+            int velocityIndex = Array.IndexOf(headers, "car_velocity");
             int positionIndex = Array.IndexOf(headers, "car_position");
+            int angularVelocityIndex = Array.IndexOf(headers, "engine_angular_velocity");
 
-            if (timeIndex == -1 || positionIndex == -1) {
-                throw new InvalidDataException("CSV file does not contain time and car_position columns");
+            if (timeIndex == -1 || positionIndex == -1 || velocityIndex == -1 || angularVelocityIndex == -1) {
+                throw new InvalidDataException("CSV file does not contain required columns");
             }
 
             // Read each line, parsing time and position
@@ -55,9 +62,11 @@ public class CSVReader
                 if (values.Length > Math.Max(timeIndex, positionIndex))
                 {
                     if (float.TryParse(values[timeIndex], out float time) &&
-                        float.TryParse(values[positionIndex], out float position))
+                        float.TryParse(values[positionIndex], out float position) && 
+                        float.TryParse(values[velocityIndex], out float velocity) && 
+                        float.TryParse(values[angularVelocityIndex], out float angular_velocity))
                     {
-                        dataPoints.Add(new DataPoint(time, position));
+                        dataPoints.Add(new DataPoint(time, position, 0, 0, velocity, angular_velocity));
                     }
                 }
             }

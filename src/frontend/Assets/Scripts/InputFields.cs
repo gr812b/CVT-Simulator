@@ -73,7 +73,7 @@ public class InputFields : MonoBehaviour
     }
 
     private void validInput(string value, ref double field, ref TMP_InputField inputField, ref TMP_Text errorText) {
-        if (double.TryParse(value, out double val)) {
+        if (double.TryParse(value, out double val) && val >= 0) {
             field = val;
             inputField.image.color = Color.white;
             errorText.text = "";
@@ -116,7 +116,7 @@ public class InputFields : MonoBehaviour
         if (!canSimulate) {
             return;
         }
-        pythonRunner.RunPython(parameters);
+        //pythonRunner.RunPython(parameters);
 
         // Go the the results scene
         DontDestroyOnLoad(this.gameObject);
