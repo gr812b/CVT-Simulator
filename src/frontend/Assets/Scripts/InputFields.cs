@@ -116,7 +116,7 @@ public class InputFields : MonoBehaviour
         if (!canSimulate) {
             return;
         }
-        pythonRunner.RunPython(parameters);
+        //pythonRunner.RunPython(parameters);
 
         // Go the the results scene
         DontDestroyOnLoad(this.gameObject);
