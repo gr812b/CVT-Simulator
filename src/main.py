@@ -210,14 +210,28 @@ for state in result.states:
     )
     primary_forces.append(primary_force)
     secondary_forces.append(secondary_force)
+    primary_wrap_angle = tm.primary_wrap_angle(
+        state.shift_distance,
+        CENTER_TO_CENTER,
+    )
+    secondary_wrap_angle = tm.secondary_wrap_angle(
+        state.shift_distance,
+        CENTER_TO_CENTER,
+    )
     prim_radial.append(
         primary_belt.calculate_radial_force(
-            state.engine_angular_velocity, state.shift_distance, np.pi, primary_force
+            state.engine_angular_velocity,
+            state.shift_distance,
+            primary_wrap_angle,
+            primary_force,
         )
     )
     sec_radial.append(
         secondary_belt.calculate_radial_force(
-            state.engine_angular_velocity, state.shift_distance, np.pi, secondary_force
+            state.engine_angular_velocity,
+            state.shift_distance,
+            secondary_wrap_angle,
+            secondary_force,
         )
     )
 
