@@ -18,7 +18,7 @@ class PrimaryPulley:
         self.initial_flyweight_radius = initial_flyweight_radius
         # Initializing ramp
         self.ramp = PiecewiseRamp()
-        self.ramp.add_segment(LinearSegment(x_start=0, x_end=0.01, slope=-1))
+        self.ramp.add_segment(LinearSegment(x_start=0, x_end=0.01, slope=-0.75))
         self.ramp.add_segment(CircularSegment(x_start=0.01, x_end=0.05, radius=0.25, theta_fraction=0.95))
 
     def calculate_flyweight_force(
@@ -29,7 +29,12 @@ class PrimaryPulley:
             angular_velocity,
             self.initial_flyweight_radius,  # TODO: Add some distance here
         )
-        return centrifugal_force * np.tan(np.pi / 6)  # TODO: Calculate ramp angle
+        if (shift_distance < 0):
+            shift_distance = 0
+        if (shift_distance > 0.05):
+            shift_distance = 0.05
+        angle = np.arctan(np.abs(self.ramp.slope(shift_distance)))
+        return centrifugal_force * np.sin(angle)  # TODO: Calculate ramp angle
 
     def calculate_spring_comp_force(self, compression: float) -> float:
         return tm.hookes_law_comp(

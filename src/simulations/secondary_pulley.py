@@ -35,7 +35,7 @@ class SecondaryPulley:
             INNER_PRIMARY_PULLEY_RADIUS,
             INNER_SECONDARY_PULLEY_RADIUS,
         )
-        helix_angle = np.pi / 6  # TODO: Calculate helix angle
+        helix_angle = np.pi / 4  # TODO: Calculate helix angle
 
         engine_force = tm.gearing(torque, cvt_ratio) / self.helix_radius
 
