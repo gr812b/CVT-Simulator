@@ -9,25 +9,25 @@ using UnityEngine.SceneManagement;
 public class PositionPlayback : PlaybackView
 {
     [SerializeField] private RawImage carTransform;
-    [SerializeField] private LineRenderer trackRenderer;
+    [SerializeField] private RectTransform canvasRect;
+    // two circles
+    // [SerializeField] private RectTransform circle1;
+    // [SerializeField] private RectTransform circle2;
     private float previousTime;
-    private Vector3 startPosition = new Vector3(-360, -132, 0);  // Adjust this to your track's start point
-    private Vector3 endPosition = new Vector3(40, -132, 0);  // Adjust this to your track's end point
-    private float endDistance = 141.57743448791217f;  // Adjust this to your track's length
-    private float pathLength = 0f;
+    private Vector3 startPosition;
+    private Vector3 endPosition;
+    private float totalDistance;
     InputFields inputFields;
     private float angle;
+    private float maxPosition = 175;
+    private float canvasWidth;
 
     private void Start()
     {
         inputFields = FindAnyObjectByType<InputFields>();
         angle = (float)inputFields.parameters.AngleOfIncline;
-        if (angle != 0)
-        {
-            calcEndPosition();
-        }
-        pathLength = Vector3.Distance(startPosition, endPosition);
-        //RenderTrackLine();
+        canvasWidth = canvasRect.rect.width  -50;
+        calcStartEndPositions();
     }
 
     public override void Display(DataPoint dataPoint)
@@ -45,50 +45,55 @@ public class PositionPlayback : PlaybackView
 
          // Calculate elapsed time since the last update
         float elapsedTime = dataPoint.Time - previousTime;
-        float distanceTraveledThisFrame = dataPoint.Velocity * elapsedTime;
 
-        MoveCarAlongTrack(dataPoint.Position, dataPoint.Velocity);
+        MoveCarAlongTrack(dataPoint.Position, angle);
         previousTime = dataPoint.Time;
     }
 
-    private void RenderTrackLine()
-        {
-
-            Vector3 worldStart = new Vector3(-7, -3, 0);
-            Vector3 worldEnd = new Vector3(2, -3, 0);
-            trackRenderer.positionCount = 2;
-            trackRenderer.SetPosition(0, worldStart);
-            trackRenderer.SetPosition(1, worldEnd);
-            trackRenderer.startWidth = 10f;
-            trackRenderer.endWidth = 10f;
-            trackRenderer.startColor = Color.green;
-            trackRenderer.endColor = Color.green;
-        }
-
-    private void calcEndPosition()
+    private void calcStartEndPositions()
     {
-        // Convert angle from degrees to radians
-        float angleRad = angle * Mathf.Deg2Rad;
 
-        // Calculate the radius of the circle based on the end distance
-        float radius = endDistance / angleRad;  // Radius = arc length / angle in radians
-
-        // Calculate the x and y position on the circle at the given angle
-        float xOffset = radius * Mathf.Cos(angleRad);
-        float yOffset = radius * Mathf.Sin(angleRad);
-
-        // The end position is relative to the start position (center of the circle)
-        endPosition = new Vector3(startPosition.x + xOffset, startPosition.y + yOffset, 0);
+        float halfCanvasWidth = canvasRect.rect.width / 2;
+        float halfCanvasHeight = canvasRect.rect.height / 2;
+        // Set start position at the left edge of the canvas
+        startPosition = new Vector3(-halfCanvasWidth,-halfCanvasHeight, 0);
+        // Set default end position at the right edge of the canvas
+        endPosition = new Vector3(halfCanvasWidth-25, -halfCanvasHeight, 0);
         
-    }
+        // Set total distance to canvas width (corner-to-corner distance is unnecessary now)
+        totalDistance = canvasRect.rect.width-25;
 
-    private void MoveCarAlongTrack(float position, float velocity)
+        //circle1.anchoredPosition = new Vector2(startPosition.x, startPosition.y);
+        
+
+        if (angle != 0) {
+            float radius = totalDistance;
+            float xOffSet = radius * Mathf.Cos(angle*Mathf.Deg2Rad);
+            float yOffSet = radius * Mathf.Sin(angle*Mathf.Deg2Rad);
+            endPosition = new Vector3(startPosition.x + xOffSet, startPosition.y + yOffSet, 0);
+        }
+        //circle2.anchoredPosition = new Vector2(endPosition.x, endPosition.y);
+
+     }
+
+    private void MoveCarAlongTrack(float position, float angle)
     {
-        float normalizedDistance = Mathf.Clamp01(position / endDistance);
-
-        float xPosition = Mathf.Lerp(startPosition.x, endPosition.x, normalizedDistance);
-        float yPosition = Mathf.Lerp(startPosition.y, endPosition.y, normalizedDistance);
-        carTransform.GetComponent<RectTransform>().anchoredPosition = new Vector2(xPosition, yPosition);
+        
+        if (angle != 0)
+        {
+            float normalizedDistance = position / maxPosition;
+            float radius = totalDistance;
+            float xOffSet = radius * Mathf.Cos(angle*Mathf.Deg2Rad);
+            float yOffSet = radius * Mathf.Sin(angle*Mathf.Deg2Rad);
+            float x = startPosition.x + (normalizedDistance * xOffSet);
+            float y = startPosition.y + (normalizedDistance * yOffSet);
+            carTransform.GetComponent<RectTransform>().anchoredPosition = new Vector2(x, y);
+        }
+        else
+        {
+            float normalizedXPos= ((position / maxPosition) * canvasWidth) - (canvasWidth / 2); 
+            carTransform.GetComponent<RectTransform>().anchoredPosition = new Vector2(normalizedXPos, startPosition.y);
+        }
     }
 
     private void UpdateAngle(float angle)
