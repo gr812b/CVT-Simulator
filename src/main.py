@@ -156,6 +156,7 @@ def angular_velocity_and_position_derivative(t, y):
 
     return [
         engine_angular_acceleration,
+        state.engine_angular_velocity,
         car_acceleration,
         state.car_velocity,
         shift_acceleration,
@@ -167,6 +168,7 @@ time_span = (0, 15)
 time_eval = np.linspace(*time_span, 10000)
 initial_state = SystemState(
     engine_angular_velocity=rpm_to_rad_s(2400),
+    engine_angular_position=0.0,
     car_velocity=0.0,
     car_position=0.0,
     shift_velocity=0.0,
