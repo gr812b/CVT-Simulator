@@ -27,7 +27,7 @@ class LinearSegment(RampSegment):
         return self.m * (x - self.x_start)
     
     def slope(self, x: float) -> float:
-        return self.m  # Constant slope for a line
+        return self.m
     
 class CircularSegment(RampSegment):
     """Circular segment where user defines only radius and rotation."""
@@ -45,13 +45,20 @@ class CircularSegment(RampSegment):
 
     def height(self, x: float) -> float:
         """Finds y-coordinate on the circular arc corresponding to x."""
-        theta = self.theta_start + ((x - self.x_start) / (self.x_end - self.x_start)) * (self.theta_end - self.theta_start)
-        return self.y_start + self.radius * (np.sin(theta) - np.sin(self.theta_start))
+        # Map x linearly into the circle’s angle.
+        t = (x - self.x_start) / (self.x_end - self.x_start)
+        theta = self.theta_start + t * (self.theta_end - self.theta_start)
+        # Use the circle equation. Since at x_start we have theta = π and sin(π)=0, height equals y_start.
+        return self.y_start + self.radius * np.sin(theta)
 
     def slope(self, x: float) -> float:
         """Derivative of a circular segment = -tan(theta)"""
-        theta = self.theta_start + ((x - self.x_start) / (self.x_end - self.x_start)) * (self.theta_end - self.theta_start)
-        return -np.tan(theta)
+        # As above, map x to theta.
+        t = (x - self.x_start) / (self.x_end - self.x_start)
+        theta = self.theta_start + t * (self.theta_end - self.theta_start)
+        dtheta_dx = (self.theta_end - self.theta_start) / (self.x_end - self.x_start)
+        # Chain rule: d(height)/dx = R*cos(theta) * dtheta/dx.
+        return self.radius * np.cos(theta) * dtheta_dx
 
 class PiecewiseRamp:
     """Handles multiple ramp segments and ensures continuity automatically."""
@@ -88,6 +95,7 @@ if __name__ == "__main__":
     x_midpoint = 0.02
     ramp_length = 0.06
 
+    # Sample primary ramp
     ramp = PiecewiseRamp()
     ramp.add_segment(LinearSegment(x_start=0, x_end=0.01, slope=-1))
     ramp.add_segment(CircularSegment(x_start=0.01, x_end=0.05, radius=0.25, theta_fraction=0.95))
@@ -101,6 +109,17 @@ if __name__ == "__main__":
     plt.xlabel("X Position")
     plt.ylabel("Height")
     plt.title("Piecewise Ramp Profile")
+    plt.grid()
+    plt.show()
+
+    # Evaluate slope
+    slope_values = [ramp.slope(x) for x in x_values]
+
+    # Plot results
+    plt.plot(x_values, slope_values)
+    plt.xlabel("X Position")
+    plt.ylabel("Slope")
+    plt.title("Piecewise Ramp Slope Profile")
     plt.grid()
     plt.show()
     

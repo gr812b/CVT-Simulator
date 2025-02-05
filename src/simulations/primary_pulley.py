@@ -1,5 +1,6 @@
 import numpy as np
 from utils.theoretical_models import TheoreticalModels as tm
+from utils.ramp_representation import LinearSegment, CircularSegment, PiecewiseRamp
 
 
 class PrimaryPulley:
@@ -15,6 +16,10 @@ class PrimaryPulley:
         self.initial_compression = initial_compression
         self.flyweight_mass = flyweight_mass
         self.initial_flyweight_radius = initial_flyweight_radius
+        # Initializing ramp
+        self.ramp = PiecewiseRamp()
+        self.ramp.add_segment(LinearSegment(x_start=0, x_end=0.01, slope=-1))
+        self.ramp.add_segment(CircularSegment(x_start=0.01, x_end=0.05, radius=0.25, theta_fraction=0.95))
 
     def calculate_flyweight_force(
         self, shift_distance: float, angular_velocity: float
