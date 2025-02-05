@@ -3,8 +3,8 @@ from utils.theoretical_models import TheoreticalModels as tm
 from constants.car_specs import (
     SHEAVE_ANGLE,
     BELT_WIDTH,
-    INITIAL_PRIMARY_PULLEY_RADIUS,
-    INITIAL_SECONDARY_PULLEY_RADIUS,
+    INNER_PRIMARY_PULLEY_RADIUS,
+    INNER_SECONDARY_PULLEY_RADIUS,
 )
 
 
@@ -24,6 +24,7 @@ class SecondaryPulley:
         self.initial_compression = initial_compression
         self.helix_radius = helix_radius
 
+    # TODO: Look into how the torsional sping affects this torque value
     def calculate_helix_force(
         self, torque: float, spring_force: float, shift_distance: float
     ) -> float:
@@ -31,8 +32,8 @@ class SecondaryPulley:
             shift_distance,
             SHEAVE_ANGLE,
             BELT_WIDTH,
-            INITIAL_PRIMARY_PULLEY_RADIUS,
-            INITIAL_SECONDARY_PULLEY_RADIUS,
+            INNER_PRIMARY_PULLEY_RADIUS,
+            INNER_SECONDARY_PULLEY_RADIUS,
         )
         helix_angle = np.pi / 6  # TODO: Calculate helix angle
 
