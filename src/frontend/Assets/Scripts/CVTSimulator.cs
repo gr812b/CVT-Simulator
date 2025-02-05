@@ -10,17 +10,17 @@ public class CVTSimulator : PlaybackView
     [SerializeField] private GameObject secondaryMovable;
     [SerializeField] private GameObject secondaryFixed;
 
-    private float maxPrimaryShift = -0.5f;
-    private float minPrimaryShift = 0.0f;
-    private float maxSecondaryShift = 0.5f;
-    private float minSecondaryShift = 0.0f;
-    private float maxDistance = 1.0f;
+    // The maximum shift distance value from the backend
+    private float maxShiftDistance = 1.0f;
 
+    // The maximum distance that the pulley model can move
+    private float maxPrimaryDistance = 0.3f;
+    private float maxSecondaryDistance = -0.3f;
     
     public override void Display(DataPoint dataPoint)
     {
-        SetAngles(dataPoint.Position);
-        SetShifts(dataPoint.Position);
+        SetAngles(dataPoint.Angle);
+        SetShifts(dataPoint.Distance);
     }
 
     private void SetAngles(float angle)
@@ -33,20 +33,21 @@ public class CVTSimulator : PlaybackView
 
     private void SetAngle(ref GameObject component, float angle)
     {
-        Vector3 currentRotation = component.transform.localEulerAngles;
-        component.transform.localEulerAngles = new Vector3(currentRotation.x, angle, currentRotation.z);
+        component.transform.localRotation = Quaternion.identity;
+        component.transform.Rotate(angle, 0, 0);
     }
 
     private void SetShifts(float distance)
     {
-        SetShiftDistance(ref primaryMovable, maxPrimaryShift, minPrimaryShift, distance);
-        SetShiftDistance(ref secondaryMovable, maxSecondaryShift, minSecondaryShift, maxDistance - distance);
+        SetShiftDistance(ref primaryMovable, maxPrimaryDistance, distance);
+        SetShiftDistance(ref secondaryMovable, maxSecondaryDistance, maxShiftDistance - distance); // Invert distance
     }
 
-    private void SetShiftDistance(ref GameObject movableComponent, float maxShift, float minShift, float distance)
+    private void SetShiftDistance(ref GameObject movableComponent, float maxComponentDistance, float distance)
     {
-        float shift = math.lerp(minShift, maxShift, distance/maxDistance);
+        float shiftDistance = maxComponentDistance * distance / maxShiftDistance;
         Vector3 currentPosition = movableComponent.transform.localPosition;
-        movableComponent.transform.localPosition = new Vector3(currentPosition.x, shift, currentPosition.z);
+        movableComponent.transform.localPosition = new Vector3(shiftDistance, currentPosition.y, currentPosition.z);
     }
+    
 }
