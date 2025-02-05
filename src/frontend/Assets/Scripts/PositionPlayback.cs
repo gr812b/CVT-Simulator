@@ -11,8 +11,9 @@ public class PositionPlayback : PlaybackView
     [SerializeField] private RawImage carTransform;
     [SerializeField] private RectTransform canvasRect;
     // two circles
-    // [SerializeField] private RectTransform circle1;
-    // [SerializeField] private RectTransform circle2;
+    [SerializeField] private RectTransform circle1;
+    [SerializeField] private RectTransform circle2;
+    [SerializeField] private LineRenderer lineRenderer;
     private float previousTime;
     private Vector3 startPosition;
     private Vector3 endPosition;
@@ -56,15 +57,15 @@ public class PositionPlayback : PlaybackView
         float halfCanvasWidth = canvasRect.rect.width / 2;
         float halfCanvasHeight = canvasRect.rect.height / 2;
         // Set start position at the left edge of the canvas
-        startPosition = new Vector3(-halfCanvasWidth,-halfCanvasHeight, 0);
+        // Move the halfCanvasWidth to the left to make the car appear at the edge of the canvas
+
+        startPosition = new Vector3(-halfCanvasWidth+25, -halfCanvasHeight, 0);
         // Set default end position at the right edge of the canvas
+        // End the position a little early
         endPosition = new Vector3(halfCanvasWidth-25, -halfCanvasHeight, 0);
         
         // Set total distance to canvas width (corner-to-corner distance is unnecessary now)
-        totalDistance = canvasRect.rect.width-25;
-
-        //circle1.anchoredPosition = new Vector2(startPosition.x, startPosition.y);
-        
+        totalDistance = canvasRect.rect.width-25;        
 
         if (angle != 0) {
             float radius = totalDistance;
@@ -72,8 +73,16 @@ public class PositionPlayback : PlaybackView
             float yOffSet = radius * Mathf.Sin(angle*Mathf.Deg2Rad);
             endPosition = new Vector3(startPosition.x + xOffSet, startPosition.y + yOffSet, 0);
         }
-        //circle2.anchoredPosition = new Vector2(endPosition.x, endPosition.y);
-
+        circle1.anchoredPosition = new Vector2(startPosition.x, startPosition.y);
+        circle2.anchoredPosition = new Vector2(endPosition.x, endPosition.y);
+        Vector3 worldPos1 = circle1.position;  // Get world position
+        Vector3 worldPos2 = circle2.position;  // Get world position
+        lineRenderer.useWorldSpace = true;
+        lineRenderer.positionCount = 2;
+        lineRenderer.SetPosition(0, worldPos1);
+        lineRenderer.SetPosition(1, worldPos2);
+        // lineRenderer.SetPosition(0, circle1.anchoredPosition);
+        // lineRenderer.SetPosition(1, circle2.anchoredPosition);
      }
 
     private void MoveCarAlongTrack(float position, float angle)
