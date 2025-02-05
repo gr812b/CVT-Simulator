@@ -73,11 +73,11 @@ secondary_belt = BeltSimulator(
 def angular_velocity_and_position_derivative(t, y):
     state = SystemState.from_array(y)
 
-    # Load from external forces
+    # Get sources of torque
     gearbox_load = load_simulator.calculate_gearbox_load(state.car_velocity)
-
     engine_torque = engine_simulator.get_torque(state.engine_angular_velocity)
 
+    # Get pulley forces
     primary_force = primary_simulator.calculate_net_force(
         state.shift_distance,
         state.engine_angular_velocity,
@@ -85,9 +85,10 @@ def angular_velocity_and_position_derivative(t, y):
     secondary_force = secondary_simulator.calculate_net_force(
         engine_torque,
         state.shift_distance,
-        0,
+        0,  # TODO: Add rotation
     )
 
+    # Convert direct clamping to radial forces
     primary_wrap_angle = tm.primary_wrap_angle(
         state.shift_distance,
         CENTER_TO_CENTER,
@@ -96,7 +97,6 @@ def angular_velocity_and_position_derivative(t, y):
         state.shift_distance,
         CENTER_TO_CENTER,
     )
-
     primary_belt_radial = primary_belt.calculate_radial_force(
         state.engine_angular_velocity,
         state.shift_distance,
@@ -110,7 +110,11 @@ def angular_velocity_and_position_derivative(t, y):
         secondary_force,
     )
 
-    # TODO: Remove
+    cvt_moving_mass = 100000  # TODO: Use constants
+    shift_acceleration = (
+        primary_belt_radial - secondary_belt_radial
+    ) / cvt_moving_mass  # TODO: See if this is equal to shift accel
+
     cvt_ratio = tm.current_cvt_ratio(
         state.shift_distance,
         SHEAVE_ANGLE,
@@ -118,11 +122,6 @@ def angular_velocity_and_position_derivative(t, y):
         INNER_PRIMARY_PULLEY_RADIUS,
         INNER_SECONDARY_PULLEY_RADIUS,
     )
-
-    cvt_moving_mass = 100000  # TODO: Use constants
-    shift_acceleration = (primary_belt_radial - secondary_belt_radial) / cvt_moving_mass
-
-    # print(f"primary radial: {primary_belt_radial}, secondary radial: {secondary_belt_radial}")
 
     # Engines angular acceleration due to engine torque
     # TODO: Update to be torque seen through the CVT
@@ -132,23 +131,14 @@ def angular_velocity_and_position_derivative(t, y):
     )
 
     # Net force on the car
-    net_torque = engine_torque * cvt_ratio - gearbox_load
+    net_torque = (engine_torque * cvt_ratio) - gearbox_load
     force_at_wheel = net_torque * GEARBOX_RATIO / WHEEL_RADIUS
 
     # Vehicle acceleration
     car_acceleration = car_simulator.calculate_acceleration(force_at_wheel)
 
-    # print(f"Primary wrap angle: {primary_wrap_angle}, Secondary wrap angle: {secondary_wrap_angle}")
-
-    # print(
-    #     f"Primary force: {primary_force}, Secondary force: {secondary_force}, engine torque: {engine_torque}"
-    # )
     # TODO: Next steps
-    # Difference in clamping forces causes shifting up to the CVTs limit.
-    # Needs to accelerate both secondary and primary moving components + ?belt?
-    # Include updated CVT ratio in force at wheel calcs
 
-    # Also consider the actual difference in forces based on how much clamping force is being transferred through it
     # Also consider the amount of torque that the belt can transfer due to friction, which limits torque at wheels, bogging down of engine, etc.
 
     # Maximum car velocity at the current engine speed (Wheels can't spin faster than the engine + gearbox)
@@ -160,6 +150,9 @@ def angular_velocity_and_position_derivative(t, y):
     # TODO: Remove temporary solution to act as limiter for engine speed
     if abs(state.engine_angular_velocity) > 400:
         engine_angular_acceleration = 0
+
+    # if abs(state.shift_distance) > BELT_WIDTH:
+    #     shift_acceleration = 0
 
     return [
         engine_angular_acceleration,

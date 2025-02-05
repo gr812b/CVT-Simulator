@@ -56,4 +56,8 @@ def engine_angular_velocity_constraint_event(t, y):
 
 
 # Export all constraints
-constraints = [shift_constraint_event, car_velocity_constraint_event]
+constraints = [
+    shift_constraint_event,
+    car_velocity_constraint_event,
+    engine_angular_velocity_constraint_event,
+]
