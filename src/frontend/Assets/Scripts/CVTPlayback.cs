@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using Unity.Mathematics;
 using UnityEngine;
 
-public class CVTSimulator : PlaybackView
+public class CVTPlayback : PlaybackView
 {
     [SerializeField] private GameObject primaryMovable;
     [SerializeField] private GameObject primaryFixed;
