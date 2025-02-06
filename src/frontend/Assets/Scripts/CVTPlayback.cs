@@ -12,7 +12,7 @@ public class CVTPlayback : PlaybackView
     [SerializeField] private GameObject secondaryFixed;
 
     // The maximum shift distance value from the backend
-    private float maxShiftDistance = 1.0f;
+    private float maxShiftDistance = 0.05f;
 
     // The maximum distance that the pulley model can move
     private float maxPrimaryDistance = 0.3f;

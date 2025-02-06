@@ -2,33 +2,55 @@ using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
 using System;
+using System.Linq;
 
 public class DataPoint
 {
     public float Time { get; }
-    public float Position { get; }
+    public float CarPosition { get; }
+    public float CarVelocity { get; }
+    public float EngineRPM { get; }
     public float PrimaryAngle { get; }
     public float SecondaryAngle { get; }
     public float ShiftDistance { get; }
-    public float Velocity { get; }
-    public float AngularVelocity { get; }
 
-    public DataPoint(float time, float position, float primaryAngle, float secondaryAngle, float shiftDistance, float velocity, float angularVelocity)
+    public DataPoint(float time, float engineAngularVelocity, float engineAngularPosition, float carVelocity, float carPosition, float shiftDistance)
     {
         Time = time;
-        Position = position;
-        PrimaryAngle = primaryAngle;
-        SecondaryAngle = secondaryAngle;
+        CarPosition = carPosition;
+        PrimaryAngle = RadiansToDegrees(engineAngularPosition);
+        SecondaryAngle = RadiansToDegrees(CarPositionToSecondaryAngle(carPosition));
         ShiftDistance = shiftDistance;
-        Velocity = velocity;
-        AngularVelocity = angularVelocity;
+        CarVelocity = MetersPerSecondToKmPerHour(carVelocity);
+        EngineRPM = RadPerSecondToRPM(engineAngularVelocity);
+    }
+
+    private float RadiansToDegrees(float radians)
+    {
+        return radians * 180.0f / Mathf.PI;
+    }
+
+    private float CarPositionToSecondaryAngle(float position)
+    {
+        return position * (2.0f * 7.556f) / (22.0f * 0.0254f);
+    }
+
+    private float RadPerSecondToRPM(float radPerSecond)
+    {
+        return radPerSecond * 60 / (2 * Mathf.PI);
+    }
+
+    private float MetersPerSecondToKmPerHour(float metersPerSecond)
+    {
+        return metersPerSecond * 3.6f;
     }
 }
 
 public class CSVReader
 {
-
     private readonly string csvPath = Path.GetFullPath(Path.Combine(Application.dataPath, "../simulation_output.csv"));
+
+    private readonly string[] headers = new string[] { "time", "engine_angular_velocity", "engine_angular_position", "car_velocity", "car_position", "shift_distance" };
 
     public List<DataPoint> LoadCSVData()
     {
@@ -42,15 +64,16 @@ public class CSVReader
                 throw new InvalidDataException("CSV file is empty");
             }
 
-            // Get the indices for the time and car_position columns
-            string[] headers = headerLine.Split(',');
-            int timeIndex = Array.IndexOf(headers, "time");
-            int velocityIndex = Array.IndexOf(headers, "car_velocity");
-            int positionIndex = Array.IndexOf(headers, "car_position");
-            int angularVelocityIndex = Array.IndexOf(headers, "engine_angular_velocity");
+            Dictionary<string, int> headerIndices = new Dictionary<string, int>();
+            string[] fileHeaders = headerLine.Split(',');
 
-            if (timeIndex == -1 || positionIndex == -1 || velocityIndex == -1 || angularVelocityIndex == -1) {
-                throw new InvalidDataException("CSV file does not contain required columns");
+            foreach (string header in headers) 
+            {
+                headerIndices[header] = Array.IndexOf(fileHeaders, header);
+            }
+
+            if (headerIndices.ContainsValue(-1)) {
+                throw new InvalidDataException("CSV file is missing required headers");
             }
 
             // Read each line, parsing time and position
@@ -61,28 +84,21 @@ public class CSVReader
 
                 string[] values = line.Split(',');
 
-                if (values.Length > Math.Max(timeIndex, positionIndex))
+
+                if (values.Length > headerIndices.Values.Max())
                 {
-                    if (float.TryParse(values[timeIndex], out float time) &&
-                        float.TryParse(values[positionIndex], out float position) && 
-                        float.TryParse(values[velocityIndex], out float velocity) && 
-                        float.TryParse(values[angularVelocityIndex], out float angular_velocity))
-                    {
-                        dataPoints.Add(new DataPoint(time, position, 0, 0, 0, velocity, angular_velocity));
-                    }
+                    float time = float.Parse(values[headerIndices["time"]]);
+                    float engineAngularVelocity = float.Parse(values[headerIndices["engine_angular_velocity"]]);
+                    float engineAngularPosition = float.Parse(values[headerIndices["engine_angular_position"]]);
+                    float carVelocity = float.Parse(values[headerIndices["car_velocity"]]);
+                    float carPosition = float.Parse(values[headerIndices["car_position"]]);
+                    float shiftDistance = float.Parse(values[headerIndices["shift_distance"]]);
+
+                    dataPoints.Add(new DataPoint(time, engineAngularVelocity, engineAngularPosition, carVelocity, carPosition, shiftDistance));
+
                 }
             }
         }
         return dataPoints;
-    }
-
-    private float RadiansToDegrees(float radians)
-    {
-        return radians * 180.0f / Mathf.PI;
-    }
-
-    private float CarPositionToSecondaryAngle(float position)
-    {
-        return position * (22.0f * 0.0254f) / (2.0f * 7.556f);
     }
 }
