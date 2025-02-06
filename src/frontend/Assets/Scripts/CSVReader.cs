@@ -12,17 +12,23 @@ public class DataPoint
     public float EngineRPM { get; }
     public float PrimaryAngle { get; }
     public float SecondaryAngle { get; }
-    public float ShiftDistance { get; }
+    public float PrimaryShiftDistance { get; }
+    public float SecondaryShiftDistance { get; }
+
+    private readonly float maxShiftDistance = 0.05f;
 
     public DataPoint(float time, float engineAngularVelocity, float engineAngularPosition, float carVelocity, float carPosition, float shiftDistance)
     {
         Time = time;
         CarPosition = carPosition;
         PrimaryAngle = RadiansToDegrees(engineAngularPosition);
-        SecondaryAngle = RadiansToDegrees(CarPositionToSecondaryAngle(carPosition));
-        ShiftDistance = shiftDistance;
+        SecondaryAngle = RadiansToDegrees(CarPositionToSecondaryAngle(carPosition));;
         CarVelocity = MetersPerSecondToKmPerHour(carVelocity);
         EngineRPM = RadPerSecondToRPM(engineAngularVelocity);
+        
+        float shiftPercentage = shiftDistance / maxShiftDistance;
+        PrimaryShiftDistance = 1 - shiftPercentage;
+        SecondaryShiftDistance = shiftPercentage;
     }
 
     private float RadiansToDegrees(float radians)

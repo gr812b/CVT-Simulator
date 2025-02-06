@@ -21,7 +21,7 @@ public class CVTPlayback : PlaybackView
     public override void Display(DataPoint dataPoint)
     {
         SetAngles(dataPoint.PrimaryAngle, dataPoint.SecondaryAngle);
-        SetShifts(dataPoint.ShiftDistance);
+        SetShifts(dataPoint.PrimaryShiftDistance, dataPoint.SecondaryShiftDistance);
     }
 
     // Handles setting all of the angles for the pulley models
@@ -41,16 +41,16 @@ public class CVTPlayback : PlaybackView
     }
 
     // Handles setting the shift distance for the pulley models
-    private void SetShifts(float shiftDistance)
+    private void SetShifts(float primaryShiftDistance, float secondaryShiftDistance)
     {
-        SetShiftDistance(ref primaryMovable, maxPrimaryDistance, maxShiftDistance - shiftDistance); // Invert distance
-        SetShiftDistance(ref secondaryMovable, maxSecondaryDistance, shiftDistance); 
+        SetShiftDistance(ref primaryMovable, maxPrimaryDistance, primaryShiftDistance);
+        SetShiftDistance(ref secondaryMovable, maxSecondaryDistance, secondaryShiftDistance); 
     }
 
     // Sets the shift distance of a movable component
     private void SetShiftDistance(ref GameObject movableComponent, float maxComponentDistance, float shiftDistance)
     {
-        float componentDistance = maxComponentDistance * shiftDistance / maxShiftDistance;
+        float componentDistance = maxComponentDistance * shiftDistance;
         Vector3 currentPosition = movableComponent.transform.localPosition;
         movableComponent.transform.localPosition = new Vector3(componentDistance, currentPosition.y, currentPosition.z);
     }
