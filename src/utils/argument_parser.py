@@ -3,7 +3,7 @@ from dataclasses import dataclass
 
 @dataclass
 class SimulationArgs:
-    primary_weight: float
+    flyweight_mass: float
     primary_ramp_geometry: float
     primary_spring_rate: float
     primary_spring_pretension: float

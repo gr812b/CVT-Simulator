@@ -6,12 +6,13 @@ using UnityEngine;
 public struct Parameters
 {
     // Parameter variables
-    public double PrimaryWeight;
+    public double FlyweightMass;
     public double PrimaryRampGeometry;
     public double PrimarySpringRate;
     public double PrimarySpringPretension;
     public double SecondaryHelixGeometry;
-    public double SecondarySpringRate;
+    public double SecondaryTorsionSpringRate;
+    public double SecondaryCompressionSpringRate;
     public double SecondarySpringPretension;
     public double VehicleWeight;
     public double DriverWeight;
