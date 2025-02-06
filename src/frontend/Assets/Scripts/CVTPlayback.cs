@@ -41,18 +41,18 @@ public class CVTPlayback : PlaybackView
     }
 
     // Handles setting the shift distance for the pulley models
-    private void SetShifts(float distance)
+    private void SetShifts(float shiftDistance)
     {
-        SetShiftDistance(ref primaryMovable, maxPrimaryDistance, distance);
-        SetShiftDistance(ref secondaryMovable, maxSecondaryDistance, maxShiftDistance - distance); // Invert distance
+        SetShiftDistance(ref primaryMovable, maxPrimaryDistance, maxShiftDistance - shiftDistance); // Invert distance
+        SetShiftDistance(ref secondaryMovable, maxSecondaryDistance, shiftDistance); 
     }
 
     // Sets the shift distance of a movable component
-    private void SetShiftDistance(ref GameObject movableComponent, float maxComponentDistance, float distance)
+    private void SetShiftDistance(ref GameObject movableComponent, float maxComponentDistance, float shiftDistance)
     {
-        float shiftDistance = maxComponentDistance * distance / maxShiftDistance;
+        float componentDistance = maxComponentDistance * shiftDistance / maxShiftDistance;
         Vector3 currentPosition = movableComponent.transform.localPosition;
-        movableComponent.transform.localPosition = new Vector3(shiftDistance, currentPosition.y, currentPosition.z);
+        movableComponent.transform.localPosition = new Vector3(componentDistance, currentPosition.y, currentPosition.z);
     }
     
 }
