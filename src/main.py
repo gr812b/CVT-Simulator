@@ -47,7 +47,7 @@ car_simulator = CarSimulator(car_mass=CAR_MASS + args.driver_weight)
 primary_simulator = PrimaryPulley(
     spring_coeff_comp=args.primary_spring_rate,
     initial_compression=args.primary_spring_pretension,
-    flyweight_mass=args.primary_weight,
+    flyweight_mass=args.flyweight_mass,
     initial_flyweight_radius=INITIAL_FLYWEIGHT_RADIUS,
 )
 secondary_simulator = SecondaryPulley(
@@ -142,7 +142,7 @@ def angular_velocity_and_position_derivative(t, y):
     # Also consider the amount of torque that the belt can transfer due to friction, which limits torque at wheels, bogging down of engine, etc.
 
     # Maximum car velocity at the current engine speed (Wheels can't spin faster than the engine + gearbox)
-    max_car_velocity = state.engine_angular_velocity / GEARBOX_RATIO * WHEEL_RADIUS
+    max_car_velocity = (state.engine_angular_velocity / cvt_ratio)  / GEARBOX_RATIO * WHEEL_RADIUS
 
     if abs(state.car_velocity) > max_car_velocity:
         car_acceleration = 0
@@ -189,8 +189,8 @@ solution = solve_ivp(
 result = SimulationResult(solution)
 
 result.write_csv("simulation_output.csv")
-# result.plot("car_velocity")
-result.plot("shift_distance")
+result.plot("car_velocity")
+# result.plot("shift_distance")
 # result.plot("shift_velocity")
 # result.plot("engine_angular_velocity")
 
@@ -246,4 +246,4 @@ plt.ylabel("Force (N)")
 plt.title("Primary and Secondary Forces Over Time")
 plt.legend()
 plt.grid()
-plt.show()
+# plt.show()

@@ -19,7 +19,7 @@ class SimulationArgs:
 def get_arguments() -> SimulationArgs:
     parser = argparse.ArgumentParser(description="Simulate a Baja SAE car")
     parser.add_argument(
-        "--primary_weight",
+        "--flyweight_mass",
         type=float,
         default=0.8,
         help="Weight of the primary pulley in kilograms (default: 0.8 kg)",

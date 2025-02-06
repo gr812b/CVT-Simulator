@@ -1,8 +1,12 @@
 from constants.car_specs import (
     BELT_WIDTH,
     GEARBOX_RATIO,
+    INNER_PRIMARY_PULLEY_RADIUS,
+    INNER_SECONDARY_PULLEY_RADIUS,
+    SHEAVE_ANGLE,
     WHEEL_RADIUS,
 )
+from utils.theoretical_models import TheoreticalModels as tm
 from utils.system_state import SystemState
 
 
@@ -33,7 +37,15 @@ def shift_constraint_event(t, y):
 def car_velocity_constraint_event(t, y):
     state = SystemState.from_array(y)
 
-    max_car_velocity = state.engine_angular_velocity / GEARBOX_RATIO * WHEEL_RADIUS
+    cvt_ratio = tm.current_cvt_ratio(
+        state.shift_distance,
+        SHEAVE_ANGLE,
+        BELT_WIDTH,
+        INNER_PRIMARY_PULLEY_RADIUS,
+        INNER_SECONDARY_PULLEY_RADIUS,
+    )
+
+    max_car_velocity = (state.engine_angular_velocity / cvt_ratio)  / GEARBOX_RATIO * WHEEL_RADIUS
 
     if abs(state.car_velocity) > max_car_velocity:
         state.car_velocity = max_car_velocity
