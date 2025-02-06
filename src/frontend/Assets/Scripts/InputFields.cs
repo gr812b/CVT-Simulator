@@ -77,7 +77,7 @@ public class InputFields : MonoBehaviour
 
     private void Start() {
         simulateButton.onClick.AddListener(StartSimulation);
-        defaultButton.onClick.AddListener(SetDefaultValues);
+        SetDefaultValues();
         flyweightMassInput.onValueChanged.AddListener((string value) => validInput(value, ref parameters.FlyweightMass, ref flyweightMassInput, ref flyweightMassError));
         primaryRampGeometryInput.onValueChanged.AddListener((string value) => validInput(value, ref parameters.PrimaryRampGeometry, ref primaryRampGeometryInput, ref primaryRampGeometryError));
         primarySpringRateInput.onValueChanged.AddListener((string value) => validInput(value, ref parameters.PrimarySpringRate, ref primarySpringRateInput, ref primarySpringRateError));
