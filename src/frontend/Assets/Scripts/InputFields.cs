@@ -14,16 +14,16 @@ public class InputFields : MonoBehaviour
     // Parameters struct to store the input fields
     public Parameters parameters = new Parameters
     {
-        FlyweightMass = 0.0,
+        FlyweightMass = 0.8,
         PrimaryRampGeometry = 0.0,
-        PrimarySpringRate = 0.0,
-        PrimarySpringPretension = 0.0,
+        PrimarySpringRate = 500.0,
+        PrimarySpringPretension = 0.2,
         SecondaryHelixGeometry = 0.0,
-        SecondaryTorsionSpringRate = 0.0,
-        SecondaryCompressionSpringRate = 0.0,
-        SecondarySpringPretension = 0.0,
-        VehicleWeight = 0.0,
-        DriverWeight = 0.0,
+        SecondaryTorsionSpringRate = 5.0,
+        SecondaryCompressionSpringRate = 100.0,
+        SecondarySpringPretension = 15.0,
+        VehicleWeight = 226.8,
+        DriverWeight = 77.107,
         Traction = 0.0,
         AngleOfIncline = 0.0
     };
@@ -59,21 +59,6 @@ public class InputFields : MonoBehaviour
     [SerializeField] private TMP_Text driverWeightError;
     [SerializeField] private TMP_Text tractionError;
     [SerializeField] private TMP_Text angleOfInclineError;
-
-    // Default Values
-    private double defaultFlyweightMass = 0.8;
-    private double defaultPrimaryRampGeometry = 0.0;
-    private double defaultPrimarySpringRate = 500;
-    private double defaultPrimarySpringPretension = 0.2;
-    private double defaultSecondaryHelixGeometry = 0.0;
-    private double defaultSecondaryTorsionSpringRate = 5;
-    private double defaultSecondaryCompressionSpringRate = 100;
-    private double defaultSecondarySpringPretension = 15;
-    private double defaultVehicleWeight = 226.8;
-    private double defaultDriverWeight = 77.1107;
-    private double defaultTraction = 0.0;
-    private double defaultAngleOfIncline = 0.0;
-
 
     private void Start() {
         simulateButton.onClick.AddListener(StartSimulation);
@@ -122,18 +107,18 @@ public class InputFields : MonoBehaviour
     }
 
     private void SetDefaultValues() {
-        inputDefaultValues(ref flyweightMassInput, ref flyweightMassError, defaultFlyweightMass);
-        inputDefaultValues(ref primaryRampGeometryInput, ref primaryRampGeometryError, defaultPrimaryRampGeometry);
-        inputDefaultValues(ref primarySpringRateInput, ref primarySpringRateError, defaultPrimarySpringRate);
-        inputDefaultValues(ref primarySpringPretensionInput, ref primarySpringPretensionError, defaultPrimarySpringPretension);
-        inputDefaultValues(ref secondaryHelixGeometryInput, ref secondaryHelixGeometryError, defaultSecondaryHelixGeometry);
-        inputDefaultValues(ref secondaryTorsionSpringRateInput, ref secondaryTorsionSpringRateError, defaultSecondaryTorsionSpringRate);
-        inputDefaultValues(ref secondaryCompressionSpringRateInput, ref secondaryCompressionSpringRateError, defaultSecondaryCompressionSpringRate);
-        inputDefaultValues(ref secondarySpringPretensionInput, ref secondarySpringPretensionError, defaultSecondarySpringPretension);
-        inputDefaultValues(ref vehicleWeightInput, ref vehicleWeightError, defaultVehicleWeight);
-        inputDefaultValues(ref driverWeightInput, ref driverWeightError, defaultDriverWeight);
-        inputDefaultValues(ref tractionInput, ref tractionError, defaultTraction);
-        inputDefaultValues(ref angleOfInclineInput, ref angleOfInclineError, defaultAngleOfIncline);
+        inputDefaultValues(ref flyweightMassInput, ref flyweightMassError, parameters.FlyweightMass);
+        inputDefaultValues(ref primaryRampGeometryInput, ref primaryRampGeometryError, parameters.PrimaryRampGeometry);
+        inputDefaultValues(ref primarySpringRateInput, ref primarySpringRateError, parameters.PrimarySpringRate);
+        inputDefaultValues(ref primarySpringPretensionInput, ref primarySpringPretensionError, parameters.PrimarySpringPretension);
+        inputDefaultValues(ref secondaryHelixGeometryInput, ref secondaryHelixGeometryError, parameters.SecondaryHelixGeometry);
+        inputDefaultValues(ref secondaryTorsionSpringRateInput, ref secondaryTorsionSpringRateError, parameters.SecondaryTorsionSpringRate);
+        inputDefaultValues(ref secondaryCompressionSpringRateInput, ref secondaryCompressionSpringRateError, parameters.SecondaryCompressionSpringRate);
+        inputDefaultValues(ref secondarySpringPretensionInput, ref secondarySpringPretensionError, parameters.SecondarySpringPretension);
+        inputDefaultValues(ref vehicleWeightInput, ref vehicleWeightError, parameters.VehicleWeight);
+        inputDefaultValues(ref driverWeightInput, ref driverWeightError, parameters.DriverWeight);
+        inputDefaultValues(ref tractionInput, ref tractionError, parameters.Traction);
+        inputDefaultValues(ref angleOfInclineInput, ref angleOfInclineError, parameters.AngleOfIncline);
     }
     private void checkFields() {
         verifyFieldNotEmpty(ref flyweightMassInput, ref flyweightMassError);
