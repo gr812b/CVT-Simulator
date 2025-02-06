@@ -46,7 +46,7 @@ public class PositionPlayback : PlaybackView
 
         float elapsedTime = dataPoint.Time - previousTime;
 
-        MoveCarAlongTrack(dataPoint.Position, angle);
+        MoveCarAlongTrack(dataPoint.CarPosition, angle);
         previousTime = dataPoint.Time;
     }
 

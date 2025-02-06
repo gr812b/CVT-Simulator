@@ -139,3 +139,6 @@ Assets/URP2DSceneTemplate.unity.meta
 # Universal Render Pipeline Global Settings
 Assets/UniversalRenderPipelineGlobalSettings.asset
 Assets/UniversalRenderPipelineGlobalSettings.asset.meta
+
+# Simulation Output
+simulation_output.csv
