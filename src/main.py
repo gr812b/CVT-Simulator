@@ -182,14 +182,14 @@ solution = solve_ivp(
     initial_state.to_array(),
     t_eval=time_eval,
     events=constraints,
-    rtol=1e-6,
+    rtol=1e-5,
     atol=1e-9,
 )
 
 result = SimulationResult(solution)
 
 result.write_csv("simulation_output.csv")
-result.plot("car_velocity")
+# result.plot("car_velocity")
 # result.plot("shift_distance")
 # result.plot("shift_velocity")
 # result.plot("engine_angular_velocity")
