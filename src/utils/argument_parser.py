@@ -21,7 +21,7 @@ def get_arguments() -> SimulationArgs:
     parser.add_argument(
         "--flyweight_mass",
         type=float,
-        default=0.8,
+        default=0.6,
         help="Weight of the primary pulley in kilograms (default: 0.8 kg)",
     )
     parser.add_argument(
@@ -51,8 +51,8 @@ def get_arguments() -> SimulationArgs:
     parser.add_argument(
         "--secondary_torsion_spring_rate",
         type=float,
-        default=5.0,
-        help="Spring rate of the secondary pulley in N/m (default: 5.0 Nm/rad)",
+        default=100.0,
+        help="Spring rate of the secondary pulley in N/m (default: 100.0 Nm/rad)",
     )
     parser.add_argument(
         "--secondary_compression_spring_rate",
@@ -64,7 +64,7 @@ def get_arguments() -> SimulationArgs:
         "--secondary_spring_pretension",
         type=float,
         default=15,
-        help="Spring pretension of the secondary pulley in degrees (default: 15 degrees)",
+        help="Spring pretension of the secondary pulley in degrees (default: 45 degrees)",
     )
     parser.add_argument(
         "--vehicle_weight",

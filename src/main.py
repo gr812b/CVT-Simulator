@@ -29,6 +29,7 @@ from utils.conversions import rpm_to_rad_s, deg_to_rad
 from utils.argument_parser import get_arguments
 from utils.theoretical_models import TheoreticalModels as tm
 from utils.simulation_constraints import constraints
+from utils.ramp_representation import LinearSegment, PiecewiseRamp, CircularSegment
 
 # Parse arguments
 args = get_arguments()
@@ -72,7 +73,15 @@ secondary_belt = BeltSimulator(
 # Define the system of differential equations
 def angular_velocity_and_position_derivative(t, y):
     state = SystemState.from_array(y)
-
+    
+    cvt_ratio = tm.current_cvt_ratio(
+        state.shift_distance,
+        SHEAVE_ANGLE,
+        BELT_WIDTH,
+        INNER_PRIMARY_PULLEY_RADIUS,
+        INNER_SECONDARY_PULLEY_RADIUS,
+    )
+    
     # Get sources of torque
     gearbox_load = load_simulator.calculate_gearbox_load(state.car_velocity)
     engine_torque = engine_simulator.get_torque(state.engine_angular_velocity)
@@ -83,9 +92,8 @@ def angular_velocity_and_position_derivative(t, y):
         state.engine_angular_velocity,
     )
     secondary_force = secondary_simulator.calculate_net_force(
-        engine_torque,
+        engine_torque * cvt_ratio,
         state.shift_distance,
-        0,  # TODO: Add rotation
     )
 
     # Convert direct clamping to radial forces
@@ -110,7 +118,7 @@ def angular_velocity_and_position_derivative(t, y):
         secondary_force,
     )
 
-    cvt_moving_mass = 100000  # TODO: Use constants
+    cvt_moving_mass = 1000000  # TODO: Use constants
     shift_acceleration = (
         primary_belt_radial - secondary_belt_radial
     ) / cvt_moving_mass  # TODO: See if this belt acceleration is actually equal to shift accel
@@ -189,10 +197,10 @@ solution = solve_ivp(
 result = SimulationResult(solution)
 
 result.write_csv("simulation_output.csv")
-# result.plot("car_velocity")
-# result.plot("shift_distance")
-# result.plot("shift_velocity")
-# result.plot("engine_angular_velocity")
+#result.plot("car_velocity")
+#result.plot("shift_distance")
+#result.plot("shift_velocity")
+#result.plot("engine_angular_velocity")
 
 # Loop through the solution and recalculate the primary and secondary forces, then plot it
 primary_forces = []
@@ -200,15 +208,33 @@ secondary_forces = []
 prim_radial = []
 sec_radial = []
 
+ramp = PiecewiseRamp()
+ramp.add_segment(LinearSegment(x_start=0, x_end=BELT_WIDTH/5, slope=-1))
+ramp.add_segment(
+        CircularSegment(x_start=BELT_WIDTH/5, x_end=BELT_WIDTH, radius=0.05, theta_fraction=0.95)
+    )
+angles = []
 for state in result.states:
+    shift_distance = state.shift_distance
+    if shift_distance < 0:
+        shift_distance = 0
+    if shift_distance > BELT_WIDTH:
+        shift_distance = BELT_WIDTH
+    angles.append(np.sin(np.arctan(ramp.slope(shift_distance))))
+    cvt_ratio = tm.current_cvt_ratio(
+        state.shift_distance,
+        SHEAVE_ANGLE,
+        BELT_WIDTH,
+        INNER_PRIMARY_PULLEY_RADIUS,
+        INNER_SECONDARY_PULLEY_RADIUS,
+    )
     primary_force = primary_simulator.calculate_net_force(
         state.shift_distance,
         state.engine_angular_velocity,
     )
     secondary_force = secondary_simulator.calculate_net_force(
-        engine_simulator.get_torque(state.engine_angular_velocity),
+        engine_simulator.get_torque(state.engine_angular_velocity) * cvt_ratio,
         state.shift_distance,
-        0,
     )
     primary_forces.append(primary_force)
     secondary_forces.append(secondary_force)
@@ -237,13 +263,23 @@ for state in result.states:
         )
     )
 
-plt.plot(result.time, primary_forces, label="Primary Force")
-plt.plot(result.time, secondary_forces, label="Secondary Force")
-plt.plot(result.time, prim_radial, label="Primary Radial")
-plt.plot(result.time, sec_radial, label="Secondary Radial")
-plt.xlabel("Time (s)")
-plt.ylabel("Force (N)")
-plt.title("Primary and Secondary Forces Over Time")
-plt.legend()
-plt.grid()
-# plt.show()
+fig, ax1 = plt.subplots()
+
+# Primary Y-axis (left) for forces
+ax1.plot(result.time, primary_forces, label="Primary Force", color="tab:blue")
+ax1.plot(result.time, secondary_forces, label="Secondary Force", color="tab:orange")
+ax1.plot(result.time, prim_radial, label="Primary Radial", color="tab:green")
+ax1.plot(result.time, sec_radial, label="Secondary Radial", color="tab:red")
+ax1.set_xlabel("Time (s)")
+ax1.set_ylabel("Force (N)")
+ax1.set_title("Primary and Secondary Forces Over Time")
+ax1.legend(loc="upper left")
+ax1.grid()
+
+# Secondary Y-axis (right) for angles
+ax2 = ax1.twinx()
+ax2.plot(result.time, angles, label="Angle", color="tab:purple", linestyle="dashed")
+ax2.set_ylabel("Angle (degrees)")
+ax2.legend(loc="upper right")
+
+plt.show()
