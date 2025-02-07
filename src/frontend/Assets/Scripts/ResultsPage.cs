@@ -23,26 +23,21 @@ public class ResultsPage: MonoBehaviour
     //initalize before it starts
     private void Awake()
     {
-
         //find InputFields 
-
-        //InputFields inputFields = FindObjectOfType<InputFields>();
-        InputFields inputFields = FindAnyObjectByType<InputFields>();
-        if (inputFields != null)
-        {
-            //update the values in the UI
-            FlyweightMass_val.text = (inputFields.parameters.FlyweightMass).ToString();
-            PrimaryRampGeo_val.text = (inputFields.parameters.PrimaryRampGeometry).ToString();
-            PrimarySpringRate_val.text = (inputFields.parameters.PrimarySpringRate).ToString();
-            PrimarySpringPretension_val.text = (inputFields.parameters.PrimarySpringPretension).ToString();
-            SecondaryHelixGeo_val.text = (inputFields.parameters.SecondaryHelixGeometry).ToString();
-            SecondaryTorsionSpringRate_val.text = (inputFields.parameters.SecondaryTorsionSpringRate).ToString();
-            SecondaryCompressionSpringRate_val.text = (inputFields.parameters.SecondaryCompressionSpringRate).ToString();
-            SecondarySpringPretension_val.text = (inputFields.parameters.SecondarySpringPretension).ToString();
-            VehicleWeight_val.text = (inputFields.parameters.VehicleWeight).ToString();
-            DriverWeight_val.text = (inputFields.parameters.DriverWeight).ToString();
-            Traction_val.text = (inputFields.parameters.Traction).ToString();
-            AngleofIncline_val.text = (inputFields.parameters.AngleOfIncline).ToString();
-        }
+        Parameters parameters = SimulationData.parameters; 
+        //update the values in the UI
+        FlyweightMass_val.text = parameters.FlyweightMass.ToString();
+        PrimaryRampGeo_val.text = parameters.PrimaryRampGeometry.ToString();
+        PrimarySpringRate_val.text = parameters.PrimarySpringRate.ToString();
+        PrimarySpringPretension_val.text = parameters.PrimarySpringPretension.ToString();
+        SecondaryHelixGeo_val.text = parameters.SecondaryHelixGeometry.ToString();
+        SecondaryTorsionSpringRate_val.text = parameters.SecondaryTorsionSpringRate.ToString();
+        SecondaryCompressionSpringRate_val.text = parameters.SecondaryCompressionSpringRate.ToString();
+        SecondarySpringPretension_val.text = parameters.SecondarySpringPretension.ToString();
+        VehicleWeight_val.text = parameters.VehicleWeight.ToString();
+        DriverWeight_val.text = parameters.DriverWeight.ToString();
+        Traction_val.text = parameters.Traction.ToString();
+        AngleofIncline_val.text = parameters.AngleOfIncline.ToString();
     }
-}
+ }
+

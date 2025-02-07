@@ -51,7 +51,9 @@ public struct Parameters
 public class PythonRunner
 {
     // Paths to python environment and script
-    private readonly string relativePythonPath = "../../../venv/Scripts/python.exe";
+    //private readonly string relativePythonPath = "../../../venv/Scripts/python.exe";
+    private readonly string relativePythonPath = "../../../venv/bin/python";
+    // or for mac private readonly string relativePythonPath = "../../../venv/bin/python";
     private readonly string relativeScriptPath = "../../main.py";
 
     // Main function to run the python script

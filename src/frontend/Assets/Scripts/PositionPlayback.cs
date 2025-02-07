@@ -26,7 +26,7 @@ public class PositionPlayback : PlaybackView
     private void Start()
     {
         inputFields = FindAnyObjectByType<InputFields>();
-        angle = (float)inputFields.parameters.AngleOfIncline;
+        angle = (float)SimulationData.parameters.AngleOfIncline;
         canvasWidth = canvasRect.rect.width  -50;
         calcStartEndPositions();
     }

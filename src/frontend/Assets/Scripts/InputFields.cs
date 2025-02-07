@@ -5,14 +5,9 @@ using UnityEngine.UI;
 using TMPro;
 using UnityEngine.SceneManagement;
 
-public class InputFields : MonoBehaviour
+public static class SimulationData
 {
-    // Runner for the python script
-    private PythonRunner pythonRunner = new PythonRunner();
-    private bool canSimulate = false;
-
-    // Parameters struct to store the input fields
-    public Parameters parameters = new Parameters
+    public static Parameters parameters = new Parameters
     {
         FlyweightMass = 0.8,
         PrimaryRampGeometry = 0.0,
@@ -27,6 +22,14 @@ public class InputFields : MonoBehaviour
         Traction = 0.0,
         AngleOfIncline = 0.0
     };
+}
+public class InputFields : MonoBehaviour
+{
+    // Runner for the python script
+    private PythonRunner pythonRunner = new PythonRunner();
+    private bool canSimulate = false;
+
+    public Parameters parameters;
 
     // Buttons
     [SerializeField] private Button simulateButton;
@@ -61,21 +64,49 @@ public class InputFields : MonoBehaviour
     [SerializeField] private TMP_Text angleOfInclineError;
 
     private void Start() {
+        parameters = SimulationData.parameters;
+        LoadStoredValues();
+        LoadStoredValues(); // Load saved values when scene starts
         simulateButton.onClick.AddListener(StartSimulation);
-        SetDefaultValues();
-        flyweightMassInput.onValueChanged.AddListener((string value) => validInput(value, ref parameters.FlyweightMass, ref flyweightMassInput, ref flyweightMassError));
-        primaryRampGeometryInput.onValueChanged.AddListener((string value) => validInput(value, ref parameters.PrimaryRampGeometry, ref primaryRampGeometryInput, ref primaryRampGeometryError));
-        primarySpringRateInput.onValueChanged.AddListener((string value) => validInput(value, ref parameters.PrimarySpringRate, ref primarySpringRateInput, ref primarySpringRateError));
-        primarySpringPretensionInput.onValueChanged.AddListener((string value) => validInput(value, ref parameters.PrimarySpringPretension, ref primarySpringPretensionInput, ref primarySpringPretensionError));
-        secondaryHelixGeometryInput.onValueChanged.AddListener((string value) => validInput(value, ref parameters.SecondaryHelixGeometry, ref secondaryHelixGeometryInput, ref secondaryHelixGeometryError));
-        secondaryTorsionSpringRateInput.onValueChanged.AddListener((string value) => validInput(value, ref parameters.SecondaryTorsionSpringRate, ref secondaryTorsionSpringRateInput, ref secondaryTorsionSpringRateError));
-        secondaryCompressionSpringRateInput.onValueChanged.AddListener((string value) => validInput(value, ref parameters.SecondaryCompressionSpringRate, ref secondaryCompressionSpringRateInput, ref secondaryCompressionSpringRateError));
-        secondarySpringPretensionInput.onValueChanged.AddListener((string value) => validInput(value, ref parameters.SecondarySpringPretension, ref secondarySpringPretensionInput, ref secondarySpringPretensionError));
-        vehicleWeightInput.onValueChanged.AddListener((string value) => validInput(value, ref parameters.VehicleWeight, ref vehicleWeightInput, ref vehicleWeightError));
-        driverWeightInput.onValueChanged.AddListener((string value) => validInput(value, ref parameters.DriverWeight, ref driverWeightInput, ref driverWeightError));
-        tractionInput.onValueChanged.AddListener((string value) => validInput(value, ref parameters.Traction, ref tractionInput, ref tractionError));
-        angleOfInclineInput.onValueChanged.AddListener((string value) => validInput(value, ref parameters.AngleOfIncline, ref angleOfInclineInput, ref angleOfInclineError));
+        flyweightMassInput.onValueChanged.AddListener((value) => UpdateParameter(value, ref SimulationData.parameters.FlyweightMass, flyweightMassInput, flyweightMassError));
+        primaryRampGeometryInput.onValueChanged.AddListener((value) => UpdateParameter(value, ref SimulationData.parameters.PrimaryRampGeometry, primaryRampGeometryInput, primaryRampGeometryError));
+        primarySpringRateInput.onValueChanged.AddListener((value) => UpdateParameter(value, ref SimulationData.parameters.PrimarySpringRate, primarySpringRateInput, primarySpringRateError));
+        primarySpringPretensionInput.onValueChanged.AddListener((value) => UpdateParameter(value, ref SimulationData.parameters.PrimarySpringPretension, primarySpringPretensionInput, primarySpringPretensionError));
+        secondaryHelixGeometryInput.onValueChanged.AddListener((value) => UpdateParameter(value, ref SimulationData.parameters.SecondaryHelixGeometry, secondaryHelixGeometryInput, secondaryHelixGeometryError));
+        secondaryTorsionSpringRateInput.onValueChanged.AddListener((value) => UpdateParameter(value, ref SimulationData.parameters.SecondaryTorsionSpringRate, secondaryTorsionSpringRateInput, secondaryTorsionSpringRateError));
+        secondaryCompressionSpringRateInput.onValueChanged.AddListener((value) => UpdateParameter(value, ref SimulationData.parameters.SecondaryCompressionSpringRate, secondaryCompressionSpringRateInput, secondaryCompressionSpringRateError));
+        secondarySpringPretensionInput.onValueChanged.AddListener((value) => UpdateParameter(value, ref SimulationData.parameters.SecondarySpringPretension, secondarySpringPretensionInput, secondarySpringPretensionError));
+        vehicleWeightInput.onValueChanged.AddListener((value) => UpdateParameter(value, ref SimulationData.parameters.VehicleWeight, vehicleWeightInput, vehicleWeightError));
+        driverWeightInput.onValueChanged.AddListener((value) => UpdateParameter(value, ref SimulationData.parameters.DriverWeight, driverWeightInput, driverWeightError));
+        tractionInput.onValueChanged.AddListener((value) => UpdateParameter(value, ref SimulationData.parameters.Traction, tractionInput, tractionError));
+        angleOfInclineInput.onValueChanged.AddListener((value) => UpdateParameter(value, ref SimulationData.parameters.AngleOfIncline, angleOfInclineInput, angleOfInclineError));
     }
+
+    private void LoadStoredValues() {
+        flyweightMassInput.text = SimulationData.parameters.FlyweightMass.ToString();
+        primaryRampGeometryInput.text = SimulationData.parameters.PrimaryRampGeometry.ToString();
+        primarySpringRateInput.text = SimulationData.parameters.PrimarySpringRate.ToString();
+        primarySpringPretensionInput.text = SimulationData.parameters.PrimarySpringPretension.ToString();
+        secondaryHelixGeometryInput.text = SimulationData.parameters.SecondaryHelixGeometry.ToString();
+        secondaryTorsionSpringRateInput.text = SimulationData.parameters.SecondaryTorsionSpringRate.ToString();
+        secondaryCompressionSpringRateInput.text = SimulationData.parameters.SecondaryCompressionSpringRate.ToString();
+        secondarySpringPretensionInput.text = SimulationData.parameters.SecondarySpringPretension.ToString();
+        vehicleWeightInput.text = SimulationData.parameters.VehicleWeight.ToString();
+        driverWeightInput.text = SimulationData.parameters.DriverWeight.ToString();
+        tractionInput.text = SimulationData.parameters.Traction.ToString();
+        angleOfInclineInput.text = SimulationData.parameters.AngleOfIncline.ToString();
+    }
+
+    private void UpdateParameter(string value, ref double parameter, TMP_InputField inputField, TMP_Text errorText) {
+    if (double.TryParse(value, out double val) && val >= 0) {
+        parameter = val; // Store updated value in static class
+        inputField.image.color = Color.white;
+        errorText.text = "";
+    } else {
+        inputField.image.color = Color.red;
+        errorText.text = "Invalid input, enter a number";
+    }
+}
 
     private void validInput(string value, ref double field, ref TMP_InputField inputField, ref TMP_Text errorText) {
         if (double.TryParse(value, out double val) && val >= 0) {
@@ -106,20 +137,6 @@ public class InputFields : MonoBehaviour
         errorText.text = "";
     }
 
-    private void SetDefaultValues() {
-        inputDefaultValues(ref flyweightMassInput, ref flyweightMassError, parameters.FlyweightMass);
-        inputDefaultValues(ref primaryRampGeometryInput, ref primaryRampGeometryError, parameters.PrimaryRampGeometry);
-        inputDefaultValues(ref primarySpringRateInput, ref primarySpringRateError, parameters.PrimarySpringRate);
-        inputDefaultValues(ref primarySpringPretensionInput, ref primarySpringPretensionError, parameters.PrimarySpringPretension);
-        inputDefaultValues(ref secondaryHelixGeometryInput, ref secondaryHelixGeometryError, parameters.SecondaryHelixGeometry);
-        inputDefaultValues(ref secondaryTorsionSpringRateInput, ref secondaryTorsionSpringRateError, parameters.SecondaryTorsionSpringRate);
-        inputDefaultValues(ref secondaryCompressionSpringRateInput, ref secondaryCompressionSpringRateError, parameters.SecondaryCompressionSpringRate);
-        inputDefaultValues(ref secondarySpringPretensionInput, ref secondarySpringPretensionError, parameters.SecondarySpringPretension);
-        inputDefaultValues(ref vehicleWeightInput, ref vehicleWeightError, parameters.VehicleWeight);
-        inputDefaultValues(ref driverWeightInput, ref driverWeightError, parameters.DriverWeight);
-        inputDefaultValues(ref tractionInput, ref tractionError, parameters.Traction);
-        inputDefaultValues(ref angleOfInclineInput, ref angleOfInclineError, parameters.AngleOfIncline);
-    }
     private void checkFields() {
         verifyFieldNotEmpty(ref flyweightMassInput, ref flyweightMassError);
         verifyFieldNotEmpty(ref primaryRampGeometryInput, ref primaryRampGeometryError);
@@ -141,12 +158,18 @@ public class InputFields : MonoBehaviour
         if (!canSimulate) {
             return;
         }
-        pythonRunner.RunPython(parameters);
+        pythonRunner.RunPython(SimulationData.parameters);
 
         // Go the the results scene
         DontDestroyOnLoad(this.gameObject);
         int nextSceneIndex = SceneManager.GetActiveScene().buildIndex + 1;
         SceneManager.LoadScene(nextSceneIndex);
+    }
+
+    private void OnDestroy()
+    {
+        // Save changes before exiting the scene
+        SimulationData.parameters = parameters;
     }
 
 }
