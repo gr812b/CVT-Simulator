@@ -105,18 +105,6 @@ public class InputFields : MonoBehaviour
     } else {
         inputField.image.color = Color.red;
         errorText.text = "Invalid input, enter a number";
-    }
-}
-
-    private void validInput(string value, ref double field, ref TMP_InputField inputField, ref TMP_Text errorText) {
-        if (double.TryParse(value, out double val) && val >= 0) {
-            field = val;
-            inputField.image.color = Color.white;
-            errorText.text = "";
-        } else {
-            UnityEngine.Debug.LogError("Invalid input for field: " + value);
-            inputField.image.color = Color.red;
-            errorText.text = "Invalid input, enter a number";
         }
     }
 
@@ -130,11 +118,6 @@ public class InputFields : MonoBehaviour
             errorText.text = "";
             canSimulate = true;
         }
-    }
-
-    private void inputDefaultValues(ref TMP_InputField inputField, ref TMP_Text errorText, double value) {
-        inputField.text = value.ToString();
-        errorText.text = "";
     }
 
     private void checkFields() {

@@ -29,6 +29,19 @@ public class PositionPlayback : PlaybackView
         angle = (float)SimulationData.parameters.AngleOfIncline;
         canvasWidth = canvasRect.rect.width  -50;
         calcStartEndPositions();
+        SetCarInitial();
+    }
+
+    private void SetCarInitial()
+    {
+        // Set initial position
+        carTransform.GetComponent<RectTransform>().anchoredPosition = new Vector2(startPosition.x, startPosition.y);
+
+        // Rotate the car before playback starts
+        if (angle != 0)
+        {
+            carTransform.GetComponent<RectTransform>().rotation = Quaternion.Euler(0, 0, angle);
+        }
     }
 
     public override void Display(DataPoint dataPoint)
