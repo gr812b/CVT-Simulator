@@ -70,10 +70,8 @@ public class PositionPlayback : PlaybackView
         float halfCanvasHeight = canvasRect.rect.height / 2;
 
         startPosition = new Vector3(-halfCanvasWidth+25, -halfCanvasHeight, 0);
-
-        endPosition = new Vector3(halfCanvasWidth-25, -halfCanvasHeight, 0);
         
-        totalDistance = canvasRect.rect.width-25;        
+        totalDistance = canvasRect.rect.width-50;        
 
         if (angle != 0) {
             float radius = totalDistance;
@@ -81,14 +79,26 @@ public class PositionPlayback : PlaybackView
             float yOffSet = radius * Mathf.Sin(angle*Mathf.Deg2Rad);
             endPosition = new Vector3(startPosition.x + xOffSet, startPosition.y + yOffSet, 0);
         }
+        else{
+            endPosition = new Vector3(startPosition.x + totalDistance, startPosition.y, 0);
+        }
         circle1.anchoredPosition = new Vector2(startPosition.x, startPosition.y);
         circle2.anchoredPosition = new Vector2(endPosition.x, endPosition.y);
         Vector3 worldPos1 = circle1.position;  
         Vector3 worldPos2 = circle2.position;  
         lineRenderer.useWorldSpace = true;
-        lineRenderer.positionCount = 2;
+        lineRenderer.startColor = new Color(0.7f, 0.5f, 0.3f);
+        lineRenderer.material.color = new Color(0.7f, 0.5f, 0.3f);
+        lineRenderer.endColor   = new Color(0.7f, 0.5f, 0.3f);
+        lineRenderer.positionCount = 4;
         lineRenderer.SetPosition(0, worldPos1);
         lineRenderer.SetPosition(1, worldPos2);
+
+        var baselinePoint = new Vector3(worldPos2.x, worldPos1.y, worldPos1.z);
+        lineRenderer.SetPosition(2, baselinePoint);
+
+        lineRenderer.SetPosition(3, worldPos1);
+
         circle1.gameObject.SetActive(false);
         circle2.gameObject.SetActive(false);
 
