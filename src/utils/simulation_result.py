@@ -22,8 +22,13 @@ class SimulationResult:
             "engine_angular_velocity": [
                 state.engine_angular_velocity for state in self.states
             ],
+            "engine_angular_position": [
+                state.engine_angular_position for state in self.states
+            ],
             "car_velocity": [state.car_velocity for state in self.states],
             "car_position": [state.car_position for state in self.states],
+            "shift_velocity": [state.shift_velocity for state in self.states],
+            "shift_distance": [state.shift_distance for state in self.states],
         }
         df = pd.DataFrame(data)
         df.to_csv(filename, index=False)
@@ -35,8 +40,13 @@ class SimulationResult:
             "engine_angular_velocity": [
                 state.engine_angular_velocity for state in self.states
             ],
+            "engine_angular_position": [
+                state.engine_angular_position for state in self.states
+            ],
             "car_velocity": [state.car_velocity for state in self.states],
             "car_position": [state.car_position for state in self.states],
+            "shift_velocity": [state.shift_velocity for state in self.states],
+            "shift_distance": [state.shift_distance for state in self.states],
         }
 
         if field not in field_data:

@@ -2,73 +2,85 @@ using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
 using System;
-using UnityEngine.UI;
-using TMPro;
-using UnityEngine.SceneManagement;
+using System.Linq;
 
-public class CSVReader : MonoBehaviour
+public class DataPoint
+{
+    public float Time { get; }
+    public float CarPosition { get; }
+    public float CarVelocity { get; }
+    public float EngineRPM { get; }
+    public float PrimaryAngle { get; }
+    public float SecondaryAngle { get; }
+    public float PrimaryShiftDistance { get; }
+    public float SecondaryShiftDistance { get; }
+
+    private readonly float maxShiftDistance = 0.05f;
+
+    public DataPoint(float time, float engineAngularVelocity, float engineAngularPosition, float carVelocity, float carPosition, float shiftDistance)
+    {
+        Time = time;
+        CarPosition = carPosition;
+        PrimaryAngle = RadiansToDegrees(engineAngularPosition);
+        SecondaryAngle = RadiansToDegrees(CarPositionToSecondaryAngle(carPosition));;
+        CarVelocity = MetersPerSecondToKmPerHour(carVelocity);
+        EngineRPM = RadPerSecondToRPM(engineAngularVelocity);
+        
+        float shiftPercentage = shiftDistance / maxShiftDistance;
+        PrimaryShiftDistance = 1 - shiftPercentage;
+        SecondaryShiftDistance = shiftPercentage;
+    }
+
+    private float RadiansToDegrees(float radians)
+    {
+        return radians * 180.0f / Mathf.PI;
+    }
+
+    private float CarPositionToSecondaryAngle(float position)
+    {
+        return position * (2.0f * 7.556f) / (22.0f * 0.0254f);
+    }
+
+    private float RadPerSecondToRPM(float radPerSecond)
+    {
+        return radPerSecond * 60 / (2 * Mathf.PI);
+    }
+
+    private float MetersPerSecondToKmPerHour(float metersPerSecond)
+    {
+        return metersPerSecond * 3.6f;
+    }
+}
+
+public class CSVReader
 {
     private readonly string csvPath = Path.GetFullPath(Path.Combine(Application.dataPath, "../simulation_output.csv"));
 
-    [SerializeField] private Button playButton;
-    [SerializeField] private Button pauseButton;
-    [SerializeField] private Button restartButton;
-    [SerializeField] private Button nextSceneButton;
-    [SerializeField] private TMP_Text statusText;
-    [SerializeField] private Transform carTransform;
-    [SerializeField] private Transform carSpinTransform;
+    private readonly string[] headers = new string[] { "time", "engine_angular_velocity", "engine_angular_position", "car_velocity", "car_position", "shift_distance" };
 
-
-    private List<DataPoint> dataPoints = new List<DataPoint>();
-    private bool isPlaying = false;
-    private int currentIndex = 0;
-    private float startTime;
-
-    private float screenLeftBound;
-    private float screenRightBound;
-
+    public List<DataPoint> LoadCSVData()
+    {
+        List<DataPoint> dataPoints = new List<DataPoint>();
     
-
-    private void Start()
-    {
-        // Set screen boundaries based on camera viewport
-        screenLeftBound = Camera.main.ViewportToWorldPoint(new Vector3(0, 0, carTransform.position.z)).x;
-        screenRightBound = Camera.main.ViewportToWorldPoint(new Vector3(1, 0, carTransform.position.z)).x;
-
-        playButton.onClick.AddListener(StartPlayback);
-        pauseButton.onClick.AddListener(PausePlayback);
-        restartButton.onClick.AddListener(RestartPlayback);
-        nextSceneButton.onClick.AddListener(backButton);
-
-        LoadCSVData();
-    }
-
-    private class DataPoint
-    {
-        public float Time { get; }
-        public float Position { get; }
-
-        public DataPoint(float time, float position)
-        {
-            Time = time;
-            Position = position;
-        }
-    }
-
-    private void LoadCSVData()
-    {
         using (StreamReader reader = new StreamReader(csvPath))
         {
             // Read the header line
             string headerLine = reader.ReadLine();
-            if (headerLine == null) return;
+            if (headerLine == null) {
+                throw new InvalidDataException("CSV file is empty");
+            }
 
-            // Get the indices for the time and car_position columns
-            string[] headers = headerLine.Split(',');
-            int timeIndex = Array.IndexOf(headers, "time");
-            int positionIndex = Array.IndexOf(headers, "car_position");
+            Dictionary<string, int> headerIndices = new Dictionary<string, int>();
+            string[] fileHeaders = headerLine.Split(',');
 
-            if (timeIndex == -1 || positionIndex == -1) return;
+            foreach (string header in headers) 
+            {
+                headerIndices[header] = Array.IndexOf(fileHeaders, header);
+            }
+
+            if (headerIndices.ContainsValue(-1)) {
+                throw new InvalidDataException("CSV file is missing required headers");
+            }
 
             // Read each line, parsing time and position
             while (!reader.EndOfStream)
@@ -78,95 +90,21 @@ public class CSVReader : MonoBehaviour
 
                 string[] values = line.Split(',');
 
-                if (values.Length > Math.Max(timeIndex, positionIndex))
+
+                if (values.Length > headerIndices.Values.Max())
                 {
-                    if (float.TryParse(values[timeIndex], out float time) &&
-                        float.TryParse(values[positionIndex], out float position))
-                    {
-                        dataPoints.Add(new DataPoint(time, position));
-                    }
+                    float time = float.Parse(values[headerIndices["time"]]);
+                    float engineAngularVelocity = float.Parse(values[headerIndices["engine_angular_velocity"]]);
+                    float engineAngularPosition = float.Parse(values[headerIndices["engine_angular_position"]]);
+                    float carVelocity = float.Parse(values[headerIndices["car_velocity"]]);
+                    float carPosition = float.Parse(values[headerIndices["car_position"]]);
+                    float shiftDistance = float.Parse(values[headerIndices["shift_distance"]]);
+
+                    dataPoints.Add(new DataPoint(time, engineAngularVelocity, engineAngularPosition, carVelocity, carPosition, shiftDistance));
+
                 }
             }
         }
-
-        statusText.text = "Data Loaded. Ready to Play.";
+        return dataPoints;
     }
-
-    private void StartPlayback()
-    {
-        if (dataPoints.Count == 0) return;
-        isPlaying = true;
-        //currentIndex = 0;
-        startTime = Time.time;
-        StartCoroutine(PlaybackCoroutine());
-        statusText.text = "Playing...";
-    }
-
-    private void PausePlayback()
-    {
-        isPlaying = false;
-        statusText.text = "Paused";
-    }
-
-    private void RestartPlayback()
-    {
-        isPlaying = false;
-        statusText.text = "Data Loaded. Ready to Play.";
-        carTransform.position = new Vector3(screenLeftBound, carTransform.position.y, carTransform.position.z);
-        currentIndex = 0;
-
-    }
-
-
-    private System.Collections.IEnumerator PlaybackCoroutine()
-    {
-        while (isPlaying && currentIndex < dataPoints.Count - 1)
-        {
-            float elapsedTime = Time.time - startTime;
-            
-            // Move to the next data point if enough time has passed
-            while (currentIndex < dataPoints.Count - 1 && elapsedTime >= dataPoints[currentIndex + 1].Time)
-            {
-                currentIndex++;
-                if (currentIndex == dataPoints.Count - 2)
-                {
-                    statusText.text = "Playback Finished";
-                }
-            }
-
-            // Interpolate the position based on time for smooth movement
-            if (currentIndex < dataPoints.Count - 1)
-            {
-                float timeA = dataPoints[currentIndex].Time;
-                float timeB = dataPoints[currentIndex + 1].Time;
-                float posA = dataPoints[currentIndex].Position;
-                float posB = dataPoints[currentIndex + 1].Position;
-
-                float t = (elapsedTime - timeA) / (timeB - timeA);
-                float interpolatedPosition = Mathf.Lerp(posA, posB, t);
-
-                float mappedPositionX = Mathf.Lerp(screenLeftBound, screenRightBound, interpolatedPosition / 200f);
-
-                // Update the car's position in 3D space
-                carTransform.position = new Vector3(mappedPositionX, carTransform.position.y, carTransform.position.z);
-
-                // Calculate velocity based on change in position
-                float velocity = (posB - posA) / (timeB - timeA);
-
-                // Rotate the car based on velocity
-                carSpinTransform.Rotate(Vector3.forward * velocity * 10f * Time.deltaTime);
-            }
-            yield return null;
-        }
-        isPlaying = false;
-    }
-
-    private void backButton()
-        {
-            int nextSceneIndex = SceneManager.GetActiveScene().buildIndex - 1;
-            SceneManager.LoadScene(nextSceneIndex);
-        }
-
 }
-
-
