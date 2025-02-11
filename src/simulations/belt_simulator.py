@@ -37,6 +37,8 @@ class BeltSimulator:
         length = radius * wrap_angle
         mass = RUBBER_DENSITY * BELT_CROSS_SECTIONAL_AREA * length
 
+        # print(f"Primary: {self.primary}, Length: {length}, Wrap angle: {wrap_angle}, Radius: {radius}, Mass: {mass}, Total Mass:")
+
         return tm.centrifugal_force(mass, ω, radius)
 
     def radial_force_from_clamping(self, clamping_force: float) -> float:

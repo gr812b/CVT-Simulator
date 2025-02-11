@@ -17,8 +17,8 @@ class TheoreticalModels:
         return k * x
 
     @staticmethod
-    def hookes_law_tors(k: float, θ: float, r: float) -> float:
-        return k * θ / r
+    def hookes_law_tors(k: float, θ: float) -> float:
+        return k * θ
 
     @staticmethod
     def centrifugal_force(m: float, ω: float, r: float) -> float:
@@ -68,9 +68,9 @@ class TheoreticalModels:
 
     @staticmethod
     def current_secondary_radius(
-        d: float, sheave_angle: float, belt_width: float, initial_radius: float
+        d: float, sheave_angle: float, belt_width: float, inner_radius: float
     ) -> float:
-        return initial_radius + TheoreticalModels.shift_to_pulley_radius_sec(
+        return inner_radius + TheoreticalModels.shift_to_pulley_radius_sec(
             d, sheave_angle, belt_width
         )
 

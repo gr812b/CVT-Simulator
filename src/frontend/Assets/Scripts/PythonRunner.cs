@@ -6,12 +6,13 @@ using UnityEngine;
 public struct Parameters
 {
     // Parameter variables
-    public double PrimaryWeight;
+    public double FlyweightMass;
     public double PrimaryRampGeometry;
     public double PrimarySpringRate;
     public double PrimarySpringPretension;
     public double SecondaryHelixGeometry;
-    public double SecondarySpringRate;
+    public double SecondaryTorsionSpringRate;
+    public double SecondaryCompressionSpringRate;
     public double SecondarySpringPretension;
     public double VehicleWeight;
     public double DriverWeight;
@@ -51,6 +52,8 @@ public class PythonRunner
 {
     // Paths to python environment and script
     private readonly string relativePythonPath = "../../../venv/Scripts/python.exe";
+    
+    // or for mac private readonly string relativePythonPath = "../../../venv/bin/python";
     private readonly string relativeScriptPath = "../../main.py";
 
     // Main function to run the python script

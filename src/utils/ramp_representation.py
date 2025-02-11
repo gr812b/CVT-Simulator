@@ -1,6 +1,7 @@
 import numpy as np
 from typing import List
 import matplotlib.pyplot as plt
+from constants.car_specs import BELT_WIDTH
 
 
 class RampSegment:
@@ -90,14 +91,14 @@ class PiecewiseRamp:
         """Computes the height at x, ensuring continuity dynamically."""
         for segment in self.segments:
             if segment.x_start <= x <= segment.x_end:
-                return segment.height(x)
+                return abs(segment.height(x))
         raise ValueError(f"x={x} is out of ramp range!")
 
     def slope(self, x: float) -> float:
         """Finds the appropriate segment and computes slope."""
         for segment in self.segments:
             if segment.x_start <= x <= segment.x_end:
-                return segment.slope(x)
+                return abs(segment.slope(x))
         raise ValueError(f"x={x} is out of ramp range!")
 
 
@@ -108,14 +109,16 @@ if __name__ == "__main__":
 
     # Sample primary ramp
     ramp = PiecewiseRamp()
-    ramp.add_segment(LinearSegment(x_start=0, x_end=0.01, slope=-1))
+    ramp.add_segment(LinearSegment(x_start=0, x_end=BELT_WIDTH / 5, slope=-1))
     ramp.add_segment(
-        CircularSegment(x_start=0.01, x_end=0.05, radius=0.25, theta_fraction=0.95)
+        CircularSegment(
+            x_start=BELT_WIDTH / 5, x_end=BELT_WIDTH, radius=0.05, theta_fraction=0.95
+        )
     )
 
     # Evaluate ramp
-    x_values = np.linspace(0, 0.05, 100)
-    y_values = [ramp.height(x) for x in x_values]
+    x_values = np.linspace(0, BELT_WIDTH, 100)
+    y_values = [-ramp.height(x) for x in x_values]
 
     # Plot results
     plt.plot(x_values, y_values)
@@ -133,5 +136,16 @@ if __name__ == "__main__":
     plt.xlabel("X Position")
     plt.ylabel("Slope")
     plt.title("Piecewise Ramp Slope Profile")
+    plt.grid()
+    plt.show()
+
+    # Evaluate angle
+    angle_values = [np.arctan(slope) * 180 / np.pi for slope in slope_values]
+
+    # Plot results
+    plt.plot(x_values, angle_values)
+    plt.xlabel("X Position")
+    plt.ylabel("Angle")
+    plt.title("Piecewise Ramp Angle Profile")
     plt.grid()
     plt.show()

@@ -13,17 +13,16 @@ public class GaugePlayback : PlaybackView
     [SerializeField] private TMP_Text velocityText;
     [SerializeField] private TMP_Text rpmText;
 
-    private float maxVelocity = 70.0f;
-    private float maxRPM = 6000.0f;
+    private float maxVelocity = 90.0f;
+    private float maxRPM = 4500.0f;
      private float minGaugeAngle = 135.0f; 
     private float maxGaugeAngle = -135.0f;  
 
     
     public override void Display(DataPoint dataPoint)
     {
-        float velocity = Mathf.Clamp(dataPoint.Velocity, 0, maxVelocity);  
-        //given angular velocity in rad/s, convert to rpm
-        float rpm = Mathf.Clamp(dataPoint.Angular_Velocity * 60 / (2 * Mathf.PI), 0, maxRPM);
+        float velocity = Mathf.Clamp(dataPoint.CarVelocity, 0, maxVelocity);  
+        float rpm = Mathf.Clamp(dataPoint.EngineRPM, 0, maxRPM);
         SetVelocity(velocity);
         SetRPM(rpm);
     }
