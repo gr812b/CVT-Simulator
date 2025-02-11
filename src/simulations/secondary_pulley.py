@@ -3,7 +3,6 @@ from utils.theoretical_models import TheoreticalModels as tm
 from constants.car_specs import (
     SHEAVE_ANGLE,
     BELT_WIDTH,
-    INNER_PRIMARY_PULLEY_RADIUS,
     INNER_SECONDARY_PULLEY_RADIUS,
 )
 from utils.ramp_representation import LinearSegment, PiecewiseRamp

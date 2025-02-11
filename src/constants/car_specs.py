@@ -1,6 +1,5 @@
 # This file should contain all the constants that define the car's specs
 import numpy as np
-import constants.constants
 
 # TODO: Look into inertia as it should be of all spinning parts
 ENGINE_INERTIA = 0.5  # kg*m^2

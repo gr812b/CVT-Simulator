@@ -285,5 +285,3 @@ ax2 = ax1.twinx()
 ax2.plot(result.time, angles, label="Angle", color="tab:purple", linestyle="dashed")
 ax2.set_ylabel("Angle (degrees)")
 ax2.legend(loc="upper right")
-
-#plt.show()
