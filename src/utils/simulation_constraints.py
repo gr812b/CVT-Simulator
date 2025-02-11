@@ -45,7 +45,9 @@ def car_velocity_constraint_event(t, y):
         INNER_SECONDARY_PULLEY_RADIUS,
     )
 
-    max_car_velocity = (state.engine_angular_velocity / cvt_ratio)  / GEARBOX_RATIO * WHEEL_RADIUS
+    max_car_velocity = (
+        (state.engine_angular_velocity / cvt_ratio) / GEARBOX_RATIO * WHEEL_RADIUS
+    )
 
     if abs(state.car_velocity) > max_car_velocity:
         state.car_velocity = max_car_velocity

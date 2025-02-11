@@ -109,9 +109,11 @@ if __name__ == "__main__":
 
     # Sample primary ramp
     ramp = PiecewiseRamp()
-    ramp.add_segment(LinearSegment(x_start=0, x_end=BELT_WIDTH/5, slope=-1))
+    ramp.add_segment(LinearSegment(x_start=0, x_end=BELT_WIDTH / 5, slope=-1))
     ramp.add_segment(
-        CircularSegment(x_start=BELT_WIDTH/5, x_end=BELT_WIDTH, radius=0.05, theta_fraction=0.95)
+        CircularSegment(
+            x_start=BELT_WIDTH / 5, x_end=BELT_WIDTH, radius=0.05, theta_fraction=0.95
+        )
     )
 
     # Evaluate ramp
@@ -136,7 +138,7 @@ if __name__ == "__main__":
     plt.title("Piecewise Ramp Slope Profile")
     plt.grid()
     plt.show()
-    
+
     # Evaluate angle
     angle_values = [np.arctan(slope) * 180 / np.pi for slope in slope_values]
 

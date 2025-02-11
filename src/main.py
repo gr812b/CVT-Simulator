@@ -73,7 +73,7 @@ secondary_belt = BeltSimulator(
 # Define the system of differential equations
 def angular_velocity_and_position_derivative(t, y):
     state = SystemState.from_array(y)
-    
+
     cvt_ratio = tm.current_cvt_ratio(
         state.shift_distance,
         SHEAVE_ANGLE,
@@ -81,7 +81,7 @@ def angular_velocity_and_position_derivative(t, y):
         INNER_PRIMARY_PULLEY_RADIUS,
         INNER_SECONDARY_PULLEY_RADIUS,
     )
-    
+
     # Get sources of torque
     gearbox_load = load_simulator.calculate_gearbox_load(state.car_velocity)
     engine_torque = engine_simulator.get_torque(state.engine_angular_velocity)
@@ -150,7 +150,9 @@ def angular_velocity_and_position_derivative(t, y):
     # Also consider the amount of torque that the belt can transfer due to friction, which limits torque at wheels, bogging down of engine, etc.
 
     # Maximum car velocity at the current engine speed (Wheels can't spin faster than the engine + gearbox)
-    max_car_velocity = (state.engine_angular_velocity / cvt_ratio)  / GEARBOX_RATIO * WHEEL_RADIUS
+    max_car_velocity = (
+        (state.engine_angular_velocity / cvt_ratio) / GEARBOX_RATIO * WHEEL_RADIUS
+    )
 
     if abs(state.car_velocity) > max_car_velocity:
         car_acceleration = 0
@@ -197,10 +199,10 @@ solution = solve_ivp(
 result = SimulationResult(solution)
 
 result.write_csv("simulation_output.csv")
-#result.plot("car_velocity")
-#result.plot("shift_distance")
-#result.plot("shift_velocity")
-#result.plot("engine_angular_velocity")
+# result.plot("car_velocity")
+# result.plot("shift_distance")
+# result.plot("shift_velocity")
+# result.plot("engine_angular_velocity")
 
 # Loop through the solution and recalculate the primary and secondary forces, then plot it
 primary_forces = []
@@ -209,10 +211,12 @@ prim_radial = []
 sec_radial = []
 
 ramp = PiecewiseRamp()
-ramp.add_segment(LinearSegment(x_start=0, x_end=BELT_WIDTH/5, slope=-1))
+ramp.add_segment(LinearSegment(x_start=0, x_end=BELT_WIDTH / 5, slope=-1))
 ramp.add_segment(
-        CircularSegment(x_start=BELT_WIDTH/5, x_end=BELT_WIDTH, radius=0.05, theta_fraction=0.95)
+    CircularSegment(
+        x_start=BELT_WIDTH / 5, x_end=BELT_WIDTH, radius=0.05, theta_fraction=0.95
     )
+)
 angles = []
 for state in result.states:
     shift_distance = state.shift_distance

@@ -1,6 +1,7 @@
 import argparse
 from dataclasses import dataclass
 
+
 @dataclass
 class SimulationArgs:
     flyweight_mass: float
@@ -15,6 +16,7 @@ class SimulationArgs:
     driver_weight: float
     traction: float
     angle_of_incline: float
+
 
 def get_arguments() -> SimulationArgs:
     parser = argparse.ArgumentParser(description="Simulate a Baja SAE car")

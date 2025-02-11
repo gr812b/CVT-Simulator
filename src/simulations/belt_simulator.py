@@ -10,6 +10,7 @@ from constants.car_specs import (
 )
 from constants.constants import RUBBER_DENSITY
 
+
 class BeltSimulator:
     def __init__(
         self,
@@ -35,8 +36,8 @@ class BeltSimulator:
 
         length = radius * wrap_angle
         mass = RUBBER_DENSITY * BELT_CROSS_SECTIONAL_AREA * length
-        
-        #print(f"Primary: {self.primary}, Length: {length}, Wrap angle: {wrap_angle}, Radius: {radius}, Mass: {mass}, Total Mass:")
+
+        # print(f"Primary: {self.primary}, Length: {length}, Wrap angle: {wrap_angle}, Radius: {radius}, Mass: {mass}, Total Mass:")
 
         return tm.centrifugal_force(mass, ω, radius)
 
