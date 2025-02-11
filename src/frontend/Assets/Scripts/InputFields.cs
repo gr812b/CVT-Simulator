@@ -9,17 +9,17 @@ public static class SimulationData
 {
     public static Parameters parameters = new Parameters
     {
-        FlyweightMass = 0.8,
+        FlyweightMass = 0.6,
         PrimaryRampGeometry = 0.0,
         PrimarySpringRate = 500.0,
         PrimarySpringPretension = 0.2,
         SecondaryHelixGeometry = 0.0,
-        SecondaryTorsionSpringRate = 5.0,
+        SecondaryTorsionSpringRate = 100.0,
         SecondaryCompressionSpringRate = 100.0,
         SecondarySpringPretension = 15.0,
-        VehicleWeight = 226.8,
-        DriverWeight = 77.107,
-        Traction = 0.0,
+        VehicleWeight = 225.0,
+        DriverWeight = 75.0,
+        Traction = 100.0,
         AngleOfIncline = 0.0
     };
 }

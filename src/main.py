@@ -286,4 +286,4 @@ ax2.plot(result.time, angles, label="Angle", color="tab:purple", linestyle="dash
 ax2.set_ylabel("Angle (degrees)")
 ax2.legend(loc="upper right")
 
-plt.show()
+#plt.show()

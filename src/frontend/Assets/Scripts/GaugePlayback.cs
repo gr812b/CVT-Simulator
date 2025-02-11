@@ -13,8 +13,8 @@ public class GaugePlayback : PlaybackView
     [SerializeField] private TMP_Text velocityText;
     [SerializeField] private TMP_Text rpmText;
 
-    private float maxVelocity = 70.0f;
-    private float maxRPM = 6000.0f;
+    private float maxVelocity = 90.0f;
+    private float maxRPM = 4500.0f;
      private float minGaugeAngle = 135.0f; 
     private float maxGaugeAngle = -135.0f;  
 

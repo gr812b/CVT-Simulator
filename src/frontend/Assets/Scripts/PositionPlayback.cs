@@ -20,7 +20,7 @@ public class PositionPlayback : PlaybackView
     InputFields inputFields;
     private float angle;
     // Max Position will be changed
-    private float maxPosition = 175;
+    private float maxPosition = 127;
     private float canvasWidth;
 
     private void Start()
@@ -70,17 +70,14 @@ public class PositionPlayback : PlaybackView
         float halfCanvasHeight = canvasRect.rect.height / 2;
 
         startPosition = new Vector3(-halfCanvasWidth+25, -halfCanvasHeight, 0);
-        
-        totalDistance = canvasRect.rect.width-50;        
+        endPosition = new Vector3(halfCanvasWidth-25, -halfCanvasHeight, 0);
+        totalDistance = canvasRect.rect.width-25;        
 
         if (angle != 0) {
             float radius = totalDistance;
             float xOffSet = radius * Mathf.Cos(angle*Mathf.Deg2Rad);
             float yOffSet = radius * Mathf.Sin(angle*Mathf.Deg2Rad);
             endPosition = new Vector3(startPosition.x + xOffSet, startPosition.y + yOffSet, 0);
-        }
-        else{
-            endPosition = new Vector3(startPosition.x + totalDistance, startPosition.y, 0);
         }
         circle1.anchoredPosition = new Vector2(startPosition.x, startPosition.y);
         circle2.anchoredPosition = new Vector2(endPosition.x, endPosition.y);
