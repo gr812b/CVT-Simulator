@@ -15,7 +15,7 @@ public class DataPoint
     public float PrimaryShiftDistance { get; }
     public float SecondaryShiftDistance { get; }
 
-    private readonly float maxShiftDistance = 0.05f;
+    private readonly float maxShiftDistance = 0.017f;
 
     public DataPoint(float time, float engineAngularVelocity, float engineAngularPosition, float carVelocity, float carPosition, float shiftDistance)
     {
