@@ -1,5 +1,3 @@
-using System.Diagnostics;
-using System.IO;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;

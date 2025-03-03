@@ -1,10 +1,6 @@
-using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
-using System;
 using UnityEngine.UI;
-using TMPro;
-using UnityEngine.SceneManagement;
 using SFB; 
 
 public class DownloadCSV : MonoBehaviour
