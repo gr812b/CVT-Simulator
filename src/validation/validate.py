@@ -23,7 +23,9 @@ def main():
     parser.add_argument("--start_time", type=str, default="0")
     parser.add_argument("--end_time", type=str, default="1:00")
     parser.add_argument("--real_path", type=str, default="data/real_data.csv")
-    parser.add_argument("--sim_path", type=str, default="../frontend/simulation_output.csv")
+    parser.add_argument(
+        "--sim_path", type=str, default="../frontend/simulation_output.csv"
+    )
     args = parser.parse_args()
 
     # read real data and simulation data
@@ -42,7 +44,10 @@ def main():
     start_real_time = np.max([start_time, real_data["Timestamp (ms)"].iloc[0] / 1000])
 
     # filter real data to match start and end time
-    real_data = real_data[(real_data["Timestamp (ms)"] >= start_real_time * 1000) & (real_data["Timestamp (ms)"] <= end_time * 1000)]
+    real_data = real_data[
+        (real_data["Timestamp (ms)"] >= start_real_time * 1000)
+        & (real_data["Timestamp (ms)"] <= end_time * 1000)
+    ]
 
     # convert real data timestamps to seconds and adjust by start time
     real_data["time"] = real_data["Timestamp (ms)"] / 1000 - start_time
@@ -54,7 +59,9 @@ def main():
     sim_data = sim_data[(sim_data["time"] <= end_real_time)]
 
     # interpolate the specific column of simulation data to match the real data timestamps
-    interpolated_data = np.interp(real_data["time"], sim_data["time"], sim_data[args.sim_col])
+    interpolated_data = np.interp(
+        real_data["time"], sim_data["time"], sim_data[args.sim_col]
+    )
 
     # calculate squared error between real data and interpolated simulation data
     squared_error = (real_data[args.real_col] - interpolated_data) ** 2
@@ -63,8 +70,15 @@ def main():
     # data share the left y-axis, mse uses the right y-axis
     _, ax1 = plt.subplots()
     ax2 = ax1.twinx()
-    ax1.plot(real_data["time"], real_data[args.real_col], label=args.real_path.split("/")[-1], color="blue")
-    ax1.plot(real_data["time"], interpolated_data, label="Simulation Output", color="green")
+    ax1.plot(
+        real_data["time"],
+        real_data[args.real_col],
+        label=args.real_path.split("/")[-1],
+        color="blue",
+    )
+    ax1.plot(
+        real_data["time"], interpolated_data, label="Simulation Output", color="green"
+    )
     ax2.plot(real_data["time"], squared_error, label="Squared Error", color="red")
     ax1.set_xlabel("Time (s)")
     ax1.set_ylabel(args.real_col)
