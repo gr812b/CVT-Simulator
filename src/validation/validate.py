@@ -68,20 +68,24 @@ def main():
 
     # plot real data, simulation data and the mean squared error all in one graph
     # data share the left y-axis, mse uses the right y-axis
-    _, ax1 = plt.subplots()
+    fig, ax1 = plt.subplots()
     ax2 = ax1.twinx()
+
     ax1.plot(
         real_data["time"],
         real_data[args.real_col],
-        label=args.real_path.split("/")[-1],
+        label=f"{args.real_col} ({args.real_path.split('/')[-1]})",
         color="blue",
     )
     ax1.plot(
-        real_data["time"], interpolated_data, label="Simulation Output", color="green"
+        real_data["time"],
+        interpolated_data,
+        label=f"{args.sim_col} ({args.sim_path.split('/')[-1]})",
+        color="green",
     )
     ax2.plot(real_data["time"], squared_error, label="Squared Error", color="red")
     ax1.set_xlabel("Time (s)")
-    ax1.set_ylabel(args.real_col)
+    ax1.set_ylabel(f"{args.real_col} & {args.sim_col}")
     ax2.set_ylabel("Mean Squared Error")
 
     # get each set of legends
@@ -92,7 +96,7 @@ def main():
     labels2 = [f"{label} (MSE: {np.mean(squared_error):.2f})" for label in labels2]
 
     # combine legends
-    ax1.legend(lines + lines2, labels + labels2, loc=0)
+    fig.legend(lines + lines2, labels + labels2, loc="upper left")
 
     plt.show()
 
