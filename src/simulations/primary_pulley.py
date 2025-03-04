@@ -24,7 +24,7 @@ class PrimaryPulley:
             CircularSegment(
                 x_start=BELT_WIDTH / 5,
                 x_end=BELT_WIDTH,
-                radius=0.05,
+                radius=0.025,
                 theta_fraction=0.95,
             )
         )

@@ -19,9 +19,6 @@ class SimulationResult:
         """Writes the parsed solution states to a CSV file."""
         data = {
             "time": self.time,
-            "engine_angular_velocity": [
-                state.engine_angular_velocity for state in self.states
-            ],
             "engine_angular_position": [
                 state.engine_angular_position for state in self.states
             ],
@@ -37,9 +34,6 @@ class SimulationResult:
         """Plots a selected field over time."""
         # Mapping field names to their respective data
         field_data = {
-            "engine_angular_velocity": [
-                state.engine_angular_velocity for state in self.states
-            ],
             "engine_angular_position": [
                 state.engine_angular_position for state in self.states
             ],

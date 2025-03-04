@@ -112,7 +112,10 @@ if __name__ == "__main__":
     ramp.add_segment(LinearSegment(x_start=0, x_end=BELT_WIDTH / 5, slope=-1))
     ramp.add_segment(
         CircularSegment(
-            x_start=BELT_WIDTH / 5, x_end=BELT_WIDTH, radius=0.05, theta_fraction=0.95
+            x_start=BELT_WIDTH / 5,
+            x_end=BELT_WIDTH,
+            radius=0.025,
+            theta_fraction=1,
         )
     )
 
