@@ -86,25 +86,26 @@ def angular_velocity_and_position_derivative(t, y):
         INNER_PRIMARY_PULLEY_RADIUS,
         INNER_SECONDARY_PULLEY_RADIUS,
     )
-    print(cvt_ratio)
     wheel_to_engine_ratio = (cvt_ratio * GEARBOX_RATIO) / WHEEL_RADIUS
-    engine_to_wheel_ratio = 1 / wheel_to_engine_ratio
-
-    # Get sources of torque
-    gearbox_load = load_simulator.calculate_gearbox_load(state.car_velocity)
-    engine_torque = engine_simulator.get_torque(state.engine_angular_velocity)
+    engine_velocity = state.car_velocity * wheel_to_engine_ratio
 
     # Vehicle acceleration
-    engine_power = engine_simulator.get_power(state.engine_angular_velocity)
+    engine_power = engine_simulator.get_power(engine_velocity)
     car_acceleration = load_simulator.calculate_acceleration(state.car_velocity, engine_power)
+
+    # Override engine velocity
+    
 
     # ------------------
     # PULLEY STUFF BELOW
     # ------------------
 
+    # Get torque feedback
+    engine_torque = engine_simulator.get_torque(engine_velocity)
+
     primary_force = primary_simulator.calculate_net_force(
         state.shift_distance,
-        state.engine_angular_velocity,
+        engine_velocity,
     )
     secondary_force = secondary_simulator.calculate_net_force(
         engine_torque * cvt_ratio,
@@ -121,13 +122,13 @@ def angular_velocity_and_position_derivative(t, y):
         CENTER_TO_CENTER,
     )
     primary_belt_radial = primary_belt.calculate_radial_force(
-        state.engine_angular_velocity,
+        engine_velocity,
         state.shift_distance,
         primary_wrap_angle,
         primary_force,
     )
     secondary_belt_radial = secondary_belt.calculate_radial_force(
-        state.engine_angular_velocity,
+        engine_velocity,
         state.shift_distance,
         secondary_wrap_angle,
         secondary_force,
@@ -139,8 +140,8 @@ def angular_velocity_and_position_derivative(t, y):
     ) / cvt_moving_mass  # TODO: See if this belt acceleration is actually equal to shift accel
 
     return [
-        car_acceleration * wheel_to_engine_ratio, # This forces the engine to match the car's acceleration i.e. no slip
-        state.engine_angular_velocity,
+        0, # This forces the engine to match the car's acceleration i.e. no slip
+        engine_velocity,
         car_acceleration,
         state.car_velocity,
         shift_acceleration,
@@ -148,7 +149,7 @@ def angular_velocity_and_position_derivative(t, y):
     ]
 
 
-time_span = (0, 7)
+time_span = (0, 30)
 time_eval = np.linspace(*time_span, 10000)
 initial_state = SystemState(
     engine_angular_velocity=rpm_to_rad_s(2400),
@@ -174,32 +175,23 @@ result = SimulationResult(solution)
 
 result.write_csv("simulation_output.csv")
 result.plot("car_velocity")
-result.plot("car_position")
-result.plot("shift_distance")
+# result.plot("car_position")
+# result.plot("shift_distance")
 # result.plot("shift_velocity")
-result.plot("engine_angular_velocity")
+# result.plot("engine_angular_velocity")
 
 # Loop through the solution and recalculate the primary and secondary forces, then plot it
-primary_forces = []
-secondary_forces = []
-prim_radial = []
-sec_radial = []
+vehicle_accels = []
+engine_angular_velocities = []
+air_resistance = []
+engine_powers = []
+cvt_ratios = []
+vehicle_speeds = []
+engine_speeds = []
+times = result.time
 
-ramp = PiecewiseRamp()
-ramp.add_segment(LinearSegment(x_start=0, x_end=BELT_WIDTH / 5, slope=-1))
-ramp.add_segment(
-    CircularSegment(
-        x_start=BELT_WIDTH / 5, x_end=BELT_WIDTH, radius=0.05, theta_fraction=0.95
-    )
-)
-angles = []
 for state in result.states:
-    shift_distance = state.shift_distance
-    if shift_distance < 0:
-        shift_distance = 0
-    if shift_distance > BELT_WIDTH:
-        shift_distance = BELT_WIDTH
-    angles.append(np.sin(np.arctan(ramp.slope(shift_distance))))
+    # Vehicle acceleration
     cvt_ratio = tm.current_cvt_ratio(
         state.shift_distance,
         SHEAVE_ANGLE,
@@ -207,59 +199,53 @@ for state in result.states:
         INNER_PRIMARY_PULLEY_RADIUS,
         INNER_SECONDARY_PULLEY_RADIUS,
     )
-    current_engine_angular_velocity = (state.car_velocity / WHEEL_RADIUS) * GEARBOX_RATIO * cvt_ratio
-    primary_force = primary_simulator.calculate_net_force(
-        state.shift_distance,
-        current_engine_angular_velocity,
-    )
-    secondary_force = secondary_simulator.calculate_net_force(
-        engine_simulator.get_torque(current_engine_angular_velocity) * cvt_ratio,
-        state.shift_distance,
-    )
-    primary_forces.append(primary_force)
-    secondary_forces.append(secondary_force)
-    primary_wrap_angle = tm.primary_wrap_angle(
-        state.shift_distance,
-        CENTER_TO_CENTER,
-    )
-    secondary_wrap_angle = tm.secondary_wrap_angle(
-        state.shift_distance,
-        CENTER_TO_CENTER,
-    )
-    prim_radial.append(
-        primary_belt.calculate_radial_force(
-            current_engine_angular_velocity,
-            state.shift_distance,
-            primary_wrap_angle,
-            primary_force,
-        )
-    )
-    sec_radial.append(
-        secondary_belt.calculate_radial_force(
-            current_engine_angular_velocity,
-            state.shift_distance,
-            secondary_wrap_angle,
-            secondary_force,
-        )
-    )
+    wheel_to_engine_ratio = (cvt_ratio * GEARBOX_RATIO) / WHEEL_RADIUS
+    actual_engine_velocity = state.car_velocity * wheel_to_engine_ratio
 
+    engine_power = engine_simulator.get_power(state.engine_angular_velocity)
+    car_acceleration = load_simulator.calculate_acceleration(state.car_velocity, engine_power)
+    air_resis = load_simulator.calculate_drag_force(state.car_velocity)/load_simulator.car_mass
+
+    vehicle_accels.append(car_acceleration + air_resis)
+    engine_angular_velocities.append(actual_engine_velocity)
+    air_resistance.append(air_resis)
+    engine_powers.append(engine_power)
+
+    cvt_ratio = tm.current_cvt_ratio(
+        state.shift_distance,
+        SHEAVE_ANGLE,
+        BELT_WIDTH,
+        INNER_PRIMARY_PULLEY_RADIUS,
+        INNER_SECONDARY_PULLEY_RADIUS,
+    )
+    cvt_ratios.append(cvt_ratio)
+    vehicle_speeds.append(state.car_velocity)
+    engine_speeds.append(actual_engine_velocity)
+    
+
+# Plot the vehicle speed, engine speed, and CVT ratio against time
 fig, ax1 = plt.subplots()
 
-# Primary Y-axis (left) for forces
-ax1.plot(result.time, primary_forces, label="Primary Force", color="tab:blue")
-ax1.plot(result.time, secondary_forces, label="Secondary Force", color="tab:orange")
-ax1.plot(result.time, prim_radial, label="Primary Radial", color="tab:green")
-ax1.plot(result.time, sec_radial, label="Secondary Radial", color="tab:red")
 ax1.set_xlabel("Time (s)")
-ax1.set_ylabel("Force (N)")
-ax1.set_title("Primary and Secondary Forces Over Time")
-ax1.legend(loc="upper left")
-ax1.grid()
+ax1.set_ylabel("Vehicle Speed (m/s)", color="#DDDD40")
+ax1.plot(times, vehicle_speeds, label="Vehicle Speed", color="#DDDD40", linewidth=4)
+ax1.tick_params(axis="y", labelcolor="#DDDD40")
 
-# Secondary Y-axis (right) for angles
+# Create a second y-axis for the engine speed
 ax2 = ax1.twinx()
-ax2.plot(result.time, angles, label="Angle", color="tab:purple", linestyle="dashed")
-ax2.set_ylabel("Angle (degrees)")
-ax2.legend(loc="upper right")
+ax2.set_ylabel("Engine Speed (rad/s)", color="#000000")
+ax2.plot(times, engine_speeds, label="Engine Speed", color="#000000", linewidth=1.5)
+ax2.tick_params(axis="y", labelcolor="#000000")
 
+# Create a third y-axis for the CVT ratio
+ax3 = ax1.twinx()
+ax3.spines["right"].set_position(("outward", 60))  # Offset the third axis
+ax3.set_ylabel("CVT Ratio", color="tab:green")
+ax3.plot(times, cvt_ratios, label="CVT Ratio", color="tab:green", linestyle='dashdot', linewidth=2)
+ax3.tick_params(axis="y", labelcolor="tab:green")
+
+fig.tight_layout()
+plt.title("Vehicle Speed, Engine Speed, and CVT Ratio vs Time")
+plt.grid()
 plt.show()
+    

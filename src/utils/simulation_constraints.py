@@ -18,7 +18,7 @@ def update_y(y, state: SystemState):
 
 def shift_constraint_event(t, y):
     state = SystemState.from_array(y)
-    MAX_SHIFT = BELT_WIDTH
+    MAX_SHIFT = 0.01
     shift_velocity = state.shift_velocity
     shift_distance = state.shift_distance
 
