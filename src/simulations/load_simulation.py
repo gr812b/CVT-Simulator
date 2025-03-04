@@ -42,7 +42,7 @@ class LoadSimulator:
 
         return drag_force
 
-    def calculate_total_load_torque(self, velocity: float) -> float:
+    def calculate_total_load_force(self, velocity: float) -> float:
         """Calculate the total load torque on the wheels due to drag and incline."""
         incline_force = self.calculate_incline_force()
         drag_force = self.calculate_drag_force(velocity)
@@ -52,7 +52,15 @@ class LoadSimulator:
     def calculate_gearbox_load(self, velocity: float) -> float:
         """Calculate the torque at the gearbox"""
         return (
-            self.calculate_total_load_torque(velocity)
+            self.calculate_total_load_force(velocity)
             * self.wheel_radius
             / self.gearbox_ratio
         )
+    
+    def calculate_acceleration(self, velocity: float, power: float) -> float:
+        """Calculate the acceleration of the car."""
+        engine = power / (velocity * self.car_mass)
+        air_resistance = self.calculate_drag_force(velocity)/self.car_mass
+        gravity = self.g * math.sin(self.incline_angle)
+        accel = engine - air_resistance - gravity
+        return accel
