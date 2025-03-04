@@ -12,6 +12,8 @@ engineSpecs = [
     {"rpm": 3200, "torque": 15.4},
     {"rpm": 3400, "torque": 14.5},
     {"rpm": 3600, "torque": 13.5},
+
+    {"rpm": 4000, "torque": 0},
 ]
 
 # SI Units engine specs
