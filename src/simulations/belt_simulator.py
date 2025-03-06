@@ -2,7 +2,6 @@ import numpy as np
 import math
 from utils.theoretical_models import TheoreticalModels as tm
 from constants.car_specs import (
-    BELT_WIDTH,
     INNER_PRIMARY_PULLEY_RADIUS,
     INNER_SECONDARY_PULLEY_RADIUS,
     SHEAVE_ANGLE,
@@ -31,7 +30,7 @@ class BeltSimulator:
             )
         else:
             radius = tm.current_secondary_radius(
-                shift_distance, SHEAVE_ANGLE, BELT_WIDTH, INNER_SECONDARY_PULLEY_RADIUS
+                shift_distance, SHEAVE_ANGLE, INNER_SECONDARY_PULLEY_RADIUS
             )
 
         length = radius * wrap_angle

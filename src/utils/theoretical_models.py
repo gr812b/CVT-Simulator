@@ -3,7 +3,8 @@ from constants.car_specs import (
     INNER_PRIMARY_PULLEY_RADIUS,
     INNER_SECONDARY_PULLEY_RADIUS,
     SHEAVE_ANGLE,
-    BELT_WIDTH,
+    BELT_HEIGHT,
+    MAX_SHIFT,
 )
 
 
@@ -54,36 +55,35 @@ class TheoreticalModels:
 
     @staticmethod  # See theoretical model TM:D2R
     def shift_to_pulley_radius_sec(
-        d: float, sheave_angle: float, belt_width: float
+        d: float, sheave_angle: float
     ) -> float:
-        return (belt_width - d) / (2 * np.tan(sheave_angle / 2))
+        return (MAX_SHIFT - d) / (2 * np.tan(sheave_angle / 2))
 
     @staticmethod
     def current_primary_radius(
         d: float, sheave_angle: float, initial_radius: float
     ) -> float:
-        return initial_radius + TheoreticalModels.shift_to_pulley_radius_prim(
+        return initial_radius + BELT_HEIGHT/2 + TheoreticalModels.shift_to_pulley_radius_prim(
             d, sheave_angle
         )
 
     @staticmethod
     def current_secondary_radius(
-        d: float, sheave_angle: float, belt_width: float, inner_radius: float
+        d: float, sheave_angle: float, inner_radius: float
     ) -> float:
-        return inner_radius + TheoreticalModels.shift_to_pulley_radius_sec(
-            d, sheave_angle, belt_width
+        return inner_radius + BELT_HEIGHT/2 + TheoreticalModels.shift_to_pulley_radius_sec(
+            d, sheave_angle
         )
 
     @staticmethod
     def current_cvt_ratio(
         d: float,
         sheave_angle: float,
-        belt_width: float,
         initial_primary_radius: float,
         initial_secondary_radius: float,
     ) -> float:
         secondary_radius = TheoreticalModels.current_secondary_radius(
-            d, sheave_angle, belt_width, initial_secondary_radius
+            d, sheave_angle, initial_secondary_radius
         )
         primary_radius = TheoreticalModels.current_primary_radius(
             d, sheave_angle, initial_primary_radius
@@ -111,7 +111,7 @@ class TheoreticalModels:
             shift_distance, SHEAVE_ANGLE, INNER_PRIMARY_PULLEY_RADIUS
         )
         secondary_radius = TheoreticalModels.current_secondary_radius(
-            shift_distance, SHEAVE_ANGLE, BELT_WIDTH, INNER_SECONDARY_PULLEY_RADIUS
+            shift_distance, SHEAVE_ANGLE, INNER_SECONDARY_PULLEY_RADIUS
         )
         wrap_offset = TheoreticalModels.wrap_angle(
             primary_radius, secondary_radius, center_to_center
@@ -130,7 +130,7 @@ class TheoreticalModels:
             shift_distance, SHEAVE_ANGLE, INNER_PRIMARY_PULLEY_RADIUS
         )
         secondary_radius = TheoreticalModels.current_secondary_radius(
-            shift_distance, SHEAVE_ANGLE, BELT_WIDTH, INNER_SECONDARY_PULLEY_RADIUS
+            shift_distance, SHEAVE_ANGLE, INNER_SECONDARY_PULLEY_RADIUS
         )
         wrap_offset = TheoreticalModels.wrap_angle(
             primary_radius, secondary_radius, center_to_center
