@@ -56,11 +56,11 @@ class LoadSimulator:
             * self.wheel_radius
             / self.gearbox_ratio
         )
-    
+
     def calculate_acceleration(self, velocity: float, power: float) -> float:
         """Calculate the acceleration of the car."""
         engine = power / (velocity * self.car_mass)
-        air_resistance = self.calculate_drag_force(velocity)/self.car_mass
+        air_resistance = self.calculate_drag_force(velocity) / self.car_mass
         gravity = self.g * math.sin(self.incline_angle)
         accel = engine - air_resistance - gravity
         return accel

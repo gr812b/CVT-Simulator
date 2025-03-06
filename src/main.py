@@ -20,8 +20,6 @@ from constants.car_specs import (
     INITIAL_FLYWEIGHT_RADIUS,
     HELIX_RADIUS,
     SHEAVE_ANGLE,
-    INNER_PRIMARY_PULLEY_RADIUS,
-    INNER_SECONDARY_PULLEY_RADIUS,
     CENTER_TO_CENTER,
     MAX_SHIFT,
 )
@@ -41,7 +39,7 @@ load_simulator = LoadSimulator(
     car_mass=CAR_MASS + args.driver_weight,
     wheel_radius=WHEEL_RADIUS,
     gearbox_ratio=GEARBOX_RATIO,
-    incline_angle=deg_to_rad(0),
+    incline_angle=deg_to_rad(30),
 )
 car_simulator = CarSimulator(car_mass=CAR_MASS + args.driver_weight)
 primary_simulator = PrimaryPulley(
@@ -68,6 +66,7 @@ secondary_belt = BeltSimulator(
     primary=False,
 )
 
+
 # Define the system of differential equations
 def angular_velocity_and_position_derivative(t, y):
     state = SystemState.from_array(y)
@@ -77,18 +76,15 @@ def angular_velocity_and_position_derivative(t, y):
     # ---------------------------
 
     # Some ratios
-    cvt_ratio = tm.current_cvt_ratio(
-        state.shift_distance,
-        SHEAVE_ANGLE,
-        INNER_PRIMARY_PULLEY_RADIUS,
-        INNER_SECONDARY_PULLEY_RADIUS,
-    )
+    cvt_ratio = tm.current_cvt_ratio(state.shift_distance)
     wheel_to_engine_ratio = (cvt_ratio * GEARBOX_RATIO) / WHEEL_RADIUS
     engine_velocity = state.car_velocity * wheel_to_engine_ratio
 
     # Vehicle acceleration
     engine_power = engine_simulator.get_power(engine_velocity)
-    car_acceleration = load_simulator.calculate_acceleration(state.car_velocity, engine_power)
+    car_acceleration = load_simulator.calculate_acceleration(
+        state.car_velocity, engine_power
+    )
 
     # ------------------
     # PULLEY STUFF BELOW
@@ -107,14 +103,8 @@ def angular_velocity_and_position_derivative(t, y):
     )
 
     # Convert direct clamping to radial forces
-    primary_wrap_angle = tm.primary_wrap_angle(
-        state.shift_distance,
-        CENTER_TO_CENTER,
-    )
-    secondary_wrap_angle = tm.secondary_wrap_angle(
-        state.shift_distance,
-        CENTER_TO_CENTER,
-    )
+    primary_wrap_angle = tm.primary_wrap_angle(state.shift_distance)
+    secondary_wrap_angle = tm.secondary_wrap_angle(state.shift_distance)
     primary_belt_radial = primary_belt.calculate_radial_force(
         engine_velocity,
         state.shift_distance,
@@ -130,7 +120,7 @@ def angular_velocity_and_position_derivative(t, y):
 
     cvt_moving_mass = 10  # TODO: Use constants
     # TODO: See if this belt acceleration is actually equal to shift accel
-    shift_acceleration = ((primary_belt_radial - secondary_belt_radial) / cvt_moving_mass)
+    shift_acceleration = (primary_belt_radial - secondary_belt_radial) / cvt_moving_mass
 
     clamp_factor = logistic_clamp(state.shift_distance, 0.0, MAX_SHIFT, slope=10000.0)
     # shift_acceleration *= clamp_factor
@@ -146,12 +136,14 @@ def angular_velocity_and_position_derivative(t, y):
     ]
 
 
-time_span = (0, 150)
+time_span = (0, 15)
 time_eval = np.linspace(*time_span, 10000)
 initial_state = SystemState(
     engine_angular_velocity=rpm_to_rad_s(2400),
     engine_angular_position=0.0,
-    car_velocity=rpm_to_rad_s(2400)/(GEARBOX_RATIO * 3.338941738205263) * WHEEL_RADIUS,
+    car_velocity=rpm_to_rad_s(2400)
+    / (GEARBOX_RATIO * 3.338941738205263)
+    * WHEEL_RADIUS,
     car_position=0.0,
     shift_velocity=0.0,
     shift_distance=0.0,
@@ -164,7 +156,7 @@ solution = solve_ivp(
     initial_state.to_array(),
     t_eval=time_eval,
     events=constraints,
-    rtol=1e-6,
+    rtol=1e-5,
     atol=1e-9,
 )
 
@@ -189,34 +181,29 @@ times = result.time
 
 for state in result.states:
     # Vehicle acceleration
-    cvt_ratio = tm.current_cvt_ratio(
-        state.shift_distance,
-        SHEAVE_ANGLE,
-        INNER_PRIMARY_PULLEY_RADIUS,
-        INNER_SECONDARY_PULLEY_RADIUS,
-    )
+    cvt_ratio = tm.current_cvt_ratio(state.shift_distance)
     wheel_to_engine_ratio = (cvt_ratio * GEARBOX_RATIO) / WHEEL_RADIUS
     actual_engine_velocity = state.car_velocity * wheel_to_engine_ratio
 
     engine_power = engine_simulator.get_power(state.engine_angular_velocity)
-    car_acceleration = load_simulator.calculate_acceleration(state.car_velocity, engine_power)
-    air_resis = load_simulator.calculate_drag_force(state.car_velocity)/load_simulator.car_mass
+    car_acceleration = load_simulator.calculate_acceleration(
+        state.car_velocity, engine_power
+    )
+    air_resis = (
+        load_simulator.calculate_drag_force(state.car_velocity)
+        / load_simulator.car_mass
+    )
 
     vehicle_accels.append(car_acceleration + air_resis)
     engine_angular_velocities.append(actual_engine_velocity)
     air_resistance.append(air_resis)
     engine_powers.append(engine_power)
 
-    cvt_ratio = tm.current_cvt_ratio(
-        state.shift_distance,
-        SHEAVE_ANGLE,
-        INNER_PRIMARY_PULLEY_RADIUS,
-        INNER_SECONDARY_PULLEY_RADIUS,
-    )
+    cvt_ratio = tm.current_cvt_ratio(state.shift_distance)
     cvt_ratios.append(cvt_ratio)
     vehicle_speeds.append(state.car_velocity)
     engine_speeds.append(actual_engine_velocity)
-    
+
 
 # Plot the vehicle speed, engine speed, and CVT ratio against time
 fig, ax1 = plt.subplots()
@@ -236,7 +223,14 @@ ax2.tick_params(axis="y", labelcolor="#000000")
 ax3 = ax1.twinx()
 ax3.spines["right"].set_position(("outward", 60))  # Offset the third axis
 ax3.set_ylabel("CVT Ratio", color="tab:green")
-ax3.plot(times, cvt_ratios, label="CVT Ratio", color="tab:green", linestyle='dashdot', linewidth=2)
+ax3.plot(
+    times,
+    cvt_ratios,
+    label="CVT Ratio",
+    color="tab:green",
+    linestyle="dashdot",
+    linewidth=2,
+)
 ax3.tick_params(axis="y", labelcolor="tab:green")
 
 fig.tight_layout()
@@ -261,12 +255,7 @@ for state in result.states:
         shift_distance = MAX_SHIFT
 
     angles.append(np.sin(np.arctan(ramp.slope(shift_distance))))
-    cvt_ratio = tm.current_cvt_ratio(
-        state.shift_distance,
-        SHEAVE_ANGLE,
-        INNER_PRIMARY_PULLEY_RADIUS,
-        INNER_SECONDARY_PULLEY_RADIUS,
-    )
+    cvt_ratio = tm.current_cvt_ratio(state.shift_distance,)
     primary_force = primary_simulator.calculate_net_force(
         state.shift_distance,
         state.engine_angular_velocity,
@@ -277,14 +266,8 @@ for state in result.states:
     )
     primary_forces.append(primary_force)
     secondary_forces.append(secondary_force)
-    primary_wrap_angle = tm.primary_wrap_angle(
-        state.shift_distance,
-        CENTER_TO_CENTER,
-    )
-    secondary_wrap_angle = tm.secondary_wrap_angle(
-        state.shift_distance,
-        CENTER_TO_CENTER,
-    )
+    primary_wrap_angle = tm.primary_wrap_angle(state.shift_distance)
+    secondary_wrap_angle = tm.secondary_wrap_angle(state.shift_distance)
     prim_radial.append(
         primary_belt.calculate_radial_force(
             state.engine_angular_velocity,
@@ -321,4 +304,3 @@ ax2.plot(result.time, angles, label="Angle", color="tab:purple", linestyle="dash
 ax2.set_ylabel("Angle (degrees)")
 ax2.legend(loc="upper right")
 plt.show()
-    

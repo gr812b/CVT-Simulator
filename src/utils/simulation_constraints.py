@@ -5,6 +5,7 @@ from utils.theoretical_models import TheoreticalModels as tm
 from utils.system_state import SystemState
 import numpy as np
 
+
 def logistic_clamp(x, lower_bound, upper_bound, slope=5000.0):
     """
     Returns a factor in [0..1] that is ~1 for x in (lower_bound, upper_bound)
@@ -14,7 +15,7 @@ def logistic_clamp(x, lower_bound, upper_bound, slope=5000.0):
     # Transition near the lower bound
     factor_low = 1.0 / (1.0 + np.exp(-slope * (x - lower_bound)))
     # Transition near the upper bound
-    factor_up  = 1.0 / (1.0 + np.exp( slope * (x - upper_bound)))
+    factor_up = 1.0 / (1.0 + np.exp(slope * (x - upper_bound)))
     return factor_low * factor_up
 
 
