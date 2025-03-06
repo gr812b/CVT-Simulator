@@ -19,14 +19,13 @@ from constants.car_specs import (
     WHEEL_RADIUS,
     INITIAL_FLYWEIGHT_RADIUS,
     HELIX_RADIUS,
-    SHEAVE_ANGLE,
-    CENTER_TO_CENTER,
     MAX_SHIFT,
 )
 from utils.conversions import rpm_to_rad_s, deg_to_rad
 from utils.argument_parser import get_arguments
 from utils.theoretical_models import TheoreticalModels as tm
 from utils.simulation_constraints import constraints, logistic_clamp
+import sys
 
 # Parse arguments
 args = get_arguments()
@@ -66,10 +65,17 @@ secondary_belt = BeltSimulator(
     primary=False,
 )
 
-
+total_sim_time = 15  # seconds
 # Define the system of differential equations
 def angular_velocity_and_position_derivative(t, y):
     state = SystemState.from_array(y)
+
+    progress_percent = (t / total_sim_time) * 100
+    #  Print every 2% progress
+    if progress_percent % 0.1 < 0.01:
+        sys.stdout.write(f"\rProgress: {progress_percent:.1f}%")
+        sys.stdout.flush()
+    
 
     # ---------------------------
     # CAR + ENGINE DYNAMICS BELOW
@@ -136,7 +142,7 @@ def angular_velocity_and_position_derivative(t, y):
     ]
 
 
-time_span = (0, 15)
+time_span = (0, total_sim_time)
 time_eval = np.linspace(*time_span, 10000)
 initial_state = SystemState(
     engine_angular_velocity=rpm_to_rad_s(2400),
@@ -212,12 +218,14 @@ ax1.set_xlabel("Time (s)")
 ax1.set_ylabel("Vehicle Speed (m/s)", color="#DDDD40")
 ax1.plot(times, vehicle_speeds, label="Vehicle Speed", color="#DDDD40", linewidth=4)
 ax1.tick_params(axis="y", labelcolor="#DDDD40")
+ax1.set_ylim(bottom=0) 
 
 # Create a second y-axis for the engine speed
 ax2 = ax1.twinx()
 ax2.set_ylabel("Engine Speed (rad/s)", color="#000000")
 ax2.plot(times, engine_speeds, label="Engine Speed", color="#000000", linewidth=1.5)
 ax2.tick_params(axis="y", labelcolor="#000000")
+ax2.set_ylim(bottom=0) 
 
 # Create a third y-axis for the CVT ratio
 ax3 = ax1.twinx()
