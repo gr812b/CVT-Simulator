@@ -98,6 +98,7 @@ class TheoreticalModels:
         primary_radius = TheoreticalModels.outer_prim_radius(d) - BELT_HEIGHT / 2
         secondary_radius = TheoreticalModels.outer_sec_radius(d) - BELT_HEIGHT / 2
         wrap_offset = TheoreticalModels.wrap_angle(primary_radius, secondary_radius)
+        # print(f"Ratio: {secondary_radius/primary_radius}, wrap: {wrap_offset}")
         if primary_radius <= secondary_radius:
             return np.pi - wrap_offset
         else:

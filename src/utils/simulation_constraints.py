@@ -43,12 +43,10 @@ def shift_constraint_event(t, y):
 
 def car_velocity_constraint_event(t, y):
     state = SystemState.from_array(y)
-    car_velocity = state.car_velocity
+    return state.car_velocity
 
-    if car_velocity < 0:
-        return 0  # End the simulation if car_velocity goes negative
-
-    return 1
+car_velocity_constraint_event.terminal = True
+car_velocity_constraint_event.direction = -1
 
 
 # Export all constraints
