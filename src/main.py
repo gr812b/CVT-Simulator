@@ -38,7 +38,7 @@ load_simulator = LoadSimulator(
     car_mass=CAR_MASS + args.driver_weight,
     wheel_radius=WHEEL_RADIUS,
     gearbox_ratio=GEARBOX_RATIO,
-    incline_angle=deg_to_rad(30),
+    incline_angle=deg_to_rad(0),
 )
 car_simulator = CarSimulator(car_mass=CAR_MASS + args.driver_weight)
 primary_simulator = PrimaryPulley(
@@ -173,8 +173,8 @@ solution = solve_ivp(
     initial_state.to_array(),
     t_eval=time_eval,
     events=constraints,
-    rtol=1e-5,
-    atol=1e-9,
+    # rtol=1e-5,
+    # atol=1e-9,
 )
 
 result = SimulationResult(solution)
@@ -222,22 +222,21 @@ for state in result.states:
     engine_speeds.append(actual_engine_velocity)
 
 
+# Create subplots
+fig, axs = plt.subplots(3, 2, figsize=(15, 15))
+
 # Plot the vehicle speed, engine speed, and CVT ratio against time
-fig, ax1 = plt.subplots()
+axs[0, 0].set_xlabel("Time (s)")
+axs[0, 0].set_ylabel("Vehicle Speed (m/s)", color="#DDDD40")
+axs[0, 0].plot(times, vehicle_speeds, label="Vehicle Speed", color="#DDDD40", linewidth=4)
+axs[0, 0].tick_params(axis="y", labelcolor="#DDDD40")
 
-ax1.set_xlabel("Time (s)")
-ax1.set_ylabel("Vehicle Speed (m/s)", color="#DDDD40")
-ax1.plot(times, vehicle_speeds, label="Vehicle Speed", color="#DDDD40", linewidth=4)
-ax1.tick_params(axis="y", labelcolor="#DDDD40")
-
-# Create a second y-axis for the engine speed
-ax2 = ax1.twinx()
+ax2 = axs[0, 0].twinx()
 ax2.set_ylabel("Engine Speed (rad/s)", color="#000000")
 ax2.plot(times, engine_speeds, label="Engine Speed", color="#000000", linewidth=1.5)
 ax2.tick_params(axis="y", labelcolor="#000000")
 
-# Create a third y-axis for the CVT ratio
-ax3 = ax1.twinx()
+ax3 = axs[0, 0].twinx()
 ax3.spines["right"].set_position(("outward", 60))  # Offset the third axis
 ax3.set_ylabel("CVT Ratio", color="tab:green")
 ax3.plot(
@@ -250,10 +249,8 @@ ax3.plot(
 )
 ax3.tick_params(axis="y", labelcolor="tab:green")
 
-fig.tight_layout()
-plt.title("Vehicle Speed, Engine Speed, and CVT Ratio vs Time")
-plt.grid()
-plt.show()
+axs[0, 0].set_title("Vehicle Speed, Engine Speed, and CVT Ratio vs Time")
+axs[0, 0].grid()
 
 # Loop through the solution and recalculate the primary and secondary forces, then plot it
 ramp = primary_simulator.ramp
@@ -292,31 +289,35 @@ for i in range(len(primary_forces)):
         primary_force = primary_simulator.calculate_net_force(state.shift_distance, engine_velocity)
     last_force = primary_forces[i]
 
-fig, ax1 = plt.subplots()
-
 # Primary Y-axis (left) for forces
-# ax1.plot(result.time, primary_forces, label="Primary Force", color="tab:blue")
-# ax1.plot(result.time, secondary_forces, label="Secondary Force", color="tab:orange")
-ax1.plot(result.time, prim_radial, label="Primary Radial", color="tab:green")
-ax1.plot(result.time, sec_radial, label="Secondary Radial", color="tab:red")
-ax1.set_xlabel("Time (s)")
-ax1.set_ylabel("Force (N)")
-ax1.set_title("Primary and Secondary Forces Over Time")
-ax1.legend(loc="upper left")
-ax1.grid()
+axs[0, 1].plot(result.time, prim_radial, label="Primary Radial", color="tab:green")
+axs[0, 1].plot(result.time, sec_radial, label="Secondary Radial", color="tab:red")
+axs[0, 1].set_xlabel("Time (s)")
+axs[0, 1].set_ylabel("Force (N)")
+axs[0, 1].set_title("Primary and Secondary Forces Over Time")
+axs[0, 1].legend(loc="upper left")
+axs[0, 1].grid()
 
 # Secondary Y-axis (right) for shift distance
-ax2 = ax1.twinx()
+ax2 = axs[0, 1].twinx()
 ax2.plot(result.time, shift_distances, label="Shift Distance", color="tab:purple", linestyle="dashed")
 ax2.set_ylabel("Shift Distance (units)")
 ax2.legend(loc="upper right")
 
 # Create a third y-axis for the shift velocities
-ax3 = ax1.twinx()
+ax3 = axs[0, 1].twinx()
 ax3.spines["right"].set_position(("outward", 60))  # Offset the third axis
 ax3.plot(result.time, shift_velocities, label="Shift Velocity", color="tab:cyan", linestyle="dotted")
 ax3.set_ylabel("Shift Velocity (units/s)")
 ax3.legend(loc="lower right")
+
+# Plot the vehicle speed against engine velocity
+axs[1, 0].set_xlabel("Vehicle Speed (m/s)")
+axs[1, 0].set_ylabel("Engine Velocity (rad/s)")
+axs[1, 0].plot(vehicle_speeds, engine_angular_velocities, label="Engine Velocity vs Vehicle Speed", color="tab:blue")
+axs[1, 0].tick_params(axis="y", labelcolor="tab:blue")
+axs[1, 0].set_title("Engine Velocity vs Vehicle Speed")
+axs[1, 0].grid()
 
 fig.tight_layout()
 plt.show()

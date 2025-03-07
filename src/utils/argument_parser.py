@@ -23,7 +23,7 @@ def get_arguments() -> SimulationArgs:
     parser.add_argument(
         "--flyweight_mass",
         type=float,
-        default=0.6,
+        default=0.8,
         help="Weight of the primary pulley in kilograms (default: 0.8 kg)",
     )
     parser.add_argument(

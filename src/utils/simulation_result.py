@@ -14,6 +14,24 @@ class SimulationResult:
         """Parses the solution from solve_ivp into a list of DrivetrainState instances."""
         states = [SystemState.from_array(state) for state in solution.y.T]
         return states
+    
+    @staticmethod
+    def from_csv(filename="simulation_output.csv"):
+        """Reads the solution states from a CSV file and returns a SimulationResult instance."""
+        df = pd.read_csv(filename)
+        time = df["time"].values
+        states = [
+            SystemState(
+                engine_angular_velocity=row["engine_angular_velocity"],
+                engine_angular_position=row["engine_angular_position"],
+                car_velocity=row["car_velocity"],
+                car_position=row["car_position"],
+                shift_velocity=row["shift_velocity"],
+                shift_distance=row["shift_distance"],
+            )
+            for _, row in df.iterrows()
+        ]
+        return SimulationResult(time=time, states=states)
 
     def write_csv(self, filename="simulation_output.csv"):
         """Writes the parsed solution states to a CSV file."""
