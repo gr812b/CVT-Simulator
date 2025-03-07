@@ -1,7 +1,6 @@
 from constants.car_specs import (
     MAX_SHIFT,
 )
-from utils.theoretical_models import TheoreticalModels as tm
 from utils.system_state import SystemState
 import numpy as np
 

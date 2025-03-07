@@ -1,10 +1,7 @@
-from matplotlib import pyplot as plt
-import numpy as np
-from scipy.integrate import solve_ivp
+# File purpose is to determine shift starting point
+
 from simulations.car_simulation import CarSimulator
 from simulations.load_simulation import LoadSimulator
-from utils.system_state import SystemState
-from utils.simulation_result import SimulationResult
 from simulations.engine_simulation import EngineSimulator
 from simulations.primary_pulley import PrimaryPulley
 from simulations.secondary_pulley import SecondaryPulley
@@ -19,13 +16,10 @@ from constants.car_specs import (
     WHEEL_RADIUS,
     INITIAL_FLYWEIGHT_RADIUS,
     HELIX_RADIUS,
-    MAX_SHIFT,
 )
 from utils.conversions import rpm_to_rad_s, deg_to_rad
 from utils.argument_parser import get_arguments
 from utils.theoretical_models import TheoreticalModels as tm
-from utils.simulation_constraints import constraints, logistic_clamp
-import sys
 
 args = get_arguments()
 

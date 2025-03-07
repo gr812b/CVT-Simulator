@@ -1,6 +1,6 @@
 import numpy as np
 from utils.theoretical_models import TheoreticalModels as tm
-from utils.ramp_representation import LinearSegment, CircularSegment, PiecewiseRamp
+from utils.ramp_representation import LinearSegment, PiecewiseRamp  # , CircularSegment
 from constants.car_specs import MAX_SHIFT
 
 

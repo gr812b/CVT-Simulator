@@ -1,6 +1,5 @@
 # This file should contain all the constants that define the car's specs
 import numpy as np
-from constants.constants import INCH_TO_METER
 from utils.conversions import deg_to_rad, inch_to_meter
 import math
 
