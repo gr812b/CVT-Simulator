@@ -45,6 +45,18 @@ def car_velocity_constraint_event(t, y):
     state = SystemState.from_array(y)
     return state.car_velocity
 
+def shift_velocity_constraint_event(t, y):
+    state = SystemState.from_array(y)
+    MAX_SHIFT_VELOCITY = 0.01
+
+    if state.shift_velocity > MAX_SHIFT_VELOCITY:
+        state.shift_velocity = MAX_SHIFT_VELOCITY
+    elif state.shift_velocity < -MAX_SHIFT_VELOCITY:
+        state.shift_velocity = -MAX_SHIFT_VELOCITY
+
+    update_y(y, state)
+    return 1
+
 car_velocity_constraint_event.terminal = True
 car_velocity_constraint_event.direction = -1
 
@@ -52,5 +64,6 @@ car_velocity_constraint_event.direction = -1
 # Export all constraints
 constraints = [
     shift_constraint_event,
-    car_velocity_constraint_event
+    car_velocity_constraint_event,
+    # shift_velocity_constraint_event,
 ]
