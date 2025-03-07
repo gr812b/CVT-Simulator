@@ -93,4 +93,6 @@ secondary_belt_radial = secondary_belt.calculate_radial_force(
     secondary_force,
 )
 
-print(f"Primary belt radial force: {primary_belt_radial:.2f}, Secondary belt radial force: {secondary_belt_radial:.2f}")
+print(
+    f"Primary belt radial force: {primary_belt_radial:.2f}, Secondary belt radial force: {secondary_belt_radial:.2f}"
+)

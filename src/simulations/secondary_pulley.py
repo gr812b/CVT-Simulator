@@ -29,7 +29,7 @@ class SecondaryPulley:
     def calculate_helix_force(
         self, torque: float, spring_torque: float, shift_distance: float
     ) -> float:
-        secondary_radius = tm.outer_sec_radius(shift_distance) - BELT_HEIGHT/2
+        secondary_radius = tm.outer_sec_radius(shift_distance) - BELT_HEIGHT / 2
 
         if shift_distance < 0:  # TODO: remove
             shift_distance = 0

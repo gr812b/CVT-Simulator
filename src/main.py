@@ -65,6 +65,7 @@ secondary_belt = BeltSimulator(
     primary=False,
 )
 
+
 def get_pulley_forces(state: SystemState) -> dict:
     # Compute CVT ratio and engine velocity
     cvt_ratio = tm.current_cvt_ratio(state.shift_distance)
@@ -73,16 +74,24 @@ def get_pulley_forces(state: SystemState) -> dict:
 
     # Engine torque for secondary force calculation
     engine_torque = engine_simulator.get_torque(engine_velocity)
-    
+
     # Calculate forces using your existing simulators
-    primary_force = primary_simulator.calculate_net_force(state.shift_distance, engine_velocity)
-    secondary_force = secondary_simulator.calculate_net_force(engine_torque * cvt_ratio, state.shift_distance)
-    
+    primary_force = primary_simulator.calculate_net_force(
+        state.shift_distance, engine_velocity
+    )
+    secondary_force = secondary_simulator.calculate_net_force(
+        engine_torque * cvt_ratio, state.shift_distance
+    )
+
     # Calculate wrap angles and convert to radial forces
     primary_wrap_angle = tm.primary_wrap_angle(state.shift_distance)
     secondary_wrap_angle = tm.secondary_wrap_angle(state.shift_distance)
-    primary_radial = primary_belt.calculate_radial_force(engine_velocity, state.shift_distance, primary_wrap_angle, primary_force)
-    secondary_radial = secondary_belt.calculate_radial_force(engine_velocity, state.shift_distance, secondary_wrap_angle, secondary_force)
+    primary_radial = primary_belt.calculate_radial_force(
+        engine_velocity, state.shift_distance, primary_wrap_angle, primary_force
+    )
+    secondary_radial = secondary_belt.calculate_radial_force(
+        engine_velocity, state.shift_distance, secondary_wrap_angle, secondary_force
+    )
 
     return {
         "primary_force": primary_force,
@@ -91,7 +100,10 @@ def get_pulley_forces(state: SystemState) -> dict:
         "secondary_radial": secondary_radial,
     }
 
+
 total_sim_time = 15  # seconds
+
+
 # Define the system of differential equations
 def angular_velocity_and_position_derivative(t, y):
     state = SystemState.from_array(y)
@@ -136,11 +148,17 @@ def angular_velocity_and_position_derivative(t, y):
 
     cvt_moving_mass = 10  # TODO: Use constants
     # TODO: See if this belt acceleration is actually equal to shift accel
-    friction = min(20, abs(pulleyForces["primary_radial"] - pulleyForces["secondary_radial"]))
+    friction = min(
+        20, abs(pulleyForces["primary_radial"] - pulleyForces["secondary_radial"])
+    )
     if state.shift_velocity > 0:
-        forces = pulleyForces["primary_radial"] - pulleyForces["secondary_radial"] - friction
+        forces = (
+            pulleyForces["primary_radial"] - pulleyForces["secondary_radial"] - friction
+        )
     else:
-        forces = pulleyForces["primary_radial"] - pulleyForces["secondary_radial"] + friction
+        forces = (
+            pulleyForces["primary_radial"] - pulleyForces["secondary_radial"] + friction
+        )
     shift_acceleration = forces / cvt_moving_mass
 
     return [
@@ -228,7 +246,9 @@ fig, axs = plt.subplots(3, 2, figsize=(15, 15))
 # Plot the vehicle speed, engine speed, and CVT ratio against time
 axs[0, 0].set_xlabel("Time (s)")
 axs[0, 0].set_ylabel("Vehicle Speed (m/s)", color="#DDDD40")
-axs[0, 0].plot(times, vehicle_speeds, label="Vehicle Speed", color="#DDDD40", linewidth=4)
+axs[0, 0].plot(
+    times, vehicle_speeds, label="Vehicle Speed", color="#DDDD40", linewidth=4
+)
 axs[0, 0].tick_params(axis="y", labelcolor="#DDDD40")
 
 ax2 = axs[0, 0].twinx()
@@ -268,12 +288,12 @@ for state in result.states:
 observables = [get_pulley_forces(state) for state in result.states]
 
 # Unpack the observables for plotting or further processing
-primary_forces    = [obs["primary_force"] for obs in observables]
-secondary_forces  = [obs["secondary_force"] for obs in observables]
-prim_radial       = [obs["primary_radial"] for obs in observables]
-sec_radial        = [obs["secondary_radial"] for obs in observables]
-shift_distances   = [state.shift_distance for state in result.states]
-shift_velocities  = [state.shift_velocity for state in result.states]
+primary_forces = [obs["primary_force"] for obs in observables]
+secondary_forces = [obs["secondary_force"] for obs in observables]
+prim_radial = [obs["primary_radial"] for obs in observables]
+sec_radial = [obs["secondary_radial"] for obs in observables]
+shift_distances = [state.shift_distance for state in result.states]
+shift_velocities = [state.shift_velocity for state in result.states]
 # Clear console
 sys.stdout.write("\r" + " " * 40 + "\r")
 sys.stdout.flush()
@@ -285,8 +305,12 @@ for i in range(len(primary_forces)):
         cvt_ratio = tm.current_cvt_ratio(state.shift_distance)
         wheel_to_engine_ratio = (cvt_ratio * GEARBOX_RATIO) / WHEEL_RADIUS
         engine_velocity = state.car_velocity * wheel_to_engine_ratio
-        print(f"Time: {times[i]:.3f}s, Engine Velocity: {engine_velocity:.3f} rad/s, shift_distance: {state.shift_distance:.3f}")
-        primary_force = primary_simulator.calculate_net_force(state.shift_distance, engine_velocity)
+        print(
+            f"Time: {times[i]:.3f}s, Engine Velocity: {engine_velocity:.3f} rad/s, shift_distance: {state.shift_distance:.3f}"
+        )
+        primary_force = primary_simulator.calculate_net_force(
+            state.shift_distance, engine_velocity
+        )
     last_force = primary_forces[i]
 
 # Primary Y-axis (left) for forces
@@ -300,21 +324,38 @@ axs[0, 1].grid()
 
 # Secondary Y-axis (right) for shift distance
 ax2 = axs[0, 1].twinx()
-ax2.plot(result.time, shift_distances, label="Shift Distance", color="tab:purple", linestyle="dashed")
+ax2.plot(
+    result.time,
+    shift_distances,
+    label="Shift Distance",
+    color="tab:purple",
+    linestyle="dashed",
+)
 ax2.set_ylabel("Shift Distance (units)")
 ax2.legend(loc="upper right")
 
 # Create a third y-axis for the shift velocities
 ax3 = axs[0, 1].twinx()
 ax3.spines["right"].set_position(("outward", 60))  # Offset the third axis
-ax3.plot(result.time, shift_velocities, label="Shift Velocity", color="tab:cyan", linestyle="dotted")
+ax3.plot(
+    result.time,
+    shift_velocities,
+    label="Shift Velocity",
+    color="tab:cyan",
+    linestyle="dotted",
+)
 ax3.set_ylabel("Shift Velocity (units/s)")
 ax3.legend(loc="lower right")
 
 # Plot the vehicle speed against engine velocity
 axs[1, 0].set_xlabel("Vehicle Speed (m/s)")
 axs[1, 0].set_ylabel("Engine Velocity (rad/s)")
-axs[1, 0].plot(vehicle_speeds, engine_angular_velocities, label="Engine Velocity vs Vehicle Speed", color="tab:blue")
+axs[1, 0].plot(
+    vehicle_speeds,
+    engine_angular_velocities,
+    label="Engine Velocity vs Vehicle Speed",
+    color="tab:blue",
+)
 axs[1, 0].tick_params(axis="y", labelcolor="tab:blue")
 axs[1, 0].set_title("Engine Velocity vs Vehicle Speed")
 axs[1, 0].grid()

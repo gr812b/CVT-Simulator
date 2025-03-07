@@ -1,11 +1,7 @@
 import numpy as np
 import math
 from utils.theoretical_models import TheoreticalModels as tm
-from constants.car_specs import (
-    SHEAVE_ANGLE,
-    BELT_CROSS_SECTIONAL_AREA,
-    BELT_HEIGHT
-)
+from constants.car_specs import SHEAVE_ANGLE, BELT_CROSS_SECTIONAL_AREA, BELT_HEIGHT
 from constants.constants import RUBBER_DENSITY
 
 
@@ -24,9 +20,9 @@ class BeltSimulator:
         self, ω: float, shift_distance: float, wrap_angle: float
     ) -> float:
         if self.primary:
-            radius = tm.outer_prim_radius(shift_distance) - BELT_HEIGHT/2
+            radius = tm.outer_prim_radius(shift_distance) - BELT_HEIGHT / 2
         else:
-            radius = tm.outer_sec_radius(shift_distance) - BELT_HEIGHT/2
+            radius = tm.outer_sec_radius(shift_distance) - BELT_HEIGHT / 2
 
         length = radius * wrap_angle
         mass = RUBBER_DENSITY * BELT_CROSS_SECTIONAL_AREA * length

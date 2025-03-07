@@ -14,7 +14,7 @@ class SimulationResult:
         """Parses the solution from solve_ivp into a list of DrivetrainState instances."""
         states = [SystemState.from_array(state) for state in solution.y.T]
         return states
-    
+
     @staticmethod
     def from_csv(filename="simulation_output.csv"):
         """Reads the solution states from a CSV file and returns a SimulationResult instance."""
