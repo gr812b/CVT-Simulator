@@ -35,10 +35,10 @@ engine_simulator = EngineSimulator(torque_curve=torque_curve, inertia=ENGINE_INE
 load_simulator = LoadSimulator(
     frontal_area=FRONTAL_AREA,
     drag_coefficient=DRAG_COEFFICIENT,
-    car_mass=CAR_MASS + args.driver_weight,
+    car_mass=args.vehicle_weight + args.driver_weight,
     wheel_radius=WHEEL_RADIUS,
     gearbox_ratio=GEARBOX_RATIO,
-    incline_angle=deg_to_rad(0),
+    incline_angle=deg_to_rad(args.angle_of_incline),
 )
 car_simulator = CarSimulator(car_mass=CAR_MASS + args.driver_weight)
 primary_simulator = PrimaryPulley(
