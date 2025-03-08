@@ -2,7 +2,9 @@ import unittest
 
 from utils.system_state import SystemState
 
+
 class TestSystemState(unittest.TestCase):
+
     def test_initialization(self):
         state = SystemState(
             engine_angular_velocity=100.0,
@@ -40,6 +42,7 @@ class TestSystemState(unittest.TestCase):
         self.assertEqual(state.car_position, 10.0)
         self.assertEqual(state.shift_velocity, 5.0)
         self.assertEqual(state.shift_distance, 2.0)
+
 
 if __name__ == '__main__':
     unittest.main()

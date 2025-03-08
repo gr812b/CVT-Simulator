@@ -8,7 +8,9 @@ from constants.car_specs import (
     BELT_HEIGHT
 )
 
+
 class TestSecondaryPulley(unittest.TestCase):
+
     def setUp(self):
         self.pulley = SecondaryPulley(
             spring_coeff_tors=10.0,
@@ -22,7 +24,7 @@ class TestSecondaryPulley(unittest.TestCase):
         torque = 10.0
         spring_torque = 10.0
         shift_distance = 0.025
-        expected_force = -(torque + spring_torque) / (2 * np.tan(np.arctan(-0.5774)) * (tm.outer_sec_radius(shift_distance) - BELT_HEIGHT/2))
+        expected_force = -(torque + spring_torque) / (2 * np.tan(np.arctan(-0.5774)) * (tm.outer_sec_radius(shift_distance) - BELT_HEIGHT / 2))
         result = self.pulley.calculate_helix_force(torque, spring_torque, shift_distance)
         self.assertAlmostEqual(result, expected_force, places=5)
 
@@ -48,6 +50,7 @@ class TestSecondaryPulley(unittest.TestCase):
         expected_net_force = helix_force + spring_comp_force
         result = self.pulley.calculate_net_force(torque, shift_distance)
         self.assertAlmostEqual(result, expected_net_force, places=5)
+
 
 if __name__ == '__main__':
     unittest.main()

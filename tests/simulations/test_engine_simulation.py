@@ -2,7 +2,9 @@ import unittest
 
 from simulations.engine_simulation import EngineSimulator
 
+
 class TestEngineSimulator(unittest.TestCase):
+
     def test_init(self):
         def mock_torque_curve(angular_velocity):
             return 10.0
@@ -36,6 +38,7 @@ class TestEngineSimulator(unittest.TestCase):
         load_torque = 5.0
         expected_acceleration = (10.0 - load_torque) / 5.0
         self.assertEqual(simulator.calculate_angular_acceleration(angular_velocity, load_torque), expected_acceleration)
+
 
 if __name__ == '__main__':
     unittest.main()

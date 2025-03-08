@@ -7,7 +7,9 @@ from scipy.integrate import solve_ivp
 from utils.simulation_result import SimulationResult
 from utils.system_state import SystemState
 
+
 class TestSimulationResult(unittest.TestCase):
+
     def setUp(self):
         # Define a simple ODE system for testing
         def simple_ode(t, y):
@@ -52,6 +54,7 @@ class TestSimulationResult(unittest.TestCase):
         result = SimulationResult(self.solution)
         result.plot("car_velocity")
         mock_plot.assert_called_once_with("car_velocity")
+
 
 if __name__ == "__main__":
     unittest.main()

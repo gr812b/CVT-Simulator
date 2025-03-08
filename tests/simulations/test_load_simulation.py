@@ -5,7 +5,9 @@ import math
 from simulations.load_simulation import LoadSimulator
 from constants.constants import GRAVITY, AIR_DENSITY
 
+
 class TestLoadSimulator(unittest.TestCase):
+
     def setUp(self):
         self.car_mass = 1500  # kg
         self.drag_coefficient = 0.3  # unitless
@@ -62,6 +64,7 @@ class TestLoadSimulator(unittest.TestCase):
         gravity = GRAVITY * math.sin(self.incline_angle)
         expected_acceleration = engine - air_resistance - gravity
         self.assertAlmostEqual(self.simulator.calculate_acceleration(velocity, power), expected_acceleration)
+
 
 if __name__ == '__main__':
     unittest.main()

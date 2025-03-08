@@ -1,6 +1,4 @@
 import unittest
-import sys
-import os
 import numpy as np
 
 from simulations.belt_simulator import BeltSimulator
@@ -13,7 +11,9 @@ from constants.car_specs import (
     BELT_HEIGHT
 )
 
+
 class TestBeltSimulator(unittest.TestCase):
+
     def setUp(self):
         self.simulator_primary = BeltSimulator(μ_static=0.5, μ_kinetic=0.4, primary=True)
         self.simulator_secondary = BeltSimulator(μ_static=0.5, μ_kinetic=0.4, primary=False)
@@ -83,6 +83,7 @@ class TestBeltSimulator(unittest.TestCase):
         expected_torque = tension * radius * (np.exp(μ * wrap_angle) - 1)
         result = self.simulator_primary.calculate_max_transferable_torque(tension, μ, wrap_angle, radius)
         self.assertAlmostEqual(result, expected_torque, places=5)
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -3,7 +3,9 @@ import unittest
 from simulations.primary_pulley import PrimaryPulley
 from constants.car_specs import MAX_SHIFT
 
+
 class TestPrimaryPulley(unittest.TestCase):
+
     def setUp(self):
         self.primary_pulley = PrimaryPulley(
             spring_coeff_comp=1000,  # N/m
@@ -40,6 +42,7 @@ class TestPrimaryPulley(unittest.TestCase):
         force = self.primary_pulley.calculate_flyweight_force(MAX_SHIFT + 1, angular_velocity)
         self.assertIsInstance(force, float)
         self.assertGreaterEqual(force, 0)
+
 
 if __name__ == '__main__':
     unittest.main()
