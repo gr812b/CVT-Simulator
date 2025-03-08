@@ -32,7 +32,8 @@ namespace DataLoading
 
         private float RadiansToDegrees(float radians)
         {
-            return radians * 180.0f / (float)Math.PI;
+            float degreesPerRadian = 180.0f / (float)Math.PI;
+            return radians * degreesPerRadian;
         }
 
         private float CarPositionToSecondaryAngle(float position)
@@ -42,12 +43,15 @@ namespace DataLoading
 
         private float RadPerSecondToRPM(float radPerSecond)
         {
-            return radPerSecond * 60 / (2 * (float)Math.PI);
+            float RPMPerRad = 60.0f / (2.0f * (float)Math.PI);
+            return radPerSecond * RPMPerRad;
         }
 
         private float MetersPerSecondToKmPerHour(float metersPerSecond)
         {
-            return metersPerSecond * 3.6f;
+            float kmPerMeter = 0.001f;
+            float secondsPerHour = 3600.0f;
+            return metersPerSecond * kmPerMeter * secondsPerHour;
         }
     }
 
