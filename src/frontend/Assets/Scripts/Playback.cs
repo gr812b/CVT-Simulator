@@ -39,7 +39,7 @@ public class Playback : MonoBehaviour
         nextSceneButton.onClick.AddListener(backButton);
 
         // Get path to simulation result file and then read it
-        string path = Path.Combine(Application.streamingAssetsPath, "../simulation_output.csv");
+        string path = Path.Combine(Application.dataPath, "../simulation_output.csv");
         simulationResult = new SimulationResult(path);
     }
 
