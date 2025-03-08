@@ -1,0 +1,202 @@
+\documentclass[12pt, titlepage]{article}
+
+\usepackage{float}
+\usepackage{geometry}
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{hyperref}
+\usepackage{siunitx}
+\hypersetup{
+    colorlinks,
+    citecolor=blue,
+    filecolor=black,
+    linkcolor=red,
+    urlcolor=blue
+}
+\usepackage[round]{natbib}
+\usepackage{amsmath, mathtools}
+\usepackage{xr}
+\externaldocument{../SRS/SRS}
+
+\input{../Comments}
+\input{../Common}
+
+\newcommand{\refdata}[2]{
+  \href{https://github.com/gr812b/CVT-Simulator/blob/main/experimental-data/#1
+  }{\texttt{#2}}}
+
+
+\begin{document}
+
+\title{Usability Report for \progname{}} 
+\author{\authname}
+\date{\today}
+	
+\maketitle
+
+\pagenumbering{roman}
+
+\section*{Revision History}
+
+\begin{tabularx}{\textwidth}{p{3cm}p{2cm}X}
+\toprule {\bf Date} & {\bf Version} & {\bf Notes}\\
+\midrule
+
+\bottomrule
+\end{tabularx}
+
+~\\
+
+\newpage
+
+\tableofcontents
+
+\listoftables
+
+
+\listoffigures
+
+
+\newpage
+
+\section{Symbols, Abbreviations, and Acronyms}
+
+\begin{table}[h]
+  \raggedright
+  \begin{tabular}{l l} 
+    \toprule		
+    \textbf{acronym} & \textbf{definition}\\
+    \midrule
+    CD & Continuous Development\\
+    CI & Continuous Integration\\ 
+    CVT & Continuous Variable Transmission\\
+    GPS & Global Positioning System\\
+    IMU & Inertial Measurement Unit\\
+    GUI & Graphical User Interface\\
+    IM & Instance Model\\
+    MG & Module Guide\\
+    MIS & Module Interface Specification\\
+    MSE & Mean Squared Error\\
+    NFR & Nonfunctional Requirement\\
+    PR & Pull Request\\
+    R & Functional Requirement\\
+    RPM & Revolutions Per Minute\\
+    SRS & Software Requirements Specification\\
+    VnV & Verification and Validation\\
+    \bottomrule
+  \end{tabular}
+  \caption{Verification and Validation Acronyms}
+  \label{tab:vnv_acronyms}
+\end{table}
+
+\newpage
+
+\pagenumbering{arabic}
+
+\noindent This document serves as a 
+\section{General Information}
+
+\subsection{Summary}
+
+\subsection{Objectives}
+
+\subsection{Relevant Documentation}
+
+\section{Plan}
+
+\subsection{Verification and Validation Team}
+    
+\subsection{Data Collection}
+
+
+\subsubsection*{Review Meetings}
+
+\subsubsection*{Baja Team Review}
+
+
+\subsection{Design Verification Plan}
+
+\subsubsection{Usability}
+
+The below test are to verify the usability of the system.
+They are based on NFR2 from the SRS document.
+
+\begin{enumerate}
+
+\item{test-1\\}
+
+Type: Manual
+					
+Initial State: 
+					
+Input/Condition: Users within the Primary User role as well as Baja team members are asked to rate how simple the navigation process of the main interface. 
+They are asked to rate this on a scale of (1-5) 1 being extremely difficult and 5 being extremely easy with the other options being 4: somewhat easy, 3: neutral and 2: somewhat difficult. 
+					
+Output/Result: The average output rating from all users is greater than or equal to a 4(somewhat easy or above expectations).
+					
+How test will be performed: Each user in the test group will be provided with a survey which provides a series of questions and a scale for each option where 1 represents Poor, 2 represents below expectation, 3 represents satisfactory, 4 represents above average and 5 represents excellent.
+The average rating will then be calculated and must be above or equal to 4 representing the system usability is above expectations.  
+
+\item{test-2\\}
+  
+Type: Manual
+            
+Initial State: The user has successfully installed the system on their device.
+            
+Input/Condition: Users within the Primary User role as well as Baja team members are asked to rate the features inputting parameters, adjusting parameters, viewing data outputs and saving and exporting data on how easy it was to use each feature.
+They are asked to rate this on a scale of (1-5) 1 being extremely difficult and 5 being extremely easy with the other options being 4: somewhat easy, 3: neutral and 2: somewhat difficult. 
+            
+Output/Result: The average output rating from all users for each listed feature is greater than or equal to a 4(somewhat easy or above expectations).
+            
+How test will be performed: Each user in the test group will be provided with a survey which provides a series of questions and a scale for each option where 1 represents Poor, 2 represents below expectation, 3 represents satisfactory, 4 represents above average and 5 represents excellent.
+The average rating will then be calculated and must be above or equal to 4 representing the system usability is above expectations. 
+  
+\end{enumerate}
+
+\subsubsection{Understandability}
+
+The below test are to verify the understandability of the system.
+They are based on NFR5 from the SRS document.
+\begin{enumerate}
+
+  \item{test-1\\}
+  
+  Type: Manual.
+            
+  Initial State: The user has successfully installed the system on their device.
+            
+  Input/Condition: Users within the Primary User role as well as Baja team members are asked to rate how clear they found the features and functions within the system. 
+  They are asked to rate this on a scale of (1-5) 1 being extremely unclear and 5 being extremely clear with the other options being 4: somewhat clear, 3: neutral and 2: somewhat unclear. 
+            
+  Output/Result: The average output rating from all users for each listed feature is greater than or equal to a 4(somewhat clear or above expectations).
+            
+  How test will be performed: Each user in the test group will be provided with a survey which provides a series of questions and a scale for each option where 1 represents Poor, 2 represents below expectation, 3 represents satisfactory, 4 represents above average and 5 represents excellent.
+  The average rating will then be calculated and must be above or equal to 4, representing the systems understandability is above expectations.  
+  
+  \item{test-2\\}
+  
+  Type: Manual
+            
+  Initial State: The user has successfully installed the system on their device.
+            
+  Input/Condition: Users within the Primary User role as well as Baja team members are asked to rate their understanding of the simulation results and outputs. 
+  They are asked to rate this on a scale of (1-5) 1 being extremely unclear and 5 being extremely clear with the other options being 4: somewhat clear, 3: neutral and 2: somewhat unclear. 
+            
+  Output/Result: The average output rating from all users for each listed feature is greater than or equal to a 4(somewhat clear or above expectations).
+            
+  How test will be performed: Each user in the test group will be provided with a survey which provides a series of questions and a scale for each option where 1 represents Poor, 2 represents below expectation, 3 represents satisfactory, 4 represents above average and 5 represents excellent.
+  The average rating will then be calculated and must be above or equal to 4, representing the systems' understandability is above expectations. 
+  
+  \end{enumerate}
+
+\newpage{}
+\section*{Appendix --- Reflection}
+
+The information in this section will be used to evaluate the team members on the
+graduate attribute of Lifelong Learning.
+
+\input{../Reflection.tex}
+
+
+
+\end{document}
