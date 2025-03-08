@@ -75,7 +75,6 @@ class TheoreticalModels:
                 - 8 * CENTER_TO_CENTER**2
             )
         ) / 2
-    
 
     @staticmethod
     def current_cvt_ratio(d: float) -> float:
