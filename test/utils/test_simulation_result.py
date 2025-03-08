@@ -29,7 +29,7 @@ class TestSimulationResult(unittest.TestCase):
             car_velocity=arr[0],
             car_position=arr[1],
             shift_velocity=arr[0],
-            shift_distance=arr[1]
+            shift_distance=arr[1],
         )
 
     def tearDown(self):
@@ -49,7 +49,7 @@ class TestSimulationResult(unittest.TestCase):
         self.assertIn("time", df.columns)
         self.assertIn("engine_angular_velocity", df.columns)
 
-    @patch.object(SimulationResult, 'plot')
+    @patch.object(SimulationResult, "plot")
     def test_plot(self, mock_plot):
         result = SimulationResult(self.solution)
         result.plot("car_velocity")

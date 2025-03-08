@@ -17,7 +17,9 @@ class TestPrimaryPulley(unittest.TestCase):
     def test_calculate_flyweight_force(self):
         shift_distance = 0.1
         angular_velocity = 100
-        force = self.primary_pulley.calculate_flyweight_force(shift_distance, angular_velocity)
+        force = self.primary_pulley.calculate_flyweight_force(
+            shift_distance, angular_velocity
+        )
         self.assertIsInstance(force, float)
         self.assertGreaterEqual(force, 0)
 
@@ -30,7 +32,9 @@ class TestPrimaryPulley(unittest.TestCase):
     def test_calculate_net_force(self):
         shift_distance = 0.1
         angular_velocity = 100
-        net_force = self.primary_pulley.calculate_net_force(shift_distance, angular_velocity)
+        net_force = self.primary_pulley.calculate_net_force(
+            shift_distance, angular_velocity
+        )
         self.assertIsInstance(net_force, float)
 
     def test_shift_distance_bounds(self):
@@ -39,10 +43,12 @@ class TestPrimaryPulley(unittest.TestCase):
         self.assertIsInstance(force, float)
         self.assertGreaterEqual(force, 0)
 
-        force = self.primary_pulley.calculate_flyweight_force(MAX_SHIFT + 1, angular_velocity)
+        force = self.primary_pulley.calculate_flyweight_force(
+            MAX_SHIFT + 1, angular_velocity
+        )
         self.assertIsInstance(force, float)
         self.assertGreaterEqual(force, 0)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

@@ -11,8 +11,10 @@ class TestCarSimulator(unittest.TestCase):
     def test_calculate_acceleration(self):
         force = 2000  # 2000 N
         expected_acceleration = 2.0  # m/s^2
-        self.assertEqual(self.simulator.calculate_acceleration(force), expected_acceleration)
+        self.assertEqual(
+            self.simulator.calculate_acceleration(force), expected_acceleration
+        )
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

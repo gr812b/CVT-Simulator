@@ -7,7 +7,7 @@ from utils.conversions import (
     rad_to_deg,
     deg_to_rad,
     circumference,
-    inch_to_meter
+    inch_to_meter,
 )
 
 
@@ -44,5 +44,5 @@ class TestConversions(unittest.TestCase):
         self.assertAlmostEqual(inch_to_meter(10), 0.254)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

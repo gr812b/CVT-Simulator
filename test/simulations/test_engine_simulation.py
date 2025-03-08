@@ -37,8 +37,11 @@ class TestEngineSimulator(unittest.TestCase):
         angular_velocity = 5.0
         load_torque = 5.0
         expected_acceleration = (10.0 - load_torque) / 5.0
-        self.assertEqual(simulator.calculate_angular_acceleration(angular_velocity, load_torque), expected_acceleration)
+        self.assertEqual(
+            simulator.calculate_angular_acceleration(angular_velocity, load_torque),
+            expected_acceleration,
+        )
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

@@ -21,7 +21,7 @@ class TestLoadSimulator(unittest.TestCase):
             self.frontal_area,
             self.wheel_radius,
             self.gearbox_ratio,
-            self.incline_angle
+            self.incline_angle,
         )
 
     def test_initialization(self):
@@ -40,21 +40,32 @@ class TestLoadSimulator(unittest.TestCase):
 
     def test_calculate_drag_force(self):
         velocity = 30  # m/s
-        expected_drag_force = 0.5 * AIR_DENSITY * velocity**2 * self.frontal_area * self.drag_coefficient
-        self.assertAlmostEqual(self.simulator.calculate_drag_force(velocity), expected_drag_force)
+        expected_drag_force = (
+            0.5 * AIR_DENSITY * velocity**2 * self.frontal_area * self.drag_coefficient
+        )
+        self.assertAlmostEqual(
+            self.simulator.calculate_drag_force(velocity), expected_drag_force
+        )
 
     def test_calculate_total_load_force(self):
         velocity = 30  # m/s
         incline_force = self.simulator.calculate_incline_force()
         drag_force = self.simulator.calculate_drag_force(velocity)
         expected_total_load_force = incline_force + drag_force
-        self.assertAlmostEqual(self.simulator.calculate_total_load_force(velocity), expected_total_load_force)
+        self.assertAlmostEqual(
+            self.simulator.calculate_total_load_force(velocity),
+            expected_total_load_force,
+        )
 
     def test_calculate_gearbox_load(self):
         velocity = 30  # m/s
         total_load_force = self.simulator.calculate_total_load_force(velocity)
-        expected_gearbox_load = total_load_force * self.wheel_radius / self.gearbox_ratio
-        self.assertAlmostEqual(self.simulator.calculate_gearbox_load(velocity), expected_gearbox_load)
+        expected_gearbox_load = (
+            total_load_force * self.wheel_radius / self.gearbox_ratio
+        )
+        self.assertAlmostEqual(
+            self.simulator.calculate_gearbox_load(velocity), expected_gearbox_load
+        )
 
     def test_calculate_acceleration(self):
         velocity = 30  # m/s
@@ -63,8 +74,11 @@ class TestLoadSimulator(unittest.TestCase):
         air_resistance = self.simulator.calculate_drag_force(velocity) / self.car_mass
         gravity = GRAVITY * math.sin(self.incline_angle)
         expected_acceleration = engine - air_resistance - gravity
-        self.assertAlmostEqual(self.simulator.calculate_acceleration(velocity, power), expected_acceleration)
+        self.assertAlmostEqual(
+            self.simulator.calculate_acceleration(velocity, power),
+            expected_acceleration,
+        )
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

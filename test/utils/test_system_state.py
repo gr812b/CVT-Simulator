@@ -12,7 +12,7 @@ class TestSystemState(unittest.TestCase):
             car_velocity=30.0,
             car_position=10.0,
             shift_velocity=5.0,
-            shift_distance=2.0
+            shift_distance=2.0,
         )
         self.assertEqual(state.engine_angular_velocity, 100.0)
         self.assertEqual(state.engine_angular_position, 50.0)
@@ -28,7 +28,7 @@ class TestSystemState(unittest.TestCase):
             car_velocity=30.0,
             car_position=10.0,
             shift_velocity=5.0,
-            shift_distance=2.0
+            shift_distance=2.0,
         )
         expected_array = [100.0, 50.0, 30.0, 10.0, 5.0, 2.0]
         self.assertEqual(state.to_array(), expected_array)
@@ -44,5 +44,5 @@ class TestSystemState(unittest.TestCase):
         self.assertEqual(state.shift_distance, 2.0)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()
