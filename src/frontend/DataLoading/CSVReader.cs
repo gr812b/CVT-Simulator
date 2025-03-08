@@ -1,10 +1,10 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
-using UnityEngine;
 using System;
 using System.Linq;
 
-namespace DataLoader {
+namespace DataLoading
+{
 
     public class DataPoint
     {
@@ -24,10 +24,10 @@ namespace DataLoader {
             Time = time;
             CarPosition = carPosition;
             PrimaryAngle = RadiansToDegrees(engineAngularPosition);
-            SecondaryAngle = RadiansToDegrees(CarPositionToSecondaryAngle(carPosition));;
+            SecondaryAngle = RadiansToDegrees(CarPositionToSecondaryAngle(carPosition)); ;
             CarVelocity = MetersPerSecondToKmPerHour(carVelocity);
             EngineRPM = RadPerSecondToRPM(engineAngularVelocity);
-            
+
             float shiftPercentage = shiftDistance / maxShiftDistance;
             PrimaryShiftDistance = 1 - shiftPercentage;
             SecondaryShiftDistance = shiftPercentage;
@@ -35,7 +35,7 @@ namespace DataLoader {
 
         private float RadiansToDegrees(float radians)
         {
-            return radians * 180.0f / Mathf.PI;
+            return radians * 180.0f / (float)Math.PI;
         }
 
         private float CarPositionToSecondaryAngle(float position)
@@ -45,7 +45,7 @@ namespace DataLoader {
 
         private float RadPerSecondToRPM(float radPerSecond)
         {
-            return radPerSecond * 60 / (2 * Mathf.PI);
+            return radPerSecond * 60 / (2 * (float)Math.PI);
         }
 
         private float MetersPerSecondToKmPerHour(float metersPerSecond)
@@ -56,31 +56,34 @@ namespace DataLoader {
 
     public class CSVReader
     {
-        private readonly string csvPath = Path.GetFullPath(Path.Combine(Application.dataPath, "../simulation_output.csv"));
+
+        private readonly string csvPath = Path.GetFullPath(Path.Combine(Directory.GetCurrentDirectory(), "../simulation_output.csv"));
 
         private readonly string[] headers = new string[] { "time", "engine_angular_velocity", "engine_angular_position", "car_velocity", "car_position", "shift_distance" };
 
         public List<DataPoint> LoadCSVData()
         {
             List<DataPoint> dataPoints = new List<DataPoint>();
-        
+
             using (StreamReader reader = new StreamReader(csvPath))
             {
                 // Read the header line
                 string headerLine = reader.ReadLine();
-                if (headerLine == null) {
+                if (headerLine == null)
+                {
                     throw new InvalidDataException("CSV file is empty");
                 }
 
                 Dictionary<string, int> headerIndices = new Dictionary<string, int>();
                 string[] fileHeaders = headerLine.Split(',');
 
-                foreach (string header in headers) 
+                foreach (string header in headers)
                 {
                     headerIndices[header] = Array.IndexOf(fileHeaders, header);
                 }
 
-                if (headerIndices.ContainsValue(-1)) {
+                if (headerIndices.ContainsValue(-1))
+                {
                     throw new InvalidDataException("CSV file is missing required headers");
                 }
 
