@@ -1,116 +1,39 @@
 ﻿using System.Collections.Generic;
 using System.IO;
-using System;
-using System.Linq;
 
 namespace DataLoading
 {
-
-    public class DataPoint
+    public abstract class CSVReader<T> : List<T>
     {
-        public float Time { get; }
-        public float CarPosition { get; }
-        public float CarVelocity { get; }
-        public float EngineRPM { get; }
-        public float PrimaryAngle { get; }
-        public float SecondaryAngle { get; }
-        public float PrimaryShiftDistance { get; }
-        public float SecondaryShiftDistance { get; }
-
-        private readonly float maxShiftDistance = 0.017f;
-
-        public DataPoint(float time, float engineAngularVelocity, float engineAngularPosition, float carVelocity, float carPosition, float shiftDistance)
+        // Constructor to load data when instantiated
+        public CSVReader(string path)
         {
-            Time = time;
-            CarPosition = carPosition;
-            PrimaryAngle = RadiansToDegrees(engineAngularPosition);
-            SecondaryAngle = RadiansToDegrees(CarPositionToSecondaryAngle(carPosition)); ;
-            CarVelocity = MetersPerSecondToKmPerHour(carVelocity);
-            EngineRPM = RadPerSecondToRPM(engineAngularVelocity);
-
-            float shiftPercentage = shiftDistance / maxShiftDistance;
-            PrimaryShiftDistance = 1 - shiftPercentage;
-            SecondaryShiftDistance = shiftPercentage;
+            LoadData(path);
         }
 
-        private float RadiansToDegrees(float radians)
+        // Parsing method to be implemented by subclasses
+        public abstract T ParseRow(string[] values);
+
+        // Method to read all data from the CSV file
+        public void LoadData(string path)
         {
-            return radians * 180.0f / (float)Math.PI;
-        }
+            // Clear existing data
+            this.Clear();
 
-        private float CarPositionToSecondaryAngle(float position)
-        {
-            return position * (2.0f * 7.556f) / (22.0f * 0.0254f);
-        }
-
-        private float RadPerSecondToRPM(float radPerSecond)
-        {
-            return radPerSecond * 60 / (2 * (float)Math.PI);
-        }
-
-        private float MetersPerSecondToKmPerHour(float metersPerSecond)
-        {
-            return metersPerSecond * 3.6f;
-        }
-    }
-
-    public class CSVReader
-    {
-
-        private readonly string csvPath = Path.GetFullPath(Path.Combine(Directory.GetCurrentDirectory(), "../simulation_output.csv"));
-
-        private readonly string[] headers = new string[] { "time", "engine_angular_velocity", "engine_angular_position", "car_velocity", "car_position", "shift_distance" };
-
-        public List<DataPoint> LoadCSVData()
-        {
-            List<DataPoint> dataPoints = new List<DataPoint>();
-
-            using (StreamReader reader = new StreamReader(csvPath))
+            // Read the CSV file line by line and parse each row using the concrete implementation of ParseRow
+            using (var reader = new StreamReader(path))
             {
-                // Read the header line
-                string headerLine = reader.ReadLine();
-                if (headerLine == null)
-                {
-                    throw new InvalidDataException("CSV file is empty");
-                }
+                // Skip the header row
+                reader.ReadLine();
 
-                Dictionary<string, int> headerIndices = new Dictionary<string, int>();
-                string[] fileHeaders = headerLine.Split(',');
-
-                foreach (string header in headers)
-                {
-                    headerIndices[header] = Array.IndexOf(fileHeaders, header);
-                }
-
-                if (headerIndices.ContainsValue(-1))
-                {
-                    throw new InvalidDataException("CSV file is missing required headers");
-                }
-
-                // Read each line, parsing time and position
                 while (!reader.EndOfStream)
                 {
-                    string line = reader.ReadLine();
-                    if (line == null) continue;
+                    var line = reader.ReadLine();
+                    var values = line.Split(',');
 
-                    string[] values = line.Split(',');
-
-
-                    if (values.Length > headerIndices.Values.Max())
-                    {
-                        float time = float.Parse(values[headerIndices["time"]]);
-                        float engineAngularVelocity = float.Parse(values[headerIndices["engine_angular_velocity"]]);
-                        float engineAngularPosition = float.Parse(values[headerIndices["engine_angular_position"]]);
-                        float carVelocity = float.Parse(values[headerIndices["car_velocity"]]);
-                        float carPosition = float.Parse(values[headerIndices["car_position"]]);
-                        float shiftDistance = float.Parse(values[headerIndices["shift_distance"]]);
-
-                        dataPoints.Add(new DataPoint(time, engineAngularVelocity, engineAngularPosition, carVelocity, carPosition, shiftDistance));
-
-                    }
+                    this.Add(ParseRow(values));
                 }
             }
-            return dataPoints;
         }
     }
 }
