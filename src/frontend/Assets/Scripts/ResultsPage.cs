@@ -23,7 +23,7 @@ public class ResultsPage: MonoBehaviour
     {
         //find InputFields 
         InputParameters parameters = new InputParameters(PathConstants.INPUT_PARAMETERS_PATH);
-        //update the values in the UI\
+        //update the values in the UI
         FlyweightMass_val.text = parameters.GetValue(ParameterNames.FLYWEIGHT_MASS);
         PrimaryRampGeo_val.text = parameters.GetValue(ParameterNames.PRIMARY_RAMP_GEOMETRY);
         PrimarySpringRate_val.text = parameters.GetValue(ParameterNames.PRIMARY_SPRING_RATE);
