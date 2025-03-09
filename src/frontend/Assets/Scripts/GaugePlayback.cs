@@ -1,6 +1,6 @@
 using UnityEngine;
 using TMPro;
-using DataLoading;
+using CommunicationProtocol.Receivers.SimulationResult;
 
 public class GaugePlayback : PlaybackView
 {
