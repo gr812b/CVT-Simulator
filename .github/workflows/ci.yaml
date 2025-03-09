@@ -62,5 +62,8 @@ jobs:
       - name: Build CommunicationProtocol project
         run: dotnet build src/frontend/CommunicationProtocol/CommunicationProtocol.csproj --configuration Release --no-restore
 
+      - name: Build CommunicationProtocolUnitTesting project
+        run: dotnet build src/frontend/CommunicationProtocolUnitTesting/CommunicationProtocolUnitTesting.csproj --configuration Release --no-restore
+
       - name: Run C# unit tests
         run: dotnet test src/frontend/CommunicationProtocolUnitTesting/CommunicationProtocolUnitTesting.csproj --configuration Release --no-build
