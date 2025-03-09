@@ -57,12 +57,9 @@ jobs:
           dotnet-version: '7.x'  # Adjust if needed
 
       - name: Restore .NET dependencies
-        run: dotnet restore src/frontend/CommunicationProtocol/CommunicationProtocol.csproj
+        run: dotnet restore src/frontend/CommunicationProtocolUnitTesting/CommunicationProtocolUnitTesting.csproj
 
-      - name: Build CommunicationProtocol project
-        run: dotnet build src/frontend/CommunicationProtocol/CommunicationProtocol.csproj --configuration Release --no-restore
-
-      - name: Build CommunicationProtocolUnitTesting project
+      - name: Build UnitTesting project
         run: dotnet build src/frontend/CommunicationProtocolUnitTesting/CommunicationProtocolUnitTesting.csproj --configuration Release --no-restore
 
       - name: Run C# unit tests
