@@ -85,7 +85,14 @@ Rate each feature on a scale of 1-5 with 1 being extremely difficult and 5 being
 \end{enumerate}
 
 \subsection{Maintainability}
-
+The maintainability tests are designed to test how maintainable the system is given likely future changes.
+\begin{enumerate}
+\item{\textbf{test-1}: Maintainability}\\
+This test was manually completed where the amount of time and number of lines of code
+will be recorded when implementing the changes that correspond to the 2023 CVT configuration. 
+Implementation of the 2023 CVT parameters takes at most 20 minutes with modifications to appropriately 26 lines of code in the \texttt{car\_specs.py}.
+Thus, the system is easily maintainability and the number of lines modified and time taken is minimal given a total change in parameters of the CVT. 
+\end{enumerate}
 \subsection{Verifiability}
 
 \subsection{Understandability}
@@ -101,6 +108,14 @@ Therefore, Understandability test-1 and Understandability test-2 have not been c
 \end{enumerate}
 
 \subsection{Reusability}
+
+The reusability tests are designed to assess how easily the system can be adapted to new or modified configurations. 
+\begin{enumerate}
+    \item {\textbf{test-1}: Reusability}\\
+    This test was manually performed by the teams, where the time taken and number of lines of code modified were recorded when implementing the 2023 CVT configuration. 
+    Implementation of the 2023 CVT parameters requires at most 20 minutes and involves modifications to approximately 26 lines of code in the \texttt{car\_specs.py} file. 
+    These minimal changes demonstrate the system's high reusability, as it can be quickly adapted to new CVT configurations with little effort and modification.
+\end{enumerate}
 	
 \section{Comparison to Existing Implementation}	
 
@@ -116,7 +131,7 @@ the feedback from the Rev 0 demo to the supervisor (or to potential users)
 should be highlighted.}
 
 \section{Automated Testing}
-		
+		 
 \section{Trace to Requirements}
 		
 \section{Trace to Modules}		
