@@ -56,9 +56,7 @@ public class InputField
         }
         else
         {
-            Debug.Log(parameter.Value);
             parameter.Value = value;
-            Debug.Log(parameter.Value);
             inputField.image.color = Color.white;
             errorText.text = "";
         }
