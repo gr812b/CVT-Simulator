@@ -2,6 +2,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using UnityEngine.SceneManagement;
+using System.Collections.Generic;
 
 public static class SimulationData
 {
@@ -21,6 +22,16 @@ public static class SimulationData
         AngleOfIncline = 0.0
     };
 }
+
+[System.Serializable]
+public class ParameterFields
+{
+    public TMP_InputField inputField;
+    public TMP_Text errorText;
+    public string parameterName;
+    public System.Action<double> setParameter;
+}
+
 public class InputFields : MonoBehaviour
 {
     // Runner for the python script
@@ -31,111 +42,103 @@ public class InputFields : MonoBehaviour
 
     // Buttons
     [SerializeField] private Button simulateButton;
-    [SerializeField] private Button defaultButton;
 
-    // Input fields
-    [SerializeField] private TMP_InputField flyweightMassInput;
-    [SerializeField] private TMP_InputField primaryRampGeometryInput;
-    [SerializeField] private TMP_InputField primarySpringRateInput;
-    [SerializeField] private TMP_InputField primarySpringPretensionInput;
-    [SerializeField] private TMP_InputField secondaryHelixGeometryInput;
-    [SerializeField] private TMP_InputField secondaryTorsionSpringRateInput;
-    [SerializeField] private TMP_InputField secondaryCompressionSpringRateInput;
-    [SerializeField] private TMP_InputField secondarySpringPretensionInput;
-    [SerializeField] private TMP_InputField vehicleWeightInput;
-    [SerializeField] private TMP_InputField driverWeightInput;
-    [SerializeField] private TMP_InputField tractionInput;
-    [SerializeField] private TMP_InputField angleOfInclineInput;
+    // List of all parameter fields
+    [SerializeField] private List<ParameterFields> parameterFields;
 
-    // Text Fields
-    [SerializeField] private TMP_Text flyweightMassError;
-    [SerializeField] private TMP_Text primaryRampGeometryError;
-    [SerializeField] private TMP_Text primarySpringRateError;
-    [SerializeField] private TMP_Text primarySpringPretensionError;
-    [SerializeField] private TMP_Text secondaryHelixGeometryError;
-    [SerializeField] private TMP_Text secondaryTorsionSpringRateError;
-    [SerializeField] private TMP_Text secondaryCompressionSpringRateError;
-    [SerializeField] private TMP_Text secondarySpringPretensionError;
-    [SerializeField] private TMP_Text vehicleWeightError;
-    [SerializeField] private TMP_Text driverWeightError;
-    [SerializeField] private TMP_Text tractionError;
-    [SerializeField] private TMP_Text angleOfInclineError;
-
-    private void Start() {
-        parameters = SimulationData.parameters;
+     private void Start()
+    {
         LoadStoredValues();
-        LoadStoredValues(); // Load saved values when scene starts
+
         simulateButton.onClick.AddListener(StartSimulation);
-        flyweightMassInput.onValueChanged.AddListener((value) => UpdateParameter(value, ref SimulationData.parameters.FlyweightMass, flyweightMassInput, flyweightMassError));
-        primaryRampGeometryInput.onValueChanged.AddListener((value) => UpdateParameter(value, ref SimulationData.parameters.PrimaryRampGeometry, primaryRampGeometryInput, primaryRampGeometryError));
-        primarySpringRateInput.onValueChanged.AddListener((value) => UpdateParameter(value, ref SimulationData.parameters.PrimarySpringRate, primarySpringRateInput, primarySpringRateError));
-        primarySpringPretensionInput.onValueChanged.AddListener((value) => UpdateParameter(value, ref SimulationData.parameters.PrimarySpringPretension, primarySpringPretensionInput, primarySpringPretensionError));
-        secondaryHelixGeometryInput.onValueChanged.AddListener((value) => UpdateParameter(value, ref SimulationData.parameters.SecondaryHelixGeometry, secondaryHelixGeometryInput, secondaryHelixGeometryError));
-        secondaryTorsionSpringRateInput.onValueChanged.AddListener((value) => UpdateParameter(value, ref SimulationData.parameters.SecondaryTorsionSpringRate, secondaryTorsionSpringRateInput, secondaryTorsionSpringRateError));
-        secondaryCompressionSpringRateInput.onValueChanged.AddListener((value) => UpdateParameter(value, ref SimulationData.parameters.SecondaryCompressionSpringRate, secondaryCompressionSpringRateInput, secondaryCompressionSpringRateError));
-        secondarySpringPretensionInput.onValueChanged.AddListener((value) => UpdateParameter(value, ref SimulationData.parameters.SecondarySpringPretension, secondarySpringPretensionInput, secondarySpringPretensionError));
-        vehicleWeightInput.onValueChanged.AddListener((value) => UpdateParameter(value, ref SimulationData.parameters.VehicleWeight, vehicleWeightInput, vehicleWeightError));
-        driverWeightInput.onValueChanged.AddListener((value) => UpdateParameter(value, ref SimulationData.parameters.DriverWeight, driverWeightInput, driverWeightError));
-        tractionInput.onValueChanged.AddListener((value) => UpdateParameter(value, ref SimulationData.parameters.Traction, tractionInput, tractionError));
-        angleOfInclineInput.onValueChanged.AddListener((value) => UpdateParameter(value, ref SimulationData.parameters.AngleOfIncline, angleOfInclineInput, angleOfInclineError));
-    }
 
-    private void LoadStoredValues() {
-        flyweightMassInput.text = SimulationData.parameters.FlyweightMass.ToString();
-        primaryRampGeometryInput.text = SimulationData.parameters.PrimaryRampGeometry.ToString();
-        primarySpringRateInput.text = SimulationData.parameters.PrimarySpringRate.ToString();
-        primarySpringPretensionInput.text = SimulationData.parameters.PrimarySpringPretension.ToString();
-        secondaryHelixGeometryInput.text = SimulationData.parameters.SecondaryHelixGeometry.ToString();
-        secondaryTorsionSpringRateInput.text = SimulationData.parameters.SecondaryTorsionSpringRate.ToString();
-        secondaryCompressionSpringRateInput.text = SimulationData.parameters.SecondaryCompressionSpringRate.ToString();
-        secondarySpringPretensionInput.text = SimulationData.parameters.SecondarySpringPretension.ToString();
-        vehicleWeightInput.text = SimulationData.parameters.VehicleWeight.ToString();
-        driverWeightInput.text = SimulationData.parameters.DriverWeight.ToString();
-        tractionInput.text = SimulationData.parameters.Traction.ToString();
-        angleOfInclineInput.text = SimulationData.parameters.AngleOfIncline.ToString();
-    }
-
-    private void UpdateParameter(string value, ref double parameter, TMP_InputField inputField, TMP_Text errorText) {
-    if (double.TryParse(value, out double val) && val >= 0) {
-        parameter = val; // Store updated value in static class
-        inputField.image.color = Color.white;
-        errorText.text = "";
-    } else {
-        inputField.image.color = Color.red;
-        errorText.text = "Invalid input, enter a number";
+        // Add listeners dynamically for all fields
+        foreach (var field in parameterFields)
+        {
+            field.inputField.onValueChanged.AddListener(value => UpdateParameter(value, field));
         }
     }
 
-    private void verifyFieldNotEmpty(ref TMP_InputField inputField, ref TMP_Text errorText) {
-        if (inputField.text == "") {
-            inputField.image.color = Color.red;
-            errorText.text = "Required field";
-            canSimulate = false;
-        } else {
-            inputField.image.color = Color.white;
-            errorText.text = "";
-            canSimulate = true;
+    private void LoadStoredValues()
+    {
+        foreach (var field in parameterFields)
+        {
+            double value = GetParameterValue(field.parameterName);
+            field.inputField.text = value.ToString();
         }
     }
 
-    private void checkFields() {
-        verifyFieldNotEmpty(ref flyweightMassInput, ref flyweightMassError);
-        verifyFieldNotEmpty(ref primaryRampGeometryInput, ref primaryRampGeometryError);
-        verifyFieldNotEmpty(ref primarySpringRateInput, ref primarySpringRateError);
-        verifyFieldNotEmpty(ref primarySpringPretensionInput, ref primarySpringPretensionError);
-        verifyFieldNotEmpty(ref secondaryHelixGeometryInput, ref secondaryHelixGeometryError);
-        verifyFieldNotEmpty(ref secondaryTorsionSpringRateInput, ref secondaryTorsionSpringRateError);
-        verifyFieldNotEmpty(ref secondaryCompressionSpringRateInput, ref secondaryCompressionSpringRateError);
-        verifyFieldNotEmpty(ref secondarySpringPretensionInput, ref secondarySpringPretensionError);
-        verifyFieldNotEmpty(ref vehicleWeightInput, ref vehicleWeightError);
-        verifyFieldNotEmpty(ref driverWeightInput, ref driverWeightError);
-        verifyFieldNotEmpty(ref tractionInput, ref tractionError);
-        verifyFieldNotEmpty(ref angleOfInclineInput, ref angleOfInclineError);
+    private double GetParameterValue(string name)
+    {
+        return name switch
+        {
+            "FlyweightMass" => SimulationData.parameters.FlyweightMass,
+            "PrimaryRampGeometry" => SimulationData.parameters.PrimaryRampGeometry,
+            "PrimarySpringRate" => SimulationData.parameters.PrimarySpringRate,
+            "PrimarySpringPretension" => SimulationData.parameters.PrimarySpringPretension,
+            "SecondaryHelixGeometry" => SimulationData.parameters.SecondaryHelixGeometry,
+            "SecondaryTorsionSpringRate" => SimulationData.parameters.SecondaryTorsionSpringRate,
+            "SecondaryCompressionSpringRate" => SimulationData.parameters.SecondaryCompressionSpringRate,
+            "SecondarySpringPretension" => SimulationData.parameters.SecondarySpringPretension,
+            "VehicleWeight" => SimulationData.parameters.VehicleWeight,
+            "DriverWeight" => SimulationData.parameters.DriverWeight,
+            "Traction" => SimulationData.parameters.Traction,
+            "AngleOfIncline" => SimulationData.parameters.AngleOfIncline,
+            _ => 0.0
+        };
     }
 
+    private void SetParameterValue(string name, double value)
+    {
+        switch (name)
+        {
+            case "FlyweightMass": SimulationData.parameters.FlyweightMass = value; break;
+            case "PrimaryRampGeometry": SimulationData.parameters.PrimaryRampGeometry = value; break;
+            case "PrimarySpringRate": SimulationData.parameters.PrimarySpringRate = value; break;
+            case "PrimarySpringPretension": SimulationData.parameters.PrimarySpringPretension = value; break;
+            case "SecondaryHelixGeometry": SimulationData.parameters.SecondaryHelixGeometry = value; break;
+            case "SecondaryTorsionSpringRate": SimulationData.parameters.SecondaryTorsionSpringRate = value; break;
+            case "SecondaryCompressionSpringRate": SimulationData.parameters.SecondaryCompressionSpringRate = value; break;
+            case "SecondarySpringPretension": SimulationData.parameters.SecondarySpringPretension = value; break;
+            case "VehicleWeight": SimulationData.parameters.VehicleWeight = value; break;
+            case "DriverWeight": SimulationData.parameters.DriverWeight = value; break;
+            case "Traction": SimulationData.parameters.Traction = value; break;
+            case "AngleOfIncline": SimulationData.parameters.AngleOfIncline = value; break;
+        }
+    }
+
+    private void UpdateParameter(string value, ParameterFields field)
+    {
+        if (double.TryParse(value, out double val) && val >= 0)
+        {
+            SetParameterValue(field.parameterName, val);
+            field.inputField.image.color = Color.white;
+            field.errorText.text = "";
+        }
+        else
+        {
+            field.inputField.image.color = Color.red;
+            field.errorText.text = "Invalid input, enter a number";
+        }
+    }
+
+    private void CheckFields()
+    {
+        canSimulate = true;
+        foreach (var field in parameterFields)
+        {
+            if (string.IsNullOrWhiteSpace(field.inputField.text))
+            {
+                field.inputField.image.color = Color.red;
+                field.errorText.text = "Required field";
+                canSimulate = false;
+            }
+        }
+    }
+    
     private void StartSimulation() {
         // Run the python script with the input parameters
-        checkFields();
+        CheckFields();
         if (!canSimulate) {
             return;
         }
@@ -149,8 +152,11 @@ public class InputFields : MonoBehaviour
 
     private void OnDestroy()
     {
-        // Save changes before exiting the scene
-        SimulationData.parameters = parameters;
+        foreach (var field in parameterFields)
+        {
+            double value = double.TryParse(field.inputField.text, out double val) ? val : 0.0;
+            SetParameterValue(field.parameterName, value);
+        }
     }
 
 }
