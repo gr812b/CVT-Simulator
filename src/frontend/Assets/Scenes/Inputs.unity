@@ -4562,31 +4562,43 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   simulateButton: {fileID: 782828726}
-  defaultButton: {fileID: 0}
-  flyweightMassInput: {fileID: 109714770}
-  primaryRampGeometryInput: {fileID: 1626156529}
-  primarySpringRateInput: {fileID: 1815771504}
-  primarySpringPretensionInput: {fileID: 1546887988}
-  secondaryHelixGeometryInput: {fileID: 1194728859}
-  secondaryTorsionSpringRateInput: {fileID: 328831286}
-  secondaryCompressionSpringRateInput: {fileID: 124355276}
-  secondarySpringPretensionInput: {fileID: 1367394230}
-  vehicleWeightInput: {fileID: 89104430}
-  driverWeightInput: {fileID: 1557013929}
-  tractionInput: {fileID: 866363522}
-  angleOfInclineInput: {fileID: 698078734}
-  flyweightMassError: {fileID: 2057979204}
-  primaryRampGeometryError: {fileID: 1195295665}
-  primarySpringRateError: {fileID: 638834820}
-  primarySpringPretensionError: {fileID: 495425581}
-  secondaryHelixGeometryError: {fileID: 1898071302}
-  secondaryTorsionSpringRateError: {fileID: 343542087}
-  secondaryCompressionSpringRateError: {fileID: 1435625780}
-  secondarySpringPretensionError: {fileID: 627608537}
-  vehicleWeightError: {fileID: 2129583303}
-  driverWeightError: {fileID: 983226999}
-  tractionError: {fileID: 1531822285}
-  angleOfInclineError: {fileID: 1832984477}
+  parameterFields:
+  - inputField: {fileID: 698078734}
+    errorText: {fileID: 1832984477}
+    parameterName: AngleOfIncline
+  - inputField: {fileID: 1557013929}
+    errorText: {fileID: 983226999}
+    parameterName: DriverWeight
+  - inputField: {fileID: 109714770}
+    errorText: {fileID: 2057979204}
+    parameterName: FlyweightMass
+  - inputField: {fileID: 1626156529}
+    errorText: {fileID: 1195295665}
+    parameterName: PrimaryRampGeometry
+  - inputField: {fileID: 1546887988}
+    errorText: {fileID: 495425581}
+    parameterName: PrimarySpringPretension
+  - inputField: {fileID: 1815771504}
+    errorText: {fileID: 638834820}
+    parameterName: PrimarySpringRate
+  - inputField: {fileID: 124355276}
+    errorText: {fileID: 1435625780}
+    parameterName: SecondaryCompressionSpringRate
+  - inputField: {fileID: 1194728859}
+    errorText: {fileID: 1898071302}
+    parameterName: SecondaryHelixGeometry
+  - inputField: {fileID: 1367394230}
+    errorText: {fileID: 627608537}
+    parameterName: SecondarySpringPretension
+  - inputField: {fileID: 328831286}
+    errorText: {fileID: 343542087}
+    parameterName: SecondaryTorsionSpringRate
+  - inputField: {fileID: 866363522}
+    errorText: {fileID: 1531822285}
+    parameterName: Traction
+  - inputField: {fileID: 89104430}
+    errorText: {fileID: 2129583303}
+    parameterName: VehicleWeight
 --- !u!114 &794761009
 MonoBehaviour:
   m_ObjectHideFlags: 0
