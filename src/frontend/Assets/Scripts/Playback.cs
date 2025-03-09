@@ -3,7 +3,7 @@ using UnityEngine.UI;
 using TMPro;
 using UnityEngine.SceneManagement;
 using System.IO;
-using CommunicationProtocol.Receivers.SimulationResult;
+using CommunicationProtocol.Receivers;
 
 // Abstract class encapsulating a component that displays playback data
 public abstract class PlaybackView : MonoBehaviour

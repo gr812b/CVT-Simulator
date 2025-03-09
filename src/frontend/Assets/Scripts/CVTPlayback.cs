@@ -1,4 +1,4 @@
-using CommunicationProtocol.Receivers.SimulationResult;
+using CommunicationProtocol.Receivers;
 using UnityEngine;
 
 public class CVTPlayback : PlaybackView

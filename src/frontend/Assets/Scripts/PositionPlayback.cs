@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.UI;
-using CommunicationProtocol.Receivers.SimulationResult;
+using CommunicationProtocol.Receivers;
+using System.IO;
 
 public class PositionPlayback : PlaybackView
 {
@@ -13,7 +14,6 @@ public class PositionPlayback : PlaybackView
     private Vector3 startPosition;
     private Vector3 endPosition;
     private float totalDistance;
-    InputFields inputFields;
     private float angle;
     // Max Position will be changed
     private float maxPosition = 127;
@@ -21,8 +21,8 @@ public class PositionPlayback : PlaybackView
 
     private void Start()
     {
-        inputFields = FindAnyObjectByType<InputFields>();
-        angle = (float)SimulationData.parameters.AngleOfIncline;
+        InputParameters inputParameters = new InputParameters(PathConstants.INPUT_PARAMETERS_PATH);
+        angle = float.Parse(inputParameters.GetValue(ParameterNames.ANGLE_OF_INCLINE));
         canvasWidth = canvasRect.rect.width  -50;
         calcStartEndPositions();
         SetCarInitial();

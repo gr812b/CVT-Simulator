@@ -25,9 +25,6 @@ public class DownloadCSV : MonoBehaviour
 
         if (!string.IsNullOrEmpty(destinationPath)) {
             File.Copy(csvPath, destinationPath, true);
-            Debug.Log("Downloaded CSV file to: " + destinationPath);
-        } else {
-            Debug.Log("Save operation canceled.");
         }
     } 
 }
