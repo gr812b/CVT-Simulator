@@ -1,6 +1,5 @@
 # This file should contain all the constants that define the car's specs
 import numpy as np
-from constants.constants import INCH_TO_METER
 from utils.conversions import deg_to_rad, inch_to_meter
 import math
 
@@ -25,7 +24,9 @@ BELT_HEIGHT = inch_to_meter(0.613)  # m
 BELT_LENGTH = inch_to_meter(37.53)  # m
 BELT_WIDTH_TOP = inch_to_meter(0.85)  # m
 BELT_WIDTH_BOTTOM = BELT_WIDTH_TOP - 2 * BELT_HEIGHT * np.tan(BELT_ANGLE)
-BELT_CROSS_SECTIONAL_AREA = (BELT_WIDTH_TOP * BELT_WIDTH_BOTTOM) / 2 * BELT_HEIGHT  # m^2
+BELT_CROSS_SECTIONAL_AREA = (
+    (BELT_WIDTH_TOP * BELT_WIDTH_BOTTOM) / 2 * BELT_HEIGHT
+)  # m^2
 
 MIN_PRIM_RADIUS = inch_to_meter(0.75)
 MAX_SEC_RADIUS = inch_to_meter(4.0)

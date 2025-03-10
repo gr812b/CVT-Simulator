@@ -1,6 +1,6 @@
 import numpy as np
 from utils.theoretical_models import TheoreticalModels as tm
-from utils.ramp_representation import LinearSegment, CircularSegment, PiecewiseRamp
+from utils.ramp_representation import LinearSegment, PiecewiseRamp  # , CircularSegment
 from constants.car_specs import MAX_SHIFT
 
 
@@ -19,15 +19,15 @@ class PrimaryPulley:
         self.initial_flyweight_radius = initial_flyweight_radius
         # Initializing ramp
         self.ramp = PiecewiseRamp()
-        self.ramp.add_segment(LinearSegment(x_start=0, x_end=MAX_SHIFT / 5, slope=-0.3))
-        self.ramp.add_segment(
-            CircularSegment(
-                x_start=MAX_SHIFT / 5,
-                x_end=MAX_SHIFT,
-                radius=0.025,
-                theta_fraction=0.95,
-            )
-        )
+        self.ramp.add_segment(LinearSegment(x_start=0, x_end=MAX_SHIFT, slope=-0.3))
+        # self.ramp.add_segment(
+        #     CircularSegment(
+        #         x_start=MAX_SHIFT/4,
+        #         x_end=MAX_SHIFT,
+        #         radius=0.025,
+        #         theta_fraction=0.95,
+        #     )
+        # )
 
     def calculate_flyweight_force(
         self, shift_distance: float, angular_velocity: float
@@ -65,4 +65,5 @@ class PrimaryPulley:
             shift_distance, angular_velocity
         )
         spring_force = self.calculate_spring_comp_force(shift_distance)
+        # print(f"Centrifugal force: {centrifugal_force:.2f}, Spring force: {spring_force:.2f}")
         return centrifugal_force - spring_force
