@@ -70,11 +70,54 @@ This document ...
 
 \section{Nonfunctional Requirements Evaluation}
 
-\subsection{Usability}
-		
-\subsection{Performance}
+This section will cover the evaluation of the Nonfunctional Requirements. 
 
-\subsection{etc.}
+\subsection{Accuracy}
+		
+\subsection{Usability}
+The Usability/Understandability survey remains in progress at this time and results will be discussed in the \href{file:../UsabilityReport/UsabilityReport.pdf}{Usability Report}. 
+Therefore, Usability test-1 and Usability test-2 have not been fully completed yet, however as they are in progress these tests will be completed as future work. 
+
+\begin{enumerate}
+\item{\textbf{test-1}: Navigating Main Interface}\\
+Survey question: On a scale of 1-5 with 1 being extremely difficult and 5 being extremely easy, how easy was it to navigate the main interface? 
+\item{\textbf{test-2}: Use of Most Common Features}\\
+Survey question: For the following main features: Inputting parameters, Adjusting parameters, Viewing data outputs, Saving and exporting data. 
+Rate each feature on a scale of 1-5 with 1 being extremely difficult and 5 being extremely easy
+\end{enumerate}
+
+\subsection{Maintainability}
+The maintainability tests are designed to test how maintainable the system is given likely future changes.
+\begin{enumerate}
+\item{\textbf{test-1}: Maintainability}\\
+This test was manually completed where the amount of time and number of lines of code
+will be recorded when implementing the changes that correspond to the 2023 CVT configuration. 
+Implementation of the 2023 CVT parameters takes at most 20 minutes with modifications to appropriately 26 lines of code in the \texttt{car\_specs.py}.
+Thus, the system is easily maintainability and the number of lines modified and time taken is minimal given a total change in parameters of the CVT. 
+\end{enumerate}
+\subsection{Verifiability}
+
+\subsection{Understandability}
+The Usability/Understandability survey remains in progress at this time and results will be discussed in the \href{file:../UsabilityReport/UsabilityReport.pdf}{Usability Report}. 
+Therefore, Understandability test-1 and Understandability test-2 have not been completed yet, however as they are in progress these tests will completed as future work. 
+
+\begin{enumerate}
+  \item{\textbf{test-1}: Function Purpose}\\
+  Survey question: For the following main features: Inputting parameters, Adjusting parameters, Viewing data outputs, Saving and exporting data. 
+  Was the purpose of each function clear, on a scale of 1-5 with 1 being very unclear and 5 being extremely clear. 
+  \item{\textbf{test-2}: Understanding Simulation Outputs}\\
+  Survey question: On a scale of 1-5, with 1 being very unclear and 5 being extremely clear, how well did you understand the simulation results and output?
+\end{enumerate}
+
+\subsection{Reusability}
+
+The reusability tests are designed to assess how easily the system can be adapted to new or modified configurations. 
+\begin{enumerate}
+    \item {\textbf{test-1}: Reusability}\\
+    This test was manually performed by the teams, where the time taken and number of lines of code modified were recorded when implementing the 2023 CVT configuration. 
+    Implementation of the 2023 CVT parameters requires at most 20 minutes and involves modifications to approximately 26 lines of code in the \texttt{car\_specs.py} file. 
+    These minimal changes demonstrate the system's high reusability, as it can be quickly adapted to new CVT configurations with little effort and modification.
+\end{enumerate}
 	
 \section{Comparison to Existing Implementation}	
 
