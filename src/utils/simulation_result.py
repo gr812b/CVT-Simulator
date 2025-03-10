@@ -4,15 +4,14 @@ import matplotlib.pyplot as plt
 
 
 class SimulationResult:
-    def __init__(self, solution):
-        """Initialize with solution from solve_ivp and parse it into states."""
-        self.time = solution.t
-        self.states = self.parse_solution(solution)
-
-    def __init__(self, time, states):
-        """Initialize with time and states."""
-        self.time = time
-        self.states = states
+    def __init__(self, solution=None, time=None, states=None):
+        """Initialize with solution from solve_ivp and parse it into states, or directly with time and states."""
+        if solution is not None:
+            self.time = solution.t
+            self.states = self.parse_solution(solution)
+        else:
+            self.time = time
+            self.states = states
 
     @staticmethod
     def parse_solution(solution):
