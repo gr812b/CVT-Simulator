@@ -3,6 +3,8 @@
 \usepackage{booktabs}
 \usepackage{tabularx}
 \usepackage{hyperref}
+\usepackage{float}
+\usepackage{graphicx}
 \hypersetup{
     colorlinks,
     citecolor=black,
@@ -119,9 +121,23 @@ The reusability tests are designed to assess how easily the system can be adapte
 	
 \section{Comparison to Existing Implementation}	
 
-This section will not be appropriate for every project.
-
+Not applicable for this project.
 \section{Unit Testing}
+
+\subsection{Back End Unit Testing}
+The back end was fully covered by unit tests except for a several files which were not suited for unit testing as they were mainly constants or did not provide functionality that could be tested. \\
+\\
+The test structure that was created was to essentially mirror how the codebase is organized. There is a test folder which houses all the tests, then inside that there is a simulations and utils folder which contain mirrored test files of the actual files under src/simulations or src/utils.\\
+\\
+The tests were written using the built in unittest module in python. The tests were run using the command coverage run -m unittest discover -s test/simulations -s test/utils. This command runs all the tests in those two folders using the coverage library.\\
+\\
+A coverage report was generated using the command coverage report -m.\\
+\\
+This command generates a report that shows the percentage of code that was covered by the tests. The report also shows which lines were not covered by the tests.
+This can be seen in section 11 of this document.\\
+
+\subsection{Front End Unit Testing}
+Cam fill this in please
 
 \section{Changes Due to Testing}
 
@@ -131,12 +147,28 @@ the feedback from the Rev 0 demo to the supervisor (or to potential users)
 should be highlighted.}
 
 \section{Automated Testing}
-		 
+
+The backend test run has been added to the CI/CD of the project. Now whenever there is a commit it must pass all the tess in order to be verified.
+If there is an error it will fail and state which tests failed. This is a good way to ensure that the code is always working as expected.\\
+\\
+As well the coverage report is also generated in the CI/CD run so you can see how much of the code is being covered by tests at that moment.
+\\
+The configuration for the CI/CD can be seen here: \url{https://github.com/gr812b/CVT-Simulator/blob/develop/.github/workflows/ci.yaml}
 \section{Trace to Requirements}
 		
 \section{Trace to Modules}		
 
 \section{Code Coverage Metrics}
+
+\subsection{Back End Code Coverage}
+\begin{figure}[H]
+  \begin{center}
+   \includegraphics[width=0.7\textwidth]{UnitTestCoverageReport.png}
+  \caption{Home Page }
+  \label{Fig_Home} 
+  \end{center}
+\end{figure}
+
 
 \bibliographystyle{plainnat}
 \bibliography{../../refs/References}
