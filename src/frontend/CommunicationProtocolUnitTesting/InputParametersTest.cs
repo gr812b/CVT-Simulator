@@ -1,5 +1,4 @@
 using CommunicationProtocol.Receivers;
-using System.Diagnostics;
 
 namespace CommunicationProtocolUnitTesting
 {
