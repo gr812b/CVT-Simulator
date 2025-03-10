@@ -79,9 +79,9 @@ The Usability/Understandability survey remains in progress at this time and resu
 Therefore, Usability test-1 and Usability test-2 have not been fully completed yet, however as they are in progress these tests will be completed as future work. 
 
 \begin{enumerate}
-\item{\textbf{test-1}: Navigating Main Interface}\\
+\item{\textbf{Usability test-1}: Navigating Main Interface}\\
 Survey question: On a scale of 1-5 with 1 being extremely difficult and 5 being extremely easy, how easy was it to navigate the main interface? 
-\item{\textbf{test-2}: Use of Most Common Features}\\
+\item{\textbf{Usability test-2}: Use of Most Common Features}\\
 Survey question: For the following main features: Inputting parameters, Adjusting parameters, Viewing data outputs, Saving and exporting data. 
 Rate each feature on a scale of 1-5 with 1 being extremely difficult and 5 being extremely easy
 \end{enumerate}
@@ -89,7 +89,7 @@ Rate each feature on a scale of 1-5 with 1 being extremely difficult and 5 being
 \subsection{Maintainability}
 The maintainability tests are designed to test how maintainable the system is given likely future changes.
 \begin{enumerate}
-\item{\textbf{test-1}: Maintainability}\\
+\item{\textbf{Maintainability test-1}}\\
 This test was manually completed where the amount of time and number of lines of code
 will be recorded when implementing the changes that correspond to the 2023 CVT configuration. 
 Implementation of the 2023 CVT parameters takes at most 20 minutes with modifications to appropriately 26 lines of code in the \texttt{car\_specs.py}.
@@ -102,10 +102,10 @@ The Usability/Understandability survey remains in progress at this time and resu
 Therefore, Understandability test-1 and Understandability test-2 have not been completed yet, however as they are in progress these tests will completed as future work. 
 
 \begin{enumerate}
-  \item{\textbf{test-1}: Function Purpose}\\
+  \item{\textbf{Understandability test-1}}\\
   Survey question: For the following main features: Inputting parameters, Adjusting parameters, Viewing data outputs, Saving and exporting data. 
   Was the purpose of each function clear, on a scale of 1-5 with 1 being very unclear and 5 being extremely clear. 
-  \item{\textbf{test-2}: Understanding Simulation Outputs}\\
+  \item{\textbf{Understandability test-2}: Understanding Simulation Outputs}\\
   Survey question: On a scale of 1-5, with 1 being very unclear and 5 being extremely clear, how well did you understand the simulation results and output?
 \end{enumerate}
 
@@ -113,7 +113,7 @@ Therefore, Understandability test-1 and Understandability test-2 have not been c
 
 The reusability tests are designed to assess how easily the system can be adapted to new or modified configurations. 
 \begin{enumerate}
-    \item {\textbf{test-1}: Reusability}\\
+    \item {\textbf{Reusability test-1}}\\
     This test was manually performed by the teams, where the time taken and number of lines of code modified were recorded when implementing the 2023 CVT configuration. 
     Implementation of the 2023 CVT parameters requires at most 20 minutes and involves modifications to approximately 26 lines of code in the \texttt{car\_specs.py} file. 
     These minimal changes demonstrate the system's high reusability, as it can be quickly adapted to new CVT configurations with little effort and modification.
@@ -129,7 +129,7 @@ The back end was fully covered by unit tests except for a several files which we
 \\
 The test structure that was created was to essentially mirror how the codebase is organized. There is a test folder which houses all the tests, then inside that there is a simulations and utils folder which contain mirrored test files of the actual files under src/simulations or src/utils.\\
 \\
-The tests were written using the built in unittest module in python. The tests were run using the command coverage run -m unittest discover -s test/simulations -s test/utils. This command runs all the tests in those two folders using the coverage library.\\
+The tests were written using the built-in unittest module in python. The tests were run using the command coverage run -m unittest discover -s test/simulations -s test/utils. This command runs all the tests in those two folders using the coverage library.\\
 \\
 A coverage report was generated using the command coverage report -m.\\
 \\
@@ -139,7 +139,7 @@ This can be seen in section 11 of this document.\\
 \subsection{Front End Unit Testing}
 The front end communication protocol was fully covered by unit tests besides the function that calls the python script since it is dependent on the back end Implementation.
 \\
-The tests are stored in a separate project within the front end solution. They are written using the MS Unit Testing Framework and are ran using the dotnet test command.
+The tests are stored in a separate project within the front end solution. They are written using the MS Unit Testing Framework and are run using the dotnet test command.
 \\
 A coverage report was generated using the JetBrains dotCover tool which shows the percentage of code that was covered by the tests.  
 
@@ -157,7 +157,7 @@ Moving the communication protocol into a separate project allowed for the simpli
 \\
 There were also changes on the front end to support the requested changes from the Rev 0 demo. The input parameters were updated to be stored in a csv file and read from there.
 \\
-This changes was to facilitate the implementation of uploading and downloading the parameters from the front end which was a requested feature from the Rev 0 demo.
+These changes were to facilitate the implementation of uploading and downloading the parameters from the front end which was a requested feature from the Rev 0 demo.
 
 \section{Automated Testing}
 Both back and front end sets of unit tests were automated and added to the CI/CD pipeline. Now whenever there is a commit it must pass all the tess in order to be verified.
@@ -167,6 +167,49 @@ As well the back end coverage report is also generated in the CI/CD run so you c
 \\
 The configuration for the CI/CD can be seen here: \url{https://github.com/gr812b/CVT-Simulator/blob/develop/.github/workflows/ci.yaml}
 \section{Trace to Requirements}
+
+\begin{table}[H]
+  \centering
+    \begin{tabular}{|c|c|}
+      \hline
+      \textbf{Requirement} & \textbf{Test(s)} \\ \hline
+      R1 & Position test-2, Velocity test-2, Acceleration test-2, Shift test-4  \\ \hline
+      R2 & Acceleration test-1 \\ \hline
+      R3 & Velocity test-1 \\ \hline
+      R4 & Position test-1 \\ \hline
+      R5 & Clamping forces test-1 \\ \hline
+      R6 & Clamping forces test-1 \\ \hline
+      R7 & Shift test-1, Shift test-2, Shift test-3 \\ \hline
+      R8 & Shift test-1, Shift test-2, Shift test-3 \\ \hline
+      R9 & Engine test-1 \\ \hline
+      R10 & User Interface test-1 \\ \hline
+      R11 & User Interface test-1 \\ \hline
+      R12 & User Interface test-2 \\ \hline
+      R13 & User Interface test-3 \\ \hline
+      R14 & User Interface test-4 \\ \hline
+      R15 & User Interface test-5 \\ \hline
+      R16 & Compatibility test-1 \\ \hline
+      R17 & Compatibility test-1 \\ \hline
+      \end{tabular}
+      \caption{System Functional Requirements and Corresponding Tests}
+      \label{tab:requirements_tests}
+  \end{table}
+
+  \begin{table}[h!]
+    \centering
+      \begin{tabular}{|c|c|}
+        \hline
+        \textbf{Requirement} & \textbf{Test(s)} \\ \hline
+        NFR1 & Accuracy test-1  \\ \hline
+        NFR2 & Useability test-1, Useability test-2 \\ \hline
+        NFR3 & Maintainability test-1 \\ \hline
+        NFR4 & Verifiability test-1 \\ \hline
+        NFR5 & Understandability test-1, Understandability test-2 \\ \hline
+        NFR6 & Reusability test-1 \\ \hline
+        \end{tabular}
+        \caption{System Nonfunctional Requirements and Corresponding Tests}
+        \label{tab:requirements_tests}
+    \end{table}
 		
 \section{Trace to Modules}		
 
