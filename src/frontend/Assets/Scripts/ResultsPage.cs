@@ -1,8 +1,6 @@
-using System.Diagnostics;
-using System.IO;
 using UnityEngine;
-using UnityEngine.UI;
 using TMPro;
+using CommunicationProtocol.Receivers;
 
 public class ResultsPage: MonoBehaviour
 {
@@ -24,20 +22,20 @@ public class ResultsPage: MonoBehaviour
     private void Awake()
     {
         //find InputFields 
-        Parameters parameters = SimulationData.parameters; 
+        InputParameters parameters = new InputParameters(PathConstants.INPUT_PARAMETERS_PATH);
         //update the values in the UI
-        FlyweightMass_val.text = parameters.FlyweightMass.ToString();
-        PrimaryRampGeo_val.text = parameters.PrimaryRampGeometry.ToString();
-        PrimarySpringRate_val.text = parameters.PrimarySpringRate.ToString();
-        PrimarySpringPretension_val.text = parameters.PrimarySpringPretension.ToString();
-        SecondaryHelixGeo_val.text = parameters.SecondaryHelixGeometry.ToString();
-        SecondaryTorsionSpringRate_val.text = parameters.SecondaryTorsionSpringRate.ToString();
-        SecondaryCompressionSpringRate_val.text = parameters.SecondaryCompressionSpringRate.ToString();
-        SecondarySpringPretension_val.text = parameters.SecondarySpringPretension.ToString();
-        VehicleWeight_val.text = parameters.VehicleWeight.ToString();
-        DriverWeight_val.text = parameters.DriverWeight.ToString();
-        Traction_val.text = parameters.Traction.ToString();
-        AngleofIncline_val.text = parameters.AngleOfIncline.ToString();
+        FlyweightMass_val.text = parameters.GetValue(ParameterNames.FLYWEIGHT_MASS);
+        PrimaryRampGeo_val.text = parameters.GetValue(ParameterNames.PRIMARY_RAMP_GEOMETRY);
+        PrimarySpringRate_val.text = parameters.GetValue(ParameterNames.PRIMARY_SPRING_RATE);
+        PrimarySpringPretension_val.text = parameters.GetValue(ParameterNames.PRIMARY_SPRING_PRETENSION);
+        SecondaryHelixGeo_val.text = parameters.GetValue(ParameterNames.SECONDARY_HELIX_GEOMETRY);
+        SecondaryTorsionSpringRate_val.text = parameters.GetValue(ParameterNames.SECONDARY_TORSION_SPRING_RATE);
+        SecondaryCompressionSpringRate_val.text = parameters.GetValue(ParameterNames.SECONDARY_COMPRESSION_SPRING_RATE);
+        SecondarySpringPretension_val.text = parameters.GetValue(ParameterNames.SECONDARY_SPRING_PRETENSION);
+        VehicleWeight_val.text = parameters.GetValue(ParameterNames.VEHICLE_WEIGHT);
+        DriverWeight_val.text = parameters.GetValue(ParameterNames.DRIVER_WEIGHT);
+        Traction_val.text = parameters.GetValue(ParameterNames.TRACTION);
+        AngleofIncline_val.text = parameters.GetValue(ParameterNames.ANGLE_OF_INCLINE);
     }
  }
 
