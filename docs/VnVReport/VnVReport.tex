@@ -78,7 +78,7 @@ This document ...
 \includegraphics[width=0.5\textwidth]{theoretical-figures/position.png}
 \includegraphics[width=0.5\textwidth]{simulation-figures/car_position.png}
 
-As seen above, the simulation output for the position of the car is consistent with the theoretical model. The larger initial slope can be attributed to an initial velocity, which si required due to Assumption of no slip [REFERENCE HERE].
+As seen above, the simulation output for the position of the car is consistent with the theoretical model. The larger initial slope can be attributed to an initial velocity, which is required due to Assumption of no slip [REFERENCE HERE].
 
 \item{\textbf{Position test-2}: MSE against experimental data}\\
 (SEE VNV EXTRA)
@@ -96,6 +96,82 @@ As seen above, the simulation output for the velocity of the car is consistent w
 
 \item{\textbf{Velocity test-2}: MSE against experimental data}\\
 (SEE VNV EXTRA)
+
+\end{enumerate}
+
+\subsubsection{Acceleration}
+\begin{enumerate}
+\item{\textbf{Acceleration test-1}: Graphical validation}\\
+
+\includegraphics[width=0.4\textwidth]{theoretical-figures/acceleration.png}
+\includegraphics[width=0.5\textwidth]{simulation-figures/vehicle_acceleration.png}
+
+The vehicle's acceleration matches the general shape of the theoretical model. The slope of the theoretical model was simply an estimate, meant to capture the shape of the graph, and so is a bit less accurate than the other graphs. Despite this, both share a common structure and follow expected trends.
+\item{\textbf{Acceleration test-2}: MSE against experimental data}\\
+(SEE VNV EXTRA)
+
+\end{enumerate}
+
+\subsubsection{Clamping Forces}
+\begin{enumerate}
+\item{\textbf{Clamping forces test-1}: Graphical validation}\\
+
+\includegraphics[width=0.4\textwidth]{theoretical-figures/clamp_force.png}
+\includegraphics[width=0.5\textwidth]{simulation-figures/primary_clamping.png}
+
+The shape of both graphs above do not match. While the expected result is an initial sharp increase, which then leads to a steady decrease, followed finally by an increase at the end, here we can see what is effectively exclusively an increase with some oscillations. This difference can be explained thanks to two factors.
+
+First, the oscillations arise due to the NO SLIP ASSUMPTION [LINK HERE], which result in an underdamped system. 
+
+Secondly, the exclusive increase is due to a poor representation of the complex ramp geometry. While in the real world, we know the ramp begins linear, then transitions to a gentle curve that gives us the decrease in force as we shift, the simulation represents it as a linear line. This causes a more strict rising of the force at each corresponding angular velocity of the engine.
+
+The impact this has on the system is quite miniscule. As long as the initla clamping forces which drive the shifting behaviour are correct, the majority of the system should behave as expected. Since our shifting occurs at one specific angular velocity, we need not worry about some of the extremeties being too far off. Further, the real world downsides of having an ever-increasing clamping force would be an excess of heat, which is ignored in our simulation in assumption NO HEAT [LINK HERE].
+
+\end{enumerate}
+
+\subsubsection{Shift}
+\begin{enumerate}
+\item{\textbf{Shift test-1}: Graphical validation 1}\\
+
+\includegraphics[width=0.5\textwidth]{theoretical-figures/shift_vs_engine.png}
+\includegraphics[width=0.5\textwidth]{simulation-figures/shift_distance_vs_engine_velocity.png}
+We can see the graphs are quite close in shape. Some key differences include:
+\begin{itemize}
+  \item the magnitude at which we shift, which is variable and can be altered based on the input parameters.
+  \item The oscillations in the simulation are due to the NO SLIP ASSUMPTION [LINK HERE], which cause an underdamped system.
+  \item The slight slope within the simulation. This is due to the poor ramp representation alongside other input parameters. Will be discussed more in Shift test-3.
+\end{itemize}
+
+
+\item{\textbf{Shift test-2}: MSE against experimental data 1}\\
+(SEE VNV EXTRA)
+
+\item{\textbf{Shift test-3}: Graphical validation 2}\\
+
+\includegraphics[width=0.5\textwidth]{theoretical-figures/shift_curve.png}
+\includegraphics[width=0.5\textwidth]{simulation-figures/shift_curve.png}
+
+The shift curve seen here shows much about the system, as so we will go over each section within the graph.
+\begin{itemize}
+\item{Phase A to C:} Due to the no slip assumption, it is unreasonable to omdel these portions. Were the engine tied to the vehicle's tired without slip, at low velocities the engine would be spinning lowering than it is capable of maintaining, and would thus kill the system. The solution in our simulation is to skip this portion, beginning at an initial velocity of around 3.5m/s.
+\item {Phase D and E:} This portion is modelled quite well. Here we see the vehicle and engine gaining speed at the low-ratio gear. We also see a slight overshoot thanks to the momentum of the system.
+\item {Phase F:} This is the shifting phase, which has the bulk of the calculations in our system affecting. Overall, a similar shape is reflected in both, with a mostly horizontal line. The slight slope in the simulation arises as we begin to shift too slowly, which allows the engine to gain speed. This can be attributed to several factors, but the most prominent is the poor ramp representation. The ramp is modelled as a linear line, which causes the system to shift too slowly. This is a minor issue, as the system still shifts at the correct time, but the speed at which it shifts is too slow.
+\item {Phase G:} In the final phase, we see the system accelerate at the high-ratio gear. Both graphs match exactly in this portion.
+\end{itemize}
+
+\item{\textbf{Shift test-2}: MSE against experimental data 2}\\
+(SEE VNV EXTRA)
+
+\end{enumerate}
+
+\subsubsection{Engine Dynamics}
+\begin{enumerate}
+\item{\textbf{Engine test-1}: Graphical validation}\\
+
+\includegraphics[width=0.4\textwidth]{theoretical-figures/engine.png}
+\includegraphics[width=0.5\textwidth]{simulation-figures/engine_specs.png}
+
+As seen in these two graphics, all points within the theoretical figures are represented exactly in the simulation. The only addition is seen via a point at our max engine RPM of 4000, which is limited by the official Baja SAE rules [LINK HERE]. The produced torque at this point drops to 0, as a restrictor plate ensures no additional power may be produced beyond this speed.
 
 \end{enumerate}
 

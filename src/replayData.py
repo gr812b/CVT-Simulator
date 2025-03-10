@@ -1,4 +1,5 @@
 from matplotlib import pyplot as plt
+import numpy as np
 from simulations.car_simulation import CarSimulator
 from simulations.load_simulation import LoadSimulator
 from utils.system_state import SystemState
@@ -121,7 +122,6 @@ def plotVelocity(result: SimulationResult):
     plt.legend()
     plt.grid()
 
-
 def plotVehicleAccel(result: SimulationResult):
     vehicle_accels = []
     for state in result.states:
@@ -240,10 +240,6 @@ def plotVehicleEngineSpeed(result: SimulationResult):
     ax1.grid()
 
 
-plotVehicleEngineSpeed(result)
-plt.show()
-
-
 # Function to plot primary and secondary forces over time
 def plot_forces_over_time(result: SimulationResult):
     # Unpack the observables for plotting or further processing
@@ -310,6 +306,8 @@ def plotShiftDistance(result: SimulationResult):
     plt.legend()
     plt.grid()
 
+plotShiftDistance(result)
+plt.show()
 
 def plotShiftCurve(result: SimulationResult):
     # Extract vehicle speeds and compute engine angular velocities.
@@ -330,9 +328,6 @@ def plotShiftCurve(result: SimulationResult):
     # Find the maximum engine angular velocity to use as an upper bound.
     max_engine = max(engine_angular_velocities)
 
-    # Convert vehicle speeds to a numpy array for masking.
-    import numpy as np
-
     vehicle_speeds_arr = np.array(vehicle_speeds)
 
     # Create masks for plotting the dashed lines only where they don't exceed the maximum engine speed.
@@ -345,20 +340,26 @@ def plotShiftCurve(result: SimulationResult):
         vehicle_speeds, engine_angular_velocities, label="Engine Speed", linewidth=2
     )
 
-    # Plot the dashed lines, but only up to the x values that produce y values below max_engine.
+    # Get masked arrays for the dashed lines.
+    x_min = vehicle_speeds_arr[mask_min]
+    y_min = min_ratio * x_min
+    x_max = vehicle_speeds_arr[mask_max]
+    y_max = max_ratio * x_max
+
+    # Insert (0, 0) so the dashed lines extend all the way to zero.
+    x_min = np.insert(x_min, 0, 0)
+    y_min = np.insert(y_min, 0, 0)
+    x_max = np.insert(x_max, 0, 0)
+    y_max = np.insert(y_max, 0, 0)
+
+    # Plot the dashed lines.
     plt.plot(
-        vehicle_speeds_arr[mask_min],
-        min_ratio * vehicle_speeds_arr[mask_min],
-        label="Min Ratio",
-        linestyle="--",
-        alpha=0.8,
+        x_min, y_min,
+        label="Min Ratio", linestyle="--", alpha=0.8,
     )
     plt.plot(
-        vehicle_speeds_arr[mask_max],
-        max_ratio * vehicle_speeds_arr[mask_max],
-        label="Max Ratio",
-        linestyle="--",
-        alpha=0.8,
+        x_max, y_max,
+        label="Max Ratio", linestyle="--", alpha=0.8,
     )
 
     plt.xlabel("Vehicle Speed (m/s)")
@@ -366,7 +367,8 @@ def plotShiftCurve(result: SimulationResult):
     plt.title("Engine Speed vs Vehicle Speed")
     plt.legend()
     plt.grid()
-
+    plt.xlim(left=0)
+    plt.ylim(bottom=0)
 
 plotShiftCurve(result)
 plt.show()
