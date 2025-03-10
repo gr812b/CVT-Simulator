@@ -5,6 +5,7 @@
 \usepackage{hyperref}
 \usepackage{float}
 \usepackage{graphicx}
+\usepackage{amsmath, mathtools}
 \hypersetup{
     colorlinks,
     citecolor=black,
@@ -67,6 +68,36 @@ Date 2 & 1.1 & Notes\\
 This document ...
 
 \section{Functional Requirements Evaluation}
+
+\subsection{Simulation Model}
+
+\subsubsection{Position}
+\begin{enumerate}
+\item{\textbf{Position test-1}: Graphical validation}\\
+
+\includegraphics[width=0.5\textwidth]{theoretical-figures/position.png}
+\includegraphics[width=0.5\textwidth]{simulation-figures/car_position.png}
+
+As seen above, the simulation output for the position of the car is consistent with the theoretical model. The larger initial slope can be attributed to an initial velocity, which si required due to Assumption of no slip [REFERENCE HERE].
+
+\item{\textbf{Position test-2}: MSE against experimental data}\\
+(SEE VNV EXTRA)
+
+\end{enumerate}
+
+\subsubsection{Velocity}
+\begin{enumerate}
+\item{\textbf{Velocity test-1}: Graphical validation}\\
+
+\includegraphics[width=0.4\textwidth]{theoretical-figures/velocity.png}
+\includegraphics[width=0.5\textwidth]{simulation-figures/car_velocity.png}
+
+As seen above, the simulation output for the velocity of the car is consistent with the theoretical model. The $v_\text{max}$ may be subject to changes according to approximations when calculating air resistance.
+
+\item{\textbf{Velocity test-2}: MSE against experimental data}\\
+(SEE VNV EXTRA)
+
+\end{enumerate}
 
 \section{Nonfunctional Requirements Evaluation}
 
