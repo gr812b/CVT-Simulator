@@ -1,6 +1,4 @@
-using System;
-using System.Collections.Generic;
-using Unity.Mathematics;
+using CommunicationProtocol.Receivers;
 using UnityEngine;
 
 public class CVTPlayback : PlaybackView

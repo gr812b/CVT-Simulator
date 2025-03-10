@@ -1,4 +1,4 @@
-name: CI for Python Project
+name: CI for Python and C# Project
 
 on:
   pull_request:
@@ -7,19 +7,21 @@ on:
       - develop
 
 jobs:
-  lint-and-test:
+  python-tests:
+    name: Python Lint & Tests
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
 
+      # Setup Python Environment
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
           python-version: '3.10'
 
-      - name: Install dependencies
+      - name: Install Python dependencies
         run: |
           python -m venv venv
           source venv/bin/activate
@@ -35,7 +37,30 @@ jobs:
           source venv/bin/activate
           black --check src test
 
-      - name: Run unit tests
+      - name: Run Python unit tests
         run: |
           source venv/bin/activate
           python -m unittest discover -s test
+
+  csharp-tests:
+    name: C# Build & Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      # Setup .NET Environment
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: '7.x'  # Adjust if needed
+
+      - name: Restore .NET dependencies
+        run: dotnet restore src/frontend/CommunicationProtocolUnitTesting/CommunicationProtocolUnitTesting.csproj
+
+      - name: Build UnitTesting project
+        run: dotnet build src/frontend/CommunicationProtocolUnitTesting/CommunicationProtocolUnitTesting.csproj --configuration Release --no-restore
+
+      - name: Run C# unit tests
+        run: dotnet test src/frontend/CommunicationProtocolUnitTesting/CommunicationProtocolUnitTesting.csproj --configuration Release --no-build

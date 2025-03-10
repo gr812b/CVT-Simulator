@@ -1,10 +1,6 @@
-using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
-using System;
 using UnityEngine.UI;
-using TMPro;
-using UnityEngine.SceneManagement;
 using SFB; 
 
 public class DownloadCSV : MonoBehaviour
@@ -29,9 +25,6 @@ public class DownloadCSV : MonoBehaviour
 
         if (!string.IsNullOrEmpty(destinationPath)) {
             File.Copy(csvPath, destinationPath, true);
-            Debug.Log("Downloaded CSV file to: " + destinationPath);
-        } else {
-            Debug.Log("Save operation canceled.");
         }
     } 
 }
