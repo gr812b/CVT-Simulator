@@ -40,6 +40,13 @@ jobs:
       - name: Run Python unit tests
         run: |
           source venv/bin/activate
+          coverage run -m unittest discover -s test/simulations -s test/utils
+          
+      - name: Generate coverage report
+        run: |
+          source venv/bin/activate
+          coverage report
+
           python -m unittest discover -s test
 
   csharp-tests:
