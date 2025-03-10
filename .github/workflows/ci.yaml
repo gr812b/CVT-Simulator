@@ -44,4 +44,4 @@ jobs:
         run: |
           source venv/bin/activate
           coverage report
-          coverage html  # optional, to generate a report in HTML format
+
