@@ -137,7 +137,11 @@ This command generates a report that shows the percentage of code that was cover
 This can be seen in section 11 of this document.\\
 
 \subsection{Front End Unit Testing}
-Cam fill this in please
+The front end communication protocol was fully covered by unit tests besides the function that calls the python script since it is dependent on the back end Implementation.
+\\
+The tests are stored in a separate project within the front end solution. They are written using the MS Unit Testing Framework and are ran using the dotnet test command.
+\\
+A coverage report was generated using the JetBrains dotCover tool which shows the percentage of code that was covered by the tests.  
 
 \section{Changes Due to Testing}
 
@@ -146,12 +150,20 @@ the supervisor (when one exists) shaped the final product.  In particular
 the feedback from the Rev 0 demo to the supervisor (or to potential users) 
 should be highlighted.}
 
-\section{Automated Testing}
+\subsection{Front End Changes}
+On the front end, many changes were made to support unit testing. The communication protocol was separated from the main Unity project since Unity was not compatible with the MS Unit Testing Framework.
+\\
+Moving the communication protocol into a separate project allowed for the simplification of the code base by isolating responsibilities and improving modularization.
+\\
+There were also changes on the front end to support the requested changes from the Rev 0 demo. The input parameters were updated to be stored in a csv file and read from there.
+\\
+This changes was to facilitate the implementation of uploading and downloading the parameters from the front end which was a requested feature from the Rev 0 demo.
 
-The backend test run has been added to the CI/CD of the project. Now whenever there is a commit it must pass all the tess in order to be verified.
+\section{Automated Testing}
+Both back and front end sets of unit tests were automated and added to the CI/CD pipeline. Now whenever there is a commit it must pass all the tess in order to be verified.
 If there is an error it will fail and state which tests failed. This is a good way to ensure that the code is always working as expected.\\
 \\
-As well the coverage report is also generated in the CI/CD run so you can see how much of the code is being covered by tests at that moment.
+As well the back end coverage report is also generated in the CI/CD run so you can see how much of the code is being covered by tests at that moment.
 \\
 The configuration for the CI/CD can be seen here: \url{https://github.com/gr812b/CVT-Simulator/blob/develop/.github/workflows/ci.yaml}
 \section{Trace to Requirements}
