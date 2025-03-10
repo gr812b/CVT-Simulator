@@ -9,6 +9,11 @@ class SimulationResult:
         self.time = solution.t
         self.states = self.parse_solution(solution)
 
+    def __init__(self, time, states):
+        """Initialize with time and states."""
+        self.time = time
+        self.states = states
+
     @staticmethod
     def parse_solution(solution):
         """Parses the solution from solve_ivp into a list of DrivetrainState instances."""
