@@ -6,7 +6,7 @@ from simulations.engine_simulation import EngineSimulator
 from simulations.primary_pulley import PrimaryPulley
 from simulations.secondary_pulley import SecondaryPulley
 from simulations.belt_simulator import BeltSimulator
-from simulations.cvt_shift import get_pulley_forces
+from simulations.cvt_shift import CvtShift
 from constants.engine_specs import torque_curve
 from constants.car_specs import (
     ENGINE_INERTIA,
@@ -42,6 +42,13 @@ secondary_simulator = SecondaryPulley(
 )
 primary_belt = BeltSimulator(primary=True)
 secondary_belt = BeltSimulator(primary=False)
+cvt_shift = CvtShift(
+    engine_simulator,
+    primary_simulator,
+    secondary_simulator,
+    primary_belt,
+    secondary_belt,
+)
 
 total_sim_time = 15  # seconds
 
@@ -86,8 +93,9 @@ def evaluate_cvt_system(t, y):
     # ------------------
     # PULLEY STUFF BELOW
     # ------------------
-    pulleyForces = get_pulley_forces(state)
+    pulleyForces = cvt_shift.get_pulley_forces(state)
 
+    # TODO: Move these calculations to cvt_shift.py
     cvt_moving_mass = 10  # TODO: Use constants
     # TODO: See if this belt acceleration is actually equal to shift accel
     friction = min(

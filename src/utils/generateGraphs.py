@@ -6,7 +6,7 @@ from simulations.engine_simulation import EngineSimulator
 from simulations.primary_pulley import PrimaryPulley
 from simulations.secondary_pulley import SecondaryPulley
 from simulations.belt_simulator import BeltSimulator
-from simulations.cvt_shift import get_pulley_forces
+from simulations.cvt_shift import CvtShift
 from constants.engine_specs import torque_curve
 from constants.car_specs import (
     ENGINE_INERTIA,
@@ -43,6 +43,13 @@ secondary_simulator = SecondaryPulley(
 )
 primary_belt = BeltSimulator(primary=True)
 secondary_belt = BeltSimulator(primary=False)
+cvt_shift = CvtShift(
+    engine_simulator,
+    primary_simulator,
+    secondary_simulator,
+    primary_belt,
+    secondary_belt,
+)
 
 result = SimulationResult.from_csv("simulation_output.csv")
 
@@ -183,7 +190,7 @@ def plotVehicleEngineSpeed(result: SimulationResult):
 # Function to plot primary and secondary forces over time
 def plot_forces_over_time(result: SimulationResult):
     # Unpack the observables for plotting or further processing
-    observables = [get_pulley_forces(state) for state in result.states]
+    observables = [cvt_shift.get_pulley_forces(state) for state in result.states]
     prim_radial = [obs["primary_radial"] for obs in observables]
     sec_radial = [obs["secondary_radial"] for obs in observables]
     shift_distances = [state.shift_distance for state in result.states]
