@@ -382,9 +382,18 @@ graduate attribute of Reflection.
 \input{../Reflection.tex}
 
 \begin{enumerate}
-  \item What went well while writing this deliverable? 
+  \item What went well while writing this deliverable?
+  \\
+  \\
+  Creating the unit tests for the back end was relatively simple as the code was already structured in a way that made it easy to unit test.
+  The process of creating the test just involved going through each function and comparing the expected output to the actual output.
   \item What pain points did you experience during this deliverable, and how
     did you resolve them?
+  \\
+  \\
+  Getting front end unit testing to work was a challenge since Unity was not compatible with many unit testing frameworks.
+  The solution was to separate the communication protocol into its own project which then allowed us to use the MS Unit Testing Framework.
+  This also allowed us to simplify the code base by isolating responsibilities and improving modularization.
   \item Which parts of this document stemmed from speaking to your client(s) or
   a proxy (e.g. your peers)? Which ones were not, and why?
   \item In what ways was the Verification and Validation (VnV) Plan different
@@ -395,6 +404,15 @@ graduate attribute of Reflection.
   predict a feasible amount of effort and the right tasks needed to build the
   evidence that demonstrates the required quality?  (It is expected that most
   teams will have had to deviate from their original VnV Plan.)
+  \\
+  \\
+  The back end unit testing was conducted as planned in the VnV Plan while the front end unit testing required modification to our approach.
+  On the front end, the Unity Testing Framework was significantly less user friendly and comprehensive than we expected.
+  This required us to change our approach to unit testing on the front end and move towards our current solution.
+  This was not anticipated in the VnV Plan as we were not aware of the limitations of the Unity Testing Framework.
+  In future projects, we would be able to better anticipate these changes by doing more research on the tools we plan to use.
+  On the back end, we were able to correctly predict the amount of effort and the tasks needed based on our previous experience with unit testing.
+  The back end unit testing followed the standard procedure and was able to easily leverage existing packages and tools to support the testing.
 \end{enumerate}
 
 \end{document}
