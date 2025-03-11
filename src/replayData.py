@@ -122,6 +122,7 @@ def plotVelocity(result: SimulationResult):
     plt.legend()
     plt.grid()
 
+
 def plotVehicleAccel(result: SimulationResult):
     vehicle_accels = []
     for state in result.states:
@@ -306,8 +307,10 @@ def plotShiftDistance(result: SimulationResult):
     plt.legend()
     plt.grid()
 
+
 plotShiftDistance(result)
 plt.show()
+
 
 def plotShiftCurve(result: SimulationResult):
     # Extract vehicle speeds and compute engine angular velocities.
@@ -354,12 +357,18 @@ def plotShiftCurve(result: SimulationResult):
 
     # Plot the dashed lines.
     plt.plot(
-        x_min, y_min,
-        label="Min Ratio", linestyle="--", alpha=0.8,
+        x_min,
+        y_min,
+        label="Min Ratio",
+        linestyle="--",
+        alpha=0.8,
     )
     plt.plot(
-        x_max, y_max,
-        label="Max Ratio", linestyle="--", alpha=0.8,
+        x_max,
+        y_max,
+        label="Max Ratio",
+        linestyle="--",
+        alpha=0.8,
     )
 
     plt.xlabel("Vehicle Speed (m/s)")
@@ -369,6 +378,7 @@ def plotShiftCurve(result: SimulationResult):
     plt.grid()
     plt.xlim(left=0)
     plt.ylim(bottom=0)
+
 
 plotShiftCurve(result)
 plt.show()
