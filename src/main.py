@@ -60,7 +60,7 @@ def evaluate_cvt_system(t, y):
 
     # Print progress
     progress_percent = (t / total_sim_time) * 100
-    
+
     if progress_percent % 0.1 < 0.01:
         sys.stdout.write(f"\rProgress: {progress_percent:.1f}%")
         sys.stdout.flush()
