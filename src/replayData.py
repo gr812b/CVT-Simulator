@@ -1,6 +1,5 @@
 from matplotlib import pyplot as plt
 import numpy as np
-from simulations.car_simulation import CarSimulator
 from simulations.load_simulation import LoadSimulator
 from utils.system_state import SystemState
 from utils.simulation_result import SimulationResult
@@ -14,10 +13,7 @@ from constants.car_specs import (
     GEARBOX_RATIO,
     FRONTAL_AREA,
     DRAG_COEFFICIENT,
-    CAR_MASS,
     WHEEL_RADIUS,
-    INITIAL_FLYWEIGHT_RADIUS,
-    HELIX_RADIUS,
     MAX_SHIFT,
 )
 from constants.constants import AIR_DENSITY
@@ -28,40 +24,25 @@ from utils.theoretical_models import TheoreticalModels as tm
 # Parse arguments
 args = get_arguments()
 
-# Pass arguments and constants into the simulators
+# Initialize simulators
 engine_simulator = EngineSimulator(torque_curve=torque_curve, inertia=ENGINE_INERTIA)
 load_simulator = LoadSimulator(
-    frontal_area=FRONTAL_AREA,
-    drag_coefficient=DRAG_COEFFICIENT,
     car_mass=args.vehicle_weight + args.driver_weight,
-    wheel_radius=WHEEL_RADIUS,
-    gearbox_ratio=GEARBOX_RATIO,
     incline_angle=deg_to_rad(args.angle_of_incline),
 )
-car_simulator = CarSimulator(car_mass=CAR_MASS + args.driver_weight)
 primary_simulator = PrimaryPulley(
     spring_coeff_comp=args.primary_spring_rate,
     initial_compression=args.primary_spring_pretension,
     flyweight_mass=args.flyweight_mass,
-    initial_flyweight_radius=INITIAL_FLYWEIGHT_RADIUS,
 )
 secondary_simulator = SecondaryPulley(
     spring_coeff_tors=args.secondary_torsion_spring_rate,
     spring_coeff_comp=args.secondary_compression_spring_rate,
     initial_rotation=deg_to_rad(args.secondary_spring_pretension),
     initial_compression=0.1,  # TODO: Use constants
-    helix_radius=HELIX_RADIUS,
 )
-primary_belt = BeltSimulator(
-    μ_static=1.2,  # TODO: Use constants
-    μ_kinetic=0.9,  # TODO: Use constants
-    primary=True,
-)
-secondary_belt = BeltSimulator(
-    μ_static=1.2,  # TODO: Use constants
-    μ_kinetic=0.9,  # TODO: Use constants
-    primary=False,
-)
+primary_belt = BeltSimulator(primary=True)
+secondary_belt = BeltSimulator(primary=False)
 
 
 def get_pulley_forces(state: SystemState) -> dict:
