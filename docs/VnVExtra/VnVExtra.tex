@@ -1,0 +1,89 @@
+\documentclass[12pt, titlepage]{article}
+
+\usepackage{float}
+\usepackage{geometry}
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{hyperref}
+\usepackage{siunitx}
+\hypersetup{
+    colorlinks,
+    citecolor=blue,
+    filecolor=black,
+    linkcolor=red,
+    urlcolor=blue
+}
+\usepackage[round]{natbib}
+\usepackage{amsmath, mathtools}
+\usepackage{xr}
+\externaldocument{../SRS/SRS}
+
+\input{../Comments}
+\input{../Common}
+
+\newcommand{\refdata}[2]{
+  \href{https://github.com/gr812b/CVT-Simulator/blob/main/experimental-data/#1
+  }{\texttt{#2}}}
+
+
+\begin{document}
+
+\title{System Verification and Validation Plan for \progname{}} 
+\author{\authname}
+\date{\today}
+	
+\maketitle
+
+\pagenumbering{roman}
+
+\section*{Revision History}
+
+\begin{tabularx}{\textwidth}{p{3cm}p{2cm}X}
+\toprule {\bf Date} & {\bf Version} & {\bf Notes}\\
+\midrule
+October 11th, 2024 & 0 & First version of VnV plan\\
+\bottomrule
+\end{tabularx}
+
+~\\
+
+\newpage
+
+\tableofcontents
+
+\listoftables
+
+
+\listoffigures
+
+
+\newpage
+
+\section{Symbols, Abbreviations, and Acronyms}
+
+\begin{table}[h]
+  \raggedright
+  \begin{tabular}{l l} 
+    \toprule		
+    \textbf{acronym} & \textbf{definition}\\
+    \midrule
+    CVT & Continuous Variable Transmission\\
+    GPS & Global Positioning System\\
+    \bottomrule
+  \end{tabular}
+  \caption{Verification and Validation Acronyms}
+  \label{tab:vnv_acronyms}
+\end{table}
+
+\newpage
+
+\pagenumbering{arabic}
+
+\section{General Information}
+
+
+\subsection{Summary}
+
+\noindent This document will go into detail on the real-world data validation performed for the \progname{}. As per Dr. Smith's instructions, it will be completed prior to the course's end. This document currently serves as a placeholder for the final VnV extra report.
+
+\end{document}
