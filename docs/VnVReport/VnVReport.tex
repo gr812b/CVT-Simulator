@@ -215,7 +215,25 @@ Implementation of the 2023 CVT parameters takes at most 20 minutes with modifica
 Thus, the system is easily maintainability and the number of lines modified and time taken is minimal given a total change in parameters of the CVT. 
 \end{enumerate}
 \subsection{Verifiability}
+The tests for verifiability involve completing \textbf{Position test-1}, \textbf{Velocity test-1}, \textbf{Acceleration test-1}, \textbf{Shift test-1} and \textbf{Shift test-3}.
+For each of the above tests, they will be run 30 times with the same input parameters to verify that the output produced is the same each time. 
 
+
+\includegraphics[width=0.5\textwidth]{simulation-figures/car_position_30.png}
+\includegraphics[width=0.5\textwidth]{simulation-figures/car_velocity30.png}
+\noindent The graphs above show the Car Position vs Time(Left) and the Car Velocity vs Time(Right) after 30 simulations with the same inputs.
+These tests correspond to \textbf{Position test-1} and \textbf{Velocity test-1}. \\
+\includegraphics[width=0.5\textwidth]{simulation-figures/vehicle_acceleration30.png}
+\includegraphics[width=0.5\textwidth]{simulation-figures/shift_distance_vs_engine_velocity30.png}
+\noindent The graphs above show the Car Acceleration vs Time(Left) and the Shift Distance vs Engine Angular Velocity(Right) after 30 simulations with the same inputs.
+These tests correspond to \textbf{Acceleration test-1} and \textbf{Shift test-1}. \\
+\includegraphics[width=0.5\textwidth]{simulation-figures/shift_curve_30.png}
+\\
+\noindent The graph above show the Engine Angualr Velocity vs Vehicle Speed. 
+These tests correspond to \textbf{Shift test-3} and \textbf{Velocity test-1}. \\
+\\
+As seen, based on the graphs above, there is little to no variation when performing the tests: \textbf{Position test-1}, \textbf{Velocity test-1}, \textbf{Acceleration test-1}, \textbf{Shift test-1} and \textbf{Shift test-3} 30 times on the same input data.
+This passes the test for verifiability. 
 
 \subsection{Understandability}
 The Usability/Understandability survey remains in progress at this time and results will be discussed in the \href{file:../UsabilityReport/UsabilityReport.pdf}{Usability Report}. 
