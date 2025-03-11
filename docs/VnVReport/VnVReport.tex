@@ -65,8 +65,6 @@ Date 2 & 1.1 & Notes\\
 
 \pagenumbering{arabic}
 
-This document ...
-
 \section{Functional Requirements Evaluation}
 
 \subsection{Simulation Model}
@@ -172,7 +170,7 @@ See the \href{https://github.com/gr812b/CVT-Simulator/blob/develop/docs/VnVExtra
 \includegraphics[width=0.4\textwidth]{theoretical-figures/engine.png}
 \includegraphics[width=0.5\textwidth]{simulation-figures/engine_specs.png}
 
-As seen in these two graphics, all points within the theoretical figures are represented exactly in the simulation. The only addition is seen via a point at our max engine RPM of 4000, which is limited by the official Baja SAE rules [LINK HERE]. The produced torque at this point drops to 0, as a restrictor plate ensures no additional power may be produced beyond this speed.
+As seen in these two graphics, all points within the theoretical figures are represented exactly in the simulation. The only addition is seen via a point at our max engine RPM of 4000, which is limited by the official \href{https://www.bajasae.net/cdsweb/gen/DocumentResources.aspx}{Baja SAE rules}. The produced torque at this point drops to 0, as a restrictor plate ensures no additional power may be produced beyond this speed.
 
 \end{enumerate}
 
@@ -323,10 +321,10 @@ A coverage report was generated using the JetBrains dotCover tool which shows th
 
 \section{Changes Due to Testing}
 
-\wss{This section should highlight how feedback from the users and from 
-the supervisor (when one exists) shaped the final product.  In particular 
-the feedback from the Rev 0 demo to the supervisor (or to potential users) 
-should be highlighted.}
+\subsection{Back End Changes}
+Many changes were implemented at various stages of the process. Early on, we had feedback on the mathematical models that shaped the simulation. Once we began implementing some of the independent forces, we once again reviewed and tested some of the calculations and made adjustments to the equations to ensure they were within reasonable ranges. \\
+
+These changes took place across the entire application on the backend, specifically referring to the mathematical implementation. The aspects that were left untouched were the shape and structure of the code, but all else was altered at least once throughout the process. \\
 
 \subsection{Front End Changes}
 On the front end, many changes were made to support unit testing. The communication protocol was separated from the main Unity project since Unity was not compatible with the MS Unit Testing Framework.
@@ -435,6 +433,15 @@ graduate attribute of Reflection.
   This also allowed us to simplify the code base by isolating responsibilities and improving modularization.
   \item Which parts of this document stemmed from speaking to your client(s) or
   a proxy (e.g. your peers)? Which ones were not, and why?
+  Sections 7.1, 7.2, 4, 3. Many sections throughout this document were heavily affected by peers on the McMaster Baja Racing team. This was accomplished through regular meetings and feedback, as well as more formal sitdowns and presentations. In turn this has effected the following sections:
+  \begin{itemize}
+  \item{3} Many discussions surrounding the mathematical model and the theoretical results occured to create these tests in the first place, as well as actively inspect various graphs. Further live data collection occured throughout the team.
+  \item{4} Worked closely with members to attempt some changes on the system that are likely in the following years to come, as well as the usability report.
+  \item{7} Many changes applied to the system in both front end and back end were done so due to feedback received from either our supervisor, Dr.~Smith or other members on the team when showed the product or questioned about mathematics, and such this was critical.
+  \end{itemize}
+
+  Did not receive help regarding unit testing or automated testing, as we were the domain experts on the codebase and could ensure sufficient code coverage. Many of the peers we worked closely with were not software oriented, and the challenge did not lie here.
+
   \item In what ways was the Verification and Validation (VnV) Plan different
   from the activities that were actually conducted for VnV?  If there were
   differences, what changes required the modification in the plan?  Why did
