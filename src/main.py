@@ -1,3 +1,4 @@
+import numpy as np
 from scipy.integrate import solve_ivp
 from simulations.load_simulation import LoadSimulator
 from utils.system_state import SystemState
@@ -122,6 +123,7 @@ def evaluate_cvt_system(t, y):
 
 
 time_span = (0, total_sim_time)
+time_eval = np.linspace(*time_span, 10000)
 initial_state = SystemState(
     engine_angular_velocity=rpm_to_rad_s(1800),
     engine_angular_position=0.0,
@@ -139,6 +141,7 @@ solution = solve_ivp(
     time_span,
     initial_state.to_array(),
     events=constraints,
+    t_eval=time_eval,
 )
 
 result = SimulationResult(solution)

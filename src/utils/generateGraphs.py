@@ -254,10 +254,6 @@ def plotShiftDistance(result: SimulationResult):
     plt.grid()
 
 
-plotShiftDistance(result)
-plt.show()
-
-
 def plotShiftCurve(result: SimulationResult):
     # Extract vehicle speeds and compute engine angular velocities.
     vehicle_speeds = [state.car_velocity for state in result.states]
@@ -326,5 +322,21 @@ def plotShiftCurve(result: SimulationResult):
     plt.ylim(bottom=0)
 
 
-plotShiftCurve(result)
-plt.show()
+if __name__ == "__main__":
+    # Plot the vehicle speed, engine speed, and cvt ratio over time.
+    plotVehicleEngineSpeed(result)
+    # Plot the vehicle acceleration over time.
+    plotVehicleAccel(result)
+    # Plot the vehicle velocity over time.
+    plotVelocity(result)
+    # Plot the primary clamping force over time.
+    plotPrimaryClampingForce(result)
+    # Plot the secondary clamping force over time.
+    plotSecondaryClampingForce(result)
+    # Plot the primary and secondary forces over time.
+    plot_forces_over_time(result)
+    # Plot the shift distance over time.
+    plotShiftDistance(result)
+    # Plot the shift curve.
+    plotShiftCurve(result)
+    plt.show()
