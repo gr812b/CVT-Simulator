@@ -1,12 +1,12 @@
 from matplotlib import pyplot as plt
 import numpy as np
 from simulations.load_simulation import LoadSimulator
-from utils.system_state import SystemState
 from utils.simulation_result import SimulationResult
 from simulations.engine_simulation import EngineSimulator
 from simulations.primary_pulley import PrimaryPulley
 from simulations.secondary_pulley import SecondaryPulley
 from simulations.belt_simulator import BeltSimulator
+from simulations.cvt_shift import get_pulley_forces
 from constants.engine_specs import torque_curve
 from constants.car_specs import (
     ENGINE_INERTIA,
@@ -44,49 +44,7 @@ secondary_simulator = SecondaryPulley(
 primary_belt = BeltSimulator(primary=True)
 secondary_belt = BeltSimulator(primary=False)
 
-
-def get_pulley_forces(state: SystemState) -> dict:
-    # Compute CVT ratio and engine velocity
-    cvt_ratio = tm.current_cvt_ratio(state.shift_distance)
-    wheel_to_engine_ratio = (cvt_ratio * GEARBOX_RATIO) / WHEEL_RADIUS
-    engine_velocity = state.car_velocity * wheel_to_engine_ratio
-
-    # Engine torque for secondary force calculation
-    engine_torque = engine_simulator.get_torque(engine_velocity)
-
-    # Calculate forces using your existing simulators
-    primary_force = primary_simulator.calculate_net_force(
-        state.shift_distance, engine_velocity
-    )
-    secondary_force = secondary_simulator.calculate_net_force(
-        engine_torque * cvt_ratio, state.shift_distance
-    )
-
-    # Calculate wrap angles and convert to radial forces
-    primary_wrap_angle = tm.primary_wrap_angle(state.shift_distance)
-    secondary_wrap_angle = tm.secondary_wrap_angle(state.shift_distance)
-    primary_radial = primary_belt.calculate_radial_force(
-        engine_velocity, state.shift_distance, primary_wrap_angle, primary_force
-    )
-    secondary_radial = secondary_belt.calculate_radial_force(
-        engine_velocity, state.shift_distance, secondary_wrap_angle, secondary_force
-    )
-
-    return {
-        "primary_force": primary_force,
-        "secondary_force": secondary_force,
-        "primary_radial": primary_radial,
-        "secondary_radial": secondary_radial,
-    }
-
-
 result = SimulationResult.from_csv("simulation_output.csv")
-
-# result.plot("car_velocity")
-# result.plot("car_position")
-# result.plot("shift_distance")
-# result.plot("shift_velocity")
-# result.plot("engine_angular_velocity")
 
 
 def plotVelocity(result: SimulationResult):
