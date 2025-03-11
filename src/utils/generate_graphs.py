@@ -72,7 +72,10 @@ def plotVelocity(result: SimulationResult):
 def plotVehicleAccel(result: SimulationResult):
     vehicle_accels = []
     for state in result.states:
-        engine_power = engine_simulator.get_power(state.engine_angular_velocity)
+        cvt_ratio = tm.current_cvt_ratio(state.shift_distance)
+        wheel_to_engine_ratio = (cvt_ratio * GEARBOX_RATIO) / WHEEL_RADIUS
+        actual_engine_velocity = state.car_velocity * wheel_to_engine_ratio
+        engine_power = engine_simulator.get_power(actual_engine_velocity)
         car_acceleration = load_simulator.calculate_acceleration(
             state.car_velocity, engine_power
         )

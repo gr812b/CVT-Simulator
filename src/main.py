@@ -99,8 +99,6 @@ def evaluate_cvt_system(t, y):
     shift_acceleration = cvt_shift.calculate_shift_acceleration(state)
 
     return [
-        0,
-        engine_velocity,
         car_acceleration,
         state.car_velocity,
         shift_acceleration,
@@ -111,8 +109,6 @@ def evaluate_cvt_system(t, y):
 time_span = (0, total_sim_time)
 time_eval = np.linspace(*time_span, 10000)
 initial_state = SystemState(
-    engine_angular_velocity=rpm_to_rad_s(1800),
-    engine_angular_position=0.0,
     car_velocity=rpm_to_rad_s(1800)
     / (GEARBOX_RATIO * tm.current_cvt_ratio(0))
     * WHEEL_RADIUS,
