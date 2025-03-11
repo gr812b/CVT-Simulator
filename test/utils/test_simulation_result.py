@@ -45,7 +45,7 @@ class TestSimulationResult(unittest.TestCase):
         df = pd.read_csv("test_output.csv")
         self.assertEqual(len(df), len(self.solution.t))
         self.assertIn("time", df.columns)
-        self.assertIn("engine_angular_velocity", df.columns)
+        self.assertIn("car_position", df.columns)
 
     @patch.object(SimulationResult, "plot")
     def test_plot(self, mock_plot):
