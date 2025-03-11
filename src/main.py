@@ -58,13 +58,15 @@ total_sim_time = 15  # seconds
 def evaluate_cvt_system(t, y):
     state = SystemState.from_array(y)
 
+    # Print progress
     progress_percent = (t / total_sim_time) * 100
-    #  Print every 2% progress
+    
     if progress_percent % 0.1 < 0.01:
         sys.stdout.write(f"\rProgress: {progress_percent:.1f}%")
         sys.stdout.flush()
         pass
 
+    # TODO: Remove this (should be handled by constraints)
     shift_velocity = state.shift_velocity
     shift_distance = state.shift_distance
     if shift_distance < 0:
@@ -94,23 +96,7 @@ def evaluate_cvt_system(t, y):
     # ------------------
     # PULLEY STUFF BELOW
     # ------------------
-    pulleyForces = cvt_shift.get_pulley_forces(state)
-
-    # TODO: Move these calculations to cvt_shift.py
-    cvt_moving_mass = 10  # TODO: Use constants
-    # TODO: See if this belt acceleration is actually equal to shift accel
-    friction = min(
-        20, abs(pulleyForces["primary_radial"] - pulleyForces["secondary_radial"])
-    )
-    if state.shift_velocity > 0:
-        forces = (
-            pulleyForces["primary_radial"] - pulleyForces["secondary_radial"] - friction
-        )
-    else:
-        forces = (
-            pulleyForces["primary_radial"] - pulleyForces["secondary_radial"] + friction
-        )
-    shift_acceleration = forces / cvt_moving_mass
+    shift_acceleration = cvt_shift.calculate_shift_acceleration(state)
 
     return [
         0,
