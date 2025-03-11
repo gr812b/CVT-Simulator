@@ -1,9 +1,12 @@
 import numpy as np
+import math
 from constants.car_specs import (
-    INNER_PRIMARY_PULLEY_RADIUS,
-    INNER_SECONDARY_PULLEY_RADIUS,
-    SHEAVE_ANGLE,
-    BELT_WIDTH,
+    BELT_HEIGHT,
+    MIN_PRIM_RADIUS,
+    INITIAL_SHEAVE_DISPLACEMENT,
+    BELT_ANGLE,
+    CENTER_TO_CENTER,
+    BELT_LENGTH,
 )
 
 
@@ -48,46 +51,35 @@ class TheoreticalModels:
     def newtons_second_law(m: float, a: float) -> float:
         return m * a
 
-    @staticmethod  # See theoretical model TM:D2R
-    def shift_to_pulley_radius_prim(d: float, sheave_angle: float) -> float:
-        return d / (2 * np.tan(sheave_angle / 2))
+    @staticmethod  # See Enman's excel sheet
+    def outer_prim_radius(d: float) -> float:
+        engage_distance = MIN_PRIM_RADIUS + BELT_HEIGHT
+        current_distance = (
+            (d - INITIAL_SHEAVE_DISPLACEMENT) / (2 * np.tan(BELT_ANGLE))
+            + MIN_PRIM_RADIUS
+            + BELT_HEIGHT
+        )
+        # print(f"Engage: {engage_distance}, Current: {current_distance}")
+        return max(engage_distance, current_distance)
 
-    @staticmethod  # See theoretical model TM:D2R
-    def shift_to_pulley_radius_sec(
-        d: float, sheave_angle: float, belt_width: float
-    ) -> float:
-        return (belt_width - d) / (2 * np.tan(sheave_angle / 2))
+    @staticmethod  # See Enman's excel sheet
+    def outer_sec_radius(d: float) -> float:
+        prim_radius = TheoreticalModels.outer_prim_radius(d)
+        return (
+            2 * prim_radius
+            - np.pi * CENTER_TO_CENTER
+            + math.sqrt(
+                (np.pi * CENTER_TO_CENTER) ** 2
+                - 8 * np.pi * CENTER_TO_CENTER * prim_radius
+                + 4 * BELT_LENGTH * CENTER_TO_CENTER
+                - 8 * CENTER_TO_CENTER**2
+            )
+        ) / 2
 
     @staticmethod
-    def current_primary_radius(
-        d: float, sheave_angle: float, initial_radius: float
-    ) -> float:
-        return initial_radius + TheoreticalModels.shift_to_pulley_radius_prim(
-            d, sheave_angle
-        )
-
-    @staticmethod
-    def current_secondary_radius(
-        d: float, sheave_angle: float, belt_width: float, inner_radius: float
-    ) -> float:
-        return inner_radius + TheoreticalModels.shift_to_pulley_radius_sec(
-            d, sheave_angle, belt_width
-        )
-
-    @staticmethod
-    def current_cvt_ratio(
-        d: float,
-        sheave_angle: float,
-        belt_width: float,
-        initial_primary_radius: float,
-        initial_secondary_radius: float,
-    ) -> float:
-        secondary_radius = TheoreticalModels.current_secondary_radius(
-            d, sheave_angle, belt_width, initial_secondary_radius
-        )
-        primary_radius = TheoreticalModels.current_primary_radius(
-            d, sheave_angle, initial_primary_radius
-        )
+    def current_cvt_ratio(d: float) -> float:
+        primary_radius = TheoreticalModels.outer_prim_radius(d) - BELT_HEIGHT / 2
+        secondary_radius = TheoreticalModels.outer_sec_radius(d) - BELT_HEIGHT / 2
         # TODO: Remove debug prints
         # print(f"Primary: {primary_radius}, Secondary: {secondary_radius}, ratio: {secondary_radius / primary_radius}")
         return secondary_radius / primary_radius
@@ -96,45 +88,27 @@ class TheoreticalModels:
     def wrap_angle(
         primary_radius: float,
         secondary_radius: float,
-        center_to_center: float,
     ):
         return 2 * np.arcsin(
-            (secondary_radius - primary_radius) / (2 * center_to_center)
+            (secondary_radius - primary_radius) / (2 * CENTER_TO_CENTER)
         )
 
     @staticmethod
-    def primary_wrap_angle(
-        shift_distance: float,
-        center_to_center: float,
-    ):
-        primary_radius = TheoreticalModels.current_primary_radius(
-            shift_distance, SHEAVE_ANGLE, INNER_PRIMARY_PULLEY_RADIUS
-        )
-        secondary_radius = TheoreticalModels.current_secondary_radius(
-            shift_distance, SHEAVE_ANGLE, BELT_WIDTH, INNER_SECONDARY_PULLEY_RADIUS
-        )
-        wrap_offset = TheoreticalModels.wrap_angle(
-            primary_radius, secondary_radius, center_to_center
-        )
+    def primary_wrap_angle(d: float):
+        primary_radius = TheoreticalModels.outer_prim_radius(d) - BELT_HEIGHT / 2
+        secondary_radius = TheoreticalModels.outer_sec_radius(d) - BELT_HEIGHT / 2
+        wrap_offset = TheoreticalModels.wrap_angle(primary_radius, secondary_radius)
+        # print(f"Ratio: {secondary_radius/primary_radius}, wrap: {wrap_offset}")
         if primary_radius <= secondary_radius:
             return np.pi - wrap_offset
         else:
             return np.pi + wrap_offset
 
     @staticmethod
-    def secondary_wrap_angle(
-        shift_distance: float,
-        center_to_center: float,
-    ):
-        primary_radius = TheoreticalModels.current_primary_radius(
-            shift_distance, SHEAVE_ANGLE, INNER_PRIMARY_PULLEY_RADIUS
-        )
-        secondary_radius = TheoreticalModels.current_secondary_radius(
-            shift_distance, SHEAVE_ANGLE, BELT_WIDTH, INNER_SECONDARY_PULLEY_RADIUS
-        )
-        wrap_offset = TheoreticalModels.wrap_angle(
-            primary_radius, secondary_radius, center_to_center
-        )
+    def secondary_wrap_angle(d: float):
+        primary_radius = TheoreticalModels.outer_prim_radius(d) - BELT_HEIGHT / 2
+        secondary_radius = TheoreticalModels.outer_sec_radius(d) - BELT_HEIGHT / 2
+        wrap_offset = TheoreticalModels.wrap_angle(primary_radius, secondary_radius)
         if primary_radius <= secondary_radius:
             return np.pi + wrap_offset
         else:

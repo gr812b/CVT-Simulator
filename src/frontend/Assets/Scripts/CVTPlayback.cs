@@ -1,6 +1,4 @@
-using System;
-using System.Collections.Generic;
-using Unity.Mathematics;
+using CommunicationProtocol.Receivers;
 using UnityEngine;
 
 public class CVTPlayback : PlaybackView
@@ -10,9 +8,6 @@ public class CVTPlayback : PlaybackView
     [SerializeField] private GameObject primaryFixed;
     [SerializeField] private GameObject secondaryMovable;
     [SerializeField] private GameObject secondaryFixed;
-
-    // The maximum shift distance value from the backend
-    private float maxShiftDistance = 0.05f;
 
     // The maximum distance that the pulley model can move
     private float maxPrimaryDistance = 0.3f;

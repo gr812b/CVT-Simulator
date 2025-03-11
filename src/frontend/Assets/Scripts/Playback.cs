@@ -1,10 +1,9 @@
-using System.Collections.Generic;
-using System.IO;
 using UnityEngine;
-using System;
 using UnityEngine.UI;
 using TMPro;
 using UnityEngine.SceneManagement;
+using System.IO;
+using CommunicationProtocol.Receivers;
 
 // Abstract class encapsulating a component that displays playback data
 public abstract class PlaybackView : MonoBehaviour
@@ -14,8 +13,7 @@ public abstract class PlaybackView : MonoBehaviour
 
 public class Playback : MonoBehaviour
 {
-    CSVReader csvReader = new CSVReader();
-    private List<DataPoint> dataPoints;
+    private SimulationResult simulationResult;
 
     [SerializeField] private Button playPauseButton;
     [SerializeField] private Button restartButton;
@@ -40,12 +38,14 @@ public class Playback : MonoBehaviour
         restartButton.onClick.AddListener(RestartPlayback);
         nextSceneButton.onClick.AddListener(backButton);
 
-        dataPoints = csvReader.LoadCSVData();
+        // Get path to simulation result file and then read it
+        string path = Path.Combine(Application.dataPath, "../simulation_output.csv");
+        simulationResult = new SimulationResult(path);
     }
 
     void TogglePlayPause()
     {
-        if (dataPoints.Count == 0) return;
+        if (simulationResult.Count == 0) return;
 
         isPlaying = !isPlaying; 
 
@@ -79,19 +79,19 @@ public class Playback : MonoBehaviour
 
     private System.Collections.IEnumerator PlaybackCoroutine()
     {
-        while (isPlaying && currentIndex < dataPoints.Count - 1)
+        while (isPlaying && currentIndex < simulationResult.Count - 1)
         {
             if (isPlaying)
             {
                 float elapsedTime = Time.time - startTime;
                 
                 // Move to the next data point if enough time has passed
-                while (currentIndex < dataPoints.Count - 1 && elapsedTime >= dataPoints[currentIndex + 1].Time)
+                while (currentIndex < simulationResult.Count - 1 && elapsedTime >= simulationResult[currentIndex + 1].Time)
                 {
                     // Updates views to the current index and then moves to the next index
                     UpdateViews();
                     currentIndex++;
-                    if (currentIndex == dataPoints.Count - 2)
+                    if (currentIndex == simulationResult.Count - 2)
                 {
                     statusText.text = "Playback Finished";
                 }
@@ -110,7 +110,7 @@ public class Playback : MonoBehaviour
     {
         foreach (PlaybackView view in playbackViews)
         {
-            view.Display(dataPoints[currentIndex]);
+            view.Display(simulationResult[currentIndex]);
         }
     }
 

@@ -4,16 +4,38 @@ import matplotlib.pyplot as plt
 
 
 class SimulationResult:
-    def __init__(self, solution):
-        """Initialize with solution from solve_ivp and parse it into states."""
-        self.time = solution.t
-        self.states = self.parse_solution(solution)
+    def __init__(self, solution=None, time=None, states=None):
+        """Initialize with solution from solve_ivp and parse it into states, or directly with time and states."""
+        if solution is not None:
+            self.time = solution.t
+            self.states = self.parse_solution(solution)
+        else:
+            self.time = time
+            self.states = states
 
     @staticmethod
     def parse_solution(solution):
         """Parses the solution from solve_ivp into a list of DrivetrainState instances."""
         states = [SystemState.from_array(state) for state in solution.y.T]
         return states
+
+    @staticmethod
+    def from_csv(filename="simulation_output.csv"):
+        """Reads the solution states from a CSV file and returns a SimulationResult instance."""
+        df = pd.read_csv(filename)
+        time = df["time"].values
+        states = [
+            SystemState(
+                engine_angular_velocity=row["engine_angular_velocity"],
+                engine_angular_position=row["engine_angular_position"],
+                car_velocity=row["car_velocity"],
+                car_position=row["car_position"],
+                shift_velocity=row["shift_velocity"],
+                shift_distance=row["shift_distance"],
+            )
+            for _, row in df.iterrows()
+        ]
+        return SimulationResult(time=time, states=states)
 
     def write_csv(self, filename="simulation_output.csv"):
         """Writes the parsed solution states to a CSV file."""

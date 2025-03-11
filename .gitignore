@@ -286,6 +286,7 @@ __pycache__/
 
 # VS Code
 .vscode/
+.vs/
 
 # Simulation Output
 simulation_output.csv

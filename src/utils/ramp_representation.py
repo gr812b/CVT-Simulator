@@ -1,7 +1,7 @@
 import numpy as np
 from typing import List
 import matplotlib.pyplot as plt
-from constants.car_specs import BELT_WIDTH
+from constants.car_specs import MAX_SHIFT
 
 
 class RampSegment:
@@ -109,15 +109,18 @@ if __name__ == "__main__":
 
     # Sample primary ramp
     ramp = PiecewiseRamp()
-    ramp.add_segment(LinearSegment(x_start=0, x_end=BELT_WIDTH / 5, slope=-1))
+    ramp.add_segment(LinearSegment(x_start=0, x_end=MAX_SHIFT / 4, slope=-0.3))
     ramp.add_segment(
         CircularSegment(
-            x_start=BELT_WIDTH / 5, x_end=BELT_WIDTH, radius=0.05, theta_fraction=0.95
+            x_start=MAX_SHIFT / 4,
+            x_end=MAX_SHIFT,
+            radius=0.025,
+            theta_fraction=0.95,
         )
     )
 
     # Evaluate ramp
-    x_values = np.linspace(0, BELT_WIDTH, 100)
+    x_values = np.linspace(0, MAX_SHIFT, 100)
     y_values = [-ramp.height(x) for x in x_values]
 
     # Plot results

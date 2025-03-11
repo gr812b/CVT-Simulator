@@ -1,9 +1,8 @@
 import numpy as np
 from utils.theoretical_models import TheoreticalModels as tm
 from constants.car_specs import (
-    SHEAVE_ANGLE,
-    BELT_WIDTH,
-    INNER_SECONDARY_PULLEY_RADIUS,
+    BELT_HEIGHT,
+    MAX_SHIFT,
 )
 from utils.ramp_representation import LinearSegment, PiecewiseRamp
 
@@ -30,12 +29,12 @@ class SecondaryPulley:
     def calculate_helix_force(
         self, torque: float, spring_torque: float, shift_distance: float
     ) -> float:
-        secondary_radius = tm.current_secondary_radius(
-            shift_distance, SHEAVE_ANGLE, BELT_WIDTH, INNER_SECONDARY_PULLEY_RADIUS
-        )
+        secondary_radius = tm.outer_sec_radius(shift_distance) - BELT_HEIGHT / 2
 
         if shift_distance < 0:  # TODO: remove
             shift_distance = 0
+        if shift_distance > MAX_SHIFT:
+            shift_distance = MAX_SHIFT
 
         angle = np.arctan(self.ramp.slope(shift_distance))
 
@@ -50,6 +49,8 @@ class SecondaryPulley:
 
         if shift_distance < 0:  # TODO: remove
             shift_distance = 0
+        if shift_distance > MAX_SHIFT:
+            shift_distance = MAX_SHIFT
 
         rotation = (
             self.initial_rotation + self.ramp.height(shift_distance) / self.helix_radius

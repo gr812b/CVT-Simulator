@@ -12,5 +12,7 @@ setup(
         "black",
         "flake8",
         "pandas",
+        "pytest",
+        "coverage",
     ],
 )
