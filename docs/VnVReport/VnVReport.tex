@@ -287,6 +287,33 @@ A coverage report was generated using the command coverage report -m.\\
 This command generates a report that shows the percentage of code that was covered by the tests. The report also shows which lines were not covered by the tests.
 This can be seen in section 11 of this document.\\
 
+\noindent The following is the file breakdown for the backend unit tests within test/simulations directory:
+\\
+\texttt{test\_belt\_simulator.py} - This test suite verifies that the BeltSimulator’s methods correctly compute centrifugal force, clamping-derived radial forces, net radial force, slack tension, and maximum transferable torque according to theoretical models.
+\\
+\texttt{test\_car\_simulator.py} - This test verifies that CarSimulator calculates acceleration correctly as force divided by mass.
+\\
+\texttt{test\_engine\_simulation.py} - This test suite verifies that EngineSimulator correctly initializes and computes torque, power, and angular acceleration using a mock torque curve.
+\\
+\texttt{test\_load\_simulation.py} - This test suite verifies that the LoadSimulator correctly computes vehicle load forces (incline, drag, total, gearbox) and acceleration given specific parameters.
+\\
+\texttt{test\_primary\_pulley.py} - This test suite verifies that the PrimaryPulley class correctly computes flyweight force, spring compression force, net force, and properly handles shift distance limits.
+\\
+\texttt{test\_secondary\_pulley.py} - This test suite verifies that the SecondaryPulley correctly computes helix force, spring compression force, spring torsion torque, and net force based on theoretical models and geometric parameters. 
+\\
+
+\noindent The following is the file breakdown for the backend unit tests within test/utils directory:
+\\
+\texttt{test\_argument\_parser.py} -- This test suite verifies that \texttt{get\_arguments} correctly parses command line inputs into an object for both default and custom scenarios.
+\\
+\texttt{test\_conversions.py} - This test suite verifies that conversion functions for angular velocity, angle measurements, circumference, and inch-to-meter conversions return correct values.
+\\
+\texttt{test\_simulation\_result.py} - This test suite verifies that simulation result correctly parses ODE solutions into system state objects, writes the results to a CSV file, and calls the plot method as expected.
+\\
+\texttt{test\_system\_state.py} - This test suite verifies that the SystemState class initializes correctly and accurately converts to and from array representations.
+\\
+\texttt{test\_theoretical\_models.py} - This test suite verifies that Theoretical Models correctly compute various physics and geometry calculations—including Hooke's law, centrifugal force, air resistance, torque, gearing, friction, capstan equation, Newton's second law, and CVT and wrap angle parameters.
+
 \subsection{Front End Unit Testing}
 The front end communication protocol was fully covered by unit tests besides the function that calls the python script since it is dependent on the back end Implementation.
 \\
