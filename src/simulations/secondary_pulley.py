@@ -25,7 +25,6 @@ class SecondaryPulley:
         self.ramp = PiecewiseRamp()
         self.ramp.add_segment(LinearSegment(x_start=0, x_end=1, slope=-0.5774))
 
-    # TODO: Look into how the torsional sping affects this torque value
     def calculate_helix_force(
         self, torque: float, spring_torque: float, shift_distance: float
     ) -> float:
@@ -44,6 +43,9 @@ class SecondaryPulley:
         return tm.hookes_law_comp(
             self.spring_coeff_comp, self.initial_compression + compression
         )
+    
+    def calculate_rotation(self, shift_distance: float) -> float:
+        return shift_distance * self.ramp.slope(shift_distance) * 2 / HELIX_RADIUS
 
     def calculate_spring_tors_torque(self, shift_distance: float) -> float:
 
@@ -53,7 +55,7 @@ class SecondaryPulley:
             shift_distance = MAX_SHIFT
 
         rotation = (
-            self.initial_rotation + self.ramp.height(shift_distance) / self.helix_radius
+            self.initial_rotation + self.calculate_rotation(shift_distance)
         )
         return tm.hookes_law_tors(self.spring_coeff_tors, rotation)
 

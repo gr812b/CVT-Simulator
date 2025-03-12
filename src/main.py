@@ -51,7 +51,7 @@ cvt_shift = CvtShift(
     secondary_belt,
 )
 
-total_sim_time = 15  # seconds
+total_sim_time = 30  # seconds
 
 
 # Define the system of differential equations
