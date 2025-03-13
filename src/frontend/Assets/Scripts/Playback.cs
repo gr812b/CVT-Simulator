@@ -22,13 +22,14 @@ public class Playback : MonoBehaviour
     [SerializeField] private PlaybackView[] playbackViews;
     [SerializeField] private RawImage playImage;
     [SerializeField] private RawImage pauseImage;
+    [SerializeField] private Button graphButton;
 
     private bool isPlaying = false;
     private int currentIndex = 0;
     private float startTime;
     private float pauseTime;
 
-    
+    private PythonRunner pythonRunner = new PythonRunner(PathConstants.PYTHON_ENVIRONMENT_PATH);
 
     private void Start()
     {
@@ -37,6 +38,7 @@ public class Playback : MonoBehaviour
         playPauseButton.onClick.AddListener(TogglePlayPause);
         restartButton.onClick.AddListener(RestartPlayback);
         nextSceneButton.onClick.AddListener(backButton);
+        graphButton.onClick.AddListener(ShowGraphs);
 
         // Get path to simulation result file and then read it
         string path = Path.Combine(Application.dataPath, "../simulation_output.csv");
@@ -120,6 +122,12 @@ public class Playback : MonoBehaviour
             int nextSceneIndex = SceneManager.GetActiveScene().buildIndex - 1;
             SceneManager.LoadScene(nextSceneIndex);
         }
+
+    // Show graphs
+    public void ShowGraphs()
+    {
+        pythonRunner.Run(PathConstants.GRAPH_SCRIPT_PATH);
+    }
 
 }
 
