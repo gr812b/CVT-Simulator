@@ -43,7 +43,7 @@ class SecondaryPulley:
         return tm.hookes_law_comp(
             self.spring_coeff_comp, self.initial_compression + compression
         )
-    
+
     def calculate_rotation(self, shift_distance: float) -> float:
         return shift_distance * self.ramp.slope(shift_distance) * 2 / HELIX_RADIUS
 
@@ -54,9 +54,7 @@ class SecondaryPulley:
         if shift_distance > MAX_SHIFT:
             shift_distance = MAX_SHIFT
 
-        rotation = (
-            self.initial_rotation + self.calculate_rotation(shift_distance)
-        )
+        rotation = self.initial_rotation + self.calculate_rotation(shift_distance)
         return tm.hookes_law_tors(self.spring_coeff_tors, rotation)
 
     # TODO: Determine relationship between shift distance and rotation
