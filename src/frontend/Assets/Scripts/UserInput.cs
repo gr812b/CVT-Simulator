@@ -65,8 +65,8 @@ public class InputField
 
 public class UserInput : MonoBehaviour
 {
-    // Runner for the python script
-    private PythonRunner pythonRunner = new PythonRunner(PathConstants.PYTHON_ENVIRONMENT_PATH);
+
+    // Input store to save the input parameters
     private InputStore inputStore = new InputStore();
     public List<Parameter> parameters = DefaultParameters.parameters;
     
@@ -103,7 +103,6 @@ public class UserInput : MonoBehaviour
         }
 
         inputStore.Store(PathConstants.INPUT_PARAMETERS_PATH, parameters);
-        pythonRunner.Run(PathConstants.PYTHON_SCRIPT_PATH, parameters);
 
         // Go the the results scene
         int nextSceneIndex = SceneManager.GetActiveScene().buildIndex + 1;
