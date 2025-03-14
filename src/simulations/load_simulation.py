@@ -1,5 +1,11 @@
 import math
 from constants.constants import GRAVITY, AIR_DENSITY
+from constants.car_specs import (
+    FRONTAL_AREA,
+    DRAG_COEFFICIENT,
+    WHEEL_RADIUS,
+    GEARBOX_RATIO,
+)
 from utils.theoretical_models import TheoreticalModels as tm
 
 # TODO: Consider direction, drag should never be applied in the opposite direction of velocity
@@ -9,10 +15,6 @@ class LoadSimulator:
     def __init__(
         self,
         car_mass: float,  # kg
-        drag_coefficient: float,  # unitless
-        frontal_area: float,  # m^2
-        wheel_radius: float,  # m
-        gearbox_ratio: float,  # unitless
         incline_angle: float,  # radians
     ):
         # Constants
@@ -20,12 +22,12 @@ class LoadSimulator:
         self.air_density = AIR_DENSITY  # kg/m^3
         # Car specs
         self.car_mass = car_mass
-        self.drag_coefficient = drag_coefficient
-        self.frontal_area = frontal_area
+        self.drag_coefficient = DRAG_COEFFICIENT
+        self.frontal_area = FRONTAL_AREA
         self.incline_angle = incline_angle
         # Gear reduction
-        self.wheel_radius = wheel_radius
-        self.gearbox_ratio = gearbox_ratio
+        self.wheel_radius = WHEEL_RADIUS
+        self.gearbox_ratio = GEARBOX_RATIO
 
     def calculate_incline_force(self) -> float:
         """Calculate the incline force due to gravity."""
