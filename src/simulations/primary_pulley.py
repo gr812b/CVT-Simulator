@@ -1,7 +1,7 @@
 import numpy as np
 from utils.theoretical_models import TheoreticalModels as tm
 from utils.ramp_representation import LinearSegment, PiecewiseRamp  # , CircularSegment
-from constants.car_specs import MAX_SHIFT
+from constants.car_specs import MAX_SHIFT, INITIAL_FLYWEIGHT_RADIUS
 
 
 class PrimaryPulley:
@@ -10,13 +10,12 @@ class PrimaryPulley:
         spring_coeff_comp: float,  # N/m
         initial_compression: float,  # m
         flyweight_mass: float,  # kg
-        initial_flyweight_radius: float,  # m
         # TODO: Add fields for ramp geometry
     ):
         self.spring_coeff_comp = spring_coeff_comp
         self.initial_compression = initial_compression
         self.flyweight_mass = flyweight_mass
-        self.initial_flyweight_radius = initial_flyweight_radius
+        self.initial_flyweight_radius = INITIAL_FLYWEIGHT_RADIUS
         # Initializing ramp
         self.ramp = PiecewiseRamp()
         self.ramp.add_segment(LinearSegment(x_start=0, x_end=MAX_SHIFT, slope=-0.3))

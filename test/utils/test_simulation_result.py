@@ -24,8 +24,6 @@ class TestSimulationResult(unittest.TestCase):
         # Mock SystemState.from_array to return a simple object
         self.original_from_array = SystemState.from_array
         SystemState.from_array = lambda arr: SystemState(
-            engine_angular_velocity=arr[0],
-            engine_angular_position=arr[1],
             car_velocity=arr[0],
             car_position=arr[1],
             shift_velocity=arr[0],
@@ -47,7 +45,7 @@ class TestSimulationResult(unittest.TestCase):
         df = pd.read_csv("test_output.csv")
         self.assertEqual(len(df), len(self.solution.t))
         self.assertIn("time", df.columns)
-        self.assertIn("engine_angular_velocity", df.columns)
+        self.assertIn("car_position", df.columns)
 
     @patch.object(SimulationResult, "plot")
     def test_plot(self, mock_plot):

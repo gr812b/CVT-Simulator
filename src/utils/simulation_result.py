@@ -26,8 +26,6 @@ class SimulationResult:
         time = df["time"].values
         states = [
             SystemState(
-                engine_angular_velocity=row["engine_angular_velocity"],
-                engine_angular_position=row["engine_angular_position"],
                 car_velocity=row["car_velocity"],
                 car_position=row["car_position"],
                 shift_velocity=row["shift_velocity"],
@@ -41,12 +39,6 @@ class SimulationResult:
         """Writes the parsed solution states to a CSV file."""
         data = {
             "time": self.time,
-            "engine_angular_velocity": [
-                state.engine_angular_velocity for state in self.states
-            ],
-            "engine_angular_position": [
-                state.engine_angular_position for state in self.states
-            ],
             "car_velocity": [state.car_velocity for state in self.states],
             "car_position": [state.car_position for state in self.states],
             "shift_velocity": [state.shift_velocity for state in self.states],
@@ -59,12 +51,6 @@ class SimulationResult:
         """Plots a selected field over time."""
         # Mapping field names to their respective data
         field_data = {
-            "engine_angular_velocity": [
-                state.engine_angular_velocity for state in self.states
-            ],
-            "engine_angular_position": [
-                state.engine_angular_position for state in self.states
-            ],
             "car_velocity": [state.car_velocity for state in self.states],
             "car_position": [state.car_position for state in self.states],
             "shift_velocity": [state.shift_velocity for state in self.states],

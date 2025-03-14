@@ -3,6 +3,7 @@ from utils.theoretical_models import TheoreticalModels as tm
 from constants.car_specs import (
     BELT_HEIGHT,
     MAX_SHIFT,
+    HELIX_RADIUS,
 )
 from utils.ramp_representation import LinearSegment, PiecewiseRamp
 
@@ -14,14 +15,13 @@ class SecondaryPulley:
         spring_coeff_comp: float,  # N/m
         initial_rotation: float,  # rad
         initial_compression: float,  # m
-        helix_radius: float,  # m
         # TODO: Add params for helix geometry
     ):
         self.spring_coeff_tors = spring_coeff_tors
         self.spring_coeff_comp = spring_coeff_comp
         self.initial_rotation = initial_rotation
         self.initial_compression = initial_compression
-        self.helix_radius = helix_radius
+        self.helix_radius = HELIX_RADIUS
         self.ramp = PiecewiseRamp()
         self.ramp.add_segment(LinearSegment(x_start=0, x_end=1, slope=-0.5774))
 

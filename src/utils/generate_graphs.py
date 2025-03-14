@@ -1,23 +1,19 @@
 from matplotlib import pyplot as plt
 import numpy as np
-from simulations.car_simulation import CarSimulator
 from simulations.load_simulation import LoadSimulator
-from utils.system_state import SystemState
 from utils.simulation_result import SimulationResult
 from simulations.engine_simulation import EngineSimulator
 from simulations.primary_pulley import PrimaryPulley
 from simulations.secondary_pulley import SecondaryPulley
 from simulations.belt_simulator import BeltSimulator
+from simulations.cvt_shift import CvtShift
 from constants.engine_specs import torque_curve
 from constants.car_specs import (
     ENGINE_INERTIA,
     GEARBOX_RATIO,
     FRONTAL_AREA,
     DRAG_COEFFICIENT,
-    CAR_MASS,
     WHEEL_RADIUS,
-    INITIAL_FLYWEIGHT_RADIUS,
-    HELIX_RADIUS,
     MAX_SHIFT,
 )
 from constants.constants import AIR_DENSITY
@@ -28,84 +24,34 @@ from utils.theoretical_models import TheoreticalModels as tm
 # Parse arguments
 args = get_arguments()
 
-# Pass arguments and constants into the simulators
+# Initialize simulators
 engine_simulator = EngineSimulator(torque_curve=torque_curve, inertia=ENGINE_INERTIA)
 load_simulator = LoadSimulator(
-    frontal_area=FRONTAL_AREA,
-    drag_coefficient=DRAG_COEFFICIENT,
     car_mass=args.vehicle_weight + args.driver_weight,
-    wheel_radius=WHEEL_RADIUS,
-    gearbox_ratio=GEARBOX_RATIO,
     incline_angle=deg_to_rad(args.angle_of_incline),
 )
-car_simulator = CarSimulator(car_mass=CAR_MASS + args.driver_weight)
 primary_simulator = PrimaryPulley(
     spring_coeff_comp=args.primary_spring_rate,
     initial_compression=args.primary_spring_pretension,
     flyweight_mass=args.flyweight_mass,
-    initial_flyweight_radius=INITIAL_FLYWEIGHT_RADIUS,
 )
 secondary_simulator = SecondaryPulley(
     spring_coeff_tors=args.secondary_torsion_spring_rate,
     spring_coeff_comp=args.secondary_compression_spring_rate,
     initial_rotation=deg_to_rad(args.secondary_spring_pretension),
     initial_compression=0.1,  # TODO: Use constants
-    helix_radius=HELIX_RADIUS,
 )
-primary_belt = BeltSimulator(
-    μ_static=1.2,  # TODO: Use constants
-    μ_kinetic=0.9,  # TODO: Use constants
-    primary=True,
+primary_belt = BeltSimulator(primary=True)
+secondary_belt = BeltSimulator(primary=False)
+cvt_shift = CvtShift(
+    engine_simulator,
+    primary_simulator,
+    secondary_simulator,
+    primary_belt,
+    secondary_belt,
 )
-secondary_belt = BeltSimulator(
-    μ_static=1.2,  # TODO: Use constants
-    μ_kinetic=0.9,  # TODO: Use constants
-    primary=False,
-)
-
-
-def get_pulley_forces(state: SystemState) -> dict:
-    # Compute CVT ratio and engine velocity
-    cvt_ratio = tm.current_cvt_ratio(state.shift_distance)
-    wheel_to_engine_ratio = (cvt_ratio * GEARBOX_RATIO) / WHEEL_RADIUS
-    engine_velocity = state.car_velocity * wheel_to_engine_ratio
-
-    # Engine torque for secondary force calculation
-    engine_torque = engine_simulator.get_torque(engine_velocity)
-
-    # Calculate forces using your existing simulators
-    primary_force = primary_simulator.calculate_net_force(
-        state.shift_distance, engine_velocity
-    )
-    secondary_force = secondary_simulator.calculate_net_force(
-        engine_torque * cvt_ratio, state.shift_distance
-    )
-
-    # Calculate wrap angles and convert to radial forces
-    primary_wrap_angle = tm.primary_wrap_angle(state.shift_distance)
-    secondary_wrap_angle = tm.secondary_wrap_angle(state.shift_distance)
-    primary_radial = primary_belt.calculate_radial_force(
-        engine_velocity, state.shift_distance, primary_wrap_angle, primary_force
-    )
-    secondary_radial = secondary_belt.calculate_radial_force(
-        engine_velocity, state.shift_distance, secondary_wrap_angle, secondary_force
-    )
-
-    return {
-        "primary_force": primary_force,
-        "secondary_force": secondary_force,
-        "primary_radial": primary_radial,
-        "secondary_radial": secondary_radial,
-    }
-
 
 result = SimulationResult.from_csv("simulation_output.csv")
-
-# result.plot("car_velocity")
-# result.plot("car_position")
-# result.plot("shift_distance")
-# result.plot("shift_velocity")
-# result.plot("engine_angular_velocity")
 
 
 def plotVelocity(result: SimulationResult):
@@ -126,7 +72,10 @@ def plotVelocity(result: SimulationResult):
 def plotVehicleAccel(result: SimulationResult):
     vehicle_accels = []
     for state in result.states:
-        engine_power = engine_simulator.get_power(state.engine_angular_velocity)
+        cvt_ratio = tm.current_cvt_ratio(state.shift_distance)
+        wheel_to_engine_ratio = (cvt_ratio * GEARBOX_RATIO) / WHEEL_RADIUS
+        actual_engine_velocity = state.car_velocity * wheel_to_engine_ratio
+        engine_power = engine_simulator.get_power(actual_engine_velocity)
         car_acceleration = load_simulator.calculate_acceleration(
             state.car_velocity, engine_power
         )
@@ -244,7 +193,7 @@ def plotVehicleEngineSpeed(result: SimulationResult):
 # Function to plot primary and secondary forces over time
 def plot_forces_over_time(result: SimulationResult):
     # Unpack the observables for plotting or further processing
-    observables = [get_pulley_forces(state) for state in result.states]
+    observables = [cvt_shift.get_pulley_forces(state) for state in result.states]
     prim_radial = [obs["primary_radial"] for obs in observables]
     sec_radial = [obs["secondary_radial"] for obs in observables]
     shift_distances = [state.shift_distance for state in result.states]
@@ -306,10 +255,6 @@ def plotShiftDistance(result: SimulationResult):
     plt.title("Shift Distance vs Engine Angular Velocity")
     plt.legend()
     plt.grid()
-
-
-plotShiftDistance(result)
-plt.show()
 
 
 def plotShiftCurve(result: SimulationResult):
@@ -380,5 +325,21 @@ def plotShiftCurve(result: SimulationResult):
     plt.ylim(bottom=0)
 
 
-plotShiftCurve(result)
-plt.show()
+if __name__ == "__main__":
+    # Plot the vehicle speed, engine speed, and cvt ratio over time.
+    plotVehicleEngineSpeed(result)
+    # Plot the vehicle acceleration over time.
+    plotVehicleAccel(result)
+    # Plot the vehicle velocity over time.
+    plotVelocity(result)
+    # Plot the primary clamping force over time.
+    plotPrimaryClampingForce(result)
+    # Plot the secondary clamping force over time.
+    plotSecondaryClampingForce(result)
+    # Plot the primary and secondary forces over time.
+    plot_forces_over_time(result)
+    # Plot the shift distance over time.
+    plotShiftDistance(result)
+    # Plot the shift curve.
+    plotShiftCurve(result)
+    plt.show()
