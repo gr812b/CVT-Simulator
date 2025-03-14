@@ -324,6 +324,35 @@ def plotShiftCurve(result: SimulationResult):
     plt.xlim(left=0)
     plt.ylim(bottom=0)
 
+def plot_radial_forces_vs_shift_ratio(result: SimulationResult):
+    shift_ratios = []
+    primary_radial = []
+    secondary_radial = []
+    
+    # Loop over simulation states to compute the CVT (shift) ratio and forces.
+    for state in result.states:
+        # Compute the shift (CVT) ratio from the current shift distance.
+        shift_ratio = tm.current_cvt_ratio(state.shift_distance)
+        # Get the pulley forces from the CVT shift simulator.
+        forces = cvt_shift.get_pulley_forces(state)
+        
+        shift_ratios.append(shift_ratio)
+        primary_radial.append(forces["primary_radial"])
+        secondary_radial.append(forces["secondary_radial"])
+    
+    # Create the plot.
+    plt.figure()
+    plt.plot(shift_ratios, primary_radial, label="Primary Radial Force")
+    plt.plot(shift_ratios, secondary_radial, label="Secondary Radial Force")
+    plt.xlabel("Shift Ratio")
+    plt.ylabel("Radial Force (N)")
+    plt.title("Primary and Secondary Radial Forces vs Shift Ratio")
+    plt.legend()
+    plt.grid()
+
+    plt.gca().invert_xaxis()
+
+
 
 if __name__ == "__main__":
     # Plot the vehicle speed, engine speed, and cvt ratio over time.
@@ -342,4 +371,6 @@ if __name__ == "__main__":
     plotShiftDistance(result)
     # Plot the shift curve.
     plotShiftCurve(result)
+    # Call the new function along with any other plots as needed.
+    plot_radial_forces_vs_shift_ratio(result)
     plt.show()
