@@ -7,6 +7,7 @@ public static class PathConstants
     private static string dataPath = Application.dataPath;
     public static string SIMULATION_OUTPUT_PATH = Path.Combine(dataPath, "../simulation_output.csv");
     public static string INPUT_PARAMETERS_PATH = Path.Combine(dataPath, "../input_parameters.csv");
+    public static string PERCENT_VALUE_PATH = Path.Combine(dataPath, "../progress_percent.csv");
     public static string PYTHON_ENVIRONMENT_PATH = Path.Combine(dataPath, "../../../venv/Scripts/python.exe");
     public static string PYTHON_SCRIPT_PATH = Path.Combine(dataPath, "../../main.py");
 }

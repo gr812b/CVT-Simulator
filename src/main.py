@@ -26,6 +26,9 @@ from utils.argument_parser import get_arguments
 from utils.theoretical_models import TheoreticalModels as tm
 from utils.simulation_constraints import constraints
 import sys
+import os
+import csv
+
 
 # Parse arguments
 args = get_arguments()
@@ -103,16 +106,43 @@ def get_pulley_forces(state: SystemState) -> dict:
 
 total_sim_time = 15  # seconds
 
+current_progress = 0  # global variable to track progress
+
+# delete temp csv file if it exists
+try:
+    os.remove("progress_percent_temp.csv")
+except FileNotFoundError:
+    pass
+
+# create temp csv file
+with open("progress_percent_temp.csv", "w", newline='') as f:
+    writer = csv.writer(f)
+    writer.writerow(["Percent"])
+    writer.writerow([current_progress])
+
+os.replace("progress_percent_temp.csv", "progress_percent.csv")
+
 
 # Define the system of differential equations
 def angular_velocity_and_position_derivative(t, y):
+    global current_progress
     state = SystemState.from_array(y)
 
-    progress_percent = (t / total_sim_time) * 100
-    #  Print every 2% progress
-    if progress_percent % 0.1 < 0.01:
+    progress_percent = t / total_sim_time
+
+    # Print every 1% progress
+    if progress_percent > current_progress + 0.01:
+        current_progress = progress_percent
         sys.stdout.write(f"\rProgress: {progress_percent:.1f}%")
         sys.stdout.flush()
+
+        # write progress to temp csv file
+        with open("progress_percent_temp.csv", "w", newline='') as f:
+            writer = csv.writer(f)
+            writer.writerow(["Percent"])
+            writer.writerow([f"{current_progress:.2f}"])
+        
+        os.replace("progress_percent_temp.csv", "progress_percent.csv")
         pass
 
     shift_velocity = state.shift_velocity
