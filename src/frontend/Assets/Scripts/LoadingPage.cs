@@ -20,7 +20,7 @@ public class LoadingPage : MonoBehaviour
         loadingBar.SetPercentage(currentPercent);
 
         // Run the Python script with the input parameters
-        pythonRunner.Run(PathConstants.PYTHON_SCRIPT_PATH, inputParameters);
+        var _ = pythonRunner.RunAsync(PathConstants.PYTHON_SCRIPT_PATH, inputParameters);
     }
 
     // Update is called once per frame

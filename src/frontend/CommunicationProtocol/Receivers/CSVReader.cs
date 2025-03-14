@@ -22,24 +22,32 @@ namespace CommunicationProtocol.Receivers
             // Clear existing data
             this.Clear();
 
-            // Read the CSV file line by line and parse each row using the concrete implementation of ParseRow
-            using (var reader = new StreamReader(path))
+            try
             {
-                // Read the header row and store the column indices
-                var headerLine = reader.ReadLine();
-                var headerValues = headerLine.Split(',');
-                for (int i = 0; i < headerValues.Length; i++)
+                // Read the CSV file line by line and parse each row using the concrete implementation of ParseRow
+                using (var reader = new StreamReader(path))
                 {
-                    headers[headerValues[i]] = i;
-                }
+                    // Read the header row and store the column indices
+                    var headerLine = reader.ReadLine();
+                    var headerValues = headerLine.Split(',');
+                    for (int i = 0; i < headerValues.Length; i++)
+                    {
+                        headers[headerValues[i]] = i;
+                    }
 
-                while (!reader.EndOfStream)
-                {
-                    var line = reader.ReadLine();
-                    var values = line.Split(',');
+                    while (!reader.EndOfStream)
+                    {
+                        var line = reader.ReadLine();
+                        var values = line.Split(',');
 
-                    this.Add(ParseRow(values));
+                        this.Add(ParseRow(values));
+                    }
                 }
+            } 
+            catch (IOException e)
+            {
+                this.Clear();
+                this.Add(default(T));
             }
         }
     }

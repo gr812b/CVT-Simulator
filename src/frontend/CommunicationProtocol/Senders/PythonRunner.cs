@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Threading.Tasks;
 
 namespace CommunicationProtocol.Senders
 {
@@ -43,26 +44,25 @@ namespace CommunicationProtocol.Senders
         }
 
         // Main function to run the python script
-        public void Run(string scriptPath, List<Parameter> parameters)
+        public Task RunAsync(string scriptPath, List<Parameter> parameters)
         {
-
-            // Create a new process to run the python script
-            ProcessStartInfo python = new ProcessStartInfo
+            return Task.Run(() =>
             {
-                FileName = environmentPath,
-                Arguments = scriptPath + GenerateArgumentString(parameters),
-                UseShellExecute = false,
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-                CreateNoWindow = true
-            };
+                ProcessStartInfo startInfo = new ProcessStartInfo
+                {
+                    FileName = environmentPath,
+                    Arguments = scriptPath + GenerateArgumentString(parameters),
+                    UseShellExecute = false,
+                    CreateNoWindow = false
+                };
 
-            // Execute the process
-            using (Process process = Process.Start(python))
-            {
-                string result = process.StandardOutput.ReadToEnd();
-                string error = process.StandardError.ReadToEnd();
-            }
+                using (Process process = new Process())
+                {
+                    process.StartInfo = startInfo;
+                    process.Start();
+                    process.WaitForExit();
+                }
+            });
         }
     }
 }

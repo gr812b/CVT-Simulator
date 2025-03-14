@@ -28,8 +28,6 @@ public class Playback : MonoBehaviour
     private float startTime;
     private float pauseTime;
 
-    
-
     private void Start()
     {
 
@@ -117,7 +115,7 @@ public class Playback : MonoBehaviour
     // Returns to the previous scene
     private void backButton()
         {
-            int nextSceneIndex = SceneManager.GetActiveScene().buildIndex - 1;
+            int nextSceneIndex = SceneManager.GetActiveScene().buildIndex - 2;
             SceneManager.LoadScene(nextSceneIndex);
         }
 
