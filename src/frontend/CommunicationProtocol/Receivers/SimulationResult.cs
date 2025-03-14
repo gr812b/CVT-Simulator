@@ -60,12 +60,12 @@ namespace CommunicationProtocol.Receivers
 
         protected override DataPoint ParseRow(string[] values)
         {
-            float time = float.Parse(values[0]);
-            float engineAngularVelocity = float.Parse(values[1]);
-            float engineAngularPosition = float.Parse(values[2]);
-            float carVelocity = float.Parse(values[3]);
-            float carPosition = float.Parse(values[4]);
-            float shiftDistance = float.Parse(values[6]);
+            float time = float.Parse(values[headers["time"]]);
+            float engineAngularVelocity = float.Parse(values[headers["engine_angular_velocity"]]);
+            float engineAngularPosition = float.Parse(values[headers["engine_angular_position"]]);
+            float carVelocity = float.Parse(values[headers["car_velocity"]]);
+            float carPosition = float.Parse(values[headers["car_position"]]);
+            float shiftDistance = float.Parse(values[headers["shift_distance"]]);
 
             return new DataPoint(time, engineAngularVelocity, engineAngularPosition, carVelocity, carPosition, shiftDistance);
         }
