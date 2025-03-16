@@ -13,7 +13,7 @@ namespace CommunicationProtocolUnitTesting
         public void SetUp()
         {
             // Write test data to the file
-            File.WriteAllText(CSVPath, "time,engine_angular_velocity,engine_angular_position,car_velocity,car_position,shift_distance\n" +
+            File.WriteAllText(CSVPath, "time,engine_angular_velocity,engine_angular_position,car_velocity,car_position,shift_velocity,shift_distance\n" +
                                        "0,10,0.1,20,30,0,0.005\n" +
                                        "1,15,0.2,25,35,0,0.010\n");
         }
