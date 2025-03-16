@@ -127,4 +127,5 @@ solution = solve_ivp(
 )
 
 result = SimulationResult(solution)
-result.write_csv("simulation_output.csv")
+result.write_result_csv("simulation_output.csv")
+result.write_frontend_csv("frontend_data.csv")

@@ -35,7 +35,7 @@ class SimulationResult:
         ]
         return SimulationResult(time=time, states=states)
 
-    def write_csv(self, filename="simulation_output.csv"):
+    def write_result_csv(self, filename="simulation_output.csv"):
         """Writes the parsed solution states to a CSV file."""
         data = {
             "time": self.time,
@@ -43,6 +43,20 @@ class SimulationResult:
             "car_position": [state.car_position for state in self.states],
             "shift_velocity": [state.shift_velocity for state in self.states],
             "shift_distance": [state.shift_distance for state in self.states],
+        }
+        df = pd.DataFrame(data)
+        df.to_csv(filename, index=False)
+
+    def write_frontend_csv(self, filename="frontend_data.csv"):
+        """Writes the parsed solution states in the desired frontend form to a CSV file."""
+        data = {
+            "time": self.time, 
+            "car_velocity": [state.car_velocity for state in self.states],  # TODO: convert to correct units
+            "car_position": [state.car_position for state in self.states],  # TODO: convert to correct units
+            "shift_distance": [state.shift_distance for state in self.states],  # TODO: convert to correct units
+            "engine_rpm": [0 for _ in self.states],  # TODO: Add engine RPM to the data
+            "primary_rotation": [0 for _ in self.states],  # TODO: Add primary rotation angle to the data
+            "secondary_rotation": [0 for _ in self.states],  # TODO: Add secondary rotation angle to the data
         }
         df = pd.DataFrame(data)
         df.to_csv(filename, index=False)

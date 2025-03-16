@@ -41,7 +41,7 @@ class TestSimulationResult(unittest.TestCase):
 
     def test_write_csv(self):
         result = SimulationResult(self.solution)
-        result.write_csv("test_output.csv")
+        result.write_result_csv("test_output.csv")
         df = pd.read_csv("test_output.csv")
         self.assertEqual(len(df), len(self.solution.t))
         self.assertIn("time", df.columns)
