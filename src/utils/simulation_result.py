@@ -53,10 +53,11 @@ class SimulationResult:
             "time": self.time, 
             "car_velocity": [state.car_velocity for state in self.states],  # TODO: convert to correct units
             "car_position": [state.car_position for state in self.states],  # TODO: convert to correct units
-            "shift_distance": [state.shift_distance for state in self.states],  # TODO: convert to correct units
             "engine_rpm": [0 for _ in self.states],  # TODO: Add engine RPM to the data
             "primary_rotation": [0 for _ in self.states],  # TODO: Add primary rotation angle to the data
             "secondary_rotation": [0 for _ in self.states],  # TODO: Add secondary rotation angle to the data
+            "primary_shift": [0 for _ in self.states],  # TODO: Add primary shift percentage to the data
+            "secondary_shift": [0 for _ in self.states],  # TODO: Add secondary shift percentage to the data
         }
         df = pd.DataFrame(data)
         df.to_csv(filename, index=False)
