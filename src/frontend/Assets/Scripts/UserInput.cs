@@ -7,6 +7,7 @@ using CommunicationProtocol.Senders;
 using CommunicationProtocol.Receivers;
 using System.Linq;
 using System.IO;
+using SFB;
 
 // Class to make the input fields serializable
 [System.Serializable]
@@ -76,12 +77,10 @@ public class UserInput : MonoBehaviour
 
     // Buttons
     [SerializeField] private Button simulateButton;
+    [SerializeField] private Button uploadButton;
 
-     private void Start()
+    private void UpdateParameters()
     {
-        simulateButton.onClick.AddListener(StartSimulation);
-
-        // Check if the input fields csv file exists and load the parameters if it does
         if (File.Exists(PathConstants.INPUT_PARAMETERS_PATH))
         {
             parameters = new InputParameters(PathConstants.INPUT_PARAMETERS_PATH);
@@ -93,6 +92,26 @@ public class UserInput : MonoBehaviour
             Parameter parameter = parameters.Find(p => p.Name == field.parameterName);
             inputFields.Add(new InputField(field.inputField, field.errorText, parameter));
         }
+    }
+
+    private void Start()
+    {
+        simulateButton.onClick.AddListener(StartSimulation);
+        uploadButton.onClick.AddListener(Upload);
+
+        // Check if the input fields csv file exists and load the parameters if it does
+        UpdateParameters();
+    }
+
+    private void Upload() 
+    {
+        //open file explorer and accept a csv then rename the csv to input_parameters.csv
+        string[] paths = StandaloneFileBrowser.OpenFilePanel("Open CSV File", "", "csv", false);
+        if (paths.Length > 0) {
+            File.Copy(paths[0], Path.Combine(Application.dataPath, "../input_parameters.csv"), true);
+        }
+
+        UpdateParameters();
     }
     
     private void StartSimulation() {
@@ -109,4 +128,6 @@ public class UserInput : MonoBehaviour
         int nextSceneIndex = SceneManager.GetActiveScene().buildIndex + 1;
         SceneManager.LoadScene(nextSceneIndex);
     }
+
+    
 }
