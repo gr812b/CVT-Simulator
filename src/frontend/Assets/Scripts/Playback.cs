@@ -4,6 +4,8 @@ using TMPro;
 using UnityEngine.SceneManagement;
 using System.IO;
 using CommunicationProtocol.Receivers;
+using CommunicationProtocol.Senders;
+
 
 // Abstract class encapsulating a component that displays playback data
 public abstract class PlaybackView : MonoBehaviour
@@ -126,7 +128,8 @@ public class Playback : MonoBehaviour
     // Show graphs
     public void ShowGraphs()
     {
-        pythonRunner.Run(PathConstants.GRAPH_SCRIPT_PATH);
+        InputParameters inputParameters = new InputParameters(PathConstants.INPUT_PARAMETERS_PATH);
+        pythonRunner.Run(PathConstants.GRAPH_SCRIPT_PATH, inputParameters);
     }
 
 }
