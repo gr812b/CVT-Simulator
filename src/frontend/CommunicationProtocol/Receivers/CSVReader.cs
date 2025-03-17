@@ -5,6 +5,8 @@ namespace CommunicationProtocol.Receivers
 {
     public abstract class CSVReader<T> : List<T>
     {
+        protected Dictionary<string, int> headerMap = new Dictionary<string, int>();
+
         // Constructor to load data when instantiated
         public CSVReader(string path)
         {
@@ -23,8 +25,14 @@ namespace CommunicationProtocol.Receivers
             // Read the CSV file line by line and parse each row using the concrete implementation of ParseRow
             using (var reader = new StreamReader(path))
             {
-                // Skip the header row
-                reader.ReadLine();
+
+                // Read the header row and store the index of each column
+                var header = reader.ReadLine();
+                var headerValues = header.Split(',');
+                for (int i = 0; i < headerValues.Length; i++)
+                {
+                    headerMap[headerValues[i]] = i;
+                }
 
                 while (!reader.EndOfStream)
                 {
