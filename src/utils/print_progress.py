@@ -12,7 +12,7 @@ def print_progress(progress):
     with open(lockFile, "w") as f:
         f.write("locked")
 
-    while (True):
+    while True:
         try:
             with open(filePath, "w", newline="") as f:
                 writer = csv.writer(f)
