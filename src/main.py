@@ -3,6 +3,7 @@ import numpy as np
 from scipy.integrate import solve_ivp
 from simulations.car_simulation import CarSimulator
 from simulations.load_simulation import LoadSimulator
+from utils import print_progress
 from utils.system_state import SystemState
 from utils.simulation_result import SimulationResult
 from simulations.engine_simulation import EngineSimulator
@@ -26,8 +27,6 @@ from utils.argument_parser import get_arguments
 from utils.theoretical_models import TheoreticalModels as tm
 from utils.simulation_constraints import constraints
 import sys
-import os
-import csv
 
 
 # Parse arguments
@@ -107,20 +106,7 @@ def get_pulley_forces(state: SystemState) -> dict:
 total_sim_time = 15  # seconds
 
 current_progress = 0  # global variable to track progress
-
-# delete temp csv file if it exists
-try:
-    os.remove("progress_percent_temp.csv")
-except FileNotFoundError:
-    pass
-
-# create temp csv file
-with open("progress_percent_temp.csv", "w", newline="") as f:
-    writer = csv.writer(f)
-    writer.writerow(["Percent"])
-    writer.writerow([current_progress])
-
-os.replace("progress_percent_temp.csv", "progress_percent.csv")
+print_progress(current_progress)  # set initial progress to 0
 
 
 # Define the system of differential equations
@@ -131,18 +117,9 @@ def angular_velocity_and_position_derivative(t, y):
     progress_percent = t / total_sim_time
 
     # Print every 1% progress
-    if progress_percent > current_progress + 0.01:
-        current_progress = progress_percent
-        sys.stdout.write(f"\rProgress: {progress_percent:.1f}%")
-        sys.stdout.flush()
-
-        # write progress to temp csv file
-        with open("progress_percent_temp.csv", "w", newline="") as f:
-            writer = csv.writer(f)
-            writer.writerow(["Percent"])
-            writer.writerow([f"{current_progress:.2f}"])
-
-        os.replace("progress_percent_temp.csv", "progress_percent.csv")
+    if progress_percent >= current_progress + 0.01:
+        current_progress += 0.01
+        print_progress(current_progress)
         pass
 
     shift_velocity = state.shift_velocity
