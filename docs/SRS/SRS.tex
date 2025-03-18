@@ -533,6 +533,10 @@ easier to correctly understand the requirements:
   \item Flyweight - The weights that experience centrifugal force and push against the primary ramp. Highlighted yellow in Figure \ref{Fig_PrimaryCVT}.
   \item Helix - The helical ramp that the secondary CVT pushes against. Highlighted bronze in Figure \ref{Fig_SecondaryCVT}.
   \item CVT System - This is the entire system that includes the primary and secondary CVT and the belt. The primary CVT is connected to the engine and the secondary CVT is connected to the wheels.
+  \item Sheave - This is a grooved pulley used in the CVT system to transfer power between the engine and drivetrain. 
+  The Primary Pulley has both movable and fixed sheaves that adjust based on engine RPM, and the belt position to increase or decrease the gear ratio.
+  The Secondary Pulley has movable and fixed sheaves, which respond to the belt's tension and centrifugal force, transferring power to the drivetrain.
+  These sheaves are the circular disk shaped in \ref{Fig_PrimaryCVT} and \ref{Fig_SecondaryCVT}.
 \end{itemize}
 
 \begin{figure}[H]
@@ -1555,7 +1559,7 @@ which is to say that the top requirement is the most important and the bottom re
 \noindent \begin{itemize}
 
 \item[NFR\refstepcounter{nfrnum}\thenfrnum \label{NFR_Accuracy}:]\textbf{Accuracy} The system shall achieve an accuracy of at least 95 \% in correctly predicting CVT outputs. 
-See \href{.../VnVPlan/VnVPlan.pdf#page=21}{VnV Plan Section 4.2} for the test procedure. An accuracy rate of 95\% ensures that the system is able to make reliable predictions, which are important to the performance optimization. 
+See \href{https://github.com/gr812b/CVT-Simulator/blob/main/docs/VnVPlan/VnVPlan.pdf}{VnV Plan} Section 4.2 for the test procedure. An accuracy rate of 95\% ensures that the system is able to make reliable predictions, which are important to the performance optimization. 
 Accuracy validation shall use Python’s \texttt{assertAlmostEqual()} with a tolerance of delta = 1e-7, to account for minor numerical deviations.\item[NFR\refstepcounter{nfrnum}\thenfrnum \label{NFR_Usability}:] \textbf{Usability} 85 \% of a representative user group shall be able to successfully input CVT parameters and receive CVT outputs on their first use.
 An 85\% success rate was chosen for successfully inputting parameters and receiving outputs on their first use is realistic based on the complexity of the system. 
 This 85 \% acknowledges that some users may require trial and error, but the majority of users should still be able to effectively interact with the system. 
