@@ -237,7 +237,7 @@ Ref.\ By & #8\\
 Oct 12 & 1.0 & First Draft\\
 Nov 12 & 1.1 & Added references \\
 Jan 10 & 1.2 & Updated traceability matrices \\
-Mar 18 & 1.3 & Updated Standards(5.3) and NF\rref{NFR_Accuracy} \\
+Mar 18 & 1.3 & Updated Standards(5.3), NF\rref{NFR_Accuracy} and Phase In Plan(8) \\
 \bottomrule
 \end{tabularx}
 
@@ -1639,6 +1639,88 @@ Finally, the CVT axis are assumed to be in line and the belt slippage of the CVT
   \item[ULC\refstepcounter{ulcnum}\theulcnum\label{ULC_3}:] The assumption that the influence of gravitational forces is negligible is unlikely to change as it heavily reduces complexity and plays an incredibly small part on spinning objects at high rotational speeds. (A\ref{A_2})
   
   \end{itemize}
+
+  \section{Phase In Plan of Requirements}
+
+  The implementation of the CVT simulation software will be divided into two phases:
+  \begin{enumerate}
+      \item \textbf{Phase 1 (February 3–February 14): Functional Requirements Implementation}. The functional requirements are aimed to be fully implemented by Rev0 which is the date given. 
+      \item \textbf{Phase 2 (March 7): Nonfunctional Requirements Implementation}. The non functional requirements are aimed to be implemented before the VnV Report is due which is the date given. 
+  \end{enumerate}
+  
+  \subsection{Phase 1: Functional Requirements Implementation (February 3)}
+  
+  The primary focus of this phase is to implement the core functionalities of the system, ensuring that all mathematical computations and system mechanics are operational by Rev 0.
+  These requirements follow the priority of the order given below, the first groups of the requirements are of a higher priority. 
+  The requirements of highest priority are \ref{subsec:Clamping Force and Sheave Dynamics}, \ref{subsec:Mathematical Models}, \ref{subsec:User Adjustments and Inputs}. 
+  
+  \subsubsection{Clamping Force and Sheave Dynamics}
+  \label{subsec:Clamping Force and Sheave Dynamics}
+  \begin{itemize}
+      \item R\ref{R_5}
+      \item R\ref{R_6}
+      \item R\ref{R_7}
+      \item R\ref{R_8}
+      \item R\ref{R_9}
+  \end{itemize}
+
+  \subsubsection{Mathematical Models}
+  \label{subsec:Mathematical Models}
+  \begin{itemize}
+       \item R\ref{R_1}
+       \item R\ref{R_2}
+       \item R\ref{R_3}
+       \item R\ref{R_4}
+  \end{itemize}
+  
+  \subsubsection{User Adjustments and Inputs}
+  \label{subsec:User Adjustments and Inputs}
+  \begin{itemize}
+      \item R\ref{R_10}
+      \item R\ref{R_11}
+      \item R\ref{R_12}
+  \end{itemize}
+
+  \subsubsection{Output Visualization and Export}
+  \begin{itemize}
+      \item R\ref{R_13}
+      \item R\ref{R_14}
+  \end{itemize}
+  
+  \subsubsection{Platform Compatibility}
+  \begin{itemize}
+      \item R\ref{R_15}
+      \item R\ref{R_16}
+  \end{itemize}
+  
+  \subsection{Phase 2: Nonfunctional Requirements Implementation (March 7 and March 23) }
+  
+  This phase will focus on refining the system by ensuring accuracy, usability, maintainability, and verification.
+  The priority of the Nonfunctional requirements is stated in the order below, with \ref{subsec:System Accuracy and Verification} and \ref{subsec:Maintainability and Reusability} being of highest priority.
+  These two subsections of the Nonfunctional requirements will be phased in by March 7 which is the due date of the VnV Report. 
+  The set of Nonfunctional requirements \ref{subsec:Usability and User Experience} will be highlighted in the \href{https://github.com/gr812b/CVT-Simulator/blob/main/docs/UsabilityReport/UsabilityReport.pdf}{Useability Report} which will be completed by March 23rd.
+  
+  \subsubsection{System Accuracy and Verification}
+  \label{subsec:System Accuracy and Verification}
+  \begin{itemize}
+      \item NF\ref{NFR_Accuracy}
+      \item NFR\ref{NFR_Verifiability}
+  \end{itemize}
+  
+  \subsubsection{Maintainability and Reusability}
+  \label{subsec:Maintainability and Reusability}
+  \begin{itemize}
+      \item NF\ref{NFR_Maintainability}
+      \item NF\ref{NFR_Reusability} 
+  \end{itemize}
+
+  \subsubsection{Usability and User Experience}
+  \label{subsec:Usability and User Experience}
+  \begin{itemize}
+      \item NF\ref{NFR_Usability}
+      \item NF\ref{NFR_Understandability}
+  \end{itemize}
+  
 \section{Traceability Matrices and Graphs}
 
 The purpose of the traceability matrices is to provide easy references on what
@@ -1651,16 +1733,6 @@ dependencies of instance models, requirements, and data constraints on each
 other. The table~\ref{Table:trace_Assumptions} shows the dependencies of theoretical models,
 general definitions, data definitions, instance models, and likely changes on
 the assumptions.
-
-\plt{You will have to modify these tables for your problem.}
-
-\plt{The traceability matrix is not generally symmetric.  If GD1 uses A1, that
-  means that GD1's derivation or presentation requires invocation of A1.  A1
-  does not use GD1.  A1 is ``used by'' GD1.}
-
-\plt{The traceability matrix is challenging to maintain manually.  Please do
-  your best.  In the future tools (like Drasil) will make this much easier.}
-
 \clearpage
 \FloatBarrier
 
