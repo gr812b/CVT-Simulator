@@ -115,7 +115,7 @@ except FileNotFoundError:
     pass
 
 # create temp csv file
-with open("progress_percent_temp.csv", "w", newline='') as f:
+with open("progress_percent_temp.csv", "w", newline="") as f:
     writer = csv.writer(f)
     writer.writerow(["Percent"])
     writer.writerow([current_progress])
@@ -137,7 +137,7 @@ def angular_velocity_and_position_derivative(t, y):
         sys.stdout.flush()
 
         # write progress to temp csv file
-        with open("progress_percent_temp.csv", "w", newline='') as f:
+        with open("progress_percent_temp.csv", "w", newline="") as f:
             writer = csv.writer(f)
             writer.writerow(["Percent"])
             writer.writerow([f"{current_progress:.2f}"])
