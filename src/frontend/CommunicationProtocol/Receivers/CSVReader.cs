@@ -5,7 +5,7 @@ namespace CommunicationProtocol.Receivers
 {
     public abstract class CSVReader<T> : List<T>
     {
-        protected Dictionary<string, int> headers = new Dictionary<string, int>();
+        protected Dictionary<string, int> headerMap = new Dictionary<string, int>();
 
         // Constructor to load data when instantiated
         public CSVReader(string path)
@@ -22,32 +22,25 @@ namespace CommunicationProtocol.Receivers
             // Clear existing data
             this.Clear();
 
-            try
+            // Read the CSV file line by line and parse each row using the concrete implementation of ParseRow
+            using (var reader = new StreamReader(path))
             {
-                // Read the CSV file line by line and parse each row using the concrete implementation of ParseRow
-                using (var reader = new StreamReader(path))
+
+                // Read the header row and store the index of each column
+                var header = reader.ReadLine();
+                var headerValues = header.Split(',');
+                for (int i = 0; i < headerValues.Length; i++)
                 {
-                    // Read the header row and store the column indices
-                    var headerLine = reader.ReadLine();
-                    var headerValues = headerLine.Split(',');
-                    for (int i = 0; i < headerValues.Length; i++)
-                    {
-                        headers[headerValues[i]] = i;
-                    }
-
-                    while (!reader.EndOfStream)
-                    {
-                        var line = reader.ReadLine();
-                        var values = line.Split(',');
-
-                        this.Add(ParseRow(values));
-                    }
+                    headerMap[headerValues[i]] = i;
                 }
-            } 
-            catch (IOException e)
-            {
-                this.Clear();
-                this.Add(default(T));
+
+                while (!reader.EndOfStream)
+                {
+                    var line = reader.ReadLine();
+                    var values = line.Split(',');
+
+                    this.Add(ParseRow(values));
+                }
             }
         }
     }
