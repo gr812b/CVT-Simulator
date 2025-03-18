@@ -4,11 +4,17 @@ using System.Collections.Generic;
 using CommunicationProtocol.Senders;
 public static class PathConstants
 {
-    private static string dataPath = Application.dataPath;
-    public static string SIMULATION_OUTPUT_PATH = Path.Combine(dataPath, "../simulation_output.csv");
-    public static string INPUT_PARAMETERS_PATH = Path.Combine(dataPath, "../input_parameters.csv");
-    public static string PYTHON_ENVIRONMENT_PATH = Path.Combine(dataPath, "../../../venv/Scripts/python.exe");
-    public static string PYTHON_SCRIPT_PATH = Path.Combine(dataPath, "../../main.py");
+
+    private static string Relativize(string path)
+    {
+        return Path.Combine(Application.dataPath, path);
+    }
+
+    public static string SIMULATION_OUTPUT_PATH = Relativize("../simulation_output.csv");
+    public static string INPUT_PARAMETERS_PATH = Relativize("../input_parameters.csv");
+    public static string PYTHON_ENVIRONMENT_PATH = Relativize("../../../venv/Scripts/python.exe");
+    public static string PYTHON_SCRIPT_PATH = Relativize("../../main.py");
+    public static string GRAPH_SCRIPT_PATH = Relativize("../../utils/generate_graphs.py");
 }
 
 public static class ParameterNames {
