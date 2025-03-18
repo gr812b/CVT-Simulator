@@ -48,6 +48,6 @@ public class LoadingBar : MonoBehaviour
     private void SetPercentageText(float percentage)
     {
         // Set the text of the percentage tracker to the percentage
-        percentageText.text = $"{percentage}%";
+        percentageText.text = $"{percentage:F2}%";
     }
 }

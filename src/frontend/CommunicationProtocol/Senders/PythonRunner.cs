@@ -44,7 +44,7 @@ namespace CommunicationProtocol.Senders
         }
 
         // Main function to run the python script
-        public Task RunAsync(string scriptPath, List<Parameter> parameters)
+        public Task RunAsync(string scriptPath, List<Parameter> parameters, bool debug = false)
         {
             return Task.Run(() =>
             {
@@ -52,8 +52,8 @@ namespace CommunicationProtocol.Senders
                 {
                     FileName = environmentPath,
                     Arguments = scriptPath + GenerateArgumentString(parameters),
-                    UseShellExecute = false,
-                    CreateNoWindow = true
+                    UseShellExecute = debug,
+                    CreateNoWindow = !debug
                 };
 
                 using (Process process = new Process())

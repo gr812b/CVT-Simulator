@@ -50,7 +50,6 @@ public class LoadingPage : MonoBehaviour
         } else if (percent > currentPercent){
             currentPercent = percent;
             loadingBar.SetPercentage(currentPercent);
-            Debug.Log(currentPercent);
         }
     }
 

@@ -116,9 +116,10 @@ def angular_velocity_and_position_derivative(t, y):
 
     progress_percent = t / total_sim_time
 
-    # Print every 1% progress
-    if progress_percent >= current_progress + 0.01:
-        current_progress += 0.01
+    # Print every 0.01% progress
+    percent_interval = 0.0001
+    if progress_percent >= current_progress + percent_interval:
+        current_progress += percent_interval
         print_progress(current_progress)
         pass
 
