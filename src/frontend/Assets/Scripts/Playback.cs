@@ -4,7 +4,6 @@ using TMPro;
 using UnityEngine.SceneManagement;
 using System.IO;
 using CommunicationProtocol.Receivers;
-using CommunicationProtocol.Senders;
 
 
 // Abstract class encapsulating a component that displays playback data
@@ -24,14 +23,12 @@ public class Playback : MonoBehaviour
     [SerializeField] private PlaybackView[] playbackViews;
     [SerializeField] private RawImage playImage;
     [SerializeField] private RawImage pauseImage;
-    [SerializeField] private Button graphButton;
+
 
     private bool isPlaying = false;
     private int currentIndex = 0;
     private float startTime;
     private float pauseTime;
-
-    private PythonRunner pythonRunner = new PythonRunner(PathConstants.PYTHON_ENVIRONMENT_PATH);
 
     private void Start()
     {
@@ -40,7 +37,6 @@ public class Playback : MonoBehaviour
         playPauseButton.onClick.AddListener(TogglePlayPause);
         restartButton.onClick.AddListener(RestartPlayback);
         nextSceneButton.onClick.AddListener(backButton);
-        graphButton.onClick.AddListener(ShowGraphs);
 
         // Get path to simulation result file and then read it
         string path = Path.Combine(Application.dataPath, "../simulation_output.csv");
@@ -124,14 +120,6 @@ public class Playback : MonoBehaviour
             int nextSceneIndex = SceneManager.GetActiveScene().buildIndex - 1;
             SceneManager.LoadScene(nextSceneIndex);
         }
-
-    // Show graphs
-    public void ShowGraphs()
-    {
-        InputParameters inputParameters = new InputParameters(PathConstants.INPUT_PARAMETERS_PATH);
-        pythonRunner.Run(PathConstants.GRAPH_SCRIPT_PATH, inputParameters);
-    }
-
 }
 
 
