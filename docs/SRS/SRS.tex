@@ -237,6 +237,7 @@ Ref.\ By & #8\\
 Oct 12 & 1.0 & First Draft\\
 Nov 12 & 1.1 & Added references \\
 Jan 10 & 1.2 & Updated traceability matrices \\
+Mar 18 & 1.3 & Updated Standards(5.3) and NF\rref{NFR_Accuracy} \\
 \bottomrule
 \end{tabularx}
 
@@ -269,7 +270,7 @@ description of the unit and the SI name.
     \si{\joule} & energy & joule\\
     \si{\watt} & power & watt (W = \si{\joule\per\second})\\
     \si{\newton} & force & newtons (N = \si{\kilogram \metre\per\square\second} )\\
-    Nm & torque & newton metre (Nm = \si{\kilogram \square\metre\per\square\second})\\
+    Nm & torque & newton meter (Nm = \si{\kilogram \square\metre\per\square\second})\\
     \si{\radian} & angle & radian\\
     \bottomrule
   \end{tabular}
@@ -1578,6 +1579,31 @@ By choosing 30\% this is a reasonable limit showing for flexibility and reusabil
 This 30\% target ensures that future modifications such as accommodating for a new CVT, can be achieved without requiring a complete redesign of the system as majority if not all the mathematical calculations will remain the same.
 
 \end{itemize}
+
+\subsection{Regulatory and Standards Compliance}
+The \progname \ software must adhere to relevant industry standards, legal regulations, and ensure accuracy, reliability, and compliance with safety and performance requirements. 
+This section outlines key regulatory, legal, and industry compliance factors that influence the design and validation of the software.
+
+\subsubsection{Industry Standards}
+The \progname \ software shall comply with recognized software engineering and automotive control standards, including but not limited to:
+While no specific industry regulations directly relate to this software, practices such as software validation, numerical accuracy, and performance testing will be followed to ensure reliability and correctness. 
+Testing methodologies, such as unit testing will be used to verify system accuracy.
+
+\subsubsection{Legal and Safety Regulations}
+The software must comply with applicable regulations concerning software integrity and data accuracy, as no personal information is used security requirements are considered out of scope.
+\begin{itemize}
+    \item \textbf{ISO/IEC 25002:2024}: Software quality models ensuring reliability and maintainability \cite{ISO26262Standard}. This will be ensured via NFR\ref{NFR_Maintainability}. 
+\end{itemize}
+
+\subsubsection{Software Development Constraints Due to Compliance}
+Compliance with these standards imposes specific requirements on the CVT software, including:
+\begin{itemize}
+    \item \textbf{Precision in Computation}: Floating-point errors must be mitigated this will be achieved by NF\rref{NFR_Accuracy}.
+    \item \textbf{Version Control and Documentation}: Compliance with \cite{ISO26262Standard} mandates detailed software version control and traceability of changes. This will be shown at the top of each document's Revision History section. 
+\end{itemize}
+
+\noindent Therefore, the \progname \ software will comply with these regulatory and industry standards.
+
 
 \subsection{Rationale}
 
