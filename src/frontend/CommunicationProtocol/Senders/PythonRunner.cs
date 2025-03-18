@@ -53,7 +53,7 @@ namespace CommunicationProtocol.Senders
                     FileName = environmentPath,
                     Arguments = scriptPath + GenerateArgumentString(parameters),
                     UseShellExecute = false,
-                    CreateNoWindow = false
+                    CreateNoWindow = true
                 };
 
                 using (Process process = new Process())

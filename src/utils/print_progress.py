@@ -3,11 +3,11 @@ import os
 import sys
 
 filePath = "progress_percent.csv"
-lockFile = "progress_percent.lock"
+lockFile = "progress.lock"
 
 
 def print_progress(progress):
-    progress_str = f"{progress*100:.2f}"
+    progress_str = f"{progress*100:.0f}"
 
     with open(lockFile, "w") as f:
         f.write("locked")

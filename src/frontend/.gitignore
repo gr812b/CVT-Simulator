@@ -139,7 +139,8 @@ Assets/URP2DSceneTemplate.unity.meta
 Assets/UniversalRenderPipelineGlobalSettings.asset
 Assets/UniversalRenderPipelineGlobalSettings.asset.meta
 
-# CSV files
+# CSV and Lock files
 simulation_output.csv
 input_parameters.csv
 progress_percent.csv
+progress.lock

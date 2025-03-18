@@ -3,7 +3,7 @@ import numpy as np
 from scipy.integrate import solve_ivp
 from simulations.car_simulation import CarSimulator
 from simulations.load_simulation import LoadSimulator
-from utils import print_progress
+from utils.print_progress import print_progress
 from utils.system_state import SystemState
 from utils.simulation_result import SimulationResult
 from simulations.engine_simulation import EngineSimulator

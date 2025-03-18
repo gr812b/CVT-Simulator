@@ -10,7 +10,6 @@ public class LoadingBar : MonoBehaviour
 
     private float maxWidth;
     private float movingX;
-    private float trackerY;
 
 
     private void Start()
@@ -27,7 +26,7 @@ public class LoadingBar : MonoBehaviour
 
     public void SetPercentage(float percentage)
     {
-        float newWidth = maxWidth * percentage;
+        float newWidth = maxWidth * percentage / 100;
         SetMovingBarWidth(newWidth);
         SetTrackerPosition(newWidth);
         SetPercentageText(percentage);
@@ -49,6 +48,6 @@ public class LoadingBar : MonoBehaviour
     private void SetPercentageText(float percentage)
     {
         // Set the text of the percentage tracker to the percentage
-        percentageText.text = $"{percentage * 100}%";
+        percentageText.text = $"{percentage}%";
     }
 }

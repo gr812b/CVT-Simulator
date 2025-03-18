@@ -3,6 +3,7 @@ using CommunicationProtocol.Receivers;
 using CommunicationProtocol.Senders;
 using UnityEngine.SceneManagement;
 using System.Linq;
+using System.IO;
 
 public class LoadingPage : MonoBehaviour
 {
@@ -19,12 +20,23 @@ public class LoadingPage : MonoBehaviour
     {
         loadingBar.SetPercentage(currentPercent);
 
+        // Delete progress percent and lock files if they exist
+        File.Delete(PathConstants.PERCENT_VALUE_PATH);
+        File.Delete(PathConstants.PROGRESS_LOCKFILE_PATH);
+
         // Run the Python script with the input parameters
         var _ = pythonRunner.RunAsync(PathConstants.PYTHON_SCRIPT_PATH, inputParameters);
     }
 
     // Update is called once per frame
-    private void Update() => UpdatePercent();
+    private void Update()
+    {
+        // Update the percentage value only if the lock file does not exist and the progress percent file exists
+        if (!File.Exists(PathConstants.PROGRESS_LOCKFILE_PATH) && File.Exists(PathConstants.PERCENT_VALUE_PATH))
+        {
+            UpdatePercent();
+        }
+    }
 
     private void UpdatePercent()
     {
@@ -33,11 +45,12 @@ public class LoadingPage : MonoBehaviour
         // Get last value of percent from the array
         float percent = percentValue.Last();
 
-        if (percent >= 1){
+        if (percent >= 100){
             NextScene();
         } else if (percent > currentPercent){
             currentPercent = percent;
             loadingBar.SetPercentage(currentPercent);
+            Debug.Log(currentPercent);
         }
     }
 
