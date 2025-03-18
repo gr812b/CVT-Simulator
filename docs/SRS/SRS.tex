@@ -1555,8 +1555,8 @@ which is to say that the top requirement is the most important and the bottom re
 \noindent \begin{itemize}
 
 \item[NFR\refstepcounter{nfrnum}\thenfrnum \label{NFR_Accuracy}:]\textbf{Accuracy} The system shall achieve an accuracy of at least 95 \% in correctly predicting CVT outputs. 
-See VnV Plan Section 4.2 for the test procedure. An accuracy rate of 95\% ensures that the system is able to make reliable predictions, which are important to the performance optimization. 
-\item[NFR\refstepcounter{nfrnum}\thenfrnum \label{NFR_Usability}:] \textbf{Usability} 85 \% of a representative user group shall be able to successfully input CVT parameters and receive CVT outputs on their first use.
+See \href{.../VnVPlan/VnVPlan.pdf#page=21}{VnV Plan Section 4.2} for the test procedure. An accuracy rate of 95\% ensures that the system is able to make reliable predictions, which are important to the performance optimization. 
+Accuracy validation shall use Python’s \texttt{assertAlmostEqual()} with a tolerance of delta = 1e-7, to account for minor numerical deviations.\item[NFR\refstepcounter{nfrnum}\thenfrnum \label{NFR_Usability}:] \textbf{Usability} 85 \% of a representative user group shall be able to successfully input CVT parameters and receive CVT outputs on their first use.
 An 85\% success rate was chosen for successfully inputting parameters and receiving outputs on their first use is realistic based on the complexity of the system. 
 This 85 \% acknowledges that some users may require trial and error, but the majority of users should still be able to effectively interact with the system. 
 \item[NFR\refstepcounter{nfrnum}\thenfrnum \label{NFR_Maintainability}:]\textbf{Maintainability} If a likely change is made to the finished software, it will take at most 10 \% of the original development time, assuming the same development resources are available.
