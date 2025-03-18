@@ -10,7 +10,7 @@ namespace CommunicationProtocol.Receivers
 
         protected override float ParseRow(string[] values)
         {
-            return float.Parse(values[headers["Percent"]]);
+            return float.Parse(values[headerMap["Percent"]]);
         }
     }
 }

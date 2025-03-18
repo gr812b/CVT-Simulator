@@ -141,7 +141,7 @@ def angular_velocity_and_position_derivative(t, y):
             writer = csv.writer(f)
             writer.writerow(["Percent"])
             writer.writerow([f"{current_progress:.2f}"])
-        
+
         os.replace("progress_percent_temp.csv", "progress_percent.csv")
         pass
 
