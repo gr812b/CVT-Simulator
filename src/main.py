@@ -24,7 +24,7 @@ from constants.car_specs import (
 from utils.conversions import rpm_to_rad_s, deg_to_rad
 from utils.argument_parser import get_arguments
 from utils.theoretical_models import TheoreticalModels as tm
-from utils.simulation_constraints import constraints
+from utils.simulation_constraints import get_constraints
 import sys
 
 # Parse arguments
@@ -190,7 +190,7 @@ solution = solve_ivp(
     time_span,
     initial_state.to_array(),
     t_eval=time_eval,
-    events=constraints,
+    events=get_constraints(args.acceleration_distance),
     # rtol=1e-5,
     # atol=1e-9,
 )
@@ -198,9 +198,9 @@ solution = solve_ivp(
 result = SimulationResult(solution)
 
 result.write_csv("simulation_output.csv")
-result.plot("car_velocity")
-# result.plot("car_position")
-result.plot("shift_distance")
+# result.plot("car_velocity")
+result.plot("car_position")
+# result.plot("shift_distance")
 # result.plot("shift_velocity")
 # result.plot("engine_angular_velocity")
 
