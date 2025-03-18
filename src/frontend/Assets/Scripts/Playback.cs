@@ -19,7 +19,6 @@ public class Playback : MonoBehaviour
     [SerializeField] private Button restartButton;
     [SerializeField] private Button nextSceneButton;
     [SerializeField] private Slider seekBar;  
-    [SerializeField] private TMP_Text statusText;
     [SerializeField] private PlaybackView[] playbackViews;
     [SerializeField] private RawImage playImage;
     [SerializeField] private RawImage pauseImage;
@@ -30,7 +29,6 @@ public class Playback : MonoBehaviour
 
     private void Start()
     {
-        statusText.text = "Data Loaded. Ready to Play.";
         playPauseButton.onClick.AddListener(TogglePlayPause);
         restartButton.onClick.AddListener(RestartPlayback);
         nextSceneButton.onClick.AddListener(BackButton);
@@ -52,14 +50,12 @@ public class Playback : MonoBehaviour
 
         if (isPlaying)
         {
-            statusText.text = "Playing";
             playImage.gameObject.SetActive(false);
             pauseImage.gameObject.SetActive(true);
             StartCoroutine(PlaybackCoroutine());
         }
         else
         {
-            statusText.text = "Paused";
             playImage.gameObject.SetActive(true);
             pauseImage.gameObject.SetActive(false);
         }
@@ -68,7 +64,6 @@ public class Playback : MonoBehaviour
     private void RestartPlayback()
     {
         isPlaying = false;
-        statusText.text = "Data Loaded. Ready to Play.";
         currentIndex = 0;
         accumulatedTime = 0f;
         playImage.gameObject.SetActive(true);
@@ -88,11 +83,6 @@ public class Playback : MonoBehaviour
                 UpdateViews();
                 currentIndex++;
                 seekBar.value = currentIndex;
-
-                if (currentIndex == simulationResult.Count - 2)
-                {
-                    statusText.text = "Playback Finished";
-                }
             }
 
             yield return null;
