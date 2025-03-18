@@ -55,7 +55,9 @@ result = SimulationResult.from_csv("simulation_output.csv")
 
 
 def plotVelocity(result: SimulationResult, ax=None):
-    vMax = (3277.6296 / (0.5 * FRONTAL_AREA * DRAG_COEFFICIENT * AIR_DENSITY)) ** (1 / 3)
+    vMax = (3277.6296 / (0.5 * FRONTAL_AREA * DRAG_COEFFICIENT * AIR_DENSITY)) ** (
+        1 / 3
+    )
     car_velocities = [state.car_velocity for state in result.states]
     if ax is None:
         ax = plt.gca()
