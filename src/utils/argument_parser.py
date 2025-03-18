@@ -96,7 +96,7 @@ def get_arguments() -> SimulationArgs:
     parser.add_argument(
         "--acceleration_distance",
         type=float,
-        default=100.0,  
+        default=100.0,
         help="Acceleration distance in meters (default: 100.0 m)",
     )
 
