@@ -15,14 +15,14 @@ public class PositionPlayback : PlaybackView
     private Vector3 endPosition;
     private float totalDistance;
     private float angle;
-    private float accelerationDistance;
+    private float distance;
     private float canvasWidth;
 
     private void Start()
     {
         InputParameters inputParameters = new InputParameters(PathConstants.INPUT_PARAMETERS_PATH);
         angle = float.Parse(inputParameters.GetValue(ParameterNames.ANGLE_OF_INCLINE));
-        accelerationDistance = float.Parse(inputParameters.GetValue(ParameterNames.ACCELERATION_DISTANCE));
+        distance = float.Parse(inputParameters.GetValue(ParameterNames.TOTAL_DISTANCE));
         canvasWidth = canvasRect.rect.width  -50;
         calcStartEndPositions();
         SetCarInitial();
@@ -109,7 +109,7 @@ public class PositionPlayback : PlaybackView
         
         if (angle != 0)
         {
-            float normalizedDistance = position / accelerationDistance;
+            float normalizedDistance = position / distance;
             float radius = totalDistance;
             float xOffSet = radius * Mathf.Cos(angle*Mathf.Deg2Rad);
             float yOffSet = radius * Mathf.Sin(angle*Mathf.Deg2Rad);
@@ -119,7 +119,7 @@ public class PositionPlayback : PlaybackView
         }
         else
         {
-            float normalizedXPos= ((position / accelerationDistance) * canvasWidth) - (canvasWidth / 2); 
+            float normalizedXPos= ((position / distance) * canvasWidth) - (canvasWidth / 2); 
             carTransform.GetComponent<RectTransform>().anchoredPosition = new Vector2(normalizedXPos, startPosition.y);
         }
     }

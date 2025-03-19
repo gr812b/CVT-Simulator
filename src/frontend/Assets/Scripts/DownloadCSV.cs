@@ -16,11 +16,11 @@ public class DownloadCSV : MonoBehaviour
         downloadParamsButton.onClick.AddListener(() => DownloadCSVFile(csvParamsPath, "input_parameters"));
     }
 
-    private void DownloadCSVFile(string sourcePath, string defaultFileName) {
+    private void DownloadCSVFile(string sourcePath, string fileName) {
         string destinationPath = StandaloneFileBrowser.SaveFilePanel(
             "Save CSV File",        // Title of the dialog
             "",                    // Initial directory (empty defaults to user's Documents)
-            defaultFileName,         // Default file name
+            fileName,         // Default file name
             "csv"                   // Default file extension
         );
 
