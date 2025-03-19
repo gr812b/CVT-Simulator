@@ -167,8 +167,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 92e02c0078db3fb4aab28eeeb348963d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  downloadDataButton: {fileID: 127121558}
-  downloadParamsButton: {fileID: 2107988781}
+  downloadDataButton: {fileID: 0}
+  downloadParamsButton: {fileID: 0}
 --- !u!1 &32465575
 GameObject:
   m_ObjectHideFlags: 0
@@ -571,7 +571,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 55.6, y: -236.15}
+  m_AnchoredPosition: {x: 351.5, y: -211.4}
   m_SizeDelta: {x: 160, y: 30}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &127121558
@@ -2329,6 +2329,7 @@ RectTransform:
   - {fileID: 17706336}
   - {fileID: 762791278}
   - {fileID: 2107988780}
+  - {fileID: 2012217128}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
@@ -4232,7 +4233,7 @@ MonoBehaviour:
   playPauseButton: {fileID: 1753377980}
   restartButton: {fileID: 908370177}
   nextSceneButton: {fileID: 953166789}
-  seekBar: {fileID: 762791279}
+  seekBar: {fileID: 0}
   playbackViews:
   - {fileID: 32465577}
   - {fileID: 2091141540}
@@ -6279,7 +6280,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 55.6, y: -199.3}
+  m_AnchoredPosition: {x: 355.9, y: -129.8}
   m_SizeDelta: {x: 140, y: 30}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1 &1928584233

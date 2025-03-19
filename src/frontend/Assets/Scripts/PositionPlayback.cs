@@ -15,7 +15,6 @@ public class PositionPlayback : PlaybackView
     private Vector3 endPosition;
     private float totalDistance;
     private float angle;
-    // Max Position will be changed
     private float accelerationDistance;
     private float canvasWidth;
 
@@ -110,7 +109,7 @@ public class PositionPlayback : PlaybackView
         
         if (angle != 0)
         {
-            float normalizedDistance = position / maxPosition;
+            float normalizedDistance = position / accelerationDistance;
             float radius = totalDistance;
             float xOffSet = radius * Mathf.Cos(angle*Mathf.Deg2Rad);
             float yOffSet = radius * Mathf.Sin(angle*Mathf.Deg2Rad);
@@ -120,7 +119,7 @@ public class PositionPlayback : PlaybackView
         }
         else
         {
-            float normalizedXPos= ((position / maxPosition) * canvasWidth) - (canvasWidth / 2); 
+            float normalizedXPos= ((position / accelerationDistance) * canvasWidth) - (canvasWidth / 2); 
             carTransform.GetComponent<RectTransform>().anchoredPosition = new Vector2(normalizedXPos, startPosition.y);
         }
     }
