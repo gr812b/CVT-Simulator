@@ -4598,7 +4598,7 @@ MonoBehaviour:
     inputField: {fileID: 698078734}
     errorText: {fileID: 1832984477}
   simulateButton: {fileID: 782828726}
-  uploadButton: {fileID: 0}
+  uploadButton: {fileID: 1273293384}
 --- !u!114 &794761009
 MonoBehaviour:
   m_ObjectHideFlags: 0
