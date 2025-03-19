@@ -7,7 +7,7 @@ lockFile = "progress.lock"
 
 
 def print_progress(progress):
-    progress_str = f"{progress*100:.2f}"
+    progress_str = f"{progress:.1f}"
 
     with open(lockFile, "w") as f:
         f.write("locked")

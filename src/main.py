@@ -1,3 +1,4 @@
+import sys
 import numpy as np
 from scipy.integrate import solve_ivp
 from simulations.load_simulation import LoadSimulator
@@ -54,23 +55,17 @@ cvt_shift = CvtShift(
 
 total_sim_time = 15  # seconds
 
-current_progress = 0  # global variable to track progress
-print_progress(current_progress)  # set initial progress to 0
 
 
 # Define the system of differential equations
 def evaluate_cvt_system(t, y):
-    global current_progress
     state = SystemState.from_array(y)
 
-    progress_percent = t / total_sim_time
-
-    # Print every 0.01% progress
-    percent_interval = 0.0001
-    if progress_percent >= current_progress + percent_interval:
-        current_progress += percent_interval
-        print_progress(current_progress)
-        pass
+    progress_percent = (t / total_sim_time) * 100
+    # Print every 0.1% progress
+    if progress_percent % 0.1 < 0.01:
+        sys.stdout.write(f"\rProgress: {progress_percent:.1f}%")
+        sys.stdout.flush()
 
     # TODO: Remove this (should be handled by constraints)
     shift_velocity = state.shift_velocity
@@ -122,6 +117,8 @@ initial_state = SystemState(
     shift_velocity=0.0,
     shift_distance=0.0,
 )
+
+# print_progress(0)  # set initial progress to 0
 
 # Solve the system over the desired time span
 solution = solve_ivp(
