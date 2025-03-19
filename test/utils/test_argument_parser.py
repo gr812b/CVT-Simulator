@@ -19,7 +19,7 @@ class TestArgumentParser(unittest.TestCase):
             "driver_weight": 75.0,
             "traction": 100.0,
             "angle_of_incline": 0.0,
-            "acceleration_distance": 200.0,
+            "total_distance": 200.0,
         }
 
     @patch("sys.argv", ["program_name"])  # Mock the args here for the default test
@@ -55,7 +55,7 @@ class TestArgumentParser(unittest.TestCase):
             "90.0",
             "--angle_of_incline",
             "10.0",
-            "--acceleration_distance",
+            "--total_distance",
             "100.0",
         ],
     )  # Mock the args here for the custom test
@@ -73,7 +73,7 @@ class TestArgumentParser(unittest.TestCase):
             "driver_weight": 80.0,
             "traction": 90.0,
             "angle_of_incline": 10.0,
-            "acceleration_distance": 100.0,
+            "total_distance": 100.0,
         }
         args = get_arguments()
         for key, value in custom_args.items():
