@@ -16,13 +16,14 @@ public class PositionPlayback : PlaybackView
     private float totalDistance;
     private float angle;
     // Max Position will be changed
-    private float maxPosition = 127;
+    private float accelerationDistance;
     private float canvasWidth;
 
     private void Start()
     {
         InputParameters inputParameters = new InputParameters(PathConstants.INPUT_PARAMETERS_PATH);
         angle = float.Parse(inputParameters.GetValue(ParameterNames.ANGLE_OF_INCLINE));
+        accelerationDistance = float.Parse(inputParameters.GetValue(ParameterNames.ACCELERATION_DISTANCE));
         canvasWidth = canvasRect.rect.width  -50;
         calcStartEndPositions();
         SetCarInitial();
@@ -77,25 +78,32 @@ public class PositionPlayback : PlaybackView
         }
         circle1.anchoredPosition = new Vector2(startPosition.x, startPosition.y);
         circle2.anchoredPosition = new Vector2(endPosition.x, endPosition.y);
-        Vector3 worldPos1 = circle1.position;  
-        Vector3 worldPos2 = circle2.position;  
+       
+        DrawPath(circle1, circle2);
+
+        circle1.gameObject.SetActive(false);
+        circle2.gameObject.SetActive(false);
+
+     }
+
+    private void DrawPath(RectTransform startCircle, RectTransform endCircle)
+    {
+        Vector3 worldPos1 = startCircle.position;  
+        Vector3 worldPos2 = endCircle.position;  
+        
         lineRenderer.useWorldSpace = true;
         lineRenderer.startColor = new Color(0.7f, 0.5f, 0.3f);
         lineRenderer.material.color = new Color(0.7f, 0.5f, 0.3f);
         lineRenderer.endColor   = new Color(0.7f, 0.5f, 0.3f);
+
         lineRenderer.positionCount = 4;
         lineRenderer.SetPosition(0, worldPos1);
         lineRenderer.SetPosition(1, worldPos2);
 
         var baselinePoint = new Vector3(worldPos2.x, worldPos1.y, worldPos1.z);
         lineRenderer.SetPosition(2, baselinePoint);
-
         lineRenderer.SetPosition(3, worldPos1);
-
-        circle1.gameObject.SetActive(false);
-        circle2.gameObject.SetActive(false);
-
-     }
+    }
 
     private void MoveCarAlongTrack(float position, float angle)
     {
