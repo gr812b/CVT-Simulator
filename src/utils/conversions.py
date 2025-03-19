@@ -23,3 +23,6 @@ def circumference(radius):
 
 def inch_to_meter(inch):
     return inch * 0.0254
+
+def meter_s_to_km_h(meter_s):
+    return meter_s * 3.6
