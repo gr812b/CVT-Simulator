@@ -6,6 +6,8 @@ using System.IO;
 using System.Collections;
 using CommunicationProtocol.Receivers;
 
+
+// Abstract class encapsulating a component that displays playback data
 public abstract class PlaybackView : MonoBehaviour
 {
     public abstract void Display(DataPoint dataPoint);
@@ -22,6 +24,7 @@ public class Playback : MonoBehaviour
     [SerializeField] private PlaybackView[] playbackViews;
     [SerializeField] private RawImage playImage;
     [SerializeField] private RawImage pauseImage;
+
 
     private bool isPlaying = false;
     private int currentIndex = 0;
