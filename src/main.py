@@ -20,6 +20,7 @@ from utils.conversions import rpm_to_rad_s, deg_to_rad
 from utils.argument_parser import get_arguments
 from utils.theoretical_models import TheoreticalModels as tm
 from utils.simulation_constraints import constraints
+from utils.frontend_output import FormattedSimulationResult
 
 
 # Parse arguments
@@ -130,3 +131,4 @@ solution = solve_ivp(
 
 result = SimulationResult(solution)
 result.write_csv("simulation_output.csv")
+FormattedSimulationResult.from_csv().write_formatted_csv()
