@@ -4,6 +4,7 @@ from utils.simulation_result import SimulationResult
 from constants.car_specs import (
     GEARBOX_RATIO,
     WHEEL_RADIUS,
+    MAX_SHIFT,
 )
 from utils.theoretical_models import TheoreticalModels as tm
 from utils.conversions import rad_s_to_rpm, meter_s_to_km_h
@@ -28,6 +29,7 @@ class FormattedSimulationResult(SimulationResult):
         self.secondary_angular_positions = []
         self.engine_angular_velocities = []
         self.car_velocities = []
+        self.shift_distance_percents = []
 
         current_engine_angle = 0.0
         current_secondary_angle = 0.0
@@ -44,12 +46,14 @@ class FormattedSimulationResult(SimulationResult):
             current_engine_angle += engine_velocity * dt
             current_secondary_angle += engine_velocity / cvt_ratio * dt
             car_km_per_hour = meter_s_to_km_h(state.car_velocity)
+            shift_distance_percent = state.shift_distance / MAX_SHIFT
 
             # Append the calculated values.
             self.engine_angular_positions.append(current_engine_angle)
             self.secondary_angular_positions.append(current_secondary_angle)
             self.engine_angular_velocities.append(engine_rpm)
             self.car_velocities.append(car_km_per_hour)
+            self.shift_distance_percents.append(shift_distance_percent)
 
     @staticmethod
     def from_csv(filename="simulation_output.csv"):
@@ -69,7 +73,7 @@ class FormattedSimulationResult(SimulationResult):
             "time": self.time,
             "car_velocity": self.car_velocities,
             "car_position": [state.car_position for state in self.states],
-            "shift_distance": [state.shift_distance for state in self.states],
+            "shift_distance": self.shift_distance_percents,
             "engine_angular_position": self.engine_angular_positions,
             "secondary_angular_position": self.secondary_angular_positions,
             "engine_angular_velocity": self.engine_angular_velocities,
@@ -81,7 +85,7 @@ class FormattedSimulationResult(SimulationResult):
         """
         Optionally, plot the new computed columns for quick visualization.
         """
-        fig, axs = plt.subplots(2, 2, figsize=(12, 8), sharex=True)
+        fig, axs = plt.subplots(2, 3, figsize=(12, 8), sharex=True)
 
         axs[0, 0].plot(self.time, self.engine_angular_positions)
         axs[0, 0].set_ylabel("Engine Angular Position (rad)")
@@ -104,6 +108,12 @@ class FormattedSimulationResult(SimulationResult):
         axs[1, 1].set_ylabel("Car Velocity (km/h)")
         axs[1, 1].set_title("Car Velocity Over Time")
         axs[1, 1].grid(True)
+
+        axs[1, 2].plot(self.time, self.shift_distance_percents)
+        axs[1, 2].set_xlabel("Time (s)")
+        axs[1, 2].set_ylabel("Shift Distance (%)")
+        axs[1, 2].set_title("Shift Distance Over Time")
+        axs[1, 2].grid(True)
 
         plt.tight_layout()
         plt.show()
