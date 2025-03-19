@@ -63,7 +63,7 @@ def evaluate_cvt_system(t, y):
     progress_percent = (t / total_sim_time) * 100
     # Print every 0.1% progress
     if progress_percent % 0.1 < 0.01:
-        sys.stdout.write(f"\rProgress: {progress_percent:.1f}%")
+        sys.stdout.write(f"\rProgress: {progress_percent:.1f}% [{'=' * int(progress_percent // 2)}{' ' * (50 - int(progress_percent // 2))}]")
         sys.stdout.flush()
 
     # TODO: Remove this (should be handled by constraints)

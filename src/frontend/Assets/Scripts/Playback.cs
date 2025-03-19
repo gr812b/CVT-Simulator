@@ -117,7 +117,7 @@ public class Playback : MonoBehaviour
     // Returns to the previous scene
     private void backButton()
         {
-            int nextSceneIndex = SceneManager.GetActiveScene().buildIndex - 2;
+            int nextSceneIndex = SceneManager.GetActiveScene().buildIndex - 1;
             SceneManager.LoadScene(nextSceneIndex);
         }
 }

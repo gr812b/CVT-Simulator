@@ -8,6 +8,7 @@ using CommunicationProtocol.Receivers;
 using System.Linq;
 using System.IO;
 using SFB;
+using CommunicationProtocol.Senders;
 
 // Class to make the input fields serializable
 [System.Serializable]
@@ -79,6 +80,8 @@ public class UserInput : MonoBehaviour
     [SerializeField] private Button simulateButton;
     [SerializeField] private Button uploadButton;
 
+    private PythonRunner runner = new PythonRunner(PathConstants.PYTHON_ENVIRONMENT_PATH);
+
     private void UpdateParameters()
     {
         if (File.Exists(PathConstants.INPUT_PARAMETERS_PATH))
@@ -122,6 +125,7 @@ public class UserInput : MonoBehaviour
         }
 
         inputStore.Store(PathConstants.INPUT_PARAMETERS_PATH, parameters);
+        runner.Run(PathConstants.PYTHON_SCRIPT_PATH, parameters, true);
 
         // Go the the results scene
         int nextSceneIndex = SceneManager.GetActiveScene().buildIndex + 1;
