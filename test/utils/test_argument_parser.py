@@ -19,7 +19,7 @@ class TestArgumentParser(unittest.TestCase):
             "driver_weight": 75.0,
             "traction": 100.0,
             "angle_of_incline": 0.0,
-            "acceleration_distance": 100.0,
+            "acceleration_distance": 200.0,
         }
 
     @patch("sys.argv", ["program_name"])  # Mock the args here for the default test
