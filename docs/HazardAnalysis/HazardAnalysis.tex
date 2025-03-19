@@ -228,7 +228,10 @@ This component displays various models that are part of the CVT system, moving i
     \item  \label{sr:error-handling}- The software shall implement robust error handling mechanisms that detect and handle at least 95\% of all expected and unexpected errors, ensuring that no more than 5\% of critical system failures result in unhandled exceptions or system crashes.\\
 \end{enumerate}
 
-\noindent The failure mode of \textit{Insufficient Frictional Forces}, identified in the Failure Modes and Effects Analysis (FMEA) table, does not have an associated system requirement (SR). This is due to A\ref{A_9}\textbf{: No Belt Slippage}, which states that \textit{"The CVT will not slip relative to the sheaves."} 
+\noindent The failure mode of \textit{Insufficient Frictional Forces}, identified in the Failure Modes and Effects Analysis (FMEA) table, does not have an associated system requirement (SR). 
+This is due to A\ref{A_9}\textbf{: No Belt Slippage}, which states that \textit{"The CVT will not slip relative to the sheaves."}. 
+Additionally, the User Interface (UI) component was evaluated for potential failure modes in relation to system safety. Common UI-related concerns such as incorrect input handling, misleading graphical outputs, or usability issues were considered. However, since the CVT simulation software does not directly control physical hardware or interact with safety-critical real-world systems, UI-related failures do not pose a direct safety risk.
+While usability improvements may enhance user experience and prevent incorrect parameter tuning, they do not require explicit safety requirements.  
 
 \section{Roadmap}
 
