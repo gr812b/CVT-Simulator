@@ -8,6 +8,7 @@ from constants.car_specs import (
 from utils.theoretical_models import TheoreticalModels as tm
 from utils.conversions import rad_s_to_rpm, meter_s_to_km_h
 
+
 class FormattedSimulationResult(SimulationResult):
     def __init__(self, solution=None, time=None, states=None):
         """
@@ -27,14 +28,14 @@ class FormattedSimulationResult(SimulationResult):
         self.secondary_angular_positions = []
         self.engine_angular_velocities = []
         self.car_velocities = []
-        
+
         current_engine_angle = 0.0
         current_secondary_angle = 0.0
 
         for i, t in enumerate(self.time):
-            dt = t - self.time[i-1] if i > 0 else 0
+            dt = t - self.time[i - 1] if i > 0 else 0
             state = self.states[i]
-            
+
             cvt_ratio = tm.current_cvt_ratio(state.shift_distance)
             wheel_to_engine_ratio = (cvt_ratio * GEARBOX_RATIO) / WHEEL_RADIUS
             engine_velocity = state.car_velocity * wheel_to_engine_ratio
@@ -43,7 +44,7 @@ class FormattedSimulationResult(SimulationResult):
             current_engine_angle += engine_velocity * dt
             current_secondary_angle += engine_velocity / cvt_ratio * dt
             car_km_per_hour = meter_s_to_km_h(state.car_velocity)
-            
+
             # Append the calculated values.
             self.engine_angular_positions.append(current_engine_angle)
             self.secondary_angular_positions.append(current_secondary_angle)
@@ -56,7 +57,9 @@ class FormattedSimulationResult(SimulationResult):
         Reads the simulation states from a CSV file and returns an FormattedSimulationResult instance.
         """
         base_result = SimulationResult.from_csv(filename)
-        return FormattedSimulationResult(time=base_result.time, states=base_result.states)
+        return FormattedSimulationResult(
+            time=base_result.time, states=base_result.states
+        )
 
     def write_formatted_csv(self, filename="front_end_output.csv"):
         """
@@ -79,17 +82,17 @@ class FormattedSimulationResult(SimulationResult):
         Optionally, plot the new computed columns for quick visualization.
         """
         fig, axs = plt.subplots(2, 2, figsize=(12, 8), sharex=True)
-        
+
         axs[0, 0].plot(self.time, self.engine_angular_positions)
         axs[0, 0].set_ylabel("Engine Angular Position (rad)")
         axs[0, 0].set_title("Engine Angular Position Over Time")
         axs[0, 0].grid(True)
-        
+
         axs[0, 1].plot(self.time, self.secondary_angular_positions)
         axs[0, 1].set_ylabel("Secondary Angular Position (rad)")
         axs[0, 1].set_title("Secondary Angular Position Over Time")
         axs[0, 1].grid(True)
-        
+
         axs[1, 0].plot(self.time, self.engine_angular_velocities)
         axs[1, 0].set_xlabel("Time (s)")
         axs[1, 0].set_ylabel("Engine Angular Velocity (rpm)")
@@ -101,10 +104,9 @@ class FormattedSimulationResult(SimulationResult):
         axs[1, 1].set_ylabel("Car Velocity (km/h)")
         axs[1, 1].set_title("Car Velocity Over Time")
         axs[1, 1].grid(True)
-        
+
         plt.tight_layout()
         plt.show()
-
 
 
 if __name__ == "__main__":

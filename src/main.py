@@ -56,7 +56,6 @@ cvt_shift = CvtShift(
 total_sim_time = 15  # seconds
 
 
-
 # Define the system of differential equations
 def evaluate_cvt_system(t, y):
     state = SystemState.from_array(y)
