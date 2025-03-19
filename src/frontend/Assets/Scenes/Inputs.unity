@@ -3595,7 +3595,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Acceleration Distance (m)
+  m_text: Total Distance (m)
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
@@ -4872,7 +4872,7 @@ MonoBehaviour:
   - parameterName: angle_of_incline
     inputField: {fileID: 698078734}
     errorText: {fileID: 1832984477}
-  - parameterName: acceleration_distance
+  - parameterName: total_distance
     inputField: {fileID: 1082832542}
     errorText: {fileID: 117097972}
   simulateButton: {fileID: 782828726}

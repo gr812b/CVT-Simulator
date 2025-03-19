@@ -16,7 +16,7 @@ class SimulationArgs:
     driver_weight: float
     traction: float
     angle_of_incline: float
-    acceleration_distance: float
+    total_distance: float
 
 
 def get_arguments() -> SimulationArgs:
@@ -94,10 +94,10 @@ def get_arguments() -> SimulationArgs:
         help="Angle of incline in degrees (default: 0.0 degrees)",
     )
     parser.add_argument(
-        "--acceleration_distance",
+        "--total_distance",
         type=float,
         default=200.0,
-        help="Acceleration distance in meters (default: 100.0 m)",
+        help="Total distance in meters (default: 100.0 m)",
     )
 
     args = parser.parse_args()
