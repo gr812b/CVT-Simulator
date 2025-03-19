@@ -5,6 +5,7 @@ using UnityEngine.SceneManagement;
 using System.IO;
 using CommunicationProtocol.Receivers;
 
+
 // Abstract class encapsulating a component that displays playback data
 public abstract class PlaybackView : MonoBehaviour
 {
@@ -22,6 +23,7 @@ public class Playback : MonoBehaviour
     [SerializeField] private PlaybackView[] playbackViews;
     [SerializeField] private RawImage playImage;
     [SerializeField] private RawImage pauseImage;
+
 
     private bool isPlaying = false;
     private int currentIndex = 0;
@@ -118,7 +120,6 @@ public class Playback : MonoBehaviour
             int nextSceneIndex = SceneManager.GetActiveScene().buildIndex - 2;
             SceneManager.LoadScene(nextSceneIndex);
         }
-
 }
 
 
