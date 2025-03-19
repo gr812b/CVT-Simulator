@@ -20,7 +20,6 @@ from utils.conversions import rpm_to_rad_s, deg_to_rad
 from utils.argument_parser import get_arguments
 from utils.theoretical_models import TheoreticalModels as tm
 from utils.simulation_constraints import constraints
-import sys
 
 
 # Parse arguments
