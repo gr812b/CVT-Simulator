@@ -1,0 +1,1313 @@
+fileFormatVersion: 2
+guid: 63256fcd1f04a5147808d88e73b67817
+TextureImporter:
+  internalIDToNameTable: []
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 1
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 0
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 100
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: baja_jump_spritesheet_0
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 7820
+        width: 1200
+        height: 782
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 159c8d5c0f54502419a739ccbe605431
+      internalID: -295966893
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: baja_jump_spritesheet_1
+      rect:
+        serializedVersion: 2
+        x: 1200
+        y: 7820
+        width: 1200
+        height: 782
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: bd2d2fdcd963fba4cb8ba7e57df188ce
+      internalID: 2011724985
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: baja_jump_spritesheet_2
+      rect:
+        serializedVersion: 2
+        x: 2400
+        y: 7820
+        width: 1200
+        height: 782
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 1bd6563dc6d4ef64aa58a984427aed8e
+      internalID: 865828655
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: baja_jump_spritesheet_3
+      rect:
+        serializedVersion: 2
+        x: 3600
+        y: 7820
+        width: 1200
+        height: 782
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 5c13b2ae8ab925d49a05bc91c4cee0db
+      internalID: 1364693312
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: baja_jump_spritesheet_4
+      rect:
+        serializedVersion: 2
+        x: 4800
+        y: 7820
+        width: 1200
+        height: 782
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 47b7cf05b42e26c4dafd066957980895
+      internalID: 1310209539
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: baja_jump_spritesheet_5
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 7038
+        width: 1200
+        height: 782
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 704fafe2c1e72e5488e93838af6652c0
+      internalID: 541100429
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: baja_jump_spritesheet_6
+      rect:
+        serializedVersion: 2
+        x: 1200
+        y: 7038
+        width: 1200
+        height: 782
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 50c4c0f9929ad4449bbacc84a57cfb51
+      internalID: 779718247
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: baja_jump_spritesheet_7
+      rect:
+        serializedVersion: 2
+        x: 2400
+        y: 7038
+        width: 1200
+        height: 782
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: ebce827aa5c817748aba3587bbb611ba
+      internalID: -584790609
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: baja_jump_spritesheet_8
+      rect:
+        serializedVersion: 2
+        x: 3600
+        y: 7038
+        width: 1200
+        height: 782
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 607c719255e4a1c4d8f94eeca56443d6
+      internalID: -75872912
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: baja_jump_spritesheet_9
+      rect:
+        serializedVersion: 2
+        x: 4800
+        y: 7038
+        width: 1200
+        height: 782
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: a2f469de0ce18d247a30c4d717da8eff
+      internalID: -1108475704
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: baja_jump_spritesheet_10
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 6256
+        width: 1200
+        height: 782
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 68ac43ef5410a0e4b8b0920258bbd31e
+      internalID: -2058126927
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: baja_jump_spritesheet_11
+      rect:
+        serializedVersion: 2
+        x: 1200
+        y: 6256
+        width: 1200
+        height: 782
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 5d7d299a9ce60a746afa194e7d2c0a0b
+      internalID: -158184111
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: baja_jump_spritesheet_12
+      rect:
+        serializedVersion: 2
+        x: 2400
+        y: 6256
+        width: 1200
+        height: 782
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 3567d9f58fa86c64496aaa6bf4935213
+      internalID: -1446968604
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: baja_jump_spritesheet_13
+      rect:
+        serializedVersion: 2
+        x: 3600
+        y: 6256
+        width: 1200
+        height: 782
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: d03f4937832bda649af75446a4c5795b
+      internalID: 671548974
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: baja_jump_spritesheet_14
+      rect:
+        serializedVersion: 2
+        x: 4800
+        y: 6256
+        width: 1200
+        height: 782
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: d6138b31089c1ad499bb5245528512d5
+      internalID: -1472327207
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: baja_jump_spritesheet_15
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 5474
+        width: 1200
+        height: 782
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 1be451e032c1d2f4ca8a11290bf2959f
+      internalID: 1636963026
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: baja_jump_spritesheet_16
+      rect:
+        serializedVersion: 2
+        x: 1200
+        y: 5474
+        width: 1200
+        height: 782
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 953cbb592c8527249a5340ac78f82faf
+      internalID: -260827635
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: baja_jump_spritesheet_17
+      rect:
+        serializedVersion: 2
+        x: 2400
+        y: 5474
+        width: 1200
+        height: 782
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 169d4dfb20c456b4c9c8948f2c25d8de
+      internalID: -1440983567
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: baja_jump_spritesheet_18
+      rect:
+        serializedVersion: 2
+        x: 3600
+        y: 5474
+        width: 1200
+        height: 782
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: e7614f6810f9b974f962a493d4644699
+      internalID: 757414041
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: baja_jump_spritesheet_19
+      rect:
+        serializedVersion: 2
+        x: 4800
+        y: 5474
+        width: 1200
+        height: 782
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: b6c1a9d975c4cf3438662c329490be63
+      internalID: 835439318
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: baja_jump_spritesheet_20
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 4692
+        width: 1200
+        height: 782
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 8fae4cb803faca64bb9e8c7f207d8bed
+      internalID: -1786227691
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: baja_jump_spritesheet_21
+      rect:
+        serializedVersion: 2
+        x: 1200
+        y: 4692
+        width: 1200
+        height: 782
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 744b46f4fd0a22148980b7d33ecade86
+      internalID: -1006204769
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: baja_jump_spritesheet_22
+      rect:
+        serializedVersion: 2
+        x: 2400
+        y: 4692
+        width: 1200
+        height: 782
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 123a90c7211c317498b60c166cb76ca4
+      internalID: -1783721164
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: baja_jump_spritesheet_23
+      rect:
+        serializedVersion: 2
+        x: 3600
+        y: 4692
+        width: 1200
+        height: 782
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 7c7b573710f921d4fb59abac1e7c47cf
+      internalID: -947712024
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: baja_jump_spritesheet_24
+      rect:
+        serializedVersion: 2
+        x: 4800
+        y: 4692
+        width: 1200
+        height: 782
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 27f7206ce62db7c48957d3231ed2b487
+      internalID: -1567350851
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: baja_jump_spritesheet_25
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 3910
+        width: 1200
+        height: 782
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: a4a89c763030a364f9a8fb49765d7baf
+      internalID: 509904077
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: baja_jump_spritesheet_26
+      rect:
+        serializedVersion: 2
+        x: 1200
+        y: 3910
+        width: 1200
+        height: 782
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 94cd021a1174e304aa6072706fd4345d
+      internalID: -460715120
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: baja_jump_spritesheet_27
+      rect:
+        serializedVersion: 2
+        x: 2400
+        y: 3910
+        width: 1200
+        height: 782
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 226b8189c9f7910448e66006be7c7885
+      internalID: -1238234487
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: baja_jump_spritesheet_28
+      rect:
+        serializedVersion: 2
+        x: 3600
+        y: 3910
+        width: 1200
+        height: 782
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: c81f4813353bb2142a8db2ed3b1a82ce
+      internalID: -995787874
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: baja_jump_spritesheet_29
+      rect:
+        serializedVersion: 2
+        x: 4800
+        y: 3910
+        width: 1200
+        height: 782
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 9e855baddb43ab74fb47fe076f26cda4
+      internalID: 449672829
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: baja_jump_spritesheet_30
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 3128
+        width: 1200
+        height: 782
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: e8347e740b553134c89ff3cf6cc5fb82
+      internalID: 942454428
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: baja_jump_spritesheet_31
+      rect:
+        serializedVersion: 2
+        x: 1200
+        y: 3128
+        width: 1200
+        height: 782
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: b4f5d70bef3a21c49b9d55ff068c9f3e
+      internalID: -1165071724
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: baja_jump_spritesheet_32
+      rect:
+        serializedVersion: 2
+        x: 2400
+        y: 3128
+        width: 1200
+        height: 782
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 95799a15f901617439d3bb175f83a53b
+      internalID: -2032691656
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: baja_jump_spritesheet_33
+      rect:
+        serializedVersion: 2
+        x: 3600
+        y: 3128
+        width: 1200
+        height: 782
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 81c5e167d4bce6a46866057b79f14b16
+      internalID: 1964176284
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: baja_jump_spritesheet_34
+      rect:
+        serializedVersion: 2
+        x: 4800
+        y: 3128
+        width: 1200
+        height: 782
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: f0ade4724b84d6a4d9eeba428431d1e4
+      internalID: 1722159574
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: baja_jump_spritesheet_35
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 2346
+        width: 1200
+        height: 782
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 94b6145d17783ff4eb64d5e63f9a3132
+      internalID: -1639114063
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: baja_jump_spritesheet_36
+      rect:
+        serializedVersion: 2
+        x: 1200
+        y: 2346
+        width: 1200
+        height: 782
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: f46f221fbe5e63e4f8c6941684806c84
+      internalID: 1905507027
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: baja_jump_spritesheet_37
+      rect:
+        serializedVersion: 2
+        x: 2400
+        y: 2346
+        width: 1200
+        height: 782
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: df2c29fd7d65d1c4f8817de72b190ae0
+      internalID: 1598900055
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: baja_jump_spritesheet_38
+      rect:
+        serializedVersion: 2
+        x: 3600
+        y: 2346
+        width: 1200
+        height: 782
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 368440871fe24084cb844eb83fa8d536
+      internalID: -1800091223
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: baja_jump_spritesheet_39
+      rect:
+        serializedVersion: 2
+        x: 4800
+        y: 2346
+        width: 1200
+        height: 782
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 2a395c5604a3e4c4395401b0574ae6ed
+      internalID: -343622184
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: baja_jump_spritesheet_40
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 1564
+        width: 1200
+        height: 782
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 6b21ff436a5cdf04b858e83d3ae73f3a
+      internalID: 181868212
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: baja_jump_spritesheet_41
+      rect:
+        serializedVersion: 2
+        x: 1200
+        y: 1564
+        width: 1200
+        height: 782
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: d92af447acb80c843bb5de75447950c9
+      internalID: -347948912
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: baja_jump_spritesheet_42
+      rect:
+        serializedVersion: 2
+        x: 2400
+        y: 1564
+        width: 1200
+        height: 782
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 2183673cbe5721f488187e049d7e7c75
+      internalID: -1255335400
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: baja_jump_spritesheet_43
+      rect:
+        serializedVersion: 2
+        x: 3600
+        y: 1564
+        width: 1200
+        height: 782
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 3b2bccff1aa41304bb078aab808c7e43
+      internalID: 135889865
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: baja_jump_spritesheet_44
+      rect:
+        serializedVersion: 2
+        x: 4800
+        y: 1564
+        width: 1200
+        height: 782
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: ea43925b2fc51a6478280952b6ee99db
+      internalID: -1390332708
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: baja_jump_spritesheet_45
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 782
+        width: 1200
+        height: 782
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 22e2ff16c2c6fe1459ea4f6e01a6be98
+      internalID: -1059355873
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: baja_jump_spritesheet_46
+      rect:
+        serializedVersion: 2
+        x: 1200
+        y: 782
+        width: 1200
+        height: 782
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: e3d4b5980875aad498e33837d6cd0e2b
+      internalID: -2138695850
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: baja_jump_spritesheet_47
+      rect:
+        serializedVersion: 2
+        x: 2400
+        y: 782
+        width: 1200
+        height: 782
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 8425441c148ffbf4ba22d85a3ae56c5c
+      internalID: 1957147461
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: baja_jump_spritesheet_48
+      rect:
+        serializedVersion: 2
+        x: 3600
+        y: 782
+        width: 1200
+        height: 782
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 73b69ad5156c22f45b81e9b6de52f05e
+      internalID: 883711446
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: baja_jump_spritesheet_49
+      rect:
+        serializedVersion: 2
+        x: 4800
+        y: 782
+        width: 1200
+        height: 782
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 7a324ce3a2ca7f34eb6297db56ddd99f
+      internalID: 35667618
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: baja_jump_spritesheet_50
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 0
+        width: 1200
+        height: 782
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 1e54879d9d96ce148b7171b7c787d9e1
+      internalID: 901663248
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: baja_jump_spritesheet_51
+      rect:
+        serializedVersion: 2
+        x: 1200
+        y: 0
+        width: 1200
+        height: 782
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 4f85ee27aaf2bbc4a894b245598678b5
+      internalID: 177433433
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 1e6e70e4de4b3d04e82085ba2451193e
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      baja_jump_spritesheet_0: -295966893
+      baja_jump_spritesheet_1: 2011724985
+      baja_jump_spritesheet_10: -2058126927
+      baja_jump_spritesheet_11: -158184111
+      baja_jump_spritesheet_12: -1446968604
+      baja_jump_spritesheet_13: 671548974
+      baja_jump_spritesheet_14: -1472327207
+      baja_jump_spritesheet_15: 1636963026
+      baja_jump_spritesheet_16: -260827635
+      baja_jump_spritesheet_17: -1440983567
+      baja_jump_spritesheet_18: 757414041
+      baja_jump_spritesheet_19: 835439318
+      baja_jump_spritesheet_2: 865828655
+      baja_jump_spritesheet_20: -1786227691
+      baja_jump_spritesheet_21: -1006204769
+      baja_jump_spritesheet_22: -1783721164
+      baja_jump_spritesheet_23: -947712024
+      baja_jump_spritesheet_24: -1567350851
+      baja_jump_spritesheet_25: 509904077
+      baja_jump_spritesheet_26: -460715120
+      baja_jump_spritesheet_27: -1238234487
+      baja_jump_spritesheet_28: -995787874
+      baja_jump_spritesheet_29: 449672829
+      baja_jump_spritesheet_3: 1364693312
+      baja_jump_spritesheet_30: 942454428
+      baja_jump_spritesheet_31: -1165071724
+      baja_jump_spritesheet_32: -2032691656
+      baja_jump_spritesheet_33: 1964176284
+      baja_jump_spritesheet_34: 1722159574
+      baja_jump_spritesheet_35: -1639114063
+      baja_jump_spritesheet_36: 1905507027
+      baja_jump_spritesheet_37: 1598900055
+      baja_jump_spritesheet_38: -1800091223
+      baja_jump_spritesheet_39: -343622184
+      baja_jump_spritesheet_4: 1310209539
+      baja_jump_spritesheet_40: 181868212
+      baja_jump_spritesheet_41: -347948912
+      baja_jump_spritesheet_42: -1255335400
+      baja_jump_spritesheet_43: 135889865
+      baja_jump_spritesheet_44: -1390332708
+      baja_jump_spritesheet_45: -1059355873
+      baja_jump_spritesheet_46: -2138695850
+      baja_jump_spritesheet_47: 1957147461
+      baja_jump_spritesheet_48: 883711446
+      baja_jump_spritesheet_49: 35667618
+      baja_jump_spritesheet_5: 541100429
+      baja_jump_spritesheet_50: 901663248
+      baja_jump_spritesheet_51: 177433433
+      baja_jump_spritesheet_6: 779718247
+      baja_jump_spritesheet_7: -584790609
+      baja_jump_spritesheet_8: -75872912
+      baja_jump_spritesheet_9: -1108475704
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
