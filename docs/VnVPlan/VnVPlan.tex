@@ -97,9 +97,9 @@ October 11th, 2024 & 0 & First version of VnV plan\\
 \noindent This document serves as a guide for how we plan to verify and validate the \progname{} system.
 Within is a detailed plan of all the tests that will be conducted to ensure that the system is functioning as intended.
 The document is divided into several sections going from the general plan to the specific tests that will be conducted.
-On the verification side, the document lists all all the tests that will be conducted to verify the performance of the system.
+On the verification side, the document lists all the tests that will be conducted to verify the performance of the system.
 The tests are divided into functional and nonfunctional requirements and then separate system and unit test for each.
-There are also multiple checklist in place to verify that all the requirements both within and outside the document are met.
+There are also multiple checklists in place to verify that all the requirements both within and outside the document are met.
 On the validation side, the document outlines all the plans in place to validate the results of the system.
 This includes how we plan to compare our results against real world data and how we plan to validate the usability of the system.
 Overall, this document comprehensively outlines all the plans in place to verify the system and validate its results.
@@ -128,7 +128,7 @@ We will verify that our 3D model and user interface allow users to easily input 
 Our validation tests will focus on graphical models based on current available data to describe how the outputs should behave. 
 We will aim to quantify these results by analyzing the difference between expected versus actual output. 
 By referencing our outputs to real world data we can validate the accuracy of our mathematical model.
-We will conduct useability testing to ensure that the interface is intuitive and allows users to easily input parameters, visualize results and understand the performance of the CVT.
+We will conduct usability testing to ensure that the interface is intuitive and allows users to easily input parameters, visualize results and understand the performance of the CVT.
 \\
 \noindent For our project attempting to optimize our systems outputs will be considered out of scope. 
 Additionally, we will not verify any third party libraries used in our software as we assume that this has been previously validated. 
@@ -320,7 +320,7 @@ Below is a checklist to use as reference for the verification of the Verificatio
   \item Design Verification Plan includes all necessary components in the checklist
   \item VnV Plan Verification Plan includes all necessary components in the checklist
   \item Implementation Verification Plan includes all techniques that are used
-  \item Automated Testing and Verification Tools includes all tools that are used
+  \item Automated Testing, and Verification Tools includes all tools that are used
   \item Software Validation Plan includes all external data that is used
 \end{itemize}
 \noindent
@@ -478,7 +478,7 @@ Listed is each requirement and how the tests verify each one.
   
   Test Case Derivation: As long as the vehicle is able to overcome the initial force of the slope, the vehicle should continue to move forward indefinitely.
   
-  How test will be performed: The script will run with the provided inputs. After execution is complete, the output position over time will be visualized as a graph which should show a smooth upward trend as time progresses. Its slope should increase over time as well. Visual inspection will follow against Figure~\ref{fig:position_graph} for confirmation of expected behaviour.
+  How test will be performed: The script will run with the provided inputs. After execution is complete, the output position over time will be visualized as a graph which should show a smooth upward trend as time progresses. Its slope should increase over time as well. Visual inspection will follow against Figure~\ref{fig:position_graph} for confirmation of expected behavior.
   
   \item \phantomsection \hypertarget{PositionTest-2}{\textbf{Position test-2}} \label{PositionTest-2}
 
@@ -514,7 +514,7 @@ Test Case Derivation: Based on assumption \ref{A_11} that the vehicle should not
 Derived from the vehicle’s geometry and the CVT configuration, limiting the velocity to a defined top speed based on the system’s constraints.
 
 
-How test will be performed: The script will run with the provided inputs. After execution is complete, the output velocity over time will be visualized as a graph which should show a smooth upward trend that begins at zero and approaches $v_\text{max}$ as time progresses. Visual inspection will follow against Figure~\ref{fig:velocity_graph} for confirmation of expected behaviour.
+How test will be performed: The script will run with the provided inputs. After execution is complete, the output velocity over time will be visualized as a graph which should show a smooth upward trend that begins at zero and approaches $v_\text{max}$ as time progresses. Visual inspection will follow against Figure~\ref{fig:velocity_graph} for confirmation of expected behavior.
 					
 \item \phantomsection \hypertarget{Velocity test-2}{\textbf{Velocity test-2}} \label{Velocity test-2}
 
@@ -549,7 +549,7 @@ How test will be performed: The script will run with the provided inputs. After 
   Test Case Derivation: Based on the engine's output limits, going no lower than $\omega_\text{idle}$ and no higher than $\omega_\text{max}$.
   Based on air resistance, which increases with the square of velocity, alongside the diminishing torque output of the engine.
   
-  How test will be performed: The script will run with the provided inputs. After execution is complete, the output will be visualized as a graph. Visual inspection will follow against Figure~\ref{fig:acceleration_graph} for confirmation of expected behaviour.
+  How test will be performed: The script will run with the provided inputs. After execution is complete, the output will be visualized as a graph. Visual inspection will follow against Figure~\ref{fig:acceleration_graph} for confirmation of expected behavior.
 
   \item \phantomsection \hypertarget{Acceleration test-2}{\textbf{Acceleration test-2}} \label{Acceleration test-2}
 
@@ -595,9 +595,9 @@ Listed is each requirement and how the tests verify each one.
             
   Output: The resulting graphs should show a clamping force against engine angular velocity beginning an initial minimum value, which should then rise to a peak before falling during the shifting phase. Suboptimal parameters may lead to a clamping force that is too low or too high, but a similar shape nonetheless. A typical output graph will look similar to the one shown in Figure~\ref{fig:clamping_force_graph}.
   
-  Test Case Derivation: This behaviour is resulting from ideal tuning parameters, and may vary depending on inputs. Ramp and helix geometry will both have a major impact on the shape of these graphs, while weight and spring constants will affect the magnitude.
+  Test Case Derivation: This behavior is resulting from ideal tuning parameters, and may vary depending on inputs. Ramp and helix geometry will both have a major impact on the shape of these graphs, while weight and spring constants will affect the magnitude.
   
-  How test will be performed: The script will run with the provided inputs. After execution is complete, the output will be visualized as a graph. Visual inspection will follow against Figure~\ref{fig:clamping_force_graph} for confirmation of expected behaviour.
+  How test will be performed: The script will run with the provided inputs. After execution is complete, the output will be visualized as a graph. Visual inspection will follow against Figure~\ref{fig:clamping_force_graph} for confirmation of expected behavior.
   
 \end{enumerate}
 
@@ -615,9 +615,9 @@ Listed is each requirement and how the tests verify each one.
             
   Output: The resulting graphs should show the shift distance against the engine's angular velocity. An ideal graph will look very similar to the leading edge of a square wave. A typical output graph will look similar to the one shown in Figure~\ref{fig:shift_distance_graph}.
   
-  Test Case Derivation: This behaviour is resulting from the CVT's clamping forces overcoming the resistive forces just enough such that the CVT begins shifting. Once this has begun, ramp geometry is expected to cause shifting rather than the engine increasing in speed, maintaining a constant power output. With suboptimal tuning parameters passed in, one might observe a slanted shifting portion.
+  Test Case Derivation: This behavior is resulting from the CVT's clamping forces overcoming the resistive forces just enough such that the CVT begins shifting. Once this has begun, ramp geometry is expected to cause shifting rather than the engine increasing in speed, maintaining a constant power output. With suboptimal tuning parameters passed in, one might observe a slanted shifting portion.
   
-  How test will be performed: The script will run with the provided inputs. After execution is complete, the output will be visualized as a graph. Visual inspection will follow against Figure~\ref{fig:shift_distance_graph} for confirmation of expected behaviour.
+  How test will be performed: The script will run with the provided inputs. After execution is complete, the output will be visualized as a graph. Visual inspection will follow against Figure~\ref{fig:shift_distance_graph} for confirmation of expected behavior.
   
   \item \phantomsection \hypertarget{Shift test-2}{\textbf{Shift test-2}} \label{Shift test-2}
 
@@ -641,11 +641,11 @@ Listed is each requirement and how the tests verify each one.
   
   Input: The input values from Section~\ref{sec:standard_inputs}.
             
-  Output: The resulting graph show show the engine's angular velocity against the vehicles velocity. The output should show a smooth trend upwards starting at $\omega_\text{idle}$ until reaching the shift point, in which it then moves horizontally until finally reaching full shift and bringing the engine's angular velocity to $\omega_\text{max}$. A typical output graph will look similar to the one shown in Figure~\ref{fig:shift_curve}.
+  Output: The resulting graph show the engine's angular velocity against the vehicles' velocity. The output should show a smooth trend upwards starting at $\omega_\text{idle}$ until reaching the shift point, in which it then moves horizontally until finally reaching full shift and bringing the engine's angular velocity to $\omega_\text{max}$. A typical output graph will look similar to the one shown in Figure~\ref{fig:shift_curve}.
   
-  Test Case Derivation: This behaviour results from the CVT's shifting behaviour as a whole. An in-depth explanation of the phases can be found beneath Figure~\ref{fig:shift_curve}.
+  Test Case Derivation: This behavior results from the CVT's shifting behavior as a whole. An in-depth explanation of the phases can be found beneath Figure~\ref{fig:shift_curve}.
   
-  How test will be performed: The script will run with the provided inputs. After execution is complete, the output will be visualized as a graph. Visual inspection will follow against Figure~\ref{fig:shift_curve} for confirmation of expected behaviour.
+  How test will be performed: The script will run with the provided inputs. After execution is complete, the output will be visualized as a graph. Visual inspection will follow against Figure~\ref{fig:shift_curve} for confirmation of expected behavior.
   
   \item \phantomsection \hypertarget{Shift test-4}{\textbf{Shift test-4}} \label{Shift test-4}
 
@@ -675,11 +675,11 @@ Listed is each requirement and how the tests verify each one.
   
   Input: The input values from Section~\ref{sec:standard_inputs}.
             
-  Output: The resulting graph should show a decreasing relationship with forque and engine angular velocity, while having a peak in power at $\omega_\text{peak\_power}$. A typical output graph will look similar to the one shown in Figure~\ref{fig:engine_graph}.
+  Output: The resulting graph should show a decreasing relationship with torque and engine angular velocity, while having a peak in power at $\omega_\text{peak\_power}$. A typical output graph will look similar to the one shown in Figure~\ref{fig:engine_graph}.
   
   Test Case Derivation: These are given values as specs of the engine at full load. The engine should not significantly leave the bounds of these angular velocities.
   
-  How test will be performed: The script will run with the provided inputs. After execution is complete, the output will be visualized as a graph. Visual inspection will follow against Figure~\ref{fig:engine_graph} for confirmation of expected behaviour.
+  How test will be performed: The script will run with the provided inputs. After execution is complete, the output will be visualized as a graph. Visual inspection will follow against Figure~\ref{fig:engine_graph} for confirmation of expected behavior.
 
 \end{enumerate}
 
@@ -731,7 +731,7 @@ Listed is each requirement and how the tests verify each one.
   
   Control: Automatic
             
-  Initial State: Simulation pre loaded with input parameters
+  Initial State: Simulation preloaded with input parameters
             
   Input: Run simulation 
             
@@ -739,7 +739,7 @@ Listed is each requirement and how the tests verify each one.
   
   Test Case Derivation: Based on R13, validate that the simulation produces output in the form of graphs.
   
-  How test will be performed: The test will run the simulation with a set of pre made input parameters, then it will verify that whether or not a graph has been outputted. 
+  How test will be performed: The test will run the simulation with a set of pre-made input parameters, then it will verify that whether a graph has been outputted. 
   \item \phantomsection \hypertarget{User Interface test-4}{\textbf{User Interface test-4}} \label{User Interface test-4}
   
   Control: Manual
@@ -779,7 +779,7 @@ Listed is each requirement and how the tests verify each one.
   
   Test Case Derivation: Based on R16 and R17, validate that the application can be installed and ran on different operating systems and types of computers. 
   
-  How test will be performed: This test will be performed on two types of computers, a personal laptop and a desktop. On each of those types of computers it will be ran on each of the operating systems, Windows, Linux and MacOS to verify compatability with each OS and type of computer.
+  How test will be performed: This test will be performed on two types of computers, a personal laptop and a desktop. On each of those types of computers it will be ran on each of the operating systems, Windows, Linux and macOS to verify compatability with each OS and type of computer.
 
   \end{enumerate}
 
@@ -813,7 +813,7 @@ How test will be performed: We will compare each MSE to the value of 0 as the cl
 
 \subsubsection{Usability}
 
-The below test are to verify the useability of the system.
+The below test are to verify the usability of the system.
 They are based on NFR2 from the SRS document.
 
 \begin{enumerate}
@@ -830,7 +830,7 @@ They are asked to rate this on a scale of (1-5) 1 being extremely difficult and 
 Output/Result: The average output rating from all users is greater than or equal to a 4(somewhat easy or above expectations).
 					
 How test will be performed: Each user in the test group will be provided with a survey which provides a series of questions and a scale for each option where 1 represents Poor, 2 represents below expectation, 3 represents satisfactory, 4 represents above average and 5 represents excellent.
-The average rating will then be calculated and must be above or equal to 4 representing the system usability is above expectations.  
+The average rating will then be calculated and must be above or equal to 4 representing the system usability is above expectations. See the usability/understandability survey in section \ref{sec:Usability Survey Questions}. 
 
 \item \phantomsection \hypertarget{Usability test-2}{\textbf{Usability test-2}} \label{Usability test-2}
   
@@ -845,6 +845,7 @@ Output/Result: The average output rating from all users for each listed feature 
             
 How test will be performed: Each user in the test group will be provided with a survey which provides a series of questions and a scale for each option where 1 represents Poor, 2 represents below expectation, 3 represents satisfactory, 4 represents above average and 5 represents excellent.
 The average rating will then be calculated and must be above or equal to 4 representing the system usability is above expectations. 
+See the usability/understandability survey in section \ref{sec:Usability Survey Questions}. 
   
 \end{enumerate}
 
@@ -909,7 +910,8 @@ They are asked to rate this on a scale of (1-5) 1 being extremely unclear and 5 
 Output/Result: The average output rating from all users for each listed feature is greater than or equal to a 4(somewhat clear or above expectations).
 					
 How test will be performed: Each user in the test group will be provided with a survey which provides a series of questions and a scale for each option where 1 represents Poor, 2 represents below expectation, 3 represents satisfactory, 4 represents above average and 5 represents excellent.
-The average rating will then be calculated and must be above or equal to 4, representing the systems understandability is above expectations.  
+The average rating will then be calculated and must be above or equal to 4, representing the systems' understandability is above expectations.  
+See the usability/understandability survey in section \ref{sec:Usability Survey Questions}. 
 
  \item \phantomsection \hypertarget{Understandability test-2}{\textbf{Understandability test-2}} \label{Understandability test-2}
 
@@ -924,6 +926,7 @@ Output/Result: The average output rating from all users for each listed feature 
 					
 How test will be performed: Each user in the test group will be provided with a survey which provides a series of questions and a scale for each option where 1 represents Poor, 2 represents below expectation, 3 represents satisfactory, 4 represents above average and 5 represents excellent.
 The average rating will then be calculated and must be above or equal to 4, representing the systems understandability is above expectations. 
+See the usability/understandability survey in section \ref{sec:Usability Survey Questions}. 
 
 \end{enumerate}
 
@@ -1040,9 +1043,9 @@ Their values are defined in this section for easy maintenance.
   \label{tab:vnv_constants}
 \end{table}
 
-\subsection{Usability Survey Questions?}
+\subsection{Usability Survey Questions} \label{sec:Usability Survey Questions}
 
-Useability/Understandability survey:
+Usability/Understandability survey:
 \url{https://forms.office.com/r/RkeDW31ZTS}
 
 \subsection{Expected Graphs}
