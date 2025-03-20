@@ -17,6 +17,6 @@ class GraphButton : MonoBehaviour
     public void ShowGraphs()
     {
         InputParameters inputParameters = new InputParameters(PathConstants.INPUT_PARAMETERS_PATH);
-        pythonRunner.Run(PathConstants.GRAPH_SCRIPT_PATH, inputParameters);
+        pythonRunner.RunAsync(PathConstants.GRAPH_SCRIPT_PATH, inputParameters);
     }
 }
