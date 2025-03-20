@@ -43,6 +43,7 @@
 \toprule {\bf Date} & {\bf Version} & {\bf Notes}\\
 \midrule
 October 11th, 2024 & 0 & First version of VnV plan\\
+March 20th, 2024 & 1.0 & Added traceability to tests\\
 \bottomrule
 \end{tabularx}
 
@@ -244,7 +245,7 @@ The team will use the below checklist to verify the quality of the SRS document:
 We will conduct meetings with experienced team members and alumni to review the SRS document.
 These meetings will focus on the theoretical models, data definitions, and instance models.
 We will also conduct a practicality check to ensure that all requirements are feasible and measurable.
-Finally the assumptions will also be verified to ensure that they won't negatively impact the accuracy of the simulation.
+Finally, the assumptions will also be verified to ensure that they won't negatively impact the accuracy of the simulation.
 
 \subsubsection*{Baja Team Review}
 Talk here about sharing the document to the team as a whole, include a checklist and receive issues on github.
@@ -1006,21 +1007,56 @@ This will indicate how long it will take for the system to be adapted to future 
   \end{table}
 
 \section{Unit Test Description}
+This section provides an overview of the unit tests implemented for individual modules. The tests ensure correctness and reliability of key functionalities.
 
-This section is not applicable to this version of this document, as the system is not yet implemented.
-When implementation is completed, this section will be updated to include the unit tests that will be conducted.
 
 \subsection{Unit Testing Scope}
-N/A
+All unit tests are automated and executed using Python’s built-in \texttt{unittest} framework. The tests ensure that key components behave as expected under various conditions. Test coverage reports are generated using the \texttt{coverage.py} tool.
 
 \subsection{Tests for Functional Requirements}
-N/A
+The unit tests verify critical components, including argument parsing, conversion functions, simulation results processing, system state management, and theoretical models computations.
+These test are split into two directories are can be located in the \href{https://github.com/gr812b/CVT-Simulator/tree/main/test/simulations}{simulations directory} and the \href{https://github.com/gr812b/CVT-Simulator/tree/main/test/utils}{utils directory}.
+The \href{https://github.com/gr812b/CVT-Simulator/tree/main/test/simulations}{simulations directory} contains 6 python files each file named descriptively to reflect the functionality they test: \texttt{test\_belt\_simulator.py}, \texttt{test\_car\_simulation.py}, \texttt{test\_engine\_simulation.py}, \texttt{test\_load\_simulation.py}, \texttt{test\_primary\_pulley.py}, \texttt{test\_secondary\_pulley.py}. 
+Additionally, \href{https://github.com/gr812b/CVT-Simulator/tree/main/test/utils}{utils directory} contains 5 python files each file named to reflect the functionality they test: \texttt{test\_argument\_parser.py}, \texttt{test\_conversions.py}, \\ \texttt{test\_simulation\_result.py}, \texttt{test\_system\_state.py}, \\ \texttt{test\_theoretical\_models.py}.
+
 
 \subsection{Tests for Nonfunctional Requirements}
-N/A
+There are no unit tests for Nonfunctional Requirements.
 
 \subsection{Traceability Between Test Cases and Modules}
-N/A	
+\section{Trace to Modules}	
+
+\begin{table}[H]
+  \centering
+  \renewcommand{\arraystretch}{1.3} % Increases row spacing
+  \begin{tabular}{|c|p{10cm}|} % Fixed width for the second column
+      \hline
+      \textbf{Module} & \textbf{Test(s)} \\ \hline
+      M1  &  \\ \hline
+      M2  & Engine test-1, Unit Tests: \texttt{test\_engine\_simulation.py} \\ \hline
+      M3  & Velocity test-1, Acceleration test-1, Position test-1, \\  
+          & Unit Tests: \texttt{test\_car\_simulator.py} \\ \hline
+      M4  & Clamping forces test-1, \\  
+          & Unit Tests: \texttt{test\_primary\_pulley.py} \\ \hline
+      M5  & Clamping forces test-1, \\  
+          & Unit Tests: \texttt{test\_secondary\_pulley.py} \\ \hline
+      M6  &  \\ \hline
+      M7  & Tested by SciPy \\ \hline
+      M8  & Shift test-1, Shift test-2, Shift test-3, \\  
+          & Unit Tests: \texttt{test\_belt\_simulator.py} \\ \hline
+      M9  & Unit tests for CSV Reader \\ \hline
+      M10 &  \\ \hline
+      M11 &  \\ \hline
+      M12 &  \\ \hline
+      M13 &  \\ \hline
+      M14 & User Interface test-1, 2, 3, 4 \\ \hline
+      M15 &  \\ \hline
+      M16 & Unit tests for Python Runner \\ \hline
+  \end{tabular}
+  \caption{Software Modules and Corresponding Tests}
+  \label{tab:modules_tests}
+\end{table}
+
 
 \bibliographystyle{plainnat}
 
