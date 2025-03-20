@@ -11,8 +11,6 @@ public static class PathConstants
 
     public static string SIMULATION_OUTPUT_PATH = Relativize("../simulation_output.csv");
     public static string INPUT_PARAMETERS_PATH = Relativize("../input_parameters.csv");
-    public static string PERCENT_VALUE_PATH = Relativize("../progress_percent.csv");
-    public static string PROGRESS_LOCKFILE_PATH = Relativize("../progress.lock");
     public static string PYTHON_ENVIRONMENT_PATH = Relativize("../../../venv/Scripts/python.exe");
     public static string PYTHON_SCRIPT_PATH = Relativize("../../main.py");
     public static string GRAPH_SCRIPT_PATH = Relativize("../../utils/generate_graphs.py");
