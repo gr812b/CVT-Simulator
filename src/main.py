@@ -1,7 +1,7 @@
+import sys
 import numpy as np
 from scipy.integrate import solve_ivp
 from simulations.load_simulation import LoadSimulator
-from utils.print_progress import print_progress
 from utils.system_state import SystemState
 from utils.simulation_result import SimulationResult
 from simulations.engine_simulation import EngineSimulator
@@ -20,6 +20,7 @@ from utils.conversions import rpm_to_rad_s, deg_to_rad
 from utils.argument_parser import get_arguments
 from utils.theoretical_models import TheoreticalModels as tm
 from utils.simulation_constraints import constraints
+from utils.frontend_output import FormattedSimulationResult
 
 
 # Parse arguments
@@ -54,23 +55,18 @@ cvt_shift = CvtShift(
 
 total_sim_time = 15  # seconds
 
-current_progress = 0  # global variable to track progress
-print_progress(current_progress)  # set initial progress to 0
-
 
 # Define the system of differential equations
 def evaluate_cvt_system(t, y):
-    global current_progress
     state = SystemState.from_array(y)
 
-    progress_percent = t / total_sim_time
-
-    # Print every 0.01% progress
-    percent_interval = 0.0001
-    if progress_percent >= current_progress + percent_interval:
-        current_progress += percent_interval
-        print_progress(current_progress)
-        pass
+    progress_percent = (t / total_sim_time) * 100
+    # Print every 0.1% progress
+    if progress_percent % 0.1 < 0.01:
+        sys.stdout.write(
+            f"\rProgress: {progress_percent:.1f}% [{'=' * int(progress_percent // 2)}{' ' * (50 - int(progress_percent // 2))}]"
+        )
+        sys.stdout.flush()
 
     # TODO: Remove this (should be handled by constraints)
     shift_velocity = state.shift_velocity
@@ -134,3 +130,4 @@ solution = solve_ivp(
 
 result = SimulationResult(solution)
 result.write_csv("simulation_output.csv")
+FormattedSimulationResult.from_csv().write_formatted_csv()
