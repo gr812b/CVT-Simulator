@@ -6,6 +6,7 @@
 \usepackage{tabularx}
 \usepackage{hyperref}
 \usepackage{siunitx}
+\usepackage{nameref}
 \hypersetup{
     colorlinks,
     citecolor=blue,
@@ -42,6 +43,8 @@
 \toprule {\bf Date} & {\bf Version} & {\bf Notes}\\
 \midrule
 October 11th, 2024 & 0 & First version of VnV plan\\
+March 20th, 2024 & 1.0 & Added traceability to tests\\
+March 20th, 2024 & 1.1 & Added Plans for Unit Tests\\
 \bottomrule
 \end{tabularx}
 
@@ -96,9 +99,9 @@ October 11th, 2024 & 0 & First version of VnV plan\\
 \noindent This document serves as a guide for how we plan to verify and validate the \progname{} system.
 Within is a detailed plan of all the tests that will be conducted to ensure that the system is functioning as intended.
 The document is divided into several sections going from the general plan to the specific tests that will be conducted.
-On the verification side, the document lists all all the tests that will be conducted to verify the performance of the system.
+On the verification side, the document lists all the tests that will be conducted to verify the performance of the system.
 The tests are divided into functional and nonfunctional requirements and then separate system and unit test for each.
-There are also multiple checklist in place to verify that all the requirements both within and outside the document are met.
+There are also multiple checklists in place to verify that all the requirements both within and outside the document are met.
 On the validation side, the document outlines all the plans in place to validate the results of the system.
 This includes how we plan to compare our results against real world data and how we plan to validate the usability of the system.
 Overall, this document comprehensively outlines all the plans in place to verify the system and validate its results.
@@ -115,7 +118,7 @@ In summary, this section provides a high level overview of the VnV plan.
 The software that will be tested is the \progname{}, this is a system that simulates the Continuously Variable Transmission (CVT) system of a Baja vehicle.
 The system has three components, a user interface which will allow the user to input the parameters of the CVT system and visualize the output of the simulation.
 A mathematical component that will take the input parameters and simulate the CVT system.
-There is also a 3D model component that will display the some models of the CVT system. 
+There is also a 3D model component that will display the same models of the CVT system. 
 Each of these components covered will be verified and validated to ensure that the system is functioning as intended.
 
 \subsection{Objectives}
@@ -127,7 +130,7 @@ We will verify that our 3D model and user interface allow users to easily input 
 Our validation tests will focus on graphical models based on current available data to describe how the outputs should behave. 
 We will aim to quantify these results by analyzing the difference between expected versus actual output. 
 By referencing our outputs to real world data we can validate the accuracy of our mathematical model.
-We will conduct useability testing to ensure that the interface is intuitive and allows users to easily input parameters, visualize results and understand the performance of the CVT.
+We will conduct usability testing to ensure that the interface is intuitive and allows users to easily input parameters, visualize results and understand the performance of the CVT.
 \\
 \noindent For our project attempting to optimize our systems outputs will be considered out of scope. 
 Additionally, we will not verify any third party libraries used in our software as we assume that this has been previously validated. 
@@ -154,13 +157,13 @@ The extras for this project are the following:\\
 
 \noindent \textbf{Software Requirements Specification} \citet{SRS}
 \newline
-This document is relevant because it it list all the requirements that the system should have and specifies how they should be achieved.
+This document is relevant because it lists all the requirements that the system should have and specifies how they should be achieved.
 Requirements serve an important role in the verification process as the metric for determining if the system is functioning as intended.
 When we do the verification of the system we will compare the system's capabilities and outputs to the requirements from the SRS document.
 This will tell us what parts of the system are working as intended and which need to be changed or updated.
 For validation, the specification serves and equivalent role as the metric for determining if the system is implemented correctly.
 The specifications will be compared with the implementations of the system to see if they correspond.
-If they do not, then the system will need to be updated so the the implementations match with the specifications.
+If they do not, then the system will need to be updated, so the implementations match with the specifications.
 Overall, the SRS document is important for verification and validation as it provides the metrics for determining their success.
 \bigskip
 \newline
@@ -234,7 +237,7 @@ These reviews will be conducted by the team, our supervisor, and our stakeholder
 The team will use the below checklist to verify the quality of the SRS document:
 \begin{itemize}
   \item Review the SRS document for spelling, grammatical and formatting errors
-  \item Check the applicability of each theoretical models
+  \item Check the applicability of all theoretical models
   \item Check the usefulness of each data definitions
   \item Check the validity of each instance models
 \end{itemize}
@@ -243,7 +246,7 @@ The team will use the below checklist to verify the quality of the SRS document:
 We will conduct meetings with experienced team members and alumni to review the SRS document.
 These meetings will focus on the theoretical models, data definitions, and instance models.
 We will also conduct a practicality check to ensure that all requirements are feasible and measurable.
-Finally the assumptions will also be verified to ensure that they won't negatively impact the accuracy of the simulation.
+Finally, the assumptions will also be verified to ensure that they won't negatively impact the accuracy of the simulation.
 
 \subsubsection*{Baja Team Review}
 Talk here about sharing the document to the team as a whole, include a checklist and receive issues on github.
@@ -270,15 +273,15 @@ The system will undergo reviews from fellow classmates, providing our team with 
 A checklist has been designed below to which fellow classmates and stakeholders can use to verify the system.  
 
 
-\begin{enumerate}
+\begin{itemize}
   \item For each functional requirement there is a at least one corresponding system test.
   \item For each non functional requirement there is a at least one corresponding system test.  
   \item The system tests contain tests for boundary cases for user inputs, empty inputs and edge cases. 
   \item Each instance model (IM) within the SRS document shall correspond to a unit test. 
   \item Each function written in our mathematical python model shall correspond to at least one unit test. 
   \item There exists system tests for each component: user interface, mathematical model, data visualization and 3D model. 
-\end{enumerate}
-\subsection{Verification and Validation Plan Verification Plan}
+\end{itemize}
+\subsection{Verification and Validation Plan}
 
 To ensure that the Verification and Validation Plan is sufficient, this document will undergo a verification plan.
 This plan will review the contents of the document to make sure that all necessary components are included.
@@ -319,7 +322,7 @@ Below is a checklist to use as reference for the verification of the Verificatio
   \item Design Verification Plan includes all necessary components in the checklist
   \item VnV Plan Verification Plan includes all necessary components in the checklist
   \item Implementation Verification Plan includes all techniques that are used
-  \item Automated Testing and Verification Tools includes all tools that are used
+  \item Automated Testing, and Verification Tools includes all tools that are used
   \item Software Validation Plan includes all external data that is used
 \end{itemize}
 \noindent
@@ -352,7 +355,7 @@ Below is a checklist to use as reference for the verification of the Verificatio
 \subsection{Implementation Verification Plan}
 
 For the implementation verification plan, we will be using many techniques to ensure that the system is functioning as intended.
-We will use the unit tests listed in the this document as well as other common testing techniques.
+We will use the unit tests listed in the document as well as other common testing techniques.
 It will be required that all unit tests are run and pass for any PRs to be merged into their parent branch.
 We will be doing code inspections during development by ensuring that all code is reviewed by at least one other team member before merging.
 Static analyzers will also be used throughout development to ensure a high quality codebase and will be integrated into our CI/CD pipeline.
@@ -404,7 +407,7 @@ This will allow us to better diagnose the issues and allocate our resources to f
 
 \section{System Tests}
 
-Found below are all of the system tests that will be conducted to verify the system.
+Found below are all the system tests that will be conducted to verify the system.
 These tests are split based on if they are for functional or nonfunctional requirements.
 
 \subsection{Tests for Functional Requirements}
@@ -465,7 +468,7 @@ Listed is each requirement and how the tests verify each one.
 
 \begin{enumerate}
   
-  \item{Position test-1\\}
+  \item \phantomsection \hypertarget{PositionTest-1}{\textbf{Position test-1}} \label{PositionTest-1}
   
   Control: Manual
             
@@ -477,9 +480,9 @@ Listed is each requirement and how the tests verify each one.
   
   Test Case Derivation: As long as the vehicle is able to overcome the initial force of the slope, the vehicle should continue to move forward indefinitely.
   
-  How test will be performed: The script will run with the provided inputs. After execution is complete, the output position over time will be visualized as a graph which should show a smooth upward trend as time progresses. Its slope should increase over time as well. Visual inspection will follow against Figure~\ref{fig:position_graph} for confirmation of expected behaviour.
+  How test will be performed: The script will run with the provided inputs. After execution is complete, the output position over time will be visualized as a graph which should show a smooth upward trend as time progresses. Its slope should increase over time as well. Visual inspection will follow against Figure~\ref{fig:position_graph} for confirmation of expected behavior.
   
-  \item{Position test-2\\}
+  \item \phantomsection \hypertarget{PositionTest-2}{\textbf{Position test-2}} \label{PositionTest-2}
 
   Control: Manual
 
@@ -499,7 +502,7 @@ Listed is each requirement and how the tests verify each one.
 
 \begin{enumerate}
 
-\item{Velocity test-1\\}
+  \item \phantomsection \hypertarget{Velocity test-1}{\textbf{Velocity test-1}} \label{Velocity test-1}
 
 Control: Manual
 					
@@ -513,9 +516,9 @@ Test Case Derivation: Based on assumption \ref{A_11} that the vehicle should not
 Derived from the vehicle’s geometry and the CVT configuration, limiting the velocity to a defined top speed based on the system’s constraints.
 
 
-How test will be performed: The script will run with the provided inputs. After execution is complete, the output velocity over time will be visualized as a graph which should show a smooth upward trend that begins at zero and approaches $v_\text{max}$ as time progresses. Visual inspection will follow against Figure~\ref{fig:velocity_graph} for confirmation of expected behaviour.
+How test will be performed: The script will run with the provided inputs. After execution is complete, the output velocity over time will be visualized as a graph which should show a smooth upward trend that begins at zero and approaches $v_\text{max}$ as time progresses. Visual inspection will follow against Figure~\ref{fig:velocity_graph} for confirmation of expected behavior.
 					
-\item{Velocity test-2\\}
+\item \phantomsection \hypertarget{Velocity test-2}{\textbf{Velocity test-2}} \label{Velocity test-2}
 
 Control: Manual
 
@@ -535,7 +538,7 @@ How test will be performed: The script will run with the provided inputs. After 
 
 \begin{enumerate}
 
-  \item{Acceleration test-1\\}
+  \item \phantomsection \hypertarget{Acceleration test-1}{\textbf{Acceleration test-1}} \label{Acceleration test-1}
   
   Control: Manual
             
@@ -548,9 +551,9 @@ How test will be performed: The script will run with the provided inputs. After 
   Test Case Derivation: Based on the engine's output limits, going no lower than $\omega_\text{idle}$ and no higher than $\omega_\text{max}$.
   Based on air resistance, which increases with the square of velocity, alongside the diminishing torque output of the engine.
   
-  How test will be performed: The script will run with the provided inputs. After execution is complete, the output will be visualized as a graph. Visual inspection will follow against Figure~\ref{fig:acceleration_graph} for confirmation of expected behaviour.
+  How test will be performed: The script will run with the provided inputs. After execution is complete, the output will be visualized as a graph. Visual inspection will follow against Figure~\ref{fig:acceleration_graph} for confirmation of expected behavior.
 
-  \item{Acceleration test-2\\}
+  \item \phantomsection \hypertarget{Acceleration test-2}{\textbf{Acceleration test-2}} \label{Acceleration test-2}
 
   Control: Manual
 
@@ -583,8 +586,8 @@ Listed is each requirement and how the tests verify each one.
 \paragraph{Clamping forces}
 
 \begin{enumerate}
-  
-  \item{Clamping forces test-1\\}
+
+  \item \phantomsection \hypertarget{Clamping forces test-1}{\textbf{Clamping forces test-1}} \label{Clamping forces test-1}
   
   Control: Manual
             
@@ -594,17 +597,17 @@ Listed is each requirement and how the tests verify each one.
             
   Output: The resulting graphs should show a clamping force against engine angular velocity beginning an initial minimum value, which should then rise to a peak before falling during the shifting phase. Suboptimal parameters may lead to a clamping force that is too low or too high, but a similar shape nonetheless. A typical output graph will look similar to the one shown in Figure~\ref{fig:clamping_force_graph}.
   
-  Test Case Derivation: This behaviour is resulting from ideal tuning parameters, and may vary depending on inputs. Ramp and helix geometry will both have a major impact on the shape of these graphs, while weight and spring constants will affect the magnitude.
+  Test Case Derivation: This behavior is resulting from ideal tuning parameters, and may vary depending on inputs. Ramp and helix geometry will both have a major impact on the shape of these graphs, while weight and spring constants will affect the magnitude.
   
-  How test will be performed: The script will run with the provided inputs. After execution is complete, the output will be visualized as a graph. Visual inspection will follow against Figure~\ref{fig:clamping_force_graph} for confirmation of expected behaviour.
+  How test will be performed: The script will run with the provided inputs. After execution is complete, the output will be visualized as a graph. Visual inspection will follow against Figure~\ref{fig:clamping_force_graph} for confirmation of expected behavior.
   
 \end{enumerate}
 
 \paragraph{Shift}
 
 \begin{enumerate}
-  
-  \item{Shift test-1\\}
+
+  \item \phantomsection \hypertarget{Shift test-1}{\textbf{Shift test-1}} \label{Shift test-1}
   
   Control: Manual
             
@@ -614,11 +617,11 @@ Listed is each requirement and how the tests verify each one.
             
   Output: The resulting graphs should show the shift distance against the engine's angular velocity. An ideal graph will look very similar to the leading edge of a square wave. A typical output graph will look similar to the one shown in Figure~\ref{fig:shift_distance_graph}.
   
-  Test Case Derivation: This behaviour is resulting from the CVT's clamping forces overcoming the resistive forces just enough such that the CVT begins shifting. Once this has begun, ramp geometry is expected to cause shifting rather than the engine increasing in speed, maintaining a constant power output. With suboptimal tuning parameters passed in, one might observe a slanted shifting portion.
+  Test Case Derivation: This behavior is resulting from the CVT's clamping forces overcoming the resistive forces just enough such that the CVT begins shifting. Once this has begun, ramp geometry is expected to cause shifting rather than the engine increasing in speed, maintaining a constant power output. With suboptimal tuning parameters passed in, one might observe a slanted shifting portion.
   
-  How test will be performed: The script will run with the provided inputs. After execution is complete, the output will be visualized as a graph. Visual inspection will follow against Figure~\ref{fig:shift_distance_graph} for confirmation of expected behaviour.
+  How test will be performed: The script will run with the provided inputs. After execution is complete, the output will be visualized as a graph. Visual inspection will follow against Figure~\ref{fig:shift_distance_graph} for confirmation of expected behavior.
   
-  \item{Shift test-2\\}
+  \item \phantomsection \hypertarget{Shift test-2}{\textbf{Shift test-2}} \label{Shift test-2}
 
   Control: Manual
 
@@ -632,7 +635,7 @@ Listed is each requirement and how the tests verify each one.
 
   How test will be performed: The script will run with the provided inputs. After execution is complete, the output of the simulation will be compared to experimental data from the physical car to ensure that the simulation is accurate. The experimental data will be configured to show the primary RPM divided by the secondary RPM on the y-axis, and the primary RPM on the x-axis.
   
-  \item{Shift test-3\\}
+  \item \phantomsection \hypertarget{Shift test-3}{\textbf{Shift test-3}} \label{Shift test-3}
   
   Control: Manual
             
@@ -640,13 +643,13 @@ Listed is each requirement and how the tests verify each one.
   
   Input: The input values from Section~\ref{sec:standard_inputs}.
             
-  Output: The resulting graph show show the engine's angular velocity against the vehicles velocity. The output should show a smooth trend upwards starting at $\omega_\text{idle}$ until reaching the shift point, in which it then moves horizontally until finally reaching full shift and bringing the engine's angular velocity to $\omega_\text{max}$. A typical output graph will look similar to the one shown in Figure~\ref{fig:shift_curve}.
+  Output: The resulting graph show the engine's angular velocity against the vehicles' velocity. The output should show a smooth trend upwards starting at $\omega_\text{idle}$ until reaching the shift point, in which it then moves horizontally until finally reaching full shift and bringing the engine's angular velocity to $\omega_\text{max}$. A typical output graph will look similar to the one shown in Figure~\ref{fig:shift_curve}.
   
-  Test Case Derivation: This behaviour results from the CVT's shifting behaviour as a whole. An in-depth explanation of the phases can be found beneath Figure~\ref{fig:shift_curve}.
+  Test Case Derivation: This behavior results from the CVT's shifting behavior as a whole. An in-depth explanation of the phases can be found beneath Figure~\ref{fig:shift_curve}.
   
-  How test will be performed: The script will run with the provided inputs. After execution is complete, the output will be visualized as a graph. Visual inspection will follow against Figure~\ref{fig:shift_curve} for confirmation of expected behaviour.
+  How test will be performed: The script will run with the provided inputs. After execution is complete, the output will be visualized as a graph. Visual inspection will follow against Figure~\ref{fig:shift_curve} for confirmation of expected behavior.
   
-  \item{Shift test-4\\}
+  \item \phantomsection \hypertarget{Shift test-4}{\textbf{Shift test-4}} \label{Shift test-4}
 
   Control: Manual
 
@@ -666,7 +669,7 @@ Listed is each requirement and how the tests verify each one.
 
 \begin{enumerate}
 
-  \item{Engine test-1\\}
+  \item \phantomsection \hypertarget{Engine test-1}{\textbf{Engine test-1}} \label{Engine test-1}
   
   Control: Manual
             
@@ -674,11 +677,11 @@ Listed is each requirement and how the tests verify each one.
   
   Input: The input values from Section~\ref{sec:standard_inputs}.
             
-  Output: The resulting graph should show a decreasing relationship with forque and engine angular velocity, while having a peak in power at $\omega_\text{peak\_power}$. A typical output graph will look similar to the one shown in Figure~\ref{fig:engine_graph}.
+  Output: The resulting graph should show a decreasing relationship with torque and engine angular velocity, while having a peak in power at $\omega_\text{peak\_power}$. A typical output graph will look similar to the one shown in Figure~\ref{fig:engine_graph}.
   
   Test Case Derivation: These are given values as specs of the engine at full load. The engine should not significantly leave the bounds of these angular velocities.
   
-  How test will be performed: The script will run with the provided inputs. After execution is complete, the output will be visualized as a graph. Visual inspection will follow against Figure~\ref{fig:engine_graph} for confirmation of expected behaviour.
+  How test will be performed: The script will run with the provided inputs. After execution is complete, the output will be visualized as a graph. Visual inspection will follow against Figure~\ref{fig:engine_graph} for confirmation of expected behavior.
 
 \end{enumerate}
 
@@ -697,7 +700,8 @@ Listed is each requirement and how the tests verify each one.
 \end{itemize}
 
 \begin{enumerate}
-  \item{User Interface test-1\\}
+
+  \item \phantomsection \hypertarget{User Interface test-1}{\textbf{User Interface test-1}} \label{User Interface test-1}
   
   Control: Manual
 
@@ -712,7 +716,7 @@ Listed is each requirement and how the tests verify each one.
   
   How test will be performed: Upon a fresh launch of the application, manually change each of the input parameters from the default values to a new value. 
              
-  \item{User Interface test-2\\}
+  \item \phantomsection \hypertarget{User Interface test-2}{\textbf{User Interface test-2}} \label{User Interface test-2}
  
   Control: Automatic
             
@@ -725,11 +729,11 @@ Listed is each requirement and how the tests verify each one.
   Test Case Derivation: Based on R12 validate that the system provides the user with a UI to change the input parameters.
   
   How test will be performed: Upon a fresh launch of the software, the system will assert whether the input parameter page is displayed or not. 
-  \item {User Interface test-3\\}
+  \item \phantomsection \hypertarget{User Interface test-3}{\textbf{User Interface test-3}} \label{User Interface test-3}
   
   Control: Automatic
             
-  Initial State: Simulation pre loaded with input parameters
+  Initial State: Simulation preloaded with input parameters
             
   Input: Run simulation 
             
@@ -737,8 +741,8 @@ Listed is each requirement and how the tests verify each one.
   
   Test Case Derivation: Based on R13, validate that the simulation produces output in the form of graphs.
   
-  How test will be performed: The test will run the simulation with a set of pre made input parameters, then it will verify that whether or not a graph has been outputted. 
-  \item {User Interface test-4\\}
+  How test will be performed: The test will run the simulation with a set of pre-made input parameters, then it will verify that whether a graph has been outputted. 
+  \item \phantomsection \hypertarget{User Interface test-4}{\textbf{User Interface test-4}} \label{User Interface test-4}
   
   Control: Manual
             
@@ -754,9 +758,9 @@ Listed is each requirement and how the tests verify each one.
 
 \end{enumerate}
 
-  \subsubsection{Compatability}
+  \subsubsection{Compatibility}
 
-  This section provides tests to verify the Compatability of the system.
+  This section provides tests to verify the Compatibility of the system.
 They are based on the following functional requirements from the SRS document.
 Listed is each requirement and how the tests verify each one.
 \begin{itemize}
@@ -765,7 +769,7 @@ Listed is each requirement and how the tests verify each one.
 \end{itemize}
 
   \begin{enumerate}
-  \item {Compatability test-1\\}
+    \item \phantomsection \hypertarget{Compatibility test-1}{\textbf{Compatibility test-1}} \label{Compatability test-1}
   
   Control: Manual
             
@@ -777,15 +781,15 @@ Listed is each requirement and how the tests verify each one.
   
   Test Case Derivation: Based on R16 and R17, validate that the application can be installed and ran on different operating systems and types of computers. 
   
-  How test will be performed: This test will be performed on two types of computers, a personal laptop and a desktop. On each of those types of computers it will be ran on each of the operating systems, Windows, Linux and MacOS to verify compatability with each OS and type of computer.
+  How test will be performed: This test will be performed on two types of computers, a personal laptop and a desktop. On each of those types of computers it will be run on each of the operating systems, Windows, Linux and macOS to verify compatability with each OS and type of computer.
 
   \end{enumerate}
 
 \subsection{Tests for Nonfunctional Requirements}
 
-\noindent The nonfunctional requirements we will be testing for are accuracy, useability, maintainability, verifiability, understandability and reusability. 
+\noindent The nonfunctional requirements we will be testing for are accuracy, usability, maintainability, verifiability, understandability and reusability. 
 Referencing the Nonfunctional requirements within the SRS document: NFR1: Accuracy, NFR4 Verifiability will reference the above tests given for the functional requirements. 
-The Nonfunctional requirements related to useability and understandability (NFR2 and NFR 5 respectively) will reference the useability/understandability survey linked in the appendix.
+The Nonfunctional requirements related to usability and understandability (NFR2 and NFR 5 respectively) will reference the usability/understandability survey linked in the appendix.
 
 \subsubsection{Accuracy}
 
@@ -793,8 +797,8 @@ The below test are to verify the accuracy of the system.
 They are based on NFR1 from the SRS document.
 
 \begin{enumerate}
+  \item \phantomsection \hypertarget{Accuracy test-1}{\textbf{Accuracy test-1}} \label{Accuracy test-1}
 
-\item{test-1\\}
 
 Type: Manual
 					
@@ -809,14 +813,14 @@ How test will be performed: We will compare each MSE to the value of 0 as the cl
 
 \end{enumerate}
 
-\subsubsection{Useability}
+\subsubsection{Usability}
 
-The below test are to verify the useability of the system.
+The below test are to verify the usability of the system.
 They are based on NFR2 from the SRS document.
 
 \begin{enumerate}
+  \item \phantomsection \hypertarget{Usability test-1}{\textbf{Usability test-1}} \label{Usability test-1}
 
-\item{test-1\\}
 
 Type: Manual
 					
@@ -828,9 +832,9 @@ They are asked to rate this on a scale of (1-5) 1 being extremely difficult and 
 Output/Result: The average output rating from all users is greater than or equal to a 4(somewhat easy or above expectations).
 					
 How test will be performed: Each user in the test group will be provided with a survey which provides a series of questions and a scale for each option where 1 represents Poor, 2 represents below expectation, 3 represents satisfactory, 4 represents above average and 5 represents excellent.
-The average rating will then be calculated and must be above or equal to 4 representing the system usability is above expectations.  
+The average rating will then be calculated and must be above or equal to 4 representing the system usability is above expectations. See the usability/understandability survey in section \ref{sec:Usability Survey Questions}. 
 
-\item{test-2\\}
+\item \phantomsection \hypertarget{Usability test-2}{\textbf{Usability test-2}} \label{Usability test-2}
   
 Type: Manual
             
@@ -843,6 +847,7 @@ Output/Result: The average output rating from all users for each listed feature 
             
 How test will be performed: Each user in the test group will be provided with a survey which provides a series of questions and a scale for each option where 1 represents Poor, 2 represents below expectation, 3 represents satisfactory, 4 represents above average and 5 represents excellent.
 The average rating will then be calculated and must be above or equal to 4 representing the system usability is above expectations. 
+See the usability/understandability survey in section \ref{sec:Usability Survey Questions}. 
   
 \end{enumerate}
 
@@ -853,7 +858,7 @@ They are based on NFR3 from the SRS document.
 
 \begin{enumerate}
 
-\item{test-1\\}
+  \item \phantomsection \hypertarget{Maintainability test-1}{\textbf{Maintainability test-1}} \label{Maintainability test-1}
 
 Type: Manual
 					
@@ -874,7 +879,7 @@ They are based on NFR4 from the SRS document.
 
 \begin{enumerate}
 
-\item{test-1\\}
+  \item \phantomsection \hypertarget{Verifiability test-1}{\textbf{Verifiability test-1}} \label{Verifiability test-1}
 
 Type: Manual
 					
@@ -884,9 +889,17 @@ Input/Condition: The outputs of the functional tests: Position test1, Velocity t
 					
 Output/Result: The graphed behavior of each run is consistent each time.
 					
-How test will be performed: The outputs will be compared after each run to ensure that the behaviour of each run is consistent for the same tunning settings.
+How test will be performed: The outputs will be compared after each run to ensure that the behavior of each run is consistent for the same tunning settings.
 
 \end{enumerate}
+
+\paragraph{\indent Checklist for verfiability}
+\begin{itemize}
+    \item Ensure each test runs 30 times with the same input settings.
+    \item Verify that input conditions remain unchanged between test executions.
+    \item Identify and document any deviations between runs.
+    \item Ensure that differences if there are any are within acceptable tolerances defined in the requirements.
+\end{itemize}
 
 \subsubsection{Understandability}
 
@@ -895,7 +908,7 @@ They are based on NFR5 from the SRS document.
 
 \begin{enumerate}
 
-\item{test-1\\}
+  \item \phantomsection \hypertarget{Understandability test-1}{\textbf{Understandability test-1}} \label{Understandability test-1}
 
 Type: Manual.
 					
@@ -907,9 +920,10 @@ They are asked to rate this on a scale of (1-5) 1 being extremely unclear and 5 
 Output/Result: The average output rating from all users for each listed feature is greater than or equal to a 4(somewhat clear or above expectations).
 					
 How test will be performed: Each user in the test group will be provided with a survey which provides a series of questions and a scale for each option where 1 represents Poor, 2 represents below expectation, 3 represents satisfactory, 4 represents above average and 5 represents excellent.
-The average rating will then be calculated and must be above or equal to 4, representing the systems understandability is above expectations.  
+The average rating will then be calculated and must be above or equal to 4, representing the systems' understandability is above expectations.  
+See the usability/understandability survey in section \ref{sec:Usability Survey Questions}. 
 
-\item{test-2\\}
+ \item \phantomsection \hypertarget{Understandability test-2}{\textbf{Understandability test-2}} \label{Understandability test-2}
 
 Type: Manual
 					
@@ -922,6 +936,7 @@ Output/Result: The average output rating from all users for each listed feature 
 					
 How test will be performed: Each user in the test group will be provided with a survey which provides a series of questions and a scale for each option where 1 represents Poor, 2 represents below expectation, 3 represents satisfactory, 4 represents above average and 5 represents excellent.
 The average rating will then be calculated and must be above or equal to 4, representing the systems understandability is above expectations. 
+See the usability/understandability survey in section \ref{sec:Usability Survey Questions}. 
 
 \end{enumerate}
 
@@ -932,7 +947,7 @@ They are based on NFR6 from the SRS document.
 
 \begin{enumerate}
 
-\item{test-1\\}
+  \item \phantomsection \hypertarget{Reusability test-1}{\textbf{Reusability test-1}} \label{Reusability test-1}
     
 Type: Manual
               
@@ -955,23 +970,22 @@ This will indicate how long it will take for the system to be adapted to future 
   \begin{tabular}{|c|c|}
     \hline
     \textbf{Requirement} & \textbf{Test(s)} \\ \hline
-    R1 & Position test-2, Velocity test-2, Acceleration test-2, Shift test-4  \\ \hline
-    R2 & Acceleration test-1 \\ \hline
-    R3 & Velocity test-1 \\ \hline
-    R4 & Position test-1 \\ \hline
-    R5 & Clamping forces test-1 \\ \hline
-    R6 & Clamping forces test-1 \\ \hline
-    R7 & Shift test-1, Shift test-2, Shift test-3 \\ \hline
-    R8 & Shift test-1, Shift test-2, Shift test-3 \\ \hline
-    R9 & Engine test-1 \\ \hline
-    R10 & User Interface test-1 \\ \hline
-    R11 & User Interface test-1 \\ \hline
-    R12 & User Interface test-2 \\ \hline
-    R13 & User Interface test-3 \\ \hline
-    R14 & User Interface test-4 \\ \hline
-    R15 & User Interface test-5 \\ \hline
-    R16 & Compatibility test-1 \\ \hline
-    R17 & Compatibility test-1 \\ \hline
+    R1 & \textcolor{blue}{\hyperlink{PositionTest-2}{Position test-2}}, \textcolor{blue}{\hyperlink{Velocity test-2}{Velocity test-2}}, \textcolor{blue}{\hyperlink{Acceleration test-2}{Acceleration test-2}}, \textcolor{blue}{\hyperlink{Shift test-4}{Shift test-4}} \\ \hline
+    R2 & \textcolor{blue}{\hyperlink{Acceleration test-1}{Acceleration test-1}} \\ \hline
+    R3 & \textcolor{blue}{\hyperlink{Velocity test-1}{Velocity test-1}} \\ \hline
+    R4 & \textcolor{blue}{\hyperlink{PositionTest-1}{Position test-1}} \\ \hline
+    R5 & \textcolor{blue}{\hyperlink{Clamping forces test-1}{Clamping forces test-1}}  \\ \hline
+    R6 & \textcolor{blue}{\hyperlink{Clamping forces test-1}{Clamping forces test-1}}  \\ \hline
+    R7 & \textcolor{blue}{\hyperlink{Shift test-1}{Shift test-1}}, \textcolor{blue}{\hyperlink{Shift test-2}{Shift test-2}}, \textcolor{blue}{\hyperlink{Shift test-3}{Shift test-3}} \\ \hline
+    R8 & \textcolor{blue}{\hyperlink{Shift test-1}{Shift test-1}}, \textcolor{blue}{\hyperlink{Shift test-2}{Shift test-2}}, \textcolor{blue}{\hyperlink{Shift test-3}{Shift test-3}} \\ \hline
+    R9 & \textcolor{blue}{\hyperlink{Engine test-1}{Engine test-1}}\\ \hline
+    R10 & \textcolor{blue}{\hyperlink{User Interface test-1}{User Interface test-1}} \\ \hline
+    R11 & \textcolor{blue}{\hyperlink{User Interface test-1}{User Interface test-1}} \\ \hline
+    R12 & \textcolor{blue}{\hyperlink{User Interface test-2}{User Interface test-2}} \\ \hline
+    R13 & \textcolor{blue}{\hyperlink{User Interface test-3}{User Interface test-3}} \\ \hline
+    R14 & \textcolor{blue}{\hyperlink{User Interface test-4}{User Interface test-4}} \\ \hline
+    R15 & \textcolor{blue}{\hyperlink{Compatibility test-1}{Compatibility test-1}} \\ \hline
+    R16 & \textcolor{blue}{\hyperlink{Compatibility test-1}{Compatibility test-1}} \\ \hline
     \end{tabular}
     \caption{System Functional Requirements and Corresponding Tests}
     \label{tab:requirements_tests}
@@ -982,33 +996,105 @@ This will indicate how long it will take for the system to be adapted to future 
     \begin{tabular}{|c|c|}
       \hline
       \textbf{Requirement} & \textbf{Test(s)} \\ \hline
-      NFR1 & Accuracy test-1  \\ \hline
-      NFR2 & Useability test-1, Useability test-2 \\ \hline
-      NFR3 & Maintainability test-1 \\ \hline
-      NFR4 & Verifiability test-1 \\ \hline
-      NFR5 & Understandability test-1, Understandability test-2 \\ \hline
-      NFR6 & Reusability test-1 \\ \hline
+      NFR1 & \textcolor{blue}{\hyperlink{Accuracy test-1}{Accuracy test-1}}  \\ \hline
+      NFR2 & \textcolor{blue}{\hyperlink{Usability test-1}{Usability test-1}}, \textcolor{blue}{\hyperlink{Usability test-2}{Usability test-2}} \\ \hline
+      NFR3 & \textcolor{blue}{\hyperlink{Maintainability test-1}{Maintainability test-1}}\\ \hline
+      NFR4 & \textcolor{blue}{\hyperlink{Verifiability test-1}{Verifiability test-1}} \\ \hline
+      NFR5 & \textcolor{blue}{\hyperlink{Understandability test-1}{Understandability test-1}}, \textcolor{blue}{\hyperlink{Understandability test-2}{Understandability test-2}} \\ \hline
+      NFR6 & \textcolor{blue}{\hyperlink{Reusability test-1}{Reusability test-1}} \\ \hline
       \end{tabular}
       \caption{System Nonfunctional Requirements and Corresponding Tests}
       \label{tab:requirements_tests}
   \end{table}
 
 \section{Unit Test Description}
+This section provides an overview of the unit tests implemented for individual modules. The tests ensure correctness and reliability of key functionalities.
 
-This section is not applicable to this version of this document, as the system is not yet implemented.
-When implementation is completed, this section will be updated to include the unit tests that will be conducted.
 
 \subsection{Unit Testing Scope}
-N/A
+All unit tests are automated and executed using Python’s built-in \texttt{unittest} framework. The tests ensure that key components behave as expected under various conditions. Test coverage reports are generated using the \texttt{coverage.py} tool.
 
 \subsection{Tests for Functional Requirements}
-N/A
+The unit tests verify critical components, including argument parsing, conversion functions, simulation results processing, system state management, and theoretical models computations.
+These test are split into two directories are can be located in the \href{https://github.com/gr812b/CVT-Simulator/tree/main/test/simulations}{simulations directory} and the \href{https://github.com/gr812b/CVT-Simulator/tree/main/test/utils}{utils directory}.
+The \href{https://github.com/gr812b/CVT-Simulator/tree/main/test/simulations}{simulations directory} contains 6 python files each file named descriptively to reflect the functionality they test: \texttt{test\_belt\_simulator.py}, \texttt{test\_car\_simulation.py}, \texttt{test\_engine\_simulation.py}, \texttt{test\_load\_simulation.py}, \texttt{test\_primary\_pulley.py}, \texttt{test\_secondary\_pulley.py}. 
+Additionally, \href{https://github.com/gr812b/CVT-Simulator/tree/main/test/utils}{utils directory} contains 5 python files each file named to reflect the functionality they test: \texttt{test\_argument\_parser.py}, \texttt{test\_conversions.py}, \\ \texttt{test\_simulation\_result.py}, \texttt{test\_system\_state.py}, \\ \texttt{test\_theoretical\_models.py}.
+\\
+
+\noindent The following is the file breakdown for each test suite:
+\begin{itemize}
+  \item \href{https://github.com/gr812b/CVT-Simulator/blob/main/test/simulations/test_belt_simulator.py}{test\_belt\_simulator.py} 
+  \label{test:belt_simulator} - This test suite will verify that the BeltSimulator’s methods correctly compute centrifugal force, clamping-derived radial forces, net radial force, slack tension, and maximum transferable torque according to theoretical models.
+
+  \item \href{https://github.com/gr812b/CVT-Simulator/blob/main/test/simulations/test_car_simulation.py}{test\_car\_simulator.py} 
+  \label{test:car_simulator} - This test suite will verify that CarSimulator calculates acceleration correctly as force divided by mass.
+
+  \item \href{https://github.com/gr812b/CVT-Simulator/blob/main/test/simulations/test_engine_simulation.py}{test\_engine\_simulation.py} 
+  \label{test:engine_simulator} - This test suite will verify that EngineSimulator correctly initializes and computes torque, power, and angular acceleration using a mock torque curve.
+
+  \item \href{https://github.com/gr812b/CVT-Simulator/blob/main/test/simulations/test_load_simulation.py}{test\_load\_simulation.py} 
+  \label{test:load_simulator} - This test suite will verify that the LoadSimulator correctly computes vehicle load forces (incline, drag, total, gearbox) and acceleration given specific parameters.
+
+  \item \href{https://github.com/gr812b/CVT-Simulator/blob/main/test/simulations/test_primary_pulley.py}{test\_primary\_pulley.py} 
+  \label{test:primary_pulley} - This test suite will verify that the PrimaryPulley class correctly computes flyweight force, spring compression force, net force, and properly handles shift distance limits.
+
+  \item \href{https://github.com/gr812b/CVT-Simulator/blob/main/test/simulations/test_secondary_pulley.py}{test\_secondary\_pulley.py}
+  \label{test:secondary_pulley} - This test suite will verify that the SecondaryPulley correctly computes helix force, spring compression force, spring torsion torque, and net force based on theoretical models and geometric parameters.
+
+  \item \href{https://github.com/gr812b/CVT-Simulator/blob/main/test/utils/test_argument_parser.py}{test\_argument\_parser.py}
+  \label{test:argument_parser} - This test suite will verify that arguments are correctly parsed and will check that command line inputs are turned into an object for both default and custom scenarios.
+
+  \item \href{https://github.com/gr812b/CVT-Simulator/blob/main/test/utils/test_conversions.py}{test\_conversions.py}
+  \label{test:conversions} - This test suite will verify that conversion functions for angular velocity, angle measurements, circumference, and inch-to-meter conversions return correct values.
+
+  \item \href{https://github.com/gr812b/CVT-Simulator/blob/main/test/utils/test_simulation_result.py}{test\_simulation\_result.py}
+  \label{test:simulation_result} - This test suite will verify that simulation result correctly parses ODE solutions into system state objects, writes the results to a CSV file, and calls the plot method as expected.
+
+  \item \href{https://github.com/gr812b/CVT-Simulator/blob/main/test/utils/test_system_state.py}{test\_system\_state.py}
+  \label{test:system_state} - This test suite will verify that the SystemState class initializes correctly and accurately converts to and from array representations.
+
+  \item \href{https://github.com/gr812b/CVT-Simulator/blob/main/test/utils/test_theoretical_models.py}{test\_theoretical\_models.py}
+  \label{test:theoretical_models} - This test suite will verify that Theoretical Models correctly compute various physics and geometry calculations—including Hooke’s law, centrifugal force, air resistance, torque, gearing, friction, capstan equation, Newton’s second law, and CVT and wrap angle parameters.
+\end{itemize}
+
 
 \subsection{Tests for Nonfunctional Requirements}
-N/A
+There are no unit tests for Nonfunctional Requirements.
 
 \subsection{Traceability Between Test Cases and Modules}
-N/A	
+\section{Trace to Modules}	
+
+\begin{table}[H]
+  \centering
+  \renewcommand{\arraystretch}{1.3} % Increases row spacing
+  \begin{tabular}{|c|p{10cm}|} % Fixed width for the second column
+      \hline
+      \textbf{Module} & \textbf{Test(s)} \\ \hline
+      M1  &  \\ \hline
+      M2  & \textcolor{blue}{\hyperlink{Engine test-1}{Engine test-1}}, \hyperref[test:simulation_result]{\texttt{test\_engine\_simulation.py}} \\ \hline
+      M3  & \textcolor{blue}{\hyperlink{Velocity test-1}{Velocity test-1}}, \textcolor{blue}{\hyperlink{Acceleration test-1}{Acceleration test-1}}, \textcolor{blue}{\hyperlink{Position test-1}{Position test-1}}, \\  
+          & \hyperref[test:car_simulator]{\texttt{test\_car\_simulator.py}} \\ \hline
+      M4  & \textcolor{blue}{\hyperlink{Clamping forces test-1}{Clamping forces test-1}}, \\  
+          & \hyperref[test:primary_pulley]{\texttt{test\_primary\_pulley.py}} \\ \hline
+      M5  & \textcolor{blue}{\hyperlink{Clamping forces test-1}{Clamping forces test-1}}, \\  
+          & \hyperref[test:secondary_pulley]{\texttt{test\_secondary\_pulley.py}} \\ \hline
+      M6  &  \\ \hline
+      M7  & Tested by SciPy \\ \hline
+      M8  & \textcolor{blue}{\hyperlink{Shift test-1}{Shift test-1}}, \textcolor{blue}{\hyperlink{Shift test-2}{Shift test-2}}, \textcolor{blue}{\hyperlink{Shift test-3}{Shift test-3}}, \\  
+          & \hyperref[test:belt_simulator]{\texttt{test\_belt\_simulator.py}} \\ \hline
+      M9  & Unit tests for CSV Reader \\ \hline
+      M10 &  \\ \hline
+      M11 &  \\ \hline
+      M12 &  \\ \hline
+      M13 &  \\ \hline
+      M14 & \textcolor{blue}{\hyperlink{User Interface test-1}{User Interface test-1}}, \textcolor{blue}{\hyperlink{User Interface test-2}{User Interface test-2}}, \\ & \textcolor{blue}{\hyperlink{User Interface test-3}{User Interface test-3}}, \textcolor{blue}{\hyperlink{User Interface test-4}{User Interface test-4}} \\ \hline
+      M15 &  \\ \hline
+      M16 & Unit tests for Python Runner \\ \hline
+  \end{tabular}
+  \caption{Software Modules and Corresponding Tests}
+  \label{tab:modules_tests}
+\end{table}
+
 
 \bibliographystyle{plainnat}
 
@@ -1039,9 +1125,9 @@ Their values are defined in this section for easy maintenance.
   \label{tab:vnv_constants}
 \end{table}
 
-\subsection{Usability Survey Questions?}
+\subsection{Usability Survey Questions} \label{sec:Usability Survey Questions}
 
-Useability/Understandability survey:
+Usability/Understandability survey:
 \url{https://forms.office.com/r/RkeDW31ZTS}
 
 \subsection{Expected Graphs}
@@ -1097,14 +1183,14 @@ Belt engagement starts with a lot of slip when the vehicle is stationary, increa
 
 \subsubsection*{D - Low Ratio Acceleration}
 
-After the sheaves have gripped the belt and they are transferring the torque without slipping, the machine will accelerate along the low ratio line. The engine speed will continue to increase as if you were in low gear in your car. While the vehicle speed is increasing the belt remains in low ratio at the bottom of the driving sheaves. The belt will not start moving out on the sheave until the flyweight force has become large enough to overcome both the pressure spring and the side pressure of the belt on the driven sheave. When the engine speed has built up to create enough centrifugal force to overcome the pressure spring and the driven sheave pressures, the belt will start shifting out and the ratio will change. This is called the “shift point” and should coincide with the power peak of the engine.
+After the sheaves have gripped the belt and they are transferring the torque without slipping, the machine will accelerate along the low ratio line. The engine speed will continue to increase as if you were in low gear in your car. While the vehicle speed is increasing the belt remains in low ratio at the bottom of the driving sheaves. The belt will not start moving out on the sheave until the flyweight force has become large enough to overcome both the pressure spring and the side pressure of the belt on the driven sheave. When the engine speed has built up to create enough centrifugal force to overcome the pressure spring and the driven sheave pressures, the belt will start shifting out and, the ratio will change. This is called the “shift point” and should coincide with the power peak of the engine.
 
 \textbf{Between full engagement and the shift point, centrifugal forces are larger than the pressure spring but less than the belt pressure from the driven clutch.}
 
 \subsubsection*{E - Shift-Out-Point}
 As the RPM of the driving clutch increases in low ratio, the centrifugal force from the flyweights will eventually be large enough to overcome the tension on the belt from the driven clutch. When this occurs, the transmission has reached the shift out point and the belt will start to move outward on the driving clutch and inward on the driven clutch. As the belt starts to move, the drive ratio is changed.
 
-Ideally, the shift out point should be at the power peak of the engine and the shift curve should be straight from there through high ratio. In practice it may sometimes end up a little different. If you have a heavy machine and a small high revving engine, you may want the shift out point to be several hundred RPMs higher than the power peak. As the machine increases acceleration the engine may be pulled down in RPM by the increasing load as the transmission shifts out. By over-revving slightly in the beginning the engine will be pulled down on to the power peak, and smooth acceleration continues. If the shift out point was right on the power peak, the reduction in RPM would have pulled the transmission down off the peak and a more sluggish acceleration would have occurred as the transmission worked its RPM up again.
+Ideally, the shift out point should be at the power peak of the engine and the shift curve should be straight from there through high ratio. In practice, it may sometimes end up a little different. If you have a heavy machine and a small high revving engine, you may want the shift out point to be several hundred RPMs higher than the power peak. As the machine increases acceleration the engine may be pulled down in RPM by the increasing load as the transmission shifts out. By over-revving slightly in the beginning the engine will be pulled down on to the power peak, and smooth acceleration continues. If the shift out point was right on the power peak, the reduction in RPM would have pulled the transmission down off the peak and a more sluggish acceleration would have occurred as the transmission worked its RPM up again.
 
 This shift out over-rev is of short duration, and highly individual depending on the combination of machine weight and engine power. On a super light drag machine with a big engine, you may get away with starting the shift-out slightly before the power peak as the power will pull you right through without an RPM drop. The best way to achieve the initial over-rev is to modify the shift curve of the flyweight right off the engagement point. This is usually done by extending the engagement flat into the shift curvature. The length and shape of the transition from engagement to shift curve will determine the amount and duration of the shift out over-rev.
 
@@ -1114,7 +1200,7 @@ This shift out over-rev is of short duration, and highly individual depending on
 
 The ideal shift-curve is “straight” between the low and high ratio. This means that the engine speed is held constant at the power peak while the transmission is shifting out and the vehicle speed is increasing. With the exception of a slight shift-out over-rev as discussed in the previous section, a straight shift at the power peak will give the maximum performance. To maintain a straight shift is not an easy task. As we saw under the discussion of the belt pressure requirements, the pressure on the belt is actually decreasing as the transmission shifts out. This decrease in belt tension may be as much as 50% between low and high ratio. If the decrease is not matched by the flyweight force, the driving clutch will compensate by lowering the engine speed. The driving clutch will always match the required belt tension by changing the engine speed if the flyweight system is not correctly calibrated. Our task is to make sure the flyweight system matches the belt forces at the peak power engine speed. Straight shifting is accomplished by calibrating the relationship of the flyweight curvature and roller location as well as the arc traveled by the flyweight. Engine speed is determined by the weight of the flyweight system.
 
-Since the flyweight system works against the pressure spring in the driving clutch, the loads and rates of this spring also influence straight shift and engine RPM. Flyweight curvatures have been experimented with and fine tuned by the manufacturers over the last 15 years and they provide a good selection of tuning components. Polaris is a good example; they provide two basic flyweight curvatures, trail and racing. The trail curvature has lower engagement and softer shift-out than the racing curvature. Each flyweight group is available with weights in 2-4 gram increments for each curvature. Each manufacturer also has a large selection of springs with different pretensions and rates for calibration purposes. Achieving the correct combination of flyweight and spring to obtain a straight shift at the correct engine speed is the task of the tuner. This will be covered in greater detail under the Selection of Components and Testing chapters.
+Since the flyweight system works against the pressure spring in the driving clutch, the loads and rates of this spring also influence straight shift and engine RPM. Flyweight curvatures have been experimented with and fine-tuned by the manufacturers over the last 15 years, and they provide a good selection of tuning components. Polaris is a good example; they provide two basic flyweight curvatures, trail and racing. The trail curvature has lower engagement and softer shift-out than the racing curvature. Each flyweight group is available with weights in 2-4 gram increments for each curvature. Each manufacturer also has a large selection of springs with different pretensions and rates for calibration purposes. Achieving the correct combination of flyweight and spring to obtain a straight shift at the correct engine speed is the task of the tuner. This will be covered in greater detail under the Selection of Components and Testing chapters.
 
 \textbf{Straight shift is obtained by matching curvature and spring rates; correct engine speed is dependent on the weight of the flyweight.}
 
@@ -1144,22 +1230,22 @@ graduate attribute of Lifelong Learning.
 \begin{enumerate}
   \item What went well while writing this deliverable?\\ 
   When writing this deliverable there was a lot of things that went well.
-  Firstly the team had a long sitdown with our capstone supervisor Dr Smith to discuss the process of how we will be validating our simulation.
-  We were able to come up with a great plan for how the simulation will be validated against real world data and how to incorperate that into this document and the project as a whole.
+  Firstly the team had a long sit down with our capstone supervisor Dr Smith to discuss the process of how we will be validating our simulation.
+  We were able to come up with a great plan for how the simulation will be validated against real world data and how to incorporate that into this document and the project as a whole.
   The team was also able to have some great communication with each other when figuring out how to write the various kinds of tests for the system.
   Since there was a lot of different types of tests we were constantly bouncing ideas off each other to figure out the best way to move forward.
   Team communication such as that is always a good thing and this deliverable specifically had a lot of that in it.
   Another thing that went well was the team was able to figure out who on the McMaster Baja team will help us validate our simulation once the implementation is complete.
-  We outlined a list of people that will help us in section 3 of this document and we were able to get in contact with them and they are all on board to help us validate the simulation.  
+  We outlined a list of people that will help us in section 3 of this document, and we were able to get in contact with them, and they are all on board to help us validate the simulation.  
 
   \item What pain points did you experience during this deliverable, and how
     did you resolve them?\\
     When writing this deliverable there was only one pain point that needed to be resolved.
     The first one was how to write the functional tests for the math component of the system.
     Due to the nature of our project the simulation outputs are not something that will be able to be verified/validated numerically or with a simple test.
-    Instead we will need to compare the outputs of the simulation to the outputs of the physical car.
-    Therefore we had to change the way that we wrote the functional requirements, and instead of writing them as a simple test we wrote them as a comparison between some specific part of the simulation output and against the same data gathered from the physical car.
-    The way this pain point was resolved was through sitting down with our capstone supervisor Dr Smith and talked the process of how we will be validating our simulation and he was the one who gave us the reccomendation to write the functional requirements in this way.
+    Instead, we will need to compare the outputs of the simulation to the outputs of the physical car.
+    Therefore, we had to change the way that we wrote the functional requirements, and instead of writing them as a simple test we wrote them as a comparison between some specific part of the simulation output and against the same data gathered from the physical car.
+    The way this pain point was resolved was through sitting down with our capstone supervisor Dr Smith and talked the process of how we will be validating our simulation and he was the one who gave us the recommendation to write the functional requirements in this way.
   \item What knowledge and skills will the team collectively need to acquire to
   successfully complete the verification and validation of your project?
   Examples of possible knowledge and skills include dynamic testing knowledge,
@@ -1190,8 +1276,8 @@ graduate attribute of Lifelong Learning.
   
   Team skill breakdown
   \begin{itemize}
-    \item Travis: Need to familiarize himself with the C\# testing tools and how to use them. As well he will need to learn how to validate the simulation output against the physical car data.
-    \item Grace: Need to familiarize herself with the C\# testing tools and how to use them. As well she will need to learn how to validate the simulation output against the physical car data.
+    \item Travis: Need to familiarize himself with the C\# testing tools and how to use them. As well, he will need to learn how to validate the simulation output against the physical car data.
+    \item Grace: Need to familiarize herself with the C\# testing tools and how to use them. As well, she will need to learn how to validate the simulation output against the physical car data.
     \item Kai: Need to familiarize himself with the Python testing tools and how to use them. He is already familiar with the data acquisition system and how to gather data from the car.
     \item Cam: Need to familiarize himself with the Python testing tools and how to use them. He is already familiar with the data acquisition system and how to gather data from the car.
   \end{itemize}
@@ -1209,7 +1295,7 @@ graduate attribute of Lifelong Learning.
   Each team member will be using the second approach to acquire these knowledge and skills. 
   We felt that the best way to learn testing tools is to read the documentation on how they should be used.
   Then once we are implementing the POC we can use that smaller project to get a feel for how the tools work and how to use them.
-  This will gives us the base knowledge and the practicality of how to use the tools in a real project.
+  This will give us the base knowledge and the practicality of how to use the tools in a real project.
 \end{enumerate}
 
 \end{document}
