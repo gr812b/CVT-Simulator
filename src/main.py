@@ -63,7 +63,9 @@ def evaluate_cvt_system(t, y):
     progress_percent = (t / total_sim_time) * 100
     # Print every 0.1% progress
     if progress_percent % 0.1 < 0.01:
-        sys.stdout.write(f"\rProgress: {progress_percent:.1f}% [{'=' * int(progress_percent // 2)}{' ' * (50 - int(progress_percent // 2))}]")
+        sys.stdout.write(
+            f"\rProgress: {progress_percent:.1f}% [{'=' * int(progress_percent // 2)}{' ' * (50 - int(progress_percent // 2))}]"
+        )
         sys.stdout.flush()
 
     # TODO: Remove this (should be handled by constraints)
@@ -116,8 +118,6 @@ initial_state = SystemState(
     shift_velocity=0.0,
     shift_distance=0.0,
 )
-
-# print_progress(0)  # set initial progress to 0
 
 # Solve the system over the desired time span
 solution = solve_ivp(
