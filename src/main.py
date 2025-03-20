@@ -60,6 +60,7 @@ total_sim_time = 15  # seconds
 def evaluate_cvt_system(t, y):
     state = SystemState.from_array(y)
 
+    # Print progress
     progress_percent = (t / total_sim_time) * 100
     # Print every 0.1% progress
     if progress_percent % 0.1 < 0.01:
