@@ -130,14 +130,14 @@ class PiecewiseRamp:
 if __name__ == "__main__":
     # Sample primary ramp
     ramp = PiecewiseRamp()
-    ramp.add_segment(LinearSegment(x_start=0, x_end=MAX_SHIFT / 4, slope=-0.3))
+    ramp.add_segment(LinearSegment(x_start=0, x_end=MAX_SHIFT / 6, slope=-0.3))
     ramp.add_segment(
         CircularSegment(
-            x_start=MAX_SHIFT / 4,
+            x_start=MAX_SHIFT / 6,
             x_end=MAX_SHIFT,
-            radius=0.002,
-            theta_start=0.3,
-            theta_end=np.pi / 2 - 0.7,
+            radius=0.001,
+            theta_start=0.5,
+            theta_end=np.pi / 2 - 0.4,
         )
     )
 
