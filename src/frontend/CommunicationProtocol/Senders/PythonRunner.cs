@@ -44,25 +44,22 @@ namespace CommunicationProtocol.Senders
         }
 
         // Main function to run the python script
-        public Task RunAsync(string scriptPath, List<Parameter> parameters, bool debug = false)
+        public void Run(string scriptPath, List<Parameter> parameters, bool showTerminal)
         {
-            return Task.Run(() =>
+            ProcessStartInfo startInfo = new ProcessStartInfo
             {
-                ProcessStartInfo startInfo = new ProcessStartInfo
-                {
-                    FileName = environmentPath,
-                    Arguments = scriptPath + GenerateArgumentString(parameters),
-                    UseShellExecute = debug,
-                    CreateNoWindow = !debug
-                };
+                FileName = environmentPath,
+                Arguments = scriptPath + GenerateArgumentString(parameters),
+                UseShellExecute = showTerminal,
+                CreateNoWindow = !showTerminal
+            };
 
-                using (Process process = new Process())
-                {
-                    process.StartInfo = startInfo;
-                    process.Start();
-                    process.WaitForExit();
-                }
-            });
+            using (Process process = new Process())
+            {
+                process.StartInfo = startInfo;
+                process.Start();
+                process.WaitForExit();
+            }
         }
     }
 }

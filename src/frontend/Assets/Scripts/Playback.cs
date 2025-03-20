@@ -39,8 +39,7 @@ public class Playback : MonoBehaviour
         nextSceneButton.onClick.AddListener(backButton);
 
         // Get path to simulation result file and then read it
-        string path = Path.Combine(Application.dataPath, "../simulation_output.csv");
-        simulationResult = new SimulationResult(path);
+        simulationResult = new SimulationResult(PathConstants.SIMULATION_OUTPUT_PATH);
     }
 
     void TogglePlayPause()
@@ -117,7 +116,7 @@ public class Playback : MonoBehaviour
     // Returns to the previous scene
     private void backButton()
         {
-            int nextSceneIndex = SceneManager.GetActiveScene().buildIndex - 2;
+            int nextSceneIndex = SceneManager.GetActiveScene().buildIndex - 1;
             SceneManager.LoadScene(nextSceneIndex);
         }
 }
