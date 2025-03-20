@@ -44,6 +44,7 @@
 \midrule
 October 11th, 2024 & 0 & First version of VnV plan\\
 March 20th, 2024 & 1.0 & Added traceability to tests\\
+March 20th, 2024 & 1.1 & Added Plans for Unit Tests\\
 \bottomrule
 \end{tabularx}
 
@@ -1022,46 +1023,40 @@ Additionally, \href{https://github.com/gr812b/CVT-Simulator/tree/main/test/utils
 
 \noindent The following is the file breakdown for each test suite:
 \begin{itemize}
-  \item \href{https://github.com/gr812b/CVT-Simulator/blob/main/test/simulations/test_belt_simulator.py}{test\_belt\_simulator.py}  - This test suite will verify that the BeltSimulator’s
-  methods correctly compute centrifugal force, clamping-derived radial forces,
-  net radial force, slack tension, and maximum transferable torque according
-  to theoretical models.
+  \item \href{https://github.com/gr812b/CVT-Simulator/blob/main/test/simulations/test_belt_simulator.py}{test\_belt\_simulator.py} 
+  \label{test:belt_simulator} - This test suite will verify that the BeltSimulator’s methods correctly compute centrifugal force, clamping-derived radial forces, net radial force, slack tension, and maximum transferable torque according to theoretical models.
 
   \item \href{https://github.com/gr812b/CVT-Simulator/blob/main/test/simulations/test_car_simulation.py}{test\_car\_simulator.py} 
-  - This test suite will verify that CarSimulator calculates acceleration correctly as force divided by mass.
+  \label{test:car_simulator} - This test suite will verify that CarSimulator calculates acceleration correctly as force divided by mass.
 
   \item \href{https://github.com/gr812b/CVT-Simulator/blob/main/test/simulations/test_engine_simulation.py}{test\_engine\_simulation.py} 
-  - This test suite will verify that EngineSimulator correctly initializes and computes torque, power, and angular acceleration
-  using a mock torque curve.
+  \label{test:engine_simulator} - This test suite will verify that EngineSimulator correctly initializes and computes torque, power, and angular acceleration using a mock torque curve.
 
   \item \href{https://github.com/gr812b/CVT-Simulator/blob/main/test/simulations/test_load_simulation.py}{test\_load\_simulation.py} 
-  - This test suite will verify that the LoadSimulator correctly computes vehicle load forces (incline, drag, total, gearbox) and acceleration given specific parameters.
+  \label{test:load_simulator} - This test suite will verify that the LoadSimulator correctly computes vehicle load forces (incline, drag, total, gearbox) and acceleration given specific parameters.
 
   \item \href{https://github.com/gr812b/CVT-Simulator/blob/main/test/simulations/test_primary_pulley.py}{test\_primary\_pulley.py} 
-  - This test suite will verify that the PrimaryPulley class correctly computes flyweight force, spring compression force, net force, and properly handles shift distance limits.
+  \label{test:primary_pulley} - This test suite will verify that the PrimaryPulley class correctly computes flyweight force, spring compression force, net force, and properly handles shift distance limits.
 
   \item \href{https://github.com/gr812b/CVT-Simulator/blob/main/test/simulations/test_secondary_pulley.py}{test\_secondary\_pulley.py}
-  - This test suite will verify that the SecondaryPulley correctly computes helix force, spring compression force, spring torsion
-  torque, and net force based on theoretical models and geometric parameters.
+  \label{test:secondary_pulley} - This test suite will verify that the SecondaryPulley correctly computes helix force, spring compression force, spring torsion torque, and net force based on theoretical models and geometric parameters.
 
   \item \href{https://github.com/gr812b/CVT-Simulator/blob/main/test/utils/test_argument_parser.py}{test\_argument\_parser.py}
-  – This test suite will verify arguments are correctly parsed and will check that command line inputs are turned into an object for both default and custom
-  scenarios.
+  \label{test:argument_parser} - This test suite will verify that arguments are correctly parsed and will check that command line inputs are turned into an object for both default and custom scenarios.
 
   \item \href{https://github.com/gr812b/CVT-Simulator/blob/main/test/utils/test_conversions.py}{test\_conversions.py}
-  - This test suite will verify that conversion functions for angular velocity, angle measurements, circumference, and inch-to-meter conversions return correct values.
+  \label{test:conversions} - This test suite will verify that conversion functions for angular velocity, angle measurements, circumference, and inch-to-meter conversions return correct values.
 
   \item \href{https://github.com/gr812b/CVT-Simulator/blob/main/test/utils/test_simulation_result.py}{test\_simulation\_result.py}
-  - This test suite will verify that simulation result correctly parses ODE solutions into system state objects, writes the results
-  to a CSV file, and calls the plot method as expected.
+  \label{test:simulation_result} - This test suite will verify that simulation result correctly parses ODE solutions into system state objects, writes the results to a CSV file, and calls the plot method as expected.
 
   \item \href{https://github.com/gr812b/CVT-Simulator/blob/main/test/utils/test_system_state.py}{test\_system\_state.py}
-   - This test suite will verify that the SystemState class initializes correctly and accurately converts to and from array representations.
+  \label{test:system_state} - This test suite will verify that the SystemState class initializes correctly and accurately converts to and from array representations.
 
   \item \href{https://github.com/gr812b/CVT-Simulator/blob/main/test/utils/test_theoretical_models.py}{test\_theoretical\_models.py}
-  - This test suite verifies that Theoretical Models correctly compute various physics and geometry calculations—including
-  Hooke’s law, centrifugal force, air resistance, torque, gearing, friction, capstan equation, Newton’s second law, and CVT and wrap angle parameters
+  \label{test:theoretical_models} - This test suite will verify that Theoretical Models correctly compute various physics and geometry calculations—including Hooke’s law, centrifugal force, air resistance, torque, gearing, friction, capstan equation, Newton’s second law, and CVT and wrap angle parameters.
 \end{itemize}
+
 
 \subsection{Tests for Nonfunctional Requirements}
 There are no unit tests for Nonfunctional Requirements.
@@ -1076,23 +1071,23 @@ There are no unit tests for Nonfunctional Requirements.
       \hline
       \textbf{Module} & \textbf{Test(s)} \\ \hline
       M1  &  \\ \hline
-      M2  & Engine test-1, Unit Tests: \texttt{test\_engine\_simulation.py} \\ \hline
-      M3  & Velocity test-1, Acceleration test-1, Position test-1, \\  
-          & Unit Tests: \texttt{test\_car\_simulator.py} \\ \hline
-      M4  & Clamping forces test-1, \\  
-          & Unit Tests: \texttt{test\_primary\_pulley.py} \\ \hline
-      M5  & Clamping forces test-1, \\  
-          & Unit Tests: \texttt{test\_secondary\_pulley.py} \\ \hline
+      M2  & \textcolor{blue}{\hyperlink{Engine test-1}{Engine test-1}}, \hyperref[test:simulation_result]{\texttt{test\_engine\_simulation.py}} \\ \hline
+      M3  & \textcolor{blue}{\hyperlink{Velocity test-1}{Velocity test-1}}, \textcolor{blue}{\hyperlink{Acceleration test-1}{Acceleration test-1}}, \textcolor{blue}{\hyperlink{Position test-1}{Position test-1}}, \\  
+          & \hyperref[test:car_simulator]{\texttt{test\_car\_simulator.py}} \\ \hline
+      M4  & \textcolor{blue}{\hyperlink{Clamping forces test-1}{Clamping forces test-1}}, \\  
+          & \hyperref[test:primary_pulley]{\texttt{test\_primary\_pulley.py}} \\ \hline
+      M5  & \textcolor{blue}{\hyperlink{Clamping forces test-1}{Clamping forces test-1}}, \\  
+          & \hyperref[test:secondary_pulley]{\texttt{test\_secondary\_pulley.py}} \\ \hline
       M6  &  \\ \hline
       M7  & Tested by SciPy \\ \hline
-      M8  & Shift test-1, Shift test-2, Shift test-3, \\  
-          & Unit Tests: \texttt{test\_belt\_simulator.py} \\ \hline
+      M8  & \textcolor{blue}{\hyperlink{Shift test-1}{Shift test-1}}, \textcolor{blue}{\hyperlink{Shift test-2}{Shift test-2}}, \textcolor{blue}{\hyperlink{Shift test-3}{Shift test-3}}, \\  
+          & \hyperref[test:belt_simulator]{\texttt{test\_belt\_simulator.py}} \\ \hline
       M9  & Unit tests for CSV Reader \\ \hline
       M10 &  \\ \hline
       M11 &  \\ \hline
       M12 &  \\ \hline
       M13 &  \\ \hline
-      M14 & User Interface test-1, 2, 3, 4 \\ \hline
+      M14 & \textcolor{blue}{\hyperlink{User Interface test-1}{User Interface test-1}}, \textcolor{blue}{\hyperlink{User Interface test-2}{User Interface test-2}}, \\ & \textcolor{blue}{\hyperlink{User Interface test-3}{User Interface test-3}}, \textcolor{blue}{\hyperlink{User Interface test-4}{User Interface test-4}} \\ \hline
       M15 &  \\ \hline
       M16 & Unit tests for Python Runner \\ \hline
   \end{tabular}
