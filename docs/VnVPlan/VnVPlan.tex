@@ -1018,7 +1018,50 @@ The unit tests verify critical components, including argument parsing, conversio
 These test are split into two directories are can be located in the \href{https://github.com/gr812b/CVT-Simulator/tree/main/test/simulations}{simulations directory} and the \href{https://github.com/gr812b/CVT-Simulator/tree/main/test/utils}{utils directory}.
 The \href{https://github.com/gr812b/CVT-Simulator/tree/main/test/simulations}{simulations directory} contains 6 python files each file named descriptively to reflect the functionality they test: \texttt{test\_belt\_simulator.py}, \texttt{test\_car\_simulation.py}, \texttt{test\_engine\_simulation.py}, \texttt{test\_load\_simulation.py}, \texttt{test\_primary\_pulley.py}, \texttt{test\_secondary\_pulley.py}. 
 Additionally, \href{https://github.com/gr812b/CVT-Simulator/tree/main/test/utils}{utils directory} contains 5 python files each file named to reflect the functionality they test: \texttt{test\_argument\_parser.py}, \texttt{test\_conversions.py}, \\ \texttt{test\_simulation\_result.py}, \texttt{test\_system\_state.py}, \\ \texttt{test\_theoretical\_models.py}.
+\\
 
+\noindent The following is the file breakdown for each test suite:
+\begin{itemize}
+  \item \href{https://github.com/gr812b/CVT-Simulator/blob/main/test/simulations/test_belt_simulator.py}{test\_belt\_simulator.py}  - This test suite will verify that the BeltSimulator’s
+  methods correctly compute centrifugal force, clamping-derived radial forces,
+  net radial force, slack tension, and maximum transferable torque according
+  to theoretical models.
+
+  \item \href{https://github.com/gr812b/CVT-Simulator/blob/main/test/simulations/test_car_simulation.py}{test\_car\_simulator.py} 
+  - This test suite will verify that CarSimulator calculates acceleration correctly as force divided by mass.
+
+  \item \href{https://github.com/gr812b/CVT-Simulator/blob/main/test/simulations/test_engine_simulation.py}{test\_engine\_simulation.py} 
+  - This test suite will verify that EngineSimulator correctly initializes and computes torque, power, and angular acceleration
+  using a mock torque curve.
+
+  \item \href{https://github.com/gr812b/CVT-Simulator/blob/main/test/simulations/test_load_simulation.py}{test\_load\_simulation.py} 
+  - This test suite will verify that the LoadSimulator correctly computes vehicle load forces (incline, drag, total, gearbox) and acceleration given specific parameters.
+
+  \item \href{https://github.com/gr812b/CVT-Simulator/blob/main/test/simulations/test_primary_pulley.py}{test\_primary\_pulley.py} 
+  - This test suite will verify that the PrimaryPulley class correctly computes flyweight force, spring compression force, net force, and properly handles shift distance limits.
+
+  \item \href{https://github.com/gr812b/CVT-Simulator/blob/main/test/simulations/test_secondary_pulley.py}{test\_secondary\_pulley.py}
+  - This test suite will verify that the SecondaryPulley correctly computes helix force, spring compression force, spring torsion
+  torque, and net force based on theoretical models and geometric parameters.
+
+  \item \href{https://github.com/gr812b/CVT-Simulator/blob/main/test/utils/test_argument_parser.py}{test\_argument\_parser.py}
+  – This test suite will verify arguments are correctly parsed and will check that command line inputs are turned into an object for both default and custom
+  scenarios.
+
+  \item \href{https://github.com/gr812b/CVT-Simulator/blob/main/test/utils/test_conversions.py}{test\_conversions.py}
+  - This test suite will verify that conversion functions for angular velocity, angle measurements, circumference, and inch-to-meter conversions return correct values.
+
+  \item \href{https://github.com/gr812b/CVT-Simulator/blob/main/test/utils/test_simulation_result.py}{test\_simulation\_result.py}
+  - This test suite will verify that simulation result correctly parses ODE solutions into system state objects, writes the results
+  to a CSV file, and calls the plot method as expected.
+
+  \item \href{https://github.com/gr812b/CVT-Simulator/blob/main/test/utils/test_system_state.py}{test\_system\_state.py}
+   - This test suite will verify that the SystemState class initializes correctly and accurately converts to and from array representations.
+
+  \item \href{https://github.com/gr812b/CVT-Simulator/blob/main/test/utils/test_theoretical_models.py}{test\_theoretical\_models.py}
+  - This test suite verifies that Theoretical Models correctly compute various physics and geometry calculations—including
+  Hooke’s law, centrifugal force, air resistance, torque, gearing, friction, capstan equation, Newton’s second law, and CVT and wrap angle parameters
+\end{itemize}
 
 \subsection{Tests for Nonfunctional Requirements}
 There are no unit tests for Nonfunctional Requirements.
