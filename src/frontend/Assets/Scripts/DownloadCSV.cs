@@ -5,26 +5,27 @@ using SFB;
 
 public class DownloadCSV : MonoBehaviour
 {
-    private readonly string csvPath = Path.Combine(Application.dataPath, "../simulation_output.csv");
+    private readonly string csvDataPath = PathConstants.SIMULATION_OUTPUT_PATH;
+    private readonly string csvParamsPath = PathConstants.INPUT_PARAMETERS_PATH;
 
-    [SerializeField] private Button downloadButton;
+    [SerializeField] private Button downloadDataButton;
+    [SerializeField] private Button downloadParamsButton;
 
     private void Start() {
-        downloadButton.onClick.AddListener(Download);
+        downloadDataButton.onClick.AddListener(() => DownloadCSVFile(csvDataPath, "simulation_output"));
+        downloadParamsButton.onClick.AddListener(() => DownloadCSVFile(csvParamsPath, "input_parameters"));
     }
 
-    private void Download() {
-       
+    private void DownloadCSVFile(string sourcePath, string fileName) {
         string destinationPath = StandaloneFileBrowser.SaveFilePanel(
             "Save CSV File",        // Title of the dialog
             "",                    // Initial directory (empty defaults to user's Documents)
-            "simulation_output",   // Default file name
-            "csv"                  // Default file extension
+            fileName,         // Default file name
+            "csv"                   // Default file extension
         );
 
-
         if (!string.IsNullOrEmpty(destinationPath)) {
-            File.Copy(csvPath, destinationPath, true);
+            File.Copy(sourcePath, destinationPath, true);
         }
     } 
 }

@@ -111,7 +111,7 @@ public class UserInput : MonoBehaviour
         //open file explorer and accept a csv then rename the csv to input_parameters.csv
         string[] paths = StandaloneFileBrowser.OpenFilePanel("Open CSV File", "", "csv", false);
         if (paths.Length > 0) {
-            File.Copy(paths[0], Path.Combine(Application.dataPath, "../input_parameters.csv"), true);
+            File.Copy(paths[0], PathConstants.INPUT_PARAMETERS_PATH, true);
         }
 
         UpdateParameters();
