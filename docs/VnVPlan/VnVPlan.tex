@@ -6,6 +6,7 @@
 \usepackage{tabularx}
 \usepackage{hyperref}
 \usepackage{siunitx}
+\usepackage{nameref}
 \hypersetup{
     colorlinks,
     citecolor=blue,
@@ -465,7 +466,7 @@ Listed is each requirement and how the tests verify each one.
 
 \begin{enumerate}
   
-  \item{Position test-1\\}
+  \item \phantomsection \hypertarget{PositionTest-1}{\textbf{Position test-1}} \label{PositionTest-1}
   
   Control: Manual
             
@@ -479,7 +480,7 @@ Listed is each requirement and how the tests verify each one.
   
   How test will be performed: The script will run with the provided inputs. After execution is complete, the output position over time will be visualized as a graph which should show a smooth upward trend as time progresses. Its slope should increase over time as well. Visual inspection will follow against Figure~\ref{fig:position_graph} for confirmation of expected behaviour.
   
-  \item{Position test-2\\}
+  \item \phantomsection \hypertarget{PositionTest-2}{\textbf{Position test-2}} \label{PositionTest-2}
 
   Control: Manual
 
@@ -499,7 +500,7 @@ Listed is each requirement and how the tests verify each one.
 
 \begin{enumerate}
 
-\item{Velocity test-1\\}
+  \item \phantomsection \hypertarget{Velocity test-1}{\textbf{Velocity test-1}} \label{Velocity test-1}
 
 Control: Manual
 					
@@ -515,7 +516,7 @@ Derived from the vehicle’s geometry and the CVT configuration, limiting the ve
 
 How test will be performed: The script will run with the provided inputs. After execution is complete, the output velocity over time will be visualized as a graph which should show a smooth upward trend that begins at zero and approaches $v_\text{max}$ as time progresses. Visual inspection will follow against Figure~\ref{fig:velocity_graph} for confirmation of expected behaviour.
 					
-\item{Velocity test-2\\}
+\item \phantomsection \hypertarget{Velocity test-2}{\textbf{Velocity test-2}} \label{Velocity test-2}
 
 Control: Manual
 
@@ -535,7 +536,7 @@ How test will be performed: The script will run with the provided inputs. After 
 
 \begin{enumerate}
 
-  \item{Acceleration test-1\\}
+  \item \phantomsection \hypertarget{Acceleration test-1}{\textbf{Acceleration test-1}} \label{Acceleration test-1}
   
   Control: Manual
             
@@ -550,7 +551,7 @@ How test will be performed: The script will run with the provided inputs. After 
   
   How test will be performed: The script will run with the provided inputs. After execution is complete, the output will be visualized as a graph. Visual inspection will follow against Figure~\ref{fig:acceleration_graph} for confirmation of expected behaviour.
 
-  \item{Acceleration test-2\\}
+  \item \phantomsection \hypertarget{Acceleration test-2}{\textbf{Acceleration test-2}} \label{Acceleration test-2}
 
   Control: Manual
 
@@ -583,8 +584,8 @@ Listed is each requirement and how the tests verify each one.
 \paragraph{Clamping forces}
 
 \begin{enumerate}
-  
-  \item{Clamping forces test-1\\}
+
+  \item \phantomsection \hypertarget{Clamping forces test-1}{\textbf{Clamping forces test-1}} \label{Clamping forces test-1}
   
   Control: Manual
             
@@ -603,8 +604,8 @@ Listed is each requirement and how the tests verify each one.
 \paragraph{Shift}
 
 \begin{enumerate}
-  
-  \item{Shift test-1\\}
+
+  \item \phantomsection \hypertarget{Shift test-1}{\textbf{Shift test-1}} \label{Shift test-1}
   
   Control: Manual
             
@@ -618,7 +619,7 @@ Listed is each requirement and how the tests verify each one.
   
   How test will be performed: The script will run with the provided inputs. After execution is complete, the output will be visualized as a graph. Visual inspection will follow against Figure~\ref{fig:shift_distance_graph} for confirmation of expected behaviour.
   
-  \item{Shift test-2\\}
+  \item \phantomsection \hypertarget{Shift test-2}{\textbf{Shift test-2}} \label{Shift test-2}
 
   Control: Manual
 
@@ -632,7 +633,7 @@ Listed is each requirement and how the tests verify each one.
 
   How test will be performed: The script will run with the provided inputs. After execution is complete, the output of the simulation will be compared to experimental data from the physical car to ensure that the simulation is accurate. The experimental data will be configured to show the primary RPM divided by the secondary RPM on the y-axis, and the primary RPM on the x-axis.
   
-  \item{Shift test-3\\}
+  \item \phantomsection \hypertarget{Shift test-3}{\textbf{Shift test-3}} \label{Shift test-3}
   
   Control: Manual
             
@@ -646,7 +647,7 @@ Listed is each requirement and how the tests verify each one.
   
   How test will be performed: The script will run with the provided inputs. After execution is complete, the output will be visualized as a graph. Visual inspection will follow against Figure~\ref{fig:shift_curve} for confirmation of expected behaviour.
   
-  \item{Shift test-4\\}
+  \item \phantomsection \hypertarget{Shift test-4}{\textbf{Shift test-4}} \label{Shift test-4}
 
   Control: Manual
 
@@ -666,7 +667,7 @@ Listed is each requirement and how the tests verify each one.
 
 \begin{enumerate}
 
-  \item{Engine test-1\\}
+  \item \phantomsection \hypertarget{Engine test-1}{\textbf{Engine test-1}} \label{Engine test-1}
   
   Control: Manual
             
@@ -697,7 +698,8 @@ Listed is each requirement and how the tests verify each one.
 \end{itemize}
 
 \begin{enumerate}
-  \item{User Interface test-1\\}
+
+  \item \phantomsection \hypertarget{User Interface test-1}{\textbf{User Interface test-1}} \label{User Interface test-1}
   
   Control: Manual
 
@@ -712,7 +714,7 @@ Listed is each requirement and how the tests verify each one.
   
   How test will be performed: Upon a fresh launch of the application, manually change each of the input parameters from the default values to a new value. 
              
-  \item{User Interface test-2\\}
+  \item \phantomsection \hypertarget{User Interface test-2}{\textbf{User Interface test-2}} \label{User Interface test-2}
  
   Control: Automatic
             
@@ -725,7 +727,7 @@ Listed is each requirement and how the tests verify each one.
   Test Case Derivation: Based on R12 validate that the system provides the user with a UI to change the input parameters.
   
   How test will be performed: Upon a fresh launch of the software, the system will assert whether the input parameter page is displayed or not. 
-  \item {User Interface test-3\\}
+  \item \phantomsection \hypertarget{User Interface test-3}{\textbf{User Interface test-3}} \label{User Interface test-3}
   
   Control: Automatic
             
@@ -738,7 +740,7 @@ Listed is each requirement and how the tests verify each one.
   Test Case Derivation: Based on R13, validate that the simulation produces output in the form of graphs.
   
   How test will be performed: The test will run the simulation with a set of pre made input parameters, then it will verify that whether or not a graph has been outputted. 
-  \item {User Interface test-4\\}
+  \item \phantomsection \hypertarget{User Interface test-4}{\textbf{User Interface test-4}} \label{User Interface test-4}
   
   Control: Manual
             
@@ -754,9 +756,9 @@ Listed is each requirement and how the tests verify each one.
 
 \end{enumerate}
 
-  \subsubsection{Compatability}
+  \subsubsection{Compatibility}
 
-  This section provides tests to verify the Compatability of the system.
+  This section provides tests to verify the Compatibility of the system.
 They are based on the following functional requirements from the SRS document.
 Listed is each requirement and how the tests verify each one.
 \begin{itemize}
@@ -765,7 +767,7 @@ Listed is each requirement and how the tests verify each one.
 \end{itemize}
 
   \begin{enumerate}
-  \item {Compatability test-1\\}
+    \item \phantomsection \hypertarget{Compatibility test-1}{\textbf{Compatibility test-1}} \label{Compatability test-1}
   
   Control: Manual
             
@@ -783,9 +785,9 @@ Listed is each requirement and how the tests verify each one.
 
 \subsection{Tests for Nonfunctional Requirements}
 
-\noindent The nonfunctional requirements we will be testing for are accuracy, useability, maintainability, verifiability, understandability and reusability. 
+\noindent The nonfunctional requirements we will be testing for are accuracy, usability, maintainability, verifiability, understandability and reusability. 
 Referencing the Nonfunctional requirements within the SRS document: NFR1: Accuracy, NFR4 Verifiability will reference the above tests given for the functional requirements. 
-The Nonfunctional requirements related to useability and understandability (NFR2 and NFR 5 respectively) will reference the useability/understandability survey linked in the appendix.
+The Nonfunctional requirements related to usability and understandability (NFR2 and NFR 5 respectively) will reference the usability/understandability survey linked in the appendix.
 
 \subsubsection{Accuracy}
 
@@ -793,8 +795,8 @@ The below test are to verify the accuracy of the system.
 They are based on NFR1 from the SRS document.
 
 \begin{enumerate}
+  \item \phantomsection \hypertarget{Accuracy test-1}{\textbf{Accuracy test-1}} \label{Accuracy test-1}
 
-\item{test-1\\}
 
 Type: Manual
 					
@@ -809,14 +811,14 @@ How test will be performed: We will compare each MSE to the value of 0 as the cl
 
 \end{enumerate}
 
-\subsubsection{Useability}
+\subsubsection{Usability}
 
 The below test are to verify the useability of the system.
 They are based on NFR2 from the SRS document.
 
 \begin{enumerate}
+  \item \phantomsection \hypertarget{Usability test-1}{\textbf{Usability test-1}} \label{Usability test-1}
 
-\item{test-1\\}
 
 Type: Manual
 					
@@ -830,7 +832,7 @@ Output/Result: The average output rating from all users is greater than or equal
 How test will be performed: Each user in the test group will be provided with a survey which provides a series of questions and a scale for each option where 1 represents Poor, 2 represents below expectation, 3 represents satisfactory, 4 represents above average and 5 represents excellent.
 The average rating will then be calculated and must be above or equal to 4 representing the system usability is above expectations.  
 
-\item{test-2\\}
+\item \phantomsection \hypertarget{Usability test-2}{\textbf{Usability test-2}} \label{Usability test-2}
   
 Type: Manual
             
@@ -853,7 +855,7 @@ They are based on NFR3 from the SRS document.
 
 \begin{enumerate}
 
-\item{test-1\\}
+  \item \phantomsection \hypertarget{Maintainability test-1}{\textbf{Maintainability test-1}} \label{Maintainability test-1}
 
 Type: Manual
 					
@@ -874,7 +876,7 @@ They are based on NFR4 from the SRS document.
 
 \begin{enumerate}
 
-\item{test-1\\}
+  \item \phantomsection \hypertarget{Verifiability test-1}{\textbf{Verifiability test-1}} \label{Verifiability test-1}
 
 Type: Manual
 					
@@ -895,7 +897,7 @@ They are based on NFR5 from the SRS document.
 
 \begin{enumerate}
 
-\item{test-1\\}
+  \item \phantomsection \hypertarget{Understandability test-1}{\textbf{Understandability test-1}} \label{Understandability test-1}
 
 Type: Manual.
 					
@@ -909,7 +911,7 @@ Output/Result: The average output rating from all users for each listed feature 
 How test will be performed: Each user in the test group will be provided with a survey which provides a series of questions and a scale for each option where 1 represents Poor, 2 represents below expectation, 3 represents satisfactory, 4 represents above average and 5 represents excellent.
 The average rating will then be calculated and must be above or equal to 4, representing the systems understandability is above expectations.  
 
-\item{test-2\\}
+ \item \phantomsection \hypertarget{Understandability test-2}{\textbf{Understandability test-2}} \label{Understandability test-2}
 
 Type: Manual
 					
@@ -932,7 +934,7 @@ They are based on NFR6 from the SRS document.
 
 \begin{enumerate}
 
-\item{test-1\\}
+  \item \phantomsection \hypertarget{Reusability test-1}{\textbf{Reusability test-1}} \label{Reusability test-1}
     
 Type: Manual
               
@@ -955,23 +957,22 @@ This will indicate how long it will take for the system to be adapted to future 
   \begin{tabular}{|c|c|}
     \hline
     \textbf{Requirement} & \textbf{Test(s)} \\ \hline
-    R1 & Position test-2, Velocity test-2, Acceleration test-2, Shift test-4  \\ \hline
-    R2 & Acceleration test-1 \\ \hline
-    R3 & Velocity test-1 \\ \hline
-    R4 & Position test-1 \\ \hline
-    R5 & Clamping forces test-1 \\ \hline
-    R6 & Clamping forces test-1 \\ \hline
-    R7 & Shift test-1, Shift test-2, Shift test-3 \\ \hline
-    R8 & Shift test-1, Shift test-2, Shift test-3 \\ \hline
-    R9 & Engine test-1 \\ \hline
-    R10 & User Interface test-1 \\ \hline
-    R11 & User Interface test-1 \\ \hline
-    R12 & User Interface test-2 \\ \hline
-    R13 & User Interface test-3 \\ \hline
-    R14 & User Interface test-4 \\ \hline
-    R15 & User Interface test-5 \\ \hline
-    R16 & Compatibility test-1 \\ \hline
-    R17 & Compatibility test-1 \\ \hline
+    R1 & \textcolor{blue}{\hyperlink{PositionTest-2}{Position test-2}}, \textcolor{blue}{\hyperlink{Velocity test-2}{Velocity test-2}}, \textcolor{blue}{\hyperlink{Acceleration test-2}{Acceleration test-2}}, \textcolor{blue}{\hyperlink{Shift test-4}{Shift test-4}} \\ \hline
+    R2 & \textcolor{blue}{\hyperlink{Acceleration test-1}{Acceleration test-1}} \\ \hline
+    R3 & \textcolor{blue}{\hyperlink{Velocity test-1}{Velocity test-1}} \\ \hline
+    R4 & \textcolor{blue}{\hyperlink{PositionTest-1}{Position test-1}} \\ \hline
+    R5 & \textcolor{blue}{\hyperlink{Clamping forces test-1}{Clamping forces test-1}}  \\ \hline
+    R6 & \textcolor{blue}{\hyperlink{Clamping forces test-1}{Clamping forces test-1}}  \\ \hline
+    R7 & \textcolor{blue}{\hyperlink{Shift test-1}{Shift test-1}}, \textcolor{blue}{\hyperlink{Shift test-2}{Shift test-2}}, \textcolor{blue}{\hyperlink{Shift test-3}{Shift test-3}} \\ \hline
+    R8 & \textcolor{blue}{\hyperlink{Shift test-1}{Shift test-1}}, \textcolor{blue}{\hyperlink{Shift test-2}{Shift test-2}}, \textcolor{blue}{\hyperlink{Shift test-3}{Shift test-3}} \\ \hline
+    R9 & \textcolor{blue}{\hyperlink{Engine test-1}{Engine test-1}}\\ \hline
+    R10 & \textcolor{blue}{\hyperlink{User Interface test-1}{User Interface test-1}} \\ \hline
+    R11 & \textcolor{blue}{\hyperlink{User Interface test-1}{User Interface test-1}} \\ \hline
+    R12 & \textcolor{blue}{\hyperlink{User Interface test-2}{User Interface test-2}} \\ \hline
+    R13 & \textcolor{blue}{\hyperlink{User Interface test-3}{User Interface test-3}} \\ \hline
+    R14 & \textcolor{blue}{\hyperlink{User Interface test-4}{User Interface test-4}} \\ \hline
+    R15 & \textcolor{blue}{\hyperlink{Compatibility test-1}{Compatibility test-1}} \\ \hline
+    R16 & \textcolor{blue}{\hyperlink{Compatibility test-1}{Compatibility test-1}} \\ \hline
     \end{tabular}
     \caption{System Functional Requirements and Corresponding Tests}
     \label{tab:requirements_tests}
@@ -982,12 +983,12 @@ This will indicate how long it will take for the system to be adapted to future 
     \begin{tabular}{|c|c|}
       \hline
       \textbf{Requirement} & \textbf{Test(s)} \\ \hline
-      NFR1 & Accuracy test-1  \\ \hline
-      NFR2 & Useability test-1, Useability test-2 \\ \hline
-      NFR3 & Maintainability test-1 \\ \hline
-      NFR4 & Verifiability test-1 \\ \hline
-      NFR5 & Understandability test-1, Understandability test-2 \\ \hline
-      NFR6 & Reusability test-1 \\ \hline
+      NFR1 & \textcolor{blue}{\hyperlink{Accuracy test-1}{Accuracy test-1}}  \\ \hline
+      NFR2 & \textcolor{blue}{\hyperlink{Usability test-1}{Usability test-1}}, \textcolor{blue}{\hyperlink{Usability test-2}{Usability test-2}} \\ \hline
+      NFR3 & \textcolor{blue}{\hyperlink{Maintainability test-1}{Maintainability test-1}}\\ \hline
+      NFR4 & \textcolor{blue}{\hyperlink{Verifiability test-1}{Verifiability test-1}} \\ \hline
+      NFR5 & \textcolor{blue}{\hyperlink{Understandability test-1}{Understandability test-1}}, \textcolor{blue}{\hyperlink{Understandability test-2}{Understandability test-2}} \\ \hline
+      NFR6 & \textcolor{blue}{\hyperlink{Reusability test-1}{Reusability test-1}} \\ \hline
       \end{tabular}
       \caption{System Nonfunctional Requirements and Corresponding Tests}
       \label{tab:requirements_tests}
