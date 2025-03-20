@@ -279,7 +279,7 @@ A checklist has been designed below to which fellow classmates and stakeholders 
   \item Each function written in our mathematical python model shall correspond to at least one unit test. 
   \item There exists system tests for each component: user interface, mathematical model, data visualization and 3D model. 
 \end{itemize}
-\subsection{Verification and Validation Plan Verification Plan}
+\subsection{Verification and Validation Plan}
 
 To ensure that the Verification and Validation Plan is sufficient, this document will undergo a verification plan.
 This plan will review the contents of the document to make sure that all necessary components are included.
@@ -779,7 +779,7 @@ Listed is each requirement and how the tests verify each one.
   
   Test Case Derivation: Based on R16 and R17, validate that the application can be installed and ran on different operating systems and types of computers. 
   
-  How test will be performed: This test will be performed on two types of computers, a personal laptop and a desktop. On each of those types of computers it will be ran on each of the operating systems, Windows, Linux and macOS to verify compatability with each OS and type of computer.
+  How test will be performed: This test will be performed on two types of computers, a personal laptop and a desktop. On each of those types of computers it will be run on each of the operating systems, Windows, Linux and macOS to verify compatability with each OS and type of computer.
 
   \end{enumerate}
 
@@ -887,9 +887,17 @@ Input/Condition: The outputs of the functional tests: Position test1, Velocity t
 					
 Output/Result: The graphed behavior of each run is consistent each time.
 					
-How test will be performed: The outputs will be compared after each run to ensure that the behaviour of each run is consistent for the same tunning settings.
+How test will be performed: The outputs will be compared after each run to ensure that the behavior of each run is consistent for the same tunning settings.
 
 \end{enumerate}
+
+\paragraph{\indent Checklist for verfiability}
+\begin{itemize}
+    \item Ensure each test runs 30 times with the same input settings.
+    \item Verify that input conditions remain unchanged between test executions.
+    \item Identify and document any deviations between runs.
+    \item Ensure that differences if there are any are within acceptable tolerances defined in the requirements.
+\end{itemize}
 
 \subsubsection{Understandability}
 
@@ -1101,14 +1109,14 @@ Belt engagement starts with a lot of slip when the vehicle is stationary, increa
 
 \subsubsection*{D - Low Ratio Acceleration}
 
-After the sheaves have gripped the belt and they are transferring the torque without slipping, the machine will accelerate along the low ratio line. The engine speed will continue to increase as if you were in low gear in your car. While the vehicle speed is increasing the belt remains in low ratio at the bottom of the driving sheaves. The belt will not start moving out on the sheave until the flyweight force has become large enough to overcome both the pressure spring and the side pressure of the belt on the driven sheave. When the engine speed has built up to create enough centrifugal force to overcome the pressure spring and the driven sheave pressures, the belt will start shifting out and the ratio will change. This is called the “shift point” and should coincide with the power peak of the engine.
+After the sheaves have gripped the belt and they are transferring the torque without slipping, the machine will accelerate along the low ratio line. The engine speed will continue to increase as if you were in low gear in your car. While the vehicle speed is increasing the belt remains in low ratio at the bottom of the driving sheaves. The belt will not start moving out on the sheave until the flyweight force has become large enough to overcome both the pressure spring and the side pressure of the belt on the driven sheave. When the engine speed has built up to create enough centrifugal force to overcome the pressure spring and the driven sheave pressures, the belt will start shifting out and, the ratio will change. This is called the “shift point” and should coincide with the power peak of the engine.
 
 \textbf{Between full engagement and the shift point, centrifugal forces are larger than the pressure spring but less than the belt pressure from the driven clutch.}
 
 \subsubsection*{E - Shift-Out-Point}
 As the RPM of the driving clutch increases in low ratio, the centrifugal force from the flyweights will eventually be large enough to overcome the tension on the belt from the driven clutch. When this occurs, the transmission has reached the shift out point and the belt will start to move outward on the driving clutch and inward on the driven clutch. As the belt starts to move, the drive ratio is changed.
 
-Ideally, the shift out point should be at the power peak of the engine and the shift curve should be straight from there through high ratio. In practice it may sometimes end up a little different. If you have a heavy machine and a small high revving engine, you may want the shift out point to be several hundred RPMs higher than the power peak. As the machine increases acceleration the engine may be pulled down in RPM by the increasing load as the transmission shifts out. By over-revving slightly in the beginning the engine will be pulled down on to the power peak, and smooth acceleration continues. If the shift out point was right on the power peak, the reduction in RPM would have pulled the transmission down off the peak and a more sluggish acceleration would have occurred as the transmission worked its RPM up again.
+Ideally, the shift out point should be at the power peak of the engine and the shift curve should be straight from there through high ratio. In practice, it may sometimes end up a little different. If you have a heavy machine and a small high revving engine, you may want the shift out point to be several hundred RPMs higher than the power peak. As the machine increases acceleration the engine may be pulled down in RPM by the increasing load as the transmission shifts out. By over-revving slightly in the beginning the engine will be pulled down on to the power peak, and smooth acceleration continues. If the shift out point was right on the power peak, the reduction in RPM would have pulled the transmission down off the peak and a more sluggish acceleration would have occurred as the transmission worked its RPM up again.
 
 This shift out over-rev is of short duration, and highly individual depending on the combination of machine weight and engine power. On a super light drag machine with a big engine, you may get away with starting the shift-out slightly before the power peak as the power will pull you right through without an RPM drop. The best way to achieve the initial over-rev is to modify the shift curve of the flyweight right off the engagement point. This is usually done by extending the engagement flat into the shift curvature. The length and shape of the transition from engagement to shift curve will determine the amount and duration of the shift out over-rev.
 
@@ -1118,7 +1126,7 @@ This shift out over-rev is of short duration, and highly individual depending on
 
 The ideal shift-curve is “straight” between the low and high ratio. This means that the engine speed is held constant at the power peak while the transmission is shifting out and the vehicle speed is increasing. With the exception of a slight shift-out over-rev as discussed in the previous section, a straight shift at the power peak will give the maximum performance. To maintain a straight shift is not an easy task. As we saw under the discussion of the belt pressure requirements, the pressure on the belt is actually decreasing as the transmission shifts out. This decrease in belt tension may be as much as 50% between low and high ratio. If the decrease is not matched by the flyweight force, the driving clutch will compensate by lowering the engine speed. The driving clutch will always match the required belt tension by changing the engine speed if the flyweight system is not correctly calibrated. Our task is to make sure the flyweight system matches the belt forces at the peak power engine speed. Straight shifting is accomplished by calibrating the relationship of the flyweight curvature and roller location as well as the arc traveled by the flyweight. Engine speed is determined by the weight of the flyweight system.
 
-Since the flyweight system works against the pressure spring in the driving clutch, the loads and rates of this spring also influence straight shift and engine RPM. Flyweight curvatures have been experimented with and fine tuned by the manufacturers over the last 15 years and they provide a good selection of tuning components. Polaris is a good example; they provide two basic flyweight curvatures, trail and racing. The trail curvature has lower engagement and softer shift-out than the racing curvature. Each flyweight group is available with weights in 2-4 gram increments for each curvature. Each manufacturer also has a large selection of springs with different pretensions and rates for calibration purposes. Achieving the correct combination of flyweight and spring to obtain a straight shift at the correct engine speed is the task of the tuner. This will be covered in greater detail under the Selection of Components and Testing chapters.
+Since the flyweight system works against the pressure spring in the driving clutch, the loads and rates of this spring also influence straight shift and engine RPM. Flyweight curvatures have been experimented with and fine-tuned by the manufacturers over the last 15 years, and they provide a good selection of tuning components. Polaris is a good example; they provide two basic flyweight curvatures, trail and racing. The trail curvature has lower engagement and softer shift-out than the racing curvature. Each flyweight group is available with weights in 2-4 gram increments for each curvature. Each manufacturer also has a large selection of springs with different pretensions and rates for calibration purposes. Achieving the correct combination of flyweight and spring to obtain a straight shift at the correct engine speed is the task of the tuner. This will be covered in greater detail under the Selection of Components and Testing chapters.
 
 \textbf{Straight shift is obtained by matching curvature and spring rates; correct engine speed is dependent on the weight of the flyweight.}
 
@@ -1148,22 +1156,22 @@ graduate attribute of Lifelong Learning.
 \begin{enumerate}
   \item What went well while writing this deliverable?\\ 
   When writing this deliverable there was a lot of things that went well.
-  Firstly the team had a long sitdown with our capstone supervisor Dr Smith to discuss the process of how we will be validating our simulation.
-  We were able to come up with a great plan for how the simulation will be validated against real world data and how to incorperate that into this document and the project as a whole.
+  Firstly the team had a long sit down with our capstone supervisor Dr Smith to discuss the process of how we will be validating our simulation.
+  We were able to come up with a great plan for how the simulation will be validated against real world data and how to incorporate that into this document and the project as a whole.
   The team was also able to have some great communication with each other when figuring out how to write the various kinds of tests for the system.
   Since there was a lot of different types of tests we were constantly bouncing ideas off each other to figure out the best way to move forward.
   Team communication such as that is always a good thing and this deliverable specifically had a lot of that in it.
   Another thing that went well was the team was able to figure out who on the McMaster Baja team will help us validate our simulation once the implementation is complete.
-  We outlined a list of people that will help us in section 3 of this document and we were able to get in contact with them and they are all on board to help us validate the simulation.  
+  We outlined a list of people that will help us in section 3 of this document, and we were able to get in contact with them, and they are all on board to help us validate the simulation.  
 
   \item What pain points did you experience during this deliverable, and how
     did you resolve them?\\
     When writing this deliverable there was only one pain point that needed to be resolved.
     The first one was how to write the functional tests for the math component of the system.
     Due to the nature of our project the simulation outputs are not something that will be able to be verified/validated numerically or with a simple test.
-    Instead we will need to compare the outputs of the simulation to the outputs of the physical car.
-    Therefore we had to change the way that we wrote the functional requirements, and instead of writing them as a simple test we wrote them as a comparison between some specific part of the simulation output and against the same data gathered from the physical car.
-    The way this pain point was resolved was through sitting down with our capstone supervisor Dr Smith and talked the process of how we will be validating our simulation and he was the one who gave us the reccomendation to write the functional requirements in this way.
+    Instead, we will need to compare the outputs of the simulation to the outputs of the physical car.
+    Therefore, we had to change the way that we wrote the functional requirements, and instead of writing them as a simple test we wrote them as a comparison between some specific part of the simulation output and against the same data gathered from the physical car.
+    The way this pain point was resolved was through sitting down with our capstone supervisor Dr Smith and talked the process of how we will be validating our simulation and he was the one who gave us the recommendation to write the functional requirements in this way.
   \item What knowledge and skills will the team collectively need to acquire to
   successfully complete the verification and validation of your project?
   Examples of possible knowledge and skills include dynamic testing knowledge,
@@ -1194,8 +1202,8 @@ graduate attribute of Lifelong Learning.
   
   Team skill breakdown
   \begin{itemize}
-    \item Travis: Need to familiarize himself with the C\# testing tools and how to use them. As well he will need to learn how to validate the simulation output against the physical car data.
-    \item Grace: Need to familiarize herself with the C\# testing tools and how to use them. As well she will need to learn how to validate the simulation output against the physical car data.
+    \item Travis: Need to familiarize himself with the C\# testing tools and how to use them. As well, he will need to learn how to validate the simulation output against the physical car data.
+    \item Grace: Need to familiarize herself with the C\# testing tools and how to use them. As well, she will need to learn how to validate the simulation output against the physical car data.
     \item Kai: Need to familiarize himself with the Python testing tools and how to use them. He is already familiar with the data acquisition system and how to gather data from the car.
     \item Cam: Need to familiarize himself with the Python testing tools and how to use them. He is already familiar with the data acquisition system and how to gather data from the car.
   \end{itemize}
@@ -1213,7 +1221,7 @@ graduate attribute of Lifelong Learning.
   Each team member will be using the second approach to acquire these knowledge and skills. 
   We felt that the best way to learn testing tools is to read the documentation on how they should be used.
   Then once we are implementing the POC we can use that smaller project to get a feel for how the tools work and how to use them.
-  This will gives us the base knowledge and the practicality of how to use the tools in a real project.
+  This will give us the base knowledge and the practicality of how to use the tools in a real project.
 \end{enumerate}
 
 \end{document}
