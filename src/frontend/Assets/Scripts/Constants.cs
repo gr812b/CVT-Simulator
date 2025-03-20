@@ -9,7 +9,7 @@ public static class PathConstants
         return Path.Combine(Application.dataPath, path);
     }
 
-    public static string SIMULATION_OUTPUT_PATH = Relativize("../simulation_output.csv");
+    public static string SIMULATION_OUTPUT_PATH = Relativize("../front_end_output.csv");
     public static string INPUT_PARAMETERS_PATH = Relativize("../input_parameters.csv");
     public static string PYTHON_ENVIRONMENT_PATH = Relativize("../../../venv/Scripts/python.exe");
     public static string PYTHON_SCRIPT_PATH = Relativize("../../main.py");
