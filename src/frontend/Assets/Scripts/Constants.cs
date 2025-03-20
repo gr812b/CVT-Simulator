@@ -29,6 +29,7 @@ public static class ParameterNames {
     public static string DRIVER_WEIGHT = "driver_weight";
     public static string TRACTION = "traction";
     public static string ANGLE_OF_INCLINE = "angle_of_incline";
+    public static string TOTAL_DISTANCE = "total_distance";
 }
 
 public static class DefaultParameters
@@ -46,6 +47,7 @@ public static class DefaultParameters
         new Parameter(ParameterNames.VEHICLE_WEIGHT, "225.0"),
         new Parameter(ParameterNames.DRIVER_WEIGHT, "75.0"),
         new Parameter(ParameterNames.TRACTION, "100.0"),
-        new Parameter(ParameterNames.ANGLE_OF_INCLINE, "15.0")
+        new Parameter(ParameterNames.ANGLE_OF_INCLINE, "15.0"),
+        new Parameter(ParameterNames.TOTAL_DISTANCE, "200")
     };
 }
