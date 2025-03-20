@@ -30,7 +30,7 @@ class LinearSegment(RampSegment):
         self.m = slope
 
     def height(self, x: float) -> float:
-        return self.m * (x - self.x_start)
+        return self.m * (x - self.x_start) + self.y_start
 
     def slope(self, x: float) -> float:
         return self.m
@@ -86,7 +86,8 @@ class CircularSegment(RampSegment):
     def height(self, x: float) -> float:
         """Finds y-coordinate on the circular arc corresponding to x."""
         adjusted_x = self.map_x(x)
-        return self.f(adjusted_x)
+        starting_height = self.f(self.helpful_guy(self.theta_start))
+        return  self.f(adjusted_x) - starting_height + self.y_start
 
     def slope(self, x: float) -> float:
         """Returns the slope (dy/dx) at position x on the ramp."""
@@ -129,14 +130,14 @@ class PiecewiseRamp:
 if __name__ == "__main__":
     # Sample primary ramp
     ramp = PiecewiseRamp()
-    # ramp.add_segment(LinearSegment(x_start=0, x_end=MAX_SHIFT / 4, slope=-1))
+    ramp.add_segment(LinearSegment(x_start=0, x_end=MAX_SHIFT / 4, slope=-0.3))
     ramp.add_segment(
         CircularSegment(
-            x_start=0,
+            x_start=MAX_SHIFT / 4,
             x_end=MAX_SHIFT,
-            radius=100,
-            theta_start=0,
-            theta_end=np.pi / 2,
+            radius=0.002,
+            theta_start=0.3,
+            theta_end=np.pi / 2 - 0.7,
         )
     )
 
@@ -149,6 +150,7 @@ if __name__ == "__main__":
     plt.xlabel("X Position")
     plt.ylabel("Height")
     plt.title("Piecewise Ramp Profile")
+    plt.gca().set_aspect('equal', adjustable='box')
     plt.grid()
     plt.show()
 

@@ -1,6 +1,6 @@
 import numpy as np
 from utils.theoretical_models import TheoreticalModels as tm
-from utils.ramp_representation import LinearSegment, PiecewiseRamp  # , CircularSegment
+from utils.ramp_representation import CircularSegment, LinearSegment, PiecewiseRamp
 from constants.car_specs import MAX_SHIFT, INITIAL_FLYWEIGHT_RADIUS
 
 
@@ -18,15 +18,16 @@ class PrimaryPulley:
         self.initial_flyweight_radius = INITIAL_FLYWEIGHT_RADIUS
         # Initializing ramp
         self.ramp = PiecewiseRamp()
-        self.ramp.add_segment(LinearSegment(x_start=0, x_end=MAX_SHIFT, slope=-0.3))
-        # self.ramp.add_segment(
-        #     CircularSegment(
-        #         x_start=MAX_SHIFT/4,
-        #         x_end=MAX_SHIFT,
-        #         radius=0.025,
-        #         theta_fraction=0.95,
-        #     )
-        # )
+        self.ramp.add_segment(LinearSegment(x_start=0, x_end=MAX_SHIFT / 4, slope=-0.3))
+        self.ramp.add_segment(
+            CircularSegment(
+                x_start=MAX_SHIFT / 4,
+                x_end=MAX_SHIFT,
+                radius=0.002,
+                theta_start=0.3,
+                theta_end=np.pi / 2 - 0.7,
+            )
+        )
 
     def calculate_flyweight_force(
         self, shift_distance: float, angular_velocity: float
