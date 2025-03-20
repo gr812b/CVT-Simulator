@@ -8,49 +8,21 @@ namespace CommunicationProtocol.Receivers
         public float CarPosition { get; }
         public float CarVelocity { get; }
         public float EngineRPM { get; }
-        public float PrimaryAngle { get; }
-        public float SecondaryAngle { get; }
+        public float PrimaryRotation { get; }
+        public float SecondaryRotation { get; }
         public float PrimaryShiftDistance { get; }
         public float SecondaryShiftDistance { get; }
 
-        private readonly float maxShiftDistance = 0.026f;
-
-        public DataPoint(float time, float engineAngularVelocity, float engineAngularPosition, float carVelocity, float carPosition, float shiftDistance)
+        public DataPoint(float time, float carVelocity, float carPosition, float shiftDistance, float engineAngluarPosition, float secondaryAngularPostion, float engineAngularVelocity)
         {
             Time = time;
             CarPosition = carPosition;
-            PrimaryAngle = RadiansToDegrees(engineAngularPosition);
-            SecondaryAngle = RadiansToDegrees(CarPositionToSecondaryAngle(carPosition)); ;
-            CarVelocity = MetersPerSecondToKmPerHour(carVelocity);
-            EngineRPM = RadPerSecondToRPM(engineAngularVelocity);
-
-            float shiftPercentage = shiftDistance / maxShiftDistance;
-            PrimaryShiftDistance = 1 - shiftPercentage;
-            SecondaryShiftDistance = shiftPercentage;
-        }
-
-        private float RadiansToDegrees(float radians)
-        {
-            float degreesPerRadian = 180.0f / (float)Math.PI;
-            return radians * degreesPerRadian;
-        }
-
-        private float CarPositionToSecondaryAngle(float position)
-        {
-            return position * (2.0f * 7.556f) / (22.0f * 0.0254f);
-        }
-
-        private float RadPerSecondToRPM(float radPerSecond)
-        {
-            float RPMPerRad = 60.0f / (2.0f * (float)Math.PI);
-            return radPerSecond * RPMPerRad;
-        }
-
-        private float MetersPerSecondToKmPerHour(float metersPerSecond)
-        {
-            float kmPerMeter = 0.001f;
-            float secondsPerHour = 3600.0f;
-            return metersPerSecond * kmPerMeter * secondsPerHour;
+            CarVelocity = carVelocity;
+            EngineRPM = engineAngularVelocity;
+            PrimaryRotation = engineAngluarPosition;
+            SecondaryRotation = secondaryAngularPostion;
+            PrimaryShiftDistance = 1 - shiftDistance;
+            SecondaryShiftDistance = shiftDistance;
         }
     }
 
@@ -60,14 +32,15 @@ namespace CommunicationProtocol.Receivers
 
         protected override DataPoint ParseRow(string[] values)
         {
-            float time = float.Parse(values[0]);
-            float engineAngularVelocity = float.Parse(values[1]);
-            float engineAngularPosition = float.Parse(values[2]);
-            float carVelocity = float.Parse(values[3]);
-            float carPosition = float.Parse(values[4]);
-            float shiftDistance = float.Parse(values[6]);
+            float time = float.Parse(values[headerMap["time"]]);
+            float carVelocity = float.Parse(values[headerMap["car_velocity"]]);
+            float carPosition = float.Parse(values[headerMap["car_position"]]);
+            float shiftDistance = float.Parse(values[headerMap["shift_distance"]]);
+            float engineAngularPosition = float.Parse(values[headerMap["engine_angular_position"]]);
+            float secondaryAngularPosition = float.Parse(values[headerMap["secondary_angular_position"]]);
+            float engineAngularVelocity = float.Parse(values[headerMap["engine_angular_velocity"]]);
 
-            return new DataPoint(time, engineAngularVelocity, engineAngularPosition, carVelocity, carPosition, shiftDistance);
+            return new DataPoint(time, carVelocity, carPosition, shiftDistance, engineAngularPosition, secondaryAngularPosition, engineAngularVelocity);
         }
     }
 }

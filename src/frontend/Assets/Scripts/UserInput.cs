@@ -7,6 +7,8 @@ using CommunicationProtocol.Senders;
 using CommunicationProtocol.Receivers;
 using System.Linq;
 using System.IO;
+using SFB;
+using CommunicationProtocol.Senders;
 
 // Class to make the input fields serializable
 [System.Serializable]
@@ -65,8 +67,8 @@ public class InputField
 
 public class UserInput : MonoBehaviour
 {
-    // Runner for the python script
-    private PythonRunner pythonRunner = new PythonRunner(PathConstants.PYTHON_ENVIRONMENT_PATH);
+
+    // Input store to save the input parameters
     private InputStore inputStore = new InputStore();
     public List<Parameter> parameters = DefaultParameters.parameters;
     
@@ -76,12 +78,12 @@ public class UserInput : MonoBehaviour
 
     // Buttons
     [SerializeField] private Button simulateButton;
+    [SerializeField] private Button uploadButton;
 
-     private void Start()
+    private PythonRunner runner = new PythonRunner(PathConstants.PYTHON_ENVIRONMENT_PATH);
+
+    private void UpdateParameters()
     {
-        simulateButton.onClick.AddListener(StartSimulation);
-
-        // Check if the input fields csv file exists and load the parameters if it does
         if (File.Exists(PathConstants.INPUT_PARAMETERS_PATH))
         {
             parameters = new InputParameters(PathConstants.INPUT_PARAMETERS_PATH);
@@ -94,6 +96,26 @@ public class UserInput : MonoBehaviour
             inputFields.Add(new InputField(field.inputField, field.errorText, parameter));
         }
     }
+
+    private void Start()
+    {
+        simulateButton.onClick.AddListener(StartSimulation);
+        uploadButton.onClick.AddListener(Upload);
+
+        // Check if the input fields csv file exists and load the parameters if it does
+        UpdateParameters();
+    }
+
+    private void Upload() 
+    {
+        //open file explorer and accept a csv then rename the csv to input_parameters.csv
+        string[] paths = StandaloneFileBrowser.OpenFilePanel("Open CSV File", "", "csv", false);
+        if (paths.Length > 0) {
+            File.Copy(paths[0], Path.Combine(Application.dataPath, "../input_parameters.csv"), true);
+        }
+
+        UpdateParameters();
+    }
     
     private void StartSimulation() {
         // Run the python script with the input parameters
@@ -103,10 +125,12 @@ public class UserInput : MonoBehaviour
         }
 
         inputStore.Store(PathConstants.INPUT_PARAMETERS_PATH, parameters);
-        pythonRunner.Run(PathConstants.PYTHON_SCRIPT_PATH, parameters);
+        runner.Run(PathConstants.PYTHON_SCRIPT_PATH, parameters, true);
 
         // Go the the results scene
         int nextSceneIndex = SceneManager.GetActiveScene().buildIndex + 1;
         SceneManager.LoadScene(nextSceneIndex);
     }
+
+    
 }

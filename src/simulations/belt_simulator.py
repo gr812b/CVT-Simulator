@@ -4,7 +4,7 @@ from utils.theoretical_models import TheoreticalModels as tm
 from constants.car_specs import SHEAVE_ANGLE, BELT_CROSS_SECTIONAL_AREA, BELT_HEIGHT
 from constants.constants import (
     RUBBER_DENSITY,
-    RUBBET_ALUMINUM_STATIC_FRICTION,
+    RUBBER_ALUMINUM_STATIC_FRICTION,
     RUBBER_ALUMINUM_KINETIC_FRICTION,
 )
 
@@ -15,7 +15,7 @@ class BeltSimulator:
         primary: bool,
     ):
         self.primary = primary
-        self.μ_static = RUBBET_ALUMINUM_STATIC_FRICTION
+        self.μ_static = RUBBER_ALUMINUM_STATIC_FRICTION
         self.μ_kinetic = RUBBER_ALUMINUM_KINETIC_FRICTION
 
     def calculate_centrifugal_force(

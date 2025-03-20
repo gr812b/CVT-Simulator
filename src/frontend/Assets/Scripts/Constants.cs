@@ -4,11 +4,16 @@ using System.Collections.Generic;
 using CommunicationProtocol.Senders;
 public static class PathConstants
 {
-    private static string dataPath = Application.dataPath;
-    public static string SIMULATION_OUTPUT_PATH = Path.Combine(dataPath, "../simulation_output.csv");
-    public static string INPUT_PARAMETERS_PATH = Path.Combine(dataPath, "../input_parameters.csv");
-    public static string PYTHON_ENVIRONMENT_PATH = Path.Combine(dataPath, "../../../venv/Scripts/python.exe");
-    public static string PYTHON_SCRIPT_PATH = Path.Combine(dataPath, "../../main.py");
+    private static string Relativize(string path)
+    {
+        return Path.Combine(Application.dataPath, path);
+    }
+
+    public static string SIMULATION_OUTPUT_PATH = Relativize("../front_end_output.csv");
+    public static string INPUT_PARAMETERS_PATH = Relativize("../input_parameters.csv");
+    public static string PYTHON_ENVIRONMENT_PATH = Relativize("../../../venv/Scripts/python.exe");
+    public static string PYTHON_SCRIPT_PATH = Relativize("../../main.py");
+    public static string GRAPH_SCRIPT_PATH = Relativize("../../utils/generate_graphs.py");
 }
 
 public static class ParameterNames {
@@ -24,6 +29,7 @@ public static class ParameterNames {
     public static string DRIVER_WEIGHT = "driver_weight";
     public static string TRACTION = "traction";
     public static string ANGLE_OF_INCLINE = "angle_of_incline";
+    public static string TOTAL_DISTANCE = "total_distance";
 }
 
 public static class DefaultParameters
@@ -41,6 +47,7 @@ public static class DefaultParameters
         new Parameter(ParameterNames.VEHICLE_WEIGHT, "225.0"),
         new Parameter(ParameterNames.DRIVER_WEIGHT, "75.0"),
         new Parameter(ParameterNames.TRACTION, "100.0"),
-        new Parameter(ParameterNames.ANGLE_OF_INCLINE, "15.0")
+        new Parameter(ParameterNames.ANGLE_OF_INCLINE, "15.0"),
+        new Parameter(ParameterNames.TOTAL_DISTANCE, "200")
     };
 }
