@@ -40,7 +40,12 @@ class CircularSegment(RampSegment):
     """Circular segment where user defines rotation."""
 
     def __init__(
-        self, x_start: float, x_end: float, radius: float, theta_start: float, theta_end: float
+        self,
+        x_start: float,
+        x_end: float,
+        radius: float,
+        theta_start: float,
+        theta_end: float,
     ):
         """
         :param x_start: Start x position
@@ -56,24 +61,22 @@ class CircularSegment(RampSegment):
             raise ValueError("theta_end must be in [0, π/2]")
         if theta_start >= theta_end:
             raise ValueError("theta_start must be less than theta_end")
-        
+
         self.theta_start = np.pi + theta_start
         self.theta_end = np.pi + theta_end
         self.radius = radius
 
-
-
     # Convert from an angle to the x distance from axis
     def helpful_guy(self, theta: float) -> float:
         return -math.sqrt(self.radius / (1 + np.tan(theta) ** 2))
-    
+
     # Equation of a circle in the third quadrant
     def f(self, x: float) -> float:
-        return -math.sqrt(self.radius - x ** 2)
-    
+        return -math.sqrt(self.radius - x**2)
+
     def f_prime(self, x: float) -> float:
-        return x / math.sqrt(self.radius - x ** 2)
-    
+        return x / math.sqrt(self.radius - x**2)
+
     def map_x(self, x: float) -> float:
         start_offset = self.helpful_guy(self.theta_start)
         end_offset = self.helpful_guy(self.theta_end)
@@ -87,7 +90,7 @@ class CircularSegment(RampSegment):
         """Finds y-coordinate on the circular arc corresponding to x."""
         adjusted_x = self.map_x(x)
         starting_height = self.f(self.helpful_guy(self.theta_start))
-        return  self.f(adjusted_x) - starting_height + self.y_start
+        return self.f(adjusted_x) - starting_height + self.y_start
 
     def slope(self, x: float) -> float:
         """Returns the slope (dy/dx) at position x on the ramp."""
@@ -150,7 +153,7 @@ if __name__ == "__main__":
     plt.xlabel("X Position")
     plt.ylabel("Height")
     plt.title("Piecewise Ramp Profile")
-    plt.gca().set_aspect('equal', adjustable='box')
+    plt.gca().set_aspect("equal", adjustable="box")
     plt.grid()
     plt.show()
 

@@ -49,9 +49,7 @@ shift = 0
 engine_torque = engine_simulator.get_torque(engine_velocity)
 
 # Calculate forces using the provided simulators
-primary_force = primary_simulator.calculate_net_force(
-    shift, engine_velocity
-)
+primary_force = primary_simulator.calculate_net_force(shift, engine_velocity)
 secondary_force = secondary_simulator.calculate_net_force(
     engine_torque * tm.current_cvt_ratio(shift), shift
 )

@@ -69,6 +69,7 @@ def plotVelocity(result: SimulationResult, ax=None):
     ax.legend()
     ax.grid()
 
+
 def plotPosition(result: SimulationResult, ax=None):
     car_positions = [state.car_position for state in result.states]
     if ax is None:
