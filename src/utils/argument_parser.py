@@ -36,7 +36,7 @@ def get_arguments() -> SimulationArgs:
     parser.add_argument(
         "--primary_spring_rate",
         type=float,
-        default=500,
+        default=60,
         help="Spring rate of the primary pulley in N/m (default: 500.0 N/m)",
     )
     parser.add_argument(
@@ -54,19 +54,19 @@ def get_arguments() -> SimulationArgs:
     parser.add_argument(
         "--secondary_torsion_spring_rate",
         type=float,
-        default=100.0,
+        default=30,
         help="Spring rate of the secondary pulley in N/m (default: 100.0 Nm/rad)",
     )
     parser.add_argument(
         "--secondary_compression_spring_rate",
         type=float,
-        default=100.0,
+        default=1,
         help="Spring rate of the secondary pulley in N/m (default: 100.0 N/m)",
     )
     parser.add_argument(
         "--secondary_spring_pretension",
         type=float,
-        default=15,
+        default=45,
         help="Spring pretension of the secondary pulley in degrees (default: 45 degrees)",
     )
     parser.add_argument(

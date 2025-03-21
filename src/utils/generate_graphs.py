@@ -39,7 +39,7 @@ secondary_simulator = SecondaryPulley(
     spring_coeff_tors=args.secondary_torsion_spring_rate,
     spring_coeff_comp=args.secondary_compression_spring_rate,
     initial_rotation=deg_to_rad(args.secondary_spring_pretension),
-    initial_compression=0.1,  # TODO: Use constants
+    initial_compression=1,  # TODO: Use constants
 )
 primary_belt = BeltSimulator(primary=True)
 secondary_belt = BeltSimulator(primary=False)
@@ -66,6 +66,18 @@ def plotVelocity(result: SimulationResult, ax=None):
     ax.set_xlabel("Time (s)")
     ax.set_ylabel("Car Velocity (m/s)")
     ax.set_title("Car Velocity vs Time")
+    ax.legend()
+    ax.grid()
+
+
+def plotPosition(result: SimulationResult, ax=None):
+    car_positions = [state.car_position for state in result.states]
+    if ax is None:
+        ax = plt.gca()
+    ax.plot(result.time, car_positions, label="Car Position")
+    ax.set_xlabel("Time (s)")
+    ax.set_ylabel("Car Position (m)")
+    ax.set_title("Car Position vs Time")
     ax.legend()
     ax.grid()
 
@@ -312,6 +324,5 @@ if __name__ == "__main__":
     plot_forces_over_time(result, ax=axs[1, 1])
     plotShiftDistance(result, ax=axs[1, 2])
     plotShiftCurve(result, ax=axs[1, 3])
-
     plt.tight_layout()
     plt.show()
