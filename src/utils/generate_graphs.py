@@ -69,6 +69,17 @@ def plotVelocity(result: SimulationResult, ax=None):
     ax.legend()
     ax.grid()
 
+def plotPosition(result: SimulationResult, ax=None):
+    car_positions = [state.car_position for state in result.states]
+    if ax is None:
+        ax = plt.gca()
+    ax.plot(result.time, car_positions, label="Car Position")
+    ax.set_xlabel("Time (s)")
+    ax.set_ylabel("Car Position (m)")
+    ax.set_title("Car Position vs Time")
+    ax.legend()
+    ax.grid()
+
 
 def plotVehicleAccel(result: SimulationResult, ax=None):
     vehicle_accels = []
@@ -312,6 +323,5 @@ if __name__ == "__main__":
     plot_forces_over_time(result, ax=axs[1, 1])
     plotShiftDistance(result, ax=axs[1, 2])
     plotShiftCurve(result, ax=axs[1, 3])
-
     plt.tight_layout()
     plt.show()

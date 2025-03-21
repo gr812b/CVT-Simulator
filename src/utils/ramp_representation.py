@@ -135,9 +135,9 @@ if __name__ == "__main__":
         CircularSegment(
             x_start=MAX_SHIFT / 6,
             x_end=MAX_SHIFT,
-            radius=0.001,
-            theta_start=0.5,
-            theta_end=np.pi / 2 - 0.4,
+            radius=0.002,
+            theta_start=1,
+            theta_end=np.pi / 2 - 0.5,
         )
     )
 
