@@ -8,7 +8,6 @@ using CommunicationProtocol.Receivers;
 using System.Linq;
 using System.IO;
 using SFB;
-using CommunicationProtocol.Senders;
 
 // Class to make the input fields serializable
 [System.Serializable]
