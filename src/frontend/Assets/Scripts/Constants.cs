@@ -37,10 +37,10 @@ public static class DefaultParameters
     public static List<Parameter> parameters = new List<Parameter>
     {
         new Parameter(ParameterNames.FLYWEIGHT_MASS, "0.6"),
-        new Parameter(ParameterNames.PRIMARY_RAMP_GEOMETRY, "0.0"),
+        new Parameter(ParameterNames.PRIMARY_RAMP_GEOMETRY, "1"),
         new Parameter(ParameterNames.PRIMARY_SPRING_RATE, "500.0"),
         new Parameter(ParameterNames.PRIMARY_SPRING_PRETENSION, "0.2"),
-        new Parameter(ParameterNames.SECONDARY_HELIX_GEOMETRY, "0.0"),
+        new Parameter(ParameterNames.SECONDARY_HELIX_GEOMETRY, "1"),
         new Parameter(ParameterNames.SECONDARY_TORSION_SPRING_RATE, "100.0"),
         new Parameter(ParameterNames.SECONDARY_COMPRESSION_SPRING_RATE, "100.0"),
         new Parameter(ParameterNames.SECONDARY_SPRING_PRETENSION, "15.0"),
