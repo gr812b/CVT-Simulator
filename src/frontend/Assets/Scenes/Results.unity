@@ -167,8 +167,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 92e02c0078db3fb4aab28eeeb348963d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  downloadDataButton: {fileID: 0}
-  downloadParamsButton: {fileID: 0}
+  downloadDataButton: {fileID: 127121558}
+  downloadParamsButton: {fileID: 2107988781}
 --- !u!1 &32465575
 GameObject:
   m_ObjectHideFlags: 0
@@ -4233,7 +4233,7 @@ MonoBehaviour:
   playPauseButton: {fileID: 1753377980}
   restartButton: {fileID: 908370177}
   nextSceneButton: {fileID: 953166789}
-  seekBar: {fileID: 0}
+  seekBar: {fileID: 762791279}
   playbackViews:
   - {fileID: 32465577}
   - {fileID: 2091141540}
