@@ -39,9 +39,9 @@ class PrimaryPulley:
                 CircularSegment(
                     x_start=MAX_SHIFT / 6,
                     x_end=MAX_SHIFT,
-                    radius=0.005,
-                    theta_start=1,
-                    theta_end=np.pi / 2 - 0.5,
+                    radius=0.01,
+                    theta_start=0.9,
+                    theta_end=np.pi / 2 - 0.3,
                 )
             )
 
