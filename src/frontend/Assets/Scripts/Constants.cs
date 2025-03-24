@@ -13,7 +13,7 @@ public static class PathConstants
     public static string INPUT_PARAMETERS_PATH = Relativize(Application.dataPath, "../input_parameters.csv");
     public static string PYTHON_ENVIRONMENT_PATH = Relativize(Application.streamingAssetsPath, "venv/Scripts/python.exe");
     public static string PYTHON_SCRIPT_PATH = Relativize(Application.streamingAssetsPath, "main.py");
-    public static string GRAPH_SCRIPT_PATH = Relativize(Application.streamingAssetsPath, "utils/generate_graphs.py");
+    public static string GRAPH_SCRIPT_PATH = Relativize(Application.streamingAssetsPath, "generate_graphs.py");
 }
 
 public static class ParameterNames {
