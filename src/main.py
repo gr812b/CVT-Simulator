@@ -41,8 +41,8 @@ primary_simulator = PrimaryPulley(
 secondary_simulator = SecondaryPulley(
     spring_coeff_tors=args.secondary_torsion_spring_rate,
     spring_coeff_comp=args.secondary_compression_spring_rate,
-    initial_rotation=deg_to_rad(args.secondary_spring_pretension),
-    initial_compression=args.secondary_compression_spring_rate,
+    initial_rotation=deg_to_rad(args.secondary_rotational_spring_pretension),
+    initial_compression=args.secondary_linear_spring_pretension,
     ramp_type=args.secondary_helix_geometry,
 )
 primary_belt = BeltSimulator(primary=True)
