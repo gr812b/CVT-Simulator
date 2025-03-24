@@ -12,7 +12,7 @@ class TestPrimaryPulley(unittest.TestCase):
             initial_compression=0.1,  # m
             flyweight_mass=0.5,  # kg
             initial_flyweight_radius=0.05,  # m
-            ramp_type=1
+            ramp_type=1,
         )
 
     def test_calculate_flyweight_force(self):
