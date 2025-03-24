@@ -7,7 +7,7 @@ from constants.car_specs import (
     MAX_SHIFT,
 )
 from utils.theoretical_models import TheoreticalModels as tm
-from utils.conversions import rad_s_to_rpm, meter_s_to_km_h
+from utils.conversions import rad_s_to_rpm, meter_s_to_km_h, rad_to_deg
 
 
 class FormattedSimulationResult(SimulationResult):
@@ -49,8 +49,8 @@ class FormattedSimulationResult(SimulationResult):
             shift_distance_percent = state.shift_distance / MAX_SHIFT
 
             # Append the calculated values.
-            self.engine_angular_positions.append(current_engine_angle)
-            self.secondary_angular_positions.append(current_secondary_angle)
+            self.engine_angular_positions.append(rad_to_deg(current_engine_angle))
+            self.secondary_angular_positions.append(rad_to_deg(current_secondary_angle))
             self.engine_angular_velocities.append(engine_rpm)
             self.car_velocities.append(car_km_per_hour)
             self.shift_distance_percents.append(shift_distance_percent)
