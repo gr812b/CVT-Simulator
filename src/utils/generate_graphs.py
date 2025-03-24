@@ -105,6 +105,7 @@ def plotVehicleAccel(result: SimulationResult, ax=None):
 
 def plotPrimaryClampingForce(result: SimulationResult, ax=None):
     primary_clamping_forces = []
+    primary_radial_forces = []
     engine_angular_velocities = []
     for state in result.states:
         cvt_ratio = tm.current_cvt_ratio(state.shift_distance)
@@ -113,7 +114,14 @@ def plotPrimaryClampingForce(result: SimulationResult, ax=None):
         primary_force = primary_simulator.calculate_net_force(
             state.shift_distance, actual_engine_velocity
         )
+        primary_radial_force = primary_belt.calculate_radial_force(
+            actual_engine_velocity,
+            state.shift_distance,
+            tm.primary_wrap_angle(state.shift_distance),
+            primary_force,
+        )
         primary_clamping_forces.append(primary_force)
+        primary_radial_forces.append(primary_radial_force)
         engine_angular_velocities.append(actual_engine_velocity)
     if ax is None:
         ax = plt.gca()
@@ -121,6 +129,11 @@ def plotPrimaryClampingForce(result: SimulationResult, ax=None):
         engine_angular_velocities,
         primary_clamping_forces,
         label="Primary Clamping Force",
+    )
+    ax.plot(
+        engine_angular_velocities, 
+        primary_radial_forces, 
+        label="Primary Radial Force"
     )
     ax.set_xlabel("Engine Angular Velocity (rad/s)")
     ax.set_ylabel("Primary Clamping Force (N)")
@@ -131,16 +144,24 @@ def plotPrimaryClampingForce(result: SimulationResult, ax=None):
 
 def plotSecondaryClampingForce(result: SimulationResult, ax=None):
     secondary_clamping_forces = []
+    secondary_radial_forces = []
     engine_angular_velocities = []
     for state in result.states:
         cvt_ratio = tm.current_cvt_ratio(state.shift_distance)
         wheel_to_engine_ratio = (cvt_ratio * GEARBOX_RATIO) / WHEEL_RADIUS
         actual_engine_velocity = state.car_velocity * wheel_to_engine_ratio
-        engine_power = engine_simulator.get_power(actual_engine_velocity)
+        engine_torque = engine_simulator.get_torque(actual_engine_velocity)
         secondary_force = secondary_simulator.calculate_net_force(
-            engine_power * cvt_ratio, state.shift_distance
+            engine_torque * cvt_ratio, state.shift_distance
+        )
+        secondary_radial = secondary_belt.calculate_radial_force(
+            actual_engine_velocity,
+            state.shift_distance,
+            tm.secondary_wrap_angle(state.shift_distance),
+            secondary_force,
         )
         secondary_clamping_forces.append(secondary_force)
+        secondary_radial_forces.append(secondary_radial)
         engine_angular_velocities.append(actual_engine_velocity)
     if ax is None:
         ax = plt.gca()
@@ -148,6 +169,11 @@ def plotSecondaryClampingForce(result: SimulationResult, ax=None):
         engine_angular_velocities,
         secondary_clamping_forces,
         label="Secondary Clamping Force",
+    )
+    ax.plot(
+        engine_angular_velocities,
+        secondary_radial_forces,
+        label="Secondary Radial Force",
     )
     ax.set_xlabel("Engine Angular Velocity (rad/s)")
     ax.set_ylabel("Secondary Clamping Force (N)")

@@ -18,14 +18,14 @@ class PrimaryPulley:
         self.initial_flyweight_radius = INITIAL_FLYWEIGHT_RADIUS
         # Initializing ramp
         self.ramp = PiecewiseRamp()
-        self.ramp.add_segment(LinearSegment(x_start=0, x_end=MAX_SHIFT / 6, slope=-0.5))
+        self.ramp.add_segment(LinearSegment(x_start=0, x_end=MAX_SHIFT / 6, slope=-0.9))
         self.ramp.add_segment(
             CircularSegment(
                 x_start=MAX_SHIFT / 6,
                 x_end=MAX_SHIFT,
-                radius=0.005,
+                radius=0.2,
                 theta_start=1,
-                theta_end=np.pi / 2 - 0.5,
+                theta_end=np.pi / 2 - 0.55,
             )
         )
 
