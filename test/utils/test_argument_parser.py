@@ -8,10 +8,10 @@ class TestArgumentParser(unittest.TestCase):
     def setUp(self):
         self.default_args = {
             "flyweight_mass": 0.6,
-            "primary_ramp_geometry": 0.0,
+            "primary_ramp_geometry": 1.0,
             "primary_spring_rate": 60,
             "primary_spring_pretension": 0.2,
-            "secondary_helix_geometry": 0.0,
+            "secondary_helix_geometry": 1.0,
             "secondary_torsion_spring_rate": 30,
             "secondary_compression_spring_rate": 1,
             "secondary_spring_pretension": 45,
