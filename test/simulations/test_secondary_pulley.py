@@ -16,6 +16,7 @@ class TestSecondaryPulley(unittest.TestCase):
             initial_rotation=0.1,
             initial_compression=0.1,
             helix_radius=0.05,
+            ramp_type=1,
         )
 
     def test_calculate_helix_force(self):

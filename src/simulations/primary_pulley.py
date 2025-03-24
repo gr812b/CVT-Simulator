@@ -10,24 +10,43 @@ class PrimaryPulley:
         spring_coeff_comp: float,  # N/m
         initial_compression: float,  # m
         flyweight_mass: float,  # kg
-        # TODO: Add fields for ramp geometry
+        ramp_type: int,
     ):
         self.spring_coeff_comp = spring_coeff_comp
         self.initial_compression = initial_compression
         self.flyweight_mass = flyweight_mass
         self.initial_flyweight_radius = INITIAL_FLYWEIGHT_RADIUS
+        self.ramp_type = ramp_type
+
         # Initializing ramp
-        self.ramp = PiecewiseRamp()
-        self.ramp.add_segment(LinearSegment(x_start=0, x_end=MAX_SHIFT / 6, slope=-0.5))
-        self.ramp.add_segment(
-            CircularSegment(
-                x_start=MAX_SHIFT / 6,
-                x_end=MAX_SHIFT,
-                radius=0.005,
-                theta_start=1,
-                theta_end=np.pi / 2 - 0.5,
+        if self.ramp_type == 1:
+            self.ramp = PiecewiseRamp()
+            self.ramp.add_segment(
+                LinearSegment(x_start=0, x_end=MAX_SHIFT / 6, slope=-0.5)
             )
-        )
+            self.ramp.add_segment(
+                CircularSegment(
+                    x_start=MAX_SHIFT / 6,
+                    x_end=MAX_SHIFT,
+                    radius=0.07,
+                    theta_start=1,
+                    theta_end=np.pi / 2 - 0.4,
+                )
+            )
+        elif self.ramp_type == 2:
+            self.ramp = PiecewiseRamp()
+            self.ramp.add_segment(
+                LinearSegment(x_start=0, x_end=MAX_SHIFT / 6, slope=-0.5)
+            )
+            self.ramp.add_segment(
+                CircularSegment(
+                    x_start=MAX_SHIFT / 6,
+                    x_end=MAX_SHIFT,
+                    radius=0.01,
+                    theta_start=0.9,
+                    theta_end=np.pi / 2 - 0.3,
+                )
+            )
 
     def calculate_flyweight_force(
         self, shift_distance: float, angular_velocity: float

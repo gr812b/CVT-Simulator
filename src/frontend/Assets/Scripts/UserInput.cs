@@ -37,10 +37,12 @@ public class InputField
     }
 
     // Sets the parameter to update when the input field changes
-    private void AddParameterListener(Parameter parameter)
+    public void AddParameterListener(Parameter parameter)
     {
         inputField.text = parameter.Value; // Set the text to the initial value
+    
         inputField.onValueChanged.AddListener(value => UpdateParameterValue(value, parameter));
+        UpdateParameterValue(inputField.text, parameter);
     }
 
     private void UpdateParameterValue(string value, Parameter parameter)
@@ -49,6 +51,11 @@ public class InputField
         {
             inputField.image.color = Color.red;
             errorText.text = "Required field";
+        }
+        else if (value == "not a ramp")
+        {
+            inputField.image.color = Color.red;
+            errorText.text = "Invalid input, select a Ramp";
         }
         else if (!IsNumber(value))
         {
@@ -92,7 +99,7 @@ public class UserInput : MonoBehaviour
         foreach(ParameterField field in parameterFields)
         {
             Parameter parameter = parameters.Find(p => p.Name == field.parameterName);
-            inputFields.Add(new InputField(field.inputField, field.errorText, parameter));
+            inputFields.Add(new InputField(field.inputField, field.errorText, parameter));        
         }
     }
 
@@ -112,7 +119,6 @@ public class UserInput : MonoBehaviour
         if (paths.Length > 0) {
             File.Copy(paths[0], PathConstants.INPUT_PARAMETERS_PATH, true);
         }
-
         UpdateParameters();
     }
     
@@ -133,3 +139,4 @@ public class UserInput : MonoBehaviour
 
     
 }
+
