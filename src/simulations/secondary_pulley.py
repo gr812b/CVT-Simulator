@@ -16,7 +16,6 @@ class SecondaryPulley:
         initial_rotation: float,  # rad
         initial_compression: float,  # m
         ramp_type: int
-        # TODO: Add params for helix geometry
     ):
         self.spring_coeff_tors = spring_coeff_tors
         self.spring_coeff_comp = spring_coeff_comp

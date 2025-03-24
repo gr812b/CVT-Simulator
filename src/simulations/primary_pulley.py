@@ -10,15 +10,14 @@ class PrimaryPulley:
         spring_coeff_comp: float,  # N/m
         initial_compression: float,  # m
         flyweight_mass: float,  # kg
-        ramp_type: int
-        # TODO: Add fields for ramp geometry
+        ramp_type: int,
     ):
         self.spring_coeff_comp = spring_coeff_comp
         self.initial_compression = initial_compression
         self.flyweight_mass = flyweight_mass
         self.initial_flyweight_radius = INITIAL_FLYWEIGHT_RADIUS
         self.ramp_type = ramp_type
-        
+
         # Initializing ramp
         if self.ramp_type == 1:
             self.ramp = PiecewiseRamp()
