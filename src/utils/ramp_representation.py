@@ -133,8 +133,16 @@ class PiecewiseRamp:
 if __name__ == "__main__":
     # Sample primary ramp
     ramp = PiecewiseRamp()
-    ramp.add_segment(LinearSegment(x_start=0, x_end=MAX_SHIFT/2, slope=-0.4))
-    ramp.add_segment(LinearSegment(x_start=MAX_SHIFT/2, x_end=MAX_SHIFT, slope=-0.25))
+    ramp.add_segment(LinearSegment(x_start=0, x_end=MAX_SHIFT / 6, slope=-0.5))
+    ramp.add_segment(
+        CircularSegment(
+            x_start=MAX_SHIFT / 6,
+            x_end=MAX_SHIFT,
+            radius=0.07,
+            theta_start=1,
+            theta_end=np.pi / 2 - 0.4,
+        )
+    )
 
     # Evaluate ramp
     x_values = np.linspace(0, MAX_SHIFT, 1000)

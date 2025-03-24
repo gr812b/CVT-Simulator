@@ -27,9 +27,9 @@ class PrimaryPulley:
                 CircularSegment(
                     x_start=MAX_SHIFT / 6,
                     x_end=MAX_SHIFT,
-                    radius=0.005,
+                    radius=0.07,
                     theta_start=1,
-                    theta_end=np.pi / 2 - 0.5,
+                    theta_end=np.pi / 2 - 0.4,
                 )
             )
         elif self.ramp_type == 2:
