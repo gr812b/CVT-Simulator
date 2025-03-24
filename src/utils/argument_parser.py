@@ -30,7 +30,7 @@ def get_arguments() -> SimulationArgs:
     parser.add_argument(
         "--primary_ramp_geometry",
         type=float,
-        default=0.0,
+        default=1,
         help="Ramp geometry of the primary pulley (default: ???)",
     )
     parser.add_argument(
@@ -48,7 +48,7 @@ def get_arguments() -> SimulationArgs:
     parser.add_argument(
         "--secondary_helix_geometry",
         type=float,
-        default=0.0,
+        default=1,
         help="Helix geometry of the secondary pulley (default: 0.0)",
     )
     parser.add_argument(
