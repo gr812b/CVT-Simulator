@@ -71,7 +71,6 @@ class TestArgumentParser(unittest.TestCase):
             "secondary_helix_geometry": 1.0,
             "secondary_torsion_spring_rate": 150.0,
             "secondary_compression_spring_rate": 150.0,
-            "secondary_compression_spring_rate": 45.0,
             "secondary_rotational_spring_pretension": 45.0,
             "secondary_linear_spring_pretension": 0.1,
             "vehicle_weight": 250.0,
