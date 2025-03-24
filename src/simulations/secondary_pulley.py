@@ -30,7 +30,8 @@ class SecondaryPulley:
             self.ramp.add_segment(LinearSegment(x_start=0, x_end=MAX_SHIFT, slope=-0.3))
         elif self.ramp_type == 2:
             self.ramp = PiecewiseRamp()
-            self.ramp.add_segment(LinearSegment(x_start=0, x_end=MAX_SHIFT, slope=-0.3))
+            self.ramp.add_segment(LinearSegment(x_start=0, x_end=MAX_SHIFT/2, slope=-0.4))
+            self.ramp.add_segment(LinearSegment(x_start=MAX_SHIFT/2, x_end=MAX_SHIFT, slope=-0.25))
 
     def calculate_helix_force(
         self, torque: float, spring_torque: float, shift_distance: float
