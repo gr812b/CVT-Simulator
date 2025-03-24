@@ -21,7 +21,9 @@ class PrimaryPulley:
         # Initializing ramp
         if self.ramp_type == 1:
             self.ramp = PiecewiseRamp()
-            self.ramp.add_segment(LinearSegment(x_start=0, x_end=MAX_SHIFT / 6, slope=-0.5))
+            self.ramp.add_segment(
+                LinearSegment(x_start=0, x_end=MAX_SHIFT / 6, slope=-0.5)
+            )
             self.ramp.add_segment(
                 CircularSegment(
                     x_start=MAX_SHIFT / 6,
@@ -33,7 +35,9 @@ class PrimaryPulley:
             )
         elif self.ramp_type == 2:
             self.ramp = PiecewiseRamp()
-            self.ramp.add_segment(LinearSegment(x_start=0, x_end=MAX_SHIFT / 6, slope=-0.5))
+            self.ramp.add_segment(
+                LinearSegment(x_start=0, x_end=MAX_SHIFT / 6, slope=-0.5)
+            )
             self.ramp.add_segment(
                 CircularSegment(
                     x_start=MAX_SHIFT / 6,
