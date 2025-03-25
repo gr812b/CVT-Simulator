@@ -21,7 +21,7 @@ class CvtShift:
         self.secondary_simulator = secondary_simulator
         self.primary_belt = primary_belt
         self.secondary_belt = secondary_belt
-        self.cvt_moving_mass = 10  # TODO: Use constants
+        self.cvt_moving_mass = 1  # TODO: Use constants
 
     def get_pulley_forces(self, state: SystemState):
         # Compute CVT ratio and engine velocity

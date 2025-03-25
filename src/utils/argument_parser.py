@@ -24,31 +24,31 @@ def get_arguments() -> SimulationArgs:
     parser.add_argument(
         "--flyweight_mass",
         type=float,
-        default=0.35,
+        default=0.8,
         help="Weight of the primary pulley in kilograms (default: 0.6 kg)",
     )
     parser.add_argument(
         "--primary_ramp_geometry",
         type=float,
-        default=0.0,
+        default=1,
         help="Ramp geometry of the primary pulley (default: ???)",
     )
     parser.add_argument(
         "--primary_spring_rate",
         type=float,
-        default=60,
+        default=1000,
         help="Spring rate of the primary pulley in N/m (default: 500.0 N/m)",
     )
     parser.add_argument(
         "--primary_spring_pretension",
         type=float,
-        default=0.2,
+        default=0,
         help="Spring pretension of the primary pulley in m (default: 0.2 m)",
     )
     parser.add_argument(
         "--secondary_helix_geometry",
         type=float,
-        default=0.0,
+        default=1,
         help="Helix geometry of the secondary pulley (default: 0.0)",
     )
     parser.add_argument(
