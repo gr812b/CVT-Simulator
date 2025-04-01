@@ -19,6 +19,7 @@
 \usepackage{pdflscape}
 \usepackage{afterpage}
 \usepackage{placeins}
+\usepackage{enumitem}
 
 \usepackage[round]{natbib}
 
@@ -237,6 +238,7 @@ Ref.\ By & #8\\
 Oct 12 & 1.0 & First Draft\\
 Nov 12 & 1.1 & Added references \\
 Jan 10 & 1.2 & Updated traceability matrices \\
+April 1 & 2.0 & Added Security Requirements \\
 \bottomrule
 \end{tabularx}
 
@@ -1574,6 +1576,15 @@ By choosing 30\% this is a reasonable limit showing for flexibility and reusabil
 This 30\% target ensures that future modifications such as accommodating for a new CVT, can be achieved without requiring a complete redesign of the system as majority if not all the mathematical calculations will remain the same.
 
 \end{itemize}
+
+\subsection{Safety and Security Requirements}
+The following requirements were derived from the \href{https://github.com/gr812b/CVT-Simulator/blob/main/docs/HazardAnalysis/HazardAnalysis.pdf#page=40}{HazardAnalysis} document.
+\begin{enumerate}[label=\textbf{SR\arabic*}]
+  \item \label{sr:load-balancing} The simulation will dynamically check safety metrics such as belt tension and loads, adjusting the computations accordingly and notifying the user if any values go out of range.
+  \item \label{sr:error-handling} The software shall implement robust error handling mechanisms that detect and handle at least 95\% of all expected and unexpected errors, ensuring that no more than 5\% of critical system failures result in unhandled exceptions or system crashes.
+\end{enumerate}
+
+
 
 \subsection{Rationale}
 
