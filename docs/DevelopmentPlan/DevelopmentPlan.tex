@@ -227,8 +227,14 @@ When Unity receives the result, a corresponding animation will be displayed.
 This will be a sufficient proof of concept as once the team is able to complete this task the rest of the project will expand on this existing system. 
 \\\\
 \noindent One risk involved with this plan is ensuring the two way communication between the Unity frontend and the Python backend as these platforms require distinct handling protocols. 
+This is risk is difficult to mitigate due to the complexity and our lack of experience with Unity and Python integration.
+Additionally, it is often difficult to determine the source and cause of a problem when debugging the integration of two different platforms.
+There is also a lack of documentation on how to best integrate Unity and Python, which makes it difficult to find solutions to problems that arise.
 To mitigate this we will implement a phased integration strategy starting with a simple data exchange and gradually incorporating more complex interactions. 
 Additionally another risk is working with ODE solvers which would require the team to acquire new knowledge and skills.
+This issue is not as difficult to mitigate since there are many existing libraries and documentation available for ODE solvers in Python.
+We will be able to leverage these existing libraries to help us resolve any unexpected issues that arise.
+However, there is still a risk that we may not be able to find the right library or documentation for our specific needs.
 To mitigate this risk we plan to read documentation of existing Python libraries as well as set up meetings with Dr.\ Smith for any clarification as needed. 
 We will also start with solving a simple ODE and incrementally increase the complexity.
 Both of these risks will require a large time investment and continuous attention to ensure our proof of concept is successful. 
