@@ -920,6 +920,37 @@ This portion will specify the existing theories that are used in the development
 {None}% #9 Preconditions
 {}% #1 derivation - not applicable by default
 
+\noindent
+\deftheory
+{TM:HT}% #2 refname of theory
+{Hooke's Law (Torsional)}% #3 label
+{$F = \frac{k \Delta \theta}{r} $}% #4 equation
+{$F$ is the force (N)\\
+  $k$ is the torsional spring constant (Nm/rad)\\
+  $\Delta \theta$ is the rotation (rad)
+  $r$ is the radius of the applied torque (m)
+  }% #5 description
+{}% #6 Notes
+{\citet{SpringDesignFormulas}}% #7 Source
+{}% #8 Referenced by
+{None}% #9 Preconditions
+{}% #1 derivation - not applicable by default
+
+\noindent
+\deftheory
+{TM:KE}% #2 refname of theory
+{Kinetic Energy}% #3 label
+{$KE = \frac{1}{2} m v^2$}% #4 equation
+{$KE$ is the kinetic energy (J)\\
+  $m$ is the mass (kg)\\
+  $v$ is the velocity (m/s)
+}% #5 description
+{None.}% #6 Notes
+{\citet{KineticEnergyPhysicsClassroom}}% #7 Source
+{}% #8 Referenced by
+{None}% #9 Preconditions
+{}% #1 derivation - not applicable by default
+
 \subsubsection*{Helper Theories}
 This portion will define auxiliary theories to aid in further derivation below.
 
@@ -960,51 +991,6 @@ $f_\text{prim}(d)$ is the function to express the ramp geometry (m $\rightarrow$
 {None}% #9 Preconditions
 {}% #1 derivation - not applicable by default
 
-\noindent
-\deftheory
-{TM:D2HA}% #2 refname of theory
-{Shift Distance to Helix Angle}% #3 label
-{$\theta_\text{ramp} = f_\text{sec}(d_\text{shift})$}% #4 equation
-{$d_\text{shift}$ is the axial shift distance, or sheave displacement (m)\\
-$\theta_\text{ramp}$ is the instantaneous helix angle (rad)\\
-$f_\text{prim}(d)$ is the function to express the helix geometry (m $\rightarrow$ rad)}% #5 description
-{The user will input the geometry of the helix, which will then be interpreted to generate $f_\text{sec}$}% #6 Notes
-{N/A}% #7 Source
-{}% #8 Referenced by
-{None}% #9 Preconditions
-{}% #1 derivation - not applicable by default
-
-\noindent
-\deftheory
-{TM:HT}% #2 refname of theory
-{Hooke's Law (Torsional)}% #3 label
-{$F = \frac{k \Delta \theta}{r} $}% #4 equation
-{$F$ is the force (N)\\
-  $k$ is the torsional spring constant (Nm/rad)\\
-  $\Delta \theta$ is the rotation (rad)
-  $r$ is the radius of the applied torque (m)
-  }% #5 description
-{}% #6 Notes
-{\citet{SpringDesignFormulas}}% #7 Source
-{}% #8 Referenced by
-{None}% #9 Preconditions
-{}% #1 derivation - not applicable by default
-
-\noindent
-\deftheory
-{TM:KE}% #2 refname of theory
-{Kinetic Energy}% #3 label
-{$KE = \frac{1}{2} m v^2$}% #4 equation
-{$KE$ is the kinetic energy (J)\\
-  $m$ is the mass (kg)\\
-  $v$ is the velocity (m/s)
-}% #5 description
-{None.}% #6 Notes
-{\citet{KineticEnergyPhysicsClassroom}}% #7 Source
-{}% #8 Referenced by
-{None}% #9 Preconditions
-{}% #1 derivation - not applicable by default
-
 ~\newline
 
 \subsubsection{General Definitions}\label{sec_gendef}
@@ -1032,7 +1018,7 @@ Since this is a torque, we can convert it to a force by dividing by the radius o
 
 
 \defgeneral
-{Spring Side Force} % #1 label
+{Secondary Spring Side Force} % #1 label
 {N = \si{\kilogram \metre\per\square\second}} % #2 units
 {\[F_S = \frac{k_{\text{tor}}(\theta_0 + \theta)}{2r\tan(\beta)} + k_\text{comp}(x_0 + x)\]} % #3 equation
 {$F_S$ is the side force due to the spring (N) \\
@@ -1175,8 +1161,8 @@ The goal statement GS\ref{GS3} are solved by Instance Models \ref{inst:4}, \ref{
   {Acceleration}
   {$r_{\text{gear}}, r_{\text{wheel}}, \rho, C_d, A, \theta_{\text{inc}}, T_{\text{CVT}}, C_{\text{rr}}, m_v, m_d$}
   {
-    \[ a(t) = \frac{\left( \frac{T_{\text{eng}}(t) \cdot R_\text{cvt}(t)}{r_{\text{gear}} + r_{\text{wheel}}} \right) - (C_{\text{rr}} F_g \sin(\theta_\text{inc})) - \left( \frac{1}{2} \rho v^2 C_D A \right) - (F_g \cos(\theta_\text{inc}))}{m_v + m_d} \]
-    }
+    \[\frac{dv}{dt} = \frac{P_\text{change}}{mv} - g\sin{\theta_\text{inc}} - \frac{\rho C_D A}{2m} v^2 \]
+  }
   {acceleration $a(t)$}
   {
   $r_{\text{gear}}$ is the radius of the gear (m)\\
