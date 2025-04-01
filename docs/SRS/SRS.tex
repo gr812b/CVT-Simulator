@@ -1287,7 +1287,7 @@ F_{\text{prim\_clamp}}(t) = m_\text{fly} (r_{\text{fly}} + f_{\text{prim\_height
 {$d_\text{shift}$, $T_\text{eng}$, $R_\text{cvt}$, $k_{\text{sec\_tor}}$, $\theta_{\text{sec}}$, $r_{\text{sec\_ramp}}$, $f_{\text{sec\_ramp}}(d_{\text{shift}})$, $f_{\text{sec\_shift}}(d_{\text{shift}})$, $k_{\text{sec\_comp}}$, $d_{\text{sec}}$} % Input
 {
   \begin{multline*}
-    F_{\text{prim\_clamp}}(d_\text{shift}, T_\text{eng}, R_\text{cvt}) = \\
+    F_{\text{sec\_clamp}}(d_\text{shift}, T_\text{eng}, R_\text{cvt}) = \\
   \frac{k_{\text{sec\_tor}} (\theta_{\text{sec}} + f_{\text{sec\_shift}}(d_\text{shift})) + T_{eng} R_{cvt}}{2 r_{\text{sec\_ramp}} \tan(f_{\text{sec\_ramp}}(d_{\text{shift}}))} + k_{\text{sec\_comp}} (d_{\text{sec}} + d_{\text{shift}})
   \end{multline*}
 } % 
@@ -1346,15 +1346,20 @@ The final equation can be reached through simplifying the above equation by comb
 F_{\text{sec\_clamp}} = \frac{k_{\text{sec\_tor}} (\theta_{\text{sec}} + f_{\text{sec\_shift}}(d_\text{shift}(t))) + T_{eng}(t) R_{cvt}(t)}{2 r_{\text{sec\_ramp}} \tan(f_{\text{sec\_ramp}}(d_\text{shift}(t)))} + k_{\text{sec\_comp}} (d_{\text{sec}} + d_\text{shift}(t))
 \]
 
-% TODO: Clean up T_T and T_s, shouldnt's exist like this? These are forces that change over time, its why we derived them below
 \definstance
-{Sheave Acceleration}
-{$F_{\text{clamp\_prim}}, F_{\text{clamp\_sec}}, m_\text{sheaves}$} % Input
-{\[a(t) = \frac{F_{\text{clamp\_prim}}(t) - F_{\text{clamp\_sec}}(t)}{m_\text{sheaves}}\]} % Equation
-{Sheave acceleration $a$} % Output
-{$F_{\text{clamp\_prim}}$: Primary clamping force\\
-  &$F_{\text{clamp\_sec}}$: Secondary clamping force\\
-  &$m_\text{sheaves}$: Mass of the movable sheaves, combined} % Description
+{Shift Acceleration}
+{$d_\text{shift}, \omega_\text{eng}, T_\text{eng}, R_\text{cvt}, m_\text{sheaves}$} % Input
+{\[
+a_\text{shift} = v_\text{shift}\frac{dv_\text{shift}}{dd_\text{shift}} = \frac{F_{\text{prim\_clamp}}(d_\text{shift}, \omega_\text{eng}) - F_{\text{sec\_clamp}}(d_\text{shift}, T_\text{eng}, R_\text{cvt})}{m_\text{sheaves}}
+\]} % Equation
+{shift acceleration $a_\text{shift}$} % Output
+{
+  $d_\text{shift}$: Displacement of the shift as a function of time. (m)\\
+  &$\omega_\text{eng}$: Angular velocity of the engine as a function of time. (rad/s)\\
+  &$T_{eng}$: Torque seen at the engine as a function of time. (Nm) \\
+  &$R_{cvt}$: Ratio of the CVT as a function of time. (unitless) \\
+  &$m_\text{sheaves}$: Mass of the sheaves. (kg)
+} % Description
 {} % Sources
 {-}
 {} % Sources
@@ -1369,8 +1374,40 @@ The acceleration of the sheave is derived as follows:
 Rearranging the equation for acceleration gives the final equation:
 \[a(t) = \frac{F_{\text{clamp\_prim}}(t) - F_{\text{clamp\_sec}}(t)}{m}\]
 
+\definstance
+{Shift Velocity}
+{$a_\text{shift}$} % Input
+{\[
+\frac{dv_\text{shift}}{dt} = a_\text{shift}
+\]} % Equation
+{shift velocity $v_\text{shift}$} % Output
+{
+  $a_\text{shift}$: Acceleration of the sheave in the shift direction. (m/s$^2$)
+} % Description
+{} % Sources
+{-}
+{} % Sources
+{} % Citation
+{-}
+
+\definstance
+{Shift Distance}
+{$v_\text{sheave}$} % Input
+{\[
+\frac{dd_\text{shift}}{dt} = v_\text{sheave}
+\]} % Equation
+{Shift Distance $d_\text{shift}$} % Output
+{
+  $v_\text{sheave}$: Velocity of the sheave. (m/s)
+} % Description
+{} % Sources
+{-}
+{} % Sources
+{} % Citation
+{-}
 
 
+% TODO: Clean up T_T and T_s, shouldnt's exist like this? These are forces that change over time, its why we derived them below
 \definstance
 {Belt Acceleration}
 {$T_{\text{eng}}, r_{\text{prim}}, m_\text{belt}$ } % Input
