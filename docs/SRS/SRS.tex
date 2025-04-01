@@ -1227,16 +1227,24 @@ Substituting the above equations in and solving for $a$ gives us the final equat
 
 \definstance
 {Primary Clamping Force}
-{$m_\text{fly}$, $r_{\text{fly}}$, $f_{\text{prim\_height}}(d_{\text{shift}})$, $f_{\text{prim\_angle}}(d_{\text{shift}}(t))$, $k_{\text{prim}}$, $d_{\text{prim}}$, $d_{\text{shift}}$} % Input
-{$F_{\text{prim\_clamp}}(t) = m_\text{fly} (r_{\text{fly}} + f_{\text{prim\_height}}({d_\text{shift}(t)}))(\omega_\text{eng}(t))^2 \tan(f_{\text{prim\_angle}}(d_\text{shift}(t))) + k_{\text{prim}} (d_{\text{prim}} + d_\text{shift}(t))$} % 
-{The primary clamping force $F_{\text{prim\_clamp}}$}
-{$m_\text{fly}$: Mass of the flyweight system. (kg) \\ 
+{$d_{\text{shift}}$, $\omega_\text{eng}$, $m_\text{fly}$, $r_{\text{fly}}$, $f_{\text{prim\_height}}(d_{\text{shift}})$, $f_{\text{prim\_angle}}(d_{\text{shift}})$, $k_{\text{prim}}$, $d_{\text{prim}}$} % Input
+{
+  \begin{multline*}
+  F_{\text{prim\_clamp}}(d_\text{shift}, \omega_\text{eng}) = \\
+  m_\text{fly} (r_{\text{fly}} + f_{\text{prim\_height}}(d_\text{shift}))
+  \omega_\text{eng}^2 \tan(f_{\text{prim\_angle}}(d_\text{shift}))
+  + k_{\text{prim}} (d_{\text{prim}} + d_\text{shift})
+  \end{multline*}
+  }
+{The primary clamping force $F_{\text{prim\_clamp}}$ (N)}
+{
+  $d_\text{shift}$: Displacement of the sheave as a function of time. (m)\\
+  &$\omega_\text{eng}$: Angular velocity of the engine as a function of time. (rad/s)\\
+  &$m_\text{fly}$: Mass of the flyweight system. (kg) \\ 
   &$r_{\text{fly}}$: Initial radius of the flyweights. (m) \\ 
   &$f_{\text{prim\_height}}(d_{\text{shift}})$: Function that represents the height of the flyweights based on the shift distance. (rad) \\
   &$f_{\text{prim\_angle}}(d_{\text{shift}})$: Function that returns the instantaneous angle of the ramps based on the shifting distance. (rad) \\ 
   &$k_{\text{prim}}$: Primary spring coefficient. (unitless) \\ 
-  &$d_\text{shift}(t)$: Displacement of the sheave as a function of time. (m)\\
-  &$\omega_\text{eng} (t)$: Angular velocity of the engine as a function of time. (rad/s)\\
   &$d_{\text{prim}}$: Initial compression distance of the primary spring. (m)
 } % Description
 {} % Sources
@@ -1276,20 +1284,24 @@ F_{\text{prim\_clamp}}(t) = m_\text{fly} (r_{\text{fly}} + f_{\text{prim\_height
 
 \definstance
 {Secondary Clamping Force}
-{$k_{\text{sec\_tor}}$, $\theta_{\text{sec}}$, $r_{\text{sec\_ramp}}$, $f_{\text{sec\_ramp}}(d_{\text{shift}})$, $f_{\text{sec\_shift}}(d_{\text{shift}})$, $k_{\text{sec\_comp}}$, $d_{\text{sec}}$, $d_{\text{shift}}(t)$, $T_{eng}(t)$, $R_{cvt}(t)$} % Input
-{\[
-F_{\text{sec\_clamp}}(t) = \frac{k_{\text{sec\_tor}} (\theta_{\text{sec}} + f_{\text{sec\_shift}}(d_\text{shift}(t))) + T_{eng}(t) R_{cvt}(t)}{2 r_{\text{sec\_ramp}} \tan(f_{\text{sec\_ramp}}(d_{\text{shift}}(t)))} + k_{\text{sec\_comp}} (d_{\text{sec}} + d_{\text{shift}}(t))
-\]} % 
-{Secondary clamping force $F_{\text{sec\_clamp}}$} % Output
-{$k_{\text{sec\_tor}}$: Torsional spring rate. (Nm/rad)\\
+{$d_\text{shift}$, $T_\text{eng}$, $R_\text{cvt}$, $k_{\text{sec\_tor}}$, $\theta_{\text{sec}}$, $r_{\text{sec\_ramp}}$, $f_{\text{sec\_ramp}}(d_{\text{shift}})$, $f_{\text{sec\_shift}}(d_{\text{shift}})$, $k_{\text{sec\_comp}}$, $d_{\text{sec}}$} % Input
+{
+  \begin{multline*}
+    F_{\text{prim\_clamp}}(d_\text{shift}, T_\text{eng}, R_\text{cvt}) = \\
+  \frac{k_{\text{sec\_tor}} (\theta_{\text{sec}} + f_{\text{sec\_shift}}(d_\text{shift})) + T_{eng} R_{cvt}}{2 r_{\text{sec\_ramp}} \tan(f_{\text{sec\_ramp}}(d_{\text{shift}}))} + k_{\text{sec\_comp}} (d_{\text{sec}} + d_{\text{shift}})
+  \end{multline*}
+} % 
+{Secondary clamping force $F_{\text{sec\_clamp}}$ (N)} % Output
+{
+  $d_{\text{shift}}$: Displacement of the sheave as a function of time. (m)\\
+  &$T_{eng}$: Torque seen at the engine as a function of time. (Nm) \\
+  &$R_{cvt}$: Ratio of the CVT as a function of time. (unitless) \\
+  &$k_{\text{sec\_tor}}$: Torsional spring rate. (Nm/rad)\\
   &$\theta_{\text{sec}}$: Initial torsional rotation. (rad)\\
   &$f_{\text{sec}}(d_{\text{shift}})$: Amount of torsional rotation based on the distance shifted. (rad) \\
   &$r_{\text{sec\_ramp}}$: Radius of the helix from the shaft. (m)\\
   &$k_{\text{sec\_comp}}$: Compression spring rate. (N/m)\\
-  &$d_{\text{sec}}$: Initial compression distance. (m)\\
-  &$d_{\text{shift}}$: Displacement of the sheave as a function of time. (m)\\
-  &$T_{eng}(t)$: Torque seen at the engine as a function of time. (Nm) \\
-  &$R_{cvt}(t)$: Ratio of the CVT as a function of time. (unitless)
+  &$d_{\text{sec}}$: Initial compression distance. (m)
 } % Description
 {} % Sources
 {\iref{inst:6}}
