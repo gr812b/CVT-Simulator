@@ -1142,6 +1142,19 @@ models. The dimension of each quantity is also given.
 {None.}% #7 Source
 {IM\ref{inst:1}}% #8 Referenced by
 
+\defdata 
+{EngTorque}
+{Engine Torque}
+{$\tau_\text{eng}$}
+{Nm}
+{$\tau_\text{eng}(\omega_\text{eng})$}
+{
+  $\tau_\text{eng}$ is the engine torque (Nm)\\
+  & $\omega_\text{eng}$ is the engine angular velocity (rad/s)
+}
+{This is defined by Baja SAE via \citet{BajaSAEKohlerEngine2022}}% #7 Source
+{}% #8 Referenced by
+
 \subsubsection{Data Types}\label{sec_datatypes}
 
 N/A
@@ -1159,25 +1172,22 @@ identified in Sections~\ref{sec_theoretical} and~\ref{sec_gendef}.
 The goal statement GS\ref{GS3} are solved by Instance Models \ref{inst:4}, \ref{inst:5}, \ref{inst:6} and \ref{inst:7}\\
   \definstance
   {Acceleration}
-  {$r_{\text{gear}}, r_{\text{wheel}}, \rho, C_d, A, \theta_{\text{inc}}, T_{\text{CVT}}, C_{\text{rr}}, m_v, m_d$}
+  {$r_{\text{wheel}}, \rho, C_d, A, \theta_{\text{inc}}, R_{\text{CVT}}, R_\text{gearbox}, \tau_\text{engine} m_v, m_d$}
   {
-    \[\frac{dv}{dt} = \frac{P_\text{change}}{mv} - g\sin{\theta_\text{inc}} - \frac{\rho C_D A}{2m} v^2 \]
+    \[\frac{dv_\text{car}}{dt} = \frac{\frac{R_\text{CVT} R_\text{gearbox}}{r_\text{wheel}} \tau_\text{engine}(\frac{v_\text{car} R_\text{CVT} R_\text{gearbox}}{r_\text{wheel}})}{m_v + m_d} - g\sin{\theta_\text{inc}} - \frac{\rho C_D A}{2(m_v + m_d)} v_\text{car}^2 \]
   }
-  {acceleration $a(t)$}
+  {acceleration $a_\text{car}(t)$ (m/s$^2$)}
   {
-  $r_{\text{gear}}$ is the radius of the gear (m)\\
-  & $r_{\text{wheel}}$ is the radius of the wheel (m)\\
+  $r_{\text{wheel}}$ is the radius of the wheel (m)\\
   & $\rho$ is the density of the fluid (kg/m$^3$)\\
   & $C_d$ is the drag coefficient (unitless)\\
   & $A$ is the cross-sectional area of the object (m$^2$)\\
   & $\theta_{inc}$ is the angle of incline (rad)\\
-  & $C_{\text{rr}}$ is the coefficient of rolling resistance (unitless)\\
-  & $F_g$ is the force of gravity (N)\\
   & $m_v$ is the mass of the vehicle (kg)\\
-  & $m_d$ is the mass of the driver(kg)\\
-  & $a(t)$ is the function of acceleration over time (m/s$^2$)\\
-  & $R_\text{cvt}(t)$ is the current ratio of the CVT as a function of time (unitless)\\
-  & $T_{\text{eng}}(t)$ is the torque seen at the engine as a function of time (Nm)
+  & $m_d$ is the mass of the driver (kg)\\
+  & $R_\text{cvt}$ is the current ratio of the CVT (unitless)\\
+  & $R_\text{gearbox}$ is the gearbox reduction ratio (unitless)\\
+  & $\tau_{\text{eng}}(\omega_\text{eng})$ is the torque seen at the engine as a function of engine angular velocity (Nm)
 }
   {\iref{inst:5}}
   {-}
@@ -1446,14 +1456,16 @@ Finally, simplifying to get: \\
 
 % TODO: Probably need to define this if I can't find a source
 \definstance
-{RPM and Torque of Engine}
-{$t, T_\text{load}$} % Input
-{{$T_{eng}$,  $\omega_\text{eng}$ } = $F(t, T_\text{load})$} % Equation
-{$T_{eng}$, $\omega_\text{eng}$} % Output
+{Angular Velocity of the Engine}
+{$v_\text{car}, R_\text{CVT}, R_\text{gearbox}, r_\text{wheel}$} % Input
+{
+  \[ \omega_\text{eng} = \frac{v_\text{car} \cdot R_\text{CVT} \cdot R_\text{gearbox}}{r_\text{wheel}} \]
+} % Equation
+{$\omega_\text{eng}$} % Output
 {
   $T_{eng}$: Torque seen at the engine\\
 & $\omega_\text{eng}$: Angular velocity of the engine\\
-& These are functions that are defined in a library. It will be passed the torque curve of the engine at 100\% load and calculate the torque and RPM at based on the time and the load of the system.
+& Due to the no slip assumption (LINK HERE), the engine velocity is directly correlated to the speed of the vehicles through the gearbox ratio and CVT. Since the engine torque at each angular velocity is pre-defined, we can then get these at each point.
 } % Description
 {} % Sources
 {} % Citation
