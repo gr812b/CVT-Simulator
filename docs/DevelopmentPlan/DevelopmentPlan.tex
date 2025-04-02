@@ -2,6 +2,7 @@
 
 \usepackage{booktabs}
 \usepackage{tabularx}
+\usepackage{multirow}
 
 \title{Development Plan\\\progname}
 
@@ -30,6 +31,7 @@ Nov 10 & Grace McKenna & Updated Proof of Concept Demonstration Plan\\
 
 \newpage{}
 
+\noindent
 This document provides a summary of how we plan to approach this project.
 It covers both the managerial and technical aspects of the project.
 On the management side, we discuss how we will communicate, organize ourselves and divide up responsibilities.
@@ -78,36 +80,40 @@ This flexibility allows team members to take on different roles as needed and en
 To promote this flexibility each team member is also assigned a secondary role to support or replace the primary role taker if and when needed.
 These backup roles are spread out evenly so that the missing team members responsibilities are evenly distributed across the team.
 
-\subsection*{Grace McKenna}
+
+\subsection*{Meeting Roles}
 \begin{itemize}
-	\item Note Taker - The responsibility of this role is to take notes based on meeting discussion. These notes are then uploaded to the corresponding meeting GitHub Issue as a comment. 
-  \item Project Manager - The responsibility of this role is to manage the project timeline and resource allocation. \
-  \item Secondary Roles: Reviewer, Frontend Lead
+  \item Issue Manager - The responsibility of this role is to review and present the issues that are related to the meeting.
+  \item Meeting Chair - The responsibility of this role is to facilitate meeting discussion and ensure all points on the meeting agenda are covered.
+  \item Note Taker - The responsibility of this role is to take notes based on meeting discussion. These notes are then uploaded to the corresponding meeting GitHub Issue as a comment.
+  \item Reviewer - The responsibility of this role is to review the ideas discussed and evaluate their quality.
 \end{itemize}
 
-\subsection*{Travis Wing}
+\subsection*{Deliverable Roles}
 \begin{itemize}
-	\item Issue Manager - The responsibility of this role is to review and present the issues that are related to the meeting. 
-	\item Frontend Lead - This role is responsible for managing the implementation of the frontend of the application.
-	\item Secondary Roles: Meeting Chair, Project Manager
+  \item Backend Lead - This role is responsible for managing the implementation of the backend of the application.
+  \item Frontend Lead - This role is responsible for managing the implementation of the frontend of the application.
+  \item Product Owner - The responsibility of this role is to ensure that the product meets its requirements.
+  \item Project Manager - The responsibility of this role is to manage the project timeline and resource allocation.
 \end{itemize}
 
-\subsection*{Cameron Dunn}
-\begin{itemize}
-	\item Meeting Chair - The responsibility of this role is to facilitate meeting discussion and ensure all points on the meeting agenda are covered. 
-  \item Product Owner - The responsibility of this role is to ensure that the product meets it's requirements.
-  \item Secondary Roles: Note Taker, Backend Lead
-\end{itemize}
-
-\subsection*{Kai Arseneau}
-\begin{itemize}
-	\item Reviewer - The responsibility of this role is to review the ideas discussed and evaluate their quality.  
-	\item Backend Lead - This role is responsible for managing the implementation of the backend of the application.
-	\item Secondary Roles: Issue Manager, Product Owner
-\end{itemize}
-
-\noindent The roles listed above relate to decision making and organization, but all team members are expected to contribute to each aspect. 
+\subsection*{Roles Assignment}
+\noindent Below is a table laying out the assignment of the roles as described above.
+The roles assigned below relate to decision making and organization, but all team members are expected to contribute to each aspect. 
 This is to ensure all team members have knowledge about all parts of the project. 
+\begin{table}[h]
+  \begin{tabular}{lcccc}
+  \hline
+  \multicolumn{1}{c}{\multirow{2}{*}{\textbf{Team Member}}} & \multicolumn{2}{c}{\textbf{Meeting Role}} & \multicolumn{2}{c}{\textbf{Deliverable Role}} \\ \cline{2-5} 
+  \multicolumn{1}{c}{}                                      & \textbf{Primary}   & \textbf{Secondary}   & \textbf{Primary}     & \textbf{Secondary}     \\ \hline
+  Grace McKenna                                             & Note Taker         & Reviewer             & Project Manager      & Frontend Lead          \\ \hline
+  Travis Wing                                               & Issue Manager      & Meeting Chair        & Frontend Lead        & Product Owner          \\ \hline
+  Cameron Dunn                                              & Meeting Chair      & Note Taker           & Product Owner        & Backend Lead           \\ \hline
+  Kai Arseneau                                              & Reviewer           & Issue Manager        & Backend Lead         & Project Manger         \\ \hline
+  \end{tabular}
+\end{table}
+
+
 
 
 \section{Workflow Plan}
