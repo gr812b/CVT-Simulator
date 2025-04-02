@@ -290,3 +290,8 @@ __pycache__/
 
 # Simulation Output
 simulation_output.csv
+front_end_output.csv
+
+# build folders
+CVT_Simulator/
+unity/

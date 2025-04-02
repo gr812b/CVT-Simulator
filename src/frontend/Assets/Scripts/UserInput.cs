@@ -37,10 +37,12 @@ public class InputField
     }
 
     // Sets the parameter to update when the input field changes
-    private void AddParameterListener(Parameter parameter)
+    public void AddParameterListener(Parameter parameter)
     {
         inputField.text = parameter.Value; // Set the text to the initial value
+    
         inputField.onValueChanged.AddListener(value => UpdateParameterValue(value, parameter));
+        UpdateParameterValue(inputField.text, parameter);
     }
 
     private void UpdateParameterValue(string value, Parameter parameter)
@@ -49,6 +51,11 @@ public class InputField
         {
             inputField.image.color = Color.red;
             errorText.text = "Required field";
+        }
+        else if (value == "not a ramp")
+        {
+            inputField.image.color = Color.red;
+            errorText.text = "Invalid input, select a Ramp";
         }
         else if (!IsNumber(value))
         {
@@ -66,8 +73,8 @@ public class InputField
 
 public class UserInput : MonoBehaviour
 {
-    // Runner for the python script
-    private PythonRunner pythonRunner = new PythonRunner(PathConstants.PYTHON_ENVIRONMENT_PATH);
+
+    // Input store to save the input parameters
     private InputStore inputStore = new InputStore();
     public List<Parameter> parameters = DefaultParameters.parameters;
     
@@ -78,6 +85,8 @@ public class UserInput : MonoBehaviour
     // Buttons
     [SerializeField] private Button simulateButton;
     [SerializeField] private Button uploadButton;
+
+    private PythonRunner runner = new PythonRunner(PathConstants.PYTHON_ENVIRONMENT_PATH);
 
     private void UpdateParameters()
     {
@@ -90,7 +99,7 @@ public class UserInput : MonoBehaviour
         foreach(ParameterField field in parameterFields)
         {
             Parameter parameter = parameters.Find(p => p.Name == field.parameterName);
-            inputFields.Add(new InputField(field.inputField, field.errorText, parameter));
+            inputFields.Add(new InputField(field.inputField, field.errorText, parameter));        
         }
     }
 
@@ -108,9 +117,8 @@ public class UserInput : MonoBehaviour
         //open file explorer and accept a csv then rename the csv to input_parameters.csv
         string[] paths = StandaloneFileBrowser.OpenFilePanel("Open CSV File", "", "csv", false);
         if (paths.Length > 0) {
-            File.Copy(paths[0], Path.Combine(Application.dataPath, "../input_parameters.csv"), true);
+            File.Copy(paths[0], PathConstants.INPUT_PARAMETERS_PATH, true);
         }
-
         UpdateParameters();
     }
     
@@ -122,7 +130,7 @@ public class UserInput : MonoBehaviour
         }
 
         inputStore.Store(PathConstants.INPUT_PARAMETERS_PATH, parameters);
-        pythonRunner.Run(PathConstants.PYTHON_SCRIPT_PATH, parameters);
+        runner.Run(PathConstants.PYTHON_SCRIPT_PATH, parameters, true);
 
         // Go the the results scene
         int nextSceneIndex = SceneManager.GetActiveScene().buildIndex + 1;
@@ -131,3 +139,4 @@ public class UserInput : MonoBehaviour
 
     
 }
+

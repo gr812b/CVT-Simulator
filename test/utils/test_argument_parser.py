@@ -8,17 +8,19 @@ class TestArgumentParser(unittest.TestCase):
     def setUp(self):
         self.default_args = {
             "flyweight_mass": 0.6,
-            "primary_ramp_geometry": 0.0,
-            "primary_spring_rate": 500.0,
+            "primary_ramp_geometry": 1.0,
+            "primary_spring_rate": 60,
             "primary_spring_pretension": 0.2,
-            "secondary_helix_geometry": 0.0,
-            "secondary_torsion_spring_rate": 100.0,
-            "secondary_compression_spring_rate": 100.0,
-            "secondary_spring_pretension": 15.0,
+            "secondary_helix_geometry": 1.0,
+            "secondary_torsion_spring_rate": 30,
+            "secondary_compression_spring_rate": 1,
+            "secondary_rotational_spring_pretension": 45,
+            "secondary_linear_spring_pretension": 0.1,
             "vehicle_weight": 225.0,
             "driver_weight": 75.0,
             "traction": 100.0,
             "angle_of_incline": 0.0,
+            "total_distance": 200.0,
         }
 
     @patch("sys.argv", ["program_name"])  # Mock the args here for the default test
@@ -44,8 +46,10 @@ class TestArgumentParser(unittest.TestCase):
             "150.0",
             "--secondary_compression_spring_rate",
             "150.0",
-            "--secondary_spring_pretension",
-            "20.0",
+            "--secondary_rotational_spring_pretension",
+            "45.0",
+            "--secondary_linear_spring_pretension",
+            "0.1",
             "--vehicle_weight",
             "250.0",
             "--driver_weight",
@@ -54,6 +58,8 @@ class TestArgumentParser(unittest.TestCase):
             "90.0",
             "--angle_of_incline",
             "10.0",
+            "--total_distance",
+            "100.0",
         ],
     )  # Mock the args here for the custom test
     def test_custom_arguments(self):  # No blank line after decorator
@@ -65,11 +71,13 @@ class TestArgumentParser(unittest.TestCase):
             "secondary_helix_geometry": 1.0,
             "secondary_torsion_spring_rate": 150.0,
             "secondary_compression_spring_rate": 150.0,
-            "secondary_spring_pretension": 20.0,
+            "secondary_rotational_spring_pretension": 45.0,
+            "secondary_linear_spring_pretension": 0.1,
             "vehicle_weight": 250.0,
             "driver_weight": 80.0,
             "traction": 90.0,
             "angle_of_incline": 10.0,
+            "total_distance": 100.0,
         }
         args = get_arguments()
         for key, value in custom_args.items():

@@ -46,8 +46,8 @@
 \begin{tabularx}{\textwidth}{p{3cm}p{2cm}X}
 \toprule {\bf Date} & {\bf Version} & {\bf Notes}\\
 \midrule
-Date 1 & 1.0 & Notes\\
-Date 2 & 1.1 & Notes\\
+Jan 17th & 1.0 & Initial Version\\
+March 20th & 1.1 & Provided Detailed Timeline \\
 \bottomrule
 \end{tabularx}
 
@@ -55,7 +55,7 @@ Date 2 & 1.1 & Notes\\
 
 \section{Reference Material}
 
-This section records information for easy reference.
+Here the \href{https://github.com/gr812b/CVT-Simulator/blob/main/docs/SRS/SRS.pdf}{SRS document} can be found, which includes information regarding requirements, definitions, equations, derivations and project objectives. 
 
 \subsection{Abbreviations and Acronyms}
 
@@ -74,7 +74,6 @@ This section records information for easy reference.
   SRS & Software Requirements Specification\\
   \progname & Explanation of program name\\
   UC & Unlikely Change \\
-  \wss{etc.} & \wss{...}\\
   \bottomrule
 \end{tabular}\\
 
@@ -101,7 +100,7 @@ hides represent likely future changes.  Design for change is valuable in SC,
 where modifications are frequent, especially during initial development as the
 solution space is explored.  
 
-Our design follows the rules layed out by \citet{ParnasEtAl1984}, as follows:
+Our design follows the laid out by \citet{ParnasEtAl1984}, as follows:
 \begin{itemize}
 \item System details that are likely to change independently should be the
   secrets of separate modules.
@@ -251,12 +250,6 @@ The design of the system is intended to satisfy the requirements developed in
 the SRS. In this stage, the system is decomposed into modules. The connection
 between requirements and modules is listed in Table~\ref{TblRT}.
 
-\wss{The intention of this section is to document decisions that are made
-  ``between'' the requirements and the design.  To satisfy some requirements,
-  design decisions need to be made.  Rather than make these decisions implicit,
-  they are explicitly recorded here.  For instance, if a program has security
-  requirements, a specific design decision may be made to satisfy those
-  requirements with a password.}
 
 \section{Module Decomposition} \label{SecMD}
 
@@ -554,42 +547,72 @@ This data is used to display the results of the simulation to the user.
 
 \section{Timeline}
 
-Rev 0 of the product is due by February 3rd, 2025. To ensure adequate time for any last-minute adjustments or unforeseen issues, the goal is to complete all tasks by February 1st, 2025.
+The following is a breakdown of the module implementation timeline, where dates and respective priorities of modules can be seen.
+Modules listed in earlier phases and have earlier deadlines and thus are considered higher priority. 
 
-\subsection*{Backend and Mathematical Model}
-The backend and mathematical model are primarily the responsibility of Kai, with support from Cameron. The team aims to complete this work by January 27th, 2025. 
-
-This includes:
+\subsection*{Phase 1: Backend and Mathematical Model (January 17 - January 27, 2025)}
+The backend and mathematical model are primarily the responsibility of Kai, with support from Cameron. 
+This includes:Finalizing the CVT mathematical modules, which are critical to the product. Additionally, the engine and external forces modules, which are already mostly complete, will be integrated into the system.
+Initial validation and verification will also be conducted. These checks will include ensuring that values increase monotonically where expected, verifying the realism of generated values within the context of the problem, and performing quick automated tests that do not rely on realistic data. 
+These steps will help ensure the robustness of the backend before integration. This will take up the remaining time.
 \begin{enumerate}
-\item Finalizing the CVT mathematical modules, which are critical to the product. Additionally, the engine and external forces modules, which are already complete, will be integrated into the system. This refers to modules \mref{mEngineSim}, \mref{mExternalForces}, and \mref{mCVT} and will be completed no later than January 22nd, 2025.
-\item Following this, modules \mref{mODESolver}, \mref{mConstants}, \mref{mState}, and \mref{mBCM} will be developed. This will connect the previous work together to create a complete backend. This will be completed by January 25th, 2025.
+    \item \textbf{January 15 - January 22: CVT Mathematical Modules}
+    \begin{itemize}
+        \item Implement \textbf{Engine Simulator Module (M\ref{mEngineSim})}
+        \item Implement \textbf{External Forces Module (M\ref{acExternalForces})}
+        \item Implement \textbf{Primary CVT Module (M\ref{mPrimCVT})}
+        \item Implement \textbf{Secondary CVT Module (M\ref{mSecCVT})}
+        \item Implement \textbf{Main Module (M\ref{mMain})}
+    \end{itemize}
+    
+    \item \textbf{January 22 - January 29: Mathematical and Core Simulation Components}
+    \begin{itemize}
+        \item Implement \textbf{ODE Solver Module (M\ref{mODESolver})}
+        \item Implement \textbf{Constants Module (M\ref{mConstants})}
+        \item Implement \textbf{State Module (M\ref{mState})}
+        \item Implement \textbf{Communication Module (M\ref{mComm})}
+    \end{itemize}
+
+    \item \textbf{January 29 - February 10: Backend Testing and Evaluation}
+    \begin{itemize}
+      \item This will involve graphical representation to ensure our outputs match expected/predicted outputs.
+    \end{itemize}
+
 \end{enumerate}
 
-Initial validation and verification will also be conducted. These checks will include ensuring that values increase monotonically where expected, verifying the realism of generated values within the context of the problem, and performing quick automated tests that do not rely on realistic data. These steps will help ensure the robustness of the backend before integration. This will take up the remaining time.
-
-\subsection*{Unity and User Interface (UI)}
-The Unity and user interface components will be developed collaboratively by Travis and Grace. The deadline for this section is also January 27th, 2025. 
-
-This includes:
+\subsection*{Phase 2: Frontend and Communication with backend (January 22 - February 11th, 2025)}
+Note that February 11th is the date Rev 0 is due, Additionally, these dates also overlap with some Phase 1 dates as various group members were able to work on the stages simultaneously. 
+The Unity and user interface components will be developed collaboratively by Travis and Grace. 
 \begin{enumerate}
-\item Building the UI prototype based on the Figma design provided in Section 10 of the documentation along with basic output features. This refers to modules \mref{mGUI} and \mref{mFileOutput}  and will be completed by January 22nd, 2025.
-\item Completing the Playback module (\mref{mPlayback}) by January 25th, 2025. This will involve using fed data from the backend with the Unity components to ensure that the simulation results are displayed accurately. This does not cover the communication module.
-\end{enumerate}
+    \item \textbf{January 22 - February 1 : UI Prototype Development}
+    \begin{itemize}
+        \item Implement \textbf{Initialize Module (M\ref{mInitialize})}
+        \item Implement \textbf{Hardware-Hiding Module (M\ref{mHH})}
+        \item Implement \textbf{GUI Module (M\ref{mGUI})}
+    \end{itemize}
+    
+    \item \textbf{February 1 - February 10 : Developing Playback Functionality, Outputs and Further UI}
+    \begin{itemize}
+        \item Implement \textbf{Playback (M\ref{mPlayback})}
+        \item Implement \textbf{Visualizer (M\ref{mVisualizer})}
+        \item Implement \textbf{File Output Module (M\ref{mFileOutput})}
+    \end{itemize}
 
+    \item \textbf{February 3 - February 10 : Testing}
+    \begin{itemize}
+      \item Team-wide testing of integration of UI and frontend to back end integration.
+      \item Ensure each component functions as intended.
+  \end{itemize}
+  \end{enumerate}
 
-This prototype will handle user input effectively and include visualizations such as 3D models, graphs, gauges, and other essential elements. These features are intended to provide an intuitive and visually engaging user experience. Initial testing of these will be done via early user feedback, ensuring simple bugs are caught and feedback can be acquired for later use. This will take the remaining time until January 27th, 2025.
-
-\subsection*{Connecting the Components}
-The integration of the backend and mathematical model with the Unity and UI components will involve all team members and will be completed by February 1st, 2025. This phase will ensure that the backend models connect seamlessly with their respective visualizations. Full playback functionality will also be implemented, allowing the system to operate as intended. This should complete module \mref{mComm}.
-
-Team-wide testing will take place during this phase to identify and resolve any integration issues. Clear communication and collaboration between subteams will be crucial to ensure that all components function harmoniously.
+This prototype will handle user input effectively and include visualizations such as 3D models, graphs, gauges, and other essential elements. 
+These features are intended to provide an intuitive and visually engaging user experience. 
+Initial testing of these will be done via early user feedback, ensuring simple bugs are caught and feedback can be acquired for later use. 
 
 \subsection*{Additional Notes}
-All updates and task tracking will be managed through the project GitHub repository. The repository can be accessed at \url{https://github.com/gr812b/CVT-Simulator/issues}. Between January 27th and February 1st, 2025, effective communication between subteams will be vital to ensure the integration process proceeds smoothly. Team members are encouraged to check in regularly to verify that progress aligns with the established timeline.
-
-\wss{Schedule of tasks and who is responsible}
-
-\wss{You can point to GitHub if this information is included there}
+All updates and task tracking will be managed through the project GitHub repository. The repository can be accessed at \url{https://github.com/gr812b/CVT-Simulator/issues}. 
+Between the dates of January 15th and February 10th, 2025, effective communication between subteams will be vital to ensure the integration process proceeds smoothly heading into Rev 0. 
+Team members are encouraged to check in regularly to verify that progress aligns with the established timeline.
 
 \bibliographystyle {plainnat}
 \bibliography{../../../refs/References}
