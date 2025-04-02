@@ -45,6 +45,8 @@
 \textbf{Date} & \textbf{Developer(s)} & \textbf{Change}\\
 \midrule
 Oct 25 & All & First Draft\\
+March 18 & Grace McKenna & Added traceability to document and addressed missing requirements \\
+April 1 & Grace McKenna & Added link to SRS and updated requirements\\
 \bottomrule
 \end{tabularx}
 \end{table}
@@ -102,13 +104,14 @@ This component displays various models that are part of the CVT system, moving i
 
 
 \section{Failure Mode and Effect Analysis}
+Note that the Requirements R17, R18, and NFR1 can be found in the \href{https://github.com/gr812b/CVT-Simulator/blob/main/docs/SRS/SRS.pdf#page=40}{SRS document}.
 
 \newgeometry{left=0cm, right=0cm, top=0cm, bottom=0cm}
 \begin{table}[ht]
     \centering
     \setlength{\tabcolsep}{3pt} % Adjust space between columns
     \renewcommand{\arraystretch}{1.5} % Adjust row spacing
-    \begin{tabular}{|>{\centering\arraybackslash}m{1.5cm}|>{\centering\arraybackslash}m{1.75cm}|>{\centering\arraybackslash}m{3.25cm}|>{\arraybackslash}m{5cm}|>{\centering\arraybackslash}m{3.65cm}|>{\centering\arraybackslash}m{3cm}|>{\centering\arraybackslash}m{0.65cm}|>{\centering\arraybackslash}m{0.65cm}|}
+    \begin{tabular}{|>{\centering\arraybackslash}m{1.5cm}|>{\centering\arraybackslash}m{1.75cm}|>{\centering\arraybackslash}m{3.25cm}|>{\arraybackslash}m{5cm}|>{\centering\arraybackslash}m{3.65cm}|>{\centering\arraybackslash}m{3cm}|>{\centering\arraybackslash}m{0.65cm}|>{\centering\arraybackslash}m{0.82cm}|}
     \hline
     \textbf{Design Function} & \textbf{Failure Modes} & \textbf{Effects of Failure} & \textbf{Causes of Failure} & \textbf{Detection} & \textbf{Recommended Action} & \textbf{SR} & \textbf{Ref} \\ \hline
     
@@ -132,7 +135,7 @@ This component displays various models that are part of the CVT system, moving i
         \item Adjust load model to more accurately represent the vehicle.
         \item Add dynamic load balancing checks to the simulation.
     \end{itemize} 
-    & \ref{sr:load-balancing}  & R18 \\ \cline{2-8} 
+    & \ref{sr:load-balancing}  & R17 \\ \cline{2-8} 
     
     & Inaccurate power transfer between pulleys (belt dynamics)
     & \begin{itemize}[left=0pt]
@@ -150,7 +153,7 @@ This component displays various models that are part of the CVT system, moving i
     \begin{itemize}[left=0pt]
         \item Dynamically check if belt tension is within reasonable limits.
     \end{itemize} 
-    & \ref{sr:belt-tension} & R19 \\ \cline{2-8} 
+    & \ref{sr:load-balancing} & R17 \\ \cline{2-8} 
     
     & Poor numerical precision 
     & \begin{itemize}[left=0pt]
@@ -169,7 +172,7 @@ This component displays various models that are part of the CVT system, moving i
         \item Manually verify precision is sufficient by a factor of safety.
         \item Validate the ODE library's precision and accuracy.
     \end{itemize} 
-    & \ref{sr:precision} & \\ \cline{2-8} 
+    &  & NFR1 \\ \cline{2-8} 
     
     & Insufficient frictional forces
     & \begin{itemize}[left=0pt]
@@ -189,7 +192,7 @@ This component displays various models that are part of the CVT system, moving i
         \item Investigate friction assumptions and models.
         \item Validate simulation in simple cases to ensure friction is accounted for.
     \end{itemize} 
-    &  & R20 \\ \cline{2-8} 
+    &  & \\ \cline{2-8} 
     
     & Software Crash
     & \begin{itemize}[left=0pt]
@@ -212,7 +215,7 @@ This component displays various models that are part of the CVT system, moving i
         \item Conduct memory profiling and avoid loading large or unnecessary data.
         \item Test the software in edge cases to ensure it fails gracefully.
     \end{itemize} 
-    & \ref{sr:error-handling} & R21 \\ \hline
+    & \ref{sr:error-handling} & R18\\ \hline
     
     \end{tabular}
     \caption{Failure Modes, Effects, and Recommended Actions for Insulin Delivery}
@@ -222,9 +225,7 @@ This component displays various models that are part of the CVT system, moving i
 \section{Safety and Security Requirements}
 
 \begin{enumerate}[label=\textbf{SR\arabic*},ref=SR\arabic*]
-    \item  \label{sr:load-balancing}- The simulation will dynamically check load balancing and adjust the computations accordingly.
-    \item  \label{sr:belt-tension}- The simulation will dynamically check that the belt tension is within reasonable limits.\\ 
-    \item  \label{sr:precision}- Ensure that the precision exceeds the standard 32-bit level by using 64-bit to ensure greater accuracy. \\
+    \item  \label{sr:load-balancing}- The simulation will dynamically check safety metrics such as belt tension and loads, adjusting the computations accordingly and notifying the user if any values go out of range.
     \item  \label{sr:error-handling}- The software shall implement robust error handling mechanisms that detect and handle at least 95\% of all expected and unexpected errors, ensuring that no more than 5\% of critical system failures result in unhandled exceptions or system crashes.\\
 \end{enumerate}
 
@@ -235,7 +236,7 @@ While usability improvements may enhance user experience and prevent incorrect p
 
 \section{Roadmap}
 
-We will implement \ref{sr:load-balancing}, \ref{sr:belt-tension}, \ref{sr:precision} and \ref{sr:error-handling} as part of the capstone timeline.
+We will implement \ref{sr:load-balancing} and \ref{sr:error-handling} as part of the capstone timeline.
 We have chosen to implement all of these is that we believe that they are all relevant.
 Additionally, we believe that they are all attainable within the project window.
 
