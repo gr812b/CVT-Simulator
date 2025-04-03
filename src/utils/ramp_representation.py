@@ -215,110 +215,82 @@ class PiecewiseRamp:
         raise ValueError(f"x={x} is out of ramp range!")
 
 
+def visualize_ramps(ramps):
+    """
+    Visualizes the ramp profiles for height, slope, and angle as three separate graphs.
+    The height graph is displayed with an equal aspect ratio.
+    
+    :param ramps: A list of ramp objects. Each ramp should have a .segments attribute,
+                  and each segment must support .height(x) and .slope(x) methods.
+    """
+    # Helper function to determine style based on segment type.
+    def get_segment_style(segment):
+        if hasattr(segment, '__class__'):
+            if segment.__class__.__name__ == "LinearSegment":
+                return "blue", "Linear"
+            elif segment.__class__.__name__ == "EulerSpiralSegment":
+                return "red", "Euler Spiral"
+        # Default for other types:
+        return "black", type(segment).__name__
+    
+    # Generic helper to plot a given attribute for all ramp segments.
+    def plot_attribute(attribute_func, ylabel, title, equal_aspect=False):
+        plt.figure()
+        used_labels = set()
+        for ramp in ramps:
+            for segment in ramp.segments:
+                x_vals = np.linspace(segment.x_start, segment.x_end, 200)
+                y_vals = [attribute_func(segment, x) for x in x_vals]
+                color, label = get_segment_style(segment)
+                if label in used_labels:
+                    label = None
+                else:
+                    used_labels.add(label)
+                plt.plot(x_vals, y_vals, color=color, label=label)
+        plt.xlabel("X Position")
+        plt.ylabel(ylabel)
+        plt.title(title)
+        plt.grid(True)
+        if equal_aspect:
+            plt.gca().set_aspect("equal", adjustable="box")
+        plt.legend()
+    
+    # Plot Height Profile (equal aspect ratio).
+    plot_attribute(lambda seg, x: seg.height(x), "Height", "Height Profile by Segment", equal_aspect=True)
+    
+    # Plot Slope Profile.
+    plot_attribute(lambda seg, x: seg.slope(x), "Slope (dy/dx)", "Slope Profile by Segment", equal_aspect=False)
+    
+    # Plot Angle Profile (angle computed as arctan(slope)).
+    plot_attribute(lambda seg, x: np.arctan(seg.slope(x)), "Angle (radians)", "Angle Profile by Segment", equal_aspect=False)
+    
+    plt.show()
+
+
 if __name__ == "__main__":
+    length = 1.125
+    eulerLength = 0.025
     # Sample primary ramp
     ramp = PiecewiseRamp()
-    ramp.add_segment(
-        LinearSegment(x_start=0, x_end=MAX_SHIFT/6, slope=-0.25)
-    )
+
+    line = LinearSegment(x_start=0, x_end=0.125, slope=math.tan(math.radians(-15)))
     circle = CircularSegment(
-        x_start=MAX_SHIFT / 4,
-        x_end=MAX_SHIFT,
-        radius=0.001,
-        theta_start=0.1,
-        theta_end=np.pi / 2 -0.1,
+        x_start=line.x_end + eulerLength,
+        x_end=length,
+        radius=25,
+        theta_start=0.971816735418,
+        theta_end=1.1984521248,
     )
-    print(circle.slope(MAX_SHIFT / 4))
-    ramp.add_segment(
-        EulerSpiralSegment(
-            x_start=MAX_SHIFT/6,
-            x_end=MAX_SHIFT/4,
-            slope_start=-0.25,
-            slope_end=circle.slope(MAX_SHIFT / 4)
-        )
+    euler = EulerSpiralSegment(
+        x_start=line.x_end,
+        x_end=line.x_end + eulerLength,
+        slope_start=line.slope(line.x_start),
+        slope_end=circle.slope(circle.x_start)
     )
-    # tempLine = LinearSegment(x_start=MAX_SHIFT/4, x_end=MAX_SHIFT, slope=circle.slope(MAX_SHIFT / 4))
+    ramp.add_segment(line)
+    ramp.add_segment(euler)
     ramp.add_segment(circle)
-    # ramp.add_segment(tempLine)
 
+    visualize_ramps([ramp])
 
-    plt.figure()
-    used_labels = set()
-    for segment in ramp.segments:
-        x_vals = np.linspace(segment.x_start, segment.x_end, 200)
-        y_vals = [segment.height(x) for x in x_vals]
-        if isinstance(segment, LinearSegment):
-            color = "blue"
-            label = "Linear"
-        elif isinstance(segment, EulerSpiralSegment):
-            color = "red"
-            label = "Euler Spiral"
-        else:
-            color = "black"
-            label = type(segment).__name__
-        if label in used_labels:
-            label = None
-        else:
-            used_labels.add(label)
-        plt.plot(x_vals, y_vals, color=color, label=label)
-    plt.xlabel("X Position")
-    plt.ylabel("Height")
-    plt.title("Height Profile by Segment")
-    plt.grid()
-    plt.legend()
-    plt.gca().set_aspect("equal", adjustable="box")
-    plt.show()
-
-    # Plot the Slope Profile by Segment
-    plt.figure()
-    used_labels = set()
-    for segment in ramp.segments:
-        x_vals = np.linspace(segment.x_start, segment.x_end, 200)
-        slope_vals = [segment.slope(x) for x in x_vals]
-        if isinstance(segment, LinearSegment):
-            color = "blue"
-            label = "Linear"
-        elif isinstance(segment, EulerSpiralSegment):
-            color = "red"
-            label = "Euler Spiral"
-        else:
-            color = "black"
-            label = type(segment).__name__
-        if label in used_labels:
-            label = None
-        else:
-            used_labels.add(label)
-        plt.plot(x_vals, slope_vals, color=color, label=label)
-    plt.xlabel("X Position")
-    plt.ylabel("Slope (dy/dx)")
-    plt.title("Slope Profile by Segment")
-    plt.grid()
-    plt.legend()
-    plt.show()
-
-    # Plot the Angle Profile by Segment (angle computed as arctan(slope))
-    plt.figure()
-    used_labels = set()
-    for segment in ramp.segments:
-        x_vals = np.linspace(segment.x_start, segment.x_end, 200)
-        angle_vals = [np.arctan(segment.slope(x)) for x in x_vals]
-        if isinstance(segment, LinearSegment):
-            color = "blue"
-            label = "Linear"
-        elif isinstance(segment, EulerSpiralSegment):
-            color = "red"
-            label = "Euler Spiral"
-        else:
-            color = "black"
-            label = type(segment).__name__
-        if label in used_labels:
-            label = None
-        else:
-            used_labels.add(label)
-        plt.plot(x_vals, angle_vals, color=color, label=label)
-    plt.xlabel("X Position")
-    plt.ylabel("Angle (radians)")
-    plt.title("Angle Profile by Segment")
-    plt.grid()
-    plt.legend()
-    plt.show()
+    
