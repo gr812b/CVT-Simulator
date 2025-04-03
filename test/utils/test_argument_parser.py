@@ -84,5 +84,6 @@ class TestArgumentParser(unittest.TestCase):
             setattr(args, key, value)
         self.assertEqual(args, SimulationArgs(**custom_args))
 
+
 if __name__ == "__main__":
     unittest.main()
