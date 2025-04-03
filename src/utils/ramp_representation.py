@@ -102,37 +102,39 @@ class CircularSegment(RampSegment):
 class EulerSpiralSegment(RampSegment):
     """
     Euler spiral segment that transitions smoothly between two slopes.
-    Instead of tangent angles, you supply the initial and final slopes.
+    Instead of passing tangent angles, you supply the starting and ending slopes.
     The slopes are converted to tangent angles (θ = arctan(slope)).
-    This version assumes slopes are in the range -∞ to 0.
+    
+    This implementation now allows the initial slope to be flatter (e.g. -0.25)
+    and the final slope to be steeper (e.g. -10). The tangent angle then decreases 
+    along the segment, i.e. theta_start > theta_end.
     """
     def __init__(self, x_start: float, x_end: float, slope_start: float, slope_end: float):
         """
-        :param x_start: start horizontal coordinate
-        :param x_end: end horizontal coordinate (defines the horizontal span L)
-        :param slope_start: starting slope (e.g., a very negative value, approaching -∞)
-        :param slope_end: ending slope (e.g., 0 for horizontal)
+        :param x_start: start horizontal coordinate.
+        :param x_end: end horizontal coordinate (defines the horizontal span L).
+        :param slope_start: starting slope (e.g. -0.25 for a flat start).
+        :param slope_end: ending slope (e.g. -10 for a steep end).
         """
         super().__init__(x_start, x_end)
-        # Convert slopes to tangent angles
+        # Convert slopes to tangent angles.
         self.theta_start = np.arctan(slope_start)
         self.theta_end = np.arctan(slope_end)
+        # Note: for a transition from flatter to steeper (more negative) slope,
+        # theta_start > theta_end.
+        self.delta = self.theta_end - self.theta_start  # This will be negative.
         
-        if self.theta_start >= self.theta_end:
-            raise ValueError("slope_start must be less than slope_end (i.e. more negative than slope_end)")
-        
-        self.delta = self.theta_end - self.theta_start  # total change in tangent angle
-        
-        # Horizontal length of the segment
+        # Horizontal length of the segment.
         self.L = self.x_end - self.x_start
         
-        # Compute normalization factor I = ∫₀¹ cos(θ_start + delta * u²) du.
+        # Compute the normalization factor:
+        # I = ∫₀¹ cos(theta_start + delta*u²) du.
         I, _ = quad(lambda u: np.cos(self.theta_start + self.delta * u**2), 0, 1)
-        # s_end is chosen so that the horizontal projection matches L
+        # Set s_end so that the horizontal projection equals L.
         self.s_end = self.L / I
 
     def _x_of_s(self, s: float) -> float:
-        """Computes the horizontal distance traveled for a given arc length s."""
+        """Computes the horizontal displacement for a given arc length s."""
         u_upper = s / self.s_end
         integral, _ = quad(lambda u: np.cos(self.theta_start + self.delta * u**2), 0, u_upper)
         return self.s_end * integral
@@ -145,19 +147,15 @@ class EulerSpiralSegment(RampSegment):
 
     def _find_s_for_x(self, x_offset: float, tol: float = 1e-8) -> float:
         """
-        Given a horizontal offset (x - x_start), find the corresponding arc length s.
-        Uses a simple binary search.
+        Uses binary search to find the arc length s corresponding to a given horizontal offset.
         """
         lower = 0.0
         upper = self.s_end
-        # Ensure the value at upper is at least x_offset
         while self._x_of_s(upper) < x_offset:
             upper *= 2
-        
         while upper - lower > tol:
             mid = (lower + upper) / 2.0
-            x_mid = self._x_of_s(mid)
-            if x_mid < x_offset:
+            if self._x_of_s(mid) < x_offset:
                 lower = mid
             else:
                 upper = mid
@@ -181,10 +179,9 @@ class EulerSpiralSegment(RampSegment):
             raise ValueError(f"x={x} is out of the Euler spiral segment range!")
         x_offset = x - self.x_start
         s_val = self._find_s_for_x(x_offset)
-        # Instantaneous tangent angle:
+        # Compute the instantaneous tangent angle:
         angle = self.theta_start + self.delta * (s_val / self.s_end) ** 2
         return math.tan(angle)
-
 
 class PiecewiseRamp:
     """Handles multiple ramp segments and ensures continuity automatically."""
@@ -222,23 +219,27 @@ if __name__ == "__main__":
     # Sample primary ramp
     ramp = PiecewiseRamp()
     ramp.add_segment(
-        LinearSegment(x_start=0, x_end=MAX_SHIFT/4, slope=-1)
+        LinearSegment(x_start=0, x_end=MAX_SHIFT/6, slope=-0.25)
     )
-    
-    # Euler spiral from MAX_SHIFT/4 to MAX_SHIFT/2,
-    # transitioning from the linear segment's slope to a new slope.
-    # For example, starting at -0.5 rad and ending at -0.2 rad.
+    circle = CircularSegment(
+        x_start=MAX_SHIFT / 4,
+        x_end=MAX_SHIFT,
+        radius=0.001,
+        theta_start=0.1,
+        theta_end=np.pi / 2 -0.1,
+    )
+    print(circle.slope(MAX_SHIFT / 4))
     ramp.add_segment(
         EulerSpiralSegment(
-            x_start=MAX_SHIFT/4,
-            x_end=MAX_SHIFT*0.4,
-            slope_start=-1,
-            slope_end=-0.2
+            x_start=MAX_SHIFT/6,
+            x_end=MAX_SHIFT/4,
+            slope_start=-0.25,
+            slope_end=circle.slope(MAX_SHIFT / 4)
         )
     )
-    ramp.add_segment(
-        LinearSegment(x_start=MAX_SHIFT*0.4, x_end=MAX_SHIFT, slope=-0.2)
-    )
+    # tempLine = LinearSegment(x_start=MAX_SHIFT/4, x_end=MAX_SHIFT, slope=circle.slope(MAX_SHIFT / 4))
+    ramp.add_segment(circle)
+    # ramp.add_segment(tempLine)
 
 
     plt.figure()
