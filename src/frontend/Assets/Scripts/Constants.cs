@@ -43,7 +43,7 @@ public static class DefaultParameters
         new Parameter(ParameterNames.PRIMARY_SPRING_PRETENSION, "0.2"),
         new Parameter(ParameterNames.SECONDARY_HELIX_GEOMETRY, "1"),
         new Parameter(ParameterNames.SECONDARY_TORSION_SPRING_RATE, "30"),
-        new Parameter(ParameterNames.SECONDARY_COMPRESSION_SPRING_RATE, "1"),
+        new Parameter(ParameterNames.SECONDARY_COMPRESSION_SPRING_RATE, "20"),
         new Parameter(ParameterNames.SECONDARY_ROTATIONAL_SPRING_PRETENSION, "45"),
         new Parameter(ParameterNames.SECCONDARY_LINEAR_SPRING_PRETENSION, "0.1"),
         new Parameter(ParameterNames.VEHICLE_WEIGHT, "225.0"),
