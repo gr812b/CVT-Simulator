@@ -2,6 +2,10 @@
 
 \usepackage{tabularx}
 \usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{graphicx}
+\usepackage{pdflscape}
+\usepackage{tabularx}
 
 \title{Reflection and Traceability Report on \progname}
 
@@ -63,10 +67,172 @@ low.}
 
 \subsection{SRS and Hazard Analysis}
 
+The following table corresponds to SRS changes in response to feedback.
+
+    \begin{longtable}{|p{4cm}|p{1.5cm}|p{4cm}|p{1.5cm}|}
+    \hline
+    \textbf{Feedback Item} & \textbf{Source of Feedback} & \textbf{Change Made in Response} & \textbf{Commit Reference} \\
+    \hline
+    \endfirsthead
+    \hline
+    \endhead
+    \hline
+    \endfoot
+    \hline
+    \endlastfoot
+    Functional Requirements do not seem to have measurable/fit criteria associated with them \href{https://github.com/gr812b/CVT-Simulator/issues/38}{Issue \#38} & Peer review  & No change made, Functional requirements were deemed measurable & N/A \\
+    \hline 
+    Acknowledging possible floating point errors and specifying a tollerance range for error would be beneficial \href{https://github.com/gr812b/CVT-Simulator/issues/39}{Issue \#39} & Peer review  & Added floating point accuracy consideration to \href{https://github.com/gr812b/CVT-Simulator/blob/main/docs/SRS/SRS.pdf}{NFR1}. 
+    & \href{https://github.com/gr812b/CVT-Simulator/commit/b737c9dca12893fff6071cc0cf9fcc4c4b4d7a93}{b737c9d} \\
+   
+    \hline 
+    Adding why specifc section were NA \href{https://github.com/gr812b/CVT-Simulator/issues/40}{Issue \#40} & Peer review & No change made, deemed not relevant & N/A\\
+    \hline
+    Traceability matrix not clear \href{https://github.com/gr812b/CVT-Simulator/issues/41}{Issue \#41} and \href{https://github.com/gr812b/CVT-Simulator/issues/64}{Issue \#64} & Peer review and TA feedback & Traceability Matrices fixed to be more clear and complete 
+    & \href{https://github.com/gr812b/CVT-Simulator/commit/f8dc185e533e52c5260595c5b1c8d48bb4db3ff8}{f8dc185}  
+    \href{https://github.com/gr812b/CVT-Simulator/commit/d5080cc95e629483f81ea46df03fbcc2f9c454eb}{d5080cc}  
+    \href{https://github.com/gr812b/CVT-Simulator/commit/b7db68a977e81676ac26ccea8c662e55feb7d087}{b7db68a} 
+    \\
+    \hline
+    Reusability metric not practical \href{https://github.com/gr812b/CVT-Simulator/issues/42}{Issue \#42} & Peer feedback & No change made as was deemed practical as previous CVT information was available to us. & N/A\\
+
+    \hline 
+    Remove unused SRS folders \href{https://github.com/gr812b/CVT-Simulator/issues/55}{Issue \#55}. & Supervisor feedback & Removed used SRS folders from the repository & 
+    \href{https://github.com/gr812b/CVT-Simulator/commit/b6e45c22301071eea9360af5a45d437670bcf9a7}{b6e45c2}  \\
+    \hline
+    Add References \href{https://github.com/gr812b/CVT-Simulator/issues/61}{Issue \#61}. & TA feedback & Added references to SRS where needed. & 
+    \href{https://github.com/gr812b/CVT-Simulator/commit/1632c65edd88ce7af866c39e77177310d6423657}{1632c65}  \\
+    \hline 
+    Discuss standards \href{https://github.com/gr812b/CVT-Simulator/issues/62}{Issue \#62}. & TA feedback & Added standards section. & 
+    \href{https://github.com/gr812b/CVT-Simulator/commit/91148c8a8249d9964023fbcab5e4fcf92a940b2c}{91148c8} \\
+    \hline
+    Missing numerical rational as why certain numbers were chosen in requirements \href{https://github.com/gr812b/CVT-Simulator/issues/65}{Issue \#65}. & TA feedback & Added rationale for the numbers selected. & 
+    \href{https://github.com/gr812b/CVT-Simulator/commit/b5b01370c77954ad1f6c25786c1e88eb61ef5a77}{b5b0137} \\
+    \hline
+    Missing phase in plane of requirements \href{https://github.com/gr812b/CVT-Simulator/issues/66}{Issue \#66}. & TA feedback & Added phase in plan for requirements. & 
+    \href{https://github.com/gr812b/CVT-Simulator/commit/43c023e165f82a2f03926e7721ca326effeb52e47}{43c023e} \\
+    \hline
+    Add description of sheaves \href{https://github.com/gr812b/CVT-Simulator/issues/158}{Issue \#158} & Supervisor feedback & Added sheave description to improve user understanding. & 
+    \href{https://github.com/gr812b/CVT-Simulator/commit/e3953ccd60abfd192f6ebd23efa01e5a88108d30}{e3953cc}
+    \end{longtable}
+
+
+    \noindent The following table corresponds to Hazard Analysis changes in response to feedback.
+
+    \begin{longtable}{|p{4cm}|p{1.5cm}|p{4cm}|p{1.5cm}|}
+    \hline
+    \textbf{Feedback Item} & \textbf{Source of Feedback} & \textbf{Change Made in Response} & \textbf{Commit Reference} \\
+    \hline
+    \endfirsthead
+    \hline
+    \endhead
+    \hline
+    \endfoot
+    \hline
+    \endlastfoot
+    The failure mode of "insufficient frictional forces" has no requirement associated with it according to the FMEA table \href{https://github.com/gr812b/CVT-Simulator/issues/48}{Issue \#48}. & Peer review  & Addressed why one failure mode did not have requirement due to assumptions made. & 
+    \href{https://github.com/gr812b/CVT-Simulator/commit/430fb6dd9bbe740c4c952e974f0799712f0055c0}{430fb6d} \\
+    \hline
+    Assumptions listed outside Assumptions section \href{https://github.com/gr812b/CVT-Simulator/issues/49}{Issue \#49}. & Peer review & No change made as discussing some assumptions in the scope section was relevant. & N/A\\
+    \hline 
+    Security requirements missing fit criteria \href{https://github.com/gr812b/CVT-Simulator/issues/50}{Issue \#50}. & Peer review & No change made as security requirements were deemed practical and attainable. & N/A\\
+    \hline
+    Table is missing references for one failure mode \href{https://github.com/gr812b/CVT-Simulator/issues/52}{Issue \#52}. & Peer review & No change made as this was addressed with \href{https://github.com/gr812b/CVT-Simulator/issues/48}{Issue \#48}. & See     \href{https://github.com/gr812b/CVT-Simulator/commit/430fb6dd9bbe740c4c952e974f0799712f0055c0}{430fb6d} \\
+    \hline
+    Table is missing failure modes and associated safety requirements for User Interface Component \href{https://github.com/gr812b/CVT-Simulator/issues/53}{Issue \#53}. & Peer review & Added a section to address why there were no UI security requirements. & \href{https://github.com/gr812b/CVT-Simulator/commit/bce0b0260aeedc43a905349bb702547b7a445af0}{bce0b02}\\
+    \hline
+    Should consider cancellation errors under numerical stability \href{https://github.com/gr812b/CVT-Simulator/issues/54}{Issue \#54}. & Peer review & No change as not planned for this revision of our product. & N/A\\
+    \hline 
+
+\end{longtable}
+
+
 \subsection{Design and Design Documentation}
+The following table corresponds to the changes to the Module Guide(MG) and MIS documents. 
+\begin{longtable}{|p{4cm}|p{1.5cm}|p{4cm}|p{1.5cm}|}
+    \hline
+    \textbf{Feedback Item} & \textbf{Source of Feedback} & \textbf{Change Made in Response} & \textbf{Commit Reference} \\
+    \hline
+    \endfirsthead
+    \hline
+    \endhead
+    \hline
+    \endfoot
+    \hline
+    \endlastfoot
+    MG - Section 6 not valueable to the reader \href{https://github.com/gr812b/CVT-Simulator/issues/100}{Issue \#100}. & Peer review  & No change made as section 6 was deemed valueable.& N/A \\
+    \hline
+    MG - Link back to SRS to reduce duplicate information and add traceability \href{https://github.com/gr812b/CVT-Simulator/issues/101}{Issue \#101}. & Peer review  & Link to SRS was provided.& 
+    \href{https://github.com/gr812b/CVT-Simulator/commit/c9472786934ffacbad18ab7b65ed8313451e8ada}{c947278} \\ 
+    \hline
+    MG - Anticipated changes could be more clear \href{https://github.com/gr812b/CVT-Simulator/issues/103}{Issue \#103}. & Peer review  & No change made as the anticipated change's section was deemed strait forward.& N/A \\
+    \hline
+
+    MG - Should the GUI module not make use of initialize module \href{https://github.com/gr812b/CVT-Simulator/issues/104}{Issue \#104}. & Peer review  & No change made as not applicable. & N/A \\
+    \hline
+
+    MIS - Some exceptions were left blank. \href{https://github.com/gr812b/CVT-Simulator/issues/102}{Issue \#102}. & Peer review  & Blank exceptions were removed. & 
+    \href{https://github.com/gr812b/CVT-Simulator/commit/5c48147b343cc93bd576ef4c185cf6708cb6ad26}{5c48147} \\ 
+
+\end{longtable}
+
+\noindent The following table corresponds to the changes made in the design of the \progname's  design.
+\begin{longtable}{|p{4cm}|p{1.5cm}|p{4cm}|p{1.5cm}|}
+    \hline
+    \textbf{Feedback Item} & \textbf{Source of Feedback} & \textbf{Change Made in Response} & \textbf{Commit Reference} \\
+    \hline
+    \endfirsthead
+    \hline
+    \endhead
+    \hline
+    \endfoot
+    \hline
+    \endlastfoot
+    Add units to the user inputs to improve user understanding. \href{https://github.com/gr812b/CVT-Simulator/issues/153}{Issue \#153}. & Supervisor feedback & Units were added beside inputs. & 
+    \href{https://github.com/gr812b/CVT-Simulator/commit/54bafd2bf352567aea47488b067127ec2b9f7a34}{54bafd2} \\ 
+    \hline 
+    Add ability to upload dxf files for ramp geometry. \href{https://github.com/gr812b/CVT-Simulator/issues/157}{Issue \#153}. & Supervisor feedback & No changes as did not have time to implement. & 
+    N/A \\ 
+    \hline
+    Check for users entering negative inputs  \href{https://github.com/gr812b/CVT-Simulator/issues/154}{Issue \#154}. & Supervisor feedback & Users are not allowed to enter negative numbers. & 
+    \href{https://github.com/gr812b/CVT-Simulator/commit/54bafd2bf352567aea47488b067127ec2b9f7a34}{54bafd2} \\ 
+    \hline 
+    Provide default values in the input fields \href{https://github.com/gr812b/CVT-Simulator/issues/156}{Issue \#156}. & Supervisor feedback & Users are given default values allowing them to quickly tune CVT. & 
+    \href{https://github.com/gr812b/CVT-Simulator/commit/54bafd2bf352567aea47488b067127ec2b9f7a34}{54bafd2} \\ 
+    \hline 
+    Provide user with loading information to improve user feedback \href{https://github.com/gr812b/CVT-Simulator/issues/204}{Issue \#204} & Supervisor feedback & Added a loading bar to provide the user loading progress. & 
+    \href{https://github.com/gr812b/CVT-Simulator/pull/207}{pull-207} \\ 
+
+\end{longtable}
 
 \subsection{VnV Plan and Report}
 
+The following table corresponds to changes regarding the VnV Plan.
+\begin{longtable}{|p{4cm}|p{1.5cm}|p{4cm}|p{1.5cm}|}
+    \hline
+    \textbf{Feedback Item} & \textbf{Source of Feedback} & \textbf{Change Made in Response} & \textbf{Commit Reference} \\
+    \hline
+    \endfirsthead
+    \hline
+    \endhead
+    \hline
+    \endfoot
+    \hline
+    \endlastfoot
+    Confusion with Validation report extra \href{https://github.com/gr812b/CVT-Simulator/issues/76}{Issue \#76} & Peer review  & No change made, as one of our extras is a Validation report & N/A \\
+    \hline 
+    Repetitive information that can be listed in your development plan \href{https://github.com/gr812b/CVT-Simulator/issues/77}{Issue \#77} & Peer review & No change as was deemed not repetitive & N/A \\
+    \hline
+    Opportunity for more automated tests \href{https://github.com/gr812b/CVT-Simulator/issues/78}{Issue \#78} & Peer review & No change as not planed for this revision of the product. & N/A \\
+    \hline
+    More granular items in the SRS verification plan checklist \href{https://github.com/gr812b/CVT-Simulator/issues/85}{Issue \#85} & Peer review & No change as not planed for this revision of the product. & N/A \\
+    \hline
+    The checklist format was not consistent. \href{https://github.com/gr812b/CVT-Simulator/issues/86}{Issue \#86} & Peer review & Checklist format was fixed so that the format of each checklist was consistent & 
+    \href{https://github.com/gr812b/CVT-Simulator/commit/13e3596e7e3ba6fa7feca6426c6248aba93e2b49}{13e3596} \\
+    \hline 
+    Traceability labels could be shorter \href{https://github.com/gr812b/CVT-Simulator/issues/88}{Issue \#88} & Peer review  & No change made, as test labels were deemed appropriate  & N/A \\
+    \hline 
+\end{longtable}
 \section{Challenge Level and Extras}
 
 \subsection{Challenge Level}
