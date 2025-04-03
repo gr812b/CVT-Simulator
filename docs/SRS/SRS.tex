@@ -1060,8 +1060,21 @@ Combining the two forces, we get the total side force acting on the secondary CV
 
 \[ F_S = \frac{k_{\text{tor}}(\theta_0 + \theta)}{2r\tan(\beta)} + k_\text{comp}(x_0 + x) \]
 
-
-% TODO: Add derivation
+\defgeneral
+{Angular Velocity of the Engine} % #1 label
+{rad/s} % #2 units
+{
+  \[ \omega_\text{eng} = \frac{v_\text{car} \cdot R_\text{CVT} \cdot R_\text{gearbox}}{r_\text{wheel}} \]
+} % #3 equation
+{ 
+$\omega_\text{eng}$: Angular velocity of the engine\\
+& $v_\text{car}$: Velocity of the car\\
+& $R_\text{CVT}$: Ratio of the CVT\\
+& $R_\text{gearbox}$: Gearbox ratio\\
+& Due to the no slip assumption (LINK HERE), the engine velocity is directly correlated to the speed of the vehicles through the gearbox ratio and CVT. Since the engine torque at each angular velocity is pre-defined, we can then get these at each point.
+}  % #4 description
+{} % #5 source
+{} % #6 referenced by
 
 \subsubsection{Data Definitions}\label{sec_datadef}
 
@@ -1189,8 +1202,8 @@ The goal statement GS\ref{GS3} are solved by Instance Models \ref{inst:4}, \ref{
   & $R_\text{gearbox}$ is the gearbox reduction ratio (unitless)\\
   & $\tau_{\text{eng}}(\omega_\text{eng})$ is the torque seen at the engine as a function of engine angular velocity (Nm)
 }
-  {\iref{inst:5}}
-  {-}
+{}
+{\iref{inst:2}}
   
   
   \subsubsection*{Derivation of Acceleration}
@@ -1221,18 +1234,22 @@ Substituting the above equations in and solving for $a$ gives us the final equat
 \[ a(t) = \frac{\left( \frac{T_{\text{eng}}(t) \cdot R_\text{cvt}(t)}{r_{\text{gear}} + r_{\text{wheel}}} \right) - (C_{\text{rr}} F_g \sin(\theta_\text{inc})) - \left( \frac{1}{2} \rho v^2 C_D A \right) - (F_g \cos(\theta))}{m_v + m_d} \]
 \definstance
 {Velocity}
-{$a(t)$}
-{$v(t) = \int a(t) dt$}
-{$v(t)$}
-{$a(t)$ is the function of acceleration over time}
+{$a_\text{car}$}
+{\[
+\frac{dv_\text{car}}{dt} = a_\text{car}
+\]}
+{$v_\text{car}$}
+{$a_\text{car}$ is the vehicles acceleration (m/s$^2$)}
 {-}
 
 \definstance
 {Distance}
-{$v(t)$}
-{$d(t) = \int v(t) dt$}
-{$d(t)$}
-{$v(t)$ is the function of velocity over time}
+{$v_\text{car}$}
+{\[
+\frac{dd_\text{car}}{dt} = v_\text{car}
+\]}
+{$d_\text{car}$}
+{$v_\text{car}$ is the vehicles velocity (m/s)}
 {-}
 
 \definstance
@@ -1454,22 +1471,6 @@ Finally, simplifying to get: \\
 \[a_{\text{belt}} = \frac{T_{\text{eng}}}{m_\text{belt} r_{\text{prim}}}\]
 
 
-% TODO: Probably need to define this if I can't find a source
-\definstance
-{Angular Velocity of the Engine}
-{$v_\text{car}, R_\text{CVT}, R_\text{gearbox}, r_\text{wheel}$} % Input
-{
-  \[ \omega_\text{eng} = \frac{v_\text{car} \cdot R_\text{CVT} \cdot R_\text{gearbox}}{r_\text{wheel}} \]
-} % Equation
-{$\omega_\text{eng}$} % Output
-{
-  $T_{eng}$: Torque seen at the engine\\
-& $\omega_\text{eng}$: Angular velocity of the engine\\
-& Due to the no slip assumption (LINK HERE), the engine velocity is directly correlated to the speed of the vehicles through the gearbox ratio and CVT. Since the engine torque at each angular velocity is pre-defined, we can then get these at each point.
-} % Description
-{} % Sources
-{} % Citation
-{-}
 
 \subsubsection{Input Data Constraints} \label{sec_DataConstraints}    
 
