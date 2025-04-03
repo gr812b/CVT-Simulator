@@ -1401,9 +1401,9 @@ a_\text{shift} = v_\text{shift}\frac{dv_\text{shift}}{dd_\text{shift}} = \frac{F
 One can derive the acceleration of the sheaves using \hpref{TM:N2}{Newton's Second Law}. The forces acting on the built include 
 only the primary and secondary clamping forces, which act in opposite directions as they act out radially.
 The acceleration of the sheave is derived as follows:
-\[ma(t) = F_{\text{clamp\_prim}}(t) - F_{\text{clamp\_sec}}(t)\]
+\[mv\frac{dv}{dt} = F_{\text{prim\_clamp}}(d_\text{shift}, \omega_\text{eng}) - F_{\text{sec\_clamp}}(d_\text{shift}, T_\text{eng}, R_\text{cvt})\]
 Rearranging the equation for acceleration gives the final equation:
-\[a(t) = \frac{F_{\text{clamp\_prim}}(t) - F_{\text{clamp\_sec}}(t)}{m}\]
+\[v\frac{dv}{dt} = \frac{F_{\text{clamp\_prim}}(t) - F_{\text{clamp\_sec}}(t)}{m}\]
 
 \definstance
 {IM:SV}
