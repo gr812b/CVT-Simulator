@@ -188,6 +188,7 @@ None
 \textbf{Name} & \textbf{In} & \textbf{Out} & \textbf{Exceptions} \\
 \hline
 getTorque & angularVeloctiy ($\mathbb{R}$) & torque ($\mathbb{R}$) & - \\
+getPower & angularVelocity ($\mathbb{R}$) & power ($\mathbb{R}$) & - \\
 calcuAngularAccel & angularVeloctiy ($\mathbb{R}$), loadTorque ($\mathbb{R}$)  & angularAcceleration ($\mathbb{R}$) & ValueError \\
 \hline
 \end{tabular}
@@ -216,6 +217,11 @@ None
 \noindent getTorque(angularVeloctiy):
 \begin{itemize}
 \item output: torque:= torqueCurve(angularVeloctiy) 
+\end{itemize}
+
+\noindent getPower(angularVeloctiy):
+\begin{itemize}
+\item output: power:= getTorque(angularVeloctiy) * angularVeloctiy
 \end{itemize}
 
 \noindent calcAngularAccel(angularVeloctiy, loadTorque):
@@ -258,6 +264,7 @@ calcInclineForce & - & inclineForce $\mathbb{R}$ & - \\
 calcDragForce & velocity $\mathbb{R}$ & dragForce $\mathbb{R}$ & - \\
 calcLoadTorque & velocity $\mathbb{R}$ & loadTorque $\mathbb{R}$ & - \\
 calcGearboxLoad & velocity $\mathbb{R}$ & gearboxLoad $\mathbb{R}$ & ValueError \\
+calcAcceleration & velocity $\mathbb{R}$, power $\mathbb{R}$ & acceleration $\mathbb{R}$ & ValueError \\
 \hline
 \end{tabular}
 \end{center}
@@ -267,7 +274,7 @@ calcGearboxLoad & velocity $\mathbb{R}$ & gearboxLoad $\mathbb{R}$ & ValueError 
 \subsubsection{State Variables}
 
 \begin{itemize}
-  \item gavitational acceleration ($\mathbb{R}$) denoted as $g$
+  \item gravitational acceleration ($\mathbb{R}$) denoted as $g$
   \item air density ($\mathbb{R}$) denoted as $\rho$
   \item frontal area ($\mathbb{R}$) denoted as $A$
   \item drag coefficient ($\mathbb{R}$) denoted as $C_{\text{d}}$
@@ -308,6 +315,15 @@ Constants are initialized from the constants module
 \item error: ValueError iff gearboxRatio = 0
 \end{itemize}
 
+\noindent calcAcceleration(velocity, power):
+\begin{itemize}
+\item output: acceleration :=
+\[
+\frac{\text{power}}{\text{velocity} \times m} - \frac{\text{calculate\_drag\_force(velocity)}}{m} - g \cdot \sin(\theta)
+\]
+\item error: ValueError iff gearboxRatio = 0
+\end{itemize}
+
 \subsubsection{Local Functions}
 
 None
@@ -336,8 +352,9 @@ Primary Module
 \hline
 \textbf{Name} & \textbf{In} & \textbf{Out} & \textbf{Exceptions} \\
 \hline
-springForce & shiftDistance ($\mathbb{R}$) & force ($\mathbb{R}$) & - \\
-rampForce & shiftDistance ($\mathbb{R}$), angularVelocity ($\mathbb{R}$) & force ($\mathbb{R}$) & - \\
+calcFlyForce & shiftDistance ($\mathbb{R}$), angularVelocity ($\mathbb{R}$) & force ($\mathbb{R}$) & - \\
+springForce & compression ($\mathbb{R}$) & force ($\mathbb{R}$) & - \\
+calcNetForce & shiftDistance ($\mathbb{R}$), angularVelocity ($\mathbb{R}$) & netForce ($\mathbb{R}$) & - \\
 \hline
 \end{tabular}
 \end{center}
@@ -348,12 +365,11 @@ rampForce & shiftDistance ($\mathbb{R}$), angularVelocity ($\mathbb{R}$) & force
 
 \begin{enumerate}
   \item flyweight radius ($\mathbb{R}$) (Initial) denoted as $r_{\text{fly}}$
-  \item Height of flyweights given by shift distance ($\mathbb{R} \rightarrow \mathbb{R}$) denoted as $f_{\text{prim\_height}}(d)$
-  \item Angle of flyweights given by shift distance ($\mathbb{R} \rightarrow \mathbb{R}$) denoted as $f_{\text{prim\_angle}}(d)$
   \item spring coefficient ($\mathbb{R}$) denoted as $k_{\text{prim}}$
-
   \item Initial compression of primary spring ($\mathbb{R}$) denoted as $d_{\text{prim}}$
   \item flyweight mass ($\mathbb{R}$) denoted as $m_\text{fly}$
+  \item ramp type ($\mathbb{R}$) (either ramp 1 or ramp 2)
+  \item ramp ($\mathbb{F}$): Linear Segement ($\mathbb{F}$) and Circular Segment ($\mathbb{F}$) denoted as $ramp_\text{prim}$
 \end{enumerate}
 
 \subsubsection{Environment Variables}
@@ -365,14 +381,18 @@ None.
 
 \noindent springForce():
 \begin{itemize}
-  \item output: force $\coloneq \text{springForce} (k_{\text{prim}}, d_{\text{prim}} + d_{\text{shift}})$
+  \item output: force $\coloneq \text{springForce}(k_{\text{prim}}, d_{\text{prim}} + \text{shiftDistance})$
 \end{itemize}
 
-\noindent rampForce():
+\noindent calcFlyForce():
 \begin{itemize}
-\item output: force $\coloneq \text{centForce}(m_\text{fly}, r_{\text{fly}}, \text{angularVelocity}) \times \tan(f_{\text{prim\_angle}}(\text{shiftDistance})) $
+\item output: force $\coloneq \text{centForce}(m_\text{fly}, r_{\text{fly}}, \text{angularVelocity}) \times \tan(ramp_{\text{prim}}(\text{shiftDistance})) $
 \end{itemize}
 
+\noindent calcNetForce():
+\begin{itemize}
+\item output: force $\coloneq \text{calcFlyForce}(\text{shiftDistance},\text{angularVelocity} ) - \text{springForce}(\text{shiftDistance})$
+\end{itemize}
 \subsubsection{Local Functions}
 
 \begin{itemize}
@@ -404,9 +424,11 @@ Secondary Module
 \hline
 \textbf{Name} & \textbf{In} & \textbf{Out} & \textbf{Exceptions} \\
 \hline
-torsSpringForce & shiftDistance ($\mathbb{R}$) & force ($\mathbb{R}$) & ValueError \\
+helixForce & torque ($\mathbb{R}$), springTorque ($\mathbb{R}$), shiftDistance ($\mathbb{R}$) & force ($\mathbb{R}$) & ValueError \\
 compSpringForce & shiftDistance ($\mathbb{R}$) & force ($\mathbb{R}$) & - \\
-rampForce & torque ($\mathbb{R}$), ratio ($\mathbb{R}$), shiftDistance ($\mathbb{R}$) & force ($\mathbb{R}$) & ValueError\\
+calcRotation & shiftDistance ($\mathbb{R}$) & rotation ($\mathbb{R}$) & ValueError \\
+torsSpringTorque & shiftDistance ($\mathbb{R}$) & force ($\mathbb{R}$) & ValueError \\
+calcNetForce & torque ($\mathbb{R}$), shiftDistance ($\mathbb{R}$) & force ($\mathbb{R}$) & ValueError\\
 \hline
 \end{tabular}
 \end{center}
@@ -432,9 +454,9 @@ None.
 
 \subsubsection{Access Routine Semantics}
 
-\noindent torsSpringForce():
+\noindent helixForce():
 \begin{itemize}
-  \item output: force $\coloneq \text{torsForce} (k_\text{tors}, \theta_\text{sec} + f_\text{sec}(\text{shiftDistance})) / (2 \cdot r_\text{helix} \cdot \tan(g_{\text{sec}}(\text{shiftDistance})))$
+  \item output: helix force: $\frac{\text{torque} \cdot \text{springTorque}}{2 \cdot r_\text{sec} \cdot \tan(\theta)}$
   \item error: ValueError iff $\tan(g_{\text{sec}}(\text{shiftDistance})) = 0$
 \end{itemize}
 
@@ -443,10 +465,20 @@ None.
   \item output: force $\coloneq \text{springForce} (k_\text{comp}, d_\text{comp} + \text{shiftDistance}) $
 \end{itemize}
 
-\noindent helixForce():
+\noindent calcRotation():
 \begin{itemize}
-  \item output: force $\coloneq \text{helixForce} (\text{torque}, \text{ratio}, r_{\text{helix}}, g_{\text{sec}}(\text{shiftDistance}))$
+  \item output: force $\coloneq \text{shiftDistance} \cdot g_{\text{sec}}(d) \cdot 2 / r_\text{helix} $
+\end{itemize}
+
+\noindent torsSpringTorque():
+\begin{itemize}
+  \item output: force $\coloneq \text{torsForce} (k_\text{tors}, \theta_\text{sec} + f_\text{sec}(\text{shiftDistance})) / (2 \cdot r_\text{helix} \cdot \tan(g_{\text{sec}}(\text{shiftDistance})))$
   \item error: ValueError iff $\tan(g_{\text{sec}}(\text{shiftDistance})) = 0$
+\end{itemize}
+
+\noindent calcNetForce():
+\begin{itemize}
+  \item output: force $\coloneq \text{helixForce}(\text{torque}, \text{torsSpringTorque}(\text{shiftDistance}), \text{shiftDistance}) + \text{compSpringForce}(\text{shiftDistance}) $
 \end{itemize}
 
 \subsubsection{Local Functions}
@@ -454,7 +486,6 @@ None.
 \begin{itemize}
   \item comp spring force: $\text{springForce(k, x)} \coloneq \text{k} \cdot \text{x}$
   \item tors spring force: $\text{torsForce}(k, \theta, r) \coloneq \frac{k \cdot \theta}{r}$ 
-  \item helix force: $\text{helixForce}(T, R, r, \theta) \coloneq \frac{T \cdot R}{2r\tan(\theta)}$
 \end{itemize}
 
 \newpage
@@ -526,7 +557,6 @@ ODE Solver
 
 \begin{itemize}
   \item Constants Module (\ref{Module_constants})
-  \item CVT Simulation Module (\ref{Module_cvt_simulation})
   \item External Forces Module (\ref{Module_external_forces})
   \item Engine Simulator Module (\ref{Module_engine_simulator})
   \item State Module (\ref{Module_state})
@@ -968,6 +998,233 @@ Assume that the other modules are functioning correctly.
 \subsubsection{Local Functions}
 
 None
+
+\newpage
+
+\section{MIS of Belt Simulator Module} \label{Module_belt_simulator}
+
+\subsection{Module}
+
+\texttt{Belt Simulator}
+
+\subsection{Uses}
+
+\begin{itemize}
+  \item Constants Module (\ref{Module_constants})
+\end{itemize}
+\subsection{Syntax}
+
+\subsubsection{Exported Constants}
+None.
+
+\subsubsection{Exported Access Programs}
+
+\begin{center}
+\begin{tabular}{p{3cm} p{4cm} p{4cm} p{2cm}}
+\hline
+\textbf{Name} & \textbf{In} & \textbf{Out} & \textbf{Exceptions} \\
+\hline
+centrifgual & w $\mathbb{R}$, shiftDistance $\mathbb{R}$, wrapAngle $\mathbb{R}$  & Force $\mathbb{R}$ & - \\
+radialFromClamp & clampingForce $\mathbb{R}$ & Force $\mathbb{R}$ & - \\
+calcNetRadial & centrifugalForce $\mathbb{R}$, radialForce $\mathbb{R}$, wrapAngle $\mathbb{R}$ & netForce $\mathbb{R}$ & - \\
+radialForce & shiftDistance $\mathbb{R}$, wrapAngle $\mathbb{R}$, clampingForce $\mathbb{R}$& radialForce $\mathbb{R}$ & - \\
+calcSlackTension & radialForce $\mathbb{R}$, wrapAngle $\mathbb{R}$, u $\mathbb{R}$ & slackTension $\mathbb{R}$ & - \\
+maxTorque & tension $\mathbb{R}$, wrapAngle $\mathbb{R}$, u $\mathbb{R}$, radius $\mathbb{R}$ & torque $\mathbb{R}$ & - \\
+\hline
+\end{tabular}
+\end{center}
+
+\subsection{Semantics}
+
+\subsubsection{State Variables}
+
+\begin{enumerate}
+  \item primary $\mathbb{B}$
+  \item uStatic $\mathbb{R}$ = $\text{RUBBER ALUMINUM STATIC FRICTION}$ denoted as $u_s$
+  \item uKinetic $\mathbb{R}$ = $\text{RUBBER ALUMINUM KINETIC FRICTION}$ denoted as $u_k$
+\end{enumerate}
+
+\subsubsection{Environment Variables}
+
+\subsubsection{Assumptions}
+
+None.
+
+\subsubsection{Access Routine Semantics}
+
+\noindent centrifgual():
+\begin{itemize}
+  \item output: force $\coloneq \text{centForce}(\text{w}, \text{mass}, \text{shiftDistance})$
+\end{itemize}
+
+\noindent radialFromClamp():
+\begin{itemize}
+  \item output: force $\coloneq \text{clampingForce} \cdot 2 \cdot tan(\text{SHEAVE ANGLE}/2)$
+\end{itemize}
+
+\noindent calcNetRadial():
+\begin{itemize}
+  \item output: force $\coloneq (\text{centrifugalForce} + \text{radialForce}$) $\cdot 2 \cdot sin(\text{wrapAngle}/2)$
+\end{itemize}
+
+\noindent radialForce():
+\begin{itemize}
+  \item output: force $\coloneq \text{calcNetRadial}(\text{centrifgual}(w, shiftDistance, wrapAngle), \text{radialFromClamp}(\text{clampingForce}))$
+\end{itemize}
+
+\noindent calcSlackTension():
+\begin{itemize}
+  \item output: tension $\coloneq \frac{\text{radialForce}}{cos(\text{wrapAngle}-pi /2) \cdot (1 + \text{wrapAngle} \cdot \text{u})}$
+\end{itemize}
+
+\noindent maxTorque():
+\begin{itemize}
+  \item output: torque $\coloneq \text{tension} \cdot \text{radius} \left( e^{\mu \cdot \text{wrap\_angle}} - 1 \right) $
+\end{itemize}
+
+
+
+\subsubsection{Local Functions}
+\begin{itemize}
+  \item centrifugal force: $\text{centForce(m, r, w)} \coloneq \text{m} \times \text{r} \times \text{w}^2$
+\end{itemize}
+
+
+\newpage
+
+
+\section{MIS of Piecewise Ramp Module} \label{Module_piecewise_ramp}
+
+\subsection{Module}
+
+\texttt{Piecewise Ramp}
+
+\subsection{Uses}
+
+\begin{itemize}
+  \item Constants Module (\ref{Module_constants})
+\end{itemize}
+
+\subsection{Syntax}
+
+\subsubsection{Exported Classes and Methods}
+
+\begin{center}
+\begin{tabular}{p{3cm} p{4cm} p{4cm} p{2cm}}
+\hline
+\textbf{Name} & \textbf{In} & \textbf{Out} & \textbf{Exceptions} \\
+\hline
+\multicolumn{4}{l}{\textbf{RampSegment (Abstract Base Class)}} \\
+\hline
+height & x: \(\mathbb{R}\) & y-coordinate: \(\mathbb{R}\) & NotImplemented \\
+slope  & x: \(\mathbb{R}\) & derivative: \(\mathbb{R}\) & NotImplemented \\
+\hline
+\multicolumn{4}{l}{\textbf{LinearSegment (Inherits RampSegment)}} \\
+\hline
+\texttt{LinearSegment} (Constructor) & x\_start: \(\mathbb{R}\), x\_end: \(\mathbb{R}\), slope: \(\mathbb{R}\) & LinearSegment instance & - \\
+\hline
+height & x: \(\mathbb{R}\) & \( y = m \times (x - x_{start}) + y_{start} \) & - \\
+slope  & x: \(\mathbb{R}\) & \( m \) & - \\
+\hline
+\multicolumn{4}{l}{\textbf{CircularSegment (Inherits RampSegment)}} \\
+\hline
+\texttt{CircularSegment} (Constructor) & x\_start: \(\mathbb{R}\), x\_end: \(\mathbb{R}\), radius: \(\mathbb{R}\), theta\_start: \(\mathbb{R}\), theta\_end: \(\mathbb{R}\) & CircularSegment instance & \begin{tabular}[c]{@{}l@{}}ValueError if\\ 1) \(\theta_{start}\) or \(\theta_{end}\) \\ not in \([0,\pi/2]\)\\ 2) \(\theta_{start} \ge \theta_{end}\)\end{tabular} \\
+\hline
+helpful\_guy & \(\theta: \mathbb{R}\) & offset: \(\mathbb{R}\) & - \\
+f & x: \(\mathbb{R}\) & \( y = -\sqrt{radius - x^2} \) & - \\
+f\_prime & x: \(\mathbb{R}\) & derivative: \(\mathbb{R}\) & - \\
+map\_x & x: \(\mathbb{R}\) & adjusted x: \(\mathbb{R}\) & - \\
+height & x: \(\mathbb{R}\) & computed y-coordinate: \(\mathbb{R}\) & - \\
+slope  & x: \(\mathbb{R}\) & computed slope: \(\mathbb{R}\) & - \\
+\hline
+\multicolumn{4}{l}{\textbf{PiecewiseRamp}} \\
+\hline
+\texttt{PiecewiseRamp} (Constructor) & None & PiecewiseRamp instance & - \\
+\hline
+add\_segment & segment: \texttt{RampSegment} & None & - \\
+height      & x: \(\mathbb{R}\) & \( |y| \) (ramp height) : \(\mathbb{R}\) & ValueError if \(x\) out of range \\
+slope       & x: \(\mathbb{R}\) & \( |dy/dx| \) : \(\mathbb{R}\) & ValueError if \(x\) out of range \\
+\hline
+\end{tabular}
+\end{center}
+
+\subsubsection{Exported Constants}
+None.
+
+\subsection{Semantics}
+
+\subsubsection{State Variables}
+
+For the \texttt{PiecewiseRamp} class:
+\begin{enumerate}
+  \item \texttt{segments} \(\in\) List of \texttt{RampSegment}
+\end{enumerate}
+
+For the ramp segment classes, the following instance variables are maintained:
+\begin{itemize}
+  \item \texttt{x\_start}, \texttt{x\_end}: defines the domain of the segment.
+  \item \texttt{y\_start}: starting height (automatically set to ensure continuity).
+  \item For \texttt{LinearSegment}: slope \(m\).
+  \item For \texttt{CircularSegment}: radius, \(\theta_{start}\), \(\theta_{end}\) (with internal conversion for computation), and related parameters used in the mapping functions.
+\end{itemize}
+
+\subsubsection{Environment Variables}
+
+None.
+
+\subsubsection{Assumptions}
+
+\begin{itemize}
+  \item The segments added to a \texttt{PiecewiseRamp} are contiguous and ordered by increasing \(x\).
+  \item The user provides valid input ranges (i.e., \(x\_start < x\_end\) and for circular segments, \(0 \le \theta_{start} < \theta_{end} \le \pi/2\)).
+\end{itemize}
+
+\subsubsection{Access Routine Semantics}
+
+\noindent \textbf{LinearSegment}:
+\begin{itemize}
+  \item \texttt{height(x)}: \\
+  Returns the height computed by \( y = m \times (x - x_{start}) + y_{start} \).
+  \item \texttt{slope(x)}: \\
+  Returns the constant slope \( m \).
+\end{itemize}
+
+\noindent \textbf{CircularSegment}:
+\begin{itemize}
+  \item \texttt{helpful\_guy(\(\theta\))}: \\
+  Returns an offset computed as \(-\sqrt{\frac{radius}{1+\tan^2(\theta)}}\) used in the x-coordinate mapping.
+  \item \texttt{f(x)}: \\
+  Returns the y-coordinate on the circle: \(-\sqrt{radius - x^2}\).
+  \item \texttt{f\_prime(x)}: \\
+  Returns the derivative of \texttt{f} at \( x \).
+  \item \texttt{map\_x(x)}: \\
+  Transforms \( x \) in the segment’s domain to the corresponding coordinate on the circular arc using a linear scaling between offsets computed from \(\theta_{start}\) and \(\theta_{end}\).
+  \item \texttt{height(x)}: \\
+  Returns the height at \( x \) based on the circular arc and adjusted to maintain continuity with \( y_{start} \).
+  \item \texttt{slope(x)}: \\
+  Returns the derivative at \( x \) computed via the derivative of the circular function.
+\end{itemize}
+
+\noindent \textbf{PiecewiseRamp}:
+\begin{itemize}
+  \item \texttt{add\_segment(segment)}: \\
+  Adds a new ramp segment. If segments already exist, sets the new segment's \texttt{y\_start} to the end height of the previous segment to ensure continuity.
+  \item \texttt{height(x)}: \\
+  Determines which segment covers \( x \) and returns the absolute height at that \( x \). \\
+  \textbf{Exception:} Raises a ValueError if \( x \) is outside the domain of all segments.
+  \item \texttt{slope(x)}: \\
+  Determines which segment covers \( x \) and returns the absolute slope at that \( x \). \\
+  \textbf{Exception:} Raises a ValueError if \( x \) is outside the domain of all segments.
+\end{itemize}
+
+\subsubsection{Local Functions}
+
+Within \texttt{CircularSegment}, the following internal functions are used to assist computations:
+\begin{itemize}
+  \item \texttt{helpful\_guy}: maps a given angle to an x-offset.
+  \item \texttt{f} and \texttt{f\_prime}: compute the circular arc and its derivative.
+  \item \texttt{map\_x}: performs the coordinate transformation needed to align the circular segment with the provided \(x\)-domain.
+\end{itemize}
 
 \newpage
 
