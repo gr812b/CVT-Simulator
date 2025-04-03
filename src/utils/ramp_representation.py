@@ -3,6 +3,7 @@ from typing import List
 import matplotlib.pyplot as plt
 from constants.car_specs import MAX_SHIFT
 import math
+from scipy.integrate import quad
 
 
 class RampSegment:
@@ -98,6 +99,93 @@ class CircularSegment(RampSegment):
         return self.f_prime(adjusted_x)
 
 
+class EulerSpiralSegment(RampSegment):
+    """
+    Euler spiral segment that transitions smoothly between two slopes.
+    Instead of tangent angles, you supply the initial and final slopes.
+    The slopes are converted to tangent angles (θ = arctan(slope)).
+    This version assumes slopes are in the range -∞ to 0.
+    """
+    def __init__(self, x_start: float, x_end: float, slope_start: float, slope_end: float):
+        """
+        :param x_start: start horizontal coordinate
+        :param x_end: end horizontal coordinate (defines the horizontal span L)
+        :param slope_start: starting slope (e.g., a very negative value, approaching -∞)
+        :param slope_end: ending slope (e.g., 0 for horizontal)
+        """
+        super().__init__(x_start, x_end)
+        # Convert slopes to tangent angles
+        self.theta_start = np.arctan(slope_start)
+        self.theta_end = np.arctan(slope_end)
+        
+        if self.theta_start >= self.theta_end:
+            raise ValueError("slope_start must be less than slope_end (i.e. more negative than slope_end)")
+        
+        self.delta = self.theta_end - self.theta_start  # total change in tangent angle
+        
+        # Horizontal length of the segment
+        self.L = self.x_end - self.x_start
+        
+        # Compute normalization factor I = ∫₀¹ cos(θ_start + delta * u²) du.
+        I, _ = quad(lambda u: np.cos(self.theta_start + self.delta * u**2), 0, 1)
+        # s_end is chosen so that the horizontal projection matches L
+        self.s_end = self.L / I
+
+    def _x_of_s(self, s: float) -> float:
+        """Computes the horizontal distance traveled for a given arc length s."""
+        u_upper = s / self.s_end
+        integral, _ = quad(lambda u: np.cos(self.theta_start + self.delta * u**2), 0, u_upper)
+        return self.s_end * integral
+
+    def _y_of_s(self, s: float) -> float:
+        """Computes the vertical displacement for a given arc length s."""
+        u_upper = s / self.s_end
+        integral, _ = quad(lambda u: np.sin(self.theta_start + self.delta * u**2), 0, u_upper)
+        return self.s_end * integral
+
+    def _find_s_for_x(self, x_offset: float, tol: float = 1e-8) -> float:
+        """
+        Given a horizontal offset (x - x_start), find the corresponding arc length s.
+        Uses a simple binary search.
+        """
+        lower = 0.0
+        upper = self.s_end
+        # Ensure the value at upper is at least x_offset
+        while self._x_of_s(upper) < x_offset:
+            upper *= 2
+        
+        while upper - lower > tol:
+            mid = (lower + upper) / 2.0
+            x_mid = self._x_of_s(mid)
+            if x_mid < x_offset:
+                lower = mid
+            else:
+                upper = mid
+        return (lower + upper) / 2.0
+
+    def height(self, x: float) -> float:
+        """
+        Returns the vertical height at horizontal position x.
+        """
+        if not (self.x_start <= x <= self.x_end):
+            raise ValueError(f"x={x} is out of the Euler spiral segment range!")
+        x_offset = x - self.x_start
+        s_val = self._find_s_for_x(x_offset)
+        return self.y_start + self._y_of_s(s_val)
+
+    def slope(self, x: float) -> float:
+        """
+        Returns the slope (dy/dx) at horizontal position x.
+        """
+        if not (self.x_start <= x <= self.x_end):
+            raise ValueError(f"x={x} is out of the Euler spiral segment range!")
+        x_offset = x - self.x_start
+        s_val = self._find_s_for_x(x_offset)
+        # Instantaneous tangent angle:
+        angle = self.theta_start + self.delta * (s_val / self.s_end) ** 2
+        return math.tan(angle)
+
+
 class PiecewiseRamp:
     """Handles multiple ramp segments and ensures continuity automatically."""
 
@@ -133,48 +221,103 @@ class PiecewiseRamp:
 if __name__ == "__main__":
     # Sample primary ramp
     ramp = PiecewiseRamp()
-    ramp.add_segment(LinearSegment(x_start=0, x_end=MAX_SHIFT / 6, slope=-0.3))
     ramp.add_segment(
-        CircularSegment(
-            x_start=MAX_SHIFT / 6,
-            x_end=MAX_SHIFT,
-            radius=0.002,
-            theta_start=1,
-            theta_end=np.pi / 2 - 0.5,
+        LinearSegment(x_start=0, x_end=MAX_SHIFT/4, slope=-1)
+    )
+    
+    # Euler spiral from MAX_SHIFT/4 to MAX_SHIFT/2,
+    # transitioning from the linear segment's slope to a new slope.
+    # For example, starting at -0.5 rad and ending at -0.2 rad.
+    ramp.add_segment(
+        EulerSpiralSegment(
+            x_start=MAX_SHIFT/4,
+            x_end=MAX_SHIFT*0.4,
+            slope_start=-1,
+            slope_end=-0.2
         )
     )
+    ramp.add_segment(
+        LinearSegment(x_start=MAX_SHIFT*0.4, x_end=MAX_SHIFT, slope=-0.2)
+    )
 
-    # Evaluate ramp
-    x_values = np.linspace(0, MAX_SHIFT, 1000)
-    y_values = [-ramp.height(x) for x in x_values]
 
-    # Plot results
-    plt.plot(x_values, y_values)
+    plt.figure()
+    used_labels = set()
+    for segment in ramp.segments:
+        x_vals = np.linspace(segment.x_start, segment.x_end, 200)
+        y_vals = [segment.height(x) for x in x_vals]
+        if isinstance(segment, LinearSegment):
+            color = "blue"
+            label = "Linear"
+        elif isinstance(segment, EulerSpiralSegment):
+            color = "red"
+            label = "Euler Spiral"
+        else:
+            color = "black"
+            label = type(segment).__name__
+        if label in used_labels:
+            label = None
+        else:
+            used_labels.add(label)
+        plt.plot(x_vals, y_vals, color=color, label=label)
     plt.xlabel("X Position")
     plt.ylabel("Height")
-    plt.title("Piecewise Ramp Profile")
+    plt.title("Height Profile by Segment")
+    plt.grid()
+    plt.legend()
     plt.gca().set_aspect("equal", adjustable="box")
-    plt.grid()
     plt.show()
 
-    # Evaluate slope
-    slope_values = [ramp.slope(x) for x in x_values]
-
-    # Plot results
-    plt.plot(x_values, slope_values)
+    # Plot the Slope Profile by Segment
+    plt.figure()
+    used_labels = set()
+    for segment in ramp.segments:
+        x_vals = np.linspace(segment.x_start, segment.x_end, 200)
+        slope_vals = [segment.slope(x) for x in x_vals]
+        if isinstance(segment, LinearSegment):
+            color = "blue"
+            label = "Linear"
+        elif isinstance(segment, EulerSpiralSegment):
+            color = "red"
+            label = "Euler Spiral"
+        else:
+            color = "black"
+            label = type(segment).__name__
+        if label in used_labels:
+            label = None
+        else:
+            used_labels.add(label)
+        plt.plot(x_vals, slope_vals, color=color, label=label)
     plt.xlabel("X Position")
-    plt.ylabel("Slope")
-    plt.title("Piecewise Ramp Slope Profile")
+    plt.ylabel("Slope (dy/dx)")
+    plt.title("Slope Profile by Segment")
     plt.grid()
+    plt.legend()
     plt.show()
 
-    # Evaluate angle
-    angle_values = [np.arctan(slope) for slope in slope_values]
-
-    # Plot results
-    plt.plot(x_values, angle_values)
+    # Plot the Angle Profile by Segment (angle computed as arctan(slope))
+    plt.figure()
+    used_labels = set()
+    for segment in ramp.segments:
+        x_vals = np.linspace(segment.x_start, segment.x_end, 200)
+        angle_vals = [np.arctan(segment.slope(x)) for x in x_vals]
+        if isinstance(segment, LinearSegment):
+            color = "blue"
+            label = "Linear"
+        elif isinstance(segment, EulerSpiralSegment):
+            color = "red"
+            label = "Euler Spiral"
+        else:
+            color = "black"
+            label = type(segment).__name__
+        if label in used_labels:
+            label = None
+        else:
+            used_labels.add(label)
+        plt.plot(x_vals, angle_vals, color=color, label=label)
     plt.xlabel("X Position")
-    plt.ylabel("Angle")
-    plt.title("Piecewise Ramp Angle Profile")
+    plt.ylabel("Angle (radians)")
+    plt.title("Angle Profile by Segment")
     plt.grid()
+    plt.legend()
     plt.show()
