@@ -994,7 +994,7 @@ The helix side force can be derived from using the torque across the CVT system,
 
 \[ T_\text{CVT} = T_\text{eng} \cdot R_\text{cvt} \tag*{\text{(see \hyperref[TM:GR]{TM:GR})}}\]
 
-Since this is a torque, we can convert it to a force by dividing by the radius of the ramps. Further, since the ramps are angled at $\beta$, we divide by $\tan(\beta)$ to get the force in the direction of the helix (see \hpref{A:IFF}). Finally, since only one of the two pulleys is moveable, and the force is acting on both, we must divide by a factor of 2.
+Since this is a torque, we can convert it to a force by dividing by the radius of the ramps. Further, since the ramps are angled at $\beta$, we divide by $\tan(\beta)$ to get the force in the direction of the helix (see \hpref{A:IIF}). Finally, since only one of the two pulleys is moveable, and the force is acting on both, we must divide by a factor of 2.
 
 \[ F_H = \frac{T_\text{eng} R_\text{cvt}}{2r\tan(\beta)} \]
 
@@ -1165,8 +1165,8 @@ identified in Sections~\ref{sec_theoretical} and~\ref{sec_gendef}.
 {\newline}
 
 {\noindent}The goal statement \hpref{GS:IF} are solved by Instance Models \hpref{IM:A}, \hpref{IM:V} and \hpref{IM:D}\\
-{\noindent}The goal statement GS\ref{GS2} are solved by Instance Models \hpref{IM:SD}\\
-The goal statement GS\ref{GS3} are solved by Instance Models \hpref{IM:PCF}, \hpref{IM:SCF}, \hpref{IM:SA} and \hpref{IM:SV}\\
+{\noindent}The goal statement \hpref{GS:E} are solved by Instance Models \hpref{IM:SD}\\
+The goal statement \hpref{GS:F} are solved by Instance Models \hpref{IM:PCF}, \hpref{IM:SCF}, \hpref{IM:SA} and \hpref{IM:SV}\\
   \definstance
   {IM:A}
   {Acceleration}
@@ -1193,9 +1193,9 @@ The goal statement GS\ref{GS3} are solved by Instance Models \hpref{IM:PCF}, \hp
   
 \subsubsection*{Derivation of Acceleration}
 
-Using equations for \hpref{TM:KE}{kinetic energy}, \hpref{TM:GE}{gavitational potential energy}, \hpref{TM:AR}{air resistance} and \hpref{TM:ET}{engine power}, the acceleration of the vehicle is derived using the law of conservation of energy.
+Using equations for \hyperref[TM:KE]{kinetic energy}, \hyperref[TM:GE]{gavitational potential energy}, \hyperref[TM:AR]{air resistance} and \hyperref[TM:ET]{engine power}, the acceleration of the vehicle is derived using the law of conservation of energy.
 \[
-P = \frac{dK}{dt} + \frac{dU}{dt} + \frac{dF_D}{dt} \tag*{\text{(see \hyperref[TM:KE]{TM:KE}, \hyperref[TM:GE]{TM:GE}, \hyperref[TM:AR]{TM:AR})}}
+P = \frac{dK}{dt} + \frac{dU}{dt} + \frac{dF_D}{dt} \tag*{\text{(see \hpref{TM:KE}, \hpref{TM:GE}, \hpref{TM:AR})}}
 \]
 
 Substituting the above equations in gives us:
@@ -1285,7 +1285,7 @@ The flyweight experiences a \hyperref[TM:CF]{centrifugal force} {$F_c = m r\omeg
 The ramp angle $f_{\text{prim\_angle}}(d_{\text{shift}})$ is where the force applied by the flyweight meets the inclined surface.
 The force can be broken into the radial force, which is perpendicular to the ramp, and the axial force which acts in the direction of the ramp.
 The axial force is what is responsible for moving the mechanism causing the flyweights to press against a ramp or surface, therefore the force we are interested in.
-We can ignore the radial force as it acts perpendicular to the ramp and does not contribute to the axial force. (see \hpref{A:IFF})
+We can ignore the radial force as it acts perpendicular to the ramp and does not contribute to the axial force. (see \hpref{A:IIF})
 To find the flywheel force in this axial direction the tangent of the angle $f_{\text{prim\_angle}}(d_{\text{shift}})$ is used.
 The flywheel force is derived as follows: 
 \[
@@ -1398,7 +1398,7 @@ a_\text{shift} = v_\text{shift}\frac{dv_\text{shift}}{dd_\text{shift}} = \frac{F
 {-}
 
 \subsubsection*{Derivation of Sheave Acceleration}
-One can derive the acceleration of the sheaves using \hpref{TM:N2}{Newton's Second Law}. The forces acting on the built include 
+One can derive the acceleration of the sheaves using \hyperref[TM:N2]{Newton's Second Law}. The forces acting on the built include 
 only the primary and secondary clamping forces, which act in opposite directions as they act out radially.
 The acceleration of the sheave is derived as follows:
 \[mv\frac{dv}{dt} = F_{\text{prim\_clamp}}(d_\text{shift}, \omega_\text{eng}) - F_{\text{sec\_clamp}}(d_\text{shift}, T_\text{eng}, R_\text{cvt})\]
@@ -1462,7 +1462,7 @@ Equating the two torque equations: \\
 \[\frac{T_{\text{eng}}}{r_{\text{prim}}} = \frac{T_{\text{load}}}{r_{\text{sec}}} \tag*{\text{(see \hpref{A:NBS})}}\] 
 {\newline}
 
-The equation for the torque of the taut side is derived using the \hpref{TM:CE}{capstan equation}:
+The equation for the torque of the taut side is derived using the \hyperref[TM:CE]{capstan equation}:
 \[T_T = T_s e^{\mu \theta} \tag*{\text{(\hyperref[TM:CE]{TM:CE})}}\]
 Substituting our engine torque into this: \\
 \[\frac{T_{\text{eng}}}{r_{\text{prim}}} + T_s = T_s e^{\mu \theta}\]
@@ -1649,7 +1649,7 @@ Testing methodologies, such as unit testing will be used to verify system accura
 \subsubsection{Legal and Safety Regulations}
 The software must comply with applicable regulations concerning software integrity and data accuracy, as no personal information is used security requirements are considered out of scope.
 \begin{itemize}
-    \item \textbf{ISO/IEC 25002:2024}: Software quality models ensuring reliability and maintainability \cite{ISO26262Standard}. This will be ensured via NFR\ref{NFR:MA}. 
+    \item \textbf{ISO/IEC 25002:2024}: Software quality models ensuring reliability and maintainability \cite{ISO26262Standard}. This will be ensured via \hpref{NFR:MA}. 
 \end{itemize}
 
 \subsubsection{Software Development Constraints Due to Compliance}
@@ -1680,9 +1680,9 @@ Finally, the CVT axis are assumed to be in line and the belt slippage of the CVT
 
 \noindent \begin{itemize}
 
-\item[LC:TMP \label{LC:TMP}:] The effect of temperature on material properties might be included in the future, (A\ref{A_1}) Stakeholders would be interested in seeing this information in the future.
-\item[LC:EB \label{LC:EB}:] The elasticity of the belt might be considered in the future, (A\ref{A_3}) This would provide a more accurate model of the CVT system.
-\item[LC:FL \label{LC:FL}:] Frictional losses in non-critical components might be considered in the future, (A\ref{A_6}) This would provide a more accurate model of the CVT system.
+\item[LC:TMP \label{LC:TMP}:] The effect of temperature on material properties might be included in the future, (\hpref{A:NMVT}) Stakeholders would be interested in seeing this information in the future.
+\item[LC:EB \label{LC:EB}:] The elasticity of the belt might be considered in the future, (\hpref{A:RB}) This would provide a more accurate model of the CVT system.
+\item[LC:FL \label{LC:FL}:] Frictional losses in non-critical components might be considered in the future, (\hpref{A:NFL}) This would provide a more accurate model of the CVT system.
 \item[LC:MM \label{LC:MM}:] Some of the math models will most likely change as the design is refined.
 
 \end{itemize}
@@ -1691,9 +1691,9 @@ Finally, the CVT axis are assumed to be in line and the belt slippage of the CVT
 
 \begin{itemize}
 
-  \item[ULC:AL \label{ULC:AL}:] The assumption that the CVT axis are in line is unlikely to change because tuning is simply not valuable in a system as poor as this. (A\ref{A_8})
-  \item[ULC:FT \label{ULC:FT}:] The assumption that the engine operates at full throttle is unlikely to change as different behavior is simply not ideal. (A\ref{A_7})
-  \item[ULC:GF \label{ULC:GF}:] The assumption that the influence of gravitational forces is negligible is unlikely to change as it heavily reduces complexity and plays an incredibly small part on spinning objects at high rotational speeds. (A\ref{A_2})
+  \item[ULC:AL \label{ULC:AL}:] The assumption that the CVT axis are in line is unlikely to change because tuning is simply not valuable in a system as poor as this. (\hpref{A:PAA})
+  \item[ULC:FT \label{ULC:FT}:] The assumption that the engine operates at full throttle is unlikely to change as different behavior is simply not ideal. (\hpref{A:FTPE})
+  \item[ULC:GF \label{ULC:GF}:] The assumption that the influence of gravitational forces is negligible is unlikely to change as it heavily reduces complexity and plays an incredibly small part on spinning objects at high rotational speeds. (\hpref{A:NGI})
   
   \end{itemize}
 
@@ -1798,22 +1798,22 @@ the assumptions.
 \centering
 \begin{tabular}{|c|c|c|c|c|c|c|c|c|c|c|}
 \hline
-	& \hpref{A:NMVT}& \hpref{A:NGI}& \hpref{A:RB}& \hpref{A:NVE}& \hpref{A:IWT}& \hpref{A:NFL}& \hpref{A:FTPE}& \hpref{A:PAA}& \hpref{A:NBS}& \hpref{A:IFF}\\
+	& \hpref{A:NMVT}& \hpref{A:NGI}& \hpref{A:RB}& \hpref{A:NVE}& \hpref{A:IWT}& \hpref{A:NFL}& \hpref{A:FTPE}& \hpref{A:PAA}& \hpref{A:NBS}& \hpref{A:IIF}\\
 \hline
-\tref{TM:HL}        & & & & & & & & & & \\ \hline
-\tref{TM:CF}        & & & & & & & & & & \\ \hline
-\tref{TM:AR}        & & & & & & & & & & \\ \hline
-\tref{TM:ET}        & & & & & & & & & & \\ \hline
-\tref{TM:GR}        & & & & & & & & & & \\ \hline
-\tref{TM:FR}        & & & & & & & & & & \\ \hline
-\tref{TM:DE}        & & & & & & & & & & \\ \hline
-\tref{TM:CE}        & & & & & & & & & & \\ \hline
-\tref{TM:N2}        & & & & & & & & & & \\ \hline
-\tref{TM:D2R}       & & & & & & & & & & \\ \hline
-\tref{TM:D2RA}      & & & & & & & & & & \\ \hline
-\tref{TM:D2HA}      & & & & & & & & & & \\ \hline
-\tref{TM:HT}        & & & & & & & & & & \\ \hline
-\tref{TM:KE}        & & & & & & & & & & \\ \hline
+\hpref{TM:HL}        & & & & & & & & & & \\ \hline
+\hpref{TM:CF}        & & & & & & & & & & \\ \hline
+\hpref{TM:AR}        & & & & & & & & & & \\ \hline
+\hpref{TM:ET}        & & & & & & & & & & \\ \hline
+\hpref{TM:GR}        & & & & & & & & & & \\ \hline
+\hpref{TM:FR}        & & & & & & & & & & \\ \hline
+\hpref{TM:DE}        & & & & & & & & & & \\ \hline
+\hpref{TM:CE}        & & & & & & & & & & \\ \hline
+\hpref{TM:N2}        & & & & & & & & & & \\ \hline
+\hpref{TM:D2R}       & & & & & & & & & & \\ \hline
+\hpref{TM:D2RA}      & & & & & & & & & & \\ \hline
+\hpref{TM:D2HA}      & & & & & & & & & & \\ \hline
+\hpref{TM:HT}        & & & & & & & & & & \\ \hline
+\hpref{TM:KE}        & & & & & & & & & & \\ \hline
 \hpref{GD:HSF}         & & & & & & & & & &X \\ \hline
 \hpref{GD:SSSF}         & & & & & & & & & & \\ \hline
 \hpref{DD:F}        & & & & & & & & & & \\ \hline
@@ -1833,7 +1833,7 @@ the assumptions.
 \centering
 \begin{tabular}{|c|c|c|c|c|c|c|c|c|c|c|}
 \hline
-	& \hpref{A:NMVT}& \hpref{A:NGI}& \hpref{A:RB}& \hpref{A:NVE}& \hpref{A:IWT}& \hpref{A:NFL}& \hpref{A:FTPE}& \hpref{A:PAA}& \hpref{A:NBS}& \hpref{A:IFF}\\
+	& \hpref{A:NMVT}& \hpref{A:NGI}& \hpref{A:RB}& \hpref{A:NVE}& \hpref{A:IWT}& \hpref{A:NFL}& \hpref{A:FTPE}& \hpref{A:PAA}& \hpref{A:NBS}& \hpref{A:IIF}\\
 \hline
 \hpref{IM:A}       & & & & & & & & & & \\ \hline
 \hpref{IM:V}       & & & & & & & & & & \\ \hline
@@ -1861,20 +1861,20 @@ the assumptions.
 \hline
 	& \hpref{IM:A} & \hpref{IM:V}& \hpref{IM:D} & \hpref{IM:PCF} & \hpref{IM:SCF} & \hpref{IM:SA}& \hpref{IM:SV}& \hpref{IM:SD}\\
 \hline
-\tref{TM:HL}        & & & &X& & & &  \\ \hline
-\tref{TM:CF}        & & & &X& & & &  \\ \hline
-\tref{TM:AR}        &X& & & & & & &  \\ \hline
-\tref{TM:ET}        & & & & & & & &  \\ \hline
-\tref{TM:GR}        &X& & & & & & &  \\ \hline
-\tref{TM:FR}        &X& & & & & &X&  \\ \hline
-\tref{TM:DE}        &X& & & & & & &  \\ \hline
-\tref{TM:CE}        & & & & & & &X&  \\ \hline
-\tref{TM:N2}        &X& & & & &X&X&  \\ \hline
-\tref{TM:D2R}       & & & & & & & &  \\ \hline
-\tref{TM:D2RA}      & & & & & & & &  \\ \hline
-\tref{TM:D2HA}      & & & & & & & &  \\ \hline
-\tref{TM:HT}        & & & & & & & &  \\ \hline
-\tref{TM:KE}        & & & & & & & &  \\ \hline
+\hpref{TM:HL}        & & & &X& & & &  \\ \hline
+\hpref{TM:CF}        & & & &X& & & &  \\ \hline
+\hpref{TM:AR}        &X& & & & & & &  \\ \hline
+\hpref{TM:ET}        & & & & & & & &  \\ \hline
+\hpref{TM:GR}        &X& & & & & & &  \\ \hline
+\hpref{TM:FR}        &X& & & & & &X&  \\ \hline
+\hpref{TM:DE}        &X& & & & & & &  \\ \hline
+\hpref{TM:CE}        & & & & & & &X&  \\ \hline
+\hpref{TM:N2}        &X& & & & &X&X&  \\ \hline
+\hpref{TM:D2R}       & & & & & & & &  \\ \hline
+\hpref{TM:D2RA}      & & & & & & & &  \\ \hline
+\hpref{TM:D2HA}      & & & & & & & &  \\ \hline
+\hpref{TM:HT}        & & & & & & & &  \\ \hline
+\hpref{TM:KE}        & & & & & & & &  \\ \hline
 \hpref{GD:HSF}         & & & & &X& & &  \\ \hline
 \hpref{GD:SSSF}         & & & & &X& & &  \\ \hline
 \hpref{DD:F}        &X& & & & & &X&  \\ \hline
