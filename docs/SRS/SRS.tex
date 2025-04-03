@@ -940,8 +940,8 @@ This portion will specify the existing theories that are used in the development
 \deftheory
 {TM:KE}% #2 refname of theory
 {Kinetic Energy}% #3 label
-{$KE = \frac{1}{2} m v^2$}% #4 equation
-{$KE$ is the kinetic energy (J)\\
+{$\mathit{KE} = \frac{1}{2} m v^2$}% #4 equation
+{$\mathit{KE}$ is the kinetic energy (J)\\
   $m$ is the mass (kg)\\
   $v$ is the velocity (m/s)
 }% #5 description
@@ -950,6 +950,24 @@ This portion will specify the existing theories that are used in the development
 {}% #8 Referenced by
 {None}% #9 Preconditions
 {}% #1 derivation - not applicable by default
+
+\noindent
+\deftheory
+{TM:GE}% #2 refname of theory
+{Gavitational Potential Energy}% #3 label
+{$\mathit{GE} = mgh$}% #4 equation
+{
+$\mathit{GE}$ is the gravitational potential energy (J)\\
+  $m$ is the mass (kg)\\
+  $g$ is the gravitational constant (9.81 m/s$^2$)\\
+  $h$ is the height (m)
+}% #5 description
+{None.}% #6 Notes
+{\citet{GravitationalPotentialEnergyOnlineMath}}% #7 Source
+{}% #8 Referenced by
+{None}% #9 Preconditions
+{}% #1 derivation - not applicable by default
+
 
 \subsubsection*{Helper Theories}
 This portion will define auxiliary theories to aid in further derivation below.
@@ -1187,7 +1205,7 @@ The goal statement GS\ref{GS3} are solved by Instance Models \ref{inst:4}, \ref{
   {Acceleration}
   {$r_{\text{wheel}}, \rho, C_d, A, \theta_{\text{inc}}, R_{\text{CVT}}, R_\text{gearbox}, \tau_\text{engine} m_v, m_d$}
   {
-    \[\frac{dv_\text{car}}{dt} = \frac{\frac{R_\text{CVT} R_\text{gearbox}}{r_\text{wheel}} \tau_\text{engine}(\frac{v_\text{car} R_\text{CVT} R_\text{gearbox}}{r_\text{wheel}})}{m_v + m_d} - g\sin{\theta_\text{inc}} - \frac{\rho C_D A}{2(m_v + m_d)} v_\text{car}^2 \]
+    \[a_\text{car} = \frac{dv_\text{car}}{dt} = \frac{\frac{R_\text{CVT} R_\text{gearbox}}{r_\text{wheel}} \tau_\text{engine}(\frac{v_\text{car} R_\text{CVT} R_\text{gearbox}}{r_\text{wheel}})}{m_v + m_d} - g\sin{\theta_\text{inc}} - \frac{\rho C_D A}{2(m_v + m_d)} v_\text{car}^2 \]
   }
   {acceleration $a_\text{car}(t)$ (m/s$^2$)}
   {
@@ -1206,32 +1224,46 @@ The goal statement GS\ref{GS3} are solved by Instance Models \ref{inst:4}, \ref{
 {\iref{inst:2}}
   
   
-  \subsubsection*{Derivation of Acceleration}
+\subsubsection*{Derivation of Acceleration}
 
-Using \hyperref[TM:N2]{Newton's 2nd Law}, the acceleration of the vehicle is derived as follows: 
+Using equations for \hyperref[TM:KE]{kinetic energy}, \hyperref[TM:GE]{gavitational potential energy}, \hyperref[TM:AR]{air resistance} and \hyperref[TM:ET]{engine power}, the acceleration of the vehicle is derived using the law of conservation of energy.
 \[
-T_W - R_r - F_D - F_g \cos(\theta_\text{inc}) = ma
-\]
-Where \( T_W \) is the torque of the wheel, \( F_r \) is the rolling resistance, \( F_D \) is the drag force, \( F_g \) is the gravitational force, and \( m \) is the mass of the vehicle. 
-
-\[
-T_W = \frac{T_{\text{eng}}(t) \cdot R_\text{cvt}(t)}{r_{\text{gear}} + r_{\text{wheel}}} \tag*{\text{(see \hyperref[TM:GR]{TM:GR})}}
-\],
-
-\[
-F_r = C_{\text{rr}} F_g \sin(\theta_{inc}) \tag*{\text{(see \hyperref[TM:FR]{TM:FR})}}
+P = \frac{dK}{dt} + \frac{dU}{dt} + \frac{dF_D}{dt} \tag*{\text{(see \hyperref[TM:KE]{TM:KE}, \hyperref[TM:GE]{TM:GE}, \hyperref[TM:AR]{TM:AR})}}
 \]
 
-\[
-F_D = \frac{1}{2} \rho v^2 C_D A \tag*{\text{(see \hyperref[TM:AR]{TM:AR})}}
-\]
+Substituting the above equations in gives us:
 
 \[
-m = m_v + m_d
+P = \frac{d(m_v v_\text{car})}{dt} + \frac{d(m_v g h)}{dt} + \frac{d(\frac{1}{2} \rho v^2 C_D A)}{dt} 
+\]
+  
+Where the power is defined as the engine torque multiplied by the angular velocity of the engine. 
+\begin{itemize}
+\item The rate of change of the kinetic energy is defined as the mass of the vehicle multiplied by the acceleration of the vehicle.
+\item The rate of change of gravitational potential energy is defined as the mass of the vehicle multiplied by the gravitational constant multiplied by the sine of the incline angle.
+\item The power lost to air resistance is the drag forces times the velocity.
+\end{itemize}
+
+We can then write this as:
+
+\[
+P = mv\frac{dv}{dt} + mgv\sin(\theta) + \frac{1}{2} \rho v^3 C_D A
 \]
 
-Substituting the above equations in and solving for $a$ gives us the final equation:
-\[ a(t) = \frac{\left( \frac{T_{\text{eng}}(t) \cdot R_\text{cvt}(t)}{r_{\text{gear}} + r_{\text{wheel}}} \right) - (C_{\text{rr}} F_g \sin(\theta_\text{inc})) - \left( \frac{1}{2} \rho v^2 C_D A \right) - (F_g \cos(\theta))}{m_v + m_d} \]
+Solving for $\frac{dv}{dt}$ gives us:
+
+\[
+\frac{dv}{dt} = \frac{P}{mv} - g\sin(\theta) - \frac{\rho C_D A}{2m} v^2 
+\]
+
+Now we can use \ddref{DD_7}, \dref{GD_3} to substitute power in for the engine torque and the engine angular velocity.
+
+\[
+\frac{dv}{dt} = \frac{\frac{R}{r} \tau(\frac{v R}{r})}{m} - g\sin(\theta) - \frac{\rho C_D A}{2m} v^2
+\]
+
+
+
 \definstance
 {Velocity}
 {$a_\text{car}$}
@@ -2040,8 +2072,8 @@ graduate attribute of Lifelong Learning.
   As well as team members completing the models within Unity must understand the mathematical Python models to use Unity to simulate them. 
   \item For each of the knowledge areas and skills identified in the previous
   question, what are at least two approaches to acquiring the knowledge or
-  mastering the skill?  Of the identified approaches, which will each team
-  member pursue, and why did they make this choice?
+  mastering the skill?  Of the identifiethisd approaches, which will each team
+  member pursue, and why did they make  choice?
   \\\\
   To familiarize ourselves with Unity projects, we will watch YouTube tutorials and read guides provided by Unity.
   The team members who chose to do the videos did so because they are more visual learners and prefer to see the process in action.
