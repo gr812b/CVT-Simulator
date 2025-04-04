@@ -41,7 +41,8 @@
 \begin{tabularx}{\textwidth}{p{3cm}p{2cm}X}
 \toprule {\bf Date} & {\bf Version} & {\bf Notes}\\
 \midrule
-October 11th, 2024 & 0 & First version of VnV plan\\
+October 11th, 2024 & 0 & First version of VnV extra report\\
+April 1st, 2025 & 1 & Added real-world data into VnV extra\\
 \bottomrule
 \end{tabularx}
 
@@ -69,6 +70,8 @@ October 11th, 2024 & 0 & First version of VnV plan\\
     \midrule
     CVT & Continuous Variable Transmission\\
     GPS & Global Positioning System\\
+    IMU & Inertial Measurement Unit\\
+    VnV & Verification and Validation\\
     \bottomrule
   \end{tabular}
   \caption{Verification and Validation Acronyms}
@@ -81,7 +84,6 @@ October 11th, 2024 & 0 & First version of VnV plan\\
 
 \section{General Information}
 
-
 \subsection{Summary}
 
 \noindent This document will go into detail on the real-world data validation performed for the \progname{}. As per Dr. Smith's instructions, it will be completed prior to the course's end. This document currently serves as a placeholder for the final VnV extra report.
@@ -93,12 +95,14 @@ October 11th, 2024 & 0 & First version of VnV plan\\
 \subsubsection{Position}
 
 - Car go fast... still! Explained by poor modelling of air resistance and other resistive forces such as rolling resistance, frictions, etc
+- At the end you can see error decreases a bit. Perhaps the final force of air resistance was estimated too high, but the other forces were estimated too low, giving a slightly different final value, so final speed was too high.
+- Also note the poor tests mentioned later about no max velocity
 
 Car position over time
 
 \subsubsection{Velocity}
 
-- Car go fast, shocker! Ignored many resistive forces
+- Car go fast, shocker! Ignored many resistive forces, no slipping so early on its most noticeable.
 
 Car velocity over time
 
@@ -117,6 +121,8 @@ Not availabel (no data gotten from IMU)
 
 
 1 and 2 (What is 1?)
+
+\section{Trace to Requirements or Modules}
 
 
 \end{document}
