@@ -23,47 +23,62 @@
 \textbf{Date} & \textbf{Developer(s)} & \textbf{Change}\\
 \midrule
 Sept 24 & All & Initial draft\\
+Apr 3 & Cameron Dunn & Updated to Rev 1\\
 \bottomrule
 \end{tabularx}
 \end{table}
 
 \section{Problem Statement}
+The problem statement is a high-level overview of the problem that our project is trying to solve.
+It specifies the problem in plain language and outlines the inputs, outputs, stakeholders, and environment.
 
 \subsection{Problem}
 The McMaster Baja engineering team is seeking to improve the tuning process for their Continuous Variable Transmission (CVT). The tuning of a CVT typically involves extensive real-world testing of physical components, which is time-consuming and prone to inconsistencies due to factors such as wear and weather. These conditions complicate the ability to fine-tune the CVT’s torque transfer, which directly impacts vehicle acceleration and hill-climbing performance, both which are two of the team's main objectives in competition.
 
 
 \subsection{Inputs and Outputs}
+The inputs and outputs are the parameters and results that define the structure of the problem.
+The inputs provide a scope of what factors are being considered for the problem at hand.
+The outputs give the desired final form of the inputs after the problem has been solved.
 
 \subsubsection{Inputs}
 \begin{itemize}
-    \item CVT parameters
+    \item CVT Parameters
     \begin{itemize}
-        \item Primary weight
-        \item Primary Ramp Geometry
-        \item Primary Spring Rate
+        \item Primary Flyweight Mass
         \item Primary Spring Pretension
+        \item Primary Spring Rate
+        \item Primary Ramp Geometry
+        \item Secondary Torsional Spring Rate
+        \item Secondary Compression Spring Rate
+        \item Secondary Spring Rotational Pretension
+        \item Secondary Spring Linear Pretension
         \item Secondary Helix Geometry
-        \item Secondary Spring Rate
-        \item Secondary Spring Pretension
     \end{itemize}
-    \item Vehicle and Driver Weight
+    \item Vehicle Weight
+    \item Driver Weight
     \item Traction
     \item Angle of Incline
+    \item Total Distance
 \end{itemize}
 \subsubsection{Outputs}
 \begin{itemize}
-    \item Data that will be outputted as a function of time
+    \item Data that will be outputted from the simulation
     \begin{itemize}
-        \item Distance
-        \item Speed
-        \item Acceleration
-        \item Clamping Force
-        \item CVT Ratio
-        \item RPM
-        \item Torque
+        \item Time
+        \item Car Velocity
+        \item Car Position
+        \item Shift Velocity
+        \item Shift Distance
+        \item Engine Angular Position
+        \item Secondary Angular Position
+        \item Engine RPM
     \end{itemize}
-    \item 3D Model Visualization
+    \item Graphs of the simulation output
+    \item 3D Model of CVT Visualization
+    \item Speedometer
+    \item Tachometer
+    \item Distance travelled visualization
 \end{itemize}
 
 \subsection{Stakeholders}
@@ -73,6 +88,9 @@ The McMaster Baja engineering team is seeking to improve the tuning process for 
 \end{itemize}
 
 \subsection{Environment}
+The environment of the problem encompasses what hardware the application will be able to run on,
+as well as the software that the application will support and be developed in.
+
 \subsubsection{Hardware}
 \begin{itemize}
     \item Device can be configured through the use of a personal computer or laptop.
@@ -81,6 +99,7 @@ The McMaster Baja engineering team is seeking to improve the tuning process for 
 \begin{itemize}
     \item The application will be supported on Mac, Windows and Linux operating
     systems.
+    \item The application will be developed using Python and C\#.
 \end{itemize}
 
 \section{Goals}
@@ -112,6 +131,9 @@ We will need to gather data from the McMaster Baja Racing Team to validate again
 speed, RPM and basic torque measurements.
 
 \section{Stretch Goals}
+The stretch goals of the project are the features that would improve the application,
+but they are not required and can be considered out of scope for the current implementation.
+
 \subsection{Simulating Heat}
 Heat can play an important role in the behaviour of the CVT system, especially in extreme 
 configurations. Including basic heat simulation would allow users to understand which
@@ -135,6 +157,8 @@ ensure the accuracy of the simulation. This includes validating advanced torque 
 acceleration data.
 
 \section{Challenge Level and Extras}
+The challenge level provides a rough estimate of the overall difficulty of the project.
+The extras are project specific additional deliverables that separate it from the standard capstone project requirements
 
 \subsection{Challenge Level}
 
