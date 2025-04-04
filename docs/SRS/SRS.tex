@@ -49,40 +49,10 @@
 \newcommand{\colHwidth}{0.28\textwidth}
 
 % Used so that cross-references have a meaningful prefix
-\newcounter{defnum} %Definition Number
-\newcommand{\dthedefnum}{GD\thedefnum}
-\newcommand{\dref}[1]{GD\ref{#1}}
-\newcounter{datadefnum} %Datadefinition Number
-\newcommand{\ddthedatadefnum}{DD\thedatadefnum}
-\newcommand{\ddref}[1]{DD\ref{#1}}
-\newcounter{theorynum} %Theory Number
-\newcommand{\tthetheorynum}{TM\thetheorynum}
 \newcommand{\tref}[1]{TM\ref{#1}}
 \newcounter{tablenum} %Table Number
-\newcommand{\tbthetablenum}{TB\thetablenum}
-\newcommand{\tbref}[1]{TB\ref{#1}}
-\newcounter{assumpnum} %Assumption Number
-\newcommand{\atheassumpnum}{A\theassumpnum}
-\newcommand{\aref}[1]{A\ref{#1}}
-\newcounter{goalnum} %Goal Number
-\newcommand{\gthegoalnum}{GS\thegoalnum}
-\newcommand{\gsref}[1]{GS\ref{#1}}
-\newcounter{instnum} %Instance Number
-\newcommand{\itheinstnum}{IM\theinstnum}
-\newcommand{\iref}[1]{IM\ref{#1}}
-\newcounter{reqnum} %Requirement Number
-\newcommand{\rthereqnum}{R\thereqnum}
-\newcommand{\rref}[1]{R\ref{#1}}
-\newcounter{nfrnum} %NFR Number
-\newcommand{\rthenfrnum}{NFR\thenfrnum}
-\newcommand{\nfrref}[1]{NFR\ref{#1}}
-\newcounter{lcnum} %Likely change number
-\newcommand{\lthelcnum}{LC\thelcnum}
-\newcommand{\lcref}[1]{LC\ref{#1}}
 
-\newcounter{ulcnum} %Unlikely change number
-\newcommand{\utheulcnum}{ULC\theulcnum}
-\newcommand{\ulcref}[1]{ULC\ref{#1}}
+\newcommand{\hpref}[1]{\hyperref[#1]{#1}}
 
 \usepackage{fullpage}
 
@@ -92,7 +62,7 @@
 \noindent \rule{\textwidth}{0.5mm}
 
 \paragraph{RefName: } \textbf{#2} \phantomsection 
-\refstepcounter{theorynum} \label{#2}
+\label{#2}
 
 \paragraph{Label:} #3
 
@@ -118,12 +88,12 @@
 
 #8
 
-\paragraph{Preconditions for \hyperref[#2]{#2}:}
+\paragraph{Preconditions for \hpref{#2}:}
 \label{#2_precond}
 
 #9
 
-\paragraph{Derivation for \hyperref[#2]{#2}:}
+\paragraph{Derivation for \hpref{#2}:}
 \label{#2_deriv}
 
 #1
@@ -132,7 +102,7 @@
 
 }
 
-\newcommand{\definstance}[7] {
+\newcommand{\definstance}[8] {
 ~\newline
 \noindent
 \begin{minipage}{\textwidth}
@@ -140,27 +110,27 @@
 \begin{tabular}{| p{\colAwidth} | p{\colBwidth}|}
   \hline
   \rowcolor[gray]{0.9}
-  Number& IM\refstepcounter{instnum}\theinstnum \label{inst:\theinstnum}\\
+  RefName& \textbf{#1} \label{#1}\\
   \hline
-  Label& \bf #1 \\
+  Label& \bf #2 \\
   \hline
-  Input& #2\\
+  Input& #3\\
   \hline
-  Equation& #3\\
+  Equation& #4\\
   \hline
-  Output& #4\\
+  Output& #5\\
   \hline
-  Description& #5 \\
+  Description& #6 \\
   \hline
-  Sources& #6 \\
+  Sources& #7 \\
   \hline
-  Ref.\ By & #7\\
+  Ref.\ By & #8\\
   \hline
 \end{tabular}
 \end{minipage}\\
 }
 
-\newcommand{\defgeneral}[6] {
+\newcommand{\defgeneral}[7] {
 ~\newline
 \noindent
 \begin{minipage}{\textwidth}
@@ -168,19 +138,19 @@
 \begin{tabular}{| p{\colAwidth} | p{\colBwidth}|}
   \hline
   \rowcolor[gray]{0.9}
-  Number& GD\refstepcounter{defnum}\thedefnum \label{GD_\thedefnum}\\
+  RefName& \textbf{#1} \label{#1}\\
   \hline
-  Label& \bf #1 \\
+  Label& \bf #2 \\
   \hline
-  SI Units& #2\\
+  SI Units& #3\\
   \hline
-  Equation& #3\\
+  Equation& #4\\
   \hline
-  Description& #4 \\
+  Description& #5 \\
   \hline
-  Source& #5 \\
+  Source& #6 \\
   \hline
-  Ref.\ By & #6\\
+  Ref.\ By & #7\\
   \hline
 \end{tabular}
 \end{minipage}\\
@@ -194,7 +164,7 @@
 \begin{tabular}{| p{\colAwidth} | p{\colBwidth}|}
 \hline
 \rowcolor[gray]{0.9}
-Number& DD\refstepcounter{datadefnum}\thedatadefnum \label{DD_\thedatadefnum}\\
+RefName& \textbf{#1} \label{#1}\\
 \hline
 Label& \bf #2\\
 \hline
@@ -235,12 +205,13 @@ Ref.\ By & #8\\
 \begin{tabularx}{\textwidth}{p{3cm}p{2cm}X}
 \toprule {\bf Date} & {\bf Version} & {\bf Notes}\\
 \midrule
-Oct 12 & 1.0 & First Draft\\
-Nov 12 & 1.1 & Added references \\
-Jan 10 & 1.2 & Updated traceability matrices \\
-Mar 18 & 1.3 & Updated Standards(5.3), NF\rref{NFR_Accuracy} and Phase In Plan(8) \\
-Mar 24 & 1.3 & Updated functional requirements \\
-April 1 & 2.0 & Added Security Requirements \\
+Oct 12 & 0.1 & First Draft\\
+Nov 12 & 0.2 & Added references \\
+Jan 10 & 0.3 & Updated traceability matrices \\
+Mar 18 & 0.4 & Updated Standards(5.3), \hpref{NFR:AC} and Phase In Plan(8) \\
+Mar 24 & 0.5 & Updated functional requirements \\
+Apr 01 & 0.6 & Added Security Requirements \\
+Apr 04 & 1.0 & Updated to Rev 1 \\
 \bottomrule
 \end{tabularx}
 
@@ -342,11 +313,6 @@ $r_{\text{gear}}$ & \si[per-mode=symbol] {\metre} & gear radius \\
 $r_{\text{prim\_shaft}}$ & \si[per-mode=symbol] {\metre} & primary shaft initial radius \\
 $r_{\text{sec\_shaft}}$ & \si[per-mode=symbol] {\metre} & secondary shaft initial radius \\
 $r_{\text{sec\_ramp}}$ & \si[per-mode=symbol] {\metre} & secondary ramp radius \\
-$T_1$ & \si[per-mode=symbol] {\newton\metre} & first side torque \\
-$T_2$ & \si[per-mode=symbol] {\newton\metre} & second side torque \\
-$T_{\text{CVT}}$ & \si[per-mode=symbol] {} & CVT torque \\
-$T_{\text{eng}}$ & \si[per-mode=symbol] {\newton\metre} & engine torque \\
-$T_{\text{load}}$ & \si[per-mode=symbol] {\newton\metre} & load torque \\
 $t$ & \si[per-mode=symbol] {\second} & time \\
 $V$ & \si[per-mode=symbol] {\metre\cubed} & volume \\
 $v$ & \si[per-mode=symbol] {\metre\per\second} & velocity \\
@@ -361,6 +327,11 @@ $\omega_{\text{engine}}$ & \si[per-mode=symbol] {\radian\per\second} & engine an
 $\phi_{\text{sheave}}$ & \si[per-mode=symbol] {\radian} & angle between sheaves \\
 $\rho$ & \si[per-mode=symbol] {\kilogram\per\metre\cubed} & density \\
 $\tau$ & \si[per-mode=symbol] {\newton\metre} & torque \\
+$\tau_1$ & \si[per-mode=symbol] {\newton\metre} & first side torque \\
+$\tau_2$ & \si[per-mode=symbol] {\newton\metre} & second side torque \\
+$\tau_{\text{CVT}}$ & \si[per-mode=symbol] {} & CVT torque \\
+$\tau_{\text{eng}}$ & \si[per-mode=symbol] {\newton\metre} & engine torque \\
+$\tau_{\text{load}}$ & \si[per-mode=symbol] {\newton\metre} & load torque \\
 $\tau_{\text{input}}$ & \si[per-mode=symbol] {\newton\metre} & input torque \\
 $\tau_{\text{output}}$ & \si[per-mode=symbol] {\newton\metre} & output torque \\
 $\theta_{\text{inc}}$ & \si[per-mode=symbol] {\radian} & angle on incline \\
@@ -646,7 +617,7 @@ includes the following elements:
 
 \begin{itemize}
   \item [PS9a:] input angular velocity ($\omega_{\text{engine}}$) in rad/s.
-  \item [PS9b:] output torque ($T_{\text{eng}}$) in Nm.
+  \item [PS9b:] output torque ($\tau_{\text{eng}}$) in Nm.
 \end{itemize}
 
 \item[PS10:] Belt
@@ -690,9 +661,9 @@ includes the following elements:
 
 \begin{itemize}
 
-  \item[GS\refstepcounter{goalnum}\thegoalnum \label{GS1}:]  Given the material properties, initial conditions, and boundary conditions, predict the kinematics of the vehicle as a function of time, including its position, velocity, acceleration, and orientation.
-  \item[GS\refstepcounter{goalnum}\thegoalnum \label{GS2}:]  Given the engine characteristics, load torque and time simulate the output of the engine as a function of time, predicting engine torque and angular velocity.
-  \item[GS\refstepcounter{goalnum}\thegoalnum \label{GS3}:]  Given the flyweight specifications, spring coefficients, torque, input parameters, material properties, simulate the Continuous Variable Transmission (CVT) system over time, predict the output such as clamping forces, sheave acceleration, belt acceleration and system response to varying loads and engine outputs.
+  \item[GS:IF \label{GS:IF}:]  Given the material properties, initial conditions, and boundary conditions, predict the kinematics of the vehicle as a function of time, including its position, velocity, acceleration, and orientation.
+  \item[GS:E \label{GS:E}:]  Given the engine characteristics, load torque and time simulate the output of the engine as a function of time, predicting engine torque and angular velocity.
+  \item[GS:F \label{GS:F}:]  Given the flyweight specifications, spring coefficients, torque, input parameters, material properties, simulate the Continuous Variable Transmission (CVT) system over time, predict the output such as clamping forces, sheave acceleration, belt acceleration and system response to varying loads and engine outputs.
 
 \end{itemize}
 
@@ -728,37 +699,37 @@ N/A
 
 \begin{itemize}
 
-\item[A\refstepcounter{assumpnum}\theassumpnum \label{A_1}:]
+\item[A:NT \label{A:NT}:]
 \textbf{No Material Variations By Temperature } Ignore the effect of temperature on the material properties, excluding the belt.
 
-\item[A\refstepcounter{assumpnum}\theassumpnum \label{A_2}:]
+\item[A:NG \label{A:NG}:]
 \textbf{Negligible Gravitational Influence}: The orientation of the CVT system and gravitational effects are considered negligible due to the high rotational speeds involved in the system's operation.
 
-\item[A\refstepcounter{assumpnum}\theassumpnum \label{A_3}:]
+\item[A:RB \label{A:RB}:]
 \textbf{Rigidity of Belts}: Elasticity of belts are assumed negligible through its length, and the components are considered ideally rigid under normal operating conditions. The belt may still rotate about the pulleys.
 
-\item[A\refstepcounter{assumpnum}\theassumpnum \label{A_4}:]
+\item[A:NV \label{A:NV}:]
 \textbf{No Vibrational Effects}: Vibrational effects from the vehicle or external environment are assumed to be minimal and are not factored into the transmission’s operation in this model.
 
-\item[A\refstepcounter{assumpnum}\theassumpnum \label{A_5}:]
+\item[A:WT \label{A:WT}:]
 \textbf{Ignore Wear and Tear}: Component wear over time, including belt/chain wear and pulley degradation, is assumed negligible in the short-term operational model.
 
-\item[A\refstepcounter{assumpnum}\theassumpnum \label{A_6}:]
+\item[A:NF \label{A:NF}:]
 \textbf{No Frictional Losses in Non-critical Components}: Frictional losses in non-critical components (e.g., bearings, shafts) are assumed negligible, focusing only on friction relevant to the CVT system's core mechanics.
 
-\item[A\refstepcounter{assumpnum}\theassumpnum \label{A_7}:]
+\item[A:FT \label{A:FT}:]
 \textbf{Full Throttle Consistent Power Engine:} The engine is modeled to operate at full throttle with consistent power curves and peak performance, maintaining a uniform response throughout the analysis. Load feedback will be integrated to adjust RPM and power output as necessary.
 
-\item[A\refstepcounter{assumpnum}\theassumpnum \label{A_8}:]
+\item[A:AA \label{A:AA}:]
 \textbf{Perfect Axis Alignment:} The CVT's axes are aligned with one another.
 
-\item[A\refstepcounter{assumpnum}\theassumpnum \label{A_9}:]
+\item[A:NS \label{A:NS}:]
 \textbf{No Belt Slippage:} The CVT will not slip relative to the sheaves.
 
-\item[A\refstepcounter{assumpnum}\theassumpnum \label{A_10}:]
+\item[A:IF \label{A:IF}:]
 \textbf{Ignore Irrelevant Forces:} Only forces that directly contribute to the car's dynamics or the CVT's shifting behaviors are considered, allowing the simplification of dimensions where applicable.
 
-\item[A\refstepcounter{assumpnum}\theassumpnum \label{A_11}:]
+\item[A:PV \label{A:PV}:]
 \textbf{Positive Velocity Only:} The model assumes that the vehicle will only move forward, meaning that velocity will never be negative. Any dynamics related to reversing or backward movement are not considered in this analysis.
 
 
@@ -780,9 +751,8 @@ This portion will specify the existing theories that are used in the development
   $k$ is the spring constant (N/m)\\
   $\Delta x$ is the displacement (m)}% #5 description
 {In the context of this project Hooke's law is used in both a torsional and linear way.}% #6 Notes
-
 {\citet{hookeslaw}}
-{IM\ref{inst:4}}% #8 Referenced by
+{\hpref{IM:PCF}, \hpref{IM:SCF}}% #8 Referenced by
 {None}% #9 Preconditions
 {}% #1 derivation - not applicable by default
 
@@ -798,9 +768,8 @@ This portion will specify the existing theories that are used in the development
   $\omega$ is the angular velocity (rad/s)\\
   $r$ is the radius (m)}% #5 description
 {None.}% #6 Notes
-
 {\citet{CentrifugalForceCalculator2024}}% #7 Source
-{IM\ref{inst:4}}% #8 Referenced by
+{\hpref{IM:PCF}}% #8 Referenced by
 {None}% #9 Preconditions
 {}% #1 derivation - not applicable by default
 
@@ -818,7 +787,7 @@ This portion will specify the existing theories that are used in the development
   $A$ is the cross-sectional area of the object (m$^2$)}% #5 description
 {None.}% #6 Notes
 {\citet{AirResistanceFormula}}% #7 Source
-{IM\ref{inst:1}}% #8 Referenced by
+{\hpref{IM:A}}% #8 Referenced by
 {None}% #9 Preconditions
 {}% #1 derivation - not applicable by default
 
@@ -833,9 +802,8 @@ This portion will specify the existing theories that are used in the development
   $P$ is the power (W)\\
   $\omega$ is the angular velocity (rad/s)}% #5 description
 {None.}% #6 Notes
-
 {\citet{HorsepowerCalculation}}% #7 Source
-{}% #8 Referenced by
+{\hpref{IM:A}, \hpref{IM:SCF}, \hpref{IM:SA}, \hpref{IM:BA}}% #8 Referenced by
 {None}% #9 Preconditions
 {}% #1 derivation - not applicable by default
 
@@ -850,9 +818,8 @@ This portion will specify the existing theories that are used in the development
   $\tau_{\text{input}}$ is the input torque (Nm)\\
   $R_\text{gear}$ is the gear reduction (unitless)}% #5 description
 {None.}% #6 Notes
-
 {\citet{GearRatioExplanation}}% #7 Source
-{IM\ref{inst:1}}% #8 Referenced by
+{\hpref{IM:A}, \hpref{IM:SCF}}% #8 Referenced by
 {None}% #9 Preconditions
 {}% #1 derivation - not applicable by default
 
@@ -867,9 +834,8 @@ This portion will specify the existing theories that are used in the development
   $F_f$ is the force of friction (N)\\
   $F_n$ is the normal force (N)}% #5 description
 {None.}% #6 Notes
-
 {\citet{FrictionWikipedia}}% #7 Source
-{IM\ref{inst:1}, IM\ref{inst:7}}% #8 Referenced by
+{\hpref{IM:A}}% #8 Referenced by
 {None}% #9 Preconditions
 {}% #1 derivation - not applicable by default
 
@@ -882,9 +848,8 @@ This portion will specify the existing theories that are used in the development
   $m$ is the mass (kg)\\
   $V$ is the volume (m$^3$)}% #5 description
 {None.}% #6 Notes
-
 {\citet{BritannicaDensity}}% #7 Source
-{IM\ref{inst:1}}% #8 Referenced by
+{\hpref{IM:A}}% #8 Referenced by
 {None}% #9 Preconditions
 {}% #1 derivation - not applicable by default
 
@@ -894,15 +859,14 @@ This portion will specify the existing theories that are used in the development
 \deftheory
 {TM:CE}% #2 refname of theory
 {Capstan Equation}% #3 label
-{$T_1 = T_2 e^{\mu \theta}$}% #4 equation
-{$T_1$ is the tension on the first side of the belt (N)\\
-  $T_2$ is the tension on the second side of the belt (N)\\
+{$\tau_1 = \tau_2 e^{\mu \theta}$}% #4 equation
+{$\tau_1$ is the tension on the first side of the belt (N)\\
+  $\tau_2$ is the tension on the second side of the belt (N)\\
   $\mu$ is the coefficient of friction\\
   $\theta$ is the angle of wrap of the belt (radians)}% #5 description
 {None.}% #6 Notes
-
 {\citet{CapstanEquation2021}}% #7 Source
-{IM\ref{inst:7}}% #8 Referenced by
+{\hpref{IM:BA}}% #8 Referenced by
 {None}% #9 Preconditions
 {}% #1 derivation - not applicable by default
 
@@ -918,9 +882,58 @@ This portion will specify the existing theories that are used in the development
   $a$ is the acceleration (m/s$^2$)}% #5 description
 {Newtons 2nd law is used repeatedly in several Instance models}% #6 Notes
 {\citet{NewtonsSecondLaw}}% #7 Source
-{IM\ref{inst:1}, IM\ref{inst:6}, IM\ref{inst:7}}% #8 Referenced by
+{\hpref{IM:A}, \hpref{IM:SA}, \hpref{IM:BA}}% #8 Referenced by
 {None}% #9 Preconditions
 {}% #1 derivation - not applicable by default
+
+\noindent
+\deftheory
+{TM:HT}% #2 refname of theory
+{Hooke's Law (Torsional)}% #3 label
+{$F = \frac{k \Delta \theta}{r} $}% #4 equation
+{$F$ is the force (N)\\
+  $k$ is the torsional spring constant (Nm/rad)\\
+  $\Delta \theta$ is the rotation (rad)
+  $r$ is the radius of the applied torque (m)
+  }% #5 description
+{None.}% #6 Notes
+{\citet{SpringDesignFormulas}}% #7 Source
+{\hpref{IM:SCF}}% #8 Referenced by
+{None}% #9 Preconditions
+{}% #1 derivation - not applicable by default
+
+\noindent
+\deftheory
+{TM:KE}% #2 refname of theory
+{Kinetic Energy}% #3 label
+{$\mathit{KE} = \frac{1}{2} m v^2$}% #4 equation
+{$\mathit{KE}$ is the kinetic energy (J)\\
+  $m$ is the mass (kg)\\
+  $v$ is the velocity (m/s)
+}% #5 description
+{None.}% #6 Notes
+{\citet{KineticEnergyPhysicsClassroom}}% #7 Source
+{\hpref{IM:A}}% #8 Referenced by
+{None}% #9 Preconditions
+{}% #1 derivation - not applicable by default
+
+\noindent
+\deftheory
+{TM:GE}% #2 refname of theory
+{Gavitational Potential Energy}% #3 label
+{$\mathit{GE} = mgh$}% #4 equation
+{
+$\mathit{GE}$ is the gravitational potential energy (J)\\
+  $m$ is the mass (kg)\\
+  $g$ is the gravitational constant (9.81 m/s$^2$)\\
+  $h$ is the height (m)
+}% #5 description
+{None.}% #6 Notes
+{\citet{GravitationalPotentialEnergyOnlineMath}}% #7 Source
+{\hpref{IM:A}}% #8 Referenced by
+{None}% #9 Preconditions
+{}% #1 derivation - not applicable by default
+
 
 \subsubsection*{Helper Theories}
 This portion will define auxiliary theories to aid in further derivation below.
@@ -935,7 +948,7 @@ $\Delta r$ is the change in effective radius (m)\\
 $\phi$ is the angle between sheaves (rad)}% #5 description
 {Derived based on geometry of the sheaves and belt}% #6 Notes
 {See below for derivation}% #7 Source
-{}% #8 Referenced by
+{\hpref{IM:PCF}, \hpref{IM:SCF}}% #8 Referenced by
 {None}% #9 Preconditions
 {}% #1 derivation - not applicable by default
 
@@ -958,52 +971,7 @@ $\theta_\text{ramp}$ is the instantaneous ramp angle (rad)\\
 $f_\text{prim}(d)$ is the function to express the ramp geometry (m $\rightarrow$ rad)}% #5 description
 {The user will input the geometry of the ramp, which will then be interpreted to generate $f_\text{prim}$}% #6 Notes
 {N/A}% #7 Source
-{}% #8 Referenced by
-{None}% #9 Preconditions
-{}% #1 derivation - not applicable by default
-
-\noindent
-\deftheory
-{TM:D2HA}% #2 refname of theory
-{Shift Distance to Helix Angle}% #3 label
-{$\theta_\text{ramp} = f_\text{sec}(d_\text{shift})$}% #4 equation
-{$d_\text{shift}$ is the axial shift distance, or sheave displacement (m)\\
-$\theta_\text{ramp}$ is the instantaneous helix angle (rad)\\
-$f_\text{prim}(d)$ is the function to express the helix geometry (m $\rightarrow$ rad)}% #5 description
-{The user will input the geometry of the helix, which will then be interpreted to generate $f_\text{sec}$}% #6 Notes
-{N/A}% #7 Source
-{}% #8 Referenced by
-{None}% #9 Preconditions
-{}% #1 derivation - not applicable by default
-
-\noindent
-\deftheory
-{TM:HT}% #2 refname of theory
-{Hooke's Law (Torsional)}% #3 label
-{$F = \frac{k \Delta \theta}{r} $}% #4 equation
-{$F$ is the force (N)\\
-  $k$ is the torsional spring constant (Nm/rad)\\
-  $\Delta \theta$ is the rotation (rad)
-  $r$ is the radius of the applied torque (m)
-  }% #5 description
-{}% #6 Notes
-{\citet{SpringDesignFormulas}}% #7 Source
-{}% #8 Referenced by
-{None}% #9 Preconditions
-{}% #1 derivation - not applicable by default
-
-\noindent
-\deftheory
-{TM:KE}% #2 refname of theory
-{Kinetic Energy}% #3 label
-{$KE = \frac{1}{2} m v^2$}% #4 equation
-{$KE$ is the kinetic energy (J)\\
-  $m$ is the mass (kg)\\
-  $v$ is the velocity (m/s)
-}% #5 description
-{None.}% #6 Notes
-{\citet{KineticEnergyPhysicsClassroom}}% #7 Source
-{}% #8 Referenced by
+{\hpref{IM:PCF}, \hpref{IM:SCF}}% #8 Referenced by
 {None}% #9 Preconditions
 {}% #1 derivation - not applicable by default
 
@@ -1012,29 +980,31 @@ $f_\text{prim}(d)$ is the function to express the helix geometry (m $\rightarrow
 \subsubsection{General Definitions}\label{sec_gendef}
 
 \defgeneral
+{GD:HSF}
 {Helix Side Force} % #1 label
 {N = \si{\kilogram \metre\per\square\second}} % #2 units
-{$F_H = \frac{T_\text{eng} R_\text{cvt}}{2r\tan(\beta)}$} % #3 equation
+{$F_H = \frac{\tau_\text{eng} R_{\text{CVT}}}{2r\tan(\beta)}$} % #3 equation
 {$F_H$ is the side force due to the helix (N) \\
-& $T_{\text{eng}}$ is the engine torque (N-m) \\
+& $\tau_{\text{eng}}$ is the engine torque (N-m) \\
 & $R_{\text{CVT}}$ is the CVT ratio (unitless) \\
 & $r$ is the radius of the ramps from the shaft (m) \\
 & $\beta$ is the helix angle (rad)} % #4 description
-{} % #5 source
-{\iref{inst:5}} % #6 referenced by
+{-} % #5 source
+{\hpref{IM:SCF}} % #6 referenced by
 
 \subsubsection*{Derivation of Helix Side Force}
 The helix side force can be derived from using the torque across the CVT system, then by dividing out the radius to get a force.
 
-\[ T_\text{CVT} = T_\text{eng} \cdot R_\text{cvt} \tag*{\text{(see \hyperref[TM:GR]{TM:GR})}}\]
+\[ \tau_\text{CVT} = \tau_\text{eng} \cdot R_{\text{CVT}} \tag*{\text{(see \hyperref[TM:GR]{TM:GR})}}\]
 
-Since this is a torque, we can convert it to a force by dividing by the radius of the ramps. Further, since the ramps are angled at $\beta$, we divide by $\tan(\beta)$ to get the force in the direction of the helix (see \aref{A_10}). Finally, since only one of the two pulleys is moveable, and the force is acting on both, we must divide by a factor of 2.
+Since this is a torque, we can convert it to a force by dividing by the radius of the ramps. Further, since the ramps are angled at $\beta$, we divide by $\tan(\beta)$ to get the force in the direction of the helix (see \hpref{A:IF}). Finally, since only one of the two pulleys is moveable, and the force is acting on both, we must divide by a factor of 2.
 
-\[ F_H = \frac{T_\text{eng} R_\text{cvt}}{2r\tan(\beta)} \]
+\[ F_H = \frac{\tau_\text{eng} R_{\text{CVT}}}{2r\tan(\beta)} \]
 
 
 \defgeneral
-{Spring Side Force} % #1 label
+{GD:SSSF}
+{Secondary Spring Side Force} % #1 label
 {N = \si{\kilogram \metre\per\square\second}} % #2 units
 {\[F_S = \frac{k_{\text{tor}}(\theta_0 + \theta)}{2r\tan(\beta)} + k_\text{comp}(x_0 + x)\]} % #3 equation
 {$F_S$ is the side force due to the spring (N) \\
@@ -1046,8 +1016,8 @@ Since this is a torque, we can convert it to a force by dividing by the radius o
 & $x$ is the amount of compression (m) \\
 & $r$ is the radius of the ramps from the shaft (m) \\
 & $\theta$ is the amount of angular torsion (rad)} % #4 description
-{} % #5 source
-{\iref{inst:5}} % #6 referenced by
+{-} % #5 source
+{\hpref{IM:SCF}} % #6 referenced by
 
 \subsubsection*{Derivation of Spring Side Force}
 
@@ -1062,7 +1032,7 @@ Here, the displacement $x$ is the change in the compression of the spring added 
 
 Next, we can derive the torsional spring force. We can use \hyperref[TM:HT]{Hooke's Law (Torsional)} to derive:
 
-\[ T_{\text{tor}} = \frac{k_{\text{tor}} \cdot \theta}{r} \tag*{\text{(see \hyperref[TM:HT]{TM:HT})}}\]
+\[ \tau_{\text{tor}} = \frac{k_{\text{tor}} \cdot \theta}{r} \tag*{\text{(see \hyperref[TM:HT]{TM:HT})}}\]
 
 Similarly, we have an initial torsional compression $\theta_0$ that is added to the current torsional compression $\theta$.
 
@@ -1076,8 +1046,22 @@ Combining the two forces, we get the total side force acting on the secondary CV
 
 \[ F_S = \frac{k_{\text{tor}}(\theta_0 + \theta)}{2r\tan(\beta)} + k_\text{comp}(x_0 + x) \]
 
-
-% TODO: Add derivation
+\defgeneral
+{GD:AVE}
+{Angular Velocity of the Engine} % #1 label
+{rad/s} % #2 units
+{
+  \[ \omega_\text{eng} = \frac{v_\text{car} \cdot R_{\text{CVT}} \cdot R_\text{gearbox}}{r_\text{wheel}} \]
+} % #3 equation
+{ 
+$\omega_\text{eng}$: Angular velocity of the engine\\
+& $v_\text{car}$: Velocity of the car\\
+& $R_{\text{CVT}}$: Ratio of the CVT\\
+& $R_\text{gearbox}$: Gearbox ratio\\
+& Due to the no slip assumption \hpref{A:NS}, the engine velocity is directly correlated to the speed of the vehicles through the gearbox ratio and CVT. Since the engine torque at each angular velocity is pre-defined, we can then get these at each point.
+}  % #4 description
+{-} % #5 source
+{\hpref{IM:PCF}} % #6 referenced by
 
 \subsubsection{Data Definitions}\label{sec_datadef}
 
@@ -1085,7 +1069,7 @@ This section collects and defines all the data needed to build the instance
 models. The dimension of each quantity is also given. 
 
 \defdata 
-{Friction}% #1 refname of data
+{DD:F} % #1 refname of data
 {Coefficient of Friction} % #2 label
 {$\mu$} % #3 symbol
 {unitless} % #4 units
@@ -1094,10 +1078,10 @@ models. The dimension of each quantity is also given.
 & $F_f$ is the force of friction\\
 & $F_n$ is the normal force}% #6 description
 {None.}% #7 Source
-{IM\ref{inst:1}, IM\ref{inst:7}}% #8 Referenced by
+{\hpref{IM:A}}% #8 Referenced by
 
-\defdata 
-{SpringConstComp}% #1 refname of data
+\defdata
+{DD:CSC} % #1 refname of data
 {Compressionional Spring Constant} % #2 label
 {$k$} % #3 symbol
 {\si[per-mode=symbol] {\newton\per\metre}} % #4 units
@@ -1106,10 +1090,10 @@ models. The dimension of each quantity is also given.
 & $F$ is the force (\si[per-mode=symbol] {\newton})\\
 & $\Delta x$ is the displacement (\si[per-mode=symbol] {\metre})}% #6 description
 {None.}% #7 Source
-{IM\ref{inst:4}}% #8 Referenced by
+{\hpref{IM:PCF}}% #8 Referenced by
 
 \defdata
-{SpringConstTors}% #1 refname of data
+{DD:TSC}% #1 refname of data
 {Torsional Spring Constant} % #2 label
 {$k$} % #3 symbol
 {\si[per-mode=symbol] {\newton\metre\per\radian}} % #4 units
@@ -1118,10 +1102,10 @@ models. The dimension of each quantity is also given.
 & $\tau$ is the torque (\si[per-mode=symbol] {\newton\metre})\\
 & $\theta$ is the angle of rotation (radians)} % #6 description
 {None.}% #7 Source
-{IM\ref{inst:5}}% #8 Referenced by
+{\hpref{IM:SCF}}% #8 Referenced by
 
 \defdata 
-{GravConst}
+{DD:GC}
 {Gravitational Constant}
 {$g$}
 {\si[per-mode=symbol] {\metre\per\square\second}}
@@ -1130,10 +1114,10 @@ models. The dimension of each quantity is also given.
 & $F_g$ is the force of gravity\\
 & $m$ is the mass}% #6 description
 {None.}% #7 Source
-{IM\ref{inst:1}}% #8 Referenced by
+{\hpref{IM:A}}% #8 Referenced by
 
 \defdata 
-{DragCoeff}
+{DD:DC}
 {Drag Coefficient}
 {$C_d$}
 {unitless}
@@ -1144,10 +1128,10 @@ models. The dimension of each quantity is also given.
 & $v$ is the velocity of the object\\
 & $A$ is the cross-sectional area of the object}% #6 description
 {None.}% #7 Source
-{IM\ref{inst:1}}% #8 Referenced by
+{\hpref{IM:A}}% #8 Referenced by
 
 \defdata 
-{RollCoeff}
+{DD:RRC}
 {Rolling Resistance Coefficient}
 {$C_{\text{rr}}$}
 {unitless}
@@ -1156,7 +1140,20 @@ models. The dimension of each quantity is also given.
 & $F_{\text{rr}}$ is the force of rolling resistance\\
 & $F_n$ is the normal force}% #6 description
 {None.}% #7 Source
-{IM\ref{inst:1}}% #8 Referenced by
+{\hpref{IM:A}}% #8 Referenced by
+
+\defdata 
+{DD:ET}
+{Engine Torque}
+{$\tau_\text{eng}$}
+{Nm}
+{$\tau_\text{eng}(\omega_\text{eng})$}
+{
+  $\tau_\text{eng}$ is the engine torque (Nm)\\
+  & $\omega_\text{eng}$ is the engine angular velocity (rad/s)
+}
+{This is defined by Baja SAE via \citet{BajaSAEKohlerEngine2022}}% #7 Source
+{\hpref{IM:A}, \hpref{IM:SCF}, \hpref{IM:SA}, \hpref{IM:BA}}% #8 Referenced by
 
 \subsubsection{Data Types}\label{sec_datatypes}
 
@@ -1170,93 +1167,122 @@ in Section~\ref{sec_datadef} to replace the abstract symbols in the models
 identified in Sections~\ref{sec_theoretical} and~\ref{sec_gendef}.
 {\newline}
 
-{\noindent}The goal statement GS\ref{GS1} are solved by Instance Models \ref{inst:1}, \ref{inst:2} and \ref{inst:3}\\
-{\noindent}The goal statement GS\ref{GS2} are solved by Instance Models \ref{inst:8}\\
-The goal statement GS\ref{GS3} are solved by Instance Models \ref{inst:4}, \ref{inst:5}, \ref{inst:6} and \ref{inst:7}\\
+{\noindent}The goal statement \hpref{GS:IF} are solved by Instance Models \hpref{IM:A}, \hpref{IM:V} and \hpref{IM:D}\\
+{\noindent}The goal statement \hpref{GS:E} are solved by Instance Models \hpref{IM:SD}\\
+The goal statement \hpref{GS:F} are solved by Instance Models \hpref{IM:PCF}, \hpref{IM:SCF}, \hpref{IM:SA} and \hpref{IM:SV}\\
   \definstance
+  {IM:A}
   {Acceleration}
-  {$r_{\text{gear}}, r_{\text{wheel}}, \rho, C_d, A, \theta_{\text{inc}}, T_{\text{CVT}}, C_{\text{rr}}, m_v, m_d$}
+  {$r_{\text{wheel}}, \rho, C_d, A, \theta_{\text{inc}}, R_{\text{CVT}}, R_\text{gearbox}, \tau_\text{eng} m_v, m_d$}
   {
-    \[ a(t) = \frac{\left( \frac{T_{\text{eng}}(t) \cdot R_\text{cvt}(t)}{r_{\text{gear}} + r_{\text{wheel}}} \right) - (C_{\text{rr}} F_g \sin(\theta_\text{inc})) - \left( \frac{1}{2} \rho v^2 C_D A \right) - (F_g \cos(\theta_\text{inc}))}{m_v + m_d} \]
-    }
-  {acceleration $a(t)$}
+    \[a_\text{car} = \frac{dv_\text{car}}{dt} = \frac{\frac{R_{\text{CVT}} R_\text{gearbox}}{r_\text{wheel}} \tau_\text{eng}(\frac{v_\text{car} R_{\text{CVT}} R_\text{gearbox}}{r_\text{wheel}})}{m_v + m_d} - g\sin{\theta_\text{inc}} - \frac{\rho C_D A}{2(m_v + m_d)} v_\text{car}^2 \]
+  }
+  {The acceleration of the car $a_\text{car}(t)$ (m/s$^2$)}
   {
-  $r_{\text{gear}}$ is the radius of the gear (m)\\
-  & $r_{\text{wheel}}$ is the radius of the wheel (m)\\
-  & $\rho$ is the density of the fluid (kg/m$^3$)\\
-  & $C_d$ is the drag coefficient (unitless)\\
-  & $A$ is the cross-sectional area of the object (m$^2$)\\
-  & $\theta_{inc}$ is the angle of incline (rad)\\
-  & $C_{\text{rr}}$ is the coefficient of rolling resistance (unitless)\\
-  & $F_g$ is the force of gravity (N)\\
-  & $m_v$ is the mass of the vehicle (kg)\\
-  & $m_d$ is the mass of the driver(kg)\\
-  & $a(t)$ is the function of acceleration over time (m/s$^2$)\\
-  & $R_\text{cvt}(t)$ is the current ratio of the CVT as a function of time (unitless)\\
-  & $T_{\text{eng}}(t)$ is the torque seen at the engine as a function of time (Nm)
+  $r_{\text{wheel}}$ is the radius of the wheel (m)\\
+  & $\rho$: Density of the fluid (kg/m$^3$)\\
+  & $C_d$: Drag coefficient (unitless)\\
+  & $A$: Cross-sectional area of the vehicle (m$^2$)\\
+  & $\theta_{inc}$: Angle of incline (rad)\\
+  & $m_v$: Mass of the vehicle (kg)\\
+  & $m_d$: Mass of the driver (kg)\\
+  & $R_{\text{CVT}}$: Current ratio of the CVT (unitless)\\
+  & $R_\text{gearbox}$ is the gearbox reduction ratio (unitless)\\
+  & $\tau_{\text{eng}}(\omega_\text{eng})$ is the torque seen at the engine as a function of engine angular velocity (Nm)
 }
-  {\iref{inst:5}}
-  {-}
+{-}
+{\hpref{IM:V}}
   
   
-  \subsubsection*{Derivation of Acceleration}
+\subsubsection*{Derivation of Acceleration}
 
-Using \hyperref[TM:N2]{Newton's 2nd Law}, the acceleration of the vehicle is derived as follows: 
+Using equations for \hyperref[TM:KE]{kinetic energy}, \hyperref[TM:GE]{gavitational potential energy}, \hyperref[TM:AR]{air resistance} and \hyperref[TM:ET]{engine power}, the acceleration of the vehicle is derived using the law of conservation of energy.
 \[
-T_W - R_r - F_D - F_g \cos(\theta_\text{inc}) = ma
-\]
-Where \( T_W \) is the torque of the wheel, \( F_r \) is the rolling resistance, \( F_D \) is the drag force, \( F_g \) is the gravitational force, and \( m \) is the mass of the vehicle. 
-
-\[
-T_W = \frac{T_{\text{eng}}(t) \cdot R_\text{cvt}(t)}{r_{\text{gear}} + r_{\text{wheel}}} \tag*{\text{(see \hyperref[TM:GR]{TM:GR})}}
-\],
-
-\[
-F_r = C_{\text{rr}} F_g \sin(\theta_{inc}) \tag*{\text{(see \hyperref[TM:FR]{TM:FR})}}
+P = \frac{dK}{dt} + \frac{dU}{dt} + \frac{dF_D}{dt} \tag*{\text{(see \hpref{TM:KE}, \hpref{TM:GE}, \hpref{TM:AR})}}
 \]
 
-\[
-F_D = \frac{1}{2} \rho v^2 C_D A \tag*{\text{(see \hyperref[TM:AR]{TM:AR})}}
-\]
+Substituting the above equations in gives us:
 
 \[
-m = m_v + m_d
+P = \frac{d(m_v v_\text{car})}{dt} + \frac{d(m_v g h)}{dt} + \frac{d(\frac{1}{2} \rho v^2 C_D A)}{dt} 
+\]
+  
+Where the power is defined as the engine torque multiplied by the angular velocity of the engine. 
+\begin{itemize}
+\item The rate of change of the kinetic energy is defined as the mass of the vehicle multiplied by the acceleration of the vehicle.
+\item The rate of change of gravitational potential energy is defined as the mass of the vehicle multiplied by the gravitational constant multiplied by the sine of the incline angle.
+\item The power lost to air resistance is the drag forces times the velocity.
+\end{itemize}
+
+We can then write this as:
+
+\[
+P = mv\frac{dv}{dt} + mgv\sin(\theta) + \frac{1}{2} \rho v^3 C_D A
 \]
 
-Substituting the above equations in and solving for $a$ gives us the final equation:
-\[ a(t) = \frac{\left( \frac{T_{\text{eng}}(t) \cdot R_\text{cvt}(t)}{r_{\text{gear}} + r_{\text{wheel}}} \right) - (C_{\text{rr}} F_g \sin(\theta_\text{inc})) - \left( \frac{1}{2} \rho v^2 C_D A \right) - (F_g \cos(\theta))}{m_v + m_d} \]
+Solving for $\frac{dv}{dt}$ gives us:
+
+\[
+\frac{dv}{dt} = \frac{P}{mv} - g\sin(\theta) - \frac{\rho C_D A}{2m} v^2 
+\]
+
+Now we can use DD7, GD3 to substitute power in for the engine torque and the engine angular velocity.
+
+\[
+\frac{dv}{dt} = \frac{\frac{R}{r} \tau(\frac{v R}{r})}{m} - g\sin(\theta) - \frac{\rho C_D A}{2m} v^2
+\]
+
+
+
 \definstance
+{IM:V}
 {Velocity}
-{$a(t)$}
-{$v(t) = \int a(t) dt$}
-{$v(t)$}
-{$a(t)$ is the function of acceleration over time}
+{$a_\text{car}$}
+{\[
+\frac{dv_\text{car}}{dt} = a_\text{car}
+\]}
+{The velocity of the car $v_\text{car}$ (m/s)}
+{$a_\text{car}$: Acceleration of the vehicle (m/s$^2$)}
 {-}
+{\hpref{IM:D}}
 
 \definstance
+{IM:D}
 {Distance}
-{$v(t)$}
-{$d(t) = \int v(t) dt$}
-{$d(t)$}
-{$v(t)$ is the function of velocity over time}
+{$v_\text{car}$}
+{\[
+\frac{dd_\text{car}}{dt} = v_\text{car}
+\]}
+{The distance the car has traveled $d_\text{car}$ (m)}
+{$v_\text{car}$: Velocity of the vehicle (m/s)}
+{-}
 {-}
 
 \definstance
+{IM:PCF}
 {Primary Clamping Force}
-{$m_\text{fly}$, $r_{\text{fly}}$, $f_{\text{prim\_height}}(d_{\text{shift}})$, $f_{\text{prim\_angle}}(d_{\text{shift}}(t))$, $k_{\text{prim}}$, $d_{\text{prim}}$, $d_{\text{shift}}$} % Input
-{$F_{\text{prim\_clamp}}(t) = m_\text{fly} (r_{\text{fly}} + f_{\text{prim\_height}}({d_\text{shift}(t)}))(\omega_\text{eng}(t))^2 \tan(f_{\text{prim\_angle}}(d_\text{shift}(t))) + k_{\text{prim}} (d_{\text{prim}} + d_\text{shift}(t))$} % 
-{The primary clamping force $F_{\text{prim\_clamp}}$}
-{$m_\text{fly}$: Mass of the flyweight system. (kg) \\ 
+{$d_{\text{shift}}$, $\omega_\text{eng}$, $m_\text{fly}$, $r_{\text{fly}}$, $f_{\text{prim\_height}}(d_{\text{shift}})$, $f_{\text{prim\_angle}}(d_{\text{shift}})$, $k_{\text{prim}}$, $d_{\text{prim}}$} % Input
+{
+  \begin{multline*}
+  F_{\text{prim\_clamp}}(d_\text{shift}, \omega_\text{eng}) = \\
+  m_\text{fly} (r_{\text{fly}} + f_{\text{prim\_height}}(d_\text{shift}))
+  \omega_\text{eng}^2 \tan(f_{\text{prim\_angle}}(d_\text{shift}))
+  + k_{\text{prim}} (d_{\text{prim}} + d_\text{shift})
+  \end{multline*}
+  }
+{The primary clamping force $F_{\text{prim\_clamp}}$ (N)}
+{
+  $d_\text{shift}$: Displacement of the sheave as a function of time. (m)\\
+  &$\omega_\text{eng}$: Angular velocity of the engine as a function of time. (rad/s)\\
+  &$m_\text{fly}$: Mass of the flyweight system. (kg) \\ 
   &$r_{\text{fly}}$: Initial radius of the flyweights. (m) \\ 
   &$f_{\text{prim\_height}}(d_{\text{shift}})$: Function that represents the height of the flyweights based on the shift distance. (rad) \\
   &$f_{\text{prim\_angle}}(d_{\text{shift}})$: Function that returns the instantaneous angle of the ramps based on the shifting distance. (rad) \\ 
   &$k_{\text{prim}}$: Primary spring coefficient. (unitless) \\ 
-  &$d_\text{shift}(t)$: Displacement of the sheave as a function of time. (m)\\
-  &$\omega_\text{eng} (t)$: Angular velocity of the engine as a function of time. (rad/s)\\
   &$d_{\text{prim}}$: Initial compression distance of the primary spring. (m)
 } % Description
-{} % Sources
-{\iref{inst:6}}
+{-} % Sources
+{\hpref{IM:SA}}
 
 \subsubsection*{Derivation of Primary Clamping Force}
 
@@ -1264,7 +1290,7 @@ The flyweight experiences a \hyperref[TM:CF]{centrifugal force} {$F_c = m r\omeg
 The ramp angle $f_{\text{prim\_angle}}(d_{\text{shift}})$ is where the force applied by the flyweight meets the inclined surface.
 The force can be broken into the radial force, which is perpendicular to the ramp, and the axial force which acts in the direction of the ramp.
 The axial force is what is responsible for moving the mechanism causing the flyweights to press against a ramp or surface, therefore the force we are interested in.
-We can ignore the radial force as it acts perpendicular to the ramp and does not contribute to the axial force. (see \aref{A_10})
+We can ignore the radial force as it acts perpendicular to the ramp and does not contribute to the axial force. (see \hpref{A:IF})
 To find the flywheel force in this axial direction the tangent of the angle $f_{\text{prim\_angle}}(d_{\text{shift}})$ is used.
 The flywheel force is derived as follows: 
 \[
@@ -1291,24 +1317,29 @@ F_{\text{prim\_clamp}}(t) = m_\text{fly} (r_{\text{fly}} + f_{\text{prim\_height
 \]
 
 \definstance
+{IM:SCF}
 {Secondary Clamping Force}
-{$k_{\text{sec\_tor}}$, $\theta_{\text{sec}}$, $r_{\text{sec\_ramp}}$, $f_{\text{sec\_ramp}}(d_{\text{shift}})$, $f_{\text{sec\_shift}}(d_{\text{shift}})$, $k_{\text{sec\_comp}}$, $d_{\text{sec}}$, $d_{\text{shift}}(t)$, $T_{eng}(t)$, $R_{cvt}(t)$} % Input
-{\[
-F_{\text{sec\_clamp}}(t) = \frac{k_{\text{sec\_tor}} (\theta_{\text{sec}} + f_{\text{sec\_shift}}(d_\text{shift}(t))) + T_{eng}(t) R_{cvt}(t)}{2 r_{\text{sec\_ramp}} \tan(f_{\text{sec\_ramp}}(d_{\text{shift}}(t)))} + k_{\text{sec\_comp}} (d_{\text{sec}} + d_{\text{shift}}(t))
-\]} % 
-{Secondary clamping force $F_{\text{sec\_clamp}}$} % Output
-{$k_{\text{sec\_tor}}$: Torsional spring rate. (Nm/rad)\\
+{$d_\text{shift}$, $\tau_\text{eng}$, $R_{\text{CVT}}$, $k_{\text{sec\_tor}}$, $\theta_{\text{sec}}$, $r_{\text{sec\_ramp}}$, $f_{\text{sec\_ramp}}(d_{\text{shift}})$, $f_{\text{sec\_shift}}(d_{\text{shift}})$, $k_{\text{sec\_comp}}$, $d_{\text{sec}}$} % Input
+{
+  \begin{multline*}
+    F_{\text{sec\_clamp}}(d_\text{shift}, \tau_\text{eng}, R_{\text{CVT}}) = \\
+  \frac{k_{\text{sec\_tor}} (\theta_{\text{sec}} + f_{\text{sec\_shift}}(d_\text{shift})) + \tau_{eng} R_{\text{CVT}}}{2 r_{\text{sec\_ramp}} \tan(f_{\text{sec\_ramp}}(d_{\text{shift}}))} + k_{\text{sec\_comp}} (d_{\text{sec}} + d_{\text{shift}})
+  \end{multline*}
+} % 
+{The secondary clamping force $F_{\text{sec\_clamp}}$ (N)} % Output
+{
+  $d_{\text{shift}}$: Displacement of the sheave as a function of time. (m)\\
+  &$\tau_{eng}$: Torque seen at the engine as a function of time. (Nm) \\
+  &$R_{\text{CVT}}$: Ratio of the CVT as a function of time. (unitless) \\
+  &$k_{\text{sec\_tor}}$: Torsional spring rate. (Nm/rad)\\
   &$\theta_{\text{sec}}$: Initial torsional rotation. (rad)\\
   &$f_{\text{sec}}(d_{\text{shift}})$: Amount of torsional rotation based on the distance shifted. (rad) \\
   &$r_{\text{sec\_ramp}}$: Radius of the helix from the shaft. (m)\\
   &$k_{\text{sec\_comp}}$: Compression spring rate. (N/m)\\
-  &$d_{\text{sec}}$: Initial compression distance. (m)\\
-  &$d_{\text{shift}}$: Displacement of the sheave as a function of time. (m)\\
-  &$T_{eng}(t)$: Torque seen at the engine as a function of time. (Nm) \\
-  &$R_{cvt}(t)$: Ratio of the CVT as a function of time. (unitless)
+  &$d_{\text{sec}}$: Initial compression distance. (m)
 } % Description
-{} % Sources
-{\iref{inst:6}}
+{-} % Sources
+{\hpref{IM:SA}}
 
 \subsubsection*{Derivation of Secondary Clamping Force}
 
@@ -1320,19 +1351,19 @@ F_{\text{sec\_clamp}}\ = F_H + F_S
 The helix force is derived as follows:
 
 \[
-F_H = \frac{T_{eng}(t) R_{cvt}(t)}{2r\tan(\beta)}  \tag*{\text{(see \dref{GD_2})}} % TODO: Fix reference
+F_H = \frac{\tau_{eng}(t) R_{\text{CVT}}(t)}{2r\tan(\beta)}  \tag*{\text{(see \hpref{GD:SSSF})}} % TODO: Fix reference
 \]
 
 Substituting in our variables gives us the following equation:
 
 \[
-F_H = \frac{T_{eng}(t) R_{cvt}(t)}{2 r_{\text{sec\_ramp}} \tan(f_{\text{sec\_ramp}}(d_\text{shift}(t)))}
+F_H = \frac{\tau_{eng}(t) R_{\text{CVT}}(t)}{2 r_{\text{sec\_ramp}} \tan(f_{\text{sec\_ramp}}(d_\text{shift}(t)))}
 \]
 
 The spring force is derived as follows:
 
 \[
-F_S = \frac{k_{\text{tor}}(\theta_0 + \theta)}{2r\tan(\beta)} + k_\text{comp}(x_0 + x) \tag*{\text{(see \dref{GD_1})}} % TODO: Fix reference
+F_S = \frac{k_{\text{tor}}(\theta_0 + \theta)}{2r\tan(\beta)} + k_\text{comp}(x_0 + x) \tag*{\text{(see \hpref{GD:HSF})}} % TODO: Fix reference
 \]
 
 Substituting in our variables gives us the following equation:
@@ -1342,89 +1373,107 @@ F_S = \frac{k_{\text{sec\_tor}} (\theta_{\text{sec}} + f_{\text{sec\_shift}}(d_\
 
 Combining these two forces gives the total secondary clamping force:
 \[
-F_H + F_S = \frac{T_{eng}(t) R_{cvt}(t)}{2 r_{\text{sec\_ramp}} \tan(f_{\text{sec\_ramp}}(d_\text{shift}(t)))} + \frac{k_{\text{sec\_tor}} (\theta_{\text{sec}} + f_{\text{sec\_shift}}(d_\text{shift}(t)))}{2 r_{\text{sec\_ramp}} \tan(f_{\text{sec\_ramp}}(d_\text{shift}(t)))} + k_{\text{sec\_comp}} (d_{\text{sec}} + d_\text{shift}(t))
+F_H + F_S = \frac{\tau_{eng}(t) R_{\text{CVT}}(t)}{2 r_{\text{sec\_ramp}} \tan(f_{\text{sec\_ramp}}(d_\text{shift}(t)))} + \frac{k_{\text{sec\_tor}} (\theta_{\text{sec}} + f_{\text{sec\_shift}}(d_\text{shift}(t)))}{2 r_{\text{sec\_ramp}} \tan(f_{\text{sec\_ramp}}(d_\text{shift}(t)))} + k_{\text{sec\_comp}} (d_{\text{sec}} + d_\text{shift}(t))
 \]
 
 The final equation can be reached through simplifying the above equation by combining like terms:
 \[
-F_{\text{sec\_clamp}} = \frac{k_{\text{sec\_tor}} (\theta_{\text{sec}} + f_{\text{sec\_shift}}(d_\text{shift}(t))) + T_{eng}(t) R_{cvt}(t)}{2 r_{\text{sec\_ramp}} \tan(f_{\text{sec\_ramp}}(d_\text{shift}(t)))} + k_{\text{sec\_comp}} (d_{\text{sec}} + d_\text{shift}(t))
+F_{\text{sec\_clamp}} = \frac{k_{\text{sec\_tor}} (\theta_{\text{sec}} + f_{\text{sec\_shift}}(d_\text{shift}(t))) + \tau_{eng}(t) R_{\text{CVT}}(t)}{2 r_{\text{sec\_ramp}} \tan(f_{\text{sec\_ramp}}(d_\text{shift}(t)))} + k_{\text{sec\_comp}} (d_{\text{sec}} + d_\text{shift}(t))
 \]
 
-% TODO: Clean up T_T and T_s, shouldnt's exist like this? These are forces that change over time, its why we derived them below
 \definstance
-{Sheave Acceleration}
-{$F_{\text{clamp\_prim}}, F_{\text{clamp\_sec}}, m_\text{sheaves}$} % Input
-{\[a(t) = \frac{F_{\text{clamp\_prim}}(t) - F_{\text{clamp\_sec}}(t)}{m_\text{sheaves}}\]} % Equation
-{Sheave acceleration $a$} % Output
-{$F_{\text{clamp\_prim}}$: Primary clamping force\\
-  &$F_{\text{clamp\_sec}}$: Secondary clamping force\\
-  &$m_\text{sheaves}$: Mass of the movable sheaves, combined} % Description
-{} % Sources
+{IM:SA}
+{Shift Acceleration}
+{$d_\text{shift}, \omega_\text{eng}, \tau_\text{eng}, R_{\text{CVT}}, m_\text{sheaves}$} % Input
+{\[
+a_\text{shift} = v_\text{shift}\frac{dv_\text{shift}}{dd_\text{shift}} = \frac{F_{\text{prim\_clamp}}(d_\text{shift}, \omega_\text{eng}) - F_{\text{sec\_clamp}}(d_\text{shift}, \tau_\text{eng}, R_{\text{CVT}})}{m_\text{sheaves}}
+\]} % Equation
+{The shift acceleration $a_\text{shift}$} % Output
+{
+  $d_\text{shift}$: Displacement of the shift as a function of time. (m)\\
+  &$\omega_\text{eng}$: Angular velocity of the engine as a function of time. (rad/s)\\
+  &$\tau_{eng}$: Torque seen at the engine as a function of time. (Nm) \\
+  &$R_{\text{CVT}}$: Ratio of the CVT as a function of time. (unitless) \\
+  &$m_\text{sheaves}$: Mass of the sheaves. (kg)
+} % Description
 {-}
-{} % Sources
-{} % Citation
-{-}
+{\hpref{IM:SV}}
 
 \subsubsection*{Derivation of Sheave Acceleration}
 One can derive the acceleration of the sheaves using \hyperref[TM:N2]{Newton's Second Law}. The forces acting on the built include 
 only the primary and secondary clamping forces, which act in opposite directions as they act out radially.
 The acceleration of the sheave is derived as follows:
-\[ma(t) = F_{\text{clamp\_prim}}(t) - F_{\text{clamp\_sec}}(t)\]
+\[mv\frac{dv}{dt} = F_{\text{prim\_clamp}}(d_\text{shift}, \omega_\text{eng}) - F_{\text{sec\_clamp}}(d_\text{shift}, \tau_\text{eng}, R_{\text{CVT}})\]
 Rearranging the equation for acceleration gives the final equation:
-\[a(t) = \frac{F_{\text{clamp\_prim}}(t) - F_{\text{clamp\_sec}}(t)}{m}\]
-
-
+\[v\frac{dv}{dt} = \frac{F_{\text{clamp\_prim}}(t) - F_{\text{clamp\_sec}}(t)}{m}\]
 
 \definstance
+{IM:SV}
+{Shift Velocity}
+{$a_\text{shift}$} % Input
+{\[
+\frac{dv_\text{shift}}{dt} = a_\text{shift}
+\]} % Equation
+{The shift Velocity $v_\text{shift}$} % Output
+{
+  $a_\text{shift}$: Acceleration of the sheave in the shift direction. (m/s$^2$)
+} % Description
+{-}
+{\hpref{IM:SD}}
+
+\definstance
+{IM:SD}
+{Shift Distance}
+{$v_\text{sheave}$} % Input
+{\[
+\frac{dd_\text{shift}}{dt} = v_\text{sheave}
+\]} % Equation
+{The distance shifted $d_\text{shift}$} % Output
+{
+  $v_\text{sheave}$: Velocity of the sheave. (m/s)
+} % Description
+{-}
+{\hpref{IM:PCF}, \hpref{IM:SCF}, \hpref{IM:SA}}
+
+
+% TODO: Clean up \tau_T and \tau_s, shouldnt's exist like this? These are forces that change over time, its why we derived them below
+\definstance
+{IM:BA}
 {Belt Acceleration}
-{$T_{\text{eng}}, r_{\text{prim}}, m_\text{belt}$ } % Input
-{$a_{\text{belt}} = \frac{T_{\text{eng}}}{m r_{\text{prim}}}$} % Equation
+{$\tau_{\text{eng}}, r_{\text{prim}}, m_\text{belt}$ } % Input
+{$a_{\text{belt}} = \frac{\tau_{\text{eng}}}{m r_{\text{prim}}}$} % Equation
 {Belt Acceleration $a_{\text{belt}}$} % Output
-{$T_{\text{eng}}$: Engine torque\\
-   &$r_{\text{prim}}$: Primary radiu\\
+{$\tau_{\text{eng}}$: Engine torque\\
+   &$r_{\text{prim}}$: Primary radius\\
    &$m_\text{belt}$: Mass of the belt.} % Description} % Description
-{} % Sources
-{IM6} % Citation
+{-} % Sources
+{\hpref{IM:SA}} % Citation
 \subsubsection*{Derivation of Belt Acceleration}
 
 The torque of the engine equation in terms of belt tension is derived as such: \\
-\[T_{\text{eng}} = (T_T - T_s) r_{\text{prim}} \quad \Rightarrow \quad T_T - T_s = \frac{T_{\text{eng}}}{r_{\text{prim}}}\] % TODO: Add TM and reference here
+\[\tau_{\text{eng}} = (\tau_T - \tau_s) r_{\text{prim}} \quad \Rightarrow \quad \tau_T - \tau_s = \frac{\tau_{\text{eng}}}{r_{\text{prim}}}\] % TODO: Add TM and reference here
 Similarly, for the load torque: \\
-\[T_{\text{load}} = (T_T - T_s) r_{\text{sec}} \quad \Rightarrow \quad T_T - T_s = \frac{T_{\text{load}}}{r_{\text{sec}}}\] % TODO: Add TM and reference here
+\[\tau_{\text{load}} = (\tau_T - \tau_s) r_{\text{sec}} \quad \Rightarrow \quad \tau_T - \tau_s = \frac{\tau_{\text{load}}}{r_{\text{sec}}}\] % TODO: Add TM and reference here
 Equating the two torque equations: \\
-\[\frac{T_{\text{eng}}}{r_{\text{prim}}} = \frac{T_{\text{load}}}{r_{\text{sec}}} \tag*{\text{(see \aref{A_9})}}\] 
+\[\frac{\tau_{\text{eng}}}{r_{\text{prim}}} = \frac{\tau_{\text{load}}}{r_{\text{sec}}} \tag*{\text{(see \hpref{A:NS})}}\] 
 {\newline}
 
 The equation for the torque of the taut side is derived using the \hyperref[TM:CE]{capstan equation}:
-\[T_T = T_s e^{\mu \theta} \tag*{\text{(\hyperref[TM:CE]{TM:CE})}}\]
+\[\tau_T = \tau_s e^{\mu \theta} \tag*{\text{(\hyperref[TM:CE]{TM:CE})}}\]
 Substituting our engine torque into this: \\
-\[\frac{T_{\text{eng}}}{r_{\text{prim}}} + T_s = T_s e^{\mu \theta}\]
-Solving for \(T_s\) (slack side): \\
-\[T_s = \frac{T_{\text{eng}}}{r_{\text{prim}} (e^{\mu \theta} - 1)}\]
+\[\frac{\tau_{\text{eng}}}{r_{\text{prim}}} + \tau_s = \tau_s e^{\mu \theta}\]
+Solving for \(\tau_s\) (slack side): \\
+\[\tau_s = \frac{\tau_{\text{eng}}}{r_{\text{prim}} (e^{\mu \theta} - 1)}\]
 {\newline}
 
 Using \hyperref[TM:N2]{Newton's 2nd law} the final equation for belt acceleration is derived as: \\
-\[m_\text{belt} a_{\text{belt}} = \frac{T_{\text{eng}} e^{\mu \theta}}{r_{\text{prim}} (e^{\mu \theta} - 1)} - \frac{T_{\text{eng}}}{r_{\text{prim}} (e^{\mu \theta} - 1)}  \tag*{\text{(\hyperref[TM:N2]{TM:N2})}}\]
+\[m_\text{belt} a_{\text{belt}} = \frac{\tau_{\text{eng}} e^{\mu \theta}}{r_{\text{prim}} (e^{\mu \theta} - 1)} - \frac{\tau_{\text{eng}}}{r_{\text{prim}} (e^{\mu \theta} - 1)}  \tag*{\text{(\hyperref[TM:N2]{TM:N2})}}\]
 Solving for acceleration: \\
-\[a_{\text{belt}} = \frac{T_{\text{eng}}}{m_\text{belt} r_{\text{prim}} (e^{\mu \theta} - 1)} (e^{\mu \theta} - 1)\]
+\[a_{\text{belt}} = \frac{\tau_{\text{eng}}}{m_\text{belt} r_{\text{prim}} (e^{\mu \theta} - 1)} (e^{\mu \theta} - 1)\]
 Finally, simplifying to get: \\
-\[a_{\text{belt}} = \frac{T_{\text{eng}}}{m_\text{belt} r_{\text{prim}}}\]
+\[a_{\text{belt}} = \frac{\tau_{\text{eng}}}{m_\text{belt} r_{\text{prim}}}\]
 
 
-% TODO: Probably need to define this if I can't find a source
-\definstance
-{RPM and Torque of Engine}
-{$t, T_\text{load}$} % Input
-{{$T_{eng}$,  $\omega_\text{eng}$ } = $F(t, T_\text{load})$} % Equation
-{$T_{eng}$, $\omega_\text{eng}$} % Output
-{
-  $T_{eng}$: Torque seen at the engine\\
-& $\omega_\text{eng}$: Angular velocity of the engine\\
-& These are functions that are defined in a library. It will be passed the torque curve of the engine at 100\% load and calculate the torque and RPM at based on the time and the load of the system.
-} % Description
-{} % Sources
-{} % Citation
-{-}
 
 \subsubsection{Input Data Constraints} \label{sec_DataConstraints}    
 
@@ -1509,7 +1558,7 @@ Table~\ref{TblSpecParams}.
   \midrule 
   $v(t)$ & $0 \leq v(t) \leq v_\text{max}$& m/s\\
   $F_{\text{clamp\_prim}}, F_{\text{clamp\_sec}}$ & $F_{\text{clamp\_prim}} + F_{\text{clamp\_sec}} \leq f_\text{belt\_max}$ & N \\
-  $v(t)$ , $T_\text{eng}(t)$,  $\omega_\text{eng}(t)$ & $\frac{d}{dt}(\frac{1}{2}(m_\text{car}+m_\text{driver})v(t)^2) \leq T_\text{eng}(t) \omega_\text{eng}(t)$ & N\\
+  $v(t)$ , $\tau_\text{eng}(t)$,  $\omega_\text{eng}(t)$ & $\frac{d}{dt}(\frac{1}{2}(m_\text{car}+m_\text{driver})v(t)^2) \leq \tau_\text{eng}(t) \omega_\text{eng}(t)$ & N\\
   \bottomrule
 \end{longtable*}
 \end{table}
@@ -1525,58 +1574,59 @@ which is to say that the top requirement is the most important and the bottom re
 
 \noindent \begin{itemize}
 
-\item[R\refstepcounter{reqnum}\thereqnum \label{R_1}:] The system shall simulate the behavior of the McMaster Baja Team's Continuous Variable Transmission(CVT) using mathematical models.
+\item[R:MM \label{R:MM}:] The system shall simulate the behavior of the McMaster Baja Team's Continuous Variable Transmission(CVT) using mathematical models.
 
-\item[R\refstepcounter{reqnum}\thereqnum \label{R_2}:] The system shall calculate the acceleration of the vehicle as a function of time using inputs: gear radius, wheel radius, density of the fluid, drag coefficient, cross-sectional area, angle of incline, torque transferred to the wheel, coefficient of rolling resistance, mass of the vehicle and driver. 
+\item[R:AV \label{R:AV}:] The system shall calculate the acceleration of the vehicle as a function of time using inputs: gear radius, wheel radius, density of the fluid, drag coefficient, cross-sectional area, angle of incline, torque transferred to the wheel, coefficient of rolling resistance, mass of the vehicle and driver. 
 
-\item[R\refstepcounter{reqnum}\thereqnum \label{R_3}:] The system shall calculate the velocity of the vehicle as a function of time by taking the integral of acceleration with respect to time.
+\item[R:VV \label{R:VV}:] The system shall calculate the velocity of the vehicle as a function of time by taking the integral of acceleration with respect to time.
 
-\item[R\refstepcounter{reqnum}\thereqnum \label{R_4}:] The system shall calculate the distance as a function of time by taking the integral of the velocity with respect to time.
+\item[R:DV \label{R:DV}:] The system shall calculate the distance as a function of time by taking the integral of the velocity with respect to time.
 
-\item[R\refstepcounter{reqnum}\thereqnum \label{R_5}:] The system shall calculate the primary clamping force using inputs: mass of the flyweight, radius related to the flywheel, height of the primary system, force dependent of the shifting distance, stiffness of primary system and displacement or shift in the system. 
+\item[R:PCF \label{R:PCF}:] The system shall calculate the primary clamping force using inputs: mass of the flyweight, radius related to the flywheel, height of the primary system, force dependent of the shifting distance, stiffness of primary system and displacement or shift in the system. 
 
-\item[R\refstepcounter{reqnum}\thereqnum \label{R_6}:] The system shall calculate the secondary clamping force using inputs: torsional spring rate, initial torsional rotation, amount of torsional rotation based on the distance shifted, radius of the ramps from the shaft, compression spring rate, initial compression distance, displacement in system, torque of the engine and ratio of the CVT system.
+\item[R:SCF \label{R:SCF}:] The system shall calculate the secondary clamping force using inputs: torsional spring rate, initial torsional rotation, amount of torsional rotation based on the distance shifted, radius of the ramps from the shaft, compression spring rate, initial compression distance, displacement in system, torque of the engine and ratio of the CVT system.
 
-\item[R\refstepcounter{reqnum}\thereqnum \label{R_7}:] The system shall calculate the sheave acceleration using inputs: primary clamping force, secondary clamping force, coefficient of friction, torque of the taut side of the belt, torque of the slack side of the belt and mass of the system. 
+\item[R:SA \label{R:SA}:] The system shall calculate the sheave acceleration using inputs: primary clamping force, secondary clamping force, coefficient of friction, torque of the taut side of the belt, torque of the slack side of the belt and mass of the system. 
 
-\item[R\refstepcounter{reqnum}\thereqnum \label{R_8}:] The system shall calculate the belt acceleration using inputs engine torque, primary radius, friction force and mass of the system. 
+\item[R:BA \label{R:BA}:] The system shall calculate the belt acceleration using inputs engine torque, primary radius, friction force and mass of the system. 
 
-\item[R\refstepcounter{reqnum}\thereqnum \label{R_9}:] The system shall calculate RPM and Torque of the Engine using inputs time and load torque.
+\item[R:ENG \label{R:ENG}:] The system shall calculate RPM and Torque of the Engine using inputs time and load torque.
 
-\item[R\refstepcounter{reqnum}\thereqnum \label{R_10}:] The system shall allow users to adjust the following CVT tuning parameters: primary weight, primary ramp geometry, primary spring rate, primary spring pretension, secondary helix geometry, secondary spring rate, secondary spring pretension. 
+\item[R:TP \label{R:TP}:] The system shall allow users to adjust the following CVT tuning parameters: primary weight, primary ramp geometry, primary spring rate, primary spring pretension, secondary helix geometry, secondary spring rate, secondary spring pretension. 
 
-\item[R\refstepcounter{reqnum}\thereqnum \label{R_11}:] The system shall allow users to adjust vehicle and driver weight, traction and angle of incline in addition to the CVT tuning parameters.
+\item[R:UA \label{R:UA}:] The system shall allow users to adjust vehicle and driver weight, traction and angle of incline in addition to the CVT tuning parameters.
 
-\item[R\refstepcounter{reqnum}\thereqnum \label{R_12}:] The system shall provide users with an interface to input tuning parameters.
+\item[R:UI \label{R:UI}:] The system shall provide users with an interface to input tuning parameters.
 
-\item[R\refstepcounter{reqnum}\thereqnum \label{R_13}:] The system shall display graphs of simulation output based on the user inputted tuning parameters.
+\item[R:DG \label{R:DG}:] The system shall display graphs of simulation output based on the user inputted tuning parameters.
 
-\item[R\refstepcounter{reqnum}\thereqnum \label{R_14}:] The system shall allow users to export outputted simulated graphical data.
+\item[R:ER \label{R:ER}:] The system shall allow users to export outputted simulated graphical data.
 
-\item[R\refstepcounter{reqnum}\thereqnum \label{R_15}:] The system shall allow users to access the application through the use of a personal computer or laptop.
+\item[R:AA \label{R:AA}:] The system shall allow users to access the application through the use of a personal computer or laptop.
 
-\item[R\refstepcounter{reqnum}\thereqnum \label{R_16}:] The system shall be compatible with Windows machines. 
+\item[R:WM \label{R:WM}:] The system shall be compatible with Windows machines. 
 \end{itemize}
 
 \subsection{Nonfunctional Requirements}
 
 \noindent \begin{itemize}
 
-\item[NFR\refstepcounter{nfrnum}\thenfrnum \label{NFR_Accuracy}:]\textbf{Accuracy} The system shall achieve an accuracy of at least 95 \% in correctly predicting CVT outputs. 
+\item[NFR:AC \label{NFR:AC}:] The system shall achieve an accuracy of at least 95 \% in correctly predicting CVT outputs. 
 See \href{https://github.com/gr812b/CVT-Simulator/blob/main/docs/VnVPlan/VnVPlan.pdf}{VnV Plan} Section 4.2 for the test procedure. An accuracy rate of 95\% ensures that the system is able to make reliable predictions, which are important to the performance optimization. 
-Accuracy validation shall use Python’s \texttt{assertAlmostEqual()} with a tolerance of delta = 1e-7, to account for minor numerical deviations.\item[NFR\refstepcounter{nfrnum}\thenfrnum \label{NFR_Usability}:] \textbf{Usability} 85 \% of a representative user group shall be able to successfully input CVT parameters and receive CVT outputs on their first use.
+Accuracy validation shall use Python’s \texttt{assertAlmostEqual()} with a tolerance of delta = 1e-7, to account for minor numerical deviations.
+\item[NFR:US \label{NFR:US}:] 85 \% of a representative user group shall be able to successfully input CVT parameters and receive CVT outputs on their first use.
 An 85\% success rate was chosen for successfully inputting parameters and receiving outputs on their first use is realistic based on the complexity of the system. 
 This 85 \% acknowledges that some users may require trial and error, but the majority of users should still be able to effectively interact with the system. 
-\item[NFR\refstepcounter{nfrnum}\thenfrnum \label{NFR_Maintainability}:]\textbf{Maintainability} If a likely change is made to the finished software, it will take at most 10 \% of the original development time, assuming the same development resources are available.
+\item[NFR:MA \label{NFR:MA}:] If a likely change is made to the finished software, it will take at most 10 \% of the original development time, assuming the same development resources are available.
 This 10\% figure is a reasonable expectation for maintainability. 
 Given that our system will evolve, this 10\% represents having a modular design that should be able to accommodate changes without significant extra effort and additions. 
-\item[NFR\refstepcounter{nfrnum}\thenfrnum \label{NFR_Verifiability}:] \textbf{Verifiability} The system shall output the resulting tunned CVT outputs which must be able to be cross-verified against data available through the McMaster Baja Team with a consistency rate of 95 \%.
+\item[NFR:VE \label{NFR:VE}:] The system shall output the resulting tunned CVT outputs which must be able to be cross-verified against data available through the McMaster Baja Team with a consistency rate of 95 \%.
 This 95\% reflects the need for a high level of precision and consistency of the system. 
 This number was chosen as the system must be valuable to its users through producing accurate reliable outputs. 
-\item[NFR\refstepcounter{nfrnum}\thenfrnum \label{NFR_Understandability}:] \textbf{Understandability} The system shall be understood by at least 90 \% of a representative user group with no more than 15 minutes of initial training, as measured by assessing ability to generate and export tunned CVT output where users must score at least 90 \%.
+\item[NFR:UN \label{NFR:UN}:] The system shall be understood by at least 90 \% of a representative user group with no more than 15 minutes of initial training, as measured by assessing ability to generate and export tunned CVT output where users must score at least 90 \%.
 A target of 90\% was chosen as this ensures that system is intuitive and user-friendly to a large majority of users. 
 By providing users with 15 minutes of training this demonstrates that the learning curve is minimal. 
-\item[NFR\refstepcounter{nfrnum}\thenfrnum \label{NFR_Reusability}:] \textbf{Reusability} The system's components shall be designed for reuse in the case the McMaster Baja team acquires a new CVT. 
+\item[NFR:RE \label{NFR:RE}:]  The system's components shall be designed for reuse in the case the McMaster Baja team acquires a new CVT. 
 These modifications should be made with minimal modifications, defined as requiring modification to less than 30 \% of the code to configure these changes.
 By choosing 30\% this is a reasonable limit showing for flexibility and reusability of components. 
 This 30\% target ensures that future modifications such as accommodating for a new CVT, can be achieved without requiring a complete redesign of the system as majority if not all the mathematical calculations will remain the same.
@@ -1590,30 +1640,48 @@ The following requirements were derived from the \href{https://github.com/gr812b
   \item \label{sr:error-handling} The software shall implement robust error handling mechanisms that detect and handle at least 95\% of all expected and unexpected errors, ensuring that no more than 5\% of critical system failures result in unhandled exceptions or system crashes.
 \end{enumerate}
 
+\subsubsection{Industry Standards}
+The \progname \ software shall comply with recognized software engineering and automotive control standards, including but not limited to:
+While no specific industry regulations directly relate to this software, practices such as software validation, numerical accuracy, and performance testing will be followed to ensure reliability and correctness. 
+Testing methodologies, such as unit testing will be used to verify system accuracy.
 
+\subsubsection{Legal and Safety Regulations}
+The software must comply with applicable regulations concerning software integrity and data accuracy, as no personal information is used security requirements are considered out of scope.
+\begin{itemize}
+    \item \textbf{ISO/IEC 25002:2024}: Software quality models ensuring reliability and maintainability \cite{ISO26262Standard}. This will be ensured via \hpref{NFR:MA}. 
+\end{itemize}
+
+\subsubsection{Software Development Constraints Due to Compliance}
+Compliance with these standards imposes specific requirements on the CVT software, including:
+\begin{itemize}
+    \item \textbf{Precision in Computation}: Floating-point errors must be mitigated this will be achieved by \hpref{NFR:AC}.
+    \item \textbf{Version Control and Documentation}: Compliance with \cite{ISO26262Standard} mandates detailed software version control and traceability of changes. This will be shown at the top of each document's Revision History section. 
+\end{itemize}
+
+\noindent Therefore, the \progname \ software will comply with these regulatory and industry standards.
 
 \subsection{Rationale}
 
-The assumptions made for the CVT (Continuously Variable Transmission) system model aim to simplify it's dynamics, facilitating the development of mathematical models to simulate the behavior of the CVT(\rref{R_1}). 
-Many key assumptions are made to meet the requirement of developing these mathematical models. The following assumptions are also factored in to the calculations of the CVT ratio, clamping force, RPM, torque, engine input, distance, speed and acceleration(\rref{R_2}). 
+The assumptions made for the CVT (Continuously Variable Transmission) system model aim to simplify it's dynamics, facilitating the development of mathematical models to simulate the behavior of the CVT{\hpref{R:MM}}. 
+Many key assumptions are made to meet the requirement of developing these mathematical models. The following assumptions are also factored in to the calculations of the CVT ratio, clamping force, RPM, torque, engine input, distance, speed and acceleration(\hpref{R:AV}). 
 \\\\
-\noindent The system excludes the effects of temperature on material properties, aside from the belt, which allows for a more straightforward focus on the mechanics of the interactions (\aref{A_1}).
-The influence of gravitational forces is negligible and the elasticity of belts is considered insignificant(\aref{A_2}, \aref{A_3}). 
-Vibrational effects from external sources are also assumed to be minimal, avoiding the complexity of vibration-induced disturbances in transmission behavior (\aref{A_4}).
-Wear and tear of components, including the belt and pulley are disregarded and frictional losses in non-critical components, are deemed negligible (\aref{A_5}, \aref{A_6}). 
-The engine is assumed to operate at full throttle with consistent power delivery, simplifying the model by maintaining uniform engine behavior (\aref{A_4}).
-Finally, the CVT axis are assumed to be in line and the belt slippage of the CVT is assumed as negligible (\aref{A_8},\aref{A_9}). 
+\noindent The system excludes the effects of temperature on material properties, aside from the belt, which allows for a more straightforward focus on the mechanics of the interactions (\hpref{A:NT}).
+The influence of gravitational forces is negligible and the elasticity of belts is considered insignificant(\hpref{A:NG}, \hpref{A:RB}). 
+Vibrational effects from external sources are also assumed to be minimal, avoiding the complexity of vibration-induced disturbances in transmission behavior (\hpref{A:NV}).
+Wear and tear of components, including the belt and pulley are disregarded and frictional losses in non-critical components, are deemed negligible (\hpref{A:WT}, \hpref{A:NF}). 
+The engine is assumed to operate at full throttle with consistent power delivery, simplifying the model by maintaining uniform engine behavior (\hpref{A:NV}).
+Finally, the CVT axis are assumed to be in line and the belt slippage of the CVT is assumed as negligible (\hpref{A:AA},\hpref{A:NS}). 
 \\\\
-\noindent These simplifications affect the process of creating our mathematical models and formulating equations governing velocity, distance, primary clamping force, secondary clamping force, CVT Ratio, Torque transfer and RPM and Torque of the Engine(IM1-IM8)
+\noindent These simplifications affect the process of creating our mathematical models and formulating equations governing velocity, distance, primary clamping force, secondary clamping force, CVT Ratio, Torque transfer and RPM and Torque of the Engine(\hpref{IM:A}-\hpref{IM:SD})
 
 \section{Likely Changes}    
 
 \noindent \begin{itemize}
 
-\item[LC\refstepcounter{lcnum}\thelcnum\label{LC_1}:] The effect of temperature on material properties might be included in the future, (A\ref{A_1}) Stakeholders would be interested in seeing this information in the future.
-\item[LC\refstepcounter{lcnum}\thelcnum\label{LC_2}:] The elasticity of the belt might be considered in the future, (A\ref{A_3}) This would provide a more accurate model of the CVT system.
-\item[LC\refstepcounter{lcnum}\thelcnum\label{LC_3}:] Frictional losses in non-critical components might be considered in the future, (A\ref{A_6}) This would provide a more accurate model of the CVT system.
-\item[LC\refstepcounter{lcnum}\thelcnum\label{LC_4}:] Some of the math models will most likely change as the design is refined.
+\item[LC:TMP \label{LC:TMP}:] The effect of temperature on material properties might be included in the future, (\hpref{A:NT}) Stakeholders would be interested in seeing this information in the future.
+\item[LC:EB \label{LC:EB}:] The elasticity of the belt might be considered in the future, (\hpref{A:RB}) This would provide a more accurate model of the CVT system.
+\item[LC:FL \label{LC:FL}:] Frictional losses in non-critical components might be considered in the future, (\hpref{A:NF}) This would provide a more accurate model of the CVT system.
+\item[LC:MM \label{LC:MM}:] Some of the math models will most likely change as the design is refined.
 
 \end{itemize}
 
@@ -1621,9 +1689,9 @@ Finally, the CVT axis are assumed to be in line and the belt slippage of the CVT
 
 \begin{itemize}
 
-  \item[ULC\refstepcounter{ulcnum}\theulcnum\label{ULC_1}:] The assumption that the CVT axis are in line is unlikely to change because tuning is simply not valuable in a system as poor as this. (A\ref{A_8})
-  \item[ULC\refstepcounter{ulcnum}\theulcnum\label{ULC_2}:] The assumption that the engine operates at full throttle is unlikely to change as different behavior is simply not ideal. (A\ref{A_7})
-  \item[ULC\refstepcounter{ulcnum}\theulcnum\label{ULC_3}:] The assumption that the influence of gravitational forces is negligible is unlikely to change as it heavily reduces complexity and plays an incredibly small part on spinning objects at high rotational speeds. (A\ref{A_2})
+  \item[ULC:AL \label{ULC:AL}:] The assumption that the CVT axis are in line is unlikely to change because tuning is simply not valuable in a system as poor as this. (\hpref{A:AA})
+  \item[ULC:FT \label{ULC:FT}:] The assumption that the engine operates at full throttle is unlikely to change as different behavior is simply not ideal. (\hpref{A:FT})
+  \item[ULC:GF \label{ULC:GF}:] The assumption that the influence of gravitational forces is negligible is unlikely to change as it heavily reduces complexity and plays an incredibly small part on spinning objects at high rotational speeds. (\hpref{A:NG})
   
   \end{itemize}
 
@@ -1644,40 +1712,40 @@ Finally, the CVT axis are assumed to be in line and the belt slippage of the CVT
   \subsubsection{Clamping Force and Sheave Dynamics}
   \label{subsec:Clamping Force and Sheave Dynamics}
   \begin{itemize}
-      \item R\ref{R_5}
-      \item R\ref{R_6}
-      \item R\ref{R_7}
-      \item R\ref{R_8}
-      \item R\ref{R_9}
+      \item \hpref{R:PCF}
+      \item \hpref{R:SCF}
+      \item \hpref{R:SA}
+      \item \hpref{R:BA}
+      \item \hpref{R:ENG}
   \end{itemize}
 
   \subsubsection{Mathematical Models}
   \label{subsec:Mathematical Models}
   \begin{itemize}
-       \item R\ref{R_1}
-       \item R\ref{R_2}
-       \item R\ref{R_3}
-       \item R\ref{R_4}
+       \item \hpref{R:MM}
+       \item \hpref{R:AV}
+       \item \hpref{R:VV}
+       \item \hpref{R:DV}
   \end{itemize}
   
   \subsubsection{User Adjustments and Inputs}
   \label{subsec:User Adjustments and Inputs}
   \begin{itemize}
-      \item R\ref{R_10}
-      \item R\ref{R_11}
-      \item R\ref{R_12}
+      \item \hpref{R:TP}
+      \item \hpref{R:UA}
+      \item \hpref{R:UI}
   \end{itemize}
 
   \subsubsection{Output Visualization and Export}
   \begin{itemize}
-      \item R\ref{R_13}
-      \item R\ref{R_14}
+      \item \hpref{R:DG}
+      \item \hpref{R:ER}
   \end{itemize}
   
   \subsubsection{Platform Compatibility}
   \begin{itemize}
-      \item R\ref{R_15}
-      \item R\ref{R_16}
+      \item \hpref{R:AA}
+      \item \hpref{R:WM}
   \end{itemize}
   
   \subsection{Phase 2: Nonfunctional Requirements Implementation (March 7 and March 23) }
@@ -1690,22 +1758,22 @@ Finally, the CVT axis are assumed to be in line and the belt slippage of the CVT
   \subsubsection{System Accuracy and Verification}
   \label{subsec:System Accuracy and Verification}
   \begin{itemize}
-      \item NF\ref{NFR_Accuracy}
-      \item NFR\ref{NFR_Verifiability}
+      \item \hpref{NFR:AC}
+      \item \hpref{NFR:VE}
   \end{itemize}
   
   \subsubsection{Maintainability and Reusability}
   \label{subsec:Maintainability and Reusability}
   \begin{itemize}
-      \item NF\ref{NFR_Maintainability}
-      \item NF\ref{NFR_Reusability} 
+      \item \hpref{NFR:MA}
+      \item \hpref{NFR:RE} 
   \end{itemize}
 
   \subsubsection{Usability and User Experience}
   \label{subsec:Usability and User Experience}
   \begin{itemize}
-      \item NF\ref{NFR_Usability}
-      \item NF\ref{NFR_Understandability}
+      \item \hpref{NFR:US}
+      \item \hpref{NFR:UN}
   \end{itemize}
   
 \section{Traceability Matrices and Graphs}
@@ -1728,30 +1796,32 @@ the assumptions.
 \centering
 \begin{tabular}{|c|c|c|c|c|c|c|c|c|c|c|}
 \hline
-	& \aref{A_1}& \aref{A_2}& \aref{A_3}& \aref{A_4}& \aref{A_5}& \aref{A_6}& \aref{A_7}& \aref{A_8}& \aref{A_9}& \aref{A_10}\\
+	& \hpref{A:NT}& \hpref{A:NG}& \hpref{A:RB}& \hpref{A:NV}& \hpref{A:WT}& \hpref{A:NF}& \hpref{A:FT}& \hpref{A:AA}& \hpref{A:NS}& \hpref{A:IF}\\
 \hline
-\tref{TM:HL}        & & & & & & & & & & \\ \hline
-\tref{TM:CF}        & & & & & & & & & & \\ \hline
-\tref{TM:AR}        & & & & & & & & & & \\ \hline
-\tref{TM:ET}        & & & & & & & & & & \\ \hline
-\tref{TM:GR}        & & & & & & & & & & \\ \hline
-\tref{TM:FR}        & & & & & & & & & & \\ \hline
-\tref{TM:DE}        & & & & & & & & & & \\ \hline
-\tref{TM:CE}        & & & & & & & & & & \\ \hline
-\tref{TM:N2}        & & & & & & & & & & \\ \hline
-\tref{TM:D2R}       & & & & & & & & & & \\ \hline
-\tref{TM:D2RA}      & & & & & & & & & & \\ \hline
-\tref{TM:D2HA}      & & & & & & & & & & \\ \hline
-\tref{TM:HT}        & & & & & & & & & & \\ \hline
-\tref{TM:KE}        & & & & & & & & & & \\ \hline
-\dref{GD_1}         & & & & & & & & & &X \\ \hline
-\dref{GD_2}         & & & & & & & & & & \\ \hline
-\ddref{DD_1}        & & & & & & & & & & \\ \hline
-\ddref{DD_2}        & & & & & & & & & & \\ \hline
-\ddref{DD_3}        & & & & & & & & & & \\ \hline
-\ddref{DD_4}        & & & & & & & & & & \\ \hline
-\ddref{DD_5}        & & & & & & & & & & \\ \hline
-\ddref{DD_6}        & & & & & & & & & & \\ \hline
+\hpref{TM:HL}        & & & & & & & & & & \\ \hline
+\hpref{TM:CF}        & & & & & & & & & & \\ \hline
+\hpref{TM:AR}        & & & & & & & & & & \\ \hline
+\hpref{TM:ET}        & & & & & & & & & & \\ \hline
+\hpref{TM:GR}        & & & & & & & & & & \\ \hline
+\hpref{TM:FR}        & & & & & & & & & & \\ \hline
+\hpref{TM:DE}        & & & & & & & & & & \\ \hline
+\hpref{TM:CE}        & & & & & & & & & & \\ \hline
+\hpref{TM:N2}        & & & & & & & & & & \\ \hline
+\hpref{TM:HT}        & & & & & & & & & & \\ \hline
+\hpref{TM:KE}        & & & & & & & & & & \\ \hline
+\hpref{TM:GE}        & & & & & & & & & & \\ \hline
+\hpref{TM:D2R}       & & & & & & & & & & \\ \hline
+\hpref{TM:D2RA}      & & & & & & & & & & \\ \hline
+\hpref{GD:HSF}       & & & & & & & & & &X \\ \hline
+\hpref{GD:SSSF}      & & & & & & & & & & \\ \hline
+\hpref{GD:AVE}       & & & & & & & & & & \\ \hline
+\hpref{DD:F}         & & & & & & & & & & \\ \hline
+\hpref{DD:CSC}       & & & & & & & & & & \\ \hline
+\hpref{DD:TSC}       & & & & & & & & & & \\ \hline
+\hpref{DD:GC}        & & & & & & & & & & \\ \hline
+\hpref{DD:DC}        & & & & & & & & & & \\ \hline
+\hpref{DD:RRC}       & & & & & & & & & & \\ \hline
+\hpref{DD:ET}        & & & & & & & & & & \\ \hline
 \end{tabular}
 \caption{Traceability Matrix Showing the Connections Between Assumptions, Theoretical Models, General Definitions, Data Definitions}
 \label{Table:trace_Assumptions_TM}
@@ -1763,23 +1833,24 @@ the assumptions.
 \centering
 \begin{tabular}{|c|c|c|c|c|c|c|c|c|c|c|}
 \hline
-	& \aref{A_1}& \aref{A_2}& \aref{A_3}& \aref{A_4}& \aref{A_5}& \aref{A_6}& \aref{A_7}& \aref{A_8}& \aref{A_9}& \aref{A_10}\\
+	& \hpref{A:NT}& \hpref{A:NG}& \hpref{A:RB}& \hpref{A:NV}& \hpref{A:WT}& \hpref{A:NF}& \hpref{A:FT}& \hpref{A:AA}& \hpref{A:NS}& \hpref{A:IF}\\
 \hline
-\iref{inst:1}       & & & & & & & & & & \\ \hline
-\iref{inst:2}       & & & & & & & & & & \\ \hline
-\iref{inst:3}       & & & & & & & & & & \\ \hline
-\iref{inst:4}       & & & & & & & & & &X \\ \hline
-\iref{inst:5}       & & & & & & & & & & \\ \hline
-\iref{inst:6}       & & & & & & & & & & \\ \hline
-\iref{inst:7}       & & & & & & & & &X& \\ \hline
-\iref{inst:8}       & & & & & & & & & & \\ \hline
-\lcref{LC_1}        &X& & & & & & & & & \\ \hline
-\lcref{LC_2}        & & &X& & & & & & & \\ \hline
-\lcref{LC_3}        & & & & & &X& & & & \\ \hline
-\lcref{LC_4}        & & & & & & & & & & \\ \hline
-\ulcref{ULC_1}      & & & & & & & &X& & \\ \hline
-\ulcref{ULC_2}      & & & & & & &X& & & \\ \hline
-\ulcref{ULC_3}      & &X& & & & & & & & \\ \hline
+\hpref{IM:A}       & & & & & & & & & & \\ \hline
+\hpref{IM:V}       & & & & & & & & & & \\ \hline
+\hpref{IM:D}       & & & & & & & & & & \\ \hline
+\hpref{IM:PCF}     & & & & & & & & & &X \\ \hline
+\hpref{IM:SCF}     & & & & & & & & & & \\ \hline
+\hpref{IM:SA}      & & & & & & & & & & \\ \hline
+\hpref{IM:SV}      & & & & & & & & &X& \\ \hline
+\hpref{IM:SD}      & & & & & & & & & & \\ \hline
+\hpref{IM:BA}      & & & & & & & & & & \\ \hline
+\hpref{LC:TMP}     &X& & & & & & & & & \\ \hline
+\hpref{LC:EB}      & & &X& & & & & & & \\ \hline
+\hpref{LC:FL}      & & & & & &X& & & & \\ \hline
+\hpref{LC:MM}      & & & & & & & & & & \\ \hline
+\hpref{ULC:AL}     & & & & & & & &X& & \\ \hline
+\hpref{ULC:FT}     & & & & & & &X& & & \\ \hline
+\hpref{ULC:GF}     & &X& & & & & & & & \\ \hline
 \end{tabular}
 \caption{Traceability Matrix Showing the Connections Between Assumptions and Instance Models and Likely Changes}
 \label{Table:trace_Assumptions}
@@ -1787,32 +1858,34 @@ the assumptions.
 
 \begin{table}[H]
 \centering
-\begin{tabular}{|c|c|c|c|c|c|c|c|c|}
+\begin{tabular}{|c|c|c|c|c|c|c|c|c|c|}
 \hline
-	& \iref{inst:1} & \iref{inst:2}& \iref{inst:3} & \iref{inst:4} & \iref{inst:5} & \iref{inst:6}& \iref{inst:7}& \iref{inst:8}\\
+	& \hpref{IM:A} & \hpref{IM:V}& \hpref{IM:D} & \hpref{IM:PCF} & \hpref{IM:SCF} & \hpref{IM:SA}& \hpref{IM:SV}& \hpref{IM:SD}& \hpref{IM:BA}\\
 \hline
-\tref{TM:HL}        & & & &X& & & &  \\ \hline
-\tref{TM:CF}        & & & &X& & & &  \\ \hline
-\tref{TM:AR}        &X& & & & & & &  \\ \hline
-\tref{TM:ET}        & & & & & & & &  \\ \hline
-\tref{TM:GR}        &X& & & & & & &  \\ \hline
-\tref{TM:FR}        &X& & & & & &X&  \\ \hline
-\tref{TM:DE}        &X& & & & & & &  \\ \hline
-\tref{TM:CE}        & & & & & & &X&  \\ \hline
-\tref{TM:N2}        &X& & & & &X&X&  \\ \hline
-\tref{TM:D2R}       & & & & & & & &  \\ \hline
-\tref{TM:D2RA}      & & & & & & & &  \\ \hline
-\tref{TM:D2HA}      & & & & & & & &  \\ \hline
-\tref{TM:HT}        & & & & & & & &  \\ \hline
-\tref{TM:KE}        & & & & & & & &  \\ \hline
-\dref{GD_1}         & & & & &X& & &  \\ \hline
-\dref{GD_2}         & & & & &X& & &  \\ \hline
-\ddref{DD_1}        &X& & & & & &X&  \\ \hline
-\ddref{DD_2}        & & & &X& & & &  \\ \hline
-\ddref{DD_3}        & & & & &X& & &  \\ \hline
-\ddref{DD_4}        &X& & & & & & &  \\ \hline
-\ddref{DD_5}        &X& & & & & & &  \\ \hline
-\ddref{DD_6}        &X& & & & & & &  \\ \hline
+\hpref{TM:HL}        & & & &X&X& & & &  \\ \hline
+\hpref{TM:CF}        & & & &X& & & & &  \\ \hline
+\hpref{TM:AR}        &X& & & & & & & &  \\ \hline
+\hpref{TM:ET}        &X& & & &X&X& & &X  \\ \hline
+\hpref{TM:GR}        &X& & & &X& & & &  \\ \hline
+\hpref{TM:FR}        &X& & & & & & & &  \\ \hline
+\hpref{TM:DE}        &X& & & & & & & &  \\ \hline
+\hpref{TM:CE}        & & & & & & & & &X  \\ \hline
+\hpref{TM:N2}        &X& & & & &X& & &X  \\ \hline
+\hpref{TM:HT}        & & & & &X& & & &  \\ \hline
+\hpref{TM:KE}        &X& & & & & & & &  \\ \hline
+\hpref{TM:GE}        &X& & & & & & & &  \\ \hline
+\hpref{TM:D2R}       & & & &X&X& & & &  \\ \hline
+\hpref{TM:D2RA}      & & & &X&X& & & &  \\ \hline
+\hpref{GD:HSF}       & & & & &X& & & &  \\ \hline
+\hpref{GD:SSSF}      & & & & &X& & & &  \\ \hline
+\hpref{GD:AVE}       & & & &X& & & & &  \\ \hline
+\hpref{DD:F}         &X& & & & & & & &  \\ \hline
+\hpref{DD:CSC}       & & & &X& & & & &  \\ \hline
+\hpref{DD:TSC}       & & & & &X& & & &  \\ \hline
+\hpref{DD:GC}        &X& & & & & & & &  \\ \hline
+\hpref{DD:DC}        &X& & & & & & & &  \\ \hline
+\hpref{DD:RRC}       &X& & & & & & & &  \\ \hline
+\hpref{DD:ET}        &X& & & &X&X& & &X  \\ \hline
 \end{tabular}
 \caption{Traceability Matrix Showing the Connections Between Instance Models and Other Items}
 \label{Table:trace_IM_Others}
@@ -1823,27 +1896,27 @@ the assumptions.
 
 \begin{table}[h!]
 \centering
-\begin{tabular}{|c|c|c|c|c|c|c|c|c|}
+\begin{tabular}{|c|c|c|c|c|c|c|c|c|c|}
 \hline
-	& \iref{inst:1} & \iref{inst:2}& \iref{inst:3} & \iref{inst:4} & \iref{inst:5} & \iref{inst:6}& \iref{inst:7}& \iref{inst:8}\\
+	& \hpref{IM:A} & \hpref{IM:V}& \hpref{IM:D} & \hpref{IM:PCF} & \hpref{IM:SCF} & \hpref{IM:SA}& \hpref{IM:SV}& \hpref{IM:SD}& \hpref{IM:BA}\\
 \hline
 
-\rref{R_1}          & & & & & & & &  \\ \hline
-\rref{R_2}          &X& & & & & & &  \\ \hline
-\rref{R_3}          & &X& & & & & &  \\ \hline
-\rref{R_4}          & & &X& & & & &  \\ \hline
-\rref{R_5}          & & & &X& & & &  \\ \hline
-\rref{R_6}          & & & & &X& & &  \\ \hline
-\rref{R_7}          & & & & & &X& &  \\ \hline
-\rref{R_8}          & & & & & & &X&  \\ \hline
-\rref{R_9}          & & & & & & & &X \\ \hline
-\rref{R_10}         & & & & & & & &  \\ \hline
-\rref{R_11}         & & & & & & & &  \\ \hline
-\rref{R_12}         & & & & & & & &  \\ \hline
-\rref{R_13}         & & & & & & & &  \\ \hline
-\rref{R_14}         & & & & & & & &  \\ \hline
-\rref{R_15}         & & & & & & & &  \\ \hline
-\rref{R_16}         & & & & & & & &  \\ \hline
+\hpref{R:MM}         & & & & & & & & &  \\ \hline
+\hpref{R:AV}         &X& & & & & & & &  \\ \hline
+\hpref{R:VV}         & &X& & & & & & &  \\ \hline
+\hpref{R:DV}         & & &X& & & & & &  \\ \hline
+\hpref{R:PCF}        & & & &X& & & & &  \\ \hline
+\hpref{R:SCF}        & & & & &X& & & &  \\ \hline
+\hpref{R:SA}         & & & & & &X& & &  \\ \hline
+\hpref{R:BA}         & & & & & & & & &X  \\ \hline
+\hpref{R:ENG}        & & & & & & & & & \\ \hline
+\hpref{R:TP}         & & & & & & & & &  \\ \hline
+\hpref{R:UA}         & & & & & & & & &  \\ \hline
+\hpref{R:UI}         & & & & & & & & &  \\ \hline
+\hpref{R:DG}         & & & & & & & & &  \\ \hline
+\hpref{R:ER}         & & & & & & & & &  \\ \hline
+\hpref{R:AA}         & & & & & & & & &  \\ \hline
+\hpref{R:WM}         & & & & & & & & &  \\ \hline
 \end{tabular}
 \caption{Traceability Matrix Showing the Connections Between Instance Models and Functional Requirements}
 \label{Table:trace_requirements}
@@ -1855,18 +1928,19 @@ the assumptions.
 
 \begin{table}[h!]
 \centering
-\begin{tabular}{|c|c|c|c|c|c|c|c|c|}
+\begin{tabular}{|c|c|c|c|c|c|c|c|c|c|}
 \hline
-	& \iref{inst:1} & \iref{inst:2}& \iref{inst:3} & \iref{inst:4} & \iref{inst:5} & \iref{inst:6}& \iref{inst:7}& \iref{inst:8}\\
+	& \hpref{IM:A} & \hpref{IM:V}& \hpref{IM:D} & \hpref{IM:PCF} & \hpref{IM:SCF} & \hpref{IM:SA}& \hpref{IM:SV}& \hpref{IM:SD}& \hpref{IM:BA}\\
 \hline
-\iref{inst:1}       &X& & & &X& & &  \\ \hline
-\iref{inst:2}       & &X& & & & & &  \\ \hline
-\iref{inst:3}       & & &X& & & & &  \\ \hline
-\iref{inst:4}       & & & &X& &X& &  \\ \hline
-\iref{inst:5}       &X& & & &X&X& &  \\ \hline
-\iref{inst:6}       & & & &X&X&X&X&  \\ \hline
-\iref{inst:7}       & & & & & &X&X&  \\ \hline
-\iref{inst:8}       & & & & & & & &X \\ \hline
+\hpref{IM:A}       & &X& & & & & & &  \\ \hline
+\hpref{IM:V}       & & &X& & & & & &  \\ \hline
+\hpref{IM:D}       & & & & & & & & &  \\ \hline
+\hpref{IM:PCF}     & & & & & &X& & &  \\ \hline
+\hpref{IM:SCF}     & & & & & &X& & &  \\ \hline
+\hpref{IM:SA}      & & & & & & &X& &  \\ \hline
+\hpref{IM:SV}      & & & & & & & &X&  \\ \hline
+\hpref{IM:SD}      & & & &X&X&X& & & \\ \hline
+\hpref{IM:BA}      & & & & & &X& & & \\ \hline
 \end{tabular}
 \caption{Traceability Matrix Showing the Connections Between Instance Models}
 \label{Table:trace_IM}
@@ -1878,31 +1952,10 @@ what has to be additionally modified if a certain component is changed.  The
 arrows in the graphs represent dependencies. The component at the tail of an
 arrow is depended on by the component at the head of that arrow. Therefore, if a
 component is changed, the components that it points to should also be
-changed. Figure~\ref{Fig_ATrace} shows the dependencies of theoretical models,
+changed. Figure~\ref{Table:trace_Assumptions} shows the dependencies of theoretical models,
 general definitions, data definitions, instance models, likely changes, and
-assumptions on each other. Figure~\ref{Fig_RTrace} shows the dependencies of
+assumptions on each other. Figure~\ref{Table:trace_requirements} shows the dependencies of
 instance models, requirements, and data constraints on each other.
-
-% \begin{figure}[h!]
-% 	\begin{center}
-% 		%\rotatebox{-90}
-% 		{
-% 			\includegraphics[width=\textwidth]{ATrace.png}
-% 		}
-% 		\caption{\label{Fig_ATrace} Traceability Matrix Showing the Connections Between Items of Different Sections}
-% 	\end{center}
-% \end{figure}
-
-
-% \begin{figure}[h!]
-% 	\begin{center}
-% 		%\rotatebox{-90}
-% 		{
-% 			\includegraphics[width=0.7\textwidth]{RTrace.png}
-% 		}
-% 		\caption{\label{Fig_RTrace} Traceability Matrix Showing the Connections Between Requirements, Instance Models, and Data Constraints}
-% 	\end{center}
-% \end{figure}
 
 \section{Development Plan}
 
@@ -1919,8 +1972,6 @@ N/A
 
 \newpage
 \section*{Appendix --- Reflection}
-
-\wss{Not required for CAS 741}
 
 The information in this section will be used to evaluate the team members on the
 graduate attribute of Lifelong Learning.  
@@ -1979,7 +2030,7 @@ graduate attribute of Lifelong Learning.
   \item For each of the knowledge areas and skills identified in the previous
   question, what are at least two approaches to acquiring the knowledge or
   mastering the skill?  Of the identified approaches, which will each team
-  member pursue, and why did they make this choice?
+  member pursue, and why did they make  choice?
   \\\\
   To familiarize ourselves with Unity projects, we will watch YouTube tutorials and read guides provided by Unity.
   The team members who chose to do the videos did so because they are more visual learners and prefer to see the process in action.

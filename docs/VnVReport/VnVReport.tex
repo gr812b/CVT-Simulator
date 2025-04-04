@@ -75,7 +75,7 @@ March 10 2025 & 1.0 & Initial Version\\
 \includegraphics[width=0.5\textwidth]{theoretical-figures/position.png}
 \includegraphics[width=0.5\textwidth]{simulation-figures/car_position.png}
 
-As seen above, the simulation output for the position of the car is consistent with the theoretical model. The larger initial slope can be attributed to an initial velocity, which is required due to \textbf{A9: No belt slippage} in \href{https://github.com/gr812b/CVT-Simulator/blob/develop/docs/SRS/SRS.pdf}{SRS}.
+As seen above, the simulation output for the position of the car is consistent with the theoretical model. The larger initial slope can be attributed to an initial velocity, which is required due to \textbf{A:NS No belt slippage} in \href{https://github.com/gr812b/CVT-Simulator/blob/develop/docs/SRS/SRS.pdf}{SRS}.
 
 \item{\textbf{Position test-2}: MSE against experimental data}\\
 See the \href{https://github.com/gr812b/CVT-Simulator/blob/develop/docs/VnVExtra/VnVExtra.pdf}{VnV Extra}.
@@ -118,7 +118,7 @@ See the \href{https://github.com/gr812b/CVT-Simulator/blob/develop/docs/VnVExtra
 
 The shape of both graphs above do not match. While the expected result is an initial sharp increase, which then leads to a steady decrease, followed finally by an increase at the end, here we can see what is effectively exclusively an increase with some oscillations. This difference can be explained thanks to two factors.
 
-First, the oscillations arise due to \textbf{A9: No belt slippage} in \href{https://github.com/gr812b/CVT-Simulator/blob/develop/docs/SRS/SRS.pdf}{SRS}, which result in an underdamped system. 
+First, the oscillations arise due to \textbf{A:NS No belt slippage} in \href{https://github.com/gr812b/CVT-Simulator/blob/develop/docs/SRS/SRS.pdf}{SRS}, which result in an underdamped system. 
 
 Secondly, the exclusive increase is due to a poor representation of the complex ramp geometry. While in the real world, we know the ramp begins linear, then transitions to a gentle curve that gives us the decrease in force as we shift, the simulation represents it as a linear line. This causes a more strict rising of the force at each corresponding angular velocity of the engine.
 
@@ -135,7 +135,7 @@ The impact this has on the system is quite miniscule. As long as the initla clam
 We can see the graphs are quite close in shape. Some key differences include:
 \begin{itemize}
   \item the magnitude at which we shift, which is variable and can be altered based on the input parameters.
-  \item The oscillations in the simulation are due to \textbf{A9: No belt slippage} in \href{https://github.com/gr812b/CVT-Simulator/blob/develop/docs/SRS/SRS.pdf}{SRS}, which cause an underdamped system.
+  \item The oscillations in the simulation are due to \textbf{A:NS No belt slippage} in \href{https://github.com/gr812b/CVT-Simulator/blob/develop/docs/SRS/SRS.pdf}{SRS}, which cause an underdamped system.
   \item The slight slope within the simulation. This is due to the poor ramp representation alongside other input parameters. Will be discussed more in Shift test-3.
 \end{itemize}
 
@@ -150,7 +150,7 @@ See the \href{https://github.com/gr812b/CVT-Simulator/blob/develop/docs/VnVExtra
 
 The shift curve seen here shows much about the system, as so we will go over each section within the graph.
 \begin{itemize}
-\item{Phase A to C:} Due to \textbf{A9: No belt slippage} in \href{https://github.com/gr812b/CVT-Simulator/blob/develop/docs/SRS/SRS.pdf}{SRS}, it is unreasonable to omdel these portions. Were the engine tied to the vehicle's tired without slip, at low velocities the engine would be spinning lowering than it is capable of maintaining, and would thus kill the system. The solution in our simulation is to skip this portion, beginning at an initial velocity of around 3.5m/s.
+\item{Phase A to C:} Due to \textbf{A:NS No belt slippage} in \href{https://github.com/gr812b/CVT-Simulator/blob/develop/docs/SRS/SRS.pdf}{SRS}, it is unreasonable to omdel these portions. Were the engine tied to the vehicle's tired without slip, at low velocities the engine would be spinning lowering than it is capable of maintaining, and would thus kill the system. The solution in our simulation is to skip this portion, beginning at an initial velocity of around 3.5m/s.
 \item {Phase D and E:} This portion is modelled quite well. Here we see the vehicle and engine gaining speed at the low-ratio gear. We also see a slight overshoot thanks to the momentum of the system.
 \item {Phase F:} This is the shifting phase, which has the bulk of the calculations in our system affecting. Overall, a similar shape is reflected in both, with a mostly horizontal line. The slight slope in the simulation arises as we begin to shift too slowly, which allows the engine to gain speed. This can be attributed to several factors, but the most prominent is the poor ramp representation. The ramp is modelled as a linear line, which causes the system to shift too slowly. This is a minor issue, as the system still shifts at the correct time, but the speed at which it shifts is too slow.
 \item {Phase G:} In the final phase, we see the system accelerate at the high-ratio gear. Both graphs match exactly in this portion.
