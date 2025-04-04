@@ -16,7 +16,7 @@
 \usepackage[round]{natbib}
 \usepackage{amsmath, mathtools}
 \usepackage{xr}
-\externaldocument{../SRS/SRS}
+
 
 \input{../Comments}
 \input{../Common}
@@ -51,79 +51,30 @@
 
 \tableofcontents
 
-\listoftables
-
-
-\listoffigures
 
 
 \newpage
 
-\section{Symbols, Abbreviations, and Acronyms}
-
-\begin{table}[h]
-  \raggedright
-  \begin{tabular}{l l} 
-    \toprule		
-    \textbf{acronym} & \textbf{definition}\\
-    \midrule
-    CD & Continuous Development\\
-    CI & Continuous Integration\\ 
-    CVT & Continuous Variable Transmission\\
-    GPS & Global Positioning System\\
-    IMU & Inertial Measurement Unit\\
-    GUI & Graphical User Interface\\
-    IM & Instance Model\\
-    MG & Module Guide\\
-    MIS & Module Interface Specification\\
-    MSE & Mean Squared Error\\
-    NFR & Nonfunctional Requirement\\
-    PR & Pull Request\\
-    R & Functional Requirement\\
-    RPM & Revolutions Per Minute\\
-    SRS & Software Requirements Specification\\
-    VnV & Verification and Validation\\
-    \bottomrule
-  \end{tabular}
-  \caption{Verification and Validation Acronyms}
-  \label{tab:vnv_acronyms}
-\end{table}
 
 \newpage
 
 \pagenumbering{arabic}
 
-\noindent This document serves as a 
-\section{General Information}
+\section{Introduction}
 
-\subsection{Summary}
+The purpose of this document is to evaluate the usability and understandability of the CVT simulator system. The method used to evaluate user feedback was a feedback survey that included Likert-scale questions and open-ended responses.
+The survey can be found \href{https://forms.office.com/r/RkeDW31ZTS}{here}. 
 
-\subsection{Objectives}
+\section{Usability of the System}
 
-\subsection{Relevant Documentation}
-
-\section{Plan}
-
-\subsection{Verification and Validation Team}
-    
-\subsection{Data Collection}
-
-
-\subsubsection*{Review Meetings}
-
-\subsubsection*{Baja Team Review}
-
-
-\subsection{Design Verification Plan}
-
-\subsubsection{Usability}
+\subsection{Format of Usability Tests}
 
 The below test are to verify the usability of the system.
-They are based on NFR2 from the SRS document.
+They are based on NFR2 from the \href{https://github.com/gr812b/CVT-Simulator/blob/main/docs/SRS/SRS.pdf}{SRS document}.
 
 \begin{enumerate}
 
-\item{test-1\\}
+  \item \label{usetest-1}test-1\\
 
 Type: Manual
 					
@@ -137,7 +88,8 @@ Output/Result: The average output rating from all users is greater than or equal
 How test will be performed: Each user in the test group will be provided with a survey which provides a series of questions and a scale for each option where 1 represents Poor, 2 represents below expectation, 3 represents satisfactory, 4 represents above average and 5 represents excellent.
 The average rating will then be calculated and must be above or equal to 4 representing the system usability is above expectations.  
 
-\item{test-2\\}
+\item \label{usetest-2}test-2\\
+
   
 Type: Manual
             
@@ -153,13 +105,23 @@ The average rating will then be calculated and must be above or equal to 4 repre
   
 \end{enumerate}
 
-\subsubsection{Understandability}
+\subsection{Results of Usability Tests}
+
+\begin{enumerate}
+  \item test-\ref{usetest-1}
+\end{enumerate}
+
+\section{Understandability of the System}
+
+\subsection{Format of Understandability Tests}
 
 The below test are to verify the understandability of the system.
-They are based on NFR5 from the SRS document.
+They are based on NFR2 from the \href{https://github.com/gr812b/CVT-Simulator/blob/main/docs/SRS/SRS.pdf}{SRS document}.
+
 \begin{enumerate}
 
-  \item{test-1\\}
+  \item \label{undtest-1}test-1\\
+
   
   Type: Manual.
             
@@ -173,7 +135,8 @@ They are based on NFR5 from the SRS document.
   How test will be performed: Each user in the test group will be provided with a survey which provides a series of questions and a scale for each option where 1 represents Poor, 2 represents below expectation, 3 represents satisfactory, 4 represents above average and 5 represents excellent.
   The average rating will then be calculated and must be above or equal to 4, representing the systems understandability is above expectations.  
   
-  \item{test-2\\}
+  \item \label{undtest-2}test-2\\
+
   
   Type: Manual
             
@@ -189,17 +152,14 @@ They are based on NFR5 from the SRS document.
   
   \end{enumerate}
 
-\subsection{Usability Survey Questions}
+\section{Overall Satisfaction and Feedback}
 
-  Usability/Understandability survey:
-  \url{https://forms.office.com/r/RkeDW31ZTS}
+\section{Recommendations}
+
+\section{Conclusion}
+
 \newpage{}
-\section*{Appendix --- Reflection}
 
-The information in this section will be used to evaluate the team members on the
-graduate attribute of Lifelong Learning.
-
-\input{../Reflection.tex}
 
 
 
