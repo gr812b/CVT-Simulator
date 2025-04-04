@@ -1640,7 +1640,25 @@ The following requirements were derived from the \href{https://github.com/gr812b
   \item \label{sr:error-handling} The software shall implement robust error handling mechanisms that detect and handle at least 95\% of all expected and unexpected errors, ensuring that no more than 5\% of critical system failures result in unhandled exceptions or system crashes.
 \end{enumerate}
 
+\subsubsection{Industry Standards}
+The \progname \ software shall comply with recognized software engineering and automotive control standards, including but not limited to:
+While no specific industry regulations directly relate to this software, practices such as software validation, numerical accuracy, and performance testing will be followed to ensure reliability and correctness. 
+Testing methodologies, such as unit testing will be used to verify system accuracy.
 
+\subsubsection{Legal and Safety Regulations}
+The software must comply with applicable regulations concerning software integrity and data accuracy, as no personal information is used security requirements are considered out of scope.
+\begin{itemize}
+    \item \textbf{ISO/IEC 25002:2024}: Software quality models ensuring reliability and maintainability \cite{ISO26262Standard}. This will be ensured via \hpref{NFR:MA}. 
+\end{itemize}
+
+\subsubsection{Software Development Constraints Due to Compliance}
+Compliance with these standards imposes specific requirements on the CVT software, including:
+\begin{itemize}
+    \item \textbf{Precision in Computation}: Floating-point errors must be mitigated this will be achieved by \hpref{NFR:AC}.
+    \item \textbf{Version Control and Documentation}: Compliance with \cite{ISO26262Standard} mandates detailed software version control and traceability of changes. This will be shown at the top of each document's Revision History section. 
+\end{itemize}
+
+\noindent Therefore, the \progname \ software will comply with these regulatory and industry standards.
 
 \subsection{Rationale}
 
