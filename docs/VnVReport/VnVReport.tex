@@ -267,6 +267,21 @@ The reusability tests are designed to assess how easily the system can be adapte
     These minimal changes demonstrate the system's high reusability, as it can be quickly adapted to new CVT configurations with little effort and modification.
 \end{enumerate}
 	
+\section{Safety Requirements Evaluation}
+The safety requirements are designed to ensure that the system is safe to use and does not cause harm to the user or the environment.
+
+\subsection{Safety Requirement 1}
+\begin{enumerate}
+  \item {\textbf{SR1 Test-1}}\\
+  This test was manually performed by the team. During the execution, when a value was inputted that caused the belt tension to exceed the maximum limit, the system promptly notified the user and stopped the simulation. The error message was clear and easily understood, with the simulation halting within approximately 2 seconds of the input. These results confirm that the safety mechanism for belt tension is working as intended, ensuring immediate user notification and system shutdown upon detecting unsafe conditions.
+  \end{enumerate}
+
+\subsection{Safety Requirement 2}
+  \begin{enumerate}
+    \item {\textbf{SR2 Test-1}}\\
+    This test was manually performed by the team. When the input causing an error was introduced, the system immediately threw the error and stopped the simulation. A clear error message was displayed, including relevant debugging information, enabling the user to understand what went wrong. The error handling was prompt and efficient, confirming that the system meets the safety requirement for robust error management.
+    \end{enumerate}
+
 \section{Comparison to Existing Implementation}	
 
 Not applicable for this project.
