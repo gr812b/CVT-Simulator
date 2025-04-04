@@ -183,6 +183,214 @@ class EulerSpiralSegment(RampSegment):
         angle = self.theta_start + self.delta * (s_val / self.s_end) ** 2
         return math.tan(angle)
 
+class CubicSpiralZeroZero(RampSegment):
+    """
+    A cubic spiral transition defined by:
+    
+      θ(s) = θ₀ + B·s² + C·s³,   0 ≤ s ≤ L_eff,
+    
+    with boundary conditions:
+      θ(0)=θ₀,    κ(0)=θ'(0)=0,
+      θ(L_eff)=θ₁, κ(L_eff)=θ'(L_eff)=0.
+      
+    These conditions yield:
+      B = 3(θ₁ - θ₀) / L_eff²,     C = -2(θ₁ - θ₀) / L_eff³.
+      
+    In our implementation, the user specifies x_start and x_end (thus a chord length),
+    but because the horizontal projection of the spiral is:
+    
+      x(L_eff) = ∫₀^(L_eff) cos(θ(s)) ds,
+    
+    we iterate on L_eff until x(L_eff) matches the chord length exactly.
+    """
+    def __init__(self, x_start: float, x_end: float, slope_start: float, slope_end: float, tol: float=1e-8):
+        super().__init__(x_start, x_end)
+        # The desired horizontal chord length.
+        chord_target = x_end - x_start
+
+        # Convert slopes to tangent angles.
+        self.theta0 = math.atan(slope_start)
+        self.theta1 = math.atan(slope_end)
+        dtheta = self.theta1 - self.theta0
+
+        # --- Find effective arc length L_eff such that the horizontal projection matches chord_target.
+        # Our cubic spiral is defined as:
+        #   θ(s) = θ₀ + B s² + C s³,   with B = 3*dθ / L_eff² and C = -2*dθ / L_eff³.
+        # Then, horizontal projection is:
+        #   x(L_eff) = ∫_0^(L_eff) cos(θ₀ + (3*dθ/L_eff²) s² - (2*dθ/L_eff³) s³) ds.
+        # We want: x(L_eff) = chord_target.
+        def chord_projection(L_eff):
+            B = 3*dtheta / (L_eff**2)
+            C = -2*dtheta / (L_eff**3)
+            val, _ = quad(lambda u: math.cos(self.theta0 + B*u**2 + C*u**3), 0, L_eff)
+            return val
+
+        # Use bisection to solve f(L_eff) = chord_projection(L_eff) - chord_target = 0.
+        # Initial guess: For a straight line, L_eff would equal chord_target.
+        L_low = chord_target
+        L_high = chord_target * 1.5  # a reasonable upper bound
+        
+        # Ensure that f(L_low) and f(L_high) have opposite signs.
+        f_low = chord_projection(L_low) - chord_target
+        f_high = chord_projection(L_high) - chord_target
+
+        # In some cases, if dtheta is small, they may both be nearly zero.
+        # We'll assume we can find bounds. Otherwise, no iteration is needed.
+        while f_low * f_high > 0:
+            L_high *= 1.1
+            f_high = chord_projection(L_high) - chord_target
+        
+        # Bisection iteration.
+        while abs(L_high - L_low) > tol:
+            L_mid = (L_low + L_high) / 2.0
+            f_mid = chord_projection(L_mid) - chord_target
+            if f_mid * f_low < 0:
+                L_high = L_mid
+                f_high = f_mid
+            else:
+                L_low = L_mid
+                f_low = f_mid
+        L_eff = (L_low + L_high) / 2.0
+        self.L = L_eff  # effective arc-length that gives the correct chord
+
+        # Now compute B and C based on L_eff.
+        self.B = 3*dtheta/(self.L**2)
+        self.C = -2*dtheta/(self.L**3)
+        self.delta = dtheta  # total change in angle over the spiral
+
+    def _theta(self, s: float) -> float:
+        return self.theta0 + self.B * s**2 + self.C * s**3
+
+    def _x_of_s(self, s: float) -> float:
+        val, _ = quad(lambda u: math.cos(self._theta(u)), 0, s)
+        return val
+
+    def _y_of_s(self, s: float) -> float:
+        val, _ = quad(lambda u: math.sin(self._theta(u)), 0, s)
+        return val
+
+    def _find_s_for_x(self, x_offset: float, tol: float = 1e-8) -> float:
+        lower, upper = 0.0, self.L
+        while self._x_of_s(upper) < x_offset:
+            upper *= 2
+        while upper - lower > tol:
+            mid = (lower + upper) / 2.0
+            if self._x_of_s(mid) < x_offset:
+                lower = mid
+            else:
+                upper = mid
+        return (lower + upper) / 2.0
+
+    def height(self, x: float) -> float:
+        if not (self.x_start <= x <= self.x_end):
+            raise ValueError(f"{x} out of range")
+        x_offset = x - self.x_start
+        s_val = self._find_s_for_x(x_offset)
+        return self.y_start + self._y_of_s(s_val)
+
+    def slope(self, x: float) -> float:
+        if not (self.x_start <= x <= self.x_end):
+            raise ValueError(f"{x} out of range")
+        x_offset = x - self.x_start
+        s_val = self._find_s_for_x(x_offset)
+        return math.tan(self._theta(s_val))
+    
+class CubicSpiralZeroK1(RampSegment):
+    """
+    Cubic spiral defined by:
+      θ(s) = θ₀ + B s² + C s³,   0 ≤ s ≤ L_eff,
+    with:
+      θ(0) = θ₀ = arctan(slope_start),
+      θ'(0)=0,
+      θ(L_eff)=θ₁ = arctan(target_slope),
+      θ'(L_eff)=k₁  (target curvature).
+    
+    The coefficients are given by:
+      C = (k₁ L_eff - 2(θ₁-θ₀)) / L_eff³,
+      B = -k₁/L_eff + 3(θ₁-θ₀)/L_eff².
+    
+    Because the horizontal projection of the spiral is
+      x(L_eff) = ∫₀^(L_eff) cos(θ(s)) ds,
+    we adjust L_eff using bisection so that x(L_eff) equals the given chord length.
+    """
+    def __init__(self, x_start: float, x_end: float, slope_start: float, slope_end: float, target_curvature: float, tol: float=1e-8):
+        super().__init__(x_start, x_end)
+        chord_target = x_end - x_start
+
+        self.theta0 = math.atan(slope_start)
+        self.theta1 = math.atan(slope_end)
+        dtheta = self.theta1 - self.theta0
+        self.k1 = target_curvature  # target curvature at end
+
+        # Define a function that, given an effective arc length L_eff, returns the horizontal projection.
+        def chord_projection(L_eff):
+            B = -self.k1/L_eff + 3*dtheta/(L_eff**2)
+            C = (self.k1*L_eff - 2*dtheta)/(L_eff**3)
+            val, _ = quad(lambda u: math.cos(self.theta0 + B*u**2 + C*u**3), 0, L_eff)
+            return val
+
+        # Use bisection to solve chord_projection(L_eff) = chord_target.
+        L_low = chord_target
+        L_high = chord_target * 1.5
+        f_low = chord_projection(L_low) - chord_target
+        f_high = chord_projection(L_high) - chord_target
+        while f_low * f_high > 0:
+            L_high *= 1.1
+            f_high = chord_projection(L_high) - chord_target
+        while abs(L_high - L_low) > tol:
+            L_mid = (L_low + L_high)/2.0
+            f_mid = chord_projection(L_mid) - chord_target
+            if f_mid * f_low < 0:
+                L_high = L_mid
+                f_high = f_mid
+            else:
+                L_low = L_mid
+                f_low = f_mid
+        L_eff = (L_low + L_high)/2.0
+        self.L = L_eff  # effective arc length for the spiral
+        
+        # Now set coefficients B and C using the formulas:
+        self.B = -self.k1/self.L + 3*dtheta/(self.L**2)
+        self.C = (self.k1*self.L - 2*dtheta)/(self.L**3)
+        self.delta = dtheta
+
+    def _theta(self, s: float) -> float:
+        return self.theta0 + self.B*s**2 + self.C*s**3
+
+    def _x_of_s(self, s: float) -> float:
+        val, _ = quad(lambda u: math.cos(self._theta(u)), 0, s)
+        return val
+
+    def _y_of_s(self, s: float) -> float:
+        val, _ = quad(lambda u: math.sin(self._theta(u)), 0, s)
+        return val
+
+    def _find_s_for_x(self, x_offset: float, tol: float=1e-8) -> float:
+        lower, upper = 0.0, self.L
+        while self._x_of_s(upper) < x_offset:
+            upper *= 2
+        while upper-lower > tol:
+            mid = (lower+upper)/2.0
+            if self._x_of_s(mid) < x_offset:
+                lower = mid
+            else:
+                upper = mid
+        return (lower+upper)/2.0
+
+    def height(self, x: float) -> float:
+        if not (self.x_start <= x <= self.x_end):
+            raise ValueError(f"{x} out of range")
+        x_offset = x - self.x_start
+        s_val = self._find_s_for_x(x_offset)
+        return self.y_start + self._y_of_s(s_val)
+
+    def slope(self, x: float) -> float:
+        if not (self.x_start <= x <= self.x_end):
+            raise ValueError(f"{x} out of range")
+        x_offset = x - self.x_start
+        s_val = self._find_s_for_x(x_offset)
+        return math.tan(self._theta(s_val))
+
 class PiecewiseRamp:
     """Handles multiple ramp segments and ensures continuity automatically."""
 
@@ -230,6 +438,8 @@ def visualize_ramps(ramps):
                 return "blue", "Linear"
             elif segment.__class__.__name__ == "EulerSpiralSegment":
                 return "red", "Euler Spiral"
+            elif segment.__class__.__name__ == "CircularSegment":
+                return "green", "Circular"
         # Default for other types:
         return "black", type(segment).__name__
     
@@ -239,7 +449,7 @@ def visualize_ramps(ramps):
         used_labels = set()
         for ramp in ramps:
             for segment in ramp.segments:
-                x_vals = np.linspace(segment.x_start, segment.x_end, 200)
+                x_vals = np.linspace(segment.x_start, segment.x_end, 2000)
                 y_vals = [attribute_func(segment, x) for x in x_vals]
                 color, label = get_segment_style(segment)
                 if label in used_labels:
@@ -269,26 +479,43 @@ def visualize_ramps(ramps):
 
 if __name__ == "__main__":
     length = 1.125
-    eulerLength = 0.025
+    curveLength = 0.025
     # Sample primary ramp
     ramp = PiecewiseRamp()
 
-    line = LinearSegment(x_start=0, x_end=0.125, slope=math.tan(math.radians(-15)))
+    line1 = LinearSegment(x_start=0, x_end=0.125, slope=math.tan(math.radians(-15)))
+    line2 = LinearSegment(x_start=line1.x_end + curveLength, x_end=length, slope=math.tan(math.radians(-70)))
+
     circle = CircularSegment(
-        x_start=line.x_end + eulerLength,
+        x_start=line1.x_end + curveLength,
         x_end=length,
         radius=25,
         theta_start=0.971816735418,
         theta_end=1.1984521248,
     )
+
     euler = EulerSpiralSegment(
-        x_start=line.x_end,
-        x_end=line.x_end + eulerLength,
-        slope_start=line.slope(line.x_start),
-        slope_end=circle.slope(circle.x_start)
+        x_start=line1.x_end,
+        x_end=line1.x_end + curveLength,
+        slope_start=line1.slope(line1.x_end),
+        slope_end=line2.slope(line2.x_start),
     )
-    ramp.add_segment(line)
-    ramp.add_segment(euler)
+    cubicLines = CubicSpiralZeroZero(
+        x_start=line1.x_end,
+        x_end=line1.x_end + curveLength,
+        slope_start=line1.slope(line1.x_end),
+        slope_end=line2.slope(line2.x_start)
+    )
+    cubicCircleLine = CubicSpiralZeroK1(
+        x_start=line1.x_end,
+        x_end=line1.x_end + curveLength,
+        slope_start=line1.slope(line1.x_end),
+        slope_end=circle.slope(circle.x_start),
+        target_curvature=1/5,
+    )
+
+    ramp.add_segment(line1)
+    ramp.add_segment(cubicCircleLine)
     ramp.add_segment(circle)
 
     visualize_ramps([ramp])
