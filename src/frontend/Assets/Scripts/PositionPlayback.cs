@@ -1,10 +1,7 @@
-using System.Collections.Generic;
-using System.IO;
 using UnityEngine;
-using System;
 using UnityEngine.UI;
-using TMPro;
-using UnityEngine.SceneManagement;
+using CommunicationProtocol.Receivers;
+using System.IO;
 
 public class PositionPlayback : PlaybackView
 {
@@ -17,16 +14,15 @@ public class PositionPlayback : PlaybackView
     private Vector3 startPosition;
     private Vector3 endPosition;
     private float totalDistance;
-    InputFields inputFields;
     private float angle;
-    // Max Position will be changed
-    private float maxPosition = 127;
+    private float distance;
     private float canvasWidth;
 
     private void Start()
     {
-        inputFields = FindAnyObjectByType<InputFields>();
-        angle = (float)SimulationData.parameters.AngleOfIncline;
+        InputParameters inputParameters = new InputParameters(PathConstants.INPUT_PARAMETERS_PATH);
+        angle = float.Parse(inputParameters.GetValue(ParameterNames.ANGLE_OF_INCLINE));
+        distance = float.Parse(inputParameters.GetValue(ParameterNames.TOTAL_DISTANCE));
         canvasWidth = canvasRect.rect.width  -50;
         calcStartEndPositions();
         SetCarInitial();
@@ -81,32 +77,39 @@ public class PositionPlayback : PlaybackView
         }
         circle1.anchoredPosition = new Vector2(startPosition.x, startPosition.y);
         circle2.anchoredPosition = new Vector2(endPosition.x, endPosition.y);
-        Vector3 worldPos1 = circle1.position;  
-        Vector3 worldPos2 = circle2.position;  
-        lineRenderer.useWorldSpace = true;
-        lineRenderer.startColor = new Color(0.7f, 0.5f, 0.3f);
-        lineRenderer.material.color = new Color(0.7f, 0.5f, 0.3f);
-        lineRenderer.endColor   = new Color(0.7f, 0.5f, 0.3f);
-        lineRenderer.positionCount = 4;
-        lineRenderer.SetPosition(0, worldPos1);
-        lineRenderer.SetPosition(1, worldPos2);
-
-        var baselinePoint = new Vector3(worldPos2.x, worldPos1.y, worldPos1.z);
-        lineRenderer.SetPosition(2, baselinePoint);
-
-        lineRenderer.SetPosition(3, worldPos1);
+       
+        DrawPath(circle1, circle2);
 
         circle1.gameObject.SetActive(false);
         circle2.gameObject.SetActive(false);
 
      }
 
+    private void DrawPath(RectTransform startCircle, RectTransform endCircle)
+    {
+        Vector3 worldPos1 = startCircle.position;  
+        Vector3 worldPos2 = endCircle.position;  
+        
+        lineRenderer.useWorldSpace = true;
+        lineRenderer.startColor = new Color(0.7f, 0.5f, 0.3f);
+        lineRenderer.material.color = new Color(0.7f, 0.5f, 0.3f);
+        lineRenderer.endColor   = new Color(0.7f, 0.5f, 0.3f);
+
+        lineRenderer.positionCount = 4;
+        lineRenderer.SetPosition(0, worldPos1);
+        lineRenderer.SetPosition(1, worldPos2);
+
+        var baselinePoint = new Vector3(worldPos2.x, worldPos1.y, worldPos1.z);
+        lineRenderer.SetPosition(2, baselinePoint);
+        lineRenderer.SetPosition(3, worldPos1);
+    }
+
     private void MoveCarAlongTrack(float position, float angle)
     {
         
         if (angle != 0)
         {
-            float normalizedDistance = position / maxPosition;
+            float normalizedDistance = position / distance;
             float radius = totalDistance;
             float xOffSet = radius * Mathf.Cos(angle*Mathf.Deg2Rad);
             float yOffSet = radius * Mathf.Sin(angle*Mathf.Deg2Rad);
@@ -116,7 +119,7 @@ public class PositionPlayback : PlaybackView
         }
         else
         {
-            float normalizedXPos= ((position / maxPosition) * canvasWidth) - (canvasWidth / 2); 
+            float normalizedXPos= ((position / distance) * canvasWidth) - (canvasWidth / 2); 
             carTransform.GetComponent<RectTransform>().anchoredPosition = new Vector2(normalizedXPos, startPosition.y);
         }
     }

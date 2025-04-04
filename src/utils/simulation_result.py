@@ -4,10 +4,14 @@ import matplotlib.pyplot as plt
 
 
 class SimulationResult:
-    def __init__(self, solution):
-        """Initialize with solution from solve_ivp and parse it into states."""
-        self.time = solution.t
-        self.states = self.parse_solution(solution)
+    def __init__(self, solution=None, time=None, states=None):
+        """Initialize with solution from solve_ivp and parse it into states, or directly with time and states."""
+        if solution is not None:
+            self.time = solution.t
+            self.states = self.parse_solution(solution)
+        else:
+            self.time = time
+            self.states = states
 
     @staticmethod
     def parse_solution(solution):
@@ -15,16 +19,26 @@ class SimulationResult:
         states = [SystemState.from_array(state) for state in solution.y.T]
         return states
 
+    @staticmethod
+    def from_csv(filename="simulation_output.csv"):
+        """Reads the solution states from a CSV file and returns a SimulationResult instance."""
+        df = pd.read_csv(filename)
+        time = df["time"].values
+        states = [
+            SystemState(
+                car_velocity=row["car_velocity"],
+                car_position=row["car_position"],
+                shift_velocity=row["shift_velocity"],
+                shift_distance=row["shift_distance"],
+            )
+            for _, row in df.iterrows()
+        ]
+        return SimulationResult(time=time, states=states)
+
     def write_csv(self, filename="simulation_output.csv"):
         """Writes the parsed solution states to a CSV file."""
         data = {
             "time": self.time,
-            "engine_angular_velocity": [
-                state.engine_angular_velocity for state in self.states
-            ],
-            "engine_angular_position": [
-                state.engine_angular_position for state in self.states
-            ],
             "car_velocity": [state.car_velocity for state in self.states],
             "car_position": [state.car_position for state in self.states],
             "shift_velocity": [state.shift_velocity for state in self.states],
@@ -37,12 +51,6 @@ class SimulationResult:
         """Plots a selected field over time."""
         # Mapping field names to their respective data
         field_data = {
-            "engine_angular_velocity": [
-                state.engine_angular_velocity for state in self.states
-            ],
-            "engine_angular_position": [
-                state.engine_angular_position for state in self.states
-            ],
             "car_velocity": [state.car_velocity for state in self.states],
             "car_position": [state.car_position for state in self.states],
             "shift_velocity": [state.shift_velocity for state in self.states],

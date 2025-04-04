@@ -1,13 +1,21 @@
 from constants.car_specs import (
-    BELT_WIDTH,
-    GEARBOX_RATIO,
-    INNER_PRIMARY_PULLEY_RADIUS,
-    INNER_SECONDARY_PULLEY_RADIUS,
-    SHEAVE_ANGLE,
-    WHEEL_RADIUS,
+    MAX_SHIFT,
 )
-from utils.theoretical_models import TheoreticalModels as tm
 from utils.system_state import SystemState
+import numpy as np
+
+
+def logistic_clamp(x, lower_bound, upper_bound, slope=5000.0):
+    """
+    Returns a factor in [0..1] that is ~1 for x in (lower_bound, upper_bound)
+    and smoothly transitions to 0 when x is outside [lower_bound, upper_bound].
+    The 'slope' controls how sharp the transition is.
+    """
+    # Transition near the lower bound
+    factor_low = 1.0 / (1.0 + np.exp(-slope * (x - lower_bound)))
+    # Transition near the upper bound
+    factor_up = 1.0 / (1.0 + np.exp(slope * (x - upper_bound)))
+    return factor_low * factor_up
 
 
 def update_y(y, state: SystemState):
@@ -18,7 +26,6 @@ def update_y(y, state: SystemState):
 
 def shift_constraint_event(t, y):
     state = SystemState.from_array(y)
-    MAX_SHIFT = BELT_WIDTH
     shift_velocity = state.shift_velocity
     shift_distance = state.shift_distance
 
@@ -36,42 +43,15 @@ def shift_constraint_event(t, y):
 
 def car_velocity_constraint_event(t, y):
     state = SystemState.from_array(y)
-
-    cvt_ratio = tm.current_cvt_ratio(
-        state.shift_distance,
-        SHEAVE_ANGLE,
-        BELT_WIDTH,
-        INNER_PRIMARY_PULLEY_RADIUS,
-        INNER_SECONDARY_PULLEY_RADIUS,
-    )
-
-    max_car_velocity = (
-        (state.engine_angular_velocity / cvt_ratio) / GEARBOX_RATIO * WHEEL_RADIUS
-    )
-
-    if abs(state.car_velocity) > max_car_velocity:
-        state.car_velocity = max_car_velocity
-
-    update_y(y, state)
-    return 1
+    return state.car_velocity
 
 
-def engine_angular_velocity_constraint_event(t, y):
-    state = SystemState.from_array(y)
-    MAX_ENGINE_ANGULAR_VELOCITY = 400
-
-    if state.engine_angular_velocity < 0:
-        state.engine_angular_velocity = 0
-    elif state.engine_angular_velocity > MAX_ENGINE_ANGULAR_VELOCITY:
-        state.engine_angular_velocity = MAX_ENGINE_ANGULAR_VELOCITY
-
-    update_y(y, state)
-    return 1
+car_velocity_constraint_event.terminal = True
+car_velocity_constraint_event.direction = -1
 
 
 # Export all constraints
 constraints = [
     shift_constraint_event,
     car_velocity_constraint_event,
-    engine_angular_velocity_constraint_event,
 ]

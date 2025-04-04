@@ -1,6 +1,4 @@
-using System;
-using System.Collections.Generic;
-using Unity.Mathematics;
+using CommunicationProtocol.Receivers;
 using UnityEngine;
 
 public class CVTPlayback : PlaybackView
@@ -17,17 +15,17 @@ public class CVTPlayback : PlaybackView
     
     public override void Display(DataPoint dataPoint)
     {
-        SetAngles(dataPoint.PrimaryAngle, dataPoint.SecondaryAngle);
+        SetAngles(dataPoint.PrimaryRotation, dataPoint.SecondaryRotation);
         SetShifts(dataPoint.PrimaryShiftDistance, dataPoint.SecondaryShiftDistance);
     }
 
     // Handles setting all of the angles for the pulley models
-    private void SetAngles(float primaryAngle, float secondaryAngle)
+    private void SetAngles(float primaryRotation, float secondaryRotation)
     {
-        SetAngle(ref primaryMovable, primaryAngle);
-        SetAngle(ref primaryFixed, primaryAngle);
-        SetAngle(ref secondaryMovable, secondaryAngle);
-        SetAngle(ref secondaryFixed, secondaryAngle);
+        SetAngle(ref primaryMovable, primaryRotation);
+        SetAngle(ref primaryFixed, primaryRotation);
+        SetAngle(ref secondaryMovable, secondaryRotation);
+        SetAngle(ref secondaryFixed, secondaryRotation);
     }
 
     // Sets the angle of a component

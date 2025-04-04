@@ -1,9 +1,9 @@
 import numpy as np
 from utils.theoretical_models import TheoreticalModels as tm
 from constants.car_specs import (
-    SHEAVE_ANGLE,
-    BELT_WIDTH,
-    INNER_SECONDARY_PULLEY_RADIUS,
+    BELT_HEIGHT,
+    MAX_SHIFT,
+    HELIX_RADIUS,
 )
 from utils.ramp_representation import LinearSegment, PiecewiseRamp
 
@@ -15,27 +15,36 @@ class SecondaryPulley:
         spring_coeff_comp: float,  # N/m
         initial_rotation: float,  # rad
         initial_compression: float,  # m
-        helix_radius: float,  # m
-        # TODO: Add params for helix geometry
+        ramp_type: int,
     ):
         self.spring_coeff_tors = spring_coeff_tors
         self.spring_coeff_comp = spring_coeff_comp
         self.initial_rotation = initial_rotation
         self.initial_compression = initial_compression
-        self.helix_radius = helix_radius
-        self.ramp = PiecewiseRamp()
-        self.ramp.add_segment(LinearSegment(x_start=0, x_end=1, slope=-0.5774))
+        self.helix_radius = HELIX_RADIUS
+        self.ramp_type = ramp_type
 
-    # TODO: Look into how the torsional sping affects this torque value
+        if self.ramp_type == 1:
+            self.ramp = PiecewiseRamp()
+            self.ramp.add_segment(LinearSegment(x_start=0, x_end=MAX_SHIFT, slope=-0.3))
+        elif self.ramp_type == 2:
+            self.ramp = PiecewiseRamp()
+            self.ramp.add_segment(
+                LinearSegment(x_start=0, x_end=MAX_SHIFT / 2, slope=-0.4)
+            )
+            self.ramp.add_segment(
+                LinearSegment(x_start=MAX_SHIFT / 2, x_end=MAX_SHIFT, slope=-0.25)
+            )
+
     def calculate_helix_force(
         self, torque: float, spring_torque: float, shift_distance: float
     ) -> float:
-        secondary_radius = tm.current_secondary_radius(
-            shift_distance, SHEAVE_ANGLE, BELT_WIDTH, INNER_SECONDARY_PULLEY_RADIUS
-        )
+        secondary_radius = tm.outer_sec_radius(shift_distance) - BELT_HEIGHT / 2
 
         if shift_distance < 0:  # TODO: remove
             shift_distance = 0
+        if shift_distance > MAX_SHIFT:
+            shift_distance = MAX_SHIFT
 
         angle = np.arctan(self.ramp.slope(shift_distance))
 
@@ -46,14 +55,17 @@ class SecondaryPulley:
             self.spring_coeff_comp, self.initial_compression + compression
         )
 
+    def calculate_rotation(self, shift_distance: float) -> float:
+        return shift_distance * self.ramp.slope(shift_distance) * 2 / HELIX_RADIUS
+
     def calculate_spring_tors_torque(self, shift_distance: float) -> float:
 
         if shift_distance < 0:  # TODO: remove
             shift_distance = 0
+        if shift_distance > MAX_SHIFT:
+            shift_distance = MAX_SHIFT
 
-        rotation = (
-            self.initial_rotation + self.ramp.height(shift_distance) / self.helix_radius
-        )
+        rotation = self.initial_rotation + self.calculate_rotation(shift_distance)
         return tm.hookes_law_tors(self.spring_coeff_tors, rotation)
 
     # TODO: Determine relationship between shift distance and rotation

@@ -11,11 +11,13 @@ class SimulationArgs:
     secondary_helix_geometry: float
     secondary_torsion_spring_rate: float
     secondary_compression_spring_rate: float
-    secondary_spring_pretension: float
+    secondary_rotational_spring_pretension: float
+    secondary_linear_spring_pretension: float
     vehicle_weight: float
     driver_weight: float
     traction: float
     angle_of_incline: float
+    total_distance: float
 
 
 def get_arguments() -> SimulationArgs:
@@ -24,18 +26,18 @@ def get_arguments() -> SimulationArgs:
         "--flyweight_mass",
         type=float,
         default=0.6,
-        help="Weight of the primary pulley in kilograms (default: 0.8 kg)",
+        help="Weight of the primary pulley in kilograms (default: 0.6 kg)",
     )
     parser.add_argument(
         "--primary_ramp_geometry",
         type=float,
-        default=0.0,
+        default=1,
         help="Ramp geometry of the primary pulley (default: ???)",
     )
     parser.add_argument(
         "--primary_spring_rate",
         type=float,
-        default=500,
+        default=60,
         help="Spring rate of the primary pulley in N/m (default: 500.0 N/m)",
     )
     parser.add_argument(
@@ -47,25 +49,31 @@ def get_arguments() -> SimulationArgs:
     parser.add_argument(
         "--secondary_helix_geometry",
         type=float,
-        default=0.0,
+        default=1,
         help="Helix geometry of the secondary pulley (default: 0.0)",
     )
     parser.add_argument(
         "--secondary_torsion_spring_rate",
         type=float,
-        default=100.0,
+        default=30,
         help="Spring rate of the secondary pulley in N/m (default: 100.0 Nm/rad)",
     )
     parser.add_argument(
         "--secondary_compression_spring_rate",
         type=float,
-        default=100.0,
+        default=1,
         help="Spring rate of the secondary pulley in N/m (default: 100.0 N/m)",
     )
     parser.add_argument(
-        "--secondary_spring_pretension",
+        "--secondary_rotational_spring_pretension",
         type=float,
-        default=15,
+        default=45,
+        help="Spring pretension of the secondary pulley in degrees (default: 45 degrees)",
+    ),
+    parser.add_argument(
+        "--secondary_linear_spring_pretension",
+        type=float,
+        default=0.1,
         help="Spring pretension of the secondary pulley in degrees (default: 45 degrees)",
     )
     parser.add_argument(
@@ -91,6 +99,12 @@ def get_arguments() -> SimulationArgs:
         type=float,
         default=0.0,
         help="Angle of incline in degrees (default: 0.0 degrees)",
+    )
+    parser.add_argument(
+        "--total_distance",
+        type=float,
+        default=200.0,
+        help="Total distance in meters (default: 100.0 m)",
     )
 
     args = parser.parse_args()

@@ -1,0 +1,12 @@
+fileFormatVersion: 2
+<<<<<<<< HEAD:src/frontend/Assets/Plugins.meta
+guid: 59cc3384562b2054d9648ae1c0e1c8cf
+========
+guid: 57e25b4a578dba94c9353f4633b20549
+>>>>>>>> main:src/frontend/Assets/StandaloneFileBrowser.meta
+folderAsset: yes
+DefaultImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

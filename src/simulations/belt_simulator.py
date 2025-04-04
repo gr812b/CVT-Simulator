@@ -1,38 +1,30 @@
 import numpy as np
 import math
 from utils.theoretical_models import TheoreticalModels as tm
-from constants.car_specs import (
-    BELT_WIDTH,
-    INNER_PRIMARY_PULLEY_RADIUS,
-    INNER_SECONDARY_PULLEY_RADIUS,
-    SHEAVE_ANGLE,
-    BELT_CROSS_SECTIONAL_AREA,
+from constants.car_specs import SHEAVE_ANGLE, BELT_CROSS_SECTIONAL_AREA, BELT_HEIGHT
+from constants.constants import (
+    RUBBER_DENSITY,
+    RUBBER_ALUMINUM_STATIC_FRICTION,
+    RUBBER_ALUMINUM_KINETIC_FRICTION,
 )
-from constants.constants import RUBBER_DENSITY
 
 
 class BeltSimulator:
     def __init__(
         self,
-        μ_static: float,
-        μ_kinetic: float,
         primary: bool,
     ):
-        self.μ_static = μ_static
-        self.μ_kinetic = μ_kinetic
         self.primary = primary
+        self.μ_static = RUBBER_ALUMINUM_STATIC_FRICTION
+        self.μ_kinetic = RUBBER_ALUMINUM_KINETIC_FRICTION
 
     def calculate_centrifugal_force(
         self, ω: float, shift_distance: float, wrap_angle: float
     ) -> float:
         if self.primary:
-            radius = tm.current_primary_radius(
-                shift_distance, SHEAVE_ANGLE, INNER_PRIMARY_PULLEY_RADIUS
-            )
+            radius = tm.outer_prim_radius(shift_distance) - BELT_HEIGHT / 2
         else:
-            radius = tm.current_secondary_radius(
-                shift_distance, SHEAVE_ANGLE, BELT_WIDTH, INNER_SECONDARY_PULLEY_RADIUS
-            )
+            radius = tm.outer_sec_radius(shift_distance) - BELT_HEIGHT / 2
 
         length = radius * wrap_angle
         mass = RUBBER_DENSITY * BELT_CROSS_SECTIONAL_AREA * length

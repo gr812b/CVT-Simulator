@@ -9,6 +9,7 @@
 \usepackage{adjustbox} 
 \usepackage{caption}
 \usepackage{enumitem}
+\usepackage{xr}
 
 \hypersetup{
     colorlinks=true,       % false: boxed links; true: colored links
@@ -26,6 +27,7 @@
 
 \input{../Comments}
 \input{../Common}
+\externaldocument{../SRS/SRS}
 
 \begin{document}
 
@@ -43,6 +45,8 @@
 \textbf{Date} & \textbf{Developer(s)} & \textbf{Change}\\
 \midrule
 Oct 25 & All & First Draft\\
+March 18 & Grace McKenna & Added traceability to document and addressed missing requirements \\
+April 1 & Grace McKenna & Added link to SRS and updated requirements\\
 \bottomrule
 \end{tabularx}
 \end{table}
@@ -57,7 +61,7 @@ Oct 25 & All & First Draft\\
 
 \section{Introduction}
 
-A hazard refers to any circumstance or occurence that has the potential to endanger, damage or cause a system to fail. Hazards may arise from errors in design, implementation or operation and may affect both the system and the user.
+A hazard refers to any circumstance or occurrence that has the potential to endanger, damage or cause a system to fail. Hazards may arise from errors in design, implementation or operation and may affect both the system and the user.
 
 \noindent In this document, we will examine the possible risks related to the creation and application of a software system intended to replicate the functionality of a Continuous Variable Transmission (CVT) for the car of the McMaster Baja Racing team. By systematically examining the components and assumptions of the software, this hazard analysis attempts to make sure that the finished solution satisfies performance objectives and is robust enough to manage the intricacies inherent in CVT modeling.
 
@@ -67,7 +71,7 @@ The purpose of conducting a hazard analysis when designing software that aims to
 McMaster Baja team's Continuous Variable Transmission(CVT), is to identify and become aware of potential risks that could negatively affect the project. 
 A hazard such as producing flawed simulations could delay the tuning process and create unreliable and incorrect outputs thus negatively impacting the vehicle performance and efficiency. 
 These performance flaws could then lead to losses during Baja competitions. 
-Through exploring the possible hazards involved, the project's code quality can be enhanced, potential risks can be mitigated and it ensures that the system will function as intended. 
+Through exploring the possible hazards involved, the project's code quality can be enhanced, potential risks can be mitigated, and it ensures that the system will function as intended. 
 \\\\
 \noindent This document assumes that the user has access to a hard drive with sufficient storage space to download the software, an appropriate computer that meets the system requirements and a stable internet connection when downloading the software. 
 
@@ -100,13 +104,14 @@ This component displays various models that are part of the CVT system, moving i
 
 
 \section{Failure Mode and Effect Analysis}
+Note that the Requirements R17, R18, and NFR1 can be found in the \href{https://github.com/gr812b/CVT-Simulator/blob/main/docs/SRS/SRS.pdf#page=40}{SRS document}.
 
 \newgeometry{left=0cm, right=0cm, top=0cm, bottom=0cm}
 \begin{table}[ht]
     \centering
     \setlength{\tabcolsep}{3pt} % Adjust space between columns
     \renewcommand{\arraystretch}{1.5} % Adjust row spacing
-    \begin{tabular}{|>{\centering\arraybackslash}m{1.5cm}|>{\centering\arraybackslash}m{1.75cm}|>{\centering\arraybackslash}m{3.25cm}|>{\arraybackslash}m{5cm}|>{\centering\arraybackslash}m{3cm}|>{\centering\arraybackslash}m{3cm}|>{\centering\arraybackslash}m{0.5cm}|>{\centering\arraybackslash}m{0.75cm}|}
+    \begin{tabular}{|>{\centering\arraybackslash}m{1.5cm}|>{\centering\arraybackslash}m{1.75cm}|>{\centering\arraybackslash}m{3.25cm}|>{\arraybackslash}m{5cm}|>{\centering\arraybackslash}m{3.65cm}|>{\centering\arraybackslash}m{3cm}|>{\centering\arraybackslash}m{0.65cm}|>{\centering\arraybackslash}m{0.82cm}|}
     \hline
     \textbf{Design Function} & \textbf{Failure Modes} & \textbf{Effects of Failure} & \textbf{Causes of Failure} & \textbf{Detection} & \textbf{Recommended Action} & \textbf{SR} & \textbf{Ref} \\ \hline
     
@@ -130,7 +135,7 @@ This component displays various models that are part of the CVT system, moving i
         \item Adjust load model to more accurately represent the vehicle.
         \item Add dynamic load balancing checks to the simulation.
     \end{itemize} 
-    & 1 & R18 \\ \cline{2-8} 
+    & \ref{sr:load-balancing}  & R17 \\ \cline{2-8} 
     
     & Inaccurate power transfer between pulleys (belt dynamics)
     & \begin{itemize}[left=0pt]
@@ -148,12 +153,12 @@ This component displays various models that are part of the CVT system, moving i
     \begin{itemize}[left=0pt]
         \item Dynamically check if belt tension is within reasonable limits.
     \end{itemize} 
-    & 2 & R19 \\ \cline{2-8} 
+    & \ref{sr:load-balancing} & R17 \\ \cline{2-8} 
     
     & Poor numerical precision 
     & \begin{itemize}[left=0pt]
         \item Inaccurate simulation results, leading to incorrect design decisions
-        \item Inconsistent behaviour of the system, leading to confusion and potential damage.
+        \item Inconsistent behavior of the system, leading to confusion and potential damage.
     \end{itemize} 
     & \begin{itemize}[left=0pt]
         \item Insufficient precision in the ODE solver.
@@ -161,13 +166,13 @@ This component displays various models that are part of the CVT system, moving i
     \end{itemize} 
     & \begin{itemize}[left=0pt]
         \item Erratic in times of high acceleration or deceleration.
-        \item Results that are inconsistent with the expected behaviour of the system.
+        \item Results that are inconsistent with the expected behavior of the system.
     \end{itemize} &
     \begin{itemize}[left=0pt]
         \item Manually verify precision is sufficient by a factor of safety.
         \item Validate the ODE library's precision and accuracy.
     \end{itemize} 
-    & 3 & \\ \cline{2-8} 
+    &  & NFR1 \\ \cline{2-8} 
     
     & Insufficient frictional forces
     & \begin{itemize}[left=0pt]
@@ -187,7 +192,7 @@ This component displays various models that are part of the CVT system, moving i
         \item Investigate friction assumptions and models.
         \item Validate simulation in simple cases to ensure friction is accounted for.
     \end{itemize} 
-    &  & R20 \\ \cline{2-8} 
+    &  & \\ \cline{2-8} 
     
     & Software Crash
     & \begin{itemize}[left=0pt]
@@ -210,7 +215,7 @@ This component displays various models that are part of the CVT system, moving i
         \item Conduct memory profiling and avoid loading large or unnecessary data.
         \item Test the software in edge cases to ensure it fails gracefully.
     \end{itemize} 
-    & 4 & R21 \\ \hline
+    & \ref{sr:error-handling} & R18\\ \hline
     
     \end{tabular}
     \caption{Failure Modes, Effects, and Recommended Actions for Insulin Delivery}
@@ -219,16 +224,21 @@ This component displays various models that are part of the CVT system, moving i
 
 \section{Safety and Security Requirements}
 
-\textbf{SR 1}  The simulation will dynamically check load balancing and adjust the computations accordingly.\\
-\textbf{SR 2} The simulation will dynamically check that the belt tension is within reasonable limits.\\ 
-\textbf{SR 3} Ensure that the precision exceeds the standard 32-bit level by using 64-bit to ensure greater accuracy. \\
-\textbf{SR 4} The software shall implement robust error handling mechanisms that detect and handle at least 95\% of all expected and unexpected errors, ensuring that no more than 5\% of critical system failures result in unhandled exceptions or system crashes.\\
+\begin{enumerate}[label=\textbf{SR\arabic*},ref=SR\arabic*]
+    \item  \label{sr:load-balancing}- The simulation will dynamically check safety metrics such as belt tension and loads, adjusting the computations accordingly and notifying the user if any values go out of range.
+    \item  \label{sr:error-handling}- The software shall implement robust error handling mechanisms that detect and handle at least 95\% of all expected and unexpected errors, ensuring that no more than 5\% of critical system failures result in unhandled exceptions or system crashes.\\
+\end{enumerate}
+
+\noindent The failure mode of \textit{Insufficient Frictional Forces}, identified in the Failure Modes and Effects Analysis (FMEA) table, does not have an associated system requirement (SR). 
+This is due to A\ref{A_9}\textbf{: No Belt Slippage}, which states that \textit{"The CVT will not slip relative to the sheaves."}. 
+Additionally, the User Interface (UI) component was evaluated for potential failure modes in relation to system safety. Common UI-related concerns such as incorrect input handling, misleading graphical outputs, or usability issues were considered. However, since the CVT simulation software does not directly control physical hardware or interact with safety-critical real-world systems, UI-related failures do not pose a direct safety risk.
+While usability improvements may enhance user experience and prevent incorrect parameter tuning, they do not require explicit safety requirements.  
 
 \section{Roadmap}
 
-We will implement SR1, SR2, SR3 and SR4 as part of the capstone timeline.
+We will implement \ref{sr:load-balancing} and \ref{sr:error-handling} as part of the capstone timeline.
 We have chosen to implement all of these is that we believe that they are all relevant.
-We also believe that they are all attainable within the project window.
+Additionally, we believe that they are all attainable within the project window.
 
 \newpage{}
 
@@ -265,7 +275,7 @@ We also believe that they are all attainable within the project window.
     Before starting this deliverable, we had previously identified the risks of simulation failures and software crashes. 
     While completing this deliverable, we realized that simulation failures was too broad and included multiple potential failure modes. 
     Breaking it down allowed us to better identify and address specific risks, leading to a clearer and more detailed analysis.  
-    Our system now has a total of 5 failure modes improper load balancing, inaccurate power transfer between transfer between pulleys (belt dynamics), poor numerical precision, insufficient friction forces and software crashes. 
+    Our system now has a total of 5 failure modes improper load balancing, inaccurate power transfer between pulleys (belt dynamics), poor numerical precision, insufficient friction forces and software crashes. 
     These various failure modes were the result of the pain points discussed above. 
     By completing this document and sparking conversation about a failure mode vs a cause of a failure we were able to further derive failure modes thus making our system more accurate and further defined. 
 
