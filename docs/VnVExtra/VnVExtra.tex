@@ -21,10 +21,6 @@
 \input{../Comments}
 \input{../Common}
 
-\newcommand{\refdata}[2]{
-  \href{https://github.com/gr812b/CVT-Simulator/blob/main/experimental-data/#1
-  }{\texttt{#2}}}
-
 
 \begin{document}
 
@@ -94,6 +90,14 @@ April 1st, 2025 & 1 & Added real-world data into VnV extra\\
 
 \subsubsection{Position}
 
+\begin{figure}[H]
+  \begin{center}
+   \includegraphics[width=\textwidth]{MSE Graphs/position.png}
+  \caption{MSE of simulated position vs integrated experimental data.}
+  \label{Fig_Position} 
+  \end{center}
+\end{figure}
+
 - Car go fast... still! Explained by poor modelling of air resistance and other resistive forces such as rolling resistance, frictions, etc
 - At the end you can see error decreases a bit. Perhaps the final force of air resistance was estimated too high, but the other forces were estimated too low, giving a slightly different final value, so final speed was too high.
 - Also note the poor tests mentioned later about no max velocity
@@ -101,6 +105,14 @@ April 1st, 2025 & 1 & Added real-world data into VnV extra\\
 Car position over time
 
 \subsubsection{Velocity}
+
+\begin{figure}[H]
+  \begin{center}
+   \includegraphics[width=\textwidth]{MSE Graphs/speed.png}
+  \caption{MSE of simulated vehicle velocity and experimental data.}
+  \label{Fig_Velocity} 
+  \end{center}
+\end{figure}
 
 - Car go fast, shocker! Ignored many resistive forces, no slipping so early on its most noticeable.
 
@@ -111,6 +123,24 @@ Car velocity over time
 Not availabel (no data gotten from IMU)
 
 \subsubsection{Shift}
+
+\subsubsection{Velocity}
+
+\begin{figure}[H]
+  \begin{center}
+   \includegraphics[width=\textwidth]{MSE Graphs/shift_curve_3400rpm.png}
+  \caption{MSE of simulated shift curve and experimental data.}
+  \label{Fig_Shift_3400} 
+  \end{center}
+\end{figure}
+
+\begin{figure}[H]
+  \begin{center}
+   \includegraphics[width=\textwidth]{MSE Graphs/shift_curve_low_ratio.png}
+  \caption{Second dataset at a different tune, showing the shift curve and experimental data.}
+  \label{Fig_Shift_Low_Ratio} 
+  \end{center}
+\end{figure}
 
 - We see generally a flat shift in both, which is great!
 - Both also have a low ratio, although slight differences, they definitely both exist well
