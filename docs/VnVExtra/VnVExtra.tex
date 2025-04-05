@@ -205,10 +205,65 @@ Each figure presents engine RPM vs.\ speed for a distinct CVT tune, where one tu
     \item \textbf{Slipping Effects:} Occasional slipping in the CVT can alter the effective gear ratio. If slipping occurs, the low ratio appears different because the loss of traction changes the power transfer dynamics, contributing further to the discrepancy between simulated and real data.
 \end{itemize}
 
-
-
-
 \section{Trace to Requirements or Modules}
 
+Below are traces of the functional requirements from the \href{https://github.com/gr812b/CVT-Simulator/blob/develop/docs/SRS/SRS.pdf}{SRS}
+and the modules from the \href{https://github.com/gr812b/CVT-Simulator/blob/develop/docs/Design/SoftArchitecture/MG.pdf}{MG} to the tests.
+
+\begin{table}[h!]
+  \centering
+  \begin{tabular}{|c|c|c|c|}
+  \hline
+    & Position & Velocity & Shift \\
+  \hline
+  R:MM         &X&X&X \\ \hline
+  R:AV         &X&X&X \\ \hline
+  R:VV         & &X&  \\ \hline
+  R:DV         &X& &  \\ \hline
+  R:PCF        & & &X \\ \hline
+  R:SCF        & & &X \\ \hline
+  R:SA         & & &X \\ \hline
+  R:BA         & & &X \\ \hline
+  R:ENG        & & &X \\ \hline
+  R:TP         & & &  \\ \hline
+  R:UA         & & &  \\ \hline
+  R:UI         & & &  \\ \hline
+  R:DG         & & &  \\ \hline
+  R:ER         & & &  \\ \hline
+  R:AA         & & &  \\ \hline
+  R:WM         & & &  \\ \hline
+  \end{tabular}
+  \caption{Traceability Matrix Showing the Connections Between Tests and Functional Requirements}
+  \label{Table:trace_requirements}
+  \end{table}
+
+  \begin{table}[h!]
+    \centering
+    \begin{tabular}{|c|c|c|c|}
+    \hline
+      & Position & Velocity & Shift \\
+    \hline
+    M1        & & &  \\ \hline
+    M2        & & &  \\ \hline
+    M3        & & &X \\ \hline
+    M4        & & &X \\ \hline
+    M5        & & &X \\ \hline
+    M6        & & &  \\ \hline
+    M7        &X&X&X \\ \hline
+    M8        & & &  \\ \hline
+    M9        & & &  \\ \hline
+    M10       & & &  \\ \hline
+    M11       &X&X&X \\ \hline
+    M12       & & &  \\ \hline
+    M13       & & &  \\ \hline
+    M14       & & &  \\ \hline
+    M15       & & &  \\ \hline
+    M16       & & &  \\ \hline
+    M17       & & &X \\ \hline
+    M18       & & &X \\ \hline
+    \end{tabular}
+    \caption{Traceability Matrix Showing the Connections Between Tests and Modules}
+    \label{Table:trace_modules}
+    \end{table}
 
 \end{document}
