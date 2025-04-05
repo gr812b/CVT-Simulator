@@ -98,11 +98,30 @@ April 1st, 2025 & 1 & Added real-world data into VnV extra\\
   \end{center}
 \end{figure}
 
-- Car go fast... still! Explained by poor modelling of air resistance and other resistive forces such as rolling resistance, frictions, etc
-- At the end you can see error decreases a bit. Perhaps the final force of air resistance was estimated too high, but the other forces were estimated too low, giving a slightly different final value, so final speed was too high.
-- Also note the poor tests mentioned later about no max velocity
+\textbf{Overview of the Position vs. Time Plot:}  
 
-Car position over time
+The figure compares three key quantities over time:
+\begin{itemize}
+    \item Simulated Position (blue line)
+    \item Measured (Integrated) Real Position (orange line)
+    \item Position Error (red line), which is displayed on a secondary vertical axis.
+\end{itemize}
+
+\textbf{Initial Observation - Simulated Speed is Too High:}
+Early in the plot, the simulated position exceeds the real position, indicating that the simulation predicts a higher velocity than observed. This discrepancy likely arises from an incomplete representation of resistive forces such as air resistance, rolling resistance, and friction.
+
+\textbf{Mid to Late Observation - Error Dynamics:}  
+Towards the end of the test, the error (red line) decreases slightly. This may be due to the model overestimating the final air resistance while underestimating other forces, such as friction and rolling resistance, which results in a final simulated speed that is still somewhat higher than reality, but still shows the initial descrepency.
+
+\textbf{Testing Limitations - No Maximum Velocity Achieved:}  
+The testing environment does not allow the car to reach its true maximum velocity. Consequently, the model cannot be fully validated at higher speeds, and any inaccuracies in modeling high-speed resistive forces remain untested.
+
+\textbf{Conclusions:}
+\begin{itemize}
+    \item \textbf{Main Issue:} The simulation overestimates vehicle speed due to an oversimplified treatment of resistive forces.
+    \item \textbf{Error Trends:} The narrowing gap between simulated and real positions toward the end suggests an overcompensation in the final air resistance term.
+    \item \textbf{Future Work:} More comprehensive testing at higher speeds and enhanced modeling of resistive components (air drag, rolling friction, etc.) are needed to improve simulation fidelity.
+\end{itemize}
 
 \subsubsection{Velocity}
 
@@ -114,17 +133,38 @@ Car position over time
   \end{center}
 \end{figure}
 
-- Car go fast, shocker! Ignored many resistive forces, no slipping so early on its most noticeable.
+\textbf{Overview:}\\
+The figure compares the simulated velocity (blue line) against the real, interpolated velocity (orange line), with the velocity error (red line) shown on a secondary vertical axis. Early in the plot, the simulated velocity is noticeably higher, indicating that certain resistive effects and potential slip conditions are not fully captured by the model. As time progresses, the two velocities begin to converge, although a measurable offset remains.
 
-Car velocity over time
+\textbf{Early Overestimation:}\\
+During the initial phase, the simulation overestimates acceleration because it neglects several resistive forces (e.g., air resistance, rolling friction) and assumes no slipping. Without realistic slip modeling, the simulation applies full power to the wheels without the belt slippage that occur in real conditions.
+
+\textbf{Later Convergence:}\\
+As time goes on, the discrepancy between simulated and real velocities narrows, suggesting that the model's inaccuracies in resistive forces become less dominant at higher speeds. Nevertheless, an observable gap persists, implying that additional refinement of the resistance and slip models is necessary to achieve better accuracy.
+
+\textbf{Comparison to Position Analysis:}\\
+Many observations from the position error analysis also apply here. In both cases, the underlying cause is an oversimplified treatment of resistive forces and the lack of a slipping mechanism. Enhancing these aspects in the model would likely improve both position and velocity predictions.
+
+\textbf{Conclusions:}
+\begin{itemize}
+    \item The simulation initially predicts excessive velocity due to ignoring key resistive forces and assuming perfect traction.
+    \item Over time, simulated and real velocities partially align, though a consistent offset remains.
+    \item More precise modeling of friction, rolling resistance, and slip is required for higher-fidelity velocity predictions.
+\end{itemize}
 
 \subsubsection{Acceleration}
 
-Not availabel (no data gotten from IMU)
+\textbf{Acceleration Analysis:}\\
+The plan includes a detailed investigation of the car's acceleration profile to further validate the simulation. Unfortunately, acceleration data has not yet been gathered, so a direct comparison with the model is not currently possible. Based on the trends observed in both the position and velocity analyses, we expect the following:
+
+\begin{itemize}
+    \item \textbf{Early Stage:} The simulation likely overestimates acceleration at the beginning, due to the simplified treatment of resistive forces (e.g., air resistance, friction) and the assumption of perfect traction.
+    \item \textbf{Later Stage:} As time progresses, it is anticipated that the simulated acceleration will be lower than the actual values, mirroring the gradual convergence observed in the other parameters.
+\end{itemize}
+
+These expected trends suggest that, similar to the position and velocity results, the initial overestimation in acceleration will diminish over time, leading to a closer, yet still offset, match with the real-world data once it becomes available.
 
 \subsubsection{Shift}
-
-\subsubsection{Velocity}
 
 \begin{figure}[H]
   \begin{center}
@@ -142,15 +182,31 @@ Not availabel (no data gotten from IMU)
   \end{center}
 \end{figure}
 
-- We see generally a flat shift in both, which is great!
-- Both also have a low ratio, although slight differences, they definitely both exist well
+\textbf{Overview of Shift Curves:}\\
+Each figure presents engine RPM vs.\ speed for a distinct CVT tune, where one tune shifts at a higher RPM than the other. This behavior aligns with expectations: reducing weight in the CVT assembly leads to higher shift RPMs. Despite some overall inaccuracy indicated by the consistent error, the relative change in the system (i.e., higher or lower shift points) appears correct.
 
-- Low ratio is somewhat different in calculations (causes: Wrong geometry, precision in machined parts, assumption of slip)
-- Through the shift, we see some curve. A subtle change in ramps could cause this, or a poor understanding of the springs in our system. Potential in the real CVT system for spring to bind as it compresses, bringing unknown forces
-- Don't see max shift much, this is due to poor data collection tests - Limits on the length of track we have access to mean we dont see our top end of the speeds our vehicle can acheive.
+\textbf{General Observations:}
+\begin{itemize}
+    \item \textbf{Shifting Direction:} The curves shift as intended, with the tune having less weight achieving higher RPM before shifting.
+    \item \textbf{Consistent Errors:} The error trends suggest a systematic mismatch between the model and reality, but the tuning differences themselves manifest correctly.
+    \item \textbf{Limited Data Collection:} We do not see the maximum shift range because the test track is too short, preventing the vehicle from reaching top speed and thus limiting the observable shift.
+\end{itemize}
+
+\textbf{Comparison of Real vs.\ Simulated Data:}
+\begin{itemize}
+    \item \textbf{Flat Shift Region:} Both simulated and real data exhibit a generally flat shift region, indicating that the fundamental mechanism of ratio change is captured.
+    \item \textbf{Low Ratio Presence:} Each tune shows a low ratio phase, though the exact values differ. This discrepancy may arise from factors such as incorrect geometric assumptions or machining tolerances in the CVT components.
+\end{itemize}
+
+\textbf{Potential Sources of Error:}
+\begin{itemize}
+    \item \textbf{Low Ratio Variation:} Deviations in the low ratio can stem from inaccuracies in modeled geometry, part precision, or an unaccounted slip factor in the real CVT.
+    \item \textbf{Shift Curve Nuances:} Subtle variations in the ramps or spring characteristics may lead to unexpected curvature in the shift profile. In the actual CVT system, springs can bind or behave non-linearly under compression, introducing forces not accounted for in the simulation.
+    \item \textbf{Slipping Effects:} Occasional slipping in the CVT can alter the effective gear ratio. If slipping occurs, the low ratio appears different because the loss of traction changes the power transfer dynamics, contributing further to the discrepancy between simulated and real data.
+\end{itemize}
 
 
-1 and 2 (What is 1?)
+
 
 \section{Trace to Requirements or Modules}
 
