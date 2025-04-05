@@ -46,6 +46,7 @@ October 11th, 2024 & 0 & First version of VnV plan\\
 March 20th, 2025 & 1.0 & Added traceability to tests\\
 March 20th, 2025 & 1.1 & Added Plans for Unit Tests\\
 March 24th, 2025 & 1.2 & Updated Compatibility test-1 \\
+April 3rd, 2025 & 1.3 & Updated tests, added modules\\
 \bottomrule
 \end{tabularx}
 
@@ -250,8 +251,6 @@ We will also conduct a practicality check to ensure that all requirements are fe
 Finally, the assumptions will also be verified to ensure that they won't negatively impact the accuracy of the simulation.
 
 \subsubsection*{Baja Team Review}
-Talk here about sharing the document to the team as a whole, include a checklist and receive issues on github.
-
 We will share the SRS document with the entire McMaster Baja Racing team for review.
 This will allow us to get feedback from a wide range of people with different backgrounds and experiences.
 The team will use the checklist provided above as a guide for their reviews.
@@ -379,8 +378,6 @@ Before major milestones, full code walkthroughs will be conducted which is enfor
   \bigskip
   \noindent For the Unity C\# frontend we will be using the following tools:
   \begin{itemize}
-    \item [\textbf{SonarLint}] - C\# linter that checks for code quality and security vulnerabilities.
-    \item [\textbf{StyleCop}] - C\# linter that checks for code style and formatting.
     \item [\textbf{UTF}] - A testing framework for C\# that will be used for unit testing.
     \item [\textbf{UTR}] - A testing framework for Unity that will be used for unit testing and code coverage.
   \end{itemize}
@@ -395,7 +392,6 @@ Some of the values we are able to collect include:
   \item Primary RPM
   \item Secondary RPM
   \item CVT Ratio (from Primary and Secondary RPM)
-  \item Wheel Speed
   \item GPS Speed
   \item GPS Position
   \item Acceleration
@@ -432,7 +428,8 @@ The standard simulation inputs for the CVT system are as follows.
     \item Helix Geometry
     \item Torsional spring rate
     \item Compressional spring rate
-    \item Spring pretension
+    \item Spring Linear pretension
+    \item Spring Rotational pretension
   \end{itemize}
   \item Vehicle Characteristics:
   \begin{itemize}
@@ -696,8 +693,7 @@ Listed is each requirement and how the tests verify each one.
   \item [R11:] Verifies the other input parameters can be adjusted
   \item [R12:] Verifies the system provides a UI to change the input parameters
   \item [R13:] Verifies the system provides output in the form of graphs
-  \item [R14:] Verifies the system lets users compare simulation data
-  \item [R15:] Verifies the system lets users export simulation data
+  \item [R14:] Verifies the system lets users export simulation data
 \end{itemize}
 
 \begin{enumerate}
@@ -765,8 +761,8 @@ Listed is each requirement and how the tests verify each one.
 They are based on the following functional requirements from the SRS document.
 Listed is each requirement and how the tests verify each one.
 \begin{itemize}
-  \item [R16:] Verifies the application works on different types of computers
-  \item [R17:] Verifies the application works on a Windows operating system
+  \item [R15:] Verifies the application works on different types of computers
+  \item [R16:] Verifies the application works on a Windows operating system
 \end{itemize}
 
   \begin{enumerate}
@@ -780,7 +776,7 @@ Listed is each requirement and how the tests verify each one.
             
   Output: Applications installs and functions as expected
   
-  Test Case Derivation: Based on R16 and R17, validate that the application can be installed and ran on different operating systems and types of computers. 
+  Test Case Derivation: Based on R15 and R16, validate that the application can be installed and ran on different operating systems and types of computers. 
   
   How test will be performed: This test will be performed on two types of computers, a personal laptop and a desktop. On each of those types of computers it will be run on a Windows operating system, to verify the software is compatible with Windows.
 
@@ -963,6 +959,49 @@ This will indicate how long it will take for the system to be adapted to future 
     
 \end{enumerate}
 
+\subsection{Tests for Safety Requirements}
+
+\noindent This section briefly summarizes the safety requirements tests. The focus is on verifying that dynamic adjustments to safety metrics and robust error handling mechanisms function correctly to maintain system integrity under varying conditions.
+
+
+\subsubsection{Test for Safety Requirement 1}
+\begin{enumerate}
+
+  \item \phantomsection \hypertarget{SR1 Test-1}{\textbf{SR1 Test-1}} \label{SR1 Test-1}
+    
+Type: Manual
+              
+Initial State: Running software under normal conditions
+              
+Input/Condition: Input a value into the simulation that will cause an increase in the belt tension beyond the maximum limit.
+              
+Output/Result: The system should notify the user of the belt tension exceeding the maximum limit and stop the simulation.
+              
+How test will be performed: The test will be performed by running the software under normal conditions and then inputting a value that causes the simulation to exceed the maximum belt tension.
+The system should notify the user of the belt tension exceeding the maximum limit and stop the simulation. The user should be able to see the error message and understand what went wrong.
+    
+
+\end{enumerate}
+
+\subsubsection{Test for Safety Requirement 2}
+\begin{enumerate}
+
+  \item \phantomsection \hypertarget{SR2 Test-1}{\textbf{SR2 Test-1}} \label{SR2 Test-1}
+    
+Type: Manual
+              
+Initial State: Running software under normal conditions
+              
+Input/Condition: Input that will cause the system to throw an error.
+              
+Output/Result: The system should throw an error and stop the simulation, and the user should be notified of the error with a means of debugging.
+              
+How test will be performed: The test will be performed by running the software under normal conditions and then inputting a value that causes the simulation to throw an error.
+The system should throw an error and stop the simulation, and the user should be notified of the error with a means of debugging. The user should be able to see the error message and understand what went wrong.
+    
+\end{enumerate}
+
+
 \subsection{Traceability Between Test Cases and Requirements}
 
 
@@ -1008,6 +1047,20 @@ This will indicate how long it will take for the system to be adapted to future 
       \label{tab:requirements_tests}
   \end{table}
 
+  \begin{table}[h!]
+    \centering
+      \begin{tabular}{|c|c|}
+        \hline
+        \textbf{Requirement} & \textbf{Test(s)} \\ \hline
+        SR1 & \textcolor{blue}{\hyperlink{SR1 Test-1}{SR1 Test-1}}  \\ \hline
+        SR2 & \textcolor{blue}{\hyperlink{SR2 Test-1}{SR2 Test-1}}\\ \hline
+        \end{tabular}
+        \caption{System Safety Requirements and Corresponding Tests}
+        \label{tab:requirements_tests}
+    \end{table}
+
+\newpage
+
 \section{Unit Test Description}
 This section provides an overview of the unit tests implemented for individual modules. The tests ensure correctness and reliability of key functionalities.
 
@@ -1020,7 +1073,7 @@ The unit tests verify critical components, including argument parsing, conversio
 These test are split into two directories are can be located in the \href{https://github.com/gr812b/CVT-Simulator/tree/main/test/simulations}{simulations directory} and the \href{https://github.com/gr812b/CVT-Simulator/tree/main/test/utils}{utils directory}.
 The \href{https://github.com/gr812b/CVT-Simulator/tree/main/test/simulations}{simulations directory} contains 6 python files each file named descriptively to reflect the functionality they test: \texttt{test\_belt\_simulator.py}, \texttt{test\_car\_simulation.py}, \texttt{test\_engine\_simulation.py}, \texttt{test\_load\_simulation.py}, \texttt{test\_primary\_pulley.py}, \texttt{test\_secondary\_pulley.py}. 
 Additionally, \href{https://github.com/gr812b/CVT-Simulator/tree/main/test/utils}{utils directory} contains 5 python files each file named to reflect the functionality they test: \texttt{test\_argument\_parser.py}, \texttt{test\_conversions.py}, \\ \texttt{test\_simulation\_result.py}, \texttt{test\_system\_state.py}, \\ \texttt{test\_theoretical\_models.py}.
-\\
+Then there is the front end tests that test the CSV reading and parameters parsing. They are listed after the backend tests below\\
 
 \noindent The following is the file breakdown for each test suite:
 \begin{itemize}
@@ -1056,6 +1109,18 @@ Additionally, \href{https://github.com/gr812b/CVT-Simulator/tree/main/test/utils
 
   \item \href{https://github.com/gr812b/CVT-Simulator/blob/main/test/utils/test_theoretical_models.py}{test\_theoretical\_models.py}
   \label{test:theoretical_models} - This test suite will verify that Theoretical Models correctly compute various physics and geometry calculations—including Hooke’s law, centrifugal force, air resistance, torque, gearing, friction, capstan equation, Newton’s second law, and CVT and wrap angle parameters.
+
+  \item \href{https://github.com/gr812b/CVT-Simulator/blob/main/src/frontend/CommunicationProtocolUnitTesting/InputParametersTest.cs}{InputParametersTest.cs}
+  \label{test:InputParametersTest} - This test suite will verify that the InputParameters class correctly initializes and validates input parameters, ensuring that all required fields are present and valid.
+
+  \item \href{https://github.com/gr812b/CVT-Simulator/blob/main/src/frontend/CommunicationProtocolUnitTesting/InputStoreTest.cs}{InputStoreTest.cs}
+  \label{test:InputStoreTest} - This test suite will verify that the InputStore class correctly manages input parameters, including adding, removing, and retrieving parameters from the store.
+  
+  \item \href{https://github.com/gr812b/CVT-Simulator/blob/main/src/frontend/CommunicationProtocolUnitTesting/ParameterTest.cs}{ParameterTest.cs}
+  \label{test:ParameterTest} - This test suite will verify that the Parameter class correctly initializes and validates individual parameters, ensuring that all required fields are present and valid.
+
+  \item \href{https://github.com/gr812b/CVT-Simulator/blob/main/src/frontend/CommunicationProtocolUnitTesting/SimulationResultTest.cs}{SimulationResultTest.cs}
+  \label{test:SimulationResultTest} - This test suite will verify that the SimulationResult class correctly initializes and manages simulation results, including storing and retrieving results from the store.
 \end{itemize}
 
 
@@ -1063,7 +1128,6 @@ Additionally, \href{https://github.com/gr812b/CVT-Simulator/tree/main/test/utils
 There are no unit tests for Nonfunctional Requirements.
 
 \subsection{Traceability Between Test Cases and Modules}
-\section{Trace to Modules}	
 
 \begin{table}[H]
   \centering
@@ -1074,23 +1138,24 @@ There are no unit tests for Nonfunctional Requirements.
       M1  &  \\ \hline
       M2  & \textcolor{blue}{\hyperlink{Engine test-1}{Engine test-1}}, \hyperref[test:simulation_result]{\texttt{test\_engine\_simulation.py}} \\ \hline
       M3  & \textcolor{blue}{\hyperlink{Velocity test-1}{Velocity test-1}}, \textcolor{blue}{\hyperlink{Acceleration test-1}{Acceleration test-1}}, \textcolor{blue}{\hyperlink{Position test-1}{Position test-1}}, \\  
-          & \hyperref[test:car_simulator]{\texttt{test\_car\_simulator.py}} \\ \hline
+          & \hyperref[test:car_simulator]{\texttt{test\_car\_simulator.py}}, \hyperref[test:simulation_result]{\texttt{test\_load\_simulation.py}} \\ \hline
       M4  & \textcolor{blue}{\hyperlink{Clamping forces test-1}{Clamping forces test-1}}, \\  
           & \hyperref[test:primary_pulley]{\texttt{test\_primary\_pulley.py}} \\ \hline
       M5  & \textcolor{blue}{\hyperlink{Clamping forces test-1}{Clamping forces test-1}}, \\  
           & \hyperref[test:secondary_pulley]{\texttt{test\_secondary\_pulley.py}} \\ \hline
       M6  &  \\ \hline
       M7  & Tested by SciPy \\ \hline
-      M8  & \textcolor{blue}{\hyperlink{Shift test-1}{Shift test-1}}, \textcolor{blue}{\hyperlink{Shift test-2}{Shift test-2}}, \textcolor{blue}{\hyperlink{Shift test-3}{Shift test-3}}, \\  
-          & \hyperref[test:belt_simulator]{\texttt{test\_belt\_simulator.py}} \\ \hline
-      M9  & Unit tests for CSV Reader \\ \hline
+      M8  & \textcolor{blue}{\hyperlink{Shift test-1}{Shift test-1}}, \textcolor{blue}{\hyperlink{Shift test-2}{Shift test-2}}, \textcolor{blue}{\hyperlink{Shift test-3}{Shift test-3}}\\ \hline
+      M9  &  \hyperref[test:InputParametersTest]{\texttt{InputParametersTest.cs}}, \hyperref[test:InputStoreTest]{\texttt{InputStoreTest.cs}}, \hyperref[test:ParameterTest]{\texttt{ParameterTest.cs}}, \hyperref[test:SimulationResultTest]{\texttt{SimulationResultTest.cs}} \\ \hline
       M10 &  \\ \hline
-      M11 &  \\ \hline
-      M12 &  \\ \hline
+      M11 &  \hyperref[test:theoretical_models]{\texttt{test\_theoretical\_models.py}}\\ \hline
+      M12 &  \hyperref[test:system_state]{\texttt{test\_system\_state.py}}\\ \hline
       M13 &  \\ \hline
       M14 & \textcolor{blue}{\hyperlink{User Interface test-1}{User Interface test-1}}, \textcolor{blue}{\hyperlink{User Interface test-2}{User Interface test-2}}, \\ & \textcolor{blue}{\hyperlink{User Interface test-3}{User Interface test-3}}, \textcolor{blue}{\hyperlink{User Interface test-4}{User Interface test-4}} \\ \hline
-      M15 &  \\ \hline
-      M16 & Unit tests for Python Runner \\ \hline
+      M15 &  \hyperref[test:conversions]{\texttt{test\_conversions.py}}\\ \hline
+      M16 & \\ \hline
+      M17 & \hyperref[test:simulation_result]{\texttt{test\_belt\_simulation.py}} \\ \hline
+      M18 &  \\ \hline
   \end{tabular}
   \caption{Software Modules and Corresponding Tests}
   \label{tab:modules_tests}
