@@ -11,7 +11,8 @@ class SimulationArgs:
     secondary_helix_geometry: float
     secondary_torsion_spring_rate: float
     secondary_compression_spring_rate: float
-    secondary_spring_pretension: float
+    secondary_rotational_spring_pretension: float
+    secondary_linear_spring_pretension: float
     vehicle_weight: float
     driver_weight: float
     traction: float
@@ -64,9 +65,15 @@ def get_arguments() -> SimulationArgs:
         help="Spring rate of the secondary pulley in N/m (default: 100.0 N/m)",
     )
     parser.add_argument(
-        "--secondary_spring_pretension",
+        "--secondary_rotational_spring_pretension",
         type=float,
         default=45,
+        help="Spring pretension of the secondary pulley in degrees (default: 45 degrees)",
+    ),
+    parser.add_argument(
+        "--secondary_linear_spring_pretension",
+        type=float,
+        default=0.1,
         help="Spring pretension of the secondary pulley in degrees (default: 45 degrees)",
     )
     parser.add_argument(

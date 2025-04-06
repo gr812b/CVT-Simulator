@@ -2,6 +2,10 @@
 
 \usepackage{tabularx}
 \usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{graphicx}
+\usepackage{pdflscape}
+\usepackage{tabularx}
 
 \title{Reflection and Traceability Report on \progname}
 
@@ -16,129 +20,376 @@
 
 \maketitle
 
-\plt{Reflection is an important component of getting the full benefits from a
-learning experience.  Besides the intrinsic benefits of reflection, this
-document will be used to help the TAs grade how well your team responded to
-feedback.  Therefore, traceability between Revision 0 and Revision 1 is and
-important part of the reflection exercise.  In addition, several CEAB (Canadian
-Engineering Accreditation Board) Learning Outcomes (LOs) will be assessed based
-on your reflections.}
 
 \section{Changes in Response to Feedback}
 
-\plt{Summarize the changes made over the course of the project in response to
-feedback from TAs, the instructor, teammates, other teams, the project
-supervisor (if present), and from user testers.}
-
-\plt{For those teams with an external supervisor, please highlight how the feedback 
-from the supervisor shaped your project.  In particular, you should highlight the 
-supervisor's response to your Rev 0 demonstration to them.}
-
-\plt{Version control can make the summary relatively easy, if you used issues
-and meaningful commits.  If you feedback is in an issue, and you responded in
-the issue tracker, you can point to the issue as part of explaining your
-changes.  If addressing the issue required changes to code or documentation, you
-can point to the specific commit that made the changes.  Although the links are
-helpful for the details, you should include a label for each item of feedback so
-that the reader has an idea of what each item is about without the need to click
-on everything to find out.}
-
-\plt{If you were not organized with your commits, traceability between feedback
-and commits will not be feasible to capture after the fact.  You will instead
-need to spend time writing down a summary of the changes made in response to
-each item of feedback.}
-
-\plt{You should address EVERY item of feedback.  A table or itemized list is
-recommended.  You should record every item of feedback, along with the source of
-that feedback and the change you made in response to that feedback.  The
-response can be a change to your documentation, code, or development process.
-The response can also be the reason why no changes were made in response to the
-feedback.  To make this information manageable, you will record the feedback and
-response separately for each deliverable in the sections that follow.}
-
-\plt{If the feedback is general or incomplete, the TA (or instructor) will not
-be able to grade your response to feedback.  In that case your grade on this
-document, and likely the Revision 1 versions of the other documents will be
-low.} 
-
 \subsection{SRS and Hazard Analysis}
 
+The following table corresponds to SRS changes in response to feedback.
+
+    \begin{longtable}{|p{4cm}|p{1.5cm}|p{4cm}|p{1.5cm}|}
+    \hline
+    \textbf{Feedback Item} & \textbf{Source of Feedback} & \textbf{Change Made in Response} & \textbf{Commit Reference} \\
+    \hline
+    \endfirsthead
+    \hline
+    \endhead
+    \hline
+    \endfoot
+    \hline
+    \endlastfoot
+    Functional Requirements do not seem to have measurable/fit criteria associated with them \href{https://github.com/gr812b/CVT-Simulator/issues/38}{Issue \#38}. & Peer review  & No change made, Functional requirements were deemed measurable. & N/A \\
+    \hline 
+    Acknowledging possible floating point errors and specifying a tollerance range for error would be beneficial \href{https://github.com/gr812b/CVT-Simulator/issues/39}{Issue \#39}. & Peer review  & Added floating point accuracy consideration to \href{https://github.com/gr812b/CVT-Simulator/blob/main/docs/SRS/SRS.pdf}{NFR1}. 
+    & \href{https://github.com/gr812b/CVT-Simulator/commit/b737c9dca12893fff6071cc0cf9fcc4c4b4d7a93}{b737c9d} \\
+   
+    \hline 
+    Adding why specifc section were NA \href{https://github.com/gr812b/CVT-Simulator/issues/40}{Issue \#40}. & Peer review & No change made, deemed not relevant. & N/A\\
+    \hline
+    Traceability matrix not clear \href{https://github.com/gr812b/CVT-Simulator/issues/41}{Issue \#41} and \href{https://github.com/gr812b/CVT-Simulator/issues/64}{Issue \#64}. & Peer review and TA feedback & Traceability Matrices fixed to be more clear and complete.
+    & \href{https://github.com/gr812b/CVT-Simulator/commit/f8dc185e533e52c5260595c5b1c8d48bb4db3ff8}{f8dc185}  
+    \href{https://github.com/gr812b/CVT-Simulator/commit/d5080cc95e629483f81ea46df03fbcc2f9c454eb}{d5080cc}  
+    \href{https://github.com/gr812b/CVT-Simulator/commit/b7db68a977e81676ac26ccea8c662e55feb7d087}{b7db68a} 
+    \\
+    \hline
+    Reusability metric not practical \href{https://github.com/gr812b/CVT-Simulator/issues/42}{Issue \#42} & Peer feedback & No change made as was deemed practical as previous CVT information was available to us. & N/A\\
+
+    \hline 
+    Remove unused SRS folders \href{https://github.com/gr812b/CVT-Simulator/issues/55}{Issue \#55}. & Supervisor feedback & Removed used SRS folders from the repository. & 
+    \href{https://github.com/gr812b/CVT-Simulator/commit/b6e45c22301071eea9360af5a45d437670bcf9a7}{b6e45c2}  \\
+    \hline
+    Add References \href{https://github.com/gr812b/CVT-Simulator/issues/61}{Issue \#61}. & TA feedback & Added references to SRS where needed. & 
+    \href{https://github.com/gr812b/CVT-Simulator/commit/1632c65edd88ce7af866c39e77177310d6423657}{1632c65}  \\
+    \hline 
+    Discuss standards \href{https://github.com/gr812b/CVT-Simulator/issues/62}{Issue \#62}. & TA feedback & Added standards section. & 
+    \href{https://github.com/gr812b/CVT-Simulator/commit/91148c8a8249d9964023fbcab5e4fcf92a940b2c}{91148c8} \\
+    \hline
+    Missing numerical rational as why certain numbers were chosen in requirements \href{https://github.com/gr812b/CVT-Simulator/issues/65}{Issue \#65}. & TA feedback & Added rationale for the numbers selected. & 
+    \href{https://github.com/gr812b/CVT-Simulator/commit/b5b01370c77954ad1f6c25786c1e88eb61ef5a77}{b5b0137} \\
+    \hline
+    Missing phase in plane of requirements \href{https://github.com/gr812b/CVT-Simulator/issues/66}{Issue \#66}. & TA feedback & Added phase in plan for requirements. & 
+    \href{https://github.com/gr812b/CVT-Simulator/commit/43c023e165f82a2f03926e7721ca326effeb52e47}{43c023e} \\
+    \hline
+    Add description of sheaves \href{https://github.com/gr812b/CVT-Simulator/issues/158}{Issue \#158}. & Supervisor feedback & Added sheave description to improve user understanding. & 
+    \href{https://github.com/gr812b/CVT-Simulator/commit/e3953ccd60abfd192f6ebd23efa01e5a88108d30}{e3953cc}
+    \end{longtable}
+
+
+    \noindent The following table corresponds to Hazard Analysis changes in response to feedback.
+
+    \begin{longtable}{|p{4cm}|p{1.5cm}|p{4cm}|p{1.5cm}|}
+    \hline
+    \textbf{Feedback Item} & \textbf{Source of Feedback} & \textbf{Change Made in Response} & \textbf{Commit Reference} \\
+    \hline
+    \endfirsthead
+    \hline
+    \endhead
+    \hline
+    \endfoot
+    \hline
+    \endlastfoot
+    The failure mode of "insufficient frictional forces" has no requirement associated with it according to the FMEA table \href{https://github.com/gr812b/CVT-Simulator/issues/48}{Issue \#48}. & Peer review  & Addressed why one failure mode did not have requirement due to assumptions made. & 
+    \href{https://github.com/gr812b/CVT-Simulator/commit/430fb6dd9bbe740c4c952e974f0799712f0055c0}{430fb6d} \\
+    \hline
+    Assumptions listed outside Assumptions section \href{https://github.com/gr812b/CVT-Simulator/issues/49}{Issue \#49}. & Peer review & No change made as discussing some assumptions in the scope section was relevant. & N/A\\
+    \hline 
+    Security requirements missing fit criteria \href{https://github.com/gr812b/CVT-Simulator/issues/50}{Issue \#50}. & Peer review & No change made as security requirements were deemed practical and attainable. & N/A\\
+    \hline
+    Table is missing references for one failure mode \href{https://github.com/gr812b/CVT-Simulator/issues/52}{Issue \#52}. & Peer review & No change made as this was addressed with \href{https://github.com/gr812b/CVT-Simulator/issues/48}{Issue \#48}. & See     \href{https://github.com/gr812b/CVT-Simulator/commit/430fb6dd9bbe740c4c952e974f0799712f0055c0}{430fb6d} \\
+    \hline
+    Table is missing failure modes and associated safety requirements for User Interface Component \href{https://github.com/gr812b/CVT-Simulator/issues/53}{Issue \#53}. & Peer review & Added a section to address why there were no UI security requirements. & \href{https://github.com/gr812b/CVT-Simulator/commit/bce0b0260aeedc43a905349bb702547b7a445af0}{bce0b02}\\
+    \hline
+    Should consider cancellation errors under numerical stability \href{https://github.com/gr812b/CVT-Simulator/issues/54}{Issue \#54}. & Peer review & No change as not planned for this revision of our product. & N/A\\
+    \hline 
+    Add traceability to security requirements in FMEA \href{https://github.com/gr812b/CVT-Simulator/issues/212}{Issue \#212}. & TA feedback & Added traceability to FMEA table for Security Requirements. & 
+    \href{https://github.com/gr812b/CVT-Simulator/commit/430fb6dd9bbe740c4c952e974f0799712f0055c0}{430fb6d} \\ 
+
+\end{longtable}
+
+
 \subsection{Design and Design Documentation}
+The following table corresponds to the changes to the Module Guide(MG) and MIS documents. 
+\begin{longtable}{|p{4cm}|p{1.5cm}|p{4cm}|p{1.5cm}|}
+    \hline
+    \textbf{Feedback Item} & \textbf{Source of Feedback} & \textbf{Change Made in Response} & \textbf{Commit Reference} \\
+    \hline
+    \endfirsthead
+    \hline
+    \endhead
+    \hline
+    \endfoot
+    \hline
+    \endlastfoot
+    MG - Section 6 not valueable to the reader \href{https://github.com/gr812b/CVT-Simulator/issues/100}{Issue \#100}. & Peer review  & No change made as section 6 was deemed valueable.& N/A \\
+    \hline
+    MG - Link back to SRS to reduce duplicate information and add traceability \href{https://github.com/gr812b/CVT-Simulator/issues/101}{Issue \#101}. & Peer review  & Link to SRS was provided.& 
+    \href{https://github.com/gr812b/CVT-Simulator/commit/c9472786934ffacbad18ab7b65ed8313451e8ada}{c947278} \\ 
+    \hline
+    MG - Anticipated changes could be more clear \href{https://github.com/gr812b/CVT-Simulator/issues/103}{Issue \#103}. & Peer review  & No change made as the anticipated change's section was deemed strait forward.& N/A \\
+    \hline
+
+    MG - Should the GUI module not make use of initialize module \href{https://github.com/gr812b/CVT-Simulator/issues/104}{Issue \#104}. & Peer review  & No change made as not applicable. & N/A \\
+    \hline
+
+    MG - Missing Add timeline and detail about priority of modules being implemented \href{https://github.com/gr812b/CVT-Simulator/issues/222}{Issue \#222}. & TA feedback  & Added details of priority of modules and breakdown of timeline. & 
+    \href{https://github.com/gr812b/CVT-Simulator/commit/a3867bbdd214e4d35cc654ba57f8a74de16630c5}{a3867bb} \\
+    \hline
+
+    MIS - Some exceptions were left blank. \href{https://github.com/gr812b/CVT-Simulator/issues/102}{Issue \#102}. & Peer review  & Blank exceptions were removed. & 
+    \href{https://github.com/gr812b/CVT-Simulator/commit/5c48147b343cc93bd576ef4c185cf6708cb6ad26}{5c48147} \\ 
+
+\end{longtable}
+
+\noindent The following table corresponds to the changes made in the design of the \progname's  design.
+\begin{longtable}{|p{4cm}|p{1.5cm}|p{4cm}|p{1.5cm}|}
+    \hline
+    \textbf{Feedback Item} & \textbf{Source of Feedback} & \textbf{Change Made in Response} & \textbf{Commit Reference} \\
+    \hline
+    \endfirsthead
+    \hline
+    \endhead
+    \hline
+    \endfoot
+    \hline
+    \endlastfoot
+    Add units to the user inputs to improve user understanding. \href{https://github.com/gr812b/CVT-Simulator/issues/153}{Issue \#153}. & Supervisor feedback & Units were added beside inputs. & 
+    \href{https://github.com/gr812b/CVT-Simulator/commit/54bafd2bf352567aea47488b067127ec2b9f7a34}{54bafd2} \\ 
+    \hline 
+    Add ability to upload dxf files for ramp geometry. \href{https://github.com/gr812b/CVT-Simulator/issues/157}{Issue \#153}. & Supervisor feedback & No changes as did not have time to implement. & 
+    N/A \\ 
+    \hline
+    Check for users entering negative inputs  \href{https://github.com/gr812b/CVT-Simulator/issues/154}{Issue \#154}. & Supervisor feedback & Users are not allowed to enter negative numbers. & 
+    \href{https://github.com/gr812b/CVT-Simulator/commit/54bafd2bf352567aea47488b067127ec2b9f7a34}{54bafd2} \\ 
+    \hline 
+    Provide default values in the input fields \href{https://github.com/gr812b/CVT-Simulator/issues/156}{Issue \#156}. & Supervisor feedback & Users are given default values allowing them to quickly tune CVT. & 
+    \href{https://github.com/gr812b/CVT-Simulator/commit/54bafd2bf352567aea47488b067127ec2b9f7a34}{54bafd2} \\ 
+    \hline 
+    Provide user with loading information to improve user feedback \href{https://github.com/gr812b/CVT-Simulator/issues/204}{Issue \#204} & Supervisor feedback & Added a loading bar to provide the user loading progress. & 
+    \href{https://github.com/gr812b/CVT-Simulator/commit/f9c304efe46558aaa3f681d34d50404b479b3449}{f9c304} \\ 
+
+\end{longtable}
 
 \subsection{VnV Plan and Report}
 
+The following table corresponds to changes regarding the VnV Plan.
+\begin{longtable}{|p{4cm}|p{1.5cm}|p{4cm}|p{1.5cm}|}
+    \hline
+    \textbf{Feedback Item} & \textbf{Source of Feedback} & \textbf{Change Made in Response} & \textbf{Commit Reference} \\
+    \hline
+    \endfirsthead
+    \hline
+    \endhead
+    \hline
+    \endfoot
+    \hline
+    \endlastfoot
+    Confusion with Validation report extra \href{https://github.com/gr812b/CVT-Simulator/issues/76}{Issue \#76}. & Peer review  & No change made, as one of our extras is a Validation report. & N/A \\
+    \hline 
+    Repetitive information that can be listed in your development plan \href{https://github.com/gr812b/CVT-Simulator/issues/77}{Issue \#77}. & Peer review & No change as was deemed not repetitive. & N/A \\
+    \hline
+    Opportunity for more automated tests \href{https://github.com/gr812b/CVT-Simulator/issues/78}{Issue \#78}. & Peer review & No change as not planed for this revision of the product. & N/A \\
+    \hline
+    More granular items in the SRS verification plan checklist \href{https://github.com/gr812b/CVT-Simulator/issues/85}{Issue \#85}. & Peer review & No change as not planed for this revision of the product. & N/A \\
+    \hline
+    The checklist format was not consistent. \href{https://github.com/gr812b/CVT-Simulator/issues/86}{Issue \#86}. & Peer review & Checklist format was fixed so that the format of each checklist was consistent.& 
+    \href{https://github.com/gr812b/CVT-Simulator/commit/13e3596e7e3ba6fa7feca6426c6248aba93e2b49}{13e3596} \\
+    \hline 
+    Traceability labels could be shorter \href{https://github.com/gr812b/CVT-Simulator/issues/88}{Issue \#88}. & Peer review  & No change made, as test labels were deemed appropriate.  & N/A \\
+    \hline 
+    Add traceability to tests in the tables \href{https://github.com/gr812b/CVT-Simulator/issues/214}{Issue \#214}. & TA feedback & Traceability added to the table. & 
+    \href{https://github.com/gr812b/CVT-Simulator/commit/c50551feaf252118ed75dcdf9ee6ea1eb685dc0d}{c50551f} \\
+    \hline
+    Link usability/understandability in the tests and add checklist where applicable \href{https://github.com/gr812b/CVT-Simulator/issues/215}{Issue \#215}. & TA feedback & Added link to usability/understandability survey and added verifiability checklist. & 
+    \href{https://github.com/gr812b/CVT-Simulator/commit/ff2bb8c002761baa2ea05bca5b202977b40ac1b8}{ff2bb8c} and \href{https://github.com/gr812b/CVT-Simulator/commit/https://github.com/gr812b/CVT-Simulator/commit/b26ab16316d9372e622200558502ee3e089b03f9}{b26ab16}.\\
+
+\end{longtable}
+
+The following table corresponds to changes regarding the VnV Report.
+\begin{longtable}{|p{4cm}|p{1.5cm}|p{4cm}|p{1.5cm}|}
+    \hline
+    \textbf{Feedback Item} & \textbf{Source of Feedback} & \textbf{Change Made in Response} & \textbf{Commit Reference} \\
+    \hline
+    \endfirsthead
+    \hline
+    \endhead
+    \hline
+    \endfoot
+    \hline
+    \endlastfoot
+    Consolidating all your symbols, abbreviations and acronyms into one document \href{https://github.com/gr812b/CVT-Simulator/issues/201}{Issue \#201}. & Peer review  & No change made, as symbols are referenced in SRS already. & N/A \\
+    \hline
+    Adding expected result clarity explaining the results of your testing, \href{https://github.com/gr812b/CVT-Simulator/issues/202}{Issue \#202}. & Peer review  & No change made, as not enough time to implement. & N/A \\
+    
+    \hline 
+\end{longtable}    
 \section{Challenge Level and Extras}
 
 \subsection{Challenge Level}
 
-\plt{State the challenge level (advanced, general, basic) for your project.  Your challenge level should exactly match what is included in your problem statement.  This should be the challenge level agreed on between you and the course instructor.}
+\noindent The challenge level of this project is General. 
 
 \subsection{Extras}
 
-\plt{Summarize the extras (if any) that were tackled by this project.  Extras
-can include usability testing, code walkthroughs, user documentation, formal
-proof, GenderMag personas, Design Thinking, etc.  Extras should have already
-been approved by the course instructor as included in your problem statement.}
+\subsubsection{Requirements Validation Report}
+\noindent Since our capstone is a simulation of a real-world system there is extra validation that has be done in addition to the VnV Report that was completed earlier this year. 
+In the Requirements Validation Report we will analyze the simulation results vs actual data that was collected from the car using various data analysis techniques.
 
+\subsubsection{Usability Report}
+\noindent Users were given the application along with a usability survey that was created with the intention of getting the users to interact with all the core features. We will review the feedback collected from the users
+ and organize the result into a Usability Report to analyze further.
 \section{Design Iteration (LO11 (PrototypeIterate))}
 
-\plt{Explain how you arrived at your final design and implementation.  How did
-the design evolve from the first version to the final version?} 
+\noindent From the initial prototype demo in November and the rev 0 demo in January our project has changed a lot. To more accurately capture the iterations that occurred in our project we will have to split this up into front end and back end.
+\subsection{Front End}
 
-\plt{Don't just say what you changed, say why you changed it.  The needs of the
-client should be part of the explanation.  For example, if you made changes in
-response to usability testing, explain what the testing found and what changes
-it led to.}
+\noindent The style and flow of the front end of our capstone remained the same throughout development. We decided to stick to the 3-page system and have users progress through them linearly. The areas that had lots of developmental iterations was the inputs page and results page, 
+these both changed many times due to feedback received from stakeholders and team design decisions. These two pages each had there own specific question that impacted our design choices, 
+on the input page it was “what should the user be able to do” and the results page was “what should the user be able to see”.\\
+
+\noindent The input page is where all of our input parameters to the system are stored and the user has the freedom to change any of these parameters to whatever they want. As well the user can upload a set of pre made parameters if they have them saved from an earlier run. 
+Some key design iterations that occurred on this page included:\\
+
+\begin{itemize}
+    \item \textbf{Figma Redesign}: The team decided a new design was needed after some feedback was received from test users about it being messy and unorganized.
+    \item \textbf{Drop down options for ramps}: After discussing with our stakeholders on the Baja team about how best to handle the ramp inputs for the project it was concluded that instead of a completely free ramp designing option we will instead give them a list of ramps to chose from. The reasoning behind this decision was that a user will never able to input a ramp from scratch on the spot as the ramp design require a mathematical process to be created.
+    \item \textbf{Saving/Uploading parameters}: During our rev 0 demo Dr Smith had some feedback about the user being able to save and upload parameters. We decided to implement that as apart of rev 1 as it allows users to essentially “keep there place” and pick up where they left off from last time.
+\end{itemize}
+
+\noindent The results page is where the user gets to view the simulation results and also where they can export parameters, graphs and data. This page is based around a playback component where the user can stop and start the simulation. Some key design iterations that occurred on this page included:\\
+
+\begin{itemize}
+    \item \textbf{Adding the seekbar}: After presenting our rev 0 version of the project the team identified a missing aspect of our “playback” system was having a seek bar. It was put on the list of important features to add for the rev 1 demo as it ties 
+    together the whole idea of having playback control over the simulation, without it seemed we were just starting and stopping something with no identifiers of where we were in the simulation. 
+    \item \textbf{ Displaying graphs }: After discussing the rev 0 demonstration of the project with our stakeholders on the Baja team and discussing what the most important information is from a run on the simulation. It was determined that instead of just having the option to export the data and analyze it elsewhere 
+    we should let them view important graphs while still on the application. The idea is to remove the wasted time of taking the data and creating the same graphs manually elsewhere. Therefore, for rev 1 we added the option to view graphs on the results page and it was an important part of our live demonstration. 
+    \item \textbf{ Downloading parameters}: As mentioned earlier in the inputs page section Dr Smith provided us with the feedback of being able to download parameters. Originally, we had the download parameters option on the inputs page but after some usability testing it was determined that didn’t make sense to the user. 
+    Therefore, we moved it to the results page because the feedback was that you wouldn’t know if you wanted to download that set of parameters until you saw the results of the simulation. 
+    \item \textbf{ Changing CVT material: }: In our rev 0 demo the CVT object we have on the results page was the default material in unity and it did not look good. After doing some UI review the team decided that we needed to dig more 
+    into unity to figure out how to change this material because originally we were not able to change it. It was then changed to the color it is now which fits much better with the rest of the application.
+\end{itemize}
+
+\subsection{Back End}
+\noindent The backend saw several important design iterations driven by the need for more accurate results that better matched real data and improved overall code clarity. Some key design iterations that occurred on the backend include:
+
+\begin{itemize}
+    \item \textbf{Updated Engine Dynamics}: Previously, the engine's angular velocity was simulated as a separate system with its own inertia, causing it to accelerate on its own due to missing forces. Recognizing discrepancies with real-world behavior and the benefits of the no-slip assumption, we unified the engine and car into one system—effectively connected like a timing belt rather than a rubber one—to improve accuracy.
+    \item \textbf{Improved Ramp Representation}: Initially, the math for the circular portion of the ramp was faulty, leading to incorrect simulation outputs when compared with real data. We rewrote the equations and their derivatives to yield a far more accurate ramp representation which resulted in our results aligning much more closely with real data.
+    \item \textbf{ Modular Graphing System}: We separated out the graphing functionality to make it more modular. This change was driven by the decision to add a graphing feature on the front end for real-time data visualization. Now, the graphing module simply reads the output file and leverages established math modules, which simplifies the frontend code and enhances maintainability.
+    \item \textbf{Added Progress Printing}: Given that the simulation frequently takes a while to run, progress printing was implemented to provide real-time feedback. This not only aids developers during debugging but also gives the frontend user clear indicators of how far along the simulation is, improving the overall user experience.
+    \item \textbf{Decoupled FE output conversions}: Conversion calculations for output data have been moved from the frontend to the backend. This decoupling was done to improve the readability and maintainability of the frontend code, ensuring that the frontend focuses solely on user interaction while the backend handles all computational tasks.
+    \item \textbf{Revisited and verified Math}: Various mathematical computations were re-evaluated because earlier inaccuracies resulted in outcomes that did not align with real data. This thorough review helped us identify and correct errors, leading to more reliable simulation results.
+    \item \textbf{Incorperated frictional forces}: Frictional forces, once thought to have minimal impact, were added to introduce necessary dampening. Without these forces, the system exhibited oscillations that deviated from observed physical behavior, so their inclusion ensures that the simulation more accurately reflects real-world dynamics.
+\end{itemize}
 
 \section{Design Decisions (LO12)}
 
-\plt{Reflect and justify your design decisions.  How did limitations,
- assumptions, and constraints influence your decisions?  Discuss each of these
- separately.}
+\subsection{Limitations}
+The key limitation in this project was our understanding of the CVT system and how it functions. Even now with our simulation successfully producing results that accurately depict how the system should be functioning our key limitation is still our lack of knowledge of the CVT system. 
+Essentially the CVT system is a black box and there is so much math and physics that goes into it that fully understanding how each aspect works and how it impacts the overall performance is really challenging. Over the course of this capstone we have learned so much about the system 
+and the “whys” of certain tuning parameters impact performance in a certain way. However, there is still so much more to learn about the system and that is why it is our biggest limitation.\\
+Basically, as our project has progressed, we gained more and more knowledge about how the CVT functions and as a result the simulation became more accurate. 
+We have been reducing the limitation over time, but it remains the biggest obstacle to achieving a “perfect” simulation. So, when talking about limitations I would label this as the most important/significant one when it comes to our capstone. 
+
+\subsection{Assumptions}
+We made a lot of simplifying assumptions when doing this project to ensure we could capture the mathematics behind the CVT system. The two assumptions that affected our final design the most are:
+\begin{itemize}
+    \item \textbf{No Belt Slippage}: As a result of assuming the belt does not slip the system overpredicts torque transfer and grip reliability.
+    \item \textbf{No friction on noncritical components}: This resulted inaccuracies through various resistive/ dampening forces when shifting.
+\end{itemize}
+The other assumptions that were made very mode simple in concept, these two are the ones that have the most impacts on the actual results of our CVT simulation results as they fundamentally changed how we designed the backend architecture. However attempting to incorporate these assumptions from the beginning would have made the project significantly more complicated and we don’t believe we would have achieved the same success if we had tried that. 
+
 
 \section{Economic Considerations (LO23)}
 
-\plt{Is there a market for your product? What would be involved in marketing your 
-product? What is your estimate of the cost to produce a version that you could 
-sell?  What would you charge for your product?  How many units would you have to 
-sell to make money? If your product isn't something that would be sold, like an 
-open source project, how would you go about attracting users?  How many potential 
-users currently exist?}
+There is a market for our CVT Simulator, for instance the market would be the hundreds of Baja teams all over North America. Each team uses a CVT in their car and I would guess that they would be interested in having a way to simulate it for the same reasons why our team was interested in it. However, I don’t think this project would succeed as a product that we would market and sell to other teams and the reason for that is the math. 
+The math of the simulation is specifically based around how McMaster Bajas CVT is designed, and it was built off all the knowledge we have of how our CVT functions. If you were to give it to another team, they would have to change a bunch of math to make it align with there specific system before it started being of use to them. Therefore, I can see our capstone being more of an open-source project where other teams would have access to the codebase to be able to tailor the project to there needs. 
+To go about attracting users to this project the approach I would first send it to the Baja SAE discord server which has thousands of members from across North America and let people know about our project. It would for sure get some people interested in looking at it. However, before that we would first have to rewrite the backend to abstract out the specific parts where the math is solely based on our CVT to make it easier for others to change it to there’s. 
+That would be a complicated undertaking but would have to been done if this was an actual goal for the project. Therefore, this capstone has the potential future to be an open source project where other Baja teams can come use the software to improve there teams CVT tuning but there would be a large barrier of entry because the domain and technical knowledge needed to interact with the codebase. 
 
 \section{Reflection on Project Management (LO24)}
 
-\plt{This question focuses on processes and tools used for project management.}
 
 \subsection{How Does Your Project Management Compare to Your Development Plan}
 
-\plt{Did you follow your Development plan, with respect to the team meeting plan, 
-team communication plan, team member roles and workflow plan.  Did you use the 
-technology you planned on using?}
+\noindent The team meeting plan in the development plan was an in person meeting every Monday (during our tutorial time) and then an online meeting every Friday. As the semester progressed, and we went got busy we stopped following this plan and began meeting on a need be basis. \\
+\noindent Our communication plan was followed, and it became one of our strong points as a team, we communicated frequently and about everything. Our discord server has all our PR’s, resources, notes and Todo’s. \\
+\noindent The team member roles were followed closely:\\
+\begin{itemize}
+    \item Grace is the primary note taker at meetings and project manager
+    \item Travis is the issue manager and was the front-end lead
+    \item Kai is the primary reviewer for code and was the backend lead.
+    \item Cam is the product owner and oversees meetings.
+\end{itemize}
+For different stretches of the project when we got busy the roles changed a bit but overall, this was the structure we followed.\\
+
+\noindent The workflow plan was followed. For branches main was only updated when deliverables were due, develop was the primary branch we were interacting with and bigger features that took a while were kept on separate branches to be worked on. We added all of the various issues labels and used them throughout the project for better organization. We utilized CI/CD to run our test suites and to lint/check our backend code on each commit.\\
+
+\noindent The technology was as expected:\\
+\begin{itemize}
+    \item Backend: python
+    \item Front-end: Unity/Csharp
+    \item Github
+    \item VSCode
+\end{itemize}
 
 \subsection{What Went Well?}
 
-\plt{What went well for your project management in terms of processes and 
-technology?}
+\noindent \textbf{Processes}:
+\begin{itemize}
+    \item Git hub standards (PR’s and reviewing) were all really well done
+    \item Communication was the higlight of our team, utilzed our discord server to its fullest extent.
+    \item Issue creation before development cycles, we issues out all the tickets needed for each cycle making it very easy to pick up work
+\end{itemize}
+
+\noindent \textbf{Technologies}:
+\begin{itemize}
+    \item Python was a great choice for backend
+    \item Testing, linting, formatting tools all are really easy to use in python
+\end{itemize}
 
 \subsection{What Went Wrong?}
+\noindent \textbf{Processes}:
+\begin{itemize}
+    \item Issue tracking during development was difficult, frequently had to go back and back update and link issues to PR’s.
+    \item Making issues when new issues/bugs came up, we defaulted to just fixing them as fast as possible.
+\end{itemize}
 
-\plt{What went wrong in terms of processes and technology?}
+\noindent \textbf{Technologies}:
+\begin{itemize}
+    \item Using Unity for the front end was probably not a good choice in hindsight, the learning curve to use it effectively was much higher than we expected. Probably would have been better to make it a web application so that we would have been more familiar with the languages.
+    \item Testing was difficult in unity because of the nature of our modules and how Unity works.
+\end{itemize}
 
 \subsection{What Would you Do Differently Next Time?}
 
-\plt{What will you do differently for your next project?}
-
+\begin{itemize}
+    \item Do a lot more research into technologies before starting the project so we are sure we are using the right tech for the project.
+    \item Having stricter GitHub regulations, reviewing, issue tracking, branch naming, etc.
+    \item -	Not having lapses in development due to getting busy with other courses, because we found that it really derails the project development.
+\end{itemize}
 \section{Reflection on Capstone}
 
-\plt{This question focuses on what you learned during the course of the capstone project.}
 
 \subsection{Which Courses Were Relevant}
 
-\plt{Which of the courses you have taken were relevant for the capstone project?}
+\noindent Courses that were relevant to this capstone project include:\\
+\begin{itemize}
+    \item SFWRENG 4X03 Scientific computation
+    \item SFWRENG 3A04 Software Development
+    \item ENG 3PX3, 2PX3, 1P13 
+    \item Calc 1, Calc 2
+    \item Physics 1D03 and 1E03
+    \item SFWRENG 3XB3 
+\end{itemize}
 
 \subsection{Knowledge/Skills Outside of Courses}
 
-\plt{What skills/knowledge did you need to acquire for your capstone project
-that was outside of the courses you took?}
+\noindent Knowledge that had to be acquired outside of courses include:\\
+\begin{itemize}
+    \item Unity and Csharp, we had to learn how to use Unity and Csharp to build the front end of our project.
+    \item GitHub, we had to learn how to use GitHub effectively and how to use the issue tracking system as well as properly using CI/CD
+    \item Python best practises, we were familiar with python but we had to learn how to use it in a more professional way.
+    \item Physics and math of the CVT, we had to learn how a CVT works and how to simulate it.
+\end{itemize}
 
 \end{document}

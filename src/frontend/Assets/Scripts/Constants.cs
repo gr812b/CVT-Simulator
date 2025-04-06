@@ -24,7 +24,8 @@ public static class ParameterNames {
     public static string SECONDARY_HELIX_GEOMETRY = "secondary_helix_geometry";
     public static string SECONDARY_TORSION_SPRING_RATE = "secondary_torsion_spring_rate";
     public static string SECONDARY_COMPRESSION_SPRING_RATE = "secondary_compression_spring_rate";
-    public static string SECONDARY_SPRING_PRETENSION = "secondary_spring_pretension";
+    public static string SECONDARY_ROTATIONAL_SPRING_PRETENSION = "secondary_rotational_spring_pretension";
+    public static string SECCONDARY_LINEAR_SPRING_PRETENSION = "secondary_linear_spring_pretension";
     public static string VEHICLE_WEIGHT = "vehicle_weight";
     public static string DRIVER_WEIGHT = "driver_weight";
     public static string TRACTION = "traction";
@@ -37,17 +38,18 @@ public static class DefaultParameters
     public static List<Parameter> parameters = new List<Parameter>
     {
         new Parameter(ParameterNames.FLYWEIGHT_MASS, "0.6"),
-        new Parameter(ParameterNames.PRIMARY_RAMP_GEOMETRY, "0.0"),
-        new Parameter(ParameterNames.PRIMARY_SPRING_RATE, "500.0"),
+        new Parameter(ParameterNames.PRIMARY_RAMP_GEOMETRY, "1"),
+        new Parameter(ParameterNames.PRIMARY_SPRING_RATE, "60"),
         new Parameter(ParameterNames.PRIMARY_SPRING_PRETENSION, "0.2"),
-        new Parameter(ParameterNames.SECONDARY_HELIX_GEOMETRY, "0.0"),
-        new Parameter(ParameterNames.SECONDARY_TORSION_SPRING_RATE, "100.0"),
-        new Parameter(ParameterNames.SECONDARY_COMPRESSION_SPRING_RATE, "100.0"),
-        new Parameter(ParameterNames.SECONDARY_SPRING_PRETENSION, "15.0"),
+        new Parameter(ParameterNames.SECONDARY_HELIX_GEOMETRY, "1"),
+        new Parameter(ParameterNames.SECONDARY_TORSION_SPRING_RATE, "30"),
+        new Parameter(ParameterNames.SECONDARY_COMPRESSION_SPRING_RATE, "20"),
+        new Parameter(ParameterNames.SECONDARY_ROTATIONAL_SPRING_PRETENSION, "45"),
+        new Parameter(ParameterNames.SECCONDARY_LINEAR_SPRING_PRETENSION, "0.1"),
         new Parameter(ParameterNames.VEHICLE_WEIGHT, "225.0"),
         new Parameter(ParameterNames.DRIVER_WEIGHT, "75.0"),
         new Parameter(ParameterNames.TRACTION, "100.0"),
-        new Parameter(ParameterNames.ANGLE_OF_INCLINE, "15.0"),
+        new Parameter(ParameterNames.ANGLE_OF_INCLINE, "0.0"),
         new Parameter(ParameterNames.TOTAL_DISTANCE, "200")
     };
 }

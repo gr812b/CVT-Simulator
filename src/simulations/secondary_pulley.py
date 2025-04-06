@@ -15,15 +15,26 @@ class SecondaryPulley:
         spring_coeff_comp: float,  # N/m
         initial_rotation: float,  # rad
         initial_compression: float,  # m
-        # TODO: Add params for helix geometry
+        ramp_type: int,
     ):
         self.spring_coeff_tors = spring_coeff_tors
         self.spring_coeff_comp = spring_coeff_comp
         self.initial_rotation = initial_rotation
         self.initial_compression = initial_compression
         self.helix_radius = HELIX_RADIUS
-        self.ramp = PiecewiseRamp()
-        self.ramp.add_segment(LinearSegment(x_start=0, x_end=MAX_SHIFT, slope=-0.3))
+        self.ramp_type = ramp_type
+
+        if self.ramp_type == 1:
+            self.ramp = PiecewiseRamp()
+            self.ramp.add_segment(LinearSegment(x_start=0, x_end=MAX_SHIFT, slope=-0.3))
+        elif self.ramp_type == 2:
+            self.ramp = PiecewiseRamp()
+            self.ramp.add_segment(
+                LinearSegment(x_start=0, x_end=MAX_SHIFT / 2, slope=-0.4)
+            )
+            self.ramp.add_segment(
+                LinearSegment(x_start=MAX_SHIFT / 2, x_end=MAX_SHIFT, slope=-0.25)
+            )
 
     def calculate_helix_force(
         self, torque: float, spring_torque: float, shift_distance: float
