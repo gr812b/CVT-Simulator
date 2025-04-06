@@ -71,19 +71,19 @@ class CircularSegment(RampSegment):
         self.radius = radius
 
     # Convert from an angle to the x distance from axis
-    def helpful_guy(self, theta: float) -> float:
-        return -math.sqrt(self.radius / (1 + np.tan(theta) ** 2))
+    def angle_to_x(self, theta: float) -> float:
+        return self.radius * math.cos(theta)
 
     # Equation of a circle in the third quadrant
     def f(self, x: float) -> float:
-        return -math.sqrt(self.radius - x**2)
+        return -math.sqrt(self.radius**2 - x**2)
 
     def f_prime(self, x: float) -> float:
-        return x / math.sqrt(self.radius - x**2)
+        return x / math.sqrt(self.radius**2 - x**2)
 
     def map_x(self, x: float) -> float:
-        start_offset = self.helpful_guy(self.theta_start)
-        end_offset = self.helpful_guy(self.theta_end)
+        start_offset = self.angle_to_x(self.theta_start)
+        end_offset = self.angle_to_x(self.theta_end)
 
         scaled_x = (x - self.x_start) / (self.x_end - self.x_start)
         adjusted_x = start_offset + scaled_x * (end_offset - start_offset)
@@ -93,7 +93,7 @@ class CircularSegment(RampSegment):
     def height(self, x: float) -> float:
         """Finds y-coordinate on the circular arc corresponding to x."""
         adjusted_x = self.map_x(x)
-        starting_height = self.f(self.helpful_guy(self.theta_start))
+        starting_height = self.f(self.angle_to_x(self.theta_start))
         return self.f(adjusted_x) - starting_height + self.y_start
 
     def slope(self, x: float) -> float:
@@ -539,44 +539,20 @@ if __name__ == "__main__":
     # Sample primary ramp
     ramp = PiecewiseRamp()
 
-    line1 = LinearSegment(x_start=0, x_end=0.125, slope=math.tan(math.radians(-15)))
-    line2 = LinearSegment(x_start=line1.x_end + curveLength, x_end=length, slope=math.tan(math.radians(-70)))
-
-    circle = CircularSegment(
-        x_start=line1.x_end + curveLength,
-        x_end=length,
-        radius=25,
-        theta_start=0.971816735418,
-        theta_end=1.1984521248,
-    )
-
-    euler = EulerSpiralSegment(
-        x_start=line1.x_end,
-        x_end=line1.x_end + curveLength,
-        slope_start=line1.slope(line1.x_end),
-        slope_end=line2.slope(line2.x_start),
-    )
-    cubicLines = CubicSpiralZeroZero(
-        x_start=line1.x_end,
-        x_end=line1.x_end + curveLength,
-        slope_start=line1.slope(line1.x_end),
-        slope_end=line2.slope(line2.x_start)
-    )
-    cubicCircleLine = CubicSpiralZeroK1(
-        x_start=line1.x_end,
-        x_end=line1.x_end + curveLength,
-        slope_start=line1.slope(line1.x_end),
-        slope_end=circle.slope(circle.x_start),
-        target_curvature=1/5,
-    )
-
     line = LinearSegment(x_start=0, x_end=0.125, slope=math.tan(math.radians(-15)))
     circle = CircularSegment(
         x_start=line.x_end + curveLength,
         x_end=length,
-        radius=5**2,
+        radius=5,
         theta_start=0.971816735418,
         theta_end=1.1984521248,
+    )
+    cubicCircleLine = CubicSpiralZeroK1(
+        x_start=line.x_end,
+        x_end=line.x_end + curveLength,
+        slope_start=line.slope(line.x_end),
+        slope_end=circle.slope(circle.x_start),
+        target_curvature=1/5,
     )
     cubicCircleLine = CubicSpiralZeroK1(
         x_start=line.x_end,
@@ -590,7 +566,7 @@ if __name__ == "__main__":
     ramp.add_segment(cubicCircleLine)
     ramp.add_segment(circle)
 
-    save_ramp_to_dxf([ramp], filename="ramp_profile.dxf")
+    # save_ramp_to_dxf([ramp], filename="ramp_profile.dxf")
     visualize_ramps([ramp])
 
     
