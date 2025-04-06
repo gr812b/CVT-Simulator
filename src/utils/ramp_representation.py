@@ -1,12 +1,12 @@
 import numpy as np
 from typing import List
 import matplotlib.pyplot as plt
-from constants.car_specs import MAX_SHIFT
+from constants.car_specs import INITIAL_FLYWEIGHT_RADIUS
 import math
 from scipy.integrate import quad
 import ezdxf
 
-from utils.conversions import inch_to_meter
+from utils.conversions import meter_to_inch
 
 
 class RampSegment:
@@ -99,6 +99,32 @@ class CircularSegment(RampSegment):
     def slope(self, x: float) -> float:
         """Returns the slope (dy/dx) at position x on the ramp."""
         adjusted_x = self.map_x(x)
+        return self.f_prime(adjusted_x)
+
+
+class ProDefinedSegment(RampSegment):
+    def __init__(self, x_start: float, x_end: float, prev_seg_height: float, end_length: float, r_initial: float = INITIAL_FLYWEIGHT_RADIUS):
+        super().__init__(x_start, x_end)
+        self.r_initial = r_initial
+        self.end_length = end_length
+        self.C = ((2 * r_initial) + prev_seg_height) ** 2 - x_start**2
+
+    def x_shift(self, x: float) -> float:
+        return x - self.end_length
+
+    def f(self, x: float) -> float:
+        return math.sqrt(x**2 + self.C) - self.r_initial
+    
+    def f_prime(self, x: float) -> float:
+        return -(x / math.sqrt(x**2 + self.C))
+    
+    def height(self, x: float) -> float:
+        adjusted_x = self.x_shift(x)
+        starting_height = self.f(self.x_shift(self.x_start))
+        return self.f(adjusted_x) - starting_height + self.y_start
+    
+    def slope(self, x: float) -> float:
+        adjusted_x = self.x_shift(x)
         return self.f_prime(adjusted_x)
 
 
@@ -536,8 +562,6 @@ def save_ramp_to_dxf(ramps, filename="ramp_profile.dxf", points_per_segment=2000
 if __name__ == "__main__":
     length = 1.125
     curveLength = 0.025
-    # Sample primary ramp
-    ramp = PiecewiseRamp()
 
     line = LinearSegment(x_start=0, x_end=0.125, slope=math.tan(math.radians(-15)))
     circle = CircularSegment(
@@ -552,19 +576,21 @@ if __name__ == "__main__":
         x_end=line.x_end + curveLength,
         slope_start=line.slope(line.x_end),
         slope_end=circle.slope(circle.x_start),
-        target_curvature=1/5,
-    )
-    cubicCircleLine = CubicSpiralZeroK1(
-        x_start=line.x_end,
-        x_end=line.x_end + curveLength,
-        slope_start=line.slope(line.x_end),
-        slope_end=circle.slope(circle.x_start),
-        target_curvature=1/5,
+        target_curvature=1/circle.radius,
     )
 
+    ramp = PiecewiseRamp()
     ramp.add_segment(line)
-    ramp.add_segment(cubicCircleLine)
-    ramp.add_segment(circle)
+
+    proSeg = ProDefinedSegment(
+        x_start=line.x_end,
+        x_end=length,
+        prev_seg_height=ramp.height(line.x_end),
+        end_length=length,
+        r_initial=meter_to_inch(INITIAL_FLYWEIGHT_RADIUS),
+    )
+
+    ramp.add_segment(proSeg)
 
     # save_ramp_to_dxf([ramp], filename="ramp_profile.dxf")
     visualize_ramps([ramp])
