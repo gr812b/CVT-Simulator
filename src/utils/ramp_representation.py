@@ -4,6 +4,9 @@ import matplotlib.pyplot as plt
 from constants.car_specs import MAX_SHIFT
 import math
 from scipy.integrate import quad
+import ezdxf
+
+from utils.conversions import inch_to_meter
 
 
 class RampSegment:
@@ -438,6 +441,8 @@ def visualize_ramps(ramps):
                 return "blue", "Linear"
             elif segment.__class__.__name__ == "EulerSpiralSegment":
                 return "red", "Euler Spiral"
+            elif segment.__class__.__name__ == "CubicSpiralZeroZero" or segment.__class__.__name__ == "CubicSpiralZeroK1":
+                return "orange", "Cubic Spiral"
             elif segment.__class__.__name__ == "CircularSegment":
                 return "green", "Circular"
         # Default for other types:
@@ -477,6 +482,57 @@ def visualize_ramps(ramps):
     plt.show()
 
 
+def save_ramp_to_dxf(ramps, filename="ramp_profile.dxf", points_per_segment=2000):
+    """
+    Saves the ramp profile to a DXF file.
+    For each ramp segment, this function computes high-resolution (x, y) points,
+    adds them as a polyline to the DXF document, and then adds extra connection lines.
+    
+    The extra connection lines include:
+      1. A vertical line dropping exactly 0.750 (units) from the first point.
+      2. A horizontal line from the dropped level at the first point's x
+         to the last point's x.
+      3. A vertical line rising from that horizontal line up to the last point.
+    """
+    doc = ezdxf.new(dxfversion='R2010')
+    msp = doc.modelspace()
+
+    # Collect points from all ramp segments.
+    all_points = []
+    for ramp in ramps:
+        for segment in ramp.segments:
+            x_vals = np.linspace(segment.x_start, segment.x_end, points_per_segment)
+            for x in x_vals:
+                y = segment.height(x)
+                all_points.append((x, y))
+
+    # Add polyline (or individual points if only one exists)
+    if len(all_points) > 1:
+        msp.add_lwpolyline(all_points)
+    else:
+        for pt in all_points:
+            msp.add_point(pt)
+
+    # Add extra connection lines with a fixed vertical drop of 0.750 (units)
+    if len(all_points) >= 2:
+        drop = 0.750  # Fixed vertical drop value (in same units as your data)
+        first_point = all_points[0]
+        last_point = all_points[-1]
+
+        # Intermediate points:
+        # 1. Drop vertically from the first point by 0.750.
+        intermediate1 = (first_point[0], first_point[1] - drop)
+        # 2. Horizontal move: from first point's x to last point's x at the dropped level.
+        intermediate2 = (last_point[0], first_point[1] - drop)
+
+        msp.add_line(first_point, intermediate1)
+        msp.add_line(intermediate1, intermediate2)
+        msp.add_line(intermediate2, last_point)
+
+    doc.saveas(filename)
+    print(f"DXF file saved as {filename}")
+
+
 if __name__ == "__main__":
     length = 1.125
     curveLength = 0.025
@@ -514,10 +570,27 @@ if __name__ == "__main__":
         target_curvature=1/5,
     )
 
-    ramp.add_segment(line1)
+    line = LinearSegment(x_start=0, x_end=0.125, slope=math.tan(math.radians(-15)))
+    circle = CircularSegment(
+        x_start=line.x_end + curveLength,
+        x_end=length,
+        radius=5**2,
+        theta_start=0.971816735418,
+        theta_end=1.1984521248,
+    )
+    cubicCircleLine = CubicSpiralZeroK1(
+        x_start=line.x_end,
+        x_end=line.x_end + curveLength,
+        slope_start=line.slope(line.x_end),
+        slope_end=circle.slope(circle.x_start),
+        target_curvature=1/5,
+    )
+
+    ramp.add_segment(line)
     ramp.add_segment(cubicCircleLine)
     ramp.add_segment(circle)
 
+    save_ramp_to_dxf([ramp], filename="ramp_profile.dxf")
     visualize_ramps([ramp])
 
     
