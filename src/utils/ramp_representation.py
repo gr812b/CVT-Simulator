@@ -563,6 +563,66 @@ def save_ramp_to_dxf(ramp, filename="ramp_profile.dxf", points_per_segment=2000)
 
 
 if __name__ == "__main__":
+    import math
+
+    # Fixed ramp parameters.
+    length = 1.125
+    linearLength = 0.18126
+    # Using a fixed initial linear slope of -15° (downward ramp).
+    fixed_angle_deg = 15
+
+    # Define a list of curve lengths (horizontal span of the cubic spiral segment) to test.
+    curve_lengths = [0.005, 0.015, 0.040, 0.1]
+
+    ramps_list = []  # To collect ramps for visualization.
+
+    for curve_length in curve_lengths:
+        ramp = PiecewiseRamp()
+
+        # Create and add the linear segment.
+        linear_seg = LinearSegment(
+            x_start=0,
+            x_end=linearLength,
+            slope=math.tan(math.radians(-fixed_angle_deg))
+        )
+        ramp.add_segment(linear_seg)
+
+        # Create the circular segment.
+        # It starts right after the cubic spiral, at x = linearLength + curve_length.
+        circular_seg = CircularSegment(
+            x_start=linear_seg.x_end + curve_length,
+            x_end=length,
+            radius=5,
+            theta_start=0.985378117709,
+            theta_end=1.1984521248,
+        )
+        # Note: We do not need to set circular_seg.y_start because slope calculations do not use it.
+
+        # Create the cubic spiral segment (cubicCircleLine) connecting the linear and circular segments.
+        cubicCircleLine = CubicSpiralZeroK1(
+            x_start=linear_seg.x_end,
+            x_end=linear_seg.x_end + curve_length,
+            slope_start=linear_seg.slope(linear_seg.x_end),
+            slope_end=circular_seg.slope(circular_seg.x_start),
+            target_curvature=1 / circular_seg.radius,
+        )
+
+        # Add the cubic spiral segment and the circular segment to the ramp.
+        ramp.add_segment(cubicCircleLine)
+        ramp.add_segment(circular_seg)
+
+        # Save ramp to DXF file with a filename indicating the curve length.
+        dxf_filename = f"ramp_profile_curve_{curve_length:.3f}.dxf"
+        save_ramp_to_dxf(ramp, filename=dxf_filename)
+
+        ramps_list.append(ramp)
+
+    # Visualize all ramps together.
+    visualize_ramps(ramps_list)
+
+    
+
+def generateCoolRamps():
     length = 1.125
     curveLength = 0.025
     linearLength = 0.18126
@@ -579,28 +639,8 @@ if __name__ == "__main__":
     ogRamp.add_segment(ogLine)
     ogRamp.add_segment(ogCircle)
 
-    # save_ramp_to_dxf(ogRamp, filename="og_ramp_profile.dxf")
-    # visualize_ramps([ogRamp])
-
     line = LinearSegment(x_start=0, x_end=linearLength, slope=math.tan(math.radians(-15)))
-    circle = CircularSegment(
-        x_start=line.x_end + curveLength,
-        x_end=length,
-        radius=5,
-        theta_start=0.985378117709,
-        theta_end=1.1984521248,
-    )
-    cubicCircleLine = CubicSpiralZeroK1(
-        x_start=line.x_end,
-        x_end=line.x_end + curveLength,
-        slope_start=line.slope(line.x_end),
-        slope_end=circle.slope(circle.x_start),
-        target_curvature=1/circle.radius,
-    )
-
-    ramp = PiecewiseRamp()
-    ramp.add_segment(line)
-
+    
     proSeg = ProDefinedSegment(
         x_start=line.x_end,
         x_end=length,
@@ -614,7 +654,6 @@ if __name__ == "__main__":
 
     pro_ramp_list = []
 
-    initial_x_dist = -3.52553
     slope_stuff = [-0.5, 0, 0.5, 1, 1.5, 2, 2.5]
 
     for x_dist in slope_stuff:
