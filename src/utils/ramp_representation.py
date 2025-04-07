@@ -103,27 +103,33 @@ class CircularSegment(RampSegment):
 
 
 class ProDefinedSegment(RampSegment):
-    def __init__(self, x_start: float, x_end: float, prev_seg_height: float, end_length: float, r_initial: float = INITIAL_FLYWEIGHT_RADIUS):
+    def __init__(self, x_start: float, x_end: float, prev_seg_height: float, end_length: float, initial_slope: float, r_initial: float = INITIAL_FLYWEIGHT_RADIUS):
         super().__init__(x_start, x_end)
         self.r_initial = r_initial
         self.end_length = end_length
         self.C = ((2 * r_initial) + prev_seg_height) ** 2 - x_start**2
+        self.x_offset = math.sqrt((initial_slope**2 * self.C)/(1 - initial_slope**2))
+        # print(f"X offset: {self.x_offset}, F(x_offset): {self.f(self.x_offset)}, F'(x_offset): {self.f_prime(self.x_offset)}")
+        # Do the same but pass in x_start + x_offset
+        # print(f"X start: {self.x_start}, F(x_start + x_offset): {self.f(self.x_start + self.x_offset)}, F'(x_start + x_offset): {self.f_prime(self.x_start + self.x_offset)}")
 
     def x_shift(self, x: float) -> float:
-        return x - self.end_length
+        return (x - self.x_start) - self.x_offset
 
     def f(self, x: float) -> float:
-        return -(math.sqrt(x**2 + self.C) - self.r_initial)
+        return (math.sqrt(x**2 + self.C) - self.r_initial)
     
     def f_prime(self, x: float) -> float:
-        return -(x / math.sqrt(x**2 + self.C))
+        return (x / math.sqrt(x**2 + self.C))
     
     def height(self, x: float) -> float:
-        starting_height = self.f(self.x_start)
-        return self.f(x) - starting_height + self.y_start
+        adjusted_x = self.x_shift(x)
+        starting_height = self.f(-self.x_offset)
+        return self.f(adjusted_x) - starting_height + self.y_start
     
     def slope(self, x: float) -> float:
-        return self.f_prime(x)
+        adjusted_x = self.x_shift(x)
+        return self.f_prime(adjusted_x)
 
 
 class EulerSpiralSegment(RampSegment):
@@ -573,10 +579,12 @@ if __name__ == "__main__":
     ogRamp.add_segment(ogLine)
     ogRamp.add_segment(ogCircle)
 
+    # save_ramp_to_dxf(ogRamp, filename="og_ramp_profile.dxf")
+    # visualize_ramps([ogRamp])
 
     line = LinearSegment(x_start=0, x_end=linearLength, slope=math.tan(math.radians(-15)))
     circle = CircularSegment(
-        x_start=ogLine.x_end, # + curveLength
+        x_start=line.x_end + curveLength,
         x_end=length,
         radius=5,
         theta_start=0.985378117709,
@@ -590,17 +598,46 @@ if __name__ == "__main__":
         target_curvature=1/circle.radius,
     )
 
-    # proSeg = ProDefinedSegment(
-    #     x_start=line.x_end,
-    #     x_end=length,
-    #     prev_seg_height=ramp.height(line.x_end),
-    #     end_length=length,
-    #     r_initial=meter_to_inch(INITIAL_FLYWEIGHT_RADIUS),
-    # )
+    ramp = PiecewiseRamp()
+    ramp.add_segment(line)
 
-    # ramp.add_segment(proSeg)
+    proSeg = ProDefinedSegment(
+        x_start=line.x_end,
+        x_end=length,
+        prev_seg_height=ramp.height(line.x_end),
+        end_length=length,
+        initial_slope=ogCircle.slope(line.x_end),
+        r_initial=meter_to_inch(INITIAL_FLYWEIGHT_RADIUS),
+    )
 
-    save_ramp_to_dxf(ogRamp, filename="ramp_profile.dxf")
-    visualize_ramps([ogRamp])
+    ramp.add_segment(proSeg)
+
+    pro_ramp_list = []
+
+    initial_x_dist = -3.52553
+    slope_stuff = [-0.5, 0, 0.5, 1, 1.5, 2, 2.5]
+
+    for x_dist in slope_stuff:
+        slope = proSeg.slope(proSeg.x_start + x_dist)
+        new_ramp = PiecewiseRamp()
+        # Recreate the same line segment.
+        new_line = LinearSegment(x_start=0, x_end=linearLength, slope=math.tan(math.radians(-15)))
+        new_ramp.add_segment(new_line)
+        new_pro_seg = ProDefinedSegment(
+            x_start=new_line.x_end,
+            x_end=length,
+            prev_seg_height=new_ramp.height(new_line.x_end),
+            end_length=length,
+            initial_slope=slope,
+            r_initial=meter_to_inch(INITIAL_FLYWEIGHT_RADIUS),
+        )
+        new_ramp.add_segment(new_pro_seg)
+        pro_ramp_list.append(new_ramp)
+        # Save to dxf
+        save_ramp_to_dxf(new_ramp, filename=f"pro_ramp_profile_{x_dist}.dxf")
+    
+    # Visualize all the pro-segment variants.
+    visualize_ramps([ogRamp] + pro_ramp_list)
+
 
     
