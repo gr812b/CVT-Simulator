@@ -113,19 +113,17 @@ class ProDefinedSegment(RampSegment):
         return x - self.end_length
 
     def f(self, x: float) -> float:
-        return math.sqrt(x**2 + self.C) - self.r_initial
+        return -(math.sqrt(x**2 + self.C) - self.r_initial)
     
     def f_prime(self, x: float) -> float:
         return -(x / math.sqrt(x**2 + self.C))
     
     def height(self, x: float) -> float:
-        adjusted_x = self.x_shift(x)
-        starting_height = self.f(self.x_shift(self.x_start))
-        return self.f(adjusted_x) - starting_height + self.y_start
+        starting_height = self.f(self.x_start)
+        return self.f(x) - starting_height + self.y_start
     
     def slope(self, x: float) -> float:
-        adjusted_x = self.x_shift(x)
-        return self.f_prime(adjusted_x)
+        return self.f_prime(x)
 
 
 class EulerSpiralSegment(RampSegment):
@@ -508,7 +506,7 @@ def visualize_ramps(ramps):
     plt.show()
 
 
-def save_ramp_to_dxf(ramps, filename="ramp_profile.dxf", points_per_segment=2000):
+def save_ramp_to_dxf(ramp, filename="ramp_profile.dxf", points_per_segment=2000):
     """
     Saves the ramp profile to a DXF file.
     For each ramp segment, this function computes high-resolution (x, y) points,
@@ -525,12 +523,11 @@ def save_ramp_to_dxf(ramps, filename="ramp_profile.dxf", points_per_segment=2000
 
     # Collect points from all ramp segments.
     all_points = []
-    for ramp in ramps:
-        for segment in ramp.segments:
-            x_vals = np.linspace(segment.x_start, segment.x_end, points_per_segment)
-            for x in x_vals:
-                y = segment.height(x)
-                all_points.append((x, y))
+    for segment in ramp.segments:
+        x_vals = np.linspace(segment.x_start, segment.x_end, points_per_segment)
+        for x in x_vals:
+            y = segment.height(x)
+            all_points.append((x, y))
 
     # Add polyline (or individual points if only one exists)
     if len(all_points) > 1:
@@ -562,13 +559,27 @@ def save_ramp_to_dxf(ramps, filename="ramp_profile.dxf", points_per_segment=2000
 if __name__ == "__main__":
     length = 1.125
     curveLength = 0.025
+    linearLength = 0.18126
 
-    line = LinearSegment(x_start=0, x_end=0.125, slope=math.tan(math.radians(-15)))
-    circle = CircularSegment(
-        x_start=line.x_end + curveLength,
+    ogLine = LinearSegment(x_start=0, x_end=linearLength, slope=math.tan(math.radians(-15)))
+    ogCircle = CircularSegment(
+        x_start=ogLine.x_end, # + curveLength
         x_end=length,
         radius=5,
-        theta_start=0.971816735418,
+        theta_start=0.985378117709,
+        theta_end=1.1984521248,
+    )
+    ogRamp = PiecewiseRamp()
+    ogRamp.add_segment(ogLine)
+    ogRamp.add_segment(ogCircle)
+
+
+    line = LinearSegment(x_start=0, x_end=linearLength, slope=math.tan(math.radians(-15)))
+    circle = CircularSegment(
+        x_start=ogLine.x_end, # + curveLength
+        x_end=length,
+        radius=5,
+        theta_start=0.985378117709,
         theta_end=1.1984521248,
     )
     cubicCircleLine = CubicSpiralZeroK1(
@@ -579,20 +590,17 @@ if __name__ == "__main__":
         target_curvature=1/circle.radius,
     )
 
-    ramp = PiecewiseRamp()
-    ramp.add_segment(line)
+    # proSeg = ProDefinedSegment(
+    #     x_start=line.x_end,
+    #     x_end=length,
+    #     prev_seg_height=ramp.height(line.x_end),
+    #     end_length=length,
+    #     r_initial=meter_to_inch(INITIAL_FLYWEIGHT_RADIUS),
+    # )
 
-    proSeg = ProDefinedSegment(
-        x_start=line.x_end,
-        x_end=length,
-        prev_seg_height=ramp.height(line.x_end),
-        end_length=length,
-        r_initial=meter_to_inch(INITIAL_FLYWEIGHT_RADIUS),
-    )
+    # ramp.add_segment(proSeg)
 
-    ramp.add_segment(proSeg)
-
-    # save_ramp_to_dxf([ramp], filename="ramp_profile.dxf")
-    visualize_ramps([ramp])
+    save_ramp_to_dxf(ogRamp, filename="ramp_profile.dxf")
+    visualize_ramps([ogRamp])
 
     
