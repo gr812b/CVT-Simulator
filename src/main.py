@@ -161,6 +161,8 @@ solution_phase1 = solve_ivp(
         car_velocity_constraint_event,
         shift_constraint_event,
     ],
+    atol=1e-6,
+    rtol=1e-4,
 )
 
 if solution_phase1.t_events[0].size > 0:
