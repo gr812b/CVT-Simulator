@@ -19,7 +19,11 @@ from constants.car_specs import (
 from utils.conversions import rpm_to_rad_s, deg_to_rad
 from utils.argument_parser import get_arguments
 from utils.theoretical_models import TheoreticalModels as tm
-from utils.simulation_constraints import constraints
+from utils.simulation_constraints import (
+    car_velocity_constraint_event,
+    get_shift_steady_event,
+    shift_constraint_event,
+)
 from utils.frontend_output import FormattedSimulationResult
 
 
@@ -111,8 +115,32 @@ def evaluate_cvt_system(t, y):
     ]
 
 
-time_span = (0, total_sim_time)
-time_eval = np.linspace(*time_span, 10000)
+# PHASE 2: Simplified model (shift is locked at full shift)
+def evaluate_full_shift_system(t, y):
+    state = SystemState.from_array(y)
+    # Force the shifting variables to remain constant at full shift.
+    state.shift_distance = MAX_SHIFT
+    state.shift_velocity = 0
+
+    # Use constant CVT ratio for full shift
+    cvt_ratio = tm.current_cvt_ratio(MAX_SHIFT)
+    wheel_to_engine_ratio = (cvt_ratio * GEARBOX_RATIO) / WHEEL_RADIUS
+    engine_velocity = state.car_velocity * wheel_to_engine_ratio
+
+    engine_power = engine_simulator.get_power(engine_velocity)
+    car_acceleration = load_simulator.calculate_acceleration(
+        state.car_velocity, engine_power
+    )
+
+    return [
+        car_acceleration,
+        state.car_velocity,
+        0,
+        0,
+    ]
+
+
+time_eval_phase1 = np.linspace(0, total_sim_time, 10000)
 initial_state = SystemState(
     car_velocity=rpm_to_rad_s(1800)
     / (GEARBOX_RATIO * tm.current_cvt_ratio(0))
@@ -123,14 +151,59 @@ initial_state = SystemState(
 )
 
 # Solve the system over the desired time span
-solution = solve_ivp(
+solution_phase1 = solve_ivp(
     evaluate_cvt_system,
-    time_span,
+    (0, total_sim_time),
     initial_state.to_array(),
-    events=constraints,
-    t_eval=time_eval,
+    t_eval=time_eval_phase1,
+    events=[
+        get_shift_steady_event(cvt_shift),
+        car_velocity_constraint_event,
+        shift_constraint_event,
+    ],
 )
 
-result = SimulationResult(solution)
+if solution_phase1.t_events[0].size > 0:
+    # The full shift steady event was triggered.
+    event_time = solution_phase1.t_events[0][0]
+    event_state = solution_phase1.y_events[0][0]
+
+    # Define a new t_eval for phase 2 (you can adjust the number of points as needed)
+    num_phase2_points = 1000
+    time_eval_phase2 = np.linspace(event_time, total_sim_time, num_phase2_points)
+
+    # -----------------------------------------------------------
+    # PHASE 2: Run simulation with shifting dynamics turned off
+    # -----------------------------------------------------------
+    solution_phase2 = solve_ivp(
+        evaluate_full_shift_system,
+        (event_time, total_sim_time),
+        event_state,
+        t_eval=time_eval_phase2,
+        events=[car_velocity_constraint_event],
+    )
+
+    phase1_indices = solution_phase1.t <= event_time
+    combined_t = np.concatenate(
+        [solution_phase1.t[phase1_indices], solution_phase2.t[1:]]
+    )
+    combined_y = np.hstack(
+        [solution_phase1.y[:, phase1_indices], solution_phase2.y[:, 1:]]
+    )
+else:
+    # Otherwise, use the phase 1 solution entirely.
+    combined_t = solution_phase1.t
+    combined_y = solution_phase1.y
+
+
+class CombinedSolution:
+    def __init__(self, t, y):
+        self.t = t
+        self.y = y
+
+
+combined_solution = CombinedSolution(combined_t, combined_y)
+
+result = SimulationResult(combined_solution)
 result.write_csv("simulation_output.csv")
 FormattedSimulationResult.from_csv().write_formatted_csv()
