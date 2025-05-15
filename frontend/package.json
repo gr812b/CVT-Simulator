@@ -1,0 +1,12 @@
+{
+  "name": "cvt-simulator",
+  "version": "2.0.0",
+  "description": "Simulates the functioning of the McMaster Baja Racing CVT",
+  "main": "index.js",
+  "dependencies": {
+    "sass": "^1.88.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.8.3"
+  }
+}
