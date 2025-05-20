@@ -1,7 +1,8 @@
 @use '@styles/_fonts';
 @use '@styles/_colors';
 @use 'sass:map';
-.App {
+
+.Home {
     display: flex;
     flex-direction: column;
     background-color: var(--secondary);
