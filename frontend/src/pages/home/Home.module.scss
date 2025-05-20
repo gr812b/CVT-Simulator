@@ -23,7 +23,10 @@
         .title {
             @include fonts.title-huge;
             color: var(--primary);
-            margin: 0;
+            width: 100%;
+            margin: 0 0 0 1rem;
+            white-space: nowrap;
+            overflow: hidden;
         }
     }
 }
