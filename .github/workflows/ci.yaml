@@ -50,7 +50,7 @@ jobs:
           python -m unittest discover -s test
 
   web-tests:
-    name: Web Tests
+    name: Web Lint & Tests
     runs-on: ubuntu-latest
 
     steps:
@@ -80,5 +80,5 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: frontend-build
-          with: ./frontend/dist
+          path: ./frontend/dist
           
