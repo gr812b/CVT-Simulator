@@ -1,7 +1,42 @@
+@use '@styles/_fonts';
+@use '@styles/_colors';
+@use 'sass:map';
+
 .iconButton {
     display: flex;
     align-items: center;
     justify-content: space-between;
     background-color: transparent;
+    padding: 1rem 1.25rem;
+    width: fit-content;
+    gap: 0.625rem;
+    border-radius: 1.55rem;
+    border: none;
+    transition: 0.3s ease-in-out;
 
+    .icon {
+        height: 2.25rem;
+        width: 2.25rem;
+        color: var(--primary);
+    }
+
+    .text {
+        @include fonts.text-medium;
+        color: var(--primary);
+
+    }
+
+    &:hover {
+        background-color: var(--primary);
+        cursor: pointer;
+
+
+        .icon {
+            color: var(--secondary);
+        }
+
+        .text {
+            color: var(--secondary);
+        }
+    }
 }

@@ -1,20 +1,23 @@
 import styles from './IconButton.module.scss'
 import cx from 'classnames';
-import { Button } from "../button/Button";
 
 interface IconButtonProps {
     onClick: () => void
-    icon: string
-    alt?: string
+    icon: React.FC<React.SVGProps<SVGSVGElement>>;
+    iconSide?: 'left' | 'right'
     text: string
     className?: string
 }
 
-export const IconButton = ({ onClick, icon, alt, text, className }: IconButtonProps) => {
+export const IconButton = ({ onClick, icon: Icon, iconSide = 'left', text, className }: IconButtonProps) => {
+
+    const renderIcon = () => <Icon className={styles.icon} />
+
     return (
-        <Button onClick={onClick} className={cx(styles.iconButton, className)}>
-            <img src={icon} alt={alt} className={styles.icon} />
+        <button onClick={onClick} className={cx(styles.iconButton, className)}>
+            {iconSide === 'left' && renderIcon()}
             <span className={styles.text}>{text}</span>
-        </Button>
+            {iconSide === 'right' && renderIcon()}
+        </button>
     )
 }
