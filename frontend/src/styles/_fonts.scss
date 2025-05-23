@@ -1,3 +1,9 @@
+@mixin text-medium {
+    font-family: "Roboto", sans-serif;
+    font-weight: 400;
+    font-size: 2rem;
+}
+
 @mixin title-huge {
     font-family: "Roboto", sans-serif;
     font-weight: 600;

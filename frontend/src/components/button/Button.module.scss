@@ -1,0 +1,6 @@
+@use '@styles/_fonts';
+
+.button {
+    all: unset;
+    @include fonts.text-medium;
+}
