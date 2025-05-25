@@ -1,10 +1,10 @@
-import type {FC, SVGProps} from 'react';
+import type {ComponentType, SVGAttributes} from 'react';
 import styles from './IconButton.module.scss'
 import cx from 'classnames';
 
 interface IconButtonProps {
     onClick: () => void
-    icon: FC<SVGProps<SVGSVGElement>>
+    icon: ComponentType<SVGAttributes<SVGSVGElement>>
     iconSide?: 'left' | 'right'
     text: string
 }
