@@ -1,0 +1,21 @@
+@use '@styles/_fonts';
+@use '@styles/_colors';
+@use 'sass:map';
+
+.invertButton {
+    padding: 1rem 1.25rem;
+    width: fit-content;
+    gap: 0.625rem;
+    border-radius: 1.55rem;
+    color: var(--primary);
+
+    & > * {
+        color: inherit;
+        transition: 0.3s ease-in-out;
+    }
+
+    &:hover {
+        background-color: var(--primary);
+        color: var(--secondary);
+    }
+}

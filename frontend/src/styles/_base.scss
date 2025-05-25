@@ -1,3 +1,5 @@
+@use "./fonts";
+
 button {
     background-color: transparent;
     display: flex;
@@ -9,4 +11,8 @@ button {
     &:hover {
         cursor: pointer;
     }
+}
+
+span {
+    @include fonts.text-medium;
 }
