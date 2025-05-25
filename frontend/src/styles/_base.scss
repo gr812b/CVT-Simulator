@@ -1,0 +1,12 @@
+button {
+    background-color: transparent;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border: none;
+    transition: 0.3s ease-in-out;
+
+    &:hover {
+        cursor: pointer;
+    }
+}
