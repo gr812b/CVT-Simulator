@@ -1,5 +1,6 @@
 @use "./fonts";
 
+// default button styling
 button {
     background-color: transparent;
     display: flex;
@@ -13,6 +14,9 @@ button {
     }
 }
 
+// default font
+label,
+input,
 span {
     @include fonts.text-medium;
 }
