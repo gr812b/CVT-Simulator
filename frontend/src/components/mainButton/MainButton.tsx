@@ -4,7 +4,7 @@ import type {ComponentType, SVGAttributes} from 'react';
 
 interface MainButtonProps {
     onClick: () => void
-    text: string
+    text?: string
     icon: ComponentType<SVGAttributes<SVGSVGElement>>
     iconSide?: 'left' | 'right'
 }
@@ -12,9 +12,12 @@ interface MainButtonProps {
 const MainButton = ({ onClick, text, icon: Icon, iconSide = 'left'}: MainButtonProps) => {
     const renderIcon = () => <Icon className={styles.icon} />
     return (
-        <button onClick={onClick} className={cx(styles.mainButton)} >
+        <button
+            onClick={onClick}
+            className={cx(styles.mainButton, { [styles.noText]: !text })}
+        >
             {iconSide === 'left' && renderIcon()}
-            <span className={styles.text}>{text}</span>
+            {text && <span className={styles.text}>{text}</span>}
             {iconSide === 'right' && renderIcon()}
         </button>
     )

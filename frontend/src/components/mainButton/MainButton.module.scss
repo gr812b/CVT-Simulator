@@ -14,8 +14,17 @@
         transition: 0.3s ease-in-out;
     }
 
+    .icon {
+        height: 2.25rem;
+        width: 2.25rem;
+    }
+
     &:hover {
         background-color: var(--primary);
         color: var(--secondary);
     }
+}
+
+.noText {
+    padding: 0.75rem;
 }
