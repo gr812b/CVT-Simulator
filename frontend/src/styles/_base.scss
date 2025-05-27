@@ -7,6 +7,7 @@ button {
     justify-content: space-between;
     border: none;
     transition: 0.3s ease-in-out;
+    padding: 0;
 
     &:hover {
         cursor: pointer;
@@ -15,4 +16,10 @@ button {
 
 span {
     @include fonts.text-medium;
+}
+
+h1, h2, h3, h4, h5, h6, p, span, label {
+    margin: 0;
+    display: flex;
+    align-items: center;
 }

@@ -4,6 +4,13 @@
     font-size: 1.5rem;
 }
 
+@mixin title-medium {
+    font-family: "Roboto", sans-serif;
+    font-weight: 500;
+    font-size: 2.5rem;
+    text-transform: uppercase;
+}
+
 @mixin title-huge {
     font-family: "Roboto", sans-serif;
     font-weight: 600;

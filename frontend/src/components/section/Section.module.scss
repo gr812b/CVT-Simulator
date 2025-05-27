@@ -1,0 +1,52 @@
+@use '@styles/_fonts';
+@use '@styles/_colors';
+@use 'sass:map';
+
+.section {
+    display: flex;
+    flex-direction: column;
+    height: fit-content;
+    gap: 1.25rem;
+    color: var(--primary);
+
+    .header {
+        min-height: 6rem;
+        color: inherit;
+        border-bottom: 0.313rem solid currentColor;
+
+        .title {
+            @include fonts.title-medium;
+            color: inherit;
+        }
+
+        .icon {
+            width: 4.5rem;
+            height: 4.5rem;
+            color: inherit;
+            transition: 0.3s ease-in-out;
+        }
+
+        .rotateRight {
+            transform: rotate(-90deg);
+        }
+    }
+
+    .noDropdown:hover {
+        cursor: default;
+    }
+
+    .content {
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        width: fit-content;
+        color: inherit;
+        overflow: hidden;
+        transition: height 0.3s ease-in-out;
+    }
+
+    .hideContent {
+        height: 0;
+        transition: height 0.3s ease-in-out;
+    }
+}
