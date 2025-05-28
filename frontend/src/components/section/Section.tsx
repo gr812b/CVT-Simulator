@@ -22,8 +22,14 @@ const Section = ({ title, className, collapsible = true, children }: SectionProp
     }
 
     return (
-        <div className={cx(styles.section, className)}>
-            <button
+        <div
+            className={cx(
+                styles.section,
+                { [styles.hideContent]: !isOpen },
+                className
+            )}
+        >
+            <div
                 onClick={toggleOpen}
                 className={cx(
                     styles.header,
@@ -31,8 +37,8 @@ const Section = ({ title, className, collapsible = true, children }: SectionProp
                 )}
             >
                 <h2 className={styles.title}>{title}</h2>
-                {collapsible && <ChevronDown className={cx(styles.icon, { [styles.rotateRight] : !isOpen })} />}
-            </button>
+                {collapsible && <button className={styles.iconWrapper}><ChevronDown className={cx(styles.icon, { [styles.rotateRight] : !isOpen })} /></button>}
+            </div>
             <div
                 className={cx(
                     styles.content,

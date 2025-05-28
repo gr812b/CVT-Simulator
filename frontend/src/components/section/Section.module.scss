@@ -8,23 +8,36 @@
     height: fit-content;
     gap: 1.25rem;
     color: var(--primary);
+    transition: gap 0s;
 
     .header {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
         min-height: 6rem;
         color: inherit;
         border-bottom: 0.313rem solid currentColor;
+        cursor: pointer;
 
         .title {
             @include fonts.title-medium;
             color: inherit;
         }
 
-        .icon {
-            width: 4.5rem;
-            height: 4.5rem;
+        .iconWrapper {
+            height: fit-content;
+            width: fit-content;
             color: inherit;
-            transition: 0.3s ease-in-out;
+
+            .icon {
+                width: 4.5rem;
+                height: 4.5rem;
+                color: inherit;
+                transition: 0.3s ease-in-out;
+            }
+
         }
+
 
         .rotateRight {
             transform: rotate(-90deg);
@@ -32,7 +45,7 @@
     }
 
     .noDropdown:hover {
-        cursor: default;
+        cursor: auto;
     }
 
     .content {
@@ -45,8 +58,14 @@
         transition: height 0.3s ease-in-out;
     }
 
-    .hideContent {
-        height: 0;
-        transition: height 0.3s ease-in-out;
-    }
 }
+
+    .hideContent {
+        gap: 0;
+        transition: gap 0s 0.3s;
+
+        .content {
+            height: 0;
+        }
+
+    }
