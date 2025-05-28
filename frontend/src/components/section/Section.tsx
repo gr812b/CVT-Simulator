@@ -7,10 +7,11 @@ interface SectionProps {
     title: string
     collapsible?: boolean
     className?: string
+    contentClassName?: string
     children: React.ReactNode
 }
 
-const Section = ({ title, className, collapsible = true, children }: SectionProps) => {
+const Section = ({ title, className, contentClassName, collapsible = true, children }: SectionProps) => {
     // Controls if the section is expanded or collapsed
     const [isOpen, setIsOpen] = useState(false);
 
@@ -42,7 +43,8 @@ const Section = ({ title, className, collapsible = true, children }: SectionProp
             <div
                 className={cx(
                     styles.content,
-                    { [styles.hideContent]: !isOpen }
+                    { [styles.hideContent]: !isOpen },
+                    contentClassName
                 )}
             >
                 {children}
