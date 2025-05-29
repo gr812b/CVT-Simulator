@@ -54,6 +54,6 @@ export class ArcSegment extends Segment {
         const theta = this.thetaStart + deltaTheta + Math.PI;
 
         // Adjust the height calculation to account for the angle
-        return this.radius * (Math.sin(theta) - Math.sin(this.thetaStart + Math.PI));
+        return -this.radius * (Math.sin(theta) - Math.sin(this.thetaStart + Math.PI));
     }
 }

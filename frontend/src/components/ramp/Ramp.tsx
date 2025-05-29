@@ -74,13 +74,16 @@ const Ramp = ({ segments, className }: RampProps) => {
         return { x: endX, y: endY }
     }
 
+    // Calculate the bounds of the canvas based on the segment dimensions
+    const totalLength = segments.reduce((sum, segment) => sum + segment.length, 0)
+    const totalHeight = segments.reduce((sum, segment) => sum + segment.getHeight(segment.length), 0)
 
     return (
         <canvas
             ref={canvasRef}
             className={cx(styles.ramp, className)}
-            width={800}
-            height={600}
+            width={totalLength}
+            height={totalHeight}
         />
     )   
 }
