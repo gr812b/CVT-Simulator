@@ -29,7 +29,7 @@ const RampView = ({ segments, className }: RampViewProps) => {
     }, [segments])
 
     const drawNotch = useCallback(
-        (ctx: CanvasRenderingContext2D, x: number, y: number, horizontal = true, value: number, unit: string = 'cm') => {
+        (ctx: CanvasRenderingContext2D, x: number, y: number, horizontal = true, value: number, target?: { x: number; y: number }) => {
             const { length } = CANVAS.NOTCH
 
             ctx.beginPath()
@@ -49,8 +49,20 @@ const RampView = ({ segments, className }: RampViewProps) => {
             const textGap = 10
             const offsetX = horizontal ? -length - textGap : 0
             const offsetY = horizontal ? 0 : length + textGap
-            const text = `${value.toFixed(1)} ${unit}`
+            const text = `${value.toFixed(1)} cm`
             ctx.fillText(text, x + offsetX, y + offsetY)
+
+            if (target) {
+                ctx.save();
+                ctx.strokeStyle = 'rgba(255,255,255,0.2)';
+                ctx.lineWidth = 5;
+                ctx.setLineDash([10, 20]);
+                ctx.beginPath();
+                ctx.moveTo(x, y);
+                ctx.lineTo(target.x, target.y);
+                ctx.stroke();
+                ctx.restore();
+            }
         },
         []
     )
@@ -121,8 +133,8 @@ const RampView = ({ segments, className }: RampViewProps) => {
             x = nextX
             y = nextY
 
-            drawNotch(ctx, startX, y, true, cumHeight)
-            drawNotch(ctx, x, endY, false, cumLength)
+            drawNotch(ctx, startX, y, true, cumHeight, {x, y})
+            drawNotch(ctx, x, endY, false, cumLength, {x, y})
         })
 
         // Outer edge of ramp
