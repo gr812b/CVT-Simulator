@@ -21,6 +21,10 @@ export abstract class Segment {
         this.checkDistanceInRange(distance);
         return this.calculateHeight(distance);
     }
+
+    public get height(): number {
+        return this.calculateHeight(this.length);
+    }
 }
 
 export class LineSegment extends Segment {

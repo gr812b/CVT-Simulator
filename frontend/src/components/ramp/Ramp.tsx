@@ -1,30 +1,87 @@
 import styles from './Ramp.module.scss'
 import cx from 'classnames'
 import { Segment, LineSegment, ArcSegment } from '@types'
-import { useEffect, useRef } from 'react'
+import { useCallback, useEffect, useMemo, useRef } from 'react'
 
 interface RampProps {
     segments: Segment[]
     className?: string
 }
 
+const CANVAS = {
+  WIDTH: 800,
+  HEIGHT: 600,
+  PADDING: { top: 50, right: 50, bottom: 150, left: 150 },
+  STROKE: { color: 'white', width: 10, cap: 'round' as CanvasLineCap },
+  NOTCH: { length: 15 },
+}
+
 const Ramp = ({ segments, className }: RampProps) => {
     const canvasRef = useRef<HTMLCanvasElement>(null)
-    const paddingX = 10
-    const paddingY = 10
+    // Precompute totals and scale just once per segments array
+    const { totalLength, totalHeight, scale } = useMemo(() => {
+        const totalLength = segments.reduce((sum, s) => sum + s.length, 0)
+        const totalHeight = segments.reduce((sum, s) => sum + s.getHeight(s.length), 0)
+        const rampWidth = CANVAS.WIDTH - CANVAS.PADDING.left - CANVAS.PADDING.right
+        const rampHeight = CANVAS.HEIGHT - CANVAS.PADDING.bottom
+        const scale = Math.min(rampWidth / totalLength, rampHeight / totalHeight)
+        return { totalLength, totalHeight, scale }
+    }, [segments])
+
+    const drawNotch = useCallback(
+        (ctx: CanvasRenderingContext2D, x: number, y: number, horizontal = true, value: number, unit: string = 'cm') => {
+            const { length } = CANVAS.NOTCH
+
+            ctx.beginPath()
+            if (horizontal) {
+                ctx.moveTo(x, y)
+                ctx.lineTo(x - length, y)
+            } else {
+                ctx.moveTo(x, y)
+                ctx.lineTo(x, y + length)
+            }
+            ctx.stroke()
+
+            ctx.font = '24px Roboto, sans-serif'
+            ctx.fillStyle = 'white'
+            ctx.textAlign = horizontal ? 'right' : 'center'
+            ctx.textBaseline = horizontal ? 'middle' : 'top'
+            const textGap = 10
+            const offsetX = horizontal ? -length - textGap : 0
+            const offsetY = horizontal ? 0 : length + textGap
+            const text = `${value.toFixed(1)} ${unit}`
+            ctx.fillText(text, x + offsetX, y + offsetY)
+        },
+        []
+    )
+
+    const renderLine = useCallback(
+        (ctx: CanvasRenderingContext2D, x1: number, y1: number, x2: number, y2: number) => {
+            ctx.beginPath()
+            ctx.moveTo(x1, y1)
+            ctx.lineTo(x2, y2)
+            ctx.stroke()
+        },
+        []
+    )
+    
+    const renderArc = useCallback(
+        (ctx: CanvasRenderingContext2D, segment: ArcSegment, startX: number, startY: number) => {
+            const { radius, thetaStart, thetaEnd } = segment
+            const rScaled = radius * scale
+            const cx = startX + rScaled * Math.cos(-thetaStart)
+            const cy = startY + rScaled * Math.sin(-thetaStart)
+            const start = -thetaStart + Math.PI
+            const end = -thetaEnd + Math.PI
+
+            ctx.beginPath()
+            ctx.arc(cx, cy, rScaled, start, end, true)
+            ctx.stroke()
+        },
+        [scale]
+    )
 
     useEffect(() => {
-
-        const renderSegment = (ctx: CanvasRenderingContext2D, segment: Segment, startX: number, startY: number, endX: number, endY: number) => {
-            if (segment instanceof LineSegment) {
-                renderLineSegment(ctx, startX, startY, endX, endY)
-            } else if (segment instanceof ArcSegment) {
-                renderArcSegment(ctx, segment, startX, startY)
-            } else {
-                throw new Error('Unknown segment type')
-            }
-        }
-
         const canvas = canvasRef.current
         if (!canvas) return
 
@@ -36,57 +93,49 @@ const Ramp = ({ segments, className }: RampProps) => {
         ctx.lineWidth = 10
         ctx.lineCap = 'round'
 
-        let startX = paddingX
-        let startY = paddingY
+        // For notches
+        const startX = CANVAS.PADDING.left
+        const endY = CANVAS.PADDING.top + totalHeight * scale
+        let cumLength = 0
+        let cumHeight = 0
+
+        let x = CANVAS.PADDING.left
+        let y = CANVAS.PADDING.top
+
+        // Draw initial notches
+        drawNotch(ctx, startX, y, true, cumLength)
+        drawNotch(ctx, x, endY, false, cumHeight)
 
         segments.forEach((segment) => {
-            const endX = startX + segment.length
-            const endY = startY + segment.getHeight(segment.length)
+            const nextX = x + segment.length * scale
+            const nextY = y + segment.height * scale
+            cumLength += segment.length
+            cumHeight += segment.height
 
-            renderSegment(ctx, segment, startX, startY, endX, endY)
+            if (segment instanceof LineSegment) {
+                renderLine(ctx, x, y, nextX, nextY)
+            } else if (segment instanceof ArcSegment) {
+                renderArc(ctx, segment, x, y)
+            }
 
-            startX = endX
-            startY = endY
+            x = nextX
+            y = nextY
+
+            drawNotch(ctx, startX, y, true, cumHeight)
+            drawNotch(ctx, x, endY, false, cumLength)
         })
 
-        // Draw the egdes of the ramp
-        ctx.beginPath()
-        ctx.moveTo(paddingX, paddingY)
-        ctx.lineTo(paddingX, startY)
-        ctx.lineTo(startX, startY)
-        ctx.stroke()
-
-    }, [segments])
-
-    const renderLineSegment = (ctx: CanvasRenderingContext2D, startX: number, startY: number, endX: number, endY: number) => {
-        ctx.beginPath()
-        ctx.moveTo(startX, startY)
-        ctx.lineTo(endX, endY)
-        ctx.stroke()
-    }
-
-    const renderArcSegment = (ctx: CanvasRenderingContext2D, segment: ArcSegment, startX: number, startY: number) => {
-        const centerX = startX + segment.radius * Math.cos(-segment.thetaStart)
-        const centerY = startY + segment.radius * Math.sin(-segment.thetaStart)
-
-        const thetaStart = -segment.thetaStart + Math.PI
-        const thetaEnd = -segment.thetaEnd + Math.PI
-
-        ctx.beginPath()
-        ctx.arc(centerX, centerY, segment.radius, thetaStart, thetaEnd, true)
-        ctx.stroke()
-    }
-
-    // Calculate the bounds of the canvas based on the segment dimensions
-    const totalLength = segments.reduce((sum, segment) => sum + segment.length, 0)
-    const totalHeight = segments.reduce((sum, segment) => sum + segment.getHeight(segment.length), 0)
+        // Outer edge of ramp
+        renderLine(ctx, CANVAS.PADDING.left, CANVAS.PADDING.top, CANVAS.PADDING.left, y)
+        renderLine(ctx, CANVAS.PADDING.left, y, x, y)
+    }, [segments, totalHeight, totalLength, scale, renderArc, renderLine, drawNotch])
 
     return (
         <canvas
             ref={canvasRef}
             className={cx(styles.ramp, className)}
-            width={totalLength + paddingX * 2}
-            height={totalHeight + paddingY * 2}
+            width={CANVAS.WIDTH}
+            height={CANVAS.HEIGHT}
         />
     )   
 }
