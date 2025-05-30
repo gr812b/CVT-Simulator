@@ -32,7 +32,7 @@ export class LineSegment extends Segment {
     }
 
     calculateHeight(distance: number): number {
-        return distance * Math.sin(this.angle);
+        return distance * Math.tan(this.angle);
     }
 }
 
@@ -43,7 +43,7 @@ export class ArcSegment extends Segment {
 
     constructor(length: number, thetaStart: number, thetaEnd: number) {
         super(length);
-        this.radius = length / (thetaEnd - thetaStart);
+        this.radius = length / Math.abs(Math.cos(thetaEnd) - Math.cos(thetaStart))
         this.thetaStart = thetaStart;
         this.thetaEnd = thetaEnd;
     }

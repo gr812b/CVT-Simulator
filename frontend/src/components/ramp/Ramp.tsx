@@ -10,14 +10,16 @@ interface RampProps {
 
 const Ramp = ({ segments, className }: RampProps) => {
     const canvasRef = useRef<HTMLCanvasElement>(null)
+    const paddingX = 10
+    const paddingY = 10
 
     useEffect(() => {
 
-        const renderSegment = (ctx: CanvasRenderingContext2D, segment: Segment, startX: number, startY: number) => {
+        const renderSegment = (ctx: CanvasRenderingContext2D, segment: Segment, startX: number, startY: number, endX: number, endY: number) => {
             if (segment instanceof LineSegment) {
-                return renderLineSegment(ctx, segment, startX, startY)
+                renderLineSegment(ctx, startX, startY, endX, endY)
             } else if (segment instanceof ArcSegment) {
-                return renderArcSegment(ctx, segment, startX, startY)
+                renderArcSegment(ctx, segment, startX, startY)
             } else {
                 throw new Error('Unknown segment type')
             }
@@ -30,31 +32,37 @@ const Ramp = ({ segments, className }: RampProps) => {
         if (!ctx) return
 
         ctx.clearRect(0, 0, canvas.width, canvas.height)
-
-        let currentX = 0
-        let currentY = 0
-
-        segments.forEach((segment) => {
-            const result = renderSegment(ctx, segment, currentX, currentY)
-            currentX = result.x
-            currentY = result.y
-        })
-
         ctx.strokeStyle = 'white'
         ctx.lineWidth = 10
+        ctx.lineCap = 'round'
+
+        let startX = paddingX
+        let startY = paddingY
+
+        segments.forEach((segment) => {
+            const endX = startX + segment.length
+            const endY = startY + segment.getHeight(segment.length)
+
+            renderSegment(ctx, segment, startX, startY, endX, endY)
+
+            startX = endX
+            startY = endY
+        })
+
+        // Draw the egdes of the ramp
+        ctx.beginPath()
+        ctx.moveTo(paddingX, paddingY)
+        ctx.lineTo(paddingX, startY)
+        ctx.lineTo(startX, startY)
+        ctx.stroke()
+
     }, [segments])
 
-
-    const renderLineSegment = (ctx: CanvasRenderingContext2D, segment: LineSegment, startX: number, startY: number) => {
-        const endX = startX + segment.length * Math.cos(segment.angle)
-        const endY = startY + segment.length * Math.sin(segment.angle)
-
+    const renderLineSegment = (ctx: CanvasRenderingContext2D, startX: number, startY: number, endX: number, endY: number) => {
         ctx.beginPath()
         ctx.moveTo(startX, startY)
         ctx.lineTo(endX, endY)
         ctx.stroke()
-
-        return { x: endX, y: endY }
     }
 
     const renderArcSegment = (ctx: CanvasRenderingContext2D, segment: ArcSegment, startX: number, startY: number) => {
@@ -67,11 +75,6 @@ const Ramp = ({ segments, className }: RampProps) => {
         ctx.beginPath()
         ctx.arc(centerX, centerY, segment.radius, thetaStart, thetaEnd, true)
         ctx.stroke()
-
-        const endX = centerX + segment.radius * Math.cos(segment.thetaEnd)
-        const endY = centerY + segment.radius * Math.sin(segment.thetaEnd)
-
-        return { x: endX, y: endY }
     }
 
     // Calculate the bounds of the canvas based on the segment dimensions
@@ -82,8 +85,8 @@ const Ramp = ({ segments, className }: RampProps) => {
         <canvas
             ref={canvasRef}
             className={cx(styles.ramp, className)}
-            width={totalLength}
-            height={totalHeight}
+            width={totalLength + paddingX * 2}
+            height={totalHeight + paddingY * 2}
         />
     )   
 }
