@@ -1,9 +1,9 @@
-import styles from './Ramp.module.scss'
+import styles from './RampView.module.scss'
 import cx from 'classnames'
 import { Segment, LineSegment, ArcSegment } from '@types'
 import { useCallback, useEffect, useMemo, useRef } from 'react'
 
-interface RampProps {
+interface RampViewProps {
     segments: Segment[]
     className?: string
 }
@@ -16,7 +16,7 @@ const CANVAS = {
   NOTCH: { length: 15 },
 }
 
-const Ramp = ({ segments, className }: RampProps) => {
+const RampView = ({ segments, className }: RampViewProps) => {
     const canvasRef = useRef<HTMLCanvasElement>(null)
     // Precompute totals and scale just once per segments array
     const { totalLength, totalHeight, scale } = useMemo(() => {
@@ -140,4 +140,4 @@ const Ramp = ({ segments, className }: RampProps) => {
     )   
 }
 
-export default Ramp
+export default RampView
