@@ -12,40 +12,46 @@ const Ramp = ({ segments, className }: RampProps) => {
     const canvasRef = useRef<HTMLCanvasElement>(null)
 
     const drawNotch = useCallback(
-        (ctx: CanvasRenderingContext2D, x: number, y: number, horizontal = true, value: number, target?: { x: number; y: number }) => {
-            const length = 15
+        (ctx: CanvasRenderingContext2D, style: CSSStyleDeclaration, x: number, y: number, horizontal = true, target: { x: number; y: number }, value: number, unit: string = 'cm') => {
+            // Get values from SCSS
+            const notchLength = parseFloat(style.getPropertyValue('--notch-length'))
+            const textGap = parseFloat(style.getPropertyValue('--notch-text-gap'))
+            const dashWidth = parseFloat(style.getPropertyValue('--dash-width'))
+            const dashLength = parseFloat(style.getPropertyValue('--dash-length'))
+            const dashGap = parseFloat(style.getPropertyValue('--dash-gap'))
+            const dashColor = style.getPropertyValue('--dash-color')
 
             ctx.beginPath()
             if (horizontal) {
                 ctx.moveTo(x, y)
-                ctx.lineTo(x - length, y)
+                ctx.lineTo(x - notchLength, y)
             } else {
                 ctx.moveTo(x, y)
-                ctx.lineTo(x, y + length)
+                ctx.lineTo(x, y + notchLength)
             }
             ctx.stroke()
 
-            ctx.font = '24px Roboto, sans-serif'
-            ctx.fillStyle = 'white'
+
+            // Add label to notche
             ctx.textAlign = horizontal ? 'right' : 'center'
             ctx.textBaseline = horizontal ? 'middle' : 'top'
-            const textGap = 10
-            const offsetX = horizontal ? -length - textGap : 0
-            const offsetY = horizontal ? 0 : length + textGap
-            const text = `${value.toFixed(1)} cm`
+            ctx.fillStyle = style.color  
+            ctx.font = `${style.fontWeight} ${style.fontSize} ${style.fontFamily}`
+            const offsetX = horizontal ? -notchLength - textGap : 0
+            const offsetY = horizontal ? 0 : notchLength + textGap
+            const text = `${value.toFixed(1)} ${unit}`
             ctx.fillText(text, x + offsetX, y + offsetY)
 
-            if (target) {
-                ctx.save();
-                ctx.strokeStyle = 'rgba(255,255,255,0.2)';
-                ctx.lineWidth = 5;
-                ctx.setLineDash([10, 20]);
-                ctx.beginPath();
-                ctx.moveTo(x, y);
-                ctx.lineTo(target.x, target.y);
-                ctx.stroke();
-                ctx.restore();
-            }
+            // Draw dashed line from notches to ramp
+            ctx.save();
+            ctx.strokeStyle = dashColor;
+            ctx.lineWidth = dashWidth;
+            ctx.setLineDash([dashLength, dashGap]);
+            ctx.beginPath();
+            ctx.moveTo(x, y);
+            ctx.lineTo(target.x, target.y);
+            ctx.stroke();
+            ctx.restore();
         },
         []
     )
@@ -125,8 +131,8 @@ const Ramp = ({ segments, className }: RampProps) => {
         let y = PADDING.top
 
         // Draw initial notches
-        drawNotch(ctx, startX, y, true, cumLength)
-        drawNotch(ctx, x, endY, false, cumHeight)
+        drawNotch(ctx, style, startX, y, true, {x, y}, cumLength)
+        drawNotch(ctx, style, x, endY, false, {x, y}, cumHeight)
 
         segments.forEach((segment) => {
             const nextX = x + segment.length * scale
@@ -143,8 +149,8 @@ const Ramp = ({ segments, className }: RampProps) => {
             x = nextX
             y = nextY
 
-            drawNotch(ctx, startX, y, true, cumHeight, {x, y})
-            drawNotch(ctx, x, endY, false, cumLength, {x, y})
+            drawNotch(ctx, style, startX, y, true, {x, y}, cumHeight)
+            drawNotch(ctx, style, x, endY, false, {x, y}, cumLength)
         })
 
         // Outer edge of ramp
