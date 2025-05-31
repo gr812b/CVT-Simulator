@@ -1,7 +1,7 @@
 import styles from './RampView.module.scss'
 import cx from 'classnames'
 import { Segment, LineSegment, ArcSegment } from '@types'
-import { useCallback, useEffect, useMemo, useRef } from 'react'
+import { useCallback, useEffect, useRef } from 'react'
 
 interface RampViewProps {
     segments: Segment[]
@@ -18,15 +18,6 @@ const CANVAS = {
 
 const RampView = ({ segments, className }: RampViewProps) => {
     const canvasRef = useRef<HTMLCanvasElement>(null)
-    // Precompute totals and scale just once per segments array
-    const { totalLength, totalHeight, scale } = useMemo(() => {
-        const totalLength = segments.reduce((sum, s) => sum + s.length, 0)
-        const totalHeight = segments.reduce((sum, s) => sum + s.getHeight(s.length), 0)
-        const rampWidth = CANVAS.WIDTH - CANVAS.PADDING.left - CANVAS.PADDING.right
-        const rampHeight = CANVAS.HEIGHT - CANVAS.PADDING.bottom
-        const scale = Math.min(rampWidth / totalLength, rampHeight / totalHeight)
-        return { totalLength, totalHeight, scale }
-    }, [segments])
 
     const drawNotch = useCallback(
         (ctx: CanvasRenderingContext2D, x: number, y: number, horizontal = true, value: number, target?: { x: number; y: number }) => {
@@ -78,7 +69,7 @@ const RampView = ({ segments, className }: RampViewProps) => {
     )
     
     const renderArc = useCallback(
-        (ctx: CanvasRenderingContext2D, segment: ArcSegment, startX: number, startY: number) => {
+        (ctx: CanvasRenderingContext2D, segment: ArcSegment, startX: number, startY: number, scale: number) => {
             const { radius, thetaStart, thetaEnd } = segment
             const rScaled = radius * scale
             const cx = startX + rScaled * Math.cos(-thetaStart)
@@ -90,7 +81,7 @@ const RampView = ({ segments, className }: RampViewProps) => {
             ctx.arc(cx, cy, rScaled, start, end, true)
             ctx.stroke()
         },
-        [scale]
+        []
     )
 
     useEffect(() => {
@@ -100,19 +91,46 @@ const RampView = ({ segments, className }: RampViewProps) => {
         const ctx = canvas.getContext('2d')
         if (!ctx) return
 
-        ctx.clearRect(0, 0, canvas.width, canvas.height)
-        ctx.strokeStyle = 'white'
-        ctx.lineWidth = 10
-        ctx.lineCap = 'round'
+        // Get display size
+        const { width: displayWidth, height: displayHeight } = canvas.getBoundingClientRect()
+        canvas.width = displayWidth
+        canvas.height = displayHeight
 
-        // For notches
-        const startX = CANVAS.PADDING.left
-        const endY = CANVAS.PADDING.top + totalHeight * scale
+        // Get padding from SCSS
+        const style = getComputedStyle(canvas)
+        const PADDING = {
+            top: parseFloat(style.getPropertyValue('--padding-top')),
+            right: parseFloat(style.getPropertyValue('--padding-right')),
+            bottom: parseFloat(style.getPropertyValue('--padding-bottom')),
+            left: parseFloat(style.getPropertyValue('--padding-left')),
+        }
+
+        // Area of canvas available for ramp
+        const rampWidth = displayWidth - PADDING.left - PADDING.right
+        const rampHeight = displayHeight - PADDING.bottom
+
+        // Compute actual dimensions of ramp
+        const totalLength = segments.reduce((sum, s) => sum + s.length, 0)
+        const totalHeight = segments.reduce((sum, s) => sum + s.getHeight(s.length), 0)
+
+        // Minimum scale needed to keep ramp in canvas area
+        const scale = Math.min(rampWidth / totalLength, rampHeight / totalHeight)
+
+        // Reset canvas and set stroke styling
+        ctx.clearRect(0, 0, canvas.width, canvas.height)
+        ctx.strokeStyle = style.color
+        ctx.lineWidth = parseFloat(style.strokeWidth)
+        ctx.lineCap = style.strokeLinecap as CanvasLineCap
+
+        // For notch positioning and text
+        const startX = PADDING.left
+        const endY = PADDING.top + totalHeight * scale
         let cumLength = 0
         let cumHeight = 0
 
-        let x = CANVAS.PADDING.left
-        let y = CANVAS.PADDING.top
+        // Track start of each segment
+        let x = PADDING.left
+        let y = PADDING.top
 
         // Draw initial notches
         drawNotch(ctx, startX, y, true, cumLength)
@@ -127,7 +145,7 @@ const RampView = ({ segments, className }: RampViewProps) => {
             if (segment instanceof LineSegment) {
                 renderLine(ctx, x, y, nextX, nextY)
             } else if (segment instanceof ArcSegment) {
-                renderArc(ctx, segment, x, y)
+                renderArc(ctx, segment, x, y, scale)
             }
 
             x = nextX
@@ -138,16 +156,14 @@ const RampView = ({ segments, className }: RampViewProps) => {
         })
 
         // Outer edge of ramp
-        renderLine(ctx, CANVAS.PADDING.left, CANVAS.PADDING.top, CANVAS.PADDING.left, y)
-        renderLine(ctx, CANVAS.PADDING.left, y, x, y)
-    }, [segments, totalHeight, totalLength, scale, renderArc, renderLine, drawNotch])
+        renderLine(ctx, PADDING.left, PADDING.top, PADDING.left, y)
+        renderLine(ctx, PADDING.left, y, x, y)
+    }, [segments, renderArc, renderLine, drawNotch])
 
     return (
         <canvas
             ref={canvasRef}
             className={cx(styles.ramp, className)}
-            width={CANVAS.WIDTH}
-            height={CANVAS.HEIGHT}
         />
     )   
 }

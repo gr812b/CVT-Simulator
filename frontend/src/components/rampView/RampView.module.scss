@@ -1,6 +1,17 @@
-.ramp {
+@use '@styles/_fonts';
+@use '@styles/_colors';
+@use 'sass:map';
 
-    margin: 10rem;
-    height: fit-content;
-    width: fit-content;
+.ramp {
+    color: var(--primary);
+    @include fonts.text-medium;
+
+    stroke-width: 10;
+    stroke-linecap: round;
+
+    --padding-top: 50;
+    --padding-right: 50;
+    --padding-bottom: 150;
+    --padding-left: 150;
+
 }
