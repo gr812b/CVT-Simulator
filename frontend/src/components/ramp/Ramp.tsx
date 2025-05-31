@@ -1,27 +1,19 @@
-import styles from './RampView.module.scss'
+import styles from './Ramp.module.scss'
 import cx from 'classnames'
 import { Segment, LineSegment, ArcSegment } from '@types'
 import { useCallback, useEffect, useRef } from 'react'
 
-interface RampViewProps {
+interface RampProps {
     segments: Segment[]
     className?: string
 }
 
-const CANVAS = {
-  WIDTH: 800,
-  HEIGHT: 600,
-  PADDING: { top: 50, right: 50, bottom: 150, left: 150 },
-  STROKE: { color: 'white', width: 10, cap: 'round' as CanvasLineCap },
-  NOTCH: { length: 15 },
-}
-
-const RampView = ({ segments, className }: RampViewProps) => {
+const Ramp = ({ segments, className }: RampProps) => {
     const canvasRef = useRef<HTMLCanvasElement>(null)
 
     const drawNotch = useCallback(
         (ctx: CanvasRenderingContext2D, x: number, y: number, horizontal = true, value: number, target?: { x: number; y: number }) => {
-            const { length } = CANVAS.NOTCH
+            const length = 15
 
             ctx.beginPath()
             if (horizontal) {
@@ -168,4 +160,4 @@ const RampView = ({ segments, className }: RampViewProps) => {
     )   
 }
 
-export default RampView
+export default Ramp
