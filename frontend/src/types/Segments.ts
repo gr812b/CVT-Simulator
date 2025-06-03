@@ -54,10 +54,9 @@ export class ArcSegment extends Segment {
 
     calculateHeight(distance: number): number {
         // Calculate the angle based on the distance along the arc
-        const deltaTheta = (this.thetaEnd - this.thetaStart) * (distance / this.length);
-        const theta = this.thetaStart + deltaTheta + Math.PI;
+        const theta = this.thetaStart + (this.thetaEnd - this.thetaStart) * (distance / this.length);
 
-        // Adjust the height calculation to account for the angle
-        return -this.radius * (Math.sin(theta) - Math.sin(this.thetaStart + Math.PI));
+        // Adjust the height calculation to account for the initial angle
+        return this.radius * (Math.sin(theta) - Math.sin(this.thetaStart));
     }
 }
