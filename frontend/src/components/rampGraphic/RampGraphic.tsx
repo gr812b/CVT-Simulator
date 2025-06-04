@@ -12,6 +12,24 @@ interface RampGraphicProps {
 const RampGraphic = ({ ramp, className }: RampGraphicProps) => {
     const canvasRef = useRef<CanvasHandle>(null)
 
+    const drawLine = useCallback(
+    (canvas: CanvasHandle, x1: number, y1: number, x2: number, y2: number) => {
+        canvas.drawLine(x1, y1, x2, y2)
+    },
+    []
+    )
+
+    const drawDash = useCallback(
+        (canvas: CanvasHandle, style: CSSStyleDeclaration, x1: number, y1: number, x2: number, y2: number) => {
+            const dashWidth = parseFloat(style.getPropertyValue('--dash-width'))
+            const dashLength = parseFloat(style.getPropertyValue('--dash-length'))
+            const dashGap = parseFloat(style.getPropertyValue('--dash-gap'))
+            const dashColor = style.getPropertyValue('--dash-color')
+            canvas.drawLine(x1, y1, x2, y2, dashColor, dashWidth, [dashLength, dashGap])
+        },
+        []
+    )
+
     const drawNotch = useCallback(
         (canvas: CanvasHandle, style: CSSStyleDeclaration, x: number, y: number, horizontal = true, target: { x: number; y: number }, value: number, unit: string = 'cm') => {
             // Get scale from canvas
@@ -40,25 +58,7 @@ const RampGraphic = ({ ramp, className }: RampGraphicProps) => {
             // Draws dashed line
             drawDash(canvas, style, x, y, target.x, target.y)
         },
-        []
-    )
-
-    const drawLine = useCallback(
-        (canvas: CanvasHandle, x1: number, y1: number, x2: number, y2: number) => {
-            canvas.drawLine(x1, y1, x2, y2)
-        },
-        []
-    )
-
-    const drawDash = useCallback(
-        (canvas: CanvasHandle, style: CSSStyleDeclaration, x1: number, y1: number, x2: number, y2: number) => {
-            const dashWidth = parseFloat(style.getPropertyValue('--dash-width'))
-            const dashLength = parseFloat(style.getPropertyValue('--dash-length'))
-            const dashGap = parseFloat(style.getPropertyValue('--dash-gap'))
-            const dashColor = style.getPropertyValue('--dash-color')
-            canvas.drawLine(x1, y1, x2, y2, dashColor, dashWidth, [dashLength, dashGap])
-        },
-        []
+        [drawDash]
     )
     
     const drawArc = useCallback(
