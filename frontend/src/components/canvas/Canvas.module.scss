@@ -1,0 +1,19 @@
+@use '@styles/_fonts';
+@use '@styles/_colors';
+@use 'sass:map';
+
+.container {
+    width: 100%;
+    height: 100%;
+
+    color: var(--primary);
+    @include fonts.text-medium;
+
+    stroke-width: 10;
+    stroke-linecap: round;
+    .canvas {
+        width: 100%;
+        height: 100%;
+        display: block;
+    }
+}

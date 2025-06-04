@@ -3,12 +3,6 @@
 @use 'sass:map';
 
 .ramp {
-    color: var(--primary);
-    @include fonts.text-medium;
-
-    stroke-width: 10;
-    stroke-linecap: round;
-
     --padding-top: 50;
     --padding-right: 50;
     --padding-bottom: 125;
