@@ -130,6 +130,9 @@ const RampGraphic = ({ ramp, className }: RampGraphicProps) => {
         drawNotch(canvas, style, notchX, y, true, {x, y}, cumHeight)
         drawNotch(canvas, style, x, notchY, false, {x, y}, cumLength)
 
+        // Add additional notch to ensure one at 0
+        if (y != PADDING.bottom) drawNotch(canvas, style, notchX, PADDING.bottom, true, {x, y: PADDING.bottom}, 0)
+
         // Outer edge of ramp
         drawLine(canvas, PADDING.left, PADDING.bottom, PADDING.left, PADDING.bottom - ramp.minHeight)
         drawDash(canvas, style, PADDING.left, PADDING.bottom, PADDING.left, PADDING.bottom + ramp.height)
