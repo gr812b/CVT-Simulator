@@ -53,6 +53,7 @@ cvt_shift = CvtShift(
     secondary_belt,
 )
 
+
 def plotVelocity(result: SimulationResult, ax=None):
     vMax = (3277.6296 / (0.5 * FRONTAL_AREA * DRAG_COEFFICIENT * AIR_DENSITY)) ** (
         1 / 3
@@ -130,9 +131,7 @@ def plotPrimaryClampingForce(result: SimulationResult, ax=None):
         label="Primary Clamping Force",
     )
     ax.plot(
-        engine_angular_velocities, 
-        primary_radial_forces, 
-        label="Primary Radial Force"
+        engine_angular_velocities, primary_radial_forces, label="Primary Radial Force"
     )
     ax.set_xlabel("Engine Angular Velocity (rad/s)")
     ax.set_ylabel("Primary Clamping Force (N)")
@@ -297,13 +296,17 @@ def plotShiftCurves(results, ax=None):
     # Plot each simulation's engine speed curve.
     for i, result in enumerate(results):
         vehicle_speeds = [state.car_velocity for state in result.states]
-        cvt_ratios = [tm.current_cvt_ratio(state.shift_distance) for state in result.states]
+        cvt_ratios = [
+            tm.current_cvt_ratio(state.shift_distance) for state in result.states
+        ]
         wheel_to_engine_ratios = [
             (cvt_ratio * GEARBOX_RATIO) / WHEEL_RADIUS for cvt_ratio in cvt_ratios
         ]
         engine_angular_velocities = [
             state.car_velocity * wheel_to_engine_ratio
-            for state, wheel_to_engine_ratio in zip(result.states, wheel_to_engine_ratios)
+            for state, wheel_to_engine_ratio in zip(
+                result.states, wheel_to_engine_ratios
+            )
         ]
         ax.plot(
             vehicle_speeds,
@@ -317,14 +320,16 @@ def plotShiftCurves(results, ax=None):
     all_engine_velocities = []
     for result in results:
         vs = [state.car_velocity for state in result.states]
-        cvt_ratios = [tm.current_cvt_ratio(state.shift_distance) for state in result.states]
+        cvt_ratios = [
+            tm.current_cvt_ratio(state.shift_distance) for state in result.states
+        ]
         wheel_to_engine_ratios = [
             (cvt_ratio * GEARBOX_RATIO) / WHEEL_RADIUS for cvt_ratio in cvt_ratios
         ]
         eng_vel = [v * r for v, r in zip(vs, wheel_to_engine_ratios)]
         all_vehicle_speeds.extend(vs)
         all_engine_velocities.extend(eng_vel)
-    
+
     # Use the global maximum values for the x-range and engine speed limit.
     max_x = max(all_vehicle_speeds) if all_vehicle_speeds else 0
     max_engine = max(all_engine_velocities) if all_engine_velocities else 0
@@ -368,7 +373,6 @@ def plotShiftCurves(results, ax=None):
     ax.set_ylim(bottom=0)
 
 
-
 if __name__ == "__main__":
     result = SimulationResult.from_csv("simulation_output.csv")
     # result2 = SimulationResult.from_csv("simulation_output_2.csv")
@@ -386,7 +390,6 @@ if __name__ == "__main__":
     # plotShiftCurve(result, ax=axs[1, 3])
     # plt.tight_layout()
     # plt.show()
-    
 
     plotShiftCurves([result])
     plt.show()

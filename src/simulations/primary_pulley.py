@@ -2,7 +2,12 @@ import math
 import numpy as np
 from utils.conversions import inch_to_meter
 from utils.theoretical_models import TheoreticalModels as tm
-from utils.ramp_representation import CircularSegment, CubicSpiralZeroK1, LinearSegment, PiecewiseRamp
+from utils.ramp_representation import (
+    CircularSegment,
+    CubicSpiralZeroK1,
+    LinearSegment,
+    PiecewiseRamp,
+)
 from constants.car_specs import MAX_SHIFT, INITIAL_FLYWEIGHT_RADIUS
 
 
@@ -26,11 +31,13 @@ class PrimaryPulley:
             curveLength = inch_to_meter(0.025)
 
             self.ramp = PiecewiseRamp()
-            line = LinearSegment(x_start=0, x_end=inch_to_meter(0.125), slope=math.tan(math.radians(-25)))
+            line = LinearSegment(
+                x_start=0, x_end=inch_to_meter(0.125), slope=math.tan(math.radians(-25))
+            )
             circle = CircularSegment(
                 x_start=line.x_end + curveLength,
                 x_end=length,
-                radius=(inch_to_meter(5))**2,
+                radius=(inch_to_meter(5)) ** 2,
                 theta_start=0.971816735418,
                 theta_end=1.1984521248,
             )
@@ -39,7 +46,7 @@ class PrimaryPulley:
                 x_end=line.x_end + curveLength,
                 slope_start=line.slope(line.x_end),
                 slope_end=circle.slope(circle.x_start),
-                target_curvature=1/inch_to_meter(5),
+                target_curvature=1 / inch_to_meter(5),
             )
             self.ramp.add_segment(line)
             self.ramp.add_segment(cubicCircleLine)
