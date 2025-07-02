@@ -1,4 +1,4 @@
-name: CI for Python and C# Project
+name: CI for CVT Simulator
 
 on:
   pull_request:
@@ -49,25 +49,36 @@ jobs:
 
           python -m unittest discover -s test
 
-  csharp-tests:
-    name: C# Build & Tests
+  web-tests:
+    name: Web Lint & Tests
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
-      # Setup .NET Environment
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v3
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
         with:
-          dotnet-version: '7.x'  # Adjust if needed
+          node-version: lts/*
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
 
-      - name: Restore .NET dependencies
-        run: dotnet restore src/frontend/CommunicationProtocolUnitTesting/CommunicationProtocolUnitTesting.csproj
+      - name: Install dependencies
+        run: npm ci
+        working-directory: ./frontend
 
-      - name: Build UnitTesting project
-        run: dotnet build src/frontend/CommunicationProtocolUnitTesting/CommunicationProtocolUnitTesting.csproj --configuration Release --no-restore
+      - name: Run ESLint
+        run: npm run lint
+        working-directory: ./frontend
+      
+      - name: Build frontend
+        run: npm run build
+        working-directory: ./frontend
 
-      - name: Run C# unit tests
-        run: dotnet test src/frontend/CommunicationProtocolUnitTesting/CommunicationProtocolUnitTesting.csproj --configuration Release --no-build
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-build
+          path: ./frontend/dist
+          

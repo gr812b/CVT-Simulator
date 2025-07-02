@@ -1,0 +1,13 @@
+@mixin text-medium {
+    font-family: "Roboto", sans-serif;
+    font-weight: 500;
+    font-size: 1.5rem;
+}
+
+@mixin title-huge {
+    font-family: "Roboto", sans-serif;
+    font-weight: 600;
+    font-size: 8rem;
+    font-style: italic;
+    text-transform: uppercase;
+}

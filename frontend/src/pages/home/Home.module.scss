@@ -1,0 +1,32 @@
+@use '@styles/_fonts';
+@use '@styles/_colors';
+@use 'sass:map';
+
+.Home {
+    display: flex;
+    flex-direction: column;
+    background-color: var(--secondary);
+    height: 100vh;
+    width: 100vw;
+
+    .header {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        height: fit-content;
+        margin: 1rem 2rem;
+
+        .logo {
+            height: 13rem;
+        }
+
+        .title {
+            @include fonts.title-huge;
+            color: var(--primary);
+            width: 100%;
+            margin: 0 0 0 1rem;
+            white-space: nowrap;
+            overflow: hidden;
+        }
+    }
+}
