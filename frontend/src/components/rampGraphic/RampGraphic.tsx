@@ -101,12 +101,12 @@ const RampGraphic = ({ ramp, className }: RampGraphicProps) => {
 
     // Loop through each segment in ramp
     ramp.forEach((line) => {
-      drawLine(
-        line.start.x,
-        line.start.y,
-        line.end.x,
-        line.end.y
-      )
+      const startX = line.start.x + padding.left
+      const startY = line.start.y + padding.bottom
+      const endX = line.end.x + padding.left
+      const endY = line.end.y + padding.bottom
+
+      drawLine(startX, startY, endX, endY)
 
 
       // If new ramp starts, draw notches at the start of the ramp
@@ -115,20 +115,20 @@ const RampGraphic = ({ ramp, className }: RampGraphicProps) => {
         // Draws horizontal notch
         drawNotch(
           notchX,
-          line.start.y,
+          startY,
           true,
-          line.start.x,
-          line.start.y,
+          startX,
+          startY,
           line.start.y
         )
 
         // Draws vertical notch
         drawNotch(
-          line.start.x,
+          startX,
           notchY,
           false,
-          line.start.x,
-          line.start.y,
+          startX,
+          startY,
           line.start.x
         )
 
@@ -141,23 +141,25 @@ const RampGraphic = ({ ramp, className }: RampGraphicProps) => {
 
     // 3) After all segments, draw the final notches (at the end of the ramp)
     const lastLine = ramp[ramp.length - 1]
+    const endX = lastLine.end.x + padding.left
+    const endY = lastLine.end.y + padding.bottom
     // final “height” notch at x = notchX, y = currentY
     drawNotch(
       notchX,
-      lastLine.end.y,
+      endY,
       true,
-      lastLine.end.x,
-      lastLine.end.y,
+      endX,
+      endY,
       lastLine.end.y
     )
 
     // final “length” notch at x = currentX, y = notchY
     drawNotch(
-      lastLine.end.x,
+      endX,
       notchY,
       false,
-      lastLine.end.x,
-      lastLine.end.y,
+      endX,
+      endY,
       lastLine.end.x
     )
 
@@ -167,32 +169,23 @@ const RampGraphic = ({ ramp, className }: RampGraphicProps) => {
       padding.left,
       padding.bottom,
       padding.left,
-      padding.bottom
-    )
-
-    //   - dashed upward from base to show total ramp height
-    drawLine(
-      padding.left,
-      padding.bottom,
-      padding.left,
-      padding.bottom + ramp.height,
-      true
+      ramp[0].start.y + padding.bottom,
     )
 
     //   - horizontal bottom edge of ramp
     drawLine(
       padding.left,
       padding.bottom,
-      lastLine.end.x,
+      endX,
       padding.bottom
     )
 
     //   - vertical right edge of ramp
     drawLine(
-      lastLine.end.x,
+      endX,
       padding.bottom,
-      lastLine.end.x,
-      lastLine.end.y
+      endX,
+      endY
     )
   }, [ramp])
 
