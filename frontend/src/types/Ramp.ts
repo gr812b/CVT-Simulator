@@ -1,5 +1,5 @@
 export interface RampLine {
-    num: number
+    ramp: number
     start: {x: number, y: number}
     end: {x: number, y: number}
 }

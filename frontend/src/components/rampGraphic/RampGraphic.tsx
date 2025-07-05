@@ -1,7 +1,7 @@
 // RampGraphic.tsx
 import styles from './RampGraphic.module.scss'
 import cx from 'classnames'
-import { Ramp, LineSegment, ArcSegment } from '@types'
+import { Ramp } from '@types'
 import { useEffect, useRef } from 'react'
 import Canvas, { type CanvasHandle } from '@components/canvas/Canvas'
 
@@ -73,7 +73,7 @@ const RampGraphic = ({ ramp, className }: RampGraphicProps) => {
       targetX: number,
       targetY: number,
       value: number,
-      unit: string = 'cm'
+      unit: string = 'in'
     ) => {
       // Draw the short solid notch
       const text = `${Math.abs(value).toFixed(1)} ${unit}`
@@ -92,101 +92,74 @@ const RampGraphic = ({ ramp, className }: RampGraphicProps) => {
       drawLine(x, y, targetX, targetY, true)
     }
 
-    // Helper: draw a circular arc (ArcSegment)
-    const drawArc = (segment: ArcSegment, startX: number, startY: number) => {
-      const { radius, thetaStart, thetaEnd } = segment
-      // compute center of the arc
-      const centerX = startX + radius * Math.cos(thetaStart)
-      const centerY = startY + radius * Math.sin(-thetaStart)
-      const startAngle = Math.PI - thetaStart
-      const endAngle = Math.PI - thetaEnd
-      canvas.drawArc(centerX, centerY, radius, startAngle, endAngle)
-    }
-
-    // 2) iterate over all segments, keeping track of cumulative length and height
-    let cumLength = 0
-    let cumHeight = -ramp.minHeight // start offset so that the “bottom” of the ramp aligns at y = padding.bottom
-
-    // Initial drawing origin
-    let currentX = cumLength + padding.left
-    let currentY = cumHeight + padding.bottom
-
     // “Notch baseline” positions (fixed x or y)
     const notchX = padding.left
     const notchY = padding.bottom
 
-    // Loop through each segment in ramp
-    ramp.forEach((segment) => {
-      // compute the end point of this segment
-      const endX = currentX + segment.length
-      const endY = currentY + segment.height
+    // Updates to 0 on first ramp
+    let currentRamp = -1
 
-      // draw either a straight line or an arc
-      if (segment instanceof LineSegment) {
-        drawLine(currentX, currentY, endX, endY)
-      } else if (segment instanceof ArcSegment) {
-        drawArc(segment, currentX, currentY)
+    // Loop through each segment in ramp
+    ramp.forEach((line) => {
+      drawLine(
+        line.start.x,
+        line.start.y,
+        line.end.x,
+        line.end.y
+      )
+
+
+      // If new ramp starts, draw notches at the start of the ramp
+      if (line.ramp > currentRamp) {
+
+        // Draws horizontal notch
+        drawNotch(
+          notchX,
+          line.start.y,
+          true,
+          line.start.x,
+          line.start.y,
+          line.start.y
+        )
+
+        // Draws vertical notch
+        drawNotch(
+          line.start.x,
+          notchY,
+          false,
+          line.start.x,
+          line.start.y,
+          line.start.x
+        )
+
+        // Update current ramp
+        currentRamp = line.ramp
+
       }
 
-      // draw the “horizontal” height-notch (always at x = notchX)
-      drawNotch(
-        notchX,
-        currentY,
-        true,               // horizontal notch
-        currentX,
-        currentY,
-        cumHeight          // label = cumulative height so far
-      )
-
-      // draw the “vertical” length-notch (always at y = notchY)
-      drawNotch(
-        currentX,
-        notchY,
-        false,              // vertical notch
-        currentX,
-        currentY,
-        cumLength          // label = cumulative length so far
-      )
-
-      // update for next segment
-      currentX = endX
-      currentY = endY
-      cumLength += segment.length
-      cumHeight += segment.height
     })
 
     // 3) After all segments, draw the final notches (at the end of the ramp)
+    const lastLine = ramp[ramp.length - 1]
     // final “height” notch at x = notchX, y = currentY
     drawNotch(
       notchX,
-      currentY,
+      lastLine.end.y,
       true,
-      currentX,
-      currentY,
-      cumHeight
+      lastLine.end.x,
+      lastLine.end.y,
+      lastLine.end.y
     )
 
     // final “length” notch at x = currentX, y = notchY
     drawNotch(
-      currentX,
+      lastLine.end.x,
       notchY,
       false,
-      currentX,
-      currentY,
-      cumLength
+      lastLine.end.x,
+      lastLine.end.y,
+      lastLine.end.x
     )
-
-    // If the ramp does not start exactly at y = padding.bottom, add a zero-height notch
-    if (currentY !== padding.bottom) {
-      drawNotch(
-        notchX,
-        padding.bottom,
-        true,
-        currentX,
-        padding.bottom,
-        0
-      )
-    }
 
     // 4) Draw the “outer edges” and a dashed guideline up from the base
     //   - vertical left edge of ramp
@@ -194,7 +167,7 @@ const RampGraphic = ({ ramp, className }: RampGraphicProps) => {
       padding.left,
       padding.bottom,
       padding.left,
-      padding.bottom - ramp.minHeight
+      padding.bottom
     )
 
     //   - dashed upward from base to show total ramp height
@@ -210,16 +183,16 @@ const RampGraphic = ({ ramp, className }: RampGraphicProps) => {
     drawLine(
       padding.left,
       padding.bottom,
-      currentX,
+      lastLine.end.x,
       padding.bottom
     )
 
     //   - vertical right edge of ramp
     drawLine(
-      currentX,
+      lastLine.end.x,
       padding.bottom,
-      currentX,
-      currentY
+      lastLine.end.x,
+      lastLine.end.y
     )
   }, [ramp])
 
