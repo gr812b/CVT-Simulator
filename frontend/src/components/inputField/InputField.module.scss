@@ -1,0 +1,31 @@
+@use '@styles/_fonts';
+@use '@styles/_colors';
+@use 'sass:map';
+
+.inputContainer {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    width: 100%;
+    height: fit-content;
+    color: var(--primary);
+
+
+    .label {
+        display: flex;
+        align-items: center;
+        color: inherit;
+        height: 3rem;
+    }
+
+    .input {
+        color: inherit;
+        border: none;
+        outline: none;
+        height: 3rem;
+        width: 100%;
+        padding: 0;
+        background-color: transparent;
+        border-bottom: 0.125rem solid currentColor;
+    }
+}
