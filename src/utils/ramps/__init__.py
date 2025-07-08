@@ -1,3 +1,4 @@
+# flake8: noqa
 from .circular_segment import CircularSegment
 from .cubic_spiral_zero_k1 import CubicSpiralZeroK1
 from .cubic_spiral_zero_zero import CubicSpiralZeroZero

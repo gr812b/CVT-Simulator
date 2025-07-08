@@ -77,6 +77,7 @@ def visualize_ramps(ramps):
 
     plt.show()
 
+
 def save_ramp_to_dxf(ramp, filename="ramp_profile.dxf", points_per_segment=2000):
     """
     Saves the ramp profile to a DXF file.
@@ -125,5 +126,3 @@ def save_ramp_to_dxf(ramp, filename="ramp_profile.dxf", points_per_segment=2000)
 
     doc.saveas(filename)
     print(f"DXF file saved as {filename}")
-
-

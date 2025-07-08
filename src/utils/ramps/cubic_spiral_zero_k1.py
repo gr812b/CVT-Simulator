@@ -2,6 +2,7 @@ from utils.ramps.ramp_segment import RampSegment
 import math
 from scipy.integrate import quad
 
+
 class CubicSpiralZeroK1(RampSegment):
     """
     Cubic spiral defined by:

@@ -2,6 +2,7 @@ import math
 from constants.car_specs import INITIAL_FLYWEIGHT_RADIUS
 from utils.ramps.ramp_segment import RampSegment
 
+
 class ProDefinedSegment(RampSegment):
     def __init__(
         self,

@@ -1,6 +1,7 @@
 from utils.ramps.ramp_segment import RampSegment
 from typing import List
 
+
 class PiecewiseRamp:
     """Handles multiple ramp segments and ensures continuity automatically."""
 
@@ -31,4 +32,3 @@ class PiecewiseRamp:
             if segment.x_start <= x <= segment.x_end:
                 return abs(segment.slope(x))
         raise ValueError(f"x={x} is out of ramp range!")
-

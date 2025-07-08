@@ -1,5 +1,6 @@
 from utils.ramps.ramp_segment import RampSegment
 
+
 class LinearSegment(RampSegment):
     """Linear segment: y = mx"""
 

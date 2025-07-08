@@ -3,6 +3,7 @@ import numpy as np
 import math
 from scipy.integrate import quad
 
+
 class EulerSpiralSegment(RampSegment):
     """
     Euler spiral segment that transitions smoothly between two slopes.
@@ -93,4 +94,3 @@ class EulerSpiralSegment(RampSegment):
         # Compute the instantaneous tangent angle:
         angle = self.theta_start + self.delta * (s_val / self.s_end) ** 2
         return math.tan(angle)
-
