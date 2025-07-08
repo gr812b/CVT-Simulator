@@ -8,7 +8,7 @@ on:
 
 jobs:
   simulator-tests:
-    name: Python Simulation Lint & Tests
+    name: Simulation Module Lint & Tests
     runs-on: ubuntu-latest
 
     steps:
@@ -49,13 +49,13 @@ jobs:
           python -m unittest discover -s test
 
   backend-tests:
-    name: Python Lint & Tests
+    name: Backend Lint & Tests
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
-        
+
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
