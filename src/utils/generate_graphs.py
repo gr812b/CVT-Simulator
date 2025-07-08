@@ -20,6 +20,7 @@ from constants.constants import AIR_DENSITY
 from utils.conversions import deg_to_rad
 from utils.argument_parser import get_arguments
 from utils.theoretical_models import TheoreticalModels as tm
+# TODO: Look into debloating this file, potentially a rework of how the graphs information is acquired, as it requires a lot of coupling with the math logic
 
 # Parse arguments
 args = get_arguments()
