@@ -71,13 +71,13 @@ jobs:
       - name: Run flake8
         run: |
           source venv/bin/activate
-          flake8 src test
+          flake8 app
         working-directory: ./backend
 
       - name: Run black (check)
         run: |
           source venv/bin/activate
-          black --check src test
+          black --check app
         working-directory: ./backend
 
       - name: Run compiler
