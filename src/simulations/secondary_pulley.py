@@ -5,7 +5,7 @@ from constants.car_specs import (
     MAX_SHIFT,
     HELIX_RADIUS,
 )
-from utils.ramp_representation import LinearSegment, PiecewiseRamp
+from utils.ramps import LinearSegment, PiecewiseRamp
 
 
 class SecondaryPulley:
