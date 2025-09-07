@@ -11,33 +11,28 @@ interface ParameterAccordionProps {
 
 const ParameterAccordion = ({ title, className, children }: ParameterAccordionProps) => {
     // Controls if the section is expanded or collapsed
-    const [isOpen, setIsOpen] = useState(false);
+    const [isExpanded, setIsExpanded] = useState(false);
 
-    const toggleOpen = () => setIsOpen(!isOpen);
+    const toggleExpanded = () => setIsExpanded(!isExpanded);
 
     return (
         <div
             className={cx(
-                styles.section,
-                { [styles.hideContent]: !isOpen },
+                styles.accordion,
+                { [styles.hideChildren]: !isExpanded },
                 className
             )}
         >
             <div
-                onClick={toggleOpen}
+                onClick={toggleExpanded}
                 className={cx(styles.header)}
             >
                 <h2 className={styles.title}>{title}</h2>
-                <button className={styles.iconWrapper}><ChevronDown className={cx(styles.icon, { [styles.rotateRight] : !isOpen })} /></button>
+                <button className={styles.iconWrapper}>
+                    <ChevronDown className={cx(styles.icon, { [styles.rotateRight] : !isExpanded })} />
+                </button>
             </div>
-            <div
-                className={cx(
-                    styles.children,
-                    { [styles.hideChildren]: !isOpen }
-                )}
-            >
-                {children}
-            </div>
+            <div className={cx(styles.children)}>{children}</div>
         </div>
     );
 }

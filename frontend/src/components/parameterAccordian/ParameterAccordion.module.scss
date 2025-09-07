@@ -2,7 +2,7 @@
 @use '@styles/_colors';
 @use 'sass:map';
 
-.section {
+.accordion {
     display: flex;
     flex-direction: column;
     height: fit-content;
@@ -13,11 +13,13 @@
     .header {
         display: flex;
         align-items: center;
+        justify-content: space-between;
         gap: 1rem;
         min-height: 6rem;
         color: inherit;
         border-bottom: 0.313rem solid currentColor;
         cursor: pointer;
+        overflow: hidden;
 
         .title {
             @include fonts.title-medium;
@@ -37,7 +39,6 @@
             }
 
         }
-
 
         .rotateRight {
             transform: rotate(-90deg);
