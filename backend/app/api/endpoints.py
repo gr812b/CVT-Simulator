@@ -9,6 +9,7 @@ router = APIRouter()
 #   -H "Content-Type: application/json" \
 #   -d "{\"field\":\"test input\"}"
 
+
 @router.post("/compute")
 def compute(field: str = Body(..., embed=True)):
     result = f"Received: {field}"
