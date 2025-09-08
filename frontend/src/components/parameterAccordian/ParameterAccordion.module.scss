@@ -24,6 +24,7 @@
         .title {
             @include fonts.title-medium;
             color: inherit;
+            white-space: nowrap;
         }
 
         .iconWrapper {

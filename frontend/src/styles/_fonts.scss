@@ -4,6 +4,13 @@
     font-size: 1.5rem;
 }
 
+@mixin text-paragraph {
+    font-family: "Roboto", sans-serif;
+    font-weight: 500;
+    font-size: 1.5rem;
+    line-height: 3rem;
+}
+
 @mixin title-medium {
     font-family: "Roboto", sans-serif;
     font-weight: 500;
