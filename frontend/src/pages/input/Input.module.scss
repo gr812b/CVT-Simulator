@@ -10,6 +10,42 @@
     width: 100vw;
 
     .backButton {
-        margin: 1.5rem 0 0 1.5rem;
+        margin: 1.5rem 0 0 0.75rem;
+    }
+
+    .inputGrid {
+        display: grid;
+        grid-template-columns: max-content 1fr; // left fits content, right grows
+        grid-template-rows: 1fr auto;           // top grows, bottom fits content
+        height: 100%;
+        width: 100%;
+        overflow: hidden;
+
+        .parameterInputContainer {
+            grid-column: 1;
+            grid-row: 1;
+            margin: 0 1rem 0 2rem;
+            padding-right: 1rem;
+            overflow: auto;
+            scrollbar-gutter: stable;
+        }
+
+        .parameterInformationContainer {
+            grid-column: 2;
+            grid-row: 1;
+        }
+
+        .inputButtonsContainer {
+            grid-column: 1;
+            grid-row: 2;
+            display: flex;
+            justify-content: space-between;
+            margin: 0 2.25rem 1rem 0.5rem;
+        }
+
+        .nextButtonContainer {
+            grid-column: 2;
+            grid-row: 2;
+        }
     }
 }

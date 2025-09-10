@@ -9,7 +9,7 @@ interface InputFieldProps {
     className?: string;
 }
 
-const InputField = ({ value, onChange, label, placeholder, className }: InputFieldProps) => {
+export const InputField = ({ value, onChange, label, placeholder, className }: InputFieldProps) => {
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         onChange(e.target.value);
     };
@@ -27,5 +27,3 @@ const InputField = ({ value, onChange, label, placeholder, className }: InputFie
         </div>
     );
 }
-
-export default InputField;
