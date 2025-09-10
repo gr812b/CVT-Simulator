@@ -1,26 +1,26 @@
 from utils.system_state import SystemState
 from utils.theoretical_models import TheoreticalModels as tm
-from simulations.engine_simulation import EngineSimulator
-from simulations.primary_pulley import PrimaryPulley
-from simulations.secondary_pulley import SecondaryPulley
-from simulations.belt_simulator import BeltSimulator
+from models.engine_model import EngineModel
+from models.primary_pulley_model import PrimaryPulleyModel
+from models.secondary_pulley_model import SecondaryPulleyModel
+from models.belt_model import BeltModel
 from constants.car_specs import GEARBOX_RATIO, WHEEL_RADIUS
 
 
 class CvtShiftModel:
     def __init__(
         self,
-        engine_simulator: EngineSimulator,
-        primary_simulator: PrimaryPulley,
-        secondary_simulator: SecondaryPulley,
-        primary_belt: BeltSimulator,
-        secondary_belt: BeltSimulator,
+        engine_model: EngineModel,
+        primary_model: PrimaryPulleyModel,
+        secondary_model: SecondaryPulleyModel,
+        primary_belt_model: BeltModel,
+        secondary_belt_model: BeltModel,
     ):
-        self.engine_simulator = engine_simulator
-        self.primary_simulator = primary_simulator
-        self.secondary_simulator = secondary_simulator
-        self.primary_belt = primary_belt
-        self.secondary_belt = secondary_belt
+        self.engine_model = engine_model
+        self.primary_model = primary_model
+        self.secondary_model = secondary_model
+        self.primary_belt_model = primary_belt_model
+        self.secondary_belt_model = secondary_belt_model
         self.cvt_moving_mass = 0.5  # TODO: Use constants
 
     def get_pulley_forces(self, state: SystemState):
@@ -32,23 +32,23 @@ class CvtShiftModel:
         engine_velocity = state.car_velocity * wheel_to_engine_ratio
 
         # Engine torque for secondary force calculation
-        engine_torque = self.engine_simulator.get_torque(engine_velocity)
+        engine_torque = self.engine_model.get_torque(engine_velocity)
 
         # Calculate forces using the provided simulators
-        primary_force = self.primary_simulator.calculate_net_force(
+        primary_force = self.primary_model.calculate_net_force(
             state.shift_distance, engine_velocity
         )
-        secondary_force = self.secondary_simulator.calculate_net_force(
+        secondary_force = self.secondary_model.calculate_net_force(
             engine_torque * cvt_ratio, state.shift_distance
         )
 
         # Calculate wrap angles and convert to radial forces
         primary_wrap_angle = tm.primary_wrap_angle(state.shift_distance)
         secondary_wrap_angle = tm.secondary_wrap_angle(state.shift_distance)
-        primary_radial = self.primary_belt.calculate_radial_force(
+        primary_radial = self.primary_belt_model.calculate_radial_force(
             engine_velocity, state.shift_distance, primary_wrap_angle, primary_force
         )
-        secondary_radial = self.secondary_belt.calculate_radial_force(
+        secondary_radial = self.secondary_belt_model.calculate_radial_force(
             engine_velocity, state.shift_distance, secondary_wrap_angle, secondary_force
         )
 
