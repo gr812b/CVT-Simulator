@@ -4,6 +4,7 @@ import { createRoot } from 'react-dom/client'
 import { BrowserRouter } from 'react-router-dom'
 import { App } from '@pages/app/App.tsx'
 import { ThemeProvider } from '@contexts/ThemeContext';
+import { ParameterProvider } from '@contexts/ParameterContext'
 
 const rootElement = document.getElementById('root');
 if (!rootElement) {
@@ -15,9 +16,11 @@ const root = createRoot(rootElement as HTMLElement);
 root.render(
   <StrictMode>
     <ThemeProvider>
-      <BrowserRouter>
-        <App />
-      </BrowserRouter>
+      <ParameterProvider>
+        <BrowserRouter>
+          <App />
+        </BrowserRouter>
+      </ParameterProvider>
     </ThemeProvider>
   </StrictMode>,
 )
