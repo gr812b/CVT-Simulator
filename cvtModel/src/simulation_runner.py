@@ -132,11 +132,7 @@ class SimulationRunner:
             rtol=1e-4,
         )
 
-    def _evaluate_cvt_system(self, t, y):
-        """Evaluate system dynamics (phase 1: not at full shift)."""
-        state = SystemState.from_array(y)
-
-        # TODO: Update lethis
+    def _print_progress(self, t):
         # Print progress
         progress_percent = (t / self.TOTAL_SIM_TIME) * 100
         # Print every 0.1% progress
@@ -145,6 +141,12 @@ class SimulationRunner:
                 f"\rProgress: {progress_percent:.1f}% [{'=' * int(progress_percent // 2)}{' ' * (50 - int(progress_percent // 2))}]"
             )
             sys.stdout.flush()
+
+
+    def _evaluate_cvt_system(self, t, y):
+        """Evaluate system dynamics (phase 1: not at full shift)."""
+        state = SystemState.from_array(y)
+        self._print_progress(t)
 
         # TODO: Remove this (should be handled by constraints)
         shift_velocity = state.shift_velocity
@@ -162,7 +164,6 @@ class SimulationRunner:
         # ---------------------------
 
         # Some ratios
-        # print(tm.outer_prim_radius(state.shift_distance), state.shift_distance)
         cvt_ratio = tm.current_cvt_ratio(state.shift_distance)
         wheel_to_engine_ratio = (cvt_ratio * GEARBOX_RATIO) / WHEEL_RADIUS
         engine_velocity = state.car_velocity * wheel_to_engine_ratio
@@ -188,6 +189,7 @@ class SimulationRunner:
     def _evaluate_full_shift_system(self, t, y):
         """Evaluate system dynamics (phase 2: at full shift)."""
         state = SystemState.from_array(y)
+        self._print_progress(t)
         # Force the shifting variables to remain constant at full shift.
         state.shift_distance = MAX_SHIFT
         state.shift_velocity = 0

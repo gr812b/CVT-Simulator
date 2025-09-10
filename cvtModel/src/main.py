@@ -16,7 +16,7 @@ from utils.frontend_output import FormattedSimulationResult
 # Parse arguments
 args = get_arguments()
 
-# Initialize simulators
+# Initialize models with args
 engine_model = EngineModel(torque_curve=torque_curve, inertia=ENGINE_INERTIA)
 load_model = LoadModel(
     car_mass=args.vehicle_weight + args.driver_weight,
@@ -45,12 +45,14 @@ cvt_shift = CvtShiftModel(
     secondary_belt_model,
 )
 
+# Run multi-phase simulation
 simulationRunner = SimulationRunner(
     engine_model,
     load_model,
     cvt_shift,
 )
-
 result = simulationRunner.run_simulation()
+
+# Handle output
 result.write_csv("simulation_output.csv")
 FormattedSimulationResult.from_csv().write_formatted_csv()
