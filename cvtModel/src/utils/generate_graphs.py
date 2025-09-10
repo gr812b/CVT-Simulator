@@ -1,12 +1,12 @@
 from matplotlib import pyplot as plt
 import numpy as np
-from simulations.load_simulation import LoadSimulator
+from models.external_load_model import LoadModel
 from utils.simulation_result import SimulationResult
-from simulations.engine_simulation import EngineSimulator
-from simulations.primary_pulley import PrimaryPulley
-from simulations.secondary_pulley import SecondaryPulley
-from simulations.belt_simulator import BeltSimulator
-from simulations.cvt_shift import CvtShift
+from models.engine_model import EngineModel
+from models.primary_pulley_model import PrimaryPulleyModel
+from models.secondary_pulley_model import SecondaryPulleyModel
+from models.belt_model import BeltModel
+from models.cvt_shift_model import CvtShiftModel
 from constants.engine_specs import torque_curve
 from constants.car_specs import (
     ENGINE_INERTIA,
@@ -27,27 +27,27 @@ from utils.theoretical_models import TheoreticalModels as tm
 args = get_arguments()
 
 # Initialize simulators
-engine_simulator = EngineSimulator(torque_curve=torque_curve, inertia=ENGINE_INERTIA)
-load_simulator = LoadSimulator(
+engine_simulator = EngineModel(torque_curve=torque_curve, inertia=ENGINE_INERTIA)
+load_simulator = LoadModel(
     car_mass=args.vehicle_weight + args.driver_weight,
     incline_angle=deg_to_rad(args.angle_of_incline),
 )
-primary_simulator = PrimaryPulley(
+primary_simulator = PrimaryPulleyModel(
     spring_coeff_comp=args.primary_spring_rate,
     initial_compression=args.primary_spring_pretension,
     flyweight_mass=args.flyweight_mass,
     ramp_type=args.primary_ramp_geometry,
 )
-secondary_simulator = SecondaryPulley(
+secondary_simulator = SecondaryPulleyModel(
     spring_coeff_tors=args.secondary_torsion_spring_rate,
     spring_coeff_comp=args.secondary_compression_spring_rate,
     initial_rotation=deg_to_rad(args.secondary_rotational_spring_pretension),
     initial_compression=args.secondary_linear_spring_pretension,
     ramp_type=args.secondary_helix_geometry,
 )
-primary_belt = BeltSimulator(primary=True)
-secondary_belt = BeltSimulator(primary=False)
-cvt_shift = CvtShift(
+primary_belt = BeltModel(primary=True)
+secondary_belt = BeltModel(primary=False)
+cvt_shift = CvtShiftModel(
     engine_simulator,
     primary_simulator,
     secondary_simulator,
