@@ -1,16 +1,16 @@
-import styles from './ParameterInformation.module.scss';
+import styles from './ParameterDescription.module.scss';
 import cx from 'classnames';
 
-interface ParameterInformationProps {
+interface ParameterDescriptionProps {
     name: string
     description: string
     imgSrc: string
     className?: string
 }
 
-export const ParameterInformation = ({ name, description, imgSrc, className }: ParameterInformationProps) => {
+export const ParameterDescription = ({ name, description, imgSrc, className }: ParameterDescriptionProps) => {
     return (
-        <div className={cx(styles.parameterInformation, className)}>
+        <div className={cx(styles.parameterDescription, className)}>
             <div className={styles.textContainer}>
                 <h2 className={styles.name}>{name}</h2>
                 <p className={styles.description}>{description}</p>

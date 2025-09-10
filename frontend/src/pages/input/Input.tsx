@@ -6,6 +6,8 @@ import ArrowDownCircle from '@assets/icons/arrow_down_circle.svg?react';
 import { useNavigate } from 'react-router-dom';
 import { ParameterAccordion } from '@components/parameterAccordian/ParameterAccordion';
 import { InputField } from '@components/inputField/InputField';
+import { ParameterDescription } from '@components/parameterDescription/ParameterDescription';
+import baja_logo from '@assets/baja_logo.png';
 
 export const Input = () => {
     const navigate = useNavigate();
@@ -43,7 +45,9 @@ export const Input = () => {
                         <InputField label='Total Distance (m)' value='0' onChange={handleInputChange} className={styles.baseInputField}/>
                     </ParameterAccordion>
                 </div>
-                <div className={styles.parameterInformationContainer}></div>
+                <div className={styles.parameterInformationContainer}>
+                    <ParameterDescription name={'Parameter Name'} description={'This is a description of the parameter. It provides useful information to help the user understand what the parameter does and how it affects the simulation.'} imgSrc={baja_logo} />
+                </div>
                 <div className={styles.inputButtonsContainer}>
                     <MainButton
                         text='Expand All'
