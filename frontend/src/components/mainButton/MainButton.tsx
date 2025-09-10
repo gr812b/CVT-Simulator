@@ -9,7 +9,7 @@ interface MainButtonProps {
     iconSide?: 'left' | 'right'
 }
 
-const MainButton = ({ onClick, text, icon: Icon, iconSide = 'left'}: MainButtonProps) => {
+export const MainButton = ({ onClick, text, icon: Icon, iconSide = 'left'}: MainButtonProps) => {
     const renderIcon = () => <Icon className={styles.icon} />
     return (
         <button
@@ -22,5 +22,3 @@ const MainButton = ({ onClick, text, icon: Icon, iconSide = 'left'}: MainButtonP
         </button>
     )
 }
-
-export default MainButton;

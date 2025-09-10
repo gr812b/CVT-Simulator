@@ -1,0 +1,70 @@
+@use '@styles/_fonts';
+@use '@styles/_colors';
+@use 'sass:map';
+
+.accordion {
+    display: flex;
+    flex-direction: column;
+    height: fit-content;
+    gap: 1.25rem;
+    color: var(--primary);
+    transition: gap 0s;
+
+    .header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        min-height: 6rem;
+        color: inherit;
+        border-bottom: 0.313rem solid currentColor;
+        cursor: pointer;
+        overflow: hidden;
+
+        .title {
+            @include fonts.title-medium;
+            color: inherit;
+            white-space: nowrap;
+        }
+
+        .iconWrapper {
+            height: fit-content;
+            width: fit-content;
+            color: inherit;
+
+            .icon {
+                width: 4.5rem;
+                height: 4.5rem;
+                color: inherit;
+                transition: 0.3s ease-in-out;
+            }
+
+        }
+
+        .rotateRight {
+            transform: rotate(-90deg);
+        }
+    }
+
+    .children {
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        width: fit-content;
+        color: inherit;
+        overflow: hidden;
+        transition: height 0.3s ease-in-out;
+        gap: 1.25rem;
+    }
+
+}
+
+    .hideChildren {
+        gap: 0;
+        transition: gap 0s 0.3s;
+
+        .children {
+            height: 0;
+        }
+
+    }

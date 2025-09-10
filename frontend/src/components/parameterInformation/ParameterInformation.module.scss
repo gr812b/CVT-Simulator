@@ -1,0 +1,52 @@
+@use '@styles/_fonts';
+@use '@styles/_colors';
+@use 'sass:map';
+
+.parameterInformation {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 2rem;
+    color: var(--primary);
+    height: 100%;
+    width: 100%;
+    max-width: 100%;
+    max-height: 100%;
+
+    .textContainer {
+        display: flex;
+        flex-direction: column;
+        gap: 2rem;
+
+        .name {
+            min-height: 6rem;
+            color: inherit;
+            border-bottom: 0.313rem solid currentColor;
+            @include fonts.title-medium;
+            width: 100%;
+            white-space: nowrap;
+        }
+
+        .description {
+            color: inherit;
+            @include fonts.text-paragraph;
+        }
+    }
+
+
+    .imageContainer {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        height: 100%;
+        width: 100%;
+
+        .image {
+            max-width: 100%;
+            max-height: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+    }
+}
