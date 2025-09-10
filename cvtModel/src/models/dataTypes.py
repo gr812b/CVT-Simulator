@@ -56,8 +56,8 @@ class BeltCentrifugalForceBreakdown:
 @dataclass
 class RadialPulleyForceBreakdown:
     pulleyForce: Union[PrimaryForceBreakdown, SecondaryForceBreakdown]
-    radialPulleyForce: float # Radial component
     beltCentrifugalForce: BeltCentrifugalForceBreakdown
+    radialPulleyForce: float # Radial component
     net: float
 
 ## Engine

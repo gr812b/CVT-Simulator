@@ -14,7 +14,7 @@ class CarModel:
         self.load_model = load_model
         self.engine_model = engine_model
 
-    def calculate_acceleration(self, velocity: float, angular_velocity: float):
+    def get_breakdown(self, velocity: float, angular_velocity: float):
         engineForces = self.engine_model.get_breakdown(angular_velocity)
         load_force = self.load_model.get_breakdown(velocity)
 

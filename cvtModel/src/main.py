@@ -1,3 +1,4 @@
+from models.radial_model import RadialPulleyModel
 from simulation_runner import SimulationRunner
 from models.external_load_model import LoadModel
 from utils.simulation_result import SimulationResult
@@ -37,12 +38,20 @@ secondary_model = SecondaryPulleyModel(
 )
 primary_belt_model = BeltModel(primary=True)
 secondary_belt_model = BeltModel(primary=False)
+primary_radial_model = RadialPulleyModel(
+    primary = True,
+    pulley_model = primary_model,
+    belt_model = primary_belt_model,
+)
+secondary_radial_model = RadialPulleyModel(
+    primary = False,
+    pulley_model = secondary_model,
+    belt_model = secondary_belt_model,
+)
 cvt_shift = CvtShiftModel(
     engine_model,
-    primary_model,
-    secondary_model,
-    primary_belt_model,
-    secondary_belt_model,
+    primary_radial_model,
+    secondary_radial_model,
 )
 
 # Run multi-phase simulation

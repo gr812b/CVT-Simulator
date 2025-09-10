@@ -1,3 +1,4 @@
+from models.radial_model import RadialPulleyModel
 from utils.system_state import SystemState
 from utils.theoretical_models import TheoreticalModels as tm
 from models.engine_model import EngineModel
@@ -11,16 +12,12 @@ class CvtShiftModel:
     def __init__(
         self,
         engine_model: EngineModel,
-        primary_model: PrimaryPulleyModel,
-        secondary_model: SecondaryPulleyModel,
-        primary_belt_model: BeltModel,
-        secondary_belt_model: BeltModel,
+        primary_radial_model: RadialPulleyModel,
+        secondary_radial_model: RadialPulleyModel,
     ):
         self.engine_model = engine_model
-        self.primary_model = primary_model
-        self.secondary_model = secondary_model
-        self.primary_belt_model = primary_belt_model
-        self.secondary_belt_model = secondary_belt_model
+        self.primary_radial_model = primary_radial_model
+        self.secondary_radial_model = secondary_radial_model
         self.cvt_moving_mass = 0.5  # TODO: Use constants
 
     def calculate_shift_acceleration(self, state: SystemState) -> float:
@@ -45,22 +42,14 @@ class CvtShiftModel:
         engine_torque = self.engine_model.get_torque(engine_velocity)
 
         # Calculate forces using the provided simulators
-        primary_force = self.primary_model.calculate_net_force(
+        primary_force = self.primary_radial_model.get_breakdown(
             state.shift_distance, engine_velocity
-        )
-        secondary_force = self.secondary_model.calculate_net_force(
+        ).net
+        secondary_force = self.secondary_model.get_breakdown(
             engine_torque * cvt_ratio, state.shift_distance
-        )
+        ).net
 
-        # Calculate wrap angles and convert to radial forces
-        primary_wrap_angle = tm.primary_wrap_angle(state.shift_distance)
-        secondary_wrap_angle = tm.secondary_wrap_angle(state.shift_distance)
-        primary_radial = self.primary_belt_model.calculate_radial_force(
-            engine_velocity, state.shift_distance, primary_wrap_angle, primary_force
-        )
-        secondary_radial = self.secondary_belt_model.calculate_radial_force(
-            engine_velocity, state.shift_distance, secondary_wrap_angle, secondary_force
-        )
+
 
         return {
             "primary_force": primary_force,
