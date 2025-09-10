@@ -1,4 +1,4 @@
-from utils.ramps.ramp_segment import RampSegment
+from models.ramps.ramp_segment import RampSegment
 from typing import List
 
 

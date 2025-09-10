@@ -2,7 +2,7 @@ import math
 import numpy as np
 from utils.conversions import inch_to_meter
 from utils.theoretical_models import TheoreticalModels as tm
-from utils.ramps import (
+from models.ramps import (
     CircularSegment,
     CubicSpiralZeroK1,
     LinearSegment,

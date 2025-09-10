@@ -1,12 +1,12 @@
 import math
 from constants.car_specs import INITIAL_FLYWEIGHT_RADIUS
 from utils.conversions import meter_to_inch
-from utils.ramps.circular_segment import CircularSegment
-from utils.ramps.cubic_spiral_zero_k1 import CubicSpiralZeroK1
-from utils.ramps.linear_segment import LinearSegment
-from utils.ramps.piecewise_ramp import PiecewiseRamp
-from utils.ramps.pro_defined_segment import ProDefinedSegment
-from utils.ramps.ramp_utils import save_ramp_to_dxf, visualize_ramps
+from models.ramps.circular_segment import CircularSegment
+from models.ramps.cubic_spiral_zero_k1 import CubicSpiralZeroK1
+from models.ramps.linear_segment import LinearSegment
+from models.ramps.piecewise_ramp import PiecewiseRamp
+from models.ramps.pro_defined_segment import ProDefinedSegment
+from cvtModel.src.utils.ramp_utils import save_ramp_to_dxf, visualize_ramps
 
 ## TODO: Remove this file once we extract some of the useful ramps from it
 

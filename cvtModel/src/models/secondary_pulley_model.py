@@ -5,7 +5,7 @@ from constants.car_specs import (
     MAX_SHIFT,
     HELIX_RADIUS,
 )
-from utils.ramps import LinearSegment, PiecewiseRamp
+from models.ramps import LinearSegment, PiecewiseRamp
 
 
 class SecondaryPulleyModel:
