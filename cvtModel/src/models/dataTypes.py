@@ -14,20 +14,12 @@ class flyweightForceBreakdown:
 
 @dataclass
 class springCompForceBreakdown:
-    initial_compression: float
-    additional_compression: float
-
-    initial_force: float # initial, coeff
-    additional_force: float # additional, coeff
+    compression: float
     net: float
 
 @dataclass
 class SpringTorsForceBreakdown:
-    initial_rotation: float # TODO: Remove?
-    additional_rotation: float
-
-    initial_force: float
-    additional_force: float
+    rotation: float
     net: float
 
 @dataclass
