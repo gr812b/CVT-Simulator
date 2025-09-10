@@ -68,6 +68,13 @@ class RadialPulleyForceBreakdown:
     beltCentrifugalForce: BeltCentrifugalForceBreakdown
     net: float
 
+## Engine
+@dataclass
+class EngineForceBreakdown:
+    torque: float
+    power: float
+    angular_velocity: float
+
 ## External load
 @dataclass
 class ExternalLoadForceBreakdown:
@@ -75,10 +82,9 @@ class ExternalLoadForceBreakdown:
     drag_force: float
     net: float
 
-## Engine
+## Car
 @dataclass
-class EngineForceBreakdown:
-    torque: float
-    power: float
-    angular_acceleration: float
-
+class CarForceBreakdown:
+    external_forces: ExternalLoadForceBreakdown
+    engine_forces: EngineForceBreakdown
+    acceleration: float

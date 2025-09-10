@@ -7,9 +7,7 @@ from constants.car_specs import (
     GEARBOX_RATIO,
 )
 from utils.theoretical_models import TheoreticalModels as tm
-
-# TODO: Consider direction, drag should never be applied in the opposite direction of velocity
-
+from models.dataTypes import ExternalLoadForceBreakdown
 
 class LoadModel:
     def __init__(
@@ -29,19 +27,23 @@ class LoadModel:
         self.wheel_radius = WHEEL_RADIUS
         self.gearbox_ratio = GEARBOX_RATIO
 
-    # TODO: Separate car acceleration from load here
-    def calculate_acceleration(self, velocity: float, power: float) -> float:
-        """Calculate the acceleration of the car."""
-        engine = power / velocity
-        total_load_force = self.calculate_total_load_force(velocity)
-        accel = (engine - total_load_force) / self.car_mass
-        return accel
+    def get_breakdown(self, velocity: float) -> ExternalLoadForceBreakdown:
+        """Calculate the total load torque on the wheels due to drag and incline."""
+        incline_force = self._calculate_incline_force()
+        drag_force = self._calculate_drag_force(velocity)
+        total_load_force = incline_force + drag_force
 
-    def calculate_incline_force(self) -> float:
+        return ExternalLoadForceBreakdown(
+            incline_force=incline_force,
+            drag_force=drag_force,
+            net=total_load_force
+        )
+
+    def _calculate_incline_force(self) -> float:
         """Calculate the incline force due to gravity."""
         return self.car_mass * self.g * math.sin(self.incline_angle)
 
-    def calculate_drag_force(self, velocity: float) -> float:
+    def _calculate_drag_force(self, velocity: float) -> float:
         """Calculate the drag force on the car."""
         drag_force = tm.air_resistance(
             self.air_density, velocity, self.frontal_area, self.drag_coefficient
@@ -52,12 +54,6 @@ class LoadModel:
 
         return drag_force
 
-    def calculate_total_load_force(self, velocity: float) -> float:
-        """Calculate the total load torque on the wheels due to drag and incline."""
-        incline_force = self.calculate_incline_force()
-        drag_force = self.calculate_drag_force(velocity)
-        total_load_force = incline_force + drag_force
-        return total_load_force
 
     # TODO: Why does this exist
     def calculate_gearbox_load(self, velocity: float) -> float:
