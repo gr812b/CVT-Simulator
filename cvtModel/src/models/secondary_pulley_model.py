@@ -8,7 +8,7 @@ from constants.car_specs import (
 from utils.ramps import LinearSegment, PiecewiseRamp
 
 
-class SecondaryPulley:
+class SecondaryPulleyModel:
     def __init__(
         self,
         spring_coeff_tors: float,  # Nm/rad

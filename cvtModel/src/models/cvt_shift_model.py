@@ -7,7 +7,7 @@ from simulations.belt_simulator import BeltSimulator
 from constants.car_specs import GEARBOX_RATIO, WHEEL_RADIUS
 
 
-class CvtShift:
+class CvtShiftModel:
     def __init__(
         self,
         engine_simulator: EngineSimulator,

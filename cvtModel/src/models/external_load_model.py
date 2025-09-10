@@ -11,7 +11,7 @@ from utils.theoretical_models import TheoreticalModels as tm
 # TODO: Consider direction, drag should never be applied in the opposite direction of velocity
 
 
-class LoadSimulator:
+class LoadModel:
     def __init__(
         self,
         car_mass: float,  # kg

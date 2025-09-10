@@ -1,7 +1,7 @@
 from typing import Callable
 
 
-class EngineSimulator:
+class EngineModel:
     def __init__(
         self,
         torque_curve: Callable[[float], float],  # rad/s -> Nm

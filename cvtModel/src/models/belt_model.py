@@ -9,7 +9,7 @@ from constants.constants import (
 )
 
 
-class BeltSimulator:
+class BeltModel:
     def __init__(
         self,
         primary: bool,
