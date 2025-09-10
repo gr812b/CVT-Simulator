@@ -11,10 +11,10 @@ export default defineConfig({
     alias: {
       '@assets': resolve(root, 'assets'),
       '@components': resolve(root, 'components'),
-      '@lib': resolve(root, 'lib'),
       '@styles': resolve(root, 'styles'),
       '@types': resolve(root, 'types/index.ts'),
       '@pages': resolve(root, 'pages'),
+      '@contexts': resolve(root, 'contexts'),
     },
   },
   css: {

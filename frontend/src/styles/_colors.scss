@@ -1,7 +1,18 @@
+
 :root {
+    // Default theme (Dark)
+    --text-color: #ffffff;
+    --primary: #ffffff; // TODO: Update the primary colour and use text-color instead
+    --secondary: #222222;
+    --accent: #bb0808;
+
+    // Default colours
+    --confirm: #009951;
+    --reject: #c00f0c;
+}
+
+[data-theme="light"] {
     --primary: #ffffff;
     --secondary: #222222;
     --accent: #bb0808;
-    --confirm: #009951;
-    --reject: #c00f0c;
 }
