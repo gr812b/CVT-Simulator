@@ -1,6 +1,7 @@
+from typing import Union
 import numpy as np
 import math
-from models.dataTypes import BeltCentrifugalForceBreakdown, RadialPulleyForceBreakdown
+from models.dataTypes import BeltCentrifugalForceBreakdown, PrimaryForceBreakdown, RadialPulleyForceBreakdown, SecondaryForceBreakdown
 from utils.theoretical_models import TheoreticalModels as tm
 from constants.car_specs import SHEAVE_ANGLE, BELT_CROSS_SECTIONAL_AREA, BELT_HEIGHT
 from constants.constants import (
@@ -20,7 +21,11 @@ class BeltModel:
         self.μ_kinetic = RUBBER_ALUMINUM_KINETIC_FRICTION
 
     def calculate_radial_force(
-        self, ω: float, shift_distance: float, wrap_angle: float, clamping_force: float
+        self, 
+        ω: float, 
+        shift_distance: float, 
+        wrap_angle: float, 
+        clamping_force: Union[PrimaryForceBreakdown, SecondaryForceBreakdown]
     ) -> RadialPulleyForceBreakdown:
         centrifugal_force_breakdown = self.calculate_centrifugal_force(
             ω, shift_distance, wrap_angle
@@ -70,7 +75,7 @@ class BeltModel:
         # factor comes from the integral based on the force distribution
         return (centrifugal_force + radial_force) * 2 * np.sin(wrap_angle / 2)
     
-    
+
 
     ## TODO: UNUSED METHODS
     def calculate_slack_tension(
