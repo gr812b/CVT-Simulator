@@ -1,4 +1,5 @@
 import numpy as np
+from models.dataTypes import HelixForceBreakdown, SecondaryForceBreakdown, SpringTorsForceBreakdown, springCompForceBreakdown
 from utils.theoretical_models import TheoreticalModels as tm
 from constants.car_specs import (
     BELT_HEIGHT,
@@ -36,20 +37,22 @@ class SecondaryPulleyModel:
                 LinearSegment(x_start=MAX_SHIFT / 2, x_end=MAX_SHIFT, slope=-0.25)
             )
 
-    # TODO: Determine relationship between shift distance and rotation
-    def calculate_net_force(self, torque: float, shift_distance: float) -> float:
-        spring_comp_force = self.calculate_spring_comp_force(shift_distance)
-        spring_tors_torque = self.calculate_spring_tors_torque(shift_distance)
-        helix_force = self.calculate_helix_force(
-            torque, spring_tors_torque, shift_distance
+    def get_breakdown(self, torque: float, shift_distance: float) -> SecondaryForceBreakdown:
+        spring_comp_force_breakdown = self._calculate_spring_comp_force(shift_distance)
+        helix_force_breakdown = self._calculate_helix_force(
+            torque, shift_distance
+        )
+        net = helix_force_breakdown.net + spring_comp_force_breakdown.net
+        return SecondaryForceBreakdown(
+            spring_comp_force_breakdown,
+            helix_force_breakdown,
+            net,
         )
 
-        # print(f"Compression force: {spring_comp_force}, Torsion Force: {spring_tors_torque / self.helix_radius}, Helix Force: {helix_force}, Torque: {torque}")
-        return helix_force + spring_comp_force
-
-    def calculate_helix_force(
-        self, torque: float, spring_torque: float, shift_distance: float
-    ) -> float:
+    def _calculate_helix_force(
+        self, torque: float, shift_distance: float
+    ) -> HelixForceBreakdown:
+        spring_torque_breakdown = self._calculate_spring_tors_torque(shift_distance)
         secondary_radius = tm.outer_sec_radius(shift_distance) - BELT_HEIGHT / 2
 
         if shift_distance < 0:  # TODO: remove
@@ -59,24 +62,41 @@ class SecondaryPulleyModel:
 
         angle = np.arctan(self.ramp.slope(shift_distance))
 
-        return (torque + spring_torque) / (2 * np.tan(angle) * secondary_radius)
+        net = (torque + spring_torque_breakdown.net) / (2 * np.tan(angle) * secondary_radius)
 
-    def calculate_spring_comp_force(self, compression: float) -> float:
-        return tm.hookes_law_comp(
-            self.spring_coeff_comp, self.initial_compression + compression
+        return HelixForceBreakdown(
+            torque,
+            spring_torque_breakdown,
+            angle,
+            secondary_radius,
+            (2 * np.tan(angle) * secondary_radius),
+            net,
         )
 
-    def calculate_rotation(self, shift_distance: float) -> float:
+    def _calculate_spring_comp_force(self, compression: float) -> springCompForceBreakdown:
+        net = tm.hookes_law_comp(
+            self.spring_coeff_comp, self.initial_compression + compression
+        )
+        return springCompForceBreakdown(
+            compression,
+            net,
+        )
+
+    # TODO: Determine relationship between shift distance and rotation
+    def _calculate_rotation(self, shift_distance: float) -> float:
         return shift_distance * self.ramp.slope(shift_distance) * 2 / HELIX_RADIUS
 
-    def calculate_spring_tors_torque(self, shift_distance: float) -> float:
+    def _calculate_spring_tors_torque(self, shift_distance: float) -> SpringTorsForceBreakdown:
 
         if shift_distance < 0:  # TODO: remove
             shift_distance = 0
         if shift_distance > MAX_SHIFT:
             shift_distance = MAX_SHIFT
 
-        rotation = self.initial_rotation + self.calculate_rotation(shift_distance)
-        return tm.hookes_law_tors(self.spring_coeff_tors, rotation)
-
+        rotation = self.initial_rotation + self._calculate_rotation(shift_distance)
+        net = tm.hookes_law_tors(self.spring_coeff_tors, rotation)
+        return SpringTorsForceBreakdown(
+            rotation,
+            net,
+        )
 
