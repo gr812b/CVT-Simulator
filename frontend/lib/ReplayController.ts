@@ -43,6 +43,10 @@ export class ModelReplayController {
   // This allows users to subscribe to events
   on(eventHandler: (event: ReplayEvent) => void) {
     this.listeners.push(eventHandler);
+    // Return a cleanup function to unsubscribe
+    return () => {
+      this.off(eventHandler);
+    };
   }
 
   // This allows users to unsubscribe from events
