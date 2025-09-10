@@ -1,6 +1,8 @@
 import { MainButton } from '@components/mainButton/MainButton';
 import styles from './Input.module.scss';
 import ArrowLeft from '@assets/icons/arrow_left.svg?react';
+import ArrowUpCircle from '@assets/icons/arrow_up_circle.svg?react';
+import ArrowDownCircle from '@assets/icons/arrow_down_circle.svg?react';
 import { useNavigate } from 'react-router-dom';
 import { ParameterAccordion } from '@components/parameterAccordian/ParameterAccordion';
 import { InputField } from '@components/inputField/InputField';
@@ -43,6 +45,19 @@ export const Input = () => {
                 </div>
                 <div className={styles.parameterInformationContainer}></div>
                 <div className={styles.inputButtonsContainer}>
+                    <MainButton
+                        text='Expand All'
+                        icon={ArrowDownCircle}
+                        className={styles.expandButton}
+                        onClick={() => {}}
+                    />
+                    <MainButton
+                        text='Collapse All'
+                        icon={ArrowUpCircle}
+                        iconSide='right'
+                        className={styles.collapseButton}
+                        onClick={() => {}}
+                    />
                 </div>
                 <div className={styles.nextButtonContainer}></div>
             </div>
