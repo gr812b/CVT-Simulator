@@ -9,7 +9,7 @@ const ParameterContext = createContext<{
 } | undefined>(undefined);
 
 const parameterReducer = (state: { 
-  title: string; sidebarOpen: boolean; layout: string; live: boolean; sources: string[]
+  weight: number,
 }, action: ParameterAction) => {
   switch (action.type) {
     case 'SET_WEIGHT':
