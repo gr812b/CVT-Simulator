@@ -1,5 +1,6 @@
 import numpy as np
 import math
+from models.dataTypes import BeltCentrifugalForceBreakdown, RadialPulleyForceBreakdown
 from utils.theoretical_models import TheoreticalModels as tm
 from constants.car_specs import SHEAVE_ANGLE, BELT_CROSS_SECTIONAL_AREA, BELT_HEIGHT
 from constants.constants import (
@@ -18,9 +19,27 @@ class BeltModel:
         self.μ_static = RUBBER_ALUMINUM_STATIC_FRICTION
         self.μ_kinetic = RUBBER_ALUMINUM_KINETIC_FRICTION
 
+    def calculate_radial_force(
+        self, ω: float, shift_distance: float, wrap_angle: float, clamping_force: float
+    ) -> RadialPulleyForceBreakdown:
+        centrifugal_force_breakdown = self.calculate_centrifugal_force(
+            ω, shift_distance, wrap_angle
+        )
+        radial_force = self.radial_force_from_clamping(clamping_force)
+        # print(f"Centrifugal force: {centrifugal_force}, Radial force: {radial_force}, yea: {np.sin(wrap_angle / 2)}")
+        net = self.calculate_net_radial_force(
+            centrifugal_force_breakdown.net, radial_force, wrap_angle
+        )
+        return RadialPulleyForceBreakdown(
+            clamping_force,
+            radial_force,
+            centrifugal_force_breakdown,
+            net,
+        )
+
     def calculate_centrifugal_force(
         self, ω: float, shift_distance: float, wrap_angle: float
-    ) -> float:
+    ) -> BeltCentrifugalForceBreakdown:
         if self.primary:
             radius = tm.outer_prim_radius(shift_distance) - BELT_HEIGHT / 2
         else:
@@ -30,8 +49,14 @@ class BeltModel:
         mass = RUBBER_DENSITY * BELT_CROSS_SECTIONAL_AREA * length
 
         # print(f"Primary: {self.primary}, Length: {length}, Wrap angle: {wrap_angle}, Radius: {radius}, Mass: {mass}, Total Mass:")
-
-        return tm.centrifugal_force(mass, ω, radius)
+        net = tm.centrifugal_force(mass, ω, radius)
+        return BeltCentrifugalForceBreakdown(
+            mass,
+            radius,
+            wrap_angle,
+            ω,
+            net,
+        )
 
     def radial_force_from_clamping(self, clamping_force: float) -> float:
         return 2 * clamping_force * np.tan(SHEAVE_ANGLE / 2)
@@ -44,19 +69,10 @@ class BeltModel:
     ) -> float:
         # factor comes from the integral based on the force distribution
         return (centrifugal_force + radial_force) * 2 * np.sin(wrap_angle / 2)
+    
+    
 
-    def calculate_radial_force(
-        self, ω: float, shift_distance: float, wrap_angle: float, clamping_force: float
-    ) -> float:
-        centrifugal_force = self.calculate_centrifugal_force(
-            ω, shift_distance, wrap_angle
-        )
-        radial_force = self.radial_force_from_clamping(clamping_force)
-        # print(f"Centrifugal force: {centrifugal_force}, Radial force: {radial_force}, yea: {np.sin(wrap_angle / 2)}")
-        return self.calculate_net_radial_force(
-            centrifugal_force, radial_force, wrap_angle
-        )
-
+    ## TODO: UNUSED METHODS
     def calculate_slack_tension(
         self,
         radial_force: float,
