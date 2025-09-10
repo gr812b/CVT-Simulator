@@ -36,6 +36,17 @@ class SecondaryPulleyModel:
                 LinearSegment(x_start=MAX_SHIFT / 2, x_end=MAX_SHIFT, slope=-0.25)
             )
 
+    # TODO: Determine relationship between shift distance and rotation
+    def calculate_net_force(self, torque: float, shift_distance: float) -> float:
+        spring_comp_force = self.calculate_spring_comp_force(shift_distance)
+        spring_tors_torque = self.calculate_spring_tors_torque(shift_distance)
+        helix_force = self.calculate_helix_force(
+            torque, spring_tors_torque, shift_distance
+        )
+
+        # print(f"Compression force: {spring_comp_force}, Torsion Force: {spring_tors_torque / self.helix_radius}, Helix Force: {helix_force}, Torque: {torque}")
+        return helix_force + spring_comp_force
+
     def calculate_helix_force(
         self, torque: float, spring_torque: float, shift_distance: float
     ) -> float:
@@ -68,13 +79,4 @@ class SecondaryPulleyModel:
         rotation = self.initial_rotation + self.calculate_rotation(shift_distance)
         return tm.hookes_law_tors(self.spring_coeff_tors, rotation)
 
-    # TODO: Determine relationship between shift distance and rotation
-    def calculate_net_force(self, torque: float, shift_distance: float) -> float:
-        spring_comp_force = self.calculate_spring_comp_force(shift_distance)
-        spring_tors_torque = self.calculate_spring_tors_torque(shift_distance)
-        helix_force = self.calculate_helix_force(
-            torque, spring_tors_torque, shift_distance
-        )
 
-        # print(f"Compression force: {spring_comp_force}, Torsion Force: {spring_tors_torque / self.helix_radius}, Helix Force: {helix_force}, Torque: {torque}")
-        return helix_force + spring_comp_force

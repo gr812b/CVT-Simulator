@@ -11,6 +11,7 @@ from models.ramps import (
 from constants.car_specs import MAX_SHIFT, INITIAL_FLYWEIGHT_RADIUS
 
 
+
 class PrimaryPulleyModel:
     def __init__(
         self,

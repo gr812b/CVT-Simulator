@@ -23,6 +23,16 @@ class CvtShiftModel:
         self.secondary_belt_model = secondary_belt_model
         self.cvt_moving_mass = 0.5  # TODO: Use constants
 
+    def calculate_shift_acceleration(self, state: SystemState) -> float:
+        pulley_forces = self.get_pulley_forces(state)
+        shift_velocity = state.shift_velocity
+
+        sum_of_radial_forces = (
+            pulley_forces["primary_radial"] - pulley_forces["secondary_radial"]
+        )
+        friction = self.frictional_force(sum_of_radial_forces, shift_velocity)
+        return (sum_of_radial_forces + friction) / self.cvt_moving_mass
+
     def get_pulley_forces(self, state: SystemState):
         # Compute CVT ratio and engine velocity
         cvt_ratio = tm.current_cvt_ratio(state.shift_distance)
@@ -68,12 +78,4 @@ class CvtShiftModel:
             return -friction_magnitude
         return friction_magnitude
 
-    def calculate_shift_acceleration(self, state: SystemState) -> float:
-        pulley_forces = self.get_pulley_forces(state)
-        shift_velocity = state.shift_velocity
-
-        sum_of_radial_forces = (
-            pulley_forces["primary_radial"] - pulley_forces["secondary_radial"]
-        )
-        friction = self.frictional_force(sum_of_radial_forces, shift_velocity)
-        return (sum_of_radial_forces + friction) / self.cvt_moving_mass
+    

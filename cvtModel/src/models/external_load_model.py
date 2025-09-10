@@ -29,6 +29,14 @@ class LoadModel:
         self.wheel_radius = WHEEL_RADIUS
         self.gearbox_ratio = GEARBOX_RATIO
 
+    # TODO: Separate car acceleration from load here
+    def calculate_acceleration(self, velocity: float, power: float) -> float:
+        """Calculate the acceleration of the car."""
+        engine = power / velocity
+        total_load_force = self.calculate_total_load_force(velocity)
+        accel = (engine - total_load_force) / self.car_mass
+        return accel
+
     def calculate_incline_force(self) -> float:
         """Calculate the incline force due to gravity."""
         return self.car_mass * self.g * math.sin(self.incline_angle)
@@ -51,6 +59,7 @@ class LoadModel:
         total_load_force = incline_force + drag_force
         return total_load_force
 
+    # TODO: Why does this exist
     def calculate_gearbox_load(self, velocity: float) -> float:
         """Calculate the torque at the gearbox"""
         return (
@@ -59,10 +68,4 @@ class LoadModel:
             / self.gearbox_ratio
         )
 
-    def calculate_acceleration(self, velocity: float, power: float) -> float:
-        """Calculate the acceleration of the car."""
-        engine = power / (velocity * self.car_mass)
-        air_resistance = self.calculate_drag_force(velocity) / self.car_mass
-        gravity = self.g * math.sin(self.incline_angle)
-        accel = engine - air_resistance - gravity
-        return accel
+
