@@ -7,14 +7,15 @@ interface MainButtonProps {
     text?: string
     icon: ComponentType<SVGAttributes<SVGSVGElement>>
     iconSide?: 'left' | 'right'
+    className?: string
 }
 
-export const MainButton = ({ onClick, text, icon: Icon, iconSide = 'left'}: MainButtonProps) => {
+export const MainButton = ({ onClick, text, icon: Icon, iconSide = 'left', className }: MainButtonProps) => {
     const renderIcon = () => <Icon className={styles.icon} />
     return (
         <button
             onClick={onClick}
-            className={cx(styles.mainButton, { [styles.noText]: !text })}
+            className={cx(styles.mainButton, { [styles.noText]: !text }, className)}
         >
             {iconSide === 'left' && renderIcon()}
             {text && <span className={styles.text}>{text}</span>}
