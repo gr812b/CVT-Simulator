@@ -29,6 +29,10 @@
             padding-right: 1rem;
             overflow: auto;
             scrollbar-gutter: stable;
+
+            .baseInputField {
+                margin-right: 3rem;
+            }
         }
 
         .parameterInformationContainer {

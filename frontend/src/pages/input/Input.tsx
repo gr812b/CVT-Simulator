@@ -26,21 +26,21 @@ export const Input = () => {
             <div className={styles.inputGrid}>
                 <div className={styles.parameterInputContainer}>
                     <ParameterAccordion title='Primary Pulley'>
-                        <InputField label='Spring Pretension (m)' value='0' onChange={handleInputChange}/>
-                        <InputField label='Spring Rate (N/m)' value='0' onChange={handleInputChange}/>
+                        <InputField label='Spring Pretension (m)' value='0' onChange={handleInputChange} className={styles.baseInputField}/>
+                        <InputField label='Spring Rate (N/m)' value='0' onChange={handleInputChange} className={styles.baseInputField}/>
                     </ParameterAccordion>
                     <ParameterAccordion title='Secondary Pulley'>
-                        <InputField label='Rotational Spring Pretension (deg)' value='0' onChange={handleInputChange}/>
-                        <InputField label='Rotational Spring Rate (Nm/deg)' value='0' onChange={handleInputChange}/>
-                        <InputField label='Linear Spring Pretension (m)' value='0' onChange={handleInputChange}/>
-                        <InputField label='Linear Spring Rate (N/m)' value='0' onChange={handleInputChange}/>
+                        <InputField label='Rotational Spring Pretension (deg)' value='0' onChange={handleInputChange} className={styles.baseInputField}/>
+                        <InputField label='Rotational Spring Rate (Nm/deg)' value='0' onChange={handleInputChange} className={styles.baseInputField}/>
+                        <InputField label='Linear Spring Pretension (m)' value='0' onChange={handleInputChange} className={styles.baseInputField}/>
+                        <InputField label='Linear Spring Rate (N/m)' value='0' onChange={handleInputChange} className={styles.baseInputField}/>
                     </ParameterAccordion>
                     <ParameterAccordion title='Environment'>
-                        <InputField label='Vehicle Weight (kg)' value='0' onChange={handleInputChange}/>
-                        <InputField label='Driver Weight (kg)' value='0' onChange={handleInputChange}/>
-                        <InputField label='Traction (%)' value='0' onChange={handleInputChange}/>
-                        <InputField label='Angle of Incline (deg)' value='0' onChange={handleInputChange}/>
-                        <InputField label='Total Distance (m)' value='0' onChange={handleInputChange}/>
+                        <InputField label='Vehicle Weight (kg)' value='0' onChange={handleInputChange} className={styles.baseInputField}/>
+                        <InputField label='Driver Weight (kg)' value='0' onChange={handleInputChange} className={styles.baseInputField}/>
+                        <InputField label='Traction (%)' value='0' onChange={handleInputChange} className={styles.baseInputField}/>
+                        <InputField label='Angle of Incline (deg)' value='0' onChange={handleInputChange} className={styles.baseInputField}/>
+                        <InputField label='Total Distance (m)' value='0' onChange={handleInputChange} className={styles.baseInputField}/>
                     </ParameterAccordion>
                 </div>
                 <div className={styles.parameterInformationContainer}></div>
