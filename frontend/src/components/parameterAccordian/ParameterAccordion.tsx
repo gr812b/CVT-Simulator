@@ -9,7 +9,7 @@ interface ParameterAccordionProps {
     children: React.ReactNode
 }
 
-const ParameterAccordion = ({ title, className, children }: ParameterAccordionProps) => {
+export const ParameterAccordion = ({ title, className, children }: ParameterAccordionProps) => {
     // Controls if the section is expanded or collapsed
     const [isExpanded, setIsExpanded] = useState(false);
 
@@ -36,5 +36,3 @@ const ParameterAccordion = ({ title, className, children }: ParameterAccordionPr
         </div>
     );
 }
-
-export default ParameterAccordion;

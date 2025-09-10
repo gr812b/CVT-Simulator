@@ -8,7 +8,7 @@ interface ParameterInformationProps {
     className?: string
 }
 
-const ParameterInformation = ({ name, description, imgSrc, className }: ParameterInformationProps) => {
+export const ParameterInformation = ({ name, description, imgSrc, className }: ParameterInformationProps) => {
     return (
         <div className={cx(styles.parameterInformation, className)}>
             <div className={styles.textContainer}>
@@ -21,5 +21,3 @@ const ParameterInformation = ({ name, description, imgSrc, className }: Paramete
         </div>
     );
 }
-
-export default ParameterInformation;
