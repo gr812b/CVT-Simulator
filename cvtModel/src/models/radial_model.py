@@ -20,9 +20,14 @@ class RadialPulleyModel:
         self.pulley_model = pulley_model
         self.belt_model = belt_model
 
-    # TODO: Handle different inputs based on prim or sec
-    def get_breakdown(self, shift_distance, angular_velocity):
-        pulley_breakdown = self.pulley_model.get_breakdown(shift_distance, angular_velocity)
+    def get_breakdown(self, shift_distance, *, angular_velocity=None, torque=None):
+        if self.primary:
+            assert angular_velocity is not None, "Primary requires angular_velocity"
+            pulley_breakdown = self.pulley_model.get_breakdown(shift_distance, angular_velocity)
+        else:
+            assert torque is not None, "Secondary requires torque"
+            pulley_breakdown = self.pulley_model.get_breakdown(shift_distance, torque)
+        
         belt_breakdown = self.belt_model.get_breakdown(angular_velocity, shift_distance)
 
         wrap_angle = self._get_wrap_angle(shift_distance)

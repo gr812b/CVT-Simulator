@@ -37,7 +37,7 @@ class SecondaryPulleyModel:
                 LinearSegment(x_start=MAX_SHIFT / 2, x_end=MAX_SHIFT, slope=-0.25)
             )
 
-    def get_breakdown(self, torque: float, shift_distance: float) -> SecondaryForceBreakdown:
+    def get_breakdown(self, shift_distance: float, torque: float) -> SecondaryForceBreakdown:
         spring_comp_force_breakdown = self._calculate_spring_comp_force(shift_distance)
         helix_force_breakdown = self._calculate_helix_force(
             torque, shift_distance

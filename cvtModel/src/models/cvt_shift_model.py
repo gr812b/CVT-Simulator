@@ -21,16 +21,18 @@ class CvtShiftModel:
         self.cvt_moving_mass = 0.5  # TODO: Use constants
 
     def calculate_shift_acceleration(self, state: SystemState) -> float:
-        pulley_forces = self.get_pulley_forces(state)
+        prim_breakdown, sec_breakdown = self.get_breakdown(state)
+        prim_radial = prim_breakdown.radialPulleyForce
+        sec_radial = sec_breakdown.radialPulleyForce
+        sum_of_radial_forces = prim_radial - sec_radial
+
         shift_velocity = state.shift_velocity
+        friction = self._frictional_force(sum_of_radial_forces, shift_velocity)
 
-        sum_of_radial_forces = (
-            pulley_forces["primary_radial"] - pulley_forces["secondary_radial"]
-        )
-        friction = self.frictional_force(sum_of_radial_forces, shift_velocity)
-        return (sum_of_radial_forces + friction) / self.cvt_moving_mass
+        acceleration = (sum_of_radial_forces + friction) / self.cvt_moving_mass
+        return acceleration
 
-    def get_pulley_forces(self, state: SystemState):
+    def get_breakdown(self, state: SystemState):
         # Compute CVT ratio and engine velocity
         cvt_ratio = tm.current_cvt_ratio(state.shift_distance)
         wheel_to_engine_ratio = (
@@ -42,23 +44,16 @@ class CvtShiftModel:
         engine_torque = self.engine_model.get_torque(engine_velocity)
 
         # Calculate forces using the provided simulators
-        primary_force = self.primary_radial_model.get_breakdown(
-            state.shift_distance, engine_velocity
-        ).net
-        secondary_force = self.secondary_model.get_breakdown(
-            engine_torque * cvt_ratio, state.shift_distance
-        ).net
+        primary_radial_breakdown = self.primary_radial_model.get_breakdown(
+            state.shift_distance, angular_velocity=engine_velocity
+        )
+        secondary_radial_breakdown = self.secondary_radial_model.get_breakdown(
+            state.shift_distance, torque=engine_torque * cvt_ratio, 
+        )
 
+        return primary_radial_breakdown, secondary_radial_breakdown
 
-
-        return {
-            "primary_force": primary_force,
-            "secondary_force": secondary_force,
-            "primary_radial": primary_radial,
-            "secondary_radial": secondary_radial,
-        }
-
-    def frictional_force(
+    def _frictional_force(
         self, sum_of_radial_forces: float, shift_velocity: float
     ) -> float:
         raw_friction = 20  # TODO: Update to use calculation
