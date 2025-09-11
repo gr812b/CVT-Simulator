@@ -3,6 +3,7 @@ import styles from './Input.module.scss';
 import ArrowLeft from '@assets/icons/arrow_left.svg?react';
 import ArrowUpCircle from '@assets/icons/arrow_up_circle.svg?react';
 import ArrowDownCircle from '@assets/icons/arrow_down_circle.svg?react';
+import Play from '@assets/icons/play.svg?react';
 import { useNavigate } from 'react-router-dom';
 import { ParameterAccordion } from '@components/parameterAccordian/ParameterAccordion';
 import { InputField } from '@components/inputField/InputField';
@@ -40,7 +41,7 @@ export const Input = () => {
     const {
         register,
         handleSubmit,
-        formState: { errors },
+        // formState: { errors },
     } = useForm<z.infer<typeof schema>>({
         resolver: zodResolver(schema),
         defaultValues: {
@@ -65,7 +66,6 @@ export const Input = () => {
     // Handler to toggle individual accordion
     const toggleAccordion = (key: keyof typeof expanded) => {
         setExpanded((prev) => ({ ...prev, [key]: !prev[key] }));
-        console.log(errors);
     };
 
     // Sets all accordions to expanded
@@ -109,7 +109,6 @@ export const Input = () => {
                     <MainButton
                         text='Expand All'
                         icon={ArrowDownCircle}
-                        className={styles.expandButton}
                         onClick={expandAll}
                         type='button'
                     />
@@ -117,12 +116,17 @@ export const Input = () => {
                         text='Collapse All'
                         icon={ArrowUpCircle}
                         iconSide='right'
-                        className={styles.collapseButton}
                         onClick={collapseAll}
                         type='button'
                     />
                 </div>
-                <div className={styles.nextButtonContainer}></div>
+                <div className={styles.nextButtonContainer}>
+                    <MainButton
+                        text='Run'
+                        icon={Play}
+                        type='submit'
+                    />
+                </div>
             </form>
         </div>
     )
