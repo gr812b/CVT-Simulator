@@ -3,10 +3,8 @@ import sys
 import numpy as np
 from models.car_model import CarModel
 from scipy.integrate import solve_ivp
-from models.external_load_model import LoadModel
 from utils.system_state import SystemState
 from utils.simulation_result import SimulationResult
-from models.engine_model import EngineModel
 from models.cvt_shift_model import CvtShiftModel
 from constants.car_specs import (
     GEARBOX_RATIO,
@@ -43,13 +41,9 @@ class SimulationRunner:
 
     def __init__(
         self,
-        engine_model: EngineModel,
-        load_model: LoadModel,
         car_model: CarModel,
         cvt_shift_model: CvtShiftModel,
     ):
-        self.engine_model = engine_model
-        self.load_model = load_model
         self.car_model = car_model
         self.cvt_shift_model = cvt_shift_model
 
