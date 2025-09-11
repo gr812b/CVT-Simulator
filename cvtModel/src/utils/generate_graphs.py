@@ -1,15 +1,8 @@
 from matplotlib import pyplot as plt
 import numpy as np
-from models.external_load_model import LoadModel
+from models.model_initializer import get_models
 from utils.simulation_result import SimulationResult
-from models.engine_model import EngineModel
-from models.primary_pulley_model import PrimaryPulleyModel
-from models.secondary_pulley_model import SecondaryPulleyModel
-from models.belt_model import BeltModel
-from models.cvt_shift_model import CvtShiftModel
-from constants.engine_specs import torque_curve
 from constants.car_specs import (
-    ENGINE_INERTIA,
     GEARBOX_RATIO,
     FRONTAL_AREA,
     DRAG_COEFFICIENT,
@@ -17,43 +10,14 @@ from constants.car_specs import (
     MAX_SHIFT,
 )
 from constants.constants import AIR_DENSITY
-from utils.conversions import deg_to_rad
 from utils.argument_parser import get_arguments
 from utils.theoretical_models import TheoreticalModels as tm
-
-# TODO: Look into debloating this file, potentially a rework of how the graphs information is acquired, as it requires a lot of coupling with the math logic
 
 # Parse arguments
 args = get_arguments()
 
-# Initialize simulators
-engine_simulator = EngineModel(torque_curve=torque_curve, inertia=ENGINE_INERTIA)
-load_simulator = LoadModel(
-    car_mass=args.vehicle_weight + args.driver_weight,
-    incline_angle=deg_to_rad(args.angle_of_incline),
-)
-primary_simulator = PrimaryPulleyModel(
-    spring_coeff_comp=args.primary_spring_rate,
-    initial_compression=args.primary_spring_pretension,
-    flyweight_mass=args.flyweight_mass,
-    ramp_type=args.primary_ramp_geometry,
-)
-secondary_simulator = SecondaryPulleyModel(
-    spring_coeff_tors=args.secondary_torsion_spring_rate,
-    spring_coeff_comp=args.secondary_compression_spring_rate,
-    initial_rotation=deg_to_rad(args.secondary_rotational_spring_pretension),
-    initial_compression=args.secondary_linear_spring_pretension,
-    ramp_type=args.secondary_helix_geometry,
-)
-primary_belt = BeltModel(primary=True)
-secondary_belt = BeltModel(primary=False)
-cvt_shift = CvtShiftModel(
-    engine_simulator,
-    primary_simulator,
-    secondary_simulator,
-    primary_belt,
-    secondary_belt,
-)
+# Initialize models with args
+car_model, cvt_model = get_models(args)
 
 
 def plotVelocity(result: SimulationResult, ax=None):
@@ -87,13 +51,7 @@ def plotPosition(result: SimulationResult, ax=None):
 def plotVehicleAccel(result: SimulationResult, ax=None):
     vehicle_accels = []
     for state in result.states:
-        cvt_ratio = tm.current_cvt_ratio(state.shift_distance)
-        wheel_to_engine_ratio = (cvt_ratio * GEARBOX_RATIO) / WHEEL_RADIUS
-        actual_engine_velocity = state.car_velocity * wheel_to_engine_ratio
-        engine_power = engine_simulator.get_power(actual_engine_velocity)
-        car_acceleration = load_simulator.calculate_acceleration(
-            state.car_velocity, engine_power
-        )
+        car_acceleration = car_model.get_breakdown(state).acceleration
         vehicle_accels.append(car_acceleration)
     if ax is None:
         ax = plt.gca()
@@ -110,18 +68,13 @@ def plotPrimaryClampingForce(result: SimulationResult, ax=None):
     primary_radial_forces = []
     engine_angular_velocities = []
     for state in result.states:
-        cvt_ratio = tm.current_cvt_ratio(state.shift_distance)
-        wheel_to_engine_ratio = (cvt_ratio * GEARBOX_RATIO) / WHEEL_RADIUS
-        actual_engine_velocity = state.car_velocity * wheel_to_engine_ratio
-        primary_force = primary_simulator.calculate_net_force(
-            state.shift_distance, actual_engine_velocity
-        )
-        primary_radial_force = primary_belt.calculate_radial_force(
-            actual_engine_velocity,
-            state.shift_distance,
-            tm.primary_wrap_angle(state.shift_distance),
-            primary_force,
-        )
+        shift_breakdown = cvt_model.get_breakdown(state)
+        car_breakdown = car_model.get_breakdown(state)
+
+        primary_force = shift_breakdown.primaryRadialForce.pulleyForce.net
+        primary_radial_force = shift_breakdown.primaryRadialForce.net
+        actual_engine_velocity = car_breakdown.engine_forces.angular_velocity
+
         primary_clamping_forces.append(primary_force)
         primary_radial_forces.append(primary_radial_force)
         engine_angular_velocities.append(actual_engine_velocity)
@@ -147,19 +100,13 @@ def plotSecondaryClampingForce(result: SimulationResult, ax=None):
     secondary_radial_forces = []
     engine_angular_velocities = []
     for state in result.states:
-        cvt_ratio = tm.current_cvt_ratio(state.shift_distance)
-        wheel_to_engine_ratio = (cvt_ratio * GEARBOX_RATIO) / WHEEL_RADIUS
-        actual_engine_velocity = state.car_velocity * wheel_to_engine_ratio
-        engine_torque = engine_simulator.get_torque(actual_engine_velocity)
-        secondary_force = secondary_simulator.calculate_net_force(
-            engine_torque * cvt_ratio, state.shift_distance
-        )
-        secondary_radial = secondary_belt.calculate_radial_force(
-            actual_engine_velocity,
-            state.shift_distance,
-            tm.secondary_wrap_angle(state.shift_distance),
-            secondary_force,
-        )
+        shift_breakdown = cvt_model.get_breakdown(state)
+        car_breakdown = car_model.get_breakdown(state)
+
+        secondary_force = shift_breakdown.secondaryRadialForce.pulleyForce.net
+        secondary_radial = shift_breakdown.secondaryRadialForce.net
+        actual_engine_velocity = car_breakdown.engine_forces.angular_velocity
+
         secondary_clamping_forces.append(secondary_force)
         secondary_radial_forces.append(secondary_radial)
         engine_angular_velocities.append(actual_engine_velocity)
@@ -189,12 +136,14 @@ def plotVehicleEngineSpeed(result: SimulationResult, ax=None):
     times = result.time
 
     for state in result.states:
+        car_breakdown = car_model.get_breakdown(state)
+
+        # TODO: This shoud be in a data field somewhere
         cvt_ratio = tm.current_cvt_ratio(state.shift_distance)
-        wheel_to_engine_ratio = (cvt_ratio * GEARBOX_RATIO) / WHEEL_RADIUS
-        actual_engine_velocity = state.car_velocity * wheel_to_engine_ratio
+
         cvt_ratios.append(cvt_ratio)
         vehicle_speeds.append(state.car_velocity)
-        engine_speeds.append(actual_engine_velocity)
+        engine_speeds.append(car_breakdown.engine_forces.angular_velocity)
 
     if ax is None:
         fig, ax = plt.subplots(figsize=(12, 8))
@@ -229,9 +178,15 @@ def plotVehicleEngineSpeed(result: SimulationResult, ax=None):
 
 
 def plot_forces_over_time(result: SimulationResult, ax=None):
-    observables = [cvt_shift.get_pulley_forces(state) for state in result.states]
-    prim_radial = [obs["primary_radial"] for obs in observables]
-    sec_radial = [obs["secondary_radial"] for obs in observables]
+    prim_radial = []
+    sec_radial = []
+
+    for state in result.states:
+        shift_breakdown = cvt_model.get_breakdown(state)
+
+        prim_radial.append(shift_breakdown.primaryRadialForce.net)
+        sec_radial.append(shift_breakdown.secondaryRadialForce.net)
+
     shift_distances = [state.shift_distance for state in result.states]
     shift_velocities = [state.shift_velocity for state in result.states]
 
@@ -272,15 +227,15 @@ def plot_forces_over_time(result: SimulationResult, ax=None):
 
 
 def plotShiftDistance(result: SimulationResult, ax=None):
-    shift_distances = [state.shift_distance for state in result.states]
-    cvt_ratios = [tm.current_cvt_ratio(state.shift_distance) for state in result.states]
-    wheel_to_engine_ratios = [
-        (cvt_ratio * GEARBOX_RATIO) / WHEEL_RADIUS for cvt_ratio in cvt_ratios
-    ]
-    engine_angular_velocities = [
-        state.car_velocity * wheel_to_engine_ratio
-        for state, wheel_to_engine_ratio in zip(result.states, wheel_to_engine_ratios)
-    ]
+    shift_distances = []
+    engine_angular_velocities = []
+
+    for state in result.states:
+        car_breakdown = car_model.get_breakdown(state)
+
+        shift_distances.append(state.shift_distance)
+        engine_angular_velocities.append(car_breakdown.engine_forces.angular_velocity)
+
     if ax is None:
         ax = plt.gca()
     ax.plot(engine_angular_velocities, shift_distances, label="Shift Distance")
@@ -291,25 +246,21 @@ def plotShiftDistance(result: SimulationResult, ax=None):
     ax.grid()
 
 
-def plotShiftCurves(results, ax=None):
+def plotShiftCurves(results: list[SimulationResult], ax=None):
     if ax is None:
         ax = plt.gca()
 
     # Plot each simulation's engine speed curve.
     for i, result in enumerate(results):
-        vehicle_speeds = [state.car_velocity for state in result.states]
-        cvt_ratios = [
-            tm.current_cvt_ratio(state.shift_distance) for state in result.states
-        ]
-        wheel_to_engine_ratios = [
-            (cvt_ratio * GEARBOX_RATIO) / WHEEL_RADIUS for cvt_ratio in cvt_ratios
-        ]
-        engine_angular_velocities = [
-            state.car_velocity * wheel_to_engine_ratio
-            for state, wheel_to_engine_ratio in zip(
-                result.states, wheel_to_engine_ratios
-            )
-        ]
+        vehicle_speeds = []
+        engine_angular_velocities = []
+        
+        for state in result.states:
+            car_breakdown = car_model.get_breakdown(state)
+
+            vehicle_speeds.append(state.car_velocity)
+            engine_angular_velocities.append(car_breakdown.engine_forces.angular_velocity)
+
         ax.plot(
             vehicle_speeds,
             engine_angular_velocities,
@@ -321,16 +272,17 @@ def plotShiftCurves(results, ax=None):
     all_vehicle_speeds = []
     all_engine_velocities = []
     for result in results:
-        vs = [state.car_velocity for state in result.states]
-        cvt_ratios = [
-            tm.current_cvt_ratio(state.shift_distance) for state in result.states
-        ]
-        wheel_to_engine_ratios = [
-            (cvt_ratio * GEARBOX_RATIO) / WHEEL_RADIUS for cvt_ratio in cvt_ratios
-        ]
-        eng_vel = [v * r for v, r in zip(vs, wheel_to_engine_ratios)]
-        all_vehicle_speeds.extend(vs)
-        all_engine_velocities.extend(eng_vel)
+        vehicle_speeds = []
+        engine_angular_velocities = []
+        
+        for state in result.states:
+            car_breakdown = car_model.get_breakdown(state)
+
+            vehicle_speeds.append(state.car_velocity)
+            engine_angular_velocities.append(car_breakdown.engine_forces.angular_velocity)
+
+        all_vehicle_speeds.extend(vehicle_speeds)
+        all_engine_velocities.extend(engine_angular_velocities)
 
     # Use the global maximum values for the x-range and engine speed limit.
     max_x = max(all_vehicle_speeds) if all_vehicle_speeds else 0
