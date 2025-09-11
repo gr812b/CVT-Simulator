@@ -8,6 +8,7 @@ import { ParameterAccordion } from '@components/parameterAccordian/ParameterAcco
 import { InputField } from '@components/inputField/InputField';
 import { ParameterDescription } from '@components/parameterDescription/ParameterDescription';
 import baja_logo from '@assets/baja_logo.png';
+import { useState } from 'react';
 
 export const Input = () => {
     const navigate = useNavigate();
@@ -16,7 +17,25 @@ export const Input = () => {
     const handleInputChange = (value: string) => {
         console.log('Input changed to:', value);
     };
-    
+
+    // State to manage which accordions are expanded
+    const [expanded, setExpanded] = useState({
+        primary: true,
+        secondary: true,
+        environment: true,
+    });
+
+    // Handler to toggle individual accordion
+    const toggleAccordion = (key: keyof typeof expanded) => {
+        setExpanded((prev) => ({ ...prev, [key]: !prev[key] }));
+    };
+
+    // Sets all accordions to expanded
+    const expandAll = () => setExpanded({ primary: true, secondary: true, environment: true });
+
+    // Sets all accordions to collapsed
+    const collapseAll = () => setExpanded({ primary: false, secondary: false, environment: false });
+
     return (
         <div className={styles.input}>
             <MainButton
@@ -27,17 +46,17 @@ export const Input = () => {
             />
             <div className={styles.inputGrid}>
                 <div className={styles.parameterInputContainer}>
-                    <ParameterAccordion title='Primary Pulley'>
+                    <ParameterAccordion title='Primary Pulley' isExpanded={expanded.primary} onToggle={() => toggleAccordion('primary')}>
                         <InputField label='Spring Pretension (m)' value='0' onChange={handleInputChange} className={styles.baseInputField}/>
                         <InputField label='Spring Rate (N/m)' value='0' onChange={handleInputChange} className={styles.baseInputField}/>
                     </ParameterAccordion>
-                    <ParameterAccordion title='Secondary Pulley'>
+                    <ParameterAccordion title='Secondary Pulley' isExpanded={expanded.secondary} onToggle={() => toggleAccordion('secondary')}>
                         <InputField label='Rotational Spring Pretension (deg)' value='0' onChange={handleInputChange} className={styles.baseInputField}/>
                         <InputField label='Rotational Spring Rate (Nm/deg)' value='0' onChange={handleInputChange} className={styles.baseInputField}/>
                         <InputField label='Linear Spring Pretension (m)' value='0' onChange={handleInputChange} className={styles.baseInputField}/>
                         <InputField label='Linear Spring Rate (N/m)' value='0' onChange={handleInputChange} className={styles.baseInputField}/>
                     </ParameterAccordion>
-                    <ParameterAccordion title='Environment'>
+                    <ParameterAccordion title='Environment' isExpanded={expanded.environment} onToggle={() => toggleAccordion('environment')}>
                         <InputField label='Vehicle Weight (kg)' value='0' onChange={handleInputChange} className={styles.baseInputField}/>
                         <InputField label='Driver Weight (kg)' value='0' onChange={handleInputChange} className={styles.baseInputField}/>
                         <InputField label='Traction (%)' value='0' onChange={handleInputChange} className={styles.baseInputField}/>
@@ -53,14 +72,14 @@ export const Input = () => {
                         text='Expand All'
                         icon={ArrowDownCircle}
                         className={styles.expandButton}
-                        onClick={() => {}}
+                        onClick={expandAll}
                     />
                     <MainButton
                         text='Collapse All'
                         icon={ArrowUpCircle}
                         iconSide='right'
                         className={styles.collapseButton}
-                        onClick={() => {}}
+                        onClick={collapseAll}
                     />
                 </div>
                 <div className={styles.nextButtonContainer}></div>
