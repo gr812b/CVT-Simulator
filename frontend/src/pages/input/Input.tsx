@@ -5,7 +5,7 @@ import ArrowUpCircle from '@assets/icons/arrow_up_circle.svg?react';
 import ArrowDownCircle from '@assets/icons/arrow_down_circle.svg?react';
 import Play from '@assets/icons/play.svg?react';
 import { useNavigate } from 'react-router-dom';
-import { ParameterAccordion } from '@components/parameterAccordian/ParameterAccordion';
+import { ParameterAccordion } from '@components/parameterAccordion/ParameterAccordion';
 import { InputField } from '@components/inputField/InputField';
 import { ParameterDescription } from '@components/parameterDescription/ParameterDescription';
 import { useState, type ReactNode } from 'react';
