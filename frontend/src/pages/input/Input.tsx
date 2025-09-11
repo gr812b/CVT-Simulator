@@ -9,13 +9,50 @@ import { InputField } from '@components/inputField/InputField';
 import { ParameterDescription } from '@components/parameterDescription/ParameterDescription';
 import baja_logo from '@assets/baja_logo.png';
 import { useState } from 'react';
+import { z } from 'zod';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+
+// Form schema
+const schema = z.object({
+    primary: z.object({
+        springPretension: z.transform(Number).pipe(z.number()),
+        springRate: z.transform(Number).pipe(z.number()),
+    }),
+    secondary: z.object({
+        rotationalSpringPretension: z.transform(Number).pipe(z.number()),
+        rotationalSpringRate: z.transform(Number).pipe(z.number()),
+        linearSpringPretension: z.transform(Number).pipe(z.number()),
+        linearSpringRate: z.transform(Number).pipe(z.number()),
+    }),
+    environment: z.object({
+        vehicleWeight: z.transform(Number).pipe(z.number()),
+        driverWeight: z.transform(Number).pipe(z.number()),
+        traction: z.transform(Number).pipe(z.number()),
+        angleOfIncline: z.transform(Number).pipe(z.number()),
+        totalDistance: z.transform(Number).pipe(z.number()),
+    }),
+});
 
 export const Input = () => {
     const navigate = useNavigate();
 
-    // Temporary handler for input field changes
-    const handleInputChange = (value: string) => {
-        console.log('Input changed to:', value);
+    const {
+        register,
+        handleSubmit,
+        formState: { errors },
+    } = useForm<z.infer<typeof schema>>({
+        resolver: zodResolver(schema),
+        defaultValues: {
+            primary: { springPretension: 0, springRate: 0 },
+            secondary: { rotationalSpringPretension: 0, rotationalSpringRate: 0, linearSpringPretension: 0, linearSpringRate: 0 },
+            environment: { vehicleWeight: 0, driverWeight: 0, traction: 0, angleOfIncline: 0, totalDistance: 0 },
+        },
+    });
+
+    const onSubmit = (data: z.infer<typeof schema>) => {
+        console.log("Form Data:", data);
+        //TODO: Handle form submission (e.g., send data to backend or update state)
     };
 
     // State to manage which accordions are expanded
@@ -28,6 +65,7 @@ export const Input = () => {
     // Handler to toggle individual accordion
     const toggleAccordion = (key: keyof typeof expanded) => {
         setExpanded((prev) => ({ ...prev, [key]: !prev[key] }));
+        console.log(errors);
     };
 
     // Sets all accordions to expanded
@@ -44,24 +82,24 @@ export const Input = () => {
                 className={styles.backButton}
                 onClick={() => navigate('/')}
             />
-            <div className={styles.inputGrid}>
+            <form className={styles.inputGrid} onSubmit={handleSubmit(onSubmit)}>
                 <div className={styles.parameterInputContainer}>
                     <ParameterAccordion title='Primary Pulley' isExpanded={expanded.primary} onToggle={() => toggleAccordion('primary')}>
-                        <InputField label='Spring Pretension (m)' value='0' onChange={handleInputChange} className={styles.baseInputField}/>
-                        <InputField label='Spring Rate (N/m)' value='0' onChange={handleInputChange} className={styles.baseInputField}/>
+                        <InputField className={styles.baseInputField} label='Spring Pretension (m)' type='number' step='any' {...register("primary.springPretension")} />
+                        <InputField className={styles.baseInputField} label='Spring Rate (N/m)' type='number' step='any' {...register("primary.springRate")} />
                     </ParameterAccordion>
                     <ParameterAccordion title='Secondary Pulley' isExpanded={expanded.secondary} onToggle={() => toggleAccordion('secondary')}>
-                        <InputField label='Rotational Spring Pretension (deg)' value='0' onChange={handleInputChange} className={styles.baseInputField}/>
-                        <InputField label='Rotational Spring Rate (Nm/deg)' value='0' onChange={handleInputChange} className={styles.baseInputField}/>
-                        <InputField label='Linear Spring Pretension (m)' value='0' onChange={handleInputChange} className={styles.baseInputField}/>
-                        <InputField label='Linear Spring Rate (N/m)' value='0' onChange={handleInputChange} className={styles.baseInputField}/>
+                        <InputField className={styles.baseInputField} label='Rotational Spring Pretension (deg)' type='number' step='any' {...register("secondary.rotationalSpringPretension")} />
+                        <InputField className={styles.baseInputField} label='Rotational Spring Rate (Nm/deg)' type='number' step='any' {...register("secondary.rotationalSpringRate")} />
+                        <InputField className={styles.baseInputField} label='Linear Spring Pretension (m)' type='number' step='any' {...register("secondary.linearSpringPretension")} />
+                        <InputField className={styles.baseInputField} label='Linear Spring Rate (N/m)' type='number' step='any' {...register("secondary.linearSpringRate")} />
                     </ParameterAccordion>
                     <ParameterAccordion title='Environment' isExpanded={expanded.environment} onToggle={() => toggleAccordion('environment')}>
-                        <InputField label='Vehicle Weight (kg)' value='0' onChange={handleInputChange} className={styles.baseInputField}/>
-                        <InputField label='Driver Weight (kg)' value='0' onChange={handleInputChange} className={styles.baseInputField}/>
-                        <InputField label='Traction (%)' value='0' onChange={handleInputChange} className={styles.baseInputField}/>
-                        <InputField label='Angle of Incline (deg)' value='0' onChange={handleInputChange} className={styles.baseInputField}/>
-                        <InputField label='Total Distance (m)' value='0' onChange={handleInputChange} className={styles.baseInputField}/>
+                        <InputField className={styles.baseInputField} label='Vehicle Weight (kg)' type='number' step='any' {...register("environment.vehicleWeight")} />
+                        <InputField className={styles.baseInputField} label='Driver Weight (kg)' type='number' step='any' {...register("environment.driverWeight")} />
+                        <InputField className={styles.baseInputField} label='Traction (%)' type='number' step='any' {...register("environment.traction")} />
+                        <InputField className={styles.baseInputField} label='Angle of Incline (deg)' type='number' step='any' {...register("environment.angleOfIncline")} />
+                        <InputField className={styles.baseInputField} label='Total Distance (m)' type='number' step='any' {...register("environment.totalDistance")} />
                     </ParameterAccordion>
                 </div>
                 <div className={styles.parameterInformationContainer}>
@@ -73,6 +111,7 @@ export const Input = () => {
                         icon={ArrowDownCircle}
                         className={styles.expandButton}
                         onClick={expandAll}
+                        type='button'
                     />
                     <MainButton
                         text='Collapse All'
@@ -80,10 +119,11 @@ export const Input = () => {
                         iconSide='right'
                         className={styles.collapseButton}
                         onClick={collapseAll}
+                        type='button'
                     />
                 </div>
                 <div className={styles.nextButtonContainer}></div>
-            </div>
+            </form>
         </div>
     )
 }
