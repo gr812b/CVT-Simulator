@@ -60,6 +60,14 @@ class RadialPulleyForceBreakdown:
     radialPulleyForce: float # Radial component
     net: float
 
+@dataclass
+class CvtSystemForceBreakdown:
+    primaryRadialForce: RadialPulleyForceBreakdown
+    secondaryRadialForce: RadialPulleyForceBreakdown
+    friction: float
+    acceleration: float
+    net: float
+
 ## Engine
 @dataclass
 class EngineForceBreakdown:

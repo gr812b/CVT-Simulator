@@ -1,6 +1,7 @@
 
 import sys
 import numpy as np
+from models.car_model import CarModel
 from scipy.integrate import solve_ivp
 from models.external_load_model import LoadModel
 from utils.system_state import SystemState
@@ -44,10 +45,12 @@ class SimulationRunner:
         self,
         engine_model: EngineModel,
         load_model: LoadModel,
+        car_model: CarModel,
         cvt_shift_model: CvtShiftModel,
     ):
         self.engine_model = engine_model
         self.load_model = load_model
+        self.car_model = car_model
         self.cvt_shift_model = cvt_shift_model
 
     def run_simulation(self) -> SimulationResult:
@@ -159,25 +162,11 @@ class SimulationRunner:
             state.shift_distance = MAX_SHIFT
             state.shift_velocity = min(0, shift_velocity)
 
-        # ---------------------------
-        # CAR + ENGINE DYNAMICS BELOW
-        # ---------------------------
+        # Car math
+        car_acceleration = self.car_model.get_breakdown(state).acceleration
 
-        # Some ratios
-        cvt_ratio = tm.current_cvt_ratio(state.shift_distance)
-        wheel_to_engine_ratio = (cvt_ratio * GEARBOX_RATIO) / WHEEL_RADIUS
-        engine_velocity = state.car_velocity * wheel_to_engine_ratio
-
-        # Vehicle acceleration
-        engine_power = self.engine_model.get_power(engine_velocity)
-        car_acceleration = self.load_model.calculate_acceleration(
-            state.car_velocity, engine_power
-        )
-
-        # ------------------
-        # PULLEY STUFF BELOW
-        # ------------------
-        shift_acceleration = self.cvt_shift_model.calculate_shift_acceleration(state)
+        # Pulley math
+        shift_acceleration = self.cvt_shift_model.get_breakdown(state).acceleration
 
         return [
             car_acceleration,
@@ -194,15 +183,8 @@ class SimulationRunner:
         state.shift_distance = MAX_SHIFT
         state.shift_velocity = 0
 
-        # Use constant CVT ratio for full shift
-        cvt_ratio = tm.current_cvt_ratio(MAX_SHIFT)
-        wheel_to_engine_ratio = (cvt_ratio * GEARBOX_RATIO) / WHEEL_RADIUS
-        engine_velocity = state.car_velocity * wheel_to_engine_ratio
-
-        engine_power = self.engine_model.get_power(engine_velocity)
-        car_acceleration = self.load_model.calculate_acceleration(
-            state.car_velocity, engine_power
-        )
+        # Car math
+        car_acceleration = self.car_model.get_breakdown(state).acceleration
 
         return [
             car_acceleration,

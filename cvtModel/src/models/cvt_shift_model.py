@@ -1,10 +1,8 @@
+from models.dataTypes import CvtSystemForceBreakdown
 from models.radial_model import RadialPulleyModel
 from utils.system_state import SystemState
 from utils.theoretical_models import TheoreticalModels as tm
 from models.engine_model import EngineModel
-from models.primary_pulley_model import PrimaryPulleyModel
-from models.secondary_pulley_model import SecondaryPulleyModel
-from models.belt_model import BeltModel
 from constants.car_specs import GEARBOX_RATIO, WHEEL_RADIUS
 
 
@@ -20,19 +18,26 @@ class CvtShiftModel:
         self.secondary_radial_model = secondary_radial_model
         self.cvt_moving_mass = 0.5  # TODO: Use constants
 
-    def calculate_shift_acceleration(self, state: SystemState) -> float:
-        prim_breakdown, sec_breakdown = self.get_breakdown(state)
+    def get_breakdown(self, state: SystemState) -> CvtSystemForceBreakdown:
+        prim_breakdown, sec_breakdown = self._get_pulley_breakdowns(state)
+
         prim_radial = prim_breakdown.radialPulleyForce
         sec_radial = sec_breakdown.radialPulleyForce
-        sum_of_radial_forces = prim_radial - sec_radial
+        net = prim_radial - sec_radial
 
         shift_velocity = state.shift_velocity
-        friction = self._frictional_force(sum_of_radial_forces, shift_velocity)
+        friction = self._frictional_force(net, shift_velocity)
 
-        acceleration = (sum_of_radial_forces + friction) / self.cvt_moving_mass
-        return acceleration
+        acceleration = (net + friction) / self.cvt_moving_mass
+        return CvtSystemForceBreakdown(
+            prim_breakdown,
+            sec_breakdown,
+            friction,
+            acceleration,
+            net,
+        )
 
-    def get_breakdown(self, state: SystemState):
+    def _get_pulley_breakdowns(self, state: SystemState):
         # Compute CVT ratio and engine velocity
         cvt_ratio = tm.current_cvt_ratio(state.shift_distance)
         wheel_to_engine_ratio = (
