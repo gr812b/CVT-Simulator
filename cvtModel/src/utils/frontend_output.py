@@ -9,7 +9,7 @@ from constants.car_specs import (
 from utils.theoretical_models import TheoreticalModels as tm
 from utils.conversions import rad_s_to_rpm, meter_s_to_km_h, rad_to_deg
 
-
+# TODO: Update this to output to front end properly
 class FormattedSimulationResult(SimulationResult):
     def __init__(self, solution=None, time=None, states=None):
         """
