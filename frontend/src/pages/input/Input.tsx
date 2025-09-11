@@ -8,7 +8,6 @@ import { useNavigate } from 'react-router-dom';
 import { ParameterAccordion } from '@components/parameterAccordian/ParameterAccordion';
 import { InputField } from '@components/inputField/InputField';
 import { ParameterDescription } from '@components/parameterDescription/ParameterDescription';
-import baja_logo from '@assets/baja_logo.png';
 import { useState } from 'react';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
@@ -74,6 +73,8 @@ export const Input = () => {
     // Sets all accordions to collapsed
     const collapseAll = () => setExpanded({ primary: false, secondary: false, environment: false });
 
+    const handleOnWheel = (e: React.WheelEvent) => (e.target as HTMLElement).blur();
+
     return (
         <div className={styles.input}>
             <MainButton
@@ -85,25 +86,25 @@ export const Input = () => {
             <form className={styles.inputGrid} onSubmit={handleSubmit(onSubmit)}>
                 <div className={styles.parameterInputContainer}>
                     <ParameterAccordion title='Primary Pulley' isExpanded={expanded.primary} onToggle={() => toggleAccordion('primary')}>
-                        <InputField className={styles.baseInputField} label='Spring Pretension (m)' type='number' step='any' {...register("primary.springPretension")} />
-                        <InputField className={styles.baseInputField} label='Spring Rate (N/m)' type='number' step='any' {...register("primary.springRate")} />
+                        <InputField className={styles.baseInputField} label='Spring Pretension (m)' type='number' step='any' onWheel={handleOnWheel} {...register("primary.springPretension")} />
+                        <InputField className={styles.baseInputField} label='Spring Rate (N/m)' type='number' step='any' onWheel={handleOnWheel} {...register("primary.springRate")} />
                     </ParameterAccordion>
                     <ParameterAccordion title='Secondary Pulley' isExpanded={expanded.secondary} onToggle={() => toggleAccordion('secondary')}>
-                        <InputField className={styles.baseInputField} label='Rotational Spring Pretension (deg)' type='number' step='any' {...register("secondary.rotationalSpringPretension")} />
-                        <InputField className={styles.baseInputField} label='Rotational Spring Rate (Nm/deg)' type='number' step='any' {...register("secondary.rotationalSpringRate")} />
-                        <InputField className={styles.baseInputField} label='Linear Spring Pretension (m)' type='number' step='any' {...register("secondary.linearSpringPretension")} />
-                        <InputField className={styles.baseInputField} label='Linear Spring Rate (N/m)' type='number' step='any' {...register("secondary.linearSpringRate")} />
+                        <InputField className={styles.baseInputField} label='Rotational Spring Pretension (deg)' type='number' step='any' onWheel={handleOnWheel} {...register("secondary.rotationalSpringPretension")} />
+                        <InputField className={styles.baseInputField} label='Rotational Spring Rate (Nm/deg)' type='number' step='any' onWheel={handleOnWheel} {...register("secondary.rotationalSpringRate")} />
+                        <InputField className={styles.baseInputField} label='Linear Spring Pretension (m)' type='number' step='any' onWheel={handleOnWheel} {...register("secondary.linearSpringPretension")} />
+                        <InputField className={styles.baseInputField} label='Linear Spring Rate (N/m)' type='number' step='any' onWheel={handleOnWheel} {...register("secondary.linearSpringRate")} />
                     </ParameterAccordion>
                     <ParameterAccordion title='Environment' isExpanded={expanded.environment} onToggle={() => toggleAccordion('environment')}>
-                        <InputField className={styles.baseInputField} label='Vehicle Weight (kg)' type='number' step='any' {...register("environment.vehicleWeight")} />
-                        <InputField className={styles.baseInputField} label='Driver Weight (kg)' type='number' step='any' {...register("environment.driverWeight")} />
-                        <InputField className={styles.baseInputField} label='Traction (%)' type='number' step='any' {...register("environment.traction")} />
-                        <InputField className={styles.baseInputField} label='Angle of Incline (deg)' type='number' step='any' {...register("environment.angleOfIncline")} />
-                        <InputField className={styles.baseInputField} label='Total Distance (m)' type='number' step='any' {...register("environment.totalDistance")} />
+                        <InputField className={styles.baseInputField} label='Vehicle Weight (kg)' type='number' step='any' onWheel={handleOnWheel} {...register("environment.vehicleWeight")} />
+                        <InputField className={styles.baseInputField} label='Driver Weight (kg)' type='number' step='any' onWheel={handleOnWheel} {...register("environment.driverWeight")} />
+                        <InputField className={styles.baseInputField} label='Traction (%)' type='number' step='any' onWheel={handleOnWheel} {...register("environment.traction")} />
+                        <InputField className={styles.baseInputField} label='Angle of Incline (deg)' type='number' step='any' onWheel={handleOnWheel} {...register("environment.angleOfIncline")} />
+                        <InputField className={styles.baseInputField} label='Total Distance (m)' type='number' step='any' onWheel={handleOnWheel} {...register("environment.totalDistance")} />
                     </ParameterAccordion>
                 </div>
                 <div className={styles.parameterInformationContainer}>
-                    <ParameterDescription name={'Parameter Name'} description={'This is a description of the parameter. It provides useful information to help the user understand what the parameter does and how it affects the simulation.'} imgSrc={baja_logo} />
+                    <ParameterDescription name='No Parameter Selected' />
                 </div>
                 <div className={styles.inputButtonsContainer}>
                     <MainButton
