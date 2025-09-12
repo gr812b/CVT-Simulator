@@ -28,6 +28,7 @@ class RadialPulleyModel:
             )
         else:
             assert torque is not None, "Secondary requires torque"
+            assert angular_velocity is not None, "Secondary requires angular_velocity"
             pulley_breakdown = self.pulley_model.get_breakdown(shift_distance, torque)
 
         belt_breakdown = self.belt_model.get_breakdown(angular_velocity, shift_distance)

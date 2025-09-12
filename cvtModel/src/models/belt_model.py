@@ -28,6 +28,7 @@ class BeltModel:
         length = radius * wrap_angle
         mass = RUBBER_DENSITY * BELT_CROSS_SECTIONAL_AREA * length
 
+        # TODO: If this is secondary, multiple by CVT ratio for new angular velocity
         # print(f"Primary: {self.primary}, Length: {length}, Wrap angle: {wrap_angle}, Radius: {radius}, Mass: {mass}, Total Mass:")
         net = tm.centrifugal_force(mass, ω, radius)
         return BeltCentrifugalForceBreakdown(

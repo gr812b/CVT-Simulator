@@ -54,6 +54,7 @@ class CvtShiftModel:
         )
         secondary_radial_breakdown = self.secondary_radial_model.get_breakdown(
             state.shift_distance,
+            angular_velocity=engine_velocity,
             torque=engine_torque * cvt_ratio,
         )
 

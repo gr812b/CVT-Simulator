@@ -1,5 +1,6 @@
 import sys
 import numpy as np
+from typing import Callable
 from models.car_model import CarModel
 from scipy.integrate import solve_ivp
 from utils.system_state import SystemState
@@ -60,7 +61,7 @@ class SimulationRunner:
         solution_phase1 = self._solve(
             cvt_system_ode,
             0,
-            self.INITIAL_STATE,
+            self.INITIAL_STATE.to_array(),
             time_eval_phase1,
             events,
         )
@@ -100,31 +101,31 @@ class SimulationRunner:
 
     # Get the function without self for scipy
     def _get_ode_function(self):
-        def ode_func(t, y):
+        def ode_func(t: float, y: list[float]):
             return self._evaluate_cvt_system(t, y)
 
         return ode_func
 
     def _get_full_shift_ode_function(self):
-        def ode_func(t, y):
+        def ode_func(t: float, y: list[float]):
             return self._evaluate_full_shift_system(t, y)
 
         return ode_func
 
     def _solve(
         self,
-        ode_func,
-        start_time,
-        initial_state,
-        time_eval,
-        events,
+        ode_func: Callable[[float, list[float]], list[float]], # (t, y) -> dydt
+        start_time: float,
+        initial_state: list[float],
+        time_eval: np.ndarray,
+        events: list,
     ):
         return solve_ivp(
             ode_func,
             (start_time, self.TOTAL_SIM_TIME),
             initial_state,
-            time_eval,
-            events=[events],
+            t_eval=time_eval,
+            events=events,
             atol=1e-6,
             rtol=1e-4,
         )
@@ -139,7 +140,7 @@ class SimulationRunner:
             )
             sys.stdout.flush()
 
-    def _evaluate_cvt_system(self, t, y):
+    def _evaluate_cvt_system(self, t: float, y: list[float]):
         """Evaluate system dynamics (phase 1: not at full shift)."""
         state = SystemState.from_array(y)
         self._print_progress(t)
@@ -168,7 +169,7 @@ class SimulationRunner:
             state.shift_velocity,
         ]
 
-    def _evaluate_full_shift_system(self, t, y):
+    def _evaluate_full_shift_system(self, t: float, y: list[float]):
         """Evaluate system dynamics (phase 2: at full shift)."""
         state = SystemState.from_array(y)
         self._print_progress(t)

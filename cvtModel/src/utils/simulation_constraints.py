@@ -69,7 +69,7 @@ def get_shift_steady_event(shift_simulator: CvtShiftModel):
 
         # Once near full shift, return the computed shift acceleration.
         # The event will trigger when this value crosses from negative to positive.
-        return shift_simulator.get_breakdown(state)
+        return shift_simulator.get_breakdown(state).acceleration
 
     shift_steady_event.terminal = True
     shift_steady_event.direction = 1  # Looking for a negative-to-positive crossing.
