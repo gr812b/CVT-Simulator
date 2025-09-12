@@ -114,7 +114,7 @@ class SimulationRunner:
 
     def _solve(
         self,
-        ode_func: Callable[[float, list[float]], list[float]], # (t, y) -> dydt
+        ode_func: Callable[[float, list[float]], list[float]],  # (t, y) -> dydt
         start_time: float,
         initial_state: list[float],
         time_eval: np.ndarray,
