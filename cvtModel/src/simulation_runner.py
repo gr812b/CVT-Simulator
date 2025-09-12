@@ -1,4 +1,3 @@
-
 import sys
 import numpy as np
 from models.car_model import CarModel
@@ -19,6 +18,7 @@ from utils.simulation_constraints import (
     shift_constraint_event,
 )
 
+
 # Helper class to wrap data
 class CombinedSolution:
     def __init__(self, t, y):
@@ -26,9 +26,9 @@ class CombinedSolution:
         self.y = y
 
 
-
 class SimulationRunner:
     """Runs a two-phase CVT system simulation."""
+
     TOTAL_SIM_TIME = 15  # seconds
     INITIAL_STATE = SystemState(
         car_velocity=rpm_to_rad_s(1800)
@@ -102,29 +102,29 @@ class SimulationRunner:
     def _get_ode_function(self):
         def ode_func(t, y):
             return self._evaluate_cvt_system(t, y)
+
         return ode_func
-    
+
     def _get_full_shift_ode_function(self):
         def ode_func(t, y):
             return self._evaluate_full_shift_system(t, y)
+
         return ode_func
-    
+
     def _solve(
-            self, 
-            ode_func,
-            start_time,
-            initial_state,
-            time_eval,
-            events,
-        ):
+        self,
+        ode_func,
+        start_time,
+        initial_state,
+        time_eval,
+        events,
+    ):
         return solve_ivp(
             ode_func,
             (start_time, self.TOTAL_SIM_TIME),
             initial_state,
             time_eval,
-            events=[
-                events
-            ],
+            events=[events],
             atol=1e-6,
             rtol=1e-4,
         )
@@ -138,7 +138,6 @@ class SimulationRunner:
                 f"\rProgress: {progress_percent:.1f}% [{'=' * int(progress_percent // 2)}{' ' * (50 - int(progress_percent // 2))}]"
             )
             sys.stdout.flush()
-
 
     def _evaluate_cvt_system(self, t, y):
         """Evaluate system dynamics (phase 1: not at full shift)."""

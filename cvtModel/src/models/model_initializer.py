@@ -7,7 +7,7 @@ from models.secondary_pulley_model import SecondaryPulleyModel
 from models.belt_model import BeltModel
 from models.cvt_shift_model import CvtShiftModel
 from constants.engine_specs import torque_curve
-from constants.car_specs import ( ENGINE_INERTIA )
+from constants.car_specs import ENGINE_INERTIA
 from utils.conversions import deg_to_rad
 from utils.argument_parser import SimulationArgs
 
@@ -42,14 +42,14 @@ def get_models(args: SimulationArgs):
     primary_belt_model = BeltModel(primary=True)
     secondary_belt_model = BeltModel(primary=False)
     primary_radial_model = RadialPulleyModel(
-        primary = True,
-        pulley_model = primary_model,
-        belt_model = primary_belt_model,
+        primary=True,
+        pulley_model=primary_model,
+        belt_model=primary_belt_model,
     )
     secondary_radial_model = RadialPulleyModel(
-        primary = False,
-        pulley_model = secondary_model,
-        belt_model = secondary_belt_model,
+        primary=False,
+        pulley_model=secondary_model,
+        belt_model=secondary_belt_model,
     )
     cvt_shift = CvtShiftModel(
         engine_model,

@@ -9,6 +9,7 @@ from constants.car_specs import (
 from utils.theoretical_models import TheoreticalModels as tm
 from models.dataTypes import ExternalLoadForceBreakdown
 
+
 class LoadModel:
     def __init__(
         self,
@@ -34,9 +35,7 @@ class LoadModel:
         total_load_force = incline_force + drag_force
 
         return ExternalLoadForceBreakdown(
-            incline_force=incline_force,
-            drag_force=drag_force,
-            net=total_load_force
+            incline_force=incline_force, drag_force=drag_force, net=total_load_force
         )
 
     def _calculate_incline_force(self) -> float:
@@ -54,7 +53,6 @@ class LoadModel:
 
         return drag_force
 
-
     # TODO: Why does this exist
     def calculate_gearbox_load(self, velocity: float) -> float:
         """Calculate the torque at the gearbox"""
@@ -63,5 +61,3 @@ class LoadModel:
             * self.wheel_radius
             / self.gearbox_ratio
         )
-
-

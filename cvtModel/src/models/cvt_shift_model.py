@@ -53,7 +53,8 @@ class CvtShiftModel:
             state.shift_distance, angular_velocity=engine_velocity
         )
         secondary_radial_breakdown = self.secondary_radial_model.get_breakdown(
-            state.shift_distance, torque=engine_torque * cvt_ratio, 
+            state.shift_distance,
+            torque=engine_torque * cvt_ratio,
         )
 
         return primary_radial_breakdown, secondary_radial_breakdown
@@ -66,5 +67,3 @@ class CvtShiftModel:
         if shift_velocity > 0:
             return -friction_magnitude
         return friction_magnitude
-
-    

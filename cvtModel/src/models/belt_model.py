@@ -9,6 +9,7 @@ from constants.constants import (
     RUBBER_ALUMINUM_KINETIC_FRICTION,
 )
 
+
 # Centrifugal force of the belt
 class BeltModel:
     def __init__(
@@ -36,7 +37,7 @@ class BeltModel:
             ω,
             net,
         )
-    
+
     def _get_radius(self, shift_distance):
         if self.primary:
             return tm.outer_prim_radius(shift_distance) - BELT_HEIGHT / 2
@@ -48,8 +49,6 @@ class BeltModel:
             return tm.primary_wrap_angle(shift_distance)
         else:
             return tm.secondary_wrap_angle(shift_distance)
-
-
 
     ## TODO: UNUSED METHODS
     def calculate_slack_tension(

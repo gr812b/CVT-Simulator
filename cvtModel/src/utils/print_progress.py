@@ -1,6 +1,7 @@
 import csv
 import os
 import sys
+
 # TODO: Remove this file
 
 filePath = "progress_percent.csv"

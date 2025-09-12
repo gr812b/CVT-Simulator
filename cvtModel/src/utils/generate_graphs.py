@@ -254,12 +254,14 @@ def plotShiftCurves(results: list[SimulationResult], ax=None):
     for i, result in enumerate(results):
         vehicle_speeds = []
         engine_angular_velocities = []
-        
+
         for state in result.states:
             car_breakdown = car_model.get_breakdown(state)
 
             vehicle_speeds.append(state.car_velocity)
-            engine_angular_velocities.append(car_breakdown.engine_forces.angular_velocity)
+            engine_angular_velocities.append(
+                car_breakdown.engine_forces.angular_velocity
+            )
 
         ax.plot(
             vehicle_speeds,
@@ -274,12 +276,14 @@ def plotShiftCurves(results: list[SimulationResult], ax=None):
     for result in results:
         vehicle_speeds = []
         engine_angular_velocities = []
-        
+
         for state in result.states:
             car_breakdown = car_model.get_breakdown(state)
 
             vehicle_speeds.append(state.car_velocity)
-            engine_angular_velocities.append(car_breakdown.engine_forces.angular_velocity)
+            engine_angular_velocities.append(
+                car_breakdown.engine_forces.angular_velocity
+            )
 
         all_vehicle_speeds.extend(vehicle_speeds)
         all_engine_velocities.extend(engine_angular_velocities)

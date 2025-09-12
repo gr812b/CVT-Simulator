@@ -1,6 +1,10 @@
 import math
 import numpy as np
-from models.dataTypes import PrimaryForceBreakdown, flyweightForceBreakdown, springCompForceBreakdown
+from models.dataTypes import (
+    PrimaryForceBreakdown,
+    flyweightForceBreakdown,
+    springCompForceBreakdown,
+)
 from utils.conversions import inch_to_meter
 from utils.theoretical_models import TheoreticalModels as tm
 from models.ramps import (
@@ -10,7 +14,6 @@ from models.ramps import (
     PiecewiseRamp,
 )
 from constants.car_specs import MAX_SHIFT, INITIAL_FLYWEIGHT_RADIUS
-
 
 
 class PrimaryPulleyModel:
@@ -126,10 +129,12 @@ class PrimaryPulleyModel:
             angle,
             centrifugal_force,
             np.tan(angle),
-            net
+            net,
         )
 
-    def _calculate_spring_comp_force(self, compression: float) -> springCompForceBreakdown:
+    def _calculate_spring_comp_force(
+        self, compression: float
+    ) -> springCompForceBreakdown:
         net = tm.hookes_law_comp(
             self.spring_coeff_comp,
             self.initial_compression + compression,
@@ -139,4 +144,3 @@ class PrimaryPulleyModel:
             compression,
             net,
         )
-

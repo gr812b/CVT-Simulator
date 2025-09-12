@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from typing import Union
 
+
 ## Pulley stuff
 @dataclass
 class flyweightForceBreakdown:
@@ -8,29 +9,33 @@ class flyweightForceBreakdown:
     angular_velocity: float
     angle: float
 
-    centrifugal_force: float # radius, mass, angular velocity
-    angle_multiplier: float # tan(angle)
+    centrifugal_force: float  # radius, mass, angular velocity
+    angle_multiplier: float  # tan(angle)
     net: float
+
 
 @dataclass
 class springCompForceBreakdown:
     compression: float
     net: float
 
+
 @dataclass
 class SpringTorsForceBreakdown:
     rotation: float
     net: float
 
+
 @dataclass
 class HelixForceBreakdown:
-    feedbackTorque: float # TODO: See if this will breakdown
+    feedbackTorque: float  # TODO: See if this will breakdown
     springTorque: SpringTorsForceBreakdown
     angle: float
     radius: float
 
-    angle_multiplier: float # The 2 * np.tan(angle) * radius
+    angle_multiplier: float  # The 2 * np.tan(angle) * radius
     net: float
+
 
 @dataclass
 class PrimaryForceBreakdown:
@@ -38,11 +43,13 @@ class PrimaryForceBreakdown:
     springForce: springCompForceBreakdown
     net: float
 
+
 @dataclass
 class SecondaryForceBreakdown:
     springCompForce: springCompForceBreakdown
     helix_force: HelixForceBreakdown
     net: float
+
 
 @dataclass
 class BeltCentrifugalForceBreakdown:
@@ -52,13 +59,15 @@ class BeltCentrifugalForceBreakdown:
     angular_velocity: float
 
     net: float
-    
+
+
 @dataclass
 class RadialPulleyForceBreakdown:
     pulleyForce: Union[PrimaryForceBreakdown, SecondaryForceBreakdown]
     beltCentrifugalForce: BeltCentrifugalForceBreakdown
-    radialPulleyForce: float # Radial component
+    radialPulleyForce: float  # Radial component
     net: float
+
 
 @dataclass
 class CvtSystemForceBreakdown:
@@ -68,6 +77,7 @@ class CvtSystemForceBreakdown:
     acceleration: float
     net: float
 
+
 ## Engine
 @dataclass
 class EngineForceBreakdown:
@@ -75,12 +85,14 @@ class EngineForceBreakdown:
     power: float
     angular_velocity: float
 
+
 ## External load
 @dataclass
 class ExternalLoadForceBreakdown:
     incline_force: float
     drag_force: float
     net: float
+
 
 ## Car
 @dataclass
