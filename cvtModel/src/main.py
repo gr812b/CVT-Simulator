@@ -4,7 +4,7 @@ from utils.argument_parser import get_arguments
 from utils.frontend_output import FormattedSimulationResult
 
 
-# Parse arguments
+# Parse arguments 
 args = get_arguments()
 
 # Initialize models with args
