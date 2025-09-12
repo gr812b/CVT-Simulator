@@ -6,10 +6,8 @@ export type ParameterGroup = 'primary' | 'secondary' | 'environment'
 
 export type Parameter =
   | 'FlyweightMass'
-  | 'PrimaryRampGeometry'
   | 'PrimarySpringRate'
   | 'PrimarySpringPretension'
-  | 'SecondaryHelixGeometry'
   | 'SecondaryTorsionSpringRate'
   | 'SecondaryCompressionSpringRate'
   | 'SecondaryRotationalSpringPretension'
@@ -51,15 +49,6 @@ export const PARAMETERS: Record<Parameter, ParameterConfig> = {
     units: 'kg',
     group: 'primary',
   },
-  PrimaryRampGeometry: {
-    label: 'Primary Ramp Geometry',
-    description: 'Ramp geometry of the primary pulley',
-    type: 'number',
-    defaultValue: 1,
-    validation: (value) => typeof value === 'number' && value >= 0,
-    units: 'ratio',
-    group: 'primary',
-  },
   PrimarySpringRate: {
     label: 'Primary Spring Rate',
     description: 'Spring rate of the primary pulley',
@@ -77,15 +66,6 @@ export const PARAMETERS: Record<Parameter, ParameterConfig> = {
     validation: (value) => typeof value === 'number' && value >= 0,
     units: 'm',
     group: 'primary',
-  },
-  SecondaryHelixGeometry: {
-    label: 'Secondary Helix Geometry',
-    description: 'Helix geometry of the secondary pulley',
-    type: 'number',
-    defaultValue: 1,
-    validation: (value) => typeof value === 'number' && value >= 0,
-    units: 'ratio',
-    group: 'secondary',
   },
   SecondaryTorsionSpringRate: {
     label: 'Secondary Torsion Spring Rate',
