@@ -27,12 +27,5 @@
         padding: 0;
         background-color: transparent;
         border-bottom: 0.125rem solid currentColor;
-
-        // Remove number input arrows
-        &::-webkit-outer-spin-button,
-        &::-webkit-inner-spin-button {
-            -webkit-appearance: none;
-            margin: 0;
-        }
     }
 }
