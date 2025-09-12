@@ -1,8 +1,7 @@
 import styles from './Home.module.scss'
 import bajaLogo from '@assets/baja_logo.png'
 
-function Home() {
-
+export const Home = () => {
   return (
     <div className={styles.Home}>
       <div className={styles.header}>
@@ -12,5 +11,3 @@ function Home() {
     </div>
   )
 }
-
-export default Home

@@ -10,7 +10,9 @@
       "@components/*": ["components/*"],
       "@assets/*": ["assets/*"],
       "@styles/*": ["styles/*"],
-      "@pages/*": ["pages/*"]
+      "@types": ["types/index.ts"],
+      "@pages/*": ["pages/*"],
+      "@contexts/*": ["contexts/*"],
     },
   }
 }
