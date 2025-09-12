@@ -2,6 +2,8 @@
 type ParameterValue = string | number | boolean
 type ParameterType = 'string' | 'number' | 'boolean'
 
+export type ParameterGroup = 'primary' | 'secondary' | 'environment'
+
 export type Parameter =
   | 'FlyweightMass'
   | 'PrimaryRampGeometry'
@@ -25,12 +27,19 @@ interface BaseParameterConfig<T extends ParameterValue> {
     defaultValue: T;
     validation: (value: T) => boolean;
     units: string;
+    group: ParameterGroup;
 }
 
 type StringParameter = BaseParameterConfig<string> & { type: 'string' };
 type NumberParameter = BaseParameterConfig<number> & { type: 'number' };
 
 type ParameterConfig = StringParameter | NumberParameter;
+
+export const GROUP_TITLES: Record<ParameterGroup, string> = {
+    primary: 'Primary Pulley',
+    secondary: 'Secondary Pulley',
+    environment: 'Environment',
+};
 
 export const PARAMETERS: Record<Parameter, ParameterConfig> = {
   FlyweightMass: {
@@ -40,6 +49,7 @@ export const PARAMETERS: Record<Parameter, ParameterConfig> = {
     defaultValue: 0.8,
     validation: (value) => typeof value === 'number' && value > 0,
     units: 'kg',
+    group: 'primary',
   },
   PrimaryRampGeometry: {
     label: 'Primary Ramp Geometry',
@@ -48,6 +58,7 @@ export const PARAMETERS: Record<Parameter, ParameterConfig> = {
     defaultValue: 1,
     validation: (value) => typeof value === 'number' && value >= 0,
     units: 'ratio',
+    group: 'primary',
   },
   PrimarySpringRate: {
     label: 'Primary Spring Rate',
@@ -56,6 +67,7 @@ export const PARAMETERS: Record<Parameter, ParameterConfig> = {
     defaultValue: 1000,
     validation: (value) => typeof value === 'number' && value > 0,
     units: 'N/m',
+    group: 'primary',
   },
   PrimarySpringPretension: {
     label: 'Primary Spring Pretension',
@@ -64,6 +76,7 @@ export const PARAMETERS: Record<Parameter, ParameterConfig> = {
     defaultValue: 0,
     validation: (value) => typeof value === 'number' && value >= 0,
     units: 'm',
+    group: 'primary',
   },
   SecondaryHelixGeometry: {
     label: 'Secondary Helix Geometry',
@@ -72,6 +85,7 @@ export const PARAMETERS: Record<Parameter, ParameterConfig> = {
     defaultValue: 1,
     validation: (value) => typeof value === 'number' && value >= 0,
     units: 'ratio',
+    group: 'secondary',
   },
   SecondaryTorsionSpringRate: {
     label: 'Secondary Torsion Spring Rate',
@@ -80,6 +94,7 @@ export const PARAMETERS: Record<Parameter, ParameterConfig> = {
     defaultValue: 30,
     validation: (value) => typeof value === 'number' && value > 0,
     units: 'Nm/rad',
+    group: 'secondary',
   },
   SecondaryCompressionSpringRate: {
     label: 'Secondary Compression Spring Rate',
@@ -88,6 +103,7 @@ export const PARAMETERS: Record<Parameter, ParameterConfig> = {
     defaultValue: 1,
     validation: (value) => typeof value === 'number' && value > 0,
     units: 'N/m',
+    group: 'secondary',
   },
   SecondaryRotationalSpringPretension: {
     label: 'Secondary Rotational Spring Pretension',
@@ -96,6 +112,7 @@ export const PARAMETERS: Record<Parameter, ParameterConfig> = {
     defaultValue: 45,
     validation: (value) => typeof value === 'number' && value >= 0,
     units: 'degrees',
+    group: 'secondary',
   },
   SecondaryLinearSpringPretension: {
     label: 'Secondary Linear Spring Pretension',
@@ -104,6 +121,7 @@ export const PARAMETERS: Record<Parameter, ParameterConfig> = {
     defaultValue: 0.1,
     validation: (value) => typeof value === 'number' && value >= 0,
     units: 'm',
+    group: 'secondary',
   },
   VehicleWeight: {
     label: 'Vehicle Weight',
@@ -112,6 +130,7 @@ export const PARAMETERS: Record<Parameter, ParameterConfig> = {
     defaultValue: 225,
     validation: (value) => typeof value === 'number' && value > 0,
     units: 'kg',
+    group: 'environment',
   },
   DriverWeight: {
     label: 'Driver Weight',
@@ -120,6 +139,7 @@ export const PARAMETERS: Record<Parameter, ParameterConfig> = {
     defaultValue: 75,
     validation: (value) => typeof value === 'number' && value > 0,
     units: 'kg',
+    group: 'environment',
   },
   Traction: {
     label: 'Traction',
@@ -129,6 +149,7 @@ export const PARAMETERS: Record<Parameter, ParameterConfig> = {
     validation: (value) =>
       typeof value === 'number' && value >= 0 && value <= 100,
     units: '%',
+    group: 'environment',
   },
   AngleOfIncline: {
     label: 'Angle of Incline',
@@ -137,6 +158,7 @@ export const PARAMETERS: Record<Parameter, ParameterConfig> = {
     defaultValue: 0,
     validation: (value) => typeof value === 'number',
     units: 'degrees',
+    group: 'environment',
   },
   TotalDistance: {
     label: 'Total Distance',
@@ -145,5 +167,6 @@ export const PARAMETERS: Record<Parameter, ParameterConfig> = {
     defaultValue: 200,
     validation: (value) => typeof value === 'number' && value > 0,
     units: 'm',
+    group: 'environment',
   },
 }

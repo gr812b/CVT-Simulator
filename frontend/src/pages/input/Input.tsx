@@ -9,41 +9,36 @@ import { ParameterAccordion } from '@components/parameterAccordion/ParameterAcco
 import { InputField } from '@components/inputField/InputField';
 import { ParameterDescription } from '@components/parameterDescription/ParameterDescription';
 import { useState } from 'react';
-import { PARAMETERS } from 'types/parameter';
+import { GROUP_TITLES, PARAMETERS, type Parameter, type ParameterGroup } from '@types';
 
 export const Input = () => {
     const navigate = useNavigate();
 
+    // Precompute expanded and collapsed states for all accordions
+    const allGroups = Object.keys(GROUP_TITLES) as ParameterGroup[];
+    const expandedState: Record<ParameterGroup, boolean> = Object.fromEntries(allGroups.map(group => [group, true])) as Record<ParameterGroup, boolean>;
+    const collapsedState: Record<ParameterGroup, boolean> = Object.fromEntries(allGroups.map(group => [group, false])) as Record<ParameterGroup, boolean>;
+
     // State to manage which accordions are expanded
-    const [expanded, setExpanded] = useState({
-        primary: true,
-        secondary: true,
-        environment: true,
-    });
+    const [expanded, setExpanded] = useState<Record<ParameterGroup, boolean>>(expandedState);
 
     // Handler to toggle individual accordion
-    const toggleAccordion = (key: keyof typeof expanded) => {
-        setExpanded((prev) => ({ ...prev, [key]: !prev[key] }));
+    const toggleAccordion = (group: keyof typeof expanded) => {
+        setExpanded((prev) => ({ ...prev, [group]: !prev[group] }));
     };
 
-    // Sets all accordions to expanded
-    const expandAll = () => setExpanded({ primary: true, secondary: true, environment: true });
-
-    // Sets all accordions to collapsed
-    const collapseAll = () => setExpanded({ primary: false, secondary: false, environment: false });
-
-    const [activeField, setActiveField] = useState<string | null>(null);
+    // State to track which input field was most recently being used
+    const [activeField, setActiveField] = useState<Parameter | null>(null);
 
     // Get parameter description based on active field
-    const getParameterDescription = (field: string | null) => {
-        const parameter = PARAMETERS.find(param => param.key === field);
-
-        // Return ParameterDescription component
-        if (parameter) {
-            return <ParameterDescription name={parameter.label} description={parameter.description} />;
-        } else {
-            return <ParameterDescription name="No Parameter Selected" description="Click on an input field to see its description." />;
-        }
+    const getParameterDescription = (key: Parameter | null) => {
+        const parameter = key ? PARAMETERS[key] : null;
+        return (
+            <ParameterDescription
+                name={parameter ? parameter.label : "No Parameter Selected"}
+                description={parameter ? parameter.description : "Click on an input field to see its description."}
+            />
+        );
     }
 
     return (
@@ -56,23 +51,26 @@ export const Input = () => {
             />
             <div className={styles.inputGrid}>
                 <div className={styles.parameterInputContainer}>
-                    <ParameterAccordion title='Primary Pulley' isExpanded={expanded.primary} onToggle={() => toggleAccordion('primary')}>
-                        <InputField className={styles.baseInputField} label='Spring Pretension (m)' onFocus={() => setActiveField('springPretension')} />
-                        <InputField className={styles.baseInputField} label='Spring Rate (N/m)' onFocus={() => setActiveField('springRate')} />
-                    </ParameterAccordion>
-                    <ParameterAccordion title='Secondary Pulley' isExpanded={expanded.secondary} onToggle={() => toggleAccordion('secondary')}>
-                        <InputField className={styles.baseInputField} label='Rotational Spring Pretension (deg)' onFocus={() => setActiveField('rotationalSpringPretension')} />
-                        <InputField className={styles.baseInputField} label='Rotational Spring Rate (Nm/deg)' onFocus={() => setActiveField('rotationalSpringRate')} />
-                        <InputField className={styles.baseInputField} label='Linear Spring Pretension (m)' onFocus={() => setActiveField('linearSpringPretension')} />
-                        <InputField className={styles.baseInputField} label='Linear Spring Rate (N/m)' onFocus={() => setActiveField('linearSpringRate')} />
-                    </ParameterAccordion>
-                    <ParameterAccordion title='Environment' isExpanded={expanded.environment} onToggle={() => toggleAccordion('environment')}>
-                        <InputField className={styles.baseInputField} label='Vehicle Weight (kg)' onFocus={() => setActiveField('vehicleWeight')} />
-                        <InputField className={styles.baseInputField} label='Driver Weight (kg)' onFocus={() => setActiveField('driverWeight')} />
-                        <InputField className={styles.baseInputField} label='Traction (%)' onFocus={() => setActiveField('traction')} />
-                        <InputField className={styles.baseInputField} label='Angle of Incline (deg)' onFocus={() => setActiveField('angleOfIncline')} />
-                        <InputField className={styles.baseInputField} label='Total Distance (m)' onFocus={() => setActiveField('totalDistance')} />
-                    </ParameterAccordion>
+                    {(Object.keys(GROUP_TITLES) as ParameterGroup[]).map((groupKey) => (
+                        <ParameterAccordion
+                            key={groupKey}
+                            title={GROUP_TITLES[groupKey]}
+                            isExpanded={expanded[groupKey]}
+                            onToggle={() => toggleAccordion(groupKey)}
+                        >
+                            {Object.entries(PARAMETERS)
+                                .filter(([, param]) => param.group === groupKey)
+                                .map(([paramKey, param]) => (
+                                    <InputField
+                                        key={paramKey}
+                                        className={styles.baseInputField}
+                                        label={`${param.label} (${param.units})`}
+                                        defaultValue={param.defaultValue}
+                                        onFocus={() => setActiveField(paramKey as Parameter)}
+                                    />
+                                ))}
+                        </ParameterAccordion>
+                    ))}
                 </div>
                 <div className={styles.parameterInformationContainer}>
                     {getParameterDescription(activeField)}
@@ -81,22 +79,19 @@ export const Input = () => {
                     <MainButton
                         text='Expand All'
                         icon={ArrowDownCircle}
-                        onClick={expandAll}
-                        type='button'
+                        onClick={() => setExpanded(expandedState)}
                     />
                     <MainButton
                         text='Collapse All'
                         icon={ArrowUpCircle}
                         iconSide='right'
-                        onClick={collapseAll}
-                        type='button'
+                        onClick={() => setExpanded(collapsedState)}
                     />
                 </div>
                 <div className={styles.nextButtonContainer}>
                     <MainButton
                         text='Run'
                         icon={Play}
-                        type='submit'
                     />
                 </div>
             </div>
