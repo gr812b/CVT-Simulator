@@ -11,29 +11,29 @@ import { ParameterDescription } from '@components/parameterDescription/Parameter
 import { useState } from 'react';
 import { GROUP_TITLES, PARAMETERS, type Parameter, type ParameterGroup } from '@types';
 
+// Precomputed list of all parameter groups
+const allGroups = Object.keys(GROUP_TITLES) as ParameterGroup[];
+
+// Precompute expanded and collapsed states for all accordions
+const expandedState: Record<ParameterGroup, boolean> = Object.fromEntries(allGroups.map(group => [group, true])) as Record<ParameterGroup, boolean>;
+const collapsedState: Record<ParameterGroup, boolean> = Object.fromEntries(allGroups.map(group => [group, false])) as Record<ParameterGroup, boolean>;
+
 export const Input = () => {
     const navigate = useNavigate();
 
-    // Precomputed list of all parameter groups
-    const allGroups = Object.keys(GROUP_TITLES) as ParameterGroup[];
-    
-    // Precompute expanded and collapsed states for all accordions
-    const expandedState: Record<ParameterGroup, boolean> = Object.fromEntries(allGroups.map(group => [group, true])) as Record<ParameterGroup, boolean>;
-    const collapsedState: Record<ParameterGroup, boolean> = Object.fromEntries(allGroups.map(group => [group, false])) as Record<ParameterGroup, boolean>;
-
     // State to manage which accordions are expanded
     const [expanded, setExpanded] = useState<Record<ParameterGroup, boolean>>(expandedState);
+
+    // State to track which input field was most recently being used
+    const [activeField, setActiveField] = useState<Parameter | null>(null);
 
     // Handler to toggle individual accordion
     const toggleAccordion = (group: keyof typeof expanded) => {
         setExpanded((prev) => ({ ...prev, [group]: !prev[group] }));
     };
 
-    // State to track which input field was most recently being used
-    const [activeField, setActiveField] = useState<Parameter | null>(null);
-
     // Get parameter description based on active field
-    const getParameterDescription = (key: Parameter | null) => {
+    const getParameterInformation = (key: Parameter | null) => {
         const parameter = key ? PARAMETERS[key] : null;
         return (
             <ParameterDescription
@@ -75,7 +75,7 @@ export const Input = () => {
                     ))}
                 </div>
                 <div className={styles.parameterInformationContainer}>
-                    {getParameterDescription(activeField)}
+                    {getParameterInformation(activeField)}
                 </div>
                 <div className={styles.inputButtonsContainer}>
                     <MainButton
