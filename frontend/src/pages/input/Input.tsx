@@ -14,8 +14,10 @@ import { GROUP_TITLES, PARAMETERS, type Parameter, type ParameterGroup } from '@
 export const Input = () => {
     const navigate = useNavigate();
 
-    // Precompute expanded and collapsed states for all accordions
+    // Precomputed list of all parameter groups
     const allGroups = Object.keys(GROUP_TITLES) as ParameterGroup[];
+    
+    // Precompute expanded and collapsed states for all accordions
     const expandedState: Record<ParameterGroup, boolean> = Object.fromEntries(allGroups.map(group => [group, true])) as Record<ParameterGroup, boolean>;
     const collapsedState: Record<ParameterGroup, boolean> = Object.fromEntries(allGroups.map(group => [group, false])) as Record<ParameterGroup, boolean>;
 
@@ -51,7 +53,7 @@ export const Input = () => {
             />
             <div className={styles.inputGrid}>
                 <div className={styles.parameterInputContainer}>
-                    {(Object.keys(GROUP_TITLES) as ParameterGroup[]).map((groupKey) => (
+                    {allGroups.map((groupKey) => (
                         <ParameterAccordion
                             key={groupKey}
                             title={GROUP_TITLES[groupKey]}
