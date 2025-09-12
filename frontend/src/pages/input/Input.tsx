@@ -1,15 +1,15 @@
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { MainButton } from '@components/mainButton/MainButton';
-import styles from './Input.module.scss';
+import { ParameterAccordion } from '@components/parameterAccordion/ParameterAccordion';
+import { InputField } from '@components/inputField/InputField';
+import { ParameterDescription } from '@components/parameterDescription/ParameterDescription';
+import { GROUP_TITLES, PARAMETERS, type Parameter, type ParameterGroup } from '@types';
 import ArrowLeft from '@assets/icons/arrow_left.svg?react';
 import ArrowUpCircle from '@assets/icons/arrow_up_circle.svg?react';
 import ArrowDownCircle from '@assets/icons/arrow_down_circle.svg?react';
 import Play from '@assets/icons/play.svg?react';
-import { useNavigate } from 'react-router-dom';
-import { ParameterAccordion } from '@components/parameterAccordion/ParameterAccordion';
-import { InputField } from '@components/inputField/InputField';
-import { ParameterDescription } from '@components/parameterDescription/ParameterDescription';
-import { useState } from 'react';
-import { GROUP_TITLES, PARAMETERS, type Parameter, type ParameterGroup } from '@types';
+import styles from './Input.module.scss';
 
 // Precomputed list of all parameter groups
 const allGroups = Object.keys(GROUP_TITLES) as ParameterGroup[];
