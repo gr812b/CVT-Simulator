@@ -11,8 +11,9 @@ import ArrowDownCircle from '@assets/icons/arrow_down_circle.svg?react';
 import Play from '@assets/icons/play.svg?react';
 import styles from './Input.module.scss';
 
-// Precomputed list of all parameter groups
+// Precomputed list of all groups and parameters
 const allGroups = Object.keys(GROUP_TITLES) as ParameterGroup[];
+const allParameters = Object.keys(PARAMETERS) as Parameter[];
 
 // Precompute expanded and collapsed states for all accordions
 const expandedState: Record<ParameterGroup, boolean> = Object.fromEntries(allGroups.map(group => [group, true])) as Record<ParameterGroup, boolean>;
@@ -60,17 +61,20 @@ export const Input = () => {
                             isExpanded={expanded[groupKey]}
                             onToggle={() => toggleAccordion(groupKey)}
                         >
-                            {Object.entries(PARAMETERS)
-                                .filter(([, param]) => param.group === groupKey)
-                                .map(([paramKey, param]) => (
-                                    <InputField
-                                        key={paramKey}
-                                        className={styles.baseInputField}
-                                        label={`${param.label} (${param.units})`}
-                                        defaultValue={param.defaultValue}
-                                        onFocus={() => setActiveField(paramKey as Parameter)}
-                                    />
-                                ))}
+                            {allParameters
+                                .filter(paramKey => PARAMETERS[paramKey].group === groupKey)
+                                .map(paramKey => {
+                                    const { label, units, defaultValue } = PARAMETERS[paramKey];
+                                    return (
+                                        <InputField
+                                            key={paramKey}
+                                            className={styles.baseInputField}
+                                            label={`${label} (${units})`}
+                                            defaultValue={defaultValue}
+                                            onFocus={() => setActiveField(paramKey)}
+                                        />
+                                    );
+                                })}
                         </ParameterAccordion>
                     ))}
                 </div>
