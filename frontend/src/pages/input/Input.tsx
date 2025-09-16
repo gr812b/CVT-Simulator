@@ -5,7 +5,7 @@ import { ParameterAccordion } from '@components/parameterAccordion/ParameterAcco
 import { InputField } from '@components/inputField/InputField';
 import { ParameterDescription } from '@components/parameterDescription/ParameterDescription';
 import { GROUP_TITLES, PARAMETERS, type Parameter, type ParameterGroup } from '@types';
-import ArrowLeft from '@assets/icons/arrow_left.svg?react';
+import Home from '@assets/icons/home.svg?react';
 import ArrowUpCircle from '@assets/icons/arrow_up_circle.svg?react';
 import ArrowDownCircle from '@assets/icons/arrow_down_circle.svg?react';
 import Play from '@assets/icons/play.svg?react';
@@ -46,8 +46,8 @@ export const Input = () => {
     return (
         <div className={styles.input}>
             <MainButton
-                text={'Back'}
-                icon={ArrowLeft}
+                text={'Home'}
+                icon={Home}
                 className={styles.backButton}
                 onClick={() => navigate('/')}
             />
