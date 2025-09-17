@@ -44,9 +44,8 @@ class FormattedSimulationResult(SimulationResult):
             # TODO: Use cvt_state to get cvt_ratio
             args = get_arguments()
             car_model, cvt_model = get_models(args)
-            car_state, cvt_state = car_model.get_breakdown(
-                state
-            ), cvt_model.get_breakdown(state)
+            car_state = car_model.get_breakdown(state)
+            cvt_state = cvt_model.get_breakdown(state)
 
             cvt_ratio = tm.current_cvt_ratio(state.shift_distance)
             engine_velocity = car_state.engine_forces.angular_velocity

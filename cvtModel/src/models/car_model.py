@@ -31,7 +31,7 @@ class CarModel:
         engine = engineForces.power / state.car_velocity
         accel = (engine - load_force.net) / self.car_mass
 
-        return CarForceBreakdown(engineForces, load_force, accel)
+        return CarForceBreakdown(load_force, engineForces, accel)
 
     def _get_engine_velocity(self, shift_distance, car_velocity):
         cvt_ratio = tm.current_cvt_ratio(shift_distance)
