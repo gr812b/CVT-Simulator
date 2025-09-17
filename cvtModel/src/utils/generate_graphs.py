@@ -139,7 +139,6 @@ def plotVehicleEngineSpeed(result: SimulationResult, ax=None):
         car_breakdown = car_model.get_breakdown(state)
         cvt_breakdown = cvt_model.get_breakdown(state)
 
-        # TODO: This shoud be in a data field somewhere
         cvt_ratio = cvt_breakdown.cvt_ratio
 
         cvt_ratios.append(cvt_ratio)
