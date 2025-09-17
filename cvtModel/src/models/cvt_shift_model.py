@@ -29,11 +29,15 @@ class CvtShiftModel:
         friction = self._frictional_force(net, shift_velocity)
 
         acceleration = (net + friction) / self.cvt_moving_mass
+
+        cvt_ratio = tm.current_cvt_ratio(state.shift_distance)
+
         return CvtSystemForceBreakdown(
             prim_breakdown,
             sec_breakdown,
             friction,
             acceleration,
+            cvt_ratio,
             net,
         )
 

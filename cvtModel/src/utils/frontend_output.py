@@ -6,7 +6,6 @@ from utils.simulation_result import SimulationResult
 from constants.car_specs import (
     MAX_SHIFT,
 )
-from utils.theoretical_models import TheoreticalModels as tm
 from utils.conversions import rad_s_to_rpm, meter_s_to_km_h, rad_to_deg
 
 
@@ -39,14 +38,12 @@ class FormattedSimulationResult(SimulationResult):
             dt = t - self.time[i - 1] if i > 0 else 0
             state = self.states[i]
 
-            # TODO: Use cvt_state to get cvt_ratio
             args = get_arguments()
             car_model, cvt_model = get_models(args)
             car_state = car_model.get_breakdown(state)
-            # TODO: Use this for a more comprehensive output
-            # cvt_state = cvt_model.get_breakdown(state)
+            cvt_state = cvt_model.get_breakdown(state)
 
-            cvt_ratio = tm.current_cvt_ratio(state.shift_distance)
+            cvt_ratio = cvt_state.cvt_ratio
             engine_velocity = car_state.engine_forces.angular_velocity
             engine_rpm = rad_s_to_rpm(engine_velocity)
 

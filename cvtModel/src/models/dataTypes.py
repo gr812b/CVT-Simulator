@@ -75,6 +75,7 @@ class CvtSystemForceBreakdown:
     secondaryRadialForce: RadialPulleyForceBreakdown
     friction: float
     acceleration: float
+    cvt_ratio: float
     net: float
 
 
