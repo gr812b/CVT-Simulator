@@ -4,8 +4,6 @@ from models.model_initializer import get_models
 from utils.argument_parser import get_arguments
 from utils.simulation_result import SimulationResult
 from constants.car_specs import (
-    GEARBOX_RATIO,
-    WHEEL_RADIUS,
     MAX_SHIFT,
 )
 from utils.theoretical_models import TheoreticalModels as tm
@@ -45,7 +43,8 @@ class FormattedSimulationResult(SimulationResult):
             args = get_arguments()
             car_model, cvt_model = get_models(args)
             car_state = car_model.get_breakdown(state)
-            cvt_state = cvt_model.get_breakdown(state)
+            # TODO: Use this for a more comprehensive output
+            # cvt_state = cvt_model.get_breakdown(state)
 
             cvt_ratio = tm.current_cvt_ratio(state.shift_distance)
             engine_velocity = car_state.engine_forces.angular_velocity
