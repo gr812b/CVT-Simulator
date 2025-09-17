@@ -34,12 +34,13 @@ class FormattedSimulationResult(SimulationResult):
         current_engine_angle = 0.0
         current_secondary_angle = 0.0
 
+        args = get_arguments()
+        car_model, cvt_model = get_models(args)
+
         for i, t in enumerate(self.time):
             dt = t - self.time[i - 1] if i > 0 else 0
             state = self.states[i]
 
-            args = get_arguments()
-            car_model, cvt_model = get_models(args)
             car_state = car_model.get_breakdown(state)
             cvt_state = cvt_model.get_breakdown(state)
 
