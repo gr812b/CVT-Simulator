@@ -11,7 +11,7 @@ import Plus from '@assets/icons/plus.svg?react';
 export const Dashboard = () => {
   const navigate = useNavigate();
 
-  const tempIsDisabled = false; // Placeholder for future functionality
+  const tempIsDisabled = true; // Placeholder for future functionality
   
   return (
     <div className={styles.dashboard}>
@@ -28,18 +28,21 @@ export const Dashboard = () => {
           icon={Play}
           className={styles.button}
           disabled={tempIsDisabled}
+          onClick={() => console.log('Run button clicked')}
         />
         <Button
           text={'Edit'}
           icon={Edit}
           className={styles.button}
           disabled={tempIsDisabled}
+          onClick={() => console.log('Edit button clicked')}
         />
         <Button
           text={'Delete'}
           icon={TrashCan}
           className={styles.button}
           disabled={tempIsDisabled}
+          onClick={() => console.log('Delete button clicked')}
         />
         <Button
           text={'New'}

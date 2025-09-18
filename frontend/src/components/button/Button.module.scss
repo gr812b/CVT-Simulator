@@ -26,6 +26,16 @@
         background-color: var(--primary);
         color: var(--secondary);
     }
+
+    &:disabled {
+        pointer-events: none;
+        opacity: 0.6;
+
+        &:hover {
+            background-color: unset;
+            color: var(--primary);
+        }
+    }
 }
 
 .noText {
