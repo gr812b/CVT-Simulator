@@ -1,15 +1,15 @@
 import pandas as pd
 import matplotlib.pyplot as plt
+from models.model_initializer import get_models
+from utils.argument_parser import get_arguments
 from utils.simulation_result import SimulationResult
 from constants.car_specs import (
-    GEARBOX_RATIO,
-    WHEEL_RADIUS,
     MAX_SHIFT,
 )
-from utils.theoretical_models import TheoreticalModels as tm
 from utils.conversions import rad_s_to_rpm, meter_s_to_km_h, rad_to_deg
 
 
+# TODO: Update this to output to front end properly
 class FormattedSimulationResult(SimulationResult):
     def __init__(self, solution=None, time=None, states=None):
         """
@@ -34,17 +34,23 @@ class FormattedSimulationResult(SimulationResult):
         current_engine_angle = 0.0
         current_secondary_angle = 0.0
 
+        args = get_arguments()
+        car_model, cvt_model = get_models(args)
+
         for i, t in enumerate(self.time):
             dt = t - self.time[i - 1] if i > 0 else 0
             state = self.states[i]
 
-            cvt_ratio = tm.current_cvt_ratio(state.shift_distance)
-            wheel_to_engine_ratio = (cvt_ratio * GEARBOX_RATIO) / WHEEL_RADIUS
-            engine_velocity = state.car_velocity * wheel_to_engine_ratio
+            car_state = car_model.get_breakdown(state)
+            cvt_state = cvt_model.get_breakdown(state)
 
+            cvt_ratio = cvt_state.cvt_ratio
+            engine_velocity = car_state.engine_forces.angular_velocity
             engine_rpm = rad_s_to_rpm(engine_velocity)
+
             current_engine_angle += engine_velocity * dt
             current_secondary_angle += engine_velocity / cvt_ratio * dt
+
             car_km_per_hour = meter_s_to_km_h(state.car_velocity)
             shift_distance_percent = state.shift_distance / MAX_SHIFT
 

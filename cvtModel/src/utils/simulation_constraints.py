@@ -1,7 +1,7 @@
 from constants.car_specs import (
     MAX_SHIFT,
 )
-from simulations.cvt_shift import CvtShift
+from models.cvt_shift_model import CvtShiftModel
 from utils.system_state import SystemState
 import numpy as np
 
@@ -51,7 +51,7 @@ car_velocity_constraint_event.terminal = True
 car_velocity_constraint_event.direction = -1
 
 
-def get_shift_steady_event(shift_simulator: CvtShift):
+def get_shift_steady_event(shift_simulator: CvtShiftModel):
     """
     Returns an event function that triggers only when:
       1. The system is close enough to full shift (i.e. shift_distance within tol of MAX_SHIFT).
@@ -69,7 +69,7 @@ def get_shift_steady_event(shift_simulator: CvtShift):
 
         # Once near full shift, return the computed shift acceleration.
         # The event will trigger when this value crosses from negative to positive.
-        return shift_simulator.calculate_shift_acceleration(state)
+        return shift_simulator.get_breakdown(state).acceleration
 
     shift_steady_event.terminal = True
     shift_steady_event.direction = 1  # Looking for a negative-to-positive crossing.
