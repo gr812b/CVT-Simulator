@@ -1,8 +1,13 @@
 import math
 import numpy as np
+from models.dataTypes import (
+    PrimaryForceBreakdown,
+    flyweightForceBreakdown,
+    springCompForceBreakdown,
+)
 from utils.conversions import inch_to_meter
 from utils.theoretical_models import TheoreticalModels as tm
-from utils.ramps import (
+from models.ramps import (
     CircularSegment,
     CubicSpiralZeroK1,
     LinearSegment,
@@ -11,7 +16,7 @@ from utils.ramps import (
 from constants.car_specs import MAX_SHIFT, INITIAL_FLYWEIGHT_RADIUS
 
 
-class PrimaryPulley:
+class PrimaryPulleyModel:
     def __init__(
         self,
         spring_coeff_comp: float,  # N/m
@@ -80,9 +85,24 @@ class PrimaryPulley:
                 )
             )
 
-    def calculate_flyweight_force(
+    def get_breakdown(
         self, shift_distance: float, angular_velocity: float
-    ) -> float:
+    ) -> PrimaryForceBreakdown:
+        flyweight_force_breakdown = self._calculate_flyweight_force(
+            shift_distance, angular_velocity
+        )
+        spring_force_breakdown = self._calculate_spring_comp_force(shift_distance)
+        net = flyweight_force_breakdown.net - spring_force_breakdown.net
+
+        return PrimaryForceBreakdown(
+            flyweight_force_breakdown,
+            spring_force_breakdown,
+            net,
+        )
+
+    def _calculate_flyweight_force(
+        self, shift_distance: float, angular_velocity: float
+    ) -> flyweightForceBreakdown:
         if shift_distance < 0:
             shift_distance = 0
         if shift_distance > MAX_SHIFT:
@@ -101,20 +121,26 @@ class PrimaryPulley:
 
         # print(f"Shift distance: {shift_distance:.2f}, Flyweight radius: {flyweight_radius:.2f}, Angular velocity: {angular_velocity:.2f}, Angle: {angle:.2f}")
         # print(f"Centrifugal force: {centrifugal_force:.2f}, Angle: {np.sin(angle):.5f}")
-        return centrifugal_force * np.tan(angle)
+        net = centrifugal_force * np.tan(angle)
 
-    def calculate_spring_comp_force(self, compression: float) -> float:
-        return tm.hookes_law_comp(
+        return flyweightForceBreakdown(
+            flyweight_radius,
+            angular_velocity,
+            angle,
+            centrifugal_force,
+            np.tan(angle),
+            net,
+        )
+
+    def _calculate_spring_comp_force(
+        self, compression: float
+    ) -> springCompForceBreakdown:
+        net = tm.hookes_law_comp(
             self.spring_coeff_comp,
             self.initial_compression + compression,
         )
 
-    def calculate_net_force(
-        self, shift_distance: float, angular_velocity: float
-    ) -> float:
-        centrifugal_force = self.calculate_flyweight_force(
-            shift_distance, angular_velocity
+        return springCompForceBreakdown(
+            compression,
+            net,
         )
-        spring_force = self.calculate_spring_comp_force(shift_distance)
-        # print(f"Centrifugal force: {centrifugal_force:.2f}, Spring force: {spring_force:.2f}")
-        return centrifugal_force - spring_force

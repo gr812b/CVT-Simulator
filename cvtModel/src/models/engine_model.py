@@ -1,7 +1,9 @@
 from typing import Callable
 
+from models.dataTypes import EngineForceBreakdown
 
-class EngineSimulator:
+
+class EngineModel:
     def __init__(
         self,
         torque_curve: Callable[[float], float],  # rad/s -> Nm
@@ -18,10 +20,11 @@ class EngineSimulator:
         """Get the power output at a given angular velocity."""
         return self.get_torque(angular_velocity) * angular_velocity
 
-    def calculate_angular_acceleration(
-        self, angular_velocity: float, load_torque: float
-    ) -> float:
-        """Calculate the angular acceleration based on the current angular velocity."""
+    def get_breakdown(self, angular_velocity: float) -> EngineForceBreakdown:
         torque = self.get_torque(angular_velocity)
-        angular_acceleration = (torque - load_torque) / self.inertia
-        return angular_acceleration
+        power = self.get_power(angular_velocity)
+        return EngineForceBreakdown(
+            torque,
+            power,
+            angular_velocity,
+        )

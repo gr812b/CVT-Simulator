@@ -7,11 +7,10 @@ from constants.car_specs import (
     GEARBOX_RATIO,
 )
 from utils.theoretical_models import TheoreticalModels as tm
+from models.dataTypes import ExternalLoadForceBreakdown
 
-# TODO: Consider direction, drag should never be applied in the opposite direction of velocity
 
-
-class LoadSimulator:
+class LoadModel:
     def __init__(
         self,
         car_mass: float,  # kg
@@ -29,11 +28,21 @@ class LoadSimulator:
         self.wheel_radius = WHEEL_RADIUS
         self.gearbox_ratio = GEARBOX_RATIO
 
-    def calculate_incline_force(self) -> float:
+    def get_breakdown(self, velocity: float) -> ExternalLoadForceBreakdown:
+        """Calculate the total load torque on the wheels due to drag and incline."""
+        incline_force = self._calculate_incline_force()
+        drag_force = self._calculate_drag_force(velocity)
+        total_load_force = incline_force + drag_force
+
+        return ExternalLoadForceBreakdown(
+            incline_force=incline_force, drag_force=drag_force, net=total_load_force
+        )
+
+    def _calculate_incline_force(self) -> float:
         """Calculate the incline force due to gravity."""
         return self.car_mass * self.g * math.sin(self.incline_angle)
 
-    def calculate_drag_force(self, velocity: float) -> float:
+    def _calculate_drag_force(self, velocity: float) -> float:
         """Calculate the drag force on the car."""
         drag_force = tm.air_resistance(
             self.air_density, velocity, self.frontal_area, self.drag_coefficient
@@ -44,13 +53,7 @@ class LoadSimulator:
 
         return drag_force
 
-    def calculate_total_load_force(self, velocity: float) -> float:
-        """Calculate the total load torque on the wheels due to drag and incline."""
-        incline_force = self.calculate_incline_force()
-        drag_force = self.calculate_drag_force(velocity)
-        total_load_force = incline_force + drag_force
-        return total_load_force
-
+    # TODO: Why does this exist
     def calculate_gearbox_load(self, velocity: float) -> float:
         """Calculate the torque at the gearbox"""
         return (
@@ -58,11 +61,3 @@ class LoadSimulator:
             * self.wheel_radius
             / self.gearbox_ratio
         )
-
-    def calculate_acceleration(self, velocity: float, power: float) -> float:
-        """Calculate the acceleration of the car."""
-        engine = power / (velocity * self.car_mass)
-        air_resistance = self.calculate_drag_force(velocity) / self.car_mass
-        gravity = self.g * math.sin(self.incline_angle)
-        accel = engine - air_resistance - gravity
-        return accel

@@ -1,25 +1,27 @@
-from utils.ramps.ramp_segment import RampSegment
+from models.ramps.ramp_segment import RampSegment
 import math
 from scipy.integrate import quad
 
 
-class CubicSpiralZeroK1(RampSegment):
+class CubicSpiralZeroZero(RampSegment):
     """
-    Cubic spiral defined by:
-      θ(s) = θ₀ + B s² + C s³,   0 ≤ s ≤ L_eff,
-    with:
-      θ(0) = θ₀ = arctan(slope_start),
-      θ'(0)=0,
-      θ(L_eff)=θ₁ = arctan(target_slope),
-      θ'(L_eff)=k₁  (target curvature).
+    A cubic spiral transition defined by:
 
-    The coefficients are given by:
-      C = (k₁ L_eff - 2(θ₁-θ₀)) / L_eff³,
-      B = -k₁/L_eff + 3(θ₁-θ₀)/L_eff².
+      θ(s) = θ₀ + B·s² + C·s³,   0 ≤ s ≤ L_eff,
 
-    Because the horizontal projection of the spiral is
+    with boundary conditions:
+      θ(0)=θ₀,    κ(0)=θ'(0)=0,
+      θ(L_eff)=θ₁, κ(L_eff)=θ'(L_eff)=0.
+
+    These conditions yield:
+      B = 3(θ₁ - θ₀) / L_eff²,     C = -2(θ₁ - θ₀) / L_eff³.
+
+    In our implementation, the user specifies x_start and x_end (thus a chord length),
+    but because the horizontal projection of the spiral is:
+
       x(L_eff) = ∫₀^(L_eff) cos(θ(s)) ds,
-    we adjust L_eff using bisection so that x(L_eff) equals the given chord length.
+
+    we iterate on L_eff until x(L_eff) matches the chord length exactly.
     """
 
     def __init__(
@@ -28,34 +30,47 @@ class CubicSpiralZeroK1(RampSegment):
         x_end: float,
         slope_start: float,
         slope_end: float,
-        target_curvature: float,
         tol: float = 1e-8,
     ):
         super().__init__(x_start, x_end)
+        # The desired horizontal chord length.
         chord_target = x_end - x_start
 
+        # Convert slopes to tangent angles.
         self.theta0 = math.atan(slope_start)
         self.theta1 = math.atan(slope_end)
         dtheta = self.theta1 - self.theta0
-        self.k1 = target_curvature  # target curvature at end
 
-        # Define a function that, given an effective arc length L_eff, returns the horizontal projection.
+        # --- Find effective arc length L_eff such that the horizontal projection matches chord_target.
+        # Our cubic spiral is defined as:
+        #   θ(s) = θ₀ + B s² + C s³,   with B = 3*dθ / L_eff² and C = -2*dθ / L_eff³.
+        # Then, horizontal projection is:
+        #   x(L_eff) = ∫_0^(L_eff) cos(θ₀ + (3*dθ/L_eff²) s² - (2*dθ/L_eff³) s³) ds.
+        # We want: x(L_eff) = chord_target.
         def chord_projection(L_eff):
-            B = -self.k1 / L_eff + 3 * dtheta / (L_eff**2)
-            C = (self.k1 * L_eff - 2 * dtheta) / (L_eff**3)
+            B = 3 * dtheta / (L_eff**2)
+            C = -2 * dtheta / (L_eff**3)
             val, _ = quad(
                 lambda u: math.cos(self.theta0 + B * u**2 + C * u**3), 0, L_eff
             )
             return val
 
-        # Use bisection to solve chord_projection(L_eff) = chord_target.
+        # Use bisection to solve f(L_eff) = chord_projection(L_eff) - chord_target = 0.
+        # Initial guess: For a straight line, L_eff would equal chord_target.
         L_low = chord_target
-        L_high = chord_target * 1.5
+        L_high = chord_target * 1.5  # a reasonable upper bound
+
+        # Ensure that f(L_low) and f(L_high) have opposite signs.
         f_low = chord_projection(L_low) - chord_target
         f_high = chord_projection(L_high) - chord_target
+
+        # In some cases, if dtheta is small, they may both be nearly zero.
+        # We'll assume we can find bounds. Otherwise, no iteration is needed.
         while f_low * f_high > 0:
             L_high *= 1.1
             f_high = chord_projection(L_high) - chord_target
+
+        # Bisection iteration.
         while abs(L_high - L_low) > tol:
             L_mid = (L_low + L_high) / 2.0
             f_mid = chord_projection(L_mid) - chord_target
@@ -66,12 +81,12 @@ class CubicSpiralZeroK1(RampSegment):
                 L_low = L_mid
                 f_low = f_mid
         L_eff = (L_low + L_high) / 2.0
-        self.L = L_eff  # effective arc length for the spiral
+        self.L = L_eff  # effective arc-length that gives the correct chord
 
-        # Now set coefficients B and C using the formulas:
-        self.B = -self.k1 / self.L + 3 * dtheta / (self.L**2)
-        self.C = (self.k1 * self.L - 2 * dtheta) / (self.L**3)
-        self.delta = dtheta
+        # Now compute B and C based on L_eff.
+        self.B = 3 * dtheta / (self.L**2)
+        self.C = -2 * dtheta / (self.L**3)
+        self.delta = dtheta  # total change in angle over the spiral
 
     def _theta(self, s: float) -> float:
         return self.theta0 + self.B * s**2 + self.C * s**3
