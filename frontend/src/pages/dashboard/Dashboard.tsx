@@ -10,6 +10,8 @@ import Plus from '@assets/icons/plus.svg?react';
 
 export const Dashboard = () => {
   const navigate = useNavigate();
+
+  const tempIsDisabled = false; // Placeholder for future functionality
   
   return (
     <div className={styles.dashboard}>
@@ -24,22 +26,25 @@ export const Dashboard = () => {
         <Button
           text={'Run'}
           icon={Play}
-          className={styles.backButton}
+          className={styles.button}
+          disabled={tempIsDisabled}
         />
         <Button
           text={'Edit'}
           icon={Edit}
-          className={styles.backButton}
+          className={styles.button}
+          disabled={tempIsDisabled}
         />
         <Button
           text={'Delete'}
           icon={TrashCan}
-          className={styles.backButton}
+          className={styles.button}
+          disabled={tempIsDisabled}
         />
         <Button
           text={'New'}
           icon={Plus}
-          className={styles.backButton}
+          className={styles.button}
           onClick={() => navigate('/input')}
         />
       </div>

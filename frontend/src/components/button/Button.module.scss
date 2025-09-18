@@ -9,6 +9,8 @@
     gap: 0.625rem;
     border-radius: 1.55rem;
     color: var(--primary);
+    display: flex;
+    justify-content: center;
 
     & > * {
         color: inherit;
