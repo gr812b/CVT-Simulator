@@ -98,6 +98,7 @@ export const Input = () => {
                     <Button
                         text='Run'
                         icon={Play}
+                        onClick={() => navigate('/playback')}
                     />
                 </div>
             </div>
