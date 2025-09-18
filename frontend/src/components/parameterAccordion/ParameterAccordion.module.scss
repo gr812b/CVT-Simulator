@@ -2,13 +2,16 @@
 @use '@styles/_colors';
 @use 'sass:map';
 
+// Variable for time
+$transition-time: 0.4s;
+
 .accordion {
     display: flex;
     flex-direction: column;
     height: fit-content;
     gap: 1.25rem;
     color: var(--primary);
-    transition: gap 0s;
+    transition: $transition-time ease-in-out;
 
     .header {
         display: flex;
@@ -36,35 +39,44 @@
                 width: 4.5rem;
                 height: 4.5rem;
                 color: inherit;
-                transition: 0.3s ease-in-out;
+                transition: $transition-time ease-in-out;
             }
 
-        }
-
-        .rotateRight {
-            transform: rotate(-90deg);
         }
     }
 
     .children {
-        display: flex;
-        flex-direction: column;
-        height: 100%;
+        display: grid;
+        grid-template-rows: 1fr;
         width: 100%;
         color: inherit;
         overflow: hidden;
-        transition: height 0.3s ease-in-out;
-        gap: 1.25rem;
+        transition: $transition-time ease-in-out;
+        
+        .childrenContent {
+            display: flex;
+            flex-direction: column;
+            gap: 1.25rem;
+            min-height: 0; // Important for grid to work properly
+        }
     }
 
-}
-
-    .hideChildren {
+    &.hideChildren {
         gap: 0;
-        transition: gap 0s 0.3s;
 
         .children {
-            height: 0;
+            grid-template-rows: 0fr;
+            opacity: 0;
+            
+            .childrenContent {
+                gap: 0;
+            }
         }
 
+        .header {
+            .rotateRight {
+                transform: rotate(-90deg);
+            }
+        }
     }
+}
