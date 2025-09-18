@@ -2,7 +2,7 @@
 @use '@styles/_colors';
 @use 'sass:map';
 
-.Home {
+.dashboard {
     display: flex;
     flex-direction: column;
     background-color: var(--secondary);
