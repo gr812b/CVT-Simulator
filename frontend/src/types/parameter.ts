@@ -1,3 +1,4 @@
+import { validators } from "@utils/validation"
 
 type ParameterValue = string | number | boolean
 type ParameterType = 'string' | 'number' | 'boolean'
@@ -23,7 +24,7 @@ interface BaseParameterConfig<T extends ParameterValue> {
     description: string;
     type: ParameterType;
     defaultValue: T;
-    validation: (value: T) => boolean;
+    validate: (value: string) => string | null;
     units: string;
     group: ParameterGroup;
 }
@@ -45,7 +46,7 @@ export const PARAMETERS: Record<Parameter, ParameterConfig> = {
     description: 'Weight of the primary pulley flyweight',
     type: 'number',
     defaultValue: 0.8,
-    validation: (value) => typeof value === 'number' && value > 0,
+    validate: validators.positiveNumber,
     units: 'kg',
     group: 'primary',
   },
@@ -54,7 +55,7 @@ export const PARAMETERS: Record<Parameter, ParameterConfig> = {
     description: 'Spring rate of the primary pulley',
     type: 'number',
     defaultValue: 1000,
-    validation: (value) => typeof value === 'number' && value > 0,
+    validate: validators.positiveNumber,
     units: 'N/m',
     group: 'primary',
   },
@@ -63,7 +64,7 @@ export const PARAMETERS: Record<Parameter, ParameterConfig> = {
     description: 'Spring pretension of the primary pulley',
     type: 'number',
     defaultValue: 0,
-    validation: (value) => typeof value === 'number' && value >= 0,
+    validate: validators.nonNegativeNumber,
     units: 'm',
     group: 'primary',
   },
@@ -72,7 +73,7 @@ export const PARAMETERS: Record<Parameter, ParameterConfig> = {
     description: 'Spring rate of the secondary torsional spring',
     type: 'number',
     defaultValue: 30,
-    validation: (value) => typeof value === 'number' && value > 0,
+    validate: validators.positiveNumber,
     units: 'Nm/rad',
     group: 'secondary',
   },
@@ -81,7 +82,7 @@ export const PARAMETERS: Record<Parameter, ParameterConfig> = {
     description: 'Spring rate of the secondary compression spring',
     type: 'number',
     defaultValue: 1,
-    validation: (value) => typeof value === 'number' && value > 0,
+    validate: validators.positiveNumber,
     units: 'N/m',
     group: 'secondary',
   },
@@ -90,7 +91,7 @@ export const PARAMETERS: Record<Parameter, ParameterConfig> = {
     description: 'Pretension of the secondary rotational spring',
     type: 'number',
     defaultValue: 45,
-    validation: (value) => typeof value === 'number' && value >= 0,
+    validate: validators.nonNegativeNumber,
     units: 'degrees',
     group: 'secondary',
   },
@@ -99,7 +100,7 @@ export const PARAMETERS: Record<Parameter, ParameterConfig> = {
     description: 'Pretension of the secondary linear spring',
     type: 'number',
     defaultValue: 0.1,
-    validation: (value) => typeof value === 'number' && value >= 0,
+    validate: validators.nonNegativeNumber,
     units: 'm',
     group: 'secondary',
   },
@@ -108,7 +109,7 @@ export const PARAMETERS: Record<Parameter, ParameterConfig> = {
     description: 'Weight of the vehicle',
     type: 'number',
     defaultValue: 225,
-    validation: (value) => typeof value === 'number' && value > 0,
+    validate: validators.positiveNumber,
     units: 'kg',
     group: 'environment',
   },
@@ -117,7 +118,7 @@ export const PARAMETERS: Record<Parameter, ParameterConfig> = {
     description: 'Weight of the driver',
     type: 'number',
     defaultValue: 75,
-    validation: (value) => typeof value === 'number' && value > 0,
+    validate: validators.positiveNumber,
     units: 'kg',
     group: 'environment',
   },
@@ -126,8 +127,7 @@ export const PARAMETERS: Record<Parameter, ParameterConfig> = {
     description: 'Available traction force as a percentage',
     type: 'number',
     defaultValue: 100,
-    validation: (value) =>
-      typeof value === 'number' && value >= 0 && value <= 100,
+    validate: validators.percent,
     units: '%',
     group: 'environment',
   },
@@ -136,7 +136,7 @@ export const PARAMETERS: Record<Parameter, ParameterConfig> = {
     description: 'Incline angle of the surface',
     type: 'number',
     defaultValue: 0,
-    validation: (value) => typeof value === 'number',
+    validate: validators.nonNegativeNumber,
     units: 'degrees',
     group: 'environment',
   },
@@ -145,7 +145,7 @@ export const PARAMETERS: Record<Parameter, ParameterConfig> = {
     description: 'Total simulation distance',
     type: 'number',
     defaultValue: 200,
-    validation: (value) => typeof value === 'number' && value > 0,
+    validate: validators.positiveNumber,
     units: 'm',
     group: 'environment',
   },
