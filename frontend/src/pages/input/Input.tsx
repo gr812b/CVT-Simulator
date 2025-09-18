@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { MainButton } from '@components/mainButton/MainButton';
+import { Button } from '@components/button/Button';
 import { ParameterAccordion } from '@components/parameterAccordion/ParameterAccordion';
 import { InputField } from '@components/inputField/InputField';
 import { ParameterDescription } from '@components/parameterDescription/ParameterDescription';
@@ -46,7 +46,7 @@ export const Input = () => {
 
     return (
         <div className={styles.input}>
-            <MainButton
+            <Button
                 text={'Home'}
                 icon={Home}
                 className={styles.backButton}
@@ -82,12 +82,12 @@ export const Input = () => {
                     {getParameterInformation(activeField)}
                 </div>
                 <div className={styles.inputButtonsContainer}>
-                    <MainButton
+                    <Button
                         text='Expand All'
                         icon={ArrowDownCircle}
                         onClick={() => setExpanded(expandedState)}
                     />
-                    <MainButton
+                    <Button
                         text='Collapse All'
                         icon={ArrowUpCircle}
                         iconSide='right'
@@ -95,7 +95,7 @@ export const Input = () => {
                     />
                 </div>
                 <div className={styles.nextButtonContainer}>
-                    <MainButton
+                    <Button
                         text='Run'
                         icon={Play}
                     />
