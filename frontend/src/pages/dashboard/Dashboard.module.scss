@@ -8,6 +8,8 @@
     background-color: var(--secondary);
     height: 100vh;
     width: 100vw;
+    padding: 0.625rem;
+    box-sizing: border-box;
 
     .header {
         display: flex;
@@ -28,5 +30,18 @@
             white-space: nowrap;
             overflow: hidden;
         }
+    }
+
+    .tableContainer {
+        flex-grow: 1;
+        align-content: center;
+        justify-items: center;
+    }
+
+    .buttonsContainer {
+        display: flex;
+        flex-direction: row;
+        justify-content: end;
+        gap: 1.25rem;
     }
 }
