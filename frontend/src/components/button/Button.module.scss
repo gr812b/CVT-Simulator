@@ -2,13 +2,15 @@
 @use '@styles/_colors';
 @use 'sass:map';
 
-.mainButton {
+.button {
     padding: 1rem 1.25rem;
     width: fit-content;
     height: fit-content;
     gap: 0.625rem;
     border-radius: 1.55rem;
     color: var(--primary);
+    display: flex;
+    justify-content: center;
 
     & > * {
         color: inherit;
@@ -23,6 +25,16 @@
     &:hover {
         background-color: var(--primary);
         color: var(--secondary);
+    }
+
+    &:disabled {
+        pointer-events: none;
+        opacity: 0.6;
+
+        &:hover {
+            background-color: unset;
+            color: var(--primary);
+        }
     }
 }
 
