@@ -136,6 +136,41 @@ export function generateEChartsOptions(
 ): EChartsOption {
   const dataset = createDataset(data, config);
   
+  // Create axis options separately to avoid type inference issues
+  const xAxisOption = {
+    type: config.xAxis.type,
+    name: config.xAxis.name,
+    nameLocation: 'middle' as const,
+    nameGap: LAYOUT.X_AXIS_NAME_GAP,
+    nameTextStyle: { color: COLORS.TEXT },
+    boundaryGap: config.xAxis.type === 'category',
+    axisLabel: { 
+      hideOverlap: CHART_DEFAULTS.HIDE_OVERLAP,
+      color: COLORS.TEXT 
+    },
+    axisLine: { lineStyle: { color: COLORS.GRID } },
+    axisTick: { lineStyle: { color: COLORS.GRID } },
+    splitLine: { lineStyle: { color: COLORS.GRID } },
+  };
+  
+  const yAxisOption = {
+    type: config.yAxis.type,
+    name: config.yAxis.name,
+    nameLocation: 'middle' as const,
+    nameGap: LAYOUT.Y_AXIS_NAME_GAP,
+    nameTextStyle: { color: COLORS.TEXT },
+    axisLabel: { 
+      hideOverlap: CHART_DEFAULTS.HIDE_OVERLAP,
+      color: COLORS.TEXT 
+    },
+    splitLine: { 
+      show: CHART_DEFAULTS.SHOW_SPLIT_LINES,
+      lineStyle: { color: COLORS.GRID }
+    },
+    axisLine: { lineStyle: { color: COLORS.GRID } },
+    axisTick: { lineStyle: { color: COLORS.GRID } },
+  };
+  
   // Base options with dark theme styling built-in
   const baseOptions: EChartsOption = {
     backgroundColor: COLORS.BACKGROUND,
@@ -180,39 +215,9 @@ export function generateEChartsOptions(
       containLabel: true,
     },
     
-    xAxis: {
-      type: config.xAxis.type,
-      name: config.xAxis.name,
-      nameLocation: 'middle',
-      nameGap: LAYOUT.X_AXIS_NAME_GAP,
-      nameTextStyle: { color: COLORS.TEXT },
-      boundaryGap: config.xAxis.type === 'category',
-      axisLabel: { 
-        hideOverlap: CHART_DEFAULTS.HIDE_OVERLAP,
-        color: COLORS.TEXT 
-      },
-      axisLine: { lineStyle: { color: COLORS.GRID } },
-      axisTick: { lineStyle: { color: COLORS.GRID } },
-      splitLine: { lineStyle: { color: COLORS.GRID } },
-    },
+    xAxis: xAxisOption,
     
-    yAxis: {
-      type: config.yAxis.type,
-      name: config.yAxis.name,
-      nameLocation: 'middle',
-      nameGap: LAYOUT.Y_AXIS_NAME_GAP,
-      nameTextStyle: { color: COLORS.TEXT },
-      axisLabel: { 
-        hideOverlap: CHART_DEFAULTS.HIDE_OVERLAP,
-        color: COLORS.TEXT 
-      },
-      splitLine: { 
-        show: CHART_DEFAULTS.SHOW_SPLIT_LINES,
-        lineStyle: { color: COLORS.GRID }
-      },
-      axisLine: { lineStyle: { color: COLORS.GRID } },
-      axisTick: { lineStyle: { color: COLORS.GRID } },
-    },
+    yAxis: yAxisOption,
     
     dataZoom: [
       { 
