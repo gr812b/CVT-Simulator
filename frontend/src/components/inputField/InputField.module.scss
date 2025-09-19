@@ -31,10 +31,9 @@
     }
 
     .error {
-        @include fonts.text-small;
         color: var(--error);
-        margin-top: 0.5rem;
-        min-height: 1.25rem;
+        margin-top: 0.25rem;
+        min-height: 2rem;
     }
 
     &.hasError {
