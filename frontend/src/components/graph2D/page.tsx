@@ -1,19 +1,10 @@
 import { Graph2D } from './graph2D';
-import { DARK_THEME } from './theme';
 import { csvToDataPoints } from './csvUtils';
 import csvText from "./front_end_output.csv?raw";
 
 export function Page() {
-  // Debug the CSV content
-  console.log('Raw CSV text:', csvText);
-  console.log('CSV length:', csvText.length);
-  
   // Parse CSV data
   const { data, errors, warnings } = csvToDataPoints(csvText, 'time', 'car_velocity');
-
-  console.log('Parsed data points:', data);
-  console.log('Parsing errors:', errors);
-  console.log('Parsing warnings:', warnings);
   
   // Log any issues
   if (warnings.length > 0) console.warn('CSV warnings:', warnings);
@@ -31,7 +22,6 @@ export function Page() {
           yAxis: { name: "Velocity", type: "value", unit: "m/s" },
           height: 400
         }}
-        theme={DARK_THEME}
       />
       
       <Graph2D

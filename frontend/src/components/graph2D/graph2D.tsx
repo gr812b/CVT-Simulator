@@ -4,13 +4,11 @@ import cx from 'classnames';
 import styles from './Graph2D.module.scss';
 import type { Graph2DProps } from './types';
 import { validateData } from './validation';
-import { createChartOptions } from './chartOptions';
-import { LAYOUT, COLORS } from './constants';
+import { createChartOptions, CHART_COLORS } from './chartOptions';
 
 export function Graph2D({
   data,
   config,
-  theme = {},
   chartOptions = {},
   className = '',
 }: Graph2DProps) {
@@ -25,13 +23,13 @@ export function Graph2D({
         title: {
           text: 'No Data',
           left: 'center',
-          textStyle: { color: COLORS.ERROR },
+          textStyle: { color: CHART_COLORS.ERROR },
         },
       };
     }
     
-    return createChartOptions(data, config, theme, chartOptions);
-  }, [data, config, theme, chartOptions, validation]);
+    return createChartOptions(data, config, chartOptions);
+  }, [data, config, chartOptions, validation]);
   
   // Log warnings to console (can be disabled in production)
   useEffect(() => {
@@ -40,8 +38,8 @@ export function Graph2D({
     }
   }, [validation.warnings]);
   
-  const chartHeight = config.height || LAYOUT.DEFAULT_HEIGHT;
-  const chartWidth = config.width || LAYOUT.DEFAULT_WIDTH;
+  const chartHeight = config.height || 400;
+  const chartWidth = config.width || '100%';
   
   // If data is invalid, show error state
   if (!validation.isValid) {

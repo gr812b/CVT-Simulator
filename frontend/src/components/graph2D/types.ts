@@ -43,22 +43,6 @@ export interface ChartConfig {
 }
 
 /**
- * Theme options for chart styling
- */
-export interface ChartTheme {
-  /** Background color */
-  backgroundColor?: string;
-  /** Text color */
-  textColor?: string;
-  /** Grid line color */
-  gridColor?: string;
-  /** Line color */
-  lineColor?: string;
-  /** Whether to use dark mode */
-  darkMode?: boolean;
-}
-
-/**
  * Props for the Graph2D component
  */
 export interface Graph2DProps {
@@ -66,8 +50,6 @@ export interface Graph2DProps {
   data: DataPoint2D[];
   /** Chart configuration */
   config: ChartConfig;
-  /** Theme/styling options */
-  theme?: ChartTheme;
   /** Additional ECharts options to merge (for advanced customization) */
   chartOptions?: Partial<EChartsOption>;
   /** Class name for the container */

@@ -1,6 +1,6 @@
 import type { DataPoint2D } from './types';
-import { createDataFromArrays } from './validation';
-import { VALIDATION } from './constants';
+import { createDataFromArrays, VALIDATION } from './validation';
+// TODO: Remove this once we no longer take CSV
 
 /**
  * Simple CSV parser for basic comma-separated files (no quoted commas)

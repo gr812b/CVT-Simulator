@@ -1,5 +1,14 @@
 import type { DataPoint2D, ValidationResult } from './types';
-import { VALIDATION } from './constants';
+
+// Validation constants (moved from constants.ts)
+export const VALIDATION = {
+  MIN_DATA_POINTS_WARNING: 5,
+  SINGLE_POINT_WARNING: 1,
+  DATE_DETECTION_THRESHOLD: 0.8,
+  HEADER_ROW_INDEX: 0,
+  FIRST_DATA_ROW_INDEX: 1,
+  NOT_FOUND_INDEX: -1,
+} as const;
 
 /**
  * Validates an array of data points
