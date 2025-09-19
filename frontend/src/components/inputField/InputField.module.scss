@@ -27,5 +27,22 @@
         padding: 0;
         background-color: transparent;
         border-bottom: 0.125rem solid currentColor;
+
+    }
+
+    .error {
+        @include fonts.text-small;
+        color: var(--error);
+        margin-top: 0.5rem;
+        min-height: 1.25rem;
+    }
+
+    &.hasError {
+
+        .input {
+            border-bottom-color: var(--error);
+        }
+
     }
 }
+

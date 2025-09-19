@@ -1,5 +1,9 @@
 type ValidationResult = string | null;
 
+function isNotEmpty(value: string): ValidationResult {
+    return value.trim() === '' ? 'Must provide a value' : null;
+}
+
 function isNumber(value: string): ValidationResult {
     return isNaN(Number(value)) ? 'Must be a number' : null;
 }
@@ -35,11 +39,11 @@ function combineValidators(...validators: ((value: string) => ValidationResult)[
 
 export const validators = {
     // Preset common validators
-    positiveNumber : combineValidators(isNumber, isPositiveNumber),
-    nonNegativeNumber : combineValidators(isNumber, isNonNegativeNumber),
-    percent: combineValidators(isNumber, isInRange(0, 100)),
+    positiveNumber : combineValidators(isNotEmpty,isNumber, isPositiveNumber),
+    nonNegativeNumber : combineValidators(isNotEmpty,isNumber, isNonNegativeNumber),
+    percent: combineValidators(isNotEmpty,isNumber, isInRange(0, 100)),
 
     // Factory for range validator
-    range: (min: number, max: number) => combineValidators(isNumber, isInRange(min, max)),
+    range: (min: number, max: number) => combineValidators(isNotEmpty, isNumber, isInRange(min, max)),
 
 }

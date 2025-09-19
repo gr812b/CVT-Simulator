@@ -64,13 +64,14 @@ export const Input = () => {
                             {allParameters
                                 .filter(paramKey => PARAMETERS[paramKey].group === groupKey)
                                 .map(paramKey => {
-                                    const { label, units, defaultValue } = PARAMETERS[paramKey];
+                                    const { label, units, defaultValue, validate } = PARAMETERS[paramKey];
                                     return (
                                         <InputField
                                             key={paramKey}
                                             className={styles.baseInputField}
                                             label={`${label} (${units})`}
                                             defaultValue={defaultValue}
+                                            error={validate("1")} // TODO: Replace with actual value in inputField
                                             onFocus={() => setActiveField(paramKey)}
                                         />
                                     );
