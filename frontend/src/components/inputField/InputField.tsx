@@ -5,18 +5,16 @@ import cx from 'classnames';
 
 interface InputFieldProps extends InputHTMLAttributes<HTMLInputElement> {
   label?: string;
+  error?: string | null;
   className?: string;
 }
 
-export const InputField = ({ label, className, ...props }: InputFieldProps) => {
+export const InputField = ({ label, error, className, ...props }: InputFieldProps) => {
   return (
-    <div className={cx(styles.inputContainer, className)}>
-      {label && (
-        <label className={styles.label}>
-          {label}
-        </label>
-      )}
+    <div className={cx(styles.inputContainer, { [styles.hasError]: error }, className)}>
+      {label && <label className={styles.label}>{label}</label>}
       <input {...props} className={styles.input} />
+      <span className={styles.error}>{error ?? ''}</span>
     </div>
   );
 };
