@@ -29,7 +29,11 @@ export const ParameterAccordion = ({ title, className, children, isExpanded, onT
                     <ChevronDown className={cx(styles.icon, { [styles.rotateRight] : !isExpanded })} />
                 </button>
             </div>
-            <div className={cx(styles.children)}>{children}</div>
+            <div className={cx(styles.children)}>
+                <div className={styles.childrenContent}>
+                    {children}
+                </div>
+            </div>
         </div>
     );
 }
