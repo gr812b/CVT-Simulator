@@ -27,5 +27,21 @@
         padding: 0;
         background-color: transparent;
         border-bottom: 0.125rem solid currentColor;
+
+    }
+
+    .error {
+        color: var(--error);
+        margin-top: 0.25rem;
+        min-height: 2rem;
+    }
+
+    &.hasError {
+
+        .input {
+            border-bottom-color: var(--error);
+        }
+
     }
 }
+
