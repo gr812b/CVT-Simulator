@@ -1,6 +1,6 @@
 import { Graph2D } from './graph2D';
 import { csvToDataPoints } from './csvUtils';
-import csvText from "./front_end_output.csv?raw";
+import csvText from "./temp.csv?raw";
 
 export function Page() {
   // Parse CSV data
