@@ -28,7 +28,7 @@ const COLORS = {
     const b = parseInt(hex.substr(4, 2), 16);
     return `rgba(${r}, ${g}, ${b}, 0.2)`;
   },
-  get ERROR() { return getCSSColor('--reject', '#c00f0c'); },
+  get ERROR() { return getCSSColor('--error', '#c00f0c'); },
 } as const;
 
 const LAYOUT = {
