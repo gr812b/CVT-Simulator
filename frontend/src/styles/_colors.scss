@@ -1,18 +1,28 @@
 
 :root {
-    // Default theme (Dark)
+    // Core theme colors (Dark theme by default)
     --text-color: #ffffff;
     --primary: #ffffff; // TODO: Update the primary colour and use text-color instead
     --secondary: #222222;
     --accent: #bb0808;
 
-    // Default colours
+    // Status colors
     --confirm: #009951;
     --reject: #c00f0c;
+
+    // Chart-specific colors
+    --grid-color: #404040;
+    --tooltip-bg: #2a2a2a;
 }
 
 [data-theme="light"] {
+    // Core theme colors
+    --text-color: #222222;
     --primary: #ffffff;
     --secondary: #222222;
     --accent: #bb0808;
+    
+    // Chart colors for light theme
+    --grid-color: #e0e0e0;
+    --tooltip-bg: #f5f5f5;
 }

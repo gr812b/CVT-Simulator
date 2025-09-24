@@ -2,15 +2,33 @@ import type { EChartsOption } from 'echarts';
 import type { ChartConfig, DataPoint2D } from './types';
 import { inferAxisType } from './validation';
 
-// Dark theme constants (hardcoded defaults)
+/**
+ * Gets color values from CSS custom properties defined in _colors.scss
+ */
+function getCSSColor(property: string, fallback: string): string {
+  if (typeof window !== 'undefined') {
+    const value = getComputedStyle(document.documentElement).getPropertyValue(property).trim();
+    return value || fallback;
+  }
+  return fallback;
+}
+
+// Chart colors linked to _colors.scss
 const COLORS = {
-  BACKGROUND: '#1e1e1e',
-  TEXT: '#ffffff',
-  GRID: '#404040',
-  LINE: '#4dabf7',
-  TOOLTIP_BG: '#2a2a2a',
-  ZOOM_FILL: 'rgba(77, 171, 247, 0.2)',
-  ERROR: '#ff4444',
+  get BACKGROUND() { return getCSSColor('--secondary', '#222222'); },
+  get TEXT() { return getCSSColor('--text-color', '#ffffff'); },
+  get GRID() { return getCSSColor('--grid-color', '#404040'); },
+  get LINE() { return getCSSColor('--accent', '#bb0808'); },
+  get TOOLTIP_BG() { return getCSSColor('--tooltip-bg', '#2a2a2a'); },
+  get ZOOM_FILL() { 
+    const accent = getCSSColor('--accent', '#bb0808');
+    const hex = accent.replace('#', '');
+    const r = parseInt(hex.substr(0, 2), 16);
+    const g = parseInt(hex.substr(2, 2), 16);
+    const b = parseInt(hex.substr(4, 2), 16);
+    return `rgba(${r}, ${g}, ${b}, 0.2)`;
+  },
+  get ERROR() { return getCSSColor('--reject', '#c00f0c'); },
 } as const;
 
 const LAYOUT = {
