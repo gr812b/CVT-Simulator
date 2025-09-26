@@ -8,14 +8,17 @@ export interface FormState {
   hasChanges: boolean;
 }
 
-export const useFormState = () => {
-  // Initialize form values with string representations of defaults
+export const useFormState = (contextValues?: ParameterState) => {
+  // Initialize form values with string representations from context or defaults
   const getInitialValues = useCallback((): Record<Parameter, string> => {
     return Object.entries(PARAMETERS).reduce((acc, [key, config]) => {
-      acc[key as Parameter] = String(config.defaultValue);
+      const paramKey = key as Parameter;
+      // Use context value if available, otherwise use default
+      const value = contextValues?.[paramKey] ?? config.defaultValue;
+      acc[paramKey] = String(value);
       return acc;
     }, {} as Record<Parameter, string>);
-  }, []);
+  }, [contextValues]);
 
   const getInitialErrors = useCallback((): Record<Parameter, string | null> => {
     return Object.keys(PARAMETERS).reduce((acc, key) => {
@@ -31,7 +34,7 @@ export const useFormState = () => {
     }, {} as Record<Parameter, boolean>);
   }, []);
 
-  const [values, setValues] = useState<Record<Parameter, string>>(getInitialValues);
+  const [values, setValues] = useState<Record<Parameter, string>>(() => getInitialValues());
   const [errors, setErrors] = useState<Record<Parameter, string | null>>(getInitialErrors);
   const [touched, setTouched] = useState<Record<Parameter, boolean>>(getInitialTouched);
   const [hasChanges, setHasChanges] = useState(false);

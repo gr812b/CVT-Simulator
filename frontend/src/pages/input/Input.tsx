@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@components/button/Button';
 import { ParameterAccordion } from '@components/parameterAccordion/ParameterAccordion';
 import { InputField } from '@components/inputField/InputField';
@@ -11,6 +12,7 @@ import Home from '@assets/icons/home.svg?react';
 import ArrowUpCircle from '@assets/icons/arrow_up_circle.svg?react';
 import ArrowDownCircle from '@assets/icons/arrow_down_circle.svg?react';
 import Play from '@assets/icons/play.svg?react';
+import Edit from '@assets/icons/edit.svg?react';
 import styles from './Input.module.scss';
 
 // Precomputed list of all groups and parameters
@@ -22,8 +24,9 @@ const expandedState: Record<ParameterGroup, boolean> = Object.fromEntries(allGro
 const collapsedState: Record<ParameterGroup, boolean> = Object.fromEntries(allGroups.map(group => [group, false])) as Record<ParameterGroup, boolean>;
 
 export const Input = () => {
-    const { setMultipleParameters } = useParameter();
-    const formState = useFormState();
+    const navigate = useNavigate();
+    const { setMultipleParameters, parameters } = useParameter();
+    const formState = useFormState(parameters);
     const { navigateWithConfirmation } = useUnsavedChangesPrompt(formState.hasChanges);
 
     // State to manage which accordions are expanded
@@ -43,7 +46,16 @@ export const Input = () => {
             const parsedValues = formState.getParsedValues();
             setMultipleParameters(parsedValues);
             formState.markAsSaved();
-            navigateWithConfirmation('/playback');
+            navigate('/playback'); // Simple navigation, no confirmation needed
+        }
+    };
+
+    // Handle manual save
+    const handleSave = () => {
+        if (formState.validateAll()) {
+            const parsedValues = formState.getParsedValues();
+            setMultipleParameters(parsedValues);
+            formState.markAsSaved();
         }
     };
 
@@ -118,6 +130,12 @@ export const Input = () => {
                     />
                 </div>
                 <div className={styles.nextButtonContainer}>
+                    <Button
+                        text='Save'
+                        icon={Edit}
+                        onClick={handleSave}
+                        disabled={!formState.isValid()}
+                    />
                     <Button
                         text='Run'
                         icon={Play}
