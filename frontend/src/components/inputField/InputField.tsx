@@ -20,7 +20,7 @@ export const InputField = ({ label, error, className, hasChanged, ...props }: In
         </label>
       )}
       <input {...props} className={styles.input} />
-      {error && <span className={styles.error}>{error}</span>}
+      <span className={styles.error}>{error}</span>
     </div>
   );
 };
