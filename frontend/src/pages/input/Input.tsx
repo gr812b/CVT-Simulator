@@ -80,6 +80,7 @@ export const Input = () => {
                                 .map(paramKey => {
                                     const { label, units } = PARAMETERS[paramKey];
                                     const hasError = formState.touched[paramKey] && formState.errors[paramKey];
+                                    const hasChanged = formState.isFieldChanged(paramKey);
                                     
                                     return (
                                         <InputField
@@ -88,6 +89,7 @@ export const Input = () => {
                                             label={`${label} (${units})`}
                                             value={formState.values[paramKey]}
                                             error={hasError ? formState.errors[paramKey] : null}
+                                            hasChanged={hasChanged}
                                             onChange={(e) => formState.updateField(paramKey, e.target.value)}
                                             onFocus={() => {
                                                 setActiveField(paramKey);
@@ -101,12 +103,6 @@ export const Input = () => {
                 </div>
                 <div className={styles.parameterInformationContainer}>
                     {getParameterInformation(activeField)}
-                    {formState.hasChanges && (
-                        <div className={styles.changesIndicator}>
-                            <p>Unsaved changes detected</p>
-                            <p>Changed fields: {formState.getChangedFields().length}</p>
-                        </div>
-                    )}
                 </div>
                 <div className={styles.inputButtonsContainer}>
                     <Button

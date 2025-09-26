@@ -39,21 +39,6 @@
             grid-column: 2;
             grid-row: 1;
             margin-right: 2rem;
-
-            // TODO: Remove this
-            .changesIndicator {
-                margin-top: 1rem;
-                padding: 0.75rem;
-                background-color: rgba(255, 193, 7, 0.1);
-                border: 1px solid rgba(255, 193, 7, 0.3);
-                border-radius: 4px;
-
-                p {
-                    margin: 0.25rem 0;
-                    font-size: 0.875rem;
-                    color: var(--warning, #ffc107);
-                }
-            }
         }
 
         .inputButtonsContainer {

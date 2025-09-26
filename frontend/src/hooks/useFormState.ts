@@ -97,6 +97,11 @@ export const useFormState = () => {
     ) as Parameter[];
   }, [values]);
 
+  // Check if a specific field has been changed
+  const isFieldChanged = useCallback((parameter: Parameter): boolean => {
+    return values[parameter] !== initialValuesRef.current[parameter];
+  }, [values]);
+
   // Reset form to initial state
   const resetForm = useCallback(() => {
     const initialValues = getInitialValues();
@@ -142,6 +147,7 @@ export const useFormState = () => {
     getParsedValues,
     isValid,
     getChangedFields,
+    isFieldChanged,
     resetForm,
     markAsSaved,
     validateAll,
