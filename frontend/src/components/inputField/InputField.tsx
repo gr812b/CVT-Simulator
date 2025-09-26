@@ -14,7 +14,7 @@ export const InputField = ({ label, error, className, ...props }: InputFieldProp
     <div className={cx(styles.inputContainer, { [styles.hasError]: error }, className)}>
       {label && <label className={styles.label}>{label}</label>}
       <input {...props} className={styles.input} />
-      <span className={styles.error}>{error ?? ''}</span>
+      {error && <span className={styles.error}>{error}</span>}
     </div>
   );
 };

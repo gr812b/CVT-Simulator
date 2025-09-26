@@ -13,7 +13,8 @@
       "@types": ["types/index.ts"],
       "@pages/*": ["pages/*"],
       "@contexts/*": ["contexts/*"],
-      "@utils/*": ["utils/*"]
+      "@utils/*": ["utils/*"],
+      "@hooks/*": ["hooks/*"]
     },
   }
 }
