@@ -483,7 +483,7 @@ The system should be able to run on any machine that supports Python 3.9 or late
 This section first presents the problem description, which gives a high-level
 view of the problem to be solved.  This is followed by the solution characteristics
 specification, which presents the assumptions, theories, definitions and finally
-the instance models. 
+the instance cvt_simulator.models. 
 
 \subsection{Problem Description} \label{Sec_pd}
 
@@ -670,7 +670,7 @@ includes the following elements:
 \subsection{Solution Characteristics Specification}
 
 Figure \ref{Fig_SolutionCharacteristics} outlines the key components and interactions within the system's architecture, 
-including theoretical models, general definitions, data definitions, assumptions, and instanced models.
+including theoretical models, general definitions, data definitions, assumptions, and instanced cvt_simulator.models.
 This specification defines the relationships between these elements, showing how they may reference, refine, or depend on each other. 
 
 \begin{figure}[H]
@@ -1574,7 +1574,7 @@ which is to say that the top requirement is the most important and the bottom re
 
 \noindent \begin{itemize}
 
-\item[R:MM \label{R:MM}:] The system shall simulate the behavior of the McMaster Baja Team's Continuous Variable Transmission(CVT) using mathematical models.
+\item[R:MM \label{R:MM}:] The system shall simulate the behavior of the McMaster Baja Team's Continuous Variable Transmission(CVT) using mathematical cvt_simulator.models.
 
 \item[R:AV \label{R:AV}:] The system shall calculate the acceleration of the vehicle as a function of time using inputs: gear radius, wheel radius, density of the fluid, drag coefficient, cross-sectional area, angle of incline, torque transferred to the wheel, coefficient of rolling resistance, mass of the vehicle and driver. 
 
@@ -1663,7 +1663,7 @@ Compliance with these standards imposes specific requirements on the CVT softwar
 \subsection{Rationale}
 
 The assumptions made for the CVT (Continuously Variable Transmission) system model aim to simplify it's dynamics, facilitating the development of mathematical models to simulate the behavior of the CVT{\hpref{R:MM}}. 
-Many key assumptions are made to meet the requirement of developing these mathematical models. The following assumptions are also factored in to the calculations of the CVT ratio, clamping force, RPM, torque, engine input, distance, speed and acceleration(\hpref{R:AV}). 
+Many key assumptions are made to meet the requirement of developing these mathematical cvt_simulator.models. The following assumptions are also factored in to the calculations of the CVT ratio, clamping force, RPM, torque, engine input, distance, speed and acceleration(\hpref{R:AV}). 
 \\\\
 \noindent The system excludes the effects of temperature on material properties, aside from the belt, which allows for a more straightforward focus on the mechanics of the interactions (\hpref{A:NT}).
 The influence of gravitational forces is negligible and the elasticity of belts is considered insignificant(\hpref{A:NG}, \hpref{A:RB}). 
@@ -2023,7 +2023,7 @@ graduate attribute of Lifelong Learning.
   \\\\
   To successfully complete this capstone project our team will need to acquire several important skills.
   We will need to learn and understand Unity to create a user-friendly interface which will use our created mathematical models in Python.
-  For Unity, we need to learn how to make a GUI interface, animate 3D models, create and display graphs, and learn how to interface with a Python script to run the mathematical models.
+  For Unity, we need to learn how to make a GUI interface, animate 3D models, create and display graphs, and learn how to interface with a Python script to run the mathematical cvt_simulator.models.
   For Python, we need to learn how to create and implement these complex mathematical models and learn how to make these Python models interface with Unity.
   It is important that each team member acquires a general knowledge of these skills as team members completing the Python code must be familiar with interfacing the code with Unity. 
   As well as team members completing the models within Unity must understand the mathematical Python models to use Unity to simulate them. 
@@ -2035,7 +2035,7 @@ graduate attribute of Lifelong Learning.
   To familiarize ourselves with Unity projects, we will watch YouTube tutorials and read guides provided by Unity.
   The team members who chose to do the videos did so because they are more visual learners and prefer to see the process in action.
   Those that chose to read the guides did so because they prefer to read and also prefer that it is from an official source.
-  For learning the Python required, we will do research on relevant libraries and functions that will help us implement our mathematical models.
+  For learning the Python required, we will do research on relevant libraries and functions that will help us implement our mathematical cvt_simulator.models.
   The team members who chose to do research did so because they are more comfortable researching and learning on their own.
   \\\\
   This approach allows us to take into account the different learning styles of each team member so that everyone can learn in a way that suits them best. 

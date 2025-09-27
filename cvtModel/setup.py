@@ -6,13 +6,15 @@ setup(
     packages=find_packages(where="src"),
     package_dir={"": "src"},
     install_requires=[
-        "numpy",
-        "scipy",
-        "matplotlib",
-        "black",
-        "flake8",
-        "pandas",
-        "pytest",
-        "coverage",
+      "numpy",
+      "scipy",
+      "matplotlib",
+      "pandas"
     ],
+    extras_require={"dev": [
+      "black",
+      "flake8",
+      "pytest",
+      "coverage"
+    ]},
 )

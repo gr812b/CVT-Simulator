@@ -3,7 +3,7 @@ import unittest
 import math
 
 from simulations.load_simulation import LoadSimulator
-from constants.constants import GRAVITY, AIR_DENSITY
+from cvt_simulator.constants.constants import GRAVITY, AIR_DENSITY
 
 
 class TestLoadSimulator(unittest.TestCase):

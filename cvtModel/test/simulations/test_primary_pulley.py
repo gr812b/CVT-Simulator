@@ -1,7 +1,7 @@
 import unittest
 
 from simulations.primary_pulley import PrimaryPulley
-from constants.car_specs import MAX_SHIFT
+from cvt_simulator.constants.car_specs import MAX_SHIFT
 
 
 class TestPrimaryPulley(unittest.TestCase):

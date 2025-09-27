@@ -246,7 +246,7 @@ The team will use the below checklist to verify the quality of the SRS document:
 
 \subsubsection*{Review Meetings}
 We will conduct meetings with experienced team members and alumni to review the SRS document.
-These meetings will focus on the theoretical models, data definitions, and instance models.
+These meetings will focus on the theoretical models, data definitions, and instance cvt_simulator.models.
 We will also conduct a practicality check to ensure that all requirements are feasible and measurable.
 Finally, the assumptions will also be verified to ensure that they won't negatively impact the accuracy of the simulation.
 
@@ -1078,7 +1078,7 @@ Then there is the front end tests that test the CSV reading and parameters parsi
 \noindent The following is the file breakdown for each test suite:
 \begin{itemize}
   \item \href{https://github.com/gr812b/CVT-Simulator/blob/main/test/simulations/test_belt_simulator.py}{test\_belt\_simulator.py} 
-  \label{test:belt_simulator} - This test suite will verify that the BeltSimulator’s methods correctly compute centrifugal force, clamping-derived radial forces, net radial force, slack tension, and maximum transferable torque according to theoretical models.
+  \label{test:belt_simulator} - This test suite will verify that the BeltSimulator’s methods correctly compute centrifugal force, clamping-derived radial forces, net radial force, slack tension, and maximum transferable torque according to theoretical cvt_simulator.models.
 
   \item \href{https://github.com/gr812b/CVT-Simulator/blob/main/test/simulations/test_car_simulation.py}{test\_car\_simulator.py} 
   \label{test:car_simulator} - This test suite will verify that CarSimulator calculates acceleration correctly as force divided by mass.

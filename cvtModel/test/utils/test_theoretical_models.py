@@ -1,6 +1,6 @@
 import unittest
 
-from utils.theoretical_models import TheoreticalModels
+from cvt_simulator.utils.theoretical_models import TheoreticalModels
 
 
 class TestTheoreticalModels(unittest.TestCase):
