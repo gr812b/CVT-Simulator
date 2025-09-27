@@ -1,33 +1,115 @@
-import React, { createContext, useReducer, useContext } from 'react';
+import React, { createContext, useReducer, useContext, useEffect } from 'react';
+import { PARAMETERS, type Parameter, type ParameterState } from '@types';
 
 type ParameterAction = 
-  | { type: 'SET_WEIGHT'; weight: number };
+  | { type: 'SET_PARAMETER'; parameter: Parameter; value: ParameterState[Parameter] }
+  | { type: 'SET_MULTIPLE_PARAMETERS'; parameters: Partial<ParameterState> }
+  | { type: 'RESET_TO_DEFAULTS' }
+  | { type: 'LOAD_FROM_STORAGE'; parameters: ParameterState };
 
 const ParameterContext = createContext<{
-  weight: number;
+  parameters: ParameterState;
   dispatch: React.Dispatch<ParameterAction>;
+  setParameter: (parameter: Parameter, value: ParameterState[Parameter]) => void;
+  setMultipleParameters: (parameters: Partial<ParameterState>) => void;
+  resetToDefaults: () => void;
 } | undefined>(undefined);
 
-const parameterReducer = (state: { 
-  weight: number,
-}, action: ParameterAction) => {
-  switch (action.type) {
-    case 'SET_WEIGHT':
-      return { ...state, weight: action.weight };
-    default:
-      return state;
+// Create initial state from PARAMETERS defaults
+const getInitialState = (): ParameterState => {
+  const result = {} as Record<Parameter, unknown>;
+  
+  for (const [key, config] of Object.entries(PARAMETERS)) {
+    result[key as Parameter] = config.defaultValue;
+  }
+  
+  return result as ParameterState;
+};
+
+// Storage key for localStorage
+const STORAGE_KEY = 'cvt-simulator-parameters';
+
+// Load parameters from localStorage
+const loadFromStorage = (): ParameterState => {
+  try {
+    const stored = localStorage.getItem(STORAGE_KEY);
+    if (stored) {
+      const parsed = JSON.parse(stored);
+      // Merge with defaults to ensure all parameters exist
+      return { ...getInitialState(), ...parsed };
+    }
+  } catch (error) {
+    console.warn('Failed to load parameters from localStorage:', error);
+  }
+  return getInitialState();
+};
+
+// Save parameters to localStorage
+const saveToStorage = (parameters: ParameterState): void => {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(parameters));
+  } catch (error) {
+    console.warn('Failed to save parameters to localStorage:', error);
   }
 };
 
+const parameterReducer = (state: ParameterState, action: ParameterAction): ParameterState => {
+  let newState: ParameterState;
+  
+  switch (action.type) {
+    case 'SET_PARAMETER':
+      newState = { ...state, [action.parameter]: action.value };
+      break;
+    case 'SET_MULTIPLE_PARAMETERS':
+      newState = { ...state, ...action.parameters };
+      break;
+    case 'RESET_TO_DEFAULTS':
+      newState = getInitialState();
+      break;
+    case 'LOAD_FROM_STORAGE':
+      newState = action.parameters;
+      break;
+    default:
+      return state;
+  }
+  
+  // Save to localStorage for all actions except LOAD_FROM_STORAGE
+  if (action.type !== 'LOAD_FROM_STORAGE') {
+    saveToStorage(newState);
+  }
+  
+  return newState;
+};
+
 export const ParameterProvider = ({ children }: { children: React.ReactNode }) => {
-  const initialState = {
-    weight: 150, // TODO: Use default values in source of truth
+  const [parameters, dispatch] = useReducer(parameterReducer, getInitialState());
+
+  // Load from localStorage on mount
+  useEffect(() => {
+    const storedParameters = loadFromStorage();
+    dispatch({ type: 'LOAD_FROM_STORAGE', parameters: storedParameters });
+  }, []);
+
+  const setParameter = (parameter: Parameter, value: ParameterState[Parameter]) => {
+    dispatch({ type: 'SET_PARAMETER', parameter, value });
   };
 
-  const [state, dispatch] = useReducer(parameterReducer, initialState);
+  const setMultipleParameters = (params: Partial<ParameterState>) => {
+    dispatch({ type: 'SET_MULTIPLE_PARAMETERS', parameters: params });
+  };
+
+  const resetToDefaults = () => {
+    dispatch({ type: 'RESET_TO_DEFAULTS' });
+  };
 
   return (
-    <ParameterContext.Provider value={{ ...state, dispatch }}>
+    <ParameterContext.Provider value={{ 
+      parameters, 
+      dispatch,
+      setParameter,
+      setMultipleParameters,
+      resetToDefaults 
+    }}>
       {children}
     </ParameterContext.Provider>
   );

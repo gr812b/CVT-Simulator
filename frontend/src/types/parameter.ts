@@ -19,20 +19,21 @@ export type Parameter =
   | 'AngleOfIncline'
   | 'TotalDistance'
 
-interface BaseParameterConfig<T extends ParameterValue> {
+interface BaseParameterConfig<T extends ParameterValue, K extends ParameterType> {
     label: string;
     description: string;
-    type: ParameterType;
+    type: K;
     defaultValue: T;
     validate: (value: string) => string | null;
     units: string;
     group: ParameterGroup;
 }
 
-type StringParameter = BaseParameterConfig<string> & { type: 'string' };
-type NumberParameter = BaseParameterConfig<number> & { type: 'number' };
+type StringParameter = BaseParameterConfig<string, 'string'>;
+type NumberParameter = BaseParameterConfig<number, 'number'>;
+type BooleanParameter = BaseParameterConfig<boolean, 'boolean'>;
 
-type ParameterConfig = StringParameter | NumberParameter;
+type ParameterConfig = StringParameter | NumberParameter | BooleanParameter;
 
 export const GROUP_TITLES: Record<ParameterGroup, string> = {
     primary: 'Primary Pulley',
@@ -40,7 +41,7 @@ export const GROUP_TITLES: Record<ParameterGroup, string> = {
     environment: 'Environment',
 };
 
-export const PARAMETERS: Record<Parameter, ParameterConfig> = {
+const PARAMETERS_IMPL = {
   FlyweightMass: {
     label: 'Flyweight Mass',
     description: 'Weight of the primary pulley flyweight',
@@ -149,4 +150,14 @@ export const PARAMETERS: Record<Parameter, ParameterConfig> = {
     units: 'm',
     group: 'environment',
   },
-}
+} as const;
+
+// Export with proper typing but preserve literal types
+export const PARAMETERS: Record<Parameter, ParameterConfig> = PARAMETERS_IMPL;
+
+// Create parameter state type using the const-asserted implementation
+type TypeFromLiteral<T extends string> = T extends 'string' ? string : T extends 'number' ? number : T extends 'boolean' ? boolean : never;
+
+export type ParameterState = {
+  [K in Parameter]: TypeFromLiteral<(typeof PARAMETERS_IMPL)[K]['type']>;
+};

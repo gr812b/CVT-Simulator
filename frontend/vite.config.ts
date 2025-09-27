@@ -16,6 +16,7 @@ export default defineConfig({
       '@pages': resolve(root, 'pages'),
       '@contexts': resolve(root, 'contexts'),
       '@utils': resolve(root, 'utils'),
+      '@hooks': resolve(root, 'hooks'),
     },
   },
   css: {
