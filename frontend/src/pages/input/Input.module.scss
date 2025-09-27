@@ -1,5 +1,6 @@
 @use '@styles/_fonts';
 @use '@styles/_colors';
+@use '@styles/_mixins';
 @use 'sass:map';
 
 .input {
@@ -27,7 +28,7 @@
             grid-row: 1;
             margin-left: 2rem;
             padding-right: 1rem;
-            overflow: auto;
+            @include mixins.scrollbar;
             scrollbar-gutter: stable;
 
             .baseInputField {
