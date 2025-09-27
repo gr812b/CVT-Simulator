@@ -5,13 +5,13 @@
 
     // Works on all browsers except Safari
     @supports (scrollbar-width: auto) {
-      scrollbar-color: var(--primary) transparent;
+      scrollbar-color: var(--text-color) transparent;
     }
 
     // Works on Safari and all other browsers except Firefox
     @supports selector(::-webkit-scrollbar) {
       &::-webkit-scrollbar-thumb {
-          background: var(--primary);
+          background: var(--text-color);
           border-radius: 3px;
       }
       &::-webkit-scrollbar-track {
