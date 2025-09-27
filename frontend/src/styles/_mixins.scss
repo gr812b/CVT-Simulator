@@ -1,0 +1,24 @@
+@use '@styles/_colors';
+
+@mixin scrollbar {
+    overflow-y: scroll;
+
+    // Works on all browsers except Safari
+    @supports (scrollbar-width: auto) {
+      scrollbar-color: var(--text-color) transparent;
+    }
+
+    // Works on Safari and all other browsers except Firefox
+    @supports selector(::-webkit-scrollbar) {
+      &::-webkit-scrollbar-thumb {
+          background: var(--text-color);
+          border-radius: 3px;
+      }
+      &::-webkit-scrollbar-track {
+          background: transparent;
+      }
+      &::-webkit-scrollbar {
+          width: 6px;
+      }
+    }
+}
