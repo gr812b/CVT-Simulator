@@ -1,6 +1,6 @@
 import type { DataPoint2D, ValidationResult } from './types';
 
-// Validation constants (moved from cvt_simulator.constants.ts)
+// Validation constants (moved from constants.ts)
 export const VALIDATION = {
   MIN_DATA_POINTS_WARNING: 5,
   SINGLE_POINT_WARNING: 1,
