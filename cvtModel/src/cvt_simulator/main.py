@@ -8,10 +8,10 @@ def simulate_cvt_model(args: SimulationArgs, out_csv: str = "simulation_output.c
 
   simulation_runner = SimulationRunner(car_model, cvt_model)
   result = simulation_runner.run_simulation()
-  # Save outputs
   result.write_csv(out_csv)
-  formatted = FormattedSimulationResult.from_csv(out_csv) # .write_formatted_csv()
-  formatted.write_formatted_csv()
+
+  formatted = FormattedSimulationResult(result)
+  
 
   return formatted
 
