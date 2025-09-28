@@ -1,31 +1,58 @@
 # backend/models/auto_model.py
+from __future__ import annotations
+import inspect
 from dataclasses import is_dataclass, fields as dc_fields
-from typing import Any, get_origin, get_args, Union, Type
+from typing import Any, Dict, Tuple, Union, get_args, get_origin, get_type_hints
 from pydantic import BaseModel, ConfigDict, create_model
 
-_cache: dict[type, type[BaseModel]] = {}
+_CACHE: dict[type, type[BaseModel]] = {}
+_PRIMS = (int, float, str, bool, bytes, type(None))
 
-def model_from_dataclass(dc_type: type) -> type[BaseModel]:
-    if dc_type in _cache:
-        return _cache[dc_type]
-    if not is_dataclass(dc_type):
-        raise TypeError(f"{dc_type} is not a dataclass")
+def _resolve(t: Any) -> Any:
+    origin = get_origin(t)
+    if origin is Union:
+        return Union[tuple(_resolve(a) for a in get_args(t))]  # type: ignore[misc]
+    if origin in (list, tuple, set, frozenset):
+        (inner,) = get_args(t) or (Any,)
+        return origin[_resolve(inner)]  # type: ignore[index]
+    if origin is dict:
+        k_t, v_t = get_args(t) or (Any, Any)
+        return dict[_resolve(k_t), _resolve(v_t)]  # type: ignore[index]
+    if inspect.isclass(t) and t not in _PRIMS:
+        return model_from_class(t)
+    return t
 
-    annotations: dict[str, tuple[type[Any], Any]] = {}
-    for f in dc_fields(dc_type):
-        t = f.type
-        origin = get_origin(t)
-        if origin is Union:
-            args = []
-            for a in get_args(t):
-                args.append(model_from_dataclass(a) if is_dataclass(a) else a)
-            field_type = Union[tuple(args)]  # type: ignore[arg-type]
-        else:
-            field_type = model_from_dataclass(t) if is_dataclass(t) else t
-        annotations[f.name] = (field_type, ...)  # required
+def model_from_class(tp: type, *, name: str | None = None) -> type[BaseModel]:
+    if tp in _CACHE:
+        return _CACHE[tp]
+    if not inspect.isclass(tp):
+        raise TypeError(f"{tp!r} is not a class")
 
-    M = create_model(f"{dc_type.__name__}Model", __base__=BaseModel, **annotations)  # type: ignore
-    # attach config
-    M.model_config = ConfigDict(from_attributes=True)
-    _cache[dc_type] = M
+    # 1) Prefer class annotations (DRY). Only if there are NONE do we fall back to __init__.
+    fields_dict: Dict[str, Tuple[Any, Any]] = {}
+    hints: Dict[str, Any] = {}
+    try:
+        hints = get_type_hints(tp, include_extras=True) or {}
+    except Exception:
+        hints = getattr(tp, "__annotations__", {}) or {}
+
+    if hints:
+        for name_, ann in hints.items():
+            fields_dict[name_] = (_resolve(ann), ...)
+    else:
+        # 2) Fallback: derive fields from __init__ signature
+        try:
+            sig = inspect.signature(tp.__init__)
+            for name_, p in sig.parameters.items():
+                if name_ == "self":
+                    continue
+                ann = p.annotation if p.annotation is not inspect._empty else Any
+                fields_dict[name_] = (_resolve(ann), ...)
+        except Exception:
+            pass
+
+    model_name = name or f"{tp.__name__}Model"
+    M = create_model(model_name, __base__=BaseModel, **fields_dict)  # type: ignore[arg-type]
+    M.model_config = ConfigDict(from_attributes=True, title=model_name)
+    _CACHE[tp] = M
     return M

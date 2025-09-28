@@ -1,4 +1,4 @@
-from ast import List
+from typing import List
 from cvt_simulator.models.dataTypes import CarForceBreakdown, CvtSystemForceBreakdown
 from cvt_simulator.utils.system_state import SystemState
 import pandas as pd
@@ -11,26 +11,25 @@ from dataclasses import is_dataclass, fields
 # TODO: figure out how to structure the returned object over the API as one guy, that makes sense for the 
 # front end and is easy, with type gen
 class FormattedSimulationResult():
-    time: List[float]
+    times: List[float]
     states: List[SystemState]
     car_states: List[CarForceBreakdown]
     cvt_states: List[CvtSystemForceBreakdown]
     
-    def __init__(self, result: SimulationResult):
+    def __init__(self, result: SimulationResult, args: SimulationArgs):
         """
         Initialize using the base SimulationResult and then compute additional columns.
         """
-        self.time = result.time
+        self.times = result.time
         self.states = result.states
         self.car_states = []
         self.cvt_states = []
-        self.gather_model_states()
+        self.gather_model_states(args)
 
-    def gather_model_states(self):
-        args = SimulationArgs()
+    def gather_model_states(self, args):
         car_model, cvt_model = get_models(args)
 
-        for i, t in enumerate(self.time):
+        for i, t in enumerate(self.times):
             # dt = t - self.time[i - 1] if i > 0 else 0
             state = self.states[i]
 
@@ -46,9 +45,7 @@ class FormattedSimulationResult():
         Reads the simulation states from a CSV file and returns an FormattedSimulationResult instance.
         """
         base_result = SimulationResult.from_csv(filename)
-        return FormattedSimulationResult(
-            time=base_result.time, states=base_result.states
-        )
+        return FormattedSimulationResult(base_result)
 
     def write_formatted_csv(self, filename="front_end_output.csv"):
         """
@@ -80,7 +77,7 @@ class FormattedSimulationResult():
             data[key] = []
         
         # Populate all the flattened data
-        for i, (time_val, state, car_state, cvt_state) in enumerate(zip(self.time, self.states, self.car_states, self.cvt_states)):
+        for i, (time_val, state, car_state, cvt_state) in enumerate(zip(self.times, self.states, self.car_states, self.cvt_states)):
             flat_state = self._flatten_dataclass(state, "state")
             flat_car = self._flatten_dataclass(car_state, "car")
             flat_cvt = self._flatten_dataclass(cvt_state, "cvt")
@@ -97,6 +94,21 @@ class FormattedSimulationResult():
         
         df = pd.DataFrame(data)
         df.to_csv(filename, index=False)
+
+    def to_dict(self):
+        """
+        Converts the entire result into a list of dictionaries for each time step. No flattening
+        """
+        result_list = []
+        for i, (time, state, car_state, cvt_state) in enumerate(zip(self.times, self.states, self.car_states, self.cvt_states)):
+            entry = {
+                "time": time,
+                "state": state,
+                "car_state": car_state,
+                "cvt_state": cvt_state
+            }
+            result_list.append(entry)
+        return result_list
 
     def _flatten_dataclass(self, obj, prefix=""):
         """
@@ -123,3 +135,5 @@ class FormattedSimulationResult():
             flat_dict[prefix] = obj
             
         return flat_dict
+    
+

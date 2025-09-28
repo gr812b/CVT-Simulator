@@ -10,8 +10,7 @@ def simulate_cvt_model(args: SimulationArgs, out_csv: str = "simulation_output.c
   result = simulation_runner.run_simulation()
   result.write_csv(out_csv)
 
-  formatted = FormattedSimulationResult(result)
-  
+  formatted = FormattedSimulationResult(result, args)
 
   return formatted
 

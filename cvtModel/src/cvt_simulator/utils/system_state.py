@@ -1,4 +1,9 @@
 class SystemState:
+    car_velocity: float
+    car_position: float
+    shift_velocity: float
+    shift_distance: float
+
     def __init__(
         self,
         car_velocity=0.0,
