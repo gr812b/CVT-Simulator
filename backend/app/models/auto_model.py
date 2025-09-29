@@ -1,8 +1,7 @@
 # backend/models/auto_model.py
 from __future__ import annotations
 import inspect
-from dataclasses import is_dataclass, fields as dc_fields
-from typing import Any, Dict, Tuple, Union, get_args, get_origin, get_type_hints
+from typing import Any, Dict, Tuple, Union, Optional, get_args, get_origin, get_type_hints
 from pydantic import BaseModel, ConfigDict, create_model
 
 _CACHE: dict[type, type[BaseModel]] = {}
@@ -56,3 +55,10 @@ def model_from_class(tp: type, *, name: str | None = None) -> type[BaseModel]:
     M.model_config = ConfigDict(from_attributes=True, title=model_name)
     _CACHE[tp] = M
     return M
+
+def partial_model_from_class(tp: type, *, name: str | None = None) -> type[BaseModel]:
+    M = model_from_class(tp)  # built with required fields
+    fields = {k: (Optional[v.annotation], None) for k, v in M.model_fields.items()}  # type: ignore[attr-defined]
+    P = create_model(name or f"{tp.__name__}Input", __base__=BaseModel, **fields)  # type: ignore[arg-type]
+    P.model_config = ConfigDict(from_attributes=True)
+    return P

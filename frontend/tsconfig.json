@@ -14,7 +14,7 @@
       "@pages/*": ["pages/*"],
       "@contexts/*": ["contexts/*"],
       "@utils/*": ["utils/*"],
-      "@hooks/*": ["hooks/*"]
+      "@hooks/*": ["hooks/*"],
     },
   }
 }
