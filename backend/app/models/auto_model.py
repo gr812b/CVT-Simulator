@@ -1,11 +1,21 @@
 # backend/models/auto_model.py
 from __future__ import annotations
 import inspect
-from typing import Any, Dict, Tuple, Union, Optional, get_args, get_origin, get_type_hints
+from typing import (
+    Any,
+    Dict,
+    Tuple,
+    Union,
+    Optional,
+    get_args,
+    get_origin,
+    get_type_hints,
+)
 from pydantic import BaseModel, ConfigDict, create_model
 
 _CACHE: dict[type, type[BaseModel]] = {}
 _PRIMS = (int, float, str, bool, bytes, type(None))
+
 
 def _resolve(t: Any) -> Any:
     origin = get_origin(t)
@@ -20,6 +30,7 @@ def _resolve(t: Any) -> Any:
     if inspect.isclass(t) and t not in _PRIMS:
         return model_from_class(t)
     return t
+
 
 def model_from_class(tp: type, *, name: str | None = None) -> type[BaseModel]:
     if tp in _CACHE:
@@ -55,6 +66,7 @@ def model_from_class(tp: type, *, name: str | None = None) -> type[BaseModel]:
     M.model_config = ConfigDict(from_attributes=True, title=model_name)
     _CACHE[tp] = M
     return M
+
 
 def partial_model_from_class(tp: type, *, name: str | None = None) -> type[BaseModel]:
     M = model_from_class(tp)  # built with required fields

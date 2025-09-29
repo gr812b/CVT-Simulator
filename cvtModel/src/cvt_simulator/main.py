@@ -3,19 +3,22 @@ from cvt_simulator.simulation_runner import SimulationRunner
 from cvt_simulator.utils.simulation_args import SimulationArgs
 from cvt_simulator.utils.frontend_output import FormattedSimulationResult
 
+
 def simulate_cvt_model(args: SimulationArgs, out_csv: str = "simulation_output.csv"):
-  car_model, cvt_model = get_models(args)
+    car_model, cvt_model = get_models(args)
 
-  simulation_runner = SimulationRunner(car_model, cvt_model)
-  result = simulation_runner.run_simulation()
-  result.write_csv(out_csv)
+    simulation_runner = SimulationRunner(car_model, cvt_model)
+    result = simulation_runner.run_simulation()
+    result.write_csv(out_csv)
 
-  formatted = FormattedSimulationResult(result, args)
+    formatted = FormattedSimulationResult(result, args)
 
-  return formatted
+    return formatted
+
 
 def main():
-  simulate_cvt_model(SimulationArgs())
+    simulate_cvt_model(SimulationArgs())
+
 
 if __name__ == "__main__":
-  main()
+    main()
