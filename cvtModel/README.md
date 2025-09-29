@@ -7,7 +7,7 @@ venv\Scripts\activate # or 'source venv/bin/activate' on Mac
 ```
 2. Install the dependencies and setup package
 ```bash
-pip install -e .
+pip install -e .[dev]
 ```
 3. Run the tests
 ```bash
