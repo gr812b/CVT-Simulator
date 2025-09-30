@@ -1,4 +1,3 @@
-
 try {
     Set-Location frontend
     Start-Process powershell {npm run dev}
