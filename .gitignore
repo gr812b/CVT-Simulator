@@ -294,5 +294,4 @@ front_end_output.csv
 *.dxf
 
 # build folders
-CVT_Simulator/
 unity/

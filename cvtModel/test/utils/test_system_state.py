@@ -1,6 +1,6 @@
 import unittest
 
-from utils.system_state import SystemState
+from cvt_simulator.utils.system_state import SystemState
 
 
 class TestSystemState(unittest.TestCase):

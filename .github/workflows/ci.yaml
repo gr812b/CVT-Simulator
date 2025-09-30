@@ -24,7 +24,7 @@ jobs:
         run: |
           python -m venv venv
           source venv/bin/activate
-          pip install -e .
+          pip install -e .[dev]
         working-directory: ./cvtModel
 
       - name: Run flake8

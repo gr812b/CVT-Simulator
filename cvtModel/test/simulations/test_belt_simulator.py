@@ -2,10 +2,14 @@ import unittest
 import numpy as np
 
 from simulations.belt_simulator import BeltSimulator
-from utils.theoretical_models import TheoreticalModels as tm
-from constants.constants import RUBBER_DENSITY
+from cvt_simulator.utils.theoretical_models import TheoreticalModels as tm
+from cvt_simulator.constants.constants import RUBBER_DENSITY
 
-from constants.car_specs import SHEAVE_ANGLE, BELT_CROSS_SECTIONAL_AREA, BELT_HEIGHT
+from cvt_simulator.constants.car_specs import (
+    SHEAVE_ANGLE,
+    BELT_CROSS_SECTIONAL_AREA,
+    BELT_HEIGHT,
+)
 
 
 class TestBeltSimulator(unittest.TestCase):

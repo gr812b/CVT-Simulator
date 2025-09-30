@@ -1,7 +1,7 @@
 import unittest
 import math
 
-from utils.conversions import (
+from cvt_simulator.utils.conversions import (
     rpm_to_rad_s,
     rad_s_to_rpm,
     rad_to_deg,
