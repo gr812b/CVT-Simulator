@@ -1,5 +1,5 @@
 import type { EChartsOption } from 'echarts';
-import type { ChartConfig, DataPoint2D } from './types';
+import type { ChartConfig } from './types';
 import { inferAxisType } from './validation';
 
 /**
@@ -111,7 +111,7 @@ function createDefaultConfig(): ChartConfig {
 /**
  * Creates a complete chart configuration by merging user config with defaults
  */
-export function createChartConfig(userConfig: Partial<ChartConfig>, data: DataPoint2D[]): ChartConfig {
+export function createChartConfig(userConfig: Partial<ChartConfig>, xData: number[], yData: number[]): ChartConfig {
   const defaultConfig = createDefaultConfig();
   const mergedConfig: ChartConfig = {
     ...defaultConfig,
@@ -127,9 +127,11 @@ export function createChartConfig(userConfig: Partial<ChartConfig>, data: DataPo
   };
   
   // Auto-infer axis types if not specified
-  if (data.length > 0 && !userConfig.xAxis?.type) {
-    const xValues = data.map(point => point.x);
-    mergedConfig.xAxis.type = inferAxisType(xValues);
+  if (xData.length > 0 && !userConfig.xAxis?.type) {
+    mergedConfig.xAxis.type = inferAxisType(xData);
+  }
+  if (yData.length > 0 && !userConfig.yAxis?.type) {
+    mergedConfig.yAxis.type = inferAxisType(yData);
   }
   
   return mergedConfig;
@@ -138,9 +140,12 @@ export function createChartConfig(userConfig: Partial<ChartConfig>, data: DataPo
 /**
  * Converts data points to ECharts dataset format
  */
-export function createDataset(data: DataPoint2D[], config: ChartConfig): EChartsOption['dataset'] {
+export function createDataset(xData: number[], yData: number[], config: ChartConfig): EChartsOption['dataset'] {
   const source: (string | number | Date)[][] = [[config.xAxis.name, config.yAxis.name]];
-  data.forEach(point => source.push([point.x, point.y]));
+  xData.forEach((x, index) => {
+    const y = yData[index];
+    source.push([x, y]);
+  });
   return { source };
 }
 
@@ -148,12 +153,13 @@ export function createDataset(data: DataPoint2D[], config: ChartConfig): ECharts
  * Generates complete ECharts options with dark theme defaults
  */
 export function generateEChartsOptions(
-  data: DataPoint2D[],
+  xData: number[],
+  yData: number[],
   config: ChartConfig,
   userOptions: Partial<EChartsOption> = {}
 ): EChartsOption {
-  const dataset = createDataset(data, config);
-  
+  const dataset = createDataset(xData, yData, config);
+
   // Create axis options separately to avoid type inference issues
   const xAxisOption = {
     type: config.xAxis.type,
@@ -281,12 +287,13 @@ export function generateEChartsOptions(
  * Utility to create chart options with sensible defaults and easy customization
  */
 export function createChartOptions(
-  data: DataPoint2D[],
+  xData: number[],
+  yData: number[],
   partialConfig: Partial<ChartConfig> = {},
   chartOptions: Partial<EChartsOption> = {}
 ): EChartsOption {
-  const config = createChartConfig(partialConfig, data);
-  return generateEChartsOptions(data, config, chartOptions);
+  const config = createChartConfig(partialConfig, xData, yData);
+  return generateEChartsOptions(xData, yData, config, chartOptions);
 }
 
 // Export constants for external use if needed
