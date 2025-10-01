@@ -95,14 +95,8 @@ export interface components {
         };
         /** FormattedSimulationResultModel */
         FormattedSimulationResultModel: {
-            /** Times */
-            times: number[];
-            /** States */
-            states: components["schemas"]["SystemStateModel"][];
-            /** Car States */
-            car_states: components["schemas"]["CarForceBreakdownModel"][];
-            /** Cvt States */
-            cvt_states: components["schemas"]["CvtSystemForceBreakdownModel"][];
+            /** Data */
+            data: components["schemas"]["TimeStepDataModel"][];
         };
         /** HTTPValidationError */
         HTTPValidationError: {
@@ -195,6 +189,14 @@ export interface components {
             shift_velocity: number;
             /** Shift Distance */
             shift_distance: number;
+        };
+        /** TimeStepDataModel */
+        TimeStepDataModel: {
+            /** Time */
+            time: number;
+            state: components["schemas"]["SystemStateModel"];
+            car_state: components["schemas"]["CarForceBreakdownModel"];
+            cvt_state: components["schemas"]["CvtSystemForceBreakdownModel"];
         };
         /** ValidationError */
         ValidationError: {
