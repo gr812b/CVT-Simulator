@@ -13,6 +13,7 @@ class TimeStepData:
     """
     Represents all the data for a single time step in the simulation.
     """
+
     time: float
     state: SystemState
     car_state: CarForceBreakdown
@@ -39,10 +40,7 @@ class FormattedSimulationResult:
             cvt_state = cvt_model.get_breakdown(state)
 
             time_step_data = TimeStepData(
-                time=time,
-                state=state,
-                car_state=car_state,
-                cvt_state=cvt_state
+                time=time, state=state, car_state=car_state, cvt_state=cvt_state
             )
             self.data.append(time_step_data)
 
@@ -72,7 +70,7 @@ class FormattedSimulationResult:
             flat_state = self._flatten_dataclass(time_step.state, "state")
             flat_car = self._flatten_dataclass(time_step.car_state, "car")
             flat_cvt = self._flatten_dataclass(time_step.cvt_state, "cvt")
-            
+
             all_keys.update(flat_state.keys())
             all_keys.update(flat_car.keys())
             all_keys.update(flat_cvt.keys())
@@ -89,7 +87,12 @@ class FormattedSimulationResult:
             flat_cvt = self._flatten_dataclass(time_step.cvt_state, "cvt")
 
             # Merge all flattened data
-            flat_combined = {**flat_state, **flat_car, **flat_cvt, "time": time_step.time}
+            flat_combined = {
+                **flat_state,
+                **flat_car,
+                **flat_cvt,
+                "time": time_step.time,
+            }
 
             # For each key, append the value or None if missing
             for key in all_keys:
