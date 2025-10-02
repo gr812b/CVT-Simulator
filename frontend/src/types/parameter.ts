@@ -44,7 +44,8 @@ export const GROUP_TITLES: Record<ParameterGroup, string> = {
 const PARAMETERS_IMPL = {
   FlyweightMass: {
     label: 'Flyweight Mass',
-    description: 'Weight of the primary pulley flyweight',
+    description:
+      'The total mass of the flyweight arm system in the primary pulley. This includes all flyweights (typically three in most designs) and the full assembly that rotates to generate centrifugal force. The flyweight mass is responsible for producing the main clamping force in the CVT system, as it determines how strongly the pulley can grip the belt as RPM increases. Enter the combined mass of all spinning components that contribute to centrifugal clamping.',
     type: 'number',
     defaultValue: 0.8,
     validate: validators.gtZero,
@@ -53,7 +54,8 @@ const PARAMETERS_IMPL = {
   },
   PrimarySpringRate: {
     label: 'Primary Spring Rate',
-    description: 'Spring rate of the primary pulley',
+      description:
+        'The spring rate of the compressional spring in the primary pulley. This value sets how much force is needed to shift the pulley as the spring is compressed, affecting the entire shifting process. In the spring force equation (y = mx + b), the spring rate is the "m" (slope), controlling how quickly force increases with compression. A higher spring rate means more force is required for shifting at all points. Enter the spring rate value to set the overall resistance to shifting.',
     type: 'number',
     defaultValue: 1000,
     validate: validators.gtZero,
@@ -62,7 +64,8 @@ const PARAMETERS_IMPL = {
   },
   PrimarySpringPretension: {
     label: 'Primary Spring Pretension',
-    description: 'Spring pretension of the primary pulley',
+    description:
+      'The initial compression (pretension) applied to the primary pulley spring before any movement occurs. This sets the starting force that must be overcome for the CVT to begin engaging. Pretension acts as an offset in the spring force equation (y = mx + b), shifting the engagement point. Note: The maximum pretension is limited by the physical design of each CVT. Adjust this value to control when the belt starts to be clamped, but be aware of hardware constraints.',
     type: 'number',
     defaultValue: 0,
     validate: validators.gteZero,
@@ -71,7 +74,8 @@ const PARAMETERS_IMPL = {
   },
   SecondaryTorsionSpringRate: {
     label: 'Secondary Torsion Spring Rate',
-    description: 'Spring rate of the secondary torsional spring',
+    description:
+      'The spring rate of the torsional aspect of the secondary pulley spring. This is the main force component, applying torque through the helix mechanism to resist shifting. In the spring force equation (y = mx + b), this rate is the "m" (slope), controlling how much torque increases as the spring is twisted. The secondary spring has both torsional and compressional effects, but torsional is much larger. For more on how the helix geometry affects this, see the helix geometry documentation.',
     type: 'number',
     defaultValue: 30,
     validate: validators.gtZero,
@@ -80,7 +84,8 @@ const PARAMETERS_IMPL = {
   },
   SecondaryCompressionSpringRate: {
     label: 'Secondary Compression Spring Rate',
-    description: 'Spring rate of the secondary compression spring',
+    description:
+      'The spring rate of the compressional aspect of the secondary pulley spring. This is a smaller force component compared to the torsional aspect, but it still contributes to shifting. In the spring force equation (y = mx + b), this rate is the "m" (slope), controlling how quickly force decreases as the spring is decompressed. The secondary spring is primarily torsional, but the compressional effect is non-negligible and helps the pulley shift.',
     type: 'number',
     defaultValue: 1,
     validate: validators.gtZero,
@@ -89,7 +94,8 @@ const PARAMETERS_IMPL = {
   },
   SecondaryRotationalSpringPretension: {
     label: 'Secondary Rotational Spring Pretension',
-    description: 'Pretension of the secondary rotational spring',
+    description:
+      'The initial pretension (offset) of the torsional component of the secondary pulley spring, measured in degrees. This sets the starting torque that resists shifting before any movement occurs, acting as the "b" in y = mx + b. Adjusting this value changes the baseline resistance to shifting, and is a key factor in how the helix mechanism responds to belt movement.',
     type: 'number',
     defaultValue: 45,
     validate: validators.gteZero,
@@ -98,7 +104,8 @@ const PARAMETERS_IMPL = {
   },
   SecondaryLinearSpringPretension: {
     label: 'Secondary Linear Spring Pretension',
-    description: 'Pretension of the secondary linear spring',
+    description:
+      'The initial pretension (offset) of the compressional component of the secondary pulley spring, measured in meters. This sets the starting force that encourages shifting before any movement occurs, acting as the "b" in y = mx + b. Adjusting this value changes the baseline force helping the secndary pulley shift.',
     type: 'number',
     defaultValue: 0.1,
     validate: validators.gteZero,
@@ -107,7 +114,7 @@ const PARAMETERS_IMPL = {
   },
   VehicleWeight: {
     label: 'Vehicle Weight',
-    description: 'Weight of the vehicle',
+  description: 'The mass of the vehicle itself. This is the "m" in F=ma, determining how much force is required to accelerate the vehicle as a whole.',
     type: 'number',
     defaultValue: 225,
     validate: validators.gtZero,
@@ -116,7 +123,7 @@ const PARAMETERS_IMPL = {
   },
   DriverWeight: {
     label: 'Driver Weight',
-    description: 'Weight of the driver',
+  description: 'The mass of the driver. This is added to the vehicle mass as part of the "m" in F=ma, affecting the total force needed for acceleration.',
     type: 'number',
     defaultValue: 75,
     validate: validators.gtZero,
@@ -125,7 +132,7 @@ const PARAMETERS_IMPL = {
   },
   Traction: {
     label: 'Traction',
-    description: 'Available traction force as a percentage',
+  description: 'The available traction force as a percentage. This limits how much of the engine\'s force can be used for acceleration before wheel slip occurs. TODO: Make this value a force slip value rather than a percentage.',
     type: 'number',
     defaultValue: 100,
     validate: validators.percent,
@@ -134,7 +141,7 @@ const PARAMETERS_IMPL = {
   },
   AngleOfIncline: {
     label: 'Angle of Incline',
-    description: 'Incline angle of the surface',
+  description: 'The angle of the surface the vehicle is driving on, in degrees. A higher angle means the vehicle must overcome more gravitational force to climb, reducing acceleration.',
     type: 'number',
     defaultValue: 0,
     validate: validators.gteZero,
@@ -143,7 +150,7 @@ const PARAMETERS_IMPL = {
   },
   TotalDistance: {
     label: 'Total Distance',
-    description: 'Total simulation distance',
+  description: 'The total distance the simulation will run before stopping. This is one way to set the simulation end condition (the other is a set amount of time).',
     type: 'number',
     defaultValue: 200,
     validate: validators.gtZero,
