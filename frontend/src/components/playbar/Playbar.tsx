@@ -1,10 +1,9 @@
-
-
-
 import React, { useEffect, useState } from 'react';
 import styles from './Playbar.module.scss';
 import { ReplayController, ReplayEventType, StateType } from '@utils/ReplayController';
 import Slider from '@mui/material/Slider';
+import PlayIcon from '@assets/icons/play.svg?react';
+import PauseIcon from '@assets/icons/pause.svg?react';
 
 
 interface PlaybarProps {
@@ -41,7 +40,8 @@ export const Playbar: React.FC<PlaybarProps> = ({ replayController, times }) => 
         }
     };
 
-    const handleSpeedChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const speedOptions = [0.25, 0.5, 0.75, 1, 1.25, 1.5, 2, 2.5, 3, 4];
+    const handleSpeedChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
         const newSpeed = Number(e.target.value);
         setSpeed(newSpeed);
         replayController.setSpeed(newSpeed);
@@ -63,7 +63,7 @@ export const Playbar: React.FC<PlaybarProps> = ({ replayController, times }) => 
                 onClick={handlePlayPause}
                 aria-label={isPlaying ? 'Pause' : 'Play'}
             >
-                {isPlaying ? '⏸' : '▶️'}
+                {isPlaying ? <PauseIcon /> : <PlayIcon />}
             </button>
             <Slider
                 min={0}
@@ -87,16 +87,15 @@ export const Playbar: React.FC<PlaybarProps> = ({ replayController, times }) => 
             </span>
             <label className={styles.speedLabel}>
                 Speed:
-                <input
-                    type="number"
-                    min={0.1}
-                    max={10}
-                    step={0.25}
+                <select
                     value={speed}
                     onChange={handleSpeedChange}
-                    className={styles.speedInput}
-                />
-                x
+                    className={styles.speedSelect}
+                >
+                    {speedOptions.map(opt => (
+                        <option key={opt} value={opt}>{opt}x</option>
+                    ))}
+                </select>
             </label>
         </div>
     );
