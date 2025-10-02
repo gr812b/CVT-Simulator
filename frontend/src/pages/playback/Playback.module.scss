@@ -28,7 +28,7 @@
         display: grid;
         grid-template-columns: 1fr 1fr;
         grid-auto-rows: 1fr;
-        gap: 1.5rem;
+        overflow-x: hidden; // TODO: fix 2D graph overflow     
     }
 
     .playbarContainer {
