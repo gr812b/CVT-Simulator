@@ -7,13 +7,14 @@ import { validateData } from './validation';
 import { createChartOptions, CHART_COLORS } from './chartOptions';
 
 export function Graph2D({
-  data,
+  xData,
+  yData,
   config,
   chartOptions = {},
   className = '',
 }: Graph2DProps) {
   // Validate data and generate warnings/errors
-  const validation = useMemo(() => validateData(data), [data]);
+  const validation = useMemo(() => validateData(xData, yData), [xData, yData]);
   
   // Generate complete ECharts options
   const echartsOptions = useMemo(() => {
@@ -27,10 +28,10 @@ export function Graph2D({
         },
       };
     }
-    
-    return createChartOptions(data, config, chartOptions);
-  }, [data, config, chartOptions, validation]);
-  
+
+    return createChartOptions(xData, yData, config, chartOptions);
+  }, [xData, yData, config, chartOptions, validation]);
+
   // Log warnings to console (can be disabled in production)
   useEffect(() => {
     if (validation.warnings.length > 0) {

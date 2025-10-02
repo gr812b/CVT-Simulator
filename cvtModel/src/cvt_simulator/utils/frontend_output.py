@@ -5,70 +5,74 @@ import pandas as pd
 from cvt_simulator.models.model_initializer import get_models
 from cvt_simulator.utils.simulation_args import SimulationArgs
 from cvt_simulator.utils.simulation_result import SimulationResult
-from dataclasses import is_dataclass, fields
+from dataclasses import is_dataclass, fields, dataclass
+
+
+@dataclass
+class TimeStepData:
+    """
+    Represents all the data for a single time step in the simulation.
+    """
+
+    time: float
+    state: SystemState
+    car_state: CarForceBreakdown
+    cvt_state: CvtSystemForceBreakdown
 
 
 # TODO: figure out how to structure the returned object over the API as one guy, that makes sense for the
 # front end and is easy, with type gen
 class FormattedSimulationResult:
-    times: List[float]
-    states: List[SystemState]
-    car_states: List[CarForceBreakdown]
-    cvt_states: List[CvtSystemForceBreakdown]
+    data: List[TimeStepData]
 
     def __init__(self, result: SimulationResult, args: SimulationArgs):
         """
         Initialize using the base SimulationResult and then compute additional columns.
         """
-        self.times = result.time
-        self.states = result.states
-        self.car_states = []
-        self.cvt_states = []
-        self.gather_model_states(args)
+        self.data = []
+        self.gather_model_states(result, args)
 
-    def gather_model_states(self, args):
+    def gather_model_states(self, result: SimulationResult, args: SimulationArgs):
         car_model, cvt_model = get_models(args)
 
-        for i, t in enumerate(self.times):
-            # dt = t - self.time[i - 1] if i > 0 else 0
-            state = self.states[i]
-
+        for i, (time, state) in enumerate(zip(result.time, result.states)):
             car_state = car_model.get_breakdown(state)
             cvt_state = cvt_model.get_breakdown(state)
 
-            self.car_states.append(car_state)
-            self.cvt_states.append(cvt_state)
+            time_step_data = TimeStepData(
+                time=time, state=state, car_state=car_state, cvt_state=cvt_state
+            )
+            self.data.append(time_step_data)
 
     @staticmethod
-    def from_csv(filename="simulation_output.csv"):
+    def from_csv(filename="simulation_output.csv", args: SimulationArgs = None):
         """
-        Reads the simulation states from a CSV file and returns an FormattedSimulationResult instance.
+        Reads the simulation states from a CSV file and returns a FormattedSimulationResult instance.
+        Note: args parameter is required to compute car_state and cvt_state breakdowns.
         """
         base_result = SimulationResult.from_csv(filename)
-        return FormattedSimulationResult(base_result)
+        if args is None:
+            raise ValueError("SimulationArgs is required to compute model breakdowns")
+        return FormattedSimulationResult(base_result, args)
 
     def write_formatted_csv(self, filename="front_end_output.csv"):
         """
         Flattens the data and writes to a CSV file for front-end consumption.
         """
-        # Get all unique keys from all states by flattening everything
+        # Get all unique keys from all time steps by flattening everything
         all_keys = set()
-
-        # Add basic simulation data by flattening each state
-        for state in self.states:
-            flat_state = self._flatten_dataclass(state, "state")
-            all_keys.update(flat_state.keys())
 
         # Add time as a basic field
         all_keys.add("time")
 
-        # Collect all unique keys from car and CVT states
-        for car_state in self.car_states:
-            flat_car = self._flatten_dataclass(car_state, "car")
-            all_keys.update(flat_car.keys())
+        # Collect all unique keys from all time steps
+        for time_step in self.data:
+            flat_state = self._flatten_dataclass(time_step.state, "state")
+            flat_car = self._flatten_dataclass(time_step.car_state, "car")
+            flat_cvt = self._flatten_dataclass(time_step.cvt_state, "cvt")
 
-        for cvt_state in self.cvt_states:
-            flat_cvt = self._flatten_dataclass(cvt_state, "cvt")
+            all_keys.update(flat_state.keys())
+            all_keys.update(flat_car.keys())
             all_keys.update(flat_cvt.keys())
 
         # Initialize all columns
@@ -77,15 +81,18 @@ class FormattedSimulationResult:
             data[key] = []
 
         # Populate all the flattened data
-        for i, (time_val, state, car_state, cvt_state) in enumerate(
-            zip(self.times, self.states, self.car_states, self.cvt_states)
-        ):
-            flat_state = self._flatten_dataclass(state, "state")
-            flat_car = self._flatten_dataclass(car_state, "car")
-            flat_cvt = self._flatten_dataclass(cvt_state, "cvt")
+        for time_step in self.data:
+            flat_state = self._flatten_dataclass(time_step.state, "state")
+            flat_car = self._flatten_dataclass(time_step.car_state, "car")
+            flat_cvt = self._flatten_dataclass(time_step.cvt_state, "cvt")
 
             # Merge all flattened data
-            flat_combined = {**flat_state, **flat_car, **flat_cvt, "time": time_val}
+            flat_combined = {
+                **flat_state,
+                **flat_car,
+                **flat_cvt,
+                "time": time_step.time,
+            }
 
             # For each key, append the value or None if missing
             for key in all_keys:
@@ -102,14 +109,12 @@ class FormattedSimulationResult:
         Converts the entire result into a list of dictionaries for each time step. No flattening
         """
         result_list = []
-        for i, (time, state, car_state, cvt_state) in enumerate(
-            zip(self.times, self.states, self.car_states, self.cvt_states)
-        ):
+        for time_step in self.data:
             entry = {
-                "time": time,
-                "state": state,
-                "car_state": car_state,
-                "cvt_state": cvt_state,
+                "time": time_step.time,
+                "state": time_step.state,
+                "car_state": time_step.car_state,
+                "cvt_state": time_step.cvt_state,
             }
             result_list.append(entry)
         return result_list
