@@ -6,15 +6,20 @@ import Play from '@assets/icons/play.svg?react';
 import Edit from '@assets/icons/edit.svg?react';
 import TrashCan from '@assets/icons/trash_can.svg?react';
 import Plus from '@assets/icons/plus.svg?react';
+import { Playbar } from '@components/playbar/Playbar';
+import { ReplayController } from '@utils/ReplayController';
 
 
 export const Dashboard = () => {
   const navigate = useNavigate();
 
   const tempIsDisabled = true; // Placeholder for future functionality
+
+  const replayController = new ReplayController([]);
   
   return (
     <div className={styles.dashboard}>
+      <Playbar replayController={replayController} times={[1,2,3,4,5]} /> {/* Placeholder for future functionality */}
       <div className={styles.header}>
         <img className={styles.logo} src={bajaLogo} alt="Baja Logo" />
         <h1 className={styles.title}>CVT Simulator</h1>

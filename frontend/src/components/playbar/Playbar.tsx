@@ -3,12 +3,12 @@
 
 import React, { useEffect, useState } from 'react';
 import styles from './Playbar.module.scss';
-import { ModelReplayController, ReplayEventType, StateType } from '@utils/ReplayController';
+import { ReplayController, ReplayEventType, StateType } from '@utils/ReplayController';
 import Slider from '@mui/material/Slider';
 
 
 interface PlaybarProps {
-    replayController: ModelReplayController;
+    replayController: ReplayController;
     times: number[];
 }
 

@@ -23,7 +23,7 @@ type ReplayEvent =
   | { type: ReplayEventType.Progress; currentIndex: number; data: dataPoint }
   | { type: ReplayEventType.Finished };
 
-export class ModelReplayController {
+export class ReplayController {
   private data: replayData;
   private isPlaying = false;
   private currentIndex = 0;
