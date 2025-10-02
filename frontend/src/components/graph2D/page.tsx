@@ -1,21 +1,17 @@
 import { Graph2D } from './graph2D';
-import { csvToDataPoints } from './csvUtils';
-import csvText from "./temp.csv?raw";
 
 export function Page() {
-  // Parse CSV data
-  const { data, errors, warnings } = csvToDataPoints(csvText, 'time', 'car_velocity');
-  
-  // Log any issues
-  if (warnings.length > 0) console.warn('CSV warnings:', warnings);
-  if (errors.length > 0) console.error('CSV errors:', errors);
-  
+  // Sample data for demonstration
+  const xData = [0, 1, 2, 3, 4, 5];
+  const yData = [0, 10, 20, 30, 40, 50];
+
   return (
     <div>
       <h1>Graph2D Demo</h1>
       
       <Graph2D
-        data={data}
+        xData={xData}
+        yData={yData}
         config={{
           title: "Velocity vs Time",
           xAxis: { name: "Time", type: "value", unit: "s" },
@@ -25,7 +21,8 @@ export function Page() {
       />
       
       <Graph2D
-        data={[]}
+        xData={[]}
+        yData={[]}
         config={{
           title: "Empty Data Test",
           xAxis: { name: "Time", type: "value", unit: "s" },

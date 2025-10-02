@@ -1,4 +1,4 @@
-import type { DataPoint2D, ValidationResult } from './types';
+import type { ValidationResult } from './types';
 
 // Validation constants (moved from constants.ts)
 export const VALIDATION = {
@@ -13,12 +13,12 @@ export const VALIDATION = {
 /**
  * Validates an array of data points
  */
-export function validateData(data: DataPoint2D[]): ValidationResult {
+export function validateData(xData: number[], yData: number[]): ValidationResult {
   const errors: string[] = [];
   const warnings: string[] = [];
   
   // Check if data is an array
-  if (!Array.isArray(data)) {
+  if (!Array.isArray(xData) || !Array.isArray(yData)) {
     return {
       isValid: false,
       errors: ['Data must be an array'],
@@ -27,41 +27,49 @@ export function validateData(data: DataPoint2D[]): ValidationResult {
   }
   
   // Check if array is empty
-  if (data.length === 0) {
+  if (xData.length === 0 || yData.length === 0) {
     return {
       isValid: false,
       errors: ['Data array cannot be empty'],
       warnings: [],
     };
   }
-  
-  // Validate each data point
-  data.forEach((point, index) => {
-    if (typeof point !== 'object' || point === null) {
-      errors.push(`Data point at index ${index} is not an object`);
-      return;
+
+  // Check if arrays have the same length
+  if (xData.length !== yData.length) {
+    return {
+      isValid: false,
+      errors: ['X and Y arrays must have the same length'],
+      warnings: [],
+    };
+  }
+
+  xData.forEach((x, index) => {
+    if (typeof x !== 'number' || !Number.isFinite(x)) {
+      errors.push(`X value at index ${index} is not a valid number`);
     }
-    
-    if (!('x' in point) || !('y' in point)) {
-      errors.push(`Data point at index ${index} missing x or y property`);
-      return;
+
+    if (x === null || x === undefined) {
+      errors.push(`X value at index ${index} has null/undefined value`);
     }
-    
-    if (typeof point.y !== 'number' || !Number.isFinite(point.y)) {
-      errors.push(`Data point at index ${index} has invalid y value`);
+  });
+
+  yData.forEach((y, index) => {
+    if (typeof y !== 'number' || !Number.isFinite(y)) {
+      errors.push(`Y value at index ${index} is not a valid number`);
     }
-    
-    if (point.x === null || point.x === undefined) {
-      errors.push(`Data point at index ${index} has null/undefined x value`);
+
+    if (y === null || y === undefined) {
+      errors.push(`Y value at index ${index} has null/undefined value`);
     }
   });
   
   // Add warnings for data quality
-  if (data.length === VALIDATION.SINGLE_POINT_WARNING) {
+  if (xData.length === VALIDATION.SINGLE_POINT_WARNING) {
     warnings.push('Only one data point provided - chart may not display meaningfully');
   }
-  
-  if (data.length < VALIDATION.MIN_DATA_POINTS_WARNING) {
+
+  if (xData.length < VALIDATION.MIN_DATA_POINTS_WARNING) {
     warnings.push('Few data points provided - consider adding more for better visualization');
   }
   
@@ -70,37 +78,6 @@ export function validateData(data: DataPoint2D[]): ValidationResult {
     errors,
     warnings,
   };
-}
-
-/**
- * Converts arrays of x and y values to DataPoint2D array
- */
-export function createDataFromArrays(
-  xValues: (number | string | Date)[],
-  yValues: number[]
-): { data: DataPoint2D[]; validation: ValidationResult } {
-  // Check if arrays have the same length
-  if (xValues.length !== yValues.length) {
-    return {
-      data: [],
-      validation: {
-        isValid: false,
-        errors: [`X and Y arrays have different lengths: ${xValues.length} vs ${yValues.length}`],
-        warnings: [],
-      },
-    };
-  }
-  
-  // Create data points
-  const data: DataPoint2D[] = xValues.map((x, index) => ({
-    x,
-    y: yValues[index],
-  }));
-  
-  // Validate the created data
-  const validation = validateData(data);
-  
-  return { data, validation };
 }
 
 /**

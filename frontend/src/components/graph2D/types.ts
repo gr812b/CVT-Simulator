@@ -1,14 +1,6 @@
 import type { EChartsOption } from 'echarts';
 
 /**
- * Represents a single 2D data point
- */
-export interface DataPoint2D {
-  x: number | string | Date;
-  y: number;
-}
-
-/**
  * Configuration for axis display
  */
 export interface AxisConfig {
@@ -46,8 +38,10 @@ export interface ChartConfig {
  * Props for the Graph2D component
  */
 export interface Graph2DProps {
-  /** Array of 2D data points to plot */
-  data: DataPoint2D[];
+  /** X-axis data points */
+  xData: number[];
+  /** Y-axis data points */
+  yData: number[];
   /** Chart configuration */
   config: ChartConfig;
   /** Additional ECharts options to merge (for advanced customization) */
