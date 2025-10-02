@@ -7,13 +7,13 @@ interface dataPoint {
 
 type replayData = dataPoint[];
 
-enum ReplayEventType {
+export enum ReplayEventType {
   StateChanged = 'stateChanged',
   Progress = 'progress',
   Finished = 'finished',
 }
 
-enum StateType {
+export enum StateType {
   Playing = 'playing',
   Paused = 'paused',
 }
@@ -98,6 +98,21 @@ export class ModelReplayController {
       return;
     }
     this.speed = newSpeed;
+  }
+
+  // Set the current index and update lastTimestamp accordingly
+  setCurrentIndex(idx: number) {
+    if (idx < 0 || idx >= this.data.length) return;
+    this.currentIndex = idx;
+    this.lastTimestamp = this.data[idx]?.timestamp || 0;
+    // Emit progress event if paused
+    if (!this.isPlaying) {
+      this.emit({
+        type: 'progress',
+        currentIndex: idx,
+        data: this.data[idx],
+      });
+    }
   }
 
   private loop() {

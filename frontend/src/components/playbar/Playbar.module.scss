@@ -1,0 +1,14 @@
+// Playbar styles
+
+.playbar {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.playPause {
+  font-size: 1.5rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
