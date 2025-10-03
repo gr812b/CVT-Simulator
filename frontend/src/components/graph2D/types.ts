@@ -32,6 +32,10 @@ export interface ChartConfig {
   smooth?: boolean;
   /** Whether to show data point symbols */
   showSymbol?: boolean;
+  /** Whether to draw a vertical line at x[index] */
+  showXLine?: boolean;
+  /** Whether to draw a horizontal line at y[index] */
+  showYLine?: boolean;
 }
 
 /**
@@ -42,6 +46,8 @@ export interface Graph2DProps {
   xData: number[];
   /** Y-axis data points */
   yData: number[];
+  /** Index of point to highlight on chart */
+  activeIndex?: number;
   /** Chart configuration */
   config: ChartConfig;
   /** Additional ECharts options to merge (for advanced customization) */

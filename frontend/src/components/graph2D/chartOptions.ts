@@ -1,4 +1,4 @@
-import type { EChartsOption } from 'echarts';
+import type { EChartsOption, MarkLineComponentOption } from 'echarts';
 import type { ChartConfig } from './types';
 import { inferAxisType } from './validation';
 
@@ -298,3 +298,47 @@ export function createChartOptions(
 
 // Export constants for external use if needed
 export { COLORS as CHART_COLORS };
+
+/**
+ * Generates markLines for highlighting specific data points
+ */
+export function createMarkLines(
+  xData: number[],
+  yData: number[],
+  activeIndex: number | undefined,
+  config: ChartConfig
+): MarkLineComponentOption {
+  if (activeIndex === undefined || activeIndex < 0 || activeIndex >= xData.length) {
+    return {};
+  }
+
+  const x = xData[activeIndex];
+  const y = yData[activeIndex];
+
+  const markLine: MarkLineComponentOption = {
+    animation: false,
+    silent: true,
+    lineStyle: { type: 'dashed', color: COLORS.TEXT },
+    label: { show: true },
+  };
+
+  const data: NonNullable<MarkLineComponentOption['data']> = [];
+
+  if (config.showXLine) {
+    data.push([
+      { coord: [x, 0] },
+      { coord: [x, y], label: { formatter: `${config.yAxis.name}: ${yData[activeIndex].toFixed(2)}` } },
+    ]);
+  }
+
+  if (config.showYLine) {
+    data.push([
+      { coord: [0, y] },
+      { coord: [x, y], label: { formatter: `${config.xAxis.name}: ${xData[activeIndex].toFixed(2)}` } },
+    ]);
+  }
+
+  markLine.data = data;
+
+  return markLine;
+}
