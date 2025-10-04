@@ -4,7 +4,7 @@ import cx from 'classnames';
 import styles from './Graph2D.module.scss';
 import type { Graph2DProps } from './types';
 import { validateData } from './validation';
-import { createChartOptions, createMarkLines, CHART_COLORS } from './chartOptions';
+import { createChartOptions, createMarkLines, CHART_COLORS, createActiveIndexLabel } from './chartOptions';
 import type { ECharts } from 'echarts';
 
 export function Graph2D({
@@ -48,8 +48,11 @@ export function Graph2D({
     if (!chartRef.current || !validation.isValid) return;
 
     const markLine = createMarkLines(xData, yData, activeIndex, config);
+    const graphic = createActiveIndexLabel(xData, yData, activeIndex, config);
+    
     chartRef.current.setOption({
       series: [{ markLine }],
+      graphic,
     });
 
     console.log(markLine);

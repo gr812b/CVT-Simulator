@@ -197,6 +197,7 @@ export function generateEChartsOptions(
   
   // Base options with dark theme styling built-in
   const baseOptions: EChartsOption = {
+    animation: true, // TODO: Only enable if playback paused
     backgroundColor: COLORS.BACKGROUND,
     textStyle: { color: COLORS.TEXT },
     
@@ -207,6 +208,7 @@ export function generateEChartsOptions(
       textStyle: { color: COLORS.TEXT },
     } : undefined,
     
+    // TODO: Only enable if playback paused
     tooltip: {
       trigger: 'axis',
       axisPointer: { type: 'cross' },
@@ -215,6 +217,7 @@ export function generateEChartsOptions(
       textStyle: { color: COLORS.TEXT },
     },
     
+    // TODO: Only enable if playback paused
     toolbox: {
       feature: {
         dataZoom: { yAxisIndex: 'none' },
@@ -243,6 +246,7 @@ export function generateEChartsOptions(
     
     yAxis: yAxisOption,
     
+    // TODO: Only enable if playback paused
     dataZoom: [
       { 
         type: 'inside', 
@@ -325,5 +329,38 @@ export function createMarkLines(
     label: { show: false },
     symbol: 'none',
     data,
+  };
+}
+
+/**
+ * Create top-left corner label for active index display
+ */
+export function createActiveIndexLabel(
+  xData: number[],
+  yData: number[],
+  activeIndex: number | undefined,
+  config: ChartConfig
+): EChartsOption['graphic'] {
+  if (activeIndex == null || activeIndex < 0 || activeIndex >= xData.length) return {}
+
+  const [x, y] = [xData[activeIndex], yData[activeIndex]];
+
+  let text = '';
+  if (config.showXLine && config.showYLine) {
+    text = `(${config.xAxis.name}: ${x.toFixed(2)}, ${config.yAxis.name}: ${y.toFixed(2)})`;
+  } else if (config.showXLine) {
+    text = `${config.yAxis.name}: ${y.toFixed(2)}`;
+  } else if (config.showYLine) {
+    text = `${config.xAxis.name}: ${x.toFixed(2)}`;
+  }
+
+  return {
+    type: 'text',
+    left: LAYOUT.GRID.LEFT,
+    top: (config.title ? LAYOUT.GRID.TOP_WITH_TITLE : LAYOUT.GRID.TOP_WITHOUT_TITLE) / 3,
+    style: {
+      text,
+      fill: COLORS.TEXT,
+    },
   };
 }
