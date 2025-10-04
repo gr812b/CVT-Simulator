@@ -308,37 +308,22 @@ export function createMarkLines(
   activeIndex: number | undefined,
   config: ChartConfig
 ): MarkLineComponentOption {
-  if (activeIndex === undefined || activeIndex < 0 || activeIndex >= xData.length) {
-    return {};
-  }
+  if (activeIndex == null || activeIndex < 0 || activeIndex >= xData.length) return {};
 
-  const x = xData[activeIndex];
-  const y = yData[activeIndex];
+  const [x, y] = [xData[activeIndex], yData[activeIndex]];
 
-  const markLine: MarkLineComponentOption = {
+  const data: NonNullable<MarkLineComponentOption['data']> = [
+    ...(config.showXLine ? [{ xAxis: x }] : []),
+    ...(config.showYLine ? [{ yAxis: y }] : []),
+    [{ coord: [x, y], symbol: 'none' }, { coord: [x, y], symbol: 'circle' }],
+  ];
+
+  return {
     animation: false,
     silent: true,
     lineStyle: { type: 'dashed', color: COLORS.TEXT },
-    label: { show: true },
+    label: { show: false },
+    symbol: 'none',
+    data,
   };
-
-  const data: NonNullable<MarkLineComponentOption['data']> = [];
-
-  if (config.showXLine) {
-    data.push([
-      { coord: [x, 0] },
-      { coord: [x, y], label: { formatter: `${config.yAxis.name}: ${yData[activeIndex].toFixed(2)}` } },
-    ]);
-  }
-
-  if (config.showYLine) {
-    data.push([
-      { coord: [0, y] },
-      { coord: [x, y], label: { formatter: `${config.xAxis.name}: ${xData[activeIndex].toFixed(2)}` } },
-    ]);
-  }
-
-  markLine.data = data;
-
-  return markLine;
 }
