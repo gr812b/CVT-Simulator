@@ -2,10 +2,28 @@ import { useMemo, useEffect, useRef } from 'react';
 import ReactECharts from 'echarts-for-react';
 import cx from 'classnames';
 import styles from './Graph2D.module.scss';
-import type { Graph2DProps } from './types';
 import { validateData } from './validation';
-import { createChartOptions, createMarkLines, CHART_COLORS, createActiveIndexLabel } from './chartOptions';
-import type { ECharts } from 'echarts';
+import { createChartOptions, createMarkLines, CHART_COLORS, createActiveIndexLabel, type ChartConfig } from './chartOptions';
+import type { ECharts, EChartsOption } from 'echarts';
+
+
+/**
+ * Props for the Graph2D component
+ */
+export interface Graph2DProps {
+  /** X-axis data points */
+  xData: number[];
+  /** Y-axis data points */
+  yData: number[];
+  /** Index of point to highlight on chart */
+  activeIndex?: number;
+  /** Chart configuration */
+  config: ChartConfig;
+  /** Additional ECharts options to merge (for advanced customization) */
+  chartOptions?: Partial<EChartsOption>;
+  /** Class name for the container */
+  className?: string;
+}
 
 export function Graph2D({
   xData,
@@ -54,8 +72,6 @@ export function Graph2D({
       series: [{ markLine }],
       graphic,
     });
-
-    console.log(markLine);
   }, [xData, yData, activeIndex, config, validation.isValid]);
 
   const chartHeight = config.height || 400;

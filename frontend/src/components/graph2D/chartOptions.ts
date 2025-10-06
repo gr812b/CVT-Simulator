@@ -1,6 +1,43 @@
 import type { EChartsOption, MarkLineComponentOption } from 'echarts';
-import type { ChartConfig } from './types';
 import { inferAxisType } from './validation';
+
+/**
+ * Configuration for axis display
+ */
+interface AxisConfig {
+  /** Display name for the axis */
+  name: string;
+  /** Type of axis data */
+  type: 'time' | 'value' | 'category';
+  /** Unit label (e.g., 'm/s', 'seconds') */
+  unit?: string;
+}
+
+/**
+ * Chart configuration options
+ */
+export interface ChartConfig {
+  /** Title displayed above the chart */
+  title?: string;
+  /** Chart height in pixels */
+  height?: number;
+  /** Chart width (default: 100%) */
+  width?: string | number;
+  /** X-axis configuration */
+  xAxis: AxisConfig;
+  /** Y-axis configuration */
+  yAxis: AxisConfig;
+  /** Series name for the line */
+  seriesName?: string;
+  /** Whether to show smooth curves */
+  smooth?: boolean;
+  /** Whether to show data point symbols */
+  showSymbol?: boolean;
+  /** Whether to draw a vertical line at x[index] */
+  showXLine?: boolean;
+  /** Whether to draw a horizontal line at y[index] */
+  showYLine?: boolean;
+}
 
 /**
  * Gets color values from CSS custom properties defined in _colors.scss
