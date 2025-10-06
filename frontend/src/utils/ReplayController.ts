@@ -93,7 +93,6 @@ export class ReplayController {
   setSpeed(newSpeed: number) {
     if (newSpeed <= 0) {
       // TODO: Remove debugging statement
-      // eslint-disable-next-line no-console
       console.warn('Speed must be positive. Ignoring invalid value:', newSpeed);
       return;
     }
@@ -108,7 +107,7 @@ export class ReplayController {
     // Emit progress event if paused
     if (!this.isPlaying) {
       this.emit({
-        type: 'progress',
+        type: ReplayEventType.Progress,
         currentIndex: idx,
         data: this.data[idx],
       });
