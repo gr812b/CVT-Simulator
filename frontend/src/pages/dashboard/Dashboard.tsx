@@ -19,7 +19,7 @@ export const Dashboard = () => {
   
   return (
     <div className={styles.dashboard}>
-      <Playbar replayController={replayController} times={[1,2,3,4,5]} /> {/* Placeholder for future functionality */}
+      <Playbar replayController={replayController} times={[10,20,30,40,50]} /> {/* Placeholder for future functionality */}
       <div className={styles.header}>
         <img className={styles.logo} src={bajaLogo} alt="Baja Logo" />
         <h1 className={styles.title}>CVT Simulator</h1>

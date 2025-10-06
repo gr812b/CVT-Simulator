@@ -11,7 +11,8 @@ interface PlaybarProps {
     times: number[];
 }
 
-
+// Be aware that this places the times evenly along the slider, not according to their actual values.
+// This is because the slider only supports linear scales. If we want a non-linear scale, we would need to implement a custom slider.
 export const Playbar: React.FC<PlaybarProps> = ({ replayController, times }) => {
     const [isPlaying, setIsPlaying] = useState(false);
     const [currentIndex, setCurrentIndex] = useState(0);
@@ -47,7 +48,7 @@ export const Playbar: React.FC<PlaybarProps> = ({ replayController, times }) => 
         replayController.setSpeed(newSpeed);
     };
 
-    const handleSeek = (_: any, idx: number | number[]) => {
+    const handleSeek = (_: Event | React.SyntheticEvent, idx: number | number[]) => {
         const index = Array.isArray(idx) ? idx[0] : idx;
         setCurrentIndex(index);
         replayController.setCurrentIndex(index);
