@@ -1,18 +1,40 @@
-import { useMemo, useEffect } from 'react';
+import { useMemo, useEffect, useRef } from 'react';
 import ReactECharts from 'echarts-for-react';
 import cx from 'classnames';
 import styles from './Graph2D.module.scss';
-import type { Graph2DProps } from './types';
 import { validateData } from './validation';
-import { createChartOptions, CHART_COLORS } from './chartOptions';
+import { createChartOptions, createMarkLines, CHART_COLORS, createActiveIndexLabel, type ChartConfig } from './chartOptions';
+import type { ECharts, EChartsOption } from 'echarts';
+
+
+/**
+ * Props for the Graph2D component
+ */
+export interface Graph2DProps {
+  /** X-axis data points */
+  xData: number[];
+  /** Y-axis data points */
+  yData: number[];
+  /** Index of point to highlight on chart */
+  activeIndex?: number;
+  /** Chart configuration */
+  config: ChartConfig;
+  /** Additional ECharts options to merge (for advanced customization) */
+  chartOptions?: Partial<EChartsOption>;
+  /** Class name for the container */
+  className?: string;
+}
 
 export function Graph2D({
   xData,
   yData,
+  activeIndex,
   config,
   chartOptions = {},
   className = '',
 }: Graph2DProps) {
+  const chartRef = useRef<ECharts | null>(null);
+
   // Validate data and generate warnings/errors
   const validation = useMemo(() => validateData(xData, yData), [xData, yData]);
   
@@ -38,7 +60,20 @@ export function Graph2D({
       console.warn('Graph2D warnings:', validation.warnings);
     }
   }, [validation.warnings]);
-  
+
+  // Update markLines when activeIndex changes
+  useEffect(() => {
+    if (!chartRef.current || !validation.isValid) return;
+
+    const markLine = createMarkLines(xData, yData, activeIndex, config);
+    const graphic = createActiveIndexLabel(xData, yData, activeIndex, config);
+    
+    chartRef.current.setOption({
+      series: [{ markLine }],
+      graphic,
+    });
+  }, [xData, yData, activeIndex, config, validation.isValid]);
+
   const chartHeight = config.height || 400;
   const chartWidth = config.width || '100%';
   
@@ -66,6 +101,7 @@ export function Graph2D({
           style={{ width: chartWidth, height: chartHeight }}
           notMerge
           lazyUpdate
+          onChartReady={(chart) => { chartRef.current = chart; }}
         />
       </div>
     </div>

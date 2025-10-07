@@ -1,4 +1,11 @@
-import type { ValidationResult } from './types';
+/**
+ * Validation result for data
+ */
+interface ValidationResult {
+  isValid: boolean;
+  errors: string[];
+  warnings: string[];
+}
 
 // Validation constants (moved from constants.ts)
 export const VALIDATION = {
