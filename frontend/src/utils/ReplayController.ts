@@ -7,13 +7,13 @@ interface dataPoint {
 
 type replayData = dataPoint[];
 
-enum ReplayEventType {
+export enum ReplayEventType {
   StateChanged = 'stateChanged',
   Progress = 'progress',
   Finished = 'finished',
 }
 
-enum StateType {
+export enum StateType {
   Playing = 'playing',
   Paused = 'paused',
 }
@@ -23,7 +23,7 @@ type ReplayEvent =
   | { type: ReplayEventType.Progress; currentIndex: number; data: dataPoint }
   | { type: ReplayEventType.Finished };
 
-export class ModelReplayController {
+export class ReplayController {
   private data: replayData;
   private isPlaying = false;
   private currentIndex = 0;
@@ -93,11 +93,25 @@ export class ModelReplayController {
   setSpeed(newSpeed: number) {
     if (newSpeed <= 0) {
       // TODO: Remove debugging statement
-      // eslint-disable-next-line no-console
       console.warn('Speed must be positive. Ignoring invalid value:', newSpeed);
       return;
     }
     this.speed = newSpeed;
+  }
+
+  // Set the current index and update lastTimestamp accordingly
+  setCurrentIndex(idx: number) {
+    if (idx < 0 || idx >= this.data.length) return;
+    this.currentIndex = idx;
+    this.lastTimestamp = this.data[idx]?.timestamp || 0;
+    // Emit progress event if paused
+    if (!this.isPlaying) {
+      this.emit({
+        type: ReplayEventType.Progress,
+        currentIndex: idx,
+        data: this.data[idx],
+      });
+    }
   }
 
   private loop() {

@@ -1,5 +1,12 @@
 @use "./fonts";
 
+// Universal box-sizing border-box
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
 // default button styling
 button {
     background-color: transparent;
