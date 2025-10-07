@@ -4,10 +4,15 @@ import { Button } from '@components/button/Button';
 import { ParameterAccordion } from '@components/parameterAccordion/ParameterAccordion';
 import { InputField } from '@components/inputField/InputField';
 import { ParameterDescription } from '@components/parameterDescription/ParameterDescription';
+import { LoadingOverlay } from '@components/loadingOverlay/LoadingOverlay';
 import { GROUP_TITLES, PARAMETERS, type Parameter, type ParameterGroup } from '@types';
 import { useParameter } from '@contexts/ParameterContext';
+import { useLoading } from '@hooks/useLoading';
+import { useSimulation } from '@hooks/useSimulation';
 import { useFormState } from '@hooks/useFormState';
 import { useUnsavedChangesPrompt } from '@hooks/useUnsavedChangesPrompt';
+import { runSimulation } from '@utils/api';
+import { mapParametersToApiBody } from '@utils/parameterMapping';
 import Home from '@assets/icons/home.svg?react';
 import ArrowUpCircle from '@assets/icons/arrow_up_circle.svg?react';
 import ArrowDownCircle from '@assets/icons/arrow_down_circle.svg?react';
@@ -26,6 +31,8 @@ const collapsedState: Record<ParameterGroup, boolean> = Object.fromEntries(allGr
 export const Input = () => {
     const navigate = useNavigate();
     const { setMultipleParameters, parameters } = useParameter();
+    const { setLoading, isLoading, loadingMessage } = useLoading();
+    const { setSimulationResult } = useSimulation();
     const formState = useFormState(parameters);
     const { navigateWithConfirmation } = useUnsavedChangesPrompt(formState.hasChanges);
 
@@ -40,13 +47,38 @@ export const Input = () => {
         setExpanded((prev) => ({ ...prev, [group]: !prev[group] }));
     };
 
-    // Handle form submission
-    const handleSubmit = () => {
-        if (formState.validateAll()) {
+    // Handle form submission and API call
+    const handleSubmit = async () => {
+        if (!formState.validateAll()) {
+            return;
+        }
+
+        try {
+            // Save the form data first
             const parsedValues = formState.getParsedValues();
             setMultipleParameters(parsedValues);
             formState.markAsSaved();
-            navigate('/playback'); // Simple navigation, no confirmation needed
+
+            // Show loading overlay
+            setLoading(true, 'Running simulation...');
+
+            // Prepare API request body
+            const apiBody = mapParametersToApiBody(parsedValues);
+
+            // Make API call
+            const result = await runSimulation(apiBody);
+
+            // Store the result for the Playback page
+            setSimulationResult(result);
+
+            // Navigate to playback page
+            navigate('/playback');
+        } catch (error) {
+            console.error('Simulation failed:', error);
+            // You might want to show an error toast or modal here
+            alert('Simulation failed. Please check your parameters and try again.');
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -72,6 +104,7 @@ export const Input = () => {
 
     return (
         <div className={styles.input}>
+            <LoadingOverlay isVisible={isLoading} message={loadingMessage} />
             <Button
                 text={'Home'}
                 icon={Home}

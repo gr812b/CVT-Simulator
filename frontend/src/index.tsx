@@ -4,7 +4,9 @@ import { createRoot } from 'react-dom/client'
 import { BrowserRouter } from 'react-router-dom'
 import { App } from '@pages/app/App.tsx'
 import { ThemeProvider } from '@contexts/ThemeContext';
-import { ParameterProvider } from '@contexts/ParameterContext'
+import { ParameterProvider } from '@contexts/ParameterContext';
+import { LoadingProvider } from '@contexts/LoadingContext';
+import { SimulationProvider } from '@contexts/SimulationContext';
 
 const rootElement = document.getElementById('root');
 if (!rootElement) {
@@ -17,9 +19,13 @@ root.render(
   <StrictMode>
     <ThemeProvider>
       <ParameterProvider>
-        <BrowserRouter>
-          <App />
-        </BrowserRouter>
+        <LoadingProvider>
+          <SimulationProvider>
+            <BrowserRouter>
+              <App />
+            </BrowserRouter>
+          </SimulationProvider>
+        </LoadingProvider>
       </ParameterProvider>
     </ThemeProvider>
   </StrictMode>,
