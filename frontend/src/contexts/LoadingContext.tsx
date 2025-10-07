@@ -1,12 +1,12 @@
-import React, { createContext, useState } from 'react';
+import React, { createContext, useState, useContext } from 'react';
 
-export interface LoadingContextType {
+interface LoadingContextType {
   isLoading: boolean;
   loadingMessage: string;
   setLoading: (loading: boolean, message?: string) => void;
 }
 
-export const LoadingContext = createContext<LoadingContextType | undefined>(undefined);
+const LoadingContext = createContext<LoadingContextType | undefined>(undefined);
 
 export const LoadingProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [isLoading, setIsLoading] = useState(false);
@@ -22,4 +22,13 @@ export const LoadingProvider: React.FC<{ children: React.ReactNode }> = ({ child
       {children}
     </LoadingContext.Provider>
   );
+};
+
+// eslint-disable-next-line react-refresh/only-export-components
+export const useLoading = (): LoadingContextType => {
+  const context = useContext(LoadingContext);
+  if (context === undefined) {
+    throw new Error('useLoading must be used within a LoadingProvider');
+  }
+  return context;
 };

@@ -115,6 +115,7 @@ export const ParameterProvider = ({ children }: { children: React.ReactNode }) =
   );
 };
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const useParameter = () => {
   const context = useContext(ParameterContext);
   if (!context) throw new Error('useParameter must be used within ParameterProvider');

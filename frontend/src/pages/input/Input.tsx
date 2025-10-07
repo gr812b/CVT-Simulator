@@ -7,8 +7,8 @@ import { ParameterDescription } from '@components/parameterDescription/Parameter
 import { LoadingOverlay } from '@components/loadingOverlay/LoadingOverlay';
 import { GROUP_TITLES, PARAMETERS, type Parameter, type ParameterGroup } from '@types';
 import { useParameter } from '@contexts/ParameterContext';
-import { useLoading } from '@hooks/useLoading';
-import { useSimulation } from '@hooks/useSimulation';
+import { useLoading } from '@contexts/LoadingContext';
+import { useSimulation } from '@contexts/SimulationContext';
 import { useFormState } from '@hooks/useFormState';
 import { useUnsavedChangesPrompt } from '@hooks/useUnsavedChangesPrompt';
 import { runSimulation } from '@utils/api';
