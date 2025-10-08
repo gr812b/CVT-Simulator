@@ -6,7 +6,6 @@ import { App } from '@pages/app/App.tsx'
 import { ThemeProvider } from '@contexts/ThemeContext';
 import { ParameterProvider } from '@contexts/ParameterContext';
 import { LoadingProvider } from '@contexts/LoadingContext';
-import { SimulationProvider } from '@contexts/SimulationContext';
 
 const rootElement = document.getElementById('root');
 if (!rootElement) {
@@ -20,11 +19,9 @@ root.render(
     <ThemeProvider>
       <ParameterProvider>
         <LoadingProvider>
-          <SimulationProvider>
-            <BrowserRouter>
-              <App />
-            </BrowserRouter>
-          </SimulationProvider>
+          <BrowserRouter>
+            <App />
+          </BrowserRouter>
         </LoadingProvider>
       </ParameterProvider>
     </ThemeProvider>

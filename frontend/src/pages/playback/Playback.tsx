@@ -1,22 +1,28 @@
 import { useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Page } from '@components/graph2D/page';
-import { useSimulation } from '@contexts/SimulationContext';
+import type { RunResponse } from '@utils/api';
+
+// Type the location state
+interface PlaybackLocationState {
+  simulationResult: RunResponse;
+}
 
 export const Playback = () => {
     const navigate = useNavigate();
-    const { simulationResult, isSimulationReady } = useSimulation();
+    const location = useLocation();
+    const simulationResult = (location.state as PlaybackLocationState | null)?.simulationResult;
 
     // Redirect to input page if no simulation data is available
     useEffect(() => {
-        if (!isSimulationReady) {
+        if (!simulationResult) {
             console.warn('No simulation data available. Redirecting to input page.');
             navigate('/input');
         }
-    }, [isSimulationReady, navigate]);
+    }, [simulationResult, navigate]);
 
     // Don't render anything if no simulation data
-    if (!isSimulationReady || !simulationResult) {
+    if (!simulationResult) {
         return null;
     }
 

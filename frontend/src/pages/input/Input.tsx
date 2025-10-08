@@ -8,7 +8,6 @@ import { LoadingOverlay } from '@components/loadingOverlay/LoadingOverlay';
 import { GROUP_TITLES, PARAMETERS, type Parameter, type ParameterGroup } from '@types';
 import { useParameter } from '@contexts/ParameterContext';
 import { useLoading } from '@contexts/LoadingContext';
-import { useSimulation } from '@contexts/SimulationContext';
 import { useFormState } from '@hooks/useFormState';
 import { useUnsavedChangesPrompt } from '@hooks/useUnsavedChangesPrompt';
 import { runSimulation } from '@utils/api';
@@ -32,7 +31,6 @@ export const Input = () => {
     const navigate = useNavigate();
     const { setMultipleParameters, parameters } = useParameter();
     const { setLoading, isLoading, loadingMessage } = useLoading();
-    const { setSimulationResult } = useSimulation();
     const formState = useFormState(parameters);
     const { navigateWithConfirmation } = useUnsavedChangesPrompt(formState.hasChanges);
 
@@ -68,11 +66,10 @@ export const Input = () => {
             // Make API call
             const result = await runSimulation(apiBody);
 
-            // Store the result for the Playback page
-            setSimulationResult(result);
-
-            // Navigate to playback page
-            navigate('/playback');
+            // Navigate to playback page with simulation result in state
+            navigate('/playback', { 
+                state: { simulationResult: result }
+            });
         } catch (error) {
             console.error('Simulation failed:', error);
             // You might want to show an error toast or modal here
