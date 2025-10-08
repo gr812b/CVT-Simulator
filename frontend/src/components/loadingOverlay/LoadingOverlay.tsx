@@ -5,10 +5,10 @@ interface LoadingOverlayProps {
   isVisible?: boolean;
 }
 
-export const LoadingOverlay: React.FC<LoadingOverlayProps> = ({ 
+export const LoadingOverlay = ({ 
   message = 'Loading...', 
   isVisible = true 
-}) => {
+}: LoadingOverlayProps) => {
   if (!isVisible) return null;
 
   return (

@@ -52,27 +52,21 @@ export const Input = () => {
         }
 
         try {
-            // Save the form data first
             const parsedValues = formState.getParsedValues();
             setMultipleParameters(parsedValues);
             formState.markAsSaved();
 
-            // Show loading overlay
             setLoading(true, 'Running simulation...');
 
-            // Prepare API request body
             const apiBody = mapParametersToApiBody(parsedValues);
-
-            // Make API call
             const result = await runSimulation(apiBody);
 
-            // Navigate to playback page with simulation result in state
             navigate('/playback', { 
                 state: { simulationResult: result }
             });
         } catch (error) {
             console.error('Simulation failed:', error);
-            // You might want to show an error toast or modal here
+            // TODO: Replace with error toast
             alert('Simulation failed. Please check your parameters and try again.');
         } finally {
             setLoading(false);
