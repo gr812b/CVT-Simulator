@@ -24,22 +24,16 @@ export const Playback = () => {
 
     const [activeIndex, setActiveIndex] = useState<number>(0);
 
-    // Redirect to input page if no simulation data is available
-    if (!simulationResult) {
-        console.warn('No simulation data available. Redirecting to input page.');
-        navigate('/input');
-        return null;
-    }
-
     const replayController = useMemo(() => {
-        return new ReplayController(simulationResult.data);
+        return simulationResult ? new ReplayController(simulationResult.data) : null;
     }, [simulationResult]);
 
     const times = useMemo(() => {
-        return simulationResult.data.map(timeAccessor);
+        return simulationResult ? simulationResult.data.map(timeAccessor) : [];
     }, [simulationResult]);
 
     useEffect(() => {
+        if (!replayController) return;
         const cleanup = replayController.on((event) => {
             if (event.type === ReplayEventType.Progress) {
                 setActiveIndex(event.currentIndex);
@@ -50,8 +44,15 @@ export const Playback = () => {
 
     // Build graphs from simulation result using graph configs
     const graphs = useMemo(() => {
-        return buildGraphs(simulationResult);
+        return simulationResult ? buildGraphs(simulationResult) : [];
     }, [simulationResult]);
+
+    // Redirect to input page if no simulation data is available
+    if (!simulationResult) {
+        console.warn('No simulation data available. Redirecting to input page.');
+        navigate('/input');
+        return null;
+    }
 
     return (
         <div className={styles.playback}>
@@ -79,10 +80,12 @@ export const Playback = () => {
                 ))}
             </div>
             <div className={styles.playbarContainer}>
-                <Playbar 
-                    replayController={replayController}
-                    times={times}
-                />
+                {replayController && (
+                    <Playbar 
+                        replayController={replayController}
+                        times={times}
+                    />
+                )}
             </div>
         </div>
     );
