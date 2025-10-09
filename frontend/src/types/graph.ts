@@ -50,12 +50,12 @@ export const graphConfigs: GraphConfig[] = [
         }
     },
     {
-        xAccessor: (point) => point.time,
-        yAccessor: (point) => point.car_state.engine_forces.power,
+        xAccessor: (point) => point.state.car_velocity,
+        yAccessor: (point) => point.car_state.engine_forces.angular_velocity,
         config: {
-            title: "Engine Power vs Time",
-            xAxis: { name: "Time", type: "value", unit: "s" },
-            yAxis: { name: "Engine Power", type: "value", unit: "W" },
+            title: "Shift Curve (Engine RPM vs Vehicle Speed)",
+            xAxis: { name: "Vehicle Speed", type: "value", unit: "m/s" },
+            yAxis: { name: "Engine RPM", type: "value", unit: "rad/s" },
             height: 400
         }
     },
