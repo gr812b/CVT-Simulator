@@ -9,6 +9,7 @@ import Edit from '@assets/icons/edit.svg?react';
 import { useMemo, useState, useEffect } from 'react';
 import { buildGraphs } from '@utils/graph';
 import { ReplayController, ReplayEventType } from '@utils/ReplayController';
+import { timeAccessor } from '@types';
 
 
 // Type the location state
@@ -35,7 +36,7 @@ export const Playback = () => {
     }, [simulationResult]);
 
     const times = useMemo(() => {
-        return simulationResult.data.map(point => point.time);
+        return simulationResult.data.map(timeAccessor);
     }, [simulationResult]);
 
     useEffect(() => {

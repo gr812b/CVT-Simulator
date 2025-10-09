@@ -10,7 +10,7 @@ type GraphConfig = Omit<Graph2DProps, 'xData' | 'yData' | 'className'> & {
     yAccessor: AccessorStrategy;
 };
 
-const timeAccessor: AccessorStrategy = (point) => point.time;
+export const timeAccessor: AccessorStrategy = (point) => point.time;
 const positionAccessor: AccessorStrategy = (point) => point.state.car_position;
 const velocityAccessor: AccessorStrategy = (point) => point.state.car_velocity;
 const accelerationAccessor: AccessorStrategy = (point) => point.car_state.acceleration;
