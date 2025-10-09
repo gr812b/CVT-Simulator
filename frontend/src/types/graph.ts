@@ -1,4 +1,4 @@
-import type { Graph2DProps } from "@components/graph2D/types";
+import type { Graph2DProps } from "@components/graph2D/graph2D";
 import type { RunResponse } from "@utils/api";
 
 type DataPoint = RunResponse['data'][number]; // TODO: Move to somewhere else (maybe replay controller file)
