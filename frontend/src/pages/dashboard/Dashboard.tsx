@@ -7,7 +7,6 @@ import Edit from '@assets/icons/edit.svg?react';
 import TrashCan from '@assets/icons/trash_can.svg?react';
 import Plus from '@assets/icons/plus.svg?react';
 
-
 export const Dashboard = () => {
   const navigate = useNavigate();
 

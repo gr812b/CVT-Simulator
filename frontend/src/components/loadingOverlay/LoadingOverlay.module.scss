@@ -1,0 +1,44 @@
+@use '@styles/_z_index' as *;
+@use '@styles/_fonts';
+
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: z(loading);
+
+  .spinner {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+
+    .spinnerRing {
+      width: 3.75rem;
+      height: 3.75rem;
+      border: 4px solid rgba(255, 255, 255, 0.2);
+      border-top: 4px solid var(--text-color);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    .message {
+      @include fonts.text-medium;
+      color: var(--text-color);
+      margin: 0;
+      text-align: center;
+    }
+  }
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}

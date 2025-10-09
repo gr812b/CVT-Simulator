@@ -1,6 +1,43 @@
-import type { EChartsOption } from 'echarts';
-import type { ChartConfig } from './types';
+import type { EChartsOption, MarkLineComponentOption } from 'echarts';
 import { inferAxisType } from './validation';
+
+/**
+ * Configuration for axis display
+ */
+interface AxisConfig {
+  /** Display name for the axis */
+  name: string;
+  /** Type of axis data */
+  type: 'time' | 'value' | 'category';
+  /** Unit label (e.g., 'm/s', 'seconds') */
+  unit?: string;
+}
+
+/**
+ * Chart configuration options
+ */
+export interface ChartConfig {
+  /** Title displayed above the chart */
+  title?: string;
+  /** Chart height in pixels */
+  height?: number;
+  /** Chart width (default: 100%) */
+  width?: string | number;
+  /** X-axis configuration */
+  xAxis: AxisConfig;
+  /** Y-axis configuration */
+  yAxis: AxisConfig;
+  /** Series name for the line */
+  seriesName?: string;
+  /** Whether to show smooth curves */
+  smooth?: boolean;
+  /** Whether to show data point symbols */
+  showSymbol?: boolean;
+  /** Whether to draw a vertical line at x[index] */
+  showXLine?: boolean;
+  /** Whether to draw a horizontal line at y[index] */
+  showYLine?: boolean;
+}
 
 /**
  * Gets color values from CSS custom properties defined in _colors.scss
@@ -197,6 +234,7 @@ export function generateEChartsOptions(
   
   // Base options with dark theme styling built-in
   const baseOptions: EChartsOption = {
+    animation: true, // TODO: Only enable if playback paused
     backgroundColor: COLORS.BACKGROUND,
     textStyle: { color: COLORS.TEXT },
     
@@ -207,6 +245,7 @@ export function generateEChartsOptions(
       textStyle: { color: COLORS.TEXT },
     } : undefined,
     
+    // TODO: Only enable if playback paused
     tooltip: {
       trigger: 'axis',
       axisPointer: { type: 'cross' },
@@ -215,6 +254,7 @@ export function generateEChartsOptions(
       textStyle: { color: COLORS.TEXT },
     },
     
+    // TODO: Only enable if playback paused
     toolbox: {
       feature: {
         dataZoom: { yAxisIndex: 'none' },
@@ -243,6 +283,7 @@ export function generateEChartsOptions(
     
     yAxis: yAxisOption,
     
+    // TODO: Only enable if playback paused
     dataZoom: [
       { 
         type: 'inside', 
@@ -298,3 +339,65 @@ export function createChartOptions(
 
 // Export constants for external use if needed
 export { COLORS as CHART_COLORS };
+
+/**
+ * Generates markLines for highlighting specific data points
+ */
+export function createMarkLines(
+  xData: number[],
+  yData: number[],
+  activeIndex: number | undefined,
+  config: ChartConfig
+): MarkLineComponentOption {
+  if (activeIndex == null || activeIndex < 0 || activeIndex >= xData.length) return {};
+
+  const [x, y] = [xData[activeIndex], yData[activeIndex]];
+
+  const data: NonNullable<MarkLineComponentOption['data']> = [
+    ...(config.showXLine ? [{ xAxis: x }] : []),
+    ...(config.showYLine ? [{ yAxis: y }] : []),
+    [{ coord: [x, y], symbol: 'none' }, { coord: [x, y], symbol: 'circle' }],
+  ];
+
+  return {
+    animation: false,
+    silent: true,
+    lineStyle: { type: 'dashed', color: COLORS.TEXT },
+    label: { show: false },
+    symbol: 'none',
+    data,
+  };
+}
+
+/**
+ * Create top-left corner label for active index display
+ */
+export function createActiveIndexLabel(
+  xData: number[],
+  yData: number[],
+  activeIndex: number | undefined,
+  config: ChartConfig
+): EChartsOption['graphic'] {
+  if (activeIndex == null || activeIndex < 0 || activeIndex >= xData.length) return {}
+
+  const [x, y] = [xData[activeIndex], yData[activeIndex]];
+
+  let text = '';
+  if (config.showXLine && config.showYLine) {
+    text = `(${config.xAxis.name}: ${x.toFixed(2)}, ${config.yAxis.name}: ${y.toFixed(2)})`;
+  } else if (config.showXLine) {
+    text = `${config.yAxis.name}: ${y.toFixed(2)}`;
+  } else if (config.showYLine) {
+    text = `${config.xAxis.name}: ${x.toFixed(2)}`;
+  }
+
+  return {
+    type: 'text',
+    left: LAYOUT.GRID.LEFT,
+    top: (config.title ? LAYOUT.GRID.TOP_WITH_TITLE : LAYOUT.GRID.TOP_WITHOUT_TITLE) / 3,
+    style: {
+      text,
+      fill: COLORS.TEXT,
+    },
+  };
+}

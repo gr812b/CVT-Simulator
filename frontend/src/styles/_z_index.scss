@@ -1,0 +1,12 @@
+@use 'sass:map';
+
+$z-index: (
+        dropdown: 1,
+        popup: 2,
+        modal: 3,
+        loading: 4,
+);
+
+@function z($key) {
+    @return map.get($z-index, $key);
+}
