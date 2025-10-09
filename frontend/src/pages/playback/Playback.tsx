@@ -1,58 +1,31 @@
-import { useNavigate, useLocation } from 'react-router-dom';
-import type { RunResponse } from '@utils/api';
+import { useNavigate } from 'react-router-dom';
+import { useEffect } from 'react';
 import styles from './Playback.module.scss';
 import { Button } from '@components/button/Button';
 import { Graph2D } from '@components/graph2D/graph2D';
 import { Playbar } from '@components/playbar/Playbar';
 import Home from '@assets/icons/home.svg?react';
 import Edit from '@assets/icons/edit.svg?react';
-import { useMemo, useState, useEffect } from 'react';
-import { buildGraphs } from '@utils/graph';
-import { ReplayController, ReplayEventType } from '@utils/ReplayController';
-import { timeAccessor } from '@types';
-
-
-// Type the location state
-interface PlaybackLocationState {
-  simulationResult: RunResponse;
-}
+import { usePlaybackData } from '@hooks/usePlaybackData';
 
 export const Playback = () => {
     const navigate = useNavigate();
-    const location = useLocation();
-    const simulationResult = (location.state as PlaybackLocationState | null)?.simulationResult;
+    const playbackData = usePlaybackData();
 
-    const [activeIndex, setActiveIndex] = useState<number>(0);
-
-    const replayController = useMemo(() => {
-        return simulationResult ? new ReplayController(simulationResult.data) : null;
-    }, [simulationResult]);
-
-    const times = useMemo(() => {
-        return simulationResult ? simulationResult.data.map(timeAccessor) : [];
-    }, [simulationResult]);
-
+    // Handle redirect if no simulation data is available
     useEffect(() => {
-        if (!replayController) return;
-        const cleanup = replayController.on((event) => {
-            if (event.type === ReplayEventType.Progress) {
-                setActiveIndex(event.currentIndex);
-            }
-        });
-        return cleanup;
-    }, [replayController]);
+        if (!playbackData) {
+            console.warn('No simulation data available. Redirecting to input page.');
+            navigate('/input');
+        }
+    }, [playbackData, navigate]);
 
-    // Build graphs from simulation result using graph configs
-    const graphs = useMemo(() => {
-        return simulationResult ? buildGraphs(simulationResult) : [];
-    }, [simulationResult]);
-
-    // Redirect to input page if no simulation data is available
-    if (!simulationResult) {
-        console.warn('No simulation data available. Redirecting to input page.');
-        navigate('/input');
+    // If no data is available, show loading or return null while redirect happens
+    if (!playbackData) {
         return null;
     }
+
+    const { graphs, replayController, times, activeIndex } = playbackData;
 
     return (
         <div className={styles.playback}>
@@ -80,12 +53,10 @@ export const Playback = () => {
                 ))}
             </div>
             <div className={styles.playbarContainer}>
-                {replayController && (
-                    <Playbar 
-                        replayController={replayController}
-                        times={times}
-                    />
-                )}
+                <Playbar 
+                    replayController={replayController}
+                    times={times}
+                />
             </div>
         </div>
     );
