@@ -378,7 +378,7 @@ export function createActiveIndexLabel(
   activeIndex: number | undefined,
   config: ChartConfig
 ): EChartsOption['graphic'] {
-  if (activeIndex == null || activeIndex < 0 || activeIndex >= xData.length) return {}
+  if (activeIndex == null || activeIndex < 0 || activeIndex >= xData.length) return [];
 
   const [x, y] = [xData[activeIndex], yData[activeIndex]];
 
@@ -391,7 +391,7 @@ export function createActiveIndexLabel(
     text = `${config.xAxis.name}: ${x.toFixed(2)}`;
   }
 
-  return {
+  return [{
     type: 'text',
     left: LAYOUT.GRID.LEFT,
     top: (config.title ? LAYOUT.GRID.TOP_WITH_TITLE : LAYOUT.GRID.TOP_WITHOUT_TITLE) / 3,
@@ -399,5 +399,5 @@ export function createActiveIndexLabel(
       text,
       fill: COLORS.TEXT,
     },
-  };
+  }];
 }

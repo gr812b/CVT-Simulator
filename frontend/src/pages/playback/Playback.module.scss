@@ -1,0 +1,39 @@
+@use '@styles/_fonts';
+@use '@styles/_colors';
+@use '@styles/_mixins';
+@use 'sass:map';
+
+.playback {
+    display: flex;
+    flex-direction: column;
+    background-color: var(--secondary);
+    height: 100vh;
+    width: 100vw;
+
+    .buttonsContainer {
+        display: flex;
+        flex-direction: row;
+
+        .navigateButton {
+            margin: 1.5rem 0 0 0.75rem;
+        }
+    }
+
+    .displayGrid {
+        flex-grow: 1;
+        @include mixins.scrollbar;
+        & { scrollbar-gutter: stable; }
+
+        // make grid of 2 columns and as many rows as needed
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        grid-auto-rows: 1fr;
+        overflow-x: hidden; // TODO: fix 2D graph overflow     
+    }
+
+    .playbarContainer {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+    }
+}

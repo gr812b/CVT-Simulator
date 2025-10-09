@@ -1,11 +1,7 @@
-// TODO: Align this with the actual data we expect from the api
-interface dataPoint {
-    timestamp: number;
-    rpm: number;
-    car_speed: number;
-}
+import type { RunResponse } from './api';
 
-type replayData = dataPoint[];
+type DataPoint = RunResponse['data'][number];
+type ReplayData = DataPoint[];
 
 export enum ReplayEventType {
   StateChanged = 'stateChanged',
@@ -20,11 +16,11 @@ export enum StateType {
 
 type ReplayEvent =
   | { type: ReplayEventType.StateChanged; state: StateType }
-  | { type: ReplayEventType.Progress; currentIndex: number; data: dataPoint }
+  | { type: ReplayEventType.Progress; currentIndex: number; data: DataPoint }
   | { type: ReplayEventType.Finished };
 
 export class ReplayController {
-  private data: replayData;
+  private data: ReplayData;
   private isPlaying = false;
   private currentIndex = 0;
   private lastTimestamp = 0;
@@ -33,7 +29,7 @@ export class ReplayController {
   private listeners: ((event: ReplayEvent) => void)[] = [];
 
   constructor(
-    data: replayData,
+    data: ReplayData,
   ) {
     this.data = data;
   }
@@ -71,7 +67,7 @@ export class ReplayController {
       this.startTime = performance.now();
     } else {
       // Adjust the start time for resuming from the current index
-      this.startTime = performance.now() - this.lastTimestamp / this.speed;
+      this.startTime = performance.now() - (this.lastTimestamp * 1000) / this.speed; // Convert seconds to ms
     }
 
     this.emit({ type: ReplayEventType.StateChanged, state: StateType.Playing });
@@ -103,7 +99,7 @@ export class ReplayController {
   setCurrentIndex(idx: number) {
     if (idx < 0 || idx >= this.data.length) return;
     this.currentIndex = idx;
-    this.lastTimestamp = this.data[idx]?.timestamp || 0;
+    this.lastTimestamp = this.data[idx]?.time || 0;
     // Emit progress event if paused
     if (!this.isPlaying) {
       this.emit({
@@ -118,11 +114,11 @@ export class ReplayController {
     if (!this.isPlaying) return;
 
     const now = performance.now();
-    const elapsed = (now - this.startTime) * this.speed;
+    const elapsed = ((now - this.startTime) / 1000) * this.speed; // Convert ms to seconds
 
     while (
       this.currentIndex < this.data.length &&
-      this.data[this.currentIndex].timestamp <= elapsed
+      this.data[this.currentIndex].time <= elapsed
     ) {
       const dataPoint = this.data[this.currentIndex];
 
@@ -132,7 +128,7 @@ export class ReplayController {
         data: dataPoint,
       });
 
-      this.lastTimestamp = dataPoint.timestamp;
+      this.lastTimestamp = dataPoint.time;
       this.currentIndex++;
     }
 
