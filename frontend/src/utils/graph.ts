@@ -1,4 +1,4 @@
-import type { Graph2DProps } from "@components/graph2D/types";
+import type { Graph2DProps } from "@components/graph2D/graph2D";
 import type { RunResponse } from "./api";
 import { graphConfigs } from "@types";
 
