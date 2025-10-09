@@ -3,10 +3,12 @@ import type { RunResponse } from '@utils/api';
 import styles from './Playback.module.scss';
 import { Button } from '@components/button/Button';
 import { Graph2D } from '@components/graph2D/graph2D';
+import { Playbar } from '@components/playbar/Playbar';
 import Home from '@assets/icons/home.svg?react';
 import Edit from '@assets/icons/edit.svg?react';
-import { useMemo } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { buildGraphs } from '@utils/graph';
+import { ReplayController, ReplayEventType } from '@utils/ReplayController';
 
 
 // Type the location state
@@ -15,10 +17,11 @@ interface PlaybackLocationState {
 }
 
 export const Playback = () => {
-
     const navigate = useNavigate();
     const location = useLocation();
     const simulationResult = (location.state as PlaybackLocationState | null)?.simulationResult;
+
+    const [activeIndex, setActiveIndex] = useState<number>(0);
 
     // Redirect to input page if no simulation data is available
     if (!simulationResult) {
@@ -26,6 +29,23 @@ export const Playback = () => {
         navigate('/input');
         return null;
     }
+
+    const replayController = useMemo(() => {
+        return new ReplayController(simulationResult.data);
+    }, [simulationResult]);
+
+    const times = useMemo(() => {
+        return simulationResult.data.map(point => point.time);
+    }, [simulationResult]);
+
+    useEffect(() => {
+        const cleanup = replayController.on((event) => {
+            if (event.type === ReplayEventType.Progress) {
+                setActiveIndex(event.currentIndex);
+            }
+        });
+        return cleanup;
+    }, [replayController]);
 
     // Build graphs from simulation result using graph configs
     const graphs = useMemo(() => {
@@ -53,10 +73,16 @@ export const Playback = () => {
                     <Graph2D
                         key={index}
                         {...graph}
+                        activeIndex={activeIndex}
                     />
                 ))}
             </div>
-            <div className={styles.playbarContainer}></div>
+            <div className={styles.playbarContainer}>
+                <Playbar 
+                    replayController={replayController}
+                    times={times}
+                />
+            </div>
         </div>
     );
 };

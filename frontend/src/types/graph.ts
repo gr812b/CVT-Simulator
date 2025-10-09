@@ -16,7 +16,9 @@ export const graphConfigs: GraphConfig[] = [
             title: "Position vs Time",
             xAxis: { name: "Time", type: "value", unit: "s" },
             yAxis: { name: "Position", type: "value", unit: "m" },
-            height: 400
+            height: 400,
+            showXLine: true,
+            showYLine: false
         }
     },
     {
@@ -26,7 +28,9 @@ export const graphConfigs: GraphConfig[] = [
           title: "Velocity vs Time",
           xAxis: { name: "Time", type: "value", unit: "s" },
           yAxis: { name: "Velocity", type: "value", unit: "m/s" },
-          height: 400
+          height: 400,
+          showXLine: true,
+          showYLine: true
         }
     },
     {
@@ -36,7 +40,9 @@ export const graphConfigs: GraphConfig[] = [
             title: "Acceleration vs Time",
             xAxis: { name: "Time", type: "value", unit: "s" },
             yAxis: { name: "Acceleration", type: "value", unit: "m/s²" },
-            height: 400
+            height: 400,
+            showXLine: true,
+            showYLine: false
         }
     },
     {
@@ -46,7 +52,9 @@ export const graphConfigs: GraphConfig[] = [
             title: "CVT Ratio vs Time",
             xAxis: { name: "Time", type: "value", unit: "s" },
             yAxis: { name: "CVT Ratio", type: "value", unit: "ratio" },
-            height: 400
+            height: 400,
+            showXLine: true,
+            showYLine: false
         }
     },
     {
@@ -56,7 +64,9 @@ export const graphConfigs: GraphConfig[] = [
             title: "Shift Curve (Engine RPM vs Vehicle Speed)",
             xAxis: { name: "Vehicle Speed", type: "value", unit: "m/s" },
             yAxis: { name: "Engine RPM", type: "value", unit: "rad/s" },
-            height: 400
+            height: 400,
+            showXLine: true,
+            showYLine: false
         }
     },
     {
@@ -66,7 +76,9 @@ export const graphConfigs: GraphConfig[] = [
             title: "Engine Torque vs Time",
             xAxis: { name: "Time", type: "value", unit: "s" },
             yAxis: { name: "Engine Torque", type: "value", unit: "Nm" },
-            height: 400
+            height: 400,
+            showXLine: true,
+            showYLine: false
         }
     }
 ];
