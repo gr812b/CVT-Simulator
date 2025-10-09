@@ -3,15 +3,25 @@ import type { RunResponse } from "@utils/api";
 
 type DataPoint = RunResponse['data'][number]; // TODO: Move to somewhere else (maybe replay controller file)
 
+type AccessorStrategy = (point: DataPoint) => number;
+
 type GraphConfig = Omit<Graph2DProps, 'xData' | 'yData' | 'className'> & {
-    xAccessor: (point: DataPoint) => number;
-    yAccessor: (point: DataPoint) => number;
+    xAccessor: AccessorStrategy;
+    yAccessor: AccessorStrategy;
 };
+
+const timeAccessor: AccessorStrategy = (point) => point.time;
+const positionAccessor: AccessorStrategy = (point) => point.state.car_position;
+const velocityAccessor: AccessorStrategy = (point) => point.state.car_velocity;
+const accelerationAccessor: AccessorStrategy = (point) => point.car_state.acceleration;
+const cvtRatioAccessor: AccessorStrategy = (point) => point.cvt_state.cvt_ratio;
+const engineRpmAccessor: AccessorStrategy = (point) => point.car_state.engine_forces.angular_velocity;
+const engineTorqueAccessor: AccessorStrategy = (point) => point.car_state.engine_forces.torque;
 
 export const graphConfigs: GraphConfig[] = [
     {
-        xAccessor: (point) => point.time,
-        yAccessor: (point) => point.state.car_position,
+        xAccessor: timeAccessor,
+        yAccessor: positionAccessor,
         config: {
             title: "Position vs Time",
             xAxis: { name: "Time", type: "value", unit: "s" },
@@ -22,8 +32,8 @@ export const graphConfigs: GraphConfig[] = [
         }
     },
     {
-        xAccessor: (point) => point.time,
-        yAccessor: (point) => point.state.car_velocity,
+        xAccessor: timeAccessor,
+        yAccessor: velocityAccessor,
         config: {
           title: "Velocity vs Time",
           xAxis: { name: "Time", type: "value", unit: "s" },
@@ -34,8 +44,8 @@ export const graphConfigs: GraphConfig[] = [
         }
     },
     {
-        xAccessor: (point) => point.time,
-        yAccessor: (point) => point.car_state.acceleration,
+        xAccessor: timeAccessor,
+        yAccessor: accelerationAccessor,
         config: {
             title: "Acceleration vs Time",
             xAxis: { name: "Time", type: "value", unit: "s" },
@@ -46,8 +56,8 @@ export const graphConfigs: GraphConfig[] = [
         }
     },
     {
-        xAccessor: (point) => point.time,
-        yAccessor: (point) => point.cvt_state.cvt_ratio,
+        xAccessor: timeAccessor,
+        yAccessor: cvtRatioAccessor,
         config: {
             title: "CVT Ratio vs Time",
             xAxis: { name: "Time", type: "value", unit: "s" },
@@ -58,8 +68,8 @@ export const graphConfigs: GraphConfig[] = [
         }
     },
     {
-        xAccessor: (point) => point.state.car_velocity,
-        yAccessor: (point) => point.car_state.engine_forces.angular_velocity,
+        xAccessor: velocityAccessor,
+        yAccessor: engineRpmAccessor,
         config: {
             title: "Shift Curve (Engine RPM vs Vehicle Speed)",
             xAxis: { name: "Vehicle Speed", type: "value", unit: "m/s" },
@@ -70,8 +80,8 @@ export const graphConfigs: GraphConfig[] = [
         }
     },
     {
-        xAccessor: (point) => point.time,
-        yAccessor: (point) => point.car_state.engine_forces.torque,
+        xAccessor: timeAccessor,
+        yAccessor: engineTorqueAccessor,
         config: {
             title: "Engine Torque vs Time",
             xAxis: { name: "Time", type: "value", unit: "s" },
