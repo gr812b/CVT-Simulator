@@ -89,6 +89,7 @@ export const Input = () => {
             <ParameterDescription
                 name={parameter ? parameter.label : "No Parameter Selected"}
                 description={parameter ? parameter.description : "Click on an input field to see its description."}
+                img={parameter ? parameter.img : undefined}
             />
         );
     }
