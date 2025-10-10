@@ -28,7 +28,7 @@ export interface ChartConfig {
   /** Y-axis configuration */
   yAxis: AxisConfig;
   /** Series name for the line */
-  seriesName?: string;
+  seriesNames?: string[];
   /** Whether to show smooth curves */
   smooth?: boolean;
   /** Whether to show data point symbols */
@@ -178,26 +178,8 @@ export function createChartConfig(userConfig: Partial<ChartConfig>, xData: numbe
  * Converts data points to ECharts dataset format
  */
 export function createDataset(xData: number[], yData: number[][], config: ChartConfig): EChartsOption['dataset'] {
-  // const source: (string | number | Date)[][] = [[config.xAxis.name, config.yAxis.name]];
-  // xData.forEach((x, index) => {
-  //   const y = yData[index];
-  //   source.push([x, ...y]);
-  // });
-  // return { source };
-  // const sources: (string | number | Date)[][][] = [];
-  // for (let i = 0; i < yData[0].length; i++) {
-  //   const source: (string | number | Date)[][] = [[config.xAxis.name, config.yAxis.name]];
-  //   sources.push(source);
-  // }
 
-  // xData.forEach((x, index) => {
-  //   const y = yData[index];
-  //   for (let i = 0; i < y.length; i++) {
-  //     sources[i].push([x, y[i]]);
-  //   }
-  // });
-
-  const source: (string | number | Date)[][] = [[config.xAxis.name, ...yData[0].map((_, i) => `${config.yAxis.name} ${i + 1}`)]];
+  const source: (string | number | Date)[][] = [[config.xAxis.name, ...yData[0].map((_, i) => config.seriesNames?.[i] || `${config.yAxis.name} ${i + 1}`)]];
 
   xData.forEach((x, index) => {
     const y = yData[index];
@@ -206,6 +188,25 @@ export function createDataset(xData: number[], yData: number[][], config: ChartC
 
   return { source };
 }
+
+/**
+ * Generates the series array for ECharts options
+ */
+function createSeries(yData: number[][], config: ChartConfig): EChartsOption['series'] {
+  return yData[0].map((_, i) => ({
+    type: "line" as const,
+    name: config.seriesNames?.[i] || `${config.yAxis.name} ${i + 1}`,
+    smooth: config.smooth,
+    showSymbol: config.showSymbol,
+    itemStyle: { color: COLORS.LINE },
+    lineStyle: { color: COLORS.LINE },
+    encode: {
+      x: config.xAxis.name,
+      y: i + 1,
+    },
+  }));
+}
+
 
 /**
  * Generates complete ECharts options with dark theme defaults
@@ -217,19 +218,7 @@ export function generateEChartsOptions(
   userOptions: Partial<EChartsOption> = {}
 ): EChartsOption {
   const dataset = createDataset(xData, yData, config);
-
-  const series = yData[0].map((_, i) => ({
-    type: "line" as const,
-    name: `${config.yAxis.name} ${i + 1}`, // can remove if you don't care about names
-    smooth: config.smooth,
-    showSymbol: config.showSymbol,
-    itemStyle: { color: COLORS.LINE },
-    lineStyle: { color: COLORS.LINE },
-    encode: {
-      x: config.xAxis.name,
-      y: i + 1, // ECharts dataset columns are indexed (0 = x, 1 = first y, 2 = second y, etc.)
-    },
-  }));
+  const series = createSeries(yData, config);
 
   // Create axis options separately to avoid type inference issues
   const xAxisOption = {
@@ -338,21 +327,6 @@ export function generateEChartsOptions(
     ],
     
     series: series
-    // [
-    //   {
-    //     type: 'line',
-    //     name: config.seriesName || `${config.yAxis.name} vs ${config.xAxis.name}`,
-    //     smooth: config.smooth,
-    //     showSymbol: config.showSymbol,
-    //     itemStyle: { color: COLORS.LINE },
-    //     lineStyle: { color: COLORS.LINE },
-    //     encode: {
-    //       x: config.xAxis.name,
-    //       y: config.yAxis.name,
-    //       tooltip: [config.xAxis.name, config.yAxis.name],
-    //     },
-    //   },
-    // ],
   };
   
   // Apply user overrides last
