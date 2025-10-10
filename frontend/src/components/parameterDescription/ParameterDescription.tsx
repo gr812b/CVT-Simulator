@@ -4,11 +4,11 @@ import cx from 'classnames';
 interface ParameterDescriptionProps {
     name: string
     description?: string
-    imgSrc?: string
+    img?: string
     className?: string
 }
 
-export const ParameterDescription = ({ name, description, imgSrc, className }: ParameterDescriptionProps) => {
+export const ParameterDescription = ({ name, description, img, className }: ParameterDescriptionProps) => {
     return (
         <div className={cx(styles.parameterDescription, className)}>
             <div className={styles.textContainer}>
@@ -16,7 +16,7 @@ export const ParameterDescription = ({ name, description, imgSrc, className }: P
                 {description && <p className={styles.description}>{description}</p>}
             </div>
             <div className={styles.imageContainer}>
-                {imgSrc && (<img className={styles.image} src={imgSrc} alt={`${name} illustration`} />)}
+                {img && (<img className={styles.image} src={img} alt={`${name} illustration`} />)}
             </div>
         </div>
     );
