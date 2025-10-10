@@ -7,7 +7,7 @@ export function buildGraphs(run: RunResponse): Graph2DProps[] {
 
     return graphConfigs.map((config) => ({
         xData: data.map(config.xAccessor),
-        yData: data.map(config.yAccessor),
+        yData: data.map((point) => config.yAccessor.map((accessor) => accessor(point))),
         ...config,
     }));
 }

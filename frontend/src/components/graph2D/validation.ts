@@ -20,7 +20,7 @@ export const VALIDATION = {
 /**
  * Validates an array of data points
  */
-export function validateData(xData: number[], yData: number[]): ValidationResult {
+export function validateData(xData: number[], yData: number[][]): ValidationResult {
   const errors: string[] = [];
   const warnings: string[] = [];
   
@@ -62,12 +62,14 @@ export function validateData(xData: number[], yData: number[]): ValidationResult
   });
 
   yData.forEach((y, index) => {
-    if (typeof y !== 'number' || !Number.isFinite(y)) {
-      errors.push(`Y value at index ${index} is not a valid number`);
-    }
+    for (const yValue of y) {
+      if (typeof yValue !== 'number' || !Number.isFinite(yValue)) {
+        errors.push(`Y value at index ${index} is not a valid number`);
+      }
 
-    if (y === null || y === undefined) {
-      errors.push(`Y value at index ${index} has null/undefined value`);
+      if (yValue === null || yValue === undefined) {
+        errors.push(`Y value at index ${index} has null/undefined value`);
+      }
     }
   });
   

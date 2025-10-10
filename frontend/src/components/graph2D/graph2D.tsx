@@ -14,7 +14,7 @@ export interface Graph2DProps {
   /** X-axis data points */
   xData: number[];
   /** Y-axis data points */
-  yData: number[];
+  yData: number[][];
   /** Index of point to highlight on chart */
   activeIndex?: number;
   /** Chart configuration */
