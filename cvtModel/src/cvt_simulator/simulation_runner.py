@@ -88,10 +88,12 @@ class SimulationRunner:
 
                 # Phase 1 output is already truncated by the event; just append phase 2
                 combined_t = np.concatenate([solution_phase1.t, solution_phase2.t])
-                combined_y = np.hstack([
-                    solution_phase1.y,
-                    solution_phase2.y,
-                ])
+                combined_y = np.hstack(
+                    [
+                        solution_phase1.y,
+                        solution_phase2.y,
+                    ]
+                )
             else:
                 # No remaining time points to evaluate in phase 2
                 combined_t = solution_phase1.t
