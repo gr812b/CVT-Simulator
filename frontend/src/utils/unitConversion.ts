@@ -41,8 +41,7 @@ export type UnitConfiguration = {
 };
 
 // Conversion factors from SI base units
-// TODO: Define via UnitOptions
-const CONVERSION_FACTORS = {
+const CONVERSION_FACTORS: { [K in BaseUnitType]: Record<UnitOptions[K], number> } = {
   angular_velocity: {
     'rad/s': 1,
     'rpm': 30 / Math.PI,
@@ -151,26 +150,24 @@ function getTargetUnit<T extends BaseUnitType>(
   return siUnits[baseType] as UnitOptions[T];
 }
 
-// TODO: Use UnitOptions for targetUnit
 // Convert a value from SI base unit to target unit
-function convertValue(
+function convertValue<T extends BaseUnitType>(
   value: number,
-  baseType: BaseUnitType,
-  targetUnit: string
+  baseType: T,
+  targetUnit: UnitOptions[T]
 ): number {
-  const conversionTable = CONVERSION_FACTORS[baseType] as Record<string, number>;
+  const conversionTable = CONVERSION_FACTORS[baseType];
   const factor = conversionTable[targetUnit] ?? 1;
   return value * factor;
 }
 
-// TODO: Look into primary / secondary radial force
 // Convert a single time step's data
 function convertTimeStepData(
   timeStep: TimeStepDataModel,
   config: UnitConfiguration
 ): TimeStepDataModel {
   // Helper to convert values with the simplified config
-  const conv = (value: number, type: BaseUnitType) => 
+  const conv = <T extends BaseUnitType>(value: number, type: T) => 
     convertValue(value, type, getTargetUnit(type, config));
 
   return {
@@ -199,7 +196,7 @@ function convertTimeStepData(
     
     cvt_state: {
       primaryRadialForce: {
-        pulleyForce: convertAnyObject(timeStep.cvt_state.primaryRadialForce.pulleyForce, config) as TimeStepDataModel['cvt_state']['primaryRadialForce']['pulleyForce'],
+        pulleyForce: convertPulleyForce(timeStep.cvt_state.primaryRadialForce.pulleyForce, config),
         beltCentrifugalForce: {
           mass: conv(timeStep.cvt_state.primaryRadialForce.beltCentrifugalForce.mass, 'mass'),
           radius: conv(timeStep.cvt_state.primaryRadialForce.beltCentrifugalForce.radius, 'distance'),
@@ -211,7 +208,7 @@ function convertTimeStepData(
         net: conv(timeStep.cvt_state.primaryRadialForce.net, 'force'),
       },
       secondaryRadialForce: {
-        pulleyForce: convertAnyObject(timeStep.cvt_state.secondaryRadialForce.pulleyForce, config) as TimeStepDataModel['cvt_state']['secondaryRadialForce']['pulleyForce'],
+        pulleyForce: convertPulleyForce(timeStep.cvt_state.secondaryRadialForce.pulleyForce, config),
         beltCentrifugalForce: {
           mass: conv(timeStep.cvt_state.secondaryRadialForce.beltCentrifugalForce.mass, 'mass'),
           radius: conv(timeStep.cvt_state.secondaryRadialForce.beltCentrifugalForce.radius, 'distance'),
@@ -230,80 +227,52 @@ function convertTimeStepData(
   };
 }
 
-// TODO: Try to remove these two methods
-// Simple recursive object converter - handles any nested structure
-function convertAnyObject(obj: unknown, config: UnitConfiguration): unknown {
-  if (typeof obj === 'number') {
-    // We can't know the unit type without context, so just return the number
-    return obj;
-  }
-  
-  if (Array.isArray(obj)) {
-    return obj.map(item => convertAnyObject(item, config));
-  }
-  
-  if (obj && typeof obj === 'object') {
-    const result: Record<string, unknown> = {};
-    for (const [key, value] of Object.entries(obj)) {
-      if (typeof value === 'number') {
-        // Map common field names to unit types
-        const unitType = getUnitTypeFromFieldName(key);
-        if (unitType) {
-          result[key] = convertValue(value, unitType, getTargetUnit(unitType, config));
-        } else {
-          result[key] = value; // Keep as-is if we can't determine unit type
-        }
-      } else {
-        result[key] = convertAnyObject(value, config);
-      }
-    }
-    return result;
-  }
-  
-  return obj;
-}
+// Convert primary or secondary pulley force (needed to handle the union type)
+function convertPulleyForce(
+  pulleyForce: components['schemas']['PrimaryForceBreakdownModel'] | components['schemas']['SecondaryForceBreakdownModel'],
+  config: UnitConfiguration
+): components['schemas']['PrimaryForceBreakdownModel'] | components['schemas']['SecondaryForceBreakdownModel'] {
+  const conv = <T extends BaseUnitType>(value: number, type: T) => 
+    convertValue(value, type, getTargetUnit(type, config));
 
-// Helper to guess unit type from field names
-function getUnitTypeFromFieldName(fieldName: string): BaseUnitType | null {
-  const fieldMappings: Record<string, BaseUnitType> = {
-    // Forces
-    'net': 'force',
-    'force': 'force',
-    'centrifugal_force': 'force',
-    
-    // Torques
-    'torque': 'torque',
-    'feedbackTorque': 'torque',
-    
-    // Angular velocity
-    'angular_velocity': 'angular_velocity',
-    
-    // Distances
-    'radius': 'distance',
-    'compression': 'distance',
-    
-    // Angles
-    'angle': 'angle',
-    'wrap_angle': 'angle',
-    'rotation': 'angle',
-    
-    // Mass
-    'mass': 'mass',
-    
-    // Power
-    'power': 'power',
-    
-    // Velocity
-    'velocity': 'velocity',
-    
-    // Acceleration
-    'acceleration': 'acceleration',
-    
-    // Time
-    'time': 'time',
-  };
-  
-  return fieldMappings[fieldName] || null;
+  // Type guard: check if it's PrimaryForceBreakdownModel
+  if ('flyweightForce' in pulleyForce) {
+    return {
+      flyweightForce: {
+        radius: conv(pulleyForce.flyweightForce.radius, 'distance'),
+        angular_velocity: conv(pulleyForce.flyweightForce.angular_velocity, 'angular_velocity'),
+        angle: conv(pulleyForce.flyweightForce.angle, 'angle'),
+        centrifugal_force: conv(pulleyForce.flyweightForce.centrifugal_force, 'force'),
+        angle_multiplier: pulleyForce.flyweightForce.angle_multiplier, // dimensionless
+        net: conv(pulleyForce.flyweightForce.net, 'force'),
+      },
+      springForce: {
+        compression: conv(pulleyForce.springForce.compression, 'distance'),
+        net: conv(pulleyForce.springForce.net, 'force'),
+      },
+      net: conv(pulleyForce.net, 'force'),
+    };
+  } else {
+    // It's SecondaryForceBreakdownModel
+    return {
+      springCompForce: {
+        compression: conv(pulleyForce.springCompForce.compression, 'distance'),
+        net: conv(pulleyForce.springCompForce.net, 'force'),
+      },
+      helix_force: {
+        feedbackTorque: conv(pulleyForce.helix_force.feedbackTorque, 'torque'),
+        springTorque: {
+          rotation: conv(pulleyForce.helix_force.springTorque.rotation, 'angle'),
+          net: conv(pulleyForce.helix_force.springTorque.net, 'torque'),
+        },
+        angle: conv(pulleyForce.helix_force.angle, 'angle'),
+        radius: conv(pulleyForce.helix_force.radius, 'distance'),
+        angle_multiplier: pulleyForce.helix_force.angle_multiplier, // dimensionless
+        net: conv(pulleyForce.helix_force.net, 'force'),
+      },
+      net: conv(pulleyForce.net, 'force'),
+    };
+  }
 }
 
 // Main conversion function for simulation results
