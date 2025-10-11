@@ -55,7 +55,20 @@ const COLORS = {
   get BACKGROUND() { return getCSSColor('--secondary', '#222222'); },
   get TEXT() { return getCSSColor('--text-color', '#ffffff'); },
   get GRID() { return getCSSColor('--grid-color', '#404040'); },
-  get LINE() { return getCSSColor('--accent', '#bb0808'); },
+  get LINES() {
+    return [
+      getCSSColor('--line1', '#bb0808'),
+      getCSSColor('--line2', '#2ecc71'),
+      getCSSColor('--line3', '#3498db'),
+      getCSSColor('--line4', '#e67e22'),
+      getCSSColor('--line5', '#9b59b6'),
+      getCSSColor('--line6', '#f1c40f'),
+      getCSSColor('--line7', '#00ffff'),
+      getCSSColor('--line8', '#ff00ff'),
+      getCSSColor('--line9', '#e74c3c'),
+    ];
+  },
+  get ACCENT() { return getCSSColor('--accent', '#bb0808'); },
   get TOOLTIP_BG() { return getCSSColor('--tooltip-bg', '#2a2a2a'); },
   get ZOOM_FILL() { 
     const accent = getCSSColor('--accent', '#bb0808');
@@ -198,8 +211,8 @@ function createSeries(yData: number[][], config: ChartConfig): EChartsOption['se
     name: config.seriesNames?.[i] || `${config.yAxis.name} ${i + 1}`,
     smooth: config.smooth,
     showSymbol: config.showSymbol,
-    itemStyle: { color: COLORS.LINE },
-    lineStyle: { color: COLORS.LINE },
+    itemStyle: { color: COLORS.LINES[i] },
+    lineStyle: { color: COLORS.LINES[i] },
     encode: {
       x: config.xAxis.name,
       y: i + 1,
@@ -288,7 +301,7 @@ export function generateEChartsOptions(
       top: LAYOUT.TOOLBOX.TOP,
       iconStyle: { borderColor: COLORS.TEXT },
       emphasis: {
-        iconStyle: { borderColor: COLORS.LINE },
+        iconStyle: { borderColor: COLORS.ACCENT },
       },
     },
     
@@ -320,8 +333,8 @@ export function generateEChartsOptions(
         borderColor: COLORS.GRID,
         fillerColor: COLORS.ZOOM_FILL,
         handleStyle: {
-          color: COLORS.LINE,
-          borderColor: COLORS.LINE,
+          color: COLORS.ACCENT,
+          borderColor: COLORS.ACCENT,
         },
       },
     ],
@@ -403,9 +416,19 @@ export function createActiveIndexLabel(
 
   let text = '';
   if (config.showXLine && config.showYLine) {
-    text = `(${config.xAxis.name}: ${x.toFixed(2)}, ${config.yAxis.name}: ${y.map(value => value.toFixed(2)).join(', ')})`;
+    text = `(${config.xAxis.name}: ${x.toFixed(2)}, ${config.yAxis.name}: `;
+    if (y.length === 1) {
+      text += `${y[0].toFixed(2)})`;
+    } else {
+      text += `[${y.map((value, index) => `${config.seriesNames?.[index]}: ${value.toFixed(2)}`).join(', ')}]`;
+    }
   } else if (config.showXLine) {
-    text = `${config.yAxis.name}: ${y.map(value => value.toFixed(2)).join(', ')}`;
+      text = `${config.yAxis.name}: `;
+    if (y.length === 1) {
+      text += `${y[0].toFixed(2)}`;
+    } else {
+      text += `[${y.map((value, index) => `${config.seriesNames?.[index]}: ${value.toFixed(2)}`).join(', ')}]`;
+    }
   } else if (config.showYLine) {
     text = `${config.xAxis.name}: ${x.toFixed(2)}`;
   }
