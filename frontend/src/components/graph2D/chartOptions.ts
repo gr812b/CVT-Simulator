@@ -104,6 +104,13 @@ const CHART_DEFAULTS = {
 } as const;
 
 /**
+ * Stable value formatter function to prevent unnecessary re-renders for tooltip
+ */
+const stableValueFormatter = (value: unknown): string => {
+  return typeof value === 'number' ? value.toFixed(2) : String(value);
+};
+
+/**
  * Deep merge function for objects
  */
 function deepMerge<T extends Record<string, unknown>>(target: T, source: Partial<T>): T {
@@ -252,6 +259,7 @@ export function generateEChartsOptions(
       backgroundColor: COLORS.TOOLTIP_BG,
       borderColor: COLORS.GRID,
       textStyle: { color: COLORS.TEXT },
+      valueFormatter: stableValueFormatter,
     },
     
     // TODO: Only enable if playback paused
@@ -399,5 +407,6 @@ export function createActiveIndexLabel(
       text,
       fill: COLORS.TEXT,
     },
+    silent: true,
   }];
 }
