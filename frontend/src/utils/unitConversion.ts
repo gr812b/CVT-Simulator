@@ -100,7 +100,18 @@ export const DEFAULT_UNIT_CONFIG: UnitConfiguration = {};
 
 // Common preset configurations
 export const UNIT_PRESETS = {
-  SI: {} as UnitConfiguration,
+  SI: {
+    angular_velocity: 'rad/s',
+    mass: 'kg',
+    force: 'N',
+    torque: 'Nm',
+    power: 'W',
+    velocity: 'm/s',
+    distance: 'm',
+    acceleration: 'm/s²',
+    angle: 'rad',
+    time: 's',
+  } as UnitConfiguration,
   
   IMPERIAL: {
     angular_velocity: 'rpm',
@@ -129,25 +140,13 @@ function getTargetUnit<T extends BaseUnitType>(
   baseType: T,
   config: UnitConfiguration
 ): UnitOptions[T] {
-  // Check configuration for this type
-  const configuredUnit = config[baseType] as UnitOptions[T] | undefined;
+  // Check configuration for this type, could be empty
+  const configuredUnit = config[baseType];
   if (configuredUnit) return configuredUnit;
   
-  // Default to SI unit
-  const siUnits = {
-    angular_velocity: 'rad/s',
-    mass: 'kg',
-    force: 'N',
-    torque: 'Nm',
-    power: 'W',
-    velocity: 'm/s',
-    distance: 'm',
-    acceleration: 'm/s²',
-    angle: 'rad',
-    time: 's',
-  } as const;
-  
-  return siUnits[baseType] as UnitOptions[T];
+  // Default to SI unit from preset
+  const siUnit = UNIT_PRESETS.SI[baseType];
+  return siUnit!; // We know SI preset has all units defined
 }
 
 // Convert a value from SI base unit to target unit
@@ -157,7 +156,7 @@ function convertValue<T extends BaseUnitType>(
   targetUnit: UnitOptions[T]
 ): number {
   const conversionTable = CONVERSION_FACTORS[baseType];
-  const factor = conversionTable[targetUnit] ?? 1;
+  const factor = conversionTable[targetUnit];
   return value * factor;
 }
 
