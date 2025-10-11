@@ -32,9 +32,6 @@ export class ReplayController {
   private rafId: number | null = null;
   private loopBound = (now: number) => this.loop(now);
 
-  // limit CPU per frame so paint can happen
-  private frameBudgetMs = 8; // tweak or set to Infinity to disable
-
   constructor(
     data: ReplayData,
   ) {
@@ -131,8 +128,7 @@ export class ReplayController {
 
    /** Advance indices up to the given elapsed time.
    * Returns the latest DataPoint processed in this frame (or null). */
-  private stepUntil(elapsedSeconds: number, budgetMs: number): DataPoint | null {
-    const start = performance.now();
+  private stepUntil(elapsedSeconds: number): DataPoint | null {
     let lastPoint: DataPoint | null = null;
 
     while (
@@ -142,9 +138,6 @@ export class ReplayController {
       lastPoint = this.data[this.currentIndex];
       this.lastTimestamp = lastPoint.time;
       this.currentIndex++;
-
-      // optional frame budget to leave time for paint/React
-      if (performance.now() - start >= budgetMs) break;
     }
 
     return lastPoint;
@@ -159,7 +152,7 @@ export class ReplayController {
     if (!this.isPlaying) return;
 
     const elapsedSec = ((now - this.startTime) / 1000) * this.speed;
-    const latest = this.stepUntil(elapsedSec, this.frameBudgetMs);
+    const latest = this.stepUntil(elapsedSec);
 
     if (latest) {
       this.emit({
