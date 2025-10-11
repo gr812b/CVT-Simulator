@@ -19,16 +19,16 @@ const engineRpmAccessor: AccessorStrategy = (point) => point.car_state.engine_fo
 const engineTorqueAccessor: AccessorStrategy = (point) => point.car_state.engine_forces.torque;
 const primaryRadialForceAccessor: AccessorStrategy = (point) => point.cvt_state.primaryRadialForce.net;
 const secondaryRadialForceAccessor: AccessorStrategy = (point) => point.cvt_state.secondaryRadialForce.net;
-// // Accessor for flyweightForce.net
-// const primaryFlyweightForceAccessor: AccessorStrategy = (point) => {
-//     const prf = point.cvt_state.primaryRadialForce;
-//     const pulleyForce = prf.pulleyForce;
-//     if (!pulleyForce) return 0;
-//     if ('flyweightForce' in pulleyForce && pulleyForce.flyweightForce) {
-//         return pulleyForce.flyweightForce.net;
-//     }
-//     return 0;
-// };
+// Accessor for flyweightForce.net
+const primaryFlyweightForceAccessor: AccessorStrategy = (point) => {
+    const prf = point.cvt_state.primaryRadialForce;
+    const pulleyForce = prf.pulleyForce;
+    if (!pulleyForce) return 0;
+    if ('flyweightForce' in pulleyForce && pulleyForce.flyweightForce) {
+        return pulleyForce.flyweightForce.net;
+    }
+    return 0;
+};
 
 // Accessor for springForce.net or springCompForce.net
 const primarySpringForceAccessor: AccessorStrategy = (point) => {
@@ -42,24 +42,6 @@ const primarySpringForceAccessor: AccessorStrategy = (point) => {
         return pulleyForce.springCompForce.net;
     }
     return 0;
-};
-
-// Accessor for helix_force.net
-const primaryHelixForceAccessor: AccessorStrategy = (point) => {
-    const prf = point.cvt_state.primaryRadialForce;
-    const pulleyForce = prf.pulleyForce;
-    if (!pulleyForce) return 0;
-    if ('helix_force' in pulleyForce && pulleyForce.helix_force) {
-        return pulleyForce.helix_force.net;
-    }
-    return 0;
-};
-
-// Accessor for beltCentrifugalForce.net
-const primaryBeltCentrifugalForceAccessor: AccessorStrategy = (point) => {
-    const prf = point.cvt_state.primaryRadialForce;
-    const beltForce = prf.beltCentrifugalForce;
-    return beltForce ? beltForce.net : 0;
 };
 
 
@@ -158,12 +140,12 @@ export const graphConfigs: GraphConfig[] = [
     },
         {
             xAccessor: timeAccessor,
-            yAccessor: [primarySpringForceAccessor, primaryHelixForceAccessor, primaryBeltCentrifugalForceAccessor],
+            yAccessor: [primaryRadialForceAccessor, primaryFlyweightForceAccessor, primarySpringForceAccessor],
             config: {
                 title: "Primary Forces vs Time",
                 xAxis: { name: "Time", type: "value", unit: "s" },
                 yAxis: { name: "Primary Force", type: "value", unit: "N" },
-                seriesNames: ["Spring", "Helix", "Belt"],
+                seriesNames: ["Net", "Flyweight", "Spring"],
                 height: 400,
             showXLine: true,
             showYLine: false

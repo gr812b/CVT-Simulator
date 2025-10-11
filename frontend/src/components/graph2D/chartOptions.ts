@@ -428,7 +428,7 @@ export function createActiveIndexLabel(
     if (y.length === 1) {
       text += `${y[0].toFixed(2)})`;
     } else {
-      text += `[${y.map((value, index) => `${config.seriesNames?.[index]}: ${value.toFixed(2)}`).join(', ')}]`;
+      text += `[${y.map((value, index) => `${config.seriesNames?.[index]}: ${value.toFixed(2)}`).join(', ')}])`;
     }
   } else if (config.showXLine) {
       text = `${config.yAxis.name}: `;
