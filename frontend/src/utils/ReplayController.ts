@@ -84,7 +84,7 @@ export class ReplayController {
 
   pause() {
     this.isPlaying = false;
-     if (this.rafId != null) {
+    if (this.rafId != null) {
       cancelAnimationFrame(this.rafId);
       this.rafId = null;
     }
