@@ -34,13 +34,13 @@ export const Playback = () => {
                 text={'Home'}
                 icon={Home}
                 className={styles.navigateButton}
-                onClick={() => navigate('/')}
+                onClick={() => {replayController.pause(); navigate('/')}}
             />
             <Button
                 text={'Edit'}
                 icon={Edit}
                 className={styles.navigateButton}
-                onClick={() => navigate('/input')}
+                onClick={() => {replayController.pause(); navigate('/input')}}
             />
             </div>
             <div className={styles.displayGrid}>

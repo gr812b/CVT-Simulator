@@ -14,6 +14,19 @@ interface PlaybarProps {
 // Be aware that this places the times evenly along the slider, not according to their actual values.
 // This is because the slider only supports linear scales. If we want a non-linear scale, we would need to implement a custom slider.
 export const Playbar = ({ replayController, times }: PlaybarProps) => {
+    // Format seconds to m:ss:ss (minutes:seconds:hundredths). Handles undefined and negatives gracefully.
+    const formatTime = (sec?: number) => {
+        if (sec == null || !Number.isFinite(sec)) return '-:--:--';
+        const clamped = Math.max(0, sec);
+        const totalSec = Math.floor(clamped);
+        const m = Math.floor(totalSec / 60);
+        const s = totalSec % 60;
+        const fractional = clamped - totalSec;
+        // Hundredths of a second (00-99), avoid rounding to 100
+        const hs = Math.floor(Math.min(0.9999, Math.max(0, fractional)) * 100);
+        return `${m}:${s.toString().padStart(2, '0')}:${hs.toString().padStart(2, '0')}`;
+    };
+
     const [isPlaying, setIsPlaying] = useState(false);
     const [currentIndex, setCurrentIndex] = useState(0);
     const [speed, setSpeed] = useState(1);
@@ -84,7 +97,7 @@ export const Playbar = ({ replayController, times }: PlaybarProps) => {
                 sx={{ flex: 1, mx: 2 }}
             />
             <span className={styles.indexLabel}>
-                {currentIndex + 1} / {times.length} ({times[currentIndex] ?? '-'})
+                {formatTime(times[currentIndex])} / {formatTime(times[times.length - 1])}
             </span>
             <label className={styles.speedLabel}>
                 Speed:
