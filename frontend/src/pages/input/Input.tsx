@@ -62,8 +62,7 @@ export const Input = () => {
 
             const apiBody = mapParametersToApiBody(parsedValues);
             const result = await runSimulation(apiBody);
-
-            const unitConversion = convertSimulationData(result, UNIT_PRESETS.IMPERIAL);
+            const unitConversion = convertSimulationData(result, UNIT_PRESETS.BAJA);
 
             navigate('/playback', { 
                 state: { simulationResult: unitConversion }
