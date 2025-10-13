@@ -14,7 +14,8 @@ export type BaseUnitType =
   | 'distance'           // m
   | 'acceleration'       // m/s²
   | 'angle'              // rad
-  | 'time';              // s
+  | 'time'               // s
+  | 'dimensionless';     // unitless ratios
 
 // Available unit options for each base type
 export type UnitOptions = {
@@ -28,6 +29,8 @@ export type UnitOptions = {
   acceleration: 'm/s²' | 'ft/s²' | 'g';
   angle: 'rad' | 'deg';
   time: 's' | 'min' | 'hr';
+  // Dimensionless set to empty for a ratio
+  dimensionless: '' | '%'; 
 };
 
 // Core unit configuration - affects all values of that type
@@ -93,6 +96,10 @@ const CONVERSION_FACTORS: { [K in BaseUnitType]: Record<UnitOptions[K], number> 
     'min': 1 / 60,
     'hr': 1 / 3600,
   },
+  dimensionless: {
+    '': 1,
+    '%': 100,
+  },
 } as const;
 
 // Default configuration (all SI units)
@@ -111,6 +118,7 @@ export const UNIT_PRESETS = {
     acceleration: 'm/s²',
     angle: 'rad',
     time: 's',
+    dimensionless: '',
   } as UnitConfiguration,
   
   IMPERIAL: {
@@ -123,6 +131,7 @@ export const UNIT_PRESETS = {
     distance: 'ft',
     acceleration: 'ft/s²',
     angle: 'deg',
+    dimensionless: '%',
   } as UnitConfiguration,
   
   BAJA: {
@@ -136,7 +145,7 @@ export const UNIT_PRESETS = {
 };
 
 // Helper function to get the target unit for a specific type
-function getTargetUnit<T extends BaseUnitType>(
+export function getTargetUnit<T extends BaseUnitType>(
   baseType: T,
   config: UnitConfiguration
 ): UnitOptions[T] {
