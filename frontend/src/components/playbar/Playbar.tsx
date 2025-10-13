@@ -31,7 +31,6 @@ export const Playbar = ({ replayController, times }: PlaybarProps) => {
     const [currentIndex, setCurrentIndex] = useState(0);
     const [speed, setSpeed] = useState(1);
 
-
     useEffect(() => {
         const cleanup = replayController.on((event) => {
             if (event.type === ReplayEventType.StateChanged) {
@@ -79,7 +78,7 @@ export const Playbar = ({ replayController, times }: PlaybarProps) => {
                 {isPlaying ? <PauseIcon /> : <PlayIcon />}
             </button>
             <DiscreteSlider
-                values={times.map(formatTime)}
+                values={times}
                 selectedIndex={currentIndex}
                 onIndexChange={handleSeek}
             />
