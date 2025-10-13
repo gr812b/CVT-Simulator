@@ -34,9 +34,9 @@ export const accessorToUnit = new Map<AccessorStrategy, BaseUnitType>([
 // Helper function to get unit label for an accessor
 function getAxisUnit(accessor: AccessorStrategy): string {
     const unitType = accessorToUnit.get(accessor);
-    if (!unitType) return 'No unit found';
+    if (!unitType) return 'No unit associated with accessor!';
     
-    // Get SI unit as default
+    // Get BAJA unit as default
     const unit = getTargetUnit(unitType, UNIT_PRESETS.BAJA);
     return unit || '';
 }
