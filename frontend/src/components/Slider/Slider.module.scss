@@ -1,0 +1,134 @@
+@use '@styles/_fonts';
+@use '@styles/_colors';
+
+.sliderContainer {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+
+  .sliderWrapper {
+    position: relative;
+    width: 100%;
+
+    .sliderRoot {
+      position: relative;
+      display: flex;
+      align-items: center;
+      user-select: none;
+      touch-action: none;
+      width: 100%;
+      height: 2rem;
+
+      .sliderTrack {
+        background-color: var(--text-color);
+        position: relative;
+        flex-grow: 1;
+        border-radius: 9999px;
+        height: 0.5rem;
+        cursor: pointer;
+        transition: background-color 0.2s ease;
+
+        &:hover {
+            background-color: var(--grid-color);
+        }
+
+        .sliderRange {
+          position: absolute;
+          background-color: var(--accent);
+          border-radius: 9999px;
+          height: 100%;
+          transition: background-color 0.2s ease;
+        }
+
+        .tick {
+          position: absolute;
+          width: 0.5rem;
+          height: 0.5rem;
+          background-color: var(--grid-color);
+          border-radius: 50%;
+          top: 50%;
+          transform: translateX(-50%) translateY(-50%);
+          transition: all 0.2s ease;
+          pointer-events: none;
+
+          &.activeTick {
+              background-color: var(--accent);
+              transform: translateX(-50%) translateY(-50%) scale(1.2);
+          }
+        }
+      }
+
+      .sliderThumb {
+        display: block;
+        width: 1.5rem;
+        height: 1.5rem;
+        background-color: var(--primary);
+        border: 2px solid var(--accent);
+        border-radius: 50%;
+        cursor: grab;
+        transition: all 0.2s ease;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+
+        &:hover {
+          background-color: var(--accent);
+          transform: scale(1.1);
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+        }
+
+        &:focus {
+          outline: none;
+          box-shadow: 0 0 0 3px rgba(187, 8, 8, 0.3);
+        }
+
+        &:active {
+          cursor: grabbing;
+          transform: scale(1.05);
+        }
+
+        &[data-disabled] {
+          pointer-events: none;
+          opacity: 0.6;
+        }
+      }
+    }
+
+    .labels {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      margin-top: 1rem;
+      pointer-events: none; // Allow clicks to pass through to individual labels
+
+      .labelItem {
+        position: absolute;
+        transform: translateX(-50%);
+        @include fonts.text-paragraph;
+        color: var(--text-color);
+        opacity: 0.7;
+        transition: all 0.2s ease;
+        cursor: pointer;
+        pointer-events: auto;
+        padding: 0.25rem 0.5rem;
+        border-radius: 0.25rem;
+        font-size: 0.875rem;
+        line-height: 1.2;
+
+        &:hover {
+          opacity: 1;
+          background-color: var(--tooltip-bg);
+          transform: translateX(-50%) scale(1.05);
+        }
+
+        &.activeLabel {
+          opacity: 1;
+          color: var(--accent);
+          font-weight: 600;
+          transform: translateX(-50%) scale(1.1);
+        }
+      }
+    }
+  }
+}
+
+
