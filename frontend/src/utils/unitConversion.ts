@@ -29,7 +29,8 @@ export type UnitOptions = {
   acceleration: 'm/s²' | 'ft/s²' | 'g';
   angle: 'rad' | 'deg';
   time: 's' | 'min' | 'hr';
-  dimensionless: 'ratio' | '%';
+  // Dimensionless set to empty for a ratio
+  dimensionless: '' | '%'; 
 };
 
 // Core unit configuration - affects all values of that type
@@ -96,7 +97,7 @@ const CONVERSION_FACTORS: { [K in BaseUnitType]: Record<UnitOptions[K], number> 
     'hr': 1 / 3600,
   },
   dimensionless: {
-    'ratio': 1,
+    '': 1,
     '%': 100,
   },
 } as const;
@@ -117,7 +118,7 @@ export const UNIT_PRESETS = {
     acceleration: 'm/s²',
     angle: 'rad',
     time: 's',
-    dimensionless: 'ratio',
+    dimensionless: '',
   } as UnitConfiguration,
   
   IMPERIAL: {
