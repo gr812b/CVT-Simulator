@@ -1,7 +1,8 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import styles from './Playbar.module.scss';
 import { ReplayController, ReplayEventType, StateType } from '@utils/ReplayController';
 import { DiscreteSlider } from '@components/Slider/Slider';
+import { SpeedSelector } from '@components/SpeedSelector/SpeedSelector';
 import PlayIcon from '@assets/icons/play.svg?react';
 import PauseIcon from '@assets/icons/pause.svg?react';
 
@@ -45,6 +46,8 @@ export const Playbar = ({ replayController, times }: PlaybarProps) => {
         return cleanup;
     }, [replayController, times.length]);
 
+
+
     const handlePlayPause = () => {
         if (isPlaying) {
             replayController.pause();
@@ -53,9 +56,7 @@ export const Playbar = ({ replayController, times }: PlaybarProps) => {
         }
     };
 
-    const speedOptions = [0.25, 0.5, 0.75, 1, 1.25, 1.5, 2, 2.5, 3, 4];
-    const handleSpeedChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-        const newSpeed = Number(e.target.value);
+    const handleSpeedChange = (newSpeed: number) => {
         setSpeed(newSpeed);
         replayController.setSpeed(newSpeed);
     };
@@ -85,18 +86,10 @@ export const Playbar = ({ replayController, times }: PlaybarProps) => {
             <span className={styles.indexLabel}>
                 {formatTime(times[currentIndex])} / {formatTime(times[times.length - 1])}
             </span>
-            <label className={styles.speedLabel}>
-                Speed:
-                <select
-                    value={speed}
-                    onChange={handleSpeedChange}
-                    className={styles.speedSelect}
-                >
-                    {speedOptions.map(opt => (
-                        <option key={opt} value={opt}>{opt}x</option>
-                    ))}
-                </select>
-            </label>
+            <SpeedSelector
+                speed={speed}
+                onSpeedChange={handleSpeedChange}
+            />
         </div>
     );
 };
