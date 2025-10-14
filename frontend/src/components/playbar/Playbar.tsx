@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import styles from './Playbar.module.scss';
 import { ReplayController, ReplayEventType, StateType } from '@utils/ReplayController';
 import { DiscreteSlider } from '@components/Slider/Slider';
@@ -46,15 +46,27 @@ export const Playbar = ({ replayController, times }: PlaybarProps) => {
         return cleanup;
     }, [replayController, times.length]);
 
-
-
-    const handlePlayPause = () => {
+    const handlePlayPause = useCallback(() => {
         if (isPlaying) {
             replayController.pause();
         } else {
             replayController.play();
         }
-    };
+    }, [isPlaying, replayController]);
+
+    useEffect(() => {
+        const handleKeyDown = (event: KeyboardEvent) => {
+            if (event.code === 'Space') {
+                event.preventDefault(); // Prevent page scrolling
+                handlePlayPause();
+            }
+        };
+
+        document.addEventListener('keydown', handleKeyDown);
+        return () => {
+            document.removeEventListener('keydown', handleKeyDown);
+        };
+    }, [handlePlayPause]);
 
     const handleSpeedChange = (newSpeed: number) => {
         setSpeed(newSpeed);
