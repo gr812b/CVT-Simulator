@@ -12,12 +12,15 @@
     width: 2.5rem;
     height: 2.5rem;
     padding-left: 3px; /* to center the play icon visually */
-    background: white;
-    border-radius: 50%;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    filter: invert(1);
 
     svg {
       width: 1.5rem;
       height: 1.5rem;
+      color: currentColor;
     }
   }
 

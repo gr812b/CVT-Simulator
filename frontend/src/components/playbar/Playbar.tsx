@@ -78,14 +78,14 @@ export const Playbar = ({ replayController, times }: PlaybarProps) => {
             >
                 {isPlaying ? <PauseIcon /> : <PlayIcon />}
             </button>
+            <span className={styles.indexLabel}>
+                {formatTime(times[currentIndex])} / {formatTime(times[times.length - 1])}
+            </span>
             <DiscreteSlider
                 values={times}
                 selectedIndex={currentIndex}
                 onIndexChange={handleSeek}
             />
-            <span className={styles.indexLabel}>
-                {formatTime(times[currentIndex])} / {formatTime(times[times.length - 1])}
-            </span>
             <SpeedSelector
                 speed={speed}
                 onSpeedChange={handleSpeedChange}
