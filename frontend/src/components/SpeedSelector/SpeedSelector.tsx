@@ -43,7 +43,6 @@ export const SpeedSelector = ({
 
     return (
         <div className={styles.speedContainer}>
-
             <div className={styles.customDropdown} ref={dropdownRef}>
                 <button
                     className={styles.speedButton}
