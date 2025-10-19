@@ -167,14 +167,19 @@ function createTooltipFormatter(config: ChartConfig) {
       const dataValues = Array.isArray(param.value) ? param.value : param.data;
       
       if (Array.isArray(dataValues) && dataValues.length >= 2) {
-        const [xValue, yValue] = dataValues;
-        
         const xUnit = config.xAxis.unit ? ` ${config.xAxis.unit}` : '';
         const yUnit = config.yAxis.unit ? ` ${config.yAxis.unit}` : '';
-        
+
+        const xLine = `${config.xAxis.name}: ${stableValueFormatter(dataValues[0])}${xUnit}<br/>`;
+
+        const yLines = [];
+        for (let i = 1; i < dataValues.length; i++) {
+          yLines.push(`${config.seriesNames?.[i - 1] || ''} ${config.yAxis.name}: ${stableValueFormatter(dataValues[i])}${yUnit}`);
+        }
+
         return `
-          ${config.xAxis.name}: ${stableValueFormatter(xValue)}${xUnit}<br/>
-          ${config.yAxis.name}: ${stableValueFormatter(yValue)}${yUnit}
+          ${xLine}
+          ${yLines.join('<br/>')}
         `;
       }
     }

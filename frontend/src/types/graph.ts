@@ -77,7 +77,6 @@ export const graphConfigs: GraphConfig[] = [
             title: "Position vs Time",
             xAxis: { name: "Time", type: "value", unit: getAxisUnit(timeAccessor) },
             yAxis: { name: "Position", type: "value", unit: getAxisUnit(positionAccessor) },
-            seriesNames: ["Position"],
             height: 400,
             showXLine: true,
             showYLine: false
@@ -90,7 +89,6 @@ export const graphConfigs: GraphConfig[] = [
           title: "Velocity vs Time",
           xAxis: { name: "Time", type: "value", unit: getAxisUnit(timeAccessor) },
           yAxis: { name: "Velocity", type: "value", unit: getAxisUnit(velocityAccessor) },
-          seriesNames: ["Velocity"],
           height: 400,
           showXLine: true,
           showYLine: true
@@ -103,7 +101,6 @@ export const graphConfigs: GraphConfig[] = [
             title: "Acceleration vs Time",
             xAxis: { name: "Time", type: "value", unit: getAxisUnit(timeAccessor) },
             yAxis: { name: "Acceleration", type: "value", unit: getAxisUnit(accelerationAccessor) },
-            seriesNames: ["Acceleration"],
             height: 400,
             showXLine: true,
             showYLine: false
@@ -116,7 +113,6 @@ export const graphConfigs: GraphConfig[] = [
             title: "CVT Ratio vs Time",
             xAxis: { name: "Time", type: "value", unit: getAxisUnit(timeAccessor) },
             yAxis: { name: "CVT Ratio", type: "value", unit: getAxisUnit(cvtRatioAccessor) },
-            seriesNames: ["CVT Ratio"],
             height: 400,
             showXLine: true,
             showYLine: false
@@ -129,7 +125,6 @@ export const graphConfigs: GraphConfig[] = [
             title: "Shift Curve (Engine RPM vs Vehicle Speed)",
             xAxis: { name: "Vehicle Speed", type: "value", unit: getAxisUnit(velocityAccessor) },
             yAxis: { name: "Engine RPM", type: "value", unit: getAxisUnit(engineRpmAccessor) },
-            seriesNames: ["Engine RPM"],
             height: 400,
             showXLine: true,
             showYLine: false
@@ -142,7 +137,6 @@ export const graphConfigs: GraphConfig[] = [
             title: "Engine Torque vs Time",
             xAxis: { name: "Time", type: "value", unit: getAxisUnit(timeAccessor) },
             yAxis: { name: "Engine Torque", type: "value", unit: getAxisUnit(engineTorqueAccessor) },
-            seriesNames: ["Engine Torque"],
             height: 400,
             showXLine: true,
             showYLine: false
