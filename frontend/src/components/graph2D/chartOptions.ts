@@ -199,7 +199,12 @@ export function createChartConfig(userConfig: Partial<ChartConfig>, xData: numbe
  */
 export function createDataset(xData: number[], yData: number[][], config: ChartConfig): EChartsOption['dataset'] {
 
-  const source: (string | number | Date)[][] = [[config.xAxis.name, ...yData[0].map((_, i) => config.seriesNames?.[i] || `${config.yAxis.name} ${i + 1}`)]];
+
+  const source: (string | number | Date)[][] = [[config.xAxis.name]];
+  const seriesCount = yData[0]?.length || 0;
+  for (let i = 1; i < seriesCount; i++) {
+    source[0].push(config.seriesNames?.[i] || `${config.yAxis.name} ${i + 1}`);
+  }
 
   xData.forEach((x, index) => {
     const y = yData[index];
@@ -218,8 +223,8 @@ function createSeries(yData: number[][], config: ChartConfig): EChartsOption['se
     name: config.seriesNames?.[i] || `${config.yAxis.name} ${i + 1}`,
     smooth: config.smooth,
     showSymbol: config.showSymbol,
-    itemStyle: { color: COLORS.LINES[i] },
-    lineStyle: { color: COLORS.LINES[i] },
+    itemStyle: { color: COLORS.LINES[i % COLORS.LINES.length] },
+    lineStyle: { color: COLORS.LINES[i % COLORS.LINES.length] },
     encode: {
       x: config.xAxis.name,
       y: i + 1,
@@ -422,21 +427,14 @@ export function createActiveIndexLabel(
 
   const [x, y] = [xData[activeIndex], yData[activeIndex]];
 
+  const formatYValues = () =>
+    y.length === 1 ? y[0].toFixed(2) : `[${y.map((value, i) => `${config.seriesNames?.[i]}: ${value.toFixed(2)}`).join(', ')}]`;
+
   let text = '';
   if (config.showXLine && config.showYLine) {
-    text = `(${config.xAxis.name}: ${x.toFixed(2)}, ${config.yAxis.name}: `;
-    if (y.length === 1) {
-      text += `${y[0].toFixed(2)})`;
-    } else {
-      text += `[${y.map((value, index) => `${config.seriesNames?.[index]}: ${value.toFixed(2)}`).join(', ')}])`;
-    }
+    text = `(${config.xAxis.name}: ${x.toFixed(2)}, ${config.yAxis.name}: ${formatYValues()})`;
   } else if (config.showXLine) {
-      text = `${config.yAxis.name}: `;
-    if (y.length === 1) {
-      text += `${y[0].toFixed(2)}`;
-    } else {
-      text += `[${y.map((value, index) => `${config.seriesNames?.[index]}: ${value.toFixed(2)}`).join(', ')}]`;
-    }
+    text = `${config.yAxis.name}: ${formatYValues()}`;
   } else if (config.showYLine) {
     text = `${config.xAxis.name}: ${x.toFixed(2)}`;
   }
