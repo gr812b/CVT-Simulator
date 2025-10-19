@@ -264,8 +264,9 @@ export function createDataset(xData: number[], yData: number[][], config: ChartC
 
 
   const source: (string | number | Date)[][] = [[config.xAxis.name]];
+
   const seriesCount = yData[0]?.length || 0;
-  for (let i = 1; i < seriesCount; i++) {
+  for (let i = 0; i < seriesCount; i++) {
     source[0].push(config.seriesNames?.[i] || `${config.yAxis.name} ${i + 1}`);
   }
 
@@ -281,18 +282,25 @@ export function createDataset(xData: number[], yData: number[][], config: ChartC
  * Generates the series array for ECharts options
  */
 function createSeries(yData: number[][], config: ChartConfig): EChartsOption['series'] {
-  return yData[0].map((_, i) => ({
-    type: "line" as const,
-    name: config.seriesNames?.[i] || `${config.yAxis.name} ${i + 1}`,
-    smooth: config.smooth,
-    showSymbol: config.showSymbol,
-    itemStyle: { color: COLORS.LINES[i % COLORS.LINES.length] },
-    lineStyle: { color: COLORS.LINES[i % COLORS.LINES.length] },
-    encode: {
-      x: config.xAxis.name,
-      y: i + 1,
-    },
-  }));
+  const seriesCount = yData[0]?.length || 0;
+  const seriesArray: EChartsOption['series'] = [];
+
+  for (let i = 0; i < seriesCount; i++) {
+    seriesArray.push({
+      type: 'line',
+      name: config.seriesNames?.[i] || `${config.yAxis.name} ${i + 1}`,
+      smooth: config.smooth,
+      showSymbol: config.showSymbol,
+      itemStyle: { color: COLORS.LINES[i % COLORS.LINES.length] },
+      lineStyle: { color: COLORS.LINES[i % COLORS.LINES.length] },
+      encode: {
+        x: config.xAxis.name,
+        y: i + 1,
+      },
+    });
+  }
+
+  return seriesArray;
 }
 
 
