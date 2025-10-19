@@ -8,11 +8,12 @@ from cvt_simulator.constants.car_specs import (
     WHEEL_RADIUS,
     GEARBOX_RATIO,
 )
+from cvt_simulator.utils.theoretical_models import TheoreticalModels as tm
 
 
 class slip_model:
-    T_MAX = 10 # TODO: Replace with calculation
-    inertia = 0.1 # TODO: Replace with real value
+    T_MAX = 10000 # TODO: Replace with calculation
+    inertia = 1 # TODO: Replace with real value
 
     def __init__(
         self,
@@ -29,6 +30,9 @@ class slip_model:
         # Then determine if we slip on the primary
         sec_torque = self.get_secondary_torque(state)
 
+        # This is divided by the cvt ratio
+        sec_torque /= tm.current_cvt_ratio(state.shift_distance)
+
         torque_experienced = min(sec_torque, self.T_MAX)
         # T_MAX should rise with clamping force, meaning
         # the engine will experience more load and slow down more
@@ -38,7 +42,7 @@ class slip_model:
         engine_torque = self.engine_model.get_breakdown(state.engine_angular_velocity).torque
 
         # Now get accel
-        angular_accel = (torque_experienced - engine_torque) / self.inertia
+        angular_accel = (engine_torque - torque_experienced) / self.inertia
 
         return angular_accel
         
@@ -46,7 +50,7 @@ class slip_model:
 
     def get_secondary_torque(self, state: SystemState):
         # Load that is applied at wheel radius
-        load_force = self.load_model.get_breakdown(state).total_load_force
+        load_force = self.load_model.get_breakdown(state.car_velocity).net
 
         # Convert to torque
         load_torque = load_force * WHEEL_RADIUS

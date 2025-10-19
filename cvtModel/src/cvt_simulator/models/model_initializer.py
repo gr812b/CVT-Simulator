@@ -10,6 +10,7 @@ from cvt_simulator.constants.engine_specs import torque_curve
 from cvt_simulator.constants.car_specs import ENGINE_INERTIA
 from cvt_simulator.utils.conversions import deg_to_rad
 from cvt_simulator.utils.simulation_args import SimulationArgs
+from cvt_simulator.models.engine_slip_model import slip_model
 
 
 def get_models(args: SimulationArgs):
@@ -57,4 +58,10 @@ def get_models(args: SimulationArgs):
         secondary_radial_model,
     )
 
-    return car_model, cvt_shift
+    # TODO: TEMP Engine slip model
+    engine_slip_model = slip_model(
+        load_model=load_model,
+        engine_model=engine_model,
+    )
+
+    return car_model, cvt_shift, engine_slip_model

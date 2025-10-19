@@ -1,22 +1,13 @@
-class SystemState:
-    car_velocity: float
-    car_position: float
-    shift_velocity: float
-    shift_distance: float
+from dataclasses import dataclass
 
-    def __init__(
-        self,
-        car_velocity=0.0,
-        car_position=0.0,
-        shift_velocity=0.0,
-        shift_distance=0.0,
-        engine_angular_velocity=0.0,
-    ):
-        self.car_velocity = car_velocity
-        self.car_position = car_position
-        self.shift_velocity = shift_velocity
-        self.shift_distance = shift_distance
-        self.engine_angular_velocity = engine_angular_velocity
+
+@dataclass
+class SystemState:
+    car_velocity: float = 0.0
+    car_position: float = 0.0
+    shift_velocity: float = 0.0
+    shift_distance: float = 0.0
+    engine_angular_velocity: float = 0.0
 
     def to_array(self):
         """Converts the state to an array for solve_ivp."""

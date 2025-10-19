@@ -18,6 +18,7 @@ class TimeStepData:
     state: SystemState
     car_state: CarForceBreakdown
     cvt_state: CvtSystemForceBreakdown
+    engine_slip_state: float
 
 
 # TODO: figure out how to structure the returned object over the API as one guy, that makes sense for the
@@ -33,14 +34,15 @@ class FormattedSimulationResult:
         self.gather_model_states(result, args)
 
     def gather_model_states(self, result: SimulationResult, args: SimulationArgs):
-        car_model, cvt_model = get_models(args)
+        car_model, cvt_model, engine_slip_model = get_models(args)
 
         for i, (time, state) in enumerate(zip(result.time, result.states)):
             car_state = car_model.get_breakdown(state)
             cvt_state = cvt_model.get_breakdown(state)
+            engine_slip_state = engine_slip_model.get_breakdown(state)
 
             time_step_data = TimeStepData(
-                time=time, state=state, car_state=car_state, cvt_state=cvt_state
+                time=time, state=state, car_state=car_state, cvt_state=cvt_state, engine_slip_state=engine_slip_state
             )
             self.data.append(time_step_data)
 
@@ -70,10 +72,12 @@ class FormattedSimulationResult:
             flat_state = self._flatten_dataclass(time_step.state, "state")
             flat_car = self._flatten_dataclass(time_step.car_state, "car")
             flat_cvt = self._flatten_dataclass(time_step.cvt_state, "cvt")
+            flat_engine_slip = self._flatten_dataclass(time_step.engine_slip_state, "engine_slip")
 
             all_keys.update(flat_state.keys())
             all_keys.update(flat_car.keys())
             all_keys.update(flat_cvt.keys())
+            all_keys.update(flat_engine_slip.keys())
 
         # Initialize all columns
         data = {}
@@ -85,12 +89,14 @@ class FormattedSimulationResult:
             flat_state = self._flatten_dataclass(time_step.state, "state")
             flat_car = self._flatten_dataclass(time_step.car_state, "car")
             flat_cvt = self._flatten_dataclass(time_step.cvt_state, "cvt")
+            flat_engine_slip = self._flatten_dataclass(time_step.engine_slip_state, "engine_slip")
 
             # Merge all flattened data
             flat_combined = {
                 **flat_state,
                 **flat_car,
                 **flat_cvt,
+                **flat_engine_slip,
                 "time": time_step.time,
             }
 
@@ -115,6 +121,7 @@ class FormattedSimulationResult:
                 "state": time_step.state,
                 "car_state": time_step.car_state,
                 "cvt_state": time_step.cvt_state,
+                "engine_slip_state": time_step.engine_slip_state,
             }
             result_list.append(entry)
         return result_list

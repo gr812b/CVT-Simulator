@@ -5,9 +5,9 @@ from cvt_simulator.utils.frontend_output import FormattedSimulationResult
 
 
 def simulate_cvt_model(args: SimulationArgs, out_csv: str = "simulation_output.csv"):
-    car_model, cvt_model = get_models(args)
+    car_model, cvt_model, engine_slip_model = get_models(args)
 
-    simulation_runner = SimulationRunner(car_model, cvt_model)
+    simulation_runner = SimulationRunner(car_model, cvt_model, engine_slip_model)
     result = simulation_runner.run_simulation()
     result.write_csv(out_csv)
 
@@ -17,8 +17,9 @@ def simulate_cvt_model(args: SimulationArgs, out_csv: str = "simulation_output.c
 
 
 def main():
-    simulate_cvt_model(SimulationArgs())
-
+    formatted = simulate_cvt_model(SimulationArgs())
+    formatted.write_formatted_csv("front_end_output.csv")
+    # Plot engine_angular_velocity
 
 if __name__ == "__main__":
     main()
