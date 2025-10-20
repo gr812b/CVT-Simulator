@@ -174,7 +174,15 @@ function createTooltipFormatter(config: ChartConfig) {
 
         const yLines = [];
         for (let i = 1; i < dataValues.length; i++) {
-          yLines.push(`${config.seriesNames?.[i - 1] || ''} ${config.yAxis.name}: ${stableValueFormatter(dataValues[i])}${yUnit}`);
+            const marker = `<span style="
+              display:inline-block;
+              margin-right:6px;
+              border-radius:50%;
+              width:8px;
+              height:8px;
+              background-color:${COLORS.LINES[(i - 1) % COLORS.LINES.length]};
+          "></span>`;
+          yLines.push(`${marker} ${config.seriesNames?.[i - 1] || ''} ${config.yAxis.name}: ${stableValueFormatter(dataValues[i])}${yUnit}`);
         }
 
         return `
