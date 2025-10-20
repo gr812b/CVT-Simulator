@@ -99,5 +99,12 @@ class ExternalLoadForceBreakdown:
 @dataclass
 class CarForceBreakdown:
     external_forces: ExternalLoadForceBreakdown
-    engine_forces: EngineForceBreakdown
     acceleration: float
+
+# Slip shenanigans
+@dataclass
+class SlipBreakdown:
+    t_c: float
+    cvt_ratio_derivative: float
+    engine_forces: EngineForceBreakdown
+    engine_angular_accel: float

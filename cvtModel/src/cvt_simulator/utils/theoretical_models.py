@@ -84,6 +84,54 @@ class TheoreticalModels:
         # print(f"Primary: {primary_radius}, Secondary: {secondary_radius}, ratio: {secondary_radius / primary_radius}")
         return secondary_radius / primary_radius
 
+    # ---------------------------------------------------------
+    # NEW: Derivative of ratio wrt d (di/dd)
+    # ---------------------------------------------------------
+    @staticmethod
+    def cvt_ratio_derivative_wrt_d(d: float) -> float:
+        # primary + derivative
+        engage_distance = MIN_PRIM_RADIUS + BELT_HEIGHT
+        current_distance = (
+            (d - INITIAL_SHEAVE_DISPLACEMENT) / (2 * np.tan(BELT_ANGLE))
+            + MIN_PRIM_RADIUS
+            + BELT_HEIGHT
+        )
+        prim_radius = max(engage_distance, current_distance)
+        # dR_p/dd = 0 if clamped, else 1/(2tan(theta))
+        if current_distance <= engage_distance:
+            dRp_dd = 0.0
+        else:
+            dRp_dd = 1.0 / (2.0 * np.tan(BELT_ANGLE))
+
+        # secondary + derivative
+        C = CENTER_TO_CENTER
+        L = BELT_LENGTH
+        Delta = math.sqrt(
+            max((np.pi * C) ** 2 - 8 * np.pi * C * prim_radius + 4 * L * C - 8 * C**2, 1e-12)
+        )
+        dRs_dRp = 1.0 - (2.0 * np.pi * C) / Delta
+        dRs_dd = dRs_dRp * dRp_dd
+        sec_radius = (2 * prim_radius - np.pi * C + Delta) / 2.0
+
+        # effective radii (belt centerline)
+        P = prim_radius - BELT_HEIGHT / 2.0
+        S = sec_radius - BELT_HEIGHT / 2.0
+        Pp = dRp_dd
+        Sp = dRs_dd
+
+        # quotient rule: (S'P - SP') / P^2
+        if abs(P) < 1e-12:
+            return 0.0
+        return (Sp * P - S * Pp) / (P * P)
+
+    # ---------------------------------------------------------
+    # NEW: di/dt = (di/dd) * v
+    # ---------------------------------------------------------
+    @staticmethod
+    def current_cvt_ratio_rate_of_change(d: float, v: float) -> float:
+        di_dd = TheoreticalModels.cvt_ratio_derivative_wrt_d(d)
+        return di_dd * v
+
     @staticmethod
     def wrap_angle(
         primary_radius: float,

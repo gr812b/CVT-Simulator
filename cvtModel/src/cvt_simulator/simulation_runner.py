@@ -170,7 +170,7 @@ class SimulationRunner:
 
         # TODO: REMOVE TEMP LOGIC BELOW
         # We're gonna pretend to get slip here for testing
-        engine_angular_accel = self.engine_slip_model.get_breakdown(state)
+        engine_angular_accel = self.engine_slip_model.get_breakdown(state).engine_angular_accel
 
         return [
             car_acceleration,
@@ -190,7 +190,7 @@ class SimulationRunner:
 
         # Car math
         car_acceleration = self.car_model.get_breakdown(state).acceleration
-        engine_angular_accel = self.engine_slip_model.get_breakdown(state)
+        engine_angular_accel = self.engine_slip_model.get_breakdown(state).engine_angular_accel
 
         return [
             car_acceleration,

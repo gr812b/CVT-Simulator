@@ -20,11 +20,7 @@ def get_models(args: SimulationArgs):
         car_mass=args.vehicle_weight + args.driver_weight,
         incline_angle=deg_to_rad(args.angle_of_incline),
     )
-    car_model = CarModel(
-        car_mass=args.vehicle_weight + args.driver_weight,
-        load_model=load_model,
-        engine_model=engine_model,
-    )
+    
 
     # CVT dynamics
     primary_model = PrimaryPulleyModel(
@@ -62,6 +58,14 @@ def get_models(args: SimulationArgs):
     engine_slip_model = slip_model(
         load_model=load_model,
         engine_model=engine_model,
+        car_mass=args.vehicle_weight + args.driver_weight,
+    )
+
+    car_model = CarModel(
+        car_mass=args.vehicle_weight + args.driver_weight,
+        load_model=load_model,
+        engine_model=engine_model,
+        engine_slip_model=engine_slip_model,
     )
 
     return car_model, cvt_shift, engine_slip_model
