@@ -17,8 +17,8 @@ const positionAccessor: AccessorStrategy = (point) => point.state.car_position;
 const velocityAccessor: AccessorStrategy = (point) => point.state.car_velocity;
 const accelerationAccessor: AccessorStrategy = (point) => point.car_state.acceleration;
 const cvtRatioAccessor: AccessorStrategy = (point) => point.cvt_state.cvt_ratio;
-const engineRpmAccessor: AccessorStrategy = (point) => point.car_state.engine_forces.angular_velocity;
-const engineTorqueAccessor: AccessorStrategy = (point) => point.car_state.engine_forces.torque;
+const engineRpmAccessor: AccessorStrategy = (point) => point.engine_slip_state.engine_forces.angular_velocity;
+const engineTorqueAccessor: AccessorStrategy = (point) => point.engine_slip_state.engine_forces.torque;
 
 // Mapping from accessor to unit type
 export const accessorToUnit = new Map<AccessorStrategy, BaseUnitType>([

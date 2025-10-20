@@ -1,5 +1,5 @@
 from typing import List
-from cvt_simulator.models.dataTypes import CarForceBreakdown, CvtSystemForceBreakdown
+from cvt_simulator.models.dataTypes import CarForceBreakdown, CvtSystemForceBreakdown, SlipBreakdown
 from cvt_simulator.utils.system_state import SystemState
 import pandas as pd
 from cvt_simulator.models.model_initializer import get_models
@@ -18,7 +18,7 @@ class TimeStepData:
     state: SystemState
     car_state: CarForceBreakdown
     cvt_state: CvtSystemForceBreakdown
-    engine_slip_state: float
+    engine_slip_state: SlipBreakdown
 
 
 # TODO: figure out how to structure the returned object over the API as one guy, that makes sense for the

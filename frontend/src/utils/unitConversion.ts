@@ -6,6 +6,7 @@ type TimeStepDataModel = components['schemas']['TimeStepDataModel'];
 // Base unit types that the API provides (all SI units)
 export type BaseUnitType = 
   | 'angular_velocity'    // rad/s
+  | 'angular_acceleration' // rad/s²
   | 'mass'               // kg
   | 'force'              // N
   | 'torque'             // Nm
@@ -20,6 +21,7 @@ export type BaseUnitType =
 // Available unit options for each base type
 export type UnitOptions = {
   angular_velocity: 'rad/s' | 'rpm' | 'deg/s';
+  angular_acceleration: 'rad/s²' | 'rpm/s' | 'deg/s²';
   mass: 'kg' | 'lb' | 'g';
   force: 'N' | 'lbf' | 'kN';
   torque: 'Nm' | 'lb·ft' | 'kNm';
@@ -49,6 +51,11 @@ const CONVERSION_FACTORS: { [K in BaseUnitType]: Record<UnitOptions[K], number> 
     'rad/s': 1,
     'rpm': 30 / Math.PI,
     'deg/s': 180 / Math.PI,
+  },
+  angular_acceleration: {
+    'rad/s²': 1,
+    'rpm/s': 30 / Math.PI,
+    'deg/s²': 180 / Math.PI,
   },
   mass: {
     'kg': 1,
@@ -109,6 +116,7 @@ export const DEFAULT_UNIT_CONFIG: UnitConfiguration = {};
 export const UNIT_PRESETS = {
   SI: {
     angular_velocity: 'rad/s',
+    angular_acceleration: 'rad/s²',
     mass: 'kg',
     force: 'N',
     torque: 'Nm',
@@ -123,6 +131,7 @@ export const UNIT_PRESETS = {
   
   IMPERIAL: {
     angular_velocity: 'rpm',
+    angular_acceleration: 'rpm/s',
     mass: 'lb',
     force: 'lbf',
     torque: 'lb·ft',
@@ -136,6 +145,7 @@ export const UNIT_PRESETS = {
   
   BAJA: {
     angular_velocity: 'rpm',
+    angular_acceleration: 'rpm/s',
     power: 'hp',
     velocity: 'km/h',
     distance: 'm',
@@ -179,60 +189,66 @@ function convertTimeStepData(
     convertValue(value, type, getTargetUnit(type, config));
 
   return {
-    time: conv(timeStep.time, 'time'),
-    
-    state: {
-      car_velocity: conv(timeStep.state.car_velocity, 'velocity'),
-      car_position: conv(timeStep.state.car_position, 'distance'),
-      shift_velocity: conv(timeStep.state.shift_velocity, 'velocity'),
-      shift_distance: conv(timeStep.state.shift_distance, 'distance'),
+  time: conv(timeStep.time, 'time'),
+
+  state: {
+    car_velocity: conv(timeStep.state.car_velocity, 'velocity'),
+    car_position: conv(timeStep.state.car_position, 'distance'),
+    shift_velocity: conv(timeStep.state.shift_velocity, 'velocity'),
+    shift_distance: conv(timeStep.state.shift_distance, 'distance'),
+    engine_angular_velocity: conv(timeStep.state.engine_angular_velocity, 'angular_velocity'),
+  },
+
+  car_state: {
+    external_forces: {
+      incline_force: conv(timeStep.car_state.external_forces.incline_force, 'force'),
+      drag_force: conv(timeStep.car_state.external_forces.drag_force, 'force'),
+      net: conv(timeStep.car_state.external_forces.net, 'force'),
     },
-    
-    car_state: {
-      external_forces: {
-        incline_force: conv(timeStep.car_state.external_forces.incline_force, 'force'),
-        drag_force: conv(timeStep.car_state.external_forces.drag_force, 'force'),
-        net: conv(timeStep.car_state.external_forces.net, 'force'),
+    acceleration: conv(timeStep.car_state.acceleration, 'acceleration'),
+  },
+
+  cvt_state: {
+    primaryRadialForce: {
+      pulleyForce: convertPulleyForce(timeStep.cvt_state.primaryRadialForce.pulleyForce, config),
+      beltCentrifugalForce: {
+        mass: conv(timeStep.cvt_state.primaryRadialForce.beltCentrifugalForce.mass, 'mass'),
+        radius: conv(timeStep.cvt_state.primaryRadialForce.beltCentrifugalForce.radius, 'distance'),
+        wrap_angle: conv(timeStep.cvt_state.primaryRadialForce.beltCentrifugalForce.wrap_angle, 'angle'),
+        angular_velocity: conv(timeStep.cvt_state.primaryRadialForce.beltCentrifugalForce.angular_velocity, 'angular_velocity'),
+        net: conv(timeStep.cvt_state.primaryRadialForce.beltCentrifugalForce.net, 'force'),
       },
-      engine_forces: {
-        torque: conv(timeStep.car_state.engine_forces.torque, 'torque'),
-        power: conv(timeStep.car_state.engine_forces.power, 'power'),
-        angular_velocity: conv(timeStep.car_state.engine_forces.angular_velocity, 'angular_velocity'),
-      },
-      acceleration: conv(timeStep.car_state.acceleration, 'acceleration'),
+      radialPulleyForce: conv(timeStep.cvt_state.primaryRadialForce.radialPulleyForce, 'force'),
+      net: conv(timeStep.cvt_state.primaryRadialForce.net, 'force'),
     },
-    
-    cvt_state: {
-      primaryRadialForce: {
-        pulleyForce: convertPulleyForce(timeStep.cvt_state.primaryRadialForce.pulleyForce, config),
-        beltCentrifugalForce: {
-          mass: conv(timeStep.cvt_state.primaryRadialForce.beltCentrifugalForce.mass, 'mass'),
-          radius: conv(timeStep.cvt_state.primaryRadialForce.beltCentrifugalForce.radius, 'distance'),
-          wrap_angle: conv(timeStep.cvt_state.primaryRadialForce.beltCentrifugalForce.wrap_angle, 'angle'),
-          angular_velocity: conv(timeStep.cvt_state.primaryRadialForce.beltCentrifugalForce.angular_velocity, 'angular_velocity'),
-          net: conv(timeStep.cvt_state.primaryRadialForce.beltCentrifugalForce.net, 'force'),
-        },
-        radialPulleyForce: conv(timeStep.cvt_state.primaryRadialForce.radialPulleyForce, 'force'),
-        net: conv(timeStep.cvt_state.primaryRadialForce.net, 'force'),
+    secondaryRadialForce: {
+      pulleyForce: convertPulleyForce(timeStep.cvt_state.secondaryRadialForce.pulleyForce, config),
+      beltCentrifugalForce: {
+        mass: conv(timeStep.cvt_state.secondaryRadialForce.beltCentrifugalForce.mass, 'mass'),
+        radius: conv(timeStep.cvt_state.secondaryRadialForce.beltCentrifugalForce.radius, 'distance'),
+        wrap_angle: conv(timeStep.cvt_state.secondaryRadialForce.beltCentrifugalForce.wrap_angle, 'angle'),
+        angular_velocity: conv(timeStep.cvt_state.secondaryRadialForce.beltCentrifugalForce.angular_velocity, 'angular_velocity'),
+        net: conv(timeStep.cvt_state.secondaryRadialForce.beltCentrifugalForce.net, 'force'),
       },
-      secondaryRadialForce: {
-        pulleyForce: convertPulleyForce(timeStep.cvt_state.secondaryRadialForce.pulleyForce, config),
-        beltCentrifugalForce: {
-          mass: conv(timeStep.cvt_state.secondaryRadialForce.beltCentrifugalForce.mass, 'mass'),
-          radius: conv(timeStep.cvt_state.secondaryRadialForce.beltCentrifugalForce.radius, 'distance'),
-          wrap_angle: conv(timeStep.cvt_state.secondaryRadialForce.beltCentrifugalForce.wrap_angle, 'angle'),
-          angular_velocity: conv(timeStep.cvt_state.secondaryRadialForce.beltCentrifugalForce.angular_velocity, 'angular_velocity'),
-          net: conv(timeStep.cvt_state.secondaryRadialForce.beltCentrifugalForce.net, 'force'),
-        },
-        radialPulleyForce: conv(timeStep.cvt_state.secondaryRadialForce.radialPulleyForce, 'force'),
-        net: conv(timeStep.cvt_state.secondaryRadialForce.net, 'force'),
-      },
-      friction: conv(timeStep.cvt_state.friction, 'force'),
-      acceleration: conv(timeStep.cvt_state.acceleration, 'acceleration'),
-      cvt_ratio: timeStep.cvt_state.cvt_ratio, // Dimensionless
-      net: conv(timeStep.cvt_state.net, 'force'),
+      radialPulleyForce: conv(timeStep.cvt_state.secondaryRadialForce.radialPulleyForce, 'force'),
+      net: conv(timeStep.cvt_state.secondaryRadialForce.net, 'force'),
     },
-  };
+    friction: conv(timeStep.cvt_state.friction, 'force'),
+    acceleration: conv(timeStep.cvt_state.acceleration, 'acceleration'),
+    cvt_ratio: timeStep.cvt_state.cvt_ratio, // Dimensionless
+    net: conv(timeStep.cvt_state.net, 'force'),
+  },
+  engine_slip_state: {
+    t_c: conv(timeStep.engine_slip_state.t_c, 'force'),
+    cvt_ratio_derivative: timeStep.engine_slip_state.cvt_ratio_derivative, // Dimensionless
+    engine_forces: {
+      torque: conv(timeStep.engine_slip_state.engine_forces.torque, 'torque'),
+      power: conv(timeStep.engine_slip_state.engine_forces.power, 'power'),
+      angular_velocity: conv(timeStep.engine_slip_state.engine_forces.angular_velocity, 'angular_velocity')
+    },
+    engine_angular_accel: conv(timeStep.engine_slip_state.engine_angular_accel, 'angular_acceleration'),
+  }
+};
 }
 
 // Convert primary or secondary pulley force (needed to handle the union type)

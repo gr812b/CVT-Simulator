@@ -32,7 +32,7 @@ class CarModel:
         engine_to_wheel_ratio = tm.current_cvt_ratio(state.shift_distance) * GEARBOX_RATIO
         accel = WHEEL_RADIUS * (t_c * engine_to_wheel_ratio - load_torque) / (driveline_inertia + self.car_mass * WHEEL_RADIUS ** 2)
 
-        return CarForceBreakdown(load_torque, accel)
+        return CarForceBreakdown(self.load_model.get_breakdown(state.car_velocity), accel)
 
     def _get_engine_velocity(self, shift_distance, car_velocity):
         cvt_ratio = tm.current_cvt_ratio(shift_distance)
