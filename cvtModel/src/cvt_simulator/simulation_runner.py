@@ -57,7 +57,8 @@ class SimulationRunner:
     def run_simulation(self) -> SimulationResult:
         """Run the simulation and return results."""
         cvt_system_ode = self._get_ode_function()
-        time_eval_phase1 = np.linspace(0, self.TOTAL_SIM_TIME, 10000)
+        # Use a single global time grid for the entire simulation
+        time_eval = np.linspace(0, self.TOTAL_SIM_TIME, 10000)
         events = [
             get_shift_steady_event(self.cvt_shift_model),
             car_velocity_constraint_event,
@@ -68,7 +69,7 @@ class SimulationRunner:
             cvt_system_ode,
             0,
             self.INITIAL_STATE.to_array(),
-            time_eval_phase1,
+            time_eval,
             events,
         )
 
@@ -77,26 +78,32 @@ class SimulationRunner:
             event_time = solution_phase1.t_events[0][0]
             event_state = solution_phase1.y_events[0][0]
 
-            # Define a new t_eval for phase 2 (you can adjust the number of points as needed)
-            time_eval_phase2 = np.linspace(event_time, self.TOTAL_SIM_TIME, 1000)
-
             cvt_system_full_shift_ode = self._get_full_shift_ode_function()
 
-            solution_phase2 = self._solve(
-                cvt_system_full_shift_ode,
-                event_time,
-                event_state,
-                time_eval_phase2,
-                [car_velocity_constraint_event],
-            )
+            # Use the remaining portion of the original time grid for phase 2
+            time_eval_phase2 = time_eval[time_eval > event_time]
 
-            phase1_indices = solution_phase1.t <= event_time
-            combined_t = np.concatenate(
-                [solution_phase1.t[phase1_indices], solution_phase2.t[1:]]
-            )
-            combined_y = np.hstack(
-                [solution_phase1.y[:, phase1_indices], solution_phase2.y[:, 1:]]
-            )
+            if time_eval_phase2.size > 0:
+                solution_phase2 = self._solve(
+                    cvt_system_full_shift_ode,
+                    event_time,
+                    event_state,
+                    time_eval_phase2,
+                    [car_velocity_constraint_event],
+                )
+
+                # Phase 1 output is already truncated by the event; just append phase 2
+                combined_t = np.concatenate([solution_phase1.t, solution_phase2.t])
+                combined_y = np.hstack(
+                    [
+                        solution_phase1.y,
+                        solution_phase2.y,
+                    ]
+                )
+            else:
+                # No remaining time points to evaluate in phase 2
+                combined_t = solution_phase1.t
+                combined_y = solution_phase1.y
         else:
             # Otherwise, use the phase 1 solution entirely.
             combined_t = solution_phase1.t

@@ -1,38 +1,63 @@
+import { useNavigate } from 'react-router-dom';
 import { useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
-import { Page } from '@components/graph2D/page';
-import type { RunResponse } from '@utils/api';
-
-// Type the location state
-interface PlaybackLocationState {
-  simulationResult: RunResponse;
-}
+import styles from './Playback.module.scss';
+import { Button } from '@components/button/Button';
+import { Graph2D } from '@components/graph2D/graph2D';
+import { Playbar } from '@components/playbar/Playbar';
+import Home from '@assets/icons/home.svg?react';
+import Edit from '@assets/icons/edit.svg?react';
+import { usePlaybackData } from '@hooks/usePlaybackData';
 
 export const Playback = () => {
     const navigate = useNavigate();
-    const location = useLocation();
-    const simulationResult = (location.state as PlaybackLocationState | null)?.simulationResult;
+    const playbackData = usePlaybackData();
 
-    // Redirect to input page if no simulation data is available
+    // Handle redirect if no simulation data is available
     useEffect(() => {
-        if (!simulationResult) {
+        if (!playbackData) {
             console.warn('No simulation data available. Redirecting to input page.');
             navigate('/input');
         }
-    }, [simulationResult, navigate]);
+    }, [playbackData, navigate]);
 
-    // Don't render anything if no simulation data
-    if (!simulationResult) {
+    // If no data is available, show loading or return null while redirect happens
+    if (!playbackData) {
         return null;
     }
 
-    // Log simulation data to console
-    console.log('Simulation Result:', simulationResult);
-    console.log('Number of data points:', simulationResult.data.length);
+    const { graphs, replayController, times, activeIndex } = playbackData;
 
     return (
-        <div>
-            <Page />
+        <div className={styles.playback}>
+            <div className={styles.buttonsContainer}>
+            <Button
+                text={'Home'}
+                icon={Home}
+                className={styles.navigateButton}
+                onClick={() => {replayController.pause(); navigate('/')}}
+            />
+            <Button
+                text={'Edit'}
+                icon={Edit}
+                className={styles.navigateButton}
+                onClick={() => {replayController.pause(); navigate('/input')}}
+            />
+            </div>
+            <div className={styles.displayGrid}>
+                {graphs.map((graph, index) => (
+                    <Graph2D
+                        key={index}
+                        {...graph}
+                        activeIndex={activeIndex}
+                    />
+                ))}
+            </div>
+            <div className={styles.playbarContainer}>
+                <Playbar 
+                    replayController={replayController}
+                    times={times}
+                />
+            </div>
         </div>
     );
 };

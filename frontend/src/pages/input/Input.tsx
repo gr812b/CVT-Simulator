@@ -19,6 +19,8 @@ import Play from '@assets/icons/play.svg?react';
 import Edit from '@assets/icons/edit.svg?react';
 import styles from './Input.module.scss';
 
+import { convertSimulationData, UNIT_PRESETS } from '@utils/unitConversion';
+
 // Precomputed list of all groups and parameters
 const allGroups = Object.keys(GROUP_TITLES) as ParameterGroup[];
 const allParameters = Object.keys(PARAMETERS) as Parameter[];
@@ -60,9 +62,10 @@ export const Input = () => {
 
             const apiBody = mapParametersToApiBody(parsedValues);
             const result = await runSimulation(apiBody);
+            const unitConversion = convertSimulationData(result, UNIT_PRESETS.BAJA);
 
             navigate('/playback', { 
-                state: { simulationResult: result }
+                state: { simulationResult: unitConversion }
             });
         } catch (error) {
             console.error('Simulation failed:', error);
@@ -89,6 +92,7 @@ export const Input = () => {
             <ParameterDescription
                 name={parameter ? parameter.label : "No Parameter Selected"}
                 description={parameter ? parameter.description : "Click on an input field to see its description."}
+                img={parameter ? parameter.img : undefined}
             />
         );
     }

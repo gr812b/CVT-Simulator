@@ -1,4 +1,7 @@
 import { validators } from "@utils/validation"
+import primaryCVT from "@assets/images/primary_cvt.png"
+import secondaryCVT from "@assets/images/secondary_cvt.png"
+import environment from "@assets/images/environment.png"
 
 type ParameterValue = string | number | boolean
 type ParameterType = 'string' | 'number' | 'boolean'
@@ -27,6 +30,7 @@ interface BaseParameterConfig<T extends ParameterValue, K extends ParameterType>
     validate: (value: string) => string | null;
     units: string;
     group: ParameterGroup;
+    img?: string;
 }
 
 type StringParameter = BaseParameterConfig<string, 'string'>;
@@ -51,6 +55,7 @@ const PARAMETERS_IMPL = {
     validate: validators.gtZero,
     units: 'kg',
     group: 'primary',
+    img: primaryCVT,
   },
   PrimarySpringRate: {
     label: 'Primary Spring Rate',
@@ -61,6 +66,7 @@ const PARAMETERS_IMPL = {
     validate: validators.gtZero,
     units: 'N/m',
     group: 'primary',
+    img: primaryCVT,
   },
   PrimarySpringPretension: {
     label: 'Primary Spring Pretension',
@@ -71,6 +77,7 @@ const PARAMETERS_IMPL = {
     validate: validators.gteZero,
     units: 'm',
     group: 'primary',
+    img: primaryCVT,
   },
   SecondaryTorsionSpringRate: {
     label: 'Secondary Torsion Spring Rate',
@@ -81,6 +88,7 @@ const PARAMETERS_IMPL = {
     validate: validators.gtZero,
     units: 'Nm/rad',
     group: 'secondary',
+    img: secondaryCVT,
   },
   SecondaryCompressionSpringRate: {
     label: 'Secondary Compression Spring Rate',
@@ -91,6 +99,7 @@ const PARAMETERS_IMPL = {
     validate: validators.gtZero,
     units: 'N/m',
     group: 'secondary',
+    img: secondaryCVT,
   },
   SecondaryRotationalSpringPretension: {
     label: 'Secondary Rotational Spring Pretension',
@@ -101,6 +110,7 @@ const PARAMETERS_IMPL = {
     validate: validators.gteZero,
     units: 'degrees',
     group: 'secondary',
+    img: secondaryCVT,
   },
   SecondaryLinearSpringPretension: {
     label: 'Secondary Linear Spring Pretension',
@@ -110,7 +120,8 @@ const PARAMETERS_IMPL = {
     defaultValue: 0.1,
     validate: validators.gteZero,
     units: 'm',
-    group: 'secondary',
+    group: 'secondary', 
+    img: secondaryCVT,
   },
   VehicleWeight: {
     label: 'Vehicle Weight',
@@ -120,6 +131,7 @@ const PARAMETERS_IMPL = {
     validate: validators.gtZero,
     units: 'kg',
     group: 'environment',
+    img: environment,
   },
   DriverWeight: {
     label: 'Driver Weight',
@@ -129,6 +141,7 @@ const PARAMETERS_IMPL = {
     validate: validators.gtZero,
     units: 'kg',
     group: 'environment',
+    img: environment,
   },
   Traction: {
     label: 'Traction',
@@ -138,6 +151,7 @@ const PARAMETERS_IMPL = {
     validate: validators.percent,
     units: '%',
     group: 'environment',
+    img: environment,
   },
   AngleOfIncline: {
     label: 'Angle of Incline',
@@ -147,6 +161,7 @@ const PARAMETERS_IMPL = {
     validate: validators.gteZero,
     units: 'degrees',
     group: 'environment',
+    img: environment,
   },
   TotalDistance: {
     label: 'Total Distance',
@@ -156,6 +171,7 @@ const PARAMETERS_IMPL = {
     validate: validators.gtZero,
     units: 'm',
     group: 'environment',
+    img: environment,
   },
 } as const;
 

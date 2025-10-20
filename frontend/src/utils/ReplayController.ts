@@ -1,11 +1,7 @@
-// TODO: Align this with the actual data we expect from the api
-interface dataPoint {
-    timestamp: number;
-    rpm: number;
-    car_speed: number;
-}
+import type { RunResponse } from './api';
 
-type replayData = dataPoint[];
+type DataPoint = RunResponse['data'][number];
+type ReplayData = DataPoint[];
 
 export enum ReplayEventType {
   StateChanged = 'stateChanged',
@@ -20,11 +16,11 @@ export enum StateType {
 
 type ReplayEvent =
   | { type: ReplayEventType.StateChanged; state: StateType }
-  | { type: ReplayEventType.Progress; currentIndex: number; data: dataPoint }
+  | { type: ReplayEventType.Progress; currentIndex: number; data: DataPoint }
   | { type: ReplayEventType.Finished };
 
 export class ReplayController {
-  private data: replayData;
+  private data: ReplayData;
   private isPlaying = false;
   private currentIndex = 0;
   private lastTimestamp = 0;
@@ -32,8 +28,12 @@ export class ReplayController {
   private speed = 1;
   private listeners: ((event: ReplayEvent) => void)[] = [];
 
+  // rAF management
+  private rafId: number | null = null;
+  private loopBound = (now: number) => this.loop(now);
+
   constructor(
-    data: replayData,
+    data: ReplayData,
   ) {
     this.data = data;
   }
@@ -71,17 +71,23 @@ export class ReplayController {
       this.startTime = performance.now();
     } else {
       // Adjust the start time for resuming from the current index
-      this.startTime = performance.now() - this.lastTimestamp / this.speed;
+      this.startTime = performance.now() - (this.lastTimestamp * 1000) / this.speed; // Convert seconds to ms
     }
 
     this.emit({ type: ReplayEventType.StateChanged, state: StateType.Playing });
     this.isPlaying = true;
 
-    this.loop();
+    // ensure only one rAF loop
+    if (this.rafId != null) cancelAnimationFrame(this.rafId);
+    this.rafId = requestAnimationFrame(this.loopBound);
   }
 
   pause() {
     this.isPlaying = false;
+    if (this.rafId != null) {
+      cancelAnimationFrame(this.rafId);
+      this.rafId = null;
+    }
     this.emit({ type: ReplayEventType.StateChanged, state: StateType.Paused });
   }
 
@@ -96,6 +102,12 @@ export class ReplayController {
       console.warn('Speed must be positive. Ignoring invalid value:', newSpeed);
       return;
     }
+    // keep timeline continuous when changing speed during playback
+    if (this.isPlaying) {
+      const now = performance.now();
+      const elapsedSec = ((now - this.startTime) / 1000) * this.speed;
+      this.startTime = now - (elapsedSec * 1000) / newSpeed;
+    }
     this.speed = newSpeed;
   }
 
@@ -103,7 +115,7 @@ export class ReplayController {
   setCurrentIndex(idx: number) {
     if (idx < 0 || idx >= this.data.length) return;
     this.currentIndex = idx;
-    this.lastTimestamp = this.data[idx]?.timestamp || 0;
+    this.lastTimestamp = this.data[idx]?.time || 0;
     // Emit progress event if paused
     if (!this.isPlaying) {
       this.emit({
@@ -114,26 +126,40 @@ export class ReplayController {
     }
   }
 
-  private loop() {
-    if (!this.isPlaying) return;
-
-    const now = performance.now();
-    const elapsed = (now - this.startTime) * this.speed;
+   /** Advance indices up to the given elapsed time.
+   * Returns the latest DataPoint processed in this frame (or null). */
+  private stepUntil(elapsedSeconds: number): DataPoint | null {
+    let lastPoint: DataPoint | null = null;
 
     while (
       this.currentIndex < this.data.length &&
-      this.data[this.currentIndex].timestamp <= elapsed
+      this.data[this.currentIndex].time <= elapsedSeconds
     ) {
-      const dataPoint = this.data[this.currentIndex];
+      lastPoint = this.data[this.currentIndex];
+      this.lastTimestamp = lastPoint.time;
+      this.currentIndex++;
+    }
 
+    return lastPoint;
+  }
+
+  /** Single rAF callback that:
+   *  - computes elapsed,
+   *  - advances simulation (possibly multiple data points),
+   *  - emits at most once with the latest point,
+   *  - schedules the next frame. */
+  private loop(now: number) {
+    if (!this.isPlaying) return;
+
+    const elapsedSec = ((now - this.startTime) / 1000) * this.speed;
+    const latest = this.stepUntil(elapsedSec);
+
+    if (latest) {
       this.emit({
         type: ReplayEventType.Progress,
         currentIndex: this.currentIndex,
-        data: dataPoint,
+        data: latest, // only the newest point this frame
       });
-
-      this.lastTimestamp = dataPoint.timestamp;
-      this.currentIndex++;
     }
 
     if (this.currentIndex >= this.data.length) {
@@ -142,7 +168,6 @@ export class ReplayController {
       return;
     }
 
-    // Continue the loop
-    requestAnimationFrame(this.loop.bind(this));
+    this.rafId = requestAnimationFrame(this.loopBound);
   }
 }

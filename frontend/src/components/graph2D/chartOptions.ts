@@ -1,4 +1,8 @@
-import type { EChartsOption, MarkLineComponentOption } from 'echarts';
+import type { 
+  EChartsOption, 
+  MarkLineComponentOption, 
+  DefaultLabelFormatterCallbackParams 
+} from 'echarts';
 import { inferAxisType } from './validation';
 
 /**
@@ -104,6 +108,72 @@ const CHART_DEFAULTS = {
 } as const;
 
 /**
+ * Stable value formatter function to prevent unnecessary re-renders for tooltip
+ */
+const stableValueFormatter = (value: unknown): string => {
+  return typeof value === 'number' ? value.toFixed(2) : String(value);
+};
+
+/**
+ * Cache for memoized tooltip formatters to prevent unnecessary re-renders
+ */
+const tooltipFormatterCache = new Map<string, (params: DefaultLabelFormatterCallbackParams | DefaultLabelFormatterCallbackParams[]) => string>();
+
+/**
+ * Creates a tooltip formatter that includes units.
+ * Returns either a string template or a stable function reference.
+ */
+function createTooltipFormatter(config: ChartConfig) {
+  // For simple cases, we could use ECharts string templates:
+  // return `${config.xAxis.name}: {c0}<br/>${config.yAxis.name}: {c1}`;
+  
+  // But for unit support and formatting, we need the function approach with caching
+  const cacheKey = JSON.stringify({
+    xAxisName: config.xAxis.name,
+    yAxisName: config.yAxis.name,
+    xAxisUnit: config.xAxis.unit,
+    yAxisUnit: config.yAxis.unit,
+  });
+  
+  // Return cached formatter if it exists
+  if (tooltipFormatterCache.has(cacheKey)) {
+    return tooltipFormatterCache.get(cacheKey)!;
+  }
+  
+  // Create new formatter
+  const formatter = (params: DefaultLabelFormatterCallbackParams | DefaultLabelFormatterCallbackParams[]) => {
+    // ECharts passes either a single param object or an array of param objects
+    // For 'axis' trigger (which we use), it's always an array
+    const paramArray = Array.isArray(params) ? params : [params];
+    
+    if (paramArray.length > 0) {
+      const param = paramArray[0];
+      
+      // For line charts with dataset, data comes in param.value as [x, y]
+      // or for some configurations it might be in param.data
+      const dataValues = Array.isArray(param.value) ? param.value : param.data;
+      
+      if (Array.isArray(dataValues) && dataValues.length >= 2) {
+        const [xValue, yValue] = dataValues;
+        
+        const xUnit = config.xAxis.unit ? ` ${config.xAxis.unit}` : '';
+        const yUnit = config.yAxis.unit ? ` ${config.yAxis.unit}` : '';
+        
+        return `
+          ${config.xAxis.name}: ${stableValueFormatter(xValue)}${xUnit}<br/>
+          ${config.yAxis.name}: ${stableValueFormatter(yValue)}${yUnit}
+        `;
+      }
+    }
+    return '';
+  };
+  
+  // Cache and return the formatter
+  tooltipFormatterCache.set(cacheKey, formatter);
+  return formatter;
+}
+
+/**
  * Deep merge function for objects
  */
 function deepMerge<T extends Record<string, unknown>>(target: T, source: Partial<T>): T {
@@ -200,7 +270,7 @@ export function generateEChartsOptions(
   // Create axis options separately to avoid type inference issues
   const xAxisOption = {
     type: config.xAxis.type,
-    name: config.xAxis.name,
+    name: config.xAxis.unit ? `${config.xAxis.name} (${config.xAxis.unit})` : config.xAxis.name,
     nameLocation: 'middle' as const,
     nameGap: LAYOUT.X_AXIS_NAME_GAP,
     nameTextStyle: { color: COLORS.TEXT },
@@ -216,7 +286,7 @@ export function generateEChartsOptions(
   
   const yAxisOption = {
     type: config.yAxis.type,
-    name: config.yAxis.name,
+    name: config.yAxis.unit ? `${config.yAxis.name} (${config.yAxis.unit})` : config.yAxis.name,
     nameLocation: 'middle' as const,
     nameGap: LAYOUT.Y_AXIS_NAME_GAP,
     nameTextStyle: { color: COLORS.TEXT },
@@ -252,6 +322,7 @@ export function generateEChartsOptions(
       backgroundColor: COLORS.TOOLTIP_BG,
       borderColor: COLORS.GRID,
       textStyle: { color: COLORS.TEXT },
+      formatter: createTooltipFormatter(config),
     },
     
     // TODO: Only enable if playback paused
@@ -378,20 +449,23 @@ export function createActiveIndexLabel(
   activeIndex: number | undefined,
   config: ChartConfig
 ): EChartsOption['graphic'] {
-  if (activeIndex == null || activeIndex < 0 || activeIndex >= xData.length) return {}
+  if (activeIndex == null || activeIndex < 0 || activeIndex >= xData.length) return [];
 
   const [x, y] = [xData[activeIndex], yData[activeIndex]];
+  
+  const xUnit = config.xAxis.unit ? ` ${config.xAxis.unit}` : '';
+  const yUnit = config.yAxis.unit ? ` ${config.yAxis.unit}` : '';
 
   let text = '';
   if (config.showXLine && config.showYLine) {
-    text = `(${config.xAxis.name}: ${x.toFixed(2)}, ${config.yAxis.name}: ${y.toFixed(2)})`;
+    text = `(${config.xAxis.name}: ${x.toFixed(2)}${xUnit}, ${config.yAxis.name}: ${y.toFixed(2)}${yUnit})`;
   } else if (config.showXLine) {
-    text = `${config.yAxis.name}: ${y.toFixed(2)}`;
+    text = `${config.yAxis.name}: ${y.toFixed(2)}${yUnit}`;
   } else if (config.showYLine) {
-    text = `${config.xAxis.name}: ${x.toFixed(2)}`;
+    text = `${config.xAxis.name}: ${x.toFixed(2)}${xUnit}`;
   }
 
-  return {
+  return [{
     type: 'text',
     left: LAYOUT.GRID.LEFT,
     top: (config.title ? LAYOUT.GRID.TOP_WITH_TITLE : LAYOUT.GRID.TOP_WITHOUT_TITLE) / 3,
@@ -399,5 +473,6 @@ export function createActiveIndexLabel(
       text,
       fill: COLORS.TEXT,
     },
-  };
+    silent: true,
+  }];
 }
