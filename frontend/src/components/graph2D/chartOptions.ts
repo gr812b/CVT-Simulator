@@ -436,6 +436,7 @@ export function createMarkLines(
     lineStyle: { type: 'dashed', color: COLORS.TEXT },
     label: { show: false },
     symbol: 'none',
+    precision: 10,
     data,
   };
 }
