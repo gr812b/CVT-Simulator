@@ -7,14 +7,7 @@ from cvt_simulator.utils.system_state import SystemState
 
 
 class SystemModel:
-    """
-    Single system model that manages all component interactions and dependencies.
-
-    This solves the circular dependency problem by:
-    1. Calculating components in the correct dependency order
-    2. Passing computed dependencies to components that need them
-    3. Providing a single breakdown that contains everything
-    """
+    """Single system model that manages all component interactions and dependencies."""
 
     def __init__(
         self,
