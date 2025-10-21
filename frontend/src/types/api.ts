@@ -177,6 +177,8 @@ export interface components {
         SlipBreakdownModel: {
             /** T C */
             t_c: number;
+            /** T Max */
+            t_max: number;
             /** Cvt Ratio Derivative */
             cvt_ratio_derivative: number;
         };

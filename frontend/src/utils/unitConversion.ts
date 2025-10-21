@@ -212,6 +212,7 @@ function convertTimeStepData(
   system: {
     slip: {
       t_c: conv(timeStep.system.slip.t_c, 'torque'),
+      t_max: conv(timeStep.system.slip.t_max, 'torque'),
       cvt_ratio_derivative: conv(timeStep.system.slip.cvt_ratio_derivative, 'dimensionless_rate')
     },
     engine: {
