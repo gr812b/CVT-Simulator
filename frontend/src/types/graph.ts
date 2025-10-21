@@ -9,7 +9,7 @@ type AccessorStrategy = (point: DataPoint) => number;
 
 type GraphConfig = Omit<Graph2DProps, 'xData' | 'yData' | 'className'> & {
     xAccessor: AccessorStrategy;
-    yAccessor: AccessorStrategy;
+    yAccessor: AccessorStrategy[];
 };
 
 export const timeAccessor: AccessorStrategy = (point) => point.time;
@@ -19,6 +19,34 @@ const accelerationAccessor: AccessorStrategy = (point) => point.car_state.accele
 const cvtRatioAccessor: AccessorStrategy = (point) => point.cvt_state.cvt_ratio;
 const engineRpmAccessor: AccessorStrategy = (point) => point.car_state.engine_forces.angular_velocity;
 const engineTorqueAccessor: AccessorStrategy = (point) => point.car_state.engine_forces.torque;
+const primaryRadialForceAccessor: AccessorStrategy = (point) => point.cvt_state.primaryRadialForce.net;
+const secondaryRadialForceAccessor: AccessorStrategy = (point) => point.cvt_state.secondaryRadialForce.net;
+// Accessor for flyweightForce.net
+const primaryFlyweightForceAccessor: AccessorStrategy = (point) => {
+    const prf = point.cvt_state.primaryRadialForce;
+    const pulleyForce = prf.pulleyForce;
+    if (!pulleyForce) return 0;
+    if ('flyweightForce' in pulleyForce && pulleyForce.flyweightForce) {
+        return pulleyForce.flyweightForce.net;
+    }
+    return 0;
+};
+
+// Accessor for springForce.net or springCompForce.net
+const primarySpringForceAccessor: AccessorStrategy = (point) => {
+    const prf = point.cvt_state.primaryRadialForce;
+    const pulleyForce = prf.pulleyForce;
+    if (!pulleyForce) return 0;
+    if ('springForce' in pulleyForce && pulleyForce.springForce) {
+        return pulleyForce.springForce.net;
+    }
+    if ('springCompForce' in pulleyForce && pulleyForce.springCompForce) {
+        return pulleyForce.springCompForce.net;
+    }
+    return 0;
+};
+
+
 
 // Mapping from accessor to unit type
 export const accessorToUnit = new Map<AccessorStrategy, BaseUnitType>([
@@ -44,7 +72,7 @@ function getAxisUnit(accessor: AccessorStrategy): string {
 export const graphConfigs: GraphConfig[] = [
     {
         xAccessor: timeAccessor,
-        yAccessor: positionAccessor,
+        yAccessor: [positionAccessor],
         config: {
             title: "Position vs Time",
             xAxis: { name: "Time", type: "value", unit: getAxisUnit(timeAccessor) },
@@ -56,7 +84,7 @@ export const graphConfigs: GraphConfig[] = [
     },
     {
         xAccessor: timeAccessor,
-        yAccessor: velocityAccessor,
+        yAccessor: [velocityAccessor],
         config: {
           title: "Velocity vs Time",
           xAxis: { name: "Time", type: "value", unit: getAxisUnit(timeAccessor) },
@@ -68,7 +96,7 @@ export const graphConfigs: GraphConfig[] = [
     },
     {
         xAccessor: timeAccessor,
-        yAccessor: accelerationAccessor,
+        yAccessor: [accelerationAccessor],
         config: {
             title: "Acceleration vs Time",
             xAxis: { name: "Time", type: "value", unit: getAxisUnit(timeAccessor) },
@@ -80,7 +108,7 @@ export const graphConfigs: GraphConfig[] = [
     },
     {
         xAccessor: timeAccessor,
-        yAccessor: cvtRatioAccessor,
+        yAccessor: [cvtRatioAccessor],
         config: {
             title: "CVT Ratio vs Time",
             xAxis: { name: "Time", type: "value", unit: getAxisUnit(timeAccessor) },
@@ -92,7 +120,7 @@ export const graphConfigs: GraphConfig[] = [
     },
     {
         xAccessor: velocityAccessor,
-        yAccessor: engineRpmAccessor,
+        yAccessor: [engineRpmAccessor],
         config: {
             title: "Shift Curve (Engine RPM vs Vehicle Speed)",
             xAxis: { name: "Vehicle Speed", type: "value", unit: getAxisUnit(velocityAccessor) },
@@ -104,12 +132,38 @@ export const graphConfigs: GraphConfig[] = [
     },
     {
         xAccessor: timeAccessor,
-        yAccessor: engineTorqueAccessor,
+        yAccessor: [engineTorqueAccessor],
         config: {
             title: "Engine Torque vs Time",
             xAxis: { name: "Time", type: "value", unit: getAxisUnit(timeAccessor) },
             yAxis: { name: "Engine Torque", type: "value", unit: getAxisUnit(engineTorqueAccessor) },
             height: 400,
+            showXLine: true,
+            showYLine: false
+        }
+    },
+    {
+        xAccessor: timeAccessor,
+        yAccessor: [primaryRadialForceAccessor, secondaryRadialForceAccessor],
+        config: {
+            title: "Pulley Radial Forces vs Time",
+            xAxis: { name: "Time", type: "value", unit: "s" },
+            yAxis: { name: "Radial Force", type: "value", unit: "N" },
+            seriesNames: ["Primary ", "Secondary"],
+            height: 400,
+            showXLine: true,
+            showYLine: false
+        }
+    },
+        {
+            xAccessor: timeAccessor,
+            yAccessor: [primaryRadialForceAccessor, primaryFlyweightForceAccessor, primarySpringForceAccessor],
+            config: {
+                title: "Primary Forces vs Time",
+                xAxis: { name: "Time", type: "value", unit: "s" },
+                yAxis: { name: "Primary Force", type: "value", unit: "N" },
+                seriesNames: ["Net", "Flyweight", "Spring"],
+                height: 400,
             showXLine: true,
             showYLine: false
         }
