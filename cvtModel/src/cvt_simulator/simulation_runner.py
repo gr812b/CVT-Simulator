@@ -39,7 +39,6 @@ class SimulationRunner:
         shift_distance=0.0,
         engine_angular_velocity=rpm_to_rad_s(1800),
     )
-    slip_breakdowns = []
 
     def __init__(
         self,
