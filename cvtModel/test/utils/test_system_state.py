@@ -11,11 +11,13 @@ class TestSystemState(unittest.TestCase):
             car_position=10.0,
             shift_velocity=5.0,
             shift_distance=2.0,
+            engine_angular_velocity=100.0,
         )
         self.assertEqual(state.car_velocity, 30.0)
         self.assertEqual(state.car_position, 10.0)
         self.assertEqual(state.shift_velocity, 5.0)
         self.assertEqual(state.shift_distance, 2.0)
+        self.assertEqual(state.engine_angular_velocity, 100.0)
 
     def test_to_array(self):
         state = SystemState(
