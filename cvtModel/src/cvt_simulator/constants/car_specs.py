@@ -5,6 +5,7 @@ import math
 
 # TODO: Look into inertia as it should be of all spinning parts
 ENGINE_INERTIA = 0.1  # kg*m^2
+DRIVELINE_INERTIA = 0.5  # kg*m^2 - This includes sec CVT, gearbox, axles, wheels, hubs, etc
 GEARBOX_RATIO = 7.556  # unitless
 FRONTAL_AREA = 1.11484  # m^2
 DRAG_COEFFICIENT = 0.6  # unitless

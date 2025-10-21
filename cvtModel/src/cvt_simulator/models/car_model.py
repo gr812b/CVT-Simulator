@@ -5,6 +5,7 @@ from cvt_simulator.utils.theoretical_models import TheoreticalModels as tm
 from cvt_simulator.constants.car_specs import (
     GEARBOX_RATIO,
     WHEEL_RADIUS,
+    DRIVELINE_INERTIA,
 )
 
 
@@ -20,8 +21,6 @@ class CarModel:
     def get_breakdown(
         self, state: SystemState, slip_breakdown: SlipBreakdown
     ) -> CarForceBreakdown:
-        driveline_inertia = 5  # TODO: Replace with real value
-
         load_torque = self.load_model.get_breakdown(state.car_velocity).net
         t_c = slip_breakdown.t_c
 
@@ -31,7 +30,7 @@ class CarModel:
         accel = (
             WHEEL_RADIUS
             * (t_c * engine_to_wheel_ratio - load_torque)
-            / (driveline_inertia + self.car_mass * WHEEL_RADIUS**2)
+            / (DRIVELINE_INERTIA + self.car_mass * WHEEL_RADIUS**2)
         )
 
         return CarForceBreakdown(

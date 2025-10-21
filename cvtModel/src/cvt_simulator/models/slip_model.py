@@ -6,6 +6,7 @@ from cvt_simulator.constants.car_specs import (
     WHEEL_RADIUS,
     GEARBOX_RATIO,
     ENGINE_INERTIA,
+    DRIVELINE_INERTIA,
 )
 from cvt_simulator.utils.theoretical_models import TheoreticalModels as tm
 
@@ -32,8 +33,7 @@ class SlipModel:
         )
 
     def get_tc(self, state: SystemState):
-        driveline_inertia = 5  # TODO: Replace with real value
-        wheel_inertia = driveline_inertia + self.car_mass * (
+        wheel_inertia = DRIVELINE_INERTIA + self.car_mass * (
             WHEEL_RADIUS**2
         )  # This is the driveline + car's translational mass at wheels
 
