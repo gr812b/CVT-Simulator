@@ -85,6 +85,7 @@ class EngineForceBreakdown:
     torque: float
     power: float
     angular_velocity: float
+    engine_angular_acceleration: float
 
 
 ## External load
@@ -106,5 +107,3 @@ class CarForceBreakdown:
 class SlipBreakdown:
     t_c: float
     cvt_ratio_derivative: float
-    engine_forces: EngineForceBreakdown
-    engine_angular_accel: float

@@ -10,17 +10,17 @@ from cvt_simulator.constants.engine_specs import torque_curve
 from cvt_simulator.constants.car_specs import ENGINE_INERTIA
 from cvt_simulator.utils.conversions import deg_to_rad
 from cvt_simulator.utils.simulation_args import SimulationArgs
-from cvt_simulator.models.engine_slip_model import slip_model
+from cvt_simulator.models.slip_model import SlipModel
+from cvt_simulator.models.engine_accel_model import EngineAccelModel
 
 
 def get_models(args: SimulationArgs):
     # Vehicle dynamics
-    engine_model = EngineModel(torque_curve=torque_curve, inertia=ENGINE_INERTIA)
+    engine_model = EngineModel(torque_curve=torque_curve)
     load_model = LoadModel(
         car_mass=args.vehicle_weight + args.driver_weight,
         incline_angle=deg_to_rad(args.angle_of_incline),
     )
-    
 
     # CVT dynamics
     primary_model = PrimaryPulleyModel(
@@ -54,8 +54,7 @@ def get_models(args: SimulationArgs):
         secondary_radial_model,
     )
 
-    # TODO: TEMP Engine slip model
-    engine_slip_model = slip_model(
+    slip_model = SlipModel(
         load_model=load_model,
         engine_model=engine_model,
         car_mass=args.vehicle_weight + args.driver_weight,
@@ -64,8 +63,12 @@ def get_models(args: SimulationArgs):
     car_model = CarModel(
         car_mass=args.vehicle_weight + args.driver_weight,
         load_model=load_model,
+        slip_model=slip_model,
+    )
+    engine_accel_model = EngineAccelModel(
         engine_model=engine_model,
-        engine_slip_model=engine_slip_model,
+        inertia=ENGINE_INERTIA,
+        slip_model=slip_model,
     )
 
-    return car_model, cvt_shift, engine_slip_model
+    return car_model, cvt_shift, engine_accel_model

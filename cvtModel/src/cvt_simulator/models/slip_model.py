@@ -12,7 +12,7 @@ from cvt_simulator.constants.car_specs import (
 from cvt_simulator.utils.theoretical_models import TheoreticalModels as tm
 
 
-class slip_model:
+class SlipModel:
     T_MAX = 50 # TODO: Replace with calculation
     inertia = 0.1 # TODO: Replace with real value
 
@@ -30,14 +30,9 @@ class slip_model:
         t_c = self.get_tc(state)
         cvt_ratio_derivative = tm.current_cvt_ratio_rate_of_change(state.shift_distance, state.shift_velocity)
 
-        engine_torque = self.engine_model.get_torque(state.engine_angular_velocity)
-        engine_angular_accel = (engine_torque - t_c) / self.inertia
-
         return SlipBreakdown(
             t_c=t_c,
             cvt_ratio_derivative=cvt_ratio_derivative,
-            engine_forces=self.engine_model.get_breakdown(state.engine_angular_velocity),
-            engine_angular_accel=engine_angular_accel
         )
     
     def get_tc(self, state: SystemState):

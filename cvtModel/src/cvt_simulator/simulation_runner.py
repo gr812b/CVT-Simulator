@@ -18,8 +18,7 @@ from cvt_simulator.utils.simulation_constraints import (
     get_shift_steady_event,
     shift_constraint_event,
 )
-from cvt_simulator.models.engine_slip_model import slip_model
-
+from cvt_simulator.models.engine_accel_model import EngineAccelModel
 
 
 # Helper class to wrap data
@@ -48,11 +47,11 @@ class SimulationRunner:
         self,
         car_model: CarModel,
         cvt_shift_model: CvtShiftModel,
-        engine_slip_model: slip_model,
+        engine_accel_model: EngineAccelModel,
     ):
         self.car_model = car_model
         self.cvt_shift_model = cvt_shift_model
-        self.engine_slip_model = engine_slip_model
+        self.engine_accel_model = engine_accel_model
 
     def run_simulation(self) -> SimulationResult:
         """Run the simulation and return results."""
@@ -172,13 +171,12 @@ class SimulationRunner:
         # Car math
         car_acceleration = self.car_model.get_breakdown(state).acceleration
 
+        # Engine math
+        engine_angular_accel = self.engine_accel_model.get_breakdown(state).engine_angular_acceleration
+
         # Pulley math
         shift_acceleration = self.cvt_shift_model.get_breakdown(state).acceleration
-
-        # TODO: REMOVE TEMP LOGIC BELOW
-        # We're gonna pretend to get slip here for testing
-        engine_angular_accel = self.engine_slip_model.get_breakdown(state).engine_angular_accel
-
+        
         return [
             car_acceleration,
             state.car_velocity,
@@ -197,7 +195,7 @@ class SimulationRunner:
 
         # Car math
         car_acceleration = self.car_model.get_breakdown(state).acceleration
-        engine_angular_accel = self.engine_slip_model.get_breakdown(state).engine_angular_accel
+        engine_angular_accel = self.engine_accel_model.get_breakdown(state).engine_angular_acceleration
 
         return [
             car_acceleration,

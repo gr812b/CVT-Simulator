@@ -238,15 +238,11 @@ function convertTimeStepData(
     cvt_ratio: timeStep.cvt_state.cvt_ratio, // Dimensionless
     net: conv(timeStep.cvt_state.net, 'force'),
   },
-  engine_slip_state: {
-    t_c: conv(timeStep.engine_slip_state.t_c, 'force'),
-    cvt_ratio_derivative: timeStep.engine_slip_state.cvt_ratio_derivative, // Dimensionless
-    engine_forces: {
-      torque: conv(timeStep.engine_slip_state.engine_forces.torque, 'torque'),
-      power: conv(timeStep.engine_slip_state.engine_forces.power, 'power'),
-      angular_velocity: conv(timeStep.engine_slip_state.engine_forces.angular_velocity, 'angular_velocity')
-    },
-    engine_angular_accel: conv(timeStep.engine_slip_state.engine_angular_accel, 'angular_acceleration'),
+  engine_state: {
+    torque: conv(timeStep.engine_state.torque, 'torque'),
+    angular_velocity: conv(timeStep.engine_state.angular_velocity, 'angular_velocity'),
+    power: conv(timeStep.engine_state.power, 'power'),
+    engine_angular_acceleration: conv(timeStep.engine_state.engine_angular_acceleration, 'angular_acceleration'),
   }
 };
 }
