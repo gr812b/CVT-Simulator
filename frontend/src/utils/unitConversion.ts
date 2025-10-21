@@ -198,51 +198,55 @@ function convertTimeStepData(
     shift_distance: conv(timeStep.state.shift_distance, 'distance'),
     engine_angular_velocity: conv(timeStep.state.engine_angular_velocity, 'angular_velocity'),
   },
-
-  car_state: {
-    external_forces: {
-      incline_force: conv(timeStep.car_state.external_forces.incline_force, 'force'),
-      drag_force: conv(timeStep.car_state.external_forces.drag_force, 'force'),
-      net: conv(timeStep.car_state.external_forces.net, 'force'),
+  system: {
+    slip: {
+      t_c: conv(timeStep.system.slip.t_c, 'torque'),
+      cvt_ratio_derivative: conv(timeStep.system.slip.cvt_ratio_derivative, 'dimensionless')
     },
-    acceleration: conv(timeStep.car_state.acceleration, 'acceleration'),
-  },
-
-  cvt_state: {
-    primaryRadialForce: {
-      pulleyForce: convertPulleyForce(timeStep.cvt_state.primaryRadialForce.pulleyForce, config),
-      beltCentrifugalForce: {
-        mass: conv(timeStep.cvt_state.primaryRadialForce.beltCentrifugalForce.mass, 'mass'),
-        radius: conv(timeStep.cvt_state.primaryRadialForce.beltCentrifugalForce.radius, 'distance'),
-        wrap_angle: conv(timeStep.cvt_state.primaryRadialForce.beltCentrifugalForce.wrap_angle, 'angle'),
-        angular_velocity: conv(timeStep.cvt_state.primaryRadialForce.beltCentrifugalForce.angular_velocity, 'angular_velocity'),
-        net: conv(timeStep.cvt_state.primaryRadialForce.beltCentrifugalForce.net, 'force'),
+    engine: {
+      torque: conv(timeStep.system.engine.torque, 'torque'),
+      power: conv(timeStep.system.engine.power, 'power'),
+      angular_velocity: conv(timeStep.system.engine.angular_velocity, 'angular_velocity'),
+      angular_acceleration: conv(timeStep.system.engine.angular_acceleration, 'angular_acceleration')
+    },
+    car: {
+      external_forces: {
+        incline_force: conv(timeStep.system.car.external_forces.incline_force, 'force'),
+        drag_force: conv(timeStep.system.car.external_forces.drag_force, 'force'),
+        net: conv(timeStep.system.car.external_forces.net, 'force')
       },
-      radialPulleyForce: conv(timeStep.cvt_state.primaryRadialForce.radialPulleyForce, 'force'),
-      net: conv(timeStep.cvt_state.primaryRadialForce.net, 'force'),
+      acceleration: conv(timeStep.system.car.acceleration, 'acceleration')
     },
-    secondaryRadialForce: {
-      pulleyForce: convertPulleyForce(timeStep.cvt_state.secondaryRadialForce.pulleyForce, config),
-      beltCentrifugalForce: {
-        mass: conv(timeStep.cvt_state.secondaryRadialForce.beltCentrifugalForce.mass, 'mass'),
-        radius: conv(timeStep.cvt_state.secondaryRadialForce.beltCentrifugalForce.radius, 'distance'),
-        wrap_angle: conv(timeStep.cvt_state.secondaryRadialForce.beltCentrifugalForce.wrap_angle, 'angle'),
-        angular_velocity: conv(timeStep.cvt_state.secondaryRadialForce.beltCentrifugalForce.angular_velocity, 'angular_velocity'),
-        net: conv(timeStep.cvt_state.secondaryRadialForce.beltCentrifugalForce.net, 'force'),
+    cvt: {
+      primaryRadialForce: {
+        pulleyForce: convertPulleyForce(timeStep.system.cvt.primaryRadialForce.pulleyForce, config),
+        beltCentrifugalForce: {
+          mass: conv(timeStep.system.cvt.primaryRadialForce.beltCentrifugalForce.mass, 'mass'),
+          radius: conv(timeStep.system.cvt.primaryRadialForce.beltCentrifugalForce.radius, 'distance'),
+          wrap_angle: conv(timeStep.system.cvt.primaryRadialForce.beltCentrifugalForce.wrap_angle, 'angle'),
+          angular_velocity: conv(timeStep.system.cvt.primaryRadialForce.beltCentrifugalForce.angular_velocity, 'angular_velocity'),
+          net: conv(timeStep.system.cvt.primaryRadialForce.beltCentrifugalForce.net, 'force')
+        },
+        radialPulleyForce: conv(timeStep.system.cvt.primaryRadialForce.radialPulleyForce, 'force'),
+        net: conv(timeStep.system.cvt.primaryRadialForce.net, 'force')
       },
-      radialPulleyForce: conv(timeStep.cvt_state.secondaryRadialForce.radialPulleyForce, 'force'),
-      net: conv(timeStep.cvt_state.secondaryRadialForce.net, 'force'),
-    },
-    friction: conv(timeStep.cvt_state.friction, 'force'),
-    acceleration: conv(timeStep.cvt_state.acceleration, 'acceleration'),
-    cvt_ratio: timeStep.cvt_state.cvt_ratio, // Dimensionless
-    net: conv(timeStep.cvt_state.net, 'force'),
-  },
-  engine_state: {
-    torque: conv(timeStep.engine_state.torque, 'torque'),
-    angular_velocity: conv(timeStep.engine_state.angular_velocity, 'angular_velocity'),
-    power: conv(timeStep.engine_state.power, 'power'),
-    engine_angular_acceleration: conv(timeStep.engine_state.engine_angular_acceleration, 'angular_acceleration'),
+      secondaryRadialForce: {
+        pulleyForce: convertPulleyForce(timeStep.system.cvt.secondaryRadialForce.pulleyForce, config),
+        beltCentrifugalForce: {
+          mass: conv(timeStep.system.cvt.secondaryRadialForce.beltCentrifugalForce.mass, 'mass'),
+          radius: conv(timeStep.system.cvt.secondaryRadialForce.beltCentrifugalForce.radius, 'distance'),
+          wrap_angle: conv(timeStep.system.cvt.secondaryRadialForce.beltCentrifugalForce.wrap_angle, 'angle'),
+          angular_velocity: conv(timeStep.system.cvt.secondaryRadialForce.beltCentrifugalForce.angular_velocity, 'angular_velocity'),
+          net: conv(timeStep.system.cvt.secondaryRadialForce.beltCentrifugalForce.net, 'force')
+        },
+        radialPulleyForce: conv(timeStep.system.cvt.secondaryRadialForce.radialPulleyForce, 'force'),
+        net: conv(timeStep.system.cvt.secondaryRadialForce.net, 'force')
+      },
+      friction: conv(timeStep.system.cvt.friction, 'dimensionless'),
+      acceleration: conv(timeStep.system.cvt.acceleration, 'acceleration'),
+      cvt_ratio: conv(timeStep.system.cvt.cvt_ratio, 'dimensionless'),
+      net: conv(timeStep.system.cvt.net, 'force')
+    }
   }
 };
 }

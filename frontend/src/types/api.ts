@@ -82,8 +82,8 @@ export interface components {
             power: number;
             /** Angular Velocity */
             angular_velocity: number;
-            /** Engine Angular Acceleration */
-            engine_angular_acceleration: number;
+            /** Angular Acceleration */
+            angular_acceleration: number;
         };
         /** ExternalLoadForceBreakdownModel */
         ExternalLoadForceBreakdownModel: {
@@ -173,12 +173,26 @@ export interface components {
             /** Total Distance */
             total_distance?: number | null;
         };
+        /** SlipBreakdownModel */
+        SlipBreakdownModel: {
+            /** T C */
+            t_c: number;
+            /** Cvt Ratio Derivative */
+            cvt_ratio_derivative: number;
+        };
         /** SpringTorsForceBreakdownModel */
         SpringTorsForceBreakdownModel: {
             /** Rotation */
             rotation: number;
             /** Net */
             net: number;
+        };
+        /** SystemBreakdownModel */
+        SystemBreakdownModel: {
+            slip: components["schemas"]["SlipBreakdownModel"];
+            engine: components["schemas"]["EngineForceBreakdownModel"];
+            car: components["schemas"]["CarForceBreakdownModel"];
+            cvt: components["schemas"]["CvtSystemForceBreakdownModel"];
         };
         /** SystemStateModel */
         SystemStateModel: {
@@ -198,9 +212,7 @@ export interface components {
             /** Time */
             time: number;
             state: components["schemas"]["SystemStateModel"];
-            car_state: components["schemas"]["CarForceBreakdownModel"];
-            cvt_state: components["schemas"]["CvtSystemForceBreakdownModel"];
-            engine_state: components["schemas"]["EngineForceBreakdownModel"];
+            system: components["schemas"]["SystemBreakdownModel"];
         };
         /** ValidationError */
         ValidationError: {

@@ -1,5 +1,5 @@
 from typing import List
-from cvt_simulator.models.dataTypes import CarForceBreakdown, CvtSystemForceBreakdown, EngineForceBreakdown
+from cvt_simulator.models.dataTypes import SystemBreakdown
 from cvt_simulator.utils.system_state import SystemState
 import pandas as pd
 from cvt_simulator.models.model_initializer import get_models
@@ -8,22 +8,18 @@ from cvt_simulator.utils.simulation_result import SimulationResult
 from dataclasses import is_dataclass, fields, dataclass
 
 
-
 @dataclass
 class TimeStepData:
     """
     Represents all the data for a single time step in the simulation.
+    Uses the unified SystemBreakdown for clean access to all component data.
     """
 
     time: float
     state: SystemState
-    car_state: CarForceBreakdown
-    cvt_state: CvtSystemForceBreakdown
-    engine_state: EngineForceBreakdown
+    system: SystemBreakdown
 
 
-# TODO: figure out how to structure the returned object over the API as one guy, that makes sense for the
-# front end and is easy, with type gen
 class FormattedSimulationResult:
     data: List[TimeStepData]
 
@@ -35,15 +31,15 @@ class FormattedSimulationResult:
         self.gather_model_states(result, args)
 
     def gather_model_states(self, result: SimulationResult, args: SimulationArgs):
-        car_model, cvt_model, engine_accel_model = get_models(args)
+        system_model = get_models(args)
 
         for i, (time, state) in enumerate(zip(result.time, result.states)):
-            car_state = car_model.get_breakdown(state)
-            cvt_state = cvt_model.get_breakdown(state)
-            engine_state = engine_accel_model.get_breakdown(state)
-
+            system_breakdown = system_model.get_breakdown(state)
+            
             time_step_data = TimeStepData(
-                time=time, state=state, car_state=car_state, cvt_state=cvt_state, engine_state=engine_state
+                time=time, 
+                state=state, 
+                system=system_breakdown
             )
             self.data.append(time_step_data)
 

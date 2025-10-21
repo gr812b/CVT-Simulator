@@ -12,6 +12,7 @@ from cvt_simulator.utils.conversions import deg_to_rad
 from cvt_simulator.utils.simulation_args import SimulationArgs
 from cvt_simulator.models.slip_model import SlipModel
 from cvt_simulator.models.engine_accel_model import EngineAccelModel
+from cvt_simulator.models.system_model import SystemModel
 
 
 def get_models(args: SimulationArgs):
@@ -63,12 +64,17 @@ def get_models(args: SimulationArgs):
     car_model = CarModel(
         car_mass=args.vehicle_weight + args.driver_weight,
         load_model=load_model,
-        slip_model=slip_model,
     )
     engine_accel_model = EngineAccelModel(
         engine_model=engine_model,
         inertia=ENGINE_INERTIA,
-        slip_model=slip_model,
     )
 
-    return car_model, cvt_shift, engine_accel_model
+    system_model = SystemModel(
+        slip_model=slip_model,
+        engine_accel_model=engine_accel_model,
+        car_model=car_model,
+        cvt_shift_model=cvt_shift
+    )
+
+    return system_model

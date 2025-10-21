@@ -5,9 +5,9 @@ from cvt_simulator.utils.frontend_output import FormattedSimulationResult
 
 
 def simulate_cvt_model(args: SimulationArgs, out_csv: str = "simulation_output.csv"):
-    car_model, cvt_model, engine_accel_model = get_models(args)
+    system_model = get_models(args)
 
-    simulation_runner = SimulationRunner(car_model, cvt_model, engine_accel_model)
+    simulation_runner = SimulationRunner(system_model)
     result = simulation_runner.run_simulation()
     result.write_csv(out_csv)
 

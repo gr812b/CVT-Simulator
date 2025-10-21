@@ -15,10 +15,10 @@ type GraphConfig = Omit<Graph2DProps, 'xData' | 'yData' | 'className'> & {
 export const timeAccessor: AccessorStrategy = (point) => point.time;
 const positionAccessor: AccessorStrategy = (point) => point.state.car_position;
 const velocityAccessor: AccessorStrategy = (point) => point.state.car_velocity;
-const accelerationAccessor: AccessorStrategy = (point) => point.car_state.acceleration;
-const cvtRatioAccessor: AccessorStrategy = (point) => point.cvt_state.cvt_ratio;
-const engineRpmAccessor: AccessorStrategy = (point) => point.engine_state.angular_velocity;
-const engineTorqueAccessor: AccessorStrategy = (point) => point.engine_state.torque;
+const accelerationAccessor: AccessorStrategy = (point) => point.system.car.acceleration;
+const cvtRatioAccessor: AccessorStrategy = (point) => point.system.cvt.cvt_ratio;
+const engineRpmAccessor: AccessorStrategy = (point) => point.system.engine.angular_velocity;
+const engineTorqueAccessor: AccessorStrategy = (point) => point.system.engine.torque;
 
 // Mapping from accessor to unit type
 export const accessorToUnit = new Map<AccessorStrategy, BaseUnitType>([
