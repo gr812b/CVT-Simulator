@@ -35,11 +35,9 @@ class FormattedSimulationResult:
 
         for i, (time, state) in enumerate(zip(result.time, result.states)):
             system_breakdown = system_model.get_breakdown(state)
-            
+
             time_step_data = TimeStepData(
-                time=time, 
-                state=state, 
-                system=system_breakdown
+                time=time, state=state, system=system_breakdown
             )
             self.data.append(time_step_data)
 

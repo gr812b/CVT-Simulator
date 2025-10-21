@@ -107,7 +107,10 @@ class TheoreticalModels:
         C = CENTER_TO_CENTER
         L = BELT_LENGTH
         Delta = math.sqrt(
-            max((np.pi * C) ** 2 - 8 * np.pi * C * prim_radius + 4 * L * C - 8 * C**2, 1e-12)
+            max(
+                (np.pi * C) ** 2 - 8 * np.pi * C * prim_radius + 4 * L * C - 8 * C**2,
+                1e-12,
+            )
         )
         dRs_dRp = 1.0 - (2.0 * np.pi * C) / Delta
         dRs_dd = dRs_dRp * dRp_dd

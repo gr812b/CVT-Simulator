@@ -74,7 +74,7 @@ def get_models(args: SimulationArgs):
         slip_model=slip_model,
         engine_accel_model=engine_accel_model,
         car_model=car_model,
-        cvt_shift_model=cvt_shift
+        cvt_shift_model=cvt_shift,
     )
 
     return system_model

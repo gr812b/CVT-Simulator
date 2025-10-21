@@ -17,18 +17,26 @@ class CarModel:
         self.car_mass = car_mass
         self.load_model = load_model
 
-    def get_breakdown(self, state: SystemState, slip_breakdown: SlipBreakdown) -> CarForceBreakdown:
-        driveline_inertia = 5 # TODO: Replace with real value
+    def get_breakdown(
+        self, state: SystemState, slip_breakdown: SlipBreakdown
+    ) -> CarForceBreakdown:
+        driveline_inertia = 5  # TODO: Replace with real value
 
         load_torque = self.load_model.get_breakdown(state.car_velocity).net
         t_c = slip_breakdown.t_c
 
-        engine_to_wheel_ratio = tm.current_cvt_ratio(state.shift_distance) * GEARBOX_RATIO
-        accel = WHEEL_RADIUS * (t_c * engine_to_wheel_ratio - load_torque) / (driveline_inertia + self.car_mass * WHEEL_RADIUS ** 2)
+        engine_to_wheel_ratio = (
+            tm.current_cvt_ratio(state.shift_distance) * GEARBOX_RATIO
+        )
+        accel = (
+            WHEEL_RADIUS
+            * (t_c * engine_to_wheel_ratio - load_torque)
+            / (driveline_inertia + self.car_mass * WHEEL_RADIUS**2)
+        )
 
         return CarForceBreakdown(
-            external_forces=self.load_model.get_breakdown(state.car_velocity), 
-            acceleration=accel
+            external_forces=self.load_model.get_breakdown(state.car_velocity),
+            acceleration=accel,
         )
 
     def _get_engine_velocity(self, shift_distance, car_velocity):

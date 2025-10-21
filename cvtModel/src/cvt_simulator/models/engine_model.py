@@ -1,8 +1,9 @@
 from typing import Callable
 
+
 class EngineModel:
     """Pure engine model handling torque curve and power calculations."""
-    
+
     def __init__(
         self,
         torque_curve: Callable[[float], float],  # rad/s -> Nm

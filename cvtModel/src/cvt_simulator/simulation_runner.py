@@ -169,7 +169,7 @@ class SimulationRunner:
         car_acceleration = system_breakdown.car.acceleration
         engine_angular_accel = system_breakdown.engine.angular_acceleration
         shift_acceleration = system_breakdown.cvt.acceleration
-        
+
         return [
             car_acceleration,
             state.car_velocity,
@@ -188,7 +188,7 @@ class SimulationRunner:
 
         # Get system breakdown for full shift case
         system_breakdown = self.system_model.get_breakdown(state)
-        
+
         car_acceleration = system_breakdown.car.acceleration
         engine_angular_accel = system_breakdown.engine.angular_acceleration
 
