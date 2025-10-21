@@ -70,7 +70,6 @@ class SlipModel:
         denominator = wheel_inertia + ENGINE_INERTIA * engine_to_wheel_ratio**2
 
         t_c = numerator / denominator
-        t_max = 50
         t_c = max(-t_max, min(t_max, t_c))  # Apply coulomb slip law with calculated T_MAX
 
         return t_c

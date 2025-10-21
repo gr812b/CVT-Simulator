@@ -297,11 +297,11 @@ export const graphConfigs: GraphConfig[] = [
         }
     },
     {
-        xAccessor: timeAccessor,
+        xAccessor: velocityAccessor,
         yAccessor: [totalExternalLoadAccessor, inclineForceAccessor, dragForceAccessor],
         config: {
-            title: "External Load Forces vs Time",
-            xAxis: { name: "Time", type: "value", unit: getAxisUnit(timeAccessor) },
+            title: "External Load Forces vs Vehicle Speed",
+            xAxis: { name: "Vehicle Speed", type: "value", unit: getAxisUnit(velocityAccessor) },
             yAxis: { name: "Force", type: "value", unit: getAxisUnit(inclineForceAccessor) },
             seriesNames: ["Total External Load", "Incline Force", "Air Resistance"],
             height: 400,
