@@ -15,12 +15,9 @@ def simulate_cvt_model(args: SimulationArgs, out_csv: str = "simulation_output.c
 
     return formatted
 
-
 def main():
     formatted = simulate_cvt_model(SimulationArgs())
     formatted.write_formatted_csv("front_end_output.csv")
-    # Plot engine_angular_velocity
-
 
 if __name__ == "__main__":
     main()
