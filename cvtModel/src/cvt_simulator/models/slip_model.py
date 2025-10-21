@@ -51,18 +51,21 @@ class SlipModel:
         )
 
         # The secret butter
-        numerator = (
-            engine_torque
-            - (
-                ENGINE_INERTIA
-                * wheel_angular_velocity
-                * engine_to_wheel_ratio_rate_of_change
-            )
-            + (ENGINE_INERTIA * load_torque * engine_to_wheel_ratio) / wheel_inertia
+        eng_term = engine_torque * wheel_inertia
+        load_term = ENGINE_INERTIA * load_torque * engine_to_wheel_ratio
+        shift_term = (
+            ENGINE_INERTIA
+            * wheel_inertia
+            * wheel_angular_velocity
+            * engine_to_wheel_ratio_rate_of_change
         )
-        denominator = 1 + (ENGINE_INERTIA * engine_to_wheel_ratio**2) / wheel_inertia
 
-        t_c = max(-self.T_MAX, min(self.T_MAX, numerator / denominator))
+        numerator = eng_term + load_term - shift_term
+        denominator = wheel_inertia + ENGINE_INERTIA * engine_to_wheel_ratio**2
+
+        t_c = numerator / denominator
+        t_c = max(-self.T_MAX, min(self.T_MAX, t_c))  # Apply coulomb slip law
+
         return t_c
 
     def get_wheel_speed(self, car_velocity: float):
