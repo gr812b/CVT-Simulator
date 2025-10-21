@@ -1,18 +1,14 @@
 from cvt_simulator.models.dataTypes import EngineForceBreakdown, SlipBreakdown
 from cvt_simulator.models.engine_model import EngineModel
 from cvt_simulator.utils.system_state import SystemState
+from cvt_simulator.constants.car_specs import ENGINE_INERTIA
 
 
 class EngineAccelModel:
     """Handles engine dynamics that depend on slip calculations."""
 
-    def __init__(
-        self,
-        engine_model: EngineModel,
-        inertia: float,  # kg*m^2
-    ):
+    def __init__(self, engine_model: EngineModel):
         self.engine_model = engine_model
-        self.inertia = inertia
 
     def get_breakdown(
         self, state: SystemState, slip_breakdown: SlipBreakdown
@@ -24,7 +20,7 @@ class EngineAccelModel:
 
         t_c = slip_breakdown.t_c
 
-        angular_accel = (torque - t_c) / self.inertia
+        angular_accel = (torque - t_c) / ENGINE_INERTIA
 
         return EngineForceBreakdown(
             torque=torque,

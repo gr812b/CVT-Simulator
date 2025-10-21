@@ -65,10 +65,7 @@ def get_models(args: SimulationArgs):
         car_mass=args.vehicle_weight + args.driver_weight,
         load_model=load_model,
     )
-    engine_accel_model = EngineAccelModel(
-        engine_model=engine_model,
-        inertia=ENGINE_INERTIA,
-    )
+    engine_accel_model = EngineAccelModel(engine_model=engine_model)
 
     system_model = SystemModel(
         slip_model=slip_model,
