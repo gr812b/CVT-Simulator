@@ -7,7 +7,6 @@ from cvt_simulator.models.secondary_pulley_model import SecondaryPulleyModel
 from cvt_simulator.models.belt_model import BeltModel
 from cvt_simulator.models.cvt_shift_model import CvtShiftModel
 from cvt_simulator.constants.engine_specs import torque_curve
-from cvt_simulator.constants.car_specs import ENGINE_INERTIA
 from cvt_simulator.utils.conversions import deg_to_rad
 from cvt_simulator.utils.simulation_args import SimulationArgs
 from cvt_simulator.models.slip_model import SlipModel

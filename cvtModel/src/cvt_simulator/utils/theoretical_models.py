@@ -85,7 +85,7 @@ class TheoreticalModels:
         return secondary_radius / primary_radius
 
     # ---------------------------------------------------------
-    # NEW: Derivative of ratio wrt d (di/dd)
+    # Derivative of ratio wrt d (di/dd)
     # ---------------------------------------------------------
     @staticmethod
     def cvt_ratio_derivative_wrt_d(d: float) -> float:
@@ -128,7 +128,7 @@ class TheoreticalModels:
         return (Sp * P - S * Pp) / (P * P)
 
     # ---------------------------------------------------------
-    # NEW: di/dt = (di/dd) * v
+    # di/dt = (di/dd) * v
     # ---------------------------------------------------------
     @staticmethod
     def current_cvt_ratio_rate_of_change(d: float, v: float) -> float:
