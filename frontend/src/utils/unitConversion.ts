@@ -150,7 +150,7 @@ export const UNIT_PRESETS = {
     acceleration: 'ft/s²',
     angle: 'deg',
     dimensionless: '%',
-    dimensionless_rate: '1/min',
+    dimensionless_rate: '1/s',
   } as UnitConfiguration,
   
   BAJA: {
