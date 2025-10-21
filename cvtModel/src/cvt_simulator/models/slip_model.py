@@ -8,13 +8,13 @@ from cvt_simulator.utils.system_state import SystemState
 from cvt_simulator.constants.car_specs import (
     WHEEL_RADIUS,
     GEARBOX_RATIO,
+    ENGINE_INERTIA,
 )
 from cvt_simulator.utils.theoretical_models import TheoreticalModels as tm
 
 
 class SlipModel:
     T_MAX = 50 # TODO: Replace with calculation
-    inertia = 0.1 # TODO: Replace with real value
 
     def __init__(
         self,
@@ -36,7 +36,6 @@ class SlipModel:
         )
     
     def get_tc(self, state: SystemState):
-        engine_inertia = self.inertia
         driveline_inertia = 5 # TODO: Replace with real value
         wheel_inertia = driveline_inertia + self.car_mass * (WHEEL_RADIUS ** 2) # This is the driveline + car's translational mass at wheels
 
@@ -47,8 +46,8 @@ class SlipModel:
         engine_to_wheel_ratio_rate_of_change = tm.current_cvt_ratio_rate_of_change(state.shift_distance, state.shift_velocity) * GEARBOX_RATIO
 
         # The secret butter
-        numerator = engine_torque - (engine_inertia * wheel_angular_velocity * engine_to_wheel_ratio_rate_of_change) + (engine_inertia * load_torque * engine_to_wheel_ratio) / wheel_inertia
-        denominator = 1 + (engine_inertia * engine_to_wheel_ratio ** 2) / wheel_inertia
+        numerator = engine_torque - (ENGINE_INERTIA * wheel_angular_velocity * engine_to_wheel_ratio_rate_of_change) + (ENGINE_INERTIA * load_torque * engine_to_wheel_ratio) / wheel_inertia
+        denominator = 1 + (ENGINE_INERTIA * engine_to_wheel_ratio ** 2) / wheel_inertia
 
         t_c = max(-self.T_MAX, min(self.T_MAX, numerator / denominator))
         return t_c
