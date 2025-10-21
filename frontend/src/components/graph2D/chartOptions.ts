@@ -3,7 +3,7 @@ import type {
   MarkLineComponentOption, 
   DefaultLabelFormatterCallbackParams 
 } from 'echarts';
-import { inferAxisType } from './validation';
+import { VALIDATION } from './validation';
 
 /**
  * Configuration for axis display
@@ -32,7 +32,7 @@ export interface ChartConfig {
   /** Y-axis configuration */
   yAxis: AxisConfig;
   /** Series name for the line */
-  seriesName?: string;
+  seriesNames?: string[];
   /** Whether to show smooth curves */
   smooth?: boolean;
   /** Whether to show data point symbols */
@@ -59,7 +59,20 @@ const COLORS = {
   get BACKGROUND() { return getCSSColor('--secondary', '#222222'); },
   get TEXT() { return getCSSColor('--text-color', '#ffffff'); },
   get GRID() { return getCSSColor('--grid-color', '#404040'); },
-  get LINE() { return getCSSColor('--accent', '#bb0808'); },
+  get LINES() {
+    return [
+      getCSSColor('--line1', '#bb0808'),
+      getCSSColor('--line2', '#2ecc71'),
+      getCSSColor('--line3', '#3498db'),
+      getCSSColor('--line4', '#e67e22'),
+      getCSSColor('--line5', '#9b59b6'),
+      getCSSColor('--line6', '#f1c40f'),
+      getCSSColor('--line7', '#00ffff'),
+      getCSSColor('--line8', '#ff00ff'),
+      getCSSColor('--line9', '#e74c3c'),
+    ];
+  },
+  get ACCENT() { return getCSSColor('--accent', '#bb0808'); },
   get TOOLTIP_BG() { return getCSSColor('--tooltip-bg', '#2a2a2a'); },
   get ZOOM_FILL() { 
     const accent = getCSSColor('--accent', '#bb0808');
@@ -154,14 +167,27 @@ function createTooltipFormatter(config: ChartConfig) {
       const dataValues = Array.isArray(param.value) ? param.value : param.data;
       
       if (Array.isArray(dataValues) && dataValues.length >= 2) {
-        const [xValue, yValue] = dataValues;
-        
         const xUnit = config.xAxis.unit ? ` ${config.xAxis.unit}` : '';
         const yUnit = config.yAxis.unit ? ` ${config.yAxis.unit}` : '';
-        
+
+        const xLine = `${config.xAxis.name}: ${stableValueFormatter(dataValues[0])}${xUnit}<br/>`;
+
+        const yLines = [];
+        for (let i = 1; i < dataValues.length; i++) {
+            const marker = `<span style="
+              display:inline-block;
+              margin-right:6px;
+              border-radius:50%;
+              width:8px;
+              height:8px;
+              background-color:${COLORS.LINES[(i - 1) % COLORS.LINES.length]};
+          "></span>`;
+          yLines.push(`${marker} ${config.seriesNames?.[i - 1] || ''} ${config.yAxis.name}: ${stableValueFormatter(dataValues[i])}${yUnit}`);
+        }
+
         return `
-          ${config.xAxis.name}: ${stableValueFormatter(xValue)}${xUnit}<br/>
-          ${config.yAxis.name}: ${stableValueFormatter(yValue)}${yUnit}
+          ${xLine}
+          ${yLines.join('<br/>')}
         `;
       }
     }
@@ -218,7 +244,7 @@ function createDefaultConfig(): ChartConfig {
 /**
  * Creates a complete chart configuration by merging user config with defaults
  */
-export function createChartConfig(userConfig: Partial<ChartConfig>, xData: number[], yData: number[]): ChartConfig {
+export function createChartConfig(userConfig: Partial<ChartConfig>, xData: number[], yData: number[][]): ChartConfig {
   const defaultConfig = createDefaultConfig();
   const mergedConfig: ChartConfig = {
     ...defaultConfig,
@@ -238,7 +264,7 @@ export function createChartConfig(userConfig: Partial<ChartConfig>, xData: numbe
     mergedConfig.xAxis.type = inferAxisType(xData);
   }
   if (yData.length > 0 && !userConfig.yAxis?.type) {
-    mergedConfig.yAxis.type = inferAxisType(yData);
+    mergedConfig.yAxis.type = inferAxisType(yData[0]);
   }
   
   return mergedConfig;
@@ -247,25 +273,61 @@ export function createChartConfig(userConfig: Partial<ChartConfig>, xData: numbe
 /**
  * Converts data points to ECharts dataset format
  */
-export function createDataset(xData: number[], yData: number[], config: ChartConfig): EChartsOption['dataset'] {
-  const source: (string | number | Date)[][] = [[config.xAxis.name, config.yAxis.name]];
+export function createDataset(xData: number[], yData: number[][], config: ChartConfig): EChartsOption['dataset'] {
+
+
+  const source: (string | number | Date)[][] = [[config.xAxis.name]];
+
+  const seriesCount = yData[0]?.length || 0;
+  for (let i = 0; i < seriesCount; i++) {
+    source[0].push(config.seriesNames?.[i] || `${config.yAxis.name} ${i + 1}`);
+  }
+
   xData.forEach((x, index) => {
     const y = yData[index];
-    source.push([x, y]);
+    source.push([x, ...y]);
   });
+
   return { source };
 }
+
+/**
+ * Generates the series array for ECharts options
+ */
+function createSeries(yData: number[][], config: ChartConfig): EChartsOption['series'] {
+  const seriesCount = yData[0]?.length || 0;
+  const seriesArray: EChartsOption['series'] = [];
+
+  for (let i = 0; i < seriesCount; i++) {
+    seriesArray.push({
+      type: 'line',
+      name: config.seriesNames?.[i] || `${config.yAxis.name} ${i + 1}`,
+      smooth: config.smooth,
+      showSymbol: config.showSymbol,
+      itemStyle: { color: COLORS.LINES[i % COLORS.LINES.length] },
+      lineStyle: { color: COLORS.LINES[i % COLORS.LINES.length] },
+      encode: {
+        x: config.xAxis.name,
+        y: i + 1,
+      },
+    });
+  }
+
+  return seriesArray;
+}
+
 
 /**
  * Generates complete ECharts options with dark theme defaults
  */
 export function generateEChartsOptions(
   xData: number[],
-  yData: number[],
+  yData: number[][],
   config: ChartConfig,
   userOptions: Partial<EChartsOption> = {}
 ): EChartsOption {
   const dataset = createDataset(xData, yData, config);
+  const series = createSeries(yData, config);
 
   // Create axis options separately to avoid type inference issues
   const xAxisOption = {
@@ -336,7 +398,7 @@ export function generateEChartsOptions(
       top: LAYOUT.TOOLBOX.TOP,
       iconStyle: { borderColor: COLORS.TEXT },
       emphasis: {
-        iconStyle: { borderColor: COLORS.LINE },
+        iconStyle: { borderColor: COLORS.ACCENT },
       },
     },
     
@@ -368,27 +430,13 @@ export function generateEChartsOptions(
         borderColor: COLORS.GRID,
         fillerColor: COLORS.ZOOM_FILL,
         handleStyle: {
-          color: COLORS.LINE,
-          borderColor: COLORS.LINE,
+          color: COLORS.ACCENT,
+          borderColor: COLORS.ACCENT,
         },
       },
     ],
     
-    series: [
-      {
-        type: 'line',
-        name: config.seriesName || `${config.yAxis.name} vs ${config.xAxis.name}`,
-        smooth: config.smooth,
-        showSymbol: config.showSymbol,
-        itemStyle: { color: COLORS.LINE },
-        lineStyle: { color: COLORS.LINE },
-        encode: {
-          x: config.xAxis.name,
-          y: config.yAxis.name,
-          tooltip: [config.xAxis.name, config.yAxis.name],
-        },
-      },
-    ],
+    series: series
   };
   
   // Apply user overrides last
@@ -400,7 +448,7 @@ export function generateEChartsOptions(
  */
 export function createChartOptions(
   xData: number[],
-  yData: number[],
+  yData: number[][],
   partialConfig: Partial<ChartConfig> = {},
   chartOptions: Partial<EChartsOption> = {}
 ): EChartsOption {
@@ -416,19 +464,29 @@ export { COLORS as CHART_COLORS };
  */
 export function createMarkLines(
   xData: number[],
-  yData: number[],
+  yData: number[][],
   activeIndex: number | undefined,
   config: ChartConfig
 ): MarkLineComponentOption {
   if (activeIndex == null || activeIndex < 0 || activeIndex >= xData.length) return {};
 
-  const [x, y] = [xData[activeIndex], yData[activeIndex]];
+const [x, y] = [xData[activeIndex], yData[activeIndex]];
 
-  const data: NonNullable<MarkLineComponentOption['data']> = [
-    ...(config.showXLine ? [{ xAxis: x }] : []),
-    ...(config.showYLine ? [{ yAxis: y }] : []),
-    [{ coord: [x, y], symbol: 'none' }, { coord: [x, y], symbol: 'circle' }],
-  ];
+  const data: NonNullable<MarkLineComponentOption['data']> = [];
+
+  if (config.showXLine) {
+    data.push({ xAxis: x });
+  }
+
+  if (config.showYLine) {
+    for (const yValue of y) {
+      data.push({ yAxis: yValue });
+    }
+  }
+
+  for (const yValue of y) {
+    data.push([{ coord: [x, yValue], symbol: 'none' }, { coord: [x, yValue], symbol: 'circle' }]);
+  }
 
   return {
     animation: false,
@@ -445,22 +503,25 @@ export function createMarkLines(
  */
 export function createActiveIndexLabel(
   xData: number[],
-  yData: number[],
+  yData: number[][],
   activeIndex: number | undefined,
   config: ChartConfig
 ): EChartsOption['graphic'] {
   if (activeIndex == null || activeIndex < 0 || activeIndex >= xData.length) return [];
 
   const [x, y] = [xData[activeIndex], yData[activeIndex]];
-  
+
   const xUnit = config.xAxis.unit ? ` ${config.xAxis.unit}` : '';
   const yUnit = config.yAxis.unit ? ` ${config.yAxis.unit}` : '';
 
+  const formatYValues = () =>
+    y.length === 1 ? `${y[0].toFixed(2)}${yUnit}` : `[${y.map((value, i) => `${config.seriesNames?.[i]}: ${value.toFixed(2)}${yUnit}`).join(', ')}]`;
+
   let text = '';
   if (config.showXLine && config.showYLine) {
-    text = `(${config.xAxis.name}: ${x.toFixed(2)}${xUnit}, ${config.yAxis.name}: ${y.toFixed(2)}${yUnit})`;
+    text = `(${config.xAxis.name}: ${x.toFixed(2)}${xUnit}, ${config.yAxis.name}: ${formatYValues()})`;
   } else if (config.showXLine) {
-    text = `${config.yAxis.name}: ${y.toFixed(2)}${yUnit}`;
+    text = `${config.yAxis.name}: ${formatYValues()}`;
   } else if (config.showYLine) {
     text = `${config.xAxis.name}: ${x.toFixed(2)}${xUnit}`;
   }
@@ -475,4 +536,34 @@ export function createActiveIndexLabel(
     },
     silent: true,
   }];
+}
+
+/**
+ * Determines the appropriate axis type based on data
+ */
+export function inferAxisType(values: (number | string | Date)[]): 'time' | 'value' | 'category' {
+  if (values.length === 0) return 'category';
+  
+  // Check if all values are numbers
+  const numericCount = values.filter(v => typeof v === 'number' && Number.isFinite(v)).length;
+  if (numericCount === values.length) {
+    return 'value';
+  }
+  
+  // Check if values are dates or date-like strings
+  const dateCount = values.filter(v => {
+    if (v instanceof Date) return true;
+    if (typeof v === 'string') {
+      const parsed = Date.parse(v);
+      return Number.isFinite(parsed);
+    }
+    return false;
+  }).length;
+  
+  const threshold = Math.max(1, Math.floor(values.length * VALIDATION.DATE_DETECTION_THRESHOLD));
+  if (dateCount >= threshold) {
+    return 'time';
+  }
+  
+  return 'category';
 }

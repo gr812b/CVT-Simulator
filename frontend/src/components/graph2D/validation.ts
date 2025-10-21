@@ -20,7 +20,7 @@ export const VALIDATION = {
 /**
  * Validates an array of data points
  */
-export function validateData(xData: number[], yData: number[]): ValidationResult {
+export function validateData(xData: number[], yData: number[][]): ValidationResult {
   const errors: string[] = [];
   const warnings: string[] = [];
   
@@ -62,12 +62,14 @@ export function validateData(xData: number[], yData: number[]): ValidationResult
   });
 
   yData.forEach((y, index) => {
-    if (typeof y !== 'number' || !Number.isFinite(y)) {
-      errors.push(`Y value at index ${index} is not a valid number`);
-    }
+    for (const yValue of y) {
+      if (typeof yValue !== 'number' || !Number.isFinite(yValue)) {
+        errors.push(`Y value at index ${index} is not a valid number`);
+      }
 
-    if (y === null || y === undefined) {
-      errors.push(`Y value at index ${index} has null/undefined value`);
+      if (yValue === null || yValue === undefined) {
+        errors.push(`Y value at index ${index} has null/undefined value`);
+      }
     }
   });
   
@@ -85,34 +87,4 @@ export function validateData(xData: number[], yData: number[]): ValidationResult
     errors,
     warnings,
   };
-}
-
-/**
- * Determines the appropriate axis type based on data
- */
-export function inferAxisType(values: (number | string | Date)[]): 'time' | 'value' | 'category' {
-  if (values.length === 0) return 'category';
-  
-  // Check if all values are numbers
-  const numericCount = values.filter(v => typeof v === 'number' && Number.isFinite(v)).length;
-  if (numericCount === values.length) {
-    return 'value';
-  }
-  
-  // Check if values are dates or date-like strings
-  const dateCount = values.filter(v => {
-    if (v instanceof Date) return true;
-    if (typeof v === 'string') {
-      const parsed = Date.parse(v);
-      return Number.isFinite(parsed);
-    }
-    return false;
-  }).length;
-  
-  const threshold = Math.max(1, Math.floor(values.length * VALIDATION.DATE_DETECTION_THRESHOLD));
-  if (dateCount >= threshold) {
-    return 'time';
-  }
-  
-  return 'category';
 }
