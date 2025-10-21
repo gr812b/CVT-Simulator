@@ -51,20 +51,4 @@ class BeltModel:
         else:
             return tm.secondary_wrap_angle(shift_distance)
 
-    ## TODO: UNUSED METHODS
-    def calculate_slack_tension(
-        self,
-        radial_force: float,
-        wrap_angle: float,
-        μ: float,
-    ) -> float:
-        θ = abs((wrap_angle - np.pi) / 2)
-        denominator = np.cos(θ) * (
-            1 + math.exp(μ * wrap_angle)
-        )  # Derived from tension, angles and capstan equation
-        return radial_force / denominator
 
-    def calculate_max_transferable_torque(
-        self, tension: float, μ: float, wrap_angle: float, radius: float
-    ) -> float:
-        return tension * radius * (np.exp(μ * wrap_angle) - 1)
