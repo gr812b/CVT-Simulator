@@ -16,7 +16,8 @@ export type BaseUnitType =
   | 'acceleration'       // m/s²
   | 'angle'              // rad
   | 'time'               // s
-  | 'dimensionless';     // unitless ratios
+  | 'dimensionless'      // unitless ratios
+  | 'dimensionless_rate'; // rate of change of dimensionless values (1/s)
 
 // Available unit options for each base type
 export type UnitOptions = {
@@ -33,6 +34,8 @@ export type UnitOptions = {
   time: 's' | 'min' | 'hr';
   // Dimensionless set to empty for a ratio
   dimensionless: '' | '%'; 
+  // Rate of change of dimensionless values
+  dimensionless_rate: '1/s' | '1/min' | '%/s';
 };
 
 // Core unit configuration - affects all values of that type
@@ -107,6 +110,11 @@ const CONVERSION_FACTORS: { [K in BaseUnitType]: Record<UnitOptions[K], number> 
     '': 1,
     '%': 100,
   },
+  dimensionless_rate: {
+    '1/s': 1,
+    '1/min': 60,
+    '%/s': 100,
+  },
 } as const;
 
 // Default configuration (all SI units)
@@ -127,6 +135,7 @@ export const UNIT_PRESETS = {
     angle: 'rad',
     time: 's',
     dimensionless: '',
+    dimensionless_rate: '1/s',
   } as UnitConfiguration,
   
   IMPERIAL: {
@@ -141,6 +150,7 @@ export const UNIT_PRESETS = {
     acceleration: 'ft/s²',
     angle: 'deg',
     dimensionless: '%',
+    dimensionless_rate: '1/min',
   } as UnitConfiguration,
   
   BAJA: {
@@ -151,6 +161,7 @@ export const UNIT_PRESETS = {
     distance: 'm',
     torque: 'lb·ft',
     angle: 'deg',
+    dimensionless_rate: '1/s',
   } as UnitConfiguration,
 };
 
@@ -201,7 +212,7 @@ function convertTimeStepData(
   system: {
     slip: {
       t_c: conv(timeStep.system.slip.t_c, 'torque'),
-      cvt_ratio_derivative: conv(timeStep.system.slip.cvt_ratio_derivative, 'dimensionless')
+      cvt_ratio_derivative: conv(timeStep.system.slip.cvt_ratio_derivative, 'dimensionless_rate')
     },
     engine: {
       torque: conv(timeStep.system.engine.torque, 'torque'),

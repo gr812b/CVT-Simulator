@@ -19,6 +19,8 @@ const accelerationAccessor: AccessorStrategy = (point) => point.system.car.accel
 const cvtRatioAccessor: AccessorStrategy = (point) => point.system.cvt.cvt_ratio;
 const engineRpmAccessor: AccessorStrategy = (point) => point.system.engine.angular_velocity;
 const engineTorqueAccessor: AccessorStrategy = (point) => point.system.engine.torque;
+const cvtRatioRateOfChangeAccessor: AccessorStrategy = (point) => point.system.slip.cvt_ratio_derivative;
+const enginePowerAccessor: AccessorStrategy = (point) => point.system.engine.power;
 
 // Mapping from accessor to unit type
 export const accessorToUnit = new Map<AccessorStrategy, BaseUnitType>([
@@ -29,6 +31,8 @@ export const accessorToUnit = new Map<AccessorStrategy, BaseUnitType>([
     [cvtRatioAccessor, 'dimensionless'],
     [engineRpmAccessor, 'angular_velocity'],
     [engineTorqueAccessor, 'torque'],
+    [cvtRatioRateOfChangeAccessor, 'dimensionless_rate'],
+    [enginePowerAccessor, 'power'],
 ]);
 
 // Helper function to get unit label for an accessor
@@ -113,5 +117,29 @@ export const graphConfigs: GraphConfig[] = [
             showXLine: true,
             showYLine: false
         }
-    }
+    },
+    {
+        xAccessor: timeAccessor,
+        yAccessor: enginePowerAccessor,
+        config: {
+            title: "Engine Power vs Time",
+            xAxis: { name: "Time", type: "value", unit: getAxisUnit(timeAccessor) },
+            yAxis: { name: "Engine Power", type: "value", unit: getAxisUnit(enginePowerAccessor) },
+            height: 400,
+            showXLine: true,
+            showYLine: false
+        }
+    },
+    {
+        xAccessor: timeAccessor,
+        yAccessor: cvtRatioRateOfChangeAccessor,
+        config: {
+            title: "CVT Ratio Rate of Change vs Time",
+            xAxis: { name: "Time", type: "value", unit: getAxisUnit(timeAccessor) },
+            yAxis: { name: "CVT Ratio Rate of Change", type: "value", unit: getAxisUnit(cvtRatioRateOfChangeAccessor) },
+            height: 400,
+            showXLine: true,
+            showYLine: false
+        }
+    },
 ];
