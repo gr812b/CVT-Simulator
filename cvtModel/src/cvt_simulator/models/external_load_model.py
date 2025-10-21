@@ -29,13 +29,15 @@ class LoadModel:
         self.gearbox_ratio = GEARBOX_RATIO
 
     def get_breakdown(self, velocity: float) -> ExternalLoadForceBreakdown:
-        """Calculate the total load torque on the wheels due to drag and incline."""
+        """Calculate the total load force on the wheels due to drag and incline."""
         incline_force = self._calculate_incline_force()
         drag_force = self._calculate_drag_force(velocity)
         total_load_force = incline_force + drag_force
 
         return ExternalLoadForceBreakdown(
-            incline_force=incline_force, drag_force=drag_force, net=total_load_force
+            incline_force=incline_force, 
+            drag_force=drag_force, 
+            net=total_load_force
         )
 
     def _calculate_incline_force(self) -> float:

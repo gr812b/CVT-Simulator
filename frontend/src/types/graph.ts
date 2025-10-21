@@ -92,6 +92,10 @@ const secondarySpringCompForceAccessor: AccessorStrategy = (point) => {
     return 0;
 }; 
 
+const inclineForceAccessor: AccessorStrategy = (point) => point.system.car.external_forces.incline_force;
+const dragForceAccessor: AccessorStrategy = (point) => point.system.car.external_forces.drag_force;
+const totalExternalLoadAccessor: AccessorStrategy = (point) => point.system.car.external_forces.net;
+
 // Mapping from accessor to unit type
 export const accessorToUnit = new Map<AccessorStrategy, BaseUnitType>([
     [timeAccessor, 'time'],
@@ -115,6 +119,9 @@ export const accessorToUnit = new Map<AccessorStrategy, BaseUnitType>([
     [secondarySpringCompForceAccessor, 'force'],
     [primaryForceAccessor, 'force'],
     [secondaryForceAccessor, 'force'],
+    [inclineForceAccessor, 'force'],
+    [dragForceAccessor, 'force'],
+    [totalExternalLoadAccessor, 'force'],
 ]);
 
 // Helper function to get unit label for an accessor
@@ -284,6 +291,19 @@ export const graphConfigs: GraphConfig[] = [
             xAxis: { name: "Time", type: "value", unit: getAxisUnit(timeAccessor) },
             yAxis: { name: "Torque", type: "value", unit: "N·m" },
             seriesNames: ["T_c", "T_max"],
+            height: 400,
+            showXLine: true,
+            showYLine: false
+        }
+    },
+    {
+        xAccessor: timeAccessor,
+        yAccessor: [totalExternalLoadAccessor, inclineForceAccessor, dragForceAccessor],
+        config: {
+            title: "External Load Forces vs Time",
+            xAxis: { name: "Time", type: "value", unit: getAxisUnit(timeAccessor) },
+            yAxis: { name: "Force", type: "value", unit: getAxisUnit(inclineForceAccessor) },
+            seriesNames: ["Total External Load", "Incline Force", "Air Resistance"],
             height: 400,
             showXLine: true,
             showYLine: false
