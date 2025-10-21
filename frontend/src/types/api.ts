@@ -58,7 +58,6 @@ export interface components {
         /** CarForceBreakdownModel */
         CarForceBreakdownModel: {
             external_forces: components["schemas"]["ExternalLoadForceBreakdownModel"];
-            engine_forces: components["schemas"]["EngineForceBreakdownModel"];
             /** Acceleration */
             acceleration: number;
         };
@@ -83,6 +82,8 @@ export interface components {
             power: number;
             /** Angular Velocity */
             angular_velocity: number;
+            /** Angular Acceleration */
+            angular_acceleration: number;
         };
         /** ExternalLoadForceBreakdownModel */
         ExternalLoadForceBreakdownModel: {
@@ -172,12 +173,26 @@ export interface components {
             /** Total Distance */
             total_distance?: number | null;
         };
+        /** SlipBreakdownModel */
+        SlipBreakdownModel: {
+            /** T C */
+            t_c: number;
+            /** Cvt Ratio Derivative */
+            cvt_ratio_derivative: number;
+        };
         /** SpringTorsForceBreakdownModel */
         SpringTorsForceBreakdownModel: {
             /** Rotation */
             rotation: number;
             /** Net */
             net: number;
+        };
+        /** SystemBreakdownModel */
+        SystemBreakdownModel: {
+            slip: components["schemas"]["SlipBreakdownModel"];
+            engine: components["schemas"]["EngineForceBreakdownModel"];
+            car: components["schemas"]["CarForceBreakdownModel"];
+            cvt: components["schemas"]["CvtSystemForceBreakdownModel"];
         };
         /** SystemStateModel */
         SystemStateModel: {
@@ -189,14 +204,15 @@ export interface components {
             shift_velocity: number;
             /** Shift Distance */
             shift_distance: number;
+            /** Engine Angular Velocity */
+            engine_angular_velocity: number;
         };
         /** TimeStepDataModel */
         TimeStepDataModel: {
             /** Time */
             time: number;
             state: components["schemas"]["SystemStateModel"];
-            car_state: components["schemas"]["CarForceBreakdownModel"];
-            cvt_state: components["schemas"]["CvtSystemForceBreakdownModel"];
+            system: components["schemas"]["SystemBreakdownModel"];
         };
         /** ValidationError */
         ValidationError: {

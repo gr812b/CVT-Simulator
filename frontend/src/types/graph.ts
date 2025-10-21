@@ -15,15 +15,17 @@ type GraphConfig = Omit<Graph2DProps, 'xData' | 'yData' | 'className'> & {
 export const timeAccessor: AccessorStrategy = (point) => point.time;
 const positionAccessor: AccessorStrategy = (point) => point.state.car_position;
 const velocityAccessor: AccessorStrategy = (point) => point.state.car_velocity;
-const accelerationAccessor: AccessorStrategy = (point) => point.car_state.acceleration;
-const cvtRatioAccessor: AccessorStrategy = (point) => point.cvt_state.cvt_ratio;
-const engineRpmAccessor: AccessorStrategy = (point) => point.car_state.engine_forces.angular_velocity;
-const engineTorqueAccessor: AccessorStrategy = (point) => point.car_state.engine_forces.torque;
-const primaryRadialForceAccessor: AccessorStrategy = (point) => point.cvt_state.primaryRadialForce.net;
-const secondaryRadialForceAccessor: AccessorStrategy = (point) => point.cvt_state.secondaryRadialForce.net;
+const accelerationAccessor: AccessorStrategy = (point) => point.system.car.acceleration;
+const cvtRatioAccessor: AccessorStrategy = (point) => point.system.cvt.cvt_ratio;
+const engineRpmAccessor: AccessorStrategy = (point) => point.system.engine.angular_velocity;
+const engineTorqueAccessor: AccessorStrategy = (point) => point.system.engine.torque;
+const cvtRatioRateOfChangeAccessor: AccessorStrategy = (point) => point.system.slip.cvt_ratio_derivative;
+const enginePowerAccessor: AccessorStrategy = (point) => point.system.engine.power;
+const primaryRadialForceAccessor: AccessorStrategy = (point) => point.system.cvt.primaryRadialForce.net;
+const secondaryRadialForceAccessor: AccessorStrategy = (point) => point.system.cvt.secondaryRadialForce.net;
 // Accessor for flyweightForce.net
 const primaryFlyweightForceAccessor: AccessorStrategy = (point) => {
-    const prf = point.cvt_state.primaryRadialForce;
+    const prf = point.system.cvt.primaryRadialForce;
     const pulleyForce = prf.pulleyForce;
     if (!pulleyForce) return 0;
     if ('flyweightForce' in pulleyForce && pulleyForce.flyweightForce) {
@@ -34,7 +36,7 @@ const primaryFlyweightForceAccessor: AccessorStrategy = (point) => {
 
 // Accessor for springForce.net or springCompForce.net
 const primarySpringForceAccessor: AccessorStrategy = (point) => {
-    const prf = point.cvt_state.primaryRadialForce;
+    const prf = point.system.cvt.primaryRadialForce;
     const pulleyForce = prf.pulleyForce;
     if (!pulleyForce) return 0;
     if ('springForce' in pulleyForce && pulleyForce.springForce) {
@@ -57,6 +59,8 @@ export const accessorToUnit = new Map<AccessorStrategy, BaseUnitType>([
     [cvtRatioAccessor, 'dimensionless'],
     [engineRpmAccessor, 'angular_velocity'],
     [engineTorqueAccessor, 'torque'],
+    [cvtRatioRateOfChangeAccessor, 'dimensionless_rate'],
+    [enginePowerAccessor, 'power'],
 ]);
 
 // Helper function to get unit label for an accessor
@@ -144,12 +148,36 @@ export const graphConfigs: GraphConfig[] = [
     },
     {
         xAccessor: timeAccessor,
+        yAccessor: [enginePowerAccessor],
+        config: {
+            title: "Engine Power vs Time",
+            xAxis: { name: "Time", type: "value", unit: getAxisUnit(timeAccessor) },
+            yAxis: { name: "Engine Power", type: "value", unit: getAxisUnit(enginePowerAccessor) },
+            height: 400,
+            showXLine: true,
+            showYLine: false
+        }
+    },
+    {
+        xAccessor: timeAccessor,
         yAccessor: [primaryRadialForceAccessor, secondaryRadialForceAccessor],
         config: {
             title: "Pulley Radial Forces vs Time",
             xAxis: { name: "Time", type: "value", unit: "s" },
             yAxis: { name: "Radial Force", type: "value", unit: "N" },
             seriesNames: ["Primary ", "Secondary"],
+            height: 400,
+            showXLine: true,
+            showYLine: false
+        }
+    },
+    {
+        xAccessor: timeAccessor,
+        yAccessor: [cvtRatioRateOfChangeAccessor],
+        config: {
+            title: "CVT Ratio Rate of Change vs Time",
+            xAxis: { name: "Time", type: "value", unit: getAxisUnit(timeAccessor) },
+            yAxis: { name: "CVT Ratio Rate of Change", type: "value", unit: getAxisUnit(cvtRatioRateOfChangeAccessor) },
             height: 400,
             showXLine: true,
             showYLine: false

@@ -1,5 +1,5 @@
 from typing import List
-from cvt_simulator.models.dataTypes import CarForceBreakdown, CvtSystemForceBreakdown
+from cvt_simulator.models.dataTypes import SystemBreakdown
 from cvt_simulator.utils.system_state import SystemState
 import pandas as pd
 from cvt_simulator.models.model_initializer import get_models
@@ -12,16 +12,14 @@ from dataclasses import is_dataclass, fields, dataclass
 class TimeStepData:
     """
     Represents all the data for a single time step in the simulation.
+    Uses the unified SystemBreakdown for clean access to all component data.
     """
 
     time: float
     state: SystemState
-    car_state: CarForceBreakdown
-    cvt_state: CvtSystemForceBreakdown
+    system: SystemBreakdown
 
 
-# TODO: figure out how to structure the returned object over the API as one guy, that makes sense for the
-# front end and is easy, with type gen
 class FormattedSimulationResult:
     data: List[TimeStepData]
 
@@ -33,14 +31,13 @@ class FormattedSimulationResult:
         self.gather_model_states(result, args)
 
     def gather_model_states(self, result: SimulationResult, args: SimulationArgs):
-        car_model, cvt_model = get_models(args)
+        system_model = get_models(args)
 
         for i, (time, state) in enumerate(zip(result.time, result.states)):
-            car_state = car_model.get_breakdown(state)
-            cvt_state = cvt_model.get_breakdown(state)
+            system_breakdown = system_model.get_breakdown(state)
 
             time_step_data = TimeStepData(
-                time=time, state=state, car_state=car_state, cvt_state=cvt_state
+                time=time, state=state, system=system_breakdown
             )
             self.data.append(time_step_data)
 
@@ -59,21 +56,13 @@ class FormattedSimulationResult:
         """
         Flattens the data and writes to a CSV file for front-end consumption.
         """
-        # Get all unique keys from all time steps by flattening everything
+        # Get all unique keys from all time steps by flattening the entire TimeStepData
         all_keys = set()
-
-        # Add time as a basic field
-        all_keys.add("time")
 
         # Collect all unique keys from all time steps
         for time_step in self.data:
-            flat_state = self._flatten_dataclass(time_step.state, "state")
-            flat_car = self._flatten_dataclass(time_step.car_state, "car")
-            flat_cvt = self._flatten_dataclass(time_step.cvt_state, "cvt")
-
-            all_keys.update(flat_state.keys())
-            all_keys.update(flat_car.keys())
-            all_keys.update(flat_cvt.keys())
+            flat_time_step = self._flatten_dataclass(time_step)
+            all_keys.update(flat_time_step.keys())
 
         # Initialize all columns
         data = {}
@@ -82,42 +71,17 @@ class FormattedSimulationResult:
 
         # Populate all the flattened data
         for time_step in self.data:
-            flat_state = self._flatten_dataclass(time_step.state, "state")
-            flat_car = self._flatten_dataclass(time_step.car_state, "car")
-            flat_cvt = self._flatten_dataclass(time_step.cvt_state, "cvt")
-
-            # Merge all flattened data
-            flat_combined = {
-                **flat_state,
-                **flat_car,
-                **flat_cvt,
-                "time": time_step.time,
-            }
+            flat_time_step = self._flatten_dataclass(time_step)
 
             # For each key, append the value or None if missing
             for key in all_keys:
-                if key in flat_combined:
-                    data[key].append(flat_combined[key])
+                if key in flat_time_step:
+                    data[key].append(flat_time_step[key])
                 else:
                     data[key].append(None)
 
         df = pd.DataFrame(data)
         df.to_csv(filename, index=False)
-
-    def to_dict(self):
-        """
-        Converts the entire result into a list of dictionaries for each time step. No flattening
-        """
-        result_list = []
-        for time_step in self.data:
-            entry = {
-                "time": time_step.time,
-                "state": time_step.state,
-                "car_state": time_step.car_state,
-                "cvt_state": time_step.cvt_state,
-            }
-            result_list.append(entry)
-        return result_list
 
     def _flatten_dataclass(self, obj, prefix=""):
         """

@@ -1,11 +1,10 @@
 import sys
 import numpy as np
 from typing import Callable
-from cvt_simulator.models.car_model import CarModel
 from scipy.integrate import solve_ivp
 from cvt_simulator.utils.system_state import SystemState
 from cvt_simulator.utils.simulation_result import SimulationResult
-from cvt_simulator.models.cvt_shift_model import CvtShiftModel
+from cvt_simulator.models.system_model import SystemModel
 from cvt_simulator.constants.car_specs import (
     GEARBOX_RATIO,
     WHEEL_RADIUS,
@@ -38,15 +37,14 @@ class SimulationRunner:
         car_position=0.0,
         shift_velocity=0.0,
         shift_distance=0.0,
+        engine_angular_velocity=rpm_to_rad_s(1800),
     )
 
     def __init__(
         self,
-        car_model: CarModel,
-        cvt_shift_model: CvtShiftModel,
+        system_model: SystemModel,
     ):
-        self.car_model = car_model
-        self.cvt_shift_model = cvt_shift_model
+        self.system_model = system_model
 
     def run_simulation(self) -> SimulationResult:
         """Run the simulation and return results."""
@@ -54,7 +52,7 @@ class SimulationRunner:
         # Use a single global time grid for the entire simulation
         time_eval = np.linspace(0, self.TOTAL_SIM_TIME, 10000)
         events = [
-            get_shift_steady_event(self.cvt_shift_model),
+            get_shift_steady_event(self.system_model.cvt_shift_model),
             car_velocity_constraint_event,
             shift_constraint_event,
         ]
@@ -163,17 +161,20 @@ class SimulationRunner:
             state.shift_distance = MAX_SHIFT
             state.shift_velocity = min(0, shift_velocity)
 
-        # Car math
-        car_acceleration = self.car_model.get_breakdown(state).acceleration
+        # Get system breakdown (this calculates everything in correct order)
+        system_breakdown = self.system_model.get_breakdown(state)
 
-        # Pulley math
-        shift_acceleration = self.cvt_shift_model.get_breakdown(state).acceleration
+        # Extract accelerations from breakdown
+        car_acceleration = system_breakdown.car.acceleration
+        engine_angular_accel = system_breakdown.engine.angular_acceleration
+        shift_acceleration = system_breakdown.cvt.acceleration
 
         return [
             car_acceleration,
             state.car_velocity,
             shift_acceleration,
             state.shift_velocity,
+            engine_angular_accel,
         ]
 
     def _evaluate_full_shift_system(self, t: float, y: list[float]):
@@ -184,12 +185,16 @@ class SimulationRunner:
         state.shift_distance = MAX_SHIFT
         state.shift_velocity = 0
 
-        # Car math
-        car_acceleration = self.car_model.get_breakdown(state).acceleration
+        # Get system breakdown for full shift case
+        system_breakdown = self.system_model.get_breakdown(state)
+
+        car_acceleration = system_breakdown.car.acceleration
+        engine_angular_accel = system_breakdown.engine.angular_acceleration
 
         return [
             car_acceleration,
             state.car_velocity,
             0,
             0,
+            engine_angular_accel,
         ]
