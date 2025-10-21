@@ -494,6 +494,7 @@ const [x, y] = [xData[activeIndex], yData[activeIndex]];
     lineStyle: { type: 'dashed', color: COLORS.TEXT },
     label: { show: false },
     symbol: 'none',
+    precision: 10,
     data,
   };
 }
