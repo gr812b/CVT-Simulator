@@ -38,9 +38,3 @@ class CarModel:
             external_forces=self.load_model.get_breakdown(state.car_velocity),
             acceleration=accel,
         )
-
-    def _get_engine_velocity(self, shift_distance, car_velocity):
-        cvt_ratio = tm.current_cvt_ratio(shift_distance)
-        wheel_to_engine_ratio = (cvt_ratio * GEARBOX_RATIO) / WHEEL_RADIUS
-        engine_angular_velocity = car_velocity * wheel_to_engine_ratio
-        return engine_angular_velocity
