@@ -195,6 +195,19 @@ export const graphConfigs: GraphConfig[] = [
             showYLine: false
         }
     },
+    // Just engine rpm vs time
+    {
+        xAccessor: timeAccessor,
+        yAccessor: [engineRpmAccessor],
+        config: {
+            title: "Engine RPM vs Time",
+            xAxis: { name: "Time", type: "value", unit: getAxisUnit(timeAccessor) },
+            yAxis: { name: "Engine RPM", type: "value", unit: getAxisUnit(engineRpmAccessor) },
+            height: 400,
+            showXLine: true,
+            showYLine: false
+        }
+    },
     {
         xAccessor: timeAccessor,
         yAccessor: [engineTorqueAccessor],
@@ -289,6 +302,19 @@ export const graphConfigs: GraphConfig[] = [
         config: {
             title: "Slip Model Torques vs Time",
             xAxis: { name: "Time", type: "value", unit: getAxisUnit(timeAccessor) },
+            yAxis: { name: "Torque", type: "value", unit: getAxisUnit(t_cAccessor) },
+            seriesNames: ["T_c", "T_max"],
+            height: 400,
+            showXLine: true,
+            showYLine: false
+        }
+    },
+        {
+        xAccessor: engineRpmAccessor,
+        yAccessor: [t_cAccessor, t_maxAccessor],
+        config: {
+            title: "Slip Model Torques vs Engine RPM",
+            xAxis: { name: "Engine RPM", type: "value", unit: getAxisUnit(engineRpmAccessor) },
             yAxis: { name: "Torque", type: "value", unit: "N·m" },
             seriesNames: ["T_c", "T_max"],
             height: 400,
