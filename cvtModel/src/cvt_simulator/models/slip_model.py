@@ -111,7 +111,7 @@ class SlipModel:
         )
         
         # Use the more restrictive (smaller) T_MAX
-        return min(primary_t_max, secondary_t_max)
+        return 10000 # max(min(primary_t_max, secondary_t_max), 0)
     
     def _calculate_slack_tension(
         self,

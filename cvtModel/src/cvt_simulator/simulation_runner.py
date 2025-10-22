@@ -31,7 +31,7 @@ class SimulationRunner:
 
     TOTAL_SIM_TIME = 15  # seconds
     INITIAL_STATE = SystemState(
-        car_velocity=rpm_to_rad_s(1800)
+        car_velocity=rpm_to_rad_s(0.01)
         / (GEARBOX_RATIO * tm.current_cvt_ratio(0))
         * WHEEL_RADIUS,
         car_position=0.0,
@@ -184,6 +184,11 @@ class SimulationRunner:
         # Force the shifting variables to remain constant at full shift.
         state.shift_distance = MAX_SHIFT
         state.shift_velocity = 0
+        
+        # CRITICAL: Update the actual y array that scipy saves to CSV
+        constrained_y = state.to_array()
+        for i in range(len(y)):
+            y[i] = constrained_y[i]
 
         # Get system breakdown for full shift case
         system_breakdown = self.system_model.get_breakdown(state)

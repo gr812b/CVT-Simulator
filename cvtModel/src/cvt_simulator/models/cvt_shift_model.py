@@ -44,21 +44,21 @@ class CvtShiftModel:
     def _get_pulley_breakdowns(self, state: SystemState):
         # Compute CVT ratio and engine velocity
         cvt_ratio = tm.current_cvt_ratio(state.shift_distance)
-        wheel_to_engine_ratio = (
-            cvt_ratio * GEARBOX_RATIO
-        ) / WHEEL_RADIUS  # or import these constants
-        engine_velocity = state.car_velocity * wheel_to_engine_ratio
+        wheel_to_sec_ratio = GEARBOX_RATIO / WHEEL_RADIUS  # or import these constants
+        angular_velocity_sec = state.car_velocity * wheel_to_sec_ratio
+
+        angular_velocity_prim = state.engine_angular_velocity
 
         # Engine torque for secondary force calculation
-        engine_torque = self.engine_model.get_torque(engine_velocity)
+        engine_torque = self.engine_model.get_torque(angular_velocity_prim)
 
         # Calculate forces using the provided simulators
         primary_radial_breakdown = self.primary_radial_model.get_breakdown(
-            state.shift_distance, angular_velocity=engine_velocity
+            state.shift_distance, angular_velocity=angular_velocity_prim
         )
         secondary_radial_breakdown = self.secondary_radial_model.get_breakdown(
             state.shift_distance,
-            angular_velocity=engine_velocity,
+            angular_velocity=angular_velocity_sec,
             torque=engine_torque * cvt_ratio,
         )
 
