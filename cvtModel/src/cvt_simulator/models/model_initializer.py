@@ -6,7 +6,7 @@ from cvt_simulator.models.primary_pulley_model import PrimaryPulleyModel
 from cvt_simulator.models.secondary_pulley_model import SecondaryPulleyModel
 from cvt_simulator.models.belt_model import BeltModel
 from cvt_simulator.models.cvt_shift_model import CvtShiftModel
-from cvt_simulator.constants.engine_specs import torque_curve
+from cvt_simulator.constants.engine_specs import safe_torque_curve
 from cvt_simulator.utils.conversions import deg_to_rad
 from cvt_simulator.utils.simulation_args import SimulationArgs
 from cvt_simulator.models.slip_model import SlipModel
@@ -16,7 +16,7 @@ from cvt_simulator.models.system_model import SystemModel
 
 def get_models(args: SimulationArgs):
     # Vehicle dynamics
-    engine_model = EngineModel(torque_curve=torque_curve)
+    engine_model = EngineModel(torque_curve=safe_torque_curve)
     load_model = LoadModel(
         car_mass=args.vehicle_weight + args.driver_weight,
         incline_angle=deg_to_rad(args.angle_of_incline),

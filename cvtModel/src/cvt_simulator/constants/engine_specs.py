@@ -5,6 +5,9 @@ from cvt_simulator.utils.conversions import rpm_to_rad_s
 
 # Given engine specifications (torque in ft*lbs)
 engineSpecs = [
+    {"rpm": 1000, "torque": 0},
+    {"rpm": 1800, "torque": 18},
+
     {"rpm": 2400, "torque": 18.5},
     {"rpm": 2600, "torque": 18.1},
     {"rpm": 2800, "torque": 17.4},
@@ -34,13 +37,45 @@ torque_curve = interp1d(
     angular_velocities, torques, kind="cubic", fill_value="extrapolate"
 )
 
+def safe_torque_curve(angular_velocity):
+    """
+    Safe torque curve with realistic physical limits.
+    
+    Real engines:
+    - Can't produce torque when spinning backwards (negative angular velocity)
+    - Have maximum safe RPM limits beyond which they fail
+    - Can't produce infinite torque
+    """
+    # Convert to numpy array for element-wise operations
+    omega = np.asarray(angular_velocity)
+    
+    # Define physical limits
+    MIN_ANGULAR_VELOCITY = 0.0  # rad/s (engine can't run backwards)
+    MAX_ANGULAR_VELOCITY = rpm_to_rad_s(6000)  # rad/s (redline RPM)
+    MAX_TORQUE = 30.0  # Nm (reasonable upper bound)
+    MIN_TORQUE = -5.0  # Nm (small negative torque for engine braking)
+    
+    # Clamp angular velocity to safe range
+    omega_clamped = np.clip(omega, MIN_ANGULAR_VELOCITY, MAX_ANGULAR_VELOCITY)
+    
+    # Get torque from interpolation
+    torque_raw = torque_curve(omega_clamped)
+    
+    # Handle negative angular velocities (engine can't run backwards)
+    torque_result = np.where(omega < 0, 0.0, torque_raw)
+    
+    # Clamp torque to physically reasonable bounds
+    torque_result = np.clip(torque_result, MIN_TORQUE, MAX_TORQUE)
+    
+    return torque_result
+
 
 if __name__ == "__main__":
     power_curve = interp1d(
         angular_velocities, powers, kind="cubic", fill_value="extrapolate"
     )
 
-    x = np.linspace(180, 420, 1000)
+    x = np.linspace(0, 420, 1000)
     plt.plot(x, torque_curve(x))
     plt.scatter(angular_velocities, torques, color="red")
     plt.xlabel("Angular Velocity (rad/s)")
