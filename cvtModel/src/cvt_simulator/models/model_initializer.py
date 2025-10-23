@@ -4,7 +4,6 @@ from cvt_simulator.models.external_load_model import LoadModel
 from cvt_simulator.models.engine_model import EngineModel
 from cvt_simulator.models.primary_pulley_model import PrimaryPulleyModel
 from cvt_simulator.models.secondary_pulley_model import SecondaryPulleyModel
-from cvt_simulator.models.belt_model import BeltModel
 from cvt_simulator.models.cvt_shift_model import CvtShiftModel
 from cvt_simulator.constants.engine_specs import safe_torque_curve
 from cvt_simulator.utils.conversions import deg_to_rad
@@ -36,17 +35,13 @@ def get_models(args: SimulationArgs):
         initial_compression=args.secondary_linear_spring_pretension,
         ramp_type=args.secondary_helix_geometry,
     )
-    primary_belt_model = BeltModel(primary=True)
-    secondary_belt_model = BeltModel(primary=False)
     primary_radial_model = RadialPulleyModel(
         primary=True,
         pulley_model=primary_model,
-        belt_model=primary_belt_model,
     )
     secondary_radial_model = RadialPulleyModel(
         primary=False,
         pulley_model=secondary_model,
-        belt_model=secondary_belt_model,
     )
     cvt_shift = CvtShiftModel(
         engine_model,

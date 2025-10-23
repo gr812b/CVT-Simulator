@@ -52,20 +52,14 @@ class SecondaryForceBreakdown:
 
 
 @dataclass
-class BeltCentrifugalForceBreakdown:
-    mass: float
-    radius: float
-    wrap_angle: float
-    angular_velocity: float
-
-    net: float
-
-
-@dataclass
 class RadialPulleyForceBreakdown:
     pulleyForce: Union[PrimaryForceBreakdown, SecondaryForceBreakdown]
-    beltCentrifugalForce: BeltCentrifugalForceBreakdown
-    radialPulleyForce: float  # Radial component
+    wrap_angle: float
+    radius: float
+    angular_velocity: float
+    radial_from_clamping: float
+    radial_from_centrifugal: float
+
     net: float
 
 
