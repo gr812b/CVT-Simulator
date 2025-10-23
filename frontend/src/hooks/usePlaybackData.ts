@@ -15,6 +15,7 @@ interface UsePlaybackDataReturn {
   replayController: ReplayController;
   times: number[];
   activeIndex: number;
+  setActiveIndex: (index: number) => void;
 }
 
 export const usePlaybackData = (): UsePlaybackDataReturn | null => {
@@ -55,5 +56,6 @@ export const usePlaybackData = (): UsePlaybackDataReturn | null => {
     replayController,
     times,
     activeIndex,
+    setActiveIndex: (index: number) => replayController.setCurrentIndex(index),
   };
 };

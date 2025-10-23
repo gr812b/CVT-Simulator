@@ -17,6 +17,8 @@ export interface Graph2DProps {
   yData: number[][];
   /** Index of point to highlight on chart */
   activeIndex?: number;
+  /** Function to update the active index */
+  setActiveIndex: (index: number) => void;
   /** Chart configuration */
   config: ChartConfig;
   /** Additional ECharts options to merge (for advanced customization) */
@@ -29,6 +31,7 @@ export function Graph2D({
   xData,
   yData,
   activeIndex,
+  setActiveIndex,
   config,
   chartOptions = {},
   className = '',
@@ -74,6 +77,69 @@ export function Graph2D({
     });
   }, [xData, yData, activeIndex, config, validation.isValid]);
 
+
+  // const [highlightedIndex, setHighlightedIndex] = useState<number | null>(null);
+
+  /**
+   * Unified handler for click or drag-end events.
+   */
+  function handlePointSelect(params?: { componentType: string; dataIndex?: number }): void {
+    let dataIndex: number | undefined = undefined;
+
+    // Case 1: Direct click on data point
+    if (params?.componentType === 'series') {
+      dataIndex = params.dataIndex;
+    }
+
+    // // Case 2: Click/drag near a tooltip-highlighted point
+    // else if (highlightedIndex !== null) {
+    //   dataIndex = highlightedIndex;
+    // }
+
+    setActiveIndex(dataIndex || -1);
+  }
+
+  // /**
+  //  * Listener for tooltip-highlighted point tracking.
+  //  */
+  // function handleTooltipHighlight(event: { axesInfo?: Array<{ value: number }> }): void {
+  //   if (event.axesInfo && event.axesInfo.length > 0) {
+  //     const axisValue = event.axesInfo[0].value;
+  //     const idx = xData.findIndex((x) => x === axisValue);
+  //     setHighlightedIndex(idx !== -1 ? idx : null);
+  //   }
+  // }
+
+  /**
+   * Setup mouse drag handlers (mousedown, mouseup, move)
+   */
+  // function setupDragHandlers(): void {
+  //   let isDragging = false;
+  //   let dragMoved = false;
+  //   const chart = chartRef.current;
+  //   if (!chart) return;
+
+  //   chart.getZr().on('mousedown', () => {
+  //     isDragging = true;
+  //     dragMoved = false;
+  //   });
+
+  //   chart.getZr().on('mousemove', () => {
+  //     if (isDragging) dragMoved = true;
+  //   });
+
+  //   chart.getZr().on('mouseup', () => {
+  //     if (isDragging) {
+  //       isDragging = false;
+
+  //       // If user moved the mouse while dragging
+  //       if (dragMoved && highlightedIndex !== null) {
+  //         handlePointSelect();
+  //       }
+  //     }
+  //   });
+  // }
+
   const chartHeight = config.height || 400;
   const chartWidth = config.width || '100%';
   
@@ -101,7 +167,16 @@ export function Graph2D({
           style={{ width: chartWidth, height: chartHeight }}
           notMerge
           lazyUpdate
-          onChartReady={(chart) => { chartRef.current = chart; }}
+          onChartReady={(chart) => {
+            chartRef.current = chart;
+            // setupDragHandlers();
+            // chart.on('updateAxisPointer', handleTooltipHighlight);
+          }}
+          onEvents={{
+            click: (params: { componentType: string; dataIndex?: number }) => {
+              handlePointSelect(params);
+            },
+          }}
         />
       </div>
     </div>
