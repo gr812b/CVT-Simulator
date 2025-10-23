@@ -18,7 +18,7 @@ export interface Graph2DProps {
   /** Index of point to highlight on chart */
   activeIndex?: number;
   /** Function to update the active index */
-  setActiveIndex: (index: number) => void;
+  setActiveIndex?: (index: number) => void;
   /** Chart configuration */
   config: ChartConfig;
   /** Additional ECharts options to merge (for advanced customization) */
@@ -96,7 +96,7 @@ export function Graph2D({
     //   dataIndex = highlightedIndex;
     // }
 
-    setActiveIndex(dataIndex || -1);
+    setActiveIndex?.(dataIndex || -1);
   }
 
   // /**
