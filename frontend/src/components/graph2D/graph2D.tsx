@@ -84,7 +84,8 @@ export function Graph2D({
    * Handler for click event
    */
   const handleClick = useCallback((): void => {
-    setActiveIndex?.(highlightedIndexRef.current ?? 0);
+    if (highlightedIndexRef.current === undefined) return;
+    setActiveIndex?.(highlightedIndexRef.current);
   }, [setActiveIndex]);
 
   /**
