@@ -1,4 +1,4 @@
-import { useMemo, useEffect, useRef } from 'react';
+import { useMemo, useEffect, useRef, useCallback } from 'react';
 import ReactECharts from 'echarts-for-react';
 import cx from 'classnames';
 import styles from './Graph2D.module.scss';
@@ -83,9 +83,9 @@ export function Graph2D({
   /**
    * Handler for click event
    */
-  function handleClick(): void {
-    setActiveIndex?.(highlightedIndexRef.current || -1);
-  }
+  const handleClick = useCallback((): void => {
+    setActiveIndex?.(highlightedIndexRef.current ?? 0);
+  }, [setActiveIndex]);
 
   /**
    * Listener for tooltip-highlighted point tracking
@@ -93,6 +93,28 @@ export function Graph2D({
   function handleTooltipUpdate(params?: { dataIndex?: number }): void {
     highlightedIndexRef.current = params?.dataIndex;
   }
+
+  /**
+   * Handle chart ready event
+   */
+  function handleChartReady(chart: ECharts): void {
+    chartRef.current = chart;
+  }
+
+  /**
+   * Use effect to clean up event listener on unmount
+   */
+  useEffect(() => {
+    const chart = chartRef.current;
+    if (!chart) return;
+
+    const zr = chart.getZr();
+    zr.on('click', handleClick);
+
+    return () => {
+      zr.off('click', handleClick);
+    };
+  }, [handleClick]);
 
   const chartHeight = config.height || 400;
   const chartWidth = config.width || '100%';
@@ -121,10 +143,7 @@ export function Graph2D({
           style={{ width: chartWidth, height: chartHeight }}
           notMerge
           lazyUpdate
-          onChartReady={(chart) => {
-            chartRef.current = chart;
-            chart.getZr().on('click', handleClick);
-          }}
+          onChartReady={handleChartReady}
           onEvents={{
             updateAxisPointer: (params: { dataIndex?: number }) => {
               handleTooltipUpdate(params);
