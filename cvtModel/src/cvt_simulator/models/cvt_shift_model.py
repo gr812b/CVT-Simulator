@@ -44,7 +44,7 @@ class CvtShiftModel:
     def _get_pulley_breakdowns(self, state: SystemState):
         # Calculate forces using the provided simulators
         # TODO: Remove this torque passing
-        torque = self.engine_model.get_torque(state.engine_angular_velocity)
+        torque = self.engine_model.get_torque(state.engine_angular_velocity) * tm.current_cvt_ratio(state.shift_distance)
         primary_radial_breakdown = self.primary_radial_model.get_breakdown(state, torque)
         secondary_radial_breakdown = self.secondary_radial_model.get_breakdown(state, torque)
 
