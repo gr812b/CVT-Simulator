@@ -50,7 +50,7 @@ class RadialPulleyModel:
         radius = self._get_radius(state.shift_distance)
         angular_velocity = self._get_angular_velocity(state)
 
-        radial_from_clamping = ((clamp_force * np.tan(SHEAVE_ANGLE / 2)) / wrap_angle)
+        radial_from_clamping = 2 * (clamp_force * np.tan(SHEAVE_ANGLE / 2)) / wrap_angle
         radial_from_centrifugal = angular_velocity**2 * radius**2 * BELT_CROSS_SECTIONAL_AREA * RUBBER_DENSITY
 
         net = 2 * np.sin(wrap_angle / 2) * (radial_from_clamping + radial_from_centrifugal)
