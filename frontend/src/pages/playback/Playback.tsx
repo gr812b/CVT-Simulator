@@ -25,7 +25,7 @@ export const Playback = () => {
         return null;
     }
 
-    const { graphs, replayController, times, activeIndex } = playbackData;
+    const { graphs, replayController, times, activeIndex, setActiveIndex } = playbackData;
 
     return (
         <div className={styles.playback}>
@@ -49,6 +49,7 @@ export const Playback = () => {
                         key={index}
                         {...graph}
                         activeIndex={activeIndex}
+                        setActiveIndex={setActiveIndex}
                     />
                 ))}
             </div>

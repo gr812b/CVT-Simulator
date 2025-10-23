@@ -1,4 +1,4 @@
-import { useMemo, useEffect, useRef } from 'react';
+import { useMemo, useEffect, useRef, useCallback } from 'react';
 import ReactECharts from 'echarts-for-react';
 import cx from 'classnames';
 import styles from './Graph2D.module.scss';
@@ -17,6 +17,8 @@ export interface Graph2DProps {
   yData: number[][];
   /** Index of point to highlight on chart */
   activeIndex?: number;
+  /** Function to update the active index */
+  setActiveIndex?: (index: number) => void;
   /** Chart configuration */
   config: ChartConfig;
   /** Additional ECharts options to merge (for advanced customization) */
@@ -29,6 +31,7 @@ export function Graph2D({
   xData,
   yData,
   activeIndex,
+  setActiveIndex,
   config,
   chartOptions = {},
   className = '',
@@ -74,6 +77,45 @@ export function Graph2D({
     });
   }, [xData, yData, activeIndex, config, validation.isValid]);
 
+
+  const highlightedIndexRef = useRef<number | undefined>(undefined);
+
+  /**
+   * Handler for click event
+   */
+  const handleClick = useCallback((): void => {
+    setActiveIndex?.(highlightedIndexRef.current ?? 0);
+  }, [setActiveIndex]);
+
+  /**
+   * Listener for tooltip-highlighted point tracking
+   */
+  function handleTooltipUpdate(params?: { dataIndex?: number }): void {
+    highlightedIndexRef.current = params?.dataIndex;
+  }
+
+  /**
+   * Handle chart ready event
+   */
+  function handleChartReady(chart: ECharts): void {
+    chartRef.current = chart;
+  }
+
+  /**
+   * Use effect to clean up event listener on unmount
+   */
+  useEffect(() => {
+    const chart = chartRef.current;
+    if (!chart) return;
+
+    const zr = chart.getZr();
+    zr.on('click', handleClick);
+
+    return () => {
+      zr.off('click', handleClick);
+    };
+  }, [handleClick]);
+
   const chartHeight = config.height || 400;
   const chartWidth = config.width || '100%';
   
@@ -101,7 +143,12 @@ export function Graph2D({
           style={{ width: chartWidth, height: chartHeight }}
           notMerge
           lazyUpdate
-          onChartReady={(chart) => { chartRef.current = chart; }}
+          onChartReady={handleChartReady}
+          onEvents={{
+            updateAxisPointer: (params: { dataIndex?: number }) => {
+              handleTooltipUpdate(params);
+            },
+          }}
         />
       </div>
     </div>
