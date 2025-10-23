@@ -11,6 +11,7 @@ from cvt_simulator.utils.simulation_args import SimulationArgs
 from cvt_simulator.models.slip_model import SlipModel
 from cvt_simulator.models.engine_accel_model import EngineAccelModel
 from cvt_simulator.models.system_model import SystemModel
+from cvt_simulator.models.sec_max_torque_model import SecondaryMaxTorqueModel
 
 
 def get_models(args: SimulationArgs):
@@ -43,16 +44,24 @@ def get_models(args: SimulationArgs):
         primary=False,
         pulley_model=secondary_model,
     )
+
     cvt_shift = CvtShiftModel(
         engine_model,
         primary_radial_model,
         secondary_radial_model,
     )
 
+    # Some janky glue right here
+    secondary_max_torque_model = SecondaryMaxTorqueModel(
+        sec_model=secondary_model,
+        radial_model=secondary_radial_model,
+    )
+
     slip_model = SlipModel(
         load_model=load_model,
         engine_model=engine_model,
         car_mass=args.vehicle_weight + args.driver_weight,
+        sec_max_torque_model=secondary_max_torque_model,
     )
 
     car_model = CarModel(

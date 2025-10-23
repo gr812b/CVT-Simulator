@@ -4,6 +4,7 @@ from cvt_simulator.models.dataTypes import SlipBreakdown, CvtSystemForceBreakdow
 from cvt_simulator.models.external_load_model import LoadModel
 from cvt_simulator.models.engine_model import EngineModel
 from cvt_simulator.utils.system_state import SystemState
+from cvt_simulator.models.sec_max_torque_model import SecondaryMaxTorqueModel
 from cvt_simulator.constants.car_specs import (
     WHEEL_RADIUS,
     GEARBOX_RATIO,
@@ -17,15 +18,20 @@ from cvt_simulator.constants.constants import (
 
 class SlipModel:
     def __init__(
-        self, load_model: LoadModel, engine_model: EngineModel, car_mass: float
+        self, 
+        load_model: LoadModel,
+        engine_model: EngineModel, 
+        car_mass: float,
+        sec_max_torque_model: SecondaryMaxTorqueModel,
     ):
         self.load_model = load_model
         self.engine_model = engine_model
         self.car_mass = car_mass
+        self.sec_max_torque_model = sec_max_torque_model
         self.μ = RUBBER_ALUMINUM_STATIC_FRICTION # TODO: Look into V-belt groove friction enhancement
 
     def get_breakdown(self, state: SystemState, cvt_breakdown: CvtSystemForceBreakdown) -> SlipBreakdown:
-        t_max = self.calculate_t_max(cvt_breakdown)
+        t_max = self.calculate_t_max(state, cvt_breakdown)
         t_c = self.get_tc(state, t_max)
         cvt_ratio_derivative = tm.current_cvt_ratio_rate_of_change(
             state.shift_distance, state.shift_velocity
@@ -78,7 +84,7 @@ class SlipModel:
     def get_wheel_speed(self, car_velocity: float):
         return car_velocity / WHEEL_RADIUS
 
-    def calculate_t_max(self, cvt_breakdown: CvtSystemForceBreakdown) -> float:
+    def calculate_t_max(self, state: SystemState, cvt_breakdown: CvtSystemForceBreakdown) -> float:
         """
         Calculate maximum transferable torque using CVT breakdown data.
         
@@ -89,7 +95,6 @@ class SlipModel:
         primary_radial_force = cvt_breakdown.primaryRadialForce.net
         primary_wrap_angle = cvt_breakdown.primaryRadialForce.wrap_angle
         primary_radius = cvt_breakdown.primaryRadialForce.radius
-        
         # Extract data from secondary pulley breakdown
         secondary_radial_force = cvt_breakdown.secondaryRadialForce.net
         secondary_wrap_angle = cvt_breakdown.secondaryRadialForce.wrap_angle
@@ -99,14 +104,17 @@ class SlipModel:
         primary_t_max = self._get_max_torque(
             primary_radial_force, primary_wrap_angle, primary_radius, self.μ
         )
-        secondary_t_max = self._get_max_torque(
+        secondary_t_max_old = self._get_max_torque(
             secondary_radial_force, secondary_wrap_angle, secondary_radius, self.μ
         )
+        secondary_t_max_new = self.sec_max_torque_model.get_max_torque_sec(state)
         
         # Use the more restrictive (smaller) T_MAX
-        return max(min(primary_t_max, secondary_t_max), 0)
+        return secondary_t_max_new
 
     def _get_max_torque(self, radial_force: float, wrap_angle: float, radius: float, μ: float):
         capstan_term = math.exp(μ * wrap_angle) - 1 / (np.exp(μ * wrap_angle) + 1)
         radial_force_term = radial_force * radius / np.sin(wrap_angle / 2)
         return capstan_term * radial_force_term
+    
+
