@@ -86,13 +86,13 @@ class SlipModel:
         """
         # Extract data from primary pulley breakdown
         primary_radial_force = cvt_breakdown.primaryRadialForce.net
-        primary_wrap_angle = cvt_breakdown.primaryRadialForce.beltCentrifugalForce.wrap_angle
-        primary_radius = cvt_breakdown.primaryRadialForce.beltCentrifugalForce.radius
+        primary_wrap_angle = cvt_breakdown.primaryRadialForce.wrap_angle
+        primary_radius = cvt_breakdown.primaryRadialForce.radius
         
         # Extract data from secondary pulley breakdown
         secondary_radial_force = cvt_breakdown.secondaryRadialForce.net
-        secondary_wrap_angle = cvt_breakdown.secondaryRadialForce.beltCentrifugalForce.wrap_angle
-        secondary_radius = cvt_breakdown.secondaryRadialForce.beltCentrifugalForce.radius
+        secondary_wrap_angle = cvt_breakdown.secondaryRadialForce.wrap_angle
+        secondary_radius = cvt_breakdown.secondaryRadialForce.radius
         
         # Calculate slack tension for both pulleys
         primary_tension = self._calculate_slack_tension(

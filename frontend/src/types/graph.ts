@@ -96,6 +96,39 @@ const inclineForceAccessor: AccessorStrategy = (point) => point.system.car.exter
 const dragForceAccessor: AccessorStrategy = (point) => point.system.car.external_forces.drag_force;
 const totalExternalLoadAccessor: AccessorStrategy = (point) => point.system.car.external_forces.net;
 
+// Belt centrifugal force and radial pulley force accessors
+const primaryCentrifugalForceAccessor: AccessorStrategy = (point) => {
+    const prf = point.system.cvt.primaryRadialForce;
+    if (prf && 'radial_from_centrifugal' in prf && prf.radial_from_centrifugal) {
+        return prf.radial_from_centrifugal;
+    }
+    return 0;
+};
+
+const primaryRadialPulleyForceAccessor: AccessorStrategy = (point) => {
+    const prf = point.system.cvt.primaryRadialForce;
+    if (prf && 'radial_from_clamping' in prf) {
+        return prf.radial_from_clamping;
+    }
+    return 0;
+};
+
+const secondaryCentrifugalForceAccessor: AccessorStrategy = (point) => {
+    const srf = point.system.cvt.secondaryRadialForce;
+    if (srf && 'radial_from_centrifugal' in srf && srf.radial_from_centrifugal) {
+        return srf.radial_from_centrifugal;
+    }
+    return 0;
+};
+
+const secondaryRadialPulleyForceAccessor: AccessorStrategy = (point) => {
+    const srf = point.system.cvt.secondaryRadialForce;
+    if (srf && 'radial_from_clamping' in srf) {
+        return srf.radial_from_clamping;
+    }
+    return 0;
+};
+
 // Mapping from accessor to unit type
 export const accessorToUnit = new Map<AccessorStrategy, BaseUnitType>([
     [timeAccessor, 'time'],
@@ -122,6 +155,10 @@ export const accessorToUnit = new Map<AccessorStrategy, BaseUnitType>([
     [inclineForceAccessor, 'force'],
     [dragForceAccessor, 'force'],
     [totalExternalLoadAccessor, 'force'],
+    [primaryCentrifugalForceAccessor, 'force'],
+    [primaryRadialPulleyForceAccessor, 'force'],
+    [secondaryCentrifugalForceAccessor, 'force'],
+    [secondaryRadialPulleyForceAccessor, 'force'],
 ]);
 
 // Helper function to get unit label for an accessor
@@ -240,6 +277,19 @@ export const graphConfigs: GraphConfig[] = [
             xAxis: { name: "Time", type: "value", unit: "s" },
             yAxis: { name: "Radial Force", type: "value", unit: "N" },
             seriesNames: ["Primary ", "Secondary"],
+            height: 400,
+            showXLine: true,
+            showYLine: false
+        }
+    },
+    {
+        xAccessor: timeAccessor,
+        yAccessor: [primaryCentrifugalForceAccessor, primaryRadialPulleyForceAccessor, secondaryCentrifugalForceAccessor, secondaryRadialPulleyForceAccessor],
+        config: {
+            title: "Pulley Force Components vs Time",
+            xAxis: { name: "Time", type: "value", unit: "s" },
+            yAxis: { name: "Force", type: "value", unit: "N" },
+            seriesNames: ["Primary Centrifugal", "Primary Pulley", "Secondary Centrifugal", "Secondary Pulley"],
             height: 400,
             showXLine: true,
             showYLine: false

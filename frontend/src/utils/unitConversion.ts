@@ -232,26 +232,20 @@ function convertTimeStepData(
     cvt: {
       primaryRadialForce: {
         pulleyForce: convertPulleyForce(timeStep.system.cvt.primaryRadialForce.pulleyForce, config),
-        beltCentrifugalForce: {
-          mass: conv(timeStep.system.cvt.primaryRadialForce.beltCentrifugalForce.mass, 'mass'),
-          radius: conv(timeStep.system.cvt.primaryRadialForce.beltCentrifugalForce.radius, 'distance'),
-          wrap_angle: conv(timeStep.system.cvt.primaryRadialForce.beltCentrifugalForce.wrap_angle, 'angle'),
-          angular_velocity: conv(timeStep.system.cvt.primaryRadialForce.beltCentrifugalForce.angular_velocity, 'angular_velocity'),
-          net: conv(timeStep.system.cvt.primaryRadialForce.beltCentrifugalForce.net, 'force')
-        },
-        radialPulleyForce: conv(timeStep.system.cvt.primaryRadialForce.radialPulleyForce, 'force'),
+        radius: conv(timeStep.system.cvt.primaryRadialForce.radius, 'distance'),
+        wrap_angle: conv(timeStep.system.cvt.primaryRadialForce.wrap_angle, 'angle'),
+        angular_velocity: conv(timeStep.system.cvt.primaryRadialForce.angular_velocity, 'angular_velocity'),
+        radial_from_clamping: conv(timeStep.system.cvt.primaryRadialForce.radial_from_clamping, 'force'),
+        radial_from_centrifugal: conv(timeStep.system.cvt.primaryRadialForce.radial_from_centrifugal, 'force'),
         net: conv(timeStep.system.cvt.primaryRadialForce.net, 'force')
       },
       secondaryRadialForce: {
         pulleyForce: convertPulleyForce(timeStep.system.cvt.secondaryRadialForce.pulleyForce, config),
-        beltCentrifugalForce: {
-          mass: conv(timeStep.system.cvt.secondaryRadialForce.beltCentrifugalForce.mass, 'mass'),
-          radius: conv(timeStep.system.cvt.secondaryRadialForce.beltCentrifugalForce.radius, 'distance'),
-          wrap_angle: conv(timeStep.system.cvt.secondaryRadialForce.beltCentrifugalForce.wrap_angle, 'angle'),
-          angular_velocity: conv(timeStep.system.cvt.secondaryRadialForce.beltCentrifugalForce.angular_velocity, 'angular_velocity'),
-          net: conv(timeStep.system.cvt.secondaryRadialForce.beltCentrifugalForce.net, 'force')
-        },
-        radialPulleyForce: conv(timeStep.system.cvt.secondaryRadialForce.radialPulleyForce, 'force'),
+        radius: conv(timeStep.system.cvt.secondaryRadialForce.radius, 'distance'),
+        wrap_angle: conv(timeStep.system.cvt.secondaryRadialForce.wrap_angle, 'angle'),
+        angular_velocity: conv(timeStep.system.cvt.secondaryRadialForce.angular_velocity, 'angular_velocity'),
+        radial_from_clamping: conv(timeStep.system.cvt.secondaryRadialForce.radial_from_clamping, 'force'),
+        radial_from_centrifugal: conv(timeStep.system.cvt.secondaryRadialForce.radial_from_centrifugal, 'force'),
         net: conv(timeStep.system.cvt.secondaryRadialForce.net, 'force')
       },
       friction: conv(timeStep.system.cvt.friction, 'dimensionless'),

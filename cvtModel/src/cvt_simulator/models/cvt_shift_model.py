@@ -21,8 +21,8 @@ class CvtShiftModel:
     def get_breakdown(self, state: SystemState) -> CvtSystemForceBreakdown:
         prim_breakdown, sec_breakdown = self._get_pulley_breakdowns(state)
 
-        prim_radial = prim_breakdown.radialPulleyForce
-        sec_radial = sec_breakdown.radialPulleyForce
+        prim_radial = prim_breakdown.net
+        sec_radial = sec_breakdown.net
         net = prim_radial - sec_radial
 
         shift_velocity = state.shift_velocity
@@ -43,8 +43,10 @@ class CvtShiftModel:
 
     def _get_pulley_breakdowns(self, state: SystemState):
         # Calculate forces using the provided simulators
-        primary_radial_breakdown = self.primary_radial_model.get_breakdown(state)
-        secondary_radial_breakdown = self.secondary_radial_model.get_breakdown(state)
+        # TODO: Remove this torque passing
+        torque = self.engine_model.get_torque(state.engine_angular_velocity)
+        primary_radial_breakdown = self.primary_radial_model.get_breakdown(state, torque)
+        secondary_radial_breakdown = self.secondary_radial_model.get_breakdown(state, torque)
 
         return primary_radial_breakdown, secondary_radial_breakdown
 

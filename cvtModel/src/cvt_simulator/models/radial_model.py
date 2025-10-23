@@ -19,14 +19,14 @@ class RadialPulleyModel:
         self.primary = primary
         self.pulley_model = pulley_model
 
-    def get_breakdown(self, state: SystemState):
+    def get_breakdown(self, state: SystemState, torque: float):
         if self.primary:
             pulley_breakdown = self.pulley_model.get_breakdown(
-                state.shift_distance, state.angular_velocity
+                state.shift_distance, state.engine_angular_velocity
             )
         else:
             pulley_breakdown = self.pulley_model.get_breakdown(
-                state.shift_distance, state.torque
+                state.shift_distance, torque
             )
 
         wrap_angle, radius, angular_velocity, radial_from_clamping, radial_from_centrifugal, net = self._calculate_summed_radial_force(state, pulley_breakdown.net)
