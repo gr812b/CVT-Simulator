@@ -22,7 +22,7 @@ class SlipModel:
         self.load_model = load_model
         self.engine_model = engine_model
         self.car_mass = car_mass
-        self.μ = RUBBER_ALUMINUM_STATIC_FRICTION
+        self.μ = RUBBER_ALUMINUM_STATIC_FRICTION # TODO: Look into V-belt groove friction enhancement
 
     def get_breakdown(self, state: SystemState, cvt_breakdown: CvtSystemForceBreakdown) -> SlipBreakdown:
         t_max = self.calculate_t_max(cvt_breakdown)
