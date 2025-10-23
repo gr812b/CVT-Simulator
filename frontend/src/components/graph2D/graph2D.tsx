@@ -78,67 +78,21 @@ export function Graph2D({
   }, [xData, yData, activeIndex, config, validation.isValid]);
 
 
-  // const [highlightedIndex, setHighlightedIndex] = useState<number | null>(null);
+  const highlightedIndexRef = useRef<number | undefined>(undefined);
 
   /**
-   * Unified handler for click or drag-end events.
+   * Handler for click event
    */
-  function handlePointSelect(params?: { componentType: string; dataIndex?: number }): void {
-    let dataIndex: number | undefined = undefined;
-
-    // Case 1: Direct click on data point
-    if (params?.componentType === 'series') {
-      dataIndex = params.dataIndex;
-    }
-
-    // // Case 2: Click/drag near a tooltip-highlighted point
-    // else if (highlightedIndex !== null) {
-    //   dataIndex = highlightedIndex;
-    // }
-
-    setActiveIndex?.(dataIndex || -1);
+  function handleClick(): void {
+    setActiveIndex?.(highlightedIndexRef.current || -1);
   }
 
-  // /**
-  //  * Listener for tooltip-highlighted point tracking.
-  //  */
-  // function handleTooltipHighlight(event: { axesInfo?: Array<{ value: number }> }): void {
-  //   if (event.axesInfo && event.axesInfo.length > 0) {
-  //     const axisValue = event.axesInfo[0].value;
-  //     const idx = xData.findIndex((x) => x === axisValue);
-  //     setHighlightedIndex(idx !== -1 ? idx : null);
-  //   }
-  // }
-
   /**
-   * Setup mouse drag handlers (mousedown, mouseup, move)
+   * Listener for tooltip-highlighted point tracking
    */
-  // function setupDragHandlers(): void {
-  //   let isDragging = false;
-  //   let dragMoved = false;
-  //   const chart = chartRef.current;
-  //   if (!chart) return;
-
-  //   chart.getZr().on('mousedown', () => {
-  //     isDragging = true;
-  //     dragMoved = false;
-  //   });
-
-  //   chart.getZr().on('mousemove', () => {
-  //     if (isDragging) dragMoved = true;
-  //   });
-
-  //   chart.getZr().on('mouseup', () => {
-  //     if (isDragging) {
-  //       isDragging = false;
-
-  //       // If user moved the mouse while dragging
-  //       if (dragMoved && highlightedIndex !== null) {
-  //         handlePointSelect();
-  //       }
-  //     }
-  //   });
-  // }
+  function handleTooltipUpdate(params?: { dataIndex?: number }): void {
+    highlightedIndexRef.current = params?.dataIndex;
+  }
 
   const chartHeight = config.height || 400;
   const chartWidth = config.width || '100%';
@@ -169,12 +123,11 @@ export function Graph2D({
           lazyUpdate
           onChartReady={(chart) => {
             chartRef.current = chart;
-            // setupDragHandlers();
-            // chart.on('updateAxisPointer', handleTooltipHighlight);
+            chart.getZr().on('click', handleClick);
           }}
           onEvents={{
-            click: (params: { componentType: string; dataIndex?: number }) => {
-              handlePointSelect(params);
+            updateAxisPointer: (params: { dataIndex?: number }) => {
+              handleTooltipUpdate(params);
             },
           }}
         />
