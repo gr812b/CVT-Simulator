@@ -70,6 +70,7 @@ class SlipModel:
         denominator = wheel_inertia + ENGINE_INERTIA * engine_to_wheel_ratio**2
 
         t_c = numerator / denominator
+        t_max = 10000
         t_c = max(-t_max, min(t_max, t_c))  # Apply coulomb slip law with calculated T_MAX
 
         return t_c
@@ -95,37 +96,17 @@ class SlipModel:
         secondary_radius = cvt_breakdown.secondaryRadialForce.radius
         
         # Calculate slack tension for both pulleys
-        primary_tension = self._calculate_slack_tension(
-            primary_radial_force, primary_wrap_angle, self.μ
+        primary_t_max = self._get_max_torque(
+            primary_radial_force, primary_wrap_angle, primary_radius, self.μ
         )
-        secondary_tension = self._calculate_slack_tension(
-            secondary_radial_force, secondary_wrap_angle, self.μ
-        )
-        
-        # Calculate max transferable torque for both pulleys
-        primary_t_max = self._calculate_max_transferable_torque(
-            primary_tension, self.μ, primary_wrap_angle, primary_radius
-        )
-        secondary_t_max = self._calculate_max_transferable_torque(
-            secondary_tension, self.μ, secondary_wrap_angle, secondary_radius
+        secondary_t_max = self._get_max_torque(
+            secondary_radial_force, secondary_wrap_angle, secondary_radius, self.μ
         )
         
         # Use the more restrictive (smaller) T_MAX
-        return 10000 # max(min(primary_t_max, secondary_t_max), 0)
-    
-    def _calculate_slack_tension(
-        self,
-        radial_force: float,
-        wrap_angle: float,
-        μ: float,
-    ) -> float:
-        θ = abs((wrap_angle - np.pi) / 2)
-        denominator = np.cos(θ) * (
-            1 + math.exp(μ * wrap_angle)
-        )  # Derived from tension, angles and capstan equation
-        return radial_force / denominator
+        return max(min(primary_t_max, secondary_t_max), 0)
 
-    def _calculate_max_transferable_torque(
-        self, tension: float, μ: float, wrap_angle: float, radius: float
-    ) -> float:
-        return tension * radius * (np.exp(μ * wrap_angle) - 1)
+    def _get_max_torque(self, radial_force: float, wrap_angle: float, radius: float, μ: float):
+        capstan_term = math.exp(μ * wrap_angle) - 1 / (np.exp(μ * wrap_angle) + 1)
+        radial_force_term = radial_force * radius / np.sin(wrap_angle / 2)
+        return capstan_term * radial_force_term
