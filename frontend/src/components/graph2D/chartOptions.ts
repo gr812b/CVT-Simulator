@@ -91,10 +91,10 @@ const LAYOUT = {
   
   GRID: {
     LEFT: 60,
-    RIGHT: 20,
+    RIGHT: 60,
     TOP_WITH_TITLE: 60,
     TOP_WITHOUT_TITLE: 40,
-    BOTTOM: 60,
+    BOTTOM: 70,
   },
   
   TITLE: {
@@ -109,6 +109,7 @@ const LAYOUT = {
   X_AXIS_NAME_GAP: 30,
   Y_AXIS_NAME_GAP: 40,
   SLIDER_BOTTOM: 10,
+  SLIDER_RIGHT: 10,
 } as const;
 
 const CHART_DEFAULTS = {
@@ -426,6 +427,18 @@ export function generateEChartsOptions(
         type: 'slider', 
         xAxisIndex: 0, 
         bottom: LAYOUT.SLIDER_BOTTOM,
+        textStyle: { color: COLORS.TEXT },
+        borderColor: COLORS.GRID,
+        fillerColor: COLORS.ZOOM_FILL,
+        handleStyle: {
+          color: COLORS.ACCENT,
+          borderColor: COLORS.ACCENT,
+        },
+      },
+      { 
+        type: 'slider', 
+        yAxisIndex: 0, 
+        right: LAYOUT.SLIDER_RIGHT,
         textStyle: { color: COLORS.TEXT },
         borderColor: COLORS.GRID,
         fillerColor: COLORS.ZOOM_FILL,
