@@ -81,7 +81,6 @@ export const graphConfigs: GraphConfig[] = [
             title: "Position vs Time",
             xAxis: { name: "Time", type: "value", unit: getAxisUnit(timeAccessor) },
             yAxis: { name: "Position", type: "value", unit: getAxisUnit(positionAccessor) },
-            height: 400,
             showXLine: true,
             showYLine: false
         }
@@ -93,7 +92,6 @@ export const graphConfigs: GraphConfig[] = [
           title: "Velocity vs Time",
           xAxis: { name: "Time", type: "value", unit: getAxisUnit(timeAccessor) },
           yAxis: { name: "Velocity", type: "value", unit: getAxisUnit(velocityAccessor) },
-          height: 400,
           showXLine: true,
           showYLine: true
         }
@@ -105,7 +103,6 @@ export const graphConfigs: GraphConfig[] = [
             title: "Acceleration vs Time",
             xAxis: { name: "Time", type: "value", unit: getAxisUnit(timeAccessor) },
             yAxis: { name: "Acceleration", type: "value", unit: getAxisUnit(accelerationAccessor) },
-            height: 400,
             showXLine: true,
             showYLine: false
         }
@@ -117,7 +114,6 @@ export const graphConfigs: GraphConfig[] = [
             title: "CVT Ratio vs Time",
             xAxis: { name: "Time", type: "value", unit: getAxisUnit(timeAccessor) },
             yAxis: { name: "CVT Ratio", type: "value", unit: getAxisUnit(cvtRatioAccessor) },
-            height: 400,
             showXLine: true,
             showYLine: false
         }
@@ -129,7 +125,6 @@ export const graphConfigs: GraphConfig[] = [
             title: "Shift Curve (Engine RPM vs Vehicle Speed)",
             xAxis: { name: "Vehicle Speed", type: "value", unit: getAxisUnit(velocityAccessor) },
             yAxis: { name: "Engine RPM", type: "value", unit: getAxisUnit(engineRpmAccessor) },
-            height: 400,
             showXLine: true,
             showYLine: false
         }
@@ -141,7 +136,6 @@ export const graphConfigs: GraphConfig[] = [
             title: "Engine Torque vs Time",
             xAxis: { name: "Time", type: "value", unit: getAxisUnit(timeAccessor) },
             yAxis: { name: "Engine Torque", type: "value", unit: getAxisUnit(engineTorqueAccessor) },
-            height: 400,
             showXLine: true,
             showYLine: false
         }
@@ -153,7 +147,6 @@ export const graphConfigs: GraphConfig[] = [
             title: "Engine Power vs Time",
             xAxis: { name: "Time", type: "value", unit: getAxisUnit(timeAccessor) },
             yAxis: { name: "Engine Power", type: "value", unit: getAxisUnit(enginePowerAccessor) },
-            height: 400,
             showXLine: true,
             showYLine: false
         }
@@ -166,7 +159,6 @@ export const graphConfigs: GraphConfig[] = [
             xAxis: { name: "Time", type: "value", unit: "s" },
             yAxis: { name: "Radial Force", type: "value", unit: "N" },
             seriesNames: ["Primary ", "Secondary"],
-            height: 400,
             showXLine: true,
             showYLine: false
         }
@@ -178,20 +170,18 @@ export const graphConfigs: GraphConfig[] = [
             title: "CVT Ratio Rate of Change vs Time",
             xAxis: { name: "Time", type: "value", unit: getAxisUnit(timeAccessor) },
             yAxis: { name: "CVT Ratio Rate of Change", type: "value", unit: getAxisUnit(cvtRatioRateOfChangeAccessor) },
-            height: 400,
             showXLine: true,
             showYLine: false
         }
     },
-        {
-            xAccessor: timeAccessor,
-            yAccessor: [primaryRadialForceAccessor, primaryFlyweightForceAccessor, primarySpringForceAccessor],
-            config: {
-                title: "Primary Forces vs Time",
-                xAxis: { name: "Time", type: "value", unit: "s" },
-                yAxis: { name: "Primary Force", type: "value", unit: "N" },
-                seriesNames: ["Net", "Flyweight", "Spring"],
-                height: 400,
+    {
+        xAccessor: timeAccessor,
+        yAccessor: [primaryRadialForceAccessor, primaryFlyweightForceAccessor, primarySpringForceAccessor],
+        config: {
+            title: "Primary Forces vs Time",
+            xAxis: { name: "Time", type: "value", unit: "s" },
+            yAxis: { name: "Primary Force", type: "value", unit: "N" },
+            seriesNames: ["Net", "Flyweight", "Spring"],
             showXLine: true,
             showYLine: false
         }

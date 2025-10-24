@@ -117,7 +117,7 @@ export function Graph2D({
     };
   }, [handleClick]);
 
-  const chartHeight = config.height || 400;
+  const chartHeight = config.height ?? 600;
   const chartWidth = config.width || '100%';
   
   // If data is invalid, show error state
