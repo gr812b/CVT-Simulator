@@ -31,8 +31,8 @@ class SlipModel:
         self.μ = RUBBER_ALUMINUM_STATIC_FRICTION # TODO: Look into V-belt groove friction enhancement
 
     def get_breakdown(self, state: SystemState, cvt_breakdown: CvtSystemForceBreakdown) -> SlipBreakdown:
-        t_max = self.calculate_t_max(state, cvt_breakdown)
-        t_c = self.get_tc(state, t_max)
+        t_max_prim, t_max_sec = self.calculate_t_max(state, cvt_breakdown)
+        t_c = self.get_tc(state, 10000)
         cvt_ratio_derivative = tm.current_cvt_ratio_rate_of_change(
             state.shift_distance, state.shift_velocity
         )
@@ -40,7 +40,8 @@ class SlipModel:
         return SlipBreakdown(
             t_c=t_c,
             cvt_ratio_derivative=cvt_ratio_derivative,
-            t_max=t_max,
+            t_max_prim=t_max_prim,
+            t_max_sec=t_max_sec,
         )
 
     def get_tc(self, state: SystemState, t_max: float):       
@@ -76,7 +77,6 @@ class SlipModel:
         denominator = wheel_inertia + ENGINE_INERTIA * engine_to_wheel_ratio**2
 
         t_c = numerator / denominator
-        t_max = 10000
         t_c = max(-t_max, min(t_max, t_c))  # Apply coulomb slip law with calculated T_MAX
 
         return t_c
@@ -110,7 +110,7 @@ class SlipModel:
         secondary_t_max_new = self.sec_max_torque_model.get_max_torque_sec(state)
         
         # Use the more restrictive (smaller) T_MAX
-        return secondary_t_max_new
+        return primary_t_max, secondary_t_max_old
 
     def _get_max_torque(self, radial_force: float, wrap_angle: float, radius: float, μ: float):
         capstan_term = math.exp(μ * wrap_angle) - 1 / (np.exp(μ * wrap_angle) + 1)

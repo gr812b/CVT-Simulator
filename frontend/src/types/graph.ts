@@ -21,7 +21,8 @@ const engineRpmAccessor: AccessorStrategy = (point) => point.system.engine.angul
 const engineTorqueAccessor: AccessorStrategy = (point) => point.system.engine.torque;
 const cvtRatioRateOfChangeAccessor: AccessorStrategy = (point) => point.system.slip.cvt_ratio_derivative;
 const enginePowerAccessor: AccessorStrategy = (point) => point.system.engine.power;
-const t_maxAccessor: AccessorStrategy = (point) => point.system.slip.t_max;
+const t_max_primAccessor: AccessorStrategy = (point) => point.system.slip.t_max_prim;
+const t_max_secAccessor: AccessorStrategy = (point) => point.system.slip.t_max_sec;
 const t_cAccessor: AccessorStrategy = (point) => point.system.slip.t_c;
 const primaryRadialForceAccessor: AccessorStrategy = (point) => point.system.cvt.primaryRadialForce.net;
 const primaryForceAccessor: AccessorStrategy = (point) => point.system.cvt.primaryRadialForce.pulleyForce.net;
@@ -141,7 +142,8 @@ export const accessorToUnit = new Map<AccessorStrategy, BaseUnitType>([
     [cvtRatioRateOfChangeAccessor, 'dimensionless_rate'],
     [enginePowerAccessor, 'power'],
     [t_cAccessor, 'torque'],
-    [t_maxAccessor, 'torque'],
+    [t_max_primAccessor, 'torque'],
+    [t_max_secAccessor, 'torque'],
     [primaryRadialForceAccessor, 'force'],
     [secondaryRadialForceAccessor, 'force'],
     [primaryFlyweightForceAccessor, 'force'],
@@ -348,12 +350,12 @@ export const graphConfigs: GraphConfig[] = [
     },
     {
         xAccessor: timeAccessor,
-        yAccessor: [t_cAccessor, t_maxAccessor],
+        yAccessor: [t_cAccessor, t_max_primAccessor, t_max_secAccessor],
         config: {
             title: "Slip Model Torques vs Time",
             xAxis: { name: "Time", type: "value", unit: getAxisUnit(timeAccessor) },
             yAxis: { name: "Torque", type: "value", unit: getAxisUnit(t_cAccessor) },
-            seriesNames: ["T_c", "T_max"],
+            seriesNames: ["T_c", "T_max (Primary)", "T_max (Secondary)"],
             height: 400,
             showXLine: true,
             showYLine: false
@@ -361,12 +363,12 @@ export const graphConfigs: GraphConfig[] = [
     },
         {
         xAccessor: engineRpmAccessor,
-        yAccessor: [t_cAccessor, t_maxAccessor],
+        yAccessor: [t_cAccessor, t_max_primAccessor, t_max_secAccessor],
         config: {
             title: "Slip Model Torques vs Engine RPM",
             xAxis: { name: "Engine RPM", type: "value", unit: getAxisUnit(engineRpmAccessor) },
             yAxis: { name: "Torque", type: "value", unit: "N·m" },
-            seriesNames: ["T_c", "T_max"],
+            seriesNames: ["T_c", "T_max (Primary)", "T_max (Secondary)"],
             height: 400,
             showXLine: true,
             showYLine: false

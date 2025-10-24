@@ -52,7 +52,7 @@ class SimulationRunner:
         # Use a single global time grid for the entire simulation
         time_eval = np.linspace(0, self.TOTAL_SIM_TIME, 10000)
         events = [
-            get_shift_steady_event(self.system_model.cvt_shift_model),
+            get_shift_steady_event(self.system_model),
             car_velocity_constraint_event,
             shift_constraint_event,
         ]
