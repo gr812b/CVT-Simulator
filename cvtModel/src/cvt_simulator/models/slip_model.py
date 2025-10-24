@@ -10,6 +10,7 @@ from cvt_simulator.constants.car_specs import (
     GEARBOX_RATIO,
     ENGINE_INERTIA,
     DRIVELINE_INERTIA,
+    SHEAVE_ANGLE,
 )
 from cvt_simulator.utils.theoretical_models import TheoreticalModels as tm
 from cvt_simulator.constants.constants import (
@@ -28,7 +29,7 @@ class SlipModel:
         self.engine_model = engine_model
         self.car_mass = car_mass
         self.sec_max_torque_model = sec_max_torque_model
-        self.μ = RUBBER_ALUMINUM_STATIC_FRICTION # TODO: Look into V-belt groove friction enhancement
+        self.μ = RUBBER_ALUMINUM_STATIC_FRICTION / np.sin(SHEAVE_ANGLE / 2) # V-belt groove friction enhancement
 
     def get_breakdown(self, state: SystemState, cvt_breakdown: CvtSystemForceBreakdown) -> SlipBreakdown:
         t_max_prim, t_max_sec = self.calculate_t_max(state, cvt_breakdown)
@@ -110,10 +111,10 @@ class SlipModel:
         secondary_t_max_new = self.sec_max_torque_model.get_max_torque_sec(state)
         
         # Use the more restrictive (smaller) T_MAX
-        return primary_t_max, secondary_t_max_old
+        return primary_t_max, secondary_t_max_new
 
     def _get_max_torque(self, radial_force: float, wrap_angle: float, radius: float, μ: float):
-        capstan_term = math.exp(μ * wrap_angle) - 1 / (np.exp(μ * wrap_angle) + 1)
+        capstan_term = (math.exp(μ * wrap_angle) - 1) / (np.exp(μ * wrap_angle) + 1)
         radial_force_term = radial_force * radius / np.sin(wrap_angle / 2)
         return capstan_term * radial_force_term
     
