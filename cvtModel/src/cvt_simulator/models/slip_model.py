@@ -33,7 +33,21 @@ class SlipModel:
 
     def get_breakdown(self, state: SystemState, cvt_breakdown: CvtSystemForceBreakdown) -> SlipBreakdown:
         t_max_prim, t_max_sec = self.calculate_t_max(state, cvt_breakdown)
-        t_c = self.get_tc(state, 10000)
+        t_c = self.get_tc(state)
+
+        wheel_to_sec_ratio = GEARBOX_RATIO / WHEEL_RADIUS
+        is_slipping = self._is_slipping(
+            state.engine_angular_velocity,
+            state.car_velocity * wheel_to_sec_ratio,
+            tm.current_cvt_ratio(state.shift_distance)
+        )
+
+        t_c = min(t_c, t_max_prim, t_max_sec)
+
+        if is_slipping:
+            # TODO: Consider sign
+            t_c = min(t_max_prim, t_max_sec)
+
         cvt_ratio_derivative = tm.current_cvt_ratio_rate_of_change(
             state.shift_distance, state.shift_velocity
         )
@@ -43,9 +57,10 @@ class SlipModel:
             cvt_ratio_derivative=cvt_ratio_derivative,
             t_max_prim=t_max_prim,
             t_max_sec=t_max_sec,
+            is_slipping=is_slipping,
         )
 
-    def get_tc(self, state: SystemState, t_max: float):       
+    def get_tc(self, state: SystemState):       
         wheel_inertia = DRIVELINE_INERTIA + self.car_mass * (
             WHEEL_RADIUS**2
         )  # This is the driveline + car's translational mass at wheels
@@ -78,7 +93,6 @@ class SlipModel:
         denominator = wheel_inertia + ENGINE_INERTIA * engine_to_wheel_ratio**2
 
         t_c = numerator / denominator
-        t_c = max(-t_max, min(t_max, t_c))  # Apply coulomb slip law with calculated T_MAX
 
         return t_c
 
@@ -111,11 +125,17 @@ class SlipModel:
         secondary_t_max_new = self.sec_max_torque_model.get_max_torque_sec(state)
         
         # Use the more restrictive (smaller) T_MAX
+        primary_t_max = max(0.0, primary_t_max)
+        secondary_t_max_new = max(0.0, secondary_t_max_new)
         return primary_t_max, secondary_t_max_new
 
     def _get_max_torque(self, radial_force: float, wrap_angle: float, radius: float, μ: float):
         capstan_term = (math.exp(μ * wrap_angle) - 1) / (np.exp(μ * wrap_angle) + 1)
         radial_force_term = radial_force * radius / np.sin(wrap_angle / 2)
         return capstan_term * radial_force_term
+    
+    def _is_slipping(self, primary_angular_velocity: float, secondary_angular_velocity: float, cvt_ratio: float, tolerance: float = 2) -> bool:
+        expected_secondary_velocity = primary_angular_velocity / cvt_ratio
+        return abs(expected_secondary_velocity - secondary_angular_velocity) > tolerance
     
 

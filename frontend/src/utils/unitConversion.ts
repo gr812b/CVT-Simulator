@@ -214,7 +214,8 @@ function convertTimeStepData(
       t_c: conv(timeStep.system.slip.t_c, 'torque'),
       t_max_prim: conv(timeStep.system.slip.t_max_prim, 'torque'),
       t_max_sec: conv(timeStep.system.slip.t_max_sec, 'torque'),
-      cvt_ratio_derivative: conv(timeStep.system.slip.cvt_ratio_derivative, 'dimensionless_rate')
+      cvt_ratio_derivative: conv(timeStep.system.slip.cvt_ratio_derivative, 'dimensionless_rate'),
+      is_slipping: timeStep.system.slip.is_slipping
     },
     engine: {
       torque: conv(timeStep.system.engine.torque, 'torque'),

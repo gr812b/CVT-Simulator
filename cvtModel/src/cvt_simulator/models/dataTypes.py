@@ -104,6 +104,7 @@ class SlipBreakdown:
     t_max_prim: float
     t_max_sec: float
     cvt_ratio_derivative: float
+    is_slipping: bool
 
 
 ## System-level breakdown (single source of truth)

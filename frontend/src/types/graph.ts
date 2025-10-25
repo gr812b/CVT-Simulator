@@ -130,6 +130,10 @@ const secondaryRadialPulleyForceAccessor: AccessorStrategy = (point) => {
     return 0;
 };
 
+const isSlippingAccessor: AccessorStrategy = (point) => point.system.slip.is_slipping ? 1 : 0;
+
+
+
 // Mapping from accessor to unit type
 export const accessorToUnit = new Map<AccessorStrategy, BaseUnitType>([
     [timeAccessor, 'time'],
@@ -161,6 +165,7 @@ export const accessorToUnit = new Map<AccessorStrategy, BaseUnitType>([
     [primaryRadialPulleyForceAccessor, 'force'],
     [secondaryCentrifugalForceAccessor, 'force'],
     [secondaryRadialPulleyForceAccessor, 'force'],
+    [isSlippingAccessor, 'dimensionless'],
 ]);
 
 // Helper function to get unit label for an accessor
@@ -382,6 +387,18 @@ export const graphConfigs: GraphConfig[] = [
             xAxis: { name: "Vehicle Speed", type: "value", unit: getAxisUnit(velocityAccessor) },
             yAxis: { name: "Force", type: "value", unit: getAxisUnit(inclineForceAccessor) },
             seriesNames: ["Total External Load", "Incline Force", "Air Resistance"],
+            height: 400,
+            showXLine: true,
+            showYLine: false
+        }
+    },
+    {
+        xAccessor: timeAccessor,
+        yAccessor: [isSlippingAccessor],
+        config: {
+            title: "Is Slipping vs Time",
+            xAxis: { name: "Time", type: "value", unit: getAxisUnit(timeAccessor) },
+            yAxis: { name: "Is Slipping", type: "value", unit: "dimensionless" },
             height: 400,
             showXLine: true,
             showYLine: false

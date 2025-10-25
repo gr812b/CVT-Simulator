@@ -177,6 +177,8 @@ export interface components {
             t_max_sec: number;
             /** Cvt Ratio Derivative */
             cvt_ratio_derivative: number;
+            /** Is Slipping */
+            is_slipping: boolean;
         };
         /** SpringTorsForceBreakdownModel */
         SpringTorsForceBreakdownModel: {
