@@ -184,7 +184,7 @@ class SimulationRunner:
         # Force the shifting variables to remain constant at full shift.
         state.shift_distance = MAX_SHIFT
         state.shift_velocity = 0
-        
+
         # CRITICAL: Update the actual y array that scipy saves to CSV
         constrained_y = state.to_array()
         for i in range(len(y)):

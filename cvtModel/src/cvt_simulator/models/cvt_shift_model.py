@@ -3,7 +3,6 @@ from cvt_simulator.models.radial_model import RadialPulleyModel
 from cvt_simulator.utils.system_state import SystemState
 from cvt_simulator.utils.theoretical_models import TheoreticalModels as tm
 from cvt_simulator.models.engine_model import EngineModel
-from cvt_simulator.constants.car_specs import GEARBOX_RATIO, WHEEL_RADIUS
 
 
 class CvtShiftModel:
@@ -44,7 +43,9 @@ class CvtShiftModel:
     def _get_pulley_breakdowns(self, state: SystemState, t_c: float):
         # Calculate forces using the provided simulators
         primary_radial_breakdown = self.primary_radial_model.get_breakdown(state, t_c)
-        secondary_radial_breakdown = self.secondary_radial_model.get_breakdown(state, t_c)
+        secondary_radial_breakdown = self.secondary_radial_model.get_breakdown(
+            state, t_c
+        )
 
         return primary_radial_breakdown, secondary_radial_breakdown
 

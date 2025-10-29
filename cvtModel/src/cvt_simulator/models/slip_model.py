@@ -17,11 +17,12 @@ from cvt_simulator.constants.constants import (
     RUBBER_ALUMINUM_STATIC_FRICTION,
 )
 
+
 class SlipModel:
     def __init__(
-        self, 
+        self,
         load_model: LoadModel,
-        engine_model: EngineModel, 
+        engine_model: EngineModel,
         car_mass: float,
         sec_max_torque_model: SecondaryMaxTorqueModel,
     ):
@@ -29,9 +30,13 @@ class SlipModel:
         self.engine_model = engine_model
         self.car_mass = car_mass
         self.sec_max_torque_model = sec_max_torque_model
-        self.μ = RUBBER_ALUMINUM_STATIC_FRICTION / np.sin(SHEAVE_ANGLE / 2) # V-belt groove friction enhancement
+        self.μ = RUBBER_ALUMINUM_STATIC_FRICTION / np.sin(
+            SHEAVE_ANGLE / 2
+        )  # V-belt groove friction enhancement
 
-    def get_breakdown(self, state: SystemState, primary_radial_breakdown: RadialPulleyForceBreakdown) -> SlipBreakdown:
+    def get_breakdown(
+        self, state: SystemState, primary_radial_breakdown: RadialPulleyForceBreakdown
+    ) -> SlipBreakdown:
         t_max_prim, t_max_sec = self.calculate_t_max(state, primary_radial_breakdown)
         t_c = self.get_tc(state)
 
@@ -39,7 +44,7 @@ class SlipModel:
         is_slipping = self._is_slipping(
             state.engine_angular_velocity,
             state.car_velocity * wheel_to_sec_ratio,
-            tm.current_cvt_ratio(state.shift_distance)
+            tm.current_cvt_ratio(state.shift_distance),
         )
 
         t_c = min(t_c, t_max_prim, t_max_sec)
@@ -60,7 +65,7 @@ class SlipModel:
             is_slipping=is_slipping,
         )
 
-    def get_tc(self, state: SystemState):       
+    def get_tc(self, state: SystemState):
         wheel_inertia = DRIVELINE_INERTIA + self.car_mass * (
             WHEEL_RADIUS**2
         )  # This is the driveline + car's translational mass at wheels
@@ -99,10 +104,12 @@ class SlipModel:
     def get_wheel_speed(self, car_velocity: float):
         return car_velocity / WHEEL_RADIUS
 
-    def calculate_t_max(self, state: SystemState, primary_radial_breakdown: RadialPulleyForceBreakdown) -> float:
+    def calculate_t_max(
+        self, state: SystemState, primary_radial_breakdown: RadialPulleyForceBreakdown
+    ) -> float:
         """
         Calculate maximum transferable torque using CVT breakdown data.
-        
+
         Uses the more restrictive (smaller) T_MAX from either primary or secondary pulley.
         This ensures we don't exceed the slip limit of either pulley.
         """
@@ -110,26 +117,32 @@ class SlipModel:
         primary_radial_force = primary_radial_breakdown.net
         primary_wrap_angle = primary_radial_breakdown.wrap_angle
         primary_radius = primary_radial_breakdown.radius
-        
+
         # Calculate slack tension for both pulleys
         primary_t_max = self._get_max_torque(
             primary_radial_force, primary_wrap_angle, primary_radius, self.μ
         )
         secondary_t_max = self.sec_max_torque_model.get_max_torque_sec(state)
-        
+
         # Use the more restrictive (smaller) T_MAX
         # TODO: Consider direction for engine braking scenarios
         primary_t_max = max(0.0, primary_t_max)
         secondary_t_max = max(0.0, secondary_t_max)
         return primary_t_max, secondary_t_max
 
-    def _get_max_torque(self, radial_force: float, wrap_angle: float, radius: float, μ: float):
+    def _get_max_torque(
+        self, radial_force: float, wrap_angle: float, radius: float, μ: float
+    ):
         capstan_term = (math.exp(μ * wrap_angle) - 1) / (np.exp(μ * wrap_angle) + 1)
         radial_force_term = radial_force * radius / np.sin(wrap_angle / 2)
         return capstan_term * radial_force_term
-    
-    def _is_slipping(self, primary_angular_velocity: float, secondary_angular_velocity: float, cvt_ratio: float, tolerance: float = 2) -> bool:
+
+    def _is_slipping(
+        self,
+        primary_angular_velocity: float,
+        secondary_angular_velocity: float,
+        cvt_ratio: float,
+        tolerance: float = 2,
+    ) -> bool:
         expected_secondary_velocity = primary_angular_velocity / cvt_ratio
         return abs(expected_secondary_velocity - secondary_angular_velocity) > tolerance
-    
-

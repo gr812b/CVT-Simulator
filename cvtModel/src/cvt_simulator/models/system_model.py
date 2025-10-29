@@ -33,7 +33,9 @@ class SystemModel:
         """
 
         # Step 1: Calculate slip dynamics (using CVT breakdown for T_MAX calculation)
-        primary_radial_breakdown = self.cvt_shift_model.get_breakdown(state, 0).primaryRadialForce
+        primary_radial_breakdown = self.cvt_shift_model.get_breakdown(
+            state, 0
+        ).primaryRadialForce
         slip_breakdown = self.slip_model.get_breakdown(state, primary_radial_breakdown)
 
         # Step 2: Calculate CVT dynamics with actual T_c from slip model

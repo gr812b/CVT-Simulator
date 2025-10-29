@@ -35,9 +35,7 @@ class LoadModel:
         total_load_force = incline_force + drag_force
 
         return ExternalLoadForceBreakdown(
-            incline_force=incline_force, 
-            drag_force=drag_force, 
-            net=total_load_force
+            incline_force=incline_force, drag_force=drag_force, net=total_load_force
         )
 
     def _calculate_incline_force(self) -> float:

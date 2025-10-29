@@ -1,6 +1,12 @@
 from typing import Union
 import numpy as np
-from cvt_simulator.constants.car_specs import SHEAVE_ANGLE, BELT_HEIGHT, BELT_CROSS_SECTIONAL_AREA, GEARBOX_RATIO, WHEEL_RADIUS
+from cvt_simulator.constants.car_specs import (
+    SHEAVE_ANGLE,
+    BELT_HEIGHT,
+    BELT_CROSS_SECTIONAL_AREA,
+    GEARBOX_RATIO,
+    WHEEL_RADIUS,
+)
 from cvt_simulator.constants.constants import RUBBER_DENSITY
 from cvt_simulator.models.dataTypes import RadialPulleyForceBreakdown
 from cvt_simulator.models.primary_pulley_model import PrimaryPulleyModel
@@ -29,7 +35,14 @@ class RadialPulleyModel:
                 state.shift_distance, torque
             )
 
-        wrap_angle, radius, angular_velocity, radial_from_clamping, radial_from_centrifugal, net = self._calculate_summed_radial_force(state, pulley_breakdown.net)
+        (
+            wrap_angle,
+            radius,
+            angular_velocity,
+            radial_from_clamping,
+            radial_from_centrifugal,
+            net,
+        ) = self._calculate_summed_radial_force(state, pulley_breakdown.net)
 
         return RadialPulleyForceBreakdown(
             pulleyForce=pulley_breakdown,
@@ -51,18 +64,31 @@ class RadialPulleyModel:
         angular_velocity = self._get_angular_velocity(state)
 
         radial_from_clamping = 2 * (clamp_force * np.tan(SHEAVE_ANGLE / 2)) / wrap_angle
-        radial_from_centrifugal = angular_velocity**2 * radius**2 * BELT_CROSS_SECTIONAL_AREA * RUBBER_DENSITY
+        radial_from_centrifugal = (
+            angular_velocity**2 * radius**2 * BELT_CROSS_SECTIONAL_AREA * RUBBER_DENSITY
+        )
 
-        net = 2 * np.sin(wrap_angle / 2) * (radial_from_clamping + radial_from_centrifugal)
-        
-        return wrap_angle, radius, angular_velocity, radial_from_clamping, radial_from_centrifugal, net
+        net = (
+            2
+            * np.sin(wrap_angle / 2)
+            * (radial_from_clamping + radial_from_centrifugal)
+        )
+
+        return (
+            wrap_angle,
+            radius,
+            angular_velocity,
+            radial_from_clamping,
+            radial_from_centrifugal,
+            net,
+        )
 
     def _get_wrap_angle(self, shift_distance):
         if self.primary:
             return tm.primary_wrap_angle(shift_distance)
         else:
             return tm.secondary_wrap_angle(shift_distance)
-        
+
     def _get_radius(self, shift_distance):
         if self.primary:
             return tm.outer_prim_radius(shift_distance) - BELT_HEIGHT / 2
