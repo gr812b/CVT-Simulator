@@ -69,8 +69,9 @@ def get_shift_steady_event(system_model: SystemModel):
 
         # Once near full shift, return the computed shift acceleration.
         # The event will trigger when this value crosses from negative to positive.
-        cvt_breakdown = system_model.cvt_shift_model.get_breakdown(state, 0)
-        t_c = system_model.slip_model.get_breakdown(state, cvt_breakdown).t_c
+        # TODO: Clean this up!
+        primary_radial_breakdown = system_model.cvt_shift_model.get_breakdown(state, 0).primaryRadialForce
+        t_c = system_model.slip_model.get_breakdown(state, primary_radial_breakdown).t_c
         return system_model.cvt_shift_model.get_breakdown(state, t_c).acceleration
 
     shift_steady_event.terminal = True

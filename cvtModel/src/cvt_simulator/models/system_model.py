@@ -32,13 +32,11 @@ class SystemModel:
         4. Car (needs slip)
         """
 
-        # Step 1: Calculate CVT dynamics first
-        cvt_breakdown = self.cvt_shift_model.get_breakdown(state, 0)
+        # Step 1: Calculate slip dynamics (using CVT breakdown for T_MAX calculation)
+        primary_radial_breakdown = self.cvt_shift_model.get_breakdown(state, 0).primaryRadialForce
+        slip_breakdown = self.slip_model.get_breakdown(state, primary_radial_breakdown)
 
-        # Step 2: Calculate slip dynamics (using CVT breakdown for T_MAX calculation)
-        slip_breakdown = self.slip_model.get_breakdown(state, cvt_breakdown)
-
-        # Recalculate CVT dynamics with actual T_c from slip model
+        # Step 2: Calculate CVT dynamics with actual T_c from slip model
         cvt_breakdown = self.cvt_shift_model.get_breakdown(state, slip_breakdown.t_c)
 
         # Step 3: Calculate engine dynamics (using slip)

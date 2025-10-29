@@ -53,7 +53,6 @@ def get_models(args: SimulationArgs):
 
     # Some janky glue right here
     secondary_max_torque_model = SecondaryMaxTorqueModel(
-        sec_model=secondary_model,
         radial_model=secondary_radial_model,
     )
 
