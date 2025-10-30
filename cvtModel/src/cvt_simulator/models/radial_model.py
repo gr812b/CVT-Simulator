@@ -54,6 +54,8 @@ class RadialPulleyModel:
             net=net,
         )
 
+    # See docs/Kai's folder of derivations/ShiftingAndSlip.png
+    # Derived from capstan equation and centrifugal force on belt
     def _calculate_summed_radial_force(
         self,
         state: SystemState,

@@ -26,10 +26,10 @@ class SystemModel:
         Calculate the complete system breakdown in dependency order.
 
         Dependency order:
-        1. CVT (calculated first to get radial forces and wrap angles)
-        2. Slip (needs CVT breakdown for T_MAX calculation)
-        3. Engine (needs slip)
-        4. Car (needs slip)
+        1. Clamp and Slip (Needs clamp for T_max calculation)
+        2. CVT Shift (needs slip)
+        3. Engine (needs torque through belt)
+        4. Car (needs torque through belt)
         """
 
         # Step 1: Calculate slip dynamics (using CVT breakdown for T_MAX calculation)
