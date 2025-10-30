@@ -134,7 +134,8 @@ class SlipModel:
     def _get_max_torque(
         self, radial_force: float, wrap_angle: float, radius: float, μ: float
     ):
-        capstan_term = (math.exp(μ * wrap_angle) - 1) / (np.exp(μ * wrap_angle) + 1)
+        exp_term = math.exp(μ * wrap_angle)
+        capstan_term = (exp_term - 1) / (exp_term + 1)
         radial_force_term = radial_force * radius / np.sin(wrap_angle / 2)
         return capstan_term * radial_force_term
 
