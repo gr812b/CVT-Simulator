@@ -53,7 +53,7 @@ const primarySpringForceAccessor: AccessorStrategy = (point) => {
     }
     return 0;
 };
-// dd accorsors for secondary radial force helix 
+// accessors for secondary radial force helix 
 const secondaryHelixFeedbackTorqueAccessor: AccessorStrategy = (point) => {
     const srf = point.system.cvt.secondaryRadialForce;
     const pulleyForce = srf.pulleyForce;
