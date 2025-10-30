@@ -101,6 +101,7 @@ class EngineForceBreakdown:
 @dataclass
 class SlipBreakdown:
     t_c: float
+    t_c_before_clamp: float
     t_max_prim: float
     t_max_sec: float
     cvt_ratio_derivative: float

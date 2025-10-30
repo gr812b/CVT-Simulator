@@ -24,6 +24,7 @@ const enginePowerAccessor: AccessorStrategy = (point) => point.system.engine.pow
 const t_max_primAccessor: AccessorStrategy = (point) => point.system.slip.t_max_prim;
 const t_max_secAccessor: AccessorStrategy = (point) => point.system.slip.t_max_sec;
 const t_cAccessor: AccessorStrategy = (point) => point.system.slip.t_c;
+const t_c_before_clampAccessor: AccessorStrategy = (point) => point.system.slip.t_c_before_clamp;
 const primaryRadialForceAccessor: AccessorStrategy = (point) => point.system.cvt.primaryRadialForce.net;
 const primaryForceAccessor: AccessorStrategy = (point) => point.system.cvt.primaryRadialForce.pulleyForce.net;
 const secondaryRadialForceAccessor: AccessorStrategy = (point) => point.system.cvt.secondaryRadialForce.net;
@@ -148,6 +149,7 @@ export const accessorToUnit = new Map<AccessorStrategy, BaseUnitType>([
     [t_cAccessor, 'torque'],
     [t_max_primAccessor, 'torque'],
     [t_max_secAccessor, 'torque'],
+    [t_c_before_clampAccessor, 'torque'],
     [primaryRadialForceAccessor, 'force'],
     [secondaryRadialForceAccessor, 'force'],
     [primaryFlyweightForceAccessor, 'force'],
@@ -355,12 +357,12 @@ export const graphConfigs: GraphConfig[] = [
     },
     {
         xAccessor: timeAccessor,
-        yAccessor: [t_cAccessor, t_max_primAccessor, t_max_secAccessor],
+        yAccessor: [t_cAccessor, t_c_before_clampAccessor, t_max_primAccessor, t_max_secAccessor],
         config: {
             title: "Slip Model Torques vs Time",
             xAxis: { name: "Time", type: "value", unit: getAxisUnit(timeAccessor) },
             yAxis: { name: "Torque", type: "value", unit: getAxisUnit(t_cAccessor) },
-            seriesNames: ["T_c", "T_max (Primary)", "T_max (Secondary)"],
+            seriesNames: ["T_c", "T_c (Before Clamp)", "T_max (Primary)", "T_max (Secondary)"],
             height: 400,
             showXLine: true,
             showYLine: false

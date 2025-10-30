@@ -38,7 +38,7 @@ class SlipModel:
         self, state: SystemState, primary_radial_breakdown: RadialPulleyForceBreakdown
     ) -> SlipBreakdown:
         t_max_prim, t_max_sec = self.calculate_t_max(state, primary_radial_breakdown)
-        t_c = self.get_tc(state)
+        t_c_before_clamp = self.get_tc(state)
 
         wheel_to_sec_ratio = GEARBOX_RATIO / WHEEL_RADIUS
         is_slipping = self._is_slipping(
@@ -47,7 +47,7 @@ class SlipModel:
             tm.current_cvt_ratio(state.shift_distance),
         )
 
-        t_c = min(t_c, t_max_prim, t_max_sec)
+        t_c = min(t_c_before_clamp, t_max_prim, t_max_sec)
 
         if is_slipping:
             # TODO: Consider sign
@@ -59,6 +59,7 @@ class SlipModel:
 
         return SlipBreakdown(
             t_c=t_c,
+            t_c_before_clamp=t_c_before_clamp,
             cvt_ratio_derivative=cvt_ratio_derivative,
             t_max_prim=t_max_prim,
             t_max_sec=t_max_sec,

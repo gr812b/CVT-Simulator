@@ -5,7 +5,7 @@ This is a super lightweight backend API to expose the python code. It makes use 
 1. Create and activate a virtual environment
 ```bash
 python -m venv venv
-venv\Scripts\activate # or source venv/bin/activate on Mac
+venv\Scripts\activate # or source `venv/bin/activate` on Mac
 ```
 2. Install the dependencies and setup package
 ```bash
