@@ -317,6 +317,7 @@ export const graphConfigs: GraphConfig[] = [
             seriesNames: ["Net", "Flyweight", "Spring"],
             showXLine: true,
             showYLine: false
+        }
     },
     {
         xAccessor: timeAccessor,
