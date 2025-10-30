@@ -119,7 +119,7 @@ class SlipModel:
         primary_wrap_angle = primary_radial_breakdown.wrap_angle
         primary_radius = primary_radial_breakdown.radius
 
-        # Calculate slack tension for both pulleys
+        # Calculate maximum transferable torque (T_MAX) for both pulleys
         primary_t_max = self._get_max_torque(
             primary_radial_force, primary_wrap_angle, primary_radius, self.μ
         )
