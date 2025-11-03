@@ -43,8 +43,9 @@ class CvtShiftModel:
     def _get_pulley_breakdowns(self, state: SystemState, t_c: float):
         # Calculate forces using the provided simulators
         primary_radial_breakdown = self.primary_radial_model.get_breakdown(state, t_c)
+        cvt_ratio = tm.current_cvt_ratio(state.shift_distance)
         secondary_radial_breakdown = self.secondary_radial_model.get_breakdown(
-            state, t_c
+            state, t_c * cvt_ratio
         )
 
         return primary_radial_breakdown, secondary_radial_breakdown
