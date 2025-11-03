@@ -3,7 +3,6 @@ from cvt_simulator.models.radial_model import RadialPulleyModel
 from cvt_simulator.utils.system_state import SystemState
 from cvt_simulator.utils.theoretical_models import TheoreticalModels as tm
 from cvt_simulator.models.engine_model import EngineModel
-from cvt_simulator.constants.car_specs import GEARBOX_RATIO, WHEEL_RADIUS
 
 
 class CvtShiftModel:
@@ -18,11 +17,11 @@ class CvtShiftModel:
         self.secondary_radial_model = secondary_radial_model
         self.cvt_moving_mass = 0.5  # TODO: Use constants
 
-    def get_breakdown(self, state: SystemState) -> CvtSystemForceBreakdown:
-        prim_breakdown, sec_breakdown = self._get_pulley_breakdowns(state)
+    def get_breakdown(self, state: SystemState, t_c: float) -> CvtSystemForceBreakdown:
+        prim_breakdown, sec_breakdown = self._get_pulley_breakdowns(state, t_c)
 
-        prim_radial = prim_breakdown.radialPulleyForce
-        sec_radial = sec_breakdown.radialPulleyForce
+        prim_radial = prim_breakdown.net
+        sec_radial = sec_breakdown.net
         net = prim_radial - sec_radial
 
         shift_velocity = state.shift_velocity
@@ -41,25 +40,12 @@ class CvtShiftModel:
             net,
         )
 
-    def _get_pulley_breakdowns(self, state: SystemState):
-        # Compute CVT ratio and engine velocity
-        cvt_ratio = tm.current_cvt_ratio(state.shift_distance)
-        wheel_to_engine_ratio = (
-            cvt_ratio * GEARBOX_RATIO
-        ) / WHEEL_RADIUS  # or import these constants
-        engine_velocity = state.car_velocity * wheel_to_engine_ratio
-
-        # Engine torque for secondary force calculation
-        engine_torque = self.engine_model.get_torque(engine_velocity)
-
+    def _get_pulley_breakdowns(self, state: SystemState, t_c: float):
         # Calculate forces using the provided simulators
-        primary_radial_breakdown = self.primary_radial_model.get_breakdown(
-            state.shift_distance, angular_velocity=engine_velocity
-        )
+        primary_radial_breakdown = self.primary_radial_model.get_breakdown(state, t_c)
+        cvt_ratio = tm.current_cvt_ratio(state.shift_distance)
         secondary_radial_breakdown = self.secondary_radial_model.get_breakdown(
-            state.shift_distance,
-            angular_velocity=engine_velocity,
-            torque=engine_torque * cvt_ratio,
+            state, t_c * cvt_ratio
         )
 
         return primary_radial_breakdown, secondary_radial_breakdown

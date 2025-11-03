@@ -42,19 +42,6 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
-        /** BeltCentrifugalForceBreakdownModel */
-        BeltCentrifugalForceBreakdownModel: {
-            /** Mass */
-            mass: number;
-            /** Radius */
-            radius: number;
-            /** Wrap Angle */
-            wrap_angle: number;
-            /** Angular Velocity */
-            angular_velocity: number;
-            /** Net */
-            net: number;
-        };
         /** CarForceBreakdownModel */
         CarForceBreakdownModel: {
             external_forces: components["schemas"]["ExternalLoadForceBreakdownModel"];
@@ -129,9 +116,16 @@ export interface components {
         RadialPulleyForceBreakdownModel: {
             /** Pulleyforce */
             pulleyForce: components["schemas"]["PrimaryForceBreakdownModel"] | components["schemas"]["SecondaryForceBreakdownModel"];
-            beltCentrifugalForce: components["schemas"]["BeltCentrifugalForceBreakdownModel"];
-            /** Radialpulleyforce */
-            radialPulleyForce: number;
+            /** Wrap Angle */
+            wrap_angle: number;
+            /** Radius */
+            radius: number;
+            /** Angular Velocity */
+            angular_velocity: number;
+            /** Radial From Clamping */
+            radial_from_clamping: number;
+            /** Radial From Centrifugal */
+            radial_from_centrifugal: number;
             /** Net */
             net: number;
         };
@@ -177,8 +171,16 @@ export interface components {
         SlipBreakdownModel: {
             /** T C */
             t_c: number;
+            /** T C Before Clamp */
+            t_c_before_clamp: number;
+            /** T Max Prim */
+            t_max_prim: number;
+            /** T Max Sec */
+            t_max_sec: number;
             /** Cvt Ratio Derivative */
             cvt_ratio_derivative: number;
+            /** Is Slipping */
+            is_slipping: boolean;
         };
         /** SpringTorsForceBreakdownModel */
         SpringTorsForceBreakdownModel: {

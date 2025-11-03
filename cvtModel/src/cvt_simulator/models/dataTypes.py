@@ -52,20 +52,14 @@ class SecondaryForceBreakdown:
 
 
 @dataclass
-class BeltCentrifugalForceBreakdown:
-    mass: float
-    radius: float
-    wrap_angle: float
-    angular_velocity: float
-
-    net: float
-
-
-@dataclass
 class RadialPulleyForceBreakdown:
     pulleyForce: Union[PrimaryForceBreakdown, SecondaryForceBreakdown]
-    beltCentrifugalForce: BeltCentrifugalForceBreakdown
-    radialPulleyForce: float  # Radial component
+    wrap_angle: float
+    radius: float
+    angular_velocity: float
+    radial_from_clamping: float
+    radial_from_centrifugal: float
+
     net: float
 
 
@@ -107,7 +101,11 @@ class EngineForceBreakdown:
 @dataclass
 class SlipBreakdown:
     t_c: float
+    t_c_before_clamp: float
+    t_max_prim: float
+    t_max_sec: float
     cvt_ratio_derivative: float
+    is_slipping: bool
 
 
 ## System-level breakdown (single source of truth)
