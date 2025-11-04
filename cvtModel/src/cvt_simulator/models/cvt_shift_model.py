@@ -1,27 +1,41 @@
 from cvt_simulator.models.dataTypes import CvtSystemForceBreakdown
-from cvt_simulator.models.radial_model import RadialPulleyModel
+from cvt_simulator.models.pulley.primary_pulley_interface import PrimaryPulleyModel
+from cvt_simulator.models.pulley.secondary_pulley_interface import SecondaryPulleyModel
 from cvt_simulator.utils.system_state import SystemState
 from cvt_simulator.utils.theoretical_models import TheoreticalModels as tm
 from cvt_simulator.models.engine_model import EngineModel
 
 
 class CvtShiftModel:
+    """
+    CVT shift dynamics model using the new generic pulley interface system.
+    
+    This model:
+    1. Takes generic pulley models (any implementation: physical, PID, lookup, etc.)
+    2. Calculates radial forces from each pulley using their specific mechanisms
+    3. Determines net shift force and acceleration from the force balance
+    4. Handles friction and system dynamics
+    
+    The abstraction allows swapping pulley implementations without changing
+    the core shift dynamics.
+    """
+    
     def __init__(
         self,
         engine_model: EngineModel,
-        primary_radial_model: RadialPulleyModel,
-        secondary_radial_model: RadialPulleyModel,
+        primary_pulley: PrimaryPulleyModel,
+        secondary_pulley: SecondaryPulleyModel,
     ):
         self.engine_model = engine_model
-        self.primary_radial_model = primary_radial_model
-        self.secondary_radial_model = secondary_radial_model
+        self.primary_pulley = primary_pulley
+        self.secondary_pulley = secondary_pulley
         self.cvt_moving_mass = 0.5  # TODO: Use constants
 
     def get_breakdown(self, state: SystemState, t_c: float) -> CvtSystemForceBreakdown:
-        prim_breakdown, sec_breakdown = self._get_pulley_breakdowns(state, t_c)
+        primary_state, secondary_state = self._get_pulley_states(state, t_c)
 
-        prim_radial = prim_breakdown.net
-        sec_radial = sec_breakdown.net
+        prim_radial = primary_state.forces.radial_force
+        sec_radial = secondary_state.forces.radial_force
         net = prim_radial - sec_radial
 
         shift_velocity = state.shift_velocity
@@ -32,23 +46,38 @@ class CvtShiftModel:
         cvt_ratio = tm.current_cvt_ratio(state.shift_distance)
 
         return CvtSystemForceBreakdown(
-            prim_breakdown,
-            sec_breakdown,
+            primary_state,
+            secondary_state,
             friction,
             acceleration,
             cvt_ratio,
             net,
         )
 
-    def _get_pulley_breakdowns(self, state: SystemState, t_c: float):
-        # Calculate forces using the provided simulators
-        primary_radial_breakdown = self.primary_radial_model.get_breakdown(state, t_c)
+    def _get_pulley_states(self, state: SystemState, t_c: float):
+        """
+        Get pulley states from both pulleys using their specific implementations.
+        
+        Args:
+            state: Current system state
+            t_c: Transmitted torque through CVT [N⋅m]
+            
+        Returns:
+            tuple: (primary_state, secondary_state) as PulleyState objects
+        """
+        # Get primary pulley state (speed-reactive, doesn't need torque)
+        primary_state = self.primary_pulley.get_pulley_state(state)
+        
+        # Calculate CVT ratio for torque scaling to secondary
         cvt_ratio = tm.current_cvt_ratio(state.shift_distance)
-        secondary_radial_breakdown = self.secondary_radial_model.get_breakdown(
-            state, t_c * cvt_ratio
+        
+        # Get secondary pulley state (torque-reactive, needs scaled torque)
+        secondary_state = self.secondary_pulley.get_pulley_state(
+            state, 
+            torque=t_c * cvt_ratio  # Scale torque by CVT ratio
         )
-
-        return primary_radial_breakdown, secondary_radial_breakdown
+        
+        return primary_state, secondary_state
 
     def _frictional_force(
         self, sum_of_radial_forces: float, shift_velocity: float

@@ -1,7 +1,6 @@
 import math
 import numpy as np
 from cvt_simulator.models.pulley.primary_pulley_interface import PrimaryPulleyModel
-from cvt_simulator.models.pulley.pulley_interface import get_kwarg
 from cvt_simulator.models.dataTypes import (
     PrimaryForceBreakdown,
     flyweightForceBreakdown,
@@ -18,12 +17,6 @@ from cvt_simulator.models.ramps import (
 from cvt_simulator.constants.car_specs import (
     MAX_SHIFT,
     INITIAL_FLYWEIGHT_RADIUS,
-    SHEAVE_ANGLE,
-    BELT_CROSS_SECTIONAL_AREA,
-)
-from cvt_simulator.constants.constants import (
-    RUBBER_DENSITY,
-    RUBBER_ALUMINUM_STATIC_FRICTION,
 )
 from cvt_simulator.utils.system_state import SystemState
 
@@ -154,25 +147,30 @@ class PhysicalPrimaryPulley(PrimaryPulleyModel[PrimaryForceBreakdown]):
     def calculate_max_torque(
         self,
         state: SystemState,
-        radial_force: float,
     ) -> float:
         """
         Calculate maximum transferable torque using Capstan equation.
         
+        Calculates radial force internally from current clamping force.
+        
         Args:
             state: Current system state
-            radial_force: Total radial force on belt [N]
         
         Returns:
             max_torque: Maximum torque before slip [N⋅m]
         """
+        # Calculate clamping force internally
+        clamping_force, _ = self.calculate_clamping_force(state)
+        _, _, total_radial = self.calculate_radial_force(state, clamping_force)
+        
+        # Get geometric properties
         wrap_angle = self._get_wrap_angle(state.shift_distance)
         radius = self._get_radius(state.shift_distance)
         
         # Capstan equation with V-belt friction enhancement
         exp_term = math.exp(self.μ * wrap_angle)
         capstan_term = (exp_term - 1) / (exp_term + 1)
-        radial_force_term = radial_force * radius / np.sin(wrap_angle / 2)
+        radial_force_term = total_radial * radius / np.sin(wrap_angle / 2)
         
         max_torque = capstan_term * radial_force_term
         

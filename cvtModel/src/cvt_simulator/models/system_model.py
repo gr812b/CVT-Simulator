@@ -26,23 +26,20 @@ class SystemModel:
         Calculate the complete system breakdown in dependency order.
 
         Dependency order:
-        1. Clamp and Slip (Needs clamp for T_max calculation)
-        2. CVT Shift (needs slip)
+        1. Slip (can calculate T_max directly from pulley models)
+        2. CVT Shift (needs slip for T_c)
         3. Engine (needs torque through belt)
         4. Car (needs torque through belt)
         """
 
-        # Step 1: Calculate slip dynamics (using CVT breakdown for T_MAX calculation)
-        primary_radial_breakdown = self.cvt_shift_model.get_breakdown(
-            state, 0
-        ).primaryRadialForce
-        slip_breakdown = self.slip_model.get_breakdown(state, primary_radial_breakdown)
+        # Step 1: Calculate slip dynamics (using pulley models directly)
+        slip_breakdown = self.slip_model.get_breakdown(state)
 
         # Step 2: Calculate CVT dynamics with actual T_c from slip model
         cvt_breakdown = self.cvt_shift_model.get_breakdown(state, slip_breakdown.t_c)
 
         # Step 3: Calculate engine dynamics (using slip)
-        engine_breakdown = self.engine_accel_model.get_breakdown(state, slip_breakdown)
+        engine_breakdown = self.engine_accel_model.get_breakdown(state, slip_breakdown.t_c)
 
         # Step 4: Calculate car dynamics (using slip)
         car_breakdown = self.car_model.get_breakdown(state, slip_breakdown)

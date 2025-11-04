@@ -232,13 +232,13 @@ class PulleyModel(ABC, Generic[TBreakdown]):
     def calculate_max_torque(
         self,
         state: SystemState,
-        radial_force: float,
     ) -> float:
         """
         Calculate maximum transferable torque before belt slip.
         
-        Uses Capstan equation (or Eytelwein formula) modified for V-belts:
-        T_max = f(radial_force, wrap_angle, friction_coeff, radius)
+        Uses Capstan equation (or Eytelwein formula) modified for V-belts.
+        The pulley calculates its own radial force internally based on
+        its current clamping force and operating conditions.
         
         The limiting torque depends on:
         - Belt-pulley friction (enhanced by V-groove wedging)
@@ -248,7 +248,6 @@ class PulleyModel(ABC, Generic[TBreakdown]):
         
         Args:
             state: Current system state
-            radial_force: Total radial force on belt [N]
         
         Returns:
             max_torque: Maximum torque capacity [N⋅m]
@@ -282,8 +281,8 @@ class PulleyModel(ABC, Generic[TBreakdown]):
         radial_from_clamping, radial_from_centrifugal, total_radial = \
             self.calculate_radial_force(state, clamping_force)
         
-        # Step 3: Calculate max transferable torque
-        max_torque = self.calculate_max_torque(state, total_radial)
+        # Step 3: Calculate max transferable torque (pulley calculates its own radial force)
+        max_torque = self.calculate_max_torque(state)
         
         # Get geometric properties
         wrap_angle = self._get_wrap_angle(state.shift_distance)

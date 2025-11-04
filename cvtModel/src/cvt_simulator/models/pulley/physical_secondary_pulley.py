@@ -1,17 +1,3 @@
-"""
-Physical helix-based secondary pulley implementation.
-
-This implementation represents a traditional torque-reactive CVT secondary pulley that uses
-a helix cam mechanism to convert transmitted torque into clamping force.
-
-Key Features:
-- Helix cam converts torque to axial clamping force
-- Torque-reactive: more torque = more clamping = better grip
-- Torsion spring provides base clamping and shift bias
-- Compression spring adds static clamping force
-- Purely mechanical torque feedback (no electronic control)
-"""
-
 import numpy as np
 from cvt_simulator.models.pulley.secondary_pulley_interface import SecondaryPulleyModel
 from cvt_simulator.models.pulley.pulley_interface import get_required_kwarg
@@ -27,16 +13,9 @@ from cvt_simulator.constants.car_specs import (
     MAX_SHIFT,
     HELIX_RADIUS,
     SHEAVE_ANGLE,
-    BELT_CROSS_SECTIONAL_AREA,
-)
-from cvt_simulator.constants.constants import (
-    RUBBER_DENSITY,
-    RUBBER_ALUMINUM_STATIC_FRICTION,
 )
 from cvt_simulator.models.ramps import LinearSegment, PiecewiseRamp
 from cvt_simulator.utils.system_state import SystemState
-import math
-
 
 def create_default_helix_ramp() -> PiecewiseRamp:
     """
@@ -151,7 +130,6 @@ class PhysicalSecondaryPulley(SecondaryPulleyModel[SecondaryForceBreakdown]):
     def calculate_max_torque(
         self,
         state: SystemState,
-        radial_force: float,
     ) -> float:
         """
         Calculate maximum transferable torque using modified Capstan equation.
@@ -164,7 +142,6 @@ class PhysicalSecondaryPulley(SecondaryPulleyModel[SecondaryForceBreakdown]):
         
         Args:
             state: Current system state
-            radial_force: Total radial force on belt [N]
         
         Returns:
             max_torque: Maximum torque before slip [N⋅m]

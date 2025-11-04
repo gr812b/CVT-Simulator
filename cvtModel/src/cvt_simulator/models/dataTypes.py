@@ -1,6 +1,9 @@
 from dataclasses import dataclass
 from typing import Union
 
+# Import the new PulleyState from the interface
+from cvt_simulator.models.pulley.pulley_interface import PulleyState
+
 
 ## Pulley stuff
 @dataclass
@@ -65,8 +68,8 @@ class RadialPulleyForceBreakdown:
 
 @dataclass
 class CvtSystemForceBreakdown:
-    primaryRadialForce: RadialPulleyForceBreakdown
-    secondaryRadialForce: RadialPulleyForceBreakdown
+    primaryPulleyState: PulleyState
+    secondaryPulleyState: PulleyState
     friction: float
     acceleration: float
     cvt_ratio: float
