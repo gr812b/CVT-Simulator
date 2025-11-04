@@ -19,11 +19,10 @@ class CarModel:
         self.load_model = load_model
 
     def get_breakdown(
-        self, state: SystemState, slip_breakdown: SlipBreakdown
+        self, state: SystemState, t_c: float
     ) -> CarForceBreakdown:
         load_force = self.load_model.get_breakdown(state.car_velocity).net
         load_torque = load_force * WHEEL_RADIUS
-        t_c = slip_breakdown.t_c
 
         engine_to_wheel_ratio = (
             tm.current_cvt_ratio(state.shift_distance) * GEARBOX_RATIO

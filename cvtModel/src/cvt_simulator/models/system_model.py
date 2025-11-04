@@ -42,7 +42,7 @@ class SystemModel:
         engine_breakdown = self.engine_accel_model.get_breakdown(state, slip_breakdown.t_c)
 
         # Step 4: Calculate car dynamics (using slip)
-        car_breakdown = self.car_model.get_breakdown(state, slip_breakdown)
+        car_breakdown = self.car_model.get_breakdown(state, slip_breakdown.t_c)
 
         return SystemBreakdown(
             slip=slip_breakdown,
