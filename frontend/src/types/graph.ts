@@ -40,17 +40,23 @@ const isSlippingAccessor: AccessorStrategy = (point) => point.system.slip.is_sli
 
 // Helper function to extract values from breakdown with proper error handling
 function getBreakdownValue<T>(
-    breakdown: any, 
+    breakdown: DataPoint['system']['cvt']['primaryPulleyState']['breakdown'] | 
+               DataPoint['system']['cvt']['secondaryPulleyState']['breakdown'], 
     propertyPath: string[], 
     contextName: string = "breakdown"
 ): T {
-    let current = breakdown;
+    let current: unknown = breakdown;
     
     for (const prop of propertyPath) {
-        if (!(prop in current) || current[prop] == null) {
+        if (typeof current !== 'object' || current === null || !(prop in current)) {
             throw new Error(`Missing property '${prop}' in ${contextName} breakdown. Expected path: ${propertyPath.join('.')}. This indicates a data structure mismatch.`);
         }
-        current = current[prop];
+        
+        current = (current as Record<string, unknown>)[prop];
+        
+        if (current == null) {
+            throw new Error(`Property '${prop}' is null/undefined in ${contextName} breakdown. Expected path: ${propertyPath.join('.')}. This indicates a data structure mismatch.`);
+        }
     }
     
     return current as T;
