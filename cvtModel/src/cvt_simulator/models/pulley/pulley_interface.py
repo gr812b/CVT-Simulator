@@ -19,19 +19,15 @@ Design Pattern Notes:
 """
 
 from abc import ABC, abstractmethod
-from dataclasses import dataclass
-from typing import Generic, TypeVar, Any
+from typing import Any
 import numpy as np
 from cvt_simulator.utils.system_state import SystemState
-from cvt_simulator.utils.theoretical_models import TheoreticalModels as tm
 from cvt_simulator.constants.car_specs import (
     SHEAVE_ANGLE,
     BELT_CROSS_SECTIONAL_AREA,
 )
 from cvt_simulator.constants.constants import RUBBER_DENSITY, RUBBER_ALUMINUM_STATIC_FRICTION
-
-# Generic type for implementation-specific breakdowns
-TBreakdown = TypeVar('TBreakdown')
+from cvt_simulator.models.dataTypes import PulleyState, PulleyForces, PulleyBreakdowns
 
 def get_kwarg(
     kwargs: dict[str, Any], 
@@ -96,43 +92,7 @@ def get_required_kwarg(
     return kwargs[key]
 
 
-@dataclass
-class PulleyForces:
-    """
-    Core outputs that every pulley must provide.
-    
-    These three values are sufficient to drive the CVT simulation regardless
-    of the internal mechanism (flyweights, helix, PID, etc.).
-    """
-    clamping_force: float  # Axial force pushing pulley halves together [N]
-    radial_force: float    # Total radial force on belt [N]
-    max_torque: float      # Maximum transferable torque before slip [N⋅m]
-
-
-@dataclass
-class PulleyState:
-    """
-    Complete pulley state including forces and geometric properties.
-    
-    Combines the core forces with geometric data needed for system-level
-    calculations (slip model, shift dynamics, etc.).
-    """
-    forces: PulleyForces
-    
-    # Geometric properties at current shift position
-    wrap_angle: float           # Belt wrap angle around pulley [rad]
-    radius: float              # Effective pitch radius [m]
-    angular_velocity: float    # Pulley angular velocity [rad/s]
-    
-    # Force components (for analysis/debugging)
-    radial_from_clamping: float      # Radial force contribution from clamping [N]
-    radial_from_centrifugal: float   # Radial force from belt centrifugal effect [N]
-    
-    # Implementation-specific breakdown (e.g., flyweight details, helix details)
-    breakdown: TBreakdown
-
-
-class PulleyModel(ABC, Generic[TBreakdown]):
+class PulleyModel(ABC):
     """
     Abstract base class for all pulley control strategies.
     
@@ -158,7 +118,7 @@ class PulleyModel(ABC, Generic[TBreakdown]):
         self, 
         state: SystemState,
         **kwargs
-    ) -> tuple[float, TBreakdown]:
+    ) -> tuple[float, PulleyBreakdowns]:
         """
         Calculate the axial clamping force pushing pulley halves together.
         

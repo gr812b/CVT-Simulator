@@ -35,7 +35,7 @@ def create_default_helix_ramp() -> PiecewiseRamp:
     return ramp
 
 
-class PhysicalSecondaryPulley(SecondaryPulleyModel[SecondaryForceBreakdown]):
+class PhysicalSecondaryPulley(SecondaryPulleyModel):
     """
     Helix-based secondary pulley implementation.
     

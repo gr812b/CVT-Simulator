@@ -65,7 +65,7 @@ def create_default_flyweight_ramp() -> PiecewiseRamp:
     return ramp
 
 
-class PhysicalPrimaryPulley(PrimaryPulleyModel[PrimaryForceBreakdown]):
+class PhysicalPrimaryPulley(PrimaryPulleyModel):
     """
     Flyweight-based primary pulley implementation.
     

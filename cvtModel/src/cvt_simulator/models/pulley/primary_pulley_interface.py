@@ -1,4 +1,4 @@
-from cvt_simulator.models.pulley.pulley_interface import PulleyModel, TBreakdown
+from cvt_simulator.models.pulley.pulley_interface import PulleyModel
 from pyparsing import ABC
 from cvt_simulator.constants.car_specs import (
     BELT_HEIGHT,
@@ -6,7 +6,7 @@ from cvt_simulator.constants.car_specs import (
 from cvt_simulator.utils.system_state import SystemState
 from cvt_simulator.utils.theoretical_models import TheoreticalModels as tm
 
-class PrimaryPulleyModel(PulleyModel[TBreakdown], ABC):
+class PrimaryPulleyModel(PulleyModel, ABC):
     """
     Abstract base for primary (engine-side) pulley implementations.
     
