@@ -20,7 +20,7 @@ from cvt_simulator.constants.car_specs import (
 )
 from cvt_simulator.utils.system_state import SystemState
 
-
+# TODO: Remove this code
 def create_default_flyweight_ramp() -> PiecewiseRamp:
     """
     Create the default (realistic) flyweight ramp geometry.
