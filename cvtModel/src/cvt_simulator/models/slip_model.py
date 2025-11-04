@@ -36,15 +36,13 @@ class SlipModel:
             SHEAVE_ANGLE / 2
         )  # V-belt groove friction enhancement
 
-    def get_breakdown(
-        self, state: SystemState
-    ) -> SlipBreakdown:
+    def get_breakdown(self, state: SystemState) -> SlipBreakdown:
         """
         Calculate slip breakdown using pulley models directly.
-        
+
         Args:
             state: Current system state
-            
+
         Returns:
             SlipBreakdown with slip analysis
         """
@@ -116,18 +114,16 @@ class SlipModel:
     def get_wheel_speed(self, car_velocity: float):
         return car_velocity / WHEEL_RADIUS
 
-    def calculate_t_max(
-        self, state: SystemState
-    ) -> tuple[float, float]:
+    def calculate_t_max(self, state: SystemState) -> tuple[float, float]:
         """
         Calculate maximum transferable torque using pulley models directly.
 
         Uses the more restrictive (smaller) T_MAX from either primary or secondary pulley.
         This ensures we don't exceed the slip limit of either pulley.
-        
+
         Args:
             state: Current system state
-            
+
         Returns:
             tuple: (primary_t_max, secondary_t_max)
         """

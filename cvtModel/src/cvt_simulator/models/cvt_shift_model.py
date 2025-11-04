@@ -9,17 +9,17 @@ from cvt_simulator.models.engine_model import EngineModel
 class CvtShiftModel:
     """
     CVT shift dynamics model using the new generic pulley interface system.
-    
+
     This model:
     1. Takes generic pulley models (any implementation: physical, PID, lookup, etc.)
     2. Calculates radial forces from each pulley using their specific mechanisms
     3. Determines net shift force and acceleration from the force balance
     4. Handles friction and system dynamics
-    
+
     The abstraction allows swapping pulley implementations without changing
     the core shift dynamics.
     """
-    
+
     def __init__(
         self,
         engine_model: EngineModel,
@@ -57,26 +57,25 @@ class CvtShiftModel:
     def _get_pulley_states(self, state: SystemState, t_c: float):
         """
         Get pulley states from both pulleys using their specific implementations.
-        
+
         Args:
             state: Current system state
             t_c: Transmitted torque through CVT [N⋅m]
-            
+
         Returns:
             tuple: (primary_state, secondary_state) as PulleyState objects
         """
         # Get primary pulley state (speed-reactive, doesn't need torque)
         primary_state = self.primary_pulley.get_pulley_state(state)
-        
+
         # Calculate CVT ratio for torque scaling to secondary
         cvt_ratio = tm.current_cvt_ratio(state.shift_distance)
-        
+
         # Get secondary pulley state (torque-reactive, needs scaled torque)
         secondary_state = self.secondary_pulley.get_pulley_state(
-            state, 
-            torque=t_c * cvt_ratio  # Scale torque by CVT ratio
+            state, torque=t_c * cvt_ratio  # Scale torque by CVT ratio
         )
-        
+
         return primary_state, secondary_state
 
     def _frictional_force(

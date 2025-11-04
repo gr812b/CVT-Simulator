@@ -39,7 +39,9 @@ class SystemModel:
         cvt_breakdown = self.cvt_shift_model.get_breakdown(state, slip_breakdown.t_c)
 
         # Step 3: Calculate engine dynamics (using slip)
-        engine_breakdown = self.engine_accel_model.get_breakdown(state, slip_breakdown.t_c)
+        engine_breakdown = self.engine_accel_model.get_breakdown(
+            state, slip_breakdown.t_c
+        )
 
         # Step 4: Calculate car dynamics (using slip)
         car_breakdown = self.car_model.get_breakdown(state, slip_breakdown.t_c)
