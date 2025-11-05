@@ -25,115 +25,72 @@ const t_max_primAccessor: AccessorStrategy = (point) => point.system.slip.t_max_
 const t_max_secAccessor: AccessorStrategy = (point) => point.system.slip.t_max_sec;
 const t_cAccessor: AccessorStrategy = (point) => point.system.slip.t_c;
 const t_c_before_clampAccessor: AccessorStrategy = (point) => point.system.slip.t_c_before_clamp;
-const primaryRadialForceAccessor: AccessorStrategy = (point) => point.system.cvt.primaryRadialForce.net;
-const primaryForceAccessor: AccessorStrategy = (point) => point.system.cvt.primaryRadialForce.pulleyForce.net;
-const secondaryRadialForceAccessor: AccessorStrategy = (point) => point.system.cvt.secondaryRadialForce.net;
-const secondaryForceAccessor: AccessorStrategy = (point) => point.system.cvt.secondaryRadialForce.pulleyForce.net;
-// Accessor for flyweightForce.net
-const primaryFlyweightForceAccessor: AccessorStrategy = (point) => {
-    const prf = point.system.cvt.primaryRadialForce;
-    const pulleyForce = prf.pulleyForce;
-    if (!pulleyForce) return 0;
-    if ('flyweightForce' in pulleyForce && pulleyForce.flyweightForce) {
-        return pulleyForce.flyweightForce.net;
-    }
-    return 0;
-};
-
-// Accessor for springForce.net or springCompForce.net
-const primarySpringForceAccessor: AccessorStrategy = (point) => {
-    const prf = point.system.cvt.primaryRadialForce;
-    const pulleyForce = prf.pulleyForce;
-    if (!pulleyForce) return 0;
-    if ('springForce' in pulleyForce && pulleyForce.springForce) {
-        return pulleyForce.springForce.net;
-    }
-    if ('springCompForce' in pulleyForce && pulleyForce.springCompForce) {
-        return pulleyForce.springCompForce.net;
-    }
-    return 0;
-};
-// accessors for secondary radial force helix 
-const secondaryHelixFeedbackTorqueAccessor: AccessorStrategy = (point) => {
-    const srf = point.system.cvt.secondaryRadialForce;
-    const pulleyForce = srf.pulleyForce;
-    if (!pulleyForce) return 0;
-    if ('helix_force' in pulleyForce && pulleyForce.helix_force) {
-        return pulleyForce.helix_force.feedbackTorque;
-    }
-    return 0;
-};
-
-const secondaryHelixSpringTorqueAccessor: AccessorStrategy = (point) => {
-    const srf = point.system.cvt.secondaryRadialForce;
-    const pulleyForce = srf.pulleyForce;
-    if (!pulleyForce) return 0;
-    if ('helix_force' in pulleyForce && pulleyForce.helix_force && pulleyForce.helix_force.springTorque) {
-        return pulleyForce.helix_force.springTorque.net;
-    }
-    return 0;
-}; 
-
-const secondaryHelixForceAccessor: AccessorStrategy = (point) => {
-    const srf = point.system.cvt.secondaryRadialForce;
-    const pulleyForce = srf.pulleyForce;
-    if (!pulleyForce) return 0;
-    if ('helix_force' in pulleyForce && pulleyForce.helix_force) {
-        return pulleyForce.helix_force.net;
-    }
-    return 0;
-};
-
-const secondarySpringCompForceAccessor: AccessorStrategy = (point) => {
-    const srf = point.system.cvt.secondaryRadialForce;
-    const pulleyForce = srf.pulleyForce;
-    if (!pulleyForce) return 0;
-    if ('springCompForce' in pulleyForce && pulleyForce.springCompForce) {
-        return pulleyForce.springCompForce.net;
-    }
-    return 0;
-}; 
-
+const primaryRadialForceAccessor: AccessorStrategy = (point) => point.system.cvt.primaryPulleyState.forces.radial_force;
+const primaryClampingForceAccessor: AccessorStrategy = (point) => point.system.cvt.primaryPulleyState.forces.clamping_force;
+const secondaryRadialForceAccessor: AccessorStrategy = (point) => point.system.cvt.secondaryPulleyState.forces.radial_force;
+const secondaryClampingForceAccessor: AccessorStrategy = (point) => point.system.cvt.secondaryPulleyState.forces.clamping_force;
 const inclineForceAccessor: AccessorStrategy = (point) => point.system.car.external_forces.incline_force;
 const dragForceAccessor: AccessorStrategy = (point) => point.system.car.external_forces.drag_force;
 const totalExternalLoadAccessor: AccessorStrategy = (point) => point.system.car.external_forces.net;
-
-// Belt centrifugal force and radial pulley force accessors
-const primaryCentrifugalForceAccessor: AccessorStrategy = (point) => {
-    const prf = point.system.cvt.primaryRadialForce;
-    if (prf && 'radial_from_centrifugal' in prf && prf.radial_from_centrifugal) {
-        return prf.radial_from_centrifugal;
-    }
-    return 0;
-};
-
-const primaryRadialPulleyForceAccessor: AccessorStrategy = (point) => {
-    const prf = point.system.cvt.primaryRadialForce;
-    if (prf && 'radial_from_clamping' in prf) {
-        return prf.radial_from_clamping;
-    }
-    return 0;
-};
-
-const secondaryCentrifugalForceAccessor: AccessorStrategy = (point) => {
-    const srf = point.system.cvt.secondaryRadialForce;
-    if (srf && 'radial_from_centrifugal' in srf && srf.radial_from_centrifugal) {
-        return srf.radial_from_centrifugal;
-    }
-    return 0;
-};
-
-const secondaryRadialPulleyForceAccessor: AccessorStrategy = (point) => {
-    const srf = point.system.cvt.secondaryRadialForce;
-    if (srf && 'radial_from_clamping' in srf) {
-        return srf.radial_from_clamping;
-    }
-    return 0;
-};
-
+const primaryCentrifugalForceAccessor: AccessorStrategy = (point) => point.system.cvt.primaryPulleyState.radial_from_centrifugal;
+const primaryRadialFromClampingAccessor: AccessorStrategy = (point) => point.system.cvt.primaryPulleyState.radial_from_clamping;
+const secondaryCentrifugalForceAccessor: AccessorStrategy = (point) => point.system.cvt.secondaryPulleyState.radial_from_centrifugal;
+const secondaryRadialFromClampingAccessor: AccessorStrategy = (point) => point.system.cvt.secondaryPulleyState.radial_from_clamping;
 const isSlippingAccessor: AccessorStrategy = (point) => point.system.slip.is_slipping ? 1 : 0;
 
+// Helper function to extract values from breakdown with proper error handling
+function getBreakdownValue<T>(
+    breakdown: DataPoint['system']['cvt']['primaryPulleyState']['breakdown'] | 
+               DataPoint['system']['cvt']['secondaryPulleyState']['breakdown'], 
+    propertyPath: string[], 
+    contextName: string = "breakdown"
+): T {
+    let current: unknown = breakdown;
+    
+    for (const prop of propertyPath) {
+        if (typeof current !== 'object' || current === null || !(prop in current)) {
+            throw new Error(`Missing property '${prop}' in ${contextName} breakdown. Expected path: ${propertyPath.join('.')}. This indicates a data structure mismatch.`);
+        }
+        
+        current = (current as Record<string, unknown>)[prop];
+        
+        if (current == null) {
+            throw new Error(`Property '${prop}' is null/undefined in ${contextName} breakdown. Expected path: ${propertyPath.join('.')}. This indicates a data structure mismatch.`);
+        }
+    }
+    
+    return current as T;
+}
 
+const primaryFlyweightForceAccessor: AccessorStrategy = (point) => {
+    const prf = point.system.cvt.primaryPulleyState.breakdown;
+    return getBreakdownValue(prf, ['flyweightForce', 'net'], "primary pulley");
+};
+
+const primarySpringForceAccessor: AccessorStrategy = (point) => {
+    const prf = point.system.cvt.primaryPulleyState.breakdown;
+    return getBreakdownValue(prf, ['springForce', 'net'], "primary pulley");
+};
+
+const secondaryHelixFeedbackTorqueAccessor: AccessorStrategy = (point) => {
+    const srf = point.system.cvt.secondaryPulleyState.breakdown;
+    return getBreakdownValue(srf, ['helix_force', 'feedbackTorque'], "secondary pulley");
+};
+
+const secondaryHelixSpringTorqueAccessor: AccessorStrategy = (point) => {
+    const srf = point.system.cvt.secondaryPulleyState.breakdown;
+    return getBreakdownValue(srf, ['helix_force', 'springTorque', 'net'], "secondary pulley");
+}; 
+
+const secondaryHelixForceAccessor: AccessorStrategy = (point) => {
+    const srf = point.system.cvt.secondaryPulleyState.breakdown;
+    return getBreakdownValue(srf, ['helix_force', 'net'], "secondary pulley");
+};
+
+const secondarySpringCompForceAccessor: AccessorStrategy = (point) => {
+    const srf = point.system.cvt.secondaryPulleyState.breakdown;
+    return getBreakdownValue(srf, ['springCompForce', 'net'], "secondary pulley");
+}; 
 
 // Mapping from accessor to unit type
 export const accessorToUnit = new Map<AccessorStrategy, BaseUnitType>([
@@ -158,15 +115,15 @@ export const accessorToUnit = new Map<AccessorStrategy, BaseUnitType>([
     [secondaryHelixSpringTorqueAccessor, 'torque'],
     [secondaryHelixForceAccessor, 'force'],
     [secondarySpringCompForceAccessor, 'force'],
-    [primaryForceAccessor, 'force'],
-    [secondaryForceAccessor, 'force'],
+    [primaryClampingForceAccessor, 'force'],
+    [secondaryClampingForceAccessor, 'force'],
     [inclineForceAccessor, 'force'],
     [dragForceAccessor, 'force'],
     [totalExternalLoadAccessor, 'force'],
     [primaryCentrifugalForceAccessor, 'force'],
-    [primaryRadialPulleyForceAccessor, 'force'],
+    [primaryRadialFromClampingAccessor, 'force'],
     [secondaryCentrifugalForceAccessor, 'force'],
-    [secondaryRadialPulleyForceAccessor, 'force'],
+    [secondaryRadialFromClampingAccessor, 'force'],
     [isSlippingAccessor, 'dimensionless'],
 ]);
 
@@ -285,7 +242,7 @@ export const graphConfigs: GraphConfig[] = [
     },
     {
         xAccessor: timeAccessor,
-        yAccessor: [primaryCentrifugalForceAccessor, primaryRadialPulleyForceAccessor, secondaryCentrifugalForceAccessor, secondaryRadialPulleyForceAccessor],
+        yAccessor: [primaryCentrifugalForceAccessor, primaryRadialFromClampingAccessor, secondaryCentrifugalForceAccessor, secondaryRadialFromClampingAccessor],
         config: {
             title: "Pulley Force Components vs Time",
             xAxis: { name: "Time", type: "value", unit: "s" },
@@ -309,7 +266,7 @@ export const graphConfigs: GraphConfig[] = [
     },
     {
         xAccessor: timeAccessor,
-        yAccessor: [primaryForceAccessor, primaryFlyweightForceAccessor, primarySpringForceAccessor],
+        yAccessor: [primaryClampingForceAccessor, primaryFlyweightForceAccessor, primarySpringForceAccessor],
         config: {
             title: "Primary Forces vs Time",
             xAxis: { name: "Time", type: "value", unit: "s" },
@@ -333,7 +290,7 @@ export const graphConfigs: GraphConfig[] = [
     },
     {
         xAccessor: timeAccessor,
-        yAccessor: [secondaryForceAccessor, secondaryHelixForceAccessor, secondarySpringCompForceAccessor],
+        yAccessor: [secondaryClampingForceAccessor, secondaryHelixForceAccessor, secondarySpringCompForceAccessor],
         config: {
             title: "Secondary Forces vs Time",
             xAxis: { name: "Time", type: "value", unit: "s" },

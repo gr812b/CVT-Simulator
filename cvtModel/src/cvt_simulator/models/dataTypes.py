@@ -51,22 +51,52 @@ class SecondaryForceBreakdown:
     net: float
 
 
-@dataclass
-class RadialPulleyForceBreakdown:
-    pulleyForce: Union[PrimaryForceBreakdown, SecondaryForceBreakdown]
-    wrap_angle: float
-    radius: float
-    angular_velocity: float
-    radial_from_clamping: float
-    radial_from_centrifugal: float
+# All possible pulley breakdown types
+PulleyBreakdowns = Union[PrimaryForceBreakdown, SecondaryForceBreakdown]
 
-    net: float
+
+@dataclass
+class PulleyForces:
+    """
+    Core outputs that every pulley must provide.
+
+    These three values are sufficient to drive the CVT simulation regardless
+    of the internal mechanism (flyweights, helix, PID, etc.).
+    """
+
+    clamping_force: float  # Axial force pushing pulley halves together [N]
+    radial_force: float  # Total radial force on belt [N]
+    max_torque: float  # Maximum transferable torque before slip [N⋅m]
+
+
+@dataclass
+class PulleyState:
+    """
+    Complete pulley state including forces and geometric properties.
+
+    Combines the core forces with geometric data needed for system-level
+    calculations (slip model, shift dynamics, etc.).
+    """
+
+    forces: PulleyForces
+
+    # Geometric properties at current shift position
+    wrap_angle: float  # Belt wrap angle around pulley [rad]
+    radius: float  # Effective pitch radius [m]
+    angular_velocity: float  # Pulley angular velocity [rad/s]
+
+    # Force components (for analysis/debugging)
+    radial_from_clamping: float  # Radial force contribution from clamping [N]
+    radial_from_centrifugal: float  # Radial force from belt centrifugal effect [N]
+
+    # Implementation-specific breakdown (Union of all concrete breakdown types)
+    breakdown: PulleyBreakdowns
 
 
 @dataclass
 class CvtSystemForceBreakdown:
-    primaryRadialForce: RadialPulleyForceBreakdown
-    secondaryRadialForce: RadialPulleyForceBreakdown
+    primaryPulleyState: PulleyState
+    secondaryPulleyState: PulleyState
     friction: float
     acceleration: float
     cvt_ratio: float

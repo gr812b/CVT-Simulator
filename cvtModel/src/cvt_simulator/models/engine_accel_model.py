@@ -1,4 +1,4 @@
-from cvt_simulator.models.dataTypes import EngineForceBreakdown, SlipBreakdown
+from cvt_simulator.models.dataTypes import EngineForceBreakdown
 from cvt_simulator.models.engine_model import EngineModel
 from cvt_simulator.utils.system_state import SystemState
 from cvt_simulator.constants.car_specs import ENGINE_INERTIA
@@ -10,15 +10,11 @@ class EngineAccelModel:
     def __init__(self, engine_model: EngineModel):
         self.engine_model = engine_model
 
-    def get_breakdown(
-        self, state: SystemState, slip_breakdown: SlipBreakdown
-    ) -> EngineForceBreakdown:
+    def get_breakdown(self, state: SystemState, t_c: float) -> EngineForceBreakdown:
 
         angular_velocity = state.engine_angular_velocity
         torque = self.engine_model.get_torque(angular_velocity)
         power = self.engine_model.get_power(angular_velocity)
-
-        t_c = slip_breakdown.t_c
 
         angular_accel = (torque - t_c) / ENGINE_INERTIA
 

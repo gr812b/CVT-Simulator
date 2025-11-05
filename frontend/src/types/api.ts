@@ -50,8 +50,8 @@ export interface components {
         };
         /** CvtSystemForceBreakdownModel */
         CvtSystemForceBreakdownModel: {
-            primaryRadialForce: components["schemas"]["RadialPulleyForceBreakdownModel"];
-            secondaryRadialForce: components["schemas"]["RadialPulleyForceBreakdownModel"];
+            primaryPulleyState: components["schemas"]["PulleyStateModel"];
+            secondaryPulleyState: components["schemas"]["PulleyStateModel"];
             /** Friction */
             friction: number;
             /** Acceleration */
@@ -112,10 +112,18 @@ export interface components {
             /** Net */
             net: number;
         };
-        /** RadialPulleyForceBreakdownModel */
-        RadialPulleyForceBreakdownModel: {
-            /** Pulleyforce */
-            pulleyForce: components["schemas"]["PrimaryForceBreakdownModel"] | components["schemas"]["SecondaryForceBreakdownModel"];
+        /** PulleyForcesModel */
+        PulleyForcesModel: {
+            /** Clamping Force */
+            clamping_force: number;
+            /** Radial Force */
+            radial_force: number;
+            /** Max Torque */
+            max_torque: number;
+        };
+        /** PulleyStateModel */
+        PulleyStateModel: {
+            forces: components["schemas"]["PulleyForcesModel"];
             /** Wrap Angle */
             wrap_angle: number;
             /** Radius */
@@ -126,8 +134,8 @@ export interface components {
             radial_from_clamping: number;
             /** Radial From Centrifugal */
             radial_from_centrifugal: number;
-            /** Net */
-            net: number;
+            /** Breakdown */
+            breakdown: components["schemas"]["PrimaryForceBreakdownModel"] | components["schemas"]["SecondaryForceBreakdownModel"];
         };
         /** SecondaryForceBreakdownModel */
         SecondaryForceBreakdownModel: {
