@@ -236,7 +236,7 @@ class PulleyModel(ABC):
             self.calculate_radial_force(state, clamping_force)
         )
 
-        # Step 3: Calculate max transferable torque (pulley calculates its own radial force)
+        # Step 3: Calculate max transferable torque
         max_torque = self.calculate_max_torque(state)
 
         # Get geometric properties

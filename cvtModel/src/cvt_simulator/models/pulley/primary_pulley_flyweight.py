@@ -180,6 +180,7 @@ class PhysicalPrimaryPulley(PrimaryPulleyModel):
     ) -> flyweightForceBreakdown:
         """Calculate flyweight centrifugal force and conversion through ramp."""
         # Clamp shift distance to valid range
+        # TODO: Remove extra clamp
         shift_distance = np.clip(shift_distance, 0, MAX_SHIFT)
 
         # Calculate flyweight radius at current shift position
