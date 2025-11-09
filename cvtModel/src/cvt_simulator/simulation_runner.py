@@ -161,6 +161,10 @@ class SimulationRunner:
             state.shift_distance = MAX_SHIFT
             state.shift_velocity = min(0, shift_velocity)
 
+        constrained_y = state.to_array()
+        for i in range(len(y)):
+            y[i] = constrained_y[i]
+
         # Get system breakdown (this calculates everything in correct order)
         system_breakdown = self.system_model.get_breakdown(state)
 

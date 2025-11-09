@@ -22,13 +22,13 @@ class CVTGeometry:
         # Groove half angle
         self.β = SHEAVE_ANGLE / 2
         self.d_max = MAX_SHIFT
-        self.c2c = self.compute_center_to_center()
+        self.c2c = 0.233 # TODO: self._compute_center_to_center()
 
     # ---------- 1) Primary radius from axial distance d ----------
     def r_primary(self, d: float) -> float:
         if d < 0.0 or d > self.d_max:
             raise ValueError(f"d={d} out of bounds [0, {self.d_max}]")
-        return self.r_1_min + max((self.d_contact - d) / (2 * tan(self.β)), 0.0)
+        return (self.r_1_min + self.h) + max((d - self.d_contact) / (2 * tan(self.β)), 0.0)
 
     # ---------- 2) Secondary radius from primary radius r1 ----------
     def _open_form_r_sec(self, r2: float, r1: float) -> float:
@@ -73,7 +73,7 @@ class CVTGeometry:
         
         Starts with a low and high 
         """
-        C = self.C
+        C = self.c2c
         eps = 1e-9  # small safety margin since arcsin is steep near domain boundaries
 
         # Define an upper and lower bound for r2, which our total belt length equation will cross zero
@@ -100,6 +100,32 @@ class CVTGeometry:
         ratio = r2_eff / r1_eff
         return CVTRatioResult(r1=r1, r2=r2, ratio=ratio)
     
+    # ---------- 4) CVT Ratio Rate of Change w.r.t. d ----------
+    def _cvt_ratio_derivative(self, d: float) -> float:
+        """
+        Computes di/dd using differentiation on the belt length constraint.
+        """
+        if d < self.d_contact:
+            return 0
+        
+        prim_deriv = 1 / (2 * tan(self.β))
+        r1 = self.r_primary(d)
+        r2 = self._solve_r2(r1)
+
+        term = pi
+        # Additional term to include if r2 > r1
+        if r1 > r2:
+            term -= (4 * (r2 - r1)) / (sqrt(self.c2c ** 2 - (r2 - r1) ** 2))
+
+        a = 2 * asin((r2 - r1) / self.c2c)
+        partial_deriv_term = (term - a) / (term + a)
+
+        rate = prim_deriv * ((partial_deriv_term / (r1 - self.h / 2)) - ((r2 - self.h / 2) / ((r1 - self.h / 2) ** 2)))
+        return rate
+
+    def cvt_ratio_rate_of_change(self, d: float, d_vel: float) -> float:
+        return self._cvt_ratio_derivative(d) * d_vel
+
     # TODO: Check this math
     def _compute_center_to_center(self) -> float:
         outer_prim = self.r_1_min + self.h
