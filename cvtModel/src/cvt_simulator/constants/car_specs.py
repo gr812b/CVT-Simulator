@@ -33,7 +33,7 @@ BELT_CROSS_SECTIONAL_AREA = (
 
 MIN_PRIM_RADIUS = inch_to_meter(0.75)
 MAX_SEC_RADIUS = inch_to_meter(4.0)
-INITIAL_SHEAVE_DISPLACEMENT = inch_to_meter(0.121)
+INITIAL_SHEAVE_DISPLACEMENT = inch_to_meter(0.121+0.13)
 
 # Calculated constant
 MAX_SHIFT = inch_to_meter(0.995)
