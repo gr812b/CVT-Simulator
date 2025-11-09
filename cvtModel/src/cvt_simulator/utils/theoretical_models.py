@@ -8,6 +8,10 @@ from cvt_simulator.constants.car_specs import (
     CENTER_TO_CENTER,
     BELT_LENGTH,
 )
+from cvt_simulator.utils.cvt_ratio_utils import CVTGeometry
+
+# Module-level CVTGeometry instance using default constants
+_cvt_geometry = CVTGeometry()
 
 
 class TheoreticalModels:
@@ -53,36 +57,15 @@ class TheoreticalModels:
 
     @staticmethod  # See Enman's excel sheet
     def outer_prim_radius(d: float) -> float:
-        engage_distance = MIN_PRIM_RADIUS + BELT_HEIGHT
-        current_distance = (
-            (d - INITIAL_SHEAVE_DISPLACEMENT) / (2 * np.tan(BELT_ANGLE))
-            + MIN_PRIM_RADIUS
-            + BELT_HEIGHT
-        )
-        # print(f"Engage: {engage_distance}, Current: {current_distance}")
-        return max(engage_distance, current_distance)
+        return _cvt_geometry.r_primary(d)
 
     @staticmethod  # See Enman's excel sheet
     def outer_sec_radius(d: float) -> float:
-        prim_radius = TheoreticalModels.outer_prim_radius(d)
-        return (
-            2 * prim_radius
-            - np.pi * CENTER_TO_CENTER
-            + math.sqrt(
-                (np.pi * CENTER_TO_CENTER) ** 2
-                - 8 * np.pi * CENTER_TO_CENTER * prim_radius
-                + 4 * BELT_LENGTH * CENTER_TO_CENTER
-                - 8 * CENTER_TO_CENTER**2
-            )
-        ) / 2
+        return _cvt_geometry._solve_r2(_cvt_geometry.r_primary(d))
 
     @staticmethod
     def current_cvt_ratio(d: float) -> float:
-        primary_radius = TheoreticalModels.outer_prim_radius(d) - BELT_HEIGHT / 2
-        secondary_radius = TheoreticalModels.outer_sec_radius(d) - BELT_HEIGHT / 2
-        # TODO: Remove debug prints
-        # print(f"Primary: {primary_radius}, Secondary: {secondary_radius}, ratio: {secondary_radius / primary_radius}")
-        return secondary_radius / primary_radius
+        return _cvt_geometry.ratio_from_d(d).ratio
 
     # ---------------------------------------------------------
     # Derivative of ratio wrt d (di/dd)
