@@ -2,7 +2,7 @@ from dataclasses import dataclass
 import math
 from math import asin, pi, sqrt, tan
 import numpy as np
-from scipy.optimize import bisect
+from scipy.optimize import brentq
 from cvt_simulator.constants.car_specs import BELT_LENGTH, BELT_HEIGHT, MIN_PRIM_RADIUS, MAX_SEC_RADIUS, INITIAL_SHEAVE_DISPLACEMENT, SHEAVE_ANGLE, MAX_SHIFT
 
 @dataclass
@@ -84,7 +84,7 @@ class CVTGeometry:
         if g_lo * g_hi > 0:
             raise RuntimeError("g(x) doesn't cross zero in valid domain. This should not occur!")
 
-        return bisect(self._open_form_r_sec, lo, hi, args=(r1,), xtol=1e-9)
+        return brentq(self._open_form_r_sec, lo, hi, args=(r1,), xtol=1e-9)
 
     # Public method to get secondary radius from d
     def r_secondary(self, d: float) -> float:
