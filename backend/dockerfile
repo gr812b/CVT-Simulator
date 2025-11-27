@@ -11,20 +11,22 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 ENV PATH="/root/.cargo/bin:${PATH}"
 
-COPY backend/requirements.txt .
-COPY backend/cvtModel ./cvtModel
-COPY backend/ . 
+# ✅ These paths are CORRECT because build context = backend/
+COPY requirements.txt .
+COPY cvtModel ./cvtModel
+COPY . .
 
 RUN pip install --prefix=/install --no-cache-dir -e ./cvtModel
 RUN pip install --prefix=/install --no-cache-dir -r requirements.txt
 
-# Stage 2: Final slim image
-FROM python:3.10-slim
+
+# Stage 2: Final Image (SMALL)
+FROM python:3.14-slim
 
 WORKDIR /app
 
 COPY --from=builder /install /usr/local
-COPY backend/ .
+COPY . .
 
 EXPOSE 8000
 CMD ["uvicorn", "main:app", "--host", "0.0.0.0"]
