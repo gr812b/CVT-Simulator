@@ -18,7 +18,7 @@ jobs:
   # name of the job
   # ruffLint:
   #   # the platform or OS that the workflow will run on.
-  #   runs-on: ubuntu
+  #   runs-on: ubuntu-latest
 
   #   # series of steps to finish the job.
   #   steps:
@@ -42,11 +42,13 @@ jobs:
   #       run: ruff check  --ignore E402
 
   deploy:
-    runs-on: python
+    runs-on: ubuntu
+    # if: ${{ github.ref == 'refs/heads/master' || github.event.pull_request.merged == true }} # Runs if it's a push to 'main' or a merged PR to 'main'
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+        # Login to Forgejo registry
       - name: Login to Forgejo Container Registry
         uses: docker/login-action@v2
         with:
@@ -55,21 +57,19 @@ jobs:
           password: ${{ secrets.FORGEJO_REGISTRY_TOKEN }}
         id: forgejo-login
 
-      - name: Build backend Docker image
+      - name: build container image # build the container
         run: |
-          docker build \
-            -f backend/Dockerfile \
-            -t ucalgary-baja/cvt-simulator:latest \
-            .
+          cd backend
+          docker compose build --no-cache
         id: docker-build
 
-      - name: Tag and push with Git SHA
+      - name: Upload to Forgejo with Git SHA tag
         run: |
           docker tag ucalgary-baja/cvt-simulator:latest forge.ucalgarybaja.ca/ucalgary-baja/cvt-simulator:${{ github.sha }}
           docker push forge.ucalgarybaja.ca/ucalgary-baja/cvt-simulator:${{ github.sha }}
         if: ${{ steps.forgejo-login.outcome == 'success' && steps.docker-build.outcome == 'success' }}
 
-      - name: Tag and push latest
+      - name: Upload to Forgejo
         run: |
           docker tag ucalgary-baja/cvt-simulator:latest forge.ucalgarybaja.ca/ucalgary-baja/cvt-simulator:latest
           docker push forge.ucalgarybaja.ca/ucalgary-baja/cvt-simulator:latest
