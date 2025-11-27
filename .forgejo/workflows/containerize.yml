@@ -42,7 +42,7 @@ jobs:
   #       run: ruff check  --ignore E402
 
   deploy:
-    runs-on: ubuntu
+    runs-on: python
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
