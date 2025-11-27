@@ -4,13 +4,12 @@ FROM python:3.10-slim
 # Set the working directory inside the container
 WORKDIR /app
 
+# Copy the current directory contents into the container
 COPY backend/ . 
 COPY cvtModel/ ./cvtModel
 
 RUN pip install --no-cache-dir -e ./cvtModel
 
-# Copy the current directory contents into the container
-COPY backend/requirements.txt .
 # Install any necessary dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
