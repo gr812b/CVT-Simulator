@@ -1,21 +1,25 @@
-import styles from './Dashboard.module.scss'
-import bajaLogo from '@assets/baja_logo.png'
-import { Button } from '@components/button/Button';
-import { useNavigate } from 'react-router-dom';
-import Play from '@assets/icons/play.svg?react';
-import Edit from '@assets/icons/edit.svg?react';
-import TrashCan from '@assets/icons/trash_can.svg?react';
-import Plus from '@assets/icons/plus.svg?react';
+import styles from "./Dashboard.module.scss";
+// import bajaLogo from "@assets/baja_logo.png";
+import { Button } from "@components/button/Button";
+import { useNavigate } from "react-router-dom";
+import Play from "@assets/icons/play.svg?react";
+import Edit from "@assets/icons/edit.svg?react";
+import TrashCan from "@assets/icons/trash_can.svg?react";
+import Plus from "@assets/icons/plus.svg?react";
 
 export const Dashboard = () => {
   const navigate = useNavigate();
 
   const tempIsDisabled = true; // Placeholder for future functionality
-  
+
   return (
     <div className={styles.dashboard}>
       <div className={styles.header}>
-        <img className={styles.logo} src={bajaLogo} alt="Baja Logo" />
+        <img
+          className={styles.logo}
+          src="https://ucalgarybaja.ca/static/media/logo.eed1b14ba9eef9414b41.png"
+          alt="Baja Logo"
+        />
         <h1 className={styles.title}>CVT Simulator</h1>
       </div>
       <div className={styles.tableContainer}>
@@ -23,33 +27,33 @@ export const Dashboard = () => {
       </div>
       <div className={styles.buttonsContainer}>
         <Button
-          text={'Run'}
+          text={"Run"}
           icon={Play}
           className={styles.button}
           disabled={tempIsDisabled}
-          onClick={() => console.log('Run button clicked')}
+          onClick={() => console.log("Run button clicked")}
         />
         <Button
-          text={'Edit'}
+          text={"Edit"}
           icon={Edit}
           className={styles.button}
           disabled={tempIsDisabled}
-          onClick={() => console.log('Edit button clicked')}
+          onClick={() => console.log("Edit button clicked")}
         />
         <Button
-          text={'Delete'}
+          text={"Delete"}
           icon={TrashCan}
           className={styles.button}
           disabled={tempIsDisabled}
-          onClick={() => console.log('Delete button clicked')}
+          onClick={() => console.log("Delete button clicked")}
         />
         <Button
-          text={'New'}
+          text={"New"}
           icon={Plus}
           className={styles.button}
-          onClick={() => navigate('/input')}
+          onClick={() => navigate("/input")}
         />
       </div>
     </div>
-  )
-}
+  );
+};

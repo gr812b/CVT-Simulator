@@ -1,0 +1,76 @@
+# name of the workflow.
+# this is optional.
+name: Contiaerize
+
+# events that will trigger this workflow.
+# here, we only have "pull_request", so the workflow will run
+# whenever we create a pull request.
+# other examples: [push] and [pull_request, push]
+on:
+  push:
+    branches:
+      - develop
+
+# each workflow must have at least one job.
+# jobs run in parallel by default (we can change that).
+# each job groups together a series of steps to accomplish a purpose.
+jobs:
+  # name of the job
+  # ruffLint:
+  #   # the platform or OS that the workflow will run on.
+  #   runs-on: ubuntu
+
+  #   # series of steps to finish the job.
+  #   steps:
+  #     # name of the step.
+  #     # steps run sequentially.
+  #     # this is optionale
+  #     - name: checkout
+  #       # each step can either have "uses" or "run".
+  #       # "uses" run an action written somewhere other than this workflow .
+  #       # usually from the community.
+  #       # this action checks out the repo code to the runner (instance)
+  #       # running the action
+  #       uses: actions/checkout@v3
+
+  #     # another step.
+  #     # this step runs a bash (Ubuntu's default shell) command
+  #     - name: install ruff
+  #       run: pip install ruff
+
+  #     - name: Lint
+  #       run: ruff check  --ignore E402
+
+  deploy:
+    runs-on: ubuntu
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Login to Forgejo Container Registry
+        uses: docker/login-action@v2
+        with:
+          registry: forge.ucalgarybaja.ca
+          username: ${{ secrets.FORGEJO_REGISTRY_USER }}
+          password: ${{ secrets.FORGEJO_REGISTRY_TOKEN }}
+        id: forgejo-login
+
+      - name: Build backend Docker image
+        run: |
+          docker build \
+            -f backend/Dockerfile \
+            -t ucalgary-baja/cvt-simulator:latest \
+            .
+        id: docker-build
+
+      - name: Tag and push with Git SHA
+        run: |
+          docker tag ucalgary-baja/cvt-simulator:latest forge.ucalgarybaja.ca/ucalgary-baja/cvt-simulator:${{ github.sha }}
+          docker push forge.ucalgarybaja.ca/ucalgary-baja/cvt-simulator:${{ github.sha }}
+        if: ${{ steps.forgejo-login.outcome == 'success' && steps.docker-build.outcome == 'success' }}
+
+      - name: Tag and push latest
+        run: |
+          docker tag ucalgary-baja/cvt-simulator:latest forge.ucalgarybaja.ca/ucalgary-baja/cvt-simulator:latest
+          docker push forge.ucalgarybaja.ca/ucalgary-baja/cvt-simulator:latest
+        if: ${{ steps.forgejo-login.outcome == 'success' && steps.docker-build.outcome == 'success' }}

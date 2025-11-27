@@ -1,0 +1,11 @@
+services:
+  bajacloud:
+    container_name: cvt-simulator
+    image: ucalgary-baja/cvt-simulator:latest
+    # restart: unless-stopped
+
+    build: # do not include in delpoyment version
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - 8000:8000
