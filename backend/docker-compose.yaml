@@ -5,7 +5,7 @@ services:
     # restart: unless-stopped
 
     build: # do not include in delpoyment version
-      context: .
-      dockerfile: Dockerfile
+      context: ../
+      dockerfile: backend/Dockerfile
     ports:
       - 8000:8000
