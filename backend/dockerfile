@@ -1,23 +1,9 @@
-# Stage 1: Builder
-FROM python:3.10-slim AS builder
-
-WORKDIR /app
-
-COPY requirements.txt .
-COPY cvtModel ./cvtModel
-
-
-RUN pip install --prefix=/install --no-cache-dir -e ./cvtModel
-RUN pip install --prefix=/install --no-cache-dir -r requirements.txt
-
-
-# Stage 2: Final Image (SMALL)
 FROM python:3.10-slim
 
 WORKDIR /app
 
-COPY --from=builder /install /usr/local
-
+COPY . .
 
 EXPOSE 8000
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0"]
+CMD pip install --no-cache-dir -r requirements.txt && uvicorn main:app --host 0.0.0.0
+
