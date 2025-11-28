@@ -1,5 +1,5 @@
 services:
-  bajacloud:
+  simulator:
     container_name: cvt-simulator
     image: ucalgary-baja/cvt-simulator:latest
     # restart: unless-stopped
