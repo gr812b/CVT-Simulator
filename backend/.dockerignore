@@ -4,3 +4,12 @@ setup.cfg
 cvtModel/test
 cvtModel/README.md
 cvtModel/setup.cfg
+
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.git
+*.md
+tests/
+docs/
