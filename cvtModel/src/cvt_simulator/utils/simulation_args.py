@@ -1,14 +1,33 @@
-from dataclasses import dataclass, fields, replace
+from dataclasses import dataclass, fields, replace, field
 from typing import Any, Mapping
+from cvt_simulator.models.ramps.ramp_config import PiecewiseRampConfig
+from cvt_simulator.models.pulley.primary_pulley_flyweight import (
+    create_default_flyweight_ramp,
+)
+from cvt_simulator.models.pulley.secondary_pulley_torque_reactive import (
+    create_default_helix_ramp,
+)
+
+
+def _get_default_primary_ramp() -> PiecewiseRampConfig:
+    """Factory function for default primary ramp config."""
+    return create_default_flyweight_ramp().to_config()
+
+
+def _get_default_secondary_ramp() -> PiecewiseRampConfig:
+    """Factory function for default secondary ramp config."""
+    return create_default_helix_ramp().to_config()
 
 
 @dataclass(slots=True)
 class SimulationArgs:
     flyweight_mass: float = 0.8  # kg
-    primary_ramp_geometry: float = 1.0  # unitless
+    primary_ramp_geometry: float = 1.0  # unitless (deprecated, use primary_ramp_config)
+    primary_ramp_config: PiecewiseRampConfig = field(default_factory=_get_default_primary_ramp)
     primary_spring_rate: float = 1000.0  # N/m
     primary_spring_pretension: float = 0.0  # m
-    secondary_helix_geometry: float = 1.0  # unitless
+    secondary_helix_geometry: float = 1.0  # unitless (deprecated, use secondary_ramp_config)
+    secondary_ramp_config: PiecewiseRampConfig = field(default_factory=_get_default_secondary_ramp)
     secondary_torsion_spring_rate: float = 30.0  # Nm/rad
     secondary_compression_spring_rate: float = 1.0  # N/m
     secondary_rotational_spring_pretension: float = 45.0  # degrees

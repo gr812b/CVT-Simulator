@@ -12,6 +12,7 @@ from cvt_simulator.utils.simulation_args import SimulationArgs
 from cvt_simulator.models.slip_model import SlipModel
 from cvt_simulator.models.engine_accel_model import EngineAccelModel
 from cvt_simulator.models.system_model import SystemModel
+from cvt_simulator.models.ramps.piecewise_ramp import PiecewiseRamp
 
 
 def get_models(args: SimulationArgs):
@@ -22,19 +23,19 @@ def get_models(args: SimulationArgs):
         incline_angle=deg_to_rad(args.angle_of_incline),
     )
 
-    # CVT dynamics
+    # CVT dynamics - convert ramp configs to ramp instances
     primary_pulley = PhysicalPrimaryPulley(
         spring_coeff_comp=args.primary_spring_rate,
         initial_compression=args.primary_spring_pretension,
         flyweight_mass=args.flyweight_mass,
-        # TODO: Handle ramp_type conversion if needed
+        ramp=PiecewiseRamp.from_config(args.primary_ramp_config),
     )
     secondary_pulley = PhysicalSecondaryPulley(
         spring_coeff_tors=args.secondary_torsion_spring_rate,
         spring_coeff_comp=args.secondary_compression_spring_rate,
         initial_rotation=deg_to_rad(args.secondary_rotational_spring_pretension),
         initial_compression=args.secondary_linear_spring_pretension,
-        # TODO: Handle ramp_type conversion if needed
+        ramp=PiecewiseRamp.from_config(args.secondary_ramp_config),
     )
 
     cvt_shift = CvtShiftModel(
