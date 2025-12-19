@@ -1,6 +1,4 @@
 from cvt_simulator.models.ramps.ramp_segment import RampSegment
-from cvt_simulator.models.ramps.ramp_serialization import segment_to_config, config_to_segment
-from cvt_simulator.models.ramps.ramp_config import PiecewiseRampConfig
 from typing import List
 
 
@@ -34,35 +32,3 @@ class PiecewiseRamp:
             if segment.x_start <= x <= segment.x_end:
                 return abs(segment.slope(x))
         raise ValueError(f"x={x} is out of ramp range!")
-
-    def to_config(self) -> PiecewiseRampConfig:
-        """
-        Convert this ramp to its config dataclass.
-        
-        Returns:
-            PiecewiseRampConfig dataclass
-        """
-        return PiecewiseRampConfig(
-            segments=[segment_to_config(seg) for seg in self.segments]
-        )
-
-    @classmethod
-    def from_config(cls, config: PiecewiseRampConfig) -> "PiecewiseRamp":
-        """
-        Create a PiecewiseRamp from a config dataclass.
-        
-        Args:
-            config: PiecewiseRampConfig dataclass
-            
-        Returns:
-            New PiecewiseRamp instance
-        
-        Note:
-            Segments are added in order, and PiecewiseRamp automatically
-            handles continuity by setting y_start of each segment.
-        """
-        ramp = cls()
-        for seg_config in config.segments:
-            segment = config_to_segment(seg_config)
-            ramp.add_segment(segment)
-        return ramp

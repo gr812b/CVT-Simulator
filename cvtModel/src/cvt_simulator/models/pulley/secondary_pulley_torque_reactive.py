@@ -58,7 +58,7 @@ class PhysicalSecondaryPulley(SecondaryPulleyModel):
         spring_coeff_comp: float,  # N/m - Compression spring stiffness
         initial_rotation: float,  # rad - Torsion spring preload
         initial_compression: float,  # m - Compression spring preload
-        ramp: PiecewiseRamp,  # Helix cam geometry
+        ramp: PiecewiseRamp = None,  # Helix cam geometry
     ):
         """
         Initialize physical secondary pulley with helix mechanism.
@@ -68,7 +68,7 @@ class PhysicalSecondaryPulley(SecondaryPulleyModel):
             spring_coeff_comp: Compression spring stiffness [N/m]
             initial_rotation: Initial torsion spring preload [rad]
             initial_compression: Initial compression spring preload [m]
-            ramp: Helix cam geometry
+            ramp: Helix cam geometry (defaults to linear helix if None)
         """
         super().__init__()
 
@@ -77,7 +77,9 @@ class PhysicalSecondaryPulley(SecondaryPulleyModel):
         self.initial_rotation = initial_rotation
         self.initial_compression = initial_compression
         self.helix_radius = HELIX_RADIUS
-        self.ramp = ramp
+
+        # Use provided ramp or create default
+        self.ramp = ramp if ramp is not None else create_default_helix_ramp()
 
     def calculate_clamping_force(
         self, state: SystemState, **kwargs

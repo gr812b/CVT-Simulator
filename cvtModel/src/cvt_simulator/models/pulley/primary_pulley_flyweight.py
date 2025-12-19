@@ -84,7 +84,7 @@ class PhysicalPrimaryPulley(PrimaryPulleyModel):
         spring_coeff_comp: float,  # N/m - Spring stiffness
         initial_compression: float,  # m - Spring preload
         flyweight_mass: float,  # kg - Mass of each flyweight
-        ramp: PiecewiseRamp,  # Flyweight ramp geometry
+        ramp: PiecewiseRamp = None,  # Flyweight ramp geometry
     ):
         """
         Initialize physical primary pulley with flyweight mechanism.
@@ -93,7 +93,7 @@ class PhysicalPrimaryPulley(PrimaryPulleyModel):
             spring_coeff_comp: Spring compression stiffness [N/m]
             initial_compression: Initial spring preload [m]
             flyweight_mass: Mass of each flyweight [kg]
-            ramp: Flyweight ramp geometry
+            ramp: Flyweight ramp geometry (defaults to realistic ramp if None)
         """
         super().__init__()
 
@@ -101,7 +101,9 @@ class PhysicalPrimaryPulley(PrimaryPulleyModel):
         self.initial_compression = initial_compression
         self.flyweight_mass = flyweight_mass
         self.initial_flyweight_radius = INITIAL_FLYWEIGHT_RADIUS
-        self.ramp = ramp
+
+        # Use provided ramp or create default
+        self.ramp = ramp if ramp is not None else create_default_flyweight_ramp()
 
     def calculate_clamping_force(
         self, state: SystemState, **kwargs
