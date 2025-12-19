@@ -6,71 +6,82 @@ configurations. The backend will automatically generate Pydantic models from the
 using auto_model.py.
 """
 
-from dataclasses import dataclass
-from typing import List, Union
+from dataclasses import dataclass, field
+from typing import List, Union, Literal
+from enum import Enum
+
+
+class RampSegmentType(str, Enum):
+    """Enum for ramp segment types. Inherits from str for JSON serialization."""
+    LINEAR = "linear"
+    CIRCULAR = "circular"
+    CUBIC_SPIRAL_ZERO_K1 = "cubic_spiral_zero_k1"
+    CUBIC_SPIRAL_ZERO_ZERO = "cubic_spiral_zero_zero"
+    EULER_SPIRAL = "euler_spiral"
+    PRO_DEFINED = "pro_defined"
 
 
 @dataclass
 class LinearSegmentConfig:
     """Configuration for a linear ramp segment."""
-    type: str  # "linear"
     x_start: float
     x_end: float
     slope: float
+    type: Literal[RampSegmentType.LINEAR] = field(default=RampSegmentType.LINEAR, init=False)
 
 
 @dataclass
 class CircularSegmentConfig:
     """Configuration for a circular arc ramp segment."""
-    type: str  # "circular"
     x_start: float
     x_end: float
     radius: float
     theta_start: float  # Starting angle in radians
     theta_end: float  # Ending angle in radians
+    type: Literal[RampSegmentType.CIRCULAR] = field(default=RampSegmentType.CIRCULAR, init=False)
 
 
 @dataclass
 class CubicSpiralZeroK1Config:
     """Configuration for a cubic spiral with specified final curvature."""
-    type: str  # "cubic_spiral_zero_k1"
     x_start: float
     x_end: float
     slope_start: float  # As angle in radians
     slope_end: float  # As angle in radians
     target_curvature: float
+    type: Literal[RampSegmentType.CUBIC_SPIRAL_ZERO_K1] = field(default=RampSegmentType.CUBIC_SPIRAL_ZERO_K1, init=False)
 
 
 @dataclass
 class CubicSpiralZeroZeroConfig:
     """Configuration for a cubic spiral with zero curvature at both ends."""
-    type: str  # "cubic_spiral_zero_zero"
     x_start: float
     x_end: float
     slope_start: float  # As angle in radians
     slope_end: float  # As angle in radians
+    type: Literal[RampSegmentType.CUBIC_SPIRAL_ZERO_ZERO] = field(default=RampSegmentType.CUBIC_SPIRAL_ZERO_ZERO, init=False)
 
 
 @dataclass
 class EulerSpiralConfig:
     """Configuration for an Euler spiral segment."""
-    type: str  # "euler_spiral"
     x_start: float
     x_end: float
     slope_start: float  # As angle in radians
     slope_end: float  # As angle in radians
+    type: Literal[RampSegmentType.EULER_SPIRAL] = field(default=RampSegmentType.EULER_SPIRAL, init=False)
 
 
 @dataclass
 class ProDefinedSegmentConfig:
     """Configuration for a pro-defined segment."""
-    type: str  # "pro_defined"
     x_start: float
     x_end: float
     prev_seg_height: float
     end_length: float
     initial_slope: float
     r_initial: float
+    type: Literal[RampSegmentType.PRO_DEFINED] = field(default=RampSegmentType.PRO_DEFINED, init=False)
 
 
 # Union type for any segment configuration
@@ -102,20 +113,30 @@ class PiecewiseRampConfig:
         based on the 'type' field.
         """
         segment_type_map = {
-            "linear": LinearSegmentConfig,
-            "circular": CircularSegmentConfig,
-            "cubic_spiral_zero_k1": CubicSpiralZeroK1Config,
-            "cubic_spiral_zero_zero": CubicSpiralZeroZeroConfig,
-            "euler_spiral": EulerSpiralConfig,
-            "pro_defined": ProDefinedSegmentConfig,
+            RampSegmentType.LINEAR: LinearSegmentConfig,
+            RampSegmentType.CIRCULAR: CircularSegmentConfig,
+            RampSegmentType.CUBIC_SPIRAL_ZERO_K1: CubicSpiralZeroK1Config,
+            RampSegmentType.CUBIC_SPIRAL_ZERO_ZERO: CubicSpiralZeroZeroConfig,
+            RampSegmentType.EULER_SPIRAL: EulerSpiralConfig,
+            RampSegmentType.PRO_DEFINED: ProDefinedSegmentConfig,
         }
         
         segments = []
         for seg_dict in data.get("segments", []):
             seg_type = seg_dict.get("type")
+            # Convert string to enum if needed
+            if isinstance(seg_type, str):
+                try:
+                    seg_type = RampSegmentType(seg_type)
+                except ValueError:
+                    raise ValueError(f"Unknown segment type: {seg_type}")
+            
             config_class = segment_type_map.get(seg_type)
             if config_class is None:
                 raise ValueError(f"Unknown segment type: {seg_type}")
-            segments.append(config_class(**seg_dict))
+            
+            # Remove 'type' from dict before passing to constructor (it's set automatically)
+            seg_dict_copy = {k: v for k, v in seg_dict.items() if k != 'type'}
+            segments.append(config_class(**seg_dict_copy))
         
         return cls(segments=segments)

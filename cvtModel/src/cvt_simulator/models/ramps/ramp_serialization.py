@@ -46,7 +46,6 @@ _register_segment_conversion(
     LinearSegment,
     LinearSegmentConfig,
     lambda seg: LinearSegmentConfig(
-        type="linear",
         x_start=seg.x_start,
         x_end=seg.x_end,
         slope=seg.m,
@@ -63,7 +62,6 @@ _register_segment_conversion(
     CircularSegment,
     CircularSegmentConfig,
     lambda seg: CircularSegmentConfig(
-        type="circular",
         x_start=seg.x_start,
         x_end=seg.x_end,
         radius=seg.radius,
@@ -85,7 +83,6 @@ _register_segment_conversion(
     CubicSpiralZeroK1,
     CubicSpiralZeroK1Config,
     lambda seg: CubicSpiralZeroK1Config(
-        type="cubic_spiral_zero_k1",
         x_start=seg.x_start,
         x_end=seg.x_end,
         slope_start=seg.theta0,
@@ -106,7 +103,6 @@ _register_segment_conversion(
     CubicSpiralZeroZero,
     CubicSpiralZeroZeroConfig,
     lambda seg: CubicSpiralZeroZeroConfig(
-        type="cubic_spiral_zero_zero",
         x_start=seg.x_start,
         x_end=seg.x_end,
         slope_start=seg.theta0,
@@ -125,7 +121,6 @@ _register_segment_conversion(
     EulerSpiralSegment,
     EulerSpiralConfig,
     lambda seg: EulerSpiralConfig(
-        type="euler_spiral",
         x_start=seg.x_start,
         x_end=seg.x_end,
         slope_start=seg.theta_start,
@@ -144,7 +139,6 @@ _register_segment_conversion(
     ProDefinedSegment,
     ProDefinedSegmentConfig,
     lambda seg: ProDefinedSegmentConfig(
-        type="pro_defined",
         x_start=seg.x_start,
         x_end=seg.x_end,
         prev_seg_height=seg.y_start if seg.y_start is not None else 0,
