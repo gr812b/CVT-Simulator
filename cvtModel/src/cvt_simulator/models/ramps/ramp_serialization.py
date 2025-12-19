@@ -46,13 +46,12 @@ _register_segment_conversion(
     LinearSegment,
     LinearSegmentConfig,
     lambda seg: LinearSegmentConfig(
-        x_start=seg.x_start,
-        x_end=seg.x_end,
+        length=seg.x_end - seg.x_start,
         slope=seg.m,
     ),
     lambda cfg: LinearSegment(
-        x_start=cfg.x_start,
-        x_end=cfg.x_end,
+        x_start=0,  # Will be set during ramp assembly
+        x_end=cfg.length,
         slope=cfg.slope
     )
 )
@@ -62,16 +61,15 @@ _register_segment_conversion(
     CircularSegment,
     CircularSegmentConfig,
     lambda seg: CircularSegmentConfig(
-        x_start=seg.x_start,
-        x_end=seg.x_end,
+        length=seg.x_end - seg.x_start,
         radius=seg.radius,
         # CircularSegment stores transformed values (π + original), so subtract π to get original
         theta_start=seg.theta_start - math.pi,
         theta_end=seg.theta_end - math.pi,
     ),
     lambda cfg: CircularSegment(
-        x_start=cfg.x_start,
-        x_end=cfg.x_end,
+        x_start=0,  # Will be set during ramp assembly
+        x_end=cfg.length,
         radius=cfg.radius,
         theta_start=cfg.theta_start,
         theta_end=cfg.theta_end
@@ -83,15 +81,14 @@ _register_segment_conversion(
     CubicSpiralZeroK1,
     CubicSpiralZeroK1Config,
     lambda seg: CubicSpiralZeroK1Config(
-        x_start=seg.x_start,
-        x_end=seg.x_end,
+        length=seg.x_end - seg.x_start,
         slope_start=seg.theta0,
         slope_end=seg.theta1,
         target_curvature=seg.k1,
     ),
     lambda cfg: CubicSpiralZeroK1(
-        x_start=cfg.x_start,
-        x_end=cfg.x_end,
+        x_start=0,  # Will be set during ramp assembly
+        x_end=cfg.length,
         slope_start=math.tan(cfg.slope_start),
         slope_end=math.tan(cfg.slope_end),
         target_curvature=cfg.target_curvature
@@ -103,14 +100,13 @@ _register_segment_conversion(
     CubicSpiralZeroZero,
     CubicSpiralZeroZeroConfig,
     lambda seg: CubicSpiralZeroZeroConfig(
-        x_start=seg.x_start,
-        x_end=seg.x_end,
+        length=seg.x_end - seg.x_start,
         slope_start=seg.theta0,
         slope_end=seg.theta1,
     ),
     lambda cfg: CubicSpiralZeroZero(
-        x_start=cfg.x_start,
-        x_end=cfg.x_end,
+        x_start=0,  # Will be set during ramp assembly
+        x_end=cfg.length,
         slope_start=math.tan(cfg.slope_start),
         slope_end=math.tan(cfg.slope_end)
     )
@@ -121,14 +117,13 @@ _register_segment_conversion(
     EulerSpiralSegment,
     EulerSpiralConfig,
     lambda seg: EulerSpiralConfig(
-        x_start=seg.x_start,
-        x_end=seg.x_end,
+        length=seg.x_end - seg.x_start,
         slope_start=seg.theta_start,
         slope_end=seg.theta_end,
     ),
     lambda cfg: EulerSpiralSegment(
-        x_start=cfg.x_start,
-        x_end=cfg.x_end,
+        x_start=0,  # Will be set during ramp assembly
+        x_end=cfg.length,
         slope_start=math.tan(cfg.slope_start),
         slope_end=math.tan(cfg.slope_end)
     )
@@ -139,16 +134,15 @@ _register_segment_conversion(
     ProDefinedSegment,
     ProDefinedSegmentConfig,
     lambda seg: ProDefinedSegmentConfig(
-        x_start=seg.x_start,
-        x_end=seg.x_end,
+        length=seg.x_end - seg.x_start,
         prev_seg_height=seg.y_start if seg.y_start is not None else 0,
         end_length=seg.end_length,
         initial_slope=seg.f_prime(-seg.x_offset),
         r_initial=seg.r_initial,
     ),
     lambda cfg: ProDefinedSegment(
-        x_start=cfg.x_start,
-        x_end=cfg.x_end,
+        x_start=0,  # Will be set during ramp assembly
+        x_end=cfg.length,
         prev_seg_height=cfg.prev_seg_height,
         end_length=cfg.end_length,
         initial_slope=cfg.initial_slope,

@@ -4,6 +4,7 @@ import { Button } from '@components/button/Button';
 import { ParameterAccordion } from '@components/parameterAccordion/ParameterAccordion';
 import { InputField } from '@components/inputField/InputField';
 import { RampBuilder } from '@components/rampBuilder/RampBuilder';
+import { RampPreview } from '@components/rampBuilder/RampPreview';
 import { ParameterDescription } from '@components/parameterDescription/ParameterDescription';
 import { LoadingOverlay } from '@components/loadingOverlay/LoadingOverlay';
 import { GROUP_TITLES, PARAMETERS, type Parameter, type ParameterGroup } from '@types';
@@ -89,12 +90,19 @@ export const Input = () => {
     // Get parameter description based on active field
     const getParameterInformation = (key: Parameter | null) => {
         const parameter = key ? PARAMETERS[key] : null;
+        const isRamp = parameter?.type === 'ramp';
+        
         return (
-            <ParameterDescription
-                name={parameter ? parameter.label : "No Parameter Selected"}
-                description={parameter ? parameter.description : "Click on an input field to see its description."}
-                img={parameter ? parameter.img : undefined}
-            />
+            <>
+                <ParameterDescription
+                    name={parameter ? parameter.label : "No Parameter Selected"}
+                    description={parameter ? parameter.description : "Click on an input field to see its description."}
+                    img={parameter ? parameter.img : undefined}
+                />
+                {isRamp && key && (
+                    <RampPreview config={(formState.values[key] || { segments: [] }) as any} />
+                )}
+            </>
         );
     }
 

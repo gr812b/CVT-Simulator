@@ -8,9 +8,10 @@ import type { RunBody } from '@utils/api';
 export const mapParametersToApiBody = (parameters: ParameterState): RunBody => {
   return {
     flyweight_mass: parameters.FlyweightMass,
-    primary_ramp_config: parameters.PrimaryRampConfig || undefined,
+    primary_ramp_config: parameters.PrimaryRampConfig,
     primary_spring_rate: parameters.PrimarySpringRate,
     primary_spring_pretension: parameters.PrimarySpringPretension,
+    secondary_ramp_config: parameters.SecondaryRampConfig,
     secondary_torsion_spring_rate: parameters.SecondaryTorsionSpringRate,
     secondary_compression_spring_rate: parameters.SecondaryCompressionSpringRate,
     secondary_rotational_spring_pretension: parameters.SecondaryRotationalSpringPretension,

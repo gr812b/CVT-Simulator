@@ -15,6 +15,7 @@ export type Parameter =
   | 'PrimaryRampConfig'
   | 'PrimarySpringRate'
   | 'PrimarySpringPretension'
+  | 'SecondaryRampConfig'
   | 'SecondaryTorsionSpringRate'
   | 'SecondaryCompressionSpringRate'
   | 'SecondaryRotationalSpringPretension'
@@ -91,6 +92,15 @@ const PARAMETERS_IMPL = {
     units: 'm',
     group: 'primary',
     img: primaryCVT,
+  },
+  SecondaryRampConfig: {
+    label: 'Custom Ramp Profile',
+    description:
+      'Design a custom helix ramp profile for the secondary pulley by combining different segment types. The ramp profile controls how the torque-reactive mechanism responds as the pulley shifts. Use linear segments for constant slopes, circular arcs for smooth transitions, and spiral segments for advanced tuning. Leave null to use the default ramp.',
+    type: 'ramp',
+    defaultValue: null,
+    units: '-',
+    group: 'secondary',
   },
   SecondaryTorsionSpringRate: {
     label: 'Secondary Torsion Spring Rate',

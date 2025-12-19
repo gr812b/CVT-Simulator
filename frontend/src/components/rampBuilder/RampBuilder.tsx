@@ -1,7 +1,7 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import { Button } from '@components/button/Button';
 import { InputField } from '@components/inputField/InputField';
-import type { components } from '@types/api';
+import type { components } from '@types';
 import styles from './RampBuilder.module.scss';
 import Plus from '@assets/icons/plus.svg?react';
 import Trash from '@assets/icons/trash_can.svg?react';
@@ -29,22 +29,20 @@ const SEGMENT_TYPE_LABELS: Record<SegmentType, string> = {
     pro_defined: 'Pro Defined',
 };
 
-const createDefaultSegment = (type: SegmentType, xStart: number): RampSegment => {
-    const xEnd = xStart + 0.01;
+const createDefaultSegment = (type: SegmentType): RampSegment => {
+    const defaultLength = 0.1;
     
     switch (type) {
         case 'linear':
             return {
                 type: 'linear',
-                x_start: xStart,
-                x_end: xEnd,
+                length: defaultLength,
                 slope: 0.5,
             } as LinearSegment;
         case 'circular':
             return {
                 type: 'circular',
-                x_start: xStart,
-                x_end: xEnd,
+                length: defaultLength,
                 radius: 0.05,
                 theta_start: 0,
                 theta_end: 0.785, // π/4
@@ -52,8 +50,7 @@ const createDefaultSegment = (type: SegmentType, xStart: number): RampSegment =>
         case 'cubic_spiral_zero_k1':
             return {
                 type: 'cubic_spiral_zero_k1',
-                x_start: xStart,
-                x_end: xEnd,
+                length: defaultLength,
                 slope_start: 0.3,
                 slope_end: 0.4,
                 target_curvature: 10.0,
@@ -61,49 +58,56 @@ const createDefaultSegment = (type: SegmentType, xStart: number): RampSegment =>
         default:
             return {
                 type: 'linear',
-                x_start: xStart,
-                x_end: xEnd,
+                length: defaultLength,
                 slope: 0.5,
             } as LinearSegment;
     }
 };
 
 export const RampBuilder = ({ value, onChange, className }: RampBuilderProps) => {
-    const [segments, setSegments] = useState<RampSegment[]>(
-        value?.segments || [createDefaultSegment('linear', 0)]
-    );
-
-    useEffect(() => {
-        onChange({ segments });
-    }, [segments, onChange]);
+    const [segments, setSegments] = useState<RampSegment[]>(() => {
+        const initialSegments = value?.segments || [createDefaultSegment('linear')];
+        // If we had to create default segments, notify parent immediately
+        if (!value?.segments || value.segments.length === 0) {
+            // Use setTimeout to avoid updating parent during render
+            setTimeout(() => onChange({ segments: initialSegments }), 0);
+        }
+        return initialSegments;
+    });
 
     const addSegment = useCallback(() => {
-        const lastSegment = segments[segments.length - 1];
-        const newXStart = lastSegment ? lastSegment.x_end : 0;
-        const newSegment = createDefaultSegment('linear', newXStart);
-        setSegments([...segments, newSegment]);
-    }, [segments]);
+        const newSegment = createDefaultSegment('linear');
+        const newSegments = [...segments, newSegment];
+        setSegments(newSegments);
+        onChange({ segments: newSegments });
+    }, [segments, onChange]);
 
     const removeSegment = useCallback((index: number) => {
         if (segments.length <= 1) return; // Keep at least one segment
-        setSegments(segments.filter((_, i) => i !== index));
-    }, [segments]);
+        const newSegments = segments.filter((_, i) => i !== index);
+        setSegments(newSegments);
+        onChange({ segments: newSegments });
+    }, [segments, onChange]);
 
     const updateSegment = useCallback((index: number, updates: Partial<RampSegment>) => {
-        setSegments(segments.map((seg, i) => {
+        const newSegments = segments.map((seg, i) => {
             if (i === index) {
-                return { ...seg, ...updates };
+                return { ...seg, ...updates } as RampSegment;
             }
             return seg;
-        }));
-    }, [segments]);
+        });
+        setSegments(newSegments);
+        onChange({ segments: newSegments });
+    }, [segments, onChange]);
 
     const changeSegmentType = useCallback((index: number, newType: SegmentType) => {
         const oldSegment = segments[index];
-        const newSegment = createDefaultSegment(newType, oldSegment.x_start);
-        newSegment.x_end = oldSegment.x_end;
-        setSegments(segments.map((seg, i) => i === index ? newSegment : seg));
-    }, [segments]);
+        const newSegment = createDefaultSegment(newType);
+        newSegment.length = oldSegment.length;
+        const newSegments = segments.map((seg, i) => i === index ? newSegment : seg);
+        setSegments(newSegments);
+        onChange({ segments: newSegments });
+    }, [segments, onChange]);
 
     return (
         <div className={className}>
@@ -144,22 +148,13 @@ export const RampBuilder = ({ value, onChange, className }: RampBuilderProps) =>
                                 </select>
                             </div>
 
-                            <div className={styles.row}>
-                                <InputField
-                                    label="X Start (m)"
-                                    type="number"
-                                    step="0.001"
-                                    value={segment.x_start}
-                                    onChange={(e) => updateSegment(index, { x_start: parseFloat(e.target.value) })}
-                                />
-                                <InputField
-                                    label="X End (m)"
-                                    type="number"
-                                    step="0.001"
-                                    value={segment.x_end}
-                                    onChange={(e) => updateSegment(index, { x_end: parseFloat(e.target.value) })}
-                                />
-                            </div>
+                            <InputField
+                                label="Length (m)"
+                                type="number"
+                                step="0.001"
+                                value={segment.length}
+                                onChange={(e) => updateSegment(index, { length: parseFloat(e.target.value) })}
+                            />
 
                             {segment.type === 'linear' && (
                                 <InputField
@@ -237,9 +232,9 @@ export const RampBuilder = ({ value, onChange, className }: RampBuilderProps) =>
                     <strong>{segments.length}</strong>
                 </div>
                 <div className={styles.summaryItem}>
-                    <span>Range:</span>
+                    <span>Total length:</span>
                     <strong>
-                        {segments[0]?.x_start.toFixed(3)} - {segments[segments.length - 1]?.x_end.toFixed(3)} m
+                        {segments.reduce((sum, seg) => sum + (seg.length || 0), 0).toFixed(3)} m
                     </strong>
                 </div>
             </div>

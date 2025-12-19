@@ -24,8 +24,7 @@ class RampSegmentType(str, Enum):
 @dataclass
 class LinearSegmentConfig:
     """Configuration for a linear ramp segment."""
-    x_start: float
-    x_end: float
+    length: float
     slope: float
     type: Literal[RampSegmentType.LINEAR] = field(default=RampSegmentType.LINEAR, init=False)
 
@@ -33,8 +32,7 @@ class LinearSegmentConfig:
 @dataclass
 class CircularSegmentConfig:
     """Configuration for a circular arc ramp segment."""
-    x_start: float
-    x_end: float
+    length: float
     radius: float
     theta_start: float  # Starting angle in radians
     theta_end: float  # Ending angle in radians
@@ -44,8 +42,7 @@ class CircularSegmentConfig:
 @dataclass
 class CubicSpiralZeroK1Config:
     """Configuration for a cubic spiral with specified final curvature."""
-    x_start: float
-    x_end: float
+    length: float
     slope_start: float  # As angle in radians
     slope_end: float  # As angle in radians
     target_curvature: float
@@ -55,8 +52,7 @@ class CubicSpiralZeroK1Config:
 @dataclass
 class CubicSpiralZeroZeroConfig:
     """Configuration for a cubic spiral with zero curvature at both ends."""
-    x_start: float
-    x_end: float
+    length: float
     slope_start: float  # As angle in radians
     slope_end: float  # As angle in radians
     type: Literal[RampSegmentType.CUBIC_SPIRAL_ZERO_ZERO] = field(default=RampSegmentType.CUBIC_SPIRAL_ZERO_ZERO, init=False)
@@ -65,8 +61,7 @@ class CubicSpiralZeroZeroConfig:
 @dataclass
 class EulerSpiralConfig:
     """Configuration for an Euler spiral segment."""
-    x_start: float
-    x_end: float
+    length: float
     slope_start: float  # As angle in radians
     slope_end: float  # As angle in radians
     type: Literal[RampSegmentType.EULER_SPIRAL] = field(default=RampSegmentType.EULER_SPIRAL, init=False)
@@ -75,8 +70,7 @@ class EulerSpiralConfig:
 @dataclass
 class ProDefinedSegmentConfig:
     """Configuration for a pro-defined segment."""
-    x_start: float
-    x_end: float
+    length: float
     prev_seg_height: float
     end_length: float
     initial_slope: float

@@ -73,10 +73,8 @@ export interface components {
         };
         /** CircularSegmentConfigModel */
         CircularSegmentConfigModel: {
-            /** X Start */
-            x_start: number;
-            /** X End */
-            x_end: number;
+            /** Length */
+            length: number;
             /** Radius */
             radius: number;
             /** Theta Start */
@@ -91,10 +89,8 @@ export interface components {
         };
         /** CubicSpiralZeroK1ConfigModel */
         CubicSpiralZeroK1ConfigModel: {
-            /** X Start */
-            x_start: number;
-            /** X End */
-            x_end: number;
+            /** Length */
+            length: number;
             /** Slope Start */
             slope_start: number;
             /** Slope End */
@@ -109,10 +105,8 @@ export interface components {
         };
         /** CubicSpiralZeroZeroConfigModel */
         CubicSpiralZeroZeroConfigModel: {
-            /** X Start */
-            x_start: number;
-            /** X End */
-            x_end: number;
+            /** Length */
+            length: number;
             /** Slope Start */
             slope_start: number;
             /** Slope End */
@@ -149,10 +143,8 @@ export interface components {
         };
         /** EulerSpiralConfigModel */
         EulerSpiralConfigModel: {
-            /** X Start */
-            x_start: number;
-            /** X End */
-            x_end: number;
+            /** Length */
+            length: number;
             /** Slope Start */
             slope_start: number;
             /** Slope End */
@@ -198,10 +190,8 @@ export interface components {
         };
         /** LinearSegmentConfigModel */
         LinearSegmentConfigModel: {
-            /** X Start */
-            x_start: number;
-            /** X End */
-            x_end: number;
+            /** Length */
+            length: number;
             /** Slope */
             slope: number;
             /**
@@ -224,10 +214,8 @@ export interface components {
         };
         /** ProDefinedSegmentConfigModel */
         ProDefinedSegmentConfigModel: {
-            /** X Start */
-            x_start: number;
-            /** X End */
-            x_end: number;
+            /** Length */
+            length: number;
             /** Prev Seg Height */
             prev_seg_height: number;
             /** End Length */
