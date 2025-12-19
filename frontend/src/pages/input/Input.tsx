@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '@components/button/Button';
 import { ParameterAccordion } from '@components/parameterAccordion/ParameterAccordion';
 import { InputField } from '@components/inputField/InputField';
+import { RampBuilder } from '@components/rampBuilder/RampBuilder';
 import { ParameterDescription } from '@components/parameterDescription/ParameterDescription';
 import { LoadingOverlay } from '@components/loadingOverlay/LoadingOverlay';
 import { GROUP_TITLES, PARAMETERS, type Parameter, type ParameterGroup } from '@types';
@@ -118,16 +119,30 @@ export const Input = () => {
                             {allParameters
                                 .filter(paramKey => PARAMETERS[paramKey].group === groupKey)
                                 .map(paramKey => {
-                                    const { label, units } = PARAMETERS[paramKey];
+                                    const param = PARAMETERS[paramKey];
+                                    const { label, units, type } = param;
                                     const hasError = formState.touched[paramKey] && formState.errors[paramKey];
                                     const hasChanged = formState.isFieldChanged(paramKey);
+                                    
+                                    // Handle ramp parameter differently
+                                    if (type === 'ramp') {
+                                        return (
+                                            <div key={paramKey} onFocus={() => setActiveField(paramKey)}>
+                                                <RampBuilder
+                                                    value={formState.values[paramKey] as any}
+                                                    onChange={(config) => formState.updateField(paramKey, config as any)}
+                                                    className={styles.rampBuilder}
+                                                />
+                                            </div>
+                                        );
+                                    }
                                     
                                     return (
                                         <InputField
                                             key={paramKey}
                                             className={styles.baseInputField}
                                             label={`${label} (${units})`}
-                                            value={formState.values[paramKey]}
+                                            value={formState.values[paramKey] as string}
                                             error={hasError ? formState.errors[paramKey] : null}
                                             hasChanged={hasChanged}
                                             onChange={(e) => formState.updateField(paramKey, e.target.value)}

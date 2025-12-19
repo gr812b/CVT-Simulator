@@ -30,8 +30,31 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Run */
+        /**
+         * Run
+         * @description Run CVT simulation with optional custom parameters.
+         */
         post: operations["run_run_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/ramp/preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Preview Ramp
+         * @description Generate preview data for a custom ramp configuration.
+         */
+        post: operations["preview_ramp_ramp_preview_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -47,6 +70,58 @@ export interface components {
             external_forces: components["schemas"]["ExternalLoadForceBreakdownModel"];
             /** Acceleration */
             acceleration: number;
+        };
+        /** CircularSegmentConfigModel */
+        CircularSegmentConfigModel: {
+            /** X Start */
+            x_start: number;
+            /** X End */
+            x_end: number;
+            /** Radius */
+            radius: number;
+            /** Theta Start */
+            theta_start: number;
+            /** Theta End */
+            theta_end: number;
+            /**
+             * Type
+             * @constant
+             */
+            type: "circular";
+        };
+        /** CubicSpiralZeroK1ConfigModel */
+        CubicSpiralZeroK1ConfigModel: {
+            /** X Start */
+            x_start: number;
+            /** X End */
+            x_end: number;
+            /** Slope Start */
+            slope_start: number;
+            /** Slope End */
+            slope_end: number;
+            /** Target Curvature */
+            target_curvature: number;
+            /**
+             * Type
+             * @constant
+             */
+            type: "cubic_spiral_zero_k1";
+        };
+        /** CubicSpiralZeroZeroConfigModel */
+        CubicSpiralZeroZeroConfigModel: {
+            /** X Start */
+            x_start: number;
+            /** X End */
+            x_end: number;
+            /** Slope Start */
+            slope_start: number;
+            /** Slope End */
+            slope_end: number;
+            /**
+             * Type
+             * @constant
+             */
+            type: "cubic_spiral_zero_zero";
         };
         /** CvtSystemForceBreakdownModel */
         CvtSystemForceBreakdownModel: {
@@ -71,6 +146,22 @@ export interface components {
             angular_velocity: number;
             /** Angular Acceleration */
             angular_acceleration: number;
+        };
+        /** EulerSpiralConfigModel */
+        EulerSpiralConfigModel: {
+            /** X Start */
+            x_start: number;
+            /** X End */
+            x_end: number;
+            /** Slope Start */
+            slope_start: number;
+            /** Slope End */
+            slope_end: number;
+            /**
+             * Type
+             * @constant
+             */
+            type: "euler_spiral";
         };
         /** ExternalLoadForceBreakdownModel */
         ExternalLoadForceBreakdownModel: {
@@ -105,12 +196,51 @@ export interface components {
             /** Net */
             net: number;
         };
+        /** LinearSegmentConfigModel */
+        LinearSegmentConfigModel: {
+            /** X Start */
+            x_start: number;
+            /** X End */
+            x_end: number;
+            /** Slope */
+            slope: number;
+            /**
+             * Type
+             * @constant
+             */
+            type: "linear";
+        };
+        /** PiecewiseRampConfigModel */
+        PiecewiseRampConfigModel: {
+            /** Segments */
+            segments: (components["schemas"]["LinearSegmentConfigModel"] | components["schemas"]["CircularSegmentConfigModel"] | components["schemas"]["CubicSpiralZeroK1ConfigModel"] | components["schemas"]["CubicSpiralZeroZeroConfigModel"] | components["schemas"]["EulerSpiralConfigModel"] | components["schemas"]["ProDefinedSegmentConfigModel"])[];
+        };
         /** PrimaryForceBreakdownModel */
         PrimaryForceBreakdownModel: {
             flyweightForce: components["schemas"]["flyweightForceBreakdownModel"];
             springForce: components["schemas"]["springCompForceBreakdownModel"];
             /** Net */
             net: number;
+        };
+        /** ProDefinedSegmentConfigModel */
+        ProDefinedSegmentConfigModel: {
+            /** X Start */
+            x_start: number;
+            /** X End */
+            x_end: number;
+            /** Prev Seg Height */
+            prev_seg_height: number;
+            /** End Length */
+            end_length: number;
+            /** Initial Slope */
+            initial_slope: number;
+            /** R Initial */
+            r_initial: number;
+            /**
+             * Type
+             * @constant
+             */
+            type: "pro_defined";
         };
         /** PulleyForcesModel */
         PulleyForcesModel: {
@@ -150,12 +280,14 @@ export interface components {
             flyweight_mass?: number | null;
             /** Primary Ramp Geometry */
             primary_ramp_geometry?: number | null;
+            primary_ramp_config?: components["schemas"]["PiecewiseRampConfigModel"] | null;
             /** Primary Spring Rate */
             primary_spring_rate?: number | null;
             /** Primary Spring Pretension */
             primary_spring_pretension?: number | null;
             /** Secondary Helix Geometry */
             secondary_helix_geometry?: number | null;
+            secondary_ramp_config?: components["schemas"]["PiecewiseRampConfigModel"] | null;
             /** Secondary Torsion Spring Rate */
             secondary_torsion_spring_rate?: number | null;
             /** Secondary Compression Spring Rate */
@@ -304,6 +436,39 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["FormattedSimulationResultModel"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    preview_ramp_ramp_preview_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PiecewiseRampConfigModel"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
                 };
             };
             /** @description Validation Error */
