@@ -1,0 +1,61 @@
+# name of the workflow.
+# this is optional.
+name: Containerize
+
+on:
+  push:
+    branches:
+      - develop
+
+#This also includes how I upload it to our forgejo instance, feel free to add or remove it to the github container registry
+jobs:
+  deploy:
+    runs-on: ubuntu
+    # if: ${{ github.ref == 'refs/heads/master' || github.event.pull_request.merged == true }} # Runs if it's a push to 'main' or a merged PR to 'main'
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Login to Dockerhub # log into docker hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }} # Using secret for Docker username
+          password: ${{ secrets.DOCKER_PASSWORD }} # Using secret for Docker password
+        id: docker-login
+
+        # Login to Forgejo registry
+      # - name: Login to Forgejo Container Registry
+      #   uses: docker/login-action@v2
+      #   with:
+      #     registry: forge.ucalgarybaja.ca
+      #     username: ${{ secrets.FORGEJO_REGISTRY_USER }}
+      #     password: ${{ secrets.FORGEJO_REGISTRY_TOKEN }}
+      #   id: forgejo-login
+
+      - name: build container image # build the container
+        run: |
+          cd backend
+          docker compose build --no-cache
+        id: docker-build
+
+      - name: Upload to Dockerhub
+        run: docker push gr812b/CVT-Simulator:latest
+        if: ${{ steps.docker-login.outcome == 'success' && steps.docker-build.outcome == 'success' }}
+
+      - name: Upload to Dockerhub with Git SHA tag
+        run: |
+          docker tag gr812b/CVT-Simulator:latest gr812b/CVT-Simulator:${{ github.sha }}
+          docker push gr812b/CVT-Simulator:${{ github.sha }}
+        if: ${{ steps.docker-login.outcome == 'success' && steps.docker-build.outcome == 'success' }}
+
+      # - name: Upload to Forgejo with Git SHA tag
+      #   run: |
+      #     docker tag ucalgary-baja/cvt-simulator:latest forge.ucalgarybaja.ca/ucalgary-baja/cvt-simulator:${{ github.sha }}
+      #     docker push forge.ucalgarybaja.ca/ucalgary-baja/cvt-simulator:${{ github.sha }}
+      #   if: ${{ steps.forgejo-login.outcome == 'success' && steps.docker-build.outcome == 'success' }}
+
+      # - name: Upload to Forgejo
+      #   run: |
+      #     docker tag ucalgary-baja/cvt-simulator:latest forge.ucalgarybaja.ca/ucalgary-baja/cvt-simulator:latest
+      #     docker push forge.ucalgarybaja.ca/ucalgary-baja/cvt-simulator:latest
+      #   if: ${{ steps.forgejo-login.outcome == 'success' && steps.docker-build.outcome == 'success' }}

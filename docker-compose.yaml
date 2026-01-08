@@ -1,0 +1,11 @@
+services:
+  simulator:
+    container_name: cvt-simulator
+    image: gr812b/CVT-Simulator:latest # change username of whoever wants to "own" it on dockerhub
+    # restart: unless-stopped
+
+    build: # do not include in delpoyment version
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - 8000:8000
