@@ -1,5 +1,5 @@
-from dataclasses import dataclass, fields, replace, field
-from typing import Any, Mapping
+from dataclasses import dataclass, fields, replace, field, is_dataclass
+from typing import Any, Mapping, get_origin
 from cvt_simulator.models.ramps.ramp_config import PiecewiseRampConfig
 from cvt_simulator.models.pulley.primary_pulley_flyweight import (
     create_default_flyweight_ramp,
@@ -44,11 +44,18 @@ class SimulationArgs:
         Merge a (possibly partial) dict with dataclass defaults.
         Accepts keys with '-' or '_' (e.g., 'vehicle-weight' or 'vehicle_weight').
         Ignores unknown keys.
+        Automatically converts nested dict values to dataclass objects if the field type
+        is a dataclass with a from_dict method.
         """
         allowed = {f.name: f for f in fields(cls)}
         overrides = {}
         for k, v in data.items():
             key = k.replace("-", "_")
             if key in allowed and v is not None:
-                overrides[key] = v
+                field_type = allowed[key].type
+                # If the value is a dict and the field type is a dataclass with from_dict
+                if isinstance(v, dict) and is_dataclass(field_type) and hasattr(field_type, 'from_dict'):
+                    overrides[key] = field_type.from_dict(v)
+                else:
+                    overrides[key] = v
         return replace(cls(), **overrides)
