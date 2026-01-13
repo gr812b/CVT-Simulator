@@ -7,7 +7,7 @@ import { RampBuilder } from '@components/rampBuilder/RampBuilder';
 import { RampPreview } from '@components/rampBuilder/RampPreview';
 import { ParameterDescription } from '@components/parameterDescription/ParameterDescription';
 import { LoadingOverlay } from '@components/loadingOverlay/LoadingOverlay';
-import { GROUP_TITLES, PARAMETERS, type Parameter, type ParameterGroup } from '@types';
+import { GROUP_TITLES, PARAMETERS, type Parameter, type ParameterGroup, type PiecewiseRampConfig } from '@types';
 import { useParameter } from '@contexts/ParameterContext';
 import { useLoading } from '@contexts/LoadingContext';
 import { useFormState } from '@hooks/useFormState';
@@ -100,7 +100,7 @@ export const Input = () => {
                     img={parameter ? parameter.img : undefined}
                 />
                 {isRamp && key && (
-                    <RampPreview config={(formState.values[key] || { segments: [] }) as any} />
+                    <RampPreview config={(formState.values[key] || { segments: [] }) as PiecewiseRampConfig} />
                 )}
             </>
         );
@@ -137,8 +137,8 @@ export const Input = () => {
                                         return (
                                             <div key={paramKey} onFocus={() => setActiveField(paramKey)}>
                                                 <RampBuilder
-                                                    value={formState.values[paramKey] as any}
-                                                    onChange={(config) => formState.updateField(paramKey, config as any)}
+                                                    value={formState.values[paramKey] as PiecewiseRampConfig | null}
+                                                    onChange={(config) => formState.updateField(paramKey, config)}
                                                     className={styles.rampBuilder}
                                                 />
                                             </div>

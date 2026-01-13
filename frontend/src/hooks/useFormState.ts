@@ -1,8 +1,8 @@
 import { useState, useCallback, useRef } from 'react';
-import { PARAMETERS, type Parameter, type ParameterState } from '@types';
+import { PARAMETERS, type Parameter, type ParameterState, type ParameterValue } from '@types';
 
 export interface FormState {
-  values: Record<Parameter, any>;  // Changed to any to support complex types like ramp config
+  values: Record<Parameter, ParameterValue>;
   errors: Record<Parameter, string | null>;
   touched: Record<Parameter, boolean>;
   hasChanges: boolean;
@@ -10,7 +10,7 @@ export interface FormState {
 
 export const useFormState = (contextValues?: ParameterState) => {
   // Initialize form values - strings for simple types, objects for complex types
-  const getInitialValues = useCallback((): Record<Parameter, any> => {
+  const getInitialValues = useCallback((): Record<Parameter, ParameterValue> => {
     return Object.entries(PARAMETERS).reduce((acc, [key, config]) => {
       const paramKey = key as Parameter;
       // Use context value if available, otherwise use default
@@ -18,7 +18,7 @@ export const useFormState = (contextValues?: ParameterState) => {
       // Keep complex types as-is, convert primitives to strings for input fields
       acc[paramKey] = config.type === 'ramp' ? value : String(value);
       return acc;
-    }, {} as Record<Parameter, any>);
+    }, {} as Record<Parameter, ParameterValue>);
   }, [contextValues]);
 
   const getInitialErrors = useCallback((): Record<Parameter, string | null> => {
@@ -35,16 +35,16 @@ export const useFormState = (contextValues?: ParameterState) => {
     }, {} as Record<Parameter, boolean>);
   }, []);
 
-  const [values, setValues] = useState<Record<Parameter, any>>(() => getInitialValues());
+  const [values, setValues] = useState<Record<Parameter, ParameterValue>>(() => getInitialValues());
   const [errors, setErrors] = useState<Record<Parameter, string | null>>(getInitialErrors);
   const [touched, setTouched] = useState<Record<Parameter, boolean>>(getInitialTouched);
   const [hasChanges, setHasChanges] = useState(false);
   
   // Keep track of initial values for change detection
-  const initialValuesRef = useRef<Record<Parameter, any>>(getInitialValues());
+  const initialValuesRef = useRef<Record<Parameter, ParameterValue>>(getInitialValues());
 
   // Update a field value and validate it
-  const updateField = useCallback((parameter: Parameter, value: any) => {
+  const updateField = useCallback((parameter: Parameter, value: ParameterValue) => {
     setValues(prev => ({ ...prev, [parameter]: value }));
     
     // Validate the field (skip validation for complex types)
@@ -82,7 +82,7 @@ export const useFormState = (contextValues?: ParameterState) => {
       } else if (paramConfig.type === 'string') {
         result[parameterKey] = value;
       } else if (paramConfig.type === 'boolean') {
-        result[parameterKey] = value.toLowerCase() === 'true';
+        result[parameterKey] = typeof value === 'string' ? value.toLowerCase() === 'true' : Boolean(value);
       } else if (paramConfig.type === 'ramp') {
         // Keep ramp config as-is (already an object)
         result[parameterKey] = value;

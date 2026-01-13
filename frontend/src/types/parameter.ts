@@ -5,7 +5,8 @@ import environment from "@assets/images/environment.png"
 
 import type { components } from './api';
 
-type ParameterValue = string | number | boolean | components['schemas']['PiecewiseRampConfigModel'] | null
+export type ParameterValue = string | number | boolean | components['schemas']['PiecewiseRampConfigModel'] | null
+export type PiecewiseRampConfig = components['schemas']['PiecewiseRampConfigModel'];
 type ParameterType = 'string' | 'number' | 'boolean' | 'ramp'
 
 export type ParameterGroup = 'primary' | 'secondary' | 'environment'
