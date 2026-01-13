@@ -9,6 +9,7 @@ SimulationArgsInput = partial_model_from_class(SimulationArgs)
 FormattedResultModel = model_from_class(FormattedSimulationResult)
 PiecewiseRampConfigModel = model_from_class(PiecewiseRampConfig)
 
+
 # TODO: Bake this into the auto_model system
 class RampPreviewResponse(BaseModel):
     x: List[float]

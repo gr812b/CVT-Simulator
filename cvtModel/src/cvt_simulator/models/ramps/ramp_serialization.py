@@ -26,7 +26,9 @@ from cvt_simulator.models.ramps.ramp_config import (
 
 
 # Registry mapping segment classes to their conversion functions
-_TO_CONFIG_REGISTRY: dict[Type[RampSegment], Callable[[RampSegment], RampSegmentConfig]] = {}
+_TO_CONFIG_REGISTRY: dict[
+    Type[RampSegment], Callable[[RampSegment], RampSegmentConfig]
+] = {}
 _FROM_CONFIG_REGISTRY: dict[Type, Callable[[RampSegmentConfig], RampSegment]] = {}
 
 
@@ -34,7 +36,7 @@ def _register_segment_conversion(
     segment_class: Type[RampSegment],
     config_class: Type,
     to_config_fn: Callable[[RampSegment], RampSegmentConfig],
-    from_config_fn: Callable[[RampSegmentConfig], RampSegment]
+    from_config_fn: Callable[[RampSegmentConfig], RampSegment],
 ):
     """Register conversion functions for a segment type."""
     _TO_CONFIG_REGISTRY[segment_class] = to_config_fn
@@ -50,10 +52,8 @@ _register_segment_conversion(
         slope=seg.m,
     ),
     lambda cfg: LinearSegment(
-        x_start=0,  # Will be set during ramp assembly
-        x_end=cfg.length,
-        slope=cfg.slope
-    )
+        x_start=0, x_end=cfg.length, slope=cfg.slope  # Will be set during ramp assembly
+    ),
 )
 
 # Register CircularSegment conversions
@@ -72,8 +72,8 @@ _register_segment_conversion(
         x_end=cfg.length,
         radius=cfg.radius,
         theta_start=cfg.theta_start,
-        theta_end=cfg.theta_end
-    )
+        theta_end=cfg.theta_end,
+    ),
 )
 
 # Register CubicSpiralZeroK1 conversions
@@ -91,8 +91,8 @@ _register_segment_conversion(
         x_end=cfg.length,
         slope_start=math.tan(cfg.slope_start),
         slope_end=math.tan(cfg.slope_end),
-        target_curvature=cfg.target_curvature
-    )
+        target_curvature=cfg.target_curvature,
+    ),
 )
 
 # Register CubicSpiralZeroZero conversions
@@ -108,8 +108,8 @@ _register_segment_conversion(
         x_start=0,  # Will be set during ramp assembly
         x_end=cfg.length,
         slope_start=math.tan(cfg.slope_start),
-        slope_end=math.tan(cfg.slope_end)
-    )
+        slope_end=math.tan(cfg.slope_end),
+    ),
 )
 
 # Register EulerSpiralSegment conversions
@@ -125,8 +125,8 @@ _register_segment_conversion(
         x_start=0,  # Will be set during ramp assembly
         x_end=cfg.length,
         slope_start=math.tan(cfg.slope_start),
-        slope_end=math.tan(cfg.slope_end)
-    )
+        slope_end=math.tan(cfg.slope_end),
+    ),
 )
 
 # Register ProDefinedSegment conversions
@@ -146,18 +146,18 @@ _register_segment_conversion(
         prev_seg_height=cfg.prev_seg_height,
         end_length=cfg.end_length,
         initial_slope=cfg.initial_slope,
-        r_initial=cfg.r_initial
-    )
+        r_initial=cfg.r_initial,
+    ),
 )
 
 
 def segment_to_config(segment: RampSegment) -> RampSegmentConfig:
     """
     Convert a RampSegment instance to its config dataclass.
-    
+
     Args:
         segment: RampSegment instance
-        
+
     Returns:
         Appropriate config dataclass (LinearSegmentConfig, etc.)
     """
@@ -170,10 +170,10 @@ def segment_to_config(segment: RampSegment) -> RampSegmentConfig:
 def config_to_segment(config: RampSegmentConfig) -> RampSegment:
     """
     Convert a ramp config dataclass to a RampSegment instance.
-    
+
     Args:
         config: RampSegmentConfig dataclass (union of all segment config types)
-        
+
     Returns:
         RampSegment instance for simulation
     """

@@ -41,6 +41,7 @@ def run(payload: SimulationArgsInput | None = None):  # type: ignore
     result = simulate_cvt_model(args)
     return result
 
+
 # TODO: Remove this logic from endpoints / bake into cvtModel simulator
 @router.post("/ramp/preview", response_model=RampPreviewResponse)
 def preview_ramp(config: PiecewiseRampConfigModel):
@@ -49,21 +50,21 @@ def preview_ramp(config: PiecewiseRampConfigModel):
         # Use factory method to properly handle type discrimination
         config_dataclass = PiecewiseRampConfig.from_dict(config.model_dump())
         ramp = PiecewiseRamp.from_config(config_dataclass)
-        
+
         if not ramp.segments:
             raise HTTPException(
                 status_code=400, detail="Ramp must have at least one segment"
             )
-        
+
         x_min = ramp.segments[0].x_start
         x_max = ramp.segments[-1].x_end
-        
+
         # Generate 100 sample points for smooth visualization
         x_points = np.linspace(x_min, x_max, 100)
-        
+
         heights: List[float] = []
         slopes: List[float] = []
-        
+
         for x in x_points:
             try:
                 heights.append(float(ramp.height(x)))
@@ -72,7 +73,7 @@ def preview_ramp(config: PiecewiseRampConfigModel):
                 raise HTTPException(
                     status_code=400, detail=f"Error calculating ramp at x={x}: {e}"
                 )
-        
+
         return {
             "x": x_points.tolist(),
             "y": heights,
