@@ -1,4 +1,5 @@
 from typing import List
+from cvt_simulator.constants.car_specs import MAX_SHIFT
 from cvt_simulator.models.dataTypes import SystemBreakdown
 from cvt_simulator.utils.system_state import SystemState
 import pandas as pd
@@ -34,6 +35,16 @@ class FormattedSimulationResult:
         system_model = get_models(args)
 
         for i, (time, state) in enumerate(zip(result.time, result.states)):
+            shift_velocity = state.shift_velocity
+            shift_distance = state.shift_distance
+            if shift_distance <= 0:
+                state.shift_distance = 0
+                state.shift_velocity = max(0, shift_velocity)
+
+            elif shift_distance > MAX_SHIFT:
+                state.shift_distance = MAX_SHIFT
+                state.shift_velocity = min(0, shift_velocity)
+
             system_breakdown = system_model.get_breakdown(state)
 
             time_step_data = TimeStepData(
