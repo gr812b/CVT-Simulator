@@ -2,6 +2,7 @@ import { useEffect, useState, useMemo } from 'react';
 import ReactECharts from 'echarts-for-react';
 import type { EChartsOption, CallbackDataParams } from 'echarts/types/dist/shared';
 import type { components } from '@types';
+import { previewRamp, type RampPreviewResponse } from '@utils/api';
 import styles from './RampPreview.module.scss';
 
 type PiecewiseRampConfig = components['schemas']['PiecewiseRampConfigModel'];
@@ -10,16 +11,8 @@ interface RampPreviewProps {
     config: PiecewiseRampConfig;
 }
 
-interface PreviewData {
-    x: number[];
-    y: number[];
-    slopes: number[];
-    x_min: number;
-    x_max: number;
-}
-
 export const RampPreview = ({ config }: RampPreviewProps) => {
-    const [previewData, setPreviewData] = useState<PreviewData | null>(null);
+    const [previewData, setPreviewData] = useState<RampPreviewResponse | null>(null);
     const [error, setError] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(false);
 
@@ -41,20 +34,7 @@ export const RampPreview = ({ config }: RampPreviewProps) => {
             setError(null);
 
             try {
-                const response = await fetch('http://localhost:8000/ramp/preview', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(config),
-                });
-
-                if (!response.ok) {
-                    const errorData = await response.json();
-                    throw new Error(errorData.detail || 'Failed to generate preview');
-                }
-
-                const data = await response.json();
+                const data = await previewRamp(config);
                 console.log('Preview data received:', data);
                 setPreviewData(data);
             } catch (err) {

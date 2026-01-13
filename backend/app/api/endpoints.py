@@ -14,6 +14,7 @@ from ..models.response_models import (
     FormattedResultModel,
     SimulationArgsInput,
     PiecewiseRampConfigModel,
+    RampPreviewResponse,
 )
 
 router = APIRouter()
@@ -40,8 +41,8 @@ def run(payload: SimulationArgsInput | None = None):  # type: ignore
     result = simulate_cvt_model(args)
     return result
 
-
-@router.post("/ramp/preview")
+# TODO: Remove this logic from endpoints / bake into cvtModel simulator
+@router.post("/ramp/preview", response_model=RampPreviewResponse)
 def preview_ramp(config: PiecewiseRampConfigModel):
     """Generate preview data for a custom ramp configuration."""
     try:

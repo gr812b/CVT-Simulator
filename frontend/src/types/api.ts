@@ -255,6 +255,19 @@ export interface components {
             /** Breakdown */
             breakdown: components["schemas"]["PrimaryForceBreakdownModel"] | components["schemas"]["SecondaryForceBreakdownModel"];
         };
+        /** RampPreviewResponse */
+        RampPreviewResponse: {
+            /** X */
+            x: number[];
+            /** Y */
+            y: number[];
+            /** Slopes */
+            slopes: number[];
+            /** X Min */
+            x_min: number;
+            /** X Max */
+            x_max: number;
+        };
         /** SecondaryForceBreakdownModel */
         SecondaryForceBreakdownModel: {
             springCompForce: components["schemas"]["springCompForceBreakdownModel"];
@@ -456,7 +469,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["RampPreviewResponse"];
                 };
             };
             /** @description Validation Error */
