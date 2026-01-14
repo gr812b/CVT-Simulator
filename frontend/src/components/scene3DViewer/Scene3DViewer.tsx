@@ -1,9 +1,24 @@
-import { useEffect, useMemo } from 'react';
+import { useEffect, useState } from 'react';
 import * as THREE from 'three';
+import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader.js';
 import type { Model3DConfig } from '@types';
 import { useScene3D } from '@hooks/useScene3D';
 import { ReplayController, ReplayEventType } from '@utils/ReplayController';
 import styles from './Scene3DViewer.module.scss';
+import primaryFixedModel from '@assets/models/primary_fixed.obj?url';
+import primaryMovingModel from '@assets/models/primary_moving.obj?url';
+import secondaryFixedModel from '@assets/models/secondary_fixed.obj?url';
+import secondaryMovingModel from '@assets/models/secondary_moving.obj?url';
+
+// Small constant offset for primary moving position
+// TODO: Get this from backend or something
+const PRIMARY_MOVING_BASE_OFFSET = -0.2;
+
+// Distance between primary and secondary pulleys
+const PULLEY_SPACING = 2.5;
+
+// Small constant offset for secondary moving position
+const SECONDARY_MOVING_BASE_OFFSET = -0;
 
 interface Scene3DViewerProps {
   /** Replay controller for animation */
@@ -17,19 +32,108 @@ interface Scene3DViewerProps {
  * Coordinates the 3D scene and subscribes to the replay controller.
  */
 export const Scene3DViewer = ({ replayController, className }: Scene3DViewerProps) => {
-  // Create a simple box model (replace with your .obj loaded models)
-  const models = useMemo<Model3DConfig[]>(() => {
-    const boxGeometry = new THREE.BoxGeometry(1, 1, 1);
-    const boxMaterial = new THREE.MeshStandardMaterial({ color: 0x4488ff });
-    const boxMesh = new THREE.Mesh(boxGeometry, boxMaterial);
+  const [loadedModels, setLoadedModels] = useState<Model3DConfig[]>([]);
 
-    return [
-      {
-        id: 'rotatingBox',
-        object3D: boxMesh,
-        position: [0, 0, 0],
+  // Load .obj models
+  useEffect(() => {
+    const loader = new OBJLoader();
+    const models: Model3DConfig[] = [];
+
+    // Load primary fixed
+    loader.load(
+      primaryFixedModel,
+      (fixedObject) => {
+        // Apply material to all meshes in the loaded object
+        fixedObject.traverse((child) => {
+          if (child instanceof THREE.Mesh) {
+            child.material = new THREE.MeshStandardMaterial({ color: 0xff4444 });
+          }
+        });
+
+        models.push({
+          id: 'primaryFixed',
+          object3D: fixedObject,
+          position: [0, 0, 0],
+        });
+
+        // Load primary moving after fixed is loaded
+        loader.load(
+          primaryMovingModel,
+          (movingObject) => {
+            // Apply material to all meshes
+            movingObject.traverse((child) => {
+              if (child instanceof THREE.Mesh) {
+                child.material = new THREE.MeshStandardMaterial({ color: 0xff8844 });
+              }
+            });
+
+            models.push({
+              id: 'primaryMoving',
+              parentId: 'primaryFixed', // Attached to primaryFixed so it rotates together
+              object3D: movingObject,
+              position: [PRIMARY_MOVING_BASE_OFFSET, 0, 0], // Initial offset on X-axis
+            });
+
+            // Load secondary fixed after primary models
+            loader.load(
+              secondaryFixedModel,
+              (secondaryFixedObject) => {
+                // Apply material
+                secondaryFixedObject.traverse((child) => {
+                  if (child instanceof THREE.Mesh) {
+                    child.material = new THREE.MeshStandardMaterial({ color: 0x44ff44 });
+                  }
+                });
+
+                models.push({
+                  id: 'secondaryFixed',
+                  object3D: secondaryFixedObject,
+                  position: [0, 0, PULLEY_SPACING], // Offset from primary by PULLEY_SPACING
+                });
+
+                // Load secondary moving after secondary fixed
+                loader.load(
+                  secondaryMovingModel,
+                  (secondaryMovingObject) => {
+                    // Apply material
+                    secondaryMovingObject.traverse((child) => {
+                      if (child instanceof THREE.Mesh) {
+                        child.material = new THREE.MeshStandardMaterial({ color: 0x88ff44 });
+                      }
+                    });
+
+                    models.push({
+                      id: 'secondaryMoving',
+                      parentId: 'secondaryFixed', // Attached to secondaryFixed
+                      object3D: secondaryMovingObject,
+                      position: [SECONDARY_MOVING_BASE_OFFSET, 0, 0], // Initial offset on X-axis
+                    });
+
+                    setLoadedModels(models);
+                  },
+                  undefined,
+                  (error) => {
+                    console.error('Error loading secondary moving model:', error);
+                  }
+                );
+              },
+              undefined,
+              (error) => {
+                console.error('Error loading secondary fixed model:', error);
+              }
+            );
+          },
+          undefined,
+          (error) => {
+            console.error('Error loading primary moving model:', error);
+          }
+        );
       },
-    ];
+      undefined,
+      (error) => {
+        console.error('Error loading primary fixed model:', error);
+      }
+    );
   }, []);
 
   const { containerRef, sceneController } = useScene3D({
@@ -44,7 +148,7 @@ export const Scene3DViewer = ({ replayController, className }: Scene3DViewerProp
       backgroundColor: 0x1a1a1a,
       antialias: true,
     },
-    models,
+    models: loadedModels,
   });
 
   // Subscribe to replay controller and update models
@@ -53,13 +157,28 @@ export const Scene3DViewer = ({ replayController, className }: Scene3DViewerProp
 
     const unsubscribe = replayController.on((event) => {
       if (event.type === ReplayEventType.Progress) {
-        // Extract angular velocity from primary pulley
-        const angularVelocity = event.data.system?.cvt?.primaryPulleyState?.angular_velocity ?? 0;
+        // Extract angular velocities and shift distance
+        const primaryAngularVelocity = event.data.system?.cvt?.primaryPulleyState?.angular_velocity ?? 0;
+        const secondaryAngularVelocity = event.data.system?.cvt?.secondaryPulleyState?.angular_velocity ?? 0;
+        const shiftDistance = event.data.state?.shift_distance ?? 0;
 
-        // Update the box rotation (Y-axis spin based on angular velocity)
+        // Update all models
         sceneController.updateModels({
-          rotatingBox: {
-            rotation: [0, angularVelocity * event.data.time, 0] as [number, number, number],
+          primaryFixed: {
+            rotation: [primaryAngularVelocity * event.data.time, 0, 0],
+          },
+          primaryMoving: {
+            // Position offset by shift_distance + base constant (relative to parent)
+            // TODO: Do unit adjustment * 7 is temporary
+            position: [PRIMARY_MOVING_BASE_OFFSET + shiftDistance * 7, 0, 0],
+          },
+          secondaryFixed: {
+            rotation: [secondaryAngularVelocity * event.data.time, 0, 0],
+          },
+          secondaryMoving: {
+            // Position offset by shift_distance + base constant (relative to parent)
+            // TODO: Do unit adjustment * 7 is temporary
+            position: [SECONDARY_MOVING_BASE_OFFSET + shiftDistance * 7, 0, 0],
           },
         });
       }
