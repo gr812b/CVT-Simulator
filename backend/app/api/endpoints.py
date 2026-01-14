@@ -60,7 +60,7 @@ def preview_ramp(config: PiecewiseRampConfigModel):
         x_max = ramp.segments[-1].x_end
 
         # Generate 100 sample points for smooth visualization
-        x_points = np.linspace(x_min, x_max, 100)
+        x_points = np.linspace(x_min, x_max, 500)
 
         heights: List[float] = []
         slopes: List[float] = []
