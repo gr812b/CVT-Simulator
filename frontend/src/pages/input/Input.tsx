@@ -99,8 +99,8 @@ export const Input = () => {
                     description={parameter ? parameter.description : "Click on an input field to see its description."}
                     img={parameter ? parameter.img : undefined}
                 />
-                {isRamp && key && (
-                    <RampPreview config={(formState.values[key] || { segments: [] }) as PiecewiseRampConfig} />
+                {isRamp && key && formState.values[key] && (
+                    <RampPreview config={formState.values[key] as PiecewiseRampConfig} />
                 )}
             </>
         );

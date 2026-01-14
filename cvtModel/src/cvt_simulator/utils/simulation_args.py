@@ -1,5 +1,5 @@
 from dataclasses import dataclass, fields, replace, field, is_dataclass
-from typing import Any, Mapping
+from typing import Any, Mapping, Union, get_args, get_origin
 from cvt_simulator.models.ramps.ramp_config import PiecewiseRampConfig
 from cvt_simulator.models.pulley.primary_pulley_flyweight import (
     create_default_flyweight_ramp,
@@ -59,6 +59,13 @@ class SimulationArgs:
             key = k.replace("-", "_")
             if key in allowed and v is not None:
                 field_type = allowed[key].type
+                # Handle Optional/Union types by extracting the actual type
+                origin = get_origin(field_type)
+                if origin is Union:
+                    # Extract non-None types from Union
+                    types = [t for t in get_args(field_type) if t is not type(None)]
+                    if types:
+                        field_type = types[0]
                 # If the value is a dict and the field type is a dataclass with from_dict
                 if (
                     isinstance(v, dict)
