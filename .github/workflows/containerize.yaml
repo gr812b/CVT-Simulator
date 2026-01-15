@@ -7,55 +7,37 @@ on:
     branches:
       - develop
 
+env:
+  REGISTRY_GH: ghcr.io
+
 #This also includes how I upload it to our forgejo instance, feel free to add or remove it to the github container registry
 jobs:
   deploy:
-    runs-on: ubuntu
-    # if: ${{ github.ref == 'refs/heads/master' || github.event.pull_request.merged == true }} # Runs if it's a push to 'main' or a merged PR to 'main'
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Login to Dockerhub # log into docker hub
-        uses: docker/login-action@v2
+      - name: Log into GitHub Container Registry
+        uses: docker/login-action@v3
         with:
-          username: ${{ secrets.DOCKER_USERNAME }} # Using secret for Docker username
-          password: ${{ secrets.DOCKER_PASSWORD }} # Using secret for Docker password
-        id: docker-login
+          registry: ${{ env.REGISTRY_GH }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
-        # Login to Forgejo registry
-      # - name: Login to Forgejo Container Registry
-      #   uses: docker/login-action@v2
-      #   with:
-      #     registry: forge.ucalgarybaja.ca
-      #     username: ${{ secrets.FORGEJO_REGISTRY_USER }}
-      #     password: ${{ secrets.FORGEJO_REGISTRY_TOKEN }}
-      #   id: forgejo-login
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: build container image # build the container
-        run: |
-          cd backend
-          docker compose build --no-cache
-        id: docker-build
-
-      - name: Upload to Dockerhub
-        run: docker push gr812b/CVT-Simulator:latest
-        if: ${{ steps.docker-login.outcome == 'success' && steps.docker-build.outcome == 'success' }}
-
-      - name: Upload to Dockerhub with Git SHA tag
-        run: |
-          docker tag gr812b/CVT-Simulator:latest gr812b/CVT-Simulator:${{ github.sha }}
-          docker push gr812b/CVT-Simulator:${{ github.sha }}
-        if: ${{ steps.docker-login.outcome == 'success' && steps.docker-build.outcome == 'success' }}
-
-      # - name: Upload to Forgejo with Git SHA tag
-      #   run: |
-      #     docker tag ucalgary-baja/cvt-simulator:latest forge.ucalgarybaja.ca/ucalgary-baja/cvt-simulator:${{ github.sha }}
-      #     docker push forge.ucalgarybaja.ca/ucalgary-baja/cvt-simulator:${{ github.sha }}
-      #   if: ${{ steps.forgejo-login.outcome == 'success' && steps.docker-build.outcome == 'success' }}
-
-      # - name: Upload to Forgejo
-      #   run: |
-      #     docker tag ucalgary-baja/cvt-simulator:latest forge.ucalgarybaja.ca/ucalgary-baja/cvt-simulator:latest
-      #     docker push forge.ucalgarybaja.ca/ucalgary-baja/cvt-simulator:latest
-      #   if: ${{ steps.forgejo-login.outcome == 'success' && steps.docker-build.outcome == 'success' }}
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: |
+            ${{ env.REGISTRY_GH }}/gr812b/cvt-simulator:latest
+            ${{ env.REGISTRY_GH }}/gr812b/cvt-simulator:${{ github.sha }}
+            gr812b/cvt-simulator:latest
+            gr812b/cvt-simulator:${{ github.sha }}
