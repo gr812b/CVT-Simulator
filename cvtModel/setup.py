@@ -9,7 +9,8 @@ setup(
       "numpy",
       "scipy",
       "matplotlib",
-      "pandas"
+      "pandas",
+      "pydantic"
     ],
     extras_require={"dev": [
       "black",
