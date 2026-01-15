@@ -14,6 +14,15 @@ export async function runSimulation(body?: RunBody): Promise<RunResponse> {
   return data!;
 }
 
+export type ConstantsResponse =
+  operations['get_constants_constants_get']['responses']['200']['content']['application/json'];
+
+export async function getConstants(): Promise<ConstantsResponse> {
+  const { data, error } = await client.GET('/constants');
+  if (error) throw error;
+  return data!;
+}
+
 export type RampPreviewBody = NonNullable<operations['preview_ramp_ramp_preview_post']['requestBody']>['content']['application/json'];
 export type RampPreviewResponse =
   operations['preview_ramp_ramp_preview_post']['responses']['200']['content']['application/json'];

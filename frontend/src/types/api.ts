@@ -21,6 +21,28 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/constants": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Constants
+         * @description Get the physical constants and specifications used by the CVT simulator.
+         *     These values are useful for visualization and understanding the simulation parameters.
+         *     Calculated values like max_shift and center_to_center are automatically computed.
+         */
+        get: operations["get_constants_constants_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/run": {
         parameters: {
             query?: never;
@@ -70,6 +92,131 @@ export interface components {
             external_forces: components["schemas"]["ExternalLoadForceBreakdownModel"];
             /** Acceleration */
             acceleration: number;
+        };
+        /**
+         * CarSpecs
+         * @description Configuration class for CVT simulator car specifications.
+         *
+         *     Base constants can be overridden to simulate different car configurations.
+         *     Calculated constants are computed automatically from base values.
+         */
+        CarSpecs: {
+            /**
+             * Engine Inertia
+             * @description Engine inertia in kg*m^2
+             * @default 0.1
+             */
+            engine_inertia: number;
+            /**
+             * Driveline Inertia
+             * @description Driveline inertia in kg*m^2 (includes sec CVT, gearbox, axles, wheels, hubs, etc)
+             * @default 0.5
+             */
+            driveline_inertia: number;
+            /**
+             * Gearbox Ratio
+             * @description Gearbox ratio (unitless)
+             * @default 7.556
+             */
+            gearbox_ratio: number;
+            /**
+             * Wheel Radius
+             * @description Wheel radius in meters
+             * @default 0.2794
+             */
+            wheel_radius: number;
+            /**
+             * Frontal Area
+             * @description Frontal area in m^2
+             * @default 1.11484
+             */
+            frontal_area: number;
+            /**
+             * Drag Coefficient
+             * @description Drag coefficient (unitless)
+             * @default 0.6
+             */
+            drag_coefficient: number;
+            /**
+             * Sheave Angle
+             * @description Sheave angle in radians
+             * @default 0.40142572795869574
+             */
+            sheave_angle: number;
+            /**
+             * Initial Flyweight Radius
+             * @description Initial flyweight radius in meters
+             * @default 0.05
+             */
+            initial_flyweight_radius: number;
+            /**
+             * Helix Radius
+             * @description Helix radius in meters
+             * @default 0.04445
+             */
+            helix_radius: number;
+            /**
+             * Belt Angle
+             * @description Belt angle in radians
+             * @default 0.24434609527920614
+             */
+            belt_angle: number;
+            /**
+             * Belt Height
+             * @description Belt height in meters
+             * @default 0.0155702
+             */
+            belt_height: number;
+            /**
+             * Belt Length
+             * @description Belt length in meters
+             * @default 0.9532619999999999
+             */
+            belt_length: number;
+            /**
+             * Belt Width Top
+             * @description Belt width at top in meters
+             * @default 0.021589999999999998
+             */
+            belt_width_top: number;
+            /**
+             * Min Prim Radius
+             * @description Minimum primary pulley radius in meters
+             * @default 0.019049999999999997
+             */
+            min_prim_radius: number;
+            /**
+             * Max Sec Radius
+             * @description Maximum secondary pulley radius in meters
+             * @default 0.1016
+             */
+            max_sec_radius: number;
+            /**
+             * Initial Sheave Displacement
+             * @description Initial sheave displacement in meters
+             * @default 0.0030733999999999996
+             */
+            initial_sheave_displacement: number;
+            /**
+             * Belt Width Bottom
+             * @description Belt width at bottom in meters, calculated from top width, height and angle.
+             */
+            readonly belt_width_bottom: number;
+            /**
+             * Belt Cross Sectional Area
+             * @description Belt cross-sectional area in m^2.
+             */
+            readonly belt_cross_sectional_area: number;
+            /**
+             * Max Shift
+             * @description Maximum shift distance in meters (calculated constant).
+             */
+            readonly max_shift: number;
+            /**
+             * Center To Center
+             * @description Center-to-center distance between pulleys in meters (calculated from belt and pulley geometry).
+             */
+            readonly center_to_center: number;
         };
         /** CircularSegmentConfigModel */
         CircularSegmentConfigModel: {
@@ -413,6 +560,26 @@ export interface operations {
                 };
                 content: {
                     "application/json": unknown;
+                };
+            };
+        };
+    };
+    get_constants_constants_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CarSpecs"];
                 };
             };
         };
