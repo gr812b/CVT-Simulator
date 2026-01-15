@@ -4,21 +4,15 @@ import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader.js';
 import type { Model3DConfig } from '@types';
 import { useScene3D } from '@hooks/useScene3D';
 import { ReplayController, ReplayEventType } from '@utils/ReplayController';
+import { getConstants, type ConstantsResponse } from '@utils/api';
+import { convertConstants } from '@utils/conversion';
 import styles from './Scene3DViewer.module.scss';
 import primaryFixedModel from '@assets/models/primary_fixed.obj?url';
 import primaryMovingModel from '@assets/models/primary_moving.obj?url';
 import secondaryFixedModel from '@assets/models/secondary_fixed.obj?url';
 import secondaryMovingModel from '@assets/models/secondary_moving.obj?url';
 
-// Small constant offset for primary moving position
-// TODO: Get this from backend or something
-const PRIMARY_MOVING_BASE_OFFSET = -0.2;
-
-// Distance between primary and secondary pulleys
-const PULLEY_SPACING = 2.5;
-
-// Small constant offset for secondary moving position
-const SECONDARY_MOVING_BASE_OFFSET = -0;
+const c2cOverride = 2.5;
 
 interface Scene3DViewerProps {
   /** Replay controller for animation */
@@ -33,9 +27,29 @@ interface Scene3DViewerProps {
  */
 export const Scene3DViewer = ({ replayController, className }: Scene3DViewerProps) => {
   const [loadedModels, setLoadedModels] = useState<Model3DConfig[]>([]);
+  const [constants, setConstants] = useState<ConstantsResponse | null>(null);
+
+  // Fetch simulator constants
+  useEffect(() => {
+    getConstants()
+      .then(rawConstants => {
+        // Use custom config with inches for 3D visualization
+        const converted = convertConstants(rawConstants, { distance: 'ft' });
+        setConstants(converted);
+        setConstants(prev => {
+          if (prev) {
+            return { ...prev, center_to_center: c2cOverride };
+          }
+          return prev;
+        });
+      })
+      .catch(console.error);
+  }, []);
 
   // Load .obj models
   useEffect(() => {
+    if (!constants) return; // Wait for constants to be loaded
+
     const loader = new OBJLoader();
     const models: Model3DConfig[] = [];
 
@@ -71,7 +85,7 @@ export const Scene3DViewer = ({ replayController, className }: Scene3DViewerProp
               id: 'primaryMoving',
               parentId: 'primaryFixed', // Attached to primaryFixed so it rotates together
               object3D: movingObject,
-              position: [PRIMARY_MOVING_BASE_OFFSET, 0, 0], // Initial offset on X-axis
+              position: [-constants.max_shift, 0, 0], // Start at max_shift (fully open)
             });
 
             // Load secondary fixed after primary models
@@ -88,7 +102,7 @@ export const Scene3DViewer = ({ replayController, className }: Scene3DViewerProp
                 models.push({
                   id: 'secondaryFixed',
                   object3D: secondaryFixedObject,
-                  position: [0, 0, PULLEY_SPACING], // Offset from primary by PULLEY_SPACING
+                  position: [0, 0, constants.center_to_center], // Use center_to_center distance
                 });
 
                 // Load secondary moving after secondary fixed
@@ -106,7 +120,7 @@ export const Scene3DViewer = ({ replayController, className }: Scene3DViewerProp
                       id: 'secondaryMoving',
                       parentId: 'secondaryFixed', // Attached to secondaryFixed
                       object3D: secondaryMovingObject,
-                      position: [SECONDARY_MOVING_BASE_OFFSET, 0, 0], // Initial offset on X-axis
+                      position: [0, 0, 0], // Start at 0 (fully closed)
                     });
 
                     setLoadedModels(models);
@@ -134,7 +148,7 @@ export const Scene3DViewer = ({ replayController, className }: Scene3DViewerProp
         console.error('Error loading primary fixed model:', error);
       }
     );
-  }, []);
+  }, [constants]);
 
   const { containerRef, sceneController } = useScene3D({
     sceneConfig: {
@@ -153,7 +167,7 @@ export const Scene3DViewer = ({ replayController, className }: Scene3DViewerProp
 
   // Subscribe to replay controller and update models
   useEffect(() => {
-    if (!sceneController) return;
+    if (!sceneController || !constants) return;
 
     const unsubscribe = replayController.on((event) => {
       if (event.type === ReplayEventType.Progress) {
@@ -168,24 +182,22 @@ export const Scene3DViewer = ({ replayController, className }: Scene3DViewerProp
             rotation: [primaryAngularVelocity * event.data.time, 0, 0],
           },
           primaryMoving: {
-            // Position offset by shift_distance + base constant (relative to parent)
-            // TODO: Do unit adjustment * 7 is temporary
-            position: [PRIMARY_MOVING_BASE_OFFSET + shiftDistance * 7, 0, 0],
+            // Primary closes as shift increases: max_shift - shift_distance
+            position: [constants.max_shift - shiftDistance, 0, 0],
           },
           secondaryFixed: {
             rotation: [secondaryAngularVelocity * event.data.time, 0, 0],
           },
           secondaryMoving: {
-            // Position offset by shift_distance + base constant (relative to parent)
-            // TODO: Do unit adjustment * 7 is temporary
-            position: [SECONDARY_MOVING_BASE_OFFSET + shiftDistance * 7, 0, 0],
+            // Secondary opens as shift increases: shift_distance
+            position: [shiftDistance, 0, 0],
           },
         });
       }
     });
 
     return unsubscribe;
-  }, [sceneController, replayController]);
+  }, [sceneController, replayController, constants]);
 
   return <div ref={containerRef} className={`${styles.scene3dViewer} ${className ?? ''}`} />;
 };

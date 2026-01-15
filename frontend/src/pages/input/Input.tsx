@@ -21,7 +21,7 @@ import Play from '@assets/icons/play.svg?react';
 import Edit from '@assets/icons/edit.svg?react';
 import styles from './Input.module.scss';
 
-import { convertSimulationData, UNIT_PRESETS } from '@utils/unitConversion';
+import { convertSimulationData, UNIT_PRESETS } from '@utils/conversion';
 
 // Precomputed list of all groups and parameters
 const allGroups = Object.keys(GROUP_TITLES) as ParameterGroup[];
