@@ -5,14 +5,16 @@ import type { Model3DConfig } from '@types';
 import { useScene3D } from '@hooks/useScene3D';
 import { ReplayController, ReplayEventType } from '@utils/ReplayController';
 import { getConstants, type ConstantsResponse } from '@utils/api';
-import { convertConstants } from '@utils/conversion';
+import { convertConstants, convertValue, type UnitOptions } from '@utils/conversion';
 import styles from './Scene3DViewer.module.scss';
 import primaryFixedModel from '@assets/models/primary_fixed.obj?url';
 import primaryMovingModel from '@assets/models/primary_moving.obj?url';
 import secondaryFixedModel from '@assets/models/secondary_fixed.obj?url';
 import secondaryMovingModel from '@assets/models/secondary_moving.obj?url';
 
-const c2cOverride = 2.5;
+// Define the distance unit used throughout this 3D scene
+// All distance values will be converted to this unit for rendering
+const SCENE_DISTANCE_UNIT: UnitOptions['distance'] = 'in';
 
 interface Scene3DViewerProps {
   /** Replay controller for animation */
@@ -24,24 +26,31 @@ interface Scene3DViewerProps {
 /**
  * 3D viewer component that displays animated models based on simulation data.
  * Coordinates the 3D scene and subscribes to the replay controller.
+ * 
+ * TODO: When implementing centralized unit management context, update this component
+ * to get the source unit configuration from context instead of hardcoding BAJA preset.
  */
 export const Scene3DViewer = ({ replayController, className }: Scene3DViewerProps) => {
   const [loadedModels, setLoadedModels] = useState<Model3DConfig[]>([]);
   const [constants, setConstants] = useState<ConstantsResponse | null>(null);
 
+  /**
+   * Helper to convert any distance value from BAJA units (meters) to the scene's distance unit.
+   * Use this for all distance values used in the 3D scene.
+   * 
+   * TODO: Replace hardcoded 'm' with value from centralized unit context when available.
+   */
+  const toSceneDistance = (valueInMeters: number): number => {
+    return convertValue(valueInMeters, 'distance', SCENE_DISTANCE_UNIT);
+  };
+
   // Fetch simulator constants
   useEffect(() => {
     getConstants()
-      .then(rawConstants => {
-        // Use custom config with inches for 3D visualization
-        const converted = convertConstants(rawConstants, { distance: 'ft' });
+      .then((rawConstants) => {
+        // Convert all constants to scene units
+        const converted = convertConstants(rawConstants, { distance: SCENE_DISTANCE_UNIT });
         setConstants(converted);
-        setConstants(prev => {
-          if (prev) {
-            return { ...prev, center_to_center: c2cOverride };
-          }
-          return prev;
-        });
       })
       .catch(console.error);
   }, []);
@@ -176,6 +185,9 @@ export const Scene3DViewer = ({ replayController, className }: Scene3DViewerProp
         const secondaryAngularVelocity = event.data.system?.cvt?.secondaryPulleyState?.angular_velocity ?? 0;
         const shiftDistance = event.data.state?.shift_distance ?? 0;
 
+        // Convert shift distance from BAJA preset units (meters) to scene unit (inches)
+        const shiftDistanceScene = toSceneDistance(shiftDistance);
+
         // Update all models
         sceneController.updateModels({
           primaryFixed: {
@@ -183,14 +195,14 @@ export const Scene3DViewer = ({ replayController, className }: Scene3DViewerProp
           },
           primaryMoving: {
             // Primary closes as shift increases: max_shift - shift_distance
-            position: [constants.max_shift - shiftDistance, 0, 0],
+            position: [constants.max_shift - shiftDistanceScene, 0, 0],
           },
           secondaryFixed: {
             rotation: [secondaryAngularVelocity * event.data.time, 0, 0],
           },
           secondaryMoving: {
             // Secondary opens as shift increases: shift_distance
-            position: [shiftDistance, 0, 0],
+            position: [shiftDistanceScene, 0, 0],
           },
         });
       }
