@@ -2,14 +2,13 @@ from typing import List
 
 import numpy as np
 from fastapi import APIRouter, HTTPException
-
 from cvt_simulator import (
     simulate_cvt_model,
     SimulationArgs,
     PiecewiseRampConfig,
     PiecewiseRamp,
+    CarSpecs,
 )
-
 from ..models.response_models import (
     FormattedResultModel,
     SimulationArgsInput,
@@ -23,6 +22,16 @@ router = APIRouter()
 @router.get("/")
 def ping():
     return "pong"
+
+
+@router.get("/constants", response_model=CarSpecs)
+def get_constants():
+    """
+    Get the physical constants and specifications used by the CVT simulator.
+    These values are useful for visualization and understanding the simulation parameters.
+    Calculated values like max_shift and center_to_center are automatically computed.
+    """
+    return CarSpecs()
 
 
 # Example curl commands to test the /run endpoint:
