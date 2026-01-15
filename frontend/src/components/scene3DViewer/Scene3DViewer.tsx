@@ -76,7 +76,7 @@ export const Scene3DViewer = ({ replayController, className }: Scene3DViewerProp
         models.push({
           id: 'primaryFixed',
           object3D: fixedObject,
-          position: [0, 0, 0],
+          position: [0, 0, -constants.center_to_center / 2], // Centered: negative half
         });
 
         // Load primary moving after fixed is loaded
@@ -111,7 +111,7 @@ export const Scene3DViewer = ({ replayController, className }: Scene3DViewerProp
                 models.push({
                   id: 'secondaryFixed',
                   object3D: secondaryFixedObject,
-                  position: [0, 0, constants.center_to_center], // Use center_to_center distance
+                  position: [0, 0, constants.center_to_center / 2], // Centered: positive half
                 });
 
                 // Load secondary moving after secondary fixed
@@ -191,6 +191,7 @@ export const Scene3DViewer = ({ replayController, className }: Scene3DViewerProp
         // Update all models
         sceneController.updateModels({
           primaryFixed: {
+            // TODO: Use angular position
             rotation: [primaryAngularVelocity * event.data.time, 0, 0],
           },
           primaryMoving: {
@@ -198,6 +199,7 @@ export const Scene3DViewer = ({ replayController, className }: Scene3DViewerProp
             position: [constants.max_shift - shiftDistanceScene, 0, 0],
           },
           secondaryFixed: {
+            // TODO: Use angular position
             rotation: [secondaryAngularVelocity * event.data.time, 0, 0],
           },
           secondaryMoving: {
