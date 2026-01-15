@@ -3,15 +3,20 @@ import primaryCVT from "@assets/images/primary_cvt.png"
 import secondaryCVT from "@assets/images/secondary_cvt.png"
 import environment from "@assets/images/environment.png"
 
-type ParameterValue = string | number | boolean
-type ParameterType = 'string' | 'number' | 'boolean'
+import type { components } from './api';
+
+export type ParameterValue = string | number | boolean | components['schemas']['PiecewiseRampConfigModel'] | null
+export type PiecewiseRampConfig = components['schemas']['PiecewiseRampConfigModel'];
+type ParameterType = 'string' | 'number' | 'boolean' | 'ramp'
 
 export type ParameterGroup = 'primary' | 'secondary' | 'environment'
 
 export type Parameter =
   | 'FlyweightMass'
+  | 'PrimaryRampConfig'
   | 'PrimarySpringRate'
   | 'PrimarySpringPretension'
+  | 'SecondaryRampConfig'
   | 'SecondaryTorsionSpringRate'
   | 'SecondaryCompressionSpringRate'
   | 'SecondaryRotationalSpringPretension'
@@ -27,7 +32,7 @@ interface BaseParameterConfig<T extends ParameterValue, K extends ParameterType>
     description: string;
     type: K;
     defaultValue: T;
-    validate: (value: string) => string | null;
+    validate?: (value: string) => string | null;
     units: string;
     group: ParameterGroup;
     img?: string;
@@ -36,8 +41,9 @@ interface BaseParameterConfig<T extends ParameterValue, K extends ParameterType>
 type StringParameter = BaseParameterConfig<string, 'string'>;
 type NumberParameter = BaseParameterConfig<number, 'number'>;
 type BooleanParameter = BaseParameterConfig<boolean, 'boolean'>;
+type RampParameter = BaseParameterConfig<components['schemas']['PiecewiseRampConfigModel'] | null, 'ramp'>;
 
-type ParameterConfig = StringParameter | NumberParameter | BooleanParameter;
+type ParameterConfig = StringParameter | NumberParameter | BooleanParameter | RampParameter;
 
 export const GROUP_TITLES: Record<ParameterGroup, string> = {
     primary: 'Primary Pulley',
@@ -56,6 +62,15 @@ const PARAMETERS_IMPL = {
     units: 'kg',
     group: 'primary',
     img: primaryCVT,
+  },
+  PrimaryRampConfig: {
+    label: 'Custom Ramp Profile',
+    description:
+      'Design a custom flyweight ramp profile by combining different segment types. The ramp profile controls how the flyweight force changes as the pulley shifts. Use linear segments for constant slopes, circular arcs for smooth transitions, and spiral segments for advanced tuning. Leave null to use the default ramp.',
+    type: 'ramp',
+    defaultValue: null,
+    units: '-',
+    group: 'primary',
   },
   PrimarySpringRate: {
     label: 'Primary Spring Rate',
@@ -78,6 +93,15 @@ const PARAMETERS_IMPL = {
     units: 'm',
     group: 'primary',
     img: primaryCVT,
+  },
+  SecondaryRampConfig: {
+    label: 'Custom Ramp Profile',
+    description:
+      'Design a custom helix ramp profile for the secondary pulley by combining different segment types. The ramp profile controls how the torque-reactive mechanism responds as the pulley shifts. Use linear segments for constant slopes, circular arcs for smooth transitions, and spiral segments for advanced tuning. Leave null to use the default ramp.',
+    type: 'ramp',
+    defaultValue: null,
+    units: '-',
+    group: 'secondary',
   },
   SecondaryTorsionSpringRate: {
     label: 'Secondary Torsion Spring Rate',

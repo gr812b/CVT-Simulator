@@ -1,4 +1,9 @@
 from cvt_simulator.models.ramps.ramp_segment import RampSegment
+from cvt_simulator.models.ramps.ramp_serialization import (
+    segment_to_config,
+    config_to_segment,
+)
+from cvt_simulator.models.ramps.ramp_config import PiecewiseRampConfig
 from typing import List
 
 
@@ -32,3 +37,46 @@ class PiecewiseRamp:
             if segment.x_start <= x <= segment.x_end:
                 return abs(segment.slope(x))
         raise ValueError(f"x={x} is out of ramp range!")
+
+    def to_config(self) -> PiecewiseRampConfig:
+        """
+        Convert this ramp to its config dataclass.
+
+        Returns:
+            PiecewiseRampConfig dataclass
+        """
+        return PiecewiseRampConfig(
+            segments=[segment_to_config(seg) for seg in self.segments]
+        )
+
+    @classmethod
+    def from_config(cls, config: PiecewiseRampConfig) -> "PiecewiseRamp":
+        """
+        Create a PiecewiseRamp from a config dataclass.
+
+        Args:
+            config: PiecewiseRampConfig dataclass
+
+        Returns:
+            New PiecewiseRamp instance
+
+        Note:
+            Segments are added in order, and PiecewiseRamp automatically
+            handles continuity by setting y_start of each segment.
+            x_start and x_end are calculated by accumulating segment lengths.
+        """
+        ramp = cls()
+        x_position = 0.0  # Track the current x position
+
+        for seg_config in config.segments:
+            segment = config_to_segment(seg_config)
+            # Calculate length before modifying x_start
+            length = (
+                segment.x_end - segment.x_start
+            )  # segment.x_end was set to length in config_to_segment
+            # Update segment's x positions based on accumulated length
+            segment.x_start = x_position
+            segment.x_end = x_position + length
+            x_position = segment.x_end
+            ramp.add_segment(segment)
+        return ramp

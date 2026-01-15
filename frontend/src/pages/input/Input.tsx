@@ -3,9 +3,11 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '@components/button/Button';
 import { ParameterAccordion } from '@components/parameterAccordion/ParameterAccordion';
 import { InputField } from '@components/inputField/InputField';
+import { RampBuilder } from '@components/rampBuilder/RampBuilder';
+import { RampPreview } from '@components/rampBuilder/RampPreview';
 import { ParameterDescription } from '@components/parameterDescription/ParameterDescription';
 import { LoadingOverlay } from '@components/loadingOverlay/LoadingOverlay';
-import { GROUP_TITLES, PARAMETERS, type Parameter, type ParameterGroup } from '@types';
+import { GROUP_TITLES, PARAMETERS, type Parameter, type ParameterGroup, type PiecewiseRampConfig } from '@types';
 import { useParameter } from '@contexts/ParameterContext';
 import { useLoading } from '@contexts/LoadingContext';
 import { useFormState } from '@hooks/useFormState';
@@ -88,12 +90,19 @@ export const Input = () => {
     // Get parameter description based on active field
     const getParameterInformation = (key: Parameter | null) => {
         const parameter = key ? PARAMETERS[key] : null;
+        const isRamp = parameter?.type === 'ramp';
+        
         return (
-            <ParameterDescription
-                name={parameter ? parameter.label : "No Parameter Selected"}
-                description={parameter ? parameter.description : "Click on an input field to see its description."}
-                img={parameter ? parameter.img : undefined}
-            />
+            <>
+                <ParameterDescription
+                    name={parameter ? parameter.label : "No Parameter Selected"}
+                    description={parameter ? parameter.description : "Click on an input field to see its description."}
+                    img={parameter ? parameter.img : undefined}
+                />
+                {isRamp && key && formState.values[key] && (
+                    <RampPreview config={formState.values[key] as PiecewiseRampConfig} />
+                )}
+            </>
         );
     }
 
@@ -118,16 +127,30 @@ export const Input = () => {
                             {allParameters
                                 .filter(paramKey => PARAMETERS[paramKey].group === groupKey)
                                 .map(paramKey => {
-                                    const { label, units } = PARAMETERS[paramKey];
+                                    const param = PARAMETERS[paramKey];
+                                    const { label, units, type } = param;
                                     const hasError = formState.touched[paramKey] && formState.errors[paramKey];
                                     const hasChanged = formState.isFieldChanged(paramKey);
+                                    
+                                    // Handle ramp parameter differently
+                                    if (type === 'ramp') {
+                                        return (
+                                            <div key={paramKey} onFocus={() => setActiveField(paramKey)}>
+                                                <RampBuilder
+                                                    value={formState.values[paramKey] as PiecewiseRampConfig | null}
+                                                    onChange={(config) => formState.updateField(paramKey, config)}
+                                                    className={styles.rampBuilder}
+                                                />
+                                            </div>
+                                        );
+                                    }
                                     
                                     return (
                                         <InputField
                                             key={paramKey}
                                             className={styles.baseInputField}
                                             label={`${label} (${units})`}
-                                            value={formState.values[paramKey]}
+                                            value={formState.values[paramKey] as string}
                                             error={hasError ? formState.errors[paramKey] : null}
                                             hasChanged={hasChanged}
                                             onChange={(e) => formState.updateField(paramKey, e.target.value)}
