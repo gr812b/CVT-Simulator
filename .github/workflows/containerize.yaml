@@ -25,12 +25,6 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Log in to Docker Hub
-        uses: docker/login-action@v3
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-
       - name: Build and push
         uses: docker/build-push-action@v6
         with:
@@ -39,5 +33,3 @@ jobs:
           tags: |
             ${{ env.REGISTRY_GH }}/gr812b/cvt-simulator:latest
             ${{ env.REGISTRY_GH }}/gr812b/cvt-simulator:${{ github.sha }}
-            gr812b/cvt-simulator:latest
-            gr812b/cvt-simulator:${{ github.sha }}
