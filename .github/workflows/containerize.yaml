@@ -5,7 +5,8 @@ name: Containerize
 on:
   push:
     branches:
-      - develop
+      - '**' # develop # Set to '**' for testing on all branches
+  workflow_dispatch: # Allow manual triggering
 
 env:
   REGISTRY_GH: ghcr.io
