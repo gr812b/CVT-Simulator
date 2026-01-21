@@ -84,17 +84,27 @@ export const Scene3DViewer = ({ replayController, className }: Scene3DViewerProp
             object.scale.setScalar(modelScaleFactor);
           }
           
-          // Apply material with better visibility
+          // Apply CAD-like material for clean, professional appearance
           object.traverse((child) => {
             if (child instanceof THREE.Mesh) {
-              child.material = new THREE.MeshStandardMaterial({ 
+              child.material = new THREE.MeshPhysicalMaterial({ 
                 color: config.color,
-                metalness: 0.3,
-                roughness: 0.6,
+                metalness: 0.6,
+                roughness: 0.3,
+                clearcoat: 0.3,
+                clearcoatRoughness: 0.2,
+                reflectivity: 0.5,
+                envMapIntensity: 1.0,
                 flatShading: false,
+                side: THREE.DoubleSide, // Render both sides in case normals are flipped
               });
               child.castShadow = true;
               child.receiveShadow = true;
+              
+              // Ensure geometry has proper normals
+              if (child.geometry) {
+                child.geometry.computeVertexNormals();
+              }
             }
           });
 
@@ -127,11 +137,45 @@ export const Scene3DViewer = ({ replayController, className }: Scene3DViewerProp
         lookAt: [0, 0, 0],
       },
       enableControls: true,
-      backgroundColor: 0x1a1a1a,
+      backgroundColor: 0x2a2a2a,
       antialias: true,
     },
     models: loadedModels,
   });
+
+  // Add additional lighting for better CAD visualization
+  useEffect(() => {
+    if (!sceneController) return;
+
+    // Add hemisphere light for ambient fill
+    const hemiLight = new THREE.HemisphereLight(0xffffff, 0x444444, 0.8);
+    sceneController.addObject(hemiLight);
+
+    // Add ambient light for overall brightness
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+    sceneController.addObject(ambientLight);
+
+    // Add directional lights from multiple angles
+    const dirLight1 = new THREE.DirectionalLight(0xffffff, 0.8);
+    dirLight1.position.set(5, 10, 5);
+    sceneController.addObject(dirLight1);
+
+    const dirLight2 = new THREE.DirectionalLight(0xffffff, 0.4);
+    dirLight2.position.set(-5, 5, -5);
+    sceneController.addObject(dirLight2);
+
+    const dirLight3 = new THREE.DirectionalLight(0xffffff, 0.4);
+    dirLight3.position.set(0, 5, -10);
+    sceneController.addObject(dirLight3);
+
+    return () => {
+      sceneController.removeObject(hemiLight);
+      sceneController.removeObject(ambientLight);
+      sceneController.removeObject(dirLight1);
+      sceneController.removeObject(dirLight2);
+      sceneController.removeObject(dirLight3);
+    };
+  }, [sceneController]);
 
   // Add grid helper (1 inch spacing)
   useEffect(() => {
