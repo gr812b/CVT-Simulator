@@ -62,6 +62,7 @@ export const loadCVTModels = async (
         parentId: config.parentId,
         object3D: gltf,
         position: config.getInitialPosition(constants),
+        rotation: config.rotation,
       });
     } catch (error) {
       console.error(`Error loading model ${config.id}:`, error);

@@ -58,7 +58,7 @@ export const Scene3DViewer = ({ replayController, className }: Scene3DViewerProp
       camera: {
         type: 'perspective',
         fov: 50,
-        position: [3, 2, 3],
+        position: [7, 7, 12],
         lookAt: [0, 0, 0],
       },
       enableControls: true,
@@ -96,7 +96,7 @@ export const Scene3DViewer = ({ replayController, className }: Scene3DViewerProp
         sceneController.updateModels({
           primaryFixed: {
             // TODO: Use angular position
-            rotation: [0, 0, primaryAngularVelocity * event.data.time],
+            rotation: [0, Math.PI, primaryAngularVelocity * event.data.time],
           },
           primaryMoving: {
             // Primary closes as shift increases: max_shift - shift_distance

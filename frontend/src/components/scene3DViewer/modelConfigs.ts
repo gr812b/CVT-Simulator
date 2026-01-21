@@ -21,6 +21,8 @@ export interface CVTModelConfig {
   parentId?: string;
   /** Function that calculates initial position based on constants */
   getInitialPosition: (constants: ConstantsResponse) => [number, number, number];
+  /** Optional initial rotation [x, y, z] in radians */
+  rotation?: [number, number, number];
 }
 
 /**
@@ -33,6 +35,7 @@ export const CVT_MODEL_CONFIGS: CVTModelConfig[] = [
     modelUrl: primaryFixedModel,
     color: 0xff4444,
     getInitialPosition: (constants) => [-constants.center_to_center / 2, 0, 0],
+    rotation: [0, Math.PI, 0], // Flip 180° around Y-axis to face the other way
   },
   {
     id: 'primaryMoving',
@@ -45,7 +48,8 @@ export const CVT_MODEL_CONFIGS: CVTModelConfig[] = [
     id: 'secondaryFixed',
     modelUrl: secondaryFixedModel,
     color: 0x44ff44,
-    getInitialPosition: (constants) => [constants.center_to_center / 2, 0, constants.max_shift],
+    // TODO: Initial position in Z needs looking at, kinda arbitrary for now
+    getInitialPosition: (constants) => [constants.center_to_center / 2, 0, constants.max_shift/4],
   },
   {
     id: 'secondaryMoving',
