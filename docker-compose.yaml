@@ -1,30 +1,21 @@
 services:
-  backend:
-    container_name: cvt-simulator-backend
-    image: ghcr.io/${GITHUB_REPOSITORY_OWNER:-gr812b}/cvt-simulator-backend:latest
-    # restart: unless-stopped
-    build:
-      context: .
-      dockerfile: backend/Dockerfile
+  cvt-backend:
+    image: ghcr.io/gr812b/cvt-simulator-backend:latest
+    restart: unless-stopped
     networks:
       - cvt-network
-    expose:
-      - "8000"
 
-  frontend:
-    container_name: cvt-simulator-frontend
-    image: ghcr.io/${GITHUB_REPOSITORY_OWNER:-gr812b}/cvt-simulator-frontend:latest
-    # restart: unless-stopped
-    build:
-      context: .
-      dockerfile: frontend/Dockerfile
-    ports:
-      - "8000:80"
+  cvt-frontend:
+    image: ghcr.io/gr812b/cvt-simulator-frontend:latest
+    restart: unless-stopped
     depends_on:
-      - backend
+      - cvt-backend
     networks:
       - cvt-network
+      - web
 
 networks:
   cvt-network:
     driver: bridge
+  web: # Set this to your existing external network name for reverse proxying
+    external: true
