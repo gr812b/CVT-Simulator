@@ -2,15 +2,14 @@ FROM python:3.10-slim
 
 WORKDIR /app
 
-# Copy backend requirements first for better caching
+# Copy the CVT model package first (needed by requirements.txt)
+COPY cvtModel /cvtModel
+
+# Copy backend requirements
 COPY backend/requirements.txt .
 
-# Install Python dependencies
+# Install Python dependencies (including cvtModel in editable mode)
 RUN pip install --no-cache-dir -r requirements.txt
-
-# Copy the CVT model package
-COPY cvtModel /cvtModel
-RUN pip install -e /cvtModel
 
 # Copy the rest of the backend code
 COPY backend/ .
