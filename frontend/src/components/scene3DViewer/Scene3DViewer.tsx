@@ -60,9 +60,6 @@ export const Scene3DViewer = ({ replayController, className }: Scene3DViewerProp
     dracoLoader.setDecoderPath('https://www.gstatic.com/draco/versioned/decoders/1.5.6/');
     loader.setDRACOLoader(dracoLoader);
     
-    // Calculate scale factor: models were created in inches but GLB assumes meters
-    const modelScaleFactor = 1 / toSceneDistance(1);
-    
     const models: Model3DConfig[] = [];
     let loadIndex = 0;
 
@@ -78,11 +75,6 @@ export const Scene3DViewer = ({ replayController, className }: Scene3DViewerProp
         config.modelUrl,
         (gltf) => {
           const object = gltf.scene;
-          
-          // Only scale parent models (children inherit scale)
-          if (!config.parentId) {
-            object.scale.setScalar(modelScaleFactor);
-          }
           
           // Apply CAD-like material for clean, professional appearance
           object.traverse((child) => {
@@ -206,9 +198,6 @@ export const Scene3DViewer = ({ replayController, className }: Scene3DViewerProp
 
         // Convert shift distance from BAJA preset units (meters) to scene unit (inches)
         const shiftDistanceScene = toSceneDistance(shiftDistance);
-        
-        // Child positions need to be scaled up to compensate for parent model scaling
-        const childScaleFactor = toSceneDistance(1); // meters to inches ≈ 39.37
 
         // Update all models
         sceneController.updateModels({
@@ -218,8 +207,7 @@ export const Scene3DViewer = ({ replayController, className }: Scene3DViewerProp
           },
           primaryMoving: {
             // Primary closes as shift increases: max_shift - shift_distance
-            // Multiply by childScaleFactor to compensate for parent scaling
-            position: [0, 0, -(constants.max_shift - shiftDistanceScene) * childScaleFactor],
+            position: [0, 0, -(constants.max_shift - shiftDistanceScene)],
           },
           secondaryFixed: {
             // TODO: Use angular position
@@ -227,8 +215,7 @@ export const Scene3DViewer = ({ replayController, className }: Scene3DViewerProp
           },
           secondaryMoving: {
             // Secondary opens as shift increases: shift_distance
-            // Multiply by childScaleFactor to compensate for parent scaling
-            position: [0, 0, -shiftDistanceScene * childScaleFactor],
+            position: [0, 0, -shiftDistanceScene],
           },
         });
       }

@@ -12,14 +12,6 @@ import secondaryMovingModel from '@assets/models/sec_moving.glb?url';
 export const SCENE_DISTANCE_UNIT: UnitOptions['distance'] = 'in';
 
 /**
- * Scale compensation factor for child object positions.
- * Since parent models are scaled down (GLB assumes meters, models are in inches),
- * child positions need to be scaled up by this factor to maintain correct world-space offsets.
- * This is the conversion factor from meters to inches (1 meter ≈ 39.37 inches).
- */
-const CHILD_POSITION_SCALE = 39.3701; // meters to inches conversion
-
-/**
  * Configuration for each CVT model component
  */
 export interface CVTModelConfig {
@@ -47,7 +39,7 @@ export const CVT_MODEL_CONFIGS: CVTModelConfig[] = [
     modelUrl: primaryMovingModel,
     color: 0xff8844,
     parentId: 'primaryFixed',
-    getInitialPosition: (constants) => [0, 0, -constants.max_shift * CHILD_POSITION_SCALE],
+    getInitialPosition: (constants) => [0, 0, -constants.max_shift],
   },
   {
     id: 'secondaryFixed',
@@ -60,6 +52,6 @@ export const CVT_MODEL_CONFIGS: CVTModelConfig[] = [
     modelUrl: secondaryMovingModel,
     color: 0x88ff44,
     parentId: 'secondaryFixed',
-    getInitialPosition: () => [0, 0, 0 * CHILD_POSITION_SCALE],
+    getInitialPosition: () => [0, 0, 0],
   },
 ];
