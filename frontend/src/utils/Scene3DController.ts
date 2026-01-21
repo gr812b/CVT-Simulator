@@ -13,6 +13,7 @@ export class Scene3DController {
   private renderer: THREE.WebGLRenderer;
   private controls: OrbitControls | null = null;
   private models: Map<string, Model3D> = new Map();
+  private sceneObjects: THREE.Object3D[] = [];
   private container: HTMLElement;
   private animationFrameId: number | null = null;
 
@@ -209,6 +210,26 @@ export class Scene3DController {
   }
 
   /**
+   * Add a custom object to the scene (e.g., helpers, additional meshes)
+   * The object will be tracked and cleaned up on dispose
+   */
+  addObject(object: THREE.Object3D): void {
+    this.scene.add(object);
+    this.sceneObjects.push(object);
+  }
+
+  /**
+   * Remove a custom object from the scene
+   */
+  removeObject(object: THREE.Object3D): void {
+    this.scene.remove(object);
+    const index = this.sceneObjects.indexOf(object);
+    if (index > -1) {
+      this.sceneObjects.splice(index, 1);
+    }
+  }
+
+  /**
    * Clean up resources
    */
   dispose(): void {
@@ -230,6 +251,10 @@ export class Scene3DController {
     // Dispose all models
     this.models.forEach((model) => model.dispose());
     this.models.clear();
+
+    // Remove tracked scene objects
+    this.sceneObjects.forEach((obj) => this.scene.remove(obj));
+    this.sceneObjects = [];
 
     // Dispose renderer
     this.renderer.dispose();

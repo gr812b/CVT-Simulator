@@ -1,20 +1,14 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import * as THREE from 'three';
-import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader.js';
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js';
 import type { Model3DConfig } from '@types';
 import { useScene3D } from '@hooks/useScene3D';
 import { ReplayController, ReplayEventType } from '@utils/ReplayController';
 import { getConstants, type ConstantsResponse } from '@utils/api';
-import { convertConstants, convertValue, type UnitOptions } from '@utils/conversion';
+import { convertConstants, convertValue } from '@utils/conversion';
 import styles from './Scene3DViewer.module.scss';
-import primaryFixedModel from '@assets/models/primary_fixed.obj?url';
-import primaryMovingModel from '@assets/models/primary_moving.obj?url';
-import secondaryFixedModel from '@assets/models/secondary_fixed.obj?url';
-import secondaryMovingModel from '@assets/models/secondary_moving.obj?url';
-
-// Define the distance unit used throughout this 3D scene
-// All distance values will be converted to this unit for rendering
-const SCENE_DISTANCE_UNIT: UnitOptions['distance'] = 'in';
+import { CVT_MODEL_CONFIGS, SCENE_DISTANCE_UNIT } from './modelConfigs';
 
 interface Scene3DViewerProps {
   /** Replay controller for animation */
@@ -40,9 +34,9 @@ export const Scene3DViewer = ({ replayController, className }: Scene3DViewerProp
    * 
    * TODO: Replace hardcoded 'm' with value from centralized unit context when available.
    */
-  const toSceneDistance = (valueInMeters: number): number => {
+  const toSceneDistance = useCallback((valueInMeters: number): number => {
     return convertValue(valueInMeters, 'distance', SCENE_DISTANCE_UNIT);
-  };
+  }, []);
 
   // Fetch simulator constants
   useEffect(() => {
@@ -55,109 +49,74 @@ export const Scene3DViewer = ({ replayController, className }: Scene3DViewerProp
       .catch(console.error);
   }, []);
 
-  // Load .obj models
+  // Load .glb models
   useEffect(() => {
     if (!constants) return; // Wait for constants to be loaded
 
-    const loader = new OBJLoader();
+    const loader = new GLTFLoader();
+    
+    // Configure Draco decoder for compressed models
+    const dracoLoader = new DRACOLoader();
+    dracoLoader.setDecoderPath('https://www.gstatic.com/draco/versioned/decoders/1.5.6/');
+    loader.setDRACOLoader(dracoLoader);
+    
+    // Calculate scale factor: models were created in inches but GLB assumes meters
+    const modelScaleFactor = 1 / toSceneDistance(1);
+    
     const models: Model3DConfig[] = [];
+    let loadIndex = 0;
 
-    // Load primary fixed
-    loader.load(
-      primaryFixedModel,
-      (fixedObject) => {
-        // Apply material to all meshes in the loaded object
-        fixedObject.traverse((child) => {
-          if (child instanceof THREE.Mesh) {
-            child.material = new THREE.MeshStandardMaterial({ color: 0xff4444 });
-          }
-        });
-
-        models.push({
-          id: 'primaryFixed',
-          object3D: fixedObject,
-          position: [0, 0, -constants.center_to_center / 2], // Centered: negative half
-        });
-
-        // Load primary moving after fixed is loaded
-        loader.load(
-          primaryMovingModel,
-          (movingObject) => {
-            // Apply material to all meshes
-            movingObject.traverse((child) => {
-              if (child instanceof THREE.Mesh) {
-                child.material = new THREE.MeshStandardMaterial({ color: 0xff8844 });
-              }
-            });
-
-            models.push({
-              id: 'primaryMoving',
-              parentId: 'primaryFixed', // Attached to primaryFixed so it rotates together
-              object3D: movingObject,
-              position: [-constants.max_shift, 0, 0], // Start at max_shift (fully open)
-            });
-
-            // Load secondary fixed after primary models
-            loader.load(
-              secondaryFixedModel,
-              (secondaryFixedObject) => {
-                // Apply material
-                secondaryFixedObject.traverse((child) => {
-                  if (child instanceof THREE.Mesh) {
-                    child.material = new THREE.MeshStandardMaterial({ color: 0x44ff44 });
-                  }
-                });
-
-                models.push({
-                  id: 'secondaryFixed',
-                  object3D: secondaryFixedObject,
-                  position: [0, 0, constants.center_to_center / 2], // Centered: positive half
-                });
-
-                // Load secondary moving after secondary fixed
-                loader.load(
-                  secondaryMovingModel,
-                  (secondaryMovingObject) => {
-                    // Apply material
-                    secondaryMovingObject.traverse((child) => {
-                      if (child instanceof THREE.Mesh) {
-                        child.material = new THREE.MeshStandardMaterial({ color: 0x88ff44 });
-                      }
-                    });
-
-                    models.push({
-                      id: 'secondaryMoving',
-                      parentId: 'secondaryFixed', // Attached to secondaryFixed
-                      object3D: secondaryMovingObject,
-                      position: [0, 0, 0], // Start at 0 (fully closed)
-                    });
-
-                    setLoadedModels(models);
-                  },
-                  undefined,
-                  (error) => {
-                    console.error('Error loading secondary moving model:', error);
-                  }
-                );
-              },
-              undefined,
-              (error) => {
-                console.error('Error loading secondary fixed model:', error);
-              }
-            );
-          },
-          undefined,
-          (error) => {
-            console.error('Error loading primary moving model:', error);
-          }
-        );
-      },
-      undefined,
-      (error) => {
-        console.error('Error loading primary fixed model:', error);
+    // Load models sequentially based on configuration
+    const loadNextModel = () => {
+      if (loadIndex >= CVT_MODEL_CONFIGS.length) {
+        setLoadedModels(models);
+        return;
       }
-    );
-  }, [constants]);
+
+      const config = CVT_MODEL_CONFIGS[loadIndex];
+      loader.load(
+        config.modelUrl,
+        (gltf) => {
+          const object = gltf.scene;
+          
+          // Only scale parent models (children inherit scale)
+          if (!config.parentId) {
+            object.scale.setScalar(modelScaleFactor);
+          }
+          
+          // Apply material with better visibility
+          object.traverse((child) => {
+            if (child instanceof THREE.Mesh) {
+              child.material = new THREE.MeshStandardMaterial({ 
+                color: config.color,
+                metalness: 0.3,
+                roughness: 0.6,
+                flatShading: false,
+              });
+              child.castShadow = true;
+              child.receiveShadow = true;
+            }
+          });
+
+          models.push({
+            id: config.id,
+            parentId: config.parentId,
+            object3D: object,
+            position: config.getInitialPosition(constants),
+          });
+
+          loadIndex++;
+          loadNextModel();
+        },
+        undefined,
+        (error) => {
+          console.error(`Error loading model ${config.id}:`, error);
+        }
+      );
+    };
+
+    loadNextModel();
+  }, [constants, toSceneDistance]);
 
   const { containerRef, sceneController } = useScene3D({
     sceneConfig: {
@@ -174,6 +133,22 @@ export const Scene3DViewer = ({ replayController, className }: Scene3DViewerProp
     models: loadedModels,
   });
 
+  // Add grid helper (1 inch spacing)
+  useEffect(() => {
+    if (!sceneController) return;
+
+    const gridSize = 20; // 20 inch x 20 inch grid
+    const divisions = 20; // 20 divisions = 1 inch per division
+    const gridHelper = new THREE.GridHelper(gridSize, divisions, 0x444444, 0x222222);
+    gridHelper.position.y = 0; // Grid at ground level
+    
+    sceneController.addObject(gridHelper);
+
+    return () => {
+      sceneController.removeObject(gridHelper);
+    };
+  }, [sceneController]);
+
   // Subscribe to replay controller and update models
   useEffect(() => {
     if (!sceneController || !constants) return;
@@ -187,31 +162,36 @@ export const Scene3DViewer = ({ replayController, className }: Scene3DViewerProp
 
         // Convert shift distance from BAJA preset units (meters) to scene unit (inches)
         const shiftDistanceScene = toSceneDistance(shiftDistance);
+        
+        // Child positions need to be scaled up to compensate for parent model scaling
+        const childScaleFactor = toSceneDistance(1); // meters to inches ≈ 39.37
 
         // Update all models
         sceneController.updateModels({
           primaryFixed: {
             // TODO: Use angular position
-            rotation: [primaryAngularVelocity * event.data.time, 0, 0],
+            rotation: [0, 0, primaryAngularVelocity * event.data.time],
           },
           primaryMoving: {
             // Primary closes as shift increases: max_shift - shift_distance
-            position: [constants.max_shift - shiftDistanceScene, 0, 0],
+            // Multiply by childScaleFactor to compensate for parent scaling
+            position: [0, 0, -(constants.max_shift - shiftDistanceScene) * childScaleFactor],
           },
           secondaryFixed: {
             // TODO: Use angular position
-            rotation: [secondaryAngularVelocity * event.data.time, 0, 0],
+            rotation: [0, 0, secondaryAngularVelocity * event.data.time],
           },
           secondaryMoving: {
             // Secondary opens as shift increases: shift_distance
-            position: [shiftDistanceScene, 0, 0],
+            // Multiply by childScaleFactor to compensate for parent scaling
+            position: [0, 0, -shiftDistanceScene * childScaleFactor],
           },
         });
       }
     });
 
     return unsubscribe;
-  }, [sceneController, replayController, constants]);
+  }, [sceneController, replayController, constants, toSceneDistance]);
 
   return <div ref={containerRef} className={`${styles.scene3dViewer} ${className ?? ''}`} />;
 };
