@@ -58,6 +58,7 @@ export function useScene3D({
   const containerRef = useRef<HTMLDivElement>(null);
   const [sceneController, setSceneController] = useState<Scene3DController | null>(null);
   const [isReady, setIsReady] = useState(false);
+  const addedModelIds = useRef<Set<string>>(new Set());
 
   // Initialize scene on mount
   useEffect(() => {
@@ -68,6 +69,8 @@ export function useScene3D({
       container: containerRef.current,
     });
 
+    const modelIds = addedModelIds.current;
+
     setSceneController(controller);
     setIsReady(true);
 
@@ -76,6 +79,7 @@ export function useScene3D({
       controller.dispose();
       setSceneController(null);
       setIsReady(false);
+      modelIds.clear(); // Reset tracking when controller is disposed
     };
     // We only want to run this once on mount
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -86,7 +90,11 @@ export function useScene3D({
     if (!sceneController || models.length === 0) return;
 
     models.forEach((modelConfig) => {
-      sceneController.addModel(modelConfig);
+      // Only add models that haven't been added yet
+      if (!addedModelIds.current.has(modelConfig.id)) {
+        sceneController.addModel(modelConfig);
+        addedModelIds.current.add(modelConfig.id);
+      }
     });
 
     // Note: We don't remove models on unmount since the scene controller
