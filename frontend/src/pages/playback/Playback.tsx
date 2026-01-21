@@ -45,12 +45,8 @@ export const Playback = () => {
             />
             </div>
 
-            {/* 3D Viewer - Coordinates all 3D scene logic */}
-            <div className={styles.viewer3DContainer}>
-                <Scene3DViewer replayController={replayController} />
-            </div>
-
             <div className={styles.displayGrid}>
+                <Scene3DViewer replayController={replayController} />
                 {graphs.map((graph, index) => (
                     <Graph2D
                         key={index}
