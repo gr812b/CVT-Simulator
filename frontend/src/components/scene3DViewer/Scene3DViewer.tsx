@@ -1,19 +1,15 @@
 import { useCallback, useEffect, useState } from 'react';
-import * as THREE from 'three';
-import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
-import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js';
 import type { Model3DConfig } from '@types';
 import { useScene3D } from '@hooks/useScene3D';
 import { ReplayController, ReplayEventType } from '@utils/ReplayController';
 import { getConstants, type ConstantsResponse } from '@utils/api';
 import { convertConstants, convertValue } from '@utils/conversion';
 import styles from './Scene3DViewer.module.scss';
-import { CVT_MODEL_CONFIGS, SCENE_DISTANCE_UNIT } from './modelConfigs';
+import { SCENE_DISTANCE_UNIT } from './modelConfigs';
+import { loadCVTModels, setupSceneLighting, setupSceneGrid } from './sceneElements';
 
 interface Scene3DViewerProps {
-  /** Replay controller for animation */
   replayController: ReplayController;
-  /** Optional className for styling */
   className?: string;
 }
 
@@ -49,76 +45,13 @@ export const Scene3DViewer = ({ replayController, className }: Scene3DViewerProp
       .catch(console.error);
   }, []);
 
-  // Load .glb models
   useEffect(() => {
-    if (!constants) return; // Wait for constants to be loaded
+    if (!constants) return;
 
-    const loader = new GLTFLoader();
-    
-    // Configure Draco decoder for compressed models
-    const dracoLoader = new DRACOLoader();
-    dracoLoader.setDecoderPath('https://www.gstatic.com/draco/versioned/decoders/1.5.6/');
-    loader.setDRACOLoader(dracoLoader);
-    
-    const models: Model3DConfig[] = [];
-    let loadIndex = 0;
-
-    // Load models sequentially based on configuration
-    const loadNextModel = () => {
-      if (loadIndex >= CVT_MODEL_CONFIGS.length) {
-        setLoadedModels(models);
-        return;
-      }
-
-      const config = CVT_MODEL_CONFIGS[loadIndex];
-      loader.load(
-        config.modelUrl,
-        (gltf) => {
-          const object = gltf.scene;
-          
-          // Apply CAD-like material for clean, professional appearance
-          object.traverse((child) => {
-            if (child instanceof THREE.Mesh) {
-              child.material = new THREE.MeshPhysicalMaterial({ 
-                color: config.color,
-                metalness: 0.6,
-                roughness: 0.3,
-                clearcoat: 0.3,
-                clearcoatRoughness: 0.2,
-                reflectivity: 0.5,
-                envMapIntensity: 1.0,
-                flatShading: false,
-                side: THREE.DoubleSide, // Render both sides in case normals are flipped
-              });
-              child.castShadow = true;
-              child.receiveShadow = true;
-              
-              // Ensure geometry has proper normals
-              if (child.geometry) {
-                child.geometry.computeVertexNormals();
-              }
-            }
-          });
-
-          models.push({
-            id: config.id,
-            parentId: config.parentId,
-            object3D: object,
-            position: config.getInitialPosition(constants),
-          });
-
-          loadIndex++;
-          loadNextModel();
-        },
-        undefined,
-        (error) => {
-          console.error(`Error loading model ${config.id}:`, error);
-        }
-      );
-    };
-
-    loadNextModel();
-  }, [constants, toSceneDistance]);
+    loadCVTModels(constants)
+      .then(setLoadedModels)
+      .catch(console.error);
+  }, [constants]);
 
   const { containerRef, sceneController } = useScene3D({
     sceneConfig: {
@@ -135,54 +68,14 @@ export const Scene3DViewer = ({ replayController, className }: Scene3DViewerProp
     models: loadedModels,
   });
 
-  // Add additional lighting for better CAD visualization
   useEffect(() => {
     if (!sceneController) return;
-
-    // Add hemisphere light for ambient fill
-    const hemiLight = new THREE.HemisphereLight(0xffffff, 0x444444, 0.8);
-    sceneController.addObject(hemiLight);
-
-    // Add ambient light for overall brightness
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
-    sceneController.addObject(ambientLight);
-
-    // Add directional lights from multiple angles
-    const dirLight1 = new THREE.DirectionalLight(0xffffff, 0.8);
-    dirLight1.position.set(5, 10, 5);
-    sceneController.addObject(dirLight1);
-
-    const dirLight2 = new THREE.DirectionalLight(0xffffff, 0.4);
-    dirLight2.position.set(-5, 5, -5);
-    sceneController.addObject(dirLight2);
-
-    const dirLight3 = new THREE.DirectionalLight(0xffffff, 0.4);
-    dirLight3.position.set(0, 5, -10);
-    sceneController.addObject(dirLight3);
-
-    return () => {
-      sceneController.removeObject(hemiLight);
-      sceneController.removeObject(ambientLight);
-      sceneController.removeObject(dirLight1);
-      sceneController.removeObject(dirLight2);
-      sceneController.removeObject(dirLight3);
-    };
+    return setupSceneLighting(sceneController);
   }, [sceneController]);
 
-  // Add grid helper (1 inch spacing)
   useEffect(() => {
     if (!sceneController) return;
-
-    const gridSize = 20; // 20 inch x 20 inch grid
-    const divisions = 20; // 20 divisions = 1 inch per division
-    const gridHelper = new THREE.GridHelper(gridSize, divisions, 0x444444, 0x222222);
-    gridHelper.position.y = 0; // Grid at ground level
-    
-    sceneController.addObject(gridHelper);
-
-    return () => {
-      sceneController.removeObject(gridHelper);
-    };
+    return setupSceneGrid(sceneController);
   }, [sceneController]);
 
   // Subscribe to replay controller and update models
