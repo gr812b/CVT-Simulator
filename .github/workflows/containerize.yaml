@@ -14,6 +14,9 @@ env:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -31,5 +34,5 @@ jobs:
           context: .
           push: true
           tags: |
-            ${{ env.REGISTRY_GH }}/gr812b/cvt-simulator:latest
-            ${{ env.REGISTRY_GH }}/gr812b/cvt-simulator:${{ github.sha }}
+            ${{ env.REGISTRY_GH }}/${{ github.repository_owner }}/cvt-simulator:latest
+            ${{ env.REGISTRY_GH }}/${{ github.repository_owner }}/cvt-simulator:${{ github.sha }}
