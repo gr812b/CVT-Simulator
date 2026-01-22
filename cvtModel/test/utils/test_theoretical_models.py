@@ -38,7 +38,9 @@ class TestTheoreticalModels(unittest.TestCase):
         self.assertAlmostEqual(TheoreticalModels.outer_prim_radius(0), 0.0346202)
 
     def test_outer_sec_radius(self):
-        self.assertAlmostEqual(TheoreticalModels.outer_sec_radius(0), 0.10417073986620666)
+        self.assertAlmostEqual(
+            TheoreticalModels.outer_sec_radius(0), 0.10417073986620666
+        )
 
     def test_current_cvt_ratio(self):
         self.assertAlmostEqual(
