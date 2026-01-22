@@ -117,7 +117,6 @@ export const RampBuilder = ({ value, onChange, className }: RampBuilderProps) =>
                                         type="button"
                                         onClick={() => removeSegment(index)}
                                         icon={Trash}
-                                        className={styles.removeButton}
                                         title="Remove segment"
                                     />
                                 )}
@@ -142,7 +141,7 @@ export const RampBuilder = ({ value, onChange, className }: RampBuilderProps) =>
                                 {fields.map((field) => (
                                     <InputField
                                         key={field.label}
-                                        label={`${field.label} (${field.units})`}
+                                        label={field.units === '-' ? field.label : `${field.label} (${field.units})`}
                                         type="number"
                                         value={getSegmentFieldValue(segment, field.label)}
                                         onChange={(e) => updateSegment(index, field.label, parseFloat(e.target.value))}
