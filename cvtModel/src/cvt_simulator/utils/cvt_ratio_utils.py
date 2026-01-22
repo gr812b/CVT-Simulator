@@ -20,6 +20,20 @@ class CVTRatioResult:
 
 
 class CVTGeometry:
+    """
+    CVT (Continuously Variable Transmission) geometry calculator.
+    
+    This class provides methods to compute primary/secondary pulley radii, 
+    CVT ratio, and the rate of change of the CVT ratio with respect to shift distance.
+    
+    Mathematical derivations:
+    - Belt length constraint and radius calculations: https://www.desmos.com/calculator/dd9whqmxcz
+    - CVT ratio rate of change (di/dd): https://github.com/gr812b/CVT-Simulator/blob/develop/docs/Kai's%20folder%20of%20derivations/cvtRatioRateOfChange.png
+    
+    The calculations use the belt length constraint equation with center-to-center distance
+    and sheave geometry to determine pulley radii at any given shift distance.
+    """
+
     def __init__(self):
         self.L = BELT_LENGTH
         self.h = BELT_HEIGHT
@@ -73,8 +87,8 @@ class CVTGeometry:
         inner = (
             -self.L**2
             + 4 * pi * self.L * r1
-            + pi**2 * self.C**2
-            + 4 * self.C**2
+            + pi**2 * self.c2c**2
+            + 4 * self.c2c**2
             - 4 * pi**2 * r1**2
         )
 
@@ -89,9 +103,10 @@ class CVTGeometry:
 
     def _solve_r2(self, r1: float) -> float:
         """
-        Use the bisection method to solve for r2 given r1.
+        Use Brent's method (`scipy.optimize.brentq`) to solve for r2 given r1.
 
-        Starts with a low and high
+        Starts with a low and high bracket for r2 and finds the root of `_open_form_r_sec`  
+        within this interval.  
         """
         C = self.c2c
         eps = 1e-9  # small safety margin since arcsin is steep near domain boundaries
@@ -135,7 +150,7 @@ class CVTGeometry:
         r2 = self._solve_r2(r1)
 
         term = pi
-        # Additional term to include if r2 > r1
+        # Additional term to include if r1 > r2
         if r1 > r2:
             term -= (4 * (r2 - r1)) / (sqrt(self.c2c**2 - (r2 - r1) ** 2))
 
