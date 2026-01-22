@@ -1,7 +1,7 @@
 import createClient from 'openapi-fetch';
 import type { paths, operations } from '@types'; // from openapi-typescript
 
-const client = createClient<paths>({ baseUrl: import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8000' });
+const client = createClient<paths>({ baseUrl: import.meta.env.VITE_API_BASE_URL ?? '' });
 
 // Types pulled straight from your schema:
 export type RunBody = NonNullable<operations['run_run_post']['requestBody']>['content']['application/json'];
