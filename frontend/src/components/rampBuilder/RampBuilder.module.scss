@@ -18,6 +18,7 @@
 .segmentNumber {
     font-weight: 600;
     color: var(--text-color);
+    min-height: 4rem;
 }
 
 .segmentContent {
@@ -60,12 +61,6 @@
         border-color: var(--accent);
         box-shadow: 0 0 0 2px rgba(187, 8, 8, 0.2);
     }
-}
-
-.row {
-    display: flex;
-    flex-direction: row;
-    gap: 0.75rem;
 }
 
 .addSegmentButton {
