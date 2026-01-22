@@ -56,7 +56,7 @@ class TheoreticalModels:
 
     @staticmethod  # See Enman's excel sheet
     def outer_sec_radius(d: float) -> float:
-        return _cvt_geometry._solve_r2(_cvt_geometry.r_primary(d))
+        return _cvt_geometry.r_secondary(d)
 
     @staticmethod
     def current_cvt_ratio(d: float) -> float:

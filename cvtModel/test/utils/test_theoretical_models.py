@@ -36,17 +36,17 @@ class TestTheoreticalModels(unittest.TestCase):
 
     def test_outer_prim_radius(self):
         self.assertAlmostEqual(
-            TheoreticalModels.outer_prim_radius(-3.955310010320904e-06), 0.0346202
+            TheoreticalModels.outer_prim_radius(0), 0.0346202
         )
 
     def test_outer_sec_radius(self):
         self.assertAlmostEqual(
-            TheoreticalModels.outer_sec_radius(-3.955255), 0.1015999999
+            TheoreticalModels.outer_sec_radius(0), 0.1015999999
         )
 
     def test_current_cvt_ratio(self):
         self.assertAlmostEqual(
-            TheoreticalModels.current_cvt_ratio(-3.955255), 3.4959772834831964
+            TheoreticalModels.current_cvt_ratio(0), 3.4959772834831964
         )
 
     def test_wrap_angle(self):
