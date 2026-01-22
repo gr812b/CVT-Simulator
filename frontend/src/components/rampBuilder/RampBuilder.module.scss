@@ -20,31 +20,15 @@
     color: var(--text-color);
 }
 
-.removeButton {
-    background: transparent;
-    border: none;
-    color: var(--error);
-    cursor: pointer;
-    padding: 0.25rem;
-    display: flex;
-    align-items: center;
-    gap: 0.25rem;
-    font-size: 0.875rem;
-    transition: opacity 0.2s;
-
-    &:hover {
-        opacity: 0.7;
-    }
-
-    svg {
-        width: 1rem;
-        height: 1rem;
-    }
-}
-
 .segmentContent {
     display: flex;
     flex-direction: column;
+    gap: 0.75rem;
+}
+
+.segmentFields {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
     gap: 0.75rem;
 }
 

@@ -137,16 +137,18 @@ export const RampBuilder = ({ value, onChange, className }: RampBuilderProps) =>
                                         ))}
                                     </select>
                                 </div>
-
-                                {fields.map((field) => (
-                                    <InputField
-                                        key={field.label}
-                                        label={field.units === '-' ? field.label : `${field.label} (${field.units})`}
-                                        type="number"
-                                        value={getSegmentFieldValue(segment, field.label)}
-                                        onChange={(e) => updateSegment(index, field.label, parseFloat(e.target.value))}
-                                    />
-                                ))}
+                                
+                                <div className={styles.segmentFields}>
+                                    {fields.map((field) => (
+                                        <InputField
+                                            key={field.label}
+                                            label={field.units === '-' ? field.label : `${field.label} (${field.units})`}
+                                            type="number"
+                                            value={getSegmentFieldValue(segment, field.label)}
+                                            onChange={(e) => updateSegment(index, field.label, parseFloat(e.target.value))}
+                                        />
+                                    ))}
+                                </div>
                             </div>
                         </div>
                     );
