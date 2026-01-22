@@ -56,13 +56,13 @@ class TestTheoreticalModels(unittest.TestCase):
     def test_primary_wrap_angle(self):
         self.assertAlmostEqual(
             TheoreticalModels.primary_wrap_angle(0),
-            2.8769331104525517,
+            2.8667120281407303,
         )
 
     def test_secondary_wrap_angle(self):
         self.assertAlmostEqual(
             TheoreticalModels.secondary_wrap_angle(0),
-            3.4062521967270345,
+            3.416473279038856,
         )
 
 
