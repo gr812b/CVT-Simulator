@@ -35,14 +35,10 @@ class TestTheoreticalModels(unittest.TestCase):
         self.assertAlmostEqual(TheoreticalModels.newtons_second_law(10, 9.8), 98)
 
     def test_outer_prim_radius(self):
-        self.assertAlmostEqual(
-            TheoreticalModels.outer_prim_radius(0), 0.0346202
-        )
+        self.assertAlmostEqual(TheoreticalModels.outer_prim_radius(0), 0.0346202)
 
     def test_outer_sec_radius(self):
-        self.assertAlmostEqual(
-            TheoreticalModels.outer_sec_radius(0), 0.1015999999
-        )
+        self.assertAlmostEqual(TheoreticalModels.outer_sec_radius(0), 0.1015999999)
 
     def test_current_cvt_ratio(self):
         self.assertAlmostEqual(
