@@ -22,14 +22,14 @@ class CVTRatioResult:
 class CVTGeometry:
     """
     CVT (Continuously Variable Transmission) geometry calculator.
-    
-    This class provides methods to compute primary/secondary pulley radii, 
+
+    This class provides methods to compute primary/secondary pulley radii,
     CVT ratio, and the rate of change of the CVT ratio with respect to shift distance.
-    
+
     Mathematical derivations:
     - Belt length constraint and radius calculations: https://www.desmos.com/calculator/dd9whqmxcz
     - CVT ratio rate of change (di/dd): https://github.com/gr812b/CVT-Simulator/blob/develop/docs/Kai's%20folder%20of%20derivations/cvtRatioRateOfChange.png
-    
+
     The calculations use the belt length constraint equation with center-to-center distance
     and sheave geometry to determine pulley radii at any given shift distance.
     """
@@ -105,8 +105,8 @@ class CVTGeometry:
         """
         Use Brent's method (`scipy.optimize.brentq`) to solve for r2 given r1.
 
-        Starts with a low and high bracket for r2 and finds the root of `_open_form_r_sec`  
-        within this interval.  
+        Starts with a low and high bracket for r2 and finds the root of `_open_form_r_sec`
+        within this interval.
         """
         C = self.c2c
         eps = 1e-9  # small safety margin since arcsin is steep near domain boundaries
@@ -267,7 +267,9 @@ if __name__ == "__main__":
     print(f"Min Primary Radius (r_1_min):     {cvt.r_1_min:.6f} m")
     print(f"Max Secondary Radius (r_2_max):   {cvt.r_2_max:.6f} m")
     print(f"Initial Sheave Displacement:      {cvt.d_contact:.6f} m")
-    print(f"Sheave Half-Angle (β):            {cvt.β:.6f} rad ({cvt.β * 180 / pi:.2f}°)")
+    print(
+        f"Sheave Half-Angle (β):            {cvt.β:.6f} rad ({cvt.β * 180 / pi:.2f}°)"
+    )
     print(f"Max Shift Distance (d_max):       {cvt.d_max:.6f} m")
     print(f"Center-to-Center Distance (c2c):  {cvt.c2c:.6f} m")
     print(f"C2C Approximation:                {cvt._c2c_approx():.6f} m")
