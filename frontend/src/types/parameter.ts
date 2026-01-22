@@ -88,7 +88,7 @@ const PARAMETERS_IMPL = {
     img: primaryCVT,
   },
   PrimaryRampConfig: {
-    label: 'Custom Ramp Profile',
+    label: 'Ramp Geometry',
     description:
       'Design a custom flyweight ramp profile by combining different segment types. The ramp profile controls how the flyweight force changes as the pulley shifts. Use linear segments for constant slopes, circular arcs for smooth transitions, and spiral segments for advanced tuning. Leave null to use the default ramp.',
     type: 'ramp',
@@ -141,7 +141,7 @@ const PARAMETERS_IMPL = {
     img: secondaryCVT,
   },
     SecondaryRampConfig: {
-    label: 'Custom Ramp Profile',
+    label: 'Helix Geometry',
     description:
       'Design a custom helix ramp profile for the secondary pulley by combining different segment types. The ramp profile controls how the torque-reactive mechanism responds as the pulley shifts. Use linear segments for constant slopes, circular arcs for smooth transitions, and spiral segments for advanced tuning. Leave null to use the default ramp.',
     type: 'ramp',
