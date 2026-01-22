@@ -1,12 +1,7 @@
 import numpy as np
-import math
 from cvt_simulator.constants.car_specs import (
     BELT_HEIGHT,
-    MIN_PRIM_RADIUS,
-    INITIAL_SHEAVE_DISPLACEMENT,
-    BELT_ANGLE,
     CENTER_TO_CENTER,
-    BELT_LENGTH,
 )
 from cvt_simulator.utils.cvt_ratio_utils import CVTGeometry
 
