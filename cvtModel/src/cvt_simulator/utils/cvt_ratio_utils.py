@@ -235,3 +235,46 @@ class CVTGeometry:
         return brentq(
             self._c2c_constraint_equation, lo, hi, args=(r1_eff, r2_eff), xtol=1e-9
         )
+
+
+if __name__ == "__main__":
+    import numpy as np
+
+    # Initialize CVT geometry
+    cvt = CVTGeometry()
+
+    # Print all default values
+    print("=" * 80)
+    print("CVT GEOMETRY - DEFAULT PARAMETERS")
+    print("=" * 80)
+    print(f"Belt Length (L):                  {cvt.L:.6f} m")
+    print(f"Belt Height (h):                  {cvt.h:.6f} m")
+    print(f"Min Primary Radius (r_1_min):     {cvt.r_1_min:.6f} m")
+    print(f"Max Secondary Radius (r_2_max):   {cvt.r_2_max:.6f} m")
+    print(f"Initial Sheave Displacement:      {cvt.d_contact:.6f} m")
+    print(f"Sheave Half-Angle (β):            {cvt.β:.6f} rad ({cvt.β * 180 / pi:.2f}°)")
+    print(f"Max Shift Distance (d_max):       {cvt.d_max:.6f} m")
+    print(f"Center-to-Center Distance (c2c):  {cvt.c2c:.6f} m")
+    print(f"C2C Approximation:                {cvt._c2c_approx():.6f} m")
+    print("=" * 80)
+    print()
+
+    # Create table from 0 to max shift distance
+    num_points = 10
+    d_values = np.linspace(0, cvt.d_max, num_points)
+
+    print("=" * 80)
+    print("CVT RATIO TABLE - Shift Distance vs Radii and Ratio")
+    print("=" * 80)
+    print(f"{'d (m)':<10} {'r1 (m)':<10} {'r2 (m)':<10} {'Ratio':<10} {'di/dd':<12}")
+    print("-" * 80)
+
+    for d in d_values:
+        result = cvt.ratio_from_d(d)
+        derivative = cvt._cvt_ratio_derivative(d)
+        print(
+            f"{d:<10.6f} {result.r1:<10.6f} {result.r2:<10.6f} "
+            f"{result.ratio:<10.6f} {derivative:<12.6f}"
+        )
+
+    print("=" * 80)
