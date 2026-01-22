@@ -66,7 +66,7 @@ def get_shift_steady_event(system_model: SystemModel):
         # Before we get near full shift, return a fixed negative value.
         if state.shift_distance < MAX_SHIFT - tol:
             return -tol
-        
+
         # Clamp here as clamping from other events doesn't propagate immediately
         shift_velocity = state.shift_velocity
         shift_distance = state.shift_distance
