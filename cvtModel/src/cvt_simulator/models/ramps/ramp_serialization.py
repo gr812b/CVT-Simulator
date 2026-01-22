@@ -24,7 +24,6 @@ from cvt_simulator.models.ramps.ramp_config import (
     RampSegmentConfig,
 )
 
-
 # Registry mapping segment classes to their conversion functions
 _TO_CONFIG_REGISTRY: dict[
     Type[RampSegment], Callable[[RampSegment], RampSegmentConfig]
