@@ -1,0 +1,21 @@
+services:
+  cvt-backend:
+    image: ghcr.io/gr812b/cvt-simulator-backend:latest
+    restart: unless-stopped
+    networks:
+      - cvt-network
+
+  cvt-frontend:
+    image: ghcr.io/gr812b/cvt-simulator-frontend:latest
+    restart: unless-stopped
+    depends_on:
+      - cvt-backend
+    networks:
+      - cvt-network
+      - web
+
+networks:
+  cvt-network:
+    driver: bridge
+  web: # Set this to your existing external network name for reverse proxying
+    external: true

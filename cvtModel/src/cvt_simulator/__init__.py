@@ -8,6 +8,9 @@ from .models.dataTypes import (
     SystemBreakdown,
 )
 from .utils.frontend_output import FormattedSimulationResult
+from .models.ramps.ramp_config import PiecewiseRampConfig
+from .models.ramps.piecewise_ramp import PiecewiseRamp
+from .constants.car_specs import CarSpecs
 
 __all__ = [
     "simulate_cvt_model",
@@ -18,4 +21,7 @@ __all__ = [
     "SlipBreakdown",
     "SystemBreakdown",
     "FormattedSimulationResult",
+    "PiecewiseRampConfig",
+    "PiecewiseRamp",
+    "CarSpecs",
 ]
