@@ -105,7 +105,7 @@ export const RampBuilder = ({ value, onChange, className }: RampBuilderProps) =>
                                         onChange={(e) => changeSegmentType(index, e.target.value as SegmentType)}
                                         className={styles.select}
                                     >
-                                        {(Object.keys(SEGMENT_DEFAULTS) as SegmentType[]).map((type) => (
+                                        {Object.keys(SEGMENT_DEFAULTS).map((type) => (
                                             <option key={type} value={type}>
                                                 {type.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')}
                                             </option>
