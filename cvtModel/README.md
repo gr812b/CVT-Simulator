@@ -11,7 +11,7 @@ pip install -e .[dev]
 ```
 3. Run the tests
 ```bash
-python -m unittest discover -s tests
+coverage run -m unittest discover -s test/simulations -s test/utils
 ```
 4. Manually run linter and formatter
 ```bash

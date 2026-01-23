@@ -153,13 +153,17 @@ class SimulationRunner:
         # TODO: Remove this (should be handled by constraints)
         shift_velocity = state.shift_velocity
         shift_distance = state.shift_distance
-        if shift_distance < 0:
+        if shift_distance <= 0:
             state.shift_distance = 0
             state.shift_velocity = max(0, shift_velocity)
 
         elif shift_distance > MAX_SHIFT:
             state.shift_distance = MAX_SHIFT
             state.shift_velocity = min(0, shift_velocity)
+
+        constrained_y = state.to_array()
+        for i in range(len(y)):
+            y[i] = constrained_y[i]
 
         # Get system breakdown (this calculates everything in correct order)
         system_breakdown = self.system_model.get_breakdown(state)
@@ -168,6 +172,12 @@ class SimulationRunner:
         car_acceleration = system_breakdown.car.acceleration
         engine_angular_accel = system_breakdown.engine.angular_acceleration
         shift_acceleration = system_breakdown.cvt.acceleration
+
+        # Prevent acceleration from pushing past boundaries (metal hitting metal)
+        if shift_distance <= 0 and shift_acceleration < 0:
+            shift_acceleration = 0
+        elif shift_distance >= MAX_SHIFT and shift_acceleration > 0:
+            shift_acceleration = 0
 
         return [
             car_acceleration,

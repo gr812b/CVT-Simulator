@@ -67,6 +67,19 @@ def get_shift_steady_event(system_model: SystemModel):
         if state.shift_distance < MAX_SHIFT - tol:
             return -tol
 
+        # Clamp here as clamping from other events doesn't propagate immediately
+        shift_velocity = state.shift_velocity
+        shift_distance = state.shift_distance
+        if shift_distance < 0:
+            state.shift_distance = 0
+            state.shift_velocity = max(0, shift_velocity)
+
+        elif shift_distance > MAX_SHIFT:
+            state.shift_distance = MAX_SHIFT
+            state.shift_velocity = min(0, shift_velocity)
+
+        update_y(y, state)
+
         # Once near full shift, return the computed shift acceleration.
         # The event will trigger when this value crosses from negative to positive.
         # TODO: Clean this up!

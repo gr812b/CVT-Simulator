@@ -1,13 +1,12 @@
 import numpy as np
-import math
 from cvt_simulator.constants.car_specs import (
     BELT_HEIGHT,
-    MIN_PRIM_RADIUS,
-    INITIAL_SHEAVE_DISPLACEMENT,
-    BELT_ANGLE,
     CENTER_TO_CENTER,
-    BELT_LENGTH,
 )
+from cvt_simulator.utils.cvt_ratio_utils import CVTGeometry
+
+# Module-level CVTGeometry instance using default constants
+_cvt_geometry = CVTGeometry()
 
 
 class TheoreticalModels:
@@ -53,87 +52,19 @@ class TheoreticalModels:
 
     @staticmethod  # See Enman's excel sheet
     def outer_prim_radius(d: float) -> float:
-        engage_distance = MIN_PRIM_RADIUS + BELT_HEIGHT
-        current_distance = (
-            (d - INITIAL_SHEAVE_DISPLACEMENT) / (2 * np.tan(BELT_ANGLE))
-            + MIN_PRIM_RADIUS
-            + BELT_HEIGHT
-        )
-        # print(f"Engage: {engage_distance}, Current: {current_distance}")
-        return max(engage_distance, current_distance)
+        return _cvt_geometry.r_primary(d)
 
     @staticmethod  # See Enman's excel sheet
     def outer_sec_radius(d: float) -> float:
-        prim_radius = TheoreticalModels.outer_prim_radius(d)
-        return (
-            2 * prim_radius
-            - np.pi * CENTER_TO_CENTER
-            + math.sqrt(
-                (np.pi * CENTER_TO_CENTER) ** 2
-                - 8 * np.pi * CENTER_TO_CENTER * prim_radius
-                + 4 * BELT_LENGTH * CENTER_TO_CENTER
-                - 8 * CENTER_TO_CENTER**2
-            )
-        ) / 2
+        return _cvt_geometry.r_secondary(d)
 
     @staticmethod
     def current_cvt_ratio(d: float) -> float:
-        primary_radius = TheoreticalModels.outer_prim_radius(d) - BELT_HEIGHT / 2
-        secondary_radius = TheoreticalModels.outer_sec_radius(d) - BELT_HEIGHT / 2
-        # TODO: Remove debug prints
-        # print(f"Primary: {primary_radius}, Secondary: {secondary_radius}, ratio: {secondary_radius / primary_radius}")
-        return secondary_radius / primary_radius
+        return _cvt_geometry.ratio_from_d(d).ratio
 
-    # ---------------------------------------------------------
-    # Derivative of ratio wrt d (di/dd)
-    # ---------------------------------------------------------
-    @staticmethod
-    def cvt_ratio_derivative_wrt_d(d: float) -> float:
-        # primary + derivative
-        engage_distance = MIN_PRIM_RADIUS + BELT_HEIGHT
-        current_distance = (
-            (d - INITIAL_SHEAVE_DISPLACEMENT) / (2 * np.tan(BELT_ANGLE))
-            + MIN_PRIM_RADIUS
-            + BELT_HEIGHT
-        )
-        prim_radius = max(engage_distance, current_distance)
-        # dR_p/dd = 0 if clamped, else 1/(2tan(theta))
-        if current_distance <= engage_distance:
-            dRp_dd = 0.0
-        else:
-            dRp_dd = 1.0 / (2.0 * np.tan(BELT_ANGLE))
-
-        # secondary + derivative
-        C = CENTER_TO_CENTER
-        L = BELT_LENGTH
-        Delta = math.sqrt(
-            max(
-                (np.pi * C) ** 2 - 8 * np.pi * C * prim_radius + 4 * L * C - 8 * C**2,
-                1e-12,
-            )
-        )
-        dRs_dRp = 1.0 - (2.0 * np.pi * C) / Delta
-        dRs_dd = dRs_dRp * dRp_dd
-        sec_radius = (2 * prim_radius - np.pi * C + Delta) / 2.0
-
-        # effective radii (belt centerline)
-        P = prim_radius - BELT_HEIGHT / 2.0
-        S = sec_radius - BELT_HEIGHT / 2.0
-        Pp = dRp_dd
-        Sp = dRs_dd
-
-        # quotient rule: (S'P - SP') / P^2
-        if abs(P) < 1e-12:
-            return 0.0
-        return (Sp * P - S * Pp) / (P * P)
-
-    # ---------------------------------------------------------
-    # di/dt = (di/dd) * v
-    # ---------------------------------------------------------
     @staticmethod
     def current_cvt_ratio_rate_of_change(d: float, v: float) -> float:
-        di_dd = TheoreticalModels.cvt_ratio_derivative_wrt_d(d)
-        return di_dd * v
+        return _cvt_geometry.cvt_ratio_rate_of_change(d, v)
 
     @staticmethod
     def wrap_angle(
