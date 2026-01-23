@@ -5,6 +5,8 @@ import environment from "@assets/images/environment.png"
 
 import type { components } from './api';
 
+// TODO: Pass defaults and parameters from backend when API supports it
+
 export type ParameterValue = string | number | boolean | components['schemas']['PiecewiseRampConfigModel'] | null
 export type PiecewiseRampConfig = components['schemas']['PiecewiseRampConfigModel'];
 type ParameterType = 'string' | 'number' | 'boolean' | 'ramp'

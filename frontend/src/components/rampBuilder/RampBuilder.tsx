@@ -1,14 +1,15 @@
 import { useState, useCallback } from 'react';
 import { Button } from '@components/button/Button';
 import { InputField } from '@components/inputField/InputField';
-import type { components, SegmentType } from '@types';
+import type { components } from '@types';
+import { SEGMENT_DEFAULTS } from '@types';
 import styles from './RampBuilder.module.scss';
 import Plus from '@assets/icons/plus.svg?react';
 import Trash from '@assets/icons/trash_can.svg?react';
-import { SEGMENT_LABELS, SEGMENT_FIELD_CONFIGS, FIELD_KEY_MAP } from '@types';
 
 type RampSegment = components['schemas']['PiecewiseRampConfigModel']['segments'][number];
 type PiecewiseRampConfig = components['schemas']['PiecewiseRampConfigModel'];
+type SegmentType = RampSegment['type'];
 
 interface RampBuilderProps {
     value: PiecewiseRampConfig | null;
@@ -17,33 +18,7 @@ interface RampBuilderProps {
 }
 
 const createDefaultSegment = (type: SegmentType): RampSegment => {
-    const fields = SEGMENT_FIELD_CONFIGS[type];
-    const segment: Record<string, string | number> = { type };
-    
-    fields.forEach(field => {
-        const key = FIELD_KEY_MAP[field.label];
-        if (key) {
-            segment[key] = field.defaultValue;
-        }
-    });
-    
-    return segment as RampSegment;
-};
-
-const getSegmentFieldValue = (segment: RampSegment, label: string): number | undefined => {
-    const key = FIELD_KEY_MAP[label];
-    if (!key) return undefined;
-    
-    const segmentRecord = segment as Record<string, number | string>;
-    const value = segmentRecord[key];
-    return typeof value === 'number' ? value : undefined;
-};
-
-const updateSegmentField = (segment: RampSegment, label: string, value: number): RampSegment => {
-    const key = FIELD_KEY_MAP[label];
-    if (!key) return segment;
-    
-    return { ...segment, [key]: value } as RampSegment;
+    return SEGMENT_DEFAULTS[type] as RampSegment;
 };
 
 const preserveCommonFields = (oldSegment: RampSegment, newSegment: RampSegment): RampSegment => {
@@ -82,10 +57,10 @@ export const RampBuilder = ({ value, onChange, className }: RampBuilderProps) =>
         onChange({ segments: newSegments });
     }, [segments, onChange]);
 
-    const updateSegment = useCallback((index: number, label: string, value: number) => {
+    const updateSegment = useCallback((index: number, key: string, value: number) => {
         const newSegments = segments.map((seg, i) => {
             if (i === index) {
-                return updateSegmentField(seg, label, value);
+                return { ...seg, [key]: value } as RampSegment;
             }
             return seg;
         });
@@ -106,7 +81,8 @@ export const RampBuilder = ({ value, onChange, className }: RampBuilderProps) =>
         <div className={className}>
             <div className={styles.segmentList}>
                 {segments.map((segment, index) => {
-                    const fields = SEGMENT_FIELD_CONFIGS[segment.type];
+                    const segmentRecord = segment as Record<string, unknown>;
+                    const fields = Object.entries(segmentRecord).filter(([key]) => key !== 'type');
                     
                     return (
                         <div key={index} className={styles.segment}>
@@ -130,22 +106,22 @@ export const RampBuilder = ({ value, onChange, className }: RampBuilderProps) =>
                                         onChange={(e) => changeSegmentType(index, e.target.value as SegmentType)}
                                         className={styles.select}
                                     >
-                                        {Object.entries(SEGMENT_LABELS).map(([value, label]) => (
-                                            <option key={value} value={value}>
-                                                {label}
+                                        {(Object.keys(SEGMENT_DEFAULTS) as SegmentType[]).map((type) => (
+                                            <option key={type} value={type}>
+                                                {type.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')}
                                             </option>
                                         ))}
                                     </select>
                                 </div>
                                 
                                 <div className={styles.segmentFields}>
-                                    {fields.map((field) => (
+                                    {fields.map(([key, value]) => (
                                         <InputField
-                                            key={field.label}
-                                            label={field.units === '-' ? field.label : `${field.label} (${field.units})`}
+                                            key={key}
+                                            label={key}
                                             type="number"
-                                            value={getSegmentFieldValue(segment, field.label)}
-                                            onChange={(e) => updateSegment(index, field.label, parseFloat(e.target.value))}
+                                            value={typeof value === 'number' ? value : undefined}
+                                            onChange={(e) => updateSegment(index, key, parseFloat(e.target.value))}
                                         />
                                     ))}
                                 </div>

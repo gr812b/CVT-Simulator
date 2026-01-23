@@ -1,51 +1,15 @@
-export type SegmentType = 'linear' | 'circular' | 'cubic_spiral_zero_k1' | 'cubic_spiral_zero_zero' | 'euler_spiral' | 'pro_defined';
+import type { components } from './api';
 
-export const SEGMENT_LABELS: Record<SegmentType, string> = {
-    linear: 'Linear',
-    circular: 'Circular Arc',
-    cubic_spiral_zero_k1: 'Cubic Spiral (Zero-K1)',
-    cubic_spiral_zero_zero: 'Cubic Spiral (Zero-Zero)',
-    euler_spiral: 'Euler Spiral',
-    pro_defined: 'Pro Defined',
+type RampSegment = components['schemas']['PiecewiseRampConfigModel']['segments'][number];
+type SegmentType = RampSegment['type'];
+
+// Default values for creating new segments
+// TODO: Pass defaults from backend when API supports it
+export const SEGMENT_DEFAULTS: Record<SegmentType, Partial<RampSegment>> = {
+    linear: { type: 'linear', length: 0.1, slope: 0.5 },
+    circular: { type: 'circular', length: 0.1, radius: 0.05, theta_start: 0, theta_end: 0.785 },
+    cubic_spiral_zero_k1: { type: 'cubic_spiral_zero_k1', length: 0.1, slope_start: 0.3, slope_end: 0.4, target_curvature: 10.0 },
+    cubic_spiral_zero_zero: { type: 'cubic_spiral_zero_zero', length: 0.1, slope_start: 0.3, slope_end: 0.4 },
+    euler_spiral: { type: 'euler_spiral', length: 0.1, slope_start: 0.3, slope_end: 0.4 },
+    pro_defined: { type: 'pro_defined', length: 0.1, prev_seg_height: 0, end_length: 0.05, initial_slope: 0.5, r_initial: 0.05 },
 };
-
-export const FIELD_KEY_MAP: Record<string, string> = {
-    Length: 'length',
-    Slope: 'slope',
-    Radius: 'radius',
-    'Theta Start': 'theta_start',
-    'Theta End': 'theta_end',
-    'Slope Start': 'slope_start',
-    'Slope End': 'slope_end',
-    'Target Curvature': 'target_curvature',
-};
-
-type SegmentFieldDef = {
-    label: string;
-    units: string;
-    defaultValue: number;
-};
-
-export const SEGMENT_FIELD_CONFIGS = {
-    linear: [
-        { label: 'Length', units: 'm', defaultValue: 0.1 },
-        { label: 'Slope', units: '-', defaultValue: 0.5 },
-    ],
-    circular: [
-        { label: 'Length', units: 'm', defaultValue: 0.1 },
-        { label: 'Radius', units: 'm', defaultValue: 0.05 },
-        { label: 'Theta Start', units: 'rad', defaultValue: 0 },
-        { label: 'Theta End', units: 'rad', defaultValue: 0.785 },
-    ],
-    cubic_spiral_zero_k1: [
-        { label: 'Length', units: 'm', defaultValue: 0.1 },
-        { label: 'Slope Start', units: 'rad', defaultValue: 0.3 },
-        { label: 'Slope End', units: 'rad', defaultValue: 0.4 },
-        { label: 'Target Curvature', units: '-', defaultValue: 10.0 },
-    ],
-    cubic_spiral_zero_zero: [],
-    euler_spiral: [],
-    pro_defined: [],
-} as const satisfies Record<SegmentType, ReadonlyArray<SegmentFieldDef>>;
-
-export type SegmentFieldConfigs = typeof SEGMENT_FIELD_CONFIGS;
