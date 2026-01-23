@@ -1,7 +1,7 @@
 import type { Graph2DProps } from "@components/graph2D/graph2D";
 import type { RunResponse } from "@utils/api";
-import type { BaseUnitType } from "@utils/unitConversion";
-import { UNIT_PRESETS, getTargetUnit } from "@utils/unitConversion";
+import type { BaseUnitType } from "@utils/conversion";
+import { UNIT_PRESETS, getTargetUnit } from "@utils/conversion";
 
 type DataPoint = RunResponse['data'][number]; // TODO: Move to somewhere else (maybe replay controller file)
 

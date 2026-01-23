@@ -3,6 +3,7 @@ import { useEffect } from 'react';
 import styles from './Playback.module.scss';
 import { Button } from '@components/button/Button';
 import { Graph2D } from '@components/graph2D/graph2D';
+import { Scene3DViewer } from '@components/scene3DViewer/Scene3DViewer';
 import { Playbar } from '@components/playbar/Playbar';
 import Home from '@assets/icons/home.svg?react';
 import Edit from '@assets/icons/edit.svg?react';
@@ -43,7 +44,9 @@ export const Playback = () => {
                 onClick={() => {replayController.pause(); navigate('/input')}}
             />
             </div>
+
             <div className={styles.displayGrid}>
+                <Scene3DViewer replayController={replayController} />
                 {graphs.map((graph, index) => (
                     <Graph2D
                         key={index}
