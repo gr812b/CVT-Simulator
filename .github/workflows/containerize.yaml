@@ -5,7 +5,8 @@ name: Containerize
 on:
   push:
     branches:
-      - develop
+      - develop # Set to '**' for testing on all branches
+  workflow_dispatch: # Allow manual triggering
 
 env:
   REGISTRY_GH: ghcr.io
@@ -14,6 +15,9 @@ env:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -25,11 +29,22 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build and push
+      - name: Build and push backend
         uses: docker/build-push-action@v6
         with:
           context: .
+          file: backend/Dockerfile
           push: true
           tags: |
-            ${{ env.REGISTRY_GH }}/gr812b/cvt-simulator:latest
-            ${{ env.REGISTRY_GH }}/gr812b/cvt-simulator:${{ github.sha }}
+            ${{ env.REGISTRY_GH }}/${{ github.repository_owner }}/cvt-simulator-backend:latest
+            ${{ env.REGISTRY_GH }}/${{ github.repository_owner }}/cvt-simulator-backend:${{ github.sha }}
+
+      - name: Build and push frontend
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: frontend/Dockerfile
+          push: true
+          tags: |
+            ${{ env.REGISTRY_GH }}/${{ github.repository_owner }}/cvt-simulator-frontend:latest
+            ${{ env.REGISTRY_GH }}/${{ github.repository_owner }}/cvt-simulator-frontend:${{ github.sha }}

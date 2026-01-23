@@ -1,19 +1,27 @@
-.dockerignore
+# Git
 .git/
 .gitattributes
 .github/
 .gitignore
 .pre-commit-config.yaml
 
+# Documentation
+docs/
 CodeOfConduct.md
 CONTRIBUTING.md
-
-docs/
 ExceptionsGranted.md
-experimental-data/
-frontend/
 INSTALL.md
 LICENSE
 README.md
 refs/
+
+# Data and scripts
+experimental-data/
 start.ps1
+
+# Build outputs
+*.csv
+__pycache__/
+node_modules/
+dist/
+build/

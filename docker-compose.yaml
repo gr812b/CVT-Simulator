@@ -1,11 +1,21 @@
 services:
-  simulator:
-    container_name: cvt-simulator
-    image: gr812b/CVT-Simulator:latest # change username of whoever wants to "own" it on dockerhub
-    # restart: unless-stopped
+  cvt-backend:
+    image: ghcr.io/gr812b/cvt-simulator-backend:latest
+    restart: unless-stopped
+    networks:
+      - cvt-network
 
-    build: # do not include in delpoyment version
-      context: .
-      dockerfile: Dockerfile
-    ports:
-      - 8000:8000
+  cvt-frontend:
+    image: ghcr.io/gr812b/cvt-simulator-frontend:latest
+    restart: unless-stopped
+    depends_on:
+      - cvt-backend
+    networks:
+      - cvt-network
+      - web
+
+networks:
+  cvt-network:
+    driver: bridge
+  web: # Set this to your existing external network name for reverse proxying
+    external: true

@@ -21,13 +21,13 @@ def _get_default_secondary_ramp() -> PiecewiseRampConfig:
 
 @dataclass(slots=True)
 class SimulationArgs:
-    flyweight_mass: float = 0.8  # kg
+    flyweight_mass: float = 1.0  # kg
     primary_ramp_geometry: float = 1.0  # unitless (deprecated, use primary_ramp_config)
     primary_ramp_config: PiecewiseRampConfig = field(
         default_factory=_get_default_primary_ramp
     )
-    primary_spring_rate: float = 1000.0  # N/m
-    primary_spring_pretension: float = 0.0  # m
+    primary_spring_rate: float = 7000.0  # N/m
+    primary_spring_pretension: float = 0.2  # m
     secondary_helix_geometry: float = (
         1.0  # unitless (deprecated, use secondary_ramp_config)
     )
@@ -35,8 +35,8 @@ class SimulationArgs:
         default_factory=_get_default_secondary_ramp
     )
     secondary_torsion_spring_rate: float = 30.0  # Nm/rad
-    secondary_compression_spring_rate: float = 1.0  # N/m
-    secondary_rotational_spring_pretension: float = 45.0  # degrees
+    secondary_compression_spring_rate: float = 3000.0  # N/m
+    secondary_rotational_spring_pretension: float = 230.0  # degrees
     secondary_linear_spring_pretension: float = 0.1  # m
     vehicle_weight: float = 225.0  # kg
     driver_weight: float = 75.0  # kg
