@@ -2,7 +2,7 @@ import { useState, useCallback } from 'react';
 import { Button } from '@components/button/Button';
 import { InputField } from '@components/inputField/InputField';
 import type { components } from '@types';
-import { SEGMENT_DEFAULTS } from '@types';
+import { SEGMENT_DEFAULTS, FIELD_METADATA } from '@types';
 import styles from './RampBuilder.module.scss';
 import Plus from '@assets/icons/plus.svg?react';
 import Trash from '@assets/icons/trash_can.svg?react';
@@ -114,15 +114,22 @@ export const RampBuilder = ({ value, onChange, className }: RampBuilderProps) =>
                                 </div>
                                 
                                 <div className={styles.segmentFields}>
-                                    {fields.map(([key, value]) => (
-                                        <InputField
-                                            key={key}
-                                            label={key}
-                                            type="number"
-                                            value={typeof value === 'number' ? value : undefined}
-                                            onChange={(e) => updateSegment(index, key, parseFloat(e.target.value))}
-                                        />
-                                    ))}
+                                    {fields.map(([key, value]) => {
+                                        const metadata = FIELD_METADATA[key];
+                                        const label = metadata 
+                                            ? (metadata.units === '-' ? metadata.label : `${metadata.label} (${metadata.units})`)
+                                            : key;
+                                        
+                                        return (
+                                            <InputField
+                                                key={key}
+                                                label={label}
+                                                type="number"
+                                                value={typeof value === 'number' ? value : undefined}
+                                                onChange={(e) => updateSegment(index, key, parseFloat(e.target.value))}
+                                            />
+                                        );
+                                    })}
                                 </div>
                             </div>
                         </div>
