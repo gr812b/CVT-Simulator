@@ -81,8 +81,7 @@ export const RampBuilder = ({ value, onChange, className }: RampBuilderProps) =>
         <div className={className}>
             <div className={styles.segmentList}>
                 {segments.map((segment, index) => {
-                    const segmentRecord = segment as Record<string, unknown>;
-                    const fields = Object.entries(segmentRecord).filter(([key]) => key !== 'type');
+                    const fields = Object.entries(segment).filter(([key]) => key !== 'type');
                     
                     return (
                         <div key={index} className={styles.segment}>

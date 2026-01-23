@@ -7,7 +7,7 @@ type SegmentType = RampSegment['type'];
 // TODO: Pass defaults from backend when API supports it
 export const SEGMENT_DEFAULTS: Record<SegmentType, Partial<RampSegment>> = {
     linear: { type: 'linear', length: 0.1, slope: 0.5 },
-    circular: { type: 'circular', length: 0.1, radius: 0.05, theta_start: 0, theta_end: 0.785 },
+    circular: { type: 'circular', length: 0.1, radius: 0.05, theta_start: 0.01, theta_end: 0.785 },
     cubic_spiral_zero_k1: { type: 'cubic_spiral_zero_k1', length: 0.1, slope_start: 0.3, slope_end: 0.4, target_curvature: 10.0 },
     cubic_spiral_zero_zero: { type: 'cubic_spiral_zero_zero', length: 0.1, slope_start: 0.3, slope_end: 0.4 },
     euler_spiral: { type: 'euler_spiral', length: 0.1, slope_start: 0.3, slope_end: 0.4 },
