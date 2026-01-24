@@ -23,6 +23,7 @@ interface Scene3DViewerProps {
 export const Scene3DViewer = ({ replayController, className }: Scene3DViewerProps) => {
   const [loadedModels, setLoadedModels] = useState<Model3DConfig[]>([]);
   const [constants, setConstants] = useState<ConstantsResponse | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   /**
    * Helper to convert any distance value from BAJA units (meters) to the scene's distance unit.
@@ -36,6 +37,7 @@ export const Scene3DViewer = ({ replayController, className }: Scene3DViewerProp
 
   // Fetch simulator constants
   useEffect(() => {
+    setIsLoading(true);
     getConstants()
       .then((rawConstants) => {
         // Convert all constants to scene units
@@ -49,8 +51,14 @@ export const Scene3DViewer = ({ replayController, className }: Scene3DViewerProp
     if (!constants) return;
 
     loadCVTModels(constants)
-      .then(setLoadedModels)
-      .catch(console.error);
+      .then((models) => {
+        setLoadedModels(models);
+        setIsLoading(false);
+      })
+      .catch((error) => {
+        console.error(error);
+        setIsLoading(false);
+      });
   }, [constants]);
 
   const { containerRef, sceneController } = useScene3D({
@@ -117,5 +125,14 @@ export const Scene3DViewer = ({ replayController, className }: Scene3DViewerProp
     return unsubscribe;
   }, [sceneController, replayController, constants, toSceneDistance]);
 
-  return <div ref={containerRef} className={`${styles.scene3dViewer} ${className ?? ''}`} />;
+  return (
+    <div ref={containerRef} className={`${styles.scene3dViewer} ${className ?? ''}`}>
+      {isLoading && (
+        <div className={styles.loadingOverlay}>
+          <div className={styles.spinner} />
+          <p>Loading 3D models...</p>
+        </div>
+      )}
+    </div>
+  );
 };
