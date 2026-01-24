@@ -13,12 +13,12 @@
     justify-content: space-between;
     align-items: center;
     margin-bottom: 1rem;
+    min-height: 4rem;
 }
 
 .segmentNumber {
     font-weight: 600;
     color: var(--text-color);
-    min-height: 4rem;
 }
 
 .segmentContent {
