@@ -11,6 +11,11 @@
     line-height: 3rem;
 }
 
+@mixin title-bold {
+    font-weight: 600;
+    font-size: 1.5rem;
+}
+
 @mixin title-medium {
     font-family: "Roboto", sans-serif;
     font-weight: 500;
