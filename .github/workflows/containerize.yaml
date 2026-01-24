@@ -5,7 +5,7 @@ name: Containerize
 on:
   push:
     branches:
-      - '**' # Set to '**' for testing on all branches
+      - develop # Set to '**' for testing on all branches
   workflow_dispatch: # Allow manual triggering
 
 env:
