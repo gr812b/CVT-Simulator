@@ -65,3 +65,37 @@
     height: 100% !important;
   }
 }
+
+// DOM-based cursor overlay (bypasses ECharts render pipeline)
+.cursorOverlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.cursorLine {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 2px;
+  height: 0;
+  display: none;
+  background: rgba(255, 255, 255, 0.85);
+  will-change: transform;
+}
+
+.cursorLabel {
+  position: absolute;
+  left: 0;
+  top: 0;
+  display: none;
+  white-space: pre; // so \n shows as new lines
+  padding: 6px 8px;
+  border-radius: 6px;
+  font-size: 12px;
+  line-height: 1.2;
+  background: rgba(0, 0, 0, 0.65);
+  color: white;
+  will-change: transform;
+}

@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { useEffect } from 'react';
+import { useEffect, useCallback, useRef } from 'react';
 import styles from './Playback.module.scss';
 import { Button } from '@components/button/Button';
 import { Graph2D } from '@components/graph2D/graph2D';
@@ -9,9 +9,12 @@ import Home from '@assets/icons/home.svg?react';
 import Edit from '@assets/icons/edit.svg?react';
 import { usePlaybackData } from '@hooks/usePlaybackData';
 
+
 export const Playback = () => {
+    console.count("Playback render");
     const navigate = useNavigate();
     const playbackData = usePlaybackData();
+    const replayRef = useRef(playbackData?.replayController ?? null);
 
     // Handle redirect if no simulation data is available
     useEffect(() => {
@@ -21,12 +24,30 @@ export const Playback = () => {
         }
     }, [playbackData, navigate]);
 
+    useEffect(() => {
+        replayRef.current = playbackData?.replayController ?? null;
+    }, [playbackData?.replayController]);
+
+    const onHomeClick = useCallback(() => {
+        if (replayRef.current) {
+            replayRef.current.pause();
+        }
+        navigate('/');
+    }, [navigate]);
+
+    const onEditClick = useCallback(() => {
+        if (replayRef.current) {
+            replayRef.current.pause();
+        }
+        navigate('/input');
+    }, [navigate]);
+
     // If no data is available, show loading or return null while redirect happens
     if (!playbackData) {
         return null;
     }
 
-    const { graphs, replayController, times, activeIndex, setActiveIndex } = playbackData;
+    const { graphs, replayController, times } = playbackData;
 
     return (
         <div className={styles.playback}>
@@ -35,24 +56,23 @@ export const Playback = () => {
                 text={'Home'}
                 icon={Home}
                 className={styles.navigateButton}
-                onClick={() => {replayController.pause(); navigate('/')}}
+                onClick={onHomeClick}
             />
             <Button
                 text={'Edit'}
                 icon={Edit}
                 className={styles.navigateButton}
-                onClick={() => {replayController.pause(); navigate('/input')}}
+                onClick={onEditClick}
             />
             </div>
 
             <div className={styles.displayGrid}>
                 <Scene3DViewer replayController={replayController} />
-                {graphs.map((graph, index) => (
+                {graphs.slice(1,3).map((graph, index) => (
                     <Graph2D
                         key={index}
                         {...graph}
-                        activeIndex={activeIndex}
-                        setActiveIndex={setActiveIndex}
+                        replayController={replayController}
                     />
                 ))}
             </div>

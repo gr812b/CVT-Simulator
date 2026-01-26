@@ -302,6 +302,11 @@ function createSeries(yData: number[][], config: ChartConfig): EChartsOption['se
   for (let i = 0; i < seriesCount; i++) {
     seriesArray.push({
       type: 'line',
+      progressive: 5000,
+      progressiveThreshold: 10000,
+      sampling: 'lttb',
+      animation: false,
+      symbol: 'none',
       name: config.seriesNames?.[i] || `${config.yAxis.name} ${i + 1}`,
       smooth: config.smooth,
       showSymbol: config.showSymbol,
@@ -367,7 +372,7 @@ export function generateEChartsOptions(
   
   // Base options with dark theme styling built-in
   const baseOptions: EChartsOption = {
-    animation: true, // TODO: Only enable if playback paused
+    animation: false, // Disabled for performance - 20 graphs with animation kills FPS
     backgroundColor: COLORS.BACKGROUND,
     textStyle: { color: COLORS.TEXT },
     
@@ -471,86 +476,6 @@ export function createChartOptions(
 
 // Export constants for external use if needed
 export { COLORS as CHART_COLORS };
-
-/**
- * Generates markLines for highlighting specific data points
- */
-export function createMarkLines(
-  xData: number[],
-  yData: number[][],
-  activeIndex: number | undefined,
-  config: ChartConfig
-): MarkLineComponentOption {
-  if (activeIndex == null || activeIndex < 0 || activeIndex >= xData.length) return {};
-
-const [x, y] = [xData[activeIndex], yData[activeIndex]];
-
-  const data: NonNullable<MarkLineComponentOption['data']> = [];
-
-  if (config.showXLine) {
-    data.push({ xAxis: x });
-  }
-
-  if (config.showYLine) {
-    for (const yValue of y) {
-      data.push({ yAxis: yValue });
-    }
-  }
-
-  for (const yValue of y) {
-    data.push([{ coord: [x, yValue], symbol: 'none' }, { coord: [x, yValue], symbol: 'circle' }]);
-  }
-
-  return {
-    animation: false,
-    silent: true,
-    lineStyle: { type: 'dashed', color: COLORS.TEXT },
-    label: { show: false },
-    symbol: 'none',
-    precision: 10,
-    data,
-  };
-}
-
-/**
- * Create top-left corner label for active index display
- */
-export function createActiveIndexLabel(
-  xData: number[],
-  yData: number[][],
-  activeIndex: number | undefined,
-  config: ChartConfig
-): EChartsOption['graphic'] {
-  if (activeIndex == null || activeIndex < 0 || activeIndex >= xData.length) return [];
-
-  const [x, y] = [xData[activeIndex], yData[activeIndex]];
-
-  const xUnit = config.xAxis.unit ? ` ${config.xAxis.unit}` : '';
-  const yUnit = config.yAxis.unit ? ` ${config.yAxis.unit}` : '';
-
-  const formatYValues = () =>
-    y.length === 1 ? `${y[0].toFixed(2)}${yUnit}` : `[${y.map((value, i) => `${config.seriesNames?.[i]}: ${value.toFixed(2)}${yUnit}`).join(', ')}]`;
-
-  let text = '';
-  if (config.showXLine && config.showYLine) {
-    text = `(${config.xAxis.name}: ${x.toFixed(2)}${xUnit}, ${config.yAxis.name}: ${formatYValues()})`;
-  } else if (config.showXLine) {
-    text = `${config.yAxis.name}: ${formatYValues()}`;
-  } else if (config.showYLine) {
-    text = `${config.xAxis.name}: ${x.toFixed(2)}${xUnit}`;
-  }
-
-  return [{
-    type: 'text',
-    left: LAYOUT.GRID.LEFT,
-    top: (config.title ? LAYOUT.GRID.TOP_WITH_TITLE : LAYOUT.GRID.TOP_WITHOUT_TITLE) / 3,
-    style: {
-      text,
-      fill: COLORS.TEXT,
-    },
-    silent: true,
-  }];
-}
 
 /**
  * Determines the appropriate axis type based on data
