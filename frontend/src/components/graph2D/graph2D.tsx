@@ -133,6 +133,11 @@ function Graph2DComponent({
           yData={yData}
           activeIndex={activeIndex}
           replayController={replayController}
+          xAxisLabel={config.xAxis.name}
+          yAxisLabel={config.yAxis.name}
+          xUnit={config.xAxis.unit}
+          yUnit={config.yAxis.unit}
+          seriesNames={config.seriesNames}
           onMount={(callback) => {
             onChartReadyCallbackRef.current = callback;
             if (chartRef.current) {
