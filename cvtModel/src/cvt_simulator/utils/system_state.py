@@ -8,6 +8,7 @@ class SystemState:
     shift_velocity: float = 0.0
     shift_distance: float = 0.0
     engine_angular_velocity: float = 0.0
+    engine_angular_position: float = 0.0
 
     def to_array(self):
         """Converts the state to an array for solve_ivp."""
@@ -17,6 +18,7 @@ class SystemState:
             self.shift_velocity,
             self.shift_distance,
             self.engine_angular_velocity,
+            self.engine_angular_position,
         ]
 
     @staticmethod
@@ -28,4 +30,5 @@ class SystemState:
             shift_velocity=array[2],
             shift_distance=array[3],
             engine_angular_velocity=array[4],
+            engine_angular_position=array[5],
         )

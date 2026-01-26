@@ -5,7 +5,7 @@ import { ReplayController, ReplayEventType } from '@utils/ReplayController';
 import { getConstants, type ConstantsResponse } from '@utils/api';
 import { convertConstants, convertValue } from '@utils/conversion';
 import styles from './Scene3DViewer.module.scss';
-import { SCENE_DISTANCE_UNIT } from './modelConfigs';
+import { SCENE_DISTANCE_UNIT, SCENE_ANGLE_UNIT } from './modelConfigs';
 import { loadCVTModels, setupSceneLighting, setupSceneGrid } from './sceneElements';
 
 interface Scene3DViewerProps {
@@ -41,7 +41,7 @@ export const Scene3DViewer = ({ replayController, className }: Scene3DViewerProp
     getConstants()
       .then((rawConstants) => {
         // Convert all constants to scene units
-        const converted = convertConstants(rawConstants, { distance: SCENE_DISTANCE_UNIT });
+        const converted = convertConstants(rawConstants, { distance: SCENE_DISTANCE_UNIT, angle: SCENE_ANGLE_UNIT });
         setConstants(converted);
       })
       .catch(console.error);
@@ -93,18 +93,19 @@ export const Scene3DViewer = ({ replayController, className }: Scene3DViewerProp
     const unsubscribe = replayController.on((event) => {
       if (event.type === ReplayEventType.Progress) {
         // Extract angular velocities and shift distance
-        const primaryAngularVelocity = event.data.system?.cvt?.primaryPulleyState?.angular_velocity ?? 0;
-        const secondaryAngularVelocity = event.data.system?.cvt?.secondaryPulleyState?.angular_velocity ?? 0;
+        const primaryAngularPosition = event.data.system?.cvt?.primaryPulleyState?.angular_position ?? 0;
+        const secondaryAngularPosition = event.data.system?.cvt?.secondaryPulleyState?.angular_position ?? 0;
         const shiftDistance = event.data.state?.shift_distance ?? 0;
 
-        // Convert shift distance from BAJA preset units (meters) to scene unit (inches)
+        // Angular positions are already in radians from backend, use directly for 3D rotation
+        // (Three.js rotations use radians)
         const shiftDistanceScene = toSceneDistance(shiftDistance);
 
         // Update all models
         sceneController.updateModels({
           primaryFixed: {
             // TODO: Use angular position
-            rotation: [0, Math.PI, primaryAngularVelocity * event.data.time],
+            rotation: [0, Math.PI, primaryAngularPosition],
           },
           primaryMoving: {
             // Primary closes as shift increases: max_shift - shift_distance
@@ -112,7 +113,7 @@ export const Scene3DViewer = ({ replayController, className }: Scene3DViewerProp
           },
           secondaryFixed: {
             // TODO: Use angular position
-            rotation: [0, 0, secondaryAngularVelocity * event.data.time],
+            rotation: [0, 0, secondaryAngularPosition],
           },
           secondaryMoving: {
             // Secondary opens as shift increases: shift_distance

@@ -35,3 +35,8 @@ class SecondaryPulleyModel(PulleyModel, ABC):
         """Get secondary pulley angular velocity (wheel speed / gearbox) [rad/s]."""
         wheel_to_sec_ratio = GEARBOX_RATIO / WHEEL_RADIUS
         return state.car_velocity * wheel_to_sec_ratio
+
+    def _get_angular_position(self, state: SystemState) -> float:
+        """Get secondary pulley angular position (wheel position / gearbox) [rad]."""
+        wheel_to_sec_ratio = GEARBOX_RATIO / WHEEL_RADIUS
+        return state.car_position * wheel_to_sec_ratio

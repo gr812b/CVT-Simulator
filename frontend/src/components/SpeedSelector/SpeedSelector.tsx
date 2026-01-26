@@ -10,7 +10,7 @@ interface SpeedSelectorProps {
 export const SpeedSelector = ({ 
     speed, 
     onSpeedChange, 
-    speedOptions = [0.25, 0.5, 0.75, 1, 1.25, 1.5, 2, 2.5, 3, 4] 
+    speedOptions = [0.1, 0.25, 0.5, 0.75, 1, 1.25, 1.5, 2, 2.5, 3, 4] 
 }: SpeedSelectorProps) => {
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const dropdownRef = useRef<HTMLDivElement>(null);

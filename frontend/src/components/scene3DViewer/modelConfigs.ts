@@ -10,6 +10,7 @@ import secondaryMovingModel from '@assets/models/sec_moving.glb?url';
  * All distance values will be converted to this unit for rendering.
  */
 export const SCENE_DISTANCE_UNIT: UnitOptions['distance'] = 'in';
+export const SCENE_ANGLE_UNIT: UnitOptions['angle'] = 'rad';
 
 /**
  * Configuration for each CVT model component

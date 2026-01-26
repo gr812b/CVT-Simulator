@@ -243,6 +243,7 @@ class PulleyModel(ABC):
         wrap_angle = self._get_wrap_angle(state.shift_distance)
         radius = self._get_radius(state.shift_distance)
         angular_velocity = self._get_angular_velocity(state)
+        angular_position = self._get_angular_position(state)
 
         # Package into PulleyForces
         forces = PulleyForces(
@@ -257,6 +258,7 @@ class PulleyModel(ABC):
             wrap_angle=wrap_angle,
             radius=radius,
             angular_velocity=angular_velocity,
+            angular_position=angular_position,
             radial_from_clamping=radial_from_clamping,
             radial_from_centrifugal=radial_from_centrifugal,
             breakdown=breakdown,
@@ -276,4 +278,9 @@ class PulleyModel(ABC):
     @abstractmethod
     def _get_angular_velocity(self, state: SystemState) -> float:
         """Get pulley angular velocity [rad/s]."""
+        pass
+
+    @abstractmethod
+    def _get_angular_position(self, state: SystemState) -> float:
+        """Get pulley angular position [rad]."""
         pass

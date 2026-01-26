@@ -194,7 +194,7 @@ export interface components {
             /**
              * Initial Sheave Displacement
              * @description Initial sheave displacement in meters
-             * @default 0.0030733999999999996
+             * @default 0.0063754
              */
             initial_sheave_displacement: number;
             /**
@@ -395,6 +395,8 @@ export interface components {
             radius: number;
             /** Angular Velocity */
             angular_velocity: number;
+            /** Angular Position */
+            angular_position: number;
             /** Radial From Clamping */
             radial_from_clamping: number;
             /** Radial From Centrifugal */
@@ -496,6 +498,8 @@ export interface components {
             shift_distance: number;
             /** Engine Angular Velocity */
             engine_angular_velocity: number;
+            /** Engine Angular Position */
+            engine_angular_position: number;
         };
         /** TimeStepDataModel */
         TimeStepDataModel: {
