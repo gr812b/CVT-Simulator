@@ -31,7 +31,7 @@ export function CursorOverlay({
   const [chart, setChart] = useState<ECharts | null>(null);
   const cursorLineRef = useRef<HTMLDivElement | null>(null);
   const cursorLabelRef = useRef<HTMLDivElement | null>(null);
-  const cursorDotRef = useRef<HTMLDivElement | null>(null);
+  const cursorDotsRef = useRef<HTMLDivElement[]>([]);
   const gridRectRef = useRef<{ x: number; y: number; width: number; height: number } | null>(null);
   const currentIndexRef = useRef<number>(0);
   const isInitializedRef = useRef(false);
@@ -48,9 +48,9 @@ export function CursorOverlay({
   const updateCursorDom = useCallback((index: number) => {
     const lineEl = cursorLineRef.current;
     const labelEl = cursorLabelRef.current;
-    const dotEl = cursorDotRef.current;
+    const dotEls = cursorDotsRef.current;
 
-    if (!chart || !lineEl || !labelEl || !dotEl || !isInitializedRef.current) {
+    if (!chart || !lineEl || !labelEl || !isInitializedRef.current) {
       return;
     }
 
@@ -75,16 +75,27 @@ export function CursorOverlay({
     lineEl.style.height = `${rect.height}px`;
     lineEl.style.display = 'block';
 
-    // Position dot at first series data point
-    const firstYValue = yValues[0];
-    if (firstYValue != null) {
-      const py = chart.convertToPixel({ yAxisIndex: 0 }, firstYValue) as number;
-      const dotX = px - 6;
-      const dotY = py - 6;
-      dotEl.style.transform = `translate3d(${dotX}px, ${dotY}px, 0)`;
-      dotEl.style.display = 'block';
-    } else {
-      dotEl.style.display = 'none';
+    // Position dots for each series data point
+    yValues.forEach((yValue, seriesIndex) => {
+      const dotEl = dotEls[seriesIndex];
+      if (!dotEl) return;
+
+      if (yValue != null) {
+        const py = chart.convertToPixel({ yAxisIndex: 0 }, yValue) as number;
+        const dotX = px - 6;
+        const dotY = py - 6;
+        dotEl.style.transform = `translate3d(${dotX}px, ${dotY}px, 0)`;
+        dotEl.style.display = 'block';
+      } else {
+        dotEl.style.display = 'none';
+      }
+    });
+
+    // Hide unused dots if we have fewer series than dot elements
+    for (let i = yValues.length; i < dotEls.length; i++) {
+      if (dotEls[i]) {
+        dotEls[i].style.display = 'none';
+      }
     }
 
     // Build label with all series values
@@ -177,7 +188,16 @@ export function CursorOverlay({
   return (
     <div className={styles.cursorOverlay}>
       <div ref={cursorLineRef} className={styles.cursorLine} />
-      <div ref={cursorDotRef} className={styles.cursorDot} />
+      {yData[0]?.map((_, seriesIndex) => (
+        <div
+          key={seriesIndex}
+          ref={(el) => {
+            if (el) cursorDotsRef.current[seriesIndex] = el;
+          }}
+          className={styles.cursorDot}
+          data-series-index={seriesIndex}
+        />
+      ))}
       <div ref={cursorLabelRef} className={styles.cursorLabel} />
     </div>
   );
