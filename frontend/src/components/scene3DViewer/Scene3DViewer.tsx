@@ -104,7 +104,6 @@ export const Scene3DViewer = ({ replayController, className }: Scene3DViewerProp
         // Update all models
         sceneController.updateModels({
           primaryFixed: {
-            // TODO: Use angular position
             rotation: [0, Math.PI, primaryAngularPosition],
           },
           primaryMoving: {
@@ -112,7 +111,6 @@ export const Scene3DViewer = ({ replayController, className }: Scene3DViewerProp
             position: [0, 0, -(constants.max_shift - shiftDistanceScene)],
           },
           secondaryFixed: {
-            // TODO: Use angular position
             rotation: [0, 0, secondaryAngularPosition],
           },
           secondaryMoving: {
