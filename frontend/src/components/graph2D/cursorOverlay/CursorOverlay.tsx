@@ -1,6 +1,7 @@
 import { useRef, useEffect, useCallback, useState } from 'react';
 import type { ECharts, EChartsOption } from 'echarts';
 import styles from './CursorOverlay.module.scss';
+import { ReplayEventType } from '@utils/ReplayController';
 
 interface AxisConfig {
   label: string;
@@ -176,7 +177,7 @@ export function CursorOverlay({
   useEffect(() => {
 
     const cleanup = replayController.on((event) => {
-      if (event.type === 'progress' && event.currentIndex !== undefined) {
+      if (event.type === ReplayEventType.Progress && event.currentIndex !== undefined) {
         currentIndexRef.current = event.currentIndex;
         updateCursorDom(event.currentIndex);
       }
