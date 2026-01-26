@@ -1,5 +1,5 @@
 import { useRef, useEffect, useCallback, useState } from 'react';
-import type { ECharts } from 'echarts';
+import type { ECharts, EChartsOption } from 'echarts';
 import styles from './CursorOverlay.module.scss';
 
 interface CursorOverlayProps {
@@ -44,27 +44,6 @@ export function CursorOverlay({
       setChart(chartInstance);
     });
   }, [onMount]);
-
-  // Update grid rect when chart resizes or rerenders
-  const updateGridRect = useCallback(() => {
-    if (!chart) return;
-
-    try {
-      const gridComp = chart.getModel().getComponent('grid', 0);
-      const rect = gridComp.coordinateSystem.getRect();
-
-      if (rect && typeof rect.x === 'number' && typeof rect.width === 'number') {
-        gridRectRef.current = rect;
-
-        // Re-render cursor with current index (defaults to 0)
-        if (currentIndexRef.current !== undefined && isInitializedRef.current) {
-          updateCursorDom(currentIndexRef.current);
-        }
-      }
-    } catch {
-      // Grid not ready yet
-    }
-  }, [chart]);
 
   // Update cursor DOM position
   const updateCursorDom = useCallback((index: number) => {
@@ -124,6 +103,44 @@ export function CursorOverlay({
     labelEl.style.transform = `translate3d(${rect.x}px, 10px, 0)`;
     labelEl.style.display = 'block';
   }, [chart, xData, yData, xAxisLabel, yAxisLabel, xUnit, yUnit, seriesNames]);
+
+  // Update grid rect when chart resizes or rerenders
+  const updateGridRect = useCallback(() => {
+    if (!chart) return;
+
+    try {
+      // Use public API to get grid dimensions
+      const width = chart.getWidth();
+      const height = chart.getHeight();
+      const option = chart.getOption() as EChartsOption;
+      const gridOption = option.grid;
+      const grid = (Array.isArray(gridOption) ? gridOption[0] : gridOption) || {};
+      
+      // Calculate grid rect from option values (with defaults)
+      const left = typeof grid.left === 'number' ? grid.left : 60;
+      const right = typeof grid.right === 'number' ? grid.right : 20;
+      const top = typeof grid.top === 'number' ? grid.top : 60;
+      const bottom = typeof grid.bottom === 'number' ? grid.bottom : 60;
+      
+      const rect = {
+        x: left,
+        y: top,
+        width: width - left - right,
+        height: height - top - bottom,
+      };
+
+      if (rect && typeof rect.x === 'number' && typeof rect.width === 'number') {
+        gridRectRef.current = rect;
+
+        // Re-render cursor with current index (defaults to 0)
+        if (currentIndexRef.current !== undefined && isInitializedRef.current) {
+          updateCursorDom(currentIndexRef.current);
+        }
+      }
+    } catch {
+      // Grid not ready yet
+    }
+  }, [chart, updateCursorDom]);
 
   // Initialize when chart becomes available
   useEffect(() => {
