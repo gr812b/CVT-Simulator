@@ -11,7 +11,6 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 }
 
 export const Button = React.memo(({ text, icon: Icon, iconSide = 'left', className, ...props }: ButtonProps) => {
-    console.count("Button render");
     const renderIcon = () => <Icon className={styles.icon} />
     return (
         <button

@@ -2,31 +2,30 @@ import { useRef, useEffect, useCallback, useState } from 'react';
 import type { ECharts, EChartsOption } from 'echarts';
 import styles from './CursorOverlay.module.scss';
 
+interface AxisConfig {
+  label: string;
+  unit?: string;
+}
+
 interface CursorOverlayProps {
   xData: number[];
   yData: number[][];
-  activeIndex?: number;
-  replayController?: {
+  replayController: {
     on: (handler: (event: { type: string; currentIndex?: number }) => void) => () => void;
   };
   onMount?: (callback: (chart: ECharts) => void) => void;
-  xAxisLabel?: string;
-  yAxisLabel?: string;
-  xUnit?: string;
-  yUnit?: string;
+  xAxis: AxisConfig;
+  yAxis: AxisConfig;
   seriesNames?: string[];
 }
 
 export function CursorOverlay({
   xData,
   yData,
-  activeIndex,
   replayController,
   onMount,
-  xAxisLabel = 't',
-  yAxisLabel = 'y',
-  xUnit = '',
-  yUnit = '',
+  xAxis,
+  yAxis,
   seriesNames = [],
 }: CursorOverlayProps) {
   const [chart, setChart] = useState<ECharts | null>(null);
@@ -34,7 +33,7 @@ export function CursorOverlay({
   const cursorLabelRef = useRef<HTMLDivElement | null>(null);
   const cursorDotRef = useRef<HTMLDivElement | null>(null);
   const gridRectRef = useRef<{ x: number; y: number; width: number; height: number } | null>(null);
-  const currentIndexRef = useRef<number>(activeIndex ?? 0);
+  const currentIndexRef = useRef<number>(0);
   const isInitializedRef = useRef(false);
 
   // Register chart ready callback
@@ -89,12 +88,16 @@ export function CursorOverlay({
     }
 
     // Build label with all series values
-    const xLabel = xUnit ? `${xAxisLabel}: ${xValue.toFixed(2)} ${xUnit}` : `${xAxisLabel}: ${xValue.toFixed(2)}`;
+    const xLabel = xAxis.unit 
+      ? `${xAxis.label}: ${xValue.toFixed(2)} ${xAxis.unit}` 
+      : `${xAxis.label}: ${xValue.toFixed(2)}`;
     
     const yLabels = yValues.map((yValue, idx) => {
       if (yValue == null) return null;
-      const name = seriesNames[idx] || `${yAxisLabel}${yValues.length > 1 ? ` ${idx + 1}` : ''}`;
-      return yUnit ? `${name}: ${yValue.toFixed(2)} ${yUnit}` : `${name}: ${yValue.toFixed(2)}`;
+      const name = seriesNames[idx] || `${yAxis.label}${yValues.length > 1 ? ` ${idx + 1}` : ''}`;
+      return yAxis.unit 
+        ? `${name}: ${yValue.toFixed(2)} ${yAxis.unit}` 
+        : `${name}: ${yValue.toFixed(2)}`;
     }).filter(Boolean);
     
     const text = yLabels.length === 0 ? xLabel : `${xLabel}, ${yLabels.join(', ')}`;
@@ -102,7 +105,7 @@ export function CursorOverlay({
     labelEl.textContent = text;
     labelEl.style.transform = `translate3d(${rect.x}px, 10px, 0)`;
     labelEl.style.display = 'block';
-  }, [chart, xData, yData, xAxisLabel, yAxisLabel, xUnit, yUnit, seriesNames]);
+  }, [chart, xData, yData, xAxis, yAxis, seriesNames]);
 
   // Update grid rect when chart resizes or rerenders
   const updateGridRect = useCallback(() => {
@@ -158,17 +161,8 @@ export function CursorOverlay({
     };
   }, [chart, updateGridRect]);
 
-  // Update cursor when activeIndex prop changes
+  // Subscribe to replay controller for index updates
   useEffect(() => {
-    if (activeIndex !== undefined) {
-      currentIndexRef.current = activeIndex;
-      updateCursorDom(activeIndex);
-    }
-  }, [activeIndex, updateCursorDom]);
-
-  // Subscribe to replay controller
-  useEffect(() => {
-    if (!replayController) return;
 
     const cleanup = replayController.on((event) => {
       if (event.type === 'progress' && event.currentIndex !== undefined) {

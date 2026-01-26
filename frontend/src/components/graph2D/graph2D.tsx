@@ -22,10 +22,8 @@ export interface Graph2DProps {
   chartOptions?: Partial<EChartsOption>;
   /** Class name for the container */
   className?: string;
-  /** Current active index for cursor position */
-  activeIndex?: number;
-  /** Replay controller to subscribe to for activeIndex updates (required for functionality) */
-  replayController?: { 
+  /** Replay controller for cursor updates and interactions (required for functionality) */
+  replayController: { 
     on: (handler: (event: { type: string; currentIndex?: number }) => void) => () => void; 
     setCurrentIndex?: (index: number) => void;
     pause?: () => void;
@@ -38,7 +36,6 @@ function Graph2DComponent({
   config,
   chartOptions = {},
   className = '',
-  activeIndex,
   replayController,
 }: Graph2DProps) {
   const chartRef = useRef<ECharts | null>(null);
@@ -136,12 +133,9 @@ function Graph2DComponent({
         <CursorOverlay
           xData={xData}
           yData={yData}
-          activeIndex={activeIndex}
           replayController={replayController}
-          xAxisLabel={config.xAxis.name}
-          yAxisLabel={config.yAxis.name}
-          xUnit={config.xAxis.unit}
-          yUnit={config.yAxis.unit}
+          xAxis={{ label: config.xAxis.name, unit: config.xAxis.unit }}
+          yAxis={{ label: config.yAxis.name, unit: config.yAxis.unit }}
           seriesNames={config.seriesNames}
           onMount={(callback) => {
             onChartReadyCallbackRef.current = callback;
@@ -165,6 +159,5 @@ export const Graph2D = memo(Graph2DComponent, (prev, next) =>
   prev.config === next.config &&
   prev.chartOptions === next.chartOptions &&
   prev.className === next.className &&
-  prev.activeIndex === next.activeIndex &&
   prev.replayController === next.replayController
 );

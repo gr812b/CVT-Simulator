@@ -11,7 +11,6 @@ import { usePlaybackData } from '@hooks/usePlaybackData';
 
 
 export const Playback = () => {
-    console.count("Playback render");
     const navigate = useNavigate();
     const playbackData = usePlaybackData();
     const replayRef = useRef(playbackData?.replayController ?? null);
@@ -19,6 +18,7 @@ export const Playback = () => {
     // Handle redirect if no simulation data is available
     useEffect(() => {
         if (!playbackData) {
+            // TODO: Replace with proper toast notification
             console.warn('No simulation data available. Redirecting to input page.');
             navigate('/input');
         }
