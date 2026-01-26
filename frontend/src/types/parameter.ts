@@ -5,11 +5,13 @@ import environment from "@assets/images/environment.png"
 
 import type { components } from './api';
 
+// TODO: Pass defaults and parameters from backend when API supports it
+
 export type ParameterValue = string | number | boolean | components['schemas']['PiecewiseRampConfigModel'] | null
 export type PiecewiseRampConfig = components['schemas']['PiecewiseRampConfigModel'];
 type ParameterType = 'string' | 'number' | 'boolean' | 'ramp'
 
-export type ParameterGroup = 'primary' | 'secondary' | 'environment'
+export type ParameterGroup = 'primary' | 'ramp' | 'secondary' | 'helix' | 'environment'
 
 export type Parameter =
   | 'FlyweightMass'
@@ -47,7 +49,9 @@ type ParameterConfig = StringParameter | NumberParameter | BooleanParameter | Ra
 
 export const GROUP_TITLES: Record<ParameterGroup, string> = {
     primary: 'Primary Pulley',
+    ramp: 'Ramp Geometry',
     secondary: 'Secondary Pulley',
+    helix: 'Helix Geometry',
     environment: 'Environment',
 };
 
@@ -62,15 +66,6 @@ const PARAMETERS_IMPL = {
     units: 'kg',
     group: 'primary',
     img: primaryCVT,
-  },
-  PrimaryRampConfig: {
-    label: 'Custom Ramp Profile',
-    description:
-      'Design a custom flyweight ramp profile by combining different segment types. The ramp profile controls how the flyweight force changes as the pulley shifts. Use linear segments for constant slopes, circular arcs for smooth transitions, and spiral segments for advanced tuning. Leave null to use the default ramp.',
-    type: 'ramp',
-    defaultValue: null,
-    units: '-',
-    group: 'primary',
   },
   PrimarySpringRate: {
     label: 'Primary Spring Rate',
@@ -94,14 +89,14 @@ const PARAMETERS_IMPL = {
     group: 'primary',
     img: primaryCVT,
   },
-  SecondaryRampConfig: {
-    label: 'Custom Ramp Profile',
+  PrimaryRampConfig: {
+    label: 'Ramp Geometry',
     description:
-      'Design a custom helix ramp profile for the secondary pulley by combining different segment types. The ramp profile controls how the torque-reactive mechanism responds as the pulley shifts. Use linear segments for constant slopes, circular arcs for smooth transitions, and spiral segments for advanced tuning. Leave null to use the default ramp.',
+      'Design a custom flyweight ramp profile by combining different segment types. The ramp profile controls how the flyweight force changes as the pulley shifts. Use linear segments for constant slopes, circular arcs for smooth transitions, and spiral segments for advanced tuning. Leave null to use the default ramp.',
     type: 'ramp',
     defaultValue: null,
     units: '-',
-    group: 'secondary',
+    group: 'ramp',
   },
   SecondaryTorsionSpringRate: {
     label: 'Secondary Torsion Spring Rate',
@@ -146,6 +141,15 @@ const PARAMETERS_IMPL = {
     units: 'm',
     group: 'secondary', 
     img: secondaryCVT,
+  },
+    SecondaryRampConfig: {
+    label: 'Helix Geometry',
+    description:
+      'Design a custom helix ramp profile for the secondary pulley by combining different segment types. The ramp profile controls how the torque-reactive mechanism responds as the pulley shifts. Use linear segments for constant slopes, circular arcs for smooth transitions, and spiral segments for advanced tuning. Leave null to use the default ramp.',
+    type: 'ramp',
+    defaultValue: null,
+    units: '-',
+    group: 'helix',
   },
   VehicleWeight: {
     label: 'Vehicle Weight',
