@@ -83,7 +83,7 @@ export const Playbar = ({ replayController, times }: PlaybarProps) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [speed, setSpeed] = useState(1);
 
-  // UI index: only for display/slider. We'll update it at most once per frame.
+  // UI index: only for display/slider
   const [uiIndex, setUiIndex] = useState(0);
 
   // Refs so callbacks can be stable and not depend on changing state
@@ -91,10 +91,6 @@ export const Playbar = ({ replayController, times }: PlaybarProps) => {
   useEffect(() => {
     isPlayingRef.current = isPlaying;
   }, [isPlaying]);
-
-  // Batch Progress events to one state update per animation frame
-  const pendingIndexRef = useRef<number | null>(null);
-  const rafRef = useRef<number | null>(null);
 
   useEffect(() => {
     return replayController.on((event) => {
@@ -104,17 +100,7 @@ export const Playbar = ({ replayController, times }: PlaybarProps) => {
       }
 
       if (event.type === ReplayEventType.Progress) {
-        pendingIndexRef.current = event.currentIndex;
-
-        // already scheduled a UI update this frame
-        if (rafRef.current != null) return;
-
-        rafRef.current = requestAnimationFrame(() => {
-          rafRef.current = null;
-          const idx = pendingIndexRef.current;
-          if (idx != null) setUiIndex(idx);
-        });
-
+        setUiIndex(event.currentIndex);
         return;
       }
 
