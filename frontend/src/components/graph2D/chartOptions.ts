@@ -1,6 +1,5 @@
 import type { 
   EChartsOption, 
-  MarkLineComponentOption, 
   DefaultLabelFormatterCallbackParams 
 } from 'echarts';
 import { VALIDATION } from './validation';
@@ -75,11 +74,10 @@ const COLORS = {
   get ACCENT() { return getCSSColor('--accent', '#bb0808'); },
   get TOOLTIP_BG() { return getCSSColor('--tooltip-bg', '#2a2a2a'); },
   get ZOOM_FILL() { 
-    const accent = getCSSColor('--accent', '#bb0808');
-    const hex = accent.replace('#', '');
-    const r = parseInt(hex.substr(0, 2), 16);
-    const g = parseInt(hex.substr(2, 2), 16);
-    const b = parseInt(hex.substr(4, 2), 16);
+    const hex = getCSSColor('--accent', '#bb0808').replace('#', '');
+    const r = parseInt(hex.substring(0, 2), 16);
+    const g = parseInt(hex.substring(2, 4), 16);
+    const b = parseInt(hex.substring(4, 6), 16);
     return `rgba(${r}, ${g}, ${b}, 0.2)`;
   },
   get ERROR() { return getCSSColor('--error', '#c00f0c'); },

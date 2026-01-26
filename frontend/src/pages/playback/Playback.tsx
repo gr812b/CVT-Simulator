@@ -68,7 +68,7 @@ export const Playback = () => {
 
             <div className={styles.displayGrid}>
                 <Scene3DViewer replayController={replayController} />
-                {graphs.slice(1,3).map((graph, index) => (
+                {graphs.map((graph, index) => (
                     <Graph2D
                         key={index}
                         {...graph}
