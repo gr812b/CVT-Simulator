@@ -1,6 +1,6 @@
 import { useRef, useEffect, useCallback, useState } from 'react';
 import type { ECharts } from 'echarts';
-import styles from './Graph2D.module.scss';
+import styles from './CursorOverlay.module.scss';
 
 interface CursorOverlayProps {
   xData: number[];
@@ -166,23 +166,7 @@ export function CursorOverlay({
   return (
     <div className={styles.cursorOverlay}>
       <div ref={cursorLineRef} className={styles.cursorLine} />
-      <div 
-        ref={cursorDotRef} 
-        style={{
-          position: 'absolute',
-          left: 0,
-          top: 0,
-          width: '12px',
-          height: '12px',
-          borderRadius: '50%',
-          background: 'white',
-          boxShadow: '0 0 0 2px black',
-          zIndex: 9999,
-          pointerEvents: 'none',
-          willChange: 'transform',
-          display: 'none'
-        }}
-      />
+      <div ref={cursorDotRef} className={styles.cursorDot} />
       <div ref={cursorLabelRef} className={styles.cursorLabel} />
     </div>
   );

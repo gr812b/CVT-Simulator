@@ -1,0 +1,45 @@
+// DOM-based cursor overlay (bypasses ECharts render pipeline)
+.cursorOverlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.cursorLine {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 2px;
+  height: 0;
+  display: none;
+  background: rgba(255, 255, 255, 0.85);
+  will-change: transform;
+}
+
+.cursorDot {
+  position: absolute !important;
+  left: 0 !important;
+  top: 0 !important;
+  width: 12px !important;
+  height: 12px !important;
+  display: none;
+  border-radius: 50% !important;
+  background: white !important;
+  box-shadow: 0 0 0 2px black, 0 0 8px rgba(255, 255, 255, 0.8) !important;
+  will-change: transform;
+  z-index: 9999 !important;
+  pointer-events: none !important;
+}
+
+.cursorLabel {
+  position: absolute;
+  left: 0;
+  top: 0;
+  display: none;
+  white-space: nowrap;
+  padding: 4px 12px;
+  font-size: 16px;
+  font-weight: 500;
+  color: white;
+  will-change: transform;
+}

@@ -4,7 +4,7 @@ import cx from 'classnames';
 import styles from './Graph2D.module.scss';
 import { validateData } from './validation';
 import { createChartOptions, CHART_COLORS, type ChartConfig } from './chartOptions';
-import { CursorOverlay } from './CursorOverlay';
+import { CursorOverlay } from './cursorOverlay/CursorOverlay';
 import type { ECharts, EChartsOption } from 'echarts';
 
 
@@ -25,7 +25,11 @@ export interface Graph2DProps {
   /** Current active index for cursor position */
   activeIndex?: number;
   /** Replay controller to subscribe to for activeIndex updates (required for functionality) */
-  replayController?: { on: (handler: (event: { type: string; currentIndex?: number }) => void) => () => void; setCurrentIndex?: (index: number) => void };
+  replayController?: { 
+    on: (handler: (event: { type: string; currentIndex?: number }) => void) => () => void; 
+    setCurrentIndex?: (index: number) => void;
+    pause?: () => void;
+  };
 }
 
 function Graph2DComponent({
@@ -72,6 +76,7 @@ function Graph2DComponent({
   // Chart interaction handlers
   const handleClick = useCallback((): void => {
     if (highlightedIndexRef.current === undefined) return;
+    replayController?.pause?.();
     replayController?.setCurrentIndex?.(highlightedIndexRef.current);
   }, [replayController]);
 
