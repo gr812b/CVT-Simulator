@@ -92,7 +92,7 @@ export const Scene3DViewer = ({ replayController, className }: Scene3DViewerProp
 
     const unsubscribe = replayController.on((event) => {
       if (event.type === ReplayEventType.Progress) {
-        // Extract angular velocities and shift distance
+        // Extract angular positions and shift distance
         const primaryAngularPosition = event.data.system?.cvt?.primaryPulleyState?.angular_position ?? 0;
         const secondaryAngularPosition = event.data.system?.cvt?.secondaryPulleyState?.angular_position ?? 0;
         const shiftDistance = event.data.state?.shift_distance ?? 0;
