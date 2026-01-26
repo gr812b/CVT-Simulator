@@ -1,45 +1,49 @@
+@use '@styles/_colors';
+@use '@styles/_fonts';
+
 // DOM-based cursor overlay (bypasses ECharts render pipeline)
 .cursorOverlay {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+
+    .cursorLine {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 0.125rem;
+      height: 0;
+      display: none;
+      background: var(--primary);
+      opacity: 0.85;
+      will-change: transform;
+  }
+
+  .cursorDot {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 0.75rem;
+      height: 0.75rem;
+      display: none;
+      border-radius: 50%;
+      background: var(--primary);
+      box-shadow: 0 0 0 0.125rem var(--secondary), 0 0 0.5rem var(--primary);
+      will-change: transform;
+      pointer-events: none;
+  }
+
+  .cursorLabel {
+      position: absolute;
+      left: 0;
+      top: 0;
+      display: none;
+      white-space: nowrap;
+      padding: 0.25rem 0.75rem;
+      @include fonts.text-small;
+      color: var(--primary);
+      will-change: transform;
+  }
 }
 
-.cursorLine {
-  position: absolute;
-  left: 0;
-  top: 0;
-  width: 2px;
-  height: 0;
-  display: none;
-  background: rgba(255, 255, 255, 0.85);
-  will-change: transform;
-}
 
-.cursorDot {
-  position: absolute !important;
-  left: 0 !important;
-  top: 0 !important;
-  width: 12px !important;
-  height: 12px !important;
-  display: none;
-  border-radius: 50% !important;
-  background: white !important;
-  box-shadow: 0 0 0 2px black, 0 0 8px rgba(255, 255, 255, 0.8) !important;
-  will-change: transform;
-  z-index: 9999 !important;
-  pointer-events: none !important;
-}
-
-.cursorLabel {
-  position: absolute;
-  left: 0;
-  top: 0;
-  display: none;
-  white-space: nowrap;
-  padding: 4px 12px;
-  font-size: 16px;
-  font-weight: 500;
-  color: white;
-  will-change: transform;
-}
