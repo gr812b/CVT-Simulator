@@ -317,7 +317,7 @@ export const graphConfigs: GraphConfig[] = [
     },
     {
         xAccessor: timeAccessor,
-        yAccessor: [coupling_torqueAccessor, t_max_primAccessor, t_max_secAccessor],
+        yAccessor: [coupling_torqueAccessor, coupling_torque_unclampedAccessor, t_max_primAccessor, t_max_secAccessor],
         config: {
             title: "Slip Model Torques vs Time",
             xAxis: { name: "Time", type: "value", unit: getAxisUnit(timeAccessor) },
