@@ -26,6 +26,7 @@ function convertTimeStepData(
     shift_velocity: conv(timeStep.state.shift_velocity, 'velocity'),
     shift_distance: conv(timeStep.state.shift_distance, 'distance'),
     engine_angular_velocity: conv(timeStep.state.engine_angular_velocity, 'angular_velocity'),
+    engine_angular_position: conv(timeStep.state.engine_angular_position, 'angle'),
   },
   system: {
     slip: {
@@ -60,6 +61,7 @@ function convertTimeStepData(
         wrap_angle: conv(timeStep.system.cvt.primaryPulleyState.wrap_angle, 'angle'),
         radius: conv(timeStep.system.cvt.primaryPulleyState.radius, 'distance'),
         angular_velocity: conv(timeStep.system.cvt.primaryPulleyState.angular_velocity, 'angular_velocity'),
+        angular_position: conv(timeStep.system.cvt.primaryPulleyState.angular_position, 'angle'),
         radial_from_centrifugal: conv(timeStep.system.cvt.primaryPulleyState.radial_from_centrifugal, 'force'),
         radial_from_clamping: conv(timeStep.system.cvt.primaryPulleyState.radial_from_clamping, 'force'),
         breakdown: {
@@ -75,6 +77,7 @@ function convertTimeStepData(
         wrap_angle: conv(timeStep.system.cvt.secondaryPulleyState.wrap_angle, 'angle'),
         radius: conv(timeStep.system.cvt.secondaryPulleyState.radius, 'distance'),
         angular_velocity: conv(timeStep.system.cvt.secondaryPulleyState.angular_velocity, 'angular_velocity'),
+        angular_position: conv(timeStep.system.cvt.secondaryPulleyState.angular_position, 'angle'),
         radial_from_centrifugal: conv(timeStep.system.cvt.secondaryPulleyState.radial_from_centrifugal, 'force'),
         radial_from_clamping: conv(timeStep.system.cvt.secondaryPulleyState.radial_from_clamping, 'force'),
         breakdown: {

@@ -38,6 +38,7 @@ class SimulationRunner:
         shift_velocity=0.0,
         shift_distance=0.0,
         engine_angular_velocity=rpm_to_rad_s(1800),
+        engine_angular_position=0.0,
     )
 
     def __init__(
@@ -185,6 +186,7 @@ class SimulationRunner:
             shift_acceleration,
             state.shift_velocity,
             engine_angular_accel,
+            state.engine_angular_velocity,
         ]
 
     def _evaluate_full_shift_system(self, t: float, y: list[float]):
@@ -212,4 +214,5 @@ class SimulationRunner:
             0,
             0,
             engine_angular_accel,
+            state.engine_angular_velocity,
         ]

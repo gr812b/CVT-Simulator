@@ -84,6 +84,7 @@ class PulleyState:
     wrap_angle: float  # Belt wrap angle around pulley [rad]
     radius: float  # Effective pitch radius [m]
     angular_velocity: float  # Pulley angular velocity [rad/s]
+    angular_position: float  # Pulley angular position [rad]
 
     # Force components (for analysis/debugging)
     radial_from_clamping: float  # Radial force contribution from clamping [N]

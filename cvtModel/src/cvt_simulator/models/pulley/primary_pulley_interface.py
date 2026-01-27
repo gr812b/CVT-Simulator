@@ -31,3 +31,7 @@ class PrimaryPulleyModel(PulleyModel, ABC):
     def _get_angular_velocity(self, state: SystemState) -> float:
         """Get primary pulley angular velocity (engine speed) [rad/s]."""
         return state.engine_angular_velocity
+
+    def _get_angular_position(self, state: SystemState) -> float:
+        """Get primary pulley angular position (engine position) [rad]."""
+        return state.engine_angular_position
