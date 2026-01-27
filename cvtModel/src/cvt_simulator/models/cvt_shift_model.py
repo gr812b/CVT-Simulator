@@ -31,8 +31,8 @@ class CvtShiftModel:
         self.secondary_pulley = secondary_pulley
         self.cvt_moving_mass = 0.5  # TODO: Use constants
 
-    def get_breakdown(self, state: SystemState, t_c: float) -> CvtSystemForceBreakdown:
-        primary_state, secondary_state = self._get_pulley_states(state, t_c)
+    def get_breakdown(self, state: SystemState, coupling_torque: float) -> CvtSystemForceBreakdown:
+        primary_state, secondary_state = self._get_pulley_states(state, coupling_torque)
 
         prim_radial = primary_state.forces.radial_force
         sec_radial = secondary_state.forces.radial_force
@@ -54,13 +54,13 @@ class CvtShiftModel:
             net,
         )
 
-    def _get_pulley_states(self, state: SystemState, t_c: float):
+    def _get_pulley_states(self, state: SystemState, coupling_torque: float):
         """
         Get pulley states from both pulleys using their specific implementations.
 
         Args:
             state: Current system state
-            t_c: Transmitted torque through CVT [N⋅m]
+            coupling_torque: Transmitted torque through CVT [N⋅m]
 
         Returns:
             tuple: (primary_state, secondary_state) as PulleyState objects
@@ -73,7 +73,7 @@ class CvtShiftModel:
 
         # Get secondary pulley state (torque-reactive, needs scaled torque)
         secondary_state = self.secondary_pulley.get_pulley_state(
-            state, torque=t_c * cvt_ratio  # Scale torque by CVT ratio
+            state, torque=coupling_torque * cvt_ratio  # Scale torque by CVT ratio
         )
 
         return primary_state, secondary_state

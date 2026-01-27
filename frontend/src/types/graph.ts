@@ -24,8 +24,8 @@ const cvtRatioRateOfChangeAccessor: AccessorStrategy = (point) => point.system.s
 const enginePowerAccessor: AccessorStrategy = (point) => point.system.engine.power;
 const t_max_primAccessor: AccessorStrategy = (point) => point.system.slip.t_max_prim;
 const t_max_secAccessor: AccessorStrategy = (point) => point.system.slip.t_max_sec;
-const t_cAccessor: AccessorStrategy = (point) => point.system.slip.t_c;
-const t_c_before_clampAccessor: AccessorStrategy = (point) => point.system.slip.t_c_before_clamp;
+const coupling_torqueAccessor: AccessorStrategy = (point) => point.system.slip.coupling_torque;
+const coupling_torque_unclampedAccessor: AccessorStrategy = (point) => point.system.slip.coupling_torque_unclamped;
 const primaryRadialForceAccessor: AccessorStrategy = (point) => point.system.cvt.primaryPulleyState.forces.radial_force;
 const primaryClampingForceAccessor: AccessorStrategy = (point) => point.system.cvt.primaryPulleyState.forces.clamping_force;
 const secondaryRadialForceAccessor: AccessorStrategy = (point) => point.system.cvt.secondaryPulleyState.forces.radial_force;
@@ -104,10 +104,10 @@ export const accessorToUnit = new Map<AccessorStrategy, BaseUnitType>([
     [engineTorqueAccessor, 'torque'],
     [cvtRatioRateOfChangeAccessor, 'dimensionless_rate'],
     [enginePowerAccessor, 'power'],
-    [t_cAccessor, 'torque'],
+    [coupling_torqueAccessor, 'torque'],
     [t_max_primAccessor, 'torque'],
     [t_max_secAccessor, 'torque'],
-    [t_c_before_clampAccessor, 'torque'],
+    [coupling_torque_unclampedAccessor, 'torque'],
     [primaryRadialForceAccessor, 'force'],
     [secondaryRadialForceAccessor, 'force'],
     [primaryFlyweightForceAccessor, 'force'],
@@ -317,12 +317,12 @@ export const graphConfigs: GraphConfig[] = [
     },
     {
         xAccessor: timeAccessor,
-        yAccessor: [t_cAccessor, t_max_primAccessor, t_max_secAccessor],
+        yAccessor: [coupling_torqueAccessor, t_max_primAccessor, t_max_secAccessor],
         config: {
             title: "Slip Model Torques vs Time",
             xAxis: { name: "Time", type: "value", unit: getAxisUnit(timeAccessor) },
-            yAxis: { name: "Torque", type: "value", unit: getAxisUnit(t_cAccessor) },
-            seriesNames: ["T_c", "T_c (Before Clamp)", "T_max (Primary)", "T_max (Secondary)"],
+            yAxis: { name: "Torque", type: "value", unit: getAxisUnit(coupling_torqueAccessor) },
+            seriesNames: ["Coupling Torque", "Coupling Torque (Unclamped)", "T_max (Primary)", "T_max (Secondary)"],
             height: 400,
             showXLine: true,
             showYLine: false
@@ -330,12 +330,12 @@ export const graphConfigs: GraphConfig[] = [
     },
         {
         xAccessor: engineRpmAccessor,
-        yAccessor: [t_cAccessor, t_max_primAccessor, t_max_secAccessor],
+        yAccessor: [coupling_torqueAccessor, t_max_primAccessor, t_max_secAccessor],
         config: {
             title: "Slip Model Torques vs Engine RPM",
             xAxis: { name: "Engine RPM", type: "value", unit: getAxisUnit(engineRpmAccessor) },
             yAxis: { name: "Torque", type: "value", unit: "N·m" },
-            seriesNames: ["T_c", "T_max (Primary)", "T_max (Secondary)"],
+            seriesNames: ["Coupling Torque", "T_max (Primary)", "T_max (Secondary)"],
             height: 400,
             showXLine: true,
             showYLine: false

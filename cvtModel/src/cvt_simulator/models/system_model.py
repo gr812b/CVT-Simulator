@@ -27,7 +27,7 @@ class SystemModel:
 
         Dependency order:
         1. Slip (can calculate T_max directly from pulley models)
-        2. CVT Shift (needs slip for T_c)
+        2. CVT Shift (needs slip for coupling_torque)
         3. Engine (needs torque through belt)
         4. Car (needs torque through belt)
         """
@@ -35,16 +35,16 @@ class SystemModel:
         # Step 1: Calculate slip dynamics (using pulley models directly)
         slip_breakdown = self.slip_model.get_breakdown(state)
 
-        # Step 2: Calculate CVT dynamics with actual T_c from slip model
-        cvt_breakdown = self.cvt_shift_model.get_breakdown(state, slip_breakdown.t_c)
+        # Step 2: Calculate CVT dynamics with actual coupling_torque from slip model
+        cvt_breakdown = self.cvt_shift_model.get_breakdown(state, slip_breakdown.coupling_torque)
 
         # Step 3: Calculate engine dynamics (using slip)
         engine_breakdown = self.engine_accel_model.get_breakdown(
-            state, slip_breakdown.t_c
+            state, slip_breakdown.coupling_torque
         )
 
         # Step 4: Calculate car dynamics (using slip)
-        car_breakdown = self.car_model.get_breakdown(state, slip_breakdown.t_c)
+        car_breakdown = self.car_model.get_breakdown(state, slip_breakdown.coupling_torque)
 
         return SystemBreakdown(
             slip=slip_breakdown,

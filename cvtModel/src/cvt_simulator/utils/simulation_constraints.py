@@ -83,8 +83,8 @@ def get_shift_steady_event(system_model: SystemModel):
         # Once near full shift, return the computed shift acceleration.
         # The event will trigger when this value crosses from negative to positive.
         # TODO: Clean this up!
-        t_c = system_model.slip_model.get_breakdown(state).t_c
-        return system_model.cvt_shift_model.get_breakdown(state, t_c).acceleration
+        coupling_torque = system_model.slip_model.get_breakdown(state).coupling_torque
+        return system_model.cvt_shift_model.get_breakdown(state, coupling_torque).acceleration
 
     shift_steady_event.terminal = True
     shift_steady_event.direction = 1  # Looking for a negative-to-positive crossing.
