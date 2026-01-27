@@ -56,7 +56,7 @@ class SlipModel:
             tm.current_cvt_ratio(state.shift_distance),
         )
 
-        coupling_torque = coupling_torque_unclamped # min(coupling_torque_unclamped, t_max_prim, t_max_sec)
+        coupling_torque = coupling_torque_unclamped  # min(coupling_torque_unclamped, t_max_prim, t_max_sec)
 
         if is_slipping:
             # TODO: Consider sign

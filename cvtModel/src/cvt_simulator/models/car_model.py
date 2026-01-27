@@ -18,7 +18,9 @@ class CarModel:
         self.car_mass = car_mass
         self.load_model = load_model
 
-    def get_breakdown(self, state: SystemState, coupling_torque: float) -> CarForceBreakdown:
+    def get_breakdown(
+        self, state: SystemState, coupling_torque: float
+    ) -> CarForceBreakdown:
         load_force = self.load_model.get_breakdown(state.car_velocity).net
         load_torque = load_force * WHEEL_RADIUS
 

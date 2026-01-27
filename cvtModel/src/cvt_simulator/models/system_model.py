@@ -36,7 +36,9 @@ class SystemModel:
         slip_breakdown = self.slip_model.get_breakdown(state)
 
         # Step 2: Calculate CVT dynamics with actual coupling_torque from slip model
-        cvt_breakdown = self.cvt_shift_model.get_breakdown(state, slip_breakdown.coupling_torque)
+        cvt_breakdown = self.cvt_shift_model.get_breakdown(
+            state, slip_breakdown.coupling_torque
+        )
 
         # Step 3: Calculate engine dynamics (using slip)
         engine_breakdown = self.engine_accel_model.get_breakdown(
@@ -44,7 +46,9 @@ class SystemModel:
         )
 
         # Step 4: Calculate car dynamics (using slip)
-        car_breakdown = self.car_model.get_breakdown(state, slip_breakdown.coupling_torque)
+        car_breakdown = self.car_model.get_breakdown(
+            state, slip_breakdown.coupling_torque
+        )
 
         return SystemBreakdown(
             slip=slip_breakdown,

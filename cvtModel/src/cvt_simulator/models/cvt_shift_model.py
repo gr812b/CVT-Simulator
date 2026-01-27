@@ -31,7 +31,9 @@ class CvtShiftModel:
         self.secondary_pulley = secondary_pulley
         self.cvt_moving_mass = 0.5  # TODO: Use constants
 
-    def get_breakdown(self, state: SystemState, coupling_torque: float) -> CvtSystemForceBreakdown:
+    def get_breakdown(
+        self, state: SystemState, coupling_torque: float
+    ) -> CvtSystemForceBreakdown:
         primary_state, secondary_state = self._get_pulley_states(state, coupling_torque)
 
         prim_radial = primary_state.forces.radial_force
