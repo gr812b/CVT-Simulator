@@ -1,4 +1,4 @@
-import type { Graph2DProps } from "@components/graph2D/graph2D";
+import type { ChartConfig } from "@components/graph2D/chartOptions";
 import type { RunResponse } from "@utils/api";
 import type { BaseUnitType } from "@utils/conversion";
 import { UNIT_PRESETS, getTargetUnit } from "@utils/conversion";
@@ -7,9 +7,10 @@ type DataPoint = RunResponse['data'][number]; // TODO: Move to somewhere else (m
 
 type AccessorStrategy = (point: DataPoint) => number;
 
-type GraphConfig = Omit<Graph2DProps, 'xData' | 'yData' | 'className'> & {
+type GraphConfig = {
     xAccessor: AccessorStrategy;
     yAccessor: AccessorStrategy[];
+    config: ChartConfig;
 };
 
 export const timeAccessor: AccessorStrategy = (point) => point.time;

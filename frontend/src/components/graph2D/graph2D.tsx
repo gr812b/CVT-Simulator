@@ -1,9 +1,10 @@
-import { useMemo, useEffect, useRef, useCallback } from 'react';
+import { useMemo, useEffect, useRef, useCallback, memo } from 'react';
 import ReactECharts from 'echarts-for-react';
 import cx from 'classnames';
 import styles from './Graph2D.module.scss';
 import { validateData } from './validation';
-import { createChartOptions, createMarkLines, CHART_COLORS, createActiveIndexLabel, type ChartConfig } from './chartOptions';
+import { createChartOptions, CHART_COLORS, type ChartConfig } from './chartOptions';
+import { CursorOverlay } from './cursorOverlay/CursorOverlay';
 import type { ECharts, EChartsOption } from 'echarts';
 
 
@@ -15,28 +16,31 @@ export interface Graph2DProps {
   xData: number[];
   /** Y-axis data points */
   yData: number[][];
-  /** Index of point to highlight on chart */
-  activeIndex?: number;
-  /** Function to update the active index */
-  setActiveIndex?: (index: number) => void;
   /** Chart configuration */
   config: ChartConfig;
   /** Additional ECharts options to merge (for advanced customization) */
   chartOptions?: Partial<EChartsOption>;
   /** Class name for the container */
   className?: string;
+  /** Replay controller for cursor updates and interactions (required for functionality) */
+  replayController: { 
+    on: (handler: (event: { type: string; currentIndex?: number }) => void) => () => void; 
+    setCurrentIndex?: (index: number) => void;
+    pause?: () => void;
+  };
 }
 
-export function Graph2D({
+function Graph2DComponent({
   xData,
   yData,
-  activeIndex,
-  setActiveIndex,
   config,
   chartOptions = {},
   className = '',
+  replayController,
 }: Graph2DProps) {
   const chartRef = useRef<ECharts | null>(null);
+  const highlightedIndexRef = useRef<number | undefined>(undefined);
+  const onChartReadyCallbackRef = useRef<((chart: ECharts) => void) | null>(null);
 
   // Validate data and generate warnings/errors
   const validation = useMemo(() => validateData(xData, yData), [xData, yData]);
@@ -64,57 +68,31 @@ export function Graph2D({
     }
   }, [validation.warnings]);
 
-  // Update markLines when activeIndex changes
-  useEffect(() => {
-    if (!chartRef.current || !validation.isValid) return;
-
-    const markLine = createMarkLines(xData, yData, activeIndex, config);
-    const graphic = createActiveIndexLabel(xData, yData, activeIndex, config);
-    
-    chartRef.current.setOption({
-      series: [{ markLine }],
-      graphic,
-    });
-  }, [xData, yData, activeIndex, config, validation.isValid]);
 
 
-  const highlightedIndexRef = useRef<number | undefined>(undefined);
-
-  /**
-   * Handler for click event
-   */
+  // Chart interaction handlers
   const handleClick = useCallback((): void => {
     if (highlightedIndexRef.current === undefined) return;
-    setActiveIndex?.(highlightedIndexRef.current);
-  }, [setActiveIndex]);
+    replayController?.pause?.();
+    replayController?.setCurrentIndex?.(highlightedIndexRef.current);
+  }, [replayController]);
 
-  /**
-   * Listener for tooltip-highlighted point tracking
-   */
-  function handleTooltipUpdate(params?: { dataIndex?: number }): void {
+  const handleTooltipUpdate = useCallback((params?: { dataIndex?: number }): void => {
     highlightedIndexRef.current = params?.dataIndex;
-  }
+  }, []);
 
-  /**
-   * Handle chart ready event
-   */
-  function handleChartReady(chart: ECharts): void {
+  const handleChartReady = useCallback((chart: ECharts): void => {
     chartRef.current = chart;
-  }
+    onChartReadyCallbackRef.current?.(chart);
+  }, []);
 
-  /**
-   * Use effect to clean up event listener on unmount
-   */
   useEffect(() => {
     const chart = chartRef.current;
     if (!chart) return;
 
     const zr = chart.getZr();
     zr.on('click', handleClick);
-
-    return () => {
-      zr.off('click', handleClick);
-    };
+    return () => zr.off('click', handleClick);
   }, [handleClick]);
 
   const chartHeight = config.height ?? 600;
@@ -142,7 +120,7 @@ export function Graph2D({
         <ReactECharts
           option={echartsOptions}
           style={{ width: chartWidth, height: chartHeight }}
-          notMerge
+          notMerge={false}
           lazyUpdate
           onChartReady={handleChartReady}
           onEvents={{
@@ -151,7 +129,35 @@ export function Graph2D({
             },
           }}
         />
+
+        <CursorOverlay
+          xData={xData}
+          yData={yData}
+          replayController={replayController}
+          xAxis={{ label: config.xAxis.name, unit: config.xAxis.unit }}
+          yAxis={{ label: config.yAxis.name, unit: config.yAxis.unit }}
+          seriesNames={config.seriesNames}
+          onMount={(callback) => {
+            onChartReadyCallbackRef.current = callback;
+            if (chartRef.current) {
+              callback(chartRef.current);
+            }
+          }}
+        />
       </div>
     </div>
   );
 }
+
+/**
+ * Memoized Graph2D - uses referential equality to avoid expensive deep equality checks
+ * on large datasets. DOM-based cursor updates during playback bypass React entirely.
+ */
+export const Graph2D = memo(Graph2DComponent, (prev, next) => 
+  prev.xData === next.xData &&
+  prev.yData === next.yData &&
+  prev.config === next.config &&
+  prev.chartOptions === next.chartOptions &&
+  prev.className === next.className &&
+  prev.replayController === next.replayController
+);

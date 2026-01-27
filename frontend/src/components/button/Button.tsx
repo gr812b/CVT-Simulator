@@ -1,6 +1,7 @@
 import styles from './Button.module.scss'
 import cx from 'classnames';
 import type {ButtonHTMLAttributes, ComponentType, SVGAttributes} from 'react';
+import React from 'react';
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
     text?: string
@@ -9,7 +10,7 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
     className?: string
 }
 
-export const Button = ({ text, icon: Icon, iconSide = 'left', className, ...props }: ButtonProps) => {
+export const Button = React.memo(({ text, icon: Icon, iconSide = 'left', className, ...props }: ButtonProps) => {
     const renderIcon = () => <Icon className={styles.icon} />
     return (
         <button
@@ -21,4 +22,4 @@ export const Button = ({ text, icon: Icon, iconSide = 'left', className, ...prop
             {iconSide === 'right' && renderIcon()}
         </button>
     )
-}
+});
