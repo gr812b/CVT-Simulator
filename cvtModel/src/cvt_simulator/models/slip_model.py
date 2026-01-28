@@ -20,6 +20,7 @@ from cvt_simulator.constants.constants import (
 
 class SlipModel:
     slip_speed_threshold: float = 2  # rad/s
+    slip_speed_smoothing: float = 5.0
 
     def __init__(
         self,
@@ -62,18 +63,25 @@ class SlipModel:
             tm.current_cvt_ratio(state.shift_distance),
         )
 
-        if abs(relative_speed) > self.slip_speed_threshold:
-            sign = np.sign(relative_speed)
-            coupling_torque = t_max_capacity * sign
-            is_slipping = True
-        else:
-            if abs(torque_demand) <= t_max_capacity:
-                coupling_torque = torque_demand
-                is_slipping = False
-            else:
-                sign = np.sign(relative_speed) if relative_speed != 0 else np.sign(torque_demand)
-                coupling_torque = t_max_capacity * sign
-                is_slipping = True
+        # 1) Smooth Coulomb-like torque based on slip speed
+        #    For large |relative_speed|, tanh -> ±1, so |coupling_torque| -> t_max_capacity
+        #    For small |relative_speed|, torque ~ (t_max_capacity / slip_speed_smoothing) * relative_speed (viscous-ish)
+        coulomb_torque = t_max_capacity * np.tanh(
+            relative_speed / self.slip_speed_smoothing
+        )
+
+        # 2) Optionally respect torque_demand near zero slip by blending
+        #    When relative_speed is small, use torque_demand (clamped);
+        #    as slip grows, fade to the Coulomb model.
+        v_blend = self.slip_speed_smoothing  # you can use same scale or a separate one
+        alpha = np.clip(abs(relative_speed) / v_blend, 0.0, 1.0)
+
+        torque_demand_clamped = np.clip(torque_demand, -t_max_capacity, t_max_capacity)
+
+        coupling_torque = (1.0 - alpha) * torque_demand_clamped + alpha * coulomb_torque
+
+        # 3) Define is_slipping for diagnostics (no effect on dynamics)
+        is_slipping = abs(relative_speed) > self.slip_speed_threshold
             
 
         return SlipBreakdown(
@@ -141,8 +149,8 @@ class SlipModel:
         secondary_t_max = self.secondary_pulley.calculate_max_torque(state)
 
         # Use the more restrictive (smaller) T_MAX
-        primary_t_max = abs(primary_t_max)
-        secondary_t_max = abs(secondary_t_max)
+        primary_t_max = max(0, primary_t_max)
+        secondary_t_max = max(0, secondary_t_max)
         return primary_t_max, secondary_t_max
     
     def _relative_speed(
