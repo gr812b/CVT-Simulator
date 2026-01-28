@@ -16,6 +16,11 @@ from ..models.response_models import (
     SimulationArgsInput,
     PiecewiseRampConfigModel,
     RampPreviewResponse,
+    StreamMessage,
+    # TODO: Are these needed here or just for typing?
+    StreamProgressMessage,
+    StreamCompleteMessage,
+    StreamErrorMessage,
 )
 
 router = APIRouter()
@@ -53,14 +58,14 @@ def run(payload: SimulationArgsInput | None = None):  # type: ignore
     return result
 
 
-@router.post("/run/stream")
+@router.post("/run/stream", responses={200: {"model": StreamMessage}})
 def run_stream(payload: SimulationArgsInput | None = None):  # type: ignore
     """
     Run CVT simulation with streaming progress updates.
-    Returns newline-delimited JSON (NDJSON) stream:
-    - Progress updates: {"type": "progress", "percent": 12.5}
-    - Final result: {"type": "complete", "data": {...}}
-    - Errors: {"type": "error", "message": "..."}
+    Returns newline-delimited JSON (NDJSON) stream with messages:
+    - StreamProgressMessage: {"type": "progress", "percent": 12.5}
+    - StreamCompleteMessage: {"type": "complete", "data": {...}}
+    - StreamErrorMessage: {"type": "error", "message": "..."}
     """
     from queue import Queue, Empty
     import threading

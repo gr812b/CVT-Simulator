@@ -1,5 +1,5 @@
 import createClient from 'openapi-fetch';
-import type { paths, operations } from '@types'; // from openapi-typescript
+import type { paths, operations, components } from '@types'; // from openapi-typescript
 
 const client = createClient<paths>({ baseUrl: import.meta.env.VITE_API_BASE_URL ?? '' });
 
@@ -16,24 +16,12 @@ export async function runSimulation(body?: RunBody): Promise<RunResponse> {
 
 // Streaming endpoint types
 export type RunStreamBody = NonNullable<operations['run_stream_run_stream_post']['requestBody']>['content']['application/json'];
-
-// NDJSON streaming message types
-export type StreamProgressMessage = {
-  type: 'progress';
-  percent: number;
-};
-
-export type StreamCompleteMessage = {
-  type: 'complete';
-  data: RunResponse;
-};
-
-export type StreamErrorMessage = {
-  type: 'error';
-  message: string;
-};
-
-export type StreamMessage = StreamProgressMessage | StreamCompleteMessage | StreamErrorMessage;
+// TODO: Do we need these 3 types separately?
+export type StreamProgressMessage = components['schemas']['StreamProgressMessage'];
+export type StreamCompleteMessage = components['schemas']['StreamCompleteMessage'];
+export type StreamErrorMessage = components['schemas']['StreamErrorMessage'];
+// Use the union type directly from the operation response
+export type StreamMessage = operations['run_stream_run_stream_post']['responses']['200']['content']['application/json'];
 
 /**
  * Run simulation with streaming progress updates.
@@ -46,6 +34,8 @@ export async function runSimulationStreaming(
   body?: RunStreamBody,
   onProgress?: (percent: number) => void
 ): Promise<RunResponse> {
+  // TODO: Find a better way to encapsulate this
+  // We can't use CLIENT.POST as it doesn't have support for streaming
   const baseUrl = (import.meta.env.VITE_API_BASE_URL ?? '').replace(/\/+$/, ''); // Remove trailing slashes
   
   console.log('Starting streaming request to:', `${baseUrl}/run/stream`);
@@ -59,6 +49,7 @@ export async function runSimulationStreaming(
     body: JSON.stringify(body ?? {}),
   });
 
+  // TODO: Remove all extra logging after testing done
   console.log('Response status:', response.status, 'Headers:', Object.fromEntries(response.headers.entries()));
 
   if (!response.ok) {
@@ -99,7 +90,7 @@ export async function runSimulationStreaming(
       console.log('Processing line:', line);
 
       try {
-        const message = JSON.parse(line) as StreamMessage;
+        const message: StreamMessage = JSON.parse(line);
 
         if (message.type === 'progress') {
           console.log(`Simulation progress: ${message.percent.toFixed(1)}%`);
@@ -114,7 +105,7 @@ export async function runSimulationStreaming(
           throw new Error(message.message);
         }
       } catch (e) {
-        console.error('Error parsing streaming message:', e, line);
+        console.error('Error parsing streaming message:', e);
       }
     }
   }

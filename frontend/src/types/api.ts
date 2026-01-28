@@ -75,10 +75,10 @@ export interface paths {
         /**
          * Run Stream
          * @description Run CVT simulation with streaming progress updates.
-         *     Returns newline-delimited JSON (NDJSON) stream:
-         *     - Progress updates: {"type": "progress", "percent": 12.5}
-         *     - Final result: {"type": "complete", "data": {...}}
-         *     - Errors: {"type": "error", "message": "..."}
+         *     Returns newline-delimited JSON (NDJSON) stream with messages:
+         *     - StreamProgressMessage: {"type": "progress", "percent": 12.5}
+         *     - StreamCompleteMessage: {"type": "complete", "data": {...}}
+         *     - StreamErrorMessage: {"type": "error", "message": "..."}
          */
         post: operations["run_stream_run_stream_post"];
         delete?: never;
@@ -503,6 +503,35 @@ export interface components {
             /** Net */
             net: number;
         };
+        /** StreamCompleteMessage */
+        StreamCompleteMessage: {
+            /**
+             * Type
+             * @constant
+             */
+            type: "complete";
+            data: components["schemas"]["FormattedSimulationResultModel"];
+        };
+        /** StreamErrorMessage */
+        StreamErrorMessage: {
+            /**
+             * Type
+             * @constant
+             */
+            type: "error";
+            /** Message */
+            message: string;
+        };
+        /** StreamProgressMessage */
+        StreamProgressMessage: {
+            /**
+             * Type
+             * @constant
+             */
+            type: "progress";
+            /** Percent */
+            percent: number;
+        };
         /** SystemBreakdownModel */
         SystemBreakdownModel: {
             slip: components["schemas"]["SlipBreakdownModel"];
@@ -664,7 +693,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["StreamProgressMessage"] | components["schemas"]["StreamCompleteMessage"] | components["schemas"]["StreamErrorMessage"];
                 };
             };
             /** @description Validation Error */
