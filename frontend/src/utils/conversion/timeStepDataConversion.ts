@@ -30,8 +30,8 @@ function convertTimeStepData(
   },
   system: {
     slip: {
-      t_c: conv(timeStep.system.slip.t_c, 'torque'),
-      t_c_before_clamp: conv(timeStep.system.slip.t_c_before_clamp, 'torque'),
+      coupling_torque: conv(timeStep.system.slip.coupling_torque, 'torque'),
+      coupling_torque_unclamped: conv(timeStep.system.slip.coupling_torque_unclamped, 'torque'),
       t_max_prim: conv(timeStep.system.slip.t_max_prim, 'torque'),
       t_max_sec: conv(timeStep.system.slip.t_max_sec, 'torque'),
       cvt_ratio_derivative: conv(timeStep.system.slip.cvt_ratio_derivative, 'dimensionless_rate'),

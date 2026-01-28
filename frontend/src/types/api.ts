@@ -459,10 +459,10 @@ export interface components {
         };
         /** SlipBreakdownModel */
         SlipBreakdownModel: {
-            /** T C */
-            t_c: number;
-            /** T C Before Clamp */
-            t_c_before_clamp: number;
+            /** Coupling Torque */
+            coupling_torque: number;
+            /** Coupling Torque Unclamped */
+            coupling_torque_unclamped: number;
             /** T Max Prim */
             t_max_prim: number;
             /** T Max Sec */

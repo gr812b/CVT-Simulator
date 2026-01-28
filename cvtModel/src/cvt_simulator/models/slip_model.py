@@ -47,7 +47,7 @@ class SlipModel:
             SlipBreakdown with slip analysis
         """
         t_max_prim, t_max_sec = self.calculate_t_max(state)
-        t_c_before_clamp = self.get_tc(state)
+        coupling_torque_unclamped = self.get_tc(state)
 
         wheel_to_sec_ratio = GEARBOX_RATIO / WHEEL_RADIUS
         is_slipping = self._is_slipping(
@@ -56,19 +56,20 @@ class SlipModel:
             tm.current_cvt_ratio(state.shift_distance),
         )
 
-        t_c = min(t_c_before_clamp, t_max_prim, t_max_sec)
+        coupling_torque = coupling_torque_unclamped  # min(coupling_torque_unclamped, t_max_prim, t_max_sec)
 
         if is_slipping:
             # TODO: Consider sign
-            t_c = min(t_max_prim, t_max_sec)
+            # coupling_torque = min(t_max_prim, t_max_sec)
+            pass
 
         cvt_ratio_derivative = tm.current_cvt_ratio_rate_of_change(
             state.shift_distance, state.shift_velocity
         )
 
         return SlipBreakdown(
-            t_c=t_c,
-            t_c_before_clamp=t_c_before_clamp,
+            coupling_torque=coupling_torque,
+            coupling_torque_unclamped=coupling_torque_unclamped,
             cvt_ratio_derivative=cvt_ratio_derivative,
             t_max_prim=t_max_prim,
             t_max_sec=t_max_sec,
@@ -107,9 +108,9 @@ class SlipModel:
         numerator = eng_term + load_term - shift_term
         denominator = wheel_inertia + ENGINE_INERTIA * engine_to_wheel_ratio**2
 
-        t_c = numerator / denominator
+        coupling_torque = numerator / denominator
 
-        return t_c
+        return coupling_torque
 
     def get_wheel_speed(self, car_velocity: float):
         return car_velocity / WHEEL_RADIUS
