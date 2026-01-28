@@ -149,7 +149,7 @@ class SimulationRunner:
                 f"\rProgress: {progress_percent:.1f}% [{'=' * int(progress_percent // 2)}{' ' * (50 - int(progress_percent // 2))}]"
             )
             sys.stdout.flush()
-        
+
         # Call callback whenever progress changes by at least 0.1%
         if self.progress_callback:
             rounded_percent = round(progress_percent, 1)

@@ -18,6 +18,7 @@ from ..models.response_models import (
     RampPreviewResponse,
     StreamMessage,
     # TODO: Are these needed here or just for typing?
+    # For now, ignore on linter
     StreamProgressMessage,
     StreamCompleteMessage,
     StreamErrorMessage,
@@ -69,7 +70,7 @@ def run_stream(payload: SimulationArgsInput | None = None):  # type: ignore
     """
     from queue import Queue, Empty
     import threading
-    
+
     def generate():
         try:
             args = payload.model_dump(exclude_none=True) if payload else {}
@@ -84,11 +85,20 @@ def run_stream(payload: SimulationArgsInput | None = None):  # type: ignore
 
             def run_simulation_thread():
                 try:
-                    result = simulate_cvt_model(args, progress_callback=progress_callback)
+                    result = simulate_cvt_model(
+                        args, progress_callback=progress_callback
+                    )
                     message_queue.put({"type": "complete", "data": result})
                 except Exception as e:
                     import traceback
-                    message_queue.put({"type": "error", "message": str(e), "traceback": traceback.format_exc()})
+
+                    message_queue.put(
+                        {
+                            "type": "error",
+                            "message": str(e),
+                            "traceback": traceback.format_exc(),
+                        }
+                    )
 
             # Start simulation in background thread
             sim_thread = threading.Thread(target=run_simulation_thread)
@@ -99,18 +109,24 @@ def run_stream(payload: SimulationArgsInput | None = None):  # type: ignore
                 try:
                     # Block for up to 0.5 seconds waiting for a message
                     message = message_queue.get(timeout=0.5)
-                    
+
                     if message["type"] == "complete":
                         result = message["data"]
                         # Convert to Pydantic model the same way /run does
-                        pydantic_result = FormattedResultModel.model_validate(result, from_attributes=True)
-                        yield json.dumps({
-                            "type": "complete",
-                            "data": pydantic_result.model_dump(),
-                        }) + "\n"
+                        pydantic_result = FormattedResultModel.model_validate(
+                            result, from_attributes=True
+                        )
+                        yield json.dumps(
+                            {
+                                "type": "complete",
+                                "data": pydantic_result.model_dump(),
+                            }
+                        ) + "\n"
                         break
                     elif message["type"] == "error":
-                        yield json.dumps({"type": "error", "message": message["message"]}) + "\n"
+                        yield json.dumps(
+                            {"type": "error", "message": message["message"]}
+                        ) + "\n"
                         break
                     else:
                         # Progress update - yield immediately with padding to force flush
@@ -118,18 +134,30 @@ def run_stream(payload: SimulationArgsInput | None = None):  # type: ignore
                         # Add padding to force proxies/CDN to flush the chunk
                         padding = " " * (2048 - len(msg)) + "\n"
                         yield msg + padding
-                        
+
                 except Empty:
                     # No message yet, check if thread is still alive
                     if not sim_thread.is_alive():
                         # Thread died without sending completion - something went wrong
-                        yield json.dumps({"type": "error", "message": "Simulation thread terminated unexpectedly"}) + "\n"
+                        yield json.dumps(
+                            {
+                                "type": "error",
+                                "message": "Simulation thread terminated unexpectedly",
+                            }
+                        ) + "\n"
                         break
                     # Otherwise continue waiting for messages
 
         except Exception as e:
             import traceback
-            yield json.dumps({"type": "error", "message": str(e), "traceback": traceback.format_exc()}) + "\n"
+
+            yield json.dumps(
+                {
+                    "type": "error",
+                    "message": str(e),
+                    "traceback": traceback.format_exc(),
+                }
+            ) + "\n"
 
     return StreamingResponse(
         generate(),
@@ -139,7 +167,6 @@ def run_stream(payload: SimulationArgsInput | None = None):  # type: ignore
             "X-Accel-Buffering": "no",
         },
     )
-
 
 
 # TODO: Remove this logic from endpoints / bake into cvtModel simulator

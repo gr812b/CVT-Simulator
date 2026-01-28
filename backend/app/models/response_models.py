@@ -27,7 +27,7 @@ class StreamProgressMessage(BaseModel):
 
 class StreamCompleteMessage(BaseModel):
     type: Literal["complete"]
-    data: FormattedResultModel # type: ignore
+    data: FormattedResultModel  # type: ignore
 
 
 class StreamErrorMessage(BaseModel):

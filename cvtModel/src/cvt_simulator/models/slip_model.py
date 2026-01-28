@@ -82,7 +82,6 @@ class SlipModel:
 
         # 3) Define is_slipping for diagnostics (no effect on dynamics)
         is_slipping = abs(relative_speed) > self.slip_speed_threshold
-            
 
         return SlipBreakdown(
             coupling_torque=coupling_torque,
@@ -152,9 +151,12 @@ class SlipModel:
         primary_t_max = max(0, primary_t_max)
         secondary_t_max = max(0, secondary_t_max)
         return primary_t_max, secondary_t_max
-    
+
     def _relative_speed(
-        self, primary_angular_velocity: float, secondary_angular_velocity: float, cvt_ratio: float
+        self,
+        primary_angular_velocity: float,
+        secondary_angular_velocity: float,
+        cvt_ratio: float,
     ) -> float:
         return primary_angular_velocity - (secondary_angular_velocity * cvt_ratio)
 
