@@ -61,7 +61,7 @@ const PARAMETERS_IMPL = {
     description:
       'The total mass of the flyweight arm system in the primary pulley. This includes all flyweights (typically three in most designs) and the full assembly that rotates to generate centrifugal force. The flyweight mass is responsible for producing the main clamping force in the CVT system, as it determines how strongly the pulley can grip the belt as RPM increases. Enter the combined mass of all spinning components that contribute to centrifugal clamping.',
     type: 'number',
-    defaultValue: 0.8,
+    defaultValue: 1.1,
     validate: validators.gtZero,
     units: 'kg',
     group: 'primary',
@@ -83,7 +83,7 @@ const PARAMETERS_IMPL = {
     description:
       'The initial compression (pretension) applied to the primary pulley spring before any movement occurs. This sets the starting force that must be overcome for the CVT to begin engaging. Pretension acts as an offset in the spring force equation (y = mx + b), shifting the engagement point. Note: The maximum pretension is limited by the physical design of each CVT. Adjust this value to control when the belt starts to be clamped, but be aware of hardware constraints.',
     type: 'number',
-    defaultValue: 0,
+    defaultValue: 0.3,
     validate: validators.gteZero,
     units: 'm',
     group: 'primary',
@@ -94,7 +94,17 @@ const PARAMETERS_IMPL = {
     description:
       'Design a custom flyweight ramp profile by combining different segment types. The ramp profile controls how the flyweight force changes as the pulley shifts. Use linear segments for constant slopes, circular arcs for smooth transitions, and spiral segments for advanced tuning. Leave null to use the default ramp.',
     type: 'ramp',
-    defaultValue: null,
+    defaultValue: {
+      segments: [
+        {
+          type: 'circular' as const,
+          length: 0.026,
+          radius: 0.05,
+          theta_start: 1,
+          theta_end: 1.3,
+        },
+      ],
+    } as components['schemas']['PiecewiseRampConfigModel'],
     units: '-',
     group: 'ramp',
   },
@@ -103,7 +113,7 @@ const PARAMETERS_IMPL = {
     description:
       'The spring rate of the torsional aspect of the secondary pulley spring. This is the main force component, applying torque through the helix mechanism to resist shifting. In the spring force equation (y = mx + b), this rate is the "m" (slope), controlling how much torque increases as the spring is twisted. The secondary spring has both torsional and compressional effects, but torsional is much larger. For more on how the helix geometry affects this, see the helix geometry documentation.',
     type: 'number',
-    defaultValue: 30,
+    defaultValue: 60,
     validate: validators.gtZero,
     units: 'Nm/rad',
     group: 'secondary',
@@ -114,7 +124,7 @@ const PARAMETERS_IMPL = {
     description:
       'The spring rate of the compressional aspect of the secondary pulley spring. This is a smaller force component compared to the torsional aspect, but it still contributes to shifting. In the spring force equation (y = mx + b), this rate is the "m" (slope), controlling how quickly force decreases as the spring is decompressed. The secondary spring is primarily torsional, but the compressional effect is non-negligible and helps the pulley shift.',
     type: 'number',
-    defaultValue: 1,
+    defaultValue: 7000,
     validate: validators.gtZero,
     units: 'N/m',
     group: 'secondary',
@@ -136,7 +146,7 @@ const PARAMETERS_IMPL = {
     description:
       'The initial pretension (offset) of the compressional component of the secondary pulley spring, measured in meters. This sets the starting force that encourages shifting before any movement occurs, acting as the "b" in y = mx + b. Adjusting this value changes the baseline force helping the secndary pulley shift.',
     type: 'number',
-    defaultValue: 0.1,
+    defaultValue: 0.2,
     validate: validators.gteZero,
     units: 'm',
     group: 'secondary', 
@@ -147,7 +157,15 @@ const PARAMETERS_IMPL = {
     description:
       'Design a custom helix ramp profile for the secondary pulley by combining different segment types. The ramp profile controls how the torque-reactive mechanism responds as the pulley shifts. Use linear segments for constant slopes, circular arcs for smooth transitions, and spiral segments for advanced tuning. Leave null to use the default ramp.',
     type: 'ramp',
-    defaultValue: null,
+    defaultValue: {
+      segments: [
+        {
+          type: 'linear' as const,
+          length: 0.1,
+          slope: 1.25,
+        },
+      ],
+    } as components['schemas']['PiecewiseRampConfigModel'],
     units: '-',
     group: 'helix',
   },

@@ -29,7 +29,7 @@ class CombinedSolution:
 class SimulationRunner:
     """Runs a two-phase CVT system simulation."""
 
-    TOTAL_SIM_TIME = 45  # seconds
+    TOTAL_SIM_TIME = 30  # seconds
     INITIAL_STATE = SystemState(
         car_velocity=rpm_to_rad_s(0.1)
         / (GEARBOX_RATIO * tm.current_cvt_ratio(0))
