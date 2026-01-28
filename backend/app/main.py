@@ -11,6 +11,7 @@ app.add_middleware(
     allow_credentials=False,  # Set to False when using wildcard origins
     allow_methods=["*"],
     allow_headers=["*"],
+    expose_headers=["*"],  # Expose all headers for streaming
 )
 
 app.include_router(endpoints.router)

@@ -63,6 +63,30 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/run/stream": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Run Stream
+         * @description Run CVT simulation with streaming progress updates.
+         *     Returns newline-delimited JSON (NDJSON) stream:
+         *     - Progress updates: {"type": "progress", "percent": 12.5}
+         *     - Final result: {"type": "complete", "data": {...}}
+         *     - Errors: {"type": "error", "message": "..."}
+         */
+        post: operations["run_stream_run_stream_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/ramp/preview": {
         parameters: {
             query?: never;
@@ -608,6 +632,39 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["FormattedSimulationResultModel"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    run_stream_run_stream_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["SimulationArgsInput"] | null;
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
                 };
             };
             /** @description Validation Error */
