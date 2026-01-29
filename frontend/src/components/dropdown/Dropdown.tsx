@@ -31,8 +31,20 @@ export const Dropdown = <T extends string>({
                 setOpen(false);
             }
         };
+
+        const onKeyDown = (e: KeyboardEvent) => {
+            if (e.key === 'Escape' || e.key === 'Esc') {
+                setOpen(false);
+            }
+        };
+
+        document.addEventListener('keydown', onKeyDown);
         document.addEventListener('mousedown', onClickOutside);
-        return () => document.removeEventListener('mousedown', onClickOutside);
+
+        return () => {
+            document.removeEventListener('keydown', onKeyDown);
+            document.removeEventListener('mousedown', onClickOutside);
+        }
     }, []);
 
     const selected = options.find(o => o.value === value);
