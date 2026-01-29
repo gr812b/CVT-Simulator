@@ -39,11 +39,14 @@ function convertTimeStepData(
     },
     engine: {
       torque: conv(timeStep.system.engine.torque, 'torque'),
+      coupling_torque_at_engine: conv(timeStep.system.engine.coupling_torque_at_engine, 'torque'),
       power: conv(timeStep.system.engine.power, 'power'),
       angular_velocity: conv(timeStep.system.engine.angular_velocity, 'angular_velocity'),
       angular_acceleration: conv(timeStep.system.engine.angular_acceleration, 'angular_acceleration')
     },
     car: {
+      coupling_torque_at_wheel: conv(timeStep.system.car.coupling_torque_at_wheel, 'torque'),
+      load_torque_at_wheel: conv(timeStep.system.car.load_torque_at_wheel, 'torque'),
       external_forces: {
         incline_force: conv(timeStep.system.car.external_forces.incline_force, 'force'),
         drag_force: conv(timeStep.system.car.external_forces.drag_force, 'force'),

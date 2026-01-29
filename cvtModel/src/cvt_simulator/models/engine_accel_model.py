@@ -22,6 +22,7 @@ class EngineAccelModel:
 
         return EngineForceBreakdown(
             torque=torque,
+            coupling_torque_at_engine=coupling_torque,
             power=power,
             angular_velocity=angular_velocity,
             angular_acceleration=angular_accel,

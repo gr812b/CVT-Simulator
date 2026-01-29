@@ -145,6 +145,7 @@ function createTooltipFormatter(config: ChartConfig) {
     yAxisName: config.yAxis.name,
     xAxisUnit: config.xAxis.unit,
     yAxisUnit: config.yAxis.unit,
+    seriesNames: config.seriesNames,
   });
   
   // Return cached formatter if it exists
@@ -309,7 +310,7 @@ function createSeries(yData: number[][], config: ChartConfig): EChartsOption['se
       smooth: config.smooth,
       showSymbol: config.showSymbol,
       itemStyle: { color: COLORS.LINES[i % COLORS.LINES.length] },
-      lineStyle: { color: COLORS.LINES[i % COLORS.LINES.length] },
+      lineStyle: { color: COLORS.LINES[i % COLORS.LINES.length], width: 3 },
       encode: {
         x: config.xAxis.name,
         y: i + 1,
