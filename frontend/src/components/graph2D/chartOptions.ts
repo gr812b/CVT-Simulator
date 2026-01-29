@@ -145,6 +145,7 @@ function createTooltipFormatter(config: ChartConfig) {
     yAxisName: config.yAxis.name,
     xAxisUnit: config.xAxis.unit,
     yAxisUnit: config.yAxis.unit,
+    seriesNames: config.seriesNames,
   });
   
   // Return cached formatter if it exists

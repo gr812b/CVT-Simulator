@@ -17,27 +17,39 @@ export const timeAccessor: AccessorStrategy = (point) => point.time;
 const positionAccessor: AccessorStrategy = (point) => point.state.car_position;
 const velocityAccessor: AccessorStrategy = (point) => point.state.car_velocity;
 const accelerationAccessor: AccessorStrategy = (point) => point.system.car.acceleration;
+
+// Engine and CVT stuff
 const cvtRatioAccessor: AccessorStrategy = (point) => point.system.cvt.cvt_ratio;
 const engineRpmAccessor: AccessorStrategy = (point) => point.system.engine.angular_velocity;
 const engineTorqueAccessor: AccessorStrategy = (point) => point.system.engine.torque;
 const cvtRatioRateOfChangeAccessor: AccessorStrategy = (point) => point.system.slip.cvt_ratio_derivative;
 const enginePowerAccessor: AccessorStrategy = (point) => point.system.engine.power;
+
+// Slip model accessors
 const t_max_primAccessor: AccessorStrategy = (point) => point.system.slip.t_max_prim;
 const t_max_secAccessor: AccessorStrategy = (point) => point.system.slip.t_max_sec;
 const coupling_torqueAccessor: AccessorStrategy = (point) => point.system.slip.coupling_torque;
 const torque_demandAccessor: AccessorStrategy = (point) => point.system.slip.torque_demand;
-const primaryRadialForceAccessor: AccessorStrategy = (point) => point.system.cvt.primaryPulleyState.forces.radial_force;
-const primaryClampingForceAccessor: AccessorStrategy = (point) => point.system.cvt.primaryPulleyState.forces.clamping_force;
-const secondaryRadialForceAccessor: AccessorStrategy = (point) => point.system.cvt.secondaryPulleyState.forces.radial_force;
-const secondaryClampingForceAccessor: AccessorStrategy = (point) => point.system.cvt.secondaryPulleyState.forces.clamping_force;
+const isSlippingAccessor: AccessorStrategy = (point) => point.system.slip.is_slipping ? 1 : 0;
+
+// External load
 const inclineForceAccessor: AccessorStrategy = (point) => point.system.car.external_forces.incline_force;
 const dragForceAccessor: AccessorStrategy = (point) => point.system.car.external_forces.drag_force;
 const totalExternalLoadAccessor: AccessorStrategy = (point) => point.system.car.external_forces.net;
-const primaryCentrifugalForceAccessor: AccessorStrategy = (point) => point.system.cvt.primaryPulleyState.radial_from_centrifugal;
+
+// Overall pulley radial force (combined)
+const primaryRadialForceAccessor: AccessorStrategy = (point) => point.system.cvt.primaryPulleyState.forces.radial_force;
+const secondaryRadialForceAccessor: AccessorStrategy = (point) => point.system.cvt.secondaryPulleyState.forces.radial_force;
+
+// Components of radial force prior to 2sin(phi/2) multiplication
+const primaryRadialFromCentrifugalAccessor: AccessorStrategy = (point) => point.system.cvt.primaryPulleyState.radial_from_centrifugal;
 const primaryRadialFromClampingAccessor: AccessorStrategy = (point) => point.system.cvt.primaryPulleyState.radial_from_clamping;
-const secondaryCentrifugalForceAccessor: AccessorStrategy = (point) => point.system.cvt.secondaryPulleyState.radial_from_centrifugal;
+const secondaryRadialFromCentrifugalAccessor: AccessorStrategy = (point) => point.system.cvt.secondaryPulleyState.radial_from_centrifugal;
 const secondaryRadialFromClampingAccessor: AccessorStrategy = (point) => point.system.cvt.secondaryPulleyState.radial_from_clamping;
-const isSlippingAccessor: AccessorStrategy = (point) => point.system.slip.is_slipping ? 1 : 0;
+
+// Overall pulley clamping force (Axial)
+const primaryClampingForceAccessor: AccessorStrategy = (point) => point.system.cvt.primaryPulleyState.forces.clamping_force;
+const secondaryClampingForceAccessor: AccessorStrategy = (point) => point.system.cvt.secondaryPulleyState.forces.clamping_force;
 
 // Helper function to extract values from breakdown with proper error handling
 function getBreakdownValue<T>(
@@ -66,6 +78,11 @@ function getBreakdownValue<T>(
 const primaryFlyweightForceAccessor: AccessorStrategy = (point) => {
     const prf = point.system.cvt.primaryPulleyState.breakdown;
     return getBreakdownValue(prf, ['flyweightForce', 'net'], "primary pulley");
+};
+
+const rawFlyweightCentrifugalForce: AccessorStrategy = (point) => {
+    const prf = point.system.cvt.primaryPulleyState.breakdown;
+    return getBreakdownValue(prf, ['flyweightForce', 'centrifugal_force'], "primary pulley");
 };
 
 const primarySpringForceAccessor: AccessorStrategy = (point) => {
@@ -111,6 +128,7 @@ export const accessorToUnit = new Map<AccessorStrategy, BaseUnitType>([
     [primaryRadialForceAccessor, 'force'],
     [secondaryRadialForceAccessor, 'force'],
     [primaryFlyweightForceAccessor, 'force'],
+    [rawFlyweightCentrifugalForce, 'force'],
     [primarySpringForceAccessor, 'force'],
     [secondaryHelixFeedbackTorqueAccessor, 'torque'],
     [secondaryHelixSpringTorqueAccessor, 'torque'],
@@ -121,9 +139,9 @@ export const accessorToUnit = new Map<AccessorStrategy, BaseUnitType>([
     [inclineForceAccessor, 'force'],
     [dragForceAccessor, 'force'],
     [totalExternalLoadAccessor, 'force'],
-    [primaryCentrifugalForceAccessor, 'force'],
+    [primaryRadialFromCentrifugalAccessor, 'force'],
     [primaryRadialFromClampingAccessor, 'force'],
-    [secondaryCentrifugalForceAccessor, 'force'],
+    [secondaryRadialFromCentrifugalAccessor, 'force'],
     [secondaryRadialFromClampingAccessor, 'force'],
     [isSlippingAccessor, 'dimensionless'],
 ]);
@@ -139,6 +157,7 @@ function getAxisUnit(accessor: AccessorStrategy): string {
 }
 
 export const graphConfigs: GraphConfig[] = [
+    /** KINEMATICS GRAPHS */
     {
         xAccessor: timeAccessor,
         yAccessor: [positionAccessor],
@@ -172,6 +191,20 @@ export const graphConfigs: GraphConfig[] = [
             showYLine: false
         }
     },
+    /** EXTERNAL LOAD */
+    {
+        xAccessor: velocityAccessor,
+        yAccessor: [totalExternalLoadAccessor, inclineForceAccessor, dragForceAccessor],
+        config: {
+            title: "External Load Forces vs Vehicle Speed",
+            xAxis: { name: "Vehicle Speed", type: "value", unit: getAxisUnit(velocityAccessor) },
+            yAxis: { name: "Force", type: "value", unit: getAxisUnit(inclineForceAccessor) },
+            seriesNames: ["Total External Load", "Incline Force", "Air Resistance"],
+            showXLine: true,
+            showYLine: false
+        }
+    },
+    /** CVT RATIO GRAPHS */
     {
         xAccessor: timeAccessor,
         yAccessor: [cvtRatioAccessor],
@@ -179,6 +212,17 @@ export const graphConfigs: GraphConfig[] = [
             title: "CVT Ratio vs Time",
             xAxis: { name: "Time", type: "value", unit: getAxisUnit(timeAccessor) },
             yAxis: { name: "CVT Ratio", type: "value", unit: getAxisUnit(cvtRatioAccessor) },
+            showXLine: true,
+            showYLine: false
+        }
+    },
+    {
+        xAccessor: timeAccessor,
+        yAccessor: [cvtRatioRateOfChangeAccessor],
+        config: {
+            title: "CVT Ratio Rate of Change vs Time",
+            xAxis: { name: "Time", type: "value", unit: getAxisUnit(timeAccessor) },
+            yAxis: { name: "CVT Ratio Rate of Change", type: "value", unit: getAxisUnit(cvtRatioRateOfChangeAccessor) },
             showXLine: true,
             showYLine: false
         }
@@ -194,7 +238,7 @@ export const graphConfigs: GraphConfig[] = [
             showYLine: false
         }
     },
-    // Just engine rpm vs time
+    /** ENGINE GRAPHS */
     {
         xAccessor: timeAccessor,
         yAccessor: [engineRpmAccessor],
@@ -202,7 +246,6 @@ export const graphConfigs: GraphConfig[] = [
             title: "Engine RPM vs Time",
             xAxis: { name: "Time", type: "value", unit: getAxisUnit(timeAccessor) },
             yAxis: { name: "Engine RPM", type: "value", unit: getAxisUnit(engineRpmAccessor) },
-            height: 400,
             showXLine: true,
             showYLine: false
         }
@@ -229,139 +272,137 @@ export const graphConfigs: GraphConfig[] = [
             showYLine: false
         }
     },
-    {
+    /** PRIM AND SEC OVERALL GRAPHS */
+    { // Shows overall direction of shift
         xAccessor: timeAccessor,
         yAccessor: [primaryRadialForceAccessor, secondaryRadialForceAccessor],
         config: {
-            title: "Pulley Radial Forces vs Time",
+            title: "Pulley Net Radial Forces vs Time",
             xAxis: { name: "Time", type: "value", unit: "s" },
             yAxis: { name: "Radial Force", type: "value", unit: "N" },
-            seriesNames: ["Primary ", "Secondary"],
+            seriesNames: ["Primary Net", "Secondary Net"],
             showXLine: true,
             showYLine: false
         }
     },
-    {
+    { // Breakdown of radial force in belt centrifugal and clamping
         xAccessor: timeAccessor,
-        yAccessor: [primaryCentrifugalForceAccessor, primaryRadialFromClampingAccessor, secondaryCentrifugalForceAccessor, secondaryRadialFromClampingAccessor],
+        yAccessor: [ primaryRadialFromClampingAccessor, secondaryRadialFromClampingAccessor, primaryRadialFromCentrifugalAccessor, secondaryRadialFromCentrifugalAccessor],
         config: {
-            title: "Pulley Force Components vs Time",
+            title: "Radial Breakdown vs Time",
             xAxis: { name: "Time", type: "value", unit: "s" },
             yAxis: { name: "Force", type: "value", unit: "N" },
-            seriesNames: ["Primary Centrifugal", "Primary Pulley", "Secondary Centrifugal", "Secondary Pulley"],
-            height: 400,
+            seriesNames: ["Primary Pulley", "Secondary Pulley", "Primary Centrifugal", "Secondary Centrifugal"],
             showXLine: true,
             showYLine: false
         }
     },
-    {
-        xAccessor: timeAccessor,
-        yAccessor: [cvtRatioRateOfChangeAccessor],
-        config: {
-            title: "CVT Ratio Rate of Change vs Time",
-            xAxis: { name: "Time", type: "value", unit: getAxisUnit(timeAccessor) },
-            yAxis: { name: "CVT Ratio Rate of Change", type: "value", unit: getAxisUnit(cvtRatioRateOfChangeAccessor) },
-            showXLine: true,
-            showYLine: false
-        }
-    },
-    {
+    /** PRIMARY GRAPHS */
+    { // Primary axial force breakdown into components
         xAccessor: timeAccessor,
         yAccessor: [primaryClampingForceAccessor, primaryFlyweightForceAccessor, primarySpringForceAccessor],
         config: {
-            title: "Primary Forces vs Time",
+            title: "Primary Axial Forces vs Time",
             xAxis: { name: "Time", type: "value", unit: "s" },
-            yAxis: { name: "Primary Force", type: "value", unit: "N" },
+            yAxis: { name: "Force", type: "value", unit: "N" },
             seriesNames: ["Net", "Flyweight", "Spring"],
             showXLine: true,
             showYLine: false
         }
     },
-    {
-        xAccessor: timeAccessor,
-        yAccessor: [primaryRadialForceAccessor, primaryFlyweightForceAccessor, primarySpringForceAccessor],
+    { // Visualize how much ramp is doing(raw vs post ramp)
+        xAccessor: engineRpmAccessor,
+        yAccessor: [rawFlyweightCentrifugalForce, primaryFlyweightForceAccessor],
         config: {
-            title: "Primary Forces vs Time",
-            xAxis: { name: "Time", type: "value", unit: "s" },
-            yAxis: { name: "Primary Force", type: "value", unit: "N" },
-            seriesNames: ["Net", "Flyweight", "Spring"],
+            title: "Ramp Impact (Raw vs Post-Ramp) vs Engine RPM",
+            xAxis: { name: "Engine RPM", type: "value", unit: getAxisUnit(engineRpmAccessor) },
+            yAxis: { name: "Force", type: "value", unit: "N" },
+            seriesNames: ["Raw Flyweight", "Flyweight"],
             showXLine: true,
-            showYLine: false
+            showYLine: true
         }
     },
-    {
+    /** SECONDARY GRAPHS */
+    { // Top level breakdown of axial from helix and axial from spring
         xAccessor: timeAccessor,
         yAccessor: [secondaryClampingForceAccessor, secondaryHelixForceAccessor, secondarySpringCompForceAccessor],
         config: {
-            title: "Secondary Forces vs Time",
+            title: "Secondary Axial Forces vs Time",
             xAxis: { name: "Time", type: "value", unit: "s" },
             yAxis: { name: "Secondary Force", type: "value", unit: "N" },
             seriesNames: ["Net", "Helix Force", "Spring Comp Force"],
-            height: 400,
             showXLine: true,
             showYLine: false
         }
     },
-    {
+    { // Torques that go into the helix
         xAccessor: timeAccessor,
         yAccessor: [secondaryHelixFeedbackTorqueAccessor, secondaryHelixSpringTorqueAccessor],
         config: {
-            title: "Secondary Helix Torques vs Time",
+            title: "Secondary Torques vs Time",
             xAxis: { name: "Time", type: "value", unit: "s" },
             yAxis: { name: "Torque", type: "value", unit: "N·m" },
-            seriesNames: ["Helix Feedback Torque", "Helix Spring Torque"],
-            height: 400,
+            seriesNames: ["Reactive Feedback", "Torsional Spring"],
             showXLine: true,
             showYLine: false
         }
     },
-    {
+    { // Same graph as 2 above, but vs CVT ratio
+        xAccessor: cvtRatioAccessor,
+        yAccessor: [secondaryClampingForceAccessor, secondaryHelixForceAccessor, secondarySpringCompForceAccessor],
+        config: {
+            title: "Secondary Axial Forces vs CVT RATIO",
+            xAxis: { name: "CVT RATIO", type: "value", unit: getAxisUnit(cvtRatioAccessor) },
+            yAxis: { name: "Secondary Force", type: "value", unit: "N" },
+            seriesNames: ["Net", "Helix Force", "Spring Comp Force"],
+            showXLine: true,
+            showYLine: false
+        }
+    },
+    { // Same graph as 2 above, but vs CVT ratio
+        xAccessor: cvtRatioAccessor,
+        yAccessor: [secondaryHelixFeedbackTorqueAccessor, secondaryHelixSpringTorqueAccessor],
+        config: {
+            title: "Secondary Torques vs CVT RATIO",
+            xAxis: { name: "CVT RATIO", type: "value", unit: getAxisUnit(cvtRatioAccessor) },
+            yAxis: { name: "Torque", type: "value", unit: "N·m" },
+            seriesNames: ["Reactive Feedback", "Torsional Spring"],
+            showXLine: true,
+            showYLine: false
+        }
+    },
+    /** SLIP MODEL GRAPHS */
+    { // Slip model torques vs time
         xAccessor: timeAccessor,
         yAccessor: [coupling_torqueAccessor, torque_demandAccessor, t_max_primAccessor, t_max_secAccessor],
         config: {
             title: "Slip Model Torques vs Time",
             xAxis: { name: "Time", type: "value", unit: getAxisUnit(timeAccessor) },
             yAxis: { name: "Torque", type: "value", unit: getAxisUnit(coupling_torqueAccessor) },
-            seriesNames: ["Coupling Torque", "Torque Demand", "T_max (Primary)", "T_max (Secondary)"],
-            height: 400,
+            seriesNames: ["Coupling", "Demand", "T_max (Primary)", "T_max (Secondary)"],
             showXLine: true,
             showYLine: false
         }
     },
-        {
+    { // Same graph but vs Engine RPM (is this useful?)
         xAccessor: engineRpmAccessor,
         yAccessor: [coupling_torqueAccessor, t_max_primAccessor, t_max_secAccessor],
         config: {
             title: "Slip Model Torques vs Engine RPM",
             xAxis: { name: "Engine RPM", type: "value", unit: getAxisUnit(engineRpmAccessor) },
             yAxis: { name: "Torque", type: "value", unit: "N·m" },
-            seriesNames: ["Coupling Torque", "T_max (Primary)", "T_max (Secondary)"],
-            height: 400,
+            seriesNames: ["Coupling", "T_max (Primary)", "T_max (Secondary)"],
             showXLine: true,
             showYLine: false
         }
     },
-    {
-        xAccessor: velocityAccessor,
-        yAccessor: [totalExternalLoadAccessor, inclineForceAccessor, dragForceAccessor],
-        config: {
-            title: "External Load Forces vs Vehicle Speed",
-            xAxis: { name: "Vehicle Speed", type: "value", unit: getAxisUnit(velocityAccessor) },
-            yAxis: { name: "Force", type: "value", unit: getAxisUnit(inclineForceAccessor) },
-            seriesNames: ["Total External Load", "Incline Force", "Air Resistance"],
-            height: 400,
-            showXLine: true,
-            showYLine: false
-        }
-    },
-    {
+    { // Whether you are slipping or not vs time
         xAccessor: timeAccessor,
         yAccessor: [isSlippingAccessor],
         config: {
             title: "Is Slipping vs Time",
             xAxis: { name: "Time", type: "value", unit: getAxisUnit(timeAccessor) },
             yAxis: { name: "Is Slipping", type: "value", unit: "dimensionless" },
-            height: 400,
             showXLine: true,
             showYLine: false
         }
