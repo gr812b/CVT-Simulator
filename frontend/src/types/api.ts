@@ -113,6 +113,10 @@ export interface components {
     schemas: {
         /** CarForceBreakdownModel */
         CarForceBreakdownModel: {
+            /** Coupling Torque At Wheel */
+            coupling_torque_at_wheel: number;
+            /** Load Torque At Wheel */
+            load_torque_at_wheel: number;
             external_forces: components["schemas"]["ExternalLoadForceBreakdownModel"];
             /** Acceleration */
             acceleration: number;
@@ -305,6 +309,8 @@ export interface components {
         EngineForceBreakdownModel: {
             /** Torque */
             torque: number;
+            /** Coupling Torque At Engine */
+            coupling_torque_at_engine: number;
             /** Power */
             power: number;
             /** Angular Velocity */

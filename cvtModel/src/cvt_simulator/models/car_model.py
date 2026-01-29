@@ -34,6 +34,8 @@ class CarModel:
         )
 
         return CarForceBreakdown(
+            coupling_torque_at_wheel=coupling_torque * engine_to_wheel_ratio,
+            load_torque_at_wheel=load_torque,
             external_forces=self.load_model.get_breakdown(state.car_velocity),
             acceleration=accel,
         )

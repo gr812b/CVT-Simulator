@@ -115,6 +115,8 @@ class ExternalLoadForceBreakdown:
 ## Car
 @dataclass
 class CarForceBreakdown:
+    coupling_torque_at_wheel: float
+    load_torque_at_wheel: float
     external_forces: ExternalLoadForceBreakdown
     acceleration: float
 
@@ -123,6 +125,7 @@ class CarForceBreakdown:
 @dataclass
 class EngineForceBreakdown:
     torque: float
+    coupling_torque_at_engine: float
     power: float
     angular_velocity: float
     angular_acceleration: float

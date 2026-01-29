@@ -23,6 +23,12 @@ const positionAccessor: AccessorStrategy = (point) => point.state.car_position;
 const velocityAccessor: AccessorStrategy = (point) => point.state.car_velocity;
 const accelerationAccessor: AccessorStrategy = (point) => point.system.car.acceleration;
 
+// Temp
+const couplingTorqueAtWheels: AccessorStrategy = (point) => point.system.car.coupling_torque_at_wheel;
+const loadTorqueAtWheels: AccessorStrategy = (point) => point.system.car.load_torque_at_wheel;
+
+const couplingTorqueAtEngine: AccessorStrategy = (point) => point.system.engine.coupling_torque_at_engine;
+
 // Engine and CVT stuff
 const cvtRatioAccessor: AccessorStrategy = (point) => point.system.cvt.cvt_ratio;
 const engineRpmAccessor: AccessorStrategy = (point) => point.system.engine.angular_velocity;
@@ -149,6 +155,9 @@ export const accessorToUnit = new Map<AccessorStrategy, BaseUnitType>([
     [secondaryRadialFromCentrifugalAccessor, 'force'],
     [secondaryRadialFromClampingAccessor, 'force'],
     [isSlippingAccessor, 'dimensionless'],
+    [couplingTorqueAtWheels, 'torque'],
+    [loadTorqueAtWheels, 'torque'],
+    [couplingTorqueAtEngine, 'torque'],
 ]);
 
 // Helper function to get unit label for an accessor
@@ -199,6 +208,36 @@ export const graphCategories: GraphCategory[] = [
         }
     },
 ]},
+{
+    title: "Acceleration of Engine and Car",
+    graphs: [
+        // Graphs for looking at accelration of engine and wheels as separate systems
+        {
+            xAccessor: timeAccessor,
+            yAccessor: [couplingTorqueAtWheels, loadTorqueAtWheels],
+            config: {
+                title: "Torques at Wheels vs Time",
+                xAxis: { name: "Time", type: "value", unit: getAxisUnit(timeAccessor) },
+                yAxis: { name: "Torque", type: "value", unit: getAxisUnit(couplingTorqueAtWheels) },
+                seriesNames: ["Coupling Torque at Wheels", "Load Torque at Wheels"],
+                showXLine: true,
+                showYLine: false
+            }
+        },
+        {
+            xAccessor: timeAccessor,
+            yAccessor: [couplingTorqueAtEngine, engineTorqueAccessor],
+            config: {
+                title: "Torques at Engine vs Time",
+                xAxis: { name: "Time", type: "value", unit: getAxisUnit(timeAccessor) },
+                yAxis: { name: "Torque", type: "value", unit: getAxisUnit(couplingTorqueAtEngine) },
+                seriesNames: ["Coupling Torque at Engine", "Engine Torque"],
+                showXLine: true,
+                showYLine: false
+            }
+        }
+    ]
+},
 {
     title: "External Load",
     graphs: [
