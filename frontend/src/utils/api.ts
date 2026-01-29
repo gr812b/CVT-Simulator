@@ -49,8 +49,8 @@ export async function runSimulationStreaming(
     body: JSON.stringify(body ?? {}),
   });
 
-  // TODO: Remove all extra logging after testing done
-  console.log('Response status:', response.status, 'Headers:', Object.fromEntries(response.headers.entries()));
+  // TODO: Convert commented logs into notifications once added
+  // console.log('Response status:', response.status, 'Headers:', Object.fromEntries(response.headers.entries()));
 
   if (!response.ok) {
     throw new Error(`HTTP error! status: ${response.status}`);
@@ -65,17 +65,13 @@ export async function runSimulationStreaming(
   let buffer = '';
   let finalResult: RunResponse | null = null;
 
-  console.log('Starting to read stream...');
-
   while (true) {
     const { done, value } = await reader.read();
 
     if (done) {
-      console.log('Stream ended');
+      // console.log('Stream ended');
       break;
     }
-
-    console.log('Received chunk of size:', value.length);
 
     // Decode the chunk and add to buffer
     buffer += decoder.decode(value, { stream: true });
@@ -87,24 +83,21 @@ export async function runSimulationStreaming(
     for (const line of lines) {
       if (!line.trim()) continue;
 
-      console.log('Processing line:', line);
-
       try {
         const message: StreamMessage = JSON.parse(line);
 
         if (message.type === 'progress') {
-          console.log(`Simulation progress: ${message.percent.toFixed(1)}%`);
           if (onProgress) {
             onProgress(message.percent);
           }
         } else if (message.type === 'complete') {
-          console.log('Simulation complete!');
           finalResult = message.data;
         } else if (message.type === 'error') {
-          console.error('Simulation error:', message.message);
+          // console.error('Simulation error:', message.message);
           throw new Error(message.message);
         }
       } catch (e) {
+        // TODO: Convert to notification
         console.error('Error parsing streaming message:', e);
       }
     }

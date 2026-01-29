@@ -521,6 +521,8 @@ export interface components {
             type: "error";
             /** Message */
             message: string;
+            /** Traceback */
+            traceback?: string | null;
         };
         /** StreamProgressMessage */
         StreamProgressMessage: {
