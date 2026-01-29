@@ -47,7 +47,7 @@ export const Playback = () => {
         return null;
     }
 
-    const { graphs, replayController, times } = playbackData;
+    const { categorizedGraphs, replayController, times } = playbackData;
 
     return (
         <div className={styles.playback}>
@@ -67,13 +67,22 @@ export const Playback = () => {
             </div>
 
             <div className={styles.displayGrid}>
-                <Scene3DViewer replayController={replayController} />
-                {graphs.map((graph, index) => (
-                    <Graph2D
-                        key={index}
-                        {...graph}
-                        replayController={replayController}
-                    />
+                <div className={styles.sceneContainer}>
+                    <Scene3DViewer replayController={replayController} />
+                </div>
+                {categorizedGraphs.map((category, categoryIndex) => (
+                    <div key={categoryIndex} className={styles.graphCategory}>
+                        <h2 className={styles.categoryTitle}>{category.title}</h2>
+                        <div className={styles.categoryGraphs}>
+                            {category.graphs.map((graph, graphIndex) => (
+                                <Graph2D
+                                    key={graphIndex}
+                                    {...graph}
+                                    replayController={replayController}
+                                />
+                            ))}
+                        </div>
+                    </div>
                 ))}
             </div>
             <div className={styles.playbarContainer}>

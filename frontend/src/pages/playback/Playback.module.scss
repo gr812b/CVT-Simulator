@@ -30,6 +30,31 @@
         grid-auto-rows: 1fr;
         overflow-x: hidden;
         padding-right: 1rem;
+
+        .sceneContainer {
+            grid-column: 1 / -1;
+            height: 60vh;
+            min-height: 500px;
+        }
+
+        .graphCategory {
+            grid-column: 1 / -1;
+            display: contents;
+
+            .categoryTitle {
+                grid-column: 1 / -1;
+                @include fonts.title-medium;
+                color: var(--primary);
+                margin: 2rem 0 0.5rem 1rem;
+                padding: 1rem;
+                border-bottom: 0.25rem solid white;
+            }
+
+            .categoryGraphs {
+                grid-column: 1 / -1;
+                display: contents;
+            }
+        }
     }
 
     .playbarContainer {

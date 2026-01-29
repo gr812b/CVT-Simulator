@@ -13,6 +13,11 @@ type GraphConfig = {
     config: ChartConfig;
 };
 
+export type GraphCategory = {
+    title: string;
+    graphs: GraphConfig[];
+};
+
 export const timeAccessor: AccessorStrategy = (point) => point.time;
 const positionAccessor: AccessorStrategy = (point) => point.state.car_position;
 const velocityAccessor: AccessorStrategy = (point) => point.state.car_velocity;
@@ -156,8 +161,10 @@ function getAxisUnit(accessor: AccessorStrategy): string {
     return unit || '';
 }
 
-export const graphConfigs: GraphConfig[] = [
-    /** KINEMATICS GRAPHS */
+export const graphCategories: GraphCategory[] = [
+    {
+        title: "Kinematics",
+        graphs: [
     {
         xAccessor: timeAccessor,
         yAccessor: [positionAccessor],
@@ -191,6 +198,10 @@ export const graphConfigs: GraphConfig[] = [
             showYLine: false
         }
     },
+]},
+{
+    title: "External Load",
+    graphs: [
     /** EXTERNAL LOAD */
     {
         xAccessor: velocityAccessor,
@@ -204,6 +215,10 @@ export const graphConfigs: GraphConfig[] = [
             showYLine: false
         }
     },
+]},
+{
+    title: "CVT Ratio",
+    graphs: [
     /** CVT RATIO GRAPHS */
     {
         xAccessor: timeAccessor,
@@ -238,6 +253,10 @@ export const graphConfigs: GraphConfig[] = [
             showYLine: false
         }
     },
+]},
+{
+    title: "Engine",
+    graphs: [
     /** ENGINE GRAPHS */
     {
         xAccessor: timeAccessor,
@@ -272,6 +291,10 @@ export const graphConfigs: GraphConfig[] = [
             showYLine: false
         }
     },
+]},
+{
+    title: "Pulley Forces (Overall)",
+    graphs: [
     /** PRIM AND SEC OVERALL GRAPHS */
     { // Shows overall direction of shift
         xAccessor: timeAccessor,
@@ -297,6 +320,10 @@ export const graphConfigs: GraphConfig[] = [
             showYLine: false
         }
     },
+]},
+{
+    title: "Primary Pulley",
+    graphs: [
     /** PRIMARY GRAPHS */
     { // Primary axial force breakdown into components
         xAccessor: timeAccessor,
@@ -322,6 +349,10 @@ export const graphConfigs: GraphConfig[] = [
             showYLine: true
         }
     },
+]},
+{
+    title: "Secondary Pulley",
+    graphs: [
     /** SECONDARY GRAPHS */
     { // Top level breakdown of axial from helix and axial from spring
         xAccessor: timeAccessor,
@@ -371,6 +402,10 @@ export const graphConfigs: GraphConfig[] = [
             showYLine: false
         }
     },
+]},
+{
+    title: "Slip Model",
+    graphs: [
     /** SLIP MODEL GRAPHS */
     { // Slip model torques vs time
         xAccessor: timeAccessor,
@@ -407,4 +442,8 @@ export const graphConfigs: GraphConfig[] = [
             showYLine: false
         }
     }
+]}
 ];
+
+// Flatten categories into single array for backward compatibility
+export const graphConfigs: GraphConfig[] = graphCategories.flatMap(category => category.graphs);

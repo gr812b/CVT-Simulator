@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { useLocation } from 'react-router-dom';
 import type { RunResponse } from '@utils/api';
-import { buildGraphs } from '@utils/graph';
+import { buildCategorizedGraphs, type CategorizedGraphData } from '@utils/graph';
 import { ReplayController } from '@utils/ReplayController';
 import { timeAccessor } from '@types';
 
@@ -11,7 +11,7 @@ interface PlaybackLocationState {
 }
 
 interface UsePlaybackDataReturn {
-  graphs: ReturnType<typeof buildGraphs>;
+  categorizedGraphs: CategorizedGraphData[];
   replayController: ReplayController;
   times: number[];
 }
@@ -28,8 +28,8 @@ export const usePlaybackData = (): UsePlaybackDataReturn | null => {
     return simulationResult ? simulationResult.data.map(timeAccessor) : [];
   }, [simulationResult]);
 
-  const graphs = useMemo(() => {
-    return simulationResult ? buildGraphs(simulationResult) : [];
+  const categorizedGraphs = useMemo(() => {
+    return simulationResult ? buildCategorizedGraphs(simulationResult) : [];
   }, [simulationResult]);
 
   // Return null if simulation data is not available
@@ -38,7 +38,7 @@ export const usePlaybackData = (): UsePlaybackDataReturn | null => {
   }
 
   return {
-    graphs,
+    categorizedGraphs,
     replayController,
     times,
   };
