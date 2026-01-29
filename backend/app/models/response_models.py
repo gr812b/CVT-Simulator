@@ -29,6 +29,7 @@ class StreamCompleteMessage(BaseModel):
     type: Literal["complete"]
     data: FormattedResultModel  # type: ignore
 
+
 # TODO: Don't expose traceback in production
 class StreamErrorMessage(BaseModel):
     type: Literal["error"]

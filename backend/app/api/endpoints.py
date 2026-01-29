@@ -96,7 +96,8 @@ def run_stream(payload: SimulationArgsInput | None = None):  # type: ignore
                     )
 
             # Start simulation in background thread
-            sim_thread = threading.Thread(target=run_simulation_thread)
+            # TODO: Add cancellation to cvtModel to drop unused requests
+            sim_thread = threading.Thread(target=run_simulation_thread, daemon=True)
             sim_thread.start()
 
             # Stream messages as they arrive
@@ -127,8 +128,10 @@ def run_stream(payload: SimulationArgsInput | None = None):  # type: ignore
                         # Progress update - yield immediately with padding to force flush
                         msg = json.dumps(message) + "\n"
                         # Add padding to force proxies/CDN to flush the chunk
-                        padding = " " * (2048 - len(msg)) + "\n"
-                        yield msg + padding
+                        # Uncomment these lines when running on servers that buffer small responses
+                        # Such as Github Codespaces
+                        # padding = " " * (2048 - len(msg)) + "\n"
+                        yield msg  # + padding
 
                 except Empty:
                     # No message yet, check if thread is still alive
