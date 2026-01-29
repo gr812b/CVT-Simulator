@@ -12,7 +12,7 @@ import { useParameter } from '@contexts/ParameterContext';
 import { useLoading } from '@contexts/LoadingContext';
 import { useFormState } from '@hooks/useFormState';
 import { useUnsavedChangesPrompt } from '@hooks/useUnsavedChangesPrompt';
-import { runSimulation } from '@utils/api';
+import { runSimulationStreaming } from '@utils/api';
 import { mapParametersToApiBody } from '@utils/parameterMapping';
 import Home from '@assets/icons/home.svg?react';
 import ArrowUpCircle from '@assets/icons/arrow_up_circle.svg?react';
@@ -63,7 +63,12 @@ export const Input = () => {
             setLoading(true, 'Running simulation...');
 
             const apiBody = mapParametersToApiBody(parsedValues);
-            const result = await runSimulation(apiBody);
+            const result = await runSimulationStreaming(
+                apiBody,
+                (percent) => {
+                    setLoading(true, `Running simulation... ${percent.toFixed(1)}%`);
+                }
+            );
             const unitConversion = convertSimulationData(result, UNIT_PRESETS.BAJA);
 
             navigate('/playback', { 

@@ -19,6 +19,9 @@ from cvt_simulator.constants.constants import (
 
 
 class SlipModel:
+    slip_speed_threshold: float = 2  # rad/s
+    slip_speed_smoothing: float = 5.0
+
     def __init__(
         self,
         load_model: LoadModel,
@@ -46,37 +49,50 @@ class SlipModel:
         Returns:
             SlipBreakdown with slip analysis
         """
+        cvt_ratio_derivative = tm.current_cvt_ratio_rate_of_change(
+            state.shift_distance, state.shift_velocity
+        )
         t_max_prim, t_max_sec = self.calculate_t_max(state)
-        coupling_torque_unclamped = self.get_tc(state)
+        t_max_capacity = min(t_max_prim, t_max_sec)
+        torque_demand = self.get_torque_demand(state)
 
         wheel_to_sec_ratio = GEARBOX_RATIO / WHEEL_RADIUS
-        is_slipping = self._is_slipping(
+        relative_speed = self._relative_speed(
             state.engine_angular_velocity,
             state.car_velocity * wheel_to_sec_ratio,
             tm.current_cvt_ratio(state.shift_distance),
         )
 
-        coupling_torque = coupling_torque_unclamped  # min(coupling_torque_unclamped, t_max_prim, t_max_sec)
-
-        if is_slipping:
-            # TODO: Consider sign
-            # coupling_torque = min(t_max_prim, t_max_sec)
-            pass
-
-        cvt_ratio_derivative = tm.current_cvt_ratio_rate_of_change(
-            state.shift_distance, state.shift_velocity
+        # 1) Smooth Coulomb-like torque based on slip speed
+        #    For large |relative_speed|, tanh -> ±1, so |coupling_torque| -> t_max_capacity
+        #    For small |relative_speed|, torque ~ (t_max_capacity / slip_speed_smoothing) * relative_speed (viscous-ish)
+        coulomb_torque = t_max_capacity * np.tanh(
+            relative_speed / self.slip_speed_smoothing
         )
+
+        # 2) Optionally respect torque_demand near zero slip by blending
+        #    When relative_speed is small, use torque_demand (clamped);
+        #    as slip grows, fade to the Coulomb model.
+        v_blend = self.slip_speed_smoothing  # you can use same scale or a separate one
+        alpha = np.clip(abs(relative_speed) / v_blend, 0.0, 1.0)
+
+        torque_demand_clamped = np.clip(torque_demand, -t_max_capacity, t_max_capacity)
+
+        coupling_torque = (1.0 - alpha) * torque_demand_clamped + alpha * coulomb_torque
+
+        # 3) Define is_slipping for diagnostics (no effect on dynamics)
+        is_slipping = abs(relative_speed) > self.slip_speed_threshold
 
         return SlipBreakdown(
             coupling_torque=coupling_torque,
-            coupling_torque_unclamped=coupling_torque_unclamped,
+            torque_demand=torque_demand,
             cvt_ratio_derivative=cvt_ratio_derivative,
             t_max_prim=t_max_prim,
             t_max_sec=t_max_sec,
             is_slipping=is_slipping,
         )
 
-    def get_tc(self, state: SystemState):
+    def get_torque_demand(self, state: SystemState):
         wheel_inertia = DRIVELINE_INERTIA + self.car_mass * (
             WHEEL_RADIUS**2
         )  # This is the driveline + car's translational mass at wheels
@@ -132,17 +148,24 @@ class SlipModel:
         secondary_t_max = self.secondary_pulley.calculate_max_torque(state)
 
         # Use the more restrictive (smaller) T_MAX
-        # TODO: Consider direction for engine braking scenarios
-        primary_t_max = max(0.0, primary_t_max)
-        secondary_t_max = max(0.0, secondary_t_max)
+        primary_t_max = max(0, primary_t_max)
+        secondary_t_max = max(0, secondary_t_max)
         return primary_t_max, secondary_t_max
 
-    def _is_slipping(
+    def _relative_speed(
         self,
         primary_angular_velocity: float,
         secondary_angular_velocity: float,
         cvt_ratio: float,
-        tolerance: float = 2,
-    ) -> bool:
-        expected_secondary_velocity = primary_angular_velocity / cvt_ratio
-        return abs(expected_secondary_velocity - secondary_angular_velocity) > tolerance
+    ) -> float:
+        return primary_angular_velocity - (secondary_angular_velocity * cvt_ratio)
+
+    # def _is_slipping(
+    #     self,
+    #     primary_angular_velocity: float,
+    #     secondary_angular_velocity: float,
+    #     cvt_ratio: float,
+    #     tolerance: float = 2,
+    # ) -> bool:
+    #     expected_secondary_velocity = primary_angular_velocity / cvt_ratio
+    #     return abs(expected_secondary_velocity - secondary_angular_velocity) > tolerance

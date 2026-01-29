@@ -1,6 +1,6 @@
 import sys
 import numpy as np
-from typing import Callable
+from typing import Callable, Optional
 from scipy.integrate import solve_ivp
 from cvt_simulator.utils.system_state import SystemState
 from cvt_simulator.utils.simulation_result import SimulationResult
@@ -29,7 +29,7 @@ class CombinedSolution:
 class SimulationRunner:
     """Runs a two-phase CVT system simulation."""
 
-    TOTAL_SIM_TIME = 15  # seconds
+    TOTAL_SIM_TIME = 30  # seconds
     INITIAL_STATE = SystemState(
         car_velocity=rpm_to_rad_s(0.1)
         / (GEARBOX_RATIO * tm.current_cvt_ratio(0))
@@ -44,8 +44,12 @@ class SimulationRunner:
     def __init__(
         self,
         system_model: SystemModel,
+        # Optional progress callback function that takes a float percentage (0-100)
+        progress_callback: Optional[Callable[[float], None]] = None,
     ):
         self.system_model = system_model
+        self.progress_callback = progress_callback
+        self._last_callback_percent = -1.0
 
     def run_simulation(self) -> SimulationResult:
         """Run the simulation and return results."""
@@ -145,6 +149,13 @@ class SimulationRunner:
                 f"\rProgress: {progress_percent:.1f}% [{'=' * int(progress_percent // 2)}{' ' * (50 - int(progress_percent // 2))}]"
             )
             sys.stdout.flush()
+
+        # Call callback whenever progress changes by at least 0.1%
+        if self.progress_callback:
+            rounded_percent = round(progress_percent, 1)
+            if rounded_percent != self._last_callback_percent:
+                self._last_callback_percent = rounded_percent
+                self.progress_callback(progress_percent)
 
     def _evaluate_cvt_system(self, t: float, y: list[float]):
         """Evaluate system dynamics (phase 1: not at full shift)."""

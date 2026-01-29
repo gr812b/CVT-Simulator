@@ -1,5 +1,5 @@
 # backend/models/response_models.py
-from typing import List
+from typing import List, Union, Literal
 from pydantic import BaseModel
 from .auto_model import model_from_class, partial_model_from_class
 from cvt_simulator import FormattedSimulationResult, SimulationArgs, PiecewiseRampConfig
@@ -17,3 +17,24 @@ class RampPreviewResponse(BaseModel):
     slopes: List[float]
     x_min: float
     x_max: float
+
+
+# Streaming response models
+class StreamProgressMessage(BaseModel):
+    type: Literal["progress"]
+    percent: float
+
+
+class StreamCompleteMessage(BaseModel):
+    type: Literal["complete"]
+    data: FormattedResultModel  # type: ignore
+
+
+# TODO: Don't expose traceback in production
+class StreamErrorMessage(BaseModel):
+    type: Literal["error"]
+    message: str
+    traceback: str | None = None
+
+
+StreamMessage = Union[StreamProgressMessage, StreamCompleteMessage, StreamErrorMessage]

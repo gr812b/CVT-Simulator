@@ -63,6 +63,30 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/run/stream": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Run Stream
+         * @description Run CVT simulation with streaming progress updates.
+         *     Returns newline-delimited JSON (NDJSON) stream with messages:
+         *     - StreamProgressMessage: {"type": "progress", "percent": 12.5}
+         *     - StreamCompleteMessage: {"type": "complete", "data": {...}}
+         *     - StreamErrorMessage: {"type": "error", "message": "..."}
+         */
+        post: operations["run_stream_run_stream_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/ramp/preview": {
         parameters: {
             query?: never;
@@ -461,8 +485,8 @@ export interface components {
         SlipBreakdownModel: {
             /** Coupling Torque */
             coupling_torque: number;
-            /** Coupling Torque Unclamped */
-            coupling_torque_unclamped: number;
+            /** Torque Demand */
+            torque_demand: number;
             /** T Max Prim */
             t_max_prim: number;
             /** T Max Sec */
@@ -478,6 +502,37 @@ export interface components {
             rotation: number;
             /** Net */
             net: number;
+        };
+        /** StreamCompleteMessage */
+        StreamCompleteMessage: {
+            /**
+             * Type
+             * @constant
+             */
+            type: "complete";
+            data: components["schemas"]["FormattedSimulationResultModel"];
+        };
+        /** StreamErrorMessage */
+        StreamErrorMessage: {
+            /**
+             * Type
+             * @constant
+             */
+            type: "error";
+            /** Message */
+            message: string;
+            /** Traceback */
+            traceback?: string | null;
+        };
+        /** StreamProgressMessage */
+        StreamProgressMessage: {
+            /**
+             * Type
+             * @constant
+             */
+            type: "progress";
+            /** Percent */
+            percent: number;
         };
         /** SystemBreakdownModel */
         SystemBreakdownModel: {
@@ -608,6 +663,39 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["FormattedSimulationResultModel"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    run_stream_run_stream_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["SimulationArgsInput"] | null;
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StreamProgressMessage"] | components["schemas"]["StreamCompleteMessage"] | components["schemas"]["StreamErrorMessage"];
                 };
             };
             /** @description Validation Error */
