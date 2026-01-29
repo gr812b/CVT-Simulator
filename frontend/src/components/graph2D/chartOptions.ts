@@ -310,7 +310,7 @@ function createSeries(yData: number[][], config: ChartConfig): EChartsOption['se
       smooth: config.smooth,
       showSymbol: config.showSymbol,
       itemStyle: { color: COLORS.LINES[i % COLORS.LINES.length] },
-      lineStyle: { color: COLORS.LINES[i % COLORS.LINES.length] },
+      lineStyle: { color: COLORS.LINES[i % COLORS.LINES.length], width: 3 },
       encode: {
         x: config.xAxis.name,
         y: i + 1,
