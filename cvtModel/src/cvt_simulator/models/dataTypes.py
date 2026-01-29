@@ -132,7 +132,7 @@ class EngineForceBreakdown:
 @dataclass
 class SlipBreakdown:
     coupling_torque: float
-    coupling_torque_unclamped: float
+    torque_demand: float
     t_max_prim: float
     t_max_sec: float
     cvt_ratio_derivative: float

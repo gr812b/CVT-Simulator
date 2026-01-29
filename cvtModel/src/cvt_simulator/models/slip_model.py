@@ -85,7 +85,7 @@ class SlipModel:
 
         return SlipBreakdown(
             coupling_torque=coupling_torque,
-            coupling_torque_unclamped=torque_demand,
+            torque_demand=torque_demand,
             cvt_ratio_derivative=cvt_ratio_derivative,
             t_max_prim=t_max_prim,
             t_max_sec=t_max_sec,

@@ -485,8 +485,8 @@ export interface components {
         SlipBreakdownModel: {
             /** Coupling Torque */
             coupling_torque: number;
-            /** Coupling Torque Unclamped */
-            coupling_torque_unclamped: number;
+            /** Torque Demand */
+            torque_demand: number;
             /** T Max Prim */
             t_max_prim: number;
             /** T Max Sec */
