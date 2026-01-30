@@ -1,5 +1,6 @@
-import { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import styles from './Dropdown.module.scss';
+import cx from 'classnames';
 import ChevronDown from '@assets/icons/chevron_down.svg?react';
 
 interface Option<T extends string> {
@@ -48,32 +49,39 @@ export const Dropdown = <T extends string>({
     }, []);
 
     const selected = options.find(o => o.value === value);
+    const triggerId = `dropdown-trigger-${value}`;
 
     return (
-        <div ref={ref} className={`${styles.dropdown} ${className ?? ''}`}>
-            {label && <label className={styles.label}>{label}</label>}
+        <div ref={ref} className={cx(styles.dropdown, className)}>
+            {label && <label htmlFor={triggerId} className={styles.label}>{label}</label>}
 
             <button
+                id={triggerId}
                 type="button"
                 className={styles.trigger}
                 onClick={() => setOpen(o => !o)}
+                aria-label={label || 'Dropdown menu'}
+                aria-expanded={open}
             >
                 <span>{selected?.label}</span>
                 <ChevronDown className={styles.icon} />
             </button>
 
             {open && (
-                <ul className={styles.menu}>
+                <ul className={styles.menu} role="listbox">
                     {options.map(option => (
-                        <li
-                            key={option.value}
-                            className={styles.option}
-                            onClick={() => {
-                                onChange(option.value);
-                                setOpen(false);
-                            }}
-                        >
-                            {option.label}
+                        <li key={option.value} className={styles.listItem} role="option">
+                            <button
+                                className={styles.option}
+                                type="button"
+                                onClick={() => {
+                                    onChange(option.value);
+                                    setOpen(false);
+                                }}
+                                aria-selected={option.value === value}
+                            >
+                                {option.label}
+                            </button>
                         </li>
                     ))}
                 </ul>

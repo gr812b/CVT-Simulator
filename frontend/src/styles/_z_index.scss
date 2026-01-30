@@ -1,9 +1,9 @@
 @use 'sass:map';
 
 $z-index: (
-        dropdown: 1,
-        popup: 2,
-        modal: 3,
+        popup: 1,
+        modal: 2,
+        dropdown: 3,
         loading: 4,
 );
 
