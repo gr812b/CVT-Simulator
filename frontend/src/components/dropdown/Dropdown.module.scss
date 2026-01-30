@@ -32,7 +32,9 @@
     @include fonts.text-medium;
 
     &:focus {
-        outline: none;
+        outline: 2px solid var(--text-color);
+        outline-offset: -0.125rem;
+        border-radius: 0.25rem;
     }
 }
 
@@ -76,9 +78,7 @@
     }
 
     &:focus {
-        // small outline 
         outline: 2px solid var(--accent);
-        // outline-offset: -0.25rem;
         border-radius: 0.25rem;
     }
 }

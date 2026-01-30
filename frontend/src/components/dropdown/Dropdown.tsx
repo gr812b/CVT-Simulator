@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import styles from './Dropdown.module.scss';
 import cx from 'classnames';
 import ChevronDown from '@assets/icons/chevron_down.svg?react';
