@@ -2,7 +2,7 @@ import math
 from cvt_simulator.constants.car_specs import INITIAL_FLYWEIGHT_RADIUS
 from cvt_simulator.utils.conversions import meter_to_inch
 from cvt_simulator.models.ramps.circular_segment import CircularSegment
-from cvt_simulator.models.ramps.cubic_spiral_zero_k1 import CubicSpiralZeroK1
+from cvt_simulator.models.ramps.archive.cubic_spiral_zero_k1 import CubicSpiralZeroK1
 from cvt_simulator.models.ramps.linear_segment import LinearSegment
 from cvt_simulator.models.ramps.piecewise_ramp import PiecewiseRamp
 from cvt_simulator.models.ramps.archive.pro_defined_segment import ProDefinedSegment

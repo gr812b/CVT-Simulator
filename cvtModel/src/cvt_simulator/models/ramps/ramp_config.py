@@ -16,10 +16,6 @@ class RampSegmentType(str, Enum):
 
     LINEAR = "linear"
     CIRCULAR = "circular"
-    CUBIC_SPIRAL_ZERO_K1 = "cubic_spiral_zero_k1"
-    CUBIC_SPIRAL_ZERO_ZERO = "cubic_spiral_zero_zero"
-    EULER_SPIRAL = "euler_spiral"
-    PRO_DEFINED = "pro_defined"
 
 
 @dataclass
@@ -46,65 +42,10 @@ class CircularSegmentConfig:
     )
 
 
-@dataclass
-class CubicSpiralZeroK1Config:
-    """Configuration for a cubic spiral with specified final curvature."""
-
-    length: float
-    slope_start: float  # As angle in radians
-    slope_end: float  # As angle in radians
-    target_curvature: float
-    type: Literal[RampSegmentType.CUBIC_SPIRAL_ZERO_K1] = field(
-        default=RampSegmentType.CUBIC_SPIRAL_ZERO_K1, init=False
-    )
-
-
-@dataclass
-class CubicSpiralZeroZeroConfig:
-    """Configuration for a cubic spiral with zero curvature at both ends."""
-
-    length: float
-    slope_start: float  # As angle in radians
-    slope_end: float  # As angle in radians
-    type: Literal[RampSegmentType.CUBIC_SPIRAL_ZERO_ZERO] = field(
-        default=RampSegmentType.CUBIC_SPIRAL_ZERO_ZERO, init=False
-    )
-
-
-@dataclass
-class EulerSpiralConfig:
-    """Configuration for an Euler spiral segment."""
-
-    length: float
-    slope_start: float  # As angle in radians
-    slope_end: float  # As angle in radians
-    type: Literal[RampSegmentType.EULER_SPIRAL] = field(
-        default=RampSegmentType.EULER_SPIRAL, init=False
-    )
-
-
-@dataclass
-class ProDefinedSegmentConfig:
-    """Configuration for a pro-defined segment."""
-
-    length: float
-    prev_seg_height: float
-    end_length: float
-    initial_slope: float
-    r_initial: float
-    type: Literal[RampSegmentType.PRO_DEFINED] = field(
-        default=RampSegmentType.PRO_DEFINED, init=False
-    )
-
-
 # Union type for any segment configuration
 RampSegmentConfig = Union[
     LinearSegmentConfig,
     CircularSegmentConfig,
-    CubicSpiralZeroK1Config,
-    CubicSpiralZeroZeroConfig,
-    EulerSpiralConfig,
-    ProDefinedSegmentConfig,
 ]
 
 
@@ -129,10 +70,6 @@ class PiecewiseRampConfig:
         segment_type_map = {
             RampSegmentType.LINEAR: LinearSegmentConfig,
             RampSegmentType.CIRCULAR: CircularSegmentConfig,
-            RampSegmentType.CUBIC_SPIRAL_ZERO_K1: CubicSpiralZeroK1Config,
-            RampSegmentType.CUBIC_SPIRAL_ZERO_ZERO: CubicSpiralZeroZeroConfig,
-            RampSegmentType.EULER_SPIRAL: EulerSpiralConfig,
-            RampSegmentType.PRO_DEFINED: ProDefinedSegmentConfig,
         }
 
         segments = []

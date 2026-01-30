@@ -17,13 +17,6 @@ def visualize_ramps(ramps):
         if hasattr(segment, "__class__"):
             if segment.__class__.__name__ == "LinearSegment":
                 return "blue", "Linear"
-            elif segment.__class__.__name__ == "EulerSpiralSegment":
-                return "red", "Euler Spiral"
-            elif (
-                segment.__class__.__name__ == "CubicSpiralZeroZero"
-                or segment.__class__.__name__ == "CubicSpiralZeroK1"
-            ):
-                return "orange", "Cubic Spiral"
             elif segment.__class__.__name__ == "CircularSegment":
                 return "green", "Circular"
         # Default for other types:
