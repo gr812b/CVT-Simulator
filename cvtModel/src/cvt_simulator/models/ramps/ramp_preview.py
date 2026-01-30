@@ -8,8 +8,7 @@ import numpy as np
 from cvt_simulator.models.ramps.piecewise_ramp import PiecewiseRamp
 from cvt_simulator.models.ramps.ramp_config import PiecewiseRampConfig
 from cvt_simulator.utils.conversions import inch_to_meter
-
-# from cvt_simulator.constants.car_specs import MAX_SHIFT
+from cvt_simulator.constants.car_specs import MAX_SHIFT
 
 
 def generate_ramp_preview(
@@ -79,6 +78,17 @@ def main():
     print("Ramp Preview Generator - Visualization Example")
     print("=" * 60)
 
+    # Secondary Ramp Example
+    config = {
+        "segments": [
+            {
+                "type": "linear",
+                "length": MAX_SHIFT,
+                "angle": -16.699244234,
+            },
+        ]
+    }
+
     # Create a ramp with linear and circular segments using config format
     # This is the default "Enman" ramp at McMaster baja
     config = {
@@ -97,17 +107,6 @@ def main():
             },
         ]
     }
-
-    # Secondary Ramp Example
-    # config = {
-    #     "segments": [
-    #         {
-    #             "type": "linear",
-    #             "length": MAX_SHIFT,
-    #             "angle": -16.699244234,
-    #         },
-    #     ]
-    # }
 
     print("\nGenerating preview for Linear + Circular ramp...")
     result = generate_ramp_preview(config, num_points=500)
