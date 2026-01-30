@@ -1,16 +1,14 @@
 import { useState, useCallback } from 'react';
 import { Button } from '@components/button/Button';
 import { InputField } from '@components/inputField/InputField';
-import type { components } from '@types';
+import type { PiecewiseRampConfig, RampSegment, SegmentType } from '@types';
 import { SEGMENT_DEFAULTS, FIELD_METADATA } from '@types';
 import styles from './RampBuilder.module.scss';
 import Plus from '@assets/icons/plus.svg?react';
 import Trash from '@assets/icons/trash_can.svg?react';
 import { Dropdown } from '@components/dropdown/Dropdown';
 
-type RampSegment = components['schemas']['PiecewiseRampConfigModel']['segments'][number];
-type PiecewiseRampConfig = components['schemas']['PiecewiseRampConfigModel'];
-type SegmentType = RampSegment['type'];
+
 
 interface RampBuilderProps {
     value: PiecewiseRampConfig | null;
@@ -103,9 +101,9 @@ export const RampBuilder = ({ value, onChange, className }: RampBuilderProps) =>
                                     <Dropdown
                                         label="Type"
                                         value={segment.type}
-                                        onChange={(value) => changeSegmentType(index, value)}
+                                        onChange={(value) => changeSegmentType(index, value as SegmentType)}
                                         options={Object.keys(SEGMENT_DEFAULTS).map(type => ({
-                                            value: type as SegmentType,
+                                            value: type,
                                             label: type
                                                 .split('_')
                                                 .map(w => w.charAt(0).toUpperCase() + w.slice(1))

@@ -1,7 +1,8 @@
 import type { components } from './api';
 
-type RampSegment = components['schemas']['PiecewiseRampConfigModel']['segments'][number];
-type SegmentType = RampSegment['type'];
+export type RampSegment = components['schemas']['PiecewiseRampConfigModel']['segments'][number];
+export type PiecewiseRampConfig = components['schemas']['PiecewiseRampConfigModel'];
+export type SegmentType = RampSegment['type'];
 
 // Default values for creating new segments
 // TODO: Pass defaults from backend when API supports it
