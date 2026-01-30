@@ -23,14 +23,18 @@ def create_default_helix_ramp() -> PiecewiseRamp:
     """
     Create the default (linear) helix cam ramp geometry.
 
-    This ramp has a constant angle throughout the shift range,
-    providing consistent torque-to-force conversion.
+    For the helix ramp, the HEIGHT (y) represents shift distance,
+    and we need to be able to invert it to find x for a given height.
+    
+    This means the ramp should span from height 0 to MAX_SHIFT.
 
     Returns:
         PiecewiseRamp with linear helix geometry
     """
     ramp = PiecewiseRamp()
-    ramp.add_segment(LinearSegment(x_start=0, x_end=MAX_SHIFT, slope=-0.3))
+    # Create a linear segment where y goes from 0 to MAX_SHIFT
+    # Using negative angle so slope is negative (helix ramps down)
+    ramp.add_segment(LinearSegment(length=MAX_SHIFT / 0.3, angle=-16.699))  # atan(-0.3) ≈ -16.7°
     return ramp
 
 
@@ -77,6 +81,7 @@ class PhysicalSecondaryPulley(SecondaryPulleyModel):
         self.initial_rotation = initial_rotation
         self.initial_compression = initial_compression
         self.helix_radius = HELIX_RADIUS
+        # This ramp needs to have a unique x for every height
         self.ramp = ramp
 
     def calculate_clamping_force(
@@ -204,7 +209,8 @@ class PhysicalSecondaryPulley(SecondaryPulleyModel):
         secondary_radius = tm.outer_sec_radius(shift_distance) - BELT_HEIGHT / 2
 
         # Helix angle at current position
-        helix_angle = np.arctan(self.ramp.slope(shift_distance))
+        # Negative slope because helix ramps down with increasing shift
+        helix_angle = np.arctan(-self.ramp.slope(shift_distance))
 
         # Convert torque to axial force through helix geometry
         # F = (τ + τ_spring) / (2 * tan(α) * r)
@@ -263,8 +269,19 @@ class PhysicalSecondaryPulley(SecondaryPulleyModel):
     def _calculate_rotation(self, shift_distance: float) -> float:
         """
         Calculate helix cam rotation from shift distance.
-
-        This is an approximation: rotation ≈ (shift * slope * 2) / helix_radius
-        TODO: Improve this relationship based on actual cam geometry
+        
+        For the helix ramp, shift_distance is the HEIGHT (y-value), and we need
+        to find the corresponding x position to get the correct slope.
+        
+        Args:
+            shift_distance: Current shift distance [m] (this is the ramp HEIGHT)
+            
+        Returns:
+            Rotation angle [rad]
         """
-        return shift_distance * self.ramp.slope(shift_distance) * 2 / HELIX_RADIUS
+        # Find x position that corresponds to this height
+        x_position = self.ramp.find_x_at_height(-shift_distance)
+        # Get slope at that x position
+        slope = self.ramp.slope(x_position)
+        # Calculate rotation from geometry
+        return x_position * slope * 2 / HELIX_RADIUS

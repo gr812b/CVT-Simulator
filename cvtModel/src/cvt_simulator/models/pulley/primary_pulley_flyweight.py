@@ -10,7 +10,6 @@ from cvt_simulator.utils.conversions import inch_to_meter
 from cvt_simulator.utils.theoretical_models import TheoreticalModels as tm
 from cvt_simulator.models.ramps import (
     CircularSegment,
-    CubicSpiralZeroK1,
     LinearSegment,
     PiecewiseRamp,
 )
@@ -28,37 +27,31 @@ def create_default_flyweight_ramp() -> PiecewiseRamp:
 
     This ramp has:
     - Linear start section (engagement)
-    - Smooth cubic spiral transition
-    - Circular finish (full shift)
+    - Circular finish section (full shift)
 
     Returns:
         PiecewiseRamp with realistic geometry
     """
-    length = inch_to_meter(1.125)
-    curveLength = inch_to_meter(0.025)
-
     ramp = PiecewiseRamp()
 
+    # This is the default "Enman" ramp at McMaster baja
+
+    # Linear section: ~0.125 inches at -25 degrees
     line = LinearSegment(
-        x_start=0, x_end=inch_to_meter(0.125), slope=math.tan(math.radians(-25))
+        length=inch_to_meter(0.125),
+        angle=-25
     )
+    
+    # Circular section: remaining length
+    # Approximating the original curve with a circular arc
     circle = CircularSegment(
-        x_start=line.x_end + curveLength,
-        x_end=length,
-        radius=(inch_to_meter(5)) ** 2,
-        theta_start=0.971816735418,
-        theta_end=1.1984521248,
-    )
-    cubicCircleLine = CubicSpiralZeroK1(
-        x_start=line.x_end,
-        x_end=line.x_end + curveLength,
-        slope_start=line.slope(line.x_end),
-        slope_end=circle.slope(circle.x_start),
-        target_curvature=1 / inch_to_meter(5),
+        length=inch_to_meter(1.0),
+        angle_start=33.4248111826,  # degrees
+        angle_end=20.8067910127,  # degrees
+        quadrant=3       # Negative slopes
     )
 
     ramp.add_segment(line)
-    ramp.add_segment(cubicCircleLine)
     ramp.add_segment(circle)
 
     return ramp
@@ -182,7 +175,8 @@ class PhysicalPrimaryPulley(PrimaryPulleyModel):
         shift_distance = np.clip(shift_distance, 0, MAX_SHIFT)
 
         # Calculate flyweight radius at current shift position
-        flyweight_radius = self.initial_flyweight_radius + self.ramp.height(
+        # Ramp starts at 0 and goes negative, so subtract
+        flyweight_radius = self.initial_flyweight_radius - self.ramp.height(
             shift_distance
         )
 
@@ -194,7 +188,10 @@ class PhysicalPrimaryPulley(PrimaryPulleyModel):
         )
 
         # Ramp angle at current position
-        angle = np.arctan(self.ramp.slope(shift_distance))
+        # Ramp is default negative slope, so negate for angle
+        # If a positive slope ramp is passed, it will generate a force against shifting
+        # which is expected for such a stupid ramp design.
+        angle = np.arctan(-self.ramp.slope(shift_distance))
 
         # Convert centrifugal force to axial clamping force through ramp angle
         net = centrifugal_force * np.tan(angle)

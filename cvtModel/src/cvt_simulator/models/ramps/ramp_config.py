@@ -27,7 +27,7 @@ class LinearSegmentConfig:
     """Configuration for a linear ramp segment."""
 
     length: float
-    slope: float
+    angle: float  # Slope angle in degrees (e.g., -45 for slope of -1, always use actual sign)
     type: Literal[RampSegmentType.LINEAR] = field(
         default=RampSegmentType.LINEAR, init=False
     )
@@ -38,9 +38,9 @@ class CircularSegmentConfig:
     """Configuration for a circular arc ramp segment."""
 
     length: float
-    radius: float
-    theta_start: float  # Starting angle in radians
-    theta_end: float  # Ending angle in radians
+    angle_start: float  # Starting slope angle in degrees (e.g., -45 for slope of -1)
+    angle_end: float  # Ending slope angle in degrees
+    quadrant: int = 3  # Which quadrant of circle (1-4), default 3
     type: Literal[RampSegmentType.CIRCULAR] = field(
         default=RampSegmentType.CIRCULAR, init=False
     )

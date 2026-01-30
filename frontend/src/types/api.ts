@@ -250,12 +250,12 @@ export interface components {
         CircularSegmentConfigModel: {
             /** Length */
             length: number;
-            /** Radius */
-            radius: number;
-            /** Theta Start */
-            theta_start: number;
-            /** Theta End */
-            theta_end: number;
+            /** Angle Start */
+            angle_start: number;
+            /** Angle End */
+            angle_end: number;
+            /** Quadrant */
+            quadrant: number;
             /**
              * Type
              * @constant
@@ -369,8 +369,8 @@ export interface components {
         LinearSegmentConfigModel: {
             /** Length */
             length: number;
-            /** Slope */
-            slope: number;
+            /** Angle */
+            angle: number;
             /**
              * Type
              * @constant

@@ -5,7 +5,7 @@ from cvt_simulator.models.ramps.circular_segment import CircularSegment
 from cvt_simulator.models.ramps.cubic_spiral_zero_k1 import CubicSpiralZeroK1
 from cvt_simulator.models.ramps.linear_segment import LinearSegment
 from cvt_simulator.models.ramps.piecewise_ramp import PiecewiseRamp
-from cvt_simulator.models.ramps.pro_defined_segment import ProDefinedSegment
+from cvt_simulator.models.ramps.archive.pro_defined_segment import ProDefinedSegment
 from cvt_simulator.utils.ramp_utils import save_ramp_to_dxf, visualize_ramps
 
 ## TODO: Remove this file once we extract some of the useful ramps from it
