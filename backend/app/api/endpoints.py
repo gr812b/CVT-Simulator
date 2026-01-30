@@ -10,6 +10,7 @@ from cvt_simulator import (
     PiecewiseRampConfig,
     PiecewiseRamp,
     CarSpecs,
+    solve_all,
 )
 from ..models.response_models import (
     FormattedResultModel,
@@ -17,6 +18,7 @@ from ..models.response_models import (
     PiecewiseRampConfigModel,
     RampPreviewResponse,
     StreamMessage,
+    AllSolverResultsModel,
 )
 
 router = APIRouter()
@@ -167,9 +169,18 @@ def run_stream(payload: SimulationArgsInput | None = None):  # type: ignore
     )
 
 
+@router.post("/solvers", response_model=AllSolverResultsModel)
+def run_solvers(payload: SimulationArgsInput | None = None):  # type: ignore
+    args = payload.model_dump(exclude_none=True) if payload else {}
+    args = SimulationArgs.from_mapping(args)
+    
+    # Run all solvers in one call
+    return solve_all(args)
+
+
 # TODO: Remove this logic from endpoints / bake into cvtModel simulator
 @router.post("/ramp/preview", response_model=RampPreviewResponse)
-def preview_ramp(config: PiecewiseRampConfigModel):
+def preview_ramp(config: PiecewiseRampConfigModel): # type: ignore
     """Generate preview data for a custom ramp configuration."""
     try:
         # Use factory method to properly handle type discrimination
