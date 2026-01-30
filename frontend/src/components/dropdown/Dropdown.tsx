@@ -70,7 +70,7 @@ export const Dropdown = <T extends string>({
             {open && (
                 <ul className={styles.menu} role="listbox">
                     {options.map(option => (
-                        <li key={option.value} className={styles.listItem} role="option">
+                        <li key={option.value} role="option">
                             <button
                                 className={styles.option}
                                 type="button"
