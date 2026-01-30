@@ -8,7 +8,9 @@ import numpy as np
 from cvt_simulator.models.ramps.piecewise_ramp import PiecewiseRamp
 from cvt_simulator.models.ramps.ramp_config import PiecewiseRampConfig
 from cvt_simulator.utils.conversions import inch_to_meter
-from cvt_simulator.constants.car_specs import MAX_SHIFT
+
+# from cvt_simulator.constants.car_specs import MAX_SHIFT
+
 
 def generate_ramp_preview(
     ramp: Union[PiecewiseRamp, PiecewiseRampConfig, dict],
@@ -72,7 +74,6 @@ def generate_ramp_preview(
 def main():
     """Example usage of ramp preview generation with visualization."""
     import matplotlib.pyplot as plt
-    import math
 
     print("=" * 60)
     print("Ramp Preview Generator - Visualization Example")
@@ -89,7 +90,7 @@ def main():
             },
             {
                 "type": "circular",
-                "length": inch_to_meter(1.125-0.181226),
+                "length": inch_to_meter(1.125 - 0.181226),
                 "angle_start": 89,  # degrees
                 "angle_end": 1,  # degrees
                 "quadrant": 3,  # Third quadrant (default)
@@ -107,7 +108,7 @@ def main():
     #         },
     #     ]
     # }
-    
+
     print("\nGenerating preview for Linear + Circular ramp...")
     result = generate_ramp_preview(config, num_points=500)
     print(f"Generated {len(result['x'])} points")
@@ -117,26 +118,26 @@ def main():
 
     # Create plots
     fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(10, 8))
-    
+
     # Plot 1: Height vs X (1:1 aspect ratio)
-    ax1.plot(result['x'], result['y'], 'b-', linewidth=2)
-    ax1.set_xlabel('X Position')
-    ax1.set_ylabel('Height')
-    ax1.set_title('Ramp Profile: Height vs Position')
+    ax1.plot(result["x"], result["y"], "b-", linewidth=2)
+    ax1.set_xlabel("X Position")
+    ax1.set_ylabel("Height")
+    ax1.set_title("Ramp Profile: Height vs Position")
     ax1.grid(True, alpha=0.3)
-    ax1.set_aspect('equal', adjustable='datalim')
-    
+    ax1.set_aspect("equal", adjustable="datalim")
+
     # Plot 2: Slope vs X
-    ax2.plot(result['x'], result['slopes'], 'r-', linewidth=2)
-    ax2.set_xlabel('X Position')
-    ax2.set_ylabel('Slope')
-    ax2.set_title('Ramp Profile: Slope vs Position')
+    ax2.plot(result["x"], result["slopes"], "r-", linewidth=2)
+    ax2.set_xlabel("X Position")
+    ax2.set_ylabel("Slope")
+    ax2.set_title("Ramp Profile: Slope vs Position")
     ax2.grid(True, alpha=0.3)
-    
+
     plt.tight_layout()
     print("\nDisplaying plots...")
     plt.show()
-    
+
     print("=" * 60)
 
 

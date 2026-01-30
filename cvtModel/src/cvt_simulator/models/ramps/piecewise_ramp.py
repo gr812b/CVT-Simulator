@@ -43,22 +43,23 @@ class PiecewiseRamp:
         for segment in self.segments:
             if segment.x_start <= x <= segment.x_end:
                 return segment.slope(x)
-        raise ValueError(f"x={x} is out of ramp range!")    
+        raise ValueError(f"x={x} is out of ramp range!")
+
     def find_x_at_height(self, target_height: float) -> float:
         """Find the x position that produces a given height.
-        
+
         This is the inverse of height(x). Searches through segments to find
         which one contains the target height, then inverts that segment.
-        
+
         Args:
             target_height: The height value to search for
-            
+
         Returns:
             x position that produces the target height
-            
+
         Raises:
             ValueError: If height is not within ramp range or segment doesn't support inversion
-            
+
         Note:
             Currently supports LinearSegment and CircularSegment inversion.
             CircularSegment will raise an error if the height produces ambiguous
@@ -70,11 +71,11 @@ class PiecewiseRamp:
             y_end = segment.height(segment.x_end)
             y_min = min(y_start, y_end)
             y_max = max(y_start, y_end)
-            
+
             # Check if target height is in this segment's height range
             if y_min <= target_height <= y_max:
                 # Try to invert this segment
-                if hasattr(segment, 'inverse_height'):
+                if hasattr(segment, "inverse_height"):
                     try:
                         return segment.inverse_height(target_height)
                     except ValueError as e:
@@ -87,12 +88,13 @@ class PiecewiseRamp:
                     raise ValueError(
                         f"Segment type {type(segment).__name__} does not support inverse_height."
                     )
-        
+
         raise ValueError(
             f"Height {target_height} is not within ramp range. "
             f"Ramp height range: [{self.segments[0].height(self.segments[0].x_start)}, "
             f"{self.segments[-1].height(self.segments[-1].x_end)}]"
         )
+
     def to_config(self) -> PiecewiseRampConfig:
         """
         Convert this ramp to its config dataclass.

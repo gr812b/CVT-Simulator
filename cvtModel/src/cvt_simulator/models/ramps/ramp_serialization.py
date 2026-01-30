@@ -93,4 +93,3 @@ def config_to_segment(config: RampSegmentConfig) -> RampSegment:
     if converter is None:
         raise ValueError(f"Unknown config type: {type(config)}")
     return converter(config)
-

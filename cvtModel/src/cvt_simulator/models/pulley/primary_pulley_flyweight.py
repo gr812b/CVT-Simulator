@@ -37,18 +37,15 @@ def create_default_flyweight_ramp() -> PiecewiseRamp:
     # This is the default "Enman" ramp at McMaster baja
 
     # Linear section: ~0.125 inches at -25 degrees
-    line = LinearSegment(
-        length=inch_to_meter(0.125),
-        angle=-25
-    )
-    
+    line = LinearSegment(length=inch_to_meter(0.125), angle=-25)
+
     # Circular section: remaining length
     # Approximating the original curve with a circular arc
     circle = CircularSegment(
         length=inch_to_meter(1.0),
         angle_start=33.4248111826,  # degrees
         angle_end=20.8067910127,  # degrees
-        quadrant=3       # Negative slopes
+        quadrant=3,  # Negative slopes
     )
 
     ramp.add_segment(line)

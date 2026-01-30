@@ -25,7 +25,7 @@ def create_default_helix_ramp() -> PiecewiseRamp:
 
     For the helix ramp, the HEIGHT (y) represents shift distance,
     and we need to be able to invert it to find x for a given height.
-    
+
     This means the ramp should span from height 0 to MAX_SHIFT.
 
     Returns:
@@ -34,7 +34,9 @@ def create_default_helix_ramp() -> PiecewiseRamp:
     ramp = PiecewiseRamp()
     # Create a linear segment where y goes from 0 to MAX_SHIFT
     # Using negative angle so slope is negative (helix ramps down)
-    ramp.add_segment(LinearSegment(length=MAX_SHIFT / 0.3, angle=-16.699))  # atan(-0.3) ≈ -16.7°
+    ramp.add_segment(
+        LinearSegment(length=MAX_SHIFT / 0.3, angle=-16.699)
+    )  # atan(-0.3) ≈ -16.7°
     return ramp
 
 
@@ -269,13 +271,13 @@ class PhysicalSecondaryPulley(SecondaryPulleyModel):
     def _calculate_rotation(self, shift_distance: float) -> float:
         """
         Calculate helix cam rotation from shift distance.
-        
+
         For the helix ramp, shift_distance is the HEIGHT (y-value), and we need
         to find the corresponding x position to get the correct slope.
-        
+
         Args:
             shift_distance: Current shift distance [m] (this is the ramp HEIGHT)
-            
+
         Returns:
             Rotation angle [rad]
         """

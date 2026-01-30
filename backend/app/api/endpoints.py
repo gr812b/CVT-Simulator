@@ -1,14 +1,10 @@
-from typing import List
 import json
 
-import numpy as np
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import StreamingResponse
 from cvt_simulator import (
     simulate_cvt_model,
     SimulationArgs,
-    PiecewiseRampConfig,
-    PiecewiseRamp,
     CarSpecs,
 )
 from cvt_simulator.models.ramps.ramp_preview import generate_ramp_preview
@@ -170,7 +166,7 @@ def run_stream(payload: SimulationArgsInput | None = None):  # type: ignore
 
 # TODO: Remove this logic from endpoints / bake into cvtModel simulator
 @router.post("/ramp/preview", response_model=RampPreviewResponse)
-def preview_ramp(config: PiecewiseRampConfigModel): # type: ignore
+def preview_ramp(config: PiecewiseRampConfigModel):  # type: ignore
     """Generate preview data for a custom ramp configuration."""
     try:
         # Use the centralized ramp preview generator
