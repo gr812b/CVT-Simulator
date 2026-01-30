@@ -34,9 +34,7 @@ def create_default_helix_ramp() -> PiecewiseRamp:
     ramp = PiecewiseRamp()
     # Create a linear segment where y goes from 0 to MAX_SHIFT
     # Using negative angle so slope is negative (helix ramps down)
-    ramp.add_segment(
-        LinearSegment(length=MAX_SHIFT / 0.3, angle=-16.699)
-    )  # atan(-0.3) ≈ -16.7°
+    ramp.add_segment(LinearSegment(length=MAX_SHIFT / 0.3, angle=-16.699))
     return ramp
 
 

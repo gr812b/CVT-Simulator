@@ -10,8 +10,8 @@ class CircularSegment(RampSegment):
     The quadrant determines the curve orientation:
     - Q1 (top-right): Negative slopes curving from steep down to gentle down
     - Q2 (top-left): Positive slopes curving from gentle up to steep up
-    - Q3 (bottom-left): Negative slopes curving from gentle down to steep down
-    - Q4 (bottom-right): Positive slopes curving from steep up to gentle up
+    - Q3 (bottom-left): Negative slopes curving from steep down to gentle down
+    - Q4 (bottom-right): Positive slopes curving from gentle up to steep up
 
     Slopes are always specified as POSITIVE values (magnitude only).
     The quadrant determines the actual sign.
