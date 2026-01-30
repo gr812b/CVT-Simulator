@@ -4,11 +4,11 @@ import secondaryCVT from "@assets/images/secondary_cvt.png"
 import environment from "@assets/images/environment.png"
 
 import type { components } from './api';
+import type { PiecewiseRampConfig } from "./ramp";
 
 // TODO: Pass defaults and parameters from backend when API supports it
 
-export type ParameterValue = string | number | boolean | components['schemas']['PiecewiseRampConfigModel'] | null
-export type PiecewiseRampConfig = components['schemas']['PiecewiseRampConfigModel'];
+export type ParameterValue = string | number | boolean | PiecewiseRampConfig | null
 type ParameterType = 'string' | 'number' | 'boolean' | 'ramp'
 
 export type ParameterGroup = 'primary' | 'ramp' | 'secondary' | 'helix' | 'environment'

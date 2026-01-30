@@ -1,0 +1,93 @@
+@use '@styles/_fonts';
+@use '@styles/_z_index' as z;
+
+.dropdown {
+    position: relative;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+
+    .label {
+        font-size: 0.875rem;
+        font-weight: 500;
+        color: var(--text-color);
+        @include fonts.text-medium;
+    }
+
+    .trigger {
+        width: 100%;
+        padding: 0.5rem 0rem;
+        border: none;
+        border-bottom: 0.125rem solid var(--text-color);
+        background: var(--secondary);
+        color: var(--text-color);
+        cursor: pointer;
+
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+
+        @include fonts.text-medium;
+
+        &:focus {
+            outline: 2px solid var(--text-color);
+            outline-offset: -0.125rem;
+            border-radius: 0.25rem;
+        }
+
+        .icon {
+            width: 2rem;
+            height: 2rem;
+            pointer-events: none;
+        }
+    }
+
+    .menu {
+        position: absolute;
+        top: calc(100%);
+        left: 0;
+        right: 0;
+        z-index: z.z('dropdown');
+        padding-left: 0rem;
+        margin: 0rem;
+        border: 1px solid var(--border-color);
+        border-top: none;
+
+        display: flex;
+        flex-direction: column;
+        list-style-type: none;
+        background-color: var(--secondary);
+
+        .option {
+            cursor: pointer;
+            color: var(--text-color);
+            @include fonts.text-medium;
+
+            height: 100%;
+            width: 100%;
+
+            padding: 0.5rem 0.25rem;
+
+            transition-duration: 0s;
+
+            &:hover {
+                background: var(--accent);
+            }
+
+            &:focus {
+                outline: 2px solid var(--accent);
+                border-radius: 0.25rem;
+            }
+        }
+    }
+}
+
+
+
+
+
+
+
+
+
