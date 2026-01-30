@@ -250,47 +250,17 @@ export interface components {
         CircularSegmentConfigModel: {
             /** Length */
             length: number;
-            /** Radius */
-            radius: number;
-            /** Theta Start */
-            theta_start: number;
-            /** Theta End */
-            theta_end: number;
+            /** Angle Start */
+            angle_start: number;
+            /** Angle End */
+            angle_end: number;
+            /** Quadrant */
+            quadrant: number;
             /**
              * Type
              * @constant
              */
             type: "circular";
-        };
-        /** CubicSpiralZeroK1ConfigModel */
-        CubicSpiralZeroK1ConfigModel: {
-            /** Length */
-            length: number;
-            /** Slope Start */
-            slope_start: number;
-            /** Slope End */
-            slope_end: number;
-            /** Target Curvature */
-            target_curvature: number;
-            /**
-             * Type
-             * @constant
-             */
-            type: "cubic_spiral_zero_k1";
-        };
-        /** CubicSpiralZeroZeroConfigModel */
-        CubicSpiralZeroZeroConfigModel: {
-            /** Length */
-            length: number;
-            /** Slope Start */
-            slope_start: number;
-            /** Slope End */
-            slope_end: number;
-            /**
-             * Type
-             * @constant
-             */
-            type: "cubic_spiral_zero_zero";
         };
         /** CvtSystemForceBreakdownModel */
         CvtSystemForceBreakdownModel: {
@@ -317,20 +287,6 @@ export interface components {
             angular_velocity: number;
             /** Angular Acceleration */
             angular_acceleration: number;
-        };
-        /** EulerSpiralConfigModel */
-        EulerSpiralConfigModel: {
-            /** Length */
-            length: number;
-            /** Slope Start */
-            slope_start: number;
-            /** Slope End */
-            slope_end: number;
-            /**
-             * Type
-             * @constant
-             */
-            type: "euler_spiral";
         };
         /** ExternalLoadForceBreakdownModel */
         ExternalLoadForceBreakdownModel: {
@@ -369,8 +325,8 @@ export interface components {
         LinearSegmentConfigModel: {
             /** Length */
             length: number;
-            /** Slope */
-            slope: number;
+            /** Angle */
+            angle: number;
             /**
              * Type
              * @constant
@@ -380,7 +336,7 @@ export interface components {
         /** PiecewiseRampConfigModel */
         PiecewiseRampConfigModel: {
             /** Segments */
-            segments: (components["schemas"]["LinearSegmentConfigModel"] | components["schemas"]["CircularSegmentConfigModel"] | components["schemas"]["CubicSpiralZeroK1ConfigModel"] | components["schemas"]["CubicSpiralZeroZeroConfigModel"] | components["schemas"]["EulerSpiralConfigModel"] | components["schemas"]["ProDefinedSegmentConfigModel"])[];
+            segments: (components["schemas"]["LinearSegmentConfigModel"] | components["schemas"]["CircularSegmentConfigModel"])[];
         };
         /** PrimaryForceBreakdownModel */
         PrimaryForceBreakdownModel: {
@@ -388,24 +344,6 @@ export interface components {
             springForce: components["schemas"]["springCompForceBreakdownModel"];
             /** Net */
             net: number;
-        };
-        /** ProDefinedSegmentConfigModel */
-        ProDefinedSegmentConfigModel: {
-            /** Length */
-            length: number;
-            /** Prev Seg Height */
-            prev_seg_height: number;
-            /** End Length */
-            end_length: number;
-            /** Initial Slope */
-            initial_slope: number;
-            /** R Initial */
-            r_initial: number;
-            /**
-             * Type
-             * @constant
-             */
-            type: "pro_defined";
         };
         /** PulleyForcesModel */
         PulleyForcesModel: {
