@@ -66,40 +66,66 @@ export const RampPreview = ({ config }: RampPreviewProps) => {
         TOOLTIP_BG: getColor('--tooltip-bg', '#2a2a2a'),
     };
 
-    const chartOptions: EChartsOption = {
-        backgroundColor: COLORS.BACKGROUND,
-        textStyle: { color: COLORS.TEXT },
-        grid: {
-            left: 60,
-            right: 40,
-            top: 40,
-            bottom: 60,
-        },
-        xAxis: {
-            type: 'value',
-            name: 'Position (m)',
-            nameLocation: 'middle',
-            nameGap: 30,
-            nameTextStyle: { color: COLORS.TEXT },
-            axisLine: { lineStyle: { color: COLORS.GRID } },
-            axisTick: { lineStyle: { color: COLORS.GRID } },
-            axisLabel: { color: COLORS.TEXT },
-            splitLine: { lineStyle: { color: COLORS.GRID } },
-        },
-        yAxis: {
-            type: 'value',
-            name: 'Height (m)',
-            nameLocation: 'middle',
-            nameGap: 50,
-            nameTextStyle: { color: COLORS.TEXT },
-            axisLine: { lineStyle: { color: COLORS.GRID } },
-            axisTick: { lineStyle: { color: COLORS.GRID } },
-            axisLabel: { color: COLORS.TEXT },
-            splitLine: { 
-                show: true,
-                lineStyle: { color: COLORS.GRID }
+    const chartOptions: EChartsOption = useMemo(() => {
+        // Get actual data ranges without artificial padding
+        const xMin = previewData?.x_min ?? 0;
+        const xMax = previewData?.x_max ?? 1;
+        const yMin = previewData ? Math.min(...previewData.y) : 0;
+        const yMax = previewData ? Math.max(...previewData.y) : 1;
+
+        return {
+            backgroundColor: COLORS.BACKGROUND,
+            textStyle: { color: COLORS.TEXT },
+            grid: {
+                left: 60,
+                right: 40,
+                top: 40,
+                bottom: 60,
+                containLabel: false,
             },
-        },
+            xAxis: {
+                type: 'value',
+                name: 'Position (m)',
+                nameLocation: 'middle',
+                nameGap: 30,
+                nameTextStyle: { color: COLORS.TEXT },
+                axisLine: { lineStyle: { color: COLORS.GRID } },
+                axisTick: { lineStyle: { color: COLORS.GRID } },
+                axisLabel: { color: COLORS.TEXT },
+                splitLine: { lineStyle: { color: COLORS.GRID } },
+                min: xMin,
+                max: xMax,
+                scale: false,
+            },
+            yAxis: {
+                type: 'value',
+                name: 'Height (m)',
+                nameLocation: 'middle',
+                nameGap: 50,
+                nameTextStyle: { color: COLORS.TEXT },
+                axisLine: { lineStyle: { color: COLORS.GRID } },
+                axisTick: { lineStyle: { color: COLORS.GRID } },
+                axisLabel: { color: COLORS.TEXT },
+                splitLine: { 
+                    show: true,
+                    lineStyle: { color: COLORS.GRID }
+                },
+                min: yMin,
+                max: yMax,
+                scale: false,
+            },
+            dataZoom: [
+                {
+                    type: 'inside',
+                    xAxisIndex: 0,
+                    filterMode: 'none',
+                },
+                {
+                    type: 'inside',
+                    yAxisIndex: 0,
+                    filterMode: 'none',
+                },
+            ],
         series: [
             {
                 type: 'line',
@@ -144,6 +170,7 @@ export const RampPreview = ({ config }: RampPreviewProps) => {
             },
         },
     };
+    }, [previewData, COLORS]);
 
     if (error) {
         return (
@@ -175,11 +202,36 @@ export const RampPreview = ({ config }: RampPreviewProps) => {
         );
     }
 
+    // Calculate 1:1 aspect ratio dimensions
+    const maxHeight = 400; // Maximum height in pixels
+    const gridMargins = { left: 60, right: 40, top: 40, bottom: 60 }; // From grid config
+    const plotHeight = maxHeight - gridMargins.top - gridMargins.bottom;
+    
+    // Calculate data ranges
+    const xMin = previewData.x_min;
+    const xMax = previewData.x_max;
+    const yMin = Math.min(...previewData.y);
+    const yMax = Math.max(...previewData.y);
+    const xRange = xMax - xMin;
+    const yRange = yMax - yMin;
+    
+    // Calculate width to maintain 1:1 aspect ratio (pixels per meter should be equal)
+    const pixelsPerMeter = plotHeight / yRange;
+    const plotWidth = xRange * pixelsPerMeter;
+    const chartWidth = plotWidth + gridMargins.left + gridMargins.right;
+
     return (
         <div className={styles.previewContainer}>
             <h4>Ramp Preview</h4>
             <div className={styles.chartContainer}>
-                <ReactECharts option={chartOptions} style={{ height: '300px', width: '100%' }} />
+                <ReactECharts 
+                    option={chartOptions} 
+                    style={{ 
+                        height: `${maxHeight}px`, 
+                        width: `${Math.max(chartWidth, 300)}px`, 
+                        maxWidth: '100%' 
+                    }} 
+                />
             </div>
         </div>
     );

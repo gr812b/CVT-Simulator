@@ -4,11 +4,11 @@ import secondaryCVT from "@assets/images/secondary_cvt.png"
 import environment from "@assets/images/environment.png"
 
 import type { components } from './api';
+import type { PiecewiseRampConfig } from "./ramp";
 
 // TODO: Pass defaults and parameters from backend when API supports it
 
-export type ParameterValue = string | number | boolean | components['schemas']['PiecewiseRampConfigModel'] | null
-export type PiecewiseRampConfig = components['schemas']['PiecewiseRampConfigModel'];
+export type ParameterValue = string | number | boolean | PiecewiseRampConfig | null
 type ParameterType = 'string' | 'number' | 'boolean' | 'ramp'
 
 export type ParameterGroup = 'primary' | 'ramp' | 'secondary' | 'helix' | 'environment'
@@ -97,11 +97,16 @@ const PARAMETERS_IMPL = {
     defaultValue: {
       segments: [
         {
+          type: 'linear' as const,
+          length: 0.0046,
+          angle: -15,
+        },
+        {
           type: 'circular' as const,
-          length: 0.026,
-          radius: 0.05,
-          theta_start: 1,
-          theta_end: 1.3,
+          length: 0.024,
+          angle_start: 33.4248111826,
+          angle_end: 20.8067910127,
+          quadrant: 3,
         },
       ],
     } as components['schemas']['PiecewiseRampConfigModel'],
@@ -162,7 +167,7 @@ const PARAMETERS_IMPL = {
         {
           type: 'linear' as const,
           length: 0.1,
-          slope: 1.25,
+          angle: -16.7,
         },
       ],
     } as components['schemas']['PiecewiseRampConfigModel'],

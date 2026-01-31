@@ -1,17 +1,14 @@
-from typing import List
 import json
 
-import numpy as np
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import StreamingResponse
 from cvt_simulator import (
     simulate_cvt_model,
     SimulationArgs,
-    PiecewiseRampConfig,
-    PiecewiseRamp,
     CarSpecs,
     solve_all,
 )
+from cvt_simulator.models.ramps.ramp_preview import generate_ramp_preview
 from ..models.response_models import (
     FormattedResultModel,
     SimulationArgsInput,
@@ -183,41 +180,14 @@ def run_solvers(payload: SimulationArgsInput | None = None):  # type: ignore
 def preview_ramp(config: PiecewiseRampConfigModel):  # type: ignore
     """Generate preview data for a custom ramp configuration."""
     try:
-        # Use factory method to properly handle type discrimination
-        config_dataclass = PiecewiseRampConfig.from_dict(config.model_dump())
-        ramp = PiecewiseRamp.from_config(config_dataclass)
-
-        if not ramp.segments:
-            raise HTTPException(
-                status_code=400, detail="Ramp must have at least one segment"
-            )
-
-        x_min = ramp.segments[0].x_start
-        x_max = ramp.segments[-1].x_end
-
-        # Generate 100 sample points for smooth visualization
-        x_points = np.linspace(x_min, x_max, 500)
-
-        heights: List[float] = []
-        slopes: List[float] = []
-
-        for x in x_points:
-            try:
-                heights.append(float(ramp.height(x)))
-                slopes.append(float(ramp.slope(x)))
-            except ValueError as e:
-                raise HTTPException(
-                    status_code=400, detail=f"Error calculating ramp at x={x}: {e}"
-                )
-
-        return {
-            "x": x_points.tolist(),
-            "y": heights,
-            "slopes": slopes,
-            "x_min": float(x_min),
-            "x_max": float(x_max),
-        }
-    except Exception as e:
+        # Use the centralized ramp preview generator
+        result = generate_ramp_preview(config.model_dump(), num_points=500)
+        return result
+    except ValueError as e:
         raise HTTPException(
             status_code=400, detail=f"Invalid ramp configuration: {str(e)}"
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=500, detail=f"Error generating ramp preview: {str(e)}"
         )

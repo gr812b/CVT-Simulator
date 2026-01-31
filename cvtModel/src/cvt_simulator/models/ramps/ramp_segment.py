@@ -1,9 +1,10 @@
 class RampSegment:
     """Base class for ramp segments."""
 
-    def __init__(self, x_start: float, x_end: float):
-        self.x_start = x_start
-        self.x_end = x_end
+    def __init__(self, length: float):
+        self.length = length
+        self.x_start = 0.0  # Will be set by PiecewiseRamp
+        self.x_end = length  # Will be adjusted by PiecewiseRamp
         self.y_start = None  # Will be set automatically
 
     def height(self, x: float) -> float:
