@@ -119,6 +119,16 @@ export async function getConstants(): Promise<ConstantsResponse> {
   return data!;
 }
 
+export type SolversBody = NonNullable<operations['run_solvers_solvers_post']['requestBody']>['content']['application/json'];
+export type SolversResponse =
+  operations['run_solvers_solvers_post']['responses']['200']['content']['application/json'];
+
+export async function runSolvers(body?: SolversBody): Promise<SolversResponse> {
+  const { data, error } = await client.POST('/solvers', { body: body ?? {} });
+  if (error) throw error;
+  return data!;
+}
+
 export type RampPreviewBody = NonNullable<operations['preview_ramp_ramp_preview_post']['requestBody']>['content']['application/json'];
 export type RampPreviewResponse =
   operations['preview_ramp_ramp_preview_post']['responses']['200']['content']['application/json'];

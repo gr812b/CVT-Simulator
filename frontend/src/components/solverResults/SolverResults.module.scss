@@ -1,0 +1,60 @@
+// @use '@styles/variables';
+
+.solverResults {
+    background: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 12px;
+    padding: 1.25rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    
+    h3 {
+        margin: 0 0 1rem 0;
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: white;
+    }
+}
+
+.loading,
+.error {
+    padding: 1rem;
+    text-align: center;
+    color: white;
+}
+
+.error {
+    color: white;
+}
+
+.resultItem {
+    margin-bottom: 1rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--color-border);
+    
+    &:last-child {
+        margin-bottom: 0;
+        padding-bottom: 0;
+        border-bottom: none;
+    }
+}
+
+.label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: white;
+    margin-bottom: 0.25rem;
+}
+
+.value {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: white;
+    margin-bottom: 0.5rem;
+}
+
+.description {
+    font-size: 0.75rem;
+    color: white;
+    font-style: italic;
+}
