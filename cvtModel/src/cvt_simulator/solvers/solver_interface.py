@@ -15,13 +15,14 @@ from cvt_simulator.utils.simulation_args import SimulationArgs
 class SolverResult:
     """
     Result from a solver operation.
-    
+
     Attributes:
         success: Whether the solver found a solution
         value: The primary result value (e.g., RPM, torque, etc.)
         units: Units of the result value
         description: Human-readable description of what was solved
     """
+
     success: bool
     value: Optional[float]
     units: str
@@ -31,36 +32,36 @@ class SolverResult:
 class SolverBase(ABC):
     """
     Base class for all CVT solvers.
-    
+
     Solvers take SimulationArgs (same inputs as full simulation)
     and solve for specific conditions analytically or through optimization.
     """
-    
+
     def __init__(self, args: SimulationArgs):
         """
         Initialize solver with simulation parameters.
-        
+
         Args:
             args: Simulation parameters that define the CVT configuration
         """
         self.args = args
-    
+
     @abstractmethod
     def solve(self) -> SolverResult:
         """
         Execute the solver to find the solution.
-        
+
         Returns:
             SolverResult with the solution or failure information
         """
         pass
-    
+
     @property
     @abstractmethod
     def solver_name(self) -> str:
         """Human-readable name of this solver."""
         pass
-    
+
     @property
     @abstractmethod
     def solver_description(self) -> str:

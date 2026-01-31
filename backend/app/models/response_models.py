@@ -2,7 +2,12 @@
 from typing import List, Union, Literal
 from pydantic import BaseModel
 from .auto_model import model_from_class, partial_model_from_class
-from cvt_simulator import FormattedSimulationResult, SimulationArgs, PiecewiseRampConfig, AllSolverResults
+from cvt_simulator import (
+    FormattedSimulationResult,
+    SimulationArgs,
+    PiecewiseRampConfig,
+    AllSolverResults,
+)
 
 # Auto-generate Pydantic models
 SimulationArgsInput = partial_model_from_class(SimulationArgs)
