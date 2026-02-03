@@ -28,6 +28,7 @@ export const Scene3DViewer = ({ replayController, className }: Scene3DViewerProp
   const [isLoading, setIsLoading] = useState(true);
   const [beltMesh, setBeltMesh] = useState<THREE.Mesh | null>(null);
   const [beltVisible, setBeltVisible] = useState(true);
+  const [showAngularRotation, setShowAngularRotation] = useState(true);
   const [initialHelixRotation, setInitialHelixRotation] = useState<number>(0);
 
   /**
@@ -194,7 +195,7 @@ export const Scene3DViewer = ({ replayController, className }: Scene3DViewerProp
         // Update all models
         sceneController.updateModels({
           primaryFixed: {
-            rotation: [0, Math.PI, primaryAngularPosition],
+            rotation: [0, Math.PI, showAngularRotation ? primaryAngularPosition : 0],
           },
           primaryMoving: {
             // Primary closes as shift increases: max_shift - shift_distance
@@ -202,7 +203,7 @@ export const Scene3DViewer = ({ replayController, className }: Scene3DViewerProp
             position: [0, 0, -(primaryOffset + constants.max_shift - shiftDistanceScene)],
           },
           secondaryFixed: {
-            rotation: [0, 0, secondaryAngularPosition],
+            rotation: [0, 0, showAngularRotation ? secondaryAngularPosition : 0],
           },
           secondaryMoving: {
             // Secondary opens as shift increases: shift_distance
@@ -230,7 +231,7 @@ export const Scene3DViewer = ({ replayController, className }: Scene3DViewerProp
     });
 
     return unsubscribe;
-  }, [sceneController, replayController, constants, toSceneDistance, beltMesh, initialHelixRotation]);
+  }, [sceneController, replayController, constants, toSceneDistance, beltMesh, initialHelixRotation, showAngularRotation]);
 
   // Update belt visibility when state changes
   useEffect(() => {
@@ -253,6 +254,13 @@ export const Scene3DViewer = ({ replayController, className }: Scene3DViewerProp
         title={beltVisible ? 'Hide Belt' : 'Show Belt'}
       >
         {beltVisible ? '🔴' : '⚪'} Belt
+      </button>
+      <button
+        className={styles.toggleRotationButton}
+        onClick={() => setShowAngularRotation(!showAngularRotation)}
+        title={showAngularRotation ? 'Hide Angular Rotation' : 'Show Angular Rotation'}
+      >
+        {showAngularRotation ? '🔵' : '⚪'} Rotation
       </button>
     </div>
   );
