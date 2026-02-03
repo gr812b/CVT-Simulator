@@ -102,9 +102,49 @@ export const Scene3DViewer = ({ replayController, className }: Scene3DViewerProp
     return setupVerticalGrid(sceneController);
   }, [sceneController]);
 
-  // Subscribe to replay controller and update models
+  // Setup belt mesh with initial data from replay controller
   useEffect(() => {
     if (!sceneController || !constants) return;
+
+    // Get first data point to initialize belt with real values
+    const firstDataPoint = replayController.getFirstDataPoint();
+    if (!firstDataPoint) return;
+
+    const primaryRadius = firstDataPoint.system?.cvt?.primaryPulleyState?.radius ?? constants.min_prim_radius;
+    const secondaryRadius = firstDataPoint.system?.cvt?.secondaryPulleyState?.radius ?? constants.max_sec_radius;
+    const primaryWrapAngleDeg = firstDataPoint.system?.cvt?.primaryPulleyState?.wrap_angle ?? 180;
+    const secondaryWrapAngleDeg = firstDataPoint.system?.cvt?.secondaryPulleyState?.wrap_angle ?? 180;
+    const shiftDistance = firstDataPoint.state?.shift_distance ?? 0;
+
+    const primaryWrapAngle = primaryWrapAngleDeg * (Math.PI / 180);
+    const secondaryWrapAngle = secondaryWrapAngleDeg * (Math.PI / 180);
+    const shiftDistanceScene = toSceneDistance(shiftDistance);
+    const primaryRadiusScene = toSceneDistance(primaryRadius);
+    const secondaryRadiusScene = toSceneDistance(secondaryRadius);
+
+    const beltZ = -shiftDistanceScene / 2;
+
+    const initialPathData: BeltPathData = {
+      primaryRadius: primaryRadiusScene,
+      primaryPosition: [-constants.center_to_center / 2, 0, beltZ],
+      secondaryRadius: secondaryRadiusScene,
+      secondaryPosition: [constants.center_to_center / 2, 0, beltZ],
+      primaryWrapAngle,
+      secondaryWrapAngle,
+    };
+
+    const { beltMesh: mesh, cleanup } = setupBelt(sceneController, constants);
+    mesh.visible = beltVisible;
+    // Update with actual first data point immediately
+    updateBeltMesh(mesh, initialPathData, constants);
+    setBeltMesh(mesh);
+
+    return cleanup;
+  }, [sceneController, constants, replayController, toSceneDistance, beltVisible]);
+
+  // Subscribe to replay controller and update models
+  useEffect(() => {
+    if (!sceneController || !constants || !beltMesh) return;
 
     const unsubscribe = replayController.on((event) => {
       if (event.type === ReplayEventType.Progress) {
@@ -169,21 +209,12 @@ export const Scene3DViewer = ({ replayController, className }: Scene3DViewerProp
           secondaryWrapAngle,
         };
 
-        // Create belt on first frame, update on subsequent frames
-        if (!beltMesh) {
-          const { beltMesh: mesh, cleanup } = setupBelt(sceneController, constants);
-          mesh.visible = beltVisible;
-          setBeltMesh(mesh);
-          // Update with actual data immediately
-          updateBeltMesh(mesh, beltPathData, constants);
-        } else {
-          updateBeltMesh(beltMesh, beltPathData, constants);
-        }
+        updateBeltMesh(beltMesh, beltPathData, constants);
       }
     });
 
     return unsubscribe;
-  }, [sceneController, replayController, constants, toSceneDistance, beltMesh, beltVisible]);
+  }, [sceneController, replayController, constants, toSceneDistance, beltMesh]);
 
   // Update belt visibility when state changes
   useEffect(() => {
