@@ -282,6 +282,4 @@ class PhysicalSecondaryPulley(SecondaryPulleyModel):
         # Find x position that corresponds to this height
         x_position = self.ramp.find_x_at_height(-shift_distance)
         # Get slope at that x position
-        slope = self.ramp.slope(x_position)
-        # Calculate rotation from geometry
-        return x_position * slope * 2 / HELIX_RADIUS
+        return x_position / HELIX_RADIUS
