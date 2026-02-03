@@ -28,6 +28,7 @@ export const Scene3DViewer = ({ replayController, className }: Scene3DViewerProp
   const [isLoading, setIsLoading] = useState(true);
   const [beltMesh, setBeltMesh] = useState<THREE.Mesh | null>(null);
   const [beltVisible, setBeltVisible] = useState(true);
+  const [initialHelixRotation, setInitialHelixRotation] = useState<number>(0);
 
   /**
    * Helper to convert any distance value from BAJA units (meters) to the scene's distance unit.
@@ -110,6 +111,13 @@ export const Scene3DViewer = ({ replayController, className }: Scene3DViewerProp
     const firstDataPoint = replayController.getFirstDataPoint();
     if (!firstDataPoint) return;
 
+    // Store initial helix rotation for relative rotation calculations
+    const firstBreakdown = firstDataPoint.system?.cvt?.secondaryPulleyState?.breakdown;
+    const firstHelixRotation = (firstBreakdown && 'helix_force' in firstBreakdown)
+      ? firstBreakdown.helix_force.springTorque.rotation
+      : 0;
+    setInitialHelixRotation(firstHelixRotation);
+
     const primaryRadius = firstDataPoint.system?.cvt?.primaryPulleyState?.radius ?? constants.min_prim_radius;
     const secondaryRadius = firstDataPoint.system?.cvt?.secondaryPulleyState?.radius ?? constants.max_sec_radius;
     const primaryWrapAngleDeg = firstDataPoint.system?.cvt?.primaryPulleyState?.wrap_angle ?? 180;
@@ -151,6 +159,11 @@ export const Scene3DViewer = ({ replayController, className }: Scene3DViewerProp
         // Extract angular positions and shift distance
         const primaryAngularPosition = event.data.system?.cvt?.primaryPulleyState?.angular_position ?? 0;
         const secondaryAngularPosition = event.data.system?.cvt?.secondaryPulleyState?.angular_position ?? 0;
+        const secondaryBreakdown = event.data.system?.cvt?.secondaryPulleyState?.breakdown;
+        const secondaryHelixRotationDeg = (secondaryBreakdown && 'helix_force' in secondaryBreakdown) 
+          ? secondaryBreakdown.helix_force.springTorque.rotation - initialHelixRotation
+          : 0;
+        const secondaryHelixRotation = secondaryHelixRotationDeg * (Math.PI / 180);
         const shiftDistance = event.data.state?.shift_distance ?? 0;
 
         // Get pulley states for belt calculation
@@ -166,6 +179,7 @@ export const Scene3DViewer = ({ replayController, className }: Scene3DViewerProp
         // Debug: Log wrap angles and radii
         console.log('Primary - Radius:', primaryRadius, 'Wrap Angle:', primaryWrapAngleDeg.toFixed(1), '° (', primaryWrapAngle.toFixed(3), 'rad)');
         console.log('Secondary - Radius:', secondaryRadius, 'Wrap Angle:', secondaryWrapAngleDeg.toFixed(1), '° (', secondaryWrapAngle.toFixed(3), 'rad)');
+        console.log('Secondary Helix Rotation:', secondaryHelixRotationDeg.toFixed(1), '° (', secondaryHelixRotation.toFixed(3), 'rad)');
 
         // Angular positions are already in radians from backend, use directly for 3D rotation
         // (Three.js rotations use radians)
@@ -194,6 +208,8 @@ export const Scene3DViewer = ({ replayController, className }: Scene3DViewerProp
             // Secondary opens as shift increases: shift_distance
             // Position is relative to parent (secondaryFixed), so apply the offset
             position: [0, 0, -(secondaryOffset + shiftDistanceScene)],
+            // Add helix spring rotation (relative to the fixed sheave)
+            rotation: [0, 0, secondaryHelixRotation],
           },
         });
 
@@ -214,7 +230,7 @@ export const Scene3DViewer = ({ replayController, className }: Scene3DViewerProp
     });
 
     return unsubscribe;
-  }, [sceneController, replayController, constants, toSceneDistance, beltMesh]);
+  }, [sceneController, replayController, constants, toSceneDistance, beltMesh, initialHelixRotation]);
 
   // Update belt visibility when state changes
   useEffect(() => {
