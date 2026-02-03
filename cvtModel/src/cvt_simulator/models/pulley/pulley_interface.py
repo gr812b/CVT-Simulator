@@ -178,7 +178,7 @@ class PulleyModel(ABC):
         )
 
         # To future Kai:
-        # Trust me! If you're using your current assumption 
+        # Trust me! If you're using your current assumption
         # (Which the belt isn't slipping from the secondary, i.e. belt speed = sec speed)
         # Then the formula for both pulleys ends up the same.
         # Pretty miraculous I know, but you did this sooo...
@@ -188,7 +188,10 @@ class PulleyModel(ABC):
         sec_angular_velocity = state.car_velocity * wheel_to_sec_ratio
 
         radial_from_centrifugal = (
-            sec_angular_velocity**2 * sec_radius**2 * BELT_CROSS_SECTIONAL_AREA * RUBBER_DENSITY
+            sec_angular_velocity**2
+            * sec_radius**2
+            * BELT_CROSS_SECTIONAL_AREA
+            * RUBBER_DENSITY
         )
 
         # Total radial force (determines friction capacity)
