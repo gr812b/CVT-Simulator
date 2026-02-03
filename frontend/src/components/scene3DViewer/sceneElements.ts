@@ -144,6 +144,24 @@ export const setupAxisHelpers = (sceneController: Scene3DController): (() => voi
 };
 
 /**
+ * Setup vertical grid helper for size reference.
+ * Returns cleanup function to remove the grid.
+ */
+export const setupVerticalGrid = (sceneController: Scene3DController): (() => void) => {
+  const gridSize = 20; // 20 inch x 20 inch grid
+  const divisions = 20; // 20 divisions = 1 inch per division
+  const verticalGrid = new THREE.GridHelper(gridSize, divisions, 0xffffff, 0x888888);
+  verticalGrid.rotation.x = Math.PI / 2; // Rotate to be vertical
+
+  sceneController.addObject(verticalGrid);
+
+  // Return cleanup function
+  return () => {
+    sceneController.removeObject(verticalGrid);
+  };
+};
+
+/**
  * Setup CVT belt mesh in the scene.
  * Creates an initial belt mesh with default geometry.
  * Returns the belt mesh for later updates.

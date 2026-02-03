@@ -6,7 +6,7 @@ import { getConstants, type ConstantsResponse } from '@utils/api';
 import { convertConstants, convertValue } from '@utils/conversion';
 import styles from './Scene3DViewer.module.scss';
 import { SCENE_DISTANCE_UNIT, SCENE_ANGLE_UNIT } from './modelConfigs';
-import { loadCVTModels, setupSceneLighting, setupSceneGrid, setupBelt, setupAxisHelpers } from './sceneElements';
+import { loadCVTModels, setupSceneLighting, setupSceneGrid, setupBelt, setupAxisHelpers, setupVerticalGrid } from './sceneElements';
 import { updateBeltMesh, type BeltPathData } from './beltGeometry';
 import * as THREE from 'three';
 
@@ -93,6 +93,12 @@ export const Scene3DViewer = ({ replayController, className }: Scene3DViewerProp
   useEffect(() => {
     if (!sceneController) return;
     return setupAxisHelpers(sceneController);
+  }, [sceneController]);
+
+  // Setup vertical grid for size reference
+  useEffect(() => {
+    if (!sceneController) return;
+    return setupVerticalGrid(sceneController);
   }, [sceneController]);
 
   // Setup belt mesh
