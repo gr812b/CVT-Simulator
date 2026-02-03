@@ -12,6 +12,9 @@ import secondaryMovingModel from '@assets/models/sec_moving.glb?url';
 export const SCENE_DISTANCE_UNIT: UnitOptions['distance'] = 'in';
 export const SCENE_ANGLE_UNIT: UnitOptions['angle'] = 'rad';
 
+const primaryOffset = 0.6;
+const secondaryOffset = 0.56;
+
 /**
  * Configuration for each CVT model component
  */
@@ -35,7 +38,7 @@ export const CVT_MODEL_CONFIGS: CVTModelConfig[] = [
     id: 'primaryFixed',
     modelUrl: primaryFixedModel,
     color: 0xff4444,
-    getInitialPosition: (constants) => [-constants.center_to_center / 2, 0, 0],
+    getInitialPosition: (constants) => [-constants.center_to_center / 2, 0, -primaryOffset - constants.max_shift / 2],
     rotation: [0, Math.PI, 0], // Flip 180° around Y-axis to face the other way
   },
   {
@@ -43,20 +46,20 @@ export const CVT_MODEL_CONFIGS: CVTModelConfig[] = [
     modelUrl: primaryMovingModel,
     color: 0xff8844,
     parentId: 'primaryFixed',
-    getInitialPosition: (constants) => [0, 0, -constants.max_shift],
+    getInitialPosition: (constants) => [0, 0, -primaryOffset - constants.max_shift],
   },
   {
     id: 'secondaryFixed',
     modelUrl: secondaryFixedModel,
     color: 0x44ff44,
     // TODO: Initial position in Z needs looking at, kinda arbitrary for now
-    getInitialPosition: (constants) => [constants.center_to_center / 2, 0, constants.max_shift/4],
+    getInitialPosition: (constants) => [constants.center_to_center / 2, 0, secondaryOffset],
   },
   {
     id: 'secondaryMoving',
     modelUrl: secondaryMovingModel,
     color: 0x88ff44,
     parentId: 'secondaryFixed',
-    getInitialPosition: () => [0, 0, 0],
+    getInitialPosition: () => [0, 0, -secondaryOffset],
   },
 ];

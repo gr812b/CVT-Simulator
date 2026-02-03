@@ -132,6 +132,10 @@ export const Scene3DViewer = ({ replayController, className }: Scene3DViewerProp
         const primaryRadiusScene = toSceneDistance(primaryRadius);
         const secondaryRadiusScene = toSceneDistance(secondaryRadius);
 
+        // Offsets match those in modelConfigs.ts (already in scene units)
+        const primaryOffset = 0.6;
+        const secondaryOffset = 0.56;
+
         // Update all models
         sceneController.updateModels({
           primaryFixed: {
@@ -139,20 +143,21 @@ export const Scene3DViewer = ({ replayController, className }: Scene3DViewerProp
           },
           primaryMoving: {
             // Primary closes as shift increases: max_shift - shift_distance
-            position: [0, 0, -(constants.max_shift - shiftDistanceScene)],
+            // Position is relative to parent (primaryFixed), so just the offset change
+            position: [0, 0, -(primaryOffset + constants.max_shift - shiftDistanceScene)],
           },
           secondaryFixed: {
             rotation: [0, 0, secondaryAngularPosition],
           },
           secondaryMoving: {
             // Secondary opens as shift increases: shift_distance
-            position: [0, 0, -shiftDistanceScene],
+            // Position is relative to parent (secondaryFixed), so apply the offset
+            position: [0, 0, -(secondaryOffset + shiftDistanceScene)],
           },
         });
 
-        // Update belt mesh - belt follows the shift distance in Z direction
-        // As shift increases, belt moves in -Z direction
-        const beltZ = -shiftDistanceScene;
+        // Update belt mesh - starts at Z=0 and moves in -Z direction as shift increases
+        const beltZ = -shiftDistanceScene/2;
 
         const beltPathData: BeltPathData = {
           primaryRadius: primaryRadiusScene,

@@ -88,7 +88,7 @@ class CarSpecs(BaseModel):
     @property
     def max_shift(self) -> float:
         """Maximum shift distance in meters (calculated constant)."""
-        return inch_to_meter(0.995)
+        return inch_to_meter(0.728)
 
     @computed_field
     @property
