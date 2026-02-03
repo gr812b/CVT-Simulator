@@ -127,13 +127,13 @@ export const createBeltCrossSection = (constants: ConstantsResponse, scale: numb
   const shape = new THREE.Shape();
   
   // Trapezoidal shape: narrower (top) on inside, wider (bottom) on outside
-  // For V-belt in groove: small end toward pulley center, wide end away
+  // For V-belt in groove: small end toward pulley center (inside), wide end away (outside)
   // Center at origin, with narrow end at -height/2 (inside) and wide end at +height/2 (outside)
-  shape.moveTo(-topWidth / 2, -height / 2);  // Narrow inside
-  shape.lineTo(topWidth / 2, -height / 2);
-  shape.lineTo(bottomWidth / 2, height / 2);  // Wide outside
-  shape.lineTo(-bottomWidth / 2, height / 2);
-  shape.lineTo(-topWidth / 2, -height / 2);
+  shape.moveTo(-bottomWidth / 2, -height / 2);  // Wide inside (toward pulley center)
+  shape.lineTo(bottomWidth / 2, -height / 2);
+  shape.lineTo(topWidth / 2, height / 2);  // Narrow outside (away from pulley)
+  shape.lineTo(-topWidth / 2, height / 2);
+  shape.lineTo(-bottomWidth / 2, -height / 2);
 
   return shape;
 };

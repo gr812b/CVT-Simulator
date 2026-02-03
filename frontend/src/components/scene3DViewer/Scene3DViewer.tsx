@@ -27,6 +27,7 @@ export const Scene3DViewer = ({ replayController, className }: Scene3DViewerProp
   const [constants, setConstants] = useState<ConstantsResponse | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [beltMesh, setBeltMesh] = useState<THREE.Mesh | null>(null);
+  const [beltVisible, setBeltVisible] = useState(true);
 
   /**
    * Helper to convert any distance value from BAJA units (meters) to the scene's distance unit.
@@ -171,6 +172,7 @@ export const Scene3DViewer = ({ replayController, className }: Scene3DViewerProp
         // Create belt on first frame, update on subsequent frames
         if (!beltMesh) {
           const { beltMesh: mesh, cleanup } = setupBelt(sceneController, constants);
+          mesh.visible = beltVisible;
           setBeltMesh(mesh);
           // Update with actual data immediately
           updateBeltMesh(mesh, beltPathData, constants);
@@ -181,7 +183,14 @@ export const Scene3DViewer = ({ replayController, className }: Scene3DViewerProp
     });
 
     return unsubscribe;
-  }, [sceneController, replayController, constants, toSceneDistance, beltMesh]);
+  }, [sceneController, replayController, constants, toSceneDistance, beltMesh, beltVisible]);
+
+  // Update belt visibility when state changes
+  useEffect(() => {
+    if (beltMesh) {
+      beltMesh.visible = beltVisible;
+    }
+  }, [beltVisible, beltMesh]);
 
   return (
     <div ref={containerRef} className={`${styles.scene3dViewer} ${className ?? ''}`}>
@@ -191,6 +200,13 @@ export const Scene3DViewer = ({ replayController, className }: Scene3DViewerProp
           <p>Loading 3D models...</p>
         </div>
       )}
+      <button
+        className={styles.toggleBeltButton}
+        onClick={() => setBeltVisible(!beltVisible)}
+        title={beltVisible ? 'Hide Belt' : 'Show Belt'}
+      >
+        {beltVisible ? '🔴' : '⚪'} Belt
+      </button>
     </div>
   );
 };
