@@ -25,12 +25,16 @@ from cvt_simulator.utils.system_state import SystemState
 from cvt_simulator.constants.car_specs import (
     SHEAVE_ANGLE,
     BELT_CROSS_SECTIONAL_AREA,
+    BELT_HEIGHT,
+    GEARBOX_RATIO,
+    WHEEL_RADIUS,
 )
 from cvt_simulator.constants.constants import (
     RUBBER_DENSITY,
     RUBBER_ALUMINUM_STATIC_FRICTION,
 )
 from cvt_simulator.models.dataTypes import PulleyState, PulleyForces, PulleyBreakdowns
+from cvt_simulator.utils.theoretical_models import TheoreticalModels as tm
 
 
 def get_kwarg(kwargs: dict[str, Any], key: str, default: Any = None) -> Any:
@@ -164,17 +168,27 @@ class PulleyModel(ABC):
                 - total_radial: Sum of both components [N]
         """
         wrap_angle = self._get_wrap_angle(state.shift_distance)
-        radius = self._get_radius(state.shift_distance)
-        angular_velocity = self._get_angular_velocity(state)
+        # TODO: Re-use these later?
+        # radius = self._get_radius(state.shift_distance)
+        # angular_velocity = self._get_angular_velocity(state)
 
         # Radial force from pulley clamping (through V-belt wedging)
         radial_from_clamping = (
             2 * (clamping_force * np.tan(SHEAVE_ANGLE / 2)) / wrap_angle
         )
 
-        # Radial force from belt centrifugal tension
+        # To future Kai:
+        # Trust me! If you're using your current assumption 
+        # (Which the belt isn't slipping from the secondary, i.e. belt speed = sec speed)
+        # Then the formula for both pulleys ends up the same.
+        # Pretty miraculous I know, but you did this sooo...
+        sec_radius = tm.outer_sec_radius(state.shift_distance) - BELT_HEIGHT / 2
+
+        wheel_to_sec_ratio = GEARBOX_RATIO / WHEEL_RADIUS
+        sec_angular_velocity = state.car_velocity * wheel_to_sec_ratio
+
         radial_from_centrifugal = (
-            angular_velocity**2 * radius**2 * BELT_CROSS_SECTIONAL_AREA * RUBBER_DENSITY
+            sec_angular_velocity**2 * sec_radius**2 * BELT_CROSS_SECTIONAL_AREA * RUBBER_DENSITY
         )
 
         # Total radial force (determines friction capacity)
