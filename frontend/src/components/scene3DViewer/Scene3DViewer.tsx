@@ -101,19 +101,9 @@ export const Scene3DViewer = ({ replayController, className }: Scene3DViewerProp
     return setupVerticalGrid(sceneController);
   }, [sceneController]);
 
-  // Setup belt mesh
-  useEffect(() => {
-    if (!sceneController || !constants) return;
-
-    const { beltMesh: mesh, cleanup } = setupBelt(sceneController, constants);
-    setBeltMesh(mesh);
-
-    return cleanup;
-  }, [sceneController, constants]);
-
   // Subscribe to replay controller and update models
   useEffect(() => {
-    if (!sceneController || !constants || !beltMesh) return;
+    if (!sceneController || !constants) return;
 
     const unsubscribe = replayController.on((event) => {
       if (event.type === ReplayEventType.Progress) {
@@ -125,6 +115,16 @@ export const Scene3DViewer = ({ replayController, className }: Scene3DViewerProp
         // Get pulley states for belt calculation
         const primaryRadius = event.data.system?.cvt?.primaryPulleyState?.radius ?? constants.min_prim_radius;
         const secondaryRadius = event.data.system?.cvt?.secondaryPulleyState?.radius ?? constants.max_sec_radius;
+        const primaryWrapAngleDeg = event.data.system?.cvt?.primaryPulleyState?.wrap_angle ?? 180;
+        const secondaryWrapAngleDeg = event.data.system?.cvt?.secondaryPulleyState?.wrap_angle ?? 180;
+        
+        // Convert wrap angles from degrees to radians for Three.js
+        const primaryWrapAngle = primaryWrapAngleDeg * (Math.PI / 180);
+        const secondaryWrapAngle = secondaryWrapAngleDeg * (Math.PI / 180);
+
+        // Debug: Log wrap angles and radii
+        console.log('Primary - Radius:', primaryRadius, 'Wrap Angle:', primaryWrapAngleDeg.toFixed(1), '° (', primaryWrapAngle.toFixed(3), 'rad)');
+        console.log('Secondary - Radius:', secondaryRadius, 'Wrap Angle:', secondaryWrapAngleDeg.toFixed(1), '° (', secondaryWrapAngle.toFixed(3), 'rad)');
 
         // Angular positions are already in radians from backend, use directly for 3D rotation
         // (Three.js rotations use radians)
@@ -164,9 +164,19 @@ export const Scene3DViewer = ({ replayController, className }: Scene3DViewerProp
           primaryPosition: [-constants.center_to_center / 2, 0, beltZ],
           secondaryRadius: secondaryRadiusScene,
           secondaryPosition: [constants.center_to_center / 2, 0, beltZ],
+          primaryWrapAngle,
+          secondaryWrapAngle,
         };
 
-        updateBeltMesh(beltMesh, beltPathData, constants);
+        // Create belt on first frame, update on subsequent frames
+        if (!beltMesh) {
+          const { beltMesh: mesh, cleanup } = setupBelt(sceneController, constants);
+          setBeltMesh(mesh);
+          // Update with actual data immediately
+          updateBeltMesh(mesh, beltPathData, constants);
+        } else {
+          updateBeltMesh(beltMesh, beltPathData, constants);
+        }
       }
     });
 

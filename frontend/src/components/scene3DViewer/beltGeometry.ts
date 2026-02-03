@@ -9,6 +9,8 @@ export interface BeltPathData {
   primaryPosition: [number, number, number];
   secondaryRadius: number;
   secondaryPosition: [number, number, number];
+  primaryWrapAngle?: number; // Wrap angle in radians
+  secondaryWrapAngle?: number; // Wrap angle in radians
 }
 
 /**
@@ -29,6 +31,8 @@ export const calculateBeltPath = (data: BeltPathData): THREE.CatmullRomCurve3 =>
     primaryPosition,
     secondaryRadius,
     secondaryPosition,
+    primaryWrapAngle = Math.PI,
+    secondaryWrapAngle = Math.PI,
   } = data;
 
   const points: THREE.Vector3[] = [];
@@ -39,59 +43,69 @@ export const calculateBeltPath = (data: BeltPathData): THREE.CatmullRomCurve3 =>
   const secondaryCenter = new THREE.Vector3(...secondaryPosition);
 
   // Simple belt path: wrap around each pulley and connect with straight lines
-  // For now, wrap π radians (180°) around each pulley
-  const wrapAngle = Math.PI;
-  const halfWrap = wrapAngle / 2;
+  // Wrap angles are centered on the far side (away from the other pulley)
+  // For non-crossing belt: +Y to +Y, -Y to -Y
+  // Primary (left, -X): centered at π radians (left side, away from secondary)
+  // Secondary (right, +X): centered at 0 radians (right side, away from primary)
+  const primaryHalfWrap = primaryWrapAngle / 2;
+  const secondaryHalfWrap = secondaryWrapAngle / 2;
 
   // Arc segments for smooth curves
   const arcSegments = 30;
   const spanSegments = 10;
 
-  // 1. Arc around primary pulley: from -halfWrap to +halfWrap
-  // Primary is flipped 180°, wrap from π/2 (top) to 3π/2 (bottom) going clockwise
+  // 1. Arc around primary pulley: centered at π, wraps ±halfWrap
+  // Start from bottom (π + halfWrap, -Y) going counterclockwise to top (π - halfWrap, +Y)
   for (let i = 0; i <= arcSegments; i++) {
     const t = i / arcSegments;
-    const angle = halfWrap + t * wrapAngle; // π/2 to 3π/2
+    const angle = Math.PI + primaryHalfWrap - t * primaryWrapAngle;
     const x = primaryRadius * Math.cos(angle);
     const y = primaryRadius * Math.sin(angle);
     points.push(new THREE.Vector3(primaryCenter.x + x, primaryCenter.y + y, primaryCenter.z));
   }
 
-  // 2. Straight line from primary bottom to secondary bottom
-  const primaryBottomX = primaryRadius * Math.cos(halfWrap + wrapAngle); // 3π/2
-  const primaryBottomY = primaryRadius * Math.sin(halfWrap + wrapAngle); // -Y
-  const secondaryBottomX = secondaryRadius * Math.cos(-halfWrap); // -π/2 
-  const secondaryBottomY = secondaryRadius * Math.sin(-halfWrap); // -Y
+  // 2. Straight line from primary top (+Y) to secondary top (+Y) - non-crossing
+  const primaryTopAngle = Math.PI - primaryHalfWrap;  // +Y side
+  const secondaryTopAngle = secondaryHalfWrap;  // +Y side
+  
+  const primaryTopX = primaryRadius * Math.cos(primaryTopAngle);
+  const primaryTopY = primaryRadius * Math.sin(primaryTopAngle);
+  const secondaryTopX = secondaryRadius * Math.cos(secondaryTopAngle);
+  const secondaryTopY = secondaryRadius * Math.sin(secondaryTopAngle);
 
-  const primaryBottom = new THREE.Vector3(primaryCenter.x + primaryBottomX, primaryCenter.y + primaryBottomY, primaryCenter.z);
-  const secondaryBottom = new THREE.Vector3(secondaryCenter.x + secondaryBottomX, secondaryCenter.y + secondaryBottomY, secondaryCenter.z);
+  const primaryTop = new THREE.Vector3(primaryCenter.x + primaryTopX, primaryCenter.y + primaryTopY, primaryCenter.z);
+  const secondaryTop = new THREE.Vector3(secondaryCenter.x + secondaryTopX, secondaryCenter.y + secondaryTopY, secondaryCenter.z);
 
   for (let i = 1; i <= spanSegments; i++) {
     const t = i / spanSegments;
-    points.push(new THREE.Vector3().lerpVectors(primaryBottom, secondaryBottom, t));
+    points.push(new THREE.Vector3().lerpVectors(primaryTop, secondaryTop, t));
   }
 
-  // 3. Arc around secondary pulley: from -halfWrap to +halfWrap (bottom to top)
+  // 3. Arc around secondary pulley: centered at 0, wraps ±halfWrap
+  // Start from top (+halfWrap, +Y) going counterclockwise to bottom (-halfWrap, -Y)
   for (let i = 1; i <= arcSegments; i++) {
     const t = i / arcSegments;
-    const angle = -halfWrap + t * wrapAngle; // -π/2 to π/2
+    const angle = secondaryHalfWrap - t * secondaryWrapAngle;
     const x = secondaryRadius * Math.cos(angle);
     const y = secondaryRadius * Math.sin(angle);
     points.push(new THREE.Vector3(secondaryCenter.x + x, secondaryCenter.y + y, secondaryCenter.z));
   }
 
-  // 4. Straight line from secondary top back to primary top
-  const primaryTopX = primaryRadius * Math.cos(halfWrap); // π/2
-  const primaryTopY = primaryRadius * Math.sin(halfWrap); // +Y
-  const secondaryTopX = secondaryRadius * Math.cos(halfWrap); // π/2
-  const secondaryTopY = secondaryRadius * Math.sin(halfWrap); // +Y
+  // 4. Straight line from secondary bottom (-Y) back to primary bottom (-Y) - non-crossing
+  const primaryBottomAngle = Math.PI + primaryHalfWrap;  // -Y side
+  const secondaryBottomAngle = -secondaryHalfWrap;  // -Y side
+  
+  const primaryBottomX = primaryRadius * Math.cos(primaryBottomAngle);
+  const primaryBottomY = primaryRadius * Math.sin(primaryBottomAngle);
+  const secondaryBottomX = secondaryRadius * Math.cos(secondaryBottomAngle);
+  const secondaryBottomY = secondaryRadius * Math.sin(secondaryBottomAngle);
 
-  const primaryTop = new THREE.Vector3(primaryCenter.x + primaryTopX, primaryCenter.y + primaryTopY, primaryCenter.z);
-  const secondaryTop = new THREE.Vector3(secondaryCenter.x + secondaryTopX, secondaryCenter.y + secondaryTopY, secondaryCenter.z);
+  const primaryBottom = new THREE.Vector3(primaryCenter.x + primaryBottomX, primaryCenter.y + primaryBottomY, primaryCenter.z);
+  const secondaryBottom = new THREE.Vector3(secondaryCenter.x + secondaryBottomX, secondaryCenter.y + secondaryBottomY, secondaryCenter.z);
 
   for (let i = 1; i < spanSegments; i++) {
     const t = i / spanSegments;
-    points.push(new THREE.Vector3().lerpVectors(secondaryTop, primaryTop, t));
+    points.push(new THREE.Vector3().lerpVectors(secondaryBottom, primaryBottom, t));
   }
 
   // Create closed curve
