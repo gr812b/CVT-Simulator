@@ -44,9 +44,6 @@ class CarSpecs(BaseModel):
     helix_radius: float = Field(default=0.04445, description="Helix radius in meters")
 
     # Belt specifications
-    belt_angle: float = Field(
-        default=deg_to_rad(14), description="Belt angle in radians"
-    )
     belt_height: float = Field(
         default=inch_to_meter(0.613), description="Belt height in meters"
     )
@@ -54,7 +51,10 @@ class CarSpecs(BaseModel):
         default=inch_to_meter(37.53), description="Belt length in meters"
     )
     belt_width_top: float = Field(
-        default=inch_to_meter(0.85), description="Belt width at top in meters"
+        default=inch_to_meter(0.840), description="Belt width at top in meters"
+    )
+    belt_width_bottom: float = Field(
+        default=inch_to_meter(0.662), description="Belt width at bottom in meters"
     )
 
     # Pulley radii
@@ -74,9 +74,11 @@ class CarSpecs(BaseModel):
     # Computed fields (calculated from base values)
     @computed_field
     @property
-    def belt_width_bottom(self) -> float:
+    def belt_angle(self) -> float:
         """Belt width at bottom in meters, calculated from top width, height and angle."""
-        return self.belt_width_top - 2 * self.belt_height * np.tan(self.belt_angle)
+        return math.atan(
+            (self.belt_width_top - self.belt_width_bottom) / (2 * self.belt_height)
+        )
 
     @computed_field
     @property
