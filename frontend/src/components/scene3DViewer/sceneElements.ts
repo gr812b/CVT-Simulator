@@ -6,7 +6,6 @@ import type { ConstantsResponse } from '@utils/api';
 import type { Scene3DController } from '@utils/Scene3DController';
 import { CVT_MODEL_CONFIGS } from './modelConfigs';
 import { createBeltMesh, type BeltPathData, calculateBeltPath } from './beltGeometry';
-import { SCENE_DISTANCE_UNIT } from './modelConfigs';
 
 /**
  * Load all CVT models from configuration with proper materials and shadows.

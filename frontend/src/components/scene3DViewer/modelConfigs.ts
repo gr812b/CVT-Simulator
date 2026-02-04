@@ -52,8 +52,8 @@ export const CVT_MODEL_CONFIGS: CVTModelConfig[] = [
     id: 'secondaryFixed',
     modelUrl: secondaryFixedModel,
     color: 0x44ff44,
-    // TODO: Initial position in Z needs looking at, kinda arbitrary for now
-    getInitialPosition: (constants) => [constants.center_to_center / 2, 0, secondaryOffset],
+    // Offset by initial_sheave_displacement in -Z direction
+    getInitialPosition: (constants) => [constants.center_to_center / 2, 0, secondaryOffset - constants.initial_sheave_displacement/2],
   },
   {
     id: 'secondaryMoving',

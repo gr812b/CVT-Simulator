@@ -138,7 +138,9 @@ export const Scene3DViewer = ({ replayController, className }: Scene3DViewerProp
     const primaryRadiusScene = toSceneDistance(primaryRadius);
     const secondaryRadiusScene = toSceneDistance(secondaryRadius);
 
-    const beltZ = -shiftDistanceScene / 2;
+    // Belt starts offset and doesn't move until shift distance exceeds initial_sheave_displacement
+    const effectiveBeltShift = Math.max(constants.initial_sheave_displacement, shiftDistanceScene);
+    const beltZ = -effectiveBeltShift / 2;
 
     const initialPathData: BeltPathData = {
       primaryRadius: primaryRadiusScene,
@@ -225,8 +227,9 @@ export const Scene3DViewer = ({ replayController, className }: Scene3DViewerProp
           },
         });
 
-        // Update belt mesh - starts at Z=0 and moves in -Z direction as shift increases
-        const beltZ = -shiftDistanceScene/2;
+        // Update belt mesh - starts at initial_sheave_displacement and only moves when shift exceeds it
+        const effectiveBeltShift = Math.max(constants.initial_sheave_displacement, shiftDistanceScene);
+        const beltZ = -effectiveBeltShift / 2;
 
         const beltPathData: BeltPathData = {
           primaryRadius: primaryRadiusScene,
