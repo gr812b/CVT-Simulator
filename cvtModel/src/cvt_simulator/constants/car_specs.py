@@ -67,7 +67,7 @@ class CarSpecs(BaseModel):
         description="Maximum secondary pulley radius in meters",
     )
     initial_sheave_displacement: float = Field(
-        default=inch_to_meter(0.121 + 0.13),
+        default=inch_to_meter(0.121),
         description="Initial sheave displacement in meters",
     )
 
@@ -88,7 +88,7 @@ class CarSpecs(BaseModel):
     @property
     def max_shift(self) -> float:
         """Maximum shift distance in meters (calculated constant)."""
-        return inch_to_meter(0.955)
+        return inch_to_meter(0.75)
 
     @computed_field
     @property
