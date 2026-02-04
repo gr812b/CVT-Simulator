@@ -29,6 +29,8 @@ export const Scene3DViewer = ({ replayController, className }: Scene3DViewerProp
   const [beltMesh, setBeltMesh] = useState<THREE.Mesh | null>(null);
   const [beltVisible, setBeltVisible] = useState(true);
   const [showAngularRotation, setShowAngularRotation] = useState(true);
+  const [gridsVisible, setGridsVisible] = useState(true);
+  const [gridObjects, setGridObjects] = useState<THREE.Object3D[]>([]);
   const [initialHelixRotation, setInitialHelixRotation] = useState<number>(0);
 
   /**
@@ -89,19 +91,24 @@ export const Scene3DViewer = ({ replayController, className }: Scene3DViewerProp
 
   useEffect(() => {
     if (!sceneController) return;
-    return setupSceneGrid(sceneController);
-  }, [sceneController]);
-
-  // Setup axis helpers for debugging
-  useEffect(() => {
-    if (!sceneController) return;
-    return setupAxisHelpers(sceneController);
-  }, [sceneController]);
-
-  // Setup vertical grid for size reference
-  useEffect(() => {
-    if (!sceneController) return;
-    return setupVerticalGrid(sceneController);
+    const cleanup1 = setupSceneGrid(sceneController);
+    const cleanup2 = setupAxisHelpers(sceneController);
+    const cleanup3 = setupVerticalGrid(sceneController);
+    
+    // Get the grid objects from the scene to control visibility
+    const grids: THREE.Object3D[] = [];
+    sceneController.getScene().traverse((obj) => {
+      if (obj instanceof THREE.GridHelper || obj instanceof THREE.AxesHelper) {
+        grids.push(obj);
+      }
+    });
+    setGridObjects(grids);
+    
+    return () => {
+      cleanup1();
+      cleanup2();
+      cleanup3();
+    };
   }, [sceneController]);
 
   // Setup belt mesh with initial data from replay controller
@@ -192,6 +199,9 @@ export const Scene3DViewer = ({ replayController, className }: Scene3DViewerProp
         const primaryOffset = 0.6;
         const secondaryOffset = 0.56;
 
+        // Secondary doesn't move until shift distance exceeds initial_sheave_displacement
+        const effectiveSecondaryShift = Math.max(0, shiftDistanceScene - constants.initial_sheave_displacement);
+
         // Update all models
         sceneController.updateModels({
           primaryFixed: {
@@ -208,7 +218,8 @@ export const Scene3DViewer = ({ replayController, className }: Scene3DViewerProp
           secondaryMoving: {
             // Secondary opens as shift increases: shift_distance
             // Position is relative to parent (secondaryFixed), so apply the offset
-            position: [0, 0, -(secondaryOffset + shiftDistanceScene)],
+            // Only moves after initial_sheave_displacement is exceeded
+            position: [0, 0, -(secondaryOffset + effectiveSecondaryShift)],
             // Add helix spring rotation (relative to the fixed sheave)
             rotation: [0, 0, secondaryHelixRotation],
           },
@@ -240,6 +251,18 @@ export const Scene3DViewer = ({ replayController, className }: Scene3DViewerProp
     }
   }, [beltVisible, beltMesh]);
 
+  // Update grid visibility when state changes
+  useEffect(() => {
+    gridObjects.forEach(grid => {
+      grid.visible = gridsVisible;
+    });
+  }, [gridsVisible, gridObjects]);
+  useEffect(() => {
+    gridObjects.forEach(grid => {
+      grid.visible = gridsVisible;
+    });
+  }, [gridsVisible, gridObjects]);
+
   return (
     <div ref={containerRef} className={`${styles.scene3dViewer} ${className ?? ''}`}>
       {isLoading && (
@@ -261,6 +284,13 @@ export const Scene3DViewer = ({ replayController, className }: Scene3DViewerProp
         title={showAngularRotation ? 'Hide Angular Rotation' : 'Show Angular Rotation'}
       >
         {showAngularRotation ? '🔵' : '⚪'} Rotation
+      </button>
+      <button
+        className={styles.toggleGridsButton}
+        onClick={() => setGridsVisible(!gridsVisible)}
+        title={gridsVisible ? 'Hide Grids' : 'Show Grids'}
+      >
+        {gridsVisible ? '🟢' : '⚪'} Grids
       </button>
     </div>
   );
