@@ -6,6 +6,7 @@ from cvt_simulator import (
     simulate_cvt_model,
     SimulationArgs,
     CarSpecs,
+    solve_all,
 )
 from cvt_simulator.models.ramps.ramp_preview import generate_ramp_preview
 from ..models.response_models import (
@@ -14,6 +15,7 @@ from ..models.response_models import (
     PiecewiseRampConfigModel,
     RampPreviewResponse,
     StreamMessage,
+    AllSolverResultsModel,
 )
 
 router = APIRouter()
@@ -162,6 +164,15 @@ def run_stream(payload: SimulationArgsInput | None = None):  # type: ignore
             "X-Accel-Buffering": "no",
         },
     )
+
+
+@router.post("/solvers", response_model=AllSolverResultsModel)
+def run_solvers(payload: SimulationArgsInput | None = None):  # type: ignore
+    args = payload.model_dump(exclude_none=True) if payload else {}
+    args = SimulationArgs.from_mapping(args)
+
+    # Run all solvers in one call
+    return solve_all(args)
 
 
 # TODO: Remove this logic from endpoints / bake into cvtModel simulator
