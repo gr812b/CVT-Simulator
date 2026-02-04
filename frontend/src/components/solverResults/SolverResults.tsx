@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { runSolvers } from '@utils/api';
 import type { SolversResponse } from '@utils/api';
 import { useParameter } from '@contexts/ParameterContext';
@@ -10,25 +10,43 @@ export const SolverResults = () => {
     const [solverData, setSolverData] = useState<SolversResponse | null>(null);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const currentRequestRef = useRef(0);
 
     useEffect(() => {
+        const abortController = new AbortController();
+        const requestId = ++currentRequestRef.current;
+
         const fetchSolvers = async () => {
             setIsLoading(true);
             setError(null);
             
             try {
                 const apiBody = mapParametersToApiBody(parameters);
-                const result = await runSolvers(apiBody);
-                setSolverData(result);
+                const result = await runSolvers(apiBody, abortController.signal);
+                
+                // Only update state if this is still the current request
+                if (requestId === currentRequestRef.current) {
+                    setSolverData(result);
+                }
             } catch (err) {
-                console.error('Failed to fetch solver results:', err);
-                setError('Failed to load solver results');
+                // Don't show error if request was aborted or superseded
+                if (requestId === currentRequestRef.current) {
+                    console.error('Failed to fetch solver results:', err);
+                    setError('Failed to load solver results');
+                }
             } finally {
-                setIsLoading(false);
+                if (requestId === currentRequestRef.current) {
+                    setIsLoading(false);
+                }
             }
         };
 
         fetchSolvers();
+
+        // Cancel the request when parameters change or component unmounts
+        return () => {
+            abortController.abort();
+        };
     }, [parameters]);
 
     const convertToRPM = (radPerSec: number | null | undefined): string => {
