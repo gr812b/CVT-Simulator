@@ -270,9 +270,6 @@ class PhysicalSecondaryPulley(SecondaryPulleyModel):
         """
         Calculate helix cam rotation from shift distance.
 
-        For the helix ramp, shift_distance is the HEIGHT (y-value), and we need
-        to find the corresponding x position to get the correct slope.
-
         Args:
             shift_distance: Current shift distance [m] (this is the ramp HEIGHT)
 
