@@ -87,6 +87,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/solvers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Run Solvers */
+        post: operations["run_solvers_solvers_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/ramp/preview": {
         parameters: {
             query?: never;
@@ -111,6 +128,11 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /** AllSolverResultsModel */
+        AllSolverResultsModel: {
+            primary_engagement: components["schemas"]["SolverResultModel"];
+            shift_initiation: components["schemas"]["SolverResultModel"];
+        };
         /** CarForceBreakdownModel */
         CarForceBreakdownModel: {
             /** Coupling Torque At Wheel */
@@ -440,6 +462,17 @@ export interface components {
             /** Is Slipping */
             is_slipping: boolean;
         };
+        /** SolverResultModel */
+        SolverResultModel: {
+            /** Success */
+            success: boolean;
+            /** Value */
+            value: number | null;
+            /** Units */
+            units: string;
+            /** Description */
+            description: string;
+        };
         /** SpringTorsForceBreakdownModel */
         SpringTorsForceBreakdownModel: {
             /** Rotation */
@@ -640,6 +673,39 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["StreamProgressMessage"] | components["schemas"]["StreamCompleteMessage"] | components["schemas"]["StreamErrorMessage"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    run_solvers_solvers_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["SimulationArgsInput"] | null;
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AllSolverResultsModel"];
                 };
             };
             /** @description Validation Error */

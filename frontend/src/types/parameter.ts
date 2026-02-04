@@ -61,7 +61,7 @@ const PARAMETERS_IMPL = {
     description:
       'The total mass of the flyweight arm system in the primary pulley. This includes all flyweights (typically three in most designs) and the full assembly that rotates to generate centrifugal force. The flyweight mass is responsible for producing the main clamping force in the CVT system, as it determines how strongly the pulley can grip the belt as RPM increases. Enter the combined mass of all spinning components that contribute to centrifugal clamping.',
     type: 'number',
-    defaultValue: 1.1,
+    defaultValue: 0.5,
     validate: validators.gtZero,
     units: 'kg',
     group: 'primary',
@@ -72,7 +72,7 @@ const PARAMETERS_IMPL = {
       description:
         'The spring rate of the compressional spring in the primary pulley. This value sets how much force is needed to shift the pulley as the spring is compressed, affecting the entire shifting process. In the spring force equation (y = mx + b), the spring rate is the "m" (slope), controlling how quickly force increases with compression. A higher spring rate means more force is required for shifting at all points. Enter the spring rate value to set the overall resistance to shifting.',
     type: 'number',
-    defaultValue: 1000,
+    defaultValue: 12784,
     validate: validators.gtZero,
     units: 'N/m',
     group: 'primary',
@@ -83,7 +83,7 @@ const PARAMETERS_IMPL = {
     description:
       'The initial compression (pretension) applied to the primary pulley spring before any movement occurs. This sets the starting force that must be overcome for the CVT to begin engaging. Pretension acts as an offset in the spring force equation (y = mx + b), shifting the engagement point. Note: The maximum pretension is limited by the physical design of each CVT. Adjust this value to control when the belt starts to be clamped, but be aware of hardware constraints.',
     type: 'number',
-    defaultValue: 0.3,
+    defaultValue: 0.08,
     validate: validators.gteZero,
     units: 'm',
     group: 'primary',
@@ -118,7 +118,7 @@ const PARAMETERS_IMPL = {
     description:
       'The spring rate of the torsional aspect of the secondary pulley spring. This is the main force component, applying torque through the helix mechanism to resist shifting. In the spring force equation (y = mx + b), this rate is the "m" (slope), controlling how much torque increases as the spring is twisted. The secondary spring has both torsional and compressional effects, but torsional is much larger. For more on how the helix geometry affects this, see the helix geometry documentation.',
     type: 'number',
-    defaultValue: 60,
+    defaultValue: 3.476,
     validate: validators.gtZero,
     units: 'Nm/rad',
     group: 'secondary',
@@ -129,7 +129,7 @@ const PARAMETERS_IMPL = {
     description:
       'The spring rate of the compressional aspect of the secondary pulley spring. This is a smaller force component compared to the torsional aspect, but it still contributes to shifting. In the spring force equation (y = mx + b), this rate is the "m" (slope), controlling how quickly force decreases as the spring is decompressed. The secondary spring is primarily torsional, but the compressional effect is non-negligible and helps the pulley shift.',
     type: 'number',
-    defaultValue: 7000,
+    defaultValue: 3532,
     validate: validators.gtZero,
     units: 'N/m',
     group: 'secondary',
@@ -140,7 +140,7 @@ const PARAMETERS_IMPL = {
     description:
       'The initial pretension (offset) of the torsional component of the secondary pulley spring, measured in degrees. This sets the starting torque that resists shifting before any movement occurs, acting as the "b" in y = mx + b. Adjusting this value changes the baseline resistance to shifting, and is a key factor in how the helix mechanism responds to belt movement.',
     type: 'number',
-    defaultValue: 45,
+    defaultValue: 80,
     validate: validators.gteZero,
     units: 'degrees',
     group: 'secondary',
@@ -151,7 +151,7 @@ const PARAMETERS_IMPL = {
     description:
       'The initial pretension (offset) of the compressional component of the secondary pulley spring, measured in meters. This sets the starting force that encourages shifting before any movement occurs, acting as the "b" in y = mx + b. Adjusting this value changes the baseline force helping the secndary pulley shift.',
     type: 'number',
-    defaultValue: 0.2,
+    defaultValue: 0.05,
     validate: validators.gteZero,
     units: 'm',
     group: 'secondary', 

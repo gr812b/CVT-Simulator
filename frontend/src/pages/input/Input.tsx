@@ -7,6 +7,7 @@ import { RampBuilder } from '@components/rampBuilder/RampBuilder';
 import { RampPreview } from '@components/rampBuilder/RampPreview';
 import { ParameterDescription } from '@components/parameterDescription/ParameterDescription';
 import { LoadingOverlay } from '@components/loadingOverlay/LoadingOverlay';
+import { SolverResults } from '@components/solverResults/SolverResults';
 import { GROUP_TITLES, PARAMETERS, type Parameter, type ParameterGroup, type PiecewiseRampConfig } from '@types';
 import { useParameter } from '@contexts/ParameterContext';
 import { useLoading } from '@contexts/LoadingContext';
@@ -120,6 +121,9 @@ export const Input = () => {
                 className={styles.backButton}
                 onClick={() => navigateWithConfirmation('/')}
             />
+            <div className={styles.solverResultsPosition}>
+                <SolverResults />
+            </div>
             <div className={styles.inputGrid}>
                 <div className={styles.parameterInputContainer}>
                     {allGroups.map((groupKey) => (
