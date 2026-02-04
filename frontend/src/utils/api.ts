@@ -123,8 +123,11 @@ export type SolversBody = NonNullable<operations['run_solvers_solvers_post']['re
 export type SolversResponse =
   operations['run_solvers_solvers_post']['responses']['200']['content']['application/json'];
 
-export async function runSolvers(body?: SolversBody): Promise<SolversResponse> {
-  const { data, error } = await client.POST('/solvers', { body: body ?? {} });
+export async function runSolvers(body?: SolversBody, signal?: AbortSignal): Promise<SolversResponse> {
+  const { data, error } = await client.POST('/solvers', { 
+    body: body ?? {},
+    signal 
+  });
   if (error) throw error;
   return data!;
 }
