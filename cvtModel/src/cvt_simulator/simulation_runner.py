@@ -57,21 +57,21 @@ class SimulationRunner:
         cvt_system_ode = self._get_ode_function()
         # Use a single global time grid for the entire simulation
         time_eval = np.linspace(0, self.TOTAL_SIM_TIME, 10000)
-        
+
         # Track all solution segments
         all_t = []
         all_y = []
-        
+
         current_time = 0
         current_state = self.INITIAL_STATE.to_array()
-        
+
         # Phase 1: Normal shifting until full shift is reached
         events_phase1 = [
             get_shift_steady_event(self.system_model),
             car_velocity_constraint_event,
             shift_constraint_event,
         ]
-        
+
         time_eval_phase1 = time_eval[time_eval >= current_time]
         solution_phase1 = self._solve(
             cvt_system_ode,
@@ -80,32 +80,32 @@ class SimulationRunner:
             time_eval_phase1,
             events_phase1,
         )
-        
+
         all_t.append(solution_phase1.t)
         all_y.append(solution_phase1.y)
-        
+
         # Check if we hit full shift (event 0)
         if solution_phase1.t_events[0].size > 0:
             current_time = solution_phase1.t_events[0][0]
             current_state = solution_phase1.y_events[0][0]
-            
+
             # Phase 2: At full shift - loop to handle potential back-shifting
             max_phases = 10  # Prevent infinite loops
             phase_count = 0
-            
+
             while phase_count < max_phases and current_time < self.TOTAL_SIM_TIME:
                 cvt_system_full_shift_ode = self._get_full_shift_ode_function()
                 time_eval_phase2 = time_eval[time_eval > current_time]
-                
+
                 if time_eval_phase2.size == 0:
                     break
-                
+
                 # At full shift, check for back-shift event
                 events_phase2 = [
                     get_back_shift_event(self.system_model),
                     car_velocity_constraint_event,
                 ]
-                
+
                 solution_phase2 = self._solve(
                     cvt_system_full_shift_ode,
                     current_time,
@@ -113,27 +113,27 @@ class SimulationRunner:
                     time_eval_phase2,
                     events_phase2,
                 )
-                
+
                 all_t.append(solution_phase2.t)
                 all_y.append(solution_phase2.y)
-                
+
                 # Check if back-shift event occurred (event 0)
                 if solution_phase2.t_events[0].size > 0:
                     current_time = solution_phase2.t_events[0][0]
                     current_state = solution_phase2.y_events[0][0]
-                    
+
                     # Phase 3: Back-shifting - return to normal dynamics
                     time_eval_phase3 = time_eval[time_eval > current_time]
-                    
+
                     if time_eval_phase3.size == 0:
                         break
-                    
+
                     events_phase3 = [
                         get_shift_steady_event(self.system_model),
                         car_velocity_constraint_event,
                         shift_constraint_event,
                     ]
-                    
+
                     solution_phase3 = self._solve(
                         cvt_system_ode,
                         current_time,
@@ -141,10 +141,10 @@ class SimulationRunner:
                         time_eval_phase3,
                         events_phase3,
                     )
-                    
+
                     all_t.append(solution_phase3.t)
                     all_y.append(solution_phase3.y)
-                    
+
                     # Check if we reached full shift again (event 0)
                     if solution_phase3.t_events[0].size > 0:
                         current_time = solution_phase3.t_events[0][0]
@@ -161,7 +161,7 @@ class SimulationRunner:
         # Combine all solution segments
         combined_t = np.concatenate(all_t)
         combined_y = np.hstack(all_y)
-        
+
         combined_solution = CombinedSolution(combined_t, combined_y)
         return SimulationResult(combined_solution)
 

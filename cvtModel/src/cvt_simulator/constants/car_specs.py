@@ -59,7 +59,7 @@ class CarSpecs(BaseModel):
 
     # Pulley radii
     min_prim_radius: float = Field(
-        default=inch_to_meter(1.625/2),
+        default=inch_to_meter(1.625 / 2),
         description="Minimum primary pulley radius in meters",
     )
     max_sec_radius: float = Field(
@@ -67,7 +67,7 @@ class CarSpecs(BaseModel):
         description="Maximum secondary pulley radius in meters",
     )
     initial_sheave_displacement: float = Field(
-        default=inch_to_meter(0.088+0.010),
+        default=inch_to_meter(0.088 + 0.010),
         description="Initial sheave displacement in meters",
     )
 

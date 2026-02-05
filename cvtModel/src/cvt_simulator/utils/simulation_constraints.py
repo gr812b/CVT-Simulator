@@ -102,17 +102,17 @@ def get_back_shift_event(system_model: SystemModel):
 
     def back_shift_event(t, y):
         state = SystemState.from_array(y)
-        
+
         # Should only trigger when at full shift
         if state.shift_distance < MAX_SHIFT - 1e-5:
             return 1.0  # Return positive value when not at full shift
-        
+
         # Calculate the shift acceleration
         coupling_torque = system_model.slip_model.get_breakdown(state).coupling_torque
         shift_accel = system_model.cvt_shift_model.get_breakdown(
             state, coupling_torque
         ).acceleration
-        
+
         # Return the acceleration + small threshold
         # Event triggers when this crosses from positive to negative
         # (i.e., when acceleration becomes sufficiently negative)
