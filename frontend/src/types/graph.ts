@@ -35,6 +35,7 @@ const engineRpmAccessor: AccessorStrategy = (point) => point.system.engine.angul
 const engineTorqueAccessor: AccessorStrategy = (point) => point.system.engine.torque;
 const cvtRatioRateOfChangeAccessor: AccessorStrategy = (point) => point.system.slip.cvt_ratio_derivative;
 const enginePowerAccessor: AccessorStrategy = (point) => point.system.engine.power;
+const cvtAccelerationAccessor: AccessorStrategy = (point) => point.system.cvt.acceleration;
 
 // Slip model accessors
 const t_max_primAccessor: AccessorStrategy = (point) => point.system.slip.t_max_prim;
@@ -99,6 +100,11 @@ const rawFlyweightCentrifugalForce: AccessorStrategy = (point) => {
 const primarySpringForceAccessor: AccessorStrategy = (point) => {
     const prf = point.system.cvt.primaryPulleyState.breakdown;
     return getBreakdownValue(prf, ['springForce', 'net'], "primary pulley");
+};
+
+const primaryRampAngleAccessor: AccessorStrategy = (point) => {
+    const prf = point.system.cvt.primaryPulleyState.breakdown;
+    return getBreakdownValue(prf, ['flyweightForce', 'angle'], "primary pulley");
 };
 
 const secondaryHelixFeedbackTorqueAccessor: AccessorStrategy = (point) => {
@@ -359,6 +365,18 @@ export const graphCategories: GraphCategory[] = [
             showYLine: false
         }
     },
+    // cvtAccelerationAccessor
+    {
+        xAccessor: timeAccessor,
+        yAccessor: [cvtAccelerationAccessor],
+        config: {
+            title: "CVT Acceleration vs Time",
+            xAxis: { name: "Time", type: "value", unit: getAxisUnit(timeAccessor) },
+            yAxis: { name: "CVT Acceleration", type: "value", unit: getAxisUnit(cvtAccelerationAccessor) },
+            showXLine: true,
+            showYLine: false
+        }
+    },
 ]},
 {
     title: "Primary Pulley",
@@ -386,6 +404,18 @@ export const graphCategories: GraphCategory[] = [
             seriesNames: ["Raw Flyweight", "Flyweight"],
             showXLine: true,
             showYLine: true
+        }
+    },
+    // primaryRampAngleAccessor
+    {
+        xAccessor: timeAccessor,
+        yAccessor: [primaryRampAngleAccessor],
+        config: {
+            title: "Primary Ramp Angle vs Time",
+            xAxis: { name: "Time", type: "value", unit: getAxisUnit(timeAccessor) },
+            yAxis: { name: "Ramp Angle", type: "value", unit: "degrees" },
+            showXLine: true,
+            showYLine: false
         }
     },
 ]},

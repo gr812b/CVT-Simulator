@@ -5,6 +5,7 @@ import type { Model3DConfig } from '@types';
 import type { ConstantsResponse } from '@utils/api';
 import type { Scene3DController } from '@utils/Scene3DController';
 import { CVT_MODEL_CONFIGS } from './modelConfigs';
+import { createBeltMesh, type BeltPathData, calculateBeltPath } from './beltGeometry';
 
 /**
  * Load all CVT models from configuration with proper materials and shadows.
@@ -123,5 +124,80 @@ export const setupSceneGrid = (sceneController: Scene3DController): (() => void)
   // Return cleanup function
   return () => {
     sceneController.removeObject(gridHelper);
+  };
+};
+
+/**
+ * Setup axis helpers for debugging.
+ * Returns cleanup function to remove the axes.
+ */
+export const setupAxisHelpers = (sceneController: Scene3DController): (() => void) => {
+  // Main axis helper at origin
+  const axisHelper = new THREE.AxesHelper(10);
+  sceneController.addObject(axisHelper);
+
+  // Return cleanup function
+  return () => {
+    sceneController.removeObject(axisHelper);
+  };
+};
+
+/**
+ * Setup vertical grid helper for size reference.
+ * Returns cleanup function to remove the grid.
+ */
+export const setupVerticalGrid = (sceneController: Scene3DController): (() => void) => {
+  const gridSize = 20; // 20 inch x 20 inch grid
+  const divisions = 20; // 20 divisions = 1 inch per division
+  const verticalGrid = new THREE.GridHelper(gridSize, divisions, 0xffffff, 0x888888);
+  verticalGrid.rotation.x = Math.PI / 2; // Rotate to be vertical
+
+  sceneController.addObject(verticalGrid);
+
+  // Return cleanup function
+  return () => {
+    sceneController.removeObject(verticalGrid);
+  };
+};
+
+/**
+ * Setup CVT belt mesh in the scene.
+ * Creates an initial belt mesh with default geometry.
+ * Returns the belt mesh for later updates.
+ * 
+ * @param sceneController Scene controller to add belt to
+ * @param constants Simulator constants
+ * @returns Object containing belt mesh and cleanup function
+ */
+export const setupBelt = (
+  sceneController: Scene3DController,
+  constants: ConstantsResponse
+): { beltMesh: THREE.Mesh; cleanup: () => void } => {
+  // Create initial belt path with default positions
+  // Belt sits at Z=0 for both pulleys (the functional center)
+  // Any Z offsets on the visual models are just for grid alignment
+  const initialPathData: BeltPathData = {
+    primaryRadius: constants.min_prim_radius,
+    primaryPosition: [-constants.center_to_center / 2, 0, 0],
+    secondaryRadius: constants.max_sec_radius,
+    secondaryPosition: [constants.center_to_center / 2, 0, 0],
+  };
+
+  const curve = calculateBeltPath(initialPathData);
+  const beltMesh = createBeltMesh(curve, constants);
+
+  sceneController.addObject(beltMesh);
+
+  return {
+    beltMesh,
+    cleanup: () => {
+      sceneController.removeObject(beltMesh);
+      beltMesh.geometry.dispose();
+      if (Array.isArray(beltMesh.material)) {
+        beltMesh.material.forEach(mat => mat.dispose());
+      } else {
+        beltMesh.material.dispose();
+      }
+    },
   };
 };

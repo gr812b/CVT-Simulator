@@ -111,6 +111,11 @@ export class ReplayController {
     this.speed = newSpeed;
   }
 
+  // Get the first data point without starting playback
+  getFirstDataPoint(): DataPoint | null {
+    return this.data.length > 0 ? this.data[0] : null;
+  }
+
   // Set the current index and update lastTimestamp accordingly
   setCurrentIndex(idx: number) {
     if (idx < 0 || idx >= this.data.length) return;

@@ -93,6 +93,36 @@ def get_shift_steady_event(system_model: SystemModel):
     return shift_steady_event
 
 
+def get_back_shift_event(system_model: SystemModel):
+    """
+    Returns an event function that triggers when the system wants to back-shift
+    from full shift position. This detects when the shift acceleration becomes
+    sufficiently negative while at MAX_SHIFT.
+    """
+
+    def back_shift_event(t, y):
+        state = SystemState.from_array(y)
+
+        # Should only trigger when at full shift
+        if state.shift_distance < MAX_SHIFT - 1e-5:
+            return 1.0  # Return positive value when not at full shift
+
+        # Calculate the shift acceleration
+        coupling_torque = system_model.slip_model.get_breakdown(state).coupling_torque
+        shift_accel = system_model.cvt_shift_model.get_breakdown(
+            state, coupling_torque
+        ).acceleration
+
+        # Return the acceleration + small threshold
+        # Event triggers when this crosses from positive to negative
+        # (i.e., when acceleration becomes sufficiently negative)
+        return shift_accel + 5.0  # 5 N threshold to avoid numerical noise
+
+    back_shift_event.terminal = True
+    back_shift_event.direction = -1  # Looking for a positive-to-negative crossing
+    return back_shift_event
+
+
 # Export all constraints
 constraints = [
     shift_constraint_event,
