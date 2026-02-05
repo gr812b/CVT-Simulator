@@ -83,7 +83,7 @@ const PARAMETERS_IMPL = {
     description:
       'The initial compression (pretension) applied to the primary pulley spring before any movement occurs. This sets the starting force that must be overcome for the CVT to begin engaging. Pretension acts as an offset in the spring force equation (y = mx + b), shifting the engagement point. Note: The maximum pretension is limited by the physical design of each CVT. Adjust this value to control when the belt starts to be clamped, but be aware of hardware constraints.',
     type: 'number',
-    defaultValue: 0.08,
+    defaultValue: 0.1,
     validate: validators.gteZero,
     units: 'm',
     group: 'primary',
@@ -97,15 +97,10 @@ const PARAMETERS_IMPL = {
     defaultValue: {
       segments: [
         {
-          type: 'linear' as const,
-          length: 0.0046,
-          angle: -15,
-        },
-        {
           type: 'circular' as const,
           length: 0.024,
-          angle_start: 33.4248111826,
-          angle_end: 20.8067910127,
+          angle_start: 60,
+          angle_end: 40,
           quadrant: 3,
         },
       ],
@@ -140,7 +135,7 @@ const PARAMETERS_IMPL = {
     description:
       'The initial pretension (offset) of the torsional component of the secondary pulley spring, measured in degrees. This sets the starting torque that resists shifting before any movement occurs, acting as the "b" in y = mx + b. Adjusting this value changes the baseline resistance to shifting, and is a key factor in how the helix mechanism responds to belt movement.',
     type: 'number',
-    defaultValue: 80,
+    defaultValue: 200,
     validate: validators.gteZero,
     units: 'degrees',
     group: 'secondary',
@@ -151,7 +146,7 @@ const PARAMETERS_IMPL = {
     description:
       'The initial pretension (offset) of the compressional component of the secondary pulley spring, measured in meters. This sets the starting force that encourages shifting before any movement occurs, acting as the "b" in y = mx + b. Adjusting this value changes the baseline force helping the secndary pulley shift.',
     type: 'number',
-    defaultValue: 0.05,
+    defaultValue: 0.1,
     validate: validators.gteZero,
     units: 'm',
     group: 'secondary', 
@@ -166,8 +161,8 @@ const PARAMETERS_IMPL = {
       segments: [
         {
           type: 'linear' as const,
-          length: 0.1,
-          angle: -16.7,
+          length: 1,
+          angle: -10,
         },
       ],
     } as components['schemas']['PiecewiseRampConfigModel'],
