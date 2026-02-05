@@ -223,7 +223,7 @@ export const Scene3DViewer = ({ replayController, className }: Scene3DViewerProp
             // Only moves after initial_sheave_displacement is exceeded
             position: [0, 0, -(secondaryOffset + effectiveSecondaryShift)],
             // Add helix spring rotation (relative to the fixed sheave)
-            rotation: [0, 0, secondaryHelixRotation],
+            rotation: [0, 0, -secondaryHelixRotation],
           },
         });
 
