@@ -12,8 +12,9 @@ import secondaryMovingModel from '@assets/models/sec_moving.glb?url';
 export const SCENE_DISTANCE_UNIT: UnitOptions['distance'] = 'in';
 export const SCENE_ANGLE_UNIT: UnitOptions['angle'] = 'rad';
 
-const primaryOffset = 0.6;
-const secondaryOffset = 0.56;
+// How far in axial direction to offset moving sheaves from fixed sheaves
+export const primaryOffset = 0.6;
+export const secondaryOffset = 0.56;
 
 /**
  * Configuration for each CVT model component

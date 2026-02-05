@@ -5,7 +5,7 @@ import { ReplayController, ReplayEventType } from '@utils/ReplayController';
 import { getConstants, type ConstantsResponse } from '@utils/api';
 import { convertConstants, convertValue } from '@utils/conversion';
 import styles from './Scene3DViewer.module.scss';
-import { SCENE_DISTANCE_UNIT, SCENE_ANGLE_UNIT } from './modelConfigs';
+import { SCENE_DISTANCE_UNIT, SCENE_ANGLE_UNIT, primaryOffset, secondaryOffset } from './modelConfigs';
 import { loadCVTModels, setupSceneLighting, setupSceneGrid, setupBelt, setupAxisHelpers, setupVerticalGrid } from './sceneElements';
 import { updateBeltMesh, type BeltPathData } from './beltGeometry';
 import * as THREE from 'three';
@@ -186,20 +186,12 @@ export const Scene3DViewer = ({ replayController, className }: Scene3DViewerProp
         const primaryWrapAngle = primaryWrapAngleDeg * (Math.PI / 180);
         const secondaryWrapAngle = secondaryWrapAngleDeg * (Math.PI / 180);
 
-        // Debug: Log wrap angles and radii
-        console.log('Primary - Radius:', primaryRadius, 'Wrap Angle:', primaryWrapAngleDeg.toFixed(1), '° (', primaryWrapAngle.toFixed(3), 'rad)');
-        console.log('Secondary - Radius:', secondaryRadius, 'Wrap Angle:', secondaryWrapAngleDeg.toFixed(1), '° (', secondaryWrapAngle.toFixed(3), 'rad)');
-        console.log('Secondary Helix Rotation:', secondaryHelixRotationDeg.toFixed(1), '° (', secondaryHelixRotation.toFixed(3), 'rad)');
-
         // Angular positions are already in radians from backend, use directly for 3D rotation
         // (Three.js rotations use radians)
         const shiftDistanceScene = toSceneDistance(shiftDistance);
         const primaryRadiusScene = toSceneDistance(primaryRadius);
         const secondaryRadiusScene = toSceneDistance(secondaryRadius);
 
-        // Offsets match those in modelConfigs.ts (already in scene units)
-        const primaryOffset = 0.6;
-        const secondaryOffset = 0.56;
 
         // Secondary doesn't move until shift distance exceeds initial_sheave_displacement
         const effectiveSecondaryShift = Math.max(0, shiftDistanceScene - constants.initial_sheave_displacement);
@@ -255,11 +247,6 @@ export const Scene3DViewer = ({ replayController, className }: Scene3DViewerProp
   }, [beltVisible, beltMesh]);
 
   // Update grid visibility when state changes
-  useEffect(() => {
-    gridObjects.forEach(grid => {
-      grid.visible = gridsVisible;
-    });
-  }, [gridsVisible, gridObjects]);
   useEffect(() => {
     gridObjects.forEach(grid => {
       grid.visible = gridsVisible;
