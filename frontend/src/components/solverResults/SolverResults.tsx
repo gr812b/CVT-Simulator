@@ -58,7 +58,7 @@ export const SolverResults = () => {
     if (isLoading) {
         return (
             <div className={styles.solverResults}>
-                <h3>CVT Analysis</h3>
+                <h3>CVT Pre-Analysis</h3>
                 <div className={styles.loading}>Loading...</div>
             </div>
         );
