@@ -102,6 +102,11 @@ const primarySpringForceAccessor: AccessorStrategy = (point) => {
     return getBreakdownValue(prf, ['springForce', 'net'], "primary pulley");
 };
 
+const primaryRampAngleAccessor: AccessorStrategy = (point) => {
+    const prf = point.system.cvt.primaryPulleyState.breakdown;
+    return getBreakdownValue(prf, ['flyweightForce', 'angle'], "primary pulley");
+};
+
 const secondaryHelixFeedbackTorqueAccessor: AccessorStrategy = (point) => {
     const srf = point.system.cvt.secondaryPulleyState.breakdown;
     return getBreakdownValue(srf, ['helix_force', 'feedbackTorque'], "secondary pulley");
@@ -399,6 +404,18 @@ export const graphCategories: GraphCategory[] = [
             seriesNames: ["Raw Flyweight", "Flyweight"],
             showXLine: true,
             showYLine: true
+        }
+    },
+    // primaryRampAngleAccessor
+    {
+        xAccessor: timeAccessor,
+        yAccessor: [primaryRampAngleAccessor],
+        config: {
+            title: "Primary Ramp Angle vs Time",
+            xAxis: { name: "Time", type: "value", unit: getAxisUnit(timeAccessor) },
+            yAxis: { name: "Ramp Angle", type: "value", unit: "degrees" },
+            showXLine: true,
+            showYLine: false
         }
     },
 ]},
