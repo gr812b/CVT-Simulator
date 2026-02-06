@@ -119,6 +119,7 @@ class CarForceBreakdown:
     load_torque_at_wheel: float
     external_forces: ExternalLoadForceBreakdown
     acceleration: float
+    power_at_wheel: float  # Power transmitted to wheels [W]
 
 
 ## Engine

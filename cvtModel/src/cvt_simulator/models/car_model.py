@@ -33,9 +33,16 @@ class CarModel:
             / (DRIVELINE_INERTIA + self.car_mass * WHEEL_RADIUS**2)
         )
 
+        # Calculate power at wheels: P = τ * ω
+        # ω_wheel = v / r
+        wheel_angular_velocity = state.car_velocity / WHEEL_RADIUS
+        torque_at_wheel = coupling_torque * engine_to_wheel_ratio
+        power_at_wheel = torque_at_wheel * wheel_angular_velocity
+
         return CarForceBreakdown(
-            coupling_torque_at_wheel=coupling_torque * engine_to_wheel_ratio,
+            coupling_torque_at_wheel=torque_at_wheel,
             load_torque_at_wheel=load_torque,
             external_forces=self.load_model.get_breakdown(state.car_velocity),
             acceleration=accel,
+            power_at_wheel=power_at_wheel,
         )

@@ -26,6 +26,7 @@ const accelerationAccessor: AccessorStrategy = (point) => point.system.car.accel
 // Temp
 const couplingTorqueAtWheels: AccessorStrategy = (point) => point.system.car.coupling_torque_at_wheel;
 const loadTorqueAtWheels: AccessorStrategy = (point) => point.system.car.load_torque_at_wheel;
+const powerAtWheelAccessor: AccessorStrategy = (point) => point.system.car.power_at_wheel;
 
 const couplingTorqueAtEngine: AccessorStrategy = (point) => point.system.engine.coupling_torque_at_engine;
 
@@ -164,6 +165,7 @@ export const accessorToUnit = new Map<AccessorStrategy, BaseUnitType>([
     [couplingTorqueAtWheels, 'torque'],
     [loadTorqueAtWheels, 'torque'],
     [couplingTorqueAtEngine, 'torque'],
+    [powerAtWheelAccessor, 'power'],
 ]);
 
 // Helper function to get unit label for an accessor
@@ -238,6 +240,17 @@ export const graphCategories: GraphCategory[] = [
                 xAxis: { name: "Time", type: "value", unit: getAxisUnit(timeAccessor) },
                 yAxis: { name: "Torque", type: "value", unit: getAxisUnit(couplingTorqueAtEngine) },
                 seriesNames: ["Coupling Torque at Engine", "Engine Torque"],
+                showXLine: true,
+                showYLine: false
+            }
+        },
+        {
+            xAccessor: timeAccessor,
+            yAccessor: [powerAtWheelAccessor],
+            config: {
+                title: "Power at Wheels vs Time",
+                xAxis: { name: "Time", type: "value", unit: getAxisUnit(timeAccessor) },
+                yAxis: { name: "Power", type: "value", unit: getAxisUnit(powerAtWheelAccessor) },
                 showXLine: true,
                 showYLine: false
             }

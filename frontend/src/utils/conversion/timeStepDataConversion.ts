@@ -52,7 +52,8 @@ function convertTimeStepData(
         drag_force: conv(timeStep.system.car.external_forces.drag_force, 'force'),
         net: conv(timeStep.system.car.external_forces.net, 'force')
       },
-      acceleration: conv(timeStep.system.car.acceleration, 'acceleration')
+      acceleration: conv(timeStep.system.car.acceleration, 'acceleration'),
+      power_at_wheel: conv(timeStep.system.car.power_at_wheel, 'power')
     },
     cvt: {
       primaryPulleyState: {

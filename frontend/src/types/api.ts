@@ -142,6 +142,8 @@ export interface components {
             external_forces: components["schemas"]["ExternalLoadForceBreakdownModel"];
             /** Acceleration */
             acceleration: number;
+            /** Power At Wheel */
+            power_at_wheel: number;
         };
         /**
          * CarSpecs
@@ -206,12 +208,6 @@ export interface components {
              */
             helix_radius: number;
             /**
-             * Belt Angle
-             * @description Belt angle in radians
-             * @default 0.24434609527920614
-             */
-            belt_angle: number;
-            /**
              * Belt Height
              * @description Belt height in meters
              * @default 0.0155702
@@ -226,13 +222,19 @@ export interface components {
             /**
              * Belt Width Top
              * @description Belt width at top in meters
-             * @default 0.021589999999999998
+             * @default 0.021335999999999997
              */
             belt_width_top: number;
             /**
+             * Belt Width Bottom
+             * @description Belt width at bottom in meters
+             * @default 0.0168148
+             */
+            belt_width_bottom: number;
+            /**
              * Min Prim Radius
              * @description Minimum primary pulley radius in meters
-             * @default 0.019049999999999997
+             * @default 0.0206375
              */
             min_prim_radius: number;
             /**
@@ -244,14 +246,14 @@ export interface components {
             /**
              * Initial Sheave Displacement
              * @description Initial sheave displacement in meters
-             * @default 0.0063754
+             * @default 0.0024891999999999996
              */
             initial_sheave_displacement: number;
             /**
-             * Belt Width Bottom
+             * Belt Angle
              * @description Belt width at bottom in meters, calculated from top width, height and angle.
              */
-            readonly belt_width_bottom: number;
+            readonly belt_angle: number;
             /**
              * Belt Cross Sectional Area
              * @description Belt cross-sectional area in m^2.
