@@ -17,6 +17,8 @@ interface CursorOverlayProps {
   onMount?: (callback: (chart: ECharts) => void) => void;
   xAxis: AxisConfig;
   yAxis: AxisConfig;
+  yAxis2?: AxisConfig;
+  yAxisIndex?: number[];
   seriesNames?: string[];
 }
 
@@ -27,6 +29,8 @@ export function CursorOverlay({
   onMount,
   xAxis,
   yAxis,
+  yAxis2,
+  yAxisIndex = [],
   seriesNames = [],
 }: CursorOverlayProps) {
   const [chart, setChart] = useState<ECharts | null>(null);
@@ -82,7 +86,9 @@ export function CursorOverlay({
       if (!dotEl) return;
 
       if (yValue != null) {
-        const py = chart.convertToPixel({ yAxisIndex: 0 }, yValue) as number;
+        // Determine which y-axis this series uses
+        const axisIndex = yAxisIndex[seriesIndex] ?? 0;
+        const py = chart.convertToPixel({ yAxisIndex: axisIndex }, yValue) as number;
         const dotX = px - 6;
         const dotY = py - 6;
         dotEl.style.transform = `translate3d(${dotX}px, ${dotY}px, 0)`;
@@ -106,9 +112,14 @@ export function CursorOverlay({
     
     const yLabels = yValues.map((yValue, idx) => {
       if (yValue == null) return null;
-      const name = seriesNames[idx] || `${yAxis.label}${yValues.length > 1 ? ` ${idx + 1}` : ''}`;
-      return yAxis.unit 
-        ? `${name}: ${yValue.toFixed(2)} ${yAxis.unit}` 
+      const name = seriesNames[idx] || `Series ${idx + 1}`;
+      
+      // Determine which y-axis this series uses
+      const axisIndex = yAxisIndex[idx] ?? 0;
+      const axisConfig = axisIndex === 1 && yAxis2 ? yAxis2 : yAxis;
+      
+      return axisConfig.unit 
+        ? `${name}: ${yValue.toFixed(2)} ${axisConfig.unit}` 
         : `${name}: ${yValue.toFixed(2)}`;
     }).filter(Boolean);
     
@@ -117,7 +128,7 @@ export function CursorOverlay({
     labelEl.textContent = text;
     labelEl.style.transform = `translate3d(${rect.x}px, 10px, 0)`;
     labelEl.style.display = 'block';
-  }, [chart, xData, yData, xAxis, yAxis, seriesNames]);
+  }, [chart, xData, yData, xAxis, yAxis, yAxis2, yAxisIndex, seriesNames]);
 
   // Update grid rect when chart resizes or rerenders
   const updateGridRect = useCallback(() => {

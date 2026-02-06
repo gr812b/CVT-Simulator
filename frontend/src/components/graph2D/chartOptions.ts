@@ -14,6 +14,8 @@ interface AxisConfig {
   type: 'time' | 'value' | 'category';
   /** Unit label (e.g., 'm/s', 'seconds') */
   unit?: string;
+  /** Whether to auto-scale axis (not start at 0). Default: false */
+  scale?: boolean;
 }
 
 /**
@@ -30,8 +32,12 @@ export interface ChartConfig {
   xAxis: AxisConfig;
   /** Y-axis configuration */
   yAxis: AxisConfig;
+  /** Optional second y-axis (right side) */
+  yAxis2?: AxisConfig;
   /** Series name for the line */
   seriesNames?: string[];
+  /** Maps each series index to y-axis index (0 or 1). If undefined, all use yAxis (0) */
+  yAxisIndex?: number[];
   /** Whether to show smooth curves */
   smooth?: boolean;
   /** Whether to show data point symbols */
@@ -143,9 +149,12 @@ function createTooltipFormatter(config: ChartConfig) {
   const cacheKey = JSON.stringify({
     xAxisName: config.xAxis.name,
     yAxisName: config.yAxis.name,
+    yAxis2Name: config.yAxis2?.name,
     xAxisUnit: config.xAxis.unit,
     yAxisUnit: config.yAxis.unit,
+    yAxis2Unit: config.yAxis2?.unit,
     seriesNames: config.seriesNames,
+    yAxisIndex: config.yAxisIndex,
   });
   
   // Return cached formatter if it exists
@@ -168,13 +177,16 @@ function createTooltipFormatter(config: ChartConfig) {
       
       if (Array.isArray(dataValues) && dataValues.length >= 2) {
         const xUnit = config.xAxis.unit ? ` ${config.xAxis.unit}` : '';
-        const yUnit = config.yAxis.unit ? ` ${config.yAxis.unit}` : '';
-
         const xLine = `${config.xAxis.name}: ${stableValueFormatter(dataValues[0])}${xUnit}<br/>`;
 
         const yLines = [];
         for (let i = 1; i < dataValues.length; i++) {
-            const marker = `<span style="
+          // Determine which y-axis this series uses
+          const seriesAxisIndex = config.yAxisIndex?.[i - 1] ?? 0;
+          const axisConfig = seriesAxisIndex === 1 && config.yAxis2 ? config.yAxis2 : config.yAxis;
+          const yUnit = axisConfig.unit ? ` ${axisConfig.unit}` : '';
+          
+          const marker = `<span style="
               display:inline-block;
               margin-right:6px;
               border-radius:50%;
@@ -182,7 +194,7 @@ function createTooltipFormatter(config: ChartConfig) {
               height:8px;
               background-color:${COLORS.LINES[(i - 1) % COLORS.LINES.length]};
           "></span>`;
-          yLines.push(`${marker} ${config.seriesNames?.[i - 1] || ''} ${config.yAxis.name}: ${stableValueFormatter(dataValues[i])}${yUnit}`);
+          yLines.push(`${marker} ${config.seriesNames?.[i - 1] || ''} ${axisConfig.name}: ${stableValueFormatter(dataValues[i])}${yUnit}`);
         }
 
         return `
@@ -299,6 +311,7 @@ function createSeries(yData: number[][], config: ChartConfig): EChartsOption['se
   const seriesArray: EChartsOption['series'] = [];
 
   for (let i = 0; i < seriesCount; i++) {
+    const yAxisIndex = config.yAxisIndex?.[i] ?? 0;
     seriesArray.push({
       type: 'line',
       progressive: 5000,
@@ -309,6 +322,7 @@ function createSeries(yData: number[][], config: ChartConfig): EChartsOption['se
       name: config.seriesNames?.[i] || `${config.yAxis.name} ${i + 1}`,
       smooth: config.smooth,
       showSymbol: config.showSymbol,
+      yAxisIndex: yAxisIndex,
       itemStyle: { color: COLORS.LINES[i % COLORS.LINES.length] },
       lineStyle: { color: COLORS.LINES[i % COLORS.LINES.length], width: 3 },
       encode: {
@@ -342,6 +356,7 @@ export function generateEChartsOptions(
     nameGap: LAYOUT.X_AXIS_NAME_GAP,
     nameTextStyle: { color: COLORS.TEXT },
     boundaryGap: config.xAxis.type === 'category',
+    scale: config.xAxis.scale ?? false,
     axisLabel: { 
       hideOverlap: CHART_DEFAULTS.HIDE_OVERLAP,
       color: COLORS.TEXT 
@@ -357,6 +372,7 @@ export function generateEChartsOptions(
     nameLocation: 'middle' as const,
     nameGap: LAYOUT.Y_AXIS_NAME_GAP,
     nameTextStyle: { color: COLORS.TEXT },
+    scale: config.yAxis.scale ?? false,
     axisLabel: { 
       hideOverlap: CHART_DEFAULTS.HIDE_OVERLAP,
       color: COLORS.TEXT 
@@ -368,6 +384,32 @@ export function generateEChartsOptions(
     axisLine: { lineStyle: { color: COLORS.GRID } },
     axisTick: { lineStyle: { color: COLORS.GRID } },
   };
+  
+  // Create second y-axis if configured
+  const yAxis2Option = config.yAxis2 ? {
+    type: config.yAxis2.type,
+    name: config.yAxis2.unit ? `${config.yAxis2.name} (${config.yAxis2.unit})` : config.yAxis2.name,
+    nameLocation: 'middle' as const,
+    nameGap: LAYOUT.Y_AXIS_NAME_GAP,
+    nameTextStyle: { color: COLORS.TEXT },
+    scale: config.yAxis2.scale ?? false,
+    axisLabel: { 
+      hideOverlap: CHART_DEFAULTS.HIDE_OVERLAP,
+      color: COLORS.TEXT 
+    },
+    splitLine: { 
+      show: false,  // Don't show split lines for second axis to avoid clutter
+      lineStyle: { color: COLORS.GRID }
+    },
+    axisLine: { lineStyle: { color: COLORS.GRID } },
+    axisTick: { lineStyle: { color: COLORS.GRID } },
+  } : undefined;
+  
+  // Adjust grid right margin if second y-axis is present
+  const gridRight = config.yAxis2 ? 100 : LAYOUT.GRID.RIGHT;
+  
+  // Determine which y-axes need data zoom
+  const yAxisIndices = config.yAxisIndex ? [...new Set(config.yAxisIndex)] : [0];
   
   // Base options with dark theme styling built-in
   const baseOptions: EChartsOption = {
@@ -411,7 +453,7 @@ export function generateEChartsOptions(
     
     grid: {
       left: LAYOUT.GRID.LEFT,
-      right: LAYOUT.GRID.RIGHT,
+      right: gridRight,
       top: config.title ? LAYOUT.GRID.TOP_WITH_TITLE : LAYOUT.GRID.TOP_WITHOUT_TITLE,
       bottom: LAYOUT.GRID.BOTTOM,
       containLabel: true,
@@ -419,7 +461,7 @@ export function generateEChartsOptions(
     
     xAxis: xAxisOption,
     
-    yAxis: yAxisOption,
+    yAxis: config.yAxis2 ? [yAxisOption, yAxis2Option!] : yAxisOption,
     
     // TODO: Only enable if playback paused
     dataZoom: [
@@ -439,10 +481,10 @@ export function generateEChartsOptions(
           borderColor: COLORS.ACCENT,
         },
       },
-      { 
-        type: 'slider', 
-        yAxisIndex: 0, 
-        right: LAYOUT.SLIDER_RIGHT,
+      ...yAxisIndices.map((yIdx) => ({ 
+        type: 'slider' as const, 
+        yAxisIndex: yIdx, 
+        right: yIdx === 0 ? LAYOUT.SLIDER_RIGHT : (config.yAxis2 ? LAYOUT.SLIDER_RIGHT + 60 : LAYOUT.SLIDER_RIGHT),
         textStyle: { color: COLORS.TEXT },
         borderColor: COLORS.GRID,
         fillerColor: COLORS.ZOOM_FILL,
@@ -450,7 +492,7 @@ export function generateEChartsOptions(
           color: COLORS.ACCENT,
           borderColor: COLORS.ACCENT,
         },
-      },
+      })),
     ],
     
     series: series

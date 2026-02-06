@@ -349,6 +349,20 @@ export const graphCategories: GraphCategory[] = [
             showYLine: false
         }
     },
+    {
+        xAccessor: engineRpmAccessor,
+        yAccessor: [engineTorqueAccessor, enginePowerAccessor],
+        config: {
+            title: "Engine Torque and Power vs RPM",
+            xAxis: { name: "Engine RPM", type: "value", unit: getAxisUnit(engineRpmAccessor), scale: true },
+            yAxis: { name: "Torque", type: "value", unit: getAxisUnit(engineTorqueAccessor) },
+            yAxis2: { name: "Power", type: "value", unit: getAxisUnit(enginePowerAccessor) },
+            yAxisIndex: [0, 1],
+            seriesNames: ["Engine Torque", "Engine Power"],
+            showXLine: true,
+            showYLine: false
+        }
+    },
 ]},
 {
     title: "Pulley Forces (Overall)",
@@ -412,7 +426,7 @@ export const graphCategories: GraphCategory[] = [
         yAccessor: [rawFlyweightCentrifugalForce, primaryFlyweightForceAccessor],
         config: {
             title: "Ramp Impact (Raw vs Post-Ramp) vs Engine RPM",
-            xAxis: { name: "Engine RPM", type: "value", unit: getAxisUnit(engineRpmAccessor) },
+            xAxis: { name: "Engine RPM", type: "value", unit: getAxisUnit(engineRpmAccessor), scale: true },
             yAxis: { name: "Force", type: "value", unit: "N" },
             seriesNames: ["Raw Flyweight", "Flyweight"],
             showXLine: true,
@@ -506,7 +520,7 @@ export const graphCategories: GraphCategory[] = [
         yAccessor: [coupling_torqueAccessor, t_max_primAccessor, t_max_secAccessor],
         config: {
             title: "Slip Model Torques vs Engine RPM",
-            xAxis: { name: "Engine RPM", type: "value", unit: getAxisUnit(engineRpmAccessor) },
+            xAxis: { name: "Engine RPM", type: "value", unit: getAxisUnit(engineRpmAccessor), scale: true },
             yAxis: { name: "Torque", type: "value", unit: "N·m" },
             seriesNames: ["Coupling", "T_max (Primary)", "T_max (Secondary)"],
             showXLine: true,
