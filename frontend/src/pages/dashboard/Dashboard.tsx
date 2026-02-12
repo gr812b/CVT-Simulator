@@ -1,7 +1,17 @@
+import { useState, useEffect } from 'react';
 import styles from './Dashboard.module.scss'
 import bajaLogo from '@assets/baja_logo.png'
 import { Button } from '@components/button/Button';
+import { LoadingOverlay } from '@components/loadingOverlay/LoadingOverlay';
 import { useNavigate } from 'react-router-dom';
+import { useParameter } from '@contexts/ParameterContext';
+import { useLoading } from '@contexts/LoadingContext';
+import { useRunSimulation } from '@hooks/useRunSimulation';
+import { 
+  getAllSimulations, 
+  deleteSimulation, 
+  type SavedSimulation 
+} from '@utils/localStorage';
 import Play from '@assets/icons/play.svg?react';
 import Edit from '@assets/icons/edit.svg?react';
 import TrashCan from '@assets/icons/trash_can.svg?react';
@@ -9,39 +19,130 @@ import Plus from '@assets/icons/plus.svg?react';
 
 export const Dashboard = () => {
   const navigate = useNavigate();
+  const { setMultipleParameters } = useParameter();
+  const { isLoading, loadingMessage } = useLoading();
+  const { runSimulation } = useRunSimulation();
+  const [simulations, setSimulations] = useState<SavedSimulation[]>([]);
+  const [selectedSimulation, setSelectedSimulation] = useState<string | null>(null);
 
-  const tempIsDisabled = true; // Placeholder for future functionality
+  // Load parameter sets on mount
+  useEffect(() => {
+    loadSimulations();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const loadSimulations = () => {
+    const loaded = getAllSimulations();
+    setSimulations(loaded);
+    // Clear selection if the selected parameter set no longer exists
+    if (selectedSimulation && !loaded.find(s => s.id === selectedSimulation)) {
+      setSelectedSimulation(null);
+    }
+  };
+
+  const handleRun = async () => {
+    if (!selectedSimulation) return;
+
+    const simulation = simulations.find(s => s.id === selectedSimulation);
+    if (!simulation) return;
+
+    await runSimulation(simulation.parameters);
+  };
+
+  const handleEdit = () => {
+    if (!selectedSimulation) return;
+
+    const simulation = simulations.find(s => s.id === selectedSimulation);
+    if (!simulation) return;
+
+    // Load the parameter set into the global state
+    setMultipleParameters(simulation.parameters);
+    
+    // Navigate to input page
+    navigate('/input');
+  };
+
+  const handleDelete = () => {
+    if (!selectedSimulation) return;
+
+    const simulation = simulations.find(s => s.id === selectedSimulation);
+    if (!simulation) return;
+
+    if (confirm(`Are you sure you want to delete the parameter set "${simulation.name}"?`)) {
+      deleteSimulation(selectedSimulation);
+      loadSimulations();
+    }
+  };
+
+  const handleRowClick = (id: string) => {
+    setSelectedSimulation(id === selectedSimulation ? null : id);
+  };
+
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
+  };
+  
+  const hasSelection = !!selectedSimulation;
   
   return (
     <div className={styles.dashboard}>
+      <LoadingOverlay isVisible={isLoading} message={loadingMessage} />
       <div className={styles.header}>
         <img className={styles.logo} src={bajaLogo} alt="Baja Logo" />
         <h1 className={styles.title}>CVT Simulator</h1>
       </div>
       <div className={styles.tableContainer}>
-        <span>No Saved Simulations...</span>
+        <table className={styles.table}>
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Created</th>
+              <th>Last Modified</th>
+            </tr>
+          </thead>
+          <tbody>
+            {simulations.length === 0 ? (
+              <tr className={styles.emptyRow}>
+                <td colSpan={3}>No Saved Parameter Sets...</td>
+              </tr>
+            ) : (
+              simulations.map((sim) => (
+                <tr
+                  key={sim.id}
+                  className={selectedSimulation === sim.id ? styles.selected : ''}
+                  onClick={() => handleRowClick(sim.id)}
+                >
+                  <td>{sim.name}</td>
+                  <td>{formatDate(sim.createdAt)}</td>
+                  <td>{formatDate(sim.updatedAt)}</td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
       </div>
       <div className={styles.buttonsContainer}>
         <Button
           text={'Run'}
           icon={Play}
           className={styles.button}
-          disabled={tempIsDisabled}
-          onClick={() => console.log('Run button clicked')}
+          disabled={!hasSelection}
+          onClick={handleRun}
         />
         <Button
           text={'Edit'}
           icon={Edit}
           className={styles.button}
-          disabled={tempIsDisabled}
-          onClick={() => console.log('Edit button clicked')}
+          disabled={!hasSelection}
+          onClick={handleEdit}
         />
         <Button
           text={'Delete'}
           icon={TrashCan}
           className={styles.button}
-          disabled={tempIsDisabled}
-          onClick={() => console.log('Delete button clicked')}
+          disabled={!hasSelection}
+          onClick={handleDelete}
         />
         <Button
           text={'New'}

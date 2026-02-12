@@ -1,0 +1,65 @@
+@use '@styles/_fonts';
+@use '@styles/_colors';
+
+.saveModal {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  min-height: 400px;
+}
+
+.nameSection {
+  width: 100%;
+}
+
+.previewSection {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1;
+  min-height: 300px;
+}
+
+.previewLabel {
+  @include fonts.text-small;
+  font-weight: 600;
+  color: var(--primary);
+}
+
+.jsonPreview {
+  flex: 1;
+  background-color: #1a1a1a;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  overflow: auto;
+  padding: 12px;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 0.75rem;
+  line-height: 1.5;
+  max-height: 400px;
+}
+
+.jsonContent {
+  margin: 0;
+  color: var(--text-color);
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
+.buttonGroup {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  padding-top: 12px;
+  border-top: 1px solid var(--border-color);
+}
+
+.cancelButton {
+  background-color: transparent;
+  border: 1px solid var(--border-color);
+
+  &:hover:not(:disabled) {
+    background-color: var(--primary);
+    color: var(--secondary);
+  }
+}

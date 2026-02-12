@@ -34,8 +34,74 @@
 
     .tableContainer {
         flex-grow: 1;
-        align-content: center;
-        justify-items: center;
+        overflow: auto;
+        padding: 2rem;
+    }
+
+    .table {
+        width: 100%;
+        border-collapse: collapse;
+        background-color: var(--secondary);
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+
+        thead {
+            background-color: var(--accent);
+            color: var(--primary);
+
+            th {
+                padding: 1rem;
+                text-align: left;
+                @include fonts.text-small;
+                font-weight: 600;
+                text-transform: uppercase;
+                letter-spacing: 0.05em;
+            }
+        }
+
+        tbody {
+            tr {
+                border-bottom: 1px solid var(--border-color);
+                cursor: pointer;
+                transition: background-color 0.2s;
+
+                &:hover:not(.emptyRow) {
+                    background-color: rgba(255, 255, 255, 0.05);
+                }
+
+                &.selected {
+                    background-color: var(--accent);
+                    color: var(--primary);
+
+                    &:hover {
+                        background-color: var(--accent);
+                    }
+                }
+
+                &.emptyRow {
+                    cursor: default;
+                    pointer-events: none;
+
+                    td {
+                        text-align: center;
+                        color: var(--border-color);
+                        font-style: italic;
+                        padding: 2rem 1rem;
+                    }
+                }
+
+                &:last-child {
+                    border-bottom: none;
+                }
+
+                td {
+                    padding: 1rem;
+                    @include fonts.text-small;
+                    color: var(--primary);
+                }
+            }
+        }
     }
 
     .buttonsContainer {
