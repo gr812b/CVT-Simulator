@@ -66,7 +66,7 @@
                 cursor: pointer;
                 transition: background-color 0.2s;
 
-                &:hover:not(.emptyRow):not(.sectionHeader) {
+                &:hover:not(.emptyRow):not(.sectionHeader):not(.selected) {
                     background-color: rgba(255, 255, 255, 0.05);
                 }
 
@@ -82,7 +82,7 @@
                 &.defaultRow {
                     background-color: rgba(187, 8, 8, 0.1);
 
-                    &:hover {
+                    &:hover:not(.selected) {
                         background-color: rgba(187, 8, 8, 0.15);
                     }
 
@@ -98,7 +98,7 @@
                 &.recentRunRow {
                     background-color: rgba(136, 136, 136, 0.1);
 
-                    &:hover {
+                    &:hover:not(.selected) {
                         background-color: rgba(136, 136, 136, 0.15);
                     }
 
