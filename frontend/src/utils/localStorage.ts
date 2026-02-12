@@ -46,6 +46,16 @@ const STORAGE_CONFIGS = {
   },
 } as const;
 
+/**
+ * Session storage key for work-in-progress parameters
+ */
+const SESSION_STORAGE_KEY = 'cvt_session_parameters';
+
+/**
+ * Session storage key for loaded simulation reference
+ */
+const LOADED_SIMULATION_KEY = 'cvt_loaded_simulation_id';
+
 // ============================================================================
 // Internal Helper Functions
 // ============================================================================
@@ -263,6 +273,75 @@ export const saveRecentRun = (parameters: ParameterState): SavedSimulation => {
  */
 export const isRecentRun = (id: string): boolean => {
   return id.startsWith(`${STORAGE_CONFIGS.recent.idPrefix}_`);
+};
+
+// ============================================================================
+// Public API - Session Storage (Work in Progress)
+// ============================================================================
+
+/**
+ * Save current work-in-progress parameters to session storage
+ * These persist across page reloads but are cleared when browser is closed
+ */
+export const saveSessionParameters = (parameters: ParameterState): void => {
+  try {
+    sessionStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(parameters));
+  } catch (error) {
+    console.error('Failed to save session parameters:', error);
+  }
+};
+
+/**
+ * Get work-in-progress parameters from session storage
+ */
+export const getSessionParameters = (): ParameterState | null => {
+  try {
+    const stored = sessionStorage.getItem(SESSION_STORAGE_KEY);
+    if (!stored) return null;
+    
+    return JSON.parse(stored) as ParameterState;
+  } catch (error) {
+    console.error('Failed to load session parameters:', error);
+    return null;
+  }
+};
+
+/**
+ * Clear work-in-progress parameters from session storage
+ */
+export const clearSessionParameters = (): void => {
+  try {
+    sessionStorage.removeItem(SESSION_STORAGE_KEY);
+  } catch (error) {
+    console.error('Failed to clear session parameters:', error);
+  }
+};
+
+/**
+ * Set which simulation was loaded for comparison
+ */
+export const setLoadedSimulationId = (id: string | null): void => {
+  try {
+    if (id === null) {
+      sessionStorage.removeItem(LOADED_SIMULATION_KEY);
+    } else {
+      sessionStorage.setItem(LOADED_SIMULATION_KEY, id);
+    }
+  } catch (error) {
+    console.error('Failed to set loaded simulation ID:', error);
+  }
+};
+
+/**
+ * Get the ID of the currently loaded simulation for comparison
+ */
+export const getLoadedSimulationId = (): string | null => {
+  try {
+    return sessionStorage.getItem(LOADED_SIMULATION_KEY);
+  } catch (error) {
+    console.error('Failed to get loaded simulation ID:', error);
+    return null;
+  }
 };
 
 // ============================================================================

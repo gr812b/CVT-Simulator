@@ -8,12 +8,14 @@ import { ParameterDescription } from '@components/parameterDescription/Parameter
 import { LoadingOverlay } from '@components/loadingOverlay/LoadingOverlay';
 import { SolverResults } from '@components/solverResults/SolverResults';
 import { SaveModal } from '@components/saveModal/SaveModal';
-import { GROUP_TITLES, PARAMETERS, type Parameter, type ParameterGroup, type PiecewiseRampConfig } from '@types';
+import { GROUP_TITLES, PARAMETERS, type Parameter, type ParameterGroup, type PiecewiseRampConfig, type ParameterValue, type ParameterState } from '@types';
 import { useParameter } from '@contexts/ParameterContext';
 import { useLoading } from '@contexts/LoadingContext';
 import { useFormState } from '@hooks/useFormState';
 import { useUnsavedChangesPrompt } from '@hooks/useUnsavedChangesPrompt';
 import { useRunSimulation } from '@hooks/useRunSimulation';
+import { useSessionPersistence } from '@hooks/useSessionPersistence';
+import { useAutoPreAnalysis } from '@hooks/useAutoPreAnalysis';
 import Home from '@assets/icons/home.svg?react';
 import ArrowUpCircle from '@assets/icons/arrow_up_circle.svg?react';
 import ArrowDownCircle from '@assets/icons/arrow_down_circle.svg?react';
@@ -35,6 +37,8 @@ export const Input = () => {
     const formState = useFormState(parameters);
     const { navigateWithConfirmation } = useUnsavedChangesPrompt(formState.hasChanges);
     const { runSimulation } = useRunSimulation();
+    const { isFieldChanged, hasChanges } = useSessionPersistence();
+    const { isValidating, validationError, lastValidated } = useAutoPreAnalysis(formState.isValid());
 
     // State to manage which accordions are expanded
     const [expanded, setExpanded] = useState<Record<ParameterGroup, boolean>>(expandedState);
@@ -63,7 +67,7 @@ export const Input = () => {
         await runSimulation(parsedValues);
     };
 
-    // Handle manual save
+    // Handle save to library
     const handleSave = () => {
         if (formState.validateAll()) {
             setIsSaveModalOpen(true);
@@ -96,6 +100,28 @@ export const Input = () => {
         );
     }
 
+    // Handle field changes - update both formState and parameter context
+    const handleFieldChange = (paramKey: Parameter, value: ParameterValue) => {
+        // Update form state (validation, touched, etc.)
+        formState.updateField(paramKey, value);
+        
+        // Immediately update parameter context for auto-validation and change detection
+        const paramConfig = PARAMETERS[paramKey];
+        let parsedValue: number | string | boolean | PiecewiseRampConfig;
+        
+        if (paramConfig.type === 'number') {
+            parsedValue = Number(value);
+        } else if (paramConfig.type === 'ramp') {
+            parsedValue = value as PiecewiseRampConfig;
+        } else if (paramConfig.type === 'boolean') {
+            parsedValue = typeof value === 'string' ? value.toLowerCase() === 'true' : Boolean(value);
+        } else {
+            parsedValue = value as string;
+        }
+        
+        setMultipleParameters({ [paramKey]: parsedValue } as Partial<ParameterState>);
+    };
+
     return (
         <div className={styles.input}>
             <LoadingOverlay isVisible={isLoading} message={loadingMessage} />
@@ -114,6 +140,22 @@ export const Input = () => {
             <div className={styles.solverResultsPosition}>
                 <SolverResults />
             </div>
+            {/* Validation Status Indicator - only show if form is currently valid */}
+            {!formState.isValid() && (
+                <div className={styles.validationError}>
+                    <span>Parameters invalid - fix errors to enable pre-analysis</span>
+                </div>
+            )}
+            {formState.isValid() && isValidating && (
+                <div className={styles.validationStatus}>
+                    <span>Validating parameters...</span>
+                </div>
+            )}
+            {validationError && (
+                <div className={styles.validationError}>
+                    <span>Pre-analysis Error: {validationError}</span>
+                </div>
+            )}
             <div className={styles.inputGrid}>
                 <div className={styles.parameterInputContainer}>
                     {allGroups.map((groupKey) => (
@@ -129,7 +171,7 @@ export const Input = () => {
                                     const param = PARAMETERS[paramKey];
                                     const { label, units, type } = param;
                                     const hasError = formState.touched[paramKey] && formState.errors[paramKey];
-                                    const hasChanged = formState.isFieldChanged(paramKey);
+                                    const hasChanged = isFieldChanged(paramKey);
                                     
                                     // Handle ramp parameter differently
                                     if (type === 'ramp') {
@@ -137,7 +179,7 @@ export const Input = () => {
                                             <div key={paramKey} onFocus={() => setActiveField(paramKey)}>
                                                 <RampBuilder
                                                     value={formState.values[paramKey] as PiecewiseRampConfig | null}
-                                                    onChange={(config) => formState.updateField(paramKey, config)}
+                                                    onChange={(config) => handleFieldChange(paramKey, config)}
                                                     className={styles.rampBuilder}
                                                 />
                                             </div>
@@ -152,7 +194,7 @@ export const Input = () => {
                                             value={formState.values[paramKey] as string}
                                             error={hasError ? formState.errors[paramKey] : null}
                                             hasChanged={hasChanged}
-                                            onChange={(e) => formState.updateField(paramKey, e.target.value)}
+                                            onChange={(e) => handleFieldChange(paramKey, e.target.value)}
                                             onFocus={() => {
                                                 setActiveField(paramKey);
                                                 formState.touchField(paramKey);
@@ -181,7 +223,7 @@ export const Input = () => {
                 </div>
                 <div className={styles.nextButtonContainer}>
                     <Button
-                        text='Save'
+                        text='Save As...'
                         icon={Edit}
                         onClick={handleSave}
                         disabled={!formState.isValid()}
@@ -190,7 +232,7 @@ export const Input = () => {
                         text='Run'
                         icon={Play}
                         onClick={handleSubmit}
-                        disabled={!formState.isValid()}
+                        disabled={!formState.isValid() || isValidating}
                     />
                 </div>
             </div>

@@ -45,11 +45,16 @@ export const useFormState = (contextValues?: ParameterState) => {
 
   // Update a field value and validate it
   const updateField = useCallback((parameter: Parameter, value: ParameterValue) => {
+    console.log('[Field Validation] Updating field:', parameter, 'value:', value);
+    
     setValues(prev => ({ ...prev, [parameter]: value }));
     
     // Validate the field (skip validation for complex types)
     const validator = PARAMETERS[parameter].validate;
     const error = validator ? validator(String(value)) : null;
+    
+    console.log('[Field Validation] Validation result for', parameter, ':', error ? `ERROR: ${error}` : 'VALID');
+    
     setErrors(prev => ({ ...prev, [parameter]: error }));
     
     // Mark as touched

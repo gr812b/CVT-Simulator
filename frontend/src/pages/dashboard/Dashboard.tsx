@@ -14,6 +14,8 @@ import {
   importSimulation,
   getRecentRuns,
   isRecentRun,
+  setLoadedSimulationId,
+  clearSessionParameters,
   type SavedSimulation 
 } from '@utils/localStorage';
 import { getDefaultSimulations, isDefaultSimulation } from '@constants/defaultSimulations';
@@ -70,6 +72,9 @@ export const Dashboard = () => {
     // Load the parameter set into the global state
     setMultipleParameters(simulation.parameters);
     
+    // Set which simulation was loaded (for comparison in Input page)
+    setLoadedSimulationId(selectedSimulation);
+    
     // Navigate to input page
     navigate('/input');
   };
@@ -117,6 +122,12 @@ export const Dashboard = () => {
 
   const handleImport = () => {
     fileInputRef.current?.click();
+  };
+
+  const handleNew = () => {
+    clearSessionParameters();
+    setLoadedSimulationId(null);
+    navigate('/input');
   };
 
   const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -276,7 +287,7 @@ export const Dashboard = () => {
           text={'New'}
           icon={Plus}
           className={styles.button}
-          onClick={() => navigate('/input')}
+          onClick={handleNew}
         />
       </div>
       <input
