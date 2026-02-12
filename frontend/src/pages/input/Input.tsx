@@ -19,6 +19,7 @@ import { useAutoPreAnalysis } from '@hooks/useAutoPreAnalysis';
 import Home from '@assets/icons/home.svg?react';
 import ArrowUpCircle from '@assets/icons/arrow_up_circle.svg?react';
 import ArrowDownCircle from '@assets/icons/arrow_down_circle.svg?react';
+import ArrowLeft from '@assets/icons/arrow_left.svg?react';
 import Play from '@assets/icons/play.svg?react';
 import Edit from '@assets/icons/edit.svg?react';
 import styles from './Input.module.scss';
@@ -37,8 +38,8 @@ export const Input = () => {
     const formState = useFormState(parameters);
     const { navigateWithConfirmation } = useUnsavedChangesPrompt(formState.hasChanges);
     const { runSimulation } = useRunSimulation();
-    const { isFieldChanged, hasChanges } = useSessionPersistence();
-    const { isValidating, validationError, lastValidated } = useAutoPreAnalysis(formState.isValid());
+    const { isFieldChanged, hasChanges, resetToBaseline, baselineParameters } = useSessionPersistence();
+    const { isValidating, validationError } = useAutoPreAnalysis(formState.isValid());
 
     // State to manage which accordions are expanded
     const [expanded, setExpanded] = useState<Record<ParameterGroup, boolean>>(expandedState);
@@ -99,6 +100,16 @@ export const Input = () => {
             </>
         );
     }
+
+    // Handle reset to baseline
+    const handleReset = () => {
+        const confirmed = window.confirm('Reset all parameters to their original values? This will discard all changes.');
+        if (!confirmed) return;
+        
+        // Reset both parameter context and form state to baseline
+        resetToBaseline();
+        formState.resetToValues(baselineParameters);
+    };
 
     // Handle field changes - update both formState and parameter context
     const handleFieldChange = (paramKey: Parameter, value: ParameterValue) => {
@@ -222,6 +233,12 @@ export const Input = () => {
                     />
                 </div>
                 <div className={styles.nextButtonContainer}>
+                    <Button
+                        text='Reset'
+                        icon={ArrowLeft}
+                        onClick={handleReset}
+                        disabled={!hasChanges()}
+                    />
                     <Button
                         text='Save As...'
                         icon={Edit}

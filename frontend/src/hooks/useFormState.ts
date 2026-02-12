@@ -150,6 +150,23 @@ export const useFormState = (contextValues?: ParameterState) => {
     return Object.values(newErrors).every(error => error === null);
   }, [values]);
 
+  // Reset form to specific values (e.g., baseline parameters)
+  const resetToValues = useCallback((newValues: ParameterState) => {
+    const formattedValues = Object.entries(PARAMETERS).reduce((acc, [key, config]) => {
+      const paramKey = key as Parameter;
+      const value = newValues[paramKey] ?? config.defaultValue;
+      // Keep complex types as-is, convert primitives to strings for input fields
+      acc[paramKey] = config.type === 'ramp' ? value : String(value);
+      return acc;
+    }, {} as Record<Parameter, ParameterValue>);
+    
+    setValues(formattedValues);
+    setErrors(getInitialErrors());
+    setTouched(getInitialTouched());
+    setHasChanges(false);
+    initialValuesRef.current = formattedValues;
+  }, [getInitialErrors, getInitialTouched]);
+
   return {
     values,
     errors,
@@ -162,6 +179,7 @@ export const useFormState = (contextValues?: ParameterState) => {
     getChangedFields,
     isFieldChanged,
     resetForm,
+    resetToValues,
     markAsSaved,
     validateAll,
   };

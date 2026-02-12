@@ -165,5 +165,6 @@ export const useSessionPersistence = () => {
     setLoadedSimulation,
     clearSession,
     resetToBaseline,
+    baselineParameters, // Export for direct access
   };
 };
