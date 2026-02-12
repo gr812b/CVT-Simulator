@@ -4,6 +4,7 @@ import type { ParameterState } from '@types';
 import { runSimulationStreaming } from '@utils/api';
 import { mapParametersToApiBody } from '@utils/parameterMapping';
 import { convertSimulationData, UNIT_PRESETS } from '@utils/conversion';
+import { saveRecentRun } from '@utils/localStorage';
 
 /**
  * Custom hook for running simulations with loading state and navigation
@@ -30,6 +31,9 @@ export const useRunSimulation = () => {
         }
       );
       const unitConversion = convertSimulationData(result, UNIT_PRESETS.BAJA);
+
+      // Save to recent runs history
+      saveRecentRun(parameters);
 
       navigate('/playback', { 
         state: { simulationResult: unitConversion }

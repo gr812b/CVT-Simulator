@@ -66,7 +66,7 @@
                 cursor: pointer;
                 transition: background-color 0.2s;
 
-                &:hover:not(.emptyRow) {
+                &:hover:not(.emptyRow):not(.sectionHeader) {
                     background-color: rgba(255, 255, 255, 0.05);
                 }
 
@@ -76,6 +76,59 @@
 
                     &:hover {
                         background-color: var(--accent);
+                    }
+                }
+
+                &.defaultRow {
+                    background-color: rgba(187, 8, 8, 0.1);
+
+                    &:hover {
+                        background-color: rgba(187, 8, 8, 0.15);
+                    }
+
+                    &.selected {
+                        background-color: var(--accent);
+
+                        &:hover {
+                            background-color: var(--accent);
+                        }
+                    }
+                }
+
+                &.recentRunRow {
+                    background-color: rgba(136, 136, 136, 0.1);
+
+                    &:hover {
+                        background-color: rgba(136, 136, 136, 0.15);
+                    }
+
+                    &.selected {
+                        background-color: var(--accent);
+
+                        &:hover {
+                            background-color: var(--accent);
+                        }
+                    }
+                }
+
+                &.sectionHeader {
+                    background-color: rgba(255, 255, 255, 0.03);
+                    font-weight: 600;
+                    cursor: default;
+                    pointer-events: none;
+                    border-top: 2px solid var(--border-color);
+                    
+                    td {
+                        text-align: left;
+                        color: var(--primary);
+                        padding: 0.75rem 1rem;
+                        text-transform: uppercase;
+                        font-size: 0.875rem;
+                        letter-spacing: 0.05em;
+                    }
+
+                    &:first-child {
+                        border-top: none;
                     }
                 }
 

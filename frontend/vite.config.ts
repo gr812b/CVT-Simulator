@@ -17,6 +17,7 @@ export default defineConfig({
       '@contexts': resolve(root, 'contexts'),
       '@utils': resolve(root, 'utils'),
       '@hooks': resolve(root, 'hooks'),
+      '@constants': resolve(root, 'constants'),
     },
   },
   css: {

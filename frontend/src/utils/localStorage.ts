@@ -25,6 +25,12 @@ export interface SavedSimulation {
 const STORAGE_KEY = 'cvt_saved_simulations';
 
 /**
+ * Local storage key for recent runs
+ */
+const RECENT_RUNS_KEY = 'cvt_recent_runs';
+const MAX_RECENT_RUNS = 10;
+
+/**
  * Generate a unique ID for a parameter set
  */
 const generateId = (): string => {
@@ -151,7 +157,56 @@ export const simulationNameExists = (name: string, excludeId?: string): boolean 
     sim.name.toLowerCase() === name.toLowerCase() && sim.id !== excludeId
   );
 };
+/**
+ * Get all recent runs from localStorage
+ */
+export const getRecentRuns = (): SavedSimulation[] => {
+  try {
+    const stored = localStorage.getItem(RECENT_RUNS_KEY);
+    if (!stored) return [];
+    
+    const runs: SavedSimulation[] = JSON.parse(stored);
+    
+    // Sort by most recent first
+    return runs.sort((a, b) => 
+      new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    );
+  } catch (error) {
+    console.error('Failed to load recent runs from localStorage:', error);
+    return [];
+  }
+};
 
+/**
+ * Save a simulation run to recent runs history
+ * Automatically maintains only the last 10 runs
+ */
+export const saveRecentRun = (parameters: ParameterState): SavedSimulation => {
+  const runs = getRecentRuns();
+  
+  const timestamp = new Date();
+  const newRun: SavedSimulation = {
+    id: `run_${timestamp.getTime()}`,
+    name: `Run - ${timestamp.toLocaleString()}`,
+    parameters,
+    createdAt: timestamp.toISOString(),
+    updatedAt: timestamp.toISOString(),
+    schemaVersion: SCHEMA_VERSION,
+  };
+  
+  // Add to beginning and keep only last 10
+  const updatedRuns = [newRun, ...runs].slice(0, MAX_RECENT_RUNS);
+  localStorage.setItem(RECENT_RUNS_KEY, JSON.stringify(updatedRuns));
+  
+  return newRun;
+};
+
+/**
+ * Check if a simulation is a recent run
+ */
+export const isRecentRun = (id: string): boolean => {
+  return id.startsWith('run_');
+};
 /**
  * Export parameter set to JSON file
  */

@@ -12,8 +12,11 @@ import {
   deleteSimulation,
   exportSimulation,
   importSimulation,
+  getRecentRuns,
+  isRecentRun,
   type SavedSimulation 
 } from '@utils/localStorage';
+import { getDefaultSimulations, isDefaultSimulation } from '@constants/defaultSimulations';
 import Play from '@assets/icons/play.svg?react';
 import Edit from '@assets/icons/edit.svg?react';
 import TrashCan from '@assets/icons/trash_can.svg?react';
@@ -37,10 +40,14 @@ export const Dashboard = () => {
   }, []);
 
   const loadSimulations = () => {
-    const loaded = getAllSimulations();
-    setSimulations(loaded);
+    const userSimulations = getAllSimulations();
+    const defaultSimulations = getDefaultSimulations();
+    const recentRuns = getRecentRuns();
+    // Combine: defaults first, then user simulations, then recent runs
+    const allSimulations = [...defaultSimulations, ...userSimulations, ...recentRuns];
+    setSimulations(allSimulations);
     // Clear selection if the selected parameter set no longer exists
-    if (selectedSimulation && !loaded.find(s => s.id === selectedSimulation)) {
+    if (selectedSimulation && !allSimulations.find(s => s.id === selectedSimulation)) {
       setSelectedSimulation(null);
     }
   };
@@ -72,6 +79,17 @@ export const Dashboard = () => {
 
     const simulation = simulations.find(s => s.id === selectedSimulation);
     if (!simulation) return;
+
+    // Prevent deletion of default simulations and recent runs
+    if (isDefaultSimulation(selectedSimulation)) {
+      alert('Default parameter sets cannot be deleted.');
+      return;
+    }
+
+    if (isRecentRun(selectedSimulation)) {
+      alert('Recent runs cannot be deleted. They will automatically be removed as new runs are added.');
+      return;
+    }
 
     if (confirm(`Are you sure you want to delete the parameter set "${simulation.name}"?`)) {
       deleteSimulation(selectedSimulation);
@@ -119,6 +137,14 @@ export const Dashboard = () => {
   };
   
   const hasSelection = !!selectedSimulation;
+  const isDefaultSelected = selectedSimulation ? isDefaultSimulation(selectedSimulation) : false;
+  const isRecentRunSelected = selectedSimulation ? isRecentRun(selectedSimulation) : false;
+  const canDelete = hasSelection && !isDefaultSelected && !isRecentRunSelected;
+
+  // Group simulations by section for rendering
+  const defaultSims = simulations.filter(s => isDefaultSimulation(s.id));
+  const savedSims = simulations.filter(s => !isDefaultSimulation(s.id) && !isRecentRun(s.id));
+  const recentRunSims = simulations.filter(s => isRecentRun(s.id));
   
   return (
     <div className={styles.dashboard}>
@@ -142,17 +168,71 @@ export const Dashboard = () => {
                 <td colSpan={3}>No Saved Parameter Sets...</td>
               </tr>
             ) : (
-              simulations.map((sim) => (
-                <tr
-                  key={sim.id}
-                  className={selectedSimulation === sim.id ? styles.selected : ''}
-                  onClick={() => handleRowClick(sim.id)}
-                >
-                  <td>{sim.name}</td>
-                  <td>{formatDate(sim.createdAt)}</td>
-                  <td>{formatDate(sim.updatedAt)}</td>
-                </tr>
-              ))
+              <>
+                {/* Default Configurations Section */}
+                {defaultSims.length > 0 && (
+                  <>
+                    <tr className={styles.sectionHeader}>
+                      <td colSpan={3}>Default Configurations</td>
+                    </tr>
+                    {defaultSims.map((sim) => (
+                      <tr
+                        key={sim.id}
+                        className={`${
+                          selectedSimulation === sim.id ? styles.selected : ''
+                        } ${styles.defaultRow}`}
+                        onClick={() => handleRowClick(sim.id)}
+                      >
+                        <td>{sim.name}</td>
+                        <td>{formatDate(sim.createdAt)}</td>
+                        <td>{formatDate(sim.updatedAt)}</td>
+                      </tr>
+                    ))}
+                  </>
+                )}
+
+                {/* Saved Simulations Section */}
+                {savedSims.length > 0 && (
+                  <>
+                    <tr className={styles.sectionHeader}>
+                      <td colSpan={3}>Saved Parameter Sets</td>
+                    </tr>
+                    {savedSims.map((sim) => (
+                      <tr
+                        key={sim.id}
+                        className={selectedSimulation === sim.id ? styles.selected : ''}
+                        onClick={() => handleRowClick(sim.id)}
+                      >
+                        <td>{sim.name}</td>
+                        <td>{formatDate(sim.createdAt)}</td>
+                        <td>{formatDate(sim.updatedAt)}</td>
+                      </tr>
+                    ))}
+                  </>
+                )}
+
+                {/* Recent Runs Section */}
+                {recentRunSims.length > 0 && (
+                  <>
+                    <tr className={styles.sectionHeader}>
+                      <td colSpan={3}>Recent Runs</td>
+                    </tr>
+                    {recentRunSims.map((sim) => (
+                      <tr
+                        key={sim.id}
+                        className={`${
+                          selectedSimulation === sim.id ? styles.selected : ''
+                        } ${styles.recentRunRow}`}
+                        onClick={() => handleRowClick(sim.id)}
+                      >
+                        <td>{sim.name}</td>
+                        <td>{formatDate(sim.createdAt)}</td>
+                        <td>{formatDate(sim.updatedAt)}</td>
+                      </tr>
+                    ))}
+                  </>
+                )}
+              </>
             )}
           </tbody>
         </table>
@@ -176,7 +256,7 @@ export const Dashboard = () => {
           text={'Delete'}
           icon={TrashCan}
           className={styles.button}
-          disabled={!hasSelection}
+          disabled={!canDelete}
           onClick={handleDelete}
         />
         <Button
