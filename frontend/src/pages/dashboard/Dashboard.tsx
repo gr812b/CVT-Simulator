@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import styles from './Dashboard.module.scss'
 import bajaLogo from '@assets/baja_logo.png'
 import { Button } from '@components/button/Button';
@@ -9,13 +9,17 @@ import { useLoading } from '@contexts/LoadingContext';
 import { useRunSimulation } from '@hooks/useRunSimulation';
 import { 
   getAllSimulations, 
-  deleteSimulation, 
+  deleteSimulation,
+  exportSimulation,
+  importSimulation,
   type SavedSimulation 
 } from '@utils/localStorage';
 import Play from '@assets/icons/play.svg?react';
 import Edit from '@assets/icons/edit.svg?react';
 import TrashCan from '@assets/icons/trash_can.svg?react';
 import Plus from '@assets/icons/plus.svg?react';
+import ArrowUpCircle from '@assets/icons/arrow_up_circle.svg?react';
+import ArrowDownCircle from '@assets/icons/arrow_down_circle.svg?react';
 
 export const Dashboard = () => {
   const navigate = useNavigate();
@@ -24,6 +28,7 @@ export const Dashboard = () => {
   const { runSimulation } = useRunSimulation();
   const [simulations, setSimulations] = useState<SavedSimulation[]>([]);
   const [selectedSimulation, setSelectedSimulation] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Load parameter sets on mount
   useEffect(() => {
@@ -81,6 +86,36 @@ export const Dashboard = () => {
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
+  };
+
+  const handleExport = () => {
+    if (!selectedSimulation) return;
+
+    const simulation = simulations.find(s => s.id === selectedSimulation);
+    if (!simulation) return;
+
+    exportSimulation(simulation);
+  };
+
+  const handleImport = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    try {
+      await importSimulation(file);
+      loadSimulations();
+      // Reset the input so the same file can be imported again
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    } catch (error) {
+      console.error('Import failed:', error);
+      alert('Failed to import parameter set. Please check the file format.');
+    }
   };
   
   const hasSelection = !!selectedSimulation;
@@ -145,12 +180,32 @@ export const Dashboard = () => {
           onClick={handleDelete}
         />
         <Button
+          text={'Export'}
+          icon={ArrowUpCircle}
+          className={styles.button}
+          disabled={!hasSelection}
+          onClick={handleExport}
+        />
+        <Button
+          text={'Import'}
+          icon={ArrowDownCircle}
+          className={styles.button}
+          onClick={handleImport}
+        />
+        <Button
           text={'New'}
           icon={Plus}
           className={styles.button}
           onClick={() => navigate('/input')}
         />
       </div>
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="application/json,.json"
+        style={{ display: 'none' }}
+        onChange={handleFileChange}
+      />
     </div>
   )
 }
