@@ -15,7 +15,6 @@ import { useFormState } from '@hooks/useFormState';
 import { useUnsavedChangesPrompt } from '@hooks/useUnsavedChangesPrompt';
 import { useRunSimulation } from '@hooks/useRunSimulation';
 import { useSessionPersistence } from '@hooks/useSessionPersistence';
-import { useAutoPreAnalysis } from '@hooks/useAutoPreAnalysis';
 import Home from '@assets/icons/home.svg?react';
 import ArrowUpCircle from '@assets/icons/arrow_up_circle.svg?react';
 import ArrowDownCircle from '@assets/icons/arrow_down_circle.svg?react';
@@ -39,7 +38,6 @@ export const Input = () => {
     const { navigateWithConfirmation } = useUnsavedChangesPrompt(formState.hasChanges);
     const { runSimulation } = useRunSimulation();
     const { isFieldChanged, hasChanges, resetToBaseline, baselineParameters } = useSessionPersistence();
-    const { isValidating, validationError } = useAutoPreAnalysis(formState.isValid());
 
     // State to manage which accordions are expanded
     const [expanded, setExpanded] = useState<Record<ParameterGroup, boolean>>(expandedState);
@@ -151,22 +149,6 @@ export const Input = () => {
             <div className={styles.solverResultsPosition}>
                 <SolverResults />
             </div>
-            {/* Validation Status Indicator - only show if form is currently valid */}
-            {!formState.isValid() && (
-                <div className={styles.validationError}>
-                    <span>Parameters invalid - fix errors to enable pre-analysis</span>
-                </div>
-            )}
-            {formState.isValid() && isValidating && (
-                <div className={styles.validationStatus}>
-                    <span>Validating parameters...</span>
-                </div>
-            )}
-            {validationError && (
-                <div className={styles.validationError}>
-                    <span>Pre-analysis Error: {validationError}</span>
-                </div>
-            )}
             <div className={styles.inputGrid}>
                 <div className={styles.parameterInputContainer}>
                     {allGroups.map((groupKey) => (
@@ -249,7 +231,7 @@ export const Input = () => {
                         text='Run'
                         icon={Play}
                         onClick={handleSubmit}
-                        disabled={!formState.isValid() || isValidating}
+                        disabled={!formState.isValid()}
                     />
                 </div>
             </div>
