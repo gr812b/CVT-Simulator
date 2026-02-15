@@ -4,8 +4,9 @@
 - Update symbol summary at the end 
 - Parasitic bruh
 - Appendix: Proof of approximation being bad
-
-
+- fix: s = 0 corresponds to the defined reference configuration.
+- update illustration for primary_geometry.png
+- update illustration for belt_length_geometry.jpg
 
 likely to change section
 - belt slip assumption (ideal slip yada ayda)

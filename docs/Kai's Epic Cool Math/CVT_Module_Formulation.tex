@@ -33,7 +33,7 @@
 \setlist[itemize]{noitemsep, topsep=2pt, after=\noindent}
 \setlist[enumerate]{after=\noindent}
 
-
+\usepackage{parskip}
 \usepackage{placeins}
 
 \usepackage[round]{natbib}
@@ -57,6 +57,7 @@
 \NewDocumentCommand{\Eq}{m}{\cref{#1}}
 \NewDocumentCommand{\Th}{m}{\cref{#1}}
 \NewDocumentCommand{\Sec}{m}{\cref{#1}}
+\NewDocumentCommand{\Fig}{m}{\cref{#1}}
 
 % =========================
 % Theory / Law block (better spacing)
@@ -187,6 +188,24 @@
 }
 
 
+% ==========================================================
+% Remark / Aside Box
+% ==========================================================
+\newtcolorbox{remarkbox}[1][]{
+  enhanced,
+  colback=gray!5,
+  colframe=black!40,
+  boxrule=0.6pt,
+  arc=2pt,
+  left=8pt,
+  right=8pt,
+  top=6pt,
+  bottom=6pt,
+  fonttitle=\bfseries,
+  title=#1
+}
+
+
 
 
 
@@ -213,7 +232,7 @@ physically consistent set of governing equations that describe:
 
 \begin{itemize}
     \item Rotational dynamics of the primary and secondary assemblies,
-    \item Axial shift dynamics of the primary sheave,
+    \item Axial shift dynamics of the primary sheaves,
     \item Belt traction and torque transfer,
     \item Slip behavior under torque saturation,
     \item Coupled vehicle longitudinal response.
@@ -261,13 +280,13 @@ A continuously variable transmission (CVT) transmits torque between
 an engine and drivetrain using a belt or chain running between two
 variable-diameter pulleys.
 
-Each pulley consists of conical sheaves whose axial separation determines
-the effective belt radius. As the primary sheave shifts axially, the
+Each pulley consists of two opposing conical faces (sheaves) whose axial separation determines
+the effective belt radius. As the primary sheaves shift axially, the
 effective radius changes, which in turn modifies the transmission ratio.
 
 Unlike discrete gearboxes, a CVT provides a continuously varying ratio.
 Torque transfer is governed by belt traction, normal clamping forces,
-and frictional interaction between the belt and pulley faces.
+and frictional interaction between the belt and sheave faces.
 
 When transmitted torque exceeds traction capacity, slip occurs.
 Accurately modeling both stick and slip regimes is essential for
@@ -816,7 +835,7 @@ where:
     \item $\omega_s$ is the angular speed of the secondary pulley 
     (\si{\radian\per\second}).
 
-    \item $s$ is the axial shift position of the primary sheave 
+    \item $s$ is the axial shift position of the primary sheave
     (\si{\meter}).
 
     \item $\dot{s}$ is the axial shift velocity 
@@ -864,33 +883,834 @@ radial forces, and torque capacity — are computed directly from the
 current values of $\omega_p$, $\omega_s$, and $s$.
 
 
+\section{Pulley Geometry}\label{sec:geometry}
+
+This section establishes the geometric relationships that govern how axial
+shift modifies effective pulley radii and therefore transmission ratio.
+The derivations presented here are purely kinematic and do not involve
+force balances.
+
+The objective is to derive explicit expressions for:
+
+\begin{itemize}
+    \item Primary outer radius as a function of shift,
+    \item Secondary outer radius as a function of shift,
+    \item Center-to-center distance,
+    \item CVT ratio and its rate of change.
+\end{itemize}
+
+% ==============================================================
+\subsection{Conceptual Overview of Variable Geometry}
+
+Each pulley in the CVT consists of two opposing sheaves.
+One sheave is fixed axially, while the other is free to translate
+along the shaft.
+
+The effective belt radius is determined by the axial separation
+between these sheaves. As the moveable sheave approaches the fixed
+sheave, the belt is forced outward along the conical faces,
+increasing the effective pulley radius.
+
+Conversely, as the sheaves separate, the belt rides deeper
+between the sheaves, decreasing the effective radius.
+
+Because the belt length is constant, any increase in the
+primary pulley radius must be accompanied by a corresponding
+decrease in the secondary pulley radius. This geometric coupling
+is fundamental to the operation of the CVT and is derived
+explicitly in the following sections.
 
 
-\section{Kinematics}\label{sec:kinematics}
-\subsection{Pulley Geometry}\label{sec:geometry}
-\subsubsection{Primary Effective Radius}\label{sec:rp}
+TODO: ADD ILLUSTRATION. Cvt cross section of single pulley in 0 shift and full shift
+
+% NOTE:
+% - Clarify cone geometry assumptions
+% - Clarify belt thickness uniformity
+% - Clarify that geometry is idealized
+
+% ==============================================================
+\subsection{Definition of Axial Shift Variable}
+
+Let $s$ denote the axial displacement of the moveable primary sheave,
+defined according to the sign convention in \Sec{sec:sign}.
+
+\begin{itemize}
+    \item At $s = 0$, the primary sheaves are at their maximum axial separation.
+    \item At $s = 0$, the primary pulley is at its minimum effective radius.
+\end{itemize}
+
+For $s > 0$, the moveable sheave translates toward the fixed sheave,
+reducing the axial gap between the sheaves.
+
+\paragraph{Deadzone and Travel Limits}
+
+The shift coordinate is bounded as
+\[
+0 \le s \le s_{\max}.
+\]
+
+A deadzone region exists such that
+
+\[
+0 \le s < s_{\mathrm{dz}}
+\]
+
+does not alter the belt contact radius on the sheaves.
+
+For
+\[
+s_{\mathrm{dz}} \le s \le s_{\max},
+\]
+axial motion produces a proportional change in primary radius.
+
+Here:
+
+\begin{itemize}
+    \item $s_{\mathrm{dz}}$ denotes the deadzone displacement,
+    \item $s_{\max}$ denotes the maximum allowable sheave travel.
+\end{itemize}
+
+
+
+% NOTE:
+% - Define physical bounds on s
+% - Define minimum and maximum shift
+% - Clarify reference geometry at s = 0
+
+% ==============================================================
+\subsection{Primary Outer Radius as a Function of Shift}\label{sec:rp}
+
+Given sheave half-angle $\beta$, axial closure beyond the
+deadzone produces a radial increase governed by simple trigonometry.
+
+For an incremental axial displacement $\Delta s$ beyond
+$s_{\mathrm{dz}}$, the corresponding radial increase is
+
+\[
+\Delta r = \frac{\Delta s}{2\tan\beta}.
+\]
+
+The factor of $2$ arises because axial closure is shared
+symmetrically between the two opposing sheave faces. The geometric relation is illustrated in \cref{fig:primary_geometry}.
+
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.7\linewidth]{./illustrations/primary_geometry.png}
+\caption{Axial–radial relationship for opposing conical sheaves
+with half-angle $\beta$.}
+\label{fig:primary_geometry}
+\end{figure}
+
+\paragraph{Piecewise Radius Model}
+
+Let $r_{p,\min}$ denote the minimum primary outer radius.
+Then the primary outer radius is
+
 \begin{equation}
-r_p(s) = \cdots
-\label{eq:rp_of_s}
+r_{p,\text{outer}}(s)=
+\begin{cases}
+r_{p,\min}, & 0 \le s < s_{\mathrm{dz}}, \\[8pt]
+r_{p,\min} + \dfrac{s - s_{\mathrm{dz}}}{2\tan\beta},
+& s_{\mathrm{dz}} \le s \le s_{\max}.
+\end{cases}
+\label{eq:primary_radius}
 \end{equation}
 
-\subsubsection{Secondary Effective Radius via Belt-Length Constraint}\label{sec:rs}
+
+
+% NOTE:
+% - Derive from cone half-angle
+% - Include diagram reference later
+% - State geometric assumptions clearly
+\begin{remarkbox}[Remark on Belt Height and Effective Torque Radius]
+
+The belt possesses a finite radial thickness $h_b$. In this section,
+all geometric relations are formulated using the \emph{outer surface}
+of the belt as the reference radius. That is, 
+$r_{\text{outer}}$ denotes the radial position of the belt’s outer face.
+
+This convention simplifies the geometric derivations of pulley radius
+and belt length. However, torque transmission does not occur at the
+outer surface. The effective moment arm corresponds approximately to
+the mid-height of the belt.
+
+Accordingly, the effective torque radius used in force and torque
+calculations will later be defined as
+
 \begin{equation}
-r_s = \cdots
-\label{eq:rs_constraint}
+r_{\text{eff}} = r_{\text{outer}} - \frac{h_b}{2}.
+\label{eq:effective_radius}
 \end{equation}
 
-\subsection{CVT Ratio}\label{sec:ratio}
+This correction is applied explicitly in the torque transfer formulation
+(see \Sec{sec:effective-radius-placeholder}).
+
+\end{remarkbox}
+
+
+
+% ==============================================================
+% ============================================================== 
+\subsection{Belt Length Constraint}\label{sec:belt_length}
+
+This section derives the geometric constraint relating belt length to the
+primary radius $r_p$, secondary radius $r_s$, and center-to-center distance $C$.
+The derivation follows directly from the belt path geometry shown in
+\Fig{fig:belt_geometry_placeholder}.
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.75\linewidth]{./illustrations/belt_length_geometry.jpg}
+\caption{Belt geometry for two pulleys of radii $r_p$ and $r_s$ separated by center distance $C$.
+The belt wraps the pulleys with angles $\phi_p$ and $\phi_s$ and connects via two straight tangent spans.}
+\label{fig:belt_geometry_placeholder}
+\end{figure}
+
+\paragraph{Belt Length Decomposition}
+
+The total belt length $L_b$ is the sum of:
+(i) wrapped arc length on the primary pulley,
+(ii) wrapped arc length on the secondary pulley, and
+(iii) two straight tangent spans.
+Therefore,
+
 \begin{equation}
-R(s) = \frac{r_s(s)}{r_p(s)}
-\label{eq:ratio_def}
+L_b = r_p \phi_p + r_s \phi_s + 2\ell,
+\label{eq:belt_length_general}
 \end{equation}
 
-\subsection{Ratio Rate of Change}\label{sec:ratio-rate}
+where $\ell$ is the length of a single straight tangent span segment.
+
+\paragraph{Straight Span Length}
+
+Let $\ell$ denote the length of the straight belt segment between tangent points.
+From the right-triangle geometry formed by the pulley centers and tangent points,
+
 \begin{equation}
-\dot{R} = \frac{\mathrm{d}R}{\mathrm{d}s}\dot{s}
-\label{eq:ratio_rate}
+\ell = \sqrt{C^2 - (r_s - r_p)^2}.
+\label{eq:span_length}
 \end{equation}
+
+\paragraph{Tangency Angle}
+
+Let $\lambda$ denote the (nonnegative) angle between the line of centers and the straight
+tangent belt segment (as defined in \Fig{fig:belt_geometry_placeholder}). Then,
+
+\begin{equation}
+\sin\lambda = \frac{|r_s - r_p|}{C},
+\label{eq:lambda_def}
+\end{equation}
+
+and equivalently,
+
+\begin{equation}
+\lambda = \sin^{-1}\!\left(\frac{|r_s - r_p|}{C}\right).
+\label{eq:lambda_asin}
+\end{equation}
+
+\paragraph{Wrap Angles}
+
+With $\lambda \ge 0$, the wrap angles on the smaller- and larger-radius pulleys are
+
+\begin{align}
+\phi_p &= \pi - 2\lambda, \label{eq:wrap_primary}\\
+\phi_s &= \pi + 2\lambda. \label{eq:wrap_secondary}
+\end{align}
+
+\paragraph{Closed Form Belt-Length Expression}
+
+Substituting \Eq{eq:span_length} and \Eq{eq:wrap_primary}--\Eq{eq:wrap_secondary}
+into \Eq{eq:belt_length_general} yields
+
+\begin{align}
+L_b
+&= r_p(\pi - 2\lambda)
+ + r_s(\pi + 2\lambda)
+ + 2\sqrt{C^2 - (r_s - r_p)^2} \nonumber\\
+&= \pi(r_p + r_s)
+ + 2\lambda |r_s - r_p|
+ + 2\sqrt{C^2 - (r_s - r_p)^2}. \label{eq:belt_length_subbed}
+\end{align}
+
+Finally, substituting \Eq{eq:lambda_asin} gives
+
+\begin{equation}
+L_b =
+\pi(r_p + r_s)
++ 2|r_s - r_p|\,
+\sin^{-1}\!\left(\frac{|r_s - r_p|}{C}\right)
++ 2\sqrt{C^2 - (r_s - r_p)^2}.
+\label{eq:belt_length_final}
+\end{equation}
+
+\paragraph{Root Form (Geometric Compatibility Constraint)}
+
+Rearranging \Eq{eq:belt_length_final} yields a geometric constraint of the form
+
+\begin{equation}
+f(r_p, r_s, C) =
+\pi(r_p + r_s)
++ 2|r_s - r_p|\,
+\sin^{-1}\!\left(\frac{|r_s - r_p|}{C}\right)
++ 2\sqrt{C^2 - (r_s - r_p)^2}
+- L_b.
+\label{eq:belt_length_root}
+\end{equation}
+
+The belt-length constraint is therefore
+
+\begin{equation}
+f(r_p, r_s, C) = 0.
+\label{eq:belt_length_constraint}
+\end{equation}
+
+
+\begin{remarkbox}[Remark (Transcendental Nature and Approximation)]
+
+Equation \Eq{eq:belt_length_constraint} is transcendental due to the
+inverse-sine and square-root terms and therefore does not admit
+a closed-form solution.
+
+In this work, the constraint is solved numerically using a
+bracketed root-finding method (e.g., bisection or Brent's method),
+which is deterministic and robust over the physically admissible interval.
+
+It is common in online references and simplified treatments to assume
+
+\[
+\frac{|r_s - r_p|}{C} \approx 0,
+\]
+
+which implies $\lambda \approx 0$ and therefore
+$\sin^{-1}\!\left(\frac{|r_s - r_p|}{C}\right) \approx 0$.
+Under this assumption, the belt-length equation reduces to a much
+simpler approximate form.
+
+However, this small-angle approximation can introduce substantial
+geometric error when $(|r_s - r_p|)/C$ is not negligible.
+Appendix~\ref{sec:approximation-validation-placeholder}
+quantifies this deviation and demonstrates that the approximation
+is not acceptable under realistic operating conditions.
+\end{remarkbox}
+
+
+% NOTE:
+% - Later sections will specify the bracketing bounds used in practice for the solver.
+% - If you want to support cases where r_p > r_s, you can replace (r_s - r_p) with |r_s - r_p|
+%   and state the sign convention, or explicitly assume w.l.o.g. r_s \ge r_p for the geometric derivation.
+
+
+
+% ==============================================================
+\subsection{Center-to-Center Distance Determination}\label{sec:center_distance}
+
+The center-to-center distance $C$ is a fixed geometric parameter
+of the assembled CVT system. Once the transmission is constructed,
+$C$ does not vary during operation.
+
+To determine $C$, we evaluate the belt-length constraint
+\Eq{eq:belt_length_constraint} at the known initial configuration
+of the system.
+
+\paragraph{Initial Geometric Configuration}
+
+At startup, the CVT is assumed to be in its lowest ratio configuration:
+
+\begin{itemize}
+    \item The primary pulley is at its minimum outer radius,
+    \[
+    r_p = r_{p,\min}.
+    \]
+    \item The secondary pulley is at its maximum outer radius,
+    \[
+    r_s = r_{s,\max}.
+    \]
+\end{itemize}
+
+These values are determined by the physical geometry of the sheaves
+and represent the fully separated primary and fully closed secondary
+configuration.
+
+\paragraph{Center Distance from Belt-Length Compatibility}
+
+Substituting these known radii into
+\Eq{eq:belt_length_constraint} yields
+
+\begin{equation}
+f(r_{p,\min}, r_{s,\max}, C) = 0.
+\label{eq:center_distance_constraint}
+\end{equation}
+
+This equation contains a single unknown, $C$, and is solved
+numerically to determine the fixed center-to-center distance
+consistent with the specified belt length $L_b$.
+
+\begin{remarkbox}[Remark (One-Time Geometric Solve)]
+The center distance $C$ is determined once during model
+initialization. Thereafter, $C$ is treated as a constant
+in all subsequent geometric and dynamic calculations.
+\end{remarkbox}
+
+
+
+% ==============================================================
+\subsection{Secondary Outer Radius as a Function of Shift}
+\label{sec:secondary_radius}
+
+With the center-to-center distance $C$ determined from
+\Sec{sec:center_distance}, and the primary radius
+$r_p(s)$ defined by \Eq{eq:primary_radius}, the secondary
+outer radius is obtained by enforcing the belt-length
+compatibility constraint.
+
+\paragraph{Geometric Coupling}
+
+At any shift position $s$, the primary radius
+$r_p(s)$ is known. The secondary radius $r_s$
+must therefore satisfy
+
+\begin{equation}
+f\!\left(r_p(s), r_s, C\right) = 0,
+\label{eq:secondary_radius_constraint}
+\end{equation}
+
+where $f(\cdot)$ is defined in \Eq{eq:belt_length_root}.
+
+\paragraph{Numerical Determination of $r_s(s)$}
+
+Because \Eq{eq:secondary_radius_constraint} is transcendental
+in $r_s$, the secondary radius is obtained numerically for
+each value of $s$:
+
+\begin{equation}
+r_{s,\text{outer}}(s)
+=
+\operatorname*{root}_{r_s}
+\; f\!\left(r_p(s), r_s, C\right).
+\label{eq:secondary_radius}
+\end{equation}
+
+\begin{remarkbox}[Remark (Dynamic Root Solve)]
+Unlike the center-distance calculation in
+\Sec{sec:center_distance}, which is performed once during
+initialization, this root solve is performed repeatedly
+as the shift coordinate $s$ evolves during simulation.
+Because the physically admissible interval for $r_s$ is bounded,
+a bracketed solver (e.g., Brent’s method) converges rapidly.
+\end{remarkbox}
+
+% NOTE:
+% - Clarify this uses same solver structure
+% - Emphasize geometric coupling
+% - Explain physical meaning (primary increase → secondary decrease)
+
+% ==============================================================
+\subsection{Effective Torque Radius}
+\label{sec:effective-radius-placeholder}
+
+As noted previously, the belt possesses a finite radial thickness $h_b$.
+All geometric derivations were performed using the outer belt surface
+for convenience. However, torque is transmitted through the belt
+cross-section, and the effective moment arm corresponds approximately
+to the mid-height of the belt.
+
+The effective torque radius for each pulley is therefore defined as
+
+\begin{equation}
+r_{p,\text{eff}} = r_{p,\text{outer}} - \frac{h_b}{2},
+\end{equation}
+
+\begin{equation}
+r_{s,\text{eff}} = r_{s,\text{outer}} - \frac{h_b}{2}.
+\end{equation}
+
+These effective radii are used in all subsequent torque transmission calculations.
+
+
+% ==============================================================
+\subsection{CVT Ratio Definition}
+
+The instantaneous CVT ratio is defined as the ratio of
+secondary to primary effective radii:
+
+\begin{equation}
+R(s) = \frac{r_{s,\text{eff}}(s)}{r_{p,\text{eff}}(s)}.
+\label{eq:cvt_ratio}
+\end{equation}
+
+Because $r_{p,\text{eff}}(s)$ increases with shift $s$,
+the ratio $R(s)$ decreases as the primary closes.
+
+Thus:
+\begin{itemize}
+    \item Small $s$ (minimum primary radius) corresponds to high ratio.
+    \item Large $s$ (maximum primary radius) corresponds to low ratio.
+\end{itemize}
+
+The transmission ratio is therefore a purely geometric function
+of shift position.
+
+
+% ==============================================================
+\subsection{Ratio Rate of Change}\label{sec:ratio_rate}
+
+During shifting, the ratio $R$ varies because the effective pulley radii vary with the
+shift coordinate $s$. This section derives an expression for $\dot R$ in terms of
+$\dot s$ and geometric derivatives.
+
+\subsubsection{Start from the Ratio Definition}
+
+The ratio is defined by the effective radii as
+
+\begin{equation}
+R(s) = \frac{r_{s,\text{eff}}(s)}{r_{p,\text{eff}}(s)}.
+\label{eq:R_def}
+\end{equation}
+
+Because $R$ depends on time only through $s(t)$, the chain rule gives
+
+\begin{equation}
+\dot R = \frac{dR}{ds}\dot s.
+\label{eq:Rdot_chain}
+\end{equation}
+
+Thus, the objective is to compute $dR/ds$.
+
+\subsubsection{Differentiate $R$ with Respect to $s$}
+
+Differentiating \Eq{eq:R_def} with respect to $s$ (quotient rule) gives
+
+\begin{align}
+\frac{dR}{ds}
+&=
+\frac{d}{ds}\!\left(\frac{r_{s,\text{eff}}}{r_{p,\text{eff}}}\right)
+=
+\frac{
+\left(\dfrac{dr_{s,\text{eff}}}{ds}\right) r_{p,\text{eff}}
+-
+r_{s,\text{eff}}
+\left(\dfrac{dr_{p,\text{eff}}}{ds}\right)
+}{
+r_{p,\text{eff}}^2
+}.
+\label{eq:dRds_quotient}
+\end{align}
+
+Rearranging into a form that exposes the required components:
+
+\begin{equation}
+\frac{dR}{ds}
+=
+\frac{1}{r_{p,\text{eff}}}\frac{dr_{s,\text{eff}}}{ds}
+-
+\frac{r_{s,\text{eff}}}{r_{p,\text{eff}}^2}\frac{dr_{p,\text{eff}}}{ds}.
+\label{eq:dRds_components}
+\end{equation}
+
+
+At this point, the remaining task is to express the two derivatives
+$dr_{p,\text{eff}}/ds$ and $dr_{s,\text{eff}}/ds$ in computable form.
+
+\subsubsection{Eliminating \texorpdfstring{$dr_s/ds$}{drs/ds} Using the Belt-Length Constraint}
+
+The secondary radius $r_s(s)$ is defined implicitly through the
+belt-length constraint and does not admit a closed-form expression
+in terms of $r_p$. Direct differentiation of $r_s(s)$ is therefore
+not practical.
+
+Instead, we differentiate the belt-length compatibility constraint
+derived in \Sec{sec:belt_length}, which is written as
+
+\begin{equation}
+f(r_p, r_s, C) = 0,
+\label{eq:belt_constraint_general}
+\end{equation}
+
+with $f(\cdot)$ defined explicitly in \Eq{eq:belt_length_root} and
+$C$ constant.
+Since $r_p=r_p(s)$ and $r_s=r_s(s)$, differentiating \Eq{eq:belt_constraint_general}
+with respect to $s$ gives (multivariable chain rule)
+
+\begin{equation}
+\frac{\partial f}{\partial r_p}\frac{dr_p}{ds}
++
+\frac{\partial f}{\partial r_s}\frac{dr_s}{ds}
+= 0.
+\label{eq:implicit_chain}
+\end{equation}
+
+Solving \Eq{eq:implicit_chain} for $dr_s/ds$ yields
+
+\begin{equation}
+\frac{dr_s}{ds}
+=
+-
+\frac{\dfrac{\partial f}{\partial r_p}}
+{\dfrac{\partial f}{\partial r_s}}
+\frac{dr_p}{ds}.
+\label{eq:drsds_general}
+\end{equation}
+
+\subsubsection{Single Expression for \texorpdfstring{$dR/ds$}{dR/ds} in Terms of Remaining Unknowns}
+
+Substituting \Eq{eq:drsds_general} into \Eq{eq:dRds_components} eliminates $dr_s/ds$ and
+gives a single expression for $dR/ds$ in terms of the belt constraint partial derivatives
+and the primary geometric derivative:
+
+\begin{equation}
+\frac{dR}{ds}
+=
+-
+\frac{1}{r_{p,\text{eff}}}
+\frac{\dfrac{\partial f}{\partial r_p}}
+{\dfrac{\partial f}{\partial r_s}}
+\frac{dr_p}{ds}
+-
+\frac{r_{s,\text{eff}}}{r_{p,\text{eff}}^{2}}
+\frac{dr_{p,\text{eff}}}{ds}.
+\label{eq:dRds_reduced}
+\end{equation}
+
+Equation \Eq{eq:dRds_reduced} makes the remaining requirements explicit. To evaluate
+$dR/ds$ (and therefore $\dot R$ via \Eq{eq:Rdot_chain}), three quantities are required:
+
+\begin{enumerate}
+    \item $\dfrac{\partial f}{\partial r_p}$,
+    \item $\dfrac{\partial f}{\partial r_s}$,
+    \item $\dfrac{dr_p}{ds}$ (and the associated $\dfrac{dr_{p,\text{eff}}}{ds}$).
+\end{enumerate}
+
+The following subsections derive these three quantities for the specific belt-length
+function $f$ defined in \Eq{eq:belt_length_root} and for the primary geometry defined in
+\Eq{eq:primary_radius}.
+
+% ==============================================================
+\subsubsection{Partial Derivatives of the Belt Constraint}
+\label{sec:belt_partials}
+
+Recall the belt-length constraint written in root form as
+\begin{equation}
+f(r_p,r_s,C)
+=
+\pi(r_p+r_s)
++2|r_s-r_p|\sin^{-1}\!\left(\frac{|r_s-r_p|}{C}\right)
++2\sqrt{C^2-(r_s-r_p)^2}
+-L_b
+=0.
+\label{eq:f_def_again}
+\end{equation}
+
+We now compute the two partial derivatives required in
+\Eq{eq:drsds_general}, following the same sequence as the handwritten derivation:
+differentiate term-by-term and apply the product rule to the inverse-sine term.
+
+% --------------------------------------------------------------
+\paragraph{Derivative of the inverse-sine term}
+
+Consider the factor
+\[
+|r_s-r_p|\sin^{-1}\!\left(\frac{|r_s-r_p|}{C}\right).
+\]
+Differentiation depends on whether $r_s\ge r_p$ or $r_s<r_p$ because of the
+absolute value. We therefore proceed piecewise.
+
+% --------------------------------------------------------------
+\paragraph{Case 1: $r_s \ge r_p$}
+
+If $r_s\ge r_p$, then $|r_s-r_p| = r_s-r_p$ and
+\[
+\sin^{-1}\!\left(\frac{|r_s-r_p|}{C}\right)
+=
+\sin^{-1}\!\left(\frac{r_s-r_p}{C}\right).
+\]
+
+First compute the needed inner derivative:
+\begin{equation}
+\frac{\partial}{\partial r_p}\sin^{-1}\!\left(\frac{r_s-r_p}{C}\right)
+=
+-\frac{1}{\sqrt{C^2-(r_s-r_p)^2}},
+\qquad
+\frac{\partial}{\partial r_s}\sin^{-1}\!\left(\frac{r_s-r_p}{C}\right)
+=
+\frac{1}{\sqrt{C^2-(r_s-r_p)^2}}.
+\label{eq:asin_derivs_case1}
+\end{equation}
+
+Now apply the product rule to $(r_s-r_p)\sin^{-1}((r_s-r_p)/C)$:
+
+\begin{align}
+\frac{\partial}{\partial r_p}
+\left[(r_s-r_p)\sin^{-1}\!\left(\frac{r_s-r_p}{C}\right)\right]
+&=
+(-1)\sin^{-1}\!\left(\frac{r_s-r_p}{C}\right)
++(r_s-r_p)\left(-\frac{1}{\sqrt{C^2-(r_s-r_p)^2}}\right), \label{eq:prod_rp_case1}\\[6pt]
+\frac{\partial}{\partial r_s}
+\left[(r_s-r_p)\sin^{-1}\!\left(\frac{r_s-r_p}{C}\right)\right]
+&=
+(+1)\sin^{-1}\!\left(\frac{r_s-r_p}{C}\right)
++(r_s-r_p)\left(\frac{1}{\sqrt{C^2-(r_s-r_p)^2}}\right).
+\label{eq:prod_rs_case1}
+\end{align}
+
+% --------------------------------------------------------------
+\paragraph{Derivative of the square-root term}
+
+For the straight-span contribution,
+\[
+2\sqrt{C^2-(r_s-r_p)^2},
+\]
+we use the chain rule:
+
+\begin{align}
+\frac{\partial}{\partial r_p}\left[2\sqrt{C^2-(r_s-r_p)^2}\right]
+&=
+2\cdot \frac{(r_s-r_p)}{\sqrt{C^2-(r_s-r_p)^2}}, \label{eq:sqrt_rp_case1}\\[6pt]
+\frac{\partial}{\partial r_s}\left[2\sqrt{C^2-(r_s-r_p)^2}\right]
+&=
+-2\cdot \frac{(r_s-r_p)}{\sqrt{C^2-(r_s-r_p)^2}}.
+\label{eq:sqrt_rs_case1}
+\end{align}
+
+% --------------------------------------------------------------
+\paragraph{Assemble $\partial f/\partial r_p$ and $\partial f/\partial r_s$ (Case 1)}
+
+Differentiate \Eq{eq:f_def_again} term-by-term. The $\pi(r_p+r_s)$ term contributes $\pi$
+to both partial derivatives. The inverse-sine product term contributes $2(\cdot)$, and the
+square-root term contributes \Eq{eq:sqrt_rp_case1}--\Eq{eq:sqrt_rs_case1}. Substituting
+and simplifying shows that the square-root contributions cancel the $ (r_s-r_p)/\sqrt{\cdot}$
+pieces from the product-rule derivatives, leaving:
+
+\begin{equation}
+\boxed{
+\frac{\partial f}{\partial r_p}
+=
+\pi
+-
+2\sin^{-1}\!\left(\frac{r_s-r_p}{C}\right)
+},
+\qquad
+\boxed{
+\frac{\partial f}{\partial r_s}
+=
+\pi
++
+2\sin^{-1}\!\left(\frac{r_s-r_p}{C}\right)
+},
+\qquad (r_s\ge r_p).
+\label{eq:partials_case1}
+\end{equation}
+
+% --------------------------------------------------------------
+\paragraph{Case 2: $r_s < r_p$}
+
+If $r_s<r_p$, then $|r_s-r_p| = r_p-r_s$ and
+\[
+\sin^{-1}\!\left(\frac{|r_s-r_p|}{C}\right)
+=
+\sin^{-1}\!\left(\frac{r_p-r_s}{C}\right).
+\]
+
+Proceeding identically (product rule on $(r_p-r_s)\sin^{-1}((r_p-r_s)/C)$ and chain rule
+on the square-root term) yields the swapped-sign results:
+
+\begin{equation}
+\boxed{
+\frac{\partial f}{\partial r_p}
+=
+\pi
++
+2\sin^{-1}\!\left(\frac{r_p-r_s}{C}\right)
+},
+\qquad
+\boxed{
+\frac{\partial f}{\partial r_s}
+=
+\pi
+-
+2\sin^{-1}\!\left(\frac{r_p-r_s}{C}\right)
+},
+\qquad (r_s<r_p).
+\label{eq:partials_case2}
+\end{equation}
+
+% --------------------------------------------------------------
+\paragraph{Summary (piecewise partial derivatives)}
+
+Combining \Eq{eq:partials_case1} and \Eq{eq:partials_case2}, the belt constraint partials are
+
+\begin{equation}
+\frac{\partial f}{\partial r_p}
+=
+\begin{cases}
+\pi - 2\sin^{-1}\!\left(\dfrac{r_s-r_p}{C}\right), & r_s \ge r_p,\\[10pt]
+\pi + 2\sin^{-1}\!\left(\dfrac{r_p-r_s}{C}\right), & r_s < r_p,
+\end{cases}
+\label{eq:df_drp_piecewise}
+\end{equation}
+
+\begin{equation}
+\frac{\partial f}{\partial r_s}
+=
+\begin{cases}
+\pi + 2\sin^{-1}\!\left(\dfrac{r_s-r_p}{C}\right), & r_s \ge r_p,\\[10pt]
+\pi - 2\sin^{-1}\!\left(\dfrac{r_p-r_s}{C}\right), & r_s < r_p.
+\end{cases}
+\label{eq:df_drs_piecewise}
+\end{equation}
+
+These expressions are valid for both regimes and do not assume an ordering
+between $r_p$ and $r_s$.
+
+% ==============================================================
+\subsubsection{Primary Radius Derivative}
+\label{sec:drpds}
+
+From the piecewise primary radius model \Eq{eq:primary_radius}, the primary outer radius
+satisfies
+
+\[
+r_{p,\text{outer}}(s)=
+\begin{cases}
+r_{p,\min}, & 0 \le s < s_{\mathrm{dz}}, \\[8pt]
+r_{p,\min} + \dfrac{s - s_{\mathrm{dz}}}{2\tan\beta},
+& s_{\mathrm{dz}} \le s \le s_{\max}.
+\end{cases}
+\]
+
+Differentiating with respect to $s$ gives
+
+\begin{equation}
+\frac{dr_p}{ds}
+=
+\frac{dr_{p,\text{outer}}}{ds}
+=
+\begin{cases}
+0, & 0 \le s < s_{\mathrm{dz}},\\[8pt]
+\dfrac{1}{2\tan\beta}, & s_{\mathrm{dz}} \le s \le s_{\max}.
+\end{cases}
+\label{eq:drpds_piecewise}
+\end{equation}
+
+Because $r_{p,\text{eff}} = r_{p,\text{outer}} - h_b/2$ and $h_b$ is constant,
+the same derivative applies:
+
+\begin{equation}
+\frac{dr_{p,\text{eff}}}{ds} = \frac{dr_p}{ds}.
+\label{eq:drpeffds}
+\end{equation}
+
+
+
+
+
+\begin{remarkbox}[Remark (At the Travel Limit)]
+If the model clamps $s$ at the physical limit $s_{\max}$, then $r_{p,\text{outer}}$
+(and thus $r_{p,\text{eff}}$) is constant beyond this point and the derivative is zero
+for $s>s_{\max}$. In this document we restrict to the admissible domain
+$0\le s\le s_{\max}$.
+\end{remarkbox}
+
 
 \section{Pulley Axial Force Models}\label{sec:axial}
 \subsection{Primary Axial Force Model}\label{sec:primary-axial}
