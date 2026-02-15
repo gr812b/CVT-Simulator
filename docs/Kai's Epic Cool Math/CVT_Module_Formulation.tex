@@ -1718,32 +1718,33 @@ Assembling terms gives
 
 
 % --------------------------------------------------------------
-\paragraph{Summary (piecewise partial derivatives)}
+\paragraph{Summary of Belt Constraint Partial Derivatives}
 
-Combining \Eq{eq:partials_case1} and \Eq{eq:partials_case2}, the belt constraint partials are
+From the derivations above, the partial derivatives of the belt-length
+constraint \Eq{eq:f_def_again} are
 
 \begin{equation}
 \frac{\partial f}{\partial r_p}
 =
-\begin{cases}
-\pi - 2\sin^{-1}\!\left(\dfrac{r_s-r_p}{C}\right), & r_s \ge r_p,\\[10pt]
-\pi + 2\sin^{-1}\!\left(\dfrac{r_p-r_s}{C}\right), & r_s < r_p,
-\end{cases}
-\label{eq:df_drp_piecewise}
+\pi
+-
+2\sin^{-1}\!\left(\frac{r_s-r_p}{C}\right),
+\label{eq:dfdrp_summary}
 \end{equation}
 
 \begin{equation}
 \frac{\partial f}{\partial r_s}
 =
-\begin{cases}
-\pi + 2\sin^{-1}\!\left(\dfrac{r_s-r_p}{C}\right), & r_s \ge r_p,\\[10pt]
-\pi - 2\sin^{-1}\!\left(\dfrac{r_p-r_s}{C}\right), & r_s < r_p.
-\end{cases}
-\label{eq:df_drs_piecewise}
+\pi
++
+2\sin^{-1}\!\left(\frac{r_s-r_p}{C}\right).
+\label{eq:dfdrs_summary}
 \end{equation}
 
-These expressions are valid for both regimes and do not assume an ordering
-between $r_p$ and $r_s$.
+These expressions are globally valid under the geometric definition
+of $\lambda$ given in \Eq{eq:lambda_asin} and require no piecewise
+case distinction.
+
 
 % ==============================================================
 \subsubsection{Primary Radius Derivative}
@@ -1793,6 +1794,144 @@ If the model clamps $s$ at the physical limit $s_{\max}$, then $r_{p,\text{outer
 for $s>s_{\max}$. In this document we restrict to the admissible domain
 $0\le s\le s_{\max}$.
 \end{remarkbox}
+
+% ==============================================================
+% ==============================================================
+\subsubsection{Final Expression for \texorpdfstring{$dR/ds$}{dR/ds} and \texorpdfstring{$\dot R$}{Rdot}}
+\label{sec:dRds_final}
+
+\Eq{eq:dRds_reduced} expresses $dR/ds$ in terms of three quantities:
+(i) the belt-constraint partial derivatives $\partial f/\partial r_p$ and $\partial f/\partial r_s$,
+and (ii) the primary geometric derivatives $dr_p/ds$ and $dr_{p,\text{eff}}/ds$.
+
+From \Sec{sec:belt_partials}, the partial derivatives of the belt-length constraint
+\Eq{eq:belt_length_root} are
+\begin{equation}
+\frac{\partial f}{\partial r_p}
+=
+\pi
+-
+2\sin^{-1}\!\left(\frac{r_s-r_p}{C}\right),
+\label{eq:dfdrp_final_used}
+\end{equation}
+\begin{equation}
+\frac{\partial f}{\partial r_s}
+=
+\pi
++
+2\sin^{-1}\!\left(\frac{r_s-r_p}{C}\right).
+\label{eq:dfdrs_final_used}
+\end{equation}
+
+From \Sec{sec:drpds}, the primary outer-radius derivative is
+\Eq{eq:drpds_piecewise}, and since $r_{p,\text{eff}} = r_{p,\text{outer}} - h_b/2$ with
+$h_b$ constant, \Eq{eq:drpeffds} gives $dr_{p,\text{eff}}/ds = dr_p/ds$.
+
+Substituting \Eq{eq:dfdrp_final_used}--\Eq{eq:dfdrs_final_used} and \Eq{eq:drpeffds}
+into \Eq{eq:dRds_reduced} yields
+\begin{equation}
+\frac{dR}{ds}
+=
+\left[
+-
+\frac{1}{r_{p,\text{eff}}}
+\frac{
+\pi - 2\sin^{-1}\!\left(\dfrac{r_s-r_p}{C}\right)
+}{
+\pi + 2\sin^{-1}\!\left(\dfrac{r_s-r_p}{C}\right)
+}
+-
+\frac{r_{s,\text{eff}}}{r_{p,\text{eff}}^{2}}
+\right]\frac{dr_p}{ds}.
+\label{eq:dRds_subbed_all}
+\end{equation}
+
+Finally, substituting the piecewise primary derivative \Eq{eq:drpds_piecewise} gives the
+fully expanded result
+\begin{equation}
+\frac{dR}{ds}
+=
+\begin{cases}
+0,
+& 0 \le s < s_{\mathrm{dz}}, \\[14pt]
+\displaystyle
+\frac{1}{2\tan\beta}
+\left[
+-
+\frac{1}{r_{p,\text{eff}}}
+\frac{
+\pi - 2\sin^{-1}\!\left(\dfrac{r_s-r_p}{C}\right)
+}{
+\pi + 2\sin^{-1}\!\left(\dfrac{r_s-r_p}{C}\right)
+}
+-
+\frac{r_{s,\text{eff}}}{r_{p,\text{eff}}^{2}}
+\right],
+& s_{\mathrm{dz}} \le s \le s_{\max}.
+\end{cases}
+\label{eq:dRds_final}
+\end{equation}
+
+Using the chain rule \Eq{eq:Rdot_chain}, $\dot R = (dR/ds)\dot s$. Substituting
+\Eq{eq:dRds_final} and rearranging gives
+
+\begin{equation}
+\dot R
+=
+\begin{cases}
+0,
+& 0 \le s < s_{\mathrm{dz}}, \\[14pt]
+\displaystyle
+-\frac{\dot s}{2\tan\beta\,r_{p,\text{eff}}}
+\left[
+\frac{
+\pi - 2\sin^{-1}\!\left(\dfrac{r_s-r_p}{C}\right)
+}{
+\pi + 2\sin^{-1}\!\left(\dfrac{r_s-r_p}{C}\right)
+}
++
+\frac{r_{s,\text{eff}}}{r_{p,\text{eff}}}
+\right],
+& s_{\mathrm{dz}} \le s \le s_{\max}.
+\end{cases}
+\label{eq:Rdot_final}
+\end{equation}
+
+\paragraph{Summary}
+
+Equations \Eq{eq:dRds_final} and \Eq{eq:Rdot_final} provide a complete
+closed-form expression for the geometric sensitivity of the transmission ratio
+and its time rate of change.
+
+Specifically,
+
+\begin{itemize}
+    \item $\dfrac{dR}{ds}$ quantifies how sensitive the CVT ratio is to
+    axial sheave motion.
+    \item $\dot R = \dfrac{dR}{dt}$ relates axial shift velocity $\dot s$
+    directly to rotational ratio dynamics.
+\end{itemize}
+
+The result captures three coupled geometric effects:
+
+\begin{enumerate}
+    \item The primary sheave cone geometry through $\beta$,
+    \item The nonlinear belt-length compatibility through the inverse-sine term,
+    \item The redistribution of effective radii between pulleys during shift.
+\end{enumerate}
+
+The deadzone behavior is explicitly represented: when
+$0 \le s < s_{\mathrm{dz}}$, the effective radii are constant and
+$\dot R = 0$.
+
+In the active shift region $s_{\mathrm{dz}} \le s \le s_{\max}$,
+ratio dynamics are governed entirely by geometric coupling and
+axial shift velocity.
+
+This completes the purely kinematic derivation of CVT ratio evolution.
+Subsequent sections incorporate force balance and torque transfer
+to determine $\dot s$ dynamically.
+
 
 
 \section{Pulley Axial Force Models}\label{sec:axial}
