@@ -1092,31 +1092,38 @@ From the right-triangle geometry formed by the pulley centers and tangent points
 \label{eq:span_length}
 \end{equation}
 
-\paragraph{Tangency Angle}
+\paragraph{Tangency Angle (Signed Convention)}
 
-Let $\lambda$ denote the (nonnegative) angle between the line of centers and the straight
-tangent belt segment (as defined in \Fig{fig:belt_geometry_placeholder}). Then,
+Let $\lambda$ denote the signed angle between the line of centers and the straight
+tangent belt segment (as defined in \Fig{fig:belt_geometry_placeholder}). We define
 
 \begin{equation}
-\sin\lambda = \frac{|r_s - r_p|}{C},
+\sin\lambda = \frac{r_s - r_p}{C},
 \label{eq:lambda_def}
 \end{equation}
 
 and equivalently,
 
 \begin{equation}
-\lambda = \sin^{-1}\!\left(\frac{|r_s - r_p|}{C}\right).
+\lambda = \sin^{-1}\!\left(\frac{r_s - r_p}{C}\right).
 \label{eq:lambda_asin}
 \end{equation}
 
+Under this convention, $\lambda$ may be negative when $r_p > r_s$.
+This signed definition ensures the wrap distribution automatically adjusts
+when the pulley ordering reverses.
+
 \paragraph{Wrap Angles}
 
-With $\lambda \ge 0$, the wrap angles on the smaller- and larger-radius pulleys are
+The wrap angles on the primary and secondary pulleys are
 
 \begin{align}
 \phi_p &= \pi - 2\lambda, \label{eq:wrap_primary}\\
 \phi_s &= \pi + 2\lambda. \label{eq:wrap_secondary}
 \end{align}
+
+If $\lambda < 0$, these expressions automatically redistribute wrap
+between pulleys while preserving total belt length.
 
 \paragraph{Closed Form Belt-Length Expression}
 
@@ -1129,8 +1136,9 @@ L_b
  + r_s(\pi + 2\lambda)
  + 2\sqrt{C^2 - (r_s - r_p)^2} \nonumber\\
 &= \pi(r_p + r_s)
- + 2\lambda |r_s - r_p|
- + 2\sqrt{C^2 - (r_s - r_p)^2}. \label{eq:belt_length_subbed}
+ + 2\lambda (r_s - r_p)
+ + 2\sqrt{C^2 - (r_s - r_p)^2}. 
+\label{eq:belt_length_subbed}
 \end{align}
 
 Finally, substituting \Eq{eq:lambda_asin} gives
@@ -1138,21 +1146,21 @@ Finally, substituting \Eq{eq:lambda_asin} gives
 \begin{equation}
 L_b =
 \pi(r_p + r_s)
-+ 2|r_s - r_p|\,
-\sin^{-1}\!\left(\frac{|r_s - r_p|}{C}\right)
++ 2(r_s - r_p)\,
+\sin^{-1}\!\left(\frac{r_s - r_p}{C}\right)
 + 2\sqrt{C^2 - (r_s - r_p)^2}.
 \label{eq:belt_length_final}
 \end{equation}
 
 \paragraph{Root Form (Geometric Compatibility Constraint)}
 
-Rearranging \Eq{eq:belt_length_final} yields a geometric constraint of the form
+Rearranging \Eq{eq:belt_length_final} yields
 
 \begin{equation}
 f(r_p, r_s, C) =
 \pi(r_p + r_s)
-+ 2|r_s - r_p|\,
-\sin^{-1}\!\left(\frac{|r_s - r_p|}{C}\right)
++ 2(r_s - r_p)\,
+\sin^{-1}\!\left(\frac{r_s - r_p}{C}\right)
 + 2\sqrt{C^2 - (r_s - r_p)^2}
 - L_b.
 \label{eq:belt_length_root}
@@ -1166,6 +1174,8 @@ f(r_p, r_s, C) = 0.
 \end{equation}
 
 
+
+
 \begin{remarkbox}[Remark (Transcendental Nature and Approximation)]
 
 Equation \Eq{eq:belt_length_constraint} is transcendental due to the
@@ -1176,22 +1186,25 @@ In this work, the constraint is solved numerically using a
 bracketed root-finding method (e.g., bisection or Brent's method),
 which is deterministic and robust over the physically admissible interval.
 
-It is common in online references and simplified treatments to assume
+It is common in simplified treatments to assume
 
 \[
-\frac{|r_s - r_p|}{C} \approx 0,
+\frac{r_s - r_p}{C} \approx 0,
 \]
 
 which implies $\lambda \approx 0$ and therefore
-$\sin^{-1}\!\left(\frac{|r_s - r_p|}{C}\right) \approx 0$.
-Under this assumption, the belt-length equation reduces to a much
+\[
+\sin^{-1}\!\left(\frac{r_s - r_p}{C}\right) \approx 0.
+\]
+
+Under this small-angle assumption, the belt-length equation reduces to a much
 simpler approximate form.
 
-However, this small-angle approximation can introduce substantial
-geometric error when $(|r_s - r_p|)/C$ is not negligible.
-Appendix~\ref{sec:approximation-validation-placeholder}
+However, this approximation can introduce substantial geometric error when
+$\frac{r_s - r_p}{C}$ is not small. Appendix~\ref{sec:approximation-validation-placeholder}
 quantifies this deviation and demonstrates that the approximation
 is not acceptable under realistic operating conditions.
+
 \end{remarkbox}
 
 
@@ -1494,7 +1507,7 @@ Recall the belt-length constraint written in root form as
 f(r_p,r_s,C)
 =
 \pi(r_p+r_s)
-+2|r_s-r_p|\sin^{-1}\!\left(\frac{|r_s-r_p|}{C}\right)
++2(r_s-r_p)\sin^{-1}\!\left(\frac{r_s-r_p}{C}\right)
 +2\sqrt{C^2-(r_s-r_p)^2}
 -L_b
 =0.
@@ -1502,55 +1515,102 @@ f(r_p,r_s,C)
 \end{equation}
 
 We now compute the two partial derivatives required in
-\Eq{eq:drsds_general}, following the same sequence as the handwritten derivation:
-differentiate term-by-term and apply the product rule to the inverse-sine term.
+\Eq{eq:drsds_general}, differentiating term-by-term and applying the
+product rule directly to the inverse-sine term.
 
 % --------------------------------------------------------------
-\paragraph{Derivative of the inverse-sine term}
+\paragraph{Product rule for the inverse-sine factor}
 
 Consider the factor
 \[
-|r_s-r_p|\sin^{-1}\!\left(\frac{|r_s-r_p|}{C}\right).
+(r_s-r_p)\sin^{-1}\!\left(\frac{r_s-r_p}{C}\right).
 \]
-Differentiation depends on whether $r_s\ge r_p$ or $r_s<r_p$ because of the
-absolute value. We therefore proceed piecewise.
 
-% --------------------------------------------------------------
-\paragraph{Case 1: $r_s \ge r_p$}
-
-If $r_s\ge r_p$, then $|r_s-r_p| = r_s-r_p$ and
-\[
-\sin^{-1}\!\left(\frac{|r_s-r_p|}{C}\right)
+Differentiating with respect to $r_p$ (product rule) gives
+\begin{equation}
+\frac{\partial}{\partial r_p}
+\left[
+(r_s-r_p)\sin^{-1}\!\left(\frac{r_s-r_p}{C}\right)
+\right]
 =
-\sin^{-1}\!\left(\frac{r_s-r_p}{C}\right).
+\underbrace{\frac{\partial}{\partial r_p}(r_s-r_p)}_{(1)}
+\sin^{-1}\!\left(\frac{r_s-r_p}{C}\right)
++
+(r_s-r_p)
+\underbrace{\frac{\partial}{\partial r_p}\sin^{-1}\!\left(\frac{r_s-r_p}{C}\right)}_{(2)}.
+\label{eq:prod_rule_asin_rp}
+\end{equation}
+
+We therefore compute the two sub-derivatives.
+
+\subparagraph{Derivative (1)}
+
+\begin{equation}
+\frac{\partial}{\partial r_p}(r_s-r_p) = -1.
+\label{eq:dlinear_rp}
+\end{equation}
+
+\subparagraph{Derivative (2)}
+
+Using the chain rule,
+\[
+\frac{d}{dx}\sin^{-1}(x)=\frac{1}{\sqrt{1-x^2}},
+\]
+let
+\[
+u=\frac{r_s-r_p}{C}.
+\]
+Then
+\[
+\frac{\partial u}{\partial r_p} = -\frac{1}{C}.
 \]
 
-First compute the needed inner derivative:
+Therefore,
 \begin{equation}
 \frac{\partial}{\partial r_p}\sin^{-1}\!\left(\frac{r_s-r_p}{C}\right)
 =
--\frac{1}{\sqrt{C^2-(r_s-r_p)^2}},
-\qquad
-\frac{\partial}{\partial r_s}\sin^{-1}\!\left(\frac{r_s-r_p}{C}\right)
-=
-\frac{1}{\sqrt{C^2-(r_s-r_p)^2}}.
-\label{eq:asin_derivs_case1}
+\frac{1}{\sqrt{1-u^2}}\left(-\frac{1}{C}\right).
+\label{eq:asin_chain_rp_step1}
 \end{equation}
 
-Now apply the product rule to $(r_s-r_p)\sin^{-1}((r_s-r_p)/C)$:
+Now simplify the denominator:
+\[
+\sqrt{1-u^2}
+=
+\sqrt{1-\left(\frac{r_s-r_p}{C}\right)^2}
+=
+\frac{\sqrt{C^2-(r_s-r_p)^2}}{C}.
+\]
 
+Substituting into \Eq{eq:asin_chain_rp_step1} yields
+\begin{equation}
+\frac{\partial}{\partial r_p}\sin^{-1}\!\left(\frac{r_s-r_p}{C}\right)
+=
+-\frac{1}{\sqrt{C^2-(r_s-r_p)^2}}.
+\label{eq:asin_chain_rp_final}
+\end{equation}
+
+\subparagraph{Substitute into the product rule}
+
+Substituting \Eq{eq:dlinear_rp} and \Eq{eq:asin_chain_rp_final} into
+\Eq{eq:prod_rule_asin_rp} gives
 \begin{align}
 \frac{\partial}{\partial r_p}
-\left[(r_s-r_p)\sin^{-1}\!\left(\frac{r_s-r_p}{C}\right)\right]
+\left[
+(r_s-r_p)\sin^{-1}\!\left(\frac{r_s-r_p}{C}\right)
+\right]
 &=
 (-1)\sin^{-1}\!\left(\frac{r_s-r_p}{C}\right)
-+(r_s-r_p)\left(-\frac{1}{\sqrt{C^2-(r_s-r_p)^2}}\right), \label{eq:prod_rp_case1}\\[6pt]
-\frac{\partial}{\partial r_s}
-\left[(r_s-r_p)\sin^{-1}\!\left(\frac{r_s-r_p}{C}\right)\right]
++
+(r_s-r_p)\left(
+-\frac{1}{\sqrt{C^2-(r_s-r_p)^2}}
+\right)
+\nonumber\\[6pt]
 &=
-(+1)\sin^{-1}\!\left(\frac{r_s-r_p}{C}\right)
-+(r_s-r_p)\left(\frac{1}{\sqrt{C^2-(r_s-r_p)^2}}\right).
-\label{eq:prod_rs_case1}
+-\sin^{-1}\!\left(\frac{r_s-r_p}{C}\right)
+-
+\frac{r_s-r_p}{\sqrt{C^2-(r_s-r_p)^2}}.
+\label{eq:prod_asin_rp_final}
 \end{align}
 
 % --------------------------------------------------------------
@@ -1560,79 +1620,102 @@ For the straight-span contribution,
 \[
 2\sqrt{C^2-(r_s-r_p)^2},
 \]
-we use the chain rule:
+we apply the chain rule:
+
+\begin{equation}
+\frac{\partial}{\partial r_p}
+\left[
+2\sqrt{C^2-(r_s-r_p)^2}
+\right]
+=
+\frac{2(r_s-r_p)}
+{\sqrt{C^2-(r_s-r_p)^2}}.
+\label{eq:sqrt_general_rp}
+\end{equation}
+
+% --------------------------------------------------------------
+\paragraph{Assemble $\partial f/\partial r_p$}
+
+Differentiating \Eq{eq:f_def_again} term-by-term gives
 
 \begin{align}
-\frac{\partial}{\partial r_p}\left[2\sqrt{C^2-(r_s-r_p)^2}\right]
+\frac{\partial f}{\partial r_p}
 &=
-2\cdot \frac{(r_s-r_p)}{\sqrt{C^2-(r_s-r_p)^2}}, \label{eq:sqrt_rp_case1}\\[6pt]
-\frac{\partial}{\partial r_s}\left[2\sqrt{C^2-(r_s-r_p)^2}\right]
+\pi
++
+2\left(
+-\sin^{-1}\!\left(\frac{r_s-r_p}{C}\right)
+-
+\frac{r_s-r_p}
+{\sqrt{C^2-(r_s-r_p)^2}}
+\right)
++
+\frac{2(r_s-r_p)}
+{\sqrt{C^2-(r_s-r_p)^2}}
+\nonumber\\[6pt]
 &=
--2\cdot \frac{(r_s-r_p)}{\sqrt{C^2-(r_s-r_p)^2}}.
-\label{eq:sqrt_rs_case1}
+\pi
+-
+2\sin^{-1}\!\left(\frac{r_s-r_p}{C}\right).
+\label{eq:dfdrp_final}
 \end{align}
 
-% --------------------------------------------------------------
-\paragraph{Assemble $\partial f/\partial r_p$ and $\partial f/\partial r_s$ (Case 1)}
-
-Differentiate \Eq{eq:f_def_again} term-by-term. The $\pi(r_p+r_s)$ term contributes $\pi$
-to both partial derivatives. The inverse-sine product term contributes $2(\cdot)$, and the
-square-root term contributes \Eq{eq:sqrt_rp_case1}--\Eq{eq:sqrt_rs_case1}. Substituting
-and simplifying shows that the square-root contributions cancel the $ (r_s-r_p)/\sqrt{\cdot}$
-pieces from the product-rule derivatives, leaving:
-
-\begin{equation}
-\boxed{
-\frac{\partial f}{\partial r_p}
-=
-\pi
--
-2\sin^{-1}\!\left(\frac{r_s-r_p}{C}\right)
-},
-\qquad
-\boxed{
-\frac{\partial f}{\partial r_s}
-=
-\pi
-+
-2\sin^{-1}\!\left(\frac{r_s-r_p}{C}\right)
-},
-\qquad (r_s\ge r_p).
-\label{eq:partials_case1}
-\end{equation}
+The square-root contributions cancel exactly.
 
 % --------------------------------------------------------------
-\paragraph{Case 2: $r_s < r_p$}
+\paragraph{Derivative with respect to $r_s$}
 
-If $r_s<r_p$, then $|r_s-r_p| = r_p-r_s$ and
-\[
-\sin^{-1}\!\left(\frac{|r_s-r_p|}{C}\right)
-=
-\sin^{-1}\!\left(\frac{r_p-r_s}{C}\right).
-\]
-
-Proceeding identically (product rule on $(r_p-r_s)\sin^{-1}((r_p-r_s)/C)$ and chain rule
-on the square-root term) yields the swapped-sign results:
+The same procedure yields
 
 \begin{equation}
-\boxed{
-\frac{\partial f}{\partial r_p}
+\frac{\partial}{\partial r_s}
+\left[
+(r_s-r_p)\sin^{-1}\!\left(\frac{r_s-r_p}{C}\right)
+\right]
 =
+\sin^{-1}\!\left(\frac{r_s-r_p}{C}\right)
++
+\frac{r_s-r_p}{\sqrt{C^2-(r_s-r_p)^2}},
+\label{eq:prod_asin_rs}
+\end{equation}
+
+and
+
+\begin{equation}
+\frac{\partial}{\partial r_s}
+\left[
+2\sqrt{C^2-(r_s-r_p)^2}
+\right]
+=
+-\frac{2(r_s-r_p)}
+{\sqrt{C^2-(r_s-r_p)^2}}.
+\label{eq:sqrt_general_rs}
+\end{equation}
+
+Assembling terms gives
+
+\begin{align}
+\frac{\partial f}{\partial r_s}
+&=
 \pi
 +
-2\sin^{-1}\!\left(\frac{r_p-r_s}{C}\right)
-},
-\qquad
-\boxed{
-\frac{\partial f}{\partial r_s}
-=
-\pi
+2\left(
+\sin^{-1}\!\left(\frac{r_s-r_p}{C}\right)
++
+\frac{r_s-r_p}
+{\sqrt{C^2-(r_s-r_p)^2}}
+\right)
 -
-2\sin^{-1}\!\left(\frac{r_p-r_s}{C}\right)
-},
-\qquad (r_s<r_p).
-\label{eq:partials_case2}
-\end{equation}
+\frac{2(r_s-r_p)}
+{\sqrt{C^2-(r_s-r_p)^2}}
+\nonumber\\[6pt]
+&=
+\pi
++
+2\sin^{-1}\!\left(\frac{r_s-r_p}{C}\right).
+\label{eq:dfdrs_final}
+\end{align}
+
 
 % --------------------------------------------------------------
 \paragraph{Summary (piecewise partial derivatives)}
