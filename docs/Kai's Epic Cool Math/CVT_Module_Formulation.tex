@@ -1,0 +1,974 @@
+\documentclass[11pt]{article}
+
+% =========================
+% Packages (minimal + useful)
+% =========================
+\usepackage[margin=1in]{geometry}
+\usepackage{microtype}
+
+\usepackage{amsmath, amssymb, amsfonts, mathtools}
+\usepackage{bm}
+
+\usepackage{siunitx}
+\sisetup{per-mode=symbol}
+
+\usepackage{graphicx}
+\usepackage{booktabs}
+
+\usepackage[hidelinks]{hyperref}
+\usepackage[nameinlink,capitalise,noabbrev]{cleveref}
+
+\usepackage{xparse}
+\usepackage[most]{tcolorbox}
+\tcbset{
+  enhanced,
+  sharp corners,
+  boxrule=0.5pt,
+  colback=white,
+  colframe=black,
+  left=6pt,right=6pt,top=6pt,bottom=6pt
+}
+
+\usepackage{enumitem}
+\setlist[itemize]{noitemsep, topsep=2pt, after=\noindent}
+\setlist[enumerate]{after=\noindent}
+
+
+\usepackage{placeins}
+
+\usepackage[round]{natbib}
+
+% =========================
+% Global numbering + helpers
+% =========================
+\numberwithin{equation}{section}
+
+\newcommand{\vect}[1]{\bm{#1}}
+\newcommand{\dd}{\,\mathrm{d}}
+\newcommand{\sgn}{\operatorname{sgn}}
+\newcommand{\abs}[1]{\left|#1\right|}
+\newcommand{\paren}[1]{\left(#1\right)}
+\newcommand{\brak}[1]{\left[#1\right]}
+
+% =========================
+% Reference helpers (minimal)
+% =========================
+% Use: \Eq{eq:key}, \Th{th:key}, \Sec{sec:key}
+\NewDocumentCommand{\Eq}{m}{\cref{#1}}
+\NewDocumentCommand{\Th}{m}{\cref{#1}}
+\NewDocumentCommand{\Sec}{m}{\cref{#1}}
+
+% =========================
+% Theory / Law block (better spacing)
+% =========================
+% \theory{th:key}{Title}{<equation>}{<description>}{<source>}[<derivation>]
+
+\NewDocumentCommand{\theory}{m m m m m O{Not included.}}{%
+  \begin{tcolorbox}[
+      enhanced,
+      sharp corners,
+      colback=white,
+      colframe=black,
+      boxrule=0.6pt,
+      left=10pt,
+      right=10pt,
+      top=10pt,
+      bottom=10pt
+    ]
+    \phantomsection\label{#1}
+
+    {\Large \textbf{#2}}
+
+    \vspace{6pt}
+    \hrule
+    \vspace{10pt}
+
+    \textbf{Equation}
+    \vspace{4pt}
+
+    \[
+      #3
+    \]
+
+    \vspace{8pt}
+
+    \textbf{Description}
+    \vspace{4pt}
+
+    #4
+
+    \vspace{8pt}
+
+    \textbf{Source}
+    \vspace{4pt}
+
+    #5
+
+    \vspace{8pt}
+
+    \textbf{Derivation}
+    \vspace{4pt}
+
+    #6
+
+  \end{tcolorbox}
+}
+
+
+% =========================
+% Big boxed equation (for "headline" equations)
+% =========================
+% \bigeq{eq:key}{Title}{<equation>}
+\NewDocumentCommand{\bigeq}{m m m}{%
+  \begin{tcolorbox}
+    \phantomsection\label{#1}
+    \textbf{#2}\\[-2pt]\rule{\textwidth}{0.4pt}
+    \[
+      #3
+    \]
+  \end{tcolorbox}
+}
+
+% Multi-line boxed equations:
+% \begin{bigeqalign}{eq:key}{Title} ... \end{bigeqalign}
+\NewDocumentEnvironment{bigeqalign}{m m}{%
+  \begin{tcolorbox}
+    \phantomsection\label{#1}
+    \textbf{#2}\\[-2pt]\rule{\textwidth}{0.4pt}
+    \begin{align}
+}{%
+    \end{align}
+  \end{tcolorbox}
+}
+
+% =========================
+% Assumption block
+% =========================
+
+\newcounter{assump}
+
+% Custom reference name for cleveref
+\crefname{assump}{A}{A}
+\Crefname{assump}{A}{A}
+
+\NewDocumentEnvironment{assumptionblock}{m m}
+{
+  % #1 = label key
+  % #2 = assumption title
+  \refstepcounter{assump}
+  \def\currentassumptitle{#2}
+  \begin{tcolorbox}[
+      enhanced,
+      sharp corners,
+      colback=white,
+      colframe=black,
+      boxrule=0.6pt,
+      left=10pt,
+      right=10pt,
+      top=10pt,
+      bottom=10pt
+  ]
+  \phantomsection\label{#1}
+  \expandafter\gdef\csname assump@title@\theassump\endcsname{#2}
+
+  {\Large \textbf{Assumption \theassump\ (#2)}}
+
+  \vspace{6pt}
+  \hrule
+  \vspace{8pt}
+}
+{
+  \end{tcolorbox}
+}
+
+% Custom reference command for assumptions
+\NewDocumentCommand{\AssRef}{m}{%
+  A\ref{#1}: \nameref{#1}%
+}
+
+
+
+
+
+% =========================
+% Title
+% =========================
+\title{CVT System Model Derivation}
+\author{Kai Arseneau}
+\date{\today}
+
+\begin{document}
+\maketitle
+\tableofcontents
+\newpage
+
+% ============================================================
+\section{Overview}\label{sec:overview}
+
+\subsection{Purpose of This Document}
+
+This document presents a complete dynamic derivation of a continuously
+variable transmission (CVT) system model. The goal is to develop a
+physically consistent set of governing equations that describe:
+
+\begin{itemize}
+    \item Rotational dynamics of the primary and secondary assemblies,
+    \item Axial shift dynamics of the primary sheave,
+    \item Belt traction and torque transfer,
+    \item Slip behavior under torque saturation,
+    \item Coupled vehicle longitudinal response.
+\end{itemize}
+
+The resulting formulation provides a structured, state-based model
+suitable for numerical simulation and performance analysis.
+
+\subsection{Scope}
+
+This document focuses on the mechanical modeling of the CVT system.
+It includes force balances, torque transfer mechanisms, and dynamic
+coupling between rotational and axial motion.
+
+The following are outside the scope of this document:
+
+\begin{itemize}
+    \item Thermal modeling,
+    \item Long-term wear or material degradation,
+    \item Detailed tribological contact mechanics,
+    \item Multi-body vehicle dynamics beyond one-dimensional motion.
+\end{itemize}
+
+All assumptions limiting model fidelity are formally defined in
+\Sec{sec:assumptions}.
+
+\subsection{Expected Background Knowledge}
+
+The reader is expected to be familiar with:
+
+\begin{itemize}
+    \item Newton’s laws of motion,
+    \item Basic rigid-body rotational dynamics,
+    \item Linear spring models,
+    \item Gear ratios and torque multiplication,
+    \item Basic algebra and differential equations.
+\end{itemize}
+
+Prior familiarity with state-space modeling or numerical integration
+is not assumed. Relevant concepts are introduced where required.
+
+\subsection{Conceptual Overview of a CVT}
+
+A continuously variable transmission (CVT) transmits torque between
+an engine and drivetrain using a belt or chain running between two
+variable-diameter pulleys.
+
+Each pulley consists of conical sheaves whose axial separation determines
+the effective belt radius. As the primary sheave shifts axially, the
+effective radius changes, which in turn modifies the transmission ratio.
+
+Unlike discrete gearboxes, a CVT provides a continuously varying ratio.
+Torque transfer is governed by belt traction, normal clamping forces,
+and frictional interaction between the belt and pulley faces.
+
+When transmitted torque exceeds traction capacity, slip occurs.
+Accurately modeling both stick and slip regimes is essential for
+predicting performance.
+
+\subsection{Modeling Approach}
+
+The system is modeled using a minimal set of dynamic state variables,
+defined in \Sec{sec:state}. All other quantities are derived algebraically
+from these states.
+
+The derivation proceeds as follows:
+
+\begin{itemize}
+    \item Governing physical laws are defined (\Sec{sec:principles}),
+    \item Kinematic relationships between pulley geometry and ratio are derived,
+    \item Axial and radial force models are constructed,
+    \item Belt traction limits are formulated,
+    \item Rotational and axial equations of motion are assembled,
+    \item Slip behavior is incorporated.
+\end{itemize}
+
+The final result is a coupled nonlinear dynamic system
+suitable for time-domain simulation.
+
+
+\section{Notation and Conventions}\label{sec:notation}
+\subsection{Coordinate and Sign Conventions}\label{sec:sign}
+
+A consistent set of coordinate directions and sign conventions
+is adopted throughout this document. All equations follow these conventions.
+
+\subsubsection{Vehicle Longitudinal Direction}
+
+The vehicle is modeled as a one-dimensional system moving along a
+single longitudinal axis.
+
+\begin{itemize}
+    \item Positive direction ($+x$) is defined as forward vehicle motion.
+    \item Vehicle velocity $v > 0$ corresponds to forward motion.
+    \item Resistive forces (rolling resistance, aerodynamic drag, grade load)
+    act in the negative ($-x$) direction.
+\end{itemize}
+
+\paragraph{Incline Angle}
+
+If terrain grade is considered, the incline angle $\alpha$ is defined as:
+
+\begin{itemize}
+    \item $\alpha > 0$ for uphill motion.
+    \item $\alpha = 0$ for level ground.
+\end{itemize}
+
+The gravitational component acting along the longitudinal axis is:
+
+\[
+F_{\text{grade}} = m g \sin\alpha
+\]
+
+This modifies the longitudinal load only and does not introduce
+additional spatial dimensions into the model.
+
+\subsubsection{Rotational Sign Convention}
+
+All angular velocities follow the same convention:
+
+\begin{itemize}
+    \item Positive angular velocity corresponds to forward vehicle motion.
+    \item Primary and secondary pulleys are defined such that
+    $\omega_p > 0$ and $\omega_s > 0$ produce forward belt motion.
+    \item Applied engine torque is positive when it increases $\omega_p$.
+\end{itemize}
+
+Reaction torques opposing motion are therefore negative.
+
+\subsubsection{CVT Axial Direction}
+
+The axial direction of the primary pulley is defined along its shaft axis.
+
+\begin{itemize}
+    \item Positive axial displacement $s > 0$ corresponds to increasing
+    primary effective radius.
+    \item Increasing $s$ therefore corresponds to an upshift
+    (decreasing overall CVT ratio).
+\end{itemize}
+
+The axial velocity $\dot{s}$ follows the same sign convention.
+
+\subsubsection{Radial Direction}
+
+Radial direction is defined perpendicular to the pulley axis,
+measured outward from the center of rotation.
+
+\begin{itemize}
+    \item Radial forces $F_r > 0$ act outward from the pulley center.
+    \item Belt normal forces are treated as positive when compressive.
+\end{itemize}
+
+\subsubsection{Slip Velocity Sign Convention}
+
+Slip velocity between belt and pulley is defined as:
+
+\[
+v_{\mathrm{slip}} = r_p(s)\omega_p - r_s(s)\omega_s
+\]
+
+\begin{itemize}
+    \item $v_{\mathrm{slip}} > 0$ indicates the primary surface speed
+    exceeds the secondary surface speed.
+    \item $v_{\mathrm{slip}} = 0$ corresponds to no-slip contact.
+\end{itemize}
+
+
+\subsection{Symbol Summary}\label{sec:symbols}
+\begin{table}[h]
+\centering
+\begin{tabular}{@{}ll@{}}
+\toprule
+Symbol & Meaning \\ \midrule
+$v$ & vehicle speed \\
+$\omega_e$ & engine angular speed \\
+$s$ & primary axial shift position \\
+$\dot{s}$ & primary axial shift velocity \\
+$R$ & CVT ratio (define direction explicitly) \\
+\bottomrule
+\end{tabular}
+\caption{Core symbols used throughout the derivation.}
+\label{tab:symbols_core}
+\end{table}
+
+\section{Units and Dimensions}\label{sec:units}
+
+All quantities in this document are expressed in SI units unless otherwise stated.
+
+\subsection{Base Units}
+
+\begin{table}[h]
+\centering
+\begin{tabular}{@{}lll@{}}
+\toprule
+Quantity & Unit & Symbol \\ \midrule
+Length & meter & \si{\meter} \\
+Mass & kilogram & \si{\kilogram} \\
+Time & second & \si{\second} \\
+Plane angle & radian & \si{\radian} \\
+\bottomrule
+\end{tabular}
+\caption{SI base units used throughout the model.}
+\label{tab:si_base}
+\end{table}
+
+\FloatBarrier
+\subsection{Common Derived Units}
+
+\begin{table}[h]
+\centering
+\begin{tabular}{@{}lll@{}}
+\toprule
+Quantity & Unit & Symbol \\ \midrule
+Velocity & meter per second & \si{\meter\per\second} \\
+Acceleration & meter per second squared & \si{\meter\per\second\squared} \\
+Angular velocity & radian per second & \si{\radian\per\second} \\
+Angular acceleration & radian per second squared & \si{\radian\per\second\squared} \\
+Force & newton & \si{\newton} \\
+Torque & newton meter & \si{\newton\meter} \\
+Moment of inertia & kilogram meter squared & \si{\kilogram\meter\squared} \\
+Power & watt & \si{\watt} \\
+\bottomrule
+\end{tabular}
+\caption{Common derived SI units used in the CVT model.}
+\label{tab:si_derived}
+\end{table}
+
+\FloatBarrier
+\section{Constants and Parameters}\label{sec:constants}
+
+All physical constants, geometric parameters, and calibrated values used in the model are listed below.
+
+\begin{table}[h]
+\centering
+\begin{tabular}{@{}lllll@{}}
+\toprule
+Symbol & Name & Value & Unit & Description \\ \midrule
+$m$ & Vehicle mass & -- & \si{\kilogram} & Total vehicle mass \\
+$r_w$ & Wheel radius & -- & \si{\meter} & Effective rolling radius \\
+$G$ & Final drive ratio & -- & -- & Secondary-to-wheel speed ratio \\
+$I_p$ & Primary inertia & -- & \si{\kilogram\meter\squared} & Lumped primary-side inertia \\
+$I_s$ & Secondary inertia & -- & \si{\kilogram\meter\squared} & Lumped secondary-side inertia \\
+$k_p$ & Primary spring constant & -- & \si{\newton\per\meter} & Primary compression spring \\
+$k_s$ & Secondary spring constant & -- & \si{\newton\per\meter} & Secondary compression spring \\
+$\mu$ & Friction coefficient & -- & -- & Belt-pulley friction coefficient \\
+$\beta$ & Wrap angle & -- & \si{\radian} & Belt wrap angle \\
+\bottomrule
+\end{tabular}
+\caption{Model constants and parameters.}
+\label{tab:constants}
+\end{table}
+
+\section{Modeling Assumptions}\label{sec:assumptions}
+
+The following assumptions define the modeling scope and physical idealizations
+used in the CVT dynamic formulation. These assumptions establish the limits
+within which the derived equations remain valid.
+
+% ======================================================
+\subsection{Material and Structural Idealizations}
+
+\begin{assumptionblock}{assump:material_constancy}{Constant Material Properties}
+Material properties of structural components are treated as constant.
+No temperature-dependent material variation is modeled.
+Thermal effects are not solved as part of this system.
+\end{assumptionblock}
+
+\begin{assumptionblock}{assump:rigid_components}{Rigid Structural Components}
+All structural components (pulleys, shafts, housing) are modeled as rigid bodies.
+Elastic deformation under operational loading is neglected.
+The belt is assumed axially rigid (no longitudinal stretch),
+while still conforming geometrically around pulleys.
+\end{assumptionblock}
+
+\begin{assumptionblock}{assump:no_wear}{Negligible Wear and Surface Evolution}
+Component wear, belt degradation, and pulley surface evolution
+are neglected.
+The model represents short-term operational behavior.
+\end{assumptionblock}
+
+% ======================================================
+\subsection{Contact and Friction Modeling}
+
+\begin{assumptionblock}{assump:ideal_friction}{Idealized Belt--Pulley Friction Law}
+Belt traction is modeled using a simplified friction law
+(e.g., Coulomb friction with a capstan formulation and
+an explicit stick--slip transition rule).
+Microscopic contact mechanics, rubber hysteresis,
+lubrication films, and detailed Stribeck effects
+are not explicitly modeled.
+\end{assumptionblock}
+
+\begin{assumptionblock}{assump:constant_friction}{Constant Effective Friction Coefficient}
+The belt--pulley coefficient of friction is treated as constant.
+It does not evolve with temperature, wear, or surface conditioning.
+\end{assumptionblock}
+
+\begin{assumptionblock}{assump:uniform_contact}{Uniform Contact Distribution}
+Contact pressure and traction over the pulley wrap angle
+are treated as effectively uniform or averaged.
+Localized edge loading and non-uniform stress distributions are neglected.
+\end{assumptionblock}
+
+% ======================================================
+\subsection{Geometric and Kinematic Idealizations}
+
+\begin{assumptionblock}{assump:axis_alignment}{Perfect Axis Alignment}
+Primary and secondary pulley axes are assumed perfectly aligned.
+Misalignment, shaft eccentricity, and geometric runout are neglected.
+\end{assumptionblock}
+
+\begin{assumptionblock}{assump:constant_belt_length}{Constant Belt Length}
+The belt length is treated as constant.
+Permanent creep and progressive elongation are not modeled.
+Effective pulley radii are determined solely from geometry
+and belt-length constraints.
+\end{assumptionblock}
+
+% ======================================================
+\subsection{Dynamic and Inertial Modeling}
+
+\begin{assumptionblock}{assump:lumped_inertia}{Lumped Inertia Representation}
+Rotational inertias of the engine, pulleys, drivetrain,
+and wheels are represented as lumped equivalent inertias.
+Distributed shaft flex and torsional compliance are neglected.
+\end{assumptionblock}
+
+\begin{assumptionblock}{assump:no_vibration}{Negligible Vibrational Effects}
+High-frequency vibrational effects, structural resonances,
+and drivetrain oscillations are neglected.
+The model captures dominant rigid-body dynamics only.
+\end{assumptionblock}
+
+\begin{assumptionblock}{assump:no_parasitic_losses}{Negligible Parasitic Friction}
+Frictional losses in non-critical components
+(e.g., bearings, seals, auxiliary shafts)
+are neglected.
+Only friction directly relevant to belt traction
+and CVT torque transfer is modeled.
+\end{assumptionblock}
+
+% ======================================================
+\subsection{Environmental and Operational Scope}
+
+\begin{assumptionblock}{assump:gravity_internal}{Negligible Gravitational Influence on CVT Internals}
+Gravitational forces acting on CVT internal components
+are negligible relative to centrifugal and contact forces
+at operating speeds.
+\end{assumptionblock}
+
+\begin{assumptionblock}{assump:full_throttle_model}{Full-Throttle Engine Model}
+The engine is modeled using a prescribed full-throttle torque curve.
+Load feedback modifies engine speed dynamically,
+but part-throttle dynamics and throttle transients
+are not explicitly modeled.
+\end{assumptionblock}
+
+
+\section{Governing Principles}\label{sec:principles}
+
+% NOTE:
+% Using the format:
+% \theory{th:key}{Title}{<equation>}{<description>}{<source>}[<derivation>]
+%
+% Keep th: keys stable so references never break.
+
+% -------------------------
+% Mechanics (forces/torques)
+% -------------------------
+
+\theory
+{th:newton-trans}
+{Newton's Second Law (Translation)}
+{\sum F = m a}
+{
+\begin{itemize}
+  \item $\sum F$ is the net force (\si{\newton})
+  \item $m$ is mass (\si{\kilogram})
+  \item $a$ is acceleration (\si{\meter\per\second\squared})
+\end{itemize}
+}
+{Classical mechanics (textbook / lecture notes).}
+[
+From the definition of acceleration and empirical laws of motion; used here as a governing relationship.
+]
+
+\theory
+{th:newton-rot}
+{Newton's Second Law (Rotation)}
+{\sum \tau = I \alpha}
+{
+\begin{itemize}
+  \item $\sum \tau$ is net torque (\si{\newton\meter})
+  \item $I$ is moment of inertia (\si{\kilogram\meter\squared})
+  \item $\alpha$ is angular acceleration (\si{\radian\per\second\squared})
+\end{itemize}
+}
+{Classical rigid body dynamics (textbook / lecture notes).}
+[
+Standard rigid-body rotational dynamics relationship.
+]
+
+\theory
+{th:centrifugal_force}
+{Centrifugal Force}
+{F_c = m \omega^2 r}
+{
+\begin{itemize}
+  \item $F_c$ is centrifugal force (\si{\newton})
+  \item $m$ is mass (\si{\kilogram})
+  \item $\omega$ is angular velocity (\si{\radian\per\second})
+  \item $r$ is radius from the axis of rotation (\si{\meter})
+\end{itemize}
+}
+{\citet{CentrifugalForceCalculator2024}.}
+[
+Derived from circular motion kinematics where $a_c = \omega^2 r$, then applying $F = ma$.
+]
+
+% -------------------------
+% Springs / elasticity
+% -------------------------
+
+\theory
+{th:hooke_linear}
+{Hooke's Law (Compressional)}
+{F = k \Delta x}
+{
+\begin{itemize}
+  \item $F$ is force (\si{\newton})
+  \item $k$ is spring constant (\si{\newton\per\meter})
+  \item $\Delta x$ is displacement (\si{\meter})
+\end{itemize}
+}
+{\citet{hookeslaw}.}
+[
+Linear spring constitutive relationship in the elastic regime.
+]
+
+\theory
+{th:hooke_torsional}
+{Hooke's Law (Torsional)}
+{F = \frac{k \Delta \theta}{r}}
+{
+\begin{itemize}
+  \item $F$ is force (\si{\newton})
+  \item $k$ is torsional spring constant (\si{\newton\meter\per\radian})
+  \item $\Delta \theta$ is angular deflection (\si{\radian})
+  \item $r$ is torque arm radius (\si{\meter})
+\end{itemize}
+}
+{\citet{SpringDesignFormulas}.}
+[
+Starting from $\tau = k\Delta\theta$ and $\tau = Fr$, then $F = \frac{k\Delta\theta}{r}$.
+]
+
+% -------------------------
+% Powertrain relationships
+% -------------------------
+
+\theory
+{th:engine_torque_power}
+{Engine Torque from Power}
+{\tau = \frac{P}{\omega}}
+{
+\begin{itemize}
+  \item $\tau$ is torque (\si{\newton\meter})
+  \item $P$ is power (\si{\watt})
+  \item $\omega$ is angular velocity (\si{\radian\per\second})
+\end{itemize}
+}
+{\citet{HorsepowerCalculation}.}
+[
+From the rotational power relationship $P=\tau\omega$.
+]
+
+\theory
+{th:gearing_torque}
+{Gearing (Torque Scaling)}
+{\tau_{\text{out}} = \tau_{\text{in}} \, R_{\text{gear}}}
+{
+\begin{itemize}
+  \item $\tau_{\text{out}}$ is output torque (\si{\newton\meter})
+  \item $\tau_{\text{in}}$ is input torque (\si{\newton\meter})
+  \item $R_{\text{gear}}$ is gear reduction ratio (unitless)
+\end{itemize}
+}
+{\citet{GearRatioExplanation}.}
+[
+Ideal gear relationship assuming no losses; power balance implies inverse scaling of speed.
+]
+
+% -------------------------
+% Friction / belt traction
+% -------------------------
+
+\theory
+{th:static_friction}
+{Static Friction}
+{F_f = \mu_s F_n}
+{
+\begin{itemize}
+  \item $F_f$ is friction force (\si{\newton})
+  \item $\mu_s$ is coefficient of static friction (unitless)
+  \item $F_n$ is normal force (\si{\newton})
+\end{itemize}
+}
+{\citet{FrictionWikipedia}.}
+[
+Coulomb friction model for impending slip.
+]
+
+\theory
+{th:capstan}
+{Capstan Equation}
+{T_1 = T_2 e^{\mu \theta}}
+{
+\begin{itemize}
+  \item $T_1$ is tight-side belt tension (\si{\newton})
+  \item $T_2$ is slack-side belt tension (\si{\newton})
+  \item $\mu$ is belt--pulley friction coefficient (unitless)
+  \item $\theta$ is wrap angle (\si{\radian})
+\end{itemize}
+}
+{\citet{CapstanEquation2021}.}
+[
+Differential force balance on an infinitesimal belt element on a pulley yields $\frac{\dd T}{T}=\mu\,\dd\theta$, then integrate over wrap.
+]
+
+
+
+% -------------------------
+% Fluids / aero (if used)
+% -------------------------
+
+\theory
+{th:density}
+{Density}
+{\rho = \frac{m}{V}}
+{
+\begin{itemize}
+  \item $\rho$ is density (\si{\kilogram\per\meter\cubed})
+  \item $m$ is mass (\si{\kilogram})
+  \item $V$ is volume (\si{\meter\cubed})
+\end{itemize}
+}
+{\citet{BritannicaDensity}.}
+[
+Definition of density.
+]
+
+\theory
+{th:air_resistance}
+{Air Resistance (Quadratic Drag)}
+{F_d = \frac{1}{2}\rho v^2 C_d A}
+{
+\begin{itemize}
+  \item $F_d$ is drag force (\si{\newton})
+  \item $\rho$ is fluid density (\si{\kilogram\per\meter\cubed})
+  \item $v$ is object speed relative to fluid (\si{\meter\per\second})
+  \item $C_d$ is drag coefficient (unitless)
+  \item $A$ is reference area (\si{\meter\squared})
+\end{itemize}
+}
+{\citet{AirResistanceFormula}.}
+[
+Standard empirical/derived quadratic drag model; applicable at moderate to high Reynolds number.
+]
+
+
+\section{System State Definition}\label{sec:state}
+
+The dynamic behavior of the CVT system is described using a set of
+\emph{state variables}. A state variable is a quantity whose future value
+depends on its current value and its time derivative. In numerical
+simulation, state variables are the quantities that are directly
+integrated forward in time at each timestep.
+
+All other quantities in the model (e.g., torque transfer, CVT ratio,
+belt forces) are computed algebraically from these states.
+
+\subsection{State Vector}
+
+\bigeq{eq:state-vector}{State Vector}{
+\vect{x}(t) =
+\begin{bmatrix}
+\omega_p \\
+\omega_s \\
+s \\
+\dot{s}
+\end{bmatrix}
+}
+
+where:
+
+\begin{itemize}
+    \item $\omega_p$ is the angular speed of the primary pulley 
+    (\si{\radian\per\second}).
+
+    \item $\omega_s$ is the angular speed of the secondary pulley 
+    (\si{\radian\per\second}).
+
+    \item $s$ is the axial shift position of the primary sheave 
+    (\si{\meter}).
+
+    \item $\dot{s}$ is the axial shift velocity 
+    (\si{\meter\per\second}).
+\end{itemize}
+
+\subsection{Why These Are the State Variables}
+
+These four variables represent the independent dynamic degrees of freedom
+of the CVT system:
+
+\begin{itemize}
+    \item The primary pulley rotation ($\omega_p$) evolves according to
+    applied engine torque and belt reaction torque.
+
+    \item The secondary pulley rotation ($\omega_s$) evolves according to
+    belt torque and external load torque.
+
+    \item The axial shift position ($s$) evolves according to the
+    balance of axial forces between the primary and secondary assemblies.
+
+    \item The axial velocity ($\dot{s}$) is required because axial motion
+    follows a second-order differential equation.
+\end{itemize}
+
+This will be made clear in the following derivations in later sections (TODO: MAKE BETTER). Removing any of these variables would eliminate an independent dynamic
+degree of freedom from the model.
+
+\subsection{Numerical Integration Perspective}
+
+At each simulation timestep $\Delta t$, the following updates occur:
+
+\begin{itemize}
+    \item $\omega_p$ is updated using its angular acceleration.
+    \item $\omega_s$ is updated using its angular acceleration.
+    \item $s$ is updated using $\dot{s}$.
+    \item $\dot{s}$ is updated using axial acceleration.
+\end{itemize}
+
+Thus, the state vector evolves according to differential equations
+derived in later sections.
+
+All other model quantities — including CVT ratio, belt slip velocity,
+radial forces, and torque capacity — are computed directly from the
+current values of $\omega_p$, $\omega_s$, and $s$.
+
+
+
+
+\section{Kinematics}\label{sec:kinematics}
+\subsection{Pulley Geometry}\label{sec:geometry}
+\subsubsection{Primary Effective Radius}\label{sec:rp}
+\begin{equation}
+r_p(s) = \cdots
+\label{eq:rp_of_s}
+\end{equation}
+
+\subsubsection{Secondary Effective Radius via Belt-Length Constraint}\label{sec:rs}
+\begin{equation}
+r_s = \cdots
+\label{eq:rs_constraint}
+\end{equation}
+
+\subsection{CVT Ratio}\label{sec:ratio}
+\begin{equation}
+R(s) = \frac{r_s(s)}{r_p(s)}
+\label{eq:ratio_def}
+\end{equation}
+
+\subsection{Ratio Rate of Change}\label{sec:ratio-rate}
+\begin{equation}
+\dot{R} = \frac{\mathrm{d}R}{\mathrm{d}s}\dot{s}
+\label{eq:ratio_rate}
+\end{equation}
+
+\section{Pulley Axial Force Models}\label{sec:axial}
+\subsection{Primary Axial Force Model}\label{sec:primary-axial}
+\begin{equation}
+F_{p,\mathrm{ax}} = \cdots
+\label{eq:primary_axial}
+\end{equation}
+
+\subsection{Secondary Axial Force Model}\label{sec:secondary-axial}
+\begin{equation}
+F_{s,\mathrm{ax}} = \cdots
+\label{eq:secondary_axial}
+\end{equation}
+
+\subsection{Axial Shift Dynamics}\label{sec:shift-dyn}
+\bigeq{eq:shift-dynamics}{Axial Shift Equation of Motion}{
+m_{\mathrm{shift}}\ddot{s} = F_{p,\mathrm{ax}} - F_{s,\mathrm{ax}}
+}
+
+\section{Belt Forces and Torque Transmission}\label{sec:belt}
+\subsection{Axial-to-Radial Force Conversion}\label{sec:axial-radial}
+\begin{equation}
+F_{r,p} = \cdots \qquad F_{r,s} = \cdots
+\label{eq:axial_to_radial}
+\end{equation}
+
+\subsection{Belt Tension Distribution}\label{sec:tension}
+Using \Th{th:capstan},
+\begin{equation}
+\frac{T_1}{T_2} = e^{\mu \beta}
+\label{eq:tension_ratio}
+\end{equation}
+
+\subsection{Maximum Transferable Torque}\label{sec:tmax}
+\bigeq{eq:tmax}{Maximum Transferable Torque}{
+T_{\max,p} = \cdots \qquad T_{\max,s} = \cdots
+}
+
+\section{Dynamics: No-Slip Baseline}\label{sec:noslip-dyn}
+\subsection{Coupling Torque}\label{sec:coupling}
+\bigeq{eq:coupling-torque}{Coupling Torque Definition}{
+T_c = \cdots
+}
+
+\subsection{Vehicle Longitudinal Dynamics}\label{sec:vehicle}
+\begin{equation}
+m\dot{v} = \frac{T_{\mathrm{wheel}}}{r_{\mathrm{wheel}}} - F_{\mathrm{resist}}
+\label{eq:vehicle_dyn}
+\end{equation}
+
+\subsection{Final Coupled State-Space System}\label{sec:statespace}
+\bigeq{eq:state-space}{State-Space Form}{
+\dot{\vect{x}} = \vect{f}(\vect{x},u)
+}
+
+\section{Slip Model}\label{sec:slip}
+\subsection{Slip Condition and Torque Saturation}\label{sec:slip-cond}
+\begin{equation}
+\abs{T_c} \le T_{\max} \Rightarrow \text{no slip}
+\label{eq:slip_condition}
+\end{equation}
+\begin{equation}
+T = T_{\max}\,\sgn(T_c) \Rightarrow \text{slip}
+\label{eq:torque_saturation}
+\end{equation}
+
+\subsection{Slip Velocity}\label{sec:slip-vel}
+\begin{equation}
+v_{\mathrm{slip}} = r_p\omega_p - r_s\omega_s
+\label{eq:slip_velocity}
+\end{equation}
+
+\appendix
+\section{Parameter Tables}\label{sec:appendix-params}
+% Constants, geometry, spring rates, friction, inertias.
+
+\newpage
+\bibliographystyle{plainnat}
+\bibliography{../../refs/References}
+
+\end{document}

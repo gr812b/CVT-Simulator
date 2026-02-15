@@ -1,0 +1,12 @@
+- No indents after every single list
+- Add images in the overview and coordinate convention sections (at least)
+- Add constants values some time
+- Update symbol summary at the end 
+- Parasitic bruh
+- Appendix: Proof of approximation being bad
+
+
+
+likely to change section
+- belt slip assumption (ideal slip yada ayda)
+- State vector may include omega_belt
