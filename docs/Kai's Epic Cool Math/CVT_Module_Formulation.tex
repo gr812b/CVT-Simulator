@@ -1932,6 +1932,166 @@ This completes the purely kinematic derivation of CVT ratio evolution.
 Subsequent sections incorporate force balance and torque transfer
 to determine $\dot s$ dynamically.
 
+% ==============================================================
+\subsection{Section Summary and Forward Connection}
+\label{sec:geometry_summary}
+
+This section has established a complete \emph{geometric foundation}
+for the CVT model. The development was intentionally kinematic:
+no force balances, no slip assumptions, and no torque relations
+were introduced. The objective was to construct a mathematically
+closed mapping
+
+\[
+s(t)
+\;\longrightarrow\;
+r_{p,\text{eff}}(s),\; r_{s,\text{eff}}(s)
+\;\longrightarrow\;
+R(s)
+\;\longrightarrow\;
+\dot R(s,\dot s),
+\]
+
+with all intermediate relationships derived explicitly.
+
+\paragraph{What Has Been Established}
+
+The following key geometric components are now rigorously defined:
+
+\begin{enumerate}
+
+\item \textbf{Primary Radius Law}  
+\Eq{eq:primary_radius} provides the piecewise relationship between
+axial shift $s$ and primary outer radius, governed by the cone
+half-angle $\beta$ and deadzone $s_{\mathrm{dz}}$.
+
+\item \textbf{Belt-Length Compatibility Constraint}  
+\Eq{eq:belt_length_constraint} defines the transcendental geometric
+coupling between $r_p$, $r_s$, and center distance $C$.  
+This constraint enforces constant belt length and represents the
+core geometric coupling of the transmission.
+
+\item \textbf{Center Distance Determination}  
+\Sec{sec:center_distance} determines $C$ once during initialization
+by solving \Eq{eq:center_distance_constraint}.  
+After this step, $C$ is fixed for the remainder of the model.
+
+\item \textbf{Secondary Radius Implicit Law}  
+\Eq{eq:secondary_radius_constraint} and \Eq{eq:secondary_radius}
+define $r_s(s)$ implicitly via the belt constraint, producing the
+geometric redistribution of radius during shift.
+
+\item \textbf{Effective Torque Radii}  
+\Sec{sec:effective-radius-placeholder} corrects outer radii to
+effective radii via \Eq{eq:effective_radius}, ensuring torque
+calculations later act at the belt mid-height.
+
+\item \textbf{Transmission Ratio}  
+\Eq{eq:cvt_ratio} defines the purely geometric ratio
+\[
+R(s) = \frac{r_{s,\text{eff}}}{r_{p,\text{eff}}}.
+\]
+
+\item \textbf{Ratio Sensitivity and Time Evolution}  
+\Sec{sec:ratio_rate} culminates in the closed-form expressions
+\Eq{eq:dRds_final} and \Eq{eq:Rdot_final}, which provide
+\[
+\frac{dR}{ds}
+\quad\text{and}\quad
+\dot R = \frac{dR}{ds}\dot s.
+\]
+
+These expressions fully capture the nonlinear geometric sensitivity
+introduced by belt-length compatibility and cone geometry.
+
+\end{enumerate}
+
+\paragraph{Structural Importance for the Full Model}
+
+This section establishes the geometric backbone of the entire CVT
+simulation framework. Every dynamic result that follows will rely
+on the mappings derived here.
+
+In particular:
+
+\begin{itemize}
+
+\item Torque transfer equations will use
+$r_{p,\text{eff}}$ and $r_{s,\text{eff}}$
+from \Sec{sec:effective-radius-placeholder}.
+
+\item Axial force balances will determine $\dot s$ dynamically.
+
+\item The ratio dynamics in \Eq{eq:Rdot_final} will convert
+axial motion into rotational acceleration coupling between shafts.
+
+\item Slip models and capstan friction relations will depend
+explicitly on wrap angles
+\Eq{eq:wrap_primary}--\Eq{eq:wrap_secondary}
+and the geometric redistribution captured in
+\Eq{eq:belt_length_root}.
+
+\item Power flow and coupling torque formulations will use
+$R(s)$ and $\dot R$ directly to relate engine dynamics
+to driven-shaft dynamics.
+
+\end{itemize}
+
+Thus, this section isolates geometry from physics.
+All subsequent force and torque derivations will treat
+the geometric relationships derived here as fixed,
+differentiable mappings.
+
+\paragraph{Key Modeling Properties}
+
+Several important structural properties are now clear:
+
+\begin{enumerate}
+
+\item The ratio evolution is inherently nonlinear due to the
+inverse-sine term in the belt constraint.
+
+\item The geometric coupling is globally valid (no small-angle
+approximation required).
+
+\item The deadzone is explicitly represented:
+for $0 \le s < s_{\mathrm{dz}}$, $R$ is constant.
+
+\item Ratio sensitivity depends on both cone angle $\beta$
+and instantaneous pulley radii.
+
+\item The system is fully differentiable within the admissible
+domain $s_{\mathrm{dz}} \le s \le s_{\max}$, enabling
+continuous-time simulation and ODE integration.
+
+\end{enumerate}
+
+\paragraph{Transition to Dynamics}
+
+With geometry now fully specified, the model is ready to
+incorporate force balance and torque transfer.
+
+The next major objective is to determine $\dot s$ from
+axial forces (centrifugal force, spring force, belt tension,
+and normal reaction forces). Once $\dot s$ is known, the
+ratio evolution \Eq{eq:Rdot_final} immediately provides
+rotational coupling between shafts.
+
+In other words:
+
+\[
+\text{Axial Dynamics}
+\;\longrightarrow\;
+\dot s
+\;\longrightarrow\;
+\dot R
+\;\longrightarrow\;
+Rotational Dynamics.
+\]
+
+This completes the geometric phase of the CVT derivation.
+The model is now prepared for the introduction of force
+and torque equilibrium in the subsequent section.
 
 
 \section{Pulley Axial Force Models}\label{sec:axial}
