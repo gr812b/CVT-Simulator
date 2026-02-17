@@ -2963,6 +2963,46 @@ The remaining coupling between axial and rotational dynamics
 enters through $\tau_s$, which will be determined later
 using \theoryRef{th:newton-rot}.
 
+% ==============================================================
+\subsection{Section Summary and Forward Outlook}\label{sec:axial-summary}
+
+In this section we established a complete axial force model for the CVT
+mechanism and derived a closed-form equation of motion for the generalized
+shift coordinate $s(t)$.
+
+Beginning with geometric parameterizations of the primary ramp and
+secondary helix, we expressed all actuator forces in terms of the
+state variables $(s,\dot s,\omega_p,\omega_s)$.
+We then incorporated spring forces, torque-reactive loading on the
+secondary, and the distributed centrifugal loading of the belt.
+Finally, by constructing an equivalent inertia associated with the
+coordinated axial motion of the movable sheaves and belt mass,
+we obtained the governing shift dynamics equation
+\Eq{eq:s_ddot_final}.
+
+At this stage, the axial subsystem is formally closed
+\emph{except} for one remaining coupling quantity:
+the reacted secondary torque $\tau_s$.
+Although $\tau_s$ appears explicitly in the secondary axial force model,
+its value is determined by rotational dynamics of the drivetrain
+and by torque transmission through the belt.
+The axial and rotational subsystems are therefore coupled,
+but only through this torque term.
+
+The next step is to determine how torque is transmitted across the CVT
+as a function of pulley radii and speed ratio.
+This will establish the relationship between $\tau_s$,
+input torque at the primary, and the evolving ratio
+$R = r_s / r_p$.
+Once this transmission relationship is obtained,
+the axial and rotational equations can be combined into a unified,
+state-space representation of the full CVT dynamics.
+
+With the axial force structure now complete,
+attention turns to the torque transmission mechanism
+that closes the remaining dynamical loop.
+
+
 
 \section{Belt Forces and Torque Transmission}\label{sec:belt}
 \subsection{Axial-to-Radial Force Conversion}\label{sec:axial-radial}
