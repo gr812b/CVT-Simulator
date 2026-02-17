@@ -148,15 +148,20 @@
 % Big boxed equation (for "headline" equations)
 % =========================
 % \bigeq{eq:key}{Title}{<equation>}
+
 \NewDocumentCommand{\bigeq}{m m m}{%
+  \refstepcounter{equation}%
   \begin{tcolorbox}
-    \phantomsection\label{#1}
-    \textbf{#2}\\[-2pt]\rule{\textwidth}{0.4pt}
+    \textbf{#2}\hfill\textbf{(\theequation)}\\[-4pt]
+    \rule{\textwidth}{0.4pt}
     \[
       #3
     \]
   \end{tcolorbox}
+  \label{#1}
 }
+
+
 
 % Multi-line boxed equations:
 % \begin{bigeqalign}{eq:key}{Title} ... \end{bigeqalign}
@@ -1035,15 +1040,14 @@ with half-angle $\beta$.}
 Let $r_{p,\min}$ denote the minimum primary outer radius.
 Then the primary outer radius is
 
-\begin{equation}
+\bigeq{eq:primary_radius}{Primary Outer Radius}{
 r_{p,\text{outer}}(s)=
 \begin{cases}
 r_{p,\min}, & 0 \le s < s_{\mathrm{dz}}, \\[8pt]
 r_{p,\min} + \dfrac{s - s_{\mathrm{dz}}}{2\tan\beta},
 & s_{\mathrm{dz}} \le s \le s_{\max}.
 \end{cases}
-\label{eq:primary_radius}
-\end{equation}
+}
 
 
 
@@ -1148,7 +1152,7 @@ The wrap angles on the primary and secondary pulleys are
 \begin{align}
 \phi_p &= \pi - 2\lambda, \label{eq:wrap_primary}\\
 \phi_s &= \pi + 2\lambda. \label{eq:wrap_secondary}
-\end{align}
+\end{align} 
 
 If $\lambda < 0$, these expressions automatically redistribute wrap
 between pulleys while preserving total belt length.
@@ -1184,15 +1188,14 @@ L_b =
 
 Rearranging \Eq{eq:belt_length_final} yields
 
-\begin{equation}
+\bigeq{eq:belt_length_root}{Belt Length Constraint Root Function}{
 f(r_p, r_s, C) =
 \pi(r_p + r_s)
 + 2(r_s - r_p)\,
 \sin^{-1}\!\left(\frac{r_s - r_p}{C}\right)
 + 2\sqrt{C^2 - (r_s - r_p)^2}
 - L_b.
-\label{eq:belt_length_root}
-\end{equation}
+}
 
 The belt-length constraint is therefore
 
@@ -1324,13 +1327,12 @@ Because \Eq{eq:secondary_radius_constraint} is transcendental
 in $r_s$, the secondary radius is obtained numerically for
 each value of $s$:
 
-\begin{equation}
+\bigeq{eq:secondary_radius}{Secondary Outer Radius}{
 r_{s,\text{outer}}(s)
 =
 \operatorname*{root}_{r_s}
 \; f\!\left(r_p(s), r_s, C\right).
-\label{eq:secondary_radius}
-\end{equation}
+}
 
 \begin{remarkbox}[Remark (Dynamic Root Solve)]
 Unlike the center-distance calculation in
@@ -1345,6 +1347,55 @@ a bracketed solver (e.g., Brent’s method) converges rapidly.
 % - Clarify this uses same solver structure
 % - Emphasize geometric coupling
 % - Explain physical meaning (primary increase → secondary decrease)
+
+\paragraph{Wrap Angles as Explicit Functions of Shift}
+
+Using the geometric relations from \Sec{sec:belt_length}, the tangency angle
+evaluated at the current shift is
+
+\begin{equation}
+\lambda(s)
+=
+\sin^{-1}\!\left(
+\frac{
+r_{s,\mathrm{outer}}(s)
+-
+r_{p,\mathrm{outer}}(s)
+}{C}
+\right).
+\label{eq:lambda_of_s_expanded}
+\end{equation}
+
+Substituting directly into the wrap-angle relations \Eq{eq:wrap_primary} and \Eq{eq:wrap_secondary} yields the fully expanded expressions.
+
+\begin{align}
+\phi_p(s)
+&=
+\pi
+-
+2\sin^{-1}\!\left(
+\frac{
+r_{s,\mathrm{outer}}(s)
+-
+r_{p,\mathrm{outer}}(s)
+}{C}
+\right),
+\label{eq:phi_p_of_s_expanded}\\[8pt]
+\phi_s(s)
+&=
+\pi
++
+2\sin^{-1}\!\left(
+\frac{
+r_{s,\mathrm{outer}}(s)
+-
+r_{p,\mathrm{outer}}(s)
+}{C}
+\right).
+\label{eq:phi_s_of_s_expanded}
+\end{align}
+
+
 
 % ==============================================================
 \subsection{Effective Torque Radius}
@@ -1903,7 +1954,7 @@ fully expanded result
 Using the chain rule \Eq{eq:Rdot_chain}, $\dot R = (dR/ds)\dot s$. Substituting
 \Eq{eq:dRds_final} and rearranging gives
 
-\begin{equation}
+\bigeq{eq:Rdot_final}{Rate of Change of Transmission Ratio}{
 \dot R
 =
 \begin{cases}
@@ -1922,8 +1973,7 @@ Using the chain rule \Eq{eq:Rdot_chain}, $\dot R = (dR/ds)\dot s$. Substituting
 \right],
 & s_{\mathrm{dz}} \le s \le s_{\max}.
 \end{cases}
-\label{eq:Rdot_final}
-\end{equation}
+}
 
 \paragraph{Summary}
 
@@ -2513,151 +2563,406 @@ k_{s,x}(x_{s,0}+s)
 
 In addition to actuator and spring forces, the belt itself generates a distributed
 centrifugal load while rotating around each pulley. This load acts radially outward
-along the wrapped belt segment and increases the normal loading between belt and sheaves.
-Following the axial--radial conversion discussed previously (see \Fig{fig:primary_geometry}), this contribution can be
-mapped into an effective axial opening force on each pulley.
+along the wrapped belt segment and increases normal loading between belt and sheaves.
+Using the axial–radial coupling established previously (see \Fig{fig:primary_geometry}),
+this radial loading can be mapped into an effective axial \emph{closing} force.
 
 % --------------------------------------------------------------
-\paragraph{Distributed Load Model}
+\paragraph{Belt Cross-Section Geometry}
 
-Let the belt material have density $\rho_b$ and cross-sectional area $A_b$
-(see \Fig{fig:belt_cross_section_placeholder}), giving a linear mass density
+The belt cross-section is approximated as a trapezoid
+(see \Fig{fig:belt_cross_section_placeholder}) with:
+
+\begin{itemize}
+    \item radial thickness $h_b$,
+    \item outer width $b_{\mathrm{out}}$,
+    \item inner width $b_{\mathrm{in}}$.
+\end{itemize}
+
+\begin{figure}[h]
+\centering
+%\includegraphics[width=0.55\linewidth]{./illustrations/belt_cross_section_placeholder.png}
+\caption{Trapezoidal belt cross-section used to define area $A_b$ and centroid location.}
+\label{fig:belt_cross_section_placeholder}
+\end{figure}
+
+\paragraph{Cross-Sectional Area}
+
+The cross-sectional area of the trapezoid is
+
+\begin{equation}
+A_b
+=
+\frac{h_b}{2}\left(b_{\mathrm{out}} + b_{\mathrm{in}}\right).
+\label{eq:Ab_trap}
+\end{equation}
+
+With belt material density $\rho_b$, the linear mass density becomes
+
 \begin{equation}
 \mu_b = \rho_b A_b.
 \label{eq:mu_b_def}
 \end{equation}
 
-Consider a belt element on a pulley at angular position $\theta$ (measured about the pulley
-center), where the belt follows a circular arc of radius $r$ over a wrap angle $\phi$.
-The element has differential length
+% --------------------------------------------------------------
+\paragraph{Belt Mass Centroid}
+
+Centrifugal loading acts at the belt mass centroid rather than at the outer surface.
+Let $y$ denote radial distance measured inward from the outer surface
+($0 \le y \le h_b$).
+
+Assuming linear sidewalls, the local width varies linearly:
+
+\begin{equation}
+b(y)
+=
+b_{\mathrm{out}}
++
+\frac{b_{\mathrm{in}} - b_{\mathrm{out}}}{h_b}y.
+\label{eq:b_of_y}
+\end{equation}
+
+The centroid location measured inward from the outer surface is
+
+\begin{equation}
+\Delta r_{\mathrm{cm}}
+=
+\frac{1}{A_b}
+\int_0^{h_b} y\,b(y)\,\dd y.
+\label{eq:centroid_def}
+\end{equation}
+
+Evaluating the integral gives
+
+\begin{equation}
+\Delta r_{\mathrm{cm}}
+=
+h_b
+\frac{
+b_{\mathrm{out}} + 2 b_{\mathrm{in}}
+}{
+3\left(b_{\mathrm{out}} + b_{\mathrm{in}}\right)
+}.
+\label{eq:delta_r_cm_trap}
+\end{equation}
+
+Thus the belt mass-centroid radius becomes
+
+\begin{equation}
+r_{\mathrm{cm}}(s)
+=
+r_{\mathrm{out}}(s)
+-
+\Delta r_{\mathrm{cm}}.
+\label{eq:r_cm_definition}
+\end{equation}
+
+% --------------------------------------------------------------
+\paragraph{Distributed Centrifugal Load Along the Wrap}
+
+Let $\theta$ denote the local angular coordinate along the wrapped arc
+of a pulley, with
+
 \[
-\dd \ell = r\,\dd\theta,
+\theta \in \left[-\frac{\phi}{2},\;\frac{\phi}{2}\right],
 \]
-and differential mass
-\begin{equation}
-\dd m = \mu_b \,\dd \ell = \rho_b A_b \, r \,\dd\theta.
-\label{eq:dm_belt}
-\end{equation}
 
-From \theoryRef{th:centrifugal_force}, the centrifugal force on this element is
-\begin{equation}
-\dd F_c
-=
-\dd m \,\omega^2 r
-=
-\rho_b A_b \, r \,\dd\theta \;\omega^2 r
-=
-\rho_b A_b \,\omega^2\, r^2\,\dd\theta.
-\label{eq:dFc_belt}
-\end{equation}
-
-This force is directed radially outward and is distributed continuously around the wrap,
 as illustrated in \Fig{fig:belt_centrifugal_wrap_placeholder}.
 
-% Placeholder figure: distributed centrifugal load around wrap
 \begin{figure}[h]
 \centering
 %\includegraphics[width=0.55\linewidth]{./illustrations/belt_centrifugal_wrap_placeholder.png}
-\caption{Distributed belt centrifugal force acting radially outward along the wrapped belt segment.
-The integral is taken over $\theta \in [-\phi/2,\;\phi/2]$.}
+\caption{Distributed belt centrifugal force acting radially outward along the wrapped arc.
+Integration is taken over $\theta \in [-\phi/2,\;\phi/2]$.}
 \label{fig:belt_centrifugal_wrap_placeholder}
 \end{figure}
 
-% Placeholder figure: belt cross section / area
-\begin{figure}[h]
-\centering
-%\includegraphics[width=0.55\linewidth]{./illustrations/belt_cross_section_placeholder.png}
-\caption{Belt cross-section used to define area $A_b$ (and therefore linear density $\mu_b=\rho_b A_b$).}
-\label{fig:belt_cross_section_placeholder}
-\end{figure}
+A differential belt element has arc length
+
+\[
+\dd \ell = r_{\mathrm{cm}}\,\dd\theta,
+\]
+
+and differential mass
+
+\begin{equation}
+\dd m = \mu_b r_{\mathrm{cm}} \dd\theta.
+\label{eq:dm_belt}
+\end{equation}
+
+From \theoryRef{th:centrifugal_force},
+
+\begin{equation}
+\dd F_c
+=
+\dd m\,\omega^2 r_{\mathrm{cm}}
+=
+\mu_b \omega^2 r_{\mathrm{cm}}^2 \dd\theta.
+\label{eq:dFc_belt}
+\end{equation}
 
 % --------------------------------------------------------------
-\paragraph{Resultant Centrifugal Load Over a Wrap Angle}
+\paragraph{Resultant Radial Load Over the Wrap}
 
-Integrating \Eq{eq:dFc_belt} over the wrap, taking the symmetric bounds
-$\theta\in[-\phi/2,\;\phi/2]$, yields the net radial centrifugal load on that pulley:
+Integrating over the wrap angle gives
+
 \begin{align}
 F_{c,\mathrm{rad}}
 &=
-\int_{-\phi/2}^{\phi/2} \rho_b A_b \,\omega^2\, r^2 \,\dd\theta
-=
-\rho_b A_b \,\omega^2\, r^2
-\int_{-\phi/2}^{\phi/2}\dd\theta
+\int_{-\phi/2}^{\phi/2}
+\mu_b \omega^2 r_{\mathrm{cm}}^2
+\,\dd\theta
 \nonumber\\
 &=
-\rho_b A_b \,\omega^2\, r^2 \,\phi.
+\mu_b \omega^2 r_{\mathrm{cm}}^2 \phi
+\nonumber\\
+&=
+\rho_b A_b \omega^2 r_{\mathrm{cm}}^2 \phi.
 \label{eq:Fc_rad_wrap}
 \end{align}
-
-This expression assumes the belt rides at approximately constant radius $r$ along the wrapped arc,
-which is consistent with the pulley effective-radius representation used in \Sec{sec:geometry}.
 
 % --------------------------------------------------------------
 \paragraph{Axial Conversion Through the Sheave Cone}
 
-The distributed centrifugal load acts radially and therefore must be converted into an equivalent
-axial closing force on the sheaves. Using the same axial--radial coupling as in the pulley geometry,
-the conjugate force mapping is
-\begin{equation}
-F_{c,\mathrm{ax}}
-=
-F_{c,\mathrm{rad}} \,\frac{\dd r}{\dd s}.
-\label{eq:Fc_ax_general}
-\end{equation}
+Using the previously derived radial–axial mapping
 
-For a conical sheave with half-angle $\beta$ (see \Sec{sec:rp}), the kinematic relation is
 \[
-\frac{\dd r}{\dd s} = \frac{1}{2\tan\beta},
+\frac{\dd r}{\dd s}
+=
+\frac{1}{2\tan\beta},
 \]
-so
+
+the centrifugal contribution to axial closing force becomes
+
 \begin{equation}
 F_{c,\mathrm{ax}}
 =
-\frac{F_{c,\mathrm{rad}}}{2\tan\beta}
-=
-\frac{\rho_b A_b \,\omega^2\, r^2 \,\phi}{2\tan\beta}.
+\frac{
+\rho_b A_b \omega^2 r_{\mathrm{cm}}^2 \phi
+}{
+2\tan\beta
+}.
 \label{eq:Fc_ax_wrap}
 \end{equation}
 
-% --------------------------------------------------------------
-\paragraph{Application to Primary and Secondary Pulleys}
+\paragraph{Primary Pulley Contribution}
 
-Applying \Eq{eq:Fc_ax_wrap} to each pulley gives the centrifugal belt contribution
-to axial clamping:
+TODO: USE BELT ANGULAR VELOCITY RATHER THAN PRIMARY AND SECONDARY ANGULAR VELOCITY
+
+On the primary pulley, use $\omega=\omega_p$ and evaluate
+the centroid radius and wrap angle at the current shift:
+
+\[
+r_{p,\mathrm{cm}}(s)
+=
+r_{p,\mathrm{out}}(s)
+-
+\Delta r_{\mathrm{cm}},
+\qquad
+\phi_p(s)\ \text{from}\ \Eq{eq:phi_p_of_s_expanded}.
+\]
+
+Substituting into \Eq{eq:Fc_ax_wrap} gives
 
 \begin{equation}
 F_{c,p}(s,\omega_p)
 =
-\frac{\rho_b A_b \,\omega_p^2\, r_{p,\mathrm{out}}(s)^2 \,\phi_p(s)}{2\tan\beta_p},
+\frac{
+\rho_b A_b \,\omega_p^2\,
+r_{p,\mathrm{cm}}(s)^2\,
+\phi_p(s)
+}{
+2\tan\beta
+}.
 \label{eq:Fc_primary}
 \end{equation}
+
+\paragraph{Secondary Pulley Contribution}
+
+On the secondary pulley, use $\omega=\omega_s$ and similarly
+
+\[
+r_{s,\mathrm{cm}}(s)
+=
+r_{s,\mathrm{out}}(s)
+-
+\Delta r_{\mathrm{cm}},
+\qquad
+\phi_s(s)\ \text{from}\ \Eq{eq:phi_s_of_s_expanded}.
+\]
+
+Thus,
 
 \begin{equation}
 F_{c,s}(s,\omega_s)
 =
-\frac{\rho_b A_b \,\omega_s^2\, r_{s,\mathrm{out}}(s)^2 \,\phi_s(s)}{2\tan\beta_s},
+\frac{
+\rho_b A_b \,\omega_s^2\,
+r_{s,\mathrm{cm}}(s)^2\,
+\phi_s(s)
+}{
+2\tan\beta
+}.
 \label{eq:Fc_secondary}
 \end{equation}
 
-where $\phi_p(s)$ and $\phi_s(s)$ are the wrap angles from \Sec{sec:belt_length}
-(e.g., \Eq{eq:wrap_primary}--\Eq{eq:wrap_secondary}), and $r_{p,\mathrm{out}}(s)$,
-$r_{s,\mathrm{out}}(s)$ are the outer belt radii from \Sec{sec:rp} and \Sec{sec:secondary_radius}.
-If desired, $r_{\mathrm{out}}$ may be replaced by the effective radius $r_{\mathrm{eff}}$
-depending on where you want the belt mass centroid to act (addressed explicitly later
-in the belt mass distribution assumptions).
-
-\begin{remarkbox}[Remark (How This Will Be Used Later)]
-The terms $F_{c,p}$ and $F_{c,s}$ act as additional closing contributions and will be added
-to the actuator-generated axial forces in the net axial force balance. In the next section,
-these contributions will be combined and substituted into \theoryRef{th:newton-trans} to obtain
-the equation of motion for $s(t)$.
-\end{remarkbox}
 
 
+
+
+% ==============================================================
 \subsection{Axial Shift Dynamics}\label{sec:shift-dyn}
-\bigeq{eq:shift-dynamics}{Axial Shift Equation of Motion}{
-m_{\mathrm{shift}}\ddot{s} = F_{p,\mathrm{ax}} - F_{s,\mathrm{ax}}
+
+We now assemble the axial force models into a single equation of motion
+for the generalized shift coordinate $s(t)$.
+
+At first glance, it may feel unusual to describe the motion of two movable
+sheaves and a continuous belt using a single coordinate.
+However, earlier sections established that the belt length constraint and
+conical kinematics fully determine pulley radii, wrap angles, and span
+geometry once $s$ is specified.
+The system therefore evolves along a single admissible geometric path,
+and $s$ serves as a valid one-degree-of-freedom generalized coordinate.
+
+% --------------------------------------------------------------
+\paragraph{Sign Convention}
+
+By definition, increasing $s$ corresponds to closing the primary pulley.
+Because total belt length is fixed, this necessarily induces the complementary
+motion at the secondary.
+Under this convention, a positive primary axial force tends to increase $s$,
+while a positive secondary closing force tends to decrease $s$.
+This sign structure will be reflected explicitly in the final force balance.
+
+% --------------------------------------------------------------
+\paragraph{Equivalent Inertia Associated with $s$}
+
+Newton’s second law applies to physical masses in translation.
+Since $s$ parameterizes coordinated motion of several bodies,
+we construct an equivalent mass $m_{\mathrm{eq}}$ such that the total
+kinetic energy associated with shift can be written as
+
+\[
+T_{\text{shift}} = \frac12\,m_{\mathrm{eq}}\,\dot s^2.
+\]
+
+The movable primary sheave translates with speed $\dot s$
+in the positive coordinate direction.
+The movable secondary sheave translates with equal magnitude speed
+(but opposite physical direction), so its kinetic energy also contributes
+proportionally to $\dot s^2$.
+
+Let $m_{p,m}$ and $m_{s,m}$ denote the masses of the movable
+primary and secondary sheaves.
+
+% --------------------------------------------------------------
+\paragraph{Belt Mass Contribution}
+
+The belt mass is
+
+\begin{equation}
+m_b = \rho_b A_b L_b,
+\label{eq:mb_def}
+\end{equation}
+
+where $A_b$ is the trapezoidal cross-sectional area from
+\Eq{eq:Ab_trap} and $L_b$ is the constant belt length.
+
+The belt moves continuously with a single belt speed,
+but the axial component of that motion associated with
+a change in $s$ is determined by geometry.
+From the same axial–radial coupling used throughout the model,
+a change in sheave separation $s$ is shared between the two
+conical faces supporting the belt wedge.
+Thus, the belt’s axial velocity relative to the pulley axis is
+
+\begin{equation}
+\dot s_b = \frac{\dot s}{2}.
+\label{eq:belt_half_speed}
+\end{equation}
+
+The kinetic energy associated with this axial motion is therefore
+
+\[
+T_b
+=
+\frac12 m_b \left(\frac{\dot s}{2}\right)^2
+=
+\frac12 \left(\frac{m_b}{4}\right)\dot s^2.
+\]
+
+Expressed in the generalized coordinate $s$,
+the belt contributes an effective mass of $m_b/4$.
+
+% --------------------------------------------------------------
+\paragraph{Total Equivalent Mass}
+
+The total inertia associated with shift becomes
+
+\begin{equation}
+m_{\mathrm{eq}}
+=
+m_{p,m} + m_{s,m} + \frac{m_b}{4}
+=
+m_{p,m} + m_{s,m} + \frac{\rho_b A_b L_b}{4}.
+\label{eq:meq_def}
+\end{equation}
+
+% --------------------------------------------------------------
+\paragraph{Net Axial Force in the $s$ Coordinate}
+
+Collecting the axial force contributions derived previously:
+
+\begin{itemize}
+  \item $F_{p,\mathrm{ax}}(s,\omega_p)$ from \Eq{eq:primary_axial},
+  \item $F_{s,\mathrm{ax}}(s,\tau_s)$ from \Eq{eq:secondary_axial},
+  \item $F_{c,p}(s,\omega_p)$ from \Eq{eq:Fc_primary},
+  \item $F_{c,s}(s,\omega_s)$ from \Eq{eq:Fc_secondary}.
+\end{itemize}
+
+With the sign convention defined above, the generalized force
+in the positive $s$ direction is
+
+\begin{equation}
+\sum F_s
+=
+\Big(F_{p,\mathrm{ax}} + F_{c,p}\Big)
+-
+\Big(F_{s,\mathrm{ax}} + F_{c,s}\Big).
+\label{eq:sumF_shift}
+\end{equation}
+
+% --------------------------------------------------------------
+\paragraph{Shift Equation of Motion}
+
+Applying Newton’s second law in the generalized coordinate,
+
+\[
+\sum F_s = m_{\mathrm{eq}}\,\ddot s,
+\]
+
+and substituting \Eq{eq:meq_def} and \Eq{eq:sumF_shift},
+we obtain
+
+\bigeq{eq:s_ddot_final}{Axial Shift Acceleration}{
+\ddot s
+=
+\frac{
+\Big(F_{p,\mathrm{ax}}(s,\omega_p) + F_{c,p}(s,\omega_p)\Big)
+-
+\Big(F_{s,\mathrm{ax}}(s,\tau_s) + F_{c,s}(s,\omega_s)\Big)
+}{
+m_{p,m} + m_{s,m} + \dfrac{\rho_b A_b L_b}{4}
+}.
 }
+
+\Eq{eq:s_ddot_final} provides the axial shift acceleration
+as a function of the current state variables
+$(s,\dot s,\omega_p,\omega_s)$ and the reacted secondary torque $\tau_s$.
+The remaining coupling between axial and rotational dynamics
+enters through $\tau_s$, which will be determined later
+using \theoryRef{th:newton-rot}.
+
 
 \section{Belt Forces and Torque Transmission}\label{sec:belt}
 \subsection{Axial-to-Radial Force Conversion}\label{sec:axial-radial}
