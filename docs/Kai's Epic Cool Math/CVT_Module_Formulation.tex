@@ -3286,9 +3286,9 @@ and will be generalized in the next section.
 \caption{Torque transmission schematic (placeholder).
 Engine torque $\tau_{\text{eng}}$ drives the primary pulley
 (angular velocity $\omega_p$).
-Torque $\tau_c$ is transmitted through the belt to the secondary pulley
-(angular velocity $\omega_s$).
-The secondary delivers torque $\tau_s$ to the downstream drivetrain,
+Coupling torque $\tau_p$ is transmitted through the belt to the secondary pulley
+(angular velocity $\omega_s$), where it appears as $\tau_s = R\tau_p$.
+The secondary delivers torque to the downstream drivetrain,
 which resists motion with torque $\tau_{\text{load}}$.}
 \label{fig:torque_path}
 \end{figure}
@@ -3306,8 +3306,8 @@ Let
     \item $I_p$ : total rotational inertia of the engine + primary CVT pulley,
     \item $I_s$ : total rotational inertia about the secondary pulley,
     \item $\tau_{\text{eng}}(t)$ : engine torque,
-    \item $\tau_c(t)$ : torque transmitted from primary pulley into the belt,
-    \item $\tau_s(t)$ : torque delivered from belt to secondary pulley,
+    \item $\tau_p(t)$ : coupling torque (as seen at the primary pulley),
+    \item $\tau_s(t)$ : coupling torque (as seen at the secondary pulley),
     \item $\tau_{\text{load}}(t)$ : resisting torque acting on the secondary pulley.
 \end{itemize}
 
@@ -3319,7 +3319,7 @@ Applying \theoryRef{th:newton-rot} to each pulley:
 \paragraph{Primary Pulley}
 
 \begin{equation}
-\tau_{\text{eng}}(t) - \tau_c(t)
+\tau_{\text{eng}}(t) - \tau_p(t)
 =
 I_p\,\alpha_p(t),
 \label{eq:primary_rot_dyn}
@@ -3342,18 +3342,20 @@ where
 \alpha_s(t) = \frac{d\omega_s}{dt}.
 \]
 
-At this stage we have three unknown quantities:
+At this stage we have four unknown quantities:
 
 \[
 \alpha_p(t),
 \qquad
 \alpha_s(t),
 \qquad
-\tau_c(t),
+\tau_p(t),
+\qquad
+\tau_s(t),
 \]
 
-with $\tau_s$ related to $\tau_c$ through transmission physics.
-Additional relations are therefore required.
+but only two equations (\Eq{eq:primary_rot_dyn} and \Eq{eq:secondary_rot_dyn}).
+Two additional relations are therefore required to close the system. First, we will define the inertias $I_p$ and $I_s$ in terms of physical parameters of the system.
 
 % --------------------------------------------------------------
 \subsection{Inertia Definitions}
@@ -3507,8 +3509,8 @@ R(t)\,\alpha_s(t)
 \end{equation}
 
 where $\dot R(t) = \dfrac{dR}{dt}$
-was derived previously in \Sec{sec:cvt_ratio_rate}
-(see \Eq{eq:Rdot_chain}).
+was derived previously
+(see \Eq{eq:Rdot_final}).
 
 Equation \Eq{eq:alpha_relation}
 captures the coupling introduced by a time-varying ratio:
@@ -3522,7 +3524,7 @@ The belt transmits power from the primary pulley to the secondary pulley.
 In general,
 
 \begin{equation}
-\tau_c(t)\,\omega_p(t)
+\tau_p(t)\,\omega_p(t)
 =
 \tau_s(t)\,\omega_s(t)
 +
@@ -3538,7 +3540,7 @@ Following \AssRef{assump:ideal_cvt_power},
 we set $P_{\text{loss}}(t) = 0$, giving
 
 \begin{equation}
-\tau_c(t)\,\omega_p(t)
+\tau_p(t)\,\omega_p(t)
 =
 \tau_s(t)\,\omega_s(t).
 \label{eq:power_balance_ideal}
@@ -3547,7 +3549,7 @@ we set $P_{\text{loss}}(t) = 0$, giving
 Substituting \Eq{eq:ratio_speed_constraint} yields
 
 \begin{equation}
-\tau_s(t) = R(t)\,\tau_c(t).
+\tau_s(t) = R(t)\,\tau_p(t).
 \label{eq:tau_relation}
 \end{equation}
 
@@ -3558,10 +3560,14 @@ to eliminate $\tau_s$.
 % --------------------------------------------------------------
 \subsection{Eliminating Accelerations}
 
+We now have four equations (\Eq{eq:primary_rot_dyn}, \Eq{eq:secondary_rot_dyn}, \Eq{eq:alpha_relation}, \Eq{eq:tau_relation})
+and four unknowns ($\alpha_p$, $\alpha_s$, $\tau_p$, $\tau_s$).
+The goal is to eliminate the accelerations $\alpha_p$ and $\alpha_s$ to obtain a closed-form expression for the coupling torque $\tau_p$ in terms of the known quantities $\tau_{\text{eng}}$, $\tau_{\text{load}}$, $R$, and $\dot R$.
+
 From \Eq{eq:primary_rot_dyn},
 
 \[
-\tau_c
+\tau_p
 =
 \tau_{\text{eng}}
 -
@@ -3571,12 +3577,12 @@ I_p\,\alpha_p.
 Substituting \Eq{eq:alpha_relation}:
 
 \begin{equation}
-\tau_c
+\tau_p
 =
 \tau_{\text{eng}}
 -
 I_p\big(R\alpha_s + \omega_s\dot R\big).
-\label{eq:tau_c_intermediate}
+\label{eq:tau_p_intermediate}
 \end{equation}
 
 From \Eq{eq:secondary_rot_dyn} and \Eq{eq:tau_relation},
@@ -3584,20 +3590,20 @@ From \Eq{eq:secondary_rot_dyn} and \Eq{eq:tau_relation},
 \[
 \alpha_s
 =
-\frac{R\tau_c - \tau_{\text{load}}}{I_s}.
+\frac{R\tau_p - \tau_{\text{load}}}{I_s}.
 \]
 
-Substituting into \Eq{eq:tau_c_intermediate}:
+Substituting into \Eq{eq:tau_p_intermediate}:
 
 \begin{align}
-\tau_c
+\tau_p
 &=
 \tau_{\text{eng}}
 -
 I_p
 \left[
 R\left(
-\frac{R\tau_c - \tau_{\text{load}}}{I_s}
+\frac{R\tau_p - \tau_{\text{load}}}{I_s}
 \right)
 +
 \omega_s\dot R
@@ -3608,7 +3614,7 @@ R\left(
 -
 \frac{I_p}{I_s}
 \left(
-R^2\tau_c - R\tau_{\text{load}}
+R^2\tau_p - R\tau_{\text{load}}
 \right)
 -
 I_p\omega_s\dot R.
@@ -3617,7 +3623,7 @@ I_p\omega_s\dot R.
 Collecting terms:
 
 \begin{equation}
-\tau_c
+\tau_p
 \left(
 1 + \frac{I_p}{I_s}R^2
 \right)
@@ -3627,16 +3633,16 @@ Collecting terms:
 \frac{I_p}{I_s}R\tau_{\text{load}}
 -
 I_p\omega_s\dot R.
-\label{eq:tau_c_rearranged}
+\label{eq:tau_p_rearranged}
 \end{equation}
 
 % --------------------------------------------------------------
 \subsection{Closed-Form Coupling Torque}
 
-Solving \Eq{eq:tau_c_rearranged}:
+Solving \Eq{eq:tau_p_rearranged}:
 
-\bigeq{eq:tau_c_final}{Primary-Side Coupling Torque}{
-\tau_c(t)
+\bigeq{eq:tau_p_final}{Coupling Torque (Primary Side)}{
+\tau_p(t)
 =
 \frac{
 \tau_{\text{eng}}(t)
@@ -3649,12 +3655,12 @@ I_p\,\omega_s(t)\,\dot R(t)
 }.
 }
 
-The reacted secondary torque required by
-\Eq{eq:secondary_axial} then follows from
+The coupling torque as seen at the secondary pulley,
+required by \Eq{eq:secondary_axial}, then follows from
 \Eq{eq:tau_relation}:
 
-\bigeq{eq:tau_s_final}{Secondary Pulley Torque}{
-\tau_s(t) = R(t)\,\tau_c(t).
+\bigeq{eq:tau_s_final}{Coupling Torque (Secondary Side)}{
+\tau_s(t) = R(t)\,\tau_p(t).
 }
 
 % --------------------------------------------------------------
@@ -3670,10 +3676,10 @@ Closure was obtained by incorporating:
     \item The torque mapping implied by power transfer across the CVT.
 \end{itemize}
 
-The resulting coupling torque \Eq{eq:tau_c_final}
+The resulting coupling torque \Eq{eq:tau_p_final}
 expresses the torque transmitted through the CVT
 in terms of the instantaneous ratio and ratio rate.
-Substitution into \Eq{eq:secondary_axial}
+Substitution of \Eq{eq:tau_s_final} into \Eq{eq:secondary_axial}
 completes the dynamical coupling required
 for the axial shift equation \Eq{eq:s_ddot_final}.
 
