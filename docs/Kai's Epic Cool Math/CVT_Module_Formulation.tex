@@ -185,6 +185,7 @@
 \crefname{assump}{A}{A}
 \Crefname{assump}{A}{A}
 
+\makeatletter
 \NewDocumentEnvironment{assumptionblock}{m m}
 {
   % #1 = label key
@@ -202,8 +203,10 @@
       top=10pt,
       bottom=10pt
   ]
-  \phantomsection\label{#1}
-  \expandafter\gdef\csname assump@title@\theassump\endcsname{#2}
+  \phantomsection
+  % Ensure \nameref uses the assumption title (not the surrounding section title)
+  \protected@edef\@currentlabelname{#2}%
+  \label{#1}
 
   {\Large \textbf{Assumption \theassump\ (#2)}}
 
@@ -214,10 +217,11 @@
 {
   \end{tcolorbox}
 }
+\makeatother
 
-% Custom reference command for assumptions
+% Custom reference command for assumptions (matches theoryRef pattern)
 \NewDocumentCommand{\AssRef}{m}{%
-  A\ref{#1}: \nameref{#1}%
+  \hyperref[#1]{Assumption~\ref*{#1} (\nameref*{#1})}%
 }
 
 
@@ -605,6 +609,14 @@ Frictional losses in non-critical components
 are neglected.
 Only friction directly relevant to belt traction
 and CVT torque transfer is modeled.
+\end{assumptionblock}
+
+\begin{assumptionblock}{assump:ideal_cvt_power}{Ideal CVT Power Transmission}
+Power transmission through the CVT is modeled as ideal
+(i.e., no internal dissipation).
+Although belt slip is explicitly modeled and affects
+torque capacity and shift dynamics,
+the associated power loss $P_{\text{loss}}$ is neglected.
 \end{assumptionblock}
 
 % ======================================================
@@ -1454,7 +1466,7 @@ These effective radii are used in all subsequent torque transmission calculation
 
 
 % ==============================================================
-\subsection{CVT Ratio Definition}
+\subsection{CVT Ratio Definition}\label{sec:cvt_ratio}
 
 The instantaneous CVT ratio is defined as the ratio of
 secondary to primary effective radii:
@@ -3241,25 +3253,431 @@ attention turns to the torque transmission mechanism
 that closes the remaining dynamical loop.
 
 
+% ==============================================================
+\section{Torque Transmission and Coupling Torque}\label{sec:torque-coupling}
 
-\section{Belt Forces and Torque Transmission}\label{sec:belt}
-\subsection{Axial-to-Radial Force Conversion}\label{sec:axial-radial}
+The axial shift dynamics derived in \Sec{sec:shift-dyn}
+require the reacted secondary torque $\tau_s$
+appearing in \Eq{eq:secondary_axial}.
+In this section we determine the torque transmitted
+through the CVT as a function of the rotational states
+and the instantaneous ratio $R(t)$.
+
+We proceed in four steps:
+
+\begin{enumerate}
+    \item Write rotational equations of motion for the primary and secondary pulleys.
+    \item Define the inertias associated with each pulley.
+    \item Introduce the CVT ratio kinematics.
+    \item Eliminate accelerations to obtain the transmitted torque.
+\end{enumerate}
+
+The result provides the ideal torque transmission law associated
+with the geometric ratio $R(t)$.
+This serves as the baseline torque model
+and will be generalized in the next section.
+
+% --------------------------------------------------------------
+\subsection{System Definition and Torque Path}
+
+\begin{figure}[H]
+\centering
+%\includegraphics[width=0.85\linewidth]{./illustrations/torque_path_placeholder.png}
+\caption{Torque transmission schematic (placeholder).
+Engine torque $\tau_{\text{eng}}$ drives the primary pulley
+(angular velocity $\omega_p$).
+Torque $\tau_c$ is transmitted through the belt to the secondary pulley
+(angular velocity $\omega_s$).
+The secondary delivers torque $\tau_s$ to the downstream drivetrain,
+which resists motion with torque $\tau_{\text{load}}$.}
+\label{fig:torque_path}
+\end{figure}
+
+We model two rotating bodies:
+
+\begin{itemize}
+    \item Primary pulley (rigidly connected to the engine),
+    \item Secondary pulley (driving the downstream drivetrain and vehicle).
+\end{itemize}
+
+Let
+
+\begin{itemize}
+    \item $I_p$ : total rotational inertia of the engine + primary CVT pulley,
+    \item $I_s$ : total rotational inertia about the secondary pulley,
+    \item $\tau_{\text{eng}}(t)$ : engine torque,
+    \item $\tau_c(t)$ : torque transmitted from primary pulley into the belt,
+    \item $\tau_s(t)$ : torque delivered from belt to secondary pulley,
+    \item $\tau_{\text{load}}(t)$ : resisting torque acting on the secondary pulley.
+\end{itemize}
+
+% --------------------------------------------------------------
+\subsection{Rotational Equations of Motion}
+
+Applying \theoryRef{th:newton-rot} to each pulley:
+
+\paragraph{Primary Pulley}
+
 \begin{equation}
-F_{r,p} = \cdots \qquad F_{r,s} = \cdots
-\label{eq:axial_to_radial}
+\tau_{\text{eng}}(t) - \tau_c(t)
+=
+I_p\,\alpha_p(t),
+\label{eq:primary_rot_dyn}
 \end{equation}
 
-\subsection{Belt Tension Distribution}\label{sec:tension}
-Using \Th{th:capstan},
+\paragraph{Secondary Pulley}
+
 \begin{equation}
-\frac{T_1}{T_2} = e^{\mu \beta}
-\label{eq:tension_ratio}
+\tau_s(t) - \tau_{\text{load}}(t)
+=
+I_s\,\alpha_s(t),
+\label{eq:secondary_rot_dyn}
 \end{equation}
 
-\subsection{Maximum Transferable Torque}\label{sec:tmax}
-\bigeq{eq:tmax}{Maximum Transferable Torque}{
-T_{\max,p} = \cdots \qquad T_{\max,s} = \cdots
+where
+
+\[
+\alpha_p(t) = \frac{d\omega_p}{dt},
+\qquad
+\alpha_s(t) = \frac{d\omega_s}{dt}.
+\]
+
+At this stage we have three unknown quantities:
+
+\[
+\alpha_p(t),
+\qquad
+\alpha_s(t),
+\qquad
+\tau_c(t),
+\]
+
+with $\tau_s$ related to $\tau_c$ through transmission physics.
+Additional relations are therefore required.
+
+% --------------------------------------------------------------
+\subsection{Inertia Definitions}
+
+The rotational equations \Eq{eq:primary_rot_dyn}--\Eq{eq:secondary_rot_dyn}
+require the effective inertias about each pulley axis.
+
+\paragraph{Primary Pulley Inertia}
+
+The primary pulley is rigidly connected to the engine.
+Its effective inertia is therefore the direct sum of
+
+\begin{equation}
+I_p
+=
+I_{\text{eng}}
++
+I_{\text{prim}},
+\label{eq:Ip_def}
+\end{equation}
+
+where
+\begin{itemize}
+    \item $I_{\text{eng}}$ is the engine rotational inertia,
+    \item $I_{\text{prim}}$ is the primary CVT pulley inertia.
+\end{itemize}
+
+No reflection is required on the primary side since all components
+rotate at the same angular velocity $\omega_p$.
+
+% --------------------------------------------------------------
+\paragraph{Secondary Pulley Inertia}
+
+All components downstream of the secondary pulley
+must be expressed as an equivalent inertia about
+the secondary pulley axis.
+
+Let
+
+\begin{itemize}
+    \item $I_{\text{sec}}$ : secondary CVT pulley inertia,
+    \item $I_{\text{gb}}$ : gearbox + intermediate shaft inertia,
+    \item $I_{\text{wheel}}$ : wheel + hub inertia about the wheel axis,
+    \item $m$ : total vehicle mass,
+    \item $r_w$ : effective wheel rolling radius,
+    \item $G$ : fixed gear ratio between secondary pulley and wheel
+          (defined so that $\omega_s = G\,\omega_w$).
+\end{itemize}
+
+% --------------------------------------------------------------
+\paragraph{Vehicle Mass Contribution}
+
+The vehicle translational kinetic energy is given by \theoryRef{th:kinetic_energy_trans}:
+
+\[
+T_{\text{trans}}
+=
+\frac12 m v^2,
+\]
+
+with $v = r_w \omega_w$.
+Expressed in rotational form about the wheel axis:
+
+\[
+T_{\text{trans}}
+=
+\frac12 (m r_w^2)\,\omega_w^2.
+\]
+
+Thus the vehicle mass contributes an effective rotational inertia
+
+\[
+I_{\text{veh,wheel}} = m r_w^2
+\]
+
+about the wheel axis.
+
+% --------------------------------------------------------------
+\paragraph{Reflection to the Secondary Pulley}
+
+Because $\omega_s = G\,\omega_w$,
+we have $\omega_w = \omega_s/G$.
+
+Expressing kinetic energy in terms of $\omega_s$:
+
+\[
+T
+=
+\frac12 I_{\text{wheel}} \left(\frac{\omega_s}{G}\right)^2
++
+\frac12 (m r_w^2) \left(\frac{\omega_s}{G}\right)^2.
+\]
+
+Therefore inertias at the wheel are reflected to the secondary pulley by
+
+\[
+I_{\text{reflected}}
+=
+\frac{I_{\text{wheel}} + m r_w^2}{G^2}.
+\]
+
+% --------------------------------------------------------------
+\paragraph{Total Secondary Inertia}
+
+The total effective inertia about the secondary pulley becomes
+
+\begin{equation}
+I_s
+=
+I_{\text{sec}}
++
+I_{\text{gb}}
++
+\frac{I_{\text{wheel}} + m r_w^2}{G^2}.
+\label{eq:Is_def}
+\end{equation}
+
+Equation \Eq{eq:Is_def} defines the total inertia resisting
+angular acceleration of the secondary pulley.
+
+
+% --------------------------------------------------------------
+\subsection{Ratio Kinematics}
+
+The CVT ratio was defined geometrically in \Sec{sec:cvt_ratio}
+(see \Eq{eq:cvt_ratio}) as
+
+\[
+R(t)
+=
+\frac{r_{s,\text{eff}}(t)}{r_{p,\text{eff}}(t)}.
+\]
+
+Under ideal belt transmission, the pulley speeds satisfy
+
+\begin{equation}
+\omega_p(t) = R(t)\,\omega_s(t).
+\label{eq:ratio_speed_constraint}
+\end{equation}
+
+Differentiating \Eq{eq:ratio_speed_constraint}
+\emph{with respect to time} gives
+
+\begin{equation}
+\alpha_p(t)
+=
+R(t)\,\alpha_s(t)
++
+\omega_s(t)\,\dot R(t),
+\label{eq:alpha_relation}
+\end{equation}
+
+where $\dot R(t) = \dfrac{dR}{dt}$
+was derived previously in \Sec{sec:cvt_ratio_rate}
+(see \Eq{eq:Rdot_chain}).
+
+Equation \Eq{eq:alpha_relation}
+captures the coupling introduced by a time-varying ratio:
+even if $\alpha_s=0$, a changing ratio ($\dot R \neq 0$)
+produces primary acceleration.
+
+% --------------------------------------------------------------
+\subsection{Torque Mapping Across the CVT}
+
+The belt transmits power from the primary pulley to the secondary pulley.
+In general,
+
+\begin{equation}
+\tau_c(t)\,\omega_p(t)
+=
+\tau_s(t)\,\omega_s(t)
++
+P_{\text{loss}}(t),
+\label{eq:power_balance_general}
+\end{equation}
+
+where $P_{\text{loss}}(t)$ represents internal dissipation.
+This identity always holds; modeling assumptions determine how
+$P_{\text{loss}}$ is represented.
+
+Following \AssRef{assump:ideal_cvt_power},
+we set $P_{\text{loss}}(t) = 0$, giving
+
+\begin{equation}
+\tau_c(t)\,\omega_p(t)
+=
+\tau_s(t)\,\omega_s(t).
+\label{eq:power_balance_ideal}
+\end{equation}
+
+Substituting \Eq{eq:ratio_speed_constraint} yields
+
+\begin{equation}
+\tau_s(t) = R(t)\,\tau_c(t).
+\label{eq:tau_relation}
+\end{equation}
+
+Equation \Eq{eq:tau_relation}
+is the explicit torque relation required
+to eliminate $\tau_s$.
+
+% --------------------------------------------------------------
+\subsection{Eliminating Accelerations}
+
+From \Eq{eq:primary_rot_dyn},
+
+\[
+\tau_c
+=
+\tau_{\text{eng}}
+-
+I_p\,\alpha_p.
+\]
+
+Substituting \Eq{eq:alpha_relation}:
+
+\begin{equation}
+\tau_c
+=
+\tau_{\text{eng}}
+-
+I_p\big(R\alpha_s + \omega_s\dot R\big).
+\label{eq:tau_c_intermediate}
+\end{equation}
+
+From \Eq{eq:secondary_rot_dyn} and \Eq{eq:tau_relation},
+
+\[
+\alpha_s
+=
+\frac{R\tau_c - \tau_{\text{load}}}{I_s}.
+\]
+
+Substituting into \Eq{eq:tau_c_intermediate}:
+
+\begin{align}
+\tau_c
+&=
+\tau_{\text{eng}}
+-
+I_p
+\left[
+R\left(
+\frac{R\tau_c - \tau_{\text{load}}}{I_s}
+\right)
++
+\omega_s\dot R
+\right]
+\nonumber\\[6pt]
+&=
+\tau_{\text{eng}}
+-
+\frac{I_p}{I_s}
+\left(
+R^2\tau_c - R\tau_{\text{load}}
+\right)
+-
+I_p\omega_s\dot R.
+\end{align}
+
+Collecting terms:
+
+\begin{equation}
+\tau_c
+\left(
+1 + \frac{I_p}{I_s}R^2
+\right)
+=
+\tau_{\text{eng}}
++
+\frac{I_p}{I_s}R\tau_{\text{load}}
+-
+I_p\omega_s\dot R.
+\label{eq:tau_c_rearranged}
+\end{equation}
+
+% --------------------------------------------------------------
+\subsection{Closed-Form Coupling Torque}
+
+Solving \Eq{eq:tau_c_rearranged}:
+
+\bigeq{eq:tau_c_final}{Primary-Side Coupling Torque}{
+\tau_c(t)
+=
+\frac{
+\tau_{\text{eng}}(t)
++
+\dfrac{I_p}{I_s}R(t)\,\tau_{\text{load}}(t)
+-
+I_p\,\omega_s(t)\,\dot R(t)
+}{
+1 + \dfrac{I_p}{I_s}R(t)^2
+}.
 }
+
+The reacted secondary torque required by
+\Eq{eq:secondary_axial} then follows from
+\Eq{eq:tau_relation}:
+
+\bigeq{eq:tau_s_final}{Secondary Pulley Torque}{
+\tau_s(t) = R(t)\,\tau_c(t).
+}
+
+% --------------------------------------------------------------
+\subsection{Section Summary}
+
+We began with rotational equations of motion for the primary and secondary pulleys.
+These introduced more unknowns than equations.
+Closure was obtained by incorporating:
+
+\begin{itemize}
+    \item The geometric ratio definition $R(t)$,
+    \item Its time derivative $\dot R(t)$,
+    \item The torque mapping implied by power transfer across the CVT.
+\end{itemize}
+
+The resulting coupling torque \Eq{eq:tau_c_final}
+expresses the torque transmitted through the CVT
+in terms of the instantaneous ratio and ratio rate.
+Substitution into \Eq{eq:secondary_axial}
+completes the dynamical coupling required
+for the axial shift equation \Eq{eq:s_ddot_final}.
+
+
 
 \section{Dynamics: No-Slip Baseline}\label{sec:noslip-dyn}
 \subsection{Coupling Torque}\label{sec:coupling}
