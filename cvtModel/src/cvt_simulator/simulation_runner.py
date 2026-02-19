@@ -1,4 +1,5 @@
 import sys
+import math
 import numpy as np
 from typing import Callable, Optional
 from scipy.integrate import solve_ivp
@@ -9,14 +10,16 @@ from cvt_simulator.constants.car_specs import (
     GEARBOX_RATIO,
     WHEEL_RADIUS,
     MAX_SHIFT,
+    ENGINE_INERTIA,
+    DRIVELINE_INERTIA,
 )
 from cvt_simulator.utils.conversions import rpm_to_rad_s
 from cvt_simulator.utils.theoretical_models import TheoreticalModels as tm
-from cvt_simulator.utils.simulation_constraints import (
-    car_velocity_constraint_event,
-    get_shift_steady_event,
-    get_back_shift_event,
-    shift_constraint_event,
+from cvt_simulator.constants.engine_specs import safe_torque_curve
+from cvt_simulator.utils.numba_kernels import (
+    slip_relative_speed_kernel,
+    slip_coupling_torque_kernel,
+    torque_demand_kernel,
 )
 
 
@@ -52,6 +55,63 @@ class SimulationRunner:
         self.progress_callback = progress_callback
         self._last_callback_percent = -1.0
 
+        # Cached model references for faster ODE RHS evaluation
+        self._slip_model = system_model.slip_model
+        self._cvt_shift_model = system_model.cvt_shift_model
+        self._primary_pulley = self._slip_model.primary_pulley
+        self._secondary_pulley = self._slip_model.secondary_pulley
+        self._engine_model = self._slip_model.engine_model
+        self._load_model = self._slip_model.load_model
+
+        self._wheel_to_sec_ratio = GEARBOX_RATIO / WHEEL_RADIUS
+        self._wheel_inertia = DRIVELINE_INERTIA + self._slip_model.car_mass * (
+            WHEEL_RADIUS**2
+        )
+        self._cvt_moving_mass = self._cvt_shift_model.cvt_moving_mass
+        self._slip_speed_smoothing = self._slip_model.slip_speed_smoothing
+
+        self._incline_force = (
+            self._load_model.car_mass
+            * self._load_model.g
+            * math.sin(self._load_model.incline_angle)
+        )
+        self._drag_force_coeff = (
+            0.5
+            * self._load_model.air_density
+            * self._load_model.frontal_area
+            * self._load_model.drag_coefficient
+        )
+
+        # Precompute CVT ratio and derivative lookup tables to avoid per-step root finding
+        self._ratio_lut_shift = np.linspace(0.0, MAX_SHIFT, 1024)
+        self._ratio_lut = np.array(
+            [tm.current_cvt_ratio(d) for d in self._ratio_lut_shift], dtype=float
+        )
+        self._ratio_rate_per_vel_lut = np.array(
+            [
+                tm.current_cvt_ratio_rate_of_change(d, 1.0)
+                for d in self._ratio_lut_shift
+            ],
+            dtype=float,
+        )
+
+        # Precompute torque lookup table to avoid repeated scipy interp1d overhead
+        self._torque_lut_omega = np.linspace(0.0, rpm_to_rad_s(6000), 2048)
+        self._torque_lut = np.asarray(safe_torque_curve(self._torque_lut_omega), dtype=float)
+
+        # Reused mutable state object to minimize allocation churn
+        self._scratch_state = SystemState()
+
+        # Secondary ramp can have a slightly smaller usable max than MAX_SHIFT.
+        # Clamp internal pulley calculations to avoid inverse-height edge errors.
+        secondary_last_segment = self._secondary_pulley.ramp.segments[-1]
+        secondary_max_shift = abs(
+            self._secondary_pulley.ramp.height(secondary_last_segment.x_end)
+        )
+        self._pulley_calc_shift_max = min(MAX_SHIFT, secondary_max_shift)
+
+
+    
     def run_simulation(self) -> SimulationResult:
         """Run the simulation and return results."""
         cvt_system_ode = self._get_ode_function()
@@ -67,9 +127,9 @@ class SimulationRunner:
 
         # Phase 1: Normal shifting until full shift is reached
         events_phase1 = [
-            get_shift_steady_event(self.system_model),
-            car_velocity_constraint_event,
-            shift_constraint_event,
+            self._get_shift_steady_event(),
+            self._get_car_velocity_constraint_event(),
+            self._get_shift_constraint_event(),
         ]
 
         time_eval_phase1 = time_eval[time_eval >= current_time]
@@ -102,8 +162,8 @@ class SimulationRunner:
 
                 # At full shift, check for back-shift event
                 events_phase2 = [
-                    get_back_shift_event(self.system_model),
-                    car_velocity_constraint_event,
+                    self._get_back_shift_event(),
+                    self._get_car_velocity_constraint_event(),
                 ]
 
                 solution_phase2 = self._solve(
@@ -129,9 +189,9 @@ class SimulationRunner:
                         break
 
                     events_phase3 = [
-                        get_shift_steady_event(self.system_model),
-                        car_velocity_constraint_event,
-                        shift_constraint_event,
+                        self._get_shift_steady_event(),
+                        self._get_car_velocity_constraint_event(),
+                        self._get_shift_constraint_event(),
                     ]
 
                     solution_phase3 = self._solve(
@@ -213,73 +273,224 @@ class SimulationRunner:
                 self._last_callback_percent = rounded_percent
                 self.progress_callback(progress_percent)
 
+    def _get_shift_constraint_event(self):
+        def shift_constraint_event(t, y):
+            shift_velocity = y[2]
+            shift_distance = y[3]
+
+            if shift_distance < 0:
+                y[3] = 0.0
+                y[2] = max(0.0, shift_velocity)
+            elif shift_distance > MAX_SHIFT:
+                y[3] = MAX_SHIFT
+                y[2] = min(0.0, shift_velocity)
+
+            return 1.0
+
+        return shift_constraint_event
+
+    def _get_car_velocity_constraint_event(self):
+        def car_velocity_event(t, y):
+            return y[0]
+
+        car_velocity_event.terminal = True
+        car_velocity_event.direction = -1
+        return car_velocity_event
+
+    def _get_shift_steady_event(self):
+        def shift_steady_event(t, y):
+            tol = 1e-5
+            if y[3] < MAX_SHIFT - tol:
+                return -tol
+
+            shift_velocity = y[2]
+            shift_distance = y[3]
+            if shift_distance < 0:
+                y[3] = 0.0
+                y[2] = max(0.0, shift_velocity)
+            elif shift_distance > MAX_SHIFT:
+                y[3] = MAX_SHIFT
+                y[2] = min(0.0, shift_velocity)
+
+            _, _, shift_acceleration = self._compute_dynamics(y, full_shift=False)
+            return shift_acceleration
+
+        shift_steady_event.terminal = True
+        shift_steady_event.direction = 1
+        return shift_steady_event
+
+    def _get_back_shift_event(self):
+        def back_shift_event(t, y):
+            if y[3] < MAX_SHIFT - 1e-5:
+                return 1.0
+
+            _, _, shift_acceleration = self._compute_dynamics(y, full_shift=False)
+            return shift_acceleration + 5.0
+
+        back_shift_event.terminal = True
+        back_shift_event.direction = -1
+        return back_shift_event
+
+    def _clamp_shift_state(self, y: list[float], full_shift: bool) -> tuple[float, float]:
+        if full_shift:
+            y[3] = MAX_SHIFT
+            y[2] = 0.0
+            return MAX_SHIFT, 0.0
+
+        shift_velocity = y[2]
+        shift_distance = y[3]
+
+        if shift_distance <= 0:
+            y[3] = 0.0
+            y[2] = max(0.0, shift_velocity)
+        elif shift_distance > MAX_SHIFT:
+            y[3] = MAX_SHIFT
+            y[2] = min(0.0, shift_velocity)
+
+        return y[3], y[2]
+
+    def _lookup_cvt_ratio(self, shift_distance: float) -> float:
+        return float(np.interp(shift_distance, self._ratio_lut_shift, self._ratio_lut))
+
+    def _lookup_cvt_ratio_rate(self, shift_distance: float, shift_velocity: float) -> float:
+        rate_per_velocity = float(
+            np.interp(shift_distance, self._ratio_lut_shift, self._ratio_rate_per_vel_lut)
+        )
+        return rate_per_velocity * shift_velocity
+
+    def _lookup_engine_torque(self, engine_angular_velocity: float) -> float:
+        if engine_angular_velocity <= self._torque_lut_omega[0]:
+            return float(self._torque_lut[0])
+        if engine_angular_velocity >= self._torque_lut_omega[-1]:
+            return float(self._torque_lut[-1])
+        return float(
+            np.interp(engine_angular_velocity, self._torque_lut_omega, self._torque_lut)
+        )
+
+    def _load_force(self, car_velocity: float) -> float:
+        return self._incline_force + self._drag_force_coeff * car_velocity * abs(car_velocity)
+
+    def _compute_dynamics(
+        self, y: list[float], full_shift: bool
+    ) -> tuple[float, float, float]:
+        car_velocity = y[0]
+        car_position = y[1]
+        shift_distance, shift_velocity = self._clamp_shift_state(y, full_shift)
+        engine_angular_velocity = y[4]
+        engine_angular_position = y[5]
+
+        shift_distance_for_calc = min(shift_distance, self._pulley_calc_shift_max)
+
+        cvt_ratio = self._lookup_cvt_ratio(shift_distance_for_calc)
+        cvt_ratio_derivative = self._lookup_cvt_ratio_rate(
+            shift_distance_for_calc,
+            shift_velocity,
+        )
+
+        engine_torque = self._lookup_engine_torque(engine_angular_velocity)
+        load_torque = self._load_force(car_velocity) * WHEEL_RADIUS
+
+        wheel_angular_velocity = car_velocity / WHEEL_RADIUS
+        engine_to_wheel_ratio = cvt_ratio * GEARBOX_RATIO
+        engine_to_wheel_ratio_rate_of_change = cvt_ratio_derivative * GEARBOX_RATIO
+
+        torque_demand = torque_demand_kernel(
+            engine_torque,
+            load_torque,
+            self._wheel_inertia,
+            wheel_angular_velocity,
+            engine_to_wheel_ratio,
+            engine_to_wheel_ratio_rate_of_change,
+            ENGINE_INERTIA,
+        )
+
+        state = self._scratch_state
+        state.car_velocity = car_velocity
+        state.car_position = car_position
+        state.shift_velocity = shift_velocity
+        state.shift_distance = shift_distance_for_calc
+        state.engine_angular_velocity = engine_angular_velocity
+        state.engine_angular_position = engine_angular_position
+
+        t_max_prim = self._primary_pulley.calculate_max_torque(state)
+        t_max_sec = self._secondary_pulley.calculate_max_torque(state)
+        t_max_capacity = min(max(0.0, t_max_prim), max(0.0, t_max_sec))
+
+        relative_speed = slip_relative_speed_kernel(
+            engine_angular_velocity,
+            car_velocity * self._wheel_to_sec_ratio,
+            cvt_ratio,
+        )
+        coupling_torque, _ = slip_coupling_torque_kernel(
+            relative_speed,
+            torque_demand,
+            t_max_capacity,
+            self._slip_speed_smoothing,
+        )
+
+        car_acceleration = (
+            WHEEL_RADIUS * (coupling_torque * engine_to_wheel_ratio - load_torque)
+        ) / self._wheel_inertia
+
+        engine_angular_accel = (engine_torque - coupling_torque) / ENGINE_INERTIA
+
+        if full_shift:
+            return car_acceleration, engine_angular_accel, 0.0
+
+        primary_clamp, _ = self._primary_pulley.calculate_clamping_force(state)
+        _, _, primary_radial = self._primary_pulley.calculate_radial_force(
+            state, primary_clamp
+        )
+        secondary_clamp, _ = self._secondary_pulley.calculate_clamping_force(
+            state,
+            torque=coupling_torque * cvt_ratio,
+        )
+        _, _, secondary_radial = self._secondary_pulley.calculate_radial_force(
+            state,
+            secondary_clamp,
+        )
+
+        net_radial = primary_radial - secondary_radial
+        friction = self._cvt_shift_model._frictional_force(net_radial, shift_velocity)
+        shift_acceleration = (net_radial + friction) / self._cvt_moving_mass
+
+        if shift_distance <= 0 and shift_acceleration < 0:
+            shift_acceleration = 0.0
+        elif shift_distance >= MAX_SHIFT and shift_acceleration > 0:
+            shift_acceleration = 0.0
+
+        return car_acceleration, engine_angular_accel, shift_acceleration
+
     def _evaluate_cvt_system(self, t: float, y: list[float]):
         """Evaluate system dynamics (phase 1: not at full shift)."""
-        state = SystemState.from_array(y)
         self._print_progress(t)
-
-        # TODO: Remove this (should be handled by constraints)
-        shift_velocity = state.shift_velocity
-        shift_distance = state.shift_distance
-        if shift_distance <= 0:
-            state.shift_distance = 0
-            state.shift_velocity = max(0, shift_velocity)
-
-        elif shift_distance > MAX_SHIFT:
-            state.shift_distance = MAX_SHIFT
-            state.shift_velocity = min(0, shift_velocity)
-
-        constrained_y = state.to_array()
-        for i in range(len(y)):
-            y[i] = constrained_y[i]
-
-        # Get system breakdown (this calculates everything in correct order)
-        system_breakdown = self.system_model.get_breakdown(state)
-
-        # Extract accelerations from breakdown
-        car_acceleration = system_breakdown.car.acceleration
-        engine_angular_accel = system_breakdown.engine.angular_acceleration
-        shift_acceleration = system_breakdown.cvt.acceleration
-
-        # Prevent acceleration from pushing past boundaries (metal hitting metal)
-        if shift_distance <= 0 and shift_acceleration < 0:
-            shift_acceleration = 0
-        elif shift_distance >= MAX_SHIFT and shift_acceleration > 0:
-            shift_acceleration = 0
+        car_acceleration, engine_angular_accel, shift_acceleration = self._compute_dynamics(
+            y,
+            full_shift=False,
+        )
 
         return [
             car_acceleration,
-            state.car_velocity,
+            y[0],
             shift_acceleration,
-            state.shift_velocity,
+            y[2],
             engine_angular_accel,
-            state.engine_angular_velocity,
+            y[4],
         ]
 
     def _evaluate_full_shift_system(self, t: float, y: list[float]):
         """Evaluate system dynamics (phase 2: at full shift)."""
-        state = SystemState.from_array(y)
         self._print_progress(t)
-        # Force the shifting variables to remain constant at full shift.
-        state.shift_distance = MAX_SHIFT
-        state.shift_velocity = 0
-
-        # CRITICAL: Update the actual y array that scipy saves to CSV
-        constrained_y = state.to_array()
-        for i in range(len(y)):
-            y[i] = constrained_y[i]
-
-        # Get system breakdown for full shift case
-        system_breakdown = self.system_model.get_breakdown(state)
-
-        car_acceleration = system_breakdown.car.acceleration
-        engine_angular_accel = system_breakdown.engine.angular_acceleration
+        car_acceleration, engine_angular_accel, _ = self._compute_dynamics(
+            y,
+            full_shift=True,
+        )
 
         return [
             car_acceleration,
-            state.car_velocity,
+            y[0],
             0,
             0,
             engine_angular_accel,
-            state.engine_angular_velocity,
+            y[4],
         ]

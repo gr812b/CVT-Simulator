@@ -35,6 +35,7 @@ from cvt_simulator.constants.constants import (
 )
 from cvt_simulator.models.dataTypes import PulleyState, PulleyForces, PulleyBreakdowns
 from cvt_simulator.utils.theoretical_models import TheoreticalModels as tm
+from cvt_simulator.utils.numba_kernels import radial_force_kernel
 
 
 def get_kwarg(kwargs: dict[str, Any], key: str, default: Any = None) -> Any:
@@ -172,11 +173,6 @@ class PulleyModel(ABC):
         # radius = self._get_radius(state.shift_distance)
         # angular_velocity = self._get_angular_velocity(state)
 
-        # Radial force from pulley clamping (through V-belt wedging)
-        radial_from_clamping = (
-            2 * (clamping_force * np.tan(SHEAVE_ANGLE / 2)) / wrap_angle
-        )
-
         # To future Kai:
         # Trust me! If you're using your current assumption
         # (Which the belt isn't slipping from the secondary, i.e. belt speed = sec speed)
@@ -187,18 +183,16 @@ class PulleyModel(ABC):
         wheel_to_sec_ratio = GEARBOX_RATIO / WHEEL_RADIUS
         sec_angular_velocity = state.car_velocity * wheel_to_sec_ratio
 
-        radial_from_centrifugal = (
-            sec_angular_velocity**2
-            * sec_radius**2
-            * BELT_CROSS_SECTIONAL_AREA
-            * RUBBER_DENSITY
-        )
-
-        # Total radial force (determines friction capacity)
-        total_radial = (
-            2
-            * np.sin(wrap_angle / 2)
-            * (radial_from_clamping + radial_from_centrifugal)
+        radial_from_clamping, radial_from_centrifugal, total_radial = (
+            radial_force_kernel(
+                clamping_force,
+                SHEAVE_ANGLE,
+                wrap_angle,
+                sec_angular_velocity,
+                sec_radius,
+                BELT_CROSS_SECTIONAL_AREA,
+                RUBBER_DENSITY,
+            )
         )
 
         return radial_from_clamping, radial_from_centrifugal, total_radial

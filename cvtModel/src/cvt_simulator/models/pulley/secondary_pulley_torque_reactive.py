@@ -16,6 +16,10 @@ from cvt_simulator.constants.car_specs import (
 )
 from cvt_simulator.models.ramps import LinearSegment, PiecewiseRamp
 from cvt_simulator.utils.system_state import SystemState
+from cvt_simulator.utils.numba_kernels import (
+    secondary_helix_force_kernel,
+    max_torque_secondary_kernel,
+)
 
 
 # TODO: Remove this code
@@ -158,35 +162,24 @@ class PhysicalSecondaryPulley(SecondaryPulleyModel):
         helix_breakdown = self._calculate_helix_force(0, shift_distance)
         spring_tors_torque = helix_breakdown.net
 
-        # Convert to radial force contribution
-        spring_force_term = (spring_comp_force + spring_tors_torque) * np.tan(
-            SHEAVE_ANGLE / 2
-        )
-
         # Centrifugal force contribution, used built in calc with 0 clamp (since we only need centrifugal)
         _, radial_from_centrifugal, _ = self.calculate_radial_force(state, 0)
-        centrifugal_force = radial_from_centrifugal * wrap_angle / 2
-
-        # Capstan term
-        exp_term = np.exp(self.μ * wrap_angle)
-        capstan_term = (wrap_angle / (4 * radius)) * (exp_term + 1) / (exp_term - 1)
 
         # Torque transmission term (feedback loop)
         cvt_ratio = tm.current_cvt_ratio(shift_distance)
         helix_angle = helix_breakdown.angle
-        transmission_term = (
-            2
-            * cvt_ratio
-            * (HELIX_RADIUS * np.tan(helix_angle))
-            * np.tan(SHEAVE_ANGLE / 2)
+        return max_torque_secondary_kernel(
+            spring_comp_force,
+            spring_tors_torque,
+            SHEAVE_ANGLE,
+            radial_from_centrifugal,
+            wrap_angle,
+            radius,
+            self.μ,
+            cvt_ratio,
+            HELIX_RADIUS,
+            helix_angle,
         )
-
-        # Solve for max torque (equilibrium of torque feedback loop)
-        numerator = centrifugal_force + spring_force_term
-        denominator = capstan_term - transmission_term
-        max_torque = numerator / denominator
-
-        return max(0.0, max_torque)  # Ensure non-negative
 
     # Private helper methods for force calculations
 
@@ -208,16 +201,12 @@ class PhysicalSecondaryPulley(SecondaryPulleyModel):
         # Effective radius at current shift position
         secondary_radius = tm.outer_sec_radius(shift_distance) - BELT_HEIGHT / 2
 
-        # Helix angle at current position
-        # Negative slope because helix ramps down with increasing shift
-        helix_angle = np.arctan(-self.ramp.slope(shift_distance))
-
-        # Convert torque to axial force through helix geometry
-        # F = (τ + τ_spring) / (2 * tan(α) * r)
-        angle_multiplier = 2 * np.tan(helix_angle) * secondary_radius
-
-        # Net
-        net = (torque + spring_torque_breakdown.net) / angle_multiplier
+        helix_angle, angle_multiplier, net = secondary_helix_force_kernel(
+            torque,
+            spring_torque_breakdown.net,
+            secondary_radius,
+            self.ramp.slope(shift_distance),
+        )
 
         return HelixForceBreakdown(
             feedbackTorque=torque,

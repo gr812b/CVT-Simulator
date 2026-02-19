@@ -12,10 +12,15 @@ setup(
       "pandas",
       "pydantic"
     ],
-    extras_require={"dev": [
-      "black",
-      "flake8",
-      "pytest",
-      "coverage"
-    ]},
+    extras_require={
+      "dev": [
+        "black",
+        "flake8",
+        "pytest",
+        "coverage"
+      ],
+      "numba": [
+        "numba"
+      ]
+    },
 )

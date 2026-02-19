@@ -9,6 +9,10 @@ venv\Scripts\activate # or 'source venv/bin/activate' on Mac
 ```bash
 pip install -e .[dev]
 ```
+For optional runtime acceleration kernels:
+```bash
+pip install -e .[dev,numba]
+```
 3. Run the tests
 ```bash
 coverage run -m unittest discover -s test/simulations -s test/utils
