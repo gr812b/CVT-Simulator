@@ -10,7 +10,8 @@ setup(
       "scipy",
       "matplotlib",
       "pandas",
-      "pydantic"
+      "pydantic",
+      "numba"
     ],
     extras_require={
       "dev": [
@@ -19,8 +20,5 @@ setup(
         "pytest",
         "coverage"
       ],
-      "numba": [
-        "numba"
-      ]
     },
 )

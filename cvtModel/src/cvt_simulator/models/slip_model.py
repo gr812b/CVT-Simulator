@@ -1,4 +1,3 @@
-import math
 import numpy as np
 from cvt_simulator.models.dataTypes import SlipBreakdown
 from cvt_simulator.models.external_load_model import LoadModel
@@ -18,53 +17,6 @@ from cvt_simulator.constants.constants import (
     RUBBER_ALUMINUM_STATIC_FRICTION,
 )
 from cvt_simulator.utils.numba_utils import maybe_njit
-
-
-@maybe_njit(cache=True, fastmath=True)
-def _relative_speed_kernel(
-    primary_angular_velocity: float,
-    secondary_angular_velocity: float,
-    cvt_ratio: float,
-) -> float:
-    return primary_angular_velocity - (secondary_angular_velocity * cvt_ratio)
-
-
-@maybe_njit(cache=True, fastmath=True)
-def _coupling_torque_kernel(
-    relative_speed: float,
-    torque_demand: float,
-    t_max_capacity: float,
-    slip_speed_smoothing: float,
-) -> tuple[float, bool]:
-    coulomb_torque = t_max_capacity * math.tanh(relative_speed / slip_speed_smoothing)
-    alpha = min(max(abs(relative_speed) / slip_speed_smoothing, 0.0), 1.0)
-    torque_demand_clamped = min(max(torque_demand, -t_max_capacity), t_max_capacity)
-    coupling_torque = (1.0 - alpha) * torque_demand_clamped + alpha * coulomb_torque
-    return coupling_torque, alpha > 0.0
-
-
-@maybe_njit(cache=True, fastmath=True)
-def _torque_demand_kernel(
-    engine_torque: float,
-    load_torque: float,
-    wheel_inertia: float,
-    wheel_angular_velocity: float,
-    engine_to_wheel_ratio: float,
-    engine_to_wheel_ratio_rate_of_change: float,
-    engine_inertia: float,
-) -> float:
-    eng_term = engine_torque * wheel_inertia
-    load_term = engine_inertia * load_torque * engine_to_wheel_ratio
-    shift_term = (
-        engine_inertia
-        * wheel_inertia
-        * wheel_angular_velocity
-        * engine_to_wheel_ratio_rate_of_change
-    )
-
-    numerator = eng_term + load_term - shift_term
-    denominator = wheel_inertia + engine_inertia * engine_to_wheel_ratio**2
-    return numerator / denominator
 
 
 class SlipModel:
@@ -111,12 +63,23 @@ class SlipModel:
             state.car_velocity * wheel_to_sec_ratio,
             tm.current_cvt_ratio(state.shift_distance),
         )
-        coupling_torque, _ = _coupling_torque_kernel(
-            relative_speed,
-            torque_demand,
-            t_max_capacity,
-            self.slip_speed_smoothing,
+
+        # 1) Smooth Coulomb-like torque based on slip speed
+        #    For large |relative_speed|, tanh -> ±1, so |coupling_torque| -> t_max_capacity
+        #    For small |relative_speed|, torque ~ (t_max_capacity / slip_speed_smoothing) * relative_speed (viscous-ish)
+        coulomb_torque = t_max_capacity * np.tanh(
+            relative_speed / self.slip_speed_smoothing
         )
+
+        # 2) Optionally respect torque_demand near zero slip by blending
+        #    When relative_speed is small, use torque_demand (clamped);
+        #    as slip grows, fade to the Coulomb model.
+        v_blend = self.slip_speed_smoothing  # you can use same scale or a separate one
+        alpha = np.clip(abs(relative_speed) / v_blend, 0.0, 1.0)
+
+        torque_demand_clamped = np.clip(torque_demand, -t_max_capacity, t_max_capacity)
+
+        coupling_torque = (1.0 - alpha) * torque_demand_clamped + alpha * coulomb_torque
 
         # 3) Define is_slipping for diagnostics (no effect on dynamics)
         is_slipping = abs(relative_speed) > self.slip_speed_threshold
@@ -149,15 +112,20 @@ class SlipModel:
             * GEARBOX_RATIO
         )
 
-        coupling_torque = _torque_demand_kernel(
-            engine_torque,
-            load_torque,
-            wheel_inertia,
-            wheel_angular_velocity,
-            engine_to_wheel_ratio,
-            engine_to_wheel_ratio_rate_of_change,
-            ENGINE_INERTIA,
+        # The secret butter
+        eng_term = engine_torque * wheel_inertia
+        load_term = ENGINE_INERTIA * load_torque * engine_to_wheel_ratio
+        shift_term = (
+            ENGINE_INERTIA
+            * wheel_inertia
+            * wheel_angular_velocity
+            * engine_to_wheel_ratio_rate_of_change
         )
+
+        numerator = eng_term + load_term - shift_term
+        denominator = wheel_inertia + ENGINE_INERTIA * engine_to_wheel_ratio**2
+
+        coupling_torque = numerator / denominator
 
         return coupling_torque
 
@@ -185,17 +153,14 @@ class SlipModel:
         secondary_t_max = max(0, secondary_t_max)
         return primary_t_max, secondary_t_max
 
+    @staticmethod
+    @maybe_njit(cache=True, fastmath=True)
     def _relative_speed(
-        self,
         primary_angular_velocity: float,
         secondary_angular_velocity: float,
         cvt_ratio: float,
     ) -> float:
-        return _relative_speed_kernel(
-            primary_angular_velocity,
-            secondary_angular_velocity,
-            cvt_ratio,
-        )
+        return primary_angular_velocity - (secondary_angular_velocity * cvt_ratio)
 
     # def _is_slipping(
     #     self,

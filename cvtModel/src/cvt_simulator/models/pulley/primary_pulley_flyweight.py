@@ -18,35 +18,6 @@ from cvt_simulator.constants.car_specs import (
     INITIAL_FLYWEIGHT_RADIUS,
 )
 from cvt_simulator.utils.system_state import SystemState
-from cvt_simulator.utils.numba_utils import maybe_njit
-
-
-@maybe_njit(cache=True, fastmath=True)
-def _primary_flyweight_force_kernel(
-    flyweight_mass: float,
-    angular_velocity: float,
-    flyweight_radius: float,
-    ramp_slope: float,
-) -> tuple[float, float, float, float]:
-    centrifugal_force = flyweight_mass * angular_velocity**2 * flyweight_radius
-    angle = math.atan(-ramp_slope)
-    angle_multiplier = math.tan(angle)
-    net = centrifugal_force * angle_multiplier
-    return angle, centrifugal_force, angle_multiplier, net
-
-
-@maybe_njit(cache=True, fastmath=True)
-def _max_torque_primary_kernel(
-    mu_effective: float,
-    wrap_angle: float,
-    total_radial: float,
-    radius: float,
-) -> float:
-    exp_term = math.exp(mu_effective * wrap_angle)
-    capstan_term = (exp_term - 1.0) / (exp_term + 1.0)
-    radial_force_term = total_radial * radius / math.sin(wrap_angle / 2.0)
-    max_torque = capstan_term * radial_force_term
-    return max(0.0, max_torque)
 
 
 # TODO: Remove this code
@@ -181,7 +152,14 @@ class PhysicalPrimaryPulley(PrimaryPulleyModel):
         wrap_angle = self._get_wrap_angle(state.shift_distance)
         radius = self._get_radius(state.shift_distance)
 
-        return _max_torque_primary_kernel(self.μ, wrap_angle, total_radial, radius)
+        # Capstan equation with V-belt friction enhancement
+        exp_term = math.exp(self.μ * wrap_angle)
+        capstan_term = (exp_term - 1) / (exp_term + 1)
+        radial_force_term = total_radial * radius / np.sin(wrap_angle / 2)
+
+        max_torque = capstan_term * radial_force_term
+
+        return max(0.0, max_torque)  # Ensure non-negative
 
     # Private helper methods for force calculations
 
@@ -199,19 +177,28 @@ class PhysicalPrimaryPulley(PrimaryPulleyModel):
             shift_distance
         )
 
-        angle, centrifugal_force, angle_multiplier, net = _primary_flyweight_force_kernel(
+        # Centrifugal force on flyweight: F = m * ω² * r
+        centrifugal_force = tm.centrifugal_force(
             self.flyweight_mass,
             angular_velocity,
             flyweight_radius,
-            self.ramp.slope(shift_distance),
         )
+
+        # Ramp angle at current position
+        # Ramp is default negative slope, so negate for angle
+        # If a positive slope ramp is passed, it will generate a force against shifting
+        # which is expected for such a stupid ramp design.
+        angle = np.arctan(-self.ramp.slope(shift_distance))
+
+        # Convert centrifugal force to axial clamping force through ramp angle
+        net = centrifugal_force * np.tan(angle)
 
         return flyweightForceBreakdown(
             radius=flyweight_radius,
             angular_velocity=angular_velocity,
             angle=angle,
             centrifugal_force=centrifugal_force,
-            angle_multiplier=angle_multiplier,
+            angle_multiplier=np.tan(angle),
             net=net,
         )
 
