@@ -15,3 +15,30 @@
 likely to change section
 - belt slip assumption (ideal slip yada ayda)
 - State vector may include omega_belt
+
+
+
+
+Cam Review
+Remove formulas in sign convention section
+
+Units
+- Put SI derived unit in brackets (N (kgm/s^2))
+
+Constants
+- Remove column 'value'
+
+Assumptions
+- Get rid of e.g., 
+- Add constant radius
+- Get rid of P_loss
+
+Theory
+- Remove capstan
+
+
+State variables
+- axial shift determines primary and secondary radius
+
+8.1 link belt length assumption
+8.1 link 2.1.3
