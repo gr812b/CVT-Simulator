@@ -808,8 +808,8 @@ Ideal gear relationship assuming no losses; power balance implies inverse scalin
 % -------------------------
 
 \theory
-{th:static_friction}
-{Static Friction}
+{th:coulomb_friction}
+{Coulomb Friction}
 {F_f = \mu_s F_n}
 {
 \begin{itemize}
@@ -3684,23 +3684,285 @@ completes the dynamical coupling required
 for the axial shift equation \Eq{eq:s_ddot_final}.
 
 
+% ==============================================================
+\section{Traction Limit and Slip Condition}
+\label{sec:traction-slip}
 
-\section{Dynamics: No-Slip Baseline}\label{sec:noslip-dyn}
-\subsection{Coupling Torque}\label{sec:coupling}
-\bigeq{eq:coupling-torque}{Coupling Torque Definition}{
-T_c = \cdots
-}
+The torque transmission law derived previously assumes ideal no-slip belt
+traction. Under that assumption, the coupling torque
+\Eq{eq:tau_p_final} (and equivalently \Eq{eq:tau_s_final})
+represents the torque actually transmitted through the CVT.
 
-\subsection{Vehicle Longitudinal Dynamics}\label{sec:vehicle}
+In reality, belt–pulley friction is finite. For a given normal clamping
+force, there exists a maximum tangential traction force that the contact
+can sustain. If the demanded coupling torque exceeds this traction
+capacity, slip occurs and the transmitted torque saturates at a
+friction-limited value.
+
+The objective of this section is to derive a traction inequality of the form
+
 \begin{equation}
-m\dot{v} = \frac{T_{\mathrm{wheel}}}{r_{\mathrm{wheel}}} - F_{\mathrm{resist}}
-\label{eq:vehicle_dyn}
+|\tau| \le \tau_{\max},
+\label{eq:tau_traction_goal}
 \end{equation}
 
-\subsection{Final Coupled State-Space System}\label{sec:statespace}
-\bigeq{eq:state-space}{State-Space Form}{
-\dot{\vect{x}} = \vect{f}(\vect{x},u)
-}
+which will later be enforced in place of the ideal coupling law whenever
+the no-slip solution violates this bound.
+
+% ==============================================================
+\subsection{Differential Belt Element and Tangential Force Balance}
+\label{sec:traction_element}
+
+\begin{figure}[H]
+    \centering
+    % ----------------------------------------------------------
+    % Replace this placeholder with your cleaned-up diagram.
+    % ----------------------------------------------------------
+    \fbox{\parbox{0.90\linewidth}{\centering
+        \vspace{18pt}
+        \textbf{Placeholder: Differential belt element diagram.}\\
+        \vspace{6pt}
+        Shows tensions $T$ and $T+dT$, differential normal $dN$,
+        differential friction $dF_f$, and wrap angle $d\theta$.
+        \vspace{18pt}
+    }}
+    \caption{Free-body diagram of a differential belt element spanning $d\theta$.}
+    \label{fig:traction_element}
+\end{figure}
+
+Consider a differential belt element spanning an infinitesimal wrap angle
+$d\theta$ on a pulley, as shown in \Fig{fig:traction_element}. The belt
+tension entering the element is $T$, and leaving the element is
+$T + dT$.
+
+The pulley exerts on the belt element:
+
+\begin{itemize}
+    \item a differential normal force $dN$ (radial),
+    \item a differential friction force $dF_f$ (tangential).
+\end{itemize}
+
+The positive tangential direction is taken along the midpoint tangent
+of the element, consistent with increasing wrap angle.
+
+% --------------------------------------------------------------
+\paragraph{Tangential Newton's Second Law}
+
+Applying \theoryRef{th:newton-trans} in the tangential direction:
+
+\begin{equation}
+\sum F_t = dm \, a_t,
+\label{eq:newton_tangential}
+\end{equation}
+
+where $a_t$ is the tangential acceleration of the belt material at the
+contact point.
+
+The tangential components of the end tensions follow directly from geometry:
+
+\begin{align}
+(T)_t &= T\cos\!\left(\frac{d\theta}{2}\right),
+\\[4pt]
+(T+dT)_t &= (T+dT)\cos\!\left(\frac{d\theta}{2}\right).
+\end{align}
+
+The left-end tension acts in the positive tangential direction,
+while the right-end tension acts in the negative tangential direction.
+Including friction, the tangential force balance becomes
+
+\begin{equation}
+T\cos\!\left(\frac{d\theta}{2}\right)
+-
+(T+dT)\cos\!\left(\frac{d\theta}{2}\right)
++
+dF_f
+=
+dm\,a_t.
+\label{eq:tangential_balance_expanded}
+\end{equation}
+
+Simplifying the first two terms exactly,
+
+\begin{equation}
+-dT \cos\!\left(\frac{d\theta}{2}\right)
++
+dF_f
+=
+dm\,a_t.
+\label{eq:tangential_balance_simplified}
+\end{equation}
+
+Rearranging,
+
+\begin{equation}
+dT \cos\!\left(\frac{d\theta}{2}\right)
+=
+dF_f
+-
+dm\,a_t.
+\label{eq:dT_exact}
+\end{equation}
+
+% --------------------------------------------------------------
+\paragraph{Belt mass element}
+
+From \Eq{eq:dm_belt},
+
+\begin{equation}
+dm = \mu_b \, r_{\mathrm{cm}} \, d\theta,
+\end{equation}
+
+so
+
+\begin{equation}
+dm\,a_t
+=
+\mu_b r_{\mathrm{cm}} a_t \, d\theta.
+\label{eq:dm_at}
+\end{equation}
+
+Substituting into \Eq{eq:dT_exact},
+
+\begin{equation}
+dT \cos\!\left(\frac{d\theta}{2}\right)
+=
+dF_f
+-
+\mu_b r_{\mathrm{cm}} a_t \, d\theta.
+\label{eq:dT_with_mass}
+\end{equation}
+
+% --------------------------------------------------------------
+\paragraph{Friction limit and impending slip}
+
+\theoryRef{th:coulomb_friction} states that the friction force magnitude is bounded by the normal force:
+
+\begin{equation}
+|dF_f| \le \mu \, dN.
+\label{eq:coulomb_limit}
+\end{equation}
+
+The maximum transmissible tension increase occurs when friction is fully
+mobilized in the direction that increases tension (impending slip):
+
+\begin{equation}
+dF_f = +\mu \, dN.
+\label{eq:friction_saturated}
+\end{equation}
+
+Substituting \Eq{eq:friction_saturated} into
+\Eq{eq:dT_with_mass} gives the maximum local tension change:
+
+\begin{equation}
+dT_{\max}
+=
+\frac{\mu\, dN
+-
+\mu_b r_{\mathrm{cm}} a_t \, d\theta}
+{\cos\!\left(\frac{d\theta}{2}\right)}.
+\label{eq:dT_max_local}
+\end{equation}
+
+% ==============================================================
+\subsection{Integration Across the Wrap}
+\label{sec:traction_wrap}
+
+Define the tight–slack tension difference
+
+\begin{equation}
+\Delta T
+=
+T_{\mathrm{tight}}
+-
+T_{\mathrm{slack}}
+=
+\int_0^\phi dT.
+\label{eq:deltaT_def}
+\end{equation}
+
+The maximum admissible tension difference is therefore
+
+\begin{equation}
+\Delta T_{\max}
+=
+\int_0^\phi
+\frac{\mu\, dN
+-
+\mu_b r_{\mathrm{cm}} a_t \, d\theta}
+{\cos\!\left(\frac{d\theta}{2}\right)}.
+\label{eq:deltaT_integral}
+\end{equation}
+
+In the differential limit $d\theta \to 0$,
+$\cos(d\theta/2) \to 1$, yielding
+
+\begin{equation}
+\Delta T_{\max}
+=
+\int_0^\phi \mu\, dN
+-
+\int_0^\phi \mu_b r_{\mathrm{cm}} a_t \, d\theta.
+\label{eq:deltaT_after_limit}
+\end{equation}
+
+Define total normal force over the wrap:
+
+\begin{equation}
+N_\phi
+=
+\int_0^\phi dN.
+\label{eq:Nphi_def}
+\end{equation}
+
+Assuming $r_{\mathrm{cm}}$ and $a_t$ are approximately constant over
+the wrap,
+
+\begin{equation}
+\Delta T_{\max}
+=
+\mu N_\phi
+-
+\mu_b r_{\mathrm{cm}} a_t \phi.
+\label{eq:deltaT_final}
+\end{equation}
+
+% ==============================================================
+\subsection{Torque Capacity Inequality}
+\label{sec:tau_capacity}
+
+The transmitted torque magnitude is
+
+\begin{equation}
+|\tau|
+=
+r_{\mathrm{eff}} |\Delta T|.
+\label{eq:tau_deltaT}
+\end{equation}
+
+Substituting \Eq{eq:deltaT_final} gives the traction limit
+
+\begin{equation}
+|\tau|
+\le
+r_{\mathrm{eff}}
+\left(
+\mu N_\phi
+-
+\mu_b r_{\mathrm{cm}} a_t \phi
+\right).
+\label{eq:tau_capacity_pre_accel}
+\end{equation}
+
+Equation \Eq{eq:tau_capacity_pre_accel} provides the
+general traction-limited torque bound.
+In the next subsection, the tangential acceleration $a_t$
+will be expressed explicitly in terms of pulley angular
+acceleration and radial rate.
+
+
+% Next: Polar coordinates and angular acceleration
+% Showing N force due to clamping
+% Remark for capstan equation
 
 \section{Slip Model}\label{sec:slip}
 \subsection{Slip Condition and Torque Saturation}\label{sec:slip-cond}
