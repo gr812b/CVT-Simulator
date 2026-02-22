@@ -880,6 +880,38 @@ Definition of density.
 Standard empirical/derived quadratic drag model; applicable at moderate to high Reynolds number.
 ]
 
+\theory
+{th:rolling_resistance}
+{Rolling Resistance}
+{F_r = C_r N}
+{
+\begin{itemize}
+  \item $F_r$ is rolling resistance force (\si{\newton})
+  \item $C_r$ is coefficient of rolling resistance (unitless)
+  \item $N$ is normal force (\si{\newton})
+\end{itemize}
+}
+{\citet{RollingResistance}.}
+[
+Rolling resistance arises from deformation of contact surfaces (tire and road). For a vehicle on level ground, $N = mg$ where $m$ is vehicle mass and $g$ is gravitational acceleration.
+]
+
+\theory
+{th:gravity_force}
+{Gravitational Force}
+{F_g = mg}
+{
+\begin{itemize}
+  \item $F_g$ is gravitational force (\si{\newton})
+  \item $m$ is mass (\si{\kilogram})
+  \item $g$ is gravitational acceleration (\si{\meter\per\second\squared})
+\end{itemize}
+}
+{\citet{NewtonGravity}.}
+[
+Near Earth's surface, $g \approx 9.81$ \si{\meter\per\second\squared}. On an incline with angle $\theta$, the component parallel to the surface is $F_g \sin\theta$.
+]
+
 
 \section{System State Definition}\label{sec:state}
 
@@ -3305,10 +3337,12 @@ Let
 \begin{itemize}
     \item $I_p$ : total rotational inertia of the engine + primary CVT pulley,
     \item $I_s$ : total rotational inertia about the secondary pulley,
-    \item $\tau_{\text{eng}}(t)$ : engine torque,
+    \item $\tau_{\text{eng}}(t)$ : engine output torque applied to the primary pulley,
+      modeled as a user-supplied function of primary speed (see \Sec{sec:tau_eng_model}),
     \item $\tau_p(t)$ : coupling torque (as seen at the primary pulley),
     \item $\tau_s(t)$ : coupling torque (as seen at the secondary pulley),
-    \item $\tau_{\text{load}}(t)$ : resisting torque acting on the secondary pulley.
+    \item $\tau_{\text{load}}(t)$ : resisting torque reflected to the secondary pulley from
+      road loads (see \Sec{sec:tau_load_model}),
 \end{itemize}
 
 % --------------------------------------------------------------
@@ -3356,6 +3390,274 @@ At this stage we have four unknown quantities:
 
 but only two equations (\Eq{eq:primary_rot_dyn} and \Eq{eq:secondary_rot_dyn}).
 Two additional relations are therefore required to close the system. First, we will define the inertias $I_p$ and $I_s$ in terms of physical parameters of the system.
+% TODO: Make this final paragraph segue better
+At this point, the external torques $\tau_{\text{eng}}(t)$ and $\tau_{\text{load}}(t)$
+remain to be specified. In the remainder of this section we:
+(i) define $\tau_{\text{eng}}$ from the engine torque curve under a full-throttle assumption,
+and (ii) derive $\tau_{\text{load}}$ from longitudinal road-load theories and reflect it to the
+secondary pulley.
+
+% --------------------------------------------------------------
+\subsection{Engine Torque Model}
+\label{sec:tau_eng_model}
+
+The primary forcing term $\tau_{\text{eng}}(t)$ is supplied by the engine.
+In this formulation, the engine is modeled as a user-provided torque curve
+defined as a function of primary angular velocity.
+
+Following \AssRef{assump:full_throttle_model}, we assume full-throttle operation
+throughout the simulation. Under this assumption,
+
+\begin{equation}
+\tau_{\text{eng}}(t)
+=
+\tau_{\text{eng}}\!\big(\omega_p(t)\big),
+\label{eq:tau_eng_from_curve}
+\end{equation}
+
+where $\tau_{\text{eng}}(\cdot)$ is a supplied admissible function.
+
+\paragraph{Admissibility Constraints.}
+
+The engine torque function must satisfy:
+
+\begin{itemize}
+    \item It is defined over a bounded operating domain
+          $\omega_{\min} \le \omega_p \le \omega_{\max}$.
+    \item It is finite and real-valued on this domain.
+    \item Outside this domain, torque is either saturated
+          or $\omega_p$ is constrained to remain within bounds.
+\end{itemize}
+
+No additional structural assumptions (e.g., polynomial form,
+closed-form analytic expression) are required by the dynamical model.
+Only the mapping $\omega_p \mapsto \tau_{\text{eng}}$ is needed
+to evaluate \Eq{eq:primary_rot_dyn}.
+
+% --------------------------------------------------------------
+\subsection{Load Torque Model}
+\label{sec:tau_load_model}
+
+The resisting torque $\tau_{\text{load}}(t)$ in
+\Eq{eq:secondary_rot_dyn} represents the longitudinal
+road load reflected to the secondary pulley.
+
+We derive this torque from first principles:
+(i) force balance on an inclined vehicle,
+(ii) standard rolling resistance theory,
+(iii) quadratic aerodynamic drag,
+(iv) reflection through wheel radius and gear ratio.
+
+% --------------------------------------------------------------
+\paragraph{Step 1: Wheel and Gear Reflection}
+
+Let $r_w$ denote effective wheel rolling radius,
+and $G>0$ the fixed gear ratio defined so that
+
+\[
+\omega_s = G\,\omega_w.
+\]
+
+Vehicle speed is therefore
+
+\begin{equation}
+v(t)
+=
+r_w \omega_w(t)
+=
+\frac{r_w}{G}\,\omega_s(t).
+\label{eq:v_from_secondary}
+\end{equation}
+
+If $F_{\text{road}}(t)$ denotes the total longitudinal
+resistive force on the vehicle, then the wheel torque is
+
+\begin{equation}
+\tau_{\text{road},w}(t)
+=
+r_w F_{\text{road}}(t).
+\label{eq:tau_wheel}
+\end{equation}
+
+Assuming ideal power transmission
+(\AssRef{assump:ideal_cvt_power}),
+the reflected secondary torque is
+
+\begin{equation}
+\tau_{\text{load}}(t)
+=
+\frac{1}{G}\,\tau_{\text{road},w}(t)
+=
+\frac{r_w}{G} F_{\text{road}}(t).
+\label{eq:tau_load_basic}
+\end{equation}
+
+Thus we now determine $F_{\text{road}}(t)$.
+
+% --------------------------------------------------------------
+\paragraph{Step 2: Free-Body Diagram and Force Decomposition}
+
+Consider the vehicle on an incline of angle $\alpha$.
+Using \theoryRef{th:newton-trans}, the longitudinal
+resistive force is modeled as
+
+\begin{equation}
+F_{\text{road}}
+=
+F_{\text{rr}}
++
+F_{\text{grade}}
++
+F_{\text{drag}}.
+\label{eq:Froad_total}
+\end{equation}
+
+% --------------------------------------------------------------
+\begin{remarkbox}[Diagram Placeholder (Incline Free-Body Diagram)]
+Insert a free-body diagram of the vehicle on an incline showing:
+
+\begin{itemize}
+    \item Weight $mg$ acting vertically downward,
+    \item Decomposition into $mg\sin\alpha$ along the slope
+          and $mg\cos\alpha$ normal to the slope,
+    \item Normal force $N$ perpendicular to the surface,
+    \item Positive longitudinal direction $+x$,
+    \item Vehicle velocity $v$ along $+x$.
+\end{itemize}
+\end{remarkbox}
+% --------------------------------------------------------------
+
+\paragraph{Step 3: Rolling Resistance}
+
+from \theoryRef{th:rolling_resistance}, rolling resistance is modeled as proportional
+to the normal force:
+
+\begin{equation}
+F_{\text{rr}} = C_{\text{rr}}\,N.
+\label{eq:Frr_basic}
+\end{equation}
+
+From the incline free-body diagram,
+trigonometric decomposition of gravity gives
+
+\begin{equation}
+N = m g \cos\alpha.
+\label{eq:normal_force}
+\end{equation}
+
+Substituting \Eq{eq:normal_force} into \Eq{eq:Frr_basic}:
+
+\begin{equation}
+F_{\text{rr}}
+=
+C_{\text{rr}}\, m g \cos\alpha.
+\label{eq:Frr_mag}
+\end{equation}
+
+Rolling resistance always opposes motion.
+To enforce directionality, we multiply by the sign
+of velocity:
+
+\begin{equation}
+F_{\text{rr}}(v,\alpha)
+=
+C_{\text{rr}}\, m g \cos\alpha
+\;\mathrm{sgn}(v).
+\label{eq:Frr_final}
+\end{equation}
+
+If $v>0$, the force acts opposite $+x$;
+if $v<0$, it acts opposite $-x$.
+
+% --------------------------------------------------------------
+\paragraph{Step 4: Grade Resistance}
+
+The longitudinal gravitational component from
+the free-body diagram is
+
+\begin{equation}
+F_{\text{grade}}(\alpha)
+=
+m g \sin\alpha.
+\label{eq:Fgrade}
+\end{equation}
+
+This term is positive for an uphill incline
+($\alpha>0$), meaning it resists forward motion.
+
+% --------------------------------------------------------------
+\paragraph{Step 5: Aerodynamic Drag}
+
+Following \theoryRef{th:air_resistance},
+the aerodynamic force magnitude is
+
+\begin{equation}
+F_{\text{drag}} = \frac12 \rho C_d A_f v^2.
+\label{eq:Fdrag_mag}
+\end{equation}
+
+To ensure drag opposes motion, we write
+
+\begin{equation}
+F_{\text{drag}}(v)
+=
+\frac12 \rho C_d A_f
+\, v^2 \,\mathrm{sgn}(v).
+\label{eq:Fdrag_final}
+\end{equation}
+
+% --------------------------------------------------------------
+\paragraph{Step 6: Total Road Force}
+
+Substituting
+\Eq{eq:Frr_final},
+\Eq{eq:Fgrade},
+and \Eq{eq:Fdrag_final}
+into \Eq{eq:Froad_total} gives
+
+\begin{align}
+F_{\text{road}}(t)
+&=
+C_{\text{rr}} m g \cos\alpha
+\;\mathrm{sgn}\!\left(v(t)\right)
+\nonumber\\
+&\quad
++
+m g \sin\alpha
+\nonumber\\
+&\quad
++
+\frac12 \rho C_d A_f
+\, v(t)^2 \,\mathrm{sgn}\!\left(v(t)\right).
+\label{eq:Froad_expanded}
+\end{align}
+
+Using \Eq{eq:v_from_secondary},
+$v(t) = \dfrac{r_w}{G}\omega_s(t)$,
+the fully expanded load torque becomes
+
+\begin{equation}
+\boxed{
+\tau_{\text{load}}(t)
+=
+\frac{r_w}{G}
+\left[
+C_{\text{rr}} m g \cos\alpha
+\;\mathrm{sgn}\!\left(\frac{r_w}{G}\omega_s(t)\right)
++
+m g \sin\alpha
++
+\frac12 \rho C_d A_f
+\left(\frac{r_w}{G}\omega_s(t)\right)^2
+\mathrm{sgn}\!\left(\frac{r_w}{G}\omega_s(t)\right)
+\right].
+}
+\label{eq:tau_load_final}
+\end{equation}
+
+Equation \Eq{eq:tau_load_final}
+is the explicit resisting torque used
+in \Eq{eq:secondary_rot_dyn}.
 
 % --------------------------------------------------------------
 \subsection{Inertia Definitions}
@@ -4292,22 +4594,292 @@ The next section defines the stick and slip regimes
 and modifies the governing equations accordingly.
 % --------------------------------------------------------------
 
-\section{Slip Model}\label{sec:slip}
-\subsection{Slip Condition and Torque Saturation}\label{sec:slip-cond}
+% ==============================================================
+\section{Slip Regimes and Traction-Limited Coupling Torque}
+\label{sec:slip_regimes}
+
+% --------------------------------------------------------------
+% Placeholder diagram (highly recommended)
+% --------------------------------------------------------------
+\begin{figure}[H]
+\centering
+\fbox{\parbox{0.9\linewidth}{
+\textbf{Placeholder: Slip intuition diagram.}\\
+Sketch two pulleys with effective radii $r_{p,\mathrm{eff}}$, $r_{s,\mathrm{eff}}$ and angular speeds $\omega_p,\omega_s$.\\
+Show the two tangential surface speeds $v_p=r_{p,\mathrm{eff}}\omega_p$ and $v_s=r_{s,\mathrm{eff}}\omega_s$ at the belt contact, and define
+$v_{\mathrm{rel}} = v_p - v_s$.\\
+Annotate: $v_{\mathrm{rel}}=0$ (stick) vs $v_{\mathrm{rel}}\neq 0$ (slip), and indicate the friction torque direction opposing $v_{\mathrm{rel}}$.
+}}
+\caption{Conceptual definition of slip via contact-speed mismatch.}
+\label{fig:slip_intuition}
+\end{figure}
+
+% --------------------------------------------------------------
+\subsection{Working Backwards From the Goal}
+\label{sec:slip_goal}
+
+The goal of this section is to define, at every instant, a \emph{physically admissible}
+coupling torque that the belt can transmit between the pulleys.
+Earlier, we derived:
+\begin{itemize}
+\item a no-slip (rigid-traction) relationship that specifies how torque transfers between the pulleys when the belt adheres (``stick''), and
+\item a traction capacity bound for each pulley of the form
+$|\tau| \le \tau_{\max,p}$ and $|\tau| \le \tau_{\max,s}$.
+\end{itemize}
+These two results must be combined into a single rule that:
+\begin{enumerate}
+\item \emph{never} violates either capacity bound (even before slip begins),
+\item reduces to the earlier no-slip torque transfer when feasible, and
+\item produces a slip torque that opposes relative motion when the no-slip demand is infeasible.
+\end{enumerate}
+
+To do this cleanly, we proceed in the order that matches physical intuition:
+\begin{center}
+\emph{(i) define how we detect slip} $\rightarrow$
+\emph{(ii) define the torque limits that force entry into slip} $\rightarrow$
+\emph{(iii) define the torque law during slip} $\rightarrow$
+\emph{(iv) define how we exit slip.}
+\end{center}
+
+% --------------------------------------------------------------
+\subsection{Slip Metric: How We Know We Are Slipping}
+\label{sec:slip_metric}
+
+Slip in a belt CVT is most naturally defined at the belt--pulley contact:
+if the belt adheres to both pulleys, then the tangential surface speeds at the
+contact must match. Using the effective contact radii, define
 \begin{equation}
-\abs{T_c} \le T_{\max} \Rightarrow \text{no slip}
-\label{eq:slip_condition}
+v_p \;\triangleq\; r_{p,\mathrm{eff}}\,\omega_p,
+\qquad
+v_s \;\triangleq\; r_{s,\mathrm{eff}}\,\omega_s,
 \end{equation}
+and the relative contact-speed mismatch
 \begin{equation}
-T = T_{\max}\,\sgn(T_c) \Rightarrow \text{slip}
-\label{eq:torque_saturation}
+v_{\mathrm{rel}}
+\;\triangleq\;
+v_p - v_s
+\;=\;
+r_{p,\mathrm{eff}}\omega_p - r_{s,\mathrm{eff}}\omega_s.
+\label{eq:vrel_def}
 \end{equation}
 
-\subsection{Slip Velocity}\label{sec:slip-vel}
+\noindent
+\textbf{Stick condition (no slip):}
 \begin{equation}
-v_{\mathrm{slip}} = r_p\omega_p - r_s\omega_s
-\label{eq:slip_velocity}
+v_{\mathrm{rel}} = 0.
+\label{eq:stick_condition}
 \end{equation}
+
+\noindent
+\textbf{Slip condition:}
+\begin{equation}
+v_{\mathrm{rel}} \neq 0.
+\label{eq:slip_condition}
+\end{equation}
+
+Equation \Eq{eq:vrel_def} is therefore the diagnostic: it is the quantity we monitor
+to determine whether the belt is adhering (stick) or sliding (slip).
+In a perfect rigid-traction model, the dynamics would enforce \Eq{eq:stick_condition}
+exactly. In a traction-limited model, \Eq{eq:stick_condition} can only be maintained
+if the required torques remain within the available traction capacity.
+
+% --------------------------------------------------------------
+\subsection{Traction Capacity: How We Enter Slip}
+\label{sec:slip_entry}
+
+From the traction analysis of the previous section, each pulley has a maximum
+transmissible torque magnitude at the current operating state:
+\begin{equation}
+|\tau_p| \le \tau_{\max,p}(\cdot),
+\qquad
+|\tau_s| \le \tau_{\max,s}(\cdot),
+\label{eq:two_capacity_bounds}
+\end{equation}
+where $\tau_{\max,p}$ and $\tau_{\max,s}$ depend on the current state (clamping force,
+cone angle, wrap angle, belt kinematics, etc.) through \Eq{eq:tau_capacity_final_section}
+applied to the primary and secondary, respectively.
+
+\medskip
+\noindent
+\textbf{Key physical point: these bounds apply \emph{always}.}
+Even before any slip is observed, the belt--pulley interface cannot transmit a torque
+exceeding its instantaneous capacity.
+Therefore, if the no-slip model (rigid traction) would \emph{demand} a torque larger
+than the bound in \Eq{eq:two_capacity_bounds}, the constraint $v_{\mathrm{rel}}=0$ can
+no longer be maintained by static friction.
+
+\medskip
+In practice, torque transfer is constrained by the \emph{most limiting} interface.
+We therefore define a single admissible coupling capacity
+\begin{equation}
+\tau_{\max}
+\;\triangleq\;
+\min\!\big(\tau_{\max,p},\;\tau_{\max,s}\big).
+\label{eq:tau_max_min}
+\end{equation}
+
+\medskip
+\noindent
+\textbf{Intuition for entering slip.}
+Suppose the system is in stick so that $v_{\mathrm{rel}}=0$ initially.
+External conditions (engine torque rise, vehicle load increase, ratio change reducing
+effective radius leverage, reduced clamping, etc.) may increase the torque required to
+preserve $v_{\mathrm{rel}}=0$.
+As soon as the required coupling torque exceeds $\tau_{\max}$, the transmitted torque
+cannot increase further. The coupling torque saturates at the traction limit, while the
+remaining unbalanced torque accelerates one pulley relative to the other, causing
+\Eq{eq:stick_condition} to break and $v_{\mathrm{rel}}$ to grow in magnitude. This is the
+mechanism by which the model \emph{falls into} a slip regime.
+
+% --------------------------------------------------------------
+\subsection{Coupling Torque Law: Stick When Feasible, Slip When Necessary}
+\label{sec:coupling_law}
+
+Earlier sections already specify how torques transfer \emph{when not slipping}:
+the dynamics and kinematics provide a ``desired'' (no-slip) coupling torque that would
+maintain $v_{\mathrm{rel}}=0$. We denote this no-slip demand by
+\begin{equation}
+\tau_{\mathrm{ns}}
+\;\triangleq\;
+\text{(the coupling torque predicted by the no-slip torque-transfer model)}.
+\label{eq:tau_ns_def}
+\end{equation}
+\noindent
+This quantity is not a new model; it is simply a name for ``whatever torque the earlier
+no-slip equations imply'' at the current state.
+
+\medskip
+However, the belt cannot transmit an arbitrarily large torque: it must also satisfy
+\Eq{eq:tau_max_min}. Therefore, even in stick, the admissible coupling torque is at most
+$\tau_{\max}$ in magnitude.
+
+\paragraph{(A) Feasible no-slip torque (stick).}
+If the no-slip demand is within capacity,
+\begin{equation}
+|\tau_{\mathrm{ns}}| \le \tau_{\max},
+\end{equation}
+then static friction can support the demand and the belt remains in stick:
+\begin{equation}
+\tau_c = \tau_{\mathrm{ns}},
+\qquad
+v_{\mathrm{rel}} = 0.
+\label{eq:stick_tau}
+\end{equation}
+
+\paragraph{(B) Infeasible no-slip torque (entering slip).}
+If the no-slip demand exceeds capacity,
+\begin{equation}
+|\tau_{\mathrm{ns}}| > \tau_{\max},
+\end{equation}
+then the coupling torque must saturate and the mismatch $v_{\mathrm{rel}}$ can no longer
+remain zero. In slip, the transmitted torque is friction-limited and its direction must
+oppose the relative motion. A smooth Coulomb-like slip law is
+\begin{equation}
+\tau_{\mathrm{slip}}
+\;=\;
+\tau_{\max}\;
+\tanh\!\left(\frac{v_{\mathrm{rel}}}{v_{\mathrm{smooth}}}\right),
+\label{eq:tau_slip_tanh}
+\end{equation}
+where $v_{\mathrm{smooth}}>0$ controls the transition sharpness near $v_{\mathrm{rel}}=0$.
+For $|v_{\mathrm{rel}}|\gg v_{\mathrm{smooth}}$, this approaches $\tau_{\max}\,\mathrm{sign}(v_{\mathrm{rel}})$.
+
+\medskip
+\noindent
+\textbf{Sign convention note.}
+Equation \Eq{eq:tau_slip_tanh} is written so that the slip torque changes sign with
+$v_{\mathrm{rel}}$. In the equations of motion, $\tau_c$ must be applied with opposite
+sign on the two pulleys (equal-and-opposite action), so that the net effect is always
+to \emph{reduce} the mismatch and dissipate energy during slip.
+(If your earlier rotational EOM use the opposite sign convention for $\tau_c$,
+the tanh argument should be negated accordingly.)
+
+\paragraph{(C) Smooth unified law (recommended for numerics).}
+Rather than hard switching, we define a blending factor $\alpha\in[0,1]$ that increases
+from stick-like to slip-like behavior as the relative speed grows:
+\begin{equation}
+\alpha(v_{\mathrm{rel}})
+\;=\;
+\mathrm{clip}\!\left(\frac{|v_{\mathrm{rel}}|}{v_{\mathrm{blend}}},\;0,\;1\right),
+\label{eq:alpha_def}
+\end{equation}
+where $v_{\mathrm{blend}}>0$ is a chosen blending scale.
+We also define the capacity-saturated no-slip torque
+\begin{equation}
+\tau_{\mathrm{ns,sat}}
+\;=\;
+\mathrm{clip}\!\left(\tau_{\mathrm{ns}},\;-\tau_{\max},\;+\tau_{\max}\right).
+\label{eq:tau_ns_sat}
+\end{equation}
+
+The final coupling torque is then
+\begin{equation}
+\tau_c
+\;=\;
+(1-\alpha)\,\tau_{\mathrm{ns,sat}}
+\;+\;
+\alpha\,\tau_{\mathrm{slip}},
+\label{eq:tau_c_blend}
+\end{equation}
+with $\tau_{\mathrm{slip}}$ given by \Eq{eq:tau_slip_tanh}.
+
+\medskip
+\noindent
+This construction encodes all desired behaviors:
+\begin{itemize}
+\item \textbf{Capacity is never violated:} both $\tau_{\mathrm{ns,sat}}$ and $\tau_{\mathrm{slip}}$ are bounded by $\tau_{\max}$, hence so is $\tau_c$.
+\item \textbf{Stick when feasible:} if $v_{\mathrm{rel}}\approx 0$, then $\alpha\approx 0$ and $\tau_c\approx \tau_{\mathrm{ns,sat}}$ (equal to $\tau_{\mathrm{ns}}$ if feasible).
+\item \textbf{Slip when necessary:} if mismatch grows, $\alpha\to 1$ and $\tau_c\to \tau_{\mathrm{slip}}$, i.e. friction-limited sliding torque.
+\end{itemize}
+
+% --------------------------------------------------------------
+\subsection{How Slip Reduces and Ends: Exiting the Slip Regime}
+\label{sec:slip_exit}
+
+Once the coupling torque saturates, the remainder of the external torque imbalance
+accelerates the pulleys differently, which produces a nonzero $v_{\mathrm{rel}}$ through
+\Eq{eq:vrel_def}.
+During slip, the transmitted torque magnitude cannot exceed $\tau_{\max}$, but its
+\emph{direction} always opposes the mismatch via \Eq{eq:tau_slip_tanh}. As a result, the
+slip torque acts to reduce $|v_{\mathrm{rel}}|$ whenever the external conditions permit.
+
+\medskip
+\noindent
+\textbf{Intuition for exiting slip.}
+Slip persists as long as the system would require more than $\tau_{\max}$ to enforce
+$v_{\mathrm{rel}}=0$.
+If operating conditions change (e.g., demanded torque falls, clamping increases,
+wrap angle increases, ratio shifts into a more favorable radius, or the inertial term
+reduces), then $\tau_{\max}$ may rise and/or the required no-slip demand $\tau_{\mathrm{ns}}$
+may fall.
+When the inequality becomes feasible again,
+\begin{equation}
+|\tau_{\mathrm{ns}}| \le \tau_{\max},
+\end{equation}
+static traction can re-establish adherence and the mismatch decays to zero.
+In the smooth blended law \Eq{eq:tau_c_blend}, this corresponds to $v_{\mathrm{rel}}\to 0$,
+so that $\alpha\to 0$ and $\tau_c\to \tau_{\mathrm{ns}}$ continuously.
+
+% --------------------------------------------------------------
+\subsection{Implementation Summary (Matches the Simulation Rule)}
+\label{sec:slip_impl_summary}
+
+For convenience, the continuous-time model above corresponds directly to the
+following computation at each time step:
+\begin{enumerate}
+\item compute $v_{\mathrm{rel}} = r_{p,\mathrm{eff}}\omega_p - r_{s,\mathrm{eff}}\omega_s$,
+\item compute capacities $\tau_{\max,p}$ and $\tau_{\max,s}$, then $\tau_{\max}=\min(\tau_{\max,p},\tau_{\max,s})$,
+\item compute the no-slip demand $\tau_{\mathrm{ns}}$ from the earlier torque-transfer equations,
+\item form $\tau_{\mathrm{ns,sat}}=\mathrm{clip}(\tau_{\mathrm{ns}},-\tau_{\max},+\tau_{\max})$,
+\item form $\tau_{\mathrm{slip}}=\tau_{\max}\tanh(v_{\mathrm{rel}}/v_{\mathrm{smooth}})$,
+\item blend using $\alpha=\mathrm{clip}(|v_{\mathrm{rel}}|/v_{\mathrm{blend}},0,1)$:
+$\;\tau_c=(1-\alpha)\tau_{\mathrm{ns,sat}}+\alpha\tau_{\mathrm{slip}}$.
+\end{enumerate}
+
+\noindent
+This yields a coupling torque that (i) respects traction limits at both pulleys,
+(ii) reproduces the earlier no-slip behavior when feasible, and (iii) transitions
+smoothly into a Coulomb-like slip regime when necessary.
 
 \appendix
 \section{Parameter Tables}\label{sec:appendix-params}
