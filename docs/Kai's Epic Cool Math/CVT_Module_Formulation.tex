@@ -3715,17 +3715,7 @@ the no-slip solution violates this bound.
 
 \begin{figure}[H]
     \centering
-    % ----------------------------------------------------------
-    % Replace this placeholder with your cleaned-up diagram.
-    % ----------------------------------------------------------
-    \fbox{\parbox{0.90\linewidth}{\centering
-        \vspace{18pt}
-        \textbf{Placeholder: Differential belt element diagram.}\\
-        \vspace{6pt}
-        Shows tensions $T$ and $T+dT$, differential normal $dN$,
-        differential friction $dF_f$, and wrap angle $d\theta$.
-        \vspace{18pt}
-    }}
+    \includegraphics[width=0.55\linewidth]{./illustrations/belt_element.png}
     \caption{Free-body diagram of a differential belt element spanning $d\theta$.}
     \label{fig:traction_element}
 \end{figure}
@@ -3955,14 +3945,352 @@ r_{\mathrm{eff}}
 
 Equation \Eq{eq:tau_capacity_pre_accel} provides the
 general traction-limited torque bound.
-In the next subsection, the tangential acceleration $a_t$
-will be expressed explicitly in terms of pulley angular
-acceleration and radial rate.
+However, two quantities remain to be defined: the normal force per unit arc length $N_\phi$ and the tangential acceleration $a_t$.
+In the next subsection, $a_t$ will be expressed explicitly in terms of pulley angular acceleration and radial rate.
+
+% --------------------------------------------------------------
+\subsection{Tangential Acceleration of a Belt Element on a Circular Wrap}
+\label{sec:belt_tangential_accel}
+
+This subsection derives the tangential acceleration term required in the local
+traction inequality in \S\ref{sec:traction_limit}.
+In that inequality we apply Newton's second law \emph{along the direction of belt
+motion}, so we need an explicit expression for the belt element's tangential
+acceleration $a_t$.
+
+\paragraph{Goal}
+
+For a belt element of differential mass $\dd m$ moving along the wrap, the
+tangential force balance uses
+\[
+\sum F_t = \dd m\,a_t,
+\]
+so our goal is to compute $a_t$ from the belt kinematics when both
+\emph{angular speed} and \emph{wrap radius} may vary:
+\[
+\omega(t)=\dot\theta(t),\qquad \alpha(t)=\dot\omega(t),\qquad r(t),\qquad \dot r(t).
+\]
+
+\paragraph{Coordinate system and unit vectors}
+
+Because we care about forces \emph{along the belt}, we choose a basis aligned
+with the belt's local geometry:
+\begin{itemize}
+    \item $\mathbf e_r(t)$ points radially outward from the pulley center $O$ to
+    the belt point $P$,
+    \item $\mathbf e_\theta(t)$ is the unit tangent, obtained by rotating
+    $\mathbf e_r$ by $+90^\circ$ in the direction of increasing $\theta$.
+\end{itemize}
+
+These are not arbitrary symbols: they are \emph{the} directions of radial and
+tangential motion on a circle, and the belt's local tangential direction is
+exactly $\mathbf e_\theta$.
+
+\begin{figure}[H]
+    \centering
+    \fbox{\parbox{0.92\linewidth}{
+    \textbf{Placeholder: polar basis at the wrap.}
+    Draw pulley center $O$ and belt point $P$ at radius $r$ and angle $\theta$.
+    Show $\mathbf e_r$ pointing from $O$ to $P$ and $\mathbf e_\theta$
+    perpendicular to $\mathbf e_r$ in the direction of belt motion
+    (increasing $\theta$). Label belt tangential direction as $\mathbf e_\theta$.
+    }}
+    \caption{Definition of the radial and tangential unit vectors.}
+    \label{fig:polar_basis_placeholder}
+\end{figure}
+
+\paragraph{Work backwards: to get $a_t$, compute $\mathbf a$ and take its tangential component}
+
+Tangential acceleration is the component of the acceleration vector along
+$\mathbf e_\theta$:
+\begin{equation}
+a_t \equiv \mathbf a\cdot \mathbf e_\theta.
+\label{eq:at_component_def}
+\end{equation}
+So we will compute $\mathbf a=\dot{\mathbf v}$, then read off the
+$\mathbf e_\theta$ component.
+
+\paragraph{Step 1: position and velocity}
+
+The position of $P$ from the center is
+\begin{equation}
+\mathbf r(t) = r(t)\,\mathbf e_r(t).
+\label{eq:position_polar}
+\end{equation}
+
+Differentiate \Eq{eq:position_polar} using the product rule:
+\begin{equation}
+\mathbf v = \dot{\mathbf r}
+= \dot r\,\mathbf e_r + r\,\dot{\mathbf e}_r.
+\label{eq:velocity_before_unit_rates}
+\end{equation}
+
+This shows why we must track how the unit vectors change with time:
+even if $r$ were constant, $\mathbf e_r$ rotates as the belt moves around the
+pulley.
+
+\paragraph{Step 2: derive $\dot{\mathbf e}_r$ and $\dot{\mathbf e}_\theta$ (no assumptions)}
+
+Over a small change $\dd\theta$, the unit vectors rotate rigidly by the same
+angle. The derivative with respect to angle is therefore:
+\begin{equation}
+\frac{\dd \mathbf e_r}{\dd\theta} = \mathbf e_\theta,
+\qquad
+\frac{\dd \mathbf e_\theta}{\dd\theta} = -\mathbf e_r.
+\label{eq:unit_vectors_angle_derivatives}
+\end{equation}
+
+(Geometric justification: increasing $\theta$ rotates $\mathbf e_r$ toward the
+tangent; increasing $\theta$ rotates the tangent toward $-\mathbf e_r$.)
+
+Convert angle-derivatives to time-derivatives with the chain rule
+$\dd(\cdot)/\dd t = (\dd(\cdot)/\dd\theta)\,\dot\theta$ and
+$\omega=\dot\theta$:
+\begin{equation}
+\dot{\mathbf e}_r = \omega\,\mathbf e_\theta,
+\qquad
+\dot{\mathbf e}_\theta = -\omega\,\mathbf e_r.
+\label{eq:unit_vectors_time_derivatives}
+\end{equation}
+
+\paragraph{Step 3: velocity in radial--tangential form}
+
+Substitute $\dot{\mathbf e}_r$ from \Eq{eq:unit_vectors_time_derivatives} into
+\Eq{eq:velocity_before_unit_rates}:
+\begin{equation}
+\mathbf v
+=
+\dot r\,\mathbf e_r + r\omega\,\mathbf e_\theta.
+\label{eq:velocity_polar}
+\end{equation}
+
+This is already intuitive:
+$\dot r$ is the radial speed, and $r\omega$ is the tangential speed.
+
+\paragraph{Step 4: acceleration and its tangential component}
+
+Differentiate \Eq{eq:velocity_polar}:
+\begin{align}
+\mathbf a = \dot{\mathbf v}
+&=
+\frac{\dd}{\dd t}\big(\dot r\,\mathbf e_r\big)
++
+\frac{\dd}{\dd t}\big(r\omega\,\mathbf e_\theta\big)
+\nonumber\\[6pt]
+&=
+\ddot r\,\mathbf e_r + \dot r\,\dot{\mathbf e}_r
++
+(\dot r\,\omega + r\alpha)\mathbf e_\theta + r\omega\,\dot{\mathbf e}_\theta.
+\label{eq:accel_expand}
+\end{align}
+
+Now substitute the unit-vector time derivatives from
+\Eq{eq:unit_vectors_time_derivatives}:
+\[
+\dot{\mathbf e}_r = \omega\,\mathbf e_\theta,
+\qquad
+\dot{\mathbf e}_\theta = -\omega\,\mathbf e_r,
+\]
+and collect like directions:
+\begin{align}
+\mathbf a
+&=
+\ddot r\,\mathbf e_r
++
+\dot r(\omega\,\mathbf e_\theta)
++
+(\dot r\,\omega + r\alpha)\mathbf e_\theta
++
+r\omega(-\omega\,\mathbf e_r)
+\nonumber\\[6pt]
+&=
+\big(\ddot r - r\omega^2\big)\mathbf e_r
++
+\big(r\alpha + 2\dot r\,\omega\big)\mathbf e_\theta.
+\label{eq:accel_polar}
+\end{align}
+
+Finally, by the definition \Eq{eq:at_component_def}, the tangential acceleration is
+the $\mathbf e_\theta$ component:
+\begin{equation}
+a_t = r\alpha + 2\dot r\,\omega.
+\label{eq:at_final}
+\end{equation}
+
+\paragraph{Where the factor of 2 comes from}
+
+The two $\dot r\,\omega$ contributions in \Eq{eq:accel_polar} come from
+\emph{two distinct effects}:
+\begin{itemize}
+    \item $\dot r\,\dot{\mathbf e}_r$: even the \emph{radial} velocity $\dot r\,\mathbf e_r$
+    gains a tangential contribution because $\mathbf e_r$ rotates at rate $\omega$;
+    \item $\frac{\dd}{\dd t}(r\omega)$: the tangential speed $r\omega$ changes if $r$ changes.
+\end{itemize}
+
+Adding these yields the total $2\dot r\,\omega$ term.
+
+% --------------------------------------------------------------
+\subsection{Normal Force from Axial Clamping}
+\label{sec:normal_from_clamp}
+
+The local traction inequality derived in \Sec{sec:traction_limit}
+depends on the normal load over the wrap,
+\[
+N_\phi \;\equiv\; \int_0^\phi \dd N,
+\]
+since the available friction is $\mu\,\dd N$ at each differential contact element.
+
+In the CVT, this normal load is not generated implicitly by belt tension
+(as in the classical capstan problem). Instead, it is imposed by the pulley
+\emph{axial clamping force} derived in \Sec{sec:axial}.
+We now map axial clamp into an equivalent total normal load over the wrap.
+
+% --------------------------------------------------------------
+\paragraph{Geometry: why a factor of $2\tan\beta$ appears}
+
+Recall the conical kinematics established earlier for opposing sheaves
+(\Sec{sec:rp}), where axial closure beyond the deadzone produces a radial change
+\[
+\Delta r = \frac{\Delta s}{2\tan\beta}
+\qquad\Longrightarrow\qquad
+\frac{\dd r}{\dd s} = \frac{1}{2\tan\beta}.
+\]
+
+This is the key geometric ratio: a given axial displacement $\dd s$
+produces a smaller radial displacement $\dd r$ by the factor $2\tan\beta$,
+because the closure is shared between the two opposing faces.
+
+To convert forces consistently, we use virtual work (equivalently, power balance
+in the shift direction): the incremental work done by the axial clamp must equal
+the incremental work associated with the corresponding radial normal loading,
+\[
+F_{\mathrm{ax}}\,\dd s \;=\; F_{\mathrm{rad}}\,\dd r.
+\]
+
+Substituting $\dd r = \big(\dd r/\dd s\big)\dd s$ gives
+\begin{align}
+F_{\mathrm{ax}}\,\dd s
+&= F_{\mathrm{rad}}\left(\frac{\dd r}{\dd s}\right)\dd s
+\nonumber\\[4pt]
+\Longrightarrow\quad
+F_{\mathrm{rad}}
+&=
+\frac{F_{\mathrm{ax}}}{\dd r/\dd s}
+=
+F_{\mathrm{ax}}\,(2\tan\beta).
+\label{eq:Frad_from_Fax}
+\end{align}
+
+Thus the total radial normal load supplied by a given axial clamp force is
+\begin{equation}
+F_{\mathrm{rad}} = 2\tan\beta\;F_{\mathrm{ax}}.
+\label{eq:Frad_from_Fax_simple}
+\end{equation}
+
+% --------------------------------------------------------------
+\paragraph{Identification with wrap-normal load $N_\phi$}
+
+Under the uniform distribution assumption (discussed previously),
+we take the total normal load over the wrap to be equal to the total
+radial normal load supplied by clamping:
+\begin{equation}
+N_\phi \;=\; F_{\mathrm{rad}} \;=\; 2\tan\beta\;F_{\mathrm{ax}}.
+\label{eq:Nphi_from_Fax}
+\end{equation}
+
+Equivalently, the normal force per unit wrap angle is constant:
+\begin{equation}
+\frac{\dd N}{\dd\theta} = \frac{N_\phi}{\phi}
+\qquad\Longrightarrow\qquad
+\dd N = \frac{N_\phi}{\phi}\,\dd\theta.
+\label{eq:dN_uniform}
+\end{equation}
+
+Substituting \Eq{eq:Nphi_from_Fax} into the integrated traction bound
+(from \Sec{sec:traction_limit}) yields the clamp-limited torque capacity form
+\begin{equation}
+|\tau|
+\le
+r_{\mathrm{eff}}
+\left[
+\mu\,N_\phi
+-
+\mu_b\,r_{\mathrm{cm}}\,a_t\,\phi
+\right]
+=
+r_{\mathrm{eff}}
+\left[
+\mu\,(2\tan\beta\,F_{\mathrm{ax}})
+-
+\mu_b\,r_{\mathrm{cm}}\,a_t\,\phi
+\right].
+\label{eq:tau_capacity_with_clamp}
+\end{equation}
+
+% --------------------------------------------------------------
+\begin{remarkbox}[Remark (Why this differs from the classical capstan exponential)]
+In the classical capstan problem, the normal load is generated \emph{by the belt tension}
+itself (a larger tension implies a proportionally larger contact normal),
+which leads to the exponential relation $T_1/T_2 = e^{\mu\phi}$.
+
+Here, the normal load is imposed externally by the clamping mechanism:
+$N_\phi$ is determined by $F_{\mathrm{ax}}$ through \Eq{eq:Nphi_from_Fax}.
+Therefore, the available traction scales \emph{linearly} with clamping force,
+not exponentially with belt tension.
+Centrifugal loading and ratio change enter additionally through the inertial term
+in \Eq{eq:tau_capacity_with_clamp}.
+\end{remarkbox}
 
 
-% Next: Polar coordinates and angular acceleration
-% Showing N force due to clamping
-% Remark for capstan equation
+% --------------------------------------------------------------
+\subsection{Section Conclusion and Transition}
+\label{sec:traction_conclusion}
+
+This section derived a traction-limited torque bound for a single pulley.
+
+The result is
+
+\begin{equation}
+|\tau|
+\;\le\;
+r_{\mathrm{eff}}
+\left[
+\mu\,(2\tan\beta\,F_{\mathrm{ax}})
+-
+\mu_b\,r_{\mathrm{cm}}\,a_t\,\phi
+\right],
+\label{eq:tau_capacity_final_section}
+\end{equation}
+
+with
+\[
+a_t = r_{\mathrm{cm}}\alpha + 2\dot r_{\mathrm{cm}}\omega.
+\]
+
+Equation \Eq{eq:tau_capacity_final_section} gives the maximum torque
+that can be transmitted at the current operating state.
+It depends only on:
+
+\begin{itemize}
+    \item axial clamping force $F_{\mathrm{ax}}$,
+    \item cone angle $\beta$,
+    \item wrap angle $\phi$,
+    \item belt mass and kinematics.
+\end{itemize}
+
+No exponential amplification occurs because the normal force
+is externally imposed and bounded.
+
+\vspace{6pt}
+
+The ideal coupling torque derived earlier remains valid
+only when it satisfies \Eq{eq:tau_capacity_final_section}.
+If the demanded torque exceeds this bound,
+the belt cannot sustain static friction and slip must occur.
+
+The next section defines the stick and slip regimes
+and modifies the governing equations accordingly.
+% --------------------------------------------------------------
 
 \section{Slip Model}\label{sec:slip}
 \subsection{Slip Condition and Torque Saturation}\label{sec:slip-cond}
