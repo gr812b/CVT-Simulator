@@ -12,6 +12,9 @@
 
 - Add illustrations to primary ramp and helix geometry
 
+MATH
+Add section for effective coefficient of friction in sheaves. Reference Assump 5
+
 likely to change section
 - belt slip assumption (ideal slip yada ayda)
 - State vector may include omega_belt
@@ -20,10 +23,6 @@ likely to change section
 
 
 Cam Review
-Remove formulas in sign convention section
-
-Units
-- Put SI derived unit in brackets (N (kgm/s^2))
 
 Constants
 - Remove column 'value'
