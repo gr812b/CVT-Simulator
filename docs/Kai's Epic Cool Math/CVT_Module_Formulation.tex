@@ -1223,17 +1223,21 @@ Near Earth's surface, $g \approx 9.81$ \si{\meter\per\second\squared}. On an inc
 ]
 
 
-\section{System State Definition}\label{sec:state}
+% ==============================================================
+\section{System State Definition}
+\label{sec:state}
 
 The dynamic behavior of the CVT system is described using a set of
-\emph{state variables}. A state variable is a quantity whose future value
-depends on its current value and its time derivative. In numerical
-simulation, state variables are the quantities that are directly
-integrated forward in time at each timestep.
+\emph{state variables}. A state variable is a quantity whose future
+evolution is determined by its current value and the governing
+differential equations of the system.
 
-All other quantities in the model (e.g., torque transfer, CVT ratio,
-belt forces) are computed algebraically from these states.
+In numerical simulation, state variables are the quantities that are
+explicitly integrated forward in time. All other model quantities
+— such as torque transfer, transmission ratio, belt forces, and
+contact conditions — are computed algebraically from these states.
 
+% --------------------------------------------------------------
 \subsection{State Vector}
 
 \bigeq{eq:state-vector}{State Vector}{
@@ -1250,65 +1254,72 @@ where:
 
 \begin{itemize}
     \item $\omega_p$ is the angular speed of the primary pulley 
-    (\si{\radian\per\second}).
+    (\si{\radian\per\second}),
 
     \item $\omega_s$ is the angular speed of the secondary pulley 
-    (\si{\radian\per\second}).
+    (\si{\radian\per\second}),
 
     \item $s$ is the axial shift position of the primary sheave
-    (\si{\meter}).
+    (\si{\meter}),
 
     \item $\dot{s}$ is the axial shift velocity 
     (\si{\meter\per\second}).
 \end{itemize}
 
-\subsection{Why These Are the State Variables}
+% --------------------------------------------------------------
+\subsection{Independent Dynamic Degrees of Freedom}
 
-These four variables represent the independent dynamic degrees of freedom
-of the CVT system:
+These four quantities represent the independent dynamic motions of the CVT system.
+
+The primary pulley can rotate independently under engine input and belt interaction. 
+Its angular speed $\omega_p$ therefore represents one rotational degree of freedom.
+
+The secondary pulley also rotates and interacts with both the belt and the external 
+drivetrain load. Its angular speed $\omega_s$ represents a second independent 
+rotational degree of freedom.
+
+In addition to rotation, the CVT includes axial motion of the primary sheave. 
+This axial displacement $s$ determines the effective pulley geometry and therefore 
+the transmission ratio. The axial motion is mechanically independent of pure rotation 
+and must be modeled explicitly.
+
+Because axial motion follows second-order dynamics, both the axial position $s$ 
+and its rate $\dot{s}$ are required to fully describe its evolution.
+
+Together, these variables capture the complete rotational and axial motion of the system. 
+Removing any one of them would eliminate an independent dynamic degree of freedom 
+from the model.
+
+% --------------------------------------------------------------
+\subsection{Time Integration Perspective}
+
+During numerical simulation, the state vector is advanced forward in time.
+
+At each timestep $\Delta t$:
 
 \begin{itemize}
-    \item The primary pulley rotation ($\omega_p$) evolves according to
-    applied engine torque and belt reaction torque.
+    \item The angular speeds $\omega_p$ and $\omega_s$ are updated according 
+    to their angular accelerations.
 
-    \item The secondary pulley rotation ($\omega_s$) evolves according to
-    belt torque and external load torque.
+    \item The axial position $s$ is updated using its current velocity $\dot{s}$.
 
-    \item The axial shift position ($s$) evolves according to the
-    balance of axial forces between the primary and secondary assemblies.
-
-    \item The axial velocity ($\dot{s}$) is required because axial motion
-    follows a second-order differential equation.
+    \item The axial velocity $\dot{s}$ is updated according to the axial acceleration.
 \end{itemize}
 
-This will be made clear in the following derivations in later sections (TODO: MAKE BETTER). Removing any of these variables would eliminate an independent dynamic
-degree of freedom from the model.
-
-\subsection{Numerical Integration Perspective}
-
-At each simulation timestep $\Delta t$, the following updates occur:
-
-\begin{itemize}
-    \item $\omega_p$ is updated using its angular acceleration.
-    \item $\omega_s$ is updated using its angular acceleration.
-    \item $s$ is updated using $\dot{s}$.
-    \item $\dot{s}$ is updated using axial acceleration.
-\end{itemize}
-
-Thus, the state vector evolves according to differential equations
-derived in later sections.
-
-All other model quantities — including CVT ratio, belt slip velocity,
-radial forces, and torque capacity — are computed directly from the
-current values of $\omega_p$, $\omega_s$, and $s$.
+The angular and axial accelerations are determined from the governing 
+equations derived in subsequent sections. Once the state vector has been 
+updated, all other quantities in the model are computed directly from the 
+current values of $\omega_p$, $\omega_s$, $s$, and $\dot{s}$.
 
 
 \section{Pulley Geometry}\label{sec:geometry}
 
 This section establishes the geometric relationships that govern how axial
-shift modifies effective pulley radii and therefore transmission ratio.
-The derivations presented here are purely kinematic and do not involve
-force balances.
+shift modifies the effective pulley radii and therefore the transmission ratio.
+
+The analysis presented here is purely kinematic. No force balances or
+dynamic effects are considered. The goal is to describe how pulley
+geometry alone determines belt position and ratio evolution.
 
 The objective is to derive explicit expressions for:
 
@@ -1322,26 +1333,41 @@ The objective is to derive explicit expressions for:
 % ==============================================================
 \subsection{Conceptual Overview of Variable Geometry}
 
-Each pulley in the CVT consists of two opposing sheaves.
-One sheave is fixed axially, while the other is free to translate
+As introduced in \Sec{sec:cvt_overview}, each pulley consists of two opposing
+conical sheaves. One sheave is fixed axially, while the other translates
 along the shaft.
 
-The effective belt radius is determined by the axial separation
-between these sheaves. As the moveable sheave approaches the fixed
-sheave, the belt is forced outward along the conical faces,
-increasing the effective pulley radius.
+The axial separation between the sheaves determines where the belt
+contacts the conical faces. When the movable sheave translates toward
+the fixed sheave, the gap decreases and the belt is forced outward,
+increasing the effective pulley radius. When the sheaves separate,
+the belt settles deeper between them, decreasing the effective radius.
 
-Conversely, as the sheaves separate, the belt rides deeper
-between the sheaves, decreasing the effective radius.
+It is important to distinguish between axial displacement and effective radius.
+Axial motion changes the gap between sheaves; the effective radius changes
+as a geometric consequence of how the belt sits within that gap.
+The relationship between these quantities will be derived explicitly
+in the following subsection.
 
-Because the belt length is constant, any increase in the
-primary pulley radius must be accompanied by a corresponding
-decrease in the secondary pulley radius. This geometric coupling
-is fundamental to the operation of the CVT and is derived
-explicitly in the following sections.
+Because the belt length remains constrained, the effective radii of the
+primary and secondary pulleys cannot vary independently. An increase in
+the primary effective radius must be accompanied by a corresponding
+decrease in the secondary effective radius. This geometric coupling
+is fundamental to CVT operation and forms the basis of the ratio model
+derived below.
 
 
-TODO: ADD ILLUSTRATION. Cvt cross section of single pulley in 0 shift and full shift
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.95\textwidth]{illustrations/geometry/both_cvts_min_max_shift_belt.png}
+\caption{
+Conceptual illustration of variable pulley geometry. 
+Changes in axial separation alter effective radii. 
+Because belt length is constrained, an increase in primary effective 
+radius corresponds to a decrease in secondary effective radius.
+}
+\label{fig:variable_geometry}
+\end{figure}
 
 % NOTE:
 % - Clarify cone geometry assumptions
@@ -1349,83 +1375,106 @@ TODO: ADD ILLUSTRATION. Cvt cross section of single pulley in 0 shift and full s
 % - Clarify that geometry is idealized
 
 % ==============================================================
+% --------------------------------------------------------------
+% --------------------------------------------------------------
 \subsection{Definition of Axial Shift Variable}
+\label{sec:shift_definition}
 
-Let $s$ denote the axial displacement of the moveable primary sheave,
-defined according to the sign convention in \Sec{sec:sign}.
+Let $s$ denote the axial displacement of the movable primary sheave,
+defined according to the sign convention in \Sec{sec:cvt_axial_direction}.
 
-\begin{itemize}
-    \item At $s = 0$, the primary sheaves are at their maximum axial separation.
-    \item At $s = 0$, the primary pulley is at its minimum effective radius.
-\end{itemize}
+At $s = 0$, the primary pulley is in its fully open configuration.
+The sheaves are at their maximum axial separation, and the belt
+rests at its minimum effective radius.
 
-For $s > 0$, the moveable sheave translates toward the fixed sheave,
-reducing the axial gap between the sheaves.
+The shift coordinate $s$ measures the amount of closure relative
+to this initial configuration. Increasing $s$ corresponds to the
+movable sheave translating toward the fixed sheave, reducing the
+axial gap.
 
+% --------------------------------------------------------------
 \paragraph{Deadzone and Travel Limits}
 
-The shift coordinate is bounded as
+In practice, the initial sheave gap at $s = 0$ is larger than the
+belt width. As a result, small axial motion does not immediately
+alter the belt’s contact position on the conical faces.
+
+The interval
+\[
+0 \le s < s_{\mathrm{dz}}
+\]
+defines this \emph{deadzone}. Within this region, the movable
+sheave translates axially but does not yet sufficiently compress
+the belt to change its effective contact radius. The belt remains
+at the same radial position despite the reduction in gap.
+
+Once the sheave gap becomes small enough to fully engage the belt,
+further axial motion alters the belt position. For
+\[
+s_{\mathrm{dz}} \le s \le s_{\max},
+\]
+additional closure forces the belt outward along the conical faces,
+producing a proportional change in primary effective radius.
+
+The shift coordinate is therefore bounded as
 \[
 0 \le s \le s_{\max}.
 \]
 
-A deadzone region exists such that
+The upper limit $s_{\max}$ corresponds to the physical travel limit
+of the sheave assembly. At this position, the sheaves are fully closed
+and mechanically contact one another, forming a hard geometric boundary
+beyond which further axial motion is not possible.
 
-\[
-0 \le s < s_{\mathrm{dz}}
-\]
-
-does not alter the belt contact radius on the sheaves.
-
-For
-\[
-s_{\mathrm{dz}} \le s \le s_{\max},
-\]
-axial motion produces a proportional change in primary radius.
-
-Here:
-
-\begin{itemize}
-    \item $s_{\mathrm{dz}}$ denotes the deadzone displacement,
-    \item $s_{\max}$ denotes the maximum allowable sheave travel.
-\end{itemize}
-
-
-
-% NOTE:
-% - Define physical bounds on s
-% - Define minimum and maximum shift
-% - Clarify reference geometry at s = 0
 
 % ==============================================================
-\subsection{Primary Outer Radius as a Function of Shift}\label{sec:rp}
+\subsection{Primary Outer Radius as a Function of Shift}
+\label{sec:rp}
 
-Given sheave half-angle $\beta$, axial closure beyond the
-deadzone produces a radial increase governed by simple trigonometry.
+When the primary sheaves close beyond the deadzone, the belt is forced
+outward along the conical faces. The relationship between axial closure
+and radial expansion follows directly from the cone geometry.
 
-For an incremental axial displacement $\Delta s$ beyond
-$s_{\mathrm{dz}}$, the corresponding radial increase is
+As shown in \cref{fig:primary_geometry}, the sheave face forms a straight
+line in cross-section. The cone half-angle $\beta$ is defined as the angle
+between the sheave face and the \emph{radial direction} (As defined in \Sec{sec:radial_direction}). 
 
+For a small axial displacement $\Delta s$
+beyond the deadzone, the total closure is shared symmetrically between
+the two opposing sheaves, so each sheave contributes $\Delta s/2$.
+
+From the right triangle formed by the sheave face,
+\[
+\tan\beta = \frac{\Delta s/2}{\Delta r},
+\]
+which gives
 \[
 \Delta r = \frac{\Delta s}{2\tan\beta}.
 \]
 
-The factor of $2$ arises because axial closure is shared
-symmetrically between the two opposing sheave faces. The geometric relation is illustrated in \cref{fig:primary_geometry}.
+Thus, the cone angle determines how axial motion is converted into
+radial growth: smaller $\beta$ produces greater radial change for the
+same axial displacement.
 
-
-\begin{figure}[h]
+\begin{figure}[H]
 \centering
 \includegraphics[width=0.7\linewidth]{./illustrations/primary_geometry.png}
-\caption{Axial-radial relationship for opposing conical sheaves
-with half-angle $\beta$.}
+\caption{
+Axial–radial relationship for opposing conical sheaves.
+The angle $\beta$ is defined between the sheave face and the radial direction.
+}
 \label{fig:primary_geometry}
 \end{figure}
 
+% --------------------------------------------------------------
 \paragraph{Piecewise Radius Model}
 
-Let $r_{p,\min}$ denote the minimum primary outer radius.
-Then the primary outer radius is
+Let $r_{p,\min}$ denote the minimum primary outer radius,
+corresponding to the fully open configuration ($s=0$).
+
+Within the deadzone, axial motion does not alter belt position.
+Once $s \ge s_{\mathrm{dz}}$, the geometric relation above applies,
+yielding
 
 \bigeq{eq:primary_radius}{Primary Outer Radius}{
 r_{p,\text{outer}}(s)=
@@ -1436,53 +1485,29 @@ r_{p,\min} + \dfrac{s - s_{\mathrm{dz}}}{2\tan\beta},
 \end{cases}
 }
 
-
-
-% NOTE:
-% - Derive from cone half-angle
-% - Include diagram reference later
-% - State geometric assumptions clearly
-\begin{remarkbox}[Remark on Belt Height and Effective Torque Radius]
-
-The belt possesses a finite radial thickness $h_b$. In this section,
-all geometric relations are formulated using the \emph{outer surface}
-of the belt as the reference radius. That is, 
-$r_{\text{outer}}$ denotes the radial position of the belt’s outer face.
-
-This convention simplifies the geometric derivations of pulley radius
-and belt length. However, torque transmission does not occur at the
-outer surface. The effective moment arm corresponds approximately to
-the mid-height of the belt.
-
-Accordingly, the effective torque radius used in force and torque
-calculations will later be defined as
-
-\begin{equation}
-r_{\text{eff}} = r_{\text{outer}} - \frac{h_b}{2}.
-\label{eq:effective_radius}
-\end{equation}
-
-This correction is applied explicitly in the torque transfer formulation
-(see \Sec{sec:effective-radius-placeholder}).
-
-\end{remarkbox}
-
-
-
-% ==============================================================
 % ============================================================== 
 \subsection{Belt Length Constraint}\label{sec:belt_length}
 
-This section derives the geometric constraint relating belt length to the
-primary radius $r_p$, secondary radius $r_s$, and center-to-center distance $C$.
+In the previous subsection, the primary effective radius was expressed
+as a function of axial shift. The secondary radius, however, cannot be
+chosen independently. The belt has a fixed total length, and therefore
+any change in primary radius must be accompanied by a corresponding
+geometric adjustment of the secondary radius.
+
+This section derives the geometric compatibility constraint imposed
+by constant belt length. By expressing the total belt length in terms
+of the primary radius $r_p$, secondary radius $r_s$, and center-to-center
+distance $C$, we obtain an implicit relationship that couples the two
+pulley radii.
+
 The derivation follows directly from the belt path geometry shown in
-\Fig{fig:belt_geometry_placeholder}.
+\cref{fig:belt_geometry_placeholder}.
 
 \begin{figure}[h]
 \centering
 \includegraphics[width=0.75\linewidth]{./illustrations/belt_length_geometry.jpg}
 \caption{Belt geometry for two pulleys of radii $r_p$ and $r_s$ separated by center distance $C$.
-The belt wraps the pulleys with angles $\phi_p$ and $\phi_s$ and connects via two straight tangent spans.}
+The belt wraps the pulleys with angles $\phi_p$ and $\phi_s$ and connects via two straight tangent spans $\ell$.}
 \label{fig:belt_geometry_placeholder}
 \end{figure}
 
@@ -1503,13 +1528,24 @@ where $\ell$ is the length of a single straight tangent span segment.
 
 \paragraph{Straight Span Length}
 
-Let $\ell$ denote the length of the straight belt segment between tangent points.
 From the right-triangle geometry formed by the pulley centers and tangent points,
 
 \begin{equation}
 \ell = \sqrt{C^2 - (r_s - r_p)^2}.
 \label{eq:span_length}
 \end{equation}
+
+\paragraph{Wrap Angles}
+
+The wrap angles on the primary and secondary pulleys are
+
+\begin{align}
+\phi_p &= \pi - 2\lambda, \label{eq:wrap_primary}\\
+\phi_s &= \pi + 2\lambda. \label{eq:wrap_secondary}
+\end{align} 
+
+If $\lambda < 0$, these expressions automatically redistribute wrap
+between pulleys while preserving total belt length.
 
 \paragraph{Tangency Angle (Signed Convention)}
 
@@ -1531,18 +1567,6 @@ and equivalently,
 Under this convention, $\lambda$ may be negative when $r_p > r_s$.
 This signed definition ensures the wrap distribution automatically adjusts
 when the pulley ordering reverses.
-
-\paragraph{Wrap Angles}
-
-The wrap angles on the primary and secondary pulleys are
-
-\begin{align}
-\phi_p &= \pi - 2\lambda, \label{eq:wrap_primary}\\
-\phi_s &= \pi + 2\lambda. \label{eq:wrap_secondary}
-\end{align} 
-
-If $\lambda < 0$, these expressions automatically redistribute wrap
-between pulleys while preserving total belt length.
 
 \paragraph{Closed Form Belt-Length Expression}
 
@@ -1619,7 +1643,7 @@ Under this small-angle assumption, the belt-length equation reduces to a much
 simpler approximate form.
 
 However, this approximation can introduce substantial geometric error when
-$\frac{r_s - r_p}{C}$ is not small. Appendix~\ref{sec:approximation-validation-placeholder}
+$\frac{r_s - r_p}{C}$ is not small. Appendix~\ref{sec:approximation-validation}
 quantifies this deviation and demonstrates that the approximation
 is not acceptable under realistic operating conditions.
 
@@ -1636,12 +1660,15 @@ is not acceptable under realistic operating conditions.
 % ==============================================================
 \subsection{Center-to-Center Distance Determination}\label{sec:center_distance}
 
+In-order to make use of the belt-length constraint derived in \Sec{sec:belt_length}, 
+the center-to-center distance $C$ must be determined.
+
 The center-to-center distance $C$ is a fixed geometric parameter
 of the assembled CVT system. Once the transmission is constructed,
 $C$ does not vary during operation.
 
 To determine $C$, we evaluate the belt-length constraint
-\Eq{eq:belt_length_constraint} at the known initial configuration
+\Eq{eq:belt_length_constraint} at the \emph{known} initial configuration
 of the system.
 
 \paragraph{Initial Geometric Configuration}
@@ -1676,6 +1703,13 @@ f(r_{p,\min}, r_{s,\max}, C) = 0.
 This equation contains a single unknown, $C$, and is solved
 numerically to determine the fixed center-to-center distance
 consistent with the specified belt length $L_b$.
+
+\begin{equation}
+C
+=
+\operatorname*{root}_{C}
+\; f\!\left(r_{p,\min}, r_{s,\max}, C\right).
+\end{equation}
 
 \begin{remarkbox}[Remark (One-Time Geometric Solve)]
 The center distance $C$ is determined once during model
@@ -1730,15 +1764,16 @@ Because the physically admissible interval for $r_s$ is bounded,
 a bracketed solver (e.g., Brent’s method) converges rapidly.
 \end{remarkbox}
 
-% NOTE:
-% - Clarify this uses same solver structure
-% - Emphasize geometric coupling
-% - Explain physical meaning (primary increase → secondary decrease)
+With both $r_{p,\mathrm{outer}}(s)$ and $r_{s,\mathrm{outer}}(s)$ determined,
+all geometric quantities describing the belt path can now be expressed
+explicitly as functions of the shift coordinate $s$.
 
-\paragraph{Wrap Angles as Explicit Functions of Shift}
+% ==============================================================
+\subsection{Wrap Angles as Functions of Shift}\label{sec:wrap_angles}
 
-Using the geometric relations from \Sec{sec:belt_length}, the tangency angle
-evaluated at the current shift is
+The wrap angles on the primary and secondary pulleys
+vary as the pulley radii change. Using the geometric relations from
+\Sec{sec:belt_length}, the tangency angle becomes
 
 \begin{equation}
 \lambda(s)
@@ -1750,10 +1785,9 @@ r_{s,\mathrm{outer}}(s)
 r_{p,\mathrm{outer}}(s)
 }{C}
 \right).
-\label{eq:lambda_of_s_expanded}
 \end{equation}
 
-Substituting directly into the wrap-angle relations \Eq{eq:wrap_primary} and \Eq{eq:wrap_secondary} yields the fully expanded expressions.
+Substitution into the wrap-angle definitions yields
 
 \begin{align}
 \phi_p(s)
@@ -1766,8 +1800,7 @@ r_{s,\mathrm{outer}}(s)
 -
 r_{p,\mathrm{outer}}(s)
 }{C}
-\right),
-\label{eq:phi_p_of_s_expanded}\\[8pt]
+\right),\\[8pt]
 \phi_s(s)
 &=
 \pi
@@ -1779,7 +1812,6 @@ r_{s,\mathrm{outer}}(s)
 r_{p,\mathrm{outer}}(s)
 }{C}
 \right).
-\label{eq:phi_s_of_s_expanded}
 \end{align}
 
 
@@ -1788,13 +1820,15 @@ r_{p,\mathrm{outer}}(s)
 \subsection{Effective Torque Radius}
 \label{sec:effective-radius-placeholder}
 
-As noted previously, the belt possesses a finite radial thickness $h_b$.
-All geometric derivations were performed using the outer belt surface
-for convenience. However, torque is transmitted through the belt
-cross-section, and the effective moment arm corresponds approximately
-to the mid-height of the belt.
+All geometric relations derived thus far use the outer surface of the belt
+as the reference radius. This simplifies the belt-length formulation and
+pulley geometry.
 
-The effective torque radius for each pulley is therefore defined as
+Torque transmission, however, occurs through the belt cross-section.
+The appropriate moment arm for torque is therefore located
+approximately at the mid-height of the belt.
+
+The effective torque radius for each pulley is defined as
 
 \begin{equation}
 r_{p,\text{eff}} = r_{p,\text{outer}} - \frac{h_b}{2},
@@ -1804,21 +1838,26 @@ r_{p,\text{eff}} = r_{p,\text{outer}} - \frac{h_b}{2},
 r_{s,\text{eff}} = r_{s,\text{outer}} - \frac{h_b}{2}.
 \end{equation}
 
-These effective radii are used in all subsequent torque transmission calculations.
+These effective radii are used in all subsequent torque calculations.
 
 
 % ==============================================================
-\subsection{CVT Ratio Definition}\label{sec:cvt_ratio}
+\subsection{CVT Ratio Definition}
+\label{sec:cvt_ratio}
 
-The instantaneous CVT ratio is defined as the ratio of
-secondary to primary effective radii:
+The instantaneous transmission ratio is determined purely by pulley geometry.
+It is defined as the ratio of secondary to primary effective radii:
 
 \bigeq{eq:cvt_ratio}{CVT Ratio}{
 R(s) = \frac{r_{s,\text{eff}}(s)}{r_{p,\text{eff}}(s)}.
 }
 
-Because $r_{p,\text{eff}}(s)$ increases with shift $s$,
-the ratio $R(s)$ decreases as the primary closes.
+Because both effective radii are functions of the shift coordinate $s$,
+the transmission ratio is likewise a function of $s$ alone.
+
+As the primary sheaves close, $r_{p,\text{eff}}(s)$ increases.
+By belt-length compatibility, the secondary radius decreases.
+Consequently, the ratio $R(s)$ decreases with increasing $s$.
 
 Thus:
 \begin{itemize}
@@ -1826,16 +1865,21 @@ Thus:
     \item Large $s$ (maximum primary radius) corresponds to low ratio.
 \end{itemize}
 
-The transmission ratio is therefore a purely geometric function
-of shift position.
+The CVT ratio is therefore a purely geometric quantity determined by
+the axial shift position.
 
 
 % ==============================================================
 \subsection{Ratio Rate of Change}\label{sec:ratio_rate}
 
-During shifting, the ratio $R$ varies because the effective pulley radii vary with the
-shift coordinate $s$. This section derives an expression for $\dot R$ in terms of
-$\dot s$ and geometric derivatives.
+The CVT ratio is not only a function of shift position, but also changes in time whenever the
+sheaves are moving. This time variation matters because a changing ratio introduces additional
+kinematic coupling between the primary and secondary rotations. In other words, it is not
+sufficient to know the instantaneous ratio $R(s)$; the model also requires how quickly the ratio
+is changing.
+
+This section derives an explicit expression for $\dot R$ in terms of the shift velocity $\dot s$
+and geometric derivatives.
 
 \subsubsection{Start from the Ratio Definition}
 
@@ -2363,49 +2407,21 @@ Using the chain rule \Eq{eq:Rdot_chain}, $\dot R = (dR/ds)\dot s$. Substituting
 
 \paragraph{Summary}
 
-Equations \Eq{eq:dRds_final} and \Eq{eq:Rdot_final} provide a complete
-closed-form expression for the geometric sensitivity of the transmission ratio
-and its time rate of change.
-
-Specifically,
-
-\begin{itemize}
-    \item $\dfrac{dR}{ds}$ quantifies how sensitive the CVT ratio is to
-    axial sheave motion.
-    \item $\dot R = \dfrac{dR}{dt}$ relates axial shift velocity $\dot s$
-    directly to rotational ratio dynamics.
-\end{itemize}
-
-The result captures three coupled geometric effects:
-
-\begin{enumerate}
-    \item The primary sheave cone geometry through $\beta$,
-    \item The nonlinear belt-length compatibility through the inverse-sine term,
-    \item The redistribution of effective radii between pulleys during shift.
-\end{enumerate}
-
-The deadzone behavior is explicitly represented: when
-$0 \le s < s_{\mathrm{dz}}$, the effective radii are constant and
-$\dot R = 0$.
-
-In the active shift region $s_{\mathrm{dz}} \le s \le s_{\max}$,
-ratio dynamics are governed entirely by geometric coupling and
-axial shift velocity.
-
-This completes the purely kinematic derivation of CVT ratio evolution.
-Subsequent sections incorporate force balance and torque transfer
-to determine $\dot s$ dynamically.
+Equations \Eq{eq:dRds_final} and \Eq{eq:Rdot_final} give the geometric sensitivity of the ratio
+to axial motion and its time rate of change. The deadzone behavior is explicit: when
+$0 \le s < s_{\mathrm{dz}}$, the ratio is constant and $\dot R = 0$. In the active region,
+$s_{\mathrm{dz}} \le s \le s_{\max}$, the ratio evolves according to geometry and the shift rate $\dot s$.
 
 % ==============================================================
 \subsection{Section Summary and Forward Connection}
 \label{sec:geometry_summary}
 
-This section has established a complete \emph{geometric foundation}
-for the CVT model. The development was intentionally kinematic:
-no force balances, no slip assumptions, and no torque relations
-were introduced. The objective was to construct a mathematically
-closed mapping
+This section established the complete \emph{geometric foundation} of the CVT model.
+The development was intentionally kinematic: the objective was to derive a closed,
+computable mapping from axial shift to pulley geometry and transmission ratio, without
+introducing force balance, slip behavior, or torque relations.
 
+At a high level, the geometry defines the chain
 \[
 s(t)
 \;\longrightarrow\;
@@ -2415,147 +2431,64 @@ R(s)
 \;\longrightarrow\;
 \dot R(s,\dot s),
 \]
+with each intermediate relationship derived explicitly from pulley and belt geometry.
 
-with all intermediate relationships derived explicitly.
+\paragraph{Key Results Established}
 
-\paragraph{What Has Been Established}
-
-The following key geometric components are now rigorously defined:
-
-\begin{enumerate}
-
-\item \textbf{Primary Radius Law}  
-\Eq{eq:primary_radius} provides the piecewise relationship between
-axial shift $s$ and primary outer radius, governed by the cone
-half-angle $\beta$ and deadzone $s_{\mathrm{dz}}$.
-
-\item \textbf{Belt-Length Compatibility Constraint}  
-\Eq{eq:belt_length_constraint} defines the transcendental geometric
-coupling between $r_p$, $r_s$, and center distance $C$.  
-This constraint enforces constant belt length and represents the
-core geometric coupling of the transmission.
-
-\item \textbf{Center Distance Determination}  
-\Sec{sec:center_distance} determines $C$ once during initialization
-by solving \Eq{eq:center_distance_constraint}.  
-After this step, $C$ is fixed for the remainder of the model.
-
-\item \textbf{Secondary Radius Implicit Law}  
-\Eq{eq:secondary_radius_constraint} and \Eq{eq:secondary_radius}
-define $r_s(s)$ implicitly via the belt constraint, producing the
-geometric redistribution of radius during shift.
-
-\item \textbf{Effective Torque Radii}  
-\Sec{sec:effective-radius-placeholder} corrects outer radii to
-effective radii via \Eq{eq:effective_radius}, ensuring torque
-calculations later act at the belt mid-height.
-
-\item \textbf{Transmission Ratio}  
-\Eq{eq:cvt_ratio} defines the purely geometric ratio
-\[
-R(s) = \frac{r_{s,\text{eff}}}{r_{p,\text{eff}}}.
-\]
-
-\item \textbf{Ratio Sensitivity and Time Evolution}  
-\Sec{sec:ratio_rate} culminates in the closed-form expressions
-\Eq{eq:dRds_final} and \Eq{eq:Rdot_final}, which provide
-\[
-\frac{dR}{ds}
-\quad\text{and}\quad
-\dot R = \frac{dR}{ds}\dot s.
-\]
-
-These expressions fully capture the nonlinear geometric sensitivity
-introduced by belt-length compatibility and cone geometry.
-
-\end{enumerate}
-
-\paragraph{Structural Importance for the Full Model}
-
-This section establishes the geometric backbone of the entire CVT
-simulation framework. Every dynamic result that follows will rely
-on the mappings derived here.
-
-In particular:
-
-\begin{itemize}
-
-\item Torque transfer equations will use
-$r_{p,\text{eff}}$ and $r_{s,\text{eff}}$
-from \Sec{sec:effective-radius-placeholder}.
-
-\item Axial force balances will determine $\dot s$ dynamically.
-
-\item The ratio dynamics in \Eq{eq:Rdot_final} will convert
-axial motion into rotational acceleration coupling between shafts.
-
-\item Slip models and capstan friction relations will depend
-explicitly on wrap angles
-\Eq{eq:wrap_primary}--\Eq{eq:wrap_secondary}
-and the geometric redistribution captured in
-\Eq{eq:belt_length_root}.
-
-\item Power flow and coupling torque formulations will use
-$R(s)$ and $\dot R$ directly to relate engine dynamics
-to driven-shaft dynamics.
-
-\end{itemize}
-
-Thus, this section isolates geometry from physics.
-All subsequent force and torque derivations will treat
-the geometric relationships derived here as fixed,
-differentiable mappings.
-
-\paragraph{Key Modeling Properties}
-
-Several important structural properties are now clear:
+The following geometric components are now defined and ready for use in subsequent modeling:
 
 \begin{enumerate}
+    \item \textbf{Primary radius law.}  
+    \Eq{eq:primary_radius} provides the piecewise relationship between axial shift $s$
+    and primary outer radius, including deadzone behavior and cone-angle dependence.
 
-\item The ratio evolution is inherently nonlinear due to the
-inverse-sine term in the belt constraint.
+    \item \textbf{Belt-length compatibility constraint.}  
+    \Eq{eq:belt_length_constraint} enforces constant belt length and defines the implicit,
+    nonlinear coupling between $r_p$, $r_s$, and the center distance $C$.
 
-\item The geometric coupling is globally valid (no small-angle
-approximation required).
+    \item \textbf{Center distance determination.}  
+    \Sec{sec:center_distance} fixes the assembled center-to-center distance $C$ by evaluating
+    the belt constraint at a known geometric configuration. This solve is performed once
+    during initialization.
 
-\item The deadzone is explicitly represented:
-for $0 \le s < s_{\mathrm{dz}}$, $R$ is constant.
+    \item \textbf{Secondary radius as a function of shift.}  
+    \Sec{sec:secondary_radius} defines $r_s(s)$ implicitly by solving the belt constraint at
+    each shift position, producing the required redistribution of belt radius between pulleys.
 
-\item Ratio sensitivity depends on both cone angle $\beta$
-and instantaneous pulley radii.
+    \item \textbf{Wrap angles as functions of shift.}  
+    \Sec{sec:wrap_angles} defines the wrap angles $\phi_p(s)$ and $\phi_s(s)$ follow directly from the tangency geometry and
+    are available for later contact, work, and belt-distribution calculations.
 
-\item The system is fully differentiable within the admissible
-domain $s_{\mathrm{dz}} \le s \le s_{\max}$, enabling
-continuous-time simulation and ODE integration.
+    \item \textbf{Effective torque radii.}  
+    \Sec{sec:effective-radius-placeholder} corrects outer radii to effective radii using belt
+    thickness, ensuring subsequent torque relations use an appropriate moment arm.
 
+    \item \textbf{Ratio and ratio rate.}  
+    \Eq{eq:cvt_ratio} defines the geometric ratio $R(s)$, and \Sec{sec:ratio_rate} provides
+    $\dfrac{dR}{ds}$ and $\dot R$ via \Eq{eq:dRds_final} and \Eq{eq:Rdot_final}, including the
+    deadzone condition where $R$ is constant.
 \end{enumerate}
+
+\paragraph{Structural Role in the Full Model}
+
+These results form the geometric backbone of the CVT simulation. All subsequent sections treat
+the relationships derived here as fixed mappings. In particular, later torque and force models
+will use $r_{p,\text{eff}}(s)$ and $r_{s,\text{eff}}(s)$ as inputs, and shifting kinematics will
+use $R(s)$ and $\dot R(s,\dot s)$ to relate primary and secondary motion during ratio change.
+
+Several key properties are now clear:
+(i) the geometric coupling is inherently nonlinear (through the belt-length constraint),
+(ii) the deadzone is explicitly represented,
+and (iii) within the admissible travel range the mappings are differentiable and suitable for
+continuous-time simulation.
 
 \paragraph{Transition to Dynamics}
 
-With geometry now fully specified, the model is ready to
-incorporate force balance and torque transfer.
-
-The next major objective is to determine $\dot s$ from
-axial forces (centrifugal force, spring force, belt tension,
-and normal reaction forces). Once $\dot s$ is known, the
-ratio evolution \Eq{eq:Rdot_final} immediately provides
-rotational coupling between shafts.
-
-In other words:
-
-\[
-\text{Axial Dynamics}
-\;\longrightarrow\;
-\dot s
-\;\longrightarrow\;
-\dot R
-\;\longrightarrow\;
-Rotational Dynamics.
-\]
-
-This completes the geometric phase of the CVT derivation.
-The model is now prepared for the introduction of force
-and torque equilibrium in the subsequent section.
+With the geometry fully specified, the next objective is to determine how the shift coordinate
+evolves in time. Subsequent sections introduce axial force generation (from pulley mechanisms and
+belt interaction) to determine $\dot s$ and $\ddot s$. Once $\dot s$ is known, the ratio-rate
+expression \Eq{eq:Rdot_final} provides the corresponding ratio evolution and the required
+kinematic coupling between rotating components during shifting.
 
 
 % ==============================================================
@@ -5192,8 +5125,89 @@ This yields a coupling torque that (i) respects traction limits at both pulleys,
 smoothly into a Coulomb-like slip regime when necessary.
 
 \appendix
+
 \section{Parameter Tables}\label{sec:appendix-params}
 % Constants, geometry, spring rates, friction, inertias.
+% TODO: Fill in parameter tables for reference implementation
+
+
+\section{Belt Length Small-Angle Approximation}\label{sec:approximation-validation}
+
+This section quantifies the error introduced by the small-angle approximation
+commonly used in simplified CVT kinematic models.
+
+\subsection{Standard Approximation}
+
+Many treatments assume
+\[
+\frac{r_s - r_p}{C} \ll 1,
+\]
+which leads to $\lambda \approx 0$ and therefore
+
+
+\subsection{Error Analysis}
+
+
+\section{Common Ramp Profile Designs}\label{sec:appendix-ramp-profiles}
+
+This section catalogs several common ramp profile parameterizations
+used in CVT primary pulley actuation.
+
+\subsection{Linear Ramp}
+
+The simplest ramp profile is a linear relationship:
+\[
+r_f(s) = r_{f,0} + k_r \cdot s,
+\]
+where $k_r$ is the ramp slope (constant) and $r_{f,0}$ is the initial flyweight radius.
+
+The corresponding ramp angle is constant:
+\[
+\alpha_p(s) = \tan^{-1}(k_r).
+\]
+
+\paragraph{Characteristics:}
+\begin{itemize}
+\item Uniform force multiplication across the shift range
+\item Simple to manufacture and analyze
+\item May not provide optimal shift feel or calibration flexibility
+\end{itemize}
+
+\subsection{Quadratic Ramp}
+
+% TODO: Derive force-balance for quadratic profile $r_f(s) = r_{f,0} + as + bs^2$
+
+\subsection{Piecewise-Linear Ramp}
+
+% TODO: Document multi-stage ramp designs with different slopes in different shift regions
+
+\subsection{Custom Profiles from Lookup Tables}
+
+% TODO: Discuss spline or lookup-table based ramp profiles for advanced tuning
+
+
+\section{Numerical Methods Summary}\label{sec:appendix-numerics}
+
+This section summarizes the numerical solution methods used throughout this work.
+
+\subsection{Root Finding for Belt-Length Constraint}
+
+The belt-length constraint \Eq{eq:belt_length_constraint} is solved using
+Brent's method, a robust bracketed root-finding algorithm combining bisection,
+secant, and inverse quadratic interpolation.
+
+% TODO: Document bracketing strategy and typical convergence behavior
+
+\subsection{ODE Integration for Dynamic Simulation}
+
+% TODO: Document choice of integrator (e.g., RK45, BDF) and step size strategy
+
+
+\section{Nomenclature and Symbol Reference}\label{sec:appendix-nomenclature}
+
+% TODO: Comprehensive table of all symbols used in the document
+% Organized by category: geometry, forces, dynamics, parameters, etc.
+
 
 \newpage
 \bibliographystyle{plainnat}

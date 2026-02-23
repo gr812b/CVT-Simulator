@@ -41,3 +41,11 @@ State variables
 
 8.1 link belt length assumption
 8.1 link 2.1.3
+
+
+
+
+variables
+s - axial closure
+s_dz - axial deadzone on primary (before belt contact)
+s_max - maximum axial movement before sheaves hit each other
