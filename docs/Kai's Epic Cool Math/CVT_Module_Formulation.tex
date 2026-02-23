@@ -349,8 +349,248 @@ The derivation proceeds as follows:
 The final result is a coupled nonlinear dynamic system
 suitable for time-domain simulation.
 
+% ==============================================================
+\section{Conceptual Overview of a Continuously Variable Transmission}
+\label{sec:cvt_overview}
 
-\section{Notation and Conventions}\label{sec:notation}
+This section introduces the fundamental operating principles of a 
+continuously variable transmission (CVT) and then presents the specific 
+CVT and drivetrain architecture considered in this work. 
+
+The goal is to establish clear mechanical intuition before developing 
+the mathematical model in later sections.
+
+% --------------------------------------------------------------
+\subsection{Geometric Principle of a Belt-Sheave CVT}
+
+A belt-type CVT consists of two pulleys connected by a flexible belt.  
+Each pulley is formed by two opposing conical faces (sheaves).  
+The axial separation between these sheaves determines the effective radius 
+at which the belt rides.
+
+When the sheaves move closer together, the belt is forced outward to a 
+larger radius. When the sheaves move apart, the belt settles at a smaller 
+radius. Because the belt length remains approximately constant, an increase 
+in effective radius on one pulley necessarily causes a corresponding decrease 
+on the other.
+
+As a result, the transmission ratio changes continuously as the pulley 
+geometries change. Unlike a traditional gearbox, there are no discrete 
+gear steps; the ratio evolves smoothly between its minimum and maximum values.
+
+\begin{figure}[H]
+\centering
+% Replace with 3-ratio sheave illustration
+\includegraphics[width=0.85\textwidth]{./illustrations/overview/cvt_low_med_high_ratio.png}
+\caption{Conceptual illustration of a belt-sheave CVT at three different ratios. 
+Changing the axial separation of the conical sheaves alters the effective belt radius, 
+thereby modifying the transmission ratio continuously.}
+\label{fig:cvt_ratio_concept}
+\end{figure}
+
+% --------------------------------------------------------------
+\subsection{Continuous Ratio Versus Discrete Gearing}
+
+The defining feature of a CVT is that its transmission ratio can vary 
+smoothly rather than in discrete steps. To understand why this matters, 
+it is useful to first consider how a conventional transmission behaves.
+
+In a stepped gearbox, each gear pair imposes a fixed relationship between 
+engine speed and wheel speed. When vehicle speed increases beyond the 
+useful range of one gear, the transmission must shift to another. 
+This produces an abrupt change in engine speed for the same vehicle speed. 
+As a result, the engine repeatedly accelerates and decelerates as the 
+vehicle progresses through the gears.
+
+A belt-sheave CVT operates differently. Because the effective pulley 
+radii change continuously, the speed relationship between the engine 
+and drivetrain can be adjusted smoothly at any instant. There are no 
+fixed gear pairs that constrain the system to specific ratios. Instead, 
+the ratio can evolve gradually as operating conditions change.
+
+This continuous adjustability allows the engine to operate near a 
+preferred speed while the vehicle accelerates. For example, if an engine 
+produces its peak power within a narrow speed band, a CVT can maintain 
+the engine near that region while vehicle speed increases steadily. 
+Rather than stepping through gears, the transmission adapts its ratio 
+to match the engine’s most effective operating condition.
+
+The result is smoother acceleration, improved power utilization, and 
+greater flexibility in matching engine behavior to load demands.
+
+\begin{figure}[H]
+\centering
+\begin{minipage}{0.48\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{./illustrations/overview/discrete_transmission_shift_curve.png}
+\end{minipage}
+\hfill
+\begin{minipage}{0.48\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{./illustrations/overview/cvt_shift_curve.png}
+\end{minipage}
+\caption{Illustrative comparison of engine speed versus vehicle speed. 
+Left: stepped transmission showing discrete shifts. 
+Right: continuously variable transmission showing smooth ratio evolution.}
+\label{fig:cvt_vs_gearbox}
+\end{figure}
+
+% --------------------------------------------------------------
+\subsection{Traction-Based Torque Transmission}
+
+While the geometric adjustment of pulley radii determines the speed ratio, 
+torque is transmitted through frictional interaction between the belt and 
+the sheave faces.
+
+When a pulley attempts to rotate, it applies a tangential force to the belt. 
+For that force to be transmitted without relative motion, sufficient normal 
+clamping force must press the belt against the conical surfaces. The greater 
+the normal force, the greater the tangential force that can be supported 
+before slip occurs.
+
+This requirement arises directly from the nature of friction. The belt does 
+not contain rigid gear teeth that mechanically lock the pulleys together. 
+Instead, torque transfer depends on traction generated by contact pressure 
+and surface friction. If the transmitted torque exceeds the available 
+traction capacity, the belt will begin to slip relative to the sheave faces.
+
+Slip reduces efficiency, generates heat, and can accelerate component wear. 
+For this reason, CVT designs incorporate mechanisms that actively regulate 
+clamping force in response to operating conditions.
+
+It is therefore useful to distinguish between two interacting aspects of CVT behavior:
+\begin{itemize}
+    \item The \textbf{geometric ratio}, which determines relative speeds,
+    \item The \textbf{traction capacity}, which determines how much torque can be transmitted without slip.
+\end{itemize}
+
+Both must be considered to fully understand performance.
+
+\begin{figure}[H]
+\centering
+\begin{minipage}{0.48\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{./illustrations/overview/single_pulley_normal_and_friction.png}
+\end{minipage}
+\hfill
+\begin{minipage}{0.48\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{./illustrations/overview/cvt_cross_section_two_sheaves.png}
+\end{minipage}
+\caption{Belt-pulley contact mechanics and force transmission. 
+Left: belt wrapped around a pulley showing normal forces (pressing belt against sheave surface) 
+and tangential friction forces (transmitting torque through traction). 
+Right: cross-sectional view of a CVT pulley assembly showing how axial clamping force 
+between opposing sheaves generates the normal force required for friction and torque transmission.}
+\label{fig:belt_contact}
+\end{figure}
+
+% --------------------------------------------------------------
+\subsection{Actuation Mechanisms in the Present CVT}
+
+While the geometric principles described above apply to all belt-type CVTs, 
+the manner in which axial motion and clamping forces are generated depends 
+on the specific hardware implementation.
+
+The CVT considered in this work employs:
+
+\begin{itemize}
+    \item A \textbf{centrifugal flyweight and ramp mechanism} on the primary pulley,
+    \item A \textbf{torque-feedback helix mechanism} on the secondary pulley,
+    \item Compression and torsional springs that regulate axial clamping forces.
+\end{itemize}
+
+On the primary side, rotating flyweights move outward under centrifugal effects. 
+Through a ramped interface, this outward motion generates axial force, which 
+adjusts the sheave separation and alters the effective radius.
+
+
+\begin{figure}[H]
+\centering
+\begin{minipage}{0.48\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{./illustrations/overview/primary_cvt_cad.png}
+\end{minipage}
+\hfill
+\begin{minipage}{0.48\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{./illustrations/overview/primary_cvt_cad_cross_section.png}
+\end{minipage}
+\caption{Primary CVT pulley assembly. 
+Left: exterior view. 
+Right: cross-sectional view showing centrifugal flyweights (yellow), 
+ramps (green), and compression spring (red). 
+As engine speed increases, centrifugal force drives the flyweights outward along the ramps, 
+generating axial clamping force.}
+\label{fig:cvt_primary}
+\end{figure}
+
+On the secondary side, transmitted torque produces a rotational reaction within 
+a helical interface. This interaction generates axial force that increases 
+clamping in response to torque demand. Springs supplement this mechanism 
+to regulate baseline clamping and system stability.
+
+\begin{figure}[H]
+\centering
+\begin{minipage}{0.48\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{./illustrations/overview/secondary_cvt_cad.png}
+\end{minipage}
+\hfill
+\begin{minipage}{0.48\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{./illustrations/overview/secondary_cvt_cad_cross_section.png}
+\end{minipage}
+\caption{Secondary CVT pulley assembly. 
+Left: exterior view. 
+Right: cross-sectional view showing torque-feedback helix mechanism (bronze) 
+and torsional spring (black). 
+Transmitted torque generates a rotational reaction in the helix, 
+which produces axial clamping force proportional to load.}
+\label{fig:cvt_secondary}
+\end{figure}
+
+Although these mechanisms are specific to the hardware used in this system, 
+the underlying principles of variable effective radius and traction-based 
+torque transmission remain common to belt-driven CVTs.
+
+
+
+
+% --------------------------------------------------------------
+\subsection{Full Drivetrain Architecture}
+
+The CVT does not operate in isolation. In the system considered here, 
+the drivetrain consists of:
+
+\begin{itemize}
+    \item An internal combustion engine,
+    \item The primary CVT pulley,
+    \item A belt connecting to the secondary CVT pulley,
+    \item A fixed-ratio gearbox,
+    \item Final drive components and driven wheels,
+    \item Tire-ground interaction generating tractive forces.
+\end{itemize}
+
+Engine torque enters the primary pulley, is transmitted through the belt 
+to the secondary pulley, passes through a constant gear reduction, and 
+ultimately produces tractive force at the ground.
+
+The interaction between engine dynamics, CVT ratio evolution, drivetrain 
+inertia, and external load forces governs overall vehicle performance.
+
+\begin{figure}[h]
+\centering
+% Replace with full drivetrain schematic
+% \includegraphics[width=0.9\textwidth]{figures/drivetrain_overview_placeholder}
+\caption{Overview of the complete drivetrain architecture considered in this work.}
+\label{fig:drivetrain_overview}
+\end{figure}
+
+
+\section{Reference Material}\label{sec:notation}
+This section records any information for easy reference.
+
 \subsection{Coordinate and Sign Conventions}\label{sec:sign}
 
 A consistent set of coordinate directions and sign conventions
@@ -454,11 +694,9 @@ $R$ & CVT ratio (define direction explicitly) \\
 \label{tab:symbols_core}
 \end{table}
 
-\section{Units and Dimensions}\label{sec:units}
+\subsection{Base Units}
 
 All quantities in this document are expressed in SI units unless otherwise stated.
-
-\subsection{Base Units}
 
 \begin{table}[h]
 \centering
@@ -476,6 +714,7 @@ Plane angle & radian & \si{\radian} \\
 \end{table}
 
 \FloatBarrier
+
 \subsection{Common Derived Units}
 
 \begin{table}[h]
@@ -487,10 +726,10 @@ Velocity & meter per second & \si{\meter\per\second} \\
 Acceleration & meter per second squared & \si{\meter\per\second\squared} \\
 Angular velocity & radian per second & \si{\radian\per\second} \\
 Angular acceleration & radian per second squared & \si{\radian\per\second\squared} \\
-Force & newton & \si{\newton} \\
-Torque & newton meter & \si{\newton\meter} \\
+Force & newton (\si{\kilogram\meter\per\second\squared}) & \si{\newton} \\
+Torque & newton meter (\si{\kilogram\meter\squared\per\second\squared}) & \si{\newton\meter} \\
 Moment of inertia & kilogram meter squared & \si{\kilogram\meter\squared} \\
-Power & watt & \si{\watt} \\
+Power & watt (\si{\kilogram\meter\squared\per\second\cubed}) & \si{\watt} \\
 \bottomrule
 \end{tabular}
 \caption{Common derived SI units used in the CVT model.}
@@ -498,7 +737,8 @@ Power & watt & \si{\watt} \\
 \end{table}
 
 \FloatBarrier
-\section{Constants and Parameters}\label{sec:constants}
+
+\subsection{Constants and Parameters}\label{sec:constants}
 
 All physical constants, geometric parameters, and calibrated values used in the model are listed below.
 
@@ -1107,7 +1347,7 @@ symmetrically between the two opposing sheave faces. The geometric relation is i
 \begin{figure}[h]
 \centering
 \includegraphics[width=0.7\linewidth]{./illustrations/primary_geometry.png}
-\caption{Axial–radial relationship for opposing conical sheaves
+\caption{Axial-radial relationship for opposing conical sheaves
 with half-angle $\beta$.}
 \label{fig:primary_geometry}
 \end{figure}
@@ -3995,7 +4235,7 @@ traction. Under that assumption, the coupling torque
 \Eq{eq:tau_p_final} (and equivalently \Eq{eq:tau_s_final})
 represents the torque actually transmitted through the CVT.
 
-In reality, belt–pulley friction is finite. For a given normal clamping
+In reality, belt-pulley friction is finite. For a given normal clamping
 force, there exists a maximum tangential traction force that the contact
 can sustain. If the demanded coupling torque exceeds this traction
 capacity, slip occurs and the transmitted torque saturates at a
@@ -4159,7 +4399,7 @@ dT_{\max}
 \subsection{Integration Across the Wrap}
 \label{sec:traction_wrap}
 
-Define the tight–slack tension difference
+Define the tight-slack tension difference
 
 \begin{equation}
 \Delta T
