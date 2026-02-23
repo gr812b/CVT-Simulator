@@ -9,7 +9,7 @@
 - update illustration for belt_length_geometry.jpg
 -reference assumptions in belt section
 - Give more context to the wrap angle equations defined wrt s
-
+- In intro add v-belt introduction
 - Add illustrations to primary ramp and helix geometry
 
 MATH

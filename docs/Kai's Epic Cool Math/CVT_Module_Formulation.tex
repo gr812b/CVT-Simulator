@@ -1826,7 +1826,8 @@ pulley geometry.
 
 Torque transmission, however, occurs through the belt cross-section.
 The appropriate moment arm for torque is therefore located
-approximately at the mid-height of the belt.
+approximately at the mid-height of the belt, as illustrated in 
+\cref{fig:belt_cross_section_effective_radius}.
 
 The effective torque radius for each pulley is defined as
 
@@ -1838,7 +1839,15 @@ r_{p,\text{eff}} = r_{p,\text{outer}} - \frac{h_b}{2},
 r_{s,\text{eff}} = r_{s,\text{outer}} - \frac{h_b}{2}.
 \end{equation}
 
-These effective radii are used in all subsequent torque calculations.
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.6\linewidth]{./illustrations/geometry/belt_cross_section_effective_radius.png}
+\caption{Belt cross-section showing the outer radius $r_{\text{outer}}$, 
+inner radius $r_{\text{inner}}$, and effective torque radius $r_{\text{eff}}$ 
+located at the belt mid-height. The effective radius is used for all torque 
+and power transmission calculations.}
+\label{fig:belt_cross_section_effective_radius}
+\end{figure}
 
 
 % ==============================================================
