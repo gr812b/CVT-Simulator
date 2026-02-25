@@ -1800,7 +1800,7 @@ r_{s,\mathrm{outer}}(s)
 -
 r_{p,\mathrm{outer}}(s)
 }{C}
-\right),\\[8pt]
+\right),\label{eq:wrap_angle_primary}\\[8pt]
 \phi_s(s)
 &=
 \pi
@@ -1811,7 +1811,7 @@ r_{s,\mathrm{outer}}(s)
 -
 r_{p,\mathrm{outer}}(s)
 }{C}
-\right).
+\right).\label{eq:wrap_angle_secondary}
 \end{align}
 
 
@@ -2540,14 +2540,14 @@ mechanism's geometry using user-supplied functions of the axial shift coordinate
 \paragraph{Primary Ramp Geometry (Axial-to-Radial Profile)}
 
 On the primary pulley, centrifugal (radial) force is redirected into axial closing
-force through a ramp. We parameterize the ramp by an axial-to-radial profile
+force through a ramp (See \Fig{fig:primary_ramp}). We parameterize the ramp by an axial-to-radial profile
 \begin{equation}
 r_f = r_f(s),
 \label{eq:primary_profile}
 \end{equation}
 where $r_f(s)$ is the effective flyweight radius.
 
-Because $s$ is axial distance, the local ramp slope is $dr_f/ds$.
+As $r_f(s)$ is a function, the local ramp slope is $dr_f/ds$.
 The corresponding ramp angle is defined consistently as
 \begin{equation}
 \alpha_p(s) \;\equiv\; \tan^{-1}\!\left(\frac{dr_f}{ds}\right),
@@ -2562,14 +2562,22 @@ used later in the force model.
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=0.7\linewidth]{./illustrations/primary_ramp_definition.png}
-\caption{Primary ramp geometry. The flyweight radius is parameterized by $r_f(s)$, where $s$ is axial travel. The local ramp angle is defined by $\tan\alpha_p(s)=dr_f/ds$, so steeper profiles (larger $dr_f/ds$) redirect a larger fraction of radial force into axial closing force.}
+\begin{minipage}[t]{0.48\textwidth}
+\centering
+\includegraphics[width=\linewidth]{./illustrations/pulleyForces/primary_ramp_definition.png}
+\end{minipage}
+\hfill
+\begin{minipage}[t]{0.48\textwidth}
+\centering
+\includegraphics[width=\linewidth]{./illustrations/pulleyForces/radius_wrt_s_function.png}
+\end{minipage}
+\caption{Primary ramp geometry. \textbf{Left:} The flyweight radius is parameterized by $r_f(s)$, where $s$ is axial travel. The local ramp angle is defined by $\tan\alpha_p(s)=dr_f/ds$, so steeper profiles (larger $dr_f/ds$) redirect a larger fraction of radial force into axial closing force. \textbf{Right:} Sample profiles of $r_f(s)$ and its derivative $dr_f/ds$ as functions of axial shift.}
 \label{fig:primary_ramp}
 \end{figure}
 
 \paragraph{Primary Admissibility Conditions}
 
-The primary ramp profile $r_f(s)$ must satisfy:
+In order to be a valid primary ramp profile $r_f(s)$, it must satisfy:
 
 \begin{enumerate}
     \item $r_f(s) \in C^1([0,s_{\max}])$ (continuously differentiable),
@@ -2610,7 +2618,7 @@ matching the physical behavior described above.
 % Graphic for secondary helix definition
 \begin{figure}[h]
 \centering
-\includegraphics[width=0.7\linewidth]{./illustrations/secondary_helix_torque_to_axial.png}
+\includegraphics[width=0.7\linewidth]{./illustrations/pulleyForces/secondary_helix_torque_to_axial.png}
 \caption{Secondary helix geometry. Axial travel $s$ induces rotation $\theta_s(s)$ of the helix mechanism. The helix angle is defined so that shallower ramps produce greater rotation per unit axial travel: $\tan\alpha_s(s)=\big(r_h\,d\theta_s/ds\big)^{-1}$. Diagram should be 3d, show clearly which direction shift distance is in (and why the angle is defined differently). Use dotted lines to show a single angle along the ramp (instantaneous slope or smt)}
 \label{fig:secondary_helix_def}
 \end{figure}
@@ -2627,7 +2635,7 @@ The helix rotation mapping $\theta_s(s)$ must satisfy:
 
 Condition (1) ensures the torque-to-axial conversion remains continuous.
 Condition (2) guarantees that increasing axial displacement increases
-torsional loading. Condition (3) ensures the effective helix angle
+rotation. Condition (3) ensures the effective helix angle
 remains strictly below $\pi/2$ and the geometric gain remains finite.
 
 \begin{remarkbox}[Remark (Piecewise Profiles in Practice)]
@@ -2646,7 +2654,7 @@ solvers may be preferable.
 \\
 
 Derivations for common ramp and helix profiles are provided in
-Appendix~\ref{sec:ramp-profile-derivations-placeholder}.
+Appendix~\ref{sec:appendix-ramp-profiles}.
 \end{remarkbox}
 
 
@@ -2658,7 +2666,7 @@ flyweights and opposition from the primary compression spring.
 
 \begin{figure}[H]
 \centering
-%\includegraphics[width=0.7\linewidth]{./illustrations/primary_cvt_3d_model_placeholder.png}
+\includegraphics[width=0.7\linewidth]{./illustrations/pulleyForces/primary_cvt_mechanisms.png}
 \caption{Primary CVT assembly showing flyweight mass $m_f$, ramp profile $r_f(s)$,
 compression spring with stiffness $k_p$ and preload $x_{p,0}$, and axial shift
 coordinate $s$. TODO: use 3D model to define constants and show various aspects
@@ -2726,7 +2734,7 @@ by the local slope of the ramp profile.
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=0.7\linewidth]{./illustrations/primary_ramp_centrifugal_force.png}
+\includegraphics[width=0.7\linewidth]{./illustrations/pulleyForces/primary_ramp_centrifugal_force.png}
 \caption{Primary ramp geometry. Radial centrifugal force is redirected
 into axial force through the ramp. The projection introduces a factor
 of $\tan\alpha_p$, which equals $dr_f/ds$ by definition of the ramp slope.}
@@ -2927,7 +2935,7 @@ F_{s,\mathrm{helix}}(s,\tau_s)
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=0.7\linewidth]{./illustrations/secondary_helix_torque_to_axial.png}
+\includegraphics[width=0.7\linewidth]{./illustrations/pulleyForces/secondary_helix_torque_to_axial.png}
 \caption{Secondary helix geometry. Tangential force generated by shaft torque
 is redirected into axial force. The projection introduces a factor
 $1/\tan\alpha_s$, which equals $r_h\,d\theta_s/ds$ by definition of the helix mapping.
@@ -3016,12 +3024,14 @@ The belt cross-section is approximated as a trapezoid
     \item inner width $b_{\mathrm{in}}$ (at the belt's inner surface).
 \end{itemize}
 
-\begin{figure}[h]
+\begin{figure}[H]
 \centering
-%\includegraphics[width=0.55\linewidth]{./illustrations/belt_cross_section_placeholder.png}
+\includegraphics[width=0.55\linewidth]{./illustrations/pulleyForces/belt_cross_section.png}
 \caption{Trapezoidal belt cross-section. The outer width $b_{\mathrm{out}}$ corresponds
 to the surface away from the pulley axis; the inner width $b_{\mathrm{in}}$ corresponds
-to the surface closer to the axis. The radial thickness is $h_b$.}
+to the surface closer to the axis. The radial thickness is $h_b$ and the local width varies 
+linearly between $b_{\mathrm{out}}$ and $b_{\mathrm{in}}$, producing a $\delta r_{\mathrm{cm}}$ 
+offset of the mass centroid from the geometric center.}
 \label{fig:belt_cross_section_placeholder}
 \end{figure}
 
@@ -3164,9 +3174,9 @@ so that the wrapped arc spans
 
 where $\phi$ is the total wrap angle (see \Fig{fig:belt_centrifugal_wrap_placeholder}).
 
-\begin{figure}[h]
+\begin{figure}[H]
 \centering
-%\includegraphics[width=0.55\linewidth]{./illustrations/belt_centrifugal_wrap_placeholder.png}
+\includegraphics[width=0.55\linewidth]{./illustrations/pulleyForces/belt_element.png}
 \caption{Belt wrapped around a pulley. A differential element at angle $\theta$
 has arc length $\dd\ell = r_{\mathrm{cm}}\,\dd\theta$ and experiences radially
 outward centrifugal force.}
@@ -3280,7 +3290,7 @@ r_{p,\text{outer}}(s) - \Delta r_{\mathrm{cm}},
 \label{eq:rp_cm_def}
 \end{equation}
 
-and the wrap angle $\phi_p(s)$ is given by \Eq{eq:phi_p_of_s_expanded}.
+and the wrap angle $\phi_p(s)$ is given by \Eq{eq:wrap_angle_primary}.
 
 Substituting into \Eq{eq:Fc_ax_wrap} yields the primary belt centrifugal
 contribution to axial clamping:
@@ -3318,7 +3328,7 @@ r_{s,\text{outer}}(s) - \Delta r_{\mathrm{cm}},
 \label{eq:rs_cm_def}
 \end{equation}
 
-and the wrap angle $\phi_s(s)$ is given by \Eq{eq:phi_s_of_s_expanded}.
+and the wrap angle $\phi_s(s)$ is given by \Eq{eq:wrap_angle_secondary}.
 
 The secondary belt centrifugal contribution to axial clamping is
 
