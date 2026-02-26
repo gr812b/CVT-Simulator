@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo, useRef, useCallback } from 'react';
 import ReactECharts from 'echarts-for-react';
 import type { EChartsOption, CallbackDataParams } from 'echarts/types/dist/shared';
 import type { components } from '@types';
@@ -11,10 +11,41 @@ interface RampPreviewProps {
     config: PiecewiseRampConfig;
 }
 
+const CHART_HEIGHT = 400;
+const GRID = { left: 60, right: 40, top: 40, bottom: 60 } as const;
+
 export const RampPreview = ({ config }: RampPreviewProps) => {
     const [previewData, setPreviewData] = useState<RampPreviewResponse | null>(null);
     const [error, setError] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(false);
+    const [containerWidth, setContainerWidth] = useState(800);
+    const roRef = useRef<ResizeObserver | null>(null);
+
+    // Callback ref: React calls this with the DOM node as soon as it is
+    // attached, regardless of which render branch produced it.  This is more
+    // reliable than useEffect+useRef because useEffect only runs after the
+    // *first* render, which may be a loading/empty branch with no measurable
+    // width yet.
+    const sentinelRef = useCallback((el: HTMLDivElement | null) => {
+        // Clean up any previous observer
+        roRef.current?.disconnect();
+        roRef.current = null;
+
+        if (!el) return;
+
+        const measure = (width: number) => {
+            if (width > 0) setContainerWidth(width);
+        };
+
+        const ro = new ResizeObserver(entries => {
+            measure(entries[0]?.contentRect.width ?? 0);
+        });
+        ro.observe(el);
+        roRef.current = ro;
+
+        // Read immediately in case ResizeObserver doesn't fire synchronously
+        measure(el.getBoundingClientRect().width);
+    }, []);
 
     const configString = useMemo(() => JSON.stringify(config), [config]);
 
@@ -67,11 +98,24 @@ export const RampPreview = ({ config }: RampPreviewProps) => {
     };
 
     const chartOptions: EChartsOption = useMemo(() => {
-        // Get actual data ranges without artificial padding
-        const xMin = previewData?.x_min ?? 0;
-        const xMax = previewData?.x_max ?? 1;
-        const yMin = previewData ? Math.min(...previewData.y) : 0;
-        const yMax = previewData ? Math.max(...previewData.y) : 1;
+        // Y axis: always 0 → yMax  (requirement: top-left corner is 0,0)
+        const yMin = previewData ? Math.min(...previewData.y) : -1;
+
+        // Pixel dimensions of the plot area (inside the grid margins)
+        const plotHeightPx = CHART_HEIGHT - GRID.top - GRID.bottom;
+        const plotWidthPx  = containerWidth  - GRID.left - GRID.right;
+        console.log('Plot height (px):', plotHeightPx, 'Plot width (px):', plotWidthPx);
+
+        // Scale is driven entirely by Y so the graph always fills the full height
+        const ppm = plotHeightPx / yMin; // pixels per metre
+
+        // How many metres fit horizontally at this scale?
+        const availableXRange = plotWidthPx / ppm;
+
+        // Never let the data overflow to the right (requirement 5):
+        // if the data range is wider than what fits at this scale, expand the
+        // axis to match — the graph will fill exactly the available width.
+        const axisXMax = Math.abs(availableXRange);
 
         return {
             backgroundColor: COLORS.BACKGROUND,
@@ -93,8 +137,8 @@ export const RampPreview = ({ config }: RampPreviewProps) => {
                 axisTick: { lineStyle: { color: COLORS.GRID } },
                 axisLabel: { color: COLORS.TEXT },
                 splitLine: { lineStyle: { color: COLORS.GRID } },
-                min: xMin,
-                max: xMax,
+                min: 0,
+                max: axisXMax,
                 scale: false,
             },
             yAxis: {
@@ -111,7 +155,7 @@ export const RampPreview = ({ config }: RampPreviewProps) => {
                     lineStyle: { color: COLORS.GRID }
                 },
                 min: yMin,
-                max: yMax,
+                max: 0,
                 scale: false,
             },
             dataZoom: [
@@ -202,37 +246,56 @@ export const RampPreview = ({ config }: RampPreviewProps) => {
         );
     }
 
-    // Calculate 1:1 aspect ratio dimensions
-    const maxHeight = 400; // Maximum height in pixels
-    const gridMargins = { left: 60, right: 40, top: 40, bottom: 60 }; // From grid config
-    const plotHeight = maxHeight - gridMargins.top - gridMargins.bottom;
+    // // Calculate 1:1 aspect ratio dimensions
+    // const maxHeight = 400; // Maximum height in pixels
+    // const gridMargins = { left: 60, right: 40, top: 40, bottom: 60 }; // From grid config
+    // const plotHeight = maxHeight - gridMargins.top - gridMargins.bottom;
     
-    // Calculate data ranges
-    const xMin = previewData.x_min;
-    const xMax = previewData.x_max;
-    const yMin = Math.min(...previewData.y);
-    const yMax = Math.max(...previewData.y);
-    const xRange = xMax - xMin;
-    const yRange = yMax - yMin;
+    // // Calculate data ranges
+    // const xMin = previewData.x_min;
+    // const xMax = previewData.x_max;
+    // const yMin = Math.min(...previewData.y);
+    // const yMax = Math.max(...previewData.y);
+    // const xRange = xMax - xMin;
+    // const yRange = yMax - yMin;
     
-    // Calculate width to maintain 1:1 aspect ratio (pixels per meter should be equal)
-    const pixelsPerMeter = plotHeight / yRange;
-    const plotWidth = xRange * pixelsPerMeter;
-    const chartWidth = plotWidth + gridMargins.left + gridMargins.right;
+    // // Calculate width to maintain 1:1 aspect ratio (pixels per meter should be equal)
+    // const pixelsPerMeter = plotHeight / yRange;
+    // const plotWidth = xRange * pixelsPerMeter;
+    // const chartWidth = plotWidth + gridMargins.left + gridMargins.right;
 
-    return (
-        <div className={styles.previewContainer}>
-            <h4>Ramp Preview</h4>
+    const renderContent = () => {
+        if (error) {
+            return (
+                <div className={styles.error}>
+                    <p>Error generating preview:</p>
+                    <p>{error}</p>
+                </div>
+            );
+        }
+        if (isLoading) {
+            return <div className={styles.loading}>Loading preview...</div>;
+        }
+        if (!previewData) {
+            return <div className={styles.empty}>Add segments to see preview</div>;
+        }
+        return (
             <div className={styles.chartContainer}>
-                <ReactECharts 
-                    option={chartOptions} 
-                    style={{ 
-                        height: `${maxHeight}px`, 
-                        width: `${Math.max(chartWidth, 300)}px`, 
-                        maxWidth: '100%' 
-                    }} 
+                <ReactECharts
+                    option={chartOptions}
+                    style={{ height: `${CHART_HEIGHT}px`, width: '100%' }}
                 />
             </div>
+        );
+    };
+
+    // sentinelRef is placed on a zero-height div that is always rendered,
+    // so width measurement works in every state (loading, empty, error, data).
+    return (
+        <div className={styles.previewContainer}>
+            <div ref={sentinelRef} style={{ width: '100%', height: 0 }} />
+            <h4>Ramp Preview</h4>
+            {renderContent()}
         </div>
     );
 };
