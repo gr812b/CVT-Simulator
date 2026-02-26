@@ -3674,7 +3674,7 @@ that closes the remaining dynamical loop.
 \section{Torque Transmission and Coupling Torque}\label{sec:torque-coupling}
 
 The axial shift dynamics derived in \Sec{sec:shift-dyn}
-require the reacted secondary torque $\tau_s$
+require the transferred secondary torque $\tau_s$
 appearing in \Eq{eq:secondary_axial}.
 In this section we determine the torque transmitted
 through the CVT as a function of the rotational states
@@ -3699,12 +3699,12 @@ and will be generalized in the next section.
 
 \begin{figure}[H]
 \centering
-%\includegraphics[width=0.85\linewidth]{./illustrations/torque_path_placeholder.png}
-\caption{Torque transmission schematic (placeholder).
+\includegraphics[width=0.85\linewidth]{./illustrations/torque/cvt_overview_forces.png}
+\caption{Torque transmission schematic.
 Engine torque $\tau_{\text{eng}}$ drives the primary pulley
 (angular velocity $\omega_p$).
 Coupling torque $\tau_p$ is transmitted through the belt to the secondary pulley
-(angular velocity $\omega_s$), where it appears as $\tau_s = R\tau_p$.
+(angular velocity $\omega_s$), where it appears as $\tau_s$.
 The secondary delivers torque to the downstream drivetrain,
 which resists motion with torque $\tau_{\text{load}}$.}
 \label{fig:torque_path}
@@ -3761,37 +3761,37 @@ where
 \alpha_s(t) = \frac{d\omega_s}{dt}.
 \]
 
-At this stage we have four unknown quantities:
+At this stage, the externally applied torques
+$\tau_{\text{eng}}(t)$ and $\tau_{\text{load}}(t)$
+are treated as known inputs to the system.
+The inertias $I_p$ and $I_s$ are physical constants
+determined by the drivetrain configuration.
+
+The remaining unknown dynamic quantities are therefore
 
 \[
-\alpha_p(t),
-\qquad
-\alpha_s(t),
-\qquad
-\tau_p(t),
-\qquad
-\tau_s(t),
+\alpha_p(t),\qquad
+\alpha_s(t),\qquad
+\tau_p(t),\qquad
+\tau_s(t).
 \]
 
-but only two equations (\Eq{eq:primary_rot_dyn} and \Eq{eq:secondary_rot_dyn}).
-Two additional relations are therefore required to close the system. First, we will define the inertias $I_p$ and $I_s$ in terms of physical parameters of the system.
-% TODO: Make this final paragraph segue better
-At this point, the external torques $\tau_{\text{eng}}(t)$ and $\tau_{\text{load}}(t)$
-remain to be specified. In the remainder of this section we:
-(i) define $\tau_{\text{eng}}$ from the engine torque curve under a full-throttle assumption,
-and (ii) derive $\tau_{\text{load}}$ from longitudinal road-load theories and reflect it to the
-secondary pulley.
+Equations \Eq{eq:primary_rot_dyn} and \Eq{eq:secondary_rot_dyn}
+provide two relations among these four unknowns.
+Two additional relations are therefore required to close
+the rotational system.
 
 % --------------------------------------------------------------
 \subsection{Engine Torque Model}
 \label{sec:tau_eng_model}
 
-The primary forcing term $\tau_{\text{eng}}(t)$ is supplied by the engine.
-In this formulation, the engine is modeled as a user-provided torque curve
-defined as a function of primary angular velocity.
+The engine provides the driving torque
+$\tau_{\text{eng}}(t)$ acting on the primary pulley.
 
-Following \AssRef{assump:full_throttle_model}, we assume full-throttle operation
-throughout the simulation. Under this assumption,
+In this model, engine output torque is represented as a
+user-supplied function of primary angular velocity.
+Under the full-throttle assumption
+(\AssRef{assump:full_throttle_model}),
 
 \begin{equation}
 \tau_{\text{eng}}(t)
@@ -3800,44 +3800,72 @@ throughout the simulation. Under this assumption,
 \label{eq:tau_eng_from_curve}
 \end{equation}
 
-where $\tau_{\text{eng}}(\cdot)$ is a supplied admissible function.
+so torque depends only on instantaneous primary speed.
 
-\paragraph{Admissibility Constraints.}
+This representation is consistent with standard engine
+characterization, where torque is measured as a function
+of crankshaft speed under steady full-load conditions.
 
-The engine torque function must satisfy:
+% --------------------------------------------------------------
+\paragraph{Admissibility Constraints}
+
+The supplied torque function must satisfy:
 
 \begin{itemize}
     \item It is defined over a bounded operating domain
           $\omega_{\min} \le \omega_p \le \omega_{\max}$.
-    \item It is finite and real-valued on this domain.
+    \item It is finite and real-valued over this domain.
     \item Outside this domain, torque is either saturated
           or $\omega_p$ is constrained to remain within bounds.
 \end{itemize}
 
-No additional structural assumptions (e.g., polynomial form,
-closed-form analytic expression) are required by the dynamical model.
-Only the mapping $\omega_p \mapsto \tau_{\text{eng}}$ is needed
+No specific functional form is required.
+The dynamical model only requires the mapping
+$\omega_p \mapsto \tau_{\text{eng}}$
 to evaluate \Eq{eq:primary_rot_dyn}.
+
+% --------------------------------------------------------------
+\paragraph{Example: Kohler CH440 Engine Curve}
+
+As an illustrative example, \Fig{fig:ch440_torque_curve}
+shows a representative torque and power curve for the
+Kohler CH440 engine.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.75\linewidth]{./illustrations/torque/kohler_ch440_torque_power_curve.png}
+\caption{
+Representative torque and power curves for the Kohler CH440 engine.
+Torque is supplied as a function of angular velocity and serves as
+the input mapping in \Eq{eq:tau_eng_from_curve}.
+}
+\label{fig:ch440_torque_curve}
+\end{figure}
+
+In simulation, the discrete curve is interpolated to provide
+a continuous admissible torque function over the operating range.
 
 % --------------------------------------------------------------
 \subsection{Load Torque Model}
 \label{sec:tau_load_model}
 
 The resisting torque $\tau_{\text{load}}(t)$ in
-\Eq{eq:secondary_rot_dyn} represents the longitudinal
-road load reflected to the secondary pulley.
+\Eq{eq:secondary_rot_dyn} represents the
+longitudinal road load reflected to the secondary pulley.
 
-We derive this torque from first principles:
-(i) force balance on an inclined vehicle,
-(ii) standard rolling resistance theory,
-(iii) quadratic aerodynamic drag,
-(iv) reflection through wheel radius and gear ratio.
+We proceed in three stages:
+
+\begin{enumerate}
+    \item Express vehicle speed in terms of secondary rotation.
+    \item Derive the total longitudinal road force.
+    \item Reflect that force back to the secondary shaft.
+\end{enumerate}
 
 % --------------------------------------------------------------
-\paragraph{Step 1: Wheel and Gear Reflection}
+\paragraph{Kinematic Relations}
 
-Let $r_w$ denote effective wheel rolling radius,
-and $G>0$ the fixed gear ratio defined so that
+Let $r_w$ denote effective wheel rolling radius and
+$G>0$ the fixed gear ratio defined by
 
 \[
 \omega_s = G\,\omega_w.
@@ -3854,37 +3882,11 @@ r_w \omega_w(t)
 \label{eq:v_from_secondary}
 \end{equation}
 
-If $F_{\text{road}}(t)$ denotes the total longitudinal
-resistive force on the vehicle, then the wheel torque is
-
-\begin{equation}
-\tau_{\text{road},w}(t)
-=
-r_w F_{\text{road}}(t).
-\label{eq:tau_wheel}
-\end{equation}
-
-Assuming ideal power transmission
-(\AssRef{assump:ideal_cvt_power}),
-the reflected secondary torque is
-
-\begin{equation}
-\tau_{\text{load}}(t)
-=
-\frac{1}{G}\,\tau_{\text{road},w}(t)
-=
-\frac{r_w}{G} F_{\text{road}}(t).
-\label{eq:tau_load_basic}
-\end{equation}
-
-Thus we now determine $F_{\text{road}}(t)$.
-
 % --------------------------------------------------------------
-\paragraph{Step 2: Free-Body Diagram and Force Decomposition}
+\paragraph{Longitudinal Road Force}
 
-Consider the vehicle on an incline of angle $\alpha$.
-Using \theoryRef{th:newton-trans}, the longitudinal
-resistive force is modeled as
+Using \theoryRef{th:newton-trans},
+the total longitudinal resistive force on the vehicle is modeled as
 
 \begin{equation}
 F_{\text{road}}
@@ -3897,68 +3899,48 @@ F_{\text{drag}}.
 \label{eq:Froad_total}
 \end{equation}
 
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.75\linewidth]{./illustrations/torque/car_free_body_diagram.png}
+\caption{
+Free-body diagram of a vehicle on an incline.
+The weight $mg$ resolves into $mg\sin\alpha$ along the slope
+and $mg\cos\alpha$ normal to the surface.
+Rolling resistance and aerodynamic drag oppose motion.
+}
+\label{fig:car_fbd}
+\end{figure}
+
 % --------------------------------------------------------------
-\begin{remarkbox}[Diagram Placeholder (Incline Free-Body Diagram)]
-Insert a free-body diagram of the vehicle on an incline showing:
+\paragraph{Rolling Resistance}
 
-\begin{itemize}
-    \item Weight $mg$ acting vertically downward,
-    \item Decomposition into $mg\sin\alpha$ along the slope
-          and $mg\cos\alpha$ normal to the slope,
-    \item Normal force $N$ perpendicular to the surface,
-    \item Positive longitudinal direction $+x$,
-    \item Vehicle velocity $v$ along $+x$.
-\end{itemize}
-\end{remarkbox}
-% --------------------------------------------------------------
-
-\paragraph{Step 3: Rolling Resistance}
-
-from \theoryRef{th:rolling_resistance}, rolling resistance is modeled as proportional
-to the normal force:
+From \theoryRef{th:rolling_resistance},
 
 \begin{equation}
 F_{\text{rr}} = C_{\text{rr}}\,N.
 \label{eq:Frr_basic}
 \end{equation}
 
-From the incline free-body diagram,
-trigonometric decomposition of gravity gives
+From the incline geometry,
 
 \begin{equation}
 N = m g \cos\alpha.
 \label{eq:normal_force}
 \end{equation}
 
-Substituting \Eq{eq:normal_force} into \Eq{eq:Frr_basic}:
-
-\begin{equation}
-F_{\text{rr}}
-=
-C_{\text{rr}}\, m g \cos\alpha.
-\label{eq:Frr_mag}
-\end{equation}
-
-Rolling resistance always opposes motion.
-To enforce directionality, we multiply by the sign
-of velocity:
+Thus
 
 \begin{equation}
 F_{\text{rr}}(v,\alpha)
 =
-C_{\text{rr}}\, m g \cos\alpha
-\;\mathrm{sgn}(v).
+C_{\text{rr}} m g \cos\alpha \;\mathrm{sgn}(v).
 \label{eq:Frr_final}
 \end{equation}
 
-If $v>0$, the force acts opposite $+x$;
-if $v<0$, it acts opposite $-x$.
-
 % --------------------------------------------------------------
-\paragraph{Step 4: Grade Resistance}
+\paragraph{Grade Resistance}
 
-The longitudinal gravitational component from
-the free-body diagram is
+From \theoryRef{th:gravity_force}, the gravitational component along the slope is
 
 \begin{equation}
 F_{\text{grade}}(\alpha)
@@ -3967,38 +3949,23 @@ m g \sin\alpha.
 \label{eq:Fgrade}
 \end{equation}
 
-This term is positive for an uphill incline
-($\alpha>0$), meaning it resists forward motion.
-
 % --------------------------------------------------------------
-\paragraph{Step 5: Aerodynamic Drag}
+\paragraph{Aerodynamic Drag}
 
-Following \theoryRef{th:air_resistance},
-the aerodynamic force magnitude is
-
-\begin{equation}
-F_{\text{drag}} = \frac12 \rho C_d A_f v^2.
-\label{eq:Fdrag_mag}
-\end{equation}
-
-To ensure drag opposes motion, we write
+From \theoryRef{th:air_resistance},
 
 \begin{equation}
 F_{\text{drag}}(v)
 =
-\frac12 \rho C_d A_f
-\, v^2 \,\mathrm{sgn}(v).
+\frac12 \rho C_d A_f \, v^2 \,\mathrm{sgn}(v).
 \label{eq:Fdrag_final}
 \end{equation}
 
 % --------------------------------------------------------------
-\paragraph{Step 6: Total Road Force}
+\paragraph{Total Road Force}
 
-Substituting
-\Eq{eq:Frr_final},
-\Eq{eq:Fgrade},
-and \Eq{eq:Fdrag_final}
-into \Eq{eq:Froad_total} gives
+Substituting the above components into
+\Eq{eq:Froad_total} yields
 
 \begin{align}
 F_{\text{road}}(t)
@@ -4018,8 +3985,42 @@ m g \sin\alpha
 \end{align}
 
 Using \Eq{eq:v_from_secondary},
-$v(t) = \dfrac{r_w}{G}\omega_s(t)$,
-the fully expanded load torque becomes
+
+\[
+v(t)
+=
+\frac{r_w}{G}\,\omega_s(t),
+\]
+
+the road force is now fully expressed in terms of the
+secondary state variable $\omega_s(t)$.
+
+% --------------------------------------------------------------
+\paragraph{Reflection to Secondary Torque}
+
+Wheel torque is
+
+\begin{equation}
+\tau_{\text{road},w}(t)
+=
+r_w F_{\text{road}}(t).
+\label{eq:tau_wheel}
+\end{equation}
+
+Assuming ideal power transmission
+(\AssRef{assump:ideal_cvt_power}),
+the resisting torque reflected to the secondary pulley is
+
+\begin{equation}
+\tau_{\text{load}}(t)
+=
+\frac{1}{G}\,\tau_{\text{road},w}(t)
+=
+\frac{r_w}{G} F_{\text{road}}(t).
+\label{eq:tau_load_basic}
+\end{equation}
+
+Substituting \Eq{eq:Froad_expanded} gives
 
 \begin{equation}
 \boxed{
@@ -4040,20 +4041,20 @@ m g \sin\alpha
 \label{eq:tau_load_final}
 \end{equation}
 
-Equation \Eq{eq:tau_load_final}
-is the explicit resisting torque used
-in \Eq{eq:secondary_rot_dyn}.
-
 % --------------------------------------------------------------
 \subsection{Inertia Definitions}
 
 The rotational equations \Eq{eq:primary_rot_dyn}--\Eq{eq:secondary_rot_dyn}
-require the effective inertias about each pulley axis.
+require the effective rotational inertia about each pulley axis.
 
+% --------------------------------------------------------------
 \paragraph{Primary Pulley Inertia}
 
 The primary pulley is rigidly connected to the engine.
-Its effective inertia is therefore the direct sum of
+All components on this side rotate with angular velocity $\omega_p$,
+so no reflection is required.
+
+The effective inertia is therefore the direct sum
 
 \begin{equation}
 I_p
@@ -4070,15 +4071,11 @@ where
     \item $I_{\text{prim}}$ is the primary CVT pulley inertia.
 \end{itemize}
 
-No reflection is required on the primary side since all components
-rotate at the same angular velocity $\omega_p$.
-
 % --------------------------------------------------------------
 \paragraph{Secondary Pulley Inertia}
 
-All components downstream of the secondary pulley
-must be expressed as an equivalent inertia about
-the secondary pulley axis.
+On the secondary side, all downstream components must be
+expressed as an equivalent inertia about the secondary axis.
 
 Let
 
@@ -4088,14 +4085,13 @@ Let
     \item $I_{\text{wheel}}$ : wheel + hub inertia about the wheel axis,
     \item $m$ : total vehicle mass,
     \item $r_w$ : effective wheel rolling radius,
-    \item $G$ : fixed gear ratio between secondary pulley and wheel
-          (defined so that $\omega_s = G\,\omega_w$).
+    \item $G$ : fixed gear ratio defined by $\omega_s = G\,\omega_w$.
 \end{itemize}
 
 % --------------------------------------------------------------
-\paragraph{Vehicle Mass Contribution}
+\paragraph{Vehicle Mass as Equivalent Rotational Inertia}
 
-The vehicle translational kinetic energy is given by \theoryRef{th:kinetic_energy_trans}:
+The vehicle’s translational kinetic energy is
 
 \[
 T_{\text{trans}}
@@ -4104,15 +4100,18 @@ T_{\text{trans}}
 \]
 
 with $v = r_w \omega_w$.
-Expressed in rotational form about the wheel axis:
+
+Substituting,
 
 \[
 T_{\text{trans}}
 =
+\frac12 m (r_w \omega_w)^2
+=
 \frac12 (m r_w^2)\,\omega_w^2.
 \]
 
-Thus the vehicle mass contributes an effective rotational inertia
+Thus the vehicle mass behaves as an effective rotational inertia
 
 \[
 I_{\text{veh,wheel}} = m r_w^2
@@ -4121,12 +4120,12 @@ I_{\text{veh,wheel}} = m r_w^2
 about the wheel axis.
 
 % --------------------------------------------------------------
-\paragraph{Reflection to the Secondary Pulley}
+\paragraph{Reflection to the Secondary Axis}
 
 Because $\omega_s = G\,\omega_w$,
 we have $\omega_w = \omega_s/G$.
 
-Expressing kinetic energy in terms of $\omega_s$:
+Expressing the downstream kinetic energy in terms of $\omega_s$:
 
 \[
 T
@@ -4136,7 +4135,19 @@ T
 \frac12 (m r_w^2) \left(\frac{\omega_s}{G}\right)^2.
 \]
 
-Therefore inertias at the wheel are reflected to the secondary pulley by
+Factoring,
+
+\[
+T
+=
+\frac12
+\left(
+\frac{I_{\text{wheel}} + m r_w^2}{G^2}
+\right)
+\omega_s^2.
+\]
+
+Therefore, inertias at the wheel reflect to the secondary pulley as
 
 \[
 I_{\text{reflected}}
@@ -4147,7 +4158,7 @@ I_{\text{reflected}}
 % --------------------------------------------------------------
 \paragraph{Total Secondary Inertia}
 
-The total effective inertia about the secondary pulley becomes
+The total effective inertia about the secondary pulley is
 
 \begin{equation}
 I_s
@@ -4160,9 +4171,8 @@ I_{\text{gb}}
 \label{eq:Is_def}
 \end{equation}
 
-Equation \Eq{eq:Is_def} defines the total inertia resisting
-angular acceleration of the secondary pulley.
-
+Equation \Eq{eq:Is_def} defines the total inertia
+opposing angular acceleration of the secondary pulley.
 
 % --------------------------------------------------------------
 \subsection{Ratio Kinematics}
@@ -4176,15 +4186,35 @@ R(t)
 \frac{r_{s,\text{eff}}(t)}{r_{p,\text{eff}}(t)}.
 \]
 
-Under ideal belt transmission, the pulley speeds satisfy
+To relate pulley speeds, we now introduce the
+\emph{no-slip constraint}.
+
+Under ideal belt transmission, the belt surface speed
+must match the tangential speed of both pulley faces.
+This enforces
+
+\begin{equation}
+r_{p,\text{eff}}(t)\,\omega_p(t)
+=
+r_{s,\text{eff}}(t)\,\omega_s(t).
+\label{eq:no_slip_condition}
+\end{equation}
+
+Substituting the geometric ratio definition gives
 
 \begin{equation}
 \omega_p(t) = R(t)\,\omega_s(t).
 \label{eq:ratio_speed_constraint}
 \end{equation}
 
+This relation is equivalent to assuming zero slip between
+belt and sheaves.
+Slip effects will be handled in a later section.
+
+% --------------------------------------------------------------
+
 Differentiating \Eq{eq:ratio_speed_constraint}
-\emph{with respect to time} gives
+with respect to time gives
 
 \begin{equation}
 \alpha_p(t)
@@ -4196,19 +4226,22 @@ R(t)\,\alpha_s(t)
 \end{equation}
 
 where $\dot R(t) = \dfrac{dR}{dt}$
-was derived previously
 (see \Eq{eq:Rdot_final}).
 
-Equation \Eq{eq:alpha_relation}
-captures the coupling introduced by a time-varying ratio:
-even if $\alpha_s=0$, a changing ratio ($\dot R \neq 0$)
-produces primary acceleration.
+Equation \Eq{eq:alpha_relation} captures the dynamic coupling
+introduced by a time-varying ratio:
+even if $\alpha_s = 0$,
+a changing ratio ($\dot R \neq 0$)
+produces primary angular acceleration.
+
+This provides one of the
+additional relations required to close the rotational system.
 
 % --------------------------------------------------------------
 \subsection{Torque Mapping Across the CVT}
 
-The belt transmits power from the primary pulley to the secondary pulley.
-In general,
+The belt transfers mechanical power between the primary and
+secondary pulleys. In general,
 
 \begin{equation}
 \tau_p(t)\,\omega_p(t)
@@ -4219,37 +4252,42 @@ P_{\text{loss}}(t),
 \label{eq:power_balance_general}
 \end{equation}
 
-where $P_{\text{loss}}(t)$ represents internal dissipation.
-This identity always holds; modeling assumptions determine how
-$P_{\text{loss}}$ is represented.
+where $P_{\text{loss}}$ represents internal dissipation
+(e.g., belt hysteresis, bearing drag).
 
-Following \AssRef{assump:ideal_cvt_power},
-we set $P_{\text{loss}}(t) = 0$, giving
+Following \AssRef{assump:ideal_cvt_power}, we neglect these
+non-slip-related losses and set
 
-\begin{equation}
-\tau_p(t)\,\omega_p(t)
-=
-\tau_s(t)\,\omega_s(t).
-\label{eq:power_balance_ideal}
-\end{equation}
+\[
+P_{\text{loss}}(t) = 0.
+\]
 
-Substituting \Eq{eq:ratio_speed_constraint} yields
+This assumption removes internal inefficiencies but does
+\emph{not} by itself impose the no-slip constraint.
+
+% --------------------------------------------------------------
+
+When the belt is in sticking contact,
+the kinematic relation \Eq{eq:ratio_speed_constraint}
+holds. Substituting $\omega_p = R\,\omega_s$
+into the ideal power balance gives
 
 \begin{equation}
 \tau_s(t) = R(t)\,\tau_p(t).
 \label{eq:tau_relation}
 \end{equation}
 
-Equation \Eq{eq:tau_relation}
-is the explicit torque relation required
-to eliminate $\tau_s$.
+Equation \Eq{eq:tau_relation} is therefore the
+ideal torque mapping associated with the geometric ratio.
+If slip occurs, \Eq{eq:ratio_speed_constraint} no longer holds
+and the torque relation must be modified accordingly.
 
 % --------------------------------------------------------------
 \subsection{Eliminating Accelerations}
 
 We now have four equations (\Eq{eq:primary_rot_dyn}, \Eq{eq:secondary_rot_dyn}, \Eq{eq:alpha_relation}, \Eq{eq:tau_relation})
 and four unknowns ($\alpha_p$, $\alpha_s$, $\tau_p$, $\tau_s$).
-The goal is to eliminate the accelerations $\alpha_p$ and $\alpha_s$ to obtain a closed-form expression for the coupling torque $\tau_p$ in terms of the known quantities $\tau_{\text{eng}}$, $\tau_{\text{load}}$, $R$, and $\dot R$.
+The goal is to eliminate the accelerations $\alpha_p$ and $\alpha_s$ to obtain a closed-form expression for the coupling torque $\tau_p$ in terms of the known quantities $\tau_{\text{eng}}$, $\tau_{\text{load}}$, $I_p$, $I_s$, $R$, and $\dot R$.
 
 From \Eq{eq:primary_rot_dyn},
 
@@ -4351,22 +4389,35 @@ required by \Eq{eq:secondary_axial}, then follows from
 }
 
 % --------------------------------------------------------------
+% --------------------------------------------------------------
 \subsection{Section Summary}
 
-We began with rotational equations of motion for the primary and secondary pulleys.
-These introduced more unknowns than equations.
-Closure was obtained by incorporating:
+We began with the rotational equations of motion for the
+primary and secondary pulleys, introducing four unknowns
+($\alpha_p$, $\alpha_s$, $\tau_p$, $\tau_s$)
+but only two dynamical equations.
+
+Closure was achieved by imposing two additional physical relations:
 
 \begin{itemize}
-    \item The geometric ratio definition $R(t)$,
-    \item Its time derivative $\dot R(t)$,
-    \item The torque mapping implied by power transfer across the CVT.
+    \item The \emph{no-slip kinematic constraint}
+          $\omega_p = R\,\omega_s$, together with its
+          time derivative $\alpha_p = R\alpha_s + \omega_s\dot R$.
+    \item The \emph{ideal power-transfer assumption}
+          (\AssRef{assump:ideal_cvt_power}),
+          which neglects non-slip-related losses and yields
+          the torque mapping $\tau_s = R\,\tau_p$.
 \end{itemize}
 
-The resulting coupling torque \Eq{eq:tau_p_final}
-expresses the torque transmitted through the CVT
-in terms of the instantaneous ratio and ratio rate.
-Substitution of \Eq{eq:tau_s_final} into \Eq{eq:secondary_axial}
+Together, these relations close the rotational system and
+produce the explicit coupling torque
+\Eq{eq:tau_p_final}, which expresses the transmitted
+torque in terms of the instantaneous ratio $R(t)$
+and ratio rate $\dot R(t)$.
+
+Substitution of $\tau_s = R\,\tau_p$
+into the secondary axial force model
+\Eq{eq:secondary_axial}
 completes the dynamical coupling required
 for the axial shift equation \Eq{eq:s_ddot_final}.
 

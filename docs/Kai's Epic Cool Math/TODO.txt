@@ -63,3 +63,9 @@ Secondary
 Belt
 (might be good to use dr/ds notation earlier!)
 
+
+
+Shigleys
+898/875 - Discussed the total length of belt stuff, making small angle assumption sneakily
+899/877 - Discusses balance of forces on infinitesimal belt portion (for FLAT belts only! Later assumed true in CVTs pg 918/895)
+
