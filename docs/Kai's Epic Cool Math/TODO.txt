@@ -11,6 +11,7 @@
 - Give more context to the wrap angle equations defined wrt s
 - In intro add v-belt introduction
 - Add illustrations to primary ramp and helix geometry
+- Assumption: Negligible weight of flyarms
 
 MATH
 Add section for effective coefficient of friction in sheaves. Reference Assump 5
@@ -55,34 +56,10 @@ s_max - maximum axial movement before sheaves hit each other
 
 Feedback section 8
 
-Intro
-Section is pretty unclear. Should really setup the idea of these clamping forces (find to reference intro section). Should specify and state clearly that the acceleration of s is determined via these clamping forces. Maybe show a diagram etc.
-Remove stuff about state vector reference again as well as conventions
-
-Ramp
-Maybe a good idea to somehow show that we move along the ramp as we shift more clearly
-Figure should highlight r_f(s) as a function the entire way through, show origin. Maybe nice to see slope profile as well?
-Is the secnondary ramp definition right? Why is r_h here?
-Remark on why this is opposite to primary
-
-Primary
-Just a better intro with the figure stating the two components. Maybe dont mention it until here, only state some axial force
 
 Secondary
-Explanation is really muddy. Back n forth, not clear what is being explained. Needs improvement. Good to talk about needing to react to stuff on either side, just unclear. Maybe would be good to show the wheels pushing onto the helix (and show the belt pushing the one (How does it work if belt pushes both?... strange....)
-Explain the /2 term
-Check that r_h in ramp definition
-In final eqn, compression part of spring, torsional part of spring (same spring, make it clear)
+(and show the belt pushing the one (How does it work if belt pushes both?... strange....)
 
 Belt
-Rewrite without linear mass density (stupid)
-Write a final dF_c before moving on (expanded with dm)
-Radial-to_axial conversion should be more clear with a diagram (Likely one from before!). Or we can reference the earlier section too that defined this (might be good to use dr/ds notation earlier!)
-Why inverted?
+(might be good to use dr/ds notation earlier!)
 
-Shift dynamics
-Redoing sign convention bad!
-Introduce N2L before the mass section
-
-Conclusion
-Remove second paragraph
