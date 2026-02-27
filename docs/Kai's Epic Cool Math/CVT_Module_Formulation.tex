@@ -898,6 +898,15 @@ Effective pulley radii are determined solely from geometry
 and belt-length constraints.
 \end{assumptionblock}
 
+\begin{assumptionblock}{assump:uniform_contact_radius}{Uniform Contact Radius Around Wrap}
+At any given instant, the belt contacts each pulley at a single,
+uniform effective radius throughout the entire wrap angle.
+The contact radius is constant around the circumference of contact,
+with no spiral or progressive radial variation along the wrap.
+While the effective radius may evolve with axial shift position,
+it remains spatially uniform at each time instant.
+\end{assumptionblock}
+
 % ======================================================
 \subsection{Dynamic and Inertial Modeling}
 
@@ -3036,6 +3045,8 @@ Notably, the helix radius $r_h$ cancels: torque is converted into
 axial force according to the geometric rotation-per-travel
 relationship $d\theta_s/ds$, consistent with screw mechanics.
 
+TODO: Remark on less friction at bigger radius if being considered
+
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.7\linewidth]{./illustrations/pulleyForces/secondary_helix_torque_to_axial.png}
@@ -3315,9 +3326,10 @@ A differential belt element has arc length
 
 From \Eq{eq:dm_belt}, the corresponding differential mass is
 
-\[
+\begin{equation}
 \dd m = \rho_b A_b r_{\mathrm{cm}}\,\dd\theta.
-\]
+\label{eq:dm_belt_wrap}
+\end{equation}
 
 From \theoryRef{th:centrifugal_force}, the centrifugal force on this element is
 
@@ -4446,28 +4458,128 @@ The objective of this section is to derive a traction inequality of the form
 
 which will later be enforced in place of the ideal coupling law whenever
 the no-slip solution violates this bound.
+% --------------------------------------------------------------
+\subsection{Tight--Slack Tension Difference and Torque Capacity}
+\label{sec:traction_overview}
 
-% ==============================================================
+Consider the wrapped pulley shown in \Fig{fig:tight_slack}.  
+If torque is transmitted from the pulley to the belt, the belt tension
+cannot be the same on both spans. One side must carry a higher tension
+than the other. We therefore define
+
+\begin{equation}
+\Delta T
+\;\equiv\;
+T_{\mathrm{tight}}
+-
+T_{\mathrm{slack}},
+\label{eq:deltaT_def}
+\end{equation}
+
+where $T_{\mathrm{tight}}$ and $T_{\mathrm{slack}}$ are the belt tensions
+on the two straight spans shown in the figure.
+
+This tension difference arises because the pulley applies tangential
+traction to the belt along the wrap angle $\phi$.
+The cumulative effect of this traction increases the belt tension
+progressively from the slack side to the tight side.
+
+At effective contact radius $r_{\mathrm{eff}}$, the transmitted torque is
+
+\begin{equation}
+\tau
+=
+r_{\mathrm{eff}}\,\Delta T,
+\qquad
+|\tau|
+=
+r_{\mathrm{eff}}\,|\Delta T|.
+\label{eq:tau_from_deltaT}
+\end{equation}
+
+Thus, limiting the transmitted torque is equivalent to limiting
+the admissible tension difference $\Delta T$.
+
+% --------------------------------------------------------------
+
+Under \AssRef{assump:ideal_friction} and
+\AssRef{assump:constant_friction},
+the belt–pulley interface obeys a Coulomb friction law with constant
+coefficient $\mu$. The tangential traction at any point along the wrap
+is therefore bounded by the local normal load:
+\[
+|F_f| \le \mu N.
+\]
+
+The \emph{maximum} admissible tension difference occurs when friction is
+fully mobilized everywhere along the wrap — that is, at impending slip.
+Beyond this point, additional tension rise cannot be supported and
+sliding must occur.
+
+We therefore define a maximum supported tension difference
+$\Delta T_{\max}$, corresponding to the friction-saturated state,
+and the associated torque capacity
+
+\begin{equation}
+\tau_{\max}
+=
+r_{\mathrm{eff}}\,\Delta T_{\max}.
+\label{eq:tau_max_def}
+\end{equation}
+
+The next subsection computes $\Delta T_{\max}$ by examining the
+incremental change in belt tension along the wrap.
+
+\begin{remarkbox}[Remark (Friction)]
+TODO: Discuss other options for modelling friction of the rubber belt, reference that paper. Appendix?
+\end{remarkbox}
+
+\begin{figure}[H]
+\centering
+\fbox{\parbox{0.9\linewidth}{
+\textbf{Placeholder: tight/slack tensions on a wrapped pulley.}
+Draw pulley with wrap angle $\phi$.
+Label $T_{\mathrm{slack}}$ on the entering span,
+$T_{\mathrm{tight}}$ on the leaving span,
+and indicate belt motion direction.
+Show effective radius $r_{\mathrm{eff}}$.
+}}
+\caption{Torque transmission requires a tight--slack tension difference across the wrap.}
+\label{fig:tight_slack}
+\end{figure}
+
 \subsection{Differential Belt Element and Tangential Force Balance}
 \label{sec:traction_element}
+
+To determine the maximum admissible tension difference
+$\Delta T_{\max}$ introduced in \Sec{sec:traction_overview},
+we now examine how belt tension changes \emph{locally}
+as the belt passes around the pulley.
+
+Specifically, we seek an expression for the incremental
+tension change $\dd T$ over a differential wrap angle $\dd\theta$.
+Once $\dd T$ is related to the available friction at the interface,
+integration over the total wrap angle $\phi$ will yield
+$\Delta T_{\max}$.
+
+% --------------------------------------------------------------
 
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.55\linewidth]{./illustrations/belt_element.png}
-    \caption{Free-body diagram of a differential belt element spanning $d\theta$.}
+    \caption{Free-body diagram of a differential belt element spanning $\dd \theta$.}
     \label{fig:traction_element}
 \end{figure}
 
-Consider a differential belt element spanning an infinitesimal wrap angle
-$d\theta$ on a pulley, as shown in \Fig{fig:traction_element}. The belt
-tension entering the element is $T$, and leaving the element is
-$T + dT$.
+Consider the differential belt element shown in \Fig{fig:traction_element},
+spanning an infinitesimal wrap angle $\dd\theta$.
+The belt tension entering the element is $T$,
+and leaving is $T + \dd T$.
 
-The pulley exerts on the belt element:
-
+The pulley applies to this element:
 \begin{itemize}
-    \item a differential normal force $dN$ (radial),
-    \item a differential friction force $dF_f$ (tangential).
+    \item a differential normal force $\dd N$ (radial),
+    \item a differential tangential friction force $\dd F_f$.
 \end{itemize}
 
 The positive tangential direction is taken along the midpoint tangent
@@ -4479,7 +4591,7 @@ of the element, consistent with increasing wrap angle.
 Applying \theoryRef{th:newton-trans} in the tangential direction:
 
 \begin{equation}
-\sum F_t = dm \, a_t,
+\sum F_t = \dd m \, a_t,
 \label{eq:newton_tangential}
 \end{equation}
 
@@ -4489,9 +4601,9 @@ contact point.
 The tangential components of the end tensions follow directly from geometry:
 
 \begin{align}
-(T)_t &= T\cos\!\left(\frac{d\theta}{2}\right),
+(T)_t &= T\cos\!\left(\frac{\dd \theta}{2}\right),
 \\[4pt]
-(T+dT)_t &= (T+dT)\cos\!\left(\frac{d\theta}{2}\right).
+(T+\dd T)_t &= (T+\dd T)\cos\!\left(\frac{\dd \theta}{2}\right).
 \end{align}
 
 The left-end tension acts in the positive tangential direction,
@@ -4499,95 +4611,93 @@ while the right-end tension acts in the negative tangential direction.
 Including friction, the tangential force balance becomes
 
 \begin{equation}
-T\cos\!\left(\frac{d\theta}{2}\right)
+T\cos\!\left(\frac{\dd \theta}{2}\right)
 -
-(T+dT)\cos\!\left(\frac{d\theta}{2}\right)
+(T+\dd T)\cos\!\left(\frac{\dd \theta}{2}\right)
 +
-dF_f
+\dd F_f
 =
-dm\,a_t.
+\dd m\,a_t.
 \label{eq:tangential_balance_expanded}
 \end{equation}
 
 Simplifying the first two terms exactly,
 
 \begin{equation}
--dT \cos\!\left(\frac{d\theta}{2}\right)
+-\dd T \cos\!\left(\frac{\dd \theta}{2}\right)
 +
-dF_f
+\dd F_f
 =
-dm\,a_t.
+\dd m\,a_t.
 \label{eq:tangential_balance_simplified}
 \end{equation}
 
 Rearranging,
 
 \begin{equation}
-dT \cos\!\left(\frac{d\theta}{2}\right)
+\dd T \cos\!\left(\frac{\dd \theta}{2}\right)
 =
-dF_f
+\dd F_f
 -
-dm\,a_t.
+\dd m\,a_t.
 \label{eq:dT_exact}
 \end{equation}
 
 % --------------------------------------------------------------
 \paragraph{Belt mass element}
 
-From \Eq{eq:dm_belt},
+From \Eq{eq:dm_belt_wrap},
 
 \begin{equation}
-dm = \mu_b \, r_{\mathrm{cm}} \, d\theta,
+\dd m = \rho_b A_b r_{\mathrm{cm}}\,\dd\theta.
 \end{equation}
 
 so
 
 \begin{equation}
-dm\,a_t
+\dd m\,a_t
 =
-\mu_b r_{\mathrm{cm}} a_t \, d\theta.
+\rho_b A_b r_{\mathrm{cm}} a_t \, \dd \theta.
 \label{eq:dm_at}
 \end{equation}
 
 Substituting into \Eq{eq:dT_exact},
 
 \begin{equation}
-dT \cos\!\left(\frac{d\theta}{2}\right)
+\dd T \cos\!\left(\frac{\dd \theta}{2}\right)
 =
-dF_f
+\dd F_f
 -
-\mu_b r_{\mathrm{cm}} a_t \, d\theta.
+\rho_b A_b r_{\mathrm{cm}} a_t \, \dd \theta.
 \label{eq:dT_with_mass}
 \end{equation}
 
 % --------------------------------------------------------------
 \paragraph{Friction limit and impending slip}
 
-\theoryRef{th:coulomb_friction} states that the friction force magnitude is bounded by the normal force:
+As established in \Sec{sec:traction_overview}, the maximum admissible
+tension rise occurs when friction is fully mobilized along the wrap
+(impending slip). At the differential level, this corresponds to
 
 \begin{equation}
-|dF_f| \le \mu \, dN.
-\label{eq:coulomb_limit}
-\end{equation}
-
-The maximum transmissible tension increase occurs when friction is fully
-mobilized in the direction that increases tension (impending slip):
-
-\begin{equation}
-dF_f = +\mu \, dN.
+\dd F_f = \mu \, \dd N.
 \label{eq:friction_saturated}
 \end{equation}
 
 Substituting \Eq{eq:friction_saturated} into
-\Eq{eq:dT_with_mass} gives the maximum local tension change:
+\Eq{eq:dT_with_mass} yields the maximum local
+tension increase supported without sliding:
 
 \begin{equation}
-dT_{\max}
+\dd T_{\max}
 =
-\frac{\mu\, dN
+\frac{
+\mu\, \dd N
 -
-\mu_b r_{\mathrm{cm}} a_t \, d\theta}
-{\cos\!\left(\frac{d\theta}{2}\right)}.
+\rho_b A_b r_{\mathrm{cm}} a_t \, \dd \theta
+}{
+\cos\!\left(\frac{\dd \theta}{2}\right)
+}.
 \label{eq:dT_max_local}
 \end{equation}
 
@@ -4595,103 +4705,85 @@ dT_{\max}
 \subsection{Integration Across the Wrap}
 \label{sec:traction_wrap}
 
-Define the tight-slack tension difference
+The tight--slack tension difference introduced in
+\Sec{sec:traction_overview} is obtained by accumulating the
+incremental tension changes $\dd T$ along the contact arc.
+Since tension evolves continuously around the wrap,
 
 \begin{equation}
 \Delta T
 =
-T_{\mathrm{tight}}
--
-T_{\mathrm{slack}}
+T_{\mathrm{tight}} - T_{\mathrm{slack}}
 =
-\int_0^\phi dT.
-\label{eq:deltaT_def}
+\int_{-\phi/2}^{\phi/2} \dd T.
+\label{eq:deltaT_integral_def}
 \end{equation}
 
-The maximum admissible tension difference is therefore
+Accordingly, the maximum admissible tension difference is obtained
+by integrating the local maximum increment $\dd T_{\max}$ from
+\Eq{eq:dT_max_local}:
 
 \begin{equation}
 \Delta T_{\max}
 =
-\int_0^\phi
-\frac{\mu\, dN
+\int_{-\phi/2}^{\phi/2}
+\frac{
+\mu\, \dd N
 -
-\mu_b r_{\mathrm{cm}} a_t \, d\theta}
-{\cos\!\left(\frac{d\theta}{2}\right)}.
+\rho_b A_b r_{\mathrm{cm}} a_t \, \dd \theta
+}{
+\cos\!\left(\frac{\dd \theta}{2}\right)
+}.
 \label{eq:deltaT_integral}
 \end{equation}
 
-In the differential limit $d\theta \to 0$,
-$\cos(d\theta/2) \to 1$, yielding
+In the differential limit $\dd\theta \to 0$,
+$\cos(\dd\theta/2) \to 1$, yielding
 
 \begin{equation}
 \Delta T_{\max}
 =
-\int_0^\phi \mu\, dN
+\int_{-\phi/2}^{\phi/2} \mu\, \dd N
 -
-\int_0^\phi \mu_b r_{\mathrm{cm}} a_t \, d\theta.
+\int_{-\phi/2}^{\phi/2}
+\rho_b A_b r_{\mathrm{cm}} a_t \, \dd \theta.
 \label{eq:deltaT_after_limit}
 \end{equation}
 
-Define total normal force over the wrap:
+The first integral represents the total normal load
+supported over the wrap, which we denote
 
 \begin{equation}
 N_\phi
-=
-\int_0^\phi dN.
+\;\equiv\;
+\int_{-\phi/2}^{\phi/2} \dd N.
 \label{eq:Nphi_def}
 \end{equation}
 
-Assuming $r_{\mathrm{cm}}$ and $a_t$ are approximately constant over
-the wrap,
+(The explicit relationship between $N_\phi$ and the axial
+clamping force is derived in \Sec{sec:normal_from_clamp}.)
+
+From \AssRef{assump:uniform_contact_radius}, $r_{\mathrm{cm}}$ and $a_t$ are uniform over
+the wrap, and so the second integral simplifies to
+$\rho_b A_b r_{\mathrm{cm}} a_t \phi$, giving
 
 \begin{equation}
 \Delta T_{\max}
 =
 \mu N_\phi
 -
-\mu_b r_{\mathrm{cm}} a_t \phi.
+\rho_b A_b r_{\mathrm{cm}} a_t \phi.
 \label{eq:deltaT_final}
 \end{equation}
 
-% ==============================================================
-\subsection{Torque Capacity Inequality}
-\label{sec:tau_capacity}
-
-The transmitted torque magnitude is
-
-\begin{equation}
-|\tau|
-=
-r_{\mathrm{eff}} |\Delta T|.
-\label{eq:tau_deltaT}
-\end{equation}
-
-Substituting \Eq{eq:deltaT_final} gives the traction limit
-
-\begin{equation}
-|\tau|
-\le
-r_{\mathrm{eff}}
-\left(
-\mu N_\phi
--
-\mu_b r_{\mathrm{cm}} a_t \phi
-\right).
-\label{eq:tau_capacity_pre_accel}
-\end{equation}
-
-Equation \Eq{eq:tau_capacity_pre_accel} provides the
-general traction-limited torque bound.
-However, two quantities remain to be defined: the normal force per unit arc length $N_\phi$ and the tangential acceleration $a_t$.
-In the next subsection, $a_t$ will be expressed explicitly in terms of pulley angular acceleration and radial rate.
+This leaves two unknowns: the normal load $N_\phi$ and the tangential acceleration $a_t$.
 
 % --------------------------------------------------------------
 \subsection{Tangential Acceleration of a Belt Element on a Circular Wrap}
 \label{sec:belt_tangential_accel}
 
 This subsection derives the tangential acceleration term required in the local
-traction inequality in \S\ref{sec:traction_limit}.
+traction inequality in \Eq{eq:deltaT_final}.
 In that inequality we apply Newton's second law \emph{along the direction of belt
 motion}, so we need an explicit expression for the belt element's tangential
 acceleration $a_t$.
@@ -4871,100 +4963,157 @@ Adding these yields the total $2\dot r\,\omega$ term.
 \subsection{Normal Force from Axial Clamping}
 \label{sec:normal_from_clamp}
 
-The local traction inequality derived in \Sec{sec:traction_limit}
-depends on the normal load over the wrap,
+The traction bound \Eq{eq:deltaT_final} depends on the total normal load
+over the wrap,
 \[
-N_\phi \;\equiv\; \int_0^\phi \dd N,
+N_\phi \equiv \int_{-\phi/2}^{\phi/2} \dd N.
 \]
-since the available friction is $\mu\,\dd N$ at each differential contact element.
-
-In the CVT, this normal load is not generated implicitly by belt tension
-(as in the classical capstan problem). Instead, it is imposed by the pulley
-\emph{axial clamping force} derived in \Sec{sec:axial}.
-We now map axial clamp into an equivalent total normal load over the wrap.
+We now express $N_\phi$ in terms of the axial clamping force generated
+by the pulley mechanism.
 
 % --------------------------------------------------------------
-\paragraph{Geometry: why a factor of $2\tan\beta$ appears}
+\paragraph{Axial clamp produces radial normal load}
 
-Recall the conical kinematics established earlier for opposing sheaves
-(\Sec{sec:rp}), where axial closure beyond the deadzone produces a radial change
+The belt is pressed between two opposing conical sheaves.
+An axial clamping force $F_{\mathrm{ax}}$ pushes the sheaves together.
+Because the sheave faces are inclined at cone half-angle $\beta$,
+this axial force generates a radial normal load on the belt.
+
+From the conical kinematics established in \Eq{eq:cone_geometry},
+
 \[
-\Delta r = \frac{\Delta s}{2\tan\beta}
-\qquad\Longrightarrow\qquad
 \frac{\dd r}{\dd s} = \frac{1}{2\tan\beta}.
 \]
 
-This is the key geometric ratio: a given axial displacement $\dd s$
-produces a smaller radial displacement $\dd r$ by the factor $2\tan\beta$,
-because the closure is shared between the two opposing faces.
+To relate forces consistently, we use virtual work.
+The incremental work done by the axial clamp must equal
+the incremental work associated with radial compression:
 
-To convert forces consistently, we use virtual work (equivalently, power balance
-in the shift direction): the incremental work done by the axial clamp must equal
-the incremental work associated with the corresponding radial normal loading,
 \[
-F_{\mathrm{ax}}\,\dd s \;=\; F_{\mathrm{rad}}\,\dd r.
+F_{\mathrm{ax}}\,\dd s
+=
+F_{\mathrm{rad}}\,\dd r.
 \]
 
-Substituting $\dd r = \big(\dd r/\dd s\big)\dd s$ gives
-\begin{align}
-F_{\mathrm{ax}}\,\dd s
-&= F_{\mathrm{rad}}\left(\frac{\dd r}{\dd s}\right)\dd s
-\nonumber\\[4pt]
-\Longrightarrow\quad
+Substituting $\dd r = \left(\dd r/\dd s\right)\dd s$ gives
+
+\begin{equation}
 F_{\mathrm{rad}}
-&=
+=
 \frac{F_{\mathrm{ax}}}{\dd r/\dd s}
 =
-F_{\mathrm{ax}}\,(2\tan\beta).
+2F_{\mathrm{ax}}\tan\beta.
 \label{eq:Frad_from_Fax}
-\end{align}
+\end{equation}
 
-Thus the total radial normal load supplied by a given axial clamp force is
+Thus, the axial clamp force produces a total radial normal load
 \begin{equation}
-F_{\mathrm{rad}} = 2\tan\beta\;F_{\mathrm{ax}}.
-\label{eq:Frad_from_Fax_simple}
+F_{\mathrm{rad}} = 2F_{\mathrm{ax}}\tan\beta.
+\label{eq:Frad_simple}
 \end{equation}
 
 % --------------------------------------------------------------
-\paragraph{Identification with wrap-normal load $N_\phi$}
+\paragraph{Identification with the wrap-normal load}
 
-Under the uniform distribution assumption (discussed previously),
-we take the total normal load over the wrap to be equal to the total
-radial normal load supplied by clamping:
+The radial load $F_{\mathrm{rad}}$ derived above represents the total inward
+force applied by the two sheave faces onto the belt. That load is carried
+entirely by the distributed belt–pulley contact forces $\dd N$ along the wrap.
+
+Since no other radial forces act on the belt within the contact region,
+radial equilibrium requires that the sum of the distributed contact forces
+equal the total clamp-induced radial load. Therefore,
+
 \begin{equation}
-N_\phi \;=\; F_{\mathrm{rad}} \;=\; 2\tan\beta\;F_{\mathrm{ax}}.
+\boxed{
+N_\phi = F_{\mathrm{rad}} = 2F_{\mathrm{ax}}\tan\beta.
+}
 \label{eq:Nphi_from_Fax}
 \end{equation}
 
-Equivalently, the normal force per unit wrap angle is constant:
+This result states that the total normal load available for traction
+is set directly by the axial clamping force through the cone geometry.
+
+% ==============================================================
+\subsection{Torque Capacity Inequality}
+\label{sec:tau_capacity}
+
+From \Sec{sec:traction_overview}, the maximum transmissible torque
+is determined by the maximum admissible tension difference:
 \begin{equation}
-\frac{\dd N}{\dd\theta} = \frac{N_\phi}{\phi}
-\qquad\Longrightarrow\qquad
-\dd N = \frac{N_\phi}{\phi}\,\dd\theta.
-\label{eq:dN_uniform}
+\tau_{\max}
+=
+r_{\mathrm{eff}}\,\Delta T_{\max}.
+\label{eq:tau_max_repeat}
 \end{equation}
 
-Substituting \Eq{eq:Nphi_from_Fax} into the integrated traction bound
-(from \Sec{sec:traction_limit}) yields the clamp-limited torque capacity form
+Using the integrated result from \Eq{eq:deltaT_final},
+
+\[
+\Delta T_{\max}
+=
+\mu N_\phi
+-
+\rho_b A_b r_{\mathrm{cm}} a_t \phi,
+\]
+
+the traction limit becomes
+
 \begin{equation}
 |\tau|
 \le
 r_{\mathrm{eff}}
-\left[
-\mu\,N_\phi
+\left(
+\mu N_\phi
 -
-\mu_b\,r_{\mathrm{cm}}\,a_t\,\phi
-\right]
-=
-r_{\mathrm{eff}}
-\left[
-\mu\,(2\tan\beta\,F_{\mathrm{ax}})
--
-\mu_b\,r_{\mathrm{cm}}\,a_t\,\phi
-\right].
-\label{eq:tau_capacity_with_clamp}
+\rho_b A_b r_{\mathrm{cm}} a_t \phi
+\right).
+\label{eq:tau_capacity_step1}
 \end{equation}
 
+Substituting the clamp–normal relation from
+\Eq{eq:Nphi_from_Fax},
+
+\[
+N_\phi = 2F_{\mathrm{ax}}\tan\beta,
+\]
+
+gives
+
+\begin{equation}
+|\tau|
+\le
+r_{\mathrm{eff}}
+\left(
+\mu (2F_{\mathrm{ax}}\tan\beta)
+-
+\rho_b A_b r_{\mathrm{cm}} a_t \phi
+\right).
+\label{eq:tau_capacity_step2}
+\end{equation}
+
+Finally, substituting the belt tangential acceleration
+from \Eq{eq:at_final},
+
+\[
+a_t = r\alpha + 2\dot r\,\omega,
+\]
+
+yields the explicit traction-limited torque inequality
+
+
+\bigeq{eq:tau_capacity_final}{Traction-Limited Torque Capacity}{
+|\tau|
+\le
+r_{\mathrm{eff}}
+\left[
+2\mu F_{\mathrm{ax}}\tan\beta
+-
+\rho_b A_b r_{\mathrm{cm}} \phi
+\left(
+r\alpha + 2\dot r\,\omega
+\right)
+\right].
+}
 % --------------------------------------------------------------
 \begin{remarkbox}[Remark (Why this differs from the classical capstan exponential)]
 In the classical capstan problem, the normal load is generated \emph{by the belt tension}
@@ -4976,7 +5125,7 @@ $N_\phi$ is determined by $F_{\mathrm{ax}}$ through \Eq{eq:Nphi_from_Fax}.
 Therefore, the available traction scales \emph{linearly} with clamping force,
 not exponentially with belt tension.
 Centrifugal loading and ratio change enter additionally through the inertial term
-in \Eq{eq:tau_capacity_with_clamp}.
+in \Eq{eq:tau_capacity_final}.
 \end{remarkbox}
 
 
@@ -4986,26 +5135,7 @@ in \Eq{eq:tau_capacity_with_clamp}.
 
 This section derived a traction-limited torque bound for a single pulley.
 
-The result is
-
-\begin{equation}
-|\tau|
-\;\le\;
-r_{\mathrm{eff}}
-\left[
-\mu\,(2\tan\beta\,F_{\mathrm{ax}})
--
-\mu_b\,r_{\mathrm{cm}}\,a_t\,\phi
-\right],
-\label{eq:tau_capacity_final_section}
-\end{equation}
-
-with
-\[
-a_t = r_{\mathrm{cm}}\alpha + 2\dot r_{\mathrm{cm}}\omega.
-\]
-
-Equation \Eq{eq:tau_capacity_final_section} gives the maximum torque
+Equation \Eq{eq:tau_capacity_final} gives the maximum torque
 that can be transmitted at the current operating state.
 It depends only on:
 
@@ -5022,7 +5152,7 @@ is externally imposed and bounded.
 \vspace{6pt}
 
 The ideal coupling torque derived earlier remains valid
-only when it satisfies \Eq{eq:tau_capacity_final_section}.
+only when it satisfies \Eq{eq:tau_capacity_final}.
 If the demanded torque exceeds this bound,
 the belt cannot sustain static friction and slip must occur.
 
@@ -5031,6 +5161,8 @@ and modifies the governing equations accordingly.
 % --------------------------------------------------------------
 
 % ==============================================================
+
+
 \section{Slip Regimes and Traction-Limited Coupling Torque}
 \label{sec:slip_regimes}
 
