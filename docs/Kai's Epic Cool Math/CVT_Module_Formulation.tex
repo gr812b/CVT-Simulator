@@ -5163,76 +5163,62 @@ and modifies the governing equations accordingly.
 % ==============================================================
 
 
+% ==============================================================
 \section{Slip Regimes and Traction-Limited Coupling Torque}
 \label{sec:slip_regimes}
 
-% --------------------------------------------------------------
-% Placeholder diagram (highly recommended)
-% --------------------------------------------------------------
-\begin{figure}[H]
-\centering
-\fbox{\parbox{0.9\linewidth}{
-\textbf{Placeholder: Slip intuition diagram.}\\
-Sketch two pulleys with effective radii $r_{p,\mathrm{eff}}$, $r_{s,\mathrm{eff}}$ and angular speeds $\omega_p,\omega_s$.\\
-Show the two tangential surface speeds $v_p=r_{p,\mathrm{eff}}\omega_p$ and $v_s=r_{s,\mathrm{eff}}\omega_s$ at the belt contact, and define
-$v_{\mathrm{rel}} = v_p - v_s$.\\
-Annotate: $v_{\mathrm{rel}}=0$ (stick) vs $v_{\mathrm{rel}}\neq 0$ (slip), and indicate the friction torque direction opposing $v_{\mathrm{rel}}$.
-}}
-\caption{Conceptual definition of slip via contact-speed mismatch.}
-\label{fig:slip_intuition}
-\end{figure}
+Earlier sections produced two results:
 
-% --------------------------------------------------------------
-\subsection{Working Backwards From the Goal}
-\label{sec:slip_goal}
-
-The goal of this section is to define, at every instant, a \emph{physically admissible}
-coupling torque that the belt can transmit between the pulleys.
-Earlier, we derived:
 \begin{itemize}
-\item a no-slip (rigid-traction) relationship that specifies how torque transfers between the pulleys when the belt adheres (``stick''), and
-\item a traction capacity bound for each pulley of the form
-$|\tau| \le \tau_{\max,p}$ and $|\tau| \le \tau_{\max,s}$.
+\item A no-slip (rigid-traction) coupling torque, denoted
+\(
+\tau_{\mathrm{ns}},
+\)
+which is the torque required to enforce perfect belt adherence.
+
+\item A traction capacity bound of the form
+\(
+|\tau| \le \tau_{\max},
+\)
+derived in \Sec{sec:tau_capacity}.
 \end{itemize}
-These two results must be combined into a single rule that:
+
+The purpose of this section is to combine these into a single
+physically admissible coupling torque law that:
+
 \begin{enumerate}
-\item \emph{never} violates either capacity bound (even before slip begins),
-\item reduces to the earlier no-slip torque transfer when feasible, and
-\item produces a slip torque that opposes relative motion when the no-slip demand is infeasible.
+\item reduces to the no-slip model when feasible,
+\item never violates the traction bound,
+\item and produces sliding torque that opposes relative motion when slip occurs.
 \end{enumerate}
 
-To do this cleanly, we proceed in the order that matches physical intuition:
-\begin{center}
-\emph{(i) define how we detect slip} $\rightarrow$
-\emph{(ii) define the torque limits that force entry into slip} $\rightarrow$
-\emph{(iii) define the torque law during slip} $\rightarrow$
-\emph{(iv) define how we exit slip.}
-\end{center}
-
 % --------------------------------------------------------------
-\subsection{Slip Metric: How We Know We Are Slipping}
+\subsection{Slip Metric: Detecting Stick and Slip}
 \label{sec:slip_metric}
 
-Slip in a belt CVT is most naturally defined at the belt--pulley contact:
-if the belt adheres to both pulleys, then the tangential surface speeds at the
-contact must match. Using the effective contact radii, define
+Slip is defined at the belt–pulley contact.
+If the belt adheres to both pulleys, the tangential surface speeds must match.
+
+Define the contact speeds
 \begin{equation}
-v_p \;\triangleq\; r_{p,\mathrm{eff}}\,\omega_p,
+v_p = r_{p,\mathrm{eff}}\omega_p,
 \qquad
-v_s \;\triangleq\; r_{s,\mathrm{eff}}\,\omega_s,
+v_s = r_{s,\mathrm{eff}}\omega_s,
 \end{equation}
-and the relative contact-speed mismatch
+and the relative mismatch
 \begin{equation}
 v_{\mathrm{rel}}
-\;\triangleq\;
+=
 v_p - v_s
-\;=\;
-r_{p,\mathrm{eff}}\omega_p - r_{s,\mathrm{eff}}\omega_s.
+=
+r_{p,\mathrm{eff}}\omega_p
+-
+r_{s,\mathrm{eff}}\omega_s.
 \label{eq:vrel_def}
 \end{equation}
 
 \noindent
-\textbf{Stick condition (no slip):}
+\textbf{Stick condition:}
 \begin{equation}
 v_{\mathrm{rel}} = 0.
 \label{eq:stick_condition}
@@ -5245,211 +5231,136 @@ v_{\mathrm{rel}} \neq 0.
 \label{eq:slip_condition}
 \end{equation}
 
-Equation \Eq{eq:vrel_def} is therefore the diagnostic: it is the quantity we monitor
-to determine whether the belt is adhering (stick) or sliding (slip).
-In a perfect rigid-traction model, the dynamics would enforce \Eq{eq:stick_condition}
-exactly. In a traction-limited model, \Eq{eq:stick_condition} can only be maintained
-if the required torques remain within the available traction capacity.
+Thus, $v_{\mathrm{rel}}$ is the diagnostic quantity:
+perfect adherence requires zero relative surface speed.
 
 % --------------------------------------------------------------
-\subsection{Traction Capacity: How We Enter Slip}
-\label{sec:slip_entry}
+\subsection{Feasibility of the No-Slip Torque}
+\label{sec:slip_feasibility}
 
-From the traction analysis of the previous section, each pulley has a maximum
-transmissible torque magnitude at the current operating state:
+The no-slip model specifies a required coupling torque
 \begin{equation}
-|\tau_p| \le \tau_{\max,p}(\cdot),
-\qquad
-|\tau_s| \le \tau_{\max,s}(\cdot),
-\label{eq:two_capacity_bounds}
+\tau_{\mathrm{ns}},
 \end{equation}
-where $\tau_{\max,p}$ and $\tau_{\max,s}$ depend on the current state (clamping force,
-cone angle, wrap angle, belt kinematics, etc.) through \Eq{eq:tau_capacity_final_section}
-applied to the primary and secondary, respectively.
+which is the torque needed to enforce $v_{\mathrm{rel}}=0$ under the
+current state.
 
-\medskip
-\noindent
-\textbf{Key physical point: these bounds apply \emph{always}.}
-Even before any slip is observed, the belt--pulley interface cannot transmit a torque
-exceeding its instantaneous capacity.
-Therefore, if the no-slip model (rigid traction) would \emph{demand} a torque larger
-than the bound in \Eq{eq:two_capacity_bounds}, the constraint $v_{\mathrm{rel}}=0$ can
-no longer be maintained by static friction.
-
-\medskip
-In practice, torque transfer is constrained by the \emph{most limiting} interface.
-We therefore define a single admissible coupling capacity
+However, from \Sec{sec:tau_capacity}, the belt–pulley interface
+cannot transmit a torque exceeding $\tau_{\max}$ in magnitude.
+Therefore, static adherence is only physically possible if
 \begin{equation}
-\tau_{\max}
-\;\triangleq\;
-\min\!\big(\tau_{\max,p},\;\tau_{\max,s}\big).
-\label{eq:tau_max_min}
+|\tau_{\mathrm{ns}}| \le \tau_{\max}.
+\label{eq:stick_feasible}
 \end{equation}
 
-\medskip
-\noindent
-\textbf{Intuition for entering slip.}
-Suppose the system is in stick so that $v_{\mathrm{rel}}=0$ initially.
-External conditions (engine torque rise, vehicle load increase, ratio change reducing
-effective radius leverage, reduced clamping, etc.) may increase the torque required to
-preserve $v_{\mathrm{rel}}=0$.
-As soon as the required coupling torque exceeds $\tau_{\max}$, the transmitted torque
-cannot increase further. The coupling torque saturates at the traction limit, while the
-remaining unbalanced torque accelerates one pulley relative to the other, causing
-\Eq{eq:stick_condition} to break and $v_{\mathrm{rel}}$ to grow in magnitude. This is the
-mechanism by which the model \emph{falls into} a slip regime.
+If \Eq{eq:stick_feasible} holds, static friction can enforce
+$v_{\mathrm{rel}}=0$ and the system remains in stick.
+
+If instead
+\begin{equation}
+|\tau_{\mathrm{ns}}| > \tau_{\max},
+\label{eq:stick_infeasible}
+\end{equation}
+the required torque exceeds the available traction.
+Static friction cannot maintain adherence, and slip must occur.
 
 % --------------------------------------------------------------
-\subsection{Coupling Torque Law: Stick When Feasible, Slip When Necessary}
-\label{sec:coupling_law}
+\subsection{Traction-Limited Coupling Torque Law}
+\label{sec:coupling_law_final}
 
-Earlier sections already specify how torques transfer \emph{when not slipping}:
-the dynamics and kinematics provide a ``desired'' (no-slip) coupling torque that would
-maintain $v_{\mathrm{rel}}=0$. We denote this no-slip demand by
+The coupling torque must satisfy two physical facts:
+
+\begin{enumerate}
+\item Static friction can enforce $v_{\mathrm{rel}}=0$ only if
+      $|\tau_{\mathrm{ns}}| \le \tau_{\max}$.
+\item Once sliding occurs ($v_{\mathrm{rel}}\neq 0$),
+      the interface is in kinetic friction and the transmitted torque
+      remains saturated at $\tau_{\max}$ until the relative speed vanishes.
+\end{enumerate}
+
+This leads to the following regime definition.
+
+\paragraph{Stick (static friction).}
+
+If
 \begin{equation}
-\tau_{\mathrm{ns}}
-\;\triangleq\;
-\text{(the coupling torque predicted by the no-slip torque-transfer model)}.
-\label{eq:tau_ns_def}
-\end{equation}
-\noindent
-This quantity is not a new model; it is simply a name for ``whatever torque the earlier
-no-slip equations imply'' at the current state.
-
-\medskip
-However, the belt cannot transmit an arbitrarily large torque: it must also satisfy
-\Eq{eq:tau_max_min}. Therefore, even in stick, the admissible coupling torque is at most
-$\tau_{\max}$ in magnitude.
-
-\paragraph{(A) Feasible no-slip torque (stick).}
-If the no-slip demand is within capacity,
-\begin{equation}
+v_{\mathrm{rel}} = 0
+\quad\text{and}\quad
 |\tau_{\mathrm{ns}}| \le \tau_{\max},
 \end{equation}
-then static friction can support the demand and the belt remains in stick:
+then static traction can be maintained and
 \begin{equation}
-\tau_c = \tau_{\mathrm{ns}},
-\qquad
-v_{\mathrm{rel}} = 0.
+\tau_c = \tau_{\mathrm{ns}}.
 \label{eq:stick_tau}
 \end{equation}
 
-\paragraph{(B) Infeasible no-slip torque (entering slip).}
-If the no-slip demand exceeds capacity,
+\paragraph{Slip (kinetic friction).}
+
+If
 \begin{equation}
+v_{\mathrm{rel}} \neq 0
+\quad\text{or}\quad
 |\tau_{\mathrm{ns}}| > \tau_{\max},
 \end{equation}
-then the coupling torque must saturate and the mismatch $v_{\mathrm{rel}}$ can no longer
-remain zero. In slip, the transmitted torque is friction-limited and its direction must
-oppose the relative motion. A smooth Coulomb-like slip law is
-\begin{equation}
-\tau_{\mathrm{slip}}
-\;=\;
-\tau_{\max}\;
-\tanh\!\left(\frac{v_{\mathrm{rel}}}{v_{\mathrm{smooth}}}\right),
-\label{eq:tau_slip_tanh}
-\end{equation}
-where $v_{\mathrm{smooth}}>0$ controls the transition sharpness near $v_{\mathrm{rel}}=0$.
-For $|v_{\mathrm{rel}}|\gg v_{\mathrm{smooth}}$, this approaches $\tau_{\max}\,\mathrm{sign}(v_{\mathrm{rel}})$.
-
-\medskip
-\noindent
-\textbf{Sign convention note.}
-Equation \Eq{eq:tau_slip_tanh} is written so that the slip torque changes sign with
-$v_{\mathrm{rel}}$. In the equations of motion, $\tau_c$ must be applied with opposite
-sign on the two pulleys (equal-and-opposite action), so that the net effect is always
-to \emph{reduce} the mismatch and dissipate energy during slip.
-(If your earlier rotational EOM use the opposite sign convention for $\tau_c$,
-the tanh argument should be negated accordingly.)
-
-\paragraph{(C) Smooth unified law (recommended for numerics).}
-Rather than hard switching, we define a blending factor $\alpha\in[0,1]$ that increases
-from stick-like to slip-like behavior as the relative speed grows:
-\begin{equation}
-\alpha(v_{\mathrm{rel}})
-\;=\;
-\mathrm{clip}\!\left(\frac{|v_{\mathrm{rel}}|}{v_{\mathrm{blend}}},\;0,\;1\right),
-\label{eq:alpha_def}
-\end{equation}
-where $v_{\mathrm{blend}}>0$ is a chosen blending scale.
-We also define the capacity-saturated no-slip torque
-\begin{equation}
-\tau_{\mathrm{ns,sat}}
-\;=\;
-\mathrm{clip}\!\left(\tau_{\mathrm{ns}},\;-\tau_{\max},\;+\tau_{\max}\right).
-\label{eq:tau_ns_sat}
-\end{equation}
-
-The final coupling torque is then
+then the transmitted torque is friction-limited and opposes the
+relative motion:
 \begin{equation}
 \tau_c
-\;=\;
-(1-\alpha)\,\tau_{\mathrm{ns,sat}}
-\;+\;
-\alpha\,\tau_{\mathrm{slip}},
-\label{eq:tau_c_blend}
+=
+\tau_{\max}\,\mathrm{sign}(v_{\mathrm{rel}}).
+\label{eq:slip_tau}
 \end{equation}
-with $\tau_{\mathrm{slip}}$ given by \Eq{eq:tau_slip_tanh}.
 
 \medskip
 \noindent
-This construction encodes all desired behaviors:
-\begin{itemize}
-\item \textbf{Capacity is never violated:} both $\tau_{\mathrm{ns,sat}}$ and $\tau_{\mathrm{slip}}$ are bounded by $\tau_{\max}$, hence so is $\tau_c$.
-\item \textbf{Stick when feasible:} if $v_{\mathrm{rel}}\approx 0$, then $\alpha\approx 0$ and $\tau_c\approx \tau_{\mathrm{ns,sat}}$ (equal to $\tau_{\mathrm{ns}}$ if feasible).
-\item \textbf{Slip when necessary:} if mismatch grows, $\alpha\to 1$ and $\tau_c\to \tau_{\mathrm{slip}}$, i.e. friction-limited sliding torque.
-\end{itemize}
+\textbf{Physical interpretation.}
+While $v_{\mathrm{rel}}\neq 0$, the interface is in sliding contact.
+The friction torque remains saturated at $\tau_{\max}$ and always acts
+to oppose the mismatch.
 
-% --------------------------------------------------------------
-\subsection{How Slip Reduces and Ends: Exiting the Slip Regime}
-\label{sec:slip_exit}
+If $|\tau_{\mathrm{ns}}| < \tau_{\max}$ during slip,
+the saturated friction torque reduces $|v_{\mathrm{rel}}|$
+until it reaches zero, at which point stick may be re-established.
 
-Once the coupling torque saturates, the remainder of the external torque imbalance
-accelerates the pulleys differently, which produces a nonzero $v_{\mathrm{rel}}$ through
-\Eq{eq:vrel_def}.
-During slip, the transmitted torque magnitude cannot exceed $\tau_{\max}$, but its
-\emph{direction} always opposes the mismatch via \Eq{eq:tau_slip_tanh}. As a result, the
-slip torque acts to reduce $|v_{\mathrm{rel}}|$ whenever the external conditions permit.
+If instead $|\tau_{\mathrm{ns}}| > \tau_{\max}$,
+the torque imbalance continues to increase the mismatch,
+and slip persists.
 
 \medskip
-\noindent
-\textbf{Intuition for exiting slip.}
-Slip persists as long as the system would require more than $\tau_{\max}$ to enforce
-$v_{\mathrm{rel}}=0$.
-If operating conditions change (e.g., demanded torque falls, clamping increases,
-wrap angle increases, ratio shifts into a more favorable radius, or the inertial term
-reduces), then $\tau_{\max}$ may rise and/or the required no-slip demand $\tau_{\mathrm{ns}}$
-may fall.
-When the inequality becomes feasible again,
-\begin{equation}
+The complete traction-limited coupling law is therefore
+
+\bigeq{eq:final_tau_piecewise}{Traction-Limited Coupling Torque}{
+\boxed{
+\tau_c =
+\begin{cases}
+\tau_{\mathrm{ns}},
+&
+v_{\mathrm{rel}} = 0
+\;\text{and}\;
 |\tau_{\mathrm{ns}}| \le \tau_{\max},
-\end{equation}
-static traction can re-establish adherence and the mismatch decays to zero.
-In the smooth blended law \Eq{eq:tau_c_blend}, this corresponds to $v_{\mathrm{rel}}\to 0$,
-so that $\alpha\to 0$ and $\tau_c\to \tau_{\mathrm{ns}}$ continuously.
+\\[10pt]
+\tau_{\max}\,\mathrm{sign}(v_{\mathrm{rel}}),
+&
+\text{otherwise}.
+\end{cases}
+}
+}
 
 % --------------------------------------------------------------
-\subsection{Implementation Summary (Matches the Simulation Rule)}
-\label{sec:slip_impl_summary}
-
-For convenience, the continuous-time model above corresponds directly to the
-following computation at each time step:
-\begin{enumerate}
-\item compute $v_{\mathrm{rel}} = r_{p,\mathrm{eff}}\omega_p - r_{s,\mathrm{eff}}\omega_s$,
-\item compute capacities $\tau_{\max,p}$ and $\tau_{\max,s}$, then $\tau_{\max}=\min(\tau_{\max,p},\tau_{\max,s})$,
-\item compute the no-slip demand $\tau_{\mathrm{ns}}$ from the earlier torque-transfer equations,
-\item form $\tau_{\mathrm{ns,sat}}=\mathrm{clip}(\tau_{\mathrm{ns}},-\tau_{\max},+\tau_{\max})$,
-\item form $\tau_{\mathrm{slip}}=\tau_{\max}\tanh(v_{\mathrm{rel}}/v_{\mathrm{smooth}})$,
-\item blend using $\alpha=\mathrm{clip}(|v_{\mathrm{rel}}|/v_{\mathrm{blend}},0,1)$:
-$\;\tau_c=(1-\alpha)\tau_{\mathrm{ns,sat}}+\alpha\tau_{\mathrm{slip}}$.
-\end{enumerate}
-
-\noindent
-This yields a coupling torque that (i) respects traction limits at both pulleys,
-(ii) reproduces the earlier no-slip behavior when feasible, and (iii) transitions
-smoothly into a Coulomb-like slip regime when necessary.
-
-\appendix
+\begin{remarkbox}[Numerical regularization]
+The discontinuous $\mathrm{sign}(\cdot)$ function in
+\Eq{eq:final_tau_piecewise} may be replaced by a smooth approximation
+for numerical integration, such as
+\[
+\tau_c
+=
+\tau_{\max}
+\tanh\!\left(\frac{v_{\mathrm{rel}}}{v_{\mathrm{smooth}}}\right),
+\]
+where $v_{\mathrm{smooth}}>0$ controls transition sharpness.
+This modification improves numerical stability without significantly 
+altering the underlying physical model. 
+\end{remarkbox}
 
 \section{Parameter Tables}\label{sec:appendix-params}
 % Constants, geometry, spring rates, friction, inertias.
