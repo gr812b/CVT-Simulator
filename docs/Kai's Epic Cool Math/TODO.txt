@@ -1,16 +1,9 @@
 - No indents after every single list
-- Add images in the overview and coordinate convention sections (at least)
 - Add constants values some time
-- Update symbol summary at the end 
-- Parasitic bruh
 - Appendix: Proof of approximation being bad
-- fix: s = 0 corresponds to the defined reference configuration.
-- update illustration for primary_geometry.png
-- update illustration for belt_length_geometry.jpg
+
 -reference assumptions in belt section
-- Give more context to the wrap angle equations defined wrt s
 - In intro add v-belt introduction
-- Add illustrations to primary ramp and helix geometry
 - Assumption: Negligible weight of flyarms
 
 MATH
@@ -25,25 +18,13 @@ likely to change section
 
 Cam Review
 
-Constants
-- Remove column 'value'
-
-Assumptions
-- Get rid of e.g., 
-- Add constant radius
-- Get rid of P_loss
-
 Theory
 - Remove capstan
 
 
-State variables
-- axial shift determines primary and secondary radius
 
 8.1 link belt length assumption
 8.1 link 2.1.3
-
-
 
 
 variables
