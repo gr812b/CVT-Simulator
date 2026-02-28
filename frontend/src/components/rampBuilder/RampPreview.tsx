@@ -11,6 +11,7 @@ interface RampPreviewProps {
     config: PiecewiseRampConfig;
 }
 
+const LINE_THICKNESS = 4;
 const GRID = { left: 60, right: 40, top: 40, bottom: 60 } as const;
 
 export const RampPreview = ({ config }: RampPreviewProps) => {
@@ -164,7 +165,7 @@ export const RampPreview = ({ config }: RampPreviewProps) => {
                 smooth: true,
                 lineStyle: {
                     color: COLORS.PRIMARY,
-                    width: 2,
+                    width: LINE_THICKNESS,
                 },
                 itemStyle: {
                     color: COLORS.PRIMARY,
@@ -174,18 +175,18 @@ export const RampPreview = ({ config }: RampPreviewProps) => {
             {
                 // Bottom axis (y = yMin, from x=0 to x=xMax)
                 type: 'line',
-                data: [[0, yMin], [xMax, yMin]],
-                lineStyle: { color: COLORS.PRIMARY, width: 2 },
+                data: [[-0.005*xMax, yMin], [xMax, yMin]],
+                lineStyle: { color: COLORS.PRIMARY, width: LINE_THICKNESS },
                 itemStyle: { color: COLORS.PRIMARY },
                 showSymbol: false,
                 silent: true,
                 tooltip: { show: false },
             },
             {
-                // Left axis (x = 0, from y=yMin to y=0)
+                // Left axis (x = 0, from y=0 to y=yMin)
                 type: 'line',
-                data: [[0, yMin], [0, 0]],
-                lineStyle: { color: COLORS.PRIMARY, width: 2 },
+                data: [[0, 0], [0, yMin + 0.005*yMin]],
+                lineStyle: { color: COLORS.PRIMARY, width: LINE_THICKNESS },
                 itemStyle: { color: COLORS.PRIMARY },
                 showSymbol: false,
                 silent: true,
