@@ -5109,6 +5109,36 @@ Centrifugal loading and ratio change enter additionally through the inertial ter
 in \Eq{eq:tau_capacity_final}.
 \end{remarkbox}
 
+% --------------------------------------------------------------
+\begin{remarkbox}[Remark (Torque-Reactive Clamping and Implicit Capacity at the Secondary)]
+For the secondary pulley, the specific axial clamp force
+$F_{\mathrm{ax}}$ used in this model depends on the transmitted torque
+$\tau_s$ (see \Eq{eq:secondary_axial}).  
+However, the traction capacity $\tau_{\max}$ derived above depends
+on $F_{\mathrm{ax}}$ through \Eq{eq:Nphi_from_Fax} and
+\Eq{eq:tau_capacity_final}.  
+
+Consequently, at the secondary interface the admissible torque
+satisfies an implicit relation of the form
+\[
+|\tau_s| \le \tau_{\max}\big(F_{\mathrm{ax}}(\tau_s)\big).
+\]
+
+In other words, the transmitted torque influences the clamp force,
+the clamp force determines the traction capacity,
+and that capacity bounds the transmitted torque.
+This circular dependence arises only because the secondary
+mechanism is torque-reactive.
+
+For the specific secondary model adopted in this work,
+this implicit inequality can be reduced to a closed-form solution
+(see Appendix~\ref{sec:appendix-secondary-capacity-closure}).
+The explicit algebra is omitted here to preserve clarity,
+as it depends on the detailed functional form of
+$F_{\mathrm{ax}}(s,\tau_s)$ and is not required
+to understand the main traction derivation.
+\end{remarkbox}
+
 
 % --------------------------------------------------------------
 \subsection{Section Conclusion and Transition}
@@ -5328,7 +5358,7 @@ v_{\mathrm{rel}} = 0
 }
 
 % --------------------------------------------------------------
-\begin{remarkbox}[Numerical regularization]
+\begin{remarkbox}[Remark (Numerical regularization)]
 The discontinuous $\mathrm{sign}(\cdot)$ function in
 \Eq{eq:final_tau_piecewise} may be replaced by a smooth approximation
 for numerical integration, such as
@@ -5653,7 +5683,7 @@ secant, and inverse quadratic interpolation.
 % TODO: Document choice of integrator (e.g., RK45, BDF) and step size strategy
 
 
-\section{Nomenclature and Symbol Reference}\label{sec:appendix-nomenclature}
+\section{Secondary Capacity Closure}\label{sec:appendix-secondary-capacity-closure}
 
 % TODO: Comprehensive table of all symbols used in the document
 % Organized by category: geometry, forces, dynamics, parameters, etc.
