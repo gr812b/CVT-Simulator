@@ -135,7 +135,7 @@ export const RampPreview = ({ config }: RampPreviewProps) => {
                 nameTextStyle: { color: COLORS.TEXT },
                 axisLine: { lineStyle: { color: COLORS.GRID } },
                 axisTick: { lineStyle: { color: COLORS.GRID } },
-                axisLabel: { color: COLORS.TEXT, formatter: (val: number) => val.toFixed(3) },
+                axisLabel: { color: COLORS.TEXT, formatter: (val: number) => Math.round(val * 10000) / 10000 },
                 splitLine: { lineStyle: { color: COLORS.GRID } },
                 min: 0,
                 max: xMax,
@@ -149,7 +149,7 @@ export const RampPreview = ({ config }: RampPreviewProps) => {
                 nameTextStyle: { color: COLORS.TEXT },
                 axisLine: { lineStyle: { color: COLORS.GRID } },
                 axisTick: { lineStyle: { color: COLORS.GRID } },
-                axisLabel: { color: COLORS.TEXT, formatter: (val: number) => val.toFixed(3) },
+                axisLabel: { color: COLORS.TEXT, formatter: (val: number) => Math.round(val * 10000) / 10000 },
                 splitLine: { 
                     show: true,
                     lineStyle: { color: COLORS.GRID }
