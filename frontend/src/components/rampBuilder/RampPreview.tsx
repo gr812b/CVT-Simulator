@@ -221,12 +221,11 @@ export const RampPreview = ({ config }: RampPreviewProps) => {
             },
         },
     };
-    }, [previewData, COLORS, containerHeight, containerWidth]);
+    }, [previewData, COLORS]);
 
     if (error) {
         return (
             <div className={styles.previewContainer}>
-                <h4>Ramp Preview</h4>
                 <div className={styles.error}>
                     <p>Error generating preview:</p>
                     <p>{error}</p>
@@ -238,7 +237,6 @@ export const RampPreview = ({ config }: RampPreviewProps) => {
     if (isLoading) {
         return (
             <div className={styles.previewContainer}>
-                <h4>Ramp Preview</h4>
                 <div className={styles.loading}>Loading preview...</div>
             </div>
         );
@@ -247,7 +245,6 @@ export const RampPreview = ({ config }: RampPreviewProps) => {
     if (!previewData) {
         return (
             <div className={styles.previewContainer}>
-                <h4>Ramp Preview</h4>
                 <div className={styles.empty}>Add segments to see preview</div>
             </div>
         );
@@ -283,7 +280,6 @@ export const RampPreview = ({ config }: RampPreviewProps) => {
     return (
         <div className={styles.previewContainer}>
             <div ref={sentinelRef} style={{ width: '100%', height: 0 }} />
-            <h4>Ramp Preview</h4>
             {renderContent()}
         </div>
     );
