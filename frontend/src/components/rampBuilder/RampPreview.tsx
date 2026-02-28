@@ -11,7 +11,6 @@ interface RampPreviewProps {
     config: PiecewiseRampConfig;
 }
 
-const CHART_HEIGHT = 400;
 const GRID = { left: 60, right: 40, top: 40, bottom: 60 } as const;
 
 export const RampPreview = ({ config }: RampPreviewProps) => {
@@ -19,6 +18,7 @@ export const RampPreview = ({ config }: RampPreviewProps) => {
     const [error, setError] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(false);
     const [containerWidth, setContainerWidth] = useState(800);
+    const [containerHeight, setContainerHeight] = useState(400);
     const roRef = useRef<ResizeObserver | null>(null);
 
     // Callback ref: React calls this with the DOM node as soon as it is
@@ -46,6 +46,19 @@ export const RampPreview = ({ config }: RampPreviewProps) => {
         // Read immediately in case ResizeObserver doesn't fire synchronously
         measure(el.getBoundingClientRect().width);
     }, []);
+
+    // Recalculate containerHeight whenever the data or width changes,
+    // keeping this side-effect out of useMemo to avoid setState-during-render.
+    useEffect(() => {
+        if (!previewData) return;
+
+        const plotWidthPx = containerWidth - GRID.left - GRID.right;
+        const xMax = Math.max(...previewData.x);
+        const yMin = Math.min(...previewData.y);
+        const ppm = plotWidthPx / xMax;
+        const plotHeightPx = Math.abs(yMin) * ppm;
+        setContainerHeight(plotHeightPx + GRID.top + GRID.bottom);
+    }, [previewData, containerWidth]);
 
     const configString = useMemo(() => JSON.stringify(config), [config]);
 
@@ -93,29 +106,15 @@ export const RampPreview = ({ config }: RampPreviewProps) => {
         BACKGROUND: getColor('--secondary', '#222222'),
         TEXT: getColor('--text-color', '#ffffff'),
         GRID: getColor('--grid-color', '#404040'),
-        ACCENT: getColor('--accent', '#bb0808'),
+        PRIMARY: getColor('--primary', '#bb0808'),
         TOOLTIP_BG: getColor('--tooltip-bg', '#2a2a2a'),
     };
 
     const chartOptions: EChartsOption = useMemo(() => {
-        // Y axis: always 0 → yMax  (requirement: top-left corner is 0,0)
+        // Greatest X value and lowest Y value in the data, used to set axis limits and scaling
+        const xMax = previewData ? Math.max(...previewData.x) : 1;
         const yMin = previewData ? Math.min(...previewData.y) : -1;
 
-        // Pixel dimensions of the plot area (inside the grid margins)
-        const plotHeightPx = CHART_HEIGHT - GRID.top - GRID.bottom;
-        const plotWidthPx  = containerWidth  - GRID.left - GRID.right;
-        console.log('Plot height (px):', plotHeightPx, 'Plot width (px):', plotWidthPx);
-
-        // Scale is driven entirely by Y so the graph always fills the full height
-        const ppm = plotHeightPx / yMin; // pixels per metre
-
-        // How many metres fit horizontally at this scale?
-        const availableXRange = plotWidthPx / ppm;
-
-        // Never let the data overflow to the right (requirement 5):
-        // if the data range is wider than what fits at this scale, expand the
-        // axis to match — the graph will fill exactly the available width.
-        const axisXMax = Math.abs(availableXRange);
 
         return {
             backgroundColor: COLORS.BACKGROUND,
@@ -138,7 +137,7 @@ export const RampPreview = ({ config }: RampPreviewProps) => {
                 axisLabel: { color: COLORS.TEXT },
                 splitLine: { lineStyle: { color: COLORS.GRID } },
                 min: 0,
-                max: axisXMax,
+                max: xMax,
                 scale: false,
             },
             yAxis: {
@@ -158,31 +157,39 @@ export const RampPreview = ({ config }: RampPreviewProps) => {
                 max: 0,
                 scale: false,
             },
-            dataZoom: [
-                {
-                    type: 'inside',
-                    xAxisIndex: 0,
-                    filterMode: 'none',
-                },
-                {
-                    type: 'inside',
-                    yAxisIndex: 0,
-                    filterMode: 'none',
-                },
-            ],
         series: [
             {
                 type: 'line',
                 data: previewData?.x.map((x, i) => [x, previewData.y[i]]) || [],
                 smooth: true,
                 lineStyle: {
-                    color: COLORS.ACCENT,
+                    color: COLORS.PRIMARY,
                     width: 2,
                 },
                 itemStyle: {
-                    color: COLORS.ACCENT,
+                    color: COLORS.PRIMARY,
                 },
                 showSymbol: false,
+            },
+            {
+                // Bottom axis (y = yMin, from x=0 to x=xMax)
+                type: 'line',
+                data: [[0, yMin], [xMax, yMin]],
+                lineStyle: { color: COLORS.PRIMARY, width: 2 },
+                itemStyle: { color: COLORS.PRIMARY },
+                showSymbol: false,
+                silent: true,
+                tooltip: { show: false },
+            },
+            {
+                // Left axis (x = 0, from y=yMin to y=0)
+                type: 'line',
+                data: [[0, yMin], [0, 0]],
+                lineStyle: { color: COLORS.PRIMARY, width: 2 },
+                itemStyle: { color: COLORS.PRIMARY },
+                showSymbol: false,
+                silent: true,
+                tooltip: { show: false },
             },
         ],
         tooltip: {
@@ -214,7 +221,7 @@ export const RampPreview = ({ config }: RampPreviewProps) => {
             },
         },
     };
-    }, [previewData, COLORS]);
+    }, [previewData, COLORS, containerHeight, containerWidth]);
 
     if (error) {
         return (
@@ -246,24 +253,6 @@ export const RampPreview = ({ config }: RampPreviewProps) => {
         );
     }
 
-    // // Calculate 1:1 aspect ratio dimensions
-    // const maxHeight = 400; // Maximum height in pixels
-    // const gridMargins = { left: 60, right: 40, top: 40, bottom: 60 }; // From grid config
-    // const plotHeight = maxHeight - gridMargins.top - gridMargins.bottom;
-    
-    // // Calculate data ranges
-    // const xMin = previewData.x_min;
-    // const xMax = previewData.x_max;
-    // const yMin = Math.min(...previewData.y);
-    // const yMax = Math.max(...previewData.y);
-    // const xRange = xMax - xMin;
-    // const yRange = yMax - yMin;
-    
-    // // Calculate width to maintain 1:1 aspect ratio (pixels per meter should be equal)
-    // const pixelsPerMeter = plotHeight / yRange;
-    // const plotWidth = xRange * pixelsPerMeter;
-    // const chartWidth = plotWidth + gridMargins.left + gridMargins.right;
-
     const renderContent = () => {
         if (error) {
             return (
@@ -283,7 +272,7 @@ export const RampPreview = ({ config }: RampPreviewProps) => {
             <div className={styles.chartContainer}>
                 <ReactECharts
                     option={chartOptions}
-                    style={{ height: `${CHART_HEIGHT}px`, width: '100%' }}
+                    style={{ height: `${containerHeight}px`, width: '100%' }}
                 />
             </div>
         );
