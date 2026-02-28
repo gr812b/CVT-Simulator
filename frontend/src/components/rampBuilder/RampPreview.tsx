@@ -28,62 +28,60 @@ export const RampPreview = ({ config }: RampPreviewProps) => {
 
         if (!el) return;
 
-        const target = el;  // observe the parent
-
         const measure = (width: number, height: number) => {
             if (width > 0) setContainerWidth(width);
             if (height > 0) setContainerHeight(height);
-            console.log(`Measured container: ${width}px x ${height}px`);
         };
 
         const ro = new ResizeObserver(entries => {
             const { width, height } = entries[0]?.contentRect ?? {};
             measure(width ?? 0, height ?? 0);
         });
-        ro.observe(target);
+        ro.observe(el);
         roRef.current = ro;
 
-        const { width, height } = target.getBoundingClientRect();
+        const { width, height } = el.getBoundingClientRect();
         measure(width, height);
     }, []);
 
-    const chartDimensions = useMemo(() => {
-        if (!previewData) return { width: containerWidth, height: containerHeight };
+    // Compute axis limits that preserve the data's aspect ratio within the full container.
+    // The "tighter" dimension fills its axis exactly; the other gets extended to fill the space.
+    const { axisXMax, axisYMin } = useMemo(() => {
+        if (!previewData) return { axisXMax: 1, axisYMin: -1 };
 
-        const xMax = Math.max(...previewData.x);
-        const yMin = Math.min(...previewData.y);
+        const dataXMax = Math.max(...previewData.x);
+        const dataYMin = Math.min(...previewData.y); // negative
 
         const plotWidth  = containerWidth  - GRID.left - GRID.right;
         const plotHeight = containerHeight - GRID.top  - GRID.bottom;
 
-        const ppm = Math.min(plotWidth / xMax, plotHeight / Math.abs(yMin));
+        // pixels-per-metre if each dimension were to fill its axis exactly
+        const ppmX = plotWidth  / dataXMax;
+        const ppmY = plotHeight / Math.abs(dataYMin);
+
+        // Use the smaller ppm so the data fits — then extend the other axis to fill
+        const ppm = Math.min(ppmX, ppmY);
 
         return {
-            width:  Math.round(ppm * xMax          + GRID.left + GRID.right),
-            height: Math.round(ppm * Math.abs(yMin) + GRID.top  + GRID.bottom),
+            axisXMax: plotWidth  / ppm,
+            axisYMin: -(plotHeight / ppm),
         };
     }, [previewData, containerWidth, containerHeight]);
 
     const configString = useMemo(() => JSON.stringify(config), [config]);
 
     useEffect(() => {
-        // console.log('RampPreview config:', config);
-        
         if (!config || !config.segments || config.segments.length === 0) {
-            // console.log('No segments, skipping preview');
             setPreviewData(null);
             return;
         }
 
-        // console.log('Fetching preview with', config.segments.length, 'segments');
-        
         const timeoutId = setTimeout(async () => {
             setIsLoading(true);
             setError(null);
 
             try {
                 const data = await previewRamp(config);
-                // console.log('Preview data received:', data);
                 setPreviewData(data);
             } catch (err) {
                 console.error('Preview error:', err);
@@ -92,12 +90,11 @@ export const RampPreview = ({ config }: RampPreviewProps) => {
             } finally {
                 setIsLoading(false);
             }
-        }, 500); // Debounce for 500ms
+        }, 500);
 
         return () => clearTimeout(timeoutId);
     }, [configString, config]);
 
-    // Get colors from CSS variables (matching Graph2D styling)
     const getColor = (property: string, fallback: string): string => {
         if (typeof window !== 'undefined') {
             const value = getComputedStyle(document.documentElement).getPropertyValue(property).trim();
@@ -115,10 +112,8 @@ export const RampPreview = ({ config }: RampPreviewProps) => {
     };
 
     const chartOptions: EChartsOption = useMemo(() => {
-        // Greatest X value and lowest Y value in the data, used to set axis limits and scaling
-        const xMax = previewData ? Math.max(...previewData.x) : 1;
-        const yMin = previewData ? Math.min(...previewData.y) : -1;
-
+        const dataXMax = previewData ? Math.max(...previewData.x) : 1;
+        const dataYMin = previewData ? Math.min(...previewData.y) : -1;
 
         return {
             backgroundColor: COLORS.BACKGROUND,
@@ -141,7 +136,7 @@ export const RampPreview = ({ config }: RampPreviewProps) => {
                 axisLabel: { color: COLORS.TEXT, formatter: (val: number) => Math.round(val * 10000) / 10000 },
                 splitLine: { lineStyle: { color: COLORS.GRID } },
                 min: 0,
-                max: xMax,
+                max: axisXMax,
                 scale: false,
             },
             yAxis: {
@@ -153,106 +148,79 @@ export const RampPreview = ({ config }: RampPreviewProps) => {
                 axisLine: { lineStyle: { color: COLORS.GRID } },
                 axisTick: { lineStyle: { color: COLORS.GRID } },
                 axisLabel: { color: COLORS.TEXT, formatter: (val: number) => Math.round(val * 10000) / 10000 },
-                splitLine: { 
+                splitLine: {
                     show: true,
                     lineStyle: { color: COLORS.GRID }
                 },
-                min: yMin,
+                min: axisYMin,
                 max: 0,
                 scale: false,
             },
-        series: [
-            {
-                type: 'line',
-                data: previewData?.x.map((x, i) => [x, previewData.y[i]]) || [],
-                smooth: true,
-                lineStyle: {
-                    color: COLORS.PRIMARY,
-                    width: LINE_THICKNESS,
+            series: [
+                {
+                    type: 'line',
+                    data: previewData?.x.map((x, i) => [x, previewData.y[i]]) || [],
+                    smooth: true,
+                    lineStyle: {
+                        color: COLORS.PRIMARY,
+                        width: LINE_THICKNESS,
+                    },
+                    itemStyle: {
+                        color: COLORS.PRIMARY,
+                    },
+                    showSymbol: false,
                 },
-                itemStyle: {
-                    color: COLORS.PRIMARY,
+                {
+                    // Bottom axis line (y = axisYMin, from x=0 to x=dataXMax)
+                    type: 'line',
+                    data: [[-0.005 * dataXMax, dataYMin], [dataXMax, dataYMin]],
+                    lineStyle: { color: COLORS.PRIMARY, width: LINE_THICKNESS },
+                    itemStyle: { color: COLORS.PRIMARY },
+                    showSymbol: false,
+                    silent: true,
+                    tooltip: { show: false },
                 },
-                showSymbol: false,
-            },
-            {
-                // Bottom axis (y = yMin, from x=0 to x=xMax)
-                type: 'line',
-                data: [[-0.005*xMax, yMin], [xMax, yMin]],
-                lineStyle: { color: COLORS.PRIMARY, width: LINE_THICKNESS },
-                itemStyle: { color: COLORS.PRIMARY },
-                showSymbol: false,
-                silent: true,
-                tooltip: { show: false },
-            },
-            {
-                // Left axis (x = 0, from y=0 to y=yMin)
-                type: 'line',
-                data: [[0, 0], [0, yMin + 0.005*yMin]],
-                lineStyle: { color: COLORS.PRIMARY, width: LINE_THICKNESS },
-                itemStyle: { color: COLORS.PRIMARY },
-                showSymbol: false,
-                silent: true,
-                tooltip: { show: false },
-            },
-        ],
-        tooltip: {
-            trigger: 'axis',
-            axisPointer: { type: 'cross' },
-            backgroundColor: COLORS.TOOLTIP_BG,
-            borderColor: COLORS.GRID,
-            textStyle: { color: COLORS.TEXT },
-            formatter: (params: CallbackDataParams | CallbackDataParams[]) => {
-                const paramArray = Array.isArray(params) ? params : [params];
-                if (paramArray.length === 0) return '';
-                
-                const point = paramArray[0];
-                const dataValues = Array.isArray(point.value) ? point.value : [];
-                if (dataValues.length < 2) return '';
-                
-                const xVal = dataValues[0];
-                const yVal = dataValues[1];
-                
-                if (typeof xVal !== 'number' || typeof yVal !== 'number') return '';
-                
-                const x = xVal.toFixed(4);
-                const y = yVal.toFixed(4);
-                const slopeIdx = previewData?.x.findIndex(px => Math.abs(px - xVal) < 0.0001);
-                const slope = slopeIdx !== undefined && slopeIdx >= 0 && previewData?.slopes[slopeIdx] 
-                    ? previewData.slopes[slopeIdx].toFixed(4) 
-                    : 'N/A';
-                return `Position: ${x} m<br/>Height: ${y} m<br/>Slope: ${slope}`;
-            },
-        },
-    };
-    }, [previewData, COLORS]);
+                {
+                    // Left axis line (x = 0, from y=0 to y=axisYMin)
+                    type: 'line',
+                    data: [[0, 0], [0, dataYMin * 1.005]],
+                    lineStyle: { color: COLORS.PRIMARY, width: LINE_THICKNESS },
+                    itemStyle: { color: COLORS.PRIMARY },
+                    showSymbol: false,
+                    silent: true,
+                    tooltip: { show: false },
+                },
+            ],
+            tooltip: {
+                trigger: 'axis',
+                axisPointer: { type: 'cross' },
+                backgroundColor: COLORS.TOOLTIP_BG,
+                borderColor: COLORS.GRID,
+                textStyle: { color: COLORS.TEXT },
+                formatter: (params: CallbackDataParams | CallbackDataParams[]) => {
+                    const paramArray = Array.isArray(params) ? params : [params];
+                    if (paramArray.length === 0) return '';
 
-    if (error) {
-        return (
-            <div className={styles.previewContainer}>
-                <div className={styles.error}>
-                    <p>Error generating preview:</p>
-                    <p>{error}</p>
-                </div>
-            </div>
-        );
-    }
+                    const point = paramArray[0];
+                    const dataValues = Array.isArray(point.value) ? point.value : [];
+                    if (dataValues.length < 2) return '';
 
-    if (isLoading) {
-        return (
-            <div className={styles.previewContainer}>
-                <div className={styles.loading}>Loading preview...</div>
-            </div>
-        );
-    }
+                    const xVal = dataValues[0];
+                    const yVal = dataValues[1];
 
-    if (!previewData) {
-        return (
-            <div className={styles.previewContainer}>
-                <div className={styles.empty}>Add segments to see preview</div>
-            </div>
-        );
-    }
+                    if (typeof xVal !== 'number' || typeof yVal !== 'number') return '';
+
+                    const x = xVal.toFixed(4);
+                    const y = yVal.toFixed(4);
+                    const slopeIdx = previewData?.x.findIndex(px => Math.abs(px - xVal) < 0.0001);
+                    const slope = slopeIdx !== undefined && slopeIdx >= 0 && previewData?.slopes[slopeIdx]
+                        ? previewData.slopes[slopeIdx].toFixed(4)
+                        : 'N/A';
+                    return `Position: ${x} m<br/>Height: ${y} m<br/>Slope: ${slope}`;
+                },
+            },
+        };
+    }, [previewData, axisXMax, axisYMin, COLORS]);
 
     const renderContent = () => {
         if (error) {
@@ -270,20 +238,16 @@ export const RampPreview = ({ config }: RampPreviewProps) => {
             return <div className={styles.empty}>Add segments to see preview</div>;
         }
         return (
-            <div className={styles.chartContainer}>
-                <ReactECharts
-                    option={chartOptions}
-                    style={{ height: `${chartDimensions.height}px`, width: `${chartDimensions.width}px` }}
-                />
-            </div>
+            <ReactECharts
+                option={chartOptions}
+                style={{ height: '100%', width: '100%' }}
+            />
         );
     };
 
     return (
         <div ref={sentinelRef} className={styles.previewContainer}>
-            <div className={styles.chartWrapper}>
-                {renderContent()}
-            </div>
+            {renderContent()}
         </div>
     );
 };
