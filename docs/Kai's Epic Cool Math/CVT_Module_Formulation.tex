@@ -3747,23 +3747,17 @@ Let
 
 Applying \theoryRef{th:newton-rot} to each pulley:
 
-\paragraph{Primary Pulley}
-
-\begin{equation}
+\bigeq{eq:primary_rot_dyn}{Primary Pulley Rotational Dynamics}{
 \tau_{\text{eng}}(t) - \tau_p(t)
 =
-I_p\,\alpha_p(t),
-\label{eq:primary_rot_dyn}
-\end{equation}
+I_p\,\alpha_p(t)
+}
 
-\paragraph{Secondary Pulley}
-
-\begin{equation}
+\bigeq{eq:secondary_rot_dyn}{Secondary Pulley Rotational Dynamics}{
 \tau_s(t) - \tau_{\text{load}}(t)
 =
-I_s\,\alpha_s(t),
-\label{eq:secondary_rot_dyn}
-\end{equation}
+I_s\,\alpha_s(t)
+}
 
 where
 
@@ -5348,6 +5342,242 @@ where $v_{\mathrm{smooth}}>0$ controls transition sharpness.
 This modification improves numerical stability without significantly 
 altering the underlying physical model. 
 \end{remarkbox}
+
+% ==============================================================
+\section{Complete CVT Dynamic Model}
+\label{sec:complete_model}
+
+This section assembles the results of the preceding derivations into a single
+closed dynamical system. No new physics is introduced. The purpose is to state
+(i) the chosen state variables, (ii) the intermediate quantities computed from
+those states (geometry, ratio, traction limits), and (iii) the governing ODEs.
+
+% --------------------------------------------------------------
+\subsection{State Definition}
+
+The dynamic state vector is
+\begin{equation}
+\mathbf{x}
+=
+\big(
+\omega_p,\;
+\omega_s,\;
+s,\;
+\dot s
+\big),
+\label{eq:state_vector}
+\end{equation}
+where $\omega_p$ and $\omega_s$ are the primary and secondary pulley angular
+velocities, and $s$ is the axial shift coordinate.
+
+External inputs are the engine torque model $\tau_{\mathrm{eng}}(t)$ and the
+road-load torque model $\tau_{\mathrm{load}}(t)$.
+
+% --------------------------------------------------------------
+\subsection{Geometric Closure (Ratio and Ratio Rate)}
+
+All pulley radii, wrap angles, and belt geometry are determined by $s$ via the
+belt-length constraint and conical kinematics (see \Sec{sec:geometry_summary}).
+In particular, the CVT ratio is
+\Eq{eq:cvt_ratio}:
+\begin{equation}
+R(s) = \frac{r_{s,\mathrm{eff}}(s)}{r_{p,\mathrm{eff}}(s)}.
+\label{eq:R_of_s}
+\end{equation}
+
+Its time derivative is given by \Eq{eq:Rdot_final} and depends on $(s,\dot s)$:
+\begin{equation}
+\dot R = \dot R(s,\dot s).
+\label{eq:Rdot_of_states}
+\end{equation}
+
+These are the only places where $\dot s$ enters the ratio kinematics explicitly.
+
+% --------------------------------------------------------------
+\subsection{Coupling Torques and What the Model Solves For}
+
+We retain the two-sided torque notation used throughout:
+\begin{itemize}
+\item $\tau_p(t)$: coupling torque as seen at the \emph{primary} pulley,
+\item $\tau_s(t)$: coupling torque as seen at the \emph{secondary} pulley.
+\end{itemize}
+
+These are not prescribed inputs. They are determined by:
+\begin{enumerate}
+\item a \emph{no-slip} torque demand (from the rotational coupling derivation),
+\item a \emph{traction capacity} bound (from the friction derivation),
+\item a stick--slip rule that selects the admissible transmitted torque.
+\end{enumerate}
+
+When no slip is feasible, the no-slip torque demand is \Eq{eq:tau_p_final}:
+\begin{equation}
+\tau_{\mathrm{ns}}(t)
+\;\triangleq\;
+\tau_p(t)
+=
+\frac{
+\tau_{\text{eng}}(t)
++
+\dfrac{I_p}{I_s}R(t)\,\tau_{\text{load}}(t)
+-
+I_p\,\omega_s(t)\,\dot R(t)
+}{
+1 + \dfrac{I_p}{I_s}R(t)^2
+}.
+\label{eq:tau_ns_def_complete}
+\end{equation}
+
+Torque on the secondary side is related by the ideal geometric mapping
+(derived from power balance under the ideal transmission assumption):
+\begin{equation}
+\tau_s(t) = R(t)\,\tau_p(t).
+\label{eq:tau_s_from_tau_p}
+\end{equation}
+
+In slip, the actual transmitted torque is limited by the traction capacity.
+We denote the instantaneous admissible magnitude by $\tau_{\max}$, computed
+from \Eq{eq:tau_capacity_final} evaluated on each pulley and combined by the
+chosen limiting rule (e.g., $\min$ across interfaces).
+
+Finally, the \emph{actual} coupling torque used in the dynamics is selected by
+the traction-limited law \Eq{eq:final_tau_piecewise}:
+\begin{equation}
+\tau_p(t) \equiv \tau_c(t)
+=
+\begin{cases}
+\tau_{\mathrm{ns}}(t),
+& v_{\mathrm{rel}}=0 \;\text{and}\; |\tau_{\mathrm{ns}}(t)| \le \tau_{\max}(t),
+\\[8pt]
+\tau_{\max}(t)\,\mathrm{sign}\!\big(v_{\mathrm{rel}}(t)\big),
+& \text{otherwise},
+\end{cases}
+\label{eq:tau_p_traction_law_complete}
+\end{equation}
+with $v_{\mathrm{rel}} = r_{p,\mathrm{eff}}\omega_p - r_{s,\mathrm{eff}}\omega_s$
+(\Sec{sec:slip_metric}).
+
+Once $\tau_p$ is selected, $\tau_s$ follows immediately from
+\Eq{eq:tau_s_from_tau_p}.
+
+% --------------------------------------------------------------
+\subsection{Rotational Dynamics}
+
+The rotational equations of motion are \Eq{eq:primary_rot_dyn} and
+\Eq{eq:secondary_rot_dyn}. Written as first-order ODEs:
+
+\begin{align}
+\dot\omega_p
+&=
+\frac{1}{I_p}
+\left(
+\tau_{\mathrm{eng}}(t) - \tau_p(t)
+\right),
+\label{eq:omega_p_dot_complete}
+\\[6pt]
+\dot\omega_s
+&=
+\frac{1}{I_s}
+\left(
+\tau_s(t) - \tau_{\mathrm{load}}(t)
+\right).
+\label{eq:omega_s_dot_complete}
+\end{align}
+
+Here $\tau_p(t)$ is given by the traction-limited rule
+\Eq{eq:tau_p_traction_law_complete}, and $\tau_s(t)$ is then computed from
+\Eq{eq:tau_s_from_tau_p}.
+
+% --------------------------------------------------------------
+\subsection{Axial Shift Dynamics}
+
+The axial shift acceleration is given by \Eq{eq:s_ddot_final}:
+
+\begin{equation}
+\ddot s
+=
+\frac{
+\Big(F_{p,\mathrm{ax}}(s,\omega_p) + F_{c,p}(s,\omega_p)\Big)
+-
+\Big(F_{s,\mathrm{ax}}(s,\tau_s) + F_{c,s}(s,\omega_s)\Big)
+}{
+m_{p,m} + m_{s,m} + \dfrac{\rho_b A_b L_b}{4}
+}.
+\label{eq:s_ddot_complete}
+\end{equation}
+
+\noindent
+In this assembled model, the secondary torque input appearing in
+$F_{s,\mathrm{ax}}(s,\tau_s)$ is evaluated by
+\Eq{eq:tau_s_from_tau_p}, where $\tau_p$ is selected by the traction rule
+\Eq{eq:tau_p_traction_law_complete}.
+
+% --------------------------------------------------------------
+\subsection{Closed Model (What Is Computed Each Step)}
+
+Given the state $\mathbf{x}=(\omega_p,\omega_s,s,\dot s)$ at time $t$:
+
+\begin{enumerate}
+\item Compute geometry from $s$: $r_{p,\mathrm{eff}}(s)$, $r_{s,\mathrm{eff}}(s)$,
+      $\phi_p(s)$, $\phi_s(s)$, etc.
+\item Compute ratio and ratio rate:
+      $R(s)$ from \Eq{eq:R_of_s}, and $\dot R(s,\dot s)$ from \Eq{eq:Rdot_of_states}.
+\item Compute the no-slip torque demand $\tau_{\mathrm{ns}}$ from
+      \Eq{eq:tau_ns_def_complete}.
+\item Compute traction capacity $\tau_{\max}$ from \Eq{eq:tau_capacity_final}
+      (primary and secondary) and apply the chosen limiting rule.
+\item Select the transmitted coupling torque $\tau_p$ using
+      \Eq{eq:tau_p_traction_law_complete}.
+\item Map to the secondary torque $\tau_s$ using \Eq{eq:tau_s_from_tau_p}.
+\item Evaluate the ODE right-hand-sides:
+      \Eq{eq:omega_p_dot_complete}, \Eq{eq:omega_s_dot_complete},
+      and \Eq{eq:s_ddot_complete}.
+\end{enumerate}
+
+Therefore the complete nonlinear ODE system is
+
+\begin{equation}
+\boxed{
+\begin{aligned}
+\dot\omega_p
+&=
+\frac{1}{I_p}
+\left(
+\tau_{\mathrm{eng}}(t) - \tau_p
+\right),
+\\[6pt]
+\dot\omega_s
+&=
+\frac{1}{I_s}
+\left(
+\tau_s - \tau_{\mathrm{load}}(t)
+\right),
+\\[6pt]
+\dot s
+&=
+\dot s,
+\\[6pt]
+\ddot s
+&=
+\frac{
+\Big(F_{p,\mathrm{ax}}(s,\omega_p) + F_{c,p}(s,\omega_p)\Big)
+-
+\Big(F_{s,\mathrm{ax}}(s,\tau_s) + F_{c,s}(s,\omega_s)\Big)
+}{
+m_{p,m} + m_{s,m} + \dfrac{\rho_b A_b L_b}{4}
+},
+\end{aligned}
+}
+\label{eq:final_cvt_system_complete}
+\end{equation}
+
+with the algebraic closures
+\[
+R=R(s),\quad \dot R=\dot R(s,\dot s),\quad
+\tau_p \text{ from \Eq{eq:tau_p_traction_law_complete}},\quad
+\tau_s = R\,\tau_p.
+\]
+
+This completes the closed CVT dynamic model.
 
 \appendix
 
