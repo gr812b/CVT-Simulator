@@ -1,16 +1,7 @@
 .previewContainer {
     padding: 1rem;
-    // border: 1px solid var(--border-color);
-    // border-radius: 0.5rem;
     background: var(--secondary);
     flex-shrink: 0;
-
-    h4 {
-        margin: 0 0 1rem 0;
-        font-size: 1rem;
-        font-weight: 600;
-        color: var(--text-color);
-    }
 }
 
 .chartContainer {
