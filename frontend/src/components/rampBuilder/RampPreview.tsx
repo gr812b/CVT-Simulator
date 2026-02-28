@@ -22,57 +22,60 @@ export const RampPreview = ({ config }: RampPreviewProps) => {
     const [containerHeight, setContainerHeight] = useState(400);
     const roRef = useRef<ResizeObserver | null>(null);
 
-    // Callback ref: React calls this with the DOM node as soon as it is
-    // attached, regardless of which render branch produced it.  This is more
-    // reliable than useEffect+useRef because useEffect only runs after the
-    // *first* render, which may be a loading/empty branch with no measurable
-    // width yet.
     const sentinelRef = useCallback((el: HTMLDivElement | null) => {
-        // Clean up any previous observer
         roRef.current?.disconnect();
         roRef.current = null;
 
         if (!el) return;
 
-        const measure = (width: number) => {
+        const target = el;  // observe the parent
+
+        const measure = (width: number, height: number) => {
             if (width > 0) setContainerWidth(width);
+            if (height > 0) setContainerHeight(height);
+            console.log(`Measured container: ${width}px x ${height}px`);
         };
 
         const ro = new ResizeObserver(entries => {
-            measure(entries[0]?.contentRect.width ?? 0);
+            const { width, height } = entries[0]?.contentRect ?? {};
+            measure(width ?? 0, height ?? 0);
         });
-        ro.observe(el);
+        ro.observe(target);
         roRef.current = ro;
 
-        // Read immediately in case ResizeObserver doesn't fire synchronously
-        measure(el.getBoundingClientRect().width);
+        const { width, height } = target.getBoundingClientRect();
+        measure(width, height);
     }, []);
 
-    // Recalculate containerHeight whenever the data or width changes,
-    // keeping this side-effect out of useMemo to avoid setState-during-render.
-    useEffect(() => {
-        if (!previewData) return;
+    const chartDimensions = useMemo(() => {
+        if (!previewData) return { width: containerWidth, height: containerHeight };
 
-        const plotWidthPx = containerWidth - GRID.left - GRID.right;
         const xMax = Math.max(...previewData.x);
         const yMin = Math.min(...previewData.y);
-        const ppm = plotWidthPx / xMax;
-        const plotHeightPx = Math.abs(yMin) * ppm;
-        setContainerHeight(plotHeightPx + GRID.top + GRID.bottom);
-    }, [previewData, containerWidth]);
+
+        const plotWidth  = containerWidth  - GRID.left - GRID.right;
+        const plotHeight = containerHeight - GRID.top  - GRID.bottom;
+
+        const ppm = Math.min(plotWidth / xMax, plotHeight / Math.abs(yMin));
+
+        return {
+            width:  Math.round(ppm * xMax          + GRID.left + GRID.right),
+            height: Math.round(ppm * Math.abs(yMin) + GRID.top  + GRID.bottom),
+        };
+    }, [previewData, containerWidth, containerHeight]);
 
     const configString = useMemo(() => JSON.stringify(config), [config]);
 
     useEffect(() => {
-        console.log('RampPreview config:', config);
+        // console.log('RampPreview config:', config);
         
         if (!config || !config.segments || config.segments.length === 0) {
-            console.log('No segments, skipping preview');
+            // console.log('No segments, skipping preview');
             setPreviewData(null);
             return;
         }
 
-        console.log('Fetching preview with', config.segments.length, 'segments');
+        // console.log('Fetching preview with', config.segments.length, 'segments');
         
         const timeoutId = setTimeout(async () => {
             setIsLoading(true);
@@ -80,7 +83,7 @@ export const RampPreview = ({ config }: RampPreviewProps) => {
 
             try {
                 const data = await previewRamp(config);
-                console.log('Preview data received:', data);
+                // console.log('Preview data received:', data);
                 setPreviewData(data);
             } catch (err) {
                 console.error('Preview error:', err);
@@ -270,18 +273,17 @@ export const RampPreview = ({ config }: RampPreviewProps) => {
             <div className={styles.chartContainer}>
                 <ReactECharts
                     option={chartOptions}
-                    style={{ height: `${containerHeight}px`, width: '100%' }}
+                    style={{ height: `${chartDimensions.height}px`, width: `${chartDimensions.width}px` }}
                 />
             </div>
         );
     };
 
-    // sentinelRef is placed on a zero-height div that is always rendered,
-    // so width measurement works in every state (loading, empty, error, data).
     return (
-        <div className={styles.previewContainer}>
-            <div ref={sentinelRef} style={{ width: '100%', height: 0 }} />
-            {renderContent()}
+        <div ref={sentinelRef} className={styles.previewContainer}>
+            <div className={styles.chartWrapper}>
+                {renderContent()}
+            </div>
         </div>
     );
 };
