@@ -121,10 +121,10 @@ export const RampPreview = ({ config }: RampPreviewProps) => {
             backgroundColor: COLORS.BACKGROUND,
             textStyle: { color: COLORS.TEXT },
             grid: {
-                left: 60,
-                right: 40,
-                top: 40,
-                bottom: 60,
+                left: GRID.left,
+                right: GRID.right,
+                top: GRID.top,
+                bottom: GRID.bottom,
                 containLabel: false,
             },
             xAxis: {
