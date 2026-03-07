@@ -121,9 +121,9 @@ export const Input = () => {
                 className={styles.backButton}
                 onClick={() => navigateWithConfirmation('/')}
             />
-            <div className={styles.solverResultsPosition}>
+            {/* <div className={styles.solverResultsPosition}>
                 <SolverResults />
-            </div>
+            </div> */}
             <div className={styles.inputGrid}>
                 <div className={styles.parameterInputContainer}>
                     {allGroups.map((groupKey) => (
