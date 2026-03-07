@@ -13,6 +13,7 @@ interface RampPreviewProps {
 
 const LINE_THICKNESS = 4;
 const GRID = { left: 60, right: 40, top: 40, bottom: 60 } as const;
+const OFFSET = 0.005; // 0.5% extra space beyond data limits for axes
 
 export const RampPreview = ({ config }: RampPreviewProps) => {
     const [previewData, setPreviewData] = useState<RampPreviewResponse | null>(null);
@@ -119,10 +120,10 @@ export const RampPreview = ({ config }: RampPreviewProps) => {
             backgroundColor: COLORS.BACKGROUND,
             textStyle: { color: COLORS.TEXT },
             grid: {
-                left: 60,
-                right: 40,
-                top: 40,
-                bottom: 60,
+                left: GRID.left,
+                right: GRID.right,
+                top: GRID.top,
+                bottom: GRID.bottom,
                 containLabel: false,
             },
             xAxis: {
@@ -173,7 +174,7 @@ export const RampPreview = ({ config }: RampPreviewProps) => {
                 {
                     // Bottom axis line (y = axisYMin, from x=0 to x=dataXMax)
                     type: 'line',
-                    data: [[-0.005 * dataXMax, dataYMin], [dataXMax, dataYMin]],
+                    data: [[-OFFSET * dataXMax, dataYMin], [dataXMax, dataYMin]],
                     lineStyle: { color: COLORS.PRIMARY, width: LINE_THICKNESS },
                     itemStyle: { color: COLORS.PRIMARY },
                     showSymbol: false,
@@ -183,7 +184,7 @@ export const RampPreview = ({ config }: RampPreviewProps) => {
                 {
                     // Left axis line (x = 0, from y=0 to y=axisYMin)
                     type: 'line',
-                    data: [[0, 0], [0, dataYMin * 1.005]],
+                    data: [[0, 0], [0, dataYMin * (1 + OFFSET)]],
                     lineStyle: { color: COLORS.PRIMARY, width: LINE_THICKNESS },
                     itemStyle: { color: COLORS.PRIMARY },
                     showSymbol: false,
