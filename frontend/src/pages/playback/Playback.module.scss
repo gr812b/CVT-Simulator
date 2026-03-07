@@ -21,8 +21,6 @@
 
     .displayGrid {
         flex-grow: 1;
-        @include mixins.scrollbar;
-        & { scrollbar-gutter: stable; }
 
         // make grid of 2 columns and as many rows as needed
         display: grid;

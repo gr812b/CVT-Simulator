@@ -37,6 +37,7 @@
             margin-left: 2rem;
             padding-right: 1rem;
             @include mixins.scrollbar;
+            overflow-y: auto;
             & { scrollbar-gutter: stable; }
 
             .baseInputField {

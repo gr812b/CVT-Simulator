@@ -1,7 +1,6 @@
 @use '@styles/_colors';
 
 @mixin scrollbar {
-    overflow: auto;
 
     // Works on all browsers except Safari
     @supports (scrollbar-width: auto) {
