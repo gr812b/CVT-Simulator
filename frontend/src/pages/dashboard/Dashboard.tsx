@@ -2,7 +2,7 @@ import styles from './Dashboard.module.scss'
 import bajaLogo from '@assets/baja_logo.png'
 import { Button } from '@components/button/Button';
 import { useNavigate } from 'react-router-dom';
-import Play from '@assets/icons/play.svg?react';
+import Run from '@assets/icons/run.svg?react';
 import Edit from '@assets/icons/edit.svg?react';
 import TrashCan from '@assets/icons/trash_can.svg?react';
 import Plus from '@assets/icons/plus.svg?react';
@@ -24,7 +24,7 @@ export const Dashboard = () => {
       <div className={styles.buttonsContainer}>
         <Button
           text={'Run'}
-          icon={Play}
+          icon={Run}
           className={styles.button}
           disabled={tempIsDisabled}
           onClick={() => console.log('Run button clicked')}
