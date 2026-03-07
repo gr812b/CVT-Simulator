@@ -9,13 +9,15 @@
     background-color: var(--secondary);
     height: 100vh;
     width: 100vw;
+    @include mixins.scrollbar;
 
     .buttonsContainer {
         display: flex;
         flex-direction: row;
 
         .navigateButton {
-            margin: 1.5rem 0 0 0.75rem;
+            margin: 0.5rem;
+            margin-right: 0.5rem;
         }
     }
 
@@ -33,6 +35,7 @@
             grid-column: 1 / -1;
             height: 60vh;
             min-height: 31.25rem;
+            padding-left: 1rem;
         }
 
         .graphCategory {
@@ -42,10 +45,10 @@
             .categoryTitle {
                 grid-column: 1 / -1;
                 @include fonts.title-medium;
-                color: var(--primary);
-                margin: 2rem 0 0.5rem 1rem;
-                padding: 1rem;
-                border-bottom: 0.25rem solid white;
+                color: var(--text-color);
+                min-height: 4rem;
+                margin-left: 1rem;
+                border-bottom: 0.25rem solid currentColor;
             }
 
             .categoryGraphs {
