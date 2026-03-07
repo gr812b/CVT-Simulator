@@ -20,7 +20,7 @@
         padding: 0.5rem 0rem;
         border: none;
         border-bottom: 0.125rem solid var(--text-color);
-        background: var(--secondary);
+        background: var(--background);
         color: var(--text-color);
         cursor: pointer;
 
@@ -57,7 +57,7 @@
         display: flex;
         flex-direction: column;
         list-style-type: none;
-        background-color: var(--secondary);
+        background-color: var(--background);
 
         .option {
             cursor: pointer;
@@ -72,11 +72,11 @@
             transition-duration: 0s;
 
             &:hover {
-                background: var(--accent);
+                background: var(--primary);
             }
 
             &:focus {
-                outline: 2px solid var(--accent);
+                outline: 2px solid var(--primary);
                 border-radius: 0.25rem;
             }
         }

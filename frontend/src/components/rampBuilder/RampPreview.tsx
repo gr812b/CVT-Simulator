@@ -105,10 +105,10 @@ export const RampPreview = ({ config }: RampPreviewProps) => {
     };
 
     const COLORS = {
-        BACKGROUND: getColor('--secondary', '#222222'),
+        BACKGROUND: getColor('--background', '#222222'),
         TEXT: getColor('--text-color', '#ffffff'),
         GRID: getColor('--grid-color', '#404040'),
-        PRIMARY: getColor('--primary', '#bb0808'),
+        LINE: getColor('--text-color', '#ffffff'),
         TOOLTIP_BG: getColor('--tooltip-bg', '#2a2a2a'),
     };
 
@@ -163,11 +163,11 @@ export const RampPreview = ({ config }: RampPreviewProps) => {
                     data: previewData?.x.map((x, i) => [x, previewData.y[i]]) || [],
                     smooth: true,
                     lineStyle: {
-                        color: COLORS.PRIMARY,
+                        color: COLORS.LINE,
                         width: LINE_THICKNESS,
                     },
                     itemStyle: {
-                        color: COLORS.PRIMARY,
+                        color: COLORS.LINE,
                     },
                     showSymbol: false,
                 },
@@ -175,8 +175,8 @@ export const RampPreview = ({ config }: RampPreviewProps) => {
                     // Bottom axis line (y = axisYMin, from x=0 to x=dataXMax)
                     type: 'line',
                     data: [[-OFFSET * dataXMax, dataYMin], [dataXMax, dataYMin]],
-                    lineStyle: { color: COLORS.PRIMARY, width: LINE_THICKNESS },
-                    itemStyle: { color: COLORS.PRIMARY },
+                    lineStyle: { color: COLORS.LINE, width: LINE_THICKNESS },
+                    itemStyle: { color: COLORS.LINE },
                     showSymbol: false,
                     silent: true,
                     tooltip: { show: false },
@@ -185,8 +185,8 @@ export const RampPreview = ({ config }: RampPreviewProps) => {
                     // Left axis line (x = 0, from y=0 to y=axisYMin)
                     type: 'line',
                     data: [[0, 0], [0, dataYMin * (1 + OFFSET)]],
-                    lineStyle: { color: COLORS.PRIMARY, width: LINE_THICKNESS },
-                    itemStyle: { color: COLORS.PRIMARY },
+                    lineStyle: { color: COLORS.LINE, width: LINE_THICKNESS },
+                    itemStyle: { color: COLORS.LINE },
                     showSymbol: false,
                     silent: true,
                     tooltip: { show: false },
