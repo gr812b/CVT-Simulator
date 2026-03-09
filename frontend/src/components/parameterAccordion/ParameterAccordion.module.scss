@@ -10,7 +10,7 @@ $transition-time: 0.4s;
     flex-direction: column;
     height: fit-content;
     gap: 1.25rem;
-    color: var(--primary);
+    color: var(--text-color);
     transition: $transition-time ease-in-out;
 
     .header {
