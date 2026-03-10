@@ -69,7 +69,7 @@ export const BaseModal = ({
                 onClick={onClose}
                 aria-label="Close modal"
               >
-                ×
+                x
               </button>
             )}
           </div>

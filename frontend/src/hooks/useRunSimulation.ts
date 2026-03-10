@@ -40,7 +40,6 @@ export const useRunSimulation = () => {
       });
     } catch (error) {
       alert(`Simulation failed: ${error instanceof Error ? error.message : String(error)}`);
-      throw error;
     } finally {
       setLoading(false);
     }
