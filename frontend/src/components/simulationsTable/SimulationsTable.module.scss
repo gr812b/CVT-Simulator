@@ -1,0 +1,137 @@
+@use '@styles/_fonts';
+@use '@styles/_colors';
+@use '@styles/_mixins';
+
+// Background color variants
+$shadow-color: rgba(0, 0, 0, 0.3);
+$row-hover: rgba(255, 255, 255, 0.05);
+$section-header-bg: rgba(255, 255, 255, 0.03);
+$default-row-bg: rgba(187, 8, 8, 0.1);
+$default-row-hover: rgba(187, 8, 8, 0.15);
+$recent-row-bg: rgba(136, 136, 136, 0.1);
+$recent-row-hover: rgba(136, 136, 136, 0.15);
+
+.tableContainer {
+  flex-grow: 1;
+  @include mixins.scrollbar;
+  padding: 2rem;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  background-color: var(--secondary);
+  border-radius: 0.5rem;
+  overflow: hidden;
+  box-shadow: 0 0.125rem 0.25rem $shadow-color;
+
+  thead {
+    background-color: var(--primary);
+    color: var(--text-color);
+
+    th {
+      padding: 1rem;
+      text-align: left;
+      @include fonts.text-small;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+  }
+
+  tbody {
+    tr {
+      border-bottom: 1px solid var(--border-color);
+      cursor: pointer;
+      transition: background-color 0.2s;
+
+      &:hover:not(.emptyRow):not(.sectionHeader):not(.selected) {
+        background-color: $row-hover;
+      }
+
+      &:last-child {
+        border-bottom: none;
+      }
+
+      td {
+        padding: 1rem;
+        @include fonts.text-small;
+        color: var(--text-color);
+      }
+    }
+
+    .selected {
+      background-color: var(--primary);
+      color: var(--text-color);
+
+      &:hover {
+        background-color: var(--primary);
+      }
+    }
+
+    .defaultRow {
+      background-color: $default-row-bg;
+
+      &:hover:not(.selected) {
+        background-color: $default-row-hover;
+      }
+
+      &.selected {
+        background-color: var(--primary);
+
+        &:hover {
+          background-color: var(--primary);
+        }
+      }
+    }
+
+    .recentRunRow {
+      background-color: $recent-row-bg;
+
+      &:hover:not(.selected) {
+        background-color: $recent-row-hover;
+      }
+
+      &.selected {
+        background-color: var(--primary);
+
+        &:hover {
+          background-color: var(--primary);
+        }
+      }
+    }
+
+    .sectionHeader {
+      background-color: $section-header-bg;
+      font-weight: 600;
+      cursor: default;
+      pointer-events: none;
+      border-top: 2px solid var(--border-color);
+
+      td {
+        text-align: left;
+        color: var(--text-color);
+        padding: 0.75rem 1rem;
+        text-transform: uppercase;
+        font-size: 0.875rem;
+        letter-spacing: 0.05em;
+      }
+
+      &:first-child {
+        border-top: none;
+      }
+    }
+
+    .emptyRow {
+      cursor: default;
+      pointer-events: none;
+
+      td {
+        text-align: center;
+        color: var(--border-color);
+        font-style: italic;
+        padding: 2rem 1rem;
+      }
+    }
+  }
+}
