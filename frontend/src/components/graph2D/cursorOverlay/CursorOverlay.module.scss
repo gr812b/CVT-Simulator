@@ -14,7 +14,7 @@
       width: 0.125rem;
       height: 0;
       display: none;
-      background: var(--primary);
+      background: var(--text-color);
       opacity: 0.85;
       will-change: transform;
   }
@@ -27,8 +27,8 @@
       height: 0.75rem;
       display: none;
       border-radius: 50%;
-      background: var(--primary);
-      box-shadow: 0 0 0 0.125rem var(--secondary), 0 0 0.5rem var(--primary);
+      background: var(--text-color);
+      box-shadow: 0 0 0 0.125rem var(--background), 0 0 0.5rem var(--text-color);
       will-change: transform;
       pointer-events: none;
   }
@@ -41,7 +41,7 @@
       white-space: nowrap;
       padding: 0.25rem 0.75rem;
       @include fonts.text-small;
-      color: var(--primary);
+      color: var(--text-color);
       will-change: transform;
   }
 }
