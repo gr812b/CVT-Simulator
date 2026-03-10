@@ -27,14 +27,12 @@ export const SolverResults = () => {
             });
 
             if (!isValid) {
-                console.log('[SolverResults] Skipping /solvers call - parameters invalid');
                 setSolverData(null);
                 setIsLoading(false);
                 setError(null);
                 return;
             }
 
-            console.log('[SolverResults] Calling /solvers API');
             setIsLoading(true);
             setError(null);
             
@@ -45,12 +43,10 @@ export const SolverResults = () => {
                 // Only update state if this is still the current request
                 if (requestId === currentRequestRef.current) {
                     setSolverData(result);
-                    console.log('[SolverResults] /solvers API call successful');
                 }
-            } catch (err) {
+            } catch {
                 // Don't show error if request was aborted or superseded
                 if (requestId === currentRequestRef.current) {
-                    console.error('Failed to fetch solver results:', err);
                     setError('Failed to load solver results');
                 }
             } finally {

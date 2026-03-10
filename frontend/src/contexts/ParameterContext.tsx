@@ -39,7 +39,7 @@ const loadFromStorage = (): ParameterState => {
       return { ...getInitialState(), ...parsed };
     }
   } catch (error) {
-    console.warn('Failed to load parameters from localStorage:', error);
+    alert(`Failed to load parameters from localStorage: ${error instanceof Error ? error.message : String(error)}`);
   }
   return getInitialState();
 };
@@ -49,7 +49,7 @@ const saveToStorage = (parameters: ParameterState): void => {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(parameters));
   } catch (error) {
-    console.warn('Failed to save parameters to localStorage:', error);
+    alert(`Failed to save parameters to localStorage: ${error instanceof Error ? error.message : String(error)}`);
   }
 };
 

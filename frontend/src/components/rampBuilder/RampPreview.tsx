@@ -85,7 +85,7 @@ export const RampPreview = ({ config }: RampPreviewProps) => {
                 const data = await previewRamp(config);
                 setPreviewData(data);
             } catch (err) {
-                console.error('Preview error:', err);
+                alert('Failed to generate preview: ' + (err instanceof Error ? err.message : 'Unknown error'));
                 setError(err instanceof Error ? err.message : 'Failed to generate preview');
                 setPreviewData(null);
             } finally {

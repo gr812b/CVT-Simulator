@@ -156,8 +156,7 @@ export const useSimulations = (): UseSimulationsReturn => {
           fileInputRef.current.value = '';
         }
       } catch (error) {
-        console.error('Import failed:', error);
-        alert('Failed to import parameter set. Please check the file format.');
+        alert(`Failed to import parameter set: ${error instanceof Error ? error.message : String(error)}`);
       }
     },
     [loadSimulations]

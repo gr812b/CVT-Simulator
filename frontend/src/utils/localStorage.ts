@@ -83,8 +83,8 @@ const getSimulationsFromStorage = (config: StorageConfig): SavedSimulation[] => 
     // If we filtered any out, update localStorage
     if (compatible.length !== simulations.length) {
       localStorage.setItem(config.key, JSON.stringify(compatible));
-      console.warn(
-        `Filtered out ${simulations.length - compatible.length} simulations with incompatible schema versions from ${config.key}`
+      alert(
+        `Filtered out ${simulations.length - compatible.length} simulations with incompatible schema versions from ${config.key}r`
       );
     }
     
@@ -95,7 +95,7 @@ const getSimulationsFromStorage = (config: StorageConfig): SavedSimulation[] => 
       return dateB - dateA;
     });
   } catch (error) {
-    console.error(`Failed to load simulations from localStorage (${config.key}):`, error);
+    alert(`Failed to load simulations from localStorage: ${error instanceof Error ? error.message : String(error)}`);
     return [];
   }
 };
@@ -287,7 +287,7 @@ export const saveSessionParameters = (parameters: ParameterState): void => {
   try {
     sessionStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(parameters));
   } catch (error) {
-    console.error('Failed to save session parameters:', error);
+    alert(`Failed to save session parameters: ${error instanceof Error ? error.message : String(error)}`);
   }
 };
 
@@ -301,7 +301,7 @@ export const getSessionParameters = (): ParameterState | null => {
     
     return JSON.parse(stored) as ParameterState;
   } catch (error) {
-    console.error('Failed to load session parameters:', error);
+    alert(`Failed to load session parameters: ${error instanceof Error ? error.message : String(error)}`);
     return null;
   }
 };
@@ -313,7 +313,7 @@ export const clearSessionParameters = (): void => {
   try {
     sessionStorage.removeItem(SESSION_STORAGE_KEY);
   } catch (error) {
-    console.error('Failed to clear session parameters:', error);
+    alert(`Failed to clear session parameters: ${error instanceof Error ? error.message : String(error)}`);
   }
 };
 
@@ -328,7 +328,7 @@ export const setLoadedSimulationId = (id: string | null): void => {
       sessionStorage.setItem(LOADED_SIMULATION_KEY, id);
     }
   } catch (error) {
-    console.error('Failed to set loaded simulation ID:', error);
+    alert(`Failed to set loaded simulation ID: ${error instanceof Error ? error.message : String(error)}`);
   }
 };
 
@@ -339,7 +339,7 @@ export const getLoadedSimulationId = (): string | null => {
   try {
     return sessionStorage.getItem(LOADED_SIMULATION_KEY);
   } catch (error) {
-    console.error('Failed to get loaded simulation ID:', error);
+    alert(`Failed to get loaded simulation ID: ${error instanceof Error ? error.message : String(error)}`);
     return null;
   }
 };

@@ -30,26 +30,20 @@ export const useSessionPersistence = () => {
     const sessionParams = getSessionParameters();
     const loadedId = getLoadedSimulationId();
     
-    console.log('[Session Init]', { hasSession: !!sessionParams, loadedId });
-    
     if (sessionParams && loadedId) {
       // Both exist - restore session and keep baseline reference
-      console.log('[Session Init] Restoring session with existing baseline');
       setMultipleParameters(sessionParams);
     } else if (sessionParams && !loadedId) {
       // Session exists but no baseline - this is a page reload
       // Set the session state and mark it as the baseline by storing it with a special ID
-      console.log('[Session Init] Restoring session and setting as baseline');
       setMultipleParameters(sessionParams);
       setLoadedSimulationId('session_baseline');
     } else if (!sessionParams && !loadedId) {
       // Fresh start - load first default and set it as baseline
-      console.log('[Session Init] Fresh start, loading first default as baseline');
       const defaults = getDefaultSimulations();
       if (defaults[0]) {
         setMultipleParameters(defaults[0].parameters);
         setLoadedSimulationId(defaults[0].id);
-        console.log('[Session Init] Loaded baseline:', defaults[0].id);
       }
     }
     // else: loadedId exists without session (from dashboard), parameters already set

@@ -44,17 +44,12 @@ export const useFormState = (contextValues?: ParameterState) => {
   const initialValuesRef = useRef<Record<Parameter, ParameterValue>>(getInitialValues());
 
   // Update a field value and validate it
-  const updateField = useCallback((parameter: Parameter, value: ParameterValue) => {
-    console.log('[Field Validation] Updating field:', parameter, 'value:', value);
-    
+  const updateField = useCallback((parameter: Parameter, value: ParameterValue) => {    
     setValues(prev => ({ ...prev, [parameter]: value }));
     
     // Validate the field (skip validation for complex types)
     const validator = PARAMETERS[parameter].validate;
-    const error = validator ? validator(String(value)) : null;
-    
-    console.log('[Field Validation] Validation result for', parameter, ':', error ? `ERROR: ${error}` : 'VALID');
-    
+    const error = validator ? validator(String(value)) : null;    
     setErrors(prev => ({ ...prev, [parameter]: error }));
     
     // Mark as touched

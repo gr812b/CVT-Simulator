@@ -19,36 +19,7 @@
         top: 1.5rem;
         right: 2rem;
         z-index: 10;
-        max-width: 300px;
-    }
-
-    .validationStatus,
-    .validationError {
-        position: absolute;
-        top: 1.5rem;
-        left: 50%;
-        transform: translateX(-50%);
-        padding: 0.75rem 1.5rem;
-        border-radius: 4px;
-        @include fonts.text-small;
-        font-weight: 500;
-        z-index: 10;
-        opacity: 0.9;
-        transition: opacity 0.2s;
-
-        &:hover {
-            opacity: 1;
-        }
-    }
-
-    .validationStatus {
-        background-color: rgba(255, 255, 255, 0.1);
-        color: var(--primary);
-    }
-
-    .validationError {
-        background-color: rgba(187, 8, 8, 0.3);
-        color: var(--primary);
+        max-width: 18.75rem;
     }
 
     .inputGrid {

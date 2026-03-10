@@ -39,8 +39,7 @@ export const useRunSimulation = () => {
         state: { simulationResult: unitConversion }
       });
     } catch (error) {
-      console.error('Simulation failed:', error);
-      alert('Simulation failed. Please check your parameters and try again.');
+      alert(`Simulation failed: ${error instanceof Error ? error.message : String(error)}`);
       throw error;
     } finally {
       setLoading(false);

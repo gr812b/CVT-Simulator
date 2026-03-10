@@ -73,9 +73,8 @@ export const SaveModal = ({
       saveSimulation(name.trim(), parameters);
       onSave();
       onClose();
-    } catch (err) {
+    } catch {
       setError('Failed to save parameters. Please try again.');
-      console.error('Save error:', err);
     }
   };
 

@@ -98,8 +98,7 @@ export class ReplayController {
 
   setSpeed(newSpeed: number) {
     if (newSpeed <= 0) {
-      // TODO: Remove debugging statement
-      console.warn('Speed must be positive. Ignoring invalid value:', newSpeed);
+      alert('Speed must be positive. Invalid value ignored.');
       return;
     }
     // keep timeline continuous when changing speed during playback
