@@ -1,5 +1,6 @@
 @use '@styles/_fonts';
 @use '@styles/_colors';
+@use '@styles/_mixins';
 @use 'sass:map';
 
 .dashboard {
@@ -34,7 +35,7 @@
 
     .tableContainer {
         flex-grow: 1;
-        overflow: auto;
+        @include mixins.scrollbar;
         padding: 2rem;
     }
 

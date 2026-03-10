@@ -21,7 +21,7 @@ export const DEFAULT_SIMULATIONS = [
       PrimarySpringPretension: 0.1,
       SecondaryRampConfig: {
         segments: [
-          { type: 'circular' as const, length: 0.024, angle_start: 60, angle_end: 40, quadrant: 3 },
+          { type: 'linear' as const, length: 1, angle: -10 },
         ],
       } as RampConfig,
       SecondaryTorsionSpringRate: 3.476,
@@ -36,85 +36,55 @@ export const DEFAULT_SIMULATIONS = [
     },
   },
   {
-    name: 'High Performance',
+    name: 'Hill Climb (25)',
     parameters: {
-      FlyweightMass: 0.45,
+      FlyweightMass: 0.5,
       PrimaryRampConfig: {
         segments: [
-          { type: 'circular' as const, length: 0.015, angle_start: 65, angle_end: 50, quadrant: 3 },
-          { type: 'circular' as const, length: 0.015, angle_start: 50, angle_end: 35, quadrant: 3 },
+          { type: 'circular' as const, length: 0.024, angle_start: 60, angle_end: 40, quadrant: 3 },
         ],
       } as RampConfig,
-      PrimarySpringRate: 14000,
-      PrimarySpringPretension: 0.12,
+      PrimarySpringRate: 12784,
+      PrimarySpringPretension: 0.1,
       SecondaryRampConfig: {
         segments: [
-          { type: 'circular' as const, length: 0.012, angle_start: 65, angle_end: 45, quadrant: 3 },
-          { type: 'circular' as const, length: 0.012, angle_start: 45, angle_end: 30, quadrant: 3 },
+          { type: 'linear' as const, length: 1, angle: -10 },
         ],
       } as RampConfig,
-      SecondaryTorsionSpringRate: 3.8,
-      SecondaryCompressionSpringRate: 3800,
-      SecondaryRotationalSpringPretension: 220,
-      SecondaryLinearSpringPretension: 0.12,
-      VehicleWeight: 210,
-      DriverWeight: 70,
-      Traction: 100,
-      AngleOfIncline: 0,
-      TotalDistance: 250,
-    },
-  },
-  {
-    name: 'Hill Climb',
-    parameters: {
-      FlyweightMass: 0.55,
-      PrimaryRampConfig: {
-        segments: [
-          { type: 'circular' as const, length: 0.020, angle_start: 55, angle_end: 45, quadrant: 3 },
-          { type: 'circular' as const, length: 0.010, angle_start: 45, angle_end: 35, quadrant: 3 },
-        ],
-      } as RampConfig,
-      PrimarySpringRate: 11500,
-      PrimarySpringPretension: 0.15,
-      SecondaryRampConfig: {
-        segments: [
-          { type: 'circular' as const, length: 0.018, angle_start: 55, angle_end: 40, quadrant: 3 },
-        ],
-      } as RampConfig,
-      SecondaryTorsionSpringRate: 3.2,
-      SecondaryCompressionSpringRate: 3200,
-      SecondaryRotationalSpringPretension: 180,
-      SecondaryLinearSpringPretension: 0.15,
-      VehicleWeight: 230,
-      DriverWeight: 80,
-      Traction: 100,
-      AngleOfIncline: 15,
-      TotalDistance: 150,
-    },
-  },
-  {
-    name: 'Mud/Low Traction',
-    parameters: {
-      FlyweightMass: 0.52,
-      PrimaryRampConfig: {
-        segments: [
-          { type: 'circular' as const, length: 0.022, angle_start: 58, angle_end: 42, quadrant: 3 },
-        ],
-      } as RampConfig,
-      PrimarySpringRate: 12000,
-      PrimarySpringPretension: 0.11,
-      SecondaryRampConfig: {
-        segments: [
-          { type: 'circular' as const, length: 0.020, angle_start: 58, angle_end: 43, quadrant: 3 },
-        ],
-      } as RampConfig,
-      SecondaryTorsionSpringRate: 3.3,
-      SecondaryCompressionSpringRate: 3400,
-      SecondaryRotationalSpringPretension: 190,
-      SecondaryLinearSpringPretension: 0.11,
+      SecondaryTorsionSpringRate: 3.476,
+      SecondaryCompressionSpringRate: 3532,
+      SecondaryRotationalSpringPretension: 200,
+      SecondaryLinearSpringPretension: 0.1,
       VehicleWeight: 225,
       DriverWeight: 75,
-      Traction: 65,
+      Traction: 100,
+      AngleOfIncline: 25,
+      TotalDistance: 200,
+    },
+  },
+  {
+    name: 'Our Lightest Driver',
+    parameters: {
+      FlyweightMass: 0.5,
+      PrimaryRampConfig: {
+        segments: [
+          { type: 'circular' as const, length: 0.024, angle_start: 60, angle_end: 40, quadrant: 3 },
+        ],
+      } as RampConfig,
+      PrimarySpringRate: 12784,
+      PrimarySpringPretension: 0.1,
+      SecondaryRampConfig: {
+        segments: [
+          { type: 'linear' as const, length: 1, angle: -10 },
+        ],
+      } as RampConfig,
+      SecondaryTorsionSpringRate: 3.476,
+      SecondaryCompressionSpringRate: 3532,
+      SecondaryRotationalSpringPretension: 200,
+      SecondaryLinearSpringPretension: 0.1,
+      VehicleWeight: 225,
+      DriverWeight: 35,
+      Traction: 100,
       AngleOfIncline: 0,
       TotalDistance: 200,
     },

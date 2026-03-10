@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@components/button/Button';
 import { ParameterAccordion } from '@components/parameterAccordion/ParameterAccordion';
 import { InputField } from '@components/inputField/InputField';
@@ -12,7 +13,6 @@ import { GROUP_TITLES, PARAMETERS, type Parameter, type ParameterGroup, type Pie
 import { useParameter } from '@contexts/ParameterContext';
 import { useLoading } from '@contexts/LoadingContext';
 import { useFormState } from '@hooks/useFormState';
-import { useUnsavedChangesPrompt } from '@hooks/useUnsavedChangesPrompt';
 import { useRunSimulation } from '@hooks/useRunSimulation';
 import { useSessionPersistence } from '@hooks/useSessionPersistence';
 import Home from '@assets/icons/home.svg?react';
@@ -35,7 +35,7 @@ export const Input = () => {
     const { setMultipleParameters, parameters } = useParameter();
     const { isLoading, loadingMessage } = useLoading();
     const formState = useFormState(parameters);
-    const { navigateWithConfirmation } = useUnsavedChangesPrompt(formState.hasChanges);
+    const navigate = useNavigate();
     const { runSimulation } = useRunSimulation();
     const { isFieldChanged, hasChanges, resetToBaseline, baselineParameters } = useSessionPersistence();
 
@@ -144,7 +144,7 @@ export const Input = () => {
                 text={'Home'}
                 icon={Home}
                 className={styles.backButton}
-                onClick={() => navigateWithConfirmation('/')}
+                onClick={() => navigate('/')}
             />
             <div className={styles.solverResultsPosition}>
                 <SolverResults />
