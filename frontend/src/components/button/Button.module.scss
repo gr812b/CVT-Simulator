@@ -8,7 +8,7 @@
     height: fit-content;
     gap: 0.5rem;
     border-radius: 100rem;
-    color: var(--primary);
+    color: var(--text-color);
     display: flex;
     justify-content: center;
 
@@ -23,8 +23,8 @@
     }
 
     &:hover {
-        background-color: var(--primary);
-        color: var(--secondary);
+        background-color: var(--text-color);
+        color: var(--background);
     }
 
     &:disabled {
@@ -33,7 +33,7 @@
 
         &:hover {
             background-color: unset;
-            color: var(--primary);
+            color: var(--text-color);
         }
     }
 }
