@@ -6617,25 +6617,161 @@ throughout the ramp.
 
 \section{Numerical Methods Summary}\label{sec:appendix-numerics}
 
-This section summarizes the numerical solution methods used throughout this work.
+This section documents the numerical algorithms used for belt-geometry root
+finding and dynamic simulation, including the specific tolerances, bracketing
+strategies, and solver configurations employed in the implementation.
 
+% --------------------------------------------------------------
 \subsection{Root Finding for Belt-Length Constraint}
 
-The belt-length constraint \Eq{eq:belt_length_constraint} is solved using
-Brent's method, a robust bracketed root-finding algorithm combining bisection,
-secant, and inverse quadratic interpolation.
+Given a known primary outer radius $r_1$ and fixed center-to-center distance
+$C$, the secondary outer radius $r_2$ is the unique root of the belt-length
+constraint. This scalar root problem is obtained by rearranging the exact belt
+length closure from \Eq{eq:belt_length_constraint} into the residual form:
+\begin{equation}
+g(r_2;\,r_1)
+=
+\pi(r_1+r_2)
++ 2(r_2-r_1)\arcsin\!\left(\frac{r_2-r_1}{C}\right)
++ 2\sqrt{C^2-(r_2-r_1)^2}
+- L_b
+= 0,
+\label{eq:belt_constraint_g}
+\end{equation}
+where $L_b$ is the fixed belt length. A separate invocation solves for the
+center-to-center distance $C$ itself at initialization, using the same equation
+evaluated at the boundary radii $(r_{1,\min},\, r_{2,\max})$ with $C$ as the
+unknown; this is exactly the initialization step implied by
+\Eq{eq:belt_length_constraint} before the ratio law \Eq{eq:R_of_s} can be
+evaluated over the shift range.
 
-% TODO: Document bracketing strategy and typical convergence behavior
+\paragraph{Bracketing strategy.}
 
+The $\arcsin$ term in \Eq{eq:belt_constraint_g} is real only when
+$|r_2 - r_1| \le C$, so the natural domain for $r_2$ is the open interval
+$(r_1 - C,\, r_1 + C)$. Within this interval a sign change is guaranteed:
+at the lower boundary $r_2 \to r_1 - C$, the $\arcsin$ saturates to $-\pi/2$
+and the square root vanishes, giving
+$g \to 2\pi r_1 - 2\pi C - L_b < 0$ for all physically valid parameters.
+At the upper boundary $r_2 \to r_1 + C$, by symmetry
+$g \to 2\pi r_1 + 2\pi C - L_b > 0$, satisfied whenever the belt length is
+less than the circumference subtended by the wider pulley pair --- a
+requirement any real CVT must satisfy. A small safety margin
+$\varepsilon = \num{e-9}$~m is applied at both ends to keep $\arcsin$ away
+from its domain boundary where the function becomes numerically steep.
+
+For center-to-center distance solving, the bracket is instead the interval
+$(\Delta r + \varepsilon,\; L_b/2)$, where $\Delta r = |r_{2,\mathrm{eff}} -
+r_{1,\mathrm{eff}}|$ is the effective-radius difference at the boundary
+configuration. The lower bound ensures $\arcsin$ is defined; the upper bound
+is a conservative geometric limit (a straight two-span belt cannot exceed
+$L_b$ across a gap of $L_b/2$). Both brackets are validated by an explicit
+sign-change check before invoking the solver, so any failure to bracket
+immediately identifies an infeasible geometry rather than producing a silent
+wrong answer.
+
+\paragraph{Brent's method.}
+
+Both roots are found using \texttt{scipy.optimize.brentq}, an implementation
+of Brent's algorithm~\cite{Brent1973}. The method combines three strategies:
+bisection (guaranteed bracket-halving), secant interpolation (superlinear
+convergence near smooth roots), and inverse quadratic interpolation
+(order-$\approx 1.84$ convergence when three previous iterates are
+well-conditioned). Whenever the faster interpolation steps would place the
+next iterate outside the current bracket, the algorithm falls back to
+bisection, preserving the worst-case $O(\log_2(1/\varepsilon))$ guarantee of
+pure bisection. Because the sign-change brackets described above are
+guaranteed for all valid CVT geometries, \texttt{brentq} is certain to
+converge. Both root solves use an absolute tolerance of $\num{e-9}$~m, well
+below any physically meaningful length precision.
+
+% --------------------------------------------------------------
 \subsection{ODE Integration for Dynamic Simulation}
 
-% TODO: Document choice of integrator (e.g., RK45, BDF) and step size strategy
+The full CVT state vector $\mathbf{x} = (\omega_p, \omega_s, s, \dot{s})$
+is integrated using \texttt{scipy.integrate.solve\_ivp}. The governing system
+is the assembled first-order model in \Eq{eq:final_cvt_system_complete}, with
+rotational sub-equations \Eq{eq:omega_p_dot_complete} and
+\Eq{eq:omega_s_dot_complete}, axial dynamics \Eq{eq:s_ddot_complete}, and
+algebraic geometry closures \Eq{eq:R_of_s} and \Eq{eq:Rdot_of_states}. The
+time integrator is used with the
+\texttt{RK45} method --- the Dormand--Prince explicit embedded Runge--Kutta
+pair~\cite{DormandPrince1980}. The method propagates the state with a
+5th-order formula and simultaneously computes a 4th-order companion estimate
+for local error control, using the same six function evaluations. The tableau
+is FSAL (first-same-as-last): the final stage of each accepted step is
+reused as the first stage of the next, so only five new evaluations are
+needed per step in steady operation.
+
+\paragraph{Adaptive step size control.}
+
+At each candidate step the per-component local error estimate $\hat{e}_i$
+is compared to a mixed tolerance threshold. A step is accepted when
+\begin{equation}
+\max_i \frac{|\hat{e}_i|}{\mathrm{atol} + \mathrm{rtol}\cdot|y_i|}
+\le 1,
+\end{equation}
+and the next step size is scaled proportionally to $(\mathrm{tol}/\hat{e})^{1/5}$.
+The tolerances used in this work are $\mathrm{atol} = \num{e-6}$ and
+$\mathrm{rtol} = \num{e-4}$ (Table~\ref{tab:solver_tols}).
+The absolute floor prevents spurious step rejection when a state variable
+passes through zero (e.g.\ $\dot{s} \approx 0$ at shift equilibrium or
+$\omega_p \approx 0$ at engine start), where a purely relative criterion
+would demand unreachable accuracy.
+
+\begin{table}[H]
+\centering
+\begin{tabular}{llp{7cm}}
+\toprule
+\textbf{Parameter} & \textbf{Value} & \textbf{Interpretation} \\
+\midrule
+\texttt{atol} & $\num{e-6}$ & absolute floor: \SI{1}{\micro\metre} on $s$,
+                               \SI{1}{\micro\radian\per\second} on $\omega$ \\
+\texttt{rtol} & $\num{e-4}$ & relative tolerance: 0.01\% of current state magnitude \\
+\texttt{t\_eval} & 10\,000 pts & uniform output grid over \SI{30}{\second} \\
+\bottomrule
+\end{tabular}
+\caption{ODE solver tolerance parameters.}
+\label{tab:solver_tols}
+\end{table}
+
+\paragraph{Event detection.}
+
+Phase transitions (shift engagement, boundary contact, back-shift onset) are
+located using \texttt{solve\_ivp}'s event mechanism. These events correspond to
+qualitative changes in the dynamics around the bounded shift coordinate used in
+\Eq{eq:s_ddot_complete} and the full state evolution in
+\Eq{eq:final_cvt_system_complete}. After each accepted step
+the solver evaluates the event functions on a degree-4 dense-output
+interpolant and applies a root-finding pass to detect any sign change within
+the step. When a crossing is found it is bracketed at sub-tolerance precision
+before being reported, so transitions are located with the same accuracy as
+the integration tolerance rather than being snapped to the coarse output grid.
+
+\paragraph{Phase splitting at hard constraints.}
+
+The shift bounds $s \in [0, s_{\max}]$ with $\dot{s} = 0$ at both endpoints
+are handled by partitioning the trajectory into separate \texttt{solve\_ivp}
+calls rather than imposing inequality constraints inside the ODE. Each phase
+--- normal shifting, clamped-at-maximum, and back-shifting --- presents a
+smooth right-hand side to the integrator, allowing RK45 to operate at full
+5th-order accuracy throughout. The terminal event of each phase supplies the
+initial condition of the next. This is numerically cleaner than directly
+clamping \Eq{eq:s_ddot_complete} inside a single solve because it preserves a
+smooth right-hand side within each phase. Up to ten alternating full-shift\,/\,back-shift
+cycles are supported before the simulation terminates, preventing unbounded
+phase loops for unusual parameter regimes.
 
 
 \section{Secondary Capacity Closure}\label{sec:appendix-secondary-capacity-closure}
 
-% TODO: Comprehensive table of all symbols used in the document
-% Organized by category: geometry, forces, dynamics, parameters, etc.
+This remains a placeholder for now, as it relies on outdated equations, but one can see how the circular dependency can be resolved.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.75\linewidth]{./illustrations/appendix/t_maxSecondaryDerivation.png}
+\label{fig:secondary_capacity_closure}
+\end{figure}
 
 
 \newpage
