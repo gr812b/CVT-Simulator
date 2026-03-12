@@ -97,20 +97,19 @@ export const RampBuilder = ({ value, onChange, className }: RampBuilderProps) =>
                             </div>
 
                             <div className={styles.segmentContent}>
-                                <div className={styles.field}>
-                                    <Dropdown
-                                        label="Type"
-                                        value={segment.type}
-                                        onChange={(value) => changeSegmentType(index, value as SegmentType)}
-                                        options={Object.keys(SEGMENT_DEFAULTS).map(type => ({
-                                            value: type,
-                                            label: type
-                                                .split('_')
-                                                .map(w => w.charAt(0).toUpperCase() + w.slice(1))
-                                                .join(' ')
-                                        }))}
-                                    />
-                                </div>
+                                
+                                <Dropdown
+                                    label="Type"
+                                    value={segment.type}
+                                    onChange={(value) => changeSegmentType(index, value as SegmentType)}
+                                    options={Object.keys(SEGMENT_DEFAULTS).map(type => ({
+                                        value: type,
+                                        label: type
+                                            .split('_')
+                                            .map(w => w.charAt(0).toUpperCase() + w.slice(1))
+                                            .join(' ')
+                                    }))}
+                                />
                                 
                                 <div className={styles.segmentFields}>
                                     {fields.map(([key, value]) => {
