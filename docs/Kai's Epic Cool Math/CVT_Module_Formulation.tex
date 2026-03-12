@@ -15,13 +15,14 @@
 \usepackage{graphicx}
 \usepackage{booktabs}
 \usepackage{float}
-
+\usepackage{booktabs}
+\usepackage{makecell}
 \usepackage[hidelinks]{hyperref}
 \hypersetup{
     bookmarks=true,         % show bookmarks bar?
       colorlinks=true,       % false: boxed links; true: colored links
     linkcolor=red,          % color of internal links (change box color with linkbordercolor)
-    citecolor=green,        % color of links to bibliography
+    citecolor=blue,        % color of links to bibliography
     filecolor=magenta,      % color of file links
     urlcolor=cyan           % color of external links
 }
@@ -258,80 +259,293 @@
 \tableofcontents
 \newpage
 
-% ============================================================
-\section{Overview}\label{sec:overview}
-
-\subsection{Purpose of This Document}
-
-This document presents a complete dynamic derivation of a continuously
-variable transmission (CVT) system model. The goal is to develop a
-physically consistent set of governing equations that describe:
-
-\begin{itemize}
-    \item Rotational dynamics of the primary and secondary assemblies,
-    \item Axial shift dynamics of the primary sheaves,
-    \item Belt traction and torque transfer,
-    \item Slip behavior under torque saturation,
-    \item Coupled vehicle longitudinal response.
-\end{itemize}
-
-The resulting formulation provides a structured, state-based model
-suitable for numerical simulation and performance analysis.
-
-\subsection{Scope}
-
-This document focuses on the mechanical modeling of the CVT system.
-It includes force balances, torque transfer mechanisms, and dynamic
-coupling between rotational and axial motion.
-
-The following are outside the scope of this document:
-
-\begin{itemize}
-    \item Thermal modeling,
-    \item Long-term wear or material degradation,
-    \item Detailed tribological contact mechanics,
-    \item Multi-body vehicle dynamics beyond one-dimensional motion.
-\end{itemize}
-
-All assumptions limiting model fidelity are formally defined in
-\Sec{sec:assumptions}.
-
-\subsection{Expected Background Knowledge}
-
-The reader is expected to be familiar with:
-
-\begin{itemize}
-    \item Newton’s laws of motion,
-    \item Basic rigid-body rotational dynamics,
-    \item Linear spring models,
-    \item Gear ratios and torque multiplication,
-    \item Basic algebra and differential equations.
-\end{itemize}
-
-Prior familiarity with state-space modeling or numerical integration
-is not assumed. Relevant concepts are introduced where required.
-
-\subsection{Modeling Approach}
-
-The system is modeled using a minimal set of dynamic state variables,
-defined in \Sec{sec:state}. All other quantities are derived algebraically
-from these states.
-
-The derivation proceeds as follows:
-
-\begin{itemize}
-    \item Governing physical laws are defined (\Sec{sec:principles}),
-    \item Kinematic relationships between pulley geometry and ratio are derived,
-    \item Axial and radial force models are constructed,
-    \item Belt traction limits are formulated,
-    \item Rotational and axial equations of motion are assembled,
-    \item Slip behavior is incorporated.
-\end{itemize}
-
-The final result is a coupled nonlinear dynamic system
-suitable for time-domain simulation.
-
 % ==============================================================
+\section{Introduction}
+\label{sec:introduction}
+
+% --------------------------------------------------------------
+\subsection{Background and Context}
+\label{sec:intro_background}
+
+The continuously variable transmission (CVT) is a mechanical power transmission device capable of producing a continuously variable speed ratio between an input and output shaft, in contrast to the fixed discrete ratios of a conventional stepped gearbox. In the class of CVTs relevant to this work --- dry rubber V-belt CVTs with mechanically actuated conical sheave pairs --- the transmission ratio is not commanded by an external actuator or electronic controller. Instead, it is an emergent dynamic response: the equilibrium of axial forces acting on the primary and secondary sheave pairs, arising from centrifugal flyweight mechanisms, torque-reactive helix and ramp assemblies, and return springs, determines the radial position at which the belt seats within each sheave groove, and therefore the effective pitch radii and transmission ratio at every instant.
+
+This self-regulating character is simultaneously the CVT's greatest practical asset and the primary source of difficulty in modeling it rigorously. Because no actuator explicitly commands the ratio, the ratio trajectory at any instant is the output of a coupled mechanical system whose state depends on engine speed, load torque, belt clamping geometry, and the prior history of the shift position --- all evolving together in time.
+
+This class of CVT is found throughout small-displacement powersport and utility vehicles. It is the mandated transmission in the SAE Baja competition series, where a single-cylinder Briggs and Stratton 10~hp engine is paired with a CVT that must be designed, selected, and tuned entirely by student engineering teams from first principles. Beyond Baja, mechanically actuated rubber V-belt CVTs are standard equipment in snowmobiles, all-terrain vehicles (ATVs), utility task vehicles (UTVs), and small agricultural and industrial machinery. Despite their prevalence and the practical engineering importance of understanding their behavior, the quality of publicly available engineering models for these systems is strikingly uneven. The present work was motivated directly by this gap.
+
+% --------------------------------------------------------------
+\subsection{Motivation and Literature Review}
+\label{sec:intro_lit}
+
+\subsubsection{Overview of the Modeling Landscape}
+
+A thorough review of CVT modeling literature reveals a consistent pattern:
+each body of work captures some aspects of the physics carefully while leaving
+equally important aspects absent, empiricized, or explicitly assumed away.
+
+A comprehensive survey of CVT dynamics and control research through 2009 is
+provided by Srivastava and Haque in their review article
+\emph{``A Review on Belt and Chain Continuously Variable Transmissions:
+Dynamics and Control''} \cite{Srivastava2009}.
+
+Their review systematically covers the major CVT types --- rubber V-belt,
+metal pushing V-belt, and chain CVT --- across static, quasi-static, and
+fully dynamic formulations, and surveys both the physical models and the
+control strategies built upon them. Crucially, it emphasizes that rubber
+belt CVTs are mechanically and dynamically distinct from metal pushing
+belt CVTs in their actuation mechanisms, belt compliance, and contact
+mechanics, and that the two should not be treated interchangeably in
+modeling.
+
+Their central conclusion --- that there exists
+\emph{``considerable disparity in the type of CVT models that have been used''}
+across the literature, and that fully dynamic, experimentally validated
+models remain scarce for several CVT classes --- indicates that the field
+has developed in fragments rather than converging toward a unified
+framework.
+
+The present section builds on that survey, focusing specifically on the
+subset of literature relevant to the mechanically actuated rubber
+V-belt CVT considered in this work.
+
+% --------------------------------------------------------------
+\subsubsection{Metal Pushing V-Belt CVT Models}
+
+The most analytically complete CVT dynamic models in the literature concern
+the Van Doorne-type metal pushing V-belt CVT used in automotive applications.
+
+In this class of transmission, clamping force is imposed hydraulically
+through electronically controlled oil pressure rather than through
+centrifugal flyweights and spring mechanisms. The belt itself consists
+of a series of compressive steel elements rather than a flexible rubber
+belt operating primarily in tension.
+
+Carbone, Mangialardi, and Mantriota \cite{Carbone2005} derive a dynamic
+model for the shifting behavior of the metal V-belt CVT and identify two
+distinct operating regimes governing ratio change. In the first regime,
+micro-slip redistribution within the contact arc governs the shift
+process, producing relatively slow ratio evolution. In the second regime,
+macro-slip occurs and rapid ratio change becomes possible.
+
+Srivastava and Haque extend this class of modeling by incorporating
+dynamic effects associated with belt element inertia and transient
+force redistribution within the belt system \cite{SrivastavaHaque2006}.
+These studies represent some of the most detailed dynamic analyses of
+CVT behavior available in the literature.
+
+Experimental characterization of the slip–torque relationship in metal
+belt CVTs has also been reported by Bonsen et al.\ \cite{Bonsen2004}.
+Their results show that transmitted torque varies nonlinearly with slip
+ratio, increasing through a micro-slip region before reaching a maximum
+near the transition to macro-slip.
+
+While these models achieve a high degree of dynamic fidelity, they
+describe a fundamentally different system class from the mechanically
+actuated rubber belt CVT considered here. The actuation mechanisms,
+belt mechanics, and contact physics differ substantially, limiting
+the direct applicability of these formulations.
+
+% --------------------------------------------------------------
+\subsubsection{Rubber Belt Mechanical CVT Models}
+
+For the mechanically actuated rubber V-belt CVT, the literature is
+considerably thinner.
+
+The most detailed dynamic model in the open literature appears to be
+that of Julio and Plante \cite{JulioPlante2011}. Their formulation
+discretizes the belt into nodal elements and applies Newton's second
+law to each node individually. Local friction forces are computed
+from the normal force at each contact point, allowing the torque
+transmission capacity of the belt to emerge from the cumulative
+tangential friction forces acting along the wrap arc.
+
+This nodal formulation has several advantages. The belt tension
+distribution arises naturally from the equilibrium of individual
+elements rather than being imposed through the classical capstan
+relationship. The wedging behavior of the belt in the conical groove
+is captured directly through the element geometry, and centrifugal
+effects acting on belt elements are included through fictitious
+forces in the rotating reference frame.
+
+However, two important limitations remain.
+
+First, the inertia of the movable sheaves is neglected. The axial
+position of the sheaves is determined through instantaneous force
+balance rather than through an inertial equation of motion, meaning
+the model cannot capture the finite time required for sheave motion
+to respond to changing forces.
+
+Second, the authors report difficulty obtaining stable predictions
+during the transition between clutching and shifting operation.
+Since mechanically actuated rubber belt CVTs use the belt clamping
+mechanism itself as the start-up clutch, the clutching regime forms
+an essential part of the system operating envelope.
+
+Another related effort is presented in SAE technical paper
+\emph{``Development of CVT Shift Dynamic Simulation Model with Elastic
+Rubber V-Belt''} \cite{SAE2011}. This work develops a dynamic simulation
+model incorporating belt elasticity and derives a shift motion
+relationship based on axial force balance between pulleys. Because
+the full derivation is not publicly accessible, the detailed structure
+of the dynamic model cannot be evaluated fully from the available
+abstract and secondary descriptions.
+
+% --------------------------------------------------------------
+\subsubsection{Quasi-Static Baja-Specific Models}
+
+Within the SAE Baja community, most CVT modeling work follows a
+quasi-static force balance approach.
+
+In these models the operating point of the transmission is obtained
+by solving the condition that the net axial force acting on the
+sheave assembly is zero. The shift position is therefore treated as
+an instantaneous function of operating conditions rather than as a
+dynamic state evolving over time.
+
+A widely cited example is the thesis by Skinner \cite{Skinner2020},
+which develops a quasi-static model of the flyweight-actuated primary
+and ramp-actuated secondary and investigates how parameters such as
+flyweight mass, spring preload, and ramp angle affect engagement
+speed and operating RPM.
+
+While such models are useful for design tuning and steady-state
+analysis, they contain no explicit equation of motion for the shift
+coordinate, no sheave inertia, and no explicit treatment of belt
+slip. Consequently they cannot simulate transient behavior or
+predict the dynamic evolution of the transmission ratio.
+
+% --------------------------------------------------------------
+\subsubsection{The Persistent Gap}
+
+The literature survey above reveals a consistent pattern.
+For mechanically actuated dry rubber V-belt CVTs, no publicly
+available model simultaneously provides
+
+\begin{enumerate}
+\item an explicit inertial equation of motion for the axial shift coordinate,
+\item first-principles modeling of flyweight actuation,
+\item a torque-reactive secondary helix force derived from geometry,
+\item centrifugal belt mass correction to effective clamping force,
+\item an analytical traction-limit slip criterion, and
+\item coupling to vehicle longitudinal dynamics.
+\end{enumerate}
+
+Metal pushing-belt CVT models such as those of
+\cite{Carbone2005}, \cite{SrivastavaHaque2006}, and \cite{Bonsen2004}
+achieve high levels of dynamic fidelity but describe a different
+transmission architecture under hydraulic actuation.
+
+Rubber belt models such as \cite{JulioPlante2011} capture detailed
+belt mechanics but omit sheave inertia and encounter difficulties
+during clutching transitions.
+
+Quasi-static Baja models such as \cite{Skinner2020} provide useful
+design intuition but cannot capture transient behavior.
+
+The absence of a unified dynamic treatment incorporating both
+mechanical actuation physics and traction-limited torque transmission
+motivates the development presented in this work.
+
+% --------------------------------------------------------------
+\begin{table}[h]
+\centering
+\footnotesize
+
+\begin{tabular}{lccccccc}
+\toprule
+Reference &
+Belt &
+Actuation &
+\makecell{Shift\\ODE} &
+\makecell{Sheave\\Inertia} &
+\makecell{Clutching\\Mode} &
+\makecell{Slip\\Model} &
+\makecell{Vehicle\\Dyn.} \\
+\midrule
+\cite{Carbone2005} & Metal & Hydraulic & Yes & Yes & No & Yes & No \\
+\cite{SrivastavaHaque2006} & Metal & Hydraulic & Yes & Yes & No & Yes & No \\
+\cite{Bonsen2004} & Metal & Hydraulic & Partial & Yes & No & Yes & No \\
+\cite{JulioPlante2011} & Rubber & Mechanical & Partial & No & Unstable & Implicit & No \\
+\cite{SAE2011} & Rubber & Mechanical & Partial & Unknown & Unknown & Not explicit & No \\
+\cite{Skinner2020} & Rubber & Mechanical & No & No & No & No & No \\
+\textbf{Present Work} & Rubber & Mechanical & Yes & Yes & Yes & Analytical & Yes \\
+\bottomrule
+\end{tabular}
+
+\caption{Comparison of representative CVT modeling approaches}
+\label{tab:lit_comparison}
+
+\end{table}
+
+\subsection{Objectives and Scope}
+\label{sec:intro_objectives}
+
+This work has two parallel objectives.
+
+The first is technical: to derive a complete, coupled system of nonlinear
+ordinary differential equations governing the CVT from engine input shaft
+to vehicle wheel, suitable for direct numerical integration in time.
+
+The second is pedagogical: to make each step of the derivation explicit and
+physically interpretable, allowing the reader to develop intuition for the
+mechanisms governing CVT behavior.
+
+The model includes:
+
+\begin{itemize}
+\item Primary sheave axial shift dynamics
+\item Secondary helix and spring force model
+\item Belt geometry and kinematics
+\item Belt traction and slip-state model
+\item Rotational equations of motion for both pulleys
+\item Vehicle longitudinal dynamics
+\end{itemize}
+
+The model intentionally excludes thermal effects, belt wear, detailed
+tribological contact mechanics, and multi-body vehicle dynamics beyond
+one-dimensional longitudinal motion.
+
+% --------------------------------------------------------------
+\subsection{Contribution Statement}
+\label{sec:intro_contributions}
+
+The primary technical contributions of this work are:
+
+\begin{enumerate}
+\item A unified nonlinear state-space model for the mechanically actuated
+rubber V-belt CVT.
+
+\item First-principles derivation of the primary axial shift equation of
+motion including sheave inertia and centrifugal flyweight actuation.
+
+\item First-principles derivation of the torque-reactive secondary helix force.
+
+\item Derivation of the centrifugal belt mass correction to effective clamping
+force.
+
+\item An analytical slip-state switching criterion separating no-slip and
+traction-limited regimes.
+
+\item Full coupling of the CVT dynamics to vehicle longitudinal motion.
+\end{enumerate}
+
+% --------------------------------------------------------------
+\subsection{Document Organization}
+\label{sec:intro_structure}
+
+The remainder of this document is organized as follows.
+
+Section~2 describes the physical CVT system and its components.
+Section~3 defines notation and symbol conventions.
+Section~4 defines the dynamic state variables.
+
+Sections~7 through~11 contain the core derivations: pulley geometry,
+primary shift dynamics, secondary force models, belt traction mechanics,
+and the slip-state formulation.
+
+Section~12 assembles the complete dynamic system, and Section~13 introduces
+the vehicle longitudinal dynamics module.
+
 \section{Conceptual Overview of a Continuously Variable Transmission}
 \label{sec:cvt_overview}
 
