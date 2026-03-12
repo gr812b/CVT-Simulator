@@ -271,7 +271,7 @@ The continuously variable transmission (CVT) is a mechanical power transmission 
 
 This self-regulating character is simultaneously the CVT's greatest practical asset and the primary source of difficulty in modeling it rigorously. Because no actuator explicitly commands the ratio, the ratio trajectory at any instant is the output of a coupled mechanical system whose state depends on engine speed, load torque, belt clamping geometry, and the prior history of the shift position --- all evolving together in time.
 
-This class of CVT is found throughout small-displacement powersport and utility vehicles. It is the mandated transmission in the SAE Baja competition series, where a single-cylinder Briggs and Stratton 10~hp engine is paired with a CVT that must be designed, selected, and tuned entirely by student engineering teams from first principles. Beyond Baja, mechanically actuated rubber V-belt CVTs are standard equipment in snowmobiles, all-terrain vehicles (ATVs), utility task vehicles (UTVs), and small agricultural and industrial machinery. Despite their prevalence and the practical engineering importance of understanding their behavior, the quality of publicly available engineering models for these systems is strikingly uneven. The present work was motivated directly by this gap.
+This class of CVT is found throughout small-displacement powersport and utility vehicles. It is the mandated transmission in the SAE Baja competition series, where a 10~hp engine is paired with a CVT that must be designed, selected, and tuned entirely by student engineering teams from first principles. Beyond Baja, mechanically actuated rubber V-belt CVTs are standard equipment in snowmobiles, all-terrain vehicles (ATVs), utility task vehicles (UTVs), and small agricultural and industrial machinery. Despite their prevalence and the practical engineering importance of understanding their behavior, the quality of publicly available engineering models for these systems is strikingly uneven. The present work was motivated directly by this gap.
 
 % --------------------------------------------------------------
 \subsection{Motivation and Literature Review}
@@ -535,16 +535,34 @@ traction-limited regimes.
 
 The remainder of this document is organized as follows.
 
-Section~2 describes the physical CVT system and its components.
-Section~3 defines notation and symbol conventions.
-Section~4 defines the dynamic state variables.
+\Sec{sec:cvt_overview} introduces the fundamental operating principles of
+a belt-sheave CVT and describes the specific drivetrain architecture
+considered in this work.
 
-Sections~7 through~11 contain the core derivations: pulley geometry,
-primary shift dynamics, secondary force models, belt traction mechanics,
-and the slip-state formulation.
+\Sec{sec:notation} defines notation, coordinate conventions, and symbol
+definitions used throughout.
 
-Section~12 assembles the complete dynamic system, and Section~13 introduces
-the vehicle longitudinal dynamics module.
+\Sec{sec:assumptions} states the modeling assumptions that scope the
+analysis.
+
+\Sec{sec:principles} presents the governing physical principles underlying
+the model.
+
+\Sec{sec:state} defines the dynamic state variables.
+
+\Sec{sec:geometry} through \Sec{sec:slip_regimes} contain the core
+derivations: pulley geometry (\Sec{sec:geometry}), axial force models
+(\Sec{sec:axial}), torque transmission mechanics (\Sec{sec:torque-coupling}),
+traction limits (\Sec{sec:traction-slip}), and slip-state formulation
+(\Sec{sec:slip_regimes}).
+
+\Sec{sec:complete_model} assembles the complete dynamic system.
+
+Appendices provide supplementary material: belt length approximation
+validation (\Sec{sec:approximation-validation}), common ramp profile
+designs (\Sec{sec:appendix-ramp-profiles}), numerical methods
+(\Sec{sec:appendix-numerics}), and secondary capacity closure
+(\Sec{sec:appendix-secondary-capacity-closure}).
 
 \section{Conceptual Overview of a Continuously Variable Transmission}
 \label{sec:cvt_overview}
@@ -5827,57 +5845,774 @@ This completes the closed CVT dynamic model.
 
 \section{Belt Length Small-Angle Approximation}\label{sec:approximation-validation}
 
-This section quantifies the error introduced by the small-angle approximation
-commonly used in simplified CVT kinematic models.
+This appendix quantifies the error introduced by the small-angle approximation
+commonly used in simplified CVT kinematic models. Using parameter values
+representative of the physical system considered in this work, we demonstrate
+that the approximation introduces substantial error in the computed
+center-to-center distance, then further in the ratio, which is critical for accurate dynamic modeling.
 
+% --------------------------------------------------------------
 \subsection{Standard Approximation}
 
-Many treatments assume
+Many simplified treatments assume
 \[
 \frac{r_s - r_p}{C} \ll 1,
 \]
-which leads to $\lambda \approx 0$ and therefore
+which implies $\lambda \approx 0$ and therefore
+\[
+\sin^{-1}\!\left(\frac{r_s - r_p}{C}\right) \approx 0.
+\]
 
+Under this approximation, the belt-length constraint
+\Eq{eq:belt_length_final} reduces to
+\begin{equation}
+L_b \approx \pi(r_p + r_s) + 2\sqrt{C^2 - (r_s - r_p)^2}.
+\label{eq:belt_length_approx}
+\end{equation}
 
+% --------------------------------------------------------------
+\subsection{Derivation of the Approximate Center Distance}
+
+To determine the center-to-center distance at the initial configuration,
+we substitute $r_p = r_{p,\min}$ and $r_s = r_{s,\max}$ into
+\Eq{eq:belt_length_approx} and solve for $C$.
+
+\paragraph{Step 1: Isolate the square root.}
+
+Rearranging \Eq{eq:belt_length_approx}:
+\begin{equation}
+L_b - \pi(r_{p,\min} + r_{s,\max})
+=
+2\sqrt{C^2 - (r_{s,\max} - r_{p,\min})^2}.
+\label{eq:approx_step1}
+\end{equation}
+
+\paragraph{Step 2: Square both sides.}
+
+\begin{equation}
+\bigl[L_b - \pi(r_{p,\min} + r_{s,\max})\bigr]^2
+=
+4\bigl[C^2 - (r_{s,\max} - r_{p,\min})^2\bigr].
+\label{eq:approx_step2}
+\end{equation}
+
+\paragraph{Step 3: Solve for $C^2$.}
+
+\begin{equation}
+C^2
+=
+\frac{\bigl[L_b - \pi(r_{p,\min} + r_{s,\max})\bigr]^2}{4}
++
+(r_{s,\max} - r_{p,\min})^2.
+\label{eq:approx_step3}
+\end{equation}
+
+\paragraph{Step 4: Take the square root.}
+
+Expanding the squared term in the numerator:
+\[
+\bigl[L_b - \pi(r_{p,\min} + r_{s,\max})\bigr]^2
+=
+L_b^2 - 2L_b\pi(r_{p,\min} + r_{s,\max}) + \pi^2(r_{p,\min} + r_{s,\max})^2,
+\]
+the approximate center distance becomes
+
+\begin{equation}
+\boxed{
+C_{\mathrm{approx}}
+=
+\sqrt{
+\frac{L_b^2 - 2L_b\pi(r_{p,\min} + r_{s,\max}) + \pi^2(r_{p,\min} + r_{s,\max})^2}{4}
++
+(r_{s,\max} - r_{p,\min})^2
+}.
+}
+\label{eq:C_approx}
+\end{equation}
+
+This closed-form expression avoids the need for numerical root finding
+but neglects the $\sin^{-1}$ term in the exact constraint.
+
+% --------------------------------------------------------------
 \subsection{Error Analysis}
+
+We now evaluate the approximation error using parameter values
+from the physical CVT system considered in this work.
+
+\paragraph{System Parameters}
+
+\begin{center}
+\begin{tabular}{lcc}
+\toprule
+\textbf{Parameter} & \textbf{Value} & \textbf{SI Value} \\
+\midrule
+Belt length $L_b$ & \SI{37.538}{in} & \SI{0.9535}{m} \\
+Belt height $h_b$ & \SI{0.613}{in} & \SI{0.01557}{m} \\
+Groove half-angle $\beta$ & \SI{11.5}{\degree} & \SI{0.2007}{rad} \\
+Inner primary radius & \SI{0.75}{in} & \SI{0.01905}{m} \\
+Primary outer radius $r_{p,\min}$ & \SI{1.363}{in} & \SI{0.03462}{m} \\
+Secondary outer radius $r_{s,\max}$ & \SI{4.0}{in} & \SI{0.1016}{m} \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\noindent
+The primary outer radius is computed as the inner radius plus belt height:
+$r_{p,\min} = 0.75 + 0.613 = \SI{1.363}{in}$.
+
+\paragraph{Computed Center Distances}
+
+Solving the exact belt-length constraint \Eq{eq:belt_length_constraint}
+numerically yields
+\[
+C_{\mathrm{exact}} = \SI{0.25387}{m} \approx \SI{9.995}{in}.
+\]
+
+Evaluating the approximate formula \Eq{eq:C_approx} yields
+\[
+C_{\mathrm{approx}} = \SI{0.27116}{m} \approx \SI{10.676}{in}.
+\]
+
+\paragraph{Error Metrics}
+
+The absolute and relative errors are:
+\begin{align}
+\Delta C &= C_{\mathrm{approx}} - C_{\mathrm{exact}}
+= \SI{0.01729}{m}
+= \SI{0.681}{in}, \\[4pt]
+\varepsilon_{\mathrm{rel}}
+&= \frac{\Delta C}{C_{\mathrm{exact}}}
+= \frac{0.01729}{0.25387}
+= 6.81\%.
+\end{align}
+
+\paragraph{Assessment}
+
+The small-angle approximation introduces a relative error of nearly 7\%
+in the center-to-center distance for this system. This error arises because
+the ratio
+\[
+\frac{r_{s,\max} - r_{p,\min}}{C}
+=
+\frac{0.1016 - 0.03462}{0.25387}
+=
+0.264
+\]
+is not small. The assumption $\lambda \approx 0$ is therefore not
+justified for this CVT geometry.
+
+Since the center distance $C$ propagates into all subsequent geometric
+calculations---wrap angles, tangent span lengths, and derived quantities
+such as the transmission ratio---a 7\% error in $C$ can compound into
+larger errors in predicted system behavior.
+
+% --------------------------------------------------------------
+\subsection{Propagation to Secondary Radius and Transmission Ratio}
+
+To demonstrate how the center distance error propagates into operationally
+relevant quantities, we now examine the secondary radius and CVT ratio
+at two shift positions: maximum shift (where the pulleys are most similar
+in size) and zero shift (where discrepancy is largest).
+
+% --------------------------------------------------------------
+\subsubsection{Derivation of the Approximate Secondary Radius}
+
+Given a known primary outer radius $r_{p,\text{outer}}$ and center distance $C$,
+the secondary outer radius can be obtained by solving the belt-length
+constraint. Under the small-angle approximation \Eq{eq:belt_length_approx},
+this yields a closed-form expression.
+
+\paragraph{Step 1: Isolate the square root.}
+
+From \Eq{eq:belt_length_approx}:
+\begin{equation}
+L_b - \pi(r_{p,\text{outer}} + r_{s,\text{outer}})
+=
+2\sqrt{C^2 - (r_{s,\text{outer}} - r_{p,\text{outer}})^2}.
+\end{equation}
+
+\paragraph{Step 2: Square both sides.}
+
+\begin{equation}
+\bigl[L_b - \pi r_{p,\text{outer}} - \pi r_{s,\text{outer}}\bigr]^2
+=
+4\bigl[C^2 - (r_{s,\text{outer}} - r_{p,\text{outer}})^2\bigr].
+\end{equation}
+
+\paragraph{Step 3: Expand and collect terms.}
+
+Expanding the left side:
+\[
+(L_b - \pi r_{p,\text{outer}})^2
+- 2\pi(L_b - \pi r_{p,\text{outer}}) r_{s,\text{outer}}
++ \pi^2 r_{s,\text{outer}}^2.
+\]
+
+Expanding the right side:
+\[
+4C^2 - 4r_{s,\text{outer}}^2 + 8 r_{p,\text{outer}} r_{s,\text{outer}} - 4r_{p,\text{outer}}^2.
+\]
+
+Collecting powers of $r_{s,\text{outer}}$ yields a quadratic equation:
+\begin{equation}
+(\pi^2 + 4) r_{s,\text{outer}}^2
+- 2\bigl[\pi L_b - \pi^2 r_{p,\text{outer}} + 4 r_{p,\text{outer}}\bigr] r_{s,\text{outer}}
++ \bigl[(L_b - \pi r_{p,\text{outer}})^2 + 4r_{p,\text{outer}}^2 - 4C^2\bigr]
+= 0.
+\end{equation}
+
+\paragraph{Step 4: Apply the quadratic formula.}
+
+The physically meaningful root (smaller secondary radius for overdrive
+configuration) is
+
+\begin{equation}
+\boxed{
+r_{s,\mathrm{approx}}
+=
+\frac{
+\pi L_b + (4 - \pi^2) r_{p,\text{outer}}
+-
+2\sqrt{(\pi^2 + 4)C^2 - L_b^2 + 4\pi L_b r_{p,\text{outer}} - 4\pi^2 r_{p,\text{outer}}^2}
+}{
+\pi^2 + 4
+}.
+}
+\label{eq:rs_approx}
+\end{equation}
+
+This closed-form expression enables direct computation of the approximate
+secondary radius without numerical root finding.
+
+% --------------------------------------------------------------
+\subsubsection{Maximum Shift Configuration}
+\label{sec:approx_maxshift}
+
+At maximum shift, the primary and secondary pulleys are closest in size,
+representing the ``overdrive'' configuration. This is the most favorable
+case for the small-angle approximation.
+
+\paragraph{Primary Radius at Maximum Shift}
+
+Using \Eq{eq:primary_radius} with $s = s_{\max} = \SI{0.75}{in} = \SI{0.01905}{m}$
+and deadzone $s_{\mathrm{dz}} = \SI{0.0024892}{m}$:
+\begin{align}
+r_{p,\text{outer}}(s_{\max})
+&= r_{p,\min} + \frac{s_{\max} - s_{\mathrm{dz}}}{2\tan\beta} \nonumber\\[4pt]
+&= 0.03462 + \frac{0.01905 - 0.0024892}{2 \times \tan(11.5^\circ)} \nonumber\\[4pt]
+&= 0.03462 + \frac{0.01656}{0.4070} \nonumber\\[4pt]
+&= \SI{0.0753}{m}.
+\end{align}
+
+\paragraph{Secondary Radius Comparison}
+
+Solving the exact belt-length constraint \Eq{eq:belt_length_constraint}
+numerically with $C_{\mathrm{exact}} = \SI{0.25387}{m}$ yields
+\[
+r_{s,\mathrm{exact}} = \SI{0.0669385}{m}.
+\]
+
+Evaluating the approximate formula \Eq{eq:rs_approx} with
+$C_{\mathrm{approx}} = \SI{0.27116}{m}$ yields
+\[
+r_{s,\mathrm{approx}} = \SI{0.0812}{m}.
+\]
+
+\paragraph{Transmission Ratio Error}
+
+The CVT ratio is defined using effective radii, which account for
+belt seating depth (\Sec{sec:belt_seating}):
+\[
+r_{\text{eff}} = r_{\text{outer}} - \frac{h_b}{2}.
+\]
+
+With $h_b/2 = \SI{0.00779}{m}$:
+
+\begin{center}
+\begin{tabular}{lcc}
+\toprule
+\textbf{Quantity} & \textbf{Exact} & \textbf{Approximate} \\
+\midrule
+$r_{p,\text{eff}}$ & \SI{0.0675}{m} & \SI{0.0675}{m} \\
+$r_{s,\text{eff}}$ & \SI{0.0591}{m} & \SI{0.0734}{m} \\
+$R = r_{s,\text{eff}}/r_{p,\text{eff}}$ & 0.876 & 1.087 \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+The approximate model predicts an overdrive ratio ($R > 1$), while
+the exact model shows underdrive ($R < 1$). The ratio error is
+\[
+\varepsilon_R = \frac{|1.087 - 0.876|}{0.876} = 24.1\%.
+\]
+
+Even at maximum shift---the most favorable configuration---the
+approximation produces a qualitatively incorrect ratio prediction.
+
+\begin{figure}[H]
+\centering
+%\includegraphics[width=0.75\linewidth]{./illustrations/appendix/approx_max_shift.png}
+\caption{Scaled diagram of the CVT at maximum shift ($s = s_{\max}$).
+The primary pulley (left) and exact secondary pulley (right, solid line)
+are shown alongside the approximate secondary pulley (dotted line).
+The approximation overestimates the secondary radius, predicting
+overdrive when the actual configuration is underdrive.}
+\label{fig:approx_max_shift}
+\end{figure}
+
+% --------------------------------------------------------------
+\subsubsection{Zero Shift Configuration}
+\label{sec:approx_zeroshift}
+
+At zero shift, the CVT is in its lowest ratio (maximum reduction)
+configuration. The pulley radii differ most significantly, and the
+small-angle approximation is expected to perform worst.
+
+\paragraph{Primary Radius at Zero Shift}
+
+At $s = 0$, the primary is within the deadzone, so from \Eq{eq:primary_radius}:
+\[
+r_{p,\text{outer}}(0) = r_{p,\min} = \SI{0.03462}{m}.
+\]
+
+\paragraph{Secondary Radius Comparison}
+
+Solving the exact belt-length constraint with $C_{\mathrm{exact}}$ yields
+\[
+r_{s,\mathrm{exact}} = r_{s,\max} = \SI{0.1016}{m}.
+\]
+
+Evaluating the approximate formula \Eq{eq:rs_approx} with
+$C_{\mathrm{approx}} = \SI{0.27116}{m}$ yields
+\[
+r_{s,\mathrm{approx}} = \SI{0.1187}{m}.
+\]
+
+\paragraph{Transmission Ratio Error}
+
+Computing effective radii with $h_b/2 = \SI{0.00779}{m}$:
+
+\begin{center}
+\begin{tabular}{lcc}
+\toprule
+\textbf{Quantity} & \textbf{Exact} & \textbf{Approximate} \\
+\midrule
+$r_{p,\text{eff}}$ & \SI{0.0268}{m} & \SI{0.0268}{m} \\
+$r_{s,\text{eff}}$ & \SI{0.0938}{m} & \SI{0.1109}{m} \\
+$R = r_{s,\text{eff}}/r_{p,\text{eff}}$ & 3.50 & 4.14 \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+The ratio error at zero shift is
+\[
+\varepsilon_R = \frac{|4.14 - 3.50|}{3.50} = 18.3\%.
+\]
+
+\begin{figure}[H]
+\centering
+%\includegraphics[width=0.75\linewidth]{./illustrations/appendix/approx_zero_shift.png}
+\caption{Scaled diagram of the CVT at zero shift ($s = 0$).
+The primary pulley (left) and exact secondary pulley (right, solid line)
+are shown alongside the approximate secondary pulley (dotted line).
+The radius discrepancy is visually apparent, with the approximation
+substantially overestimating the secondary size.}
+\label{fig:approx_zero_shift}
+\end{figure}
+
+% --------------------------------------------------------------
+\subsection{Summary of Approximation Errors}
+
+\begin{center}
+\begin{tabular}{lccc}
+\toprule
+\textbf{Configuration} & \textbf{$R_{\mathrm{exact}}$} & \textbf{$R_{\mathrm{approx}}$} & \textbf{Ratio Error} \\
+\midrule
+Zero shift ($s = 0$) & 3.50 & 4.14 & 18.3\% \\
+Maximum shift ($s = s_{\max}$) & 0.876 & 1.087 & 24.1\% \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+The small-angle approximation introduces ratio errors exceeding 18\%
+across the entire shift range. At maximum shift, the approximation
+incorrectly predicts the qualitative regime (overdrive vs.\ underdrive).
+
+These errors arise from the initial 6.81\% error in center distance,
+which then propagates nonlinearly through the belt-length geometry.
+Since the transmission ratio directly enters the rotational equations
+of motion (\Sec{sec:complete_model}), errors of this magnitude would
+render dynamic simulations unreliable.
+
+This analysis justifies the use of exact numerical solutions for all
+geometric computations in this work.
 
 
 \section{Common Ramp Profile Designs}\label{sec:appendix-ramp-profiles}
 
-This section catalogs several common ramp profile parameterizations
-used in CVT primary pulley actuation.
+This appendix presents common ramp profile parameterizations for CVT
+primary pulley actuation. From \Eq{eq:primary_centrifugal_axial}, the
+centrifugal axial force is
+\begin{equation}
+F_{p,\mathrm{cent}}(s,\omega_p)
+=
+m_f \omega_p^2 \bigl(r_{f,0} + r_f(s)\bigr) \frac{dr_f}{ds},
+\label{eq:centrifugal_product_form}
+\end{equation}
+where $m_f$ is the flyweight mass, $r_{f,0}$ is the initial flyweight
+radius, and $r_f(s)$ is the radial displacement along the ramp as a
+function of axial shift $s$.
 
+The profile $r_f(s)$ must satisfy the admissibility conditions from
+\Sec{sec:axial}: continuously differentiable, non-negative slope,
+and finite slope throughout $[0, s_{\max}]$.
+
+% --------------------------------------------------------------
 \subsection{Linear Ramp}
+\label{sec:ramp_linear}
 
-The simplest ramp profile is a linear relationship:
-\[
-r_f(s) = r_{f,0} + k_r \cdot s,
-\]
-where $k_r$ is the ramp slope (constant) and $r_{f,0}$ is the initial flyweight radius.
+A linear ramp with slope $k_r$ (radial displacement per unit axial shift):
+\begin{equation}
+r_f(s) = k_r \cdot s,
+\qquad
+\frac{dr_f}{ds} = k_r = \text{const}.
+\label{eq:linear_ramp}
+\end{equation}
 
-The corresponding ramp angle is constant:
-\[
-\alpha_p(s) = \tan^{-1}(k_r).
-\]
+Substituting into \Eq{eq:centrifugal_product_form}:
+\begin{equation}
+F_{p,\mathrm{cent}}(s,\omega_p)
+= m_f \omega_p^2 k_r (r_{f,0} + k_r s)
+= m_f \omega_p^2 k_r r_{f,0} + m_f \omega_p^2 k_r^2 s.
+\label{eq:linear_ramp_force}
+\end{equation}
 
-\paragraph{Characteristics:}
-\begin{itemize}
-\item Uniform force multiplication across the shift range
-\item Simple to manufacture and analyze
-\item May not provide optimal shift feel or calibration flexibility
-\end{itemize}
+At constant $\omega_p$, axial force increases linearly with $s$ because
+the growing radius is multiplied by a constant slope. Simple to manufacture,
+but may cause aggressive shifting at high ratio.
 
-\subsection{Quadratic Ramp}
+% --------------------------------------------------------------
+\subsection{Circular Arc Ramp}
+\label{sec:ramp_circular}
 
-% TODO: Derive force-balance for quadratic profile $r_f(s) = r_{f,0} + as + bs^2$
+A circular arc ramp is designed to reduce force variation across the shift
+range by achieving \emph{partial} cancellation. The key insight is to parameterize
+the arc by desired slope angles $\alpha_1$ and $\alpha_2$ at the start and end
+of the segment, where $|dr_f/ds| = \tan\alpha$ specifies the force multiplier.
+This provides direct control over actuation behavior at engagement (high slope)
+versus overdrive (low slope).
 
-\subsection{Piecewise-Linear Ramp}
+For a circle of radius $R_c$ centered at $(s_c, r_c)$, the ramp profile
+satisfies:
+\begin{equation}
+(s - s_c)^2 + (r_f - r_c)^2 = R_c^2.
+\end{equation}
 
-% TODO: Document multi-stage ramp designs with different slopes in different shift regions
+Solving for $r_f(s)$ on the upper arc:
+\begin{equation}
+r_f(s) = r_c + \sqrt{R_c^2 - (s - s_c)^2}.
+\label{eq:circ_ramp}
+\end{equation}
 
-\subsection{Custom Profiles from Lookup Tables}
+Implicit differentiation yields:
+\begin{equation}
+\frac{dr_f}{ds}
+= \frac{-(s - s_c)}{\sqrt{R_c^2 - (s - s_c)^2}}
+= \frac{-(s - s_c)}{r_f - r_c}.
+\label{eq:circ_slope}
+\end{equation}
 
-% TODO: Discuss spline or lookup-table based ramp profiles for advanced tuning
+\paragraph{Parameterization from slope angles.}
+
+At any point on the arc where the local slope angle is $\alpha$
+(i.e.\ $dr_f/ds = \tan\alpha$), the circle constraint combined with
+\Eq{eq:circ_slope} gives the parametric form:
+\begin{align}
+s &= s_c - R_c\sin\alpha,
+&
+r_f &= r_c + R_c\cos\alpha.
+\label{eq:circ_parametric}
+\end{align}
+The slope angle $\alpha$ decreases monotonically from $\alpha_1$ (entry) to
+$\alpha_2 < \alpha_1$ (exit) as $s$ increases along the ramp. Applying
+\Eq{eq:circ_parametric} at both boundary shifts $s_1$ and $s_2$ and
+subtracting:
+\begin{equation}
+s_2 - s_1 = R_c(\sin\alpha_1 - \sin\alpha_2).
+\end{equation}
+With $\Delta s = s_2 - s_1$ as the total axial span of the ramp segment,
+the arc radius and center are determined entirely by the two slope angles:
+\begin{equation}
+R_c = \frac{\Delta s}{\sin\alpha_1 - \sin\alpha_2},
+\qquad
+s_c = s_1 + R_c\sin\alpha_1.
+\label{eq:circ_params}
+\end{equation}
+The boundary condition $r_f(s_1) = 0$ (flyweights at their initial radius at
+ramp entry) then fixes the radial center:
+\begin{equation}
+r_c = -R_c\cos\alpha_1.
+\label{eq:circ_rc}
+\end{equation}
+
+Substituting into \Eq{eq:centrifugal_product_form}:
+\begin{equation}
+F_{p,\mathrm{cent}}(s,\omega_p)
+= m_f \omega_p^2 (r_{f,0} + r_f) \cdot \frac{-(s - s_c)}{r_f - r_c}.
+\label{eq:circ_force}
+\end{equation}
+
+To see the cancellation explicitly, split
+$r_{f,0} + r_f = (r_{f,0} + r_c) + (r_f - r_c)$:
+\begin{align}
+F_{p,\mathrm{cent}}
+&=
+m_f \omega_p^2
+\left[
+\underbrace{(r_f - r_c)}_{\text{cancels}} \cdot \frac{-(s-s_c)}{r_f - r_c}
++
+(r_{f,0} + r_c) \cdot \frac{-(s-s_c)}{r_f - r_c}
+\right]
+\nonumber\\[6pt]
+&=
+-m_f \omega_p^2\,(s - s_c)
+\left[
+1 + \frac{r_{f,0} + r_c}{r_f - r_c}
+\right].
+\label{eq:circ_split}
+\end{align}
+
+This form reveals the structure clearly. The dominant factor is $-(s - s_c)$,
+which is linear in shift: the $(r_f - r_c)$ terms cancel exactly in the first
+part of the split. The bracket $\left[1 + \dfrac{r_{f,0}+r_c}{r_f-r_c}\right]$
+is a nonlinear correction multiplier. Using the parametric form
+\Eq{eq:circ_parametric} with \Eq{eq:circ_rc}, the bracket evaluates to
+\begin{equation}
+1 + \frac{r_{f,0}+r_c}{r_f-r_c}
+=
+1 + \frac{r_{f,0} - R_c\cos\alpha_1}{R_c\cos\alpha},
+\label{eq:circ_bracket}
+\end{equation}
+where $\alpha$ is the local slope angle at shift $s$, sweeping from $\alpha_1$
+at entry to $\alpha_2$ at exit. This makes the effective proportionality between
+force and $(s-s_c)$ position-dependent.
+
+The numerator $r_{f,0} - R_c\cos\alpha_1$ is the key residual: it is
+controlled entirely by the choice of $\alpha_1$, $\alpha_2$, and $\Delta s$
+through $R_c = \Delta s/(\sin\alpha_1 - \sin\alpha_2)$. Increasing either $\alpha_1$
+or $\Delta s$ raises $R_c$, making $R_c\cos\alpha_1$ larger and the residual
+smaller (or negative). The entry force scale, the exit force scale, and the
+degree of position-dependence between them are therefore all coupled to the
+same two angle choices. There is no freedom to set the overall force scale
+independently of the nonlinearity — changing $\alpha_1$ and $\alpha_2$ adjusts
+both simultaneously.
+
+The condition $r_{f,0} = R_c\cos\alpha_1$ makes the residual zero, so the
+bracket equals 1 everywhere and force is exactly proportional to shift. This
+is the angle configuration at which the circular arc best approximates the
+hyperbolic ideal — it gives a practical design rule for tuning.
+
+The practical consequence is important: at a fixed engine speed $\omega_p$,
+the centrifugal force is approximately proportional to $(s - s_c)$, growing
+linearly with shift. This directly matches the linear restoring force of the
+primary spring (force $\propto k_s \cdot s$). A spring-loaded primary can
+therefore be tuned to balance the centrifugal flyweights at a target shift,
+and the linear character of the circular arc ensures the equilibrium is
+stable across the shift range rather than concentrated at a single point.
+
+Circular arcs are widely used in practice due to ease of manufacture and
+sufficient compensation. The nonlinear residual is small when the ramp center
+offset $(r_{f,0} + r_c)$ is small relative to the arc radius $R_c$, but it
+cannot be eliminated entirely. The following section shows how to \emph{exactly}
+achieve the linear target by choosing a different ramp geometry.
+
+% --------------------------------------------------------------
+\subsection{Hyperbolic Ramp (Perfect Cancellation)}
+\label{sec:ramp_hyperbolic}
+
+From \Eq{eq:circ_bracket}, the circular arc force-to-shift proportionality
+constant is:
+\begin{equation}
+\frac{F_{p,\mathrm{cent}}}{-m_f\omega_p^2(s-s_c)}
+= 1 + \frac{r_{f,0} - R_c\cos\alpha_1}{R_c\cos\alpha}.
+\end{equation}
+This varies with position because $\alpha$ changes along the arc. The natural
+question is: what ramp profile makes this ratio a \emph{true constant}?
+That constant is what we call $K$, and the profile that achieves it satisfies:
+\begin{equation}
+(r_{f,0} + r_f(s))\frac{dr_f}{ds} = K s,
+\label{eq:target_ode}
+\end{equation}
+where $K > 0$. This produces centrifugal force exactly proportional to shift:
+\begin{equation}
+F_{p,\mathrm{cent}}(s,\omega_p)
+= m_f \omega_p^2 K s.
+\label{eq:target_force}
+\end{equation}
+
+$K$ is not a free parameter any more than $R_c$ is for the circular arc: just
+as $R_c$ is uniquely determined by $\alpha_1$, $\alpha_2$, and $\Delta s$
+(\Eq{eq:circ_params}), $K$ is uniquely determined by $\alpha_1$, $\alpha_2$,
+$s_1$, and $s_2$ (derived in the parameterization below). What differs is not
+the design inputs, but that the hyperbolic profile makes $K$ exactly constant
+along the entire ramp, whereas the circular arc's equivalent ratio changes
+with position.
+
+\paragraph{Deriving the profile.}
+
+Equation~\eqref{eq:target_ode} is separable. Substituting $u = r_{f,0} + r_f$,
+so $du/ds = dr_f/ds$:
+\begin{equation}
+u \, du = K s \, ds.
+\end{equation}
+
+Integrating both sides and writing the constant of integration as
+$\tfrac{1}{2}K s_0^2$:
+\begin{equation}
+\tfrac{1}{2}u^2 = \tfrac{1}{2}K(s^2 + s_0^2).
+\end{equation}
+
+Substituting back $u = r_{f,0} + r_f$:
+\begin{equation}
+\boxed{
+(r_{f,0} + r_f(s))^2 = K(s^2 + s_0^2),
+}
+\label{eq:hyperbolic_ramp}
+\end{equation}
+
+giving the explicit profile:
+\begin{equation}
+r_f(s) = \sqrt{K(s^2 + s_0^2)} - r_{f,0}.
+\label{eq:hyperbolic_profile}
+\end{equation}
+
+In the $(s, r_f)$ plane, the locus $(r_{f,0}+r_f)^2 = Ks^2$ (taking $s_0 = 0$)
+is a branch of a \emph{hyperbola} — hence the name. Unlike the circular arc,
+where the residual multiplier in \Eq{eq:circ_split} could not be removed, this
+profile forces the product $(r_{f,0}+r_f)\cdot dr_f/ds = Ks$ exactly for all
+$s$.
+
+\paragraph{Local slope and its variation.}
+
+To see how $K$ relates to actual ramp angles, differentiate
+\Eq{eq:hyperbolic_ramp} implicitly:
+\begin{equation}
+\frac{dr_f}{ds}
+= \frac{K s}{r_{f,0}+r_f}
+= \frac{\sqrt{K}\, s}{\sqrt{s^2 + s_0^2}}.
+\label{eq:hyperbolic_slope}
+\end{equation}
+
+Since $dr_f/ds = \tan\alpha(s)$ by definition of the ramp slope angle, the
+local angle satisfies:
+\begin{equation}
+\tan\alpha(s) = \frac{\sqrt{K}\, s}{\sqrt{s^2 + s_0^2}}.
+\label{eq:hyperbolic_angle}
+\end{equation}
+
+Two observations follow. First, the slope is zero at $s = 0$ and grows
+monotonically toward the asymptote $\sqrt{K}$ as $s \to \infty$. This is the
+opposite trend from a circular arc, where the slope decreases from entry to
+exit. The reason is that the growing lever arm $(r_{f,0}+r_f)$ at large shift
+would otherwise amplify force super-linearly; a rising slope exactly compensates
+to keep the product $Ks$ linear. Second, the asymptotic slope
+$\lim_{s\to\infty} \tan\alpha(s) = \sqrt{K}$ gives a simple interpretation: $K
+= \tan^2\!\alpha_\infty$ where $\alpha_\infty$ is the slope the profile
+approaches at large shift.
+
+\paragraph{Parameterization by entry and exit angles.}
+
+Following the same convention as \Sec{sec:ramp_circular}, specify desired slope
+angles $\alpha_1$ and $\alpha_2$ at entry shift $s_1$ and exit shift $s_2$.
+From \Eq{eq:hyperbolic_angle}:
+\begin{align}
+\tan^2\!\alpha_1 &= \frac{K s_1^2}{s_1^2 + s_0^2},
+&
+\tan^2\!\alpha_2 &= \frac{K s_2^2}{s_2^2 + s_0^2}.
+\label{eq:hyperbolic_angle_conditions}
+\end{align}
+
+Dividing the two equations eliminates $K$:
+\begin{equation}
+\frac{\tan^2\!\alpha_1}{\tan^2\!\alpha_2}
+=
+\frac{s_1^2\,(s_2^2 + s_0^2)}{s_2^2\,(s_1^2 + s_0^2)}.
+\end{equation}
+
+Solving for $s_0^2$:
+\begin{equation}
+s_0^2
+=
+\frac{s_1^2 s_2^2\,(\tan^2\!\alpha_2 - \tan^2\!\alpha_1)}
+     {\tan^2\!\alpha_1\, s_2^2 - \tan^2\!\alpha_2\, s_1^2}.
+\label{eq:hyperbolic_s0}
+\end{equation}
+
+Then $K$ follows from either condition in \Eq{eq:hyperbolic_angle_conditions}:
+\begin{equation}
+K
+=
+\frac{\tan^2\!\alpha_1\,(s_1^2 + s_0^2)}{s_1^2}.
+\label{eq:hyperbolic_K}
+\end{equation}
+
+For $s_0^2 > 0$ a consistent solution requires the numerator and denominator of
+\Eq{eq:hyperbolic_s0} to have the same sign. Since the hyperbolic slope
+increases with $s$ (Eq.~\eqref{eq:hyperbolic_slope}), the physically consistent
+case is $\alpha_2 > \alpha_1$ (exit angle larger than entry), with
+$\tan^2\!\alpha_1 s_2^2 > \tan^2\!\alpha_2 s_1^2$ ensuring a positive
+denominator. No solution exists when the two angle conditions give a
+degenerate system ($\tan^2\!\alpha_1 s_2^2 = \tan^2\!\alpha_2 s_1^2$).
+
+\paragraph{Practical impact.}
+
+In most cases the difference between circular and hyperbolic profiles is
+negligible. For the specific ramps implemented in this work, the integrated
+force deviation across the full shift range is less than $1\%$. The hyperbolic
+derivation is nonetheless useful: it establishes the theoretical ideal and
+shows that the circular arc's partial cancellation is not a fundamental
+limitation but rather a small correction from the constant offset $(r_{f,0}+r_c)$.
+
+\paragraph{Limitations.}
+
+Both profiles address only the centrifugal force term. The secondary pulley
+torque feedback ($F_{s,\mathrm{ax}}(s,\tau_s)$ in \Eq{eq:s_ddot_complete})
+introduces load-dependent nonlinear terms that no ramp geometry alone can
+cancel. Circular arcs therefore remain the practical standard—simpler to
+manufacture, well-understood, and sufficient given these irreducible
+secondary-side effects.
+
+% --------------------------------------------------------------
+\subsection{Piecewise Ramps and Smoothing}
+\label{sec:ramp_piecewise}
+
+Any of the profiles above can be combined in a piecewise fashion: multiple
+linear segments, multiple circular arcs with different angle pairs, or a mix
+of profile types joined at transition shifts $s_1, s_2, \ldots, s_{n-1}$.
+This allows region-specific tuning — steeper slopes at engagement, moderate for
+cruise, gentler near overdrive — without committing to a single global geometry.
+
+\paragraph{Admissibility at junctions.}
+
+The admissibility conditions from \Sec{sec:axial} require $r_f(s)$ to be
+continuously differentiable ($C^1$). A piecewise ramp satisfies $C^0$ by
+construction (the profile value is continuous if segments are joined at a common
+point), but slope continuity may be violated: if the left-segment slope at
+$s_k$ differs from the right-segment slope, Eq.~\eqref{eq:centrifugal_product_form}
+gives a finite force jump at that point. No kinematic singularity occurs, but
+the force has a step discontinuity.
+
+\paragraph{Numerical stiffness considerations.}
+
+A sharp slope discontinuity is not the same as a smooth rapid transition:
+many real implementations use a finite but steep blend region, which the ODE
+solver sees as an extremely large second derivative $d^2r_f/ds^2$ near the
+junction. This can create a locally stiff region and force an adaptive
+integrator to take very small steps near the knot, even if the discontinuity
+is physically mild. If simulation performance is a concern, slope transitions
+should be blended — a short circular arc segment tangent to both adjoining
+profiles is sufficient, as it restores $C^1$ continuity and bounds $d^2r_f/ds^2$
+throughout the ramp.
 
 
 \section{Numerical Methods Summary}\label{sec:appendix-numerics}

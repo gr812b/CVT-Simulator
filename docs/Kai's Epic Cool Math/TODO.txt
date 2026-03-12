@@ -1,3 +1,7 @@
+INTRO
+- Neglect the uJoints and 4WD (since no traction is considered)
+
+
 - No indents after every single list
 - Add constants values some time
 - Appendix: Proof of approximation being bad
