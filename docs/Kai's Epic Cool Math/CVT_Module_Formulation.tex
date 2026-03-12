@@ -6011,8 +6011,7 @@ larger errors in predicted system behavior.
 
 To demonstrate how the center distance error propagates into operationally
 relevant quantities, we now examine the secondary radius and CVT ratio
-at two shift positions: maximum shift (where the pulleys are most similar
-in size) and zero shift (where discrepancy is largest).
+at two shift positions: zero shift and maximum shift.
 
 % --------------------------------------------------------------
 \subsubsection{Derivation of the Approximate Secondary Radius}
@@ -6084,13 +6083,78 @@ r_{s,\mathrm{approx}}
 This closed-form expression enables direct computation of the approximate
 secondary radius without numerical root finding.
 
+\subsubsection{Zero Shift Configuration}
+\label{sec:approx_zeroshift}
+
+At zero shift, the CVT is in its lowest ratio (maximum reduction)
+configuration. This is also the geometry used to compute the approximate
+center distance $C_{\mathrm{approx}}$, so much of that initial center-distance
+error cancels when the same configuration is used again to recover the
+secondary radius.
+
+\paragraph{Primary Radius at Zero Shift}
+
+At $s = 0$, the primary is within the deadzone, so from \Eq{eq:primary_radius}:
+\[
+r_{p,\text{outer}}(0) = r_{p,\min} = \SI{0.03462}{m}.
+\]
+
+\paragraph{Secondary Radius Comparison}
+
+Solving the exact belt-length constraint with $C_{\mathrm{exact}}$ yields
+\[
+r_{s,\mathrm{exact}} = \SI{0.10161}{m}.
+\]
+
+Evaluating the approximate formula \Eq{eq:rs_approx} with
+$C_{\mathrm{approx}} = \SI{0.27116}{m}$ yields
+\[
+r_{s,\mathrm{approx}} = \SI{0.10161}{m}.
+\]
+
+\paragraph{Transmission Ratio Error}
+
+Computing effective radii with $h_b/2 = \SI{0.00779}{m}$:
+
+\begin{center}
+\begin{tabular}{lcc}
+\toprule
+\textbf{Quantity} & \textbf{Exact} & \textbf{Approximate} \\
+\midrule
+$r_{p,\text{eff}}$ & \SI{0.0268}{m} & \SI{0.0268}{m} \\
+$r_{s,\text{eff}}$ & \SI{0.0938}{m} & \SI{0.0938}{m} \\
+$R = r_{s,\text{eff}}/r_{p,\text{eff}}$ & 3.496 & 3.497 \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+The ratio error at zero shift is
+\[
+\varepsilon_R = \frac{|3.497 - 3.496|}{3.496} \approx 0.005\%.
+\]
+
+Thus, although $C_{\mathrm{approx}}$ is already 6.81\% too large, the induced
+error has little visible effect at minimum shift because the radius calculation
+is being evaluated at the same operating point used to construct that
+approximate center distance in the first place.
+
+\begin{figure}[H]
+\centering
+%\includegraphics[width=0.75\linewidth]{./illustrations/appendix/approx_zero_shift.png}
+\caption{Scaled diagram of the CVT at zero shift ($s = 0$).
+The primary pulley (left) and exact secondary pulley (right, solid line)
+are shown alongside the approximate secondary pulley (dotted line).
+The two solutions nearly overlap at this operating point,
+indicating negligible ratio error in this case.}
+\label{fig:approx_zero_shift}
+\end{figure}
+
 % --------------------------------------------------------------
 \subsubsection{Maximum Shift Configuration}
 \label{sec:approx_maxshift}
 
 At maximum shift, the primary and secondary pulleys are closest in size,
-representing the ``overdrive'' configuration. This is the most favorable
-case for the small-angle approximation.
+representing a near-crossover configuration.
 
 \paragraph{Primary Radius at Maximum Shift}
 
@@ -6109,19 +6173,19 @@ r_{p,\text{outer}}(s_{\max})
 Solving the exact belt-length constraint \Eq{eq:belt_length_constraint}
 numerically with $C_{\mathrm{exact}} = \SI{0.25387}{m}$ yields
 \[
-r_{s,\mathrm{exact}} = \SI{0.0669385}{m}.
+r_{s,\mathrm{exact}} = \SI{0.06647}{m}.
 \]
 
 Evaluating the approximate formula \Eq{eq:rs_approx} with
 $C_{\mathrm{approx}} = \SI{0.27116}{m}$ yields
 \[
-r_{s,\mathrm{approx}} = \SI{0.0812}{m}.
+r_{s,\mathrm{approx}} = \SI{0.05600}{m}.
 \]
 
 \paragraph{Transmission Ratio Error}
 
 The CVT ratio is defined using effective radii, which account for
-belt seating depth (\Sec{sec:belt_seating}):
+belt seating depth (\Eq{eq:cvt_ratio}):
 \[
 r_{\text{eff}} = r_{\text{outer}} - \frac{h_b}{2}.
 \]
@@ -6130,24 +6194,25 @@ With $h_b/2 = \SI{0.00779}{m}$:
 
 \begin{center}
 \begin{tabular}{lcc}
-\toprule
-\textbf{Quantity} & \textbf{Exact} & \textbf{Approximate} \\
+\midrule[\heavyrulewidth]
+Quantity & \textbf{Exact} & \textbf{Approximate} \\
 \midrule
 $r_{p,\text{eff}}$ & \SI{0.0675}{m} & \SI{0.0675}{m} \\
-$r_{s,\text{eff}}$ & \SI{0.0591}{m} & \SI{0.0734}{m} \\
-$R = r_{s,\text{eff}}/r_{p,\text{eff}}$ & 0.876 & 1.087 \\
+$r_{s,\text{eff}}$ & \SI{0.0587}{m} & \SI{0.0482}{m} \\
+$R = r_{s,\text{eff}}/r_{p,\text{eff}}$ & 0.869 & 0.714 \\
 \bottomrule
 \end{tabular}
 \end{center}
 
-The approximate model predicts an overdrive ratio ($R > 1$), while
-the exact model shows underdrive ($R < 1$). The ratio error is
+Both models predict underdrive ($R < 1$), but the approximation
+substantially underestimates the ratio. The ratio error is
 \[
-\varepsilon_R = \frac{|1.087 - 0.876|}{0.876} = 24.1\%.
+\varepsilon_R = \frac{|0.714 - 0.869|}{0.869} = 17.8\%.
 \]
 
-Even at maximum shift---the most favorable configuration---the
-approximation produces a qualitatively incorrect ratio prediction.
+Unlike the minimum-shift case, this operating point does not benefit from
+the same cancellation, so the center-distance error propagates into a much
+larger error in secondary radius and transmission ratio.
 
 \begin{figure}[H]
 \centering
@@ -6155,69 +6220,9 @@ approximation produces a qualitatively incorrect ratio prediction.
 \caption{Scaled diagram of the CVT at maximum shift ($s = s_{\max}$).
 The primary pulley (left) and exact secondary pulley (right, solid line)
 are shown alongside the approximate secondary pulley (dotted line).
-The approximation overestimates the secondary radius, predicting
-overdrive when the actual configuration is underdrive.}
+The approximation underestimates the secondary radius,
+leading to a lower predicted ratio than the exact model.}
 \label{fig:approx_max_shift}
-\end{figure}
-
-% --------------------------------------------------------------
-\subsubsection{Zero Shift Configuration}
-\label{sec:approx_zeroshift}
-
-At zero shift, the CVT is in its lowest ratio (maximum reduction)
-configuration. The pulley radii differ most significantly, and the
-small-angle approximation is expected to perform worst.
-
-\paragraph{Primary Radius at Zero Shift}
-
-At $s = 0$, the primary is within the deadzone, so from \Eq{eq:primary_radius}:
-\[
-r_{p,\text{outer}}(0) = r_{p,\min} = \SI{0.03462}{m}.
-\]
-
-\paragraph{Secondary Radius Comparison}
-
-Solving the exact belt-length constraint with $C_{\mathrm{exact}}$ yields
-\[
-r_{s,\mathrm{exact}} = r_{s,\max} = \SI{0.1016}{m}.
-\]
-
-Evaluating the approximate formula \Eq{eq:rs_approx} with
-$C_{\mathrm{approx}} = \SI{0.27116}{m}$ yields
-\[
-r_{s,\mathrm{approx}} = \SI{0.1187}{m}.
-\]
-
-\paragraph{Transmission Ratio Error}
-
-Computing effective radii with $h_b/2 = \SI{0.00779}{m}$:
-
-\begin{center}
-\begin{tabular}{lcc}
-\toprule
-\textbf{Quantity} & \textbf{Exact} & \textbf{Approximate} \\
-\midrule
-$r_{p,\text{eff}}$ & \SI{0.0268}{m} & \SI{0.0268}{m} \\
-$r_{s,\text{eff}}$ & \SI{0.0938}{m} & \SI{0.1109}{m} \\
-$R = r_{s,\text{eff}}/r_{p,\text{eff}}$ & 3.50 & 4.14 \\
-\bottomrule
-\end{tabular}
-\end{center}
-
-The ratio error at zero shift is
-\[
-\varepsilon_R = \frac{|4.14 - 3.50|}{3.50} = 18.3\%.
-\]
-
-\begin{figure}[H]
-\centering
-%\includegraphics[width=0.75\linewidth]{./illustrations/appendix/approx_zero_shift.png}
-\caption{Scaled diagram of the CVT at zero shift ($s = 0$).
-The primary pulley (left) and exact secondary pulley (right, solid line)
-are shown alongside the approximate secondary pulley (dotted line).
-The radius discrepancy is visually apparent, with the approximation
-substantially overestimating the secondary size.}
-\label{fig:approx_zero_shift}
 \end{figure}
 
 % --------------------------------------------------------------
@@ -6228,21 +6233,23 @@ substantially overestimating the secondary size.}
 \toprule
 \textbf{Configuration} & \textbf{$R_{\mathrm{exact}}$} & \textbf{$R_{\mathrm{approx}}$} & \textbf{Ratio Error} \\
 \midrule
-Zero shift ($s = 0$) & 3.50 & 4.14 & 18.3\% \\
-Maximum shift ($s = s_{\max}$) & 0.876 & 1.087 & 24.1\% \\
+Zero shift ($s = 0$) & 3.496 & 3.497 & 0.005\% \\
+Maximum shift ($s = s_{\max}$) & 0.869 & 0.714 & 17.8\% \\
 \bottomrule
 \end{tabular}
 \end{center}
 
-The small-angle approximation introduces ratio errors exceeding 18\%
-across the entire shift range. At maximum shift, the approximation
-incorrectly predicts the qualitative regime (overdrive vs.\ underdrive).
+The small-angle approximation error is strongly operating-point dependent.
+At zero shift, most of the center-distance error cancels because the
+approximate center distance was itself constructed from that same geometry.
+At maximum shift, that cancellation is lost and the ratio error becomes
+substantial.
 
 These errors arise from the initial 6.81\% error in center distance,
-which then propagates nonlinearly through the belt-length geometry.
-Since the transmission ratio directly enters the rotational equations
-of motion (\Sec{sec:complete_model}), errors of this magnitude would
-render dynamic simulations unreliable.
+which propagates nonlinearly through the belt-length geometry in a
+state-dependent way. Since the transmission ratio directly enters the
+rotational equations of motion (\Sec{sec:complete_model}), this approximation
+can still produce materially inaccurate dynamics near maximum shift.
 
 This analysis justifies the use of exact numerical solutions for all
 geometric computations in this work.
@@ -6769,7 +6776,7 @@ This remains a placeholder for now, as it relies on outdated equations, but one 
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=0.75\linewidth]{./illustrations/appendix/t_maxSecondaryDerivation.png}
+\includegraphics[width=0.75\linewidth]{../Kai's folder of derivations/t_maxSecondaryDerivation.png}
 \label{fig:secondary_capacity_closure}
 \end{figure}
 
