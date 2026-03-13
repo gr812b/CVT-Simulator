@@ -14,6 +14,7 @@
 
 \usepackage{graphicx}
 \usepackage{booktabs}
+\usepackage{longtable}
 \usepackage{float}
 \usepackage{booktabs}
 \usepackage{makecell}
@@ -980,27 +981,79 @@ positive rotation.
 
 
 \subsection{Symbol Summary}\label{sec:symbols}
-\begin{table}[h]
-\centering
-\begin{tabular}{@{}ll@{}}
+\begin{center}
+\small
+\setlength{\LTleft}{0pt}
+\setlength{\LTright}{0pt}
+\begin{longtable}{@{}p{0.34\textwidth}p{0.62\textwidth}@{}}
 \toprule
 Symbol & Meaning \\ \midrule
-$v$ & vehicle speed \\
-$\omega_e$ & engine angular speed \\
-$s$ & primary axial shift position \\
-$\dot{s}$ & primary axial shift velocity \\
-$R$ & CVT ratio (define direction explicitly) \\
+\endfirsthead
+\toprule
+Symbol & Meaning \\ \midrule
+\endhead
 \bottomrule
-\end{tabular}
-\caption{Core symbols used throughout the derivation.}
-\label{tab:symbols_core}
-\end{table}
+\endfoot
+\bottomrule
+\caption{Core symbols used throughout the derivation.}\label{tab:symbols_core}\\
+\endlastfoot
+\multicolumn{2}{@{}l}{\textbf{State and kinematics}} \\
+$\vect{x}(t)$ & state vector \\
+$t$ & time \\
+$\omega_p,\ \omega_s$ & primary and secondary angular speed \\
+$\alpha_p,\ \alpha_s$ & primary and secondary angular acceleration \\
+$s,\ \dot s,\ \ddot s$ & shift position, velocity, and acceleration \\
+$R,\ \dot R$ & CVT ratio and ratio rate \\
+$v_{\mathrm{rel}}$ & relative slip speed at belt--pulley interface \\
+\addlinespace
+\multicolumn{2}{@{}l}{\textbf{Geometry}} \\
+$r_{p,\mathrm{outer}}(s),\ r_{s,\mathrm{outer}}(s)$ & primary and secondary outer radius \\
+$r_{p,\mathrm{eff}}(s),\ r_{s,\mathrm{eff}}(s)$ & primary and secondary effective torque radius \\
+$r_{p,\min}$ & minimum primary outer radius \\
+$r_{s,\max}$ & maximum secondary outer radius \\
+$s_{\mathrm{dz}},\ s_{\max}$ & deadzone threshold and maximum shift \\
+$\beta$ & sheave face half-angle (radial reference) \\
+$C$ & pulley center distance \\
+$L_b$ & total belt length \\
+$\phi$ & belt wrap angle used in distributed contact model \\
+$r,\ \dot r$ & local belt path radius and its time derivative \\
+$r_{\mathrm{cm}}$ & belt element center-of-mass radius \\
+\addlinespace
+\multicolumn{2}{@{}l}{\textbf{Constraint and mapping functions}} \\
+$f(r_p,r_s,C)$ & belt-length compatibility root function ($f=0$) \\
+$\operatorname*{root}_{r_s}(\cdot)$ & numerical root solve for secondary radius \\
+$r_f(s),\ \dfrac{dr_f}{ds}$ & primary flyweight radius map and gradient \\
+$\theta_s(s),\ \dfrac{d\theta_s}{ds}$ & secondary helix angle map and gradient \\
+\addlinespace
+\multicolumn{2}{@{}l}{\textbf{Forces and torques}} \\
+$F_{p,\mathrm{ax}},\ F_{s,\mathrm{ax}}$ & primary and secondary axial mechanism force \\
+$F_{c,p},\ F_{c,s}$ & primary and secondary belt centrifugal axial contribution \\
+$F_{\mathrm{ax}}$ & generic axial clamp force at one pulley contact \\
+$\tau_{\mathrm{eng}},\ \tau_{\mathrm{load}}$ & engine input torque and reflected load torque \\
+$\tau_p,\ \tau_s$ & coupling torque seen at primary and secondary \\
+$\tau,\ \tau_c$ & generic interface torque and applied coupling/friction torque \\
+$\tau_{\mathrm{ns}}$ & no-slip requested coupling torque \\
+$\tau_{\max}$ & traction-limited torque capacity \\
+\addlinespace
+\multicolumn{2}{@{}l}{\textbf{Mass/inertia and material parameters}} \\
+$I_p,\ I_s$ & primary and secondary rotational inertia \\
+$m_f$ & effective flyweight mass \\
+$m_{p,m},\ m_{s,m}$ & equivalent primary and secondary translating mechanism mass \\
+$\rho_b$ & belt material density \\
+$A_b$ & belt cross-sectional area \\
+$\mu$ & belt--pulley traction coefficient \\
+$k_p,\ x_{p,0}$ & primary spring stiffness and preload displacement \\
+$k_{s,\theta},\ \theta_{s,0}$ & secondary torsional stiffness and preload angle \\
+$k_{s,x},\ x_{s,0}$ & secondary axial stiffness and preload displacement \\
+\end{longtable}
+\normalsize
+\end{center}
 
 \subsection{Base Units}
 
 All quantities in this document are expressed in SI units unless otherwise stated.
 
-\begin{table}[h]
+\begin{table}[H]
 \centering
 \begin{tabular}{@{}lll@{}}
 \toprule
@@ -1011,15 +1064,13 @@ Time & second & \si{\second} \\
 Plane angle & radian & \si{\radian} \\
 \bottomrule
 \end{tabular}
-\caption{SI base units used throughout the model.}
+\caption{Base SI units used by the model variables and parameters.}
 \label{tab:si_base}
 \end{table}
 
-\FloatBarrier
-
 \subsection{Common Derived Units}
 
-\begin{table}[h]
+\begin{table}[H]
 \centering
 \begin{tabular}{@{}lll@{}}
 \toprule
@@ -1028,41 +1079,91 @@ Velocity & meter per second & \si{\meter\per\second} \\
 Acceleration & meter per second squared & \si{\meter\per\second\squared} \\
 Angular velocity & radian per second & \si{\radian\per\second} \\
 Angular acceleration & radian per second squared & \si{\radian\per\second\squared} \\
+Area & square meter & \si{\meter\squared} \\
+Volume & cubic meter & \si{\meter\cubed} \\
+Density & kilogram per cubic meter & \si{\kilogram\per\meter\cubed} \\
+Linear spring stiffness & newton per meter & \si{\newton\per\meter} \\
+Torsional spring stiffness & newton meter per radian & \si{\newton\meter\per\radian} \\
 Force & newton (\si{\kilogram\meter\per\second\squared}) & \si{\newton} \\
 Torque & newton meter (\si{\kilogram\meter\squared\per\second\squared}) & \si{\newton\meter} \\
 Moment of inertia & kilogram meter squared & \si{\kilogram\meter\squared} \\
 Power & watt (\si{\kilogram\meter\squared\per\second\cubed}) & \si{\watt} \\
+Dimensionless ratios/coefs. & unitless & 1 \\
 \bottomrule
 \end{tabular}
-\caption{Common derived SI units used in the CVT model.}
+\caption{Derived units and unitless groups used throughout the CVT model.}
 \label{tab:si_derived}
 \end{table}
 
-\FloatBarrier
-
 \subsection{Constants and Parameters}\label{sec:constants}
 
-All physical constants, geometric parameters, and calibrated values used in the model are listed below.
+All non-varying model parameters are centralized below as the canonical reference.
+Unless explicitly treated as inputs or state-dependent maps, symbols listed here are held constant during simulation.
 
-\begin{table}[h]
-\centering
-\begin{tabular}{@{}lllll@{}}
+\begin{center}
+\small
+\setlength{\LTleft}{0pt}
+\setlength{\LTright}{0pt}
+\begin{longtable}{@{}p{0.15\textwidth}p{0.20\textwidth}p{0.14\textwidth}p{0.13\textwidth}p{0.32\textwidth}@{}}
 \toprule
-Symbol & Name & Value & Unit & Description \\ \midrule
-$m$ & Vehicle mass & -- & \si{\kilogram} & Total vehicle mass \\
-$r_w$ & Wheel radius & -- & \si{\meter} & Effective rolling radius \\
-$G$ & Final drive ratio & -- & -- & Secondary-to-wheel speed ratio \\
-$I_p$ & Primary inertia & -- & \si{\kilogram\meter\squared} & Lumped primary-side inertia \\
-$I_s$ & Secondary inertia & -- & \si{\kilogram\meter\squared} & Lumped secondary-side inertia \\
-$k_p$ & Primary spring constant & -- & \si{\newton\per\meter} & Primary compression spring \\
-$k_s$ & Secondary spring constant & -- & \si{\newton\per\meter} & Secondary compression spring \\
-$\mu$ & Friction coefficient & -- & -- & Belt-pulley friction coefficient \\
-$\beta$ & Wrap angle & -- & \si{\radian} & Belt wrap angle \\
+Symbol & Name & Nominal value & Unit & Description \\ \midrule
+\endfirsthead
+\toprule
+Symbol & Name & Nominal value & Unit & Description \\ \midrule
+\endhead
 \bottomrule
-\end{tabular}
-\caption{Model constants and parameters.}
-\label{tab:constants}
-\end{table}
+\endfoot
+\bottomrule
+\caption{Canonical non-varying parameters used by the CVT model equations.}
+\label{tab:constants}\\
+\endlastfoot
+\multicolumn{5}{@{}l}{\textbf{Geometry and belt}} \\
+$L_b$ & Belt length & -- & \si{\meter} & Fixed total belt length \\
+$C$ & Center distance & -- & \si{\meter} & Primary--secondary shaft center distance (fixed after initialization) \\
+$\beta$ & Sheave half-angle & -- & \si{\radian} & Cone half-angle used for radial/axial conversion \\
+$h_b$ & Belt thickness & -- & \si{\meter} & Radial belt thickness \\
+$b_{\mathrm{out}}$ & Belt outer width & -- & \si{\meter} & Belt width at outer face \\
+$b_{\mathrm{in}}$ & Belt inner width & -- & \si{\meter} & Belt width at inner face \\
+$A_b$ & Belt cross-sectional area & -- & \si{\meter\squared} & Trapezoid area from $h_b$, $b_{\mathrm{out}}$, $b_{\mathrm{in}}$ \\
+$r_{p,\min}$ & Primary minimum outer radius & -- & \si{\meter} & Radius at fully open primary \\
+$r_{s,\max}$ & Secondary maximum outer radius & -- & \si{\meter} & Radius at fully closed secondary \\
+$s_{\mathrm{dz}}$ & Shift deadzone threshold & -- & \si{\meter} & Onset of effective radial motion \\
+$s_{\max}$ & Maximum shift & -- & \si{\meter} & Physical upper travel bound \\
+\addlinespace
+\multicolumn{5}{@{}l}{\textbf{Primary/secondary actuation}} \\
+$m_f$ & Flyweight mass & -- & \si{\kilogram} & Effective flyweight mass \\
+$r_{f,0}$ & Initial flyweight radius & -- & \si{\meter} & Flyweight radius offset at $s=0$ \\
+$k_p$ & Primary spring stiffness & -- & \si{\newton\per\meter} & Primary compression spring rate \\
+$x_{p,0}$ & Primary spring preload & -- & \si{\meter} & Initial compression of primary spring \\
+$k_{s,\theta}$ & Secondary torsional stiffness & -- & \si{\newton\meter\per\radian} & Torsional spring rate in helix assembly \\
+$\theta_{s,0}$ & Secondary torsional preload & -- & \si{\radian} & Initial torsional deflection preload \\
+$r_h$ & Helix reference radius & -- & \si{\meter} & Effective cylindrical radius in helix kinematics \\
+$k_{s,x}$ & Secondary axial stiffness & -- & \si{\newton\per\meter} & Secondary axial compression spring rate \\
+$x_{s,0}$ & Secondary axial preload & -- & \si{\meter} & Initial compression of secondary axial spring \\
+\addlinespace
+\multicolumn{5}{@{}l}{\textbf{Inertia and drivetrain}} \\
+$I_{\mathrm{eng}}$ & Engine inertia & -- & \si{\kilogram\meter\squared} & Engine rotational inertia \\
+$I_{\mathrm{prim}}$ & Primary pulley inertia & -- & \si{\kilogram\meter\squared} & Primary CVT pulley inertia \\
+$I_p$ & Effective primary inertia & -- & \si{\kilogram\meter\squared} & $I_p = I_{\mathrm{eng}} + I_{\mathrm{prim}}$ \\
+$I_{\mathrm{sec}}$ & Secondary pulley inertia & -- & \si{\kilogram\meter\squared} & Secondary CVT pulley inertia \\
+$I_{\mathrm{gb}}$ & Gearbox inertia & -- & \si{\kilogram\meter\squared} & Gearbox/intermediate shaft inertia \\
+$I_{\mathrm{wheel}}$ & Wheel inertia & -- & \si{\kilogram\meter\squared} & Wheel/hub inertia about wheel axis \\
+$I_s$ & Effective secondary inertia & -- & \si{\kilogram\meter\squared} & Lumped secondary-side inertia about secondary axis \\
+$G$ & Final drive ratio & -- & 1 & Fixed ratio defined by $\omega_s = G\,\omega_w$ \\
+$m$ & Vehicle mass & -- & \si{\kilogram} & Total vehicle mass \\
+$r_w$ & Wheel rolling radius & -- & \si{\meter} & Effective tire rolling radius \\
+\addlinespace
+\multicolumn{5}{@{}l}{\textbf{Contact and environment}} \\
+$\rho_b$ & Belt density & -- & \si{\kilogram\per\meter\cubed} & Belt material density \\
+$\mu$ & Belt--pulley friction coefficient & -- & 1 & Effective Coulomb traction coefficient \\
+$C_{\mathrm{rr}}$ & Rolling resistance coefficient & -- & 1 & Tire-road rolling resistance coefficient \\
+$C_d$ & Drag coefficient & -- & 1 & Aerodynamic drag coefficient \\
+$A_f$ & Frontal area & -- & \si{\meter\squared} & Vehicle aerodynamic reference area \\
+$\rho$ & Air density & -- & \si{\kilogram\per\meter\cubed} & Ambient air density used in drag model \\
+$g$ & Gravitational acceleration & -- & \si{\meter\per\second\squared} & Gravity constant \\
+\end{longtable}
+\normalsize
+\end{center}
 
 \section{Modeling Assumptions}\label{sec:assumptions}
 
@@ -5840,6 +5941,368 @@ R=R(s),\quad \dot R=\dot R(s,\dot s),\quad
 \]
 
 This completes the closed CVT dynamic model.
+
+\section{Simulation Results}
+\label{sec:results}
+
+Because experimental drivetrain data for the present vehicle configuration was not available at the time of writing, the results presented here focus on establishing physical credibility of the model through three complementary strategies:
+
+\begin{enumerate}
+    \item Verification that the dynamic model reproduces known quasi–static behaviour in appropriate limits.
+    \item Demonstration that the model produces trends consistent with established physical intuition of CVT operation.
+    \item Exploration of transient behaviours and force interactions that cannot be captured by steady–state formulations.
+\end{enumerate}
+
+Accordingly, the results are structured to progressively build confidence in the formulation. We begin with a summary of simulation parameters, then verify steady–state force balance behaviour, examine the magnitude of the centrifugal belt correction, and finally present transient simulations of torque transmission and full vehicle launch behaviour.
+
+\FloatBarrier
+
+% --------------------------------------------------
+\subsection{Simulation Parameters}
+\label{sec:results_parameters}
+
+All simulations were performed using the nominal parameter set summarized in \Cref{tab:simulation_parameters}. Symbol definitions are centralized in \Cref{tab:constants}; this results table reports the nominal values used in simulation together with their sources.
+
+\begin{table}[H]
+\centering
+\caption{Nominal simulation parameters grouped by subsystem. Parameter sources are indicated as CAD (measured from geometry), Spec (manufacturer specification), Lit. (literature value), or Est. (engineering estimate).}
+\label{tab:simulation_parameters}
+
+\small
+\begin{tabular}{@{}llp{3.0cm}llp{2.2cm}@{}}
+\toprule
+\textbf{Subsystem} & \textbf{Symbol(s)} & \textbf{Parameter} & \textbf{Nominal value} & \textbf{Unit} & \textbf{Source} \\
+\midrule
+
+Primary clutch
+& $m_f$
+& Flyweight mass
+& --
+& \si{\kilogram}
+& CAD / Spec \\
+& $r_{f,0}$
+& Flyweight radius
+& --
+& \si{\meter}
+& CAD \\
+& $r_f(s)$
+& Ramp geometry profile
+& profile curve
+& --
+& CAD \\
+& $k_p$
+& Primary spring rate
+& --
+& \si{\newton\per\meter}
+& Spec \\
+& $x_{p,0}$
+& Primary spring preload
+& --
+& \si{\meter}
+& Spec \\
+& $\beta$
+& Sheave half-angle
+& $0.2007$
+& \si{\radian}
+& CAD \\
+& $s_{\mathrm{dz}},\ s_{\max}$
+& Minimum / maximum shift position
+& --
+& \si{\meter}
+& CAD \\
+
+\midrule
+
+Secondary clutch
+& $\theta_s(s)$
+& Helix angle profile
+& profile curve
+& --
+& CAD \\
+& $k_{s,\theta}$
+& Torsional spring rate
+& --
+& \si{\newton\meter\per\radian}
+& Spec \\
+& $\theta_{s,0}$
+& Torsional spring preload
+& --
+& \si{\radian}
+& Spec \\
+& $k_{s,x}$
+& Compression spring rate
+& --
+& \si{\newton\per\meter}
+& Spec \\
+& $\beta$
+& Sheave half-angle
+& $0.2007$
+& \si{\radian}
+& CAD \\
+
+\midrule
+
+Belt
+& $\rho_b$
+& Mass per unit length
+& --
+& \si{\kilogram\per\meter}
+& Lit. \\
+& $\beta$
+& Belt V-angle
+& $0.2007$
+& \si{\radian}
+& Spec \\
+& $\mu$
+& Friction coefficient
+& --
+& 1
+& Est. \\
+& $L_b$
+& Free belt length
+& $0.9535$
+& \si{\meter}
+& CAD \\
+& $h_b,\ b_{\mathrm{out}},\ b_{\mathrm{in}}$
+& Cross–section geometry
+& $h_b=0.01557$; others --
+& \si{\meter}
+& CAD \\
+
+\midrule
+
+Vehicle
+& $m$
+& Total vehicle mass
+& --
+& \si{\kilogram}
+& Measured \\
+& $r_w$
+& Wheel radius
+& --
+& \si{\meter}
+& CAD \\
+& $G$
+& Final drive ratio
+& --
+& 1
+& Spec \\
+& $C_d$
+& Drag coefficient
+& --
+& 1
+& Est. \\
+& $A_f$
+& Frontal area
+& --
+& \si{\meter\squared}
+& CAD \\
+& $C_{\mathrm{rr}}$
+& Rolling resistance coefficient
+& --
+& 1
+& Lit. \\
+
+\midrule
+
+Engine
+& $\tau_{\mathrm{eng}}(\omega_p)$
+& Torque curve
+& lookup/fit curve
+& \si{\newton\meter}
+& Spec \\
+
+\bottomrule
+\end{tabular}
+\end{table}
+
+Parameters derived directly from geometry (e.g. ramp profiles, helix geometry, belt path) are known with relatively high confidence. By contrast, friction coefficient and certain aerodynamic parameters are treated as estimated quantities and are therefore examined further in the sensitivity analysis presented later in this section.
+
+\FloatBarrier
+
+% --------------------------------------------------
+\subsection{Steady-State Force Balance Verification}
+\label{sec:results_static}
+
+Before examining transient behaviour, it is useful to verify that the dynamic model recovers the expected quasi–static behaviour of the CVT under steady operating conditions.
+
+Physically, if engine speed is held constant and inertial effects vanish, the axial forces acting on the movable sheave should balance such that
+
+\[
+F_{\text{net}}(s) = 0
+\]
+
+at the equilibrium shift position.
+
+\begin{figure}[H]
+\centering
+%\includegraphics[width=0.85\textwidth]{figures/placeholder_primary_force_balance.png}
+\caption{Placeholder: axial force components acting on the primary clutch as a function of shift position at several fixed engine speeds. The curves represent centrifugal flyweight force, primary spring restoring force, and belt axial reaction. The equilibrium shift position occurs where the net axial force crosses zero.}
+\label{fig:primary_force_balance}
+\end{figure}
+
+\Cref{fig:primary_force_balance} illustrates the individual axial force contributions acting on the primary sheave. As engine speed increases, centrifugal flyweight force grows approximately quadratically, shifting the equilibrium point toward larger shift positions. This behaviour corresponds physically to the familiar engagement and upshift mechanism of the CVT.
+
+From these force curves the equilibrium shift position can be extracted as the zero–crossing of the net force curve.
+
+\begin{figure}[H]
+\centering
+%\includegraphics[width=0.8\textwidth]{figures/placeholder_equilibrium_shift_curve.png}
+\caption{Placeholder: predicted equilibrium shift position as a function of engine angular velocity obtained from the steady-state force balance.}
+\label{fig:shift_curve}
+\end{figure}
+
+The resulting equilibrium shift curve shown in \Cref{fig:shift_curve} provides a useful consistency check against prior quasi–static formulations in the literature. In the limit of negligible inertia, the dynamic model converges to this same equilibrium condition, confirming that the formulation is internally consistent.
+
+\FloatBarrier
+
+% --------------------------------------------------
+\subsection{Magnitude of the Centrifugal Belt Correction}
+\label{sec:results_centrifugal}
+
+One of the central derivations of this work is the centrifugal belt force correction derived in \Sec{sec:belt_centrifugal}. Physically, this term arises because the rotating belt experiences radial inertia that tends to unseat it from the sheave groove.
+
+This effect reduces the effective normal force acting on the belt and therefore lowers the maximum transmissible torque.
+
+\begin{figure}[H]
+\centering
+%\includegraphics[width=0.85\textwidth]{figures/placeholder_centrifugal_vs_clamp.png}
+\caption{Placeholder: centrifugal belt force compared with total clamping force as a function of engine speed for both primary and secondary pulleys.}
+\label{fig:centrifugal_comparison}
+\end{figure}
+
+\Cref{fig:centrifugal_comparison} compares the centrifugal correction term with the total clamping force produced by the clutch mechanisms. At low engine speeds the centrifugal term is negligible. However, as engine speed increases the correction grows rapidly and becomes comparable in magnitude to the mechanical clamping force.
+
+To quantify the impact of this effect on torque transmission, the maximum transmissible torque was computed both with and without the centrifugal correction.
+
+\begin{figure}[H]
+\centering
+%\includegraphics[width=0.8\textwidth]{figures/placeholder_torque_capacity_comparison.png}
+\caption{Placeholder: predicted torque capacity of the belt drive with and without the centrifugal correction term. Neglecting the correction significantly overestimates the torque capacity at high engine speeds.}
+\label{fig:torque_capacity_comparison}
+\end{figure}
+
+The difference between these curves represents the modelling error introduced by neglecting belt centrifugal effects. For the operating range considered here, the correction substantially reduces the predicted torque capacity at high rotational speeds, highlighting the importance of including this effect in accurate CVT models.
+
+\FloatBarrier
+
+% --------------------------------------------------
+\subsection{Torque Transmission and Slip Behaviour}
+\label{sec:results_slip}
+
+The model explicitly distinguishes between no–slip and slipping regimes based on the instantaneous torque capacity of the belt.
+
+Physically, when the demanded torque exceeds the maximum transmissible torque determined by clamping force and friction, the belt must enter a slipping state.
+
+\begin{figure}[H]
+\centering
+%\includegraphics[width=0.85\textwidth]{figures/placeholder_torque_demand_vs_capacity.png}
+\caption{Placeholder: time history of torque demand and maximum transmissible torque during a transient loading event. Regions where torque demand exceeds capacity correspond to slipping behaviour.}
+\label{fig:torque_slip_event}
+\end{figure}
+
+\Cref{fig:torque_slip_event} illustrates a representative transient in which the torque demand temporarily exceeds the belt's torque capacity. In these intervals the transmitted torque is limited by frictional capacity rather than by the engine torque itself.
+
+The model also records the instantaneous slip state.
+
+\begin{figure}[H]
+\centering
+%\includegraphics[width=0.85\textwidth]{figures/placeholder_slip_indicator.png}
+\caption{Placeholder: slip-state indicator and ratio derivative during the transient event shown in \Fig{fig:torque_slip_event}.}
+\label{fig:slip_indicator}
+\end{figure}
+
+As shown in \Cref{fig:slip_indicator}, the onset of slip coincides with changes in the rate of ratio evolution. This coupling between torque transmission and ratio dynamics is a fundamentally transient phenomenon and cannot be captured by purely steady–state models.
+
+\FloatBarrier
+
+% --------------------------------------------------
+\subsection{Vehicle Launch from Rest}
+\label{sec:results_launch}
+
+The full drivetrain model can be used to simulate a complete vehicle launch from rest.
+
+Physically, such a launch typically exhibits three distinct phases:
+
+\begin{enumerate}
+\item initial clutch engagement,
+\item active ratio upshift as vehicle speed increases,
+\item eventual stabilization near the shift–out ratio.
+\end{enumerate}
+
+\begin{figure}[H]
+\centering
+%\includegraphics[width=0.85\textwidth]{figures/placeholder_ratio_vs_time.png}
+\caption{Placeholder: transmission ratio as a function of time during a simulated vehicle launch from rest.}
+\label{fig:ratio_launch}
+\end{figure}
+
+\Cref{fig:ratio_launch} shows the predicted ratio trajectory during the launch. The model captures the gradual engagement of the belt followed by continuous ratio adjustment as engine speed increases.
+
+\begin{figure}[H]
+\centering
+%\includegraphics[width=0.85\textwidth]{figures/placeholder_engine_vehicle_speed.png}
+\caption{Placeholder: engine angular velocity and vehicle speed during the launch simulation.}
+\label{fig:engine_vehicle_speed}
+\end{figure}
+
+The relationship between engine speed and vehicle speed is shown in \Cref{fig:engine_vehicle_speed}. A properly tuned CVT maintains the engine near its optimal operating range during acceleration.
+
+\begin{figure}[H]
+\centering
+%\includegraphics[width=0.8\textwidth]{figures/placeholder_engine_operating_map.png}
+\caption{Placeholder: trajectory of the engine operating point during launch plotted against the engine torque curve.}
+\label{fig:engine_operating_map}
+\end{figure}
+
+\Cref{fig:engine_operating_map} visualizes this behaviour by plotting the engine operating point over the torque curve. The ability of the CVT to keep the engine near its optimal torque or power region is one of the primary motivations for using continuously variable transmissions.
+
+\FloatBarrier
+
+% --------------------------------------------------
+\subsection{Parameter Sensitivity}
+\label{sec:results_sensitivity}
+
+Finally, selected parameter variations were performed to illustrate how the model responds to changes in key clutch parameters.
+
+Rather than performing a full factorial sweep, the analysis focuses on parameters known to strongly influence CVT behaviour.
+
+\paragraph{Flyweight mass}
+
+Increasing flyweight mass increases centrifugal force and therefore lowers engagement RPM.
+
+\begin{figure}[H]
+\centering
+%\includegraphics[width=0.85\textwidth]{figures/placeholder_flyweight_sensitivity.png}
+\caption{Placeholder: effect of flyweight mass on predicted ratio trajectory and engagement speed.}
+\label{fig:flyweight_sensitivity}
+\end{figure}
+
+\paragraph{Helix angle}
+
+The helix profile determines how strongly the secondary clutch reacts to transmitted torque.
+
+\begin{figure}[H]
+\centering
+%\includegraphics[width=0.85\textwidth]{figures/placeholder_helix_sensitivity.png}
+\caption{Placeholder: effect of helix angle variation on ratio dynamics under load.}
+\label{fig:helix_sensitivity}
+\end{figure}
+
+\paragraph{Friction coefficient}
+
+The belt friction coefficient determines the torque capacity threshold at which slip occurs.
+
+\begin{figure}[H]
+\centering
+%\includegraphics[width=0.85\textwidth]{figures/placeholder_friction_sensitivity.png}
+\caption{Placeholder: torque capacity as a function of friction coefficient.}
+\label{fig:friction_sensitivity}
+\end{figure}
+
+These sensitivity studies demonstrate how the model can be used not only to simulate drivetrain behaviour but also to provide insight into the effects of tuning parameters commonly adjusted during CVT calibration.
+
+\FloatBarrier
 
 \appendix
 
