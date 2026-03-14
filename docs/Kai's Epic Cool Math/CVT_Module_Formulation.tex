@@ -230,18 +230,22 @@
 % ==========================================================
 % Remark / Aside Box
 % ==========================================================
-\newtcolorbox{remarkbox}[1][]{
-  enhanced,
-  colback=gray!5,
-  colframe=black!40,
-  boxrule=0.6pt,
-  arc=2pt,
-  left=8pt,
-  right=8pt,
-  top=6pt,
-  bottom=6pt,
-  fonttitle=\bfseries,
-  title=#1
+\NewDocumentEnvironment{remarkbox}{O{}}{
+  \begin{tcolorbox}[
+    enhanced,
+    colback=gray!5,
+    colframe=black!40,
+    boxrule=0.6pt,
+    arc=2pt,
+    left=8pt,
+    right=8pt,
+    top=6pt,
+    bottom=6pt,
+    fonttitle=\bfseries,
+    title={#1}
+  ]
+}{
+  \end{tcolorbox}
 }
 
 
@@ -257,6 +261,41 @@
 
 \begin{document}
 \maketitle
+
+\begin{abstract}
+This work develops a first-principles dynamic model for a mechanically
+actuated dry rubber V-belt continuously variable transmission (CVT) and its
+coupling to the vehicle drivetrain. The model is motivated by a persistent gap
+in the available literature: while quasi-static Baja-oriented models are common
+and detailed dynamic models exist for hydraulically actuated metal-belt CVTs,
+publicly available formulations for mechanically actuated rubber belt CVTs do
+not generally combine sheave inertia, flyweight actuation, torque-reactive
+secondary clamping, belt centrifugal effects, traction-limited torque
+transmission, and vehicle longitudinal dynamics within a single unified
+framework.
+
+Starting from pulley geometry and belt-length closure, the derivation develops
+the kinematic ratio relation, rotational dynamics of the primary and secondary
+pulleys, and the axial equation of motion governing shift. The primary clutch
+model includes centrifugal flyweight actuation and spring preload, while the
+secondary model includes helix-generated torque feedback together with spring
+forces. A centrifugal belt correction is derived to account for the reduction
+in effective normal force at speed, and an analytical stick--slip switching law
+is introduced to distinguish no-slip operation from traction-limited torque
+transmission. These elements are assembled into a closed nonlinear state-space
+model suitable for direct numerical time integration.
+
+The resulting formulation is intended both as a simulation model and as a
+derivation document that makes each modeling step physically interpretable. The
+simulation section is structured to verify recovery of expected quasi-static
+equilibria, illustrate the importance of the belt centrifugal correction,
+demonstrate transient slip behavior, and show coupled launch dynamics of the
+complete drivetrain. TODO: add the key quantitative result highlights once the
+final simulation figures and numerical comparisons are completed. TODO: add the
+final concluding implications and summary statement after the conclusion section
+is finalized.
+\end{abstract}
+
 \tableofcontents
 \newpage
 
@@ -5694,17 +5733,71 @@ v_{\mathrm{rel}} = 0
 \begin{remarkbox}[Remark (Numerical regularization)]
 The discontinuous $\mathrm{sign}(\cdot)$ function in
 \Eq{eq:final_tau_piecewise} may be replaced by a smooth approximation
-for numerical integration, such as
-\[
-\tau_c
-=
-\tau_{\max}
-\tanh\!\left(\frac{v_{\mathrm{rel}}}{v_{\mathrm{smooth}}}\right),
-\]
-where $v_{\mathrm{smooth}}>0$ controls transition sharpness.
-This modification improves numerical stability without significantly 
-altering the underlying physical model. 
+for numerical integration. A practical regularized form uses three ideas:
+\begin{itemize}
+  \item a smooth Coulomb-like saturation near zero relative speed,
+  \item a clamped no-slip torque request,
+  \item and a blend between those two limits across a small mismatch region.
+\end{itemize}
+This preserves the intended stick--slip behavior while avoiding a hard
+discontinuity at $v_{\mathrm{rel}}=0$. Implementation details and practical
+parameter-selection guidance are provided in
+\Sec{sec:appendix-slip-regularization}.
 \end{remarkbox}
+
+
+% --------------------------------------------------------------
+\begin{remarkbox}[Remark (Torque deficit, frictional heating, and transient inertial power transfer)]
+As an aside, this work is formulated primarily from force and torque balance,
+not from a full energy-based loss accounting framework. Even so, viewing the
+slip law through an energy lens is useful as a logical validation step: it
+helps confirm that the model behavior remains consistent with the law of conservation of
+energy.
+
+When the no-slip request exceeds traction capacity,
+\begin{equation}
+\Delta\tau_{\mathrm{loss}}
+=
+\max\!\left(0,\,|\tau_{\mathrm{ns}}|-\tau_{\max}\right),
+\label{eq:torque_deficit}
+\end{equation}
+which quantifies the instantaneous torque shortfall between the requested
+no-slip coupling and the admissible traction-limited coupling.
+
+During slip, mechanical energy is dissipated at the contact as heat at the rate
+\begin{equation}
+\dot Q_{\mathrm{fric}}
+=
+|F_t\,v_{\mathrm{rel}}|
+=
+\left|\frac{\tau_c}{r_{\mathrm{int}}}\,v_{\mathrm{rel}}\right|,
+\label{eq:slip_heat_rate}
+\end{equation}
+where $r_{\mathrm{int}}$ is the local effective contact radius used to map
+torque to tangential force. In traction-limited slip,
+$|\tau_c|=\tau_{\max}$, so larger speed mismatch directly increases thermal
+generation.
+
+It is also possible to observe slip while $|\tau_{\mathrm{ns}}|<\tau_{\max}$,
+because slip can persist temporarily until the existing mismatch decays.
+In that interval, the transmitted interface power can exceed the
+instantaneous engine shaft output without violating energy conservation.
+From the primary rotational balance,
+\begin{equation}
+\tau_c\,\omega_p
+=
+\tau_{\mathrm{eng}}\,\omega_p
+-
+\frac{\dd}{\dd t}\!\left(\frac{1}{2}I_p\omega_p^2\right),
+\label{eq:inertial_power_transfer}
+\end{equation}
+so when the engine-side rotating inertia is decelerating
+($\dd(\tfrac{1}{2}I_p\omega_p^2)/\dd t<0$), released kinetic energy supplements
+the instantaneous engine power. This effect is transient and vanishes once the
+slip mismatch collapses and the system re-enters stick.
+\end{remarkbox}
+
+
 
 % ==============================================================
 \section{Complete CVT Dynamic Model}
@@ -6303,6 +6396,53 @@ The belt friction coefficient determines the torque capacity threshold at which 
 These sensitivity studies demonstrate how the model can be used not only to simulate drivetrain behaviour but also to provide insight into the effects of tuning parameters commonly adjusted during CVT calibration.
 
 \FloatBarrier
+
+\section{Conclusion}
+\label{sec:conclusion}
+
+This work developed a unified first-principles dynamic model for a
+mechanically actuated dry rubber V-belt CVT and its coupling to the full
+drivetrain. Starting from geometry and force balance, the derivation produced a
+closed nonlinear state-space formulation in which rotational dynamics,
+traction-limited torque transmission, and axial shift dynamics are solved
+consistently in time.
+
+The completed formulation includes the primary flyweight-ramp actuation model,
+secondary helix torque feedback, belt geometric closure, centrifugal belt
+normal-force correction, and a stick--slip switching rule for transmitted
+torque. Together, these elements provide a physically interpretable framework
+that bridges the gap between purely quasi-static tuning models and dynamic
+simulation suitable for transient events such as engagement, upshift, and
+load-induced slip.
+
+From an engineering perspective, the model is intended to support both
+understanding and design iteration: it provides traceable equations for
+mechanism-level reasoning while also enabling numerical studies of parameter
+sensitivity (e.g., flyweight mass, helix profile, friction level) and their
+impact on shift behaviour and torque capacity.
+
+The current formulation also has clear limits. It does not yet include thermal
+effects, wear progression, or detailed tribological contact evolution, and the
+vehicle side remains a reduced longitudinal model. Efficiency is also treated
+with simplifying assumptions: torque transfer is modeled with ideal geometric
+mapping and traction limits, but explicit speed/load-dependent loss partitions
+(e.g., belt hysteresis, sheave contact dissipation, bearing and seal losses)
+are not yet parameterized as a standalone efficiency submodel. In addition,
+experimental calibration and validation data are still limited for the present
+hardware configuration, so several parameters are currently represented by
+engineering estimates.
+
+TODO: insert the final quantitative result highlights from
+\Sec{sec:results}, including the key no-slip/slip transition findings and the
+measured impact of the centrifugal correction on predicted torque capacity.
+
+TODO: insert final validation-comparison statement once benchmark and/or
+experimental datasets are finalized.
+
+Future work will prioritize targeted parameter identification, experimental
+validation across operating regimes, and extension of the model to include
+higher-fidelity loss and thermal effects so that predictive accuracy and design
+decision confidence can be improved further.
 
 \appendix
 
@@ -7232,6 +7372,80 @@ smooth right-hand side within each phase. Up to ten alternating full-shift\,/\,b
 cycles are supported before the simulation terminates, preventing unbounded
 phase loops for unusual parameter regimes.
 
+% --------------------------------------------------------------
+\subsection{Slip-Law Regularization and Blend Parameter Selection}
+\label{sec:appendix-slip-regularization}
+
+The traction law in \Eq{eq:final_tau_piecewise} is physically clear but
+discontinuous at $v_{\mathrm{rel}}=0$, which can induce step-size chatter near
+stick--slip transitions. A practical regularized formulation uses three ideas:
+a smooth saturation law, a clamped no-slip torque request, and a blending rule
+between those two limits.
+
+First define a smooth saturation torque
+\begin{equation}
+\tau_{\mathrm{sat}}
+=
+\tau_{\max}
+\tanh\!\left(\frac{v_{\mathrm{rel}}}{v_{\mathrm{smooth}}}\right),
+\label{eq:tau_tanh_regularized}
+\end{equation}
+where $v_{\mathrm{smooth}}>0$ sets the transition width in slip-speed units.
+For $|v_{\mathrm{rel}}| \gg v_{\mathrm{smooth}}$, this approaches the usual
+friction-limited value $\pm\tau_{\max}$, while near zero it removes the sharp
+sign discontinuity.
+
+Next, clamp the no-slip torque request:
+\begin{equation}
+\tau_{\mathrm{req}}
+=
+\mathrm{clip}\!\left(\tau_{\mathrm{ns}},\,-\tau_{\max},\,\tau_{\max}\right).
+\label{eq:tau_ns_clamped_impl}
+\end{equation}
+This is the largest admissible torque consistent with the no-slip request,
+without allowing the requested value to exceed traction capacity.
+
+Then define the blend factor
+\begin{equation}
+\alpha
+=
+\mathrm{clip}\!\left(\frac{|v_{\mathrm{rel}}|}{v_{\mathrm{blend}}},\,0,\,1\right),
+\label{eq:alpha_blend_impl}
+\end{equation}
+with $v_{\mathrm{blend}}>0$ defining the width of the blending region, and use
+the transmitted torque
+\begin{equation}
+\tau_c
+=
+(1-\alpha)\,\tau_{\mathrm{req}} + \alpha\,\tau_{\mathrm{sat}}.
+\label{eq:tau_blend_impl}
+\end{equation}
+
+This has a useful interpretation. For very small mismatch,
+$\alpha\approx 0$, so the model stays close to the clamped no-slip demand.
+For larger mismatch, $\alpha\to 1$, so the law transitions to the smooth
+Coulomb limit. In other words, the regularized model behaves like a requested
+no-slip torque near stick and like a friction-limited sliding law once the
+mismatch becomes appreciable.
+
+\paragraph{How to choose $v_{\mathrm{smooth}}$.}
+
+Choose the smoothing scale small enough that
+$\tanh(v_{\mathrm{rel}}/v_{\mathrm{smooth}})$ is close to a sign law
+through most of the slip regime, but not so small that the solver again sees an
+effectively discontinuous transition. A practical workflow is:
+\begin{enumerate}
+\item Start with $v_{\mathrm{smooth}}$ around 0.5--2\% of a representative
+  relative-speed magnitude seen during actual slip.
+\item Decrease it until predicted macro outputs (ratio trajectory, launch time,
+  peak speeds) stop changing materially.
+\item Increase it slightly if event localization or adaptive step-size behavior
+  becomes noisy near $v_{\mathrm{rel}}\approx 0$.
+\end{enumerate}
+
+The blend scale $v_{\mathrm{blend}}$ should generally be chosen greater than or
+equal to $v_{\mathrm{smooth}}$, so that the handoff from clamped demand to the
+smooth Coulomb limit is not sharper than the smoothing law itself.
 
 \section{Secondary Capacity Closure}\label{sec:appendix-secondary-capacity-closure}
 
