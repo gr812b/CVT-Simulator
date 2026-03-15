@@ -3009,7 +3009,8 @@ where $r_f(s)$ is the effective flyweight radius.
 
 An incremental axial displacement $ds$ produces a radial displacement
 $dr_f$. The local slope of the ramp is therefore $dr_f/ds$.
-The ramp angle is defined with respect to the axial direction as
+The instantaneous primary ramp angle is denoted by $\alpha_p(s)$ and is
+defined with respect to the axial direction as
 \begin{equation}
 \tan\alpha_p(s) = \frac{dr_f}{ds},
 \qquad
@@ -3074,8 +3075,8 @@ where $\theta_s(s)$ is the helix-induced rotation.
 
 An incremental rotation $d\theta_s$ corresponds to a circumferential
 displacement $r_h d\theta_s$ along a cylindrical surface of effective
-radius $r_h$. The helix angle is defined from the local slope of the
-ramp surface:
+radius $r_h$. The instantaneous secondary helix angle is denoted by
+$\alpha_s(s)$ and is defined from the local slope of the ramp surface:
 
 \[
 \tan\alpha_s
@@ -3791,7 +3792,7 @@ cannot occur without simultaneous axial motion of the sheaves.
 Thus, a purely radial force applied to the belt generates an axial
 reaction component that contributes to clamping.
 
-From the pulley geometry derived previously (see \Eq{eq:cone_geometry}),
+From the pulley geometry derived previously (see \Eq{eq:cone_geometry_diff}),
 the relationship between radial and axial displacement in the active
 shift region is
 
@@ -5376,7 +5377,7 @@ An axial clamping force $F_{\mathrm{ax}}$ pushes the sheaves together.
 Because the sheave faces are inclined at cone half-angle $\beta$,
 this axial force generates a radial normal load on the belt.
 
-From the conical kinematics established in \Eq{eq:cone_geometry},
+From the conical kinematics established in \Eq{eq:cone_geometry_diff},
 
 \[
 \frac{\dd r}{\dd s} = \frac{1}{2\tan\beta}.
