@@ -853,31 +853,47 @@ is adopted throughout this document. All equations follow these conventions.
 \subsubsection{Vehicle Longitudinal Coordinate and Incline Angle}
 \label{sec:vehicle_longitudinal}
 
-The vehicle is modeled as moving along a single straight line aligned with the road surface.
+Vehicle motion is modeled along a single longitudinal coordinate
+that follows the surface of the road.
 
-The positive longitudinal direction, denoted $+x$, is defined as the forward direction of travel along the surface of the road.
+The coordinate $x$ is defined locally along the direction of travel,
+tangent to the road surface. The positive direction, $+x$, corresponds
+to the forward direction of vehicle motion.
 
-The road may be inclined relative to horizontal.  
-The incline angle is denoted by $\alpha$ and is measured between the road surface and the horizontal reference line.  
-An incline with $\alpha > 0$ corresponds to the vehicle facing uphill in the positive $x$ direction.
+Because the road may be inclined relative to horizontal, the local
+direction of the $x$ axis depends on the road slope. The incline angle
+is denoted by $\alpha$ and is measured between the road surface and a
+horizontal reference line.
 
-Importantly, the $+x$ axis is \emph{tangent to the road surface} and rotates with the road inclination. The $+x$ direction is not fixed in space but rather follows the path of the road, changing orientation as the incline angle $\alpha$ changes.
+\[
+\alpha > 0 \quad \text{: uphill in the $+x$ direction}
+\]
 
-Because the $+x$ axis remains parallel to the road surface regardless of incline, the coordinate system rotates through angle $\alpha$ relative to a horizontal reference frame.
+\[
+\alpha < 0 \quad \text{: downhill in the $+x$ direction}
+\]
 
-A vehicle with velocity $v > 0$ is therefore moving forward along the road in the $+x$ direction.  
-If $v < 0$, the vehicle is moving in the opposite direction.
+As illustrated in \Fig{fig:vehicle_longitudinal_axis}, the $x$ direction
+always lies tangent to the road surface. Consequently, the orientation
+of the longitudinal axis varies with the local road incline $\alpha$.
 
-These definitions establish the geometric orientation of vehicle motion and the road surface.
+Vehicle velocity is defined along this coordinate. A velocity
+$v > 0$ corresponds to motion in the forward $+x$ direction along
+the road, while $v < 0$ corresponds to motion in the opposite direction.
+
+These definitions establish the geometric orientation of vehicle motion
+and the sign convention for road incline used throughout the model.
 
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.85\textwidth]{illustrations/coordinate/vehicle_longitudinal.png}
 \caption{
-Definition of the longitudinal coordinate and incline angle. 
-The positive $x$ direction follows the road surface. 
-Velocity $v$ is positive when directed uphill along $+x$. 
-The incline angle $\alpha$ is measured between the road and the horizontal.
+Definition of the longitudinal vehicle coordinate and incline angle.
+The coordinate $x$ is defined tangent to the road surface and
+points in the forward direction of travel. The road incline
+$\alpha$ is measured relative to the horizontal reference line.
+Positive $\alpha$ corresponds to uphill motion in the $+x$
+direction, while negative $\alpha$ corresponds to downhill slope.
 }
 \label{fig:vehicle_longitudinal_axis}
 \end{figure}
@@ -886,50 +902,43 @@ The incline angle $\alpha$ is measured between the road and the horizontal.
 \subsubsection{Rotational Sign Convention}
 \label{sec:rotational_sign}
 
-All rotating components in the drivetrain follow a consistent angular sign convention.
+All rotating components in the drivetrain follow a consistent angular
+sign convention defined relative to forward vehicle motion.
 
-The primary pulley, secondary pulley, and engine crankshaft are each assigned a positive direction of rotation. This positive rotational direction is defined such that it produces forward belt motion and, consequently, forward vehicle motion along the $+x$ direction defined previously.
+The positive longitudinal direction $+x$ was defined previously as the
+forward direction of travel along the road surface. The rotational
+directions of all drivetrain components are chosen such that positive
+rotation produces vehicle motion in this $+x$ direction.
 
-Angular velocities are therefore interpreted as follows:
+As illustrated in \Fig{fig:rotational_sign}, positive wheel angular
+velocity $\omega_w > 0$ corresponds to wheel rotation that drives the
+vehicle forward along $+x$.
 
-\begin{itemize}
-    \item $\omega_p > 0$ corresponds to the primary pulley rotating in the direction that drives the belt forward.
-    \item $\omega_s > 0$ corresponds to the secondary pulley rotating in the direction consistent with forward belt travel.
-    \item Engine angular velocity is positive when rotating in the direction that drives the primary pulley forward.
-\end{itemize}
+The same convention is propagated upstream through the drivetrain.
+Positive rotation of the secondary pulley, $\omega_s > 0$, corresponds
+to the direction of rotation that produces this forward wheel motion
+through the final reduction gearbox and axle.
 
-Torque follows the same convention. A torque is considered positive if it acts in the defined positive direction of rotation and tends to increase the corresponding angular velocity. A torque acting opposite to the defined rotational direction is negative.
+Likewise, positive rotation of the primary pulley, $\omega_p > 0$,
+corresponds to the direction that drives the secondary pulley in this
+same sense through the CVT belt.
 
-These definitions establish a consistent orientation for all rotational quantities in the drivetrain.
+Engine angular velocity follows the same convention. The engine rotates
+positively when it drives the primary pulley in the defined positive
+direction.
+
+Torque follows the same sign convention. A torque is considered
+positive when it acts in the defined positive rotational direction
+and therefore tends to increase the corresponding angular velocity.
 
 \begin{figure}[H]
 \centering
-% ------------------------------------------------------------------
-% FIGURE REQUIREMENTS:
-% - Clean 2D line diagram (no shading, no forces, no equations).
-% - Side-view schematic showing:
-%     1) Engine crankshaft (simple circle).
-%     2) Primary pulley (circle).
-%     3) Belt segment between pulleys.
-%     4) Secondary pulley (circle).
-% - A straight horizontal arrow labeled "+x" beneath the system.
-% - Curved arrow on primary pulley indicating positive rotation direction.
-% - Curved arrow on secondary pulley indicating positive rotation direction.
-% - Curved arrow on engine shaft indicating positive rotation direction.
-% - Belt segment arrow showing forward belt motion corresponding to positive rotation.
-% - All curved arrows must be consistent so that positive rotation produces belt motion in the +x direction.
-% - Minimal color allowed:
-%       Black for geometry,
-%       One consistent color for positive rotation arrows,
-%       Optional subtle color for belt motion arrow.
-% - No torque magnitudes, no reaction torques, no dynamics.
-% ------------------------------------------------------------------
 \includegraphics[width=0.9\textwidth]{./illustrations/coordinate/rotational_directions.png}
 \caption{
-Rotational sign convention for the drivetrain. Positive angular velocities 
-($\omega_p$, $\omega_s$) correspond to rotation that drives the belt in the 
-$+x$ direction, producing forward vehicle motion. Positive torque acts in 
-the same rotational direction.
+Rotational sign convention for the drivetrain. Positive angular
+velocities for the wheels ($\omega_w$), secondary pulley ($\omega_s$),
+and primary pulley ($\omega_p$) are defined such that drivetrain
+rotation produces forward vehicle motion along the $+x$ direction.
 }
 \label{fig:rotational_sign}
 \end{figure}
@@ -938,36 +947,46 @@ the same rotational direction.
 \subsubsection{CVT Axial Direction}
 \label{sec:cvt_axial_direction}
 
-The axial direction of the primary pulley is defined along the axis of its shaft. 
-This direction is parallel to the pulley centerline and perpendicular to the 
-belt’s plane of rotation.
+The axial coordinate of the primary pulley is defined along the axis of the
+pulley shaft, parallel to the pulley centerline and perpendicular to the
+plane of belt rotation.
 
-The primary pulley is initially in an open configuration, meaning there is a 
-finite gap between the fixed and movable sheaves. The axial coordinate $s$ 
-does not represent the total gap distance. Instead, it measures how much the 
-movable sheave has translated from this initial open position.
+In the reference configuration shown in
+\Fig{fig:cvt_axial_direction} (left), the primary pulley is fully open.
+The movable sheave is separated from the fixed sheave by the initial gap,
+and this configuration defines the origin of the axial coordinate.
 
-A positive axial displacement, $s > 0$, corresponds to the movable sheave 
-moving toward the fixed sheave, thereby reducing the gap. In other words, 
-increasing $s$ represents additional closure relative to the initial open state.
+The axial variable $s$ measures the translation of the movable sheave
+relative to this open configuration.
 
-As the sheaves move closer together, the belt is forced outward along the 
-conical faces, increasing the effective belt radius on the primary pulley. 
-Thus, increasing $s$ corresponds to increasing primary effective radius and 
-produces an upshift.
+\[
+s = 0 \quad \text{: fully open configuration}
+\]
 
-A change in $s$ also affects the secondary pulley. Because the belt length 
-remains constrained, motion of the primary sheaves is coupled to motion of 
-the secondary sheaves. In general terms, an increase in $s$ on the primary 
-corresponds to the secondary sheaves moving apart. The precise relationship 
-between these motions depends on belt geometry and will be established later; 
-here it is sufficient to recognize that the two axial motions are linked.
+A positive value of $s$ corresponds to the movable sheave translating
+toward the fixed sheave along the pulley axis.
 
-Axial velocity follows the same sign convention: $\dot{s} > 0$ corresponds 
-to the movable sheave translating in the defined positive axial direction.
+\[
+s > 0 \quad \text{: sheave closing motion}
+\]
 
-These definitions establish the orientation and meaning of axial motion 
-for the CVT.
+As the movable sheave closes, the belt is squeezed between the conical
+faces and is forced outward along the pulley ramps. This increases the
+effective belt radius on the primary pulley and corresponds to an
+upshift of the transmission.
+
+The maximum displacement $s = S_{\max}$ corresponds to the fully closed
+configuration shown in \Fig{fig:cvt_axial_direction} (right).
+
+Although $s$ is defined using the primary pulley, the motion cannot
+occur independently. Because the belt length remains constrained,
+closure of the primary pulley forces the secondary pulley to open.
+The precise geometric relationship between these motions will be
+derived later.
+
+Axial velocity follows the same sign convention: $\dot{s} > 0$
+corresponds to the movable sheave translating toward the fixed
+sheave.
 
 \begin{figure}[H]
 \centering
@@ -985,35 +1004,47 @@ primary effective radius and is coupled to secondary axial motion.
 \subsubsection{Radial and Tangential Directions}
 \label{sec:radial_direction}
 
-Within the plane of pulley rotation, directions are defined using the 
-standard polar (radial–tangential) convention commonly used in rotational mechanics.
+Within the plane of pulley rotation, directions are defined using the
+standard polar coordinate convention commonly used in rotational mechanics.
 
-The radial direction is defined perpendicular to the shaft axis and 
-measured outward from the center of rotation. At any point on the pulley, 
-the radial direction points directly away from the center toward the belt 
-contact surface.
+At any point in the plane, two orthogonal directions are defined:
+the radial direction $\hat e_r$ and the tangential direction $\hat e_\theta$.
+These directions form a local coordinate basis centered on the pulley axis.
 
-A radial force is defined as positive when it acts outward from the 
-center of the pulley. Thus, $F_r > 0$ corresponds to a force directed 
-away from the center.
+The radial direction lies in the plane of rotation and points directly
+outward from the center of the pulley. A radial force is defined as
+positive when it acts away from the center of rotation. Thus,
+$F_r > 0$ corresponds to a force directed outward along $\hat e_r$.
 
-The tangential direction lies in the plane of rotation and is perpendicular 
-to the radial direction at each point. The positive tangential direction 
-is defined to be consistent with the previously defined positive angular 
-rotation. In other words, positive tangential direction corresponds to the 
-direction of motion produced by positive angular velocity defined in \Sec{sec:rotational_sign}.
+The tangential direction lies in the plane of rotation and is
+perpendicular to the radial direction. The positive tangential
+direction $\hat e_\theta$ is defined to be consistent with the
+positive rotational convention introduced in
+\Sec{sec:rotational_sign}. Tangential motion in this direction
+corresponds to motion produced by positive angular velocity.
 
-Together, the radial and tangential directions form the standard local 
-coordinate basis for forces and motion in the rotating pulley.
+Figure~\ref{fig:radial_direction} illustrates these directions using
+physical examples from the primary pulley. The centrifugal flyweights
+generate outward radial forces $F_r$, while the belt moves along the
+tangential direction with velocity $v_t$. These quantities serve as
+representative examples of forces and motion that act along the radial
+and tangential directions.
+
+The previously defined axial direction is perpendicular to this plane
+of rotation and points along the pulley shaft, into the page.
 
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.75\textwidth]{illustrations/coordinate/radial_tangential_direction.png}
 \caption{
-Definition of radial and tangential directions in the plane of rotation. 
-The radial direction points outward from the center. The tangential 
-direction is perpendicular to the radial direction and aligned with 
-positive rotation.
+Radial and tangential directions in the plane of pulley rotation.
+The radial direction $\hat e_r$ points outward from the center of the
+pulley, while the tangential direction $\hat e_\theta$ is perpendicular
+to $\hat e_r$ and aligned with positive rotation. Example quantities
+illustrated include outward radial forces $F_r$ generated by flyweights
+and tangential belt velocity $v_t$. For reference, the previously defined
+axial coordinate $s$ is perpendicular to the page in this view and
+points along the pulley shaft, into the page.
 }
 \label{fig:radial_direction}
 \end{figure}
