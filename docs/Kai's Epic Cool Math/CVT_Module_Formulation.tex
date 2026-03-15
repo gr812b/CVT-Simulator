@@ -1048,14 +1048,14 @@ $v_{\mathrm{rel}}$ & relative slip speed at belt--pulley interface \\
 \multicolumn{2}{@{}l}{\textbf{Geometry}} \\
 $r_{p,\mathrm{outer}}(s),\ r_{s,\mathrm{outer}}(s)$ & primary and secondary outer radius \\
 $r_{p,\mathrm{eff}}(s),\ r_{s,\mathrm{eff}}(s)$ & primary and secondary effective torque radius \\
-$r_{p,\min}$ & minimum primary outer radius \\
-$r_{s,\max}$ & maximum secondary outer radius \\
+$r_{p,\text{outer},\min}$ & minimum primary outer radius \\
+$r_{s,\text{outer},\max}$ & maximum secondary outer radius \\
 $s_{\mathrm{dz}},\ s_{\max}$ & deadzone threshold and maximum shift \\
 $\beta$ & sheave face half-angle (radial reference) \\
 $C$ & pulley center distance \\
 $L_b$ & total belt length \\
 $\phi$ & belt wrap angle used in distributed contact model \\
-$r,\ \dot r$ & local belt path radius and its time derivative \\
+$r,\ \dot r$ & local bConceptual Overview of Variable Geoelt path radius and its time derivative \\
 $r_{\mathrm{cm}}$ & belt element center-of-mass radius \\
 \addlinespace
 \multicolumn{2}{@{}l}{\textbf{Constraint and mapping functions}} \\
@@ -1164,8 +1164,8 @@ $h_b$ & Belt thickness & -- & \si{\meter} & Radial belt thickness \\
 $b_{\mathrm{out}}$ & Belt outer width & -- & \si{\meter} & Belt width at outer face \\
 $b_{\mathrm{in}}$ & Belt inner width & -- & \si{\meter} & Belt width at inner face \\
 $A_b$ & Belt cross-sectional area & -- & \si{\meter\squared} & Trapezoid area from $h_b$, $b_{\mathrm{out}}$, $b_{\mathrm{in}}$ \\
-$r_{p,\min}$ & Primary minimum outer radius & -- & \si{\meter} & Radius at fully open primary \\
-$r_{s,\max}$ & Secondary maximum outer radius & -- & \si{\meter} & Radius at fully closed secondary \\
+$r_{p,\text{outer},\min}$ & Primary minimum outer radius & -- & \si{\meter} & Radius at fully open primary \\
+$r_{s,\text{outer},\max}$ & Secondary maximum outer radius & -- & \si{\meter} & Radius at fully closed secondary \\
 $s_{\mathrm{dz}}$ & Shift deadzone threshold & -- & \si{\meter} & Onset of effective radial motion \\
 $s_{\max}$ & Maximum shift & -- & \si{\meter} & Physical upper travel bound \\
 \addlinespace
@@ -1711,40 +1711,49 @@ The objective is to derive explicit expressions for:
     \item CVT ratio and its rate of change.
 \end{itemize}
 
+\paragraph{Radius Definitions Used in This Section}
+Because the belt has finite radial height, two geometric radii are used here:
+the \emph{outer radius} (belt outer surface/contact geometry) and the
+\emph{inner radius} (belt inner surface). Let $h_b$ denote the belt height
+(belt radial thickness). Then,
+\[
+r_{\text{inner}} = r_{\text{outer}} - h_b,
+\]
+The effective torque radius used in torque and ratio relations is introduced
+later in \Sec{sec:effective-radius-placeholder}.
+
 % ==============================================================
 \subsection{Conceptual Overview of Variable Geometry}
 
 As introduced in \Sec{sec:cvt_overview}, each pulley consists of two opposing
-conical sheaves. One sheave is fixed axially, while the other translates
-along the shaft.
+conical sheaves. One sheave is fixed axially, while the other translates along
+the shaft.
 
-The axial separation between the sheaves determines where the belt
-contacts the conical faces. When the movable sheave translates toward
-the fixed sheave, the gap decreases and the belt is forced outward,
-increasing the effective pulley radius. When the sheaves separate,
-the belt settles deeper between them, decreasing the effective radius.
+The key controllable motion in the system is this \textit{axial separation}
+between the sheaves. When the movable sheave translates toward the fixed
+sheave, the gap narrows and the belt is forced outward along the conical faces.
+When the sheaves separate, the belt settles deeper between them.
 
-It is important to distinguish between axial displacement and effective radius.
-Axial motion changes the gap between sheaves; the effective radius changes
-as a geometric consequence of how the belt sits within that gap.
-The relationship between these quantities will be derived explicitly
-in the following subsection.
+This axial motion does not directly change the pulley radius. Instead, the
+effective radius arises geometrically from where the belt sits within the
+sheave gap. In other words, axial displacement determines the belt's radial
+position, and therefore the effective pulley radius. The precise relationship
+between these quantities will be derived in the following subsection.
 
 Because the belt length remains constrained, the effective radii of the
-primary and secondary pulleys cannot vary independently. An increase in
-the primary effective radius must be accompanied by a corresponding
-decrease in the secondary effective radius. This geometric coupling
-is fundamental to CVT operation and forms the basis of the ratio model
-derived below.
-
+primary and secondary pulleys cannot vary independently. An increase in the
+primary effective radius must therefore be accompanied by a corresponding
+decrease in the secondary effective radius. This geometric coupling is
+fundamental to CVT operation and forms the basis of the ratio model derived
+below.
 
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.95\textwidth]{illustrations/geometry/both_cvts_min_max_shift_belt.png}
 \caption{
-Conceptual illustration of variable pulley geometry. 
-Changes in axial separation alter effective radii. 
-Because belt length is constrained, an increase in primary effective 
+Conceptual illustration of variable pulley geometry.
+Changes in axial separation alter effective radii.
+Because belt length is constrained, an increase in primary effective
 radius corresponds to a decrease in secondary effective radius.
 }
 \label{fig:variable_geometry}
@@ -1838,9 +1847,19 @@ Thus, the cone angle determines how axial motion is converted into
 radial growth: smaller $\beta$ produces greater radial change for the
 same axial displacement.
 
+Taking the infinitesimal limit of \cref{eq:cone_geometry} yields the
+local geometric relationship between axial shift and effective radius,
+\begin{equation}
+\frac{dr}{ds} = \frac{1}{2\tan\beta}.
+\label{eq:cone_geometry_diff}
+\end{equation}
+
+Because the sheave face is straight, this derivative is constant,
+meaning that radial position varies linearly with axial displacement.
+
 \begin{figure}[H]
 \centering
-\includegraphics[width=0.7\linewidth]{./illustrations/primary_geometry.png}
+\includegraphics[width=0.7\linewidth]{./illustrations/geometry/primary_geometry.png}
 \caption{
 Axial–radial relationship for opposing conical sheaves.
 The angle $\beta$ is defined between the sheave face and the radial direction.
@@ -1851,18 +1870,18 @@ The angle $\beta$ is defined between the sheave face and the radial direction.
 % --------------------------------------------------------------
 \paragraph{Piecewise Radius Model}
 
-Let $r_{p,\min}$ denote the minimum primary outer radius,
+Let $r_{p,\text{outer},\min}$ denote the minimum primary outer radius,
 corresponding to the fully open configuration ($s=0$).
 
 Within the deadzone, axial motion does not alter belt position.
-Once $s \ge s_{\mathrm{dz}}$, the geometric relation above applies,
-yielding
+Once $s \ge s_{\mathrm{dz}}$, only the displacement \emph{beyond the
+deadzone} contributes to radial growth.
 
 \bigeq{eq:primary_radius}{Primary Outer Radius}{
 r_{p,\text{outer}}(s)=
 \begin{cases}
-r_{p,\min}, & 0 \le s < s_{\mathrm{dz}}, \\[8pt]
-r_{p,\min} + \dfrac{s - s_{\mathrm{dz}}}{2\tan\beta},
+r_{p,\text{outer},\min}, & 0 \le s < s_{\mathrm{dz}}, \\[8pt]
+r_{p,\text{outer},\min} + \dfrac{s - s_{\mathrm{dz}}}{2\tan\beta},
 & s_{\mathrm{dz}} \le s \le s_{\max}.
 \end{cases}
 }
@@ -1883,7 +1902,18 @@ distance $C$, we obtain an implicit relationship that couples the two
 pulley radii.
 
 The derivation follows directly from the belt path geometry shown in
-\cref{fig:belt_geometry_placeholder}.
+\cref{fig:belt_geometry_placeholder}. The geometric
+quantities used in the derivation are
+
+\begin{itemize}
+\item $r_p$ — radius of the primary pulley
+\item $r_s$ — radius of the secondary pulley
+\item $C$ — center-to-center distance between pulley shafts
+\item $\phi_p$ — belt wrap angle on the primary pulley
+\item $\phi_s$ — belt wrap angle on the secondary pulley
+\item $\ell$ — length of a single straight tangent span
+\end{itemize}
+
 
 \begin{figure}[h]
 \centering
@@ -1892,6 +1922,7 @@ The derivation follows directly from the belt path geometry shown in
 The belt wraps the pulleys with angles $\phi_p$ and $\phi_s$ and connects via two straight tangent spans $\ell$.}
 \label{fig:belt_geometry_placeholder}
 \end{figure}
+
 
 \paragraph{Belt Length Decomposition}
 
@@ -1997,12 +2028,19 @@ f(r_p, r_s, C) = 0.
 \label{eq:belt_length_constraint}
 \end{equation}
 
+The form of \Eq{eq:belt_length_constraint} is unchanged if radii are defined
+at the belt outer surface, inner surface, or effective mid-height radius,
+provided all terms are referenced consistently. In particular, $L_b$ must
+correspond to the same reference as $r_p$ and $r_s$ (e.g., outer-length with
+outer radii, inner-length with inner radii, or effective-length with effective
+radii).
+
 
 
 
 \begin{remarkbox}[Remark (Transcendental Nature and Approximation)]
 
-Equation \Eq{eq:belt_length_constraint} is transcendental due to the
+\Eq{eq:belt_length_root} is transcendental due to the
 inverse-sine and square-root terms and therefore does not admit
 a closed-form solution.
 
@@ -2060,11 +2098,11 @@ At startup, the CVT is assumed to be in its lowest ratio configuration:
 \begin{itemize}
     \item The primary pulley is at its minimum outer radius,
     \[
-    r_p = r_{p,\min}.
+    r_p = r_{p,\text{outer},\min}.
     \]
     \item The secondary pulley is at its maximum outer radius,
     \[
-    r_s = r_{s,\max}.
+    r_s = r_{s,\text{outer},\max}.
     \]
 \end{itemize}
 
@@ -2075,10 +2113,10 @@ configuration.
 \paragraph{Center Distance from Belt-Length Compatibility}
 
 Substituting these known radii into
-\Eq{eq:belt_length_constraint} yields
+\Eq{eq:belt_length_root} yields
 
 \begin{equation}
-f(r_{p,\min}, r_{s,\max}, C) = 0.
+f(r_{p,\text{outer},\min}, r_{s,\text{outer},\max}, C) = 0.
 \label{eq:center_distance_constraint}
 \end{equation}
 
@@ -2090,7 +2128,7 @@ consistent with the specified belt length $L_b$.
 C
 =
 \operatorname*{root}_{C}
-\; f\!\left(r_{p,\min}, r_{s,\max}, C\right).
+\; f\!\left(r_{p,\text{outer},\min}, r_{s,\text{outer},\max}, C\right).
 \end{equation}
 
 \begin{remarkbox}[Remark (One-Time Geometric Solve)]
@@ -2107,18 +2145,18 @@ in all subsequent geometric and dynamic calculations.
 
 With the center-to-center distance $C$ determined from
 \Sec{sec:center_distance}, and the primary radius
-$r_p(s)$ defined by \Eq{eq:primary_radius}, the secondary
+$r_{p,\text{outer}}(s)$ defined by \Eq{eq:primary_radius}, the secondary
 outer radius is obtained by enforcing the belt-length
 compatibility constraint.
 
 \paragraph{Geometric Coupling}
 
 At any shift position $s$, the primary radius
-$r_p(s)$ is known. The secondary radius $r_s$
+$r_{p,\text{outer}}(s)$ is known. The secondary radius $r_s$
 must therefore satisfy
 
 \begin{equation}
-f\!\left(r_p(s), r_s, C\right) = 0,
+f\!\left(r_{p,\text{outer}}(s), r_s, C\right) = 0,
 \label{eq:secondary_radius_constraint}
 \end{equation}
 
@@ -2134,7 +2172,7 @@ each value of $s$:
 r_{s,\text{outer}}(s)
 =
 \operatorname*{root}_{r_s}
-\; f\!\left(r_p(s), r_s, C\right).
+\; f\!\left(r_{p,\text{outer}}(s), r_s, C\right).
 }
 
 \begin{remarkbox}[Remark (Dynamic Root Solve)]
@@ -2342,6 +2380,12 @@ f(r_p, r_s, C) = 0,
 
 with $f(\cdot)$ defined explicitly in \Eq{eq:belt_length_root} and
 $C$ constant.
+
+For the implicit-differentiation step below, we use the compact notation
+$r_p, r_s, dr_p/ds,$ and $dr_s/ds$. Because this derivation is based on
+rate relationships, any constant radial offset between radius references
+vanishes directly under differentiation ($\mathrm{d}(\text{constant})/\mathrm{d}s=0$),
+so the same derivative form is obtained.
 Since $r_p=r_p(s)$ and $r_s=r_s(s)$, differentiating \Eq{eq:belt_constraint_general}
 with respect to $s$ gives (multivariable chain rule)
 
@@ -2656,8 +2700,8 @@ satisfies
 \[
 r_{p,\text{outer}}(s)=
 \begin{cases}
-r_{p,\min}, & 0 \le s < s_{\mathrm{dz}}, \\[8pt]
-r_{p,\min} + \dfrac{s - s_{\mathrm{dz}}}{2\tan\beta},
+r_{p,\text{outer},\min}, & 0 \le s < s_{\mathrm{dz}}, \\[8pt]
+r_{p,\text{outer},\min} + \dfrac{s - s_{\mathrm{dz}}}{2\tan\beta},
 & s_{\mathrm{dz}} \le s \le s_{\max}.
 \end{cases}
 \]
@@ -2668,7 +2712,7 @@ Differentiating with respect to $s$ gives
 \frac{dr_p}{ds}
 =
 \frac{dr_{p,\text{outer}}}{ds}
-=
+ =
 \begin{cases}
 0, & 0 \le s < s_{\mathrm{dz}},\\[8pt]
 \dfrac{1}{2\tan\beta}, & s_{\mathrm{dz}} \le s \le s_{\max}.
@@ -6477,25 +6521,25 @@ L_b \approx \pi(r_p + r_s) + 2\sqrt{C^2 - (r_s - r_p)^2}.
 \subsection{Derivation of the Approximate Center Distance}
 
 To determine the center-to-center distance at the initial configuration,
-we substitute $r_p = r_{p,\min}$ and $r_s = r_{s,\max}$ into
+we substitute $r_p = r_{p,\text{outer},\min}$ and $r_s = r_{s,\text{outer},\max}$ into
 \Eq{eq:belt_length_approx} and solve for $C$.
 
 \paragraph{Step 1: Isolate the square root.}
 
 Rearranging \Eq{eq:belt_length_approx}:
 \begin{equation}
-L_b - \pi(r_{p,\min} + r_{s,\max})
+L_b - \pi(r_{p,\text{outer},\min} + r_{s,\text{outer},\max})
 =
-2\sqrt{C^2 - (r_{s,\max} - r_{p,\min})^2}.
+2\sqrt{C^2 - (r_{s,\text{outer},\max} - r_{p,\text{outer},\min})^2}.
 \label{eq:approx_step1}
 \end{equation}
 
 \paragraph{Step 2: Square both sides.}
 
 \begin{equation}
-\bigl[L_b - \pi(r_{p,\min} + r_{s,\max})\bigr]^2
+\bigl[L_b - \pi(r_{p,\text{outer},\min} + r_{s,\text{outer},\max})\bigr]^2
 =
-4\bigl[C^2 - (r_{s,\max} - r_{p,\min})^2\bigr].
+4\bigl[C^2 - (r_{s,\text{outer},\max} - r_{p,\text{outer},\min})^2\bigr].
 \label{eq:approx_step2}
 \end{equation}
 
@@ -6504,9 +6548,9 @@ L_b - \pi(r_{p,\min} + r_{s,\max})
 \begin{equation}
 C^2
 =
-\frac{\bigl[L_b - \pi(r_{p,\min} + r_{s,\max})\bigr]^2}{4}
+\frac{\bigl[L_b - \pi(r_{p,\text{outer},\min} + r_{s,\text{outer},\max})\bigr]^2}{4}
 +
-(r_{s,\max} - r_{p,\min})^2.
+(r_{s,\text{outer},\max} - r_{p,\text{outer},\min})^2.
 \label{eq:approx_step3}
 \end{equation}
 
@@ -6514,9 +6558,9 @@ C^2
 
 Expanding the squared term in the numerator:
 \[
-\bigl[L_b - \pi(r_{p,\min} + r_{s,\max})\bigr]^2
+\bigl[L_b - \pi(r_{p,\text{outer},\min} + r_{s,\text{outer},\max})\bigr]^2
 =
-L_b^2 - 2L_b\pi(r_{p,\min} + r_{s,\max}) + \pi^2(r_{p,\min} + r_{s,\max})^2,
+L_b^2 - 2L_b\pi(r_{p,\text{outer},\min} + r_{s,\text{outer},\max}) + \pi^2(r_{p,\text{outer},\min} + r_{s,\text{outer},\max})^2,
 \]
 the approximate center distance becomes
 
@@ -6525,9 +6569,9 @@ the approximate center distance becomes
 C_{\mathrm{approx}}
 =
 \sqrt{
-\frac{L_b^2 - 2L_b\pi(r_{p,\min} + r_{s,\max}) + \pi^2(r_{p,\min} + r_{s,\max})^2}{4}
+\frac{L_b^2 - 2L_b\pi(r_{p,\text{outer},\min} + r_{s,\text{outer},\max}) + \pi^2(r_{p,\text{outer},\min} + r_{s,\text{outer},\max})^2}{4}
 +
-(r_{s,\max} - r_{p,\min})^2
+(r_{s,\text{outer},\max} - r_{p,\text{outer},\min})^2
 }.
 }
 \label{eq:C_approx}
@@ -6553,15 +6597,15 @@ Belt length $L_b$ & \SI{37.538}{in} & \SI{0.9535}{m} \\
 Belt height $h_b$ & \SI{0.613}{in} & \SI{0.01557}{m} \\
 Groove half-angle $\beta$ & \SI{11.5}{\degree} & \SI{0.2007}{rad} \\
 Inner primary radius & \SI{0.75}{in} & \SI{0.01905}{m} \\
-Primary outer radius $r_{p,\min}$ & \SI{1.363}{in} & \SI{0.03462}{m} \\
-Secondary outer radius $r_{s,\max}$ & \SI{4.0}{in} & \SI{0.1016}{m} \\
+Primary outer radius $r_{p,\text{outer},\min}$ & \SI{1.363}{in} & \SI{0.03462}{m} \\
+Secondary outer radius $r_{s,\text{outer},\max}$ & \SI{4.0}{in} & \SI{0.1016}{m} \\
 \bottomrule
 \end{tabular}
 \end{center}
 
 \noindent
 The primary outer radius is computed as the inner radius plus belt height:
-$r_{p,\min} = 0.75 + 0.613 = \SI{1.363}{in}$.
+$r_{p,\text{outer},\min} = 0.75 + 0.613 = \SI{1.363}{in}$.
 
 \paragraph{Computed Center Distances}
 
@@ -6595,7 +6639,7 @@ The small-angle approximation introduces a relative error of nearly 7\%
 in the center-to-center distance for this system. This error arises because
 the ratio
 \[
-\frac{r_{s,\max} - r_{p,\min}}{C}
+\frac{r_{s,\text{outer},\max} - r_{p,\text{outer},\min}}{C}
 =
 \frac{0.1016 - 0.03462}{0.25387}
 =
@@ -6699,7 +6743,7 @@ secondary radius.
 
 At $s = 0$, the primary is within the deadzone, so from \Eq{eq:primary_radius}:
 \[
-r_{p,\text{outer}}(0) = r_{p,\min} = \SI{0.03462}{m}.
+r_{p,\text{outer}}(0) = r_{p,\text{outer},\min} = \SI{0.03462}{m}.
 \]
 
 \paragraph{Secondary Radius Comparison}
@@ -6765,7 +6809,7 @@ Using \Eq{eq:primary_radius} with $s = s_{\max} = \SI{0.75}{in} = \SI{0.01905}{m
 and deadzone $s_{\mathrm{dz}} = \SI{0.0024892}{m}$:
 \begin{align}
 r_{p,\text{outer}}(s_{\max})
-&= r_{p,\min} + \frac{s_{\max} - s_{\mathrm{dz}}}{2\tan\beta} \nonumber\\[4pt]
+&= r_{p,\text{outer},\min} + \frac{s_{\max} - s_{\mathrm{dz}}}{2\tan\beta} \nonumber\\[4pt]
 &= 0.03462 + \frac{0.01905 - 0.0024892}{2 \times \tan(11.5^\circ)} \nonumber\\[4pt]
 &= 0.03462 + \frac{0.01656}{0.4070} \nonumber\\[4pt]
 &= \SI{0.0753}{m}.
