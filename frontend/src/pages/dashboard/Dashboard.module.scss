@@ -15,17 +15,17 @@
         flex-direction: row;
         align-items: center;
         height: fit-content;
-        margin: 1rem 2rem;
+        margin: 1rem;
 
         .logo {
-            height: 13rem;
+            height: 7rem;
         }
 
         .title {
             @include fonts.title-huge;
             color: var(--text-color);
             width: 100%;
-            margin: 0 0 0 1rem;
+            margin-left: 0.5rem;
             white-space: nowrap;
             overflow: hidden;
         }
@@ -35,6 +35,6 @@
         display: flex;
         flex-direction: row;
         justify-content: end;
-        gap: 1.25rem;
+        gap: 1rem;
     }
 }

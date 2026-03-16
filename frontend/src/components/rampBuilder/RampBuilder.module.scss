@@ -3,7 +3,6 @@
 .segmentList {
     display: flex;
     flex-direction: column;
-    gap: 1rem;
 
     .segment {
         background: var(--background);
@@ -13,7 +12,7 @@
             justify-content: space-between;
             align-items: center;
             margin-bottom: 1rem;
-            min-height: 4rem;
+            min-height: 2rem;
 
             .segmentNumber {
                 color: var(--text-color);
@@ -24,21 +23,7 @@
         .segmentContent {
             display: flex;
             flex-direction: column;
-            gap: 0.75rem;
-
-            .field {
-                display: flex;
-                flex-direction: column;
-                gap: 0.5rem;
-                padding-bottom: 2rem;
-
-                label {
-                    font-size: 0.875rem;
-                    font-weight: 500;
-                    color: var(--text-color);
-                    @include fonts.text-medium;
-                }
-            }
+            gap: 1.5rem;
 
             .segmentFields {
                 display: grid;

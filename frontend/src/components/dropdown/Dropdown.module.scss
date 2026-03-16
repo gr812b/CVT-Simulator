@@ -9,15 +9,12 @@
     gap: 0.5rem;
 
     .label {
-        font-size: 0.875rem;
-        font-weight: 500;
-        color: var(--text-color);
         @include fonts.text-medium;
     }
 
     .trigger {
         width: 100%;
-        padding: 0.5rem 0rem;
+        padding: 0rem;
         border: none;
         border-bottom: 0.125rem solid var(--text-color);
         background: var(--background);
@@ -34,6 +31,7 @@
             outline: 2px solid var(--text-color);
             outline-offset: -0.125rem;
             border-radius: 0.25rem;
+            padding-left: 0.25rem;
         }
 
         .icon {

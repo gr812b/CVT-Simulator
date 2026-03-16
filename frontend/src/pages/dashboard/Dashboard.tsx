@@ -5,7 +5,7 @@ import { LoadingOverlay } from '@components/loadingOverlay/LoadingOverlay';
 import { SimulationsTable } from '@components/simulationsTable/SimulationsTable';
 import { useLoading } from '@contexts/LoadingContext';
 import { useSimulations } from '@hooks/useSimulations';
-import Play from '@assets/icons/play.svg?react';
+import PlayOutline from '@assets/icons/play_outline.svg?react';
 import Edit from '@assets/icons/edit.svg?react';
 import TrashCan from '@assets/icons/trash_can.svg?react';
 import Plus from '@assets/icons/plus.svg?react';
@@ -45,7 +45,7 @@ export const Dashboard = () => {
       <div className={styles.buttonsContainer}>
         <Button
           text={'Run'}
-          icon={Play}
+          icon={PlayOutline}
           className={styles.button}
           disabled={!hasSelection}
           onClick={handleRun}
