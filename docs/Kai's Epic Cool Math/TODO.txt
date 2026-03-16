@@ -4,20 +4,16 @@ INTRO
 
 - No indents after every single list
 - Add constants values some time
-- Appendix: Proof of approximation being bad
+
+- tau_max is unclear what it is
+- In section 12 remove tau_p and tau_s, use tau_c
 
 -reference assumptions in belt section
 - In intro add v-belt introduction
 - Assumption: Negligible weight of flyarms
 
-MATH
-Add section for effective coefficient of friction in sheaves. Reference Assump 5
-
 likely to change section
-- belt slip assumption (ideal slip yada ayda)
 - State vector may include omega_belt
-
-
 
 
 Cam Review
@@ -44,10 +40,6 @@ Feedback section 8
 
 Secondary
 (and show the belt pushing the one (How does it work if belt pushes both?... strange....)
-
-Belt
-(might be good to use dr/ds notation earlier!)
-
 
 
 Shigleys
