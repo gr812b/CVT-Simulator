@@ -9,7 +9,7 @@ class PrimaryPulleyModel(PulleyModel, ABC):
     Abstract base for primary (engine-side) pulley implementations.
 
     Primary pulleys typically:
-    - Run at engine speed
+    - Run at primary pulley speed (engine speed)
     - Generate clamping force from centrifugal mechanisms (flyweights) or active control
     - Start at large radius (low ratio) and shift to small radius (high ratio)
 
@@ -26,9 +26,13 @@ class PrimaryPulleyModel(PulleyModel, ABC):
         return tm.primary_effective_radius(shift_distance)
 
     def _get_angular_velocity(self, state: SystemState) -> float:
-        """Get primary pulley angular velocity (engine speed) [rad/s]."""
-        return state.engine_angular_velocity
+        """Get primary pulley angular velocity [rad/s]."""
+        return state.primary_pulley_angular_velocity
 
     def _get_angular_position(self, state: SystemState) -> float:
-        """Get primary pulley angular position (engine position) [rad]."""
-        return state.engine_angular_position
+        """Get primary pulley angular position (engine position) [rad].
+        
+        Note: Angular position is not part of the core 4 DOF state.
+        This method is kept for compatibility but should not be used for ODE integration.
+        """
+        return 0.0  # Placeholder - position is not integrated as part of core dynamics

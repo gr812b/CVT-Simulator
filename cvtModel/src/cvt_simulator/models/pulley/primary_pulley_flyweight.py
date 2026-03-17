@@ -107,11 +107,12 @@ class PhysicalPrimaryPulley(PrimaryPulleyModel):
             tuple: (axial_clamping_force, detailed_breakdown)
         """
         shift_distance = state.shift_distance
-        angular_velocity = state.engine_angular_velocity
+        # Primary pulley angular velocity is the engine speed
+        primary_pulley_angular_velocity = state.primary_pulley_angular_velocity
 
         # Calculate flyweight centrifugal force on ramp
         flyweight_force_breakdown = self._calculate_flyweight_force(
-            shift_distance, angular_velocity
+            shift_distance, primary_pulley_angular_velocity
         )
 
         # Calculate spring resistance

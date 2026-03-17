@@ -135,13 +135,13 @@ export interface components {
         };
         /** CarForceBreakdownModel */
         CarForceBreakdownModel: {
-            /** Coupling Torque At Wheel */
-            coupling_torque_at_wheel: number;
-            /** Load Torque At Wheel */
-            load_torque_at_wheel: number;
+            /** Coupling Torque At Secondary Pulley */
+            coupling_torque_at_secondary_pulley: number;
+            /** External Load Torque At Secondary Pulley */
+            external_load_torque_at_secondary_pulley: number;
             external_forces: components["schemas"]["ExternalLoadForceBreakdownModel"];
-            /** Acceleration */
-            acceleration: number;
+            /** Secondary Pulley Angular Acceleration */
+            secondary_pulley_angular_acceleration: number;
         };
         /**
          * CarSpecs
@@ -299,16 +299,16 @@ export interface components {
         };
         /** EngineForceBreakdownModel */
         EngineForceBreakdownModel: {
-            /** Torque */
-            torque: number;
-            /** Coupling Torque At Engine */
-            coupling_torque_at_engine: number;
+            /** Primary Pulley Drive Torque */
+            primary_pulley_drive_torque: number;
+            /** Coupling Torque At Primary Pulley */
+            coupling_torque_at_primary_pulley: number;
             /** Power */
             power: number;
-            /** Angular Velocity */
-            angular_velocity: number;
-            /** Angular Acceleration */
-            angular_acceleration: number;
+            /** Primary Pulley Angular Velocity */
+            primary_pulley_angular_velocity: number;
+            /** Primary Pulley Angular Acceleration */
+            primary_pulley_angular_acceleration: number;
         };
         /** ExternalLoadForceBreakdownModel */
         ExternalLoadForceBreakdownModel: {

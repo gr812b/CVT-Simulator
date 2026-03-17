@@ -113,20 +113,20 @@ class ExternalLoadForceBreakdown:
 ## Car
 @dataclass
 class CarForceBreakdown:
-    coupling_torque_at_wheel: float
-    load_torque_at_wheel: float
+    coupling_torque_at_secondary_pulley: float
+    external_load_torque_at_secondary_pulley: float
     external_forces: ExternalLoadForceBreakdown
-    acceleration: float
+    secondary_pulley_angular_acceleration: float
 
 
 ## Engine
 @dataclass
 class EngineForceBreakdown:
-    torque: float
-    coupling_torque_at_engine: float
+    primary_pulley_drive_torque: float
+    coupling_torque_at_primary_pulley: float
     power: float
-    angular_velocity: float
-    angular_acceleration: float
+    primary_pulley_angular_velocity: float
+    primary_pulley_angular_acceleration: float
 
 
 # Slip shenanigans

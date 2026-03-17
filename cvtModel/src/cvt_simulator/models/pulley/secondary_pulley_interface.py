@@ -13,7 +13,7 @@ class SecondaryPulleyModel(PulleyModel, ABC):
     Abstract base for secondary (driven-side) pulley implementations.
 
     Secondary pulleys typically:
-    - Run at wheel speed (through gearbox)
+    - Run at secondary pulley speed (wheel speed / gearbox)
     - Generate clamping force from torque feedback (helix) or active control
     - Start at small radius (low ratio) and shift to large radius (high ratio)
     - Must react to torque to provide back-pressure for shifting
@@ -31,11 +31,13 @@ class SecondaryPulleyModel(PulleyModel, ABC):
         return tm.secondary_effective_radius(shift_distance)
 
     def _get_angular_velocity(self, state: SystemState) -> float:
-        """Get secondary pulley angular velocity (wheel speed / gearbox) [rad/s]."""
-        wheel_to_sec_ratio = GEARBOX_RATIO / WHEEL_RADIUS
-        return state.car_velocity * wheel_to_sec_ratio
+        """Get secondary pulley angular velocity [rad/s]."""
+        return state.secondary_pulley_angular_velocity
 
     def _get_angular_position(self, state: SystemState) -> float:
-        """Get secondary pulley angular position (wheel position / gearbox) [rad]."""
-        wheel_to_sec_ratio = GEARBOX_RATIO / WHEEL_RADIUS
-        return state.car_position * wheel_to_sec_ratio
+        """Get secondary pulley angular position (wheel position / gearbox) [rad].
+        
+        Note: Angular position is not part of the core 4 DOF state.
+        This method is kept for compatibility but should not be used for ODE integration.
+        """
+        return 0.0  # Placeholder - position is not integrated as part of core dynamics

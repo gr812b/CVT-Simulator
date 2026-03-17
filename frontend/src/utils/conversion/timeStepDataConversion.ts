@@ -38,21 +38,21 @@ function convertTimeStepData(
       is_slipping: timeStep.system.slip.is_slipping
     },
     engine: {
-      torque: conv(timeStep.system.engine.torque, 'torque'),
-      coupling_torque_at_engine: conv(timeStep.system.engine.coupling_torque_at_engine, 'torque'),
+      primary_pulley_drive_torque: conv(timeStep.system.engine.primary_pulley_drive_torque, 'torque'),
+      coupling_torque_at_primary_pulley: conv(timeStep.system.engine.coupling_torque_at_primary_pulley, 'torque'),
       power: conv(timeStep.system.engine.power, 'power'),
-      angular_velocity: conv(timeStep.system.engine.angular_velocity, 'angular_velocity'),
-      angular_acceleration: conv(timeStep.system.engine.angular_acceleration, 'angular_acceleration')
+      primary_pulley_angular_velocity: conv(timeStep.system.engine.primary_pulley_angular_velocity, 'angular_velocity'),
+      primary_pulley_angular_acceleration: conv(timeStep.system.engine.primary_pulley_angular_acceleration, 'angular_acceleration')
     },
     car: {
-      coupling_torque_at_wheel: conv(timeStep.system.car.coupling_torque_at_wheel, 'torque'),
-      load_torque_at_wheel: conv(timeStep.system.car.load_torque_at_wheel, 'torque'),
+      coupling_torque_at_secondary_pulley: conv(timeStep.system.car.coupling_torque_at_secondary_pulley, 'torque'),
+      external_load_torque_at_secondary_pulley: conv(timeStep.system.car.external_load_torque_at_secondary_pulley, 'torque'),
       external_forces: {
         incline_force: conv(timeStep.system.car.external_forces.incline_force, 'force'),
         drag_force: conv(timeStep.system.car.external_forces.drag_force, 'force'),
         net: conv(timeStep.system.car.external_forces.net, 'force')
       },
-      acceleration: conv(timeStep.system.car.acceleration, 'acceleration')
+      secondary_pulley_angular_acceleration: conv(timeStep.system.car.secondary_pulley_angular_acceleration, 'angular_acceleration')
     },
     cvt: {
       primaryPulleyState: {

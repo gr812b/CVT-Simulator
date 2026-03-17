@@ -1,7 +1,7 @@
 from cvt_simulator.models.dataTypes import SystemBreakdown
 from cvt_simulator.models.slip_model import SlipModel
-from cvt_simulator.models.engine_accel_model import EngineAccelModel
-from cvt_simulator.models.car_model import CarModel
+from cvt_simulator.models.primary_pulley_model import PrimaryPulleyModel
+from cvt_simulator.models.secondary_pulley_model import SecondaryPulleyModel
 from cvt_simulator.models.cvt_shift_model import CvtShiftModel
 from cvt_simulator.utils.system_state import SystemState
 
@@ -12,13 +12,13 @@ class SystemModel:
     def __init__(
         self,
         slip_model: SlipModel,
-        engine_accel_model: EngineAccelModel,
-        car_model: CarModel,
+        primary_pulley_model: PrimaryPulleyModel,
+        secondary_pulley_model: SecondaryPulleyModel,
         cvt_shift_model: CvtShiftModel,
     ):
         self.slip_model = slip_model
-        self.engine_accel_model = engine_accel_model
-        self.car_model = car_model
+        self.primary_pulley_model = primary_pulley_model
+        self.secondary_pulley_model = secondary_pulley_model
         self.cvt_shift_model = cvt_shift_model
 
     def get_breakdown(self, state: SystemState) -> SystemBreakdown:
@@ -40,19 +40,19 @@ class SystemModel:
             state, slip_breakdown.coupling_torque
         )
 
-        # Step 3: Calculate engine dynamics (using slip)
-        engine_breakdown = self.engine_accel_model.get_breakdown(
+        # Step 3: Calculate primary-pulley-side dynamics (using slip)
+        engine_breakdown = self.primary_pulley_model.get_breakdown(
             state, slip_breakdown.coupling_torque
         )
 
-        # Step 4: Calculate car dynamics (using slip)
-        car_breakdown = self.car_model.get_breakdown(
+        # Step 4: Calculate secondary-pulley-side dynamics (using slip)
+        secondary_pulley_breakdown = self.secondary_pulley_model.get_breakdown(
             state, slip_breakdown.coupling_torque
         )
 
         return SystemBreakdown(
             slip=slip_breakdown,
             engine=engine_breakdown,
-            car=car_breakdown,
+            car=secondary_pulley_breakdown,
             cvt=cvt_breakdown,
         )

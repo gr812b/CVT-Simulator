@@ -146,11 +146,10 @@ class PrimaryCVTEngagementSolver(SolverBase):
         # Create a mock system state at minimum shift position (engagement)
         # At engagement, the CVT is at its lowest ratio (largest primary radius)
         state = SystemState(
-            engine_angular_velocity=angular_velocity,
-            engine_angular_position=0.0,  # Position doesn't matter for t_max
+            primary_pulley_angular_velocity=angular_velocity,
+            secondary_pulley_angular_velocity=0.0,  # Stationary
             shift_distance=0.0,  # Minimum shift position
             shift_velocity=0.0,  # Static evaluation
-            car_velocity=0.0,  # Stationary
         )
 
         # Calculate t_max using the primary pulley model

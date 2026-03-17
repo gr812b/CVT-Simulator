@@ -2,6 +2,9 @@ from matplotlib import pyplot as plt
 import numpy as np
 from cvt_simulator.models.model_initializer import get_models
 from cvt_simulator.utils.simulation_result import SimulationResult
+from cvt_simulator.utils.state_computations import (
+    secondary_pulley_angular_velocity_to_car_velocity,
+)
 from cvt_simulator.constants.car_specs import (
     GEARBOX_RATIO,
     FRONTAL_AREA,
@@ -17,14 +20,19 @@ from cvt_simulator.utils.theoretical_models import TheoreticalModels as tm
 args = SimulationArgs()
 
 # Initialize models with args
-car_model, cvt_model = get_models(args)
+secondary_pulley_accel_model, cvt_model = get_models(args)
 
 
 def plotVelocity(result: SimulationResult, ax=None):
     vMax = (3277.6296 / (0.5 * FRONTAL_AREA * DRAG_COEFFICIENT * AIR_DENSITY)) ** (
         1 / 3
     )
-    car_velocities = [state.car_velocity for state in result.states]
+    car_velocities = [
+        secondary_pulley_angular_velocity_to_car_velocity(
+            state.secondary_pulley_angular_velocity
+        )
+        for state in result.states
+    ]
     if ax is None:
         ax = plt.gca()
     ax.plot(result.time, car_velocities, label="Car Velocity")
@@ -37,7 +45,15 @@ def plotVelocity(result: SimulationResult, ax=None):
 
 
 def plotPosition(result: SimulationResult, ax=None):
-    car_positions = [state.car_position for state in result.states]
+    car_positions = result._compute_positions(
+        result.time,
+        [
+            secondary_pulley_angular_velocity_to_car_velocity(
+                s.secondary_pulley_angular_velocity
+            )
+            for s in result.states
+        ],
+    )
     if ax is None:
         ax = plt.gca()
     ax.plot(result.time, car_positions, label="Car Position")
@@ -51,8 +67,10 @@ def plotPosition(result: SimulationResult, ax=None):
 def plotVehicleAccel(result: SimulationResult, ax=None):
     vehicle_accels = []
     for state in result.states:
-        car_acceleration = car_model.get_breakdown(state).acceleration
-        vehicle_accels.append(car_acceleration)
+        # Convert secondary pulley angular acceleration to linear vehicle acceleration
+        secondary_pulley_angular_accel = secondary_pulley_accel_model.get_breakdown(state).secondary_pulley_angular_acceleration
+        linear_vehicle_accel = secondary_pulley_angular_accel * WHEEL_RADIUS
+        vehicle_accels.append(linear_vehicle_accel)
     if ax is None:
         ax = plt.gca()
     ax.plot(result.time, vehicle_accels, label="Vehicle Acceleration")
@@ -69,11 +87,11 @@ def plotPrimaryClampingForce(result: SimulationResult, ax=None):
     engine_angular_velocities = []
     for state in result.states:
         shift_breakdown = cvt_model.get_breakdown(state)
-        car_breakdown = car_model.get_breakdown(state)
+        secondary_pulley_breakdown = secondary_pulley_accel_model.get_breakdown(state)
 
         primary_force = shift_breakdown.primaryPulleyState.forces.axial_clamping_force
         primary_axial_force = shift_breakdown.primaryPulleyState.forces.axial_force_total
-        actual_engine_velocity = car_breakdown.engine_forces.angular_velocity
+        actual_engine_velocity = secondary_pulley_breakdown.engine_forces.angular_velocity
 
         primary_axial_clamping_forces.append(primary_force)
         primary_axial_total_forces.append(primary_axial_force)
@@ -101,11 +119,11 @@ def plotSecondaryClampingForce(result: SimulationResult, ax=None):
     engine_angular_velocities = []
     for state in result.states:
         shift_breakdown = cvt_model.get_breakdown(state)
-        car_breakdown = car_model.get_breakdown(state)
+        secondary_pulley_breakdown = secondary_pulley_accel_model.get_breakdown(state)
 
         secondary_force = shift_breakdown.secondaryPulleyState.forces.axial_clamping_force
         secondary_axial = shift_breakdown.secondaryPulleyState.forces.axial_force_total
-        actual_engine_velocity = car_breakdown.engine_forces.angular_velocity
+        actual_engine_velocity = secondary_pulley_breakdown.engine_forces.angular_velocity
 
         secondary_axial_clamping_forces.append(secondary_force)
         secondary_axial_total_forces.append(secondary_axial)
@@ -136,14 +154,14 @@ def plotVehicleEngineSpeed(result: SimulationResult, ax=None):
     times = result.time
 
     for state in result.states:
-        car_breakdown = car_model.get_breakdown(state)
+        secondary_pulley_breakdown = secondary_pulley_accel_model.get_breakdown(state)
         cvt_breakdown = cvt_model.get_breakdown(state)
 
         cvt_ratio = cvt_breakdown.cvt_ratio
 
         cvt_ratios.append(cvt_ratio)
         vehicle_speeds.append(state.car_velocity)
-        engine_speeds.append(car_breakdown.engine_forces.angular_velocity)
+        engine_speeds.append(secondary_pulley_breakdown.engine_forces.angular_velocity)
 
     if ax is None:
         fig, ax = plt.subplots(figsize=(12, 8))
@@ -235,10 +253,10 @@ def plotShiftDistance(result: SimulationResult, ax=None):
     engine_angular_velocities = []
 
     for state in result.states:
-        car_breakdown = car_model.get_breakdown(state)
+        secondary_pulley_breakdown = secondary_pulley_accel_model.get_breakdown(state)
 
         shift_distances.append(state.shift_distance)
-        engine_angular_velocities.append(car_breakdown.engine_forces.angular_velocity)
+        engine_angular_velocities.append(secondary_pulley_breakdown.engine_forces.angular_velocity)
 
     if ax is None:
         ax = plt.gca()
@@ -260,11 +278,11 @@ def plotShiftCurves(results: list[SimulationResult], ax=None):
         engine_angular_velocities = []
 
         for state in result.states:
-            car_breakdown = car_model.get_breakdown(state)
+            secondary_pulley_breakdown = secondary_pulley_accel_model.get_breakdown(state)
 
             vehicle_speeds.append(state.car_velocity)
             engine_angular_velocities.append(
-                car_breakdown.engine_forces.angular_velocity
+                secondary_pulley_breakdown.engine_forces.angular_velocity
             )
 
         ax.plot(
@@ -282,11 +300,11 @@ def plotShiftCurves(results: list[SimulationResult], ax=None):
         engine_angular_velocities = []
 
         for state in result.states:
-            car_breakdown = car_model.get_breakdown(state)
+            secondary_pulley_breakdown = secondary_pulley_accel_model.get_breakdown(state)
 
             vehicle_speeds.append(state.car_velocity)
             engine_angular_velocities.append(
-                car_breakdown.engine_forces.angular_velocity
+                secondary_pulley_breakdown.engine_forces.angular_velocity
             )
 
         all_vehicle_speeds.extend(vehicle_speeds)

@@ -153,11 +153,10 @@ class ShiftInitiationSolver(SolverBase):
         """
         # Create a system state at minimum shift position and stationary
         state = SystemState(
-            engine_angular_velocity=angular_velocity,
-            engine_angular_position=0.0,
+            primary_pulley_angular_velocity=angular_velocity,
+            secondary_pulley_angular_velocity=0.0,  # Stationary (as specified)
             shift_distance=0.0,  # Minimum shift position
             shift_velocity=0.0,  # Static evaluation
-            car_velocity=0.0,  # Stationary (as specified)
         )
 
         # Calculate torque demand from road load (before slip limiting)

@@ -21,18 +21,18 @@ export type GraphCategory = {
 export const timeAccessor: AccessorStrategy = (point) => point.time;
 const positionAccessor: AccessorStrategy = (point) => point.state.car_position;
 const velocityAccessor: AccessorStrategy = (point) => point.state.car_velocity;
-const accelerationAccessor: AccessorStrategy = (point) => point.system.car.acceleration;
+const accelerationAccessor: AccessorStrategy = (point) => point.system.car.secondary_pulley_angular_acceleration;
 
 // Temp
-const couplingTorqueAtWheels: AccessorStrategy = (point) => point.system.car.coupling_torque_at_wheel;
-const loadTorqueAtWheels: AccessorStrategy = (point) => point.system.car.load_torque_at_wheel;
+const couplingTorqueAtWheels: AccessorStrategy = (point) => point.system.car.coupling_torque_at_secondary_pulley;
+const loadTorqueAtWheels: AccessorStrategy = (point) => point.system.car.external_load_torque_at_secondary_pulley;
 
-const couplingTorqueAtEngine: AccessorStrategy = (point) => point.system.engine.coupling_torque_at_engine;
+const couplingTorqueAtEngine: AccessorStrategy = (point) => point.system.engine.coupling_torque_at_primary_pulley;
 
 // Engine and CVT stuff
 const cvtRatioAccessor: AccessorStrategy = (point) => point.system.cvt.cvt_ratio;
-const engineRpmAccessor: AccessorStrategy = (point) => point.system.engine.angular_velocity;
-const engineTorqueAccessor: AccessorStrategy = (point) => point.system.engine.torque;
+const engineRpmAccessor: AccessorStrategy = (point) => point.system.engine.primary_pulley_angular_velocity;
+const engineTorqueAccessor: AccessorStrategy = (point) => point.system.engine.primary_pulley_drive_torque;
 const cvtRatioRateOfChangeAccessor: AccessorStrategy = (point) => point.system.slip.cvt_ratio_derivative;
 const enginePowerAccessor: AccessorStrategy = (point) => point.system.engine.power;
 const cvtAccelerationAccessor: AccessorStrategy = (point) => point.system.cvt.acceleration;

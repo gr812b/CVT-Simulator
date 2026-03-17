@@ -7,6 +7,10 @@ from cvt_simulator.constants.car_specs import (
     GEARBOX_RATIO,
     ROLLING_RESISTANCE_COEFFICIENT,
 )
+from cvt_simulator.utils.system_state import SystemState
+from cvt_simulator.utils.state_computations import (
+    secondary_pulley_angular_velocity_to_car_velocity,
+)
 from cvt_simulator.utils.theoretical_models import TheoreticalModels as tm
 from cvt_simulator.models.dataTypes import ExternalLoadForceBreakdown
 
@@ -30,11 +34,19 @@ class LoadModel:
         self.wheel_radius = WHEEL_RADIUS
         self.gearbox_ratio = GEARBOX_RATIO
 
-    def get_breakdown(self, velocity: float) -> ExternalLoadForceBreakdown:
+    def get_breakdown(self, state: SystemState) -> ExternalLoadForceBreakdown:
         """
-        Calculate the total load force on the wheels using:
+        Calculate equivalent road load as seen at the secondary pulley using:
+
         η_load(t) = (r_w/G) * [C_rr*m*g*cos(α)*sgn(v) + m*g*sin(α) + (1/2)*ρ*c_d*A_f*v²*sgn(v)]
+
+        The velocity term v is derived from the state vector's secondary pulley
+        angular velocity ω_s.
         """
+        velocity = secondary_pulley_angular_velocity_to_car_velocity(
+            state.secondary_pulley_angular_velocity
+        )
+
         rolling_resistance_force = self._calculate_rolling_resistance_force(velocity)
         incline_force = self._calculate_incline_force()
         drag_force = self._calculate_drag_force(velocity)

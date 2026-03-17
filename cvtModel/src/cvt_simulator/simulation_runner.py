@@ -32,14 +32,13 @@ class SimulationRunner:
 
     TOTAL_SIM_TIME = 30  # seconds
     INITIAL_STATE = SystemState(
-        car_velocity=rpm_to_rad_s(0.1)
-        / (GEARBOX_RATIO * tm.current_effective_cvt_ratio(0))
-        * WHEEL_RADIUS,
-        car_position=0.0,
-        shift_velocity=0.0,
         shift_distance=0.0,
-        engine_angular_velocity=rpm_to_rad_s(1800),
-        engine_angular_position=0.0,
+        shift_velocity=0.0,
+        # Initial secondary pulley angular velocity derived from initial car velocity
+        secondary_pulley_angular_velocity=rpm_to_rad_s(0.1)
+        / (GEARBOX_RATIO * tm.current_effective_cvt_ratio(0)),
+        # Initial primary pulley angular velocity (engine speed)
+        primary_pulley_angular_velocity=rpm_to_rad_s(1800),
     )
 
     def __init__(
@@ -214,7 +213,14 @@ class SimulationRunner:
                 self.progress_callback(progress_percent)
 
     def _evaluate_cvt_system(self, t: float, y: list[float]):
-        """Evaluate system dynamics (phase 1: not at full shift)."""
+        """Evaluate system dynamics (phase 1: not at full shift).
+        
+        Returns derivatives of the 4 DOF state vector:
+        dy[0] = d(shift_distance)/dt = shift_velocity
+        dy[1] = d(shift_velocity)/dt = shift_acceleration
+        dy[2] = d(primary_pulley_angular_velocity)/dt = primary_pulley_angular_accel
+        dy[3] = d(secondary_pulley_angular_velocity)/dt = secondary_pulley_angular_accel
+        """
         state = SystemState.from_array(y)
         self._print_progress(t)
 
@@ -236,9 +242,9 @@ class SimulationRunner:
         # Get system breakdown (this calculates everything in correct order)
         system_breakdown = self.system_model.get_breakdown(state)
 
-        # Extract accelerations from breakdown
-        car_acceleration = system_breakdown.car.acceleration
-        engine_angular_accel = system_breakdown.engine.angular_acceleration
+        # Extract accelerations
+        secondary_pulley_angular_accel_from_torques = system_breakdown.car.secondary_pulley_angular_acceleration
+        primary_pulley_angular_accel = system_breakdown.engine.primary_pulley_angular_acceleration
         shift_acceleration = system_breakdown.cvt.acceleration
 
         # Prevent acceleration from pushing past boundaries (metal hitting metal)
@@ -248,23 +254,25 @@ class SimulationRunner:
             shift_acceleration = 0
 
         return [
-            car_acceleration,
-            state.car_velocity,
-            shift_acceleration,
             state.shift_velocity,
-            engine_angular_accel,
-            state.engine_angular_velocity,
+            shift_acceleration,
+            primary_pulley_angular_accel,
+            secondary_pulley_angular_accel_from_torques,
         ]
 
     def _evaluate_full_shift_system(self, t: float, y: list[float]):
-        """Evaluate system dynamics (phase 2: at full shift)."""
+        """Evaluate system dynamics (phase 2: at full shift).
+        
+        At full shift, shift_distance and shift_velocity are held constant.
+        Only the pulley angular velocities continue to evolve.
+        """
         state = SystemState.from_array(y)
         self._print_progress(t)
         # Force the shifting variables to remain constant at full shift.
         state.shift_distance = MAX_SHIFT
         state.shift_velocity = 0
 
-        # CRITICAL: Update the actual y array that scipy saves to CSV
+        # CRITICAL: Update the actual y array that scipy saves
         constrained_y = state.to_array()
         for i in range(len(y)):
             y[i] = constrained_y[i]
@@ -272,14 +280,12 @@ class SimulationRunner:
         # Get system breakdown for full shift case
         system_breakdown = self.system_model.get_breakdown(state)
 
-        car_acceleration = system_breakdown.car.acceleration
-        engine_angular_accel = system_breakdown.engine.angular_acceleration
+        secondary_pulley_angular_accel_from_torques = system_breakdown.car.secondary_pulley_angular_acceleration
+        primary_pulley_angular_accel = system_breakdown.engine.primary_pulley_angular_acceleration
 
         return [
-            car_acceleration,
-            state.car_velocity,
-            0,
-            0,
-            engine_angular_accel,
-            state.engine_angular_velocity,
+            0,                              # shift_distance held constant
+            0,                              # shift_velocity held constant
+            primary_pulley_angular_accel,   # primary pulley continues to evolve
+            secondary_pulley_angular_accel_from_torques, # secondary pulley continues to evolve
         ]
