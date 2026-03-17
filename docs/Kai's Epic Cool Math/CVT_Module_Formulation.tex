@@ -2394,31 +2394,77 @@ Rearranging into a form that exposes the required components:
 At this point, the remaining task is to express the two derivatives
 $dr_{p,\text{eff}}/ds$ and $dr_{s,\text{eff}}/ds$ in computable form.
 
-\subsubsection{Eliminating \texorpdfstring{$dr_s/ds$}{drs/ds} Using the Belt-Length Constraint}
+% ==============================================================
+\subsubsection{Primary Radius Derivative}
+\label{sec:drpds}
 
-The secondary radius $r_s(s)$ is defined implicitly through the
-belt-length constraint and does not admit a closed-form expression
-in terms of $r_p$. Direct differentiation of $r_s(s)$ is therefore
-not practical.
+The primary radius derivative follows directly from the sheave geometry,
+since the primary radius is prescribed explicitly as a function of shift.
+From the piecewise primary radius model \Eq{eq:primary_radius}, the primary outer radius
+satisfies
 
-Instead, we differentiate the belt-length compatibility constraint
-derived in \Sec{sec:belt_length}, which is written as
+\[
+r_{p,\text{outer}}(s)=
+\begin{cases}
+r_{p,\text{outer},\min}, & 0 \le s < s_{\mathrm{dz}}, \\[8pt]
+r_{p,\text{outer},\min} + \dfrac{s - s_{\mathrm{dz}}}{2\tan\beta},
+& s_{\mathrm{dz}} \le s \le s_{\max}.
+\end{cases}
+\]
+
+Differentiating with respect to $s$ gives
+
+\bigeq{eq:drpds_piecewise}{Primary Radius Derivative}{
+\frac{dr_p}{ds}
+=
+\frac{dr_{p,\text{outer}}}{ds}
+=
+\begin{cases}
+0, & 0 \le s < s_{\mathrm{dz}},\\[8pt]
+\dfrac{1}{2\tan\beta}, & s_{\mathrm{dz}} \le s \le s_{\max}.
+\end{cases}
+}
+
+Because $r_{p,\text{eff}} = r_{p,\text{outer}} - h_b/2$ and $h_b$ is constant,
+the same derivative applies:
+
+\begin{equation}
+\frac{dr_{p,\text{eff}}}{ds} = \frac{dr_p}{ds}.
+\label{eq:drpeffds}
+\end{equation}
+
+
+\begin{remarkbox}[Remark (At the Travel Limit)]
+If the model clamps $s$ at the physical limit $s_{\max}$, then $r_{p,\text{outer}}$
+(and thus $r_{p,\text{eff}}$) is constant beyond this point and the derivative is zero
+for $s>s_{\max}$. In this document we restrict to the admissible domain
+$0\le s\le s_{\max}$.
+\end{remarkbox}
+
+% ==============================================================
+% ==============================================================
+% ==============================================================
+\subsubsection{Secondary Radius Derivative}
+\label{sec:drsds}
+
+Unlike the primary radius, the secondary radius is not prescribed explicitly
+as a function of shift. Instead, it is determined implicitly by the
+belt-length compatibility condition derived in \Sec{sec:belt_length}. Thus,
+the secondary radius derivative must be obtained by differentiating the
+constraint itself.
+
+The belt-length constraint is written as
 
 \begin{equation}
 f(r_p, r_s, C) = 0,
 \label{eq:belt_constraint_general}
 \end{equation}
 
-with $f(\cdot)$ defined explicitly in \Eq{eq:belt_length_root} and
-$C$ constant.
+where $f(\cdot)$ is defined in \Eq{eq:belt_length_root} and $C$ is constant.
 
-For the implicit-differentiation step below, we use the compact notation
-$r_p, r_s, dr_p/ds,$ and $dr_s/ds$. Because this derivation is based on
-rate relationships, any constant radial offset between radius references
-vanishes directly under differentiation ($\mathrm{d}(\text{constant})/\mathrm{d}s=0$),
-so the same derivative form is obtained.
-Since $r_p=r_p(s)$ and $r_s=r_s(s)$, differentiating \Eq{eq:belt_constraint_general}
-with respect to $s$ gives (multivariable chain rule)
+Since both $r_p=r_p(s)$ and $r_s=r_s(s)$ depend on the shift coordinate $s$,
+differentiating \Eq{eq:belt_constraint_general} with respect to $s$ gives,
+by the multivariable chain rule,
 
 \begin{equation}
 \frac{\partial f}{\partial r_p}\frac{dr_p}{ds}
@@ -2428,7 +2474,7 @@ with respect to $s$ gives (multivariable chain rule)
 \label{eq:implicit_chain}
 \end{equation}
 
-Solving \Eq{eq:implicit_chain} for $dr_s/ds$ yields
+Solving \Eq{eq:implicit_chain} for the secondary radius derivative yields
 
 \begin{equation}
 \frac{dr_s}{ds}
@@ -2440,40 +2486,25 @@ Solving \Eq{eq:implicit_chain} for $dr_s/ds$ yields
 \label{eq:drsds_general}
 \end{equation}
 
-\subsubsection{Single Expression for \texorpdfstring{$dR/ds$}{dR/ds} in Terms of Remaining Unknowns}
-
-Substituting \Eq{eq:drsds_general} into \Eq{eq:dRds_components} eliminates $dr_s/ds$ and
-gives a single expression for $dR/ds$ in terms of the belt constraint partial derivatives
-and the primary geometric derivative:
+Because the effective secondary radius differs from the outer radius only by
+the constant belt offset $h_b/2$, the same derivative applies to the effective
+radius:
 
 \begin{equation}
-\frac{dR}{ds}
-=
--
-\frac{1}{r_{p,\text{eff}}}
-\frac{\dfrac{\partial f}{\partial r_p}}
-{\dfrac{\partial f}{\partial r_s}}
-\frac{dr_p}{ds}
--
-\frac{r_{s,\text{eff}}}{r_{p,\text{eff}}^{2}}
-\frac{dr_{p,\text{eff}}}{ds}.
-\label{eq:dRds_reduced}
+\frac{dr_{s,\mathrm{eff}}}{ds} = \frac{dr_s}{ds}.
+\label{eq:drseffds}
 \end{equation}
 
-Equation \Eq{eq:dRds_reduced} makes the remaining requirements explicit. To evaluate
-$dR/ds$ (and therefore $\dot R$ via \Eq{eq:Rdot_chain}), three quantities are required:
+Equation \Eq{eq:drsds_general} shows that the secondary radial motion is not
+independent, but is instead determined by the belt-length constraint and the
+primary radial motion.
 
-\begin{enumerate}
-    \item $\dfrac{\partial f}{\partial r_p}$,
-    \item $\dfrac{\partial f}{\partial r_s}$,
-    \item $\dfrac{dr_p}{ds}$ (and the associated $\dfrac{dr_{p,\text{eff}}}{ds}$).
-\end{enumerate}
+At this point, the remaining task is to evaluate the two belt-constraint
+sensitivities
+$\partial f/\partial r_p$ and $\partial f/\partial r_s$, which appear in
+\Eq{eq:drsds_general}. The following subsections derive these quantities
+explicitly for the belt-length function defined in \Eq{eq:belt_length_root}.
 
-The following subsections derive these three quantities for the specific belt-length
-function $f$ defined in \Eq{eq:belt_length_root} and for the primary geometry defined in
-\Eq{eq:primary_radius}.
-
-% ==============================================================
 \subsubsection{Partial Derivatives of the Belt Constraint}
 \label{sec:belt_partials}
 
@@ -2721,66 +2752,31 @@ of $\lambda$ given in \Eq{eq:lambda_asin} and require no piecewise
 case distinction.
 
 
+
+
 % ==============================================================
-\subsubsection{Primary Radius Derivative}
-\label{sec:drpds}
+% ==============================================================
 
-From the piecewise primary radius model \Eq{eq:primary_radius}, the primary outer radius
-satisfies
+% ==============================================================
+\subsubsection{Final Expression for the Secondary Radius Derivative}
+\label{sec:drsds_final}
 
-\[
-r_{p,\text{outer}}(s)=
-\begin{cases}
-r_{p,\text{outer},\min}, & 0 \le s < s_{\mathrm{dz}}, \\[8pt]
-r_{p,\text{outer},\min} + \dfrac{s - s_{\mathrm{dz}}}{2\tan\beta},
-& s_{\mathrm{dz}} \le s \le s_{\max}.
-\end{cases}
-\]
-
-Differentiating with respect to $s$ gives
+Equation \Eq{eq:drsds_general} expresses the secondary radius derivative in
+terms of the belt-constraint partial derivatives and the primary radius derivative:
 
 \begin{equation}
-\frac{dr_p}{ds}
+\frac{dr_s}{ds}
 =
-\frac{dr_{p,\text{outer}}}{ds}
- =
-\begin{cases}
-0, & 0 \le s < s_{\mathrm{dz}},\\[8pt]
-\dfrac{1}{2\tan\beta}, & s_{\mathrm{dz}} \le s \le s_{\max}.
-\end{cases}
-\label{eq:drpds_piecewise}
+-
+\frac{\dfrac{\partial f}{\partial r_p}}
+{\dfrac{\partial f}{\partial r_s}}
+\frac{dr_p}{ds}.
+\label{eq:drsds_recalled}
 \end{equation}
-
-Because $r_{p,\text{eff}} = r_{p,\text{outer}} - h_b/2$ and $h_b$ is constant,
-the same derivative applies:
-
-\begin{equation}
-\frac{dr_{p,\text{eff}}}{ds} = \frac{dr_p}{ds}.
-\label{eq:drpeffds}
-\end{equation}
-
-
-
-
-
-\begin{remarkbox}[Remark (At the Travel Limit)]
-If the model clamps $s$ at the physical limit $s_{\max}$, then $r_{p,\text{outer}}$
-(and thus $r_{p,\text{eff}}$) is constant beyond this point and the derivative is zero
-for $s>s_{\max}$. In this document we restrict to the admissible domain
-$0\le s\le s_{\max}$.
-\end{remarkbox}
-
-% ==============================================================
-% ==============================================================
-\subsubsection{Final Expression for \texorpdfstring{$dR/ds$}{dR/ds} and \texorpdfstring{$\dot R$}{Rdot}}
-\label{sec:dRds_final}
-
-\Eq{eq:dRds_reduced} expresses $dR/ds$ in terms of three quantities:
-(i) the belt-constraint partial derivatives $\partial f/\partial r_p$ and $\partial f/\partial r_s$,
-and (ii) the primary geometric derivatives $dr_p/ds$ and $dr_{p,\text{eff}}/ds$.
 
 From \Sec{sec:belt_partials}, the partial derivatives of the belt-length constraint
 \Eq{eq:belt_length_root} are
+
 \begin{equation}
 \frac{\partial f}{\partial r_p}
 =
@@ -2789,6 +2785,7 @@ From \Sec{sec:belt_partials}, the partial derivatives of the belt-length constra
 2\sin^{-1}\!\left(\frac{r_s-r_p}{C}\right),
 \label{eq:dfdrp_final_used}
 \end{equation}
+
 \begin{equation}
 \frac{\partial f}{\partial r_s}
 =
@@ -2798,31 +2795,99 @@ From \Sec{sec:belt_partials}, the partial derivatives of the belt-length constra
 \label{eq:dfdrs_final_used}
 \end{equation}
 
-From \Sec{sec:drpds}, the primary outer-radius derivative is
-\Eq{eq:drpds_piecewise}, and since $r_{p,\text{eff}} = r_{p,\text{outer}} - h_b/2$ with
-$h_b$ constant, \Eq{eq:drpeffds} gives $dr_{p,\text{eff}}/ds = dr_p/ds$.
+Substituting \Eq{eq:dfdrp_final_used} and \Eq{eq:dfdrs_final_used} into
+\Eq{eq:drsds_recalled} gives
 
-Substituting \Eq{eq:dfdrp_final_used}--\Eq{eq:dfdrs_final_used} and \Eq{eq:drpeffds}
-into \Eq{eq:dRds_reduced} yields
+\begin{equation}
+\frac{dr_s}{ds}
+=
+-
+\frac{
+\pi - 2\sin^{-1}\!\left(\dfrac{r_s-r_p}{C}\right)
+}{
+\pi + 2\sin^{-1}\!\left(\dfrac{r_s-r_p}{C}\right)
+}
+\frac{dr_p}{ds}.
+\label{eq:drsds_subbed}
+\end{equation}
+
+Finally, substituting the piecewise primary radius derivative
+\Eq{eq:drpds_piecewise} yields
+
+\bigeq{eq:drsds_final}{Secondary Radius Derivative}{
+\frac{dr_s}{ds}
+=
+\begin{cases}
+0,
+& 0 \le s < s_{\mathrm{dz}}, \\[12pt]
+\displaystyle
+-\frac{1}{2\tan\beta}
+\frac{
+\pi - 2\sin^{-1}\!\left(\dfrac{r_s-r_p}{C}\right)
+}{
+\pi + 2\sin^{-1}\!\left(\dfrac{r_s-r_p}{C}\right)
+},
+& s_{\mathrm{dz}} \le s \le s_{\max}.
+\end{cases}
+}
+
+Because $r_{s,\mathrm{eff}} = r_s - h_b/2$ with $h_b$ constant, the same
+expression applies to the effective secondary radius derivative:
+
+\begin{equation}
+\frac{dr_{s,\mathrm{eff}}}{ds} = \frac{dr_s}{ds}.
+\label{eq:drseffds_final}
+\end{equation}
+
+% ==============================================================
+\subsubsection{Final Expression for \texorpdfstring{$dR/ds$}{dR/ds} and \texorpdfstring{$\dot R$}{Rdot}}
+\label{sec:dRds_final}
+
+From \Eq{eq:dRds_components}, the ratio derivative is
+
+\begin{equation}
+\frac{dR}{ds}
+=
+\frac{1}{r_{p,\mathrm{eff}}}\frac{dr_{s,\mathrm{eff}}}{ds}
+-
+\frac{r_{s,\mathrm{eff}}}{r_{p,\mathrm{eff}}^2}\frac{dr_{p,\mathrm{eff}}}{ds}.
+\label{eq:dRds_recalled}
+\end{equation}
+
+Using \Eq{eq:drpeffds} and \Eq{eq:drseffds_final}, this becomes
+
+\begin{equation}
+\frac{dR}{ds}
+=
+\frac{1}{r_{p,\mathrm{eff}}}\frac{dr_s}{ds}
+-
+\frac{r_{s,\mathrm{eff}}}{r_{p,\mathrm{eff}}^2}\frac{dr_p}{ds}.
+\label{eq:dRds_sub_radii}
+\end{equation}
+
+Substituting \Eq{eq:drsds_subbed} into \Eq{eq:dRds_sub_radii} gives
+
 \begin{equation}
 \frac{dR}{ds}
 =
 \left[
 -
-\frac{1}{r_{p,\text{eff}}}
+\frac{1}{r_{p,\mathrm{eff}}}
 \frac{
 \pi - 2\sin^{-1}\!\left(\dfrac{r_s-r_p}{C}\right)
 }{
 \pi + 2\sin^{-1}\!\left(\dfrac{r_s-r_p}{C}\right)
 }
 -
-\frac{r_{s,\text{eff}}}{r_{p,\text{eff}}^{2}}
-\right]\frac{dr_p}{ds}.
+\frac{r_{s,\mathrm{eff}}}{r_{p,\mathrm{eff}}^2}
+\right]
+\frac{dr_p}{ds}.
 \label{eq:dRds_subbed_all}
 \end{equation}
 
-Finally, substituting the piecewise primary derivative \Eq{eq:drpds_piecewise} gives the
-fully expanded result
+Finally, substituting the piecewise primary derivative \Eq{eq:drpds_piecewise}
+yields the fully expanded result
+
 \begin{equation}
 \frac{dR}{ds}
 =
@@ -2833,14 +2898,14 @@ fully expanded result
 \frac{1}{2\tan\beta}
 \left[
 -
-\frac{1}{r_{p,\text{eff}}}
+\frac{1}{r_{p,\mathrm{eff}}}
 \frac{
 \pi - 2\sin^{-1}\!\left(\dfrac{r_s-r_p}{C}\right)
 }{
 \pi + 2\sin^{-1}\!\left(\dfrac{r_s-r_p}{C}\right)
 }
 -
-\frac{r_{s,\text{eff}}}{r_{p,\text{eff}}^{2}}
+\frac{r_{s,\mathrm{eff}}}{r_{p,\mathrm{eff}}^2}
 \right],
 & s_{\mathrm{dz}} \le s \le s_{\max}.
 \end{cases}
@@ -2857,7 +2922,7 @@ Using the chain rule \Eq{eq:Rdot_chain}, $\dot R = (dR/ds)\dot s$. Substituting
 0,
 & 0 \le s < s_{\mathrm{dz}}, \\[14pt]
 \displaystyle
--\frac{\dot s}{2\tan\beta\,r_{p,\text{eff}}}
+-\frac{\dot s}{2\tan\beta\,r_{p,\mathrm{eff}}}
 \left[
 \frac{
 \pi - 2\sin^{-1}\!\left(\dfrac{r_s-r_p}{C}\right)
@@ -2865,20 +2930,12 @@ Using the chain rule \Eq{eq:Rdot_chain}, $\dot R = (dR/ds)\dot s$. Substituting
 \pi + 2\sin^{-1}\!\left(\dfrac{r_s-r_p}{C}\right)
 }
 +
-\frac{r_{s,\text{eff}}}{r_{p,\text{eff}}}
+\frac{r_{s,\mathrm{eff}}}{r_{p,\mathrm{eff}}}
 \right],
 & s_{\mathrm{dz}} \le s \le s_{\max}.
 \end{cases}
 }
 
-\paragraph{Summary}
-
-Equations \Eq{eq:dRds_final} and \Eq{eq:Rdot_final} give the geometric sensitivity of the ratio
-to axial motion and its time rate of change. The deadzone behavior is explicit: when
-$0 \le s < s_{\mathrm{dz}}$, the ratio is constant and $\dot R = 0$. In the active region,
-$s_{\mathrm{dz}} \le s \le s_{\max}$, the ratio evolves according to geometry and the shift rate $\dot s$.
-
-% ==============================================================
 \subsection{Section Summary and Forward Connection}
 \label{sec:geometry_summary}
 
