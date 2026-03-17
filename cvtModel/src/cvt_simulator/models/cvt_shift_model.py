@@ -1,4 +1,4 @@
-from cvt_simulator.models.dataTypes import CvtSystemForceBreakdown
+from cvt_simulator.models.dataTypes import CvtDynamicsBreakdown
 from cvt_simulator.models.pulley.primary_pulley_interface import PrimaryPulleyModel
 from cvt_simulator.models.pulley.secondary_pulley_interface import SecondaryPulleyModel
 from cvt_simulator.utils.system_state import SystemState
@@ -33,7 +33,7 @@ class CvtShiftModel:
 
     def get_breakdown(
         self, state: SystemState, coupling_torque: float
-    ) -> CvtSystemForceBreakdown:
+    ) -> CvtDynamicsBreakdown:
         primary_state, secondary_state = self._get_pulley_states(state, coupling_torque)
 
         prim_axial = primary_state.forces.axial_force_total
@@ -47,7 +47,7 @@ class CvtShiftModel:
 
         cvt_ratio = tm.current_effective_cvt_ratio(state.shift_distance)
 
-        return CvtSystemForceBreakdown(
+        return CvtDynamicsBreakdown(
             primary_state,
             secondary_state,
             friction,

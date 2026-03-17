@@ -1,4 +1,4 @@
-from cvt_simulator.models.dataTypes import EngineForceBreakdown
+from cvt_simulator.models.dataTypes import PrimaryPulleyDynamicsBreakdown
 from cvt_simulator.models.engine_model import EngineModel
 from cvt_simulator.utils.system_state import SystemState
 from cvt_simulator.constants.car_specs import ENGINE_INERTIA
@@ -14,7 +14,7 @@ class PrimaryPulleyModel:
 
     def get_breakdown(
         self, state: SystemState, coupling_torque: float
-    ) -> EngineForceBreakdown:
+    ) -> PrimaryPulleyDynamicsBreakdown:
 
         # Primary pulley angular velocity is the engine speed
         primary_pulley_angular_velocity = state.primary_pulley_angular_velocity
@@ -28,7 +28,7 @@ class PrimaryPulleyModel:
             primary_pulley_drive_torque - coupling_torque
         ) / self.inertia
 
-        return EngineForceBreakdown(
+        return PrimaryPulleyDynamicsBreakdown(
             primary_pulley_drive_torque=primary_pulley_drive_torque,
             coupling_torque_at_primary_pulley=coupling_torque,
             power=power,

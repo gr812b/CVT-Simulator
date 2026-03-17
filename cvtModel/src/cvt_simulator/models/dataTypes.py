@@ -92,7 +92,7 @@ class PulleyState:
 
 
 @dataclass
-class CvtSystemForceBreakdown:
+class CvtDynamicsBreakdown:
     primaryPulleyState: PulleyState
     secondaryPulleyState: PulleyState
     friction: float
@@ -112,7 +112,7 @@ class ExternalLoadForceBreakdown:
 
 ## Car
 @dataclass
-class CarForceBreakdown:
+class SecondaryPulleyDynamicsBreakdown:
     coupling_torque_at_secondary_pulley: float
     external_load_torque_at_secondary_pulley: float
     external_forces: ExternalLoadForceBreakdown
@@ -121,7 +121,7 @@ class CarForceBreakdown:
 
 ## Engine
 @dataclass
-class EngineForceBreakdown:
+class PrimaryPulleyDynamicsBreakdown:
     primary_pulley_drive_torque: float
     coupling_torque_at_primary_pulley: float
     power: float
@@ -142,7 +142,7 @@ class SlipBreakdown:
 
 ## System-level breakdown (single source of truth)
 @dataclass
-class SystemBreakdown:
+class DrivetrainBreakdown:
     """
     Single source of truth for the entire system state.
 
@@ -152,14 +152,14 @@ class SystemBreakdown:
     3. Eliminating duplication while maintaining clean interfaces
 
     Usage:
-        system = system_model.get_breakdown(state)
-        slip_data = system.slip
-        engine_data = system.engine
-        car_data = system.car
-        cvt_data = system.cvt
+        drivetrain = system_model.get_breakdown(state)
+        slip_data = drivetrain.belt_slip
+        primary_data = drivetrain.primary_pulley
+        secondary_data = drivetrain.secondary_pulley
+        cvt_data = drivetrain.cvt_dynamics
     """
 
-    slip: SlipBreakdown
-    engine: EngineForceBreakdown
-    car: CarForceBreakdown
-    cvt: CvtSystemForceBreakdown
+    belt_slip: SlipBreakdown
+    primary_pulley: PrimaryPulleyDynamicsBreakdown
+    secondary_pulley: SecondaryPulleyDynamicsBreakdown
+    cvt_dynamics: CvtDynamicsBreakdown

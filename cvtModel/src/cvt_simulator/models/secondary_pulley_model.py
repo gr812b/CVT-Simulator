@@ -1,5 +1,5 @@
 from cvt_simulator.utils.system_state import SystemState
-from cvt_simulator.models.dataTypes import CarForceBreakdown
+from cvt_simulator.models.dataTypes import SecondaryPulleyDynamicsBreakdown
 from cvt_simulator.models.external_load_model import LoadModel
 from cvt_simulator.utils.theoretical_models import TheoreticalModels as tm
 from cvt_simulator.constants.car_specs import (
@@ -40,7 +40,7 @@ class SecondaryPulleyModel:
 
     def get_breakdown(
         self, state: SystemState, coupling_torque: float
-    ) -> CarForceBreakdown:
+    ) -> SecondaryPulleyDynamicsBreakdown:
         external_forces = self.load_model.get_breakdown(state)
 
         primary_to_secondary_ratio = (
@@ -57,7 +57,7 @@ class SecondaryPulleyModel:
             / self.inertia
         )
 
-        return CarForceBreakdown(
+        return SecondaryPulleyDynamicsBreakdown(
             coupling_torque_at_secondary_pulley=(
                 coupling_torque * primary_to_secondary_ratio
             ),

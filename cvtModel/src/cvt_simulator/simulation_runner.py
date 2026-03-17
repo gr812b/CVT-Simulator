@@ -240,12 +240,12 @@ class SimulationRunner:
             y[i] = constrained_y[i]
 
         # Get system breakdown (this calculates everything in correct order)
-        system_breakdown = self.system_model.get_breakdown(state)
+        drivetrain_breakdown = self.system_model.get_breakdown(state)
 
         # Extract accelerations
-        secondary_pulley_angular_accel_from_torques = system_breakdown.car.secondary_pulley_angular_acceleration
-        primary_pulley_angular_accel = system_breakdown.engine.primary_pulley_angular_acceleration
-        shift_acceleration = system_breakdown.cvt.acceleration
+        secondary_pulley_angular_accel_from_torques = drivetrain_breakdown.secondary_pulley.secondary_pulley_angular_acceleration
+        primary_pulley_angular_accel = drivetrain_breakdown.primary_pulley.primary_pulley_angular_acceleration
+        shift_acceleration = drivetrain_breakdown.cvt_dynamics.acceleration
 
         # Prevent acceleration from pushing past boundaries (metal hitting metal)
         if shift_distance <= 0 and shift_acceleration < 0:
@@ -278,10 +278,10 @@ class SimulationRunner:
             y[i] = constrained_y[i]
 
         # Get system breakdown for full shift case
-        system_breakdown = self.system_model.get_breakdown(state)
+        drivetrain_breakdown = self.system_model.get_breakdown(state)
 
-        secondary_pulley_angular_accel_from_torques = system_breakdown.car.secondary_pulley_angular_acceleration
-        primary_pulley_angular_accel = system_breakdown.engine.primary_pulley_angular_acceleration
+        secondary_pulley_angular_accel_from_torques = drivetrain_breakdown.secondary_pulley.secondary_pulley_angular_acceleration
+        primary_pulley_angular_accel = drivetrain_breakdown.primary_pulley.primary_pulley_angular_acceleration
 
         return [
             0,                              # shift_distance held constant

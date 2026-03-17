@@ -1,6 +1,6 @@
 from typing import List
 from cvt_simulator.constants.car_specs import MAX_SHIFT
-from cvt_simulator.models.dataTypes import SystemBreakdown
+from cvt_simulator.models.dataTypes import DrivetrainBreakdown
 from cvt_simulator.utils.system_state import SystemState
 import pandas as pd
 from cvt_simulator.models.model_initializer import get_models
@@ -13,12 +13,12 @@ from dataclasses import is_dataclass, fields, dataclass
 class TimeStepData:
     """
     Represents all the data for a single time step in the simulation.
-    Uses the unified SystemBreakdown for clean access to all component data.
+    Uses the unified DrivetrainBreakdown for clean access to all component data.
     """
 
     time: float
     state: SystemState
-    system: SystemBreakdown
+    drivetrain: DrivetrainBreakdown
 
 
 class FormattedSimulationResult:
@@ -45,10 +45,10 @@ class FormattedSimulationResult:
                 state.shift_distance = MAX_SHIFT
                 state.shift_velocity = min(0, shift_velocity)
 
-            system_breakdown = system_model.get_breakdown(state)
+            drivetrain_breakdown = system_model.get_breakdown(state)
 
             time_step_data = TimeStepData(
-                time=time, state=state, system=system_breakdown
+                time=time, state=state, drivetrain=drivetrain_breakdown
             )
             self.data.append(time_step_data)
 

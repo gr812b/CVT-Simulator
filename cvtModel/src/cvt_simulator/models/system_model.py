@@ -1,4 +1,4 @@
-from cvt_simulator.models.dataTypes import SystemBreakdown
+from cvt_simulator.models.dataTypes import DrivetrainBreakdown
 from cvt_simulator.models.slip_model import SlipModel
 from cvt_simulator.models.primary_pulley_model import PrimaryPulleyModel
 from cvt_simulator.models.secondary_pulley_model import SecondaryPulleyModel
@@ -21,7 +21,7 @@ class SystemModel:
         self.secondary_pulley_model = secondary_pulley_model
         self.cvt_shift_model = cvt_shift_model
 
-    def get_breakdown(self, state: SystemState) -> SystemBreakdown:
+    def get_breakdown(self, state: SystemState) -> DrivetrainBreakdown:
         """
         Calculate the complete system breakdown in dependency order.
 
@@ -41,7 +41,7 @@ class SystemModel:
         )
 
         # Step 3: Calculate primary-pulley-side dynamics (using slip)
-        engine_breakdown = self.primary_pulley_model.get_breakdown(
+        primary_pulley_breakdown = self.primary_pulley_model.get_breakdown(
             state, slip_breakdown.coupling_torque
         )
 
@@ -50,9 +50,9 @@ class SystemModel:
             state, slip_breakdown.coupling_torque
         )
 
-        return SystemBreakdown(
-            slip=slip_breakdown,
-            engine=engine_breakdown,
-            car=secondary_pulley_breakdown,
-            cvt=cvt_breakdown,
+        return DrivetrainBreakdown(
+            belt_slip=slip_breakdown,
+            primary_pulley=primary_pulley_breakdown,
+            secondary_pulley=secondary_pulley_breakdown,
+            cvt_dynamics=cvt_breakdown,
         )
