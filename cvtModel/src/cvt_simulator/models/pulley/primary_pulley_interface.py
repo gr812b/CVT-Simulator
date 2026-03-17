@@ -25,6 +25,10 @@ class PrimaryPulleyModel(PulleyModel, ABC):
         """Get primary effective pitch radius at current shift position [m]."""
         return tm.primary_effective_radius(shift_distance)
 
+    def _get_radius_rate_of_change(self, shift_distance: float):
+        """Get dr/dt at current shift position [m/m]."""
+        return tm.primary_radius_rate_of_change(shift_distance)
+
     def _get_angular_velocity(self, state: SystemState) -> float:
         """Get primary pulley angular velocity [rad/s]."""
         return state.primary_pulley_angular_velocity

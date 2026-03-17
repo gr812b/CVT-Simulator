@@ -1,6 +1,6 @@
-import math
 import numpy as np
 from cvt_simulator.models.pulley.primary_pulley_interface import PrimaryPulleyModel
+from cvt_simulator.models.pulley.pulley_interface import get_kwarg
 from cvt_simulator.models.dataTypes import (
     PrimaryForceBreakdown,
     flyweightForceBreakdown,
@@ -14,9 +14,12 @@ from cvt_simulator.models.ramps import (
     PiecewiseRamp,
 )
 from cvt_simulator.constants.car_specs import (
+    BELT_CROSS_SECTIONAL_AREA,
     MAX_SHIFT,
     INITIAL_FLYWEIGHT_RADIUS,
+    SHEAVE_ANGLE,
 )
+from cvt_simulator.constants.constants import RUBBER_DENSITY
 from cvt_simulator.utils.system_state import SystemState
 
 
@@ -149,24 +152,34 @@ class PhysicalPrimaryPulley(PrimaryPulleyModel):
         Returns:
             max_torque: Maximum torque before slip [N⋅m]
         """
-        # Calculate axial force components internally
+        shift_distance = np.clip(state.shift_distance, 0, MAX_SHIFT)
+        angular_velocity = self._get_angular_velocity(state)
+
+        # Geometry terms in the updated relation.
+        # - r_eff: effective pitch radius
+        # - r_cm: belt centroid radius (all other r terms)
+        r_eff = self._get_radius(shift_distance)
+        r_cm = self._get_belt_centroid_radius(shift_distance)
+        r_dot = self._get_radius_rate_of_change(shift_distance)
+        phi = self._get_wrap_angle(shift_distance)
+        beta = SHEAVE_ANGLE / 2
+
+        # Runtime dynamics terms supplied by system models.
+        tau_eng = get_kwarg(kwargs, "engine_drive_torque", 0.0)
+        I_p = get_kwarg(kwargs, "primary_inertia", 1.0)
+
+        # Mechanism clamping contribution F_ax in the updated primary equation.
         axial_clamping_force, _ = self.calculate_axial_clamping_force(state)
-        axial_force_total = (
-            axial_clamping_force + self.axial_centrifugal_from_belt(state)
+
+        belt_mass_term = RUBBER_DENSITY * BELT_CROSS_SECTIONAL_AREA * r_cm * phi
+
+        numerator = (2 * self.μ * axial_clamping_force * np.tan(beta)) - (
+            belt_mass_term * (((r_cm * tau_eng) / I_p) - (2 * r_dot * angular_velocity))
         )
 
-        # Get geometric properties
-        wrap_angle = self._get_wrap_angle(state.shift_distance)
-        radius = self._get_radius(state.shift_distance)
+        denominator = (1.0 / r_eff) - (belt_mass_term * r_cm / I_p)
 
-        # Capstan equation with axial normal-load formulation
-        # N_phi = 2 * F_ax * tan(beta)
-        n_phi = self.calculate_integrated_normal_load(axial_force_total)
-        exp_term = math.exp(self.μ * wrap_angle)
-        capstan_term = (exp_term - 1) / (exp_term + 1)
-        max_torque = capstan_term * (2 * radius / wrap_angle) * n_phi
-
-        return max(0.0, max_torque)  # Ensure non-negative
+        return numerator / denominator
 
     # Private helper methods for force calculations
 

@@ -79,6 +79,16 @@ class TheoreticalModels:
         return _cvt_geometry.secondary_effective_radius(d)
 
     @staticmethod
+    def primary_radius_rate_of_change(d: float) -> float:
+        """Get dr_p/dd at current shift position."""
+        return _cvt_geometry._primary_outer_radius_shift_derivative(d)
+
+    @staticmethod
+    def secondary_radius_rate_of_change(d: float) -> float:
+        """Get dr_s/dd at current shift position."""
+        return _cvt_geometry._secondary_outer_radius_shift_derivative(d)
+
+    @staticmethod
     def current_effective_cvt_ratio(d: float) -> float:
         return _cvt_geometry.effective_cvt_ratio(d)
 
