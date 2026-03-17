@@ -64,63 +64,63 @@ def plotVehicleAccel(result: SimulationResult, ax=None):
 
 
 def plotPrimaryClampingForce(result: SimulationResult, ax=None):
-    primary_clamping_forces = []
-    primary_radial_forces = []
+    primary_axial_clamping_forces = []
+    primary_axial_total_forces = []
     engine_angular_velocities = []
     for state in result.states:
         shift_breakdown = cvt_model.get_breakdown(state)
         car_breakdown = car_model.get_breakdown(state)
 
-        primary_force = shift_breakdown.primaryRadialForce.pulleyForce.net
-        primary_radial_force = shift_breakdown.primaryRadialForce.net
+        primary_force = shift_breakdown.primaryPulleyState.forces.axial_clamping_force
+        primary_axial_force = shift_breakdown.primaryPulleyState.forces.axial_force_total
         actual_engine_velocity = car_breakdown.engine_forces.angular_velocity
 
-        primary_clamping_forces.append(primary_force)
-        primary_radial_forces.append(primary_radial_force)
+        primary_axial_clamping_forces.append(primary_force)
+        primary_axial_total_forces.append(primary_axial_force)
         engine_angular_velocities.append(actual_engine_velocity)
     if ax is None:
         ax = plt.gca()
     ax.plot(
         engine_angular_velocities,
-        primary_clamping_forces,
-        label="Primary Clamping Force",
+        primary_axial_clamping_forces,
+        label="Primary Axial Clamping Force",
     )
     ax.plot(
-        engine_angular_velocities, primary_radial_forces, label="Primary Radial Force"
+        engine_angular_velocities, primary_axial_total_forces, label="Primary Total Axial Force"
     )
     ax.set_xlabel("Engine Angular Velocity (rad/s)")
-    ax.set_ylabel("Primary Clamping Force (N)")
-    ax.set_title("Primary Clamping Force vs Engine Angular Velocity")
+    ax.set_ylabel("Primary Axial Force (N)")
+    ax.set_title("Primary Axial Force vs Engine Angular Velocity")
     ax.legend()
     ax.grid()
 
 
 def plotSecondaryClampingForce(result: SimulationResult, ax=None):
-    secondary_clamping_forces = []
-    secondary_radial_forces = []
+    secondary_axial_clamping_forces = []
+    secondary_axial_total_forces = []
     engine_angular_velocities = []
     for state in result.states:
         shift_breakdown = cvt_model.get_breakdown(state)
         car_breakdown = car_model.get_breakdown(state)
 
-        secondary_force = shift_breakdown.secondaryRadialForce.pulleyForce.net
-        secondary_radial = shift_breakdown.secondaryRadialForce.net
+        secondary_force = shift_breakdown.secondaryPulleyState.forces.axial_clamping_force
+        secondary_axial = shift_breakdown.secondaryPulleyState.forces.axial_force_total
         actual_engine_velocity = car_breakdown.engine_forces.angular_velocity
 
-        secondary_clamping_forces.append(secondary_force)
-        secondary_radial_forces.append(secondary_radial)
+        secondary_axial_clamping_forces.append(secondary_force)
+        secondary_axial_total_forces.append(secondary_axial)
         engine_angular_velocities.append(actual_engine_velocity)
     if ax is None:
         ax = plt.gca()
     ax.plot(
         engine_angular_velocities,
-        secondary_clamping_forces,
-        label="Secondary Clamping Force",
+        secondary_axial_clamping_forces,
+        label="Secondary Axial Clamping Force",
     )
     ax.plot(
         engine_angular_velocities,
-        secondary_radial_forces,
-        label="Secondary Radial Force",
+        secondary_axial_total_forces,
+        label="Secondary Total Axial Force",
     )
     ax.set_xlabel("Engine Angular Velocity (rad/s)")
     ax.set_ylabel("Secondary Clamping Force (N)")
@@ -178,22 +178,26 @@ def plotVehicleEngineSpeed(result: SimulationResult, ax=None):
 
 
 def plot_forces_over_time(result: SimulationResult, ax=None):
-    prim_radial = []
-    sec_radial = []
+    prim_axial_total = []
+    sec_axial_total = []
 
     for state in result.states:
         shift_breakdown = cvt_model.get_breakdown(state)
 
-        prim_radial.append(shift_breakdown.primaryRadialForce.net)
-        sec_radial.append(shift_breakdown.secondaryRadialForce.net)
+        prim_axial_total.append(
+            shift_breakdown.primaryPulleyState.forces.axial_force_total
+        )
+        sec_axial_total.append(
+            shift_breakdown.secondaryPulleyState.forces.axial_force_total
+        )
 
     shift_distances = [state.shift_distance for state in result.states]
     shift_velocities = [state.shift_velocity for state in result.states]
 
     if ax is None:
         ax = plt.gca()
-    ax.plot(result.time, prim_radial, label="Primary Radial", color="tab:green")
-    ax.plot(result.time, sec_radial, label="Secondary Radial", color="tab:red")
+    ax.plot(result.time, prim_axial_total, label="Primary Total Axial", color="tab:green")
+    ax.plot(result.time, sec_axial_total, label="Secondary Total Axial", color="tab:red")
     ax.set_xlabel("Time (s)")
     ax.set_ylabel("Force (N)")
     ax.set_title("Primary and Secondary Forces Over Time")

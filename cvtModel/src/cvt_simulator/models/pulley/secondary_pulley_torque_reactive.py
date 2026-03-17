@@ -9,10 +9,8 @@ from cvt_simulator.models.dataTypes import (
 )
 from cvt_simulator.utils.theoretical_models import TheoreticalModels as tm
 from cvt_simulator.constants.car_specs import (
-    BELT_HEIGHT,
     MAX_SHIFT,
     HELIX_RADIUS,
-    SHEAVE_ANGLE,
 )
 from cvt_simulator.models.ramps import LinearSegment, PiecewiseRamp
 from cvt_simulator.utils.system_state import SystemState
@@ -84,11 +82,11 @@ class PhysicalSecondaryPulley(SecondaryPulleyModel):
         # This ramp needs to have a unique x for every height
         self.ramp = ramp
 
-    def calculate_clamping_force(
+    def calculate_axial_clamping_force(
         self, state: SystemState, **kwargs
     ) -> tuple[float, SecondaryForceBreakdown]:
         """
-        Calculate clamping force from helix torque feedback + spring forces.
+        Calculate mechanism axial clamping force from helix torque feedback + spring forces.
 
         Args:
             state: Current system state
@@ -96,7 +94,7 @@ class PhysicalSecondaryPulley(SecondaryPulleyModel):
                 - torque (float): Transmitted torque through CVT [N⋅m]
 
         Returns:
-            tuple: (net_clamping_force, detailed_breakdown)
+            tuple: (axial_clamping_force, detailed_breakdown)
         """
         shift_distance = state.shift_distance
 
@@ -116,18 +114,22 @@ class PhysicalSecondaryPulley(SecondaryPulleyModel):
         # Calculate compression spring force (static clamping)
         spring_comp_force_breakdown = self._calculate_spring_comp_force(shift_distance)
 
-        # Net clamping force (helix + compression spring)
-        net_clamping_force = helix_force_breakdown.net + spring_comp_force_breakdown.net
+        # Mechanism-only axial clamping force (helix + compression spring)
+        axial_clamping_force = (
+            helix_force_breakdown.net
+            + spring_comp_force_breakdown.net
+        )
 
         # Package detailed breakdown
         breakdown = SecondaryForceBreakdown(
             spring_comp_force_breakdown,
             helix_force_breakdown,
-            net_clamping_force,
+            axial_clamping_force,
         )
 
-        return net_clamping_force, breakdown
+        return axial_clamping_force, breakdown
 
+    # TODO: Use updated math here
     def calculate_max_torque(
         self,
         state: SystemState,
@@ -150,43 +152,35 @@ class PhysicalSecondaryPulley(SecondaryPulleyModel):
         shift_distance = state.shift_distance
         wrap_angle = self._get_wrap_angle(shift_distance)
         radius = self._get_radius(shift_distance)
-
-        # Get spring forces (independent of torque)
-        spring_comp_force = self._calculate_spring_comp_force(shift_distance).net
-
-        # Use helix force calculation with zero torque to get torsion spring torque
-        helix_breakdown = self._calculate_helix_force(0, shift_distance)
-        spring_tors_torque = helix_breakdown.net
-
-        # Convert to radial force contribution
-        spring_force_term = (spring_comp_force + spring_tors_torque) * np.tan(
-            SHEAVE_ANGLE / 2
-        )
-
-        # Centrifugal force contribution, used built in calc with 0 clamp (since we only need centrifugal)
-        _, radial_from_centrifugal, _ = self.calculate_radial_force(state, 0)
-        centrifugal_force = radial_from_centrifugal * wrap_angle / 2
-
-        # Capstan term
-        exp_term = np.exp(self.μ * wrap_angle)
-        capstan_term = (wrap_angle / (4 * radius)) * (exp_term + 1) / (exp_term - 1)
-
-        # Torque transmission term (feedback loop)
         cvt_ratio = tm.current_cvt_ratio(shift_distance)
-        helix_angle = helix_breakdown.angle
-        transmission_term = (
-            2
-            * cvt_ratio
-            * (HELIX_RADIUS * np.tan(helix_angle))
-            * np.tan(SHEAVE_ANGLE / 2)
-        )
 
-        # Solve for max torque (equilibrium of torque feedback loop)
-        numerator = centrifugal_force + spring_force_term
-        denominator = capstan_term - transmission_term
-        max_torque = numerator / denominator
+        # Solve T = T_capacity(T) because secondary clamping is torque-reactive.
+        torque_guess = 0.0
+        for _ in range(40):
+            sec_torque = torque_guess * cvt_ratio
+            axial_clamping_force, _ = self.calculate_axial_clamping_force(
+                state, torque=sec_torque
+            )
+            axial_force_total = (
+                axial_clamping_force + self.axial_centrifugal_from_belt(state)
+            )
+            n_phi = self.calculate_integrated_normal_load(axial_force_total)
 
-        return max(0.0, max_torque)  # Ensure non-negative
+            exp_term = np.exp(self.μ * wrap_angle)
+            capstan_term = (exp_term - 1) / (exp_term + 1)
+            sec_torque_capacity = max(0.0, capstan_term * (2 * radius / wrap_angle) * n_phi)
+            prim_torque_capacity = (
+                sec_torque_capacity / cvt_ratio if cvt_ratio > 1e-9 else sec_torque_capacity
+            )
+
+            # Damped fixed-point update for stability.
+            next_guess = 0.5 * torque_guess + 0.5 * prim_torque_capacity
+            if abs(next_guess - torque_guess) < 1e-6:
+                torque_guess = next_guess
+                break
+            torque_guess = next_guess
+
+        return max(0.0, torque_guess)
 
     # Private helper methods for force calculations
 
@@ -205,25 +199,21 @@ class PhysicalSecondaryPulley(SecondaryPulleyModel):
         # Calculate torsion spring torque (resists cam rotation)
         spring_torque_breakdown = self._calculate_spring_tors_torque(shift_distance)
 
-        # Effective radius at current shift position
-        secondary_radius = tm.outer_sec_radius(shift_distance) - BELT_HEIGHT / 2
+        # Helix rotation gradient dtheta_s/ds at current shift.
+        theta_gradient = self._calculate_theta_gradient(shift_distance)
 
-        # Helix angle at current position
-        # Negative slope because helix ramps down with increasing shift
-        helix_angle = np.arctan(-self.ramp.slope(shift_distance))
+        # Helix angle is retained for debug outputs.
+        helix_angle = np.arctan2(1.0, HELIX_RADIUS * theta_gradient)
 
-        # Convert torque to axial force through helix geometry
-        # F = (τ + τ_spring) / (2 * tan(α) * r)
-        angle_multiplier = 2 * np.tan(helix_angle) * secondary_radius
-
-        # Net
-        net = (torque + spring_torque_breakdown.net) / angle_multiplier
+        # F_s,helix,ax = ((tau_s + tau_spring) / 2) * dtheta_s/ds
+        angle_multiplier = theta_gradient
+        net = ((torque + spring_torque_breakdown.net) / 2) * angle_multiplier
 
         return HelixForceBreakdown(
             feedbackTorque=torque,
             springTorque=spring_torque_breakdown,
             angle=helix_angle,
-            radius=secondary_radius,
+            radius=self.helix_radius,
             angle_multiplier=angle_multiplier,
             net=net,
         )
@@ -232,8 +222,8 @@ class PhysicalSecondaryPulley(SecondaryPulleyModel):
         self, shift_distance: float
     ) -> springCompForceBreakdown:
         """Calculate compression spring force (static clamping)."""
-        # Total compression = preload + shift distance
-        total_compression = self.initial_compression + shift_distance
+        # Axial spring weakens as shift increases: x = x_0 - s
+        total_compression = self.initial_compression - shift_distance
 
         # Hooke's law: F = k * x
         net = tm.hookes_law_comp(self.spring_coeff_comp, total_compression)
@@ -265,6 +255,18 @@ class PhysicalSecondaryPulley(SecondaryPulleyModel):
             rotation=total_rotation,
             net=net,
         )
+
+    def _calculate_theta_gradient(self, shift_distance: float) -> float:
+        """Calculate dtheta_s/ds from current helix ramp mapping."""
+        shift_distance = np.clip(shift_distance, 0, MAX_SHIFT)
+
+        x_position = self.ramp.find_x_at_height(-shift_distance)
+        slope_at_x = self.ramp.slope(x_position)
+        if abs(slope_at_x) < 1e-9:
+            return 0.0
+
+        # y = height(x) = -s => ds/dx = -dy/dx = -slope, so dx/ds = -1/slope.
+        return (-1.0 / slope_at_x) / HELIX_RADIUS
 
     def _calculate_rotation(self, shift_distance: float) -> float:
         """

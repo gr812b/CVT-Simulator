@@ -64,7 +64,7 @@ class PhysicalPrimaryPulley(PrimaryPulleyModel):
 
     Physics:
     - Flyweights experience centrifugal force: F_c = m * ω² * r
-    - Ramp converts radial force to axial: F_axial = F_c * tan(ramp_angle)
+    - Ramp converts flyweight motion directly to axial force through dr_f/ds
     - Spring opposes shift: F_spring = k * x
     - Net clamping: F_clamp = F_flyweight - F_spring
     """
@@ -93,18 +93,18 @@ class PhysicalPrimaryPulley(PrimaryPulleyModel):
         self.initial_flyweight_radius = INITIAL_FLYWEIGHT_RADIUS
         self.ramp = ramp
 
-    def calculate_clamping_force(
+    def calculate_axial_clamping_force(
         self, state: SystemState, **kwargs
     ) -> tuple[float, PrimaryForceBreakdown]:
         """
-        Calculate clamping force from flyweight centrifugal force minus spring force.
+        Calculate mechanism axial clamping force from flyweight force minus spring force.
 
         Args:
             state: Current system state
             **kwargs: Not used for physical primary (speed-reactive only)
 
         Returns:
-            tuple: (net_clamping_force, detailed_breakdown)
+            tuple: (axial_clamping_force, detailed_breakdown)
         """
         shift_distance = state.shift_distance
         angular_velocity = state.engine_angular_velocity
@@ -117,18 +117,21 @@ class PhysicalPrimaryPulley(PrimaryPulleyModel):
         # Calculate spring resistance
         spring_force_breakdown = self._calculate_spring_comp_force(shift_distance)
 
-        # Net clamping force (flyweight pushes, spring resists)
-        net_clamping_force = flyweight_force_breakdown.net - spring_force_breakdown.net
+        # Mechanism-only axial clamping force (flyweight pushes, spring resists)
+        axial_clamping_force = (
+            flyweight_force_breakdown.net - spring_force_breakdown.net
+        )
 
         # Package detailed breakdown
         breakdown = PrimaryForceBreakdown(
             flyweight_force_breakdown,
             spring_force_breakdown,
-            net_clamping_force,
+            axial_clamping_force,
         )
 
-        return net_clamping_force, breakdown
+        return axial_clamping_force, breakdown
 
+    # TODO: Use updated math here
     def calculate_max_torque(
         self,
         state: SystemState,
@@ -136,7 +139,7 @@ class PhysicalPrimaryPulley(PrimaryPulleyModel):
         """
         Calculate maximum transferable torque using Capstan equation.
 
-        Calculates radial force internally from current clamping force.
+        Calculates torque capacity directly from current axial clamping force.
 
         Args:
             state: Current system state
@@ -144,20 +147,22 @@ class PhysicalPrimaryPulley(PrimaryPulleyModel):
         Returns:
             max_torque: Maximum torque before slip [N⋅m]
         """
-        # Calculate clamping force internally
-        clamping_force, _ = self.calculate_clamping_force(state)
-        _, _, total_radial = self.calculate_radial_force(state, clamping_force)
+        # Calculate axial force components internally
+        axial_clamping_force, _ = self.calculate_axial_clamping_force(state)
+        axial_force_total = (
+            axial_clamping_force + self.axial_centrifugal_from_belt(state)
+        )
 
         # Get geometric properties
         wrap_angle = self._get_wrap_angle(state.shift_distance)
         radius = self._get_radius(state.shift_distance)
 
-        # Capstan equation with V-belt friction enhancement
+        # Capstan equation with axial normal-load formulation
+        # N_phi = 2 * F_ax * tan(beta)
+        n_phi = self.calculate_integrated_normal_load(axial_force_total)
         exp_term = math.exp(self.μ * wrap_angle)
         capstan_term = (exp_term - 1) / (exp_term + 1)
-        radial_force_term = total_radial * radius / np.sin(wrap_angle / 2)
-
-        max_torque = capstan_term * radial_force_term
+        max_torque = capstan_term * (2 * radius / wrap_angle) * n_phi
 
         return max(0.0, max_torque)  # Ensure non-negative
 
@@ -184,21 +189,22 @@ class PhysicalPrimaryPulley(PrimaryPulleyModel):
             flyweight_radius,
         )
 
-        # Ramp angle at current position
-        # Ramp is default negative slope, so negate for angle
-        # If a positive slope ramp is passed, it will generate a force against shifting
-        # which is expected for such a stupid ramp design.
-        angle = np.arctan(-self.ramp.slope(shift_distance))
+        # Ramp derivative dr_f/ds at current position.
+        # For current ramp representation r_f(s) = -height(s), so dr_f/ds = -slope(s).
+        ramp_gradient = -self.ramp.slope(shift_distance)
 
-        # Convert centrifugal force to axial clamping force through ramp angle
-        net = centrifugal_force * np.tan(angle)
+        # F_p,ax = m_f * omega_p^2 * (r_f,0 + r_f(s)) * dr_f/ds
+        net = centrifugal_force * ramp_gradient
+
+        # Retain angle output for debug/plots while using derivative for force law.
+        angle = np.arctan(ramp_gradient)
 
         return flyweightForceBreakdown(
             radius=flyweight_radius,
             angular_velocity=angular_velocity,
             angle=angle,
             centrifugal_force=centrifugal_force,
-            angle_multiplier=np.tan(angle),
+            angle_multiplier=ramp_gradient,
             net=net,
         )
 

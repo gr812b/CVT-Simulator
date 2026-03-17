@@ -49,19 +49,13 @@ const inclineForceAccessor: AccessorStrategy = (point) => point.system.car.exter
 const dragForceAccessor: AccessorStrategy = (point) => point.system.car.external_forces.drag_force;
 const totalExternalLoadAccessor: AccessorStrategy = (point) => point.system.car.external_forces.net;
 
-// Overall pulley radial force (combined)
-const primaryRadialForceAccessor: AccessorStrategy = (point) => point.system.cvt.primaryPulleyState.forces.radial_force;
-const secondaryRadialForceAccessor: AccessorStrategy = (point) => point.system.cvt.secondaryPulleyState.forces.radial_force;
-
-// Components of radial force prior to 2sin(phi/2) multiplication
-const primaryRadialFromCentrifugalAccessor: AccessorStrategy = (point) => point.system.cvt.primaryPulleyState.radial_from_centrifugal;
-const primaryRadialFromClampingAccessor: AccessorStrategy = (point) => point.system.cvt.primaryPulleyState.radial_from_clamping;
-const secondaryRadialFromCentrifugalAccessor: AccessorStrategy = (point) => point.system.cvt.secondaryPulleyState.radial_from_centrifugal;
-const secondaryRadialFromClampingAccessor: AccessorStrategy = (point) => point.system.cvt.secondaryPulleyState.radial_from_clamping;
-
 // Overall pulley clamping force (Axial)
-const primaryClampingForceAccessor: AccessorStrategy = (point) => point.system.cvt.primaryPulleyState.forces.clamping_force;
-const secondaryClampingForceAccessor: AccessorStrategy = (point) => point.system.cvt.secondaryPulleyState.forces.clamping_force;
+const primaryAxialClampingForceAccessor: AccessorStrategy = (point) => point.system.cvt.primaryPulleyState.forces.axial_clamping_force;
+const secondaryAxialClampingForceAccessor: AccessorStrategy = (point) => point.system.cvt.secondaryPulleyState.forces.axial_clamping_force;
+const primaryAxialCentrifugalFromBeltAccessor: AccessorStrategy = (point) => point.system.cvt.primaryPulleyState.forces.axial_centrifugal_from_belt;
+const secondaryAxialCentrifugalFromBeltAccessor: AccessorStrategy = (point) => point.system.cvt.secondaryPulleyState.forces.axial_centrifugal_from_belt;
+const primaryAxialForceTotalAccessor: AccessorStrategy = (point) => point.system.cvt.primaryPulleyState.forces.axial_force_total;
+const secondaryAxialForceTotalAccessor: AccessorStrategy = (point) => point.system.cvt.secondaryPulleyState.forces.axial_force_total;
 
 // Helper function to extract values from breakdown with proper error handling
 function getBreakdownValue<T>(
@@ -142,8 +136,6 @@ export const accessorToUnit = new Map<AccessorStrategy, BaseUnitType>([
     [t_max_primAccessor, 'torque'],
     [t_max_secAccessor, 'torque'],
     [torque_demandAccessor, 'torque'],
-    [primaryRadialForceAccessor, 'force'],
-    [secondaryRadialForceAccessor, 'force'],
     [primaryFlyweightForceAccessor, 'force'],
     [rawFlyweightCentrifugalForce, 'force'],
     [primarySpringForceAccessor, 'force'],
@@ -151,15 +143,15 @@ export const accessorToUnit = new Map<AccessorStrategy, BaseUnitType>([
     [secondaryHelixSpringTorqueAccessor, 'torque'],
     [secondaryHelixForceAccessor, 'force'],
     [secondarySpringCompForceAccessor, 'force'],
-    [primaryClampingForceAccessor, 'force'],
-    [secondaryClampingForceAccessor, 'force'],
+    [primaryAxialClampingForceAccessor, 'force'],
+    [secondaryAxialClampingForceAccessor, 'force'],
+    [primaryAxialCentrifugalFromBeltAccessor, 'force'],
+    [secondaryAxialCentrifugalFromBeltAccessor, 'force'],
+    [primaryAxialForceTotalAccessor, 'force'],
+    [secondaryAxialForceTotalAccessor, 'force'],
     [inclineForceAccessor, 'force'],
     [dragForceAccessor, 'force'],
     [totalExternalLoadAccessor, 'force'],
-    [primaryRadialFromCentrifugalAccessor, 'force'],
-    [primaryRadialFromClampingAccessor, 'force'],
-    [secondaryRadialFromCentrifugalAccessor, 'force'],
-    [secondaryRadialFromClampingAccessor, 'force'],
     [isSlippingAccessor, 'dimensionless'],
     [couplingTorqueAtWheels, 'torque'],
     [loadTorqueAtWheels, 'torque'],
@@ -343,24 +335,24 @@ export const graphCategories: GraphCategory[] = [
     /** PRIM AND SEC OVERALL GRAPHS */
     { // Shows overall direction of shift
         xAccessor: timeAccessor,
-        yAccessor: [primaryRadialForceAccessor, secondaryRadialForceAccessor],
+        yAccessor: [primaryAxialForceTotalAccessor, secondaryAxialForceTotalAccessor],
         config: {
-            title: "Pulley Net Radial Forces vs Time",
+            title: "Pulley Total Axial Forces vs Time",
             xAxis: { name: "Time", type: "value", unit: "s" },
-            yAxis: { name: "Radial Force", type: "value", unit: "N" },
-            seriesNames: ["Primary Net", "Secondary Net"],
+            yAxis: { name: "Axial Force", type: "value", unit: "N" },
+            seriesNames: ["Primary Total", "Secondary Total"],
             showXLine: true,
             showYLine: false
         }
     },
-    { // Breakdown of radial force in belt centrifugal and clamping
+    { // Breakdown of axial clamping and belt centrifugal contribution
         xAccessor: timeAccessor,
-        yAccessor: [ primaryRadialFromClampingAccessor, secondaryRadialFromClampingAccessor, primaryRadialFromCentrifugalAccessor, secondaryRadialFromCentrifugalAccessor],
+        yAccessor: [primaryAxialClampingForceAccessor, secondaryAxialClampingForceAccessor, primaryAxialCentrifugalFromBeltAccessor, secondaryAxialCentrifugalFromBeltAccessor],
         config: {
-            title: "Radial Breakdown vs Time",
+            title: "Axial Force Breakdown vs Time",
             xAxis: { name: "Time", type: "value", unit: "s" },
             yAxis: { name: "Force", type: "value", unit: "N" },
-            seriesNames: ["Primary Pulley", "Secondary Pulley", "Primary Centrifugal", "Secondary Centrifugal"],
+            seriesNames: ["Primary Clamping", "Secondary Clamping", "Primary Belt Centrifugal", "Secondary Belt Centrifugal"],
             showXLine: true,
             showYLine: false
         }

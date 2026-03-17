@@ -57,32 +57,30 @@ function convertTimeStepData(
     cvt: {
       primaryPulleyState: {
         forces: {
-          radial_force: conv(timeStep.system.cvt.primaryPulleyState.forces.radial_force, 'force'),
-          clamping_force: conv(timeStep.system.cvt.primaryPulleyState.forces.clamping_force, 'force'),
+          axial_clamping_force: conv(timeStep.system.cvt.primaryPulleyState.forces.axial_clamping_force, 'force'),
+          axial_centrifugal_from_belt: conv(timeStep.system.cvt.primaryPulleyState.forces.axial_centrifugal_from_belt, 'force'),
+          axial_force_total: conv(timeStep.system.cvt.primaryPulleyState.forces.axial_force_total, 'force'),
           max_torque: conv(timeStep.system.cvt.primaryPulleyState.forces.max_torque, 'torque'),
         },
         wrap_angle: conv(timeStep.system.cvt.primaryPulleyState.wrap_angle, 'angle'),
         radius: conv(timeStep.system.cvt.primaryPulleyState.radius, 'distance'),
         angular_velocity: conv(timeStep.system.cvt.primaryPulleyState.angular_velocity, 'angular_velocity'),
         angular_position: conv(timeStep.system.cvt.primaryPulleyState.angular_position, 'angle'),
-        radial_from_centrifugal: conv(timeStep.system.cvt.primaryPulleyState.radial_from_centrifugal, 'force'),
-        radial_from_clamping: conv(timeStep.system.cvt.primaryPulleyState.radial_from_clamping, 'force'),
         breakdown: {
           ...convertPulleyForce(timeStep.system.cvt.primaryPulleyState.breakdown, config)
         }
       },
       secondaryPulleyState: {
         forces: {
-          radial_force: conv(timeStep.system.cvt.secondaryPulleyState.forces.radial_force, 'force'),
-          clamping_force: conv(timeStep.system.cvt.secondaryPulleyState.forces.clamping_force, 'force'),
+          axial_clamping_force: conv(timeStep.system.cvt.secondaryPulleyState.forces.axial_clamping_force, 'force'),
+          axial_centrifugal_from_belt: conv(timeStep.system.cvt.secondaryPulleyState.forces.axial_centrifugal_from_belt, 'force'),
+          axial_force_total: conv(timeStep.system.cvt.secondaryPulleyState.forces.axial_force_total, 'force'),
           max_torque: conv(timeStep.system.cvt.secondaryPulleyState.forces.max_torque, 'torque'),
         },
         wrap_angle: conv(timeStep.system.cvt.secondaryPulleyState.wrap_angle, 'angle'),
         radius: conv(timeStep.system.cvt.secondaryPulleyState.radius, 'distance'),
         angular_velocity: conv(timeStep.system.cvt.secondaryPulleyState.angular_velocity, 'angular_velocity'),
         angular_position: conv(timeStep.system.cvt.secondaryPulleyState.angular_position, 'angle'),
-        radial_from_centrifugal: conv(timeStep.system.cvt.secondaryPulleyState.radial_from_centrifugal, 'force'),
-        radial_from_clamping: conv(timeStep.system.cvt.secondaryPulleyState.radial_from_clamping, 'force'),
         breakdown: {
           ...convertPulleyForce(timeStep.system.cvt.secondaryPulleyState.breakdown, config)
         }
