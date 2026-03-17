@@ -148,7 +148,12 @@ class SlipModel:
             tuple: (primary_t_max, secondary_t_max)
         """
         primary_t_max = self.primary_pulley.calculate_max_torque(state)
-        secondary_t_max = self.secondary_pulley.calculate_max_torque(state)
+        load_torque = self.load_model.get_breakdown(state).net
+        secondary_t_max = self.secondary_pulley.calculate_max_torque(
+            state,
+            external_load_torque=load_torque,
+            secondary_inertia=self.secondary_pulley_model.inertia,
+        )
 
         # Use the more restrictive (smaller) T_MAX
         primary_t_max = max(0, primary_t_max)

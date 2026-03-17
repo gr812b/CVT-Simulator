@@ -29,6 +29,10 @@ class SecondaryPulleyModel(PulleyModel, ABC):
     def _get_radius(self, shift_distance: float) -> float:
         """Get secondary effective pitch radius at current shift position [m]."""
         return tm.secondary_effective_radius(shift_distance)
+    
+    def _get_radius_rate_of_change(self, shift_distance):
+        """Get dr/dt at current shift position [m/m]."""
+        return tm.secondary_radius_rate_of_change(shift_distance)
 
     def _get_angular_velocity(self, state: SystemState) -> float:
         """Get secondary pulley angular velocity [rad/s]."""

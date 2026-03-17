@@ -136,6 +136,7 @@ class PhysicalPrimaryPulley(PrimaryPulleyModel):
     def calculate_max_torque(
         self,
         state: SystemState,
+        **kwargs,
     ) -> float:
         """
         Calculate maximum transferable torque using Capstan equation.

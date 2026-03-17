@@ -186,6 +186,7 @@ class PulleyModel(ABC):
     def calculate_max_torque(
         self,
         state: SystemState,
+        **kwargs,
     ) -> float:
         """
         Calculate maximum transferable torque before belt slip.
@@ -202,6 +203,9 @@ class PulleyModel(ABC):
 
         Args:
             state: Current system state
+            **kwargs: Optional implementation-specific parameters used by
+                some pulley models (for example external load torque or
+                equivalent side inertia terms).
 
         Returns:
             max_torque: Maximum torque capacity [N⋅m]
@@ -237,7 +241,7 @@ class PulleyModel(ABC):
         axial_force_total = axial_clamping_force + axial_centrifugal_from_belt
 
         # Step 4: Calculate max transferable torque
-        max_torque = self.calculate_max_torque(state)
+        max_torque = self.calculate_max_torque(state, **kwargs)
 
         # Get geometric properties
         wrap_angle = self._get_wrap_angle(state.shift_distance)
@@ -272,6 +276,11 @@ class PulleyModel(ABC):
     @abstractmethod
     def _get_radius(self, shift_distance: float) -> float:
         """Get effective pitch radius at current shift position [m]."""
+        pass
+
+    @abstractmethod
+    def _get_radius_rate_of_change(self, shift_distance: float) -> float:
+        """Get dr/dt at current shift position [m/m]."""
         pass
 
     @abstractmethod

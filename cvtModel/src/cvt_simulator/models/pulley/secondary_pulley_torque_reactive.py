@@ -1,6 +1,6 @@
 import numpy as np
 from cvt_simulator.models.pulley.secondary_pulley_interface import SecondaryPulleyModel
-from cvt_simulator.models.pulley.pulley_interface import get_required_kwarg
+from cvt_simulator.models.pulley.pulley_interface import get_kwarg, get_required_kwarg
 from cvt_simulator.models.dataTypes import (
     HelixForceBreakdown,
     SecondaryForceBreakdown,
@@ -9,9 +9,12 @@ from cvt_simulator.models.dataTypes import (
 )
 from cvt_simulator.utils.theoretical_models import TheoreticalModels as tm
 from cvt_simulator.constants.car_specs import (
+    BELT_CROSS_SECTIONAL_AREA,
     MAX_SHIFT,
     HELIX_RADIUS,
+    SHEAVE_ANGLE,
 )
+from cvt_simulator.constants.constants import RUBBER_DENSITY
 from cvt_simulator.models.ramps import LinearSegment, PiecewiseRamp
 from cvt_simulator.utils.system_state import SystemState
 
@@ -129,10 +132,10 @@ class PhysicalSecondaryPulley(SecondaryPulleyModel):
 
         return axial_clamping_force, breakdown
 
-    # TODO: Use updated math here
     def calculate_max_torque(
         self,
         state: SystemState,
+        **kwargs,
     ) -> float:
         """
         Calculate maximum transferable torque using modified Capstan equation.
@@ -149,38 +152,43 @@ class PhysicalSecondaryPulley(SecondaryPulleyModel):
         Returns:
             max_torque: Maximum torque before slip [N⋅m]
         """
-        shift_distance = state.shift_distance
-        wrap_angle = self._get_wrap_angle(shift_distance)
-        radius = self._get_radius(shift_distance)
-        cvt_ratio = tm.current_effective_cvt_ratio(shift_distance)
+        shift_distance = np.clip(state.shift_distance, 0, MAX_SHIFT)
+        angular_velocity = self._get_angular_velocity(state)
 
-        # Solve T = T_capacity(T) because secondary clamping is torque-reactive.
-        torque_guess = 0.0
-        for _ in range(40):
-            sec_torque = torque_guess * cvt_ratio
-            axial_clamping_force, _ = self.calculate_axial_clamping_force(
-                state, torque=sec_torque
-            )
-            axial_force_total = (
-                axial_clamping_force + self.axial_centrifugal_from_belt(state)
-            )
-            n_phi = self.calculate_integrated_normal_load(axial_force_total)
+        # Geometry terms in the new relation:
+        # - r_eff: effective pitch radius
+        # - r_cm: belt centroid radius (all other r terms)
+        r_eff = self._get_radius(shift_distance)
+        r_cm = self._get_belt_centroid_radius(shift_distance)
+        r_dot = self._get_radius_rate_of_change(shift_distance)
+        phi = self._get_wrap_angle(shift_distance)
+        beta = SHEAVE_ANGLE / 2
 
-            exp_term = np.exp(self.μ * wrap_angle)
-            capstan_term = (exp_term - 1) / (exp_term + 1)
-            sec_torque_capacity = max(0.0, capstan_term * (2 * radius / wrap_angle) * n_phi)
-            prim_torque_capacity = (
-                sec_torque_capacity / cvt_ratio if cvt_ratio > 1e-9 else sec_torque_capacity
-            )
+        # Runtime dynamics terms supplied by system models.
+        tau_load = get_kwarg(kwargs, "external_load_torque", 0.0)
+        I_s = get_kwarg(kwargs, "secondary_inertia", 1.0)
 
-            # Damped fixed-point update for stability.
-            next_guess = 0.5 * torque_guess + 0.5 * prim_torque_capacity
-            if abs(next_guess - torque_guess) < 1e-6:
-                torque_guess = next_guess
-                break
-            torque_guess = next_guess
+        # Ramp and spring terms.
+        dtheta_ds = self._calculate_theta_gradient(shift_distance)
+        theta_total = self.initial_rotation + self._calculate_rotation(shift_distance)
+        x_total = self.initial_compression - shift_distance
 
-        return max(0.0, torque_guess)
+        spring_term = (
+            self.spring_coeff_tors * theta_total * dtheta_ds
+            + 2 * self.spring_coeff_comp * x_total
+        )
+
+        belt_mass_term = (RUBBER_DENSITY * BELT_CROSS_SECTIONAL_AREA * r_cm * phi)
+
+        numerator = (self.μ * np.tan(beta) * spring_term) + belt_mass_term * ((r_cm * tau_load / I_s) - (2 * r_dot * angular_velocity)) 
+
+        denominator = (
+            (1.0 / r_eff)
+            - (dtheta_ds * self.μ * np.tan(beta))
+            + (belt_mass_term * r_cm / I_s)
+        )
+
+        return numerator / denominator
 
     # Private helper methods for force calculations
 
