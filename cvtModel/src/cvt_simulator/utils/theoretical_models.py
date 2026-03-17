@@ -28,6 +28,21 @@ class TheoreticalModels:
         return 0.5 * ρ * v**2 * A * C_d
 
     @staticmethod
+    def sgn(x: float) -> float:
+        """Sign function: returns -1, 0, or 1 based on sign of x."""
+        if x > 0:
+            return 1.0
+        elif x < 0:
+            return -1.0
+        else:
+            return 0.0
+
+    @staticmethod
+    def rolling_resistance(C_rr: float, m: float, g: float, α: float) -> float:
+        """Calculate rolling resistance force. C_rr is coefficient, m is mass, α is incline angle."""
+        return C_rr * m * g * np.cos(α)
+
+    @staticmethod
     def torque(P: float, ω: float) -> float:
         return P / ω
 

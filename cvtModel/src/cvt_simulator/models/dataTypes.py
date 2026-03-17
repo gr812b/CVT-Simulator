@@ -104,6 +104,7 @@ class CvtSystemForceBreakdown:
 ## External load
 @dataclass
 class ExternalLoadForceBreakdown:
+    rolling_resistance_force: float
     incline_force: float
     drag_force: float
     net: float
