@@ -49,7 +49,7 @@ class SlipModel:
         Returns:
             SlipBreakdown with slip analysis
         """
-        cvt_ratio_derivative = tm.current_cvt_ratio_rate_of_change(
+        effective_cvt_ratio_time_derivative = tm.current_effective_cvt_ratio_time_derivative(
             state.shift_distance, state.shift_velocity
         )
         t_max_prim, t_max_sec = self.calculate_t_max(state)
@@ -60,7 +60,7 @@ class SlipModel:
         relative_speed = self._relative_speed(
             state.engine_angular_velocity,
             state.car_velocity * wheel_to_sec_ratio,
-            tm.current_cvt_ratio(state.shift_distance),
+            tm.current_effective_cvt_ratio(state.shift_distance),
         )
 
         # 1) Smooth Coulomb-like torque based on slip speed
@@ -86,7 +86,7 @@ class SlipModel:
         return SlipBreakdown(
             coupling_torque=coupling_torque,
             torque_demand=torque_demand,
-            cvt_ratio_derivative=cvt_ratio_derivative,
+            effective_cvt_ratio_time_derivative=effective_cvt_ratio_time_derivative,
             t_max_prim=t_max_prim,
             t_max_sec=t_max_sec,
             is_slipping=is_slipping,
@@ -102,10 +102,10 @@ class SlipModel:
         load_torque = load_force * WHEEL_RADIUS
         wheel_angular_velocity = self.get_wheel_speed(state.car_velocity)
         engine_to_wheel_ratio = (
-            tm.current_cvt_ratio(state.shift_distance) * GEARBOX_RATIO
+            tm.current_effective_cvt_ratio(state.shift_distance) * GEARBOX_RATIO
         )
-        engine_to_wheel_ratio_rate_of_change = (
-            tm.current_cvt_ratio_rate_of_change(
+        engine_to_wheel_ratio_time_derivative = (
+            tm.current_effective_cvt_ratio_time_derivative(
                 state.shift_distance, state.shift_velocity
             )
             * GEARBOX_RATIO
@@ -118,7 +118,7 @@ class SlipModel:
             ENGINE_INERTIA
             * wheel_inertia
             * wheel_angular_velocity
-            * engine_to_wheel_ratio_rate_of_change
+            * engine_to_wheel_ratio_time_derivative
         )
 
         numerator = eng_term + load_term - shift_term

@@ -152,7 +152,7 @@ class PhysicalSecondaryPulley(SecondaryPulleyModel):
         shift_distance = state.shift_distance
         wrap_angle = self._get_wrap_angle(shift_distance)
         radius = self._get_radius(shift_distance)
-        cvt_ratio = tm.current_cvt_ratio(shift_distance)
+        cvt_ratio = tm.current_effective_cvt_ratio(shift_distance)
 
         # Solve T = T_capacity(T) because secondary clamping is torque-reactive.
         torque_guess = 0.0

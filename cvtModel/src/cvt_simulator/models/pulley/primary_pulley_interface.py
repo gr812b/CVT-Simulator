@@ -1,8 +1,5 @@
 from cvt_simulator.models.pulley.pulley_interface import PulleyModel
 from pyparsing import ABC
-from cvt_simulator.constants.car_specs import (
-    BELT_HEIGHT,
-)
 from cvt_simulator.utils.system_state import SystemState
 from cvt_simulator.utils.theoretical_models import TheoreticalModels as tm
 
@@ -26,7 +23,7 @@ class PrimaryPulleyModel(PulleyModel, ABC):
 
     def _get_radius(self, shift_distance: float) -> float:
         """Get primary effective pitch radius at current shift position [m]."""
-        return tm.outer_prim_radius(shift_distance) - BELT_HEIGHT / 2
+        return tm.primary_effective_radius(shift_distance)
 
     def _get_angular_velocity(self, state: SystemState) -> float:
         """Get primary pulley angular velocity (engine speed) [rad/s]."""

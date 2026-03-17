@@ -1,8 +1,5 @@
 import numpy as np
-from cvt_simulator.constants.car_specs import (
-    BELT_HEIGHT,
-    CENTER_TO_CENTER,
-)
+from cvt_simulator.constants.car_specs import CENTER_TO_CENTER
 from cvt_simulator.utils.cvt_ratio_utils import CVTGeometry
 
 # Module-level CVTGeometry instance using default constants
@@ -51,20 +48,28 @@ class TheoreticalModels:
         return m * a
 
     @staticmethod  # See Enman's excel sheet
-    def outer_prim_radius(d: float) -> float:
-        return _cvt_geometry.r_primary(d)
+    def primary_outer_radius(d: float) -> float:
+        return _cvt_geometry.primary_outer_radius(d)
 
     @staticmethod  # See Enman's excel sheet
-    def outer_sec_radius(d: float) -> float:
-        return _cvt_geometry.r_secondary(d)
+    def secondary_outer_radius(d: float) -> float:
+        return _cvt_geometry.secondary_outer_radius(d)
 
     @staticmethod
-    def current_cvt_ratio(d: float) -> float:
-        return _cvt_geometry.ratio_from_d(d).ratio
+    def primary_effective_radius(d: float) -> float:
+        return _cvt_geometry.primary_effective_radius(d)
 
     @staticmethod
-    def current_cvt_ratio_rate_of_change(d: float, v: float) -> float:
-        return _cvt_geometry.cvt_ratio_rate_of_change(d, v)
+    def secondary_effective_radius(d: float) -> float:
+        return _cvt_geometry.secondary_effective_radius(d)
+
+    @staticmethod
+    def current_effective_cvt_ratio(d: float) -> float:
+        return _cvt_geometry.effective_cvt_ratio(d)
+
+    @staticmethod
+    def current_effective_cvt_ratio_time_derivative(d: float, v: float) -> float:
+        return _cvt_geometry.effective_cvt_ratio_time_derivative(d, v)
 
     @staticmethod
     def wrap_angle(
@@ -77,8 +82,8 @@ class TheoreticalModels:
 
     @staticmethod
     def primary_wrap_angle(d: float):
-        primary_radius = TheoreticalModels.outer_prim_radius(d) - BELT_HEIGHT / 2
-        secondary_radius = TheoreticalModels.outer_sec_radius(d) - BELT_HEIGHT / 2
+        primary_radius = TheoreticalModels.primary_effective_radius(d)
+        secondary_radius = TheoreticalModels.secondary_effective_radius(d)
         wrap_offset = TheoreticalModels.wrap_angle(primary_radius, secondary_radius)
         # print(f"Ratio: {secondary_radius/primary_radius}, wrap: {wrap_offset}")
         if primary_radius <= secondary_radius:
@@ -88,8 +93,8 @@ class TheoreticalModels:
 
     @staticmethod
     def secondary_wrap_angle(d: float):
-        primary_radius = TheoreticalModels.outer_prim_radius(d) - BELT_HEIGHT / 2
-        secondary_radius = TheoreticalModels.outer_sec_radius(d) - BELT_HEIGHT / 2
+        primary_radius = TheoreticalModels.primary_effective_radius(d)
+        secondary_radius = TheoreticalModels.secondary_effective_radius(d)
         wrap_offset = TheoreticalModels.wrap_angle(primary_radius, secondary_radius)
         if primary_radius <= secondary_radius:
             return np.pi + wrap_offset

@@ -1,7 +1,6 @@
 from cvt_simulator.models.pulley.pulley_interface import PulleyModel
 from pyparsing import ABC
 from cvt_simulator.constants.car_specs import (
-    BELT_HEIGHT,
     GEARBOX_RATIO,
     WHEEL_RADIUS,
 )
@@ -29,7 +28,7 @@ class SecondaryPulleyModel(PulleyModel, ABC):
 
     def _get_radius(self, shift_distance: float) -> float:
         """Get secondary effective pitch radius at current shift position [m]."""
-        return tm.outer_sec_radius(shift_distance) - BELT_HEIGHT / 2
+        return tm.secondary_effective_radius(shift_distance)
 
     def _get_angular_velocity(self, state: SystemState) -> float:
         """Get secondary pulley angular velocity (wheel speed / gearbox) [rad/s]."""

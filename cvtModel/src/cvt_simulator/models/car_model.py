@@ -25,7 +25,7 @@ class CarModel:
         load_torque = load_force * WHEEL_RADIUS
 
         engine_to_wheel_ratio = (
-            tm.current_cvt_ratio(state.shift_distance) * GEARBOX_RATIO
+            tm.current_effective_cvt_ratio(state.shift_distance) * GEARBOX_RATIO
         )
         accel = (
             WHEEL_RADIUS

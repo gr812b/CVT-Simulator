@@ -45,7 +45,7 @@ class CvtShiftModel:
 
         acceleration = (net + friction) / self.cvt_moving_mass
 
-        cvt_ratio = tm.current_cvt_ratio(state.shift_distance)
+        cvt_ratio = tm.current_effective_cvt_ratio(state.shift_distance)
 
         return CvtSystemForceBreakdown(
             primary_state,
@@ -71,7 +71,7 @@ class CvtShiftModel:
         primary_state = self.primary_pulley.get_pulley_state(state)
 
         # Calculate CVT ratio for torque scaling to secondary
-        cvt_ratio = tm.current_cvt_ratio(state.shift_distance)
+        cvt_ratio = tm.current_effective_cvt_ratio(state.shift_distance)
 
         # Get secondary pulley state (torque-reactive, needs scaled torque)
         secondary_state = self.secondary_pulley.get_pulley_state(

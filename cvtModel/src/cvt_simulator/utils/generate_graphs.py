@@ -297,8 +297,8 @@ def plotShiftCurves(results: list[SimulationResult], ax=None):
     max_engine = max(all_engine_velocities) if all_engine_velocities else 0
 
     # Compute constant ratios (they are independent of the simulation result).
-    min_ratio = tm.current_cvt_ratio(0) * GEARBOX_RATIO / WHEEL_RADIUS
-    max_ratio = tm.current_cvt_ratio(MAX_SHIFT) * GEARBOX_RATIO / WHEEL_RADIUS
+    min_ratio = tm.current_effective_cvt_ratio(0) * GEARBOX_RATIO / WHEEL_RADIUS
+    max_ratio = tm.current_effective_cvt_ratio(MAX_SHIFT) * GEARBOX_RATIO / WHEEL_RADIUS
 
     # Create a common x-axis for the dashed lines.
     x_vals = np.linspace(0, max_x, 100)

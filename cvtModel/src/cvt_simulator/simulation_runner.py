@@ -33,7 +33,7 @@ class SimulationRunner:
     TOTAL_SIM_TIME = 30  # seconds
     INITIAL_STATE = SystemState(
         car_velocity=rpm_to_rad_s(0.1)
-        / (GEARBOX_RATIO * tm.current_cvt_ratio(0))
+        / (GEARBOX_RATIO * tm.current_effective_cvt_ratio(0))
         * WHEEL_RADIUS,
         car_position=0.0,
         shift_velocity=0.0,
