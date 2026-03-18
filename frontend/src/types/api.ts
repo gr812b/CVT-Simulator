@@ -133,16 +133,6 @@ export interface components {
             primary_engagement: components["schemas"]["SolverResultModel"];
             shift_initiation: components["schemas"]["SolverResultModel"];
         };
-        /** CarForceBreakdownModel */
-        CarForceBreakdownModel: {
-            /** Coupling Torque At Secondary Pulley */
-            coupling_torque_at_secondary_pulley: number;
-            /** External Load Torque At Secondary Pulley */
-            external_load_torque_at_secondary_pulley: number;
-            external_forces: components["schemas"]["ExternalLoadForceBreakdownModel"];
-            /** Secondary Pulley Angular Acceleration */
-            secondary_pulley_angular_acceleration: number;
-        };
         /**
          * CarSpecs
          * @description Configuration class for CVT simulator car specifications.
@@ -157,6 +147,24 @@ export interface components {
              * @default 0.1
              */
             engine_inertia: number;
+            /**
+             * Secondary Inertia
+             * @description Secondary CVT pulley inertia in kg*m^2
+             * @default 0.1
+             */
+            secondary_inertia: number;
+            /**
+             * Gearbox Inertia
+             * @description Gearbox inertia in kg*m^2
+             * @default 0.05
+             */
+            gearbox_inertia: number;
+            /**
+             * Wheel Inertia
+             * @description Wheel inertia in kg*m^2 (all wheels)
+             * @default 0.2
+             */
+            wheel_inertia: number;
             /**
              * Driveline Inertia
              * @description Driveline inertia in kg*m^2 (includes sec CVT, gearbox, axles, wheels, hubs, etc)
@@ -188,6 +196,12 @@ export interface components {
              */
             drag_coefficient: number;
             /**
+             * Rolling Resistance Coefficient
+             * @description Rolling resistance coefficient (unitless)
+             * @default 0.015
+             */
+            rolling_resistance_coefficient: number;
+            /**
              * Sheave Angle
              * @description Sheave angle in radians
              * @default 0.40142572795869574
@@ -196,7 +210,7 @@ export interface components {
             /**
              * Initial Flyweight Radius
              * @description Initial flyweight radius in meters
-             * @default 0.05
+             * @default 0.04878
              */
             initial_flyweight_radius: number;
             /**
@@ -205,12 +219,6 @@ export interface components {
              * @default 0.04445
              */
             helix_radius: number;
-            /**
-             * Belt Angle
-             * @description Belt angle in radians
-             * @default 0.24434609527920614
-             */
-            belt_angle: number;
             /**
              * Belt Height
              * @description Belt height in meters
@@ -226,13 +234,19 @@ export interface components {
             /**
              * Belt Width Top
              * @description Belt width at top in meters
-             * @default 0.021589999999999998
+             * @default 0.021335999999999997
              */
             belt_width_top: number;
             /**
+             * Belt Width Bottom
+             * @description Belt width at bottom in meters
+             * @default 0.0168148
+             */
+            belt_width_bottom: number;
+            /**
              * Min Prim Radius
              * @description Minimum primary pulley radius in meters
-             * @default 0.019049999999999997
+             * @default 0.0206375
              */
             min_prim_radius: number;
             /**
@@ -244,14 +258,14 @@ export interface components {
             /**
              * Initial Sheave Displacement
              * @description Initial sheave displacement in meters
-             * @default 0.0063754
+             * @default 0.0024891999999999996
              */
             initial_sheave_displacement: number;
             /**
-             * Belt Width Bottom
+             * Belt Angle
              * @description Belt width at bottom in meters, calculated from top width, height and angle.
              */
-            readonly belt_width_bottom: number;
+            readonly belt_angle: number;
             /**
              * Belt Cross Sectional Area
              * @description Belt cross-sectional area in m^2.
@@ -284,8 +298,8 @@ export interface components {
              */
             type: "circular";
         };
-        /** CvtSystemForceBreakdownModel */
-        CvtSystemForceBreakdownModel: {
+        /** CvtDynamicsBreakdownModel */
+        CvtDynamicsBreakdownModel: {
             primaryPulleyState: components["schemas"]["PulleyStateModel"];
             secondaryPulleyState: components["schemas"]["PulleyStateModel"];
             /** Friction */
@@ -297,21 +311,28 @@ export interface components {
             /** Net */
             net: number;
         };
-        /** EngineForceBreakdownModel */
-        EngineForceBreakdownModel: {
-            /** Primary Pulley Drive Torque */
-            primary_pulley_drive_torque: number;
-            /** Coupling Torque At Primary Pulley */
-            coupling_torque_at_primary_pulley: number;
-            /** Power */
-            power: number;
-            /** Primary Pulley Angular Velocity */
-            primary_pulley_angular_velocity: number;
-            /** Primary Pulley Angular Acceleration */
-            primary_pulley_angular_acceleration: number;
+        /** DerivedKinematicStateModel */
+        DerivedKinematicStateModel: {
+            /** Car Velocity */
+            car_velocity: number;
+            /** Car Position */
+            car_position: number;
+            /** Engine Angular Velocity */
+            engine_angular_velocity: number;
+            /** Engine Angular Position */
+            engine_angular_position: number;
+        };
+        /** DrivetrainBreakdownModel */
+        DrivetrainBreakdownModel: {
+            belt_slip: components["schemas"]["SlipBreakdownModel"];
+            primary_pulley: components["schemas"]["PrimaryPulleyDynamicsBreakdownModel"];
+            secondary_pulley: components["schemas"]["SecondaryPulleyDynamicsBreakdownModel"];
+            cvt_dynamics: components["schemas"]["CvtDynamicsBreakdownModel"];
         };
         /** ExternalLoadForceBreakdownModel */
         ExternalLoadForceBreakdownModel: {
+            /** Rolling Resistance Force */
+            rolling_resistance_force: number;
             /** Incline Force */
             incline_force: number;
             /** Drag Force */
@@ -367,12 +388,27 @@ export interface components {
             /** Net */
             net: number;
         };
+        /** PrimaryPulleyDynamicsBreakdownModel */
+        PrimaryPulleyDynamicsBreakdownModel: {
+            /** Primary Pulley Drive Torque */
+            primary_pulley_drive_torque: number;
+            /** Coupling Torque At Primary Pulley */
+            coupling_torque_at_primary_pulley: number;
+            /** Power */
+            power: number;
+            /** Primary Pulley Angular Velocity */
+            primary_pulley_angular_velocity: number;
+            /** Primary Pulley Angular Acceleration */
+            primary_pulley_angular_acceleration: number;
+        };
         /** PulleyForcesModel */
         PulleyForcesModel: {
-            /** Clamping Force */
-            clamping_force: number;
-            /** Radial Force */
-            radial_force: number;
+            /** Axial Clamping Force */
+            axial_clamping_force: number;
+            /** Axial Centrifugal From Belt */
+            axial_centrifugal_from_belt: number;
+            /** Axial Force Total */
+            axial_force_total: number;
             /** Max Torque */
             max_torque: number;
         };
@@ -387,10 +423,6 @@ export interface components {
             angular_velocity: number;
             /** Angular Position */
             angular_position: number;
-            /** Radial From Clamping */
-            radial_from_clamping: number;
-            /** Radial From Centrifugal */
-            radial_from_centrifugal: number;
             /** Breakdown */
             breakdown: components["schemas"]["PrimaryForceBreakdownModel"] | components["schemas"]["SecondaryForceBreakdownModel"];
         };
@@ -414,19 +446,25 @@ export interface components {
             /** Net */
             net: number;
         };
+        /** SecondaryPulleyDynamicsBreakdownModel */
+        SecondaryPulleyDynamicsBreakdownModel: {
+            /** Coupling Torque At Secondary Pulley */
+            coupling_torque_at_secondary_pulley: number;
+            /** External Load Torque At Secondary Pulley */
+            external_load_torque_at_secondary_pulley: number;
+            external_forces: components["schemas"]["ExternalLoadForceBreakdownModel"];
+            /** Secondary Pulley Angular Acceleration */
+            secondary_pulley_angular_acceleration: number;
+        };
         /** SimulationArgsInput */
         SimulationArgsInput: {
             /** Flyweight Mass */
             flyweight_mass?: number | null;
-            /** Primary Ramp Geometry */
-            primary_ramp_geometry?: number | null;
             primary_ramp_config?: components["schemas"]["PiecewiseRampConfigModel"] | null;
             /** Primary Spring Rate */
             primary_spring_rate?: number | null;
             /** Primary Spring Pretension */
             primary_spring_pretension?: number | null;
-            /** Secondary Helix Geometry */
-            secondary_helix_geometry?: number | null;
             secondary_ramp_config?: components["schemas"]["PiecewiseRampConfigModel"] | null;
             /** Secondary Torsion Spring Rate */
             secondary_torsion_spring_rate?: number | null;
@@ -457,8 +495,8 @@ export interface components {
             t_max_prim: number;
             /** T Max Sec */
             t_max_sec: number;
-            /** Cvt Ratio Derivative */
-            cvt_ratio_derivative: number;
+            /** Effective Cvt Ratio Time Derivative */
+            effective_cvt_ratio_time_derivative: number;
             /** Is Slipping */
             is_slipping: boolean;
         };
@@ -511,34 +549,24 @@ export interface components {
             /** Percent */
             percent: number;
         };
-        /** SystemBreakdownModel */
-        SystemBreakdownModel: {
-            slip: components["schemas"]["SlipBreakdownModel"];
-            engine: components["schemas"]["EngineForceBreakdownModel"];
-            car: components["schemas"]["CarForceBreakdownModel"];
-            cvt: components["schemas"]["CvtSystemForceBreakdownModel"];
-        };
         /** SystemStateModel */
         SystemStateModel: {
-            /** Car Velocity */
-            car_velocity: number;
-            /** Car Position */
-            car_position: number;
-            /** Shift Velocity */
-            shift_velocity: number;
             /** Shift Distance */
             shift_distance: number;
-            /** Engine Angular Velocity */
-            engine_angular_velocity: number;
-            /** Engine Angular Position */
-            engine_angular_position: number;
+            /** Shift Velocity */
+            shift_velocity: number;
+            /** Primary Pulley Angular Velocity */
+            primary_pulley_angular_velocity: number;
+            /** Secondary Pulley Angular Velocity */
+            secondary_pulley_angular_velocity: number;
         };
         /** TimeStepDataModel */
         TimeStepDataModel: {
             /** Time */
             time: number;
             state: components["schemas"]["SystemStateModel"];
-            system: components["schemas"]["SystemBreakdownModel"];
+            derived_state: components["schemas"]["DerivedKinematicStateModel"];
+            drivetrain: components["schemas"]["DrivetrainBreakdownModel"];
         };
         /** ValidationError */
         ValidationError: {

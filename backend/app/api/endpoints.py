@@ -47,10 +47,13 @@ def get_constants():
 @router.post("/run", response_model=FormattedResultModel)
 def run(payload: SimulationArgsInput | None = None):  # type: ignore
     """Run CVT simulation with optional custom parameters."""
-    args = payload.model_dump(exclude_none=True) if payload else {}
-    args = SimulationArgs.from_mapping(args)
-    result = simulate_cvt_model(args)
-    return result
+    try:
+        args = payload.model_dump(exclude_none=True) if payload else {}
+        args = SimulationArgs.from_mapping(args)
+        result = simulate_cvt_model(args)
+        return result
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=f"Invalid simulation input: {e}")
 
 
 @router.post("/run/stream", responses={200: {"model": StreamMessage}})
@@ -168,11 +171,14 @@ def run_stream(payload: SimulationArgsInput | None = None):  # type: ignore
 
 @router.post("/solvers", response_model=AllSolverResultsModel)
 def run_solvers(payload: SimulationArgsInput | None = None):  # type: ignore
-    args = payload.model_dump(exclude_none=True) if payload else {}
-    args = SimulationArgs.from_mapping(args)
+    try:
+        args = payload.model_dump(exclude_none=True) if payload else {}
+        args = SimulationArgs.from_mapping(args)
 
-    # Run all solvers in one call
-    return solve_all(args)
+        # Run all solvers in one call
+        return solve_all(args)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=f"Invalid solver input: {e}")
 
 
 # TODO: Remove this logic from endpoints / bake into cvtModel simulator

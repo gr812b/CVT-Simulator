@@ -11,6 +11,39 @@ from typing import List, Union, Literal
 from enum import Enum
 
 
+def _coerce_float(value, field_name: str) -> float:
+    """Parse numeric payload values to float with clear errors."""
+    try:
+        return float(value)
+    except (TypeError, ValueError) as exc:
+        raise ValueError(f"Invalid value for {field_name}: {value!r}") from exc
+
+
+def _coerce_quadrant(value) -> int:
+    """Parse and validate circular-segment quadrant from payload values."""
+    if isinstance(value, bool):
+        raise ValueError(f"Invalid value for quadrant: {value!r}")
+
+    # Accept common frontend forms like "2" or 2.0
+    if isinstance(value, str):
+        value = value.strip()
+        if value == "":
+            raise ValueError("Invalid value for quadrant: empty string")
+
+    try:
+        numeric = float(value)
+    except (TypeError, ValueError) as exc:
+        raise ValueError(f"Invalid value for quadrant: {value!r}") from exc
+
+    if not numeric.is_integer():
+        raise ValueError(f"Invalid value for quadrant: {value!r}")
+
+    quadrant = int(numeric)
+    if quadrant not in {1, 2, 3, 4}:
+        raise ValueError(f"quadrant must be 1, 2, 3, or 4 (got {quadrant})")
+    return quadrant
+
+
 class RampSegmentType(str, Enum):
     """Enum for ramp segment types. Inherits from str for JSON serialization."""
 
@@ -88,6 +121,30 @@ class PiecewiseRampConfig:
 
             # Remove 'type' from dict before passing to constructor (it's set automatically)
             seg_dict_copy = {k: v for k, v in seg_dict.items() if k != "type"}
+
+            # Normalize payload numerics from UI/forms before dataclass construction.
+            if config_class is LinearSegmentConfig:
+                seg_dict_copy["length"] = _coerce_float(
+                    seg_dict_copy.get("length"), "length"
+                )
+                seg_dict_copy["angle"] = _coerce_float(
+                    seg_dict_copy.get("angle"), "angle"
+                )
+            elif config_class is CircularSegmentConfig:
+                seg_dict_copy["length"] = _coerce_float(
+                    seg_dict_copy.get("length"), "length"
+                )
+                seg_dict_copy["angle_start"] = _coerce_float(
+                    seg_dict_copy.get("angle_start"), "angle_start"
+                )
+                seg_dict_copy["angle_end"] = _coerce_float(
+                    seg_dict_copy.get("angle_end"), "angle_end"
+                )
+                if "quadrant" in seg_dict_copy:
+                    seg_dict_copy["quadrant"] = _coerce_quadrant(
+                        seg_dict_copy.get("quadrant")
+                    )
+
             segments.append(config_class(**seg_dict_copy))
 
         return cls(segments=segments)

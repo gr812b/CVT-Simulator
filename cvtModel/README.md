@@ -22,3 +22,20 @@ flake8 src/ test/
 ```bash
 pre-commit install
 ```
+
+## Local Simulation + Graph Validation
+
+1. Generate a simulation CSV
+```bash
+python -c "from cvt_simulator import simulate_cvt_model, SimulationArgs; simulate_cvt_model(SimulationArgs(), out_csv='simulation_output.csv')"
+```
+
+2. Generate validation graphs from the CSV
+```bash
+python src/cvt_simulator/utils/generate_graphs.py --csv simulation_output.csv --out-dir generated_graphs
+```
+
+3. Optional: show interactive plots while generating files
+```bash
+python src/cvt_simulator/utils/generate_graphs.py --csv simulation_output.csv --out-dir generated_graphs --show
+```

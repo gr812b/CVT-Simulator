@@ -6,6 +6,11 @@ import pandas as pd
 from cvt_simulator.models.model_initializer import get_models
 from cvt_simulator.utils.simulation_args import SimulationArgs
 from cvt_simulator.utils.simulation_result import SimulationResult
+from cvt_simulator.utils.state_computations import (
+    integrate_positions_trapezoidal,
+    primary_pulley_angular_velocity_to_engine_angular_velocity,
+    secondary_pulley_angular_velocity_to_car_velocity,
+)
 from dataclasses import is_dataclass, fields, dataclass
 
 
@@ -18,7 +23,18 @@ class TimeStepData:
 
     time: float
     state: SystemState
+    derived_state: "DerivedKinematicState"
     drivetrain: DrivetrainBreakdown
+
+
+@dataclass
+class DerivedKinematicState:
+    """Derived kinematic signals that are not part of the 4 DOF solver state."""
+
+    car_velocity: float
+    car_position: float
+    engine_angular_velocity: float
+    engine_angular_position: float
 
 
 class FormattedSimulationResult:
@@ -34,6 +50,23 @@ class FormattedSimulationResult:
     def gather_model_states(self, result: SimulationResult, args: SimulationArgs):
         system_model = get_models(args)
 
+        car_velocities = [
+            secondary_pulley_angular_velocity_to_car_velocity(
+                state.secondary_pulley_angular_velocity
+            )
+            for state in result.states
+        ]
+        engine_angular_velocities = [
+            primary_pulley_angular_velocity_to_engine_angular_velocity(
+                state.primary_pulley_angular_velocity
+            )
+            for state in result.states
+        ]
+        car_positions = integrate_positions_trapezoidal(result.time, car_velocities)
+        engine_positions = integrate_positions_trapezoidal(
+            result.time, engine_angular_velocities
+        )
+
         for i, (time, state) in enumerate(zip(result.time, result.states)):
             shift_velocity = state.shift_velocity
             shift_distance = state.shift_distance
@@ -47,8 +80,18 @@ class FormattedSimulationResult:
 
             drivetrain_breakdown = system_model.get_breakdown(state)
 
+            derived_state = DerivedKinematicState(
+                car_velocity=car_velocities[i],
+                car_position=float(car_positions[i]),
+                engine_angular_velocity=engine_angular_velocities[i],
+                engine_angular_position=float(engine_positions[i]),
+            )
+
             time_step_data = TimeStepData(
-                time=time, state=state, drivetrain=drivetrain_breakdown
+                time=time,
+                state=state,
+                derived_state=derived_state,
+                drivetrain=drivetrain_breakdown,
             )
             self.data.append(time_step_data)
 

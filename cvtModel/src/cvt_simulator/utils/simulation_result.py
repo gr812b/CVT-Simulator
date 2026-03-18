@@ -1,9 +1,10 @@
 from cvt_simulator.utils.system_state import SystemState
 from cvt_simulator.utils.state_computations import (
+    integrate_positions_trapezoidal,
+    primary_pulley_angular_velocity_to_engine_angular_velocity,
     secondary_pulley_angular_velocity_to_car_velocity,
 )
 import pandas as pd
-import numpy as np
 import matplotlib.pyplot as plt
 
 
@@ -50,7 +51,7 @@ class SimulationResult:
         Positions (car_position, engine_angular_position) are computed via kinematic integration.
         """
         # Compute positions via trapezoidal integration of velocities
-        car_positions = self._compute_positions(
+        car_positions = integrate_positions_trapezoidal(
             self.time,
             [
                 secondary_pulley_angular_velocity_to_car_velocity(
@@ -59,9 +60,14 @@ class SimulationResult:
                 for s in self.states
             ],
         )
-        engine_positions = self._compute_positions(
+        engine_positions = integrate_positions_trapezoidal(
             self.time,
-            [s.primary_pulley_angular_velocity for s in self.states],
+            [
+                primary_pulley_angular_velocity_to_engine_angular_velocity(
+                    s.primary_pulley_angular_velocity
+                )
+                for s in self.states
+            ],
         )
         
         data = {
@@ -77,7 +83,10 @@ class SimulationResult:
                 for s in self.states
             ],
             "engine_angular_velocity": [
-                s.primary_pulley_angular_velocity for s in self.states
+                primary_pulley_angular_velocity_to_engine_angular_velocity(
+                    s.primary_pulley_angular_velocity
+                )
+                for s in self.states
             ],
             "car_position": car_positions,
             "engine_angular_position": engine_positions,
@@ -104,7 +113,10 @@ class SimulationResult:
                 for s in self.states
             ],
             "engine_angular_velocity": [
-                s.primary_pulley_angular_velocity for s in self.states
+                primary_pulley_angular_velocity_to_engine_angular_velocity(
+                    s.primary_pulley_angular_velocity
+                )
+                for s in self.states
             ],
         }
 
@@ -121,11 +133,3 @@ class SimulationResult:
         plt.grid()
         plt.show()
 
-    @staticmethod
-    def _compute_positions(time, velocities):
-        """Compute positions via kinematic integration of velocities using trapezoidal rule."""
-        positions = np.zeros(len(time))
-        for i in range(1, len(time)):
-            dt = time[i] - time[i-1]
-            positions[i] = positions[i-1] + (velocities[i-1] + velocities[i]) / 2.0 * dt
-        return positions

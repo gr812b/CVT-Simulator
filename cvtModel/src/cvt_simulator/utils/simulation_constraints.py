@@ -2,21 +2,10 @@ from cvt_simulator.constants.car_specs import (
     MAX_SHIFT,
 )
 from cvt_simulator.models.system_model import SystemModel
+from cvt_simulator.utils.state_computations import (
+    secondary_pulley_angular_velocity_to_car_velocity,
+)
 from cvt_simulator.utils.system_state import SystemState
-import numpy as np
-
-
-def logistic_clamp(x, lower_bound, upper_bound, slope=5000.0):
-    """
-    Returns a factor in [0..1] that is ~1 for x in (lower_bound, upper_bound)
-    and smoothly transitions to 0 when x is outside [lower_bound, upper_bound].
-    The 'slope' controls how sharp the transition is.
-    """
-    # Transition near the lower bound
-    factor_low = 1.0 / (1.0 + np.exp(-slope * (x - lower_bound)))
-    # Transition near the upper bound
-    factor_up = 1.0 / (1.0 + np.exp(slope * (x - upper_bound)))
-    return factor_low * factor_up
 
 
 def update_y(y, state: SystemState):
@@ -44,7 +33,9 @@ def shift_constraint_event(t, y):
 
 def car_velocity_constraint_event(t, y):
     state = SystemState.from_array(y)
-    return state.car_velocity
+    return secondary_pulley_angular_velocity_to_car_velocity(
+        state.secondary_pulley_angular_velocity
+    )
 
 
 car_velocity_constraint_event.terminal = True
