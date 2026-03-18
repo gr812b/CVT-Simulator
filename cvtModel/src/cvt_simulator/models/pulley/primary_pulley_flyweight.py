@@ -39,16 +39,16 @@ def create_default_flyweight_ramp() -> PiecewiseRamp:
 
     # This is the default "Enman" ramp at McMaster baja
 
-    # Linear section: ~0.125 inches at -25 degrees
-    line = LinearSegment(length=inch_to_meter(0.125), angle=-25)
+    # Linear section: ~0.125 inches at 25 degrees (from horizontal)
+    line = LinearSegment(length=inch_to_meter(0.125), angle=25)
 
     # Circular section: remaining length
     # Approximating the original curve with a circular arc
     circle = CircularSegment(
         length=inch_to_meter(1.0),
-        angle_start=33.4248111826,  # degrees
+        angle_start=33.4248111826,  # degrees (steeper at circle start)
         angle_end=20.8067910127,  # degrees
-        quadrant=3,  # Negative slopes
+        quadrant=2,  # Mirrored Q3: positive slope while keeping steep-to-gentle shape
     )
 
     ramp.add_segment(line)
@@ -95,6 +95,7 @@ class PhysicalPrimaryPulley(PrimaryPulleyModel):
         self.flyweight_mass = flyweight_mass
         self.initial_flyweight_radius = INITIAL_FLYWEIGHT_RADIUS
         self.ramp = ramp
+        self._validate_primary_ramp_admissibility()
 
     def calculate_axial_clamping_force(
         self, state: SystemState, **kwargs
@@ -191,9 +192,8 @@ class PhysicalPrimaryPulley(PrimaryPulleyModel):
         # TODO: Remove extra clamp
         shift_distance = np.clip(shift_distance, 0, MAX_SHIFT)
 
-        # Calculate flyweight radius at current shift position
-        # Ramp starts at 0 and goes negative, so subtract
-        flyweight_radius = self.initial_flyweight_radius - self.ramp.height(
+        # Height is modeled as additional radial displacement from center.
+        flyweight_radius = self.initial_flyweight_radius + self.ramp.height(
             shift_distance
         )
 
@@ -205,8 +205,7 @@ class PhysicalPrimaryPulley(PrimaryPulleyModel):
         )
 
         # Ramp derivative dr_f/ds at current position.
-        # For current ramp representation r_f(s) = -height(s), so dr_f/ds = -slope(s).
-        ramp_gradient = -self.ramp.slope(shift_distance)
+        ramp_gradient = self.ramp.slope(shift_distance)
 
         # F_p,ax = m_f * omega_p^2 * (r_f,0 + r_f(s)) * dr_f/ds
         net = centrifugal_force * ramp_gradient
@@ -222,6 +221,31 @@ class PhysicalPrimaryPulley(PrimaryPulleyModel):
             angle_multiplier=ramp_gradient,
             net=net,
         )
+
+    def _validate_primary_ramp_admissibility(self) -> None:
+        """Validate primary ramp profile constraints for r_f(s)."""
+        if not self.ramp.segments:
+            raise ValueError("Primary ramp must contain at least one segment")
+
+        for segment in self.ramp.segments:
+            sample_points = [segment.x_start, (segment.x_start + segment.x_end) / 2, segment.x_end]
+            for x in sample_points:
+                slope = self.ramp.slope(x)
+                if not np.isfinite(slope):
+                    raise ValueError(
+                        f"Primary ramp slope must be finite on [0, {MAX_SHIFT}], got {slope} at x={x}."
+                    )
+                if slope < 0:
+                    raise ValueError(
+                        f"Primary ramp slope must be non-negative on [0, {MAX_SHIFT}], got {slope} at x={x}."
+                    )
+
+                angle_deg = np.degrees(np.arctan(slope))
+                if angle_deg < 0 or angle_deg >= 90:
+                    raise ValueError(
+                        "Primary ramp angle must be in [0, 90) degrees from horizontal; "
+                        f"got {angle_deg} degrees at x={x}."
+                    )
 
     def _calculate_spring_comp_force(
         self, shift_distance: float
