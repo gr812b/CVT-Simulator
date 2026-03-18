@@ -50,7 +50,7 @@ class CarSpecs(BaseModel):
         default=deg_to_rad(11.5 * 2), description="Sheave angle in radians"
     )
     initial_flyweight_radius: float = Field(
-        default=0.05, description="Initial flyweight radius in meters"
+        default=0.04878, description="Initial flyweight radius in meters"
     )
     helix_radius: float = Field(default=0.04445, description="Helix radius in meters")
 

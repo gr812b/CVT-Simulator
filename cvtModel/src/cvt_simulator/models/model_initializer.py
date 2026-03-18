@@ -13,6 +13,8 @@ from cvt_simulator.models.slip_model import SlipModel
 from cvt_simulator.models.primary_pulley_model import PrimaryPulleyModel
 from cvt_simulator.models.system_model import SystemModel
 from cvt_simulator.models.ramps.piecewise_ramp import PiecewiseRamp
+from cvt_simulator.models.ramps.theta_ramp import ThetaRamp
+from cvt_simulator.constants.car_specs import HELIX_RADIUS
 
 
 def get_models(args: SimulationArgs):
@@ -35,7 +37,10 @@ def get_models(args: SimulationArgs):
         spring_coeff_comp=args.secondary_compression_spring_rate,
         initial_rotation=deg_to_rad(args.secondary_rotational_spring_pretension),
         initial_compression=args.secondary_linear_spring_pretension,
-        ramp=PiecewiseRamp.from_config(args.secondary_ramp_config),
+        ramp=ThetaRamp(
+            PiecewiseRamp.from_config(args.secondary_ramp_config),
+            HELIX_RADIUS,
+        ),
     )
 
     cvt_shift = CvtShiftModel(
