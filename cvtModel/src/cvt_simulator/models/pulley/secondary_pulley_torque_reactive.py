@@ -19,9 +19,9 @@ from cvt_simulator.models.ramps import LinearSegment, PiecewiseRamp, ThetaRamp
 from cvt_simulator.utils.system_state import SystemState
 
 
-def create_default_helix_ramp() -> PiecewiseRamp:
+def create_default_helix_ramp() -> ThetaRamp:
     """
-    Create the default helix geometry as circumferential displacement u(s).
+    Create the default helix geometry as a theta ramp.
 
     New convention:
     - s is axial shift distance [m]
@@ -32,12 +32,12 @@ def create_default_helix_ramp() -> PiecewiseRamp:
     Default helix angle is alpha_s = 36°.
 
     Returns:
-        PiecewiseRamp storing u(s)
+        ThetaRamp using a PiecewiseRamp that stores u(s)
     """
     helix_angle_deg = 36.0
-    ramp = PiecewiseRamp()
-    ramp.add_segment(LinearSegment(length=MAX_SHIFT, angle=90 - helix_angle_deg))
-    return ramp
+    angle_ramp = PiecewiseRamp()
+    angle_ramp.add_segment(LinearSegment(length=MAX_SHIFT, angle=90 - helix_angle_deg))
+    return ThetaRamp(angle_ramp, HELIX_RADIUS)
 
 
 class PhysicalSecondaryPulley(SecondaryPulleyModel):

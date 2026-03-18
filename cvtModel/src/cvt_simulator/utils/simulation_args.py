@@ -16,7 +16,7 @@ def _get_default_primary_ramp() -> PiecewiseRampConfig:
 
 def _get_default_secondary_ramp() -> PiecewiseRampConfig:
     """Factory function for default secondary ramp config."""
-    return create_default_helix_ramp().to_config()
+    return create_default_helix_ramp().angle_ramp.to_config()
 
 
 @dataclass(slots=True)
