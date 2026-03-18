@@ -73,7 +73,7 @@ class LoadModel:
             self.rolling_resistance_coefficient, self.car_mass, self.g, self.incline_angle
         )
         # Apply sign to ensure it opposes motion direction
-        return -rolling_force_magnitude * tm.sgn(velocity)
+        return 0 #-rolling_force_magnitude * tm.sgn(velocity)
 
     def _calculate_incline_force(self) -> float:
         """Calculate the incline force due to gravity: m*g*sin(α)"""
@@ -89,5 +89,5 @@ class LoadModel:
             self.air_density, velocity, self.frontal_area, self.drag_coefficient
         )
         # Apply sign to ensure it opposes motion direction
-        return -drag_magnitude * tm.sgn(velocity)
+        return drag_magnitude * tm.sgn(velocity)
 

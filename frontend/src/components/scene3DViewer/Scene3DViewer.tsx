@@ -33,6 +33,8 @@ export const Scene3DViewer = ({ replayController, className }: Scene3DViewerProp
   const [gridObjects, setGridObjects] = useState<THREE.Object3D[]>([]);
   const [initialHelixRotation, setInitialHelixRotation] = useState<number>(0);
 
+  const degToRad = useCallback((deg: number): number => deg * (Math.PI / 180), []);
+
   /**
    * Helper to convert any distance value from BAJA units (meters) to the scene's distance unit.
    * Use this for all distance values used in the 3D scene.
@@ -120,16 +122,16 @@ export const Scene3DViewer = ({ replayController, className }: Scene3DViewerProp
     if (!firstDataPoint) return;
 
     // Store initial helix rotation for relative rotation calculations
-    const firstBreakdown = firstDataPoint.system?.cvt?.secondaryPulleyState?.breakdown;
+    const firstBreakdown = firstDataPoint.drivetrain?.cvt_dynamics?.secondaryPulleyState?.breakdown;
     const firstHelixRotation = (firstBreakdown && 'helix_force' in firstBreakdown)
       ? firstBreakdown.helix_force.springTorque.rotation
       : 0;
     setInitialHelixRotation(firstHelixRotation);
 
-    const primaryRadius = firstDataPoint.system?.cvt?.primaryPulleyState?.radius ?? constants.min_prim_radius;
-    const secondaryRadius = firstDataPoint.system?.cvt?.secondaryPulleyState?.radius ?? constants.max_sec_radius;
-    const primaryWrapAngleDeg = firstDataPoint.system?.cvt?.primaryPulleyState?.wrap_angle ?? 180;
-    const secondaryWrapAngleDeg = firstDataPoint.system?.cvt?.secondaryPulleyState?.wrap_angle ?? 180;
+    const primaryRadius = firstDataPoint.drivetrain?.cvt_dynamics?.primaryPulleyState?.radius ?? constants.min_prim_radius;
+    const secondaryRadius = firstDataPoint.drivetrain?.cvt_dynamics?.secondaryPulleyState?.radius ?? constants.max_sec_radius;
+    const primaryWrapAngleDeg = firstDataPoint.drivetrain?.cvt_dynamics?.primaryPulleyState?.wrap_angle ?? 180;
+    const secondaryWrapAngleDeg = firstDataPoint.drivetrain?.cvt_dynamics?.secondaryPulleyState?.wrap_angle ?? 180;
     const shiftDistance = firstDataPoint.state?.shift_distance ?? 0;
 
     const primaryWrapAngle = primaryWrapAngleDeg * (Math.PI / 180);
@@ -167,27 +169,29 @@ export const Scene3DViewer = ({ replayController, className }: Scene3DViewerProp
     const unsubscribe = replayController.on((event) => {
       if (event.type === ReplayEventType.Progress) {
         // Extract angular positions and shift distance
-        const primaryAngularPosition = event.data.system?.cvt?.primaryPulleyState?.angular_position ?? 0;
-        const secondaryAngularPosition = event.data.system?.cvt?.secondaryPulleyState?.angular_position ?? 0;
-        const secondaryBreakdown = event.data.system?.cvt?.secondaryPulleyState?.breakdown;
+        const primaryAngularPositionDeg = event.data.drivetrain?.cvt_dynamics?.primaryPulleyState?.angular_position ?? 0;
+        const secondaryAngularPositionDeg = event.data.drivetrain?.cvt_dynamics?.secondaryPulleyState?.angular_position ?? 0;
+        const secondaryBreakdown = event.data.drivetrain?.cvt_dynamics?.secondaryPulleyState?.breakdown;
         const secondaryHelixRotationDeg = (secondaryBreakdown && 'helix_force' in secondaryBreakdown) 
           ? secondaryBreakdown.helix_force.springTorque.rotation - initialHelixRotation
           : 0;
-        const secondaryHelixRotation = secondaryHelixRotationDeg * (Math.PI / 180);
+        const primaryAngularPosition = degToRad(primaryAngularPositionDeg);
+        const secondaryAngularPosition = degToRad(secondaryAngularPositionDeg);
+        const secondaryHelixRotation = degToRad(secondaryHelixRotationDeg);
         const shiftDistance = event.data.state?.shift_distance ?? 0;
 
         // Get pulley states for belt calculation
-        const primaryRadius = event.data.system?.cvt?.primaryPulleyState?.radius ?? constants.min_prim_radius;
-        const secondaryRadius = event.data.system?.cvt?.secondaryPulleyState?.radius ?? constants.max_sec_radius;
-        const primaryWrapAngleDeg = event.data.system?.cvt?.primaryPulleyState?.wrap_angle ?? 180;
-        const secondaryWrapAngleDeg = event.data.system?.cvt?.secondaryPulleyState?.wrap_angle ?? 180;
+        const primaryRadius = event.data.drivetrain?.cvt_dynamics?.primaryPulleyState?.radius ?? constants.min_prim_radius;
+        const secondaryRadius = event.data.drivetrain?.cvt_dynamics?.secondaryPulleyState?.radius ?? constants.max_sec_radius;
+        const primaryWrapAngleDeg = event.data.drivetrain?.cvt_dynamics?.primaryPulleyState?.wrap_angle ?? 180;
+        const secondaryWrapAngleDeg = event.data.drivetrain?.cvt_dynamics?.secondaryPulleyState?.wrap_angle ?? 180;
         
         // Convert wrap angles from degrees to radians for Three.js
-        const primaryWrapAngle = primaryWrapAngleDeg * (Math.PI / 180);
-        const secondaryWrapAngle = secondaryWrapAngleDeg * (Math.PI / 180);
+        const primaryWrapAngle = degToRad(primaryWrapAngleDeg);
+        const secondaryWrapAngle = degToRad(secondaryWrapAngleDeg);
 
-        // Angular positions are already in radians from backend, use directly for 3D rotation
-        // (Three.js rotations use radians)
+        // Playback data is converted to BAJA preset where angles are degrees.
+        // Convert to radians before applying Three.js rotations.
         const shiftDistanceScene = toSceneDistance(shiftDistance);
         const primaryRadiusScene = toSceneDistance(primaryRadius);
         const secondaryRadiusScene = toSceneDistance(secondaryRadius);
@@ -237,7 +241,7 @@ export const Scene3DViewer = ({ replayController, className }: Scene3DViewerProp
     });
 
     return unsubscribe;
-  }, [sceneController, replayController, constants, toSceneDistance, beltMesh, initialHelixRotation, showAngularRotation]);
+  }, [sceneController, replayController, constants, toSceneDistance, beltMesh, initialHelixRotation, showAngularRotation, degToRad]);
 
   // Update belt visibility when state changes
   useEffect(() => {

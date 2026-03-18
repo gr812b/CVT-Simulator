@@ -62,9 +62,21 @@ class FormattedSimulationResult:
             )
             for state in result.states
         ]
+        primary_pulley_angular_velocities = [
+            state.primary_pulley_angular_velocity for state in result.states
+        ]
+        secondary_pulley_angular_velocities = [
+            state.secondary_pulley_angular_velocity for state in result.states
+        ]
         car_positions = integrate_positions_trapezoidal(result.time, car_velocities)
         engine_positions = integrate_positions_trapezoidal(
             result.time, engine_angular_velocities
+        )
+        primary_pulley_angular_positions = integrate_positions_trapezoidal(
+            result.time, primary_pulley_angular_velocities
+        )
+        secondary_pulley_angular_positions = integrate_positions_trapezoidal(
+            result.time, secondary_pulley_angular_velocities
         )
 
         for i, (time, state) in enumerate(zip(result.time, result.states)):
@@ -79,6 +91,15 @@ class FormattedSimulationResult:
                 state.shift_velocity = min(0, shift_velocity)
 
             drivetrain_breakdown = system_model.get_breakdown(state)
+
+            # The 4-DOF solver tracks angular velocities only; integrate them over time
+            # so frontend consumers can animate pulley angular position directly.
+            drivetrain_breakdown.cvt_dynamics.primaryPulleyState.angular_position = float(
+                primary_pulley_angular_positions[i]
+            )
+            drivetrain_breakdown.cvt_dynamics.secondaryPulleyState.angular_position = float(
+                secondary_pulley_angular_positions[i]
+            )
 
             derived_state = DerivedKinematicState(
                 car_velocity=car_velocities[i],
