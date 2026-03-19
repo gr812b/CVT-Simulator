@@ -4454,28 +4454,28 @@ The following section derives the traction limits $\tau_-$ and $\tau_+$ and
 thereby makes the traction-limited branch explicit.
 
 % ==============================================================
-\section{Torque Transmission and Coupling Torque}\label{sec:torque-coupling}
 
-The axial shift dynamics derived in \Sec{sec:shift-dyn}
-require the transferred secondary torque $\tau_s$
-appearing in \Eq{eq:secondary_axial}.
-In this section we determine the torque transmitted
-through the CVT as a function of the rotational states
-and the instantaneous ratio $R(t)$.
+
+% ==============================================================
+% ==============================================================
+\section{Derivation of the No-Slip Coupling Torque}
+\label{sec:tau_ns}
+
+In \Sec{sec:transmission_regimes}, the coupling torque $\tau_c$ was introduced
+as an internal torque whose value depends on the active transmission regime.
+The purpose of this section is to derive the explicit form of $\tau_c$ on the
+sticking branch, i.e.\ the no-slip torque $\tau_{\mathrm{ns}}$.
 
 We proceed in four steps:
 
 \begin{enumerate}
-    \item Write rotational equations of motion for the primary and secondary pulleys.
-    \item Define the inertias associated with each pulley.
-    \item Introduce the CVT ratio kinematics.
-    \item Eliminate accelerations to obtain the transmitted torque.
+    \item Write the rotational equations of motion for the primary and secondary pulleys.
+    \item Recall the external torque and inertia models on each side.
+    \item Impose the no-slip kinematic constraint.
+    \item Eliminate angular accelerations to obtain the no-slip coupling torque.
 \end{enumerate}
 
-The result provides the ideal torque transmission law associated
-with the geometric ratio $R(t)$.
-This serves as the baseline torque model
-and will be generalized in the next section.
+The result is the sticking-branch torque law used later in the regime model.
 
 % --------------------------------------------------------------
 \subsection{System Definition and Torque Path}
@@ -4486,8 +4486,8 @@ and will be generalized in the next section.
 \caption{Torque transmission schematic.
 Engine torque $\tau_{\text{eng}}$ drives the primary pulley
 (angular velocity $\omega_p$).
-Coupling torque $\tau_p$ is transmitted through the belt to the secondary pulley
-(angular velocity $\omega_s$), where it appears as $\tau_s$.
+Coupling torque $\tau_c$ is transmitted through the belt to the secondary pulley
+(angular velocity $\omega_s$).
 The secondary delivers torque to the downstream drivetrain,
 which resists motion with torque $\tau_{\text{load}}$.}
 \label{fig:torque_path}
@@ -4496,67 +4496,62 @@ which resists motion with torque $\tau_{\text{load}}$.}
 We model two rotating bodies:
 
 \begin{itemize}
-    \item Primary pulley (rigidly connected to the engine),
-    \item Secondary pulley (driving the downstream drivetrain and vehicle).
+    \item the primary side, rigidly connected to the engine,
+    \item the secondary side, driving the downstream drivetrain and vehicle.
 \end{itemize}
 
-Let
+The external torques and effective inertias used below are
 
 \begin{itemize}
-    \item $I_p$ : total rotational inertia of the engine + primary CVT pulley,
-    \item $I_s$ : total rotational inertia about the secondary pulley,
     \item $\tau_{\text{eng}}(t)$ : engine output torque applied to the primary pulley,
-      modeled as a user-supplied function of primary speed (see \Sec{sec:tau_eng_model}),
-    \item $\tau_p(t)$ : coupling torque (as seen at the primary pulley),
-    \item $\tau_s(t)$ : coupling torque (as seen at the secondary pulley),
-    \item $\tau_{\text{load}}(t)$ : resisting torque reflected to the secondary pulley from
-      road loads (see \Sec{sec:tau_load_model}),
+    \item $\tau_{\text{load}}(t)$ : resisting torque reflected to the secondary pulley,
+    \item $I_p$ : total rotational inertia of the engine + primary CVT pulley,
+    \item $I_s$ : total effective rotational inertia about the secondary pulley.
 \end{itemize}
+
+Their explicit models are recalled in the following subsections.
+The remaining internal unknown is the transmitted coupling torque $\tau_c(t)$.
 
 % --------------------------------------------------------------
 \subsection{Rotational Equations of Motion}
 
-Applying \theoryRef{th:newton-rot} to each pulley:
+Applying \theoryRef{th:newton-rot} to the primary side gives
 
 \bigeq{eq:primary_rot_dyn}{Primary Pulley Rotational Dynamics}{
-\tau_{\text{eng}}(t) - \tau_p(t)
+\tau_{\text{eng}}(t) - \tau_c(t)
 =
-I_p\,\alpha_p(t)
+I_p\,\dot{\omega}_p(t)
 }
+
+Using the secondary-side no-slip torque mapping established in
+\Eq{eq:tau_relation}, the secondary rotational equation on the sticking branch is
 
 \bigeq{eq:secondary_rot_dyn}{Secondary Pulley Rotational Dynamics}{
-\tau_s(t) - \tau_{\text{load}}(t)
+R(t)\tau_c(t) - \tau_{\text{load}}(t)
 =
-I_s\,\alpha_s(t)
+I_s\,\dot{\omega}_s(t)
 }
 
-where
-
+At this point, \Eq{eq:primary_rot_dyn} and \Eq{eq:secondary_rot_dyn}
+provide two equations for the three internal unknowns
 \[
-\alpha_p(t) = \frac{d\omega_p}{dt},
-\qquad
-\alpha_s(t) = \frac{d\omega_s}{dt}.
+\dot{\omega}_p(t),\qquad
+\dot{\omega}_s(t),\qquad
+\tau_c(t).
 \]
 
-At this stage, the externally applied torques
-$\tau_{\text{eng}}(t)$ and $\tau_{\text{load}}(t)$
-are treated as known inputs to the system.
-The inertias $I_p$ and $I_s$ are physical constants
-determined by the drivetrain configuration.
+The remaining quantities appearing in these equations
+--- namely the applied torques $\tau_{\text{eng}}(t)$ and $\tau_{\text{load}}(t)$,
+the effective inertias $I_p$ and $I_s$, and the geometric ratio $R(t)$ ---
+are treated as known inputs, parameters, or previously defined geometric
+quantities.
+Their explicit forms are recalled in the following subsections.
 
-The remaining unknown dynamic quantities are therefore
-
-\[
-\alpha_p(t),\qquad
-\alpha_s(t),\qquad
-\tau_p(t),\qquad
-\tau_s(t).
-\]
-
-Equations \Eq{eq:primary_rot_dyn} and \Eq{eq:secondary_rot_dyn}
-provide two relations among these four unknowns.
-Two additional relations are therefore required to close
-the rotational system.
+Thus, the rotational system is not yet closed:
+two equations are available for three unknowns.
+A third relation is therefore required to determine the coupling torque.
+For the no-slip branch, that final relation will come from the sticking
+kinematic constraint introduced after the torque and inertia models are stated.
 
 % --------------------------------------------------------------
 \subsection{Engine Torque Model}
@@ -4952,24 +4947,23 @@ Equation \Eq{eq:Is_def} defines the total inertia
 opposing angular acceleration of the secondary pulley.
 
 % --------------------------------------------------------------
-\subsection{Ratio Kinematics}
+\subsection{No-Slip Ratio Kinematics}
 
-The CVT ratio was defined geometrically in \Sec{sec:cvt_ratio}
-(see \Eq{eq:cvt_ratio}) as
-
+As established in \Sec{sec:transmission_regimes}, the sticking branch is
+characterized by the condition
 \[
-R(t)
+v_{\Delta}=0,
+\]
+where \(v_{\Delta}\) was defined in \Eq{eq:v_delta_def} as
+\[
+v_{\Delta}
 =
-\frac{r_{s,\text{eff}}(t)}{r_{p,\text{eff}}(t)}.
+r_{p,\text{eff}}(t)\,\omega_p(t)
+-
+r_{s,\text{eff}}(t)\,\omega_s(t).
 \]
 
-To relate pulley speeds, we now introduce the
-\emph{no-slip constraint}.
-
-Under ideal belt transmission, the belt surface speed
-must match the tangential speed of both pulley faces.
-This enforces
-
+Setting this equal to zero gives
 \begin{equation}
 r_{p,\text{eff}}(t)\,\omega_p(t)
 =
@@ -4977,135 +4971,84 @@ r_{s,\text{eff}}(t)\,\omega_s(t).
 \label{eq:no_slip_condition}
 \end{equation}
 
-Substituting the geometric ratio definition gives
-
+Using the geometric CVT ratio
+\[
+R(t)
+=
+\frac{r_{s,\text{eff}}(t)}{r_{p,\text{eff}}(t)},
+\]
+\Eq{eq:no_slip_condition} becomes
 \begin{equation}
-\omega_p(t) = R(t)\,\omega_s(t).
+\omega_p(t)=R(t)\,\omega_s(t).
 \label{eq:ratio_speed_constraint}
 \end{equation}
 
-This relation is equivalent to assuming zero slip between
-belt and sheaves.
-Slip effects will be handled in a later section.
+This is the defining kinematic relation of the sticking branch.
+If \Eq{eq:ratio_speed_constraint} does not hold, the present derivation no
+longer applies and the transmission must instead be described by the slip
+branch.
 
-% --------------------------------------------------------------
-
-Differentiating \Eq{eq:ratio_speed_constraint}
-with respect to time gives
-
+Differentiating \Eq{eq:ratio_speed_constraint} with respect to time gives
 \begin{equation}
-\alpha_p(t)
+\dot{\omega}_p(t)
 =
-R(t)\,\alpha_s(t)
+R(t)\,\dot{\omega}_s(t)
 +
 \omega_s(t)\,\dot R(t),
 \label{eq:alpha_relation}
 \end{equation}
+which is the corresponding acceleration-level compatibility condition.
 
-where $\dot R(t) = \dfrac{dR}{dt}$
-(see \Eq{eq:Rdot_final}).
+\subsection{Eliminating Angular Accelerations}
 
-Equation \Eq{eq:alpha_relation} captures the dynamic coupling
-introduced by a time-varying ratio:
-even if $\alpha_s = 0$,
-a changing ratio ($\dot R \neq 0$)
-produces primary angular acceleration.
-
-This provides one of the
-additional relations required to close the rotational system.
-
-% --------------------------------------------------------------
-\subsection{Torque Mapping Across the CVT}
-
-The belt transfers mechanical power between the primary and
-secondary pulleys. In general,
-
-\begin{equation}
-\tau_p(t)\,\omega_p(t)
-=
-\tau_s(t)\,\omega_s(t)
-+
-P_{\text{loss}}(t),
-\label{eq:power_balance_general}
-\end{equation}
-
-where $P_{\text{loss}}$ represents internal dissipation
-(e.g., belt hysteresis, bearing drag).
-
-Following \AssRef{assump:ideal_cvt_power}, we neglect these
-non-slip-related losses and set
-
-\[
-P_{\text{loss}}(t) = 0.
-\]
-
-This assumption removes internal inefficiencies but does
-\emph{not} by itself impose the no-slip constraint.
-
-% --------------------------------------------------------------
-
-When the belt is in sticking contact,
-the kinematic relation \Eq{eq:ratio_speed_constraint}
-holds. Substituting $\omega_p = R\,\omega_s$
-into the ideal power balance gives
-
-\begin{equation}
-\tau_s(t) = R(t)\,\tau_p(t).
-\label{eq:tau_relation}
-\end{equation}
-
-Equation \Eq{eq:tau_relation} is therefore the
-ideal torque mapping associated with the geometric ratio.
-If slip occurs, \Eq{eq:ratio_speed_constraint} no longer holds
-and the torque relation must be modified accordingly.
-
-% --------------------------------------------------------------
-\subsection{Eliminating Accelerations}
-
-We now have four equations (\Eq{eq:primary_rot_dyn}, \Eq{eq:secondary_rot_dyn}, \Eq{eq:alpha_relation}, \Eq{eq:tau_relation})
-and four unknowns ($\alpha_p$, $\alpha_s$, $\tau_p$, $\tau_s$).
-The goal is to eliminate the accelerations $\alpha_p$ and $\alpha_s$ to obtain a closed-form expression for the coupling torque $\tau_p$ in terms of the known quantities $\tau_{\text{eng}}$, $\tau_{\text{load}}$, $I_p$, $I_s$, $R$, and $\dot R$.
+We now combine the primary rotational dynamics
+\Eq{eq:primary_rot_dyn},
+the secondary rotational dynamics
+\Eq{eq:secondary_rot_dyn},
+and the no-slip compatibility relation
+\Eq{eq:alpha_relation}
+to solve for the coupling torque on the sticking branch.
 
 From \Eq{eq:primary_rot_dyn},
 
 \[
-\tau_p
+\tau_c
 =
 \tau_{\text{eng}}
 -
-I_p\,\alpha_p.
+I_p\,\dot{\omega}_p.
 \]
 
-Substituting \Eq{eq:alpha_relation}:
+Substituting \Eq{eq:alpha_relation} gives
 
 \begin{equation}
-\tau_p
+\tau_c
 =
 \tau_{\text{eng}}
 -
-I_p\big(R\alpha_s + \omega_s\dot R\big).
-\label{eq:tau_p_intermediate}
+I_p\bigl(R\dot{\omega}_s+\omega_s\dot R\bigr).
+\label{eq:tau_c_intermediate}
 \end{equation}
 
-From \Eq{eq:secondary_rot_dyn} and \Eq{eq:tau_relation},
+From \Eq{eq:secondary_rot_dyn},
 
 \[
-\alpha_s
+\dot{\omega}_s
 =
-\frac{R\tau_p - \tau_{\text{load}}}{I_s}.
+\frac{R\tau_c-\tau_{\text{load}}}{I_s}.
 \]
 
-Substituting into \Eq{eq:tau_p_intermediate}:
+Substituting this into \Eq{eq:tau_c_intermediate} gives
 
 \begin{align}
-\tau_p
+\tau_c
 &=
 \tau_{\text{eng}}
 -
 I_p
 \left[
 R\left(
-\frac{R\tau_p - \tau_{\text{load}}}{I_s}
+\frac{R\tau_c-\tau_{\text{load}}}{I_s}
 \right)
 +
 \omega_s\dot R
@@ -5116,18 +5059,18 @@ R\left(
 -
 \frac{I_p}{I_s}
 \left(
-R^2\tau_p - R\tau_{\text{load}}
+R^2\tau_c-R\tau_{\text{load}}
 \right)
 -
 I_p\omega_s\dot R.
 \end{align}
 
-Collecting terms:
+Collecting terms yields
 
 \begin{equation}
-\tau_p
+\tau_c
 \left(
-1 + \frac{I_p}{I_s}R^2
+1+\frac{I_p}{I_s}R^2
 \right)
 =
 \tau_{\text{eng}}
@@ -5135,16 +5078,20 @@ Collecting terms:
 \frac{I_p}{I_s}R\tau_{\text{load}}
 -
 I_p\omega_s\dot R.
-\label{eq:tau_p_rearranged}
+\label{eq:tau_c_rearranged}
 \end{equation}
 
+Because this derivation has imposed the sticking constraint
+\Eq{eq:ratio_speed_constraint}, the resulting solution is precisely the no-slip
+coupling torque.
+
 % --------------------------------------------------------------
-\subsection{Closed-Form Coupling Torque}
+\subsection{Closed-Form No-Slip Coupling Torque}
 
-Solving \Eq{eq:tau_p_rearranged}:
+The no-slip coupling torque is therefore
 
-\bigeq{eq:tau_p_final}{Coupling Torque (Primary Side)}{
-\tau_p(t)
+\bigeq{eq:tau_ns_final}{No-Slip Coupling Torque}{
+\tau_{\mathrm{ns}}(t)
 =
 \frac{
 \tau_{\text{eng}}(t)
@@ -5153,50 +5100,40 @@ Solving \Eq{eq:tau_p_rearranged}:
 -
 I_p\,\omega_s(t)\,\dot R(t)
 }{
-1 + \dfrac{I_p}{I_s}R(t)^2
+1+\dfrac{I_p}{I_s}R(t)^2
 }.
 }
 
-The coupling torque as seen at the secondary pulley,
-required by \Eq{eq:secondary_axial}, then follows from
-\Eq{eq:tau_relation}:
+Equation \Eq{eq:tau_ns_final} is the torque required to maintain the no-slip
+constraint
+\Eq{eq:ratio_speed_constraint},
+or equivalently the condition
+\(
+v_{\Delta}=0.
+\)
 
-\bigeq{eq:tau_s_final}{Coupling Torque (Secondary Side)}{
-\tau_s(t) = R(t)\,\tau_p(t).
-}
-
-% --------------------------------------------------------------
 % --------------------------------------------------------------
 \subsection{Section Summary}
 
-We began with the rotational equations of motion for the
-primary and secondary pulleys, introducing four unknowns
-($\alpha_p$, $\alpha_s$, $\tau_p$, $\tau_s$)
-but only two dynamical equations.
+This section derived the no-slip coupling torque $\tau_{\mathrm{ns}}$ by
+specializing the rotational dynamics to the sticking branch.
 
-Closure was achieved by imposing two additional physical relations:
+The derivation used three ingredients:
 
 \begin{itemize}
-    \item The \emph{no-slip kinematic constraint}
-          $\omega_p = R\,\omega_s$, together with its
-          time derivative $\alpha_p = R\alpha_s + \omega_s\dot R$.
-    \item The \emph{ideal power-transfer assumption}
-          (\AssRef{assump:ideal_cvt_power}),
-          which neglects non-slip-related losses and yields
-          the torque mapping $\tau_s = R\,\tau_p$.
+    \item the primary and secondary rotational equations of motion written in
+          terms of the internal coupling torque $\tau_c$,
+    \item the no-slip kinematic constraint
+          $\omega_p=R\,\omega_s$ and its time derivative
+          $\dot{\omega}_p=R\dot{\omega}_s+\omega_s\dot R$,
+    \item the no-slip torque mapping
+          $\tau_{s,\mathrm{ns}}=R\,\tau_c$.
 \end{itemize}
 
-Together, these relations close the rotational system and
-produce the explicit coupling torque
-\Eq{eq:tau_p_final}, which expresses the transmitted
-torque in terms of the instantaneous ratio $R(t)$
-and ratio rate $\dot R(t)$.
+Together, these relations close the sticking branch and yield the explicit
+result \Eq{eq:tau_ns_final}.
 
-Substitution of $\tau_s = R\,\tau_p$
-into the secondary axial force model
-\Eq{eq:secondary_axial}
-completes the dynamical coupling required
-for the axial shift equation \Eq{eq:s_ddot_final}.
+
 \section{Traction Limit and Slip Condition}
 \label{sec:traction-slip}
 
