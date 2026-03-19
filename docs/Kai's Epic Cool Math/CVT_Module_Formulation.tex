@@ -1296,7 +1296,8 @@ Misalignment, shaft eccentricity, and geometric runout are neglected.
 
 \begin{assumptionblock}{assump:constant_belt_length}{Constant Belt Length}
 The belt length is treated as constant.
-Permanent creep and progressive elongation are not modeled.
+Longitudinal elasticity, transient stretch, permanent creep, and
+progressive elongation are not modeled.
 Effective pulley radii are determined solely from geometry
 and belt-length constraints.
 \end{assumptionblock}
@@ -1339,6 +1340,16 @@ Power transmission through the CVT is modeled as ideal
 Although belt slip is explicitly modeled and affects
 torque capacity and shift dynamics,
 the associated power loss $P_{\text{loss}}$ is neglected.
+\end{assumptionblock}
+
+\begin{assumptionblock}{assump:single_slip_interface}{Single Active Slip Interface}
+At any instant, the belt is assumed to either adhere to both pulleys
+or slip at exactly one pulley contact.
+Simultaneous slip at both pulley contacts is not modeled.
+
+If operating conditions would otherwise cause both contacts to exceed
+their traction limits, the model assumes an instantaneous transition
+between single-slip states.
 \end{assumptionblock}
 
 % ======================================================
@@ -1636,6 +1647,7 @@ Near Earth's surface, $g \approx 9.81$ \si{\meter\per\second\squared}. On an inc
 
 
 % ==============================================================
+
 \section{System State Definition}
 \label{sec:state}
 
@@ -4188,6 +4200,260 @@ that closes the remaining dynamical loop.
 
 
 % ==============================================================
+% ==============================================================
+
+\section{Torque Transmission and Coupling}
+\label{sec:torque_transmission}
+
+The axial force models developed in \Sec{sec:pulley_axial_models} depend on the
+torque transmitted through the CVT. However, this torque has not yet been
+defined as a system quantity.
+
+The engine applies torque at the primary pulley, while the vehicle load resists
+motion at the secondary. These components do not interact directly; their only
+mechanical connection is through the belt. To determine how torque is
+transmitted between them, the belt must be treated as the medium through which
+power flows.
+
+We proceed by first defining the torque path through the system, then examining
+how power is carried by the belt, and finally introducing a single coupling
+torque that characterizes the CVT interface.
+
+% ==============================================================
+\subsection{Torque Path Through the Belt}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\linewidth]{./illustrations/torque/cvt_overview_forces.png}
+    \caption{Torque flow through the CVT system. The primary pulley applies
+    torque $\tau_p$ to the belt, while the belt applies torque $\tau_s$ to the
+    secondary pulley.}
+    \label{fig:torque_path}
+\end{figure}
+
+Let
+\begin{align}
+\tau_p &:\ \text{torque applied by the primary pulley onto the belt}, \\
+\tau_s &:\ \text{torque applied by the belt onto the secondary pulley}.
+\end{align}
+
+These quantities represent the torque entering and leaving the belt transmission
+path, respectively.
+
+% ==============================================================
+% ==============================================================
+\subsection{Belt Power Flow and Torque Transmission}
+
+Since the belt is the only connection between the pulleys, it must carry the
+mechanical power transmitted through the system.
+
+Under \AssRef{assump:constant_belt_length}, the belt moves along its path with a
+single transport speed $v_b(t)$.
+Since the belt is modeled as having constant length with no longitudinal
+deformation, different tangential speeds at different points along the belt
+would imply local stretching or compression, which this model does not permit.
+
+Torque transmission arises from tangential forces
+acting between the belt and the pulley surfaces. Let $F_t$ denote the effective
+tangential force transmitted through the belt.
+
+The mechanical power carried by the belt is therefore
+\begin{equation}
+P = F_t \, v_b.
+\label{eq:belt_power}
+\end{equation}
+
+Under \AssRef{assump:ideal_cvt_power}, this power is conserved through the
+transmission, so that the power entering the belt at the primary equals the
+power leaving at the secondary.
+
+The same tangential force $F_t$ acts at the effective contact radii of each
+pulley. The torques at the primary and secondary are therefore
+\begin{align}
+\tau_p &= r_{p,\mathrm{eff}} \, F_t, \\
+\tau_s &= r_{s,\mathrm{eff}} \, F_t.
+\end{align}
+
+Since both torques arise from the same transmitted force, $F_t$ can be eliminated
+directly. From the primary expression,
+\begin{equation}
+F_t = \frac{\tau_p}{r_{p,\mathrm{eff}}},
+\end{equation}
+and substituting into the secondary torque gives
+\begin{equation}
+\tau_s
+=
+r_{s,\mathrm{eff}} \left( \frac{\tau_p}{r_{p,\mathrm{eff}}} \right)
+=
+\frac{r_{s,\mathrm{eff}}}{r_{p,\mathrm{eff}}}
+\, \tau_p.
+\end{equation}
+
+Recalling the geometric definition of the CVT ratio
+\begin{equation}
+R = \frac{r_{s,\mathrm{eff}}}{r_{p,\mathrm{eff}}},
+\end{equation}
+it follows directly that
+\begin{equation}
+\tau_s = R \, \tau_p.
+\label{eq:torque_ratio}
+\end{equation}
+
+% ==============================================================
+\subsection{Definition of Coupling Torque}
+
+The torques $\tau_p$ and $\tau_s$ both arise from the same transmitted belt
+force. It is therefore natural to define a single \emph{coupling torque} that
+characterizes the interaction between the pulleys:
+\begin{equation}
+\tau_c \equiv \tau_p.
+\end{equation}
+
+The corresponding secondary torque is then
+\begin{equation}
+\tau_s = R \, \tau_c.
+\end{equation}
+
+The transmitted torque is thus not a property of either pulley in isolation, but
+of the belt--pulley interaction as a whole. The quantities $\tau_p$ and $\tau_s$
+represent the primary-side and secondary-side expressions of this same coupling
+torque.
+
+% ==============================================================
+\subsection{Transmission Regimes}
+\label{sec:transmission_regimes}
+
+The coupling torque $\tau_c$ defined above is the torque actually transmitted
+through the belt.
+It is not prescribed externally.
+Instead, its value depends on the contact state of the transmission.
+
+\paragraph{No-slip torque.}
+
+If the belt remains adhered at the pulley contacts, then the transmission
+behaves as a sticking constraint.
+In that case, the transmitted torque is whatever value is required to preserve
+that adhered motion.
+
+We denote this required torque by
+\begin{equation}
+\tau_{\mathrm{ns}},
+\end{equation}
+where the subscript ``ns'' denotes \emph{no slip}.
+Thus, in a sticking state,
+\begin{equation}
+\tau_c = \tau_{\mathrm{ns}}.
+\end{equation}
+
+\paragraph{Traction limits.}
+
+Adherence cannot be maintained for arbitrary transmitted torque.
+The belt--pulley contact can only sustain a finite tangential traction, and
+therefore only a finite coupling torque.
+
+We therefore introduce directional traction bounds and write the admissible
+sticking interval as
+\begin{equation}
+\tau_- \le \tau_{\mathrm{ns}} \le \tau_+.
+\label{eq:stick_admissible_interval}
+\end{equation}
+
+If \Eq{eq:stick_admissible_interval} holds, then the no-slip torque lies within
+the available traction limits, so sticking is physically admissible.
+
+If instead $\tau_{\mathrm{ns}}$ lies outside this interval, then the torque
+required to maintain adherence cannot be supported by the contact, and slip must
+occur.
+
+\paragraph{Why a slip metric is still needed.}
+
+The traction condition alone is not enough to determine the regime.
+Once slipping has begun, the transmission does not return immediately to stick
+simply because $\tau_{\mathrm{ns}}$ later re-enters the admissible interval.
+Stick is only recovered once the existing relative motion has decayed to zero.
+
+For this reason, one further quantity is needed: a measure of the relative slip
+velocity.
+
+Under \AssRef{assump:single_slip_interface}, the model permits slip at only one
+pulley contact at a time.
+A single scalar mismatch is therefore sufficient:
+\begin{equation}
+v_{\Delta}
+=
+r_{p,\mathrm{eff}}\omega_p
+-
+r_{s,\mathrm{eff}}\omega_s.
+\label{eq:v_delta_def}
+\end{equation}
+
+This quantity compares the two tangential surface speeds that the pulleys would
+impose on the belt if each were enforcing adherence.
+
+If
+\begin{equation}
+v_{\Delta}=0,
+\label{eq:v_delta_zero}
+\end{equation}
+then the pulley motions are compatible with a common adhered belt motion, so a
+sticking state is kinematically possible.
+
+If instead
+\begin{equation}
+v_{\Delta}\neq 0,
+\label{eq:v_delta_nonzero}
+\end{equation}
+then the pulleys are demanding different tangential belt speeds.
+
+The sign of $v_{\Delta}$ indicates the slip direction:
+if $v_{\Delta}>0$, the primary tends to drive the belt faster than the secondary
+is accepting it; if $v_{\Delta}<0$, the opposite is true.
+
+\paragraph{Stick and slip states.}
+
+The transmission can therefore be in stick only when two conditions are
+satisfied simultaneously:
+
+\begin{enumerate}
+    \item the required no-slip torque lies within the admissible traction
+    interval, and
+    \item the relative slip velocity has vanished.
+\end{enumerate}
+
+This gives the regime structure
+\begin{equation}
+\tau_c =
+\begin{cases}
+\tau_{\mathrm{ns}},
+&
+v_{\Delta}=0
+\;\text{and}\;
+\tau_- \le \tau_{\mathrm{ns}} \le \tau_+,
+\\[10pt]
+\text{traction-limited value},
+&
+\text{otherwise}.
+\end{cases}
+\label{eq:tau_c_regime_structure}
+\end{equation}
+
+\paragraph{Physical interpretation.}
+
+If the required no-slip torque leaves the admissible interval, the contact can
+no longer maintain adherence and slip begins.
+
+Once slip is present, the transmission remains on a slip branch until the
+existing mismatch has been driven back to zero.
+This is why the slip metric is needed in addition to the traction limits:
+the traction limits determine whether sticking is admissible, while
+$v_{\Delta}$ determines whether slipping is still occurring and, if so, in which
+direction.
+
+The next section derives the no-slip torque $\tau_{\mathrm{ns}}$.
+The following section derives the traction limits $\tau_-$ and $\tau_+$ and
+thereby makes the traction-limited branch explicit.
+
+% ==============================================================
 \section{Torque Transmission and Coupling Torque}\label{sec:torque-coupling}
 
 The axial shift dynamics derived in \Sec{sec:shift-dyn}
@@ -4931,9 +5197,6 @@ into the secondary axial force model
 \Eq{eq:secondary_axial}
 completes the dynamical coupling required
 for the axial shift equation \Eq{eq:s_ddot_final}.
-
-
-% ==============================================================
 \section{Traction Limit and Slip Condition}
 \label{sec:traction-slip}
 
@@ -5680,6 +5943,7 @@ and modifies the governing equations accordingly.
 
 
 % ==============================================================
+
 \section{Slip Regimes and Traction-Limited Coupling Torque}
 \label{sec:slip_regimes}
 
@@ -5933,6 +6197,7 @@ slip mismatch collapses and the system re-enters stick.
 
 
 % ==============================================================
+
 \section{Complete CVT Dynamic Model}
 \label{sec:complete_model}
 
@@ -6990,7 +7255,6 @@ can still produce materially inaccurate dynamics near maximum shift.
 This analysis justifies the use of exact numerical solutions for all
 geometric computations in this work.
 
-
 \section{Common Ramp Profile Designs}\label{sec:appendix-ramp-profiles}
 
 This appendix presents common ramp profile parameterizations for CVT
@@ -7356,7 +7620,6 @@ is physically mild. If simulation performance is a concern, slope transitions
 should be blended — a short circular arc segment tangent to both adjoining
 profiles is sufficient, as it restores $C^1$ continuity and bounds $d^2r_f/ds^2$
 throughout the ramp.
-
 
 \section{Numerical Methods Summary}\label{sec:appendix-numerics}
 
