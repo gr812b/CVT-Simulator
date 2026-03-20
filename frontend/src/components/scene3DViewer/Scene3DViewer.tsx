@@ -54,7 +54,7 @@ export const Scene3DViewer = ({ replayController, className }: Scene3DViewerProp
         const converted = convertConstants(rawConstants, { distance: SCENE_DISTANCE_UNIT, angle: SCENE_ANGLE_UNIT });
         setConstants(converted);
       })
-      .catch(console.error);
+      .catch((error) => alert(`Failed to load simulator constants: ${error instanceof Error ? error.message : String(error)}`));
   }, []);
 
   useEffect(() => {
@@ -66,7 +66,7 @@ export const Scene3DViewer = ({ replayController, className }: Scene3DViewerProp
         setIsLoading(false);
       })
       .catch((error) => {
-        console.error(error);
+        alert(`Failed to load 3D models: ${error instanceof Error ? error.message : String(error)}`);
         setIsLoading(false);
       });
   }, [constants]);

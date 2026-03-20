@@ -8,21 +8,20 @@ import { RampPreview } from '@components/rampBuilder/RampPreview';
 import { ParameterDescription } from '@components/parameterDescription/ParameterDescription';
 import { LoadingOverlay } from '@components/loadingOverlay/LoadingOverlay';
 import { SolverResults } from '@components/solverResults/SolverResults';
-import { GROUP_TITLES, PARAMETERS, type Parameter, type ParameterGroup, type PiecewiseRampConfig } from '@types';
+import { SaveModal } from '@components/saveModal/SaveModal';
+import { GROUP_TITLES, PARAMETERS, type Parameter, type ParameterGroup, type PiecewiseRampConfig, type ParameterValue, type ParameterState } from '@types';
 import { useParameter } from '@contexts/ParameterContext';
 import { useLoading } from '@contexts/LoadingContext';
 import { useFormState } from '@hooks/useFormState';
-import { useUnsavedChangesPrompt } from '@hooks/useUnsavedChangesPrompt';
-import { runSimulationStreaming } from '@utils/api';
-import { mapParametersToApiBody } from '@utils/parameterMapping';
+import { useRunSimulation } from '@hooks/useRunSimulation';
+import { useSessionPersistence } from '@hooks/useSessionPersistence';
 import Home from '@assets/icons/home.svg?react';
 import ArrowUpCircle from '@assets/icons/arrow_up_circle.svg?react';
 import ArrowDownCircle from '@assets/icons/arrow_down_circle.svg?react';
+import ArrowLeft from '@assets/icons/arrow_left.svg?react';
 import PlayOutline from '@assets/icons/play_outline.svg?react';
 import Edit from '@assets/icons/edit.svg?react';
 import styles from './Input.module.scss';
-
-import { convertSimulationData, UNIT_PRESETS } from '@utils/conversion';
 
 // Precomputed list of all groups and parameters
 const allGroups = Object.keys(GROUP_TITLES) as ParameterGroup[];
@@ -33,17 +32,21 @@ const expandedState: Record<ParameterGroup, boolean> = Object.fromEntries(allGro
 const collapsedState: Record<ParameterGroup, boolean> = Object.fromEntries(allGroups.map(group => [group, false])) as Record<ParameterGroup, boolean>;
 
 export const Input = () => {
-    const navigate = useNavigate();
     const { setMultipleParameters, parameters } = useParameter();
-    const { setLoading, isLoading, loadingMessage } = useLoading();
+    const { isLoading, loadingMessage } = useLoading();
     const formState = useFormState(parameters);
-    const { navigateWithConfirmation } = useUnsavedChangesPrompt(formState.hasChanges);
+    const navigate = useNavigate();
+    const { runSimulation } = useRunSimulation();
+    const { isFieldChanged, hasChanges, resetToBaseline, baselineParameters } = useSessionPersistence();
 
     // State to manage which accordions are expanded
     const [expanded, setExpanded] = useState<Record<ParameterGroup, boolean>>(expandedState);
 
     // State to track which input field was most recently being used
     const [activeField, setActiveField] = useState<Parameter | null>(null);
+
+    // State to manage save modal visibility
+    const [isSaveModalOpen, setIsSaveModalOpen] = useState(false);
 
     // Handler to toggle individual accordion
     const toggleAccordion = (group: keyof typeof expanded) => {
@@ -56,41 +59,25 @@ export const Input = () => {
             return;
         }
 
-        try {
-            const parsedValues = formState.getParsedValues();
-            setMultipleParameters(parsedValues);
-            formState.markAsSaved();
+        const parsedValues = formState.getParsedValues();
+        setMultipleParameters(parsedValues);
+        formState.markAsSaved();
 
-            setLoading(true, 'Running simulation...');
+        await runSimulation(parsedValues);
+    };
 
-            const apiBody = mapParametersToApiBody(parsedValues);
-            const result = await runSimulationStreaming(
-                apiBody,
-                (percent) => {
-                    setLoading(true, `Running simulation... ${percent.toFixed(1)}%`);
-                }
-            );
-            const unitConversion = convertSimulationData(result, UNIT_PRESETS.BAJA);
-
-            navigate('/playback', { 
-                state: { simulationResult: unitConversion }
-            });
-        } catch (error) {
-            console.error('Simulation failed:', error);
-            // TODO: Replace with error toast
-            alert('Simulation failed. Please check your parameters and try again.');
-        } finally {
-            setLoading(false);
+    // Handle save to library
+    const handleSave = () => {
+        if (formState.validateAll()) {
+            setIsSaveModalOpen(true);
         }
     };
 
-    // Handle manual save
-    const handleSave = () => {
-        if (formState.validateAll()) {
-            const parsedValues = formState.getParsedValues();
-            setMultipleParameters(parsedValues);
-            formState.markAsSaved();
-        }
+    // Handle successful save from modal
+    const handleSaveComplete = () => {
+        const parsedValues = formState.getParsedValues();
+        setMultipleParameters(parsedValues);
+        formState.markAsSaved();
     };
 
     // Get parameter description based on active field
@@ -112,14 +99,52 @@ export const Input = () => {
         );
     }
 
+    // Handle reset to baseline
+    const handleReset = () => {
+        const confirmed = window.confirm('Reset all parameters to their original values? This will discard all changes.');
+        if (!confirmed) return;
+        
+        // Reset both parameter context and form state to baseline
+        resetToBaseline();
+        formState.resetToValues(baselineParameters);
+    };
+
+    // Handle field changes - update both formState and parameter context
+    const handleFieldChange = (paramKey: Parameter, value: ParameterValue) => {
+        // Update form state (validation, touched, etc.)
+        formState.updateField(paramKey, value);
+        
+        // Immediately update parameter context for auto-validation and change detection
+        const paramConfig = PARAMETERS[paramKey];
+        let parsedValue: number | string | boolean | PiecewiseRampConfig;
+        
+        if (paramConfig.type === 'number') {
+            parsedValue = Number(value);
+        } else if (paramConfig.type === 'ramp') {
+            parsedValue = value as PiecewiseRampConfig;
+        } else if (paramConfig.type === 'boolean') {
+            parsedValue = typeof value === 'string' ? value.toLowerCase() === 'true' : Boolean(value);
+        } else {
+            parsedValue = value as string;
+        }
+        
+        setMultipleParameters({ [paramKey]: parsedValue } as Partial<ParameterState>);
+    };
+
     return (
         <div className={styles.input}>
             <LoadingOverlay isVisible={isLoading} message={loadingMessage} />
+            <SaveModal
+                isOpen={isSaveModalOpen}
+                onClose={() => setIsSaveModalOpen(false)}
+                parameters={formState.getParsedValues()}
+                onSave={handleSaveComplete}
+            />
             <Button
                 text={'Home'}
                 icon={Home}
                 className={styles.backButton}
-                onClick={() => navigateWithConfirmation('/')}
+                onClick={() => navigate('/')}
             />
             <div className={styles.solverResultsPosition}>
                 <SolverResults />
@@ -139,7 +164,7 @@ export const Input = () => {
                                     const param = PARAMETERS[paramKey];
                                     const { label, units, type } = param;
                                     const hasError = formState.touched[paramKey] && formState.errors[paramKey];
-                                    const hasChanged = formState.isFieldChanged(paramKey);
+                                    const hasChanged = isFieldChanged(paramKey);
                                     
                                     // Handle ramp parameter differently
                                     if (type === 'ramp') {
@@ -147,7 +172,7 @@ export const Input = () => {
                                             <div key={paramKey} onFocus={() => setActiveField(paramKey)}>
                                                 <RampBuilder
                                                     value={formState.values[paramKey] as PiecewiseRampConfig | null}
-                                                    onChange={(config) => formState.updateField(paramKey, config)}
+                                                    onChange={(config) => handleFieldChange(paramKey, config)}
                                                     className={styles.rampBuilder}
                                                 />
                                             </div>
@@ -162,7 +187,7 @@ export const Input = () => {
                                             value={formState.values[paramKey] as string}
                                             error={hasError ? formState.errors[paramKey] : null}
                                             hasChanged={hasChanged}
-                                            onChange={(e) => formState.updateField(paramKey, e.target.value)}
+                                            onChange={(e) => handleFieldChange(paramKey, e.target.value)}
                                             onFocus={() => {
                                                 setActiveField(paramKey);
                                                 formState.touchField(paramKey);
@@ -191,7 +216,13 @@ export const Input = () => {
                 </div>
                 <div className={styles.nextButtonContainer}>
                     <Button
-                        text='Save'
+                        text='Reset'
+                        icon={ArrowLeft}
+                        onClick={handleReset}
+                        disabled={!hasChanges()}
+                    />
+                    <Button
+                        text='Save As...'
                         icon={Edit}
                         onClick={handleSave}
                         disabled={!formState.isValid()}

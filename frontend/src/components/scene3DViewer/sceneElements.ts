@@ -66,7 +66,7 @@ export const loadCVTModels = async (
         rotation: config.rotation,
       });
     } catch (error) {
-      console.error(`Error loading model ${config.id}:`, error);
+      alert(`Error loading model ${config.id}: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
 

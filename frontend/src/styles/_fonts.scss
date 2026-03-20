@@ -36,3 +36,9 @@
     font-style: italic;
     text-transform: uppercase;
 }
+
+@mixin text-code {
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 0.75rem;
+    line-height: 1.5;
+}
