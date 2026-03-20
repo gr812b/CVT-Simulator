@@ -2,19 +2,21 @@
 
 from collections.abc import Sequence
 import numpy as np
-from cvt_simulator.constants.car_specs import WHEEL_RADIUS
+from cvt_simulator.constants.car_specs import WHEEL_RADIUS, GEARBOX_RATIO
 
 
 def secondary_pulley_angular_velocity_to_car_velocity(
     secondary_pulley_angular_velocity: float,
 ) -> float:
     """Convert secondary pulley angular velocity ω_s [rad/s] to car velocity v [m/s]."""
-    return secondary_pulley_angular_velocity * WHEEL_RADIUS
+    wheel_angular_velocity = secondary_pulley_angular_velocity / GEARBOX_RATIO
+    return wheel_angular_velocity * WHEEL_RADIUS
 
 
 def car_velocity_to_secondary_pulley_angular_velocity(car_velocity: float) -> float:
     """Convert car velocity v [m/s] to secondary pulley angular velocity ω_s [rad/s]."""
-    return car_velocity / WHEEL_RADIUS
+    wheel_angular_velocity = car_velocity / WHEEL_RADIUS
+    return wheel_angular_velocity * GEARBOX_RATIO
 
 
 def primary_pulley_angular_velocity_to_engine_angular_velocity(
