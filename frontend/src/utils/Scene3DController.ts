@@ -95,7 +95,7 @@ export class Scene3DController {
       if (parent) {
         model.setParent(parent);
       } else {
-        console.warn(`Parent model "${config.parentId}" not found for model "${config.id}"`);
+        alert(`Parent model "${config.parentId}" not found for model "${config.id}"`);
         this.scene.add(model.object3D);
       }
     } else {

@@ -18,8 +18,7 @@ export const Playback = () => {
     // Handle redirect if no simulation data is available
     useEffect(() => {
         if (!playbackData) {
-            // TODO: Replace with proper toast notification
-            console.warn('No simulation data available. Redirecting to input page.');
+            alert('No simulation data available. Redirecting to input page.');
             navigate('/input');
         }
     }, [playbackData, navigate]);

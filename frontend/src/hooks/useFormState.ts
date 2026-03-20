@@ -44,12 +44,12 @@ export const useFormState = (contextValues?: ParameterState) => {
   const initialValuesRef = useRef<Record<Parameter, ParameterValue>>(getInitialValues());
 
   // Update a field value and validate it
-  const updateField = useCallback((parameter: Parameter, value: ParameterValue) => {
+  const updateField = useCallback((parameter: Parameter, value: ParameterValue) => {    
     setValues(prev => ({ ...prev, [parameter]: value }));
     
     // Validate the field (skip validation for complex types)
     const validator = PARAMETERS[parameter].validate;
-    const error = validator ? validator(String(value)) : null;
+    const error = validator ? validator(String(value)) : null;    
     setErrors(prev => ({ ...prev, [parameter]: error }));
     
     // Mark as touched
@@ -145,6 +145,23 @@ export const useFormState = (contextValues?: ParameterState) => {
     return Object.values(newErrors).every(error => error === null);
   }, [values]);
 
+  // Reset form to specific values (e.g., baseline parameters)
+  const resetToValues = useCallback((newValues: ParameterState) => {
+    const formattedValues = Object.entries(PARAMETERS).reduce((acc, [key, config]) => {
+      const paramKey = key as Parameter;
+      const value = newValues[paramKey] ?? config.defaultValue;
+      // Keep complex types as-is, convert primitives to strings for input fields
+      acc[paramKey] = config.type === 'ramp' ? value : String(value);
+      return acc;
+    }, {} as Record<Parameter, ParameterValue>);
+    
+    setValues(formattedValues);
+    setErrors(getInitialErrors());
+    setTouched(getInitialTouched());
+    setHasChanges(false);
+    initialValuesRef.current = formattedValues;
+  }, [getInitialErrors, getInitialTouched]);
+
   return {
     values,
     errors,
@@ -157,6 +174,7 @@ export const useFormState = (contextValues?: ParameterState) => {
     getChangedFields,
     isFieldChanged,
     resetForm,
+    resetToValues,
     markAsSaved,
     validateAll,
   };

@@ -1,6 +1,5 @@
 @use '@styles/_fonts';
 @use '@styles/_colors';
-@use 'sass:map';
 
 .dashboard {
     display: flex;
@@ -30,12 +29,6 @@
             white-space: nowrap;
             overflow: hidden;
         }
-    }
-
-    .tableContainer {
-        flex-grow: 1;
-        align-content: center;
-        justify-items: center;
     }
 
     .buttonsContainer {
