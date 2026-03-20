@@ -5134,104 +5134,64 @@ Together, these relations close the sticking branch and yield the explicit
 result \Eq{eq:tau_ns_final}.
 
 
-\section{Traction Limit and Slip Condition}
+\section{Traction Limits and Slip Conditions}
 \label{sec:traction-slip}
 
-The torque transmission law derived previously assumes ideal no-slip belt
-traction. Under that assumption, the coupling torque
-\Eq{eq:tau_p_final} (and equivalently \Eq{eq:tau_s_final})
-represents the torque actually transmitted through the CVT.
+In \Sec{sec:transmission_regimes}, the sticking branch was defined by the
+requirement that the no-slip coupling torque remain within an admissible
+traction interval. In \Sec{sec:tau_ns}, the corresponding no-slip torque
+$\tau_{\mathrm{ns}}$ was derived explicitly.
 
-In reality, belt-pulley friction is finite. For a given normal clamping
-force, there exists a maximum tangential traction force that the contact
-can sustain. If the demanded coupling torque exceeds this traction
-capacity, slip occurs and the transmitted torque saturates at a
-friction-limited value.
+The remaining task is therefore to determine the traction bounds themselves.
 
-The objective of this section is to derive a traction inequality of the form
+Because belt--pulley friction is finite, the contact cannot sustain arbitrary
+tangential traction.
+For any instantaneous clamping state, only a bounded range of transmitted
+coupling torque can be supported before adherence is lost.
+Once the demanded torque leaves that admissible range, the no-slip branch is no
+longer physically realizable and the transmission must enter slip.
+
+Accordingly, the objective of this section is to derive bounds of the form
 
 \begin{equation}
-|\tau| \le \tau_{\max},
+\tau_- \le \tau \le \tau_+,
 \label{eq:tau_traction_goal}
 \end{equation}
 
-which will later be enforced in place of the ideal coupling law whenever
-the no-slip solution violates this bound.
+where $\tau_-$ and $\tau_+$ are the negative- and positive-direction traction
+limits, respectively.
+
+These bounds will later be compared against the no-slip torque
+$\tau_{\mathrm{ns}}$ to determine whether the transmission remains in stick or
+transitions to slip.
 % --------------------------------------------------------------
 \subsection{Tight--Slack Tension Difference and Torque Capacity}
 \label{sec:traction_overview}
 
-Consider the wrapped pulley shown in \Fig{fig:tight_slack}.  
-If torque is transmitted from the pulley to the belt, the belt tension
-cannot be the same on both spans. One side must carry a higher tension
-than the other. We therefore define
+The same traction-capacity argument applies to both pulleys.
+Accordingly, in this section we use the subscript
+\[
+j \in \{p,s\},
+\]
+where \(j=p\) denotes the primary pulley and \(j=s\) denotes the secondary pulley.
+
+Consider the wrapped pulley shown in \Fig{fig:tight_slack}.
+If torque is transmitted from pulley \(j\) to the belt, the belt tension
+cannot be the same on both spans.
+One side must carry a higher tension than the other.
+For a given transmission direction, we therefore define
 
 \begin{equation}
-\Delta T
+\Delta T_j
 \;\equiv\;
-T_{\mathrm{tight}}
+T_{j,\mathrm{tight}}
 -
-T_{\mathrm{slack}},
+T_{j,\mathrm{slack}},
 \label{eq:deltaT_def}
 \end{equation}
 
-where $T_{\mathrm{tight}}$ and $T_{\mathrm{slack}}$ are the belt tensions
-on the two straight spans shown in the figure.
-
-This tension difference arises because the pulley applies tangential
-traction to the belt along the wrap angle $\phi$.
-The cumulative effect of this traction increases the belt tension
-progressively from the slack side to the tight side.
-
-At effective contact radius $r_{\mathrm{eff}}$, the transmitted torque is
-
-\begin{equation}
-\tau
-=
-r_{\mathrm{eff}}\,\Delta T,
-\qquad
-|\tau|
-=
-r_{\mathrm{eff}}\,|\Delta T|.
-\label{eq:tau_from_deltaT}
-\end{equation}
-
-Thus, limiting the transmitted torque is equivalent to limiting
-the admissible tension difference $\Delta T$.
-
-% --------------------------------------------------------------
-
-Under \AssRef{assump:ideal_friction} and
-\AssRef{assump:constant_friction},
-the belt–pulley interface obeys a Coulomb friction law with constant
-coefficient $\mu$. The tangential traction at any point along the wrap
-is therefore bounded by the local normal load:
-\[
-|F_f| \le \mu N.
-\]
-
-The \emph{maximum} admissible tension difference occurs when friction is
-fully mobilized everywhere along the wrap — that is, at impending slip.
-Beyond this point, additional tension rise cannot be supported and
-sliding must occur.
-
-We therefore define a maximum supported tension difference
-$\Delta T_{\max}$, corresponding to the friction-saturated state,
-and the associated torque capacity
-
-\begin{equation}
-\tau_{\max}
-=
-r_{\mathrm{eff}}\,\Delta T_{\max}.
-\label{eq:tau_max_def}
-\end{equation}
-
-The next subsection computes $\Delta T_{\max}$ by examining the
-incremental change in belt tension along the wrap.
-
-\begin{remarkbox}[Remark (Friction)]
-TODO: Discuss other options for modelling friction of the rubber belt, reference that paper. Appendix?
-\end{remarkbox}
+where \(T_{j,\mathrm{tight}}\) and \(T_{j,\mathrm{slack}}\) are the belt
+tensions on the two straight spans shown in the figure.
 
 \begin{figure}[H]
 \centering
@@ -5240,19 +5200,79 @@ TODO: Discuss other options for modelling friction of the rubber belt, reference
 \label{fig:tight_slack}
 \end{figure}
 
+This tension difference arises because the pulley applies tangential
+traction to the belt along the wrap angle \(\phi_j\).
+The cumulative effect of this traction changes the belt tension
+progressively from the slack side to the tight side.
+
+At effective contact radius \(r_{j,\mathrm{eff}}\), the transmitted torque is
+
+\begin{equation}
+\tau_j
+=
+r_{j,\mathrm{eff}}\,\Delta T_j,
+\qquad
+|\tau_j|
+=
+r_{j,\mathrm{eff}}\,|\Delta T_j|.
+\label{eq:tau_from_deltaT}
+\end{equation}
+
+Thus, limiting the transmitted torque is equivalent to limiting
+the admissible tension difference \(\Delta T_j\).
+
+% --------------------------------------------------------------
+
+Under \AssRef{assump:ideal_friction} and
+\AssRef{assump:constant_friction},
+the belt--pulley interface obeys a Coulomb friction law with constant
+coefficient \(\mu\).
+The tangential traction at any point along the wrap
+is therefore bounded by the local normal load:
+\[
+|F_f| \le \mu N.
+\]
+
+The largest admissible tension difference for a given pulley state and
+transmission direction occurs when friction is fully mobilized everywhere
+along the wrap, i.e.\ at impending slip.
+Beyond this point, additional tension rise cannot be supported and
+sliding must occur.
+
+We therefore define a maximum supported tension difference
+\(\Delta T_{j,\max}\), corresponding to the friction-saturated state,
+and the associated torque capacity
+
+\begin{equation}
+\tau_{j,\max}
+=
+r_{j,\mathrm{eff}}\,\Delta T_{j,\max}.
+\label{eq:tau_max_def}
+\end{equation}
+
+The next subsection computes \(\Delta T_{j,\max}\) by examining the
+incremental change in belt tension along the wrap.
+
+\begin{remarkbox}[Remark (Friction)]
+TODO: Discuss other options for modelling friction of the rubber belt, reference that paper. Appendix?
+\end{remarkbox}
+
+
+
 \subsection{Differential Belt Element and Tangential Force Balance}
 \label{sec:traction_element}
 
 To determine the maximum admissible tension difference
-$\Delta T_{\max}$ introduced in \Sec{sec:traction_overview},
+$\Delta T_{j,\max}$ introduced in \Sec{sec:traction_overview},
 we now examine how belt tension changes \emph{locally}
-as the belt passes around the pulley.
+as the belt passes around a generic pulley
+$j \in \{p,s\}$.
 
 Specifically, we seek an expression for the incremental
-tension change $\dd T$ over a differential wrap angle $\dd\theta$.
-Once $\dd T$ is related to the available friction at the interface,
-integration over the total wrap angle $\phi$ will yield
-$\Delta T_{\max}$.
+tension change $\dd T_j$ over a differential wrap angle $\dd\theta$.
+Once $\dd T_j$ is related to the available friction at the interface,
+integration over the total wrap angle $\phi_j$ will yield
+$\Delta T_{j,\max}$.
 
 % --------------------------------------------------------------
 
@@ -5264,103 +5284,105 @@ $\Delta T_{\max}$.
 \end{figure}
 
 Consider the differential belt element shown in \Fig{fig:traction_element},
-spanning an infinitesimal wrap angle $\dd\theta$.
-The belt tension entering the element is $T$,
-and leaving is $T + \dd T$.
+spanning an infinitesimal wrap angle $\dd\theta$ on pulley $j$.
+The belt tension entering the element is $T_j$,
+and leaving is $T_j + \dd T_j$.
 
 The pulley applies to this element:
 \begin{itemize}
-    \item a differential normal force $\dd N$ (radial),
-    \item a differential tangential friction force $\dd F_f$.
+    \item a differential normal force $\dd N_j$ (radial),
+    \item a differential tangential friction force $\dd F_{f,j}$.
 \end{itemize}
 
 The positive tangential direction is taken along the midpoint tangent
-of the element, consistent with increasing wrap angle.
+of the element, consistent with increasing wrap angle and with increasing
+belt tension from the slack side toward the tight side.
 
 % --------------------------------------------------------------
 \paragraph{Tangential Newton's Second Law}
 
-Applying \theoryRef{th:newton-trans} in the tangential direction:
+Applying \theoryRef{th:newton-trans} in the tangential direction gives
 
 \begin{equation}
-\sum F_t = \dd m \, a_t,
+\sum F_t = \dd m_j \, a_{t,j},
 \label{eq:newton_tangential}
 \end{equation}
 
-where $a_t$ is the tangential acceleration of the belt material at the
-contact point.
+where $a_{t,j}$ is the tangential acceleration of the belt material at the
+contact point on pulley $j$.
 
 The tangential components of the end tensions follow directly from geometry:
 
 \begin{align}
-(T)_t &= T\cos\!\left(\frac{\dd \theta}{2}\right),
+(T_j)_t &= T_j\cos\!\left(\frac{\dd \theta}{2}\right),
 \\[4pt]
-(T+\dd T)_t &= (T+\dd T)\cos\!\left(\frac{\dd \theta}{2}\right).
+(T_j+\dd T_j)_t &= (T_j+\dd T_j)\cos\!\left(\frac{\dd \theta}{2}\right).
 \end{align}
 
 The left-end tension acts in the positive tangential direction,
 while the right-end tension acts in the negative tangential direction.
-Including friction, the tangential force balance becomes
+Including the differential friction force, the tangential force balance becomes
 
 \begin{equation}
-T\cos\!\left(\frac{\dd \theta}{2}\right)
+T_j\cos\!\left(\frac{\dd \theta}{2}\right)
 -
-(T+\dd T)\cos\!\left(\frac{\dd \theta}{2}\right)
+(T_j+\dd T_j)\cos\!\left(\frac{\dd \theta}{2}\right)
 +
-\dd F_f
+\dd F_{f,j}
 =
-\dd m\,a_t.
+\dd m_j\,a_{t,j}.
 \label{eq:tangential_balance_expanded}
 \end{equation}
 
-Simplifying the first two terms exactly,
+Simplifying the first two terms exactly gives
 
 \begin{equation}
--\dd T \cos\!\left(\frac{\dd \theta}{2}\right)
+-\dd T_j \cos\!\left(\frac{\dd \theta}{2}\right)
 +
-\dd F_f
+\dd F_{f,j}
 =
-\dd m\,a_t.
+\dd m_j\,a_{t,j}.
 \label{eq:tangential_balance_simplified}
 \end{equation}
 
 Rearranging,
 
 \begin{equation}
-\dd T \cos\!\left(\frac{\dd \theta}{2}\right)
+\dd T_j \cos\!\left(\frac{\dd \theta}{2}\right)
 =
-\dd F_f
+\dd F_{f,j}
 -
-\dd m\,a_t.
+\dd m_j\,a_{t,j}.
 \label{eq:dT_exact}
 \end{equation}
 
 % --------------------------------------------------------------
 \paragraph{Belt mass element}
 
-From \Eq{eq:dm_belt_wrap},
+From \Eq{eq:dm_belt_wrap}, the belt mass associated with the differential
+contact element on pulley $j$ is
 
 \begin{equation}
-\dd m = \rho_b A_b r_{\mathrm{cm}}\,\dd\theta.
+\dd m_j = \rho_b A_b r_{j,\mathrm{cm}}\,\dd\theta.
 \end{equation}
 
-so
+Thus,
 
 \begin{equation}
-\dd m\,a_t
+\dd m_j\,a_{t,j}
 =
-\rho_b A_b r_{\mathrm{cm}} a_t \, \dd \theta.
+\rho_b A_b r_{j,\mathrm{cm}} a_{t,j} \, \dd \theta.
 \label{eq:dm_at}
 \end{equation}
 
-Substituting into \Eq{eq:dT_exact},
+Substituting into \Eq{eq:dT_exact} gives
 
 \begin{equation}
-\dd T \cos\!\left(\frac{\dd \theta}{2}\right)
+\dd T_j \cos\!\left(\frac{\dd \theta}{2}\right)
 =
-\dd F_f
+\dd F_{f,j}
 -
-\rho_b A_b r_{\mathrm{cm}} a_t \, \dd \theta.
+\rho_b A_b r_{j,\mathrm{cm}} a_{t,j} \, \dd \theta.
 \label{eq:dT_with_mass}
 \end{equation}
 
@@ -5368,11 +5390,12 @@ Substituting into \Eq{eq:dT_exact},
 \paragraph{Friction limit and impending slip}
 
 As established in \Sec{sec:traction_overview}, the maximum admissible
-tension rise occurs when friction is fully mobilized along the wrap
-(impending slip). At the differential level, this corresponds to
+tension rise occurs when friction is fully mobilized along the wrap,
+i.e.\ at impending slip.
+At the differential level, this corresponds to
 
 \begin{equation}
-\dd F_f = \mu \, \dd N.
+\dd F_{f,j} = \mu \, \dd N_j.
 \label{eq:friction_saturated}
 \end{equation}
 
@@ -5381,12 +5404,12 @@ Substituting \Eq{eq:friction_saturated} into
 tension increase supported without sliding:
 
 \begin{equation}
-\dd T_{\max}
+\dd T_{j,\max}
 =
 \frac{
-\mu\, \dd N
+\mu\, \dd N_j
 -
-\rho_b A_b r_{\mathrm{cm}} a_t \, \dd \theta
+\rho_b A_b r_{j,\mathrm{cm}} a_{t,j} \, \dd \theta
 }{
 \cos\!\left(\frac{\dd \theta}{2}\right)
 }.
@@ -5399,114 +5422,128 @@ tension increase supported without sliding:
 
 The tight--slack tension difference introduced in
 \Sec{sec:traction_overview} is obtained by accumulating the
-incremental tension changes $\dd T$ along the contact arc.
-Since tension evolves continuously around the wrap,
+incremental tension changes \(\dd T_j\) along the contact arc of pulley
+\(j \in \{p,s\}\).
+Since the belt tension evolves continuously around the wrap,
 
 \begin{equation}
-\Delta T
+\Delta T_j
 =
-T_{\mathrm{tight}} - T_{\mathrm{slack}}
+T_{j,\mathrm{tight}} - T_{j,\mathrm{slack}}
 =
-\int_{-\phi/2}^{\phi/2} \dd T.
+\int_{-\phi_j/2}^{\phi_j/2} \dd T_j.
 \label{eq:deltaT_integral_def}
 \end{equation}
 
 Accordingly, the maximum admissible tension difference is obtained
-by integrating the local maximum increment $\dd T_{\max}$ from
+by integrating the local maximum increment \(\dd T_{j,\max}\) from
 \Eq{eq:dT_max_local}:
 
 \begin{equation}
-\Delta T_{\max}
+\Delta T_{j,\max}
 =
-\int_{-\phi/2}^{\phi/2}
+\int_{-\phi_j/2}^{\phi_j/2}
 \frac{
-\mu\, \dd N
+\mu\, \dd N_j
 -
-\rho_b A_b r_{\mathrm{cm}} a_t \, \dd \theta
+\rho_b A_b r_{j,\mathrm{cm}} a_{t,j} \, \dd \theta
 }{
-\cos\!\left(\frac{\dd \theta}{2}\right)
+\cos\!\left(\frac{\dd\theta}{2}\right)
 }.
 \label{eq:deltaT_integral}
 \end{equation}
 
-In the differential limit $\dd\theta \to 0$,
-$\cos(\dd\theta/2) \to 1$, yielding
+In the differential limit \(\dd\theta \to 0\),
+\(\cos(\dd\theta/2) \to 1\), so this reduces to
 
 \begin{equation}
-\Delta T_{\max}
+\Delta T_{j,\max}
 =
-\int_{-\phi/2}^{\phi/2} \mu\, \dd N
+\int_{-\phi_j/2}^{\phi_j/2} \mu\, \dd N_j
 -
-\int_{-\phi/2}^{\phi/2}
-\rho_b A_b r_{\mathrm{cm}} a_t \, \dd \theta.
+\int_{-\phi_j/2}^{\phi_j/2}
+\rho_b A_b r_{j,\mathrm{cm}} a_{t,j} \, \dd \theta.
 \label{eq:deltaT_after_limit}
 \end{equation}
 
-The first integral represents the total normal load
-supported over the wrap, which we denote
+The first integral is the total normal load carried over the wrap of
+pulley \(j\), which we denote by
 
 \begin{equation}
-N_\phi
+N_{\phi,j}
 \;\equiv\;
-\int_{-\phi/2}^{\phi/2} \dd N.
+\int_{-\phi_j/2}^{\phi_j/2} \dd N_j.
 \label{eq:Nphi_def}
 \end{equation}
 
-(The explicit relationship between $N_\phi$ and the axial
-clamping force is derived in \Sec{sec:normal_from_clamp}.)
+The explicit relationship between \(N_{\phi,j}\) and the axial
+clamping force is derived in \Sec{sec:normal_from_clamp}.
 
-From \AssRef{assump:uniform_contact_radius}, $r_{\mathrm{cm}}$ and $a_t$ are uniform over
-the wrap, and so the second integral simplifies to
-$\rho_b A_b r_{\mathrm{cm}} a_t \phi$, giving
+From \AssRef{assump:uniform_contact_radius},
+\(r_{j,\mathrm{cm}}\) and \(a_{t,j}\) are uniform over the wrap,
+so the second integral simplifies to
+\(
+\rho_b A_b r_{j,\mathrm{cm}} a_{t,j} \phi_j
+\).
+Hence,
 
 \begin{equation}
-\Delta T_{\max}
+\Delta T_{j,\max}
 =
-\mu N_\phi
+\mu N_{\phi,j}
 -
-\rho_b A_b r_{\mathrm{cm}} a_t \phi.
+\rho_b A_b r_{j,\mathrm{cm}} a_{t,j} \phi_j.
 \label{eq:deltaT_final}
 \end{equation}
 
-This leaves two unknowns: the normal load $N_\phi$ and the tangential acceleration $a_t$.
+Thus, the maximum admissible tension difference for pulley \(j\)
+depends on two remaining quantities:
+the total wrap normal load \(N_{\phi,j}\) and the tangential
+belt acceleration \(a_{t,j}\).
 
-% --------------------------------------------------------------
 \subsection{Tangential Acceleration of a Belt Element on a Circular Wrap}
 \label{sec:belt_tangential_accel}
 
-This subsection derives the tangential acceleration term required in the local
-traction inequality in \Eq{eq:deltaT_final}.
-In that inequality we apply Newton's second law \emph{along the direction of belt
-motion}, so we need an explicit expression for the belt element's tangential
-acceleration $a_t$.
+In \Eq{eq:deltaT_final}, Newton's second law is applied \emph{along the local
+direction of belt motion}, so we require an explicit expression for the
+tangential acceleration \(a_{t,j}\) of the belt material on pulley \(j\).
+Since the inertial term acts on the belt element mass, the relevant kinematics
+are those of the belt element centroid, located at radius
+\(r_{j,\mathrm{cm}}(t)\).
 
 \paragraph{Goal}
 
-For a belt element of differential mass $\dd m$ moving along the wrap, the
-tangential force balance uses
+For a belt element of differential mass \(\dd m_j\) moving along the wrap of
+pulley \(j\), the tangential force balance uses
 \[
-\sum F_t = \dd m\,a_t,
+\sum F_t = \dd m_j\,a_{t,j}.
 \]
-so our goal is to compute $a_t$ from the belt kinematics when both
-\emph{angular speed} and \emph{wrap radius} may vary:
+Our goal is therefore to compute \(a_{t,j}\) from the belt kinematics when both
+the local angular speed and the centroid radius may vary:
 \[
-\omega(t)=\dot\theta(t),\qquad \alpha(t)=\dot\omega(t),\qquad r(t),\qquad \dot r(t).
+\omega_j(t)=\dot\theta_j(t),
+\qquad
+\dot\omega_j(t),
+\qquad
+r_{j,\mathrm{cm}}(t),
+\qquad
+\dot r_{j,\mathrm{cm}}(t).
 \]
 
 \paragraph{Coordinate system and unit vectors}
 
 Because we care about forces \emph{along the belt}, we choose a basis aligned
-with the belt's local geometry:
+with the local wrap geometry on pulley \(j\):
 \begin{itemize}
-    \item $\mathbf e_r(t)$ points radially outward from the pulley center $O$ to
-    the belt point $P$,
-    \item $\mathbf e_\theta(t)$ is the unit tangent, obtained by rotating
-    $\mathbf e_r$ by $+90^\circ$ in the direction of increasing $\theta$.
+    \item \(\mathbf e_{r,j}(t)\) points radially outward from the pulley center
+    to the belt point,
+    \item \(\mathbf e_{\theta,j}(t)\) is the unit tangent, obtained by rotating
+    \(\mathbf e_{r,j}\) by \(+90^\circ\) in the direction of increasing
+    \(\theta_j\).
 \end{itemize}
 
-These are not arbitrary symbols: they are \emph{the} directions of radial and
-tangential motion on a circle, and the belt's local tangential direction is
-exactly $\mathbf e_\theta$.
+The tangential direction of belt motion is therefore exactly
+\(\mathbf e_{\theta,j}\).
 
 \begin{figure}[H]
     \centering
@@ -5515,291 +5552,271 @@ exactly $\mathbf e_\theta$.
     \label{fig:polar_basis_placeholder}
 \end{figure}
 
-\paragraph{Work backwards: to get $a_t$, compute $\mathbf a$ and take its tangential component}
+\paragraph{Tangential acceleration as a component of \(\mathbf a\)}
 
 Tangential acceleration is the component of the acceleration vector along
-$\mathbf e_\theta$:
+\(\mathbf e_{\theta,j}\):
 \begin{equation}
-a_t \equiv \mathbf a\cdot \mathbf e_\theta.
+a_{t,j} \equiv \mathbf a_j\cdot \mathbf e_{\theta,j}.
 \label{eq:at_component_def}
 \end{equation}
-So we will compute $\mathbf a=\dot{\mathbf v}$, then read off the
-$\mathbf e_\theta$ component.
+
+We therefore compute the full acceleration \(\mathbf a_j=\dot{\mathbf v}_j\)
+and then read off its \(\mathbf e_{\theta,j}\) component.
 
 \paragraph{Step 1: position and velocity}
 
-The position of $P$ from the center is
+The position of the belt element centroid relative to the pulley center is
 \begin{equation}
-\mathbf r(t) = r(t)\,\mathbf e_r(t).
+\mathbf r_j(t) = r_{j,\mathrm{cm}}(t)\,\mathbf e_{r,j}(t).
 \label{eq:position_polar}
 \end{equation}
 
-Differentiate \Eq{eq:position_polar} using the product rule:
+Differentiating \Eq{eq:position_polar} gives
 \begin{equation}
-\mathbf v = \dot{\mathbf r}
-= \dot r\,\mathbf e_r + r\,\dot{\mathbf e}_r.
+\mathbf v_j = \dot{\mathbf r}_j
+= \dot r_{j,\mathrm{cm}}\,\mathbf e_{r,j}
++ r_{j,\mathrm{cm}}\,\dot{\mathbf e}_{r,j}.
 \label{eq:velocity_before_unit_rates}
 \end{equation}
 
-This shows why we must track how the unit vectors change with time:
-even if $r$ were constant, $\mathbf e_r$ rotates as the belt moves around the
-pulley.
+Thus, even if \(r_{j,\mathrm{cm}}\) were constant, the velocity would still
+depend on the rotation of the local basis.
 
-\paragraph{Step 2: derive $\dot{\mathbf e}_r$ and $\dot{\mathbf e}_\theta$ (no assumptions)}
+\paragraph{Step 2: time derivatives of the unit vectors}
 
-Over a small change $\dd\theta$, the unit vectors rotate rigidly by the same
-angle. The derivative with respect to angle is therefore:
+Over a small angular change \(\dd\theta_j\), the unit vectors rotate rigidly by
+the same angle. Hence
 \begin{equation}
-\frac{\dd \mathbf e_r}{\dd\theta} = \mathbf e_\theta,
+\frac{\dd \mathbf e_{r,j}}{\dd\theta_j} = \mathbf e_{\theta,j},
 \qquad
-\frac{\dd \mathbf e_\theta}{\dd\theta} = -\mathbf e_r.
+\frac{\dd \mathbf e_{\theta,j}}{\dd\theta_j} = -\mathbf e_{r,j}.
 \label{eq:unit_vectors_angle_derivatives}
 \end{equation}
 
-(Geometric justification: increasing $\theta$ rotates $\mathbf e_r$ toward the
-tangent; increasing $\theta$ rotates the tangent toward $-\mathbf e_r$.)
-
-Convert angle-derivatives to time-derivatives with the chain rule
-$\dd(\cdot)/\dd t = (\dd(\cdot)/\dd\theta)\,\dot\theta$ and
-$\omega=\dot\theta$:
+Using the chain rule with
+\(
+\omega_j=\dot\theta_j
+\),
+these become
 \begin{equation}
-\dot{\mathbf e}_r = \omega\,\mathbf e_\theta,
+\dot{\mathbf e}_{r,j} = \omega_j\,\mathbf e_{\theta,j},
 \qquad
-\dot{\mathbf e}_\theta = -\omega\,\mathbf e_r.
+\dot{\mathbf e}_{\theta,j} = -\omega_j\,\mathbf e_{r,j}.
 \label{eq:unit_vectors_time_derivatives}
 \end{equation}
 
 \paragraph{Step 3: velocity in radial--tangential form}
 
-Substitute $\dot{\mathbf e}_r$ from \Eq{eq:unit_vectors_time_derivatives} into
-\Eq{eq:velocity_before_unit_rates}:
+Substituting \Eq{eq:unit_vectors_time_derivatives} into
+\Eq{eq:velocity_before_unit_rates} gives
 \begin{equation}
-\mathbf v
+\mathbf v_j
 =
-\dot r\,\mathbf e_r + r\omega\,\mathbf e_\theta.
+\dot r_{j,\mathrm{cm}}\,\mathbf e_{r,j}
++
+r_{j,\mathrm{cm}}\omega_j\,\mathbf e_{\theta,j}.
 \label{eq:velocity_polar}
 \end{equation}
 
-This is already intuitive:
-$\dot r$ is the radial speed, and $r\omega$ is the tangential speed.
+Thus, \(\dot r_{j,\mathrm{cm}}\) is the radial speed and
+\(r_{j,\mathrm{cm}}\omega_j\) is the tangential speed.
 
-\paragraph{Step 4: acceleration and its tangential component}
+\paragraph{Step 4: acceleration and tangential component}
 
-Differentiate \Eq{eq:velocity_polar}:
+Differentiating \Eq{eq:velocity_polar} gives
 \begin{align}
-\mathbf a = \dot{\mathbf v}
+\mathbf a_j = \dot{\mathbf v}_j
 &=
-\frac{\dd}{\dd t}\big(\dot r\,\mathbf e_r\big)
+\frac{\dd}{\dd t}\big(\dot r_{j,\mathrm{cm}}\,\mathbf e_{r,j}\big)
 +
-\frac{\dd}{\dd t}\big(r\omega\,\mathbf e_\theta\big)
+\frac{\dd}{\dd t}\big(r_{j,\mathrm{cm}}\omega_j\,\mathbf e_{\theta,j}\big)
 \nonumber\\[6pt]
 &=
-\ddot r\,\mathbf e_r + \dot r\,\dot{\mathbf e}_r
+\ddot r_{j,\mathrm{cm}}\,\mathbf e_{r,j}
 +
-(\dot r\,\omega + r\alpha)\mathbf e_\theta + r\omega\,\dot{\mathbf e}_\theta.
+\dot r_{j,\mathrm{cm}}\,\dot{\mathbf e}_{r,j}
++
+(\dot r_{j,\mathrm{cm}}\,\omega_j + r_{j,\mathrm{cm}}\,\dot\omega_j)\mathbf e_{\theta,j}
++
+r_{j,\mathrm{cm}}\omega_j\,\dot{\mathbf e}_{\theta,j}.
 \label{eq:accel_expand}
 \end{align}
 
-Now substitute the unit-vector time derivatives from
-\Eq{eq:unit_vectors_time_derivatives}:
-\[
-\dot{\mathbf e}_r = \omega\,\mathbf e_\theta,
-\qquad
-\dot{\mathbf e}_\theta = -\omega\,\mathbf e_r,
-\]
-and collect like directions:
+Substituting the unit-vector derivatives from
+\Eq{eq:unit_vectors_time_derivatives} and collecting like terms yields
 \begin{align}
-\mathbf a
+\mathbf a_j
 &=
-\ddot r\,\mathbf e_r
+\ddot r_{j,\mathrm{cm}}\,\mathbf e_{r,j}
 +
-\dot r(\omega\,\mathbf e_\theta)
+\dot r_{j,\mathrm{cm}}(\omega_j\,\mathbf e_{\theta,j})
 +
-(\dot r\,\omega + r\alpha)\mathbf e_\theta
+(\dot r_{j,\mathrm{cm}}\,\omega_j + r_{j,\mathrm{cm}}\,\dot\omega_j)\mathbf e_{\theta,j}
 +
-r\omega(-\omega\,\mathbf e_r)
+r_{j,\mathrm{cm}}\omega_j(-\omega_j\,\mathbf e_{r,j})
 \nonumber\\[6pt]
 &=
-\big(\ddot r - r\omega^2\big)\mathbf e_r
+\big(\ddot r_{j,\mathrm{cm}} - r_{j,\mathrm{cm}}\omega_j^2\big)\mathbf e_{r,j}
 +
-\big(r\alpha + 2\dot r\,\omega\big)\mathbf e_\theta.
+\big(r_{j,\mathrm{cm}}\dot\omega_j + 2\dot r_{j,\mathrm{cm}}\,\omega_j\big)\mathbf e_{\theta,j}.
 \label{eq:accel_polar}
 \end{align}
 
-Finally, by the definition \Eq{eq:at_component_def}, the tangential acceleration is
-the $\mathbf e_\theta$ component:
+By \Eq{eq:at_component_def}, the tangential acceleration is therefore
 \begin{equation}
-a_t = r\alpha + 2\dot r\,\omega.
+a_{t,j}
+=
+r_{j,\mathrm{cm}}\dot\omega_j + 2\dot r_{j,\mathrm{cm}}\,\omega_j.
 \label{eq:at_final}
 \end{equation}
 
-\paragraph{Where the factor of 2 comes from}
+\paragraph{Origin of the factor of 2}
 
-The two $\dot r\,\omega$ contributions in \Eq{eq:accel_polar} come from
-\emph{two distinct effects}:
+The two \(\dot r_{j,\mathrm{cm}}\,\omega_j\) contributions in
+\Eq{eq:accel_polar} arise from two distinct effects:
 \begin{itemize}
-    \item $\dot r\,\dot{\mathbf e}_r$: even the \emph{radial} velocity $\dot r\,\mathbf e_r$
-    gains a tangential contribution because $\mathbf e_r$ rotates at rate $\omega$;
-    \item $\frac{\dd}{\dd t}(r\omega)$: the tangential speed $r\omega$ changes if $r$ changes.
+    \item \(\dot r_{j,\mathrm{cm}}\,\dot{\mathbf e}_{r,j}\): the radial velocity
+    \(\dot r_{j,\mathrm{cm}}\,\mathbf e_{r,j}\) acquires a tangential contribution because
+    the radial direction itself rotates at rate \(\omega_j\),
+    \item \(\frac{\dd}{\dd t}(r_{j,\mathrm{cm}}\omega_j)\): the tangential speed changes when
+    the centroid radius changes.
 \end{itemize}
 
-Adding these yields the total $2\dot r\,\omega$ term.
-
-% --------------------------------------------------------------
+Together, these give the total term \(2\dot r_{j,\mathrm{cm}}\,\omega_j\).
 \subsection{Normal Force from Axial Clamping}
 \label{sec:normal_from_clamp}
 
 The traction bound \Eq{eq:deltaT_final} depends on the total normal load
-over the wrap,
+over the wrap of pulley \(j\),
 \[
-N_\phi \equiv \int_{-\phi/2}^{\phi/2} \dd N.
+N_{\phi,j} \equiv \int_{-\phi_j/2}^{\phi_j/2} \dd N_j.
 \]
-We now express $N_\phi$ in terms of the axial clamping force generated
-by the pulley mechanism.
+We now express \(N_{\phi,j}\) in terms of the axial clamping force
+generated by that pulley.
 
 % --------------------------------------------------------------
 \paragraph{Axial clamp produces radial normal load}
 
 The belt is pressed between two opposing conical sheaves.
-An axial clamping force $F_{\mathrm{ax}}$ pushes the sheaves together.
-Because the sheave faces are inclined at cone half-angle $\beta$,
+On pulley \(j\), an axial clamping force \(F_{\mathrm{ax},j}\) pushes the
+sheaves together.
+Because the sheave faces are inclined at cone half-angle \(\beta\),
 this axial force generates a radial normal load on the belt.
 
-From the conical kinematics established in \Eq{eq:cone_geometry_diff},
+From the conical geometry relation established in
+\Eq{eq:cone_geometry_diff},
 
 \[
-\frac{\dd r}{\dd s} = \frac{1}{2\tan\beta}.
+\frac{\dd r_j}{\dd s} = \frac{1}{2\tan\beta}.
 \]
 
-To relate forces consistently, we use virtual work.
-The incremental work done by the axial clamp must equal
-the incremental work associated with radial compression:
+To relate the axial and radial forces consistently, we use virtual work.
+The incremental work done by the axial clamp must equal the incremental
+work associated with radial compression of the belt:
 
 \[
-F_{\mathrm{ax}}\,\dd s
+F_{\mathrm{ax},j}\,\dd s
 =
-F_{\mathrm{rad}}\,\dd r.
+F_{\mathrm{rad},j}\,\dd r_j.
 \]
 
-Substituting $\dd r = \left(\dd r/\dd s\right)\dd s$ gives
+Substituting
+\(
+\dd r_j = \left(\dd r_j/\dd s\right)\dd s
+\)
+gives
 
 \begin{equation}
-F_{\mathrm{rad}}
+F_{\mathrm{rad},j}
 =
-\frac{F_{\mathrm{ax}}}{\dd r/\dd s}
+\frac{F_{\mathrm{ax},j}}{\dd r_j/\dd s}
 =
-2F_{\mathrm{ax}}\tan\beta.
+2F_{\mathrm{ax},j}\tan\beta.
 \label{eq:Frad_from_Fax}
 \end{equation}
 
-Thus, the axial clamp force produces a total radial normal load
+Thus, the axial clamp force on pulley \(j\) produces a total radial normal load
+
 \begin{equation}
-F_{\mathrm{rad}} = 2F_{\mathrm{ax}}\tan\beta.
+F_{\mathrm{rad},j} = 2F_{\mathrm{ax},j}\tan\beta.
 \label{eq:Frad_simple}
 \end{equation}
 
 % --------------------------------------------------------------
 \paragraph{Identification with the wrap-normal load}
 
-The radial load $F_{\mathrm{rad}}$ derived above represents the total inward
-force applied by the two sheave faces onto the belt. That load is carried
-entirely by the distributed belt–pulley contact forces $\dd N$ along the wrap.
+The radial load \(F_{\mathrm{rad},j}\) derived above represents the total inward
+force applied by the two sheave faces of pulley \(j\) onto the belt.
+That load is carried by the distributed belt--pulley contact forces
+\(\dd N_j\) along the wrap.
 
-Since no other radial forces act on the belt within the contact region,
-radial equilibrium requires that the sum of the distributed contact forces
-equal the total clamp-induced radial load. Therefore,
+Therefore, the total normal load available for traction on pulley \(j\) is
 
 \begin{equation}
 \boxed{
-N_\phi = F_{\mathrm{rad}} = 2F_{\mathrm{ax}}\tan\beta.
+N_{\phi,j} = F_{\mathrm{rad},j} = 2F_{\mathrm{ax},j}\tan\beta.
 }
 \label{eq:Nphi_from_Fax}
 \end{equation}
 
-This result states that the total normal load available for traction
-is set directly by the axial clamping force through the cone geometry.
+This result states that the total wrap normal load, and hence the normal
+load available for traction, is set directly by the axial clamping force
+through the cone geometry.
 
-% ==============================================================
-\subsection{Torque Capacity Inequality}
+\subsection{Torque Capacity}
 \label{sec:tau_capacity}
 
-From \Sec{sec:traction_overview}, the maximum transmissible torque
-is determined by the maximum admissible tension difference:
+From \Sec{sec:traction_overview}, the maximum transmissible torque on pulley
+\(j\) is determined by the maximum admissible tension difference across the
+wrap:
 \begin{equation}
-\tau_{\max}
+\tau_{j,\max}
 =
-r_{\mathrm{eff}}\,\Delta T_{\max}.
+r_{j,\mathrm{eff}}\,\Delta T_{j,\max}.
 \label{eq:tau_max_repeat}
 \end{equation}
 
 Using the integrated result from \Eq{eq:deltaT_final},
-
+together with the wrap-normal relation \Eq{eq:Nphi_from_Fax} and the
+belt tangential acceleration from \Eq{eq:at_final},
 \[
-\Delta T_{\max}
+\Delta T_{j,\max}
 =
-\mu N_\phi
+\mu N_{\phi,j}
 -
-\rho_b A_b r_{\mathrm{cm}} a_t \phi,
+\rho_b A_b r_{j,\mathrm{cm}} a_{t,j} \phi_j,
+\qquad
+N_{\phi,j} = 2F_{\mathrm{ax},j}\tan\beta,
+\qquad
+a_{t,j}
+=
+r_{j,\mathrm{cm}}\dot{\omega}_j
++
+2\dot r_{j,\mathrm{cm}}\,\omega_j,
 \]
+the explicit torque-capacity expression becomes
 
-the traction limit becomes
-
-\begin{equation}
-|\tau|
-\le
-r_{\mathrm{eff}}
-\left(
-\mu N_\phi
--
-\rho_b A_b r_{\mathrm{cm}} a_t \phi
-\right).
-\label{eq:tau_capacity_step1}
-\end{equation}
-
-Substituting the clamp–normal relation from
-\Eq{eq:Nphi_from_Fax},
-
-\[
-N_\phi = 2F_{\mathrm{ax}}\tan\beta,
-\]
-
-gives
-
-\begin{equation}
-|\tau|
-\le
-r_{\mathrm{eff}}
-\left(
-\mu (2F_{\mathrm{ax}}\tan\beta)
--
-\rho_b A_b r_{\mathrm{cm}} a_t \phi
-\right).
-\label{eq:tau_capacity_step2}
-\end{equation}
-
-Finally, substituting the belt tangential acceleration
-from \Eq{eq:at_final},
-
-\[
-a_t = r\alpha + 2\dot r\,\omega,
-\]
-
-yields the explicit traction-limited torque inequality
-
-
-\bigeq{eq:tau_capacity_final}{Traction-Limited Torque Capacity}{
-|\tau|
-\le
-r_{\mathrm{eff}}
+\bigeq{eq:tau_capacity_final}{Pulley Torque Capacity}{
+\tau_{j,\max}
+=
+r_{j,\mathrm{eff}}
 \left[
-2\mu F_{\mathrm{ax}}\tan\beta
+2\mu F_{\mathrm{ax},j}\tan\beta
 -
-\rho_b A_b r_{\mathrm{cm}} \phi
+\rho_b A_b r_{j,\mathrm{cm}} \phi_j
 \left(
-r\alpha + 2\dot r\,\omega
+r_{j,\mathrm{cm}}\dot{\omega}_j
++
+2\dot r_{j,\mathrm{cm}}\,\omega_j
 \right)
 \right].
 }
+
+The remaining task is to substitute the appropriate rotational acceleration
+\(\dot{\omega}_j\) and axial clamp force \(F_{\mathrm{ax},j}\) for each pulley 
+to obtain explicit bounds on the coupling torque.
+
 % --------------------------------------------------------------
 \begin{remarkbox}[Remark (Why this differs from the classical capstan exponential)]
 In the classical capstan problem, the normal load is generated \emph{by the belt tension}
@@ -5865,275 +5882,628 @@ It depends only on:
 No exponential amplification occurs because the normal force
 is externally imposed and bounded.
 
-\vspace{6pt}
-
-The ideal coupling torque derived earlier remains valid
-only when it satisfies \Eq{eq:tau_capacity_final}.
-If the demanded torque exceeds this bound,
-the belt cannot sustain static friction and slip must occur.
-
-The next section defines the stick and slip regimes
-and modifies the governing equations accordingly.
-% --------------------------------------------------------------
-
 % ==============================================================
 
 
-% ==============================================================
+\section{Pulley-Specific Traction Bounds and Coupling Torque Closure}
+\label{sec:pulley_specific_bounds}
 
-\section{Slip Regimes and Traction-Limited Coupling Torque}
-\label{sec:slip_regimes}
+The generic capacity law \Eq{eq:tau_capacity_final} gives the maximum
+transmissible torque for a pulley \(j\) in terms of its local clamping force,
+geometry, and belt kinematics.
+To obtain usable limits on the coupling torque, this expression must now be
+specialized to the primary and secondary pulleys.
 
-Earlier sections produced two results:
-
-\begin{itemize}
-\item A no-slip (rigid-traction) coupling torque, denoted
-\(
-\tau_{\mathrm{ns}},
-\)
-which is the torque required to enforce perfect belt adherence.
-
-\item A traction capacity bound of the form
-\(
-|\tau| \le \tau_{\max},
-\)
-derived in \Sec{sec:tau_capacity}.
-\end{itemize}
-
-The purpose of this section is to combine these into a single
-physically admissible coupling torque law that:
+For each pulley, the procedure is the same:
 
 \begin{enumerate}
-\item reduces to the no-slip model when feasible,
-\item never violates the traction bound,
-\item and produces sliding torque that opposes relative motion when slip occurs.
+    \item identify the torque transmitted at that pulley,
+    \item substitute the appropriate rotational acceleration,
+    \item substitute the pulley-specific axial clamping-force model,
+    \item solve the resulting implicit inequality for the admissible torque range.
 \end{enumerate}
 
+On the primary side this is relatively direct, since the axial clamp force does
+not depend explicitly on the transmitted torque.
+On the secondary side, the torque-reactive helix introduces an additional
+dependence on transmitted torque, so the algebra is more involved.
+
+The resulting admissible interval for the coupling torque is obtained by
+intersecting the bounds contributed by the two pulleys.
+
 % --------------------------------------------------------------
-\subsection{Slip Metric: Detecting Stick and Slip}
-\label{sec:slip_metric}
+\subsection{Primary Pulley Traction Bounds}
+\label{sec:primary_tau_limits}
 
-Slip is defined at the belt–pulley contact.
-If the belt adheres to both pulleys, the tangential surface speeds must match.
+On the primary pulley, the transmitted torque at the belt contact is the
+coupling torque itself.
+Thus, applying \Eq{eq:tau_capacity_final} with \(j=p\) gives
 
-Define the contact speeds
 \begin{equation}
-v_p = r_{p,\mathrm{eff}}\omega_p,
-\qquad
-v_s = r_{s,\mathrm{eff}}\omega_s,
-\end{equation}
-and the relative mismatch
-\begin{equation}
-v_{\mathrm{rel}}
+\tau_{p,\max}
 =
-v_p - v_s
-=
-r_{p,\mathrm{eff}}\omega_p
+r_{p,\mathrm{eff}}
+\left[
+2\mu F_{\mathrm{ax},p}\tan\beta
 -
-r_{s,\mathrm{eff}}\omega_s.
-\label{eq:vrel_def}
+\rho_b A_b r_{p,\mathrm{cm}} \phi_p
+\left(
+r_{p,\mathrm{cm}}\dot{\omega}_p
++
+2\dot r_{p,\mathrm{cm}}\,\omega_p
+\right)
+\right].
+\label{eq:tau_p_max_generic}
 \end{equation}
 
-\noindent
-\textbf{Stick condition:}
+Therefore, admissible transmission at the primary requires
 \begin{equation}
-v_{\mathrm{rel}} = 0.
-\label{eq:stick_condition}
+|\tau_c| \le \tau_{p,\max}.
+\label{eq:tau_p_capacity_start}
 \end{equation}
 
-\noindent
-\textbf{Slip condition:}
+From the primary rotational dynamics \Eq{eq:primary_rot_dyn},
 \begin{equation}
-v_{\mathrm{rel}} \neq 0.
-\label{eq:slip_condition}
+\dot{\omega}_p
+=
+\frac{\tau_{\mathrm{eng}}-\tau_c}{I_p}.
+\label{eq:omega_dot_p_from_eom}
 \end{equation}
 
-Thus, $v_{\mathrm{rel}}$ is the diagnostic quantity:
-perfect adherence requires zero relative surface speed.
+Substituting \Eq{eq:omega_dot_p_from_eom} into \Eq{eq:tau_p_max_generic} gives
+\begin{equation}
+|\tau_c|
+\le
+r_{p,\mathrm{eff}}
+\left[
+2\mu F_{\mathrm{ax},p}\tan\beta
+-
+\rho_b A_b r_{p,\mathrm{cm}} \phi_p
+\left(
+r_{p,\mathrm{cm}}\frac{\tau_{\mathrm{eng}}-\tau_c}{I_p}
++
+2\dot r_{p,\mathrm{cm}}\,\omega_p
+\right)
+\right].
+\label{eq:tau_p_capacity_implicit}
+\end{equation}
+
+Since \(\tau_c\) appears on both sides, the positive and negative directions
+must be treated separately.
+
+\paragraph{Positive-direction bound \(\tau_c \ge 0\)}
+
+For \(\tau_c \ge 0\), \(|\tau_c|=\tau_c\), so
+\begin{align}
+\tau_c
+&\le
+r_{p,\mathrm{eff}}
+\left[
+2\mu F_{\mathrm{ax},p}\tan\beta
+-
+\rho_b A_b r_{p,\mathrm{cm}} \phi_p
+\left(
+r_{p,\mathrm{cm}}\frac{\tau_{\mathrm{eng}}-\tau_c}{I_p}
++
+2\dot r_{p,\mathrm{cm}}\,\omega_p
+\right)
+\right]
+\nonumber\\[4pt]
+\frac{\tau_c}{r_{p,\mathrm{eff}}}
+-
+\rho_b A_b r_{p,\mathrm{cm}} \phi_p
+\frac{r_{p,\mathrm{cm}}}{I_p}\tau_c
+&\le
+2\mu F_{\mathrm{ax},p}\tan\beta
+-
+\rho_b A_b r_{p,\mathrm{cm}} \phi_p
+\left(
+\frac{r_{p,\mathrm{cm}}}{I_p}\tau_{\mathrm{eng}}
++
+2\dot r_{p,\mathrm{cm}}\,\omega_p
+\right).
+\label{eq:tau_p_plus_rearrange}
+\end{align}
+
+Hence,
+\begin{equation}
+\tau_c \le \tau_{p,+},
+\qquad
+\tau_{p,+}
+=
+\frac{
+2\mu F_{\mathrm{ax},p}\tan\beta
+-
+\rho_b A_b r_{p,\mathrm{cm}} \phi_p
+\left(
+\dfrac{r_{p,\mathrm{cm}}}{I_p}\tau_{\mathrm{eng}}
++
+2\dot r_{p,\mathrm{cm}}\,\omega_p
+\right)
+}{
+\dfrac{1}{r_{p,\mathrm{eff}}}
+-
+\rho_b A_b r_{p,\mathrm{cm}} \phi_p
+\dfrac{r_{p,\mathrm{cm}}}{I_p}
+}.
+\label{eq:tau_p_plus}
+\end{equation}
+
+\paragraph{Negative-direction bound \(\tau_c \le 0\)}
+
+For \(\tau_c \le 0\), \(|\tau_c|=-\tau_c\), so
+\begin{align}
+-\tau_c
+&\le
+r_{p,\mathrm{eff}}
+\left[
+2\mu F_{\mathrm{ax},p}\tan\beta
+-
+\rho_b A_b r_{p,\mathrm{cm}} \phi_p
+\left(
+r_{p,\mathrm{cm}}\frac{\tau_{\mathrm{eng}}-\tau_c}{I_p}
++
+2\dot r_{p,\mathrm{cm}}\,\omega_p
+\right)
+\right]
+\nonumber\\[4pt]
+-\frac{\tau_c}{r_{p,\mathrm{eff}}}
+-
+\rho_b A_b r_{p,\mathrm{cm}} \phi_p
+\frac{r_{p,\mathrm{cm}}}{I_p}\tau_c
+&\le
+2\mu F_{\mathrm{ax},p}\tan\beta
+-
+\rho_b A_b r_{p,\mathrm{cm}} \phi_p
+\left(
+\frac{r_{p,\mathrm{cm}}}{I_p}\tau_{\mathrm{eng}}
++
+2\dot r_{p,\mathrm{cm}}\,\omega_p
+\right).
+\label{eq:tau_p_minus_rearrange}
+\end{align}
+
+Hence,
+\begin{equation}
+\tau_c \ge \tau_{p,-},
+\qquad
+\tau_{p,-}
+=
+-\frac{
+2\mu F_{\mathrm{ax},p}\tan\beta
+-
+\rho_b A_b r_{p,\mathrm{cm}} \phi_p
+\left(
+\dfrac{r_{p,\mathrm{cm}}}{I_p}\tau_{\mathrm{eng}}
++
+2\dot r_{p,\mathrm{cm}}\,\omega_p
+\right)
+}{
+\dfrac{1}{r_{p,\mathrm{eff}}}
++
+\rho_b A_b r_{p,\mathrm{cm}} \phi_p
+\dfrac{r_{p,\mathrm{cm}}}{I_p}
+}.
+\label{eq:tau_p_minus}
+\end{equation}
+
+Therefore, the primary pulley contributes the admissible interval
+\begin{equation}
+\boxed{
+\tau_{p,-} \le \tau_c \le \tau_{p,+}.
+}
+\label{eq:primary_tau_interval}
+\end{equation}
+
+Finally, substituting the primary axial-force model
+\Eq{eq:primary_axial}
+into \Eq{eq:tau_p_plus} and \Eq{eq:tau_p_minus}, with
+\[
+F_{\mathrm{ax},p}
+=
+m_f\omega_p^2\,r_f(s)\,\frac{\dd r_f}{\dd s}
+-
+k_p\bigl(x_{p,0}+s\bigr),
+\]
+gives the explicit primary traction bounds
+
+\bigeq{eq:tau_p_plus_expanded}{Primary Traction Upper Bound}{
+\tau_{p,+}
+=
+\frac{
+2\mu\tan\beta
+\left[
+m_f\omega_p^2\,r_f(s)\,\dfrac{\dd r_f}{\dd s}
+-
+k_p\bigl(x_{p,0}+s\bigr)
+\right]
+-
+\rho_b A_b r_{p,\mathrm{cm}} \phi_p
+\left(
+\dfrac{r_{p,\mathrm{cm}}}{I_p}\tau_{\mathrm{eng}}
++
+2\dot r_{p,\mathrm{cm}}\,\omega_p
+\right)
+}{
+\dfrac{1}{r_{p,\mathrm{eff}}}
+-
+\rho_b A_b r_{p,\mathrm{cm}} \phi_p
+\dfrac{r_{p,\mathrm{cm}}}{I_p}
+},
+}
+
+and
+
+\bigeq{eq:tau_p_minus_expanded}{Primary Traction Lower Bound}{
+\tau_{p,-}
+=
+-\frac{
+2\mu\tan\beta
+\left[
+m_f\omega_p^2\,r_f(s)\,\dfrac{\dd r_f}{\dd s}
+-
+k_p\bigl(x_{p,0}+s\bigr)
+\right]
+-
+\rho_b A_b r_{p,\mathrm{cm}} \phi_p
+\left(
+\dfrac{r_{p,\mathrm{cm}}}{I_p}\tau_{\mathrm{eng}}
++
+2\dot r_{p,\mathrm{cm}}\,\omega_p
+\right)
+}{
+\dfrac{1}{r_{p,\mathrm{eff}}}
++
+\rho_b A_b r_{p,\mathrm{cm}} \phi_p
+\dfrac{r_{p,\mathrm{cm}}}{I_p}
+}.
+}
 
 % --------------------------------------------------------------
-\subsection{Feasibility of the No-Slip Torque}
-\label{sec:slip_feasibility}
+\subsection{Secondary Pulley Traction Bounds}
+\label{sec:secondary_tau_limits}
 
-The no-slip model specifies a required coupling torque
+On the secondary pulley, the transmitted torque at the belt contact is
+\(\tau_s\).
+Applying \Eq{eq:tau_capacity_final} with \(j=s\) therefore gives
+
 \begin{equation}
-\tau_{\mathrm{ns}},
+\tau_{s,\max}
+=
+r_{s,\mathrm{eff}}
+\left[
+2\mu F_{\mathrm{ax},s}\tan\beta
+-
+\rho_b A_b r_{s,\mathrm{cm}} \phi_s
+\left(
+r_{s,\mathrm{cm}}\dot{\omega}_s
++
+2\dot r_{s,\mathrm{cm}}\,\omega_s
+\right)
+\right].
+\label{eq:tau_s_max_generic}
 \end{equation}
-which is the torque needed to enforce $v_{\mathrm{rel}}=0$ under the
-current state.
 
-However, from \Sec{sec:tau_capacity}, the belt–pulley interface
-cannot transmit a torque exceeding $\tau_{\max}$ in magnitude.
-Therefore, static adherence is only physically possible if
+Accordingly, admissible transmission at the secondary requires
 \begin{equation}
-|\tau_{\mathrm{ns}}| \le \tau_{\max}.
-\label{eq:stick_feasible}
+|\tau_s| \le \tau_{s,\max}.
+\label{eq:tau_s_capacity_start}
 \end{equation}
 
-If \Eq{eq:stick_feasible} holds, static friction can enforce
-$v_{\mathrm{rel}}=0$ and the system remains in stick.
-
-If instead
+From the secondary rotational dynamics \Eq{eq:secondary_rot_dyn},
 \begin{equation}
-|\tau_{\mathrm{ns}}| > \tau_{\max},
-\label{eq:stick_infeasible}
+\dot{\omega}_s
+=
+\frac{\tau_s-\tau_{\mathrm{load}}}{I_s}.
+\label{eq:omega_dot_s_from_eom}
 \end{equation}
-the required torque exceeds the available traction.
-Static friction cannot maintain adherence, and slip must occur.
+
+From the secondary axial-force model \Eq{eq:secondary_axial},
+\begin{equation}
+F_{\mathrm{ax},s}(s,\tau_s)
+=
+\frac{
+\tau_s + k_{s,\theta}\!\bigl(\theta_{s,0}+\theta_s(s)\bigr)
+}{2}
+\frac{\dd \theta_s}{\dd s}
++
+k_{s,x}(x_{s,0}-s).
+\label{eq:Fax_s_sub}
+\end{equation}
+
+Substituting \Eq{eq:omega_dot_s_from_eom} and \Eq{eq:Fax_s_sub} into
+\Eq{eq:tau_s_max_generic} gives the implicit secondary traction inequality
+
+\begin{equation}
+\begin{aligned}
+|\tau_s|
+\le\;&
+r_{s,\mathrm{eff}}
+\Biggl[
+2\mu\tan\beta
+\left(
+\frac{
+\tau_s + k_{s,\theta}\!\bigl(\theta_{s,0}+\theta_s(s)\bigr)
+}{2}
+\frac{\dd \theta_s}{\dd s}
++
+k_{s,x}(x_{s,0}-s)
+\right)
+\\
+&\qquad
+-
+\rho_b A_b r_{s,\mathrm{cm}} \phi_s
+\left(
+r_{s,\mathrm{cm}}\frac{\tau_s-\tau_{\mathrm{load}}}{I_s}
++
+2\dot r_{s,\mathrm{cm}}\,\omega_s
+\right)
+\Biggr].
+\end{aligned}
+\label{eq:tau_s_capacity_implicit}
+\end{equation}
+
+Since \(\tau_s\) appears both through the acceleration term and through the
+torque-reactive axial clamping force, the positive and negative transmission
+directions must again be treated separately.
+
+\paragraph{Positive-direction bound \(\tau_s \ge 0\)}
+
+For \(\tau_s \ge 0\), \(|\tau_s|=\tau_s\).
+Collecting the \(\tau_s\) terms on the left gives
+\begin{align}
+\frac{\tau_s}{r_{s,\mathrm{eff}}}
+-
+\mu\tan\beta \frac{\dd\theta_s}{\dd s}\,\tau_s
+\rho_b A_b r_{s,\mathrm{cm}} \phi_s
+\frac{r_{s,\mathrm{cm}}}{I_s}\,\tau_s
+\;\le\;&
+\mu\tan\beta
+\frac{\dd\theta_s}{\dd s}
+k_{s,\theta}\!\bigl(\theta_{s,0}+\theta_s(s)\bigr)
+\nonumber\\
+&+
+2\mu\tan\beta\,k_{s,x}(x_{s,0}-s)
+\nonumber\\
+&+
+\rho_b A_b r_{s,\mathrm{cm}} \phi_s
+\left(
+\frac{r_{s,\mathrm{cm}}}{I_s}\tau_{\mathrm{load}}
+-
+2\dot r_{s,\mathrm{cm}}\,\omega_s
+\right).
+\label{eq:tau_s_plus_rearrange}
+\end{align}
+
+Hence,
+\begin{equation}
+\tau_s \le \tau_{s,+},
+\label{eq:tau_s_plus_ineq}
+\end{equation}
+with
+\bigeq{eq:tau_s_plus}{Secondary Positive Traction Limit}{
+\tau_{s,+}
+=
+\frac{
+\mu\tan\beta
+\left[
+\frac{\dd\theta_s}{\dd s}\,
+k_{s,\theta}\!\bigl(\theta_{s,0}+\theta_s(s)\bigr)
++
+2k_{s,x}(x_{s,0}-s)
+\right]
++
+\rho_b A_b r_{s,\mathrm{cm}} \phi_s
+\left(
+\frac{r_{s,\mathrm{cm}}}{I_s}\tau_{\mathrm{load}}
+-
+2\dot r_{s,\mathrm{cm}}\,\omega_s
+\right)
+}{
+\frac{1}{r_{s,\mathrm{eff}}}
+-
+\mu\tan\beta \frac{\dd\theta_s}{\dd s}
++
+\rho_b A_b r_{s,\mathrm{cm}} \phi_s
+\frac{r_{s,\mathrm{cm}}}{I_s}
+}.
+}
+
+\paragraph{Negative-direction bound \(\tau_s \le 0\)}
+
+For \(\tau_s \le 0\), \(|\tau_s|=-\tau_s\).
+Collecting the \(\tau_s\) terms on the left gives
+\begin{align}
+-\frac{\tau_s}{r_{s,\mathrm{eff}}}
+-
+\mu\tan\beta \frac{\dd\theta_s}{\dd s}\,\tau_s
++
+\rho_b A_b r_{s,\mathrm{cm}} \phi_s
+\frac{r_{s,\mathrm{cm}}}{I_s}\,\tau_s
+\;\le\;&
+\mu\tan\beta
+\frac{\dd\theta_s}{\dd s}
+k_{s,\theta}\!\bigl(\theta_{s,0}+\theta_s(s)\bigr)
+\nonumber\\
+&+
+2\mu\tan\beta\,k_{s,x}(x_{s,0}-s)
+\nonumber\\
+&+
+\rho_b A_b r_{s,\mathrm{cm}} \phi_s
+\left(
+\frac{r_{s,\mathrm{cm}}}{I_s}\tau_{\mathrm{load}}
+-
+2\dot r_{s,\mathrm{cm}}\,\omega_s
+\right).
+\label{eq:tau_s_minus_rearrange}
+\end{align}
+
+Hence,
+\begin{equation}
+\tau_s \ge \tau_{s,-},
+\label{eq:tau_s_minus_ineq}
+\end{equation}
+with
+\bigeq{eq:tau_s_minus}{Secondary Negative Traction Limit}{
+\tau_{s,-}
+=
+-\frac{
+\mu\tan\beta
+\left[
+\frac{\dd\theta_s}{\dd s}\,
+k_{s,\theta}\!\bigl(\theta_{s,0}+\theta_s(s)\bigr)
++
+2k_{s,x}(x_{s,0}-s)
+\right]
++
+\rho_b A_b r_{s,\mathrm{cm}} \phi_s
+\left(
+\frac{r_{s,\mathrm{cm}}}{I_s}\tau_{\mathrm{load}}
+-
+2\dot r_{s,\mathrm{cm}}\,\omega_s
+\right)
+}{
+\frac{1}{r_{s,\mathrm{eff}}}
++
+\mu\tan\beta \frac{\dd\theta_s}{\dd s}
+-
+\rho_b A_b r_{s,\mathrm{cm}} \phi_s
+\frac{r_{s,\mathrm{cm}}}{I_s}
+}.
+}
+
+Therefore, the secondary pulley contributes the admissible interval
+\begin{equation}
+\boxed{
+\tau_{s,-} \le \tau_s \le \tau_{s,+}.
+}
+\label{eq:secondary_tau_interval}
+\end{equation}
+
+\subsection{Combined Traction-Limited Coupling Law}
+\label{sec:final_coupling_law}
+
+The previous two subsections produced admissible traction intervals for each
+pulley separately:
+\[
+\tau_{p,-} \le \tau_c \le \tau_{p,+},
+\qquad
+\tau_{s,-} \le \tau_s \le \tau_{s,+}.
+\]
+
+Since the transmitted state must satisfy the traction limits at
+\emph{both} pulleys simultaneously, the final admissible range is obtained by
+intersecting these two constraints.
+
+Using the torque mapping
+\[
+\tau_s = R\,\tau_c,
+\]
+the secondary bounds may be written in terms of the coupling torque as
+\[
+\frac{\tau_{s,-}}{R}
+\le
+\tau_c
+\le
+\frac{\tau_{s,+}}{R}.
+\]
+
+Therefore, the overall admissible coupling-torque interval is
+
+\begin{equation}
+\tau_- \le \tau_c \le \tau_+,
+\label{eq:tau_global_interval}
+\end{equation}
+
+with
+\begin{equation}
+\tau_-
+=
+\max\!\left(
+\tau_{p,-},
+\frac{\tau_{s,-}}{R}
+\right),
+\qquad
+\tau_+
+=
+\min\!\left(
+\tau_{p,+},
+\frac{\tau_{s,+}}{R}
+\right).
+\label{eq:tau_pm_final}
+\end{equation}
+
+These are the final negative- and positive-direction traction limits used in
+the regime law.
 
 % --------------------------------------------------------------
-\subsection{Traction-Limited Coupling Torque Law}
-\label{sec:coupling_law_final}
+\paragraph{Stick and slip regimes}
 
-The coupling torque must satisfy two physical facts:
+As established in \Sec{sec:transmission_regimes}, the no-slip branch is
+admissible only when two conditions hold simultaneously:
 
 \begin{enumerate}
-\item Static friction can enforce $v_{\mathrm{rel}}=0$ only if
-      $|\tau_{\mathrm{ns}}| \le \tau_{\max}$.
-\item Once sliding occurs ($v_{\mathrm{rel}}\neq 0$),
-      the interface is in kinetic friction and the transmitted torque
-      remains saturated at $\tau_{\max}$ until the relative speed vanishes.
+    \item the no-slip torque lies within the admissible interval, and
+    \item the relative slip metric satisfies \(v_{\Delta}=0\).
 \end{enumerate}
 
-This leads to the following regime definition.
+If both conditions are satisfied, the transmission remains in stick and the
+coupling torque is the no-slip torque \(\tau_{\mathrm{ns}}\).
 
-\paragraph{Stick (static friction).}
+If instead the no-slip torque lies outside the admissible interval, or if a
+nonzero slip mismatch is already present, then the transmission is on a
+traction-limited slip branch.
+The active slip branch is selected by the sign of \(v_{\Delta}\), as introduced
+in \Sec{sec:transmission_regimes}.
 
-If
-\begin{equation}
-v_{\mathrm{rel}} = 0
-\quad\text{and}\quad
-|\tau_{\mathrm{ns}}| \le \tau_{\max},
-\end{equation}
-then static traction can be maintained and
-\begin{equation}
-\tau_c = \tau_{\mathrm{ns}}.
-\label{eq:stick_tau}
-\end{equation}
+This gives the final coupling law
 
-\paragraph{Slip (kinetic friction).}
-
-If
-\begin{equation}
-v_{\mathrm{rel}} \neq 0
-\quad\text{or}\quad
-|\tau_{\mathrm{ns}}| > \tau_{\max},
-\end{equation}
-then the transmitted torque is friction-limited and opposes the
-relative motion:
-\begin{equation}
-\tau_c
-=
-\tau_{\max}\,\mathrm{sign}(v_{\mathrm{rel}}).
-\label{eq:slip_tau}
-\end{equation}
-
-\medskip
-\noindent
-\textbf{Physical interpretation.}
-While $v_{\mathrm{rel}}\neq 0$, the interface is in sliding contact.
-The friction torque remains saturated at $\tau_{\max}$ and always acts
-to oppose the mismatch.
-
-If $|\tau_{\mathrm{ns}}| < \tau_{\max}$ during slip,
-the saturated friction torque reduces $|v_{\mathrm{rel}}|$
-until it reaches zero, at which point stick may be re-established.
-
-If instead $|\tau_{\mathrm{ns}}| > \tau_{\max}$,
-the torque imbalance continues to increase the mismatch,
-and slip persists.
-
-\medskip
-The complete traction-limited coupling law is therefore
-
-\bigeq{eq:final_tau_piecewise}{Traction-Limited Coupling Torque}{
-\boxed{
+\bigeq{eq:tau_c_final}{Traction-Limited Coupling Torque Law}{
 \tau_c =
 \begin{cases}
 \tau_{\mathrm{ns}},
 &
-v_{\mathrm{rel}} = 0
+v_{\Delta}=0
 \;\text{and}\;
-|\tau_{\mathrm{ns}}| \le \tau_{\max},
+\tau_- \le \tau_{\mathrm{ns}} \le \tau_+,
 \\[10pt]
-\tau_{\max}\,\mathrm{sign}(v_{\mathrm{rel}}),
+\tau_+,
 &
-\text{otherwise}.
+v_{\Delta}>0
+\;\text{or}\;
+\bigl(v_{\Delta}=0 \text{ and } \tau_{\mathrm{ns}}>\tau_+\bigr),
+\\[10pt]
+\tau_-,
+&
+v_{\Delta}<0
+\;\text{or}\;
+\bigl(v_{\Delta}=0 \text{ and } \tau_{\mathrm{ns}}<\tau_-\bigr).
 \end{cases}
 }
-}
 
-% --------------------------------------------------------------
-\begin{remarkbox}[Remark (Numerical regularization)]
-The discontinuous $\mathrm{sign}(\cdot)$ function in
-\Eq{eq:final_tau_piecewise} may be replaced by a smooth approximation
-for numerical integration. A practical regularized form uses three ideas:
+
+\paragraph{Interpretation}
+
+The logic of \Eq{eq:tau_c_final} is as follows:
+
 \begin{itemize}
-  \item a smooth Coulomb-like saturation near zero relative speed,
-  \item a clamped no-slip torque request,
-  \item and a blend between those two limits across a small mismatch region.
+    \item If the sticking solution is both kinematically compatible
+    (\(v_{\Delta}=0\)) and traction-admissible
+    (\(\tau_- \le \tau_{\mathrm{ns}} \le \tau_+\)),
+    then the transmission remains on the no-slip branch.
+
+    \item If the demanded no-slip torque exceeds the positive traction limit,
+    the contact saturates on the positive slip branch.
+
+    \item If the demanded no-slip torque falls below the negative traction
+    limit, the contact saturates on the negative slip branch.
+
+    \item Once slip is present, the transmission remains on the corresponding
+    slip branch until the mismatch \(v_{\Delta}\) is driven back to zero.
 \end{itemize}
-This preserves the intended stick--slip behavior while avoiding a hard
-discontinuity at $v_{\mathrm{rel}}=0$. Implementation details and practical
-parameter-selection guidance are provided in
-\Sec{sec:appendix-slip-regularization}.
-\end{remarkbox}
 
-
-% --------------------------------------------------------------
-\begin{remarkbox}[Remark (Torque deficit, frictional heating, and transient inertial power transfer)]
-As an aside, this work is formulated primarily from force and torque balance,
-not from a full energy-based loss accounting framework. Even so, viewing the
-slip law through an energy lens is useful as a logical validation step: it
-helps confirm that the model behavior remains consistent with the law of conservation of
-energy.
-
-When the no-slip request exceeds traction capacity,
-\begin{equation}
-\Delta\tau_{\mathrm{loss}}
-=
-\max\!\left(0,\,|\tau_{\mathrm{ns}}|-\tau_{\max}\right),
-\label{eq:torque_deficit}
-\end{equation}
-which quantifies the instantaneous torque shortfall between the requested
-no-slip coupling and the admissible traction-limited coupling.
-
-During slip, mechanical energy is dissipated at the contact as heat at the rate
-\begin{equation}
-\dot Q_{\mathrm{fric}}
-=
-|F_t\,v_{\mathrm{rel}}|
-=
-\left|\frac{\tau_c}{r_{\mathrm{int}}}\,v_{\mathrm{rel}}\right|,
-\label{eq:slip_heat_rate}
-\end{equation}
-where $r_{\mathrm{int}}$ is the local effective contact radius used to map
-torque to tangential force. In traction-limited slip,
-$|\tau_c|=\tau_{\max}$, so larger speed mismatch directly increases thermal
-generation.
-
-It is also possible to observe slip while $|\tau_{\mathrm{ns}}|<\tau_{\max}$,
-because slip can persist temporarily until the existing mismatch decays.
-In that interval, the transmitted interface power can exceed the
-instantaneous engine shaft output without violating energy conservation.
-From the primary rotational balance,
-\begin{equation}
-\tau_c\,\omega_p
-=
-\tau_{\mathrm{eng}}\,\omega_p
--
-\frac{\dd}{\dd t}\!\left(\frac{1}{2}I_p\omega_p^2\right),
-\label{eq:inertial_power_transfer}
-\end{equation}
-so when the engine-side rotating inertia is decelerating
-($\dd(\tfrac{1}{2}I_p\omega_p^2)/\dd t<0$), released kinetic energy supplements
-the instantaneous engine power. This effect is transient and vanishes once the
-slip mismatch collapses and the system re-enters stick.
-\end{remarkbox}
-
-
-
-% ==============================================================
+\Eq{eq:tau_c_final} therefore closes the coupling-torque model across
+both stick and slip regimes.
 
 \section{Complete CVT Dynamic Model}
 \label{sec:complete_model}
