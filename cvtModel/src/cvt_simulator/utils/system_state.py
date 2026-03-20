@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from cvt_simulator.constants.car_specs import MAX_SHIFT
 
 
 @dataclass
@@ -32,8 +33,15 @@ class SystemState:
     @staticmethod
     def from_array(array):
         """Creates a SystemState from an array (4 DOF)."""
+        shift_distance = float(array[0])
+        # Clamp numerical drift so downstream geometry always sees a valid shift domain.
+        if shift_distance < 0.0:
+            shift_distance = 0.0
+        elif shift_distance > MAX_SHIFT:
+            shift_distance = float(MAX_SHIFT)
+
         return SystemState(
-            shift_distance=array[0],
+            shift_distance=shift_distance,
             shift_velocity=array[1],
             primary_pulley_angular_velocity=array[2],
             secondary_pulley_angular_velocity=array[3],
