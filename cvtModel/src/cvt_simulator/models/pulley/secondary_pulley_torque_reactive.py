@@ -4,6 +4,9 @@ from cvt_simulator.models.pulley.pulley_interface import get_kwarg, get_required
 from cvt_simulator.models.dataTypes import (
     HelixForceBreakdown,
     SecondaryForceBreakdown,
+    SecondaryTorqueBoundsBreakdown,
+    SecondaryTorqueDenominatorBreakdown,
+    SecondaryTorqueNumeratorBreakdown,
     SpringTorsForceBreakdown,
     springCompForceBreakdown,
 )
@@ -131,63 +134,111 @@ class PhysicalSecondaryPulley(SecondaryPulleyModel):
 
         return axial_clamping_force, breakdown
 
-    def calculate_max_torque(
+    def calculate_torque_bounds(
         self,
         state: SystemState,
         **kwargs,
-    ) -> float:
+    ) -> SecondaryTorqueBoundsBreakdown:
         """
-        Calculate maximum transferable torque using modified Capstan equation.
-
-        For secondary, this is more complex because of torque feedback loop:
-        - Torque creates clamping → clamping creates capacity → capacity limits torque
-        - Must solve for equilibrium where T_max satisfies torque feedback
-
-        See: docs/Kai's folder of derivations/t_maxSecondaryDerivation.png
-
-        Args:
-            state: Current system state
+        Calculate secondary traction torque bounds.
 
         Returns:
-            max_torque: Maximum torque before slip [N⋅m]
+            SecondaryTorqueBoundsBreakdown with:
+            - tau_negative / tau_positive limits [N·m]
+            - numerator term decomposition
+            - denominator decomposition for both +/- branches
         """
         shift_distance = np.clip(state.shift_distance, 0, MAX_SHIFT)
         angular_velocity = self._get_angular_velocity(state)
 
-        # Geometry terms in the new relation:
-        # - r_eff: effective pitch radius
-        # - r_cm: belt centroid radius (all other r terms)
+        # Geometry terms
         r_eff = self._get_radius(shift_distance)
         r_cm = self._get_belt_centroid_radius(shift_distance)
-        r_dot = self._get_radius_rate_of_change(shift_distance)
+        cvt_ratio = tm.current_effective_cvt_ratio(shift_distance)
+
+        # _get_radius_rate_of_change() gives dr/ds, so multiply by s_dot
+        # to obtain the actual time derivative r_dot.
+        r_cm_dot = (
+            self._get_radius_rate_of_change(shift_distance) * state.shift_velocity
+        )
+
         phi = self._get_wrap_angle(shift_distance)
         beta = SHEAVE_ANGLE / 2
 
-        # Runtime dynamics terms supplied by system models.
-        tau_load = get_kwarg(kwargs, "external_load_torque", 0.0)
-        I_s = get_kwarg(kwargs, "secondary_inertia", 1.0)
+        # Runtime dynamics terms
+        tau_load = get_kwarg(kwargs, "external_load_torque", None)
+        I_s = get_kwarg(kwargs, "secondary_inertia", None)
+        if I_s is None or tau_load is None:
+            raise ValueError("Both 'secondary_inertia' and 'external_load_torque' are required for secondary traction bounds")
 
-        # Ramp and spring terms.
+        # Helix / spring terms
         dtheta_ds = self.theta_ramp.dtheta_dx(shift_distance)
         theta_total = self.initial_rotation + self.theta_ramp.theta(shift_distance)
         x_total = self.initial_compression - shift_distance
 
         spring_term = (
-            self.spring_coeff_tors * theta_total * dtheta_ds
-            + 2 * self.spring_coeff_comp * x_total
+            dtheta_ds * self.spring_coeff_tors * theta_total
+            + 2.0 * self.spring_coeff_comp * x_total
         )
 
-        belt_mass_term = (RUBBER_DENSITY * BELT_CROSS_SECTIONAL_AREA * r_cm * phi)
-
-        numerator = (self.μ * np.tan(beta) * spring_term) + belt_mass_term * ((r_cm * tau_load / I_s) - (2 * r_dot * angular_velocity)) 
-
-        denominator = (
-            (1.0 / r_eff)
-            - (dtheta_ds * self.μ * np.tan(beta))
-            + (belt_mass_term * r_cm / I_s)
+        belt_mass_term = (
+            RUBBER_DENSITY * BELT_CROSS_SECTIONAL_AREA * r_cm * phi
         )
 
-        return numerator / denominator
+        spring_numerator_term = self.μ * np.tan(beta) * spring_term
+        load_numerator_term = belt_mass_term * ((r_cm * tau_load) / I_s)
+        shift_numerator_term = belt_mass_term * (-2.0 * r_cm_dot * angular_velocity)
+        common_numerator = (
+            spring_numerator_term + load_numerator_term + shift_numerator_term
+        )
+
+        denominator_inverse_radius = 1.0 / r_eff
+        denominator_helix_feedback = self.μ * np.tan(beta) * dtheta_ds
+        denominator_inertial_feedback = belt_mass_term * r_cm / I_s
+
+        positive_denominator = (
+            denominator_inverse_radius
+            - denominator_helix_feedback
+            + denominator_inertial_feedback
+        )
+
+        negative_denominator = (
+            denominator_inverse_radius
+            + denominator_helix_feedback
+            - denominator_inertial_feedback
+        )
+
+        tau_positive = (common_numerator / positive_denominator) / cvt_ratio
+        tau_negative = (-common_numerator / negative_denominator) / cvt_ratio
+
+        numerator_breakdown = SecondaryTorqueNumeratorBreakdown(
+            spring_term=spring_numerator_term,
+            load_term=load_numerator_term,
+            shift_term=shift_numerator_term,
+            net=common_numerator,
+        )
+
+        denominator_positive_breakdown = SecondaryTorqueDenominatorBreakdown(
+            inverse_radius_term=denominator_inverse_radius,
+            helix_feedback_term=-denominator_helix_feedback,
+            inertial_feedback_term=denominator_inertial_feedback,
+            net=positive_denominator,
+        )
+
+        denominator_negative_breakdown = SecondaryTorqueDenominatorBreakdown(
+            inverse_radius_term=denominator_inverse_radius,
+            helix_feedback_term=denominator_helix_feedback,
+            inertial_feedback_term=-denominator_inertial_feedback,
+            net=negative_denominator,
+        )
+
+        return SecondaryTorqueBoundsBreakdown(
+            tau_negative=tau_negative,
+            tau_positive=tau_positive,
+            numerator=numerator_breakdown,
+            denominator_positive=denominator_positive_breakdown,
+            denominator_negative=denominator_negative_breakdown,
+        )
 
     # Private helper methods
 
@@ -207,7 +258,7 @@ class PhysicalSecondaryPulley(SecondaryPulleyModel):
         dtheta_ds = self.theta_ramp.dtheta_dx(shift_distance)
         helix_angle = np.arctan2(1.0, self.helix_radius * dtheta_ds)
 
-        net = (torque + spring_torque_breakdown.net * dtheta_ds) / 2
+        net = (torque + spring_torque_breakdown.net) * dtheta_ds / 2
 
         return HelixForceBreakdown(
             feedbackTorque=torque,

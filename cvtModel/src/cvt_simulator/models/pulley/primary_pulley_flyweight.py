@@ -3,6 +3,9 @@ from cvt_simulator.models.pulley.primary_pulley_interface import PrimaryPulleyMo
 from cvt_simulator.models.pulley.pulley_interface import get_kwarg
 from cvt_simulator.models.dataTypes import (
     PrimaryForceBreakdown,
+    PrimaryTorqueBoundsBreakdown,
+    PrimaryTorqueDenominatorBreakdown,
+    PrimaryTorqueNumeratorBreakdown,
     flyweightForceBreakdown,
     springCompForceBreakdown,
 )
@@ -137,50 +140,84 @@ class PhysicalPrimaryPulley(PrimaryPulleyModel):
         return axial_clamping_force, breakdown
 
     # TODO: Use updated math here
-    def calculate_max_torque(
+    def calculate_torque_bounds(
         self,
         state: SystemState,
         **kwargs,
-    ) -> float:
+    ) -> PrimaryTorqueBoundsBreakdown:
         """
-        Calculate maximum transferable torque using Capstan equation.
-
-        Calculates torque capacity directly from current axial clamping force.
-
-        Args:
-            state: Current system state
+        Calculate primary traction torque bounds.
 
         Returns:
-            max_torque: Maximum torque before slip [N⋅m]
+            PrimaryTorqueBoundsBreakdown with:
+            - tau_lower / tau_upper limits [N·m]
+            - numerator term decomposition
+            - denominator decomposition for upper/lower branches
         """
         shift_distance = np.clip(state.shift_distance, 0, MAX_SHIFT)
-        angular_velocity = self._get_angular_velocity(state)
+        # angular_velocity = self._get_angular_velocity(state)
+        belt_angular_velocity = state.secondary_pulley_angular_velocity * tm.current_effective_cvt_ratio(state.shift_distance)
 
-        # Geometry terms in the updated relation.
-        # - r_eff: effective pitch radius
-        # - r_cm: belt centroid radius (all other r terms)
+        # Geometry terms
         r_eff = self._get_radius(shift_distance)
         r_cm = self._get_belt_centroid_radius(shift_distance)
-        r_dot = self._get_radius_rate_of_change(shift_distance)
+        r_dot = self._get_radius_rate_of_change(shift_distance) * state.shift_velocity
         phi = self._get_wrap_angle(shift_distance)
         beta = SHEAVE_ANGLE / 2
 
-        # Runtime dynamics terms supplied by system models.
-        tau_eng = get_kwarg(kwargs, "engine_drive_torque", 0.0)
-        I_p = get_kwarg(kwargs, "primary_inertia", 1.0)
+        # Dynamic terms
+        tau_eng = get_kwarg(kwargs, "engine_drive_torque", None)
+        I_p = get_kwarg(kwargs, "primary_inertia", None)
+        if I_p is None or tau_eng is None:
+            raise ValueError("primary_inertia and engine_drive_torque are required for primary traction bounds")
 
-        # Mechanism clamping contribution F_ax in the updated primary equation.
+        # This must be ONLY the mechanism clamping force term, not total force with belt corrections
         axial_clamping_force, _ = self.calculate_axial_clamping_force(state)
 
         belt_mass_term = RUBBER_DENSITY * BELT_CROSS_SECTIONAL_AREA * r_cm * phi
 
-        numerator = (2 * self.μ * axial_clamping_force * np.tan(beta)) - (
-            belt_mass_term * (((r_cm * tau_eng) / I_p) - (2 * r_dot * angular_velocity))
+        clamping_numerator_term = 2.0 * self.μ * np.tan(beta) * axial_clamping_force
+        load_numerator_term = -belt_mass_term * ((r_cm * tau_eng) / I_p)
+        shift_numerator_term = -belt_mass_term * (2.0 * r_dot * belt_angular_velocity)
+        common_numerator = (
+            clamping_numerator_term + load_numerator_term + shift_numerator_term
         )
 
-        denominator = (1.0 / r_eff) - (belt_mass_term * r_cm / I_p)
+        denominator_inverse_radius = 1.0 / r_eff
+        denominator_inertial_feedback = belt_mass_term * r_cm / I_p
 
-        return numerator / denominator
+        upper_denominator = denominator_inverse_radius - denominator_inertial_feedback
+        lower_denominator = denominator_inverse_radius + denominator_inertial_feedback
+
+        tau_upper = common_numerator / upper_denominator
+        tau_lower = -common_numerator / lower_denominator
+
+        numerator_breakdown = PrimaryTorqueNumeratorBreakdown(
+            clamping_term=clamping_numerator_term,
+            load_term=load_numerator_term,
+            shift_term=shift_numerator_term,
+            net=common_numerator,
+        )
+
+        denominator_upper_breakdown = PrimaryTorqueDenominatorBreakdown(
+            inverse_radius_term=denominator_inverse_radius,
+            inertial_feedback_term=-denominator_inertial_feedback,
+            net=upper_denominator,
+        )
+
+        denominator_lower_breakdown = PrimaryTorqueDenominatorBreakdown(
+            inverse_radius_term=denominator_inverse_radius,
+            inertial_feedback_term=denominator_inertial_feedback,
+            net=lower_denominator,
+        )
+
+        return PrimaryTorqueBoundsBreakdown(
+            tau_lower=tau_lower,
+            tau_upper=tau_upper,
+            numerator=numerator_breakdown,
+            denominator_upper=denominator_upper_breakdown,
+            denominator_lower=denominator_lower_breakdown,
+        )
 
     # Private helper methods for force calculations
 

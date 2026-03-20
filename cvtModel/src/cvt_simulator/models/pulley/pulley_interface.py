@@ -110,7 +110,7 @@ class PulleyModel(ABC):
         """Initialize pulley model with V-belt friction coefficient."""
         # Calculate friction coefficient with V-belt wedging effect
         # The sheave angle enhances friction through wedging action
-        self.μ = RUBBER_ALUMINUM_STATIC_FRICTION / np.sin(SHEAVE_ANGLE / 2)
+        self.μ = RUBBER_ALUMINUM_STATIC_FRICTION
 
     @abstractmethod
     def calculate_axial_clamping_force(
@@ -183,11 +183,11 @@ class PulleyModel(ABC):
         return 2 * axial_force_total * np.tan(SHEAVE_ANGLE / 2)
 
     @abstractmethod
-    def calculate_max_torque(
+    def calculate_torque_bounds(
         self,
         state: SystemState,
         **kwargs,
-    ) -> float:
+    ) -> tuple[float, float]:
         """
         Calculate maximum transferable torque before belt slip.
 
