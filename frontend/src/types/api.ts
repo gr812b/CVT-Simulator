@@ -401,6 +401,36 @@ export interface components {
             /** Primary Pulley Angular Acceleration */
             primary_pulley_angular_acceleration: number;
         };
+        /** PrimaryTorqueBoundsBreakdownModel */
+        PrimaryTorqueBoundsBreakdownModel: {
+            /** Tau Lower */
+            tau_lower: number;
+            /** Tau Upper */
+            tau_upper: number;
+            numerator: components["schemas"]["PrimaryTorqueNumeratorBreakdownModel"];
+            denominator_upper: components["schemas"]["PrimaryTorqueDenominatorBreakdownModel"];
+            denominator_lower: components["schemas"]["PrimaryTorqueDenominatorBreakdownModel"];
+        };
+        /** PrimaryTorqueDenominatorBreakdownModel */
+        PrimaryTorqueDenominatorBreakdownModel: {
+            /** Inverse Radius Term */
+            inverse_radius_term: number;
+            /** Inertial Feedback Term */
+            inertial_feedback_term: number;
+            /** Net */
+            net: number;
+        };
+        /** PrimaryTorqueNumeratorBreakdownModel */
+        PrimaryTorqueNumeratorBreakdownModel: {
+            /** Clamping Term */
+            clamping_term: number;
+            /** Load Term */
+            load_term: number;
+            /** Shift Term */
+            shift_term: number;
+            /** Net */
+            net: number;
+        };
         /** PulleyForcesModel */
         PulleyForcesModel: {
             /** Axial Clamping Force */
@@ -409,8 +439,6 @@ export interface components {
             axial_centrifugal_from_belt: number;
             /** Axial Force Total */
             axial_force_total: number;
-            /** Max Torque */
-            max_torque: number;
         };
         /** PulleyStateModel */
         PulleyStateModel: {
@@ -456,6 +484,38 @@ export interface components {
             /** Secondary Pulley Angular Acceleration */
             secondary_pulley_angular_acceleration: number;
         };
+        /** SecondaryTorqueBoundsBreakdownModel */
+        SecondaryTorqueBoundsBreakdownModel: {
+            /** Tau Negative */
+            tau_negative: number;
+            /** Tau Positive */
+            tau_positive: number;
+            numerator: components["schemas"]["SecondaryTorqueNumeratorBreakdownModel"];
+            denominator_positive: components["schemas"]["SecondaryTorqueDenominatorBreakdownModel"];
+            denominator_negative: components["schemas"]["SecondaryTorqueDenominatorBreakdownModel"];
+        };
+        /** SecondaryTorqueDenominatorBreakdownModel */
+        SecondaryTorqueDenominatorBreakdownModel: {
+            /** Inverse Radius Term */
+            inverse_radius_term: number;
+            /** Helix Feedback Term */
+            helix_feedback_term: number;
+            /** Inertial Feedback Term */
+            inertial_feedback_term: number;
+            /** Net */
+            net: number;
+        };
+        /** SecondaryTorqueNumeratorBreakdownModel */
+        SecondaryTorqueNumeratorBreakdownModel: {
+            /** Spring Term */
+            spring_term: number;
+            /** Load Term */
+            load_term: number;
+            /** Shift Term */
+            shift_term: number;
+            /** Net */
+            net: number;
+        };
         /** SimulationArgsInput */
         SimulationArgsInput: {
             /** Flyweight Mass */
@@ -491,10 +551,14 @@ export interface components {
             coupling_torque: number;
             /** Torque Demand */
             torque_demand: number;
-            /** T Max Prim */
-            t_max_prim: number;
-            /** T Max Sec */
-            t_max_sec: number;
+            /** Relative Velocity */
+            relative_velocity: number;
+            /** Tau Upper */
+            tau_upper: number;
+            /** Tau Lower */
+            tau_lower: number;
+            primary_tau_bounds: components["schemas"]["PrimaryTorqueBoundsBreakdownModel"];
+            secondary_tau_bounds: components["schemas"]["SecondaryTorqueBoundsBreakdownModel"];
             /** Effective Cvt Ratio Time Derivative */
             effective_cvt_ratio_time_derivative: number;
             /** Is Slipping */

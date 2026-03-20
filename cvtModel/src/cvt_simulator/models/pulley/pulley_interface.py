@@ -22,6 +22,7 @@ from abc import ABC, abstractmethod
 from typing import Any
 import numpy as np
 from cvt_simulator.utils.system_state import SystemState
+from cvt_simulator.utils.theoretical_models import TheoreticalModels as tm
 from cvt_simulator.constants.car_specs import (
     SHEAVE_ANGLE,
     BELT_CROSS_SECTIONAL_AREA,
@@ -152,7 +153,7 @@ class PulleyModel(ABC):
         """
         shift_distance = state.shift_distance
         wrap_angle = self._get_wrap_angle(shift_distance)
-        angular_velocity = self._get_angular_velocity(state)
+        angular_velocity = state.secondary_pulley_angular_velocity * tm.secondary_effective_radius(shift_distance) / self._get_radius(shift_distance)
         r_cm = self._get_belt_centroid_radius(shift_distance)
         beta = SHEAVE_ANGLE / 2
 
@@ -240,9 +241,6 @@ class PulleyModel(ABC):
         # Step 3: Total axial force
         axial_force_total = axial_clamping_force + axial_centrifugal_from_belt
 
-        # Step 4: Calculate max transferable torque
-        max_torque = self.calculate_max_torque(state, **kwargs)
-
         # Get geometric properties
         wrap_angle = self._get_wrap_angle(state.shift_distance)
         radius = self._get_radius(state.shift_distance)
@@ -254,7 +252,6 @@ class PulleyModel(ABC):
             axial_clamping_force=axial_clamping_force,
             axial_centrifugal_from_belt=axial_centrifugal_from_belt,
             axial_force_total=axial_force_total,
-            max_torque=max_torque,
         )
 
         # Return complete state

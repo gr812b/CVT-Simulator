@@ -33,14 +33,57 @@ function convertTimeStepData(
     engine_angular_position: conv(timeStep.derived_state.engine_angular_position, 'angle'),
   },
   drivetrain: {
-    belt_slip: {
+    belt_slip: ({
       coupling_torque: conv(timeStep.drivetrain.belt_slip.coupling_torque, 'torque'),
       torque_demand: conv(timeStep.drivetrain.belt_slip.torque_demand, 'torque'),
-      t_max_prim: conv(timeStep.drivetrain.belt_slip.t_max_prim, 'torque'),
-      t_max_sec: conv(timeStep.drivetrain.belt_slip.t_max_sec, 'torque'),
+      relative_velocity: conv((timeStep.drivetrain.belt_slip as TimeStepDataModel['drivetrain']['belt_slip'] & { relative_velocity: number }).relative_velocity, 'angular_velocity'),
+      tau_upper: conv(timeStep.drivetrain.belt_slip.tau_upper, 'torque'),
+      tau_lower: conv(timeStep.drivetrain.belt_slip.tau_lower, 'torque'),
+      primary_tau_bounds: {
+        tau_lower: conv(timeStep.drivetrain.belt_slip.primary_tau_bounds.tau_lower, 'torque'),
+        tau_upper: conv(timeStep.drivetrain.belt_slip.primary_tau_bounds.tau_upper, 'torque'),
+        numerator: {
+          clamping_term: conv(timeStep.drivetrain.belt_slip.primary_tau_bounds.numerator.clamping_term, 'torque'),
+          load_term: conv(timeStep.drivetrain.belt_slip.primary_tau_bounds.numerator.load_term, 'torque'),
+          shift_term: conv(timeStep.drivetrain.belt_slip.primary_tau_bounds.numerator.shift_term, 'torque'),
+          net: conv(timeStep.drivetrain.belt_slip.primary_tau_bounds.numerator.net, 'torque'),
+        },
+        denominator_upper: {
+          inverse_radius_term: timeStep.drivetrain.belt_slip.primary_tau_bounds.denominator_upper.inverse_radius_term,
+          inertial_feedback_term: timeStep.drivetrain.belt_slip.primary_tau_bounds.denominator_upper.inertial_feedback_term,
+          net: timeStep.drivetrain.belt_slip.primary_tau_bounds.denominator_upper.net,
+        },
+        denominator_lower: {
+          inverse_radius_term: timeStep.drivetrain.belt_slip.primary_tau_bounds.denominator_lower.inverse_radius_term,
+          inertial_feedback_term: timeStep.drivetrain.belt_slip.primary_tau_bounds.denominator_lower.inertial_feedback_term,
+          net: timeStep.drivetrain.belt_slip.primary_tau_bounds.denominator_lower.net,
+        },
+      },
+      secondary_tau_bounds: {
+        tau_negative: conv(timeStep.drivetrain.belt_slip.secondary_tau_bounds.tau_negative, 'torque'),
+        tau_positive: conv(timeStep.drivetrain.belt_slip.secondary_tau_bounds.tau_positive, 'torque'),
+        numerator: {
+          spring_term: conv(timeStep.drivetrain.belt_slip.secondary_tau_bounds.numerator.spring_term, 'torque'),
+          load_term: conv(timeStep.drivetrain.belt_slip.secondary_tau_bounds.numerator.load_term, 'torque'),
+          shift_term: conv(timeStep.drivetrain.belt_slip.secondary_tau_bounds.numerator.shift_term, 'torque'),
+          net: conv(timeStep.drivetrain.belt_slip.secondary_tau_bounds.numerator.net, 'torque'),
+        },
+        denominator_positive: {
+          inverse_radius_term: timeStep.drivetrain.belt_slip.secondary_tau_bounds.denominator_positive.inverse_radius_term,
+          helix_feedback_term: timeStep.drivetrain.belt_slip.secondary_tau_bounds.denominator_positive.helix_feedback_term,
+          inertial_feedback_term: timeStep.drivetrain.belt_slip.secondary_tau_bounds.denominator_positive.inertial_feedback_term,
+          net: timeStep.drivetrain.belt_slip.secondary_tau_bounds.denominator_positive.net,
+        },
+        denominator_negative: {
+          inverse_radius_term: timeStep.drivetrain.belt_slip.secondary_tau_bounds.denominator_negative.inverse_radius_term,
+          helix_feedback_term: timeStep.drivetrain.belt_slip.secondary_tau_bounds.denominator_negative.helix_feedback_term,
+          inertial_feedback_term: timeStep.drivetrain.belt_slip.secondary_tau_bounds.denominator_negative.inertial_feedback_term,
+          net: timeStep.drivetrain.belt_slip.secondary_tau_bounds.denominator_negative.net,
+        },
+      },
       effective_cvt_ratio_time_derivative: conv(timeStep.drivetrain.belt_slip.effective_cvt_ratio_time_derivative, 'dimensionless_rate'),
       is_slipping: timeStep.drivetrain.belt_slip.is_slipping
-    },
+    } as TimeStepDataModel['drivetrain']['belt_slip']),
     primary_pulley: {
       primary_pulley_drive_torque: conv(timeStep.drivetrain.primary_pulley.primary_pulley_drive_torque, 'torque'),
       coupling_torque_at_primary_pulley: conv(timeStep.drivetrain.primary_pulley.coupling_torque_at_primary_pulley, 'torque'),
@@ -65,7 +108,6 @@ function convertTimeStepData(
           axial_clamping_force: conv(timeStep.drivetrain.cvt_dynamics.primaryPulleyState.forces.axial_clamping_force, 'force'),
           axial_centrifugal_from_belt: conv(timeStep.drivetrain.cvt_dynamics.primaryPulleyState.forces.axial_centrifugal_from_belt, 'force'),
           axial_force_total: conv(timeStep.drivetrain.cvt_dynamics.primaryPulleyState.forces.axial_force_total, 'force'),
-          max_torque: conv(timeStep.drivetrain.cvt_dynamics.primaryPulleyState.forces.max_torque, 'torque'),
         },
         wrap_angle: conv(timeStep.drivetrain.cvt_dynamics.primaryPulleyState.wrap_angle, 'angle'),
         radius: conv(timeStep.drivetrain.cvt_dynamics.primaryPulleyState.radius, 'distance'),
@@ -80,7 +122,6 @@ function convertTimeStepData(
           axial_clamping_force: conv(timeStep.drivetrain.cvt_dynamics.secondaryPulleyState.forces.axial_clamping_force, 'force'),
           axial_centrifugal_from_belt: conv(timeStep.drivetrain.cvt_dynamics.secondaryPulleyState.forces.axial_centrifugal_from_belt, 'force'),
           axial_force_total: conv(timeStep.drivetrain.cvt_dynamics.secondaryPulleyState.forces.axial_force_total, 'force'),
-          max_torque: conv(timeStep.drivetrain.cvt_dynamics.secondaryPulleyState.forces.max_torque, 'torque'),
         },
         wrap_angle: conv(timeStep.drivetrain.cvt_dynamics.secondaryPulleyState.wrap_angle, 'angle'),
         radius: conv(timeStep.drivetrain.cvt_dynamics.secondaryPulleyState.radius, 'distance'),

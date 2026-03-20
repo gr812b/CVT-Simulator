@@ -160,7 +160,7 @@ class ShiftInitiationSolver(SolverBase):
         )
 
         # Calculate torque demand from road load (before slip limiting)
-        torque_demand = self.slip_model.get_torque_demand(state)
+        torque_demand = self.slip_model.get_no_slip_torque(state)
 
         # Get the CVT breakdown which includes both pulley states
         # Use torque_demand to properly account for secondary torque feedback

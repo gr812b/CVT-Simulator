@@ -38,10 +38,15 @@ const enginePowerAccessor: AccessorStrategy = (point) => point.drivetrain.primar
 const cvtAccelerationAccessor: AccessorStrategy = (point) => point.drivetrain.cvt_dynamics.acceleration;
 
 // Slip model accessors
-const t_max_primAccessor: AccessorStrategy = (point) => point.drivetrain.belt_slip.t_max_prim;
-const t_max_secAccessor: AccessorStrategy = (point) => point.drivetrain.belt_slip.t_max_sec;
 const coupling_torqueAccessor: AccessorStrategy = (point) => point.drivetrain.belt_slip.coupling_torque;
 const torque_demandAccessor: AccessorStrategy = (point) => point.drivetrain.belt_slip.torque_demand;
+const tau_upperAccessor: AccessorStrategy = (point) => point.drivetrain.belt_slip.tau_upper;
+const tau_lowerAccessor: AccessorStrategy = (point) => point.drivetrain.belt_slip.tau_lower;
+const primary_tau_upperAccessor: AccessorStrategy = (point) => point.drivetrain.belt_slip.primary_tau_bounds.tau_upper;
+const primary_tau_lowerAccessor: AccessorStrategy = (point) => point.drivetrain.belt_slip.primary_tau_bounds.tau_lower;
+const secondary_tau_positiveAccessor: AccessorStrategy = (point) => point.drivetrain.belt_slip.secondary_tau_bounds.tau_positive;
+const secondary_tau_negativeAccessor: AccessorStrategy = (point) => point.drivetrain.belt_slip.secondary_tau_bounds.tau_negative;
+const relativeVelocityAccessor: AccessorStrategy = (point) => (point.drivetrain.belt_slip as DataPoint['drivetrain']['belt_slip'] & { relative_velocity: number }).relative_velocity;
 const isSlippingAccessor: AccessorStrategy = (point) => point.drivetrain.belt_slip.is_slipping ? 1 : 0;
 
 // External load
@@ -133,8 +138,13 @@ export const accessorToUnit = new Map<AccessorStrategy, BaseUnitType>([
     [cvtRatioRateOfChangeAccessor, 'dimensionless_rate'],
     [enginePowerAccessor, 'power'],
     [coupling_torqueAccessor, 'torque'],
-    [t_max_primAccessor, 'torque'],
-    [t_max_secAccessor, 'torque'],
+    [tau_upperAccessor, 'torque'],
+    [tau_lowerAccessor, 'torque'],
+    [primary_tau_upperAccessor, 'torque'],
+    [primary_tau_lowerAccessor, 'torque'],
+    [secondary_tau_positiveAccessor, 'torque'],
+    [secondary_tau_negativeAccessor, 'torque'],
+    [relativeVelocityAccessor, 'angular_velocity'],
     [torque_demandAccessor, 'torque'],
     [primaryFlyweightForceAccessor, 'force'],
     [rawFlyweightCentrifugalForce, 'force'],
@@ -468,37 +478,47 @@ export const graphCategories: GraphCategory[] = [
     title: "Slip Model",
     graphs: [
     /** SLIP MODEL GRAPHS */
-    { // Slip model torques vs time
+    { // Per-pulley torque bounds
         xAccessor: timeAccessor,
-        yAccessor: [coupling_torqueAccessor, torque_demandAccessor, t_max_primAccessor, t_max_secAccessor],
+        yAccessor: [
+            primary_tau_upperAccessor,
+            primary_tau_lowerAccessor,
+            secondary_tau_positiveAccessor,
+            secondary_tau_negativeAccessor
+        ],
         config: {
-            title: "Slip Model Torques vs Time",
+            title: "Primary and Secondary Torque Bounds vs Time",
             xAxis: { name: "Time", type: "value", unit: getAxisUnit(timeAccessor) },
             yAxis: { name: "Torque", type: "value", unit: getAxisUnit(coupling_torqueAccessor) },
-            seriesNames: ["Coupling", "Demand", "T_max (Primary)", "T_max (Secondary)"],
+            seriesNames: [
+                "Primary Upper Bound",
+                "Primary Lower Bound",
+                "Secondary Upper Bound",
+                "Secondary Lower Bound"
+            ],
             showXLine: true,
             showYLine: false
         }
     },
-    { // Same graph but vs Engine RPM (is this useful?)
-        xAccessor: engineRpmAccessor,
-        yAccessor: [coupling_torqueAccessor, t_max_primAccessor, t_max_secAccessor],
-        config: {
-            title: "Slip Model Torques vs Engine RPM",
-            xAxis: { name: "Engine RPM", type: "value", unit: getAxisUnit(engineRpmAccessor) },
-            yAxis: { name: "Torque", type: "value", unit: "N·m" },
-            seriesNames: ["Coupling", "T_max (Primary)", "T_max (Secondary)"],
-            showXLine: true,
-            showYLine: false
-        }
-    },
-    { // Whether you are slipping or not vs time
+    { // Overall bounds and torque tracking
         xAccessor: timeAccessor,
-        yAccessor: [isSlippingAccessor],
+        yAccessor: [tau_upperAccessor, tau_lowerAccessor, coupling_torqueAccessor, torque_demandAccessor],
         config: {
-            title: "Is Slipping vs Time",
+            title: "Overall Bounds, Coupling, and No-Slip Torque vs Time",
             xAxis: { name: "Time", type: "value", unit: getAxisUnit(timeAccessor) },
-            yAxis: { name: "Is Slipping", type: "value", unit: "dimensionless" },
+            yAxis: { name: "Torque", type: "value", unit: "N·m" },
+            seriesNames: ["Overall Upper Bound", "Overall Lower Bound", "Coupling (Final)", "No-Slip Torque"],
+            showXLine: true,
+            showYLine: false
+        }
+    },
+    {
+        xAccessor: timeAccessor,
+        yAccessor: [relativeVelocityAccessor],
+        config: {
+            title: "Relative Velocity vs Time",
+            xAxis: { name: "Time", type: "value", unit: getAxisUnit(timeAccessor) },
+            yAxis: { name: "Relative Velocity", type: "value", unit: getAxisUnit(relativeVelocityAccessor) },
             showXLine: true,
             showYLine: false
         }
