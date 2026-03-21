@@ -1,4 +1,5 @@
 from cvt_simulator.utils.system_state import SystemState
+from typing import Any
 from cvt_simulator.utils.state_computations import (
     integrate_positions_trapezoidal,
     primary_pulley_angular_velocity_to_engine_angular_velocity,
@@ -9,7 +10,9 @@ import matplotlib.pyplot as plt
 
 
 class SimulationResult:
-    def __init__(self, solution=None, time=None, states=None):
+    termination_context: dict[str, Any] | None
+
+    def __init__(self, solution=None, time=None, states=None, termination_context: dict[str, Any] | None = None):
         """Initialize with solution from solve_ivp and parse it into states, or directly with time and states."""
         if solution is not None:
             self.time = solution.t
@@ -17,6 +20,7 @@ class SimulationResult:
         else:
             self.time = time
             self.states = states
+        self.termination_context = termination_context
 
     @staticmethod
     def parse_solution(solution):

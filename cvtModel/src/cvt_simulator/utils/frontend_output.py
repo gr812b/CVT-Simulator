@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Dict
 from cvt_simulator.constants.car_specs import MAX_SHIFT
 from cvt_simulator.models.dataTypes import DrivetrainBreakdown
 from cvt_simulator.utils.system_state import SystemState
@@ -37,8 +37,25 @@ class DerivedKinematicState:
     engine_angular_position: float
 
 
+@dataclass
+class SimulationTerminationContext:
+    """Explains why simulation execution ended and includes final-state context."""
+
+    reason_code: str
+    reason: str
+    mode: str
+    final_time: float
+    reached_max_time: bool
+    event: str | None
+    event_time: float | None
+    transition_count: int
+    max_transitions: int
+    details: Dict[str, float | str | bool]
+
+
 class FormattedSimulationResult:
     data: List[TimeStepData]
+    termination: SimulationTerminationContext
 
     def __init__(self, result: SimulationResult, args: SimulationArgs):
         """
@@ -46,6 +63,28 @@ class FormattedSimulationResult:
         """
         self.data = []
         self.gather_model_states(result, args)
+        self.termination = self._build_termination_context(result)
+
+    @staticmethod
+    def _build_termination_context(result: SimulationResult) -> SimulationTerminationContext:
+        context = result.termination_context or {}
+        details_raw = context.get("details", {})
+        details: Dict[str, float | str | bool] = {}
+        if isinstance(details_raw, dict):
+            details = {str(k): v for k, v in details_raw.items()}
+
+        return SimulationTerminationContext(
+            reason_code=str(context.get("reason_code", "unknown")),
+            reason=str(context.get("reason", "Simulation completion reason unavailable.")),
+            mode=str(context.get("mode", "unknown")),
+            final_time=float(context.get("final_time", result.time[-1] if len(result.time) > 0 else 0.0)),
+            reached_max_time=bool(context.get("reached_max_time", False)),
+            event=str(context["event"]) if context.get("event") is not None else None,
+            event_time=float(context["event_time"]) if context.get("event_time") is not None else None,
+            transition_count=int(context.get("transition_count", 0)),
+            max_transitions=int(context.get("max_transitions", 0)),
+            details=details,
+        )
 
     def gather_model_states(self, result: SimulationResult, args: SimulationArgs):
         system_model = get_models(args)

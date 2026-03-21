@@ -32,7 +32,10 @@ class CombinedSolution:
 class SimulationRunner:
     """Runs a two-phase CVT system simulation."""
 
-    TOTAL_SIM_TIME = 30  # seconds
+    TOTAL_SIM_TIME = 15  # seconds
+    # Hysteresis controls to prevent mid-shift lock/unlock chatter.
+    MID_SHIFT_MIN_HOLD_TIME = 0.02  # seconds
+    MID_SHIFT_RELOCK_DELAY = 0.05  # seconds
     INITIAL_STATE = SystemState(
         shift_distance=0.0,
         shift_velocity=0.0,
@@ -94,8 +97,20 @@ class SimulationRunner:
 
         mode = "normal"
         locked_shift_distance = None
+        mid_shift_enter_time: float | None = None
+        last_mid_shift_wake_time = -float("inf")
         transition_count = 0
         max_transitions = 20
+        termination_context: dict[str, Any] = {
+            "reason_code": "unknown",
+            "reason": "Simulation ended without a classified termination reason.",
+            "mode": mode,
+            "event": None,
+            "event_time": None,
+            "transition_count": 0,
+            "max_transitions": max_transitions,
+            "details": {},
+        }
 
         def append_solution_segment(solution):
             t_seg = np.asarray(solution.t)
@@ -115,14 +130,44 @@ class SimulationRunner:
             )
 
             if time_eval_segment.size == 0:
+                termination_context = {
+                    "reason_code": "max_time",
+                    "reason": "Simulation reached the configured maximum time.",
+                    "mode": mode,
+                    "event": None,
+                    "event_time": None,
+                    "transition_count": transition_count,
+                    "max_transitions": max_transitions,
+                    "details": {
+                        "time_eval_exhausted": True,
+                    },
+                }
                 break
 
             if mode == "normal":
+                base_mid_shift_steady_event = get_mid_shift_steady_event(self.system_model)
+
+                def guarded_mid_shift_steady_event(t, y):
+                    # After waking from a locked mid-shift state, require a short
+                    # cooldown before allowing another mid-shift lock attempt.
+                    if (t - last_mid_shift_wake_time) < self.MID_SHIFT_RELOCK_DELAY:
+                        return 1.0
+                    return base_mid_shift_steady_event(t, y)
+
+                guarded_mid_shift_steady_event.terminal = True
+                guarded_mid_shift_steady_event.direction = -1
+
                 events = [
                     get_shift_steady_event(self.system_model),
-                    get_mid_shift_steady_event(self.system_model),
+                    guarded_mid_shift_steady_event,
                     car_velocity_constraint_event,
                     shift_constraint_event,
+                ]
+                event_names = [
+                    "shift_steady_event",
+                    "mid_shift_steady_event",
+                    "car_velocity_constraint_event",
+                    "shift_constraint_event",
                 ]
                 solution = self._solve(
                     cvt_system_ode,
@@ -162,10 +207,18 @@ class SimulationRunner:
                         "mid_shift_steady_event",
                     )
                     mode = "mid_shift"
+                    mid_shift_enter_time = float(current_time)
                     transition_count += 1
                     continue
 
                 # No mode-transition event: finished (car stop, end of interval, etc.)
+                termination_context = self._build_termination_context(
+                    solution=solution,
+                    mode=mode,
+                    event_names=event_names,
+                    transition_count=transition_count,
+                    max_transitions=max_transitions,
+                )
                 break
 
             if mode == "full_shift":
@@ -173,6 +226,10 @@ class SimulationRunner:
                 events = [
                     get_back_shift_event(self.system_model),
                     car_velocity_constraint_event,
+                ]
+                event_names = [
+                    "back_shift_event",
+                    "car_velocity_constraint_event",
                 ]
                 solution = self._solve(
                     locked_ode,
@@ -199,6 +256,13 @@ class SimulationRunner:
                     transition_count += 1
                     continue
 
+                termination_context = self._build_termination_context(
+                    solution=solution,
+                    mode=mode,
+                    event_names=event_names,
+                    transition_count=transition_count,
+                    max_transitions=max_transitions,
+                )
                 break
 
             if mode == "mid_shift":
@@ -206,9 +270,26 @@ class SimulationRunner:
                     break
 
                 locked_ode = self._get_locked_shift_ode_function(locked_shift_distance)
+
+                base_mid_shift_wake_event = get_mid_shift_wake_event(self.system_model)
+
+                def guarded_mid_shift_wake_event(t, y):
+                    # Once we lock into mid-shift, keep that mode for a minimum
+                    # dwell time before evaluating wake logic.
+                    if mid_shift_enter_time is not None and (t - mid_shift_enter_time) < self.MID_SHIFT_MIN_HOLD_TIME:
+                        return -1.0
+                    return base_mid_shift_wake_event(t, y)
+
+                guarded_mid_shift_wake_event.terminal = True
+                guarded_mid_shift_wake_event.direction = 1
+
                 events = [
-                    get_mid_shift_wake_event(self.system_model),
+                    guarded_mid_shift_wake_event,
                     car_velocity_constraint_event,
+                ]
+                event_names = [
+                    "mid_shift_wake_event",
+                    "car_velocity_constraint_event",
                 ]
                 solution = self._solve(
                     locked_ode,
@@ -232,10 +313,33 @@ class SimulationRunner:
                         "mid_shift_wake_event",
                     )
                     mode = "normal"
+                    mid_shift_enter_time = None
+                    last_mid_shift_wake_time = float(current_time)
                     transition_count += 1
                     continue
 
+                termination_context = self._build_termination_context(
+                    solution=solution,
+                    mode=mode,
+                    event_names=event_names,
+                    transition_count=transition_count,
+                    max_transitions=max_transitions,
+                )
                 break
+
+        if transition_count >= max_transitions and current_time < self.TOTAL_SIM_TIME:
+            termination_context = {
+                "reason_code": "max_transitions",
+                "reason": "Simulation stopped after hitting the mode-transition safety limit.",
+                "mode": mode,
+                "event": None,
+                "event_time": None,
+                "transition_count": transition_count,
+                "max_transitions": max_transitions,
+                "details": {
+                    "safety_limit_reached": True,
+                },
+            }
 
         # Combine all solution segments
         if not all_t or not all_y:
@@ -246,7 +350,91 @@ class SimulationRunner:
             combined_y = np.hstack(all_y)
 
         combined_solution = CombinedSolution(combined_t, combined_y)
-        return SimulationResult(combined_solution)
+
+        final_state = SystemState.from_array(combined_y[:, -1])
+        final_time = float(combined_t[-1])
+        termination_context["mode"] = mode
+        termination_context["final_time"] = final_time
+        termination_context["reached_max_time"] = final_time >= (self.TOTAL_SIM_TIME - 1e-6)
+        termination_context["transition_count"] = transition_count
+        termination_context.setdefault("details", {})
+        termination_context["details"].update(
+            {
+                "final_shift_distance": float(final_state.shift_distance),
+                "final_shift_velocity": float(final_state.shift_velocity),
+                "final_primary_pulley_angular_velocity": float(final_state.primary_pulley_angular_velocity),
+                "final_secondary_pulley_angular_velocity": float(final_state.secondary_pulley_angular_velocity),
+            }
+        )
+
+        if termination_context.get("reason_code") == "unknown" and termination_context["reached_max_time"]:
+            termination_context["reason_code"] = "max_time"
+            termination_context["reason"] = "Simulation reached the configured maximum time."
+
+        return SimulationResult(combined_solution, termination_context=termination_context)
+
+    def _build_termination_context(
+        self,
+        solution,
+        mode: str,
+        event_names: list[str],
+        transition_count: int,
+        max_transitions: int,
+    ) -> dict[str, Any]:
+        triggered_events: list[tuple[float, str]] = []
+        for idx, event_name in enumerate(event_names):
+            if idx >= len(solution.t_events):
+                continue
+            event_times = np.asarray(solution.t_events[idx])
+            if event_times.size > 0:
+                triggered_events.append((float(event_times[0]), event_name))
+
+        if triggered_events:
+            event_time, event_name = min(triggered_events, key=lambda item: item[0])
+            return {
+                "reason_code": "event",
+                "reason": f"Simulation stopped because terminal event '{event_name}' fired.",
+                "mode": mode,
+                "event": event_name,
+                "event_time": event_time,
+                "transition_count": transition_count,
+                "max_transitions": max_transitions,
+                "details": {
+                    "solver_status": int(solution.status),
+                    "solver_message": str(solution.message),
+                },
+            }
+
+        final_time = float(solution.t[-1]) if np.asarray(solution.t).size > 0 else 0.0
+        reached_max_time = final_time >= (self.TOTAL_SIM_TIME - 1e-6)
+        if reached_max_time:
+            return {
+                "reason_code": "max_time",
+                "reason": "Simulation reached the configured maximum time.",
+                "mode": mode,
+                "event": None,
+                "event_time": None,
+                "transition_count": transition_count,
+                "max_transitions": max_transitions,
+                "details": {
+                    "solver_status": int(solution.status),
+                    "solver_message": str(solution.message),
+                },
+            }
+
+        return {
+            "reason_code": "solver_ended",
+            "reason": "Simulation ended because the integrator finished without a terminal event.",
+            "mode": mode,
+            "event": None,
+            "event_time": None,
+            "transition_count": transition_count,
+            "max_transitions": max_transitions,
+            "details": {
+                "solver_status": int(solution.status),
+                "solver_message": str(solution.message),
+            },
+        }
 
     # Get the function without self for scipy
     def _get_ode_function(self):

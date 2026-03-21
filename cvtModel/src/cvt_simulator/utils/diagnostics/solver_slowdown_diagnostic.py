@@ -27,6 +27,8 @@ from cvt_simulator.utils.simulation_constraints import (
     # kept for compatibility if low-level solve path is reintroduced
     car_velocity_constraint_event,
     get_shift_steady_event,
+    get_mid_shift_steady_event,
+    get_mid_shift_wake_event,
     shift_constraint_event,
 )
 from cvt_simulator.utils.system_state import SystemState
@@ -70,56 +72,22 @@ def _estimate_first_quasi_steady_time(
     return None
 
 
-def build_slow_case_args() -> SimulationArgs:
-    """Build the user-reported slow custom case for diagnostics."""
+def build_user_case_args() -> SimulationArgs:
+    """Build the exact user-reported custom case for diagnostics."""
     primary_ramp = PiecewiseRampConfig(
         segments=[
             CircularSegmentConfig(
-                length=0.024,
-                angle_start=35.0,
-                angle_end=20.0,
+                length=0.002,
+                angle_start=75.0,
+                angle_end=50.0,
                 quadrant=2,
-            )
-        ]
-    )
-
-    secondary_ramp = PiecewiseRampConfig(
-        segments=[
-            LinearSegmentConfig(
-                length=0.01905,
-                angle=54.0,
-            )
-        ]
-    )
-
-    return SimulationArgs(
-        flyweight_mass=0.5,
-        primary_spring_rate=12784.0,
-        primary_spring_pretension=0.1,
-        primary_ramp_config=primary_ramp,
-        secondary_torsion_spring_rate=3.476,
-        secondary_compression_spring_rate=3532.0,
-        secondary_rotational_spring_pretension=200.0,
-        secondary_linear_spring_pretension=0.1,
-        secondary_ramp_config=secondary_ramp,
-        vehicle_weight=225.0,
-        driver_weight=75.0,
-        traction=100.0,
-        angle_of_incline=0.0,
-        total_distance=200.0,
-    )
-
-
-def build_fast_case_args() -> SimulationArgs:
-    """Build the user-reported fast custom case for diagnostics."""
-    primary_ramp = PiecewiseRampConfig(
-        segments=[
+            ),
             CircularSegmentConfig(
-                length=0.024,
-                angle_start=35.0,
+                length=0.022,
+                angle_start=50.0,
                 angle_end=20.0,
                 quadrant=2,
-            )
+            ),
         ]
     )
 
@@ -127,7 +95,7 @@ def build_fast_case_args() -> SimulationArgs:
         segments=[
             LinearSegmentConfig(
                 length=1.0,
-                angle=36.0,
+                angle=50.0,
             )
         ]
     )
@@ -138,8 +106,8 @@ def build_fast_case_args() -> SimulationArgs:
         primary_spring_pretension=0.1,
         primary_ramp_config=primary_ramp,
         secondary_torsion_spring_rate=3.476,
-        secondary_compression_spring_rate=3532.0,
-        secondary_rotational_spring_pretension=200.0,
+        secondary_compression_spring_rate=7000.0,
+        secondary_rotational_spring_pretension=800.0,
         secondary_linear_spring_pretension=0.1,
         secondary_ramp_config=secondary_ramp,
         vehicle_weight=225.0,
@@ -338,6 +306,32 @@ def run_single_case(case_name: str, args: SimulationArgs, enable_profiling: bool
                 f"reason={tr['reason']} shift_d={tr['shift_distance']:.9f}"
             )
 
+        transition_times = np.asarray([float(tr["time"]) for tr in transitions], dtype=float)
+        if transition_times.size > 1:
+            transition_dt = np.diff(transition_times)
+            print("\n=== Transition Cadence ===")
+            print(f"min interval [s]: {float(np.min(transition_dt)):.6e}")
+            print(f"median interval [s]: {float(np.median(transition_dt)):.6e}")
+            print(f"intervals < 1e-2s: {int(np.sum(transition_dt < 1e-2))}")
+            print(f"intervals < 1e-3s: {int(np.sum(transition_dt < 1e-3))}")
+
+        mid_shift_steady_event = get_mid_shift_steady_event(system_model)
+        mid_shift_wake_event = get_mid_shift_wake_event(system_model)
+
+        print("\n=== Transition Threshold Probes ===")
+        for i, tr in enumerate(transitions, start=1):
+            t_tr = float(tr["time"])
+            idx = int(np.searchsorted(result.time, t_tr, side="left"))
+            idx = min(max(idx, 0), len(result.states) - 1)
+            state = result.states[idx]
+            y = np.asarray(state.to_array(), dtype=float)
+            steady_val = float(mid_shift_steady_event(t_tr, y.copy()))
+            wake_val = float(mid_shift_wake_event(t_tr, y.copy()))
+            print(
+                f"{i}. t={t_tr:.6f}s reason={tr['reason']} "
+                f"steady_event={steady_val:+.6e} wake_event={wake_val:+.6e}"
+            )
+
     if profiler is not None:
         print("\n=== Top cProfile (cumtime) ===")
         s = io.StringIO()
@@ -370,40 +364,13 @@ def run_single_case(case_name: str, args: SimulationArgs, enable_profiling: bool
 
 
 def run_diagnostic() -> None:
-    def fmt_float(value: float | None, places: int = 6) -> str:
-        return "None" if value is None else f"{value:.{places}f}"
-
-    fast_summary = run_single_case("fast_case", build_fast_case_args(), ENABLE_PROFILING)
-    slow_summary = run_single_case("slow_case", build_slow_case_args(), ENABLE_PROFILING)
-
-    print("\n=== Comparison (Fast Case vs Slow Case) ===")
-    print(
-        f"status: {fast_summary['status']} vs {slow_summary['status']}"
-    )
-    print(
-        f"elapsed_s: {fast_summary['elapsed_s']:.3f} vs {slow_summary['elapsed_s']:.3f}"
-    )
-    print(
-        f"nfev_observed: {fast_summary['nfev_observed']} vs {slow_summary['nfev_observed']}"
-    )
-    print(
-        f"steps: {fast_summary['steps']} vs {slow_summary['steps']}"
-    )
-    print(
-        f"dt_min: {fast_summary['dt_min']} vs {slow_summary['dt_min']}"
-    )
-    print(
-        f"dt_median: {fast_summary['dt_median']} vs {slow_summary['dt_median']}"
-    )
-    print(
-        f"t_end_reached: {fmt_float(fast_summary['t_end'])} vs {fmt_float(slow_summary['t_end'])}"
-    )
-    print(
-        f"final_shift_distance: {fast_summary['shift_distance']} vs {slow_summary['shift_distance']}"
-    )
-    print(
-        f"final_mid_shift_region: {fast_summary['mid_shift_region']} vs {slow_summary['mid_shift_region']}"
-    )
+    summary = run_single_case("user_case", build_user_case_args(), ENABLE_PROFILING)
+    print("\n=== Final Summary ===")
+    print(f"status: {summary['status']}")
+    print(f"elapsed_s: {summary['elapsed_s']:.3f}")
+    print(f"steps: {summary['steps']}")
+    print(f"transition_count: {summary['transition_count']}")
+    print(f"t_end: {summary['t_end']}")
 
 
 if __name__ == "__main__":
