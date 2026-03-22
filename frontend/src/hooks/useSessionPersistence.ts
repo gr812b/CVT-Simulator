@@ -8,8 +8,10 @@ import {
   setLoadedSimulationId,
   getLoadedSimulationId,
   getSimulation,
+  getRecentRuns,
 } from '@utils/localStorage';
 import { getDefaultSimulations } from '@constants/defaultSimulations';
+import { PARAMETERS, type Parameter } from '@types';
 
 /**
  * Hook for managing session persistence and tracking parameter changes
@@ -46,6 +48,10 @@ export const useSessionPersistence = () => {
       if (savedSimulation) {
         setMultipleParameters(savedSimulation.parameters);
       } else {
+        const recentRun = getRecentRuns().find(sim => sim.id === loadedId);
+        if (recentRun) {
+          setMultipleParameters(recentRun.parameters);
+        } else {
         const defaultSimulation = defaults.find(sim => sim.id === loadedId);
         if (defaultSimulation) {
           setMultipleParameters(defaultSimulation.parameters);
@@ -55,6 +61,7 @@ export const useSessionPersistence = () => {
           setLoadedSimulationId(defaults[0].id);
         } else {
           setLoadedSimulationId(null);
+        }
         }
       }
     } else if (defaults[0]) {
@@ -111,6 +118,12 @@ export const useSessionPersistence = () => {
     if (defaultSim) {
       return defaultSim.parameters;
     }
+
+    // Check if it's a recent run
+    const recentRun = getRecentRuns().find(s => s.id === loadedId);
+    if (recentRun) {
+      return recentRun.parameters;
+    }
     
     // Fallback
     return parameters;
@@ -120,7 +133,11 @@ export const useSessionPersistence = () => {
    * Check if current parameters differ from baseline
    */
   const hasChanges = useCallback((): boolean => {
-    return JSON.stringify(parameters) !== JSON.stringify(baselineParameters);
+    return (Object.keys(PARAMETERS) as Parameter[]).some((field) => {
+      const currentStr = JSON.stringify(parameters[field]);
+      const baselineStr = JSON.stringify(baselineParameters[field]);
+      return currentStr !== baselineStr;
+    });
   }, [parameters, baselineParameters]);
 
   /**
@@ -137,18 +154,7 @@ export const useSessionPersistence = () => {
       
       const currentStr = JSON.stringify(parameters[field]);
       const baselineStr = JSON.stringify(baselineParameters[field]);
-      const changed = currentStr !== baselineStr;
-      
-      // Only log if actually changed (reduces noise)
-      if (changed) {
-        console.log(`[Field Check] ${String(field)}: CHANGED`, {
-          loadedId,
-          current: parameters[field],
-          baseline: baselineParameters[field]
-        });
-      }
-      
-      return changed;
+      return currentStr !== baselineStr;
     },
     [parameters, baselineParameters]
   );

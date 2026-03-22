@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@components/button/Button';
 import { ParameterAccordion } from '@components/parameterAccordion/ParameterAccordion';
@@ -15,6 +15,12 @@ import { useLoading } from '@contexts/LoadingContext';
 import { useFormState } from '@hooks/useFormState';
 import { useRunSimulation } from '@hooks/useRunSimulation';
 import { useSessionPersistence } from '@hooks/useSessionPersistence';
+import {
+    getLoadedSimulationId,
+    getSimulation,
+    getRecentRuns,
+} from '@utils/localStorage';
+import { getDefaultSimulations } from '@constants/defaultSimulations';
 import Home from '@assets/icons/home.svg?react';
 import ArrowUpCircle from '@assets/icons/arrow_up_circle.svg?react';
 import ArrowDownCircle from '@assets/icons/arrow_down_circle.svg?react';
@@ -38,6 +44,23 @@ export const Input = () => {
     const navigate = useNavigate();
     const { runSimulation } = useRunSimulation();
     const { isFieldChanged, hasChanges, resetToBaseline, baselineParameters } = useSessionPersistence();
+    const hasSessionChanges = hasChanges();
+    const selectedSetName = useMemo(() => {
+        const loadedId = getLoadedSimulationId();
+        if (!loadedId) return 'New Parameter Set';
+        if (loadedId === 'session_baseline') return 'Session Parameters';
+
+        const savedSimulation = getSimulation(loadedId);
+        if (savedSimulation) return savedSimulation.name;
+
+        const defaultSimulation = getDefaultSimulations().find((simulation) => simulation.id === loadedId);
+        if (defaultSimulation) return defaultSimulation.name;
+
+        const recentRun = getRecentRuns().find((simulation) => simulation.id === loadedId);
+        if (recentRun) return recentRun.name;
+
+        return 'Selected Parameter Set';
+    }, [parameters]);
 
     // State to manage which accordions are expanded
     const [expanded, setExpanded] = useState<Record<ParameterGroup, boolean>>(expandedState);
@@ -140,12 +163,24 @@ export const Input = () => {
                 parameters={formState.getParsedValues()}
                 onSave={handleSaveComplete}
             />
-            <Button
-                text={'Home'}
-                icon={Home}
-                className={styles.backButton}
-                onClick={() => navigate('/')}
-            />
+            <div className={styles.topBar}>
+                <Button
+                    text={'Home'}
+                    icon={Home}
+                    className={styles.backButton}
+                    onClick={() => navigate('/')}
+                />
+                <div className={styles.sessionInfo} title={selectedSetName}>
+                    <span className={styles.selectedSetName}>{selectedSetName}</span>
+                    {hasSessionChanges && (
+                        <span className={styles.changesBadge}>
+                            <span className={styles.changeIndicator} />
+                            <span>Changes</span>
+                        </span>
+                    )}
+                </div>
+                <div className={styles.topBarSpacer} />
+            </div>
             <div className={styles.solverResultsPosition}>
                 <SolverResults />
             </div>
