@@ -153,7 +153,11 @@ class PulleyModel(ABC):
         """
         shift_distance = state.shift_distance
         wrap_angle = self._get_wrap_angle(shift_distance)
-        angular_velocity = state.secondary_pulley_angular_velocity * tm.secondary_effective_radius(shift_distance) / self._get_radius(shift_distance)
+        angular_velocity = (
+            state.secondary_pulley_angular_velocity
+            * tm.secondary_effective_radius(shift_distance)
+            / self._get_radius(shift_distance)
+        )
         r_cm = self._get_belt_centroid_radius(shift_distance)
         beta = SHEAVE_ANGLE / 2
 
@@ -169,8 +173,10 @@ class PulleyModel(ABC):
     def _get_belt_centroid_radius(self, shift_distance: float) -> float:
         """Get belt mass-centroid radius r_cm at current shift position [m]."""
         # Delta from trapezoidal belt cross-section centroid (measured from outer face).
-        delta_r_cm = BELT_HEIGHT * (BELT_WIDTH_TOP + 2 * BELT_WIDTH_BOTTOM) / (
-            3 * (BELT_WIDTH_TOP + BELT_WIDTH_BOTTOM)
+        delta_r_cm = (
+            BELT_HEIGHT
+            * (BELT_WIDTH_TOP + 2 * BELT_WIDTH_BOTTOM)
+            / (3 * (BELT_WIDTH_TOP + BELT_WIDTH_BOTTOM))
         )
         r_out = self._get_radius(shift_distance) + BELT_HEIGHT / 2
         return r_out - delta_r_cm

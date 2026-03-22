@@ -66,7 +66,9 @@ class FormattedSimulationResult:
         self.termination = self._build_termination_context(result)
 
     @staticmethod
-    def _build_termination_context(result: SimulationResult) -> SimulationTerminationContext:
+    def _build_termination_context(
+        result: SimulationResult,
+    ) -> SimulationTerminationContext:
         context = result.termination_context or {}
         details_raw = context.get("details", {})
         details: Dict[str, float | str | bool] = {}
@@ -75,12 +77,22 @@ class FormattedSimulationResult:
 
         return SimulationTerminationContext(
             reason_code=str(context.get("reason_code", "unknown")),
-            reason=str(context.get("reason", "Simulation completion reason unavailable.")),
+            reason=str(
+                context.get("reason", "Simulation completion reason unavailable.")
+            ),
             mode=str(context.get("mode", "unknown")),
-            final_time=float(context.get("final_time", result.time[-1] if len(result.time) > 0 else 0.0)),
+            final_time=float(
+                context.get(
+                    "final_time", result.time[-1] if len(result.time) > 0 else 0.0
+                )
+            ),
             reached_max_time=bool(context.get("reached_max_time", False)),
             event=str(context["event"]) if context.get("event") is not None else None,
-            event_time=float(context["event_time"]) if context.get("event_time") is not None else None,
+            event_time=(
+                float(context["event_time"])
+                if context.get("event_time") is not None
+                else None
+            ),
             transition_count=int(context.get("transition_count", 0)),
             max_transitions=int(context.get("max_transitions", 0)),
             details=details,
@@ -133,11 +145,11 @@ class FormattedSimulationResult:
 
             # The 4-DOF solver tracks angular velocities only; integrate them over time
             # so frontend consumers can animate pulley angular position directly.
-            drivetrain_breakdown.cvt_dynamics.primaryPulleyState.angular_position = float(
-                primary_pulley_angular_positions[i]
+            drivetrain_breakdown.cvt_dynamics.primaryPulleyState.angular_position = (
+                float(primary_pulley_angular_positions[i])
             )
-            drivetrain_breakdown.cvt_dynamics.secondaryPulleyState.angular_position = float(
-                secondary_pulley_angular_positions[i]
+            drivetrain_breakdown.cvt_dynamics.secondaryPulleyState.angular_position = (
+                float(secondary_pulley_angular_positions[i])
             )
 
             derived_state = DerivedKinematicState(

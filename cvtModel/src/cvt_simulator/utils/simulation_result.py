@@ -12,7 +12,13 @@ import matplotlib.pyplot as plt
 class SimulationResult:
     termination_context: dict[str, Any] | None
 
-    def __init__(self, solution=None, time=None, states=None, termination_context: dict[str, Any] | None = None):
+    def __init__(
+        self,
+        solution=None,
+        time=None,
+        states=None,
+        termination_context: dict[str, Any] | None = None,
+    ):
         """Initialize with solution from solve_ivp and parse it into states, or directly with time and states."""
         if solution is not None:
             self.time = solution.t
@@ -37,9 +43,7 @@ class SimulationResult:
             SystemState(
                 shift_distance=row["shift_distance"],
                 shift_velocity=row["shift_velocity"],
-                primary_pulley_angular_velocity=row[
-                    "primary_pulley_angular_velocity"
-                ],
+                primary_pulley_angular_velocity=row["primary_pulley_angular_velocity"],
                 secondary_pulley_angular_velocity=row[
                     "secondary_pulley_angular_velocity"
                 ],
@@ -50,7 +54,7 @@ class SimulationResult:
 
     def write_csv(self, filename="simulation_output.csv"):
         """Writes the parsed solution states to a CSV file.
-        
+
         Includes 4 DOF from state plus derived quantities.
         Positions (car_position, engine_angular_position) are computed via kinematic integration.
         """
@@ -73,13 +77,17 @@ class SimulationResult:
                 for s in self.states
             ],
         )
-        
+
         data = {
             "time": self.time,
             "shift_distance": [state.shift_distance for state in self.states],
             "shift_velocity": [state.shift_velocity for state in self.states],
-            "primary_pulley_angular_velocity": [state.primary_pulley_angular_velocity for state in self.states],
-            "secondary_pulley_angular_velocity": [state.secondary_pulley_angular_velocity for state in self.states],
+            "primary_pulley_angular_velocity": [
+                state.primary_pulley_angular_velocity for state in self.states
+            ],
+            "secondary_pulley_angular_velocity": [
+                state.secondary_pulley_angular_velocity for state in self.states
+            ],
             "car_velocity": [
                 secondary_pulley_angular_velocity_to_car_velocity(
                     s.secondary_pulley_angular_velocity
@@ -100,7 +108,7 @@ class SimulationResult:
 
     def plot(self, field="secondary_pulley_angular_velocity"):
         """Plots a selected field over time.
-        
+
         Available fields: shift_distance, shift_velocity, primary_pulley_angular_velocity,
                         secondary_pulley_angular_velocity, car_velocity, engine_angular_velocity
         """
@@ -108,8 +116,12 @@ class SimulationResult:
         field_data = {
             "shift_distance": [state.shift_distance for state in self.states],
             "shift_velocity": [state.shift_velocity for state in self.states],
-            "primary_pulley_angular_velocity": [state.primary_pulley_angular_velocity for state in self.states],
-            "secondary_pulley_angular_velocity": [state.secondary_pulley_angular_velocity for state in self.states],
+            "primary_pulley_angular_velocity": [
+                state.primary_pulley_angular_velocity for state in self.states
+            ],
+            "secondary_pulley_angular_velocity": [
+                state.secondary_pulley_angular_velocity for state in self.states
+            ],
             "car_velocity": [
                 secondary_pulley_angular_velocity_to_car_velocity(
                     s.secondary_pulley_angular_velocity
@@ -136,4 +148,3 @@ class SimulationResult:
         plt.title(f"{field.replace('_', ' ').capitalize()} Over Time")
         plt.grid()
         plt.show()
-

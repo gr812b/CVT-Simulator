@@ -93,7 +93,9 @@ def plot_ratio_and_shift_curve(series: dict[str, np.ndarray]):
 
     vehicle_speed = series["car_velocity"]
     engine_speed = series["primary_omega"]
-    axes[1].plot(vehicle_speed, engine_speed, label="Simulated Shift Curve", linewidth=2)
+    axes[1].plot(
+        vehicle_speed, engine_speed, label="Simulated Shift Curve", linewidth=2
+    )
 
     min_ratio = tm.current_effective_cvt_ratio(0.0) * GEARBOX_RATIO / WHEEL_RADIUS
     max_ratio = tm.current_effective_cvt_ratio(MAX_SHIFT) * GEARBOX_RATIO / WHEEL_RADIUS
@@ -113,7 +115,9 @@ def plot_ratio_and_shift_curve(series: dict[str, np.ndarray]):
     return fig
 
 
-def generate_graphs_from_csv(csv_path: Path, out_dir: Path, show: bool = False) -> list[Path]:
+def generate_graphs_from_csv(
+    csv_path: Path, out_dir: Path, show: bool = False
+) -> list[Path]:
     result = SimulationResult.from_csv(str(csv_path))
     series = _build_series(result)
 

@@ -17,9 +17,16 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 import numpy as np
 
-from cvt_simulator.constants.car_specs import ENGINE_INERTIA, HELIX_RADIUS, MAX_SHIFT, SECONDARY_INERTIA
+from cvt_simulator.constants.car_specs import (
+    ENGINE_INERTIA,
+    HELIX_RADIUS,
+    MAX_SHIFT,
+    SECONDARY_INERTIA,
+)
 from cvt_simulator.models.pulley.primary_pulley_flyweight import PhysicalPrimaryPulley
-from cvt_simulator.models.pulley.secondary_pulley_torque_reactive import PhysicalSecondaryPulley
+from cvt_simulator.models.pulley.secondary_pulley_torque_reactive import (
+    PhysicalSecondaryPulley,
+)
 from cvt_simulator.models.ramps.piecewise_ramp import PiecewiseRamp
 from cvt_simulator.models.ramps.theta_ramp import ThetaRamp
 from cvt_simulator.utils.conversions import deg_to_rad, rpm_to_rad_s
@@ -34,7 +41,9 @@ def _linspace(minimum: float, maximum: float, count: int) -> np.ndarray:
     return np.linspace(minimum, maximum, count)
 
 
-def _build_models(args: SimulationArgs) -> tuple[PhysicalPrimaryPulley, PhysicalSecondaryPulley]:
+def _build_models(
+    args: SimulationArgs,
+) -> tuple[PhysicalPrimaryPulley, PhysicalSecondaryPulley]:
     primary = PhysicalPrimaryPulley(
         spring_coeff_comp=args.primary_spring_rate,
         initial_compression=args.primary_spring_pretension,
@@ -47,13 +56,17 @@ def _build_models(args: SimulationArgs) -> tuple[PhysicalPrimaryPulley, Physical
         spring_coeff_comp=args.secondary_compression_spring_rate,
         initial_rotation=deg_to_rad(args.secondary_rotational_spring_pretension),
         initial_compression=args.secondary_linear_spring_pretension,
-        ramp=ThetaRamp(PiecewiseRamp.from_config(args.secondary_ramp_config), HELIX_RADIUS),
+        ramp=ThetaRamp(
+            PiecewiseRamp.from_config(args.secondary_ramp_config), HELIX_RADIUS
+        ),
     )
 
     return primary, secondary
 
 
-def _aggregate_mean(x_values: np.ndarray, y_values: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+def _aggregate_mean(
+    x_values: np.ndarray, y_values: np.ndarray
+) -> tuple[np.ndarray, np.ndarray]:
     unique_x = np.unique(x_values)
     means = np.array([y_values[x_values == x].mean() for x in unique_x], dtype=float)
     return unique_x, means
@@ -63,7 +76,9 @@ def _run_primary_sweep(
     model: PhysicalPrimaryPulley,
     args: argparse.Namespace,
 ) -> dict[str, np.ndarray]:
-    primary_rpm_values = _linspace(args.primary_rpm_min, args.primary_rpm_max, args.primary_rpm_points)
+    primary_rpm_values = _linspace(
+        args.primary_rpm_min, args.primary_rpm_max, args.primary_rpm_points
+    )
     shift_values = _linspace(args.shift_min, args.shift_max, args.shift_points)
     shift_velocity_values = _linspace(
         args.shift_velocity_min,
@@ -366,7 +381,9 @@ def _plot_secondary(secondary: dict[str, np.ndarray], rpm_max: float) -> plt.Fig
     return fig
 
 
-def _print_secondary_single_value(model: PhysicalSecondaryPulley, args: argparse.Namespace) -> None:
+def _print_secondary_single_value(
+    model: PhysicalSecondaryPulley, args: argparse.Namespace
+) -> None:
     secondary_rpm = 0.0
     secondary_omega = rpm_to_rad_s(secondary_rpm)
 
@@ -410,24 +427,16 @@ def _print_secondary_single_value(model: PhysicalSecondaryPulley, args: argparse
     print(f"numerator_net: {bounds.numerator.net}")
 
     print("\nPositive denominator terms (D_plus)")
-    print(
-        f"inverse_radius_term: {bounds.denominator_positive.inverse_radius_term}"
-    )
-    print(
-        f"helix_feedback_term: {bounds.denominator_positive.helix_feedback_term}"
-    )
+    print(f"inverse_radius_term: {bounds.denominator_positive.inverse_radius_term}")
+    print(f"helix_feedback_term: {bounds.denominator_positive.helix_feedback_term}")
     print(
         f"inertial_feedback_term: {bounds.denominator_positive.inertial_feedback_term}"
     )
     print(f"denominator_plus_net: {bounds.denominator_positive.net}")
 
     print("\nNegative denominator terms (D_minus)")
-    print(
-        f"inverse_radius_term: {bounds.denominator_negative.inverse_radius_term}"
-    )
-    print(
-        f"helix_feedback_term: {bounds.denominator_negative.helix_feedback_term}"
-    )
+    print(f"inverse_radius_term: {bounds.denominator_negative.inverse_radius_term}")
+    print(f"helix_feedback_term: {bounds.denominator_negative.helix_feedback_term}")
     print(
         f"inertial_feedback_term: {bounds.denominator_negative.inertial_feedback_term}"
     )
@@ -435,7 +444,9 @@ def _print_secondary_single_value(model: PhysicalSecondaryPulley, args: argparse
 
 
 def build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(description="Plot CVT primary/secondary torque bounds and bound terms")
+    parser = argparse.ArgumentParser(
+        description="Plot CVT primary/secondary torque bounds and bound terms"
+    )
 
     parser.add_argument("--primary-rpm-min", type=float, default=1500.0)
     parser.add_argument("--primary-rpm-max", type=float, default=4000.0)
@@ -494,7 +505,9 @@ def main() -> None:
     _print_secondary_single_value(secondary_model, args)
 
     primary_fig = _plot_primary(primary_data)
-    secondary_fig = _plot_secondary(secondary_data, rpm_max=float(args.secondary_rpm_max))
+    secondary_fig = _plot_secondary(
+        secondary_data, rpm_max=float(args.secondary_rpm_max)
+    )
 
     if not args.no_save:
         prefix = Path(args.plot_prefix)

@@ -145,7 +145,9 @@ class SimulationRunner:
                 break
 
             if mode == "normal":
-                base_mid_shift_steady_event = get_mid_shift_steady_event(self.system_model)
+                base_mid_shift_steady_event = get_mid_shift_steady_event(
+                    self.system_model
+                )
 
                 def guarded_mid_shift_steady_event(t, y):
                     # After waking from a locked mid-shift state, require a short
@@ -276,7 +278,10 @@ class SimulationRunner:
                 def guarded_mid_shift_wake_event(t, y):
                     # Once we lock into mid-shift, keep that mode for a minimum
                     # dwell time before evaluating wake logic.
-                    if mid_shift_enter_time is not None and (t - mid_shift_enter_time) < self.MID_SHIFT_MIN_HOLD_TIME:
+                    if (
+                        mid_shift_enter_time is not None
+                        and (t - mid_shift_enter_time) < self.MID_SHIFT_MIN_HOLD_TIME
+                    ):
                         return -1.0
                     return base_mid_shift_wake_event(t, y)
 
@@ -355,23 +360,36 @@ class SimulationRunner:
         final_time = float(combined_t[-1])
         termination_context["mode"] = mode
         termination_context["final_time"] = final_time
-        termination_context["reached_max_time"] = final_time >= (self.TOTAL_SIM_TIME - 1e-6)
+        termination_context["reached_max_time"] = final_time >= (
+            self.TOTAL_SIM_TIME - 1e-6
+        )
         termination_context["transition_count"] = transition_count
         termination_context.setdefault("details", {})
         termination_context["details"].update(
             {
                 "final_shift_distance": float(final_state.shift_distance),
                 "final_shift_velocity": float(final_state.shift_velocity),
-                "final_primary_pulley_angular_velocity": float(final_state.primary_pulley_angular_velocity),
-                "final_secondary_pulley_angular_velocity": float(final_state.secondary_pulley_angular_velocity),
+                "final_primary_pulley_angular_velocity": float(
+                    final_state.primary_pulley_angular_velocity
+                ),
+                "final_secondary_pulley_angular_velocity": float(
+                    final_state.secondary_pulley_angular_velocity
+                ),
             }
         )
 
-        if termination_context.get("reason_code") == "unknown" and termination_context["reached_max_time"]:
+        if (
+            termination_context.get("reason_code") == "unknown"
+            and termination_context["reached_max_time"]
+        ):
             termination_context["reason_code"] = "max_time"
-            termination_context["reason"] = "Simulation reached the configured maximum time."
+            termination_context["reason"] = (
+                "Simulation reached the configured maximum time."
+            )
 
-        return SimulationResult(combined_solution, termination_context=termination_context)
+        return SimulationResult(
+            combined_solution, termination_context=termination_context
+        )
 
     def _build_termination_context(
         self,
@@ -489,14 +507,16 @@ class SimulationRunner:
             if rounded_percent != self._last_callback_percent:
                 self._last_callback_percent = rounded_percent
                 try:
-                    self.progress_callback(progress_percent, float(t), float(shift_distance))
+                    self.progress_callback(
+                        progress_percent, float(t), float(shift_distance)
+                    )
                 except TypeError:
                     # Backward compatibility for older single-argument callbacks.
                     self.progress_callback(progress_percent)
 
     def _evaluate_cvt_system(self, t: float, y: list[float]):
         """Evaluate system dynamics (phase 1: not at full shift).
-        
+
         Returns derivatives of the 4 DOF state vector:
         dy[0] = d(shift_distance)/dt = shift_velocity
         dy[1] = d(shift_velocity)/dt = shift_acceleration
@@ -525,8 +545,12 @@ class SimulationRunner:
         drivetrain_breakdown = self.system_model.get_breakdown(state)
 
         # Extract accelerations
-        secondary_pulley_angular_accel_from_torques = drivetrain_breakdown.secondary_pulley.secondary_pulley_angular_acceleration
-        primary_pulley_angular_accel = drivetrain_breakdown.primary_pulley.primary_pulley_angular_acceleration
+        secondary_pulley_angular_accel_from_torques = (
+            drivetrain_breakdown.secondary_pulley.secondary_pulley_angular_acceleration
+        )
+        primary_pulley_angular_accel = (
+            drivetrain_breakdown.primary_pulley.primary_pulley_angular_acceleration
+        )
         shift_acceleration = drivetrain_breakdown.cvt_dynamics.acceleration
 
         # Prevent acceleration from pushing past boundaries (metal hitting metal)
@@ -544,7 +568,7 @@ class SimulationRunner:
 
     def _evaluate_full_shift_system(self, t: float, y: list[float]):
         """Evaluate system dynamics (phase 2: at full shift).
-        
+
         At full shift, shift_distance and shift_velocity are held constant.
         Only the pulley angular velocities continue to evolve.
         """
@@ -562,14 +586,18 @@ class SimulationRunner:
         # Get system breakdown for full shift case
         drivetrain_breakdown = self.system_model.get_breakdown(state)
 
-        secondary_pulley_angular_accel_from_torques = drivetrain_breakdown.secondary_pulley.secondary_pulley_angular_acceleration
-        primary_pulley_angular_accel = drivetrain_breakdown.primary_pulley.primary_pulley_angular_acceleration
+        secondary_pulley_angular_accel_from_torques = (
+            drivetrain_breakdown.secondary_pulley.secondary_pulley_angular_acceleration
+        )
+        primary_pulley_angular_accel = (
+            drivetrain_breakdown.primary_pulley.primary_pulley_angular_acceleration
+        )
 
         return [
-            0,                              # shift_distance held constant
-            0,                              # shift_velocity held constant
-            primary_pulley_angular_accel,   # primary pulley continues to evolve
-            secondary_pulley_angular_accel_from_torques, # secondary pulley continues to evolve
+            0,  # shift_distance held constant
+            0,  # shift_velocity held constant
+            primary_pulley_angular_accel,  # primary pulley continues to evolve
+            secondary_pulley_angular_accel_from_torques,  # secondary pulley continues to evolve
         ]
 
     def _evaluate_locked_shift_system(

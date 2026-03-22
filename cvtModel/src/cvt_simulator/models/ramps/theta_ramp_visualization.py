@@ -50,11 +50,11 @@ def visualize_theta_ramp_3d(
 
     # Compute theta and convert to 3D coordinates
     theta_points = np.array([theta_ramp.theta(x) for x in x_axial])
-    
+
     # Optional visual offset so the curve can start at bottom for display.
     # Core ThetaRamp math remains referenced to +x.
     theta_plot = theta_points - np.pi / 2 if start_on_bottom else theta_points
-    
+
     # 3D helix parameterization (vertical orientation)
     z_helix = x_axial  # axial direction (vertical)
     x_helix = theta_ramp.r * np.cos(theta_plot)  # circumferential x
@@ -71,24 +71,49 @@ def visualize_theta_ramp_3d(
     ax.plot(x_helix, y_helix, z_helix, "b-", linewidth=3, label="Helix path", zorder=10)
 
     # ========== Plot start and end points ==========
-    ax.scatter([x_helix[0]], [y_helix[0]], [z_helix[0]], color="green", s=200, marker="o", label="Start (bottom)", zorder=10)
-    ax.scatter([x_helix[-1]], [y_helix[-1]], [z_helix[-1]], color="red", s=200, marker="s", label="End (top)", zorder=10)
+    ax.scatter(
+        [x_helix[0]],
+        [y_helix[0]],
+        [z_helix[0]],
+        color="green",
+        s=200,
+        marker="o",
+        label="Start (bottom)",
+        zorder=10,
+    )
+    ax.scatter(
+        [x_helix[-1]],
+        [y_helix[-1]],
+        [z_helix[-1]],
+        color="red",
+        s=200,
+        marker="s",
+        label="End (top)",
+        zorder=10,
+    )
 
     # ========== Draw vertical lines from each helix point down to bottom circle ==========
-    for i in range(0, len(x_helix), max(1, len(x_helix) // 20)):  # Draw every ~5% of points for clarity
+    for i in range(
+        0, len(x_helix), max(1, len(x_helix) // 20)
+    ):  # Draw every ~5% of points for clarity
         ax.plot(
             [x_helix[i], x_helix[i]],
             [y_helix[i], y_helix[i]],
             [z_helix[i], z_bottom],
-            "b--", alpha=0.4, linewidth=0.8
+            "b--",
+            alpha=0.4,
+            linewidth=0.8,
         )
-    
+
     # ========== Draw prominent vertical line from endpoint ==========
     ax.plot(
         [x_helix[-1], x_helix[-1]],
         [y_helix[-1], y_helix[-1]],
         [z_helix[-1], z_bottom],
-        "r-", linewidth=2.5, alpha=0.8, label="Vertical drop from end"
+        "r-",
+        linewidth=2.5,
+        alpha=0.8,
+        label="Vertical drop from end",
     )
 
     # ========== Create ruled surface (cylinder fill below ramp) ==========
@@ -97,39 +122,54 @@ def visualize_theta_ramp_3d(
     x_bottom_proj = theta_ramp.r * np.cos(theta_plot)
     y_bottom_proj = theta_ramp.r * np.sin(theta_plot)
     z_bottom_proj = np.full_like(z_helix, z_bottom)
-    
+
     # Create mesh for the ruled surface
     x_surf = np.vstack([x_helix, x_bottom_proj])
     y_surf = np.vstack([y_helix, y_bottom_proj])
     z_surf = np.vstack([z_helix, z_bottom_proj])
-    
+
     # Plot surface
-    ax.plot_surface(
-        x_surf, y_surf, z_surf,
-        alpha=0.2,
-        color="cyan",
-        edgecolor="none"
-    )
+    ax.plot_surface(x_surf, y_surf, z_surf, alpha=0.2, color="cyan", edgecolor="none")
 
     # ========== Add reference circles ==========
     # Bottom circle (at z_min)
-    circle_angles = np.linspace(0, 2*np.pi, 100)
+    circle_angles = np.linspace(0, 2 * np.pi, 100)
     circle_phase = -np.pi / 2 if start_on_bottom else 0.0
     x_circle_bot = theta_ramp.r * np.cos(circle_angles + circle_phase)
     y_circle_bot = theta_ramp.r * np.sin(circle_angles + circle_phase)
     z_circle_bot = np.full(len(circle_angles), z_bottom)
-    ax.plot(x_circle_bot, y_circle_bot, z_circle_bot, "g-", alpha=0.7, linewidth=2, label="Bottom circle")
+    ax.plot(
+        x_circle_bot,
+        y_circle_bot,
+        z_circle_bot,
+        "g-",
+        alpha=0.7,
+        linewidth=2,
+        label="Bottom circle",
+    )
 
     # Top circle (at z_max)
     z_top = z_helix[-1]
     z_circle_top = np.full(len(circle_angles), z_top)
-    ax.plot(x_circle_bot, y_circle_bot, z_circle_top, "r--", alpha=0.5, linewidth=1.5, label="Top reference circle")
+    ax.plot(
+        x_circle_bot,
+        y_circle_bot,
+        z_circle_top,
+        "r--",
+        alpha=0.5,
+        linewidth=1.5,
+        label="Top reference circle",
+    )
 
     # ========== Formatting ==========
     ax.set_xlabel("x [m]", fontsize=11, fontweight="bold")
     ax.set_ylabel("y [m]", fontsize=11, fontweight="bold")
     ax.set_zlabel("Axial Position (Height) [m]", fontsize=11, fontweight="bold")
-    ax.set_title(f"3D Helix Ramp with Cylindrical Fill Below\n(Helix Radius = {theta_ramp.r:.4f} m)", fontsize=13, fontweight="bold")
+    ax.set_title(
+        f"3D Helix Ramp with Cylindrical Fill Below\n(Helix Radius = {theta_ramp.r:.4f} m)",
+        fontsize=13,
+        fontweight="bold",
+    )
 
     # Enforce true 1:1 data scaling using full cylinder bounds.
     # Use full radius bounds (not helix-visited arc bounds) so circles stay circles.
@@ -164,7 +204,9 @@ def visualize_theta_profiles(
 
     theta_values = np.array([theta_ramp.theta(x) for x in x_axial])
     dtheta_dx_values = np.array([theta_ramp.dtheta_dx(x) for x in x_axial])
-    angle_multiplier_values = np.array([theta_ramp.angle_multiplier(x) for x in x_axial])
+    angle_multiplier_values = np.array(
+        [theta_ramp.angle_multiplier(x) for x in x_axial]
+    )
     beta_values_deg = np.degrees(np.arctan2(1.0, theta_ramp.r * dtheta_dx_values))
 
     fig, (ax1, ax2, ax3, ax4) = plt.subplots(1, 4, figsize=figsize)
@@ -215,7 +257,9 @@ def main():
     print(f"\nHelix Parameters:")
     print(f"  Helix radius r = {HELIX_RADIUS:.4f} m")
     print(f"  Max shift = {MAX_SHIFT:.4f} m")
-    print(f"  Target rotation = {np.degrees(target_rotation_rad):.1f}° (halfway around)")
+    print(
+        f"  Target rotation = {np.degrees(target_rotation_rad):.1f}° (halfway around)"
+    )
     print(f"  cot(β) = {cot_beta:.4f}")
     print(f"  Helix angle β = {helix_angle_deg:.2f}°")
 

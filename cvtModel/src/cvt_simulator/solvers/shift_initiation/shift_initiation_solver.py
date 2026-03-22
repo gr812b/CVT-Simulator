@@ -170,7 +170,9 @@ class ShiftInitiationSolver(SolverBase):
 
         # Extract axial clamping forces
         primary_axial_force = cvt_breakdown.primaryPulleyState.forces.axial_force_total
-        secondary_axial_force = cvt_breakdown.secondaryPulleyState.forces.axial_force_total
+        secondary_axial_force = (
+            cvt_breakdown.secondaryPulleyState.forces.axial_force_total
+        )
 
         # Return difference (positive means primary is winning, shift will occur)
         return primary_axial_force - secondary_axial_force

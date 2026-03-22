@@ -178,7 +178,9 @@ def get_mid_shift_steady_event(
         )
 
     mid_shift_steady_event.terminal = True
-    mid_shift_steady_event.direction = -1  # enter steady mode when value drops below zero
+    mid_shift_steady_event.direction = (
+        -1
+    )  # enter steady mode when value drops below zero
     return mid_shift_steady_event
 
 

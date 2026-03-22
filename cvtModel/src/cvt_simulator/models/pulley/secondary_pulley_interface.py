@@ -29,7 +29,7 @@ class SecondaryPulleyModel(PulleyModel, ABC):
     def _get_radius(self, shift_distance: float) -> float:
         """Get secondary effective pitch radius at current shift position [m]."""
         return tm.secondary_effective_radius(shift_distance)
-    
+
     def _get_radius_rate_of_change(self, shift_distance):
         """Get dr/dt at current shift position [m/m]."""
         return tm.secondary_radius_rate_of_change(shift_distance)
@@ -40,7 +40,7 @@ class SecondaryPulleyModel(PulleyModel, ABC):
 
     def _get_angular_position(self, state: SystemState) -> float:
         """Get secondary pulley angular position (wheel position / gearbox) [rad].
-        
+
         Note: Angular position is not part of the core 4 DOF state.
         This method is kept for compatibility but should not be used for ODE integration.
         """

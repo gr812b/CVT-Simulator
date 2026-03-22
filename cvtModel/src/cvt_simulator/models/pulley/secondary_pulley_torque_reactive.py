@@ -125,7 +125,9 @@ class PhysicalSecondaryPulley(SecondaryPulleyModel):
         spring_comp_force_breakdown = self._calculate_spring_comp_force(shift_distance)
 
         # Total axial clamping force
-        axial_clamping_force = helix_force_breakdown.net + spring_comp_force_breakdown.net
+        axial_clamping_force = (
+            helix_force_breakdown.net + spring_comp_force_breakdown.net
+        )
 
         breakdown = SecondaryForceBreakdown(
             spring_comp_force_breakdown,
@@ -170,7 +172,9 @@ class PhysicalSecondaryPulley(SecondaryPulleyModel):
         tau_load = get_kwarg(kwargs, "external_load_torque", None)
         I_s = get_kwarg(kwargs, "secondary_inertia", None)
         if I_s is None or tau_load is None:
-            raise ValueError("Both 'secondary_inertia' and 'external_load_torque' are required for secondary traction bounds")
+            raise ValueError(
+                "Both 'secondary_inertia' and 'external_load_torque' are required for secondary traction bounds"
+            )
 
         # Helix / spring terms
         dtheta_ds = self.theta_ramp.dtheta_dx(shift_distance)
@@ -182,9 +186,7 @@ class PhysicalSecondaryPulley(SecondaryPulleyModel):
             + 2.0 * self.spring_coeff_comp * x_total
         )
 
-        belt_mass_term = (
-            RUBBER_DENSITY * BELT_CROSS_SECTIONAL_AREA * r_cm * phi
-        )
+        belt_mass_term = RUBBER_DENSITY * BELT_CROSS_SECTIONAL_AREA * r_cm * phi
 
         spring_numerator_term = self.μ * np.tan(beta) * spring_term
         load_numerator_term = belt_mass_term * ((r_cm * tau_load) / I_s)

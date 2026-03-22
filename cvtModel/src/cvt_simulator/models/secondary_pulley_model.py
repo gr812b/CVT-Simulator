@@ -24,20 +24,6 @@ class SecondaryPulleyModel:
         # I_s: secondary-side equivalent rotational inertia used across coupled dynamics.
         self.inertia = self._calculate_total_inertia()
 
-    def _calculate_total_inertia(self) -> float:
-        """
-        Calculate total system inertia using: I_s = I_sec + I_gb + (I_wheel + m*r_w^2) / G^2
-
-        Returns:
-            Total inertia in kg*m^2
-        """
-        wheel_and_car_inertia = WHEEL_INERTIA + self.car_mass * WHEEL_RADIUS**2
-        return (
-            SECONDARY_INERTIA
-            + GEARBOX_INERTIA
-            + wheel_and_car_inertia / (GEARBOX_RATIO**2)
-        )
-
     def get_breakdown(
         self, state: SystemState, coupling_torque: float
     ) -> SecondaryPulleyDynamicsBreakdown:
@@ -66,4 +52,18 @@ class SecondaryPulleyModel:
             ),
             external_forces=external_forces,
             secondary_pulley_angular_acceleration=linear_accel / WHEEL_RADIUS,
+        )
+    
+    def _calculate_total_inertia(self) -> float:
+        """
+        Calculate total system inertia using: I_s = I_sec + I_gb + (I_wheel + m*r_w^2) / G^2
+
+        Returns:
+            Total inertia in kg*m^2
+        """
+        wheel_and_car_inertia = WHEEL_INERTIA + self.car_mass * WHEEL_RADIUS**2
+        return (
+            SECONDARY_INERTIA
+            + GEARBOX_INERTIA
+            + wheel_and_car_inertia / (GEARBOX_RATIO**2)
         )

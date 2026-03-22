@@ -156,7 +156,10 @@ class PhysicalPrimaryPulley(PrimaryPulleyModel):
         """
         shift_distance = np.clip(state.shift_distance, 0, MAX_SHIFT)
         # angular_velocity = self._get_angular_velocity(state)
-        belt_angular_velocity = state.secondary_pulley_angular_velocity * tm.current_effective_cvt_ratio(state.shift_distance)
+        belt_angular_velocity = (
+            state.secondary_pulley_angular_velocity
+            * tm.current_effective_cvt_ratio(state.shift_distance)
+        )
 
         # Geometry terms
         r_eff = self._get_radius(shift_distance)
@@ -169,7 +172,9 @@ class PhysicalPrimaryPulley(PrimaryPulleyModel):
         tau_eng = get_kwarg(kwargs, "engine_drive_torque", None)
         I_p = get_kwarg(kwargs, "primary_inertia", None)
         if I_p is None or tau_eng is None:
-            raise ValueError("primary_inertia and engine_drive_torque are required for primary traction bounds")
+            raise ValueError(
+                "primary_inertia and engine_drive_torque are required for primary traction bounds"
+            )
 
         # This must be ONLY the mechanism clamping force term, not total force with belt corrections
         axial_clamping_force, _ = self.calculate_axial_clamping_force(state)
@@ -265,7 +270,11 @@ class PhysicalPrimaryPulley(PrimaryPulleyModel):
             raise ValueError("Primary ramp must contain at least one segment")
 
         for segment in self.ramp.segments:
-            sample_points = [segment.x_start, (segment.x_start + segment.x_end) / 2, segment.x_end]
+            sample_points = [
+                segment.x_start,
+                (segment.x_start + segment.x_end) / 2,
+                segment.x_end,
+            ]
             for x in sample_points:
                 slope = self.ramp.slope(x)
                 if not np.isfinite(slope):

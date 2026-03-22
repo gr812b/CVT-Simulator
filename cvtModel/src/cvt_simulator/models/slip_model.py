@@ -54,8 +54,10 @@ class SlipModel:
         Returns:
             SlipBreakdown with slip analysis
         """
-        effective_cvt_ratio_time_derivative = tm.current_effective_cvt_ratio_time_derivative(
-            state.shift_distance, state.shift_velocity
+        effective_cvt_ratio_time_derivative = (
+            tm.current_effective_cvt_ratio_time_derivative(
+                state.shift_distance, state.shift_velocity
+            )
         )
         (
             tau_lower,
@@ -119,9 +121,7 @@ class SlipModel:
 
         return numerator / denominator
 
-    def calculate_coupling_torque_bounds(
-        self, state: SystemState
-    ) -> tuple[
+    def calculate_coupling_torque_bounds(self, state: SystemState) -> tuple[
         float,
         float,
         PrimaryTorqueBoundsBreakdown,
@@ -228,4 +228,3 @@ class SlipModel:
         cvt_ratio: float,
     ) -> float:
         return primary_angular_velocity - (secondary_angular_velocity * cvt_ratio)
-

@@ -70,7 +70,9 @@ class ThetaRamp:
         return math.degrees(math.atan(1.0 / tan_beta))
 
     @classmethod
-    def _convert_helix_angle_ramp_to_u_ramp(cls, helix_angle_ramp: PiecewiseRamp) -> PiecewiseRamp:
+    def _convert_helix_angle_ramp_to_u_ramp(
+        cls, helix_angle_ramp: PiecewiseRamp
+    ) -> PiecewiseRamp:
         """Convert a helix-angle piecewise ramp into a displacement-slope ramp."""
         converted_ramp = PiecewiseRamp()
 
@@ -88,7 +90,9 @@ class ThetaRamp:
                 converted_ramp.add_segment(
                     CircularSegment(
                         length=segment.length,
-                        angle_start=cls._helix_angle_to_slope_angle(segment.angle_start),
+                        angle_start=cls._helix_angle_to_slope_angle(
+                            segment.angle_start
+                        ),
                         angle_end=cls._helix_angle_to_slope_angle(segment.angle_end),
                         quadrant=segment.quadrant,
                     )

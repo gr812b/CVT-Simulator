@@ -39,7 +39,9 @@ MAX_WALL_TIME_SECONDS = 280
 ENABLE_PROFILING = False
 
 
-def _shift_at_time(time_arr: np.ndarray, shift_arr: np.ndarray, t_query: float) -> float:
+def _shift_at_time(
+    time_arr: np.ndarray, shift_arr: np.ndarray, t_query: float
+) -> float:
     idx = int(np.searchsorted(time_arr, t_query, side="left"))
     idx = min(max(idx, 0), len(time_arr) - 1)
     return float(shift_arr[idx])
@@ -65,7 +67,7 @@ def _estimate_first_quasi_steady_time(
         j = int(np.searchsorted(time_arr, t0 + window_s, side="right")) - 1
         if j <= i + 1:
             continue
-        span = float(np.max(shift_arr[i:j + 1]) - np.min(shift_arr[i:j + 1]))
+        span = float(np.max(shift_arr[i : j + 1]) - np.min(shift_arr[i : j + 1]))
         vmax = float(np.max(np.abs(vel[i:j])))
         if span <= shift_span_tol and vmax <= vel_tol:
             return t0
@@ -118,7 +120,9 @@ def build_user_case_args() -> SimulationArgs:
     )
 
 
-def run_single_case(case_name: str, args: SimulationArgs, enable_profiling: bool) -> dict:
+def run_single_case(
+    case_name: str, args: SimulationArgs, enable_profiling: bool
+) -> dict:
     print(f"\n=== Input Case: {case_name} ===")
     print(args)
     system_model = get_models(args)
@@ -153,7 +157,9 @@ def run_single_case(case_name: str, args: SimulationArgs, enable_profiling: bool
                 if sim_time_s is not None
                 else total_time_hint * (progress_percent / 100.0)
             )
-            shift_str = "None" if shift_distance is None else f"{float(shift_distance):.9f}"
+            shift_str = (
+                "None" if shift_distance is None else f"{float(shift_distance):.9f}"
+            )
             print(
                 f"[progress:{case_name}] t~{t_est:8.4f}s ({progress_percent:6.2f}%)  shift_d={shift_str}  elapsed={elapsed:7.2f}s",
                 flush=True,
@@ -264,21 +270,31 @@ def run_single_case(case_name: str, args: SimulationArgs, enable_profiling: bool
 
     print("\n=== Dynamics Summary ===")
     print(f"|net_axial| median [N]: {float(np.median(np.abs(net_axial_arr))):.6f}")
-    print(f"|shift_accel| median [m/s^2]: {float(np.median(np.abs(shift_accel_arr))):.6f}")
-    print(f"|shift_velocity| median [m/s]: {float(np.median(np.abs(shift_velocity_arr))):.6f}")
+    print(
+        f"|shift_accel| median [m/s^2]: {float(np.median(np.abs(shift_accel_arr))):.6f}"
+    )
+    print(
+        f"|shift_velocity| median [m/s]: {float(np.median(np.abs(shift_velocity_arr))):.6f}"
+    )
     print("\n=== Shift Distance Probes ===")
     for tq in (1.0, 2.0, 2.5, 3.0, 3.5, 4.0):
         if tq <= float(result.time[-1]):
-            print(f"shift_distance(t={tq:.1f}s): {_shift_at_time(result.time, shift_distance_arr, tq):.9f}")
+            print(
+                f"shift_distance(t={tq:.1f}s): {_shift_at_time(result.time, shift_distance_arr, tq):.9f}"
+            )
 
-    first_quasi_steady = _estimate_first_quasi_steady_time(result.time, shift_distance_arr)
+    first_quasi_steady = _estimate_first_quasi_steady_time(
+        result.time, shift_distance_arr
+    )
     if first_quasi_steady is None:
         print("first_quasi_steady_time: None")
     else:
         print(f"first_quasi_steady_time: {first_quasi_steady:.6f}s")
 
     near_balance = np.abs(net_axial_arr) < 1.0
-    print(f"near_balance_points (|net|<1N): {int(near_balance.sum())}/{len(near_balance)}")
+    print(
+        f"near_balance_points (|net|<1N): {int(near_balance.sum())}/{len(near_balance)}"
+    )
 
     if dt.size and near_balance.size > 1:
         interval_mask = near_balance[:-1]
@@ -306,7 +322,9 @@ def run_single_case(case_name: str, args: SimulationArgs, enable_profiling: bool
                 f"reason={tr['reason']} shift_d={tr['shift_distance']:.9f}"
             )
 
-        transition_times = np.asarray([float(tr["time"]) for tr in transitions], dtype=float)
+        transition_times = np.asarray(
+            [float(tr["time"]) for tr in transitions], dtype=float
+        )
         if transition_times.size > 1:
             transition_dt = np.diff(transition_times)
             print("\n=== Transition Cadence ===")
@@ -348,17 +366,23 @@ def run_single_case(case_name: str, args: SimulationArgs, enable_profiling: bool
         "dt_min": float(dt.min()) if dt.size else None,
         "dt_median": float(np.median(dt)) if dt.size else None,
         "t_end": float(result.time[-1]),
-        "shift_distance": float(shift_distance_arr[-1]) if shift_distance_arr.size else None,
-        "shift_velocity": float(shift_velocity_arr[-1]) if shift_velocity_arr.size else None,
+        "shift_distance": (
+            float(shift_distance_arr[-1]) if shift_distance_arr.size else None
+        ),
+        "shift_velocity": (
+            float(shift_velocity_arr[-1]) if shift_velocity_arr.size else None
+        ),
         "net_axial": float(net_axial_arr[-1]) if net_axial_arr.size else None,
         "shift_accel": float(shift_accel_arr[-1]) if shift_accel_arr.size else None,
         "transition_count": len(transitions),
-        "mid_shift_region": bool(
-            (shift_distance_arr[-1] > 1e-6)
-            and (shift_distance_arr[-1] < float(MAX_SHIFT) - 1e-6)
-        )
-        if shift_distance_arr.size
-        else None,
+        "mid_shift_region": (
+            bool(
+                (shift_distance_arr[-1] > 1e-6)
+                and (shift_distance_arr[-1] < float(MAX_SHIFT) - 1e-6)
+            )
+            if shift_distance_arr.size
+            else None
+        ),
     }
     return summary
 
