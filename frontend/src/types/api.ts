@@ -337,13 +337,22 @@ export interface components {
             incline_force: number;
             /** Drag Force */
             drag_force: number;
-            /** Net */
-            net: number;
+            /** Net Force At Car */
+            net_force_at_car: number;
+            /** Rolling Resistance Torque At Secondary */
+            rolling_resistance_torque_at_secondary: number;
+            /** Incline Torque At Secondary */
+            incline_torque_at_secondary: number;
+            /** Drag Torque At Secondary */
+            drag_torque_at_secondary: number;
+            /** Net Torque At Secondary */
+            net_torque_at_secondary: number;
         };
         /** FormattedSimulationResultModel */
         FormattedSimulationResultModel: {
             /** Data */
             data: components["schemas"]["TimeStepDataModel"][];
+            termination: components["schemas"]["SimulationTerminationContextModel"];
         };
         /** HTTPValidationError */
         HTTPValidationError: {
@@ -544,6 +553,31 @@ export interface components {
             angle_of_incline?: number | null;
             /** Total Distance */
             total_distance?: number | null;
+        };
+        /** SimulationTerminationContextModel */
+        SimulationTerminationContextModel: {
+            /** Reason Code */
+            reason_code: string;
+            /** Reason */
+            reason: string;
+            /** Mode */
+            mode: string;
+            /** Final Time */
+            final_time: number;
+            /** Reached Max Time */
+            reached_max_time: boolean;
+            /** Event */
+            event: string | null;
+            /** Event Time */
+            event_time: number | null;
+            /** Transition Count */
+            transition_count: number;
+            /** Max Transitions */
+            max_transitions: number;
+            /** Details */
+            details: {
+                [key: string]: number | string | boolean;
+            };
         };
         /** SlipBreakdownModel */
         SlipBreakdownModel: {

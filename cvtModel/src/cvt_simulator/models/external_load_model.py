@@ -50,18 +50,28 @@ class LoadModel:
         rolling_resistance_force = self._calculate_rolling_resistance_force(velocity)
         incline_force = self._calculate_incline_force()
         drag_force = self._calculate_drag_force(velocity)
-        
-        # Sum all forces (they act in different directions based on sign)
-        total_force_inside_bracket = rolling_resistance_force + incline_force + drag_force
-        
-        # Apply the (r_w / G) scaling factor
-        total_load_force = (self.wheel_radius / self.gearbox_ratio) * total_force_inside_bracket
+
+        # Sum all road-load forces at the car contact patch.
+        net_force_at_car = rolling_resistance_force + incline_force + drag_force
+
+        # Convert each force component to equivalent torque at the secondary side.
+        force_to_secondary_torque_scale = self.wheel_radius / self.gearbox_ratio
+        rolling_resistance_torque_at_secondary = (
+            force_to_secondary_torque_scale * rolling_resistance_force
+        )
+        incline_torque_at_secondary = force_to_secondary_torque_scale * incline_force
+        drag_torque_at_secondary = force_to_secondary_torque_scale * drag_force
+        net_torque_at_secondary = force_to_secondary_torque_scale * net_force_at_car
 
         return ExternalLoadForceBreakdown(
             rolling_resistance_force=rolling_resistance_force,
             incline_force=incline_force,
             drag_force=drag_force,
-            net=total_load_force,
+            net_force_at_car=net_force_at_car,
+            rolling_resistance_torque_at_secondary=rolling_resistance_torque_at_secondary,
+            incline_torque_at_secondary=incline_torque_at_secondary,
+            drag_torque_at_secondary=drag_torque_at_secondary,
+            net_torque_at_secondary=net_torque_at_secondary,
         )
 
     def _calculate_rolling_resistance_force(self, velocity: float) -> float:

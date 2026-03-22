@@ -50,9 +50,19 @@ const relativeVelocityAccessor: AccessorStrategy = (point) => (point.drivetrain.
 const isSlippingAccessor: AccessorStrategy = (point) => point.drivetrain.belt_slip.is_slipping ? 1 : 0;
 
 // External load
+const rollingResistanceForceAccessor: AccessorStrategy = (point) => point.drivetrain.secondary_pulley.external_forces.rolling_resistance_force;
 const inclineForceAccessor: AccessorStrategy = (point) => point.drivetrain.secondary_pulley.external_forces.incline_force;
 const dragForceAccessor: AccessorStrategy = (point) => point.drivetrain.secondary_pulley.external_forces.drag_force;
-const totalExternalLoadAccessor: AccessorStrategy = (point) => point.drivetrain.secondary_pulley.external_forces.net;
+const totalExternalLoadForceAtCarAccessor: AccessorStrategy = (point) =>
+    (point.drivetrain.secondary_pulley.external_forces as DataPoint['drivetrain']['secondary_pulley']['external_forces'] & { net_force_at_car: number }).net_force_at_car;
+const rollingResistanceTorqueAtSecondaryAccessor: AccessorStrategy = (point) =>
+    (point.drivetrain.secondary_pulley.external_forces as DataPoint['drivetrain']['secondary_pulley']['external_forces'] & { rolling_resistance_torque_at_secondary: number }).rolling_resistance_torque_at_secondary;
+const inclineTorqueAtSecondaryAccessor: AccessorStrategy = (point) =>
+    (point.drivetrain.secondary_pulley.external_forces as DataPoint['drivetrain']['secondary_pulley']['external_forces'] & { incline_torque_at_secondary: number }).incline_torque_at_secondary;
+const dragTorqueAtSecondaryAccessor: AccessorStrategy = (point) =>
+    (point.drivetrain.secondary_pulley.external_forces as DataPoint['drivetrain']['secondary_pulley']['external_forces'] & { drag_torque_at_secondary: number }).drag_torque_at_secondary;
+const totalExternalLoadTorqueAtSecondaryAccessor: AccessorStrategy = (point) =>
+    (point.drivetrain.secondary_pulley.external_forces as DataPoint['drivetrain']['secondary_pulley']['external_forces'] & { net_torque_at_secondary: number }).net_torque_at_secondary;
 
 // Overall pulley clamping force (Axial)
 const primaryAxialClampingForceAccessor: AccessorStrategy = (point) => point.drivetrain.cvt_dynamics.primaryPulleyState.forces.axial_clamping_force;
@@ -159,9 +169,14 @@ export const accessorToUnit = new Map<AccessorStrategy, BaseUnitType>([
     [secondaryAxialCentrifugalFromBeltAccessor, 'force'],
     [primaryAxialForceTotalAccessor, 'force'],
     [secondaryAxialForceTotalAccessor, 'force'],
+    [rollingResistanceForceAccessor, 'force'],
     [inclineForceAccessor, 'force'],
     [dragForceAccessor, 'force'],
-    [totalExternalLoadAccessor, 'force'],
+    [totalExternalLoadForceAtCarAccessor, 'force'],
+    [rollingResistanceTorqueAtSecondaryAccessor, 'torque'],
+    [inclineTorqueAtSecondaryAccessor, 'torque'],
+    [dragTorqueAtSecondaryAccessor, 'torque'],
+    [totalExternalLoadTorqueAtSecondaryAccessor, 'torque'],
     [isSlippingAccessor, 'dimensionless'],
     [couplingTorqueAtWheels, 'torque'],
     [loadTorqueAtWheels, 'torque'],
@@ -227,7 +242,7 @@ export const graphCategories: GraphCategory[] = [
                 title: "Torques at Wheels vs Time",
                 xAxis: { name: "Time", type: "value", unit: getAxisUnit(timeAccessor) },
                 yAxis: { name: "Torque", type: "value", unit: getAxisUnit(couplingTorqueAtWheels) },
-                seriesNames: ["Coupling Torque at Wheels", "Load Torque at Wheels"],
+                seriesNames: ["Coupling Torque at Secondary", "Load Torque at Secondary"],
                 showXLine: true,
                 showYLine: false
             }
@@ -252,12 +267,24 @@ export const graphCategories: GraphCategory[] = [
     /** EXTERNAL LOAD */
     {
         xAccessor: velocityAccessor,
-        yAccessor: [totalExternalLoadAccessor, inclineForceAccessor, dragForceAccessor],
+        yAccessor: [totalExternalLoadForceAtCarAccessor, rollingResistanceForceAccessor, inclineForceAccessor, dragForceAccessor],
         config: {
-            title: "External Load Forces vs Vehicle Speed",
+            title: "External Load Forces at Car vs Vehicle Speed",
             xAxis: { name: "Vehicle Speed", type: "value", unit: getAxisUnit(velocityAccessor) },
             yAxis: { name: "Force", type: "value", unit: getAxisUnit(inclineForceAccessor) },
-            seriesNames: ["Total External Load", "Incline Force", "Air Resistance"],
+            seriesNames: ["Total (Car)", "Rolling Resistance", "Incline Force", "Air Resistance"],
+            showXLine: true,
+            showYLine: false
+        }
+    },
+    {
+        xAccessor: velocityAccessor,
+        yAccessor: [totalExternalLoadTorqueAtSecondaryAccessor, rollingResistanceTorqueAtSecondaryAccessor, inclineTorqueAtSecondaryAccessor, dragTorqueAtSecondaryAccessor],
+        config: {
+            title: "External Load Torques at Secondary vs Vehicle Speed",
+            xAxis: { name: "Vehicle Speed", type: "value", unit: getAxisUnit(velocityAccessor) },
+            yAxis: { name: "Torque", type: "value", unit: getAxisUnit(totalExternalLoadTorqueAtSecondaryAccessor) },
+            seriesNames: ["Total (Secondary)", "Rolling Resistance", "Incline Torque", "Air Resistance Torque"],
             showXLine: true,
             showYLine: false
         }

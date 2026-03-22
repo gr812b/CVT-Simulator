@@ -99,9 +99,8 @@ const PARAMETERS_IMPL = {
         {
           type: 'circular' as const,
           length: 0.024,
-          angle_start: 60,
-          angle_end: 40,
-          // Primary ramps now require non-negative slope; use Q2 for positive slope.
+          angle_start: 40,
+          angle_end: 15,
           quadrant: 2,
         },
       ],
@@ -162,9 +161,8 @@ const PARAMETERS_IMPL = {
       segments: [
         {
           type: 'linear' as const,
-          // Default helix-angle convention is ~36 deg, represented as angle=90-36=54.
-          length: 0.01905,
-          angle: 54,
+          length: 1,
+          angle: 50,
         },
       ],
     } as components['schemas']['PiecewiseRampConfigModel'],

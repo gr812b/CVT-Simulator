@@ -101,7 +101,7 @@ class SlipModel:
         I_s = self.secondary_pulley_model.inertia
 
         tau_eng = self.engine_model.get_torque(state.primary_pulley_angular_velocity)
-        tau_load = self.load_model.get_breakdown(state).net
+        tau_load = self.load_model.get_breakdown(state).net_torque_at_secondary
 
         R = tm.current_effective_cvt_ratio(state.shift_distance) * GEARBOX_RATIO
         R_dot = (
@@ -152,7 +152,7 @@ class SlipModel:
             primary_inertia=self.primary_pulley_model.inertia,
         )
 
-        load_torque = self.load_model.get_breakdown(state).net
+        load_torque = self.load_model.get_breakdown(state).net_torque_at_secondary
         secondary_bounds = self._get_pulley_torque_bounds_breakdown(
             self.secondary_pulley,
             state,

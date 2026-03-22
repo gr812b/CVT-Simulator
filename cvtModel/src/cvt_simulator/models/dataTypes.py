@@ -155,7 +155,15 @@ class ExternalLoadForceBreakdown:
     rolling_resistance_force: float
     incline_force: float
     drag_force: float
-    net: float
+    net_force_at_car: float
+    rolling_resistance_torque_at_secondary: float
+    incline_torque_at_secondary: float
+    drag_torque_at_secondary: float
+    net_torque_at_secondary: float
+
+    @property
+    def net(self) -> float:
+        return self.net_torque_at_secondary
 
 
 ## Car

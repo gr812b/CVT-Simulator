@@ -98,7 +98,11 @@ function convertTimeStepData(
         rolling_resistance_force: conv(timeStep.drivetrain.secondary_pulley.external_forces.rolling_resistance_force, 'force'),
         incline_force: conv(timeStep.drivetrain.secondary_pulley.external_forces.incline_force, 'force'),
         drag_force: conv(timeStep.drivetrain.secondary_pulley.external_forces.drag_force, 'force'),
-        net: conv(timeStep.drivetrain.secondary_pulley.external_forces.net, 'force')
+        net_force_at_car: conv(timeStep.drivetrain.secondary_pulley.external_forces.net_force_at_car, 'force'),
+        rolling_resistance_torque_at_secondary: conv(timeStep.drivetrain.secondary_pulley.external_forces.rolling_resistance_torque_at_secondary, 'torque'),
+        incline_torque_at_secondary: conv(timeStep.drivetrain.secondary_pulley.external_forces.incline_torque_at_secondary, 'torque'),
+        drag_torque_at_secondary: conv(timeStep.drivetrain.secondary_pulley.external_forces.drag_torque_at_secondary, 'torque'),
+        net_torque_at_secondary: conv(timeStep.drivetrain.secondary_pulley.external_forces.net_torque_at_secondary, 'torque')
       },
       secondary_pulley_angular_acceleration: conv(timeStep.drivetrain.secondary_pulley.secondary_pulley_angular_acceleration, 'angular_acceleration')
     },
@@ -193,7 +197,18 @@ export function convertSimulationData(
   data: FormattedSimulationResultModel,
   config: UnitConfiguration = DEFAULT_UNIT_CONFIG
 ): FormattedSimulationResultModel {
+  const conv = <T extends import('./unitConversion').BaseUnitType>(value: number, type: T) =>
+    convertValue(value, type, getTargetUnit(type, config));
+
   return {
     data: data.data.map(timeStep => convertTimeStepData(timeStep, config)),
+    termination: {
+      ...data.termination,
+      final_time: conv(data.termination.final_time, 'time'),
+      event_time:
+        data.termination.event_time == null
+          ? null
+          : conv(data.termination.event_time, 'time'),
+    },
   };
 }

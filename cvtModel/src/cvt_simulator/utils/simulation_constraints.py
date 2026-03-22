@@ -8,6 +8,9 @@ from cvt_simulator.utils.state_computations import (
 from cvt_simulator.utils.system_state import SystemState
 
 
+MIN_CAR_VELOCITY_MPS = -20.0
+
+
 def update_y(y, state: SystemState):
     stateArray = state.to_array()
     for i in range(len(y)):
@@ -33,8 +36,11 @@ def shift_constraint_event(t, y):
 
 def car_velocity_constraint_event(t, y):
     state = SystemState.from_array(y)
-    return secondary_pulley_angular_velocity_to_car_velocity(
-        state.secondary_pulley_angular_velocity
+    return (
+        secondary_pulley_angular_velocity_to_car_velocity(
+            state.secondary_pulley_angular_velocity
+        )
+        - MIN_CAR_VELOCITY_MPS
     )
 
 

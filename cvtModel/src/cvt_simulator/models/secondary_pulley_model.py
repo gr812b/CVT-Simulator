@@ -52,7 +52,7 @@ class SecondaryPulleyModel:
             WHEEL_RADIUS
             * (
                 coupling_torque * primary_to_secondary_ratio
-                - external_forces.net
+                - external_forces.net_torque_at_secondary
             )
             / self.inertia
         )
@@ -62,7 +62,7 @@ class SecondaryPulleyModel:
                 coupling_torque * primary_to_secondary_ratio
             ),
             external_load_torque_at_secondary_pulley=(
-                external_forces.net
+                external_forces.net_torque_at_secondary
             ),
             external_forces=external_forces,
             secondary_pulley_angular_acceleration=linear_accel / WHEEL_RADIUS,
