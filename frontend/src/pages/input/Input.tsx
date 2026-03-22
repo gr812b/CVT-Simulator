@@ -174,6 +174,7 @@ export const Input = () => {
                                                     value={formState.values[paramKey] as PiecewiseRampConfig | null}
                                                     onChange={(config) => handleFieldChange(paramKey, config)}
                                                     className={styles.rampBuilder}
+                                                    hasChanged={hasChanged}
                                                 />
                                             </div>
                                         );
