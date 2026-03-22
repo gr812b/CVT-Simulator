@@ -29,7 +29,6 @@ from cvt_simulator.utils.simulation_constraints import (
 )
 from cvt_simulator.constants.car_specs import MAX_SHIFT
 
-
 MAX_WALL_TIME_SECONDS = 280
 ENABLE_PROFILING = False
 

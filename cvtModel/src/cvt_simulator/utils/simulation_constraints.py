@@ -7,7 +7,6 @@ from cvt_simulator.utils.state_computations import (
 )
 from cvt_simulator.utils.system_state import SystemState
 
-
 MIN_CAR_VELOCITY_MPS = -20.0
 
 
