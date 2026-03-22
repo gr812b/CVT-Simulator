@@ -29,7 +29,8 @@ export const Scene3DViewer = ({ replayController, className }: Scene3DViewerProp
   const [beltMesh, setBeltMesh] = useState<THREE.Mesh | null>(null);
   const [beltVisible, setBeltVisible] = useState(true);
   const [showAngularRotation, setShowAngularRotation] = useState(true);
-  const [gridsVisible, setGridsVisible] = useState(true);
+  const [gridsVisible, setGridsVisible] = useState(false);
+  const [crossSectionEnabled, setCrossSectionEnabled] = useState(false);
   const [gridObjects, setGridObjects] = useState<THREE.Object3D[]>([]);
   const [initialHelixRotation, setInitialHelixRotation] = useState<number>(0);
 
@@ -101,6 +102,7 @@ export const Scene3DViewer = ({ replayController, className }: Scene3DViewerProp
     const grids: THREE.Object3D[] = [];
     sceneController.getScene().traverse((obj) => {
       if (obj instanceof THREE.GridHelper || obj instanceof THREE.AxesHelper) {
+        obj.visible = gridsVisible;
         grids.push(obj);
       }
     });
@@ -111,7 +113,7 @@ export const Scene3DViewer = ({ replayController, className }: Scene3DViewerProp
       cleanup2();
       cleanup3();
     };
-  }, [sceneController]);
+  }, [sceneController, gridsVisible]);
 
   // Setup belt mesh with initial data from replay controller
   useEffect(() => {
@@ -257,6 +259,44 @@ export const Scene3DViewer = ({ replayController, className }: Scene3DViewerProp
     });
   }, [gridsVisible, gridObjects]);
 
+  // Toggle per-pulley YZ cross-sections through each pulley centerline.
+  useEffect(() => {
+    if (!sceneController || !constants) return;
+
+    const renderer = sceneController.getRenderer();
+    renderer.localClippingEnabled = crossSectionEnabled;
+
+    const primaryCenterX = -constants.center_to_center / 2;
+    const secondaryCenterX = constants.center_to_center / 2;
+
+    const primaryPlane = new THREE.Plane(new THREE.Vector3(1, 0, 0), -primaryCenterX);
+    const secondaryPlane = new THREE.Plane(new THREE.Vector3(1, 0, 0), -secondaryCenterX);
+
+    const applyModelClipping = (modelId: string, plane: THREE.Plane) => {
+      const model = sceneController.getModel(modelId);
+      if (!model) return;
+
+      model.object3D.traverse((obj) => {
+        if (!(obj instanceof THREE.Mesh)) return;
+
+        const applyClipping = (material: THREE.Material) => {
+          const meshMaterial = material as THREE.Material & { clippingPlanes?: THREE.Plane[] };
+          meshMaterial.clippingPlanes = crossSectionEnabled ? [plane] : [];
+        };
+
+        if (Array.isArray(obj.material)) {
+          obj.material.forEach(applyClipping);
+        } else {
+          applyClipping(obj.material);
+        }
+      });
+    };
+
+    // Apply to top-level pulley nodes; children inherit by traversal.
+    applyModelClipping('primaryFixed', primaryPlane);
+    applyModelClipping('secondaryFixed', secondaryPlane);
+  }, [sceneController, constants, crossSectionEnabled]);
+
   return (
     <div ref={containerRef} className={`${styles.scene3dViewer} ${className ?? ''}`}>
       {isLoading && (
@@ -285,6 +325,13 @@ export const Scene3DViewer = ({ replayController, className }: Scene3DViewerProp
         title={gridsVisible ? 'Hide Grids' : 'Show Grids'}
       >
         {gridsVisible ? '🟢' : '⚪'} Grids
+      </button>
+      <button
+        className={styles.toggleSectionButton}
+        onClick={() => setCrossSectionEnabled(!crossSectionEnabled)}
+        title={crossSectionEnabled ? 'Disable Cross-Section View' : 'Enable Cross-Section View'}
+      >
+        {crossSectionEnabled ? '🟡' : '⚪'} Section
       </button>
     </div>
   );
