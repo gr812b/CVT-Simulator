@@ -7,7 +7,6 @@ from cvt_simulator.utils.simulation_result import SimulationResult
 from cvt_simulator.models.system_model import SystemModel
 from cvt_simulator.constants.car_specs import (
     GEARBOX_RATIO,
-    WHEEL_RADIUS,
     MAX_SHIFT,
 )
 from cvt_simulator.utils.conversions import rpm_to_rad_s

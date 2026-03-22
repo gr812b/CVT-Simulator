@@ -24,14 +24,9 @@ from cvt_simulator.models.ramps.ramp_config import (
 from cvt_simulator.simulation_runner import SimulationRunner
 from cvt_simulator.utils.simulation_args import SimulationArgs
 from cvt_simulator.utils.simulation_constraints import (
-    # kept for compatibility if low-level solve path is reintroduced
-    car_velocity_constraint_event,
-    get_shift_steady_event,
     get_mid_shift_steady_event,
     get_mid_shift_wake_event,
-    shift_constraint_event,
 )
-from cvt_simulator.utils.system_state import SystemState
 from cvt_simulator.constants.car_specs import MAX_SHIFT
 
 

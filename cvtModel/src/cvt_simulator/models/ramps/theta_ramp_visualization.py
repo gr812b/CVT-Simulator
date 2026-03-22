@@ -11,7 +11,6 @@ This reveals the helix geometry and how radius affects the θ(x) profile.
 
 import numpy as np
 import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import Axes3D
 from cvt_simulator.models.ramps import LinearSegment, PiecewiseRamp
 from cvt_simulator.models.ramps.theta_ramp import ThetaRamp
 from cvt_simulator.constants.car_specs import HELIX_RADIUS, MAX_SHIFT
@@ -254,7 +253,7 @@ def main():
     cot_beta = HELIX_RADIUS * target_rotation_rad / MAX_SHIFT
     helix_angle_deg = np.degrees(np.arctan(1.0 / cot_beta))
 
-    print(f"\nHelix Parameters:")
+    print("\nHelix Parameters:")
     print(f"  Helix radius r = {HELIX_RADIUS:.4f} m")
     print(f"  Max shift = {MAX_SHIFT:.4f} m")
     print(
@@ -273,7 +272,7 @@ def main():
     x_min, x_max = theta_ramp.get_x_range()
     theta_min, theta_max = theta_ramp.get_theta_range()
 
-    print(f"\nRamp Ranges:")
+    print("\nRamp Ranges:")
     print(f"  Axial position: [{x_min:.4f}, {x_max:.4f}] m")
     print(f"  Rotation: [{np.degrees(theta_min):.2f}°, {np.degrees(theta_max):.2f}°]")
     print(f"  Rotation: [{theta_min:.4f}, {theta_max:.4f}] rad")
@@ -303,7 +302,7 @@ def main():
     theta2_min, theta2_max = theta_ramp_direct.get_theta_range()
     dtheta_dx_direct = theta_ramp_direct.dtheta_dx(x2_min)
 
-    print(f"\nDirect-Angle Parameters:")
+    print("\nDirect-Angle Parameters:")
     print(f"  Helix angle β = {helix_angle_deg:.1f}°")
     print(f"  Helix radius r = {HELIX_RADIUS:.4f} m")
     print(f"  Max shift = {MAX_SHIFT:.4f} m")
@@ -312,7 +311,7 @@ def main():
         f"  Equivalent helix β = {np.degrees(np.arctan(1.0 / (HELIX_RADIUS * dtheta_dx_direct))):.2f}°"
     )
 
-    print(f"\nDirect-Angle Ramp Ranges:")
+    print("\nDirect-Angle Ramp Ranges:")
     print(f"  Axial position: [{x2_min:.4f}, {x2_max:.4f}] m")
     print(f"  Rotation: [{np.degrees(theta2_min):.2f}°, {np.degrees(theta2_max):.2f}°]")
     print(f"  Rotation: [{theta2_min:.4f}, {theta2_max:.4f}] rad")

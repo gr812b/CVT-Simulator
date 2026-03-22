@@ -53,7 +53,7 @@ class SecondaryPulleyModel:
             external_forces=external_forces,
             secondary_pulley_angular_acceleration=linear_accel / WHEEL_RADIUS,
         )
-    
+
     def _calculate_total_inertia(self) -> float:
         """
         Calculate total system inertia using: I_s = I_sec + I_gb + (I_wheel + m*r_w^2) / G^2

@@ -1,9 +1,5 @@
 from cvt_simulator.models.pulley.pulley_interface import PulleyModel
 from pyparsing import ABC
-from cvt_simulator.constants.car_specs import (
-    GEARBOX_RATIO,
-    WHEEL_RADIUS,
-)
 from cvt_simulator.utils.system_state import SystemState
 from cvt_simulator.utils.theoretical_models import TheoreticalModels as tm
 

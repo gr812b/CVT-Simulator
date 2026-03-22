@@ -22,7 +22,7 @@ class LoadModel:
     # Above max: full rolling resistance
     ROLLING_RESISTANCE_MIN_VELOCITY = 0.001
     ROLLING_RESISTANCE_MAX_VELOCITY = 0.01
-    
+
     def __init__(
         self,
         car_mass: float,  # kg
@@ -84,7 +84,7 @@ class LoadModel:
     def _calculate_rolling_resistance_force(self, velocity: float) -> float:
         """
         Calculate rolling resistance force with smooth activation: -C_rr*m*g*cos(α)*smooth(|v|)*sgn(v)
-        
+
         Smoothly ramps from 0 to full resistance over MIN to MAX velocity range.
         This avoids circular dependency at low speeds while preventing hard cutoffs.
         """
@@ -94,10 +94,10 @@ class LoadModel:
             self.g,
             self.incline_angle,
         )
-        
+
         # Calculate smooth activation factor (0 to 1) based on absolute velocity
         abs_velocity = abs(velocity)
-        
+
         if abs_velocity < self.ROLLING_RESISTANCE_MIN_VELOCITY:
             # Below min threshold: no resistance
             activation_factor = 0.0
@@ -107,11 +107,12 @@ class LoadModel:
         else:
             # Smooth interpolation between min and max (smoothstep)
             t = (abs_velocity - self.ROLLING_RESISTANCE_MIN_VELOCITY) / (
-                self.ROLLING_RESISTANCE_MAX_VELOCITY - self.ROLLING_RESISTANCE_MIN_VELOCITY
+                self.ROLLING_RESISTANCE_MAX_VELOCITY
+                - self.ROLLING_RESISTANCE_MIN_VELOCITY
             )
             # Smoothstep formula: 3t² - 2t³ (smooth cubic interpolation)
             activation_factor = 3 * t**2 - 2 * t**3
-        
+
         # Apply activation factor and oppose motion direction
         return rolling_force_magnitude * activation_factor * tm.sgn(velocity)
 
