@@ -16,6 +16,7 @@ from cvt_simulator.utils.simulation_args import SimulationArgs
 from cvt_simulator.utils.system_state import SystemState
 from cvt_simulator.models.model_initializer import get_models
 from cvt_simulator.utils.conversions import rad_s_to_rpm
+from cvt_simulator.constants.car_specs import ENGINE_INERTIA
 
 
 class PrimaryCVTEngagementSolver(SolverBase):
@@ -47,9 +48,11 @@ class PrimaryCVTEngagementSolver(SolverBase):
         """
         super().__init__(args)
 
-        # Initialize models to get the primary pulley
+        # Initialize models to get the primary pulley and engine
         system_model = get_models(args)
         self.primary_pulley = system_model.cvt_shift_model.primary_pulley
+        self.engine_model = system_model.slip_model.engine_model
+        self.primary_inertia = ENGINE_INERTIA
 
     @property
     def solver_name(self) -> str:
@@ -152,10 +155,21 @@ class PrimaryCVTEngagementSolver(SolverBase):
             shift_velocity=0.0,  # Static evaluation
         )
 
-        # Calculate t_max using the primary pulley model
-        t_max = self.primary_pulley.calculate_max_torque(state)
+        # Get engine torque at this angular velocity
+        engine_torque = self.engine_model.get_torque(angular_velocity)
 
-        return t_max
+        # Calculate torque bounds using the primary pulley model
+        # For primary pulley, we want tau_upper (the positive bound)
+        torque_bounds = self.primary_pulley.calculate_torque_bounds(
+            state,
+            engine_drive_torque=engine_torque,
+            primary_inertia=self.primary_inertia,
+        )
+
+        # extract tau_upper from the bounds object
+        tau_upper = torque_bounds.tau_upper
+
+        return tau_upper
 
     def get_engagement_curve(
         self,
