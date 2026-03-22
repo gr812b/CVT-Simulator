@@ -203,27 +203,25 @@ def main():
     print("Theta Ramp 3D Visualization")
     print("=" * 70)
 
-    # Create a linear helix ramp that rotates halfway around the circle
-    # Goal: θ goes from 0 to π (180°) over MAX_SHIFT
-    # For linear: dθ/dx = π / MAX_SHIFT
-    # Since dθ/dx = (du/dx) / r:
-    # => du/dx = r * π / MAX_SHIFT = cot(β)
-    # => angle = arctan(du/dx)
+    # Create a linear helix ramp that rotates halfway around the circle.
+    # Goal: θ goes from 0 to π (180°) over MAX_SHIFT.
+    # For linear: dθ/dx = π / MAX_SHIFT and r * dθ/dx = cot(β).
+    # ThetaRamp now expects segment angle as helix angle β from circumferential.
 
     target_rotation_rad = np.pi  # 180 degrees around the circle
     cot_beta = HELIX_RADIUS * target_rotation_rad / MAX_SHIFT
-    angle_deg = np.degrees(np.arctan(cot_beta))
+    helix_angle_deg = np.degrees(np.arctan(1.0 / cot_beta))
 
     print(f"\nHelix Parameters:")
     print(f"  Helix radius r = {HELIX_RADIUS:.4f} m")
     print(f"  Max shift = {MAX_SHIFT:.4f} m")
     print(f"  Target rotation = {np.degrees(target_rotation_rad):.1f}° (halfway around)")
     print(f"  cot(β) = {cot_beta:.4f}")
-    print(f"  LinearSegment angle = {angle_deg:.2f}°")
+    print(f"  Helix angle β = {helix_angle_deg:.2f}°")
 
-    # Create the angle ramp (angle defined directly)
+    # Create the angle ramp (helix angle defined directly)
     angle_ramp = PiecewiseRamp()
-    angle_ramp.add_segment(LinearSegment(length=MAX_SHIFT, angle=angle_deg))
+    angle_ramp.add_segment(LinearSegment(length=MAX_SHIFT, angle=helix_angle_deg))
 
     # Wrap in theta ramp
     theta_ramp = ThetaRamp(angle_ramp, HELIX_RADIUS)
@@ -253,7 +251,7 @@ def main():
 
     angle_ramp_direct = PiecewiseRamp()
     angle_ramp_direct.add_segment(
-        LinearSegment(length=MAX_SHIFT, angle=90 - helix_angle_deg)
+        LinearSegment(length=MAX_SHIFT, angle=helix_angle_deg)
     )
     theta_ramp_direct = ThetaRamp(angle_ramp_direct, HELIX_RADIUS)
 

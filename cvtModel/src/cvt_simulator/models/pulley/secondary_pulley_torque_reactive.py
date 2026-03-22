@@ -32,6 +32,7 @@ def create_default_helix_ramp() -> ThetaRamp:
     - tan(alpha_s) = 1 / (r_h * dtheta/ds)
     - equivalently: du/ds = cot(alpha_s)
 
+    Segment angles passed to ThetaRamp are helix angles from circumferential.
     Default helix angle is alpha_s = 36°.
 
     Returns:
@@ -39,7 +40,7 @@ def create_default_helix_ramp() -> ThetaRamp:
     """
     helix_angle_deg = 36.0
     angle_ramp = PiecewiseRamp()
-    angle_ramp.add_segment(LinearSegment(length=MAX_SHIFT, angle=90 - helix_angle_deg))
+    angle_ramp.add_segment(LinearSegment(length=MAX_SHIFT, angle=helix_angle_deg))
     return ThetaRamp(angle_ramp, HELIX_RADIUS)
 
 

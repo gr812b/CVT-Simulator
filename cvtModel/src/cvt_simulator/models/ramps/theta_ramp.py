@@ -1,25 +1,33 @@
 """
 Theta ramp wrapper for helix cam geometry.
 
-The piecewise ramp stores circumferential displacement u(x), where u is the
-distance the cam surface moves (in mm or meters) as you move axially.
+Input convention:
+- The provided PiecewiseRamp segment angles are interpreted as helix angles
+    measured from the circumferential direction.
 
-The rotation angle is then simply:
-    theta(x) = u(x) / r_helix
+Internal convention:
+- The internal PiecewiseRamp stores circumferential displacement u(x), where u
+    is the distance the cam surface moves as you move axially.
 
-where r_helix is the radius of the helix (constant).
+The rotation angle is:
+        theta(x) = u(x) / r_helix
+
+where r_helix is the helix radius.
 """
 
 import math
 from cvt_simulator.models.ramps.piecewise_ramp import PiecewiseRamp
+from cvt_simulator.models.ramps.linear_segment import LinearSegment
+from cvt_simulator.models.ramps.circular_segment import CircularSegment
 
 
 class ThetaRamp:
     """
-    Wraps a PiecewiseRamp that defines circumferential displacement u(x).
+    Wraps a PiecewiseRamp of helix angles and converts it to u(x).
 
-    The internal ramp stores u(x) (e.g., in meters), where u is the axial
-    progression of the cam surface around the helix.
+    The input ramp segment angles are helix angles measured from the
+    circumferential direction. ThetaRamp converts each segment to an equivalent
+    displacement-slope ramp and stores that internal representation as u(x).
 
     From this:
     - theta(x) = u(x) / r (direct, no integration needed)
@@ -33,14 +41,65 @@ class ThetaRamp:
         Initialize theta ramp wrapper.
 
         Args:
-            angle_ramp: PiecewiseRamp storing circumferential displacement u(x)
+            angle_ramp: PiecewiseRamp whose segment angles are helix angles
+                from circumferential direction [deg]
             helix_radius: Helix radius r [m]
         """
         if helix_radius <= 0:
             raise ValueError(f"helix_radius must be positive, got {helix_radius}")
 
-        self.angle_ramp = angle_ramp
+        self.angle_ramp = self._convert_helix_angle_ramp_to_u_ramp(angle_ramp)
         self.r = helix_radius
+
+    @staticmethod
+    def _helix_angle_to_slope_angle(helix_angle_deg: float) -> float:
+        """
+        Convert helix angle (from circumferential direction) to slope angle.
+
+        Uses:
+            du/dx = cot(beta)
+            slope_angle = atan(du/dx)
+        where beta is the helix angle.
+        """
+        beta_rad = math.radians(helix_angle_deg)
+        tan_beta = math.tan(beta_rad)
+        if abs(tan_beta) < 1e-12:
+            raise ValueError(
+                "Helix angle is too close to 0°/180°; cot(beta) is singular"
+            )
+        return math.degrees(math.atan(1.0 / tan_beta))
+
+    @classmethod
+    def _convert_helix_angle_ramp_to_u_ramp(cls, helix_angle_ramp: PiecewiseRamp) -> PiecewiseRamp:
+        """Convert a helix-angle piecewise ramp into a displacement-slope ramp."""
+        converted_ramp = PiecewiseRamp()
+
+        for segment in helix_angle_ramp.segments:
+            if isinstance(segment, LinearSegment):
+                converted_ramp.add_segment(
+                    LinearSegment(
+                        length=segment.length,
+                        angle=cls._helix_angle_to_slope_angle(segment.angle),
+                    )
+                )
+                continue
+
+            if isinstance(segment, CircularSegment):
+                converted_ramp.add_segment(
+                    CircularSegment(
+                        length=segment.length,
+                        angle_start=cls._helix_angle_to_slope_angle(segment.angle_start),
+                        angle_end=cls._helix_angle_to_slope_angle(segment.angle_end),
+                        quadrant=segment.quadrant,
+                    )
+                )
+                continue
+
+            raise TypeError(
+                f"Unsupported ramp segment type for ThetaRamp conversion: {type(segment).__name__}"
+            )
+
+        return converted_ramp
 
     def theta(self, x: float) -> float:
         """
