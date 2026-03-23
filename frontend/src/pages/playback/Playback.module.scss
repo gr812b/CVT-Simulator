@@ -14,10 +14,22 @@
     .buttonsContainer {
         display: flex;
         flex-direction: row;
+        justify-content: space-between;
+        align-items: center;
+
+        .leftButtons,
+        .rightButtons {
+            display: flex;
+            flex-direction: row;
+        }
 
         .navigateButton {
             margin: 0.5rem;
             margin-right: 0rem;
+        }
+
+        .rightButtons .navigateButton {
+            margin-right: 0.5rem;
         }
     }
 

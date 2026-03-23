@@ -7,7 +7,9 @@ import { Scene3DViewer } from '@components/scene3DViewer/Scene3DViewer';
 import { Playbar } from '@components/playbar/Playbar';
 import Home from '@assets/icons/home.svg?react';
 import Edit from '@assets/icons/edit.svg?react';
+import Download from '@assets/icons/arrow_down_circle.svg?react';
 import { usePlaybackData } from '@hooks/usePlaybackData';
+import { downloadFlattenedCsv } from '@utils/csvExport';
 
 
 export const Playback = () => {
@@ -41,6 +43,15 @@ export const Playback = () => {
         navigate('/input');
     }, [navigate]);
 
+    const onDownloadCsvClick = useCallback(() => {
+        if (!playbackData?.simulationRows.length) {
+            alert('No playback data available to download.');
+            return;
+        }
+
+        downloadFlattenedCsv(playbackData.simulationRows, 'playback_data');
+    }, [playbackData]);
+
     // If no data is available, show loading or return null while redirect happens
     if (!playbackData) {
         return null;
@@ -51,18 +62,28 @@ export const Playback = () => {
     return (
         <div className={styles.playback}>
             <div className={styles.buttonsContainer}>
-            <Button
-                text={'Home'}
-                icon={Home}
-                className={styles.navigateButton}
-                onClick={onHomeClick}
-            />
-            <Button
-                text={'Edit'}
-                icon={Edit}
-                className={styles.navigateButton}
-                onClick={onEditClick}
-            />
+                <div className={styles.leftButtons}>
+                    <Button
+                        text={'Home'}
+                        icon={Home}
+                        className={styles.navigateButton}
+                        onClick={onHomeClick}
+                    />
+                    <Button
+                        text={'Edit'}
+                        icon={Edit}
+                        className={styles.navigateButton}
+                        onClick={onEditClick}
+                    />
+                </div>
+                <div className={styles.rightButtons}>
+                    <Button
+                        text={'Download CSV'}
+                        icon={Download}
+                        className={styles.navigateButton}
+                        onClick={onDownloadCsvClick}
+                    />
+                </div>
             </div>
 
             <div className={styles.displayGrid}>
