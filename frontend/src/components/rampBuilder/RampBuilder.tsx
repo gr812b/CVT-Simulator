@@ -14,6 +14,7 @@ interface RampBuilderProps {
     value: PiecewiseRampConfig | null;
     onChange: (config: PiecewiseRampConfig) => void;
     className?: string;
+    hasChanged?: boolean;
 }
 
 const createDefaultSegment = (type: SegmentType): RampSegment => {
@@ -33,7 +34,7 @@ const preserveCommonFields = (oldSegment: RampSegment, newSegment: RampSegment):
     return result as RampSegment;
 };
 
-export const RampBuilder = ({ value, onChange, className }: RampBuilderProps) => {
+export const RampBuilder = ({ value, onChange, className, hasChanged = false }: RampBuilderProps) => {
     const [segments, setSegments] = useState<RampSegment[]>(() => {
         const initialSegments = value?.segments || [createDefaultSegment('linear')];
         if (!value?.segments || value.segments.length === 0) {
@@ -76,8 +77,21 @@ export const RampBuilder = ({ value, onChange, className }: RampBuilderProps) =>
         onChange({ segments: newSegments });
     }, [segments, onChange]);
 
+    const containerClassName = [styles.rampBuilder, className]
+        .filter(Boolean)
+        .join(' ');
+
     return (
-        <div className={className}>
+        <div className={containerClassName}>
+            <div className={styles.rampStatus}>
+                <span className={styles.rampLabel}>Ramp Profile</span>
+                {hasChanged && (
+                    <span className={styles.changedBadge}>
+                        <span className={styles.changeIndicator} />
+                        <span>Changed</span>
+                    </span>
+                )}
+            </div>
             <div className={styles.segmentList}>
                 {segments.map((segment, index) => {
                     const fields = Object.entries(segment).filter(([key]) => key !== 'type');

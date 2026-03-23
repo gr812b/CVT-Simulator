@@ -99,9 +99,9 @@ const PARAMETERS_IMPL = {
         {
           type: 'circular' as const,
           length: 0.024,
-          angle_start: 60,
-          angle_end: 40,
-          quadrant: 3,
+          angle_start: 40,
+          angle_end: 15,
+          quadrant: 2,
         },
       ],
     } as components['schemas']['PiecewiseRampConfigModel'],
@@ -162,7 +162,7 @@ const PARAMETERS_IMPL = {
         {
           type: 'linear' as const,
           length: 1,
-          angle: -10,
+          angle: 50,
         },
       ],
     } as components['schemas']['PiecewiseRampConfigModel'],

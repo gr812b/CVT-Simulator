@@ -21,6 +21,9 @@ export function convertConstants(
   return {
     // Inertia values
     engine_inertia: conv(constants.engine_inertia, 'inertia'),
+    secondary_inertia: conv(constants.secondary_inertia, 'inertia'),
+    gearbox_inertia: conv(constants.gearbox_inertia, 'inertia'),
+    wheel_inertia: conv(constants.wheel_inertia, 'inertia'),
     driveline_inertia: conv(constants.driveline_inertia, 'inertia'),
     
     // Drivetrain
@@ -30,6 +33,7 @@ export function convertConstants(
     // Aerodynamics
     frontal_area: conv(constants.frontal_area, 'area'),
     drag_coefficient: conv(constants.drag_coefficient, 'dimensionless'),
+    rolling_resistance_coefficient: conv(constants.rolling_resistance_coefficient, 'dimensionless'),
     
     // Pulley geometry
     sheave_angle: conv(constants.sheave_angle, 'angle'),

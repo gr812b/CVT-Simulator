@@ -105,10 +105,11 @@ export const useSimulations = (): UseSimulationsReturn => {
   const handleEdit = useCallback(() => {
     if (!selectedSimulation) return;
 
+    clearSessionParameters();
+    setLoadedSimulationId(selectedSimulation.id);
     setMultipleParameters(selectedSimulation.parameters);
-    setLoadedSimulationId(selectedId);
     navigate('/input');
-  }, [selectedSimulation, selectedId, setMultipleParameters, navigate]);
+  }, [selectedSimulation, setMultipleParameters, navigate]);
 
   const handleDelete = useCallback(() => {
     if (!selectedSimulation || !selectedId) return;

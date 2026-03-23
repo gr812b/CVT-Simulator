@@ -6,7 +6,7 @@ allowing different control strategies (physical models, PID controllers, lookup 
 to be swapped without changing the rest of the simulation.
 
 Key Design Principles:
-- Each pulley must provide: clamping force, radial force, and max torque
+- Each pulley must provide: clamping force and max torque
 - Implementation details (flyweights, helix, PID, etc.) are encapsulated
 - Breakdowns provide detailed internal state for debugging/visualization
 - **kwargs pattern allows flexible, future-proof parameter passing
@@ -22,19 +22,19 @@ from abc import ABC, abstractmethod
 from typing import Any
 import numpy as np
 from cvt_simulator.utils.system_state import SystemState
+from cvt_simulator.utils.theoretical_models import TheoreticalModels as tm
 from cvt_simulator.constants.car_specs import (
     SHEAVE_ANGLE,
     BELT_CROSS_SECTIONAL_AREA,
     BELT_HEIGHT,
-    GEARBOX_RATIO,
-    WHEEL_RADIUS,
+    BELT_WIDTH_TOP,
+    BELT_WIDTH_BOTTOM,
 )
 from cvt_simulator.constants.constants import (
     RUBBER_DENSITY,
     RUBBER_ALUMINUM_STATIC_FRICTION,
 )
 from cvt_simulator.models.dataTypes import PulleyState, PulleyForces, PulleyBreakdowns
-from cvt_simulator.utils.theoretical_models import TheoreticalModels as tm
 
 
 def get_kwarg(kwargs: dict[str, Any], key: str, default: Any = None) -> Any:
@@ -49,7 +49,7 @@ def get_kwarg(kwargs: dict[str, Any], key: str, default: Any = None) -> Any:
         target_rpm = get_kwarg(kwargs, 'target_rpm')
 
     Args:
-        kwargs: The kwargs dict from calculate_clamping_force
+        kwargs: The kwargs dict from calculate_axial_clamping_force
         key: The parameter name to extract
         default: Default value if key not found (default: None)
 
@@ -74,7 +74,7 @@ def get_required_kwarg(kwargs: dict[str, Any], key: str, error_msg: str = None) 
         )
 
     Args:
-        kwargs: The kwargs dict from calculate_clamping_force
+        kwargs: The kwargs dict from calculate_axial_clamping_force
         key: The parameter name to extract
         error_msg: Custom error message (optional, auto-generated if not provided)
 
@@ -104,17 +104,17 @@ class PulleyModel(ABC):
     - etc.
 
     The abstraction allows the simulation to work with any mechanism that
-    can provide the required outputs (clamping force, radial force, max torque).
+    can provide the required outputs (clamping force and max torque).
     """
 
     def __init__(self):
         """Initialize pulley model with V-belt friction coefficient."""
         # Calculate friction coefficient with V-belt wedging effect
         # The sheave angle enhances friction through wedging action
-        self.μ = RUBBER_ALUMINUM_STATIC_FRICTION / np.sin(SHEAVE_ANGLE / 2)
+        self.μ = RUBBER_ALUMINUM_STATIC_FRICTION
 
     @abstractmethod
-    def calculate_clamping_force(
+    def calculate_axial_clamping_force(
         self, state: SystemState, **kwargs
     ) -> tuple[float, PulleyBreakdowns]:
         """
@@ -136,93 +136,83 @@ class PulleyModel(ABC):
                 - Any future parameters needed by new implementations
 
         Returns:
-            tuple: (clamping_force, breakdown)
-                - clamping_force: Net axial force [N]
+            tuple: (axial_clamping_force, breakdown)
+                - axial_clamping_force: Axial force from pulley hardware [N]
                 - breakdown: Implementation-specific detailed breakdown
         """
         pass
 
-    def calculate_radial_force(
-        self,
-        state: SystemState,
-        clamping_force: float,
-    ) -> tuple[float, float, float]:
+    def axial_centrifugal_from_belt(self, state: SystemState) -> float:
         """
-        Calculate total radial force on belt from clamping and centrifugal effects.
+        Calculate centrifugal belt contribution projected into axial direction.
 
-        This implements the fundamental physics of V-belt operation (same for all pulleys):
-        1. Clamping force → radial force through sheave angle
-        2. Belt centrifugal tension adds to radial force
-        3. Combined radial force determines friction and torque capacity
+        Implements:
+            F_c,ax = rho_b * A_b * omega^2 * r_cm^2 * phi / (2 * tan(beta))
 
-        See: docs/Kai's folder of derivations/ShiftingAndSlip.png
-
-        Args:
-            state: Current system state
-            clamping_force: Axial clamping force [N]
-
-        Returns:
-            tuple: (radial_from_clamping, radial_from_centrifugal, total_radial)
-                - radial_from_clamping: Radial force from pulley clamping [N]
-                - radial_from_centrifugal: Radial force from belt rotation [N]
-                - total_radial: Sum of both components [N]
+        where beta is the sheave half-angle.
         """
-        wrap_angle = self._get_wrap_angle(state.shift_distance)
-        # TODO: Re-use these later?
-        # radius = self._get_radius(state.shift_distance)
-        # angular_velocity = self._get_angular_velocity(state)
-
-        # Radial force from pulley clamping (through V-belt wedging)
-        radial_from_clamping = (
-            2 * (clamping_force * np.tan(SHEAVE_ANGLE / 2)) / wrap_angle
+        shift_distance = state.shift_distance
+        wrap_angle = self._get_wrap_angle(shift_distance)
+        angular_velocity = (
+            state.secondary_pulley_angular_velocity
+            * tm.secondary_effective_radius(shift_distance)
+            / self._get_radius(shift_distance)
         )
+        r_cm = self._get_belt_centroid_radius(shift_distance)
+        beta = SHEAVE_ANGLE / 2
 
-        # To future Kai:
-        # Trust me! If you're using your current assumption
-        # (Which the belt isn't slipping from the secondary, i.e. belt speed = sec speed)
-        # Then the formula for both pulleys ends up the same.
-        # Pretty miraculous I know, but you did this sooo...
-        sec_radius = tm.outer_sec_radius(state.shift_distance) - BELT_HEIGHT / 2
-
-        wheel_to_sec_ratio = GEARBOX_RATIO / WHEEL_RADIUS
-        sec_angular_velocity = state.car_velocity * wheel_to_sec_ratio
-
-        radial_from_centrifugal = (
-            sec_angular_velocity**2
-            * sec_radius**2
+        return (
+            RUBBER_DENSITY
             * BELT_CROSS_SECTIONAL_AREA
-            * RUBBER_DENSITY
+            * angular_velocity**2
+            * r_cm**2
+            * wrap_angle
+            / (2 * np.tan(beta))
         )
 
-        # Total radial force (determines friction capacity)
-        total_radial = (
-            2
-            * np.sin(wrap_angle / 2)
-            * (radial_from_clamping + radial_from_centrifugal)
+    def _get_belt_centroid_radius(self, shift_distance: float) -> float:
+        """Get belt mass-centroid radius r_cm at current shift position [m]."""
+        # Delta from trapezoidal belt cross-section centroid (measured from outer face).
+        delta_r_cm = (
+            BELT_HEIGHT
+            * (BELT_WIDTH_TOP + 2 * BELT_WIDTH_BOTTOM)
+            / (3 * (BELT_WIDTH_TOP + BELT_WIDTH_BOTTOM))
         )
+        r_out = self._get_radius(shift_distance) + BELT_HEIGHT / 2
+        return r_out - delta_r_cm
 
-        return radial_from_clamping, radial_from_centrifugal, total_radial
+    def calculate_integrated_normal_load(self, axial_force_total: float) -> float:
+        """
+        Get integrated normal load over wrap from total axial force (N_phi).
+
+        Uses N_phi = 2 * F_ax * tan(beta), where beta is sheave half-angle.
+        """
+        return 2 * axial_force_total * np.tan(SHEAVE_ANGLE / 2)
 
     @abstractmethod
-    def calculate_max_torque(
+    def calculate_torque_bounds(
         self,
         state: SystemState,
-    ) -> float:
+        **kwargs,
+    ) -> tuple[float, float]:
         """
         Calculate maximum transferable torque before belt slip.
 
-        Uses Capstan equation (or Eytelwein formula) modified for V-belts.
-        The pulley calculates its own radial force internally based on
-        its current clamping force and operating conditions.
+        Uses Capstan equation (or Eytelwein formula) in an axial-load formulation.
+        The pulley calculates its own axial force internally based on
+        current operating conditions.
 
         The limiting torque depends on:
         - Belt-pulley friction (enhanced by V-groove wedging)
         - Wrap angle (more wrap = more capacity)
-        - Radial tension (from clamping + centrifugal)
+        - Total axial loading (sheave clamp + belt centrifugal contribution)
         - Effective radius
 
         Args:
             state: Current system state
+            **kwargs: Optional implementation-specific parameters used by
+                some pulley models (for example external load torque or
+                equivalent side inertia terms).
 
         Returns:
             max_torque: Maximum torque capacity [N⋅m]
@@ -234,27 +224,28 @@ class PulleyModel(ABC):
         Calculate complete pulley state (main entry point).
 
         This orchestrates the three core calculations in sequence:
-        1. Calculate clamping force (mechanism-specific)
-        2. Calculate radial force (physics-based)
-        3. Calculate max torque (Capstan equation)
+        1. Calculate axial clamping force from the pulley mechanism
+        2. Calculate axial centrifugal belt contribution
+        3. Form total axial force
+        4. Calculate max torque (Capstan equation)
 
         Args:
             state: Current system state
-            **kwargs: Implementation-specific parameters (see calculate_clamping_force)
+            **kwargs: Implementation-specific parameters (see calculate_axial_clamping_force)
 
         Returns:
             PulleyState with all forces, geometry, and detailed breakdown
         """
-        # Step 1: Get clamping force and breakdown
-        clamping_force, breakdown = self.calculate_clamping_force(state, **kwargs)
-
-        # Step 2: Calculate radial force components
-        radial_from_clamping, radial_from_centrifugal, total_radial = (
-            self.calculate_radial_force(state, clamping_force)
+        # Step 1: Get mechanism-generated axial clamping force and breakdown
+        axial_clamping_force, breakdown = self.calculate_axial_clamping_force(
+            state, **kwargs
         )
 
-        # Step 3: Calculate max transferable torque
-        max_torque = self.calculate_max_torque(state)
+        # Step 2: Axial centrifugal belt contribution
+        axial_centrifugal_from_belt = self.axial_centrifugal_from_belt(state)
+
+        # Step 3: Total axial force
+        axial_force_total = axial_clamping_force + axial_centrifugal_from_belt
 
         # Get geometric properties
         wrap_angle = self._get_wrap_angle(state.shift_distance)
@@ -264,9 +255,9 @@ class PulleyModel(ABC):
 
         # Package into PulleyForces
         forces = PulleyForces(
-            clamping_force=clamping_force,
-            radial_force=total_radial,
-            max_torque=max_torque,
+            axial_clamping_force=axial_clamping_force,
+            axial_centrifugal_from_belt=axial_centrifugal_from_belt,
+            axial_force_total=axial_force_total,
         )
 
         # Return complete state
@@ -276,8 +267,6 @@ class PulleyModel(ABC):
             radius=radius,
             angular_velocity=angular_velocity,
             angular_position=angular_position,
-            radial_from_clamping=radial_from_clamping,
-            radial_from_centrifugal=radial_from_centrifugal,
             breakdown=breakdown,
         )
 
@@ -290,6 +279,11 @@ class PulleyModel(ABC):
     @abstractmethod
     def _get_radius(self, shift_distance: float) -> float:
         """Get effective pitch radius at current shift position [m]."""
+        pass
+
+    @abstractmethod
+    def _get_radius_rate_of_change(self, shift_distance: float) -> float:
+        """Get dr/dt at current shift position [m/m]."""
         pass
 
     @abstractmethod

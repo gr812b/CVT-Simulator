@@ -14,14 +14,14 @@ export const DEFAULT_SIMULATIONS = [
       FlyweightMass: 0.5,
       PrimaryRampConfig: {
         segments: [
-          { type: 'circular' as const, length: 0.024, angle_start: 60, angle_end: 40, quadrant: 3 },
+          { type: 'circular' as const, length: 0.024, angle_start: 40, angle_end: 15, quadrant: 2 },
         ],
       } as RampConfig,
       PrimarySpringRate: 12784,
       PrimarySpringPretension: 0.1,
       SecondaryRampConfig: {
         segments: [
-          { type: 'linear' as const, length: 1, angle: -10 },
+          { type: 'linear' as const, length: 1, angle: 50 },
         ],
       } as RampConfig,
       SecondaryTorsionSpringRate: 3.476,
@@ -41,14 +41,14 @@ export const DEFAULT_SIMULATIONS = [
       FlyweightMass: 0.5,
       PrimaryRampConfig: {
         segments: [
-          { type: 'circular' as const, length: 0.024, angle_start: 60, angle_end: 40, quadrant: 3 },
+          { type: 'circular' as const, length: 0.024, angle_start: 40, angle_end: 15, quadrant: 2 },
         ],
       } as RampConfig,
       PrimarySpringRate: 12784,
       PrimarySpringPretension: 0.1,
       SecondaryRampConfig: {
         segments: [
-          { type: 'linear' as const, length: 1, angle: -10 },
+          { type: 'linear' as const, length: 1, angle: 50 },
         ],
       } as RampConfig,
       SecondaryTorsionSpringRate: 3.476,
@@ -68,14 +68,14 @@ export const DEFAULT_SIMULATIONS = [
       FlyweightMass: 0.5,
       PrimaryRampConfig: {
         segments: [
-          { type: 'circular' as const, length: 0.024, angle_start: 60, angle_end: 40, quadrant: 3 },
+          { type: 'circular' as const, length: 0.024, angle_start: 40, angle_end: 15, quadrant: 2 },
         ],
       } as RampConfig,
       PrimarySpringRate: 12784,
       PrimarySpringPretension: 0.1,
       SecondaryRampConfig: {
         segments: [
-          { type: 'linear' as const, length: 1, angle: -10 },
+          { type: 'linear' as const, length: 1, angle: 50 },
         ],
       } as RampConfig,
       SecondaryTorsionSpringRate: 3.476,
@@ -84,6 +84,34 @@ export const DEFAULT_SIMULATIONS = [
       SecondaryLinearSpringPretension: 0.1,
       VehicleWeight: 225,
       DriverWeight: 35,
+      Traction: 100,
+      AngleOfIncline: 0,
+      TotalDistance: 200,
+    },
+  },
+  {
+    name: 'Best shift curve',
+    parameters: {
+      FlyweightMass: 0.5,
+      PrimaryRampConfig: {
+        segments: [
+          { type: 'circular' as const, length: 0.002, angle_start: 75, angle_end: 50, quadrant: 2 },
+          { type: 'circular' as const, length: 0.022, angle_start: 50, angle_end: 35, quadrant: 2 },
+        ],
+      } as RampConfig,
+      PrimarySpringRate: 12784,
+      PrimarySpringPretension: 0.1,
+      SecondaryRampConfig: {
+        segments: [
+          { type: 'linear' as const, length: 1, angle: 20 },
+        ],
+      } as RampConfig,
+      SecondaryTorsionSpringRate: 3.476,
+      SecondaryCompressionSpringRate: 7000,
+      SecondaryRotationalSpringPretension: 200,
+      SecondaryLinearSpringPretension: 0.1,
+      VehicleWeight: 225,
+      DriverWeight: 75,
       Traction: 100,
       AngleOfIncline: 0,
       TotalDistance: 200,

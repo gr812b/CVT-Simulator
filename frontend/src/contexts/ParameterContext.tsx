@@ -1,11 +1,10 @@
-import React, { createContext, useReducer, useContext, useEffect } from 'react';
+import React, { createContext, useReducer, useContext } from 'react';
 import { PARAMETERS, type Parameter, type ParameterState } from '@types';
 
 type ParameterAction = 
   | { type: 'SET_PARAMETER'; parameter: Parameter; value: ParameterState[Parameter] }
   | { type: 'SET_MULTIPLE_PARAMETERS'; parameters: Partial<ParameterState> }
-  | { type: 'RESET_TO_DEFAULTS' }
-  | { type: 'LOAD_FROM_STORAGE'; parameters: ParameterState };
+  | { type: 'RESET_TO_DEFAULTS' };
 
 const ParameterContext = createContext<{
   parameters: ParameterState;
@@ -66,29 +65,17 @@ const parameterReducer = (state: ParameterState, action: ParameterAction): Param
     case 'RESET_TO_DEFAULTS':
       newState = getInitialState();
       break;
-    case 'LOAD_FROM_STORAGE':
-      newState = action.parameters;
-      break;
     default:
       return state;
   }
   
-  // Save to localStorage for all actions except LOAD_FROM_STORAGE
-  if (action.type !== 'LOAD_FROM_STORAGE') {
-    saveToStorage(newState);
-  }
+  saveToStorage(newState);
   
   return newState;
 };
 
 export const ParameterProvider = ({ children }: { children: React.ReactNode }) => {
-  const [parameters, dispatch] = useReducer(parameterReducer, getInitialState());
-
-  // Load from localStorage on mount
-  useEffect(() => {
-    const storedParameters = loadFromStorage();
-    dispatch({ type: 'LOAD_FROM_STORAGE', parameters: storedParameters });
-  }, []);
+  const [parameters, dispatch] = useReducer(parameterReducer, undefined, () => loadFromStorage());
 
   const setParameter = (parameter: Parameter, value: ParameterState[Parameter]) => {
     dispatch({ type: 'SET_PARAMETER', parameter, value });

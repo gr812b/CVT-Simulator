@@ -1,4 +1,4 @@
-from cvt_simulator.models.dataTypes import CvtSystemForceBreakdown
+from cvt_simulator.models.dataTypes import CvtDynamicsBreakdown
 from cvt_simulator.models.pulley.primary_pulley_interface import PrimaryPulleyModel
 from cvt_simulator.models.pulley.secondary_pulley_interface import SecondaryPulleyModel
 from cvt_simulator.utils.system_state import SystemState
@@ -12,8 +12,8 @@ class CvtShiftModel:
 
     This model:
     1. Takes generic pulley models (any implementation: physical, PID, lookup, etc.)
-    2. Calculates radial forces from each pulley using their specific mechanisms
-    3. Determines net shift force and acceleration from the force balance
+    2. Uses total axial forces from each pulley
+    3. Determines net shift force and acceleration from the axial force balance
     4. Handles friction and system dynamics
 
     The abstraction allows swapping pulley implementations without changing
@@ -33,21 +33,21 @@ class CvtShiftModel:
 
     def get_breakdown(
         self, state: SystemState, coupling_torque: float
-    ) -> CvtSystemForceBreakdown:
+    ) -> CvtDynamicsBreakdown:
         primary_state, secondary_state = self._get_pulley_states(state, coupling_torque)
 
-        prim_radial = primary_state.forces.radial_force
-        sec_radial = secondary_state.forces.radial_force
-        net = prim_radial - sec_radial
+        prim_axial = primary_state.forces.axial_force_total
+        sec_axial = secondary_state.forces.axial_force_total
+        net = prim_axial - sec_axial
 
         shift_velocity = state.shift_velocity
         friction = self._frictional_force(net, shift_velocity)
 
         acceleration = (net + friction) / self.cvt_moving_mass
 
-        cvt_ratio = tm.current_cvt_ratio(state.shift_distance)
+        cvt_ratio = tm.current_effective_cvt_ratio(state.shift_distance)
 
-        return CvtSystemForceBreakdown(
+        return CvtDynamicsBreakdown(
             primary_state,
             secondary_state,
             friction,
@@ -71,7 +71,7 @@ class CvtShiftModel:
         primary_state = self.primary_pulley.get_pulley_state(state)
 
         # Calculate CVT ratio for torque scaling to secondary
-        cvt_ratio = tm.current_cvt_ratio(state.shift_distance)
+        cvt_ratio = tm.current_effective_cvt_ratio(state.shift_distance)
 
         # Get secondary pulley state (torque-reactive, needs scaled torque)
         secondary_state = self.secondary_pulley.get_pulley_state(
@@ -80,11 +80,9 @@ class CvtShiftModel:
 
         return primary_state, secondary_state
 
-    def _frictional_force(
-        self, sum_of_radial_forces: float, shift_velocity: float
-    ) -> float:
+    def _frictional_force(self, net_axial_force: float, shift_velocity: float) -> float:
         raw_friction = 20  # TODO: Update to use calculation
-        friction_magnitude = min(raw_friction, abs(sum_of_radial_forces))
+        friction_magnitude = min(raw_friction, abs(net_axial_force))
         if shift_velocity > 0:
             return -friction_magnitude
         return friction_magnitude

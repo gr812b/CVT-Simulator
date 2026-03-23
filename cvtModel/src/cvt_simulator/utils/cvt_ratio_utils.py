@@ -13,10 +13,12 @@ from cvt_simulator.constants.car_specs import (
 
 
 @dataclass
-class CVTRatioResult:
-    r1: float
-    r2: float
-    ratio: float
+class CVTGeometryResult:
+    primary_outer_radius: float
+    secondary_outer_radius: float
+    primary_effective_radius: float
+    secondary_effective_radius: float
+    effective_cvt_ratio: float
 
 
 class CVTGeometry:
@@ -46,13 +48,16 @@ class CVTGeometry:
         self.d_max = MAX_SHIFT
         self.c2c = self._compute_center_to_center()
 
-    # ---------- 1) Primary radius from axial distance d ----------
-    def r_primary(self, d: float) -> float:
+    # ---------- 1) Primary outer radius from axial distance d ----------
+    def primary_outer_radius(self, d: float) -> float:
         if d < 0.0 or d > self.d_max:
             raise ValueError(f"d={d} out of bounds [0, {self.d_max}]")
         return (self.r_1_min + self.h) + max(
             (d - self.d_contact) / (2 * tan(self.β)), 0.0
         )
+
+    def primary_effective_radius(self, d: float) -> float:
+        return self.primary_outer_radius(d) - self.h / 2
 
     # ---------- 2) Secondary radius from primary radius r1 ----------
     def _open_form_r_sec(self, r2: float, r1: float) -> float:
@@ -123,48 +128,95 @@ class CVTGeometry:
 
         return brentq(self._open_form_r_sec, lo, hi, args=(r1,), xtol=1e-9)
 
-    # Public method to get secondary radius from d
-    def r_secondary(self, d: float) -> float:
-        r1 = self.r_primary(d)
-        return self._solve_r2(r1)
+    # Public method to get secondary outer radius from d
+    def secondary_outer_radius(self, d: float) -> float:
+        primary_outer_radius = self.primary_outer_radius(d)
+        return self._solve_r2(primary_outer_radius)
 
-    # ---------- 3) Ratio from d ----------
-    def ratio_from_d(self, d: float):
-        r1 = self.r_primary(d)
-        r2 = self._solve_r2(r1)
-        r1_eff = r1 - self.h / 2
-        r2_eff = r2 - self.h / 2
-        ratio = r2_eff / r1_eff
-        return CVTRatioResult(r1=r1, r2=r2, ratio=ratio)
+    def secondary_effective_radius(self, d: float) -> float:
+        return self.secondary_outer_radius(d) - self.h / 2
 
-    # ---------- 4) CVT Ratio Rate of Change w.r.t. d ----------
-    def _cvt_ratio_derivative(self, d: float) -> float:
+    # ---------- 3) Effective ratio from d ----------
+    def effective_cvt_ratio(self, d: float) -> float:
+        primary_effective_radius = self.primary_effective_radius(d)
+        secondary_effective_radius = self.secondary_effective_radius(d)
+        return secondary_effective_radius / primary_effective_radius
+
+    def geometry_from_shift_distance(self, d: float) -> CVTGeometryResult:
+        primary_outer_radius = self.primary_outer_radius(d)
+        secondary_outer_radius = self.secondary_outer_radius(d)
+        primary_effective_radius = primary_outer_radius - self.h / 2
+        secondary_effective_radius = secondary_outer_radius - self.h / 2
+        effective_cvt_ratio = secondary_effective_radius / primary_effective_radius
+
+        return CVTGeometryResult(
+            primary_outer_radius=primary_outer_radius,
+            secondary_outer_radius=secondary_outer_radius,
+            primary_effective_radius=primary_effective_radius,
+            secondary_effective_radius=secondary_effective_radius,
+            effective_cvt_ratio=effective_cvt_ratio,
+        )
+
+    # ---------- 4) Derivatives w.r.t. shift distance d ----------
+    def _primary_outer_radius_shift_derivative(self, d: float) -> float:
         """
-        Computes di/dd using differentiation on the belt length constraint.
+        Compute dr_p/dd (primary outer radius derivative with respect to shift distance).
         """
         if d < self.d_contact:
-            return 0
+            return 0.0
+        return 1 / (2 * tan(self.β))
 
-        prim_deriv = 1 / (2 * tan(self.β))
-        r1 = self.r_primary(d)
-        r2 = self._solve_r2(r1)
+    def _secondary_outer_radius_shift_derivative(self, d: float) -> float:
+        """
+        Compute dr_s/dd (secondary outer radius derivative with respect to shift distance)
+        from the differentiated belt-length constraint.
+        """
+        if d < self.d_contact:
+            return 0.0
 
-        term = pi
-        # Additional term to include if r1 > r2
-        if r1 > r2:
-            term -= (4 * (r2 - r1)) / (sqrt(self.c2c**2 - (r2 - r1) ** 2))
+        r_p = self.primary_outer_radius(d)
+        r_s = self._solve_r2(r_p)
+        angle = asin((r_s - r_p) / self.c2c)
 
-        a = 2 * asin((r2 - r1) / self.c2c)
-        partial_deriv_term = (term - a) / (term + a)
-
-        rate = prim_deriv * (
-            (partial_deriv_term / (r1 - self.h / 2))
-            - ((r2 - self.h / 2) / ((r1 - self.h / 2) ** 2))
+        return (
+            -self._primary_outer_radius_shift_derivative(d)
+            * (pi - 2 * angle)
+            / (pi + 2 * angle)
         )
-        return rate
 
-    def cvt_ratio_rate_of_change(self, d: float, d_vel: float) -> float:
-        return self._cvt_ratio_derivative(d) * d_vel
+    def _effective_cvt_ratio_shift_derivative(self, d: float) -> float:
+        """
+        Compute dR/dd where R = r_s,eff / r_p,eff.
+
+        Uses:
+            dR/dd = (1/r_p,eff) * dr_s,eff/dd - (r_s,eff/r_p,eff^2) * dr_p,eff/dd
+        and dr_eff/dd == dr_outer/dd since belt height offset is constant.
+        """
+        r_p = self.primary_outer_radius(d)
+        r_s = self._solve_r2(r_p)
+        r_p_eff = r_p - self.h / 2
+        r_s_eff = r_s - self.h / 2
+
+        dr_p_dd = self._primary_outer_radius_shift_derivative(d)
+        dr_s_dd = self._secondary_outer_radius_shift_derivative(d)
+
+        return (dr_s_dd / r_p_eff) - (r_s_eff * dr_p_dd / (r_p_eff**2))
+
+    # ---------- 5) Derivatives w.r.t. time t ----------
+    def primary_outer_radius_time_derivative(
+        self, d: float, shift_velocity: float
+    ) -> float:
+        return self._primary_outer_radius_shift_derivative(d) * shift_velocity
+
+    def secondary_outer_radius_time_derivative(
+        self, d: float, shift_velocity: float
+    ) -> float:
+        return self._secondary_outer_radius_shift_derivative(d) * shift_velocity
+
+    def effective_cvt_ratio_time_derivative(
+        self, d: float, shift_velocity: float
+    ) -> float:
+        return self._effective_cvt_ratio_shift_derivative(d) * shift_velocity
 
     # ---------- Center-to-center distance calculation ----------
     # TODO: Decide to use this in solver or not
@@ -287,11 +339,11 @@ if __name__ == "__main__":
     print("-" * 80)
 
     for d in d_values:
-        result = cvt.ratio_from_d(d)
-        derivative = cvt._cvt_ratio_derivative(d)
+        result = cvt.geometry_from_shift_distance(d)
+        derivative = cvt._effective_cvt_ratio_shift_derivative(d)
         print(
-            f"{d:<10.6f} {result.r1:<10.6f} {result.r2:<10.6f} "
-            f"{result.ratio:<10.6f} {derivative:<12.6f}"
+            f"{d:<10.6f} {result.primary_outer_radius:<10.6f} {result.secondary_outer_radius:<10.6f} "
+            f"{result.effective_cvt_ratio:<10.6f} {derivative:<12.6f}"
         )
 
     print("=" * 80)

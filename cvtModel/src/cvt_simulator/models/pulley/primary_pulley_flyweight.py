@@ -1,8 +1,11 @@
-import math
 import numpy as np
 from cvt_simulator.models.pulley.primary_pulley_interface import PrimaryPulleyModel
+from cvt_simulator.models.pulley.pulley_interface import get_kwarg
 from cvt_simulator.models.dataTypes import (
     PrimaryForceBreakdown,
+    PrimaryTorqueBoundsBreakdown,
+    PrimaryTorqueDenominatorBreakdown,
+    PrimaryTorqueNumeratorBreakdown,
     flyweightForceBreakdown,
     springCompForceBreakdown,
 )
@@ -14,9 +17,12 @@ from cvt_simulator.models.ramps import (
     PiecewiseRamp,
 )
 from cvt_simulator.constants.car_specs import (
+    BELT_CROSS_SECTIONAL_AREA,
     MAX_SHIFT,
     INITIAL_FLYWEIGHT_RADIUS,
+    SHEAVE_ANGLE,
 )
+from cvt_simulator.constants.constants import RUBBER_DENSITY
 from cvt_simulator.utils.system_state import SystemState
 
 
@@ -36,16 +42,16 @@ def create_default_flyweight_ramp() -> PiecewiseRamp:
 
     # This is the default "Enman" ramp at McMaster baja
 
-    # Linear section: ~0.125 inches at -25 degrees
-    line = LinearSegment(length=inch_to_meter(0.125), angle=-25)
+    # Linear section: ~0.125 inches at 25 degrees (from horizontal)
+    line = LinearSegment(length=inch_to_meter(0.125), angle=25)
 
     # Circular section: remaining length
     # Approximating the original curve with a circular arc
     circle = CircularSegment(
         length=inch_to_meter(1.0),
-        angle_start=33.4248111826,  # degrees
+        angle_start=33.4248111826,  # degrees (steeper at circle start)
         angle_end=20.8067910127,  # degrees
-        quadrant=3,  # Negative slopes
+        quadrant=2,  # Mirrored Q3: positive slope while keeping steep-to-gentle shape
     )
 
     ramp.add_segment(line)
@@ -64,7 +70,7 @@ class PhysicalPrimaryPulley(PrimaryPulleyModel):
 
     Physics:
     - Flyweights experience centrifugal force: F_c = m * ω² * r
-    - Ramp converts radial force to axial: F_axial = F_c * tan(ramp_angle)
+    - Ramp converts flyweight motion directly to axial force through dr_f/ds
     - Spring opposes shift: F_spring = k * x
     - Net clamping: F_clamp = F_flyweight - F_spring
     """
@@ -92,74 +98,131 @@ class PhysicalPrimaryPulley(PrimaryPulleyModel):
         self.flyweight_mass = flyweight_mass
         self.initial_flyweight_radius = INITIAL_FLYWEIGHT_RADIUS
         self.ramp = ramp
+        self._validate_primary_ramp_admissibility()
 
-    def calculate_clamping_force(
+    def calculate_axial_clamping_force(
         self, state: SystemState, **kwargs
     ) -> tuple[float, PrimaryForceBreakdown]:
         """
-        Calculate clamping force from flyweight centrifugal force minus spring force.
+        Calculate mechanism axial clamping force from flyweight force minus spring force.
 
         Args:
             state: Current system state
             **kwargs: Not used for physical primary (speed-reactive only)
 
         Returns:
-            tuple: (net_clamping_force, detailed_breakdown)
+            tuple: (axial_clamping_force, detailed_breakdown)
         """
         shift_distance = state.shift_distance
-        angular_velocity = state.engine_angular_velocity
+        # Primary pulley angular velocity is the engine speed
+        primary_pulley_angular_velocity = state.primary_pulley_angular_velocity
 
         # Calculate flyweight centrifugal force on ramp
         flyweight_force_breakdown = self._calculate_flyweight_force(
-            shift_distance, angular_velocity
+            shift_distance, primary_pulley_angular_velocity
         )
 
         # Calculate spring resistance
         spring_force_breakdown = self._calculate_spring_comp_force(shift_distance)
 
-        # Net clamping force (flyweight pushes, spring resists)
-        net_clamping_force = flyweight_force_breakdown.net - spring_force_breakdown.net
+        # Mechanism-only axial clamping force (flyweight pushes, spring resists)
+        axial_clamping_force = (
+            flyweight_force_breakdown.net - spring_force_breakdown.net
+        )
 
         # Package detailed breakdown
         breakdown = PrimaryForceBreakdown(
             flyweight_force_breakdown,
             spring_force_breakdown,
-            net_clamping_force,
+            axial_clamping_force,
         )
 
-        return net_clamping_force, breakdown
+        return axial_clamping_force, breakdown
 
-    def calculate_max_torque(
+    # TODO: Use updated math here
+    def calculate_torque_bounds(
         self,
         state: SystemState,
-    ) -> float:
+        **kwargs,
+    ) -> PrimaryTorqueBoundsBreakdown:
         """
-        Calculate maximum transferable torque using Capstan equation.
-
-        Calculates radial force internally from current clamping force.
-
-        Args:
-            state: Current system state
+        Calculate primary traction torque bounds.
 
         Returns:
-            max_torque: Maximum torque before slip [N⋅m]
+            PrimaryTorqueBoundsBreakdown with:
+            - tau_lower / tau_upper limits [N·m]
+            - numerator term decomposition
+            - denominator decomposition for upper/lower branches
         """
-        # Calculate clamping force internally
-        clamping_force, _ = self.calculate_clamping_force(state)
-        _, _, total_radial = self.calculate_radial_force(state, clamping_force)
+        shift_distance = np.clip(state.shift_distance, 0, MAX_SHIFT)
+        # angular_velocity = self._get_angular_velocity(state)
+        belt_angular_velocity = (
+            state.secondary_pulley_angular_velocity
+            * tm.current_effective_cvt_ratio(state.shift_distance)
+        )
 
-        # Get geometric properties
-        wrap_angle = self._get_wrap_angle(state.shift_distance)
-        radius = self._get_radius(state.shift_distance)
+        # Geometry terms
+        r_eff = self._get_radius(shift_distance)
+        r_cm = self._get_belt_centroid_radius(shift_distance)
+        r_dot = self._get_radius_rate_of_change(shift_distance) * state.shift_velocity
+        phi = self._get_wrap_angle(shift_distance)
+        beta = SHEAVE_ANGLE / 2
 
-        # Capstan equation with V-belt friction enhancement
-        exp_term = math.exp(self.μ * wrap_angle)
-        capstan_term = (exp_term - 1) / (exp_term + 1)
-        radial_force_term = total_radial * radius / np.sin(wrap_angle / 2)
+        # Dynamic terms
+        tau_eng = get_kwarg(kwargs, "engine_drive_torque", None)
+        I_p = get_kwarg(kwargs, "primary_inertia", None)
+        if I_p is None or tau_eng is None:
+            raise ValueError(
+                "primary_inertia and engine_drive_torque are required for primary traction bounds"
+            )
 
-        max_torque = capstan_term * radial_force_term
+        # This must be ONLY the mechanism clamping force term, not total force with belt corrections
+        axial_clamping_force, _ = self.calculate_axial_clamping_force(state)
 
-        return max(0.0, max_torque)  # Ensure non-negative
+        belt_mass_term = RUBBER_DENSITY * BELT_CROSS_SECTIONAL_AREA * r_cm * phi
+
+        clamping_numerator_term = 2.0 * self.μ * np.tan(beta) * axial_clamping_force
+        load_numerator_term = -belt_mass_term * ((r_cm * tau_eng) / I_p)
+        shift_numerator_term = -belt_mass_term * (2.0 * r_dot * belt_angular_velocity)
+        common_numerator = (
+            clamping_numerator_term + load_numerator_term + shift_numerator_term
+        )
+
+        denominator_inverse_radius = 1.0 / r_eff
+        denominator_inertial_feedback = belt_mass_term * r_cm / I_p
+
+        upper_denominator = denominator_inverse_radius - denominator_inertial_feedback
+        lower_denominator = denominator_inverse_radius + denominator_inertial_feedback
+
+        tau_upper = common_numerator / upper_denominator
+        tau_lower = -common_numerator / lower_denominator
+
+        numerator_breakdown = PrimaryTorqueNumeratorBreakdown(
+            clamping_term=clamping_numerator_term,
+            load_term=load_numerator_term,
+            shift_term=shift_numerator_term,
+            net=common_numerator,
+        )
+
+        denominator_upper_breakdown = PrimaryTorqueDenominatorBreakdown(
+            inverse_radius_term=denominator_inverse_radius,
+            inertial_feedback_term=-denominator_inertial_feedback,
+            net=upper_denominator,
+        )
+
+        denominator_lower_breakdown = PrimaryTorqueDenominatorBreakdown(
+            inverse_radius_term=denominator_inverse_radius,
+            inertial_feedback_term=denominator_inertial_feedback,
+            net=lower_denominator,
+        )
+
+        return PrimaryTorqueBoundsBreakdown(
+            tau_lower=tau_lower,
+            tau_upper=tau_upper,
+            numerator=numerator_breakdown,
+            denominator_upper=denominator_upper_breakdown,
+            denominator_lower=denominator_lower_breakdown,
+        )
 
     # Private helper methods for force calculations
 
@@ -171,9 +234,8 @@ class PhysicalPrimaryPulley(PrimaryPulleyModel):
         # TODO: Remove extra clamp
         shift_distance = np.clip(shift_distance, 0, MAX_SHIFT)
 
-        # Calculate flyweight radius at current shift position
-        # Ramp starts at 0 and goes negative, so subtract
-        flyweight_radius = self.initial_flyweight_radius - self.ramp.height(
+        # Height is modeled as additional radial displacement from center.
+        flyweight_radius = self.initial_flyweight_radius + self.ramp.height(
             shift_distance
         )
 
@@ -184,23 +246,52 @@ class PhysicalPrimaryPulley(PrimaryPulleyModel):
             flyweight_radius,
         )
 
-        # Ramp angle at current position
-        # Ramp is default negative slope, so negate for angle
-        # If a positive slope ramp is passed, it will generate a force against shifting
-        # which is expected for such a stupid ramp design.
-        angle = np.arctan(-self.ramp.slope(shift_distance))
+        # Ramp derivative dr_f/ds at current position.
+        ramp_gradient = self.ramp.slope(shift_distance)
 
-        # Convert centrifugal force to axial clamping force through ramp angle
-        net = centrifugal_force * np.tan(angle)
+        # F_p,ax = m_f * omega_p^2 * (r_f,0 + r_f(s)) * dr_f/ds
+        net = centrifugal_force * ramp_gradient
+
+        # Retain angle output for debug/plots while using derivative for force law.
+        angle = np.arctan(ramp_gradient)
 
         return flyweightForceBreakdown(
             radius=flyweight_radius,
             angular_velocity=angular_velocity,
             angle=angle,
             centrifugal_force=centrifugal_force,
-            angle_multiplier=np.tan(angle),
+            angle_multiplier=ramp_gradient,
             net=net,
         )
+
+    def _validate_primary_ramp_admissibility(self) -> None:
+        """Validate primary ramp profile constraints for r_f(s)."""
+        if not self.ramp.segments:
+            raise ValueError("Primary ramp must contain at least one segment")
+
+        for segment in self.ramp.segments:
+            sample_points = [
+                segment.x_start,
+                (segment.x_start + segment.x_end) / 2,
+                segment.x_end,
+            ]
+            for x in sample_points:
+                slope = self.ramp.slope(x)
+                if not np.isfinite(slope):
+                    raise ValueError(
+                        f"Primary ramp slope must be finite on [0, {MAX_SHIFT}], got {slope} at x={x}."
+                    )
+                if slope < 0:
+                    raise ValueError(
+                        f"Primary ramp slope must be non-negative on [0, {MAX_SHIFT}], got {slope} at x={x}."
+                    )
+
+                angle_deg = np.degrees(np.arctan(slope))
+                if angle_deg < 0 or angle_deg >= 90:
+                    raise ValueError(
+                        "Primary ramp angle must be in [0, 90) degrees from horizontal; "
+                        f"got {angle_deg} degrees at x={x}."
+                    )
 
     def _calculate_spring_comp_force(
         self, shift_distance: float

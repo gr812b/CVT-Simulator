@@ -12,7 +12,9 @@ $recent-row-bg: rgba(136, 136, 136, 0.1);
 $recent-row-hover: rgba(136, 136, 136, 0.15);
 
 .tableContainer {
-  flex-grow: 1;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
   @include mixins.scrollbar;
   padding: 2rem;
 }

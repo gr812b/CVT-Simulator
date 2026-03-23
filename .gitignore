@@ -219,6 +219,11 @@ pythontex-files-*/
 # easy-todo
 *.lod
 
+# CVT plotting artifacts
+cvtModel/generated_graphs/
+cvtModel/ramp_plots/
+cvtModel/theta_ramp_plots/
+
 # xcolor
 *.xcp
 

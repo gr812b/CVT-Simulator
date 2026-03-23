@@ -16,21 +16,17 @@ def _get_default_primary_ramp() -> PiecewiseRampConfig:
 
 def _get_default_secondary_ramp() -> PiecewiseRampConfig:
     """Factory function for default secondary ramp config."""
-    return create_default_helix_ramp().to_config()
+    return create_default_helix_ramp().angle_ramp.to_config()
 
 
 @dataclass(slots=True)
 class SimulationArgs:
     flyweight_mass: float = 1.0  # kg
-    primary_ramp_geometry: float = 1.0  # unitless (deprecated, use primary_ramp_config)
     primary_ramp_config: PiecewiseRampConfig = field(
         default_factory=_get_default_primary_ramp
     )
     primary_spring_rate: float = 7000.0  # N/m
     primary_spring_pretension: float = 0.2  # m
-    secondary_helix_geometry: float = (
-        1.0  # unitless (deprecated, use secondary_ramp_config)
-    )
     secondary_ramp_config: PiecewiseRampConfig = field(
         default_factory=_get_default_secondary_ramp
     )

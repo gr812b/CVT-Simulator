@@ -13,8 +13,6 @@ interface RampPreviewProps {
 
 const LINE_THICKNESS = 4;
 const GRID = { left: 60, right: 40, top: 40, bottom: 60 } as const;
-const OFFSET = 0.005; // 0.5% extra space beyond data limits for axes
-
 export const RampPreview = ({ config }: RampPreviewProps) => {
     const [previewData, setPreviewData] = useState<RampPreviewResponse | null>(null);
     const [error, setError] = useState<string | null>(null);
@@ -46,26 +44,39 @@ export const RampPreview = ({ config }: RampPreviewProps) => {
     }, []);
 
     // Compute axis limits that preserve the data's aspect ratio within the full container.
-    // The "tighter" dimension fills its axis exactly; the other gets extended to fill the space.
-    const { axisXMax, axisYMin } = useMemo(() => {
-        if (!previewData) return { axisXMax: 1, axisYMin: -1 };
+    // Supports ramps with positive or negative heights by deriving bounds from data.
+    const { axisXMin, axisXMax, axisYMin, axisYMax } = useMemo(() => {
+        if (!previewData) {
+            return { axisXMin: 0, axisXMax: 1, axisYMin: -1, axisYMax: 0 };
+        }
 
+        const dataXMin = Math.min(...previewData.x);
         const dataXMax = Math.max(...previewData.x);
-        const dataYMin = Math.min(...previewData.y); // negative
+        const dataYMinRaw = Math.min(...previewData.y);
+        const dataYMaxRaw = Math.max(...previewData.y);
 
-        const plotWidth  = containerWidth  - GRID.left - GRID.right;
-        const plotHeight = containerHeight - GRID.top  - GRID.bottom;
+        // Keep zero visible for easier interpretation of ramp offsets.
+        const dataYMin = Math.min(dataYMinRaw, 0);
+        const dataYMax = Math.max(dataYMaxRaw, 0);
 
-        // pixels-per-metre if each dimension were to fill its axis exactly
-        const ppmX = plotWidth  / dataXMax;
-        const ppmY = plotHeight / Math.abs(dataYMin);
+        const plotWidth = Math.max(1, containerWidth - GRID.left - GRID.right);
+        const plotHeight = Math.max(1, containerHeight - GRID.top - GRID.bottom);
 
-        // Use the smaller ppm so the data fits — then extend the other axis to fill
+        const xSpan = Math.max(1e-9, dataXMax - dataXMin);
+        const ySpan = Math.max(1e-9, dataYMax - dataYMin);
+
+        // Pixels per meter if each dimension were to fill the plot area exactly.
+        const ppmX = plotWidth / xSpan;
+        const ppmY = plotHeight / ySpan;
+
+        // Use the tighter scale so the data fully fits, then expand the other axis.
         const ppm = Math.min(ppmX, ppmY);
 
         return {
-            axisXMax: plotWidth  / ppm,
-            axisYMin: -(plotHeight / ppm),
+            axisXMin: dataXMin,
+            axisXMax: dataXMin + (plotWidth / ppm),
+            axisYMin: dataYMin,
+            axisYMax: dataYMin + (plotHeight / ppm),
         };
     }, [previewData, containerWidth, containerHeight]);
 
@@ -96,26 +107,25 @@ export const RampPreview = ({ config }: RampPreviewProps) => {
         return () => clearTimeout(timeoutId);
     }, [configString, config]);
 
-    const getColor = (property: string, fallback: string): string => {
-        if (typeof window !== 'undefined') {
-            const value = getComputedStyle(document.documentElement).getPropertyValue(property).trim();
-            return value || fallback;
-        }
-        return fallback;
-    };
+    const COLORS = useMemo(() => {
+        const getColor = (property: string, fallback: string): string => {
+            if (typeof window !== 'undefined') {
+                const value = getComputedStyle(document.documentElement).getPropertyValue(property).trim();
+                return value || fallback;
+            }
+            return fallback;
+        };
 
-    const COLORS = {
-        BACKGROUND: getColor('--background', '#222222'),
-        TEXT: getColor('--text-color', '#ffffff'),
-        GRID: getColor('--grid-color', '#404040'),
-        PRIMARY: getColor('--primary', '#bb0808'),
-        TOOLTIP_BG: getColor('--tooltip-bg', '#2a2a2a'),
-    };
+        return {
+            BACKGROUND: getColor('--background', '#222222'),
+            TEXT: getColor('--text-color', '#ffffff'),
+            GRID: getColor('--grid-color', '#404040'),
+            PRIMARY: getColor('--primary', '#bb0808'),
+            TOOLTIP_BG: getColor('--tooltip-bg', '#2a2a2a'),
+        };
+    }, []);
 
     const chartOptions: EChartsOption = useMemo(() => {
-        const dataXMax = previewData ? Math.max(...previewData.x) : 1;
-        const dataYMin = previewData ? Math.min(...previewData.y) : -1;
-
         return {
             backgroundColor: COLORS.BACKGROUND,
             textStyle: { color: COLORS.TEXT },
@@ -136,7 +146,7 @@ export const RampPreview = ({ config }: RampPreviewProps) => {
                 axisTick: { lineStyle: { color: COLORS.GRID } },
                 axisLabel: { color: COLORS.TEXT, formatter: (val: number) => Math.round(val * 10000) / 10000 },
                 splitLine: { lineStyle: { color: COLORS.GRID } },
-                min: 0,
+                min: axisXMin,
                 max: axisXMax,
                 scale: false,
             },
@@ -154,7 +164,7 @@ export const RampPreview = ({ config }: RampPreviewProps) => {
                     lineStyle: { color: COLORS.GRID }
                 },
                 min: axisYMin,
-                max: 0,
+                max: axisYMax,
                 scale: false,
             },
             series: [
@@ -170,26 +180,6 @@ export const RampPreview = ({ config }: RampPreviewProps) => {
                         color: COLORS.PRIMARY,
                     },
                     showSymbol: false,
-                },
-                {
-                    // Bottom axis line (y = axisYMin, from x=0 to x=dataXMax)
-                    type: 'line',
-                    data: [[-OFFSET * dataXMax, dataYMin], [dataXMax, dataYMin]],
-                    lineStyle: { color: COLORS.PRIMARY, width: LINE_THICKNESS },
-                    itemStyle: { color: COLORS.PRIMARY },
-                    showSymbol: false,
-                    silent: true,
-                    tooltip: { show: false },
-                },
-                {
-                    // Left axis line (x = 0, from y=0 to y=axisYMin)
-                    type: 'line',
-                    data: [[0, 0], [0, dataYMin * (1 + OFFSET)]],
-                    lineStyle: { color: COLORS.PRIMARY, width: LINE_THICKNESS },
-                    itemStyle: { color: COLORS.PRIMARY },
-                    showSymbol: false,
-                    silent: true,
-                    tooltip: { show: false },
                 },
             ],
             tooltip: {
@@ -221,7 +211,7 @@ export const RampPreview = ({ config }: RampPreviewProps) => {
                 },
             },
         };
-    }, [previewData, axisXMax, axisYMin, COLORS]);
+    }, [previewData, axisXMin, axisXMax, axisYMin, axisYMax, COLORS]);
 
     const renderContent = () => {
         if (error) {

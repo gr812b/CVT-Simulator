@@ -1,4 +1,4 @@
-import { useEffect, useCallback, useMemo } from 'react';
+import { useEffect, useCallback, useMemo, useLayoutEffect, useRef } from 'react';
 import { useParameter } from '@contexts/ParameterContext';
 import type { ParameterState } from '@types';
 import {
@@ -8,8 +8,10 @@ import {
   setLoadedSimulationId,
   getLoadedSimulationId,
   getSimulation,
+  getRecentRuns,
 } from '@utils/localStorage';
 import { getDefaultSimulations } from '@constants/defaultSimulations';
+import { PARAMETERS, type Parameter } from '@types';
 
 /**
  * Hook for managing session persistence and tracking parameter changes
@@ -22,38 +24,65 @@ import { getDefaultSimulations } from '@constants/defaultSimulations';
  */
 export const useSessionPersistence = () => {
   const { parameters, setMultipleParameters } = useParameter();
+  const isHydratedRef = useRef(false);
+  const hasSkippedInitialSaveRef = useRef(false);
 
   /**
    * Initialize: Load session parameters or check for loaded simulation
    */
-  useEffect(() => {
+  useLayoutEffect(() => {
     const sessionParams = getSessionParameters();
     const loadedId = getLoadedSimulationId();
+    const defaults = getDefaultSimulations();
     
-    if (sessionParams && loadedId) {
-      // Both exist - restore session and keep baseline reference
+    if (sessionParams) {
+      // Session always has highest priority on reload/navigation
       setMultipleParameters(sessionParams);
-    } else if (sessionParams && !loadedId) {
-      // Session exists but no baseline - this is a page reload
-      // Set the session state and mark it as the baseline by storing it with a special ID
-      setMultipleParameters(sessionParams);
-      setLoadedSimulationId('session_baseline');
-    } else if (!sessionParams && !loadedId) {
-      // Fresh start - load first default and set it as baseline
-      const defaults = getDefaultSimulations();
-      if (defaults[0]) {
-        setMultipleParameters(defaults[0].parameters);
-        setLoadedSimulationId(defaults[0].id);
+      if (!loadedId) {
+        // Keep a baseline marker so changed detection has a stable reference
+        setLoadedSimulationId('session_baseline');
       }
+    } else if (loadedId) {
+      // No session state available; restore from the selected simulation ID
+      const savedSimulation = getSimulation(loadedId);
+      if (savedSimulation) {
+        setMultipleParameters(savedSimulation.parameters);
+      } else {
+        const recentRun = getRecentRuns().find(sim => sim.id === loadedId);
+        if (recentRun) {
+          setMultipleParameters(recentRun.parameters);
+        } else {
+        const defaultSimulation = defaults.find(sim => sim.id === loadedId);
+        if (defaultSimulation) {
+          setMultipleParameters(defaultSimulation.parameters);
+        } else if (defaults[0]) {
+          // Loaded ID is stale; fall back to first default
+          setMultipleParameters(defaults[0].parameters);
+          setLoadedSimulationId(defaults[0].id);
+        } else {
+          setLoadedSimulationId(null);
+        }
+        }
+      }
+    } else if (defaults[0]) {
+      // Fresh start fallback
+      setMultipleParameters(defaults[0].parameters);
+      setLoadedSimulationId(defaults[0].id);
     }
-    // else: loadedId exists without session (from dashboard), parameters already set
+
+    isHydratedRef.current = true;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // Only run on mount
+  }, []);
 
   /**
    * Auto-save parameters to session on change
    */
   useEffect(() => {
+    if (!isHydratedRef.current) return;
+    if (!hasSkippedInitialSaveRef.current) {
+      hasSkippedInitialSaveRef.current = true;
+      return;
+    }
     saveSessionParameters(parameters);
   }, [parameters]);
 
@@ -89,6 +118,12 @@ export const useSessionPersistence = () => {
     if (defaultSim) {
       return defaultSim.parameters;
     }
+
+    // Check if it's a recent run
+    const recentRun = getRecentRuns().find(s => s.id === loadedId);
+    if (recentRun) {
+      return recentRun.parameters;
+    }
     
     // Fallback
     return parameters;
@@ -98,7 +133,11 @@ export const useSessionPersistence = () => {
    * Check if current parameters differ from baseline
    */
   const hasChanges = useCallback((): boolean => {
-    return JSON.stringify(parameters) !== JSON.stringify(baselineParameters);
+    return (Object.keys(PARAMETERS) as Parameter[]).some((field) => {
+      const currentStr = JSON.stringify(parameters[field]);
+      const baselineStr = JSON.stringify(baselineParameters[field]);
+      return currentStr !== baselineStr;
+    });
   }, [parameters, baselineParameters]);
 
   /**
@@ -115,18 +154,7 @@ export const useSessionPersistence = () => {
       
       const currentStr = JSON.stringify(parameters[field]);
       const baselineStr = JSON.stringify(baselineParameters[field]);
-      const changed = currentStr !== baselineStr;
-      
-      // Only log if actually changed (reduces noise)
-      if (changed) {
-        console.log(`[Field Check] ${String(field)}: CHANGED`, {
-          loadedId,
-          current: parameters[field],
-          baseline: baselineParameters[field]
-        });
-      }
-      
-      return changed;
+      return currentStr !== baselineStr;
     },
     [parameters, baselineParameters]
   );
