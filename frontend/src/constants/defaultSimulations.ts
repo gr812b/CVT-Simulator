@@ -103,12 +103,12 @@ export const DEFAULT_SIMULATIONS = [
       PrimarySpringPretension: 0.1,
       SecondaryRampConfig: {
         segments: [
-          { type: 'linear' as const, length: 1, angle: 50 },
+          { type: 'linear' as const, length: 1, angle: 20 },
         ],
       } as RampConfig,
       SecondaryTorsionSpringRate: 3.476,
       SecondaryCompressionSpringRate: 7000,
-      SecondaryRotationalSpringPretension: 800,
+      SecondaryRotationalSpringPretension: 200,
       SecondaryLinearSpringPretension: 0.1,
       VehicleWeight: 225,
       DriverWeight: 75,
