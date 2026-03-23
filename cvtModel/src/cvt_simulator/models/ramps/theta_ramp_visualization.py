@@ -80,7 +80,9 @@ def visualize_theta_ramp_3d(
         end_label = "End (top)" if repeat_idx == 0 else None
         drop_label = "Vertical drop from end" if repeat_idx == 0 else None
 
-        ax.plot(x_helix, y_helix, z_helix, "b-", linewidth=3, label=helix_label, zorder=10)
+        ax.plot(
+            x_helix, y_helix, z_helix, "b-", linewidth=3, label=helix_label, zorder=10
+        )
 
         ax.scatter(
             [x_helix[0]],
@@ -133,7 +135,9 @@ def visualize_theta_ramp_3d(
         y_surf = np.vstack([y_helix, y_bottom_proj])
         z_surf = np.vstack([z_helix, z_bottom_proj])
 
-        ax.plot_surface(x_surf, y_surf, z_surf, alpha=0.2, color="cyan", edgecolor="none")
+        ax.plot_surface(
+            x_surf, y_surf, z_surf, alpha=0.2, color="cyan", edgecolor="none"
+        )
 
     # ========== Add reference circles ==========
     # Bottom circle (at z_min)
@@ -277,10 +281,14 @@ def main():
 
         print("\nDirect-Angle Ramp Ranges:")
         print(f"  Axial position: [{x_min:.4f}, {x_max:.4f}] m")
-        print(f"  Rotation: [{np.degrees(theta_min):.2f}°, {np.degrees(theta_max):.2f}°]")
+        print(
+            f"  Rotation: [{np.degrees(theta_min):.2f}°, {np.degrees(theta_max):.2f}°]"
+        )
         print(f"  Rotation: [{theta_min:.4f}, {theta_max:.4f}] rad")
 
-        print(f"Generating 3D helix visualization ({helix_angle_deg:.1f}°, 3 repeats)...")
+        print(
+            f"Generating 3D helix visualization ({helix_angle_deg:.1f}°, 3 repeats)..."
+        )
         visualize_theta_ramp_3d(theta_ramp, num_points=500, num_repeats=3)
 
         print(f"Generating theta profile plots ({helix_angle_deg:.1f}°)...")
