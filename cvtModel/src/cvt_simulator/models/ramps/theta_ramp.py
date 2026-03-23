@@ -87,14 +87,25 @@ class ThetaRamp:
                 continue
 
             if isinstance(segment, CircularSegment):
+                converted_start = cls._helix_angle_to_slope_angle(segment.angle_start)
+                converted_end = cls._helix_angle_to_slope_angle(segment.angle_end)
+
+                # Preserve the original slope-sign family (positive vs negative),
+                # but allow quadrant to switch within that family when conversion
+                # flips ordering (e.g., 20deg->36deg becomes 70deg->54deg).
+                if segment.quadrant in [2, 4]:
+                    # Positive-slope family: Q2 requires start >= end, Q4 requires start <= end.
+                    target_quadrant = 2 if converted_start >= converted_end else 4
+                else:
+                    # Negative-slope family: Q3 requires start >= end, Q1 requires start <= end.
+                    target_quadrant = 3 if converted_start >= converted_end else 1
+
                 converted_ramp.add_segment(
                     CircularSegment(
                         length=segment.length,
-                        angle_start=cls._helix_angle_to_slope_angle(
-                            segment.angle_start
-                        ),
-                        angle_end=cls._helix_angle_to_slope_angle(segment.angle_end),
-                        quadrant=segment.quadrant,
+                        angle_start=converted_start,
+                        angle_end=converted_end,
+                        quadrant=target_quadrant,
                     )
                 )
                 continue

@@ -11,7 +11,7 @@ This reveals the helix geometry and how radius affects the θ(x) profile.
 
 import numpy as np
 import matplotlib.pyplot as plt
-from cvt_simulator.models.ramps import LinearSegment, PiecewiseRamp
+from cvt_simulator.models.ramps import CircularSegment, LinearSegment, PiecewiseRamp
 from cvt_simulator.models.ramps.theta_ramp import ThetaRamp
 from cvt_simulator.constants.car_specs import HELIX_RADIUS, MAX_SHIFT
 
@@ -21,6 +21,7 @@ def visualize_theta_ramp_3d(
     num_points: int = 500,
     figsize: tuple = (12, 9),
     start_on_bottom: bool = True,
+    num_repeats: int = 1,
 ):
     """
     Create true 3D visualization of helix ramp geometry in physical space.
@@ -42,6 +43,8 @@ def visualize_theta_ramp_3d(
         figsize: Figure size (width, height)
         start_on_bottom: If True, apply a -π/2 visual offset so the plotted
             helix starts at the bottom of the circle.
+        num_repeats: Number of identical helix structures repeated evenly
+            around the circle.
     """
     # Generate sample points
     x_min, x_max = theta_ramp.get_x_range()
@@ -56,8 +59,6 @@ def visualize_theta_ramp_3d(
 
     # 3D helix parameterization (vertical orientation)
     z_helix = x_axial  # axial direction (vertical)
-    x_helix = theta_ramp.r * np.cos(theta_plot)  # circumferential x
-    y_helix = theta_ramp.r * np.sin(theta_plot)  # circumferential y
 
     # Bottom circle
     z_bottom = z_helix[0]
@@ -66,69 +67,73 @@ def visualize_theta_ramp_3d(
     fig = plt.figure(figsize=figsize)
     ax = fig.add_subplot(111, projection="3d")
 
-    # ========== Plot the helix curve ==========
-    ax.plot(x_helix, y_helix, z_helix, "b-", linewidth=3, label="Helix path", zorder=10)
+    # ========== Plot one or more evenly spaced repeated helix structures ==========
+    phase_offsets = np.linspace(0.0, 2.0 * np.pi, num_repeats, endpoint=False)
 
-    # ========== Plot start and end points ==========
-    ax.scatter(
-        [x_helix[0]],
-        [y_helix[0]],
-        [z_helix[0]],
-        color="green",
-        s=200,
-        marker="o",
-        label="Start (bottom)",
-        zorder=10,
-    )
-    ax.scatter(
-        [x_helix[-1]],
-        [y_helix[-1]],
-        [z_helix[-1]],
-        color="red",
-        s=200,
-        marker="s",
-        label="End (top)",
-        zorder=10,
-    )
+    for repeat_idx, phase_offset in enumerate(phase_offsets):
+        theta_repeat = theta_plot + phase_offset
+        x_helix = theta_ramp.r * np.cos(theta_repeat)  # circumferential x
+        y_helix = theta_ramp.r * np.sin(theta_repeat)  # circumferential y
 
-    # ========== Draw vertical lines from each helix point down to bottom circle ==========
-    for i in range(
-        0, len(x_helix), max(1, len(x_helix) // 20)
-    ):  # Draw every ~5% of points for clarity
-        ax.plot(
-            [x_helix[i], x_helix[i]],
-            [y_helix[i], y_helix[i]],
-            [z_helix[i], z_bottom],
-            "b--",
-            alpha=0.4,
-            linewidth=0.8,
+        helix_label = "Helix path" if repeat_idx == 0 else None
+        start_label = "Start (bottom)" if repeat_idx == 0 else None
+        end_label = "End (top)" if repeat_idx == 0 else None
+        drop_label = "Vertical drop from end" if repeat_idx == 0 else None
+
+        ax.plot(x_helix, y_helix, z_helix, "b-", linewidth=3, label=helix_label, zorder=10)
+
+        ax.scatter(
+            [x_helix[0]],
+            [y_helix[0]],
+            [z_helix[0]],
+            color="green",
+            s=200,
+            marker="o",
+            label=start_label,
+            zorder=10,
+        )
+        ax.scatter(
+            [x_helix[-1]],
+            [y_helix[-1]],
+            [z_helix[-1]],
+            color="red",
+            s=200,
+            marker="s",
+            label=end_label,
+            zorder=10,
         )
 
-    # ========== Draw prominent vertical line from endpoint ==========
-    ax.plot(
-        [x_helix[-1], x_helix[-1]],
-        [y_helix[-1], y_helix[-1]],
-        [z_helix[-1], z_bottom],
-        "r-",
-        linewidth=2.5,
-        alpha=0.8,
-        label="Vertical drop from end",
-    )
+        # Draw every ~5% of points for clarity
+        for i in range(0, len(x_helix), max(1, len(x_helix) // 20)):
+            ax.plot(
+                [x_helix[i], x_helix[i]],
+                [y_helix[i], y_helix[i]],
+                [z_helix[i], z_bottom],
+                "b--",
+                alpha=0.4,
+                linewidth=0.8,
+            )
 
-    # ========== Create ruled surface (cylinder fill below ramp) ==========
-    # Top edge: helix points
-    # Bottom edge: projections of helix points onto bottom circle (radially outward at same angle)
-    x_bottom_proj = theta_ramp.r * np.cos(theta_plot)
-    y_bottom_proj = theta_ramp.r * np.sin(theta_plot)
-    z_bottom_proj = np.full_like(z_helix, z_bottom)
+        ax.plot(
+            [x_helix[-1], x_helix[-1]],
+            [y_helix[-1], y_helix[-1]],
+            [z_helix[-1], z_bottom],
+            "r-",
+            linewidth=2.5,
+            alpha=0.8,
+            label=drop_label,
+        )
 
-    # Create mesh for the ruled surface
-    x_surf = np.vstack([x_helix, x_bottom_proj])
-    y_surf = np.vstack([y_helix, y_bottom_proj])
-    z_surf = np.vstack([z_helix, z_bottom_proj])
+        # Create ruled surface for this repeated helix
+        x_bottom_proj = theta_ramp.r * np.cos(theta_repeat)
+        y_bottom_proj = theta_ramp.r * np.sin(theta_repeat)
+        z_bottom_proj = np.full_like(z_helix, z_bottom)
 
-    # Plot surface
-    ax.plot_surface(x_surf, y_surf, z_surf, alpha=0.2, color="cyan", edgecolor="none")
+        x_surf = np.vstack([x_helix, x_bottom_proj])
+        y_surf = np.vstack([y_helix, y_bottom_proj])
+        z_surf = np.vstack([z_helix, z_bottom_proj])
+
+        ax.plot_surface(x_surf, y_surf, z_surf, alpha=0.2, color="cyan", edgecolor="none")
 
     # ========== Add reference circles ==========
     # Bottom circle (at z_min)
@@ -165,7 +170,10 @@ def visualize_theta_ramp_3d(
     ax.set_ylabel("y [m]", fontsize=11, fontweight="bold")
     ax.set_zlabel("Axial Position (Height) [m]", fontsize=11, fontweight="bold")
     ax.set_title(
-        f"3D Helix Ramp with Cylindrical Fill Below\n(Helix Radius = {theta_ramp.r:.4f} m)",
+        (
+            f"3D Helix Ramp with Cylindrical Fill Below\n"
+            f"(Helix Radius = {theta_ramp.r:.4f} m, Repeats = {num_repeats})"
+        ),
         fontsize=13,
         fontweight="bold",
     )
@@ -244,83 +252,84 @@ def main():
     print("Theta Ramp 3D Visualization")
     print("=" * 70)
 
-    # Create a linear helix ramp that rotates halfway around the circle.
-    # Goal: θ goes from 0 to π (180°) over MAX_SHIFT.
-    # For linear: dθ/dx = π / MAX_SHIFT and r * dθ/dx = cot(β).
-    # ThetaRamp now expects segment angle as helix angle β from circumferential.
+    # Requested examples: 36 deg and 20 deg, each rendered as 3 evenly spaced repeats.
+    for helix_angle_deg in (36.0, 20.0):
+        print("\n" + "-" * 70)
+        print(f"Example: Helix Angle = {helix_angle_deg:.1f}°")
+        print("-" * 70)
 
-    target_rotation_rad = np.pi  # 180 degrees around the circle
-    cot_beta = HELIX_RADIUS * target_rotation_rad / MAX_SHIFT
-    helix_angle_deg = np.degrees(np.arctan(1.0 / cot_beta))
+        angle_ramp = PiecewiseRamp()
+        angle_ramp.add_segment(LinearSegment(length=MAX_SHIFT, angle=helix_angle_deg))
+        theta_ramp = ThetaRamp(angle_ramp, HELIX_RADIUS)
 
-    print("\nHelix Parameters:")
+        x_min, x_max = theta_ramp.get_x_range()
+        theta_min, theta_max = theta_ramp.get_theta_range()
+        dtheta_dx = theta_ramp.dtheta_dx(x_min)
+
+        print("\nDirect-Angle Parameters:")
+        print(f"  Helix angle β = {helix_angle_deg:.1f}°")
+        print(f"  Helix radius r = {HELIX_RADIUS:.4f} m")
+        print(f"  Max shift = {MAX_SHIFT:.4f} m")
+        print(f"  dθ/dx = {dtheta_dx:.4f} rad/m")
+        print(
+            f"  Equivalent helix β = {np.degrees(np.arctan(1.0 / (HELIX_RADIUS * dtheta_dx))):.2f}°"
+        )
+
+        print("\nDirect-Angle Ramp Ranges:")
+        print(f"  Axial position: [{x_min:.4f}, {x_max:.4f}] m")
+        print(f"  Rotation: [{np.degrees(theta_min):.2f}°, {np.degrees(theta_max):.2f}°]")
+        print(f"  Rotation: [{theta_min:.4f}, {theta_max:.4f}] rad")
+
+        print(f"Generating 3D helix visualization ({helix_angle_deg:.1f}°, 3 repeats)...")
+        visualize_theta_ramp_3d(theta_ramp, num_points=500, num_repeats=3)
+
+        print(f"Generating theta profile plots ({helix_angle_deg:.1f}°)...")
+        visualize_theta_profiles(theta_ramp, num_points=500)
+
+    # Requested third example: circular segment transitioning from 20° to 36°.
+    print("\n" + "-" * 70)
+    print("Example: Circular Segment 20° -> 36°")
+    print("-" * 70)
+
+    circular_angle_start_deg = 36
+    circular_angle_end_deg = 20
+
+    circular_angle_ramp = PiecewiseRamp()
+    # Quadrant 4 gives positive slopes with gentle -> steep progression,
+    # which matches 20° -> 36°.
+    circular_angle_ramp.add_segment(
+        CircularSegment(
+            length=MAX_SHIFT,
+            angle_start=circular_angle_start_deg,
+            angle_end=circular_angle_end_deg,
+            quadrant=3,
+        )
+    )
+    circular_theta_ramp = ThetaRamp(circular_angle_ramp, HELIX_RADIUS)
+
+    x_min, x_max = circular_theta_ramp.get_x_range()
+    theta_min, theta_max = circular_theta_ramp.get_theta_range()
+    dtheta_dx_start = circular_theta_ramp.dtheta_dx(x_min)
+    dtheta_dx_end = circular_theta_ramp.dtheta_dx(x_max)
+
+    print("\nCircular-Segment Parameters:")
+    print(f"  Helix angle start β = {circular_angle_start_deg:.1f}°")
+    print(f"  Helix angle end β = {circular_angle_end_deg:.1f}°")
     print(f"  Helix radius r = {HELIX_RADIUS:.4f} m")
     print(f"  Max shift = {MAX_SHIFT:.4f} m")
-    print(
-        f"  Target rotation = {np.degrees(target_rotation_rad):.1f}° (halfway around)"
-    )
-    print(f"  cot(β) = {cot_beta:.4f}")
-    print(f"  Helix angle β = {helix_angle_deg:.2f}°")
+    print(f"  dθ/dx at start = {dtheta_dx_start:.4f} rad/m")
+    print(f"  dθ/dx at end = {dtheta_dx_end:.4f} rad/m")
 
-    # Create the angle ramp (helix angle defined directly)
-    angle_ramp = PiecewiseRamp()
-    angle_ramp.add_segment(LinearSegment(length=MAX_SHIFT, angle=helix_angle_deg))
-
-    # Wrap in theta ramp
-    theta_ramp = ThetaRamp(angle_ramp, HELIX_RADIUS)
-
-    x_min, x_max = theta_ramp.get_x_range()
-    theta_min, theta_max = theta_ramp.get_theta_range()
-
-    print("\nRamp Ranges:")
+    print("\nCircular-Segment Ramp Ranges:")
     print(f"  Axial position: [{x_min:.4f}, {x_max:.4f}] m")
     print(f"  Rotation: [{np.degrees(theta_min):.2f}°, {np.degrees(theta_max):.2f}°]")
     print(f"  Rotation: [{theta_min:.4f}, {theta_max:.4f}] rad")
 
-    # Create visualizations
-    print("\nGenerating 3D helix visualization...")
-    visualize_theta_ramp_3d(theta_ramp, num_points=500)
+    print("Generating 3D helix visualization (circular 20°->36°, 3 repeats)...")
+    visualize_theta_ramp_3d(circular_theta_ramp, num_points=500, num_repeats=3)
 
-    print("Generating theta profile plots...")
-    visualize_theta_profiles(theta_ramp, num_points=500)
-
-    # -----------------------------------------------------------------
-    # Example 2: Set helix angle to 36° (direct reference)
-    # -----------------------------------------------------------------
-    helix_angle_deg = 36.0
-    print("\n" + "-" * 70)
-    print("Example 2: Helix Angle Set Directly")
-    print("-" * 70)
-
-    angle_ramp_direct = PiecewiseRamp()
-    angle_ramp_direct.add_segment(
-        LinearSegment(length=MAX_SHIFT, angle=helix_angle_deg)
-    )
-    theta_ramp_direct = ThetaRamp(angle_ramp_direct, HELIX_RADIUS)
-
-    x2_min, x2_max = theta_ramp_direct.get_x_range()
-    theta2_min, theta2_max = theta_ramp_direct.get_theta_range()
-    dtheta_dx_direct = theta_ramp_direct.dtheta_dx(x2_min)
-
-    print("\nDirect-Angle Parameters:")
-    print(f"  Helix angle β = {helix_angle_deg:.1f}°")
-    print(f"  Helix radius r = {HELIX_RADIUS:.4f} m")
-    print(f"  Max shift = {MAX_SHIFT:.4f} m")
-    print(f"  dθ/dx = {dtheta_dx_direct:.4f} rad/m")
-    print(
-        f"  Equivalent helix β = {np.degrees(np.arctan(1.0 / (HELIX_RADIUS * dtheta_dx_direct))):.2f}°"
-    )
-
-    print("\nDirect-Angle Ramp Ranges:")
-    print(f"  Axial position: [{x2_min:.4f}, {x2_max:.4f}] m")
-    print(f"  Rotation: [{np.degrees(theta2_min):.2f}°, {np.degrees(theta2_max):.2f}°]")
-    print(f"  Rotation: [{theta2_min:.4f}, {theta2_max:.4f}] rad")
-
-    print("Generating 3D helix visualization (direct 36° angle)...")
-    visualize_theta_ramp_3d(theta_ramp_direct, num_points=500)
-
-    print("Generating theta profile plots (direct 36° angle)...")
-    visualize_theta_profiles(theta_ramp_direct, num_points=500)
+    print("Generating theta profile plots (circular 20°->36°)...")
+    visualize_theta_profiles(circular_theta_ramp, num_points=500)
 
     print("Displaying plot...")
     plt.show()

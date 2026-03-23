@@ -365,6 +365,18 @@ export const graphCategories: GraphCategory[] = [
             showYLine: false
         }
     },
+    {
+        xAccessor: engineRpmAccessor,
+        yAccessor: [engineTorqueAccessor, primary_tau_upperAccessor],
+        config: {
+            title: "Engine Torque and Primary Upper Bound vs Engine RPM",
+            xAxis: { name: "Engine RPM", type: "value", unit: getAxisUnit(engineRpmAccessor) },
+            yAxis: { name: "Torque", type: "value", unit: getAxisUnit(engineTorqueAccessor) },
+            seriesNames: ["Engine Torque", "Primary Upper Bound"],
+            showXLine: true,
+            showYLine: false
+        }
+    },
 ]},
 {
     title: "Pulley Forces (Overall)",
