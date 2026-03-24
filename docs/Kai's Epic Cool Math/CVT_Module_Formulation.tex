@@ -2308,10 +2308,12 @@ The effective torque radius for each pulley is defined as
 
 \begin{equation}
 r_{p,\text{eff}} = r_{p,\text{outer}} - \frac{h_b}{2},
+\label{eq:primary_effective_radius}
 \end{equation}
 
 \begin{equation}
 r_{s,\text{eff}} = r_{s,\text{outer}} - \frac{h_b}{2}.
+\label{eq:secondary_effective_radius}
 \end{equation}
 
 \begin{figure}[H]
@@ -3894,8 +3896,8 @@ portion of the wrap on pulley \(j\).
 \paragraph{3. Angular Velocity of the Belt Mass}
 
 The rotating belt mass on pulley \(j\) must also be assigned an angular speed.
-Let \(\hat{v}_b\) denote the modeled belt transport speed introduced in the
-system state. The corresponding angular velocity of the belt mass centroid
+From \Sec{sec:state}, \(\hat{v}_b\) denotes the modeled belt transport speed. 
+The corresponding angular velocity of the belt mass centroid
 on pulley \(j\) is then
 
 \begin{equation}
@@ -3906,7 +3908,8 @@ on pulley \(j\) is then
 \end{equation}
 
 This relation expresses the fact that the same belt transport speed corresponds
-to different local angular velocities depending on the radius of motion.
+to different local angular velocities depending on the radius of motion. 
+The evolution of \(\hat{v}_b\) is derived later in \Sec{sec:torque-coupling}.
 
 % --------------------------------------------------------------
 \paragraph{Distributed Centrifugal Load Along the Wrap}
@@ -4197,66 +4200,154 @@ that closes the remaining dynamical loop.
 
 
 % ==============================================================
-% ==============================================================
+\section{Belt Motion, Torque Transmission, and Contact States}
+\label{sec:belt_motion_torque_transmission_contact_states}
 
-\section{Torque Transmission and Coupling}
-\label{sec:torque_transmission}
-
-The axial force models developed in \Sec{sec:axial} depend on the
-torque transmitted through the CVT. However, this torque has not yet been
-defined as a system quantity.
-
-The engine applies torque at the primary pulley, while the vehicle load resists
-motion at the secondary. These components do not interact directly; their only
-mechanical connection is through the belt. To determine how torque is
-transmitted between them, the belt must be treated as the medium through which
-power flows.
-
-We proceed by first defining the torque path through the system, then examining
-how power is carried by the belt, and finally introducing a single coupling
-torque that characterizes the CVT interface.
+The axial force model derived in \Sec{sec:axial} depends on quantities
+that are not determined by axial motion alone. These remaining quantities
+enter through the belt, which couples the primary and secondary pulleys in
+two distinct ways. First, the belt moves through the pulley system with a
+transport speed that enters the belt centrifugal loading terms. Second,
+through frictional contact with the pulley faces, it transmits tangential
+force and therefore torque between the pulleys. The purpose of this section
+is to introduce the belt as the coupling medium of the CVT, define the
+belt transport motion and torque path through the system, and then
+distinguish the stick and slip states that govern transmission behavior.
 
 % ==============================================================
-\subsection{Torque Path Through the Belt}
+\subsection{The Belt as the Coupling Medium}
+
+The primary and secondary pulleys do not interact directly.
+All mechanical interaction between them occurs through the belt.
+The belt is therefore the coupling medium of the CVT.
+
+This coupling occurs in two distinct ways.
+
+First, the belt moves through the pulley system with a transport speed.
+Because the belt has mass, this motion contributes to the dynamics through
+belt-speed-dependent effects such as centrifugal loading.
+
+Second, the belt transmits tangential traction through frictional contact
+with the pulley faces. This tangential interaction is what allows torque
+to pass from the primary to the secondary.
+
+These two roles are illustrated in \Fig{fig:torque_path}. The primary pulley
+drives the belt, the belt moves through the transmission path, and the belt in
+turn drives the secondary pulley.
 
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.8\linewidth]{./illustrations/torque/cvt_overview_forces.png}
-    \caption{Torque flow through the CVT system. The primary pulley applies
-    torque $\tau_p$ to the belt, while the belt applies torque $\tau_s$ to the
-    secondary pulley.}
+    \caption{Belt-mediated coupling in the CVT. The primary pulley applies
+    torque to the belt, the belt moves through the transmission path, and the
+    belt applies torque to the secondary pulley. Through frictional contact,
+    the belt also transmits tangential force between the pulley faces.}
     \label{fig:torque_path}
 \end{figure}
 
-Let
+To describe this interaction, the following belt-mediated quantities will be used:
+
 \begin{align}
 \tau_p &:\ \text{torque applied by the primary pulley onto the belt}, \\
-\tau_s &:\ \text{torque applied by the belt onto the secondary pulley}.
+\tau_s &:\ \text{torque applied by the belt onto the secondary pulley}, \\
+F_t &:\ \text{effective tangential force transmitted through the belt}, \\
+\hat{v}_b &:\ \text{modeled belt transport speed}, \\
 \end{align}
 
-These quantities represent the torque entering and leaving the belt transmission
-path, respectively.
+The quantities $\tau_p$ and $\tau_s$ describe how torque enters and leaves the
+belt transmission path.
+The quantity $F_t$ describes the tangential traction carried through the belt.
+The quantity $\hat{v}_b$ describes the motion of the belt itself through the
+pulley system.
+
+The remainder of this section develops these belt-mediated quantities in order.
+We first examine the transport motion of the belt, then the tangential force
+and torque path carried through it, and finally the contact states that govern
+whether the transmission is in stick or slip.
 
 % ==============================================================
+\subsection{Belt Transport Motion}\label{sec:belt_transport_motion}
+
+Before torque transmission can be described, the motion of the belt itself
+must be established.
+
+Under \AssRef{assump:constant_belt_length}, the belt is assumed to remain
+taut and its total length is fixed. As a result, the belt does not admit
+independent local stretching or compression along different portions of its
+path. Instead, it moves through the CVT as a single continuous body with one
+transport speed at any given instant.
+
+To represent this motion in the dynamic model, let
+
+\[
+\hat{v}_b(t)
+\]
+
+denote the modeled belt transport speed. This quantity describes the rate at
+which belt material moves along the transmission path and is the belt-speed
+state introduced in \Sec{sec:state}.
+
+If a belt segment is adhering locally to pulley \(j \in \{p,s\}\), then the
+belt speed at that contact must match the circumferential speed of the pulley
+at the radius where the belt mass is modeled to move. Using the centroid
+radius from \Eq{eq:rj_cm_definition}, the pulley-imposed belt-line speeds are therefore
+
+\begin{equation}
+v_{p,\mathrm{cm}}
+=
+r_{p,\mathrm{cm}}(s)\,\omega_p,
+\qquad
+v_{s,\mathrm{cm}}
+=
+r_{s,\mathrm{cm}}(s)\,\omega_s.
+\label{eq:belt_line_speeds}
+\end{equation}
+
+These quantities represent the belt transport speeds that would be imposed by
+the primary and secondary pulleys, respectively, if the belt were adhering
+locally at each contact.
+
+If both pulley contacts are adhering simultaneously, then the belt cannot move
+at two different speeds at once. The transport speed must therefore satisfy the
+compatibility condition
+
+\begin{equation}
+\hat{v}_b
+=
+v_{p,\mathrm{cm}}
+=
+v_{s,\mathrm{cm}}.
+\label{eq:vb_stick_compatibility}
+\end{equation}
+
+This is the kinematic condition associated with sticking contact.
+
+If the two pulley-imposed belt-line speeds are unequal, then simultaneous
+adherence at both contacts is not kinematically possible. In that case, the
+transmission must depart from the sticking condition and enter a slipping
+state, which is discussed later in this section.
+
+With the belt transport motion now identified, the next step is to determine
+how tangential force and power are carried through this moving belt.
+
+
 % ==============================================================
 \subsection{Belt Power Flow and Torque Transmission}
 
-Since the belt is the only connection between the pulleys, it must carry the
-mechanical power transmitted through the system.
+With the belt transport motion now identified, the next step is to determine
+how force and power are carried through the moving belt.
 
-Under \AssRef{assump:constant_belt_length}, the belt moves along its path with a
-single transport speed $v_b(t)$.
-Since the belt is modeled as having constant length with no longitudinal
-deformation, different tangential speeds at different points along the belt
-would imply local stretching or compression, which this model does not permit.
+Since the belt is the only mechanical connection between the pulleys, it must
+carry the power transmitted through the CVT.
 
-Torque transmission arises from tangential forces
-acting between the belt and the pulley surfaces. Let $F_t$ denote the effective
-tangential force transmitted through the belt.
+Torque transmission arises from tangential forces acting between the belt and
+the pulley faces. Let \(F_t\) denote the effective tangential force transmitted
+through the belt.
 
 The mechanical power carried by the belt is therefore
+
 \begin{equation}
-P = F_t \, v_b.
+P = F_t \,\hat{v}_b.
 \label{eq:belt_power}
 \end{equation}
 
@@ -4264,44 +4355,61 @@ Under \AssRef{assump:ideal_cvt_power}, this power is conserved through the
 transmission, so that the power entering the belt at the primary equals the
 power leaving at the secondary.
 
-The same tangential force $F_t$ acts at the effective contact radii of each
-pulley. The torques at the primary and secondary are therefore
+The same transmitted tangential force \(F_t\) acts at the effective contact
+radius of each pulley. The torques associated with this force are therefore
+
 \begin{align}
 \tau_p &= r_{p,\mathrm{eff}} \, F_t, \\
 \tau_s &= r_{s,\mathrm{eff}} \, F_t.
+\label{eq:torques_from_Ft}
 \end{align}
 
-Since both torques arise from the same transmitted force, $F_t$ can be eliminated
-directly. From the primary expression,
+Here, \(r_{p,\mathrm{eff}}\) and \(r_{s,\mathrm{eff}}\) are the effective
+contact radii defined by \Eq{eq:primary_effective_radius} and
+\Eq{eq:secondary_effective_radius}, respectively. These radii determine the torque produced
+by the transmitted tangential force.
+Since both torques arise from the same transmitted force, \(F_t\) can be
+eliminated directly. From the primary expression,
+
 \begin{equation}
-F_t = \frac{\tau_p}{r_{p,\mathrm{eff}}},
+F_t = \frac{\tau_p}{r_{p,\mathrm{eff}}}.
+\label{eq:Ft_from_taup}
 \end{equation}
-and substituting into the secondary torque gives
+
+Substituting this into the secondary torque relation gives
+
 \begin{equation}
 \tau_s
 =
-r_{s,\mathrm{eff}} \left( \frac{\tau_p}{r_{p,\mathrm{eff}}} \right)
+r_{s,\mathrm{eff}}
+\left(
+\frac{\tau_p}{r_{p,\mathrm{eff}}}
+\right)
 =
-\frac{r_{s,\mathrm{eff}}}{r_{p,\mathrm{eff}}}
-\, \tau_p.
+\frac{r_{s,\mathrm{eff}}}{r_{p,\mathrm{eff}}}\,\tau_p.
+\label{eq:taus_from_taup_intermediate}
 \end{equation}
 
-Recalling the geometric definition of the CVT ratio
+Recalling the geometric definition of the CVT ratio from \Eq{eq:cvt_ratio},
+
 \begin{equation}
 R = \frac{r_{s,\mathrm{eff}}}{r_{p,\mathrm{eff}}},
+\label{eq:R_eff_repeat}
 \end{equation}
-it follows directly that
+
+it follows that
+
 \begin{equation}
-\tau_s = R \, \tau_p.
+\tau_s = R\,\tau_p.
 \label{eq:torque_ratio}
 \end{equation}
 
-% ==============================================================
-\subsection{Definition of Coupling Torque}
+Thus, the torque carried through the belt scales directly with the current
+CVT ratio. The primary and secondary torques are not independent quantities,
+but two descriptions of the same belt-mediated transmission process.
 
-The torques $\tau_p$ and $\tau_s$ both arise from the same transmitted belt
-force. It is therefore natural to define a single \emph{coupling torque} that
-characterizes the interaction between the pulleys:
+This observation motivates the introduction of a single \emph{coupling torque}.
+
 \begin{equation}
 \tau_c \equiv \tau_p.
 \end{equation}
@@ -4316,14 +4424,23 @@ of the belt--pulley interaction as a whole. The quantities $\tau_p$ and $\tau_s$
 represent the primary-side and secondary-side expressions of this same coupling
 torque.
 
-% ==============================================================
+
 \subsection{Transmission Regimes}
 \label{sec:transmission_regimes}
 
-The coupling torque $\tau_c$ defined above is the torque actually transmitted
-through the belt.
+The coupling torque $\tau_c$ defined in \Eq{eq:torque_ratio} is the torque
+actually transmitted through the belt.
 It is not prescribed externally.
 Instead, its value depends on the contact state of the transmission.
+
+In \Sec{sec:belt_transport_motion}, the belt was introduced as a moving body
+with modeled transport speed $\hat{v}_b$.
+That quantity describes the motion of belt material through the CVT and is used
+in belt-speed-dependent effects such as centrifugal loading.
+The present subsection addresses a different issue: whether the belt is locally
+adhering or slipping at the pulley contacts.
+For this purpose, the relevant kinematic quantities are the tangential contact
+speeds imposed by the pulley surfaces.
 
 \paragraph{No-slip torque.}
 
@@ -4369,8 +4486,22 @@ Once slipping has begun, the transmission does not return immediately to stick
 simply because $\tau_{\mathrm{ns}}$ later re-enters the admissible interval.
 Stick is only recovered once the existing relative motion has decayed to zero.
 
-For this reason, one further quantity is needed: a measure of the relative slip
-velocity.
+For this reason, one further quantity is needed: a measure of the relative
+contact-speed mismatch.
+
+In analogy with the pulley-imposed belt-line speeds introduced in
+\Sec{sec:belt_transport_motion}, define the pulley-imposed tangential contact
+speeds at the effective radii by
+\begin{equation}
+u_p = r_{p,\mathrm{eff}}\omega_p,
+\qquad
+u_s = r_{s,\mathrm{eff}}\omega_s.
+\label{eq:contact_surface_speeds}
+\end{equation}
+
+These are the tangential speeds that the primary and secondary pulley surfaces
+would impose at their effective contact radii if each were enforcing local
+adherence.
 
 Under \AssRef{assump:single_slip_interface}, the model permits slip at only one
 pulley contact at a time.
@@ -4378,29 +4509,29 @@ A single scalar mismatch is therefore sufficient:
 \begin{equation}
 v_{\Delta}
 =
+u_p - u_s
+=
 r_{p,\mathrm{eff}}\omega_p
 -
 r_{s,\mathrm{eff}}\omega_s.
 \label{eq:v_delta_def}
 \end{equation}
 
-This quantity compares the two tangential surface speeds that the pulleys would
-impose on the belt if each were enforcing adherence.
-
 If
 \begin{equation}
 v_{\Delta}=0,
 \label{eq:v_delta_zero}
 \end{equation}
-then the pulley motions are compatible with a common adhered belt motion, so a
-sticking state is kinematically possible.
+then the two pulley motions are compatible with a common adhered contact motion,
+so a sticking state is kinematically possible.
 
 If instead
 \begin{equation}
 v_{\Delta}\neq 0,
 \label{eq:v_delta_nonzero}
 \end{equation}
-then the pulleys are demanding different tangential belt speeds.
+then the two pulley contacts are demanding different tangential contact speeds,
+and simultaneous adherence at both contacts is not possible.
 
 The sign of $v_{\Delta}$ indicates the slip direction:
 if $v_{\Delta}>0$, the primary tends to drive the belt faster than the secondary
@@ -4444,17 +4575,142 @@ existing mismatch has been driven back to zero.
 This is why the slip metric is needed in addition to the traction limits:
 the traction limits determine whether sticking is admissible, while
 $v_{\Delta}$ determines whether slipping is still occurring and, if so, in which
-direction.
-
-The next section derives the no-slip torque $\tau_{\mathrm{ns}}$.
-The following section derives the traction limits $\tau_-$ and $\tau_+$ and
-thereby makes the traction-limited branch explicit.
-
-% ==============================================================
+direction. Importantly, this does not determine at \emph{which} contact slip occurs,
+only which is overruning the other.
 
 
 % ==============================================================
-% ==============================================================
+\subsection{Regularized Belt-Speed Evolution}
+\label{sec:belt_speed_evolution}
+
+The modeled belt transport speed $\hat{v}_b$ introduced in
+\Sec{sec:belt_transport_motion} enters the axial force model through the
+belt centrifugal terms derived in \Sec{sec:belt-centrifugal}.
+Its evolution must therefore be specified as part of the complete dynamic model.
+
+\paragraph{Exact closure in stick.}
+
+From \Eq{eq:belt_line_speeds}, the pulley-imposed belt-line speeds are
+
+\[
+v_{p,\mathrm{cm}} = r_{p,\mathrm{cm}}(s)\,\omega_p,
+\qquad
+v_{s,\mathrm{cm}} = r_{s,\mathrm{cm}}(s)\,\omega_s.
+\]
+
+When the transmission is in a sticking state, these two speeds are compatible.
+In that case, the belt transport speed is determined exactly by the adhered
+kinematics, so that
+
+\begin{equation}
+\hat{v}_b = v_{p,\mathrm{cm}} = v_{s,\mathrm{cm}}.
+\label{eq:vb_stick_exact}
+\end{equation}
+
+Thus, no additional approximation is required while the contacts remain stuck.
+
+\paragraph{Need for a slip closure.}
+
+When the transmission is slipping, the two pulley-imposed belt-line speeds no
+longer agree.
+At that point, the exact belt transport speed is no longer determined by
+kinematic compatibility alone.
+A fully resolved treatment would require a simultaneous branch-dependent
+solution for contact state, transmitted torque, and adhered belt motion.
+
+Such a closure is beyond the level of detail adopted in the present model.
+Instead, the belt transport speed is represented during slip by a regularized
+dynamic approximation. This preserves a continuous belt-speed state for use in
+belt-speed-dependent terms, while avoiding a substantially more complicated
+contact solve.
+
+\paragraph{Regularized target speed.}
+
+To construct this approximation, define the target belt speed
+
+\begin{equation}
+v_b^\ast
+=
+\frac{1}{2}
+\left(
+v_{p,\mathrm{cm}} + v_{s,\mathrm{cm}}
+\right).
+\label{eq:vb_target}
+\end{equation}
+
+This quantity represents the midpoint of the two pulley-imposed belt-line
+speeds and therefore provides a natural reference speed during slip.
+
+\paragraph{Evolution law.}
+
+Outside the sticking regime, the modeled belt speed is evolved toward
+\(v_b^\ast\) using the first-order relaxation law
+
+\begin{equation}
+\dot{\hat{v}}_b
+=
+\frac{v_b^\ast - \hat{v}_b}{T_b},
+\label{eq:vb_relaxation}
+\end{equation}
+
+where \(T_b > 0\) is a belt-speed regularization time constant.
+
+A small value of \(T_b\) causes \(\hat{v}_b\) to track the target speed
+rapidly, while a larger value produces a more gradual response.
+In either case, \(\hat{v}_b\) remains continuous through transitions between
+stick and slip.
+
+\paragraph{Resulting closure.}
+
+The modeled belt transport speed is therefore obtained from the regime-dependent
+rule
+
+\begin{equation}
+\hat{v}_b =
+\begin{cases}
+v_{p,\mathrm{cm}} = v_{s,\mathrm{cm}},
+&
+v_{\Delta}=0
+\;\text{and}\;
+\tau_- \le \tau_{\mathrm{ns}} \le \tau_+,
+\\[10pt]
+\text{solution of }
+\dot{\hat{v}}_b = \dfrac{v_b^\ast - \hat{v}_b}{T_b},
+&
+\text{otherwise.}
+\end{cases}
+\label{eq:vb_regime_law}
+\end{equation}
+
+This closure is exact in stick and regularized in slip.
+Its purpose is not to resolve the detailed local adhered contact during slip,
+but to provide a consistent and continuous modeled belt speed for the
+belt-speed-dependent terms already present in the dynamic formulation.
+
+
+\subsection{Summary and Forward Outlook}
+
+This section established the belt-level quantities required to couple the
+axial and rotational subsystems of the CVT model.
+
+The belt was introduced as the mechanical connection between the pulleys,
+with two distinct dynamical roles: it transports belt mass through the
+system and it transmits tangential force and therefore torque between the
+pulley faces. On this basis, the modeled belt transport speed $\hat{v}_b$
+and the coupling torque $\tau_c$ were defined, and the stick and slip
+regimes governing transmission behavior were identified. A regularized
+evolution law for $\hat{v}_b$ was then introduced to close the
+belt-speed-dependent terms of the model during slip while preserving exact
+kinematic compatibility in stick.
+
+At this stage, the transmission structure has been established, but two
+ingredients remain to be determined explicitly: the no-slip torque
+$\tau_{\mathrm{ns}}$ and the traction limits $\tau_-$ and $\tau_+$.
+The next section derives the no-slip torque required to maintain adhered
+motion. The section following that then derives the admissible traction
+bounds that determine when sticking can be sustained and when the
+transmission must remain on a slip branch.
+
 \section{Derivation of the No-Slip Coupling Torque}
 \label{sec:tau_ns}
 
