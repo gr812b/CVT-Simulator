@@ -1670,7 +1670,8 @@ contact conditions — are computed algebraically from these states.
 \omega_p \\
 \omega_s \\
 s \\
-\dot{s}
+\dot{s} \\
+\hat{v}_b
 \end{bmatrix}
 }
 
@@ -1688,12 +1689,15 @@ where:
 
     \item $\dot{s}$ is the axial shift velocity 
     (\si{\meter\per\second}).
+
+    \item $\hat{v}_b$ is the modeled belt transport speed
+    (\si{\meter\per\second}).
 \end{itemize}
 
 % --------------------------------------------------------------
 \subsection{Independent Dynamic Degrees of Freedom}
 
-These four quantities represent the independent dynamic motions of the CVT system.
+These five quantities represent the independent dynamic motions of the CVT system.
 
 The primary pulley can rotate independently under engine input and belt interaction. 
 Its angular speed $\omega_p$ therefore represents one rotational degree of freedom.
@@ -1709,6 +1713,11 @@ and must be modeled explicitly.
 
 Because axial motion follows second-order dynamics, both the axial position $s$ 
 and its rate $\dot{s}$ are required to fully describe its evolution.
+
+Finally, the belt itself moves through the pulley system and carries power
+between the two pulleys. The quantity $\hat{v}_b$ describes the transport
+speed of the belt and is included as a state variable so that this belt motion
+can be represented directly within the dynamic model.
 
 Together, these variables capture the complete rotational and axial motion of the system. 
 Removing any one of them would eliminate an independent dynamic degree of freedom 
@@ -1728,12 +1737,15 @@ At each timestep $\Delta t$:
     \item The axial position $s$ is updated using its current velocity $\dot{s}$.
 
     \item The axial velocity $\dot{s}$ is updated according to the axial acceleration.
+    
+    \item The modeled belt transport speed $\hat{v}_b$ is updated according
+    to its governing evolution law.
 \end{itemize}
 
 The angular and axial accelerations are determined from the governing 
 equations derived in subsequent sections. Once the state vector has been 
 updated, all other quantities in the model are computed directly from the 
-current values of $\omega_p$, $\omega_s$, $s$, and $\dot{s}$.
+current values of $\omega_p$, $\omega_s$, $s$, $\dot{s}$, and $\hat{v}_b$.
 
 
 \section{Pulley Geometry}\label{sec:geometry}
@@ -3590,11 +3602,11 @@ F = k \Delta x.
 \]
 
 Let $k_{s,x}$ denote axial stiffness.  
-Because increasing $s$ reduces compression,
+Because increasing $s$ increases compression,
 the effective compression is
 
 \[
-\Delta x = x_{s,0} - s.
+\Delta x = x_{s,0} + s.
 \]
 
 Thus,
@@ -3602,7 +3614,7 @@ Thus,
 \begin{equation}
 F_{s,\mathrm{comp}}(s)
 =
-k_{s,x}(x_{s,0} - s).
+k_{s,x}(x_{s,0} + s).
 \label{eq:secondary_comp_spring}
 \end{equation}
 
@@ -3633,8 +3645,8 @@ k_{s,\theta}\big(\theta_{s,0}+\theta_s(s)\big)
 }_{\text{torque-reactive helix (including torsional spring)}}
 +
 \underbrace{
-k_{s,x}(x_{s,0}-s)
-}_{\text{axial spring (weakening with shift)}}.
+k_{s,x}(x_{s,0}+s)
+}_{\text{axial spring}}.
 }
 
 % ==============================================================
@@ -3643,6 +3655,13 @@ k_{s,x}(x_{s,0}-s)
 In addition to the actuator and spring forces derived previously, the belt
 itself generates centrifugal loading as it rotates around each pulley.
 This section derives the resulting contribution to axial clamping force.
+
+Throughout this sub-section, let
+\[
+j \in \{p,s\}
+\]
+denote either pulley, where \(j=p\) corresponds to the primary and
+\(j=s\) corresponds to the secondary.
 
 % --------------------------------------------------------------
 \paragraph{Centrifugal Force Formulation}
@@ -3656,33 +3675,68 @@ F_c = m \omega^2 r.
 
 To apply this to the belt wrapped around a pulley, we require:
 \begin{enumerate}
-    \item The mass of belt material in contact with the pulley.
     \item The radius at which this mass rotates.
-    \item The angular velocity of the belt.
+    \item The mass of belt material in contact with the pulley.
+    \item The angular velocity of the belt mass.
 \end{enumerate}
 
 Each of these quantities is derived below.
 
 % --------------------------------------------------------------
-\paragraph{Belt Cross-Section Geometry}
+\subsection{Belt Centrifugal Force on the Wrap}
+\label{sec:belt-centrifugal}
+
+In addition to the actuator and spring forces derived previously, the belt
+itself generates centrifugal loading as it rotates around each pulley.
+This section derives the resulting contribution to axial clamping force.
+
+Throughout this section, let
+\[
+j \in \{p,s\}
+\]
+denote either pulley, where \(j=p\) corresponds to the primary and
+\(j=s\) corresponds to the secondary.
+
+From \theoryRef{th:centrifugal_force}, a mass \(m\) rotating at angular velocity
+\(\omega\) at radius \(r\) experiences centrifugal force
+
+\[
+F_c = m\omega^2 r.
+\]
+
+To apply this to the belt wrapped around pulley \(j\), three quantities must be defined:
+
+\begin{enumerate}
+    \item the radius at which the belt mass rotates,
+    \item the mass of belt material carried around the wrap,
+    \item the angular velocity of that belt mass.
+\end{enumerate}
+
+Each is developed below.
+
+% --------------------------------------------------------------
+\paragraph{1. Radius at Which the Belt Mass Rotates}
+
+Centrifugal force acts at the center of mass of the rotating belt element,
+not at the outer or inner belt surface. The location of this center of mass
+therefore determines the radius that must be used in the centrifugal force
+calculation.
 
 The belt cross-section is approximated as a trapezoid
 (see \Fig{fig:belt_cross_section_placeholder}) with:
 
 \begin{itemize}
-    \item radial thickness $h_b$,
-    \item outer width $b_{\mathrm{out}}$ (at the belt's outer surface),
-    \item inner width $b_{\mathrm{in}}$ (at the belt's inner surface).
+    \item radial thickness \(h_b\),
+    \item outer width \(b_{\mathrm{out}}\),
+    \item inner width \(b_{\mathrm{in}}\).
 \end{itemize}
 
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.55\linewidth]{./illustrations/pulleyForces/belt_cross_section.png}
-\caption{Trapezoidal belt cross-section. The outer width $b_{\mathrm{out}}$ corresponds
-to the surface away from the pulley axis; the inner width $b_{\mathrm{in}}$ corresponds
-to the surface closer to the axis. The radial thickness is $h_b$ and the local width varies 
-linearly between $b_{\mathrm{out}}$ and $b_{\mathrm{in}}$, producing a $\delta r_{\mathrm{cm}}$ 
-offset of the mass centroid from the geometric center.}
+\caption{Trapezoidal belt cross-section. The outer width \(b_{\mathrm{out}}\) corresponds
+to the surface away from the pulley axis; the inner width \(b_{\mathrm{in}}\) corresponds
+to the surface closer to the axis. The radial thickness is \(h_b\).}
 \label{fig:belt_cross_section_placeholder}
 \end{figure}
 
@@ -3695,25 +3749,9 @@ A_b
 \label{eq:Ab_trap}
 \end{equation}
 
-Let $\rho_b$ denote the belt material density (\si{\kilogram\per\meter\cubed}).
-The mass of a differential belt segment of arc length $\dd \ell$
-is therefore
-
-\begin{equation}
-\dd m = \rho_b A_b \,\dd \ell.
-\label{eq:dm_belt}
-\end{equation}
-
-% --------------------------------------------------------------
-\paragraph{Belt Mass Centroid}
-
-Centrifugal force acts at the center of mass of the rotating belt element,
-not at the outer or inner surface. Because the belt cross-section is trapezoidal
-(not rectangular), the centroid is offset from the geometric center.
-
-Let $y$ denote radial distance measured inward from the outer surface,
-so that $y = 0$ at the outer surface and $y = h_b$ at the inner surface.
-For a trapezoid with linear sidewalls, the local width varies linearly with $y$:
+Let \(y\) denote radial distance measured inward from the outer surface,
+so that \(y=0\) at the outer surface and \(y=h_b\) at the inner surface.
+For a trapezoid with linear sidewalls, the local width varies linearly with \(y\):
 
 \begin{equation}
 b(y)
@@ -3721,173 +3759,205 @@ b(y)
 b_{\mathrm{out}}
 +
 \frac{b_{\mathrm{in}} - b_{\mathrm{out}}}{h_b}y.
-\label{eq:b_of_y}
+\label{eq:belt_width_linear}
 \end{equation}
 
-The centroid location $\Delta r_{\mathrm{cm}}$, measured inward from the outer
-surface, is computed from the definition of the centroid of an area:
+The centroid location \(\Delta r_{\mathrm{cm}}\), measured inward from the
+outer surface, follows from the area-centroid definition:
 
 \begin{equation}
 \Delta r_{\mathrm{cm}}
 =
 \frac{1}{A_b}
 \int_0^{h_b} y\,b(y)\,\dd y.
-\label{eq:centroid_def}
+\label{eq:delta_r_cm_def}
 \end{equation}
 
-Substituting \Eq{eq:b_of_y} into this integral:
+Substituting \Eq{eq:belt_width_linear} into \Eq{eq:delta_r_cm_def} gives
 
 \begin{align}
 \int_0^{h_b} y\,b(y)\,\dd y
 &=
-\int_0^{h_b} y \left[
+\int_0^{h_b}
+y\left(
 b_{\mathrm{out}}
 +
 \frac{b_{\mathrm{in}} - b_{\mathrm{out}}}{h_b}y
-\right] \dd y
+\right)\dd y
 \nonumber\\[6pt]
 &=
-\int_0^{h_b} b_{\mathrm{out}}\,y \,\dd y
-\;+\;
+\int_0^{h_b} b_{\mathrm{out}} y\,\dd y
++
 \frac{b_{\mathrm{in}} - b_{\mathrm{out}}}{h_b}
-\int_0^{h_b} y^2 \,\dd y
+\int_0^{h_b} y^2\,\dd y
 \nonumber\\[6pt]
 &=
-b_{\mathrm{out}} \left[\frac{y^2}{2}\right]_0^{h_b}
-\;+\;
-\frac{b_{\mathrm{in}} - b_{\mathrm{out}}}{h_b}
-\left[\frac{y^3}{3}\right]_0^{h_b}
-\nonumber\\[6pt]
-&=
-b_{\mathrm{out}} \cdot \frac{h_b^2}{2}
-\;+\;
-\frac{b_{\mathrm{in}} - b_{\mathrm{out}}}{h_b} \cdot \frac{h_b^3}{3}
-\nonumber\\[6pt]
-&=
-\frac{h_b^2}{2} b_{\mathrm{out}}
-\;+\;
-\frac{h_b^2}{3} \left(b_{\mathrm{in}} - b_{\mathrm{out}}\right)
+\frac{h_b^2}{2}b_{\mathrm{out}}
++
+\frac{h_b^2}{3}\left(b_{\mathrm{in}} - b_{\mathrm{out}}\right)
 \nonumber\\[6pt]
 &=
 \frac{h_b^2}{6}
-\left(
-3 b_{\mathrm{out}} + 2 b_{\mathrm{in}} - 2 b_{\mathrm{out}}
-\right)
-\nonumber\\[6pt]
-&=
-\frac{h_b^2}{6}
-\left(b_{\mathrm{out}} + 2 b_{\mathrm{in}}\right).
+\left(b_{\mathrm{out}} + 2b_{\mathrm{in}}\right).
 \label{eq:centroid_integral_steps}
 \end{align}
 
-Dividing by the area $A_b = \frac{h_b}{2}(b_{\mathrm{out}} + b_{\mathrm{in}})$
-from \Eq{eq:Ab_trap}:
+Dividing by the area from \Eq{eq:Ab_trap} yields
 
 \begin{equation}
 \Delta r_{\mathrm{cm}}
 =
-\frac{
-\dfrac{h_b^2}{6}\left(b_{\mathrm{out}} + 2 b_{\mathrm{in}}\right)
-}{
-\dfrac{h_b}{2}\left(b_{\mathrm{out}} + b_{\mathrm{in}}\right)
-}
-=
-h_b \cdot
-\frac{b_{\mathrm{out}} + 2 b_{\mathrm{in}}}{
-3\left(b_{\mathrm{out}} + b_{\mathrm{in}}\right)
-}.
+h_b\,
+\frac{b_{\mathrm{out}} + 2b_{\mathrm{in}}}
+{3\left(b_{\mathrm{out}} + b_{\mathrm{in}}\right)}.
 \label{eq:delta_r_cm_trap}
 \end{equation}
 
-The belt mass-centroid radius at any shift position is therefore
+For pulley \(j\), let \(r_{j,\mathrm{out}}(s)\) denote the outer belt radius.
+The radius at which the belt mass rotates is therefore
 
 \begin{equation}
-r_{\mathrm{cm}}(s)
+r_{j,\mathrm{cm}}(s)
 =
-r_{\mathrm{out}}(s)
--
-\Delta r_{\mathrm{cm}},
-\label{eq:r_cm_definition}
+r_{j,\mathrm{out}}(s) - \Delta r_{\mathrm{cm}}.
+\label{eq:rj_cm_definition}
 \end{equation}
 
-where $r_{\mathrm{out}}(s)$ is the outer belt radius at the current shift
-(equal to the pulley outer radius at that position).
-
 % --------------------------------------------------------------
-\paragraph{Distributed Centrifugal Load Along the Wrap}
+\paragraph{2. Mass of Belt Material on the Wrap}
 
-Consider a differential belt element along the wrapped arc.
-Let $\theta$ denote the angular coordinate measured from the center of the wrap,
-so that the wrapped arc spans
+To determine the centrifugal loading on pulley \(j\), we next determine
+the amount of belt mass associated with an infinitesimal portion of its wrap.
+
+Let \(\theta\) denote the angular coordinate measured from the center of the wrap,
+so that the wrapped region on pulley \(j\) spans
 
 \[
-\theta \in \left[-\frac{\phi}{2},\;\frac{\phi}{2}\right],
+\theta \in \left[-\frac{\phi_j}{2},\;\frac{\phi_j}{2}\right],
 \]
 
-where $\phi$ is the total wrap angle (see \Fig{fig:belt_centrifugal_wrap_placeholder}).
+where \(\phi_j(s)\) is the total wrap angle on pulley \(j\)
+(see \Fig{fig:belt_centrifugal_wrap_placeholder}).
 
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.55\linewidth]{./illustrations/pulleyForces/belt_element.png}
-\caption{Belt wrapped around a pulley. A differential element at angle $\theta$
-has arc length $\dd\ell = r_{\mathrm{cm}}\,\dd\theta$ and experiences radially
+\caption{Belt wrapped around pulley \(j\). A differential element at angle \(\theta\)
+has arc length \(\dd\ell = r_{j,\mathrm{cm}}\,\dd\theta\) and experiences radially
 outward centrifugal force.}
 \label{fig:belt_centrifugal_wrap_placeholder}
 \end{figure}
 
-A differential belt element has arc length
+A differential belt element subtending angle \(\dd\theta\) at the
+mass-centroid radius \(r_{j,\mathrm{cm}}\) has arc length
 
 \[
-\dd \ell = r_{\mathrm{cm}}\,\dd\theta.
+\dd \ell = r_{j,\mathrm{cm}}\,\dd\theta.
 \]
 
-From \Eq{eq:dm_belt}, the corresponding differential mass is
+Since the belt has cross-sectional area \(A_b\), the differential belt
+element has volume
 
 \begin{equation}
-\dd m = \rho_b A_b r_{\mathrm{cm}}\,\dd\theta.
-\label{eq:dm_belt_wrap}
+\dd V_j
+=
+A_b\,\dd\ell.
+\label{eq:dV_belt_wrap_j}
 \end{equation}
 
-From \theoryRef{th:centrifugal_force}, the centrifugal force on this element is
+Substituting \(\dd\ell = r_{j,\mathrm{cm}}\,\dd\theta\) gives
 
 \begin{equation}
-\dd F_c
+\dd V_j
 =
-\dd m\,\omega^2 r_{\mathrm{cm}}
-=
-\rho_b A_b \,\omega^2 r_{\mathrm{cm}}^2 \,\dd\theta.
-\label{eq:dFc_belt}
+A_b\,r_{j,\mathrm{cm}}\,\dd\theta.
+\label{eq:dV_belt_wrap_j_expanded}
 \end{equation}
+
+Let \(\rho_b\) denote the belt material density
+(\si{\kilogram\per\meter\cubed}). The corresponding differential mass is then
+
+\begin{align}
+\dd m_j
+&=
+\rho_b\,\dd V_j
+\nonumber\\[6pt]
+&=
+\rho_b A_b\,r_{j,\mathrm{cm}}\,\dd\theta.
+\label{eq:dm_belt_wrap_j}
+\end{align}
+
+This gives the amount of belt material associated with an infinitesimal
+portion of the wrap on pulley \(j\).
+
+% --------------------------------------------------------------
+\paragraph{3. Angular Velocity of the Belt Mass}
+
+The rotating belt mass on pulley \(j\) must also be assigned an angular speed.
+Let \(\hat{v}_b\) denote the modeled belt transport speed introduced in the
+system state. The corresponding angular velocity of the belt mass centroid
+on pulley \(j\) is then
+
+\begin{equation}
+\omega_{b,j}
+=
+\frac{\hat{v}_b}{r_{j,\mathrm{cm}}(s)}.
+\label{eq:omega_bj_definition}
+\end{equation}
+
+This relation expresses the fact that the same belt transport speed corresponds
+to different local angular velocities depending on the radius of motion.
+
+% --------------------------------------------------------------
+\paragraph{Distributed Centrifugal Load Along the Wrap}
+
+With the radius, differential mass, and angular velocity now defined,
+the centrifugal force on the differential belt element follows from
+\theoryRef{th:centrifugal_force}:
+
+\begin{align}
+\dd F_{c,j}
+&=
+\dd m_j\,\omega_{b,j}^2\,r_{j,\mathrm{cm}}
+\nonumber\\[6pt]
+&=
+\left(\rho_b A_b\,r_{j,\mathrm{cm}}\,\dd\theta\right)
+\left(\frac{\hat{v}_b}{r_{j,\mathrm{cm}}}\right)^2
+r_{j,\mathrm{cm}}
+\nonumber\\[6pt]
+&=
+\rho_b A_b\,\hat{v}_b^2\,\dd\theta.
+\label{eq:dFc_belt_j}
+\end{align}
 
 This force acts radially outward at each point along the wrap.
 
 % --------------------------------------------------------------
 \paragraph{Total Radial Force Over the Wrap}
 
-Integrating \Eq{eq:dFc_belt} over the entire wrap angle yields the total
-radially-directed centrifugal force:
+Integrating \Eq{eq:dFc_belt_j} over the full wrap angle gives the total
+radially-directed centrifugal force on pulley \(j\):
 
 \begin{align}
-F_{c,\mathrm{rad}}
+F_{c,j,\mathrm{rad}}
 &=
-\int_{-\phi/2}^{\phi/2}
-\rho_b A_b \,\omega^2 r_{\mathrm{cm}}^2
-\,\dd\theta
+\int_{-\phi_j/2}^{\phi_j/2}
+\rho_b A_b\,\hat{v}_b^2\,\dd\theta
 \nonumber\\[6pt]
 &=
-\rho_b A_b \,\omega^2 r_{\mathrm{cm}}^2
-\int_{-\phi/2}^{\phi/2} \dd\theta
+\rho_b A_b\,\hat{v}_b^2
+\int_{-\phi_j/2}^{\phi_j/2}\dd\theta
 \nonumber\\[6pt]
 &=
-\rho_b A_b \,\omega^2 r_{\mathrm{cm}}^2 \,\phi.
-\label{eq:Fc_rad_wrap}
+\rho_b A_b\,\hat{v}_b^2\,\phi_j(s).
+\label{eq:Fc_rad_wrap_j}
 \end{align}
 
 % --------------------------------------------------------------
 \paragraph{Radial-to-Axial Conversion Through the Sheave Cone}
 
 The radial centrifugal force acts outward against the conical sheave faces.
-Because the sheaves are inclined at cone half-angle $\beta$, radial loading
+Because the sheaves are inclined at cone half-angle \(\beta\), radial loading
 cannot occur without simultaneous axial motion of the sheaves.
 Thus, a purely radial force applied to the belt generates an axial
 reaction component that contributes to clamping.
@@ -3902,10 +3972,6 @@ shift region is
 \frac{1}{2\tan\beta}.
 \]
 
-This relation describes how radial motion of the belt corresponds
-to axial motion of the sheaves. To convert force components,
-we enforce virtual work consistency between radial and axial motion.
-
 For an infinitesimal displacement,
 
 \[
@@ -3916,15 +3982,16 @@ F_{\mathrm{rad}}\,\dd r
 F_{\mathrm{ax}}\,\dd s.
 \]
 
-Substituting $\dd r = \dfrac{1}{2\tan\beta}\dd s$ gives
+Substituting \(\dd r = \dfrac{1}{2\tan\beta}\dd s\) gives
 
 \[
-F_{\mathrm{rad}} \frac{1}{2\tan\beta}\dd s
+F_{\mathrm{rad}}\,
+\frac{1}{2\tan\beta}\dd s
 =
-F_{\mathrm{ax}} \dd s.
+F_{\mathrm{ax}}\,\dd s.
 \]
 
-Canceling $\dd s$ yields
+Canceling \(\dd s\) yields
 
 \[
 F_{\mathrm{ax}}
@@ -3932,88 +3999,17 @@ F_{\mathrm{ax}}
 \frac{F_{\mathrm{rad}}}{2\tan\beta}.
 \]
 
-Thus, the total axial clamping contribution from belt centrifugal force is
+Thus, the axial clamping contribution from belt centrifugal force on pulley \(j\) is
 
 \begin{equation}
-F_{c,\mathrm{ax}}
+F_{c,j}
 =
 \frac{
-\rho_b A_b \,\omega^2 r_{\mathrm{cm}}^2 \,\phi
+\rho_b A_b\,\hat{v}_b^2\,\phi_j(s)
 }{
 2\tan\beta
 }.
-\label{eq:Fc_ax_wrap}
-\end{equation}
-
-% --------------------------------------------------------------
-\paragraph{Primary Pulley Contribution}
-
-On the primary pulley, the belt rotates at approximately $\omega = \omega_p$.
-The outer belt radius equals the primary outer radius from \Eq{eq:primary_radius},
-which is piecewise in $s$ and accounts for the deadzone behavior.
-
-The mass-centroid radius is
-
-\begin{equation}
-r_{p,\mathrm{cm}}(s)
-=
-r_{p,\text{outer}}(s) - \Delta r_{\mathrm{cm}},
-\label{eq:rp_cm_def}
-\end{equation}
-
-and the wrap angle $\phi_p(s)$ is given by \Eq{eq:wrap_angle_primary}.
-
-Substituting into \Eq{eq:Fc_ax_wrap} yields the primary belt centrifugal
-contribution to axial clamping:
-
-\begin{equation}
-F_{c,p}(s,\omega_p)
-=
-\frac{
-\rho_b A_b \,\omega_p^2\,
-r_{p,\mathrm{cm}}(s)^2\,
-\phi_p(s)
-}{
-2\tan\beta
-}.
-\label{eq:Fc_primary}
-\end{equation}
-
-\begin{remarkbox}[Remark (Belt Angular Velocity)]
-Using the primary angular velocity $\omega_p$ in the centrifugal force calculation is an approximation that assumes the belt speed matches the primary sheave speed. In reality, belt slip and compliance may cause the belt to rotate at a vastly different angular velocity than the primary sheave.
-\end{remarkbox}
-
-% --------------------------------------------------------------
-\paragraph{Secondary Pulley Contribution}
-
-On the secondary pulley, the belt rotates at approximately $\omega = \omega_s$.
-The outer belt radius $r_{s,\text{outer}}(s)$ is determined implicitly by the
-belt-length constraint (see \Eq{eq:secondary_radius}).
-
-The mass-centroid radius is
-
-\begin{equation}
-r_{s,\mathrm{cm}}(s)
-=
-r_{s,\text{outer}}(s) - \Delta r_{\mathrm{cm}},
-\label{eq:rs_cm_def}
-\end{equation}
-
-and the wrap angle $\phi_s(s)$ is given by \Eq{eq:wrap_angle_secondary}.
-
-The secondary belt centrifugal contribution to axial clamping is
-
-\begin{equation}
-F_{c,s}(s,\omega_s)
-=
-\frac{
-\rho_b A_b \,\omega_s^2\,
-r_{s,\mathrm{cm}}(s)^2\,
-\phi_s(s)
-}{
-2\tan\beta
-}.
-\label{eq:Fc_secondary}
+\label{eq:Fcj_general}
 \end{equation}
 
 % ==============================================================
@@ -4122,8 +4118,8 @@ Collecting the axial force contributions derived previously:
 \begin{itemize}
   \item $F_{p,\mathrm{ax}}(s,\omega_p)$ from \Eq{eq:primary_axial},
   \item $F_{s,\mathrm{ax}}(s,\tau_s)$ from \Eq{eq:secondary_axial},
-  \item $F_{c,p}(s,\omega_p)$ from \Eq{eq:Fc_primary},
-  \item $F_{c,s}(s,\omega_s)$ from \Eq{eq:Fc_secondary}.
+  \item $F_{c,p}(s,\hat{v}_b)$ from \Eq{eq:Fcj_general} with $j=p$,
+  \item $F_{c,s}(s,\hat{v}_b)$ from \Eq{eq:Fcj_general} with $j=s$.
 \end{itemize}
 
 With the sign convention defined above, the generalized force
@@ -4154,9 +4150,9 @@ we obtain
 \ddot s
 =
 \frac{
-\Big(F_{p,\mathrm{ax}}(s,\omega_p) + F_{c,p}(s,\omega_p)\Big)
+\Big(F_{p,\mathrm{ax}}(s,\omega_p) + F_{c,p}(s,v_b)\Big)
 -
-\Big(F_{s,\mathrm{ax}}(s,\tau_s) + F_{c,s}(s,\omega_s)\Big)
+\Big(F_{s,\mathrm{ax}}(s,\tau_s) + F_{c,s}(s,v_b)\Big)
 }{
 m_{p,m} + m_{s,m} + \dfrac{\rho_b A_b L_b}{4}
 }.
@@ -4176,14 +4172,15 @@ In this section we established a complete axial force model for the CVT
 mechanism and derived a closed-form equation of motion for the generalized
 shift coordinate $s(t)$.
 
-At this stage, the axial subsystem is formally closed
-\emph{except} for one remaining coupling quantity:
-the reacted secondary torque $\tau_s$.
+At this stage, the axial subsystem is formally closed with respect to the
+state variables of the model, but it still depends on one remaining
+coupling quantity that is not determined internally by the axial force
+balance: the reacted secondary torque $\tau_s$.
 Although $\tau_s$ appears explicitly in the secondary axial force model,
-its value is determined by rotational dynamics of the drivetrain
+its value is determined by the rotational dynamics of the drivetrain
 and by torque transmission through the belt.
-Aside from the shared state variables, the axial and rotational
-subsystems are coupled only through this torque term.
+Thus, aside from the shared state variables, the axial and rotational
+subsystems are coupled through this torque term.
 
 The next step is to determine how torque is transmitted across the CVT
 as a function of pulley radii and speed ratio.
@@ -4205,7 +4202,7 @@ that closes the remaining dynamical loop.
 \section{Torque Transmission and Coupling}
 \label{sec:torque_transmission}
 
-The axial force models developed in \Sec{sec:pulley_axial_models} depend on the
+The axial force models developed in \Sec{sec:axial} depend on the
 torque transmitted through the CVT. However, this torque has not yet been
 defined as a system quantity.
 
