@@ -4588,6 +4588,34 @@ kinematics, so that
 \label{eq:vb_stick_exact}
 \end{equation}
 
+In the same way, the time derivative of the belt transport speed is also
+determined exactly in stick by differentiating the compatibility relation.
+Using the primary-side expression gives
+
+\begin{equation}
+\dot{\hat{v}}_b
+=
+\frac{\dd}{\dd t}\!\left(r_{p,\mathrm{cm}}\,\omega_p\right)
+=
+\dot r_{p,\mathrm{cm}}\,\omega_p
++
+r_{p,\mathrm{cm}}\,\dot\omega_p,
+\label{eq:vb_dot_stick_primary}
+\end{equation}
+
+and, equivalently, using the secondary-side expression gives
+
+\begin{equation}
+\dot{\hat{v}}_b
+=
+\frac{\dd}{\dd t}\!\left(r_{s,\mathrm{cm}}\,\omega_s\right)
+=
+\dot r_{s,\mathrm{cm}}\,\omega_s
++
+r_{s,\mathrm{cm}}\,\dot\omega_s.
+\label{eq:vb_dot_stick_secondary}
+\end{equation}
+
 Thus, no additional approximation is required while the contacts remain stuck.
 
 \paragraph{Need for a slip closure.}
@@ -4601,9 +4629,9 @@ solution for contact state, transmitted torque, and adhered belt motion.
 
 Such a closure is beyond the level of detail adopted in the present model.
 Instead, the belt transport speed is represented during slip by a regularized
-dynamic approximation. This preserves a continuous belt-speed state for use in
-belt-speed-dependent terms, while avoiding a substantially more complicated
-contact solve.
+dynamic approximation.
+This preserves a continuous belt-speed state for use in belt-speed-dependent
+terms, while avoiding a substantially more complicated contact solve.
 
 \paragraph{Regularized target speed.}
 
@@ -4651,23 +4679,38 @@ rule
 \begin{cases}
 v_{p,\mathrm{cm}} = v_{s,\mathrm{cm}},
 &
-v_{\Delta}=0
-\;\text{and}\;
-\tau_- \le \tau_{\mathrm{ns}} \le \tau_+,
+\text{sticking regime},
 \\[10pt]
 \text{solution of }
 \dot{\hat{v}}_b = \dfrac{v_b^\ast - \hat{v}_b}{T_b},
 &
-\text{otherwise.}
+\text{slipping regime.}
 \end{cases}
 \label{eq:vb_regime_law}
+\end{equation}
+
+Its corresponding time derivative is
+
+\begin{equation}
+\dot{\hat{v}}_b =
+\begin{cases}
+\dot r_{p,\mathrm{cm}}\,\omega_p + r_{p,\mathrm{cm}}\,\dot\omega_p
+=
+\dot r_{s,\mathrm{cm}}\,\omega_s + r_{s,\mathrm{cm}}\,\dot\omega_s,
+&
+\text{sticking regime},
+\\[10pt]
+\dfrac{v_b^\ast - \hat{v}_b}{T_b},
+&
+\text{slipping regime.}
+\end{cases}
+\label{eq:vb_dot_regime_law}
 \end{equation}
 
 This closure is exact in stick and regularized in slip.
 Its purpose is not to resolve the detailed local adhered contact during slip,
 but to provide a consistent and continuous modeled belt speed for the
 belt-speed-dependent terms already present in the dynamic formulation.
-
 
 \subsection{Summary and Forward Outlook}
 
@@ -6131,94 +6174,49 @@ The remaining task is to substitute the appropriate axial clamp force
 \(F_{\mathrm{ax},j}\) for each pulley to obtain explicit bounds on the
 coupling torque.
 
-\subsection{Section Conclusion and Transition}
-\label{sec:traction_conclusion}
+\begin{remarkbox}[Remark (Why this differs from the classical capstan exponential)]
+In the classical capstan problem, the normal load is generated \emph{by the belt tension}
+itself (a larger tension implies a proportionally larger contact normal),
+which leads to the exponential relation $T_1/T_2 = e^{\mu\phi}$.
 
-This section derived a traction-limited torque bound for a single pulley.
+Here, the normal load is imposed externally by the clamping mechanism:
+$N_\phi$ is determined by $F_{\mathrm{ax}}$ through \Eq{eq:Nphi_from_Fax}.
+Therefore, the available traction scales \emph{linearly} with clamping force,
+not exponentially with belt tension.
+Centrifugal loading and ratio change enter additionally through the inertial term
+in \Eq{eq:tau_capacity_final}.
+\end{remarkbox}
 
-Equation \Eq{eq:tau_capacity_final} gives the maximum torque
-that can be transmitted at the current operating state.
-It depends only on:
-
-\begin{itemize}
-    \item axial clamping force $F_{\mathrm{ax}}$,
-    \item cone angle $\beta$,
-    \item wrap angle $\phi$,
-    \item belt mass and kinematics.
-\end{itemize}
-
-No exponential amplification occurs because the normal force
-is externally imposed and bounded.
-
-% ==============================================================
-
-
-\section{Pulley-Specific Traction Bounds and Coupling Torque Closure}
-\label{sec:pulley_specific_bounds}
-
-The generic capacity law \Eq{eq:tau_capacity_final} gives the maximum
-transmissible torque for a pulley \(j\) in terms of its local clamping force,
-geometry, and belt kinematics.
-To obtain usable limits on the coupling torque, this expression must now be
-specialized to the primary and secondary pulleys.
-
-For each pulley, the procedure is the same:
-
-\begin{enumerate}
-    \item identify the torque transmitted at that pulley,
-    \item substitute the appropriate rotational acceleration,
-    \item substitute the pulley-specific axial clamping-force model,
-    \item solve the resulting implicit inequality for the admissible torque range.
-\end{enumerate}
-
-On the primary side this is relatively direct, since the axial clamp force does
-not depend explicitly on the transmitted torque.
-On the secondary side, the torque-reactive helix introduces an additional
-dependence on transmitted torque, so the algebra is more involved.
-
-The resulting admissible interval for the coupling torque is obtained by
-intersecting the bounds contributed by the two pulleys.
-
-% --------------------------------------------------------------
 \subsection{Primary Pulley Traction Bounds}
 \label{sec:primary_tau_limits}
 
+The generic capacity law \Eq{eq:tau_capacity_final} must now be specialized to
+the primary pulley.
+Because the inertial correction contains \(\dot{\hat v}_b\), and the belt-speed
+derivative is defined differently in stick and slip, the primary traction bounds
+must be derived separately for the two transmission regimes.
+
+In the sticking regime, the belt speed is imposed by compatibility.
+Accordingly, we use the primary-side sticking derivative from
+\Eq{eq:vb_dot_stick_primary}, together with the primary axial-force model
+\Eq{eq:primary_axial}.
+This causes the inertial term to depend on the primary angular acceleration,
+and therefore on the coupling torque itself.
+The resulting sticking bound is thus implicit in \(\tau_c\), but it can still
+be solved in closed form.
+
+In the slipping regime, the belt-speed derivative is instead given directly by
+the regularized evolution law \Eq{eq:vb_relaxation}.
+In that case, the primary traction bound no longer depends on \(\tau_c\)
+through the inertial term, so the upper and lower limits follow directly.
+
+% --------------------------------------------------------------
+\paragraph{Stick regime}
+
 On the primary pulley, the transmitted torque at the belt contact is the
 coupling torque itself.
-Thus, applying \Eq{eq:tau_capacity_final} with \(j=p\) gives
+Applying \Eq{eq:tau_capacity_final} with \(j=p\) gives
 
-\begin{equation}
-\tau_{p,\max}
-=
-r_{p,\mathrm{eff}}
-\left[
-2\mu F_{\mathrm{ax},p}\tan\beta
--
-\rho_b A_b r_{p,\mathrm{cm}} \phi_p
-\left(
-r_{p,\mathrm{cm}}\dot{\omega}_p
-+
-2\dot r_{p,\mathrm{cm}}\,\omega_p
-\right)
-\right].
-\label{eq:tau_p_max_generic}
-\end{equation}
-
-Therefore, admissible transmission at the primary requires
-\begin{equation}
-|\tau_c| \le \tau_{p,\max}.
-\label{eq:tau_p_capacity_start}
-\end{equation}
-
-From the primary rotational dynamics \Eq{eq:primary_rot_dyn},
-\begin{equation}
-\dot{\omega}_p
-=
-\frac{\tau_{\mathrm{eng}}-\tau_c}{I_p}.
-\label{eq:omega_dot_p_from_eom}
-\end{equation}
-
-Substituting \Eq{eq:omega_dot_p_from_eom} into \Eq{eq:tau_p_max_generic} gives
 \begin{equation}
 |\tau_c|
 \le
@@ -6226,159 +6224,172 @@ r_{p,\mathrm{eff}}
 \left[
 2\mu F_{\mathrm{ax},p}\tan\beta
 -
-\rho_b A_b r_{p,\mathrm{cm}} \phi_p
+\rho_b A_b \phi_p
 \left(
-r_{p,\mathrm{cm}}\frac{\tau_{\mathrm{eng}}-\tau_c}{I_p}
+r_{p,\mathrm{cm}}\dot{\hat v}_b
 +
-2\dot r_{p,\mathrm{cm}}\,\omega_p
+\dot r_{p,\mathrm{cm}}\,\hat v_b
 \right)
 \right].
-\label{eq:tau_p_capacity_implicit}
+\label{eq:tau_p_capacity_stick_start}
 \end{equation}
 
-Since \(\tau_c\) appears on both sides, the positive and negative directions
-must be treated separately.
-
-\paragraph{Positive-direction bound \(\tau_c \ge 0\)}
-
-For \(\tau_c \ge 0\), \(|\tau_c|=\tau_c\), so
-\begin{align}
-\tau_c
-&\le
-r_{p,\mathrm{eff}}
-\left[
-2\mu F_{\mathrm{ax},p}\tan\beta
--
-\rho_b A_b r_{p,\mathrm{cm}} \phi_p
-\left(
-r_{p,\mathrm{cm}}\frac{\tau_{\mathrm{eng}}-\tau_c}{I_p}
-+
-2\dot r_{p,\mathrm{cm}}\,\omega_p
-\right)
-\right]
-\nonumber\\[4pt]
-\frac{\tau_c}{r_{p,\mathrm{eff}}}
--
-\rho_b A_b r_{p,\mathrm{cm}} \phi_p
-\frac{r_{p,\mathrm{cm}}}{I_p}\tau_c
-&\le
-2\mu F_{\mathrm{ax},p}\tan\beta
--
-\rho_b A_b r_{p,\mathrm{cm}} \phi_p
-\left(
-\frac{r_{p,\mathrm{cm}}}{I_p}\tau_{\mathrm{eng}}
-+
-2\dot r_{p,\mathrm{cm}}\,\omega_p
-\right).
-\label{eq:tau_p_plus_rearrange}
-\end{align}
-
-Hence,
-\begin{equation}
-\tau_c \le \tau_{p,+},
-\qquad
-\tau_{p,+}
-=
-\frac{
-2\mu F_{\mathrm{ax},p}\tan\beta
--
-\rho_b A_b r_{p,\mathrm{cm}} \phi_p
-\left(
-\dfrac{r_{p,\mathrm{cm}}}{I_p}\tau_{\mathrm{eng}}
-+
-2\dot r_{p,\mathrm{cm}}\,\omega_p
-\right)
-}{
-\dfrac{1}{r_{p,\mathrm{eff}}}
--
-\rho_b A_b r_{p,\mathrm{cm}} \phi_p
-\dfrac{r_{p,\mathrm{cm}}}{I_p}
-}.
-\label{eq:tau_p_plus}
-\end{equation}
-
-\paragraph{Negative-direction bound \(\tau_c \le 0\)}
-
-For \(\tau_c \le 0\), \(|\tau_c|=-\tau_c\), so
-\begin{align}
--\tau_c
-&\le
-r_{p,\mathrm{eff}}
-\left[
-2\mu F_{\mathrm{ax},p}\tan\beta
--
-\rho_b A_b r_{p,\mathrm{cm}} \phi_p
-\left(
-r_{p,\mathrm{cm}}\frac{\tau_{\mathrm{eng}}-\tau_c}{I_p}
-+
-2\dot r_{p,\mathrm{cm}}\,\omega_p
-\right)
-\right]
-\nonumber\\[4pt]
--\frac{\tau_c}{r_{p,\mathrm{eff}}}
--
-\rho_b A_b r_{p,\mathrm{cm}} \phi_p
-\frac{r_{p,\mathrm{cm}}}{I_p}\tau_c
-&\le
-2\mu F_{\mathrm{ax},p}\tan\beta
--
-\rho_b A_b r_{p,\mathrm{cm}} \phi_p
-\left(
-\frac{r_{p,\mathrm{cm}}}{I_p}\tau_{\mathrm{eng}}
-+
-2\dot r_{p,\mathrm{cm}}\,\omega_p
-\right).
-\label{eq:tau_p_minus_rearrange}
-\end{align}
-
-Hence,
-\begin{equation}
-\tau_c \ge \tau_{p,-},
-\qquad
-\tau_{p,-}
-=
--\frac{
-2\mu F_{\mathrm{ax},p}\tan\beta
--
-\rho_b A_b r_{p,\mathrm{cm}} \phi_p
-\left(
-\dfrac{r_{p,\mathrm{cm}}}{I_p}\tau_{\mathrm{eng}}
-+
-2\dot r_{p,\mathrm{cm}}\,\omega_p
-\right)
-}{
-\dfrac{1}{r_{p,\mathrm{eff}}}
-+
-\rho_b A_b r_{p,\mathrm{cm}} \phi_p
-\dfrac{r_{p,\mathrm{cm}}}{I_p}
-}.
-\label{eq:tau_p_minus}
-\end{equation}
-
-Therefore, the primary pulley contributes the admissible interval
-\begin{equation}
-\boxed{
-\tau_{p,-} \le \tau_c \le \tau_{p,+}.
-}
-\label{eq:primary_tau_interval}
-\end{equation}
-
-Finally, substituting the primary axial-force model
-\Eq{eq:primary_axial}
-into \Eq{eq:tau_p_plus} and \Eq{eq:tau_p_minus}, with
+In the sticking regime,
 \[
-F_{\mathrm{ax},p}
+\hat v_b = r_{p,\mathrm{cm}}\omega_p,
+\qquad
+\dot{\hat v}_b
+=
+\dot r_{p,\mathrm{cm}}\,\omega_p
++
+r_{p,\mathrm{cm}}\,\dot\omega_p,
+\]
+from \Eq{eq:vb_stick_exact} and \Eq{eq:vb_dot_stick_primary}.
+Substituting these into \Eq{eq:tau_p_capacity_stick_start} gives
+
+\begin{equation}
+|\tau_c|
+\le
+r_{p,\mathrm{eff}}
+\left[
+2\mu F_{\mathrm{ax},p}\tan\beta
+-
+\rho_b A_b \phi_p
+\left(
+r_{p,\mathrm{cm}}^2\dot\omega_p
++
+2r_{p,\mathrm{cm}}\dot r_{p,\mathrm{cm}}\,\omega_p
+\right)
+\right].
+\label{eq:tau_p_capacity_stick_mid}
+\end{equation}
+
+Now substitute the primary axial-force model from \Eq{eq:primary_axial},
+\begin{equation}
+F_{\mathrm{ax},p}(s,\omega_p)
 =
 m_f\omega_p^2\,r_f(s)\,\frac{\dd r_f}{\dd s}
 -
 k_p\bigl(x_{p,0}+s\bigr),
-\]
-gives the explicit primary traction bounds
+\label{eq:Fax_p_sub_stick}
+\end{equation}
+together with the primary rotational equation of motion from \Eq{eq:primary_rot_dyn}
+\begin{equation}
+\dot\omega_p
+=
+\frac{\tau_{\mathrm{eng}}-\tau_c}{I_p}.
+\label{eq:omega_p_dot_sub_stick}
+\end{equation}
 
-\bigeq{eq:tau_p_plus_expanded}{Primary Traction Upper Bound}{
-\tau_{p,+}
+This yields
+\begin{equation}
+\begin{aligned}
+|\tau_c|
+\le\;&
+r_{p,\mathrm{eff}}
+\Biggl\{
+2\mu\tan\beta
+\left[
+m_f\omega_p^2\,r_f(s)\,\frac{\dd r_f}{\dd s}
+-
+k_p\bigl(x_{p,0}+s\bigr)
+\right]
+\\[4pt]
+&\qquad
+-
+\rho_b A_b \phi_p
+\left[
+\frac{r_{p,\mathrm{cm}}^2}{I_p}\bigl(\tau_{\mathrm{eng}}-\tau_c\bigr)
++
+2r_{p,\mathrm{cm}}\dot r_{p,\mathrm{cm}}\,\omega_p
+\right]
+\Biggr\}.
+\end{aligned}
+\label{eq:tau_p_capacity_stick_explicit}
+\end{equation}
+
+The coupling torque now appears on both sides of the inequality, so the
+positive and negative directions must again be treated separately.
+
+\paragraph{Positive-direction sticking bound \(\tau_c \ge 0\)}
+
+For \(\tau_c \ge 0\), \(|\tau_c|=\tau_c\), so \Eq{eq:tau_p_capacity_stick_explicit}
+becomes
+
+\begin{equation}
+\begin{aligned}
+\tau_c
+\le\;&
+r_{p,\mathrm{eff}}
+\Biggl\{
+2\mu\tan\beta
+\left[
+m_f\omega_p^2\,r_f(s)\,\frac{\dd r_f}{\dd s}
+-
+k_p\bigl(x_{p,0}+s\bigr)
+\right]
+\\[4pt]
+&\qquad
+-
+\rho_b A_b \phi_p
+\left[
+\frac{r_{p,\mathrm{cm}}^2}{I_p}\tau_{\mathrm{eng}}
+-
+\frac{r_{p,\mathrm{cm}}^2}{I_p}\tau_c
++
+2r_{p,\mathrm{cm}}\dot r_{p,\mathrm{cm}}\,\omega_p
+\right]
+\Biggr\}.
+\end{aligned}
+\label{eq:tau_p_plus_stick_expand}
+\end{equation}
+
+Collecting the \(\tau_c\) terms on the left gives
+
+\begin{equation}
+\begin{aligned}
+\Biggl(
+1
+-
+r_{p,\mathrm{eff}}\rho_b A_b \phi_p
+\frac{r_{p,\mathrm{cm}}^2}{I_p}
+\Biggr)\tau_c
+\le\;&
+r_{p,\mathrm{eff}}
+\Biggl\{
+2\mu\tan\beta
+\left[
+m_f\omega_p^2\,r_f(s)\,\frac{\dd r_f}{\dd s}
+-
+k_p\bigl(x_{p,0}+s\bigr)
+\right]
+\\[4pt]
+&\qquad
+-
+\rho_b A_b \phi_p
+\left[
+\frac{r_{p,\mathrm{cm}}^2}{I_p}\tau_{\mathrm{eng}}
++
+2r_{p,\mathrm{cm}}\dot r_{p,\mathrm{cm}}\,\omega_p
+\right]
+\Biggr\}.
+\end{aligned}
+\label{eq:tau_p_plus_stick_rearrange}
+\end{equation}
+
+Hence,
+\begin{equation}
+\tau_c \le \tau_{c,p,+}^{\mathrm{stick}},
+\label{eq:tau_p_plus_stick_ineq}
+\end{equation}
+with
+
+\bigeq{eq:tau_p_plus_stick}{Primary Stick-Branch Upper Bound}{
+\tau_{c,p,+}^{\mathrm{stick}}
 =
 \frac{
+r_{p,\mathrm{eff}}
+\Biggl\{
 2\mu\tan\beta
 \left[
 m_f\omega_p^2\,r_f(s)\,\dfrac{\dd r_f}{\dd s}
@@ -6386,407 +6397,899 @@ m_f\omega_p^2\,r_f(s)\,\dfrac{\dd r_f}{\dd s}
 k_p\bigl(x_{p,0}+s\bigr)
 \right]
 -
-\rho_b A_b r_{p,\mathrm{cm}} \phi_p
-\left(
-\dfrac{r_{p,\mathrm{cm}}}{I_p}\tau_{\mathrm{eng}}
-+
-2\dot r_{p,\mathrm{cm}}\,\omega_p
-\right)
-}{
-\dfrac{1}{r_{p,\mathrm{eff}}}
--
-\rho_b A_b r_{p,\mathrm{cm}} \phi_p
-\dfrac{r_{p,\mathrm{cm}}}{I_p}
-},
-}
-
-and
-
-\bigeq{eq:tau_p_minus_expanded}{Primary Traction Lower Bound}{
-\tau_{p,-}
-=
--\frac{
-2\mu\tan\beta
+\rho_b A_b \phi_p
 \left[
-m_f\omega_p^2\,r_f(s)\,\dfrac{\dd r_f}{\dd s}
--
-k_p\bigl(x_{p,0}+s\bigr)
+\dfrac{r_{p,\mathrm{cm}}^2}{I_p}\tau_{\mathrm{eng}}
++
+2r_{p,\mathrm{cm}}\dot r_{p,\mathrm{cm}}\,\omega_p
 \right]
--
-\rho_b A_b r_{p,\mathrm{cm}} \phi_p
-\left(
-\dfrac{r_{p,\mathrm{cm}}}{I_p}\tau_{\mathrm{eng}}
-+
-2\dot r_{p,\mathrm{cm}}\,\omega_p
-\right)
+\Biggr\}
 }{
-\dfrac{1}{r_{p,\mathrm{eff}}}
-+
-\rho_b A_b r_{p,\mathrm{cm}} \phi_p
-\dfrac{r_{p,\mathrm{cm}}}{I_p}
+1
+-
+r_{p,\mathrm{eff}}\rho_b A_b \phi_p
+\dfrac{r_{p,\mathrm{cm}}^2}{I_p}
 }.
 }
+
+\paragraph{Negative-direction sticking bound \(\tau_c \le 0\)}
+
+For \(\tau_c \le 0\), \(|\tau_c|=-\tau_c\), so \Eq{eq:tau_p_capacity_stick_explicit}
+becomes
+
+\begin{equation}
+\begin{aligned}
+\Biggl(
+1
++
+r_{p,\mathrm{eff}}\rho_b A_b \phi_p
+\frac{r_{p,\mathrm{cm}}^2}{I_p}
+\Biggr)\tau_c
+\ge\;&
+-
+r_{p,\mathrm{eff}}
+\Biggl\{
+2\mu\tan\beta
+\left[
+m_f\omega_p^2\,r_f(s)\,\frac{\dd r_f}{\dd s}
+-
+k_p\bigl(x_{p,0}+s\bigr)
+\right]
+\\[4pt]
+&\qquad
+-
+\rho_b A_b \phi_p
+\left[
+\frac{r_{p,\mathrm{cm}}^2}{I_p}\tau_{\mathrm{eng}}
++
+2r_{p,\mathrm{cm}}\dot r_{p,\mathrm{cm}}\,\omega_p
+\right]
+\Biggr\}.
+\end{aligned}
+\label{eq:tau_p_minus_stick_rearrange}
+\end{equation}
+
+Collecting the \(\tau_c\) terms gives
+
+\begin{equation}
+\left(
+1
++
+r_{p,\mathrm{eff}}\rho_b A_b \phi_p
+\frac{r_{p,\mathrm{cm}}^2}{I_p}
+\right)\tau_c
+\ge
+-
+r_{p,\mathrm{eff}}
+\Biggl\{
+2\mu\tan\beta
+\left[
+m_f\omega_p^2\,r_f(s)\,\frac{\dd r_f}{\dd s}
+-
+k_p\bigl(x_{p,0}+s\bigr)
+\right]
+-
+\rho_b A_b \phi_p
+\left[
+\frac{r_{p,\mathrm{cm}}^2}{I_p}\tau_{\mathrm{eng}}
++
+2r_{p,\mathrm{cm}}\dot r_{p,\mathrm{cm}}\,\omega_p
+\right]
+\Biggr\}.
+\label{eq:tau_p_minus_stick_rearrange}
+\end{equation}
+
+Hence,
+\begin{equation}
+\tau_c \ge \tau_{c,p,-}^{\mathrm{stick}},
+\label{eq:tau_p_minus_stick_ineq}
+\end{equation}
+with
+
+\bigeq{eq:tau_p_minus_stick}{Primary Stick-Branch Lower Bound}{
+\tau_{c,p,-}^{\mathrm{stick}}
+=
+-\frac{
+r_{p,\mathrm{eff}}
+\Biggl\{
+2\mu\tan\beta
+\left[
+m_f\omega_p^2\,r_f(s)\,\dfrac{\dd r_f}{\dd s}
+-
+k_p\bigl(x_{p,0}+s\bigr)
+\right]
+-
+\rho_b A_b \phi_p
+\left[
+\dfrac{r_{p,\mathrm{cm}}^2}{I_p}\tau_{\mathrm{eng}}
++
+2r_{p,\mathrm{cm}}\dot r_{p,\mathrm{cm}}\,\omega_p
+\right]
+\Biggr\}
+}{
+\displaystyle
+1
++
+r_{p,\mathrm{eff}}\rho_b A_b \phi_p
+\dfrac{r_{p,\mathrm{cm}}^2}{I_p}
+}.
+}
+
+Therefore, in the sticking regime the primary pulley contributes the interval
+\begin{equation}
+\boxed{
+\tau_{c,p,-}^{\mathrm{stick}}
+\le
+\tau_c
+\le
+\tau_{c,p,+}^{\mathrm{stick}}.
+}
+\label{eq:primary_tau_interval_stick}
+\end{equation}
+
+% --------------------------------------------------------------
+\paragraph{Slip regime}
+
+In the slipping regime, the belt-speed derivative is given directly by the
+regularized closure \Eq{eq:vb_relaxation}:
+\[
+\dot{\hat v}_b
+=
+\frac{v_b^\ast-\hat v_b}{T_b}.
+\]
+
+Applying \Eq{eq:tau_capacity_final} with \(j=p\), and again substituting the
+primary axial-force model \Eq{eq:primary_axial}, gives
+
+\begin{equation}
+|\tau_c|
+\le
+r_{p,\mathrm{eff}}
+\Biggl\{
+2\mu\tan\beta
+\left[
+m_f\omega_p^2\,r_f(s)\,\frac{\dd r_f}{\dd s}
+-
+k_p\bigl(x_{p,0}+s\bigr)
+\right]
+-
+\rho_b A_b \phi_p
+\left[
+r_{p,\mathrm{cm}}\frac{v_b^\ast-\hat v_b}{T_b}
++
+\dot r_{p,\mathrm{cm}}\,\hat v_b
+\right]
+\Biggr\}.
+\label{eq:tau_p_capacity_slip_explicit}
+\end{equation}
+
+In contrast to the sticking case, the right-hand side no longer depends on
+\(\tau_c\).
+The positive and negative limits therefore follow directly.
+
+\paragraph{Positive-direction slipping bound \(\tau_c \ge 0\)}
+
+For \(\tau_c \ge 0\), \(|\tau_c|=\tau_c\), so
+\begin{equation}
+\tau_c \le \tau_{c,p,+}^{\mathrm{slip}},
+\label{eq:tau_p_plus_slip_ineq}
+\end{equation}
+with
+
+\bigeq{eq:tau_p_plus_slip}{Primary Slip-Branch Upper Bound}{
+\tau_{c,p,+}^{\mathrm{slip}}
+=
+r_{p,\mathrm{eff}}
+\Biggl\{
+2\mu\tan\beta
+\left[
+m_f\omega_p^2\,r_f(s)\,\dfrac{\dd r_f}{\dd s}
+-
+k_p\bigl(x_{p,0}+s\bigr)
+\right]
+-
+\rho_b A_b \phi_p
+\left[
+r_{p,\mathrm{cm}}\dfrac{v_b^\ast-\hat v_b}{T_b}
++
+\dot r_{p,\mathrm{cm}}\,\hat v_b
+\right]
+\Biggr\}.
+}
+
+\paragraph{Negative-direction slipping bound \(\tau_c \le 0\)}
+
+For \(\tau_c \le 0\), \(|\tau_c|=-\tau_c\), so
+\begin{equation}
+\tau_c \ge \tau_{c,p,-}^{\mathrm{slip}},
+\label{eq:tau_p_minus_slip_ineq}
+\end{equation}
+with
+
+\bigeq{eq:tau_p_minus_slip}{Primary Slip-Branch Lower Bound}{
+\tau_{c,p,-}^{\mathrm{slip}}
+=
+-
+r_{p,\mathrm{eff}}
+\Biggl\{
+2\mu\tan\beta
+\left[
+m_f\omega_p^2\,r_f(s)\,\dfrac{\dd r_f}{\dd s}
+-
+k_p\bigl(x_{p,0}+s\bigr)
+\right]
+-
+\rho_b A_b \phi_p
+\left[
+r_{p,\mathrm{cm}}\dfrac{v_b^\ast-\hat v_b}{T_b}
++
+\dot r_{p,\mathrm{cm}}\,\hat v_b
+\right]
+\Biggr\}.
+}
+
+Therefore, in the slipping regime the primary pulley contributes the interval
+\begin{equation}
+\boxed{
+\tau_{c,p,-}^{\mathrm{slip}}
+\le
+\tau_c
+\le
+\tau_{c,p,+}^{\mathrm{slip}}.
+}
+\label{eq:primary_tau_interval_slip}
+\end{equation}
 
 % --------------------------------------------------------------
 \subsection{Secondary Pulley Traction Bounds}
 \label{sec:secondary_tau_limits}
 
-On the secondary pulley, the transmitted torque at the belt contact is
-\(\tau_s\).
-Applying \Eq{eq:tau_capacity_final} with \(j=s\) therefore gives
+The secondary pulley follows the same overall procedure as the primary, but
+with one important difference.
+At the secondary, the torque at the belt contact is not treated as an
+independent quantity.
+Instead, from the coupling relation introduced in \Eq{eq:torque_ratio},
+\begin{equation}
+\tau_s = R\,\tau_c.
+\label{eq:tau_s_from_tau_c_repeat}
+\end{equation}
+
+Accordingly, the secondary traction bounds will be written directly in terms
+of the coupling torque \(\tau_c\).
+
+In addition, the secondary clamp force is torque-reactive.
+Unlike the primary, whose axial clamping force depends only on pulley speed
+and shift position, the secondary axial-force model depends explicitly on the
+transmitted secondary torque.
+Thus, the substitution \(\tau_s = R\tau_c\) must be made not only in the
+secondary torque capacity relation, but also in the secondary axial clamp-force
+model itself.
+
+As with the primary, the secondary bounds must be derived separately in the
+sticking and slipping regimes because the inertial correction contains
+\(\dot{\hat v}_b\).
+In the sticking regime, we use the secondary-side sticking derivative from
+\Eq{eq:vb_dot_stick_secondary}, together with the secondary rotational
+equation of motion from \Eq{eq:secondary_rot_dyn}.
+In the slipping regime, we instead use the regularized belt-speed evolution
+law \Eq{eq:vb_relaxation}.
+
+% --------------------------------------------------------------
+\paragraph{Stick regime}
+
+Applying \Eq{eq:tau_capacity_final} with \(j=s\), and using
+\(\tau_s = R\tau_c\), gives
 
 \begin{equation}
-\tau_{s,\max}
-=
+|R\tau_c|
+\le
 r_{s,\mathrm{eff}}
 \left[
 2\mu F_{\mathrm{ax},s}\tan\beta
 -
-\rho_b A_b r_{s,\mathrm{cm}} \phi_s
+\rho_b A_b \phi_s
 \left(
-r_{s,\mathrm{cm}}\dot{\omega}_s
+r_{s,\mathrm{cm}}\dot{\hat v}_b
 +
-2\dot r_{s,\mathrm{cm}}\,\omega_s
+\dot r_{s,\mathrm{cm}}\,\hat v_b
 \right)
 \right].
-\label{eq:tau_s_max_generic}
+\label{eq:tau_c_capacity_stick_start_secondary}
 \end{equation}
 
-Accordingly, admissible transmission at the secondary requires
+Since \(R>0\), dividing by \(R\) preserves the inequality direction, so
+
 \begin{equation}
-|\tau_s| \le \tau_{s,\max}.
-\label{eq:tau_s_capacity_start}
+|\tau_c|
+\le
+\frac{r_{s,\mathrm{eff}}}{R}
+\left[
+2\mu F_{\mathrm{ax},s}\tan\beta
+-
+\rho_b A_b \phi_s
+\left(
+r_{s,\mathrm{cm}}\dot{\hat v}_b
++
+\dot r_{s,\mathrm{cm}}\,\hat v_b
+\right)
+\right].
+\label{eq:tau_c_capacity_stick_start_secondary_divided}
 \end{equation}
 
-From the secondary rotational dynamics \Eq{eq:secondary_rot_dyn},
-\begin{equation}
-\dot{\omega}_s
+In the sticking regime,
+\[
+\hat v_b = r_{s,\mathrm{cm}}\omega_s,
+\qquad
+\dot{\hat v}_b
 =
-\frac{\tau_s-\tau_{\mathrm{load}}}{I_s}.
-\label{eq:omega_dot_s_from_eom}
+\dot r_{s,\mathrm{cm}}\,\omega_s
++
+r_{s,\mathrm{cm}}\,\dot\omega_s,
+\]
+from \Eq{eq:vb_stick_exact} and \Eq{eq:vb_dot_stick_secondary}.
+Substituting these into
+\Eq{eq:tau_c_capacity_stick_start_secondary_divided} gives
+
+\begin{equation}
+|\tau_c|
+\le
+\frac{r_{s,\mathrm{eff}}}{R}
+\left[
+2\mu F_{\mathrm{ax},s}\tan\beta
+-
+\rho_b A_b \phi_s
+\left(
+r_{s,\mathrm{cm}}^2\dot\omega_s
++
+2r_{s,\mathrm{cm}}\dot r_{s,\mathrm{cm}}\,\omega_s
+\right)
+\right].
+\label{eq:tau_c_capacity_stick_mid_secondary}
 \end{equation}
 
-From the secondary axial-force model \Eq{eq:secondary_axial},
+Now substitute the secondary rotational dynamics from
+\Eq{eq:secondary_rot_dyn},
 \begin{equation}
-F_{\mathrm{ax},s}(s,\tau_s)
+\dot\omega_s
+=
+\frac{R\tau_c-\tau_{\mathrm{load}}}{I_s},
+\label{eq:omega_s_dot_sub_stick}
+\end{equation}
+and the secondary axial-force model from \Eq{eq:secondary_axial},
+using \(\tau_s = R\tau_c\) from \Eq{eq:tau_s_from_tau_c_repeat}, so that
+
+\begin{equation}
+F_{\mathrm{ax},s}(s,R\tau_c)
 =
 \frac{
-\tau_s + k_{s,\theta}\!\bigl(\theta_{s,0}+\theta_s(s)\bigr)
+R\tau_c + k_{s,\theta}\!\bigl(\theta_{s,0}+\theta_s(s)\bigr)
+}{2}
+\frac{\dd \theta_s}{\dd s}
++
+k_{s,x}(x_{s,0}+s).
+\label{eq:Fax_s_sub_stick_tau_c}
+\end{equation}
+
+This yields
+
+\begin{equation}
+\begin{aligned}
+|\tau_c|
+\le\;&
+\frac{r_{s,\mathrm{eff}}}{R}
+\Biggl[
+\mu\tan\beta
+\left(
+R\tau_c
++
+k_{s,\theta}\!\bigl(\theta_{s,0}+\theta_s(s)\bigr)
+\right)
+\frac{\dd \theta_s}{\dd s}
+\\[4pt]
+&\qquad
++
+2\mu\tan\beta\,k_{s,x}(x_{s,0}+s)
+-
+\rho_b A_b \phi_s
+\left(
+\frac{r_{s,\mathrm{cm}}^2}{I_s}(R\tau_c-\tau_{\mathrm{load}})
++
+2r_{s,\mathrm{cm}}\dot r_{s,\mathrm{cm}}\,\omega_s
+\right)
+\Biggr].
+\end{aligned}
+\label{eq:tau_c_capacity_stick_explicit_secondary}
+\end{equation}
+
+The coupling torque now appears through both the torque-reactive clamp force
+and the secondary angular acceleration, so the positive and negative
+directions must be treated separately.
+
+\paragraph{Positive-direction sticking bound \(\tau_c \ge 0\)}
+
+For \(\tau_c \ge 0\), \(|\tau_c|=\tau_c\), so
+\Eq{eq:tau_c_capacity_stick_explicit_secondary} becomes
+
+\begin{equation}
+\begin{aligned}
+\tau_c
+\le\;&
+\frac{r_{s,\mathrm{eff}}}{R}
+\Biggl[
+\mu\tan\beta
+\left(
+R\tau_c
++
+k_{s,\theta}\!\bigl(\theta_{s,0}+\theta_s(s)\bigr)
+\right)
+\frac{\dd \theta_s}{\dd s}
+\\[4pt]
+&\qquad
++
+2\mu\tan\beta\,k_{s,x}(x_{s,0}+s)
+-
+\rho_b A_b \phi_s
+\left(
+\frac{r_{s,\mathrm{cm}}^2}{I_s}(R\tau_c-\tau_{\mathrm{load}})
++
+2r_{s,\mathrm{cm}}\dot r_{s,\mathrm{cm}}\,\omega_s
+\right)
+\Biggr].
+\end{aligned}
+\label{eq:tau_c_plus_stick_expand_secondary}
+\end{equation}
+
+Collecting the \(\tau_c\) terms on the left gives
+
+\begin{align}
+\Bigl(
+1
+-
+r_{s,\mathrm{eff}}\mu\tan\beta \frac{\dd\theta_s}{\dd s}
++
+r_{s,\mathrm{eff}}\rho_b A_b \phi_s \frac{r_{s,\mathrm{cm}}^2}{I_s}
+\Bigr)\tau_c
+\;\le\;&
+\frac{r_{s,\mathrm{eff}}}{R}
+\mu\tan\beta
+\frac{\dd\theta_s}{\dd s}\,
+k_{s,\theta}\!\bigl(\theta_{s,0}+\theta_s(s)\bigr)
+\nonumber\\
+&+
+\frac{r_{s,\mathrm{eff}}}{R}
+2\mu\tan\beta\,k_{s,x}(x_{s,0}+s)
+\nonumber\\
+&+
+\frac{r_{s,\mathrm{eff}}}{R}
+\rho_b A_b \phi_s
+\left(
+\frac{r_{s,\mathrm{cm}}^2}{I_s}\tau_{\mathrm{load}}
+-
+2r_{s,\mathrm{cm}}\dot r_{s,\mathrm{cm}}\,\omega_s
+\right).
+\label{eq:tau_c_plus_stick_rearrange_secondary}
+\end{align}
+
+Hence,
+\begin{equation}
+\tau_c \le \tau_{c,s,+}^{\mathrm{stick}},
+\label{eq:tau_c_plus_stick_ineq_secondary}
+\end{equation}
+with
+
+\bigeq{eq:tau_s_plus_stick}{Secondary Stick-Branch Upper Bound}{
+\tau_{c,s,+}^{\mathrm{stick}}
+=
+\frac{
+\dfrac{r_{s,\mathrm{eff}}}{R}
+\Bigl[
+\mu\tan\beta
+\dfrac{\dd\theta_s}{\dd s}\,
+k_{s,\theta}\!\bigl(\theta_{s,0}+\theta_s(s)\bigr)
++
+2\mu\tan\beta\,k_{s,x}(x_{s,0}+s)
++
+\rho_b A_b \phi_s
+\left(
+\dfrac{r_{s,\mathrm{cm}}^2}{I_s}\tau_{\mathrm{load}}
+-
+2r_{s,\mathrm{cm}}\dot r_{s,\mathrm{cm}}\,\omega_s
+\right)
+\Bigr]
+}{
+1
+-
+r_{s,\mathrm{eff}}\mu\tan\beta \dfrac{\dd\theta_s}{\dd s}
++
+r_{s,\mathrm{eff}}\rho_b A_b \phi_s \dfrac{r_{s,\mathrm{cm}}^2}{I_s}
+}.
+}
+
+\paragraph{Negative-direction sticking bound \(\tau_c \le 0\)}
+
+For \(\tau_c \le 0\), \(|\tau_c|=-\tau_c\), so
+\Eq{eq:tau_c_capacity_stick_explicit_secondary} becomes
+
+\begin{equation}
+\begin{aligned}
+-\tau_c
+\le\;&
+\frac{r_{s,\mathrm{eff}}}{R}
+\Biggl[
+\mu\tan\beta
+\left(
+R\tau_c
++
+k_{s,\theta}\!\bigl(\theta_{s,0}+\theta_s(s)\bigr)
+\right)
+\frac{\dd \theta_s}{\dd s}
+\\[4pt]
+&\qquad
++
+2\mu\tan\beta\,k_{s,x}(x_{s,0}-s)
+-
+\rho_b A_b \phi_s
+\left(
+\frac{r_{s,\mathrm{cm}}^2}{I_s}(R\tau_c-\tau_{\mathrm{load}})
++
+2r_{s,\mathrm{cm}}\dot r_{s,\mathrm{cm}}\,\omega_s
+\right)
+\Biggr].
+\end{aligned}
+\label{eq:tau_c_minus_stick_expand_secondary}
+\end{equation}
+
+Collecting the \(\tau_c\) terms on the left gives
+
+\begin{align}
+\Bigl(
+1
++
+r_{s,\mathrm{eff}}\mu\tan\beta \frac{\dd\theta_s}{\dd s}
+-
+r_{s,\mathrm{eff}}\rho_b A_b \phi_s \frac{r_{s,\mathrm{cm}}^2}{I_s}
+\Bigr)\tau_c
+\;\ge\;&
+-\frac{r_{s,\mathrm{eff}}}{R}
+\mu\tan\beta
+\frac{\dd\theta_s}{\dd s}\,
+k_{s,\theta}\!\bigl(\theta_{s,0}+\theta_s(s)\bigr)
+\nonumber\\
+&-
+\frac{r_{s,\mathrm{eff}}}{R}
+2\mu\tan\beta\,k_{s,x}(x_{s,0}+s)
+\nonumber\\
+&-
+\frac{r_{s,\mathrm{eff}}}{R}
+\rho_b A_b \phi_s
+\left(
+\frac{r_{s,\mathrm{cm}}^2}{I_s}\tau_{\mathrm{load}}
+-
+2r_{s,\mathrm{cm}}\dot r_{s,\mathrm{cm}}\,\omega_s
+\right).
+\label{eq:tau_c_minus_stick_rearrange_secondary}
+\end{align}
+
+Hence,
+\begin{equation}
+\tau_c \ge \tau_{c,s,-}^{\mathrm{stick}},
+\label{eq:tau_c_minus_stick_ineq_secondary}
+\end{equation}
+with
+
+\bigeq{eq:tau_s_minus_stick}{Secondary Stick-Branch Lower Bound}{
+\tau_{c,s,-}^{\mathrm{stick}}
+=
+-\frac{
+\dfrac{r_{s,\mathrm{eff}}}{R}
+\Bigl[
+\mu\tan\beta
+\dfrac{\dd\theta_s}{\dd s}\,
+k_{s,\theta}\!\bigl(\theta_{s,0}+\theta_s(s)\bigr)
++
+2\mu\tan\beta\,k_{s,x}(x_{s,0}-s)
++
+\rho_b A_b \phi_s
+\left(
+\dfrac{r_{s,\mathrm{cm}}^2}{I_s}\tau_{\mathrm{load}}
+-
+2r_{s,\mathrm{cm}}\dot r_{s,\mathrm{cm}}\,\omega_s
+\right)
+\Bigr]
+}{
+1
++
+r_{s,\mathrm{eff}}\mu\tan\beta \dfrac{\dd\theta_s}{\dd s}
+-
+r_{s,\mathrm{eff}}\rho_b A_b \phi_s \dfrac{r_{s,\mathrm{cm}}^2}{I_s}
+}.
+}
+
+Therefore, in the sticking regime the secondary pulley contributes the interval
+\begin{equation}
+\boxed{
+\tau_{c,s,-}^{\mathrm{stick}}
+\le
+\tau_c
+\le
+\tau_{c,s,+}^{\mathrm{stick}}.
+}
+\label{eq:secondary_tau_interval_stick}
+\end{equation}
+
+% --------------------------------------------------------------
+\paragraph{Slip regime}
+
+In the slipping regime, the belt-speed derivative is given directly by the
+regularized closure \Eq{eq:vb_relaxation}:
+\[
+\dot{\hat v}_b
+=
+\frac{v_b^\ast-\hat v_b}{T_b}.
+\]
+
+Applying \Eq{eq:tau_capacity_final} with \(j=s\), and again using
+\(\tau_s = R\tau_c\) from \Eq{eq:tau_s_from_tau_c_repeat}, gives
+
+\begin{equation}
+|R\tau_c|
+\le
+r_{s,\mathrm{eff}}
+\left[
+2\mu F_{\mathrm{ax},s}\tan\beta
+-
+\rho_b A_b \phi_s
+\left(
+r_{s,\mathrm{cm}}\frac{v_b^\ast-\hat v_b}{T_b}
++
+\dot r_{s,\mathrm{cm}}\,\hat v_b
+\right)
+\right].
+\label{eq:tau_c_capacity_slip_start_secondary}
+\end{equation}
+
+Dividing by \(R>0\) gives
+
+\begin{equation}
+|\tau_c|
+\le
+\frac{r_{s,\mathrm{eff}}}{R}
+\left[
+2\mu F_{\mathrm{ax},s}\tan\beta
+-
+\rho_b A_b \phi_s
+\left(
+r_{s,\mathrm{cm}}\frac{v_b^\ast-\hat v_b}{T_b}
++
+\dot r_{s,\mathrm{cm}}\,\hat v_b
+\right)
+\right].
+\label{eq:tau_c_capacity_slip_start_secondary_divided}
+\end{equation}
+
+Using the secondary axial-force model \Eq{eq:secondary_axial}, with
+\(\tau_s = R\tau_c\) substituted through \Eq{eq:tau_s_from_tau_c_repeat}, gives
+
+\begin{equation}
+F_{\mathrm{ax},s}(s,R\tau_c)
+=
+\frac{
+R\tau_c + k_{s,\theta}\!\bigl(\theta_{s,0}+\theta_s(s)\bigr)
 }{2}
 \frac{\dd \theta_s}{\dd s}
 +
 k_{s,x}(x_{s,0}-s).
-\label{eq:Fax_s_sub}
+\label{eq:Fax_s_sub_slip_tau_c}
 \end{equation}
 
-Substituting \Eq{eq:omega_dot_s_from_eom} and \Eq{eq:Fax_s_sub} into
-\Eq{eq:tau_s_max_generic} gives the implicit secondary traction inequality
+Substituting this into
+\Eq{eq:tau_c_capacity_slip_start_secondary_divided} yields
 
 \begin{equation}
 \begin{aligned}
-|\tau_s|
+|\tau_c|
 \le\;&
-r_{s,\mathrm{eff}}
+\frac{r_{s,\mathrm{eff}}}{R}
 \Biggl[
-2\mu\tan\beta
+\mu\tan\beta
 \left(
-\frac{
-\tau_s + k_{s,\theta}\!\bigl(\theta_{s,0}+\theta_s(s)\bigr)
-}{2}
-\frac{\dd \theta_s}{\dd s}
+R\tau_c
 +
-k_{s,x}(x_{s,0}-s)
+k_{s,\theta}\!\bigl(\theta_{s,0}+\theta_s(s)\bigr)
 \right)
-\\
+\frac{\dd \theta_s}{\dd s}
+\\[4pt]
 &\qquad
--
-\rho_b A_b r_{s,\mathrm{cm}} \phi_s
-\left(
-r_{s,\mathrm{cm}}\frac{\tau_s-\tau_{\mathrm{load}}}{I_s}
 +
-2\dot r_{s,\mathrm{cm}}\,\omega_s
+2\mu\tan\beta\,k_{s,x}(x_{s,0}-s)
+-
+\rho_b A_b \phi_s
+\left(
+r_{s,\mathrm{cm}}\frac{v_b^\ast-\hat v_b}{T_b}
++
+\dot r_{s,\mathrm{cm}}\,\hat v_b
 \right)
 \Biggr].
 \end{aligned}
-\label{eq:tau_s_capacity_implicit}
+\label{eq:tau_c_capacity_slip_explicit_secondary}
 \end{equation}
 
-Since \(\tau_s\) appears both through the acceleration term and through the
-torque-reactive axial clamping force, the positive and negative transmission
-directions must again be treated separately.
+In contrast to the sticking case, the inertial correction no longer depends on
+\(\tau_c\).
+However, the secondary bound remains implicit because the torque-reactive clamp
+force still depends on \(R\tau_c\).
 
-\paragraph{Positive-direction bound \(\tau_s \ge 0\)}
+\paragraph{Positive-direction slipping bound \(\tau_c \ge 0\)}
 
-For \(\tau_s \ge 0\), \(|\tau_s|=\tau_s\).
-Collecting the \(\tau_s\) terms on the left gives
+For \(\tau_c \ge 0\), \(|\tau_c|=\tau_c\).
+Collecting the \(\tau_c\) terms on the left gives
+
 \begin{align}
-\frac{\tau_s}{r_{s,\mathrm{eff}}}
+\Bigl(
+1
 -
-\mu\tan\beta \frac{\dd\theta_s}{\dd s}\,\tau_s
-\rho_b A_b r_{s,\mathrm{cm}} \phi_s
-\frac{r_{s,\mathrm{cm}}}{I_s}\,\tau_s
+r_{s,\mathrm{eff}}\mu\tan\beta \frac{\dd\theta_s}{\dd s}
+\Bigr)\tau_c
 \;\le\;&
+\frac{r_{s,\mathrm{eff}}}{R}
 \mu\tan\beta
-\frac{\dd\theta_s}{\dd s}
+\frac{\dd\theta_s}{\dd s}\,
 k_{s,\theta}\!\bigl(\theta_{s,0}+\theta_s(s)\bigr)
 \nonumber\\
 &+
+\frac{r_{s,\mathrm{eff}}}{R}
 2\mu\tan\beta\,k_{s,x}(x_{s,0}-s)
 \nonumber\\
-&+
-\rho_b A_b r_{s,\mathrm{cm}} \phi_s
+&-
+\frac{r_{s,\mathrm{eff}}}{R}
+\rho_b A_b \phi_s
 \left(
-\frac{r_{s,\mathrm{cm}}}{I_s}\tau_{\mathrm{load}}
--
-2\dot r_{s,\mathrm{cm}}\,\omega_s
+r_{s,\mathrm{cm}}\frac{v_b^\ast-\hat v_b}{T_b}
++
+\dot r_{s,\mathrm{cm}}\,\hat v_b
 \right).
-\label{eq:tau_s_plus_rearrange}
+\label{eq:tau_c_plus_slip_rearrange_secondary}
 \end{align}
 
 Hence,
 \begin{equation}
-\tau_s \le \tau_{s,+},
-\label{eq:tau_s_plus_ineq}
+\tau_c \le \tau_{c,s,+}^{\mathrm{slip}},
+\label{eq:tau_c_plus_slip_ineq_secondary}
 \end{equation}
 with
-\bigeq{eq:tau_s_plus}{Secondary Positive Traction Limit}{
-\tau_{s,+}
+
+\bigeq{eq:tau_s_plus_slip}{Secondary Slip-Branch Upper Bound}{
+\tau_{c,s,+}^{\mathrm{slip}}
 =
 \frac{
+\dfrac{r_{s,\mathrm{eff}}}{R}
+\Bigl[
 \mu\tan\beta
-\left[
-\frac{\dd\theta_s}{\dd s}\,
+\dfrac{\dd\theta_s}{\dd s}\,
 k_{s,\theta}\!\bigl(\theta_{s,0}+\theta_s(s)\bigr)
 +
-2k_{s,x}(x_{s,0}-s)
-\right]
-+
-\rho_b A_b r_{s,\mathrm{cm}} \phi_s
+2\mu\tan\beta\,k_{s,x}(x_{s,0}-s)
+-
+\rho_b A_b \phi_s
 \left(
-\frac{r_{s,\mathrm{cm}}}{I_s}\tau_{\mathrm{load}}
--
-2\dot r_{s,\mathrm{cm}}\,\omega_s
-\right)
-}{
-\frac{1}{r_{s,\mathrm{eff}}}
--
-\mu\tan\beta \frac{\dd\theta_s}{\dd s}
+r_{s,\mathrm{cm}}\dfrac{v_b^\ast-\hat v_b}{T_b}
 +
-\rho_b A_b r_{s,\mathrm{cm}} \phi_s
-\frac{r_{s,\mathrm{cm}}}{I_s}
+\dot r_{s,\mathrm{cm}}\,\hat v_b
+\right)
+\Bigr]
+}{
+1
+-
+r_{s,\mathrm{eff}}\mu\tan\beta \dfrac{\dd\theta_s}{\dd s}
 }.
 }
 
-\paragraph{Negative-direction bound \(\tau_s \le 0\)}
+\paragraph{Negative-direction slipping bound \(\tau_c \le 0\)}
 
-For \(\tau_s \le 0\), \(|\tau_s|=-\tau_s\).
-Collecting the \(\tau_s\) terms on the left gives
+For \(\tau_c \le 0\), \(|\tau_c|=-\tau_c\).
+Collecting the \(\tau_c\) terms on the left gives
+
 \begin{align}
--\frac{\tau_s}{r_{s,\mathrm{eff}}}
--
-\mu\tan\beta \frac{\dd\theta_s}{\dd s}\,\tau_s
+\Bigl(
+1
 +
-\rho_b A_b r_{s,\mathrm{cm}} \phi_s
-\frac{r_{s,\mathrm{cm}}}{I_s}\,\tau_s
-\;\le\;&
+r_{s,\mathrm{eff}}\mu\tan\beta \frac{\dd\theta_s}{\dd s}
+\Bigr)\tau_c
+\;\ge\;&
+-\frac{r_{s,\mathrm{eff}}}{R}
 \mu\tan\beta
-\frac{\dd\theta_s}{\dd s}
+\frac{\dd\theta_s}{\dd s}\,
 k_{s,\theta}\!\bigl(\theta_{s,0}+\theta_s(s)\bigr)
 \nonumber\\
-&+
+&-
+\frac{r_{s,\mathrm{eff}}}{R}
 2\mu\tan\beta\,k_{s,x}(x_{s,0}-s)
 \nonumber\\
 &+
-\rho_b A_b r_{s,\mathrm{cm}} \phi_s
+\frac{r_{s,\mathrm{eff}}}{R}
+\rho_b A_b \phi_s
 \left(
-\frac{r_{s,\mathrm{cm}}}{I_s}\tau_{\mathrm{load}}
--
-2\dot r_{s,\mathrm{cm}}\,\omega_s
+r_{s,\mathrm{cm}}\frac{v_b^\ast-\hat v_b}{T_b}
++
+\dot r_{s,\mathrm{cm}}\,\hat v_b
 \right).
-\label{eq:tau_s_minus_rearrange}
+\label{eq:tau_c_minus_slip_rearrange_secondary}
 \end{align}
 
 Hence,
 \begin{equation}
-\tau_s \ge \tau_{s,-},
-\label{eq:tau_s_minus_ineq}
+\tau_c \ge \tau_{c,s,-}^{\mathrm{slip}},
+\label{eq:tau_c_minus_slip_ineq_secondary}
 \end{equation}
 with
-\bigeq{eq:tau_s_minus}{Secondary Negative Traction Limit}{
-\tau_{s,-}
+
+\bigeq{eq:tau_s_minus_slip}{Secondary Slip-Branch Lower Bound}{
+\tau_{c,s,-}^{\mathrm{slip}}
 =
 -\frac{
+\dfrac{r_{s,\mathrm{eff}}}{R}
+\Bigl[
 \mu\tan\beta
-\left[
-\frac{\dd\theta_s}{\dd s}\,
+\dfrac{\dd\theta_s}{\dd s}\,
 k_{s,\theta}\!\bigl(\theta_{s,0}+\theta_s(s)\bigr)
 +
-2k_{s,x}(x_{s,0}-s)
-\right]
-+
-\rho_b A_b r_{s,\mathrm{cm}} \phi_s
+2\mu\tan\beta\,k_{s,x}(x_{s,0}-s)
+-
+\rho_b A_b \phi_s
 \left(
-\frac{r_{s,\mathrm{cm}}}{I_s}\tau_{\mathrm{load}}
--
-2\dot r_{s,\mathrm{cm}}\,\omega_s
-\right)
-}{
-\frac{1}{r_{s,\mathrm{eff}}}
+r_{s,\mathrm{cm}}\dfrac{v_b^\ast-\hat v_b}{T_b}
 +
-\mu\tan\beta \frac{\dd\theta_s}{\dd s}
--
-\rho_b A_b r_{s,\mathrm{cm}} \phi_s
-\frac{r_{s,\mathrm{cm}}}{I_s}
+\dot r_{s,\mathrm{cm}}\,\hat v_b
+\right)
+\Bigr]
+}{
+1
++
+r_{s,\mathrm{eff}}\mu\tan\beta \dfrac{\dd\theta_s}{\dd s}
 }.
 }
 
-Therefore, the secondary pulley contributes the admissible interval
+Therefore, in the slipping regime the secondary pulley contributes the interval
 \begin{equation}
 \boxed{
-\tau_{s,-} \le \tau_s \le \tau_{s,+}.
-}
-\label{eq:secondary_tau_interval}
-\end{equation}
-
-\subsection{Combined Traction-Limited Coupling Law}
-\label{sec:final_coupling_law}
-
-The previous two subsections produced admissible traction intervals for each
-pulley separately:
-\[
-\tau_{p,-} \le \tau_c \le \tau_{p,+},
-\qquad
-\tau_{s,-} \le \tau_s \le \tau_{s,+}.
-\]
-
-Since the transmitted state must satisfy the traction limits at
-\emph{both} pulleys simultaneously, the final admissible range is obtained by
-intersecting these two constraints.
-
-Using the torque mapping
-\[
-\tau_s = R\,\tau_c,
-\]
-the secondary bounds may be written in terms of the coupling torque as
-\[
-\frac{\tau_{s,-}}{R}
+\tau_{c,s,-}^{\mathrm{slip}}
 \le
 \tau_c
 \le
-\frac{\tau_{s,+}}{R}.
-\]
-
-Therefore, the overall admissible coupling-torque interval is
-
-\begin{equation}
-\tau_- \le \tau_c \le \tau_+,
-\label{eq:tau_global_interval}
-\end{equation}
-
-with
-\begin{equation}
-\tau_-
-=
-\max\!\left(
-\tau_{p,-},
-\frac{\tau_{s,-}}{R}
-\right),
-\qquad
-\tau_+
-=
-\min\!\left(
-\tau_{p,+},
-\frac{\tau_{s,+}}{R}
-\right).
-\label{eq:tau_pm_final}
-\end{equation}
-
-These are the final negative- and positive-direction traction limits used in
-the regime law.
-
-% --------------------------------------------------------------
-\paragraph{Stick and slip regimes}
-
-As established in \Sec{sec:transmission_regimes}, the no-slip branch is
-admissible only when two conditions hold simultaneously:
-
-\begin{enumerate}
-    \item the no-slip torque lies within the admissible interval, and
-    \item the relative slip metric satisfies \(v_{\Delta}=0\).
-\end{enumerate}
-
-If both conditions are satisfied, the transmission remains in stick and the
-coupling torque is the no-slip torque \(\tau_{\mathrm{ns}}\).
-
-If instead the no-slip torque lies outside the admissible interval, or if a
-nonzero slip mismatch is already present, then the transmission is on a
-traction-limited slip branch.
-The active slip branch is selected by the sign of \(v_{\Delta}\), as introduced
-in \Sec{sec:transmission_regimes}.
-
-This gives the final coupling law
-
-\bigeq{eq:tau_c_final}{Traction-Limited Coupling Torque Law}{
-\tau_c =
-\begin{cases}
-\tau_{\mathrm{ns}},
-&
-v_{\Delta}=0
-\;\text{and}\;
-\tau_- \le \tau_{\mathrm{ns}} \le \tau_+,
-\\[10pt]
-\tau_+,
-&
-v_{\Delta}>0
-\;\text{or}\;
-\bigl(v_{\Delta}=0 \text{ and } \tau_{\mathrm{ns}}>\tau_+\bigr),
-\\[10pt]
-\tau_-,
-&
-v_{\Delta}<0
-\;\text{or}\;
-\bigl(v_{\Delta}=0 \text{ and } \tau_{\mathrm{ns}}<\tau_-\bigr).
-\end{cases}
+\tau_{c,s,+}^{\mathrm{slip}}.
 }
+\label{eq:secondary_tau_interval_slip}
+\end{equation}
 
 
-\paragraph{Interpretation}
+\subsection{Section Conclusion and Transition}
+\label{sec:traction_conclusion}
 
-The logic of \Eq{eq:tau_c_final} is as follows:
+This section derived the traction-capacity model of the CVT from the local
+belt--pulley force balance and converted it into explicit torque bounds for the
+primary and secondary pulleys.
 
-\begin{itemize}
-    \item If the sticking solution is both kinematically compatible
-    (\(v_{\Delta}=0\)) and traction-admissible
-    (\(\tau_- \le \tau_{\mathrm{ns}} \le \tau_+\)),
-    then the transmission remains on the no-slip branch.
+With these traction limits now established, the torque-transfer model is fully
+closed. The transmitted coupling torque is no longer just the value required by
+the no-slip dynamics; it is now constrained by the admissible belt traction,
+which determines whether the transmission remains in stick or saturates onto a
+slipping branch.
 
-    \item If the demanded no-slip torque exceeds the positive traction limit,
-    the contact saturates on the positive slip branch.
-
-    \item If the demanded no-slip torque falls below the negative traction
-    limit, the contact saturates on the negative slip branch.
-
-    \item Once slip is present, the transmission remains on the corresponding
-    slip branch until the mismatch \(v_{\Delta}\) is driven back to zero.
-\end{itemize}
-
-\Eq{eq:tau_c_final} therefore closes the coupling-torque model across
-both stick and slip regimes.
 
 % ==============================================================
 \section{Complete CVT Dynamic Model}
 \label{sec:complete_model}
 
-This section gathers the results of the previous derivations into one closed
+This section collects the results of the preceding derivations into one closed
 nonlinear dynamical model.
 No new physics is introduced here.
-The goal is simply to summarize, in one place,
+The purpose is simply to summarize, in one place,
 
 \begin{enumerate}
-    \item the chosen state variables,
-    \item the algebraic quantities computed from those states,
-    \item the stick--slip torque closure,
-    \item and the final governing ODEs.
+    \item the state variables,
+    \item the geometry and belt-kinematic quantities computed from those states,
+    \item the torque and regime closures,
+    \item and the final governing equations of motion.
 \end{enumerate}
 
 % --------------------------------------------------------------
@@ -6794,66 +7297,110 @@ The goal is simply to summarize, in one place,
 
 The state vector is
 \begin{equation}
-\mathbf{x}
+\mathbf{x}(t)
 =
 \big(
 \omega_p,\;
 \omega_s,\;
 s,\;
-\dot s
+\dot s,\;
+\hat v_b
 \big),
-\label{eq:state_vector}
+\label{eq:state_vector_complete}
 \end{equation}
 where
 \begin{itemize}
     \item \(\omega_p\) is the primary pulley angular velocity,
     \item \(\omega_s\) is the secondary pulley angular velocity,
     \item \(s\) is the axial shift coordinate,
-    \item \(\dot s\) is the axial shift velocity.
+    \item \(\dot s\) is the axial shift velocity,
+    \item \(\hat v_b\) is the modeled belt transport speed.
 \end{itemize}
 
 % --------------------------------------------------------------
-\subsection{Geometry and Ratio Closure}
+\subsection{Geometry and Belt Kinematics}
 
 At each instant, the shift coordinate \(s\) determines the pulley geometry
 through the belt-length constraint and the conical kinematic relations derived
 earlier.
-In particular, the effective radii and wrap angles are functions of \(s\), and
-the geometric CVT ratio is
-\begin{equation}
-R(s)
-=
-\frac{r_{s,\mathrm{eff}}(s)}{r_{p,\mathrm{eff}}(s)}.
-\label{eq:R_of_s}
-\end{equation}
-
-Its time derivative is
-\begin{equation}
-\dot R = \dot R(s,\dot s),
-\label{eq:Rdot_of_states}
-\end{equation}
-as given by \Eq{eq:Rdot_final}.
-
-Thus, once \((s,\dot s)\) are known, the model can evaluate
+In particular,
 \[
 r_{p,\mathrm{eff}},\quad
 r_{s,\mathrm{eff}},\quad
 r_{p,\mathrm{cm}},\quad
 r_{s,\mathrm{cm}},\quad
 \phi_p,\quad
-\phi_s,\quad
-R,\quad
-\dot R,
+\phi_s
 \]
-together with any other geometry-dependent terms appearing in the force and
-traction models.
+are all functions of \(s\), and the geometric CVT ratio is
+\begin{equation}
+R(s)
+=
+\frac{r_{s,\mathrm{eff}}(s)}{r_{p,\mathrm{eff}}(s)}.
+\label{eq:R_of_s_complete}
+\end{equation}
+
+Its time derivative is
+\begin{equation}
+\dot R = \dot R(s,\dot s),
+\label{eq:Rdot_of_states_complete}
+\end{equation}
+as given by \Eq{eq:Rdot_final}.
+
+The pulley-imposed belt-line speeds from \Sec{sec:belt_transport_motion} are
+\begin{equation}
+v_{p,\mathrm{cm}}
+=
+r_{p,\mathrm{cm}}(s)\,\omega_p,
+\qquad
+v_{s,\mathrm{cm}}
+=
+r_{s,\mathrm{cm}}(s)\,\omega_s.
+\label{eq:belt_line_speeds_complete}
+\end{equation}
+
+The regularized target belt speed is
+\begin{equation}
+v_b^\ast
+=
+\frac{1}{2}\left(v_{p,\mathrm{cm}}+v_{s,\mathrm{cm}}\right).
+\label{eq:vb_target_complete}
+\end{equation}
+
+In the sticking regime, the belt speed is imposed exactly by the adhered
+kinematics:
+\begin{equation}
+\hat v_b = v_{p,\mathrm{cm}} = v_{s,\mathrm{cm}}.
+\label{eq:vb_stick_complete}
+\end{equation}
+
+The corresponding sticking derivative is obtained by differentiating this
+compatibility relation, for example from the primary side,
+\begin{equation}
+\dot{\hat v}_{b,\mathrm{stick}}
+=
+\dot r_{p,\mathrm{cm}}\,\omega_p
++
+r_{p,\mathrm{cm}}\,\dot\omega_p,
+\label{eq:vb_dot_stick_complete}
+\end{equation}
+with an equivalent expression obtained from the secondary side under sticking
+compatibility.
+
+In the slipping regime, the belt-speed derivative is given by the regularized
+law
+\begin{equation}
+\dot{\hat v}_{b,\mathrm{slip}}
+=
+\frac{v_b^\ast-\hat v_b}{T_b}.
+\label{eq:vb_dot_slip_complete}
+\end{equation}
 
 % --------------------------------------------------------------
-\subsection{Torque Closure}
+\subsection{Torque and Regime Closure}
 
 The internal torque transmitted through the CVT is the coupling torque
 \(\tau_c\).
-This is the central algebraic unknown of the transmission model.
 
 \paragraph{No-slip torque demand.}
 
@@ -6871,38 +7418,67 @@ I_p\,\omega_s\,\dot R
 }{
 1+\dfrac{I_p}{I_s}R^2
 }.
-\label{eq:tau_ns_def_complete}
+\label{eq:tau_ns_complete}
 \end{equation}
 
-\paragraph{Traction bounds.}
+\paragraph{Stick and slip traction intervals.}
 
-The pulley-specific traction limits derived in
+The branchwise primary and secondary traction bounds derived in
 \Sec{sec:primary_tau_limits} and \Sec{sec:secondary_tau_limits}
-combine to give the final admissible interval
+combine into a sticking admissible interval
 \begin{equation}
-\tau_- \le \tau_c \le \tau_+,
-\label{eq:tau_pm_complete}
+\tau_-^{\mathrm{stick}}
+\le
+\tau_c
+\le
+\tau_+^{\mathrm{stick}},
+\label{eq:tau_pm_stick_complete}
 \end{equation}
 with
 \begin{equation}
-\tau_-
+\tau_-^{\mathrm{stick}}
 =
 \max\!\left(
-\tau_{p,-},
-\frac{\tau_{s,-}}{R}
+\tau_{c,p,-}^{\mathrm{stick}},
+\tau_{c,s,-}^{\mathrm{stick}}
 \right),
 \qquad
-\tau_+
+\tau_+^{\mathrm{stick}}
 =
 \min\!\left(
-\tau_{p,+},
-\frac{\tau_{s,+}}{R}
+\tau_{c,p,+}^{\mathrm{stick}},
+\tau_{c,s,+}^{\mathrm{stick}}
 \right),
-\label{eq:tau_pm_complete_explicit}
+\label{eq:tau_pm_stick_complete_explicit}
 \end{equation}
-as given by \Eq{eq:tau_pm_final}.
+and a slipping admissible interval
+\begin{equation}
+\tau_-^{\mathrm{slip}}
+\le
+\tau_c
+\le
+\tau_+^{\mathrm{slip}},
+\label{eq:tau_pm_slip_complete}
+\end{equation}
+with
+\begin{equation}
+\tau_-^{\mathrm{slip}}
+=
+\max\!\left(
+\tau_{c,p,-}^{\mathrm{slip}},
+\tau_{c,s,-}^{\mathrm{slip}}
+\right),
+\qquad
+\tau_+^{\mathrm{slip}}
+=
+\min\!\left(
+\tau_{c,p,+}^{\mathrm{slip}},
+\tau_{c,s,+}^{\mathrm{slip}}
+\right).
+\label{eq:tau_pm_slip_complete_explicit}
+\end{equation}
 
-\paragraph{Slip metric and regime selection.}
+\paragraph{Slip metric.}
 
 The slip metric from \Eq{eq:v_delta_def} is
 \begin{equation}
@@ -6914,9 +7490,13 @@ r_{s,\mathrm{eff}}\,\omega_s.
 \label{eq:v_delta_complete}
 \end{equation}
 
-Using \(\tau_{\mathrm{ns}}\), \(\tau_-\), \(\tau_+\), and \(v_\Delta\), the
-actual coupling torque is selected by the stick--slip law
-\Eq{eq:tau_c_final}:
+\paragraph{Regime selection.}
+
+Using \(\tau_{\mathrm{ns}}\), the sticking interval, the slipping interval,
+and \(v_\Delta\), the active transmission regime selects both the actual
+coupling torque and the appropriate belt-speed derivative.
+
+The coupling torque is
 \begin{equation}
 \tau_c =
 \begin{cases}
@@ -6924,27 +7504,45 @@ actual coupling torque is selected by the stick--slip law
 &
 v_{\Delta}=0
 \;\text{and}\;
-\tau_- \le \tau_{\mathrm{ns}} \le \tau_+,
+\tau_-^{\mathrm{stick}} \le \tau_{\mathrm{ns}} \le \tau_+^{\mathrm{stick}},
 \\[10pt]
-\tau_+,
+\tau_+^{\mathrm{slip}},
 &
 v_{\Delta}>0
 \;\text{or}\;
-\bigl(v_{\Delta}=0 \text{ and } \tau_{\mathrm{ns}}>\tau_+\bigr),
+\bigl(v_{\Delta}=0 \text{ and } \tau_{\mathrm{ns}}>\tau_+^{\mathrm{stick}}\bigr),
 \\[10pt]
-\tau_-,
+\tau_-^{\mathrm{slip}},
 &
 v_{\Delta}<0
 \;\text{or}\;
-\bigl(v_{\Delta}=0 \text{ and } \tau_{\mathrm{ns}}<\tau_-\bigr).
+\bigl(v_{\Delta}=0 \text{ and } \tau_{\mathrm{ns}}<\tau_-^{\mathrm{stick}}\bigr).
 \end{cases}
 \label{eq:tau_c_complete}
+\end{equation}
+
+The belt-speed derivative is
+\begin{equation}
+\dot{\hat v}_b =
+\begin{cases}
+\dot{\hat v}_{b,\mathrm{stick}},
+&
+v_{\Delta}=0
+\;\text{and}\;
+\tau_-^{\mathrm{stick}} \le \tau_{\mathrm{ns}} \le \tau_+^{\mathrm{stick}},
+\\[10pt]
+\dot{\hat v}_{b,\mathrm{slip}},
+&
+\text{otherwise.}
+\end{cases}
+\label{eq:vb_dot_complete}
 \end{equation}
 
 % --------------------------------------------------------------
 \subsection{Governing ODEs}
 
-With the coupling torque now closed, the rotational dynamics are
+With the coupling torque and belt-speed derivative now closed, the rotational
+dynamics are
 \begin{align}
 \dot\omega_p
 &=
@@ -6958,7 +7556,7 @@ With the coupling torque now closed, the rotational dynamics are
 &=
 \frac{1}{I_s}
 \left(
-R\,\tau_c - \tau_{\mathrm{load}}(\omega_s)
+R(s)\,\tau_c - \tau_{\mathrm{load}}(\omega_s)
 \right),
 \label{eq:omega_s_dot_complete}
 \end{align}
@@ -6972,49 +7570,67 @@ The axial shift dynamics are
 \ddot s
 &=
 \frac{
-\Big(F_{p,\mathrm{ax}}(s,\omega_p) + F_{c,p}(s,\omega_p)\Big)
+\Big(F_{p,\mathrm{ax}}(s,\omega_p) + F_{c,p}(s,\hat v_b)\Big)
 -
-\Big(F_{s,\mathrm{ax}}(s,R\tau_c) + F_{c,s}(s,\omega_s)\Big)
+\Big(F_{s,\mathrm{ax}}(s,R(s)\tau_c) + F_{c,s}(s,\hat v_b)\Big)
 }{
 m_{p,m} + m_{s,m} + \dfrac{\rho_b A_b L_b}{4}
 },
 \label{eq:s_ddot_complete}
 \end{align}
-from \Eq{eq:s_ddot_final}, with the secondary axial-force term evaluated using
-\(\tau_s = R\tau_c\).
+from \Eq{eq:s_ddot_final}.
+
+Finally, the belt-speed state evolves according to
+\begin{equation}
+\dot{\hat v}_b
+=
+\text{the value selected by \Eq{eq:vb_dot_complete}}.
+\label{eq:vb_dot_complete_repeat}
+\end{equation}
 
 % --------------------------------------------------------------
 \subsection{Model Evaluation Sequence}
 
 Given the current state
 \[
-\mathbf{x}(t)=\big(\omega_p,\omega_s,s,\dot s\big),
+\mathbf{x}(t)=\big(\omega_p,\omega_s,s,\dot s,\hat v_b\big),
 \]
 the model is evaluated in the following order:
 
 \begin{enumerate}
-    \item Compute the geometry from \(s\), including the effective radii,
-    centroid radii, and wrap angles.
+    \item Compute the pulley geometry from \(s\), including the effective
+    radii, centroid radii, wrap angles, and the ratio \(R(s)\).
 
-    \item Compute \(R(s)\) from \Eq{eq:R_of_s} and \(\dot R(s,\dot s)\) from
-    \Eq{eq:Rdot_of_states}.
+    \item Compute \(\dot R(s,\dot s)\) from \Eq{eq:Rdot_of_states_complete}.
+
+    \item Compute the pulley-imposed belt-line speeds
+    \(v_{p,\mathrm{cm}}\) and \(v_{s,\mathrm{cm}}\) from
+    \Eq{eq:belt_line_speeds_complete}, then form \(v_b^\ast\) from
+    \Eq{eq:vb_target_complete}.
 
     \item Evaluate the no-slip torque demand \(\tau_{\mathrm{ns}}\) from
-    \Eq{eq:tau_ns_def_complete}.
+    \Eq{eq:tau_ns_complete}.
 
-    \item Evaluate the pulley-specific traction bounds
-    \(\tau_{p,\pm}\) and \(\tau_{s,\pm}\), then combine them into
-    \(\tau_-\) and \(\tau_+\) using \Eq{eq:tau_pm_complete_explicit}.
+    \item Evaluate the branchwise traction bounds
+    \(\tau_{c,p,\pm}^{\mathrm{stick}}\),
+    \(\tau_{c,p,\pm}^{\mathrm{slip}}\),
+    \(\tau_{c,s,\pm}^{\mathrm{stick}}\),
+    and \(\tau_{c,s,\pm}^{\mathrm{slip}}\), then combine them into
+    \(\tau_\pm^{\mathrm{stick}}\) and \(\tau_\pm^{\mathrm{slip}}\) using
+    \Eq{eq:tau_pm_stick_complete_explicit} and
+    \Eq{eq:tau_pm_slip_complete_explicit}.
 
     \item Evaluate the slip metric \(v_{\Delta}\) from
-    \Eq{eq:v_delta_complete}, then select the actual coupling torque \(\tau_c\)
-    from \Eq{eq:tau_c_complete}.
+    \Eq{eq:v_delta_complete}, then select both \(\tau_c\) and
+    \(\dot{\hat v}_b\) from \Eq{eq:tau_c_complete} and
+    \Eq{eq:vb_dot_complete}.
 
     \item Evaluate the ODE right-hand sides
     \Eq{eq:omega_p_dot_complete},
     \Eq{eq:omega_s_dot_complete},
     \Eq{eq:s_dot_complete},
-    and \Eq{eq:s_ddot_complete}.
+    \Eq{eq:s_ddot_complete},
+    and \Eq{eq:vb_dot_complete_repeat}.
 \end{enumerate}
 
 % --------------------------------------------------------------
@@ -7038,19 +7654,33 @@ The complete closed CVT model is therefore
 R(s)\,\tau_c - \tau_{\mathrm{load}}(\omega_s)
 \right),
 \\[6pt]
-\frac{d}{dt}s
+\frac{\dd}{\dd t}s
 &=
 \dot s,
 \\[6pt]
-\frac{d}{dt}\dot s
+\frac{\dd}{\dd t}\dot s
 &=
 \frac{
-\Big(F_{p,\mathrm{ax}}(s,\omega_p) + F_{c,p}(s,\omega_p)\Big)
+\Big(F_{p,\mathrm{ax}}(s,\omega_p) + F_{c,p}(s,\hat v_b)\Big)
 -
-\Big(F_{s,\mathrm{ax}}(s,R(s)\tau_c) + F_{c,s}(s,\omega_s)\Big)
+\Big(F_{s,\mathrm{ax}}(s,R(s)\tau_c) + F_{c,s}(s,\hat v_b)\Big)
 }{
 m_{p,m} + m_{s,m} + \dfrac{\rho_b A_b L_b}{4}
 },
+\\[6pt]
+\frac{\dd}{\dd t}\hat v_b
+&=
+\begin{cases}
+\dot{\hat v}_{b,\mathrm{stick}},
+&
+v_{\Delta}=0
+\;\text{and}\;
+\tau_-^{\mathrm{stick}} \le \tau_{\mathrm{ns}} \le \tau_+^{\mathrm{stick}},
+\\[8pt]
+\dot{\hat v}_{b,\mathrm{slip}},
+&
+\text{otherwise,}
+\end{cases}
 \end{aligned}
 }
 \label{eq:final_cvt_system_complete}
@@ -7061,14 +7691,28 @@ R=R(s),
 \qquad
 \dot R=\dot R(s,\dot s),
 \qquad
-\tau_c \text{ from \Eq{eq:tau_c_complete}},
+v_b^\ast=\frac{1}{2}\bigl(r_{p,\mathrm{cm}}(s)\omega_p+r_{s,\mathrm{cm}}(s)\omega_s\bigr),
+\]
+\[
+\dot{\hat v}_{b,\mathrm{stick}}
+=
+\dot r_{p,\mathrm{cm}}\,\omega_p
++
+r_{p,\mathrm{cm}}\,\dot\omega_p,
+\qquad
+\dot{\hat v}_{b,\mathrm{slip}}
+=
+\frac{v_b^\ast-\hat v_b}{T_b},
+\qquad
+\tau_c \text{ from \Eq{eq:tau_c_complete}}.
 \]
 
-In short, the model closes in the following way:
-the shift state determines the geometry, the geometry determines both the
-no-slip torque demand and the traction limits, the regime law selects the
-actual transmitted coupling torque, and that torque feeds back into both the
-rotational and axial dynamics.\section{Simulation Results}
+In summary, the shift state determines the pulley geometry, the geometry
+determines both the no-slip torque demand and the belt kinematics, the regime
+law selects the transmitted coupling torque and belt-speed evolution, and those
+quantities feed back into both the rotational and axial dynamics.
+
+\section{Simulation Results}
 \label{sec:results}
 
 Because experimental drivetrain data for the present vehicle configuration was not available at the time of writing, the results presented here focus on establishing physical credibility of the model through three complementary strategies:
@@ -8494,3 +9138,5 @@ This remains a placeholder for now, as it relies on outdated equations, but one 
 \bibliography{../../refs/References}
 
 \end{document}
+
+
