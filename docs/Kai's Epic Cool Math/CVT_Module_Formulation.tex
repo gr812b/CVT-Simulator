@@ -3666,25 +3666,6 @@ denote either pulley, where \(j=p\) corresponds to the primary and
 \(j=s\) corresponds to the secondary.
 
 % --------------------------------------------------------------
-\paragraph{Centrifugal Force Formulation}
-
-From \theoryRef{th:centrifugal_force}, a mass $m$ rotating at angular velocity
-$\omega$ at radius $r$ experiences centrifugal force
-
-\[
-F_c = m \omega^2 r.
-\]
-
-To apply this to the belt wrapped around a pulley, we require:
-\begin{enumerate}
-    \item The radius at which this mass rotates.
-    \item The mass of belt material in contact with the pulley.
-    \item The angular velocity of the belt mass.
-\end{enumerate}
-
-Each of these quantities is derived below.
-
-% --------------------------------------------------------------
 \subsection{Belt Centrifugal Force on the Wrap}
 \label{sec:belt-centrifugal}
 
@@ -4777,7 +4758,7 @@ I_p\,\dot{\omega}_p(t)
 }
 
 Using the secondary-side no-slip torque mapping established in
-\Eq{eq:tau_relation}, the secondary rotational equation on the sticking branch is
+\Eq{eq:torque_ratio}, the secondary rotational equation on the sticking branch is
 
 \bigeq{eq:secondary_rot_dyn}{Secondary Pulley Rotational Dynamics}{
 R(t)\tau_c(t) - \tau_{\text{load}}(t)
@@ -5506,11 +5487,29 @@ r_{j,\mathrm{eff}}\,\Delta T_{j,\max}.
 The next subsection computes \(\Delta T_{j,\max}\) by examining the
 incremental change in belt tension along the wrap.
 
-\begin{remarkbox}[Remark (Friction)]
-TODO: Discuss other options for modelling friction of the rubber belt, reference that paper. Appendix?
+\begin{remarkbox}[Remark (Other Friction Models)]
+Although the present simulator adopts a Coulomb friction law for simplicity and
+analytic transparency, richer friction descriptions are available if greater
+fidelity near the stick--slip transition is desired. A common next step is a
+Stribeck-type law, in which the effective friction level varies with relative
+slip speed so that breakaway friction near zero speed can exceed the kinetic
+friction observed at larger slip speeds. Such a model can better represent
+engagement and low-slip behaviour than a purely constant Coulomb coefficient,
+while still remaining relatively simple to implement
+\cite{ArmstrongHelouvry1994,CanudasDeWit1995}.
+
+For still higher fidelity, dynamic friction models introduce internal state
+variables that represent the evolving contact condition. The LuGre model is a
+standard example and can capture presliding displacement, hysteresis, friction
+lag, and smoother stick--slip transitions, while related multistate models such
+as the generalized Maxwell--slip model can represent more detailed microslip and
+memory effects \cite{CanudasDeWit1995,AlBender2005}. These models are often more
+physically expressive, but they also require additional parameter identification
+and increase numerical and modelling complexity. For the present work, Coulomb
+friction is therefore retained as a deliberate low-complexity approximation,
+while Stribeck- or state-based friction models remain natural extensions for
+future refinement \cite{ArmstrongHelouvry1994}.
 \end{remarkbox}
-
-
 
 \subsection{Differential Belt Element and Tangential Force Balance}
 \label{sec:traction_element}
@@ -5520,6 +5519,19 @@ $\Delta T_{j,\max}$ introduced in \Sec{sec:traction_overview},
 we now examine how belt tension changes \emph{locally}
 as the belt passes around a generic pulley
 $j \in \{p,s\}$.
+
+This derivation uses a differential force balance on a belt element in an
+inertial frame of reference.
+Accordingly, the belt element is described through its actual acceleration,
+so the radial inertia appears through centripetal acceleration rather than
+through an explicit centrifugal force.
+This differs from the treatment in \Sec{sec:belt-centrifugal}, where the same
+underlying belt inertia on the wrap was represented through an equivalent
+centrifugal-loading picture in order to derive an axial clamping contribution.
+That earlier formulation was convenient because the goal there was to obtain a
+net axial force on the sheaves.
+Here, by contrast, the goal is to determine how belt tension changes along the
+wrap, so a local inertial-frame force balance is the more natural description.
 
 Specifically, we seek an expression for the incremental
 tension change $\dd T_j$ over a differential wrap angle $\dd\theta$.
@@ -5598,63 +5610,67 @@ Simplifying the first two terms exactly gives
 \label{eq:tangential_balance_simplified}
 \end{equation}
 
-Rearranging,
-
-\begin{equation}
-\dd T_j \cos\!\left(\frac{\dd \theta}{2}\right)
-=
-\dd F_{f,j}
--
-\dd m_j\,a_{t,j}.
-\label{eq:dT_exact}
-\end{equation}
-
 % --------------------------------------------------------------
 \paragraph{Belt mass element}
 
-From \Eq{eq:dm_belt_wrap}, the belt mass associated with the differential
+From \Eq{eq:dm_belt_wrap_j}, the belt mass associated with the differential
 contact element on pulley $j$ is
 
 \begin{equation}
 \dd m_j = \rho_b A_b r_{j,\mathrm{cm}}\,\dd\theta.
+\label{eq:dm_belt_element_repeat}
 \end{equation}
 
-Thus,
+Substituting this into \Eq{eq:tangential_balance_simplified} gives
 
 \begin{equation}
-\dd m_j\,a_{t,j}
+-\dd T_j \cos\!\left(\frac{\dd \theta}{2}\right)
++
+\dd F_{f,j}
 =
-\rho_b A_b r_{j,\mathrm{cm}} a_{t,j} \, \dd \theta.
-\label{eq:dm_at}
+\rho_b A_b r_{j,\mathrm{cm}} a_{t,j}\,\dd\theta.
+\label{eq:tangential_balance_with_mass}
 \end{equation}
 
-Substituting into \Eq{eq:dT_exact} gives
+Rearranging for the local tension change yields
 
 \begin{equation}
-\dd T_j \cos\!\left(\frac{\dd \theta}{2}\right)
+\dd T_j
 =
+\frac{
 \dd F_{f,j}
 -
-\rho_b A_b r_{j,\mathrm{cm}} a_{t,j} \, \dd \theta.
-\label{eq:dT_with_mass}
+\rho_b A_b r_{j,\mathrm{cm}} a_{t,j}\,\dd\theta
+}{
+\cos\!\left(\frac{\dd \theta}{2}\right)
+}.
+\label{eq:dT_local_general}
 \end{equation}
+
+This expression shows that the local rise in belt tension is produced by the
+available tangential friction force, reduced by the tangential inertial force
+required to accelerate the belt element.
 
 % --------------------------------------------------------------
 \paragraph{Friction limit and impending slip}
 
-As established in \Sec{sec:traction_overview}, the maximum admissible
-tension rise occurs when friction is fully mobilized along the wrap,
-i.e.\ at impending slip.
-At the differential level, this corresponds to
+The quantity of interest is the \emph{maximum} admissible tension increase.
+From \Eq{eq:dT_local_general}, this occurs when the tangential friction force
+reaches its largest value, since $\dd F_{f,j}$ is the term that directly drives
+the increase in belt tension.
+
+As discussed in \Sec{sec:traction_overview}, the maximum tension rise therefore
+occurs at impending slip, when friction is fully mobilized at the interface.
+At the differential level, the largest available friction force is
 
 \begin{equation}
-\dd F_{f,j} = \mu \, \dd N_j.
+\dd F_{f,j,\max} = \mu \,\dd N_j.
 \label{eq:friction_saturated}
 \end{equation}
 
 Substituting \Eq{eq:friction_saturated} into
-\Eq{eq:dT_with_mass} yields the maximum local
-tension increase supported without sliding:
+\Eq{eq:dT_local_general} gives the maximum local
+tension increase that can be supported without sliding:
 
 \begin{equation}
 \dd T_{j,\max}
@@ -5662,7 +5678,7 @@ tension increase supported without sliding:
 \frac{
 \mu\, \dd N_j
 -
-\rho_b A_b r_{j,\mathrm{cm}} a_{t,j} \, \dd \theta
+\rho_b A_b r_{j,\mathrm{cm}} a_{t,j}\,\dd\theta
 }{
 \cos\!\left(\frac{\dd \theta}{2}\right)
 }.
@@ -5764,6 +5780,15 @@ Since the inertial term acts on the belt element mass, the relevant kinematics
 are those of the belt element centroid, located at radius
 \(r_{j,\mathrm{cm}}(t)\).
 
+As discussed in \Sec{sec:belt-centrifugal}, belt inertia on the wrap may be
+represented in different but equivalent ways depending on the force balance of
+interest. There, the goal was to obtain an axial clamping contribution, so the
+belt inertia was introduced through an equivalent centrifugal-loading picture.
+Here, by contrast, we require a local force balance on a differential belt
+element in an inertial frame. In this description, the belt element has an
+actual acceleration, whose radial component contains the usual centripetal term,
+while the tangential force balance depends only on the tangential component.
+
 \paragraph{Goal}
 
 For a belt element of differential mass \(\dd m_j\) moving along the wrap of
@@ -5771,16 +5796,17 @@ pulley \(j\), the tangential force balance uses
 \[
 \sum F_t = \dd m_j\,a_{t,j}.
 \]
+
 Our goal is therefore to compute \(a_{t,j}\) from the belt kinematics when both
-the local angular speed and the centroid radius may vary:
+the centroid radius and the modeled belt transport speed may vary:
 \[
-\omega_j(t)=\dot\theta_j(t),
-\qquad
-\dot\omega_j(t),
-\qquad
 r_{j,\mathrm{cm}}(t),
 \qquad
-\dot r_{j,\mathrm{cm}}(t).
+\dot r_{j,\mathrm{cm}}(t),
+\qquad
+\hat v_b(t),
+\qquad
+\dot{\hat v}_b(t).
 \]
 
 \paragraph{Coordinate system and unit vectors}
@@ -5825,16 +5851,21 @@ The position of the belt element centroid relative to the pulley center is
 \label{eq:position_polar}
 \end{equation}
 
-Differentiating \Eq{eq:position_polar} gives
+The belt transport speed is the tangential speed of the belt element along the
+wrap. Since the modeled belt transport speed is \(\hat v_b\), the velocity of
+the belt element centroid is
+
 \begin{equation}
-\mathbf v_j = \dot{\mathbf r}_j
-= \dot r_{j,\mathrm{cm}}\,\mathbf e_{r,j}
-+ r_{j,\mathrm{cm}}\,\dot{\mathbf e}_{r,j}.
-\label{eq:velocity_before_unit_rates}
+\mathbf v_j
+=
+\dot r_{j,\mathrm{cm}}\,\mathbf e_{r,j}
++
+\hat v_b\,\mathbf e_{\theta,j}.
+\label{eq:velocity_polar_vb}
 \end{equation}
 
-Thus, even if \(r_{j,\mathrm{cm}}\) were constant, the velocity would still
-depend on the rotation of the local basis.
+Thus, \(\dot r_{j,\mathrm{cm}}\) is the radial speed and \(\hat v_b\) is the
+tangential speed.
 
 \paragraph{Step 2: time derivatives of the unit vectors}
 
@@ -5847,97 +5878,111 @@ the same angle. Hence
 \label{eq:unit_vectors_angle_derivatives}
 \end{equation}
 
-Using the chain rule with
-\(
-\omega_j=\dot\theta_j
-\),
-these become
+The local angular speed of the belt element centroid on pulley \(j\) is related
+to the belt transport speed by
 \begin{equation}
-\dot{\mathbf e}_{r,j} = \omega_j\,\mathbf e_{\theta,j},
-\qquad
-\dot{\mathbf e}_{\theta,j} = -\omega_j\,\mathbf e_{r,j}.
-\label{eq:unit_vectors_time_derivatives}
-\end{equation}
-
-\paragraph{Step 3: velocity in radial--tangential form}
-
-Substituting \Eq{eq:unit_vectors_time_derivatives} into
-\Eq{eq:velocity_before_unit_rates} gives
-\begin{equation}
-\mathbf v_j
+\dot\theta_j
 =
-\dot r_{j,\mathrm{cm}}\,\mathbf e_{r,j}
-+
-r_{j,\mathrm{cm}}\omega_j\,\mathbf e_{\theta,j}.
-\label{eq:velocity_polar}
+\omega_{b,j}
+=
+\frac{\hat v_b}{r_{j,\mathrm{cm}}}.
+\label{eq:omega_bj_repeat}
 \end{equation}
 
-Thus, \(\dot r_{j,\mathrm{cm}}\) is the radial speed and
-\(r_{j,\mathrm{cm}}\omega_j\) is the tangential speed.
+Using the chain rule, the unit-vector time derivatives therefore become
+\begin{equation}
+\dot{\mathbf e}_{r,j}
+=
+\frac{\hat v_b}{r_{j,\mathrm{cm}}}\,\mathbf e_{\theta,j},
+\qquad
+\dot{\mathbf e}_{\theta,j}
+=
+-
+\frac{\hat v_b}{r_{j,\mathrm{cm}}}\,\mathbf e_{r,j}.
+\label{eq:unit_vectors_time_derivatives_vb}
+\end{equation}
 
-\paragraph{Step 4: acceleration and tangential component}
+\paragraph{Step 3: acceleration and tangential component}
 
-Differentiating \Eq{eq:velocity_polar} gives
+Differentiating \Eq{eq:velocity_polar_vb} gives
 \begin{align}
-\mathbf a_j = \dot{\mathbf v}_j
+\mathbf a_j
 &=
 \frac{\dd}{\dd t}\big(\dot r_{j,\mathrm{cm}}\,\mathbf e_{r,j}\big)
 +
-\frac{\dd}{\dd t}\big(r_{j,\mathrm{cm}}\omega_j\,\mathbf e_{\theta,j}\big)
+\frac{\dd}{\dd t}\big(\hat v_b\,\mathbf e_{\theta,j}\big)
 \nonumber\\[6pt]
 &=
 \ddot r_{j,\mathrm{cm}}\,\mathbf e_{r,j}
 +
 \dot r_{j,\mathrm{cm}}\,\dot{\mathbf e}_{r,j}
 +
-(\dot r_{j,\mathrm{cm}}\,\omega_j + r_{j,\mathrm{cm}}\,\dot\omega_j)\mathbf e_{\theta,j}
+\dot{\hat v}_b\,\mathbf e_{\theta,j}
 +
-r_{j,\mathrm{cm}}\omega_j\,\dot{\mathbf e}_{\theta,j}.
-\label{eq:accel_expand}
+\hat v_b\,\dot{\mathbf e}_{\theta,j}.
+\label{eq:accel_expand_vb}
 \end{align}
 
-Substituting the unit-vector derivatives from
-\Eq{eq:unit_vectors_time_derivatives} and collecting like terms yields
+Substituting \Eq{eq:unit_vectors_time_derivatives_vb} gives
 \begin{align}
 \mathbf a_j
 &=
 \ddot r_{j,\mathrm{cm}}\,\mathbf e_{r,j}
 +
-\dot r_{j,\mathrm{cm}}(\omega_j\,\mathbf e_{\theta,j})
+\dot r_{j,\mathrm{cm}}
+\left(
+\frac{\hat v_b}{r_{j,\mathrm{cm}}}\,\mathbf e_{\theta,j}
+\right)
 +
-(\dot r_{j,\mathrm{cm}}\,\omega_j + r_{j,\mathrm{cm}}\,\dot\omega_j)\mathbf e_{\theta,j}
-+
-r_{j,\mathrm{cm}}\omega_j(-\omega_j\,\mathbf e_{r,j})
+\dot{\hat v}_b\,\mathbf e_{\theta,j}
+-
+\hat v_b
+\left(
+\frac{\hat v_b}{r_{j,\mathrm{cm}}}\,\mathbf e_{r,j}
+\right)
 \nonumber\\[6pt]
 &=
-\big(\ddot r_{j,\mathrm{cm}} - r_{j,\mathrm{cm}}\omega_j^2\big)\mathbf e_{r,j}
+\left(
+\ddot r_{j,\mathrm{cm}}
+-
+\frac{\hat v_b^2}{r_{j,\mathrm{cm}}}
+\right)\mathbf e_{r,j}
 +
-\big(r_{j,\mathrm{cm}}\dot\omega_j + 2\dot r_{j,\mathrm{cm}}\,\omega_j\big)\mathbf e_{\theta,j}.
-\label{eq:accel_polar}
+\left(
+\dot{\hat v}_b
++
+\frac{\dot r_{j,\mathrm{cm}}}{r_{j,\mathrm{cm}}}\hat v_b
+\right)\mathbf e_{\theta,j}.
+\label{eq:accel_polar_vb}
 \end{align}
 
 By \Eq{eq:at_component_def}, the tangential acceleration is therefore
+
 \begin{equation}
 a_{t,j}
 =
-r_{j,\mathrm{cm}}\dot\omega_j + 2\dot r_{j,\mathrm{cm}}\,\omega_j.
+\dot{\hat v}_b
++
+\frac{\dot r_{j,\mathrm{cm}}}{r_{j,\mathrm{cm}}}\hat v_b.
 \label{eq:at_final}
 \end{equation}
 
-\paragraph{Origin of the factor of 2}
+\paragraph{Interpretation}
 
-The two \(\dot r_{j,\mathrm{cm}}\,\omega_j\) contributions in
-\Eq{eq:accel_polar} arise from two distinct effects:
-\begin{itemize}
-    \item \(\dot r_{j,\mathrm{cm}}\,\dot{\mathbf e}_{r,j}\): the radial velocity
-    \(\dot r_{j,\mathrm{cm}}\,\mathbf e_{r,j}\) acquires a tangential contribution because
-    the radial direction itself rotates at rate \(\omega_j\),
-    \item \(\frac{\dd}{\dd t}(r_{j,\mathrm{cm}}\omega_j)\): the tangential speed changes when
-    the centroid radius changes.
-\end{itemize}
+The first term, \(\dot{\hat v}_b\), is the direct time rate of change of the
+belt transport speed.
+The second term appears because the belt element is not only moving along the wrap, 
+but also moving to a different wrap radius at the same time. As the element shifts 
+inward or outward while continuing to travel around the pulley, the local radial 
+direction changes, and that changing radial direction contributes a tangential 
+component to the acceleration.
 
-Together, these give the total term \(2\dot r_{j,\mathrm{cm}}\,\omega_j\).
-\subsection{Normal Force from Axial Clamping}
+The radial component
+\(
+\ddot r_{j,\mathrm{cm}} - \hat v_b^2/r_{j,\mathrm{cm}}
+\)
+contains the centripetal term, but it does not enter the tangential force
+balance used in \Sec{sec:traction_element}.\subsection{Normal Force from Axial Clamping}
 \label{sec:normal_from_clamp}
 
 The traction bound \Eq{eq:deltaT_final} depends on the total normal load
@@ -6044,11 +6089,27 @@ N_{\phi,j} = 2F_{\mathrm{ax},j}\tan\beta,
 \qquad
 a_{t,j}
 =
-r_{j,\mathrm{cm}}\dot{\omega}_j
+\dot{\hat v}_b
 +
-2\dot r_{j,\mathrm{cm}}\,\omega_j,
+\frac{\dot r_{j,\mathrm{cm}}}{r_{j,\mathrm{cm}}}\hat v_b,
 \]
-the explicit torque-capacity expression becomes
+we obtain
+\begin{equation}
+\Delta T_{j,\max}
+=
+2\mu F_{\mathrm{ax},j}\tan\beta
+-
+\rho_b A_b \phi_j r_{j,\mathrm{cm}}
+\left(
+\dot{\hat v}_b
++
+\frac{\dot r_{j,\mathrm{cm}}}{r_{j,\mathrm{cm}}}\hat v_b
+\right).
+\label{eq:deltaT_max_explicit}
+\end{equation}
+
+Substituting this into \Eq{eq:tau_max_repeat} and re-arranging gives the explicit
+torque-capacity expression
 
 \bigeq{eq:tau_capacity_final}{Pulley Torque Capacity}{
 \tau_{j,\max}
@@ -6057,65 +6118,19 @@ r_{j,\mathrm{eff}}
 \left[
 2\mu F_{\mathrm{ax},j}\tan\beta
 -
-\rho_b A_b r_{j,\mathrm{cm}} \phi_j
+\rho_b A_b \phi_j
 \left(
-r_{j,\mathrm{cm}}\dot{\omega}_j
+r_{j,\mathrm{cm}}\dot{\hat v}_b
 +
-2\dot r_{j,\mathrm{cm}}\,\omega_j
+\dot r_{j,\mathrm{cm}}\,\hat v_b
 \right)
 \right].
 }
 
-The remaining task is to substitute the appropriate rotational acceleration
-\(\dot{\omega}_j\) and axial clamp force \(F_{\mathrm{ax},j}\) for each pulley 
-to obtain explicit bounds on the coupling torque.
+The remaining task is to substitute the appropriate axial clamp force
+\(F_{\mathrm{ax},j}\) for each pulley to obtain explicit bounds on the
+coupling torque.
 
-% --------------------------------------------------------------
-\begin{remarkbox}[Remark (Why this differs from the classical capstan exponential)]
-In the classical capstan problem, the normal load is generated \emph{by the belt tension}
-itself (a larger tension implies a proportionally larger contact normal),
-which leads to the exponential relation $T_1/T_2 = e^{\mu\phi}$.
-
-Here, the normal load is imposed externally by the clamping mechanism:
-$N_\phi$ is determined by $F_{\mathrm{ax}}$ through \Eq{eq:Nphi_from_Fax}.
-Therefore, the available traction scales \emph{linearly} with clamping force,
-not exponentially with belt tension.
-Centrifugal loading and ratio change enter additionally through the inertial term
-in \Eq{eq:tau_capacity_final}.
-\end{remarkbox}
-
-% --------------------------------------------------------------
-\begin{remarkbox}[Remark (Torque-Reactive Clamping and Implicit Capacity at the Secondary)]
-For the secondary pulley, the specific axial clamp force
-$F_{\mathrm{ax}}$ used in this model depends on the transmitted torque
-$\tau_s$ (see \Eq{eq:secondary_axial}).  
-However, the traction capacity $\tau_{\max}$ derived above depends
-on $F_{\mathrm{ax}}$ through \Eq{eq:Nphi_from_Fax} and
-\Eq{eq:tau_capacity_final}.  
-
-Consequently, at the secondary interface the admissible torque
-satisfies an implicit relation of the form
-\[
-|\tau_s| \le \tau_{\max}\big(F_{\mathrm{ax}}(\tau_s)\big).
-\]
-
-In other words, the transmitted torque influences the clamp force,
-the clamp force determines the traction capacity,
-and that capacity bounds the transmitted torque.
-This circular dependence arises only because the secondary
-mechanism is torque-reactive.
-
-For the specific secondary model adopted in this work,
-this implicit inequality can be reduced to a closed-form solution
-(see Appendix~\ref{sec:appendix-secondary-capacity-closure}).
-The explicit algebra is omitted here to preserve clarity,
-as it depends on the detailed functional form of
-$F_{\mathrm{ax}}(s,\tau_s)$ and is not required
-to understand the main traction derivation.
-\end{remarkbox}
-
-
-% --------------------------------------------------------------
 \subsection{Section Conclusion and Transition}
 \label{sec:traction_conclusion}
 
