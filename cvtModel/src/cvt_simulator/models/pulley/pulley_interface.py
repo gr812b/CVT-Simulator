@@ -157,19 +157,13 @@ class PulleyModel(ABC):
         """
         shift_distance = state.shift_distance
         wrap_angle = self._get_wrap_angle(shift_distance)
-        angular_velocity = (
-            state.secondary_pulley_angular_velocity
-            * tm.secondary_effective_radius(shift_distance)
-            / self._get_radius(shift_distance)
-        )
-        r_cm = self._get_belt_centroid_radius(shift_distance)
+        belt_velocity = state.v_b
         beta = SHEAVE_ANGLE / 2
 
         return (
             RUBBER_DENSITY
             * BELT_CROSS_SECTIONAL_AREA
-            * angular_velocity**2
-            * r_cm**2
+            * belt_velocity**2
             * wrap_angle
             / (2 * np.tan(beta))
         )
