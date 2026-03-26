@@ -7981,6 +7981,117 @@ figure only explains the shift tendency and overall clamping levels; it has not
 yet quantified the resulting slip behaviour, which is addressed next.
 
 
+\subsection{Torque Bounds, No-Slip Demand, and Coupling Torque}
+\label{sec:results_torque_bounds}
+
+The force-balance results of \Cref{fig:axial_force_panels} explain when each
+case tends to remain at low ratio and when it begins to shift. However, force
+balance alone does not determine whether the belt is actually able to transmit
+the torque required for sticking. To examine that question,
+\Cref{fig:torque_bounds} compares four quantities during the launch: the
+primary and secondary traction bounds, the no-slip coupling torque
+\(\tau_{\mathrm{ns}}\), and the actual transmitted coupling torque
+\(\tau_c\).
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.98\textwidth]{illustrations/results/cvt_torque_bounds_2x2.png}
+\caption{Torque bounds, no-slip demand, and actual coupling torque for the four
+tuning cases. Blue and orange curves show the primary and secondary bounds,
+with the active bound drawn solid and the inactive bound dotted. The black curve
+shows the no-slip torque demand \(\tau_{\mathrm{ns}}\), and the red curve shows
+the actual transmitted coupling torque \(\tau_c\). Background shading indicates
+the clutching, low-ratio, shifting, and high-ratio phases defined earlier.}
+\label{fig:torque_bounds}
+\end{figure}
+
+These plots should be read as traction-capacity diagrams. At any instant, the
+belt can only remain in stick if the required no-slip torque lies inside the
+admissible interval defined by the active upper and lower bounds. When
+\(\tau_{\mathrm{ns}}\) lies inside that interval, the actual coupling torque
+can follow the no-slip demand closely. When \(\tau_{\mathrm{ns}}\) exceeds the
+available bounds, sticking is no longer admissible and the transmitted torque
+must saturate at the corresponding active limit.
+
+A first broad trend is immediately visible. The cases that settle out of slip
+early in the launch are precisely the cases with larger admissible positive
+torque capacity during the initial clutching and low-ratio phases. In the
+\textbf{default} and \textbf{lighter-flyweight} cases, the upper torque bound
+rises to a relatively large value early in the launch. This gives the system
+enough admissible coupling torque to reduce the belt-speed mismatch and recover
+toward sticking. By contrast, the \textbf{slip-dominated} case begins with
+essentially no admissible positive torque and only develops usable capacity
+more gradually. That lower early torque capacity directly explains why the
+slip-dominated case spends much longer in the clutching region.
+
+This same distinction appears in the evolution of \(\tau_c\). In the cases that
+recover stick early, the actual coupling torque relaxes toward and then tracks
+the no-slip demand through the end of clutching and into low-ratio operation.
+Once low-ratio launch is established, the red and black curves remain close,
+indicating that the required torque stays admissible and sustained slip is not
+reintroduced immediately.
+
+A second important pattern appears once the transmission begins to shift. In
+all four cases, the no-slip torque rises during the shift phase. This is
+consistent with the form of \(\tau_{\mathrm{ns}}\), in which the ratio-rate term
+becomes active once the CVT begins moving away from its initial ratio. In the
+\textbf{default} and \textbf{lighter-flyweight} cases, this rise remains below
+the admissible upper torque bound, so the actual coupling torque continues to
+follow the no-slip demand and large renewed slip does not occur. In the
+\textbf{steeper-helix} and \textbf{slip-dominated} cases, however,
+\(\tau_{\mathrm{ns}}\) rises above the admissible upper bound during the shift.
+At that point, sticking is no longer feasible, the actual coupling torque
+saturates at the active maximum, and renewed slip appears until the state
+returns closer to the sticking condition.
+
+The \textbf{steeper-helix} and \textbf{slip-dominated} cases also show visibly oscillatory
+behaviour in the no-slip torque during the shift onset. This is consistent with
+the oscillations already seen in the preceding axial-force plots. The most
+direct source is the ratio-rate contribution to \(\tau_{\mathrm{ns}}\): if the
+shift dynamics are not smooth, then the implied no-slip torque need not evolve
+smoothly either. In these two poorer tuning cases, the shift motion appears
+more weakly damped, so the no-slip torque exhibits stronger excursions during
+the transition into active shifting. A plausible reason is that the present
+model neglects parasitic losses and other non-critical frictional effects,
+which in a real system would provide additional damping and suppress some of
+this oscillatory behaviour. This is therefore a useful limitation to note: the
+model captures the overall stick--slip transitions and the active limiting
+mechanism, but the transient oscillations in the most aggressive cases are
+likely amplified by the intentionally idealized loss assumptions.
+
+Another common feature is the gradual relaxation of the actual coupling torque
+toward the no-slip demand rather than an instantaneous snap to it. This comes
+from the regularized transition law used in the simulation, discussed in
+Appendix \ref{sec:appendix-slip-regularization}, which replaces a discontinuous switch with a smooth \(\tanh\)-based
+approximation. Its purpose is numerical: it reduces chattering and improves
+stability near the stick--slip transition. The effect is visible here as a
+slight lag in the recovery of perfect sticking, but it does not change the main
+qualitative behaviour of the four cases. The same limiting patterns are still
+present, and the cases that lose admissibility remain clearly distinguishable
+from those that do not.
+
+Finally, each case shows a noticeable jump in the admissible torque bound once
+full sticking is re-established near the end of the launch. This reflects the
+change in limiting behaviour used by the model after slip is removed, together
+with the corresponding increase in effective friction behaviour assumed in the
+sticking regime. The important point for the present discussion is that this
+jump occurs only after the system has already relaxed back toward the no-slip
+state; it is therefore a consequence of stick recovery rather than its cause.
+
+Taken together, \Cref{fig:torque_bounds} closes the interpretation begun in the
+previous two subsections. The shift curves showed the overall launch behaviour,
+and the axial-force plots explained the tendency to hold or leave low ratio.
+The present figure then shows whether the required coupling torque is actually
+admissible throughout those phases. The default and lighter-flyweight cases
+maintain sufficient positive torque capacity to recover stick early and remain
+near the no-slip demand through the main shift. The steeper-helix and
+slip-dominated cases do not: in both, the no-slip torque exceeds the available
+upper bound during the shift, forcing the actual coupling torque to saturate and
+reintroducing slip. In this way, the torque plots both confirm the solid
+patterns seen earlier and reveal one of the model's clearest shortcomings: the
+most weakly damped cases display exaggerated oscillatory transients due to the
+idealized loss assumptions.
+
 \subsection{Nominal Launch Overview}
 \label{sec:results_nominal_launch}
 
