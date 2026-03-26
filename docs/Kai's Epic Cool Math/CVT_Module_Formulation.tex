@@ -886,7 +886,7 @@ and the sign convention for road incline used throughout the model.
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=0.85\textwidth]{illustrations/coordinate/vehicle_longitudinal.png}
+\includegraphics[width=\textwidth]{illustrations/coordinate/vehicle_longitudinal.png}
 \caption{
 Definition of the longitudinal vehicle coordinate and incline angle.
 The coordinate $x$ is defined tangent to the road surface and
@@ -933,7 +933,7 @@ and therefore tends to increase the corresponding angular velocity.
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=0.9\textwidth]{./illustrations/coordinate/rotational_directions.png}
+\includegraphics[width=\textwidth]{./illustrations/coordinate/rotational_directions.png}
 \caption{
 Rotational sign convention for the drivetrain. Positive angular
 velocities for the wheels ($\omega_w$), secondary pulley ($\omega_s$),
@@ -990,7 +990,7 @@ sheave.
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=0.9\textwidth]{illustrations/coordinate/axial_direction.png}
+\includegraphics[width=\textwidth]{illustrations/coordinate/axial_direction.png}
 \caption{
 Definition of the primary axial coordinate. The system begins in an open 
 configuration. The axial displacement $s$ measures how much the movable 
@@ -1035,7 +1035,7 @@ of rotation and points along the pulley shaft, into the page.
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=0.75\textwidth]{illustrations/coordinate/radial_tangential_direction.png}
+\includegraphics[width=\textwidth]{illustrations/coordinate/radial_tangential_direction.png}
 \caption{
 Radial and tangential directions in the plane of pulley rotation.
 The radial direction $\hat e_r$ points outward from the center of the
@@ -7875,6 +7875,111 @@ flatness of the main shift segment, and the extent of the initial slip-dominated
 portion of the launch. The following subsections explain these differences in
 terms of the underlying axial force balance and torque-transfer behaviour of the
 CVT.
+
+
+\subsection{Axial Force Balance Through the Launch}
+\label{sec:results_axial_forces}
+
+The shift-curve trajectories of \Cref{fig:shift_curves} indicate when each case
+remains near low ratio, when it begins to upshift, and how quickly it reaches
+high ratio. To explain those differences mechanically,
+\Cref{fig:axial_force_panels} compares the total axial force acting on the
+primary and secondary pulleys for each tuning case, with the same launch phases
+shaded in the background.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.98\textwidth]{illustrations/results/cvt_pulley_axial_forces_2x2.png}
+\caption{Primary and secondary total axial forces during launch for the four
+tuning cases. Blue curves show total primary axial force, orange curves show
+total secondary axial force. Background shading indicates the clutching,
+low-ratio, shifting, and high-ratio phases defined earlier.}
+\label{fig:axial_force_panels}
+\end{figure}
+
+These plots should be read as force-balance diagrams for the shift. While the
+secondary axial force exceeds the primary axial force, the transmission is held
+toward low ratio. Once the primary force overtakes the secondary, the pulley
+pair is driven into upshift. The timing of that crossover therefore determines
+how long the launch remains near low ratio and how early the transmission begins
+moving through its ratio range.
+
+The \textbf{default} case shows the most balanced behaviour. During the initial
+clutching phase, the secondary force begins noticeably above the primary force,
+so the transmission is held near its low-ratio condition rather than shifting
+immediately. This produces the short but clear low-ratio hold seen previously
+in \Cref{fig:shift_curves}. As the launch progresses, the primary axial force
+rises and eventually overtakes the secondary, initiating the main upshift.
+Importantly, the secondary force does not remain fixed while this happens. It
+also rises throughout the shift, so the system continues to resist ratio change
+even after upshift begins. This is mechanically important: if the secondary
+force stayed nearly constant while the primary force rose rapidly, the
+transmission would sweep through the shift range much more abruptly. Instead,
+both sides grow together, giving the default case its smoother and more
+controlled shift.
+
+The \textbf{lighter-flyweight} case makes this point especially clear. Relative
+to the default case, the primary force is reduced in the early launch, while the
+secondary remains comparatively strong. The initial force gap is therefore
+larger, meaning the low-ratio condition is held more firmly and for longer.
+This matches the longer low-ratio segment seen in the shift curves. Later in
+the launch, the primary still rises enough to drive upshift, but it does so
+later and at a higher engine-speed level than in the default case. In other
+words, this case does not fundamentally change the character of the shift; it
+mainly delays it by weakening the primary closing tendency during engagement and
+early launch.
+
+The \textbf{steeper-helix} case behaves differently. Here, the initial
+difference between secondary and primary force is very small, and the primary
+overtakes the secondary much earlier. This explains why the corresponding shift
+curve showed little sustained low-ratio hold and entered the shifting region so
+quickly. We also see a differently shaped force evolution throughout the shift
+itself. In the default and lighter-flyweight cases, both forces continue rising
+together in a gradual way through the main shift region. In the steeper-helix
+case, both forces rise sharply early on and then level off much sooner. The two
+forces still remain relatively close to one another, but the overall shape they
+trace is different. This helps explain why the earlier shift curve did not
+display the same flat-shift behaviour as the default case. Rather than
+maintaining a long, nearly constant-speed shift, the transmission shows a more
+rising shift trajectory, consistent with this less gradual force evolution.
+
+The \textbf{slip-dominated} case is the most extreme. Its early launch is
+characterized by a prolonged clutching phase and no meaningful low-ratio hold.
+This is consistent with the earlier shift-curve figure, where the trajectory
+spent much longer in the slip-dominated region before entering the no-slip
+shift region. Importantly, the beginning of geometric shift does not imply that
+the system has already stopped slipping. It only indicates that the shift
+coordinate has begun to move away from its initial value. The more important
+feature in this case is the low magnitude of both axial forces in the early
+launch. Compared with the other cases, neither pulley develops a strong axial
+loading during the initial portion of the event. This weak overall clamping is
+a key reason why this case behaves poorly, and it will be seen more directly in
+the following torque-transfer plots where the associated slip remains elevated
+for much longer.
+
+One additional feature is visible near the beginning of each case. The early
+spike in secondary axial force is the torque-reactive contribution of the
+secondary. It appears most strongly during the initial launch when transmitted
+torque rises rapidly, and it provides an immediate resisting effect against
+premature upshift. This feature is especially useful because it shows that the
+secondary is responding dynamically to transmitted torque rather than acting as
+a static spring-only restraint. The influence of this torque reactivity will be
+seen more directly in the following torque-transfer results, but its signature
+is already visible here in the early force histories.
+
+Taken together, \Cref{fig:axial_force_panels} provides the mechanical
+explanation for the differences observed in \Cref{fig:shift_curves}. A larger
+initial gap between secondary and primary force corresponds to stronger
+low-ratio retention, as seen in the lighter-flyweight case. A very small gap
+corresponds to premature upshift, as seen in the steeper-helix case. The
+default case lies between these extremes and therefore produces the most
+balanced launch. Perhaps most importantly, the figure shows that the shift is
+not driven by the primary alone. The secondary rises with it throughout the
+launch, and the actual shift behaviour emerges from the evolving balance between
+the two rather than from either force in isolation. At the same time, this
+figure only explains the shift tendency and overall clamping levels; it has not
+yet quantified the resulting slip behaviour, which is addressed next.
+
 
 \subsection{Nominal Launch Overview}
 \label{sec:results_nominal_launch}
