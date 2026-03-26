@@ -31,7 +31,7 @@ def get_constants():
     """
     Get the physical constants and specifications used by the CVT simulator.
     These values are useful for visualization and understanding the simulation parameters.
-    Calculated values like max_shift and center_to_center are automatically computed.
+    Calculated values like max_shift, center_to_center, and min/max effective CVT ratio are automatically computed.
     """
     return CarSpecs()
 

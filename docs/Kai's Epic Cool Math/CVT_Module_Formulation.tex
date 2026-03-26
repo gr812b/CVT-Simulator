@@ -7715,117 +7715,167 @@ quantities feed back into both the rotational and axial dynamics.
 \section{Simulation Results}
 \label{sec:results}
 
-Because direct experimental drivetrain data for the present vehicle
-configuration was not available at the time of writing, this section does not
-attempt a quantitative validation against measured traces. Instead, the purpose
-of the results is to establish physical credibility of the model by showing
-that
+This section compares four launch simulations: a nominal baseline case, a
+lighter-flyweight case, a steeper-helix case with reduced secondary torque
+reactivity, and a combined case with both a shallower initial primary ramp and
+a steeper helix. The purpose of these results is not to match experimental
+vehicle data directly, but to show that the model produces mechanically
+interpretable launch behaviour and responds to tuning changes in physically
+sensible ways.
 
-\begin{enumerate}
-    \item the coupled equations produce a coherent nominal launch trajectory,
-    \item force and torque balances extracted from that trajectory behave in the
-    physically expected direction, and
-    \item targeted tuning changes produce interpretable changes in launch and
-    shift behaviour.
-\end{enumerate}
+The results are organized around the launch shift curves of these four cases.
+These curves first provide an overall picture of the launch, including
+engagement, low-ratio operation, active upshift, and high-ratio behaviour. The
+following subsections then explain those trends by examining the axial force
+balance across the CVT and the resulting torque-transfer and slip behaviour. In
+particular, the combined case is included to show a clearly slip-dominated
+launch, in which the model predicts loss of the low-ratio hold and sustained
+slip through the early portion of the launch.
 
-The results are therefore organized around a single nominal launch case, from
-which a small number of representative operating points are extracted and used
-for diagnostic plots. Two additional comparison cases are then introduced to
-show how the predicted behaviour changes under modified clutch tuning. This
-approach keeps the section focused on the most important mechanisms without
-turning it into an exhaustive plot-by-plot replay of the full derivation.
+Taken together, the four cases are intended to show three things: first, that
+the baseline tuning produces a coherent and interpretable launch trajectory;
+second, that changes to primary and secondary tuning shift the launch behaviour
+in the expected direction; and third, that when the tuning is made
+sufficiently unfavorable, the model captures the transition to prolonged
+slipping rather than continuing to predict an unrealistic no-slip response.
 
-Throughout this section, the centrifugal belt terms derived earlier are
-retained in the governing equations, but they are interpreted through their
-effect on the overall shift and torque-transfer behaviour rather than being
-isolated in a separate subsection.
-
-\FloatBarrier
-
-% --------------------------------------------------
-\subsection{Evaluation Setup and Comparison Cases}
+\subsection{Simulation Cases and Phase Convention}
 \label{sec:results_setup}
 
-All simulations use the nominal parameter set listed in
-\Cref{tab:simulation_parameters}, except where explicitly modified for the
-comparison cases below. The primary scenario considered is a
-full-throttle launch from rest on a level surface.\footnote{Edit this sentence
-if a different launch condition is ultimately used, e.g.\ incline, prescribed
-load, or alternate throttle input.}
-The initial state is taken as
-\[
-\omega_p(0)=0,
-\qquad
-\omega_s(0)=0,
-\qquad
-s(0)=0,
-\qquad
-\dot s(0)=0,
-\qquad
-\hat v_b(0)=0,
-\]
-unless otherwise noted.
-
-Three cases are considered in the results section. Case N is the nominal
-baseline and is used for the detailed diagnostic discussion. Cases F and H are
-targeted tuning variations chosen to probe the sensitivity of the model to
-primary and secondary clutch tuning, respectively.
+The results section compares four full-throttle launch simulations from rest.
+One case is treated as the nominal baseline, while the remaining three are
+targeted tuning variations chosen to isolate specific changes in CVT behaviour.
+All cases use the same vehicle, gearbox, tire, and engine model parameters;
+they differ only in the clutch tuning parameters noted below.
 
 \begin{table}[H]
 \centering
-\caption{Simulation cases used in the results section. All parameters not listed are identical to the nominal set of \Cref{tab:simulation_parameters}.}
+\caption{Launch cases considered in the results section. All parameters not listed remain equal to the nominal baseline.}
 \label{tab:results_cases}
 \small
 \begin{tabular}{@{}lll@{}}
 \toprule
-\textbf{Case} & \textbf{Description} & \textbf{Modified parameter(s)} \\
+\textbf{Case} & \textbf{Description} & \textbf{Purpose in results section} \\
 \midrule
-N & Nominal baseline & none \\
-F & Lighter flyweights & $m_f = \text{[insert value]} < m_{f,\mathrm{nom}}$ \\
-H & Steeper helix / reduced torque reactivity &
-modified helix profile $\theta_s(s)$ or helix-angle parameter
-\text{[insert description]} \\
+D & Default tuning & Baseline reference case \\
+F & Lighter flyweights & Shows the effect of reduced primary centrifugal clamping \\
+H & Steeper helix & Shows the effect of reduced secondary torque reactivity \\
+C & Shallower initial primary ramp + steeper helix & Produces a strongly slip-dominated launch \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-To avoid introducing arbitrarily chosen static states, all detailed force and
-torque diagnostics are evaluated at a small set of representative operating
-points extracted directly from the nominal launch trajectory. These points are
+To keep the discussion consistent across the different plots, the launch is
+described in terms of a small number of recurring operating phases. These
+phases are not introduced as separate events for each case, but as common
+regions of behaviour used to interpret the launch trajectories and their
+underlying force and torque balances.
 
-\begin{enumerate}
-    \item \textbf{Point A: engagement onset}, defined as the first instant of
-    sustained torque transfer,
-    \item \textbf{Point B: shift initiation}, defined as the first instant of
-    sustained positive shift acceleration or ratio change,
-    \item \textbf{Point C: mid-shift}, chosen near the middle of the active
-    upshift region, and
-    \item \textbf{Point D: terminal/high-ratio operation}, chosen near
-    shift-out or, if more informative, at the first slip event.
-\end{enumerate}
+Throughout the following subsections, these phases will be indicated directly on
+the plots using low-opacity background shading. The same color convention is
+used wherever possible so that the reader can track the evolution of each case
+across the shift, clamping-force, and torque-transfer results.
 
-These same operating points are referenced throughout the following
-subsections, so that all force and torque interpretations are tied back to a
-single internally consistent trajectory.
-
-In addition to the trajectory plots themselves, the following summary metrics
-will be used when comparing cases:
+The phase colors are
 
 \begin{itemize}
-    \item engagement engine speed,
-    \item shift-initiation time,
-    \item time to a chosen vehicle-speed target,
-    \item minimum torque-capacity margin, and
-    \item any observed slip duration or peak slip metric.
+    \item \textbf{engagement} --- light blue,
+    \item \textbf{low-ratio operation} --- light green,
+    \item \textbf{active upshift} --- light yellow, and
+    \item \textbf{high-ratio operation} --- light red.
 \end{itemize}
 
-The exact subset ultimately reported can be adjusted once the final plots are
-available.
+Not every case is expected to exhibit all four phases equally clearly. The phase shading is therefore
+used as a visual guide to the dominant operating regime, rather than as a claim
+that every boundary is perfectly sharp.
 
-\FloatBarrier
 
-% --------------------------------------------------
+\subsection{Launch Shift Curves}
+\label{sec:results_shift_curves}
+
+The overall launch behaviour of the four tuning cases is first compared in
+\Cref{fig:shift_curves}. Each trajectory is plotted in
+engine-speed--vehicle-speed coordinates, so that engagement, ratio change, and
+the final high-ratio condition can all be viewed on the same axes. All four
+simulations begin from the same launch initial conditions,
+\[
+\omega_p(0) = \SI{1800}{rpm},
+\qquad
+\omega_s(0)=0,
+\]
+where \(\omega_p\) is the primary angular speed and \(\omega_s\) is the driven
+angular speed corresponding to zero vehicle speed. From this state, the system
+is released into a full-throttle forward simulation using the complete coupled
+model developed in the preceding sections.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.95\textwidth]{illustrations/results/cvt_shift_curves_four_cases.png}
+\caption{Engine-speed--vehicle-speed launch trajectories for the four tuning
+cases. The green line is the low-ratio limit, corresponding to a fully
+unshifted CVT. The red line is the high-ratio limit, corresponding to a fully
+shifted CVT. The blue shaded region to the left of the low-ratio line
+corresponds to launch engagement, where slip must be present. The yellow region
+between the two limit lines is the no-slip shift region.}
+\label{fig:shift_curves}
+\end{figure}
+
+The two reference lines are the kinematic no-slip limits of the CVT. The
+\textbf{low-ratio line} represents the fully unshifted transmission, where the
+CVT is in its torque-multiplying launch condition. The \textbf{high-ratio line}
+represents the fully shifted transmission, where the CVT has reached its final
+speed-increasing condition. Between these two limits lies the admissible shift 
+region. A trajectory cannot move to the right of the high-ratio
+line, and any portion of a trajectory lying to the left of the low-ratio line
+must involve slip, since even the fully unshifted CVT cannot support such a low
+vehicle speed for the corresponding engine speed.
+
+Read from left to right, the figure therefore shows the full launch sequence.
+The launch begins in the blue engagement region, where the vehicle is still too
+slow for no-slip operation. After crossing the low-ratio boundary, the
+trajectory enters the shift region. In a well-behaved launch, the CVT
+then tends to move approximately horizontally across this region, increasing
+vehicle speed while holding engine speed near a preferred operating value. This
+nearly horizontal portion will be referred to here as the
+\emph{flat-shift region}. As the shift completes, the trajectory approaches the
+high-ratio line, which forms the final no-slip boundary of the launch.
+
+With that interpretation in place, the differences between the four tuning
+cases are already visible. The \textbf{default} case shows the clearest
+baseline behaviour: a short engagement region, a brief low-ratio hold, and then
+a relatively flat shift through the middle of the plot before approaching the
+high-ratio boundary. This is the most balanced of the four trajectories, since
+it neither leaves low ratio too early nor rises excessively in engine speed
+during the main shift.
+
+The \textbf{lighter-flyweight} case retains low ratio for longer before
+crossing into the shift region. Its flat-shift portion is also noticeably
+higher in engine speed than the default case, so the launch spends more of the
+main shift at elevated primary speed. The overall shape is still recognizable
+as a conventional launch trajectory, but the shift is delayed and carried out
+at a higher engine-speed level.
+
+The \textbf{steeper-helix} case behaves differently. It leaves the low-ratio
+boundary much earlier, so the launch shows little sustained low-ratio hold.
+Its shift path is also less flat: instead of moving nearly horizontally across
+the shift region, it climbs upward more strongly as vehicle speed increases.
+This indicates that the launch does not settle into the same nearly constant
+engine-speed shift seen in the default case.
+
+The \textbf{combined slip-dominated} case is the most extreme. It remains in
+the engagement region for much longer, showing no clear low-ratio hold before
+entering the shift region. Once it does cross into the no-slip range, its shift
+still occurs at a comparatively high engine speed, and the early launch is much
+more dominated by slip than by clean low-ratio operation.
+
+At this stage, \Cref{fig:shift_curves} is intended to establish the overall
+shape of the four launches and the main qualitative differences between them.
+The key observations are the amount of low-ratio retention, the height and
+flatness of the main shift segment, and the extent of the initial slip-dominated
+portion of the launch. The following subsections explain these differences in
+terms of the underlying axial force balance and torque-transfer behaviour of the
+CVT.
+
 \subsection{Nominal Launch Overview}
 \label{sec:results_nominal_launch}
 
