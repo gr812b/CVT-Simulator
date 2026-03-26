@@ -10,6 +10,7 @@ from cvt_simulator.constants.engine_specs import safe_torque_curve
 from cvt_simulator.utils.conversions import deg_to_rad
 from cvt_simulator.utils.simulation_args import SimulationArgs
 from cvt_simulator.models.slip_model import SlipModel
+from cvt_simulator.models.belt_model import BeltModel
 from cvt_simulator.models.primary_pulley_model import PrimaryPulleyModel
 from cvt_simulator.models.system_model import SystemModel
 from cvt_simulator.models.ramps.piecewise_ramp import PiecewiseRamp
@@ -55,6 +56,8 @@ def get_models(args: SimulationArgs):
     )
     primary_pulley_model = PrimaryPulleyModel(engine_model=engine_model)
 
+    belt_model = BeltModel()
+
     slip_model = SlipModel(
         load_model=load_model,
         engine_model=engine_model,
@@ -63,10 +66,12 @@ def get_models(args: SimulationArgs):
         secondary_pulley=secondary_pulley,
         primary_pulley_model=primary_pulley_model,
         secondary_pulley_model=secondary_pulley_model,
+        belt_model=belt_model,
     )
 
     system_model = SystemModel(
         slip_model=slip_model,
+        belt_model=belt_model,
         primary_pulley_model=primary_pulley_model,
         secondary_pulley_model=secondary_pulley_model,
         cvt_shift_model=cvt_shift,

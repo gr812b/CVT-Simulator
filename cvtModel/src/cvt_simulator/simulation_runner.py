@@ -43,6 +43,7 @@ class SimulationRunner:
         / (GEARBOX_RATIO * tm.current_effective_cvt_ratio(0)),
         # Initial primary pulley angular velocity (engine speed)
         primary_pulley_angular_velocity=rpm_to_rad_s(1800),
+        v_b=0.0,
     )
 
     def __init__(
@@ -83,6 +84,8 @@ class SimulationRunner:
 
     def run_simulation(self) -> SimulationResult:
         """Run the simulation and return results."""
+        self.system_model.belt_model.reset_mode_state()
+        self.system_model.slip_model.reset_mode_state()
         cvt_system_ode = self._get_ode_function()
         # Use a single global time grid for the entire simulation
         time_eval = np.linspace(0, self.TOTAL_SIM_TIME, 10000)
@@ -93,6 +96,11 @@ class SimulationRunner:
 
         current_time = 0
         current_state = self.INITIAL_STATE.to_array()
+        initial_state = SystemState.from_array(current_state)
+        v_b_star, _, _, _, _ = self.system_model.belt_model.get_kinematic_terms(
+            initial_state
+        )
+        current_state[4] = v_b_star
 
         mode = "normal"
         locked_shift_distance = None
@@ -516,32 +524,37 @@ class SimulationRunner:
     def _evaluate_cvt_system(self, t: float, y: list[float]):
         """Evaluate system dynamics (phase 1: not at full shift).
 
-        Returns derivatives of the 4 DOF state vector:
+        Returns derivatives of the state vector:
         dy[0] = d(shift_distance)/dt = shift_velocity
         dy[1] = d(shift_velocity)/dt = shift_acceleration
         dy[2] = d(primary_pulley_angular_velocity)/dt = primary_pulley_angular_accel
         dy[3] = d(secondary_pulley_angular_velocity)/dt = secondary_pulley_angular_accel
+        dy[4] = d(v_b)/dt
         """
         state = SystemState.from_array(y)
-        self._print_progress(t, state.shift_distance)
 
-        # TODO: Remove this (should be handled by constraints)
-        shift_velocity = state.shift_velocity
-        shift_distance = state.shift_distance
-        if shift_distance <= 0:
-            state.shift_distance = 0
-            state.shift_velocity = max(0, shift_velocity)
+        # Do not mutate the solver state in normal mode. Use a constrained copy
+        # for geometry/force evaluation while preserving continuous integration.
+        raw_shift_distance = state.shift_distance
+        raw_shift_velocity = state.shift_velocity
+        eval_shift_distance = float(np.clip(raw_shift_distance, 0.0, MAX_SHIFT))
+        eval_shift_velocity = raw_shift_velocity
+        if raw_shift_distance <= 0.0 and raw_shift_velocity < 0.0:
+            eval_shift_velocity = 0.0
+        elif raw_shift_distance >= MAX_SHIFT and raw_shift_velocity > 0.0:
+            eval_shift_velocity = 0.0
 
-        elif shift_distance > MAX_SHIFT:
-            state.shift_distance = MAX_SHIFT
-            state.shift_velocity = min(0, shift_velocity)
-
-        constrained_y = state.to_array()
-        for i in range(len(y)):
-            y[i] = constrained_y[i]
+        eval_state = SystemState(
+            shift_distance=eval_shift_distance,
+            shift_velocity=eval_shift_velocity,
+            primary_pulley_angular_velocity=state.primary_pulley_angular_velocity,
+            secondary_pulley_angular_velocity=state.secondary_pulley_angular_velocity,
+            v_b=state.v_b,
+        )
+        self._print_progress(t, eval_state.shift_distance)
 
         # Get system breakdown (this calculates everything in correct order)
-        drivetrain_breakdown = self.system_model.get_breakdown(state)
+        drivetrain_breakdown = self.system_model.get_breakdown(eval_state)
 
         # Extract accelerations
         secondary_pulley_angular_accel_from_torques = (
@@ -553,16 +566,19 @@ class SimulationRunner:
         shift_acceleration = drivetrain_breakdown.cvt_dynamics.acceleration
 
         # Prevent acceleration from pushing past boundaries (metal hitting metal)
-        if shift_distance <= 0 and shift_acceleration < 0:
+        if eval_shift_distance <= 0 and shift_acceleration < 0:
             shift_acceleration = 0
-        elif shift_distance >= MAX_SHIFT and shift_acceleration > 0:
+        elif eval_shift_distance >= MAX_SHIFT and shift_acceleration > 0:
             shift_acceleration = 0
 
+        v_b_dot = drivetrain_breakdown.belt_state.v_b_dot
+
         return [
-            state.shift_velocity,
+            eval_shift_velocity,
             shift_acceleration,
             primary_pulley_angular_accel,
             secondary_pulley_angular_accel_from_torques,
+            v_b_dot,
         ]
 
     def _evaluate_full_shift_system(self, t: float, y: list[float]):
@@ -597,6 +613,7 @@ class SimulationRunner:
             0,  # shift_velocity held constant
             primary_pulley_angular_accel,  # primary pulley continues to evolve
             secondary_pulley_angular_accel_from_torques,  # secondary pulley continues to evolve
+            drivetrain_breakdown.belt_state.v_b_dot,
         ]
 
     def _evaluate_locked_shift_system(
@@ -629,4 +646,5 @@ class SimulationRunner:
             0,
             primary_pulley_angular_accel,
             secondary_pulley_angular_accel_from_torques,
+            drivetrain_breakdown.belt_state.v_b_dot,
         ]

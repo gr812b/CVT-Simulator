@@ -192,13 +192,25 @@ class PrimaryPulleyDynamicsBreakdown:
 class SlipBreakdown:
     coupling_torque: float
     torque_demand: float
-    relative_velocity: float
     tau_upper: float
     tau_lower: float
     primary_tau_bounds: PrimaryTorqueBoundsBreakdown
     secondary_tau_bounds: SecondaryTorqueBoundsBreakdown
     effective_cvt_ratio_time_derivative: float
     is_slipping: bool
+
+
+@dataclass
+class BeltStateBreakdown:
+    is_stick: bool
+    relative_speed: float
+    primary_belt_speed: float
+    secondary_belt_speed: float
+    v_b_star: float
+    T_b: float
+    v_b: float
+    v_b_compatible: float
+    v_b_dot: float
 
 
 ## System-level breakdown (single source of truth)
@@ -221,6 +233,7 @@ class DrivetrainBreakdown:
     """
 
     belt_slip: SlipBreakdown
+    belt_state: BeltStateBreakdown
     primary_pulley: PrimaryPulleyDynamicsBreakdown
     secondary_pulley: SecondaryPulleyDynamicsBreakdown
     cvt_dynamics: CvtDynamicsBreakdown

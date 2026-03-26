@@ -164,6 +164,9 @@ class PrimaryCVTEngagementSolver(SolverBase):
             state,
             engine_drive_torque=engine_torque,
             primary_inertia=self.primary_inertia,
+            is_stick=True,
+            v_b_star=0.0,
+            T_b=1.0,
         )
 
         # extract tau_upper from the bounds object
