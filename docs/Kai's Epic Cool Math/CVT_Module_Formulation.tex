@@ -7715,365 +7715,365 @@ quantities feed back into both the rotational and axial dynamics.
 \section{Simulation Results}
 \label{sec:results}
 
-Because experimental drivetrain data for the present vehicle configuration was not available at the time of writing, the results presented here focus on establishing physical credibility of the model through three complementary strategies:
+Because direct experimental drivetrain data for the present vehicle
+configuration was not available at the time of writing, this section does not
+attempt a quantitative validation against measured traces. Instead, the purpose
+of the results is to establish physical credibility of the model by showing
+that
 
 \begin{enumerate}
-    \item Verification that the dynamic model reproduces known quasi–static behaviour in appropriate limits.
-    \item Demonstration that the model produces trends consistent with established physical intuition of CVT operation.
-    \item Exploration of transient behaviours and force interactions that cannot be captured by steady–state formulations.
+    \item the coupled equations produce a coherent nominal launch trajectory,
+    \item force and torque balances extracted from that trajectory behave in the
+    physically expected direction, and
+    \item targeted tuning changes produce interpretable changes in launch and
+    shift behaviour.
 \end{enumerate}
 
-Accordingly, the results are structured to progressively build confidence in the formulation. We begin with a summary of simulation parameters, then verify steady–state force balance behaviour, examine the magnitude of the centrifugal belt correction, and finally present transient simulations of torque transmission and full vehicle launch behaviour.
+The results are therefore organized around a single nominal launch case, from
+which a small number of representative operating points are extracted and used
+for diagnostic plots. Two additional comparison cases are then introduced to
+show how the predicted behaviour changes under modified clutch tuning. This
+approach keeps the section focused on the most important mechanisms without
+turning it into an exhaustive plot-by-plot replay of the full derivation.
+
+Throughout this section, the centrifugal belt terms derived earlier are
+retained in the governing equations, but they are interpreted through their
+effect on the overall shift and torque-transfer behaviour rather than being
+isolated in a separate subsection.
 
 \FloatBarrier
 
 % --------------------------------------------------
-\subsection{Simulation Parameters}
-\label{sec:results_parameters}
+\subsection{Evaluation Setup and Comparison Cases}
+\label{sec:results_setup}
 
-All simulations were performed using the nominal parameter set summarized in \Cref{tab:simulation_parameters}. Symbol definitions are centralized in \Cref{tab:constants}; this results table reports the nominal values used in simulation together with their sources.
+All simulations use the nominal parameter set listed in
+\Cref{tab:simulation_parameters}, except where explicitly modified for the
+comparison cases below. The primary scenario considered is a
+full-throttle launch from rest on a level surface.\footnote{Edit this sentence
+if a different launch condition is ultimately used, e.g.\ incline, prescribed
+load, or alternate throttle input.}
+The initial state is taken as
+\[
+\omega_p(0)=0,
+\qquad
+\omega_s(0)=0,
+\qquad
+s(0)=0,
+\qquad
+\dot s(0)=0,
+\qquad
+\hat v_b(0)=0,
+\]
+unless otherwise noted.
+
+Three cases are considered in the results section. Case N is the nominal
+baseline and is used for the detailed diagnostic discussion. Cases F and H are
+targeted tuning variations chosen to probe the sensitivity of the model to
+primary and secondary clutch tuning, respectively.
 
 \begin{table}[H]
 \centering
-\caption{Nominal simulation parameters grouped by subsystem. Parameter sources are indicated as CAD (measured from geometry), Spec (manufacturer specification), Lit. (literature value), or Est. (engineering estimate).}
-\label{tab:simulation_parameters}
-
+\caption{Simulation cases used in the results section. All parameters not listed are identical to the nominal set of \Cref{tab:simulation_parameters}.}
+\label{tab:results_cases}
 \small
-\begin{tabular}{@{}llp{3.0cm}llp{2.2cm}@{}}
+\begin{tabular}{@{}lll@{}}
 \toprule
-\textbf{Subsystem} & \textbf{Symbol(s)} & \textbf{Parameter} & \textbf{Nominal value} & \textbf{Unit} & \textbf{Source} \\
+\textbf{Case} & \textbf{Description} & \textbf{Modified parameter(s)} \\
 \midrule
-
-Primary clutch
-& $m_f$
-& Flyweight mass
-& --
-& \si{\kilogram}
-& CAD / Spec \\
-& $r_{f,0}$
-& Flyweight radius
-& --
-& \si{\meter}
-& CAD \\
-& $r_f(s)$
-& Ramp geometry profile
-& profile curve
-& --
-& CAD \\
-& $k_p$
-& Primary spring rate
-& --
-& \si{\newton\per\meter}
-& Spec \\
-& $x_{p,0}$
-& Primary spring preload
-& --
-& \si{\meter}
-& Spec \\
-& $\beta$
-& Sheave half-angle
-& $0.2007$
-& \si{\radian}
-& CAD \\
-& $s_{\mathrm{dz}},\ s_{\max}$
-& Minimum / maximum shift position
-& --
-& \si{\meter}
-& CAD \\
-
-\midrule
-
-Secondary clutch
-& $\theta_s(s)$
-& Helix angle profile
-& profile curve
-& --
-& CAD \\
-& $k_{s,\theta}$
-& Torsional spring rate
-& --
-& \si{\newton\meter\per\radian}
-& Spec \\
-& $\theta_{s,0}$
-& Torsional spring preload
-& --
-& \si{\radian}
-& Spec \\
-& $k_{s,x}$
-& Compression spring rate
-& --
-& \si{\newton\per\meter}
-& Spec \\
-& $\beta$
-& Sheave half-angle
-& $0.2007$
-& \si{\radian}
-& CAD \\
-
-\midrule
-
-Belt
-& $\rho_b$
-& Mass per unit length
-& --
-& \si{\kilogram\per\meter}
-& Lit. \\
-& $\beta$
-& Belt V-angle
-& $0.2007$
-& \si{\radian}
-& Spec \\
-& $\mu$
-& Friction coefficient
-& --
-& 1
-& Est. \\
-& $L_b$
-& Free belt length
-& $0.9535$
-& \si{\meter}
-& CAD \\
-& $h_b,\ b_{\mathrm{out}},\ b_{\mathrm{in}}$
-& Cross–section geometry
-& $h_b=0.01557$; others --
-& \si{\meter}
-& CAD \\
-
-\midrule
-
-Vehicle
-& $m$
-& Total vehicle mass
-& --
-& \si{\kilogram}
-& Measured \\
-& $r_w$
-& Wheel radius
-& --
-& \si{\meter}
-& CAD \\
-& $G$
-& Final drive ratio
-& --
-& 1
-& Spec \\
-& $C_d$
-& Drag coefficient
-& --
-& 1
-& Est. \\
-& $A_f$
-& Frontal area
-& --
-& \si{\meter\squared}
-& CAD \\
-& $C_{\mathrm{rr}}$
-& Rolling resistance coefficient
-& --
-& 1
-& Lit. \\
-
-\midrule
-
-Engine
-& $\tau_{\mathrm{eng}}(\omega_p)$
-& Torque curve
-& lookup/fit curve
-& \si{\newton\meter}
-& Spec \\
-
+N & Nominal baseline & none \\
+F & Lighter flyweights & $m_f = \text{[insert value]} < m_{f,\mathrm{nom}}$ \\
+H & Steeper helix / reduced torque reactivity &
+modified helix profile $\theta_s(s)$ or helix-angle parameter
+\text{[insert description]} \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-Parameters derived directly from geometry (e.g. ramp profiles, helix geometry, belt path) are known with relatively high confidence. By contrast, friction coefficient and certain aerodynamic parameters are treated as estimated quantities and are therefore examined further in the sensitivity analysis presented later in this section.
-
-\FloatBarrier
-
-% --------------------------------------------------
-\subsection{Steady-State Force Balance Verification}
-\label{sec:results_static}
-
-Before examining transient behaviour, it is useful to verify that the dynamic model recovers the expected quasi–static behaviour of the CVT under steady operating conditions.
-
-Physically, if engine speed is held constant and inertial effects vanish, the axial forces acting on the movable sheave should balance such that
-
-\[
-F_{\text{net}}(s) = 0
-\]
-
-at the equilibrium shift position.
-
-\begin{figure}[H]
-\centering
-%\includegraphics[width=0.85\textwidth]{figures/placeholder_primary_force_balance.png}
-\caption{Placeholder: axial force components acting on the primary clutch as a function of shift position at several fixed engine speeds. The curves represent centrifugal flyweight force, primary spring restoring force, and belt axial reaction. The equilibrium shift position occurs where the net axial force crosses zero.}
-\label{fig:primary_force_balance}
-\end{figure}
-
-\Cref{fig:primary_force_balance} illustrates the individual axial force contributions acting on the primary sheave. As engine speed increases, centrifugal flyweight force grows approximately quadratically, shifting the equilibrium point toward larger shift positions. This behaviour corresponds physically to the familiar engagement and upshift mechanism of the CVT.
-
-From these force curves the equilibrium shift position can be extracted as the zero–crossing of the net force curve.
-
-\begin{figure}[H]
-\centering
-%\includegraphics[width=0.8\textwidth]{figures/placeholder_equilibrium_shift_curve.png}
-\caption{Placeholder: predicted equilibrium shift position as a function of engine angular velocity obtained from the steady-state force balance.}
-\label{fig:shift_curve}
-\end{figure}
-
-The resulting equilibrium shift curve shown in \Cref{fig:shift_curve} provides a useful consistency check against prior quasi–static formulations in the literature. In the limit of negligible inertia, the dynamic model converges to this same equilibrium condition, confirming that the formulation is internally consistent.
-
-\FloatBarrier
-
-% --------------------------------------------------
-\subsection{Magnitude of the Centrifugal Belt Correction}
-\label{sec:results_centrifugal}
-
-One of the central derivations of this work is the centrifugal belt force correction derived in \Sec{sec:belt_centrifugal}. Physically, this term arises because the rotating belt experiences radial inertia that tends to unseat it from the sheave groove.
-
-This effect reduces the effective normal force acting on the belt and therefore lowers the maximum transmissible torque.
-
-\begin{figure}[H]
-\centering
-%\includegraphics[width=0.85\textwidth]{figures/placeholder_centrifugal_vs_clamp.png}
-\caption{Placeholder: centrifugal belt force compared with total clamping force as a function of engine speed for both primary and secondary pulleys.}
-\label{fig:centrifugal_comparison}
-\end{figure}
-
-\Cref{fig:centrifugal_comparison} compares the centrifugal correction term with the total clamping force produced by the clutch mechanisms. At low engine speeds the centrifugal term is negligible. However, as engine speed increases the correction grows rapidly and becomes comparable in magnitude to the mechanical clamping force.
-
-To quantify the impact of this effect on torque transmission, the maximum transmissible torque was computed both with and without the centrifugal correction.
-
-\begin{figure}[H]
-\centering
-%\includegraphics[width=0.8\textwidth]{figures/placeholder_torque_capacity_comparison.png}
-\caption{Placeholder: predicted torque capacity of the belt drive with and without the centrifugal correction term. Neglecting the correction significantly overestimates the torque capacity at high engine speeds.}
-\label{fig:torque_capacity_comparison}
-\end{figure}
-
-The difference between these curves represents the modelling error introduced by neglecting belt centrifugal effects. For the operating range considered here, the correction substantially reduces the predicted torque capacity at high rotational speeds, highlighting the importance of including this effect in accurate CVT models.
-
-\FloatBarrier
-
-% --------------------------------------------------
-\subsection{Torque Transmission and Slip Behaviour}
-\label{sec:results_slip}
-
-The model explicitly distinguishes between no–slip and slipping regimes based on the instantaneous torque capacity of the belt.
-
-Physically, when the demanded torque exceeds the maximum transmissible torque determined by clamping force and friction, the belt must enter a slipping state.
-
-\begin{figure}[H]
-\centering
-%\includegraphics[width=0.85\textwidth]{figures/placeholder_torque_demand_vs_capacity.png}
-\caption{Placeholder: time history of torque demand and maximum transmissible torque during a transient loading event. Regions where torque demand exceeds capacity correspond to slipping behaviour.}
-\label{fig:torque_slip_event}
-\end{figure}
-
-\Cref{fig:torque_slip_event} illustrates a representative transient in which the torque demand temporarily exceeds the belt's torque capacity. In these intervals the transmitted torque is limited by frictional capacity rather than by the engine torque itself.
-
-The model also records the instantaneous slip state.
-
-\begin{figure}[H]
-\centering
-%\includegraphics[width=0.85\textwidth]{figures/placeholder_slip_indicator.png}
-\caption{Placeholder: slip-state indicator and ratio derivative during the transient event shown in \Fig{fig:torque_slip_event}.}
-\label{fig:slip_indicator}
-\end{figure}
-
-As shown in \Cref{fig:slip_indicator}, the onset of slip coincides with changes in the rate of ratio evolution. This coupling between torque transmission and ratio dynamics is a fundamentally transient phenomenon and cannot be captured by purely steady–state models.
-
-\FloatBarrier
-
-% --------------------------------------------------
-\subsection{Vehicle Launch from Rest}
-\label{sec:results_launch}
-
-The full drivetrain model can be used to simulate a complete vehicle launch from rest.
-
-Physically, such a launch typically exhibits three distinct phases:
+To avoid introducing arbitrarily chosen static states, all detailed force and
+torque diagnostics are evaluated at a small set of representative operating
+points extracted directly from the nominal launch trajectory. These points are
 
 \begin{enumerate}
-\item initial clutch engagement,
-\item active ratio upshift as vehicle speed increases,
-\item eventual stabilization near the shift–out ratio.
+    \item \textbf{Point A: engagement onset}, defined as the first instant of
+    sustained torque transfer,
+    \item \textbf{Point B: shift initiation}, defined as the first instant of
+    sustained positive shift acceleration or ratio change,
+    \item \textbf{Point C: mid-shift}, chosen near the middle of the active
+    upshift region, and
+    \item \textbf{Point D: terminal/high-ratio operation}, chosen near
+    shift-out or, if more informative, at the first slip event.
 \end{enumerate}
 
-\begin{figure}[H]
-\centering
-%\includegraphics[width=0.85\textwidth]{figures/placeholder_ratio_vs_time.png}
-\caption{Placeholder: transmission ratio as a function of time during a simulated vehicle launch from rest.}
-\label{fig:ratio_launch}
-\end{figure}
+These same operating points are referenced throughout the following
+subsections, so that all force and torque interpretations are tied back to a
+single internally consistent trajectory.
 
-\Cref{fig:ratio_launch} shows the predicted ratio trajectory during the launch. The model captures the gradual engagement of the belt followed by continuous ratio adjustment as engine speed increases.
+In addition to the trajectory plots themselves, the following summary metrics
+will be used when comparing cases:
 
-\begin{figure}[H]
-\centering
-%\includegraphics[width=0.85\textwidth]{figures/placeholder_engine_vehicle_speed.png}
-\caption{Placeholder: engine angular velocity and vehicle speed during the launch simulation.}
-\label{fig:engine_vehicle_speed}
-\end{figure}
+\begin{itemize}
+    \item engagement engine speed,
+    \item shift-initiation time,
+    \item time to a chosen vehicle-speed target,
+    \item minimum torque-capacity margin, and
+    \item any observed slip duration or peak slip metric.
+\end{itemize}
 
-The relationship between engine speed and vehicle speed is shown in \Cref{fig:engine_vehicle_speed}. A properly tuned CVT maintains the engine near its optimal operating range during acceleration.
-
-\begin{figure}[H]
-\centering
-%\includegraphics[width=0.8\textwidth]{figures/placeholder_engine_operating_map.png}
-\caption{Placeholder: trajectory of the engine operating point during launch plotted against the engine torque curve.}
-\label{fig:engine_operating_map}
-\end{figure}
-
-\Cref{fig:engine_operating_map} visualizes this behaviour by plotting the engine operating point over the torque curve. The ability of the CVT to keep the engine near its optimal torque or power region is one of the primary motivations for using continuously variable transmissions.
+The exact subset ultimately reported can be adjusted once the final plots are
+available.
 
 \FloatBarrier
 
 % --------------------------------------------------
-\subsection{Parameter Sensitivity}
-\label{sec:results_sensitivity}
+\subsection{Nominal Launch Overview}
+\label{sec:results_nominal_launch}
 
-Finally, selected parameter variations were performed to illustrate how the model responds to changes in key clutch parameters.
-
-Rather than performing a full factorial sweep, the analysis focuses on parameters known to strongly influence CVT behaviour.
-
-\paragraph{Flyweight mass}
-
-Increasing flyweight mass increases centrifugal force and therefore lowers engagement RPM.
+We begin with the nominal launch trajectory, which serves as the backbone for
+the remainder of the section. The goal of this first figure is not yet to
+interpret every internal quantity, but simply to establish the overall sequence
+of events predicted by the coupled model.
 
 \begin{figure}[H]
 \centering
-%\includegraphics[width=0.85\textwidth]{figures/placeholder_flyweight_sensitivity.png}
-\caption{Placeholder: effect of flyweight mass on predicted ratio trajectory and engagement speed.}
-\label{fig:flyweight_sensitivity}
+% \includegraphics[width=\textwidth]{figures/results_nominal_overview.png}
+\caption{Placeholder: overview of the nominal launch case. A recommended layout is
+three vertically stacked panels showing
+(a) shift position $s(t)$ or ratio $R(t)$,
+(b) engine and secondary angular velocities (or engine speed and vehicle speed),
+and
+(c) markers identifying operating points A--D used later in the section.}
+\label{fig:nominal_launch_overview}
 \end{figure}
 
-\paragraph{Helix angle}
+\Cref{fig:nominal_launch_overview} should show the expected launch progression:
+initial engagement from rest, the onset of active ratio change, continued
+upshift through the mid-launch region, and eventual approach toward a
+high-ratio operating condition. Once the final plots are inserted, the text
+here should briefly identify the characteristic phases visible in the launch
+history and note where points A--D occur on the trajectory.
 
-The helix profile determines how strongly the secondary clutch reacts to transmitted torque.
-
-\begin{figure}[H]
-\centering
-%\includegraphics[width=0.85\textwidth]{figures/placeholder_helix_sensitivity.png}
-\caption{Placeholder: effect of helix angle variation on ratio dynamics under load.}
-\label{fig:helix_sensitivity}
-\end{figure}
-
-\paragraph{Friction coefficient}
-
-The belt friction coefficient determines the torque capacity threshold at which slip occurs.
-
-\begin{figure}[H]
-\centering
-%\includegraphics[width=0.85\textwidth]{figures/placeholder_friction_sensitivity.png}
-\caption{Placeholder: torque capacity as a function of friction coefficient.}
-\label{fig:friction_sensitivity}
-\end{figure}
-
-These sensitivity studies demonstrate how the model can be used not only to simulate drivetrain behaviour but also to provide insight into the effects of tuning parameters commonly adjusted during CVT calibration.
+A useful tone here is descriptive rather than evaluative. For example:
+\emph{Point A marks the onset of sustained belt torque transfer, Point B marks
+the beginning of active upshift, Point C lies in the middle of the primary
+upshift region, and Point D corresponds to near-terminal ratio operation.}
+This gives the reader the basic storyline before the section turns to force and
+torque interpretation.
 
 \FloatBarrier
 
+% --------------------------------------------------
+\subsection{Shift Dynamics at Selected Operating Points}
+\label{sec:results_shift_diagnostics}
+
+The axial dynamics are governed by \Eq{eq:s_ddot_complete}, in which the
+generalized shift force is the difference between the primary-side closing
+forces and the secondary-side resisting forces. A central question for the
+results section is therefore whether the predicted shift trajectory is
+consistent with the force balance implied by that equation.
+
+Rather than plotting every force contribution over the entire launch, the force
+balance is examined at the representative operating points A--D identified in
+\Cref{fig:nominal_launch_overview}. This keeps the discussion readable while
+still tying the observed ratio motion directly back to the governing mechanics.
+
+\begin{figure}[H]
+\centering
+% \includegraphics[width=\textwidth]{figures/results_shift_force_timehistory.png}
+\caption{Placeholder: nominal launch shift diagnostics. A recommended layout is
+two panels showing
+(a) shift position $s(t)$ or ratio $R(t)$ with points A--D marked, and
+(b) net generalized shift force $\sum F_s$ or shift acceleration $\ddot s$
+over the same time interval.}
+\label{fig:shift_force_timehistory}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+% \includegraphics[width=\textwidth]{figures/results_shift_force_breakdown_points.png}
+\caption{Placeholder: force decomposition at selected operating points.
+A useful presentation is either grouped bar charts or stacked contribution plots
+showing the terms
+$F_{p,\mathrm{ax}}$,
+$F_{c,p}$,
+$F_{s,\mathrm{ax}}$, and
+$F_{c,s}$
+at points A--D.}
+\label{fig:shift_force_breakdown_points}
+\end{figure}
+
+The intended interpretation is as follows.
+
+At \textbf{Point A}, the force balance should still be close to the initial
+engagement condition, with little or no sustained upshift motion.
+At \textbf{Point B}, the net generalized force should first become
+consistently positive, indicating the start of active primary closing and
+secondary opening.
+At \textbf{Point C}, the positive shift-driving force should be clearly
+established, corresponding to continued ratio evolution through the main launch
+region.
+By \textbf{Point D}, the generalized force is expected to weaken again as the
+system approaches a high-ratio state, unless the selected point instead
+corresponds to a slip-limited event.
+
+This subsection is the natural place to report the two most important static
+checks extracted from the nominal launch:
+
+\begin{enumerate}
+    \item the \textbf{engagement condition}, identified by the first sustained
+    rise in transmitted torque and corresponding change in force balance, and
+    \item the \textbf{shift-initiation condition}, identified by the first
+    sustained sign change in $\sum F_s$ or first persistent nonzero
+    $\dot s$.
+\end{enumerate}
+
+If the final plots make it readable, one short sentence may also be added here
+to note how the predicted equilibrium tendency changes over the launch
+trajectory, but this subsection should remain focused on the force balance
+itself rather than turning into a separate quasi-static study.
+
+\FloatBarrier
+
+% --------------------------------------------------
+\subsection{Torque Transfer and Slip Margin During Launch}
+\label{sec:results_torque_transfer}
+
+The torque-transfer formulation is one of the key closures of the model. The
+required no-slip coupling torque is given by \Eq{eq:tau_ns_final}, while the
+actual transmitted torque is selected by the regime law in
+\Eq{eq:tau_c_complete}. The main diagnostic question is therefore whether the
+nominal launch remains within the admissible traction interval, and if not,
+when and how the model transitions to a slip-limited torque state.
+
+\begin{figure}[H]
+\centering
+% \includegraphics[width=\textwidth]{figures/results_torque_bounds_nominal.png}
+\caption{Placeholder: nominal launch torque-transfer diagnostics. A recommended
+layout is two panels showing
+(a) the no-slip torque demand $\tau_{\mathrm{ns}}$, the actual transmitted
+torque $\tau_c$, and the active traction bounds over time, and
+(b) the corresponding torque-capacity margin.}
+\label{fig:torque_bounds_nominal}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+% \includegraphics[width=\textwidth]{figures/results_slip_metric_nominal.png}
+\caption{Placeholder: slip diagnostic for the nominal launch, such as the slip
+metric $v_{\Delta}$, a binary regime indicator, or both. If no slip occurs in
+the nominal case, this figure can instead emphasize the closest approach to the
+traction limit.}
+\label{fig:slip_metric_nominal}
+\end{figure}
+
+The text here should be written to accommodate either of two outcomes.
+
+If the nominal launch remains in the sticking regime throughout, then the main
+result is that the demanded no-slip torque remains inside the admissible
+traction interval, with the minimum torque margin indicating how close the
+system comes to slip. In that case, the section still serves an important
+purpose by showing that the regime logic is active and that the sticking
+solution is not simply assumed.
+
+If the nominal launch does enter slip, then this subsection should identify the
+first slip event, describe whether it is brief or sustained, and relate it back
+to the operating-point logic introduced earlier. In that case, the key sentence
+to include is that once the no-slip demand exits the admissible interval, the
+coupling torque no longer follows $\tau_{\mathrm{ns}}$ and instead saturates at
+the active slipping bound selected by \Eq{eq:tau_c_complete}.
+
+Either way, this is the subsection in which the reader should become convinced
+that the torque-transfer closure is behaving as intended during a full dynamic
+launch.
+
+\FloatBarrier
+
+% --------------------------------------------------
+\subsection{Effect of Tuning Changes}
+\label{sec:results_case_comparison}
+
+Having established the nominal launch behaviour, we now compare it against the
+two targeted tuning variations of \Cref{tab:results_cases}. The aim here is not
+to perform an exhaustive parameter sweep, but simply to show that the model
+responds in physically interpretable directions when the clutch tuning is
+changed.
+
+\begin{figure}[H]
+\centering
+% \includegraphics[width=\textwidth]{figures/results_case_overlay_launch.png}
+\caption{Placeholder: comparison of the three cases N, F, and H. A recommended
+layout is two or three panels showing overlays of
+(a) ratio $R(t)$ or shift position $s(t)$,
+(b) engine speed and/or vehicle speed,
+and optionally
+(c) torque-capacity margin or slip metric.}
+\label{fig:case_overlay_launch}
+\end{figure}
+
+\begin{table}[H]
+\centering
+\caption{Placeholder: summary metrics comparing the nominal and modified tuning cases.}
+\label{tab:results_summary_metrics}
+\small
+\begin{tabular}{@{}lccccc@{}}
+\toprule
+\textbf{Case}
+& $\omega_{p,\mathrm{eng}}$
+& $t_{\mathrm{shift,start}}$
+& $t_{v=v^\ast}$
+& $\min(\text{torque margin})$
+& \textbf{Slip duration} \\
+\midrule
+N & -- & -- & -- & -- & -- \\
+F & -- & -- & -- & -- & -- \\
+H & -- & -- & -- & -- & -- \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The expected qualitative trends are straightforward.
+
+For \textbf{Case F} (lighter flyweights), the reduced centrifugal flyweight
+force should delay clutch engagement and weaken the primary closing tendency at
+a given engine speed. This would be expected to shift the launch behaviour
+toward higher engagement speed and later upshift onset, with any additional
+changes in launch time or torque margin depending on how the engine operating
+point is affected.
+
+For \textbf{Case H} (steeper helix / reduced torque reactivity), the secondary
+should oppose ratio change less strongly under load. This would be expected to
+alter the balance between primary closing and secondary resisting forces,
+thereby changing the predicted shift trajectory and possibly the torque-capacity
+margin during the launch.
+
+Once the final plots are available, the main task in this subsection is simply
+to confirm whether those directional expectations are borne out. The discussion
+should stay compact: one short paragraph for Case F, one short paragraph for
+Case H, and a closing sentence about which tuning change produced the larger
+effect in the reported metrics.
+
+\FloatBarrier
+
+% --------------------------------------------------
+\subsection{Results Summary}
+\label{sec:results_summary}
+
+Taken together, the results should support the following claims.
+
+First, the coupled model produces a coherent nominal launch trajectory whose
+main phases can be interpreted directly in terms of the derived force and
+torque balances. Second, the operating-point diagnostics tie the predicted
+ratio motion back to the axial-force closure of \Eq{eq:s_ddot_complete} without
+requiring separately invented static states. Third, the torque-transfer plots
+show whether the no-slip demand remains admissible or whether the model enters a
+slip-limited regime, thereby directly exercising the regime logic of
+\Eq{eq:tau_c_complete}. Finally, the comparison cases demonstrate that the
+model responds to targeted tuning changes in the physically expected direction.
+
+This level of evidence does not replace future validation against measured
+vehicle data, but it does provide a clear internal check that the present
+formulation behaves as a mechanically reasonable CVT/drivetrain model over the
+launch scenarios considered here.
 \section{Conclusion}
 \label{sec:conclusion}
 
