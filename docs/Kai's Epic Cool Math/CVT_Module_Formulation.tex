@@ -616,10 +616,11 @@ governing physical principles used in the derivation.
 in the final system formulation.
 
 The core derivation then proceeds through \Sec{sec:geometry},
-\Sec{sec:axial}, \Sec{sec:belt_motion_torque_transmission_contact_states}, and
-\Sec{sec:traction-slip}. These sections develop the CVT geometry and
-kinematics, the pulley axial force models, the torque-transmission and belt
-transport relations, and the traction-limited stick--slip closure.
+\Sec{sec:axial}, \Sec{sec:belt_motion_torque_transmission_contact_states},
+\Sec{sec:tau_ns}, and \Sec{sec:traction-slip}. These sections develop the
+CVT geometry and kinematics, the pulley axial force models, the belt
+transport and contact-state relations, the no-slip coupling torque
+derivation, and the traction-limited stick--slip closure.
 
 \Sec{sec:complete_model} assembles these results into the complete coupled
 dynamic model.
@@ -1104,10 +1105,11 @@ Symbol & Meaning \\ \midrule
 $\vect{x}(t)$ & state vector \\
 $t$ & time \\
 $\omega_p,\ \omega_s$ & primary and secondary angular speed \\
-$\alpha_p,\ \alpha_s$ & primary and secondary angular acceleration \\
 $s,\ \dot s,\ \ddot s$ & shift position, velocity, and acceleration \\
 $R,\ \dot R$ & CVT ratio and ratio rate \\
-$v_{\mathrm{rel}}$ & relative slip speed at belt--pulley interface \\
+$\hat v_b,\ \dot{\hat v}_b$ & modeled belt transport speed and its time derivative \\
+$v_b^\ast,\ T_b$ & slip-branch target belt speed and belt-speed relaxation time constant \\
+$v_{\Delta}$ & slip metric: primary-imposed minus secondary-imposed belt-line speed \\
 \addlinespace
 \multicolumn{2}{@{}l}{\textbf{Geometry}} \\
 $r_{p,\mathrm{outer}}(s),\ r_{s,\mathrm{outer}}(s)$ & primary and secondary outer radius \\
@@ -1119,13 +1121,14 @@ $\beta$ & sheave face half-angle (radial reference) \\
 $C$ & pulley center distance \\
 $L_b$ & total belt length \\
 $\phi$ & belt wrap angle used in distributed contact model \\
-$r,\ \dot r$ & local bConceptual Overview of Variable Geoelt path radius and its time derivative \\
+$r,\ \dot r$ & local belt path radius and its time derivative \\
 $r_{\mathrm{cm}}$ & belt element center-of-mass radius \\
 \addlinespace
 \multicolumn{2}{@{}l}{\textbf{Constraint and mapping functions}} \\
 $f(r_p,r_s,C)$ & belt-length compatibility root function ($f=0$) \\
 $\operatorname*{root}_{r_s}(\cdot)$ & numerical root solve for secondary radius \\
 $r_f(s),\ \dfrac{dr_f}{ds}$ & primary flyweight radius map and gradient \\
+\addlinespace
 $\theta_s(s),\ \dfrac{d\theta_s}{ds}$ & secondary helix angle map and gradient \\
 \addlinespace
 \multicolumn{2}{@{}l}{\textbf{Forces and torques}} \\
@@ -1136,7 +1139,12 @@ $\tau_{\mathrm{eng}},\ \tau_{\mathrm{load}}$ & engine input torque and reflected
 $\tau_p,\ \tau_s$ & coupling torque seen at primary and secondary \\
 $\tau,\ \tau_c$ & generic interface torque and applied coupling/friction torque \\
 $\tau_{\mathrm{ns}}$ & no-slip requested coupling torque \\
-$\tau_{\max}$ & traction-limited torque capacity \\
+$\tau_-^{\mathrm{stick}},\ \tau_+^{\mathrm{stick}}$ & aggregate lower and upper coupling-torque bounds for stick admissibility \\
+$\tau_-^{\mathrm{slip}},\ \tau_+^{\mathrm{slip}}$ & aggregate lower and upper coupling-torque bounds on slip branches \\
+\addlinespace
+$\tau_{c,p,\pm}^{\mathrm{stick}},\ \tau_{c,s,\pm}^{\mathrm{stick}}$ & primary/secondary pulley-wise stick-branch lower/upper bounds \\
+\addlinespace
+$\tau_{c,p,\pm}^{\mathrm{slip}},\ \tau_{c,s,\pm}^{\mathrm{slip}}$ & primary/secondary pulley-wise slip-branch lower/upper bounds \\
 \addlinespace
 \multicolumn{2}{@{}l}{\textbf{Mass/inertia and material parameters}} \\
 $I_p,\ I_s$ & primary and secondary rotational inertia \\
@@ -1221,49 +1229,47 @@ Symbol & Name & Nominal value & Unit & Description \\ \midrule
 \label{tab:constants}\\
 \endlastfoot
 \multicolumn{5}{@{}l}{\textbf{Geometry and belt}} \\
-$L_b$ & Belt length & -- & \si{\meter} & Fixed total belt length \\
-$C$ & Center distance & -- & \si{\meter} & Primary--secondary shaft center distance (fixed after initialization) \\
-$\beta$ & Sheave half-angle & -- & \si{\radian} & Cone half-angle used for radial/axial conversion \\
-$h_b$ & Belt thickness & -- & \si{\meter} & Radial belt thickness \\
-$b_{\mathrm{out}}$ & Belt outer width & -- & \si{\meter} & Belt width at outer face \\
-$b_{\mathrm{in}}$ & Belt inner width & -- & \si{\meter} & Belt width at inner face \\
-$A_b$ & Belt cross-sectional area & -- & \si{\meter\squared} & Trapezoid area from $h_b$, $b_{\mathrm{out}}$, $b_{\mathrm{in}}$ \\
-$r_{p,\text{outer},\min}$ & Primary minimum outer radius & -- & \si{\meter} & Radius at fully open primary \\
-$r_{s,\text{outer},\max}$ & Secondary maximum outer radius & -- & \si{\meter} & Radius at fully closed secondary \\
-$s_{\mathrm{dz}}$ & Shift deadzone threshold & -- & \si{\meter} & Onset of effective radial motion \\
-$s_{\max}$ & Maximum shift & -- & \si{\meter} & Physical upper travel bound \\
+$L_b$ & Belt length & 0.953262 & \si{\meter} & Fixed total belt length \\
+$\beta$ & Sheave half-angle & 0.2007129 & \si{\radian} & Cone half-angle used for radial/axial conversion \\
+$h_b$ & Belt thickness & 0.0155702 & \si{\meter} & Radial belt thickness \\
+$b_{\mathrm{out}}$ & Belt outer width & 0.021336 & \si{\meter} & Belt width at outer face \\
+$b_{\mathrm{in}}$ & Belt inner width & 0.0168148 & \si{\meter} & Belt width at inner face \\
+$r_{p,\text{outer},\min}$ & Primary minimum outer radius & 0.0206375 & \si{\meter} & Radius at fully open primary \\
+$r_{s,\text{outer},\max}$ & Secondary maximum outer radius & 0.1016 & \si{\meter} & Radius at fully closed secondary \\
+$s_{\mathrm{dz}}$ & Shift deadzone threshold & 0.0024892 & \si{\meter} & Onset of effective radial motion \\
+$s_{\max}$ & Maximum shift & 0.01905 & \si{\meter} & Physical upper travel bound \\
 \addlinespace
 \multicolumn{5}{@{}l}{\textbf{Primary/secondary actuation}} \\
-$m_f$ & Flyweight mass & -- & \si{\kilogram} & Effective flyweight mass \\
-$r_{f,0}$ & Initial flyweight radius & -- & \si{\meter} & Flyweight radius offset at $s=0$ \\
-$k_p$ & Primary spring stiffness & -- & \si{\newton\per\meter} & Primary compression spring rate \\
-$x_{p,0}$ & Primary spring preload & -- & \si{\meter} & Initial compression of primary spring \\
-$k_{s,\theta}$ & Secondary torsional stiffness & -- & \si{\newton\meter\per\radian} & Torsional spring rate in helix assembly \\
-$\theta_{s,0}$ & Secondary torsional preload & -- & \si{\radian} & Initial torsional deflection preload \\
-$r_h$ & Helix reference radius & -- & \si{\meter} & Effective cylindrical radius in helix kinematics \\
-$k_{s,x}$ & Secondary axial stiffness & -- & \si{\newton\per\meter} & Secondary axial compression spring rate \\
-$x_{s,0}$ & Secondary axial preload & -- & \si{\meter} & Initial compression of secondary axial spring \\
+$m_f$ & Flyweight mass & 0.5 & \si{\kilogram} & Effective flyweight mass \\
+$r_{f,0}$ & Initial flyweight radius & 0.05 & \si{\meter} & Flyweight radius offset at $s=0$ \\
+$k_p$ & Primary spring stiffness & 12784 & \si{\newton\per\meter} & Primary compression spring rate \\
+$x_{p,0}$ & Primary spring preload & 0.1 & \si{\meter} & Initial compression of primary spring \\
+$k_{s,\theta}$ & Secondary torsional stiffness & 3.476 & \si{\newton\meter\per\radian} & Torsional spring rate in helix assembly \\
+$\theta_{s,0}$ & Secondary torsional preload & 3.49066 & \si{\radian} & Initial torsional deflection preload \\
+$r_h$ & Helix reference radius & 0.04445 & \si{\meter} & Effective cylindrical radius in helix kinematics \\
+$k_{s,x}$ & Secondary axial stiffness & 7000 & \si{\newton\per\meter} & Secondary axial compression spring rate \\
+$x_{s,0}$ & Secondary axial preload & 0.1 & \si{\meter} & Initial compression of secondary axial spring \\
 \addlinespace
 \multicolumn{5}{@{}l}{\textbf{Inertia and drivetrain}} \\
-$I_{\mathrm{eng}}$ & Engine inertia & -- & \si{\kilogram\meter\squared} & Engine rotational inertia \\
+$I_{\mathrm{eng}}$ & Engine inertia & 0.1 & \si{\kilogram\meter\squared} & Engine rotational inertia \\
 $I_{\mathrm{prim}}$ & Primary pulley inertia & -- & \si{\kilogram\meter\squared} & Primary CVT pulley inertia \\
-$I_p$ & Effective primary inertia & -- & \si{\kilogram\meter\squared} & $I_p = I_{\mathrm{eng}} + I_{\mathrm{prim}}$ \\
+$I_p$ & Effective primary inertia & 0.1 & \si{\kilogram\meter\squared} & Implemented primary-side inertia in current setup \\
 $I_{\mathrm{sec}}$ & Secondary pulley inertia & -- & \si{\kilogram\meter\squared} & Secondary CVT pulley inertia \\
 $I_{\mathrm{gb}}$ & Gearbox inertia & -- & \si{\kilogram\meter\squared} & Gearbox/intermediate shaft inertia \\
 $I_{\mathrm{wheel}}$ & Wheel inertia & -- & \si{\kilogram\meter\squared} & Wheel/hub inertia about wheel axis \\
-$I_s$ & Effective secondary inertia & -- & \si{\kilogram\meter\squared} & Lumped secondary-side inertia about secondary axis \\
-$G$ & Final drive ratio & -- & 1 & Fixed ratio defined by $\omega_s = G\,\omega_w$ \\
-$m$ & Vehicle mass & -- & \si{\kilogram} & Total vehicle mass \\
-$r_w$ & Wheel rolling radius & -- & \si{\meter} & Effective tire rolling radius \\
+$I_s$ & Effective secondary inertia & 0.5 & \si{\kilogram\meter\squared} & Lumped secondary-side inertia about secondary axis \\
+$G$ & Final drive ratio & 7.556 & 1 & Fixed ratio defined by $\omega_s = G\,\omega_w$ \\
+$m$ & Vehicle mass & 300 & \si{\kilogram} & Total vehicle mass \\
+$r_w$ & Wheel rolling radius & 0.2794 & \si{\meter} & Effective tire rolling radius \\
 \addlinespace
 \multicolumn{5}{@{}l}{\textbf{Contact and environment}} \\
-$\rho_b$ & Belt density & -- & \si{\kilogram\per\meter\cubed} & Belt material density \\
-$\mu$ & Belt--pulley friction coefficient & -- & 1 & Effective Coulomb traction coefficient \\
+$\rho_b$ & Belt density & 1100 & \si{\kilogram\per\meter\cubed} & Belt material density \\
+$\mu$ & Belt--pulley friction coefficient & 0.8 & 1 & Effective Coulomb traction coefficient \\
 $C_{\mathrm{rr}}$ & Rolling resistance coefficient & -- & 1 & Tire-road rolling resistance coefficient \\
-$C_d$ & Drag coefficient & -- & 1 & Aerodynamic drag coefficient \\
-$A_f$ & Frontal area & -- & \si{\meter\squared} & Vehicle aerodynamic reference area \\
-$\rho$ & Air density & -- & \si{\kilogram\per\meter\cubed} & Ambient air density used in drag model \\
-$g$ & Gravitational acceleration & -- & \si{\meter\per\second\squared} & Gravity constant \\
+$C_d$ & Drag coefficient & 0.6 & 1 & Aerodynamic drag coefficient \\
+$A_f$ & Frontal area & 1.11484 & \si{\meter\squared} & Vehicle aerodynamic reference area \\
+$\rho$ & Air density & 1.225 & \si{\kilogram\per\meter\cubed} & Ambient air density used in drag model \\
+$g$ & Gravitational acceleration & 9.80665 & \si{\meter\per\second\squared} & Gravity constant \\
 \end{longtable}
 \normalsize
 \end{center}
@@ -9266,12 +9272,6 @@ effectively discontinuous transition. A practical workflow is:
 The blend scale $v_{\mathrm{blend}}$ should generally be chosen greater than or
 equal to $v_{\mathrm{smooth}}$, so that the handoff from clamped demand to the
 smooth Coulomb limit is not sharper than the smoothing law itself.
-
-\begin{figure}[H]
-\centering
-\includegraphics[width=0.75\linewidth]{../Kai's folder of derivations/t_maxSecondaryDerivation.png}
-\label{fig:secondary_capacity_closure}
-\end{figure}
 
 
 \newpage
