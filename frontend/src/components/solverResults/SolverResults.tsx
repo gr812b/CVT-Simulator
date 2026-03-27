@@ -3,6 +3,7 @@ import { runSolvers } from '@utils/api';
 import type { SolversResponse } from '@utils/api';
 import { useParameter } from '@contexts/ParameterContext';
 import { mapParametersToApiBody } from '@utils/parameterMapping';
+import { PARAMETERS } from '@types';
 import styles from './SolverResults.module.scss';
 
 export const SolverResults = () => {
@@ -17,6 +18,21 @@ export const SolverResults = () => {
         const requestId = ++currentRequestRef.current;
 
         const fetchSolvers = async () => {
+            // Validate all parameters before making API call
+            const isValid = Object.entries(parameters).every(([key, value]) => {
+                const validator = PARAMETERS[key as keyof typeof PARAMETERS]?.validate;
+                if (!validator) return true; // No validator = valid
+                const stringValue = typeof value === 'object' ? JSON.stringify(value) : String(value);
+                return validator(stringValue) === null;
+            });
+
+            if (!isValid) {
+                setSolverData(null);
+                setIsLoading(false);
+                setError(null);
+                return;
+            }
+
             setIsLoading(true);
             setError(null);
             
@@ -28,10 +44,9 @@ export const SolverResults = () => {
                 if (requestId === currentRequestRef.current) {
                     setSolverData(result);
                 }
-            } catch (err) {
+            } catch {
                 // Don't show error if request was aborted or superseded
                 if (requestId === currentRequestRef.current) {
-                    console.error('Failed to fetch solver results:', err);
                     setError('Failed to load solver results');
                 }
             } finally {

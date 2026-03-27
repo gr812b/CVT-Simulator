@@ -8,10 +8,10 @@ class CircularSegment(RampSegment):
     Circular arc segment parameterized by slope angles and quadrant.
 
     The quadrant determines the curve orientation:
-    - Q1 (top-right): Negative slopes curving from steep down to gentle down
-    - Q2 (top-left): Positive slopes curving from gentle up to steep up
-    - Q3 (bottom-left): Negative slopes curving from steep down to gentle down
-    - Q4 (bottom-right): Positive slopes curving from gentle up to steep up
+    - Q1 (top-right): Negative slopes, gentle to steep
+    - Q2 (top-left): Positive slopes, steep to gentle
+    - Q3 (bottom-left): Negative slopes, steep to gentle
+    - Q4 (bottom-right): Positive slopes, gentle to steep
 
     Slopes are always specified as POSITIVE values (magnitude only).
     The quadrant determines the actual sign.
@@ -63,16 +63,16 @@ class CircularSegment(RampSegment):
         angle_start = abs(angle_start)
         angle_end = abs(angle_end)
 
-        # Validate angle ordering based on quadrant
-        # Q1 & Q3: angles should decrease (steep to gentle, going around the quadrant)
-        # Q2 & Q4: angles should increase (gentle to steep, going around the quadrant)
-        if quadrant in [1, 3]:
+        # Validate angle ordering based on quadrant to keep x increasing along the arc.
+        # Q2 & Q3: steep to gentle (angle_start >= angle_end)
+        # Q1 & Q4: gentle to steep (angle_start <= angle_end)
+        if quadrant in [2, 3]:
             if angle_start < angle_end:
                 raise ValueError(
                     f"In quadrant {quadrant}, angle_start ({angle_start}°) must be >= angle_end ({angle_end}°). "
                     f"The arc should go from steep to gentle (e.g., 89° to 1°)."
                 )
-        else:  # quadrant in [2, 4]
+        else:  # quadrant in [1, 4]
             if angle_start > angle_end:
                 raise ValueError(
                     f"In quadrant {quadrant}, angle_start ({angle_start}°) must be <= angle_end ({angle_end}°). "
@@ -129,33 +129,19 @@ class CircularSegment(RampSegment):
         - Q3 (π to 3π/2): Bottom left, negative slopes, θ from π to 3π/2
         - Q4 (3π/2 to 2π): Bottom right, positive slopes, θ from 3π/2 to 2π
         """
-        # For a circle, if the tangent slope is tan(α), then:
-        # dy/dx = -cot(θ) = tan(α)
-        # cot(θ) = -tan(α)
-        # tan(θ) = -1/tan(α) = -cot(α)
-        # θ = arctan(-cot(α))
-
-        # Alternatively, for slope angle α:
-        # At slope angle 0° (horizontal), position is at π/2 or 3π/2 (top or bottom)
-        # At slope angle 90° (vertical), position is at 0 or π (right or left)
-
-        # The relationship is: θ = π/2 - α for the base angle
-        # Then we add quadrant offset
-
-        quadrant_offsets = {
-            1: 0,  # Q1: 0 to π/2
-            2: np.pi / 2,  # Q2: π/2 to π
-            3: np.pi,  # Q3: π to 3π/2
-            4: 3 * np.pi / 2,  # Q4: 3π/2 to 2π
-        }
-
-        # Within each quadrant, as slope angle goes from 90° to 0°,
-        # position angle goes from quadrant_start to quadrant_end
-        # So: θ = quadrant_offset + (π/2 - α)
-
-        base_angle = np.pi / 2 - slope_angle_rad
-
-        return quadrant_offsets[quadrant] + base_angle
+        # Use a tan(angle-from-horizontal) interpretation with sign from quadrant.
+        # With slope m = -cot(theta), this gives:
+        # Q1: m = -tan(alpha) -> theta = pi/2 - alpha
+        # Q2: m = +tan(alpha) -> theta = pi/2 + alpha
+        # Q3: m = -tan(alpha) -> theta = 3pi/2 - alpha
+        # Q4: m = +tan(alpha) -> theta = 3pi/2 + alpha
+        if quadrant == 1:
+            return (np.pi / 2) - slope_angle_rad
+        if quadrant == 2:
+            return (np.pi / 2) + slope_angle_rad
+        if quadrant == 3:
+            return (3 * np.pi / 2) - slope_angle_rad
+        return (3 * np.pi / 2) + slope_angle_rad
 
     def height(self, x: float) -> float:
         """Calculate y-coordinate at position x along the arc."""

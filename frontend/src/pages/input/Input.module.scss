@@ -6,12 +6,60 @@
 .input {
     display: flex;
     flex-direction: column;
-    background-color: var(--secondary);
+    background-color: var(--background);
     height: 100vh;
     width: 100vw;
 
+    .topBar {
+        display: grid;
+        grid-template-columns: 1fr auto 1fr;
+        align-items: center;
+        padding: 0.5rem 1rem 0 0.5rem;
+        z-index: 5;
+
+        .sessionInfo {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.75rem;
+            max-width: 65vw;
+            white-space: nowrap;
+            overflow: hidden;
+            color: var(--text-color);
+
+            .selectedSetName {
+                @include fonts.title-bold;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+
+            .changesBadge {
+                display: inline-flex;
+                align-items: center;
+                gap: 0.375rem;
+                @include fonts.text-small;
+                flex-shrink: 0;
+
+                .changeIndicator {
+                    display: inline-block;
+                    width: 0.5rem;
+                    height: 0.5rem;
+                    background-color: var(--warning, #ffc107);
+                    border-radius: 50%;
+                    flex-shrink: 0;
+                }
+            }
+        }
+
+        .topBarSpacer {
+            justify-self: end;
+            width: 0;
+            height: 0;
+        }
+    }
+
     .backButton {
-        margin: 1.5rem 0 0 0.75rem;
+        margin: 0;
+        justify-self: start;
     }
 
     .solverResultsPosition {
@@ -19,14 +67,14 @@
         top: 1.5rem;
         right: 2rem;
         z-index: 10;
-        max-width: 300px;
+        max-width: 18.75rem;
     }
 
     .inputGrid {
         display: grid;
         grid-template-columns: max-content 1fr; // left fits content, right grows
         grid-template-rows: 1fr auto;           // top grows, bottom fits content
-        gap: 1.5rem;
+        gap: 1rem;
         height: 100%;
         width: 100%;
         overflow: hidden;
@@ -34,29 +82,30 @@
         .parameterInputContainer {
             grid-column: 1;
             grid-row: 1;
-            margin-left: 2rem;
-            padding-right: 1rem;
+            margin-left: 1.5rem;
+            padding-right: 0.75rem;
             @include mixins.scrollbar;
+            overflow-y: auto;
             & { scrollbar-gutter: stable; }
+            width: min-content;
 
             .baseInputField {
-                margin-right: 3rem;
+                margin-right: 2rem;
             }
 
             .rampBuilder {
-                margin-right: 3rem;
+                margin-right: 2rem;
             }
         }
 
         .parameterInformationContainer {
             grid-column: 2;
             grid-row: 1;
-            margin-right: 2rem;
+            margin-right: 1.5rem;
             overflow-y: auto;
             overflow-x: hidden;
             display: flex;
             flex-direction: column;
-            gap: 1rem;
             @include mixins.scrollbar;
         }
 
@@ -65,7 +114,8 @@
             grid-row: 2;
             display: flex;
             justify-content: space-between;
-            margin: 0 2.25rem 1rem 1rem;
+            margin: 0.5rem;
+            margin-top: 0rem;
         }
 
         .nextButtonContainer {
@@ -74,7 +124,8 @@
             display: flex;
             justify-content: end;
             gap: 1rem;
-            margin: 0 2rem 1rem 0;
+            margin-bottom: 0.5rem;
+            margin-right: 1rem;
         }
     }
 }

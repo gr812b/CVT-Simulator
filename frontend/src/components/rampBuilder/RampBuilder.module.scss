@@ -1,19 +1,53 @@
 @use '@styles/_fonts';
 
+.rampBuilder {
+    position: relative;
+}
+
+.rampStatus {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    min-height: 2rem;
+    margin-bottom: 0.5rem;
+}
+
+.rampLabel {
+    color: var(--text-color);
+    @include fonts.title-bold;
+}
+
+.changedBadge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    color: var(--text-color);
+    opacity: 0.85;
+    font-size: 0.875rem;
+}
+
+.changeIndicator {
+    display: inline-block;
+    width: 0.5rem;
+    height: 0.5rem;
+    background-color: var(--warning, #ffc107);
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
 .segmentList {
     display: flex;
     flex-direction: column;
-    gap: 1rem;
 
     .segment {
-        background: var(--secondary);
+        background: var(--background);
 
         .segmentHeader {
             display: flex;
             justify-content: space-between;
             align-items: center;
             margin-bottom: 1rem;
-            min-height: 4rem;
+            min-height: 2rem;
 
             .segmentNumber {
                 color: var(--text-color);
@@ -24,21 +58,7 @@
         .segmentContent {
             display: flex;
             flex-direction: column;
-            gap: 0.75rem;
-
-            .field {
-                display: flex;
-                flex-direction: column;
-                gap: 0.5rem;
-                padding-bottom: 2rem;
-
-                label {
-                    font-size: 0.875rem;
-                    font-weight: 500;
-                    color: var(--text-color);
-                    @include fonts.text-medium;
-                }
-            }
+            gap: 1.5rem;
 
             .segmentFields {
                 display: grid;

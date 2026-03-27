@@ -90,20 +90,20 @@ def main():
     }
 
     # Create a ramp with linear and circular segments using config format
-    # This is the default "Enman" ramp at McMaster baja
+    # This is the default "Enman" ramp at McMaster baja (updated to positive convention)
     config = {
         "segments": [
             {
                 "type": "linear",
                 "length": inch_to_meter(0.18126),
-                "angle": -15,
+                "angle": 25,  # Positive angle from horizontal
             },
             {
                 "type": "circular",
                 "length": inch_to_meter(1.125 - 0.181226),
-                "angle_start": 89,  # degrees
-                "angle_end": 1,  # degrees
-                "quadrant": 3,  # Third quadrant (default)
+                "angle_start": 33.4248111826,  # degrees (steep start)
+                "angle_end": 20.8067910127,  # degrees (gentle end)
+                "quadrant": 2,  # Mirrored Q3: positive slopes, steep-to-gentle
             },
         ]
     }

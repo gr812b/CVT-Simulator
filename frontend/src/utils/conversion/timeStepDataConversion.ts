@@ -21,76 +21,124 @@ function convertTimeStepData(
   time: conv(timeStep.time, 'time'),
 
   state: {
-    car_velocity: conv(timeStep.state.car_velocity, 'velocity'),
-    car_position: conv(timeStep.state.car_position, 'distance'),
-    shift_velocity: conv(timeStep.state.shift_velocity, 'velocity'),
     shift_distance: conv(timeStep.state.shift_distance, 'distance'),
-    engine_angular_velocity: conv(timeStep.state.engine_angular_velocity, 'angular_velocity'),
-    engine_angular_position: conv(timeStep.state.engine_angular_position, 'angle'),
+    shift_velocity: conv(timeStep.state.shift_velocity, 'velocity'),
+    primary_pulley_angular_velocity: conv(timeStep.state.primary_pulley_angular_velocity, 'angular_velocity'),
+    secondary_pulley_angular_velocity: conv(timeStep.state.secondary_pulley_angular_velocity, 'angular_velocity'),
   },
-  system: {
-    slip: {
-      coupling_torque: conv(timeStep.system.slip.coupling_torque, 'torque'),
-      torque_demand: conv(timeStep.system.slip.torque_demand, 'torque'),
-      t_max_prim: conv(timeStep.system.slip.t_max_prim, 'torque'),
-      t_max_sec: conv(timeStep.system.slip.t_max_sec, 'torque'),
-      cvt_ratio_derivative: conv(timeStep.system.slip.cvt_ratio_derivative, 'dimensionless_rate'),
-      is_slipping: timeStep.system.slip.is_slipping
-    },
-    engine: {
-      torque: conv(timeStep.system.engine.torque, 'torque'),
-      coupling_torque_at_engine: conv(timeStep.system.engine.coupling_torque_at_engine, 'torque'),
-      power: conv(timeStep.system.engine.power, 'power'),
-      angular_velocity: conv(timeStep.system.engine.angular_velocity, 'angular_velocity'),
-      angular_acceleration: conv(timeStep.system.engine.angular_acceleration, 'angular_acceleration')
-    },
-    car: {
-      coupling_torque_at_wheel: conv(timeStep.system.car.coupling_torque_at_wheel, 'torque'),
-      load_torque_at_wheel: conv(timeStep.system.car.load_torque_at_wheel, 'torque'),
-      external_forces: {
-        incline_force: conv(timeStep.system.car.external_forces.incline_force, 'force'),
-        drag_force: conv(timeStep.system.car.external_forces.drag_force, 'force'),
-        net: conv(timeStep.system.car.external_forces.net, 'force')
+  derived_state: {
+    car_velocity: conv(timeStep.derived_state.car_velocity, 'velocity'),
+    car_position: conv(timeStep.derived_state.car_position, 'distance'),
+    engine_angular_velocity: conv(timeStep.derived_state.engine_angular_velocity, 'angular_velocity'),
+    engine_angular_position: conv(timeStep.derived_state.engine_angular_position, 'angle'),
+  },
+  drivetrain: {
+    belt_slip: ({
+      coupling_torque: conv(timeStep.drivetrain.belt_slip.coupling_torque, 'torque'),
+      torque_demand: conv(timeStep.drivetrain.belt_slip.torque_demand, 'torque'),
+      relative_velocity: conv((timeStep.drivetrain.belt_slip as TimeStepDataModel['drivetrain']['belt_slip'] & { relative_velocity: number }).relative_velocity, 'angular_velocity'),
+      tau_upper: conv(timeStep.drivetrain.belt_slip.tau_upper, 'torque'),
+      tau_lower: conv(timeStep.drivetrain.belt_slip.tau_lower, 'torque'),
+      primary_tau_bounds: {
+        tau_lower: conv(timeStep.drivetrain.belt_slip.primary_tau_bounds.tau_lower, 'torque'),
+        tau_upper: conv(timeStep.drivetrain.belt_slip.primary_tau_bounds.tau_upper, 'torque'),
+        numerator: {
+          clamping_term: conv(timeStep.drivetrain.belt_slip.primary_tau_bounds.numerator.clamping_term, 'torque'),
+          load_term: conv(timeStep.drivetrain.belt_slip.primary_tau_bounds.numerator.load_term, 'torque'),
+          shift_term: conv(timeStep.drivetrain.belt_slip.primary_tau_bounds.numerator.shift_term, 'torque'),
+          net: conv(timeStep.drivetrain.belt_slip.primary_tau_bounds.numerator.net, 'torque'),
+        },
+        denominator_upper: {
+          inverse_radius_term: timeStep.drivetrain.belt_slip.primary_tau_bounds.denominator_upper.inverse_radius_term,
+          inertial_feedback_term: timeStep.drivetrain.belt_slip.primary_tau_bounds.denominator_upper.inertial_feedback_term,
+          net: timeStep.drivetrain.belt_slip.primary_tau_bounds.denominator_upper.net,
+        },
+        denominator_lower: {
+          inverse_radius_term: timeStep.drivetrain.belt_slip.primary_tau_bounds.denominator_lower.inverse_radius_term,
+          inertial_feedback_term: timeStep.drivetrain.belt_slip.primary_tau_bounds.denominator_lower.inertial_feedback_term,
+          net: timeStep.drivetrain.belt_slip.primary_tau_bounds.denominator_lower.net,
+        },
       },
-      acceleration: conv(timeStep.system.car.acceleration, 'acceleration')
+      secondary_tau_bounds: {
+        tau_negative: conv(timeStep.drivetrain.belt_slip.secondary_tau_bounds.tau_negative, 'torque'),
+        tau_positive: conv(timeStep.drivetrain.belt_slip.secondary_tau_bounds.tau_positive, 'torque'),
+        numerator: {
+          spring_term: conv(timeStep.drivetrain.belt_slip.secondary_tau_bounds.numerator.spring_term, 'torque'),
+          load_term: conv(timeStep.drivetrain.belt_slip.secondary_tau_bounds.numerator.load_term, 'torque'),
+          shift_term: conv(timeStep.drivetrain.belt_slip.secondary_tau_bounds.numerator.shift_term, 'torque'),
+          net: conv(timeStep.drivetrain.belt_slip.secondary_tau_bounds.numerator.net, 'torque'),
+        },
+        denominator_positive: {
+          inverse_radius_term: timeStep.drivetrain.belt_slip.secondary_tau_bounds.denominator_positive.inverse_radius_term,
+          helix_feedback_term: timeStep.drivetrain.belt_slip.secondary_tau_bounds.denominator_positive.helix_feedback_term,
+          inertial_feedback_term: timeStep.drivetrain.belt_slip.secondary_tau_bounds.denominator_positive.inertial_feedback_term,
+          net: timeStep.drivetrain.belt_slip.secondary_tau_bounds.denominator_positive.net,
+        },
+        denominator_negative: {
+          inverse_radius_term: timeStep.drivetrain.belt_slip.secondary_tau_bounds.denominator_negative.inverse_radius_term,
+          helix_feedback_term: timeStep.drivetrain.belt_slip.secondary_tau_bounds.denominator_negative.helix_feedback_term,
+          inertial_feedback_term: timeStep.drivetrain.belt_slip.secondary_tau_bounds.denominator_negative.inertial_feedback_term,
+          net: timeStep.drivetrain.belt_slip.secondary_tau_bounds.denominator_negative.net,
+        },
+      },
+      effective_cvt_ratio_time_derivative: conv(timeStep.drivetrain.belt_slip.effective_cvt_ratio_time_derivative, 'dimensionless_rate'),
+      is_slipping: timeStep.drivetrain.belt_slip.is_slipping
+    } as TimeStepDataModel['drivetrain']['belt_slip']),
+    primary_pulley: {
+      primary_pulley_drive_torque: conv(timeStep.drivetrain.primary_pulley.primary_pulley_drive_torque, 'torque'),
+      coupling_torque_at_primary_pulley: conv(timeStep.drivetrain.primary_pulley.coupling_torque_at_primary_pulley, 'torque'),
+      power: conv(timeStep.drivetrain.primary_pulley.power, 'power'),
+      primary_pulley_angular_velocity: conv(timeStep.drivetrain.primary_pulley.primary_pulley_angular_velocity, 'angular_velocity'),
+      primary_pulley_angular_acceleration: conv(timeStep.drivetrain.primary_pulley.primary_pulley_angular_acceleration, 'angular_acceleration')
     },
-    cvt: {
+    secondary_pulley: {
+      coupling_torque_at_secondary_pulley: conv(timeStep.drivetrain.secondary_pulley.coupling_torque_at_secondary_pulley, 'torque'),
+      external_load_torque_at_secondary_pulley: conv(timeStep.drivetrain.secondary_pulley.external_load_torque_at_secondary_pulley, 'torque'),
+      external_forces: {
+        rolling_resistance_force: conv(timeStep.drivetrain.secondary_pulley.external_forces.rolling_resistance_force, 'force'),
+        incline_force: conv(timeStep.drivetrain.secondary_pulley.external_forces.incline_force, 'force'),
+        drag_force: conv(timeStep.drivetrain.secondary_pulley.external_forces.drag_force, 'force'),
+        net_force_at_car: conv(timeStep.drivetrain.secondary_pulley.external_forces.net_force_at_car, 'force'),
+        rolling_resistance_torque_at_secondary: conv(timeStep.drivetrain.secondary_pulley.external_forces.rolling_resistance_torque_at_secondary, 'torque'),
+        incline_torque_at_secondary: conv(timeStep.drivetrain.secondary_pulley.external_forces.incline_torque_at_secondary, 'torque'),
+        drag_torque_at_secondary: conv(timeStep.drivetrain.secondary_pulley.external_forces.drag_torque_at_secondary, 'torque'),
+        net_torque_at_secondary: conv(timeStep.drivetrain.secondary_pulley.external_forces.net_torque_at_secondary, 'torque')
+      },
+      secondary_pulley_angular_acceleration: conv(timeStep.drivetrain.secondary_pulley.secondary_pulley_angular_acceleration, 'angular_acceleration')
+    },
+    cvt_dynamics: {
       primaryPulleyState: {
         forces: {
-          radial_force: conv(timeStep.system.cvt.primaryPulleyState.forces.radial_force, 'force'),
-          clamping_force: conv(timeStep.system.cvt.primaryPulleyState.forces.clamping_force, 'force'),
-          max_torque: conv(timeStep.system.cvt.primaryPulleyState.forces.max_torque, 'torque'),
+          axial_clamping_force: conv(timeStep.drivetrain.cvt_dynamics.primaryPulleyState.forces.axial_clamping_force, 'force'),
+          axial_centrifugal_from_belt: conv(timeStep.drivetrain.cvt_dynamics.primaryPulleyState.forces.axial_centrifugal_from_belt, 'force'),
+          axial_force_total: conv(timeStep.drivetrain.cvt_dynamics.primaryPulleyState.forces.axial_force_total, 'force'),
         },
-        wrap_angle: conv(timeStep.system.cvt.primaryPulleyState.wrap_angle, 'angle'),
-        radius: conv(timeStep.system.cvt.primaryPulleyState.radius, 'distance'),
-        angular_velocity: conv(timeStep.system.cvt.primaryPulleyState.angular_velocity, 'angular_velocity'),
-        angular_position: conv(timeStep.system.cvt.primaryPulleyState.angular_position, 'angle'),
-        radial_from_centrifugal: conv(timeStep.system.cvt.primaryPulleyState.radial_from_centrifugal, 'force'),
-        radial_from_clamping: conv(timeStep.system.cvt.primaryPulleyState.radial_from_clamping, 'force'),
+        wrap_angle: conv(timeStep.drivetrain.cvt_dynamics.primaryPulleyState.wrap_angle, 'angle'),
+        radius: conv(timeStep.drivetrain.cvt_dynamics.primaryPulleyState.radius, 'distance'),
+        angular_velocity: conv(timeStep.drivetrain.cvt_dynamics.primaryPulleyState.angular_velocity, 'angular_velocity'),
+        angular_position: conv(timeStep.drivetrain.cvt_dynamics.primaryPulleyState.angular_position, 'angle'),
         breakdown: {
-          ...convertPulleyForce(timeStep.system.cvt.primaryPulleyState.breakdown, config)
+          ...convertPulleyForce(timeStep.drivetrain.cvt_dynamics.primaryPulleyState.breakdown, config)
         }
       },
       secondaryPulleyState: {
         forces: {
-          radial_force: conv(timeStep.system.cvt.secondaryPulleyState.forces.radial_force, 'force'),
-          clamping_force: conv(timeStep.system.cvt.secondaryPulleyState.forces.clamping_force, 'force'),
-          max_torque: conv(timeStep.system.cvt.secondaryPulleyState.forces.max_torque, 'torque'),
+          axial_clamping_force: conv(timeStep.drivetrain.cvt_dynamics.secondaryPulleyState.forces.axial_clamping_force, 'force'),
+          axial_centrifugal_from_belt: conv(timeStep.drivetrain.cvt_dynamics.secondaryPulleyState.forces.axial_centrifugal_from_belt, 'force'),
+          axial_force_total: conv(timeStep.drivetrain.cvt_dynamics.secondaryPulleyState.forces.axial_force_total, 'force'),
         },
-        wrap_angle: conv(timeStep.system.cvt.secondaryPulleyState.wrap_angle, 'angle'),
-        radius: conv(timeStep.system.cvt.secondaryPulleyState.radius, 'distance'),
-        angular_velocity: conv(timeStep.system.cvt.secondaryPulleyState.angular_velocity, 'angular_velocity'),
-        angular_position: conv(timeStep.system.cvt.secondaryPulleyState.angular_position, 'angle'),
-        radial_from_centrifugal: conv(timeStep.system.cvt.secondaryPulleyState.radial_from_centrifugal, 'force'),
-        radial_from_clamping: conv(timeStep.system.cvt.secondaryPulleyState.radial_from_clamping, 'force'),
+        wrap_angle: conv(timeStep.drivetrain.cvt_dynamics.secondaryPulleyState.wrap_angle, 'angle'),
+        radius: conv(timeStep.drivetrain.cvt_dynamics.secondaryPulleyState.radius, 'distance'),
+        angular_velocity: conv(timeStep.drivetrain.cvt_dynamics.secondaryPulleyState.angular_velocity, 'angular_velocity'),
+        angular_position: conv(timeStep.drivetrain.cvt_dynamics.secondaryPulleyState.angular_position, 'angle'),
         breakdown: {
-          ...convertPulleyForce(timeStep.system.cvt.secondaryPulleyState.breakdown, config)
+          ...convertPulleyForce(timeStep.drivetrain.cvt_dynamics.secondaryPulleyState.breakdown, config)
         }
       },
-      friction: conv(timeStep.system.cvt.friction, 'dimensionless'),
-      acceleration: conv(timeStep.system.cvt.acceleration, 'acceleration'),
-      cvt_ratio: conv(timeStep.system.cvt.cvt_ratio, 'dimensionless'),
-      net: conv(timeStep.system.cvt.net, 'force')
+      friction: conv(timeStep.drivetrain.cvt_dynamics.friction, 'dimensionless'),
+      acceleration: conv(timeStep.drivetrain.cvt_dynamics.acceleration, 'acceleration'),
+      cvt_ratio: conv(timeStep.drivetrain.cvt_dynamics.cvt_ratio, 'dimensionless'),
+      net: conv(timeStep.drivetrain.cvt_dynamics.net, 'force')
     }
   }
 };
@@ -149,7 +197,18 @@ export function convertSimulationData(
   data: FormattedSimulationResultModel,
   config: UnitConfiguration = DEFAULT_UNIT_CONFIG
 ): FormattedSimulationResultModel {
+  const conv = <T extends import('./unitConversion').BaseUnitType>(value: number, type: T) =>
+    convertValue(value, type, getTargetUnit(type, config));
+
   return {
     data: data.data.map(timeStep => convertTimeStepData(timeStep, config)),
+    termination: {
+      ...data.termination,
+      final_time: conv(data.termination.final_time, 'time'),
+      event_time:
+        data.termination.event_time == null
+          ? null
+          : conv(data.termination.event_time, 'time'),
+    },
   };
 }

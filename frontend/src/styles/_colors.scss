@@ -1,16 +1,18 @@
 
 :root {
     // Core theme colors (Dark theme by default)
+    --primary: #bb0808;
+    --secondary: #2a2a2a;
+    --accent: #3a3a3a;
     --text-color: #ffffff;
-    --primary: #ffffff; // TODO: Update the primary colour and use text-color instead
-    --secondary: #222222;
-    --accent: #bb0808;
+    --background: #222222;
+    --code-background: #1a1a1a;
 
     // Neutral colors
     --border-color: #888888;
 
     // Line colors
-    --line1: var(--accent);
+    --line1: var(--primary);
     --line2: #2ecc71;
     --line3: #3498db;
     --line4: #e67e22;
@@ -33,10 +35,12 @@
 
 [data-theme="light"] {
     // Core theme colors
+    --primary: #bb0808;
+    --secondary: #f0f0f0;
+    --accent: #e0e0e0;
     --text-color: #222222;
-    --primary: #ffffff;
-    --secondary: #222222;
-    --accent: #bb0808;
+    --background: #ffffff;
+    --code-background: #f5f5f5;
     
     // Chart colors for light theme
     --grid-color: #e0e0e0;

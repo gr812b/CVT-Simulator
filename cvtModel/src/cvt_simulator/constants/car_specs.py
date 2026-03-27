@@ -14,8 +14,16 @@ class CarSpecs(BaseModel):
     """
 
     # Inertia values
-    # TODO: Look into inertia as it should be of all spinning parts
     engine_inertia: float = Field(default=0.1, description="Engine inertia in kg*m^2")
+    secondary_inertia: float = Field(
+        default=0.1, description="Secondary CVT pulley inertia in kg*m^2"
+    )
+    gearbox_inertia: float = Field(
+        default=0.05, description="Gearbox inertia in kg*m^2"
+    )
+    wheel_inertia: float = Field(
+        default=0.2, description="Wheel inertia in kg*m^2 (all wheels)"
+    )
     driveline_inertia: float = Field(
         default=0.5,
         description="Driveline inertia in kg*m^2 (includes sec CVT, gearbox, axles, wheels, hubs, etc)",
@@ -32,6 +40,9 @@ class CarSpecs(BaseModel):
     drag_coefficient: float = Field(
         default=0.6, description="Drag coefficient (unitless)"
     )
+    rolling_resistance_coefficient: float = Field(
+        default=0.015, description="Rolling resistance coefficient (unitless)"
+    )
 
     # Pulley geometry
     # TODO: These are all guesses, need to be gotten
@@ -39,7 +50,7 @@ class CarSpecs(BaseModel):
         default=deg_to_rad(11.5 * 2), description="Sheave angle in radians"
     )
     initial_flyweight_radius: float = Field(
-        default=0.05, description="Initial flyweight radius in meters"
+        default=0.04878, description="Initial flyweight radius in meters"
     )
     helix_radius: float = Field(default=0.04445, description="Helix radius in meters")
 
@@ -143,10 +154,14 @@ _default_specs = CarSpecs()
 
 # Export constants as module-level variables for backward compatibility
 ENGINE_INERTIA = _default_specs.engine_inertia
+SECONDARY_INERTIA = _default_specs.secondary_inertia
+GEARBOX_INERTIA = _default_specs.gearbox_inertia
+WHEEL_INERTIA = _default_specs.wheel_inertia
 DRIVELINE_INERTIA = _default_specs.driveline_inertia
 GEARBOX_RATIO = _default_specs.gearbox_ratio
 FRONTAL_AREA = _default_specs.frontal_area
 DRAG_COEFFICIENT = _default_specs.drag_coefficient
+ROLLING_RESISTANCE_COEFFICIENT = _default_specs.rolling_resistance_coefficient
 WHEEL_RADIUS = _default_specs.wheel_radius
 SHEAVE_ANGLE = _default_specs.sheave_angle
 INITIAL_FLYWEIGHT_RADIUS = _default_specs.initial_flyweight_radius

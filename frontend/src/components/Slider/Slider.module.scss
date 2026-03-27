@@ -34,7 +34,7 @@
 
         .sliderRange {
           position: absolute;
-          background-color: var(--accent);
+          background-color: var(--primary);
           border-radius: 9999px;
           height: 100%;
           transition: background-color 0.2s ease;
@@ -52,7 +52,7 @@
           pointer-events: none;
 
           &.activeTick {
-              background-color: var(--accent);
+              background-color: var(--primary);
               transform: translateX(-50%) translateY(-50%) scale(1.2);
           }
         }
@@ -62,15 +62,15 @@
         display: block;
         width: 1.5rem;
         height: 1.5rem;
-        background-color: var(--primary);
-        border: 2px solid var(--accent);
+        background-color: var(--text-color);
+        border: 2px solid var(--primary);
         border-radius: 50%;
         cursor: grab;
         transition: all 0.2s ease;
         box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
 
         &:hover {
-          background-color: var(--accent);
+          background-color: var(--primary);
           transform: scale(1.1);
           box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
         }
@@ -122,7 +122,7 @@
 
         &.activeLabel {
           opacity: 1;
-          color: var(--accent);
+          color: var(--primary);
           font-weight: 600;
           transform: translateX(-50%) scale(1.1);
         }

@@ -2,7 +2,7 @@
 Solver for finding the minimum angular velocity at which CVT begins to shift.
 
 This solver determines the shift initiation point - the lowest engine speed at which
-the primary pulley's radial force overcomes the secondary pulley's radial force,
+the primary pulley's axial force overcomes the secondary pulley's axial force,
 causing the CVT to begin shifting toward higher ratio.
 
 All internal calculations use SI units (rad/s, N). Conversion to RPM happens only
@@ -21,7 +21,7 @@ from cvt_simulator.utils.conversions import rad_s_to_rpm
 
 class ShiftInitiationSolver(SolverBase):
     """
-    Finds the minimum angular velocity at which primary radial force > secondary radial force.
+    Finds the minimum angular velocity at which primary axial force > secondary axial force.
 
     This represents the shift initiation point - the engine speed where the CVT
     begins to shift from low ratio toward high ratio.
@@ -29,7 +29,7 @@ class ShiftInitiationSolver(SolverBase):
     The solver:
     1. Creates primary and secondary pulley models from SimulationArgs
     2. Calculates torque_demand from road load using slip model (no-slip assumption)
-    3. Evaluates radial forces at minimum shift position (shift_distance = 0)
+    3. Evaluates axial forces at minimum shift position (shift_distance = 0)
     4. Uses root-finding to determine the omega where forces cross
     """
 
@@ -65,12 +65,12 @@ class ShiftInitiationSolver(SolverBase):
     def solver_description(self) -> str:
         return (
             "Finds the minimum engine angular velocity at which the primary "
-            "radial force overcomes the secondary radial force, initiating shift."
+            "axial force overcomes the secondary axial force, initiating shift."
         )
 
     def solve(self) -> SolverResult:
         """
-        Solve for the minimum omega where primary_radial > secondary_radial.
+        Solve for the minimum omega where primary_axial > secondary_axial.
 
         Finds the FIRST point where the force difference crosses from negative to positive.
 
@@ -143,25 +143,24 @@ class ShiftInitiationSolver(SolverBase):
 
     def _evaluate_force_difference(self, angular_velocity: float) -> float:
         """
-        Evaluate the force difference (primary_radial - secondary_radial).
+        Evaluate the force difference (primary_axial - secondary_axial).
 
         Args:
             angular_velocity: Engine angular velocity [rad/s]
 
         Returns:
-            force_diff: Primary radial force - Secondary radial force [N]
+            force_diff: Primary axial force - Secondary axial force [N]
         """
         # Create a system state at minimum shift position and stationary
         state = SystemState(
-            engine_angular_velocity=angular_velocity,
-            engine_angular_position=0.0,
+            primary_pulley_angular_velocity=angular_velocity,
+            secondary_pulley_angular_velocity=0.0,  # Stationary (as specified)
             shift_distance=0.0,  # Minimum shift position
             shift_velocity=0.0,  # Static evaluation
-            car_velocity=0.0,  # Stationary (as specified)
         )
 
         # Calculate torque demand from road load (before slip limiting)
-        torque_demand = self.slip_model.get_torque_demand(state)
+        torque_demand = self.slip_model.get_no_slip_torque(state)
 
         # Get the CVT breakdown which includes both pulley states
         # Use torque_demand to properly account for secondary torque feedback
@@ -169,12 +168,14 @@ class ShiftInitiationSolver(SolverBase):
             state, coupling_torque=torque_demand
         )
 
-        # Extract radial forces
-        primary_radial_force = cvt_breakdown.primaryPulleyState.forces.radial_force
-        secondary_radial_force = cvt_breakdown.secondaryPulleyState.forces.radial_force
+        # Extract axial clamping forces
+        primary_axial_force = cvt_breakdown.primaryPulleyState.forces.axial_force_total
+        secondary_axial_force = (
+            cvt_breakdown.secondaryPulleyState.forces.axial_force_total
+        )
 
         # Return difference (positive means primary is winning, shift will occur)
-        return primary_radial_force - secondary_radial_force
+        return primary_axial_force - secondary_axial_force
 
     def get_force_difference_curve(
         self,
@@ -293,9 +294,9 @@ def main():
 
     # Styling
     ax.set_xlabel("Engine Speed (RPM)", fontsize=12)
-    ax.set_ylabel("Radial Force Difference (N)", fontsize=12)
+    ax.set_ylabel("Axial Force Difference (N)", fontsize=12)
     ax.set_title(
-        "CVT Shift Initiation Curve\n(Primary - Secondary Radial Force vs Engine Speed)",
+        "CVT Shift Initiation Curve\n(Primary - Secondary Axial Force vs Engine Speed)",
         fontsize=14,
         weight="bold",
     )

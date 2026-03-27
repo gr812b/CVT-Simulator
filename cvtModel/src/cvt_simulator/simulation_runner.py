@@ -1,13 +1,12 @@
 import sys
 import numpy as np
-from typing import Callable, Optional
+from typing import Callable, Optional, Any
 from scipy.integrate import solve_ivp
 from cvt_simulator.utils.system_state import SystemState
 from cvt_simulator.utils.simulation_result import SimulationResult
 from cvt_simulator.models.system_model import SystemModel
 from cvt_simulator.constants.car_specs import (
     GEARBOX_RATIO,
-    WHEEL_RADIUS,
     MAX_SHIFT,
 )
 from cvt_simulator.utils.conversions import rpm_to_rad_s
@@ -16,6 +15,8 @@ from cvt_simulator.utils.simulation_constraints import (
     car_velocity_constraint_event,
     get_shift_steady_event,
     get_back_shift_event,
+    get_mid_shift_steady_event,
+    get_mid_shift_wake_event,
     shift_constraint_event,
 )
 
@@ -30,27 +31,55 @@ class CombinedSolution:
 class SimulationRunner:
     """Runs a two-phase CVT system simulation."""
 
-    TOTAL_SIM_TIME = 30  # seconds
+    TOTAL_SIM_TIME = 15  # seconds
+    # Hysteresis controls to prevent mid-shift lock/unlock chatter.
+    MID_SHIFT_MIN_HOLD_TIME = 0.02  # seconds
+    MID_SHIFT_RELOCK_DELAY = 0.05  # seconds
     INITIAL_STATE = SystemState(
-        car_velocity=rpm_to_rad_s(0.1)
-        / (GEARBOX_RATIO * tm.current_cvt_ratio(0))
-        * WHEEL_RADIUS,
-        car_position=0.0,
-        shift_velocity=0.0,
         shift_distance=0.0,
-        engine_angular_velocity=rpm_to_rad_s(1800),
-        engine_angular_position=0.0,
+        shift_velocity=0.0,
+        # Initial secondary pulley angular velocity derived from initial car velocity
+        secondary_pulley_angular_velocity=rpm_to_rad_s(0.1)
+        / (GEARBOX_RATIO * tm.current_effective_cvt_ratio(0)),
+        # Initial primary pulley angular velocity (engine speed)
+        primary_pulley_angular_velocity=rpm_to_rad_s(1800),
     )
 
     def __init__(
         self,
         system_model: SystemModel,
-        # Optional progress callback function that takes a float percentage (0-100)
-        progress_callback: Optional[Callable[[float], None]] = None,
+        # Optional progress callback. Preferred signature:
+        #   callback(progress_percent, sim_time_s, shift_distance)
+        # Backward-compatible signature callback(progress_percent) is also supported.
+        progress_callback: Optional[Callable[..., None]] = None,
+        transition_callback: Optional[Callable[[dict[str, Any]], None]] = None,
     ):
         self.system_model = system_model
         self.progress_callback = progress_callback
+        self.transition_callback = transition_callback
         self._last_callback_percent = -1.0
+
+    def _emit_transition(
+        self,
+        from_mode: str,
+        to_mode: str,
+        t: float,
+        state_array: np.ndarray,
+        reason: str,
+    ):
+        if self.transition_callback is None:
+            return
+        state = SystemState.from_array(state_array)
+        self.transition_callback(
+            {
+                "from_mode": from_mode,
+                "to_mode": to_mode,
+                "time": float(t),
+                "reason": reason,
+                "shift_distance": float(state.shift_distance),
+                "shift_velocity": float(state.shift_velocity),
+            }
+        )
 
     def run_simulation(self) -> SimulationResult:
         """Run the simulation and return results."""
@@ -65,105 +94,364 @@ class SimulationRunner:
         current_time = 0
         current_state = self.INITIAL_STATE.to_array()
 
-        # Phase 1: Normal shifting until full shift is reached
-        events_phase1 = [
-            get_shift_steady_event(self.system_model),
-            car_velocity_constraint_event,
-            shift_constraint_event,
-        ]
+        mode = "normal"
+        locked_shift_distance = None
+        mid_shift_enter_time: float | None = None
+        last_mid_shift_wake_time = -float("inf")
+        transition_count = 0
+        max_transitions = 20
+        termination_context: dict[str, Any] = {
+            "reason_code": "unknown",
+            "reason": "Simulation ended without a classified termination reason.",
+            "mode": mode,
+            "event": None,
+            "event_time": None,
+            "transition_count": 0,
+            "max_transitions": max_transitions,
+            "details": {},
+        }
 
-        time_eval_phase1 = time_eval[time_eval >= current_time]
-        solution_phase1 = self._solve(
-            cvt_system_ode,
-            current_time,
-            current_state,
-            time_eval_phase1,
-            events_phase1,
-        )
+        def append_solution_segment(solution):
+            t_seg = np.asarray(solution.t)
+            if t_seg.size == 0:
+                return
+            y_seg = np.asarray(solution.y)
+            if y_seg.ndim == 1:
+                y_seg = y_seg.reshape(-1, 1)
+            all_t.append(t_seg)
+            all_y.append(y_seg)
 
-        all_t.append(solution_phase1.t)
-        all_y.append(solution_phase1.y)
+        while current_time < self.TOTAL_SIM_TIME and transition_count < max_transitions:
+            time_eval_segment = (
+                time_eval[time_eval >= current_time]
+                if current_time == 0
+                else time_eval[time_eval > current_time]
+            )
 
-        # Check if we hit full shift (event 0)
-        if solution_phase1.t_events[0].size > 0:
-            current_time = solution_phase1.t_events[0][0]
-            current_state = solution_phase1.y_events[0][0]
+            if time_eval_segment.size == 0:
+                termination_context = {
+                    "reason_code": "max_time",
+                    "reason": "Simulation reached the configured maximum time.",
+                    "mode": mode,
+                    "event": None,
+                    "event_time": None,
+                    "transition_count": transition_count,
+                    "max_transitions": max_transitions,
+                    "details": {
+                        "time_eval_exhausted": True,
+                    },
+                }
+                break
 
-            # Phase 2: At full shift - loop to handle potential back-shifting
-            max_phases = 10  # Prevent infinite loops
-            phase_count = 0
+            if mode == "normal":
+                base_mid_shift_steady_event = get_mid_shift_steady_event(
+                    self.system_model
+                )
 
-            while phase_count < max_phases and current_time < self.TOTAL_SIM_TIME:
-                cvt_system_full_shift_ode = self._get_full_shift_ode_function()
-                time_eval_phase2 = time_eval[time_eval > current_time]
+                def guarded_mid_shift_steady_event(t, y):
+                    # After waking from a locked mid-shift state, require a short
+                    # cooldown before allowing another mid-shift lock attempt.
+                    if (t - last_mid_shift_wake_time) < self.MID_SHIFT_RELOCK_DELAY:
+                        return 1.0
+                    return base_mid_shift_steady_event(t, y)
 
-                if time_eval_phase2.size == 0:
-                    break
+                guarded_mid_shift_steady_event.terminal = True
+                guarded_mid_shift_steady_event.direction = -1
 
-                # At full shift, check for back-shift event
-                events_phase2 = [
+                events = [
+                    get_shift_steady_event(self.system_model),
+                    guarded_mid_shift_steady_event,
+                    car_velocity_constraint_event,
+                    shift_constraint_event,
+                ]
+                event_names = [
+                    "shift_steady_event",
+                    "mid_shift_steady_event",
+                    "car_velocity_constraint_event",
+                    "shift_constraint_event",
+                ]
+                solution = self._solve(
+                    cvt_system_ode,
+                    current_time,
+                    current_state,
+                    time_eval_segment,
+                    events,
+                )
+
+                append_solution_segment(solution)
+
+                if solution.t_events[0].size > 0:
+                    # Enter full-shift locked mode
+                    current_time = solution.t_events[0][0]
+                    current_state = solution.y_events[0][0]
+                    self._emit_transition(
+                        "normal",
+                        "full_shift",
+                        current_time,
+                        current_state,
+                        "shift_steady_event",
+                    )
+                    mode = "full_shift"
+                    transition_count += 1
+                    continue
+
+                if solution.t_events[1].size > 0:
+                    # Enter mid-shift locked mode
+                    current_time = solution.t_events[1][0]
+                    current_state = solution.y_events[1][0]
+                    locked_shift_distance = float(current_state[0])
+                    self._emit_transition(
+                        "normal",
+                        "mid_shift",
+                        current_time,
+                        current_state,
+                        "mid_shift_steady_event",
+                    )
+                    mode = "mid_shift"
+                    mid_shift_enter_time = float(current_time)
+                    transition_count += 1
+                    continue
+
+                # No mode-transition event: finished (car stop, end of interval, etc.)
+                termination_context = self._build_termination_context(
+                    solution=solution,
+                    mode=mode,
+                    event_names=event_names,
+                    transition_count=transition_count,
+                    max_transitions=max_transitions,
+                )
+                break
+
+            if mode == "full_shift":
+                locked_ode = self._get_locked_shift_ode_function(MAX_SHIFT)
+                events = [
                     get_back_shift_event(self.system_model),
                     car_velocity_constraint_event,
                 ]
-
-                solution_phase2 = self._solve(
-                    cvt_system_full_shift_ode,
+                event_names = [
+                    "back_shift_event",
+                    "car_velocity_constraint_event",
+                ]
+                solution = self._solve(
+                    locked_ode,
                     current_time,
                     current_state,
-                    time_eval_phase2,
-                    events_phase2,
+                    time_eval_segment,
+                    events,
                 )
 
-                all_t.append(solution_phase2.t)
-                all_y.append(solution_phase2.y)
+                append_solution_segment(solution)
 
-                # Check if back-shift event occurred (event 0)
-                if solution_phase2.t_events[0].size > 0:
-                    current_time = solution_phase2.t_events[0][0]
-                    current_state = solution_phase2.y_events[0][0]
-
-                    # Phase 3: Back-shifting - return to normal dynamics
-                    time_eval_phase3 = time_eval[time_eval > current_time]
-
-                    if time_eval_phase3.size == 0:
-                        break
-
-                    events_phase3 = [
-                        get_shift_steady_event(self.system_model),
-                        car_velocity_constraint_event,
-                        shift_constraint_event,
-                    ]
-
-                    solution_phase3 = self._solve(
-                        cvt_system_ode,
+                if solution.t_events[0].size > 0:
+                    # Resume normal shifting dynamics
+                    current_time = solution.t_events[0][0]
+                    current_state = solution.y_events[0][0]
+                    self._emit_transition(
+                        "full_shift",
+                        "normal",
                         current_time,
                         current_state,
-                        time_eval_phase3,
-                        events_phase3,
+                        "back_shift_event",
                     )
+                    mode = "normal"
+                    transition_count += 1
+                    continue
 
-                    all_t.append(solution_phase3.t)
-                    all_y.append(solution_phase3.y)
+                termination_context = self._build_termination_context(
+                    solution=solution,
+                    mode=mode,
+                    event_names=event_names,
+                    transition_count=transition_count,
+                    max_transitions=max_transitions,
+                )
+                break
 
-                    # Check if we reached full shift again (event 0)
-                    if solution_phase3.t_events[0].size > 0:
-                        current_time = solution_phase3.t_events[0][0]
-                        current_state = solution_phase3.y_events[0][0]
-                        phase_count += 1
-                        # Continue loop to handle next full-shift phase
-                    else:
-                        # Simulation ended without reaching full shift again
-                        break
-                else:
-                    # Stayed at full shift until end or car stopped
+            if mode == "mid_shift":
+                if locked_shift_distance is None:
                     break
 
+                locked_ode = self._get_locked_shift_ode_function(locked_shift_distance)
+
+                base_mid_shift_wake_event = get_mid_shift_wake_event(self.system_model)
+
+                def guarded_mid_shift_wake_event(t, y):
+                    # Once we lock into mid-shift, keep that mode for a minimum
+                    # dwell time before evaluating wake logic.
+                    if (
+                        mid_shift_enter_time is not None
+                        and (t - mid_shift_enter_time) < self.MID_SHIFT_MIN_HOLD_TIME
+                    ):
+                        return -1.0
+                    return base_mid_shift_wake_event(t, y)
+
+                guarded_mid_shift_wake_event.terminal = True
+                guarded_mid_shift_wake_event.direction = 1
+
+                events = [
+                    guarded_mid_shift_wake_event,
+                    car_velocity_constraint_event,
+                ]
+                event_names = [
+                    "mid_shift_wake_event",
+                    "car_velocity_constraint_event",
+                ]
+                solution = self._solve(
+                    locked_ode,
+                    current_time,
+                    current_state,
+                    time_eval_segment,
+                    events,
+                )
+
+                append_solution_segment(solution)
+
+                if solution.t_events[0].size > 0:
+                    # Resume normal shifting dynamics when imbalance grows again
+                    current_time = solution.t_events[0][0]
+                    current_state = solution.y_events[0][0]
+                    self._emit_transition(
+                        "mid_shift",
+                        "normal",
+                        current_time,
+                        current_state,
+                        "mid_shift_wake_event",
+                    )
+                    mode = "normal"
+                    mid_shift_enter_time = None
+                    last_mid_shift_wake_time = float(current_time)
+                    transition_count += 1
+                    continue
+
+                termination_context = self._build_termination_context(
+                    solution=solution,
+                    mode=mode,
+                    event_names=event_names,
+                    transition_count=transition_count,
+                    max_transitions=max_transitions,
+                )
+                break
+
+        if transition_count >= max_transitions and current_time < self.TOTAL_SIM_TIME:
+            termination_context = {
+                "reason_code": "max_transitions",
+                "reason": "Simulation stopped after hitting the mode-transition safety limit.",
+                "mode": mode,
+                "event": None,
+                "event_time": None,
+                "transition_count": transition_count,
+                "max_transitions": max_transitions,
+                "details": {
+                    "safety_limit_reached": True,
+                },
+            }
+
         # Combine all solution segments
-        combined_t = np.concatenate(all_t)
-        combined_y = np.hstack(all_y)
+        if not all_t or not all_y:
+            combined_t = np.array([current_time], dtype=float)
+            combined_y = np.array(current_state, dtype=float).reshape(-1, 1)
+        else:
+            combined_t = np.concatenate(all_t)
+            combined_y = np.hstack(all_y)
 
         combined_solution = CombinedSolution(combined_t, combined_y)
-        return SimulationResult(combined_solution)
+
+        final_state = SystemState.from_array(combined_y[:, -1])
+        final_time = float(combined_t[-1])
+        termination_context["mode"] = mode
+        termination_context["final_time"] = final_time
+        termination_context["reached_max_time"] = final_time >= (
+            self.TOTAL_SIM_TIME - 1e-6
+        )
+        termination_context["transition_count"] = transition_count
+        termination_context.setdefault("details", {})
+        termination_context["details"].update(
+            {
+                "final_shift_distance": float(final_state.shift_distance),
+                "final_shift_velocity": float(final_state.shift_velocity),
+                "final_primary_pulley_angular_velocity": float(
+                    final_state.primary_pulley_angular_velocity
+                ),
+                "final_secondary_pulley_angular_velocity": float(
+                    final_state.secondary_pulley_angular_velocity
+                ),
+            }
+        )
+
+        if (
+            termination_context.get("reason_code") == "unknown"
+            and termination_context["reached_max_time"]
+        ):
+            termination_context["reason_code"] = "max_time"
+            termination_context["reason"] = (
+                "Simulation reached the configured maximum time."
+            )
+
+        return SimulationResult(
+            combined_solution, termination_context=termination_context
+        )
+
+    def _build_termination_context(
+        self,
+        solution,
+        mode: str,
+        event_names: list[str],
+        transition_count: int,
+        max_transitions: int,
+    ) -> dict[str, Any]:
+        triggered_events: list[tuple[float, str]] = []
+        for idx, event_name in enumerate(event_names):
+            if idx >= len(solution.t_events):
+                continue
+            event_times = np.asarray(solution.t_events[idx])
+            if event_times.size > 0:
+                triggered_events.append((float(event_times[0]), event_name))
+
+        if triggered_events:
+            event_time, event_name = min(triggered_events, key=lambda item: item[0])
+            return {
+                "reason_code": "event",
+                "reason": f"Simulation stopped because terminal event '{event_name}' fired.",
+                "mode": mode,
+                "event": event_name,
+                "event_time": event_time,
+                "transition_count": transition_count,
+                "max_transitions": max_transitions,
+                "details": {
+                    "solver_status": int(solution.status),
+                    "solver_message": str(solution.message),
+                },
+            }
+
+        final_time = float(solution.t[-1]) if np.asarray(solution.t).size > 0 else 0.0
+        reached_max_time = final_time >= (self.TOTAL_SIM_TIME - 1e-6)
+        if reached_max_time:
+            return {
+                "reason_code": "max_time",
+                "reason": "Simulation reached the configured maximum time.",
+                "mode": mode,
+                "event": None,
+                "event_time": None,
+                "transition_count": transition_count,
+                "max_transitions": max_transitions,
+                "details": {
+                    "solver_status": int(solution.status),
+                    "solver_message": str(solution.message),
+                },
+            }
+
+        return {
+            "reason_code": "solver_ended",
+            "reason": "Simulation ended because the integrator finished without a terminal event.",
+            "mode": mode,
+            "event": None,
+            "event_time": None,
+            "transition_count": transition_count,
+            "max_transitions": max_transitions,
+            "details": {
+                "solver_status": int(solution.status),
+                "solver_message": str(solution.message),
+            },
+        }
 
     # Get the function without self for scipy
     def _get_ode_function(self):
@@ -175,6 +463,12 @@ class SimulationRunner:
     def _get_full_shift_ode_function(self):
         def ode_func(t: float, y: list[float]):
             return self._evaluate_full_shift_system(t, y)
+
+        return ode_func
+
+    def _get_locked_shift_ode_function(self, locked_shift_distance: float):
+        def ode_func(t: float, y: list[float]):
+            return self._evaluate_locked_shift_system(t, y, locked_shift_distance)
 
         return ode_func
 
@@ -196,7 +490,7 @@ class SimulationRunner:
             rtol=1e-4,
         )
 
-    def _print_progress(self, t):
+    def _print_progress(self, t: float, shift_distance: float):
         # Print progress
         progress_percent = (t / self.TOTAL_SIM_TIME) * 100
         # Print every 0.1% progress
@@ -211,12 +505,25 @@ class SimulationRunner:
             rounded_percent = round(progress_percent, 1)
             if rounded_percent != self._last_callback_percent:
                 self._last_callback_percent = rounded_percent
-                self.progress_callback(progress_percent)
+                try:
+                    self.progress_callback(
+                        progress_percent, float(t), float(shift_distance)
+                    )
+                except TypeError:
+                    # Backward compatibility for older single-argument callbacks.
+                    self.progress_callback(progress_percent)
 
     def _evaluate_cvt_system(self, t: float, y: list[float]):
-        """Evaluate system dynamics (phase 1: not at full shift)."""
+        """Evaluate system dynamics (phase 1: not at full shift).
+
+        Returns derivatives of the 4 DOF state vector:
+        dy[0] = d(shift_distance)/dt = shift_velocity
+        dy[1] = d(shift_velocity)/dt = shift_acceleration
+        dy[2] = d(primary_pulley_angular_velocity)/dt = primary_pulley_angular_accel
+        dy[3] = d(secondary_pulley_angular_velocity)/dt = secondary_pulley_angular_accel
+        """
         state = SystemState.from_array(y)
-        self._print_progress(t)
+        self._print_progress(t, state.shift_distance)
 
         # TODO: Remove this (should be handled by constraints)
         shift_velocity = state.shift_velocity
@@ -234,12 +541,16 @@ class SimulationRunner:
             y[i] = constrained_y[i]
 
         # Get system breakdown (this calculates everything in correct order)
-        system_breakdown = self.system_model.get_breakdown(state)
+        drivetrain_breakdown = self.system_model.get_breakdown(state)
 
-        # Extract accelerations from breakdown
-        car_acceleration = system_breakdown.car.acceleration
-        engine_angular_accel = system_breakdown.engine.angular_acceleration
-        shift_acceleration = system_breakdown.cvt.acceleration
+        # Extract accelerations
+        secondary_pulley_angular_accel_from_torques = (
+            drivetrain_breakdown.secondary_pulley.secondary_pulley_angular_acceleration
+        )
+        primary_pulley_angular_accel = (
+            drivetrain_breakdown.primary_pulley.primary_pulley_angular_acceleration
+        )
+        shift_acceleration = drivetrain_breakdown.cvt_dynamics.acceleration
 
         # Prevent acceleration from pushing past boundaries (metal hitting metal)
         if shift_distance <= 0 and shift_acceleration < 0:
@@ -248,38 +559,74 @@ class SimulationRunner:
             shift_acceleration = 0
 
         return [
-            car_acceleration,
-            state.car_velocity,
-            shift_acceleration,
             state.shift_velocity,
-            engine_angular_accel,
-            state.engine_angular_velocity,
+            shift_acceleration,
+            primary_pulley_angular_accel,
+            secondary_pulley_angular_accel_from_torques,
         ]
 
     def _evaluate_full_shift_system(self, t: float, y: list[float]):
-        """Evaluate system dynamics (phase 2: at full shift)."""
+        """Evaluate system dynamics (phase 2: at full shift).
+
+        At full shift, shift_distance and shift_velocity are held constant.
+        Only the pulley angular velocities continue to evolve.
+        """
         state = SystemState.from_array(y)
-        self._print_progress(t)
+        self._print_progress(t, MAX_SHIFT)
         # Force the shifting variables to remain constant at full shift.
         state.shift_distance = MAX_SHIFT
         state.shift_velocity = 0
 
-        # CRITICAL: Update the actual y array that scipy saves to CSV
+        # CRITICAL: Update the actual y array that scipy saves
         constrained_y = state.to_array()
         for i in range(len(y)):
             y[i] = constrained_y[i]
 
         # Get system breakdown for full shift case
-        system_breakdown = self.system_model.get_breakdown(state)
+        drivetrain_breakdown = self.system_model.get_breakdown(state)
 
-        car_acceleration = system_breakdown.car.acceleration
-        engine_angular_accel = system_breakdown.engine.angular_acceleration
+        secondary_pulley_angular_accel_from_torques = (
+            drivetrain_breakdown.secondary_pulley.secondary_pulley_angular_acceleration
+        )
+        primary_pulley_angular_accel = (
+            drivetrain_breakdown.primary_pulley.primary_pulley_angular_acceleration
+        )
 
         return [
-            car_acceleration,
-            state.car_velocity,
+            0,  # shift_distance held constant
+            0,  # shift_velocity held constant
+            primary_pulley_angular_accel,  # primary pulley continues to evolve
+            secondary_pulley_angular_accel_from_torques,  # secondary pulley continues to evolve
+        ]
+
+    def _evaluate_locked_shift_system(
+        self,
+        t: float,
+        y: list[float],
+        locked_shift_distance: float,
+    ):
+        """Evaluate system dynamics with shift DOF locked at an interior position."""
+        state = SystemState.from_array(y)
+        self._print_progress(t, locked_shift_distance)
+
+        state.shift_distance = locked_shift_distance
+        state.shift_velocity = 0
+
+        constrained_y = state.to_array()
+        for i in range(len(y)):
+            y[i] = constrained_y[i]
+
+        drivetrain_breakdown = self.system_model.get_breakdown(state)
+        secondary_pulley_angular_accel_from_torques = (
+            drivetrain_breakdown.secondary_pulley.secondary_pulley_angular_acceleration
+        )
+        primary_pulley_angular_accel = (
+            drivetrain_breakdown.primary_pulley.primary_pulley_angular_acceleration
+        )
+
+        return [
             0,
             0,
-            engine_angular_accel,
-            state.engine_angular_velocity,
+            primary_pulley_angular_accel,
+            secondary_pulley_angular_accel_from_torques,
         ]

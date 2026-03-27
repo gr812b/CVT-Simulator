@@ -1,47 +1,44 @@
 @use '@styles/_fonts';
 @use '@styles/_colors';
-@use 'sass:map';
 
 .dashboard {
     display: flex;
     flex-direction: column;
-    background-color: var(--secondary);
+    background-color: var(--background);
     height: 100vh;
     width: 100vw;
     padding: 0.625rem;
     box-sizing: border-box;
+    overflow: hidden;
 
     .header {
         display: flex;
         flex-direction: row;
         align-items: center;
         height: fit-content;
-        margin: 1rem 2rem;
+        margin: 1rem;
+        flex-shrink: 0;
 
         .logo {
-            height: 13rem;
+            height: 7rem;
         }
 
         .title {
             @include fonts.title-huge;
-            color: var(--primary);
+            color: var(--text-color);
             width: 100%;
-            margin: 0 0 0 1rem;
+            margin-left: 0.5rem;
             white-space: nowrap;
             overflow: hidden;
         }
-    }
-
-    .tableContainer {
-        flex-grow: 1;
-        align-content: center;
-        justify-items: center;
     }
 
     .buttonsContainer {
         display: flex;
         flex-direction: row;
         justify-content: end;
-        gap: 1.25rem;
+        gap: 1rem;
+        flex-shrink: 0;
+        margin-top: 0.5rem;
     }
 }

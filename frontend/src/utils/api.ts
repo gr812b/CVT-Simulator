@@ -97,8 +97,7 @@ export async function runSimulationStreaming(
           throw new Error(message.message);
         }
       } catch (e) {
-        // TODO: Convert to notification
-        console.error('Error parsing streaming message:', e);
+        alert(`Error parsing streaming message: ${e instanceof Error ? e.message : String(e)}`);
       }
     }
   }

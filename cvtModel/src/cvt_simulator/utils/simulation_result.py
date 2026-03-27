@@ -1,10 +1,24 @@
 from cvt_simulator.utils.system_state import SystemState
+from typing import Any
+from cvt_simulator.utils.state_computations import (
+    integrate_positions_trapezoidal,
+    primary_pulley_angular_velocity_to_engine_angular_velocity,
+    secondary_pulley_angular_velocity_to_car_velocity,
+)
 import pandas as pd
 import matplotlib.pyplot as plt
 
 
 class SimulationResult:
-    def __init__(self, solution=None, time=None, states=None):
+    termination_context: dict[str, Any] | None
+
+    def __init__(
+        self,
+        solution=None,
+        time=None,
+        states=None,
+        termination_context: dict[str, Any] | None = None,
+    ):
         """Initialize with solution from solve_ivp and parse it into states, or directly with time and states."""
         if solution is not None:
             self.time = solution.t
@@ -12,10 +26,11 @@ class SimulationResult:
         else:
             self.time = time
             self.states = states
+        self.termination_context = termination_context
 
     @staticmethod
     def parse_solution(solution):
-        """Parses the solution from solve_ivp into a list of DrivetrainState instances."""
+        """Parses the solution from solve_ivp into a list of SystemState instances."""
         states = [SystemState.from_array(state) for state in solution.y.T]
         return states
 
@@ -26,41 +41,98 @@ class SimulationResult:
         time = df["time"].values
         states = [
             SystemState(
-                car_velocity=row["car_velocity"],
-                car_position=row["car_position"],
-                shift_velocity=row["shift_velocity"],
                 shift_distance=row["shift_distance"],
-                engine_angular_velocity=row["engine_angular_velocity"],
+                shift_velocity=row["shift_velocity"],
+                primary_pulley_angular_velocity=row["primary_pulley_angular_velocity"],
+                secondary_pulley_angular_velocity=row[
+                    "secondary_pulley_angular_velocity"
+                ],
             )
             for _, row in df.iterrows()
         ]
         return SimulationResult(time=time, states=states)
 
     def write_csv(self, filename="simulation_output.csv"):
-        """Writes the parsed solution states to a CSV file."""
+        """Writes the parsed solution states to a CSV file.
+
+        Includes 4 DOF from state plus derived quantities.
+        Positions (car_position, engine_angular_position) are computed via kinematic integration.
+        """
+        # Compute positions via trapezoidal integration of velocities
+        car_positions = integrate_positions_trapezoidal(
+            self.time,
+            [
+                secondary_pulley_angular_velocity_to_car_velocity(
+                    s.secondary_pulley_angular_velocity
+                )
+                for s in self.states
+            ],
+        )
+        engine_positions = integrate_positions_trapezoidal(
+            self.time,
+            [
+                primary_pulley_angular_velocity_to_engine_angular_velocity(
+                    s.primary_pulley_angular_velocity
+                )
+                for s in self.states
+            ],
+        )
+
         data = {
             "time": self.time,
-            "car_velocity": [state.car_velocity for state in self.states],
-            "car_position": [state.car_position for state in self.states],
-            "shift_velocity": [state.shift_velocity for state in self.states],
             "shift_distance": [state.shift_distance for state in self.states],
-            "engine_angular_velocity": [
-                state.engine_angular_velocity for state in self.states
+            "shift_velocity": [state.shift_velocity for state in self.states],
+            "primary_pulley_angular_velocity": [
+                state.primary_pulley_angular_velocity for state in self.states
             ],
+            "secondary_pulley_angular_velocity": [
+                state.secondary_pulley_angular_velocity for state in self.states
+            ],
+            "car_velocity": [
+                secondary_pulley_angular_velocity_to_car_velocity(
+                    s.secondary_pulley_angular_velocity
+                )
+                for s in self.states
+            ],
+            "engine_angular_velocity": [
+                primary_pulley_angular_velocity_to_engine_angular_velocity(
+                    s.primary_pulley_angular_velocity
+                )
+                for s in self.states
+            ],
+            "car_position": car_positions,
+            "engine_angular_position": engine_positions,
         }
         df = pd.DataFrame(data)
         df.to_csv(filename, index=False)
 
-    def plot(self, field="car_velocity"):
-        """Plots a selected field over time."""
+    def plot(self, field="secondary_pulley_angular_velocity"):
+        """Plots a selected field over time.
+
+        Available fields: shift_distance, shift_velocity, primary_pulley_angular_velocity,
+                        secondary_pulley_angular_velocity, car_velocity, engine_angular_velocity
+        """
         # Mapping field names to their respective data
         field_data = {
-            "car_velocity": [state.car_velocity for state in self.states],
-            "car_position": [state.car_position for state in self.states],
-            "shift_velocity": [state.shift_velocity for state in self.states],
             "shift_distance": [state.shift_distance for state in self.states],
+            "shift_velocity": [state.shift_velocity for state in self.states],
+            "primary_pulley_angular_velocity": [
+                state.primary_pulley_angular_velocity for state in self.states
+            ],
+            "secondary_pulley_angular_velocity": [
+                state.secondary_pulley_angular_velocity for state in self.states
+            ],
+            "car_velocity": [
+                secondary_pulley_angular_velocity_to_car_velocity(
+                    s.secondary_pulley_angular_velocity
+                )
+                for s in self.states
+            ],
             "engine_angular_velocity": [
-                state.engine_angular_velocity for state in self.states
+                primary_pulley_angular_velocity_to_engine_angular_velocity(
+                    s.primary_pulley_angular_velocity
+                )
+                for s in self.states
             ],
         }
 

@@ -1,4 +1,4 @@
-from cvt_simulator.models.car_model import CarModel
+from cvt_simulator.models.secondary_pulley_model import SecondaryPulleyModel
 from cvt_simulator.models.external_load_model import LoadModel
 from cvt_simulator.models.engine_model import EngineModel
 from cvt_simulator.models.pulley.primary_pulley_flyweight import PhysicalPrimaryPulley
@@ -10,9 +10,11 @@ from cvt_simulator.constants.engine_specs import safe_torque_curve
 from cvt_simulator.utils.conversions import deg_to_rad
 from cvt_simulator.utils.simulation_args import SimulationArgs
 from cvt_simulator.models.slip_model import SlipModel
-from cvt_simulator.models.engine_accel_model import EngineAccelModel
+from cvt_simulator.models.primary_pulley_model import PrimaryPulleyModel
 from cvt_simulator.models.system_model import SystemModel
 from cvt_simulator.models.ramps.piecewise_ramp import PiecewiseRamp
+from cvt_simulator.models.ramps.theta_ramp import ThetaRamp
+from cvt_simulator.constants.car_specs import HELIX_RADIUS
 
 
 def get_models(args: SimulationArgs):
@@ -35,7 +37,10 @@ def get_models(args: SimulationArgs):
         spring_coeff_comp=args.secondary_compression_spring_rate,
         initial_rotation=deg_to_rad(args.secondary_rotational_spring_pretension),
         initial_compression=args.secondary_linear_spring_pretension,
-        ramp=PiecewiseRamp.from_config(args.secondary_ramp_config),
+        ramp=ThetaRamp(
+            PiecewiseRamp.from_config(args.secondary_ramp_config),
+            HELIX_RADIUS,
+        ),
     )
 
     cvt_shift = CvtShiftModel(
@@ -44,24 +49,26 @@ def get_models(args: SimulationArgs):
         secondary_pulley=secondary_pulley,
     )
 
+    secondary_pulley_model = SecondaryPulleyModel(
+        car_mass=args.vehicle_weight + args.driver_weight,
+        load_model=load_model,
+    )
+    primary_pulley_model = PrimaryPulleyModel(engine_model=engine_model)
+
     slip_model = SlipModel(
         load_model=load_model,
         engine_model=engine_model,
         car_mass=args.vehicle_weight + args.driver_weight,
         primary_pulley=primary_pulley,
         secondary_pulley=secondary_pulley,
+        primary_pulley_model=primary_pulley_model,
+        secondary_pulley_model=secondary_pulley_model,
     )
-
-    car_model = CarModel(
-        car_mass=args.vehicle_weight + args.driver_weight,
-        load_model=load_model,
-    )
-    engine_accel_model = EngineAccelModel(engine_model=engine_model)
 
     system_model = SystemModel(
         slip_model=slip_model,
-        engine_accel_model=engine_accel_model,
-        car_model=car_model,
+        primary_pulley_model=primary_pulley_model,
+        secondary_pulley_model=secondary_pulley_model,
         cvt_shift_model=cvt_shift,
     )
 

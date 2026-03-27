@@ -55,7 +55,7 @@ function getCSSColor(property: string, fallback: string): string {
 
 // Chart colors linked to _colors.scss
 const COLORS = {
-  get BACKGROUND() { return getCSSColor('--secondary', '#222222'); },
+  get BACKGROUND() { return getCSSColor('--background', '#222222'); },
   get TEXT() { return getCSSColor('--text-color', '#ffffff'); },
   get GRID() { return getCSSColor('--grid-color', '#404040'); },
   get LINES() {
@@ -71,10 +71,10 @@ const COLORS = {
       getCSSColor('--line9', '#e74c3c'),
     ];
   },
-  get ACCENT() { return getCSSColor('--accent', '#bb0808'); },
+  get PRIMARY() { return getCSSColor('--primary', '#bb0808'); },
   get TOOLTIP_BG() { return getCSSColor('--tooltip-bg', '#2a2a2a'); },
   get ZOOM_FILL() { 
-    const hex = getCSSColor('--accent', '#bb0808').replace('#', '');
+    const hex = getCSSColor('--primary', '#bb0808').replace('#', '');
     const r = parseInt(hex.substring(0, 2), 16);
     const g = parseInt(hex.substring(2, 4), 16);
     const b = parseInt(hex.substring(4, 6), 16);
@@ -403,7 +403,7 @@ export function generateEChartsOptions(
       top: LAYOUT.TOOLBOX.TOP,
       iconStyle: { borderColor: COLORS.TEXT },
       emphasis: {
-        iconStyle: { borderColor: COLORS.ACCENT },
+        iconStyle: { borderColor: COLORS.PRIMARY },
       },
     },
     
@@ -435,8 +435,8 @@ export function generateEChartsOptions(
         borderColor: COLORS.GRID,
         fillerColor: COLORS.ZOOM_FILL,
         handleStyle: {
-          color: COLORS.ACCENT,
-          borderColor: COLORS.ACCENT,
+          color: COLORS.PRIMARY,
+          borderColor: COLORS.PRIMARY,
         },
       },
       { 
@@ -447,8 +447,8 @@ export function generateEChartsOptions(
         borderColor: COLORS.GRID,
         fillerColor: COLORS.ZOOM_FILL,
         handleStyle: {
-          color: COLORS.ACCENT,
-          borderColor: COLORS.ACCENT,
+          color: COLORS.PRIMARY,
+          borderColor: COLORS.PRIMARY,
         },
       },
     ],

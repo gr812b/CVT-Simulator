@@ -6,8 +6,8 @@ export type SegmentType = RampSegment['type'];
 
 // Default values for creating new segments
 export const SEGMENT_DEFAULTS: Record<SegmentType, Partial<RampSegment>> = {
-    linear: { type: 'linear', length: 0.05, angle: -15 },
-    circular: { type: 'circular', length: 0.05, angle_start: 45, angle_end: 15, quadrant: 3 },
+    linear: { type: 'linear', length: 0.05, angle: 15 },
+    circular: { type: 'circular', length: 0.05, angle_start: 45, angle_end: 15, quadrant: 2 },
 };
 
 type FieldMetadata = {

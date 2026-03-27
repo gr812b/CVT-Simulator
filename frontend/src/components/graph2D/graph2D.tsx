@@ -61,10 +61,10 @@ function Graph2DComponent({
     return createChartOptions(xData, yData, config, chartOptions);
   }, [xData, yData, config, chartOptions, validation]);
 
-  // Log warnings to console (can be disabled in production)
+  // Show warnings to user
   useEffect(() => {
     if (validation.warnings.length > 0) {
-      console.warn('Graph2D warnings:', validation.warnings);
+      alert('Graph warnings: ' + validation.warnings.join(', '));
     }
   }, [validation.warnings]);
 

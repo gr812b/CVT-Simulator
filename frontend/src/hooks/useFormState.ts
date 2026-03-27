@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, useLayoutEffect } from 'react';
 import { PARAMETERS, type Parameter, type ParameterState, type ParameterValue } from '@types';
 
 export interface FormState {
@@ -9,17 +9,19 @@ export interface FormState {
 }
 
 export const useFormState = (contextValues?: ParameterState) => {
-  // Initialize form values - strings for simple types, objects for complex types
-  const getInitialValues = useCallback((): Record<Parameter, ParameterValue> => {
+  const formatValues = useCallback((sourceValues?: ParameterState): Record<Parameter, ParameterValue> => {
     return Object.entries(PARAMETERS).reduce((acc, [key, config]) => {
       const paramKey = key as Parameter;
-      // Use context value if available, otherwise use default
-      const value = contextValues?.[paramKey] ?? config.defaultValue;
-      // Keep complex types as-is, convert primitives to strings for input fields
+      const value = sourceValues?.[paramKey] ?? config.defaultValue;
       acc[paramKey] = config.type === 'ramp' ? value : String(value);
       return acc;
     }, {} as Record<Parameter, ParameterValue>);
-  }, [contextValues]);
+  }, []);
+
+  // Initialize form values - strings for simple types, objects for complex types
+  const getInitialValues = useCallback((): Record<Parameter, ParameterValue> => {
+    return formatValues(contextValues);
+  }, [contextValues, formatValues]);
 
   const getInitialErrors = useCallback((): Record<Parameter, string | null> => {
     return Object.keys(PARAMETERS).reduce((acc, key) => {
@@ -43,13 +45,29 @@ export const useFormState = (contextValues?: ParameterState) => {
   // Keep track of initial values for change detection
   const initialValuesRef = useRef<Record<Parameter, ParameterValue>>(getInitialValues());
 
+  // Keep form in sync with external context updates (e.g., reload/session restore, New/Edit actions)
+  useLayoutEffect(() => {
+    if (!contextValues) return;
+
+    const formattedContextValues = formatValues(contextValues);
+    if (JSON.stringify(values) === JSON.stringify(formattedContextValues)) {
+      return;
+    }
+
+    setValues(formattedContextValues);
+    setErrors(getInitialErrors());
+    setTouched(getInitialTouched());
+    setHasChanges(false);
+    initialValuesRef.current = formattedContextValues;
+  }, [contextValues, values, formatValues, getInitialErrors, getInitialTouched]);
+
   // Update a field value and validate it
-  const updateField = useCallback((parameter: Parameter, value: ParameterValue) => {
+  const updateField = useCallback((parameter: Parameter, value: ParameterValue) => {    
     setValues(prev => ({ ...prev, [parameter]: value }));
     
     // Validate the field (skip validation for complex types)
     const validator = PARAMETERS[parameter].validate;
-    const error = validator ? validator(String(value)) : null;
+    const error = validator ? validator(String(value)) : null;    
     setErrors(prev => ({ ...prev, [parameter]: error }));
     
     // Mark as touched
@@ -145,6 +163,23 @@ export const useFormState = (contextValues?: ParameterState) => {
     return Object.values(newErrors).every(error => error === null);
   }, [values]);
 
+  // Reset form to specific values (e.g., baseline parameters)
+  const resetToValues = useCallback((newValues: ParameterState) => {
+    const formattedValues = Object.entries(PARAMETERS).reduce((acc, [key, config]) => {
+      const paramKey = key as Parameter;
+      const value = newValues[paramKey] ?? config.defaultValue;
+      // Keep complex types as-is, convert primitives to strings for input fields
+      acc[paramKey] = config.type === 'ramp' ? value : String(value);
+      return acc;
+    }, {} as Record<Parameter, ParameterValue>);
+    
+    setValues(formattedValues);
+    setErrors(getInitialErrors());
+    setTouched(getInitialTouched());
+    setHasChanges(false);
+    initialValuesRef.current = formattedValues;
+  }, [getInitialErrors, getInitialTouched]);
+
   return {
     values,
     errors,
@@ -157,6 +192,7 @@ export const useFormState = (contextValues?: ParameterState) => {
     getChangedFields,
     isFieldChanged,
     resetForm,
+    resetToValues,
     markAsSaved,
     validateAll,
   };

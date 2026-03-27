@@ -10,17 +10,16 @@ $transition-time: 0.4s;
     flex-direction: column;
     height: fit-content;
     gap: 1.25rem;
-    color: var(--primary);
+    color: var(--text-color);
     transition: $transition-time ease-in-out;
 
     .header {
         display: flex;
         align-items: center;
         justify-content: space-between;
-        gap: 1rem;
-        min-height: 6rem;
+        min-height: 4rem;
         color: inherit;
-        border-bottom: 0.313rem solid currentColor;
+        border-bottom: 0.25rem solid currentColor;
         cursor: pointer;
         overflow: hidden;
 
@@ -36,8 +35,8 @@ $transition-time: 0.4s;
             color: inherit;
 
             .icon {
-                width: 4.5rem;
-                height: 4.5rem;
+                width: 3rem;
+                height: 3rem;
                 color: inherit;
                 transition: $transition-time ease-in-out;
             }
@@ -56,7 +55,7 @@ $transition-time: 0.4s;
         .childrenContent {
             display: flex;
             flex-direction: column;
-            gap: 1.25rem;
+            gap: 0.25rem;
             min-height: 0; // Important for grid to work properly
         }
     }

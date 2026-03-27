@@ -14,6 +14,7 @@ interface UsePlaybackDataReturn {
   categorizedGraphs: CategorizedGraphData[];
   replayController: ReplayController;
   times: number[];
+  simulationRows: RunResponse['data'];
 }
 
 export const usePlaybackData = (): UsePlaybackDataReturn | null => {
@@ -41,5 +42,6 @@ export const usePlaybackData = (): UsePlaybackDataReturn | null => {
     categorizedGraphs,
     replayController,
     times,
+    simulationRows: simulationResult.data,
   };
 };
