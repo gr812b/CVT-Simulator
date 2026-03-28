@@ -630,6 +630,10 @@ trajectories, axial force balance, torque admissibility, and overall launch
 performance, with the goal of showing that the completed formulation behaves in
 mechanically interpretable and physically sensible ways.
 
+\Sec{sec:code-data-availability} documents implementation and reproducibility
+resources, including the code repository, release artifact, and data-access
+links associated with the reported results.
+
 \Sec{sec:conclusion} summarizes the main outcomes, limitations, and
 implications of the present formulation.
 
@@ -1264,8 +1268,9 @@ $r_w$ & Wheel rolling radius & 0.2794 & \si{\meter} & Effective tire rolling rad
 \addlinespace
 \multicolumn{5}{@{}l}{\textbf{Contact and environment}} \\
 $\rho_b$ & Belt density & 1100 & \si{\kilogram\per\meter\cubed} & Belt material density \\
-$\mu$ & Belt--pulley friction coefficient & 0.8 & 1 & Effective Coulomb traction coefficient \\
-$C_{\mathrm{rr}}$ & Rolling resistance coefficient & -- & 1 & Tire-road rolling resistance coefficient \\
+$\mu_s$ & Belt--pulley static friction coefficient & 0.65 & 1 & Static traction coefficient used at impending slip \\
+$\mu_k$ & Belt--pulley kinetic friction coefficient & 0.51 & 1 & Kinetic traction coefficient used on slip branches \\
+$C_{\mathrm{rr}}$ & Rolling resistance coefficient & 0.015 & 1 & Tire-road rolling resistance coefficient \\
 $C_d$ & Drag coefficient & 0.6 & 1 & Aerodynamic drag coefficient \\
 $A_f$ & Frontal area & 1.11484 & \si{\meter\squared} & Vehicle aerodynamic reference area \\
 $\rho$ & Air density & 1.225 & \si{\kilogram\per\meter\cubed} & Ambient air density used in drag model \\
@@ -1431,7 +1436,7 @@ are not explicitly modeled.
   \item $a$ is acceleration (\si{\meter\per\second\squared})
 \end{itemize}
 }
-{Classical mechanics (textbook / lecture notes).}
+{Standard mechanics identity.}
 [
 From the definition of acceleration and empirical laws of motion; used here as a governing relationship.
 ]
@@ -1447,7 +1452,7 @@ From the definition of acceleration and empirical laws of motion; used here as a
   \item $\alpha$ is angular acceleration (\si{\radian\per\second\squared})
 \end{itemize}
 }
-{Classical rigid body dynamics (textbook / lecture notes).}
+{Standard rigid-body dynamics identity.}
 [
 Standard rigid-body rotational dynamics relationship.
 ]
@@ -1463,7 +1468,7 @@ Standard rigid-body rotational dynamics relationship.
   \item $r$ is moment arm radius (\si{\meter})
 \end{itemize}
 }
-{Classical mechanics (textbook / lecture notes).}
+{Standard mechanics identity.}
 [
 Defines torque as the product of tangential force and moment arm.
 Equivalently, $F = \tau / r$ gives the tangential force from a known torque.
@@ -1480,7 +1485,7 @@ Equivalently, $F = \tau / r$ gives the tangential force from a known torque.
   \item $v$ is velocity (\si{\meter\per\second})
 \end{itemize}
 }
-{Classical mechanics (textbook / lecture notes).}
+{Standard mechanics identity.}
 [
 Translational kinetic energy of a point mass or rigid body moving with velocity $v$.
 ]
@@ -1497,7 +1502,7 @@ Translational kinetic energy of a point mass or rigid body moving with velocity 
   \item $r$ is radius from the axis of rotation (\si{\meter})
 \end{itemize}
 }
-{\citet{CentrifugalForceCalculator2024}.}
+{Standard circular-motion identity.}
 [
 Derived from circular motion kinematics where $a_c = \omega^2 r$, then applying $F = ma$.
 ]
@@ -1517,7 +1522,7 @@ Derived from circular motion kinematics where $a_c = \omega^2 r$, then applying 
   \item $\Delta x$ is displacement (\si{\meter})
 \end{itemize}
 }
-{\citet{hookeslaw}.}
+{Standard linear-elastic constitutive identity.}
 [
 Linear spring constitutive relationship in the elastic regime.
 ]
@@ -1534,7 +1539,7 @@ Linear spring constitutive relationship in the elastic regime.
   \item $r$ is torque arm radius (\si{\meter})
 \end{itemize}
 }
-{\citet{SpringDesignFormulas}.}
+{Standard torsional spring identity.}
 [
 Starting from $\tau = k\Delta\theta$ and $\tau = Fr$, then $F = \frac{k\Delta\theta}{r}$.
 ]
@@ -1554,25 +1559,9 @@ Starting from $\tau = k\Delta\theta$ and $\tau = Fr$, then $F = \frac{k\Delta\th
   \item $\omega$ is angular velocity (\si{\radian\per\second})
 \end{itemize}
 }
-{\citet{HorsepowerCalculation}.}
+{Standard rotational power identity.}
 [
 From the rotational power relationship $P=\tau\omega$.
-]
-
-\theory
-{th:gearing_torque}
-{Gearing (Torque Scaling)}
-{\tau_{\text{out}} = \tau_{\text{in}} \, R_{\text{gear}}}
-{
-\begin{itemize}
-  \item $\tau_{\text{out}}$ is output torque (\si{\newton\meter})
-  \item $\tau_{\text{in}}$ is input torque (\si{\newton\meter})
-  \item $R_{\text{gear}}$ is gear reduction ratio (unitless)
-\end{itemize}
-}
-{\citet{GearRatioExplanation}.}
-[
-Ideal gear relationship assuming no losses; power balance implies inverse scaling of speed.
 ]
 
 % -------------------------
@@ -1629,7 +1618,7 @@ Differential force balance on an infinitesimal belt element on a pulley yields $
   \item $V$ is volume (\si{\meter\cubed})
 \end{itemize}
 }
-{\citet{BritannicaDensity}.}
+{Standard definition.}
 [
 Definition of density.
 ]
@@ -1663,7 +1652,7 @@ Standard empirical/derived quadratic drag model; applicable at moderate to high 
   \item $N$ is normal force (\si{\newton})
 \end{itemize}
 }
-{\citet{RollingResistance}.}
+{Standard rolling-resistance model identity.}
 [
 Rolling resistance arises from deformation of contact surfaces (tire and road). For a vehicle on level ground, $N = mg$ where $m$ is vehicle mass and $g$ is gravitational acceleration.
 ]
@@ -1679,7 +1668,7 @@ Rolling resistance arises from deformation of contact surfaces (tire and road). 
   \item $g$ is gravitational acceleration (\si{\meter\per\second\squared})
 \end{itemize}
 }
-{\citet{NewtonGravity}.}
+{Standard near-Earth mechanics identity.}
 [
 Near Earth's surface, $g \approx 9.81$ \si{\meter\per\second\squared}. On an incline with angle $\theta$, the component parallel to the surface is $F_g \sin\theta$.
 ]
@@ -1730,13 +1719,14 @@ where:
     (\si{\meter\per\second}).
 
     \item $\hat{v}_b$ is the modeled belt transport speed
-    (\si{\meter\per\second}).
+    (\si{\meter\per\second}), represented as a closure-oriented dynamic state.
 \end{itemize}
 
 % --------------------------------------------------------------
 \subsection{Independent Dynamic Degrees of Freedom}
 
-These five quantities represent the independent dynamic motions of the CVT system.
+The five state variables above are the dynamic degrees of freedom of the
+present state-space model.
 
 The primary pulley can rotate independently under engine input and belt interaction. 
 Its angular speed $\omega_p$ therefore represents one rotational degree of freedom.
@@ -1753,14 +1743,14 @@ and must be modeled explicitly.
 Because axial motion follows second-order dynamics, both the axial position $s$ 
 and its rate $\dot{s}$ are required to fully describe its evolution.
 
-Finally, the belt itself moves through the pulley system and carries power
-between the two pulleys. The quantity $\hat{v}_b$ describes the transport
-speed of the belt and is included as a state variable so that this belt motion
-can be represented directly within the dynamic model.
-
-Together, these variables capture the complete rotational and axial motion of the system. 
-Removing any one of them would eliminate an independent dynamic degree of freedom 
-from the model.
+The quantity $\hat{v}_b$ can be viewed as an additional belt-related degree of
+freedom in a fully resolved belt model. In the present reduced-order
+formulation, however, detailed belt internal mechanics are not represented
+explicitly. Instead, $\hat{v}_b$ is introduced as an effective dynamic closure
+variable governed by compatibility and closure relations introduced in later
+sections. Thus,
+$\hat{v}_b$ acts as an approximated surrogate for belt transport dynamics,
+rather than a fully resolved independent mechanical coordinate.
 
 % --------------------------------------------------------------
 \subsection{Time Integration Perspective}
@@ -1778,7 +1768,7 @@ At each timestep $\Delta t$:
     \item The axial velocity $\dot{s}$ is updated according to the axial acceleration.
     
     \item The modeled belt transport speed $\hat{v}_b$ is updated according
-    to its governing evolution law.
+    to its closure law.
 \end{itemize}
 
 The angular and axial accelerations are determined from the governing 
@@ -2424,7 +2414,7 @@ Because $R$ depends on time only through $s(t)$, the chain rule gives
 
 Thus, the objective is to compute $dR/ds$.
 
-\subsubsection{Differentiate $R$ with Respect to $s$}
+\subsubsection{Differentiate \texorpdfstring{$R$}{R} with Respect to \texorpdfstring{$s$}{s}}
 
 Differentiating \Eq{eq:R_def} with respect to $s$ (quotient rule) gives
 
@@ -3528,7 +3518,6 @@ This is the torque carried from the belt, through the helix mechanism,
 and into the driven load.
 
 For the present derivation, $\tau_s$ is treated as a known input.
-Its value will be computed later in \Sec{sec:torque-coupling}.
 
 % --------------------------------------------------------------
 % --------------------------------------------------------------
@@ -3615,7 +3604,7 @@ Notably, the helix radius $r_h$ cancels: torque is converted into
 axial force according to the geometric rotation-per-travel
 relationship $d\theta_s/ds$, consistent with screw mechanics.
 
-TODO: Remark on less friction at bigger radius if being considered
+% TODO: Remark on less friction at bigger radius if being considered
 
 \begin{figure}[H]
 \centering
@@ -3659,8 +3648,8 @@ k_{s,x}(x_{s,0} + s).
 \label{eq:secondary_comp_spring}
 \end{equation}
 
-This axial spring force assists upshift at small $s$,
-but weakens progressively as the sheaves separate.
+This axial spring force acts in the same direction as the helix force,
+providing additional clamping as the sheaves separate.
 
 % --------------------------------------------------------------
 \paragraph{Net Secondary Axial Force}
@@ -3691,20 +3680,6 @@ k_{s,x}(x_{s,0}+s)
 }
 
 % ==============================================================
-\subsection{Belt Centrifugal Force on the Wrap}\label{sec:belt-centrifugal}
-
-In addition to the actuator and spring forces derived previously, the belt
-itself generates centrifugal loading as it rotates around each pulley.
-This section derives the resulting contribution to axial clamping force.
-
-Throughout this sub-section, let
-\[
-j \in \{p,s\}
-\]
-denote either pulley, where \(j=p\) corresponds to the primary and
-\(j=s\) corresponds to the secondary.
-
-% --------------------------------------------------------------
 \subsection{Belt Centrifugal Force on the Wrap}
 \label{sec:belt-centrifugal}
 
@@ -3929,7 +3904,6 @@ on pulley \(j\) is then
 
 This relation expresses the fact that the same belt transport speed corresponds
 to different local angular velocities depending on the radius of motion. 
-The evolution of \(\hat{v}_b\) is derived later in \Sec{sec:torque-coupling}.
 
 % --------------------------------------------------------------
 \paragraph{Distributed Centrifugal Load Along the Wrap}
@@ -4251,7 +4225,7 @@ Second, the belt transmits tangential traction through frictional contact
 with the pulley faces. This tangential interaction is what allows torque
 to pass from the primary to the secondary.
 
-These two roles are illustrated in \Fig{fig:torque_path}. The primary pulley
+These two roles are illustrated in \Fig{fig:torque_path_1}. The primary pulley
 drives the belt, the belt moves through the transmission path, and the belt in
 turn drives the secondary pulley.
 
@@ -4262,7 +4236,7 @@ turn drives the secondary pulley.
     torque to the belt, the belt moves through the transmission path, and the
     belt applies torque to the secondary pulley. Through frictional contact,
     the belt also transmits tangential force between the pulley faces.}
-    \label{fig:torque_path}
+    \label{fig:torque_path_1}
 \end{figure}
 
 To describe this interaction, the following belt-mediated quantities will be used:
@@ -4271,7 +4245,7 @@ To describe this interaction, the following belt-mediated quantities will be use
 \tau_p &:\ \text{torque applied by the primary pulley onto the belt}, \\
 \tau_s &:\ \text{torque applied by the belt onto the secondary pulley}, \\
 F_t &:\ \text{effective tangential force transmitted through the belt}, \\
-\hat{v}_b &:\ \text{modeled belt transport speed}, \\
+\hat{v}_b &:\ \text{modeled belt transport speed}.
 \end{align}
 
 The quantities $\tau_p$ and $\tau_s$ describe how torque enters and leaves the
@@ -5447,7 +5421,11 @@ The derivation used three ingredients:
 \end{itemize}
 
 Together, these relations close the sticking branch and yield the explicit
-result \Eq{eq:tau_ns_final}.
+result \Eq{eq:tau_ns_final}. This quantity is the ideal adhered-branch
+coupling torque: the value required to maintain sticking kinematics if
+adherence can be sustained. The next sections determine whether this required
+torque is admissible under the traction limits and, when it is not, how the
+simulation transitions to and evolves on the slip branch.
 
 
 \section{Traction Limits and Slip Conditions}
@@ -6515,7 +6493,7 @@ k_p\bigl(x_{p,0}+s\bigr)
 2r_{p,\mathrm{cm}}\dot r_{p,\mathrm{cm}}\,\omega_p
 \right]
 \Biggr\}.
-\label{eq:tau_p_minus_stick_rearrange}
+\label{eq:tau_p_minus_stick_rearrange_2}
 \end{equation}
 
 Hence,
@@ -6965,7 +6943,7 @@ k_{s,\theta}\!\bigl(\theta_{s,0}+\theta_s(s)\bigr)
 \\[4pt]
 &\qquad
 +
-2\mu\tan\beta\,k_{s,x}(x_{s,0}-s)
+2\mu\tan\beta\,k_{s,x}(x_{s,0}+s)
 -
 \rho_b A_b \phi_s
 \left(
@@ -7026,7 +7004,7 @@ with
 \dfrac{\dd\theta_s}{\dd s}\,
 k_{s,\theta}\!\bigl(\theta_{s,0}+\theta_s(s)\bigr)
 +
-2\mu\tan\beta\,k_{s,x}(x_{s,0}-s)
+2\mu\tan\beta\,k_{s,x}(x_{s,0}+s)
 +
 \rho_b A_b \phi_s
 \left(
@@ -7117,7 +7095,7 @@ R\tau_c + k_{s,\theta}\!\bigl(\theta_{s,0}+\theta_s(s)\bigr)
 }{2}
 \frac{\dd \theta_s}{\dd s}
 +
-k_{s,x}(x_{s,0}-s).
+k_{s,x}(x_{s,0}+s).
 \label{eq:Fax_s_sub_slip_tau_c}
 \end{equation}
 
@@ -7140,7 +7118,7 @@ k_{s,\theta}\!\bigl(\theta_{s,0}+\theta_s(s)\bigr)
 \\[4pt]
 &\qquad
 +
-2\mu\tan\beta\,k_{s,x}(x_{s,0}-s)
+2\mu\tan\beta\,k_{s,x}(x_{s,0}+s)
 -
 \rho_b A_b \phi_s
 \left(
@@ -7177,7 +7155,7 @@ k_{s,\theta}\!\bigl(\theta_{s,0}+\theta_s(s)\bigr)
 \nonumber\\
 &+
 \frac{r_{s,\mathrm{eff}}}{R}
-2\mu\tan\beta\,k_{s,x}(x_{s,0}-s)
+2\mu\tan\beta\,k_{s,x}(x_{s,0}+s)
 \nonumber\\
 &-
 \frac{r_{s,\mathrm{eff}}}{R}
@@ -7207,7 +7185,7 @@ with
 \dfrac{\dd\theta_s}{\dd s}\,
 k_{s,\theta}\!\bigl(\theta_{s,0}+\theta_s(s)\bigr)
 +
-2\mu\tan\beta\,k_{s,x}(x_{s,0}-s)
+2\mu\tan\beta\,k_{s,x}(x_{s,0}+s)
 -
 \rho_b A_b \phi_s
 \left(
@@ -7242,7 +7220,7 @@ k_{s,\theta}\!\bigl(\theta_{s,0}+\theta_s(s)\bigr)
 \nonumber\\
 &-
 \frac{r_{s,\mathrm{eff}}}{R}
-2\mu\tan\beta\,k_{s,x}(x_{s,0}-s)
+2\mu\tan\beta\,k_{s,x}(x_{s,0}+s)
 \nonumber\\
 &+
 \frac{r_{s,\mathrm{eff}}}{R}
@@ -7272,7 +7250,7 @@ with
 \dfrac{\dd\theta_s}{\dd s}\,
 k_{s,\theta}\!\bigl(\theta_{s,0}+\theta_s(s)\bigr)
 +
-2\mu\tan\beta\,k_{s,x}(x_{s,0}-s)
+2\mu\tan\beta\,k_{s,x}(x_{s,0}+s)
 -
 \rho_b A_b \phi_s
 \left(
@@ -7577,6 +7555,14 @@ v_{\Delta}=0
 \label{eq:vb_dot_complete}
 \end{equation}
 
+\Eq{eq:tau_c_complete} and \Eq{eq:vb_dot_complete} define the ideal
+piecewise analytical regime structure under
+\AssRef{assump:ideal_friction} and \AssRef{assump:single_slip_interface}.
+For numerical simulation, this branch logic is realized using the
+regularized/blended transition law in
+\Sec{sec:appendix-slip-regularization}, which smooths switching near
+stick--slip transitions while preserving the same limiting branch behavior.
+
 % --------------------------------------------------------------
 \subsection{Governing ODEs}
 
@@ -7776,7 +7762,11 @@ the baseline tuning produces a coherent and interpretable launch trajectory;
 second, that changes to primary and secondary tuning shift the launch behaviour
 in the expected direction; and third, that when the tuning is made
 sufficiently unfavorable, the model captures the transition to prolonged
+
 slipping rather than continuing to predict an unrealistic no-slip response.
+The implementation used to generate these simulations, along with repository,
+release, and data-access details, is documented in
+\Sec{sec:code-data-availability}.
 
 \subsection{Simulation Cases and Phase Convention}
 \label{sec:results_setup}
@@ -8214,6 +8204,35 @@ coupling torque to accelerate the vehicle strongly from rest, enough low-ratio
 retention to avoid premature upshift, and a smooth enough shift that the
 required no-slip torque does not repeatedly exceed the available traction
 limits.
+
+\section{Code and Data Availability}
+\label{sec:code-data-availability}
+
+The source code for the CVT simulator used in this work is available at
+\url{https://github.com/gr812b/CVT-Simulator}.
+This implementation includes the mathematical model developed in the main
+derivation sections along with the practical numerical regularization strategy
+described in \Sec{sec:appendix-slip-regularization}.
+
+To support reproducibility, the exact version used to generate the figures and
+tables in this manuscript will be archived as a tagged release:
+\begin{itemize}
+    \item repository release (to be finalized):
+      \url{https://github.com/gr812b/CVT-Simulator/releases/tag/vX.Y.Z},
+    \item archival DOI landing page (placeholder):
+      \url{https://doi.org/XX.XXXX/zenodo.XXXXXXX}.
+\end{itemize}
+
+Unless otherwise stated, simulation cases in \Sec{sec:results} correspond to
+that archived release. The repository README and release notes describe the
+execution workflow, configuration files, and plotting scripts used to produce
+the reported results.
+
+An interactive web deployment of the simulator is also available for
+demonstration purposes:
+\url{https://YOUR-LIVE-SITE-URL-HERE}.
+This live endpoint is provided for accessibility and does not replace the
+archived release as the canonical reproducibility artifact.
 
 \section{Conclusion}
 \label{sec:conclusion}
@@ -9078,7 +9097,7 @@ where $L_b$ is the fixed belt length. A separate invocation solves for the
 center-to-center distance $C$ itself at initialization, using the same equation
 evaluated at the boundary radii $(r_{1,\min},\, r_{2,\max})$ with $C$ as the
 unknown; this is exactly the initialization step implied by
-\Eq{eq:belt_length_constraint} before the ratio law \Eq{eq:R_of_s} can be
+\Eq{eq:belt_length_constraint} before the ratio law \Eq{eq:R_of_s_complete} can be
 evaluated over the shift range.
 
 \paragraph{Bracketing strategy.}
@@ -9129,7 +9148,7 @@ is integrated using \texttt{scipy.integrate.solve\_ivp}. The governing system
 is the assembled first-order model in \Eq{eq:final_cvt_system_complete}, with
 rotational sub-equations \Eq{eq:omega_p_dot_complete} and
 \Eq{eq:omega_s_dot_complete}, axial dynamics \Eq{eq:s_ddot_complete}, and
-algebraic geometry closures \Eq{eq:R_of_s} and \Eq{eq:Rdot_of_states}. The
+algebraic geometry closures \Eq{eq:R_of_s_complete} and \Eq{eq:Rdot_of_states_complete}. The
 time integrator is used with the
 \texttt{RK45} method --- the Dormand--Prince explicit embedded Runge--Kutta
 pair~\cite{DormandPrince1980}. The method propagates the state with a
@@ -9202,7 +9221,7 @@ phase loops for unusual parameter regimes.
 \subsection{Slip-Law Regularization and Blend Parameter Selection}
 \label{sec:appendix-slip-regularization}
 
-The traction law in \Eq{eq:final_tau_piecewise} is physically clear but
+The traction law in \Eq{eq:tau_c_complete} is physically clear but
 discontinuous at $v_{\mathrm{rel}}=0$, which can induce step-size chatter near
 stick--slip transitions. A practical regularized formulation uses three ideas:
 a smooth saturation law, a clamped no-slip torque request, and a blending rule
