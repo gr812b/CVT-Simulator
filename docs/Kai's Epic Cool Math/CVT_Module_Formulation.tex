@@ -2374,10 +2374,16 @@ As the primary sheaves close, $r_{p,\text{eff}}(s)$ increases.
 By belt-length compatibility, the secondary radius decreases.
 Consequently, the ratio $R(s)$ decreases with increasing $s$.
 
+Throughout this document, \emph{low ratio} and \emph{high ratio} are named by
+speed-reduction behavior, not by the numerical magnitude of $R$.
+Using the no-slip relation $\omega_p = R\,\omega_s$, larger $R$ means stronger
+reduction (primary faster than secondary), which we call \emph{low ratio};
+smaller $R$ is the opposite, which we call \emph{high ratio}.
+
 Thus:
 \begin{itemize}
-    \item Small $s$ (minimum primary radius) corresponds to high ratio.
-    \item Large $s$ (maximum primary radius) corresponds to low ratio.
+  \item Small $s$ (minimum primary radius) corresponds to low ratio.
+  \item Large $s$ (maximum primary radius) corresponds to high ratio.
 \end{itemize}
 
 The CVT ratio is therefore a purely geometric quantity determined by
@@ -3465,7 +3471,7 @@ Thus, axial motion and rotational motion of the helix both load the same spring.
 
 \begin{figure}[H]
 \centering
-%\includegraphics[width=0.7\linewidth]{./illustrations/secondary_cvt_3d_model_placeholder.png}
+\includegraphics[width=0.5\linewidth]{./illustrations/pulleyForces/secondary_3d_model.png}
 \caption{Secondary CVT assembly showing the helix mechanism and spring.
 Torque $\tau_s$ transmitted through the belt produces tangential force at
 the helix ramps, which is redirected into axial clamping force.}
@@ -6042,7 +6048,9 @@ The radial component
 \ddot r_{j,\mathrm{cm}} - \hat v_b^2/r_{j,\mathrm{cm}}
 \)
 contains the centripetal term, but it does not enter the tangential force
-balance used in \Sec{sec:traction_element}.\subsection{Normal Force from Axial Clamping}
+balance used in \Sec{sec:traction_element}.
+
+\subsection{Normal Force from Axial Clamping}
 \label{sec:normal_from_clamp}
 
 The traction bound \Eq{eq:deltaT_final} depends on the total normal load
@@ -6061,6 +6069,9 @@ On pulley \(j\), an axial clamping force \(F_{\mathrm{ax},j}\) pushes the
 sheaves together.
 Because the sheave faces are inclined at cone half-angle \(\beta\),
 this axial force generates a radial normal load on the belt.
+Here, \(F_{\mathrm{ax},j}\) is clamping force only; belt inertia
+(centrifugal effects) is already accounted for by the acceleration term in
+\Eq{eq:deltaT_final}.
 
 From the conical geometry relation established in
 \Eq{eq:cone_geometry_diff},
@@ -7751,6 +7762,8 @@ sensible ways.
 The results are organized around the launch shift curves of these four cases.
 These curves first provide an overall picture of the launch, including
 engagement, low-ratio operation, active upshift, and high-ratio behaviour. The
+ratio terminology follows \Sec{sec:cvt_ratio}: low ratio means larger $R$
+(greater speed reduction), and high ratio means smaller $R$.
 following subsections then explain those trends by examining the axial force
 balance across the CVT and the resulting torque-transfer and slip behaviour. In
 particular, the combined case is included to show a clearly slip-dominated
@@ -8399,8 +8412,8 @@ from the physical CVT system considered in this work.
 Belt length $L_b$ & \SI{37.538}{in} & \SI{0.9535}{m} \\
 Belt height $h_b$ & \SI{0.613}{in} & \SI{0.01557}{m} \\
 Groove half-angle $\beta$ & \SI{11.5}{\degree} & \SI{0.2007}{rad} \\
-Inner primary radius & \SI{0.75}{in} & \SI{0.01905}{m} \\
-Primary outer radius $r_{p,\text{outer},\min}$ & \SI{1.363}{in} & \SI{0.03462}{m} \\
+Inner primary radius & \SI{0.8125}{in} & \SI{0.0206375}{m} \\
+Primary outer radius $r_{p,\text{outer},\min}$ & \SI{1.4255}{in} & \SI{0.03621}{m} \\
 Secondary outer radius $r_{s,\text{outer},\max}$ & \SI{4.0}{in} & \SI{0.1016}{m} \\
 \bottomrule
 \end{tabular}
@@ -8408,19 +8421,19 @@ Secondary outer radius $r_{s,\text{outer},\max}$ & \SI{4.0}{in} & \SI{0.1016}{m}
 
 \noindent
 The primary outer radius is computed as the inner radius plus belt height:
-$r_{p,\text{outer},\min} = 0.75 + 0.613 = \SI{1.363}{in}$.
+$r_{p,\text{outer},\min} = 0.8125 + 0.613 = \SI{1.4255}{in}$.
 
 \paragraph{Computed Center Distances}
 
 Solving the exact belt-length constraint \Eq{eq:belt_length_constraint}
 numerically yields
 \[
-C_{\mathrm{exact}} = \SI{0.25387}{m} \approx \SI{9.995}{in}.
+C_{\mathrm{exact}} = \SI{0.25174}{m} \approx \SI{9.911}{in}.
 \]
 
 Evaluating the approximate formula \Eq{eq:C_approx} yields
 \[
-C_{\mathrm{approx}} = \SI{0.27116}{m} \approx \SI{10.676}{in}.
+C_{\mathrm{approx}} = \SI{0.26837}{m} \approx \SI{10.566}{in}.
 \]
 
 \paragraph{Error Metrics}
@@ -8428,12 +8441,12 @@ C_{\mathrm{approx}} = \SI{0.27116}{m} \approx \SI{10.676}{in}.
 The absolute and relative errors are:
 \begin{align}
 \Delta C &= C_{\mathrm{approx}} - C_{\mathrm{exact}}
-= \SI{0.01729}{m}
-= \SI{0.681}{in}, \\[4pt]
+= \SI{0.01663}{m}
+= \SI{0.655}{in}, \\[4pt]
 \varepsilon_{\mathrm{rel}}
 &= \frac{\Delta C}{C_{\mathrm{exact}}}
-= \frac{0.01729}{0.25387}
-= 6.81\%.
+= \frac{0.01663}{0.25174}
+= 6.61\%.
 \end{align}
 
 \paragraph{Assessment}
@@ -8444,9 +8457,9 @@ the ratio
 \[
 \frac{r_{s,\text{outer},\max} - r_{p,\text{outer},\min}}{C}
 =
-\frac{0.1016 - 0.03462}{0.25387}
+\frac{0.1016 - 0.03621}{0.25174}
 =
-0.264
+0.260
 \]
 is not small. The assumption $\lambda \approx 0$ is therefore not
 justified for this CVT geometry.
@@ -8546,20 +8559,20 @@ secondary radius.
 
 At $s = 0$, the primary is within the deadzone, so from \Eq{eq:primary_radius}:
 \[
-r_{p,\text{outer}}(0) = r_{p,\text{outer},\min} = \SI{0.03462}{m}.
+r_{p,\text{outer}}(0) = r_{p,\text{outer},\min} = \SI{0.03621}{m}.
 \]
 
 \paragraph{Secondary Radius Comparison}
 
 Solving the exact belt-length constraint with $C_{\mathrm{exact}}$ yields
 \[
-r_{s,\mathrm{exact}} = \SI{0.10161}{m}.
+r_{s,\mathrm{exact}} = \SI{0.10160}{m}.
 \]
 
 Evaluating the approximate formula \Eq{eq:rs_approx} with
-$C_{\mathrm{approx}} = \SI{0.27116}{m}$ yields
+$C_{\mathrm{approx}} = \SI{0.26837}{m}$ yields
 \[
-r_{s,\mathrm{approx}} = \SI{0.10161}{m}.
+r_{s,\mathrm{approx}} = \SI{0.10160}{m}.
 \]
 
 \paragraph{Transmission Ratio Error}
@@ -8571,19 +8584,19 @@ Computing effective radii with $h_b/2 = \SI{0.00779}{m}$:
 \toprule
 \textbf{Quantity} & \textbf{Exact} & \textbf{Approximate} \\
 \midrule
-$r_{p,\text{eff}}$ & \SI{0.0268}{m} & \SI{0.0268}{m} \\
+$r_{p,\text{eff}}$ & \SI{0.0284}{m} & \SI{0.0284}{m} \\
 $r_{s,\text{eff}}$ & \SI{0.0938}{m} & \SI{0.0938}{m} \\
-$R = r_{s,\text{eff}}/r_{p,\text{eff}}$ & 3.496 & 3.497 \\
+$R = r_{s,\text{eff}}/r_{p,\text{eff}}$ & 3.300 & 3.300 \\
 \bottomrule
 \end{tabular}
 \end{center}
 
 The ratio error at zero shift is
 \[
-\varepsilon_R = \frac{|3.497 - 3.496|}{3.496} \approx 0.005\%.
+\varepsilon_R = \frac{|3.300 - 3.300|}{3.300} \approx 0.000\%.
 \]
 
-Thus, although $C_{\mathrm{approx}}$ is already 6.81\% too large, the induced
+Thus, although $C_{\mathrm{approx}}$ is already 6.61\% too large, the induced
 error has little visible effect at minimum shift because the radius calculation
 is being evaluated at the same operating point used to construct that
 approximate center distance in the first place.
@@ -8613,23 +8626,23 @@ and deadzone $s_{\mathrm{dz}} = \SI{0.0024892}{m}$:
 \begin{align}
 r_{p,\text{outer}}(s_{\max})
 &= r_{p,\text{outer},\min} + \frac{s_{\max} - s_{\mathrm{dz}}}{2\tan\beta} \nonumber\\[4pt]
-&= 0.03462 + \frac{0.01905 - 0.0024892}{2 \times \tan(11.5^\circ)} \nonumber\\[4pt]
-&= 0.03462 + \frac{0.01656}{0.4070} \nonumber\\[4pt]
-&= \SI{0.0753}{m}.
+&= 0.03621 + \frac{0.01905 - 0.0024892}{2 \times \tan(11.5^\circ)} \nonumber\\[4pt]
+&= 0.03621 + \frac{0.01656}{0.4070} \nonumber\\[4pt]
+&= \SI{0.0769}{m}.
 \end{align}
 
 \paragraph{Secondary Radius Comparison}
 
 Solving the exact belt-length constraint \Eq{eq:belt_length_constraint}
-numerically with $C_{\mathrm{exact}} = \SI{0.25387}{m}$ yields
+numerically with $C_{\mathrm{exact}} = \SI{0.25174}{m}$ yields
 \[
-r_{s,\mathrm{exact}} = \SI{0.06647}{m}.
+r_{s,\mathrm{exact}} = \SI{0.06673}{m}.
 \]
 
 Evaluating the approximate formula \Eq{eq:rs_approx} with
-$C_{\mathrm{approx}} = \SI{0.27116}{m}$ yields
+$C_{\mathrm{approx}} = \SI{0.26837}{m}$ yields
 \[
-r_{s,\mathrm{approx}} = \SI{0.05600}{m}.
+r_{s,\mathrm{approx}} = \SI{0.05626}{m}.
 \]
 
 \paragraph{Transmission Ratio Error}
@@ -8647,17 +8660,17 @@ With $h_b/2 = \SI{0.00779}{m}$:
 \midrule[\heavyrulewidth]
 Quantity & \textbf{Exact} & \textbf{Approximate} \\
 \midrule
-$r_{p,\text{eff}}$ & \SI{0.0675}{m} & \SI{0.0675}{m} \\
-$r_{s,\text{eff}}$ & \SI{0.0587}{m} & \SI{0.0482}{m} \\
-$R = r_{s,\text{eff}}/r_{p,\text{eff}}$ & 0.869 & 0.714 \\
+$r_{p,\text{eff}}$ & \SI{0.0691}{m} & \SI{0.0691}{m} \\
+$r_{s,\text{eff}}$ & \SI{0.0589}{m} & \SI{0.0485}{m} \\
+$R = r_{s,\text{eff}}/r_{p,\text{eff}}$ & 0.853 & 0.701 \\
 \bottomrule
 \end{tabular}
 \end{center}
 
-Both models predict underdrive ($R < 1$), but the approximation
+Both models predict overdrive ($R < 1$), but the approximation
 substantially underestimates the ratio. The ratio error is
 \[
-\varepsilon_R = \frac{|0.714 - 0.869|}{0.869} = 17.8\%.
+\varepsilon_R = \frac{|0.701 - 0.853|}{0.853} = 17.8\%.
 \]
 
 Unlike the minimum-shift case, this operating point does not benefit from
@@ -8683,8 +8696,8 @@ leading to a lower predicted ratio than the exact model.}
 \toprule
 \textbf{Configuration} & \textbf{$R_{\mathrm{exact}}$} & \textbf{$R_{\mathrm{approx}}$} & \textbf{Ratio Error} \\
 \midrule
-Zero shift ($s = 0$) & 3.496 & 3.497 & 0.005\% \\
-Maximum shift ($s = s_{\max}$) & 0.869 & 0.714 & 17.8\% \\
+Zero shift ($s = 0$) & 3.300 & 3.300 & 0.000\% \\
+Maximum shift ($s = s_{\max}$) & 0.853 & 0.701 & 17.8\% \\
 \bottomrule
 \end{tabular}
 \end{center}
@@ -8695,7 +8708,7 @@ approximate center distance was itself constructed from that same geometry.
 At maximum shift, that cancellation is lost and the ratio error becomes
 substantial.
 
-These errors arise from the initial 6.81\% error in center distance,
+These errors arise from the initial 6.61\% error in center distance,
 which propagates nonlinearly through the belt-length geometry in a
 state-dependent way. Since the transmission ratio directly enters the
 rotational equations of motion (\Sec{sec:complete_model}), this approximation
