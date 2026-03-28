@@ -630,7 +630,7 @@ trajectories, axial force balance, torque admissibility, and overall launch
 performance, with the goal of showing that the completed formulation behaves in
 mechanically interpretable and physically sensible ways.
 
-\Sec{sec:code-data-availability} documents implementation and reproducibility
+\Sec{sec:implementation-and-reproducibility} documents implementation and reproducibility
 resources, including the code repository, release artifact, and data-access
 links associated with the reported results.
 
@@ -1579,7 +1579,7 @@ From the rotational power relationship $P=\tau\omega$.
   \item $F_n$ is normal force (\si{\newton})
 \end{itemize}
 }
-{\citet{FrictionWikipedia}.}
+{Standard dry-friction model identity.}
 [
 Coulomb friction model for impending slip.
 ]
@@ -1636,7 +1636,7 @@ Definition of density.
   \item $A$ is reference area (\si{\meter\squared})
 \end{itemize}
 }
-{\citet{AirResistanceFormula}.}
+{Standard aerodynamic drag model identity.}
 [
 Standard empirical/derived quadratic drag model; applicable at moderate to high Reynolds number.
 ]
@@ -7766,7 +7766,7 @@ sufficiently unfavorable, the model captures the transition to prolonged
 slipping rather than continuing to predict an unrealistic no-slip response.
 The implementation used to generate these simulations, along with repository,
 release, and data-access details, is documented in
-\Sec{sec:code-data-availability}.
+\Sec{sec:implementation-and-reproducibility}.
 
 \subsection{Simulation Cases and Phase Convention}
 \label{sec:results_setup}
@@ -8205,8 +8205,8 @@ retention to avoid premature upshift, and a smooth enough shift that the
 required no-slip torque does not repeatedly exceed the available traction
 limits.
 
-\section{Code and Data Availability}
-\label{sec:code-data-availability}
+\section{Implementation and Reproducibility}
+\label{sec:implementation-and-reproducibility}
 
 The source code for the CVT simulator used in this work is available at
 \url{https://github.com/gr812b/CVT-Simulator}.
@@ -9143,12 +9143,15 @@ below any physically meaningful length precision.
 % --------------------------------------------------------------
 \subsection{ODE Integration for Dynamic Simulation}
 
-The full CVT state vector $\mathbf{x} = (\omega_p, \omega_s, s, \dot{s})$
+The full CVT state vector $\mathbf{x} = (\omega_p, \omega_s, s, \dot{s}, \hat v_b)$
 is integrated using \texttt{scipy.integrate.solve\_ivp}. The governing system
-is the assembled first-order model in \Eq{eq:final_cvt_system_complete}, with
-rotational sub-equations \Eq{eq:omega_p_dot_complete} and
-\Eq{eq:omega_s_dot_complete}, axial dynamics \Eq{eq:s_ddot_complete}, and
-algebraic geometry closures \Eq{eq:R_of_s_complete} and \Eq{eq:Rdot_of_states_complete}. The
+is written as a first-order ODE system in \Eq{eq:final_cvt_system_complete},
+with rotational sub-equations \Eq{eq:omega_p_dot_complete} and
+\Eq{eq:omega_s_dot_complete}, axial dynamics \Eq{eq:s_ddot_complete}, belt-speed
+dynamics for $\hat v_b$, and algebraic geometry closures
+\Eq{eq:R_of_s_complete} and \Eq{eq:Rdot_of_states_complete}. Although
+\Eq{eq:s_ddot_complete} is second-order in $s$, introducing $(s,\dot s)$ as
+separate states converts the complete model to first-order form for time integration. The
 time integrator is used with the
 \texttt{RK45} method --- the Dormand--Prince explicit embedded Runge--Kutta
 pair~\cite{DormandPrince1980}. The method propagates the state with a
