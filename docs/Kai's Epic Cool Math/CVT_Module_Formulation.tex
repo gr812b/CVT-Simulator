@@ -3736,10 +3736,11 @@ The belt cross-section is approximated as a trapezoid
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=0.55\linewidth]{./illustrations/pulleyForces/belt_cross_section.png}
+\includegraphics[width=\linewidth]{./illustrations/pulleyForces/belt_cross_section.png}
 \caption{Trapezoidal belt cross-section. The outer width \(b_{\mathrm{out}}\) corresponds
 to the surface away from the pulley axis; the inner width \(b_{\mathrm{in}}\) corresponds
-to the surface closer to the axis. The radial thickness is \(h_b\).}
+to the surface closer to the axis. The radial thickness is \(h_b\) and the centroid is 
+located at \(\Delta r_{\mathrm{cm}}\) from the outer surface.}
 \label{fig:belt_cross_section_placeholder}
 \end{figure}
 
@@ -3844,7 +3845,7 @@ where \(\phi_j(s)\) is the total wrap angle on pulley \(j\)
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=0.55\linewidth]{./illustrations/pulleyForces/belt_element.png}
+\includegraphics[width=\linewidth]{./illustrations/pulleyForces/infinitesimal_belt_element.png}
 \caption{Belt wrapped around pulley \(j\). A differential element at angle \(\theta\)
 has arc length \(\dd\ell = r_{j,\mathrm{cm}}\,\dd\theta\) and experiences radially
 outward centrifugal force.}
@@ -5609,27 +5610,22 @@ $\Delta T_{j,\max}$.
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=0.55\linewidth]{./illustrations/belt_element.png}
-    \caption{Free-body diagram of a differential belt element spanning $\dd \theta$.}
+    \includegraphics[width=\linewidth]{./illustrations/slip/infinitesimal_belt_element.png}
+    \caption{Free-body diagram of an infinitesimal belt segment in contact with pulley $j$,
+    written in the local radial--tangential coordinate basis ($\hat e_r,\hat e_\theta$) shown in the inset.
+    The element subtends an infinitesimal contact angle $\dd\theta$ with the total wrap angle $\phi_j$.
+    The boundary tensions $T_j$ and $T_j+\dd T_j$ act tangentially, while the pulley applies a normal force 
+    $\dd N_j$ in the radial direction and a friction force $\dd F_{f,j}$ in the tangential direction. The 
+    positive pulley rotation $+\omega_j$ is shown for reference.}
     \label{fig:traction_element}
 \end{figure}
 
-Consider the differential belt element shown in \Fig{fig:traction_element},
-spanning an infinitesimal wrap angle $\dd\theta$ on pulley $j$.
-The belt tension entering the element is $T_j$,
-and leaving is $T_j + \dd T_j$.
+Consider the differential belt element in \Fig{fig:traction_element},
+which spans an infinitesimal wrap angle $\dd\theta$ on pulley $j$.
+The positive tangential direction is taken along the midpoint tangent of the
+element, consistent with increasing wrap angle and with increasing belt
+tension from the slack side toward the tight side.
 
-The pulley applies to this element:
-\begin{itemize}
-    \item a differential normal force $\dd N_j$ (radial),
-    \item a differential tangential friction force $\dd F_{f,j}$.
-\end{itemize}
-
-The positive tangential direction is taken along the midpoint tangent
-of the element, consistent with increasing wrap angle and with increasing
-belt tension from the slack side toward the tight side.
-
-% --------------------------------------------------------------
 \paragraph{Tangential Newton's Second Law}
 
 Applying \theoryRef{th:newton-trans} in the tangential direction gives
@@ -5639,10 +5635,10 @@ Applying \theoryRef{th:newton-trans} in the tangential direction gives
 \label{eq:newton_tangential}
 \end{equation}
 
-where $a_{t,j}$ is the tangential acceleration of the belt material at the
-contact point on pulley $j$.
+where $a_{t,j}$ is the tangential acceleration of the belt material along the
+contact arc on pulley $j$.
 
-The tangential components of the end tensions follow directly from geometry:
+From the element geometry, the tangential components of the boundary tensions are
 
 \begin{align}
 (T_j)_t &= T_j\cos\!\left(\frac{\dd \theta}{2}\right),
@@ -5650,9 +5646,9 @@ The tangential components of the end tensions follow directly from geometry:
 (T_j+\dd T_j)_t &= (T_j+\dd T_j)\cos\!\left(\frac{\dd \theta}{2}\right).
 \end{align}
 
-The left-end tension acts in the positive tangential direction,
-while the right-end tension acts in the negative tangential direction.
-Including the differential friction force, the tangential force balance becomes
+The left-end tension acts in the positive tangential direction, while the
+right-end tension acts in the negative tangential direction. Including the
+differential friction force $\dd F_{f,j}$, the tangential force balance becomes
 
 \begin{equation}
 T_j\cos\!\left(\frac{\dd \theta}{2}\right)
@@ -5665,7 +5661,7 @@ T_j\cos\!\left(\frac{\dd \theta}{2}\right)
 \label{eq:tangential_balance_expanded}
 \end{equation}
 
-Simplifying the first two terms exactly gives
+Combining the two tension terms gives
 
 \begin{equation}
 -\dd T_j \cos\!\left(\frac{\dd \theta}{2}\right)
