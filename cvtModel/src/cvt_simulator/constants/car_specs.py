@@ -126,6 +126,22 @@ class CarSpecs(BaseModel):
             )
         ) / 4
 
+    @computed_field
+    @property
+    def min_effective_cvt_ratio(self) -> float:
+        """Minimum effective CVT ratio (unitless) at zero shift distance."""
+        from cvt_simulator.utils.theoretical_models import TheoreticalModels as tm
+
+        return tm.current_effective_cvt_ratio(0)
+
+    @computed_field
+    @property
+    def max_effective_cvt_ratio(self) -> float:
+        """Maximum effective CVT ratio (unitless) at max shift distance."""
+        from cvt_simulator.utils.theoretical_models import TheoreticalModels as tm
+
+        return tm.current_effective_cvt_ratio(self.max_shift)
+
     class Config:
         """Pydantic configuration."""
 
@@ -161,3 +177,5 @@ MAX_SEC_RADIUS = _default_specs.max_sec_radius
 INITIAL_SHEAVE_DISPLACEMENT = _default_specs.initial_sheave_displacement
 MAX_SHIFT = _default_specs.max_shift
 CENTER_TO_CENTER = _default_specs.center_to_center
+MIN_EFFECTIVE_CVT_RATIO = _default_specs.min_effective_cvt_ratio
+MAX_EFFECTIVE_CVT_RATIO = _default_specs.max_effective_cvt_ratio

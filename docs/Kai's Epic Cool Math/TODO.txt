@@ -1,0 +1,48 @@
+INTRO
+- Neglect the uJoints and 4WD (since no traction is considered)
+
+
+- No indents after every single list
+- Add constants values some time
+
+- tau_max is unclear what it is
+- In section 12 remove tau_p and tau_s, use tau_c
+
+-reference assumptions in belt section
+- In intro add v-belt introduction
+- Assumption: Negligible weight of flyarms
+
+likely to change section
+- State vector may include omega_belt
+
+
+Cam Review
+
+Theory
+- Remove capstan
+
+
+
+8.1 link belt length assumption
+8.1 link 2.1.3
+
+
+variables
+s - axial closure
+s_dz - axial deadzone on primary (before belt contact)
+s_max - maximum axial movement before sheaves hit each other
+
+
+
+
+Feedback section 8
+
+
+Secondary
+(and show the belt pushing the one (How does it work if belt pushes both?... strange....)
+
+
+Shigleys
+898/875 - Discussed the total length of belt stuff, making small angle assumption sneakily
+899/877 - Discusses balance of forces on infinitesimal belt portion (for FLAT belts only! Later assumed true in CVTs pg 918/895)
+

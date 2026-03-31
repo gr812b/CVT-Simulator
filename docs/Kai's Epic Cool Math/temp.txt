@@ -1,0 +1,198 @@
+This is enough to structure the full section. Let me lay out a proposed architecture, then explain the rationale for each subsection so you can decide before committing to running everything.
+
+---
+
+# Proposed Results Section Architecture
+
+---
+
+## Overall Philosophy
+
+Given that IRL validation isn't available, the section should be structured around a **narrative of physical trust-building**, moving from simple to complex:
+
+1. First show the model behaves correctly in the simplest cases (steady-state consistency)
+2. Then show it captures known physical trends (parameter sensitivity)
+3. Then show the transient behavior only your model can produce (ratio trajectory, slip switching)
+4. Then show the physically surprising or non-obvious findings (centrifugal correction magnitude)
+5. Finally show the integrated system behavior (full launch)
+
+Every subsection should open with a one-sentence physical expectation, show the result, and then discuss whether it confirms or nuances that expectation. This structure mimics experimental validation — you're validating against physical intuition rather than a sensor, which is defensible and honest.
+
+---
+
+## Proposed Section Structure
+
+---
+
+### Section X.1 — Simulation Parameters
+
+**What goes here:**
+A clean table of every parameter used, organized by subsystem:
+
+| Subsystem | Parameters |
+|---|---|
+| Primary clutch | Flyweight mass, flyweight radius, flyweight angle geometry, spring rate, spring preload, sheave half-angle, min/max shift position |
+| Secondary clutch | Helix angle profile, spring rate (torsional + compression), spring preload, sheave half-angle |
+| Belt | Mass per unit length, V-angle, friction coefficient, free length, cross-section geometry |
+| Vehicle | Total mass, wheel radius, final drive ratio, drag coefficient, frontal area, rolling resistance coefficient |
+| Engine | Torque curve used (polynomial fit or table) |
+
+For each parameter note the source: **measured from CAD**, **manufacturer specification**, **estimated**, or **literature value**. This is important — it tells the reader which results are sensitive to uncertainty. Parameters known precisely (geometry from CAD) vs. parameters estimated (friction coefficient) should be visually distinguishable.
+
+**Why it matters:** Without this table the paper is not reproducible. With it, a reader can immediately assess which results are robust and which depend on uncertain inputs.
+
+---
+
+### Section X.2 — Steady-State Force Balance Verification
+
+**Physical expectation stated upfront:**
+At constant engine speed with no transient loading, the primary axial net force should tend to zero and the system should settle at the equilibrium shift position predicted by the static force balance. This is the dynamic model recovering the quasi-static result as a limiting case.
+
+**What to show:**
+
+**Figure 1 — Axial force components vs. shift position (primary)**
+A single plot with curves for:
+- Flyweight centrifugal force vs. *s*
+- Spring restoring force vs. *s*
+- Belt axial reaction force vs. *s*
+- Net axial force vs. *s* (should cross zero at equilibrium)
+
+This is the `PrimaryForceBreakdown` data sweeping across shift positions at a fixed RPM. Show it at two or three RPM values. The zero-crossing shifts rightward as RPM increases — this is engagement and shift-out behavior visible in one plot.
+
+**Figure 2 — Equilibrium shift position vs. engine RPM**
+Plot the zero-crossing shift position from Figure 1 across the full RPM range. This is your model's static shift curve. Overlay Skinner's quasi-static prediction if you can compute it. Note and briefly explain any differences — these will arise from the corrections and removed approximations you mentioned, and that is a legitimate result worth discussing explicitly.
+
+**Discussion point:** Where your curve differs from Skinner's, explain which physical term accounts for the difference — centrifugal belt correction, non-constant helix angle, or removed small-angle approximation. This is original content relative to prior work.
+
+---
+
+### Section X.3 — Centrifugal Belt Correction Significance
+
+**This is one of your most important standalone results — it deserves its own subsection.**
+
+**Physical expectation stated upfront:**
+The centrifugal belt correction reduces the effective normal force at the sheave contact because the rotating belt tends to unseat radially from the groove. At low RPM this effect is small. At high RPM it becomes significant and will meaningfully reduce torque capacity if neglected.
+
+**What to show:**
+
+**Figure 3 — Centrifugal correction vs. RPM alongside total clamping force**
+From `PulleyState.radial_from_centrifugal` vs. `PulleyState.forces.clamping_force` plotted against engine RPM (or angular velocity). Show both primary and secondary on the same axes or side by side.
+
+You said this term is almost equal to clamping force in many cases — **this is a striking result that directly justifies the derivation.** If you neglected this term (as all Baja models do), you would overpredict torque capacity by nearly a factor of two at high speed. State this explicitly with numbers.
+
+**Figure 4 — Torque capacity with and without centrifugal correction vs. RPM**
+Plot `max_torque` from your model against the same quantity computed with `radial_from_centrifugal` zeroed out. The gap between the two curves is the error introduced by models that neglect this term. This is a direct, quantified statement of why the correction matters.
+
+---
+
+### Section X.4 — Torque Transmission and Slip-State Behavior
+
+**This demonstrates the explicit slip switching — the other major differentiator.**
+
+**Physical expectation stated upfront:**
+When the torque demand at the belt exceeds the torque capacity set by the clamping force and friction, the belt transitions from no-slip to slipping. In the slipping regime the transmitted torque is clamped at the capacity limit. When demand falls below capacity, the belt re-engages in no-slip.
+
+**What to show:**
+
+**Figure 5 — Torque demand vs. torque capacity over time during a transient**
+From `SlipBreakdown`: plot `torque_demand` and `t_max_prim` (or `t_max_sec`, whichever is limiting) on the same axes over a time window where a slip event occurs. Shade the regions where `is_slipping = True`. Show the transmitted torque clamping at capacity during slip and recovering after.
+
+**Figure 6 — Slip state indicator and ratio derivative during the slip event**
+From `SlipBreakdown.is_slipping` and `cvt_ratio_derivative`: show the binary slip flag alongside the rate of ratio change. The physical intuition here is important — during slip, the ratio change rate and the torque transfer both behave differently than in the no-slip regime. This is something no prior model can show.
+
+**Discussion point:** Note what conditions trigger the slip event in your simulation — is it a sudden load increase, engagement from rest, or a throttle blip? This connects the abstract slip model to a concrete physical scenario.
+
+---
+
+### Section X.5 — Full Vehicle Launch from Rest
+
+**This is your showcase result — the thing the model was built to produce.**
+
+**Physical expectation stated upfront:**
+A vehicle launching from rest should show: initial clutching phase where the belt loads gradually, followed by ratio upshift as engine speed rises, engine operating point tracking along or near the peak torque/power curve, and eventual ratio settling near shift-out as vehicle speed approaches its maximum.
+
+**What to show:**
+
+**Figure 7 — Transmission ratio R(t) over a full launch**
+The ratio trajectory from rest to steady cruise. Annotate on the plot:
+- The end of the clutching phase / start of active shifting
+- Any ratio overshoot if present
+- The shift-out point
+
+This is the central time-domain result the paper has been building toward.
+
+**Figure 8 — Engine angular velocity and vehicle speed vs. time**
+From `EngineForceBreakdown.angular_velocity` and `CarForceBreakdown.acceleration` integrated. Show the engine holding near a target RPM as the vehicle accelerates — the CVT doing its job of keeping the engine near its power peak.
+
+**Figure 9 — Engine operating point trajectory overlaid on torque/power curve**
+Plot engine torque vs. engine RPM as a phase-plane trajectory during the launch, overlaid on the engine's torque curve. This is the most physically intuitive single result in the paper — it shows whether the CVT is successfully keeping the engine in its optimal operating region. If it is, you see the trajectory tracking near peak power. If the CVT is mistuned (even with nominal parameters) you see it deviating.
+
+**Figure 10 — Axial force components over time during launch**
+From `PrimaryForceBreakdown` and `SecondaryForceBreakdown`: stacked or overlaid time traces of flyweight force, spring force, belt reaction, net force on primary. This shows the physical mechanism of shifting playing out in real time and is directly connected to the derivations in §8 and §9.
+
+---
+
+### Section X.6 — Flat Shift Condition and Tuning Insight
+
+**You mentioned this explicitly — the balance between engine torque and load torque during shifting giving flat engine RPM. This deserves its own result.**
+
+**Physical expectation stated upfront:**
+During an upshift, the ratio is increasing. For the engine RPM to remain constant during this shift, the rate of ratio change must exactly absorb the difference between engine torque output and the load torque reflected back to the engine. This is the flat-shift condition — it is a natural consequence of the ODE structure and can be identified from simulation.
+
+**What to show:**
+
+**Figure 11 — Engine RPM during shift under different loading conditions**
+Show the engine RPM trace during the shift under: (a) a well-tuned parameter set where RPM stays approximately flat, (b) an over-sprung primary where RPM dips during shift, (c) an under-sprung primary where RPM rises during shift. These come from varying spring preload in the `springCompForceBreakdown`.
+
+**Discussion point:** Connect this directly to the tuning intuition — this is the quantitative version of what every CVT tuner knows empirically. The model shows *why* it happens and what to change.
+
+---
+
+### Section X.7 — Parameter Sensitivity (Selected)
+
+**Keep this focused — do not do a full sweep of every parameter. Pick two or three that are physically most interesting.**
+
+**Suggested candidates:**
+
+**Flyweight mass sensitivity:**
+Vary flyweight mass, plot how engagement RPM and shift-out RPM change, and how the ratio trajectory shifts in time. Clean, interpretable, directly useful for tuning.
+
+**Helix angle sensitivity:**
+More interesting than flyweight mass because helix angle affects the torque-reactive coupling — it changes how aggressively the secondary responds to load torque. Show ratio trajectory and slip behavior under different helix angles. Note that this is particularly difficult to characterize with static models because the effect is dynamic and load-dependent.
+
+**Friction coefficient sensitivity:**
+Plot torque capacity and slip onset threshold vs. friction coefficient. This is relevant because the friction coefficient is your most uncertain parameter — showing how sensitive the results are to it is honest and useful.
+
+**What not to include:**
+A full factorial parameter sweep. It adds length without proportional insight and the interactions are too complex to interpret cleanly without a much larger study.
+
+---
+
+## On Formatting the Section Generally
+
+A few structural recommendations:
+
+**Open with a short paragraph** before X.1 that states the purpose of the results section explicitly — since there is no experimental validation, tell the reader directly that the results are organized around three validation strategies: (1) steady-state consistency with known quasi-static results, (2) qualitative agreement with established physical intuition, and (3) demonstration of capabilities that prior models cannot produce. This is honest and sets expectations correctly.
+
+**Each subsection should follow the same structure:**
+1. One sentence stating the physical expectation or question being investigated
+2. The figure(s)
+3. Discussion of what the result shows and why it matters
+
+**Caption every figure fully** — someone reading only the figures and captions should be able to follow the narrative of the results section without reading the body text.
+
+**Number all figures sequentially** and reference them explicitly in the text — do not let any figure be self-standing without a text discussion.
+
+---
+
+## Questions Back to You Before You Start Running
+
+1. **Do you have the engine torque curve implemented** as a function so you can overlay the operating point trajectory on it for Figure 9? This is the most visually compelling result but requires the torque curve data.
+
+2. **For the flat-shift result** — have you already seen flat RPM behavior in a nominal run, or would you need to tune the parameters to produce it? Is it worth showing the nominal run first and then a tuned run?
+
+3. **For the Skinner comparison** in X.2 — do you have Skinner's force balance equations implemented somewhere you can run, or would you need to re-derive the equilibrium curve from your own model by zeroing the inertia terms?
+
+4. **How many RPM values** do you want to show on Figure 1 (the axial force vs. shift position plot) — two or three is usually clearest.
+
+5. **For sensitivity analysis** — is helix angle a single scalar parameter in your model or is it a full profile function? If it's a profile, varying it continuously might not produce clean sensitivity plots without a parameterization scheme.
