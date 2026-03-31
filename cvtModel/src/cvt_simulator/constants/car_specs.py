@@ -132,7 +132,7 @@ class CarSpecs(BaseModel):
         """Minimum effective CVT ratio (unitless) at zero shift distance."""
         from cvt_simulator.utils.theoretical_models import TheoreticalModels as tm
 
-        return tm.current_cvt_ratio(0)
+        return tm.current_effective_cvt_ratio(0)
 
     @computed_field
     @property
@@ -140,7 +140,7 @@ class CarSpecs(BaseModel):
         """Maximum effective CVT ratio (unitless) at max shift distance."""
         from cvt_simulator.utils.theoretical_models import TheoreticalModels as tm
 
-        return tm.current_cvt_ratio(self.max_shift)
+        return tm.current_effective_cvt_ratio(self.max_shift)
 
     class Config:
         """Pydantic configuration."""
