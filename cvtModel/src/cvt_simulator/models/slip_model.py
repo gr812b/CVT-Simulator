@@ -64,6 +64,7 @@ class SlipModel:
         # In slip mode, stay near demand only at very low relative speed.
         # Around 0.5 km/h (0.1389 m/s) and below, blend toward no-slip demand.
         # Above this region, enforce traction-bound saturation.
+        # TODO: Dead code, remove
         self.slip_blend_controller = SignalBlendController(
             deadzone=SLIP_LOW_SPEED_BLEND_DEADZONE,
             transition_width=SLIP_LOW_SPEED_BLEND_TRANSITION,
@@ -187,24 +188,17 @@ class SlipModel:
         rel_abs = abs(relative_speed)
 
         if self._last_is_stick is None:
-            is_stick = (
-                (tau_lower <= tau_ns <= tau_upper)
-                and (rel_abs <= stick_enter_tolerance)
+            is_stick = (tau_lower <= tau_ns <= tau_upper) and (
+                rel_abs <= stick_enter_tolerance
             )
         elif self._last_is_stick:
-            is_stick = (
-                (tau_lower - self.torque_exit_margin)
-                <= tau_ns
-                <= (tau_upper + self.torque_exit_margin)
-                and (rel_abs <= stick_exit_tolerance)
-            )
+            is_stick = (tau_lower - self.torque_exit_margin) <= tau_ns <= (
+                tau_upper + self.torque_exit_margin
+            ) and (rel_abs <= stick_exit_tolerance)
         else:
-            is_stick = (
-                (tau_lower + self.torque_reenter_margin)
-                <= tau_ns
-                <= (tau_upper - self.torque_reenter_margin)
-                and (rel_abs <= stick_enter_tolerance)
-            )
+            is_stick = (tau_lower + self.torque_reenter_margin) <= tau_ns <= (
+                tau_upper - self.torque_reenter_margin
+            ) and (rel_abs <= stick_enter_tolerance)
 
         self._last_is_stick = is_stick
         return is_stick
@@ -298,8 +292,12 @@ class SlipModel:
             T_b=T_b,
         )
 
-        coupling_tau_lower = max(primary_bounds.tau_lower, secondary_bounds.tau_negative)
-        coupling_tau_upper = min(primary_bounds.tau_upper, secondary_bounds.tau_positive)
+        coupling_tau_lower = max(
+            primary_bounds.tau_lower, secondary_bounds.tau_negative
+        )
+        coupling_tau_upper = min(
+            primary_bounds.tau_upper, secondary_bounds.tau_positive
+        )
 
         return (
             coupling_tau_lower,
@@ -327,7 +325,9 @@ class SlipModel:
         tau_amp = 0.5 * (tau_upper - tau_lower)
         # Slip correction is continuous at v_delta=0 and bounded by traction.
         slip_correction = (
-            self.slip_correction_gain * tau_amp * np.tanh(v_delta / self.slip_speed_smoothing)
+            self.slip_correction_gain
+            * tau_amp
+            * np.tanh(v_delta / self.slip_speed_smoothing)
         )
         tau_low_speed = tau_ns_clamped + slip_correction
 
@@ -338,4 +338,3 @@ class SlipModel:
             signal=v_delta,
         )
         return float(np.clip(tau, tau_lower, tau_upper))
-

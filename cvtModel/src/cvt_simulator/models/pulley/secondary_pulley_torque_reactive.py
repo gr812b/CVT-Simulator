@@ -219,7 +219,9 @@ class PhysicalSecondaryPulley(SecondaryPulleyModel):
                 net=negative_denominator,
             )
         else:
-            load_numerator_term = -belt_mass_term * (r_cm * ((v_b_star - state.v_b) / T_b))
+            load_numerator_term = -belt_mass_term * (
+                r_cm * ((v_b_star - state.v_b) / T_b)
+            )
             shift_numerator_term = -belt_mass_term * (r_cm_dot * state.v_b)
             common_numerator = (
                 spring_numerator_term + load_numerator_term + shift_numerator_term

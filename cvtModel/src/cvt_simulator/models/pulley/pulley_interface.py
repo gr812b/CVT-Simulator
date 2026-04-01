@@ -22,7 +22,6 @@ from abc import ABC, abstractmethod
 from typing import Any
 import numpy as np
 from cvt_simulator.utils.system_state import SystemState
-from cvt_simulator.utils.theoretical_models import TheoreticalModels as tm
 from cvt_simulator.constants.car_specs import (
     SHEAVE_ANGLE,
     BELT_CROSS_SECTIONAL_AREA,

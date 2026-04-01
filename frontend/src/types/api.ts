@@ -607,8 +607,6 @@ export interface components {
             coupling_torque: number;
             /** Torque Demand */
             torque_demand: number;
-            /** Relative Velocity */
-            relative_velocity: number;
             /** Tau Upper */
             tau_upper: number;
             /** Tau Lower */

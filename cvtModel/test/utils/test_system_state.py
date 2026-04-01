@@ -12,11 +12,13 @@ class TestSystemState(unittest.TestCase):
             shift_velocity=5.0,
             primary_pulley_angular_velocity=100.0,
             secondary_pulley_angular_velocity=30.0,
+            v_b=12.0,
         )
         self.assertEqual(state.shift_distance, 2.0)
         self.assertEqual(state.shift_velocity, 5.0)
         self.assertEqual(state.primary_pulley_angular_velocity, 100.0)
         self.assertEqual(state.secondary_pulley_angular_velocity, 30.0)
+        self.assertEqual(state.v_b, 12.0)
 
     def test_to_array(self):
         state = SystemState(
@@ -24,18 +26,30 @@ class TestSystemState(unittest.TestCase):
             shift_velocity=5.0,
             primary_pulley_angular_velocity=100.0,
             secondary_pulley_angular_velocity=30.0,
+            v_b=12.0,
         )
-        expected_array = [2.0, 5.0, 100.0, 30.0]
+        expected_array = [2.0, 5.0, 100.0, 30.0, 12.0]
         self.assertEqual(state.to_array(), expected_array)
 
     def test_from_array(self):
-        array = [2.0, 5.0, 100.0, 30.0]
+        array = [MAX_SHIFT, 5.0, 100.0, 30.0, 12.0]
         state = SystemState.from_array(array)
         # Shift distance is clamped when fetching it
         self.assertEqual(state.shift_distance, MAX_SHIFT)
         self.assertEqual(state.shift_velocity, 5.0)
         self.assertEqual(state.primary_pulley_angular_velocity, 100.0)
         self.assertEqual(state.secondary_pulley_angular_velocity, 30.0)
+        self.assertEqual(state.v_b, 12.0)
+
+    def test_from_array_with_legacy_state_vector(self):
+        array = [MAX_SHIFT, 5.0, 100.0, 30.0]
+        state = SystemState.from_array(array)
+
+        self.assertEqual(state.shift_distance, MAX_SHIFT)
+        self.assertEqual(state.shift_velocity, 5.0)
+        self.assertEqual(state.primary_pulley_angular_velocity, 100.0)
+        self.assertEqual(state.secondary_pulley_angular_velocity, 30.0)
+        self.assertEqual(state.v_b, 0.0)
 
 
 if __name__ == "__main__":

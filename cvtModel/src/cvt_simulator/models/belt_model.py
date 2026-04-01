@@ -35,8 +35,10 @@ class BeltModel:
         self._last_is_stick = None
 
     def _centroid_offset(self) -> float:
-        return BELT_HEIGHT * (BELT_WIDTH_TOP + 2 * BELT_WIDTH_BOTTOM) / (
-            3 * (BELT_WIDTH_TOP + BELT_WIDTH_BOTTOM)
+        return (
+            BELT_HEIGHT
+            * (BELT_WIDTH_TOP + 2 * BELT_WIDTH_BOTTOM)
+            / (3 * (BELT_WIDTH_TOP + BELT_WIDTH_BOTTOM))
         )
 
     def _primary_centroid_radius(self, shift_distance: float) -> float:
@@ -136,9 +138,11 @@ class BeltModel:
         r_p_cm_dot = dr_p_ds * shift_velocity
         r_s_cm_dot = dr_s_ds * shift_velocity
 
-        is_stick, v_b_star, T_b, relative_speed, v_p_cm, v_s_cm = self.get_branch_inputs(
-            state,
-            is_stick_override=is_stick_override,
+        is_stick, v_b_star, T_b, relative_speed, v_p_cm, v_s_cm = (
+            self.get_branch_inputs(
+                state,
+                is_stick_override=is_stick_override,
+            )
         )
         v_b_compatible = v_b_star
 
