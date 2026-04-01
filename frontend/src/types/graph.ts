@@ -46,8 +46,18 @@ const primary_tau_upperAccessor: AccessorStrategy = (point) => point.drivetrain.
 const primary_tau_lowerAccessor: AccessorStrategy = (point) => point.drivetrain.belt_slip.primary_tau_bounds.tau_lower;
 const secondary_tau_positiveAccessor: AccessorStrategy = (point) => point.drivetrain.belt_slip.secondary_tau_bounds.tau_positive;
 const secondary_tau_negativeAccessor: AccessorStrategy = (point) => point.drivetrain.belt_slip.secondary_tau_bounds.tau_negative;
-const relativeVelocityAccessor: AccessorStrategy = (point) => (point.drivetrain.belt_slip as DataPoint['drivetrain']['belt_slip'] & { relative_velocity: number }).relative_velocity;
+const relativeVelocityAccessor: AccessorStrategy = (point) => point.drivetrain.belt_state.relative_speed;
 const isSlippingAccessor: AccessorStrategy = (point) => point.drivetrain.belt_slip.is_slipping ? 1 : 0;
+
+// Belt model accessors
+const primaryBeltSpeedAccessor: AccessorStrategy = (point) => point.drivetrain.belt_state.primary_belt_speed;
+const secondaryBeltSpeedAccessor: AccessorStrategy = (point) => point.drivetrain.belt_state.secondary_belt_speed;
+const beltSpeedAccessor: AccessorStrategy = (point) => point.drivetrain.belt_state.v_b;
+const beltCompatibleSpeedAccessor: AccessorStrategy = (point) => point.drivetrain.belt_state.v_b_compatible;
+const beltTargetSpeedAccessor: AccessorStrategy = (point) => point.drivetrain.belt_state.v_b_star;
+const beltSpeedDerivativeAccessor: AccessorStrategy = (point) => point.drivetrain.belt_state.v_b_dot;
+const beltRelaxationTimeAccessor: AccessorStrategy = (point) => point.drivetrain.belt_state.T_b;
+const beltIsStickAccessor: AccessorStrategy = (point) => point.drivetrain.belt_state.is_stick ? 1 : 0;
 
 // External load
 const rollingResistanceForceAccessor: AccessorStrategy = (point) => point.drivetrain.secondary_pulley.external_forces.rolling_resistance_force;
@@ -154,7 +164,15 @@ export const accessorToUnit = new Map<AccessorStrategy, BaseUnitType>([
     [primary_tau_lowerAccessor, 'torque'],
     [secondary_tau_positiveAccessor, 'torque'],
     [secondary_tau_negativeAccessor, 'torque'],
-    [relativeVelocityAccessor, 'angular_velocity'],
+    [relativeVelocityAccessor, 'velocity'],
+    [primaryBeltSpeedAccessor, 'velocity'],
+    [secondaryBeltSpeedAccessor, 'velocity'],
+    [beltSpeedAccessor, 'velocity'],
+    [beltCompatibleSpeedAccessor, 'velocity'],
+    [beltTargetSpeedAccessor, 'velocity'],
+    [beltSpeedDerivativeAccessor, 'acceleration'],
+    [beltRelaxationTimeAccessor, 'time'],
+    [beltIsStickAccessor, 'dimensionless'],
     [torque_demandAccessor, 'torque'],
     [primaryFlyweightForceAccessor, 'force'],
     [rawFlyweightCentrifugalForce, 'force'],
@@ -558,6 +576,46 @@ export const graphCategories: GraphCategory[] = [
             title: "Relative Velocity vs Time",
             xAxis: { name: "Time", type: "value", unit: getAxisUnit(timeAccessor) },
             yAxis: { name: "Relative Velocity", type: "value", unit: getAxisUnit(relativeVelocityAccessor) },
+            showXLine: true,
+            showYLine: false
+        }
+    }
+]},
+{
+    title: "Belt Debug",
+    graphs: [
+    {
+        xAccessor: timeAccessor,
+        yAccessor: [primaryBeltSpeedAccessor, secondaryBeltSpeedAccessor, beltSpeedAccessor, beltTargetSpeedAccessor],
+        config: {
+            title: "Belt Speeds vs Time",
+            xAxis: { name: "Time", type: "value", unit: getAxisUnit(timeAccessor) },
+            yAxis: { name: "Speed", type: "value", unit: getAxisUnit(beltSpeedAccessor) },
+            seriesNames: ["Primary Belt Speed", "Secondary Belt Speed", "Transport Speed v_b", "Target Speed v_b*"],
+            showXLine: true,
+            showYLine: false
+        }
+    },
+    {
+        xAccessor: timeAccessor,
+        yAccessor: [relativeVelocityAccessor, beltCompatibleSpeedAccessor, beltSpeedDerivativeAccessor],
+        config: {
+            title: "Belt Relative Speed and Dynamics vs Time",
+            xAxis: { name: "Time", type: "value", unit: getAxisUnit(timeAccessor) },
+            yAxis: { name: "Belt Diagnostics", type: "value", unit: getAxisUnit(relativeVelocityAccessor) },
+            seriesNames: ["Relative Speed (v_p - v_s)", "Compatible Speed", "v_b_dot"],
+            showXLine: true,
+            showYLine: false
+        }
+    },
+    {
+        xAccessor: timeAccessor,
+        yAccessor: [beltIsStickAccessor, isSlippingAccessor, beltRelaxationTimeAccessor],
+        config: {
+            title: "Belt Mode Flags and Relaxation Time vs Time",
+            xAxis: { name: "Time", type: "value", unit: getAxisUnit(timeAccessor) },
+            yAxis: { name: "Mode / Time Constant", type: "value", unit: getAxisUnit(beltRelaxationTimeAccessor) },
+            seriesNames: ["is_stick (belt)", "is_slipping (slip model)", "T_b"],
             showXLine: true,
             showYLine: false
         }

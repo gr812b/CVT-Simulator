@@ -22,7 +22,6 @@ from abc import ABC, abstractmethod
 from typing import Any
 import numpy as np
 from cvt_simulator.utils.system_state import SystemState
-from cvt_simulator.utils.theoretical_models import TheoreticalModels as tm
 from cvt_simulator.constants.car_specs import (
     SHEAVE_ANGLE,
     BELT_CROSS_SECTIONAL_AREA,
@@ -33,6 +32,7 @@ from cvt_simulator.constants.car_specs import (
 from cvt_simulator.constants.constants import (
     RUBBER_DENSITY,
     RUBBER_ALUMINUM_STATIC_FRICTION,
+    RUBBER_ALUMINUM_KINETIC_FRICTION,
 )
 from cvt_simulator.models.dataTypes import PulleyState, PulleyForces, PulleyBreakdowns
 
@@ -108,10 +108,13 @@ class PulleyModel(ABC):
     """
 
     def __init__(self):
-        """Initialize pulley model with V-belt friction coefficient."""
+        """Initialize pulley model with V-belt friction coefficients."""
         # Calculate friction coefficient with V-belt wedging effect
         # The sheave angle enhances friction through wedging action
-        self.μ = RUBBER_ALUMINUM_STATIC_FRICTION
+        self.μ_static = RUBBER_ALUMINUM_STATIC_FRICTION
+        self.μ_kinetic = RUBBER_ALUMINUM_KINETIC_FRICTION
+        # Backward compatibility for any existing model code using self.μ.
+        self.μ = self.μ_static
 
     @abstractmethod
     def calculate_axial_clamping_force(
@@ -153,19 +156,13 @@ class PulleyModel(ABC):
         """
         shift_distance = state.shift_distance
         wrap_angle = self._get_wrap_angle(shift_distance)
-        angular_velocity = (
-            state.secondary_pulley_angular_velocity
-            * tm.secondary_effective_radius(shift_distance)
-            / self._get_radius(shift_distance)
-        )
-        r_cm = self._get_belt_centroid_radius(shift_distance)
+        belt_velocity = state.v_b
         beta = SHEAVE_ANGLE / 2
 
         return (
             RUBBER_DENSITY
             * BELT_CROSS_SECTIONAL_AREA
-            * angular_velocity**2
-            * r_cm**2
+            * belt_velocity**2
             * wrap_angle
             / (2 * np.tan(beta))
         )
@@ -193,6 +190,9 @@ class PulleyModel(ABC):
     def calculate_torque_bounds(
         self,
         state: SystemState,
+        is_stick: bool,
+        v_b_star: float,
+        T_b: float,
         **kwargs,
     ) -> tuple[float, float]:
         """
@@ -210,9 +210,11 @@ class PulleyModel(ABC):
 
         Args:
             state: Current system state
-            **kwargs: Optional implementation-specific parameters used by
-                some pulley models (for example external load torque or
-                equivalent side inertia terms).
+            is_stick: True for stick branch, False for slip branch.
+            v_b_star: Branch driving speed reference.
+            T_b: Branch time constant.
+            **kwargs: Model-specific parameters (for example external load torque,
+                engine torque, and side inertia terms).
 
         Returns:
             max_torque: Maximum torque capacity [N⋅m]

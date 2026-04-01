@@ -25,6 +25,7 @@ function convertTimeStepData(
     shift_velocity: conv(timeStep.state.shift_velocity, 'velocity'),
     primary_pulley_angular_velocity: conv(timeStep.state.primary_pulley_angular_velocity, 'angular_velocity'),
     secondary_pulley_angular_velocity: conv(timeStep.state.secondary_pulley_angular_velocity, 'angular_velocity'),
+    v_b: conv(timeStep.state.v_b, 'velocity'),
   },
   derived_state: {
     car_velocity: conv(timeStep.derived_state.car_velocity, 'velocity'),
@@ -36,7 +37,6 @@ function convertTimeStepData(
     belt_slip: ({
       coupling_torque: conv(timeStep.drivetrain.belt_slip.coupling_torque, 'torque'),
       torque_demand: conv(timeStep.drivetrain.belt_slip.torque_demand, 'torque'),
-      relative_velocity: conv((timeStep.drivetrain.belt_slip as TimeStepDataModel['drivetrain']['belt_slip'] & { relative_velocity: number }).relative_velocity, 'angular_velocity'),
       tau_upper: conv(timeStep.drivetrain.belt_slip.tau_upper, 'torque'),
       tau_lower: conv(timeStep.drivetrain.belt_slip.tau_lower, 'torque'),
       primary_tau_bounds: {
@@ -84,6 +84,17 @@ function convertTimeStepData(
       effective_cvt_ratio_time_derivative: conv(timeStep.drivetrain.belt_slip.effective_cvt_ratio_time_derivative, 'dimensionless_rate'),
       is_slipping: timeStep.drivetrain.belt_slip.is_slipping
     } as TimeStepDataModel['drivetrain']['belt_slip']),
+    belt_state: {
+      is_stick: timeStep.drivetrain.belt_state.is_stick,
+      relative_speed: conv(timeStep.drivetrain.belt_state.relative_speed, 'velocity'),
+      primary_belt_speed: conv(timeStep.drivetrain.belt_state.primary_belt_speed, 'velocity'),
+      secondary_belt_speed: conv(timeStep.drivetrain.belt_state.secondary_belt_speed, 'velocity'),
+      v_b_star: conv(timeStep.drivetrain.belt_state.v_b_star, 'velocity'),
+      T_b: conv(timeStep.drivetrain.belt_state.T_b, 'time'),
+      v_b: conv(timeStep.drivetrain.belt_state.v_b, 'velocity'),
+      v_b_compatible: conv(timeStep.drivetrain.belt_state.v_b_compatible, 'velocity'),
+      v_b_dot: conv(timeStep.drivetrain.belt_state.v_b_dot, 'acceleration'),
+    },
     primary_pulley: {
       primary_pulley_drive_torque: conv(timeStep.drivetrain.primary_pulley.primary_pulley_drive_torque, 'torque'),
       coupling_torque_at_primary_pulley: conv(timeStep.drivetrain.primary_pulley.coupling_torque_at_primary_pulley, 'torque'),

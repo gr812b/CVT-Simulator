@@ -133,6 +133,27 @@ export interface components {
             primary_engagement: components["schemas"]["SolverResultModel"];
             shift_initiation: components["schemas"]["SolverResultModel"];
         };
+        /** BeltStateBreakdownModel */
+        BeltStateBreakdownModel: {
+            /** Is Stick */
+            is_stick: boolean;
+            /** Relative Speed */
+            relative_speed: number;
+            /** Primary Belt Speed */
+            primary_belt_speed: number;
+            /** Secondary Belt Speed */
+            secondary_belt_speed: number;
+            /** V B Star */
+            v_b_star: number;
+            /** T B */
+            T_b: number;
+            /** V B */
+            v_b: number;
+            /** V B Compatible */
+            v_b_compatible: number;
+            /** V B Dot */
+            v_b_dot: number;
+        };
         /**
          * CarSpecs
          * @description Configuration class for CVT simulator car specifications.
@@ -325,6 +346,7 @@ export interface components {
         /** DrivetrainBreakdownModel */
         DrivetrainBreakdownModel: {
             belt_slip: components["schemas"]["SlipBreakdownModel"];
+            belt_state: components["schemas"]["BeltStateBreakdownModel"];
             primary_pulley: components["schemas"]["PrimaryPulleyDynamicsBreakdownModel"];
             secondary_pulley: components["schemas"]["SecondaryPulleyDynamicsBreakdownModel"];
             cvt_dynamics: components["schemas"]["CvtDynamicsBreakdownModel"];
@@ -585,8 +607,6 @@ export interface components {
             coupling_torque: number;
             /** Torque Demand */
             torque_demand: number;
-            /** Relative Velocity */
-            relative_velocity: number;
             /** Tau Upper */
             tau_upper: number;
             /** Tau Lower */
@@ -657,6 +677,8 @@ export interface components {
             primary_pulley_angular_velocity: number;
             /** Secondary Pulley Angular Velocity */
             secondary_pulley_angular_velocity: number;
+            /** V B */
+            v_b: number;
         };
         /** TimeStepDataModel */
         TimeStepDataModel: {

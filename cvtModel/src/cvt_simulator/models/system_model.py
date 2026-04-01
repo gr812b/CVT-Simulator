@@ -3,6 +3,7 @@ from cvt_simulator.models.slip_model import SlipModel
 from cvt_simulator.models.primary_pulley_model import PrimaryPulleyModel
 from cvt_simulator.models.secondary_pulley_model import SecondaryPulleyModel
 from cvt_simulator.models.cvt_shift_model import CvtShiftModel
+from cvt_simulator.models.belt_model import BeltModel
 from cvt_simulator.utils.system_state import SystemState
 
 
@@ -12,11 +13,13 @@ class SystemModel:
     def __init__(
         self,
         slip_model: SlipModel,
+        belt_model: BeltModel,
         primary_pulley_model: PrimaryPulleyModel,
         secondary_pulley_model: SecondaryPulleyModel,
         cvt_shift_model: CvtShiftModel,
     ):
         self.slip_model = slip_model
+        self.belt_model = belt_model
         self.primary_pulley_model = primary_pulley_model
         self.secondary_pulley_model = secondary_pulley_model
         self.cvt_shift_model = cvt_shift_model
@@ -50,8 +53,17 @@ class SystemModel:
             state, slip_breakdown.coupling_torque
         )
 
+        # Step 5: Belt transport-state evolution
+        belt_state_breakdown = self.belt_model.get_breakdown(
+            state,
+            primary_pulley_angular_accel=primary_pulley_breakdown.primary_pulley_angular_acceleration,
+            secondary_pulley_angular_accel=secondary_pulley_breakdown.secondary_pulley_angular_acceleration,
+            is_stick_override=not slip_breakdown.is_slipping,
+        )
+
         return DrivetrainBreakdown(
             belt_slip=slip_breakdown,
+            belt_state=belt_state_breakdown,
             primary_pulley=primary_pulley_breakdown,
             secondary_pulley=secondary_pulley_breakdown,
             cvt_dynamics=cvt_breakdown,

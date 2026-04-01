@@ -1,6 +1,6 @@
 import numpy as np
 from cvt_simulator.models.pulley.secondary_pulley_interface import SecondaryPulleyModel
-from cvt_simulator.models.pulley.pulley_interface import get_kwarg, get_required_kwarg
+from cvt_simulator.models.pulley.pulley_interface import get_required_kwarg
 from cvt_simulator.models.dataTypes import (
     HelixForceBreakdown,
     SecondaryForceBreakdown,
@@ -140,6 +140,9 @@ class PhysicalSecondaryPulley(SecondaryPulleyModel):
     def calculate_torque_bounds(
         self,
         state: SystemState,
+        is_stick: bool,
+        v_b_star: float,
+        T_b: float,
         **kwargs,
     ) -> SecondaryTorqueBoundsBreakdown:
         """
@@ -169,12 +172,8 @@ class PhysicalSecondaryPulley(SecondaryPulleyModel):
         beta = SHEAVE_ANGLE / 2
 
         # Runtime dynamics terms
-        tau_load = get_kwarg(kwargs, "external_load_torque", None)
-        I_s = get_kwarg(kwargs, "secondary_inertia", None)
-        if I_s is None or tau_load is None:
-            raise ValueError(
-                "Both 'secondary_inertia' and 'external_load_torque' are required for secondary traction bounds"
-            )
+        tau_load = get_required_kwarg(kwargs, "external_load_torque")
+        I_s = get_required_kwarg(kwargs, "secondary_inertia")
 
         # Helix / spring terms
         dtheta_ds = self.theta_ramp.dtheta_dx(shift_distance)
@@ -187,52 +186,74 @@ class PhysicalSecondaryPulley(SecondaryPulleyModel):
         )
 
         belt_mass_term = RUBBER_DENSITY * BELT_CROSS_SECTIONAL_AREA * r_cm * phi
+        μ_branch = self.μ_static if is_stick else self.μ_kinetic
 
-        spring_numerator_term = self.μ * np.tan(beta) * spring_term
-        load_numerator_term = belt_mass_term * ((r_cm * tau_load) / I_s)
-        shift_numerator_term = belt_mass_term * (-2.0 * r_cm_dot * angular_velocity)
-        common_numerator = (
-            spring_numerator_term + load_numerator_term + shift_numerator_term
-        )
+        spring_numerator_term = μ_branch * np.tan(beta) * spring_term
+        if is_stick:
+            load_numerator_term = belt_mass_term * ((r_cm * tau_load) / I_s)
+            shift_numerator_term = -2.0 * belt_mass_term * r_cm_dot * angular_velocity
+            common_numerator = (
+                spring_numerator_term + load_numerator_term + shift_numerator_term
+            )
+            numerator_net = (r_eff / cvt_ratio) * common_numerator
 
-        denominator_inverse_radius = 1.0 / r_eff
-        denominator_helix_feedback = self.μ * np.tan(beta) * dtheta_ds
-        denominator_inertial_feedback = belt_mass_term * r_cm / I_s
+            helix_feedback = r_eff * μ_branch * np.tan(beta) * dtheta_ds
+            inertial_feedback = r_eff * belt_mass_term * (r_cm / I_s)
+            positive_denominator = 1.0 - helix_feedback + inertial_feedback
+            negative_denominator = 1.0 + helix_feedback - inertial_feedback
 
-        positive_denominator = (
-            denominator_inverse_radius
-            - denominator_helix_feedback
-            + denominator_inertial_feedback
-        )
+            tau_positive = numerator_net / positive_denominator
+            tau_negative = -numerator_net / negative_denominator
 
-        negative_denominator = (
-            denominator_inverse_radius
-            + denominator_helix_feedback
-            - denominator_inertial_feedback
-        )
+            denominator_positive_breakdown = SecondaryTorqueDenominatorBreakdown(
+                inverse_radius_term=1.0,
+                helix_feedback_term=-helix_feedback,
+                inertial_feedback_term=inertial_feedback,
+                net=positive_denominator,
+            )
 
-        tau_positive = (common_numerator / positive_denominator) / cvt_ratio
-        tau_negative = (-common_numerator / negative_denominator) / cvt_ratio
+            denominator_negative_breakdown = SecondaryTorqueDenominatorBreakdown(
+                inverse_radius_term=1.0,
+                helix_feedback_term=helix_feedback,
+                inertial_feedback_term=-inertial_feedback,
+                net=negative_denominator,
+            )
+        else:
+            load_numerator_term = -belt_mass_term * (
+                r_cm * ((v_b_star - state.v_b) / T_b)
+            )
+            shift_numerator_term = -belt_mass_term * (r_cm_dot * state.v_b)
+            common_numerator = (
+                spring_numerator_term + load_numerator_term + shift_numerator_term
+            )
+            numerator_net = (r_eff / cvt_ratio) * common_numerator
+
+            helix_feedback = r_eff * μ_branch * np.tan(beta) * dtheta_ds
+            positive_denominator = 1.0 - helix_feedback
+            negative_denominator = 1.0 + helix_feedback
+
+            tau_positive = numerator_net / positive_denominator
+            tau_negative = -numerator_net / negative_denominator
+
+            denominator_positive_breakdown = SecondaryTorqueDenominatorBreakdown(
+                inverse_radius_term=1.0,
+                helix_feedback_term=-helix_feedback,
+                inertial_feedback_term=0.0,
+                net=positive_denominator,
+            )
+
+            denominator_negative_breakdown = SecondaryTorqueDenominatorBreakdown(
+                inverse_radius_term=1.0,
+                helix_feedback_term=helix_feedback,
+                inertial_feedback_term=0.0,
+                net=negative_denominator,
+            )
 
         numerator_breakdown = SecondaryTorqueNumeratorBreakdown(
-            spring_term=spring_numerator_term,
-            load_term=load_numerator_term,
-            shift_term=shift_numerator_term,
-            net=common_numerator,
-        )
-
-        denominator_positive_breakdown = SecondaryTorqueDenominatorBreakdown(
-            inverse_radius_term=denominator_inverse_radius,
-            helix_feedback_term=-denominator_helix_feedback,
-            inertial_feedback_term=denominator_inertial_feedback,
-            net=positive_denominator,
-        )
-
-        denominator_negative_breakdown = SecondaryTorqueDenominatorBreakdown(
-            inverse_radius_term=denominator_inverse_radius,
-            helix_feedback_term=denominator_helix_feedback,
-            inertial_feedback_term=-denominator_inertial_feedback,
-            net=negative_denominator,
+            spring_term=(r_eff / cvt_ratio) * spring_numerator_term,
+            load_term=(r_eff / cvt_ratio) * load_numerator_term,
+            shift_term=(r_eff / cvt_ratio) * shift_numerator_term,
+            net=numerator_net,
         )
 
         return SecondaryTorqueBoundsBreakdown(

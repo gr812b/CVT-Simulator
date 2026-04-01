@@ -1,6 +1,6 @@
 import numpy as np
 from cvt_simulator.models.pulley.primary_pulley_interface import PrimaryPulleyModel
-from cvt_simulator.models.pulley.pulley_interface import get_kwarg
+from cvt_simulator.models.pulley.pulley_interface import get_required_kwarg
 from cvt_simulator.models.dataTypes import (
     PrimaryForceBreakdown,
     PrimaryTorqueBoundsBreakdown,
@@ -143,6 +143,9 @@ class PhysicalPrimaryPulley(PrimaryPulleyModel):
     def calculate_torque_bounds(
         self,
         state: SystemState,
+        is_stick: bool,
+        v_b_star: float,
+        T_b: float,
         **kwargs,
     ) -> PrimaryTorqueBoundsBreakdown:
         """
@@ -155,11 +158,7 @@ class PhysicalPrimaryPulley(PrimaryPulleyModel):
             - denominator decomposition for upper/lower branches
         """
         shift_distance = np.clip(state.shift_distance, 0, MAX_SHIFT)
-        # angular_velocity = self._get_angular_velocity(state)
-        belt_angular_velocity = (
-            state.secondary_pulley_angular_velocity
-            * tm.current_effective_cvt_ratio(state.shift_distance)
-        )
+        primary_angular_velocity = state.primary_pulley_angular_velocity
 
         # Geometry terms
         r_eff = self._get_radius(shift_distance)
@@ -169,51 +168,66 @@ class PhysicalPrimaryPulley(PrimaryPulleyModel):
         beta = SHEAVE_ANGLE / 2
 
         # Dynamic terms
-        tau_eng = get_kwarg(kwargs, "engine_drive_torque", None)
-        I_p = get_kwarg(kwargs, "primary_inertia", None)
-        if I_p is None or tau_eng is None:
-            raise ValueError(
-                "primary_inertia and engine_drive_torque are required for primary traction bounds"
-            )
+        tau_eng = get_required_kwarg(kwargs, "engine_drive_torque")
+        I_p = get_required_kwarg(kwargs, "primary_inertia")
 
         # This must be ONLY the mechanism clamping force term, not total force with belt corrections
         axial_clamping_force, _ = self.calculate_axial_clamping_force(state)
 
         belt_mass_term = RUBBER_DENSITY * BELT_CROSS_SECTIONAL_AREA * r_cm * phi
+        μ_branch = self.μ_static if is_stick else self.μ_kinetic
+        clamping_term = 2.0 * μ_branch * np.tan(beta) * axial_clamping_force
 
-        clamping_numerator_term = 2.0 * self.μ * np.tan(beta) * axial_clamping_force
-        load_numerator_term = -belt_mass_term * ((r_cm * tau_eng) / I_p)
-        shift_numerator_term = -belt_mass_term * (2.0 * r_dot * belt_angular_velocity)
-        common_numerator = (
-            clamping_numerator_term + load_numerator_term + shift_numerator_term
-        )
+        if is_stick:
+            load_term = -belt_mass_term * ((r_cm**2 * tau_eng) / I_p)
+            shift_term = -belt_mass_term * (
+                2.0 * r_cm * r_dot * primary_angular_velocity
+            )
+            numerator_net = r_eff * (clamping_term + load_term + shift_term)
 
-        denominator_inverse_radius = 1.0 / r_eff
-        denominator_inertial_feedback = belt_mass_term * r_cm / I_p
+            denominator_feedback = r_eff * belt_mass_term * ((r_cm**2) / I_p)
+            upper_denominator = 1.0 - denominator_feedback
+            lower_denominator = 1.0 + denominator_feedback
 
-        upper_denominator = denominator_inverse_radius - denominator_inertial_feedback
-        lower_denominator = denominator_inverse_radius + denominator_inertial_feedback
+            tau_upper = numerator_net / upper_denominator
+            tau_lower = -numerator_net / lower_denominator
 
-        tau_upper = common_numerator / upper_denominator
-        tau_lower = -common_numerator / lower_denominator
+            denominator_upper_breakdown = PrimaryTorqueDenominatorBreakdown(
+                inverse_radius_term=1.0,
+                inertial_feedback_term=-denominator_feedback,
+                net=upper_denominator,
+            )
+
+            denominator_lower_breakdown = PrimaryTorqueDenominatorBreakdown(
+                inverse_radius_term=1.0,
+                inertial_feedback_term=denominator_feedback,
+                net=lower_denominator,
+            )
+        else:
+            load_term = -belt_mass_term * (r_cm * ((v_b_star - state.v_b) / T_b))
+            shift_term = -belt_mass_term * (r_dot * state.v_b)
+            numerator_net = r_eff * (clamping_term + load_term + shift_term)
+
+            tau_upper = numerator_net
+            tau_lower = -numerator_net
+
+            denominator_upper_breakdown = PrimaryTorqueDenominatorBreakdown(
+                inverse_radius_term=1.0,
+                inertial_feedback_term=0.0,
+                net=1.0,
+            )
+
+            denominator_lower_breakdown = PrimaryTorqueDenominatorBreakdown(
+                inverse_radius_term=1.0,
+                inertial_feedback_term=0.0,
+                net=1.0,
+            )
 
         numerator_breakdown = PrimaryTorqueNumeratorBreakdown(
-            clamping_term=clamping_numerator_term,
-            load_term=load_numerator_term,
-            shift_term=shift_numerator_term,
-            net=common_numerator,
-        )
-
-        denominator_upper_breakdown = PrimaryTorqueDenominatorBreakdown(
-            inverse_radius_term=denominator_inverse_radius,
-            inertial_feedback_term=-denominator_inertial_feedback,
-            net=upper_denominator,
-        )
-
-        denominator_lower_breakdown = PrimaryTorqueDenominatorBreakdown(
-            inverse_radius_term=denominator_inverse_radius,
-            inertial_feedback_term=denominator_inertial_feedback,
-            net=lower_denominator,
+            clamping_term=r_eff * clamping_term,
+            load_term=r_eff * load_term,
+            shift_term=r_eff * shift_term,
+            net=numerator_net,
         )
 
         return PrimaryTorqueBoundsBreakdown(
