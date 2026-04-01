@@ -12,7 +12,7 @@ class SystemState:
     - shift_velocity: ṡ [m/s] - rate of sheave axial movement
     - primary_pulley_angular_velocity: ω_P [rad/s] - primary pulley angular velocity
     - secondary_pulley_angular_velocity: ω_s [rad/s] - secondary pulley angular velocity
-    - v_b: belt angular speed state used by slip branch dynamics [rad/s]
+    - v_b: belt linear transport speed used by slip branch dynamics [m/s]
 
     All other quantities (car_velocity, engine_angular_velocity, positions, etc.)
     are derived from these DOF and should be computed using StateComputations utility.
