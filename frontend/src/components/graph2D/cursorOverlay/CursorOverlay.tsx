@@ -118,7 +118,7 @@ export function CursorOverlay({
       .filter((line): line is TooltipLine => line !== null);
 
     tooltipEl.innerHTML = buildTooltipHTML(xLabel, lines);
-    tooltipEl.style.left = `${rect.x + 8}px`;
+    tooltipEl.style.left = `${rect.x + 32}px`;
     tooltipEl.style.top = `${rect.y + 8}px`;
     tooltipEl.style.display = 'block';
   }, [chart, xData, yData, xAxis, yAxis, seriesNames]);
