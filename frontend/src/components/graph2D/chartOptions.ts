@@ -1,11 +1,8 @@
-import type {
-  EChartsOption,
-  DefaultLabelFormatterCallbackParams
+import type { 
+  EChartsOption, 
+  DefaultLabelFormatterCallbackParams 
 } from 'echarts';
 import { VALIDATION } from './validation';
-import { buildTooltipHTML } from './chartTooltip/ChartTooltip';
-import type { TooltipLine } from './chartTooltip/ChartTooltip';
-
 
 /**
  * Configuration for axis display
@@ -76,7 +73,7 @@ const COLORS = {
   },
   get PRIMARY() { return getCSSColor('--primary', '#bb0808'); },
   get TOOLTIP_BG() { return getCSSColor('--tooltip-bg', '#2a2a2a'); },
-  get ZOOM_FILL() {
+  get ZOOM_FILL() { 
     const hex = getCSSColor('--primary', '#bb0808').replace('#', '');
     const r = parseInt(hex.substring(0, 2), 16);
     const g = parseInt(hex.substring(2, 4), 16);
@@ -89,7 +86,7 @@ const COLORS = {
 const LAYOUT = {
   DEFAULT_HEIGHT: 400,
   DEFAULT_WIDTH: '100%',
-
+  
   GRID: {
     LEFT: 60,
     RIGHT: 60,
@@ -97,16 +94,16 @@ const LAYOUT = {
     TOP_WITHOUT_TITLE: 40,
     BOTTOM: 70,
   },
-
+  
   TITLE: {
     TOP: 16,
   },
-
+  
   TOOLBOX: {
     RIGHT: 12,
     TOP: 12,
   },
-
+  
   X_AXIS_NAME_GAP: 30,
   Y_AXIS_NAME_GAP: 40,
   SLIDER_BOTTOM: 10,
@@ -136,9 +133,13 @@ const tooltipFormatterCache = new Map<string, (params: DefaultLabelFormatterCall
 
 /**
  * Creates a tooltip formatter that includes units.
- * Uses buildTooltipHTML to stay visually consistent with CursorOverlay.
+ * Returns either a string template or a stable function reference.
  */
 function createTooltipFormatter(config: ChartConfig) {
+  // For simple cases, we could use ECharts string templates:
+  // return `${config.xAxis.name}: {c0}<br/>${config.yAxis.name}: {c1}`;
+  
+  // But for unit support and formatting, we need the function approach with caching
   const cacheKey = JSON.stringify({
     xAxisName: config.xAxis.name,
     yAxisName: config.yAxis.name,
@@ -146,38 +147,54 @@ function createTooltipFormatter(config: ChartConfig) {
     yAxisUnit: config.yAxis.unit,
     seriesNames: config.seriesNames,
   });
-
+  
+  // Return cached formatter if it exists
   if (tooltipFormatterCache.has(cacheKey)) {
     return tooltipFormatterCache.get(cacheKey)!;
   }
-
+  
+  // Create new formatter
   const formatter = (params: DefaultLabelFormatterCallbackParams | DefaultLabelFormatterCallbackParams[]) => {
+    // ECharts passes either a single param object or an array of param objects
+    // For 'axis' trigger (which we use), it's always an array
     const paramArray = Array.isArray(params) ? params : [params];
-
+    
     if (paramArray.length > 0) {
       const param = paramArray[0];
+      
+      // For line charts with dataset, data comes in param.value as [x, y]
+      // or for some configurations it might be in param.data
       const dataValues = Array.isArray(param.value) ? param.value : param.data;
-
+      
       if (Array.isArray(dataValues) && dataValues.length >= 2) {
         const xUnit = config.xAxis.unit ? ` ${config.xAxis.unit}` : '';
-        const xLabel = `${config.xAxis.name}: ${stableValueFormatter(dataValues[0])}${xUnit}`;
+        const yUnit = config.yAxis.unit ? ` ${config.yAxis.unit}` : '';
 
-        const lines: TooltipLine[] = [];
+        const xLine = `${config.xAxis.name}: ${stableValueFormatter(dataValues[0])}${xUnit}<br/>`;
+
+        const yLines = [];
         for (let i = 1; i < dataValues.length; i++) {
-          const yUnit = config.yAxis.unit ? ` ${config.yAxis.unit}` : '';
-          lines.push({
-            color: COLORS.LINES[(i - 1) % COLORS.LINES.length],
-            label: config.seriesNames?.[i - 1] || `${config.yAxis.name} ${i}`,
-            value: `${stableValueFormatter(dataValues[i])}${yUnit}`,
-          });
+            const marker = `<span style="
+              display:inline-block;
+              margin-right:6px;
+              border-radius:50%;
+              width:8px;
+              height:8px;
+              background-color:${COLORS.LINES[(i - 1) % COLORS.LINES.length]};
+          "></span>`;
+          yLines.push(`${marker} ${config.seriesNames?.[i - 1] || ''} ${config.yAxis.name}: ${stableValueFormatter(dataValues[i])}${yUnit}`);
         }
 
-        return buildTooltipHTML(xLabel, lines);
+        return `
+          ${xLine}
+          ${yLines.join('<br/>')}
+        `;
       }
     }
     return '';
   };
-
+  
+  // Cache and return the formatter
   tooltipFormatterCache.set(cacheKey, formatter);
   return formatter;
 }
@@ -187,7 +204,7 @@ function createTooltipFormatter(config: ChartConfig) {
  */
 function deepMerge<T extends Record<string, unknown>>(target: T, source: Partial<T>): T {
   const result = { ...target };
-
+  
   for (const key in source) {
     if (source[key] !== undefined) {
       if (typeof source[key] === 'object' && source[key] !== null && !Array.isArray(source[key])) {
@@ -200,7 +217,7 @@ function deepMerge<T extends Record<string, unknown>>(target: T, source: Partial
       }
     }
   }
-
+  
   return result;
 }
 
@@ -241,7 +258,7 @@ export function createChartConfig(userConfig: Partial<ChartConfig>, xData: numbe
       ...userConfig.yAxis,
     },
   };
-
+  
   // Auto-infer axis types if not specified
   if (xData.length > 0 && !userConfig.xAxis?.type) {
     mergedConfig.xAxis.type = inferAxisType(xData);
@@ -249,7 +266,7 @@ export function createChartConfig(userConfig: Partial<ChartConfig>, xData: numbe
   if (yData.length > 0 && !userConfig.yAxis?.type) {
     mergedConfig.yAxis.type = inferAxisType(yData[0]);
   }
-
+  
   return mergedConfig;
 }
 
@@ -257,6 +274,8 @@ export function createChartConfig(userConfig: Partial<ChartConfig>, xData: numbe
  * Converts data points to ECharts dataset format
  */
 export function createDataset(xData: number[], yData: number[][], config: ChartConfig): EChartsOption['dataset'] {
+
+
   const source: (string | number | Date)[][] = [[config.xAxis.name]];
 
   const seriesCount = yData[0]?.length || 0;
@@ -302,6 +321,7 @@ function createSeries(yData: number[][], config: ChartConfig): EChartsOption['se
   return seriesArray;
 }
 
+
 /**
  * Generates complete ECharts options with dark theme defaults
  */
@@ -314,6 +334,7 @@ export function generateEChartsOptions(
   const dataset = createDataset(xData, yData, config);
   const series = createSeries(yData, config);
 
+  // Create axis options separately to avoid type inference issues
   const xAxisOption = {
     type: config.xAxis.type,
     name: config.xAxis.unit ? `${config.xAxis.name} (${config.xAxis.unit})` : config.xAxis.name,
@@ -321,45 +342,46 @@ export function generateEChartsOptions(
     nameGap: LAYOUT.X_AXIS_NAME_GAP,
     nameTextStyle: { color: COLORS.TEXT },
     boundaryGap: config.xAxis.type === 'category',
-    axisLabel: {
+    axisLabel: { 
       hideOverlap: CHART_DEFAULTS.HIDE_OVERLAP,
-      color: COLORS.TEXT
+      color: COLORS.TEXT 
     },
     axisLine: { lineStyle: { color: COLORS.GRID } },
     axisTick: { lineStyle: { color: COLORS.GRID } },
     splitLine: { lineStyle: { color: COLORS.GRID } },
   };
-
+  
   const yAxisOption = {
     type: config.yAxis.type,
     name: config.yAxis.unit ? `${config.yAxis.name} (${config.yAxis.unit})` : config.yAxis.name,
     nameLocation: 'middle' as const,
     nameGap: LAYOUT.Y_AXIS_NAME_GAP,
     nameTextStyle: { color: COLORS.TEXT },
-    axisLabel: {
+    axisLabel: { 
       hideOverlap: CHART_DEFAULTS.HIDE_OVERLAP,
-      color: COLORS.TEXT
+      color: COLORS.TEXT 
     },
-    splitLine: {
+    splitLine: { 
       show: CHART_DEFAULTS.SHOW_SPLIT_LINES,
       lineStyle: { color: COLORS.GRID }
     },
     axisLine: { lineStyle: { color: COLORS.GRID } },
     axisTick: { lineStyle: { color: COLORS.GRID } },
   };
-
+  
+  // Base options with dark theme styling built-in
   const baseOptions: EChartsOption = {
-    animation: false,
+    animation: false, // Disabled for performance - 20 graphs with animation kills FPS
     backgroundColor: COLORS.BACKGROUND,
     textStyle: { color: COLORS.TEXT },
-
+    
     title: config.title ? {
       text: config.title,
       left: 'center',
       top: LAYOUT.TITLE.TOP,
       textStyle: { color: COLORS.TEXT },
     } : undefined,
-
+    
     // TODO: Only enable if playback paused
     tooltip: {
       trigger: 'axis',
@@ -369,7 +391,7 @@ export function generateEChartsOptions(
       textStyle: { color: COLORS.TEXT },
       formatter: createTooltipFormatter(config),
     },
-
+    
     // TODO: Only enable if playback paused
     toolbox: {
       feature: {
@@ -384,9 +406,9 @@ export function generateEChartsOptions(
         iconStyle: { borderColor: COLORS.PRIMARY },
       },
     },
-
+    
     dataset,
-
+    
     grid: {
       left: LAYOUT.GRID.LEFT,
       right: LAYOUT.GRID.RIGHT,
@@ -394,20 +416,20 @@ export function generateEChartsOptions(
       bottom: LAYOUT.GRID.BOTTOM,
       containLabel: true,
     },
-
+    
     xAxis: xAxisOption,
-
+    
     yAxis: yAxisOption,
-
+    
     // TODO: Only enable if playback paused
     dataZoom: [
-      {
-        type: 'inside',
-        xAxisIndex: 0
+      { 
+        type: 'inside', 
+        xAxisIndex: 0 
       },
-      {
-        type: 'slider',
-        xAxisIndex: 0,
+      { 
+        type: 'slider', 
+        xAxisIndex: 0, 
         bottom: LAYOUT.SLIDER_BOTTOM,
         textStyle: { color: COLORS.TEXT },
         borderColor: COLORS.GRID,
@@ -417,9 +439,9 @@ export function generateEChartsOptions(
           borderColor: COLORS.PRIMARY,
         },
       },
-      {
-        type: 'slider',
-        yAxisIndex: 0,
+      { 
+        type: 'slider', 
+        yAxisIndex: 0, 
         right: LAYOUT.SLIDER_RIGHT,
         textStyle: { color: COLORS.TEXT },
         borderColor: COLORS.GRID,
@@ -430,10 +452,11 @@ export function generateEChartsOptions(
         },
       },
     ],
-
+    
     series: series
   };
-
+  
+  // Apply user overrides last
   return deepMerge(baseOptions, userOptions);
 }
 
@@ -458,12 +481,14 @@ export { COLORS as CHART_COLORS };
  */
 export function inferAxisType(values: (number | string | Date)[]): 'time' | 'value' | 'category' {
   if (values.length === 0) return 'category';
-
+  
+  // Check if all values are numbers
   const numericCount = values.filter(v => typeof v === 'number' && Number.isFinite(v)).length;
   if (numericCount === values.length) {
     return 'value';
   }
-
+  
+  // Check if values are dates or date-like strings
   const dateCount = values.filter(v => {
     if (v instanceof Date) return true;
     if (typeof v === 'string') {
@@ -472,11 +497,11 @@ export function inferAxisType(values: (number | string | Date)[]): 'time' | 'val
     }
     return false;
   }).length;
-
+  
   const threshold = Math.max(1, Math.floor(values.length * VALIDATION.DATE_DETECTION_THRESHOLD));
   if (dateCount >= threshold) {
     return 'time';
   }
-
+  
   return 'category';
 }

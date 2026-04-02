@@ -4,7 +4,7 @@ import cx from 'classnames';
 import styles from './Graph2D.module.scss';
 import { validateData } from './validation';
 import { createChartOptions, CHART_COLORS, type ChartConfig } from './chartOptions';
-import { CursorOverlay } from './indexOverlay/IndexOverlay';
+import { IndexOverlay } from './indexOverlay/IndexOverlay';
 import type { ECharts, EChartsOption } from 'echarts';
 
 
@@ -130,7 +130,7 @@ function Graph2DComponent({
           }}
         />
 
-        <CursorOverlay
+        <IndexOverlay
           xData={xData}
           yData={yData}
           replayController={replayController}

@@ -1,13 +1,13 @@
 @use '@styles/_colors';
 @use '@styles/_fonts';
 
-// DOM-based cursor overlay (bypasses ECharts render pipeline)
-.cursorOverlay {
+// DOM-based index overlay (bypasses ECharts render pipeline)
+.indexOverlay {
     position: absolute;
     inset: 0;
     pointer-events: none;
 
-    .cursorLine {
+    .indexLine {
         position: absolute;
         left: 0;
         top: 0;
@@ -19,7 +19,7 @@
         will-change: transform;
     }
 
-    .cursorDot {
+    .indexDot {
         position: absolute;
         left: 0;
         top: 0;
@@ -33,9 +33,18 @@
         pointer-events: none;
     }
 
-    .cursorTooltip {
+    .indexTooltip {
         position: absolute;
         display: none;
+        white-space: nowrap;
+        padding: 0.5rem 0.75rem;
+        @include fonts.text-medium;
+        color: var(--text-color);
+        background: var(--tooltip-bg);
+        border: 0.5px solid var(--grid-color);
+        border-radius: 4px;
+        pointer-events: none;
         z-index: 10;
+        line-height: 1.4;
     }
 }

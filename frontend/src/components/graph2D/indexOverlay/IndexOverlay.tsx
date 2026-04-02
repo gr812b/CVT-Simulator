@@ -1,16 +1,14 @@
 import { useRef, useEffect, useCallback, useState } from 'react';
 import type { ECharts, EChartsOption } from 'echarts';
-import styles from './CursorOverlay.module.scss';
+import styles from './IndexOverlay.module.scss';
 import { ReplayEventType } from '@utils/ReplayController';
-import type { TooltipLine } from '../chartTooltip/ChartTooltip';
-import { buildTooltipHTML, ChartTooltip } from '../chartTooltip/ChartTooltip';
 
 interface AxisConfig {
   label: string;
   unit?: string;
 }
 
-interface CursorOverlayProps {
+interface IndexOverlayProps {
   xData: number[];
   yData: number[][];
   replayController: {
@@ -22,7 +20,7 @@ interface CursorOverlayProps {
   seriesNames?: string[];
 }
 
-export function CursorOverlay({
+export function IndexOverlay({
   xData,
   yData,
   replayController,
@@ -30,11 +28,11 @@ export function CursorOverlay({
   xAxis,
   yAxis,
   seriesNames = [],
-}: CursorOverlayProps) {
+}: IndexOverlayProps) {
   const [chart, setChart] = useState<ECharts | null>(null);
-  const cursorLineRef = useRef<HTMLDivElement | null>(null);
-  const cursorTooltipRef = useRef<HTMLDivElement | null>(null);
-  const cursorDotsRef = useRef<HTMLDivElement[]>([]);
+  const indexLineRef = useRef<HTMLDivElement | null>(null);
+  const indexTooltipRef = useRef<HTMLDivElement | null>(null);
+  const indexDotsRef = useRef<HTMLDivElement[]>([]);
   const gridRectRef = useRef<{ x: number; y: number; width: number; height: number } | null>(null);
   const currentIndexRef = useRef<number>(0);
   const isInitializedRef = useRef(false);
@@ -47,11 +45,11 @@ export function CursorOverlay({
     });
   }, [onMount]);
 
-  // Update cursor DOM position
-  const updateCursorDom = useCallback((index: number) => {
-    const lineEl = cursorLineRef.current;
-    const tooltipEl = cursorTooltipRef.current;
-    const dotEls = cursorDotsRef.current;
+  // Update index DOM position
+  const updateIndexDom = useCallback((index: number) => {
+    const lineEl = indexLineRef.current;
+    const tooltipEl = indexTooltipRef.current;
+    const dotEls = indexDotsRef.current;
 
     if (!chart || !lineEl || !tooltipEl || !isInitializedRef.current) {
       return;
@@ -73,7 +71,7 @@ export function CursorOverlay({
     // Convert x value to pixel coordinate
     const px = chart.convertToPixel({ xAxisIndex: 0 }, xValue) as number;
 
-    // Position cursor line
+    // Position index line
     lineEl.style.transform = `translate3d(${px}px, ${rect.y}px, 0)`;
     lineEl.style.height = `${rect.height}px`;
     lineEl.style.display = 'block';
@@ -85,9 +83,7 @@ export function CursorOverlay({
 
       if (yValue != null) {
         const py = chart.convertToPixel({ yAxisIndex: 0 }, yValue) as number;
-        const dotX = px - 6;
-        const dotY = py - 6;
-        dotEl.style.transform = `translate3d(${dotX}px, ${dotY}px, 0)`;
+        dotEl.style.transform = `translate3d(${px - 6}px, ${py - 6}px, 0)`;
         dotEl.style.display = 'block';
       } else {
         dotEl.style.display = 'none';
@@ -96,28 +92,28 @@ export function CursorOverlay({
 
     // Hide unused dots
     for (let i = yValues.length; i < dotEls.length; i++) {
-      if (dotEls[i]) {
-        dotEls[i].style.display = 'none';
-      }
+      if (dotEls[i]) dotEls[i].style.display = 'none';
     }
 
-    // Build tooltip content
+    // Build tooltip HTML
     const xLabel = xAxis.unit
       ? `${xAxis.label}: ${xValue.toFixed(2)} ${xAxis.unit}`
       : `${xAxis.label}: ${xValue.toFixed(2)}`;
 
-    const lines = yValues
-      .map((yValue, idx): TooltipLine | null => {
-        if (yValue == null) return null;
-        return {
-          color: `var(--line${idx + 1}, #ffffff)`,
-          label: seriesNames[idx] || `${yAxis.label}${yValues.length > 1 ? ` ${idx + 1}` : ''}`,
-          value: yAxis.unit ? `${yValue.toFixed(2)} ${yAxis.unit}` : yValue.toFixed(2),
-        };
+    const yLines = yValues
+      .map((yValue, idx) => {
+        if (yValue == null) return '';
+        const name = seriesNames[idx] || `${yAxis.label}${yValues.length > 1 ? ` ${idx + 1}` : ''}`;
+        const color = `var(--line${idx + 1}, #ffffff)`;
+        const val = yAxis.unit ? `${yValue.toFixed(2)} ${yAxis.unit}` : yValue.toFixed(2);
+        return `<div style="display:flex;align-items:center;gap:6px;">
+          <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${color};flex-shrink:0;"></span>
+          <span>${name}: ${val}</span>
+        </div>`;
       })
-      .filter((line): line is TooltipLine => line !== null);
+      .filter(Boolean);
 
-    tooltipEl.innerHTML = buildTooltipHTML(xLabel, lines);
+    tooltipEl.innerHTML = `<div>${xLabel}</div>${yLines.join('')}`;
     tooltipEl.style.left = `${rect.x + 32}px`;
     tooltipEl.style.top = `${rect.y + 8}px`;
     tooltipEl.style.display = 'block';
@@ -146,17 +142,16 @@ export function CursorOverlay({
         height: height - top - bottom,
       };
 
-      if (rect && typeof rect.x === 'number' && typeof rect.width === 'number') {
+      if (typeof rect.x === 'number' && typeof rect.width === 'number') {
         gridRectRef.current = rect;
-
         if (currentIndexRef.current !== undefined && isInitializedRef.current) {
-          updateCursorDom(currentIndexRef.current);
+          updateIndexDom(currentIndexRef.current);
         }
       }
     } catch {
       // Grid not ready yet
     }
-  }, [chart, updateCursorDom]);
+  }, [chart, updateIndexDom]);
 
   // Initialize when chart becomes available
   useEffect(() => {
@@ -179,27 +174,27 @@ export function CursorOverlay({
     const cleanup = replayController.on((event) => {
       if (event.type === ReplayEventType.Progress && event.currentIndex !== undefined) {
         currentIndexRef.current = event.currentIndex;
-        updateCursorDom(event.currentIndex);
+        updateIndexDom(event.currentIndex);
       }
     });
 
     return cleanup;
-  }, [replayController, updateCursorDom]);
+  }, [replayController, updateIndexDom]);
 
   return (
-    <div className={styles.cursorOverlay}>
-      <div ref={cursorLineRef} className={styles.cursorLine} />
+    <div className={styles.indexOverlay}>
+      <div ref={indexLineRef} className={styles.indexLine} />
       {yData[0]?.map((_, seriesIndex) => (
         <div
           key={seriesIndex}
           ref={(el) => {
-            if (el) cursorDotsRef.current[seriesIndex] = el;
+            if (el) indexDotsRef.current[seriesIndex] = el;
           }}
-          className={styles.cursorDot}
+          className={styles.indexDot}
           data-series-index={seriesIndex}
         />
       ))}
-      <ChartTooltip ref={cursorTooltipRef} className={styles.cursorTooltip} />
+      <div ref={indexTooltipRef} className={styles.indexTooltip} />
     </div>
   );
 }
