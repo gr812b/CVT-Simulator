@@ -4,7 +4,7 @@ import cx from 'classnames';
 import styles from './Graph2D.module.scss';
 import { validateData } from './validation';
 import { createChartOptions, CHART_COLORS, type ChartConfig } from './chartOptions';
-import { CursorOverlay } from './cursorOverlay/CursorOverlay';
+import { CursorOverlay } from './indexOverlay/IndexOverlay';
 import type { ECharts, EChartsOption } from 'echarts';
 
 
