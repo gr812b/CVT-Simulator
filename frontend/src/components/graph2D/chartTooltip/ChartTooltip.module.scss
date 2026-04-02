@@ -1,0 +1,13 @@
+@use '@styles/_fonts';
+
+.chartTooltip {
+    white-space: nowrap;
+    padding: 0.5rem 0.75rem;
+    @include fonts.text-small;
+    color: var(--text-color);
+    background: var(--tooltip-bg);
+    border: 0.5px solid var(--grid-color);
+    border-radius: 4px;
+    pointer-events: none;
+    line-height: 1.6;
+}
