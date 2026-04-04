@@ -5,6 +5,7 @@ $z-index: (
         popup: 2,
         modal: 3,
         loading: 4,
+        overlay: 10,
 );
 
 @function z($key) {

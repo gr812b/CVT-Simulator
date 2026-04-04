@@ -1,5 +1,6 @@
 @use '@styles/_colors';
 @use '@styles/_fonts';
+@use '@styles/_z_index' as *;
 
 // DOM-based index overlay (bypasses ECharts render pipeline)
 .indexOverlay {
@@ -38,13 +39,12 @@
         display: none;
         white-space: nowrap;
         padding: 0.5rem 0.75rem;
-        @include fonts.text-medium;
+        @include fonts.text-tooltip;
         color: var(--text-color);
         background: var(--tooltip-bg);
         border: 0.5px solid var(--grid-color);
         border-radius: 4px;
         pointer-events: none;
-        z-index: 10;
-        line-height: 1.4;
+        z-index: z(overlay);
     }
 }
