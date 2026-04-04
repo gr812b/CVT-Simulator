@@ -18,17 +18,10 @@ interface IndexOverlayProps {
   xAxis: AxisConfig;
   yAxis: AxisConfig;
   seriesNames?: string[];
-  tooltipPadding?: Partial<TooltipPadding>;
+  tooltipPadding?: number;
 }
 
-interface TooltipPadding {
-  top: number;
-  right: number;
-  bottom: number;
-  left: number;
-}
-
-const DEFAULT_TOOLTIP_PADDING: TooltipPadding = { top: 8, right: 8, bottom: 8, left: 8 };
+const DEFAULT_TOOLTIP_PADDING = 8;
 
 export function IndexOverlay({
   xData,
@@ -69,8 +62,8 @@ export function IndexOverlay({
   yAxisRef.current = yAxis;
   seriesNamesRef.current = seriesNames;
 
-  const tooltipPaddingRef = useRef<TooltipPadding>(DEFAULT_TOOLTIP_PADDING);
-  tooltipPaddingRef.current = { ...DEFAULT_TOOLTIP_PADDING, ...tooltipPadding };
+  const tooltipPaddingRef = useRef<number>(DEFAULT_TOOLTIP_PADDING);
+  tooltipPaddingRef.current = tooltipPadding ?? DEFAULT_TOOLTIP_PADDING;
 
   // Register chart ready callback
   useEffect(() => {
@@ -143,10 +136,10 @@ export function IndexOverlay({
       if (!rect) return pos;
 
       const pad = tooltipPaddingRef.current;
-      const minLeft = rect.x + pad.left;
-      const maxLeft = rect.x + rect.width - tooltipW - pad.right;
-      const minTop = rect.y + pad.top;
-      const maxTop = rect.y + rect.height - tooltipH - pad.bottom;
+      const minLeft = rect.x + pad;
+      const maxLeft = rect.x + rect.width - tooltipW - pad;
+      const minTop = rect.y + pad;
+      const maxTop = rect.y + rect.height - tooltipH - pad;
 
       return {
         left: Math.min(Math.max(pos.left, minLeft), Math.max(minLeft, maxLeft)),
@@ -174,7 +167,7 @@ export function IndexOverlay({
     const rect = gridRectRef.current;
     if (!rect) return null;
     const pad = tooltipPaddingRef.current;
-    return { left: rect.x + pad.left, top: rect.y + pad.top };
+    return { left: rect.x + pad, top: rect.y + pad };
   }, []);
 
   // ---------------------------------------------------------------------------
@@ -402,6 +395,8 @@ export function IndexOverlay({
     if (!chart) return;
 
     chart.on('finished', updateGridRect);
+    chart.on('dataZoom', updateGridRect);
+    chart.on('restore', updateGridRect);
 
     requestAnimationFrame(() => {
       isInitializedRef.current = true;
