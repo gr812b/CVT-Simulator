@@ -1,5 +1,5 @@
 import { useRef, useEffect, useCallback, useState } from 'react';
-import type { ECharts, EChartsOption } from 'echarts';
+import type { ECharts } from 'echarts';
 import styles from './IndexOverlay.module.scss';
 import { ReplayEventType } from '@utils/ReplayController';
 
@@ -73,47 +73,35 @@ export function IndexOverlay({
     });
   }, [onMount]);
 
-  // ---------------------------------------------------------------------------
-  // Grid rect — derived via convertToPixel so axis-label width and data-zoom
-  // are automatically accounted for, consistent with how the line/dots are placed.
-  // ---------------------------------------------------------------------------
   const computeGridRect = useCallback(
     (chartInstance: ECharts): { x: number; y: number; width: number; height: number } | null => {
       try {
-        const xData = xDataRef.current;
-        const option = chartInstance.getOption() as EChartsOption & { yAxis: { max?: number }[] };
-        const yMax = option.yAxis?.[0]?.max;
+        // @ts-expect-error - https://github.com/apache/echarts/issues/17919
+        const model = chartInstance.getModel(); 
+        const xAxis = model?.getComponent?.('xAxis', 0)?.axis;
+        const yAxis = model?.getComponent?.('yAxis', 0)?.axis;
 
-        // Left edge: pixel x for the first x data point
-        const gridLeft = (
-          chartInstance.convertToPixel({ xAxisIndex: 0, yAxisIndex: 0 }, [xData[0], 0]) as [number, number]
-        )[0];
+        const xExtent = xAxis?.scale?.getExtent?.() as [number, number] | undefined;
+        const yExtent = yAxis?.scale?.getExtent?.() as [number, number] | undefined;
 
-        // Right edge: pixel x for the last x data point
-        const gridRight = (
-          chartInstance.convertToPixel({ xAxisIndex: 0, yAxisIndex: 0 }, [xData[xData.length - 1], 0]) as [number, number]
-        )[0];
+        if (!xExtent || !yExtent) return null;
 
-        // Top edge: pixel y for yMax (or fall back to option grid.top)
-        const gridTop =
-          yMax != null
-            ? (chartInstance.convertToPixel({ xAxisIndex: 0, yAxisIndex: 0 }, [xData[0], yMax]) as [number, number])[1]
-            : (() => {
-                const gridOption = (option.grid as EChartsOption['grid'] | undefined);
-                const g = (Array.isArray(gridOption) ? gridOption[0] : gridOption) || {};
-                return typeof (g as { top?: number }).top === 'number' ? (g as { top?: number }).top! : 60;
-              })();
+        // Convert visible axis extents -> pixel bounds of the plotting grid.
+        const left = chartInstance.convertToPixel({ xAxisIndex: 0 }, xExtent[0]) as number;
+        const right = chartInstance.convertToPixel({ xAxisIndex: 0 }, xExtent[1]) as number;
 
-        // Bottom edge: pixel y for y=0
-        const gridBottom = (
-          chartInstance.convertToPixel({ xAxisIndex: 0, yAxisIndex: 0 }, [xData[0], 0]) as [number, number]
-        )[1];
+        const top = chartInstance.convertToPixel({ yAxisIndex: 0 }, yExtent[1]) as number;
+        const bottom = chartInstance.convertToPixel({ yAxisIndex: 0 }, yExtent[0]) as number;
+
+        if ([left, right, top, bottom].some((v) => typeof v !== 'number' || Number.isNaN(v))) {
+          return null;
+        }
 
         return {
-          x: gridLeft,
-          y: gridTop,
-          width: gridRight - gridLeft,
-          height: gridBottom - gridTop,
+          x: Math.min(left, right),
+          y: Math.min(top, bottom),
+          width: Math.abs(right - left),
+          height: Math.abs(bottom - top),
         };
       } catch {
         return null;
