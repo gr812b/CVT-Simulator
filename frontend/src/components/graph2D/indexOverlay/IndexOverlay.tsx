@@ -114,8 +114,19 @@ export function IndexOverlay({
       .filter(Boolean);
 
     tooltipEl.innerHTML = `<div>${xLabel}</div>${yLines.join('')}`;
-    tooltipEl.style.left = `${rect.x + 32}px`;
-    tooltipEl.style.top = `${rect.y + 8}px`;
+
+    // Use convertToPixel to get the true top-left corner of the plot area.
+    // This is accurate regardless of how grid margins are specified (string, percent,
+    // or number) and stays correct during data zoom.
+    const gridOrigin = chart.convertToPixel({ xAxisIndex: 0, yAxisIndex: 0 }, [xData[0], 0]) as [number, number];
+    const option = chart.getOption() as EChartsOption & { yAxis: { max?: number }[] };
+    const yMax = option.yAxis?.[0]?.max;
+    const gridTop = yMax != null
+      ? (chart.convertToPixel({ xAxisIndex: 0, yAxisIndex: 0 }, [xData[0], yMax]) as [number, number])[1]
+      : rect.y;
+
+    tooltipEl.style.left = `${gridOrigin[0] + 8}px`;
+    tooltipEl.style.top = `${gridTop + 8}px`;
     tooltipEl.style.display = 'block';
   }, [chart, xData, yData, xAxis, yAxis, seriesNames]);
 
