@@ -18,7 +18,17 @@ interface IndexOverlayProps {
   xAxis: AxisConfig;
   yAxis: AxisConfig;
   seriesNames?: string[];
+  tooltipPadding?: Partial<TooltipPadding>;
 }
+
+interface TooltipPadding {
+  top: number;
+  right: number;
+  bottom: number;
+  left: number;
+}
+
+const DEFAULT_TOOLTIP_PADDING: TooltipPadding = { top: 8, right: 8, bottom: 8, left: 8 };
 
 export function IndexOverlay({
   xData,
@@ -28,21 +38,26 @@ export function IndexOverlay({
   xAxis,
   yAxis,
   seriesNames = [],
+  tooltipPadding,
 }: IndexOverlayProps) {
   const [chart, setChart] = useState<ECharts | null>(null);
   const indexLineRef = useRef<HTMLDivElement | null>(null);
   const indexTooltipRef = useRef<HTMLDivElement | null>(null);
   const indexDotsRef = useRef<HTMLDivElement[]>([]);
 
-  // Cached grid state — only recomputed on resize/zoom/finish
+  // Cached grid state — only recomputed on resize/zoom/finish.
+  // Computed using convertToPixel so it correctly accounts for axis label
+  // width changes and data-zoom, matching the same approach as the line/dot positioning.
   const gridRectRef = useRef<{ x: number; y: number; width: number; height: number } | null>(null);
-  const tooltipOriginRef = useRef<{ left: number; top: number } | null>(null);
+
+  // Current free-drop position of the tooltip in overlay-local px (left/top).
+  // null means "not yet placed" — tooltip will be positioned at top-left corner of grid on first show.
+  const tooltipPosRef = useRef<{ left: number; top: number } | null>(null);
 
   const currentIndexRef = useRef<number>(0);
   const isInitializedRef = useRef(false);
 
-  // Stable refs for props that are read inside hot callbacks, avoiding
-  // the need to re-create those callbacks when prop references change.
+  // Stable refs for props read inside hot callbacks
   const xDataRef = useRef(xData);
   const yDataRef = useRef(yData);
   const xAxisRef = useRef(xAxis);
@@ -54,6 +69,9 @@ export function IndexOverlay({
   yAxisRef.current = yAxis;
   seriesNamesRef.current = seriesNames;
 
+  const tooltipPaddingRef = useRef<TooltipPadding>(DEFAULT_TOOLTIP_PADDING);
+  tooltipPaddingRef.current = { ...DEFAULT_TOOLTIP_PADDING, ...tooltipPadding };
+
   // Register chart ready callback
   useEffect(() => {
     if (!onMount) return;
@@ -62,151 +80,322 @@ export function IndexOverlay({
     });
   }, [onMount]);
 
-  // Recompute and cache the tooltip's fixed top-left position.
-  // Called only on grid changes (resize, zoom, chart finish) — not on every index tick.
-  const updateTooltipOrigin = useCallback((chartInstance: ECharts) => {
+  // ---------------------------------------------------------------------------
+  // Grid rect — derived via convertToPixel so axis-label width and data-zoom
+  // are automatically accounted for, consistent with how the line/dots are placed.
+  // ---------------------------------------------------------------------------
+  const computeGridRect = useCallback(
+    (chartInstance: ECharts): { x: number; y: number; width: number; height: number } | null => {
+      try {
+        const xData = xDataRef.current;
+        const option = chartInstance.getOption() as EChartsOption & { yAxis: { max?: number }[] };
+        const yMax = option.yAxis?.[0]?.max;
+
+        // Left edge: pixel x for the first x data point
+        const gridLeft = (
+          chartInstance.convertToPixel({ xAxisIndex: 0, yAxisIndex: 0 }, [xData[0], 0]) as [number, number]
+        )[0];
+
+        // Right edge: pixel x for the last x data point
+        const gridRight = (
+          chartInstance.convertToPixel({ xAxisIndex: 0, yAxisIndex: 0 }, [xData[xData.length - 1], 0]) as [number, number]
+        )[0];
+
+        // Top edge: pixel y for yMax (or fall back to option grid.top)
+        const gridTop =
+          yMax != null
+            ? (chartInstance.convertToPixel({ xAxisIndex: 0, yAxisIndex: 0 }, [xData[0], yMax]) as [number, number])[1]
+            : (() => {
+                const gridOption = (option.grid as EChartsOption['grid'] | undefined);
+                const g = (Array.isArray(gridOption) ? gridOption[0] : gridOption) || {};
+                return typeof (g as { top?: number }).top === 'number' ? (g as { top?: number }).top! : 60;
+              })();
+
+        // Bottom edge: pixel y for y=0
+        const gridBottom = (
+          chartInstance.convertToPixel({ xAxisIndex: 0, yAxisIndex: 0 }, [xData[0], 0]) as [number, number]
+        )[1];
+
+        return {
+          x: gridLeft,
+          y: gridTop,
+          width: gridRight - gridLeft,
+          height: gridBottom - gridTop,
+        };
+      } catch {
+        return null;
+      }
+    },
+    [],
+  );
+
+  // ---------------------------------------------------------------------------
+  // Clamping — keeps tooltip inside grid + padding after any position change
+  // or tooltip resize.
+  // ---------------------------------------------------------------------------
+  const clampTooltipPosition = useCallback(
+    (
+      pos: { left: number; top: number },
+      tooltipW: number,
+      tooltipH: number,
+    ): { left: number; top: number } => {
+      const rect = gridRectRef.current;
+      if (!rect) return pos;
+
+      const pad = tooltipPaddingRef.current;
+      const minLeft = rect.x + pad.left;
+      const maxLeft = rect.x + rect.width - tooltipW - pad.right;
+      const minTop = rect.y + pad.top;
+      const maxTop = rect.y + rect.height - tooltipH - pad.bottom;
+
+      return {
+        left: Math.min(Math.max(pos.left, minLeft), Math.max(minLeft, maxLeft)),
+        top: Math.min(Math.max(pos.top, minTop), Math.max(minTop, maxTop)),
+      };
+    },
+    [],
+  );
+
+  const applyTooltipPosition = useCallback(
+    (el: HTMLDivElement, pos: { left: number; top: number }) => {
+      el.style.left = `${pos.left}px`;
+      el.style.top = `${pos.top}px`;
+      el.style.right = '';
+      el.style.bottom = '';
+    },
+    [],
+  );
+
+  // ---------------------------------------------------------------------------
+  // Default placement — top-left corner of grid (respecting padding).
+  // Called the first time the tooltip becomes visible.
+  // ---------------------------------------------------------------------------
+  const defaultTooltipPosition = useCallback((): { left: number; top: number } | null => {
     const rect = gridRectRef.current;
-    if (!rect) return;
+    if (!rect) return null;
+    const pad = tooltipPaddingRef.current;
+    return { left: rect.x + pad.left, top: rect.y + pad.top };
+  }, []);
 
-    const xData = xDataRef.current;
-    const option = chartInstance.getOption() as EChartsOption & { yAxis: { max?: number }[] };
-    const yMax = option.yAxis?.[0]?.max;
-
-    const gridLeft = (chartInstance.convertToPixel({ xAxisIndex: 0, yAxisIndex: 0 }, [xData[0], 0]) as [number, number])[0];
-    const gridTop = yMax != null
-      ? (chartInstance.convertToPixel({ xAxisIndex: 0, yAxisIndex: 0 }, [xData[0], yMax]) as [number, number])[1]
-      : rect.y;
-
-    tooltipOriginRef.current = { left: gridLeft + 8, top: gridTop + 8 };
-
-    // Apply immediately so position is correct after zoom/resize
+  // ---------------------------------------------------------------------------
+  // ResizeObserver — clamps tooltip back into bounds whenever its size changes
+  // (e.g. content updates cause it to grow).
+  // ---------------------------------------------------------------------------
+  useEffect(() => {
     const tooltipEl = indexTooltipRef.current;
-    if (tooltipEl && tooltipEl.style.display !== 'none') {
-      tooltipEl.style.left = `${tooltipOriginRef.current.left}px`;
-      tooltipEl.style.top = `${tooltipOriginRef.current.top}px`;
-    }
-  }, []); // no deps — reads everything via refs
+    if (!tooltipEl) return;
 
-  // Hot path: runs on every replay tick. Only does pixel math and DOM writes.
-  // No chart option reads, no position recomputation.
-  const updateIndexDom = useCallback((index: number) => {
-    const lineEl = indexLineRef.current;
-    const tooltipEl = indexTooltipRef.current;
-    const dotEls = indexDotsRef.current;
+    const observer = new ResizeObserver(() => {
+      const pos = tooltipPosRef.current;
+      if (!pos) return;
 
-    if (!chart || !lineEl || !tooltipEl || !isInitializedRef.current) {
-      return;
-    }
-
-    const xData = xDataRef.current;
-    const yData = yDataRef.current;
-    const xAxis = xAxisRef.current;
-    const yAxis = yAxisRef.current;
-    const seriesNames = seriesNamesRef.current;
-
-    const xValue = xData[index];
-    const yValues = yData[index] || [];
-
-    if (xValue == null) {
-      return;
-    }
-
-    const rect = gridRectRef.current;
-    if (!rect) {
-      currentIndexRef.current = index;
-      return;
-    }
-
-    // Convert x value to pixel coordinate
-    const px = chart.convertToPixel({ xAxisIndex: 0 }, xValue) as number;
-
-    // Position index line
-    lineEl.style.transform = `translate3d(${px}px, ${rect.y}px, 0)`;
-    lineEl.style.height = `${rect.height}px`;
-    lineEl.style.display = 'block';
-
-    // Position dots for each series data point
-    yValues.forEach((yValue, seriesIndex) => {
-      const dotEl = dotEls[seriesIndex];
-      if (!dotEl) return;
-
-      if (yValue != null) {
-        const py = chart.convertToPixel({ yAxisIndex: 0 }, yValue) as number;
-        dotEl.style.transform = `translate3d(${px - 6}px, ${py - 6}px, 0)`;
-        dotEl.style.display = 'block';
-      } else {
-        dotEl.style.display = 'none';
+      const clamped = clampTooltipPosition(pos, tooltipEl.offsetWidth, tooltipEl.offsetHeight);
+      // Only write to DOM if the position actually changed to avoid jitter
+      if (clamped.left !== pos.left || clamped.top !== pos.top) {
+        tooltipPosRef.current = clamped;
+        applyTooltipPosition(tooltipEl, clamped);
       }
     });
 
-    // Hide unused dots
-    for (let i = yValues.length; i < dotEls.length; i++) {
-      if (dotEls[i]) dotEls[i].style.display = 'none';
-    }
+    observer.observe(tooltipEl);
+    return () => observer.disconnect();
+  }, [clampTooltipPosition, applyTooltipPosition]);
 
-    // Build tooltip HTML
-    const xLabel = xAxis.unit
-      ? `${xAxis.label}: ${xValue.toFixed(2)} ${xAxis.unit}`
-      : `${xAxis.label}: ${xValue.toFixed(2)}`;
+  // ---------------------------------------------------------------------------
+  // Drag logic — free movement, clamped to grid + padding
+  // ---------------------------------------------------------------------------
+  const dragStateRef = useRef<{
+    dragging: boolean;
+    startMouseX: number;
+    startMouseY: number;
+    startLeft: number;
+    startTop: number;
+  } | null>(null);
 
-    const yLines = yValues
-      .map((yValue, idx) => {
-        if (yValue == null) return '';
-        const name = seriesNames[idx] || `${yAxis.label}${yValues.length > 1 ? ` ${idx + 1}` : ''}`;
-        const color = `var(--line${idx + 1}, #ffffff)`;
-        const val = yAxis.unit ? `${yValue.toFixed(2)} ${yAxis.unit}` : yValue.toFixed(2);
-        return `<div style="display:flex;align-items:center;gap:6px;">
-          <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${color};flex-shrink:0;"></span>
-          <span>${name}: ${val}</span>
-        </div>`;
-      })
-      .filter(Boolean);
+  const setupDrag = useCallback(
+    (tooltipEl: HTMLDivElement) => {
+      const onMouseDown = (e: MouseEvent) => {
+        e.preventDefault();
 
-    tooltipEl.innerHTML = `<div>${xLabel}</div>${yLines.join('')}`;
+        tooltipEl.style.transition = '';
 
-    // Position is already cached — just apply it
-    const origin = tooltipOriginRef.current;
-    if (origin) {
-      tooltipEl.style.left = `${origin.left}px`;
-      tooltipEl.style.top = `${origin.top}px`;
-    }
-    tooltipEl.style.display = 'block';
-  }, [chart]); // only re-creates when chart instance changes
+        const overlayEl = tooltipEl.parentElement;
+        const overlayRect = overlayEl?.getBoundingClientRect();
+        const tipRect = tooltipEl.getBoundingClientRect();
+        const currentLeft = overlayRect ? tipRect.left - overlayRect.left : parseFloat(tooltipEl.style.left) || 0;
+        const currentTop = overlayRect ? tipRect.top - overlayRect.top : parseFloat(tooltipEl.style.top) || 0;
 
-  // Update grid rect and tooltip origin when chart resizes or rerenders
+        dragStateRef.current = {
+          dragging: true,
+          startMouseX: e.clientX,
+          startMouseY: e.clientY,
+          startLeft: currentLeft,
+          startTop: currentTop,
+        };
+      };
+
+      const onMouseMove = (e: MouseEvent) => {
+        const ds = dragStateRef.current;
+        if (!ds?.dragging) return;
+
+        const dx = e.clientX - ds.startMouseX;
+        const dy = e.clientY - ds.startMouseY;
+
+        const newPos = clampTooltipPosition(
+          { left: ds.startLeft + dx, top: ds.startTop + dy },
+          tooltipEl.offsetWidth,
+          tooltipEl.offsetHeight,
+        );
+
+        tooltipPosRef.current = newPos;
+        applyTooltipPosition(tooltipEl, newPos);
+      };
+
+      const onMouseUp = () => {
+        dragStateRef.current = null;
+      };
+
+      tooltipEl.addEventListener('mousedown', onMouseDown);
+      window.addEventListener('mousemove', onMouseMove);
+      window.addEventListener('mouseup', onMouseUp);
+
+      return () => {
+        tooltipEl.removeEventListener('mousedown', onMouseDown);
+        window.removeEventListener('mousemove', onMouseMove);
+        window.removeEventListener('mouseup', onMouseUp);
+      };
+    },
+    [clampTooltipPosition, applyTooltipPosition],
+  );
+
+  useEffect(() => {
+    const tooltipEl = indexTooltipRef.current;
+    if (!tooltipEl || !chart) return;
+    return setupDrag(tooltipEl);
+  }, [chart, setupDrag]);
+
+  // ---------------------------------------------------------------------------
+  // Hot path: runs on every replay tick
+  // ---------------------------------------------------------------------------
+  const updateIndexDom = useCallback(
+    (index: number) => {
+      const lineEl = indexLineRef.current;
+      const tooltipEl = indexTooltipRef.current;
+      const dotEls = indexDotsRef.current;
+
+      if (!chart || !lineEl || !tooltipEl || !isInitializedRef.current) return;
+
+      const xData = xDataRef.current;
+      const yData = yDataRef.current;
+      const xAxis = xAxisRef.current;
+      const yAxis = yAxisRef.current;
+      const seriesNames = seriesNamesRef.current;
+
+      const xValue = xData[index];
+      const yValues = yData[index] || [];
+
+      if (xValue == null) return;
+
+      const rect = gridRectRef.current;
+      if (!rect) {
+        currentIndexRef.current = index;
+        return;
+      }
+
+      // Position index line
+      const px = chart.convertToPixel({ xAxisIndex: 0 }, xValue) as number;
+      lineEl.style.transform = `translate3d(${px}px, ${rect.y}px, 0)`;
+      lineEl.style.height = `${rect.height}px`;
+      lineEl.style.display = 'block';
+
+      // Position dots
+      yValues.forEach((yValue, seriesIndex) => {
+        const dotEl = dotEls[seriesIndex];
+        if (!dotEl) return;
+        if (yValue != null) {
+          const py = chart.convertToPixel({ yAxisIndex: 0 }, yValue) as number;
+          dotEl.style.transform = `translate3d(${px - 6}px, ${py - 6}px, 0)`;
+          dotEl.style.display = 'block';
+        } else {
+          dotEl.style.display = 'none';
+        }
+      });
+
+      for (let i = yValues.length; i < dotEls.length; i++) {
+        if (dotEls[i]) dotEls[i].style.display = 'none';
+      }
+
+      // Build tooltip HTML
+      const xLabel = xAxis.unit
+        ? `${xAxis.label}: ${xValue.toFixed(2)} ${xAxis.unit}`
+        : `${xAxis.label}: ${xValue.toFixed(2)}`;
+
+      const yLines = yValues
+        .map((yValue, idx) => {
+          if (yValue == null) return '';
+          const name = seriesNames[idx] || `${yAxis.label}${yValues.length > 1 ? ` ${idx + 1}` : ''}`;
+          const color = `var(--line${idx + 1}, #ffffff)`;
+          const val = yAxis.unit ? `${yValue.toFixed(2)} ${yAxis.unit}` : yValue.toFixed(2);
+          return `<div style="display:flex;align-items:center;gap:6px;">
+            <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${color};flex-shrink:0;"></span>
+            <span>${name}: ${val}</span>
+          </div>`;
+        })
+        .filter(Boolean);
+
+      tooltipEl.innerHTML = `
+        <div style="display:flex;justify-content:center;gap:4px;margin-bottom:6px;">
+          <span style="display:inline-block;width:5px;height:5px;border-radius:50%;background:rgba(160,160,160,0.7);"></span>
+          <span style="display:inline-block;width:5px;height:5px;border-radius:50%;background:rgba(160,160,160,0.7);"></span>
+          <span style="display:inline-block;width:5px;height:5px;border-radius:50%;background:rgba(160,160,160,0.7);"></span>
+        </div>
+        <div>${xLabel}</div>
+        ${yLines.join('')}
+      `;
+
+      // Place tooltip at default position on first show, then leave it wherever
+      // the user dropped it. Clamping after content changes is handled by ResizeObserver.
+      if (!tooltipPosRef.current) {
+        const defaultPos = defaultTooltipPosition();
+        if (defaultPos) {
+          tooltipPosRef.current = defaultPos;
+          applyTooltipPosition(tooltipEl, defaultPos);
+        }
+      }
+
+      tooltipEl.style.display = 'block';
+    },
+    [chart, defaultTooltipPosition, applyTooltipPosition],
+  );
+
+  // ---------------------------------------------------------------------------
+  // Grid rect update — triggered on chart finish (includes resize and data-zoom)
+  // ---------------------------------------------------------------------------
   const updateGridRect = useCallback(() => {
     if (!chart) return;
 
-    try {
-      const width = chart.getWidth();
-      const height = chart.getHeight();
-      const option = chart.getOption() as EChartsOption;
-      const gridOption = option.grid;
-      const grid = (Array.isArray(gridOption) ? gridOption[0] : gridOption) || {};
+    const rect = computeGridRect(chart);
+    if (rect) {
+      gridRectRef.current = rect;
 
-      const left = typeof grid.left === 'number' ? grid.left : 60;
-      const right = typeof grid.right === 'number' ? grid.right : 20;
-      const top = typeof grid.top === 'number' ? grid.top : 60;
-      const bottom = typeof grid.bottom === 'number' ? grid.bottom : 60;
-
-      const rect = {
-        x: left,
-        y: top,
-        width: width - left - right,
-        height: height - top - bottom,
-      };
-
-      if (typeof rect.x === 'number' && typeof rect.width === 'number') {
-        gridRectRef.current = rect;
-        updateTooltipOrigin(chart);
-        if (currentIndexRef.current !== undefined && isInitializedRef.current) {
-          updateIndexDom(currentIndexRef.current);
+      // After grid changes, clamp the tooltip back into the (possibly shifted) bounds
+      const tooltipEl = indexTooltipRef.current;
+      const pos = tooltipPosRef.current;
+      if (tooltipEl && pos) {
+        const clamped = clampTooltipPosition(pos, tooltipEl.offsetWidth, tooltipEl.offsetHeight);
+        if (clamped.left !== pos.left || clamped.top !== pos.top) {
+          tooltipPosRef.current = clamped;
+          if (tooltipEl.style.display !== 'none') {
+            applyTooltipPosition(tooltipEl, clamped);
+          }
         }
       }
-    } catch {
-      // Grid not ready yet
+
+      if (currentIndexRef.current !== undefined && isInitializedRef.current) {
+        updateIndexDom(currentIndexRef.current);
+      }
     }
-  }, [chart, updateTooltipOrigin, updateIndexDom]);
+  }, [chart, computeGridRect, clampTooltipPosition, applyTooltipPosition, updateIndexDom]);
 
   // Initialize when chart becomes available
   useEffect(() => {
@@ -224,7 +413,7 @@ export function IndexOverlay({
     };
   }, [chart, updateGridRect]);
 
-  // Subscribe to replay controller for index updates
+  // Subscribe to replay controller
   useEffect(() => {
     const cleanup = replayController.on((event) => {
       if (event.type === ReplayEventType.Progress && event.currentIndex !== undefined) {
@@ -232,7 +421,6 @@ export function IndexOverlay({
         updateIndexDom(event.currentIndex);
       }
     });
-
     return cleanup;
   }, [replayController, updateIndexDom]);
 
@@ -249,7 +437,10 @@ export function IndexOverlay({
           data-series-index={seriesIndex}
         />
       ))}
-      <div ref={indexTooltipRef} className={styles.indexTooltip} />
+      <div
+        ref={indexTooltipRef}
+        className={`${styles.indexTooltip} ${styles.indexTooltipDraggable}`}
+      />
     </div>
   );
 }

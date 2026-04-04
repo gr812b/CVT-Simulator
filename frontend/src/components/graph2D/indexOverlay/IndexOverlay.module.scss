@@ -44,7 +44,20 @@
         background: var(--tooltip-bg);
         border: 0.5px solid var(--grid-color);
         border-radius: 4px;
-        pointer-events: none;
+        pointer-events: auto;
         z-index: z(overlay);
+        cursor: grab;
+        user-select: none;
+        filter: brightness(1);
+        transition: filter 0.15s ease;
+
+        &:hover {
+            filter: brightness(1.35);
+        }
+
+        &:active {
+            cursor: grabbing;
+            filter: brightness(1.5);
+        }
     }
 }
