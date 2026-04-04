@@ -33,9 +33,26 @@ export function IndexOverlay({
   const indexLineRef = useRef<HTMLDivElement | null>(null);
   const indexTooltipRef = useRef<HTMLDivElement | null>(null);
   const indexDotsRef = useRef<HTMLDivElement[]>([]);
+
+  // Cached grid state — only recomputed on resize/zoom/finish
   const gridRectRef = useRef<{ x: number; y: number; width: number; height: number } | null>(null);
+  const tooltipOriginRef = useRef<{ left: number; top: number } | null>(null);
+
   const currentIndexRef = useRef<number>(0);
   const isInitializedRef = useRef(false);
+
+  // Stable refs for props that are read inside hot callbacks, avoiding
+  // the need to re-create those callbacks when prop references change.
+  const xDataRef = useRef(xData);
+  const yDataRef = useRef(yData);
+  const xAxisRef = useRef(xAxis);
+  const yAxisRef = useRef(yAxis);
+  const seriesNamesRef = useRef(seriesNames);
+  xDataRef.current = xData;
+  yDataRef.current = yData;
+  xAxisRef.current = xAxis;
+  yAxisRef.current = yAxis;
+  seriesNamesRef.current = seriesNames;
 
   // Register chart ready callback
   useEffect(() => {
@@ -45,7 +62,33 @@ export function IndexOverlay({
     });
   }, [onMount]);
 
-  // Update index DOM position
+  // Recompute and cache the tooltip's fixed top-left position.
+  // Called only on grid changes (resize, zoom, chart finish) — not on every index tick.
+  const updateTooltipOrigin = useCallback((chartInstance: ECharts) => {
+    const rect = gridRectRef.current;
+    if (!rect) return;
+
+    const xData = xDataRef.current;
+    const option = chartInstance.getOption() as EChartsOption & { yAxis: { max?: number }[] };
+    const yMax = option.yAxis?.[0]?.max;
+
+    const gridLeft = (chartInstance.convertToPixel({ xAxisIndex: 0, yAxisIndex: 0 }, [xData[0], 0]) as [number, number])[0];
+    const gridTop = yMax != null
+      ? (chartInstance.convertToPixel({ xAxisIndex: 0, yAxisIndex: 0 }, [xData[0], yMax]) as [number, number])[1]
+      : rect.y;
+
+    tooltipOriginRef.current = { left: gridLeft + 8, top: gridTop + 8 };
+
+    // Apply immediately so position is correct after zoom/resize
+    const tooltipEl = indexTooltipRef.current;
+    if (tooltipEl && tooltipEl.style.display !== 'none') {
+      tooltipEl.style.left = `${tooltipOriginRef.current.left}px`;
+      tooltipEl.style.top = `${tooltipOriginRef.current.top}px`;
+    }
+  }, []); // no deps — reads everything via refs
+
+  // Hot path: runs on every replay tick. Only does pixel math and DOM writes.
+  // No chart option reads, no position recomputation.
   const updateIndexDom = useCallback((index: number) => {
     const lineEl = indexLineRef.current;
     const tooltipEl = indexTooltipRef.current;
@@ -54,6 +97,12 @@ export function IndexOverlay({
     if (!chart || !lineEl || !tooltipEl || !isInitializedRef.current) {
       return;
     }
+
+    const xData = xDataRef.current;
+    const yData = yDataRef.current;
+    const xAxis = xAxisRef.current;
+    const yAxis = yAxisRef.current;
+    const seriesNames = seriesNamesRef.current;
 
     const xValue = xData[index];
     const yValues = yData[index] || [];
@@ -115,22 +164,16 @@ export function IndexOverlay({
 
     tooltipEl.innerHTML = `<div>${xLabel}</div>${yLines.join('')}`;
 
-    // Use convertToPixel to get the true top-left corner of the plot area.
-    // This is accurate regardless of how grid margins are specified (string, percent,
-    // or number) and stays correct during data zoom.
-    const gridOrigin = chart.convertToPixel({ xAxisIndex: 0, yAxisIndex: 0 }, [xData[0], 0]) as [number, number];
-    const option = chart.getOption() as EChartsOption & { yAxis: { max?: number }[] };
-    const yMax = option.yAxis?.[0]?.max;
-    const gridTop = yMax != null
-      ? (chart.convertToPixel({ xAxisIndex: 0, yAxisIndex: 0 }, [xData[0], yMax]) as [number, number])[1]
-      : rect.y;
-
-    tooltipEl.style.left = `${gridOrigin[0] + 8}px`;
-    tooltipEl.style.top = `${gridTop + 8}px`;
+    // Position is already cached — just apply it
+    const origin = tooltipOriginRef.current;
+    if (origin) {
+      tooltipEl.style.left = `${origin.left}px`;
+      tooltipEl.style.top = `${origin.top}px`;
+    }
     tooltipEl.style.display = 'block';
-  }, [chart, xData, yData, xAxis, yAxis, seriesNames]);
+  }, [chart]); // only re-creates when chart instance changes
 
-  // Update grid rect when chart resizes or rerenders
+  // Update grid rect and tooltip origin when chart resizes or rerenders
   const updateGridRect = useCallback(() => {
     if (!chart) return;
 
@@ -155,6 +198,7 @@ export function IndexOverlay({
 
       if (typeof rect.x === 'number' && typeof rect.width === 'number') {
         gridRectRef.current = rect;
+        updateTooltipOrigin(chart);
         if (currentIndexRef.current !== undefined && isInitializedRef.current) {
           updateIndexDom(currentIndexRef.current);
         }
@@ -162,7 +206,7 @@ export function IndexOverlay({
     } catch {
       // Grid not ready yet
     }
-  }, [chart, updateIndexDom]);
+  }, [chart, updateTooltipOrigin, updateIndexDom]);
 
   // Initialize when chart becomes available
   useEffect(() => {
