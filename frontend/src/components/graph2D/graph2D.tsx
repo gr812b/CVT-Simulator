@@ -137,6 +137,7 @@ function Graph2DComponent({
           xAxis={{ label: config.xAxis.name, unit: config.xAxis.unit }}
           yAxis={{ label: config.yAxis.name, unit: config.yAxis.unit }}
           seriesNames={config.seriesNames}
+          tooltipPosition={config.tooltipPosition}
           onMount={(callback) => {
             onChartReadyCallbackRef.current = callback;
             if (chartRef.current) {

@@ -2,6 +2,7 @@ import { useRef, useEffect, useCallback, useState } from 'react';
 import type { ECharts } from 'echarts';
 import styles from './IndexOverlay.module.scss';
 import { ReplayEventType } from '@utils/ReplayController';
+import { TooltipPosition } from '../chartOptions';
 
 interface AxisConfig {
   label: string;
@@ -19,6 +20,7 @@ interface IndexOverlayProps {
   yAxis: AxisConfig;
   seriesNames?: string[];
   tooltipPadding?: number;
+  tooltipPosition?: TooltipPosition;
 }
 
 const DEFAULT_TOOLTIP_PADDING = 8;
@@ -32,6 +34,7 @@ export function IndexOverlay({
   yAxis,
   seriesNames = [],
   tooltipPadding,
+  tooltipPosition = TooltipPosition.TopLeft
 }: IndexOverlayProps) {
   const [chart, setChart] = useState<ECharts | null>(null);
   const indexLineRef = useRef<HTMLDivElement | null>(null);
@@ -148,15 +151,25 @@ export function IndexOverlay({
   );
 
   // ---------------------------------------------------------------------------
-  // Default placement — top-left corner of grid (respecting padding).
-  // Called the first time the tooltip becomes visible.
+  // Default positioning — places tooltip at a fixed position relative to the grid on first show.
   // ---------------------------------------------------------------------------
   const defaultTooltipPosition = useCallback((): { left: number; top: number } | null => {
     const rect = gridRectRef.current;
     if (!rect) return null;
     const pad = tooltipPaddingRef.current;
-    return { left: rect.x + pad, top: rect.y + pad };
-  }, []);
+
+    const isRight = tooltipPosition === TooltipPosition.TopRight || tooltipPosition === TooltipPosition.BottomRight;
+    const isBottom = tooltipPosition === TooltipPosition.BottomLeft || tooltipPosition === TooltipPosition.BottomRight;
+
+    const tooltipEl = indexTooltipRef.current;
+    const tooltipW = tooltipEl?.offsetWidth ?? 0;
+    const tooltipH = tooltipEl?.offsetHeight ?? 0;
+
+    return {
+      left: isRight ? rect.x + rect.width - tooltipW - pad : rect.x + pad,
+      top:  isBottom ? rect.y + rect.height - tooltipH - pad : rect.y + pad,
+    };
+  }, [tooltipPosition]);
 
   // ---------------------------------------------------------------------------
   // ResizeObserver — clamps tooltip back into bounds whenever its size changes

@@ -1,4 +1,4 @@
-import type { ChartConfig } from "@components/graph2D/chartOptions";
+import { TooltipPosition, type ChartConfig } from "@components/graph2D/chartOptions";
 import type { RunResponse } from "@utils/api";
 import type { BaseUnitType } from "@utils/conversion";
 import { UNIT_PRESETS, getTargetUnit } from "@utils/conversion";
@@ -223,7 +223,8 @@ export const graphCategories: GraphCategory[] = [
             xAxis: { name: "Time", type: "value", unit: getAxisUnit(timeAccessor) },
             yAxis: { name: "Position", type: "value", unit: getAxisUnit(positionAccessor) },
             showXLine: true,
-            showYLine: false
+            showYLine: false,
+            tooltipPosition: TooltipPosition.TopLeft,
         }
     },
     {
@@ -234,7 +235,8 @@ export const graphCategories: GraphCategory[] = [
           xAxis: { name: "Time", type: "value", unit: getAxisUnit(timeAccessor) },
           yAxis: { name: "Velocity", type: "value", unit: getAxisUnit(velocityAccessor) },
           showXLine: true,
-          showYLine: true
+          showYLine: true,
+          tooltipPosition: TooltipPosition.BottomRight,
         }
     },
     {
@@ -245,7 +247,8 @@ export const graphCategories: GraphCategory[] = [
             xAxis: { name: "Time", type: "value", unit: getAxisUnit(timeAccessor) },
             yAxis: { name: "Acceleration", type: "value", unit: getAxisUnit(accelerationAccessor) },
             showXLine: true,
-            showYLine: false
+            showYLine: false,
+            tooltipPosition: TooltipPosition.TopRight,
         }
     },
 ]},
@@ -262,7 +265,8 @@ export const graphCategories: GraphCategory[] = [
                 yAxis: { name: "Torque", type: "value", unit: getAxisUnit(couplingTorqueAtWheels) },
                 seriesNames: ["Coupling Torque at Secondary", "Load Torque at Secondary"],
                 showXLine: true,
-                showYLine: false
+                showYLine: false,
+                tooltipPosition: TooltipPosition.TopRight,
             }
         },
         {
@@ -274,7 +278,8 @@ export const graphCategories: GraphCategory[] = [
                 yAxis: { name: "Torque", type: "value", unit: getAxisUnit(couplingTorqueAtEngine) },
                 seriesNames: ["Coupling Torque at Engine", "Engine Torque"],
                 showXLine: true,
-                showYLine: false
+                showYLine: false,
+                tooltipPosition: TooltipPosition.TopRight,
             }
         }
     ]
@@ -292,7 +297,8 @@ export const graphCategories: GraphCategory[] = [
             yAxis: { name: "Force", type: "value", unit: getAxisUnit(inclineForceAccessor) },
             seriesNames: ["Total (Car)", "Rolling Resistance", "Incline Force", "Air Resistance"],
             showXLine: true,
-            showYLine: false
+            showYLine: false,
+            tooltipPosition: TooltipPosition.TopLeft,
         }
     },
     {
@@ -304,7 +310,8 @@ export const graphCategories: GraphCategory[] = [
             yAxis: { name: "Torque", type: "value", unit: getAxisUnit(totalExternalLoadTorqueAtSecondaryAccessor) },
             seriesNames: ["Total (Secondary)", "Rolling Resistance", "Incline Torque", "Air Resistance Torque"],
             showXLine: true,
-            showYLine: false
+            showYLine: false,
+            tooltipPosition: TooltipPosition.TopLeft,
         }
     },
 ]},
@@ -320,7 +327,8 @@ export const graphCategories: GraphCategory[] = [
             xAxis: { name: "Time", type: "value", unit: getAxisUnit(timeAccessor) },
             yAxis: { name: "CVT Ratio", type: "value", unit: getAxisUnit(cvtRatioAccessor) },
             showXLine: true,
-            showYLine: false
+            showYLine: false,
+            tooltipPosition: TooltipPosition.TopRight,
         }
     },
     {
@@ -331,7 +339,8 @@ export const graphCategories: GraphCategory[] = [
             xAxis: { name: "Time", type: "value", unit: getAxisUnit(timeAccessor) },
             yAxis: { name: "CVT Ratio Rate of Change", type: "value", unit: getAxisUnit(cvtRatioRateOfChangeAccessor) },
             showXLine: true,
-            showYLine: false
+            showYLine: false,
+            tooltipPosition: TooltipPosition.BottomRight,
         }
     },
     {
@@ -342,7 +351,8 @@ export const graphCategories: GraphCategory[] = [
             xAxis: { name: "Vehicle Speed", type: "value", unit: getAxisUnit(velocityAccessor) },
             yAxis: { name: "Engine RPM", type: "value", unit: getAxisUnit(engineRpmAccessor) },
             showXLine: true,
-            showYLine: false
+            showYLine: false,
+            tooltipPosition: TooltipPosition.BottomRight,
         }
     },
 ]},
@@ -358,7 +368,8 @@ export const graphCategories: GraphCategory[] = [
             xAxis: { name: "Time", type: "value", unit: getAxisUnit(timeAccessor) },
             yAxis: { name: "Engine RPM", type: "value", unit: getAxisUnit(engineRpmAccessor) },
             showXLine: true,
-            showYLine: false
+            showYLine: false,
+            tooltipPosition: TooltipPosition.BottomRight,
         }
     },
     {
@@ -369,7 +380,8 @@ export const graphCategories: GraphCategory[] = [
             xAxis: { name: "Time", type: "value", unit: getAxisUnit(timeAccessor) },
             yAxis: { name: "Engine Torque", type: "value", unit: getAxisUnit(engineTorqueAccessor) },
             showXLine: true,
-            showYLine: false
+            showYLine: false,
+            tooltipPosition: TooltipPosition.TopRight,
         }
     },
     {
@@ -380,7 +392,8 @@ export const graphCategories: GraphCategory[] = [
             xAxis: { name: "Time", type: "value", unit: getAxisUnit(timeAccessor) },
             yAxis: { name: "Engine Power", type: "value", unit: getAxisUnit(enginePowerAccessor) },
             showXLine: true,
-            showYLine: false
+            showYLine: false,
+            tooltipPosition: TooltipPosition.TopRight,
         }
     },
     {
@@ -392,7 +405,8 @@ export const graphCategories: GraphCategory[] = [
             yAxis: { name: "Torque", type: "value", unit: getAxisUnit(engineTorqueAccessor) },
             seriesNames: ["Engine Torque", "Primary Upper Bound"],
             showXLine: true,
-            showYLine: false
+            showYLine: false,
+            tooltipPosition: TooltipPosition.TopLeft,
         }
     },
 ]},
@@ -409,7 +423,8 @@ export const graphCategories: GraphCategory[] = [
             yAxis: { name: "Axial Force", type: "value", unit: "N" },
             seriesNames: ["Primary Total", "Secondary Total"],
             showXLine: true,
-            showYLine: false
+            showYLine: false,
+            tooltipPosition: TooltipPosition.BottomRight,
         }
     },
     { // Breakdown of axial clamping and belt centrifugal contribution
@@ -421,7 +436,8 @@ export const graphCategories: GraphCategory[] = [
             yAxis: { name: "Force", type: "value", unit: "N" },
             seriesNames: ["Primary Clamping", "Secondary Clamping", "Primary Belt Centrifugal", "Secondary Belt Centrifugal"],
             showXLine: true,
-            showYLine: false
+            showYLine: false,
+            tooltipPosition: TooltipPosition.BottomRight,
         }
     },
     // cvtAccelerationAccessor
@@ -433,7 +449,8 @@ export const graphCategories: GraphCategory[] = [
             xAxis: { name: "Time", type: "value", unit: getAxisUnit(timeAccessor) },
             yAxis: { name: "CVT Acceleration", type: "value", unit: getAxisUnit(cvtAccelerationAccessor) },
             showXLine: true,
-            showYLine: false
+            showYLine: false,
+            tooltipPosition: TooltipPosition.BottomRight,
         }
     },
 ]},
@@ -450,7 +467,8 @@ export const graphCategories: GraphCategory[] = [
             yAxis: { name: "Force", type: "value", unit: "N" },
             seriesNames: ["Net", "Flyweight", "Spring"],
             showXLine: true,
-            showYLine: false
+            showYLine: false,
+            tooltipPosition: TooltipPosition.BottomRight,
         }
     },
     { // Visualize how much ramp is doing(raw vs post ramp)
@@ -462,7 +480,8 @@ export const graphCategories: GraphCategory[] = [
             yAxis: { name: "Force", type: "value", unit: "N" },
             seriesNames: ["Raw Flyweight", "Flyweight"],
             showXLine: true,
-            showYLine: true
+            showYLine: true,
+            tooltipPosition: TooltipPosition.TopLeft,
         }
     },
     // primaryRampAngleAccessor
@@ -474,7 +493,8 @@ export const graphCategories: GraphCategory[] = [
             xAxis: { name: "Time", type: "value", unit: getAxisUnit(timeAccessor) },
             yAxis: { name: "Ramp Angle", type: "value", unit: "degrees" },
             showXLine: true,
-            showYLine: false
+            showYLine: false,
+            tooltipPosition: TooltipPosition.TopRight,
         }
     },
 ]},
@@ -491,7 +511,8 @@ export const graphCategories: GraphCategory[] = [
             yAxis: { name: "Secondary Force", type: "value", unit: "N" },
             seriesNames: ["Net", "Helix Force", "Spring Comp Force"],
             showXLine: true,
-            showYLine: false
+            showYLine: false,
+            tooltipPosition: TooltipPosition.BottomRight,
         }
     },
     { // Torques that go into the helix
@@ -503,7 +524,8 @@ export const graphCategories: GraphCategory[] = [
             yAxis: { name: "Torque", type: "value", unit: "N·m" },
             seriesNames: ["Reactive Feedback", "Torsional Spring"],
             showXLine: true,
-            showYLine: false
+            showYLine: false,
+            tooltipPosition: TooltipPosition.TopRight,
         }
     },
     { // Same graph as 2 above, but vs CVT ratio
@@ -515,7 +537,8 @@ export const graphCategories: GraphCategory[] = [
             yAxis: { name: "Secondary Force", type: "value", unit: "N" },
             seriesNames: ["Net", "Helix Force", "Spring Comp Force"],
             showXLine: true,
-            showYLine: false
+            showYLine: false,
+            tooltipPosition: TooltipPosition.BottomRight,
         }
     },
     { // Same graph as 2 above, but vs CVT ratio
@@ -527,7 +550,8 @@ export const graphCategories: GraphCategory[] = [
             yAxis: { name: "Torque", type: "value", unit: "N·m" },
             seriesNames: ["Reactive Feedback", "Torsional Spring"],
             showXLine: true,
-            showYLine: false
+            showYLine: false,
+            tooltipPosition: TooltipPosition.BottomRight,
         }
     },
 ]},
@@ -554,7 +578,8 @@ export const graphCategories: GraphCategory[] = [
                 "Secondary Lower Bound"
             ],
             showXLine: true,
-            showYLine: false
+            showYLine: false,
+            tooltipPosition: TooltipPosition.BottomRight,
         }
     },
     { // Overall bounds and torque tracking
@@ -566,7 +591,8 @@ export const graphCategories: GraphCategory[] = [
             yAxis: { name: "Torque", type: "value", unit: "N·m" },
             seriesNames: ["Overall Upper Bound", "Overall Lower Bound", "Coupling (Final)", "No-Slip Torque"],
             showXLine: true,
-            showYLine: false
+            showYLine: false,
+            tooltipPosition: TooltipPosition.BottomRight,
         }
     },
     {
@@ -577,7 +603,8 @@ export const graphCategories: GraphCategory[] = [
             xAxis: { name: "Time", type: "value", unit: getAxisUnit(timeAccessor) },
             yAxis: { name: "Relative Velocity", type: "value", unit: getAxisUnit(relativeVelocityAccessor) },
             showXLine: true,
-            showYLine: false
+            showYLine: false,
+            tooltipPosition: TooltipPosition.TopRight,
         }
     }
 ]},
@@ -593,7 +620,8 @@ export const graphCategories: GraphCategory[] = [
             yAxis: { name: "Speed", type: "value", unit: getAxisUnit(beltSpeedAccessor) },
             seriesNames: ["Primary Belt Speed", "Secondary Belt Speed", "Transport Speed v_b", "Target Speed v_b*"],
             showXLine: true,
-            showYLine: false
+            showYLine: false,
+            tooltipPosition: TooltipPosition.BottomRight,
         }
     },
     {
@@ -605,7 +633,8 @@ export const graphCategories: GraphCategory[] = [
             yAxis: { name: "Belt Diagnostics", type: "value", unit: getAxisUnit(relativeVelocityAccessor) },
             seriesNames: ["Relative Speed (v_p - v_s)", "Compatible Speed", "v_b_dot"],
             showXLine: true,
-            showYLine: false
+            showYLine: false,
+            tooltipPosition: TooltipPosition.TopRight,
         }
     },
     {
@@ -617,7 +646,8 @@ export const graphCategories: GraphCategory[] = [
             yAxis: { name: "Mode / Time Constant", type: "value", unit: getAxisUnit(beltRelaxationTimeAccessor) },
             seriesNames: ["is_stick (belt)", "is_slipping (slip model)", "T_b"],
             showXLine: true,
-            showYLine: false
+            showYLine: false,
+            tooltipPosition: TooltipPosition.TopRight,
         }
     }
 ]}
