@@ -325,11 +325,6 @@ export function IndexOverlay({
         .filter(Boolean);
 
       tooltipEl.innerHTML = `
-        <div style="display:flex;justify-content:center;gap:4px;margin-bottom:6px;">
-          <span style="display:inline-block;width:5px;height:5px;border-radius:50%;background:rgba(160,160,160,0.7);"></span>
-          <span style="display:inline-block;width:5px;height:5px;border-radius:50%;background:rgba(160,160,160,0.7);"></span>
-          <span style="display:inline-block;width:5px;height:5px;border-radius:50%;background:rgba(160,160,160,0.7);"></span>
-        </div>
         <div>${xLabel}</div>
         ${yLines.join('')}
       `;
