@@ -538,7 +538,7 @@ export const graphCategories: GraphCategory[] = [
             seriesNames: ["Net", "Helix Force", "Spring Comp Force"],
             showXLine: true,
             showYLine: false,
-            tooltipPosition: TooltipPosition.TopRight,
+            tooltipPosition: TooltipPosition.TopLeft,
         }
     },
     { // Same graph as 2 above, but vs CVT ratio
@@ -551,7 +551,7 @@ export const graphCategories: GraphCategory[] = [
             seriesNames: ["Reactive Feedback", "Torsional Spring"],
             showXLine: true,
             showYLine: false,
-            tooltipPosition: TooltipPosition.TopRight,
+            tooltipPosition: TooltipPosition.TopLeft,
         }
     },
 ]},
