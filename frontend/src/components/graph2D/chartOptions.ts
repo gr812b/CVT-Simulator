@@ -145,9 +145,6 @@ const tooltipFormatterCache = new Map<string, (params: DefaultLabelFormatterCall
  * Returns either a string template or a stable function reference.
  */
 function createTooltipFormatter(config: ChartConfig) {
-  // For simple cases, we could use ECharts string templates:
-  // return `${config.xAxis.name}: {c0}<br/>${config.yAxis.name}: {c1}`;
-  
   // But for unit support and formatting, we need the function approach with caching
   const cacheKey = JSON.stringify({
     xAxisName: config.xAxis.name,

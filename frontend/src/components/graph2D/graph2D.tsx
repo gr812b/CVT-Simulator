@@ -41,6 +41,7 @@ function Graph2DComponent({
   const chartRef = useRef<ECharts | null>(null);
   const highlightedIndexRef = useRef<number | undefined>(undefined);
   const onChartReadyCallbackRef = useRef<((chart: ECharts) => void) | null>(null);
+  const isDraggingRef = useRef<boolean>(false);
 
   // Validate data and generate warnings/errors
   const validation = useMemo(() => validateData(xData, yData), [xData, yData]);
@@ -48,7 +49,6 @@ function Graph2DComponent({
   // Generate complete ECharts options
   const echartsOptions = useMemo(() => {
     if (!validation.isValid) {
-      // Return minimal options for error state
       return {
         title: {
           text: 'No Data',
@@ -68,37 +68,87 @@ function Graph2DComponent({
     }
   }, [validation.warnings]);
 
+  /**
+   * Given a pixel X position on the zrender canvas, find the nearest data
+   * index using the chart's convertFromPixel utility and clamp it to bounds.
+   */
+  const getIndexFromPixel = useCallback((offsetX: number): number | undefined => {
+    const chart = chartRef.current;
+    if (!chart || xData.length === 0) return undefined;
 
+    const dataX = chart.convertFromPixel({ seriesIndex: 0 }, [offsetX, 0])?.[0];
+    if (dataX == null) return undefined;
 
-  // Chart interaction handlers
-  const handleClick = useCallback((): void => {
-    if (highlightedIndexRef.current === undefined) return;
+    // Find the nearest index via binary search for performance on large datasets
+    let lo = 0;
+    let hi = xData.length - 1;
+    while (lo < hi) {
+      const mid = (lo + hi) >> 1;
+      if (xData[mid] < dataX) lo = mid + 1;
+      else hi = mid;
+    }
+    // Check neighbour to find the truly closest point
+    if (lo > 0 && Math.abs(xData[lo - 1] - dataX) < Math.abs(xData[lo] - dataX)) {
+      lo = lo - 1;
+    }
+    return Math.max(0, Math.min(lo, xData.length - 1));
+  }, [xData]);
+
+  const commitIndex = useCallback((offsetX: number): void => {
+    const index = getIndexFromPixel(offsetX);
+    if (index === undefined) return;
+    highlightedIndexRef.current = index;
     replayController?.pause?.();
-    replayController?.setCurrentIndex?.(highlightedIndexRef.current);
-  }, [replayController]);
-
-  const handleTooltipUpdate = useCallback((params?: { dataIndex?: number }): void => {
-    highlightedIndexRef.current = params?.dataIndex;
-  }, []);
+    replayController?.setCurrentIndex?.(index);
+  }, [getIndexFromPixel, replayController]);
 
   const handleChartReady = useCallback((chart: ECharts): void => {
     chartRef.current = chart;
     onChartReadyCallbackRef.current?.(chart);
   }, []);
 
+  // Attach pointer event listeners to the zrender canvas
   useEffect(() => {
     const chart = chartRef.current;
     if (!chart) return;
 
     const zr = chart.getZr();
-    zr.on('click', handleClick);
-    return () => zr.off('click', handleClick);
-  }, [handleClick]);
+
+    const onMouseDown = (e: { offsetX: number }): void => {
+      isDraggingRef.current = true;
+      commitIndex(e.offsetX);
+    };
+
+    const onMouseMove = (e: { offsetX: number }): void => {
+      if (!isDraggingRef.current) return;
+      commitIndex(e.offsetX);
+    };
+
+    const onMouseUp = (): void => {
+      isDraggingRef.current = false;
+    };
+
+    zr.on('mousedown', onMouseDown);
+    zr.on('mousemove', onMouseMove);
+    zr.on('mouseup', onMouseUp);
+    // Release drag if pointer leaves the canvas
+    zr.on('globalout', onMouseUp);
+
+    return () => {
+      zr.off('mousedown', onMouseDown);
+      zr.off('mousemove', onMouseMove);
+      zr.off('mouseup', onMouseUp);
+      zr.off('globalout', onMouseUp);
+    };
+  }, [commitIndex]);
+
+  const handleTooltipUpdate = useCallback((params?: { dataIndex?: number }): void => {
+    highlightedIndexRef.current = params?.dataIndex;
+  }, []);
 
   const chartHeight = config.height ?? 600;
   const chartWidth = config.width || '100%';
   
-  // If data is invalid, show error state
   if (!validation.isValid) {
     return (
       <div className={cx(styles.graph2dError, className)} style={{ height: chartHeight }}>
@@ -150,10 +200,6 @@ function Graph2DComponent({
   );
 }
 
-/**
- * Memoized Graph2D - uses referential equality to avoid expensive deep equality checks
- * on large datasets. DOM-based index updates during playback bypass React entirely.
- */
 export const Graph2D = memo(Graph2DComponent, (prev, next) => 
   prev.xData === next.xData &&
   prev.yData === next.yData &&
