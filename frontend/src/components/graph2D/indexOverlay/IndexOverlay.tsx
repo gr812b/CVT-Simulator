@@ -296,28 +296,30 @@ export function IndexOverlay({
         return;
       }
 
-      // Position index line — hide if the current x value is outside the zoomed viewport
+      // Position index line — hide if the current x or y value is outside the zoomed viewport
       const px = chart.convertToPixel({ xAxisIndex: 0 }, xValue) as number;
-      const inBounds = px >= rect.x && px <= rect.x + rect.width;
+      const inBoundsX = px >= rect.x && px <= rect.x + rect.width;
 
-      if (!inBounds) {
+      if (!inBoundsX) {
         lineEl.style.display = 'none';
         dotEls.forEach((dotEl) => {
           if (dotEl) dotEl.style.display = 'none';
         });
         return;
       }
-
+      
       lineEl.style.transform = `translate3d(${px}px, ${rect.y}px, 0)`;
       lineEl.style.height = `${rect.height}px`;
       lineEl.style.display = 'block';
 
       // Position dots
-      yValues.forEach((yValue, seriesIndex) => {
-        const dotEl = dotEls[seriesIndex];
-        if (!dotEl) return;
-        if (yValue != null) {
-          const py = chart.convertToPixel({ yAxisIndex: 0 }, yValue) as number;
+      dotEls.forEach((dotEl, seriesIndex) => {
+        const yValue = yValues[seriesIndex];
+        if (!dotEl || yValue == null) return;
+
+        const py = chart.convertToPixel({ yAxisIndex: 0 }, yValue) as number;
+        const inBoundsY = py >= rect.y && py <= rect.y + rect.height;
+        if (inBoundsY) {
           dotEl.style.transform = `translate3d(${px - 6}px, ${py - 6}px, 0)`;
           dotEl.style.display = 'block';
         } else {
@@ -325,9 +327,10 @@ export function IndexOverlay({
         }
       });
 
-      for (let i = yValues.length; i < dotEls.length; i++) {
-        if (dotEls[i]) dotEls[i].style.display = 'none';
-      }
+      // Not sure what this code does
+      // for (let i = yValues.length; i < dotEls.length; i++) {
+      //   if (dotEls[i]) dotEls[i].style.display = 'none';
+      // }
 
       // Build tooltip HTML
       const xLabel = xAxis.unit
