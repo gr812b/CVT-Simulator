@@ -16,6 +16,13 @@ interface AxisConfig {
   unit?: string;
 }
 
+export enum TooltipPosition {
+  TopLeft = 'top-left',
+  TopRight = 'top-right',
+  BottomLeft = 'bottom-left',
+  BottomRight = 'bottom-right',
+}
+
 /**
  * Chart configuration options
  */
@@ -40,6 +47,8 @@ export interface ChartConfig {
   showXLine?: boolean;
   /** Whether to draw a horizontal line at y[index] */
   showYLine?: boolean;
+  /** Position of the tooltip relative to the cursor */
+  tooltipPosition?: TooltipPosition;
 }
 
 /**

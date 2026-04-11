@@ -4,7 +4,7 @@ import cx from 'classnames';
 import styles from './Graph2D.module.scss';
 import { validateData } from './validation';
 import { createChartOptions, CHART_COLORS, type ChartConfig } from './chartOptions';
-import { CursorOverlay } from './cursorOverlay/CursorOverlay';
+import { IndexOverlay } from './indexOverlay/IndexOverlay';
 import type { ECharts, EChartsOption } from 'echarts';
 
 
@@ -22,7 +22,7 @@ export interface Graph2DProps {
   chartOptions?: Partial<EChartsOption>;
   /** Class name for the container */
   className?: string;
-  /** Replay controller for cursor updates and interactions (required for functionality) */
+  /** Replay controller for index updates and interactions (required for functionality) */
   replayController: { 
     on: (handler: (event: { type: string; currentIndex?: number }) => void) => () => void; 
     setCurrentIndex?: (index: number) => void;
@@ -130,13 +130,14 @@ function Graph2DComponent({
           }}
         />
 
-        <CursorOverlay
+        <IndexOverlay
           xData={xData}
           yData={yData}
           replayController={replayController}
           xAxis={{ label: config.xAxis.name, unit: config.xAxis.unit }}
           yAxis={{ label: config.yAxis.name, unit: config.yAxis.unit }}
           seriesNames={config.seriesNames}
+          tooltipPosition={config.tooltipPosition}
           onMount={(callback) => {
             onChartReadyCallbackRef.current = callback;
             if (chartRef.current) {
@@ -151,7 +152,7 @@ function Graph2DComponent({
 
 /**
  * Memoized Graph2D - uses referential equality to avoid expensive deep equality checks
- * on large datasets. DOM-based cursor updates during playback bypass React entirely.
+ * on large datasets. DOM-based index updates during playback bypass React entirely.
  */
 export const Graph2D = memo(Graph2DComponent, (prev, next) => 
   prev.xData === next.xData &&
