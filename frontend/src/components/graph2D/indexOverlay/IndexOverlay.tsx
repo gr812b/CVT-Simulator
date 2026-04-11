@@ -296,8 +296,18 @@ export function IndexOverlay({
         return;
       }
 
-      // Position index line
+      // Position index line — hide if the current x value is outside the zoomed viewport
       const px = chart.convertToPixel({ xAxisIndex: 0 }, xValue) as number;
+      const inBounds = px >= rect.x && px <= rect.x + rect.width;
+
+      if (!inBounds) {
+        lineEl.style.display = 'none';
+        dotEls.forEach((dotEl) => {
+          if (dotEl) dotEl.style.display = 'none';
+        });
+        return;
+      }
+
       lineEl.style.transform = `translate3d(${px}px, ${rect.y}px, 0)`;
       lineEl.style.height = `${rect.height}px`;
       lineEl.style.display = 'block';

@@ -161,7 +161,7 @@ export class ReplayController {
     if (latest) {
       this.emit({
         type: ReplayEventType.Progress,
-        currentIndex: this.currentIndex,
+        currentIndex: this.currentIndex - 1,
         data: latest, // only the newest point this frame
       });
     }
