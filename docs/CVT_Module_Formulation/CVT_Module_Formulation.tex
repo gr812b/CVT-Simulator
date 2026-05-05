@@ -45,6 +45,7 @@
 \setlist[enumerate]{after=\noindent}
 
 \usepackage{parskip}
+\usepackage{changepage}
 \usepackage{placeins}
 
 \usepackage[round]{natbib}
@@ -175,6 +176,35 @@
 }{%
     \end{align}
   \end{tcolorbox}
+}
+
+% =========================
+% Wide boxed equation sized to the equation width and centered
+% Usage: \widebigeq{eq:key}{Title}{<equation>}
+\newlength{\bigeqwidth}
+\NewDocumentCommand{\widebigeq}{m m m}{%
+  % Measure natural width of the displayed equation
+  \begingroup
+  \setbox0=\hbox{\(\displaystyle #3\)}%
+  \setlength{\bigeqwidth}{\wd0}%
+  % Add small safety buffer to account for delimiter sizing differences
+  \addtolength{\bigeqwidth}{2em}%
+  % Step equation counter and set label
+  \refstepcounter{equation}\label{#1}%
+
+  % Center a box of the measured width; if it is wider than \linewidth
+  % TeX will allow symmetric overflow because the glue becomes negative.
+    \noindent\hbox to \linewidth{\hss
+    \begin{tcolorbox}[width=\bigeqwidth,boxrule=0.6pt,left=8pt,right=8pt,top=8pt,bottom=8pt]
+      \noindent\begin{tabular*}{\linewidth}{@{\extracolsep{\fill}}l r@{}}
+        \textbf{#2} & \textbf{(\theequation)}
+      \end{tabular*}
+      \vspace{6pt}
+      \rule{\linewidth}{0.4pt}
+      \vspace{8pt}
+      \makebox[\linewidth][c]{\(\displaystyle #3\)}%
+    \end{tcolorbox}
+  \hss}\endgroup
 }
 
 % =========================
@@ -6415,7 +6445,7 @@ Hence,
 \end{equation}
 with
 
-\bigeq{eq:tau_p_plus_stick}{Primary Stick-Branch Upper Bound}{
+\widebigeq{eq:tau_p_plus_stick}{Primary Stick-Branch Upper Bound}{
 \tau_{c,p,+}^{\mathrm{stick}}
 =
 \frac{
@@ -6517,7 +6547,7 @@ Hence,
 \end{equation}
 with
 
-\bigeq{eq:tau_p_minus_stick}{Primary Stick-Branch Lower Bound}{
+\widebigeq{eq:tau_p_minus_stick}{Primary Stick-Branch Lower Bound}{
 \tau_{c,p,-}^{\mathrm{stick}}
 =
 -\frac{
@@ -6607,7 +6637,7 @@ For \(\tau_c \ge 0\), \(|\tau_c|=\tau_c\), so
 \end{equation}
 with
 
-\bigeq{eq:tau_p_plus_slip}{Primary Slip-Branch Upper Bound}{
+\widebigeq{eq:tau_p_plus_slip}{Primary Slip-Branch Upper Bound}{
 \tau_{c,p,+}^{\mathrm{slip}}
 =
 r_{p,\mathrm{eff}}
@@ -6637,7 +6667,7 @@ For \(\tau_c \le 0\), \(|\tau_c|=-\tau_c\), so
 \end{equation}
 with
 
-\bigeq{eq:tau_p_minus_slip}{Primary Slip-Branch Lower Bound}{
+\widebigeq{eq:tau_p_minus_slip}{Primary Slip-Branch Lower Bound}{
 \tau_{c,p,-}^{\mathrm{slip}}
 =
 -
@@ -6908,7 +6938,7 @@ Hence,
 \end{equation}
 with
 
-\bigeq{eq:tau_s_plus_stick}{Secondary Stick-Branch Upper Bound}{
+\widebigeq{eq:tau_s_plus_stick}{Secondary Stick-Branch Upper Bound}{
 \tau_{c,s,+}^{\mathrm{stick}}
 =
 \frac{
@@ -7008,7 +7038,7 @@ Hence,
 \end{equation}
 with
 
-\bigeq{eq:tau_s_minus_stick}{Secondary Stick-Branch Lower Bound}{
+\widebigeq{eq:tau_s_minus_stick}{Secondary Stick-Branch Lower Bound}{
 \tau_{c,s,-}^{\mathrm{stick}}
 =
 -\frac{
@@ -7189,7 +7219,7 @@ Hence,
 \end{equation}
 with
 
-\bigeq{eq:tau_s_plus_slip}{Secondary Slip-Branch Upper Bound}{
+\widebigeq{eq:tau_s_plus_slip}{Secondary Slip-Branch Upper Bound}{
 \tau_{c,s,+}^{\mathrm{slip}}
 =
 \frac{
@@ -7254,7 +7284,7 @@ Hence,
 \end{equation}
 with
 
-\bigeq{eq:tau_s_minus_slip}{Secondary Slip-Branch Lower Bound}{
+\widebigeq{eq:tau_s_minus_slip}{Secondary Slip-Branch Lower Bound}{
 \tau_{c,s,-}^{\mathrm{slip}}
 =
 -\frac{
