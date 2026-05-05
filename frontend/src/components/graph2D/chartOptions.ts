@@ -23,6 +23,25 @@ export enum TooltipPosition {
   BottomRight = 'bottom-right',
 }
 
+export interface LinearReferenceLineConfig {
+  /** Discriminator for future equation types */
+  type: 'linear';
+  /** Label shown in legend and tooltip */
+  label: string;
+  /** Slope in y = slope*x + intercept */
+  slope: number;
+  /** Optional y-intercept (default 0) */
+  intercept?: number;
+  /** Optional line color override */
+  color?: string;
+  /** Optional line width override */
+  width?: number;
+  /** Optional stroke style override */
+  lineType?: 'solid' | 'dashed' | 'dotted';
+}
+
+export type ReferenceLineConfig = LinearReferenceLineConfig;
+
 /**
  * Chart configuration options
  */
@@ -49,6 +68,8 @@ export interface ChartConfig {
   showYLine?: boolean;
   /** Position of the tooltip relative to the cursor */
   tooltipPosition?: TooltipPosition;
+  /** Optional reference lines drawn on top of chart data */
+  referenceLines?: ReferenceLineConfig[];
 }
 
 /**
@@ -169,36 +190,37 @@ function createTooltipFormatter(config: ChartConfig) {
     const paramArray = Array.isArray(params) ? params : [params];
     
     if (paramArray.length > 0) {
-      const param = paramArray[0];
-      
-      // For line charts with dataset, data comes in param.value as [x, y]
-      // or for some configurations it might be in param.data
-      const dataValues = Array.isArray(param.value) ? param.value : param.data;
-      
-      if (Array.isArray(dataValues) && dataValues.length >= 2) {
-        const xUnit = config.xAxis.unit ? ` ${config.xAxis.unit}` : '';
-        const yUnit = config.yAxis.unit ? ` ${config.yAxis.unit}` : '';
+      const firstParam = paramArray[0];
+      const xUnit = config.xAxis.unit ? ` ${config.xAxis.unit}` : '';
+      const yUnit = config.yAxis.unit ? ` ${config.yAxis.unit}` : '';
 
-        const xLine = `${config.xAxis.name}: ${stableValueFormatter(dataValues[0])}${xUnit}<br/>`;
+      const firstValue = Array.isArray(firstParam.value) ? firstParam.value[0] : firstParam.axisValue;
+      const xLine = `${config.xAxis.name}: ${stableValueFormatter(firstValue)}${xUnit}<br/>`;
 
-        const yLines = [];
-        for (let i = 1; i < dataValues.length; i++) {
-            const marker = `<span style="
+      const yLines = paramArray
+        .map((param, index) => {
+          const markerColor = typeof param.color === 'string'
+            ? param.color
+            : COLORS.LINES[index % COLORS.LINES.length];
+          const marker = `<span style="
               display:inline-block;
               margin-right:6px;
               border-radius:50%;
               width:8px;
               height:8px;
-              background-color:${COLORS.LINES[(i - 1) % COLORS.LINES.length]};
+              background-color:${markerColor};
           "></span>`;
-          yLines.push(`${marker} ${config.seriesNames?.[i - 1] || ''} ${config.yAxis.name}: ${stableValueFormatter(dataValues[i])}${yUnit}`);
-        }
 
-        return `
+          const rawValue = Array.isArray(param.value) ? param.value[1] : param.value;
+          const seriesLabel = param.seriesName || config.yAxis.name;
+          return `${marker} ${seriesLabel}: ${stableValueFormatter(rawValue)}${yUnit}`;
+        })
+        .filter(Boolean);
+
+      return `
           ${xLine}
           ${yLines.join('<br/>')}
         `;
-      }
     }
     return '';
   };
@@ -303,7 +325,7 @@ export function createDataset(xData: number[], yData: number[][], config: ChartC
 /**
  * Generates the series array for ECharts options
  */
-function createSeries(yData: number[][], config: ChartConfig): EChartsOption['series'] {
+function createSeries(xData: number[], yData: number[][], config: ChartConfig): EChartsOption['series'] {
   const seriesCount = yData[0]?.length || 0;
   const seriesArray: EChartsOption['series'] = [];
 
@@ -327,7 +349,49 @@ function createSeries(yData: number[][], config: ChartConfig): EChartsOption['se
     });
   }
 
+  for (let i = 0; i < (config.referenceLines?.length ?? 0); i++) {
+    const referenceLine = config.referenceLines![i];
+
+    if (referenceLine.type === 'linear') {
+      const intercept = referenceLine.intercept ?? 0;
+      const color = referenceLine.color ?? COLORS.LINES[(seriesCount + i) % COLORS.LINES.length];
+
+      seriesArray.push({
+        type: 'line',
+        animation: false,
+        symbol: 'none',
+        smooth: false,
+        showSymbol: false,
+        name: referenceLine.label,
+        data: xData.map((x) => [x, referenceLine.slope * x + intercept]),
+        itemStyle: { color },
+        lineStyle: {
+          color,
+          width: referenceLine.width ?? 2,
+          type: referenceLine.lineType ?? 'dashed',
+        },
+      });
+    }
+  }
+
   return seriesArray;
+}
+
+function getNumericBounds(values: number[]): { min: number; max: number } | null {
+  const finiteValues = values.filter((value) => Number.isFinite(value));
+  if (finiteValues.length === 0) {
+    return null;
+  }
+
+  const min = Math.min(...finiteValues);
+  const max = Math.max(...finiteValues);
+
+  if (min === max) {
+    const padding = Math.abs(min) > 0 ? Math.abs(min) * 0.05 : 1;
+    return { min: min - padding, max: max + padding };
+  }
+
+  return { min, max };
 }
 
 
@@ -341,11 +405,22 @@ export function generateEChartsOptions(
   userOptions: Partial<EChartsOption> = {}
 ): EChartsOption {
   const dataset = createDataset(xData, yData, config);
-  const series = createSeries(yData, config);
+  const series = createSeries(xData, yData, config);
+  const hasReferenceLines = (config.referenceLines?.length ?? 0) > 0;
+
+  const xBounds = hasReferenceLines && config.xAxis.type !== 'category'
+    ? getNumericBounds(xData)
+    : null;
+
+  const yBounds = hasReferenceLines && config.yAxis.type !== 'category'
+    ? getNumericBounds(yData.flatMap((point) => point))
+    : null;
 
   // Create axis options separately to avoid type inference issues
   const xAxisOption = {
     type: config.xAxis.type,
+    min: xBounds?.min,
+    max: xBounds?.max,
     name: config.xAxis.unit ? `${config.xAxis.name} (${config.xAxis.unit})` : config.xAxis.name,
     nameLocation: 'middle' as const,
     nameGap: LAYOUT.X_AXIS_NAME_GAP,
@@ -362,6 +437,8 @@ export function generateEChartsOptions(
   
   const yAxisOption = {
     type: config.yAxis.type,
+    min: yBounds?.min,
+    max: yBounds?.max,
     name: config.yAxis.unit ? `${config.yAxis.name} (${config.yAxis.unit})` : config.yAxis.name,
     nameLocation: 'middle' as const,
     nameGap: LAYOUT.Y_AXIS_NAME_GAP,

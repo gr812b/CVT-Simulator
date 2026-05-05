@@ -1,4 +1,4 @@
-import { TooltipPosition, type ChartConfig } from "@components/graph2D/chartOptions";
+import { TooltipPosition, type ChartConfig, type ReferenceLineConfig } from "@components/graph2D/chartOptions";
 import type { RunResponse } from "@utils/api";
 import type { BaseUnitType } from "@utils/conversion";
 import { UNIT_PRESETS, getTargetUnit } from "@utils/conversion";
@@ -11,6 +11,7 @@ type GraphConfig = {
     xAccessor: AccessorStrategy;
     yAccessor: AccessorStrategy[];
     config: ChartConfig;
+    referenceLineBuilder?: (context: { run: RunResponse; xData: number[]; yData: number[][] }) => ReferenceLineConfig[];
 };
 
 export type GraphCategory = {
@@ -32,6 +33,7 @@ const couplingTorqueAtEngine: AccessorStrategy = (point) => point.drivetrain.pri
 // Engine and CVT stuff
 const cvtRatioAccessor: AccessorStrategy = (point) => point.drivetrain.cvt_dynamics.cvt_ratio;
 const engineRpmAccessor: AccessorStrategy = (point) => point.drivetrain.primary_pulley.primary_pulley_angular_velocity;
+const secondaryRpmAccessor: AccessorStrategy = (point) => point.state.secondary_pulley_angular_velocity;
 const engineTorqueAccessor: AccessorStrategy = (point) => point.drivetrain.primary_pulley.primary_pulley_drive_torque;
 const cvtRatioRateOfChangeAccessor: AccessorStrategy = (point) => point.drivetrain.belt_slip.effective_cvt_ratio_time_derivative;
 const enginePowerAccessor: AccessorStrategy = (point) => point.drivetrain.primary_pulley.power;
@@ -154,6 +156,7 @@ export const accessorToUnit = new Map<AccessorStrategy, BaseUnitType>([
     [accelerationAccessor, 'angular_acceleration'],
     [cvtRatioAccessor, 'dimensionless'],
     [engineRpmAccessor, 'angular_velocity'],
+    [secondaryRpmAccessor, 'angular_velocity'],
     [engineTorqueAccessor, 'torque'],
     [cvtRatioRateOfChangeAccessor, 'dimensionless_rate'],
     [enginePowerAccessor, 'power'],
@@ -209,6 +212,34 @@ function getAxisUnit(accessor: AccessorStrategy): string {
     // Get BAJA unit as default
     const unit = getTargetUnit(unitType, UNIT_PRESETS.BAJA);
     return unit || '';
+}
+
+function buildShiftCurveRatioReferenceLines(run: RunResponse): ReferenceLineConfig[] {
+    const ratios = run.data
+        .map(cvtRatioAccessor)
+        .filter((value) => Number.isFinite(value) && value > 0);
+
+    if (ratios.length === 0) {
+        return [];
+    }
+
+    const lowRatio = Math.min(...ratios);
+    const highRatio = Math.max(...ratios);
+
+    return [
+        {
+            type: 'linear',
+            label: `Low Ratio Line (${lowRatio.toFixed(2)}x)`,
+            slope: lowRatio,
+            lineType: 'dashed',
+        },
+        {
+            type: 'linear',
+            label: `High Ratio Line (${highRatio.toFixed(2)}x)`,
+            slope: highRatio,
+            lineType: 'dashed',
+        },
+    ];
 }
 
 export const graphCategories: GraphCategory[] = [
@@ -350,6 +381,19 @@ export const graphCategories: GraphCategory[] = [
             title: "Shift Curve (Engine RPM vs Vehicle Speed)",
             xAxis: { name: "Vehicle Speed", type: "value", unit: getAxisUnit(velocityAccessor) },
             yAxis: { name: "Engine RPM", type: "value", unit: getAxisUnit(engineRpmAccessor) },
+            showXLine: true,
+            showYLine: false,
+            tooltipPosition: TooltipPosition.BottomRight,
+        }
+    },
+    {
+        xAccessor: secondaryRpmAccessor,
+        yAccessor: [engineRpmAccessor],
+        referenceLineBuilder: ({ run }) => buildShiftCurveRatioReferenceLines(run),
+        config: {
+            title: "Shift Curve (Primary RPM vs Secondary RPM)",
+            xAxis: { name: "Secondary RPM", type: "value", unit: getAxisUnit(secondaryRpmAccessor) },
+            yAxis: { name: "Primary RPM", type: "value", unit: getAxisUnit(engineRpmAccessor) },
             showXLine: true,
             showYLine: false,
             tooltipPosition: TooltipPosition.BottomRight,

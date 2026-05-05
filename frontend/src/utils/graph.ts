@@ -25,11 +25,21 @@ export function buildCategorizedGraphs(run: RunResponse): CategorizedGraphData[]
     // Build categorized graphs
     const categorizedGraphs = graphCategories.map((category) => ({
         title: category.title,
-        graphs: category.graphs.map((config) => ({
-            xData: data.map(config.xAccessor),
-            yData: data.map((point) => config.yAccessor.map((accessor) => accessor(point))),
-            ...config,
-        })),
+        graphs: category.graphs.map((graphConfig) => {
+            const xData = data.map(graphConfig.xAccessor);
+            const yData = data.map((point) => graphConfig.yAccessor.map((accessor) => accessor(point)));
+            const computedReferenceLines = graphConfig.referenceLineBuilder?.({ run, xData, yData });
+
+            return {
+                xData,
+                yData,
+                ...graphConfig,
+                config: {
+                    ...graphConfig.config,
+                    referenceLines: computedReferenceLines ?? graphConfig.config.referenceLines,
+                },
+            };
+        }),
     }));
 
     // Update cache
