@@ -2,7 +2,7 @@ import sys
 import numpy as np
 from typing import Callable, Optional, Any
 from scipy.integrate import solve_ivp
-from cvt_simulator.utils.system_state import SystemState
+from cvt_simulator.core.system_state import SystemState
 from cvt_simulator.utils.simulation_result import SimulationResult
 from cvt_simulator.models.system_model import SystemModel
 from cvt_simulator.constants.car_specs import (
@@ -36,13 +36,13 @@ class SimulationRunner:
     MID_SHIFT_MIN_HOLD_TIME = 0.02  # seconds
     MID_SHIFT_RELOCK_DELAY = 0.05  # seconds
     INITIAL_STATE = SystemState(
-        shift_distance=0.0,
-        shift_velocity=0.0,
+        s=0.0,
+        s_dot=0.0,
         # Initial secondary pulley angular velocity derived from initial car velocity
-        secondary_pulley_angular_velocity=rpm_to_rad_s(0.1)
+        ω_s=rpm_to_rad_s(0.1)
         / (GEARBOX_RATIO * tm.current_effective_cvt_ratio(0)),
         # Initial primary pulley angular velocity (engine speed)
-        primary_pulley_angular_velocity=rpm_to_rad_s(1800),
+        ω_p=rpm_to_rad_s(1800),
         v_b=0.0,
     )
 
@@ -77,8 +77,8 @@ class SimulationRunner:
                 "to_mode": to_mode,
                 "time": float(t),
                 "reason": reason,
-                "shift_distance": float(state.shift_distance),
-                "shift_velocity": float(state.shift_velocity),
+                "shift_distance": float(state.s),
+                "shift_velocity": float(state.s_dot),
             }
         )
 
@@ -374,13 +374,13 @@ class SimulationRunner:
         termination_context.setdefault("details", {})
         termination_context["details"].update(
             {
-                "final_shift_distance": float(final_state.shift_distance),
-                "final_shift_velocity": float(final_state.shift_velocity),
+                "final_shift_distance": float(final_state.s),
+                "final_shift_velocity": float(final_state.s_dot),
                 "final_primary_pulley_angular_velocity": float(
-                    final_state.primary_pulley_angular_velocity
+                    final_state.ω_p
                 ),
                 "final_secondary_pulley_angular_velocity": float(
-                    final_state.secondary_pulley_angular_velocity
+                    final_state.ω_s
                 ),
             }
         )
@@ -535,8 +535,8 @@ class SimulationRunner:
 
         # Do not mutate the solver state in normal mode. Use a constrained copy
         # for geometry/force evaluation while preserving continuous integration.
-        raw_shift_distance = state.shift_distance
-        raw_shift_velocity = state.shift_velocity
+        raw_shift_distance = state.s
+        raw_shift_velocity = state.s_dot
         eval_shift_distance = float(np.clip(raw_shift_distance, 0.0, MAX_SHIFT))
         eval_shift_velocity = raw_shift_velocity
         if raw_shift_distance <= 0.0 and raw_shift_velocity < 0.0:
@@ -545,13 +545,13 @@ class SimulationRunner:
             eval_shift_velocity = 0.0
 
         eval_state = SystemState(
-            shift_distance=eval_shift_distance,
-            shift_velocity=eval_shift_velocity,
-            primary_pulley_angular_velocity=state.primary_pulley_angular_velocity,
-            secondary_pulley_angular_velocity=state.secondary_pulley_angular_velocity,
+            s=eval_shift_distance,
+            s_dot=eval_shift_velocity,
+            ω_p=state.ω_p,
+            ω_s=state.ω_s,
             v_b=state.v_b,
         )
-        self._print_progress(t, eval_state.shift_distance)
+        self._print_progress(t, eval_state.s)
 
         # Get system breakdown (this calculates everything in correct order)
         drivetrain_breakdown = self.system_model.get_breakdown(eval_state)
@@ -590,8 +590,8 @@ class SimulationRunner:
         state = SystemState.from_array(y)
         self._print_progress(t, MAX_SHIFT)
         # Force the shifting variables to remain constant at full shift.
-        state.shift_distance = MAX_SHIFT
-        state.shift_velocity = 0
+        state.s = MAX_SHIFT
+        state.s_dot = 0
 
         # CRITICAL: Update the actual y array that scipy saves
         constrained_y = state.to_array()
@@ -626,8 +626,8 @@ class SimulationRunner:
         state = SystemState.from_array(y)
         self._print_progress(t, locked_shift_distance)
 
-        state.shift_distance = locked_shift_distance
-        state.shift_velocity = 0
+        state.s = locked_shift_distance
+        state.s_dot = 0
 
         constrained_y = state.to_array()
         for i in range(len(y)):

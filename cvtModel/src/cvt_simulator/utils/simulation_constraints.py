@@ -5,7 +5,7 @@ from cvt_simulator.models.system_model import SystemModel
 from cvt_simulator.utils.state_computations import (
     secondary_pulley_angular_velocity_to_car_velocity,
 )
-from cvt_simulator.utils.system_state import SystemState
+from cvt_simulator.core.system_state import SystemState
 
 MIN_CAR_VELOCITY_MPS = -20.0
 
@@ -18,16 +18,16 @@ def update_y(y, state: SystemState):
 
 def shift_constraint_event(t, y):
     state = SystemState.from_array(y)
-    shift_velocity = state.shift_velocity
-    shift_distance = state.shift_distance
+    shift_velocity = state.s_dot
+    shift_distance = state.s
 
     if shift_distance < 0:
-        state.shift_distance = 0
-        state.shift_velocity = max(0, shift_velocity)
+        state.s = 0
+        state.s_dot = max(0, shift_velocity)
 
     elif shift_distance > MAX_SHIFT:
-        state.shift_distance = MAX_SHIFT
-        state.shift_velocity = min(0, shift_velocity)
+        state.s = MAX_SHIFT
+        state.s_dot = min(0, shift_velocity)
 
     update_y(y, state)
     return 1
@@ -37,7 +37,7 @@ def car_velocity_constraint_event(t, y):
     state = SystemState.from_array(y)
     return (
         secondary_pulley_angular_velocity_to_car_velocity(
-            state.secondary_pulley_angular_velocity
+            state.ω_s
         )
         - MIN_CAR_VELOCITY_MPS
     )
@@ -60,19 +60,19 @@ def get_shift_steady_event(system_model: SystemModel):
         tol = 1e-5  # Tolerance for proximity to MAX_SHIFT
 
         # Before we get near full shift, return a fixed negative value.
-        if state.shift_distance < MAX_SHIFT - tol:
+        if state.s < MAX_SHIFT - tol:
             return -tol
 
         # Clamp here as clamping from other events doesn't propagate immediately
-        shift_velocity = state.shift_velocity
-        shift_distance = state.shift_distance
+        shift_velocity = state.s_dot
+        shift_distance = state.s
         if shift_distance < 0:
-            state.shift_distance = 0
-            state.shift_velocity = max(0, shift_velocity)
+            state.s = 0
+            state.s_dot = max(0, shift_velocity)
 
         elif shift_distance > MAX_SHIFT:
-            state.shift_distance = MAX_SHIFT
-            state.shift_velocity = min(0, shift_velocity)
+            state.s = MAX_SHIFT
+            state.s_dot = min(0, shift_velocity)
 
         update_y(y, state)
 
@@ -100,7 +100,7 @@ def get_back_shift_event(system_model: SystemModel):
         state = SystemState.from_array(y)
 
         # Should only trigger when at full shift
-        if state.shift_distance < MAX_SHIFT - 1e-5:
+        if state.s < MAX_SHIFT - 1e-5:
             return 1.0  # Return positive value when not at full shift
 
         # Calculate the shift acceleration
@@ -144,8 +144,8 @@ def get_mid_shift_steady_event(
 
         # Only apply in the interior region, not near hard shift boundaries.
         if (
-            state.shift_distance <= boundary_margin
-            or state.shift_distance >= MAX_SHIFT - boundary_margin
+            state.s <= boundary_margin
+            or state.s >= MAX_SHIFT - boundary_margin
         ):
             return 1.0
 
@@ -157,10 +157,10 @@ def get_mid_shift_steady_event(
         # Guard against immediate wake chatter: only lock if the locked-state
         # acceleration would also remain below the wake threshold.
         locked_state = SystemState(
-            shift_distance=state.shift_distance,
-            shift_velocity=0.0,
-            primary_pulley_angular_velocity=state.primary_pulley_angular_velocity,
-            secondary_pulley_angular_velocity=state.secondary_pulley_angular_velocity,
+            s=state.s,
+            s_dot=0.0,
+            ω_p=state.ω_p,
+            ω_s=state.ω_s,
         )
         locked_coupling_torque = system_model.slip_model.get_breakdown(
             locked_state
@@ -171,7 +171,7 @@ def get_mid_shift_steady_event(
 
         # Deterministic event value: <= 0 means quasi-static and eligible to lock.
         return max(
-            abs(state.shift_velocity) - velocity_tol,
+            abs(state.s_dot) - velocity_tol,
             abs(shift_accel) - accel_tol,
             abs(locked_shift_accel) - wake_accel_guard_tol,
         )
@@ -208,9 +208,9 @@ def get_mid_shift_wake_event(
         shift_accel = system_model.cvt_shift_model.get_breakdown(
             state, coupling_torque
         ).acceleration
-        if state.shift_distance <= boundary_margin:
+        if state.s <= boundary_margin:
             return shift_accel - wake_accel_tol
-        if state.shift_distance >= MAX_SHIFT - boundary_margin:
+        if state.s >= MAX_SHIFT - boundary_margin:
             return -shift_accel - wake_accel_tol
         return abs(shift_accel) - wake_accel_tol
 

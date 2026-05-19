@@ -23,7 +23,7 @@ from cvt_simulator.constants.car_specs import (
     SHEAVE_ANGLE,
 )
 from cvt_simulator.constants.constants import RUBBER_DENSITY
-from cvt_simulator.utils.system_state import SystemState
+from cvt_simulator.core.system_state import SystemState
 
 
 # TODO: Remove this code
@@ -113,9 +113,9 @@ class PhysicalPrimaryPulley(PrimaryPulleyModel):
         Returns:
             tuple: (axial_clamping_force, detailed_breakdown)
         """
-        shift_distance = state.shift_distance
+        shift_distance = state.s
         # Primary pulley angular velocity is the engine speed
-        primary_pulley_angular_velocity = state.primary_pulley_angular_velocity
+        primary_pulley_angular_velocity = state.ω_p
 
         # Calculate flyweight centrifugal force on ramp
         flyweight_force_breakdown = self._calculate_flyweight_force(
@@ -157,13 +157,13 @@ class PhysicalPrimaryPulley(PrimaryPulleyModel):
             - numerator term decomposition
             - denominator decomposition for upper/lower branches
         """
-        shift_distance = np.clip(state.shift_distance, 0, MAX_SHIFT)
-        primary_angular_velocity = state.primary_pulley_angular_velocity
+        shift_distance = np.clip(state.s, 0, MAX_SHIFT)
+        primary_angular_velocity = state.ω_p
 
         # Geometry terms
         r_eff = self._get_radius(shift_distance)
         r_cm = self._get_belt_centroid_radius(shift_distance)
-        r_dot = self._get_radius_rate_of_change(shift_distance) * state.shift_velocity
+        r_dot = self._get_radius_rate_of_change(shift_distance) * state.s_dot
         phi = self._get_wrap_angle(shift_distance)
         beta = SHEAVE_ANGLE / 2
 

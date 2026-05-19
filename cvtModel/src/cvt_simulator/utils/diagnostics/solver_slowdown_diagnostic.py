@@ -254,8 +254,8 @@ def run_single_case(
         breakdown = system_model.get_breakdown(state)
         net_axial.append(breakdown.cvt_dynamics.net)
         shift_accel.append(breakdown.cvt_dynamics.acceleration)
-        shift_velocity.append(state.shift_velocity)
-        shift_distance.append(state.shift_distance)
+        shift_velocity.append(state.s_dot)
+        shift_distance.append(state.s)
 
     net_axial_arr = np.asarray(net_axial)
     shift_accel_arr = np.asarray(shift_accel)

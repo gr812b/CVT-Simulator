@@ -9,6 +9,8 @@ from cvt_simulator.constants.car_specs import (
     INITIAL_SHEAVE_DISPLACEMENT,
     SHEAVE_ANGLE,
     MAX_SHIFT,
+    BELT_WIDTH_BOTTOM,
+    BELT_WIDTH_TOP,
 )
 
 
@@ -19,6 +21,10 @@ class CVTGeometryResult:
     primary_effective_radius: float
     secondary_effective_radius: float
     effective_cvt_ratio: float
+    primary_centroid_radius: float
+    secondary_centroid_radius: float
+    primary_wrap_angle: float
+    secondary_wrap_angle: float
 
 
 class CVTGeometry:
@@ -58,6 +64,17 @@ class CVTGeometry:
 
     def primary_effective_radius(self, d: float) -> float:
         return self.primary_outer_radius(d) - self.h / 2
+
+    def centroid_offset(self) -> float:
+        """Centroid offset from belt centerline (used by belt centroid radius)."""
+        return (
+            self.h * (BELT_WIDTH_TOP + 2 * BELT_WIDTH_BOTTOM)
+            / (3 * (BELT_WIDTH_TOP + BELT_WIDTH_BOTTOM))
+        )
+
+    def primary_centroid_radius(self, d: float) -> float:
+        """Primary centroid radius measured to belt centroid from CVT geometry."""
+        return self.primary_effective_radius(d) + self.h / 2 - self.centroid_offset()
 
     # ---------- 2) Secondary radius from primary radius r1 ----------
     def _open_form_r_sec(self, r2: float, r1: float) -> float:
@@ -136,6 +153,32 @@ class CVTGeometry:
     def secondary_effective_radius(self, d: float) -> float:
         return self.secondary_outer_radius(d) - self.h / 2
 
+    def secondary_centroid_radius(self, d: float) -> float:
+        """Secondary centroid radius measured to belt centroid from CVT geometry."""
+        return self.secondary_effective_radius(d) + self.h / 2 - self.centroid_offset()
+
+    def wrap_angle(self, primary_radius: float, secondary_radius: float) -> float:
+        """Half-wrap offset used by primary/secondary wrap calculations."""
+        return 2 * asin((secondary_radius - primary_radius) / (2 * self.c2c))
+
+    def primary_wrap_angle(self, d: float) -> float:
+        r_p = self.primary_effective_radius(d)
+        r_s = self.secondary_effective_radius(d)
+        wrap_offset = self.wrap_angle(r_p, r_s)
+        if r_p <= r_s:
+            return pi - wrap_offset
+        else:
+            return pi + wrap_offset
+
+    def secondary_wrap_angle(self, d: float) -> float:
+        r_p = self.primary_effective_radius(d)
+        r_s = self.secondary_effective_radius(d)
+        wrap_offset = self.wrap_angle(r_p, r_s)
+        if r_p <= r_s:
+            return pi + wrap_offset
+        else:
+            return pi - wrap_offset
+
     # ---------- 3) Effective ratio from d ----------
     def effective_cvt_ratio(self, d: float) -> float:
         primary_effective_radius = self.primary_effective_radius(d)
@@ -155,6 +198,10 @@ class CVTGeometry:
             primary_effective_radius=primary_effective_radius,
             secondary_effective_radius=secondary_effective_radius,
             effective_cvt_ratio=effective_cvt_ratio,
+            primary_centroid_radius=self.primary_centroid_radius(d),
+            secondary_centroid_radius=self.secondary_centroid_radius(d),
+            primary_wrap_angle=self.primary_wrap_angle(d),
+            secondary_wrap_angle=self.secondary_wrap_angle(d),
         )
 
     # ---------- 4) Derivatives w.r.t. shift distance d ----------
@@ -304,6 +351,12 @@ class CVTGeometry:
         )
 
 
+# Module-level shared CVT geometry instance for global access
+# Other modules can import `CVT_GEOMETRY` to query geometry without
+# instantiating their own `CVTGeometry` (keeps behavior consistent).
+CVT_GEOMETRY = CVTGeometry()
+
+
 if __name__ == "__main__":
     import numpy as np
 
@@ -335,15 +388,17 @@ if __name__ == "__main__":
     print("=" * 80)
     print("CVT RATIO TABLE - Shift Distance vs Radii and Ratio")
     print("=" * 80)
-    print(f"{'d (m)':<10} {'r1 (m)':<10} {'r2 (m)':<10} {'Ratio':<10} {'di/dd':<12}")
-    print("-" * 80)
+    print(f"{ 'd (m)':<10} { 'r1 (m)':<10} { 'r2 (m)':<10} { 'Ratio':<10} { 'di/dd':<12} { 'r1_cent (m)':<14} { 'r2_cent (m)':<14} { 'wrap_p (rad)':<14} { 'wrap_s (rad)':<14}")
+    print("-" * 140)
 
     for d in d_values:
         result = cvt.geometry_from_shift_distance(d)
         derivative = cvt._effective_cvt_ratio_shift_derivative(d)
         print(
             f"{d:<10.6f} {result.primary_outer_radius:<10.6f} {result.secondary_outer_radius:<10.6f} "
-            f"{result.effective_cvt_ratio:<10.6f} {derivative:<12.6f}"
+            f"{result.effective_cvt_ratio:<10.6f} {derivative:<12.6f} "
+            f"{result.primary_centroid_radius:<14.6f} {result.secondary_centroid_radius:<14.6f} "
+            f"{result.primary_wrap_angle:<14.6f} {result.secondary_wrap_angle:<14.6f}"
         )
 
     print("=" * 80)

@@ -1,9 +1,9 @@
 from cvt_simulator.models.dataTypes import CvtDynamicsBreakdown
 from cvt_simulator.models.pulley.primary_pulley_interface import PrimaryPulleyModel
 from cvt_simulator.models.pulley.secondary_pulley_interface import SecondaryPulleyModel
-from cvt_simulator.utils.system_state import SystemState
+from cvt_simulator.core.system_state import SystemState
 from cvt_simulator.utils.theoretical_models import TheoreticalModels as tm
-from cvt_simulator.models.engine_model import EngineModel
+from cvt_simulator.components.engine import EngineModel
 
 
 class CvtShiftModel:
@@ -40,12 +40,12 @@ class CvtShiftModel:
         sec_axial = secondary_state.forces.axial_force_total
         net = prim_axial - sec_axial
 
-        shift_velocity = state.shift_velocity
+        shift_velocity = state.s_dot
         friction = self._frictional_force(net, shift_velocity)
 
         acceleration = (net + friction) / self.cvt_moving_mass
 
-        cvt_ratio = tm.current_effective_cvt_ratio(state.shift_distance)
+        cvt_ratio = tm.current_effective_cvt_ratio(state.s)
 
         return CvtDynamicsBreakdown(
             primary_state,
@@ -71,7 +71,7 @@ class CvtShiftModel:
         primary_state = self.primary_pulley.get_pulley_state(state)
 
         # Calculate CVT ratio for torque scaling to secondary
-        cvt_ratio = tm.current_effective_cvt_ratio(state.shift_distance)
+        cvt_ratio = tm.current_effective_cvt_ratio(state.s)
 
         # Get secondary pulley state (torque-reactive, needs scaled torque)
         secondary_state = self.secondary_pulley.get_pulley_state(

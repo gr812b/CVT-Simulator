@@ -1,6 +1,6 @@
-from cvt_simulator.utils.system_state import SystemState
+from cvt_simulator.core.system_state import SystemState
 from cvt_simulator.models.dataTypes import SecondaryPulleyDynamicsBreakdown
-from cvt_simulator.models.external_load_model import LoadModel
+from cvt_simulator.components.vehicle_load import LoadModel
 from cvt_simulator.utils.theoretical_models import TheoreticalModels as tm
 from cvt_simulator.constants.car_specs import (
     GEARBOX_RATIO,
@@ -30,7 +30,7 @@ class SecondaryPulleyModel:
         external_forces = self.load_model.get_breakdown(state)
 
         primary_to_secondary_ratio = (
-            tm.current_effective_cvt_ratio(state.shift_distance) * GEARBOX_RATIO
+            tm.current_effective_cvt_ratio(state.s) * GEARBOX_RATIO
         )
 
         # Linear acceleration at the vehicle from torque balance at the secondary side.

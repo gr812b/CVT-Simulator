@@ -1,7 +1,7 @@
 from typing import List, Dict
 from cvt_simulator.constants.car_specs import MAX_SHIFT
 from cvt_simulator.models.dataTypes import DrivetrainBreakdown
-from cvt_simulator.utils.system_state import SystemState
+from cvt_simulator.core.system_state import SystemState
 import pandas as pd
 from cvt_simulator.models.model_initializer import get_models
 from cvt_simulator.utils.simulation_args import SimulationArgs
@@ -103,21 +103,21 @@ class FormattedSimulationResult:
 
         car_velocities = [
             secondary_pulley_angular_velocity_to_car_velocity(
-                state.secondary_pulley_angular_velocity
+                state.ω_s
             )
             for state in result.states
         ]
         engine_angular_velocities = [
             primary_pulley_angular_velocity_to_engine_angular_velocity(
-                state.primary_pulley_angular_velocity
+                state.ω_p
             )
             for state in result.states
         ]
         primary_pulley_angular_velocities = [
-            state.primary_pulley_angular_velocity for state in result.states
+            state.ω_p for state in result.states
         ]
         secondary_pulley_angular_velocities = [
-            state.secondary_pulley_angular_velocity for state in result.states
+            state.ω_s for state in result.states
         ]
         car_positions = integrate_positions_trapezoidal(result.time, car_velocities)
         engine_positions = integrate_positions_trapezoidal(

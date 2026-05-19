@@ -147,7 +147,6 @@ class CvtDynamicsBreakdown:
     secondaryPulleyState: PulleyState
     friction: float
     acceleration: float
-    cvt_ratio: float
     net: float
 
 

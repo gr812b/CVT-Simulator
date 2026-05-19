@@ -10,10 +10,10 @@ class EngineModel:
     ):
         self.torque_curve = torque_curve
 
-    def get_torque(self, angular_velocity: float) -> float:
+    def get_torque(self, ω: float) -> float:
         """Get the torque output at a given angular velocity."""
-        return self.torque_curve(angular_velocity)
+        return self.torque_curve(ω)
 
-    def get_power(self, angular_velocity: float) -> float:
+    def get_power(self, ω: float) -> float:
         """Get the power output at a given angular velocity."""
-        return self.get_torque(angular_velocity) * angular_velocity
+        return self.get_torque(ω) * ω

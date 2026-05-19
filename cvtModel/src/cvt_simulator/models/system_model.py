@@ -4,7 +4,7 @@ from cvt_simulator.models.primary_pulley_model import PrimaryPulleyModel
 from cvt_simulator.models.secondary_pulley_model import SecondaryPulleyModel
 from cvt_simulator.models.cvt_shift_model import CvtShiftModel
 from cvt_simulator.models.belt_model import BeltModel
-from cvt_simulator.utils.system_state import SystemState
+from cvt_simulator.core.system_state import SystemState
 
 
 class SystemModel:

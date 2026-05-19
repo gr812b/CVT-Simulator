@@ -7,7 +7,7 @@ from cvt_simulator.constants.car_specs import (
     GEARBOX_RATIO,
     ROLLING_RESISTANCE_COEFFICIENT,
 )
-from cvt_simulator.utils.system_state import SystemState
+from cvt_simulator.core.system_state import SystemState
 from cvt_simulator.utils.state_computations import (
     secondary_pulley_angular_velocity_to_car_velocity,
 )
@@ -51,7 +51,7 @@ class LoadModel:
         angular velocity ω_s.
         """
         velocity = secondary_pulley_angular_velocity_to_car_velocity(
-            state.secondary_pulley_angular_velocity
+            state.ω_s
         )
 
         rolling_resistance_force = self._calculate_rolling_resistance_force(velocity)

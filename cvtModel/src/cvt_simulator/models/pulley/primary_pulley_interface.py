@@ -1,6 +1,6 @@
 from cvt_simulator.models.pulley.pulley_interface import PulleyModel
 from pyparsing import ABC
-from cvt_simulator.utils.system_state import SystemState
+from cvt_simulator.core.system_state import SystemState
 from cvt_simulator.utils.theoretical_models import TheoreticalModels as tm
 
 
@@ -31,7 +31,7 @@ class PrimaryPulleyModel(PulleyModel, ABC):
 
     def _get_angular_velocity(self, state: SystemState) -> float:
         """Get primary pulley angular velocity [rad/s]."""
-        return state.primary_pulley_angular_velocity
+        return state.ω_p
 
     def _get_angular_position(self, state: SystemState) -> float:
         """Get primary pulley angular position (engine position) [rad].

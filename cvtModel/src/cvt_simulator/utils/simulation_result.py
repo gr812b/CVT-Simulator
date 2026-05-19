@@ -1,4 +1,4 @@
-from cvt_simulator.utils.system_state import SystemState
+from cvt_simulator.core.system_state import SystemState
 from typing import Any
 from cvt_simulator.utils.state_computations import (
     integrate_positions_trapezoidal,
@@ -41,10 +41,10 @@ class SimulationResult:
         time = df["time"].values
         states = [
             SystemState(
-                shift_distance=row["shift_distance"],
-                shift_velocity=row["shift_velocity"],
-                primary_pulley_angular_velocity=row["primary_pulley_angular_velocity"],
-                secondary_pulley_angular_velocity=row[
+                s=row["shift_distance"],
+                s_dot=row["shift_velocity"],
+                ω_p=row["primary_pulley_angular_velocity"],
+                ω_s=row[
                     "secondary_pulley_angular_velocity"
                 ],
             )
@@ -63,7 +63,7 @@ class SimulationResult:
             self.time,
             [
                 secondary_pulley_angular_velocity_to_car_velocity(
-                    s.secondary_pulley_angular_velocity
+                    s.ω_s
                 )
                 for s in self.states
             ],
@@ -72,7 +72,7 @@ class SimulationResult:
             self.time,
             [
                 primary_pulley_angular_velocity_to_engine_angular_velocity(
-                    s.primary_pulley_angular_velocity
+                    s.ω_p
                 )
                 for s in self.states
             ],
@@ -80,23 +80,23 @@ class SimulationResult:
 
         data = {
             "time": self.time,
-            "shift_distance": [state.shift_distance for state in self.states],
-            "shift_velocity": [state.shift_velocity for state in self.states],
+            "shift_distance": [state.s for state in self.states],
+            "shift_velocity": [state.s_dot for state in self.states],
             "primary_pulley_angular_velocity": [
-                state.primary_pulley_angular_velocity for state in self.states
+                state.ω_p for state in self.states
             ],
             "secondary_pulley_angular_velocity": [
-                state.secondary_pulley_angular_velocity for state in self.states
+                state.ω_s for state in self.states
             ],
             "car_velocity": [
                 secondary_pulley_angular_velocity_to_car_velocity(
-                    s.secondary_pulley_angular_velocity
+                    s.ω_s
                 )
                 for s in self.states
             ],
             "engine_angular_velocity": [
                 primary_pulley_angular_velocity_to_engine_angular_velocity(
-                    s.primary_pulley_angular_velocity
+                    s.ω_p
                 )
                 for s in self.states
             ],
@@ -114,23 +114,23 @@ class SimulationResult:
         """
         # Mapping field names to their respective data
         field_data = {
-            "shift_distance": [state.shift_distance for state in self.states],
-            "shift_velocity": [state.shift_velocity for state in self.states],
+            "shift_distance": [state.s for state in self.states],
+            "shift_velocity": [state.s_dot for state in self.states],
             "primary_pulley_angular_velocity": [
-                state.primary_pulley_angular_velocity for state in self.states
+                state.ω_p for state in self.states
             ],
             "secondary_pulley_angular_velocity": [
-                state.secondary_pulley_angular_velocity for state in self.states
+                state.ω_s for state in self.states
             ],
             "car_velocity": [
                 secondary_pulley_angular_velocity_to_car_velocity(
-                    s.secondary_pulley_angular_velocity
+                    s.ω_s
                 )
                 for s in self.states
             ],
             "engine_angular_velocity": [
                 primary_pulley_angular_velocity_to_engine_angular_velocity(
-                    s.primary_pulley_angular_velocity
+                    s.ω_p
                 )
                 for s in self.states
             ],

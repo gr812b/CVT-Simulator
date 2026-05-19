@@ -1,6 +1,6 @@
 from cvt_simulator.models.secondary_pulley_model import SecondaryPulleyModel
-from cvt_simulator.models.external_load_model import LoadModel
-from cvt_simulator.models.engine_model import EngineModel
+from cvt_simulator.components.vehicle_load import LoadModel
+from cvt_simulator.components.engine import EngineModel
 from cvt_simulator.models.pulley.primary_pulley_flyweight import PhysicalPrimaryPulley
 from cvt_simulator.models.pulley.secondary_pulley_torque_reactive import (
     PhysicalSecondaryPulley,

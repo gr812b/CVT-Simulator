@@ -1,9 +1,9 @@
 import numpy as np
-from cvt_simulator.constants.car_specs import CENTER_TO_CENTER
-from cvt_simulator.utils.cvt_ratio_utils import CVTGeometry
+from cvt_simulator.constants.car_specs import CENTER_TO_CENTER, BELT_HEIGHT, BELT_WIDTH_BOTTOM, BELT_WIDTH_TOP
+from cvt_simulator.geometry.cvt_geometry import CVT_GEOMETRY
 
-# Module-level CVTGeometry instance using default constants
-_cvt_geometry = CVTGeometry()
+# Use shared CVT geometry instance
+_cvt_geometry = CVT_GEOMETRY
 
 
 class TheoreticalModels:
@@ -77,6 +77,26 @@ class TheoreticalModels:
     @staticmethod
     def secondary_effective_radius(d: float) -> float:
         return _cvt_geometry.secondary_effective_radius(d)
+
+    @staticmethod
+    def centroid_offset() -> float:
+        """Centroid offset from belt centerline (used by belt centroid radius)."""
+        return (
+            BELT_HEIGHT * (BELT_WIDTH_TOP + 2 * BELT_WIDTH_BOTTOM)
+            / (3 * (BELT_WIDTH_TOP + BELT_WIDTH_BOTTOM))
+        )
+
+    @staticmethod
+    def primary_centroid_radius(d: float) -> float:
+        """Primary centroid radius measured to belt centroid from CVT geometry."""
+        r_eff = TheoreticalModels.primary_effective_radius(d)
+        return r_eff + BELT_HEIGHT / 2 - TheoreticalModels.centroid_offset()
+
+    @staticmethod
+    def secondary_centroid_radius(d: float) -> float:
+        """Secondary centroid radius measured to belt centroid from CVT geometry."""
+        r_eff = TheoreticalModels.secondary_effective_radius(d)
+        return r_eff + BELT_HEIGHT / 2 - TheoreticalModels.centroid_offset()
 
     @staticmethod
     def primary_radius_rate_of_change(d: float) -> float:

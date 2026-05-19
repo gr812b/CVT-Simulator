@@ -9,7 +9,7 @@ from cvt_simulator.constants.tuning import (
     BELT_STICK_SPEED_RELATIVE_TOLERANCE,
     BELT_STICK_SPEED_THRESHOLD,
 )
-from cvt_simulator.utils.system_state import SystemState
+from cvt_simulator.core.system_state import SystemState
 from cvt_simulator.utils.theoretical_models import TheoreticalModels as tm
 from cvt_simulator.models.dataTypes import BeltStateBreakdown
 
@@ -72,12 +72,12 @@ class BeltModel:
         Returns:
             (v_b_star, T_b, relative_speed, v_p_cm, v_s_cm)
         """
-        shift_distance = state.shift_distance
+        shift_distance = state.s
         r_p_cm = self._primary_centroid_radius(shift_distance)
         r_s_cm = self._secondary_centroid_radius(shift_distance)
 
-        v_p_cm = r_p_cm * state.primary_pulley_angular_velocity
-        v_s_cm = r_s_cm * state.secondary_pulley_angular_velocity
+        v_p_cm = r_p_cm * state.ω_p
+        v_s_cm = r_s_cm * state.ω_s
 
         relative_speed = v_p_cm - v_s_cm
         v_b_star = 0.5 * (v_p_cm + v_s_cm)
@@ -127,8 +127,8 @@ class BeltModel:
         is_stick_override: bool | None = None,
     ) -> BeltStateBreakdown:
         """Compute belt state breakdown and v_b derivative law."""
-        shift_distance = state.shift_distance
-        shift_velocity = state.shift_velocity
+        shift_distance = state.s
+        shift_velocity = state.s_dot
 
         r_p_cm = self._primary_centroid_radius(shift_distance)
         r_s_cm = self._secondary_centroid_radius(shift_distance)
@@ -148,11 +148,11 @@ class BeltModel:
 
         if is_stick:
             v_b_dot_primary = (
-                r_p_cm_dot * state.primary_pulley_angular_velocity
+                r_p_cm_dot * state.ω_p
                 + r_p_cm * primary_pulley_angular_accel
             )
             v_b_dot_secondary = (
-                r_s_cm_dot * state.secondary_pulley_angular_velocity
+                r_s_cm_dot * state.ω_s
                 + r_s_cm * secondary_pulley_angular_accel
             )
             # Kinematic evolution from pulley accelerations.

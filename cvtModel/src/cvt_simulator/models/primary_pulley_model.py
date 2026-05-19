@@ -1,6 +1,6 @@
 from cvt_simulator.models.dataTypes import PrimaryPulleyDynamicsBreakdown
-from cvt_simulator.models.engine_model import EngineModel
-from cvt_simulator.utils.system_state import SystemState
+from cvt_simulator.components.engine import EngineModel
+from cvt_simulator.core.system_state import SystemState
 from cvt_simulator.constants.car_specs import ENGINE_INERTIA
 
 
@@ -17,7 +17,7 @@ class PrimaryPulleyModel:
     ) -> PrimaryPulleyDynamicsBreakdown:
 
         # Primary pulley angular velocity is the engine speed
-        primary_pulley_angular_velocity = state.primary_pulley_angular_velocity
+        primary_pulley_angular_velocity = state.ω_p
         primary_pulley_drive_torque = self.engine_model.get_torque(
             primary_pulley_angular_velocity
         )

@@ -21,7 +21,7 @@ Design Pattern Notes:
 from abc import ABC, abstractmethod
 from typing import Any
 import numpy as np
-from cvt_simulator.utils.system_state import SystemState
+from cvt_simulator.core.system_state import SystemState
 from cvt_simulator.constants.car_specs import (
     SHEAVE_ANGLE,
     BELT_CROSS_SECTIONAL_AREA,
@@ -154,7 +154,7 @@ class PulleyModel(ABC):
 
         where beta is the sheave half-angle.
         """
-        shift_distance = state.shift_distance
+        shift_distance = state.s
         wrap_angle = self._get_wrap_angle(shift_distance)
         belt_velocity = state.v_b
         beta = SHEAVE_ANGLE / 2
@@ -250,8 +250,8 @@ class PulleyModel(ABC):
         axial_force_total = axial_clamping_force + axial_centrifugal_from_belt
 
         # Get geometric properties
-        wrap_angle = self._get_wrap_angle(state.shift_distance)
-        radius = self._get_radius(state.shift_distance)
+        wrap_angle = self._get_wrap_angle(state.s)
+        radius = self._get_radius(state.s)
         angular_velocity = self._get_angular_velocity(state)
         angular_position = self._get_angular_position(state)
 

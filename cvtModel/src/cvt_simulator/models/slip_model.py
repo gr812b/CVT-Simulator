@@ -4,8 +4,8 @@ from cvt_simulator.models.dataTypes import (
     SecondaryTorqueBoundsBreakdown,
     SlipBreakdown,
 )
-from cvt_simulator.models.external_load_model import LoadModel
-from cvt_simulator.models.engine_model import EngineModel
+from cvt_simulator.components.vehicle_load import LoadModel
+from cvt_simulator.components.engine import EngineModel
 from cvt_simulator.models.pulley.primary_pulley_interface import PrimaryPulleyModel
 from cvt_simulator.models.pulley.secondary_pulley_interface import SecondaryPulleyModel
 from cvt_simulator.models.primary_pulley_model import (
@@ -15,7 +15,7 @@ from cvt_simulator.models.secondary_pulley_model import (
     SecondaryPulleyModel as SecondaryPulleyDynamicsModel,
 )
 from cvt_simulator.models.belt_model import BeltModel
-from cvt_simulator.utils.system_state import SystemState
+from cvt_simulator.core.system_state import SystemState
 from cvt_simulator.utils.blending import SignalBlendController
 from cvt_simulator.constants.car_specs import (
     GEARBOX_RATIO,
@@ -92,7 +92,7 @@ class SlipModel:
         """
         effective_cvt_ratio_time_derivative = (
             tm.current_effective_cvt_ratio_time_derivative(
-                state.shift_distance, state.shift_velocity
+                state.s, state.s_dot
             )
         )
 
@@ -210,12 +210,12 @@ class SlipModel:
         I_p = self.primary_pulley_model.inertia
         I_s = self.secondary_pulley_model.inertia
 
-        tau_eng = self.engine_model.get_torque(state.primary_pulley_angular_velocity)
+        tau_eng = self.engine_model.get_torque(state.ω_p)
         tau_load = self.load_model.get_breakdown(state).net_torque_at_secondary
 
-        R = tm.current_effective_cvt_ratio(state.shift_distance) * GEARBOX_RATIO
-        shift_velocity = state.shift_velocity
-        shift_distance = state.shift_distance
+        R = tm.current_effective_cvt_ratio(state.s) * GEARBOX_RATIO
+        shift_velocity = state.s_dot
+        shift_distance = state.s
         if shift_velocity > 0.0:
             distance_to_max = max(MAX_SHIFT - shift_distance, 0.0)
             if distance_to_max < self.shift_stop_blend_distance:
@@ -235,7 +235,7 @@ class SlipModel:
             * GEARBOX_RATIO
         )
 
-        omega_s = state.secondary_pulley_angular_velocity
+        omega_s = state.ω_s
         inertia_ratio = I_p / I_s
 
         numerator = tau_eng + inertia_ratio * R * tau_load - I_p * omega_s * R_dot
@@ -274,7 +274,7 @@ class SlipModel:
         primary_bounds = self.primary_pulley.calculate_torque_bounds(
             state,
             engine_drive_torque=self.engine_model.get_torque(
-                state.primary_pulley_angular_velocity
+                state.ω_p
             ),
             primary_inertia=self.primary_pulley_model.inertia,
             is_stick=is_stick,

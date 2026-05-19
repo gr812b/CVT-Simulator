@@ -19,7 +19,7 @@ from cvt_simulator.constants.car_specs import (
 )
 from cvt_simulator.constants.constants import RUBBER_DENSITY
 from cvt_simulator.models.ramps import LinearSegment, PiecewiseRamp, ThetaRamp
-from cvt_simulator.utils.system_state import SystemState
+from cvt_simulator.core.system_state import SystemState
 
 
 def create_default_helix_ramp() -> ThetaRamp:
@@ -106,7 +106,7 @@ class PhysicalSecondaryPulley(SecondaryPulleyModel):
         Returns:
             tuple: (axial_clamping_force, detailed_breakdown)
         """
-        shift_distance = np.clip(state.shift_distance, 0, MAX_SHIFT)
+        shift_distance = np.clip(state.s, 0, MAX_SHIFT)
 
         # Extract torque from kwargs (required for torque-reactive secondary)
         torque = get_required_kwarg(
@@ -154,7 +154,7 @@ class PhysicalSecondaryPulley(SecondaryPulleyModel):
             - numerator term decomposition
             - denominator decomposition for both +/- branches
         """
-        shift_distance = np.clip(state.shift_distance, 0, MAX_SHIFT)
+        shift_distance = np.clip(state.s, 0, MAX_SHIFT)
         angular_velocity = self._get_angular_velocity(state)
 
         # Geometry terms
@@ -165,7 +165,7 @@ class PhysicalSecondaryPulley(SecondaryPulleyModel):
         # _get_radius_rate_of_change() gives dr/ds, so multiply by s_dot
         # to obtain the actual time derivative r_dot.
         r_cm_dot = (
-            self._get_radius_rate_of_change(shift_distance) * state.shift_velocity
+            self._get_radius_rate_of_change(shift_distance) * state.s_dot
         )
 
         phi = self._get_wrap_angle(shift_distance)

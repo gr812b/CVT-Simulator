@@ -12,44 +12,44 @@ class SystemState:
     - shift_velocity: ṡ [m/s] - rate of sheave axial movement
     - primary_pulley_angular_velocity: ω_P [rad/s] - primary pulley angular velocity
     - secondary_pulley_angular_velocity: ω_s [rad/s] - secondary pulley angular velocity
-    - v_b: belt linear transport speed used by slip branch dynamics [m/s]
+    - belt velocity: v_b [m/s] - belt linear transport speed
 
     All other quantities (car_velocity, engine_angular_velocity, positions, etc.)
     are derived from these DOF and should be computed using StateComputations utility.
     """
 
-    shift_distance: float = 0.0
-    shift_velocity: float = 0.0
-    primary_pulley_angular_velocity: float = 0.0
-    secondary_pulley_angular_velocity: float = 0.0
+    s: float = 0.0
+    s_dot: float = 0.0
+    ω_p: float = 0.0
+    ω_s: float = 0.0
     v_b: float = 0.0
 
     def to_array(self):
         """Converts the state to an array for solve_ivp."""
         return [
-            self.shift_distance,
-            self.shift_velocity,
-            self.primary_pulley_angular_velocity,
-            self.secondary_pulley_angular_velocity,
+            self.s,
+            self.s_dot,
+            self.ω_p,
+            self.ω_s,
             self.v_b,
         ]
 
     @staticmethod
     def from_array(array):
         """Creates a SystemState from an array."""
-        shift_distance = float(array[0])
+        s = float(array[0])
         # Clamp numerical drift so downstream geometry always sees a valid shift domain.
-        if shift_distance < 0.0:
-            shift_distance = 0.0
-        elif shift_distance > MAX_SHIFT:
-            shift_distance = float(MAX_SHIFT)
+        if s < 0.0:
+            s = 0.0
+        elif s > MAX_SHIFT:
+            s = float(MAX_SHIFT)
 
         v_b = float(array[4]) if len(array) > 4 else 0.0
 
         return SystemState(
-            shift_distance=shift_distance,
-            shift_velocity=array[1],
-            primary_pulley_angular_velocity=array[2],
-            secondary_pulley_angular_velocity=array[3],
+            s=s,
+            s_dot=array[1],
+            ω_p=array[2],
+            ω_s=array[3],
             v_b=v_b,
         )

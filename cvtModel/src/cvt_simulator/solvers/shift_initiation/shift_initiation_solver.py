@@ -14,7 +14,7 @@ from scipy.optimize import brentq
 import matplotlib.pyplot as plt
 from cvt_simulator.solvers.solver_interface import SolverBase, SolverResult
 from cvt_simulator.utils.simulation_args import SimulationArgs
-from cvt_simulator.utils.system_state import SystemState
+from cvt_simulator.core.system_state import SystemState
 from cvt_simulator.models.model_initializer import get_models
 from cvt_simulator.utils.conversions import rad_s_to_rpm
 
@@ -153,10 +153,10 @@ class ShiftInitiationSolver(SolverBase):
         """
         # Create a system state at minimum shift position and stationary
         state = SystemState(
-            primary_pulley_angular_velocity=angular_velocity,
-            secondary_pulley_angular_velocity=0.0,  # Stationary (as specified)
-            shift_distance=0.0,  # Minimum shift position
-            shift_velocity=0.0,  # Static evaluation
+            ω_p=angular_velocity,
+            ω_s=0.0,  # Stationary (as specified)
+            s=0.0,  # Minimum shift position
+            s_dot=0.0,  # Static evaluation
         )
 
         # Calculate torque demand from road load (before slip limiting)
