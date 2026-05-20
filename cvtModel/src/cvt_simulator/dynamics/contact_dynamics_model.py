@@ -11,7 +11,8 @@ from cvt_simulator.components.primary_pulley import PrimaryPulley
 from cvt_simulator.components.secondary_pulley import SecondaryPulley
 from cvt_simulator.components.vehicle_load import LoadModel
 from cvt_simulator.core.system_state import SystemState
-from cvt_simulator.dynamics.drivetrain_dynamics import DrivetrainAccelerations, DrivetrainDynamics
+from cvt_simulator.dynamics.drivetrain_dynamics import DrivetrainDynamics
+from cvt_simulator.core.data_types import DrivetrainAccelerationBreakdown
 from cvt_simulator.dynamics.shift_dynamics import ShiftDynamics
 from cvt_simulator.models.dataTypes import CvtDynamicsBreakdown
 from cvt_simulator.slip.contact_torque_solver import ContactTorqueResult, ContactTorqueSolver
@@ -20,7 +21,7 @@ from cvt_simulator.slip.contact_torque_solver import ContactTorqueResult, Contac
 @dataclass
 class ContactDynamicsBreakdown:
     contact: ContactTorqueResult
-    drivetrain: DrivetrainAccelerations
+    drivetrain: DrivetrainAccelerationBreakdown
     shift: CvtDynamicsBreakdown
 
 

@@ -10,19 +10,15 @@ belt transport acceleration from torques using the equations:
 This module provides a small helper class that accepts inertias and belt
 mass and exposes `compute_accelerations(state, tau_p, tau_s)`.
 """
-from dataclasses import dataclass
-
 from cvt_simulator.core.system_state import SystemState
 from cvt_simulator.utils.theoretical_models import TheoreticalModels as tm
 from cvt_simulator.components.engine import EngineModel
 from cvt_simulator.components.vehicle_load import LoadModel
-
-
-@dataclass
-class DrivetrainAccelerations:
-    ω_p_dot: float
-    ω_s_dot: float
-    v_b_dot: float
+from cvt_simulator.core.data_types import (
+    DrivetrainAccelerationBreakdown,
+    EngineTorqueBreakdown,
+    ExternalLoadForceBreakdown,
+)
 
 
 class DrivetrainDynamics:
@@ -53,7 +49,7 @@ class DrivetrainDynamics:
         self.engine_model = engine_model
         self.load_model = load_model
 
-    def compute_accelerations(self, state: SystemState, τ_p: float, τ_s: float) -> DrivetrainAccelerations:
+    def compute_accelerations(self, state: SystemState, τ_p: float, τ_s: float) -> DrivetrainAccelerationBreakdown:
         """Compute omega and belt-transport accelerations.
 
         Args:
@@ -66,9 +62,12 @@ class DrivetrainDynamics:
         """
         s = state.s
 
-        # Query engine and load models for torques
-        τ_eng = self.engine_model.get_torque(state.ω_p)
-        τ_load = self.load_model.get_breakdown(state).net_torque_at_secondary
+        # Use breakdowns returned by the engine/load components directly
+        engine_bd = self.engine_model.get_breakdown(state.ω_p)
+        τ_eng = engine_bd.engine_torque
+
+        load_bd = self.load_model.get_breakdown(state)
+        τ_load = load_bd.net_torque_at_secondary
 
         # Effective pitch radii from geometry
         r_p_eff = tm.primary_effective_radius(s)
@@ -83,5 +82,13 @@ class DrivetrainDynamics:
         # v_b_dot = (τ_p / r_p_eff - τ_s / r_s_eff) / m_b
         v_b_dot = (τ_p / r_p_eff - τ_s / r_s_eff) / self.m_b
 
-        return DrivetrainAccelerations(ω_p_dot=ω_p_dot, ω_s_dot=ω_s_dot, v_b_dot=v_b_dot)
+        return DrivetrainAccelerationBreakdown(
+            ω_p_dot=ω_p_dot,
+            ω_s_dot=ω_s_dot,
+            v_b_dot=v_b_dot,
+            engine_breakdown=engine_bd,
+            external_load_breakdown=load_bd,
+            tau_p=τ_p,
+            tau_s=τ_s,
+        )
 

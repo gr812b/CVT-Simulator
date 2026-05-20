@@ -69,6 +69,40 @@ class CvtDynamicsBreakdown:
     friction: float
     acceleration: float
     net: float
+
+# -------------------------------------------------
+# Torque stuff
+# -------------------------------------------------
+
+@dataclass
+class ExternalLoadForceBreakdown:
+	rolling_resistance_force: float
+	incline_force: float
+	drag_force: float
+	net_force_at_car: float
+	rolling_resistance_torque_at_secondary: float
+	incline_torque_at_secondary: float
+	drag_torque_at_secondary: float
+	net_torque_at_secondary: float
+
+
+@dataclass
+class EngineTorqueBreakdown:
+  engine_torque: float
+  engine_speed: float
+  engine_power: float
+
+@dataclass
+class DrivetrainAccelerationBreakdown:
+	ω_p_dot: float
+	ω_s_dot: float
+	v_b_dot: float
+	# Engine and load breakdowns included for traceability
+	engine_breakdown: EngineTorqueBreakdown
+	external_load_breakdown: ExternalLoadForceBreakdown
+	# Contact torques that produced these accelerations
+	tau_p: float
+	tau_s: float
 		
 
 

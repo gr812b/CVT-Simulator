@@ -12,7 +12,7 @@ from cvt_simulator.utils.state_computations import (
     secondary_pulley_angular_velocity_to_car_velocity,
 )
 from cvt_simulator.utils.theoretical_models import TheoreticalModels as tm
-from cvt_simulator.models.dataTypes import ExternalLoadForceBreakdown
+from cvt_simulator.core.data_types import ExternalLoadForceBreakdown
 
 
 class LoadModel:
