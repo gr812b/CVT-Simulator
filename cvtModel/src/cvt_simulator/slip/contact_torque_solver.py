@@ -85,9 +85,3 @@ class ContactTorqueSolver:
             branch_result=branch_result,
             note=branch_result.note,
         )
-
-
-__all__ = [
-    "ContactTorqueSolver",
-    "ContactTorqueResult",
-]

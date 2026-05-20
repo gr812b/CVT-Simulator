@@ -36,8 +36,7 @@ class ShiftDynamics:
         self.primary_pulley = primary_pulley
         self.secondary_pulley = secondary_pulley
         self.cvt_moving_mass = cvt_moving_mass
-        self.primary_belt_wrap = BeltWrap(is_primary=True)
-        self.secondary_belt_wrap = BeltWrap(is_primary=False)
+        # Shift dynamics now rely on pulley-provided `PulleyForces`
 
     def get_breakdown(
         self,
@@ -54,16 +53,13 @@ class ShiftDynamics:
             CvtDynamicsBreakdown with all force and acceleration data
         """
         # Get primary pulley state (speed-reactive)
-        primary_state = self.primary_pulley.calculate_axial_clamping_force(state)
+        primary_forces = self.primary_pulley.calculate_axial_clamping_force(state)
 
-        # Get secondary pulley state (torque-reactive, needs scaled torque)
-        secondary_state = self.secondary_pulley.calculate_axial_clamping_force(state, τ_s)
+        # Get secondary pulley forces (torque-reactive)
+        secondary_forces = self.secondary_pulley.calculate_axial_clamping_force(state, τ_s)
 
-        primary_belt_axial = self.primary_belt_wrap.axial_centrifugal_force(state)
-        secondary_belt_axial = self.secondary_belt_wrap.axial_centrifugal_force(state)
-
-        prim_axial = primary_state.net + primary_belt_axial
-        sec_axial = secondary_state.net + secondary_belt_axial
+        prim_axial = primary_forces.net
+        sec_axial = secondary_forces.net
         net = prim_axial - sec_axial
 
         friction = self._frictional_force(net, state.s_dot)
@@ -71,8 +67,8 @@ class ShiftDynamics:
         acceleration = (net + friction) / self.cvt_moving_mass
 
         return CvtDynamicsBreakdown(
-            primaryPulleyState=primary_state,
-            secondaryPulleyState=secondary_state,
+            primaryPulleyState=primary_forces,
+            secondaryPulleyState=secondary_forces,
             friction=friction,
             acceleration=acceleration,
             net=net,

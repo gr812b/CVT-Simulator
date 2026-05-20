@@ -118,7 +118,8 @@ class TorqueAdmissibility:
 		effective_radius = tm.primary_effective_radius(s)
 		centroid_radius = tm.primary_centroid_radius(s)
 		centroid_radius_rate = self.cvt.primary_outer_radius_time_derivative(s, state.s_dot)
-		axial_clamping_force = self.primary_pulley.calculate_axial_clamping_force(state).net
+		# Use pulley-only clamping force (exclude belt centrifugal contribution)
+		axial_clamping_force = self.primary_pulley.calculate_axial_clamping_force(state).pulley_breakdown.net
 
 		belt_centripetal_term = RUBBER_DENSITY * BELT_CROSS_SECTIONAL_AREA * wrap_angle * (
 			centroid_radius * no_slip.v_b_dot_ns + centroid_radius_rate * state.v_b

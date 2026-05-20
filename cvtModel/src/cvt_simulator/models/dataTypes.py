@@ -1,7 +1,6 @@
 from dataclasses import dataclass
 from typing import Union
 
-
 ## Pulley stuff
 @dataclass
 class flyweightForceBreakdown:

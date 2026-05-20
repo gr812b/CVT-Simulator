@@ -7,11 +7,13 @@ import numpy as np
 from cvt_simulator.geometry.cvt_geometry import CVT_GEOMETRY
 from cvt_simulator.constants.car_specs import MAX_SHIFT, INITIAL_FLYWEIGHT_RADIUS
 from cvt_simulator.core.system_state import SystemState
-from cvt_simulator.models.dataTypes import (
+from cvt_simulator.core.data_types import (
     flyweightForceBreakdown,
     springCompForceBreakdown,
     PrimaryForceBreakdown,
+    PulleyForces,
 )
+from cvt_simulator.components.belt_wrap import BeltWrap
 
 
 class PrimaryPulley:
@@ -35,8 +37,11 @@ class PrimaryPulley:
         self.ramp = ramp
         self.initial_flyweight_radius = initial_flyweight_radius
         self.cvt = CVT_GEOMETRY
+        # Initialize belt wrap helper once per pulley instance
+        from cvt_simulator.components.belt_wrap import BeltWrap
+        self.belt_wrap = BeltWrap(is_primary=True)
 
-    def calculate_axial_clamping_force(self, state: SystemState) -> PrimaryForceBreakdown:
+    def calculate_axial_clamping_force(self, state: SystemState) -> PulleyForces:
         s = float(np.clip(state.s, 0.0, MAX_SHIFT))
 
         ω_p = state.ω_p
@@ -44,13 +49,17 @@ class PrimaryPulley:
         fly = self._calculate_flyweight_force(s, ω_p)
         spring = self._calculate_spring_comp_force(s)
 
-        axial = fly.net - spring.net
+        # belt wrap contribution (use initialized belt_wrap)
+        belt = self.belt_wrap.axial_centrifugal_force(state)
 
-        return PrimaryForceBreakdown(
-            flyweightForce=fly, 
-            springForce=spring, 
-            net=axial
+        axial_pulley = fly.net - spring.net
+        axial_total = axial_pulley + belt.belt_force
+
+        pulley_breakdown = PrimaryForceBreakdown(
+            flyweightForce=fly, springForce=spring, net=axial_pulley
         )
+
+        return PulleyForces(pulley_breakdown=pulley_breakdown, belt_wrap=belt, net=axial_total)
 
     def _calculate_flyweight_force(self, s: float, ω: float) -> flyweightForceBreakdown:
         """Compute flyweight centrifugal conversion using ramp slope.

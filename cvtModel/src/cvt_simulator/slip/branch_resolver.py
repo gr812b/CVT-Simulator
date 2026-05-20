@@ -107,8 +107,8 @@ class BranchResolver:
         # Wrap angle (phi_p)
         phi_p = tm.primary_wrap_angle(s)
 
-        # Axial clamping force at primary
-        F_p_ax = primary_pulley.calculate_axial_clamping_force(state).net
+        # Axial clamping force at primary (pulley-only, exclude belt contribution)
+        F_p_ax = primary_pulley.calculate_axial_clamping_force(state).pulley_breakdown.net
 
         # Kinetic friction and geometry
         mu_k = RUBBER_ALUMINUM_KINETIC_FRICTION
@@ -295,7 +295,8 @@ class BranchResolver:
         # Wraps and axial forces
         phi_p = tm.primary_wrap_angle(s)
         phi_s = tm.secondary_wrap_angle(s)
-        F_p_ax = primary_pulley.calculate_axial_clamping_force(state).net
+        # Use pulley-only axial clamping (exclude belt contribution)
+        F_p_ax = primary_pulley.calculate_axial_clamping_force(state).pulley_breakdown.net
 
         # Secondary helix/spring terms
         helix_rotation = secondary_pulley.initial_rotation + secondary_pulley.helix_ramp.theta(s)
