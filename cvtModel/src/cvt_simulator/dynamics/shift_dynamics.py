@@ -40,13 +40,15 @@ class ShiftDynamics:
         self.secondary_belt_wrap = BeltWrap(is_primary=False)
 
     def get_breakdown(
-        self, state: SystemState, τ_s: float
+        self,
+        state: SystemState,
+        τ_s: float,
     ) -> CvtDynamicsBreakdown:
         """Compute shift dynamics breakdown.
 
         Args:
             state: Current system state
-            τ_s: Secondary torque transmitted through CVT [N·m]
+            τ_s: Secondary torque transmitted through CVT [N·m].
 
         Returns:
             CvtDynamicsBreakdown with all force and acceleration data

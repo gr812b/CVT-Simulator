@@ -22,9 +22,9 @@ import math
 
 @dataclass
 class BranchTorqueResult:
-    tau_p: float | None
-    tau_s: float | None
-    v_b_dot: float | None
+    tau_p: float
+    tau_s: float
+    v_b_dot: float
     note: str
 
 
@@ -114,8 +114,8 @@ class BranchResolver:
         mu_k = RUBBER_ALUMINUM_KINETIC_FRICTION
         beta = SHEAVE_ANGLE / 2.0
 
-        # Slip direction sign
-        sigma_p = decision.primary_slip_direction
+        # Slip direction sign (with fallback when entering slip from rest)
+        sigma_p = self._primary_slip_sign_from_decision(decision)
 
         # Constants
         rho_b = RUBBER_DENSITY
@@ -147,13 +147,32 @@ class BranchResolver:
             note="Primary-slip branch resolved.",
         )
 
-    def _secondary_slip_branch(self) -> BranchTorqueResult:
-        return BranchTorqueResult(
-            tau_p=None,
-            tau_s=None,
-            v_b_dot=None,
-            note="TODO: resolve secondary-slip branch.",
-        )
+    def _primary_slip_sign_from_decision(self, decision: BranchDeciderResult) -> float:
+        if decision.primary_slip_direction != 0.0:
+            return decision.primary_slip_direction
+
+        tau_p_ns = decision.no_slip.tau_p_ns
+        tau_p_lim = decision.admissibility.primary.tau_p_stick_limit
+
+        if tau_p_ns > tau_p_lim:
+            return 1.0
+        if tau_p_ns < -tau_p_lim:
+            return -1.0
+        return 0.0
+
+    def _secondary_slip_sign_from_decision(self, decision: BranchDeciderResult) -> float:
+        if decision.secondary_slip_direction != 0.0:
+            return decision.secondary_slip_direction
+
+        tau_s_ns = decision.no_slip.tau_s_ns
+        tau_s_upper = decision.admissibility.secondary.tau_stick_upper
+        tau_s_lower = decision.admissibility.secondary.tau_stick_lower
+
+        if tau_s_ns > tau_s_upper:
+            return 1.0
+        if tau_s_ns < tau_s_lower:
+            return -1.0
+        return 0.0
 
     def _secondary_slip_branch(
         self,
@@ -191,7 +210,7 @@ class BranchResolver:
         helix_rotation = secondary_pulley.initial_rotation + secondary_pulley.helix_ramp.theta(s)
         helix_rotation_rate = secondary_pulley.helix_ramp.dtheta_dx(s)
         spring_torsion_term = secondary_pulley.spring_coeff_tors * helix_rotation * helix_rotation_rate
-        spring_comp_term = 2.0 * secondary_pulley.spring_coeff_comp * (secondary_pulley.initial_compression + s)
+        spring_comp_term = secondary_pulley.spring_coeff_comp * (secondary_pulley.initial_compression + s)
 
         mu_k = RUBBER_ALUMINUM_KINETIC_FRICTION
         beta = SHEAVE_ANGLE / 2.0
@@ -199,13 +218,7 @@ class BranchResolver:
         A_b = BELT_CROSS_SECTIONAL_AREA
 
         # Determine slip sign; fall back to admissibility if zero
-        sigma_s = decision.secondary_slip_direction
-        if sigma_s == 0.0:
-            tau_s_ns = decision.no_slip.tau_s_ns
-            if tau_s_ns > decision.admissibility.secondary.tau_stick_upper:
-                sigma_s = 1.0
-            elif tau_s_ns < decision.admissibility.secondary.tau_stick_lower:
-                sigma_s = -1.0
+        sigma_s = self._secondary_slip_sign_from_decision(decision)
 
         # denominator for helix coupling
         den_s = 1.0 - sigma_s * r_s * mu_k * math.tan(beta) * helix_rotation_rate
@@ -288,7 +301,7 @@ class BranchResolver:
         helix_rotation = secondary_pulley.initial_rotation + secondary_pulley.helix_ramp.theta(s)
         helix_rotation_rate = secondary_pulley.helix_ramp.dtheta_dx(s)
         spring_torsion_term = secondary_pulley.spring_coeff_tors * helix_rotation * helix_rotation_rate
-        spring_comp_term = 2.0 * secondary_pulley.spring_coeff_comp * (secondary_pulley.initial_compression + s)
+        spring_comp_term = secondary_pulley.spring_coeff_comp * (secondary_pulley.initial_compression + s)
 
         mu_k = RUBBER_ALUMINUM_KINETIC_FRICTION
         beta = SHEAVE_ANGLE / 2.0
@@ -296,21 +309,8 @@ class BranchResolver:
         A_b = BELT_CROSS_SECTIONAL_AREA
 
         # Determine slip signs (fall back to admissibility when zero)
-        sigma_p = decision.primary_slip_direction
-        sigma_s = decision.secondary_slip_direction
-        if sigma_p == 0.0:
-            tau_p_ns = decision.no_slip.tau_p_ns
-            # choose sign based on which way the no-slip demand exceeds stick limit
-            if tau_p_ns > decision.admissibility.primary.tau_p_stick_limit:
-                sigma_p = 1.0
-            elif tau_p_ns < -decision.admissibility.primary.tau_p_stick_limit:
-                sigma_p = -1.0
-        if sigma_s == 0.0:
-            tau_s_ns = decision.no_slip.tau_s_ns
-            if tau_s_ns > decision.admissibility.secondary.tau_stick_upper:
-                sigma_s = 1.0
-            elif tau_s_ns < decision.admissibility.secondary.tau_stick_lower:
-                sigma_s = -1.0
+        sigma_p = self._primary_slip_sign_from_decision(decision)
+        sigma_s = self._secondary_slip_sign_from_decision(decision)
 
         # Secondary denominator (helix coupling)
         den_s = 1.0 - sigma_s * r_s * mu_k * math.tan(beta) * helix_rotation_rate
@@ -323,9 +323,13 @@ class BranchResolver:
             mu_k * math.tan(beta) * spring_torsion_term + 2.0 * mu_k * math.tan(beta) * spring_comp_term - rho_b * A_b * phi_s * r_s_cm_dot * v_b
         ) / den_s
 
-        numerator = primary_term - secondary_term - tau_load / r_s + I_s * r_s_dot * state.ω_s / (r_s ** 2)
+        numerator = primary_term - secondary_term
 
-        denominator = m_b + sigma_p * rho_b * A_b * phi_p * r_p_cm - sigma_s * rho_b * A_b * phi_s * r_s_cm / den_s + I_s / (r_s ** 2)
+        denominator = (
+            m_b
+            + sigma_p * rho_b * A_b * phi_p * r_p_cm
+            - sigma_s * rho_b * A_b * phi_s * r_s_cm / den_s
+        )
 
         v_b_dot = numerator / denominator
 

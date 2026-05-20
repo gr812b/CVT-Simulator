@@ -6,6 +6,7 @@ belt acceleration result.
 """
 from dataclasses import dataclass
 
+from cvt_simulator.geometry.cvt_geometry import CVT_GEOMETRY
 import numpy as np
 
 from cvt_simulator.components.primary_pulley import PrimaryPulley
@@ -79,6 +80,7 @@ class TorqueAdmissibility:
 		self.mu_static = RUBBER_ALUMINUM_STATIC_FRICTION
 		self.mu_kinetic = RUBBER_ALUMINUM_KINETIC_FRICTION
 		self.beta = SHEAVE_ANGLE / 2
+		self.cvt = CVT_GEOMETRY
 
 	def get_breakdown(
 		self,
@@ -115,7 +117,7 @@ class TorqueAdmissibility:
 		wrap_angle = tm.primary_wrap_angle(s)
 		effective_radius = tm.primary_effective_radius(s)
 		centroid_radius = tm.primary_centroid_radius(s)
-		centroid_radius_rate = tm.primary_radius_rate_of_change(s)
+		centroid_radius_rate = self.cvt.primary_outer_radius_time_derivative(s, state.s_dot)
 		axial_clamping_force = self.primary_pulley.calculate_axial_clamping_force(state).net
 
 		belt_centripetal_term = RUBBER_DENSITY * BELT_CROSS_SECTIONAL_AREA * wrap_angle * (
@@ -154,13 +156,13 @@ class TorqueAdmissibility:
 		wrap_angle = tm.secondary_wrap_angle(s)
 		effective_radius = tm.secondary_effective_radius(s)
 		centroid_radius = tm.secondary_centroid_radius(s)
-		centroid_radius_rate = tm.secondary_radius_rate_of_change(s)
+		centroid_radius_rate = self.cvt.secondary_outer_radius_time_derivative(s, state.s_dot)
 
 		helix_rotation = self.secondary_pulley.initial_rotation + self.secondary_pulley.helix_ramp.theta(s)
 		helix_rotation_rate = self.secondary_pulley.helix_ramp.dtheta_dx(s)
 
 		spring_torsion_term = self.secondary_pulley.spring_coeff_tors * helix_rotation * helix_rotation_rate
-		spring_comp_term = 2.0 * self.secondary_pulley.spring_coeff_comp * (
+		spring_comp_term = self.secondary_pulley.spring_coeff_comp * (
 			self.secondary_pulley.initial_compression + s
 		)
 
