@@ -20,7 +20,7 @@ from cvt_simulator.slip.no_slip_candidate import NoSlipResult
 from cvt_simulator.utils.theoretical_models import TheoreticalModels as tm
 
 
-class BranchSelector:
+class SlipMetrics:
     """Select the active torque-transfer branch.
 
     This is the new branch-selection implementation. The legacy

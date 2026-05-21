@@ -15,7 +15,6 @@ import pstats
 import time
 
 import numpy as np
-from cvt_simulator.models.model_initializer import get_models
 from cvt_simulator.models.ramps.ramp_config import (
     CircularSegmentConfig,
     LinearSegmentConfig,
@@ -119,7 +118,6 @@ def run_single_case(
 ) -> dict:
     print(f"\n=== Input Case: {case_name} ===")
     print(args)
-    system_model = get_models(args)
     progress_state = {
         "start_wall": time.perf_counter(),
         "last_wall": 0.0,
@@ -177,8 +175,8 @@ def run_single_case(
             flush=True,
         )
 
-    runner = SimulationRunner(
-        system_model,
+    runner = SimulationRunner.from_simulation_args(
+        args,
         progress_callback=progress_callback,
         transition_callback=transition_callback,
     )
@@ -251,9 +249,9 @@ def run_single_case(
     shift_velocity = []
     shift_distance = []
     for state in result.states:
-        breakdown = system_model.get_breakdown(state)
-        net_axial.append(breakdown.cvt_dynamics.net)
-        shift_accel.append(breakdown.cvt_dynamics.acceleration)
+        breakdown = runner.contact_model.get_breakdown(state)
+        net_axial.append(breakdown.shift.net)
+        shift_accel.append(breakdown.shift.acceleration)
         shift_velocity.append(state.s_dot)
         shift_distance.append(state.s)
 
@@ -327,8 +325,8 @@ def run_single_case(
             print(f"intervals < 1e-2s: {int(np.sum(transition_dt < 1e-2))}")
             print(f"intervals < 1e-3s: {int(np.sum(transition_dt < 1e-3))}")
 
-        mid_shift_steady_event = get_mid_shift_steady_event(system_model)
-        mid_shift_wake_event = get_mid_shift_wake_event(system_model)
+        mid_shift_steady_event = get_mid_shift_steady_event(runner.contact_model)
+        mid_shift_wake_event = get_mid_shift_wake_event(runner.contact_model)
 
         print("\n=== Transition Threshold Probes ===")
         for i, tr in enumerate(transitions, start=1):

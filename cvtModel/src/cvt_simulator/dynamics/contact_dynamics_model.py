@@ -10,6 +10,8 @@ from cvt_simulator.components.engine import EngineModel
 from cvt_simulator.components.primary_pulley import PrimaryPulley
 from cvt_simulator.components.secondary_pulley import SecondaryPulley
 from cvt_simulator.components.vehicle_load import LoadModel
+from cvt_simulator.constants.car_specs import BELT_CROSS_SECTIONAL_AREA, BELT_LENGTH
+from cvt_simulator.constants.constants import RUBBER_DENSITY
 from cvt_simulator.core.system_state import SystemState
 from cvt_simulator.dynamics.drivetrain_dynamics import DrivetrainDynamics
 from cvt_simulator.core.data_types import DrivetrainAccelerationBreakdown
@@ -27,6 +29,11 @@ class ContactDynamicsBreakdown:
 
 class ContactDynamicsModel:
     """Compute contact torques and pass them through drivetrain and shift dynamics."""
+
+    @staticmethod
+    def compute_belt_mass() -> float:
+        """Compute the effective belt mass from geometry and material density."""
+        return BELT_CROSS_SECTIONAL_AREA * RUBBER_DENSITY * BELT_LENGTH
 
     def __init__(
         self,

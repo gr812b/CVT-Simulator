@@ -4,13 +4,23 @@ from typing import Callable, Optional, Any
 from scipy.integrate import solve_ivp
 from cvt_simulator.core.system_state import SystemState
 from cvt_simulator.utils.simulation_result import SimulationResult
-from cvt_simulator.models.system_model import SystemModel
+from cvt_simulator.dynamics.contact_dynamics_model import ContactDynamicsModel
 from cvt_simulator.constants.car_specs import (
     GEARBOX_RATIO,
     MAX_SHIFT,
+    ENGINE_INERTIA,
+    SECONDARY_INERTIA,
+    HELIX_RADIUS,
 )
-from cvt_simulator.utils.conversions import rpm_to_rad_s
-from cvt_simulator.utils.theoretical_models import TheoreticalModels as tm
+from cvt_simulator.components.engine import EngineModel
+from cvt_simulator.components.primary_pulley import PrimaryPulley
+from cvt_simulator.components.secondary_pulley import SecondaryPulley
+from cvt_simulator.components.vehicle_load import LoadModel
+from cvt_simulator.models.ramps.piecewise_ramp import PiecewiseRamp
+from cvt_simulator.models.ramps.theta_ramp import ThetaRamp
+from cvt_simulator.utils.conversions import rpm_to_rad_s, deg_to_rad
+from cvt_simulator.constants.engine_specs import safe_torque_curve
+from cvt_simulator.utils.simulation_args import SimulationArgs
 from cvt_simulator.utils.simulation_constraints import (
     car_velocity_constraint_event,
     get_shift_steady_event,
@@ -19,6 +29,7 @@ from cvt_simulator.utils.simulation_constraints import (
     get_mid_shift_wake_event,
     shift_constraint_event,
 )
+from cvt_simulator.geometry.cvt_geometry import CVT_GEOMETRY
 
 
 # Helper class to wrap data
@@ -40,7 +51,7 @@ class SimulationRunner:
         s_dot=0.0,
         # Initial secondary pulley angular velocity derived from initial car velocity
         ω_s=rpm_to_rad_s(0.1)
-        / (GEARBOX_RATIO * tm.current_effective_cvt_ratio(0)),
+        / (GEARBOX_RATIO * CVT_GEOMETRY.current_effective_cvt_ratio(0)),
         # Initial primary pulley angular velocity (engine speed)
         ω_p=rpm_to_rad_s(1800),
         v_b=0.0,
@@ -48,17 +59,61 @@ class SimulationRunner:
 
     def __init__(
         self,
-        system_model: SystemModel,
+        contact_model: ContactDynamicsModel,
         # Optional progress callback. Preferred signature:
         #   callback(progress_percent, sim_time_s, shift_distance)
         # Backward-compatible signature callback(progress_percent) is also supported.
         progress_callback: Optional[Callable[..., None]] = None,
         transition_callback: Optional[Callable[[dict[str, Any]], None]] = None,
     ):
-        self.system_model = system_model
+        self.contact_model = contact_model
         self.progress_callback = progress_callback
         self.transition_callback = transition_callback
         self._last_callback_percent = -1.0
+
+    @classmethod
+    def from_simulation_args(
+        cls,
+        args: SimulationArgs,
+        progress_callback: Optional[Callable[..., None]] = None,
+        transition_callback: Optional[Callable[[dict[str, Any]], None]] = None,
+    ) -> "SimulationRunner":
+        primary_ramp = PiecewiseRamp.from_config(args.primary_ramp_config)
+        secondary_ramp = PiecewiseRamp.from_config(args.secondary_ramp_config)
+
+        primary_pulley = PrimaryPulley(
+            spring_coeff_comp=args.primary_spring_rate,
+            initial_compression=args.primary_spring_pretension,
+            flyweight_mass=args.flyweight_mass,
+            ramp=primary_ramp,
+        )
+        secondary_pulley = SecondaryPulley(
+            spring_coeff_tors=args.secondary_torsion_spring_rate,
+            spring_coeff_comp=args.secondary_compression_spring_rate,
+            initial_rotation=deg_to_rad(args.secondary_rotational_spring_pretension),
+            initial_compression=args.secondary_linear_spring_pretension,
+            helix_ramp=ThetaRamp(secondary_ramp, HELIX_RADIUS),
+            helix_radius=HELIX_RADIUS,
+        )
+        engine_model = EngineModel(safe_torque_curve)
+        load_model = LoadModel(
+            car_mass=args.vehicle_weight + args.driver_weight,
+            incline_angle=deg_to_rad(args.angle_of_incline),
+        )
+        contact_model = ContactDynamicsModel(
+            primary_pulley=primary_pulley,
+            secondary_pulley=secondary_pulley,
+            primary_inertia=ENGINE_INERTIA,
+            secondary_inertia=SECONDARY_INERTIA,
+            belt_mass=ContactDynamicsModel.compute_belt_mass(),
+            engine_model=engine_model,
+            load_model=load_model,
+        )
+        return cls(
+            contact_model=contact_model,
+            progress_callback=progress_callback,
+            transition_callback=transition_callback,
+        )
 
     def _emit_transition(
         self,
@@ -84,8 +139,6 @@ class SimulationRunner:
 
     def run_simulation(self) -> SimulationResult:
         """Run the simulation and return results."""
-        self.system_model.belt_model.reset_mode_state()
-        self.system_model.slip_model.reset_mode_state()
         cvt_system_ode = self._get_ode_function()
         # Use a single global time grid for the entire simulation
         time_eval = np.linspace(0, self.TOTAL_SIM_TIME, 10000)
@@ -96,11 +149,6 @@ class SimulationRunner:
 
         current_time = 0
         current_state = self.INITIAL_STATE.to_array()
-        initial_state = SystemState.from_array(current_state)
-        v_b_star, _, _, _, _ = self.system_model.belt_model.get_kinematic_terms(
-            initial_state
-        )
-        current_state[4] = v_b_star
 
         mode = "normal"
         locked_shift_distance = None
@@ -153,7 +201,7 @@ class SimulationRunner:
 
             if mode == "normal":
                 base_mid_shift_steady_event = get_mid_shift_steady_event(
-                    self.system_model
+                    self.contact_model
                 )
 
                 def guarded_mid_shift_steady_event(t, y):
@@ -167,7 +215,7 @@ class SimulationRunner:
                 guarded_mid_shift_steady_event.direction = -1
 
                 events = [
-                    get_shift_steady_event(self.system_model),
+                    get_shift_steady_event(self.contact_model),
                     guarded_mid_shift_steady_event,
                     car_velocity_constraint_event,
                     shift_constraint_event,
@@ -233,7 +281,7 @@ class SimulationRunner:
             if mode == "full_shift":
                 locked_ode = self._get_locked_shift_ode_function(MAX_SHIFT)
                 events = [
-                    get_back_shift_event(self.system_model),
+                    get_back_shift_event(self.contact_model),
                     car_velocity_constraint_event,
                 ]
                 event_names = [
@@ -281,6 +329,7 @@ class SimulationRunner:
                 locked_ode = self._get_locked_shift_ode_function(locked_shift_distance)
 
                 base_mid_shift_wake_event = get_mid_shift_wake_event(self.system_model)
+                base_mid_shift_wake_event = get_mid_shift_wake_event(self.contact_model)
 
                 def guarded_mid_shift_wake_event(t, y):
                     # Once we lock into mid-shift, keep that mode for a minimum
@@ -554,16 +603,10 @@ class SimulationRunner:
         self._print_progress(t, eval_state.s)
 
         # Get system breakdown (this calculates everything in correct order)
-        drivetrain_breakdown = self.system_model.get_breakdown(eval_state)
+        contact_breakdown = self.contact_model.get_breakdown(eval_state)
 
-        # Extract accelerations
-        secondary_pulley_angular_accel_from_torques = (
-            drivetrain_breakdown.secondary_pulley.secondary_pulley_angular_acceleration
-        )
-        primary_pulley_angular_accel = (
-            drivetrain_breakdown.primary_pulley.primary_pulley_angular_acceleration
-        )
-        shift_acceleration = drivetrain_breakdown.cvt_dynamics.acceleration
+        # Extract acceleration
+        shift_acceleration = contact_breakdown.shift.acceleration
 
         # Prevent acceleration from pushing past boundaries (metal hitting metal)
         if eval_shift_distance <= 0 and shift_acceleration < 0:
@@ -571,14 +614,12 @@ class SimulationRunner:
         elif eval_shift_distance >= MAX_SHIFT and shift_acceleration > 0:
             shift_acceleration = 0
 
-        v_b_dot = drivetrain_breakdown.belt_state.v_b_dot
-
         return [
             eval_shift_velocity,
             shift_acceleration,
-            primary_pulley_angular_accel,
-            secondary_pulley_angular_accel_from_torques,
-            v_b_dot,
+            contact_breakdown.drivetrain.ω_p_dot,
+            contact_breakdown.drivetrain.ω_s_dot,
+            contact_breakdown.drivetrain.v_b_dot,
         ]
 
     def _evaluate_full_shift_system(self, t: float, y: list[float]):
@@ -599,21 +640,14 @@ class SimulationRunner:
             y[i] = constrained_y[i]
 
         # Get system breakdown for full shift case
-        drivetrain_breakdown = self.system_model.get_breakdown(state)
-
-        secondary_pulley_angular_accel_from_torques = (
-            drivetrain_breakdown.secondary_pulley.secondary_pulley_angular_acceleration
-        )
-        primary_pulley_angular_accel = (
-            drivetrain_breakdown.primary_pulley.primary_pulley_angular_acceleration
-        )
+        contact_breakdown = self.contact_model.get_breakdown(state)
 
         return [
             0,  # shift_distance held constant
             0,  # shift_velocity held constant
-            primary_pulley_angular_accel,  # primary pulley continues to evolve
-            secondary_pulley_angular_accel_from_torques,  # secondary pulley continues to evolve
-            drivetrain_breakdown.belt_state.v_b_dot,
+            contact_breakdown.drivetrain.ω_p_dot,  # primary pulley continues to evolve
+            contact_breakdown.drivetrain.ω_s_dot,  # secondary pulley continues to evolve
+            contact_breakdown.drivetrain.v_b_dot,
         ]
 
     def _evaluate_locked_shift_system(
@@ -633,18 +667,12 @@ class SimulationRunner:
         for i in range(len(y)):
             y[i] = constrained_y[i]
 
-        drivetrain_breakdown = self.system_model.get_breakdown(state)
-        secondary_pulley_angular_accel_from_torques = (
-            drivetrain_breakdown.secondary_pulley.secondary_pulley_angular_acceleration
-        )
-        primary_pulley_angular_accel = (
-            drivetrain_breakdown.primary_pulley.primary_pulley_angular_acceleration
-        )
+        contact_breakdown = self.contact_model.get_breakdown(state)
 
         return [
             0,
             0,
-            primary_pulley_angular_accel,
-            secondary_pulley_angular_accel_from_torques,
-            drivetrain_breakdown.belt_state.v_b_dot,
+            contact_breakdown.drivetrain.ω_p_dot,
+            contact_breakdown.drivetrain.ω_s_dot,
+            contact_breakdown.drivetrain.v_b_dot,
         ]

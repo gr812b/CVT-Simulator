@@ -1,7 +1,7 @@
 from cvt_simulator.constants.car_specs import (
     MAX_SHIFT,
 )
-from cvt_simulator.models.system_model import SystemModel
+from cvt_simulator.dynamics.contact_dynamics_model import ContactDynamicsModel
 from cvt_simulator.utils.state_computations import (
     secondary_pulley_angular_velocity_to_car_velocity,
 )
@@ -47,7 +47,7 @@ car_velocity_constraint_event.terminal = True
 car_velocity_constraint_event.direction = -1
 
 
-def get_shift_steady_event(system_model: SystemModel):
+def get_shift_steady_event(contact_model: ContactDynamicsModel):
     """
     Returns an event function that triggers only when:
       1. The system is close enough to full shift (i.e. shift_distance within tol of MAX_SHIFT).
@@ -79,17 +79,14 @@ def get_shift_steady_event(system_model: SystemModel):
         # Once near full shift, return the computed shift acceleration.
         # The event will trigger when this value crosses from negative to positive.
         # TODO: Clean this up!
-        coupling_torque = system_model.slip_model.get_breakdown(state).coupling_torque
-        return system_model.cvt_shift_model.get_breakdown(
-            state, coupling_torque
-        ).acceleration
+        return contact_model.get_breakdown(state).shift.acceleration
 
     shift_steady_event.terminal = True
     shift_steady_event.direction = 1  # Looking for a negative-to-positive crossing.
     return shift_steady_event
 
 
-def get_back_shift_event(system_model: SystemModel):
+def get_back_shift_event(contact_model: ContactDynamicsModel):
     """
     Returns an event function that triggers when the system wants to back-shift
     from full shift position. This detects when the shift acceleration becomes
@@ -104,10 +101,7 @@ def get_back_shift_event(system_model: SystemModel):
             return 1.0  # Return positive value when not at full shift
 
         # Calculate the shift acceleration
-        coupling_torque = system_model.slip_model.get_breakdown(state).coupling_torque
-        shift_accel = system_model.cvt_shift_model.get_breakdown(
-            state, coupling_torque
-        ).acceleration
+        shift_accel = contact_model.get_breakdown(state).shift.acceleration
 
         # Return the acceleration + small threshold
         # Event triggers when this crosses from positive to negative
@@ -120,7 +114,7 @@ def get_back_shift_event(system_model: SystemModel):
 
 
 def get_mid_shift_steady_event(
-    system_model: SystemModel,
+    contact_model: ContactDynamicsModel,
     velocity_tol: float = 1e-4,
     accel_tol: float = 0.1,
     wake_accel_guard_tol: float = 0.5,
@@ -149,10 +143,8 @@ def get_mid_shift_steady_event(
         ):
             return 1.0
 
-        coupling_torque = system_model.slip_model.get_breakdown(state).coupling_torque
-        shift_accel = system_model.cvt_shift_model.get_breakdown(
-            state, coupling_torque
-        ).acceleration
+        shift_breakdown = contact_model.get_breakdown(state).shift
+        shift_accel = shift_breakdown.acceleration
 
         # Guard against immediate wake chatter: only lock if the locked-state
         # acceleration would also remain below the wake threshold.
@@ -162,12 +154,7 @@ def get_mid_shift_steady_event(
             ω_p=state.ω_p,
             ω_s=state.ω_s,
         )
-        locked_coupling_torque = system_model.slip_model.get_breakdown(
-            locked_state
-        ).coupling_torque
-        locked_shift_accel = system_model.cvt_shift_model.get_breakdown(
-            locked_state, locked_coupling_torque
-        ).acceleration
+        locked_shift_accel = contact_model.get_breakdown(locked_state).shift.acceleration
 
         # Deterministic event value: <= 0 means quasi-static and eligible to lock.
         return max(
@@ -184,7 +171,7 @@ def get_mid_shift_steady_event(
 
 
 def get_mid_shift_wake_event(
-    system_model: SystemModel,
+    contact_model: ContactDynamicsModel,
     wake_accel_tol: float = 1.5,
     boundary_margin: float = 1e-5,
 ):
@@ -204,10 +191,7 @@ def get_mid_shift_wake_event(
 
     def mid_shift_wake_event(t, y):
         state = SystemState.from_array(y)
-        coupling_torque = system_model.slip_model.get_breakdown(state).coupling_torque
-        shift_accel = system_model.cvt_shift_model.get_breakdown(
-            state, coupling_torque
-        ).acceleration
+        shift_accel = contact_model.get_breakdown(state).shift.acceleration
         if state.s <= boundary_margin:
             return shift_accel - wake_accel_tol
         if state.s >= MAX_SHIFT - boundary_margin:

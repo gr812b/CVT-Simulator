@@ -1,22 +1,20 @@
 from dataclasses import dataclass, fields, replace, field, is_dataclass
 from typing import Any, Mapping, Union, get_args, get_origin
-from cvt_simulator.models.ramps.ramp_config import PiecewiseRampConfig
-from cvt_simulator.models.pulley.primary_pulley_flyweight import (
-    create_default_flyweight_ramp,
-)
-from cvt_simulator.models.pulley.secondary_pulley_torque_reactive import (
-    create_default_helix_ramp,
-)
+from cvt_simulator.models.ramps.ramp_config import PiecewiseRampConfig, LinearSegmentConfig
 
 
 def _get_default_primary_ramp() -> PiecewiseRampConfig:
     """Factory function for default primary ramp config."""
-    return create_default_flyweight_ramp().to_config()
+    return PiecewiseRampConfig(
+        segments=[LinearSegmentConfig(length=1.0, angle=45.0)]
+    )
 
 
 def _get_default_secondary_ramp() -> PiecewiseRampConfig:
     """Factory function for default secondary ramp config."""
-    return create_default_helix_ramp().angle_ramp.to_config()
+    return PiecewiseRampConfig(
+        segments=[LinearSegmentConfig(length=1.0, angle=45.0)]
+    )
 
 
 @dataclass(slots=True)

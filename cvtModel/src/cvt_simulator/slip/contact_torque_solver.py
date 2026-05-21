@@ -11,7 +11,7 @@ from cvt_simulator.core.data_types import ContactTorqueResult
 from cvt_simulator.core.system_state import SystemState
 
 from cvt_simulator.slip.branch_resolver import BranchResolver
-from cvt_simulator.slip.branch_selector import BranchSelector
+from cvt_simulator.slip.slip_metrics import SlipMetrics
 from cvt_simulator.slip.no_slip_candidate import NoSlipResult, compute_no_slip_candidate
 from cvt_simulator.slip.torque_admissibility import TorqueAdmissibility
 
@@ -27,7 +27,7 @@ class ContactTorqueSolver:
         self.primary_pulley = primary_pulley
         self.secondary_pulley = secondary_pulley
         self.torque_admissibility = TorqueAdmissibility(primary_pulley, secondary_pulley)
-        self.branch_selector = BranchSelector()
+        self.branch_selector = SlipMetrics()
         self.branch_resolver = BranchResolver()
 
     def solve(

@@ -1,5 +1,4 @@
 from typing import Callable, Optional
-from cvt_simulator.models.model_initializer import get_models
 from cvt_simulator.simulation_runner import SimulationRunner
 from cvt_simulator.utils.simulation_args import SimulationArgs
 from cvt_simulator.utils.frontend_output import FormattedSimulationResult
@@ -10,9 +9,10 @@ def simulate_cvt_model(
     out_csv: str = "simulation_output.csv",
     progress_callback: Optional[Callable[[float], None]] = None,
 ):
-    system_model = get_models(args)
-
-    simulation_runner = SimulationRunner(system_model, progress_callback)
+    simulation_runner = SimulationRunner.from_simulation_args(
+        args,
+        progress_callback=progress_callback,
+    )
     result = simulation_runner.run_simulation()
     result.write_csv(out_csv)
 
