@@ -16,11 +16,11 @@ from cvt_simulator.constants.car_specs import (
 
 @dataclass
 class CVTGeometryResult:
+    effective_cvt_ratio: float
     primary_outer_radius: float
     secondary_outer_radius: float
     primary_effective_radius: float
     secondary_effective_radius: float
-    effective_cvt_ratio: float
     primary_centroid_radius: float
     secondary_centroid_radius: float
     primary_wrap_angle: float

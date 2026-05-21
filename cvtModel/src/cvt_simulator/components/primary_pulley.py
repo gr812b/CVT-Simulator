@@ -3,6 +3,7 @@
 Exposes `PrimaryPulley.calculate_axial_clamping_force(shift, ω)` which returns
 `(axial_force, PrimaryForceBreakdown)` and uses the existing datatypes.
 """
+from cvt_simulator.models.ramps.piecewise_ramp import PiecewiseRamp
 import numpy as np
 from cvt_simulator.geometry.cvt_geometry import CVT_GEOMETRY
 from cvt_simulator.constants.car_specs import MAX_SHIFT, INITIAL_FLYWEIGHT_RADIUS
@@ -28,7 +29,7 @@ class PrimaryPulley:
         spring_coeff_comp: float,
         initial_compression: float,
         flyweight_mass: float,
-        ramp,
+        ramp: PiecewiseRamp,
         initial_flyweight_radius: float = INITIAL_FLYWEIGHT_RADIUS,
     ) -> None:
         self.spring_coeff_comp = spring_coeff_comp

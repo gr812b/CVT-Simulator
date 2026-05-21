@@ -9,32 +9,9 @@ primary/secondary torques per the derivation:
     τ_p,ns = τ_eng - I_p * ( v̇_b,ns - ṙ_p * ω_p ) / r_p
     τ_s,ns = τ_load + I_s * ( v̇_b,ns - ṙ_s * ω_s ) / r_s
 """
-from dataclasses import dataclass
-
 from cvt_simulator.core.system_state import SystemState
+from cvt_simulator.core.data_types import NoSlipResult, NoSlipBreakdown
 from cvt_simulator.utils.theoretical_models import TheoreticalModels as tm
-
-
-@dataclass
-class NoSlipBreakdown:
-    r_p: float
-    r_s: float
-    r_p_dot: float
-    r_s_dot: float
-    tau_engine_over_r_p: float
-    tau_load_over_r_s: float
-    primary_inertia_term: float
-    secondary_inertia_term: float
-    numerator: float
-    denominator: float
-
-
-@dataclass
-class NoSlipResult:
-    v_b_dot_ns: float
-    tau_p_ns: float
-    tau_s_ns: float
-    breakdown: NoSlipBreakdown
 
 
 def compute_no_slip_candidate(

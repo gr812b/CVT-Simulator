@@ -4,6 +4,7 @@ Exposes `SecondaryPulley.calculate_axial_clamping_force(shift, torque)` which re
 `(axial_force, SecondaryForceBreakdown)` using existing datatypes.
 """
 from typing import Tuple
+from cvt_simulator.models.ramps.theta_ramp import ThetaRamp
 import numpy as np
 from cvt_simulator.geometry.cvt_geometry import CVT_GEOMETRY
 from cvt_simulator.constants.car_specs import MAX_SHIFT
@@ -38,7 +39,7 @@ class SecondaryPulley:
         spring_coeff_comp: float,
         initial_rotation: float,
         initial_compression: float,
-        helix_ramp,
+        helix_ramp: ThetaRamp,
         helix_radius: float,
     ) -> None:
         self.spring_coeff_tors = spring_coeff_tors

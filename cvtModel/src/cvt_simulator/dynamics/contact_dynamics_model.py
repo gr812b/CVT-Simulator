@@ -85,9 +85,3 @@ class ContactDynamicsModel:
             drivetrain=drivetrain,
             shift=shift,
         )
-
-
-__all__ = [
-    "ContactDynamicsModel",
-    "ContactDynamicsBreakdown",
-]

@@ -4,7 +4,11 @@ Implements the no-slip admissibility expressions for the primary and
 secondary pulleys using the pulley component constants plus the no-slip
 belt acceleration result.
 """
-from dataclasses import dataclass
+from cvt_simulator.core.data_types import (
+	PrimaryTorqueAdmissibilityBreakdown,
+	SecondaryTorqueAdmissibilityBreakdown,
+	TorqueAdmissibilityResult,
+)
 
 from cvt_simulator.geometry.cvt_geometry import CVT_GEOMETRY
 import numpy as np
@@ -19,56 +23,14 @@ from cvt_simulator.constants.constants import (
 )
 from cvt_simulator.core.system_state import SystemState
 from cvt_simulator.slip.no_slip_candidate import NoSlipResult
-from cvt_simulator.utils.theoretical_models import TheoreticalModels as tm
-
-
-@dataclass
-class PrimaryTorqueAdmissibilityBreakdown:
-	shift_distance: float
-	wrap_angle: float
-	effective_radius: float
-	centroid_radius: float
-	centroid_radius_rate: float
-	axial_clamping_force: float
-	belt_centripetal_term: float
-	friction_coefficient: float
-	sheave_half_angle: float
-	tau_p_stick_limit: float
-	tau_p_stick_upper: float
-	tau_p_stick_lower: float
-
-
-@dataclass
-class SecondaryTorqueAdmissibilityBreakdown:
-	shift_distance: float
-	wrap_angle: float
-	effective_radius: float
-	centroid_radius: float
-	centroid_radius_rate: float
-	helix_rotation: float
-	helix_rotation_rate: float
-	spring_torsion_term: float
-	spring_comp_term: float
-	belt_centripetal_term: float
-	friction_coefficient: float
-	sheave_half_angle: float
-	denominator_upper: float
-	denominator_lower: float
-	tau_stick_upper: float
-	tau_stick_lower: float
-
-
-@dataclass
-class TorqueAdmissibilityResult:
-	primary: PrimaryTorqueAdmissibilityBreakdown
-	secondary: SecondaryTorqueAdmissibilityBreakdown
-	tau_p_ns: float
-	tau_s_ns: float
-	v_b_dot_ns: float
 
 
 class TorqueAdmissibility:
-	"""Evaluate no-slip torque admissibility for the CVT."""
+	"""
+	Computes the bounds for the primary and secondary CVT 
+	to determine if no-slip is admissible. 
+	Computed based on the no slip result
+	"""
 
 	def __init__(
 		self,
@@ -102,9 +64,10 @@ class TorqueAdmissibility:
 		return TorqueAdmissibilityResult(
 			primary=primary_breakdown,
 			secondary=secondary_breakdown,
-			tau_p_ns=no_slip.tau_p_ns,
-			tau_s_ns=no_slip.tau_s_ns,
-			v_b_dot_ns=no_slip.v_b_dot_ns,
+			primary_tau_p_stick_upper=primary_breakdown.tau_p_stick_upper,
+			primary_tau_p_stick_lower=primary_breakdown.tau_p_stick_lower,
+			secondary_tau_stick_upper=secondary_breakdown.tau_stick_upper,
+			secondary_tau_stick_lower=secondary_breakdown.tau_stick_lower,
 		)
 
 	def _primary_breakdown(
@@ -114,9 +77,9 @@ class TorqueAdmissibility:
 	) -> PrimaryTorqueAdmissibilityBreakdown:
 		s = state.s
 
-		wrap_angle = tm.primary_wrap_angle(s)
-		effective_radius = tm.primary_effective_radius(s)
-		centroid_radius = tm.primary_centroid_radius(s)
+		wrap_angle = self.cvt.primary_wrap_angle(s)
+		effective_radius = self.cvt.primary_effective_radius(s)
+		centroid_radius = self.cvt.primary_centroid_radius(s)
 		centroid_radius_rate = self.cvt.primary_outer_radius_time_derivative(s, state.s_dot)
 		# Use pulley-only clamping force (exclude belt centrifugal contribution)
 		axial_clamping_force = self.primary_pulley.calculate_axial_clamping_force(state).pulley_breakdown.net
@@ -154,9 +117,9 @@ class TorqueAdmissibility:
 	) -> SecondaryTorqueAdmissibilityBreakdown:
 		s = state.s
 
-		wrap_angle = tm.secondary_wrap_angle(s)
-		effective_radius = tm.secondary_effective_radius(s)
-		centroid_radius = tm.secondary_centroid_radius(s)
+		wrap_angle = self.cvt.secondary_wrap_angle(s)
+		effective_radius = self.cvt.secondary_effective_radius(s)
+		centroid_radius = self.cvt.secondary_centroid_radius(s)
 		centroid_radius_rate = self.cvt.secondary_outer_radius_time_derivative(s, state.s_dot)
 
 		helix_rotation = self.secondary_pulley.initial_rotation + self.secondary_pulley.helix_ramp.theta(s)
