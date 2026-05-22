@@ -165,20 +165,20 @@ export interface components {
             effective_cvt_ratio_rate_of_change: number;
             /** Primary Outer Radius */
             primary_outer_radius: number;
-            /** Primary Outer Radius Rate Of Change */
-            primary_outer_radius_rate_of_change: number;
-            /** Secondary Outer Radius */
-            secondary_outer_radius: number;
-            /** Secondary Outer Radius Rate Of Change */
-            secondary_outer_radius_rate_of_change: number;
             /** Primary Effective Radius */
             primary_effective_radius: number;
-            /** Secondary Effective Radius */
-            secondary_effective_radius: number;
             /** Primary Centroid Radius */
             primary_centroid_radius: number;
+            /** Primary Radius Rate Of Change */
+            primary_radius_rate_of_change: number;
+            /** Secondary Outer Radius */
+            secondary_outer_radius: number;
+            /** Secondary Effective Radius */
+            secondary_effective_radius: number;
             /** Secondary Centroid Radius */
             secondary_centroid_radius: number;
+            /** Secondary Radius Rate Of Change */
+            secondary_radius_rate_of_change: number;
             /** Primary Wrap Angle */
             primary_wrap_angle: number;
             /** Secondary Wrap Angle */

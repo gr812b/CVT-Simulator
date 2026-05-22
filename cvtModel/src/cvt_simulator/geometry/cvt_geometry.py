@@ -18,14 +18,17 @@ from cvt_simulator.constants.car_specs import (
 class CVTGeometryResult:
     effective_cvt_ratio: float
     effective_cvt_ratio_rate_of_change: float
+
     primary_outer_radius: float
-    primary_outer_radius_rate_of_change: float
-    secondary_outer_radius: float
-    secondary_outer_radius_rate_of_change: float
     primary_effective_radius: float
-    secondary_effective_radius: float
     primary_centroid_radius: float
+    primary_radius_rate_of_change: float
+
+    secondary_outer_radius: float
+    secondary_effective_radius: float
     secondary_centroid_radius: float
+    secondary_radius_rate_of_change: float
+    
     primary_wrap_angle: float
     secondary_wrap_angle: float
 
@@ -188,26 +191,30 @@ class CVTGeometry:
         secondary_effective_radius = self.secondary_effective_radius(d)
         return secondary_effective_radius / primary_effective_radius
 
-    def geometry_from_shift_distance(self, d: float) -> CVTGeometryResult:
-        primary_outer_radius = self.primary_outer_radius(d)
-        secondary_outer_radius = self.secondary_outer_radius(d)
+    def geometry_from_shift_distance(self, s: float, s_dot: float = 0.0) -> CVTGeometryResult:
+        primary_outer_radius = self.primary_outer_radius(s)
+        secondary_outer_radius = self.secondary_outer_radius(s)
         primary_effective_radius = primary_outer_radius - self.h / 2
         secondary_effective_radius = secondary_outer_radius - self.h / 2
         effective_cvt_ratio = secondary_effective_radius / primary_effective_radius
+        # All radiuses have the same rate of change
+        primary_outer_radius_rate = self.primary_outer_radius_time_derivative(s, s_dot)
+        secondary_outer_radius_rate = self.secondary_outer_radius_time_derivative(s, s_dot)
+        effective_cvt_ratio_rate = self.effective_cvt_ratio_time_derivative(s, s_dot)
 
         return CVTGeometryResult(
             primary_outer_radius=primary_outer_radius,
-            primary_outer_radius_rate_of_change=self._primary_outer_radius_shift_derivative(d),
-            secondary_outer_radius=secondary_outer_radius,
-            secondary_outer_radius_rate_of_change=self._secondary_outer_radius_shift_derivative(d),
             primary_effective_radius=primary_effective_radius,
+            primary_radius_rate_of_change=primary_outer_radius_rate,
+            secondary_outer_radius=secondary_outer_radius,
             secondary_effective_radius=secondary_effective_radius,
+            secondary_radius_rate_of_change=secondary_outer_radius_rate,
             effective_cvt_ratio=effective_cvt_ratio,
-            effective_cvt_ratio_rate_of_change=self._effective_cvt_ratio_shift_derivative(d),
-            primary_centroid_radius=self.primary_centroid_radius(d),
-            secondary_centroid_radius=self.secondary_centroid_radius(d),
-            primary_wrap_angle=self.primary_wrap_angle(d),
-            secondary_wrap_angle=self.secondary_wrap_angle(d),
+            effective_cvt_ratio_rate_of_change=effective_cvt_ratio_rate,
+            primary_centroid_radius=self.primary_centroid_radius(s),
+            secondary_centroid_radius=self.secondary_centroid_radius(s),
+            primary_wrap_angle=self.primary_wrap_angle(s),
+            secondary_wrap_angle=self.secondary_wrap_angle(s),
         )
 
     # ---------- 4) Derivatives w.r.t. shift distance d ----------

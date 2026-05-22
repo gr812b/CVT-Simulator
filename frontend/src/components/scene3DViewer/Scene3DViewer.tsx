@@ -134,7 +134,7 @@ export const Scene3DViewer = ({ replayController, className }: Scene3DViewerProp
     const secondaryRadius = firstDataPoint.drivetrain?.cvt_dynamics?.secondaryPulleyState?.radius ?? constants.max_sec_radius;
     const primaryWrapAngleDeg = firstDataPoint.drivetrain?.cvt_dynamics?.primaryPulleyState?.wrap_angle ?? 180;
     const secondaryWrapAngleDeg = firstDataPoint.drivetrain?.cvt_dynamics?.secondaryPulleyState?.wrap_angle ?? 180;
-    const shiftDistance = firstDataPoint.state?.shift_distance ?? 0;
+    const shiftDistance = firstDataPoint.state?.s ?? 0;
 
     const primaryWrapAngle = primaryWrapAngleDeg * (Math.PI / 180);
     const secondaryWrapAngle = secondaryWrapAngleDeg * (Math.PI / 180);
@@ -180,11 +180,11 @@ export const Scene3DViewer = ({ replayController, className }: Scene3DViewerProp
         const primaryAngularPosition = degToRad(primaryAngularPositionDeg);
         const secondaryAngularPosition = degToRad(secondaryAngularPositionDeg);
         const secondaryHelixRotation = degToRad(secondaryHelixRotationDeg);
-        const shiftDistance = event.data.state?.shift_distance ?? 0;
+        const shiftDistance = event.data.state?.s ?? 0;
 
         // Get pulley states for belt calculation
-        const primaryRadius = event.data.drivetrain?.cvt_dynamics?.primaryPulleyState?.radius ?? constants.min_prim_radius;
-        const secondaryRadius = event.data.drivetrain?.cvt_dynamics?.secondaryPulleyState?.radius ?? constants.max_sec_radius;
+        const primaryRadius = event.data.contact_breakdown?.geometry?.primary_effective_radius ?? constants.min_prim_radius;
+        const secondaryRadius = event.data.contact_breakdown?.geometry?.secondary_effective_radius ?? constants.max_sec_radius;
         const primaryWrapAngleDeg = event.data.drivetrain?.cvt_dynamics?.primaryPulleyState?.wrap_angle ?? 180;
         const secondaryWrapAngleDeg = event.data.drivetrain?.cvt_dynamics?.secondaryPulleyState?.wrap_angle ?? 180;
         

@@ -32,8 +32,18 @@ const couplingTorqueAtEngine: AccessorStrategy = (point) => point.contact_breakd
 // Engine and CVT stuff
 const cvtRatioAccessor: AccessorStrategy = (point) => point.contact_breakdown.geometry.effective_cvt_ratio;
 const cvtRatioRateOfChangeAccessor: AccessorStrategy = (point) => point.contact_breakdown.geometry.effective_cvt_ratio_rate_of_change;
-const primaryGeometryRateAccessor: AccessorStrategy = (point) => point.contact_breakdown.geometry.primary_outer_radius_rate_of_change;
-const secondaryGeometryRateAccessor: AccessorStrategy = (point) => point.contact_breakdown.geometry.secondary_outer_radius_rate_of_change;
+const primaryOuterRadiusAccessor: AccessorStrategy = (point) => point.contact_breakdown.geometry.primary_outer_radius;
+const primaryOuterRadiusRateAccessor: AccessorStrategy = (point) => point.contact_breakdown.geometry.primary_radius_rate_of_change;
+const primaryEffectiveRadiusAccessor: AccessorStrategy = (point) => point.contact_breakdown.geometry.primary_effective_radius;
+const secondaryOuterRadiusAccessor: AccessorStrategy = (point) => point.contact_breakdown.geometry.secondary_outer_radius;
+const secondaryOuterRadiusRateAccessor: AccessorStrategy = (point) => point.contact_breakdown.geometry.secondary_radius_rate_of_change;
+const secondaryEffectiveRadiusAccessor: AccessorStrategy = (point) => point.contact_breakdown.geometry.secondary_effective_radius;
+const primaryCentroidRadiusAccessor: AccessorStrategy = (point) => point.contact_breakdown.geometry.primary_centroid_radius;
+const primaryCentroidRadiusRateAccessor: AccessorStrategy = (point) => point.contact_breakdown.geometry.primary_radius_rate_of_change;
+const secondaryCentroidRadiusAccessor: AccessorStrategy = (point) => point.contact_breakdown.geometry.secondary_centroid_radius;
+const secondaryCentroidRadiusRateAccessor: AccessorStrategy = (point) => point.contact_breakdown.geometry.secondary_radius_rate_of_change;
+const primaryWrapAngleAccessor: AccessorStrategy = (point) => point.contact_breakdown.geometry.primary_wrap_angle;
+const secondaryWrapAngleAccessor: AccessorStrategy = (point) => point.contact_breakdown.geometry.secondary_wrap_angle;
 const engineRpmAccessor: AccessorStrategy = (point) => point.derived_state.engine_angular_velocity;
 const engineTorqueAccessor: AccessorStrategy = (point) => point.contact_breakdown.drivetrain.engine_breakdown.engine_torque;
 const enginePowerAccessor: AccessorStrategy = (point) => point.contact_breakdown.drivetrain.engine_breakdown.engine_power;
@@ -48,7 +58,17 @@ const primary_tau_upperAccessor: AccessorStrategy = (point) => point.contact_bre
 const primary_tau_lowerAccessor: AccessorStrategy = (point) => point.contact_breakdown.contact.slip_metrics.admissibility.primary_tau_p_stick_lower;
 const secondary_tau_positiveAccessor: AccessorStrategy = (point) => point.contact_breakdown.contact.slip_metrics.admissibility.secondary_tau_stick_upper;
 const secondary_tau_negativeAccessor: AccessorStrategy = (point) => point.contact_breakdown.contact.slip_metrics.admissibility.secondary_tau_stick_lower;
-const relativeVelocityAccessor: AccessorStrategy = (point) => point.contact_breakdown.contact.slip_metrics.primary_relative_speed - point.contact_breakdown.contact.slip_metrics.secondary_relative_speed;
+const branchNoSlipAccessor: AccessorStrategy = (point) => point.contact_breakdown.contact.branch === 'NO_SLIP' ? 1 : 0;
+const branchPrimarySlipAccessor: AccessorStrategy = (point) => point.contact_breakdown.contact.branch === 'PRIMARY_SLIP' ? 1 : 0;
+const branchSecondarySlipAccessor: AccessorStrategy = (point) => point.contact_breakdown.contact.branch === 'SECONDARY_SLIP' ? 1 : 0;
+const branchBothSlipAccessor: AccessorStrategy = (point) => point.contact_breakdown.contact.branch === 'BOTH_SLIP' ? 1 : 0;
+const primaryRelativeVelocityAccessor: AccessorStrategy = (point) => point.contact_breakdown.contact.slip_metrics.primary_relative_speed;
+const secondaryRelativeVelocityAccessor: AccessorStrategy = (point) => point.contact_breakdown.contact.slip_metrics.secondary_relative_speed;
+const beltSpeedAccessor: AccessorStrategy = (point) => point.state.v_b;
+const appliedPrimaryTorqueAccessor: AccessorStrategy = (point) => point.contact_breakdown.contact.tau_p;
+const appliedSecondaryTorqueAccessor: AccessorStrategy = (point) => point.contact_breakdown.contact.tau_s;
+const primaryAngularAccelerationAccessor: AccessorStrategy = (point) => point.contact_breakdown.drivetrain.ω_p_dot;
+const secondaryAngularAccelerationAccessor: AccessorStrategy = (point) => point.contact_breakdown.drivetrain.ω_s_dot;
 const isSlippingAccessor: AccessorStrategy = (point) => point.contact_breakdown.contact.branch === 'NO_SLIP' ? 0 : 1;
 
 // External load
@@ -129,8 +149,18 @@ export const accessorToUnit = new Map<AccessorStrategy, BaseUnitType>([
     [accelerationAccessor, 'angular_acceleration'],
     [cvtRatioAccessor, 'dimensionless'],
     [cvtRatioRateOfChangeAccessor, 'dimensionless_rate'],
-    [primaryGeometryRateAccessor, 'velocity'],
-    [secondaryGeometryRateAccessor, 'velocity'],
+    [primaryOuterRadiusAccessor, 'distance'],
+    [primaryOuterRadiusRateAccessor, 'velocity'],
+    [primaryEffectiveRadiusAccessor, 'distance'],
+    [secondaryOuterRadiusAccessor, 'distance'],
+    [secondaryOuterRadiusRateAccessor, 'velocity'],
+    [secondaryEffectiveRadiusAccessor, 'distance'],
+    [primaryCentroidRadiusAccessor, 'distance'],
+    [primaryCentroidRadiusRateAccessor, 'velocity'],
+    [secondaryCentroidRadiusAccessor, 'distance'],
+    [secondaryCentroidRadiusRateAccessor, 'velocity'],
+    [primaryWrapAngleAccessor, 'angle'],
+    [secondaryWrapAngleAccessor, 'angle'],
     [engineRpmAccessor, 'angular_velocity'],
     [engineTorqueAccessor, 'torque'],
     [enginePowerAccessor, 'power'],
@@ -141,7 +171,17 @@ export const accessorToUnit = new Map<AccessorStrategy, BaseUnitType>([
     [primary_tau_lowerAccessor, 'torque'],
     [secondary_tau_positiveAccessor, 'torque'],
     [secondary_tau_negativeAccessor, 'torque'],
-    [relativeVelocityAccessor, 'velocity'],
+    [branchNoSlipAccessor, 'dimensionless'],
+    [branchPrimarySlipAccessor, 'dimensionless'],
+    [branchSecondarySlipAccessor, 'dimensionless'],
+    [branchBothSlipAccessor, 'dimensionless'],
+    [primaryRelativeVelocityAccessor, 'velocity'],
+    [secondaryRelativeVelocityAccessor, 'velocity'],
+    [beltSpeedAccessor, 'velocity'],
+    [appliedPrimaryTorqueAccessor, 'torque'],
+    [appliedSecondaryTorqueAccessor, 'torque'],
+    [primaryAngularAccelerationAccessor, 'angular_acceleration'],
+    [secondaryAngularAccelerationAccessor, 'angular_acceleration'],
     [torque_demandAccessor, 'torque'],
     [primaryFlyweightForceAccessor, 'force'],
     [rawFlyweightCentrifugalForce, 'force'],
@@ -312,11 +352,11 @@ export const graphCategories: GraphCategory[] = [
             },
             {
                 xAccessor: timeAccessor,
-                yAccessor: [primaryGeometryRateAccessor, secondaryGeometryRateAccessor],
+                yAccessor: [primaryOuterRadiusRateAccessor, secondaryOuterRadiusRateAccessor],
                 config: {
-                    title: "Primary and Secondary Radius Rate vs Time",
+                    title: "Primary and Secondary Outer Radius Rate vs Time",
                     xAxis: { name: "Time", type: "value", unit: getAxisUnit(timeAccessor) },
-                    yAxis: { name: "Radius Rate", type: "value", unit: getAxisUnit(primaryGeometryRateAccessor) },
+                    yAxis: { name: "Radius Rate", type: "value", unit: getAxisUnit(primaryOuterRadiusRateAccessor) },
                     seriesNames: ["Primary Radius Rate", "Secondary Radius Rate"],
                     showXLine: true,
                     showYLine: false,
@@ -565,14 +605,66 @@ export const graphCategories: GraphCategory[] = [
             },
             {
                 xAccessor: timeAccessor,
-                yAccessor: [relativeVelocityAccessor],
+                yAccessor: [branchNoSlipAccessor, branchPrimarySlipAccessor, branchSecondarySlipAccessor, branchBothSlipAccessor],
                 config: {
-                    title: "Relative Velocity vs Time",
+                    title: "Slip Branch State vs Time",
                     xAxis: { name: "Time", type: "value", unit: getAxisUnit(timeAccessor) },
-                    yAxis: { name: "Relative Velocity", type: "value", unit: getAxisUnit(relativeVelocityAccessor) },
+                    yAxis: { name: "Branch Active", type: "value", unit: getAxisUnit(branchNoSlipAccessor) },
+                    seriesNames: ["No Slip", "Primary Slip", "Secondary Slip", "Both Slip"],
+                    showXLine: true,
+                    showYLine: false,
+                    tooltipPosition: TooltipPosition.BottomRight,
+                }
+            },
+            {
+                xAccessor: timeAccessor,
+                yAccessor: [primaryRelativeVelocityAccessor, secondaryRelativeVelocityAccessor],
+                config: {
+                    title: "Primary and Secondary Relative Velocity vs Time",
+                    xAxis: { name: "Time", type: "value", unit: getAxisUnit(timeAccessor) },
+                    yAxis: { name: "Relative Velocity", type: "value", unit: getAxisUnit(primaryRelativeVelocityAccessor) },
+                    seriesNames: ["Primary Relative Velocity", "Secondary Relative Velocity"],
                     showXLine: true,
                     showYLine: false,
                     tooltipPosition: TooltipPosition.TopRight,
+                }
+            },
+            {
+                xAccessor: timeAccessor,
+                yAccessor: [beltSpeedAccessor],
+                config: {
+                    title: "Belt Speed vs Time",
+                    xAxis: { name: "Time", type: "value", unit: getAxisUnit(timeAccessor) },
+                    yAxis: { name: "Belt Speed", type: "value", unit: getAxisUnit(beltSpeedAccessor) },
+                    showXLine: true,
+                    showYLine: false,
+                    tooltipPosition: TooltipPosition.TopRight,
+                }
+            },
+            {
+                xAccessor: timeAccessor,
+                yAccessor: [appliedPrimaryTorqueAccessor, appliedSecondaryTorqueAccessor],
+                config: {
+                    title: "Applied Contact Torque vs Time",
+                    xAxis: { name: "Time", type: "value", unit: getAxisUnit(timeAccessor) },
+                    yAxis: { name: "Applied Torque", type: "value", unit: getAxisUnit(appliedPrimaryTorqueAccessor) },
+                    seriesNames: ["Applied tau_p", "Applied tau_s"],
+                    showXLine: true,
+                    showYLine: false,
+                    tooltipPosition: TooltipPosition.BottomRight,
+                }
+            },
+            {
+                xAccessor: timeAccessor,
+                yAccessor: [primaryAngularAccelerationAccessor, secondaryAngularAccelerationAccessor],
+                config: {
+                    title: "Primary and Secondary Angular Acceleration vs Time",
+                    xAxis: { name: "Time", type: "value", unit: getAxisUnit(timeAccessor) },
+                    yAxis: { name: "Angular Acceleration", type: "value", unit: getAxisUnit(primaryAngularAccelerationAccessor) },
+                    seriesNames: ["Primary Angular Acceleration", "Secondary Angular Acceleration"],
+                    showXLine: true,
+                    showYLine: false,
+                    tooltipPosition: TooltipPosition.BottomRight,
                 }
             }
         ]

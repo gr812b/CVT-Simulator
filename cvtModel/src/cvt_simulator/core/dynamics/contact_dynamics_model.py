@@ -78,7 +78,7 @@ class ContactDynamicsModel:
             state,
             contact.tau_s,
         )
-        geometry = CVT_GEOMETRY.geometry_from_shift_distance(state.s)
+        geometry = CVT_GEOMETRY.geometry_from_shift_distance(state.s, state.s_dot)
 
         return ContactDynamicsBreakdown(
             contact=contact,

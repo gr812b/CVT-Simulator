@@ -313,19 +313,13 @@ function convertGeometryResult(
       'dimensionless_rate'
     ),
     primary_outer_radius: conv(geometry.primary_outer_radius, 'distance'),
-    primary_outer_radius_rate_of_change: conv(
-      geometry.primary_outer_radius_rate_of_change,
-      'velocity'
-    ),
-    secondary_outer_radius: conv(geometry.secondary_outer_radius, 'distance'),
-    secondary_outer_radius_rate_of_change: conv(
-      geometry.secondary_outer_radius_rate_of_change,
-      'velocity'
-    ),
     primary_effective_radius: conv(geometry.primary_effective_radius, 'distance'),
-    secondary_effective_radius: conv(geometry.secondary_effective_radius, 'distance'),
     primary_centroid_radius: conv(geometry.primary_centroid_radius, 'distance'),
+    primary_radius_rate_of_change: conv(geometry.primary_radius_rate_of_change, 'velocity'),
+    secondary_outer_radius: conv(geometry.secondary_outer_radius, 'distance'),
+    secondary_effective_radius: conv(geometry.secondary_effective_radius, 'distance'),
     secondary_centroid_radius: conv(geometry.secondary_centroid_radius, 'distance'),
+    secondary_radius_rate_of_change: conv(geometry.secondary_radius_rate_of_change, 'velocity'),
     primary_wrap_angle: conv(geometry.primary_wrap_angle, 'angle'),
     secondary_wrap_angle: conv(geometry.secondary_wrap_angle, 'angle'),
   };
