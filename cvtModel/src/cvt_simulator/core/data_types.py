@@ -4,6 +4,8 @@ from dataclasses import dataclass
 from enum import Enum, auto
 from typing import Union
 
+from cvt_simulator.geometry.cvt_geometry import CVTGeometryResult
+
 
 
 # -------------------------------------------------
@@ -229,4 +231,5 @@ class ContactDynamicsBreakdown:
     contact: ContactTorqueResult
     drivetrain: DrivetrainAccelerationBreakdown
     shift: CvtDynamicsBreakdown
+    geometry: CVTGeometryResult
 

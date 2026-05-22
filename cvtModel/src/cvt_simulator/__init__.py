@@ -12,12 +12,7 @@ from .utils.frontend_output import SimulationAnalysisResult, FormattedSimulation
 from .ramps.ramp_config import PiecewiseRampConfig
 from .ramps.piecewise_ramp import PiecewiseRamp
 from .constants.car_specs import CarSpecs
-
-try:
-    from .solvers.solve import solve_all, AllSolverResults
-except ModuleNotFoundError:
-    solve_all = None
-    AllSolverResults = None
+from .solvers.solve import solve_all, AllSolverResults
 
 # Backward-compatible aliases for older public names.
 SecondaryPulleyDynamicsBreakdown = SecondaryForceBreakdown

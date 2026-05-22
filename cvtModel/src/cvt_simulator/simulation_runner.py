@@ -328,7 +328,6 @@ class SimulationRunner:
 
                 locked_ode = self._get_locked_shift_ode_function(locked_shift_distance)
 
-                base_mid_shift_wake_event = get_mid_shift_wake_event(self.system_model)
                 base_mid_shift_wake_event = get_mid_shift_wake_event(self.contact_model)
 
                 def guarded_mid_shift_wake_event(t, y):

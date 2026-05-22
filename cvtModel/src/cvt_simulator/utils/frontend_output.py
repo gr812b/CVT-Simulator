@@ -61,11 +61,15 @@ class SimulationTerminationContext:
 class SimulationAnalysisResult:
     """Analysis-oriented projection of a simulation run."""
 
+    # Explicit response contract for backend auto model generation.
+    data: List[AnalysisStepData]
+    termination: SimulationTerminationContext
+
     def __init__(self, result: SimulationResult, args: SimulationArgs):
-        self.contact_model = SimulationRunner.from_simulation_args(args).contact_model
+        contact_model = SimulationRunner.from_simulation_args(args).contact_model
         self.rows: List[AnalysisStepData] = []
         self.data = self.rows
-        self.gather_model_states(result)
+        self.gather_model_states(result, contact_model)
         self.termination = self._build_termination_context(result)
 
     @staticmethod
@@ -101,7 +105,7 @@ class SimulationAnalysisResult:
             details=details,
         )
 
-    def gather_model_states(self, result: SimulationResult):
+    def gather_model_states(self, result: SimulationResult, contact_model):
         car_velocities = [
             secondary_pulley_angular_velocity_to_car_velocity(state.ω_s)
             for state in result.states
@@ -135,7 +139,21 @@ class SimulationAnalysisResult:
                 display_state.s = float(MAX_SHIFT)
                 display_state.s_dot = min(0.0, display_state.s_dot)
 
-            contact_breakdown = self.contact_model.get_breakdown(display_state)
+            contact_breakdown = contact_model.get_breakdown(display_state)
+            # Sanitize enum values to primitives to avoid retaining Enum internals
+            try:
+                # Convert top-level branch enum to its name
+                if hasattr(contact_breakdown, "contact") and getattr(contact_breakdown, "contact") is not None:
+                    contact = contact_breakdown.contact
+                    if hasattr(contact, "branch") and contact.branch is not None:
+                        contact.branch = contact.branch.name
+                    if hasattr(contact, "branch_result") and getattr(contact, "branch_result") is not None:
+                        br = contact.branch_result
+                        if hasattr(br, "branch") and br.branch is not None:
+                            br.branch = br.branch.name
+            except Exception:
+                # Best-effort sanitization; failure is non-fatal
+                pass
 
             derived_state = DerivedKinematicState(
                 car_velocity=car_velocities[index],

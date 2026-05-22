@@ -32,7 +32,7 @@ export interface paths {
          * Get Constants
          * @description Get the physical constants and specifications used by the CVT simulator.
          *     These values are useful for visualization and understanding the simulation parameters.
-         *     Calculated values like max_shift and center_to_center are automatically computed.
+         *     Calculated values like max_shift, center_to_center, and min/max effective CVT ratio are automatically computed.
          */
         get: operations["get_constants_constants_get"];
         put?: never;
@@ -133,26 +133,56 @@ export interface components {
             primary_engagement: components["schemas"]["SolverResultModel"];
             shift_initiation: components["schemas"]["SolverResultModel"];
         };
-        /** BeltStateBreakdownModel */
-        BeltStateBreakdownModel: {
-            /** Is Stick */
-            is_stick: boolean;
-            /** Relative Speed */
-            relative_speed: number;
-            /** Primary Belt Speed */
-            primary_belt_speed: number;
-            /** Secondary Belt Speed */
-            secondary_belt_speed: number;
-            /** V B Star */
-            v_b_star: number;
-            /** T B */
-            T_b: number;
-            /** V B */
-            v_b: number;
-            /** V B Compatible */
-            v_b_compatible: number;
-            /** V B Dot */
-            v_b_dot: number;
+        /** AnalysisStepDataModel */
+        AnalysisStepDataModel: {
+            /** Time */
+            time: number;
+            state: components["schemas"]["SystemStateModel"];
+            derived_state: components["schemas"]["DerivedKinematicStateModel"];
+            contact_breakdown: components["schemas"]["ContactDynamicsBreakdownModel"];
+        };
+        /** BeltWrapBreakdownModel */
+        BeltWrapBreakdownModel: {
+            /** Wrap Angle */
+            wrap_angle: number;
+            /** Axial Belt Force */
+            axial_belt_force: number;
+        };
+        /** BranchTorqueResultModel */
+        BranchTorqueResultModel: {
+            /** Branch */
+            branch: string;
+            /** Tau P */
+            tau_p: number;
+            /** Tau S */
+            tau_s: number;
+        };
+        /** CVTGeometryResultModel */
+        CVTGeometryResultModel: {
+            /** Effective Cvt Ratio */
+            effective_cvt_ratio: number;
+            /** Effective Cvt Ratio Rate Of Change */
+            effective_cvt_ratio_rate_of_change: number;
+            /** Primary Outer Radius */
+            primary_outer_radius: number;
+            /** Primary Outer Radius Rate Of Change */
+            primary_outer_radius_rate_of_change: number;
+            /** Secondary Outer Radius */
+            secondary_outer_radius: number;
+            /** Secondary Outer Radius Rate Of Change */
+            secondary_outer_radius_rate_of_change: number;
+            /** Primary Effective Radius */
+            primary_effective_radius: number;
+            /** Secondary Effective Radius */
+            secondary_effective_radius: number;
+            /** Primary Centroid Radius */
+            primary_centroid_radius: number;
+            /** Secondary Centroid Radius */
+            secondary_centroid_radius: number;
+            /** Primary Wrap Angle */
+            primary_wrap_angle: number;
+            /** Secondary Wrap Angle */
+            secondary_wrap_angle: number;
         };
         /**
          * CarSpecs
@@ -302,6 +332,16 @@ export interface components {
              * @description Center-to-center distance between pulleys in meters (calculated from belt and pulley geometry).
              */
             readonly center_to_center: number;
+            /**
+             * Min Effective Cvt Ratio
+             * @description Minimum effective CVT ratio (unitless) at zero shift distance.
+             */
+            readonly min_effective_cvt_ratio: number;
+            /**
+             * Max Effective Cvt Ratio
+             * @description Maximum effective CVT ratio (unitless) at max shift distance.
+             */
+            readonly max_effective_cvt_ratio: number;
         };
         /** CircularSegmentConfigModel */
         CircularSegmentConfigModel: {
@@ -319,16 +359,32 @@ export interface components {
              */
             type: "circular";
         };
+        /** ContactDynamicsBreakdownModel */
+        ContactDynamicsBreakdownModel: {
+            contact: components["schemas"]["ContactTorqueResultModel"];
+            drivetrain: components["schemas"]["DrivetrainAccelerationBreakdownModel"];
+            shift: components["schemas"]["CvtDynamicsBreakdownModel"];
+            geometry: components["schemas"]["CVTGeometryResultModel"];
+        };
+        /** ContactTorqueResultModel */
+        ContactTorqueResultModel: {
+            /** Tau P */
+            tau_p: number;
+            /** Tau S */
+            tau_s: number;
+            /** Branch */
+            branch: string;
+            slip_metrics: components["schemas"]["SlipMetricsResultModel"];
+            branch_result: components["schemas"]["BranchTorqueResultModel"];
+        };
         /** CvtDynamicsBreakdownModel */
         CvtDynamicsBreakdownModel: {
-            primaryPulleyState: components["schemas"]["PulleyStateModel"];
-            secondaryPulleyState: components["schemas"]["PulleyStateModel"];
+            primaryPulleyState: components["schemas"]["PulleyForcesModel"];
+            secondaryPulleyState: components["schemas"]["PulleyForcesModel"];
             /** Friction */
             friction: number;
             /** Acceleration */
             acceleration: number;
-            /** Cvt Ratio */
-            cvt_ratio: number;
             /** Net */
             net: number;
         };
@@ -338,18 +394,36 @@ export interface components {
             car_velocity: number;
             /** Car Position */
             car_position: number;
+            /** Belt Position */
+            belt_position: number;
             /** Engine Angular Velocity */
             engine_angular_velocity: number;
             /** Engine Angular Position */
             engine_angular_position: number;
         };
-        /** DrivetrainBreakdownModel */
-        DrivetrainBreakdownModel: {
-            belt_slip: components["schemas"]["SlipBreakdownModel"];
-            belt_state: components["schemas"]["BeltStateBreakdownModel"];
-            primary_pulley: components["schemas"]["PrimaryPulleyDynamicsBreakdownModel"];
-            secondary_pulley: components["schemas"]["SecondaryPulleyDynamicsBreakdownModel"];
-            cvt_dynamics: components["schemas"]["CvtDynamicsBreakdownModel"];
+        /** DrivetrainAccelerationBreakdownModel */
+        DrivetrainAccelerationBreakdownModel: {
+            /** Ω P Dot */
+            "\u03C9_p_dot": number;
+            /** Ω S Dot */
+            "\u03C9_s_dot": number;
+            /** V B Dot */
+            v_b_dot: number;
+            engine_breakdown: components["schemas"]["EngineTorqueBreakdownModel"];
+            external_load_breakdown: components["schemas"]["ExternalLoadForceBreakdownModel"];
+            /** Tau P */
+            tau_p: number;
+            /** Tau S */
+            tau_s: number;
+        };
+        /** EngineTorqueBreakdownModel */
+        EngineTorqueBreakdownModel: {
+            /** Engine Torque */
+            engine_torque: number;
+            /** Engine Speed */
+            engine_speed: number;
+            /** Engine Power */
+            engine_power: number;
         };
         /** ExternalLoadForceBreakdownModel */
         ExternalLoadForceBreakdownModel: {
@@ -369,12 +443,6 @@ export interface components {
             drag_torque_at_secondary: number;
             /** Net Torque At Secondary */
             net_torque_at_secondary: number;
-        };
-        /** FormattedSimulationResultModel */
-        FormattedSimulationResultModel: {
-            /** Data */
-            data: components["schemas"]["TimeStepDataModel"][];
-            termination: components["schemas"]["SimulationTerminationContextModel"];
         };
         /** HTTPValidationError */
         HTTPValidationError: {
@@ -407,6 +475,39 @@ export interface components {
              */
             type: "linear";
         };
+        /** NoSlipBreakdownModel */
+        NoSlipBreakdownModel: {
+            /** R P */
+            r_p: number;
+            /** R S */
+            r_s: number;
+            /** R P Dot */
+            r_p_dot: number;
+            /** R S Dot */
+            r_s_dot: number;
+            /** Tau Engine Over R P */
+            tau_engine_over_r_p: number;
+            /** Tau Load Over R S */
+            tau_load_over_r_s: number;
+            /** Primary Inertia Term */
+            primary_inertia_term: number;
+            /** Secondary Inertia Term */
+            secondary_inertia_term: number;
+            /** Numerator */
+            numerator: number;
+            /** Denominator */
+            denominator: number;
+        };
+        /** NoSlipResultModel */
+        NoSlipResultModel: {
+            /** V B Dot Ns */
+            v_b_dot_ns: number;
+            /** Tau P Ns */
+            tau_p_ns: number;
+            /** Tau S Ns */
+            tau_s_ns: number;
+            breakdown: components["schemas"]["NoSlipBreakdownModel"];
+        };
         /** PiecewiseRampConfigModel */
         PiecewiseRampConfigModel: {
             /** Segments */
@@ -419,71 +520,40 @@ export interface components {
             /** Net */
             net: number;
         };
-        /** PrimaryPulleyDynamicsBreakdownModel */
-        PrimaryPulleyDynamicsBreakdownModel: {
-            /** Primary Pulley Drive Torque */
-            primary_pulley_drive_torque: number;
-            /** Coupling Torque At Primary Pulley */
-            coupling_torque_at_primary_pulley: number;
-            /** Power */
-            power: number;
-            /** Primary Pulley Angular Velocity */
-            primary_pulley_angular_velocity: number;
-            /** Primary Pulley Angular Acceleration */
-            primary_pulley_angular_acceleration: number;
-        };
-        /** PrimaryTorqueBoundsBreakdownModel */
-        PrimaryTorqueBoundsBreakdownModel: {
-            /** Tau Lower */
-            tau_lower: number;
-            /** Tau Upper */
-            tau_upper: number;
-            numerator: components["schemas"]["PrimaryTorqueNumeratorBreakdownModel"];
-            denominator_upper: components["schemas"]["PrimaryTorqueDenominatorBreakdownModel"];
-            denominator_lower: components["schemas"]["PrimaryTorqueDenominatorBreakdownModel"];
-        };
-        /** PrimaryTorqueDenominatorBreakdownModel */
-        PrimaryTorqueDenominatorBreakdownModel: {
-            /** Inverse Radius Term */
-            inverse_radius_term: number;
-            /** Inertial Feedback Term */
-            inertial_feedback_term: number;
-            /** Net */
-            net: number;
-        };
-        /** PrimaryTorqueNumeratorBreakdownModel */
-        PrimaryTorqueNumeratorBreakdownModel: {
-            /** Clamping Term */
-            clamping_term: number;
-            /** Load Term */
-            load_term: number;
-            /** Shift Term */
-            shift_term: number;
-            /** Net */
-            net: number;
+        /** PrimaryTorqueAdmissibilityBreakdownModel */
+        PrimaryTorqueAdmissibilityBreakdownModel: {
+            /** Shift Distance */
+            shift_distance: number;
+            /** Wrap Angle */
+            wrap_angle: number;
+            /** Effective Radius */
+            effective_radius: number;
+            /** Centroid Radius */
+            centroid_radius: number;
+            /** Centroid Radius Rate */
+            centroid_radius_rate: number;
+            /** Axial Clamping Force */
+            axial_clamping_force: number;
+            /** Belt Centripetal Term */
+            belt_centripetal_term: number;
+            /** Friction Coefficient */
+            friction_coefficient: number;
+            /** Sheave Half Angle */
+            sheave_half_angle: number;
+            /** Tau P Stick Limit */
+            tau_p_stick_limit: number;
+            /** Tau P Stick Upper */
+            tau_p_stick_upper: number;
+            /** Tau P Stick Lower */
+            tau_p_stick_lower: number;
         };
         /** PulleyForcesModel */
         PulleyForcesModel: {
-            /** Axial Clamping Force */
-            axial_clamping_force: number;
-            /** Axial Centrifugal From Belt */
-            axial_centrifugal_from_belt: number;
-            /** Axial Force Total */
-            axial_force_total: number;
-        };
-        /** PulleyStateModel */
-        PulleyStateModel: {
-            forces: components["schemas"]["PulleyForcesModel"];
-            /** Wrap Angle */
-            wrap_angle: number;
-            /** Radius */
-            radius: number;
-            /** Angular Velocity */
-            angular_velocity: number;
-            /** Angular Position */
-            angular_position: number;
-            /** Breakdown */
-            breakdown: components["schemas"]["PrimaryForceBreakdownModel"] | components["schemas"]["SecondaryForceBreakdownModel"];
+            /** Pulley Breakdown */
+            pulley_breakdown: components["schemas"]["PrimaryForceBreakdownModel"] | components["schemas"]["SecondaryForceBreakdownModel"];
+            belt_wrap: components["schemas"]["BeltWrapBreakdownModel"];
+            /** Net */
+            net: number;
         };
         /** RampPreviewResponse */
         RampPreviewResponse: {
@@ -505,47 +575,46 @@ export interface components {
             /** Net */
             net: number;
         };
-        /** SecondaryPulleyDynamicsBreakdownModel */
-        SecondaryPulleyDynamicsBreakdownModel: {
-            /** Coupling Torque At Secondary Pulley */
-            coupling_torque_at_secondary_pulley: number;
-            /** External Load Torque At Secondary Pulley */
-            external_load_torque_at_secondary_pulley: number;
-            external_forces: components["schemas"]["ExternalLoadForceBreakdownModel"];
-            /** Secondary Pulley Angular Acceleration */
-            secondary_pulley_angular_acceleration: number;
+        /** SecondaryTorqueAdmissibilityBreakdownModel */
+        SecondaryTorqueAdmissibilityBreakdownModel: {
+            /** Shift Distance */
+            shift_distance: number;
+            /** Wrap Angle */
+            wrap_angle: number;
+            /** Effective Radius */
+            effective_radius: number;
+            /** Centroid Radius */
+            centroid_radius: number;
+            /** Centroid Radius Rate */
+            centroid_radius_rate: number;
+            /** Helix Rotation */
+            helix_rotation: number;
+            /** Helix Rotation Rate */
+            helix_rotation_rate: number;
+            /** Spring Torsion Term */
+            spring_torsion_term: number;
+            /** Spring Comp Term */
+            spring_comp_term: number;
+            /** Belt Centripetal Term */
+            belt_centripetal_term: number;
+            /** Friction Coefficient */
+            friction_coefficient: number;
+            /** Sheave Half Angle */
+            sheave_half_angle: number;
+            /** Denominator Upper */
+            denominator_upper: number;
+            /** Denominator Lower */
+            denominator_lower: number;
+            /** Tau Stick Upper */
+            tau_stick_upper: number;
+            /** Tau Stick Lower */
+            tau_stick_lower: number;
         };
-        /** SecondaryTorqueBoundsBreakdownModel */
-        SecondaryTorqueBoundsBreakdownModel: {
-            /** Tau Negative */
-            tau_negative: number;
-            /** Tau Positive */
-            tau_positive: number;
-            numerator: components["schemas"]["SecondaryTorqueNumeratorBreakdownModel"];
-            denominator_positive: components["schemas"]["SecondaryTorqueDenominatorBreakdownModel"];
-            denominator_negative: components["schemas"]["SecondaryTorqueDenominatorBreakdownModel"];
-        };
-        /** SecondaryTorqueDenominatorBreakdownModel */
-        SecondaryTorqueDenominatorBreakdownModel: {
-            /** Inverse Radius Term */
-            inverse_radius_term: number;
-            /** Helix Feedback Term */
-            helix_feedback_term: number;
-            /** Inertial Feedback Term */
-            inertial_feedback_term: number;
-            /** Net */
-            net: number;
-        };
-        /** SecondaryTorqueNumeratorBreakdownModel */
-        SecondaryTorqueNumeratorBreakdownModel: {
-            /** Spring Term */
-            spring_term: number;
-            /** Load Term */
-            load_term: number;
-            /** Shift Term */
-            shift_term: number;
-            /** Net */
-            net: number;
+        /** SimulationAnalysisResultModel */
+        SimulationAnalysisResultModel: {
+            /** Data */
+            data: components["schemas"]["AnalysisStepDataModel"][];
+            termination: components["schemas"]["SimulationTerminationContextModel"];
         };
         /** SimulationArgsInput */
         SimulationArgsInput: {
@@ -601,22 +670,22 @@ export interface components {
                 [key: string]: number | string | boolean;
             };
         };
-        /** SlipBreakdownModel */
-        SlipBreakdownModel: {
-            /** Coupling Torque */
-            coupling_torque: number;
-            /** Torque Demand */
-            torque_demand: number;
-            /** Tau Upper */
-            tau_upper: number;
-            /** Tau Lower */
-            tau_lower: number;
-            primary_tau_bounds: components["schemas"]["PrimaryTorqueBoundsBreakdownModel"];
-            secondary_tau_bounds: components["schemas"]["SecondaryTorqueBoundsBreakdownModel"];
-            /** Effective Cvt Ratio Time Derivative */
-            effective_cvt_ratio_time_derivative: number;
-            /** Is Slipping */
-            is_slipping: boolean;
+        /** SlipMetricsResultModel */
+        SlipMetricsResultModel: {
+            /** Primary Relative Speed */
+            primary_relative_speed: number;
+            /** Secondary Relative Speed */
+            secondary_relative_speed: number;
+            /** Primary Slip Direction */
+            primary_slip_direction: number;
+            /** Secondary Slip Direction */
+            secondary_slip_direction: number;
+            /** Primary Admissible */
+            primary_admissible: boolean;
+            /** Secondary Admissible */
+            secondary_admissible: boolean;
+            admissibility: components["schemas"]["TorqueAdmissibilityResultModel"];
+            no_slip: components["schemas"]["NoSlipResultModel"];
         };
         /** SolverResultModel */
         SolverResultModel: {
@@ -643,7 +712,7 @@ export interface components {
              * @constant
              */
             type: "complete";
-            data: components["schemas"]["FormattedSimulationResultModel"];
+            data: components["schemas"]["SimulationAnalysisResultModel"];
         };
         /** StreamErrorMessage */
         StreamErrorMessage: {
@@ -669,24 +738,29 @@ export interface components {
         };
         /** SystemStateModel */
         SystemStateModel: {
-            /** Shift Distance */
-            shift_distance: number;
-            /** Shift Velocity */
-            shift_velocity: number;
-            /** Primary Pulley Angular Velocity */
-            primary_pulley_angular_velocity: number;
-            /** Secondary Pulley Angular Velocity */
-            secondary_pulley_angular_velocity: number;
+            /** S */
+            s: number;
+            /** S Dot */
+            s_dot: number;
+            /** Ω P */
+            "\u03C9_p": number;
+            /** Ω S */
+            "\u03C9_s": number;
             /** V B */
             v_b: number;
         };
-        /** TimeStepDataModel */
-        TimeStepDataModel: {
-            /** Time */
-            time: number;
-            state: components["schemas"]["SystemStateModel"];
-            derived_state: components["schemas"]["DerivedKinematicStateModel"];
-            drivetrain: components["schemas"]["DrivetrainBreakdownModel"];
+        /** TorqueAdmissibilityResultModel */
+        TorqueAdmissibilityResultModel: {
+            primary: components["schemas"]["PrimaryTorqueAdmissibilityBreakdownModel"];
+            secondary: components["schemas"]["SecondaryTorqueAdmissibilityBreakdownModel"];
+            /** Primary Tau P Stick Upper */
+            primary_tau_p_stick_upper: number;
+            /** Primary Tau P Stick Lower */
+            primary_tau_p_stick_lower: number;
+            /** Secondary Tau Stick Upper */
+            secondary_tau_stick_upper: number;
+            /** Secondary Tau Stick Lower */
+            secondary_tau_stick_lower: number;
         };
         /** ValidationError */
         ValidationError: {
@@ -787,7 +861,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["FormattedSimulationResultModel"];
+                    "application/json": components["schemas"]["SimulationAnalysisResultModel"];
                 };
             };
             /** @description Validation Error */

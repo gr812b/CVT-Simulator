@@ -15,6 +15,7 @@ from cvt_simulator.core.dynamics.drivetrain_dynamics import DrivetrainDynamics
 from cvt_simulator.core.dynamics.shift_dynamics import ShiftDynamics
 from cvt_simulator.core.slip.contact_torque_solver import ContactTorqueSolver
 from cvt_simulator.core.data_types import ContactDynamicsBreakdown
+from cvt_simulator.geometry.cvt_geometry import CVT_GEOMETRY
 
 
 
@@ -77,9 +78,11 @@ class ContactDynamicsModel:
             state,
             contact.tau_s,
         )
+        geometry = CVT_GEOMETRY.geometry_from_shift_distance(state.s)
 
         return ContactDynamicsBreakdown(
             contact=contact,
             drivetrain=drivetrain,
             shift=shift,
+            geometry=geometry,
         )

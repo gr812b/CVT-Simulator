@@ -17,8 +17,11 @@ from cvt_simulator.constants.car_specs import (
 @dataclass
 class CVTGeometryResult:
     effective_cvt_ratio: float
+    effective_cvt_ratio_rate_of_change: float
     primary_outer_radius: float
+    primary_outer_radius_rate_of_change: float
     secondary_outer_radius: float
+    secondary_outer_radius_rate_of_change: float
     primary_effective_radius: float
     secondary_effective_radius: float
     primary_centroid_radius: float
@@ -194,10 +197,13 @@ class CVTGeometry:
 
         return CVTGeometryResult(
             primary_outer_radius=primary_outer_radius,
+            primary_outer_radius_rate_of_change=self._primary_outer_radius_shift_derivative(d),
             secondary_outer_radius=secondary_outer_radius,
+            secondary_outer_radius_rate_of_change=self._secondary_outer_radius_shift_derivative(d),
             primary_effective_radius=primary_effective_radius,
             secondary_effective_radius=secondary_effective_radius,
             effective_cvt_ratio=effective_cvt_ratio,
+            effective_cvt_ratio_rate_of_change=self._effective_cvt_ratio_shift_derivative(d),
             primary_centroid_radius=self.primary_centroid_radius(d),
             secondary_centroid_radius=self.secondary_centroid_radius(d),
             primary_wrap_angle=self.primary_wrap_angle(d),
