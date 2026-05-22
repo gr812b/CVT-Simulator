@@ -50,5 +50,5 @@ class BeltWrap:
             RUBBER_DENSITY * BELT_CROSS_SECTIONAL_AREA * v_b**2 * wrap_angle
         ) / (2 * np.tan(beta))
 
-        return BeltWrapBreakdown(wrap_angle=wrap_angle, belt_force=belt_force)
+        return BeltWrapBreakdown(wrap_angle=wrap_angle, axial_belt_force=belt_force)
 

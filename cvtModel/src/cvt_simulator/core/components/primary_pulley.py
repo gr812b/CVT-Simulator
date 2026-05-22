@@ -14,7 +14,7 @@ from cvt_simulator.core.data_types import (
     PrimaryForceBreakdown,
     PulleyForces,
 )
-from cvt_simulator.components.belt_wrap import BeltWrap
+from cvt_simulator.core.components.belt_wrap import BeltWrap
 
 
 class PrimaryPulley:
@@ -39,7 +39,7 @@ class PrimaryPulley:
         self.initial_flyweight_radius = initial_flyweight_radius
         self.cvt = CVT_GEOMETRY
         # Initialize belt wrap helper once per pulley instance
-        from cvt_simulator.components.belt_wrap import BeltWrap
+        from cvt_simulator.core.components.belt_wrap import BeltWrap
         self.belt_wrap = BeltWrap(is_primary=True)
 
     def calculate_axial_clamping_force(self, state: SystemState) -> PulleyForces:
@@ -54,7 +54,7 @@ class PrimaryPulley:
         belt = self.belt_wrap.axial_centrifugal_force(state)
 
         axial_pulley = fly.net - spring.net
-        axial_total = axial_pulley + belt.belt_force
+        axial_total = axial_pulley + belt.axial_belt_force
 
         pulley_breakdown = PrimaryForceBreakdown(
             flyweightForce=fly, springForce=spring, net=axial_pulley

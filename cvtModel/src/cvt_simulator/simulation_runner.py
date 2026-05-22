@@ -4,7 +4,7 @@ from typing import Callable, Optional, Any
 from scipy.integrate import solve_ivp
 from cvt_simulator.sim_utils.system_state import SystemState
 from cvt_simulator.sim_utils.simulation_result import SimulationResult
-from cvt_simulator.dynamics.contact_dynamics_model import ContactDynamicsModel
+from cvt_simulator.core.dynamics.contact_dynamics_model import ContactDynamicsModel
 from cvt_simulator.constants.car_specs import (
     GEARBOX_RATIO,
     MAX_SHIFT,
@@ -12,10 +12,10 @@ from cvt_simulator.constants.car_specs import (
     SECONDARY_INERTIA,
     HELIX_RADIUS,
 )
-from cvt_simulator.components.engine import EngineModel
-from cvt_simulator.components.primary_pulley import PrimaryPulley
-from cvt_simulator.components.secondary_pulley import SecondaryPulley
-from cvt_simulator.components.vehicle_load import LoadModel
+from cvt_simulator.core.components.engine import EngineModel
+from cvt_simulator.core.components.primary_pulley import PrimaryPulley
+from cvt_simulator.core.components.secondary_pulley import SecondaryPulley
+from cvt_simulator.core.components.vehicle_load import LoadModel
 from cvt_simulator.ramps.piecewise_ramp import PiecewiseRamp
 from cvt_simulator.ramps.theta_ramp import ThetaRamp
 from cvt_simulator.utils.conversions import rpm_to_rad_s, deg_to_rad

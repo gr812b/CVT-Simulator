@@ -4,16 +4,16 @@ This wrapper computes the active contact torques first, then passes the
 resolved torques into the drivetrain helper and the secondary torque into the
 shift dynamics helper.
 """
-from cvt_simulator.components.engine import EngineModel
-from cvt_simulator.components.primary_pulley import PrimaryPulley
-from cvt_simulator.components.secondary_pulley import SecondaryPulley
-from cvt_simulator.components.vehicle_load import LoadModel
+from cvt_simulator.core.components.engine import EngineModel
+from cvt_simulator.core.components.primary_pulley import PrimaryPulley
+from cvt_simulator.core.components.secondary_pulley import SecondaryPulley
+from cvt_simulator.core.components.vehicle_load import LoadModel
 from cvt_simulator.constants.car_specs import BELT_CROSS_SECTIONAL_AREA, BELT_LENGTH
 from cvt_simulator.constants.constants import RUBBER_DENSITY
 from cvt_simulator.sim_utils.system_state import SystemState
-from cvt_simulator.dynamics.drivetrain_dynamics import DrivetrainDynamics
-from cvt_simulator.dynamics.shift_dynamics import ShiftDynamics
-from cvt_simulator.slip.contact_torque_solver import ContactTorqueSolver
+from cvt_simulator.core.dynamics.drivetrain_dynamics import DrivetrainDynamics
+from cvt_simulator.core.dynamics.shift_dynamics import ShiftDynamics
+from cvt_simulator.core.slip.contact_torque_solver import ContactTorqueSolver
 from cvt_simulator.core.data_types import ContactDynamicsBreakdown
 
 

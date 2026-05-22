@@ -46,8 +46,8 @@ class BranchResolver:
         if branch is SlipBranch.PRIMARY_SLIP:
             return self._primary_slip_branch(branch, slip_metrics, state, tau_load, I_s, m_b, primary_pulley)
         if branch is SlipBranch.SECONDARY_SLIP:
-            return self._secondary_slip_branch(branch, slip_metrics, state, tau_engine, I_p, m_b, primary_pulley, secondary_pulley)
-        return self._both_slip_branch(branch, slip_metrics, state, tau_engine, tau_load, I_p, I_s, m_b, primary_pulley, secondary_pulley)
+            return self._secondary_slip_branch(branch, slip_metrics, state, tau_engine, I_p, m_b, secondary_pulley)
+        return self._both_slip_branch(branch, slip_metrics, state, m_b, primary_pulley, secondary_pulley)
 
     def _select_branch(self, decision: SlipMetricsResult) -> SlipBranch:
         # Stickability removed from the selector contract. Decide purely from admissibility.
@@ -94,11 +94,10 @@ class BranchResolver:
         tau_engine: float,
         I_p: float,
         m_b: float,
-        primary_pulley: PrimaryPulley,
         secondary_pulley: SecondaryPulley,
     ) -> BranchTorqueResult:
         tau_p, tau_s = secondary_slip_algebra(
-            decision, state, tau_engine, I_p, m_b, primary_pulley, secondary_pulley
+            decision, state, tau_engine, I_p, m_b, secondary_pulley
         )
         return BranchTorqueResult(
             branch=branch,
@@ -111,16 +110,12 @@ class BranchResolver:
         branch: SlipBranch,
         decision: SlipMetricsResult,
         state: SystemState,
-        tau_engine: float,
-        tau_load: float,
-        I_p: float,
-        I_s: float,
         m_b: float,
         primary_pulley: PrimaryPulley,
         secondary_pulley: SecondaryPulley,
     ) -> BranchTorqueResult:
         tau_p, tau_s = both_slip_algebra(
-            decision, state, tau_engine, tau_load, I_p, I_s, m_b, primary_pulley, secondary_pulley
+            decision, state, m_b, primary_pulley, secondary_pulley
         )
         return BranchTorqueResult(
             branch=branch,

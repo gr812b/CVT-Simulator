@@ -12,8 +12,8 @@ mass and exposes `compute_accelerations(state, tau_p, tau_s)`.
 """
 from cvt_simulator.sim_utils.system_state import SystemState
 from cvt_simulator.geometry.theoretical_models import TheoreticalModels as tm
-from cvt_simulator.components.engine import EngineModel
-from cvt_simulator.components.vehicle_load import LoadModel
+from cvt_simulator.core.components.engine import EngineModel
+from cvt_simulator.core.components.vehicle_load import LoadModel
 from cvt_simulator.core.data_types import (
     DrivetrainAccelerationBreakdown,
     EngineTorqueBreakdown,

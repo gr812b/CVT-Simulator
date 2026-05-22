@@ -16,7 +16,7 @@ from cvt_simulator.geometry.cvt_geometry import CVT_GEOMETRY
 from cvt_simulator.constants.tuning import BELT_STICK_SPEED_THRESHOLD
 from cvt_simulator.core.data_types import SlipMetricsResult, TorqueAdmissibilityResult
 from cvt_simulator.sim_utils.system_state import SystemState
-from cvt_simulator.slip.no_slip_candidate import NoSlipResult
+from cvt_simulator.core.slip.no_slip_candidate import NoSlipResult
 from cvt_simulator.geometry.theoretical_models import TheoreticalModels as tm
 
 

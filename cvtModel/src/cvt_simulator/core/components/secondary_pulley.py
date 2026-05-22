@@ -17,7 +17,7 @@ from cvt_simulator.core.data_types import (
     SecondaryForceBreakdown,
     PulleyForces,
 )
-from cvt_simulator.components.belt_wrap import BeltWrap
+from cvt_simulator.core.components.belt_wrap import BeltWrap
 
 
 class SecondaryPulley:
@@ -49,7 +49,7 @@ class SecondaryPulley:
         self.helix_ramp = helix_ramp
         self.helix_radius = helix_radius
         self.cvt = CVT_GEOMETRY
-        from cvt_simulator.components.belt_wrap import BeltWrap
+        from cvt_simulator.core.components.belt_wrap import BeltWrap
         self.belt_wrap = BeltWrap(is_primary=False)
 
     def calculate_axial_clamping_force(self, state: SystemState, τ: float) -> PulleyForces:
@@ -69,7 +69,7 @@ class SecondaryPulley:
         # belt wrap contribution (use initialized belt_wrap)
         belt = self.belt_wrap.axial_centrifugal_force(state)
 
-        axial_total = axial_pulley + belt.belt_force
+        axial_total = axial_pulley + belt.axial_belt_force
 
         breakdown = SecondaryForceBreakdown(
             springCompForce=spring_comp, helix_force=helix, net=axial_pulley
