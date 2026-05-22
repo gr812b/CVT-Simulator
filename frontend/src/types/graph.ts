@@ -52,6 +52,7 @@ const cvtAccelerationAccessor: AccessorStrategy = (point) => point.contact_break
 // Slip model accessors
 const coupling_torqueAccessor: AccessorStrategy = (point) => point.contact_breakdown.contact.tau_p;
 const torque_demandAccessor: AccessorStrategy = (point) => point.contact_breakdown.contact.slip_metrics.no_slip.tau_p_ns;
+const secondaryTorqueDemandAccessor: AccessorStrategy = (point) => point.contact_breakdown.contact.slip_metrics.no_slip.tau_s_ns;
 const tau_upperAccessor: AccessorStrategy = (point) => point.contact_breakdown.contact.slip_metrics.admissibility.primary_tau_p_stick_upper;
 const tau_lowerAccessor: AccessorStrategy = (point) => point.contact_breakdown.contact.slip_metrics.admissibility.primary_tau_p_stick_lower;
 const primary_tau_upperAccessor: AccessorStrategy = (point) => point.contact_breakdown.contact.slip_metrics.admissibility.primary_tau_p_stick_upper;
@@ -183,6 +184,7 @@ export const accessorToUnit = new Map<AccessorStrategy, BaseUnitType>([
     [primaryAngularAccelerationAccessor, 'angular_acceleration'],
     [secondaryAngularAccelerationAccessor, 'angular_acceleration'],
     [torque_demandAccessor, 'torque'],
+    [secondaryTorqueDemandAccessor, 'torque'],
     [primaryFlyweightForceAccessor, 'force'],
     [rawFlyweightCentrifugalForce, 'force'],
     [primarySpringForceAccessor, 'force'],
@@ -579,12 +581,12 @@ export const graphCategories: GraphCategory[] = [
         graphs: [
             {
                 xAccessor: timeAccessor,
-                yAccessor: [primary_tau_upperAccessor, primary_tau_lowerAccessor, secondary_tau_positiveAccessor, secondary_tau_negativeAccessor],
+                yAccessor: [coupling_torqueAccessor, primary_tau_upperAccessor, primary_tau_lowerAccessor, torque_demandAccessor],
                 config: {
-                    title: "Primary and Secondary Torque Bounds vs Time",
+                    title: "Primary Torque and Bounds vs Time",
                     xAxis: { name: "Time", type: "value", unit: getAxisUnit(timeAccessor) },
                     yAxis: { name: "Torque", type: "value", unit: getAxisUnit(coupling_torqueAccessor) },
-                    seriesNames: ["Primary Upper Bound", "Primary Lower Bound", "Secondary Upper Bound", "Secondary Lower Bound"],
+                    seriesNames: ["tau_p", "Primary Upper Bound", "Primary Lower Bound", "tau_p_ns"],
                     showXLine: true,
                     showYLine: false,
                     tooltipPosition: TooltipPosition.BottomRight,
@@ -592,12 +594,12 @@ export const graphCategories: GraphCategory[] = [
             },
             {
                 xAccessor: timeAccessor,
-                yAccessor: [tau_upperAccessor, tau_lowerAccessor, coupling_torqueAccessor, torque_demandAccessor],
+                yAccessor: [appliedSecondaryTorqueAccessor, secondary_tau_positiveAccessor, secondary_tau_negativeAccessor, secondaryTorqueDemandAccessor],
                 config: {
-                    title: "Overall Bounds, Coupling, and No-Slip Torque vs Time",
+                    title: "Secondary Torque and Bounds vs Time",
                     xAxis: { name: "Time", type: "value", unit: getAxisUnit(timeAccessor) },
-                    yAxis: { name: "Torque", type: "value", unit: getAxisUnit(coupling_torqueAccessor) },
-                    seriesNames: ["Overall Upper Bound", "Overall Lower Bound", "Coupling (Final)", "No-Slip Torque"],
+                    yAxis: { name: "Torque", type: "value", unit: getAxisUnit(appliedSecondaryTorqueAccessor) },
+                    seriesNames: ["tau_s", "Secondary Upper Bound", "Secondary Lower Bound", "tau_s_ns"],
                     showXLine: true,
                     showYLine: false,
                     tooltipPosition: TooltipPosition.BottomRight,

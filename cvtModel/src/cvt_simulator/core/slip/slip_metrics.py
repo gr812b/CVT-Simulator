@@ -86,6 +86,8 @@ class SlipMetrics:
         lower_bound: float,
         upper_bound: float,
     ) -> float:
+        # When the contact is moving faster than the stick threshold, direction is set by the
+        # sign of the relative speed; otherwise it falls back to the torque bounds.
         if abs(relative_speed) > BELT_STICK_SPEED_THRESHOLD:
             return tm.sgn(relative_speed)
 

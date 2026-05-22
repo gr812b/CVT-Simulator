@@ -11,6 +11,7 @@ from cvt_simulator.core.components.primary_pulley import PrimaryPulley
 from cvt_simulator.core.components.secondary_pulley import SecondaryPulley
 from cvt_simulator.constants.car_specs import BELT_CROSS_SECTIONAL_AREA, SHEAVE_ANGLE
 from cvt_simulator.constants.constants import RUBBER_ALUMINUM_KINETIC_FRICTION, RUBBER_DENSITY
+from cvt_simulator.constants.tuning import BELT_STICK_SPEED_THRESHOLD
 from cvt_simulator.core.data_types import SlipMetricsResult, BranchTorqueResult, SlipBranch
 from cvt_simulator.sim_utils.system_state import SystemState
 from cvt_simulator.core.slip.no_slip_candidate import NoSlipResult
@@ -50,17 +51,25 @@ class BranchResolver:
         return self._both_slip_branch(branch, slip_metrics, state, m_b, primary_pulley, secondary_pulley)
 
     def _select_branch(self, decision: SlipMetricsResult) -> SlipBranch:
-        # Stickability removed from the selector contract. Decide purely from admissibility.
-        if decision.primary_admissible and decision.secondary_admissible:
-            return SlipBranch.NO_SLIP
+        primary_slipping = (
+            abs(decision.primary_relative_speed) > BELT_STICK_SPEED_THRESHOLD
+            or not decision.primary_admissible
+        )
+        secondary_slipping = (
+            abs(decision.secondary_relative_speed) > BELT_STICK_SPEED_THRESHOLD
+            or not decision.secondary_admissible
+        )
 
-        if (not decision.primary_admissible) and decision.secondary_admissible:
+        if primary_slipping and secondary_slipping:
+            return SlipBranch.BOTH_SLIP
+
+        if primary_slipping:
             return SlipBranch.PRIMARY_SLIP
 
-        if decision.primary_admissible and (not decision.secondary_admissible):
+        if secondary_slipping:
             return SlipBranch.SECONDARY_SLIP
 
-        return SlipBranch.BOTH_SLIP
+        return SlipBranch.NO_SLIP
 
     def _no_slip_branch(self, no_slip: NoSlipResult) -> BranchTorqueResult:
         return BranchTorqueResult(
