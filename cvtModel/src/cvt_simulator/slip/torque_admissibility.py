@@ -21,7 +21,7 @@ from cvt_simulator.constants.constants import (
 	RUBBER_ALUMINUM_STATIC_FRICTION,
 	RUBBER_DENSITY,
 )
-from cvt_simulator.core.system_state import SystemState
+from cvt_simulator.sim_utils.system_state import SystemState
 from cvt_simulator.slip.no_slip_candidate import NoSlipResult
 
 

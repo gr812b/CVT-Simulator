@@ -2,7 +2,7 @@ import unittest
 import numpy as np
 
 from simulations.secondary_pulley import SecondaryPulley
-from cvt_simulator.utils.theoretical_models import TheoreticalModels as tm
+from cvt_simulator.geometry.theoretical_models import TheoreticalModels as tm
 
 from cvt_simulator.constants.car_specs import BELT_HEIGHT
 

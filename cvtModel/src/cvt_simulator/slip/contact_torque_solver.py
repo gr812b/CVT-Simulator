@@ -8,7 +8,7 @@ selected contact torques and belt acceleration.
 from cvt_simulator.components.primary_pulley import PrimaryPulley
 from cvt_simulator.components.secondary_pulley import SecondaryPulley
 from cvt_simulator.core.data_types import ContactTorqueResult
-from cvt_simulator.core.system_state import SystemState
+from cvt_simulator.sim_utils.system_state import SystemState
 
 from cvt_simulator.slip.branch_resolver import BranchResolver
 from cvt_simulator.slip.slip_metrics import SlipMetrics

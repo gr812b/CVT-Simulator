@@ -4,12 +4,12 @@ Exposes `SecondaryPulley.calculate_axial_clamping_force(shift, torque)` which re
 `(axial_force, SecondaryForceBreakdown)` using existing datatypes.
 """
 from typing import Tuple
-from cvt_simulator.models.ramps.theta_ramp import ThetaRamp
+from cvt_simulator.ramps.theta_ramp import ThetaRamp
 import numpy as np
 from cvt_simulator.geometry.cvt_geometry import CVT_GEOMETRY
 from cvt_simulator.constants.car_specs import MAX_SHIFT
-from cvt_simulator.utils.theoretical_models import TheoreticalModels as tm
-from cvt_simulator.core.system_state import SystemState
+from cvt_simulator.geometry.theoretical_models import TheoreticalModels as tm
+from cvt_simulator.sim_utils.system_state import SystemState
 from cvt_simulator.core.data_types import (
     HelixForceBreakdown,
     SpringTorsForceBreakdown,

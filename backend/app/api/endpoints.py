@@ -8,7 +8,7 @@ from cvt_simulator import (
     CarSpecs,
     solve_all,
 )
-from cvt_simulator.models.ramps.ramp_preview import generate_ramp_preview
+from cvt_simulator.ramps.ramp_preview import generate_ramp_preview
 from ..models.response_models import (
     FormattedResultModel,
     SimulationArgsInput,

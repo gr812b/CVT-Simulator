@@ -9,9 +9,9 @@ primary/secondary torques per the derivation:
     τ_p,ns = τ_eng - I_p * ( v̇_b,ns - ṙ_p * ω_p ) / r_p
     τ_s,ns = τ_load + I_s * ( v̇_b,ns - ṙ_s * ω_s ) / r_s
 """
-from cvt_simulator.core.system_state import SystemState
+from cvt_simulator.sim_utils.system_state import SystemState
 from cvt_simulator.core.data_types import NoSlipResult, NoSlipBreakdown
-from cvt_simulator.utils.theoretical_models import TheoreticalModels as tm
+from cvt_simulator.geometry.theoretical_models import TheoreticalModels as tm
 
 
 def compute_no_slip_candidate(

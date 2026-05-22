@@ -1,7 +1,7 @@
 from typing import Callable, Optional
 from cvt_simulator.simulation_runner import SimulationRunner
-from cvt_simulator.utils.simulation_args import SimulationArgs
-from cvt_simulator.utils.frontend_output import FormattedSimulationResult
+from cvt_simulator.sim_utils.simulation_args import SimulationArgs
+from cvt_simulator.utils.frontend_output import SimulationAnalysisResult
 
 
 def simulate_cvt_model(
@@ -16,14 +16,14 @@ def simulate_cvt_model(
     result = simulation_runner.run_simulation()
     result.write_csv(out_csv)
 
-    formatted = FormattedSimulationResult(result, args)
+    formatted = SimulationAnalysisResult(result, args)
 
     return formatted
 
 
 def main():
     formatted = simulate_cvt_model(SimulationArgs())
-    formatted.write_formatted_csv("front_end_output.csv")
+    formatted.write_analysis_csv("front_end_output.csv")
 
 
 if __name__ == "__main__":

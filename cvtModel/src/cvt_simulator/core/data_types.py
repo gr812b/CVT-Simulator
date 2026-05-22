@@ -220,9 +220,13 @@ class TorqueAdmissibilityResult:
 	secondary_tau_stick_lower: float
 
 
+# -------------------------------------------------
+# Overall
+# -------------------------------------------------
 
-
-
-
-
+@dataclass
+class ContactDynamicsBreakdown:
+    contact: ContactTorqueResult
+    drivetrain: DrivetrainAccelerationBreakdown
+    shift: CvtDynamicsBreakdown
 

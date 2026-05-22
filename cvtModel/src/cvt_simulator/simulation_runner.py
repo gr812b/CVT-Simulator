@@ -2,8 +2,8 @@ import sys
 import numpy as np
 from typing import Callable, Optional, Any
 from scipy.integrate import solve_ivp
-from cvt_simulator.core.system_state import SystemState
-from cvt_simulator.utils.simulation_result import SimulationResult
+from cvt_simulator.sim_utils.system_state import SystemState
+from cvt_simulator.sim_utils.simulation_result import SimulationResult
 from cvt_simulator.dynamics.contact_dynamics_model import ContactDynamicsModel
 from cvt_simulator.constants.car_specs import (
     GEARBOX_RATIO,
@@ -16,12 +16,12 @@ from cvt_simulator.components.engine import EngineModel
 from cvt_simulator.components.primary_pulley import PrimaryPulley
 from cvt_simulator.components.secondary_pulley import SecondaryPulley
 from cvt_simulator.components.vehicle_load import LoadModel
-from cvt_simulator.models.ramps.piecewise_ramp import PiecewiseRamp
-from cvt_simulator.models.ramps.theta_ramp import ThetaRamp
+from cvt_simulator.ramps.piecewise_ramp import PiecewiseRamp
+from cvt_simulator.ramps.theta_ramp import ThetaRamp
 from cvt_simulator.utils.conversions import rpm_to_rad_s, deg_to_rad
 from cvt_simulator.constants.engine_specs import safe_torque_curve
-from cvt_simulator.utils.simulation_args import SimulationArgs
-from cvt_simulator.utils.simulation_constraints import (
+from cvt_simulator.sim_utils.simulation_args import SimulationArgs
+from cvt_simulator.sim_utils.simulation_constraints import (
     car_velocity_constraint_event,
     get_shift_steady_event,
     get_back_shift_event,
@@ -51,7 +51,7 @@ class SimulationRunner:
         s_dot=0.0,
         # Initial secondary pulley angular velocity derived from initial car velocity
         ω_s=rpm_to_rad_s(0.1)
-        / (GEARBOX_RATIO * CVT_GEOMETRY.current_effective_cvt_ratio(0)),
+        / (GEARBOX_RATIO * CVT_GEOMETRY.effective_cvt_ratio(0)),
         # Initial primary pulley angular velocity (engine speed)
         ω_p=rpm_to_rad_s(1800),
         v_b=0.0,

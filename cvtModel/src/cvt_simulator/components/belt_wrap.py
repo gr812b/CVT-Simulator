@@ -4,7 +4,7 @@ Calculates the radial centrifugal force component from the rotating CVT belt.
 """
 import numpy as np
 from cvt_simulator.geometry.cvt_geometry import CVT_GEOMETRY
-from cvt_simulator.core.system_state import SystemState
+from cvt_simulator.sim_utils.system_state import SystemState
 from cvt_simulator.core.data_types import BeltWrapBreakdown
 from cvt_simulator.constants.car_specs import (
     SHEAVE_ANGLE,

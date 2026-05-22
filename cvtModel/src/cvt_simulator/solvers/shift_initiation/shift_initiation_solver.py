@@ -13,8 +13,8 @@ import numpy as np
 from scipy.optimize import brentq
 import matplotlib.pyplot as plt
 from cvt_simulator.solvers.solver_interface import SolverBase, SolverResult
-from cvt_simulator.utils.simulation_args import SimulationArgs
-from cvt_simulator.core.system_state import SystemState
+from cvt_simulator.sim_utils.simulation_args import SimulationArgs
+from cvt_simulator.sim_utils.system_state import SystemState
 from cvt_simulator.models.model_initializer import get_models
 from cvt_simulator.utils.conversions import rad_s_to_rpm
 

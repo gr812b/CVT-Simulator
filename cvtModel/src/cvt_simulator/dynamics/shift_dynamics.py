@@ -3,13 +3,10 @@
 Computes shift acceleration using primary and secondary pulley states
 and net axial force balance.
 """
-from cvt_simulator.models.dataTypes import CvtDynamicsBreakdown
+from cvt_simulator.core.data_types import CvtDynamicsBreakdown
 from cvt_simulator.components.primary_pulley import PrimaryPulley
 from cvt_simulator.components.secondary_pulley import SecondaryPulley
-from cvt_simulator.core.system_state import SystemState
-from cvt_simulator.utils.theoretical_models import TheoreticalModels as tm
-from cvt_simulator.components.belt_wrap import BeltWrap
-
+from cvt_simulator.sim_utils.system_state import SystemState
 
 class ShiftDynamics:
     """Compute shift acceleration from pulley states and axial force balance.

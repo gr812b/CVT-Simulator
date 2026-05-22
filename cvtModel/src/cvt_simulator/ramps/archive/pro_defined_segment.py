@@ -1,6 +1,6 @@
 import math
 from cvt_simulator.constants.car_specs import INITIAL_FLYWEIGHT_RADIUS
-from cvt_simulator.models.ramps.ramp_segment import RampSegment
+from cvt_simulator.ramps.ramp_segment import RampSegment
 
 
 class ProDefinedSegment(RampSegment):

@@ -10,7 +10,7 @@ from cvt_simulator.components.secondary_pulley import SecondaryPulley
 from cvt_simulator.constants.car_specs import BELT_CROSS_SECTIONAL_AREA, SHEAVE_ANGLE
 from cvt_simulator.constants.constants import RUBBER_ALUMINUM_KINETIC_FRICTION, RUBBER_DENSITY
 from cvt_simulator.core.data_types import SlipMetricsResult
-from cvt_simulator.core.system_state import SystemState
+from cvt_simulator.sim_utils.system_state import SystemState
 from cvt_simulator.geometry.cvt_geometry import CVT_GEOMETRY
 
 

@@ -16,9 +16,9 @@ where r_helix is the helix radius.
 """
 
 import math
-from cvt_simulator.models.ramps.piecewise_ramp import PiecewiseRamp
-from cvt_simulator.models.ramps.linear_segment import LinearSegment
-from cvt_simulator.models.ramps.circular_segment import CircularSegment
+from cvt_simulator.ramps.piecewise_ramp import PiecewiseRamp
+from cvt_simulator.ramps.linear_segment import LinearSegment
+from cvt_simulator.ramps.circular_segment import CircularSegment
 
 
 class ThetaRamp:

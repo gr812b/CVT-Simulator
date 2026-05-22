@@ -5,8 +5,8 @@ Can be used standalone or integrated into other applications.
 
 from typing import List, Dict, Union
 import numpy as np
-from cvt_simulator.models.ramps.piecewise_ramp import PiecewiseRamp
-from cvt_simulator.models.ramps.ramp_config import PiecewiseRampConfig
+from cvt_simulator.ramps.piecewise_ramp import PiecewiseRamp
+from cvt_simulator.ramps.ramp_config import PiecewiseRampConfig
 from cvt_simulator.utils.conversions import inch_to_meter
 from cvt_simulator.constants.car_specs import MAX_SHIFT
 

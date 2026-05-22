@@ -1,19 +1,36 @@
 from dataclasses import dataclass, fields, replace, field, is_dataclass
 from typing import Any, Mapping, Union, get_args, get_origin
-from cvt_simulator.models.ramps.ramp_config import PiecewiseRampConfig, LinearSegmentConfig
+from cvt_simulator.ramps.ramp_config import (
+    PiecewiseRampConfig,
+    LinearSegmentConfig,
+    CircularSegmentConfig,
+)
+from cvt_simulator.utils.conversions import inch_to_meter
+from cvt_simulator.constants.car_specs import MAX_SHIFT
 
 
 def _get_default_primary_ramp() -> PiecewiseRampConfig:
     """Factory function for default primary ramp config."""
+    # Default flyweight ramp: small linear engagement then circular arc finish
     return PiecewiseRampConfig(
-        segments=[LinearSegmentConfig(length=1.0, angle=45.0)]
+        segments=[
+            LinearSegmentConfig(length=inch_to_meter(0.125), angle=25.0),
+            CircularSegmentConfig(
+                length=inch_to_meter(1.0),
+                angle_start=33.4248111826,
+                angle_end=20.8067910127,
+                quadrant=2,
+            ),
+        ]
     )
 
 
 def _get_default_secondary_ramp() -> PiecewiseRampConfig:
     """Factory function for default secondary ramp config."""
+    # Default helix angle ramp: constant helix angle across full shift
+    helix_angle_deg = 36.0
     return PiecewiseRampConfig(
-        segments=[LinearSegmentConfig(length=1.0, angle=45.0)]
+        segments=[LinearSegmentConfig(length=MAX_SHIFT, angle=helix_angle_deg)]
     )
 
 

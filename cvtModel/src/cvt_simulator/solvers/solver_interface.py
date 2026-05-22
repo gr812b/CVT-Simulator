@@ -8,7 +8,7 @@ Solvers answer specific questions about operating conditions
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from typing import Optional
-from cvt_simulator.utils.simulation_args import SimulationArgs
+from cvt_simulator.sim_utils.simulation_args import SimulationArgs
 
 
 @dataclass

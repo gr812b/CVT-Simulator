@@ -5,12 +5,12 @@ from matplotlib import pyplot as plt
 import numpy as np
 
 from cvt_simulator.constants.car_specs import GEARBOX_RATIO, MAX_SHIFT, WHEEL_RADIUS
-from cvt_simulator.utils.simulation_result import SimulationResult
+from cvt_simulator.sim_utils.simulation_result import SimulationResult
 from cvt_simulator.utils.state_computations import (
     integrate_positions_trapezoidal,
     secondary_pulley_angular_velocity_to_car_velocity,
 )
-from cvt_simulator.utils.theoretical_models import TheoreticalModels as tm
+from cvt_simulator.geometry.theoretical_models import TheoreticalModels as tm
 
 
 def _build_series(result: SimulationResult) -> dict[str, np.ndarray]:

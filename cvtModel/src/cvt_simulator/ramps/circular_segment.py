@@ -1,4 +1,4 @@
-from cvt_simulator.models.ramps.ramp_segment import RampSegment
+from cvt_simulator.ramps.ramp_segment import RampSegment
 import numpy as np
 import math
 

@@ -11,8 +11,8 @@ This reveals the helix geometry and how radius affects the θ(x) profile.
 
 import numpy as np
 import matplotlib.pyplot as plt
-from cvt_simulator.models.ramps import CircularSegment, LinearSegment, PiecewiseRamp
-from cvt_simulator.models.ramps.theta_ramp import ThetaRamp
+from cvt_simulator.ramps import CircularSegment, LinearSegment, PiecewiseRamp
+from cvt_simulator.ramps.theta_ramp import ThetaRamp
 from cvt_simulator.constants.car_specs import HELIX_RADIUS, MAX_SHIFT
 
 

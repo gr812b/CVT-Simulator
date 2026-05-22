@@ -6,10 +6,10 @@ and runtime instances (RampSegment subclasses for simulation).
 """
 
 from typing import Type, Callable
-from cvt_simulator.models.ramps.ramp_segment import RampSegment
-from cvt_simulator.models.ramps.linear_segment import LinearSegment
-from cvt_simulator.models.ramps.circular_segment import CircularSegment
-from cvt_simulator.models.ramps.ramp_config import (
+from cvt_simulator.ramps.ramp_segment import RampSegment
+from cvt_simulator.ramps.linear_segment import LinearSegment
+from cvt_simulator.ramps.circular_segment import CircularSegment
+from cvt_simulator.ramps.ramp_config import (
     LinearSegmentConfig,
     CircularSegmentConfig,
     RampSegmentConfig,

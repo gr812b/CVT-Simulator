@@ -1,9 +1,9 @@
-from cvt_simulator.models.ramps.ramp_segment import RampSegment
-from cvt_simulator.models.ramps.ramp_serialization import (
+from cvt_simulator.ramps.ramp_segment import RampSegment
+from cvt_simulator.ramps.ramp_serialization import (
     segment_to_config,
     config_to_segment,
 )
-from cvt_simulator.models.ramps.ramp_config import PiecewiseRampConfig
+from cvt_simulator.ramps.ramp_config import PiecewiseRampConfig
 from typing import List
 
 

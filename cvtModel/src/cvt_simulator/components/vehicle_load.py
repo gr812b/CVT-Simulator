@@ -7,11 +7,11 @@ from cvt_simulator.constants.car_specs import (
     GEARBOX_RATIO,
     ROLLING_RESISTANCE_COEFFICIENT,
 )
-from cvt_simulator.core.system_state import SystemState
+from cvt_simulator.sim_utils.system_state import SystemState
 from cvt_simulator.utils.state_computations import (
     secondary_pulley_angular_velocity_to_car_velocity,
 )
-from cvt_simulator.utils.theoretical_models import TheoreticalModels as tm
+from cvt_simulator.geometry.theoretical_models import TheoreticalModels as tm
 from cvt_simulator.core.data_types import ExternalLoadForceBreakdown
 
 

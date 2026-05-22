@@ -130,7 +130,7 @@ class CarSpecs(BaseModel):
     @property
     def min_effective_cvt_ratio(self) -> float:
         """Minimum effective CVT ratio (unitless) at zero shift distance."""
-        from cvt_simulator.utils.theoretical_models import TheoreticalModels as tm
+        from cvt_simulator.geometry.theoretical_models import TheoreticalModels as tm
 
         return tm.current_effective_cvt_ratio(0)
 
@@ -138,7 +138,7 @@ class CarSpecs(BaseModel):
     @property
     def max_effective_cvt_ratio(self) -> float:
         """Maximum effective CVT ratio (unitless) at max shift distance."""
-        from cvt_simulator.utils.theoretical_models import TheoreticalModels as tm
+        from cvt_simulator.geometry.theoretical_models import TheoreticalModels as tm
 
         return tm.current_effective_cvt_ratio(self.max_shift)
 

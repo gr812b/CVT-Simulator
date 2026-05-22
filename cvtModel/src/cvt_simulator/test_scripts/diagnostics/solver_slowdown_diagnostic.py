@@ -15,14 +15,14 @@ import pstats
 import time
 
 import numpy as np
-from cvt_simulator.models.ramps.ramp_config import (
+from cvt_simulator.ramps.ramp_config import (
     CircularSegmentConfig,
     LinearSegmentConfig,
     PiecewiseRampConfig,
 )
 from cvt_simulator.simulation_runner import SimulationRunner
-from cvt_simulator.utils.simulation_args import SimulationArgs
-from cvt_simulator.utils.simulation_constraints import (
+from cvt_simulator.sim_utils.simulation_args import SimulationArgs
+from cvt_simulator.sim_utils.simulation_constraints import (
     get_mid_shift_steady_event,
     get_mid_shift_wake_event,
 )
