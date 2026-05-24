@@ -5,17 +5,12 @@ branch. The selector provides kinematics and admissibility; this module turns
 that into the discrete branch and resolves the branch algebra.
 """
 
-import math
-
 from cvt_simulator.core.components.primary_pulley import PrimaryPulley
 from cvt_simulator.core.components.secondary_pulley import SecondaryPulley
-from cvt_simulator.constants.car_specs import BELT_CROSS_SECTIONAL_AREA, SHEAVE_ANGLE
-from cvt_simulator.constants.constants import RUBBER_ALUMINUM_KINETIC_FRICTION, RUBBER_DENSITY
 from cvt_simulator.constants.tuning import BELT_STICK_SPEED_THRESHOLD
 from cvt_simulator.core.data_types import SlipMetricsResult, BranchTorqueResult, SlipBranch
 from cvt_simulator.sim_utils.system_state import SystemState
 from cvt_simulator.core.slip.no_slip_candidate import NoSlipResult
-from cvt_simulator.geometry.theoretical_models import TheoreticalModels as tm
 from cvt_simulator.core.slip.branch_algebra import (
     primary_slip_algebra,
     secondary_slip_algebra,

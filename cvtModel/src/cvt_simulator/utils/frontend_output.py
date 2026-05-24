@@ -23,6 +23,7 @@ class AnalysisStepData:
     """All analysis data for one simulation time step."""
 
     time: float
+    mode: str
     state: SystemState
     derived_state: "DerivedKinematicState"
     contact_breakdown: ContactDynamicsBreakdown
@@ -163,9 +164,14 @@ class SimulationAnalysisResult:
                 engine_angular_position=float(engine_positions[index]),
             )
 
+            mode = "unknown"
+            if getattr(result, "modes", None) is not None and index < len(result.modes):
+                mode = str(result.modes[index])
+
             self.rows.append(
                 AnalysisStepData(
                     time=float(time),
+                    mode=mode,
                     state=display_state,
                     derived_state=derived_state,
                     contact_breakdown=contact_breakdown,

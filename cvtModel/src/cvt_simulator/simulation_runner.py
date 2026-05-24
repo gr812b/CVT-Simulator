@@ -34,9 +34,10 @@ from cvt_simulator.geometry.cvt_geometry import CVT_GEOMETRY
 
 # Helper class to wrap data
 class CombinedSolution:
-    def __init__(self, t, y):
+    def __init__(self, t, y, modes=None):
         self.t = t
         self.y = y
+        self.modes = modes
 
 
 class SimulationRunner:
@@ -146,6 +147,7 @@ class SimulationRunner:
         # Track all solution segments
         all_t = []
         all_y = []
+        all_modes = []
 
         current_time = 0
         current_state = self.INITIAL_STATE.to_array()
@@ -167,7 +169,7 @@ class SimulationRunner:
             "details": {},
         }
 
-        def append_solution_segment(solution):
+        def append_solution_segment(solution, segment_mode: str):
             t_seg = np.asarray(solution.t)
             if t_seg.size == 0:
                 return
@@ -176,6 +178,7 @@ class SimulationRunner:
                 y_seg = y_seg.reshape(-1, 1)
             all_t.append(t_seg)
             all_y.append(y_seg)
+            all_modes.extend([segment_mode] * int(t_seg.size))
 
         while current_time < self.TOTAL_SIM_TIME and transition_count < max_transitions:
             time_eval_segment = (
@@ -234,7 +237,7 @@ class SimulationRunner:
                     events,
                 )
 
-                append_solution_segment(solution)
+                append_solution_segment(solution, mode)
 
                 if solution.t_events[0].size > 0:
                     # Enter full-shift locked mode
@@ -296,7 +299,7 @@ class SimulationRunner:
                     events,
                 )
 
-                append_solution_segment(solution)
+                append_solution_segment(solution, mode)
 
                 if solution.t_events[0].size > 0:
                     # Resume normal shifting dynamics
@@ -359,7 +362,7 @@ class SimulationRunner:
                     events,
                 )
 
-                append_solution_segment(solution)
+                append_solution_segment(solution, mode)
 
                 if solution.t_events[0].size > 0:
                     # Resume normal shifting dynamics when imbalance grows again
@@ -409,7 +412,7 @@ class SimulationRunner:
             combined_t = np.concatenate(all_t)
             combined_y = np.hstack(all_y)
 
-        combined_solution = CombinedSolution(combined_t, combined_y)
+        combined_solution = CombinedSolution(combined_t, combined_y, all_modes)
 
         final_state = SystemState.from_array(combined_y[:, -1])
         final_time = float(combined_t[-1])

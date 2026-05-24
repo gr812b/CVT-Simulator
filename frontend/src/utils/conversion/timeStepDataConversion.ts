@@ -348,6 +348,7 @@ function convertTimeStepData(
 
   return {
     time: conv(timeStep.time, 'time'),
+    mode: timeStep.mode,
     state: {
       s: conv(timeStep.state.s, 'distance'),
       s_dot: conv(timeStep.state.s_dot, 'velocity'),

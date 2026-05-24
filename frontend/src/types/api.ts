@@ -137,6 +137,8 @@ export interface components {
         AnalysisStepDataModel: {
             /** Time */
             time: number;
+            /** Mode */
+            mode: string;
             state: components["schemas"]["SystemStateModel"];
             derived_state: components["schemas"]["DerivedKinematicStateModel"];
             contact_breakdown: components["schemas"]["ContactDynamicsBreakdownModel"];

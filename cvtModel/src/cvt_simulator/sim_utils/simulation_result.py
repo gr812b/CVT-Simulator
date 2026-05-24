@@ -17,15 +17,18 @@ class SimulationResult:
         solution=None,
         time=None,
         states=None,
+        modes=None,
         termination_context: dict[str, Any] | None = None,
     ):
         """Initialize with solution from solve_ivp and parse it into states, or directly with time and states."""
         if solution is not None:
             self.time = solution.t
             self.states = self.parse_solution(solution)
+            self.modes = getattr(solution, "modes", None)
         else:
             self.time = time
             self.states = states
+            self.modes = modes
         self.termination_context = termination_context
 
     @staticmethod
@@ -39,6 +42,7 @@ class SimulationResult:
         """Reads the solution states from a CSV file and returns a SimulationResult instance."""
         df = pd.read_csv(filename)
         time = df["time"].values
+        modes = df["mode"].tolist() if "mode" in df.columns else None
         states = [
             SystemState(
                 s=row["shift_distance"],
@@ -50,7 +54,7 @@ class SimulationResult:
             )
             for _, row in df.iterrows()
         ]
-        return SimulationResult(time=time, states=states)
+        return SimulationResult(time=time, states=states, modes=modes)
 
     def write_csv(self, filename="simulation_output.csv"):
         """Writes the parsed solution states to a CSV file.
@@ -80,6 +84,7 @@ class SimulationResult:
 
         data = {
             "time": self.time,
+            "mode": self.modes if self.modes is not None else [None] * len(self.time),
             "shift_distance": [state.s for state in self.states],
             "shift_velocity": [state.s_dot for state in self.states],
             "primary_pulley_angular_velocity": [
