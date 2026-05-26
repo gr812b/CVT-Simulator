@@ -14,7 +14,7 @@ import matplotlib.pyplot as plt
 from cvt_simulator.solvers.solver_interface import SolverBase, SolverResult
 from cvt_simulator.sim_utils.simulation_args import SimulationArgs
 from cvt_simulator.sim_utils.system_state import SystemState
-from cvt_simulator.simulation_runner import SimulationRunner
+from cvt_simulator.sim.simulation_runner import SimulationRunner
 from cvt_simulator.core.slip.no_slip_candidate import compute_no_slip_candidate
 from cvt_simulator.core.slip.torque_admissibility import TorqueAdmissibility
 from cvt_simulator.utils.conversions import rad_s_to_rpm

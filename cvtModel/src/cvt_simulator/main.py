@@ -1,5 +1,5 @@
 from typing import Callable, Optional
-from cvt_simulator.simulation_runner import SimulationRunner
+from cvt_simulator.sim.simulation_runner import SimulationRunner
 from cvt_simulator.sim_utils.simulation_args import SimulationArgs
 from cvt_simulator.utils.frontend_output import SimulationAnalysisResult
 

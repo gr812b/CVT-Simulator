@@ -21,15 +21,11 @@ from cvt_simulator.ramps.theta_ramp import ThetaRamp
 from cvt_simulator.utils.conversions import rpm_to_rad_s, deg_to_rad
 from cvt_simulator.constants.engine_specs import safe_torque_curve
 from cvt_simulator.sim_utils.simulation_args import SimulationArgs
-from cvt_simulator.sim_utils.simulation_constraints import (
-    car_velocity_constraint_event,
-    get_shift_steady_event,
-    get_back_shift_event,
-    get_mid_shift_steady_event,
-    get_mid_shift_wake_event,
-    shift_constraint_event,
-)
 from cvt_simulator.geometry.cvt_geometry import CVT_GEOMETRY
+from cvt_simulator.sim_utils.simulation_branches import (
+    SimulationBranchManager,
+    SimulationBranchTransition,
+)
 
 
 # Helper class to wrap data
@@ -140,7 +136,13 @@ class SimulationRunner:
 
     def run_simulation(self) -> SimulationResult:
         """Run the simulation and return results."""
-        cvt_system_ode = self._get_ode_function()
+        branch_manager = SimulationBranchManager(
+            contact_model=self.contact_model,
+            mid_shift_min_hold_time=self.MID_SHIFT_MIN_HOLD_TIME,
+            mid_shift_relock_delay=self.MID_SHIFT_RELOCK_DELAY,
+            progress_tracker=self._print_progress,
+        )
+
         # Use a single global time grid for the entire simulation
         time_eval = np.linspace(0, self.TOTAL_SIM_TIME, 10000)
 
@@ -202,193 +204,58 @@ class SimulationRunner:
                 }
                 break
 
-            if mode == "normal":
-                base_mid_shift_steady_event = get_mid_shift_steady_event(
-                    self.contact_model
+            ode_func = branch_manager.get_ode_function(mode, locked_shift_distance)
+            events, event_names = branch_manager.get_events(
+                mode,
+                locked_shift_distance,
+                mid_shift_enter_time,
+                last_mid_shift_wake_time,
+            )
+
+            solution = self._solve(
+                ode_func,
+                current_time,
+                current_state,
+                time_eval_segment,
+                events,
+            )
+
+            append_solution_segment(solution, mode)
+
+            transition = branch_manager.get_transition(
+                mode,
+                solution,
+                event_names,
+                locked_shift_distance,
+                mid_shift_enter_time,
+                last_mid_shift_wake_time,
+            )
+
+            if transition.did_transition:
+                self._emit_transition(
+                    from_mode=mode,
+                    to_mode=transition.next_mode,
+                    t=transition.next_time,
+                    state_array=transition.next_state,
+                    reason=transition.reason,
                 )
+                mode = transition.next_mode
+                current_time = transition.next_time
+                current_state = transition.next_state
+                locked_shift_distance = transition.locked_shift_distance
+                mid_shift_enter_time = transition.mid_shift_enter_time
+                last_mid_shift_wake_time = transition.last_mid_shift_wake_time
+                transition_count += 1
+                continue
 
-                def guarded_mid_shift_steady_event(t, y):
-                    # After waking from a locked mid-shift state, require a short
-                    # cooldown before allowing another mid-shift lock attempt.
-                    if (t - last_mid_shift_wake_time) < self.MID_SHIFT_RELOCK_DELAY:
-                        return 1.0
-                    return base_mid_shift_steady_event(t, y)
-
-                guarded_mid_shift_steady_event.terminal = True
-                guarded_mid_shift_steady_event.direction = -1
-
-                events = [
-                    get_shift_steady_event(self.contact_model),
-                    guarded_mid_shift_steady_event,
-                    car_velocity_constraint_event,
-                    shift_constraint_event,
-                ]
-                event_names = [
-                    "shift_steady_event",
-                    "mid_shift_steady_event",
-                    "car_velocity_constraint_event",
-                    "shift_constraint_event",
-                ]
-                solution = self._solve(
-                    cvt_system_ode,
-                    current_time,
-                    current_state,
-                    time_eval_segment,
-                    events,
-                )
-
-                append_solution_segment(solution, mode)
-
-                if solution.t_events[0].size > 0:
-                    # Enter full-shift locked mode
-                    current_time = solution.t_events[0][0]
-                    current_state = solution.y_events[0][0]
-                    self._emit_transition(
-                        "normal",
-                        "full_shift",
-                        current_time,
-                        current_state,
-                        "shift_steady_event",
-                    )
-                    mode = "full_shift"
-                    transition_count += 1
-                    continue
-
-                if solution.t_events[1].size > 0:
-                    # Enter mid-shift locked mode
-                    current_time = solution.t_events[1][0]
-                    current_state = solution.y_events[1][0]
-                    locked_shift_distance = float(current_state[0])
-                    self._emit_transition(
-                        "normal",
-                        "mid_shift",
-                        current_time,
-                        current_state,
-                        "mid_shift_steady_event",
-                    )
-                    mode = "mid_shift"
-                    mid_shift_enter_time = float(current_time)
-                    transition_count += 1
-                    continue
-
-                # No mode-transition event: finished (car stop, end of interval, etc.)
-                termination_context = self._build_termination_context(
-                    solution=solution,
-                    mode=mode,
-                    event_names=event_names,
-                    transition_count=transition_count,
-                    max_transitions=max_transitions,
-                )
-                break
-
-            if mode == "full_shift":
-                locked_ode = self._get_locked_shift_ode_function(MAX_SHIFT)
-                events = [
-                    get_back_shift_event(self.contact_model),
-                    car_velocity_constraint_event,
-                ]
-                event_names = [
-                    "back_shift_event",
-                    "car_velocity_constraint_event",
-                ]
-                solution = self._solve(
-                    locked_ode,
-                    current_time,
-                    current_state,
-                    time_eval_segment,
-                    events,
-                )
-
-                append_solution_segment(solution, mode)
-
-                if solution.t_events[0].size > 0:
-                    # Resume normal shifting dynamics
-                    current_time = solution.t_events[0][0]
-                    current_state = solution.y_events[0][0]
-                    self._emit_transition(
-                        "full_shift",
-                        "normal",
-                        current_time,
-                        current_state,
-                        "back_shift_event",
-                    )
-                    mode = "normal"
-                    transition_count += 1
-                    continue
-
-                termination_context = self._build_termination_context(
-                    solution=solution,
-                    mode=mode,
-                    event_names=event_names,
-                    transition_count=transition_count,
-                    max_transitions=max_transitions,
-                )
-                break
-
-            if mode == "mid_shift":
-                if locked_shift_distance is None:
-                    break
-
-                locked_ode = self._get_locked_shift_ode_function(locked_shift_distance)
-
-                base_mid_shift_wake_event = get_mid_shift_wake_event(self.contact_model)
-
-                def guarded_mid_shift_wake_event(t, y):
-                    # Once we lock into mid-shift, keep that mode for a minimum
-                    # dwell time before evaluating wake logic.
-                    if (
-                        mid_shift_enter_time is not None
-                        and (t - mid_shift_enter_time) < self.MID_SHIFT_MIN_HOLD_TIME
-                    ):
-                        return -1.0
-                    return base_mid_shift_wake_event(t, y)
-
-                guarded_mid_shift_wake_event.terminal = True
-                guarded_mid_shift_wake_event.direction = 1
-
-                events = [
-                    guarded_mid_shift_wake_event,
-                    car_velocity_constraint_event,
-                ]
-                event_names = [
-                    "mid_shift_wake_event",
-                    "car_velocity_constraint_event",
-                ]
-                solution = self._solve(
-                    locked_ode,
-                    current_time,
-                    current_state,
-                    time_eval_segment,
-                    events,
-                )
-
-                append_solution_segment(solution, mode)
-
-                if solution.t_events[0].size > 0:
-                    # Resume normal shifting dynamics when imbalance grows again
-                    current_time = solution.t_events[0][0]
-                    current_state = solution.y_events[0][0]
-                    self._emit_transition(
-                        "mid_shift",
-                        "normal",
-                        current_time,
-                        current_state,
-                        "mid_shift_wake_event",
-                    )
-                    mode = "normal"
-                    mid_shift_enter_time = None
-                    last_mid_shift_wake_time = float(current_time)
-                    transition_count += 1
-                    continue
-
-                termination_context = self._build_termination_context(
-                    solution=solution,
-                    mode=mode,
-                    event_names=event_names,
-                    transition_count=transition_count,
-                    max_transitions=max_transitions,
-                )
-                break
+            termination_context = self._build_termination_context(
+                solution=solution,
+                mode=mode,
+                event_names=event_names,
+                transition_count=transition_count,
+                max_transitions=max_transitions,
+            )
+            break
 
         if transition_count >= max_transitions and current_time < self.TOTAL_SIM_TIME:
             termination_context = {
@@ -512,25 +379,6 @@ class SimulationRunner:
             },
         }
 
-    # Get the function without self for scipy
-    def _get_ode_function(self):
-        def ode_func(t: float, y: list[float]):
-            return self._evaluate_cvt_system(t, y)
-
-        return ode_func
-
-    def _get_full_shift_ode_function(self):
-        def ode_func(t: float, y: list[float]):
-            return self._evaluate_full_shift_system(t, y)
-
-        return ode_func
-
-    def _get_locked_shift_ode_function(self, locked_shift_distance: float):
-        def ode_func(t: float, y: list[float]):
-            return self._evaluate_locked_shift_system(t, y, locked_shift_distance)
-
-        return ode_func
-
     def _solve(
         self,
         ode_func: Callable[[float, list[float]], list[float]],  # (t, y) -> dydt
@@ -572,109 +420,3 @@ class SimulationRunner:
                     # Backward compatibility for older single-argument callbacks.
                     self.progress_callback(progress_percent)
 
-    def _evaluate_cvt_system(self, t: float, y: list[float]):
-        """Evaluate system dynamics (phase 1: not at full shift).
-
-        Returns derivatives of the state vector:
-        dy[0] = d(shift_distance)/dt = shift_velocity
-        dy[1] = d(shift_velocity)/dt = shift_acceleration
-        dy[2] = d(primary_pulley_angular_velocity)/dt = primary_pulley_angular_accel
-        dy[3] = d(secondary_pulley_angular_velocity)/dt = secondary_pulley_angular_accel
-        dy[4] = d(v_b)/dt
-        """
-        state = SystemState.from_array(y)
-
-        # Do not mutate the solver state in normal mode. Use a constrained copy
-        # for geometry/force evaluation while preserving continuous integration.
-        raw_shift_distance = state.s
-        raw_shift_velocity = state.s_dot
-        eval_shift_distance = float(np.clip(raw_shift_distance, 0.0, MAX_SHIFT))
-        eval_shift_velocity = raw_shift_velocity
-        if raw_shift_distance <= 0.0 and raw_shift_velocity < 0.0:
-            eval_shift_velocity = 0.0
-        elif raw_shift_distance >= MAX_SHIFT and raw_shift_velocity > 0.0:
-            eval_shift_velocity = 0.0
-
-        eval_state = SystemState(
-            s=eval_shift_distance,
-            s_dot=eval_shift_velocity,
-            ω_p=state.ω_p,
-            ω_s=state.ω_s,
-            v_b=state.v_b,
-        )
-        self._print_progress(t, eval_state.s)
-
-        # Get system breakdown (this calculates everything in correct order)
-        contact_breakdown = self.contact_model.get_breakdown(eval_state)
-
-        # Extract acceleration
-        shift_acceleration = contact_breakdown.shift.acceleration
-
-        # Prevent acceleration from pushing past boundaries (metal hitting metal)
-        if eval_shift_distance <= 0 and shift_acceleration < 0:
-            shift_acceleration = 0
-        elif eval_shift_distance >= MAX_SHIFT and shift_acceleration > 0:
-            shift_acceleration = 0
-
-        return [
-            eval_shift_velocity,
-            shift_acceleration,
-            contact_breakdown.drivetrain.ω_p_dot,
-            contact_breakdown.drivetrain.ω_s_dot,
-            contact_breakdown.drivetrain.v_b_dot,
-        ]
-
-    def _evaluate_full_shift_system(self, t: float, y: list[float]):
-        """Evaluate system dynamics (phase 2: at full shift).
-
-        At full shift, shift_distance and shift_velocity are held constant.
-        Only the pulley angular velocities continue to evolve.
-        """
-        state = SystemState.from_array(y)
-        self._print_progress(t, MAX_SHIFT)
-        # Force the shifting variables to remain constant at full shift.
-        state.s = MAX_SHIFT
-        state.s_dot = 0
-
-        # CRITICAL: Update the actual y array that scipy saves
-        constrained_y = state.to_array()
-        for i in range(len(y)):
-            y[i] = constrained_y[i]
-
-        # Get system breakdown for full shift case
-        contact_breakdown = self.contact_model.get_breakdown(state)
-
-        return [
-            0,  # shift_distance held constant
-            0,  # shift_velocity held constant
-            contact_breakdown.drivetrain.ω_p_dot,  # primary pulley continues to evolve
-            contact_breakdown.drivetrain.ω_s_dot,  # secondary pulley continues to evolve
-            contact_breakdown.drivetrain.v_b_dot,
-        ]
-
-    def _evaluate_locked_shift_system(
-        self,
-        t: float,
-        y: list[float],
-        locked_shift_distance: float,
-    ):
-        """Evaluate system dynamics with shift DOF locked at an interior position."""
-        state = SystemState.from_array(y)
-        self._print_progress(t, locked_shift_distance)
-
-        state.s = locked_shift_distance
-        state.s_dot = 0
-
-        constrained_y = state.to_array()
-        for i in range(len(y)):
-            y[i] = constrained_y[i]
-
-        contact_breakdown = self.contact_model.get_breakdown(state)
-
-        return [
-            0,
-            0,
-            contact_breakdown.drivetrain.ω_p_dot,
-            contact_breakdown.drivetrain.ω_s_dot,
-            contact_breakdown.drivetrain.v_b_dot,
-        ]

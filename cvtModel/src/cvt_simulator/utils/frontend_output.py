@@ -8,7 +8,7 @@ import pandas as pd
 from cvt_simulator.constants.car_specs import MAX_SHIFT
 from cvt_simulator.core.data_types import ContactDynamicsBreakdown
 from cvt_simulator.sim_utils.system_state import SystemState
-from cvt_simulator.simulation_runner import SimulationRunner
+from cvt_simulator.sim.simulation_runner import SimulationRunner
 from cvt_simulator.sim_utils.simulation_args import SimulationArgs
 from cvt_simulator.sim_utils.simulation_result import SimulationResult
 from cvt_simulator.utils.state_computations import (
