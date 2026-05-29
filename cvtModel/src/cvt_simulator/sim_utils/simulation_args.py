@@ -11,14 +11,13 @@ from cvt_simulator.constants.car_specs import MAX_SHIFT
 
 def _get_default_primary_ramp() -> PiecewiseRampConfig:
     """Factory function for default primary ramp config."""
-    # Default flyweight ramp: small linear engagement then circular arc finish
+    # Match frontend default: single circular segment (length in meters)
     return PiecewiseRampConfig(
         segments=[
-            LinearSegmentConfig(length=inch_to_meter(0.125), angle=25.0),
             CircularSegmentConfig(
-                length=inch_to_meter(1.0),
-                angle_start=33.4248111826,
-                angle_end=20.8067910127,
+                length=0.024,
+                angle_start=40.0,
+                angle_end=15.0,
                 quadrant=2,
             ),
         ]
@@ -27,27 +26,24 @@ def _get_default_primary_ramp() -> PiecewiseRampConfig:
 
 def _get_default_secondary_ramp() -> PiecewiseRampConfig:
     """Factory function for default secondary ramp config."""
-    # Default helix angle ramp: constant helix angle across full shift
-    helix_angle_deg = 36.0
-    return PiecewiseRampConfig(
-        segments=[LinearSegmentConfig(length=MAX_SHIFT, angle=helix_angle_deg)]
-    )
+    # Match frontend default: linear segment (length unit taken from frontend)
+    return PiecewiseRampConfig(segments=[LinearSegmentConfig(length=1.0, angle=50.0)])
 
 
 @dataclass(slots=True)
 class SimulationArgs:
-    flyweight_mass: float = 1.0  # kg
+    flyweight_mass: float = 0.5  # kg
     primary_ramp_config: PiecewiseRampConfig = field(
         default_factory=_get_default_primary_ramp
     )
-    primary_spring_rate: float = 7000.0  # N/m
-    primary_spring_pretension: float = 0.2  # m
+    primary_spring_rate: float = 12784.0  # N/m
+    primary_spring_pretension: float = 0.1  # m
     secondary_ramp_config: PiecewiseRampConfig = field(
         default_factory=_get_default_secondary_ramp
     )
-    secondary_torsion_spring_rate: float = 30.0  # Nm/rad
-    secondary_compression_spring_rate: float = 3000.0  # N/m
-    secondary_rotational_spring_pretension: float = 230.0  # degrees
+    secondary_torsion_spring_rate: float = 3.476  # Nm/rad
+    secondary_compression_spring_rate: float = 3532.0  # N/m
+    secondary_rotational_spring_pretension: float = 200.0  # degrees
     secondary_linear_spring_pretension: float = 0.1  # m
     vehicle_weight: float = 225.0  # kg
     driver_weight: float = 75.0  # kg

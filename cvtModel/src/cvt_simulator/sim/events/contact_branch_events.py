@@ -28,13 +28,13 @@ from cvt_simulator.core.data_types import SlipBranch, SlipMetricsResult
 from cvt_simulator.core.dynamics.contact_dynamics_model import ContactDynamicsModel
 from cvt_simulator.sim.system_state import SystemState
 from cvt_simulator.constants.tuning import BELT_STICK_SPEED_THRESHOLD
-thres = 1
+thres = 0.1
 
-CONTACT_SLIP_ENTER_SPEED = 1.10 * thres
+CONTACT_SLIP_ENTER_SPEED = 0.5 * thres
 CONTACT_SLIP_EXIT_SPEED = 1.1 * thres
 
-CONTACT_TORQUE_ENTER_MARGIN = 0.01 * 10
-CONTACT_TORQUE_EXIT_MARGIN = 0.01 * 10
+CONTACT_TORQUE_ENTER_MARGIN = 0.01
+CONTACT_TORQUE_EXIT_MARGIN = 0.01
 
 
 @dataclass(frozen=True)
