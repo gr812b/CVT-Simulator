@@ -5,7 +5,7 @@ from unittest.mock import patch
 
 from scipy.integrate import solve_ivp
 from cvt_simulator.sim_utils.simulation_result import SimulationResult
-from cvt_simulator.sim_utils.system_state import SystemState
+from cvt_simulator.sim.system_state import SystemState
 
 
 class TestSimulationResult(unittest.TestCase):

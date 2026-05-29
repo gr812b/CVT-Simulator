@@ -60,9 +60,13 @@ const primaryTorqueUpperAccessor: AccessorStrategy = (point) => point.contact_br
 const primaryTorqueLowerAccessor: AccessorStrategy = (point) => point.contact_breakdown.contact.slip_metrics.admissibility.primary_tau_p_stick_lower;
 const secondaryTorqueUpperAccessor: AccessorStrategy = (point) => point.contact_breakdown.contact.slip_metrics.admissibility.secondary_tau_stick_upper;
 const secondaryTorqueLowerAccessor: AccessorStrategy = (point) => point.contact_breakdown.contact.slip_metrics.admissibility.secondary_tau_stick_lower;
-const simulationModeNormalAccessor: AccessorStrategy = (point) => point.mode === 'normal' ? 1 : 0;
-const simulationModeFullShiftAccessor: AccessorStrategy = (point) => point.mode === 'full_shift' ? 1 : 0;
-const simulationModeMidShiftAccessor: AccessorStrategy = (point) => point.mode === 'mid_shift' ? 1 : 0;
+const simulationModeNormalAccessor: AccessorStrategy = (point) => point.shift_mode === 'normal' ? 1 : 0;
+const simulationModeFullShiftAccessor: AccessorStrategy = (point) => point.shift_mode === 'full_shift' ? 1 : 0;
+const simulationModeMidShiftAccessor: AccessorStrategy = (point) => point.shift_mode === 'mid_shift' ? 1 : 0;
+const slipModeNoSlipAccessor: AccessorStrategy = (point) => point.slip_mode === 'NO_SLIP' ? 1 : 0;
+const slipModePrimarySlipAccessor: AccessorStrategy = (point) => point.slip_mode === 'PRIMARY_SLIP' ? 1 : 0;
+const slipModeSecondarySlipAccessor: AccessorStrategy = (point) => point.slip_mode === 'SECONDARY_SLIP' ? 1 : 0;
+const slipModeBothSlipAccessor: AccessorStrategy = (point) => point.slip_mode === 'BOTH_SLIP' ? 1 : 0;
 const branchNoSlipAccessor: AccessorStrategy = (point) => point.contact_breakdown.contact.branch === 'NO_SLIP' ? 1 : 0;
 const branchPrimarySlipAccessor: AccessorStrategy = (point) => point.contact_breakdown.contact.branch === 'PRIMARY_SLIP' ? 1 : 0;
 const branchSecondarySlipAccessor: AccessorStrategy = (point) => point.contact_breakdown.contact.branch === 'SECONDARY_SLIP' ? 1 : 0;
@@ -176,6 +180,10 @@ export const accessorToUnit = new Map<AccessorStrategy, BaseUnitType>([
     [simulationModeNormalAccessor, 'dimensionless'],
     [simulationModeFullShiftAccessor, 'dimensionless'],
     [simulationModeMidShiftAccessor, 'dimensionless'],
+    [slipModeNoSlipAccessor, 'dimensionless'],
+    [slipModePrimarySlipAccessor, 'dimensionless'],
+    [slipModeSecondarySlipAccessor, 'dimensionless'],
+    [slipModeBothSlipAccessor, 'dimensionless'],
     [branchNoSlipAccessor, 'dimensionless'],
     [branchPrimarySlipAccessor, 'dimensionless'],
     [branchSecondarySlipAccessor, 'dimensionless'],
@@ -680,10 +688,23 @@ export const graphCategories: GraphCategory[] = [
                 xAccessor: timeAccessor,
                 yAccessor: [simulationModeNormalAccessor, simulationModeFullShiftAccessor, simulationModeMidShiftAccessor],
                 config: {
-                    title: "Simulation Mode vs Time",
+                    title: "Shift Mode vs Time",
                     xAxis: { name: "Time", type: "value", unit: getAxisUnit(timeAccessor) },
                     yAxis: { name: "Mode Active", type: "value", unit: getAxisUnit(simulationModeNormalAccessor) },
                     seriesNames: ["normal", "full_shift", "mid_shift"],
+                    showXLine: true,
+                    showYLine: false,
+                    tooltipPosition: TooltipPosition.BottomRight,
+                }
+            },
+            {
+                xAccessor: timeAccessor,
+                yAccessor: [slipModeNoSlipAccessor, slipModePrimarySlipAccessor, slipModeSecondarySlipAccessor, slipModeBothSlipAccessor],
+                config: {
+                    title: "Slip Mode vs Time",
+                    xAxis: { name: "Time", type: "value", unit: getAxisUnit(timeAccessor) },
+                    yAxis: { name: "Slip Mode Active", type: "value", unit: getAxisUnit(slipModeNoSlipAccessor) },
+                    seriesNames: ["NO_SLIP", "PRIMARY_SLIP", "SECONDARY_SLIP", "BOTH_SLIP"],
                     showXLine: true,
                     showYLine: false,
                     tooltipPosition: TooltipPosition.BottomRight,

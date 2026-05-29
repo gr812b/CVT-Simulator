@@ -130,17 +130,17 @@ class CarSpecs(BaseModel):
     @property
     def min_effective_cvt_ratio(self) -> float:
         """Minimum effective CVT ratio (unitless) at zero shift distance."""
-        from cvt_simulator.geometry.theoretical_models import TheoreticalModels as tm
+        from cvt_simulator.geometry.cvt_geometry import CVT_GEOMETRY
 
-        return tm.current_effective_cvt_ratio(0)
+        return CVT_GEOMETRY.effective_cvt_ratio(0)
 
     @computed_field
     @property
     def max_effective_cvt_ratio(self) -> float:
         """Maximum effective CVT ratio (unitless) at max shift distance."""
-        from cvt_simulator.geometry.theoretical_models import TheoreticalModels as tm
+        from cvt_simulator.geometry.cvt_geometry import CVT_GEOMETRY
 
-        return tm.current_effective_cvt_ratio(self.max_shift)
+        return CVT_GEOMETRY.effective_cvt_ratio(self.max_shift)
 
     class Config:
         """Pydantic configuration."""
@@ -177,5 +177,11 @@ MAX_SEC_RADIUS = _default_specs.max_sec_radius
 INITIAL_SHEAVE_DISPLACEMENT = _default_specs.initial_sheave_displacement
 MAX_SHIFT = _default_specs.max_shift
 CENTER_TO_CENTER = _default_specs.center_to_center
-MIN_EFFECTIVE_CVT_RATIO = _default_specs.min_effective_cvt_ratio
-MAX_EFFECTIVE_CVT_RATIO = _default_specs.max_effective_cvt_ratio
+
+
+def __getattr__(name: str):
+    if name == "MIN_EFFECTIVE_CVT_RATIO":
+        return _default_specs.min_effective_cvt_ratio
+    if name == "MAX_EFFECTIVE_CVT_RATIO":
+        return _default_specs.max_effective_cvt_ratio
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")

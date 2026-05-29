@@ -9,10 +9,12 @@ primary/secondary torques per the derivation:
     τ_p,ns = τ_eng - I_p * ( v̇_b,ns - ṙ_p * ω_p ) / r_p
     τ_s,ns = τ_load + I_s * ( v̇_b,ns - ṙ_s * ω_s ) / r_s
 """
-from cvt_simulator.sim_utils.system_state import SystemState
+from cvt_simulator.sim.system_state import SystemState
 from cvt_simulator.core.data_types import NoSlipResult, NoSlipBreakdown
 from cvt_simulator.geometry.theoretical_models import TheoreticalModels as tm
+from cvt_simulator.geometry.cvt_geometry import CVT_GEOMETRY
 
+cvt = CVT_GEOMETRY
 
 def compute_no_slip_candidate(
     state: SystemState,
@@ -41,12 +43,12 @@ def compute_no_slip_candidate(
     ω_s = state.ω_s
 
     # Effective radii
-    r_p = tm.primary_effective_radius(s)
-    r_s = tm.secondary_effective_radius(s)
+    r_p = cvt.primary_effective_radius(s)
+    r_s = cvt.secondary_effective_radius(s)
 
     # Time derivatives of radii: dr/dt = (dr/ds) * s_dot
-    r_p_dot = tm.primary_radius_rate_of_change(s) * s_dot
-    r_s_dot = tm.secondary_radius_rate_of_change(s) * s_dot
+    r_p_dot = cvt.primary_outer_radius_time_derivative(s, s_dot)
+    r_s_dot = cvt.secondary_outer_radius_time_derivative(s, s_dot)
 
     # Numerator terms
     tau_engine_over_r_p = τ_eng / r_p

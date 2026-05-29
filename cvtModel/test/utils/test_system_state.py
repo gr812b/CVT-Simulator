@@ -1,6 +1,6 @@
 import unittest
 
-from cvt_simulator.sim_utils.system_state import SystemState
+from cvt_simulator.sim.system_state import SystemState
 from cvt_simulator.constants.car_specs import MAX_SHIFT
 
 

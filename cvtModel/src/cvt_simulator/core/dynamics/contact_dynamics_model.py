@@ -10,11 +10,11 @@ from cvt_simulator.core.components.secondary_pulley import SecondaryPulley
 from cvt_simulator.core.components.vehicle_load import LoadModel
 from cvt_simulator.constants.car_specs import BELT_CROSS_SECTIONAL_AREA, BELT_LENGTH
 from cvt_simulator.constants.constants import RUBBER_DENSITY
-from cvt_simulator.sim_utils.system_state import SystemState
+from cvt_simulator.sim.system_state import SystemState
 from cvt_simulator.core.dynamics.drivetrain_dynamics import DrivetrainDynamics
 from cvt_simulator.core.dynamics.shift_dynamics import ShiftDynamics
 from cvt_simulator.core.slip.contact_torque_solver import ContactTorqueSolver
-from cvt_simulator.core.data_types import ContactDynamicsBreakdown
+from cvt_simulator.core.data_types import ContactDynamicsBreakdown, SlipBranch
 from cvt_simulator.geometry.cvt_geometry import CVT_GEOMETRY
 
 
@@ -42,7 +42,13 @@ class ContactDynamicsModel:
         self.secondary_pulley = secondary_pulley
         self.engine_model = engine_model
         self.load_model = load_model
-        self.contact_torque_solver = ContactTorqueSolver(primary_pulley, secondary_pulley)
+        self.contact_torque_solver = ContactTorqueSolver(
+            primary_pulley, 
+            secondary_pulley,
+            primary_inertia,
+            secondary_inertia,
+            belt_mass,
+        )
         self.drivetrain_dynamics = DrivetrainDynamics(
             primary_inertia=primary_inertia,
             secondary_inertia=secondary_inertia,
@@ -56,18 +62,17 @@ class ContactDynamicsModel:
             cvt_moving_mass=cvt_moving_mass,
         )
 
-    def get_breakdown(self, state: SystemState) -> ContactDynamicsBreakdown:
+    def get_breakdown(self, state: SystemState, contact_branch: SlipBranch) -> ContactDynamicsBreakdown:
         """Return the branch-selected contact result and downstream dynamics."""
         tau_engine = self.engine_model.get_torque(state.ω_p)
         tau_load = self.load_model.get_breakdown(state).net_torque_at_secondary
 
+        # TODO: Pass the contact branch through here
         contact = self.contact_torque_solver.solve(
             state=state,
+            contact_branch=contact_branch,
             tau_engine=tau_engine,
             tau_load=tau_load,
-            I_p=self.drivetrain_dynamics.I_p,
-            I_s=self.drivetrain_dynamics.I_s,
-            m_b=self.drivetrain_dynamics.m_b,
         )
         drivetrain = self.drivetrain_dynamics.compute_accelerations(
             state,
@@ -86,3 +91,11 @@ class ContactDynamicsModel:
             shift=shift,
             geometry=geometry,
         )
+    
+    # TODO: Temp drilling to avoid extra compute
+    def get_slip_metrics(self, state: SystemState):
+        tau_engine = self.engine_model.get_torque(state.ω_p)
+        tau_load = self.load_model.get_breakdown(state).net_torque_at_secondary
+
+        return self.contact_torque_solver.get_slip_metrics(state, tau_engine, tau_load)
+

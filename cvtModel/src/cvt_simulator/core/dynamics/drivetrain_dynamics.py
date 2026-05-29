@@ -10,14 +10,13 @@ belt transport acceleration from torques using the equations:
 This module provides a small helper class that accepts inertias and belt
 mass and exposes `compute_accelerations(state, tau_p, tau_s)`.
 """
-from cvt_simulator.sim_utils.system_state import SystemState
+from cvt_simulator.geometry.cvt_geometry import CVT_GEOMETRY
+from cvt_simulator.sim.system_state import SystemState
 from cvt_simulator.geometry.theoretical_models import TheoreticalModels as tm
 from cvt_simulator.core.components.engine import EngineModel
 from cvt_simulator.core.components.vehicle_load import LoadModel
 from cvt_simulator.core.data_types import (
     DrivetrainAccelerationBreakdown,
-    EngineTorqueBreakdown,
-    ExternalLoadForceBreakdown,
 )
 
 
@@ -48,6 +47,7 @@ class DrivetrainDynamics:
         self.m_b = float(belt_mass)
         self.engine_model = engine_model
         self.load_model = load_model
+        self.cvt = CVT_GEOMETRY
 
     def compute_accelerations(self, state: SystemState, τ_p: float, τ_s: float) -> DrivetrainAccelerationBreakdown:
         """Compute omega and belt-transport accelerations.
@@ -70,8 +70,8 @@ class DrivetrainDynamics:
         τ_load = load_bd.net_torque_at_secondary
 
         # Effective pitch radii from geometry
-        r_p_eff = tm.primary_effective_radius(s)
-        r_s_eff = tm.secondary_effective_radius(s)
+        r_p_eff = self.cvt.primary_effective_radius(s)
+        r_s_eff = self.cvt.secondary_effective_radius(s)
 
         # ω_p_dot = (τ_eng - τ_p) / I_p
         ω_p_dot = (τ_eng - τ_p) / self.I_p

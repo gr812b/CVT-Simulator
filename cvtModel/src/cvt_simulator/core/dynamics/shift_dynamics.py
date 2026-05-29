@@ -6,7 +6,7 @@ and net axial force balance.
 from cvt_simulator.core.data_types import CvtDynamicsBreakdown
 from cvt_simulator.core.components.primary_pulley import PrimaryPulley
 from cvt_simulator.core.components.secondary_pulley import SecondaryPulley
-from cvt_simulator.sim_utils.system_state import SystemState
+from cvt_simulator.sim.system_state import SystemState
 
 class ShiftDynamics:
     """Compute shift acceleration from pulley states and axial force balance.

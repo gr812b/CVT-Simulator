@@ -21,8 +21,8 @@ from cvt_simulator.constants.constants import (
 	RUBBER_ALUMINUM_STATIC_FRICTION,
 	RUBBER_DENSITY,
 )
-from cvt_simulator.sim_utils.system_state import SystemState
-from cvt_simulator.core.slip.no_slip_candidate import NoSlipResult
+from cvt_simulator.sim.system_state import SystemState
+from cvt_simulator.core.slip.determiner.no_slip_candidate import NoSlipResult
 
 
 class TorqueAdmissibility:

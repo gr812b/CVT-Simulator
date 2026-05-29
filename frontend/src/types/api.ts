@@ -139,6 +139,10 @@ export interface components {
             time: number;
             /** Mode */
             mode: string;
+            /** Shift Mode */
+            shift_mode: string;
+            /** Slip Mode */
+            slip_mode: string;
             state: components["schemas"]["SystemStateModel"];
             derived_state: components["schemas"]["DerivedKinematicStateModel"];
             contact_breakdown: components["schemas"]["ContactDynamicsBreakdownModel"];

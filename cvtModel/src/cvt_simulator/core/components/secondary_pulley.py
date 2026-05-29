@@ -9,7 +9,7 @@ import numpy as np
 from cvt_simulator.geometry.cvt_geometry import CVT_GEOMETRY
 from cvt_simulator.constants.car_specs import MAX_SHIFT
 from cvt_simulator.geometry.theoretical_models import TheoreticalModels as tm
-from cvt_simulator.sim_utils.system_state import SystemState
+from cvt_simulator.sim.system_state import SystemState
 from cvt_simulator.core.data_types import (
     HelixForceBreakdown,
     SpringTorsForceBreakdown,

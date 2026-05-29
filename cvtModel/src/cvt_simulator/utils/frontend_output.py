@@ -6,8 +6,8 @@ from typing import Dict, List
 import pandas as pd
 
 from cvt_simulator.constants.car_specs import MAX_SHIFT
-from cvt_simulator.core.data_types import ContactDynamicsBreakdown
-from cvt_simulator.sim_utils.system_state import SystemState
+from cvt_simulator.core.data_types import ContactDynamicsBreakdown, SlipBranch
+from cvt_simulator.sim.system_state import SystemState
 from cvt_simulator.sim.simulation_runner import SimulationRunner
 from cvt_simulator.sim_utils.simulation_args import SimulationArgs
 from cvt_simulator.sim_utils.simulation_result import SimulationResult
@@ -24,6 +24,8 @@ class AnalysisStepData:
 
     time: float
     mode: str
+    shift_mode: str
+    slip_mode: str
     state: SystemState
     derived_state: "DerivedKinematicState"
     contact_breakdown: ContactDynamicsBreakdown
@@ -140,22 +142,6 @@ class SimulationAnalysisResult:
                 display_state.s = float(MAX_SHIFT)
                 display_state.s_dot = min(0.0, display_state.s_dot)
 
-            contact_breakdown = contact_model.get_breakdown(display_state)
-            # Sanitize enum values to primitives to avoid retaining Enum internals
-            try:
-                # Convert top-level branch enum to its name
-                if hasattr(contact_breakdown, "contact") and getattr(contact_breakdown, "contact") is not None:
-                    contact = contact_breakdown.contact
-                    if hasattr(contact, "branch") and contact.branch is not None:
-                        contact.branch = contact.branch.name
-                    if hasattr(contact, "branch_result") and getattr(contact, "branch_result") is not None:
-                        br = contact.branch_result
-                        if hasattr(br, "branch") and br.branch is not None:
-                            br.branch = br.branch.name
-            except Exception:
-                # Best-effort sanitization; failure is non-fatal
-                pass
-
             derived_state = DerivedKinematicState(
                 car_velocity=car_velocities[index],
                 car_position=float(car_positions[index]),
@@ -165,18 +151,50 @@ class SimulationAnalysisResult:
             )
 
             mode = "unknown"
+            shift_mode = "unknown"
+            slip_mode = "unknown"
             if getattr(result, "modes", None) is not None and index < len(result.modes):
                 mode = str(result.modes[index])
+                if ":" in mode:
+                    shift_mode, slip_mode = mode.split(":", 1)
+                else:
+                    shift_mode = mode
+
+            contact_branch = self._slip_branch_from_mode(slip_mode)
+            contact_breakdown = contact_model.get_breakdown(display_state, contact_branch)
+
+            # Sanitize enum values to primitives to avoid retaining Enum internals.
+            try:
+                if hasattr(contact_breakdown, "contact") and getattr(contact_breakdown, "contact") is not None:
+                    contact = contact_breakdown.contact
+                    if hasattr(contact, "branch") and contact.branch is not None:
+                        contact.branch = contact.branch.name
+                    if hasattr(contact, "branch_result") and getattr(contact, "branch_result") is not None:
+                        br = contact.branch_result
+                        if hasattr(br, "branch") and br.branch is not None:
+                            br.branch = br.branch.name
+            except Exception:
+                # Best-effort sanitization; failure is non-fatal.
+                pass
 
             self.rows.append(
                 AnalysisStepData(
                     time=float(time),
                     mode=mode,
+                    shift_mode=shift_mode,
+                    slip_mode=slip_mode,
                     state=display_state,
                     derived_state=derived_state,
                     contact_breakdown=contact_breakdown,
                 )
             )
+
+    @staticmethod
+    def _slip_branch_from_mode(slip_mode: str) -> SlipBranch:
+        try:
+            return SlipBranch[slip_mode]
+        except KeyError:
+            return SlipBranch.NO_SLIP
 
     @staticmethod
     def from_csv(filename: str = "simulation_output.csv", args: SimulationArgs | None = None):

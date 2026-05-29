@@ -7,7 +7,7 @@ from cvt_simulator.ramps.piecewise_ramp import PiecewiseRamp
 import numpy as np
 from cvt_simulator.geometry.cvt_geometry import CVT_GEOMETRY
 from cvt_simulator.constants.car_specs import MAX_SHIFT, INITIAL_FLYWEIGHT_RADIUS
-from cvt_simulator.sim_utils.system_state import SystemState
+from cvt_simulator.sim.system_state import SystemState
 from cvt_simulator.core.data_types import (
     flyweightForceBreakdown,
     springCompForceBreakdown,

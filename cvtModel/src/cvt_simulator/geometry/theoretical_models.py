@@ -1,9 +1,9 @@
 import numpy as np
 from cvt_simulator.constants.car_specs import CENTER_TO_CENTER, BELT_HEIGHT, BELT_WIDTH_BOTTOM, BELT_WIDTH_TOP
-from cvt_simulator.geometry.cvt_geometry import CVT_GEOMETRY
+# from cvt_simulator.geometry.cvt_geometry import CVT_GEOMETRY
 
 # Use shared CVT geometry instance
-_cvt_geometry = CVT_GEOMETRY
+# _cvt_geometry = CVT_GEOMETRY
 
 
 class TheoreticalModels:
@@ -62,21 +62,21 @@ class TheoreticalModels:
     def newtons_second_law(m: float, a: float) -> float:
         return m * a
 
-    @staticmethod  # See Enman's excel sheet
-    def primary_outer_radius(d: float) -> float:
-        return _cvt_geometry.primary_outer_radius(d)
+    # @staticmethod  # See Enman's excel sheet
+    # def primary_outer_radius(d: float) -> float:
+    #     return _cvt_geometry.primary_outer_radius(d)
 
-    @staticmethod  # See Enman's excel sheet
-    def secondary_outer_radius(d: float) -> float:
-        return _cvt_geometry.secondary_outer_radius(d)
+    # @staticmethod  # See Enman's excel sheet
+    # def secondary_outer_radius(d: float) -> float:
+    #     return _cvt_geometry.secondary_outer_radius(d)
 
-    @staticmethod
-    def primary_effective_radius(d: float) -> float:
-        return _cvt_geometry.primary_effective_radius(d)
+    # @staticmethod
+    # def primary_effective_radius(d: float) -> float:
+    #     return _cvt_geometry.primary_effective_radius(d)
 
-    @staticmethod
-    def secondary_effective_radius(d: float) -> float:
-        return _cvt_geometry.secondary_effective_radius(d)
+    # @staticmethod
+    # def secondary_effective_radius(d: float) -> float:
+    #     return _cvt_geometry.secondary_effective_radius(d)
 
     @staticmethod
     def centroid_offset() -> float:
@@ -98,23 +98,23 @@ class TheoreticalModels:
         r_eff = TheoreticalModels.secondary_effective_radius(d)
         return r_eff + BELT_HEIGHT / 2 - TheoreticalModels.centroid_offset()
 
-    @staticmethod
-    def primary_radius_rate_of_change(d: float) -> float:
-        """Get dr_p/dd at current shift position."""
-        return _cvt_geometry._primary_outer_radius_shift_derivative(d)
+    # @staticmethod
+    # def primary_radius_rate_of_change(d: float) -> float:
+    #     """Get dr_p/dd at current shift position."""
+    #     return _cvt_geometry._primary_outer_radius_shift_derivative(d)
 
-    @staticmethod
-    def secondary_radius_rate_of_change(d: float) -> float:
-        """Get dr_s/dd at current shift position."""
-        return _cvt_geometry._secondary_outer_radius_shift_derivative(d)
+    # @staticmethod
+    # def secondary_radius_rate_of_change(d: float) -> float:
+    #     """Get dr_s/dd at current shift position."""
+    #     return _cvt_geometry._secondary_outer_radius_shift_derivative(d)
 
-    @staticmethod
-    def current_effective_cvt_ratio(d: float) -> float:
-        return _cvt_geometry.effective_cvt_ratio(d)
+    # @staticmethod
+    # def current_effective_cvt_ratio(d: float) -> float:
+    #     return _cvt_geometry.effective_cvt_ratio(d)
 
-    @staticmethod
-    def current_effective_cvt_ratio_time_derivative(d: float, v: float) -> float:
-        return _cvt_geometry.effective_cvt_ratio_time_derivative(d, v)
+    # @staticmethod
+    # def current_effective_cvt_ratio_time_derivative(d: float, v: float) -> float:
+    #     return _cvt_geometry.effective_cvt_ratio_time_derivative(d, v)
 
     @staticmethod
     def wrap_angle(

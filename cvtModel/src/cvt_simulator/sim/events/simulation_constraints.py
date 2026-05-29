@@ -1,7 +1,7 @@
 from cvt_simulator.constants.car_specs import (
     MAX_SHIFT,
 )
-from cvt_simulator.core.dynamics.contact_dynamics_model import ContactDynamicsModel
+
 from cvt_simulator.utils.state_computations import (
     secondary_pulley_angular_velocity_to_car_velocity,
 )

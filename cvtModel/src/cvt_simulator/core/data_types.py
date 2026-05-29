@@ -153,15 +153,12 @@ class SlipMetricsResult:
 	secondary_relative_speed: float
 	primary_slip_direction: float
 	secondary_slip_direction: float
-	primary_admissible: bool
-	secondary_admissible: bool
 	admissibility: TorqueAdmissibilityResult
 	no_slip: NoSlipResult
 
 
 @dataclass
 class BranchTorqueResult:
-	branch: SlipBranch
 	tau_p: float
 	tau_s: float
 

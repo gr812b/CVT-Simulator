@@ -1,4 +1,4 @@
-from cvt_simulator.sim_utils.system_state import SystemState
+from cvt_simulator.sim.system_state import SystemState
 from typing import Any
 from cvt_simulator.utils.state_computations import (
     integrate_positions_trapezoidal,

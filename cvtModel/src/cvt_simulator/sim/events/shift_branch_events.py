@@ -1,53 +1,10 @@
-from cvt_simulator.constants.car_specs import (
-    MAX_SHIFT,
-)
+from cvt_simulator.core.data_types import SlipBranch
 from cvt_simulator.core.dynamics.contact_dynamics_model import ContactDynamicsModel
-from cvt_simulator.utils.state_computations import (
-    secondary_pulley_angular_velocity_to_car_velocity,
-)
-from cvt_simulator.sim_utils.system_state import SystemState
+from cvt_simulator.sim.system_state import SystemState
+from cvt_simulator.constants.car_specs import MAX_SHIFT
+from cvt_simulator.utils.simulation_constraints import update_y
 
-MIN_CAR_VELOCITY_MPS = -20.0
-
-
-def update_y(y, state: SystemState):
-    stateArray = state.to_array()
-    for i in range(len(y)):
-        y[i] = stateArray[i]
-
-
-def shift_constraint_event(t, y):
-    state = SystemState.from_array(y)
-    shift_velocity = state.s_dot
-    shift_distance = state.s
-
-    if shift_distance < 0:
-        state.s = 0
-        state.s_dot = max(0, shift_velocity)
-
-    elif shift_distance > MAX_SHIFT:
-        state.s = MAX_SHIFT
-        state.s_dot = min(0, shift_velocity)
-
-    update_y(y, state)
-    return 1
-
-
-def car_velocity_constraint_event(t, y):
-    state = SystemState.from_array(y)
-    return (
-        secondary_pulley_angular_velocity_to_car_velocity(
-            state.ω_s
-        )
-        - MIN_CAR_VELOCITY_MPS
-    )
-
-
-car_velocity_constraint_event.terminal = True
-car_velocity_constraint_event.direction = -1
-
-
-def get_shift_steady_event(contact_model: ContactDynamicsModel):
+def get_shift_steady_event(contact_model: ContactDynamicsModel, contact_branch: SlipBranch):
     """
     Returns an event function that triggers only when:
       1. The system is close enough to full shift (i.e. shift_distance within tol of MAX_SHIFT).
@@ -79,14 +36,14 @@ def get_shift_steady_event(contact_model: ContactDynamicsModel):
         # Once near full shift, return the computed shift acceleration.
         # The event will trigger when this value crosses from negative to positive.
         # TODO: Clean this up!
-        return contact_model.get_breakdown(state).shift.acceleration
+        return contact_model.get_breakdown(state, contact_branch).shift.acceleration
 
     shift_steady_event.terminal = True
     shift_steady_event.direction = 1  # Looking for a negative-to-positive crossing.
     return shift_steady_event
 
 
-def get_back_shift_event(contact_model: ContactDynamicsModel):
+def get_back_shift_event(contact_model: ContactDynamicsModel, contact_branch: SlipBranch):
     """
     Returns an event function that triggers when the system wants to back-shift
     from full shift position. This detects when the shift acceleration becomes
@@ -101,7 +58,7 @@ def get_back_shift_event(contact_model: ContactDynamicsModel):
             return 1.0  # Return positive value when not at full shift
 
         # Calculate the shift acceleration
-        shift_accel = contact_model.get_breakdown(state).shift.acceleration
+        shift_accel = contact_model.get_breakdown(state, contact_branch).shift.acceleration
 
         # Return the acceleration + small threshold
         # Event triggers when this crosses from positive to negative
@@ -115,6 +72,7 @@ def get_back_shift_event(contact_model: ContactDynamicsModel):
 
 def get_mid_shift_steady_event(
     contact_model: ContactDynamicsModel,
+    contact_branch: SlipBranch,
     velocity_tol: float = 1e-4,
     accel_tol: float = 0.1,
     wake_accel_guard_tol: float = 0.5,
@@ -143,7 +101,7 @@ def get_mid_shift_steady_event(
         ):
             return 1.0
 
-        shift_breakdown = contact_model.get_breakdown(state).shift
+        shift_breakdown = contact_model.get_breakdown(state, contact_branch).shift
         shift_accel = shift_breakdown.acceleration
 
         # Guard against immediate wake chatter: only lock if the locked-state
@@ -154,7 +112,7 @@ def get_mid_shift_steady_event(
             ω_p=state.ω_p,
             ω_s=state.ω_s,
         )
-        locked_shift_accel = contact_model.get_breakdown(locked_state).shift.acceleration
+        locked_shift_accel = contact_model.get_breakdown(locked_state, contact_branch).shift.acceleration
 
         # Deterministic event value: <= 0 means quasi-static and eligible to lock.
         return max(
@@ -172,6 +130,7 @@ def get_mid_shift_steady_event(
 
 def get_mid_shift_wake_event(
     contact_model: ContactDynamicsModel,
+    contact_branch: SlipBranch,
     wake_accel_tol: float = 1.5,
     boundary_margin: float = 1e-5,
 ):
@@ -191,7 +150,7 @@ def get_mid_shift_wake_event(
 
     def mid_shift_wake_event(t, y):
         state = SystemState.from_array(y)
-        shift_accel = contact_model.get_breakdown(state).shift.acceleration
+        shift_accel = contact_model.get_breakdown(state, contact_branch).shift.acceleration
         if state.s <= boundary_margin:
             return shift_accel - wake_accel_tol
         if state.s >= MAX_SHIFT - boundary_margin:
@@ -201,10 +160,3 @@ def get_mid_shift_wake_event(
     mid_shift_wake_event.terminal = True
     mid_shift_wake_event.direction = 1  # wake when value rises through zero
     return mid_shift_wake_event
-
-
-# Export all constraints
-constraints = [
-    shift_constraint_event,
-    car_velocity_constraint_event,
-]

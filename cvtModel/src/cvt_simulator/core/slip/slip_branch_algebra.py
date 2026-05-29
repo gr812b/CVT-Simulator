@@ -10,12 +10,12 @@ from cvt_simulator.core.components.secondary_pulley import SecondaryPulley
 from cvt_simulator.constants.car_specs import BELT_CROSS_SECTIONAL_AREA, SHEAVE_ANGLE
 from cvt_simulator.constants.constants import RUBBER_ALUMINUM_KINETIC_FRICTION, RUBBER_DENSITY
 from cvt_simulator.core.data_types import SlipMetricsResult
-from cvt_simulator.sim_utils.system_state import SystemState
+from cvt_simulator.sim.system_state import SystemState
 from cvt_simulator.geometry.cvt_geometry import CVT_GEOMETRY
 
 
 def primary_slip_algebra(
-    decision: SlipMetricsResult,
+    slip_dir: float,
     state: SystemState,
     tau_load: float,
     I_s: float,
@@ -26,9 +26,9 @@ def primary_slip_algebra(
     s_dot = state.s_dot
     v_b = state.v_b
 
-    r_p = decision.no_slip.breakdown.r_p
-    r_s = decision.no_slip.breakdown.r_s
-    r_s_dot = decision.no_slip.breakdown.r_s_dot
+    r_p = CVT_GEOMETRY.primary_effective_radius(s)
+    r_s = CVT_GEOMETRY.secondary_effective_radius(s)
+    r_s_dot = CVT_GEOMETRY.secondary_outer_radius_time_derivative(s, s_dot)
 
     r_p_cm = CVT_GEOMETRY.primary_centroid_radius(s)
     r_p_cm_dot = CVT_GEOMETRY.primary_outer_radius_time_derivative(s, s_dot)
@@ -41,7 +41,7 @@ def primary_slip_algebra(
     rho_b = RUBBER_DENSITY
     A_b = BELT_CROSS_SECTIONAL_AREA
 
-    sigma_p = decision.primary_slip_direction
+    sigma_p = slip_dir
 
     numerator = (
         sigma_p * (2.0 * mu_k * F_p_ax * math.tan(beta) - rho_b * A_b * phi_p * r_p_cm_dot * v_b)
@@ -61,7 +61,7 @@ def primary_slip_algebra(
 
 
 def secondary_slip_algebra(
-    decision: SlipMetricsResult,
+    slip_dir: float,
     state: SystemState,
     tau_engine: float,
     I_p: float,
@@ -72,10 +72,10 @@ def secondary_slip_algebra(
     s_dot = state.s_dot
     v_b = state.v_b
 
-    r_p = decision.no_slip.breakdown.r_p
-    r_p_dot = decision.no_slip.breakdown.r_p_dot
-    r_s = decision.no_slip.breakdown.r_s
-    r_s_dot = decision.no_slip.breakdown.r_s_dot
+    r_p = CVT_GEOMETRY.primary_effective_radius(s)
+    r_p_dot = CVT_GEOMETRY.primary_outer_radius_time_derivative(s, s_dot)
+    r_s = CVT_GEOMETRY.secondary_effective_radius(s)
+    r_s_dot = CVT_GEOMETRY.secondary_outer_radius_time_derivative(s, s_dot)
 
     r_s_cm = CVT_GEOMETRY.secondary_centroid_radius(s)
     r_s_cm_dot = CVT_GEOMETRY.secondary_outer_radius_time_derivative(s, s_dot)
@@ -91,7 +91,7 @@ def secondary_slip_algebra(
     rho_b = RUBBER_DENSITY
     A_b = BELT_CROSS_SECTIONAL_AREA
 
-    sigma_s = decision.secondary_slip_direction
+    sigma_s = slip_dir
     den_s = 1.0 - sigma_s * r_s * mu_k * math.tan(beta) * helix_rotation_rate
 
     traction_common = (
@@ -119,7 +119,8 @@ def secondary_slip_algebra(
 
 
 def both_slip_algebra(
-    decision: SlipMetricsResult,
+    slip_dir_p: float,
+    slip_dir_s: float,
     state: SystemState,
     m_b: float,
     primary_pulley: PrimaryPulley,
@@ -129,8 +130,8 @@ def both_slip_algebra(
     s_dot = state.s_dot
     v_b = state.v_b
 
-    r_p = decision.no_slip.breakdown.r_p
-    r_s = decision.no_slip.breakdown.r_s
+    r_p = CVT_GEOMETRY.primary_effective_radius(s)
+    r_s = CVT_GEOMETRY.secondary_effective_radius(s)
 
     r_p_cm = CVT_GEOMETRY.primary_centroid_radius(s)
     r_p_cm_dot = CVT_GEOMETRY.primary_outer_radius_time_derivative(s, s_dot)
@@ -151,8 +152,8 @@ def both_slip_algebra(
     rho_b = RUBBER_DENSITY
     A_b = BELT_CROSS_SECTIONAL_AREA
 
-    sigma_p = decision.primary_slip_direction
-    sigma_s = decision.secondary_slip_direction
+    sigma_p = slip_dir_p
+    sigma_s = slip_dir_s
 
     den_s = 1.0 - sigma_s * r_s * mu_k * math.tan(beta) * helix_rotation_rate
     if abs(den_s) < 1e-9:
