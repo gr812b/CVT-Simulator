@@ -48,9 +48,7 @@ class SimulationResult:
                 s=row["shift_distance"],
                 s_dot=row["shift_velocity"],
                 ω_p=row["primary_pulley_angular_velocity"],
-                ω_s=row[
-                    "secondary_pulley_angular_velocity"
-                ],
+                ω_s=row["secondary_pulley_angular_velocity"],
             )
             for _, row in df.iterrows()
         ]
@@ -66,18 +64,14 @@ class SimulationResult:
         car_positions = integrate_positions_trapezoidal(
             self.time,
             [
-                secondary_pulley_angular_velocity_to_car_velocity(
-                    s.ω_s
-                )
+                secondary_pulley_angular_velocity_to_car_velocity(s.ω_s)
                 for s in self.states
             ],
         )
         engine_positions = integrate_positions_trapezoidal(
             self.time,
             [
-                primary_pulley_angular_velocity_to_engine_angular_velocity(
-                    s.ω_p
-                )
+                primary_pulley_angular_velocity_to_engine_angular_velocity(s.ω_p)
                 for s in self.states
             ],
         )
@@ -87,22 +81,14 @@ class SimulationResult:
             "mode": self.modes if self.modes is not None else [None] * len(self.time),
             "shift_distance": [state.s for state in self.states],
             "shift_velocity": [state.s_dot for state in self.states],
-            "primary_pulley_angular_velocity": [
-                state.ω_p for state in self.states
-            ],
-            "secondary_pulley_angular_velocity": [
-                state.ω_s for state in self.states
-            ],
+            "primary_pulley_angular_velocity": [state.ω_p for state in self.states],
+            "secondary_pulley_angular_velocity": [state.ω_s for state in self.states],
             "car_velocity": [
-                secondary_pulley_angular_velocity_to_car_velocity(
-                    s.ω_s
-                )
+                secondary_pulley_angular_velocity_to_car_velocity(s.ω_s)
                 for s in self.states
             ],
             "engine_angular_velocity": [
-                primary_pulley_angular_velocity_to_engine_angular_velocity(
-                    s.ω_p
-                )
+                primary_pulley_angular_velocity_to_engine_angular_velocity(s.ω_p)
                 for s in self.states
             ],
             "car_position": car_positions,
@@ -121,22 +107,14 @@ class SimulationResult:
         field_data = {
             "shift_distance": [state.s for state in self.states],
             "shift_velocity": [state.s_dot for state in self.states],
-            "primary_pulley_angular_velocity": [
-                state.ω_p for state in self.states
-            ],
-            "secondary_pulley_angular_velocity": [
-                state.ω_s for state in self.states
-            ],
+            "primary_pulley_angular_velocity": [state.ω_p for state in self.states],
+            "secondary_pulley_angular_velocity": [state.ω_s for state in self.states],
             "car_velocity": [
-                secondary_pulley_angular_velocity_to_car_velocity(
-                    s.ω_s
-                )
+                secondary_pulley_angular_velocity_to_car_velocity(s.ω_s)
                 for s in self.states
             ],
             "engine_angular_velocity": [
-                primary_pulley_angular_velocity_to_engine_angular_velocity(
-                    s.ω_p
-                )
+                primary_pulley_angular_velocity_to_engine_angular_velocity(s.ω_p)
                 for s in self.states
             ],
         }

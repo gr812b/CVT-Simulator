@@ -3,10 +3,12 @@
 Computes shift acceleration using primary and secondary pulley states
 and net axial force balance.
 """
+
 from cvt_simulator.core.data_types import CvtDynamicsBreakdown
 from cvt_simulator.core.components.primary_pulley import PrimaryPulley
 from cvt_simulator.core.components.secondary_pulley import SecondaryPulley
 from cvt_simulator.sim.system_state import SystemState
+
 
 class ShiftDynamics:
     """Compute shift acceleration from pulley states and axial force balance.
@@ -53,7 +55,9 @@ class ShiftDynamics:
         primary_forces = self.primary_pulley.calculate_axial_clamping_force(state)
 
         # Get secondary pulley forces (torque-reactive)
-        secondary_forces = self.secondary_pulley.calculate_axial_clamping_force(state, τ_s)
+        secondary_forces = self.secondary_pulley.calculate_axial_clamping_force(
+            state, τ_s
+        )
 
         prim_axial = primary_forces.net
         sec_axial = secondary_forces.net
@@ -86,4 +90,3 @@ class ShiftDynamics:
         if s_dot > 0:
             return -friction_magnitude
         return friction_magnitude
-

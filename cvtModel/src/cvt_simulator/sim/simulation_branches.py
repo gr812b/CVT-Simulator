@@ -5,7 +5,6 @@ import numpy as np
 
 from cvt_simulator.core.data_types import SlipBranch
 from cvt_simulator.sim.simulation_ode import SimulationODE
-from cvt_simulator.sim.system_state import SystemState
 
 from cvt_simulator.sim.events.simulation_constraints import (
     car_velocity_constraint_event,
@@ -23,7 +22,6 @@ from cvt_simulator.sim.events.contact_branch_events import (
     get_contact_branch_events,
     next_contact_branch,
 )
-
 
 CONTACT_EVENT_NAMES = {
     "primary_slip_entry_event",
@@ -180,8 +178,7 @@ class SimulationBranchManager:
             )
 
         did_transition = (
-            next_shift_mode != shift_mode
-            or next_contact_branch is not contact_branch
+            next_shift_mode != shift_mode or next_contact_branch is not contact_branch
         )
 
         return SimulationBranchTransition(

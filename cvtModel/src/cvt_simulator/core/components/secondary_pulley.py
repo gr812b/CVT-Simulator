@@ -3,7 +3,7 @@
 Exposes `SecondaryPulley.calculate_axial_clamping_force(shift, torque)` which returns
 `(axial_force, SecondaryForceBreakdown)` using existing datatypes.
 """
-from typing import Tuple
+
 from cvt_simulator.ramps.theta_ramp import ThetaRamp
 import numpy as np
 from cvt_simulator.geometry.cvt_geometry import CVT_GEOMETRY
@@ -17,7 +17,6 @@ from cvt_simulator.core.data_types import (
     SecondaryForceBreakdown,
     PulleyForces,
 )
-from cvt_simulator.core.components.belt_wrap import BeltWrap
 
 
 class SecondaryPulley:
@@ -50,9 +49,12 @@ class SecondaryPulley:
         self.helix_radius = helix_radius
         self.cvt = CVT_GEOMETRY
         from cvt_simulator.core.components.belt_wrap import BeltWrap
+
         self.belt_wrap = BeltWrap(is_primary=False)
 
-    def calculate_axial_clamping_force(self, state: SystemState, τ: float) -> PulleyForces:
+    def calculate_axial_clamping_force(
+        self, state: SystemState, τ: float
+    ) -> PulleyForces:
         """Return (axial_clamping_force, SecondaryForceBreakdown) from `state` and `tau`.
 
         Args:
@@ -77,9 +79,7 @@ class SecondaryPulley:
 
         return PulleyForces(pulley_breakdown=breakdown, belt_wrap=belt, net=axial_total)
 
-    def _calculate_helix_force(
-        self, τ: float, s: float
-    ) -> HelixForceBreakdown:
+    def _calculate_helix_force(self, τ: float, s: float) -> HelixForceBreakdown:
         """Calculate helix cam force from transmitted torque.
 
         Uses: F_s,helix,ax = [τ_s + k_s,0(θ_s,0 + θ_s(s)) * dθ_s/ds] / 2
@@ -116,4 +116,3 @@ class SecondaryPulley:
         total_rotation = self.initial_rotation + rotation_from_shift
         net = tm.hookes_law_tors(self.spring_coeff_tors, total_rotation)
         return SpringTorsForceBreakdown(rotation=total_rotation, net=net)
-

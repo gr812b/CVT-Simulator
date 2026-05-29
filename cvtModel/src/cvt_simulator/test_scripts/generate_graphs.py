@@ -17,18 +17,12 @@ def _build_series(result: SimulationResult) -> dict[str, np.ndarray]:
     time = np.asarray(result.time)
     shift_distance = np.asarray([state.s for state in result.states])
     shift_velocity = np.asarray([state.s_dot for state in result.states])
-    primary_omega = np.asarray(
-        [state.ω_p for state in result.states]
-    )
-    secondary_omega = np.asarray(
-        [state.ω_s for state in result.states]
-    )
+    primary_omega = np.asarray([state.ω_p for state in result.states])
+    secondary_omega = np.asarray([state.ω_s for state in result.states])
 
     car_velocity = np.asarray(
         [
-            secondary_pulley_angular_velocity_to_car_velocity(
-                state.ω_s
-            )
+            secondary_pulley_angular_velocity_to_car_velocity(state.ω_s)
             for state in result.states
         ]
     )

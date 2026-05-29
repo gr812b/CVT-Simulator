@@ -27,7 +27,7 @@ from typing import Callable
 from cvt_simulator.core.data_types import SlipBranch, SlipMetricsResult
 from cvt_simulator.core.dynamics.contact_dynamics_model import ContactDynamicsModel
 from cvt_simulator.sim.system_state import SystemState
-from cvt_simulator.constants.tuning import BELT_STICK_SPEED_THRESHOLD
+
 thres = 0.1
 
 CONTACT_SLIP_ENTER_SPEED = 0.5 * thres
@@ -146,7 +146,9 @@ def _secondary_exit_value(metrics: SlipMetricsResult) -> float:
     return max(speed_excess, torque_outside)
 
 
-def _make_event(contact_model: ContactDynamicsModel, value_fn: Callable, direction: int):
+def _make_event(
+    contact_model: ContactDynamicsModel, value_fn: Callable, direction: int
+):
     def event(t, y):
         state = SystemState.from_array(y)
         metrics = contact_model.get_slip_metrics(state)

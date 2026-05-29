@@ -56,8 +56,7 @@ class SimulationRunner:
         s=0.0,
         s_dot=0.0,
         # Initial secondary pulley angular velocity derived from initial car velocity.
-        ω_s=rpm_to_rad_s(0.1)
-        / (GEARBOX_RATIO * CVT_GEOMETRY.effective_cvt_ratio(0)),
+        ω_s=rpm_to_rad_s(0.1) / (GEARBOX_RATIO * CVT_GEOMETRY.effective_cvt_ratio(0)),
         # Initial primary pulley angular velocity.
         ω_p=rpm_to_rad_s(1800),
         v_b=0.0,

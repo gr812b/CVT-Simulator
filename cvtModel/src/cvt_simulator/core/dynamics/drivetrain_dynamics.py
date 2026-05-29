@@ -10,9 +10,9 @@ belt transport acceleration from torques using the equations:
 This module provides a small helper class that accepts inertias and belt
 mass and exposes `compute_accelerations(state, tau_p, tau_s)`.
 """
+
 from cvt_simulator.geometry.cvt_geometry import CVT_GEOMETRY
 from cvt_simulator.sim.system_state import SystemState
-from cvt_simulator.geometry.theoretical_models import TheoreticalModels as tm
 from cvt_simulator.core.components.engine import EngineModel
 from cvt_simulator.core.components.vehicle_load import LoadModel
 from cvt_simulator.core.data_types import (
@@ -49,7 +49,9 @@ class DrivetrainDynamics:
         self.load_model = load_model
         self.cvt = CVT_GEOMETRY
 
-    def compute_accelerations(self, state: SystemState, τ_p: float, τ_s: float) -> DrivetrainAccelerationBreakdown:
+    def compute_accelerations(
+        self, state: SystemState, τ_p: float, τ_s: float
+    ) -> DrivetrainAccelerationBreakdown:
         """Compute omega and belt-transport accelerations.
 
         Args:
@@ -91,4 +93,3 @@ class DrivetrainDynamics:
             tau_p=τ_p,
             tau_s=τ_s,
         )
-

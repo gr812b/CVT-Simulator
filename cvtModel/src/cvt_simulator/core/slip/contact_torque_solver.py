@@ -7,12 +7,15 @@ selected contact torques and belt acceleration.
 
 from cvt_simulator.core.components.primary_pulley import PrimaryPulley
 from cvt_simulator.core.components.secondary_pulley import SecondaryPulley
-from cvt_simulator.core.data_types import ContactTorqueResult, SlipBranch, SlipMetricsResult
+from cvt_simulator.core.data_types import (
+    ContactTorqueResult,
+    SlipBranch,
+    SlipMetricsResult,
+)
 from cvt_simulator.sim.system_state import SystemState
 
 from cvt_simulator.core.slip.torque_solver import TorqueSolver
 from cvt_simulator.core.slip.determiner.slip_metrics import SlipMetrics
-from cvt_simulator.core.slip.determiner.no_slip_candidate import compute_no_slip_candidate
 from cvt_simulator.core.slip.determiner.torque_admissibility import TorqueAdmissibility
 
 
@@ -33,9 +36,11 @@ class ContactTorqueSolver:
 
         self.primary_pulley = primary_pulley
         self.secondary_pulley = secondary_pulley
-        self.torque_admissibility = TorqueAdmissibility(primary_pulley, secondary_pulley)
+        self.torque_admissibility = TorqueAdmissibility(
+            primary_pulley, secondary_pulley
+        )
         self.slip_metric_solver = SlipMetrics(
-            torque_admissibility_solver = self.torque_admissibility,
+            torque_admissibility_solver=self.torque_admissibility,
             I_p=I_p,
             I_s=I_s,
             m_b=m_b,
@@ -50,7 +55,9 @@ class ContactTorqueSolver:
         tau_load: float,
     ) -> ContactTorqueResult:
         """Return the branch-selected contact torques and belt acceleration."""
-        slip_metrics = self.slip_metric_solver.get_slip_metrics(state, tau_engine, tau_load)
+        slip_metrics = self.slip_metric_solver.get_slip_metrics(
+            state, tau_engine, tau_load
+        )
 
         branch_result = self.branch_resolver.resolve_branch(
             branch=contact_branch,
@@ -72,8 +79,10 @@ class ContactTorqueSolver:
             slip_metrics=slip_metrics,
             branch_result=branch_result,
         )
-    
+
     # TODO: Temp drilling to avoid extra compute
-    def get_slip_metrics(self, state: SystemState, tau_engine: float, tau_load: float) -> SlipMetricsResult:
+    def get_slip_metrics(
+        self, state: SystemState, tau_engine: float, tau_load: float
+    ) -> SlipMetricsResult:
         """Return the slip metrics for the current state and torques."""
         return self.slip_metric_solver.get_slip_metrics(state, tau_engine, tau_load)

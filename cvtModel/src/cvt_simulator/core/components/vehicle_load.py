@@ -50,9 +50,7 @@ class LoadModel:
         The velocity term v is derived from the state vector's secondary pulley
         angular velocity ω_s.
         """
-        velocity = secondary_pulley_angular_velocity_to_car_velocity(
-            state.ω_s
-        )
+        velocity = secondary_pulley_angular_velocity_to_car_velocity(state.ω_s)
 
         rolling_resistance_force = self._calculate_rolling_resistance_force(velocity)
         incline_force = self._calculate_incline_force()

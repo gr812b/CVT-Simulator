@@ -3,6 +3,7 @@
 Exposes `PrimaryPulley.calculate_axial_clamping_force(shift, ω)` which returns
 `(axial_force, PrimaryForceBreakdown)` and uses the existing datatypes.
 """
+
 from cvt_simulator.ramps.piecewise_ramp import PiecewiseRamp
 import numpy as np
 from cvt_simulator.geometry.cvt_geometry import CVT_GEOMETRY
@@ -14,7 +15,6 @@ from cvt_simulator.core.data_types import (
     PrimaryForceBreakdown,
     PulleyForces,
 )
-from cvt_simulator.core.components.belt_wrap import BeltWrap
 
 
 class PrimaryPulley:
@@ -40,6 +40,7 @@ class PrimaryPulley:
         self.cvt = CVT_GEOMETRY
         # Initialize belt wrap helper once per pulley instance
         from cvt_simulator.core.components.belt_wrap import BeltWrap
+
         self.belt_wrap = BeltWrap(is_primary=True)
 
     def calculate_axial_clamping_force(self, state: SystemState) -> PulleyForces:
@@ -60,7 +61,9 @@ class PrimaryPulley:
             flyweightForce=fly, springForce=spring, net=axial_pulley
         )
 
-        return PulleyForces(pulley_breakdown=pulley_breakdown, belt_wrap=belt, net=axial_total)
+        return PulleyForces(
+            pulley_breakdown=pulley_breakdown, belt_wrap=belt, net=axial_total
+        )
 
     def _calculate_flyweight_force(self, s: float, ω: float) -> flyweightForceBreakdown:
         """Compute flyweight centrifugal conversion using ramp slope.
@@ -88,4 +91,3 @@ class PrimaryPulley:
         total_compression = self.initial_compression + s
         net = self.spring_coeff_comp * total_compression
         return springCompForceBreakdown(compression=s, net=net)
-

@@ -5,8 +5,6 @@ from cvt_simulator.ramps.ramp_config import (
     LinearSegmentConfig,
     CircularSegmentConfig,
 )
-from cvt_simulator.utils.conversions import inch_to_meter
-from cvt_simulator.constants.car_specs import MAX_SHIFT
 
 
 def _get_default_primary_ramp() -> PiecewiseRampConfig:

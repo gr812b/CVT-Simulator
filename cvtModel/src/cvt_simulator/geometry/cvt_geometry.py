@@ -28,7 +28,7 @@ class CVTGeometryResult:
     secondary_effective_radius: float
     secondary_centroid_radius: float
     secondary_radius_rate_of_change: float
-    
+
     primary_wrap_angle: float
     secondary_wrap_angle: float
 
@@ -74,7 +74,8 @@ class CVTGeometry:
     def centroid_offset(self) -> float:
         """Centroid offset from belt centerline (used by belt centroid radius)."""
         return (
-            self.h * (BELT_WIDTH_TOP + 2 * BELT_WIDTH_BOTTOM)
+            self.h
+            * (BELT_WIDTH_TOP + 2 * BELT_WIDTH_BOTTOM)
             / (3 * (BELT_WIDTH_TOP + BELT_WIDTH_BOTTOM))
         )
 
@@ -191,7 +192,9 @@ class CVTGeometry:
         secondary_effective_radius = self.secondary_effective_radius(d)
         return secondary_effective_radius / primary_effective_radius
 
-    def geometry_from_shift_distance(self, s: float, s_dot: float = 0.0) -> CVTGeometryResult:
+    def geometry_from_shift_distance(
+        self, s: float, s_dot: float = 0.0
+    ) -> CVTGeometryResult:
         primary_outer_radius = self.primary_outer_radius(s)
         secondary_outer_radius = self.secondary_outer_radius(s)
         primary_effective_radius = primary_outer_radius - self.h / 2
@@ -199,7 +202,9 @@ class CVTGeometry:
         effective_cvt_ratio = secondary_effective_radius / primary_effective_radius
         # All radiuses have the same rate of change
         primary_outer_radius_rate = self.primary_outer_radius_time_derivative(s, s_dot)
-        secondary_outer_radius_rate = self.secondary_outer_radius_time_derivative(s, s_dot)
+        secondary_outer_radius_rate = self.secondary_outer_radius_time_derivative(
+            s, s_dot
+        )
         effective_cvt_ratio_rate = self.effective_cvt_ratio_time_derivative(s, s_dot)
 
         return CVTGeometryResult(
@@ -401,7 +406,9 @@ if __name__ == "__main__":
     print("=" * 80)
     print("CVT RATIO TABLE - Shift Distance vs Radii and Ratio")
     print("=" * 80)
-    print(f"{ 'd (m)':<10} { 'r1 (m)':<10} { 'r2 (m)':<10} { 'Ratio':<10} { 'di/dd':<12} { 'r1_cent (m)':<14} { 'r2_cent (m)':<14} { 'wrap_p (rad)':<14} { 'wrap_s (rad)':<14}")
+    print(
+        f"{'d (m)':<10} {'r1 (m)':<10} {'r2 (m)':<10} {'Ratio':<10} {'di/dd':<12} {'r1_cent (m)':<14} {'r2_cent (m)':<14} {'wrap_p (rad)':<14} {'wrap_s (rad)':<14}"
+    )
     print("-" * 140)
 
     for d in d_values:

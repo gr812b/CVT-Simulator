@@ -20,9 +20,7 @@ class EngineModel:
         torque = self.get_torque(ω)
         power = self.get_power(ω)
         return EngineTorqueBreakdown(
-            engine_torque=torque,
-            engine_speed=ω,
-            engine_power=power
+            engine_torque=torque, engine_speed=ω, engine_power=power
         )
 
     def get_power(self, ω: float) -> float:

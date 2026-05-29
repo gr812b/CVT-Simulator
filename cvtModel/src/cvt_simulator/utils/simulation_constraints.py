@@ -1,7 +1,6 @@
 from cvt_simulator.constants.car_specs import (
     MAX_SHIFT,
 )
-from cvt_simulator.core.dynamics.contact_dynamics_model import ContactDynamicsModel
 from cvt_simulator.utils.state_computations import (
     secondary_pulley_angular_velocity_to_car_velocity,
 )
@@ -36,9 +35,7 @@ def shift_constraint_event(t, y):
 def car_velocity_constraint_event(t, y):
     state = SystemState.from_array(y)
     return (
-        secondary_pulley_angular_velocity_to_car_velocity(
-            state.ω_s
-        )
+        secondary_pulley_angular_velocity_to_car_velocity(state.ω_s)
         - MIN_CAR_VELOCITY_MPS
     )
 

@@ -13,7 +13,6 @@ from __future__ import annotations
 
 import argparse
 import cProfile
-import io
 import re
 import pstats
 import time

@@ -1,5 +1,11 @@
 import numpy as np
-from cvt_simulator.constants.car_specs import CENTER_TO_CENTER, BELT_HEIGHT, BELT_WIDTH_BOTTOM, BELT_WIDTH_TOP
+from cvt_simulator.constants.car_specs import (
+    CENTER_TO_CENTER,
+    BELT_HEIGHT,
+    BELT_WIDTH_BOTTOM,
+    BELT_WIDTH_TOP,
+)
+
 # from cvt_simulator.geometry.cvt_geometry import CVT_GEOMETRY
 
 # Use shared CVT geometry instance
@@ -82,7 +88,8 @@ class TheoreticalModels:
     def centroid_offset() -> float:
         """Centroid offset from belt centerline (used by belt centroid radius)."""
         return (
-            BELT_HEIGHT * (BELT_WIDTH_TOP + 2 * BELT_WIDTH_BOTTOM)
+            BELT_HEIGHT
+            * (BELT_WIDTH_TOP + 2 * BELT_WIDTH_BOTTOM)
             / (3 * (BELT_WIDTH_TOP + BELT_WIDTH_BOTTOM))
         )
 

@@ -1,4 +1,4 @@
-from typing import Callable, List, Optional, Any
+from typing import Callable, List, Optional
 from cvt_simulator.core.dynamics.contact_dynamics_model import ContactDynamicsModel
 import numpy as np
 

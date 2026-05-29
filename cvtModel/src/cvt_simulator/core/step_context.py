@@ -25,7 +25,9 @@ class StepContext:
         )
 
 
-def ensure_step_context(state: SystemState, ctx: StepContext | None = None) -> StepContext:
+def ensure_step_context(
+    state: SystemState, ctx: StepContext | None = None
+) -> StepContext:
     """Return a valid StepContext for the given state.
 
     If ``ctx`` is provided it is reused; otherwise it is built from state.

@@ -161,15 +161,23 @@ class SimulationAnalysisResult:
                     shift_mode = mode
 
             contact_branch = self._slip_branch_from_mode(slip_mode)
-            contact_breakdown = contact_model.get_breakdown(display_state, contact_branch)
+            contact_breakdown = contact_model.get_breakdown(
+                display_state, contact_branch
+            )
 
             # Sanitize enum values to primitives to avoid retaining Enum internals.
             try:
-                if hasattr(contact_breakdown, "contact") and getattr(contact_breakdown, "contact") is not None:
+                if (
+                    hasattr(contact_breakdown, "contact")
+                    and getattr(contact_breakdown, "contact") is not None
+                ):
                     contact = contact_breakdown.contact
                     if hasattr(contact, "branch") and contact.branch is not None:
                         contact.branch = contact.branch.name
-                    if hasattr(contact, "branch_result") and getattr(contact, "branch_result") is not None:
+                    if (
+                        hasattr(contact, "branch_result")
+                        and getattr(contact, "branch_result") is not None
+                    ):
                         br = contact.branch_result
                         if hasattr(br, "branch") and br.branch is not None:
                             br.branch = br.branch.name
@@ -197,7 +205,9 @@ class SimulationAnalysisResult:
             return SlipBranch.NO_SLIP
 
     @staticmethod
-    def from_csv(filename: str = "simulation_output.csv", args: SimulationArgs | None = None):
+    def from_csv(
+        filename: str = "simulation_output.csv", args: SimulationArgs | None = None
+    ):
         """Read states from CSV and reconstruct the analysis view."""
         base_result = SimulationResult.from_csv(filename)
         if args is None:

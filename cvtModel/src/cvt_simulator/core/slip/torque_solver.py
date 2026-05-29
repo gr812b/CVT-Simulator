@@ -7,9 +7,15 @@ that into the discrete branch and resolves the branch algebra.
 
 from cvt_simulator.core.components.primary_pulley import PrimaryPulley
 from cvt_simulator.core.components.secondary_pulley import SecondaryPulley
-from cvt_simulator.core.data_types import SlipMetricsResult, BranchTorqueResult, SlipBranch
+from cvt_simulator.core.data_types import (
+    SlipMetricsResult,
+    BranchTorqueResult,
+    SlipBranch,
+)
 from cvt_simulator.sim.system_state import SystemState
-from cvt_simulator.core.slip.determiner.no_slip_candidate import compute_no_slip_candidate
+from cvt_simulator.core.slip.determiner.no_slip_candidate import (
+    compute_no_slip_candidate,
+)
 from cvt_simulator.core.slip.slip_branch_algebra import (
     primary_slip_algebra,
     secondary_slip_algebra,
@@ -37,28 +43,42 @@ class TorqueSolver:
         if branch is SlipBranch.NO_SLIP:
             return self._no_slip_branch(state, tau_engine, tau_load, I_p, I_s, m_b)
         if branch is SlipBranch.PRIMARY_SLIP:
-            return self._primary_slip_branch(slip_metrics.primary_slip_direction, state, tau_load, I_s, m_b, primary_pulley)
+            return self._primary_slip_branch(
+                slip_metrics.primary_slip_direction,
+                state,
+                tau_load,
+                I_s,
+                m_b,
+                primary_pulley,
+            )
         if branch is SlipBranch.SECONDARY_SLIP:
-            return self._secondary_slip_branch(slip_metrics.secondary_slip_direction, state, tau_engine, I_p, m_b, secondary_pulley)
-        
+            return self._secondary_slip_branch(
+                slip_metrics.secondary_slip_direction,
+                state,
+                tau_engine,
+                I_p,
+                m_b,
+                secondary_pulley,
+            )
+
         return self._both_slip_branch(
-            slip_metrics.primary_slip_direction, 
-            slip_metrics.secondary_slip_direction, 
+            slip_metrics.primary_slip_direction,
+            slip_metrics.secondary_slip_direction,
             state,
-            m_b, 
-            primary_pulley, 
-            secondary_pulley
+            m_b,
+            primary_pulley,
+            secondary_pulley,
         )
 
     def _no_slip_branch(
-            self, 
-            state: SystemState,
-            tau_engine: float,
-            tau_load: float,
-            I_p: float,
-            I_s: float,
-            m_b: float,
-        ) -> BranchTorqueResult:
+        self,
+        state: SystemState,
+        tau_engine: float,
+        tau_load: float,
+        I_p: float,
+        I_s: float,
+        m_b: float,
+    ) -> BranchTorqueResult:
         no_slip = compute_no_slip_candidate(
             state=state,
             τ_eng=tau_engine,
@@ -81,7 +101,9 @@ class TorqueSolver:
         m_b: float,
         primary_pulley: PrimaryPulley,
     ) -> BranchTorqueResult:
-        tau_p, tau_s = primary_slip_algebra(slip_dir, state, tau_load, I_s, m_b, primary_pulley)
+        tau_p, tau_s = primary_slip_algebra(
+            slip_dir, state, tau_load, I_s, m_b, primary_pulley
+        )
         return BranchTorqueResult(
             tau_p=tau_p,
             tau_s=tau_s,

@@ -9,12 +9,13 @@ primary/secondary torques per the derivation:
     τ_p,ns = τ_eng - I_p * ( v̇_b,ns - ṙ_p * ω_p ) / r_p
     τ_s,ns = τ_load + I_s * ( v̇_b,ns - ṙ_s * ω_s ) / r_s
 """
+
 from cvt_simulator.sim.system_state import SystemState
 from cvt_simulator.core.data_types import NoSlipResult, NoSlipBreakdown
-from cvt_simulator.geometry.theoretical_models import TheoreticalModels as tm
 from cvt_simulator.geometry.cvt_geometry import CVT_GEOMETRY
 
 cvt = CVT_GEOMETRY
+
 
 def compute_no_slip_candidate(
     state: SystemState,
@@ -56,10 +57,15 @@ def compute_no_slip_candidate(
     primary_inertia_term = (I_p * r_p_dot * ω_p) / (r_p**2)
     secondary_inertia_term = (I_s * r_s_dot * ω_s) / (r_s**2)
 
-    numerator = tau_engine_over_r_p - tau_load_over_r_s + primary_inertia_term + secondary_inertia_term
+    numerator = (
+        tau_engine_over_r_p
+        - tau_load_over_r_s
+        + primary_inertia_term
+        + secondary_inertia_term
+    )
 
     # Denominator
-    denominator = m_b + (I_p / (r_p ** 2)) + (I_s / (r_s ** 2))
+    denominator = m_b + (I_p / (r_p**2)) + (I_s / (r_s**2))
 
     v_b_dot_ns = numerator / denominator
 
@@ -80,5 +86,6 @@ def compute_no_slip_candidate(
         denominator=denominator,
     )
 
-    return NoSlipResult(v_b_dot_ns=v_b_dot_ns, tau_p_ns=tau_p_ns, tau_s_ns=tau_s_ns, breakdown=breakdown)
-
+    return NoSlipResult(
+        v_b_dot_ns=v_b_dot_ns, tau_p_ns=tau_p_ns, tau_s_ns=tau_s_ns, breakdown=breakdown
+    )

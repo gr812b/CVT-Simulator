@@ -2,6 +2,7 @@
 
 Calculates the radial centrifugal force component from the rotating CVT belt.
 """
+
 import numpy as np
 from cvt_simulator.geometry.cvt_geometry import CVT_GEOMETRY
 from cvt_simulator.sim.system_state import SystemState
@@ -51,4 +52,3 @@ class BeltWrap:
         ) / (2 * np.tan(beta))
 
         return BeltWrapBreakdown(wrap_angle=wrap_angle, axial_belt_force=belt_force)
-

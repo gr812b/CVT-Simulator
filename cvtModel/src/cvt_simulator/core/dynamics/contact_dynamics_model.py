@@ -4,6 +4,7 @@ This wrapper computes the active contact torques first, then passes the
 resolved torques into the drivetrain helper and the secondary torque into the
 shift dynamics helper.
 """
+
 from cvt_simulator.core.components.engine import EngineModel
 from cvt_simulator.core.components.primary_pulley import PrimaryPulley
 from cvt_simulator.core.components.secondary_pulley import SecondaryPulley
@@ -16,7 +17,6 @@ from cvt_simulator.core.dynamics.shift_dynamics import ShiftDynamics
 from cvt_simulator.core.slip.contact_torque_solver import ContactTorqueSolver
 from cvt_simulator.core.data_types import ContactDynamicsBreakdown, SlipBranch
 from cvt_simulator.geometry.cvt_geometry import CVT_GEOMETRY
-
 
 
 class ContactDynamicsModel:
@@ -43,7 +43,7 @@ class ContactDynamicsModel:
         self.engine_model = engine_model
         self.load_model = load_model
         self.contact_torque_solver = ContactTorqueSolver(
-            primary_pulley, 
+            primary_pulley,
             secondary_pulley,
             primary_inertia,
             secondary_inertia,
@@ -62,7 +62,9 @@ class ContactDynamicsModel:
             cvt_moving_mass=cvt_moving_mass,
         )
 
-    def get_breakdown(self, state: SystemState, contact_branch: SlipBranch) -> ContactDynamicsBreakdown:
+    def get_breakdown(
+        self, state: SystemState, contact_branch: SlipBranch
+    ) -> ContactDynamicsBreakdown:
         """Return the branch-selected contact result and downstream dynamics."""
         tau_engine = self.engine_model.get_torque(state.ω_p)
         tau_load = self.load_model.get_breakdown(state).net_torque_at_secondary
@@ -91,11 +93,10 @@ class ContactDynamicsModel:
             shift=shift,
             geometry=geometry,
         )
-    
+
     # TODO: Temp drilling to avoid extra compute
     def get_slip_metrics(self, state: SystemState):
         tau_engine = self.engine_model.get_torque(state.ω_p)
         tau_load = self.load_model.get_breakdown(state).net_torque_at_secondary
 
         return self.contact_torque_solver.get_slip_metrics(state, tau_engine, tau_load)
-
