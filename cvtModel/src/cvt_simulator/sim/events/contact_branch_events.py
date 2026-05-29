@@ -31,10 +31,10 @@ from cvt_simulator.constants.tuning import BELT_STICK_SPEED_THRESHOLD
 thres = 1
 
 CONTACT_SLIP_ENTER_SPEED = 1.10 * thres
-CONTACT_SLIP_EXIT_SPEED = 0.50 * thres
+CONTACT_SLIP_EXIT_SPEED = 1.1 * thres
 
 CONTACT_TORQUE_ENTER_MARGIN = 0.01 * 10
-CONTACT_TORQUE_EXIT_MARGIN = 0.03 * 10
+CONTACT_TORQUE_EXIT_MARGIN = 0.01 * 10
 
 
 @dataclass(frozen=True)

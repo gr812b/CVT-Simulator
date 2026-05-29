@@ -111,6 +111,7 @@ def get_mid_shift_steady_event(
             s_dot=0.0,
             ω_p=state.ω_p,
             ω_s=state.ω_s,
+            v_b=state.v_b,
         )
         locked_shift_accel = contact_model.get_breakdown(locked_state, contact_branch).shift.acceleration
 
