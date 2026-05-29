@@ -156,8 +156,6 @@ export interface components {
         };
         /** BranchTorqueResultModel */
         BranchTorqueResultModel: {
-            /** Branch */
-            branch: string;
             /** Tau P */
             tau_p: number;
             /** Tau S */
@@ -406,6 +404,8 @@ export interface components {
             engine_angular_velocity: number;
             /** Engine Angular Position */
             engine_angular_position: number;
+            /** Secondary Angular Position */
+            secondary_angular_position: number;
         };
         /** DrivetrainAccelerationBreakdownModel */
         DrivetrainAccelerationBreakdownModel: {
@@ -686,10 +686,6 @@ export interface components {
             primary_slip_direction: number;
             /** Secondary Slip Direction */
             secondary_slip_direction: number;
-            /** Primary Admissible */
-            primary_admissible: boolean;
-            /** Secondary Admissible */
-            secondary_admissible: boolean;
             admissibility: components["schemas"]["TorqueAdmissibilityResultModel"];
             no_slip: components["schemas"]["NoSlipResultModel"];
         };

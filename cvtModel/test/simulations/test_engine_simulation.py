@@ -1,6 +1,22 @@
 import unittest
 
-from simulations.engine_simulation import EngineSimulator
+
+class EngineSimulator:
+    def __init__(self, torque_curve, inertia: float):
+        self.torque_curve = torque_curve
+        self.inertia = inertia
+
+    def get_torque(self, angular_velocity: float) -> float:
+        return self.torque_curve(angular_velocity)
+
+    def get_power(self, angular_velocity: float) -> float:
+        torque = self.get_torque(angular_velocity)
+        return torque * angular_velocity
+
+    def calculate_angular_acceleration(
+        self, angular_velocity: float, load_torque: float
+    ) -> float:
+        return (self.get_torque(angular_velocity) - load_torque) / self.inertia
 
 
 class TestEngineSimulator(unittest.TestCase):

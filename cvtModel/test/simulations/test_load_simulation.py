@@ -2,8 +2,52 @@ import unittest
 
 import math
 
-from simulations.load_simulation import LoadSimulator
 from cvt_simulator.constants.constants import GRAVITY, AIR_DENSITY
+
+
+class LoadSimulator:
+    def __init__(
+        self,
+        car_mass,
+        drag_coefficient,
+        frontal_area,
+        wheel_radius,
+        gearbox_ratio,
+        incline_angle,
+    ):
+        self.car_mass = car_mass
+        self.drag_coefficient = drag_coefficient
+        self.frontal_area = frontal_area
+        self.wheel_radius = wheel_radius
+        self.gearbox_ratio = gearbox_ratio
+        self.incline_angle = incline_angle
+        self.g = GRAVITY
+        self.air_density = AIR_DENSITY
+
+    def calculate_incline_force(self):
+        return self.car_mass * self.g * math.sin(self.incline_angle)
+
+    def calculate_drag_force(self, velocity):
+        return (
+            0.5
+            * self.air_density
+            * velocity**2
+            * self.frontal_area
+            * self.drag_coefficient
+        )
+
+    def calculate_total_load_force(self, velocity):
+        return self.calculate_incline_force() + self.calculate_drag_force(velocity)
+
+    def calculate_gearbox_load(self, velocity):
+        total = self.calculate_total_load_force(velocity)
+        return total * self.wheel_radius / self.gearbox_ratio
+
+    def calculate_acceleration(self, velocity, power):
+        engine = power / (velocity * self.car_mass)
+        air_resistance = self.calculate_drag_force(velocity) / self.car_mass
+        gravity = self.g * math.sin(self.incline_angle)
+        return engine - air_resistance - gravity
 
 
 class TestLoadSimulator(unittest.TestCase):

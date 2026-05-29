@@ -221,8 +221,6 @@ function convertSlipMetricsResult(
     secondary_relative_speed: conv(slipMetrics.secondary_relative_speed, 'velocity'),
     primary_slip_direction: slipMetrics.primary_slip_direction,
     secondary_slip_direction: slipMetrics.secondary_slip_direction,
-    primary_admissible: slipMetrics.primary_admissible,
-    secondary_admissible: slipMetrics.secondary_admissible,
     admissibility: convertTorqueAdmissibilityResult(slipMetrics.admissibility, config),
     no_slip: convertNoSlipResult(slipMetrics.no_slip, config),
   };
@@ -252,7 +250,6 @@ function convertContactTorqueResult(
     branch: contact.branch,
     slip_metrics: convertSlipMetricsResult(contact.slip_metrics, config),
     branch_result: {
-      branch: contact.branch_result.branch,
       tau_p: conv(contact.branch_result.tau_p, 'torque'),
       tau_s: conv(contact.branch_result.tau_s, 'torque'),
     },
@@ -307,7 +304,7 @@ function convertGeometryResult(
 ): CVTGeometryResultModel {
   const conv = convFactory(config);
   return {
-    effective_cvt_ratio: geometry.effective_cvt_ratio,
+    effective_cvt_ratio: conv(geometry.effective_cvt_ratio, 'dimensionless'),
     effective_cvt_ratio_rate_of_change: conv(
       geometry.effective_cvt_ratio_rate_of_change,
       'dimensionless_rate'
@@ -336,6 +333,7 @@ function convertDerivedState(
     belt_position: conv(derivedState.belt_position, 'distance'),
     engine_angular_velocity: conv(derivedState.engine_angular_velocity, 'angular_velocity'),
     engine_angular_position: conv(derivedState.engine_angular_position, 'angle'),
+    secondary_angular_position: conv(derivedState.secondary_angular_position, 'angle'),
   };
 }
 

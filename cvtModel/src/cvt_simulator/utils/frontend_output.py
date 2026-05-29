@@ -43,6 +43,7 @@ class DerivedKinematicState:
     belt_position: float
     engine_angular_velocity: float
     engine_angular_position: float
+    secondary_angular_position: float
 
 
 @dataclass
@@ -125,6 +126,11 @@ class SimulationAnalysisResult:
         engine_positions = integrate_positions_trapezoidal(
             result.time, engine_angular_velocities
         )
+        # integrate secondary pulley angular velocity to obtain angular position
+        secondary_angular_velocities = [float(state.ω_s) for state in result.states]
+        secondary_angular_positions = integrate_positions_trapezoidal(
+            result.time, secondary_angular_velocities
+        )
 
         for index, (time, state) in enumerate(zip(result.time, result.states)):
             display_state = SystemState(
@@ -148,6 +154,7 @@ class SimulationAnalysisResult:
                 belt_position=float(belt_positions[index]),
                 engine_angular_velocity=engine_angular_velocities[index],
                 engine_angular_position=float(engine_positions[index]),
+                secondary_angular_position=float(secondary_angular_positions[index]),
             )
 
             mode = "unknown"
