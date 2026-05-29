@@ -8,7 +8,7 @@ from cvt_simulator import (
     CarSpecs,
     solve_all,
 )
-from cvt_simulator.models.ramps.ramp_preview import generate_ramp_preview
+from cvt_simulator.ramps.ramp_preview import generate_ramp_preview
 from ..models.response_models import (
     FormattedResultModel,
     SimulationArgsInput,
@@ -89,11 +89,14 @@ def run_stream(payload: SimulationArgsInput | None = None):  # type: ignore
                 except Exception as e:
                     import traceback
 
+                    error_traceback = traceback.format_exc()
+                    print(error_traceback, flush=True)
+
                     message_queue.put(
                         {
                             "type": "error",
                             "message": str(e),
-                            "traceback": traceback.format_exc(),
+                            "traceback": error_traceback,
                         }
                     )
 
@@ -123,7 +126,11 @@ def run_stream(payload: SimulationArgsInput | None = None):  # type: ignore
                         break
                     elif message["type"] == "error":
                         yield json.dumps(
-                            {"type": "error", "message": message["message"]}
+                            {
+                                "type": "error",
+                                "message": message["message"],
+                                "traceback": message.get("traceback"),
+                            }
                         ) + "\n"
                         break
                     else:
@@ -151,11 +158,14 @@ def run_stream(payload: SimulationArgsInput | None = None):  # type: ignore
         except Exception as e:
             import traceback
 
+            error_traceback = traceback.format_exc()
+            print(error_traceback, flush=True)
+
             yield json.dumps(
                 {
                     "type": "error",
                     "message": str(e),
-                    "traceback": traceback.format_exc(),
+                    "traceback": error_traceback,
                 }
             ) + "\n"
 

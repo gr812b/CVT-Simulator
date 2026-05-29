@@ -1,6 +1,6 @@
 import unittest
 
-from cvt_simulator.models.ramps.ramp_config import PiecewiseRampConfig
+from cvt_simulator.ramps.ramp_config import PiecewiseRampConfig
 
 
 class TestRampConfigParsing(unittest.TestCase):

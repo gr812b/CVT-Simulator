@@ -11,6 +11,7 @@ from typing import (
     get_origin,
     get_type_hints,
 )
+import enum
 from pydantic import BaseModel, ConfigDict, create_model
 
 _CACHE: dict[type, type[BaseModel]] = {}
@@ -28,6 +29,12 @@ def _resolve(t: Any) -> Any:
         k_t, v_t = get_args(t) or (Any, Any)
         return dict[_resolve(k_t), _resolve(v_t)]  # type: ignore[index]
     if inspect.isclass(t) and t not in _PRIMS:
+        # Treat Enum subclasses as simple strings to avoid deep recursive modeling
+        try:
+            if issubclass(t, enum.Enum):
+                return str
+        except Exception:
+            pass
         return model_from_class(t)
     return t
 

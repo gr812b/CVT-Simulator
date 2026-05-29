@@ -7,7 +7,7 @@ and shows how it affects the shift initiation RPM.
 
 import numpy as np
 import matplotlib.pyplot as plt
-from cvt_simulator.utils.simulation_args import SimulationArgs
+from cvt_simulator.sim_utils.simulation_args import SimulationArgs
 from cvt_simulator.solvers.shift_initiation.shift_initiation_solver import (
     ShiftInitiationSolver,
 )

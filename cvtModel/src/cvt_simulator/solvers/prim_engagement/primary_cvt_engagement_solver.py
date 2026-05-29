@@ -12,11 +12,14 @@ import numpy as np
 from scipy.optimize import brentq
 import matplotlib.pyplot as plt
 from cvt_simulator.solvers.solver_interface import SolverBase, SolverResult
-from cvt_simulator.utils.simulation_args import SimulationArgs
-from cvt_simulator.utils.system_state import SystemState
-from cvt_simulator.models.model_initializer import get_models
+from cvt_simulator.sim_utils.simulation_args import SimulationArgs
+from cvt_simulator.sim.system_state import SystemState
+from cvt_simulator.sim.simulation_runner import SimulationRunner
+from cvt_simulator.core.slip.determiner.no_slip_candidate import (
+    compute_no_slip_candidate,
+)
+from cvt_simulator.core.slip.determiner.torque_admissibility import TorqueAdmissibility
 from cvt_simulator.utils.conversions import rad_s_to_rpm
-from cvt_simulator.constants.car_specs import ENGINE_INERTIA
 
 
 class PrimaryCVTEngagementSolver(SolverBase):
@@ -47,12 +50,15 @@ class PrimaryCVTEngagementSolver(SolverBase):
             args: Simulation parameters defining the CVT configuration
         """
         super().__init__(args)
-
-        # Initialize models to get the primary pulley and engine
-        system_model = get_models(args)
-        self.primary_pulley = system_model.cvt_shift_model.primary_pulley
-        self.engine_model = system_model.slip_model.engine_model
-        self.primary_inertia = ENGINE_INERTIA
+        self.contact_model = SimulationRunner.from_simulation_args(args).contact_model
+        self.primary_pulley = self.contact_model.primary_pulley
+        self.secondary_pulley = self.contact_model.secondary_pulley
+        self.engine_model = self.contact_model.engine_model
+        self.load_model = self.contact_model.load_model
+        self.torque_admissibility = TorqueAdmissibility(
+            self.primary_pulley,
+            self.secondary_pulley,
+        )
 
     @property
     def solver_name(self) -> str:
@@ -149,30 +155,26 @@ class PrimaryCVTEngagementSolver(SolverBase):
         # Create a mock system state at minimum shift position (engagement)
         # At engagement, the CVT is at its lowest ratio (largest primary radius)
         state = SystemState(
-            primary_pulley_angular_velocity=angular_velocity,
-            secondary_pulley_angular_velocity=0.0,  # Stationary
-            shift_distance=0.0,  # Minimum shift position
-            shift_velocity=0.0,  # Static evaluation
+            ω_p=angular_velocity,
+            ω_s=0.0,  # Stationary
+            s=0.0,  # Minimum shift position
+            s_dot=0.0,  # Static evaluation
         )
 
         # Get engine torque at this angular velocity
         engine_torque = self.engine_model.get_torque(angular_velocity)
+        load_torque = self.load_model.get_breakdown(state).net_torque_at_secondary
 
-        # Calculate torque bounds using the primary pulley model
-        # For primary pulley, we want tau_upper (the positive bound)
-        torque_bounds = self.primary_pulley.calculate_torque_bounds(
-            state,
-            engine_drive_torque=engine_torque,
-            primary_inertia=self.primary_inertia,
-            is_stick=True,
-            v_b_star=0.0,
-            T_b=1.0,
+        no_slip = compute_no_slip_candidate(
+            state=state,
+            τ_eng=engine_torque,
+            τ_load=load_torque,
+            I_p=self.contact_model.drivetrain_dynamics.I_p,
+            I_s=self.contact_model.drivetrain_dynamics.I_s,
+            m_b=self.contact_model.drivetrain_dynamics.m_b,
         )
-
-        # extract tau_upper from the bounds object
-        tau_upper = torque_bounds.tau_upper
-
-        return tau_upper
+        admissibility = self.torque_admissibility.get_breakdown(state, no_slip)
+        return admissibility.primary_tau_p_stick_upper
 
     def get_engagement_curve(
         self,

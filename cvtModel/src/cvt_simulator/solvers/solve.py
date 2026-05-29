@@ -22,7 +22,7 @@ Example usage:
 """
 
 from dataclasses import dataclass
-from cvt_simulator.utils.simulation_args import SimulationArgs
+from cvt_simulator.sim_utils.simulation_args import SimulationArgs
 from cvt_simulator.solvers.solver_interface import SolverResult
 from cvt_simulator.solvers.prim_engagement.primary_cvt_engagement_solver import (
     PrimaryCVTEngagementSolver,

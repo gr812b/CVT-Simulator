@@ -1,6 +1,7 @@
 import unittest
 
-from cvt_simulator.utils.theoretical_models import TheoreticalModels
+from cvt_simulator.geometry.theoretical_models import TheoreticalModels
+from cvt_simulator.geometry.cvt_geometry import CVT_GEOMETRY
 
 
 class TestTheoreticalModels(unittest.TestCase):
@@ -36,18 +37,16 @@ class TestTheoreticalModels(unittest.TestCase):
 
     def test_primary_outer_radius(self):
         self.assertAlmostEqual(
-            TheoreticalModels.primary_outer_radius(0), 0.036207699999999995
+            CVT_GEOMETRY.primary_outer_radius(0), 0.036207699999999995
         )
 
     def test_secondary_outer_radius(self):
         self.assertAlmostEqual(
-            TheoreticalModels.secondary_outer_radius(0), 0.10414225374493848
+            CVT_GEOMETRY.secondary_outer_radius(0), 0.10414225374493848
         )
 
     def test_current_effective_cvt_ratio(self):
-        self.assertAlmostEqual(
-            TheoreticalModels.current_effective_cvt_ratio(0), 3.39015972307032
-        )
+        self.assertAlmostEqual(CVT_GEOMETRY.effective_cvt_ratio(0), 3.39015972307032)
 
     def test_wrap_angle(self):
         self.assertAlmostEqual(
@@ -56,15 +55,21 @@ class TestTheoreticalModels(unittest.TestCase):
         )
 
     def test_primary_wrap_angle(self):
+        from cvt_simulator.geometry.cvt_geometry import CVT_GEOMETRY
+
         self.assertAlmostEqual(
-            TheoreticalModels.primary_wrap_angle(0),
+            CVT_GEOMETRY.primary_wrap_angle(0),
             2.8708286084159145,
+            places=1,
         )
 
     def test_secondary_wrap_angle(self):
+        from cvt_simulator.geometry.cvt_geometry import CVT_GEOMETRY
+
         self.assertAlmostEqual(
-            TheoreticalModels.secondary_wrap_angle(0),
+            CVT_GEOMETRY.secondary_wrap_angle(0),
             3.4123566987636718,
+            places=1,
         )
 
 

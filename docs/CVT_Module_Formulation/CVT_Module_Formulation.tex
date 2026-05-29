@@ -45,6 +45,7 @@
 \setlist[enumerate]{after=\noindent}
 
 \usepackage{parskip}
+\usepackage{changepage}
 \usepackage{placeins}
 
 \usepackage[round]{natbib}
@@ -175,6 +176,35 @@
 }{%
     \end{align}
   \end{tcolorbox}
+}
+
+% =========================
+% Wide boxed equation sized to the equation width and centered
+% Usage: \widebigeq{eq:key}{Title}{<equation>}
+\newlength{\bigeqwidth}
+\NewDocumentCommand{\widebigeq}{m m m}{%
+  % Measure natural width of the displayed equation
+  \begingroup
+  \setbox0=\hbox{\(\displaystyle #3\)}%
+  \setlength{\bigeqwidth}{\wd0}%
+  % Add small safety buffer to account for delimiter sizing differences
+  \addtolength{\bigeqwidth}{2em}%
+  % Step equation counter and set label
+  \refstepcounter{equation}\label{#1}%
+
+  % Center a box of the measured width; if it is wider than \linewidth
+  % TeX will allow symmetric overflow because the glue becomes negative.
+    \noindent\hbox to \linewidth{\hss
+    \begin{tcolorbox}[width=\bigeqwidth,boxrule=0.6pt,left=8pt,right=8pt,top=8pt,bottom=8pt]
+      \noindent\begin{tabular*}{\linewidth}{@{\extracolsep{\fill}}l r@{}}
+        \textbf{#2} & \textbf{(\theequation)}
+      \end{tabular*}
+      \vspace{6pt}
+      \rule{\linewidth}{0.4pt}
+      \vspace{8pt}
+      \makebox[\linewidth][c]{\(\displaystyle #3\)}%
+    \end{tcolorbox}
+  \hss}\endgroup
 }
 
 % =========================
@@ -1111,7 +1141,7 @@ $t$ & time \\
 $\omega_p,\ \omega_s$ & primary and secondary angular speed \\
 $s,\ \dot s,\ \ddot s$ & shift position, velocity, and acceleration \\
 $R,\ \dot R$ & CVT ratio and ratio rate \\
-$\hat v_b,\ \dot{\hat v}_b$ & modeled belt transport speed and its time derivative \\
+$v_b$ & belt transport speed \\
 $v_b^\ast,\ T_b$ & slip-branch target belt speed and belt-speed relaxation time constant \\
 $v_{\Delta}$ & slip metric: primary-imposed minus secondary-imposed belt-line speed \\
 \addlinespace
@@ -1383,17 +1413,7 @@ Power transmission through the CVT is modeled as ideal
 (i.e., no internal dissipation).
 Although belt slip is explicitly modeled and affects
 torque capacity and shift dynamics,
-the associated power loss $P_{\text{loss}}$ is neglected.
-\end{assumptionblock}
-
-\begin{assumptionblock}{assump:single_slip_interface}{Single Active Slip Interface}
-At any instant, the belt is assumed to either adhere to both pulleys
-or slip at exactly one pulley contact.
-Simultaneous slip at both pulley contacts is not modeled.
-
-If operating conditions would otherwise cause both contacts to exceed
-their traction limits, the model assumes an instantaneous transition
-between single-slip states.
+the associated power loss is neglected.
 \end{assumptionblock}
 
 % ======================================================
@@ -1699,7 +1719,7 @@ contact conditions — are computed algebraically from these states.
 \omega_s \\
 s \\
 \dot{s} \\
-\hat{v}_b
+v_b
 \end{bmatrix}
 }
 
@@ -1718,8 +1738,7 @@ where:
     \item $\dot{s}$ is the axial shift velocity 
     (\si{\meter\per\second}).
 
-    \item $\hat{v}_b$ is the modeled belt transport speed
-    (\si{\meter\per\second}), represented as a closure-oriented dynamic state.
+    \item $v_b$ is the belt transport speed (\si{\meter\per\second}).
 \end{itemize}
 
 % --------------------------------------------------------------
@@ -1743,14 +1762,11 @@ and must be modeled explicitly.
 Because axial motion follows second-order dynamics, both the axial position $s$ 
 and its rate $\dot{s}$ are required to fully describe its evolution.
 
-The quantity $\hat{v}_b$ can be viewed as an additional belt-related degree of
-freedom in a fully resolved belt model. In the present reduced-order
-formulation, however, detailed belt internal mechanics are not represented
-explicitly. Instead, $\hat{v}_b$ is introduced as an effective dynamic closure
-variable governed by compatibility and closure relations introduced in later
-sections. Thus,
-$\hat{v}_b$ acts as an approximated surrogate for belt transport dynamics,
-rather than a fully resolved independent mechanical coordinate.
+The quantity $v_b$ is treated as an independent belt-transport degree of
+freedom. While detailed internal
+belt mechanics remain unresolved, $v_b$ is modeled as a dynamic state whose
+evolution is given by an explicit equation of motion derived from torque,
+traction, and compatibility relations at the pulley–belt interfaces.
 
 % --------------------------------------------------------------
 \subsection{Time Integration Perspective}
@@ -1767,14 +1783,13 @@ At each timestep $\Delta t$:
 
     \item The axial velocity $\dot{s}$ is updated according to the axial acceleration.
     
-    \item The modeled belt transport speed $\hat{v}_b$ is updated according
-    to its closure law.
+    \item The belt transport speed $v_b$ is updated according to its angular acceleration.
 \end{itemize}
 
 The angular and axial accelerations are determined from the governing 
 equations derived in subsequent sections. Once the state vector has been 
 updated, all other quantities in the model are computed directly from the 
-current values of $\omega_p$, $\omega_s$, $s$, $\dot{s}$, and $\hat{v}_b$.
+current values of $\omega_p$, $\omega_s$, $s$, $\dot{s}$, and $v_b$.
 
 
 \section{Pulley Geometry}\label{sec:geometry}
@@ -3315,36 +3330,43 @@ Appendix~\ref{sec:appendix-ramp-profiles}.
 
 \subsection{Primary Axial Force Model}\label{sec:primary-axial}
 
-The primary axial clamping force is generated by the interaction
-between centrifugal loading of the flyweights and the restoring
-force of the primary compression spring.
+The primary axial clamping force arises from the competition between
+centrifugal loading of the flyweights and the restoring force of the
+primary compression spring.
 
-As shown in \Fig{fig:primary_cvt_3d}, each flyweight of mass $m_f$
-rotates with angular speed $\omega_p$ and experiences an outward
-radial centrifugal force. This radial force acts along the ramp
-profile $r_f(s)$ and is redirected into an axial closing force
-through the ramp geometry described in \Sec{sec:ramp-geometry}.
+As shown in \Fig{fig:primary_axial_mechanism}, each flyweight of mass
+$m_f$ rotates with angular speed $\omega_p$ at an instantaneous radius
+$r_{f,0}+r_f(s)$, where $r_{f,0}$ is the flyweight radius in the
+reference configuration $s=0$ and $r_f(s)$ is the additional radial
+displacement induced by the ramp. The resulting outward centrifugal
+force is redirected by the ramp geometry described in
+\Sec{sec:ramp-geometry} into an axial closing force on the movable
+primary sheave.
 
 Opposing this motion is the primary compression spring, characterized
 by stiffness $k_p$ and preload $x_{p,0}$. As the sheaves close
-($s$ increases), the spring compresses and produces a restoring
-axial force resisting further closure.
+($s$ increases), the spring compression increases, producing a larger
+restoring force that resists further closure.
 
-The net axial force on the movable primary sheave is therefore
-the axial component of the ramp-redirected centrifugal force
-minus the spring force. This net force determines the axial
-acceleration $\ddot{s}$ of the primary assembly.
+The resulting primary axial force is therefore the ramp-redirected
+centrifugal contribution minus the spring force. This quantity,
+denoted $F_{p,ax}(s,\omega_p)$, provides the primary-side contribution
+to the generalized axial force used in the shift equation of motion.
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=0.7\linewidth]{./illustrations/pulleyForces/primary_cvt_mechanisms.png}
-\caption{Primary CVT assembly showing flyweight mass $m_f$, ramp profile $r_f(s)$,
-compression spring with stiffness $k_p$ and preload $x_{p,0}$, and axial shift
-coordinate $s$.}
-\label{fig:primary_cvt_3d}
+\includegraphics[width=\linewidth]{./illustrations/pulleyForces/primary_cvt_mechanisms.png}
+\caption{Primary CVT axial-force mechanism. Each flyweight of mass $m_f$
+rotates at angular speed $\omega_p$ and experiences an outward
+centrifugal force at total radius $r_{f,0}+r_f(s)$. The ramp geometry
+redirects this radial loading into an axial closing force on the
+movable primary sheave in the $+s$ direction, while the primary
+compression spring $(k_p,\;x_{p,0})$ provides an opposing restoring
+force. The lower flyweight--ramp pair is symmetric and shown unlabeled
+for clarity.}
+\label{fig:primary_axial_mechanism}
 \end{figure}
 
-The state variable governing primary rotation is $\omega_p$.
 \paragraph{Centrifugal Loading of Flyweights}
 
 From \theoryRef{th:centrifugal_force},
@@ -3898,14 +3920,14 @@ portion of the wrap on pulley \(j\).
 \paragraph{3. Angular Velocity of the Belt Mass}
 
 The rotating belt mass on pulley \(j\) must also be assigned an angular speed.
-From \Sec{sec:state}, \(\hat{v}_b\) denotes the modeled belt transport speed. 
+From \Sec{sec:state}, \(v_b\) denotes the belt transport speed. 
 The corresponding angular velocity of the belt mass centroid
 on pulley \(j\) is then
 
 \begin{equation}
 \omega_{b,j}
 =
-\frac{\hat{v}_b}{r_{j,\mathrm{cm}}(s)}.
+\frac{v_b}{r_{j,\mathrm{cm}}(s)}.
 \label{eq:omega_bj_definition}
 \end{equation}
 
@@ -3926,11 +3948,11 @@ the centrifugal force on the differential belt element follows from
 \nonumber\\[6pt]
 &=
 \left(\rho_b A_b\,r_{j,\mathrm{cm}}\,\dd\theta\right)
-\left(\frac{\hat{v}_b}{r_{j,\mathrm{cm}}}\right)^2
+\left(\frac{v_b}{r_{j,\mathrm{cm}}}\right)^2
 r_{j,\mathrm{cm}}
 \nonumber\\[6pt]
 &=
-\rho_b A_b\,\hat{v}_b^2\,\dd\theta.
+\rho_b A_b\,v_b^2\,\dd\theta.
 \label{eq:dFc_belt_j}
 \end{align}
 
@@ -3946,14 +3968,14 @@ radially-directed centrifugal force on pulley \(j\):
 F_{c,j,\mathrm{rad}}
 &=
 \int_{-\phi_j/2}^{\phi_j/2}
-\rho_b A_b\,\hat{v}_b^2\,\dd\theta
+\rho_b A_b\,v_b^2\,\dd\theta
 \nonumber\\[6pt]
 &=
-\rho_b A_b\,\hat{v}_b^2
+\rho_b A_b\,v_b^2
 \int_{-\phi_j/2}^{\phi_j/2}\dd\theta
 \nonumber\\[6pt]
 &=
-\rho_b A_b\,\hat{v}_b^2\,\phi_j(s).
+\rho_b A_b\,v_b^2\,\phi_j(s).
 \label{eq:Fc_rad_wrap_j}
 \end{align}
 
@@ -3997,11 +4019,12 @@ F_{\mathrm{ax}}\,\dd s.
 
 Canceling \(\dd s\) yields
 
-\[
+\begin{equation}
 F_{\mathrm{ax}}
 =
 \frac{F_{\mathrm{rad}}}{2\tan\beta}.
-\]
+\label{eq:radial_to_axial_conversion}
+\end{equation}
 
 Thus, the axial clamping contribution from belt centrifugal force on pulley \(j\) is
 
@@ -4009,7 +4032,7 @@ Thus, the axial clamping contribution from belt centrifugal force on pulley \(j\
 F_{c,j}
 =
 \frac{
-\rho_b A_b\,\hat{v}_b^2\,\phi_j(s)
+\rho_b A_b\,v_b^2\,\phi_j(s)
 }{
 2\tan\beta
 }.
@@ -4122,8 +4145,8 @@ Collecting the axial force contributions derived previously:
 \begin{itemize}
   \item $F_{p,\mathrm{ax}}(s,\omega_p)$ from \Eq{eq:primary_axial},
   \item $F_{s,\mathrm{ax}}(s,\tau_s)$ from \Eq{eq:secondary_axial},
-  \item $F_{c,p}(s,\hat{v}_b)$ from \Eq{eq:Fcj_general} with $j=p$,
-  \item $F_{c,s}(s,\hat{v}_b)$ from \Eq{eq:Fcj_general} with $j=s$.
+  \item $F_{c,p}(s,v_b)$ from \Eq{eq:Fcj_general} with $j=p$,
+  \item $F_{c,s}(s,v_b)$ from \Eq{eq:Fcj_general} with $j=s$.
 \end{itemize}
 
 With the sign convention defined above, the generalized force
@@ -4199,658 +4222,126 @@ With the axial force structure now complete,
 attention turns to the torque transmission mechanism
 that closes the remaining dynamical loop.
 
+\section{No-Slip Belt Dynamics and Torque Demand}
+\label{sec:no-slip-belt-dynamics}
+
+The axial force model developed in \Sec{sec:axial} determines how the shift
+coordinate evolves once the primary and secondary axial forces are known.
+However, the secondary axial force depends on the transmitted secondary torque
+\(\tau_s\), which is not determined by the axial force balance itself.
+
+This section develops the rotational and belt-dynamic relations needed to
+determine that torque in the no-slip case. The primary pulley, belt, and
+secondary pulley are treated as three coupled bodies: torque enters through the
+primary, is carried through belt contact, and exits through the secondary into
+the downstream drivetrain.
+
+The goal is to derive the no-slip torque demand: the torque transfer that would
+be required if the belt remained adhered to both pulleys. This result will later
+be checked against the available belt--pulley traction limits to determine
+whether no-slip motion is physically admissible.
 
-% ==============================================================
-\section{Belt Motion, Torque Transmission, and Contact States}
-\label{sec:belt_motion_torque_transmission_contact_states}
-
-The axial force model derived in \Sec{sec:axial} depends on quantities
-that are not determined by axial motion alone. These remaining quantities
-enter through the belt, which couples the primary and secondary pulleys in
-two distinct ways. First, the belt moves through the pulley system with a
-transport speed that enters the belt centrifugal loading terms. Second,
-through frictional contact with the pulley faces, it transmits tangential
-force and therefore torque between the pulleys. The purpose of this section
-is to introduce the belt as the coupling medium of the CVT, define the
-belt transport motion and torque path through the system, and then
-distinguish the stick and slip states that govern transmission behavior.
-
-% ==============================================================
-\subsection{The Belt as the Coupling Medium}
-
-The primary and secondary pulleys do not interact directly.
-All mechanical interaction between them occurs through the belt.
-The belt is therefore the coupling medium of the CVT.
-
-This coupling occurs in two distinct ways.
-
-First, the belt moves through the pulley system with a transport speed.
-Because the belt has mass, this motion contributes to the dynamics through
-belt-speed-dependent effects such as centrifugal loading.
-
-Second, the belt transmits tangential traction through frictional contact
-with the pulley faces. This tangential interaction is what allows torque
-to pass from the primary to the secondary.
-
-These two roles are illustrated in \Fig{fig:torque_path_1}. The primary pulley
-drives the belt, the belt moves through the transmission path, and the belt in
-turn drives the secondary pulley.
-
-\begin{figure}[H]
-    \centering
-    \includegraphics[width=0.8\linewidth]{./illustrations/torque/cvt_overview_forces.png}
-    \caption{Belt-mediated coupling in the CVT. The primary pulley applies
-    torque to the belt, the belt moves through the transmission path, and the
-    belt applies torque to the secondary pulley. Through frictional contact,
-    the belt also transmits tangential force between the pulley faces.}
-    \label{fig:torque_path_1}
-\end{figure}
-
-To describe this interaction, the following belt-mediated quantities will be used:
-
-\begin{align}
-\tau_p &:\ \text{torque applied by the primary pulley onto the belt}, \\
-\tau_s &:\ \text{torque applied by the belt onto the secondary pulley}, \\
-F_t &:\ \text{effective tangential force transmitted through the belt}, \\
-\hat{v}_b &:\ \text{modeled belt transport speed}.
-\end{align}
-
-The quantities $\tau_p$ and $\tau_s$ describe how torque enters and leaves the
-belt transmission path.
-The quantity $F_t$ describes the tangential traction carried through the belt.
-The quantity $\hat{v}_b$ describes the motion of the belt itself through the
-pulley system.
-
-The remainder of this section develops these belt-mediated quantities in order.
-We first examine the transport motion of the belt, then the tangential force
-and torque path carried through it, and finally the contact states that govern
-whether the transmission is in stick or slip.
-
-% ==============================================================
-\subsection{Belt Transport Motion}\label{sec:belt_transport_motion}
-
-Before torque transmission can be described, the motion of the belt itself
-must be established.
-
-Under \AssRef{assump:constant_belt_length}, the belt is assumed to remain
-taut and its total length is fixed. As a result, the belt does not admit
-independent local stretching or compression along different portions of its
-path. Instead, it moves through the CVT as a single continuous body with one
-transport speed at any given instant.
-
-To represent this motion in the dynamic model, let
-
-\[
-\hat{v}_b(t)
-\]
-
-denote the modeled belt transport speed. This quantity describes the rate at
-which belt material moves along the transmission path and is the belt-speed
-state introduced in \Sec{sec:state}.
-
-If a belt segment is adhering locally to pulley \(j \in \{p,s\}\), then the
-belt speed at that contact must match the circumferential speed of the pulley
-at the radius where the belt mass is modeled to move. Using the centroid
-radius from \Eq{eq:rj_cm_definition}, the pulley-imposed belt-line speeds are therefore
-
-\begin{equation}
-v_{p,\mathrm{cm}}
-=
-r_{p,\mathrm{cm}}(s)\,\omega_p,
-\qquad
-v_{s,\mathrm{cm}}
-=
-r_{s,\mathrm{cm}}(s)\,\omega_s.
-\label{eq:belt_line_speeds}
-\end{equation}
-
-These quantities represent the belt transport speeds that would be imposed by
-the primary and secondary pulleys, respectively, if the belt were adhering
-locally at each contact.
-
-If both pulley contacts are adhering simultaneously, then the belt cannot move
-at two different speeds at once. The transport speed must therefore satisfy the
-compatibility condition
-
-\begin{equation}
-\hat{v}_b
-=
-v_{p,\mathrm{cm}}
-=
-v_{s,\mathrm{cm}}.
-\label{eq:vb_stick_compatibility}
-\end{equation}
-
-This is the kinematic condition associated with sticking contact.
-
-If the two pulley-imposed belt-line speeds are unequal, then simultaneous
-adherence at both contacts is not kinematically possible. In that case, the
-transmission must depart from the sticking condition and enter a slipping
-state, which is discussed later in this section.
-
-With the belt transport motion now identified, the next step is to determine
-how tangential force and power are carried through this moving belt.
-
-
-% ==============================================================
-\subsection{Belt Power Flow and Torque Transmission}
-
-With the belt transport motion now identified, the next step is to determine
-how force and power are carried through the moving belt.
-
-Since the belt is the only mechanical connection between the pulleys, it must
-carry the power transmitted through the CVT.
-
-Torque transmission arises from tangential forces acting between the belt and
-the pulley faces. Let \(F_t\) denote the effective tangential force transmitted
-through the belt.
-
-The mechanical power carried by the belt is therefore
-
-\begin{equation}
-P = F_t \,\hat{v}_b.
-\label{eq:belt_power}
-\end{equation}
-
-Under \AssRef{assump:ideal_cvt_power}, this power is conserved through the
-transmission, so that the power entering the belt at the primary equals the
-power leaving at the secondary.
-
-The same transmitted tangential force \(F_t\) acts at the effective contact
-radius of each pulley. The torques associated with this force are therefore
-
-\begin{align}
-\tau_p &= r_{p,\mathrm{eff}} \, F_t, \\
-\tau_s &= r_{s,\mathrm{eff}} \, F_t.
-\label{eq:torques_from_Ft}
-\end{align}
-
-Here, \(r_{p,\mathrm{eff}}\) and \(r_{s,\mathrm{eff}}\) are the effective
-contact radii defined by \Eq{eq:primary_effective_radius} and
-\Eq{eq:secondary_effective_radius}, respectively. These radii determine the torque produced
-by the transmitted tangential force.
-Since both torques arise from the same transmitted force, \(F_t\) can be
-eliminated directly. From the primary expression,
-
-\begin{equation}
-F_t = \frac{\tau_p}{r_{p,\mathrm{eff}}}.
-\label{eq:Ft_from_taup}
-\end{equation}
-
-Substituting this into the secondary torque relation gives
-
-\begin{equation}
-\tau_s
-=
-r_{s,\mathrm{eff}}
-\left(
-\frac{\tau_p}{r_{p,\mathrm{eff}}}
-\right)
-=
-\frac{r_{s,\mathrm{eff}}}{r_{p,\mathrm{eff}}}\,\tau_p.
-\label{eq:taus_from_taup_intermediate}
-\end{equation}
-
-Recalling the geometric definition of the CVT ratio from \Eq{eq:cvt_ratio},
-
-\begin{equation}
-R = \frac{r_{s,\mathrm{eff}}}{r_{p,\mathrm{eff}}},
-\label{eq:R_eff_repeat}
-\end{equation}
-
-it follows that
-
-\begin{equation}
-\tau_s = R\,\tau_p.
-\label{eq:torque_ratio}
-\end{equation}
-
-Thus, the torque carried through the belt scales directly with the current
-CVT ratio. The primary and secondary torques are not independent quantities,
-but two descriptions of the same belt-mediated transmission process.
-
-This observation motivates the introduction of a single \emph{coupling torque}.
-
-\begin{equation}
-\tau_c \equiv \tau_p.
-\end{equation}
-
-The corresponding secondary torque is then
-\begin{equation}
-\tau_s = R \, \tau_c.
-\end{equation}
-
-The transmitted torque is thus not a property of either pulley in isolation, but
-of the belt--pulley interaction as a whole. The quantities $\tau_p$ and $\tau_s$
-represent the primary-side and secondary-side expressions of this same coupling
-torque.
-
-
-\subsection{Transmission Regimes}
-\label{sec:transmission_regimes}
-
-The coupling torque $\tau_c$ defined in \Eq{eq:torque_ratio} is the torque
-actually transmitted through the belt.
-It is not prescribed externally.
-Instead, its value depends on the contact state of the transmission.
-
-In \Sec{sec:belt_transport_motion}, the belt was introduced as a moving body
-with modeled transport speed $\hat{v}_b$.
-That quantity describes the motion of belt material through the CVT and is used
-in belt-speed-dependent effects such as centrifugal loading.
-The present subsection addresses a different issue: whether the belt is locally
-adhering or slipping at the pulley contacts.
-For this purpose, the relevant kinematic quantities are the tangential contact
-speeds imposed by the pulley surfaces.
-
-\paragraph{No-slip torque.}
-
-If the belt remains adhered at the pulley contacts, then the transmission
-behaves as a sticking constraint.
-In that case, the transmitted torque is whatever value is required to preserve
-that adhered motion.
-
-We denote this required torque by
-\begin{equation}
-\tau_{\mathrm{ns}},
-\end{equation}
-where the subscript ``ns'' denotes \emph{no slip}.
-Thus, in a sticking state,
-\begin{equation}
-\tau_c = \tau_{\mathrm{ns}}.
-\end{equation}
-
-\paragraph{Traction limits.}
-
-Adherence cannot be maintained for arbitrary transmitted torque.
-The belt--pulley contact can only sustain a finite tangential traction, and
-therefore only a finite coupling torque.
-
-We therefore introduce directional traction bounds and write the admissible
-sticking interval as
-\begin{equation}
-\tau_- \le \tau_{\mathrm{ns}} \le \tau_+.
-\label{eq:stick_admissible_interval}
-\end{equation}
-
-If \Eq{eq:stick_admissible_interval} holds, then the no-slip torque lies within
-the available traction limits, so sticking is physically admissible.
-
-If instead $\tau_{\mathrm{ns}}$ lies outside this interval, then the torque
-required to maintain adherence cannot be supported by the contact, and slip must
-occur.
-
-\paragraph{Why a slip metric is still needed.}
-
-The traction condition alone is not enough to determine the regime.
-Once slipping has begun, the transmission does not return immediately to stick
-simply because $\tau_{\mathrm{ns}}$ later re-enters the admissible interval.
-Stick is only recovered once the existing relative motion has decayed to zero.
-
-For this reason, one further quantity is needed: a measure of the relative
-contact-speed mismatch.
-
-In analogy with the pulley-imposed belt-line speeds introduced in
-\Sec{sec:belt_transport_motion}, define the pulley-imposed tangential contact
-speeds at the effective radii by
-\begin{equation}
-u_p = r_{p,\mathrm{eff}}\omega_p,
-\qquad
-u_s = r_{s,\mathrm{eff}}\omega_s.
-\label{eq:contact_surface_speeds}
-\end{equation}
-
-These are the tangential speeds that the primary and secondary pulley surfaces
-would impose at their effective contact radii if each were enforcing local
-adherence.
-
-Under \AssRef{assump:single_slip_interface}, the model permits slip at only one
-pulley contact at a time.
-A single scalar mismatch is therefore sufficient:
-\begin{equation}
-v_{\Delta}
-=
-u_p - u_s
-=
-r_{p,\mathrm{eff}}\omega_p
--
-r_{s,\mathrm{eff}}\omega_s.
-\label{eq:v_delta_def}
-\end{equation}
-
-If
-\begin{equation}
-v_{\Delta}=0,
-\label{eq:v_delta_zero}
-\end{equation}
-then the two pulley motions are compatible with a common adhered contact motion,
-so a sticking state is kinematically possible.
-
-If instead
-\begin{equation}
-v_{\Delta}\neq 0,
-\label{eq:v_delta_nonzero}
-\end{equation}
-then the two pulley contacts are demanding different tangential contact speeds,
-and simultaneous adherence at both contacts is not possible.
-
-The sign of $v_{\Delta}$ indicates the slip direction:
-if $v_{\Delta}>0$, the primary tends to drive the belt faster than the secondary
-is accepting it; if $v_{\Delta}<0$, the opposite is true.
-
-\paragraph{Stick and slip states.}
-
-The transmission can therefore be in stick only when two conditions are
-satisfied simultaneously:
-
-\begin{enumerate}
-    \item the required no-slip torque lies within the admissible traction
-    interval, and
-    \item the relative slip velocity has vanished.
-\end{enumerate}
-
-This gives the regime structure
-\begin{equation}
-\tau_c =
-\begin{cases}
-\tau_{\mathrm{ns}},
-&
-v_{\Delta}=0
-\;\text{and}\;
-\tau_- \le \tau_{\mathrm{ns}} \le \tau_+,
-\\[10pt]
-\text{traction-limited value},
-&
-\text{otherwise}.
-\end{cases}
-\label{eq:tau_c_regime_structure}
-\end{equation}
-
-\paragraph{Physical interpretation.}
-
-If the required no-slip torque leaves the admissible interval, the contact can
-no longer maintain adherence and slip begins.
-
-Once slip is present, the transmission remains on a slip branch until the
-existing mismatch has been driven back to zero.
-This is why the slip metric is needed in addition to the traction limits:
-the traction limits determine whether sticking is admissible, while
-$v_{\Delta}$ determines whether slipping is still occurring and, if so, in which
-direction. Importantly, this does not determine at \emph{which} contact slip occurs,
-only which is overruning the other.
-
-
-% ==============================================================
-\subsection{Regularized Belt-Speed Evolution}
-\label{sec:belt_speed_evolution}
-
-The modeled belt transport speed $\hat{v}_b$ introduced in
-\Sec{sec:belt_transport_motion} enters the axial force model through the
-belt centrifugal terms derived in \Sec{sec:belt-centrifugal}.
-Its evolution must therefore be specified as part of the complete dynamic model.
-
-\paragraph{Exact closure in stick.}
-
-From \Eq{eq:belt_line_speeds}, the pulley-imposed belt-line speeds are
-
-\[
-v_{p,\mathrm{cm}} = r_{p,\mathrm{cm}}(s)\,\omega_p,
-\qquad
-v_{s,\mathrm{cm}} = r_{s,\mathrm{cm}}(s)\,\omega_s.
-\]
-
-When the transmission is in a sticking state, these two speeds are compatible.
-In that case, the belt transport speed is determined exactly by the adhered
-kinematics, so that
-
-\begin{equation}
-\hat{v}_b = v_{p,\mathrm{cm}} = v_{s,\mathrm{cm}}.
-\label{eq:vb_stick_exact}
-\end{equation}
-
-In the same way, the time derivative of the belt transport speed is also
-determined exactly in stick by differentiating the compatibility relation.
-Using the primary-side expression gives
-
-\begin{equation}
-\dot{\hat{v}}_b
-=
-\frac{\dd}{\dd t}\!\left(r_{p,\mathrm{cm}}\,\omega_p\right)
-=
-\dot r_{p,\mathrm{cm}}\,\omega_p
-+
-r_{p,\mathrm{cm}}\,\dot\omega_p,
-\label{eq:vb_dot_stick_primary}
-\end{equation}
-
-and, equivalently, using the secondary-side expression gives
-
-\begin{equation}
-\dot{\hat{v}}_b
-=
-\frac{\dd}{\dd t}\!\left(r_{s,\mathrm{cm}}\,\omega_s\right)
-=
-\dot r_{s,\mathrm{cm}}\,\omega_s
-+
-r_{s,\mathrm{cm}}\,\dot\omega_s.
-\label{eq:vb_dot_stick_secondary}
-\end{equation}
-
-Thus, no additional approximation is required while the contacts remain stuck.
-
-\paragraph{Need for a slip closure.}
-
-When the transmission is slipping, the two pulley-imposed belt-line speeds no
-longer agree.
-At that point, the exact belt transport speed is no longer determined by
-kinematic compatibility alone.
-A fully resolved treatment would require a simultaneous branch-dependent
-solution for contact state, transmitted torque, and adhered belt motion.
-
-Such a closure is beyond the level of detail adopted in the present model.
-Instead, the belt transport speed is represented during slip by a regularized
-dynamic approximation.
-This preserves a continuous belt-speed state for use in belt-speed-dependent
-terms, while avoiding a substantially more complicated contact solve.
-
-\paragraph{Regularized target speed.}
-
-To construct this approximation, define the target belt speed
-
-\begin{equation}
-v_b^\ast
-=
-\frac{1}{2}
-\left(
-v_{p,\mathrm{cm}} + v_{s,\mathrm{cm}}
-\right).
-\label{eq:vb_target}
-\end{equation}
-
-This quantity represents the midpoint of the two pulley-imposed belt-line
-speeds and therefore provides a natural reference speed during slip.
-
-\paragraph{Evolution law.}
-
-Outside the sticking regime, the modeled belt speed is evolved toward
-\(v_b^\ast\) using the first-order relaxation law
-
-\begin{equation}
-\dot{\hat{v}}_b
-=
-\frac{v_b^\ast - \hat{v}_b}{T_b},
-\label{eq:vb_relaxation}
-\end{equation}
-
-where \(T_b > 0\) is a belt-speed regularization time constant.
-
-A small value of \(T_b\) causes \(\hat{v}_b\) to track the target speed
-rapidly, while a larger value produces a more gradual response.
-In either case, \(\hat{v}_b\) remains continuous through transitions between
-stick and slip.
-
-\paragraph{Resulting closure.}
-
-The modeled belt transport speed is therefore obtained from the regime-dependent
-rule
-
-\begin{equation}
-\hat{v}_b =
-\begin{cases}
-v_{p,\mathrm{cm}} = v_{s,\mathrm{cm}},
-&
-\text{sticking regime},
-\\[10pt]
-\text{solution of }
-\dot{\hat{v}}_b = \dfrac{v_b^\ast - \hat{v}_b}{T_b},
-&
-\text{slipping regime.}
-\end{cases}
-\label{eq:vb_regime_law}
-\end{equation}
-
-Its corresponding time derivative is
-
-\begin{equation}
-\dot{\hat{v}}_b =
-\begin{cases}
-\dot r_{p,\mathrm{cm}}\,\omega_p + r_{p,\mathrm{cm}}\,\dot\omega_p
-=
-\dot r_{s,\mathrm{cm}}\,\omega_s + r_{s,\mathrm{cm}}\,\dot\omega_s,
-&
-\text{sticking regime},
-\\[10pt]
-\dfrac{v_b^\ast - \hat{v}_b}{T_b},
-&
-\text{slipping regime.}
-\end{cases}
-\label{eq:vb_dot_regime_law}
-\end{equation}
-
-This closure is exact in stick and regularized in slip.
-Its purpose is not to resolve the detailed local adhered contact during slip,
-but to provide a consistent and continuous modeled belt speed for the
-belt-speed-dependent terms already present in the dynamic formulation.
-
-\subsection{Summary and Forward Outlook}
-
-This section established the belt-level quantities required to couple the
-axial and rotational subsystems of the CVT model.
-
-The belt was introduced as the mechanical connection between the pulleys,
-with two distinct dynamical roles: it transports belt mass through the
-system and it transmits tangential force and therefore torque between the
-pulley faces. On this basis, the modeled belt transport speed $\hat{v}_b$
-and the coupling torque $\tau_c$ were defined, and the stick and slip
-regimes governing transmission behavior were identified. A regularized
-evolution law for $\hat{v}_b$ was then introduced to close the
-belt-speed-dependent terms of the model during slip while preserving exact
-kinematic compatibility in stick.
-
-At this stage, the transmission structure has been established, but two
-ingredients remain to be determined explicitly: the no-slip torque
-$\tau_{\mathrm{ns}}$ and the traction limits $\tau_-$ and $\tau_+$.
-The next section derives the no-slip torque required to maintain adhered
-motion. The section following that then derives the admissible traction
-bounds that determine when sticking can be sustained and when the
-transmission must remain on a slip branch.
-
-\section{Derivation of the No-Slip Coupling Torque}
-\label{sec:tau_ns}
-
-In \Sec{sec:transmission_regimes}, the coupling torque $\tau_c$ was introduced
-as an internal torque whose value depends on the active transmission regime.
-The purpose of this section is to derive the explicit form of $\tau_c$ on the
-sticking branch, i.e.\ the no-slip torque $\tau_{\mathrm{ns}}$.
-
-We proceed in four steps:
-
-\begin{enumerate}
-    \item Write the rotational equations of motion for the primary and secondary pulleys.
-    \item Recall the external torque and inertia models on each side.
-    \item Impose the no-slip kinematic constraint.
-    \item Eliminate angular accelerations to obtain the no-slip coupling torque.
-\end{enumerate}
-
-The result is the sticking-branch torque law used later in the regime model.
-
-% --------------------------------------------------------------
 \subsection{System Definition and Torque Path}
+\label{sec:belt-torque-path}
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=0.85\linewidth]{./illustrations/torque/cvt_overview_forces.png}
-\caption{Torque transmission schematic.
-Engine torque $\tau_{\text{eng}}$ drives the primary pulley
-(angular velocity $\omega_p$).
-Coupling torque $\tau_c$ is transmitted through the belt to the secondary pulley
-(angular velocity $\omega_s$).
-The secondary delivers torque to the downstream drivetrain,
-which resists motion with torque $\tau_{\text{load}}$.}
+\includegraphics[width=1.1\linewidth]{./illustrations/torque/cvt_overview_forces.png}
+\caption{Torque path through the CVT. Engine torque
+$\tau_{\mathrm{eng}}$ drives the primary pulley with angular speed
+$\omega_p$. The primary pulley exchanges torque with the belt, the belt
+exchanges torque with the secondary pulley, and the secondary pulley drives the
+downstream drivetrain while opposing the reflected load torque
+$\tau_{\mathrm{load}}$.}
 \label{fig:torque_path}
 \end{figure}
 
-We model two rotating bodies:
+The torque-transfer subsystem shown in \Fig{fig:torque_path} is modeled using
+three bodies:
 
 \begin{itemize}
-    \item the primary side, rigidly connected to the engine,
-    \item the secondary side, driving the downstream drivetrain and vehicle.
+    \item the primary pulley,
+    \item the belt,
+    \item the secondary pulley.
 \end{itemize}
 
-The external torques and effective inertias used below are
+The primary pulley receives the engine torque $\tau_{\mathrm{eng}}$ and
+exchanges torque with the belt. Let $\tau_p(t)$ denote the torque exerted by the
+belt contact on the primary pulley. With the sign convention from
+\Sec{sec:rotational_sign}, this torque opposes positive engine-driven rotation
+of the primary pulley.
 
-\begin{itemize}
-    \item $\tau_{\text{eng}}(t)$ : engine output torque applied to the primary pulley,
-    \item $\tau_{\text{load}}(t)$ : resisting torque reflected to the secondary pulley,
-    \item $I_p$ : total rotational inertia of the engine + primary CVT pulley,
-    \item $I_s$ : total effective rotational inertia about the secondary pulley.
-\end{itemize}
+The secondary pulley receives torque from the belt and delivers torque to the
+downstream drivetrain. Let $\tau_s(t)$ denote the torque exerted by the belt
+contact on the secondary pulley. This torque acts in the positive rotational
+direction of the secondary pulley, while the reflected load torque
+$\tau_{\mathrm{load}}(t)$ opposes the motion.
 
-Their explicit models are recalled in the following subsections.
-The remaining internal unknown is the transmitted coupling torque $\tau_c(t)$.
+Applying \theoryRef{th:newton-rot} to the primary pulley gives
 
-% --------------------------------------------------------------
-\subsection{Rotational Equations of Motion}
-
-Applying \theoryRef{th:newton-rot} to the primary side gives
-
-\bigeq{eq:primary_rot_dyn}{Primary Pulley Rotational Dynamics}{
-\tau_{\text{eng}}(t) - \tau_c(t)
+\bigeq{eq:primary_rotational_eom_belt}{Primary Pulley Rotational Dynamics}{
+\tau_{\mathrm{eng}}(t) - \tau_p(t)
 =
-I_p\,\dot{\omega}_p(t)
+I_p \dot{\omega}_p(t)
 }
 
-Using the secondary-side no-slip torque mapping established in
-\Eq{eq:torque_ratio}, the secondary rotational equation on the sticking branch is
+Similarly, applying \theoryRef{th:newton-rot} to the secondary pulley gives
 
-\bigeq{eq:secondary_rot_dyn}{Secondary Pulley Rotational Dynamics}{
-R(t)\tau_c(t) - \tau_{\text{load}}(t)
+\bigeq{eq:secondary_rotational_eom_belt}{Secondary Pulley Rotational Dynamics}{
+\tau_s(t) - \tau_{\mathrm{load}}(t)
 =
-I_s\,\dot{\omega}_s(t)
+I_s \dot{\omega}_s(t)
 }
 
-At this point, \Eq{eq:primary_rot_dyn} and \Eq{eq:secondary_rot_dyn}
-provide two equations for the three internal unknowns
+The belt is described by the transport speed $v_b(t)$ introduced in
+\Sec{sec:state}. Under \AssRef{assump:constant_belt_length}, the belt moves as a
+continuous path with a single belt-line speed. Its angular speed around each
+pulley may differ because angular speed depends on local radius, but the
+transport speed $v_b$ is common to the belt motion.
+
+For this reason, the belt equation of motion is written along the belt path
+rather than about a pulley axis. A contact torque produces an equivalent
+belt-line force when divided by the effective torque radius. Using the effective
+radii defined in \Sec{sec:effective-radius-placeholder}, the primary contact
+contributes $\tau_p/r_{p,\mathrm{eff}}$ to the belt-line motion, while the
+secondary contact contributes $\tau_s/r_{s,\mathrm{eff}}$ in the opposing
+direction. Applying \theoryRef{th:newton-trans} to the belt therefore gives
+
+\bigeq{eq:belt_transport_eom}{Belt Transport Dynamics}{
+m_b \dot v_b(t)
+=
+\frac{\tau_p(t)}{r_{p,\mathrm{eff}}(s)}
+-
+\frac{\tau_s(t)}{r_{s,\mathrm{eff}}(s)}
+}
+
+Here $m_b$ is the total belt mass defined in \Eq{eq:mb_def}. Together,
+\Eq{eq:primary_rotational_eom_belt}, \Eq{eq:secondary_rotational_eom_belt}, and
+\Eq{eq:belt_transport_eom} define the equations of motion for the three bodies
+in the torque path.
+
+The quantities appearing in these equations fall into two groups. The first
+group consists of externally supplied torques and inertial parameters:
 \[
-\dot{\omega}_p(t),\qquad
-\dot{\omega}_s(t),\qquad
-\tau_c(t).
+\tau_{\mathrm{eng}}, \qquad \tau_{\mathrm{load}}, \qquad I_p, \qquad I_s,
+\qquad m_b.
 \]
+These are not determined by the belt contact state itself. They are defined by
+the engine model, the reflected vehicle load model, and the lumped inertia and
+belt-mass definitions recalled in the following subsection.
 
-The remaining quantities appearing in these equations
---- namely the applied torques $\tau_{\text{eng}}(t)$ and $\tau_{\text{load}}(t)$,
-the effective inertias $I_p$ and $I_s$, and the geometric ratio $R(t)$ ---
-are treated as known inputs, parameters, or previously defined geometric
-quantities.
-Their explicit forms are recalled in the following subsections.
+The second group consists of the torque-transfer unknowns:
+\[
+\dot{\omega}_p, \qquad \dot{\omega}_s, \qquad \dot v_b, \qquad \tau_p,
+\qquad \tau_s.
+\]
+These five quantities describe the accelerations of the three bodies and the two
+contact torques exchanged through the belt. The three equations of motion above
+are therefore not sufficient to determine them on their own. The remaining
+closure comes from the belt--pulley contact state, beginning with the no-slip
+compatibility condition derived after the external torque and inertia models are
+recalled.
 
-Thus, the rotational system is not yet closed:
-two equations are available for three unknowns.
-A third relation is therefore required to determine the coupling torque.
-For the no-slip branch, that final relation will come from the sticking
-kinematic constraint introduced after the torque and inertia models are stated.
-
-% --------------------------------------------------------------
 \subsection{Engine Torque Model}
 \label{sec:tau_eng_model}
 
@@ -4890,8 +4381,7 @@ The supplied torque function must satisfy:
 
 No specific functional form is required.
 The dynamical model only requires the mapping
-$\omega_p \mapsto \tau_{\text{eng}}$
-to evaluate \Eq{eq:primary_rot_dyn}.
+$\omega_p \mapsto \tau_{\text{eng}}$.
 
 % --------------------------------------------------------------
 \paragraph{Example: Kohler CH440 Engine Curve}
@@ -4919,7 +4409,7 @@ a continuous admissible torque function over the operating range.
 \label{sec:tau_load_model}
 
 The resisting torque $\tau_{\text{load}}(t)$ in
-\Eq{eq:secondary_rot_dyn} represents the
+\Eq{eq:secondary_rotational_eom_belt} represents the
 longitudinal road load reflected to the secondary pulley.
 
 We proceed in three stages:
@@ -5113,7 +4603,7 @@ m g \sin\alpha
 % --------------------------------------------------------------
 \subsection{Inertia Definitions}
 
-The rotational equations \Eq{eq:primary_rot_dyn}--\Eq{eq:secondary_rot_dyn}
+The rotational equations \Eq{eq:primary_rotational_eom_belt}--\Eq{eq:secondary_rotational_eom_belt}
 require the effective rotational inertia about each pulley axis.
 
 % --------------------------------------------------------------
@@ -5244,227 +4734,256 @@ Equation \Eq{eq:Is_def} defines the total inertia
 opposing angular acceleration of the secondary pulley.
 
 % --------------------------------------------------------------
-\subsection{No-Slip Ratio Kinematics}
 
-As established in \Sec{sec:transmission_regimes}, the sticking branch is
-characterized by the condition
-\[
-v_{\Delta}=0,
-\]
-where \(v_{\Delta}\) was defined in \Eq{eq:v_delta_def} as
-\[
-v_{\Delta}
-=
-r_{p,\text{eff}}(t)\,\omega_p(t)
--
-r_{s,\text{eff}}(t)\,\omega_s(t).
-\]
 
-Setting this equal to zero gives
+\subsection{No-Slip Kinematic Compatibility}
+\label{sec:no-slip-compatibility}
+
+The equations of motion in \Sec{sec:belt-torque-path} describe the torque-transfer
+subsystem before any contact constraint has been imposed. To form the no-slip
+candidate, we now require the belt to adhere to each pulley contact.
+
+Let
+\[
+j \in \{p,s\}
+\]
+denote either the primary or secondary pulley. If the belt is adhered to pulley
+\(j\), then the belt transport speed must match the tangential surface speed of
+that pulley at the effective torque radius. Therefore,
 \begin{equation}
-r_{p,\text{eff}}(t)\,\omega_p(t)
-=
-r_{s,\text{eff}}(t)\,\omega_s(t).
-\label{eq:no_slip_condition}
+v_b(t) = r_{j,\mathrm{eff}}(s(t))\,\omega_j(t),
+\qquad j \in \{p,s\}.
+\label{eq:no_slip_identity_j}
 \end{equation}
 
-Using the geometric CVT ratio
+Equation \Eq{eq:no_slip_identity_j} is the velocity-level no-slip condition. Since
+the equations of motion involve accelerations, we differentiate it with respect
+to time. Starting from
 \[
-R(t)
-=
-\frac{r_{s,\text{eff}}(t)}{r_{p,\text{eff}}(t)},
+v_b(t) = r_{j,\mathrm{eff}}(s(t))\,\omega_j(t),
 \]
-\Eq{eq:no_slip_condition} becomes
+the product rule gives
 \begin{equation}
-\omega_p(t)=R(t)\,\omega_s(t).
-\label{eq:ratio_speed_constraint}
-\end{equation}
-
-This is the defining kinematic relation of the sticking branch.
-If \Eq{eq:ratio_speed_constraint} does not hold, the present derivation no
-longer applies and the transmission must instead be described by the slip
-branch.
-
-Differentiating \Eq{eq:ratio_speed_constraint} with respect to time gives
-\begin{equation}
-\dot{\omega}_p(t)
+\dot v_b(t)
 =
-R(t)\,\dot{\omega}_s(t)
+\dot r_{j,\mathrm{eff}}(t)\,\omega_j(t)
 +
-\omega_s(t)\,\dot R(t),
-\label{eq:alpha_relation}
+r_{j,\mathrm{eff}}(s(t))\,\dot\omega_j(t).
+\label{eq:no_slip_vb_dot_j}
 \end{equation}
-which is the corresponding acceleration-level compatibility condition.
 
-\subsection{Eliminating Angular Accelerations}
-
-We now combine the primary rotational dynamics
-\Eq{eq:primary_rot_dyn},
-the secondary rotational dynamics
-\Eq{eq:secondary_rot_dyn},
-and the no-slip compatibility relation
-\Eq{eq:alpha_relation}
-to solve for the coupling torque on the sticking branch.
-
-From \Eq{eq:primary_rot_dyn},
-
-\[
-\tau_c
-=
-\tau_{\text{eng}}
--
-I_p\,\dot{\omega}_p.
-\]
-
-Substituting \Eq{eq:alpha_relation} gives
-
+Since the effective radius depends on time only through the shift coordinate
+\(s(t)\),
 \begin{equation}
-\tau_c
+\dot r_{j,\mathrm{eff}}(t)
 =
-\tau_{\text{eng}}
--
-I_p\bigl(R\dot{\omega}_s+\omega_s\dot R\bigr).
-\label{eq:tau_c_intermediate}
+\frac{d r_{j,\mathrm{eff}}}{ds}\dot s(t).
+\label{eq:reff_time_derivative_j}
 \end{equation}
 
-From \Eq{eq:secondary_rot_dyn},
-
-\[
-\dot{\omega}_s
-=
-\frac{R\tau_c-\tau_{\text{load}}}{I_s}.
-\]
-
-Substituting this into \Eq{eq:tau_c_intermediate} gives
-
-\begin{align}
-\tau_c
-&=
-\tau_{\text{eng}}
--
-I_p
-\left[
-R\left(
-\frac{R\tau_c-\tau_{\text{load}}}{I_s}
-\right)
-+
-\omega_s\dot R
-\right]
-\nonumber\\[6pt]
-&=
-\tau_{\text{eng}}
--
-\frac{I_p}{I_s}
-\left(
-R^2\tau_c-R\tau_{\text{load}}
-\right)
--
-I_p\omega_s\dot R.
-\end{align}
-
-Collecting terms yields
-
+Solving Equation \Eq{eq:no_slip_vb_dot_j} for the pulley angular acceleration
+gives
 \begin{equation}
-\tau_c
-\left(
-1+\frac{I_p}{I_s}R^2
-\right)
-=
-\tau_{\text{eng}}
-+
-\frac{I_p}{I_s}R\tau_{\text{load}}
--
-I_p\omega_s\dot R.
-\label{eq:tau_c_rearranged}
-\end{equation}
-
-Because this derivation has imposed the sticking constraint
-\Eq{eq:ratio_speed_constraint}, the resulting solution is precisely the no-slip
-coupling torque.
-
-% --------------------------------------------------------------
-\subsection{Closed-Form No-Slip Coupling Torque}
-
-The no-slip coupling torque is therefore
-
-\bigeq{eq:tau_ns_final}{No-Slip Coupling Torque}{
-\tau_{\mathrm{ns}}(t)
+\dot\omega_j(t)
 =
 \frac{
-\tau_{\text{eng}}(t)
-+
-\dfrac{I_p}{I_s}R(t)\,\tau_{\text{load}}(t)
--
-I_p\,\omega_s(t)\,\dot R(t)
+\dot v_b(t)-\dot r_{j,\mathrm{eff}}(t)\,\omega_j(t)
 }{
-1+\dfrac{I_p}{I_s}R(t)^2
-}.
-}
-
-Equation \Eq{eq:tau_ns_final} is the torque required to maintain the no-slip
-constraint
-\Eq{eq:ratio_speed_constraint},
-or equivalently the condition
-\(
-v_{\Delta}=0.
-\)
-
-% --------------------------------------------------------------
-\subsection{Section Summary}
-
-This section derived the no-slip coupling torque $\tau_{\mathrm{ns}}$ by
-specializing the rotational dynamics to the sticking branch.
-
-The derivation used three ingredients:
-
-\begin{itemize}
-    \item the primary and secondary rotational equations of motion written in
-          terms of the internal coupling torque $\tau_c$,
-    \item the no-slip kinematic constraint
-          $\omega_p=R\,\omega_s$ and its time derivative
-          $\dot{\omega}_p=R\dot{\omega}_s+\omega_s\dot R$,
-    \item the no-slip torque mapping
-          $\tau_{s,\mathrm{ns}}=R\,\tau_c$.
-\end{itemize}
-
-Together, these relations close the sticking branch and yield the explicit
-result \Eq{eq:tau_ns_final}. This quantity is the ideal adhered-branch
-coupling torque: the value required to maintain sticking kinematics if
-adherence can be sustained. The next sections determine whether this required
-torque is admissible under the traction limits and, when it is not, how the
-simulation transitions to and evolves on the slip branch.
-
-
-\section{Traction Limits and Slip Conditions}
-\label{sec:traction-slip}
-
-In \Sec{sec:transmission_regimes}, the sticking branch was defined by the
-requirement that the no-slip coupling torque remain within an admissible
-traction interval. In \Sec{sec:tau_ns}, the corresponding no-slip torque
-$\tau_{\mathrm{ns}}$ was derived explicitly.
-
-The remaining task is therefore to determine the traction bounds themselves.
-
-Because belt--pulley friction is finite, the contact cannot sustain arbitrary
-tangential traction.
-For any instantaneous clamping state, only a bounded range of transmitted
-coupling torque can be supported before adherence is lost.
-Once the demanded torque leaves that admissible range, the no-slip branch is no
-longer physically realizable and the transmission must enter slip.
-
-Accordingly, the objective of this section is to derive bounds of the form
-
-\begin{equation}
-\tau_- \le \tau \le \tau_+,
-\label{eq:tau_traction_goal}
+r_{j,\mathrm{eff}}(s(t))
+},
+\qquad j \in \{p,s\}.
+\label{eq:no_slip_omega_dot_j}
 \end{equation}
 
-where $\tau_-$ and $\tau_+$ are the negative- and positive-direction traction
-limits, respectively.
+Together with the three equations of motion from \Sec{sec:belt-torque-path},
+this acceleration-level compatibility supplies the no-slip closure. The next
+step is to substitute \Eq{eq:no_slip_omega_dot_j} into the pulley
+equations of motion and solve for the contact torque demands associated with the
+no-slip candidate.
 
-These bounds will later be compared against the no-slip torque
-$\tau_{\mathrm{ns}}$ to determine whether the transmission remains in stick or
-transitions to slip.
+
+\subsection{Solving the No-Slip Torque Demand}
+\label{sec:no-slip-torque-demand}
+
+The no-slip compatibility relation from \Sec{sec:no-slip-compatibility} can now
+be combined with the three equations of motion from \Sec{sec:belt-torque-path}.
+For compactness, define
+\[
+r_p = r_{p,\mathrm{eff}}(s),
+\qquad
+r_s = r_{s,\mathrm{eff}}(s),
+\]
+with corresponding time derivatives \(\dot r_p\) and \(\dot r_s\).
+
+On the no-slip candidate branch, Equation \Eq{eq:no_slip_omega_dot_j} gives
+\[
+\dot\omega_p
+=
+\frac{\dot v_{b,\mathrm{ns}}-\dot r_p\omega_p}{r_p},
+\qquad
+\dot\omega_s
+=
+\frac{\dot v_{b,\mathrm{ns}}-\dot r_s\omega_s}{r_s}.
+\]
+
+Substituting these relations into the primary rotational equation
+\Eq{eq:primary_rotational_eom_belt} gives the primary contact torque required
+to maintain no slip:
+
+\bigeq{eq:tau_p_ns}{Primary No-Slip Torque Demand}{
+\tau_{p,\mathrm{ns}}
+=
+\tau_{\mathrm{eng}}
+-
+I_p
+\left(
+\frac{\dot v_{b,\mathrm{ns}}-\dot r_p\omega_p}{r_p}
+\right)
+}
+
+Similarly, substituting into the secondary rotational equation
+\Eq{eq:secondary_rotational_eom_belt} gives the secondary contact torque required
+to maintain no slip:
+
+\bigeq{eq:tau_s_ns}{Secondary No-Slip Torque Demand}{
+\tau_{s,\mathrm{ns}}
+=
+\tau_{\mathrm{load}}
++
+I_s
+\left(
+\frac{\dot v_{b,\mathrm{ns}}-\dot r_s\omega_s}{r_s}
+\right)
+}
+
+At this point, both torque demands are expressed in terms of the unknown no-slip
+belt acceleration \(\dot v_{b,\mathrm{ns}}\). The belt equation of motion
+\Eq{eq:belt_transport_eom} provides the remaining relation:
+\[
+m_b \dot v_{b,\mathrm{ns}}
+=
+\frac{\tau_{p,\mathrm{ns}}}{r_p}
+-
+\frac{\tau_{s,\mathrm{ns}}}{r_s}.
+\]
+
+Substituting \Eq{eq:tau_p_ns} and \Eq{eq:tau_s_ns} gives
+\[
+m_b \dot v_{b,\mathrm{ns}}
+=
+\frac{1}{r_p}
+\left[
+\tau_{\mathrm{eng}}
+-
+I_p
+\left(
+\frac{\dot v_{b,\mathrm{ns}}-\dot r_p\omega_p}{r_p}
+\right)
+\right]
+-
+\frac{1}{r_s}
+\left[
+\tau_{\mathrm{load}}
++
+I_s
+\left(
+\frac{\dot v_{b,\mathrm{ns}}-\dot r_s\omega_s}{r_s}
+\right)
+\right].
+\]
+
+Expanding and collecting the terms containing \(\dot v_{b,\mathrm{ns}}\) gives
+\[
+\left(
+m_b
++
+\frac{I_p}{r_p^2}
++
+\frac{I_s}{r_s^2}
+\right)
+\dot v_{b,\mathrm{ns}}
+=
+\frac{\tau_{\mathrm{eng}}}{r_p}
+-
+\frac{\tau_{\mathrm{load}}}{r_s}
++
+\frac{I_p \dot r_p\omega_p}{r_p^2}
++
+\frac{I_s \dot r_s\omega_s}{r_s^2}.
+\]
+
+Solving for the no-slip belt acceleration yields
+
+\bigeq{eq:no_slip_vb_dot}{No-Slip Belt Acceleration}{
+\dot v_{b,\mathrm{ns}}
+=
+\frac{
+\dfrac{\tau_{\mathrm{eng}}}{r_p}
+-
+\dfrac{\tau_{\mathrm{load}}}{r_s}
++
+\dfrac{I_p \dot r_p\omega_p}{r_p^2}
++
+\dfrac{I_s \dot r_s\omega_s}{r_s^2}
+}{
+m_b
++
+\dfrac{I_p}{r_p^2}
++
+\dfrac{I_s}{r_s^2}
+}
+}
+
+Substituting \Eq{eq:no_slip_vb_dot} back into \Eq{eq:tau_p_ns} and
+\Eq{eq:tau_s_ns} determines the corresponding no-slip torque demands at the
+primary and secondary contacts.
+
+\Eq{eq:no_slip_vb_dot}, \Eq{eq:tau_p_ns}, and
+\Eq{eq:tau_s_ns} therefore define the no-slip candidate torque transfer. These
+are the torques required to maintain adhered contact at both pulleys. They are
+not yet guaranteed to be physically admissible; the next section compares these
+demands against the available belt--pulley traction limits.
+
+\subsection{Transition to Traction Limits}
+\label{sec:no-slip-transition}
+
+At this point, the no-slip candidate is fully determined. For any current state,
+\Eq{eq:no_slip_vb_dot} gives the belt acceleration required by adhered motion,
+and \Eq{eq:tau_p_ns}--\Eq{eq:tau_s_ns} give the corresponding primary and
+secondary torque demands.
+
+These equations answer what torque transfer would be required to keep the belt
+stuck to both pulleys. They do not yet answer whether the contacts can actually
+support those torques. That question depends on the available frictional traction
+generated by the axial clamping forces derived in \Sec{sec:axial}.
+
+The next section derives the traction bounds for each pulley contact. The
+no-slip demands \(\tau_{p,\mathrm{ns}}\) and \(\tau_{s,\mathrm{ns}}\) can then
+be compared against those bounds to decide whether the no-slip candidate is
+admissible or whether the transmission must enter a slip branch.
+
+\section{Traction Limits and Slip Conditions}
+\label{sec:traction-limits}
+
+The previous section derived the no-slip torque demands
+\(\tau_{p,\mathrm{ns}}\) and \(\tau_{s,\mathrm{ns}}\). These are the torques
+that would be required at the primary and secondary belt contacts if the belt
+remained adhered to both pulleys.
+
+Those demands are not automatically attainable. Torque is transmitted through
+frictional traction between the belt and the sheave faces, and this traction is
+limited by the available normal force generated by axial clamping. Therefore,
+each pulley contact can support only a bounded range of torque before slip must
+occur.
+
+The purpose of this section is to derive those pulley-wise traction bounds. For
+each pulley \(j \in \{p,s\}\), we first determine the maximum admissible
+tight--slack tension difference across the wrap, then convert that tension
+difference into a torque bound using the effective torque radius. These bounds
+will later be compared against \(\tau_{p,\mathrm{ns}}\) and
+\(\tau_{s,\mathrm{ns}}\) to decide whether the no-slip candidate is admissible.
+
+
 % --------------------------------------------------------------
 \subsection{Tight--Slack Tension Difference and Torque Capacity}
 \label{sec:traction_overview}
@@ -5866,9 +5385,9 @@ r_{j,\mathrm{cm}}(t),
 \qquad
 \dot r_{j,\mathrm{cm}}(t),
 \qquad
-\hat v_b(t),
+v_b(t),
 \qquad
-\dot{\hat v}_b(t).
+\dot{v}_b(t).
 \]
 
 \paragraph{Coordinate system and unit vectors}
@@ -5885,13 +5404,6 @@ with the local wrap geometry on pulley \(j\):
 
 The tangential direction of belt motion is therefore exactly
 \(\mathbf e_{\theta,j}\).
-
-\begin{figure}[H]
-    \centering
-    \includegraphics[width=0.7\textwidth]{./illustrations/slip/polar.png}
-    \caption{Definition of the radial and tangential unit vectors.}
-    \label{fig:polar_basis_placeholder}
-\end{figure}
 
 \paragraph{Tangential acceleration as a component of \(\mathbf a\)}
 
@@ -5914,7 +5426,7 @@ The position of the belt element centroid relative to the pulley center is
 \end{equation}
 
 The belt transport speed is the tangential speed of the belt element along the
-wrap. Since the modeled belt transport speed is \(\hat v_b\), the velocity of
+wrap. Since the modeled belt transport speed is \(v_b\), the velocity of
 the belt element centroid is
 
 \begin{equation}
@@ -5922,11 +5434,11 @@ the belt element centroid is
 =
 \dot r_{j,\mathrm{cm}}\,\mathbf e_{r,j}
 +
-\hat v_b\,\mathbf e_{\theta,j}.
+v_b\,\mathbf e_{\theta,j}.
 \label{eq:velocity_polar_vb}
 \end{equation}
 
-Thus, \(\dot r_{j,\mathrm{cm}}\) is the radial speed and \(\hat v_b\) is the
+Thus, \(\dot r_{j,\mathrm{cm}}\) is the radial speed and \(v_b\) is the
 tangential speed.
 
 \paragraph{Step 2: time derivatives of the unit vectors}
@@ -5947,7 +5459,7 @@ to the belt transport speed by
 =
 \omega_{b,j}
 =
-\frac{\hat v_b}{r_{j,\mathrm{cm}}}.
+\frac{v_b}{r_{j,\mathrm{cm}}}.
 \label{eq:omega_bj_repeat}
 \end{equation}
 
@@ -5955,12 +5467,12 @@ Using the chain rule, the unit-vector time derivatives therefore become
 \begin{equation}
 \dot{\mathbf e}_{r,j}
 =
-\frac{\hat v_b}{r_{j,\mathrm{cm}}}\,\mathbf e_{\theta,j},
+\frac{v_b}{r_{j,\mathrm{cm}}}\,\mathbf e_{\theta,j},
 \qquad
 \dot{\mathbf e}_{\theta,j}
 =
 -
-\frac{\hat v_b}{r_{j,\mathrm{cm}}}\,\mathbf e_{r,j}.
+\frac{v_b}{r_{j,\mathrm{cm}}}\,\mathbf e_{r,j}.
 \label{eq:unit_vectors_time_derivatives_vb}
 \end{equation}
 
@@ -5972,16 +5484,16 @@ Differentiating \Eq{eq:velocity_polar_vb} gives
 &=
 \frac{\dd}{\dd t}\big(\dot r_{j,\mathrm{cm}}\,\mathbf e_{r,j}\big)
 +
-\frac{\dd}{\dd t}\big(\hat v_b\,\mathbf e_{\theta,j}\big)
+\frac{\dd}{\dd t}\big(v_b\,\mathbf e_{\theta,j}\big)
 \nonumber\\[6pt]
 &=
 \ddot r_{j,\mathrm{cm}}\,\mathbf e_{r,j}
 +
 \dot r_{j,\mathrm{cm}}\,\dot{\mathbf e}_{r,j}
 +
-\dot{\hat v}_b\,\mathbf e_{\theta,j}
+\dot{v}_b\,\mathbf e_{\theta,j}
 +
-\hat v_b\,\dot{\mathbf e}_{\theta,j}.
+v_b\,\dot{\mathbf e}_{\theta,j}.
 \label{eq:accel_expand_vb}
 \end{align}
 
@@ -5993,27 +5505,27 @@ Substituting \Eq{eq:unit_vectors_time_derivatives_vb} gives
 +
 \dot r_{j,\mathrm{cm}}
 \left(
-\frac{\hat v_b}{r_{j,\mathrm{cm}}}\,\mathbf e_{\theta,j}
+\frac{v_b}{r_{j,\mathrm{cm}}}\,\mathbf e_{\theta,j}
 \right)
 +
-\dot{\hat v}_b\,\mathbf e_{\theta,j}
+\dot{v}_b\,\mathbf e_{\theta,j}
 -
-\hat v_b
+v_b
 \left(
-\frac{\hat v_b}{r_{j,\mathrm{cm}}}\,\mathbf e_{r,j}
+\frac{v_b}{r_{j,\mathrm{cm}}}\,\mathbf e_{r,j}
 \right)
 \nonumber\\[6pt]
 &=
 \left(
 \ddot r_{j,\mathrm{cm}}
 -
-\frac{\hat v_b^2}{r_{j,\mathrm{cm}}}
+\frac{v_b^2}{r_{j,\mathrm{cm}}}
 \right)\mathbf e_{r,j}
 +
 \left(
-\dot{\hat v}_b
+\dot{v}_b
 +
-\frac{\dot r_{j,\mathrm{cm}}}{r_{j,\mathrm{cm}}}\hat v_b
+\frac{\dot r_{j,\mathrm{cm}}}{r_{j,\mathrm{cm}}}v_b
 \right)\mathbf e_{\theta,j}.
 \label{eq:accel_polar_vb}
 \end{align}
@@ -6023,15 +5535,15 @@ By \Eq{eq:at_component_def}, the tangential acceleration is therefore
 \begin{equation}
 a_{t,j}
 =
-\dot{\hat v}_b
+\dot{v}_b
 +
-\frac{\dot r_{j,\mathrm{cm}}}{r_{j,\mathrm{cm}}}\hat v_b.
+\frac{\dot r_{j,\mathrm{cm}}}{r_{j,\mathrm{cm}}}v_b.
 \label{eq:at_final}
 \end{equation}
 
 \paragraph{Interpretation}
 
-The first term, \(\dot{\hat v}_b\), is the direct time rate of change of the
+The first term, \(\dot{v}_b\), is the direct time rate of change of the
 belt transport speed.
 The second term appears because the belt element is not only moving along the wrap, 
 but also moving to a different wrap radius at the same time. As the element shifts 
@@ -6041,7 +5553,7 @@ component to the acceleration.
 
 The radial component
 \(
-\ddot r_{j,\mathrm{cm}} - \hat v_b^2/r_{j,\mathrm{cm}}
+\ddot r_{j,\mathrm{cm}} - v_b^2/r_{j,\mathrm{cm}}
 \)
 contains the centripetal term, but it does not enter the tangential force
 balance used in \Sec{sec:traction_element}.
@@ -6054,54 +5566,15 @@ over the wrap of pulley \(j\),
 \[
 N_{\phi,j} \equiv \int_{-\phi_j/2}^{\phi_j/2} \dd N_j.
 \]
-We now express \(N_{\phi,j}\) in terms of the axial clamping force
-generated by that pulley.
+We now express \(N_{\phi,j}\) in terms of the axial clamping force generated by that pulley.
 
 % --------------------------------------------------------------
 \paragraph{Axial clamp produces radial normal load}
 
-The belt is pressed between two opposing conical sheaves.
-On pulley \(j\), an axial clamping force \(F_{\mathrm{ax},j}\) pushes the
-sheaves together.
-Because the sheave faces are inclined at cone half-angle \(\beta\),
-this axial force generates a radial normal load on the belt.
-Here, \(F_{\mathrm{ax},j}\) is clamping force only; belt inertia
-(centrifugal effects) is already accounted for by the acceleration term in
-\Eq{eq:deltaT_final}.
-
-From the conical geometry relation established in
-\Eq{eq:cone_geometry_diff},
-
-\[
-\frac{\dd r_j}{\dd s} = \frac{1}{2\tan\beta}.
-\]
-
-To relate the axial and radial forces consistently, we use virtual work.
-The incremental work done by the axial clamp must equal the incremental
-work associated with radial compression of the belt:
-
-\[
-F_{\mathrm{ax},j}\,\dd s
-=
-F_{\mathrm{rad},j}\,\dd r_j.
-\]
-
-Substituting
-\(
-\dd r_j = \left(\dd r_j/\dd s\right)\dd s
-\)
-gives
-
-\begin{equation}
-F_{\mathrm{rad},j}
-=
-\frac{F_{\mathrm{ax},j}}{\dd r_j/\dd s}
-=
-2F_{\mathrm{ax},j}\tan\beta.
-\label{eq:Frad_from_Fax}
-\end{equation}
-
-Thus, the axial clamp force on pulley \(j\) produces a total radial normal load
+The belt is pressed between two opposing conical sheaves; the two inclined faces 
+apply a net normal force on the belt equal to the inward radial load generated by 
+the axial clamp. The same geometry was considered before, and we can rearrange 
+\Eq{eq:radial_to_axial_conversion} to get
 
 \begin{equation}
 F_{\mathrm{rad},j} = 2F_{\mathrm{ax},j}\tan\beta.
@@ -6156,9 +5629,9 @@ N_{\phi,j} = 2F_{\mathrm{ax},j}\tan\beta,
 \qquad
 a_{t,j}
 =
-\dot{\hat v}_b
+\dot{v}_b
 +
-\frac{\dot r_{j,\mathrm{cm}}}{r_{j,\mathrm{cm}}}\hat v_b,
+\frac{\dot r_{j,\mathrm{cm}}}{r_{j,\mathrm{cm}}}v_b,
 \]
 we obtain
 \begin{equation}
@@ -6168,9 +5641,9 @@ we obtain
 -
 \rho_b A_b \phi_j r_{j,\mathrm{cm}}
 \left(
-\dot{\hat v}_b
+\dot{v}_b
 +
-\frac{\dot r_{j,\mathrm{cm}}}{r_{j,\mathrm{cm}}}\hat v_b
+\frac{\dot r_{j,\mathrm{cm}}}{r_{j,\mathrm{cm}}}v_b
 \right).
 \label{eq:deltaT_max_explicit}
 \end{equation}
@@ -6187,9 +5660,9 @@ r_{j,\mathrm{eff}}
 -
 \rho_b A_b \phi_j
 \left(
-r_{j,\mathrm{cm}}\dot{\hat v}_b
+r_{j,\mathrm{cm}}\dot{v}_b
 +
-\dot r_{j,\mathrm{cm}}\,\hat v_b
+\dot r_{j,\mathrm{cm}}\,v_b
 \right)
 \right].
 }
@@ -6211,1108 +5684,1283 @@ Centrifugal loading and ratio change enter additionally through the inertial ter
 in \Eq{eq:tau_capacity_final}.
 \end{remarkbox}
 
-\subsection{Primary Pulley Traction Bounds}
+\subsection{Primary Pulley No-Slip Admissibility}
 \label{sec:primary_tau_limits}
 
-The generic capacity law \Eq{eq:tau_capacity_final} must now be specialized to
-the primary pulley.
-Because the inertial correction contains \(\dot{\hat v}_b\), and the belt-speed
-derivative is defined differently in stick and slip, the primary traction bounds
-must be derived separately for the two transmission regimes.
+The generic capacity law \Eq{eq:tau_capacity_final} can now be specialized to
+the primary pulley. At this stage, the goal is not to determine the slipping
+motion. The goal is only to test whether the no-slip demand derived in
+\Sec{sec:no-slip-torque-demand} can be supported by the available primary
+traction.
 
-In the sticking regime, the belt speed is imposed by compatibility.
-Accordingly, we use the primary-side sticking derivative from
-\Eq{eq:vb_dot_stick_primary}, together with the primary axial-force model
-\Eq{eq:primary_axial}.
-This causes the inertial term to depend on the primary angular acceleration,
-and therefore on the coupling torque itself.
-The resulting sticking bound is thus implicit in \(\tau_c\), but it can still
-be solved in closed form.
-
-In the slipping regime, the belt-speed derivative is instead given directly by
-the regularized evolution law \Eq{eq:vb_relaxation}.
-In that case, the primary traction bound no longer depends on \(\tau_c\)
-through the inertial term, so the upper and lower limits follow directly.
-
-% --------------------------------------------------------------
-\paragraph{Stick regime}
-
-On the primary pulley, the transmitted torque at the belt contact is the
-coupling torque itself.
-Applying \Eq{eq:tau_capacity_final} with \(j=p\) gives
-
-\begin{equation}
-|\tau_c|
-\le
-r_{p,\mathrm{eff}}
-\left[
-2\mu F_{\mathrm{ax},p}\tan\beta
--
-\rho_b A_b \phi_p
-\left(
-r_{p,\mathrm{cm}}\dot{\hat v}_b
-+
-\dot r_{p,\mathrm{cm}}\,\hat v_b
-\right)
-\right].
-\label{eq:tau_p_capacity_stick_start}
-\end{equation}
-
-In the sticking regime,
+For compactness in this subsection, write
 \[
-\hat v_b = r_{p,\mathrm{cm}}\omega_p,
-\qquad
-\dot{\hat v}_b
-=
-\dot r_{p,\mathrm{cm}}\,\omega_p
-+
-r_{p,\mathrm{cm}}\,\dot\omega_p,
+r_p = r_{p,\mathrm{eff}}(s).
 \]
-from \Eq{eq:vb_stick_exact} and \Eq{eq:vb_dot_stick_primary}.
-Substituting these into \Eq{eq:tau_p_capacity_stick_start} gives
+On the no-slip candidate branch, the belt acceleration is
+\(\dot v_{b,\mathrm{ns}}\), as given by \Eq{eq:no_slip_vb_dot}. Therefore,
+the primary traction capacity is evaluated using this candidate acceleration.
 
-\begin{equation}
-|\tau_c|
-\le
-r_{p,\mathrm{eff}}
+Applying \Eq{eq:tau_capacity_final} with \(j=p\), and using the static friction
+coefficient \(\mu_s\), gives
+
+\bigeq{eq:tau_p_max_stick_general}{Primary No-Slip Torque Capacity}{
+\tau_{p,\max}^{\mathrm{stick}}
+=
+r_p
 \left[
-2\mu F_{\mathrm{ax},p}\tan\beta
+2\mu_s F_{\mathrm{ax},p}(s,\omega_p)\tan\beta
 -
 \rho_b A_b \phi_p
 \left(
-r_{p,\mathrm{cm}}^2\dot\omega_p
+r_{p,\mathrm{cm}}\dot v_{b,\mathrm{ns}}
 +
-2r_{p,\mathrm{cm}}\dot r_{p,\mathrm{cm}}\,\omega_p
+\dot r_{p,\mathrm{cm}}\,v_b
 \right)
-\right].
-\label{eq:tau_p_capacity_stick_mid}
-\end{equation}
+\right]
+}
 
-Now substitute the primary axial-force model from \Eq{eq:primary_axial},
-\begin{equation}
+The primary axial force is known explicitly from \Eq{eq:primary_axial}:
+\[
 F_{\mathrm{ax},p}(s,\omega_p)
 =
 m_f\omega_p^2\,\big(r_{f,0}+r_f(s)\big)\,\frac{\dd r_f}{\dd s}
 -
-k_p\bigl(x_{p,0}+s\bigr),
-\label{eq:Fax_p_sub_stick}
-\end{equation}
-together with the primary rotational equation of motion from \Eq{eq:primary_rot_dyn}
-\begin{equation}
-\dot\omega_p
-=
-\frac{\tau_{\mathrm{eng}}-\tau_c}{I_p}.
-\label{eq:omega_p_dot_sub_stick}
-\end{equation}
-
-This yields
-\begin{equation}
-\begin{aligned}
-|\tau_c|
-\le\;&
-r_{p,\mathrm{eff}}
-\Biggl\{
-2\mu\tan\beta
-\left[
-m_f\omega_p^2\,\big(r_{f,0}+r_f(s)\big)\,\frac{\dd r_f}{\dd s}
--
-k_p\bigl(x_{p,0}+s\bigr)
-\right]
-\\[4pt]
-&\qquad
--
-\rho_b A_b \phi_p
-\left[
-\frac{r_{p,\mathrm{cm}}^2}{I_p}\bigl(\tau_{\mathrm{eng}}-\tau_c\bigr)
-+
-2r_{p,\mathrm{cm}}\dot r_{p,\mathrm{cm}}\,\omega_p
-\right]
-\Biggr\}.
-\end{aligned}
-\label{eq:tau_p_capacity_stick_explicit}
-\end{equation}
-
-The coupling torque now appears on both sides of the inequality, so the
-positive and negative directions must again be treated separately.
-
-\paragraph{Positive-direction sticking bound \(\tau_c \ge 0\)}
-
-For \(\tau_c \ge 0\), \(|\tau_c|=\tau_c\), so \Eq{eq:tau_p_capacity_stick_explicit}
-becomes
-
-\begin{equation}
-\begin{aligned}
-\tau_c
-\le\;&
-r_{p,\mathrm{eff}}
-\Biggl\{
-2\mu\tan\beta
-\left[
-m_f\omega_p^2\,\big(r_{f,0}+r_f(s)\big)\,\frac{\dd r_f}{\dd s}
--
-k_p\bigl(x_{p,0}+s\bigr)
-\right]
-\\[4pt]
-&\qquad
--
-\rho_b A_b \phi_p
-\left[
-\frac{r_{p,\mathrm{cm}}^2}{I_p}\tau_{\mathrm{eng}}
--
-\frac{r_{p,\mathrm{cm}}^2}{I_p}\tau_c
-+
-2r_{p,\mathrm{cm}}\dot r_{p,\mathrm{cm}}\,\omega_p
-\right]
-\Biggr\}.
-\end{aligned}
-\label{eq:tau_p_plus_stick_expand}
-\end{equation}
-
-Collecting the \(\tau_c\) terms on the left gives
-
-\begin{equation}
-\begin{aligned}
-\Biggl(
-1
--
-r_{p,\mathrm{eff}}\rho_b A_b \phi_p
-\frac{r_{p,\mathrm{cm}}^2}{I_p}
-\Biggr)\tau_c
-\le\;&
-r_{p,\mathrm{eff}}
-\Biggl\{
-2\mu\tan\beta
-\left[
-m_f\omega_p^2\,\big(r_{f,0}+r_f(s)\big)\,\frac{\dd r_f}{\dd s}
--
-k_p\bigl(x_{p,0}+s\bigr)
-\right]
-\\[4pt]
-&\qquad
--
-\rho_b A_b \phi_p
-\left[
-\frac{r_{p,\mathrm{cm}}^2}{I_p}\tau_{\mathrm{eng}}
-+
-2r_{p,\mathrm{cm}}\dot r_{p,\mathrm{cm}}\,\omega_p
-\right]
-\Biggr\}.
-\end{aligned}
-\label{eq:tau_p_plus_stick_rearrange}
-\end{equation}
-
-Hence,
-\begin{equation}
-\tau_c \le \tau_{c,p,+}^{\mathrm{stick}},
-\label{eq:tau_p_plus_stick_ineq}
-\end{equation}
-with
-
-\bigeq{eq:tau_p_plus_stick}{Primary Stick-Branch Upper Bound}{
-\tau_{c,p,+}^{\mathrm{stick}}
-=
-\frac{
-r_{p,\mathrm{eff}}
-\Biggl\{
-2\mu\tan\beta
-\left[
-m_f\omega_p^2\,\big(r_{f,0}+r_f(s)\big)\,\dfrac{\dd r_f}{\dd s}
--
-k_p\bigl(x_{p,0}+s\bigr)
-\right]
--
-\rho_b A_b \phi_p
-\left[
-\dfrac{r_{p,\mathrm{cm}}^2}{I_p}\tau_{\mathrm{eng}}
-+
-2r_{p,\mathrm{cm}}\dot r_{p,\mathrm{cm}}\,\omega_p
-\right]
-\Biggr\}
-}{
-1
--
-r_{p,\mathrm{eff}}\rho_b A_b \phi_p
-\dfrac{r_{p,\mathrm{cm}}^2}{I_p}
-}.
-}
-
-\paragraph{Negative-direction sticking bound \(\tau_c \le 0\)}
-
-For \(\tau_c \le 0\), \(|\tau_c|=-\tau_c\), so \Eq{eq:tau_p_capacity_stick_explicit}
-becomes
-
-\begin{equation}
-\begin{aligned}
-\Biggl(
-1
-+
-r_{p,\mathrm{eff}}\rho_b A_b \phi_p
-\frac{r_{p,\mathrm{cm}}^2}{I_p}
-\Biggr)\tau_c
-\ge\;&
--
-r_{p,\mathrm{eff}}
-\Biggl\{
-2\mu\tan\beta
-\left[
-m_f\omega_p^2\,\big(r_{f,0}+r_f(s)\big)\,\frac{\dd r_f}{\dd s}
--
-k_p\bigl(x_{p,0}+s\bigr)
-\right]
-\\[4pt]
-&\qquad
--
-\rho_b A_b \phi_p
-\left[
-\frac{r_{p,\mathrm{cm}}^2}{I_p}\tau_{\mathrm{eng}}
-+
-2r_{p,\mathrm{cm}}\dot r_{p,\mathrm{cm}}\,\omega_p
-\right]
-\Biggr\}.
-\end{aligned}
-\label{eq:tau_p_minus_stick_rearrange}
-\end{equation}
-
-Collecting the \(\tau_c\) terms gives
-
-\begin{equation}
-\left(
-1
-+
-r_{p,\mathrm{eff}}\rho_b A_b \phi_p
-\frac{r_{p,\mathrm{cm}}^2}{I_p}
-\right)\tau_c
-\ge
--
-r_{p,\mathrm{eff}}
-\Biggl\{
-2\mu\tan\beta
-\left[
-m_f\omega_p^2\,\big(r_{f,0}+r_f(s)\big)\,\frac{\dd r_f}{\dd s}
--
-k_p\bigl(x_{p,0}+s\bigr)
-\right]
--
-\rho_b A_b \phi_p
-\left[
-\frac{r_{p,\mathrm{cm}}^2}{I_p}\tau_{\mathrm{eng}}
-+
-2r_{p,\mathrm{cm}}\dot r_{p,\mathrm{cm}}\,\omega_p
-\right]
-\Biggr\}.
-\label{eq:tau_p_minus_stick_rearrange_2}
-\end{equation}
-
-Hence,
-\begin{equation}
-\tau_c \ge \tau_{c,p,-}^{\mathrm{stick}},
-\label{eq:tau_p_minus_stick_ineq}
-\end{equation}
-with
-
-\bigeq{eq:tau_p_minus_stick}{Primary Stick-Branch Lower Bound}{
-\tau_{c,p,-}^{\mathrm{stick}}
-=
--\frac{
-r_{p,\mathrm{eff}}
-\Biggl\{
-2\mu\tan\beta
-\left[
-m_f\omega_p^2\,\big(r_{f,0}+r_f(s)\big)\,\dfrac{\dd r_f}{\dd s}
--
-k_p\bigl(x_{p,0}+s\bigr)
-\right]
--
-\rho_b A_b \phi_p
-\left[
-\dfrac{r_{p,\mathrm{cm}}^2}{I_p}\tau_{\mathrm{eng}}
-+
-2r_{p,\mathrm{cm}}\dot r_{p,\mathrm{cm}}\,\omega_p
-\right]
-\Biggr\}
-}{
-\displaystyle
-1
-+
-r_{p,\mathrm{eff}}\rho_b A_b \phi_p
-\dfrac{r_{p,\mathrm{cm}}^2}{I_p}
-}.
-}
-
-Therefore, in the sticking regime the primary pulley contributes the interval
-\begin{equation}
-\boxed{
-\tau_{c,p,-}^{\mathrm{stick}}
-\le
-\tau_c
-\le
-\tau_{c,p,+}^{\mathrm{stick}}.
-}
-\label{eq:primary_tau_interval_stick}
-\end{equation}
-
-% --------------------------------------------------------------
-\paragraph{Slip regime}
-
-In the slipping regime, the belt-speed derivative is given directly by the
-regularized closure \Eq{eq:vb_relaxation}:
-\[
-\dot{\hat v}_b
-=
-\frac{v_b^\ast-\hat v_b}{T_b}.
+k_p\bigl(x_{p,0}+s\bigr).
 \]
 
-Applying \Eq{eq:tau_capacity_final} with \(j=p\), and again substituting the
-primary axial-force model \Eq{eq:primary_axial}, gives
+Substituting this force model into \Eq{eq:tau_p_max_stick_general} gives the
+fully explicit primary no-slip traction capacity:
 
-\begin{equation}
-|\tau_c|
-\le
-r_{p,\mathrm{eff}}
-\Biggl\{
-2\mu\tan\beta
-\left[
-m_f\omega_p^2\,\big(r_{f,0}+r_f(s)\big)\,\frac{\dd r_f}{\dd s}
--
-k_p\bigl(x_{p,0}+s\bigr)
-\right]
--
-\rho_b A_b \phi_p
-\left[
-r_{p,\mathrm{cm}}\frac{v_b^\ast-\hat v_b}{T_b}
-+
-\dot r_{p,\mathrm{cm}}\,\hat v_b
-\right]
-\Biggr\}.
-\label{eq:tau_p_capacity_slip_explicit}
-\end{equation}
-
-In contrast to the sticking case, the right-hand side no longer depends on
-\(\tau_c\).
-The positive and negative limits therefore follow directly.
-
-\paragraph{Positive-direction slipping bound \(\tau_c \ge 0\)}
-
-For \(\tau_c \ge 0\), \(|\tau_c|=\tau_c\), so
-\begin{equation}
-\tau_c \le \tau_{c,p,+}^{\mathrm{slip}},
-\label{eq:tau_p_plus_slip_ineq}
-\end{equation}
-with
-
-\bigeq{eq:tau_p_plus_slip}{Primary Slip-Branch Upper Bound}{
-\tau_{c,p,+}^{\mathrm{slip}}
+\widebigeq{eq:tau_p_max_stick}{Primary No-Slip Torque Capacity (Expanded)}{
+\tau_{p,\max}^{\mathrm{stick}}
 =
-r_{p,\mathrm{eff}}
-\Biggl\{
-2\mu\tan\beta
-\left[
+r_p
+\Biggl[
+2\mu_s\tan\beta
+\left(
 m_f\omega_p^2\,\big(r_{f,0}+r_f(s)\big)\,\dfrac{\dd r_f}{\dd s}
 -
 k_p\bigl(x_{p,0}+s\bigr)
-\right]
+\right)
 -
 \rho_b A_b \phi_p
-\left[
-r_{p,\mathrm{cm}}\dfrac{v_b^\ast-\hat v_b}{T_b}
+\left(
+r_{p,\mathrm{cm}}\dot v_{b,\mathrm{ns}}
 +
-\dot r_{p,\mathrm{cm}}\,\hat v_b
-\right]
-\Biggr\}.
+\dot r_{p,\mathrm{cm}}\,v_b
+\right)
+\Biggr]
 }
 
-\paragraph{Negative-direction slipping bound \(\tau_c \le 0\)}
+This quantity is the maximum primary contact torque magnitude that can be
+supported while maintaining the no-slip candidate motion. The primary no-slip
+torque demand from \Eq{eq:tau_p_ns} is therefore admissible only if
 
-For \(\tau_c \le 0\), \(|\tau_c|=-\tau_c\), so
-\begin{equation}
-\tau_c \ge \tau_{c,p,-}^{\mathrm{slip}},
-\label{eq:tau_p_minus_slip_ineq}
-\end{equation}
-with
-
-\bigeq{eq:tau_p_minus_slip}{Primary Slip-Branch Lower Bound}{
-\tau_{c,p,-}^{\mathrm{slip}}
-=
--
-r_{p,\mathrm{eff}}
-\Biggl\{
-2\mu\tan\beta
-\left[
-m_f\omega_p^2\,\big(r_{f,0}+r_f(s)\big)\,\dfrac{\dd r_f}{\dd s}
--
-k_p\bigl(x_{p,0}+s\bigr)
-\right]
--
-\rho_b A_b \phi_p
-\left[
-r_{p,\mathrm{cm}}\dfrac{v_b^\ast-\hat v_b}{T_b}
-+
-\dot r_{p,\mathrm{cm}}\,\hat v_b
-\right]
-\Biggr\}.
-}
-
-Therefore, in the slipping regime the primary pulley contributes the interval
 \begin{equation}
 \boxed{
-\tau_{c,p,-}^{\mathrm{slip}}
+\left|\tau_{p,\mathrm{ns}}\right|
 \le
-\tau_c
-\le
-\tau_{c,p,+}^{\mathrm{slip}}.
+\tau_{p,\max}^{\mathrm{stick}}.
 }
-\label{eq:primary_tau_interval_slip}
+\label{eq:primary_no_slip_admissibility}
 \end{equation}
 
-% --------------------------------------------------------------
-\subsection{Secondary Pulley Traction Bounds}
+Equivalently,
+\[
+-\tau_{p,\max}^{\mathrm{stick}}
+\le
+\tau_{p,\mathrm{ns}}
+\le
+\tau_{p,\max}^{\mathrm{stick}}.
+\]
+
+If \Eq{eq:primary_no_slip_admissibility} is satisfied, the primary contact can
+support the torque required by the no-slip candidate. If it is not satisfied,
+the primary contact cannot remain adhered under the demanded torque, and the
+final torque transfer must instead be determined by a slipping contact law.
+
+
+\subsection{Secondary Pulley No-Slip Admissibility}
 \label{sec:secondary_tau_limits}
 
 The secondary pulley follows the same overall procedure as the primary, but
-with one important difference.
-At the secondary, the torque at the belt contact is not treated as an
-independent quantity.
-Instead, from the coupling relation introduced in \Eq{eq:torque_ratio},
-\begin{equation}
-\tau_s = R\,\tau_c.
-\label{eq:tau_s_from_tau_c_repeat}
-\end{equation}
+with one important difference: the secondary axial force is torque-reactive.
+Unlike the primary axial force, which depends only on shift position and primary
+speed, the secondary axial force depends on the same transmitted torque being
+checked for admissibility.
 
-Accordingly, the secondary traction bounds will be written directly in terms
-of the coupling torque \(\tau_c\).
-
-In addition, the secondary clamp force is torque-reactive.
-Unlike the primary, whose axial clamping force depends only on pulley speed
-and shift position, the secondary axial-force model depends explicitly on the
-transmitted secondary torque.
-Thus, the substitution \(\tau_s = R\tau_c\) must be made not only in the
-secondary torque capacity relation, but also in the secondary axial clamp-force
-model itself.
-
-As with the primary, the secondary bounds must be derived separately in the
-sticking and slipping regimes because the inertial correction contains
-\(\dot{\hat v}_b\).
-In the sticking regime, we use the secondary-side sticking derivative from
-\Eq{eq:vb_dot_stick_secondary}, together with the secondary rotational
-equation of motion from \Eq{eq:secondary_rot_dyn}.
-In the slipping regime, we instead use the regularized belt-speed evolution
-law \Eq{eq:vb_relaxation}.
-
-% --------------------------------------------------------------
-\paragraph{Stick regime}
-
-Applying \Eq{eq:tau_capacity_final} with \(j=s\), and using
-\(\tau_s = R\tau_c\), gives
-
-\begin{equation}
-|R\tau_c|
-\le
-r_{s,\mathrm{eff}}
-\left[
-2\mu F_{\mathrm{ax},s}\tan\beta
--
-\rho_b A_b \phi_s
-\left(
-r_{s,\mathrm{cm}}\dot{\hat v}_b
-+
-\dot r_{s,\mathrm{cm}}\,\hat v_b
-\right)
-\right].
-\label{eq:tau_c_capacity_stick_start_secondary}
-\end{equation}
-
-Since \(R>0\), dividing by \(R\) preserves the inequality direction, so
-
-\begin{equation}
-|\tau_c|
-\le
-\frac{r_{s,\mathrm{eff}}}{R}
-\left[
-2\mu F_{\mathrm{ax},s}\tan\beta
--
-\rho_b A_b \phi_s
-\left(
-r_{s,\mathrm{cm}}\dot{\hat v}_b
-+
-\dot r_{s,\mathrm{cm}}\,\hat v_b
-\right)
-\right].
-\label{eq:tau_c_capacity_stick_start_secondary_divided}
-\end{equation}
-
-In the sticking regime,
+For compactness in this subsection, write
 \[
-\hat v_b = r_{s,\mathrm{cm}}\omega_s,
-\qquad
-\dot{\hat v}_b
-=
-\dot r_{s,\mathrm{cm}}\,\omega_s
-+
-r_{s,\mathrm{cm}}\,\dot\omega_s,
+r_s = r_{s,\mathrm{eff}}(s).
 \]
-from \Eq{eq:vb_stick_exact} and \Eq{eq:vb_dot_stick_secondary}.
-Substituting these into
-\Eq{eq:tau_c_capacity_stick_start_secondary_divided} gives
+On the no-slip candidate branch, the belt acceleration is
+\(\dot v_{b,\mathrm{ns}}\), as given by \Eq{eq:no_slip_vb_dot}. Therefore,
+the secondary traction capacity is evaluated using this candidate acceleration.
 
+Applying \Eq{eq:tau_capacity_final} with \(j=s\), and using the static friction
+coefficient \(\mu_s\), gives
 \begin{equation}
-|\tau_c|
-\le
-\frac{r_{s,\mathrm{eff}}}{R}
+\tau_{s,\max}^{\mathrm{stick}}
+=
+r_s
 \left[
-2\mu F_{\mathrm{ax},s}\tan\beta
+2\mu_s F_{\mathrm{ax},s}(s,\tau_s)\tan\beta
 -
 \rho_b A_b \phi_s
 \left(
-r_{s,\mathrm{cm}}^2\dot\omega_s
+r_{s,\mathrm{cm}}\dot v_{b,\mathrm{ns}}
 +
-2r_{s,\mathrm{cm}}\dot r_{s,\mathrm{cm}}\,\omega_s
+\dot r_{s,\mathrm{cm}}\,v_b
 \right)
 \right].
-\label{eq:tau_c_capacity_stick_mid_secondary}
+\label{eq:tau_s_max_stick_general}
 \end{equation}
 
-Now substitute the secondary rotational dynamics from
-\Eq{eq:secondary_rot_dyn},
-\begin{equation}
-\dot\omega_s
-=
-\frac{R\tau_c-\tau_{\mathrm{load}}}{I_s},
-\label{eq:omega_s_dot_sub_stick}
-\end{equation}
-and the secondary axial-force model from \Eq{eq:secondary_axial},
-using \(\tau_s = R\tau_c\) from \Eq{eq:tau_s_from_tau_c_repeat}, so that
-
-\begin{equation}
-F_{\mathrm{ax},s}(s,R\tau_c)
+For the no-slip admissibility check, the torque appearing in the secondary
+axial force model is the no-slip demand \(\tau_{s,\mathrm{ns}}\) from
+\Eq{eq:tau_s_ns}. Using the secondary axial force model from
+\Eq{eq:secondary_axial},
+\[
+F_{\mathrm{ax},s}(s,\tau_{s,\mathrm{ns}})
 =
 \frac{
-R\tau_c + k_{s,\theta}\!\bigl(\theta_{s,0}+\theta_s(s)\bigr)
+\tau_{s,\mathrm{ns}}
++
+k_{s,\theta}\!\bigl(\theta_{s,0}+\theta_s(s)\bigr)
 }{2}
-\frac{\dd \theta_s}{\dd s}
+\frac{\dd\theta_s}{\dd s}
 +
 k_{s,x}(x_{s,0}+s).
-\label{eq:Fax_s_sub_stick_tau_c}
-\end{equation}
-
-This yields
-
-\begin{equation}
-\begin{aligned}
-|\tau_c|
-\le\;&
-\frac{r_{s,\mathrm{eff}}}{R}
-\Biggl[
-\mu\tan\beta
-\left(
-R\tau_c
-+
-k_{s,\theta}\!\bigl(\theta_{s,0}+\theta_s(s)\bigr)
-\right)
-\frac{\dd \theta_s}{\dd s}
-\\[4pt]
-&\qquad
-+
-2\mu\tan\beta\,k_{s,x}(x_{s,0}+s)
--
-\rho_b A_b \phi_s
-\left(
-\frac{r_{s,\mathrm{cm}}^2}{I_s}(R\tau_c-\tau_{\mathrm{load}})
-+
-2r_{s,\mathrm{cm}}\dot r_{s,\mathrm{cm}}\,\omega_s
-\right)
-\Biggr].
-\end{aligned}
-\label{eq:tau_c_capacity_stick_explicit_secondary}
-\end{equation}
-
-The coupling torque now appears through both the torque-reactive clamp force
-and the secondary angular acceleration, so the positive and negative
-directions must be treated separately.
-
-\paragraph{Positive-direction sticking bound \(\tau_c \ge 0\)}
-
-For \(\tau_c \ge 0\), \(|\tau_c|=\tau_c\), so
-\Eq{eq:tau_c_capacity_stick_explicit_secondary} becomes
-
-\begin{equation}
-\begin{aligned}
-\tau_c
-\le\;&
-\frac{r_{s,\mathrm{eff}}}{R}
-\Biggl[
-\mu\tan\beta
-\left(
-R\tau_c
-+
-k_{s,\theta}\!\bigl(\theta_{s,0}+\theta_s(s)\bigr)
-\right)
-\frac{\dd \theta_s}{\dd s}
-\\[4pt]
-&\qquad
-+
-2\mu\tan\beta\,k_{s,x}(x_{s,0}+s)
--
-\rho_b A_b \phi_s
-\left(
-\frac{r_{s,\mathrm{cm}}^2}{I_s}(R\tau_c-\tau_{\mathrm{load}})
-+
-2r_{s,\mathrm{cm}}\dot r_{s,\mathrm{cm}}\,\omega_s
-\right)
-\Biggr].
-\end{aligned}
-\label{eq:tau_c_plus_stick_expand_secondary}
-\end{equation}
-
-Collecting the \(\tau_c\) terms on the left gives
-
-\begin{align}
-\Bigl(
-1
--
-r_{s,\mathrm{eff}}\mu\tan\beta \frac{\dd\theta_s}{\dd s}
-+
-r_{s,\mathrm{eff}}\rho_b A_b \phi_s \frac{r_{s,\mathrm{cm}}^2}{I_s}
-\Bigr)\tau_c
-\;\le\;&
-\frac{r_{s,\mathrm{eff}}}{R}
-\mu\tan\beta
-\frac{\dd\theta_s}{\dd s}\,
-k_{s,\theta}\!\bigl(\theta_{s,0}+\theta_s(s)\bigr)
-\nonumber\\
-&+
-\frac{r_{s,\mathrm{eff}}}{R}
-2\mu\tan\beta\,k_{s,x}(x_{s,0}+s)
-\nonumber\\
-&+
-\frac{r_{s,\mathrm{eff}}}{R}
-\rho_b A_b \phi_s
-\left(
-\frac{r_{s,\mathrm{cm}}^2}{I_s}\tau_{\mathrm{load}}
--
-2r_{s,\mathrm{cm}}\dot r_{s,\mathrm{cm}}\,\omega_s
-\right).
-\label{eq:tau_c_plus_stick_rearrange_secondary}
-\end{align}
-
-Hence,
-\begin{equation}
-\tau_c \le \tau_{c,s,+}^{\mathrm{stick}},
-\label{eq:tau_c_plus_stick_ineq_secondary}
-\end{equation}
-with
-
-\bigeq{eq:tau_s_plus_stick}{Secondary Stick-Branch Upper Bound}{
-\tau_{c,s,+}^{\mathrm{stick}}
-=
-\frac{
-\dfrac{r_{s,\mathrm{eff}}}{R}
-\Bigl[
-\mu\tan\beta
-\dfrac{\dd\theta_s}{\dd s}\,
-k_{s,\theta}\!\bigl(\theta_{s,0}+\theta_s(s)\bigr)
-+
-2\mu\tan\beta\,k_{s,x}(x_{s,0}+s)
-+
-\rho_b A_b \phi_s
-\left(
-\dfrac{r_{s,\mathrm{cm}}^2}{I_s}\tau_{\mathrm{load}}
--
-2r_{s,\mathrm{cm}}\dot r_{s,\mathrm{cm}}\,\omega_s
-\right)
-\Bigr]
-}{
-1
--
-r_{s,\mathrm{eff}}\mu\tan\beta \dfrac{\dd\theta_s}{\dd s}
-+
-r_{s,\mathrm{eff}}\rho_b A_b \phi_s \dfrac{r_{s,\mathrm{cm}}^2}{I_s}
-}.
-}
-
-\paragraph{Negative-direction sticking bound \(\tau_c \le 0\)}
-
-For \(\tau_c \le 0\), \(|\tau_c|=-\tau_c\), so
-\Eq{eq:tau_c_capacity_stick_explicit_secondary} becomes
-
-\begin{equation}
-\begin{aligned}
--\tau_c
-\le\;&
-\frac{r_{s,\mathrm{eff}}}{R}
-\Biggl[
-\mu\tan\beta
-\left(
-R\tau_c
-+
-k_{s,\theta}\!\bigl(\theta_{s,0}+\theta_s(s)\bigr)
-\right)
-\frac{\dd \theta_s}{\dd s}
-\\[4pt]
-&\qquad
-+
-2\mu\tan\beta\,k_{s,x}(x_{s,0}+s)
--
-\rho_b A_b \phi_s
-\left(
-\frac{r_{s,\mathrm{cm}}^2}{I_s}(R\tau_c-\tau_{\mathrm{load}})
-+
-2r_{s,\mathrm{cm}}\dot r_{s,\mathrm{cm}}\,\omega_s
-\right)
-\Biggr].
-\end{aligned}
-\label{eq:tau_c_minus_stick_expand_secondary}
-\end{equation}
-
-Collecting the \(\tau_c\) terms on the left gives
-
-\begin{align}
-\Bigl(
-1
-+
-r_{s,\mathrm{eff}}\mu\tan\beta \frac{\dd\theta_s}{\dd s}
--
-r_{s,\mathrm{eff}}\rho_b A_b \phi_s \frac{r_{s,\mathrm{cm}}^2}{I_s}
-\Bigr)\tau_c
-\;\ge\;&
--\frac{r_{s,\mathrm{eff}}}{R}
-\mu\tan\beta
-\frac{\dd\theta_s}{\dd s}\,
-k_{s,\theta}\!\bigl(\theta_{s,0}+\theta_s(s)\bigr)
-\nonumber\\
-&-
-\frac{r_{s,\mathrm{eff}}}{R}
-2\mu\tan\beta\,k_{s,x}(x_{s,0}+s)
-\nonumber\\
-&-
-\frac{r_{s,\mathrm{eff}}}{R}
-\rho_b A_b \phi_s
-\left(
-\frac{r_{s,\mathrm{cm}}^2}{I_s}\tau_{\mathrm{load}}
--
-2r_{s,\mathrm{cm}}\dot r_{s,\mathrm{cm}}\,\omega_s
-\right).
-\label{eq:tau_c_minus_stick_rearrange_secondary}
-\end{align}
-
-Hence,
-\begin{equation}
-\tau_c \ge \tau_{c,s,-}^{\mathrm{stick}},
-\label{eq:tau_c_minus_stick_ineq_secondary}
-\end{equation}
-with
-
-\bigeq{eq:tau_s_minus_stick}{Secondary Stick-Branch Lower Bound}{
-\tau_{c,s,-}^{\mathrm{stick}}
-=
--\frac{
-\dfrac{r_{s,\mathrm{eff}}}{R}
-\Bigl[
-\mu\tan\beta
-\dfrac{\dd\theta_s}{\dd s}\,
-k_{s,\theta}\!\bigl(\theta_{s,0}+\theta_s(s)\bigr)
-+
-2\mu\tan\beta\,k_{s,x}(x_{s,0}+s)
-+
-\rho_b A_b \phi_s
-\left(
-\dfrac{r_{s,\mathrm{cm}}^2}{I_s}\tau_{\mathrm{load}}
--
-2r_{s,\mathrm{cm}}\dot r_{s,\mathrm{cm}}\,\omega_s
-\right)
-\Bigr]
-}{
-1
-+
-r_{s,\mathrm{eff}}\mu\tan\beta \dfrac{\dd\theta_s}{\dd s}
--
-r_{s,\mathrm{eff}}\rho_b A_b \phi_s \dfrac{r_{s,\mathrm{cm}}^2}{I_s}
-}.
-}
-
-Therefore, in the sticking regime the secondary pulley contributes the interval
-\begin{equation}
-\boxed{
-\tau_{c,s,-}^{\mathrm{stick}}
-\le
-\tau_c
-\le
-\tau_{c,s,+}^{\mathrm{stick}}.
-}
-\label{eq:secondary_tau_interval_stick}
-\end{equation}
-
-% --------------------------------------------------------------
-\paragraph{Slip regime}
-
-In the slipping regime, the belt-speed derivative is given directly by the
-regularized closure \Eq{eq:vb_relaxation}:
-\[
-\dot{\hat v}_b
-=
-\frac{v_b^\ast-\hat v_b}{T_b}.
 \]
 
-Applying \Eq{eq:tau_capacity_final} with \(j=s\), and again using
-\(\tau_s = R\tau_c\) from \Eq{eq:tau_s_from_tau_c_repeat}, gives
-
-\begin{equation}
-|R\tau_c|
-\le
-r_{s,\mathrm{eff}}
-\left[
-2\mu F_{\mathrm{ax},s}\tan\beta
--
-\rho_b A_b \phi_s
-\left(
-r_{s,\mathrm{cm}}\frac{v_b^\ast-\hat v_b}{T_b}
-+
-\dot r_{s,\mathrm{cm}}\,\hat v_b
-\right)
-\right].
-\label{eq:tau_c_capacity_slip_start_secondary}
-\end{equation}
-
-Dividing by \(R>0\) gives
-
-\begin{equation}
-|\tau_c|
-\le
-\frac{r_{s,\mathrm{eff}}}{R}
-\left[
-2\mu F_{\mathrm{ax},s}\tan\beta
--
-\rho_b A_b \phi_s
-\left(
-r_{s,\mathrm{cm}}\frac{v_b^\ast-\hat v_b}{T_b}
-+
-\dot r_{s,\mathrm{cm}}\,\hat v_b
-\right)
-\right].
-\label{eq:tau_c_capacity_slip_start_secondary_divided}
-\end{equation}
-
-Using the secondary axial-force model \Eq{eq:secondary_axial}, with
-\(\tau_s = R\tau_c\) substituted through \Eq{eq:tau_s_from_tau_c_repeat}, gives
-
-\begin{equation}
-F_{\mathrm{ax},s}(s,R\tau_c)
-=
-\frac{
-R\tau_c + k_{s,\theta}\!\bigl(\theta_{s,0}+\theta_s(s)\bigr)
-}{2}
-\frac{\dd \theta_s}{\dd s}
-+
-k_{s,x}(x_{s,0}+s).
-\label{eq:Fax_s_sub_slip_tau_c}
-\end{equation}
-
-Substituting this into
-\Eq{eq:tau_c_capacity_slip_start_secondary_divided} yields
-
+Substituting this into \Eq{eq:tau_s_max_stick_general} gives
 \begin{equation}
 \begin{aligned}
-|\tau_c|
-\le\;&
-\frac{r_{s,\mathrm{eff}}}{R}
+\tau_{s,\max}^{\mathrm{stick}}
+=
+r_s
 \Biggl[
-\mu\tan\beta
+&\mu_s\tan\beta
 \left(
-R\tau_c
+\tau_{s,\mathrm{ns}}
 +
 k_{s,\theta}\!\bigl(\theta_{s,0}+\theta_s(s)\bigr)
 \right)
-\frac{\dd \theta_s}{\dd s}
-\\[4pt]
-&\qquad
-+
-2\mu\tan\beta\,k_{s,x}(x_{s,0}+s)
+\frac{\dd\theta_s}{\dd s}
+\\
+&+
+2\mu_s\tan\beta\,k_{s,x}(x_{s,0}+s)
 -
 \rho_b A_b \phi_s
 \left(
-r_{s,\mathrm{cm}}\frac{v_b^\ast-\hat v_b}{T_b}
+r_{s,\mathrm{cm}}\dot v_{b,\mathrm{ns}}
 +
-\dot r_{s,\mathrm{cm}}\,\hat v_b
+\dot r_{s,\mathrm{cm}}\,v_b
 \right)
 \Biggr].
 \end{aligned}
-\label{eq:tau_c_capacity_slip_explicit_secondary}
+\label{eq:tau_s_max_stick_expanded}
 \end{equation}
 
-In contrast to the sticking case, the inertial correction no longer depends on
-\(\tau_c\).
-However, the secondary bound remains implicit because the torque-reactive clamp
-force still depends on \(R\tau_c\).
+This expression shows why the secondary admissibility check is slightly
+different from the primary. The capacity depends linearly on the no-slip torque
+demand itself, because a larger transmitted secondary torque also increases the
+torque-reactive helix clamping force.
 
-\paragraph{Positive-direction slipping bound \(\tau_c \ge 0\)}
+The secondary no-slip demand is admissible if
+\[
+|\tau_{s,\mathrm{ns}}|
+\le
+\tau_{s,\max}^{\mathrm{stick}}.
+\]
 
-For \(\tau_c \ge 0\), \(|\tau_c|=\tau_c\).
-Collecting the \(\tau_c\) terms on the left gives
-
-\begin{align}
-\Bigl(
-1
--
-r_{s,\mathrm{eff}}\mu\tan\beta \frac{\dd\theta_s}{\dd s}
-\Bigr)\tau_c
-\;\le\;&
-\frac{r_{s,\mathrm{eff}}}{R}
-\mu\tan\beta
-\frac{\dd\theta_s}{\dd s}\,
+For a positive no-slip secondary torque demand,
+\(\tau_{s,\mathrm{ns}}\ge 0\), substituting
+\Eq{eq:tau_s_max_stick_expanded} gives
+\begin{equation}
+\begin{aligned}
+\tau_{s,\mathrm{ns}}
+\le
+r_s
+\Biggl[
+&\mu_s\tan\beta
+\left(
+\tau_{s,\mathrm{ns}}
++
 k_{s,\theta}\!\bigl(\theta_{s,0}+\theta_s(s)\bigr)
-\nonumber\\
+\right)
+\frac{\dd\theta_s}{\dd s}
+\\
 &+
-\frac{r_{s,\mathrm{eff}}}{R}
-2\mu\tan\beta\,k_{s,x}(x_{s,0}+s)
-\nonumber\\
-&-
-\frac{r_{s,\mathrm{eff}}}{R}
+2\mu_s\tan\beta\,k_{s,x}(x_{s,0}+s)
+-
 \rho_b A_b \phi_s
 \left(
-r_{s,\mathrm{cm}}\frac{v_b^\ast-\hat v_b}{T_b}
+r_{s,\mathrm{cm}}\dot v_{b,\mathrm{ns}}
 +
-\dot r_{s,\mathrm{cm}}\,\hat v_b
-\right).
-\label{eq:tau_c_plus_slip_rearrange_secondary}
-\end{align}
-
-Hence,
-\begin{equation}
-\tau_c \le \tau_{c,s,+}^{\mathrm{slip}},
-\label{eq:tau_c_plus_slip_ineq_secondary}
+\dot r_{s,\mathrm{cm}}\,v_b
+\right)
+\Biggr].
+\end{aligned}
+\label{eq:tau_s_positive_admissibility_expand}
 \end{equation}
-with
 
-\bigeq{eq:tau_s_plus_slip}{Secondary Slip-Branch Upper Bound}{
-\tau_{c,s,+}^{\mathrm{slip}}
+Collecting the \(\tau_{s,\mathrm{ns}}\) terms gives the positive-direction
+upper bound
+
+\widebigeq{eq:tau_s_plus_stick}{Secondary No-Slip Upper Bound}{
+\tau_{s,+}^{\mathrm{stick}}
 =
 \frac{
-\dfrac{r_{s,\mathrm{eff}}}{R}
-\Bigl[
-\mu\tan\beta
-\dfrac{\dd\theta_s}{\dd s}\,
+r_s
+\Biggl[
+\mu_s\tan\beta\,
 k_{s,\theta}\!\bigl(\theta_{s,0}+\theta_s(s)\bigr)
+\dfrac{\dd\theta_s}{\dd s}
 +
-2\mu\tan\beta\,k_{s,x}(x_{s,0}+s)
+2\mu_s\tan\beta\,k_{s,x}(x_{s,0}+s)
 -
 \rho_b A_b \phi_s
 \left(
-r_{s,\mathrm{cm}}\dfrac{v_b^\ast-\hat v_b}{T_b}
+r_{s,\mathrm{cm}}\dot v_{b,\mathrm{ns}}
 +
-\dot r_{s,\mathrm{cm}}\,\hat v_b
+\dot r_{s,\mathrm{cm}}\,v_b
 \right)
-\Bigr]
+\Biggr]
 }{
 1
 -
-r_{s,\mathrm{eff}}\mu\tan\beta \dfrac{\dd\theta_s}{\dd s}
-}.
+r_s\mu_s\tan\beta
+\dfrac{\dd\theta_s}{\dd s}
+}
 }
 
-\paragraph{Negative-direction slipping bound \(\tau_c \le 0\)}
+For a negative no-slip secondary torque demand,
+\(\tau_{s,\mathrm{ns}}\le 0\), the admissibility condition becomes
+\[
+-\tau_{s,\mathrm{ns}}
+\le
+\tau_{s,\max}^{\mathrm{stick}}.
+\]
 
-For \(\tau_c \le 0\), \(|\tau_c|=-\tau_c\).
-Collecting the \(\tau_c\) terms on the left gives
-
-\begin{align}
-\Bigl(
-1
+Substituting \Eq{eq:tau_s_max_stick_expanded} gives
+\begin{equation}
+\begin{aligned}
+-\tau_{s,\mathrm{ns}}
+\le
+r_s
+\Biggl[
+&\mu_s\tan\beta
+\left(
+\tau_{s,\mathrm{ns}}
 +
-r_{s,\mathrm{eff}}\mu\tan\beta \frac{\dd\theta_s}{\dd s}
-\Bigr)\tau_c
-\;\ge\;&
--\frac{r_{s,\mathrm{eff}}}{R}
-\mu\tan\beta
-\frac{\dd\theta_s}{\dd s}\,
 k_{s,\theta}\!\bigl(\theta_{s,0}+\theta_s(s)\bigr)
-\nonumber\\
-&-
-\frac{r_{s,\mathrm{eff}}}{R}
-2\mu\tan\beta\,k_{s,x}(x_{s,0}+s)
-\nonumber\\
+\right)
+\frac{\dd\theta_s}{\dd s}
+\\
 &+
-\frac{r_{s,\mathrm{eff}}}{R}
+2\mu_s\tan\beta\,k_{s,x}(x_{s,0}+s)
+-
 \rho_b A_b \phi_s
 \left(
-r_{s,\mathrm{cm}}\frac{v_b^\ast-\hat v_b}{T_b}
+r_{s,\mathrm{cm}}\dot v_{b,\mathrm{ns}}
 +
-\dot r_{s,\mathrm{cm}}\,\hat v_b
-\right).
-\label{eq:tau_c_minus_slip_rearrange_secondary}
-\end{align}
-
-Hence,
-\begin{equation}
-\tau_c \ge \tau_{c,s,-}^{\mathrm{slip}},
-\label{eq:tau_c_minus_slip_ineq_secondary}
+\dot r_{s,\mathrm{cm}}\,v_b
+\right)
+\Biggr].
+\end{aligned}
+\label{eq:tau_s_negative_admissibility_expand}
 \end{equation}
-with
 
-\bigeq{eq:tau_s_minus_slip}{Secondary Slip-Branch Lower Bound}{
-\tau_{c,s,-}^{\mathrm{slip}}
+Collecting the \(\tau_{s,\mathrm{ns}}\) terms gives the negative-direction
+lower bound
+
+\widebigeq{eq:tau_s_minus_stick}{Secondary No-Slip Lower Bound}{
+\tau_{s,-}^{\mathrm{stick}}
 =
 -\frac{
-\dfrac{r_{s,\mathrm{eff}}}{R}
-\Bigl[
-\mu\tan\beta
-\dfrac{\dd\theta_s}{\dd s}\,
+r_s
+\Biggl[
+\mu_s\tan\beta\,
 k_{s,\theta}\!\bigl(\theta_{s,0}+\theta_s(s)\bigr)
+\dfrac{\dd\theta_s}{\dd s}
 +
-2\mu\tan\beta\,k_{s,x}(x_{s,0}+s)
+2\mu_s\tan\beta\,k_{s,x}(x_{s,0}+s)
 -
 \rho_b A_b \phi_s
 \left(
-r_{s,\mathrm{cm}}\dfrac{v_b^\ast-\hat v_b}{T_b}
+r_{s,\mathrm{cm}}\dot v_{b,\mathrm{ns}}
 +
-\dot r_{s,\mathrm{cm}}\,\hat v_b
+\dot r_{s,\mathrm{cm}}\,v_b
 \right)
-\Bigr]
+\Biggr]
 }{
 1
 +
-r_{s,\mathrm{eff}}\mu\tan\beta \dfrac{\dd\theta_s}{\dd s}
-}.
+r_s\mu_s\tan\beta
+\dfrac{\dd\theta_s}{\dd s}
+}
 }
 
-Therefore, in the slipping regime the secondary pulley contributes the interval
+The secondary no-slip torque demand is therefore admissible only if
+
 \begin{equation}
 \boxed{
-\tau_{c,s,-}^{\mathrm{slip}}
+\tau_{s,-}^{\mathrm{stick}}
 \le
-\tau_c
+\tau_{s,\mathrm{ns}}
 \le
-\tau_{c,s,+}^{\mathrm{slip}}.
+\tau_{s,+}^{\mathrm{stick}}.
 }
-\label{eq:secondary_tau_interval_slip}
+\label{eq:secondary_no_slip_admissibility}
 \end{equation}
 
+If \Eq{eq:secondary_no_slip_admissibility} is satisfied, the secondary contact
+can support the torque required by the no-slip candidate. If it is not
+satisfied, the secondary contact cannot remain adhered under the demanded
+torque, and the final torque transfer must instead be determined by a slipping
+contact law.
 
 \subsection{Section Conclusion and Transition}
 \label{sec:traction_conclusion}
 
-This section derived the traction-capacity model of the CVT from the local
-belt--pulley force balance and converted it into explicit torque bounds for the
-primary and secondary pulleys.
+This section derived the traction limits needed to test the no-slip torque
+candidate from \Sec{sec:no-slip-belt-dynamics}. Starting from a local
+belt--pulley force balance, the available tight--slack tension difference was
+converted into a pulley torque capacity. This produced admissibility conditions
+for the primary and secondary no-slip torque demands,
+\(\tau_{p,\mathrm{ns}}\) and \(\tau_{s,\mathrm{ns}}\).
 
-With these traction limits now established, the torque-transfer model is fully
-closed. The transmitted coupling torque is no longer just the value required by
-the no-slip dynamics; it is now constrained by the admissible belt traction,
-which determines whether the transmission remains in stick or saturates onto a
-slipping branch.
+These results determine whether the no-slip candidate can be physically
+maintained. If both pulley contacts satisfy their admissibility conditions, the
+belt can remain adhered to both pulleys and the no-slip torque transfer is
+accepted.
+
+What remains is the complementary case: what happens when one or both contacts
+cannot remain adhered, or when relative belt--pulley motion is already present.
+In that situation, the torque transfer is no longer determined by the no-slip
+demand. Instead, the slipping contact must be governed by kinetic traction and
+the belt equation of motion. The next section develops the contact-state
+selection rules and the corresponding slip-branch dynamics.
 
 
-% ==============================================================
+
+\section{Slip Branch Dynamics and Contact-State Selection}
+\label{sec:slip-branch-dynamics}
+
+The previous section determined when the no-slip torque demands can be
+supported by the available belt--pulley traction. If the primary and secondary
+contacts both satisfy their admissibility conditions, the no-slip candidate is
+physically consistent and the belt remains adhered to both pulleys.
+
+When one of these admissibility conditions fails, the no-slip candidate can no
+longer be used as the final torque-transfer law. The contact that exceeds its
+available traction cannot supply the demanded torque while remaining stuck, so
+relative motion begins at that belt--pulley interface. Once this occurs, the
+contact torque is no longer determined by the no-slip demand. Instead, it is set
+by the kinetic traction available at the slipping contact.
+
+This section develops the rules used to select the active contact state and the
+corresponding equations of motion. The same three bodies introduced in
+\Sec{sec:belt-torque-path} are retained: the primary pulley, the belt, and the
+secondary pulley. What changes from one branch to another is the contact
+condition imposed at each pulley. A stuck contact enforces belt-speed
+compatibility, while a slipping contact applies a saturated kinetic traction
+torque in the direction opposing relative motion.
+
+The goal is therefore to complete the torque-transfer closure. We first define
+the relative belt--pulley speeds used to identify sliding, then state the rules
+for entering, maintaining, and exiting slip. The remaining subsections derive the
+branch dynamics for primary slip, secondary slip, and simultaneous slip at both
+contacts.
+
+\subsection{Relative Contact Speeds and Slip-State Logic}
+\label{sec:relative-contact-speeds}
+
+To determine whether a belt--pulley contact is sticking or slipping, the model
+compares the belt transport speed to the local surface speed imposed by each
+pulley.
+
+For the primary pulley, define the relative contact speed as
+\begin{equation}
+v_{\mathrm{rel},p}
+=
+r_p\omega_p - v_b,
+\label{eq:v_rel_primary}
+\end{equation}
+where \(r_p = r_{p,\mathrm{eff}}(s)\). Thus, \(v_{\mathrm{rel},p}>0\) means
+the primary pulley surface is moving faster than the belt at the contact radius
+and tends to drive the belt forward.
+
+For the secondary pulley, define
+\begin{equation}
+v_{\mathrm{rel},s}
+=
+v_b - r_s\omega_s,
+\label{eq:v_rel_secondary}
+\end{equation}
+where \(r_s = r_{s,\mathrm{eff}}(s)\). Thus, \(v_{\mathrm{rel},s}>0\) means
+the belt is moving faster than the secondary pulley surface and tends to drive
+the secondary forward.
+
+These definitions are chosen so that positive relative speed corresponds to the
+usual forward torque-transfer direction at each contact: primary-to-belt on the
+primary side, and belt-to-secondary on the secondary side.
+
+A contact can remain stuck only if its relative contact speed is zero, or within
+a small numerical tolerance:
+\begin{equation}
+|v_{\mathrm{rel},j}| \le \varepsilon_v,
+\qquad j\in\{p,s\}.
+\label{eq:stick_velocity_tolerance}
+\end{equation}
+
+If both contacts satisfy \Eq{eq:stick_velocity_tolerance}, the model first
+tests the no-slip candidate derived in \Sec{sec:no-slip-belt-dynamics}. This
+candidate is accepted only if both pulley contacts also satisfy the traction
+admissibility conditions derived in \Sec{sec:traction-limits}:
+\begin{equation}
+|\tau_{p,\mathrm{ns}}|
+\le
+\tau_{p,\max}^{\mathrm{stick}},
+\label{eq:primary_stick_acceptance_repeat}
+\end{equation}
+and
+\begin{equation}
+\tau_{s,-}^{\mathrm{stick}}
+\le
+\tau_{s,\mathrm{ns}}
+\le
+\tau_{s,+}^{\mathrm{stick}}.
+\label{eq:secondary_stick_acceptance_repeat}
+\end{equation}
+
+If these conditions hold, the no-slip candidate becomes the active
+torque-transfer branch:
+\[
+\tau_p = \tau_{p,\mathrm{ns}},
+\qquad
+\tau_s = \tau_{s,\mathrm{ns}},
+\qquad
+\dot v_b = \dot v_{b,\mathrm{ns}}.
+\]
+
+If either contact fails its admissibility check, that contact cannot support the
+required no-slip torque and must enter slip. The direction of slip is determined
+by the direction in which the demanded torque exceeds the admissible interval.
+For the primary pulley,
+\[
+\tau_{p,\mathrm{ns}} > \tau_{p,\max}^{\mathrm{stick}}
+\quad\Rightarrow\quad
+\text{positive primary slip},
+\]
+while
+\[
+\tau_{p,\mathrm{ns}} < -\tau_{p,\max}^{\mathrm{stick}}
+\quad\Rightarrow\quad
+\text{negative primary slip}.
+\]
+
+For the secondary pulley,
+\[
+\tau_{s,\mathrm{ns}} > \tau_{s,+}^{\mathrm{stick}}
+\quad\Rightarrow\quad
+\text{positive secondary slip},
+\]
+while
+\[
+\tau_{s,\mathrm{ns}} < \tau_{s,-}^{\mathrm{stick}}
+\quad\Rightarrow\quad
+\text{negative secondary slip}.
+\]
+
+Once a contact is already sliding, its state is determined primarily by its
+relative contact speed. If
+\[
+|v_{\mathrm{rel},j}| > \varepsilon_v,
+\]
+then contact \(j\) is treated as slipping, and its torque is set by kinetic
+traction rather than by the no-slip demand. The slip direction is recorded by
+\begin{equation}
+\sigma_j = \operatorname{sgn}(v_{\mathrm{rel},j}),
+\qquad j\in\{p,s\}.
+\label{eq:slip_direction_sigma}
+\end{equation}
+
+Slip persists while the relative contact speed remains nonzero. During this
+time, the slipping contact applies a saturated kinetic traction torque in the
+direction opposing relative motion. The no-slip candidate is not reaccepted
+until the relative speed returns to the sticking tolerance and the static
+admissibility conditions can again be satisfied.
+
+This gives three possible slipping branches:
+\begin{itemize}
+    \item primary slip, where the primary contact slides and the secondary
+    contact remains stuck;
+    \item secondary slip, where the secondary contact slides and the primary
+    contact remains stuck;
+    \item two-contact slip, where both pulley contacts slide simultaneously.
+\end{itemize}
+
+The following subsections derive the equations of motion for each branch.
+
+\begin{remarkbox}[Remark (Power Flow During Slip)]
+In the no-slip branch, belt-speed compatibility constrains the primary pulley,
+belt, and secondary pulley to move together kinematically. Once slip occurs,
+that compatibility is lost at the slipping contact. The contact torque is then
+limited by kinetic traction, while the pulley and belt speeds evolve according
+to their own equations of motion.
+
+As a result, the instantaneous mechanical power at the primary contact,
+\(\tau_p\omega_p\), does not need to match the instantaneous mechanical power at
+the secondary contact, \(\tau_s\omega_s\). The difference is associated with
+changes in stored kinetic energy of the rotating components and belt, together
+with slip dissipation. Thus, an apparent short-term excess of output-side power
+does not imply energy creation; it reflects energy being drawn from inertia
+while the slipping contact breaks the ideal no-slip power constraint.
+\end{remarkbox}
+
+\subsection{Kinetic Traction Law for a Slipping Contact}
+\label{sec:kinetic-traction-law}
+
+Once a belt--pulley contact is slipping, the torque at that contact is no
+longer determined by the no-slip torque demand. Instead, the contact applies the
+largest kinetic traction torque available in the direction opposing relative
+motion.
+
+The generic torque-capacity expression from \Eq{eq:tau_capacity_final} still
+applies, but the static coefficient \(\mu_s\) is replaced by the kinetic
+coefficient \(\mu_k\). For a slipping contact on pulley \(j\in\{p,s\}\), define
+
+\begin{equation}
+\tau_{j,\max}^{\mathrm{slip}}(\dot v_b)
+=
+r_j
+\left[
+2\mu_k F_{\mathrm{ax},j}\tan\beta
+-
+\rho_b A_b \phi_j
+\left(
+r_{j,\mathrm{cm}}\dot v_b
++
+\dot r_{j,\mathrm{cm}}\,v_b
+\right)
+\right],
+\label{eq:tau_j_max_slip_general}
+\end{equation}
+
+where \(r_j=r_{j,\mathrm{eff}}(s)\). The notation
+\(\tau_{j,\max}^{\mathrm{slip}}(\dot v_b)\) emphasizes that the available
+slipping torque is not generally a fixed number; it depends on the belt
+acceleration through the inertial correction term.
+
+The direction of the slipping torque is determined by the relative contact speed
+defined in \Sec{sec:relative-contact-speeds}. Let
+
+\begin{equation}
+\sigma_j
+=
+\operatorname{sgn}\!\left(v_{\mathrm{rel},j}\right),
+\qquad j\in\{p,s\}.
+\label{eq:sigma_j_def}
+\end{equation}
+
+With the relative-speed definitions adopted in \Eq{eq:v_rel_primary} and
+\Eq{eq:v_rel_secondary}, \(\sigma_j>0\) corresponds to the usual forward
+torque-transfer direction at contact \(j\). The slipping contact torque is then
+modeled as the saturated kinetic traction torque
+
+\begin{equation}
+\tau_j
+=
+\sigma_j\,\tau_{j,\max}^{\mathrm{slip}}(\dot v_b).
+\label{eq:tau_j_slip_saturated}
+\end{equation}
+
+Equation \Eq{eq:tau_j_slip_saturated} should not be interpreted as a completed
+solution for \(\tau_j\), because the right-hand side still contains
+\(\dot v_b\). In a slip branch, the belt acceleration must be solved
+simultaneously with the saturated contact torque using the belt equation of
+motion \Eq{eq:belt_transport_eom}. The following subsections carry out this
+solve for primary slip, secondary slip, and simultaneous slip at both contacts.
+
+\subsection{Primary-Slip Branch}
+\label{sec:primary-slip-branch}
+
+We first consider the branch where the primary contact is slipping while the
+secondary contact remains stuck. In this case, the primary pulley no longer
+enforces belt-speed compatibility. Instead, the primary contact torque is set by
+the saturated kinetic traction law from \Sec{sec:kinetic-traction-law}.
+
+The secondary contact, however, is still adhered. Therefore, the secondary
+pulley remains kinematically compatible with the belt:
+\begin{equation}
+\dot\omega_s
+=
+\frac{
+\dot v_b-\dot r_s\omega_s
+}{
+r_s
+},
+\label{eq:omega_s_primary_slip}
+\end{equation}
+
+Using the secondary rotational equation of motion
+\Eq{eq:secondary_rotational_eom_belt}, the secondary contact torque is then
+\begin{equation}
+\tau_s
+=
+\tau_{\mathrm{load}}
++
+I_s
+\left(
+\frac{
+\dot v_b-\dot r_s\omega_s
+}{
+r_s
+}
+\right).
+\label{eq:tau_s_primary_slip}
+\end{equation}
+
+At the slipping primary contact, let
+\[
+\sigma_p = \operatorname{sgn}(v_{\mathrm{rel},p}).
+\]
+Applying \Eq{eq:tau_j_slip_saturated} with \(j=p\) gives
+\begin{equation}
+\tau_p
+=
+\sigma_p r_p
+\left[
+2\mu_k F_{\mathrm{ax},p}\tan\beta
+-
+\rho_b A_b \phi_p
+\left(
+r_{p,\mathrm{cm}}\dot v_b
++
+\dot r_{p,\mathrm{cm}}v_b
+\right)
+\right],
+\label{eq:tau_p_primary_slip}
+\end{equation}
+where \(r_p=r_{p,\mathrm{eff}}(s)\).
+
+The remaining unknown is the belt acceleration \(\dot v_b\). This is found by
+substituting \Eq{eq:tau_s_primary_slip} and \Eq{eq:tau_p_primary_slip} into the
+belt equation of motion \Eq{eq:belt_transport_eom}:
+\begin{equation}
+m_b\dot v_b
+=
+\frac{\tau_p}{r_p}
+-
+\frac{\tau_s}{r_s}.
+\label{eq:belt_eom_primary_slip_start}
+\end{equation}
+
+Substituting gives
+\begin{align}
+m_b\dot v_b
+=&\;
+\sigma_p
+\left[
+2\mu_k F_{\mathrm{ax},p}\tan\beta
+-
+\rho_b A_b \phi_p
+\left(
+r_{p,\mathrm{cm}}\dot v_b
++
+\dot r_{p,\mathrm{cm}}v_b
+\right)
+\right]
+\nonumber\\
+&-
+\frac{\tau_{\mathrm{load}}}{r_s}
+-
+\frac{I_s}{r_s}
+\left(
+\frac{
+\dot v_b-\dot r_s\omega_s
+}{
+r_s
+}
+\right).
+\label{eq:belt_eom_primary_slip_substituted}
+\end{align}
+
+Collecting the \(\dot v_b\) terms yields the primary-slip belt acceleration:
+
+\bigeq{eq:vb_dot_primary_slip}{Primary-Slip Belt Acceleration}{
+\dot v_{b,p\mathrm{-slip}}
+=
+\frac{
+\sigma_p
+\left[
+2\mu_k F_{\mathrm{ax},p}\tan\beta
+-
+\rho_b A_b \phi_p \dot r_{p,\mathrm{cm}}v_b
+\right]
+-
+\dfrac{\tau_{\mathrm{load}}}{r_s}
++
+\dfrac{I_s\dot r_s\omega_s}{r_s^2}
+}{
+m_b
++
+\sigma_p\rho_b A_b \phi_p r_{p,\mathrm{cm}}
++
+\dfrac{I_s}{r_s^2}
+}
+}
+
+Once \(\dot v_{b,p\mathrm{-slip}}\) is known, the branch torques follow by
+substitution into \Eq{eq:tau_p_primary_slip} and
+\Eq{eq:tau_s_primary_slip}. The pulley accelerations are then
+
+\begin{equation}
+\dot\omega_p
+=
+\frac{
+\tau_{\mathrm{eng}}-\tau_p
+}{
+I_p
+},
+\label{eq:omega_p_primary_slip_final}
+\end{equation}
+
+and
+
+\begin{equation}
+\dot\omega_s
+=
+\frac{
+\dot v_{b,p\mathrm{-slip}}-\dot r_s\omega_s
+}{
+r_s
+}.
+\label{eq:omega_s_primary_slip_final}
+\end{equation}
+
+Thus, in the primary-slip branch, the primary contact torque is set by kinetic
+traction, the secondary contact still enforces belt-speed compatibility, and
+the belt equation of motion determines the resulting belt acceleration. This
+branch remains valid only while the secondary contact can remain adhered. If the
+secondary contact also fails its sticking condition, the model must transition
+to the two-contact slip branch.
+
+\subsection{Secondary-Slip Branch}
+\label{sec:secondary-slip-branch}
+
+We next consider the branch where the secondary contact is slipping while the
+primary contact remains stuck. In this case, the secondary contact torque is set
+by saturated kinetic traction, while the primary contact still enforces
+belt-speed compatibility.
+
+The primary contact remains adhered, so the primary pulley must satisfy
+\begin{equation}
+\dot\omega_p
+=
+\frac{
+\dot v_b-\dot r_p\omega_p
+}{
+r_p
+},
+\label{eq:omega_p_secondary_slip}
+\end{equation}
+where \(r_p=r_{p,\mathrm{eff}}(s)\). Using the primary rotational equation of
+motion \Eq{eq:primary_rotational_eom_belt}, the primary contact torque is
+therefore
+\begin{equation}
+\tau_p
+=
+\tau_{\mathrm{eng}}
+-
+I_p
+\left(
+\frac{
+\dot v_b-\dot r_p\omega_p
+}{
+r_p
+}
+\right).
+\label{eq:tau_p_secondary_slip}
+\end{equation}
+
+At the slipping secondary contact, let
+\[
+\sigma_s = \operatorname{sgn}(v_{\mathrm{rel},s}).
+\]
+Applying \Eq{eq:tau_j_slip_saturated} with \(j=s\) gives
+\begin{equation}
+\tau_s
+=
+\sigma_s r_s
+\left[
+2\mu_k F_{\mathrm{ax},s}(s,\tau_s)\tan\beta
+-
+\rho_b A_b \phi_s
+\left(
+r_{s,\mathrm{cm}}\dot v_b
++
+\dot r_{s,\mathrm{cm}}v_b
+\right)
+\right],
+\label{eq:tau_s_secondary_slip_start}
+\end{equation}
+where \(r_s=r_{s,\mathrm{eff}}(s)\).
+
+Unlike the primary slip branch, this expression is implicit in \(\tau_s\)
+because the secondary axial force is torque-reactive. Substituting the secondary
+axial force model from \Eq{eq:secondary_axial} gives
+\begin{equation}
+\begin{aligned}
+\tau_s
+=
+\sigma_s r_s
+\Biggl[
+&\mu_k\tan\beta
+\left(
+\tau_s
++
+k_{s,\theta}\!\bigl(\theta_{s,0}+\theta_s(s)\bigr)
+\right)
+\frac{\dd\theta_s}{\dd s}
+\\
+&+
+2\mu_k\tan\beta\,k_{s,x}(x_{s,0}+s)
+-
+\rho_b A_b \phi_s
+\left(
+r_{s,\mathrm{cm}}\dot v_b
++
+\dot r_{s,\mathrm{cm}}v_b
+\right)
+\Biggr].
+\end{aligned}
+\label{eq:tau_s_secondary_slip_implicit}
+\end{equation}
+
+Collecting the \(\tau_s\) terms gives
+\begin{equation}
+\begin{aligned}
+\tau_s
+=
+\frac{
+\sigma_s r_s
+\Biggl[
+\mu_k\tan\beta\,
+k_{s,\theta}\!\bigl(\theta_{s,0}+\theta_s(s)\bigr)
+\dfrac{\dd\theta_s}{\dd s}
++
+2\mu_k\tan\beta\,k_{s,x}(x_{s,0}+s)
+-
+\rho_b A_b \phi_s
+\left(
+r_{s,\mathrm{cm}}\dot v_b
++
+\dot r_{s,\mathrm{cm}}v_b
+\right)
+\Biggr]
+}{
+1
+-
+\sigma_s r_s\mu_k\tan\beta
+\dfrac{\dd\theta_s}{\dd s}
+}.
+\end{aligned}
+\label{eq:tau_s_secondary_slip}
+\end{equation}
+
+The remaining unknown is the belt acceleration \(\dot v_b\). Substituting
+\Eq{eq:tau_p_secondary_slip} and \Eq{eq:tau_s_secondary_slip} into the belt
+equation of motion \Eq{eq:belt_transport_eom},
+\[
+m_b\dot v_b
+=
+\frac{\tau_p}{r_p}
+-
+\frac{\tau_s}{r_s},
+\]
+and collecting the \(\dot v_b\) terms gives the secondary-slip belt
+acceleration:
+
+\widebigeq{eq:vb_dot_secondary_slip}{Secondary-Slip Belt Acceleration}{
+\dot v_{b,s\mathrm{-slip}}
+=
+\frac{
+\dfrac{\tau_{\mathrm{eng}}}{r_p}
++
+\dfrac{I_p\dot r_p\omega_p}{r_p^2}
+-
+\dfrac{
+\sigma_s
+\left[
+\mu_k\tan\beta\,
+k_{s,\theta}\!\bigl(\theta_{s,0}+\theta_s(s)\bigr)
+\dfrac{\dd\theta_s}{\dd s}
++
+2\mu_k\tan\beta\,k_{s,x}(x_{s,0}+s)
+-
+\rho_b A_b \phi_s \dot r_{s,\mathrm{cm}}v_b
+\right]
+}{
+1
+-
+\sigma_s r_s\mu_k\tan\beta
+\dfrac{\dd\theta_s}{\dd s}
+}
+}{
+m_b
++
+\dfrac{I_p}{r_p^2}
+-
+\dfrac{
+\sigma_s\rho_b A_b \phi_s r_{s,\mathrm{cm}}
+}{
+1
+-
+\sigma_s r_s\mu_k\tan\beta
+\dfrac{\dd\theta_s}{\dd s}
+}
+}
+}
+
+Once \(\dot v_{b,s\mathrm{-slip}}\) is known, the branch torques follow by
+substitution into \Eq{eq:tau_p_secondary_slip} and
+\Eq{eq:tau_s_secondary_slip}. The pulley accelerations are then
+
+\begin{equation}
+\dot\omega_p
+=
+\frac{
+\dot v_{b,s\mathrm{-slip}}-\dot r_p\omega_p
+}{
+r_p
+},
+\label{eq:omega_p_secondary_slip_final}
+\end{equation}
+
+and
+
+\begin{equation}
+\dot\omega_s
+=
+\frac{
+\tau_s-\tau_{\mathrm{load}}
+}{
+I_s
+}.
+\label{eq:omega_s_secondary_slip_final}
+\end{equation}
+
+Thus, in the secondary-slip branch, the secondary contact torque is set by
+kinetic traction, including the torque-reactive helix feedback, while the
+primary contact still enforces belt-speed compatibility. This branch remains
+valid only while the primary contact can remain adhered. If the primary contact
+also fails its sticking condition, the model must transition to the two-contact
+slip branch.
+
+\subsection{Two-Contact Slip Branch}
+\label{sec:two-contact-slip-branch}
+
+Finally, consider the branch where both belt--pulley contacts are slipping.
+In this case, neither pulley enforces belt-speed compatibility. Both contact
+torques are instead determined by saturated kinetic traction, and the belt
+acceleration is obtained directly from the belt equation of motion.
+
+Let
+\[
+\sigma_p = \operatorname{sgn}(v_{\mathrm{rel},p}),
+\qquad
+\sigma_s = \operatorname{sgn}(v_{\mathrm{rel},s}).
+\]
+
+At the primary contact, applying \Eq{eq:tau_j_slip_saturated} with \(j=p\)
+gives
+
+\begin{equation}
+\tau_p
+=
+\sigma_p r_p
+\left[
+2\mu_k F_{\mathrm{ax},p}\tan\beta
+-
+\rho_b A_b \phi_p
+\left(
+r_{p,\mathrm{cm}}\dot v_b
++
+\dot r_{p,\mathrm{cm}}v_b
+\right)
+\right],
+\label{eq:tau_p_two_slip}
+\end{equation}
+
+where \(r_p=r_{p,\mathrm{eff}}(s)\).
+
+At the secondary contact, applying \Eq{eq:tau_j_slip_saturated} with \(j=s\)
+gives
+
+\begin{equation}
+\tau_s
+=
+\sigma_s r_s
+\left[
+2\mu_k F_{\mathrm{ax},s}(s,\tau_s)\tan\beta
+-
+\rho_b A_b \phi_s
+\left(
+r_{s,\mathrm{cm}}\dot v_b
++
+\dot r_{s,\mathrm{cm}}v_b
+\right)
+\right],
+\label{eq:tau_s_two_slip_start}
+\end{equation}
+
+where \(r_s=r_{s,\mathrm{eff}}(s)\). As in \Sec{sec:secondary-slip-branch}, the
+secondary expression is implicit because the secondary axial force is
+torque-reactive. Substituting \Eq{eq:secondary_axial} and collecting the
+\(\tau_s\) terms gives
+
+\begin{equation}
+\begin{aligned}
+\tau_s
+=
+\frac{
+\sigma_s r_s
+\Biggl[
+\mu_k\tan\beta\,
+k_{s,\theta}\!\bigl(\theta_{s,0}+\theta_s(s)\bigr)
+\dfrac{\dd\theta_s}{\dd s}
++
+2\mu_k\tan\beta\,k_{s,x}(x_{s,0}+s)
+-
+\rho_b A_b \phi_s
+\left(
+r_{s,\mathrm{cm}}\dot v_b
++
+\dot r_{s,\mathrm{cm}}v_b
+\right)
+\Biggr]
+}{
+1
+-
+\sigma_s r_s\mu_k\tan\beta
+\dfrac{\dd\theta_s}{\dd s}
+}.
+\end{aligned}
+\label{eq:tau_s_two_slip}
+\end{equation}
+
+The belt equation of motion is still
+
+\[
+m_b\dot v_b
+=
+\frac{\tau_p}{r_p}
+-
+\frac{\tau_s}{r_s}.
+\]
+
+Substituting \Eq{eq:tau_p_two_slip} and \Eq{eq:tau_s_two_slip}, then collecting
+the \(\dot v_b\) terms, gives the two-contact-slip belt acceleration:
+
+\widebigeq{eq:vb_dot_two_slip}{Two-Contact-Slip Belt Acceleration}{
+\dot v_{b,ps\mathrm{-slip}}
+=
+\frac{
+\sigma_p
+\left[
+2\mu_k F_{\mathrm{ax},p}\tan\beta
+-
+\rho_b A_b \phi_p \dot r_{p,\mathrm{cm}}v_b
+\right]
+-
+\dfrac{
+\sigma_s
+\left[
+\mu_k\tan\beta\,
+k_{s,\theta}\!\bigl(\theta_{s,0}+\theta_s(s)\bigr)
+\dfrac{\dd\theta_s}{\dd s}
++
+2\mu_k\tan\beta\,k_{s,x}(x_{s,0}+s)
+-
+\rho_b A_b \phi_s \dot r_{s,\mathrm{cm}}v_b
+\right]
+}{
+1
+-
+\sigma_s r_s\mu_k\tan\beta
+\dfrac{\dd\theta_s}{\dd s}
+}
+}{
+m_b
++
+\sigma_p\rho_b A_b \phi_p r_{p,\mathrm{cm}}
+-
+\dfrac{
+\sigma_s\rho_b A_b \phi_s r_{s,\mathrm{cm}}
+}{
+1
+-
+\sigma_s r_s\mu_k\tan\beta
+\dfrac{\dd\theta_s}{\dd s}
+}
+}
+}
+
+Once \(\dot v_{b,ps\mathrm{-slip}}\) is known, the branch torques follow by
+substitution into \Eq{eq:tau_p_two_slip} and \Eq{eq:tau_s_two_slip}. Since
+neither contact is adhered, the pulley accelerations are obtained directly from
+the rotational equations of motion:
+
+\begin{equation}
+\dot\omega_p
+=
+\frac{
+\tau_{\mathrm{eng}}-\tau_p
+}{
+I_p
+},
+\label{eq:omega_p_two_slip_final}
+\end{equation}
+
+and
+
+\begin{equation}
+\dot\omega_s
+=
+\frac{
+\tau_s-\tau_{\mathrm{load}}
+}{
+I_s
+}.
+\label{eq:omega_s_two_slip_final}
+\end{equation}
+
+Thus, in the two-contact slip branch, both pulley contacts are governed by
+kinetic traction, and the belt is not kinematically constrained to either pulley.
+The belt acceleration is determined only by the balance of the two saturated
+contact torques through the belt equation of motion.
+
+\subsection{Contact-State Selection}
+\label{sec:contact-state-selection}
+
+The preceding subsections define the possible torque-transfer closures. The
+active branch is selected by checking which contacts can remain adhered.
+
+Let the primary sticking condition be
+\[
+\mathcal S_p
+\equiv
+\left(
+|v_{\mathrm{rel},p}| \le \varepsilon_v
+\right)
+\land
+\left(
+|\tau_{p,\mathrm{ns}}|
+\le
+\tau_{p,\max}^{\mathrm{stick}}
+\right),
+\]
+and let the secondary sticking condition be
+\[
+\mathcal S_s
+\equiv
+\left(
+|v_{\mathrm{rel},s}| \le \varepsilon_v
+\right)
+\land
+\left(
+\tau_{s,-}^{\mathrm{stick}}
+\le
+\tau_{s,\mathrm{ns}}
+\le
+\tau_{s,+}^{\mathrm{stick}}
+\right).
+\]
+
+The branch closure for the belt acceleration and contact torques is then
+
+\begin{equation}
+(\dot v_b,\tau_p,\tau_s)
+=
+\begin{cases}
+\left(
+\dot v_{b,\mathrm{ns}},
+\tau_{p,\mathrm{ns}},
+\tau_{s,\mathrm{ns}}
+\right),
+&
+\mathcal S_p \land \mathcal S_s,
+\\[8pt]
+\left(
+\dot v_{b,p\mathrm{-slip}},
+\tau_p \text{ from } \Eq{eq:tau_p_primary_slip},
+\tau_s \text{ from } \Eq{eq:tau_s_primary_slip}
+\right),
+&
+\neg\mathcal S_p \land \mathcal S_s,
+\\[8pt]
+\left(
+\dot v_{b,s\mathrm{-slip}},
+\tau_p \text{ from } \Eq{eq:tau_p_secondary_slip},
+\tau_s \text{ from } \Eq{eq:tau_s_secondary_slip}
+\right),
+&
+\mathcal S_p \land \neg\mathcal S_s,
+\\[8pt]
+\left(
+\dot v_{b,ps\mathrm{-slip}},
+\tau_p \text{ from } \Eq{eq:tau_p_two_slip},
+\tau_s \text{ from } \Eq{eq:tau_s_two_slip}
+\right),
+&
+\neg\mathcal S_p \land \neg\mathcal S_s.
+\end{cases}
+\label{eq:branch_closure_law}
+\end{equation}
+
+The corresponding belt accelerations are given by
+\Eq{eq:no_slip_vb_dot}, \Eq{eq:vb_dot_primary_slip},
+\Eq{eq:vb_dot_secondary_slip}, and \Eq{eq:vb_dot_two_slip},
+respectively.
+
+Thus, when both contacts can remain adhered, the model uses the no-slip torque
+demands. When one or both contacts cannot remain adhered, the corresponding slip
+branch replaces the no-slip demand with saturated kinetic traction and solves
+the belt acceleration from the belt equation of motion.
+
+\subsection{Section Summary}
+\label{sec:slip-branch-summary}
+
+This section completed the torque-transfer closure for cases where the no-slip
+candidate cannot be maintained. Relative contact speeds were introduced to
+identify whether each belt--pulley interface is adhered or sliding, and kinetic
+traction was used to define the torque applied by a slipping contact.
+
+The resulting branch structure separates the possible contact states into
+no-slip, primary slip, secondary slip, and two-contact slip. In each slipping
+case, the saturated contact torque replaces the no-slip demand, and the belt
+equation of motion determines the corresponding belt acceleration.
+
+Together with the no-slip demand from \Sec{sec:no-slip-belt-dynamics} and the
+traction admissibility conditions from \Sec{sec:traction-limits}, the branch
+selection law in \Eq{eq:branch_closure_law} provides the final torque-transfer
+rule needed by the complete CVT dynamic model.
+
 \section{Complete CVT Dynamic Model}
 \label{sec:complete_model}
 
 This section collects the results of the preceding derivations into one closed
-nonlinear dynamical model.
-No new physics is introduced here.
-The purpose is simply to summarize, in one place,
+nonlinear dynamical model. No new physics is introduced here. The purpose is to
+summarize, in one place,
 
 \begin{enumerate}
     \item the state variables,
-    \item the geometry and belt-kinematic quantities computed from those states,
-    \item the torque and regime closures,
+    \item the geometric and contact quantities computed from those states,
+    \item the torque-transfer closure,
     \item and the final governing equations of motion.
 \end{enumerate}
 
@@ -7328,7 +6976,7 @@ The state vector is
 \omega_s,\;
 s,\;
 \dot s,\;
-\hat v_b
+v_b
 \big),
 \label{eq:state_vector_complete}
 \end{equation}
@@ -7338,16 +6986,15 @@ where
     \item \(\omega_s\) is the secondary pulley angular velocity,
     \item \(s\) is the axial shift coordinate,
     \item \(\dot s\) is the axial shift velocity,
-    \item \(\hat v_b\) is the modeled belt transport speed.
+    \item \(v_b\) is the belt transport speed.
 \end{itemize}
 
 % --------------------------------------------------------------
-\subsection{Geometry and Belt Kinematics}
+\subsection{Geometry and Contact Kinematics}
 
 At each instant, the shift coordinate \(s\) determines the pulley geometry
 through the belt-length constraint and the conical kinematic relations derived
-earlier.
-In particular,
+in \Sec{sec:geometry}. In particular,
 \[
 r_{p,\mathrm{eff}},\quad
 r_{s,\mathrm{eff}},\quad
@@ -7356,7 +7003,14 @@ r_{s,\mathrm{cm}},\quad
 \phi_p,\quad
 \phi_s
 \]
-are all functions of \(s\), and the geometric CVT ratio is
+are functions of \(s\). For compactness in the complete model, write
+\[
+r_p = r_{p,\mathrm{eff}}(s),
+\qquad
+r_s = r_{s,\mathrm{eff}}(s).
+\]
+
+The geometric CVT ratio remains
 \begin{equation}
 R(s)
 =
@@ -7371,253 +7025,143 @@ Its time derivative is
 \end{equation}
 as given by \Eq{eq:Rdot_final}.
 
-The pulley-imposed belt-line speeds from \Sec{sec:belt_transport_motion} are
+The relative contact speeds at the two pulley interfaces are
 \begin{equation}
-v_{p,\mathrm{cm}}
+v_{\mathrm{rel},p}
 =
-r_{p,\mathrm{cm}}(s)\,\omega_p,
+r_p\omega_p - v_b,
 \qquad
-v_{s,\mathrm{cm}}
+v_{\mathrm{rel},s}
 =
-r_{s,\mathrm{cm}}(s)\,\omega_s.
-\label{eq:belt_line_speeds_complete}
+v_b - r_s\omega_s,
+\label{eq:v_rel_complete}
 \end{equation}
-
-The regularized target belt speed is
-\begin{equation}
-v_b^\ast
-=
-\frac{1}{2}\left(v_{p,\mathrm{cm}}+v_{s,\mathrm{cm}}\right).
-\label{eq:vb_target_complete}
-\end{equation}
-
-In the sticking regime, the belt speed is imposed exactly by the adhered
-kinematics:
-\begin{equation}
-\hat v_b = v_{p,\mathrm{cm}} = v_{s,\mathrm{cm}}.
-\label{eq:vb_stick_complete}
-\end{equation}
-
-The corresponding sticking derivative is obtained by differentiating this
-compatibility relation, for example from the primary side,
-\begin{equation}
-\dot{\hat v}_{b,\mathrm{stick}}
-=
-\dot r_{p,\mathrm{cm}}\,\omega_p
-+
-r_{p,\mathrm{cm}}\,\dot\omega_p,
-\label{eq:vb_dot_stick_complete}
-\end{equation}
-with an equivalent expression obtained from the secondary side under sticking
-compatibility.
-
-In the slipping regime, the belt-speed derivative is given by the regularized
-law
-\begin{equation}
-\dot{\hat v}_{b,\mathrm{slip}}
-=
-\frac{v_b^\ast-\hat v_b}{T_b}.
-\label{eq:vb_dot_slip_complete}
-\end{equation}
+as defined in \Eq{eq:v_rel_primary} and \Eq{eq:v_rel_secondary}. These
+quantities determine whether each contact is eligible to remain adhered or must
+be treated as sliding.
 
 % --------------------------------------------------------------
-\subsection{Torque and Regime Closure}
+\subsection{Torque-Transfer Closure}
 
-The internal torque transmitted through the CVT is the coupling torque
-\(\tau_c\).
+The torque-transfer subsystem is closed by determining the primary contact
+torque \(\tau_p\), the secondary contact torque \(\tau_s\), and the belt
+acceleration \(\dot v_b\). These quantities are computed algebraically from the
+current state and contact branch.
 
-\paragraph{No-slip torque demand.}
-
-If sticking is maintained, the required coupling torque is the no-slip torque
-derived in \Eq{eq:tau_ns_final}:
-\begin{equation}
-\tau_{\mathrm{ns}}
-=
-\frac{
-\tau_{\mathrm{eng}}
-+
-\dfrac{I_p}{I_s}R\,\tau_{\mathrm{load}}
--
-I_p\,\omega_s\,\dot R
-}{
-1+\dfrac{I_p}{I_s}R^2
-}.
-\label{eq:tau_ns_complete}
-\end{equation}
-
-\paragraph{Stick and slip traction intervals.}
-
-The branchwise primary and secondary traction bounds derived in
-\Sec{sec:primary_tau_limits} and \Sec{sec:secondary_tau_limits}
-combine into a sticking admissible interval
-\begin{equation}
-\tau_-^{\mathrm{stick}}
-\le
-\tau_c
-\le
-\tau_+^{\mathrm{stick}},
-\label{eq:tau_pm_stick_complete}
-\end{equation}
-with
-\begin{equation}
-\tau_-^{\mathrm{stick}}
-=
-\max\!\left(
-\tau_{c,p,-}^{\mathrm{stick}},
-\tau_{c,s,-}^{\mathrm{stick}}
-\right),
+The no-slip candidate derived in \Sec{sec:no-slip-torque-demand} provides
+\[
+\dot v_{b,\mathrm{ns}},
 \qquad
-\tau_+^{\mathrm{stick}}
-=
-\min\!\left(
-\tau_{c,p,+}^{\mathrm{stick}},
-\tau_{c,s,+}^{\mathrm{stick}}
-\right),
-\label{eq:tau_pm_stick_complete_explicit}
-\end{equation}
-and a slipping admissible interval
-\begin{equation}
-\tau_-^{\mathrm{slip}}
-\le
-\tau_c
-\le
-\tau_+^{\mathrm{slip}},
-\label{eq:tau_pm_slip_complete}
-\end{equation}
-with
-\begin{equation}
-\tau_-^{\mathrm{slip}}
-=
-\max\!\left(
-\tau_{c,p,-}^{\mathrm{slip}},
-\tau_{c,s,-}^{\mathrm{slip}}
-\right),
+\tau_{p,\mathrm{ns}},
 \qquad
-\tau_+^{\mathrm{slip}}
+\tau_{s,\mathrm{ns}},
+\]
+from \Eq{eq:no_slip_vb_dot}, \Eq{eq:tau_p_ns}, and \Eq{eq:tau_s_ns}. These are
+the belt acceleration and contact torque demands required for adhered motion at
+both pulleys.
+
+The admissibility conditions derived in \Sec{sec:primary_tau_limits} and
+\Sec{sec:secondary_tau_limits} determine whether those no-slip demands can be
+supported. The primary contact is admissible when
+\begin{equation}
+\left|\tau_{p,\mathrm{ns}}\right|
+\le
+\tau_{p,\max}^{\mathrm{stick}},
+\label{eq:primary_stick_condition_complete}
+\end{equation}
+as in \Eq{eq:primary_no_slip_admissibility}. The secondary contact is admissible
+when
+\begin{equation}
+\tau_{s,-}^{\mathrm{stick}}
+\le
+\tau_{s,\mathrm{ns}}
+\le
+\tau_{s,+}^{\mathrm{stick}},
+\label{eq:secondary_stick_condition_complete}
+\end{equation}
+as in \Eq{eq:secondary_no_slip_admissibility}.
+
+The active contact branch is selected using the closure law from
+\Sec{sec:contact-state-selection}. In compact form,
+\begin{equation}
+(\dot v_b,\tau_p,\tau_s)
 =
-\min\!\left(
-\tau_{c,p,+}^{\mathrm{slip}},
-\tau_{c,s,+}^{\mathrm{slip}}
-\right).
-\label{eq:tau_pm_slip_complete_explicit}
+\text{the branch output selected by \Eq{eq:branch_closure_law}}.
+\label{eq:branch_closure_complete}
 \end{equation}
 
-\paragraph{Slip metric.}
-
-The slip metric from \Eq{eq:v_delta_def} is
-\begin{equation}
-v_{\Delta}
+If both contacts remain adhered, the branch output is
+\[
+(\dot v_b,\tau_p,\tau_s)
 =
-r_{p,\mathrm{eff}}\,\omega_p
--
-r_{s,\mathrm{eff}}\,\omega_s.
-\label{eq:v_delta_complete}
-\end{equation}
-
-\paragraph{Regime selection.}
-
-Using \(\tau_{\mathrm{ns}}\), the sticking interval, the slipping interval,
-and \(v_\Delta\), the active transmission regime selects both the actual
-coupling torque and the appropriate belt-speed derivative.
-
-The coupling torque is
-\begin{equation}
-\tau_c =
-\begin{cases}
-\tau_{\mathrm{ns}},
-&
-v_{\Delta}=0
-\;\text{and}\;
-\tau_-^{\mathrm{stick}} \le \tau_{\mathrm{ns}} \le \tau_+^{\mathrm{stick}},
-\\[10pt]
-\tau_+^{\mathrm{slip}},
-&
-v_{\Delta}>0
-\;\text{or}\;
-\bigl(v_{\Delta}=0 \text{ and } \tau_{\mathrm{ns}}>\tau_+^{\mathrm{stick}}\bigr),
-\\[10pt]
-\tau_-^{\mathrm{slip}},
-&
-v_{\Delta}<0
-\;\text{or}\;
-\bigl(v_{\Delta}=0 \text{ and } \tau_{\mathrm{ns}}<\tau_-^{\mathrm{stick}}\bigr).
-\end{cases}
-\label{eq:tau_c_complete}
-\end{equation}
-
-The belt-speed derivative is
-\begin{equation}
-\dot{\hat v}_b =
-\begin{cases}
-\dot{\hat v}_{b,\mathrm{stick}},
-&
-v_{\Delta}=0
-\;\text{and}\;
-\tau_-^{\mathrm{stick}} \le \tau_{\mathrm{ns}} \le \tau_+^{\mathrm{stick}},
-\\[10pt]
-\dot{\hat v}_{b,\mathrm{slip}},
-&
-\text{otherwise.}
-\end{cases}
-\label{eq:vb_dot_complete}
-\end{equation}
-
-\Eq{eq:tau_c_complete} and \Eq{eq:vb_dot_complete} define the ideal
-piecewise analytical regime structure under
-\AssRef{assump:ideal_friction} and \AssRef{assump:single_slip_interface}.
-For numerical simulation, this branch logic is realized using the
-regularized/blended transition law in
-\Sec{sec:appendix-slip-regularization}, which smooths switching near
-stick--slip transitions while preserving the same limiting branch behavior.
+(\dot v_{b,\mathrm{ns}},\tau_{p,\mathrm{ns}},\tau_{s,\mathrm{ns}}).
+\]
+If one or both contacts slide, the corresponding slip branch replaces the
+no-slip demand with saturated kinetic traction and solves \(\dot v_b\) from the
+belt equation of motion. The primary-slip, secondary-slip, and two-contact-slip
+belt accelerations are given by \Eq{eq:vb_dot_primary_slip},
+\Eq{eq:vb_dot_secondary_slip}, and \Eq{eq:vb_dot_two_slip}, respectively.
 
 % --------------------------------------------------------------
 \subsection{Governing ODEs}
 
-With the coupling torque and belt-speed derivative now closed, the rotational
-dynamics are
-\begin{align}
+Once the branch closure has supplied \(\dot v_b\), \(\tau_p\), and \(\tau_s\),
+the primary pulley equation of motion is
+\begin{equation}
 \dot\omega_p
-&=
-\frac{1}{I_p}
-\left(
-\tau_{\mathrm{eng}}(\omega_p) - \tau_c
-\right),
-\label{eq:omega_p_dot_complete}
-\\[6pt]
-\dot\omega_s
-&=
-\frac{1}{I_s}
-\left(
-R(s)\,\tau_c - \tau_{\mathrm{load}}(\omega_s)
-\right),
-\label{eq:omega_s_dot_complete}
-\end{align}
-from \Eq{eq:primary_rot_dyn} and \Eq{eq:secondary_rot_dyn}.
-
-The axial shift dynamics are
-\begin{align}
-\dot s &= \dot s,
-\label{eq:s_dot_complete}
-\\[6pt]
-\ddot s
-&=
+=
 \frac{
-\Big(F_{p,\mathrm{ax}}(s,\omega_p) + F_{c,p}(s,\hat v_b)\Big)
+\tau_{\mathrm{eng}}(\omega_p)-\tau_p
+}{
+I_p
+}.
+\label{eq:omega_p_dot_complete}
+\end{equation}
+
+The secondary pulley equation of motion is
+\begin{equation}
+\dot\omega_s
+=
+\frac{
+\tau_s-\tau_{\mathrm{load}}(\omega_s)
+}{
+I_s
+}.
+\label{eq:omega_s_dot_complete}
+\end{equation}
+
+The shift-position kinematics are
+\begin{equation}
+\frac{\dd}{\dd t}s
+=
+\dot s.
+\label{eq:s_dot_complete}
+\end{equation}
+
+The axial shift acceleration is obtained from \Eq{eq:s_ddot_final}:
+\begin{equation}
+\ddot s
+=
+\frac{
+\Big(F_{p,\mathrm{ax}}(s,\omega_p) + F_{c,p}(s,v_b)\Big)
 -
-\Big(F_{s,\mathrm{ax}}(s,R(s)\tau_c) + F_{c,s}(s,\hat v_b)\Big)
+\Big(F_{s,\mathrm{ax}}(s,\tau_s) + F_{c,s}(s,v_b)\Big)
 }{
 m_{p,m} + m_{s,m} + \dfrac{\rho_b A_b L_b}{4}
-},
+}.
 \label{eq:s_ddot_complete}
-\end{align}
-from \Eq{eq:s_ddot_final}.
+\end{equation}
 
-Finally, the belt-speed state evolves according to
+Finally, the belt transport speed evolves according to the branch-selected belt
+acceleration:
 \begin{equation}
-\dot{\hat v}_b
+\frac{\dd}{\dd t}v_b
 =
-\text{the value selected by \Eq{eq:vb_dot_complete}}.
-\label{eq:vb_dot_complete_repeat}
+\dot v_b,
+\qquad
+\dot v_b
+\text{ from } \Eq{eq:branch_closure_complete}.
+\label{eq:vb_dot_complete}
 \end{equation}
 
 % --------------------------------------------------------------
@@ -7625,66 +7169,76 @@ Finally, the belt-speed state evolves according to
 
 Given the current state
 \[
-\mathbf{x}(t)=\big(\omega_p,\omega_s,s,\dot s,\hat v_b\big),
+\mathbf{x}(t)=\big(\omega_p,\omega_s,s,\dot s,v_b\big),
 \]
 the model is evaluated in the following order:
 
 \begin{enumerate}
-    \item Compute the pulley geometry from \(s\), including the effective
-    radii, centroid radii, wrap angles, and the ratio \(R(s)\).
+    \item Compute the pulley geometry from \(s\), including
+    \(r_p\), \(r_s\), \(r_{p,\mathrm{cm}}\), \(r_{s,\mathrm{cm}}\),
+    \(\phi_p\), and \(\phi_s\).
 
-    \item Compute \(\dot R(s,\dot s)\) from \Eq{eq:Rdot_of_states_complete}.
+    \item Compute the engine torque \(\tau_{\mathrm{eng}}(\omega_p)\) and the
+    reflected load torque \(\tau_{\mathrm{load}}(\omega_s)\).
 
-    \item Compute the pulley-imposed belt-line speeds
-    \(v_{p,\mathrm{cm}}\) and \(v_{s,\mathrm{cm}}\) from
-    \Eq{eq:belt_line_speeds_complete}, then form \(v_b^\ast\) from
-    \Eq{eq:vb_target_complete}.
+    \item Compute the no-slip candidate
+    \[
+    \dot v_{b,\mathrm{ns}},
+    \qquad
+    \tau_{p,\mathrm{ns}},
+    \qquad
+    \tau_{s,\mathrm{ns}},
+    \]
+    using \Eq{eq:no_slip_vb_dot}, \Eq{eq:tau_p_ns}, and \Eq{eq:tau_s_ns}.
 
-    \item Evaluate the no-slip torque demand \(\tau_{\mathrm{ns}}\) from
-    \Eq{eq:tau_ns_complete}.
+    \item Compute the primary and secondary no-slip admissibility quantities
+    from \Sec{sec:primary_tau_limits} and \Sec{sec:secondary_tau_limits}.
 
-    \item Evaluate the branchwise traction bounds
-    \(\tau_{c,p,\pm}^{\mathrm{stick}}\),
-    \(\tau_{c,p,\pm}^{\mathrm{slip}}\),
-    \(\tau_{c,s,\pm}^{\mathrm{stick}}\),
-    and \(\tau_{c,s,\pm}^{\mathrm{slip}}\), then combine them into
-    \(\tau_\pm^{\mathrm{stick}}\) and \(\tau_\pm^{\mathrm{slip}}\) using
-    \Eq{eq:tau_pm_stick_complete_explicit} and
-    \Eq{eq:tau_pm_slip_complete_explicit}.
+    \item Compute the relative contact speeds
+    \(v_{\mathrm{rel},p}\) and \(v_{\mathrm{rel},s}\) using
+    \Eq{eq:v_rel_complete}.
 
-    \item Evaluate the slip metric \(v_{\Delta}\) from
-    \Eq{eq:v_delta_complete}, then select both \(\tau_c\) and
-    \(\dot{\hat v}_b\) from \Eq{eq:tau_c_complete} and
-    \Eq{eq:vb_dot_complete}.
+    \item Select the active torque-transfer branch using
+    \Eq{eq:branch_closure_law}. This determines the applied values of
+    \[
+    \dot v_b,
+    \qquad
+    \tau_p,
+    \qquad
+    \tau_s.
+    \]
 
     \item Evaluate the ODE right-hand sides
     \Eq{eq:omega_p_dot_complete},
     \Eq{eq:omega_s_dot_complete},
     \Eq{eq:s_dot_complete},
     \Eq{eq:s_ddot_complete},
-    and \Eq{eq:vb_dot_complete_repeat}.
+    and \Eq{eq:vb_dot_complete}.
 \end{enumerate}
 
 % --------------------------------------------------------------
 \subsection{Complete Nonlinear ODE System}
 
 The complete closed CVT model is therefore
+
 \begin{equation}
 \boxed{
 \begin{aligned}
 \dot\omega_p
 &=
-\frac{1}{I_p}
-\left(
-\tau_{\mathrm{eng}}(\omega_p) - \tau_c
-\right),
+\frac{
+\tau_{\mathrm{eng}}(\omega_p)-\tau_p
+}{
+I_p
+},
 \\[6pt]
 \dot\omega_s
 &=
-\frac{1}{I_s}
-\left(
-R(s)\,\tau_c - \tau_{\mathrm{load}}(\omega_s)
-\right),
+\frac{
+\tau_s-\tau_{\mathrm{load}}(\omega_s)
+}{
+I_s
+},
 \\[6pt]
 \frac{\dd}{\dd t}s
 &=
@@ -7693,56 +7247,37 @@ R(s)\,\tau_c - \tau_{\mathrm{load}}(\omega_s)
 \frac{\dd}{\dd t}\dot s
 &=
 \frac{
-\Big(F_{p,\mathrm{ax}}(s,\omega_p) + F_{c,p}(s,\hat v_b)\Big)
+\Big(F_{p,\mathrm{ax}}(s,\omega_p) + F_{c,p}(s,v_b)\Big)
 -
-\Big(F_{s,\mathrm{ax}}(s,R(s)\tau_c) + F_{c,s}(s,\hat v_b)\Big)
+\Big(F_{s,\mathrm{ax}}(s,\tau_s) + F_{c,s}(s,v_b)\Big)
 }{
 m_{p,m} + m_{s,m} + \dfrac{\rho_b A_b L_b}{4}
 },
 \\[6pt]
-\frac{\dd}{\dd t}\hat v_b
+\frac{\dd}{\dd t}v_b
 &=
-\begin{cases}
-\dot{\hat v}_{b,\mathrm{stick}},
-&
-v_{\Delta}=0
-\;\text{and}\;
-\tau_-^{\mathrm{stick}} \le \tau_{\mathrm{ns}} \le \tau_+^{\mathrm{stick}},
-\\[8pt]
-\dot{\hat v}_{b,\mathrm{slip}},
-&
-\text{otherwise,}
-\end{cases}
+\dot v_b.
 \end{aligned}
 }
 \label{eq:final_cvt_system_complete}
 \end{equation}
-with the algebraic closures
+
+with the algebraic closure
 \[
-R=R(s),
-\qquad
-\dot R=\dot R(s,\dot s),
-\qquad
-v_b^\ast=\frac{1}{2}\bigl(r_{p,\mathrm{cm}}(s)\omega_p+r_{s,\mathrm{cm}}(s)\omega_s\bigr),
-\]
-\[
-\dot{\hat v}_{b,\mathrm{stick}}
+(\dot v_b,\tau_p,\tau_s)
 =
-\dot r_{p,\mathrm{cm}}\,\omega_p
-+
-r_{p,\mathrm{cm}}\,\dot\omega_p,
-\qquad
-\dot{\hat v}_{b,\mathrm{slip}}
-=
-\frac{v_b^\ast-\hat v_b}{T_b},
-\qquad
-\tau_c \text{ from \Eq{eq:tau_c_complete}}.
+\text{the active branch output from \Eq{eq:branch_closure_law}}.
 \]
 
-In summary, the shift state determines the pulley geometry, the geometry
-determines both the no-slip torque demand and the belt kinematics, the regime
-law selects the transmitted coupling torque and belt-speed evolution, and those
-quantities feed back into both the rotational and axial dynamics.
+In summary, the state determines the pulley geometry and relative contact
+speeds. The no-slip candidate determines the torque demand required for adhered
+motion. The traction admissibility conditions determine whether that candidate
+can be maintained. If not, the appropriate slip branch supplies saturated
+contact torques and the resulting belt acceleration. These branch-selected
+quantities then feed back into the rotational, belt, and axial shift dynamics,
+closing the complete CVT state-space model.
+
+
 
 \section{Simulation Results}
 \label{sec:results}
@@ -9152,12 +8687,12 @@ below any physically meaningful length precision.
 % --------------------------------------------------------------
 \subsection{ODE Integration for Dynamic Simulation}
 
-The full CVT state vector $\mathbf{x} = (\omega_p, \omega_s, s, \dot{s}, \hat v_b)$
+The full CVT state vector $\mathbf{x} = (\omega_p, \omega_s, s, \dot{s}, v_b)$
 is integrated using \texttt{scipy.integrate.solve\_ivp}. The governing system
 is written as a first-order ODE system in \Eq{eq:final_cvt_system_complete},
 with rotational sub-equations \Eq{eq:omega_p_dot_complete} and
 \Eq{eq:omega_s_dot_complete}, axial dynamics \Eq{eq:s_ddot_complete}, belt-speed
-dynamics for $\hat v_b$, and algebraic geometry closures
+dynamics for $v_b$, and algebraic geometry closures
 \Eq{eq:R_of_s_complete} and \Eq{eq:Rdot_of_states_complete}. Although
 \Eq{eq:s_ddot_complete} is second-order in $s$, introducing $(s,\dot s)$ as
 separate states converts the complete model to first-order form for time integration. The

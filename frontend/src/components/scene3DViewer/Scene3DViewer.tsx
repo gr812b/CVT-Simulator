@@ -124,17 +124,17 @@ export const Scene3DViewer = ({ replayController, className }: Scene3DViewerProp
     if (!firstDataPoint) return;
 
     // Store initial helix rotation for relative rotation calculations
-    const firstBreakdown = firstDataPoint.drivetrain?.cvt_dynamics?.secondaryPulleyState?.breakdown;
+    const firstBreakdown = firstDataPoint.contact_breakdown.shift?.secondaryPulleyState?.pulley_breakdown;
     const firstHelixRotation = (firstBreakdown && 'helix_force' in firstBreakdown)
       ? firstBreakdown.helix_force.springTorque.rotation
       : 0;
     setInitialHelixRotation(firstHelixRotation);
 
-    const primaryRadius = firstDataPoint.drivetrain?.cvt_dynamics?.primaryPulleyState?.radius ?? constants.min_prim_radius;
-    const secondaryRadius = firstDataPoint.drivetrain?.cvt_dynamics?.secondaryPulleyState?.radius ?? constants.max_sec_radius;
-    const primaryWrapAngleDeg = firstDataPoint.drivetrain?.cvt_dynamics?.primaryPulleyState?.wrap_angle ?? 180;
-    const secondaryWrapAngleDeg = firstDataPoint.drivetrain?.cvt_dynamics?.secondaryPulleyState?.wrap_angle ?? 180;
-    const shiftDistance = firstDataPoint.state?.shift_distance ?? 0;
+    const primaryRadius = firstDataPoint.contact_breakdown.geometry.primary_effective_radius ?? constants.min_prim_radius;
+    const secondaryRadius = firstDataPoint.contact_breakdown.geometry.secondary_effective_radius ?? constants.max_sec_radius;
+    const primaryWrapAngleDeg = firstDataPoint.contact_breakdown.geometry.primary_wrap_angle ?? 180;
+    const secondaryWrapAngleDeg = firstDataPoint.contact_breakdown.geometry.secondary_wrap_angle ?? 180;
+    const shiftDistance = firstDataPoint.state.s ?? 0;
 
     const primaryWrapAngle = primaryWrapAngleDeg * (Math.PI / 180);
     const secondaryWrapAngle = secondaryWrapAngleDeg * (Math.PI / 180);
@@ -171,23 +171,23 @@ export const Scene3DViewer = ({ replayController, className }: Scene3DViewerProp
     const unsubscribe = replayController.on((event) => {
       if (event.type === ReplayEventType.Progress) {
         // Extract angular positions and shift distance
-        const primaryAngularPositionDeg = event.data.drivetrain?.cvt_dynamics?.primaryPulleyState?.angular_position ?? 0;
-        const secondaryAngularPositionDeg = event.data.drivetrain?.cvt_dynamics?.secondaryPulleyState?.angular_position ?? 0;
-        const secondaryBreakdown = event.data.drivetrain?.cvt_dynamics?.secondaryPulleyState?.breakdown;
+        const primaryAngularPositionDeg = event.data.derived_state.engine_angular_position ?? 0;
+        const secondaryAngularPositionDeg = event.data.derived_state.secondary_angular_position ?? 0;
+        const secondaryBreakdown = event.data.contact_breakdown.shift.secondaryPulleyState.pulley_breakdown;
         const secondaryHelixRotationDeg = (secondaryBreakdown && 'helix_force' in secondaryBreakdown) 
           ? secondaryBreakdown.helix_force.springTorque.rotation - initialHelixRotation
           : 0;
         const primaryAngularPosition = degToRad(primaryAngularPositionDeg);
         const secondaryAngularPosition = degToRad(secondaryAngularPositionDeg);
         const secondaryHelixRotation = degToRad(secondaryHelixRotationDeg);
-        const shiftDistance = event.data.state?.shift_distance ?? 0;
+        const shiftDistance = event.data.state?.s ?? 0;
 
         // Get pulley states for belt calculation
-        const primaryRadius = event.data.drivetrain?.cvt_dynamics?.primaryPulleyState?.radius ?? constants.min_prim_radius;
-        const secondaryRadius = event.data.drivetrain?.cvt_dynamics?.secondaryPulleyState?.radius ?? constants.max_sec_radius;
-        const primaryWrapAngleDeg = event.data.drivetrain?.cvt_dynamics?.primaryPulleyState?.wrap_angle ?? 180;
-        const secondaryWrapAngleDeg = event.data.drivetrain?.cvt_dynamics?.secondaryPulleyState?.wrap_angle ?? 180;
-        
+        const primaryRadius = event.data.contact_breakdown.geometry.primary_effective_radius ?? constants.min_prim_radius;
+        const secondaryRadius = event.data.contact_breakdown.geometry.secondary_effective_radius ?? constants.max_sec_radius;
+        const primaryWrapAngleDeg = event.data.contact_breakdown.geometry.primary_wrap_angle ?? 180;
+        const secondaryWrapAngleDeg = event.data.contact_breakdown.geometry.secondary_wrap_angle ?? 180;
+
         // Convert wrap angles from degrees to radians for Three.js
         const primaryWrapAngle = degToRad(primaryWrapAngleDeg);
         const secondaryWrapAngle = degToRad(secondaryWrapAngleDeg);

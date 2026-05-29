@@ -93,8 +93,9 @@ export async function runSimulationStreaming(
         } else if (message.type === 'complete') {
           finalResult = message.data;
         } else if (message.type === 'error') {
-          // console.error('Simulation error:', message.message);
-          throw new Error(message.message);
+          const error = new Error(message.message);
+          (error as Error & { traceback?: string | null }).traceback = message.traceback ?? null;
+          throw error;
         }
       } catch (e) {
         alert(`Error parsing streaming message: ${e instanceof Error ? e.message : String(e)}`);

@@ -13,9 +13,9 @@ import numpy as np
 from scipy.optimize import brentq
 import matplotlib.pyplot as plt
 from cvt_simulator.solvers.solver_interface import SolverBase, SolverResult
-from cvt_simulator.utils.simulation_args import SimulationArgs
-from cvt_simulator.utils.system_state import SystemState
-from cvt_simulator.models.model_initializer import get_models
+from cvt_simulator.sim_utils.simulation_args import SimulationArgs
+from cvt_simulator.sim.system_state import SystemState
+from cvt_simulator.sim.simulation_runner import SimulationRunner
 from cvt_simulator.utils.conversions import rad_s_to_rpm
 
 
@@ -47,15 +47,7 @@ class ShiftInitiationSolver(SolverBase):
             args: Simulation parameters defining the CVT configuration
         """
         super().__init__(args)
-
-        # Initialize models to get both pulleys and the shift model
-        system_model = get_models(args)
-        self.cvt_shift_model = system_model.cvt_shift_model
-        self.primary_pulley = system_model.cvt_shift_model.primary_pulley
-        self.secondary_pulley = system_model.cvt_shift_model.secondary_pulley
-
-        # Get slip model for computing torque demand
-        self.slip_model = system_model.slip_model
+        self.contact_model = SimulationRunner.from_simulation_args(args).contact_model
 
     @property
     def solver_name(self) -> str:
@@ -153,29 +145,15 @@ class ShiftInitiationSolver(SolverBase):
         """
         # Create a system state at minimum shift position and stationary
         state = SystemState(
-            primary_pulley_angular_velocity=angular_velocity,
-            secondary_pulley_angular_velocity=0.0,  # Stationary (as specified)
-            shift_distance=0.0,  # Minimum shift position
-            shift_velocity=0.0,  # Static evaluation
+            ω_p=angular_velocity,
+            ω_s=0.0,  # Stationary (as specified)
+            s=0.0,  # Minimum shift position
+            s_dot=0.0,  # Static evaluation
         )
 
-        # Calculate torque demand from road load (before slip limiting)
-        torque_demand = self.slip_model.get_no_slip_torque(state)
-
-        # Get the CVT breakdown which includes both pulley states
-        # Use torque_demand to properly account for secondary torque feedback
-        cvt_breakdown = self.cvt_shift_model.get_breakdown(
-            state, coupling_torque=torque_demand
-        )
-
-        # Extract axial clamping forces
-        primary_axial_force = cvt_breakdown.primaryPulleyState.forces.axial_force_total
-        secondary_axial_force = (
-            cvt_breakdown.secondaryPulleyState.forces.axial_force_total
-        )
-
-        # Return difference (positive means primary is winning, shift will occur)
-        return primary_axial_force - secondary_axial_force
+        # Return the shift net force directly from the current contact model.
+        # Positive means the primary side is winning and shift should initiate.
+        return self.contact_model.get_breakdown(state).shift.net
 
     def get_force_difference_curve(
         self,

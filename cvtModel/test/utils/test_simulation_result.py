@@ -4,8 +4,8 @@ import pandas as pd
 from unittest.mock import patch
 
 from scipy.integrate import solve_ivp
-from cvt_simulator.utils.simulation_result import SimulationResult
-from cvt_simulator.utils.system_state import SystemState
+from cvt_simulator.sim_utils.simulation_result import SimulationResult
+from cvt_simulator.sim.system_state import SystemState
 
 
 class TestSimulationResult(unittest.TestCase):
@@ -24,10 +24,10 @@ class TestSimulationResult(unittest.TestCase):
         # Mock SystemState.from_array to return a simple object
         self.original_from_array = SystemState.from_array
         SystemState.from_array = lambda arr: SystemState(
-            shift_distance=arr[0],
-            shift_velocity=arr[1],
-            primary_pulley_angular_velocity=arr[2],
-            secondary_pulley_angular_velocity=arr[3],
+            s=arr[0],
+            s_dot=arr[1],
+            ω_p=arr[2],
+            ω_s=arr[3],
         )
 
     def tearDown(self):
