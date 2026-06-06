@@ -1,4 +1,4 @@
-\documentclass[11pt]{article}
+\documentclass[11pt]{report}
 
 % =========================
 % Packages (minimal + useful)
@@ -281,7 +281,7 @@
 
 
 
-
+\pagenumbering{roman}
 % =========================
 % Title
 % =========================
@@ -293,7 +293,8 @@
 \maketitle
 \thispagestyle{empty}
 
-\begin{abstract}
+\chapter*{Abstract}
+\addcontentsline{toc}{chapter}{Abstract}
 This work develops a first-principles dynamic model for a mechanically
 actuated dry rubber V-belt continuously variable transmission (CVT) and its
 coupling to the vehicle drivetrain. The model is motivated by a persistent gap
@@ -335,12 +336,19 @@ for understanding mechanically actuated CVT behavior during launch events. Its
 main value is not only that it closes the governing mechanisms into one
 consistent dynamical system, but also that the resulting behavior remains
 traceable back to clear mechanical causes.
-\end{abstract}
 
 \newpage
 \tableofcontents
-\newpage
+\addcontentsline{toc}{chapter}{Contents}
 
+\chapter*{Nomenclature and Notation}
+\addcontentsline{toc}{chapter}{Nomenclature and Notation}
+% notation table here
+
+\clearpage
+\newpage
+\pagenumbering{arabic}
+\chapter{Introduction \& Background}
 % ==============================================================
 \section{Introduction}
 \label{sec:introduction}
@@ -908,7 +916,7 @@ inertia, and external load forces governs overall vehicle performance.
 \label{fig:drivetrain_overview}
 \end{figure}
 
-
+\chapter{Model Setup}
 \section{Reference Material}\label{sec:notation}
 This section records any information for easy reference.
 
@@ -1791,7 +1799,7 @@ equations derived in subsequent sections. Once the state vector has been
 updated, all other quantities in the model are computed directly from the 
 current values of $\omega_p$, $\omega_s$, $s$, $\dot{s}$, and $v_b$.
 
-
+\chapter{Derivation}
 \section{Pulley Geometry}\label{sec:geometry}
 
 This section establishes the geometric relationships that govern how axial
@@ -7278,7 +7286,7 @@ quantities then feed back into the rotational, belt, and axial shift dynamics,
 closing the complete CVT state-space model.
 
 
-
+\chapter{Results and Discussion}
 \section{Simulation Results}
 \label{sec:results}
 
@@ -7836,8 +7844,13 @@ realistic damping and loss mechanisms, the framework developed here can serve
 as a useful basis for both engineering interpretation and future
 design-oriented CVT simulation.
 
+\newpage
+\bibliographystyle{plainnat}
+\addcontentsline{toc}{chapter}{Bibliography}
+\bibliography{../../refs/References}
+
 \appendix
-\section{Belt Length Small-Angle Approximation}\label{sec:approximation-validation}
+\chapter{Belt Length Small-Angle Approximation}\label{sec:approximation-validation}
 
 This appendix quantifies the error introduced by the small-angle approximation
 commonly used in simplified CVT kinematic models. Using parameter values
@@ -7846,7 +7859,7 @@ that the approximation introduces substantial error in the computed
 center-to-center distance, then further in the ratio, which is critical for accurate dynamic modeling.
 
 % --------------------------------------------------------------
-\subsection{Standard Approximation}
+\section{Standard Approximation}
 
 Many simplified treatments assume
 \[
@@ -7865,7 +7878,7 @@ L_b \approx \pi(r_p + r_s) + 2\sqrt{C^2 - (r_s - r_p)^2}.
 \end{equation}
 
 % --------------------------------------------------------------
-\subsection{Derivation of the Approximate Center Distance}
+\section{Derivation of the Approximate Center Distance}
 
 To determine the center-to-center distance at the initial configuration,
 we substitute $r_p = r_{p,\text{outer},\min}$ and $r_s = r_{s,\text{outer},\max}$ into
@@ -7928,7 +7941,7 @@ This closed-form expression avoids the need for numerical root finding
 but neglects the $\sin^{-1}$ term in the exact constraint.
 
 % --------------------------------------------------------------
-\subsection{Error Analysis}
+\section{Error Analysis}
 
 We now evaluate the approximation error using parameter values
 from the physical CVT system considered in this work.
@@ -8001,14 +8014,14 @@ such as the transmission ratio---a 7\% error in $C$ can compound into
 larger errors in predicted system behavior.
 
 % --------------------------------------------------------------
-\subsection{Propagation to Secondary Radius and Transmission Ratio}
+\section{Propagation to Secondary Radius and Transmission Ratio}
 
 To demonstrate how the center distance error propagates into operationally
 relevant quantities, we now examine the secondary radius and CVT ratio
 at two shift positions: zero shift and maximum shift.
 
 % --------------------------------------------------------------
-\subsubsection{Derivation of the Approximate Secondary Radius}
+\subsection{Derivation of the Approximate Secondary Radius}
 
 Given a known primary outer radius $r_{p,\text{outer}}$ and center distance $C$,
 the secondary outer radius can be obtained by solving the belt-length
@@ -8077,7 +8090,7 @@ r_{s,\mathrm{approx}}
 This closed-form expression enables direct computation of the approximate
 secondary radius without numerical root finding.
 
-\subsubsection{Zero Shift Configuration}
+\subsection{Zero Shift Configuration}
 \label{sec:approx_zeroshift}
 
 At zero shift, the CVT is in its lowest ratio (maximum reduction)
@@ -8144,7 +8157,7 @@ indicating negligible ratio error in this case.}
 \end{figure}
 
 % --------------------------------------------------------------
-\subsubsection{Maximum Shift Configuration}
+\subsection{Maximum Shift Configuration}
 \label{sec:approx_maxshift}
 
 At maximum shift, the primary and secondary pulleys are closest in size,
@@ -8220,7 +8233,7 @@ leading to a lower predicted ratio than the exact model.}
 \end{figure}
 
 % --------------------------------------------------------------
-\subsection{Summary of Approximation Errors}
+\section{Summary of Approximation Errors}
 
 \begin{center}
 \begin{tabular}{lccc}
@@ -8248,7 +8261,7 @@ can still produce materially inaccurate dynamics near maximum shift.
 This analysis justifies the use of exact numerical solutions for all
 geometric computations in this work.
 
-\section{Common Ramp Profile Designs}\label{sec:appendix-ramp-profiles}
+\chapter{Common Ramp Profile Designs}\label{sec:appendix-ramp-profiles}
 
 This appendix presents common ramp profile parameterizations for CVT
 primary pulley actuation. From \Eq{eq:primary_centrifugal_axial}, the
@@ -8268,7 +8281,7 @@ The profile $r_f(s)$ must satisfy the admissibility conditions from
 and finite slope throughout $[0, s_{\max}]$.
 
 % --------------------------------------------------------------
-\subsection{Linear Ramp}
+\section{Linear Ramp}
 \label{sec:ramp_linear}
 
 A linear ramp with slope $k_r$ (radial displacement per unit axial shift):
@@ -8292,7 +8305,7 @@ the growing radius is multiplied by a constant slope. Simple to manufacture,
 but may cause aggressive shifting at high ratio.
 
 % --------------------------------------------------------------
-\subsection{Circular Arc Ramp}
+\section{Circular Arc Ramp}
 \label{sec:ramp_circular}
 
 A circular arc ramp is designed to reduce force variation across the shift
@@ -8427,7 +8440,7 @@ cannot be eliminated entirely. The following section shows how to \emph{exactly}
 achieve the linear target by choosing a different ramp geometry.
 
 % --------------------------------------------------------------
-\subsection{Hyperbolic Ramp (Perfect Cancellation)}
+\section{Hyperbolic Ramp (Perfect Cancellation)}
 \label{sec:ramp_hyperbolic}
 
 From \Eq{eq:circ_bracket}, the circular arc force-to-shift proportionality
@@ -8583,7 +8596,7 @@ manufacture, well-understood, and sufficient given these irreducible
 secondary-side effects.
 
 % --------------------------------------------------------------
-\subsection{Piecewise Ramps and Smoothing}
+\section{Piecewise Ramps and Smoothing}
 \label{sec:ramp_piecewise}
 
 Any of the profiles above can be combined in a piecewise fashion: multiple
@@ -8614,14 +8627,14 @@ should be blended — a short circular arc segment tangent to both adjoining
 profiles is sufficient, as it restores $C^1$ continuity and bounds $d^2r_f/ds^2$
 throughout the ramp.
 
-\section{Numerical Methods Summary}\label{sec:appendix-numerics}
+\chapter{Numerical Methods Summary}\label{sec:appendix-numerics}
 
 This section documents the numerical algorithms used for belt-geometry root
 finding and dynamic simulation, including the specific tolerances, bracketing
 strategies, and solver configurations employed in the implementation.
 
 % --------------------------------------------------------------
-\subsection{Root Finding for Belt-Length Constraint}
+\section{Root Finding for Belt-Length Constraint}
 
 Given a known primary outer radius $r_1$ and fixed center-to-center distance
 $C$, the secondary outer radius $r_2$ is the unique root of the belt-length
@@ -8685,7 +8698,7 @@ converge. Both root solves use an absolute tolerance of $\num{e-9}$~m, well
 below any physically meaningful length precision.
 
 % --------------------------------------------------------------
-\subsection{ODE Integration for Dynamic Simulation}
+\section{ODE Integration for Dynamic Simulation}
 
 The full CVT state vector $\mathbf{x} = (\omega_p, \omega_s, s, \dot{s}, v_b)$
 is integrated using \texttt{scipy.integrate.solve\_ivp}. The governing system
@@ -8765,7 +8778,7 @@ cycles are supported before the simulation terminates, preventing unbounded
 phase loops for unusual parameter regimes.
 
 % --------------------------------------------------------------
-\subsection{Slip-Law Regularization and Blend Parameter Selection}
+\section{Slip-Law Regularization and Blend Parameter Selection}
 \label{sec:appendix-slip-regularization}
 
 The traction law in \Eq{eq:tau_c_complete} is physically clear but
@@ -8840,9 +8853,7 @@ equal to $v_{\mathrm{smooth}}$, so that the handoff from clamped demand to the
 smooth Coulomb limit is not sharper than the smoothing law itself.
 
 
-\newpage
-\bibliographystyle{plainnat}
-\bibliography{../../refs/References}
+
 
 \end{document}
 
