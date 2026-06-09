@@ -559,25 +559,29 @@ as part of a larger drivetrain system.
 \subsection{Why Use a Continuously Variable Transmission?}
 \label{subsec:why_use_cvt}
 
-A continuously variable transmission is a drivetrain element whose speed ratio
-can vary smoothly within a finite range rather than changing through a fixed set
-of gear steps. This is useful because an internal combustion engine (ICE) does
-not produce the same torque and power at every speed. Instead, the engine has a
-useful operating region where it can produce power more effectively, as shown
-conceptually in the left panel of \Cref{fig:cvt_engine_motivation}.
+A transmission is responsible for matching the operating speed of an engine to
+the speed required at the vehicle wheels. In a conventional stepped gearbox,
+this is achieved using a fixed set of discrete gear ratios. Each gear imposes a
+fixed relationship between engine speed and wheel speed. As the vehicle
+accelerates, the engine speed rises through one gear, drops when the
+transmission shifts, and then rises again in the next gear. This repeated sweep
+through the engine speed range is a direct consequence of having only a small
+number of available ratios.
 
-In a conventional stepped gearbox, each gear imposes a fixed relationship
-between engine speed and vehicle speed. As the vehicle accelerates, the engine
-speed rises through one gear, drops when the transmission shifts, and then rises
-again in the next gear. This repeated sweep through the engine speed range is a
-direct consequence of having only a small number of available ratios. The right
-panel of \Cref{fig:cvt_engine_motivation} contrasts this stepped behavior with
-the smoother operating path made possible by a CVT.
+This matters because an internal combustion engine (ICE) does not produce the
+same torque and power at every speed. Instead, the engine has a useful operating
+region where it can produce power more effectively, as shown conceptually in the
+left panel of \Cref{fig:cvt_engine_motivation}. A stepped gearbox can pass
+through this region, but it cannot generally stay there while vehicle speed
+continues to increase. The right panel of \Cref{fig:cvt_engine_motivation}
+contrasts this stepped behavior with the smoother operating path made possible
+by a continuously variable transmission.
 
-A CVT gives the drivetrain a continuously adjustable speed relationship between
-the engine and the driven wheels. Since the ratio can vary smoothly within its
-available range, the engine can remain closer to a desired operating region
-while vehicle speed changes. This is the main benefit of a CVT: it gives the
+A continuously variable transmission (CVT) addresses this limitation by allowing
+the transmission ratio to vary smoothly within a finite range rather than
+changing through a fixed set of gear steps. Since the ratio can change
+continuously, the engine can remain closer to a desired operating region while
+the vehicle accelerates. This is the main benefit of a CVT: it gives the
 drivetrain more freedom to match engine behavior to vehicle load.
 
 \begin{figure}[H]
@@ -621,8 +625,8 @@ There are several forms of continuously variable transmission, including
 different mechanical layouts and different ways of producing the variable speed
 relationship. This work focuses on a belt-sheave CVT, where two variable-radius
 pulleys are connected by a rubber V-belt. The pulley connected to the engine
-side is called the primary, or driving, pulley. The pulley connected to the
-downstream drivetrain is called the secondary, or driven, pulley. The belt
+side is called the primary (or driving) pulley. The pulley connected to the
+downstream drivetrain is called the secondary (or driven) pulley. The belt
 transmits motion and torque between these two pulleys.
 
 Before considering the full two-pulley system, it is helpful to look at the
@@ -784,13 +788,14 @@ guarantee that torque can be transmitted. Unlike a gear pair, the belt and
 pulley are not mechanically locked together by teeth. Torque is transmitted
 through frictional traction between the belt and the sheave faces.
 
-For traction to develop, the belt must be pressed into the sheave faces, as
-shown in \Cref{fig:belt_sheave_forces}. This requires clamping force. The
-clamping force creates contact pressure between the belt and the pulley, and
-that contact pressure allows friction to transmit tangential force around the
-pulley. In practical terms, transferring more torque through the CVT requires
-enough clamping force and enough available traction at the belt-pulley
-interface.
+For traction to develop, the belt must be physically squeezed between the
+sheave faces, as shown in \Cref{fig:belt_sheave_forces}. The movable sheave
+presses the belt into the opposite sheave, producing a clamping force across
+the V-groove. This clamping force creates contact pressure on the belt faces 
+and that contact pressure allows friction to transmit tangential force around 
+the pulley. In practical terms, transferring more torque through the CVT 
+requires enough clamping force to create enough available traction at the
+belt-pulley interface.
 
 If the available traction is not sufficient for the torque being transferred,
 the belt slips relative to the pulley. Slip reduces useful torque transfer and
