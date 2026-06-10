@@ -589,22 +589,19 @@ drivetrain more freedom to match engine behavior to vehicle load.
 \fbox{
 \begin{minipage}{0.9\textwidth}
 \centering
-\vspace{0.8cm}
-\textbf{Placeholder: Engine operating region and transmission behavior}
 
 \vspace{0.5cm}
 \begin{minipage}{0.43\textwidth}
 \centering
-Left panel: generic engine torque and power curves versus engine speed.
-Show that torque and power vary with RPM and that the engine has a useful
-operating region.
+\includegraphics[width=\textwidth]{illustrations/overview/kohler_ch440_torque_power_curve.png}
+
 \end{minipage}
 \hfill
 \begin{minipage}{0.43\textwidth}
 \centering
-Right panel: engine speed versus vehicle speed. Compare a stepped gearbox
-trajectory with repeated RPM drops against a smoother CVT trajectory that
-stays closer to a target operating region.
+\includegraphics[width=\textwidth]{illustrations/overview/discrete_transmission_shift_curve.png}
+\includegraphics[width=\textwidth]{illustrations/overview/cvt_shift_curve.png}
+
 \end{minipage}
 \vspace{0.8cm}
 \end{minipage}
@@ -744,33 +741,36 @@ larger and the secondary radius is smaller. This coupled motion is shown in
 
 \begin{figure}[H]
 \centering
-\fbox{
-\begin{minipage}{0.9\textwidth}
-\centering
-\vspace{0.8cm}
-\textbf{Placeholder: Full CVT in low, middle, and high ratio states}
+\includegraphics[width=\textwidth]{illustrations/overview/cvt_low_med_high_ratio.png}
 
-\vspace{0.5cm}
-Show the primary and secondary pulleys connected by the same belt in three
-states:
-\begin{enumerate}
-    \item launch/low-speed state: primary radius small, secondary radius large,
-    \item intermediate state: primary radius increasing, secondary radius decreasing,
-    \item shifted/high-speed state: primary radius large, secondary radius small.
-\end{enumerate}
+% \fbox{
+% \begin{minipage}{0.9\textwidth}
+% \centering
+% \vspace{0.8cm}
+% \textbf{Placeholder: Full CVT in low, middle, and high ratio states}
 
-Label:
-\begin{itemize}
-    \item primary pulley,
-    \item secondary pulley,
-    \item belt,
-    \item direction of upshift,
-    \item primary radius increasing,
-    \item secondary radius decreasing.
-\end{itemize}
-\vspace{0.8cm}
-\end{minipage}
-}
+% \vspace{0.5cm}
+% Show the primary and secondary pulleys connected by the same belt in three
+% states:
+% \begin{enumerate}
+%     \item launch/low-speed state: primary radius small, secondary radius large,
+%     \item intermediate state: primary radius increasing, secondary radius decreasing,
+%     \item shifted/high-speed state: primary radius large, secondary radius small.
+% \end{enumerate}
+
+% Label:
+% \begin{itemize}
+%     \item primary pulley,
+%     \item secondary pulley,
+%     \item belt,
+%     \item direction of upshift,
+%     \item primary radius increasing,
+%     \item secondary radius decreasing.
+% \end{itemize}
+% \vspace{0.8cm}
+% \end{minipage}
+% }
+
 \caption{Coupled radius change in a belt-sheave CVT. Because the belt length is
 approximately fixed, an increase in primary effective radius is accompanied by
 a decrease in secondary effective radius. This coupled radius change produces
@@ -869,30 +869,31 @@ mechanism is shown in \Cref{fig:cvt_primary_actuation}.
 
 \begin{figure}[H]
 \centering
-\fbox{
-\begin{minipage}{0.9\textwidth}
-\centering
-\vspace{0.8cm}
-\textbf{Placeholder: Primary actuation mechanism}
+\includegraphics[width=\textwidth]{illustrations/overview/primary_cvt_cad_cross_section.png}
+% \fbox{
+% \begin{minipage}{0.9\textwidth}
+% \centering
+% \vspace{0.8cm}
+% \textbf{Placeholder: Primary actuation mechanism}
 
-\vspace{0.5cm}
-Use a CAD image or schematic of the primary pulley.
+% \vspace{0.5cm}
+% Use a CAD image or schematic of the primary pulley.
 
-Include and label:
-\begin{itemize}
-    \item flyweights,
-    \item ramp surfaces,
-    \item primary spring,
-    \item movable sheave,
-    \item outward flyweight motion with increasing speed,
-    \item resulting closing force on the primary sheaves.
-\end{itemize}
+% Include and label:
+% \begin{itemize}
+%     \item flyweights,
+%     \item ramp surfaces,
+%     \item primary spring,
+%     \item movable sheave,
+%     \item outward flyweight motion with increasing speed,
+%     \item resulting closing force on the primary sheaves.
+% \end{itemize}
 
-The figure should visually support the sentence: increasing primary speed tends
-to close the primary pulley and increase primary effective radius.
-\vspace{0.8cm}
-\end{minipage}
-}
+% The figure should visually support the sentence: increasing primary speed tends
+% to close the primary pulley and increase primary effective radius.
+% \vspace{0.8cm}
+% \end{minipage}
+% }
 \caption{Primary pulley actuation concept. As primary speed increases,
 centrifugal effects drive the flyweights outward. The ramp geometry converts
 this motion into a closing force on the primary sheaves, while the spring
@@ -917,30 +918,31 @@ secondary clamping mechanism is shown conceptually in
 
 \begin{figure}[H]
 \centering
-\fbox{
-\begin{minipage}{0.9\textwidth}
-\centering
-\vspace{0.8cm}
-\textbf{Placeholder: Secondary actuation mechanism}
+\includegraphics[width=\textwidth]{illustrations/overview/secondary_cvt_cad_cross_section.png}
+% \fbox{
+% \begin{minipage}{0.9\textwidth}
+% \centering
+% \vspace{0.8cm}
+% \textbf{Placeholder: Secondary actuation mechanism}
 
-\vspace{0.5cm}
-Use a CAD image or schematic of the secondary pulley.
+% \vspace{0.5cm}
+% Use a CAD image or schematic of the secondary pulley.
 
-Include and label:
-\begin{itemize}
-    \item helix mechanism,
-    \item secondary spring,
-    \item movable sheave,
-    \item torque through the secondary,
-    \item clamping force generated through the helix,
-    \item relative rotation between secondary sheave components during shift.
-\end{itemize}
+% Include and label:
+% \begin{itemize}
+%     \item helix mechanism,
+%     \item secondary spring,
+%     \item movable sheave,
+%     \item torque through the secondary,
+%     \item clamping force generated through the helix,
+%     \item relative rotation between secondary sheave components during shift.
+% \end{itemize}
 
-The figure should visually support the main idea: torque through the secondary
-loads the helix, and the helix contributes to secondary clamping.
-\vspace{0.8cm}
-\end{minipage}
-}
+% The figure should visually support the main idea: torque through the secondary
+% loads the helix, and the helix contributes to secondary clamping.
+% \vspace{0.8cm}
+% \end{minipage}
+% }
 \caption{Secondary pulley actuation concept. Torque transmitted through the
 secondary loads the helix mechanism, which converts part of the torque reaction
 into clamping force between the sheaves. The helix also couples axial shift
@@ -977,43 +979,44 @@ slip. All of these quantities evolve together during a launch.
 
 \begin{figure}[H]
 \centering
-\fbox{
-\begin{minipage}{0.9\textwidth}
-\centering
-\vspace{0.8cm}
-\textbf{Placeholder: Full drivetrain architecture}
+\includegraphics[width=\textwidth]{illustrations/overview/drivetrain_overview.png}
+% \fbox{
+% \begin{minipage}{0.9\textwidth}
+% \centering
+% \vspace{0.8cm}
+% \textbf{Placeholder: Full drivetrain architecture}
 
-\vspace{0.5cm}
-Draw a block or schematic diagram showing:
+% \vspace{0.5cm}
+% Draw a block or schematic diagram showing:
 
-\[
-\text{engine}
-\rightarrow
-\text{primary pulley}
-\rightarrow
-\text{belt}
-\rightarrow
-\text{secondary pulley}
-\rightarrow
-\text{gearbox/final drive}
-\rightarrow
-\text{wheels}
-\rightarrow
-\text{vehicle motion}.
-\]
+% \[
+% \text{engine}
+% \rightarrow
+% \text{primary pulley}
+% \rightarrow
+% \text{belt}
+% \rightarrow
+% \text{secondary pulley}
+% \rightarrow
+% \text{gearbox/final drive}
+% \rightarrow
+% \text{wheels}
+% \rightarrow
+% \text{vehicle motion}.
+% \]
 
-Include arrows for:
-\begin{itemize}
-    \item torque flow from engine to wheels,
-    \item load feedback from vehicle/drivetrain back into the CVT,
-    \item optional speed variables on primary, secondary, and wheel.
-\end{itemize}
+% Include arrows for:
+% \begin{itemize}
+%     \item torque flow from engine to wheels,
+%     \item load feedback from vehicle/drivetrain back into the CVT,
+%     \item optional speed variables on primary, secondary, and wheel.
+% \end{itemize}
 
-The figure should make clear that the CVT is modeled as part of the drivetrain,
-not as an isolated ratio device.
-\vspace{0.8cm}
-\end{minipage}
-}
+% The figure should make clear that the CVT is modeled as part of the drivetrain,
+% not as an isolated ratio device.
+% \vspace{0.8cm}
+% \end{minipage}
+% }
 \caption{Drivetrain architecture considered in this work. Engine torque enters
 the primary pulley, is transmitted through the belt to the secondary pulley,
 passes through the downstream drivetrain, and ultimately accelerates the
