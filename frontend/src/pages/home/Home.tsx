@@ -119,6 +119,45 @@ export const Home = () => {
                 </div>
             </section>
 
+            <section className={styles.pitfalls}>
+                <h2 className={styles.sectionTitle}>Known Issues &amp; Disclaimers</h2>
+                <p className={styles.pitfallsIntro}>
+                    This tool is a <strong>work in progress</strong> — many features are still planned and some rough edges remain. Read below before diving in.
+                </p>
+                <ul className={styles.pitfallList}>
+                    <li className={styles.pitfallItem}>
+                        <span className={styles.pitfallLabel}>Slow model loading</span>
+                        <span className={styles.pitfallText}>
+                            The 3D CVT model on the Playback page can take a moment to load. Be patient — it will appear.
+                        </span>
+                    </li>
+                    <li className={styles.pitfallItem}>
+                        <span className={styles.pitfallLabel}>Solver progress bar</span>
+                        <span className={styles.pitfallText}>
+                            The loading bar may appear stuck at certain percentages. Some parts of the simulation are harder to resolve — give it time. The solver will automatically time out after 5 minutes. If that happens, try adjusting your input parameters. If you believe the case should work and it didn&apos;t, feel free to report it.
+                        </span>
+                    </li>
+                    <li className={styles.pitfallItem}>
+                        <span className={styles.pitfallLabel}>Inactive parameters</span>
+                        <span className={styles.pitfallText}>
+                            Some inputs currently have no effect on the simulation: <strong>Traction (%)</strong> and <strong>Total Distance</strong> are placeholders, and the <strong>Hill Incline</strong> setting is largely untested.
+                        </span>
+                    </li>
+                    <li className={styles.pitfallItem}>
+                        <span className={styles.pitfallLabel}>Fixed physical parameters</span>
+                        <span className={styles.pitfallText}>
+                            The vehicle&apos;s physical parameters (engine, drivetrain geometry, etc.) are based on a specific Baja SAE vehicle and are not yet editable. For now, only the tuning parameters visible on the input page can be changed — full physical parameter editing is planned for a future release.
+                        </span>
+                    </li>
+                    <li className={styles.pitfallItem}>
+                        <span className={styles.pitfallLabel}>Questions or bugs?</span>
+                        <span className={styles.pitfallText}>
+                            Reach out to Kai Arseneau — Discord: gr812b. Good luck!
+                        </span>
+                    </li>
+                </ul>
+            </section>
+
             <footer className={styles.footer}>
                 <span className={styles.footerText}>
                     &copy; {CURRENT_YEAR} McMaster Baja SAE &mdash; CVT Simulator. All rights reserved.
