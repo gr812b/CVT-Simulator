@@ -1,5 +1,5 @@
+import { useNavigate } from 'react-router-dom';
 import styles from './Dashboard.module.scss';
-import bajaLogo from '@assets/baja_logo.png';
 import { Button } from '@components/button/Button';
 import { LoadingOverlay } from '@components/loadingOverlay/LoadingOverlay';
 import { SimulationsTable } from '@components/simulationsTable/SimulationsTable';
@@ -11,8 +11,10 @@ import TrashCan from '@assets/icons/trash_can.svg?react';
 import Plus from '@assets/icons/plus.svg?react';
 import ArrowUpCircle from '@assets/icons/arrow_up_circle.svg?react';
 import ArrowDownCircle from '@assets/icons/arrow_down_circle.svg?react';
+import Home from '@assets/icons/home.svg?react';
 
 export const Dashboard = () => {
+  const navigate = useNavigate();
   const { isLoading, loadingMessage } = useLoading();
   const {
     groupedSimulations,
@@ -33,9 +35,13 @@ export const Dashboard = () => {
   return (
     <div className={styles.dashboard}>
       <LoadingOverlay isVisible={isLoading} message={loadingMessage} />
-      <div className={styles.header}>
-        <img className={styles.logo} src={bajaLogo} alt="Baja Logo" />
-        <h1 className={styles.title}>CVT Simulator</h1>
+      <div className={styles.topBar}>
+        <Button
+          text={'Home'}
+          icon={Home}
+          className={styles.navButton}
+          onClick={() => navigate('/')}
+        />
       </div>
       <SimulationsTable
         groupedSimulations={groupedSimulations}

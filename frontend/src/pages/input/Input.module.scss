@@ -57,8 +57,11 @@
         }
     }
 
-    .backButton {
-        margin: 0;
+    .navButtons {
+        display: flex;
+        flex-direction: row;
+        gap: 0.5rem;
+        align-items: center;
         justify-self: start;
     }
 

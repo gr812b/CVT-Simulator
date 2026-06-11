@@ -7,14 +7,15 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
     text?: string
     icon: ComponentType<SVGAttributes<SVGSVGElement>>
     iconSide?: 'left' | 'right'
+    size?: 'default' | 'large'
     className?: string
 }
 
-export const Button = React.memo(({ text, icon: Icon, iconSide = 'left', className, ...props }: ButtonProps) => {
+export const Button = React.memo(({ text, icon: Icon, iconSide = 'left', size = 'default', className, ...props }: ButtonProps) => {
     const renderIcon = () => <Icon className={styles.icon} />
     return (
         <button
-            className={cx(styles.button, { [styles.noText]: !text }, className)}
+            className={cx(styles.button, { [styles.noText]: !text, [styles.large]: size === 'large' }, className)}
             {...props}
         >
             {iconSide === 'left' && renderIcon()}

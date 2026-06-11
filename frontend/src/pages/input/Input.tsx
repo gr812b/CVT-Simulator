@@ -164,12 +164,18 @@ export const Input = () => {
                 onSave={handleSaveComplete}
             />
             <div className={styles.topBar}>
-                <Button
-                    text={'Home'}
-                    icon={Home}
-                    className={styles.backButton}
-                    onClick={() => navigate('/')}
-                />
+                <div className={styles.navButtons}>
+                    <Button
+                        text={'Home'}
+                        icon={Home}
+                        onClick={() => navigate('/')}
+                    />
+                    <Button
+                        text={'Dashboard'}
+                        icon={ArrowLeft}
+                        onClick={() => navigate('/dashboard')}
+                    />
+                </div>
                 <div className={styles.sessionInfo} title={selectedSetName}>
                     <span className={styles.selectedSetName}>{selectedSetName}</span>
                     {hasSessionChanges && (

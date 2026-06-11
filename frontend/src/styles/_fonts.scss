@@ -24,6 +24,13 @@
     line-height: 2rem;
 }
 
+@mixin text-paragraph-large {
+    font-family: "Roboto", sans-serif;
+    font-weight: 500;
+    font-size: 1.25rem;
+    line-height: 1.6;
+}
+
 @mixin title-bold {
     font-weight: 600;
     font-size: 1rem;
@@ -36,10 +43,26 @@
     text-transform: uppercase;
 }
 
+@mixin title-large {
+    font-family: "Roboto", sans-serif;
+    font-weight: 600;
+    font-size: 4rem;
+    font-style: italic;
+    text-transform: uppercase;
+}
+
 @mixin title-huge {
     font-family: "Roboto", sans-serif;
     font-weight: 600;
     font-size: 6rem;
+    font-style: italic;
+    text-transform: uppercase;
+}
+
+@mixin title-display {
+    font-family: "Roboto", sans-serif;
+    font-weight: 600;
+    font-size: 12rem;
     font-style: italic;
     text-transform: uppercase;
 }
