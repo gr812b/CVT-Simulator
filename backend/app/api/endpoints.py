@@ -23,9 +23,13 @@ from ..models.response_models import (
 
 router = APIRouter()
 
+# Reuse a single spawn context — it is stateless, so there is no reason to
+# reconstruct it on every request.
+_MP_CTX = multiprocessing.get_context("spawn")
+
 # Maximum wall-clock time allowed for a single streaming simulation request.
 # If a solver gets stuck and exceeds this, the subprocess is hard-killed.
-STREAM_TIMEOUT_SECONDS = 10 * 60  # 8 minutes
+STREAM_TIMEOUT_SECONDS = 10 * 60  # 10 minutes
 
 
 def _simulation_worker(args: SimulationArgs, result_queue) -> None:  # type: ignore
@@ -113,13 +117,14 @@ def run_stream(payload: SimulationArgsInput | None = None):  # type: ignore
 
     The simulation runs in a subprocess so that it can be hard-killed via
     process.kill() if the total elapsed wall-clock time exceeds
-    STREAM_TIMEOUT_SECONDS (default 5 minutes). This is necessary because
+    STREAM_TIMEOUT_SECONDS (default 10 minutes). This is necessary because
     some solver paths can get stuck indefinitely inside C extensions that
     ignore Python thread interrupts.
     """
 
     def generate():
         proc = None
+        result_queue = None
         try:
             args = payload.model_dump(exclude_none=True) if payload else {}
             args = SimulationArgs.from_mapping(args)
@@ -127,9 +132,8 @@ def run_stream(payload: SimulationArgsInput | None = None):  # type: ignore
             # Spawn a fresh process so we can hard-kill it on timeout.
             # 'spawn' is used explicitly for cross-platform safety (avoids
             # fork+async deadlock issues on Linux and is the default on Windows).
-            ctx = multiprocessing.get_context("spawn")
-            result_queue = ctx.Queue()
-            proc = ctx.Process(
+            result_queue = _MP_CTX.Queue()
+            proc = _MP_CTX.Process(
                 target=_simulation_worker,
                 args=(args, result_queue),
                 daemon=True,
@@ -146,8 +150,8 @@ def run_stream(payload: SimulationArgsInput | None = None):  # type: ignore
                 if remaining <= 0:
                     # Hard-kill the subprocess – this is safe even for stuck
                     # C-extension solvers because the OS terminates the process.
+                    # No explicit join here; the finally block always handles cleanup.
                     proc.kill()
-                    proc.join(timeout=5)
                     yield json.dumps(
                         {
                             "type": "error",
@@ -219,9 +223,14 @@ def run_stream(payload: SimulationArgsInput | None = None):  # type: ignore
         finally:
             # Guarantee the subprocess is not left running if the client
             # disconnects mid-stream or an exception escapes the loop.
-            if proc is not None and proc.is_alive():
-                proc.kill()
+            if proc is not None:
+                if proc.is_alive():
+                    proc.kill()
                 proc.join(timeout=5)
+
+            if result_queue is not None:
+                result_queue.close()
+                result_queue.join_thread()
 
     return StreamingResponse(
         generate(),
