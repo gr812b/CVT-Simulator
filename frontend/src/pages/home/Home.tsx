@@ -122,7 +122,7 @@ export const Home = () => {
             <section className={styles.pitfalls}>
                 <h2 className={styles.sectionTitle}>Known Issues &amp; Disclaimers</h2>
                 <p className={styles.pitfallsIntro}>
-                    This tool is a <strong>work in progress</strong> — many features are still planned and some rough edges remain. Read below before diving in.
+                    This tool is a work in progress — many features are still planned and some rough edges remain. Read below before diving in.
                 </p>
                 <ul className={styles.pitfallList}>
                     <li className={styles.pitfallItem}>
@@ -134,7 +134,7 @@ export const Home = () => {
                     <li className={styles.pitfallItem}>
                         <span className={styles.pitfallLabel}>Solver progress bar</span>
                         <span className={styles.pitfallText}>
-                            The loading bar may appear stuck at certain percentages. Some parts of the simulation are harder to resolve — give it time. The solver will automatically time out after 5 minutes. If that happens, try adjusting your input parameters. If you believe the case should work and it didn&apos;t, feel free to report it.
+                            The loading bar may appear stuck at certain percentages. Some parts of the simulation are harder to resolve — give it time. The solver will automatically time out after 10 minutes. If that happens, try adjusting your input parameters. If you believe the case should work and it didn&apos;t, feel free to report it.
                         </span>
                     </li>
                     <li className={styles.pitfallItem}>
