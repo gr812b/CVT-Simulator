@@ -4829,25 +4829,28 @@ path through the belt and pulleys. Combining that torque path with the shift
 relation derived here will provide the coupled dynamic closure used by the full
 CVT model.
 
-\section{No-Slip Belt Dynamics and Torque Demand}
-\label{sec:no-slip-belt-dynamics}
+% ==============================================================
 
-The axial force model developed in \Sec{sec:axial} determines how the shift
-coordinate evolves once the primary and secondary axial forces are known.
-However, the secondary axial force depends on the transmitted secondary torque
-\(\tau_s\), which is not determined by the axial force balance itself.
+\section{Rotational and Belt Transport Dynamics}
+\label{sec:rot-belt-dynamics}
 
-This section develops the rotational and belt-dynamic relations needed to
-determine that torque in the no-slip case. The primary pulley, belt, and
-secondary pulley are treated as three coupled bodies: torque enters through the
-primary, is carried through belt contact, and exits through the secondary into
-the downstream drivetrain.
+The axial force model developed in \Sec{sec:axial} gives one equation for the
+shift coordinate \(s(t)\). That equation depends on the transmitted secondary
+torque \(\tau_s\) and on the secondary angular acceleration \(\dot{\omega}_s\).
+Those quantities are determined by the torque path through the CVT.
 
-The goal is to derive the no-slip torque demand: the torque transfer that would
-be required if the belt remained adhered to both pulleys. This result will later
-be checked against the available belt--pulley traction limits to determine
-whether no-slip motion is physically admissible.
+This section derives the common equations of motion for the rotating and
+translating bodies in that torque path. The primary pulley, belt, and secondary
+pulley are treated as coupled dynamic bodies. Engine torque enters at the
+primary pulley, torque is exchanged between the primary pulley and the belt,
+the belt exchanges torque with the secondary pulley, and the secondary pulley
+drives the downstream drivetrain.
 
+The equations derived here are independent of whether the belt is sticking or
+slipping at either pulley. They describe the bodies being accelerated; the
+contact state supplies the remaining closure equations later.
+
+% --------------------------------------------------------------
 \subsection{System Definition and Torque Path}
 \label{sec:belt-torque-path}
 
@@ -4855,351 +4858,194 @@ whether no-slip motion is physically admissible.
 \centering
 \includegraphics[width=1.1\linewidth]{./illustrations/torque/cvt_overview_forces.png}
 \caption{Torque path through the CVT. Engine torque
-$\tau_{\mathrm{eng}}$ drives the primary pulley with angular speed
-$\omega_p$. The primary pulley exchanges torque with the belt, the belt
+\(\tau_{\mathrm{eng}}\) drives the primary pulley with angular speed
+\(\omega_p\). The primary pulley exchanges torque with the belt, the belt
 exchanges torque with the secondary pulley, and the secondary pulley drives the
 downstream drivetrain while opposing the reflected load torque
-$\tau_{\mathrm{load}}$.}
+\(\tau_{\mathrm{load}}\).}
 \label{fig:torque_path}
 \end{figure}
 
-The torque-transfer subsystem shown in \Fig{fig:torque_path} is modeled using
-three bodies:
-
+The torque path shown in \Fig{fig:torque_path} is described using three contact
+torques and three dynamic motions:
 \begin{itemize}
-    \item the primary pulley,
-    \item the belt,
-    \item the secondary pulley.
+    \item the primary pulley rotates with angular speed \(\omega_p\),
+    \item the belt translates with transport speed \(v_b\),
+    \item the secondary shaft and fixed sheave rotate with angular speed
+    \(\omega_s\).
 \end{itemize}
 
-The primary pulley receives the engine torque $\tau_{\mathrm{eng}}$ and
-exchanges torque with the belt. Let $\tau_p(t)$ denote the torque exerted by the
-belt contact on the primary pulley. With the sign convention from
-\Sec{sec:rotational_sign}, this torque opposes positive engine-driven rotation
-of the primary pulley.
+The primary pulley receives engine torque \(\tau_{\mathrm{eng}}\). Let
+\(\tau_p\) denote the torque exerted by the belt contact on the primary pulley.
+With the rotational sign convention from \Sec{sec:rotational_sign},
+\(\tau_p\) opposes positive engine-driven primary rotation.
 
-The secondary pulley receives torque from the belt and delivers torque to the
-downstream drivetrain. Let $\tau_s(t)$ denote the torque exerted by the belt
-contact on the secondary pulley. This torque acts in the positive rotational
-direction of the secondary pulley, while the reflected load torque
-$\tau_{\mathrm{load}}(t)$ opposes the motion.
+The belt receives torque from the primary contact and applies torque to the
+secondary contact. Let \(\tau_s\) denote the total signed torque exerted by the
+belt on the secondary pulley. This torque acts in the positive secondary
+rotational direction, while the reflected drivetrain load
+\(\tau_{\mathrm{load}}\) opposes it.
 
-Applying \theoryRef{th:newton-rot} to the primary pulley gives
-
-\bigeq{eq:primary_rotational_eom_belt}{Primary Pulley Rotational Dynamics}{
-\tau_{\mathrm{eng}}(t) - \tau_p(t)
-=
-I_p \dot{\omega}_p(t)
-}
-
-Similarly, applying \theoryRef{th:newton-rot} to the secondary pulley gives
-
-\bigeq{eq:secondary_rotational_eom_belt}{Secondary Pulley Rotational Dynamics}{
-\tau_s(t) - \tau_{\mathrm{load}}(t)
-=
-I_s \dot{\omega}_s(t)
-}
-
-The belt is described by the transport speed $v_b(t)$ introduced in
-\Sec{sec:state}. Under \AssRef{assump:constant_belt_length}, the belt moves as a
-continuous path with a single belt-line speed. Its angular speed around each
-pulley may differ because angular speed depends on local radius, but the
-transport speed $v_b$ is common to the belt motion.
-
-For this reason, the belt equation of motion is written along the belt path
-rather than about a pulley axis. A contact torque produces an equivalent
-belt-line force when divided by the effective torque radius. Using the effective
-radii defined in \Sec{sec:effective-radius-placeholder}, the primary contact
-contributes $\tau_p/r_{p,\mathrm{eff}}$ to the belt-line motion, while the
-secondary contact contributes $\tau_s/r_{s,\mathrm{eff}}$ in the opposing
-direction. Applying \theoryRef{th:newton-trans} to the belt therefore gives
-
-\bigeq{eq:belt_transport_eom}{Belt Transport Dynamics}{
-m_b \dot v_b(t)
-=
-\frac{\tau_p(t)}{r_{p,\mathrm{eff}}(s)}
--
-\frac{\tau_s(t)}{r_{s,\mathrm{eff}}(s)}
-}
-
-Here $m_b$ is the total belt mass defined in \Eq{eq:mb_def}. Together,
-\Eq{eq:primary_rotational_eom_belt}, \Eq{eq:secondary_rotational_eom_belt}, and
-\Eq{eq:belt_transport_eom} define the equations of motion for the three bodies
-in the torque path.
-
-The quantities appearing in these equations fall into two groups. The first
-group consists of externally supplied torques and inertial parameters:
-\[
-\tau_{\mathrm{eng}}, \qquad \tau_{\mathrm{load}}, \qquad I_p, \qquad I_s,
-\qquad m_b.
-\]
-These are not determined by the belt contact state itself. They are defined by
-the engine model, the reflected vehicle load model, and the lumped inertia and
-belt-mass definitions recalled in the following subsection.
-
-The second group consists of the torque-transfer unknowns:
-\[
-\dot{\omega}_p, \qquad \dot{\omega}_s, \qquad \dot v_b, \qquad \tau_p,
-\qquad \tau_s.
-\]
-These five quantities describe the accelerations of the three bodies and the two
-contact torques exchanged through the belt. The three equations of motion above
-are therefore not sufficient to determine them on their own. The remaining
-closure comes from the belt--pulley contact state, beginning with the no-slip
-compatibility condition derived after the external torque and inertia models are
-recalled.
-
+% --------------------------------------------------------------
 \subsection{Engine Torque Model}
 \label{sec:tau_eng_model}
 
-The engine provides the driving torque
-$\tau_{\text{eng}}(t)$ acting on the primary pulley.
-
-In this model, engine output torque is represented as a
-user-supplied function of primary angular velocity.
-Under the full-throttle assumption
-(\AssRef{assump:full_throttle_model}),
+The engine provides the driving torque \(\tau_{\mathrm{eng}}(t)\) acting on the
+primary pulley. Under \AssRef{assump:full_throttle_model}, engine torque is
+represented as a prescribed full-throttle function of primary angular speed:
 
 \begin{equation}
-\tau_{\text{eng}}(t)
+\tau_{\mathrm{eng}}(t)
 =
-\tau_{\text{eng}}\!\big(\omega_p(t)\big),
+\tau_{\mathrm{eng}}\!\big(\omega_p(t)\big).
 \label{eq:tau_eng_from_curve}
 \end{equation}
 
-so torque depends only on instantaneous primary speed.
-
-This representation is consistent with standard engine
-characterization, where torque is measured as a function
-of crankshaft speed under steady full-load conditions.
-
-% --------------------------------------------------------------
-\paragraph{Admissibility Constraints}
-
-The supplied torque function must satisfy:
-
-\begin{itemize}
-    \item It is defined over a bounded operating domain
-          $\omega_{\min} \le \omega_p \le \omega_{\max}$.
-    \item It is finite and real-valued over this domain.
-    \item Outside this domain, torque is either saturated
-          or $\omega_p$ is constrained to remain within bounds.
-\end{itemize}
-
-No specific functional form is required.
-The dynamical model only requires the mapping
-$\omega_p \mapsto \tau_{\text{eng}}$.
-
-% --------------------------------------------------------------
-\paragraph{Example: Kohler CH440 Engine Curve}
-
-As an illustrative example, \Fig{fig:ch440_torque_curve}
-shows a representative torque and power curve for the
-Kohler CH440 engine.
+No specific analytic form is required. The model only requires that the mapping
+\(\omega_p \mapsto \tau_{\mathrm{eng}}\) be finite over the operating range used
+in simulation. Outside the supplied range, the torque curve is either saturated
+or the state is constrained to remain within the admissible engine-speed domain.
 
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.75\linewidth]{./illustrations/torque/kohler_ch440_torque_power_curve.png}
-\caption{
-Representative torque and power curves for the Kohler CH440 engine.
-Torque is supplied as a function of angular velocity and serves as
-the input mapping in \Eq{eq:tau_eng_from_curve}.
-}
+\caption{Representative torque and power curves for the Kohler CH440 engine.
+Torque is supplied as a function of angular velocity and serves as the input
+mapping in \Eq{eq:tau_eng_from_curve}.}
 \label{fig:ch440_torque_curve}
 \end{figure}
 
-In simulation, the discrete curve is interpolated to provide
-a continuous admissible torque function over the operating range.
+In simulation, the discrete torque curve is interpolated to provide a continuous
+input torque over the operating range.
 
 % --------------------------------------------------------------
 \subsection{Load Torque Model}
 \label{sec:tau_load_model}
 
-The resisting torque $\tau_{\text{load}}(t)$ in
-\Eq{eq:secondary_rotational_eom_belt} represents the
-longitudinal road load reflected to the secondary pulley.
+The resisting torque \(\tau_{\mathrm{load}}(t)\) represents the longitudinal
+vehicle load reflected back to the secondary pulley.
 
-We proceed in three stages:
-
-\begin{enumerate}
-    \item Express vehicle speed in terms of secondary rotation.
-    \item Derive the total longitudinal road force.
-    \item Reflect that force back to the secondary shaft.
-\end{enumerate}
-
-% --------------------------------------------------------------
-\paragraph{Kinematic Relations}
-
-Let $r_w$ denote effective wheel rolling radius and
-$G>0$ the fixed gear ratio defined by
+Let \(r_w\) denote the effective wheel rolling radius and let \(G>0\) denote the
+fixed gear ratio defined by
 
 \[
-\omega_s = G\,\omega_w.
+\omega_s = G\,\omega_w .
 \]
 
-Vehicle speed is therefore
+The vehicle speed is therefore
 
 \begin{equation}
 v(t)
 =
-r_w \omega_w(t)
+r_w\omega_w(t)
 =
-\frac{r_w}{G}\,\omega_s(t).
+\frac{r_w}{G}\omega_s(t).
 \label{eq:v_from_secondary}
 \end{equation}
 
-% --------------------------------------------------------------
-\paragraph{Longitudinal Road Force}
-
-Using \theoryRef{th:newton-trans},
-the total longitudinal resistive force on the vehicle is modeled as
+The total longitudinal road force is modeled as the sum of rolling resistance,
+grade resistance, and aerodynamic drag:
 
 \begin{equation}
-F_{\text{road}}
+F_{\mathrm{road}}
 =
-F_{\text{rr}}
+F_{\mathrm{rr}}
 +
-F_{\text{grade}}
+F_{\mathrm{grade}}
 +
-F_{\text{drag}}.
+F_{\mathrm{drag}}.
 \label{eq:Froad_total}
 \end{equation}
 
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.75\linewidth]{./illustrations/torque/car_free_body_diagram.png}
-\caption{
-Free-body diagram of a vehicle on an incline.
-The weight $mg$ resolves into $mg\sin\alpha$ along the slope
-and $mg\cos\alpha$ normal to the surface.
-Rolling resistance and aerodynamic drag oppose motion.
-}
+\caption{Free-body diagram of a vehicle on an incline. The weight \(mg\)
+resolves into \(mg\sin\alpha\) along the slope and \(mg\cos\alpha\) normal to
+the surface. Rolling resistance and aerodynamic drag oppose motion.}
 \label{fig:car_fbd}
 \end{figure}
 
-% --------------------------------------------------------------
-\paragraph{Rolling Resistance}
-
-From \theoryRef{th:rolling_resistance},
+Using \theoryRef{th:rolling_resistance}, \theoryRef{th:gravity_force}, and
+\theoryRef{th:air_resistance}, the road-load components are
 
 \begin{equation}
-F_{\text{rr}} = C_{\text{rr}}\,N.
-\label{eq:Frr_basic}
-\end{equation}
-
-From the incline geometry,
-
-\begin{equation}
-N = m g \cos\alpha.
-\label{eq:normal_force}
-\end{equation}
-
-Thus
-
-\begin{equation}
-F_{\text{rr}}(v,\alpha)
+F_{\mathrm{rr}}(v,\alpha)
 =
-C_{\text{rr}} m g \cos\alpha \;\mathrm{sgn}(v).
+C_{\mathrm{rr}}mg\cos\alpha\,\mathrm{sgn}(v),
 \label{eq:Frr_final}
 \end{equation}
 
-% --------------------------------------------------------------
-\paragraph{Grade Resistance}
-
-From \theoryRef{th:gravity_force}, the gravitational component along the slope is
-
 \begin{equation}
-F_{\text{grade}}(\alpha)
+F_{\mathrm{grade}}(\alpha)
 =
-m g \sin\alpha.
+mg\sin\alpha,
 \label{eq:Fgrade}
 \end{equation}
 
-% --------------------------------------------------------------
-\paragraph{Aerodynamic Drag}
-
-From \theoryRef{th:air_resistance},
+and
 
 \begin{equation}
-F_{\text{drag}}(v)
+F_{\mathrm{drag}}(v)
 =
-\frac12 \rho C_d A_f \, v^2 \,\mathrm{sgn}(v).
+\frac{1}{2}\rho C_d A_f v^2\,\mathrm{sgn}(v).
 \label{eq:Fdrag_final}
 \end{equation}
 
-% --------------------------------------------------------------
-\paragraph{Total Road Force}
-
-Substituting the above components into
-\Eq{eq:Froad_total} yields
+Substituting these terms into \Eq{eq:Froad_total} gives
 
 \begin{align}
-F_{\text{road}}(t)
+F_{\mathrm{road}}(t)
 &=
-C_{\text{rr}} m g \cos\alpha
-\;\mathrm{sgn}\!\left(v(t)\right)
+C_{\mathrm{rr}}mg\cos\alpha\,
+\mathrm{sgn}\!\left(v(t)\right)
++
+mg\sin\alpha
 \nonumber\\
 &\quad
 +
-m g \sin\alpha
-\nonumber\\
-&\quad
-+
-\frac12 \rho C_d A_f
-\, v(t)^2 \,\mathrm{sgn}\!\left(v(t)\right).
+\frac{1}{2}\rho C_d A_f
+v(t)^2\,
+\mathrm{sgn}\!\left(v(t)\right).
 \label{eq:Froad_expanded}
 \end{align}
 
-Using \Eq{eq:v_from_secondary},
-
-\[
-v(t)
-=
-\frac{r_w}{G}\,\omega_s(t),
-\]
-
-the road force is now fully expressed in terms of the
-secondary state variable $\omega_s(t)$.
-
-% --------------------------------------------------------------
-\paragraph{Reflection to Secondary Torque}
-
-Wheel torque is
+The wheel torque associated with this road load is
 
 \begin{equation}
-\tau_{\text{road},w}(t)
+\tau_{\mathrm{road},w}(t)
 =
-r_w F_{\text{road}}(t).
+r_wF_{\mathrm{road}}(t).
 \label{eq:tau_wheel}
 \end{equation}
 
-Assuming ideal power transmission
-(\AssRef{assump:ideal_cvt_power}),
-the resisting torque reflected to the secondary pulley is
+With the downstream fixed-ratio drive treated as ideal under
+\AssRef{assump:no_explicit_loss_model}, the resisting torque reflected to the
+secondary pulley is
 
 \begin{equation}
-\tau_{\text{load}}(t)
+\tau_{\mathrm{load}}(t)
 =
-\frac{1}{G}\,\tau_{\text{road},w}(t)
+\frac{1}{G}\tau_{\mathrm{road},w}(t)
 =
-\frac{r_w}{G} F_{\text{road}}(t).
+\frac{r_w}{G}F_{\mathrm{road}}(t).
 \label{eq:tau_load_basic}
 \end{equation}
 
-Substituting \Eq{eq:Froad_expanded} gives
+Using \(v=(r_w/G)\omega_s\), this becomes
 
 \begin{equation}
 \boxed{
-\tau_{\text{load}}(t)
+\tau_{\mathrm{load}}(t)
 =
 \frac{r_w}{G}
 \left[
-C_{\text{rr}} m g \cos\alpha
-\;\mathrm{sgn}\!\left(\frac{r_w}{G}\omega_s(t)\right)
+C_{\mathrm{rr}}mg\cos\alpha\,
+\mathrm{sgn}\!\left(\frac{r_w}{G}\omega_s(t)\right)
 +
-m g \sin\alpha
+mg\sin\alpha
 +
-\frac12 \rho C_d A_f
+\frac{1}{2}\rho C_d A_f
 \left(\frac{r_w}{G}\omega_s(t)\right)^2
 \mathrm{sgn}\!\left(\frac{r_w}{G}\omega_s(t)\right)
 \right].
@@ -5209,233 +5055,837 @@ m g \sin\alpha
 
 % --------------------------------------------------------------
 \subsection{Inertia Definitions}
+\label{sec:rotational-inertia-definitions}
 
-The rotational equations \Eq{eq:primary_rotational_eom_belt}--\Eq{eq:secondary_rotational_eom_belt}
-require the effective rotational inertia about each pulley axis.
+The rotational equations require inertias expressed about the primary and
+secondary axes. Under \AssRef{assump:lumped_inertia}, these inertias are treated
+as lumped scalar quantities about their corresponding shafts.
 
 % --------------------------------------------------------------
-\paragraph{Primary Pulley Inertia}
+\subsubsection{Primary-Side Inertia}
 
-The primary pulley is rigidly connected to the engine.
-All components on this side rotate with angular velocity $\omega_p$,
-so no reflection is required.
-
-The effective inertia is therefore the direct sum
+The primary pulley is rigidly connected to the engine side. All components in
+this lump rotate with angular speed \(\omega_p\), so the primary-side inertia is
 
 \begin{equation}
 I_p
 =
-I_{\text{eng}}
+I_{\mathrm{eng}}
 +
-I_{\text{prim}},
+I_{\mathrm{prim}},
 \label{eq:Ip_def}
 \end{equation}
 
-where
-\begin{itemize}
-    \item $I_{\text{eng}}$ is the engine rotational inertia,
-    \item $I_{\text{prim}}$ is the primary CVT pulley inertia.
-\end{itemize}
+where \(I_{\mathrm{eng}}\) is the engine rotational inertia and
+\(I_{\mathrm{prim}}\) is the primary pulley inertia.
 
 % --------------------------------------------------------------
-\paragraph{Secondary Pulley Inertia}
+\subsubsection{Secondary Fixed-Side and Downstream Inertia}
 
-On the secondary side, all downstream components must be
-expressed as an equivalent inertia about the secondary axis.
+The secondary side requires one additional distinction. The fixed secondary
+sheave and downstream drivetrain rotate with \(\omega_s\). The movable secondary
+sheave does not generally rotate with exactly \(\omega_s\) during shift, because
+the helix couples axial motion to relative rotation. Its rotational motion is
+therefore handled separately using the helix kinematics from
+\Eq{eq:secondary_movable_omega} and \Eq{eq:secondary_movable_alpha}.
 
-Let
+Let \(I_{s,F}\) denote the inertia that rotates directly with the fixed
+secondary sheave and shaft, excluding the movable secondary sheave inertia
+\(I_M\). This fixed-side inertia includes the fixed secondary components,
+gearbox-side inertia, wheel inertia reflected through the fixed ratio, and the
+vehicle translational inertia reflected to the secondary axis.
 
-\begin{itemize}
-    \item $I_{\text{sec}}$ : secondary CVT pulley inertia,
-    \item $I_{\text{gb}}$ : gearbox + intermediate shaft inertia,
-    \item $I_{\text{wheel}}$ : wheel + hub inertia about the wheel axis,
-    \item $m$ : total vehicle mass,
-    \item $r_w$ : effective wheel rolling radius,
-    \item $G$ : fixed gear ratio defined by $\omega_s = G\,\omega_w$.
-\end{itemize}
-
-% --------------------------------------------------------------
-\paragraph{Vehicle Mass as Equivalent Rotational Inertia}
-
-The vehicle’s translational kinetic energy is
+The vehicle translational kinetic energy is
 
 \[
-T_{\text{trans}}
+T_{\mathrm{trans}}
 =
-\frac12 m v^2,
+\frac{1}{2}mv^2
+=
+\frac{1}{2}m(r_w\omega_w)^2,
 \]
 
-with $v = r_w \omega_w$.
-
-Substituting,
-
-\[
-T_{\text{trans}}
-=
-\frac12 m (r_w \omega_w)^2
-=
-\frac12 (m r_w^2)\,\omega_w^2.
-\]
-
-Thus the vehicle mass behaves as an effective rotational inertia
-
-\[
-I_{\text{veh,wheel}} = m r_w^2
-\]
-
-about the wheel axis.
-
-% --------------------------------------------------------------
-\paragraph{Reflection to the Secondary Axis}
-
-Because $\omega_s = G\,\omega_w$,
-we have $\omega_w = \omega_s/G$.
-
-Expressing the downstream kinetic energy in terms of $\omega_s$:
-
-\[
-T
-=
-\frac12 I_{\text{wheel}} \left(\frac{\omega_s}{G}\right)^2
-+
-\frac12 (m r_w^2) \left(\frac{\omega_s}{G}\right)^2.
-\]
-
-Factoring,
-
-\[
-T
-=
-\frac12
-\left(
-\frac{I_{\text{wheel}} + m r_w^2}{G^2}
-\right)
-\omega_s^2.
-\]
-
-Therefore, inertias at the wheel reflect to the secondary pulley as
-
-\[
-I_{\text{reflected}}
-=
-\frac{I_{\text{wheel}} + m r_w^2}{G^2}.
-\]
-
-% --------------------------------------------------------------
-\paragraph{Total Secondary Inertia}
-
-The total effective inertia about the secondary pulley is
+so the vehicle mass appears as an equivalent wheel-axis inertia
+\(mr_w^2\). Since \(\omega_s=G\omega_w\), wheel-axis inertias reflect to the
+secondary axis by division by \(G^2\). Thus,
 
 \begin{equation}
-I_s
+I_{s,F}
 =
-I_{\text{sec}}
+I_{\mathrm{sec},F}
 +
-I_{\text{gb}}
+I_{\mathrm{gb}}
 +
-\frac{I_{\text{wheel}} + m r_w^2}{G^2}.
-\label{eq:Is_def}
+\frac{I_{\mathrm{wheel}}+mr_w^2}{G^2}.
+\label{eq:Is_fixed_def}
 \end{equation}
 
-Equation \Eq{eq:Is_def} defines the total inertia
-opposing angular acceleration of the secondary pulley.
+Here \(I_{\mathrm{sec},F}\) includes the fixed secondary sheave and other
+secondary components that rotate directly with the secondary shaft. The movable
+secondary sheave inertia \(I_M\) is not included in \(I_{s,F}\).
 
 % --------------------------------------------------------------
+\subsection{Common Equations of Motion}
+\label{sec:common-eoms}
 
+The primary pulley, belt, secondary fixed-side assembly, and shift coordinate
+provide the four common dynamic equations used in every contact state. The
+contact state will later determine the two additional closure equations.
 
-\subsection{No-Slip Kinematic Compatibility}
+% --------------------------------------------------------------
+\subsubsection{Primary Pulley Rotational Dynamics}
+
+Applying \theoryRef{th:newton-rot} to the primary pulley gives
+
+\bigeq{eq:primary_rotational_eom_belt}{Primary Pulley Rotational Dynamics}{
+\tau_{\mathrm{eng}}(t)
+-
+\tau_p(t)
+=
+I_p\dot{\omega}_p(t)
+}
+
+The engine torque drives positive primary rotation, while the belt contact
+torque opposes it.
+
+% --------------------------------------------------------------
+\subsubsection{Belt Transport Dynamics}
+
+The belt is represented by the transport speed \(v_b(t)\) introduced in
+\Sec{sec:state}. Under \AssRef{assump:constant_belt_length} and
+\AssRef{assump:single_belt_speed}, the belt is modeled as a single moving path
+with one lumped transport speed.
+
+A contact torque produces an equivalent belt-line force when divided by the
+effective torque radius from \Sec{sec:effective-radius-placeholder}. The primary
+contact contributes \(\tau_p/r_{p,\mathrm{eff}}\) to the belt-line motion, while
+the secondary contact contributes \(\tau_s/r_{s,\mathrm{eff}}\) in the opposing
+direction. Applying \theoryRef{th:newton-trans} to the belt gives
+
+\bigeq{eq:belt_transport_eom}{Belt Transport Dynamics}{
+m_b\dot v_b(t)
+=
+\frac{\tau_p(t)}{r_{p,\mathrm{eff}}(s)}
+-
+\frac{\tau_s(t)}{r_{s,\mathrm{eff}}(s)}
+}
+
+where \(m_b\) is the total belt mass from \Eq{eq:mb_def}.
+
+% --------------------------------------------------------------
+\subsubsection{Secondary Rotational Dynamics}
+
+The secondary side is not treated as a single rigid body during shift. The fixed
+secondary sheave and downstream drivetrain rotate with the secondary shaft speed
+\(\omega_s\), while the movable secondary sheave rotates with \(\omega_M\).
+These two angular speeds are equal only when the secondary is not shifting. When
+the helix is active, axial motion of the movable sheave is accompanied by
+relative rotation, so the movable sheave must be counted with its own angular
+acceleration.
+
+The cleanest way to write the secondary rotational balance is to consider the
+fixed-side secondary assembly and the movable sheave together as one system. The
+external torques on this combined secondary system are the total belt-applied
+secondary torque \(\tau_s\) and the reflected load torque
+\(\tau_{\mathrm{load}}\). The helix and spring torques between the fixed and
+movable sheaves are internal to this combined system, so they do not appear in
+the net external torque balance.
+
+Let \(I_{s,F}\) denote the inertia of the fixed-side secondary assembly, excluding
+the movable secondary sheave inertia \(I_M\). The angular momentum of the
+secondary system about the shaft axis is then
+
+\[
+L_s
+=
+I_{s,F}\omega_s
++
+I_M\omega_M .
+\]
+
+Applying \theoryRef{th:newton-rot} in angular-momentum form gives
+
+\begin{equation}
+\tau_s
+-
+\tau_{\mathrm{load}}
+=
+\frac{dL_s}{dt}
+=
+I_{s,F}\dot{\omega}_s
++
+I_M\dot{\omega}_M .
+\label{eq:secondary_rotational_eom_two_body}
+\end{equation}
+
+The movable-sheave acceleration is not independent. From the helix kinematics
+derived in \Eq{eq:secondary_movable_alpha},
+
+\[
+\dot{\omega}_M
+=
+\dot{\omega}_s
+-
+\frac{d^2\theta_s}{ds^2}\dot{s}^2
+-
+\frac{d\theta_s}{ds}\ddot{s}.
+\]
+
+Substituting this relation into
+\Eq{eq:secondary_rotational_eom_two_body} gives the secondary rotational
+equation in terms of the common dynamic variables:
+
+\bigeq{eq:secondary_rotational_eom_belt}{Secondary Rotational Dynamics}{
+\tau_s
+-
+\tau_{\mathrm{load}}
+=
+\left(
+I_{s,F}
++
+I_M
+\right)
+\dot{\omega}_s
+-
+I_M
+\frac{d^2\theta_s}{ds^2}\dot{s}^{2}
+-
+I_M
+\frac{d\theta_s}{ds}\ddot{s}
+}
+
+This form preserves the distinction between the fixed secondary components and
+the movable sheave. If the CVT is not shifting, then \(\dot{s}=0\) and
+\(\ddot{s}=0\), so the movable sheave rotates with the fixed sheave and the
+secondary inertia reduces to \(I_{s,F}+I_M\). During shift, the helix introduces
+the additional coupling terms shown above.
+
+% --------------------------------------------------------------
+\subsection{Common Dynamic Relations and Remaining Closure}
+\label{sec:common-dynamics-unknowns}
+
+At this point, the model has four dynamic relations that are used regardless of
+the belt contact state. These are:
+\begin{itemize}
+    \item primary rotational dynamics, \Eq{eq:primary_rotational_eom_belt},
+    \item belt transport dynamics, \Eq{eq:belt_transport_eom},
+    \item secondary rotational dynamics, \Eq{eq:secondary_rotational_eom_belt},
+    \item axial shift dynamics, \Eq{eq:s_ddot_final}.
+\end{itemize}
+
+The first three equations describe the torque path through the primary pulley,
+belt, and secondary pulley. The fourth equation carries the axial force balance
+into the same coupled system. 
+
+Together, the common dynamics involve the six unknown quantities
+
+\[
+\dot{\omega}_p,
+\qquad
+\dot{\omega}_s,
+\qquad
+\dot v_b,
+\qquad
+\ddot{s},
+\qquad
+\tau_p,
+\qquad
+\tau_s.
+\]
+
+The four equations above therefore describe the body dynamics, but they do not
+yet determine all six unknowns. Two additional relations are still needed to
+specify how torque is exchanged at the primary and secondary belt--pulley
+contacts.
+
+This is where the belt contact state enters the model. The equations derived so
+far describe how the bodies respond to applied forces and torques; the contact
+relations determine what forces and torques can actually be exchanged between
+the belt and each pulley. The following section begins with the gross sticking
+case, where the belt is assumed to remain kinematically compatible with both
+pulley contacts.
+
+% ==============================================================
+\section{Gross Stick Compatibility and No-Slip Candidate}
+\label{sec:no-slip-candidate}
+
+The previous section established the common equations of motion for the primary
+pulley, belt, secondary assembly, and shift coordinate. These equations describe
+how the bodies respond to applied forces and torques, but they do not yet
+specify the contact state between the belt and the pulleys.
+
+This section considers the gross sticking case. In this contact state, the belt
+is assumed to remain adhered to both pulleys at their effective torque radii.
+The resulting solution is the \emph{no-slip candidate}: the accelerations and
+contact torques that would be required if both belt--pulley contacts remained
+stuck.
+
+This candidate is not automatically admissible. It is first computed from the
+sticking constraints, then checked against the available traction limits in the
+following section.
+
+% --------------------------------------------------------------
+\subsection{Gross Stick Compatibility}
 \label{sec:no-slip-compatibility}
 
-The equations of motion in \Sec{sec:belt-torque-path} describe the torque-transfer
-subsystem before any contact constraint has been imposed. To form the no-slip
-candidate, we now require the belt to adhere to each pulley contact.
+Let \(j \in \{p,s\}\) denote either the primary or secondary pulley. Under
+\AssRef{assump:single_belt_speed}, the belt is represented by a single transport
+speed \(v_b\). Under \AssRef{assump:uniform_contact_radius}, each pulley contact
+is represented by a single effective torque radius \(r_{j,\mathrm{eff}}\).
 
-Let
-\[
-j \in \{p,s\}
-\]
-denote either the primary or secondary pulley. If the belt is adhered to pulley
-\(j\), then the belt transport speed must match the tangential surface speed of
-that pulley at the effective torque radius. Therefore,
+If the belt is grossly stuck to pulley \(j\), the belt transport speed equals
+the tangential surface speed of that pulley at the effective torque radius:
+
 \begin{equation}
-v_b(t) = r_{j,\mathrm{eff}}(s(t))\,\omega_j(t),
-\qquad j \in \{p,s\}.
+v_b(t)
+=
+r_{j,\mathrm{eff}}(s(t))\,\omega_j(t),
+\qquad
+j \in \{p,s\}.
 \label{eq:no_slip_identity_j}
 \end{equation}
 
-Equation \Eq{eq:no_slip_identity_j} is the velocity-level no-slip condition. Since
-the equations of motion involve accelerations, we differentiate it with respect
-to time. Starting from
-\[
-v_b(t) = r_{j,\mathrm{eff}}(s(t))\,\omega_j(t),
-\]
-the product rule gives
-\begin{equation}
+Differentiating \Eq{eq:no_slip_identity_j} gives the acceleration-level stick
+compatibility condition:
+
+\bigeq{eq:gross_stick_compatibility}{Gross Stick Compatibility}{
 \dot v_b(t)
 =
-\dot r_{j,\mathrm{eff}}(t)\,\omega_j(t)
+\frac{d r_{j,\mathrm{eff}}}{ds}\dot{s}(t)\,\omega_j(t)
 +
-r_{j,\mathrm{eff}}(s(t))\,\dot\omega_j(t).
-\label{eq:no_slip_vb_dot_j}
-\end{equation}
+r_{j,\mathrm{eff}}(s(t))\,\dot{\omega}_j(t),
+\qquad
+j \in \{p,s\}.
+}
 
-Since the effective radius depends on time only through the shift coordinate
-\(s(t)\),
-\begin{equation}
-\dot r_{j,\mathrm{eff}}(t)
-=
-\frac{d r_{j,\mathrm{eff}}}{ds}\dot s(t).
-\label{eq:reff_time_derivative_j}
-\end{equation}
+This equation is the contact closure for a stuck belt--pulley interface. It
+states that the belt-line acceleration must match the acceleration of the pulley
+surface at the effective radius, including the contribution from changing pulley
+radius during shift.
 
-Solving Equation \Eq{eq:no_slip_vb_dot_j} for the pulley angular acceleration
+Solving \Eq{eq:gross_stick_compatibility} for the pulley angular acceleration
 gives
+
 \begin{equation}
-\dot\omega_j(t)
+\dot{\omega}_j(t)
 =
 \frac{
-\dot v_b(t)-\dot r_{j,\mathrm{eff}}(t)\,\omega_j(t)
+\dot v_b(t)
+-
+\dfrac{d r_{j,\mathrm{eff}}}{ds}\dot{s}(t)\omega_j(t)
 }{
 r_{j,\mathrm{eff}}(s(t))
 },
-\qquad j \in \{p,s\}.
+\qquad
+j \in \{p,s\}.
 \label{eq:no_slip_omega_dot_j}
 \end{equation}
 
-Together with the three equations of motion from \Sec{sec:belt-torque-path},
-this acceleration-level compatibility supplies the no-slip closure. The next
-step is to substitute \Eq{eq:no_slip_omega_dot_j} into the pulley
-equations of motion and solve for the contact torque demands associated with the
-no-slip candidate.
+For the no-slip candidate, \Eq{eq:no_slip_omega_dot_j} is applied at both the
+primary and secondary contacts.
 
-
-\subsection{Solving the No-Slip Torque Demand}
+% --------------------------------------------------------------
+\subsection{No-Slip Candidate Solve}
 \label{sec:no-slip-torque-demand}
 
-The no-slip compatibility relation from \Sec{sec:no-slip-compatibility} can now
-be combined with the three equations of motion from \Sec{sec:belt-torque-path}.
 For compactness, define
+
 \[
 r_p = r_{p,\mathrm{eff}}(s),
 \qquad
 r_s = r_{s,\mathrm{eff}}(s),
 \]
-with corresponding time derivatives \(\dot r_p\) and \(\dot r_s\).
 
-On the no-slip candidate branch, Equation \Eq{eq:no_slip_omega_dot_j} gives
+and
+
 \[
-\dot\omega_p
+\dot r_p
 =
-\frac{\dot v_{b,\mathrm{ns}}-\dot r_p\omega_p}{r_p},
+\frac{d r_{p,\mathrm{eff}}}{ds}\dot{s},
 \qquad
-\dot\omega_s
+\dot r_s
 =
-\frac{\dot v_{b,\mathrm{ns}}-\dot r_s\omega_s}{r_s}.
+\frac{d r_{s,\mathrm{eff}}}{ds}\dot{s}.
 \]
 
-Substituting these relations into the primary rotational equation
-\Eq{eq:primary_rotational_eom_belt} gives the primary contact torque required
-to maintain no slip:
+Also define the effective shift inertia from \Eq{eq:s_ddot_final} as
+
+\begin{equation}
+M_{\mathrm{shift}}
+=
+m_{p,m}
++
+m_{s,m}
++
+\frac{\rho_b A_b L_b}{4}
++
+I_M
+\left(
+\frac{d\theta_s}{ds}
+\right)^2 .
+\label{eq:Mshift_def_no_slip}
+\end{equation}
+
+This is not a new model assumption; it is the denominator of the axial shift
+equation already derived.
+
+% --------------------------------------------------------------
+\subsubsection{Stick-Compatible Angular Accelerations}
+
+Applying the stick condition from \Eq{eq:no_slip_omega_dot_j} at the primary
+pulley gives
+
+\begin{equation}
+\dot{\omega}_{p,\mathrm{ns}}
+=
+\frac{
+\dot v_{b,\mathrm{ns}}-\dot r_p\omega_p
+}{
+r_p
+}.
+\label{eq:omega_p_dot_ns}
+\end{equation}
+
+Applying the same condition at the secondary pulley gives
+
+\begin{equation}
+\dot{\omega}_{s,\mathrm{ns}}
+=
+\frac{
+\dot v_{b,\mathrm{ns}}-\dot r_s\omega_s
+}{
+r_s
+}.
+\label{eq:omega_s_dot_ns}
+\end{equation}
+
+Thus, once the no-slip belt acceleration \(\dot v_{b,\mathrm{ns}}\) is known,
+both pulley angular accelerations are known.
+
+% --------------------------------------------------------------
+\subsubsection{Primary No-Slip Torque Demand}
+
+The primary rotational equation is
+
+\[
+\tau_{\mathrm{eng}}
+-
+\tau_p
+=
+I_p\dot{\omega}_p .
+\]
+
+Substituting \Eq{eq:omega_p_dot_ns} gives the primary contact torque required to
+maintain no slip:
+
+\bigeq{eq:tau_p_ns_from_vbdot}{Primary No-Slip Torque Demand Before Belt Solve}{
+\tau_{p,\mathrm{ns}}
+=
+\tau_{\mathrm{eng}}
+-
+I_p
+\left(
+\frac{
+\dot v_{b,\mathrm{ns}}-\dot r_p\omega_p
+}{
+r_p
+}
+\right)
+}
+
+This is already expressed in terms of known state quantities and the single
+remaining unknown \(\dot v_{b,\mathrm{ns}}\).
+
+% --------------------------------------------------------------
+\subsubsection{Secondary No-Slip Torque Demand}
+
+The secondary torque demand is coupled to the axial shift equation because the
+secondary helix couples \(\tau_s\), \(\dot{\omega}_s\), and \(\ddot{s}\).
+
+From \Eq{eq:s_ddot_final}, the shift acceleration can be written directly as
+
+\begin{equation}
+\ddot{s}_{\mathrm{ns}}
+=
+\frac{
+F_{p,\mathrm{ax}}
++
+F_{c,p}
+-
+F_{c,s}
+-
+k_{s,x}(x_{s,0}+s)
+-
+\dfrac{d\theta_s}{ds}
+\left[
+\dfrac{\tau_{s,\mathrm{ns}}}{2}
++
+k_{s,\theta}
+\big(
+\theta_{s,0}+\theta_s(s)
+\big)
+-
+I_M
+\left(
+\dot{\omega}_{s,\mathrm{ns}}
+-
+\dfrac{d^2\theta_s}{ds^2}\dot{s}^2
+\right)
+\right]
+}{
+M_{\mathrm{shift}}
+}.
+\label{eq:sddot_ns_expanded_before_tau_s_solve}
+\end{equation}
+
+The secondary rotational equation from \Eq{eq:secondary_rotational_eom_belt} is
+
+\begin{equation}
+\tau_{s,\mathrm{ns}}
+-
+\tau_{\mathrm{load}}
+=
+\left(
+I_{s,F}+I_M
+\right)
+\dot{\omega}_{s,\mathrm{ns}}
+-
+I_M
+\frac{d^2\theta_s}{ds^2}\dot{s}^2
+-
+I_M
+\frac{d\theta_s}{ds}\ddot{s}_{\mathrm{ns}} .
+\label{eq:secondary_ns_before_sddot_sub}
+\end{equation}
+
+Substituting \Eq{eq:sddot_ns_expanded_before_tau_s_solve} into
+\Eq{eq:secondary_ns_before_sddot_sub}, then collecting terms in
+\(\tau_{s,\mathrm{ns}}\), gives
+
+\begin{equation}
+\tau_{s,\mathrm{ns}}
+=
+\frac{
+\begin{aligned}
+&\tau_{\mathrm{load}}
++
+\left[
+I_{s,F}
++
+I_M
+-
+\frac{
+I_M^2
+\left(
+\dfrac{d\theta_s}{ds}
+\right)^2
+}{
+M_{\mathrm{shift}}
+}
+\right]
+\dot{\omega}_{s,\mathrm{ns}}
+-
+I_M
+\frac{d^2\theta_s}{ds^2}\dot{s}^{2}
+\\
+&\quad
+-
+\frac{
+I_M
+\dfrac{d\theta_s}{ds}
+}{
+M_{\mathrm{shift}}
+}
+\left[
+F_{p,\mathrm{ax}}
++
+F_{c,p}
+-
+F_{c,s}
+-
+k_{s,x}(x_{s,0}+s)
+-
+\frac{d\theta_s}{ds}
+k_{s,\theta}
+\big(
+\theta_{s,0}+\theta_s(s)
+\big)
+-
+I_M
+\frac{d\theta_s}{ds}
+\frac{d^2\theta_s}{ds^2}\dot{s}^{2}
+\right]
+\end{aligned}
+}{
+1
+-
+\frac{
+I_M
+\left(
+\dfrac{d\theta_s}{ds}
+\right)^2
+}{
+2M_{\mathrm{shift}}
+}
+}.
+\label{eq:tau_s_ns_from_omega_s_dot}
+\end{equation}
+
+Finally, substituting the secondary stick-compatible acceleration from
+\Eq{eq:omega_s_dot_ns} gives the secondary torque demand in terms of the belt
+acceleration:
+
+\begin{equation}
+\tau_{s,\mathrm{ns}}
+=
+\frac{
+\begin{aligned}
+&\tau_{\mathrm{load}}
++
+\left[
+I_{s,F}
++
+I_M
+-
+\frac{
+I_M^2
+\left(
+\dfrac{d\theta_s}{ds}
+\right)^2
+}{
+M_{\mathrm{shift}}
+}
+\right]
+\left(
+\frac{
+\dot v_{b,\mathrm{ns}}-\dot r_s\omega_s
+}{
+r_s
+}
+\right)
+-
+I_M
+\frac{d^2\theta_s}{ds^2}\dot{s}^{2}
+\\
+&\quad
+-
+\frac{
+I_M
+\dfrac{d\theta_s}{ds}
+}{
+M_{\mathrm{shift}}
+}
+\left[
+F_{p,\mathrm{ax}}
++
+F_{c,p}
+-
+F_{c,s}
+-
+k_{s,x}(x_{s,0}+s)
+-
+\frac{d\theta_s}{ds}
+k_{s,\theta}
+\big(
+\theta_{s,0}+\theta_s(s)
+\big)
+-
+I_M
+\frac{d\theta_s}{ds}
+\frac{d^2\theta_s}{ds^2}\dot{s}^{2}
+\right]
+\end{aligned}
+}{
+1
+-
+\frac{
+I_M
+\left(
+\dfrac{d\theta_s}{ds}
+\right)^2
+}{
+2M_{\mathrm{shift}}
+}
+}.
+\label{eq:tau_s_ns_from_vbdot}
+\end{equation}
+
+This expression is longer than the primary torque demand because the secondary
+torque is coupled through the helix to both secondary rotation and axial shift.
+
+% --------------------------------------------------------------
+\subsubsection{Explicit No-Slip Belt Acceleration}
+
+The belt transport equation is
+
+\[
+m_b\dot v_b
+=
+\frac{\tau_p}{r_p}
+-
+\frac{\tau_s}{r_s}.
+\]
+
+Substituting \Eq{eq:tau_p_ns_from_vbdot} and
+\Eq{eq:tau_s_ns_from_vbdot}, then collecting terms in
+\(\dot v_{b,\mathrm{ns}}\), gives the explicit no-slip belt acceleration:
+
+\bigeq{eq:no_slip_vb_dot}{No-Slip Belt Acceleration}{
+\dot v_{b,\mathrm{ns}}
+=
+\frac{
+\begin{aligned}
+&
+\dfrac{\tau_{\mathrm{eng}}}{r_p}
++
+\dfrac{I_p\dot r_p\omega_p}{r_p^2}
+\\
+&\quad
+-
+\dfrac{1}{r_s}
+\frac{
+\begin{aligned}
+&\tau_{\mathrm{load}}
+-
+\left[
+I_{s,F}
++
+I_M
+-
+\dfrac{
+I_M^2
+\left(
+\dfrac{d\theta_s}{ds}
+\right)^2
+}{
+M_{\mathrm{shift}}
+}
+\right]
+\dfrac{\dot r_s\omega_s}{r_s}
+-
+I_M
+\dfrac{d^2\theta_s}{ds^2}\dot{s}^{2}
+\\
+&\quad
+-
+\dfrac{
+I_M
+\dfrac{d\theta_s}{ds}
+}{
+M_{\mathrm{shift}}
+}
+\left[
+F_{p,\mathrm{ax}}
++
+F_{c,p}
+-
+F_{c,s}
+-
+k_{s,x}(x_{s,0}+s)
+-
+\dfrac{d\theta_s}{ds}
+k_{s,\theta}
+\big(
+\theta_{s,0}+\theta_s(s)
+\big)
+-
+I_M
+\dfrac{d\theta_s}{ds}
+\dfrac{d^2\theta_s}{ds^2}\dot{s}^{2}
+\right]
+\end{aligned}
+}{
+1
+-
+\dfrac{
+I_M
+\left(
+\dfrac{d\theta_s}{ds}
+\right)^2
+}{
+2M_{\mathrm{shift}}
+}
+}
+\end{aligned}
+}{
+\begin{aligned}
+&
+m_b
++
+\dfrac{I_p}{r_p^2}
+\\
+&\quad
++
+\dfrac{1}{r_s}
+\frac{
+\left[
+I_{s,F}
++
+I_M
+-
+\dfrac{
+I_M^2
+\left(
+\dfrac{d\theta_s}{ds}
+\right)^2
+}{
+M_{\mathrm{shift}}
+}
+\right]
+\dfrac{1}{r_s}
+}{
+1
+-
+\dfrac{
+I_M
+\left(
+\dfrac{d\theta_s}{ds}
+\right)^2
+}{
+2M_{\mathrm{shift}}
+}
+}
+\end{aligned}
+}
+}
+
+This equation contains only quantities known from the current state, evaluated
+geometry, force models, and inertial parameters. It therefore determines the
+belt acceleration required by the no-slip candidate.
+
+% --------------------------------------------------------------
+\subsubsection{Recovered No-Slip Accelerations and Candidate Torques}
+
+Once \(\dot v_{b,\mathrm{ns}}\) has been computed from
+\Eq{eq:no_slip_vb_dot}, the remaining no-slip quantities follow in direct order.
+
+The pulley angular accelerations are
+
+\begin{equation}
+\dot{\omega}_{p,\mathrm{ns}}
+=
+\frac{
+\dot v_{b,\mathrm{ns}}-\dot r_p\omega_p
+}{
+r_p
+},
+\label{eq:omega_p_dot_ns_final}
+\end{equation}
+
+and
+
+\begin{equation}
+\dot{\omega}_{s,\mathrm{ns}}
+=
+\frac{
+\dot v_{b,\mathrm{ns}}-\dot r_s\omega_s
+}{
+r_s
+}.
+\label{eq:omega_s_dot_ns_final}
+\end{equation}
+
+The primary torque candidate is
 
 \bigeq{eq:tau_p_ns}{Primary No-Slip Torque Demand}{
 \tau_{p,\mathrm{ns}}
@@ -5444,130 +5894,163 @@ to maintain no slip:
 -
 I_p
 \left(
-\frac{\dot v_{b,\mathrm{ns}}-\dot r_p\omega_p}{r_p}
+\frac{
+\dot v_{b,\mathrm{ns}}-\dot r_p\omega_p
+}{
+r_p
+}
 \right)
 }
 
-Similarly, substituting into the secondary rotational equation
-\Eq{eq:secondary_rotational_eom_belt} gives the secondary contact torque required
-to maintain no slip:
+The secondary torque candidate is
 
 \bigeq{eq:tau_s_ns}{Secondary No-Slip Torque Demand}{
 \tau_{s,\mathrm{ns}}
 =
-\tau_{\mathrm{load}}
+\frac{
+\begin{aligned}
+&\tau_{\mathrm{load}}
 +
-I_s
+\left[
+I_{s,F}
++
+I_M
+-
+\frac{
+I_M^2
 \left(
-\frac{\dot v_{b,\mathrm{ns}}-\dot r_s\omega_s}{r_s}
+\dfrac{d\theta_s}{ds}
+\right)^2
+}{
+M_{\mathrm{shift}}
+}
+\right]
+\left(
+\frac{
+\dot v_{b,\mathrm{ns}}-\dot r_s\omega_s
+}{
+r_s
+}
 \right)
+-
+I_M
+\frac{d^2\theta_s}{ds^2}\dot{s}^{2}
+\\
+&\quad
+-
+\frac{
+I_M
+\dfrac{d\theta_s}{ds}
+}{
+M_{\mathrm{shift}}
+}
+\left[
+F_{p,\mathrm{ax}}
++
+F_{c,p}
+-
+F_{c,s}
+-
+k_{s,x}(x_{s,0}+s)
+-
+\frac{d\theta_s}{ds}
+k_{s,\theta}
+\big(
+\theta_{s,0}+\theta_s(s)
+\big)
+-
+I_M
+\frac{d\theta_s}{ds}
+\frac{d^2\theta_s}{ds^2}\dot{s}^{2}
+\right]
+\end{aligned}
+}{
+1
+-
+\frac{
+I_M
+\left(
+\dfrac{d\theta_s}{ds}
+\right)^2
+}{
+2M_{\mathrm{shift}}
+}
+}
 }
 
-At this point, both torque demands are expressed in terms of the unknown no-slip
-belt acceleration \(\dot v_{b,\mathrm{ns}}\). The belt equation of motion
-\Eq{eq:belt_transport_eom} provides the remaining relation:
-\[
-m_b \dot v_{b,\mathrm{ns}}
-=
-\frac{\tau_{p,\mathrm{ns}}}{r_p}
--
-\frac{\tau_{s,\mathrm{ns}}}{r_s}.
-\]
+Finally, the no-slip shift acceleration is obtained from the axial shift
+equation:
 
-Substituting \Eq{eq:tau_p_ns} and \Eq{eq:tau_s_ns} gives
-\[
-m_b \dot v_{b,\mathrm{ns}}
-=
-\frac{1}{r_p}
-\left[
-\tau_{\mathrm{eng}}
--
-I_p
-\left(
-\frac{\dot v_{b,\mathrm{ns}}-\dot r_p\omega_p}{r_p}
-\right)
-\right]
--
-\frac{1}{r_s}
-\left[
-\tau_{\mathrm{load}}
-+
-I_s
-\left(
-\frac{\dot v_{b,\mathrm{ns}}-\dot r_s\omega_s}{r_s}
-\right)
-\right].
-\]
-
-Expanding and collecting the terms containing \(\dot v_{b,\mathrm{ns}}\) gives
-\[
-\left(
-m_b
-+
-\frac{I_p}{r_p^2}
-+
-\frac{I_s}{r_s^2}
-\right)
-\dot v_{b,\mathrm{ns}}
-=
-\frac{\tau_{\mathrm{eng}}}{r_p}
--
-\frac{\tau_{\mathrm{load}}}{r_s}
-+
-\frac{I_p \dot r_p\omega_p}{r_p^2}
-+
-\frac{I_s \dot r_s\omega_s}{r_s^2}.
-\]
-
-Solving for the no-slip belt acceleration yields
-
-\bigeq{eq:no_slip_vb_dot}{No-Slip Belt Acceleration}{
-\dot v_{b,\mathrm{ns}}
+\bigeq{eq:s_ddot_ns}{No-Slip Shift Acceleration}{
+\ddot{s}_{\mathrm{ns}}
 =
 \frac{
-\dfrac{\tau_{\mathrm{eng}}}{r_p}
+F_{p,\mathrm{ax}}
++
+F_{c,p}
 -
-\dfrac{\tau_{\mathrm{load}}}{r_s}
+F_{c,s}
+-
+k_{s,x}(x_{s,0}+s)
+-
+\dfrac{d\theta_s}{ds}
+\left[
+\dfrac{\tau_{s,\mathrm{ns}}}{2}
 +
-\dfrac{I_p \dot r_p\omega_p}{r_p^2}
-+
-\dfrac{I_s \dot r_s\omega_s}{r_s^2}
+k_{s,\theta}
+\big(
+\theta_{s,0}+\theta_s(s)
+\big)
+-
+I_M
+\left(
+\dot{\omega}_{s,\mathrm{ns}}
+-
+\dfrac{d^2\theta_s}{ds^2}\dot{s}^2
+\right)
+\right]
 }{
-m_b
-+
-\dfrac{I_p}{r_p^2}
-+
-\dfrac{I_s}{r_s^2}
+M_{\mathrm{shift}}
 }
 }
 
-Substituting \Eq{eq:no_slip_vb_dot} back into \Eq{eq:tau_p_ns} and
-\Eq{eq:tau_s_ns} determines the corresponding no-slip torque demands at the
-primary and secondary contacts.
+Together, these equations explicitly determine the no-slip candidate:
+\[
+\dot v_{b,\mathrm{ns}},
+\qquad
+\dot{\omega}_{p,\mathrm{ns}},
+\qquad
+\dot{\omega}_{s,\mathrm{ns}},
+\qquad
+\tau_{p,\mathrm{ns}},
+\qquad
+\tau_{s,\mathrm{ns}},
+\qquad
+\ddot{s}_{\mathrm{ns}}.
+\]
 
-\Eq{eq:no_slip_vb_dot}, \Eq{eq:tau_p_ns}, and
-\Eq{eq:tau_s_ns} therefore define the no-slip candidate torque transfer. These
-are the torques required to maintain adhered contact at both pulleys. They are
-not yet guaranteed to be physically admissible; the next section compares these
-demands against the available belt--pulley traction limits.
+If both belt--pulley contacts were guaranteed to remain stuck, these equations
+would close the CVT dynamics. In that idealized case, the belt would act as a
+kinematic constraint between the two pulleys while the shift coordinate changes
+the effective ratio.
 
+For a frictional belt drive, however, the required no-slip torques must still be
+checked against the available traction capacity.
+
+% --------------------------------------------------------------
 \subsection{Transition to Traction Limits}
 \label{sec:no-slip-transition}
 
-At this point, the no-slip candidate is fully determined. For any current state,
-\Eq{eq:no_slip_vb_dot} gives the belt acceleration required by adhered motion,
-and \Eq{eq:tau_p_ns}--\Eq{eq:tau_s_ns} give the corresponding primary and
-secondary torque demands.
+The no-slip candidate answers one question: what accelerations and contact
+torques are required if the belt remains stuck to both pulleys? It does not yet
+answer whether the contacts can physically support those torques.
 
-These equations answer what torque transfer would be required to keep the belt
-stuck to both pulleys. They do not yet answer whether the contacts can actually
-support those torques. That question depends on the available frictional traction
-generated by the axial clamping forces derived in \Sec{sec:axial}.
-
-The next section derives the traction bounds for each pulley contact. The
-no-slip demands \(\tau_{p,\mathrm{ns}}\) and \(\tau_{s,\mathrm{ns}}\) can then
-be compared against those bounds to decide whether the no-slip candidate is
-admissible or whether the transmission must enter a slip branch.
+The next section derives the tangential traction limits for the primary and
+secondary belt--pulley contacts. The candidate torques
+\(\tau_{p,\mathrm{ns}}\) and \(\tau_{s,\mathrm{ns}}\) can then be compared with
+those limits. If both contact torques are admissible, the no-slip candidate is
+used. If either required torque exceeds the available traction capacity, the
+corresponding sticking constraint is replaced by a slip relation.
 
 \section{Traction Limits and Slip Conditions}
 \label{sec:traction-limits}
@@ -6650,7 +7133,6 @@ In that situation, the torque transfer is no longer determined by the no-slip
 demand. Instead, the slipping contact must be governed by kinetic traction and
 the belt equation of motion. The next section develops the contact-state
 selection rules and the corresponding slip-branch dynamics.
-
 
 
 \section{Slip Branch Dynamics and Contact-State Selection}
