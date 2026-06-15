@@ -1370,23 +1370,46 @@ The model represents short-term operational behavior.
 \subsection{Contact and Friction Modeling}
 
 \begin{assumptionblock}{assump:ideal_friction}{Idealized Belt--Pulley Friction Law}
-Belt traction is modeled using a simplified friction law
-(e.g., Coulomb friction with a capstan formulation and
-an explicit stick--slip transition rule).
-Microscopic contact mechanics, rubber hysteresis,
-lubrication films, and detailed Stribeck effects
-are not explicitly modeled.
+Belt traction is modeled using a simplified dry-friction law with an
+explicit stick--slip transition rule.
+The model distinguishes between gross adhered contact and gross slipping
+contact at each pulley.
+Microscopic contact mechanics, rubber hysteresis, local creep,
+partial slip within the contact patch, lubrication effects,
+and detailed Stribeck behavior are not explicitly modeled.
 \end{assumptionblock}
 
 \begin{assumptionblock}{assump:constant_friction}{Constant Effective Friction Coefficient}
 The belt--pulley coefficient of friction is treated as constant.
-It does not evolve with temperature, wear, or surface conditioning.
+It does not evolve with temperature, wear, belt conditioning,
+surface contamination, normal pressure, or slip speed.
+Separate static and kinetic friction coefficients may be used,
+but each is treated as constant during a given simulation.
 \end{assumptionblock}
 
-\begin{assumptionblock}{assump:uniform_contact}{Uniform Contact Distribution}
+\begin{assumptionblock}{assump:averaged_contact}{Averaged Contact Distribution}
 Contact pressure and traction over the pulley wrap angle
 are treated as effectively uniform or averaged.
 Localized edge loading and non-uniform stress distributions are neglected.
+\end{assumptionblock}
+
+\begin{assumptionblock}{assump:gross_tangential_traction}{Gross Tangential Traction Approximation}
+Belt--pulley traction is resolved only in the gross tangential direction
+around each pulley wrap.
+Radial belt migration through the sheave groove during shift is not modeled
+as a separate friction demand.
+Local radial sliding, local creep, and contact redistribution associated
+with radial belt motion are not resolved.
+\end{assumptionblock}
+
+\begin{assumptionblock}{assump:secondary_face_torque_split}{Equal Secondary Sheave-Face Torque Partition}
+The torque transmitted from the belt to the secondary pulley is treated as
+equally shared between the fixed and movable secondary sheave faces.
+Face-level torque redistribution between the fixed and movable sheaves is
+not resolved.
+Changes in torque share due to helix-induced relative rotation, local belt
+deformation, contact pressure redistribution, and face-level microslip are
+neglected.
 \end{assumptionblock}
 
 % ======================================================
@@ -1403,6 +1426,12 @@ Longitudinal elasticity, transient stretch, permanent creep, and
 progressive elongation are not modeled.
 Effective pulley radii are determined solely from geometry
 and belt-length constraints.
+\end{assumptionblock}
+
+\begin{assumptionblock}{assump:single_belt_speed}{Single Belt Transport Speed}
+The belt is represented by a single lumped transport speed.
+Internal belt shear, belt span vibration, local belt stretch,
+and separate belt speeds on the two sheave faces are not resolved.
 \end{assumptionblock}
 
 \begin{assumptionblock}{assump:uniform_contact_radius}{Uniform Contact Radius Around Wrap}
@@ -1437,15 +1466,13 @@ Only friction directly relevant to belt traction
 and CVT torque transfer is modeled.
 \end{assumptionblock}
 
-\begin{assumptionblock}{assump:ideal_cvt_power}{Ideal CVT Power Transmission}
-Power transmission through the CVT is modeled as ideal
-(i.e., no internal dissipation).
-Although belt slip is explicitly modeled and affects
-torque capacity and shift dynamics,
-the associated power loss is neglected.
+\begin{assumptionblock}{assump:no_explicit_loss_model}{No Explicit CVT Loss or Thermal Model}
+The model resolves torque transfer, traction admissibility, and slip state.
+Heat generation, temperature rise, wear, and efficiency loss are not solved.
+Power dissipated during slip is not propagated into a thermal,
+wear, or degradation model.
 \end{assumptionblock}
 
-% ======================================================
 \subsection{Environmental and Operational Scope}
 
 \begin{assumptionblock}{assump:gravity_internal}{Negligible Gravitational Influence on CVT Internals}
