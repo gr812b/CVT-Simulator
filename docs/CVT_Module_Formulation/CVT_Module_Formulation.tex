@@ -3711,241 +3711,313 @@ m_f \omega_p^2 \big(r_{f,0} + r_f(s)\big)\frac{dr_f}{ds}
 k_p (x_{p,0}+s).
 }
 
-% ==============================================================
-% ==============================================================
+% --------------------------------------------------------------
 \subsection{Secondary Axial Force Model}\label{sec:secondary-axial}
 
-The secondary pulley is \emph{torque-reactive}: its axial clamping force
-is generated in response to torque transmitted through the CVT.
-Unlike the primary, which produces clamping based on rotational speed,
-the secondary produces clamping primarily when torque flows through it.
+The secondary pulley is \emph{torque-reactive}: its axial force is produced when torque is carried through the secondary helix mechanism. The primary pulley is mainly speed-sensitive, because its flyweight force grows with rotational speed. The secondary pulley is different. Its helix responds to torque that tries to rotate the movable sheave relative to the fixed sheave.
 
-The mechanism consists of a helical ramp between the two sheaves and a
-single spring located between them. This spring serves two roles:
+The secondary assembly consists of a fixed sheave, a movable sheave, a helical slot between them, and a spring. The fixed sheave rotates with the secondary shaft. The movable sheave can slide axially, but it is not free to rotate independently: it is captured by the helical slot. Therefore, if the movable sheave shifts axially, it must also rotate relative to the fixed sheave according to the helix geometry introduced in \Eq{eq:secondary_theta_profile}.
+
+The same secondary spring contributes in two ways:
 \begin{itemize}
-    \item It acts axially in compression as the sheaves separate.
-    \item It resists relative rotation torsionally as the helix turns.
+    \item It is compressed axially as the sheaves separate.
+    \item It is twisted torsionally as the helix produces relative rotation between the sheaves.
 \end{itemize}
 
-Thus, axial motion and rotational motion of the helix both load the same spring.
+Thus, the secondary axial force comes from two coupled sources: direct axial spring compression, and torque reacted through a screw-like helix.
 
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.5\linewidth]{./illustrations/pulleyForces/secondary_3d_model.png}
-\caption{Secondary CVT assembly showing the helix mechanism and spring.
-Torque $\tau_s$ transmitted through the belt produces tangential force at
-the helix ramps, which is redirected into axial clamping force.}
+\caption{Secondary CVT assembly showing the helix mechanism and spring. The helix is modeled as a captured slot, so axial displacement of the movable sheave is coupled to relative rotation between the movable and fixed sheaves.}
 \label{fig:secondary_cvt_3d}
 \end{figure}
 
 % --------------------------------------------------------------
-% --------------------------------------------------------------
-\paragraph{Physical Mechanism (Screw Analogy)}
+\paragraph{Physical Mechanism: Why Torque Produces Axial Force}
 
-The secondary helix behaves mechanically like a screw.
+The helix can be understood using a screw analogy. Spinning a screw freely in space does not create axial force. Spinning a screw into a block that is also free to rotate does not create much axial force either, because the block can simply rotate with the screw. Axial force appears when relative rotation is resisted.
 
-If you try to spin a screw in free space, nothing happens axially.
-If you spin a screw into a block that is not restrained, the block
-simply rotates with the screw—again producing no axial force.
-Axial force only develops when there is resistance to rotation
-on one side while torque is applied on the other.
+The secondary helix works in the same way. Torque applied to the movable sheave tries to rotate it relative to the fixed sheave. Because the movable sheave is captured in a helical slot, that relative rotation cannot occur independently of axial motion. The helix must react the torque, and because the helix is inclined, that reaction has an axial component.
 
-In other words, a screw converts \emph{reacted torque} into axial force.
-
-The secondary helix operates on the same principle.
-The belt applies a driving torque to the secondary pulley.
-If the driven shaft were free, the entire assembly would rotate
-without developing tangential reaction force at the helix.
-However, when the driven load resists rotation,
-torque is transmitted through the helix ramps.
-
-Those ramps are inclined surfaces—just like screw threads.
-As torque attempts to rotate one helix face relative to the other,
-contact forces develop along the inclined surfaces.
-Because the surfaces are angled, this tangential reaction force
-has an axial component.
-
-The result is axial clamping force.
-
-The key distinction from a conventional screw is direction:
-in a normal screw, torque pulls two components together.
-In the CVT helix, the orientation of the ramp is such that
-torque causes the movable sheave to be pushed outward,
-increasing belt clamping.
-
-Thus, the secondary does not clamp because it spins.
-It clamps because torque is being transmitted and resisted.
+This is the key physical idea: the secondary does not produce axial force simply because it is spinning. It develops axial force because torque is applied to the movable sheave and reacted through a constrained helical path.
 
 % --------------------------------------------------------------
-\paragraph{Definition of Transmitted Torque}
+\paragraph{Torque Applied to the Movable Sheave}
 
-Let $\tau_s$ denote the torque transmitted through the secondary shaft.
-This is the torque carried from the belt, through the helix mechanism,
-and into the driven load.
+Let $\tau_{b,M}$ denote the signed torque applied by the belt to the movable secondary sheave. This is a local torque in the movable-sheave free body. It is the torque that tends to rotate the movable sheave relative to the fixed sheave, and therefore the torque that can load the helix.
 
-For the present derivation, $\tau_s$ is treated as a known input.
+This is distinct from a torque that simply rotates the entire secondary assembly. If the fixed and movable sheaves rotated together with no relative tendency, the helix would not be loaded. The helix is loaded only by torque that must be reacted between the movable sheave and the fixed sheave.
+
+The relationship between $\tau_{b,M}$ and the total secondary torque is handled by the torque-transfer model. Here, $\tau_{b,M}$ is treated as the local belt-applied torque entering the secondary helix mechanism.
+
+A positive value of $\tau_{b,M}$ is defined as torque that tends to produce positive relative helix rotation. Because $\tau_{b,M}$ is signed, reverse loading is handled by the same equations with $\tau_{b,M}<0$.
 
 % --------------------------------------------------------------
+\paragraph{Helix Velocity Constraint}
+
+The helix geometry has already been parameterized by the mapping
+
+\begin{equation}
+\theta_s=\theta_s(s),
+\label{eq:secondary_helix_constraint_recalled}
+\end{equation}
+
+where $\theta_s$ is the relative rotation between the movable and fixed sheaves. For the dynamics, the most direct way to use this constraint is through angular velocity.
+
+Let $\omega_F$ be the angular velocity of the fixed secondary sheave and shaft, and let $\omega_M$ be the angular velocity of the movable secondary sheave. With the sign convention used here, positive helix rotation means that the movable sheave lags the fixed sheave, so
+
+\begin{equation}
+\dot{\theta}_s
+=
+\omega_F-\omega_M .
+\label{eq:secondary_relative_speed}
+\end{equation}
+
+Since $\theta_s=\theta_s(s)$, the same relative angular speed is also
+
+\begin{equation}
+\dot{\theta}_s
+=
+\frac{d\theta_s}{ds}\dot{s}.
+\label{eq:secondary_theta_dot}
+\end{equation}
+
+Combining \Eq{eq:secondary_relative_speed} and \Eq{eq:secondary_theta_dot} gives the movable-sheave angular velocity:
+
+\begin{equation}
+\omega_M
+=
+\omega_F
+-
+\frac{d\theta_s}{ds}\dot{s}.
+\label{eq:secondary_movable_omega}
+\end{equation}
+
+This equation is the kinematic meaning of the captured helix. If the secondary shifts, the movable sheave cannot simply translate; it must also change angular speed relative to the fixed sheave.
+
+Differentiating \Eq{eq:secondary_movable_omega} gives
+
+\begin{equation}
+\dot{\omega}_M
+=
+\dot{\omega}_F
+-
+\frac{d^2\theta_s}{ds^2}\dot{s}^2
+-
+\frac{d\theta_s}{ds}\ddot{s}.
+\label{eq:secondary_movable_alpha}
+\end{equation}
+
+This angular acceleration is needed because some of the torque applied to the movable sheave is used to rotationally accelerate that sheave rather than being reacted through the helix as axial force.
+
 % --------------------------------------------------------------
 \paragraph{Torsional Spring Torque}
 
-As the helix rotates relative to the opposing sheave,
-the spring is twisted torsionally.
+As the helix rotates the sheaves relative to each other, the secondary spring is twisted. Let $k_{s,\theta}$ denote the torsional stiffness of the spring and let $\theta_{s,0}$ denote its preload deflection.
 
-From \theoryRef{th:hooke_torsional},
-
-\[
-\tau = k \Delta \theta.
-\]
-
-Let $k_{s,\theta}$ denote torsional stiffness and $\theta_{s,0}$ preload.
+The torsional spring torque applied to the movable sheave is written as
 
 \begin{equation}
 \tau_{s,\mathrm{spring}}(s)
 =
-k_{s,\theta}\big(\theta_{s,0}+\theta_s(s)\big).
+k_{s,\theta}
+\big(
+\theta_{s,0}+\theta_s(s)
+\big).
 \label{eq:secondary_torsion}
 \end{equation}
 
-This torsional component of the same spring contributes
-to helix loading even when no torque is transmitted
-($\tau_s = 0$), providing baseline clamping.
+This is a signed torque in the same helix coordinate as $\tau_{b,M}$. The sign of the preload and the definition of positive $\theta_s$ determine whether the spring torque assists or opposes the belt-applied torque at a given instant.
 
 % --------------------------------------------------------------
-\paragraph{Total Torque Applied to Helix}
+\paragraph{Rotational Equation of Motion of the Movable Sheave}
+
+Let $I_M$ be the rotational inertia of the movable secondary sheave about the secondary shaft axis. The torques acting on the movable sheave are:
+\begin{itemize}
+    \item the belt-applied torque, $\tau_{b,M}$,
+    \item the torsional spring torque, $\tau_{s,\mathrm{spring}}$,
+    \item the reaction torque applied by the helix.
+\end{itemize}
+
+Let $\tau_{\mathrm{helix}\rightarrow M}$ denote the torque applied by the helix to the movable sheave. Newton's second law in rotation gives
 
 \begin{equation}
-\tau_{s,\mathrm{total}}
+\tau_{b,M}
++
+\tau_{s,\mathrm{spring}}
++
+\tau_{\mathrm{helix}\rightarrow M}
 =
-\tau_s + \tau_{s,\mathrm{spring}}(s).
-\label{eq:secondary_total_torque}
+I_M\dot{\omega}_M .
+\label{eq:secondary_rotational_n2l}
 \end{equation}
 
-Both contributions act in the same rotational direction at the helix.
-The transmitted torque loads the helix through belt force,
-and the torsional spring resists relative rotation.
-Both therefore generate axial clamping through the same geometry.
+The helix reaction is what makes the screw analogy produce axial force. If there were no helix reaction, the applied torque would simply accelerate the movable sheave. The axial force appears because the helix must react whatever torque is not used to rotationally accelerate the movable sheave.
+
+The equal and opposite torque applied by the movable sheave into the helix is
+
+\begin{equation}
+\tau_{M\rightarrow\mathrm{helix}}
+=
+-\tau_{\mathrm{helix}\rightarrow M}.
+\label{eq:secondary_helix_reaction_def}
+\end{equation}
+
+Solving \Eq{eq:secondary_rotational_n2l} for this reacted torque gives
+
+\begin{equation}
+\tau_{M\rightarrow\mathrm{helix}}
+=
+\tau_{b,M}
++
+\tau_{s,\mathrm{spring}}
+-
+I_M\dot{\omega}_M .
+\label{eq:secondary_helix_reaction_torque}
+\end{equation}
+
+Substituting \Eq{eq:secondary_torsion} and \Eq{eq:secondary_movable_alpha},
+
+\begin{equation}
+\tau_{M\rightarrow\mathrm{helix}}
+=
+\tau_{b,M}
++
+k_{s,\theta}
+\big(
+\theta_{s,0}+\theta_s(s)
+\big)
+-
+I_M
+\left[
+\dot{\omega}_F
+-
+\frac{d^2\theta_s}{ds^2}\dot{s}^2
+-
+\frac{d\theta_s}{ds}\ddot{s}
+\right].
+\label{eq:secondary_helix_reaction_torque_expanded}
+\end{equation}
+
+This equation has a direct interpretation: the helix reacts the belt-applied torque and the torsional spring torque, except for the portion needed to angularly accelerate the movable sheave.
 
 % --------------------------------------------------------------
 \paragraph{Torque-to-Axial Conversion Through the Helix}
 
-From \theoryRef{th:torque_definition},
+The reacted helix torque is converted into axial force by the helix geometry. From the mapping $\theta_s=\theta_s(s)$, a small axial displacement $\delta s$ corresponds to a relative rotation
 
 \[
-\tau = F_t r_h
-\quad\Rightarrow\quad
-F_t = \frac{\tau_{s,\mathrm{total}}}{r_h}.
+\delta\theta_s
+=
+\frac{d\theta_s}{ds}\delta s.
 \]
 
-The tangential force $F_t$ acts along two symmetric helix ramp faces.
-Each ramp carries half of the total tangential load, introducing
-the factor of $1/2$ in the axial projection below.
-
-From helix geometry (see \Fig{fig:secondary_helix_torque_to_axial}),
+Therefore, the axial force associated with the reacted torque is
 
 \begin{equation}
 F_{s,\mathrm{helix}}
 =
-\frac{F_t}{2\tan\alpha_s(s)}.
-\label{eq:secondary_projection}
-\end{equation}
-
-Substituting $F_t$ and using
-\[
-\tan\alpha_s(s)
-=
-\frac{1}{r_h\,\dfrac{d\theta_s}{ds}}
-\]
-gives
-
-\begin{equation}
-F_{s,\mathrm{helix}}(s,\tau_s)
-=
-\frac{\tau_{s,\mathrm{total}}}{2}
+\tau_{M\rightarrow\mathrm{helix}}
 \frac{d\theta_s}{ds}.
-\label{eq:secondary_helix_force}
+\label{eq:secondary_helix_force_general}
 \end{equation}
 
-Notably, the helix radius $r_h$ cancels: torque is converted into
-axial force according to the geometric rotation-per-travel
-relationship $d\theta_s/ds$, consistent with screw mechanics.
-
-% TODO: Remark on less friction at bigger radius if being considered
+This is the screw relation written in the shift coordinate. A larger value of $d\theta_s/ds$ means that a small axial movement requires more relative rotation, so a given reacted torque produces a larger axial force.
 
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.7\linewidth]{./illustrations/pulleyForces/secondary_helix_torque_to_axial.png}
-\caption{Helix free-body concept. Tangential force from shaft torque is
-redirected into axial force along the inclined ramps. Two symmetric
-ramp faces share the tangential load, producing the $1/2$ factor.}
+\caption{Helix free-body concept. Torque applied to the movable sheave is reacted through the helix. Because the helix is inclined, the reacted torque produces an axial force proportional to $d\theta_s/ds$.}
 \label{fig:secondary_helix_torque_to_axial}
 \end{figure}
+
+Substituting \Eq{eq:secondary_helix_reaction_torque_expanded} into \Eq{eq:secondary_helix_force_general} gives
+
+\begin{equation}
+F_{s,\mathrm{helix}}
+=
+\frac{d\theta_s}{ds}
+\left[
+\tau_{b,M}
++
+k_{s,\theta}
+\big(
+\theta_{s,0}+\theta_s(s)
+\big)
+-
+I_M
+\left(
+\dot{\omega}_F
+-
+\frac{d^2\theta_s}{ds^2}\dot{s}^2
+-
+\frac{d\theta_s}{ds}\ddot{s}
+\right)
+\right].
+\label{eq:secondary_helix_force_expanded}
+\end{equation}
+
+The sign of this force follows the signed torque balance. If the belt-applied torque and spring torque drive the helix in the positive direction, the helix force is positive. If reverse loading overcomes the spring contribution, the same equation naturally gives force in the opposite direction.
 
 % --------------------------------------------------------------
 \paragraph{Secondary Compression Spring}
 
-The same spring also acts axially between the sheaves.
-At $s=0$, the spring is pre-compressed by an amount $x_{s,0}$,
-producing a baseline separating force that assists upshift.
-
-As the sheaves move apart (increasing $s$),
- its compression increases further.
+The secondary spring also acts directly in compression between the sheaves. At $s=0$, it is pre-compressed by an amount $x_{s,0}$. As the sheaves separate with increasing $s$, its compression increases.
 
 From \theoryRef{th:hooke_linear},
 
 \[
-F = k \Delta x.
+F=k\Delta x.
 \]
 
-Let $k_{s,x}$ denote axial stiffness.  
-Because increasing $s$ increases compression,
-the effective compression is
+With axial stiffness $k_{s,x}$ and compression
 
 \[
-\Delta x = x_{s,0} + s.
+\Delta x=x_{s,0}+s,
 \]
 
-Thus,
+the direct axial spring force is
 
 \begin{equation}
 F_{s,\mathrm{comp}}(s)
 =
-k_{s,x}(x_{s,0} + s).
+k_{s,x}(x_{s,0}+s).
 \label{eq:secondary_comp_spring}
 \end{equation}
-
-This axial spring force acts in the same direction as the helix force,
-providing additional clamping as the sheaves separate.
 
 % --------------------------------------------------------------
 \paragraph{Net Secondary Axial Force}
 
-The total secondary axial force is the sum of:
-
-\begin{itemize}
-    \item Helix-generated torque-reactive clamping,
-    \item Torsional spring contribution (through the helix),
-    \item Direct axial compression spring force.
-\end{itemize}
+The total secondary axial force used in the shift equation is the sum of the direct compression spring force and the helix-generated force:
 
 \bigeq{eq:secondary_axial}{Secondary Axial Force}{
-F_{s,\mathrm{ax}}(s,\tau_s)
+F_{s,\mathrm{ax}}
 =
-\underbrace{
-\frac{
-\tau_s
-+
-k_{s,\theta}\big(\theta_{s,0}+\theta_s(s)\big)
-}{2}
-\frac{d\theta_s}{ds}
-}_{\text{torque-reactive helix (including torsional spring)}}
-+
-\underbrace{
 k_{s,x}(x_{s,0}+s)
-}_{\text{axial spring}}.
++
+\frac{d\theta_s}{ds}
+\left[
+\tau_{b,M}
++
+k_{s,\theta}
+\big(
+\theta_{s,0}+\theta_s(s)
+\big)
+-
+I_M
+\left(
+\dot{\omega}_F
+-
+\frac{d^2\theta_s}{ds^2}\dot{s}^2
+-
+\frac{d\theta_s}{ds}\ddot{s}
+\right)
+\right].
 }
 
-% ==============================================================
+The first term is direct axial spring compression. The bracketed term is the torque reacted through the helix: belt-applied torque plus torsional spring torque, minus the torque required to rotationally accelerate the movable sheave. Multiplication by $d\theta_s/ds$ converts that reacted torque into axial force.
+
 \subsection{Belt Centrifugal Force on the Wrap}
 \label{sec:belt-centrifugal}
 
