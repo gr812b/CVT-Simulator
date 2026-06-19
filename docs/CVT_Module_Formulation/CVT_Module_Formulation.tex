@@ -2059,198 +2059,215 @@ current values of $\omega_p$, $\omega_s$, $s$, $\dot{s}$, and $v_b$.
 \chapter{Derivation}
 \section{Pulley Geometry}\label{sec:geometry}
 
-This section establishes the geometric relationships that govern how axial
-shift modifies the effective pulley radii and therefore the transmission ratio.
+The conceptual overview introduced the CVT as two variable-radius pulleys
+connected by a single belt. The primary and secondary pulleys do not choose
+their radii independently: when the belt moves outward on one pulley, it must
+move inward on the other. The transmission ratio is therefore not a separate
+mechanism, but a consequence of where the belt sits on the two pulleys.
 
-The analysis presented here is purely kinematic. No force balances or
-dynamic effects are considered. The goal is to describe how pulley
-geometry alone determines belt position and ratio evolution.
+This section turns that idea into the geometric and kinematic relationships
+needed later in the model. The analysis uses the axial shift position \(s\) 
+and the CVT axial direction defined in \Cref{sec:cvt_axial_direction}. 
+At this point, the question is not why the CVT shifts. That requires the
+mechanical actuation, contact, and drivetrain dynamics developed later. The
+question here is more basic:
 
-The objective is to derive explicit expressions for:
-
-\begin{itemize}
-    \item Primary outer radius as a function of shift,
-    \item Secondary outer radius as a function of shift,
-    \item Center-to-center distance,
-    \item CVT ratio and its rate of change.
-\end{itemize}
-
-\paragraph{Radius Definitions Used in This Section}
-Because the belt has finite radial height, two geometric radii are used here:
-the \emph{outer radius} (belt outer surface/contact geometry) and the
-\emph{inner radius} (belt inner surface). Let $h_b$ denote the belt height
-(belt radial thickness). Then,
 \[
-r_{\text{inner}} = r_{\text{outer}} - h_b,
+\text{if } s,\ \dot{s},\ \text{and } \ddot{s} \text{ are known, what are the pulley radii,}
 \]
-The effective torque radius used in torque and ratio relations is introduced
-later in \Sec{sec:effective-radius-placeholder}.
+\[
+\text{and how are those radii moving?}
+\]
+
+The natural place to start is the shape of the pulleys themselves. A belt sitting
+in a V-groove has a direct connection between axial motion and radial position.
+Since the same belt connects both pulleys, the two pulley radii must also be
+related to each other. The goal of this section is to use those geometric facts
+to obtain the radius and ratio relationships needed before any forces are
+introduced.
+
+Once the position-level geometry is clear, the same relationships can be viewed
+as time-varying quantities. If the shift coordinate moves, then the pulley radii
+move with it. The remaining kinematic task is therefore to differentiate the
+geometric relationships so that radius rates, radius accelerations, and ratio
+rate can be expressed consistently from the same foundation.
+
 
 % ==============================================================
-\subsection{Conceptual Overview of Variable Geometry}
-
-As introduced in \Sec{sec:cvt_overview}, each pulley consists of two opposing
-conical sheaves. One sheave is fixed axially, while the other translates along
-the shaft.
-
-The key controllable motion in the system is this \textit{axial separation}
-between the sheaves. When the movable sheave translates toward the fixed
-sheave, the gap narrows and the belt is forced outward along the conical faces.
-When the sheaves separate, the belt settles deeper between them.
-
-This axial motion does not directly change the pulley radius. Instead, the
-effective radius arises geometrically from where the belt sits within the
-sheave gap. In other words, axial displacement determines the belt's radial
-position, and therefore the effective pulley radius. The precise relationship
-between these quantities will be derived in the following subsection.
-
-Because the belt length remains constrained, the effective radii of the
-primary and secondary pulleys cannot vary independently. An increase in the
-primary effective radius must therefore be accompanied by a corresponding
-decrease in the secondary effective radius. This geometric coupling is
-fundamental to CVT operation and forms the basis of the ratio model derived
-below.
-
-\begin{figure}[H]
-\centering
-\includegraphics[width=0.95\textwidth]{illustrations/geometry/both_cvts_min_max_shift_belt.png}
-\caption{
-Conceptual illustration of variable pulley geometry.
-Changes in axial separation alter effective radii.
-Because belt length is constrained, an increase in primary effective
-radius corresponds to a decrease in secondary effective radius.
-}
-\label{fig:variable_geometry}
-\end{figure}
-
-% NOTE:
-% - Clarify cone geometry assumptions
-% - Clarify belt thickness uniformity
-% - Clarify that geometry is idealized
-
-% ==============================================================
-% --------------------------------------------------------------
-% --------------------------------------------------------------
-\subsection{Definition of Axial Shift Variable}
+\subsection{Shift Coordinate, Deadzone, and Primary Closure}
 \label{sec:shift_definition}
 
-Let $s$ denote the axial displacement of the movable primary sheave,
-defined according to the sign convention in \Sec{sec:cvt_axial_direction}.
+The shift coordinate \(s\) was defined in \Cref{sec:cvt_axial_direction} as the
+axial displacement of the movable primary sheave. Since the primary is the
+driving pulley on the engine side of the CVT, this primary sheave motion is
+used as the reference motion for the ratio change.
 
-At $s = 0$, the primary pulley is in its fully open configuration.
-The sheaves are at their maximum axial separation, and the belt
-rests at its minimum effective radius.
+The reference position is the fully open primary pulley,
 
-The shift coordinate $s$ measures the amount of closure relative
-to this initial configuration. Increasing $s$ corresponds to the
-movable sheave translating toward the fixed sheave, reducing the
-axial gap.
-
-% --------------------------------------------------------------
-\paragraph{Deadzone and Travel Limits}
-
-In practice, the initial sheave gap at $s = 0$ is larger than the
-belt width. As a result, small axial motion does not immediately
-alter the belt’s contact position on the conical faces.
-
-The interval
 \[
-0 \le s < s_{\mathrm{dz}}
+s = 0.
 \]
-defines this \emph{deadzone}. Within this region, the movable
-sheave translates axially but does not yet sufficiently compress
-the belt to change its effective contact radius. The belt remains
-at the same radial position despite the reduction in gap.
 
-Once the sheave gap becomes small enough to fully engage the belt,
-further axial motion alters the belt position. For
+In this position, the primary sheaves are farthest apart and the belt sits at
+its smallest primary radius. As \(s\) increases, the movable primary sheave
+moves toward the fixed sheave. This closes the primary pulley and moves the CVT
+toward upshift.
+
+Two other positions complete the useful range of the coordinate. The first is
+the deadzone position \(s_{\mathrm{dz}}\). In the fully open configuration, the
+primary gap may be wider than the belt, so the movable sheave can travel a
+short distance before it actually begins to squeeze the belt. During this open
+region,
+
 \[
-s_{\mathrm{dz}} \le s \le s_{\max},
+0 \le s < s_{\mathrm{dz}},
 \]
-additional closure forces the belt outward along the conical faces,
-producing a proportional change in primary effective radius.
 
-The shift coordinate is therefore bounded as
+the primary sheave is moving, but the belt has not yet been forced outward. The
+primary radius therefore remains unchanged.
+
+Once the deadzone is taken up,
+
+\[
+s_{\mathrm{dz}} \le s,
+\]
+
+the belt is seated against the sheave faces. Further closure of the primary
+V-groove now forces the belt outward to a larger radius.
+
+The second position is the maximum shift position \(s_{\max}\). This is the
+largest possible primary closure. Physically, it corresponds to the end of the
+movable sheave travel: the pulley has closed as far as the hardware allows, so
+the two sheave components cannot move farther together. The modeled shift range
+is therefore
+
 \[
 0 \le s \le s_{\max}.
 \]
 
-The upper limit $s_{\max}$ corresponds to the physical travel limit
-of the sheave assembly. At this position, the sheaves are fully closed
-and mechanically contact one another, forming a hard geometric boundary
-beyond which further axial motion is not possible.
+% --------------------------------------------------------------
 
-
-% ==============================================================
 \subsection{Primary Outer Radius as a Function of Shift}
 \label{sec:rp}
 
-When the primary sheaves close beyond the deadzone, the belt is forced
-outward along the conical faces. The relationship between axial closure
-and radial expansion follows directly from the cone geometry.
+Since the shift coordinate \(s\) directly measures closure of the primary
+pulley, the first geometric relationship to establish is between primary
+closure and radial motion of the belt. Before the deadzone is taken up, the
+movable sheave can move without changing where the belt sits. Once the belt is
+seated between the sheave faces, further closure forces it outward.
 
-As shown in \cref{fig:primary_geometry}, the sheave face forms a straight
-line in cross-section. The cone half-angle $\beta$ is defined as the angle
-between the sheave face and the \emph{radial direction} (As defined in \Sec{sec:radial_direction}). 
+This behavior follows from the belt's fixed cross-section. As assumed in
+\Cref{assump:fixed-belt-cross-section}, the belt has a fixed axial width and a
+fixed radial height. Its fixed width is what prevents it from remaining at the
+same radius as the sheaves close: once the gap becomes smaller than the belt,
+the belt must move outward along the conical faces.
 
-For a small axial displacement $\Delta s$
-beyond the deadzone, the total closure is shared symmetrically between
-the two opposing sheaves, so each sheave contributes $\Delta s/2$.
-
-From the right triangle formed by the sheave face,
-\[
-\tan\beta = \frac{\Delta s/2}{\Delta r},
-\]
-which gives
-\begin{equation}
-\Delta r = \frac{\Delta s}{2\tan\beta}.
-\label{eq:cone_geometry}
-\end{equation}
-
-Thus, the cone angle determines how axial motion is converted into
-radial growth: smaller $\beta$ produces greater radial change for the
-same axial displacement.
-
-Taking the infinitesimal limit of \cref{eq:cone_geometry} yields the
-local geometric relationship between axial shift and effective radius,
-\begin{equation}
-\frac{dr}{ds} = \frac{1}{2\tan\beta}.
-\label{eq:cone_geometry_diff}
-\end{equation}
-
-Because the sheave face is straight, this derivative is constant,
-meaning that radial position varies linearly with axial displacement.
+Consider the instant at which the belt has just become seated, at
+\(s=s_{\mathrm{dz}}\). Let \(b_{\mathrm{in}}\) denote the fixed width of the
+belt's inner base. At this instant, the sheave gap at the inner base is also
+\(b_{\mathrm{in}}\). Now let the movable primary sheave close by a further
+amount \(\Delta s\). At the original radial position, the gap is then reduced
+to \(b_{\mathrm{in}}-\Delta s\). The belt cannot remain there with the same
+width, so it moves outward by \(\Delta r\), as shown in
+\Cref{fig:primary_geometry}.
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=0.7\linewidth]{./illustrations/geometry/primary_geometry.png}
+\includegraphics[width=0.7\linewidth]{old_figures/axial_to_radial.png}
 \caption{
-Axial–radial relationship for opposing conical sheaves.
-The angle $\beta$ is defined between the sheave face and the radial direction.
+Primary V-groove geometry after the belt has become seated. A further closure
+\(\Delta s\) reduces the gap at the original belt position from
+\(b_{\mathrm{in}}\) to \(b_{\mathrm{in}}-\Delta s\). As the belt moves outward
+by \(\Delta r\), the angled sheave faces provide an additional axial space
+\(x\) on each side.
 }
 \label{fig:primary_geometry}
 \end{figure}
 
-% --------------------------------------------------------------
-\paragraph{Piecewise Radius Model}
+At the belt's new radial position, the two angled sheave faces provide an
+additional space \(x\) on either side. The belt still has the same width
+\(b_{\mathrm{in}}\), so the available gap must satisfy
 
-Let $r_{p,\text{outer},\min}$ denote the minimum primary outer radius,
-corresponding to the fully open configuration ($s=0$).
+\[
+b_{\mathrm{in}}-\Delta s+2x=b_{\mathrm{in}}.
+\]
 
-Within the deadzone, axial motion does not alter belt position.
-Once $s \ge s_{\mathrm{dz}}$, only the displacement \emph{beyond the
-deadzone} contributes to radial growth.
+Thus,
+
+\[
+\Delta s=2x.
+\]
+
+The small triangle beside either sheave face relates this side contribution to
+the radial rise. For the sheave half-angle \(\beta\),
+
+\[
+\tan\beta=\frac{x}{\Delta r},
+\]
+
+so that
+
+\[
+x=\Delta r\tan\beta.
+\]
+
+Substituting this result into the gap relation above gives
+
+\begin{equation}
+\Delta r=\frac{\Delta s}{2\tan\beta}.
+\label{eq:cone_geometry}
+\end{equation}
+
+This is the basic wedge relation for the primary pulley: axial closure of the
+sheaves becomes radial motion of the belt. A smaller sheave angle produces more
+radial motion for the same axial closure, while a larger sheave angle produces
+less.
+
+Taking the infinitesimal limit of \Cref{eq:cone_geometry} yields the local
+geometric relationship between axial shift and belt radius,
+
+\begin{equation}
+\frac{dr}{ds}=\frac{1}{2\tan\beta}.
+\label{eq:cone_geometry_diff}
+\end{equation}
+
+Because the sheave face is straight, this derivative is constant, meaning that
+radial position varies linearly with axial displacement.
+
+The radial change \(\Delta r\) is the same whether it is measured at the inner
+or outer surface of the belt, because the belt's radial height is fixed. The
+radii themselves differ by that fixed height. The radius used for the belt-path
+geometry is the \emph{primary outer radius},
+\(r_{p,\mathrm{outer}}\), measured to the outside surface of the belt. The
+corresponding inner radius is
+
+\[
+r_{p,\mathrm{inner}}
+=
+r_{p,\mathrm{outer}}-h_b,
+\]
+
+where \(h_b\) is the belt radial height. The effective torque radius is
+introduced later.
+
+Let \(r_{p,\mathrm{outer},\min}\) denote the primary outer radius at the fully
+open position. The deadzone and the V-groove relation can now be summarized in
+one radius map:
 
 \bigeq{eq:primary_radius}{Primary Outer Radius}{
-r_{p,\text{outer}}(s)=
+r_{p,\mathrm{outer}}(s)=
 \begin{cases}
-r_{p,\text{outer},\min}, & 0 \le s < s_{\mathrm{dz}}, \\[8pt]
-r_{p,\text{outer},\min} + \dfrac{s - s_{\mathrm{dz}}}{2\tan\beta},
-& s_{\mathrm{dz}} \le s \le s_{\max}.
+r_{p,\mathrm{outer},\min}, & 0\le s<s_{\mathrm{dz}}, \\[8pt]
+r_{p,\mathrm{outer},\min}
++\dfrac{s-s_{\mathrm{dz}}}{2\tan\beta},
+& s_{\mathrm{dz}}\le s\le s_{\max}.
 \end{cases}
 }
 
-% ============================================================== 
+Before the belt is squeezed, the primary radius remains fixed. Once the
+deadzone has been taken up, each additional amount of primary closure moves the
+belt outward according to the same V-groove geometry.
+
 \subsection{Belt Length Constraint}\label{sec:belt_length}
 
 In the previous subsection, the primary effective radius was expressed
