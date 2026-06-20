@@ -2268,197 +2268,202 @@ Before the belt is squeezed, the primary radius remains fixed. Once the
 deadzone has been taken up, each additional amount of primary closure moves the
 belt outward according to the same V-groove geometry.
 
-\subsection{Belt Length Constraint}\label{sec:belt_length}
+\subsection{Fixed Belt Length and Pulley Coupling}
+\label{sec:belt_length}
 
-In the previous subsection, the primary effective radius was expressed
-as a function of axial shift. The secondary radius, however, cannot be
-chosen independently. The belt has a fixed total length, and therefore
-any change in primary radius must be accompanied by a corresponding
-geometric adjustment of the secondary radius.
+The primary-radius map gives the belt position on the driving pulley. The
+secondary radius is not chosen independently. The same belt connects both
+pulleys, so when the belt moves outward on the primary, its path must adjust on
+the secondary.
 
-This section derives the geometric compatibility constraint imposed
-by constant belt length. By expressing the total belt length in terms
-of the primary radius $r_p$, secondary radius $r_s$, and center-to-center
-distance $C$, we obtain an implicit relationship that couples the two
-pulley radii.
+This coupling follows from two geometric assumptions. First, the belt length is
+treated as constant, as stated in \Cref{assump:constant-belt-length}. No matter
+where the belt sits on the two pulleys, its complete path around the CVT must
+therefore always have the same total length. Second, the idealized belt-path assumption in \Cref{assump:idealized-belt-path}
+describes how that path is measured. Within each pulley contact region, the belt
+follows a circular arc at a uniform radius, while the two sections between the
+pulleys are straight tangent spans. Together, these assumptions mean that any
+proposed pair of pulley radii defines a belt path with a particular length. The
+geometrically allowable pair is the one whose path length equals the fixed belt
+length.
 
-The derivation follows directly from the belt path geometry shown in
-\cref{fig:belt_geometry_placeholder}. The geometric
-quantities used in the derivation are
+For compactness, the radii in this subsection are written as
+\(r_p\) and \(r_s\), with both measured to the same reference surface of the
+belt. In the present geometry model, these are the primary and secondary outer
+radii introduced above. The corresponding belt length \(L_b\) is referenced to
+that same outer surface.
 
-\begin{itemize}
-\item $r_p$ — radius of the primary pulley
-\item $r_s$ — radius of the secondary pulley
-\item $C$ — center-to-center distance between pulley shafts
-\item $\phi_p$ — belt wrap angle on the primary pulley
-\item $\phi_s$ — belt wrap angle on the secondary pulley
-\item $\ell$ — length of a single straight tangent span
-\end{itemize}
+With those radii fixed at a given instant, the assumed belt path is shown in
+\Cref{fig:belt_geometry}. It is made up of an arc around the primary pulley, an
+arc around the secondary pulley, and two equal straight spans between them.
 
-
-\begin{figure}[h]
+\begin{figure}[H]
 \centering
 \includegraphics[width=0.75\linewidth]{./illustrations/belt_length_geometry.jpg}
-\caption{Belt geometry for two pulleys of radii $r_p$ and $r_s$ separated by center distance $C$.
-The belt wraps the pulleys with angles $\phi_p$ and $\phi_s$ and connects via two straight tangent spans $\ell$.}
-\label{fig:belt_geometry_placeholder}
+\caption{
+Idealized open-belt geometry for the two-pulley CVT. The belt follows circular
+contact arcs of radii \(r_p\) and \(r_s\), connected by two straight tangent
+spans of length \(\ell\). The pulley centers are separated by the fixed distance
+\(C\), while \(\phi_p\) and \(\phi_s\) denote the corresponding wrap angles.
+}
+\label{fig:belt_geometry}
 \end{figure}
 
-
-\paragraph{Belt Length Decomposition}
-
-The total belt length $L_b$ is the sum of:
-(i) wrapped arc length on the primary pulley,
-(ii) wrapped arc length on the secondary pulley, and
-(iii) two straight tangent spans.
-Therefore,
+The amount of wrap on each pulley depends on how the straight spans tilt between
+the two radii. Let \(\lambda\) denote the signed angle between the line of
+centers and either straight span, as shown in \Cref{fig:belt_geometry}. The
+right-triangle geometry gives
 
 \begin{equation}
-L_b = r_p \phi_p + r_s \phi_s + 2\ell,
-\label{eq:belt_length_general}
-\end{equation}
-
-where $\ell$ is the length of a single straight tangent span segment.
-
-\paragraph{Straight Span Length}
-
-From the right-triangle geometry formed by the pulley centers and tangent points,
-
-\begin{equation}
-\ell = \sqrt{C^2 - (r_s - r_p)^2}.
-\label{eq:span_length}
-\end{equation}
-
-\paragraph{Wrap Angles}
-
-The wrap angles on the primary and secondary pulleys are
-
-\begin{align}
-\phi_p &= \pi - 2\lambda, \label{eq:wrap_primary}\\
-\phi_s &= \pi + 2\lambda. \label{eq:wrap_secondary}
-\end{align} 
-
-If $\lambda < 0$, these expressions automatically redistribute wrap
-between pulleys while preserving total belt length.
-
-\paragraph{Tangency Angle (Signed Convention)}
-
-Let $\lambda$ denote the signed angle between the line of centers and the straight
-tangent belt segment (as defined in \Fig{fig:belt_geometry_placeholder}). We define
-
-\begin{equation}
-\sin\lambda = \frac{r_s - r_p}{C},
+\sin\lambda
+=
+\frac{r_s-r_p}{C},
 \label{eq:lambda_def}
 \end{equation}
 
-and equivalently,
+or equivalently,
 
 \begin{equation}
-\lambda = \sin^{-1}\!\left(\frac{r_s - r_p}{C}\right).
+\lambda
+=
+\sin^{-1}\!\left(\frac{r_s-r_p}{C}\right).
 \label{eq:lambda_asin}
 \end{equation}
 
-Under this convention, $\lambda$ may be negative when $r_p > r_s$.
-This signed definition ensures the wrap distribution automatically adjusts
-when the pulley ordering reverses.
+When the secondary radius is larger than the primary radius, \(\lambda>0\).
+The belt then wraps less than half a turn around the smaller primary pulley and
+more than half a turn around the larger secondary pulley. The resulting wrap
+angles are
 
-\paragraph{Closed Form Belt-Length Expression}
+\begin{align}
+\phi_p &= \pi-2\lambda,
+\label{eq:wrap_primary}\\
+\phi_s &= \pi+2\lambda.
+\label{eq:wrap_secondary}
+\end{align}
 
-Substituting \Eq{eq:span_length} and \Eq{eq:wrap_primary}--\Eq{eq:wrap_secondary}
-into \Eq{eq:belt_length_general} yields
+If the primary becomes larger than the secondary, \(\lambda\) becomes negative.
+The same expressions then reverse the wrap distribution automatically.
+
+The same triangle also gives the length of either straight span,
+
+\begin{equation}
+\ell
+=
+\sqrt{C^2-(r_s-r_p)^2}.
+\label{eq:span_length}
+\end{equation}
+
+The total geometric belt length is therefore the sum of the two contact arcs
+and the two straight spans,
+
+\begin{equation}
+L_b
+=
+r_p\phi_p+r_s\phi_s+2\ell.
+\label{eq:belt_length_general}
+\end{equation}
+
+Substituting \Cref{eq:wrap_primary,eq:wrap_secondary,eq:span_length} into
+\Cref{eq:belt_length_general} gives
 
 \begin{align}
 L_b
-&= r_p(\pi - 2\lambda)
- + r_s(\pi + 2\lambda)
- + 2\sqrt{C^2 - (r_s - r_p)^2} \nonumber\\
-&= \pi(r_p + r_s)
- + 2\lambda (r_s - r_p)
- + 2\sqrt{C^2 - (r_s - r_p)^2}. 
-\label{eq:belt_length_subbed}
+&=
+r_p(\pi-2\lambda)
++
+r_s(\pi+2\lambda)
++
+2\sqrt{C^2-(r_s-r_p)^2}
+\nonumber\\
+&=
+\pi(r_p+r_s)
++
+2\lambda(r_s-r_p)
++
+2\sqrt{C^2-(r_s-r_p)^2}.
+\label{eq:belt_length_lambda}
 \end{align}
 
-Finally, substituting \Eq{eq:lambda_asin} gives
+Finally, substituting \Cref{eq:lambda_asin} gives the belt-length relation
+entirely in terms of the two radii and the center distance,
 
 \begin{equation}
-L_b =
-\pi(r_p + r_s)
-+ 2(r_s - r_p)\,
-\sin^{-1}\!\left(\frac{r_s - r_p}{C}\right)
-+ 2\sqrt{C^2 - (r_s - r_p)^2}.
-\label{eq:belt_length_final}
+L_b
+=
+\pi(r_p+r_s)
++
+2(r_s-r_p)
+\sin^{-1}\!\left(\frac{r_s-r_p}{C}\right)
++
+2\sqrt{C^2-(r_s-r_p)^2}.
+\label{eq:belt_length_exact}
 \end{equation}
 
-\paragraph{Root Form (Geometric Compatibility Constraint)}
+This arc-and-tangent construction is commonly used in belt-drive geometry to
+relate pulley radii, wrap angles, and belt length; \citet{BudynasNisbett2015}
+presents the same underlying construction for conventional belt drives.
 
-Rearranging \Eq{eq:belt_length_final} yields
+For a proposed geometry, the expression on the right-hand side of
+\Cref{eq:belt_length_exact} gives the length of the path that the belt would
+need to follow. The difference between that required path length and the actual
+fixed belt length is the remaining geometric mismatch. It is convenient to
+write this mismatch as a residual:
 
-\bigeq{eq:belt_length_root}{Belt Length Constraint Root Function}{
-f(r_p, r_s, C) =
-\pi(r_p + r_s)
-+ 2(r_s - r_p)\,
-\sin^{-1}\!\left(\frac{r_s - r_p}{C}\right)
-+ 2\sqrt{C^2 - (r_s - r_p)^2}
-- L_b.
+\bigeq{eq:belt_length_residual}{Belt-Length Compatibility Residual}{
+\mathcal{R}_{\mathrm{belt}}(r_p,r_s,C)
+=
+\pi(r_p+r_s)
++
+2(r_s-r_p)
+\sin^{-1}\!\left(\frac{r_s-r_p}{C}\right)
++
+2\sqrt{C^2-(r_s-r_p)^2}
+-
+L_b.
 }
 
-The belt-length constraint is therefore
+A positive residual means that the proposed path is too long for the belt, while
+a negative residual means that the proposed path is too short. The geometry is
+compatible only when there is no mismatch:
 
 \begin{equation}
-f(r_p, r_s, C) = 0.
+\mathcal{R}_{\mathrm{belt}}(r_p,r_s,C)=0.
 \label{eq:belt_length_constraint}
 \end{equation}
 
-The form of \Eq{eq:belt_length_constraint} is unchanged if radii are defined
-at the belt outer surface, inner surface, or effective mid-height radius,
-provided all terms are referenced consistently. In particular, $L_b$ must
-correspond to the same reference as $r_p$ and $r_s$ (e.g., outer-length with
-outer radii, inner-length with inner radii, or effective-length with effective
-radii).
+Thus, once the primary radius is fixed by the shift coordinate, the secondary
+radius is determined by the requirement that the same fixed-length belt still
+fits around both pulleys.
 
+\begin{remarkbox}[Remark (Exact and Simplified Belt-Length Relations)]
 
+The belt-path length in \Cref{eq:belt_length_exact} is explicit for any
+proposed \(r_p\), \(r_s\), and \(C\). However, when one of these quantities is
+unknown, the compatibility condition
+\(\mathcal{R}_{\mathrm{belt}}=0\) is an implicit nonlinear equation in that
+unknown. The secondary radius and the center-to-center distance are therefore
+obtained from this condition numerically where required.
 
-
-\begin{remarkbox}[Remark (Transcendental Nature and Approximation)]
-
-\Eq{eq:belt_length_root} is transcendental due to the
-inverse-sine and square-root terms and therefore does not admit
-a closed-form solution.
-
-In this work, the constraint is solved numerically using a
-bracketed root-finding method (e.g., bisection or Brent's method),
-which is deterministic and robust over the physically admissible interval.
-
-It is common in simplified treatments to assume
+A common simplification is to neglect the tangency angle, taking
+\(\lambda\approx0\). The belt is then treated as wrapping approximately one
+half-turn around each pulley, while the straight-span length is retained. Under
+this approximation,
 
 \[
-\frac{r_s - r_p}{C} \approx 0,
+L_b
+\approx
+\pi(r_p+r_s)
++
+2\sqrt{C^2-(r_s-r_p)^2}.
 \]
 
-which implies $\lambda \approx 0$ and therefore
-\[
-\sin^{-1}\!\left(\frac{r_s - r_p}{C}\right) \approx 0.
-\]
-
-Under this small-angle assumption, the belt-length equation reduces to a much
-simpler approximate form.
-
-However, this approximation can introduce substantial geometric error when
-$\frac{r_s - r_p}{C}$ is not small. Appendix~\ref{sec:approximation-validation}
-quantifies this deviation and demonstrates that the approximation
-is not acceptable under realistic operating conditions.
+This simplified form is not used in the present geometry model. Its geometric
+error over the operating range is examined separately in
+\Cref{sec:approximation-validation}.
 
 \end{remarkbox}
 
-
-% NOTE:
-% - Later sections will specify the bracketing bounds used in practice for the solver.
-% - If you want to support cases where r_p > r_s, you can replace (r_s - r_p) with |r_s - r_p|
-%   and state the sign convention, or explicitly assume w.l.o.g. r_s \ge r_p for the geometric derivation.
-
-
-
-% ==============================================================
 \subsection{Center-to-Center Distance Determination}\label{sec:center_distance}
 
 In-order to make use of the belt-length constraint derived in \Sec{sec:belt_length}, 
