@@ -1696,8 +1696,6 @@ points along the pulley shaft, into the page.
 \label{fig:radial_direction}
 \end{figure}
 
-
-
 \section{Governing Principles}\label{sec:principles}
 
 % NOTE:
@@ -1960,6 +1958,88 @@ Near Earth's surface, $g \approx 9.81$ \si{\meter\per\second\squared}. On an inc
 
 
 % ==============================================================
+
+\subsection{Model Quantity Roles and Evaluation Flow}
+\label{sec:model_evaluation_flow}
+
+The model distinguishes between quantities specified for a CVT configuration,
+quantities derived once during setup, dynamic states advanced in time, and
+algebraic quantities evaluated from the current state. Here, \emph{fixed} means
+fixed during one simulation run. A fixed quantity may still be changed when a
+different CVT configuration or operating case is defined.
+
+The physical constants and fixed material properties used by the model are
+listed in \Cref{tab:physical_constants}, while the user-specified CVT,
+belt, and drivetrain parameters are listed in \Cref{tab:model_parameters}.
+These specified quantities include the belt length, belt cross-section,
+sheave geometry, and endpoint pulley radii. They define the particular CVT being
+modeled, but they are not dynamic states.
+
+The center-to-center distance is different. It is not prescribed independently
+in the present parameterization. Instead, it is derived once from the specified
+belt length and the known reference pulley radii, as developed in
+\Cref{sec:secondary_radius}. It is then retained as a fixed geometric quantity
+for the remainder of the run.
+
+\begin{table}[H]
+\centering
+\caption{Roles of quantities in the model evaluation.}
+\label{tab:model_quantity_roles}
+\begin{tabular}{p{0.24\linewidth} p{0.22\linewidth} p{0.43\linewidth}}
+\toprule
+\textbf{Role} & \textbf{Assigned or evaluated} & \textbf{Examples} \\
+\midrule
+Physical constants and fixed properties
+& Before simulation
+& \(g\), material densities, and other values treated as invariant within the model scope. \\[4pt]
+
+Specified configuration parameters
+& Before geometry initialization
+& \(L_b\), \(b_{\mathrm{in}}\), \(h_b\), sheave angle \(\beta\), and endpoint pulley radii. \\[4pt]
+
+Derived fixed geometry
+& Once during geometry initialization
+& Center-to-center distance \(C\). \\[4pt]
+
+Dynamic state variables
+& Advanced by the ODE integrator
+& \(\omega_p\), \(\omega_s\), \(s\), \(\dot{s}\), and \(v_b\). \\[4pt]
+
+State-dependent algebraic quantities
+& At each evaluation of the system equations
+& \(r_p(s)\), \(r_s(s)\), \(\lambda\), wrap angles, span length, effective radii, and other current geometry quantities. \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The calculation has two levels. Geometry initialization first uses the
+specified configuration data to establish \(C\). During the simulation, each
+evaluation of the system equations begins from the current state. The shift
+coordinate gives the primary radius, the fixed belt-length condition gives the
+compatible secondary radius, and the remaining belt-path quantities then follow
+directly from the current geometry:
+
+\[
+\mathbf{x}(t)
+\;\longrightarrow\;
+s
+\;\longrightarrow\;
+r_{p,\mathrm{outer}}(s)
+\;\longrightarrow\;
+r_{s,\mathrm{outer}}(s)
+\;\longrightarrow\;
+\lambda,\ \phi_p,\ \phi_s,\ \ell
+\;\longrightarrow\;
+\text{forces, torques, and } \dot{\mathbf{x}}.
+\]
+
+The secondary-radius calculation is an algebraic geometry closure within an
+evaluation of the system equations; it is not an additional dynamic state.
+Once the two radii are known, \(\lambda\), the wrap angles, and the straight-span
+length are evaluated directly. A numerical time integrator may evaluate the
+system equations multiple times within one time step, so this geometry closure
+is performed for each such evaluation rather than only once per accepted time
+step.
 
 \section{System State Definition}
 \label{sec:state}
@@ -2404,11 +2484,77 @@ This arc-and-tangent construction is commonly used in belt-drive geometry to
 relate pulley radii, wrap angles, and belt length; \citet{BudynasNisbett2015}
 presents the same underlying construction for conventional belt drives.
 
-For a proposed geometry, the expression on the right-hand side of
-\Cref{eq:belt_length_exact} gives the length of the path that the belt would
-need to follow. The difference between that required path length and the actual
-fixed belt length is the remaining geometric mismatch. It is convenient to
-write this mismatch as a residual:
+\Cref{eq:belt_length_exact} couples the two pulley radii and the
+center-to-center distance through the fixed belt length. The primary radius is
+available from the shift coordinate, but the secondary radius and
+center-to-center distance are still unknown.
+
+Neither quantity can be isolated directly from
+\Cref{eq:belt_length_exact}, since each appears both outside and inside the
+inverse-sine and square-root terms. The remaining geometry must therefore be
+established from this implicit belt-length relation.
+
+\begin{remarkbox}[Remark (Simplified Belt-Length Relation)]
+
+The exact belt-length relation does not permit a closed-form solution for the
+unknown geometry. A common simplification, appropriate when the pulley-radius
+difference is small relative to the center distance, is to neglect the
+wrap-angle correction by taking
+
+\[
+\lambda
+=
+\sin^{-1}\!\left(\frac{r_s-r_p}{C}\right)
+\approx 0.
+\]
+
+\Cref{eq:belt_length_exact} then becomes
+
+\[
+L_b
+\approx
+\pi(r_p+r_s)
++
+2\sqrt{C^2-(r_s-r_p)^2},
+\]
+
+which can be rearranged algebraically to obtain the unknown geometry in closed
+form. The present model retains the exact relation; the effect of this
+simplification is examined in \Cref{sec:approximation-validation}.
+
+\end{remarkbox}
+
+\subsection{Secondary Radius from Belt-Length Compatibility}
+\label{sec:secondary_radius}
+
+The two remaining quantities do not need to be found simultaneously. The
+center-to-center distance is fixed by the assembled CVT, whereas the secondary
+radius changes as the sheaves shift. Thus, before using the belt-length relation
+to follow the changing secondary radius, the fixed shaft spacing can be
+established once from any configuration in which both pulley radii are known.
+
+A natural choice is the configuration at the beginning of primary-sheave
+travel. The primary pulley is fully open and the secondary pulley is fully
+closed, so the belt sits at the bottom of the primary groove and at the top of
+the secondary groove. Its two radii are therefore known directly:
+
+\[
+r_p=r_{p,\mathrm{outer},\min},
+\qquad
+r_s=r_{s,\mathrm{outer},\max}.
+\]
+
+With this reference configuration and the specified belt length, the implicit
+belt-length relation contains only the fixed center-to-center distance (C) as
+an unknown.
+
+\paragraph{Reference center-to-center distance}
+
+Substituting the known reference radii into the belt-length relation leaves one
+unknown: the center-to-center distance \(C\). Since \(C\) appears both directly
+and inside the inverse-sine and square-root terms, it cannot be rearranged into
+an explicit expression. Instead, the belt-length condition is written as a
+residual:
 
 \bigeq{eq:belt_length_residual}{Belt-Length Compatibility Residual}{
 \mathcal{R}_{\mathrm{belt}}(r_p,r_s,C)
@@ -2423,158 +2569,63 @@ write this mismatch as a residual:
 L_b.
 }
 
-A positive residual means that the proposed path is too long for the belt, while
-a negative residual means that the proposed path is too short. The geometry is
-compatible only when there is no mismatch:
+For any proposed geometry, this residual is the difference between the belt
+path required by that geometry and the available belt length. A positive value
+means that the required path is too long for the belt, while a negative value
+means that it is too short. At the reference radii, the assembled
+center-to-center distance is therefore the value of \(C\) for which
 
 \begin{equation}
-\mathcal{R}_{\mathrm{belt}}(r_p,r_s,C)=0.
-\label{eq:belt_length_constraint}
-\end{equation}
-
-Thus, once the primary radius is fixed by the shift coordinate, the secondary
-radius is determined by the requirement that the same fixed-length belt still
-fits around both pulleys.
-
-\begin{remarkbox}[Remark (Exact and Simplified Belt-Length Relations)]
-
-The belt-path length in \Cref{eq:belt_length_exact} is explicit for any
-proposed \(r_p\), \(r_s\), and \(C\). However, when one of these quantities is
-unknown, the compatibility condition
-\(\mathcal{R}_{\mathrm{belt}}=0\) is an implicit nonlinear equation in that
-unknown. The secondary radius and the center-to-center distance are therefore
-obtained from this condition numerically where required.
-
-A common simplification is to neglect the tangency angle, taking
-\(\lambda\approx0\). The belt is then treated as wrapping approximately one
-half-turn around each pulley, while the straight-span length is retained. Under
-this approximation,
-
-\[
-L_b
-\approx
-\pi(r_p+r_s)
-+
-2\sqrt{C^2-(r_s-r_p)^2}.
-\]
-
-This simplified form is not used in the present geometry model. Its geometric
-error over the operating range is examined separately in
-\Cref{sec:approximation-validation}.
-
-\end{remarkbox}
-
-\subsection{Center-to-Center Distance Determination}\label{sec:center_distance}
-
-In-order to make use of the belt-length constraint derived in \Sec{sec:belt_length}, 
-the center-to-center distance $C$ must be determined.
-
-The center-to-center distance $C$ is a fixed geometric parameter
-of the assembled CVT system. Once the transmission is constructed,
-$C$ does not vary during operation.
-
-To determine $C$, we evaluate the belt-length constraint
-\Eq{eq:belt_length_constraint} at the \emph{known} initial configuration
-of the system.
-
-\paragraph{Initial Geometric Configuration}
-
-At startup, the CVT is assumed to be in its lowest ratio configuration:
-
-\begin{itemize}
-    \item The primary pulley is at its minimum outer radius,
-    \[
-    r_p = r_{p,\text{outer},\min}.
-    \]
-    \item The secondary pulley is at its maximum outer radius,
-    \[
-    r_s = r_{s,\text{outer},\max}.
-    \]
-\end{itemize}
-
-These values are determined by the physical geometry of the sheaves
-and represent the fully separated primary and fully closed secondary
-configuration.
-
-\paragraph{Center Distance from Belt-Length Compatibility}
-
-Substituting these known radii into
-\Eq{eq:belt_length_root} yields
-
-\begin{equation}
-f(r_{p,\text{outer},\min}, r_{s,\text{outer},\max}, C) = 0.
+\mathcal{R}_{\mathrm{belt}}
+\!\left(
+r_{p,\mathrm{outer},\min},
+r_{s,\mathrm{outer},\max},
+C
+\right)
+=0.
 \label{eq:center_distance_constraint}
 \end{equation}
 
-This equation contains a single unknown, $C$, and is solved
-numerically to determine the fixed center-to-center distance
-consistent with the specified belt length $L_b$.
+This is a one-dimensional nonlinear root-finding problem. The center distance
+is found numerically over its geometrically admissible range until the
+belt-length residual vanishes. Details of the numerical procedure, including
+the search interval and convergence criterion, are given in
+\Cref{app:geometry-root-solve}. Because this calculation uses only fixed belt
+and sheave geometry, it is performed once during geometry initialization. The
+resulting value of \(C\) then remains fixed throughout the simulation.
 
-\begin{equation}
-C
-=
-\operatorname*{root}_{C}
-\; f\!\left(r_{p,\text{outer},\min}, r_{s,\text{outer},\max}, C\right).
-\end{equation}
+\paragraph{Secondary radius during shift}
 
-\begin{remarkbox}[Remark (One-Time Geometric Solve)]
-The center distance $C$ is determined once during model
-initialization. Thereafter, $C$ is treated as a constant
-in all subsequent geometric and dynamic calculations.
-\end{remarkbox}
-
-
-
-% ==============================================================
-\subsection{Secondary Outer Radius as a Function of Shift}
-\label{sec:secondary_radius}
-
-With the center-to-center distance $C$ determined from
-\Sec{sec:center_distance}, and the primary radius
-$r_{p,\text{outer}}(s)$ defined by \Eq{eq:primary_radius}, the secondary
-outer radius is obtained by enforcing the belt-length
-compatibility constraint.
-
-\paragraph{Geometric Coupling}
-
-At any shift position $s$, the primary radius
-$r_{p,\text{outer}}(s)$ is known. The secondary radius $r_s$
-must therefore satisfy
-
-\begin{equation}
-f\!\left(r_{p,\text{outer}}(s), r_s, C\right) = 0,
-\label{eq:secondary_radius_constraint}
-\end{equation}
-
-where $f(\cdot)$ is defined in \Eq{eq:belt_length_root}.
-
-\paragraph{Numerical Determination of $r_s(s)$}
-
-Because \Eq{eq:secondary_radius_constraint} is transcendental
-in $r_s$, the secondary radius is obtained numerically for
-each value of $s$:
+With the center-to-center distance established, the original problem has only
+one remaining unknown. At any shift position,
+\Cref{eq:primary_radius} gives \(r_{p,\mathrm{outer}}(s)\), and the secondary
+outer radius is the value that makes the same fixed belt fit around both
+pulleys:
 
 \bigeq{eq:secondary_radius}{Secondary Outer Radius}{
-r_{s,\text{outer}}(s)
-=
-\operatorname*{root}_{r_s}
-\; f\!\left(r_{p,\text{outer}}(s), r_s, C\right).
+\mathcal{R}_{\mathrm{belt}}
+\!\left(
+r_{p,\mathrm{outer}}(s),
+r_{s,\mathrm{outer}}(s),
+C
+\right)
+=0.
 }
 
-\begin{remarkbox}[Remark (Dynamic Root Solve)]
-Unlike the center-distance calculation in
-\Sec{sec:center_distance}, which is performed once during
-initialization, this root solve is performed repeatedly
-as the shift coordinate $s$ evolves during simulation.
-Because the physically admissible interval for $r_s$ is bounded,
-a bracketed solver (e.g., Brent’s method) converges rapidly.
-\end{remarkbox}
+For a given shift position, \Cref{eq:secondary_radius} is again a
+one-dimensional nonlinear root-finding problem, now in
+\(r_{s,\mathrm{outer}}(s)\). The search is restricted to the physical range of
+secondary pulley radii, and the admissible root gives the belt position on the
+secondary pulley. The same numerical procedure described in
+\Cref{app:geometry-root-solve} is used whenever the system equations are
+evaluated as the shift coordinate changes.
 
-With both $r_{p,\mathrm{outer}}(s)$ and $r_{s,\mathrm{outer}}(s)$ determined,
-all geometric quantities describing the belt path can now be expressed
-explicitly as functions of the shift coordinate $s$.
+The two pulley radii are now available from the shift coordinate:
+\(r_{p,\mathrm{outer}}(s)\) follows directly from the primary V-groove
+geometry, and \(r_{s,\mathrm{outer}}(s)\) follows from fixed belt-length
+compatibility. The remaining belt-path quantities can then be evaluated from
+the current geometry.
 
-% ==============================================================
 \subsection{Wrap Angles as Functions of Shift}\label{sec:wrap_angles}
 
 The wrap angles on the primary and secondary pulleys
