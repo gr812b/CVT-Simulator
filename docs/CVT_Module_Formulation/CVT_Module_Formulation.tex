@@ -2691,362 +2691,383 @@ describes the gearing available from the pulley geometry; whether that gearing
 is realized depends on the belt maintaining sufficient traction at the pulley
 contacts.
 
-\subsection{Ratio Rate of Change}\label{sec:ratio_rate}
+\subsection{Pulley-Radius Rates and Accelerations}
+\label{sec:pulley_radius_rates}
 
-The CVT ratio is not only a function of shift position, but also changes in time whenever the
-sheaves are moving. This time variation matters because a changing ratio introduces additional
-kinematic coupling between the primary and secondary rotations. In other words, it is not
-sufficient to know the instantaneous ratio $R(s)$; the model also requires how quickly the ratio
-is changing.
+The geometry above determines where the belt sits on each pulley at a given
+shift position \(s\). When the primary sheave begins to move, those belt
+positions must move as well. The next quantities to establish are therefore the
+primary and secondary radial rates, \(\dot r_p\) and \(\dot r_s\), followed by
+their radial accelerations, \(\ddot r_p\) and \(\ddot r_s\).
 
-This section derives an explicit expression for $\dot R$ in terms of the shift velocity $\dot s$
-and geometric derivatives.
-
-\subsubsection{Start from the Ratio Definition}
-
-The ratio is defined by the effective radii as
+The fixed belt-length geometry was written using the outer belt radii, while
+belt transport and the geometric CVT ratio use the pitch radii. For the rate
+relations, that distinction disappears. For either pulley \(j\in\{p,s\}\),
 
 \begin{equation}
-R(s) = \frac{r_{s,\text{eff}}(s)}{r_{p,\text{eff}}(s)}.
-\label{eq:R_def}
+r_{j,\mathrm{pitch}}
+=
+r_{j,\mathrm{outer}}-d_{\mathrm{cord}}.
+\label{eq:pitch_outer_radius_offset}
 \end{equation}
 
-Because $R$ depends on time only through $s(t)$, the chain rule gives
-
-\begin{equation}
-\dot R = \frac{dR}{ds}\dot s.
-\label{eq:Rdot_chain}
-\end{equation}
-
-Thus, the objective is to compute $dR/ds$.
-
-\subsubsection{Differentiate \texorpdfstring{$R$}{R} with Respect to \texorpdfstring{$s$}{s}}
-
-Differentiating \Eq{eq:R_def} with respect to $s$ (quotient rule) gives
+The cord offset is fixed for the selected belt. Differentiating with respect to
+\(s\) or time therefore removes it:
 
 \begin{align}
-\frac{dR}{ds}
+\frac{d r_{j,\mathrm{pitch}}}{ds}
 &=
-\frac{d}{ds}\!\left(\frac{r_{s,\text{eff}}}{r_{p,\text{eff}}}\right)
-=
-\frac{
-\left(\dfrac{dr_{s,\text{eff}}}{ds}\right) r_{p,\text{eff}}
--
-r_{s,\text{eff}}
-\left(\dfrac{dr_{p,\text{eff}}}{ds}\right)
-}{
-r_{p,\text{eff}}^2
-}.
-\label{eq:dRds_quotient}
+\frac{d r_{j,\mathrm{outer}}}{ds},
+\label{eq:pitch_outer_shift_rate_equivalence}\\[4pt]
+\dot r_{j,\mathrm{pitch}}
+&=
+\dot r_{j,\mathrm{outer}},
+\label{eq:pitch_outer_time_rate_equivalence}\\[4pt]
+\ddot r_{j,\mathrm{pitch}}
+&=
+\ddot r_{j,\mathrm{outer}}.
+\label{eq:pitch_outer_acceleration_equivalence}
 \end{align}
 
-Rearranging into a form that exposes the required components:
+Thus, the same radial rates and accelerations apply whichever reference surface
+is used. To avoid carrying repeated subscripts, \(r_p\) and \(r_s\) denote the
+primary and secondary radii throughout the remainder of this section.
+
+\subsubsection{Primary Radius Rate and Acceleration}
+\label{sec:primary_radius_rates}
+
+The primary radius is already known explicitly from the primary sheave
+geometry. Recalling \Cref{eq:primary_radius},
 
 \begin{equation}
-\frac{dR}{ds}
+r_p(s)
 =
-\frac{1}{r_{p,\text{eff}}}\frac{dr_{s,\text{eff}}}{ds}
--
-\frac{r_{s,\text{eff}}}{r_{p,\text{eff}}^2}\frac{dr_{p,\text{eff}}}{ds}.
-\label{eq:dRds_components}
+\begin{cases}
+r_{p,\min},
+& 0\leq s<s_{\mathrm{dz}},\\[8pt]
+\displaystyle
+r_{p,\min}+\frac{s-s_{\mathrm{dz}}}{2\tan\beta},
+& s_{\mathrm{dz}}\leq s\leq s_{\max}.
+\end{cases}
+\label{eq:primary_radius_recalled}
 \end{equation}
 
+The primary radius changes in time only because the shift coordinate changes in
+time. Using the chain rule,
 
-At this point, the remaining task is to express the two derivatives
-$dr_{p,\text{eff}}/ds$ and $dr_{s,\text{eff}}/ds$ in computable form.
+\begin{equation}
+\dot r_p
+=
+\frac{d r_p}{ds}\dot s.
+\label{eq:primary_radius_rate_chain}
+\end{equation}
 
-% ==============================================================
-\subsubsection{Primary Radius Derivative}
-\label{sec:drpds}
+The derivative \(dr_p/ds\) comes directly from
+\Cref{eq:primary_radius_recalled}. In the dead zone, changing \(s\) does not yet
+move the belt radially. Once the sheave faces engage the belt, the conical
+geometry gives a constant radial change for each unit of axial shift:
 
-The primary radius derivative follows directly from the sheave geometry,
-since the primary radius is prescribed explicitly as a function of shift.
-From the piecewise primary radius model \Eq{eq:primary_radius}, the primary outer radius
-satisfies
-
-\[
-r_{p,\text{outer}}(s)=
+\begin{equation}
+\frac{d r_p}{ds}
+=
 \begin{cases}
-r_{p,\text{outer},\min}, & 0 \le s < s_{\mathrm{dz}}, \\[8pt]
-r_{p,\text{outer},\min} + \dfrac{s - s_{\mathrm{dz}}}{2\tan\beta},
-& s_{\mathrm{dz}} \le s \le s_{\max}.
+0,
+& 0\leq s<s_{\mathrm{dz}},\\[10pt]
+\displaystyle
+\frac{1}{2\tan\beta},
+& s_{\mathrm{dz}}<s\leq s_{\max}.
 \end{cases}
-\]
+\label{eq:primary_radius_shift_derivative}
+\end{equation}
 
-Differentiating with respect to $s$ gives
+Substituting this result into \Cref{eq:primary_radius_rate_chain} gives
 
-\bigeq{eq:drpds_piecewise}{Primary Radius Derivative}{
-\frac{dr_p}{ds}
-=
-\frac{dr_{p,\text{outer}}}{ds}
+\bigeq{eq:primary_radius_rate}{Primary Radius Rate}{
+\dot r_p
 =
 \begin{cases}
-0, & 0 \le s < s_{\mathrm{dz}},\\[8pt]
-\dfrac{1}{2\tan\beta}, & s_{\mathrm{dz}} \le s \le s_{\max}.
+0,
+& 0\leq s<s_{\mathrm{dz}},\\[10pt]
+\displaystyle
+\frac{\dot s}{2\tan\beta},
+& s_{\mathrm{dz}}<s\leq s_{\max}.
 \end{cases}
 }
 
-Because $r_{p,\text{eff}} = r_{p,\text{outer}} - h_b/2$ and $h_b$ is constant,
-the same derivative applies:
+To obtain the radial acceleration, differentiate
+\Cref{eq:primary_radius_rate_chain} once more. This is a product of
+\(dr_p/ds\) and \(\dot s\), so use the product rule:
 
-\begin{equation}
-\frac{dr_{p,\text{eff}}}{ds} = \frac{dr_p}{ds}.
-\label{eq:drpeffds}
-\end{equation}
-
-
-\begin{remarkbox}[Remark (At the Travel Limit)]
-If the model clamps $s$ at the physical limit $s_{\max}$, then $r_{p,\text{outer}}$
-(and thus $r_{p,\text{eff}}$) is constant beyond this point and the derivative is zero
-for $s>s_{\max}$. In this document we restrict to the admissible domain
-$0\le s\le s_{\max}$.
-\end{remarkbox}
-
-% ==============================================================
-% ==============================================================
-% ==============================================================
-\subsubsection{Secondary Radius Derivative}
-\label{sec:drsds}
-
-Unlike the primary radius, the secondary radius is not prescribed explicitly
-as a function of shift. Instead, it is determined implicitly by the
-belt-length compatibility condition derived in \Sec{sec:belt_length}. Thus,
-the secondary radius derivative must be obtained by differentiating the
-constraint itself.
-
-The belt-length constraint is written as
-
-\begin{equation}
-f(r_p, r_s, C) = 0,
-\label{eq:belt_constraint_general}
-\end{equation}
-
-where $f(\cdot)$ is defined in \Eq{eq:belt_length_root} and $C$ is constant.
-
-Since both $r_p=r_p(s)$ and $r_s=r_s(s)$ depend on the shift coordinate $s$,
-differentiating \Eq{eq:belt_constraint_general} with respect to $s$ gives,
-by the multivariable chain rule,
-
-\begin{equation}
-\frac{\partial f}{\partial r_p}\frac{dr_p}{ds}
-+
-\frac{\partial f}{\partial r_s}\frac{dr_s}{ds}
-= 0.
-\label{eq:implicit_chain}
-\end{equation}
-
-Solving \Eq{eq:implicit_chain} for the secondary radius derivative yields
-
-\begin{equation}
-\frac{dr_s}{ds}
-=
--
-\frac{\dfrac{\partial f}{\partial r_p}}
-{\dfrac{\partial f}{\partial r_s}}
-\frac{dr_p}{ds}.
-\label{eq:drsds_general}
-\end{equation}
-
-Because the effective secondary radius differs from the outer radius only by
-the constant belt offset $h_b/2$, the same derivative applies to the effective
-radius:
-
-\begin{equation}
-\frac{dr_{s,\mathrm{eff}}}{ds} = \frac{dr_s}{ds}.
-\label{eq:drseffds}
-\end{equation}
-
-Equation \Eq{eq:drsds_general} shows that the secondary radial motion is not
-independent, but is instead determined by the belt-length constraint and the
-primary radial motion.
-
-At this point, the remaining task is to evaluate the two belt-constraint
-sensitivities
-$\partial f/\partial r_p$ and $\partial f/\partial r_s$, which appear in
-\Eq{eq:drsds_general}. The following subsections derive these quantities
-explicitly for the belt-length function defined in \Eq{eq:belt_length_root}.
-
-\subsubsection{Partial Derivatives of the Belt Constraint}
-\label{sec:belt_partials}
-
-Recall the belt-length constraint written in root form as
-\begin{equation}
-f(r_p,r_s,C)
-=
-\pi(r_p+r_s)
-+2(r_s-r_p)\sin^{-1}\!\left(\frac{r_s-r_p}{C}\right)
-+2\sqrt{C^2-(r_s-r_p)^2}
--L_b
-=0.
-\label{eq:f_def_again}
-\end{equation}
-
-We now compute the two partial derivatives required in
-\Eq{eq:drsds_general}, differentiating term-by-term and applying the
-product rule directly to the inverse-sine term.
-
-% --------------------------------------------------------------
-\paragraph{Product rule for the inverse-sine factor}
-
-Consider the factor
-\[
-(r_s-r_p)\sin^{-1}\!\left(\frac{r_s-r_p}{C}\right).
-\]
-
-Differentiating with respect to $r_p$ (product rule) gives
-\begin{equation}
-\frac{\partial}{\partial r_p}
-\left[
-(r_s-r_p)\sin^{-1}\!\left(\frac{r_s-r_p}{C}\right)
-\right]
-=
-\underbrace{\frac{\partial}{\partial r_p}(r_s-r_p)}_{(1)}
-\sin^{-1}\!\left(\frac{r_s-r_p}{C}\right)
-+
-(r_s-r_p)
-\underbrace{\frac{\partial}{\partial r_p}\sin^{-1}\!\left(\frac{r_s-r_p}{C}\right)}_{(2)}.
-\label{eq:prod_rule_asin_rp}
-\end{equation}
-
-We therefore compute the two sub-derivatives.
-
-\subparagraph{Derivative (1)}
-
-\begin{equation}
-\frac{\partial}{\partial r_p}(r_s-r_p) = -1.
-\label{eq:dlinear_rp}
-\end{equation}
-
-\subparagraph{Derivative (2)}
-
-Using the chain rule,
-\[
-\frac{d}{dx}\sin^{-1}(x)=\frac{1}{\sqrt{1-x^2}},
-\]
-let
-\[
-u=\frac{r_s-r_p}{C}.
-\]
-Then
-\[
-\frac{\partial u}{\partial r_p} = -\frac{1}{C}.
-\]
-
-Therefore,
-\begin{equation}
-\frac{\partial}{\partial r_p}\sin^{-1}\!\left(\frac{r_s-r_p}{C}\right)
-=
-\frac{1}{\sqrt{1-u^2}}\left(-\frac{1}{C}\right).
-\label{eq:asin_chain_rp_step1}
-\end{equation}
-
-Now simplify the denominator:
-\[
-\sqrt{1-u^2}
-=
-\sqrt{1-\left(\frac{r_s-r_p}{C}\right)^2}
-=
-\frac{\sqrt{C^2-(r_s-r_p)^2}}{C}.
-\]
-
-Substituting into \Eq{eq:asin_chain_rp_step1} yields
-\begin{equation}
-\frac{\partial}{\partial r_p}\sin^{-1}\!\left(\frac{r_s-r_p}{C}\right)
-=
--\frac{1}{\sqrt{C^2-(r_s-r_p)^2}}.
-\label{eq:asin_chain_rp_final}
-\end{equation}
-
-\subparagraph{Substitute into the product rule}
-
-Substituting \Eq{eq:dlinear_rp} and \Eq{eq:asin_chain_rp_final} into
-\Eq{eq:prod_rule_asin_rp} gives
 \begin{align}
-\frac{\partial}{\partial r_p}
-\left[
-(r_s-r_p)\sin^{-1}\!\left(\frac{r_s-r_p}{C}\right)
-\right]
+\ddot r_p
 &=
-(-1)\sin^{-1}\!\left(\frac{r_s-r_p}{C}\right)
-+
-(r_s-r_p)\left(
--\frac{1}{\sqrt{C^2-(r_s-r_p)^2}}
+\frac{d}{dt}
+\left(
+\frac{d r_p}{ds}\dot s
 \right)
-\nonumber\\[6pt]
+\nonumber\\
 &=
--\sin^{-1}\!\left(\frac{r_s-r_p}{C}\right)
--
-\frac{r_s-r_p}{\sqrt{C^2-(r_s-r_p)^2}}.
-\label{eq:prod_asin_rp_final}
+\frac{d}{dt}
+\left(
+\frac{d r_p}{ds}
+\right)\dot s
++
+\frac{d r_p}{ds}\ddot s
+\nonumber\\
+&=
+\frac{d^2r_p}{ds^2}\dot s^2
++
+\frac{d r_p}{ds}\ddot s.
+\label{eq:primary_radius_acceleration_chain}
 \end{align}
 
-% --------------------------------------------------------------
-\paragraph{Derivative of the square-root term}
+Within either smooth branch of \Cref{eq:primary_radius_recalled}, the
+slope \(dr_p/ds\) is constant. Hence \(d^2r_p/ds^2=0\), leaving
 
-For the straight-span contribution,
-\[
-2\sqrt{C^2-(r_s-r_p)^2},
-\]
-we apply the chain rule:
+\bigeq{eq:primary_radius_acceleration}{Primary Radius Acceleration}{
+\ddot r_p
+=
+\begin{cases}
+0,
+& 0\leq s<s_{\mathrm{dz}},\\[10pt]
+\displaystyle
+\frac{\ddot s}{2\tan\beta},
+& s_{\mathrm{dz}}<s\leq s_{\max}.
+\end{cases}
+}
+
+\begin{remarkbox}[Remark (Dead-Zone Boundary)]
+The idealized primary-radius map changes slope at \(s=s_{\mathrm{dz}}\), so
+its ordinary second derivative is not defined at that single point. The
+expressions above apply within the dead-zone and active-shift branches; the
+boundary is handled as a regime transition.
+\end{remarkbox}
+
+\subsubsection{Secondary Radius Rate}
+\label{sec:secondary_radius_rate}
+
+The secondary radius is not prescribed directly by the shift coordinate. It is
+the radius required to keep the fixed belt compatible with the current primary
+radius. Its rate must therefore come from differentiating the belt-length
+compatibility condition itself.
+
+Recall the residual from \Cref{eq:belt_length_residual}:
 
 \begin{equation}
+\begin{aligned}
+\mathcal{R}_{\mathrm{belt}}(r_p,r_s,C)
+={}&
+\pi(r_p+r_s)
++
+2(r_s-r_p)
+\sin^{-1}\!\left(
+\frac{r_s-r_p}{C}
+\right)\\
+&+
+2\sqrt{C^2-(r_s-r_p)^2}
+-L_b
+=
+0.
+\end{aligned}
+\label{eq:belt_length_residual_recalled}
+\end{equation}
+
+Here, \(C\) and \(L_b\) remain fixed, while \(r_p\) and \(r_s\) can both vary
+with time. Using the multivariable chain rule,
+
+\begin{equation}
+\frac{\partial\mathcal{R}_{\mathrm{belt}}}{\partial r_p}\dot r_p
++
+\frac{\partial\mathcal{R}_{\mathrm{belt}}}{\partial r_s}\dot r_s
+=
+0.
+\label{eq:secondary_radius_rate_constraint}
+\end{equation}
+
+The two partial derivatives tell us how the required belt-path length changes
+when one pulley radius changes while the other radius and the center distance
+are held fixed. We find them next.
+
+\paragraph{Partial derivative with respect to \(r_p\)}
+
+Start with the inverse-sine contribution. It is a product, so its derivative
+contains one term from differentiating \(r_s-r_p\) and a second from
+differentiating the inverse-sine factor:
+
+\begin{align}
+&
+\frac{\partial}{\partial r_p}
+\left[
+(r_s-r_p)
+\sin^{-1}\!\left(
+\frac{r_s-r_p}{C}
+\right)
+\right]
+\nonumber\\
+={}&
+\frac{\partial(r_s-r_p)}{\partial r_p}
+\sin^{-1}\!\left(
+\frac{r_s-r_p}{C}
+\right)
++
+(r_s-r_p)
+\frac{\partial}{\partial r_p}
+\sin^{-1}\!\left(
+\frac{r_s-r_p}{C}
+\right).
+\label{eq:product_rule_asin_primary_start}
+\end{align}
+
+For the first factor, \(r_s\) is held fixed:
+
+\begin{equation}
+\frac{\partial(r_s-r_p)}{\partial r_p}
+=
+-1.
+\label{eq:linear_difference_primary_derivative}
+\end{equation}
+
+For the inverse-sine factor, the chain rule gives
+
+\begin{align}
+\frac{\partial}{\partial r_p}
+\sin^{-1}\!\left(
+\frac{r_s-r_p}{C}
+\right)
+&=
+-\frac{1/C}
+{\sqrt{
+1-\left(\dfrac{r_s-r_p}{C}\right)^2
+}}
+\nonumber\\
+&=
+-\frac{1}
+{\sqrt{C^2-(r_s-r_p)^2}}.
+\label{eq:asin_primary_derivative}
+\end{align}
+
+Substituting the two derivatives into \Cref{eq:product_rule_asin_primary_start} gives
+
+\begin{align}
+&
+\frac{\partial}{\partial r_p}
+\left[
+(r_s-r_p)
+\sin^{-1}\!\left(
+\frac{r_s-r_p}{C}
+\right)
+\right]
+\nonumber\\
+={}&
+-\sin^{-1}\!\left(
+\frac{r_s-r_p}{C}
+\right)
+-
+\frac{r_s-r_p}
+{\sqrt{C^2-(r_s-r_p)^2}}.
+\label{eq:product_rule_asin_primary_final}
+\end{align}
+
+The remaining nonlinear contribution comes from the straight spans. Using the
+chain rule,
+
+\begin{align}
+&
 \frac{\partial}{\partial r_p}
 \left[
 2\sqrt{C^2-(r_s-r_p)^2}
 \right]
-=
+\nonumber\\
+={}&
+2
+\left[
+\frac{1}
+{2\sqrt{C^2-(r_s-r_p)^2}}
+\right]
+\left[
+2(r_s-r_p)
+\right]
+\nonumber\\
+={}&
 \frac{2(r_s-r_p)}
 {\sqrt{C^2-(r_s-r_p)^2}}.
-\label{eq:sqrt_general_rp}
-\end{equation}
+\label{eq:square_root_primary_derivative}
+\end{align}
 
-% --------------------------------------------------------------
-\paragraph{Assemble $\partial f/\partial r_p$}
-
-Differentiating \Eq{eq:f_def_again} term-by-term gives
+We can now assemble the derivative of the full residual. The terms involving
+the straight-span square root appear with equal magnitude and opposite sign:
 
 \begin{align}
-\frac{\partial f}{\partial r_p}
-&=
+\frac{\partial\mathcal{R}_{\mathrm{belt}}}{\partial r_p}
+={}&
 \pi
 +
-2\left(
--\sin^{-1}\!\left(\frac{r_s-r_p}{C}\right)
+2\left[
+-\sin^{-1}\!\left(
+\frac{r_s-r_p}{C}
+\right)
 -
 \frac{r_s-r_p}
 {\sqrt{C^2-(r_s-r_p)^2}}
-\right)
+\right]
 +
 \frac{2(r_s-r_p)}
 {\sqrt{C^2-(r_s-r_p)^2}}
-\nonumber\\[6pt]
-&=
+\nonumber\\
+={}&
 \pi
 -
-2\sin^{-1}\!\left(\frac{r_s-r_p}{C}\right).
-\label{eq:dfdrp_final}
+2\sin^{-1}\!\left(
+\frac{r_s-r_p}{C}
+\right)
+\nonumber\\
+={}&
+\phi_p.
+\label{eq:belt_residual_primary_partial}
 \end{align}
 
-The square-root contributions cancel exactly.
+\paragraph{Partial derivative with respect to \(r_s\)}
 
-% --------------------------------------------------------------
-\paragraph{Derivative with respect to $r_s$}
+The calculation with respect to \(r_s\) follows the same steps. The only
+difference is that increasing \(r_s\) increases the radius difference
+\(r_s-r_p\), rather than decreasing it. Thus,
 
-The same procedure yields
+\begin{equation}
+\frac{\partial(r_s-r_p)}{\partial r_s}
+=
+1,
+\qquad
+\frac{\partial}{\partial r_s}
+\sin^{-1}\!\left(
+\frac{r_s-r_p}{C}
+\right)
+=
+\frac{1}
+{\sqrt{C^2-(r_s-r_p)^2}}.
+\label{eq:secondary_partial_component_derivatives}
+\end{equation}
+
+Using these signs in the same product-rule calculation gives
 
 \begin{equation}
 \frac{\partial}{\partial r_s}
 \left[
-(r_s-r_p)\sin^{-1}\!\left(\frac{r_s-r_p}{C}\right)
+(r_s-r_p)
+\sin^{-1}\!\left(
+\frac{r_s-r_p}{C}
+\right)
 \right]
 =
-\sin^{-1}\!\left(\frac{r_s-r_p}{C}\right)
+\sin^{-1}\!\left(
+\frac{r_s-r_p}{C}
+\right)
 +
-\frac{r_s-r_p}{\sqrt{C^2-(r_s-r_p)^2}},
-\label{eq:prod_asin_rs}
+\frac{r_s-r_p}
+{\sqrt{C^2-(r_s-r_p)^2}}.
+\label{eq:product_rule_asin_secondary_final}
 \end{equation}
 
-and
+The straight-span contribution changes sign as well:
 
 \begin{equation}
 \frac{\partial}{\partial r_s}
@@ -3056,246 +3077,263 @@ and
 =
 -\frac{2(r_s-r_p)}
 {\sqrt{C^2-(r_s-r_p)^2}}.
-\label{eq:sqrt_general_rs}
+\label{eq:square_root_secondary_derivative}
 \end{equation}
 
-Assembling terms gives
+Assembling the full derivative gives
 
 \begin{align}
-\frac{\partial f}{\partial r_s}
-&=
+\frac{\partial\mathcal{R}_{\mathrm{belt}}}{\partial r_s}
+={}&
 \pi
 +
-2\left(
-\sin^{-1}\!\left(\frac{r_s-r_p}{C}\right)
+2\left[
+\sin^{-1}\!\left(
+\frac{r_s-r_p}{C}
+\right)
 +
 \frac{r_s-r_p}
 {\sqrt{C^2-(r_s-r_p)^2}}
-\right)
+\right]
 -
 \frac{2(r_s-r_p)}
 {\sqrt{C^2-(r_s-r_p)^2}}
-\nonumber\\[6pt]
-&=
+\nonumber\\
+={}&
 \pi
 +
-2\sin^{-1}\!\left(\frac{r_s-r_p}{C}\right).
-\label{eq:dfdrs_final}
+2\sin^{-1}\!\left(
+\frac{r_s-r_p}{C}
+\right)
+\nonumber\\
+={}&
+\phi_s.
+\label{eq:belt_residual_secondary_partial}
 \end{align}
 
-
-% --------------------------------------------------------------
-\paragraph{Summary of Belt Constraint Partial Derivatives}
-
-From the derivations above, the partial derivatives of the belt-length
-constraint \Eq{eq:f_def_again} are
+Again, the square-root terms cancel. The two sensitivities are therefore the
+two wrap angles:
 
 \begin{equation}
-\frac{\partial f}{\partial r_p}
+\frac{\partial\mathcal{R}_{\mathrm{belt}}}{\partial r_p}
 =
-\pi
--
-2\sin^{-1}\!\left(\frac{r_s-r_p}{C}\right),
-\label{eq:dfdrp_summary}
+\phi_p,
+\qquad
+\frac{\partial\mathcal{R}_{\mathrm{belt}}}{\partial r_s}
+=
+\phi_s.
+\label{eq:belt_residual_partials_as_wrap_angles}
 \end{equation}
+
+Substituting these results into \Cref{eq:secondary_radius_rate_constraint}
+gives
 
 \begin{equation}
-\frac{\partial f}{\partial r_s}
-=
-\pi
-+
-2\sin^{-1}\!\left(\frac{r_s-r_p}{C}\right).
-\label{eq:dfdrs_summary}
+\phi_p\dot r_p+\phi_s\dot r_s=0.
+\label{eq:wrap_weighted_radius_rate_balance}
 \end{equation}
 
-These expressions are globally valid under the geometric definition
-of $\lambda$ given in \Eq{eq:lambda_asin} and require no piecewise
-case distinction.
-
-
-
-
-% ==============================================================
-% ==============================================================
-
-% ==============================================================
-\subsubsection{Final Expression for the Secondary Radius Derivative}
-\label{sec:drsds_final}
-
-Equation \Eq{eq:drsds_general} expresses the secondary radius derivative in
-terms of the belt-constraint partial derivatives and the primary radius derivative:
+This says that, under fixed belt length, the two radial motions are weighted by
+their current wrap angles. Solving for the secondary radius rate,
 
 \begin{equation}
-\frac{dr_s}{ds}
+\dot r_s
 =
--
-\frac{\dfrac{\partial f}{\partial r_p}}
-{\dfrac{\partial f}{\partial r_s}}
-\frac{dr_p}{ds}.
-\label{eq:drsds_recalled}
+-\frac{\phi_p}{\phi_s}\dot r_p.
+\label{eq:secondary_radius_rate_general}
 \end{equation}
 
-From \Sec{sec:belt_partials}, the partial derivatives of the belt-length constraint
-\Eq{eq:belt_length_root} are
+Finally, inserting the primary radius rate from
+\Cref{eq:primary_radius_rate} gives
 
-\begin{equation}
-\frac{\partial f}{\partial r_p}
-=
-\pi
--
-2\sin^{-1}\!\left(\frac{r_s-r_p}{C}\right),
-\label{eq:dfdrp_final_used}
-\end{equation}
-
-\begin{equation}
-\frac{\partial f}{\partial r_s}
-=
-\pi
-+
-2\sin^{-1}\!\left(\frac{r_s-r_p}{C}\right).
-\label{eq:dfdrs_final_used}
-\end{equation}
-
-Substituting \Eq{eq:dfdrp_final_used} and \Eq{eq:dfdrs_final_used} into
-\Eq{eq:drsds_recalled} gives
-
-\begin{equation}
-\frac{dr_s}{ds}
-=
--
-\frac{
-\pi - 2\sin^{-1}\!\left(\dfrac{r_s-r_p}{C}\right)
-}{
-\pi + 2\sin^{-1}\!\left(\dfrac{r_s-r_p}{C}\right)
-}
-\frac{dr_p}{ds}.
-\label{eq:drsds_subbed}
-\end{equation}
-
-Finally, substituting the piecewise primary radius derivative
-\Eq{eq:drpds_piecewise} yields
-
-\bigeq{eq:drsds_final}{Secondary Radius Derivative}{
-\frac{dr_s}{ds}
+\bigeq{eq:secondary_radius_rate}{Secondary Radius Rate}{
+\dot r_s
 =
 \begin{cases}
 0,
-& 0 \le s < s_{\mathrm{dz}}, \\[12pt]
+& 0\leq s<s_{\mathrm{dz}},\\[12pt]
 \displaystyle
--\frac{1}{2\tan\beta}
-\frac{
-\pi - 2\sin^{-1}\!\left(\dfrac{r_s-r_p}{C}\right)
-}{
-\pi + 2\sin^{-1}\!\left(\dfrac{r_s-r_p}{C}\right)
-},
-& s_{\mathrm{dz}} \le s \le s_{\max}.
+-\frac{\phi_p}{\phi_s}
+\frac{\dot s}{2\tan\beta},
+& s_{\mathrm{dz}}<s\leq s_{\max}.
 \end{cases}
 }
 
-Because $r_{s,\mathrm{eff}} = r_s - h_b/2$ with $h_b$ constant, the same
-expression applies to the effective secondary radius derivative:
+The negative sign is the geometric consequence of the fixed belt length: as the
+belt moves outward on the primary pulley, it must move inward on the secondary
+pulley.
 
-\begin{equation}
-\frac{dr_{s,\mathrm{eff}}}{ds} = \frac{dr_s}{ds}.
-\label{eq:drseffds_final}
-\end{equation}
+\subsubsection{Secondary Radius Acceleration}
+\label{sec:secondary_radius_acceleration}
 
-% ==============================================================
-\subsubsection{Final Expression for \texorpdfstring{$dR/ds$}{dR/ds} and \texorpdfstring{$\dot R$}{Rdot}}
-\label{sec:dRds_final}
+The secondary radius rate is not constant while the CVT shifts, because the
+wrap angles themselves change as the belt moves. To find \(\ddot r_s\), first
+find the rates of the wrap angles appearing in
+\Cref{eq:wrap_weighted_radius_rate_balance}.
 
-From \Eq{eq:dRds_components}, the ratio derivative is
+The two wrap angles are determined by the tangency angle,
 
-\begin{equation}
-\frac{dR}{ds}
+\[
+\lambda
 =
-\frac{1}{r_{p,\mathrm{eff}}}\frac{dr_{s,\mathrm{eff}}}{ds}
--
-\frac{r_{s,\mathrm{eff}}}{r_{p,\mathrm{eff}}^2}\frac{dr_{p,\mathrm{eff}}}{ds}.
-\label{eq:dRds_recalled}
-\end{equation}
+\sin^{-1}\!\left(
+\frac{r_s-r_p}{C}
+\right).
+\]
 
-Using \Eq{eq:drpeffds} and \Eq{eq:drseffds_final}, this becomes
+Using the chain rule,
 
-\begin{equation}
-\frac{dR}{ds}
+\begin{align}
+\dot\lambda
+&=
+\frac{\dot r_s-\dot r_p}
+{\sqrt{C^2-(r_s-r_p)^2}}.
+\label{eq:tangency_angle_rate}
+\end{align}
+
+Since \(\phi_p=\pi-2\lambda\) and \(\phi_s=\pi+2\lambda\),
+
+\begin{align}
+\dot\phi_p
+&=
+-2\dot\lambda
 =
-\frac{1}{r_{p,\mathrm{eff}}}\frac{dr_s}{ds}
--
-\frac{r_{s,\mathrm{eff}}}{r_{p,\mathrm{eff}}^2}\frac{dr_p}{ds}.
-\label{eq:dRds_sub_radii}
-\end{equation}
-
-Substituting \Eq{eq:drsds_subbed} into \Eq{eq:dRds_sub_radii} gives
-
-\begin{equation}
-\frac{dR}{ds}
+\frac{2(\dot r_p-\dot r_s)}
+{\sqrt{C^2-(r_s-r_p)^2}},
+\label{eq:primary_wrap_angle_rate}\\[6pt]
+\dot\phi_s
+&=
+2\dot\lambda
 =
-\left[
--
-\frac{1}{r_{p,\mathrm{eff}}}
-\frac{
-\pi - 2\sin^{-1}\!\left(\dfrac{r_s-r_p}{C}\right)
-}{
-\pi + 2\sin^{-1}\!\left(\dfrac{r_s-r_p}{C}\right)
-}
--
-\frac{r_{s,\mathrm{eff}}}{r_{p,\mathrm{eff}}^2}
-\right]
-\frac{dr_p}{ds}.
-\label{eq:dRds_subbed_all}
-\end{equation}
+-\frac{2(\dot r_p-\dot r_s)}
+{\sqrt{C^2-(r_s-r_p)^2}}.
+\label{eq:secondary_wrap_angle_rate}
+\end{align}
 
-Finally, substituting the piecewise primary derivative \Eq{eq:drpds_piecewise}
-yields the fully expanded result
+Now differentiate the rate balance,
+\(\phi_p\dot r_p+\phi_s\dot r_s=0\). Each term is the product of a changing
+wrap angle and a changing radius rate, so use the product rule on both:
 
-\begin{equation}
-\frac{dR}{ds}
-=
-\begin{cases}
-0,
-& 0 \le s < s_{\mathrm{dz}}, \\[14pt]
-\displaystyle
-\frac{1}{2\tan\beta}
-\left[
--
-\frac{1}{r_{p,\mathrm{eff}}}
-\frac{
-\pi - 2\sin^{-1}\!\left(\dfrac{r_s-r_p}{C}\right)
-}{
-\pi + 2\sin^{-1}\!\left(\dfrac{r_s-r_p}{C}\right)
-}
--
-\frac{r_{s,\mathrm{eff}}}{r_{p,\mathrm{eff}}^2}
-\right],
-& s_{\mathrm{dz}} \le s \le s_{\max}.
-\end{cases}
-\label{eq:dRds_final}
-\end{equation}
-
-Using the chain rule \Eq{eq:Rdot_chain}, $\dot R = (dR/ds)\dot s$. Substituting
-\Eq{eq:dRds_final} and rearranging gives
-
-\bigeq{eq:Rdot_final}{Rate of Change of Transmission Ratio}{
-\dot R
-=
-\begin{cases}
-0,
-& 0 \le s < s_{\mathrm{dz}}, \\[14pt]
-\displaystyle
--\frac{\dot s}{2\tan\beta\,r_{p,\mathrm{eff}}}
-\left[
-\frac{
-\pi - 2\sin^{-1}\!\left(\dfrac{r_s-r_p}{C}\right)
-}{
-\pi + 2\sin^{-1}\!\left(\dfrac{r_s-r_p}{C}\right)
-}
+\begin{align}
+0
+&=
+\frac{d}{dt}
+\left(
+\phi_p\dot r_p+\phi_s\dot r_s
+\right)
+\nonumber\\
+&=
+\dot\phi_p\dot r_p
 +
-\frac{r_{s,\mathrm{eff}}}{r_{p,\mathrm{eff}}}
-\right],
-& s_{\mathrm{dz}} \le s \le s_{\max}.
+\phi_p\ddot r_p
++
+\dot\phi_s\dot r_s
++
+\phi_s\ddot r_s.
+\label{eq:wrap_weighted_radius_acceleration_start}
+\end{align}
+
+Substituting the wrap-angle rates from
+\Cref{eq:primary_wrap_angle_rate,eq:secondary_wrap_angle_rate} gives
+
+\begin{align}
+0
+={}&
+\frac{2(\dot r_p-\dot r_s)}
+{\sqrt{C^2-(r_s-r_p)^2}}\dot r_p
++
+\phi_p\ddot r_p
+-
+\frac{2(\dot r_p-\dot r_s)}
+{\sqrt{C^2-(r_s-r_p)^2}}\dot r_s
++
+\phi_s\ddot r_s
+\nonumber\\
+={}&
+\phi_p\ddot r_p
++
+\phi_s\ddot r_s
++
+\frac{2(\dot r_p-\dot r_s)^2}
+{\sqrt{C^2-(r_s-r_p)^2}}.
+\label{eq:wrap_weighted_radius_acceleration_balance}
+\end{align}
+
+The final term is present because a changing radius changes the wrap angles as
+well as the radius itself. Solving for the secondary radial acceleration gives
+
+\begin{equation}
+\ddot r_s
+=
+-\frac{\phi_p}{\phi_s}\ddot r_p
+-
+\frac{2}
+{\phi_s\sqrt{C^2-(r_s-r_p)^2}}
+\left(\dot r_p-\dot r_s\right)^2.
+\label{eq:secondary_radius_acceleration_general}
+\end{equation}
+
+The remaining difference of radius rates can be written using the result
+already obtained in \Cref{eq:secondary_radius_rate_general}:
+
+\begin{align}
+\dot r_p-\dot r_s
+&=
+\dot r_p
++
+\frac{\phi_p}{\phi_s}\dot r_p
+\nonumber\\
+&=
+\frac{\phi_p+\phi_s}{\phi_s}\dot r_p
+\nonumber\\
+&=
+\frac{2\pi}{\phi_s}\dot r_p.
+\label{eq:radius_rate_difference}
+\end{align}
+
+Substituting this into \Cref{eq:secondary_radius_acceleration_general} gives
+
+\begin{equation}
+\ddot r_s
+=
+-\frac{\phi_p}{\phi_s}\ddot r_p
+-
+\frac{8\pi^2}
+{\phi_s^3\sqrt{C^2-(r_s-r_p)^2}}
+\dot r_p^2.
+\label{eq:secondary_radius_acceleration_primary_form}
+\end{equation}
+
+Finally, insert the primary radius rate and acceleration from
+\Cref{eq:primary_radius_rate,eq:primary_radius_acceleration}:
+
+\bigeq{eq:secondary_radius_acceleration}{Secondary Radius Acceleration}{
+\ddot r_s
+=
+\begin{cases}
+0,
+& 0\leq s<s_{\mathrm{dz}},\\[14pt]
+\displaystyle
+-\frac{\phi_p}{\phi_s}
+\frac{\ddot s}{2\tan\beta}
+-
+\frac{2\pi^2}
+{\phi_s^3
+\sqrt{C^2-(r_s-r_p)^2}
+\tan^2\beta}
+\dot s^2,
+& s_{\mathrm{dz}}<s\leq s_{\max}.
 \end{cases}
 }
+
+\begin{remarkbox}[Remark (Rate of the Geometric CVT Ratio)]
+The individual pulley-radius rates and accelerations are the quantities needed
+in the subsequent development. They can also be combined to determine how
+quickly the geometric CVT ratio changes. This result is not required in the
+main derivation, but it gives a useful design-level view of how sheave angle and
+current pulley geometry shape the available ratio-change rate. The derivation
+is given in \Cref{app:ratio-rate}.
+\end{remarkbox}
 
 \subsection{Section Summary and Forward Connection}
 \label{sec:geometry_summary}
@@ -9325,7 +9363,609 @@ The blend scale $v_{\mathrm{blend}}$ should generally be chosen greater than or
 equal to $v_{\mathrm{smooth}}$, so that the handoff from clamped demand to the
 smooth Coulomb limit is not sharper than the smoothing law itself.
 
+\chapter{Rate and Acceleration of the Geometric CVT Ratio}
+\label{app:ratio-rate}
 
+The main derivation uses the individual pulley-radius rates and accelerations
+from \Cref{sec:pulley_radius_rates}. Those same results can be combined to show
+how quickly the available geometric CVT ratio changes as the sheaves move.
+
+Recall the geometric CVT ratio from \Cref{eq:cvt_ratio}:
+
+\begin{equation}
+R_g
+=
+\frac{r_s}{r_p},
+\label{eq:geometric_ratio_recalled}
+\end{equation}
+
+The individual primary and secondary radius rates and accelerations have already
+been established in \Cref{sec:pulley_radius_rates}. This appendix only combines
+those results to show how the available geometric ratio itself changes as the
+sheaves move.
+
+\subsection{Rate of Change of the Geometric CVT Ratio}
+
+Both the numerator and denominator in \Cref{eq:geometric_ratio_recalled} can
+change with time. Using the quotient rule,
+
+\begin{align}
+\dot R_g
+&=
+\frac{d}{dt}
+\left(
+\frac{r_s}{r_p}
+\right)
+\nonumber\\
+&=
+\frac{
+\dot r_s r_p-r_s\dot r_p
+}
+{r_p^2}
+\nonumber\\
+&=
+\frac{\dot r_s}{r_p}
+-
+\frac{r_s}{r_p^2}\dot r_p.
+\label{eq:geometric_ratio_rate_general}
+\end{align}
+
+The secondary-radius result in \Cref{eq:secondary_radius_rate} supplies the
+coupled secondary motion. Within the active-shift branch,
+
+\begin{equation}
+\dot r_s
+=
+-\frac{\phi_p}{\phi_s}\dot r_p.
+\label{eq:geometric_ratio_secondary_rate_substitution}
+\end{equation}
+
+Substituting this into \Cref{eq:geometric_ratio_rate_general} gives
+
+\begin{align}
+\dot R_g
+&=
+\frac{1}{r_p}
+\left(
+-\frac{\phi_p}{\phi_s}\dot r_p
+\right)
+-
+\frac{r_s}{r_p^2}\dot r_p
+\nonumber\\
+&=
+-\frac{\dot r_p}{r_p}
+\left(
+\frac{\phi_p}{\phi_s}
++
+\frac{r_s}{r_p}
+\right)
+\nonumber\\
+&=
+-\frac{\dot r_p}{r_p}
+\left(
+\frac{\phi_p}{\phi_s}
++
+R_g
+\right).
+\label{eq:geometric_ratio_rate_primary_form}
+\end{align}
+
+Finally, \Cref{eq:primary_radius_rate} gives
+\(\dot r_p=\dot s/(2\tan\beta)\) in the active-shift branch. Therefore,
+
+\bigeq{eq:geometric_ratio_rate}{Rate of Change of Geometric CVT Ratio}{
+\dot R_g
+=
+\begin{cases}
+0,
+& 0\leq s<s_{\mathrm{dz}},\\[14pt]
+\displaystyle
+-\frac{\dot s}
+{2\tan\beta\,r_p}
+\left(
+\frac{\phi_p}{\phi_s}
++
+R_g
+\right),
+& s_{\mathrm{dz}}<s\leq s_{\max}.
+\end{cases}
+}
+
+For an upshift, \(\dot s>0\), so the available geometric reduction decreases as
+the belt moves outward on the primary pulley.
+
+
+% Insert this subsection after ``Rate of Change of the Geometric CVT Ratio''
+% and before ``Acceleration of the Geometric CVT Ratio''.
+%
+% The figure paths below assume the image files have been copied to
+% ./illustrations/geometry/. Update the paths if your illustration directory differs.
+
+% Drop-in replacement for the exploratory part of the appendix.
+% Intended to follow the subsection ``Rate of Change of the Geometric CVT Ratio''
+% and to precede ``Acceleration of the Geometric CVT Ratio''.
+
+\subsection{Geometry Families in the Radius Plane}
+\label{app}
+
+The preceding result gives the local rate at which the geometric ratio changes
+once the pulley geometry is known. To interpret that result in terms of actual
+CVT design choices, it is useful to first ask which pulley-radius combinations
+are available in the first place.
+
+Recall once more that the geometric CVT ratio is
+
+\begin{equation}
+R_g=\frac{r_s}{r_p}.
+\label{eq}
+\end{equation}
+
+Thus, every point in the \((r_p,r_s)\) plane corresponds to one geometric
+ratio, and every constant-ratio contour is a line of geometrically similar
+pulley states. This view is helpful because it separates three
+different design questions that are easy to blur together:
+
+\begin{enumerate}
+    \item What geometric ratio does a given radius pair provide?
+    \item Which radius pairs are compatible with a selected belt and installed
+    geometry?
+    \item How does the chosen compatible path influence the way ratio changes as
+    the CVT shifts?
+\end{enumerate}
+
+The first question is answered by the constant-\(R_g\) contours. The other two
+come from the belt-length compatibility relation. Once one of the global
+geometric quantities---belt length \(L_b\) or center-to-center distance
+\(C\)---is fixed, the compatibility relation defines a family of allowable
+radius pairs in the same plane.
+
+\Cref{fig:ratio_plane_geometry_families} compares these two views directly.
+The left panel fixes the center distance and varies the belt length, while the
+right panel fixes the belt length and varies the center distance. In both
+panels, the solid contours are constant geometric ratio. The dashed families
+are the geometrically compatible radius pairs selected by the remaining design
+choice.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\linewidth]{./figures/appendix/cvt_ratio_rate/cvt_geometry_matched_side_by_side.png}
+\caption{
+Matched comparison of geometry families in the pulley-radius plane. In both
+panels, the solid contours are constant geometric ratio \(R_g=r_s/r_p\). In
+(a), the center-to-center distance is fixed and the dashed families correspond
+to different belt lengths. In (b), the belt length is fixed and the dashed
+families correspond to different center-to-center distances.}
+\label{fig:ratio_plane_geometry_families}
+\end{figure}
+
+This figure makes two points especially clear.
+
+First, meeting a target ratio aperture is not only a matter of choosing two
+endpoint ratios. The selected belt and installed geometry determine which
+radius pairs are even reachable. A longer or shorter belt shifts the compatible
+family through the plane, and so does a change in center distance. Since the
+constant-ratio lines are not parallel to those compatibility families, changing
+\(L_b\) or \(C\) changes not only the reachable endpoints, but also the
+geometric route between them.
+
+Second, the figure makes the roles of belt selection and packaging easier to
+distinguish. The belt length is largely a component-selection choice, while the
+center distance is largely a packaging choice. Both appear in the same
+compatibility relation, but they move the admissible family in different ways.
+This is why a target ratio range cannot be discussed cleanly without also
+specifying either the chosen belt or the available center-to-center distance.
+
+In this sense, \Cref{fig:ratio_plane_geometry_families} is the static geometric
+view of the design problem. It shows what ratio states are available. The next
+question is dynamic in a geometric sense: once the CVT moves along one of those
+compatible paths, how much ratio change does a small increment of axial travel
+produce?
+
+\subsection{Exploring the Local Ratio-Change Map}
+\label{sec:ratio_rate_map}
+
+The expression for \(\dot R_g\) gives the instantaneous rate of change of the
+geometric ratio. To compare different parts of the geometry without committing
+to a particular time history, it is useful to divide out the shift speed and
+look instead at the local ratio change produced by a small increment of axial
+travel:
+
+\begin{equation}
+\frac{dR_g}{ds}
+=
+-\frac{1}{2\tan\beta\,r_p}
+\left(
+\frac{\phi_p}{\phi_s}+R_g
+\right).
+\label{eq:appendix_local_ratio_gain}
+\end{equation}
+
+For a small positive increment \(\Delta s\),
+
+\begin{equation}
+\Delta R_g
+\approx
+\frac{dR_g}{ds}\Delta s.
+\label{eq:appendix_local_ratio_increment}
+\end{equation}
+
+The plots below take \(\Delta s=\SI{1}{\milli\metre}\), so the displayed
+quantity may be read as the local change in geometric ratio caused by an
+additional \SI{1}{\milli\metre} of primary closure. The negative sign simply
+reflects the usual upshift direction: increasing \(s\) reduces the geometric
+reduction ratio.
+
+\paragraph{A sensitivity field over the radius plane}
+
+The first view is a broad surface over the radius plane. Here, \(r_p\) and
+\(r_s\) are treated as independent coordinates so that every part of the
+geometry can be inspected. A real CVT does not wander arbitrarily across this
+surface; its fixed belt length and center distance constrain it to one
+belt-length-compatible path. Even so, the full surface is valuable because it
+shows where the geometry itself makes ratio change especially strong or weak.
+
+\Cref{fig:ratio_rate_broad_maps} shows two versions of this surface. The
+unclipped view exposes the dominant trend: the local ratio change becomes much
+larger in magnitude as the primary radius becomes small. This follows directly
+from the explicit \(1/r_p\) factor in \Cref{eq:appendix_local_ratio_gain}, and
+is reinforced by the fact that the geometric ratio \(R_g=r_s/r_p\) is also
+largest in that same region. The clipped view hides the most extreme values so
+that the otherwise compressed mid-range curvature can be seen more clearly. The
+orange curve marks the \(R_g=1\) locus. It is a convenient reference, but not a
+special boundary in the local ratio-change law itself.
+
+\begin{figure}[H]
+\centering
+\begin{minipage}[t]{0.49\linewidth}
+\centering
+\includegraphics[width=\linewidth]{./figures/appendix/cvt_ratio_rate/zoomed_out_R.png}
+
+\smallskip
+\textbf{(a)} Broad radius domain. The full scale exposes the rapidly increasing
+magnitude of local ratio change near small \(r_p\).
+\end{minipage}
+\hfill
+\begin{minipage}[t]{0.49\linewidth}
+\centering
+\includegraphics[width=\linewidth]{./figures/appendix/cvt_ratio_rate/truncated_R.png}
+
+\smallskip
+\textbf{(b)} The same domain with values below \(-1\) per
+\SI{1}{\milli\metre} clipped, exposing the curvature through the mid-range.
+\end{minipage}
+\caption{
+Local geometric-ratio change for a \SI{1}{\milli\metre} increase in primary
+axial closure across a broad pulley-radius domain. The orange curve marks the
+\(R_g=1\) locus.}
+\label{fig:ratio_rate_broad_maps}
+\end{figure}
+
+\paragraph{How belt choice and installed geometry select a path}
+
+The broad surface is useful, but a particular CVT design only experiences the
+part of that field lying along its own compatible geometry path. This is where
+the earlier radius-plane view becomes directly relevant. Once a belt length and
+center distance are fixed, the CVT is constrained to one compatibility curve in
+the \((r_p,r_s)\) plane. As the primary sheave closes, the operating point
+moves along that curve and samples the local ratio-change field point by point.
+
+\Cref{fig:ratio_rate_belt_paths} overlays three representative
+belt-length-compatible paths on the local ratio-change surface. Each path
+corresponds to a different belt-length/reference-geometry choice. The figure
+shows that two designs with similar overall ratio aperture can still distribute
+their ratio change very differently over the available shift travel. One path
+may enter the steep small-\(r_p\) region early, concentrating a large amount of
+ratio change into a short portion of the stroke. Another may spend more of the
+stroke in the flatter region, distributing the same overall change more
+gradually.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.90\linewidth]{./figures/appendix/cvt_ratio_rate/ratio_rate_three_belts.png}
+\caption{
+Representative fixed-belt-length paths through the local ratio-change surface.
+Each coloured curve is a geometrically compatible pulley-radius path for a
+different belt-length/reference-geometry choice. The surface value gives the
+local change in geometric ratio associated with an additional
+\SI{1}{\milli\metre} of primary closure at that point.}
+\label{fig:ratio_rate_belt_paths}
+\end{figure}
+
+This is the key design value of the map: it does not merely say what overall
+ratio range is available. It shows \emph{where along the shift stroke} that
+ratio change is spent.
+
+\paragraph{Separating the roles of the two pulley radii}
+
+The two projections in \Cref{fig:ratio_rate_projections} help isolate the
+individual effects of \(r_p\) and \(r_s\). In
+\Cref{fig:ratio_rate_projections}(a), the horizontal axis is the secondary
+radius and the contours identify the primary radius. For a fixed primary
+radius, increasing \(r_s\) increases the geometric ratio and makes the local
+ratio change more negative. The effect is visible, but the contour spacing
+shows that it remains secondary to the influence of the primary radius.
+
+\Cref{fig:ratio_rate_projections}(b) makes the primary-radius effect more
+explicit. Every secondary-radius contour bends sharply downward as \(r_p\)
+approaches its lower limit, then flattens at larger radius. This is the visual
+form of the \(1/r_p\) dependence in \Cref{eq:appendix_local_ratio_gain}. Thus,
+the small-primary-radius region is not only where the geometric reduction is
+large; it is also where the ratio becomes most sensitive to additional axial
+motion.
+
+\begin{figure}[H]
+\centering
+\begin{minipage}[t]{0.49\linewidth}
+\centering
+\includegraphics[width=\linewidth]{./figures/appendix/cvt_ratio_rate/r_s.png}
+
+\smallskip
+\textbf{(a)} Local ratio change against secondary radius. Colour and contours
+identify the primary radius.
+\end{minipage}
+\hfill
+\begin{minipage}[t]{0.49\linewidth}
+\centering
+\includegraphics[width=\linewidth]{./figures/appendix/cvt_ratio_rate/r_p.png}
+
+\smallskip
+\textbf{(b)} Local ratio change against primary radius. Colour and contours
+identify the secondary radius.
+\end{minipage}
+\caption{
+Two projections of the local ratio-change surface for a
+\SI{1}{\milli\metre} primary closure. The projections separate the
+contributions of the two radii and show the dominant sensitivity to small
+primary radius.}
+\label{fig:ratio_rate_projections}
+\end{figure}
+
+\paragraph{Design interpretation}
+
+Taken together, \Cref{fig:ratio_plane_geometry_families} and
+\Cref{fig:ratio_rate_broad_maps}--\Cref{fig:ratio_rate_projections} give a more
+complete geometric design picture than endpoint ratios alone.
+
+The radius-plane view answers the question of feasibility. It makes clear how a
+target ratio aperture depends on the selected belt length and the available
+center-to-center distance. A longer or shorter belt can move the admissible
+family enough to change both the reachable ratio range and the portion of the
+plane through which the CVT shifts. Likewise, a packaging change in center
+distance can move the same belt into a very different family of compatible
+radius pairs.
+
+The ratio-change view answers the question of distribution. Once a design
+selects its belt and installed geometry, the compatible path through the plane
+determines where ratio change is concentrated. A path that reaches very small
+\(r_p\) can produce large ratio change in little axial travel, which may be
+attractive when launch or climbing performance demands strong reduction with
+limited shift stroke. A path that stays farther from that corner distributes
+ratio change more gently and may be easier to control or to package within a
+desired sheave travel.
+
+This does \emph{not} mean that the smallest possible \(r_p\) is always best.
+The present plots are geometric only. They show the leverage of the geometry,
+but not its cost. Experimental work by \citet{ChenLeeSung1998} showed that, for
+their rubber-belt CVT, the highest transmission efficiency occurred near a
+\(1{:}1\) speed ratio, reminding us that the most attractive geometric reduction
+state is not automatically the most efficient operating state. More directly,
+\citet{ChildsCowburn1987b} identified additional loss penalties at small pulley
+radii in V-belt drives, with belt-carcass warping and shearing proposed as
+important contributors. In other words, the same small-\(r_p\) region that
+offers strong geometric leverage is also the region where the belt is bent and
+seated most severely.
+
+For that reason, these plots are best used as an early design lens rather than
+a final design verdict. They help screen combinations of belt length, center
+distance, and pulley radii by showing not only how much ratio range is
+available, but how that range is distributed over the stroke. Later traction,
+loss, and dynamic analyses can then be used to judge whether the geometrically
+attractive part of the design space is physically supportable
+\citep{Gerbert1996,Bertini2014,Messick2018}.
+
+\subsection{Acceleration of the Geometric CVT Ratio}
+
+The ratio rate can change for two reasons. The primary sheave may accelerate,
+and the pulley geometry continues to change as the belt moves. Differentiate
+\Cref{eq:geometric_ratio_rate_general} term by term to capture both effects.
+
+For the first term, \(\dot r_s/r_p\), use the quotient rule:
+
+\begin{equation}
+\frac{d}{dt}
+\left(
+\frac{\dot r_s}{r_p}
+\right)
+=
+\frac{\ddot r_s}{r_p}
+-
+\frac{\dot r_s\dot r_p}{r_p^2}.
+\label{eq:ratio_acceleration_first_term}
+\end{equation}
+
+For the second term, \(r_s\dot r_p/r_p^2\), all three factors may change.
+Using the product rule,
+
+\begin{align}
+\frac{d}{dt}
+\left(
+\frac{r_s\dot r_p}{r_p^2}
+\right)
+&=
+\frac{\dot r_s\dot r_p}{r_p^2}
++
+\frac{r_s\ddot r_p}{r_p^2}
+-
+\frac{2r_s\dot r_p^2}{r_p^3}.
+\label{eq:ratio_acceleration_second_term}
+\end{align}
+
+Subtracting \Cref{eq:ratio_acceleration_second_term} from
+\Cref{eq:ratio_acceleration_first_term} gives
+
+\begin{align}
+\ddot R_g
+&=
+\frac{\ddot r_s}{r_p}
+-
+\frac{\dot r_s\dot r_p}{r_p^2}
+-
+\left[
+\frac{\dot r_s\dot r_p}{r_p^2}
++
+\frac{r_s\ddot r_p}{r_p^2}
+-
+\frac{2r_s\dot r_p^2}{r_p^3}
+\right]
+\nonumber\\
+&=
+\frac{\ddot r_s}{r_p}
+-
+\frac{2\dot r_s\dot r_p}{r_p^2}
+-
+\frac{r_s\ddot r_p}{r_p^2}
++
+\frac{2r_s\dot r_p^2}{r_p^3}.
+\label{eq:geometric_ratio_acceleration_general}
+\end{align}
+
+The main derivation gives the required coupled secondary motion in
+\Cref{eq:secondary_radius_rate_general,eq:secondary_radius_acceleration_primary_form}:
+
+\begin{align}
+\dot r_s
+&=
+-\frac{\phi_p}{\phi_s}\dot r_p,
+\label{eq:geometric_ratio_secondary_rate_recalled}\\[6pt]
+\ddot r_s
+&=
+-\frac{\phi_p}{\phi_s}\ddot r_p
+-
+\frac{8\pi^2}
+{\phi_s^3\sqrt{C^2-(r_s-r_p)^2}}
+\dot r_p^2.
+\label{eq:geometric_ratio_secondary_acceleration_recalled}
+\end{align}
+
+Substituting these into \Cref{eq:geometric_ratio_acceleration_general} gives
+
+\begin{align}
+\ddot R_g
+={}&
+\frac{1}{r_p}
+\left[
+-\frac{\phi_p}{\phi_s}\ddot r_p
+-
+\frac{8\pi^2}
+{\phi_s^3\sqrt{C^2-(r_s-r_p)^2}}
+\dot r_p^2
+\right]
+-
+\frac{2}{r_p^2}
+\left[
+-\frac{\phi_p}{\phi_s}\dot r_p
+\right]
+\dot r_p
+\nonumber\\
+&\quad
+-
+\frac{r_s}{r_p^2}\ddot r_p
++
+\frac{2r_s}{r_p^3}\dot r_p^2
+\nonumber\\
+={}&
+-\frac{1}{r_p}
+\left(
+\frac{\phi_p}{\phi_s}
++
+\frac{r_s}{r_p}
+\right)
+\ddot r_p
++
+\left[
+\frac{2}{r_p^2}
+\left(
+\frac{\phi_p}{\phi_s}
++
+\frac{r_s}{r_p}
+\right)
+-
+\frac{8\pi^2}
+{\phi_s^3r_p\sqrt{C^2-(r_s-r_p)^2}}
+\right]
+\dot r_p^2
+\nonumber\\
+={}&
+-\frac{1}{r_p}
+\left(
+\frac{\phi_p}{\phi_s}
++
+R_g
+\right)
+\ddot r_p
++
+\left[
+\frac{2}{r_p^2}
+\left(
+\frac{\phi_p}{\phi_s}
++
+R_g
+\right)
+-
+\frac{8\pi^2}
+{\phi_s^3r_p\sqrt{C^2-(r_s-r_p)^2}}
+\right]
+\dot r_p^2.
+\label{eq:geometric_ratio_acceleration_primary_form}
+\end{align}
+
+Finally, use the primary radius rate and acceleration from
+\Cref{eq:primary_radius_rate,eq:primary_radius_acceleration}:
+
+\widebigeq{eq:geometric_ratio_acceleration}{Acceleration of Geometric CVT Ratio}{
+\ddot R_g
+=
+\begin{cases}
+0,
+& 0\leq s<s_{\mathrm{dz}},\\[16pt]
+\displaystyle
+-\frac{\ddot s}
+{2\tan\beta\,r_p}
+\left(
+\frac{\phi_p}{\phi_s}
++
+R_g
+\right)
++
+\frac{\dot s^2}
+{2\tan^2\beta\,r_p^2}
+\left(
+\frac{\phi_p}{\phi_s}
++
+R_g
+\right)
+-
+\frac{2\pi^2\dot s^2}
+{\phi_s^3r_p\tan^2\beta
+\sqrt{C^2-(r_s-r_p)^2}},
+& s_{\mathrm{dz}}<s\leq s_{\max}.
+\end{cases}
+}
+
+The ratio acceleration has two sources. The term proportional to \(\ddot s\)
+is the direct conversion of primary-sheave acceleration into ratio
+acceleration. Its magnitude is scaled by the local ratio sensitivity
+\(dR_g/ds\), so the same axial acceleration produces a larger ratio response
+where the geometric ratio changes rapidly with shift.
+
+The terms proportional to \(\dot s^2\) arise even when the primary sheave moves
+at constant axial speed. They reflect the curvature of the geometric relation
+\(R_g(s)\): as the belt moves through the sheaves, the ratio change produced by
+each additional increment of axial travel need not remain constant. In the
+usual upshift direction, the large ratio sensitivity associated with small
+primary radius progressively weakens as the primary radius grows. The ratio
+therefore often changes rapidly at the beginning of the shift and then eases
+off, even without a change in axial shift speed.
 
 
 \end{document}
