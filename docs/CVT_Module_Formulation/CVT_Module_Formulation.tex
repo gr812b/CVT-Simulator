@@ -3335,82 +3335,25 @@ current pulley geometry shape the available ratio-change rate. The derivation
 is given in \Cref{app:ratio-rate}.
 \end{remarkbox}
 
-\subsection{Section Summary and Forward Connection}
-\label{sec:geometry_summary}
+\subsection{Section Conclusion}
+\label{sec:geometry_conclusion}
 
-This section established the complete \emph{geometric foundation} of the CVT model.
-The development was intentionally kinematic: the objective was to derive a closed,
-computable mapping from axial shift to pulley geometry and transmission ratio, without
-introducing force balance, slip behavior, or torque relations.
+The pulley geometry is now closed by a single shift coordinate. At any
+admissible value of \(s\), the primary sheave geometry fixes the primary belt
+radius, while fixed belt length determines the compatible secondary radius.
+Together, these radii determine the belt path, the pitch radii, and the
+geometric ratio made available by the current pulley arrangement.
 
-At a high level, the geometry defines the chain
-\[
-s(t)
-\;\longrightarrow\;
-r_{p,\text{eff}}(s),\; r_{s,\text{eff}}(s)
-\;\longrightarrow\;
-R(s)
-\;\longrightarrow\;
-\dot R(s,\dot s),
-\]
-with each intermediate relationship derived explicitly from pulley and belt geometry.
+The same geometry also determines how these quantities move when the shift
+coordinate changes. A primary sheave displacement produces a corresponding
+primary radial motion, while the fixed belt length constrains the secondary
+radius to respond with it. The resulting radius rates and accelerations are
+therefore not separate assumptions; they follow from the same belt-path
+geometry that determines the instantaneous ratio.
 
-\paragraph{Key Results Established}
-
-The following geometric components are now defined and ready for use in subsequent modeling:
-
-\begin{enumerate}
-    \item \textbf{Primary radius law.}  
-    \Eq{eq:primary_radius} provides the piecewise relationship between axial shift $s$
-    and primary outer radius, including deadzone behavior and cone-angle dependence.
-
-    \item \textbf{Belt-length compatibility constraint.}  
-    \Eq{eq:belt_length_constraint} enforces constant belt length and defines the implicit,
-    nonlinear coupling between $r_p$, $r_s$, and the center distance $C$.
-
-    \item \textbf{Center distance determination.}  
-    \Sec{sec:center_distance} fixes the assembled center-to-center distance $C$ by evaluating
-    the belt constraint at a known geometric configuration. This solve is performed once
-    during initialization.
-
-    \item \textbf{Secondary radius as a function of shift.}  
-    \Sec{sec:secondary_radius} defines $r_s(s)$ implicitly by solving the belt constraint at
-    each shift position, producing the required redistribution of belt radius between pulleys.
-
-    \item \textbf{Wrap angles as functions of shift.}  
-    \Sec{sec:wrap_angles} defines the wrap angles $\phi_p(s)$ and $\phi_s(s)$ follow directly from the tangency geometry and
-    are available for later contact, work, and belt-distribution calculations.
-
-    \item \textbf{Effective torque radii.}  
-    \Sec{sec:effective-radius-placeholder} corrects outer radii to effective radii using belt
-    thickness, ensuring subsequent torque relations use an appropriate moment arm.
-
-    \item \textbf{Ratio and ratio rate.}  
-    \Eq{eq:cvt_ratio} defines the geometric ratio $R(s)$, and \Sec{sec:ratio_rate} provides
-    $\dfrac{dR}{ds}$ and $\dot R$ via \Eq{eq:dRds_final} and \Eq{eq:Rdot_final}, including the
-    deadzone condition where $R$ is constant.
-\end{enumerate}
-
-\paragraph{Structural Role in the Full Model}
-
-These results form the geometric backbone of the CVT simulation. All subsequent sections treat
-the relationships derived here as fixed mappings. In particular, later torque and force models
-will use $r_{p,\text{eff}}(s)$ and $r_{s,\text{eff}}(s)$ as inputs, and shifting kinematics will
-use $R(s)$ and $\dot R(s,\dot s)$ to relate primary and secondary motion during ratio change.
-
-Several key properties are now clear:
-(i) the geometric coupling is inherently nonlinear (through the belt-length constraint),
-(ii) the deadzone is explicitly represented,
-and (iii) within the admissible travel range the mappings are differentiable and suitable for
-continuous-time simulation.
-
-\paragraph{Transition to Dynamics}
-
-With the geometry fully specified, the next objective is to determine how the shift coordinate
-evolves in time. Subsequent sections introduce axial force generation (from pulley mechanisms and
-belt interaction) to determine $\dot s$ and $\ddot s$. Once $\dot s$ is known, the ratio-rate
-expression \Eq{eq:Rdot_final} provides the corresponding ratio evolution and the required
-kinematic coupling between rotating components during shifting.
+This completes the geometric part of the model. The remaining development can
+treat the pulley radii, belt path, and their motion as a consistent consequence
+of the current shift state, rather than as independent quantities.
 
 
 \section{Pulley Axial Force Models}\label{sec:axial}
