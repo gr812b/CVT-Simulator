@@ -2620,130 +2620,77 @@ secondary pulley. The same numerical procedure described in
 \Cref{app:geometry-root-solve} is used whenever the system equations are
 evaluated as the shift coordinate changes.
 
-The two pulley radii are now available from the shift coordinate:
-\(r_{p,\mathrm{outer}}(s)\) follows directly from the primary V-groove
-geometry, and \(r_{s,\mathrm{outer}}(s)\) follows from fixed belt-length
-compatibility. The remaining belt-path quantities can then be evaluated from
-the current geometry.
+\subsection{Pitch Radius and Geometric CVT Ratio}
+\label{sec:pitch_radius_and_ratio}
 
-\subsection{Wrap Angles as Functions of Shift}\label{sec:wrap_angles}
+The two outer radii now locate the belt within both pulley grooves and define
+the outer belt path. This is sufficient for the belt-length geometry, including
+the wrap angles and straight-span length derived in \Cref{sec:belt_length}.
 
-The wrap angles on the primary and secondary pulleys
-vary as the pulley radii change. Using the geometric relations from
-\Sec{sec:belt_length}, the tangency angle becomes
+The next quantities of interest concern belt motion and torque transfer. For
+these purposes, the outer belt surface is not the appropriate reference. The
+longitudinal tension in a rubber V-belt is carried by its reinforcement cords,
+so the radius associated with belt transport and the tension moment arm lies at
+the cord layer rather than at the outer surface.
 
-\begin{equation}
-\lambda(s)
-=
-\sin^{-1}\!\left(
-\frac{
-r_{s,\mathrm{outer}}(s)
--
-r_{p,\mathrm{outer}}(s)
-}{C}
-\right).
-\end{equation}
+The radius of the cord layer is commonly called the \emph{pitch radius}, or
+\emph{cord radius}. \citet{Gerbert1996} identifies the pitch radius with the
+cord radius and uses it to relate belt motion and transmitted torque.
 
-Substitution into the wrap-angle definitions yields
+Let \(d_{\mathrm{cord}}\) denote the fixed radial distance from the outer belt
+surface to the centre of the cord layer, where
+
+\[
+0 \leq d_{\mathrm{cord}} \leq h_b.
+\]
+
+The primary and secondary pitch radii are therefore
 
 \begin{align}
-\phi_p(s)
+r_{p,\mathrm{pitch}}(s)
 &=
-\pi
--
-2\sin^{-1}\!\left(
-\frac{
-r_{s,\mathrm{outer}}(s)
--
-r_{p,\mathrm{outer}}(s)
-}{C}
-\right),\label{eq:wrap_angle_primary}\\[8pt]
-\phi_s(s)
+r_{p,\mathrm{outer}}(s)-d_{\mathrm{cord}},
+\label{eq:primary_pitch_radius}\\[4pt]
+r_{s,\mathrm{pitch}}(s)
 &=
-\pi
-+
-2\sin^{-1}\!\left(
-\frac{
-r_{s,\mathrm{outer}}(s)
--
-r_{p,\mathrm{outer}}(s)
-}{C}
-\right).\label{eq:wrap_angle_secondary}
+r_{s,\mathrm{outer}}(s)-d_{\mathrm{cord}}.
+\label{eq:secondary_pitch_radius}
 \end{align}
 
+Because the same belt offset is applied at both pulleys,
 
+\[
+r_{s,\mathrm{pitch}}(s)-r_{p,\mathrm{pitch}}(s)
+=
+r_{s,\mathrm{outer}}(s)-r_{p,\mathrm{outer}}(s).
+\]
 
-% ==============================================================
-\subsection{Effective Torque Radius}
-\label{sec:effective-radius-placeholder}
+The tangency angle, wrap angles, and straight-span length are therefore
+unchanged by this change of reference radius. The pitch radii are introduced
+only to describe the belt's transport motion and its torque moment arms.
 
-All geometric relations derived thus far use the outer surface of the belt
-as the reference radius. This simplifies the belt-length formulation and
-pulley geometry.
+The two pitch radii also describe the effective gearing associated with the
+belt's current position. Define the geometric CVT ratio as
 
-Torque transmission, however, occurs through the belt cross-section.
-The appropriate moment arm for torque is therefore located
-approximately at the mid-height of the belt, as illustrated in 
-\cref{fig:belt_cross_section_effective_radius}.
-
-The effective torque radius for each pulley is defined as
-
-\begin{equation}
-r_{p,\text{eff}} = r_{p,\text{outer}} - \frac{h_b}{2},
-\label{eq:primary_effective_radius}
-\end{equation}
-
-\begin{equation}
-r_{s,\text{eff}} = r_{s,\text{outer}} - \frac{h_b}{2}.
-\label{eq:secondary_effective_radius}
-\end{equation}
-
-\begin{figure}[H]
-\centering
-\includegraphics[width=0.6\linewidth]{./illustrations/geometry/belt_cross_section_effective_radius.png}
-\caption{Belt cross-section showing the outer radius $r_{\text{outer}}$, 
-inner radius $r_{\text{inner}}$, and effective torque radius $r_{\text{eff}}$ 
-located at the belt mid-height. The effective radius is used for all torque 
-and power transmission calculations.}
-\label{fig:belt_cross_section_effective_radius}
-\end{figure}
-
-
-% ==============================================================
-\subsection{CVT Ratio Definition}
-\label{sec:cvt_ratio}
-
-The instantaneous transmission ratio is determined purely by pulley geometry.
-It is defined as the ratio of secondary to primary effective radii:
-
-\bigeq{eq:cvt_ratio}{CVT Ratio}{
-R(s) = \frac{r_{s,\text{eff}}(s)}{r_{p,\text{eff}}(s)}.
+\bigeq{eq:cvt_ratio}{Geometric CVT Ratio}{
+R_g(s)
+=
+\frac{r_{s,\mathrm{pitch}}(s)}
+     {r_{p,\mathrm{pitch}}(s)}.
 }
 
-Because both effective radii are functions of the shift coordinate $s$,
-the transmission ratio is likewise a function of $s$ alone.
+This ratio describes the pulley leverage made available by the current belt
+position. A large secondary pitch radius together with a small primary pitch
+radius gives a large reduction ratio. As the primary sheave closes, the belt
+moves outward on the primary and inward on the secondary, causing
+\(R_g(s)\) to decrease.
 
-As the primary sheaves close, $r_{p,\text{eff}}(s)$ increases.
-By belt-length compatibility, the secondary radius decreases.
-Consequently, the ratio $R(s)$ decreases with increasing $s$.
+Unlike a pair of rigid meshed gears, however, the belt does not automatically
+transfer motion and torque through this exact ratio. The geometric ratio
+describes the gearing available from the pulley geometry; whether that gearing
+is realized depends on the belt maintaining sufficient traction at the pulley
+contacts.
 
-Throughout this document, \emph{low ratio} and \emph{high ratio} are named by
-speed-reduction behavior, not by the numerical magnitude of $R$.
-Using the no-slip relation $\omega_p = R\,\omega_s$, larger $R$ means stronger
-reduction (primary faster than secondary), which we call \emph{low ratio};
-smaller $R$ is the opposite, which we call \emph{high ratio}.
-
-Thus:
-\begin{itemize}
-  \item Small $s$ (minimum primary radius) corresponds to low ratio.
-  \item Large $s$ (maximum primary radius) corresponds to high ratio.
-\end{itemize}
-
-The CVT ratio is therefore a purely geometric quantity determined by
-the axial shift position.
-
-
-% ==============================================================
 \subsection{Ratio Rate of Change}\label{sec:ratio_rate}
 
 The CVT ratio is not only a function of shift position, but also changes in time whenever the
