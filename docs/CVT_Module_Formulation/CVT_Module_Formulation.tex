@@ -3335,6 +3335,56 @@ current pulley geometry shape the available ratio-change rate. The derivation
 is given in \Cref{app:ratio-rate}.
 \end{remarkbox}
 
+\paragraph{Relation to prior transient models}
+
+The radius-rate and radius-acceleration relations above are the kinematic
+closure of the idealized global belt geometry adopted here. Their purpose is
+not to introduce an independent law of shifting, but to determine the
+compatible motion of both nominal pulley radii once the primary shift state is
+known. This is useful because the subsequent model requires
+\(r_p\), \(r_s\), and their time derivatives directly, rather than only the
+resulting transmission ratio.
+
+\citet{DuanEtAl2016} develop a closely related chain-CVT geometry, including the
+open-belt arc-and-tangent path and the wedge relation between movable-sheave
+axial motion and nominal radius motion. Their formulation retains an additional
+elastic path-length degree of freedom: chain extension and its rate contribute
+to span tension, while pulley deformation produces a local difference between
+the nominal pulley radius and the radius followed by an individual chain
+element. The present formulation instead enforces fixed belt length and uses
+one nominal radius over each pulley contact region. Within those assumptions,
+differentiating the belt-length compatibility relation gives the secondary
+radius rate and acceleration directly, without introducing chain stiffness,
+damping, or a spatial deformation field at this stage. The resulting mapping,
+\[
+s,\ \dot s,\ \ddot s
+\quad\longrightarrow\quad
+r_p,\ \dot r_p,\ \ddot r_p,\ 
+r_s,\ \dot r_s,\ \ddot r_s,
+\]
+is compact and makes the nominal radii required by the later belt, traction,
+and rotational equations immediately available. The tradeoff is that
+elastic path-length change and deformation-induced local radius variation are
+excluded from this geometric layer.
+
+Rubber-belt transient models use more than one representation of this same
+problem. Analytical shift-mechanics models, such as those of
+\citet{Sorge2008} and \citet{CammalleriSorge2009}, focus on local belt
+migration through a pulley wrap, where radial motion is coupled to
+circumferential transport, sliding, and contact-region mechanics. Discretized
+rubber-belt models take a different route again: the evolving belt geometry is
+obtained from the positions and motion of individual belt elements rather than
+from either a local transport relation or a single global nominal-radius
+constraint \citep{Ballew2015,JulioPlante2011}. Those approaches can resolve local belt deformation, tension
+redistribution, and contact motion in greater detail. The present model does
+not attempt to replace that detail. It instead supplies the globally compatible
+nominal radius pair, together with explicit rates and accelerations, from the
+single shift coordinate used by the mechanically actuated variator. This
+reduces the kinematic state description and preserves a direct, physically
+traceable connection between axial sheave motion and the radii used throughout
+the coupled drivetrain model.
+
+
 \subsection{Section Conclusion}
 \label{sec:geometry_conclusion}
 
