@@ -926,70 +926,49 @@ process. The primary is mainly driven by speed, the secondary is mainly driven
 by transmitted torque, and the resulting CVT behavior depends on their combined
 interaction with the belt, pulley geometry, drivetrain inertia, external load,
 and available clamping force.
+
 \subsection{Full Drivetrain Architecture}
 \label{subsec:full_drivetrain_context}
 
-The CVT does not operate in isolation. The architecture considered in this work
-is shown in \Cref{fig:drivetrain_overview}. Engine torque enters the primary
-pulley, passes through the belt to the secondary pulley, travels through a
-fixed-ratio gearbox or final drive, and ultimately produces tractive force at
-the wheels. The vehicle then pushes against the ground, and the resulting load
-feeds back into the drivetrain through inertia, grade resistance, rolling
-resistance, and aerodynamic drag.
+The CVT does not operate in isolation. The physical drivetrain architecture
+considered in this work is shown in \Cref{fig:drivetrain_overview}. The figure
+shows the CVT within the complete vehicle context, including the downstream
+gearbox, disconnect, shafts, bevel units, axles, and all four wheels.
 
-Many drivetrain architectures are possible, but this engine--CVT--gearbox--
-wheel layout is the system modeled in this work. This system-level view is
-important because the CVT ratio is not simply chosen independently of the rest
-of the vehicle. Engine speed affects primary actuation. Transmitted torque
-affects secondary clamping. Vehicle load affects the torque carried by the
-secondary. Belt traction determines whether that torque can be carried without
-slip. All of these quantities evolve together during a launch.
+Engine torque enters the primary pulley, passes through the belt to the
+secondary pulley, and then enters the downstream driveline. This driveline
+contains a fixed-ratio gearbox and the remaining shaft, bevel, and axle
+components that transmit torque to the wheels. At the tire--ground interface,
+tractive force accelerates the vehicle, while vehicle inertia, grade resistance,
+rolling resistance, and aerodynamic drag produce the load that feeds back into
+the drivetrain through the secondary side.
+
+Although the full physical architecture is shown in
+\Cref{fig:drivetrain_overview}, the dynamic model does not resolve the
+individual motion of every U-joint, bevel unit, axle, or wheel. Instead, their
+combined effect is represented through the downstream fixed reduction,
+equivalent drivetrain inertia, and vehicle longitudinal load. This preserves the
+coupling that matters to the CVT while avoiding unnecessary detail outside the
+scope of the present model.
+
+Many drivetrain architectures are possible, but the engine--CVT--downstream
+driveline--wheel arrangement shown here is the system modeled in this work.
+This system-level view is important because the CVT ratio is not simply chosen
+independently of the rest of the vehicle. Engine speed affects primary
+actuation. Transmitted torque affects secondary clamping. Vehicle load affects
+the torque carried by the secondary. Belt traction determines whether that
+torque can be carried without slip. All of these quantities evolve together
+during a launch.
 
 \begin{figure}[H]
 \centering
 \includegraphics[width=\textwidth]{illustrations/overview/drivetrain_overview.png}
-% \fbox{
-% \begin{minipage}{0.9\textwidth}
-% \centering
-% \vspace{0.8cm}
-% \textbf{Placeholder: Full drivetrain architecture}
-
-% \vspace{0.5cm}
-% Draw a block or schematic diagram showing:
-
-% \[
-% \text{engine}
-% \rightarrow
-% \text{primary pulley}
-% \rightarrow
-% \text{belt}
-% \rightarrow
-% \text{secondary pulley}
-% \rightarrow
-% \text{gearbox/final drive}
-% \rightarrow
-% \text{wheels}
-% \rightarrow
-% \text{vehicle motion}.
-% \]
-
-% Include arrows for:
-% \begin{itemize}
-%     \item torque flow from engine to wheels,
-%     \item load feedback from vehicle/drivetrain back into the CVT,
-%     \item optional speed variables on primary, secondary, and wheel.
-% \end{itemize}
-
-% The figure should make clear that the CVT is modeled as part of the drivetrain,
-% not as an isolated ratio device.
-% \vspace{0.8cm}
-% \end{minipage}
-% }
-\caption{Drivetrain architecture considered in this work. Engine torque enters
-the primary pulley, is transmitted through the belt to the secondary pulley,
-passes through the downstream drivetrain, and ultimately accelerates the
-vehicle. The vehicle load feeds back into the CVT through the secondary side of
-the drivetrain.}
+\caption{Physical drivetrain architecture considered in this work. The figure
+shows the CVT within the complete four-wheel vehicle layout, including the
+downstream gearbox, disconnect, shaft, bevel, and axle components. In the
+dynamic model, these downstream elements are represented by an equivalent
+fixed reduction, reflected inertia, and vehicle load acting through the
+secondary side of the CVT.}
 \label{fig:drivetrain_overview}
 \end{figure}
 
@@ -1000,6 +979,7 @@ describes when torque transfer can stick and when slip occurs. The drivetrain
 model closes the loop between engine torque, CVT behavior, vehicle load, and
 vehicle acceleration. Together, these pieces explain how the CVT behaves as a
 coupled mechanical system during launch.
+
 
 
 \section{Motivation and Literature Review}
