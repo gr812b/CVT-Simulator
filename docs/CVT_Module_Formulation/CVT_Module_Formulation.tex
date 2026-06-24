@@ -571,12 +571,12 @@ number of available ratios.
 
 This matters because an internal combustion engine (ICE) does not produce the
 same torque and power at every speed. Instead, the engine has a useful operating
-region where it can produce power more effectively, as shown conceptually in the
-left panel of \Cref{fig:cvt_engine_motivation}. A stepped gearbox can pass
-through this region, but it cannot generally stay there while vehicle speed
-continues to increase. The right panel of \Cref{fig:cvt_engine_motivation}
-contrasts this stepped behavior with the smoother operating path made possible
-by a continuously variable transmission.
+region where it can produce power more effectively, as shown conceptually in
+\Cref{fig:kohler_engine_motivation}. A stepped gearbox can pass through this
+region, but it cannot generally stay there while vehicle speed continues to
+increase. \Cref{fig:transmission_shift_motivation} contrasts this stepped
+behavior with the smoother operating path made possible by a continuously
+variable transmission.
 
 A continuously variable transmission (CVT) addresses this limitation by allowing
 the transmission ratio to vary smoothly within a finite range rather than
@@ -587,35 +587,41 @@ drivetrain more freedom to match engine behavior to vehicle load.
 
 \begin{figure}[H]
 \centering
-\fbox{
-\begin{minipage}{0.9\textwidth}
-\centering
-
-\vspace{0.5cm}
-\begin{minipage}{0.43\textwidth}
-\centering
-\includegraphics[width=\textwidth]{illustrations/overview/kohler_ch440_torque_power_curve.png}
-
-\end{minipage}
-\hfill
-\begin{minipage}{0.43\textwidth}
-\centering
-\includegraphics[width=\textwidth]{illustrations/overview/discrete_transmission_shift_curve.png}
-\includegraphics[width=\textwidth]{illustrations/overview/cvt_shift_curve.png}
-
-\end{minipage}
-\vspace{0.8cm}
-\end{minipage}
-}
-\caption{Conceptual motivation for a CVT. Internal combustion engines produce
-torque and power that vary with speed. A stepped gearbox forces the engine to
-move repeatedly through its speed range, while a continuously variable ratio
-can keep the engine closer to a useful operating region as vehicle speed
-changes.}
-\label{fig:cvt_engine_motivation}
+\fbox{\includegraphics[width=0.72\textwidth]{illustrations/overview/kohler_ch440_torque_power_curve.png}}
+\caption{Torque and power of the Kohler CH440 engine as functions of engine speed. 
+Both quantities vary substantially across the operating range, with peak torque 
+occurring at a lower engine speed than peak power. \citep{BajaSAEKohlerEngine2022}}
+\label{fig:kohler_engine_motivation}
 \end{figure}
 
-% --------------------------------------------------------------
+\begin{figure}[H]
+\centering
+\fbox{
+\begin{minipage}{1.00\textwidth}
+\centering
+\vspace{0.4cm}
+
+\begin{minipage}[b]{0.46\textwidth}
+\centering
+\includegraphics[width=\textwidth]{illustrations/overview/discrete_transmission_shift_curve.png}
+\end{minipage}
+\hfill
+\begin{minipage}[b]{0.46\textwidth}
+\centering
+\includegraphics[width=\textwidth]{illustrations/overview/cvt_shift_curve.png}
+\end{minipage}
+
+\vspace{0.4cm}
+\end{minipage}
+}
+\caption{Conceptual comparison of engine-speed behavior during acceleration.
+A stepped gearbox requires repeated engine-speed sweeps and drops between
+gears, whereas a CVT can vary its ratio continuously to keep the engine closer
+to a desired operating speed as vehicle speed increases. \citep{Aaen2007}}
+\label{fig:transmission_shift_motivation}
+\end{figure}
+
+
 \subsection{Physical Layout and Single-Pulley Geometry}
 \label{subsec:physical_layout_single_pulley}
 
@@ -659,7 +665,7 @@ transmits motion and torque between these two pulleys.
 \caption{Overall layout of the belt-sheave CVT considered in this work. The
 primary pulley is connected to the engine side, the secondary pulley is
 connected to the downstream drivetrain, and the rubber V-belt transmits motion
-and torque between them.}
+and torque between them. \citep{Messick2018}}
 \label{fig:cvt_system_overview}
 \end{figure}
 
@@ -674,33 +680,6 @@ faces. This basic layout is shown in \Cref{fig:single_pulley_anatomy}.
 \begin{figure}[H]
 \centering
 \includegraphics[width=\textwidth]{illustrations/overview/single_pulley_anatomy.png}
-
-% \fbox{
-% \begin{minipage}{0.85\textwidth}
-% \centering
-% \vspace{0.8cm}
-% \textbf{Placeholder: Single pulley anatomy}
-
-% \vspace{0.5cm}
-% Draw one generic pulley cross-section, not specifically primary or secondary.
-
-% Include and label:
-% \begin{itemize}
-%     \item fixed sheave,
-%     \item movable sheave,
-%     \item shaft,
-%     \item V-groove,
-%     \item rubber V-belt cross-section,
-%     \item axial direction of movable-sheave motion,
-%     \item effective belt radius,
-%     \item sheave angle or cone angle, if visually useful.
-% \end{itemize}
-
-% The figure should make clear that both the primary and secondary pulleys use
-% this same basic sheave-and-groove geometry.
-% \vspace{0.8cm}
-% \end{minipage}
-% }
 \caption{Generic anatomy of a belt-sheave CVT pulley. Each pulley consists of
 opposing conical sheaves that form a V-groove. Motion of the movable sheave
 changes the groove width and therefore changes the radius at which the belt
@@ -811,10 +790,11 @@ larger and the secondary radius is smaller. This coupled motion is shown in
 % \end{minipage}
 % }
 
-\caption{Coupled radius change in a belt-sheave CVT. Because the belt length is
-approximately fixed, an increase in primary effective radius is accompanied by
-a decrease in secondary effective radius. This coupled radius change produces
-the continuously variable transmission ratio.}
+\caption{Low-, intermediate-, and high-ratio states of a belt--sheave CVT. 
+As the belt moves outward on the primary pulley and inward on the secondary pulley, 
+the effective radii vary in opposite directions while the belt length remains 
+approximately constant. The lower views highlight the corresponding change in 
+transmission ratio.}
 \label{fig:cvt_ratio_states}
 \end{figure}
 
@@ -907,42 +887,9 @@ surfaces convert this outward flyweight motion into a closing force on the
 primary sheaves. The spring resists this motion and helps set the speed at which
 the primary begins to close. As the primary closes, the belt is pushed outward,
 the primary effective radius increases, and the CVT shifts in the upshift
-direction introduced in \Cref{fig:cvt_ratio_states}. A conceptual view of this
-mechanism is shown in \Cref{fig:cvt_primary_actuation}.
-
-\begin{figure}[H]
-\centering
-\includegraphics[width=\textwidth]{illustrations/overview/primary_cvt_cad_cross_section.png}
-% \fbox{
-% \begin{minipage}{0.9\textwidth}
-% \centering
-% \vspace{0.8cm}
-% \textbf{Placeholder: Primary actuation mechanism}
-
-% \vspace{0.5cm}
-% Use a CAD image or schematic of the primary pulley.
-
-% Include and label:
-% \begin{itemize}
-%     \item flyweights,
-%     \item ramp surfaces,
-%     \item primary spring,
-%     \item movable sheave,
-%     \item outward flyweight motion with increasing speed,
-%     \item resulting closing force on the primary sheaves.
-% \end{itemize}
-
-% The figure should visually support the sentence: increasing primary speed tends
-% to close the primary pulley and increase primary effective radius.
-% \vspace{0.8cm}
-% \end{minipage}
-% }
-\caption{Primary pulley actuation concept. As primary speed increases,
-centrifugal effects drive the flyweights outward. The ramp geometry converts
-this motion into a closing force on the primary sheaves, while the spring
-resists that motion and helps set the shift behavior.}
-\label{fig:cvt_primary_actuation}
-\end{figure}
+direction introduced in \Cref{fig:cvt_ratio_states}. The primary actuation
+mechanism is shown conceptually on the left side of
+\Cref{fig:cvt_mechanical_actuation}.
 
 The secondary pulley uses a helix mechanism and spring loading. The helix can
 be understood like a screw-like interface: when torque is transmitted through
@@ -956,41 +903,21 @@ moves through its shift range, axial motion is coupled with relative rotation
 between secondary sheave components. This detail becomes important later when
 the secondary force model is developed, but the basic intuition is simply that
 the helix converts torque and relative rotation into axial clamping. The
-secondary clamping mechanism is shown conceptually in
-\Cref{fig:cvt_secondary_actuation}.
+secondary actuation mechanism is shown conceptually on the right side of
+\Cref{fig:cvt_mechanical_actuation}.
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=\textwidth]{illustrations/overview/secondary_cvt_cad_cross_section.png}
-% \fbox{
-% \begin{minipage}{0.9\textwidth}
-% \centering
-% \vspace{0.8cm}
-% \textbf{Placeholder: Secondary actuation mechanism}
-
-% \vspace{0.5cm}
-% Use a CAD image or schematic of the secondary pulley.
-
-% Include and label:
-% \begin{itemize}
-%     \item helix mechanism,
-%     \item secondary spring,
-%     \item movable sheave,
-%     \item torque through the secondary,
-%     \item clamping force generated through the helix,
-%     \item relative rotation between secondary sheave components during shift.
-% \end{itemize}
-
-% The figure should visually support the main idea: torque through the secondary
-% loads the helix, and the helix contributes to secondary clamping.
-% \vspace{0.8cm}
-% \end{minipage}
-% }
-\caption{Secondary pulley actuation concept. Torque transmitted through the
-secondary loads the helix mechanism, which converts part of the torque reaction
-into clamping force between the sheaves. The helix also couples axial shift
-with relative rotation between secondary sheave components.}
-\label{fig:cvt_secondary_actuation}
+\includegraphics[width=\textwidth]{figures/overview/cvt_mechanical_actuation_concept.png}
+\caption{Conceptual illustration of the mechanical actuation mechanisms in the
+present CVT. Left: the primary (drive) pulley, where increasing rotational speed
+moves the flyweights outward and the ramp geometry converts that motion into a
+closing force on the sheaves, opposed by a spring. Right: the secondary (driven)
+pulley, where transmitted torque loads a cam or helix mechanism that converts
+part of the torque reaction into sheave clamping force, together with spring
+preload. In this way, the primary is mainly speed-sensitive and the secondary is
+mainly torque-reactive. \citep{JulioPlante2011}}
+\label{fig:cvt_mechanical_actuation}
 \end{figure}
 
 Although the primary and secondary mechanisms respond most strongly to
@@ -999,8 +926,6 @@ process. The primary is mainly driven by speed, the secondary is mainly driven
 by transmitted torque, and the resulting CVT behavior depends on their combined
 interaction with the belt, pulley geometry, drivetrain inertia, external load,
 and available clamping force.
-
-% --------------------------------------------------------------
 \subsection{Full Drivetrain Architecture}
 \label{subsec:full_drivetrain_context}
 
