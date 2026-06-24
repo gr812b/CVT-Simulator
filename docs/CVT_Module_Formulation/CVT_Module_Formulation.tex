@@ -587,7 +587,7 @@ drivetrain more freedom to match engine behavior to vehicle load.
 
 \begin{figure}[H]
 \centering
-\fbox{\includegraphics[width=0.72\textwidth]{illustrations/overview/kohler_ch440_torque_power_curve.png}}
+\fbox{\includegraphics[width=0.72\textwidth]{figures/overview/kohler_ch440_torque_power_curve.png}}
 \caption{Torque and power of the Kohler CH440 engine as functions of engine speed. 
 Both quantities vary substantially across the operating range, with peak torque 
 occurring at a lower engine speed than peak power. \citep{BajaSAEKohlerEngine2022}}
@@ -603,12 +603,12 @@ occurring at a lower engine speed than peak power. \citep{BajaSAEKohlerEngine202
 
 \begin{minipage}[b]{0.46\textwidth}
 \centering
-\includegraphics[width=\textwidth]{illustrations/overview/discrete_transmission_shift_curve.png}
+\includegraphics[width=\textwidth]{figures/overview/discrete_transmission_shift_curve.png}
 \end{minipage}
 \hfill
 \begin{minipage}[b]{0.46\textwidth}
 \centering
-\includegraphics[width=\textwidth]{illustrations/overview/cvt_shift_curve.png}
+\includegraphics[width=\textwidth]{figures/overview/cvt_shift_curve.png}
 \end{minipage}
 
 \vspace{0.4cm}
@@ -636,34 +636,9 @@ transmits motion and torque between these two pulleys.
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=\textwidth]{illustrations/overview/cvt_example.png}
-
-% \fbox{
-% \begin{minipage}{0.9\textwidth}
-% \centering
-% \vspace{0.8cm}
-% \textbf{Placeholder: Overall belt-sheave CVT layout}
-
-% \vspace{0.5cm}
-% Show the complete CVT assembly at a simple, readable level.
-
-% Include and label:
-% \begin{itemize}
-%     \item primary, or driving, pulley,
-%     \item secondary, or driven, pulley,
-%     \item rubber V-belt,
-%     \item engine/input side,
-%     \item downstream/output side,
-%     \item approximate torque or motion flow direction.
-% \end{itemize}
-
-% This figure should introduce the reader to the whole CVT before the following
-% figures zoom into pulley anatomy and sheave motion.
-% \vspace{0.8cm}
-% \end{minipage}
-% }
-\caption{Overall layout of the belt-sheave CVT considered in this work. The
-primary pulley is connected to the engine side, the secondary pulley is
+\includegraphics[width=\textwidth]{figures/overview/cvt_example.png}
+\caption{Two sample configurations of the belt-sheave CVT considered in this work. 
+The primary pulley is connected to the engine side, the secondary pulley is
 connected to the downstream drivetrain, and the rubber V-belt transmits motion
 and torque between them. \citep{Messick2018}}
 \label{fig:cvt_system_overview}
@@ -679,7 +654,7 @@ faces. This basic layout is shown in \Cref{fig:single_pulley_anatomy}.
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=\textwidth]{illustrations/overview/single_pulley_anatomy.png}
+\includegraphics[width=\textwidth]{figures/overview/single_pulley_anatomy.png}
 \caption{Generic anatomy of a belt-sheave CVT pulley. Each pulley consists of
 opposing conical sheaves that form a V-groove. Motion of the movable sheave
 changes the groove width and therefore changes the radius at which the belt
@@ -703,25 +678,7 @@ radius smaller, as shown in \Cref{fig:single_pulley_states}.
 
 \begin{figure}[H]
 \centering
-\fbox{
-\begin{minipage}{0.9\textwidth}
-\centering
-\vspace{0.8cm}
-\textbf{Placeholder: Single pulley open, middle, and closed states}
-
-\vspace{0.5cm}
-Show three cross-sections of the same generic pulley:
-\begin{enumerate}
-    \item open sheaves: belt sits at small effective radius,
-    \item intermediate sheave spacing: belt sits at medium effective radius,
-    \item closed sheaves: belt is pushed outward to large effective radius.
-\end{enumerate}
-
-Use the same fixed/movable sheave labels as \Cref{fig:single_pulley_anatomy}.
-Show the movable sheave translating axially and the belt moving radially.
-\vspace{0.8cm}
-\end{minipage}
-}
+\includegraphics[width=\textwidth]{figures/overview/single_pulley_states.png}
 \caption{Single-pulley radius change. As the sheaves close, the V-groove
 narrows and the belt is pushed outward to a larger effective radius. As the
 sheaves open, the belt can fall deeper in the groove and the effective radius
@@ -760,7 +717,7 @@ larger and the secondary radius is smaller. This coupled motion is shown in
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=\textwidth]{illustrations/overview/cvt_low_med_high_ratio.png}
+\includegraphics[width=\textwidth]{figures/overview/cvt_low_med_high_ratio.png}
 
 % \fbox{
 % \begin{minipage}{0.9\textwidth}
@@ -809,64 +766,46 @@ pulley are not mechanically locked together by teeth. Torque is transmitted
 through frictional traction between the belt and the sheave faces.
 
 For traction to develop, the belt must be physically squeezed between the
-sheave faces, as shown in \Cref{fig:belt_sheave_forces}. The movable sheave
-presses the belt into the opposite sheave, producing a clamping force across
-the V-groove. This clamping force creates contact pressure on the belt faces 
-and that contact pressure allows friction to transmit tangential force around 
-the pulley. In practical terms, transferring more torque through the CVT 
-requires enough clamping force to create enough available traction at the
-belt-pulley interface.
+sheave faces. The left side of \Cref{fig:belt_sheave_forces} shows the belt 
+cross-section in the pulley V-groove. The movable sheave presses the belt 
+into the opposite sheave, producing a clamping force across the groove and 
+contact normal forces on the belt faces. These normal forces create the 
+contact pressure needed for frictional traction.
+
+The right side of \Cref{fig:belt_sheave_forces} shows the same idea viewed
+around the pulley wrap. Tangential traction acts locally along the belt--pulley
+contact and collectively allows torque to be transmitted between the pulley and
+the belt. In practical terms, transferring more torque through the CVT requires
+enough clamping force to create enough available traction at the belt--pulley
+interface.
 
 If the available traction is not sufficient for the torque being transferred,
 the belt slips relative to the pulley. Slip reduces useful torque transfer and
-can produce heat, wear, and efficiency loss. A working CVT must therefore do two
-things at once: it must allow the pulley radii to change so the ratio can
+can produce heat, wear, and efficiency loss. A working CVT must therefore do
+two things at once: it must allow the pulley radii to change so the ratio can
 shift, and it must maintain enough clamping force for the belt to transmit
 torque without excessive slip.
 
 This distinction is central to the rest of the model. The pulley geometry
 determines how the speed ratio changes. The contact mechanics determine how
-much torque can actually be carried through the belt-pulley contacts. A CVT is
+much torque can actually be carried through the belt--pulley contacts. A CVT is
 therefore not only a variable-geometry mechanism; it is also a clamping and
 traction problem.
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=\textwidth]{illustrations/overview/cvt_cross_section_two_sheaves.png}
-
-% \fbox{
-% \begin{minipage}{0.9\textwidth}
-% \centering
-% \vspace{0.8cm}
-
-% \textbf{Placeholder: Belt-sheave clamping and traction forces}
-
-% \vspace{0.5cm}
-% Draw a clear force diagram of the belt in the V-groove.
-
-% Include:
-% \begin{itemize}
-%     \item axial clamping force pushing the sheaves together,
-%     \item contact normal forces on both belt faces,
-%     \item tangential friction/traction force in the direction of belt motion,
-%     \item optional small side view of the belt wrapped around a pulley, showing
-%           traction acting along the wrap.
-% \end{itemize}
-
-% Do not include detailed formulas in this figure. The goal is to show the
-% physical idea: clamping creates normal force, and normal force enables
-% frictional torque transfer.
-% \vspace{0.8cm}
-% \end{minipage}
-% }
-\caption{Clamping and traction in a rubber V-belt CVT. The belt must be pressed
-into the sheave faces to generate contact normal force. Frictional traction at
-this contact allows torque to be transmitted between the pulley and the belt;
-if the available traction is insufficient, the belt slips.}
+\includegraphics[width=\textwidth]{figures/overview/traction.png}
+\caption{Clamping and traction in a rubber V-belt CVT. Left: axial clamping
+force closes the sheaves and generates contact normal forces on the belt faces
+within the pulley V-groove. Right: these normal forces enable tangential
+frictional traction along the wrapped belt--pulley contact, allowing torque to
+be transmitted between the pulley and the belt. The traction is distributed
+along the wrap; the indicated tangential force is representative. If the
+available traction is insufficient, the belt slips relative to the pulley.}
 \label{fig:belt_sheave_forces}
 \end{figure}
 
-% --------------------------------------------------------------
+
 \subsection{Mechanical Actuation in the Present CVT}
 \label{subsec:cvt_actuation_overview}
 
@@ -962,7 +901,7 @@ during a launch.
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=\textwidth]{illustrations/overview/drivetrain_overview.png}
+\includegraphics[width=\textwidth]{figures/overview/drivetrain_overview.png}
 \caption{Physical drivetrain architecture considered in this work. The figure
 shows the CVT within the complete four-wheel vehicle layout, including the
 downstream gearbox, disconnect, shaft, bevel, and axle components. In the
