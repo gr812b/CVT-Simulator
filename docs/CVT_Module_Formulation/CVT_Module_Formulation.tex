@@ -506,37 +506,60 @@ $g$ & Gravitational acceleration & \si{\meter\per\second\squared} & Gravity cons
 \pagenumbering{arabic}
 \chapter{Introduction \& Background}
 % ==============================================================
-The continuously variable transmission (CVT) is a mechanical power transmission 
-device capable of producing a continuously variable speed ratio between an input 
-and output shaft, in contrast to the fixed discrete ratios of a conventional 
-stepped gearbox. In the class of CVTs relevant to this work --- dry rubber V-belt 
-CVTs with mechanically actuated conical sheave pairs --- the transmission ratio 
-is not commanded by an external actuator or electronic controller. Instead, it 
-is an emergent dynamic response: the equilibrium of axial forces acting on the 
-primary and secondary sheave pairs, arising from centrifugal flyweight mechanisms, 
-torque-reactive helix and ramp assemblies, and return springs, determines the 
-radial position at which the belt seats within each sheave groove, and therefore 
-the effective pitch radii and transmission ratio at every instant.
+\section{Problem and Motivation}
+\label{sec:problem-motivation}
 
-This self-regulating character is simultaneously the CVT's greatest practical
-asset and the primary source of difficulty in modeling it rigorously. Because
-no actuator explicitly commands the ratio, the ratio trajectory must emerge
-through the evolution of an internal shift degree of freedom whose motion is
-set by the coupled force balance of the pulleys and belt. In practice, this
-means that engine speed, transmitted torque, shift position, and traction
-state evolve together in time, with each affecting the others through the
-underlying mechanics.
+Mechanically actuated rubber V-belt continuously variable transmissions (CVTs) are
+widely used in compact powersport drivetrains because they can vary the speed
+ratio automatically while transmitting power through a relatively simple
+mechanical assembly. Their visible layout is straightforward: two variable-radius
+pulleys are connected by a belt. Their transient behaviour, however, is not.
+The operating state of the transmission emerges from the interaction of its
+internal mechanisms, the belt-pulley contacts, and the vehicle drivetrain to
+which it is attached.
 
-This class of CVT is found throughout small-displacement powersport and utility 
-vehicles. It is the mandated transmission in the SAE Baja competition series, 
-where a 10~hp engine is paired with a CVT that must be designed, selected, and
-tuned entirely by student engineering teams from first principles. Beyond Baja, 
-mechanically actuated rubber V-belt CVTs are standard equipment in snowmobiles, 
-all-terrain vehicles (ATVs), utility task vehicles (UTVs), and small agricultural
-and industrial machinery. Despite their prevalence and the practical engineering
-importance of understanding their behavior, the quality of publicly available
-engineering models for these systems is strikingly uneven. The present work
-was motivated directly by this gap.
+Several coupled effects determine that response. Engine speed influences the
+centrifugal actuation of the primary pulley, while transmitted torque influences
+the torque-reactive response of the secondary pulley. Together, these mechanisms
+generate the clamping forces that press the belt into the sheave grooves.
+Clamping force determines the traction available at the belt--pulley contacts,
+which in turn determines how torque is carried and whether the belt and pulleys
+can remain coupled without gross slip. At the same time, pulley motion changes
+the belt radii and therefore the transmission ratio, while drivetrain inertia,
+road grade, and external vehicle load react back through the secondary side.
+These effects do not occur independently; each changes the conditions under
+which the others act.
+
+This coupling makes the behaviour of a mechanically actuated CVT difficult to
+interpret from vehicle response alone. A shift curve, engine-speed trace, or
+loss of acceleration may reflect the combined effect of primary engagement,
+secondary reaction, belt traction, shift motion, and changing drivetrain load.
+The underlying states responsible for that behaviour are largely internal to the
+transmission and are not usually available directly during vehicle testing.
+This is especially consequential in racing-oriented applications such as Baja
+SAE, where launch behaviour, shift response, and torque transfer strongly
+affect performance, while changes to springs, flyweights, ramps, helices, or
+other hardware may require fabrication and repeated vehicle testing before
+their effect can be assessed.
+
+Addressing this problem requires a physically interpretable dynamic framework
+that connects the internal CVT mechanisms to the vehicle-level response they
+produce. The model should be able to begin from varied initial
+conditions and respond to changing engine torque, road grade, external load,
+and other time-varying inputs, so that launch, clutching, shifting, backshift,
+traction loss, and vehicle acceleration emerge from the same coupled system
+response.
+
+The remainder of this chapter develops the context for that framework. \Cref{sec:cvt_overview}
+introduces the physical layout and operating principles of the
+belt-sheave CVT, including ratio change, traction, mechanical actuation, and
+the surrounding drivetrain. \Cref{sec:literature-review} contains a literature review 
+that organizes prior work by modelling emphasis and identifies the foundations available for
+mechanical actuation, belt contact, shift dynamics, and drivetrain coupling.
+Given this context, \Cref{sec:aim-scope-contributions}
+then states the aim, scope, assumptions, and contributions of the
+present formulation.
+
 
 % --------------------------------------------------------------
 \section{Conceptual Overview of a Continuously Variable Transmission}
