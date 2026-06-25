@@ -538,12 +538,6 @@ importance of understanding their behavior, the quality of publicly available
 engineering models for these systems is strikingly uneven. The present work
 was motivated directly by this gap.
 
-\section{Problem and Motivation}
-\label{sec:problem_motivation}
-
-Yahoo
-
-
 % --------------------------------------------------------------
 \section{Conceptual Overview of a Continuously Variable Transmission}
 \label{sec:cvt_overview}
@@ -766,18 +760,21 @@ pulley are not mechanically locked together by teeth. Torque is transmitted
 through frictional traction between the belt and the sheave faces.
 
 For traction to develop, the belt must be physically squeezed between the
-sheave faces. The left side of \Cref{fig:belt_sheave_forces} shows the belt 
-cross-section in the pulley V-groove. The movable sheave presses the belt 
-into the opposite sheave, producing a clamping force across the groove and 
-contact normal forces on the belt faces. These normal forces create the 
-contact pressure needed for frictional traction.
+sheave faces. \Cref{fig:belt_sheave_forces} shows how this happens at a small
+portion of the belt--pulley contact. The circled region on the pulley wrap is
+enlarged to show the belt cross-section within the pulley V-groove. At that
+location, the movable sheave presses the belt toward the fixed sheave. This
+clamping action produces contact normal forces on the two sides of the belt,
+creating the contact pressure needed for frictional traction.
 
-The right side of \Cref{fig:belt_sheave_forces} shows the same idea viewed
-around the pulley wrap. Tangential traction acts locally along the belt--pulley
-contact and collectively allows torque to be transmitted between the pulley and
-the belt. In practical terms, transferring more torque through the CVT requires
-enough clamping force to create enough available traction at the belt--pulley
-interface.
+The same local interaction occurs continuously around the wrapped portion of
+the belt. At each position along the wrap, the normal forces between the belt
+and sheave faces allow a tangential friction force to act. Together, these
+small tangential traction forces transfer torque between the pulley and the
+belt. In practical terms, transferring more torque through the CVT requires enough
+clamping force to create enough available traction at the belt--pulley
+interface. More clamping force increases the normal contact force, which in
+turn increases the tangential force that friction can support.
 
 If the available traction is not sufficient for the torque being transferred,
 the belt slips relative to the pulley. Slip reduces useful torque transfer and
@@ -794,14 +791,15 @@ traction problem.
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=\textwidth]{figures/overview/traction.png}
-\caption{Clamping and traction in a rubber V-belt CVT. Left: axial clamping
-force closes the sheaves and generates contact normal forces on the belt faces
-within the pulley V-groove. Right: these normal forces enable tangential
-frictional traction along the wrapped belt--pulley contact, allowing torque to
-be transmitted between the pulley and the belt. The traction is distributed
-along the wrap; the indicated tangential force is representative. If the
-available traction is insufficient, the belt slips relative to the pulley.}
+\includegraphics[width=\textwidth]{figures/overview/traction_AI_flipped.png}
+\caption{Clamping and traction in a rubber V-belt CVT. A representative
+location on the wrapped belt--pulley contact is circled and enlarged to show
+the local belt cross-section within the V-groove. Motion of the movable sheave
+toward the fixed sheave creates normal contact forces on the belt faces. These
+normal forces allow tangential frictional traction to act continuously along
+the wrap, collectively transmitting torque between the pulley and belt. The
+indicated tangential forces are representative local contributions to this
+distributed traction.}
 \label{fig:belt_sheave_forces}
 \end{figure}
 
@@ -918,8 +916,6 @@ describes when torque transfer can stick and when slip occurs. The drivetrain
 model closes the loop between engine torque, CVT behavior, vehicle load, and
 vehicle acceleration. Together, these pieces explain how the CVT behaves as a
 coupled mechanical system during launch.
-
-
 
 \section{Motivation and Literature Review}
 \label{sec:literature-review}
