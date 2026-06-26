@@ -11,25 +11,15 @@
     box-sizing: border-box;
     overflow: hidden;
 
-    .header {
+    .topBar {
         display: flex;
         flex-direction: row;
         align-items: center;
-        height: fit-content;
-        margin: 1rem;
+        padding: 0.5rem 1rem 0 0.5rem;
         flex-shrink: 0;
 
-        .logo {
-            height: 7rem;
-        }
-
-        .title {
-            @include fonts.title-huge;
-            color: var(--text-color);
-            width: 100%;
-            margin-left: 0.5rem;
-            white-space: nowrap;
-            overflow: hidden;
+        .navButton {
+            margin: 0;
         }
     }
 

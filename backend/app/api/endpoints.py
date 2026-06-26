@@ -1,4 +1,7 @@
 import json
+import multiprocessing
+import time
+from queue import Empty
 
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import StreamingResponse
@@ -19,6 +22,53 @@ from ..models.response_models import (
 )
 
 router = APIRouter()
+
+# Reuse a single spawn context — it is stateless, so there is no reason to
+# reconstruct it on every request.
+_MP_CTX = multiprocessing.get_context("spawn")
+
+# Maximum wall-clock time allowed for a single streaming simulation request.
+# If a solver gets stuck and exceeds this, the subprocess is hard-killed.
+STREAM_TIMEOUT_SECONDS = 10 * 60  # 10 minutes
+
+
+def _simulation_worker(args: SimulationArgs, result_queue) -> None:  # type: ignore
+    """
+    Module-level worker that runs simulate_cvt_model in a subprocess.
+
+    Must be at module level for Windows (spawn-based multiprocessing) pickle
+    compatibility. Running in a separate *process* (not thread) lets the parent
+    hard-kill it via process.kill() when a solver gets stuck indefinitely,
+    which is impossible with threads.
+
+    The result is serialized to a plain dict before being queued to avoid any
+    pickle issues with complex nested objects crossing the process boundary.
+    """
+    try:
+
+        def progress_callback(percent: float):
+            try:
+                result_queue.put_nowait(
+                    {"type": "progress", "percent": round(percent, 1)}
+                )
+            except Exception:
+                pass  # Never let a failed progress update abort the simulation
+
+        result = simulate_cvt_model(args, progress_callback=progress_callback)
+
+        # Serialize inside the worker so we only pass a plain dict across the
+        # process boundary – avoids pickling deeply-nested dataclass graphs.
+        result_dict = FormattedResultModel.model_validate(
+            result, from_attributes=True
+        ).model_dump()
+        result_queue.put({"type": "complete", "data": result_dict})
+
+    except Exception as e:
+        import traceback
+
+        result_queue.put(
+            {"type": "error", "message": str(e), "traceback": traceback.format_exc()}
+        )
 
 
 @router.get("/")
@@ -64,58 +114,60 @@ def run_stream(payload: SimulationArgsInput | None = None):  # type: ignore
     - StreamProgressMessage: {"type": "progress", "percent": 12.5}
     - StreamCompleteMessage: {"type": "complete", "data": {...}}
     - StreamErrorMessage: {"type": "error", "message": "..."}
+
+    The simulation runs in a subprocess so that it can be hard-killed via
+    process.kill() if the total elapsed wall-clock time exceeds
+    STREAM_TIMEOUT_SECONDS (default 10 minutes). This is necessary because
+    some solver paths can get stuck indefinitely inside C extensions that
+    ignore Python thread interrupts.
     """
-    from queue import Queue, Empty
-    import threading
 
     def generate():
+        proc = None
+        result_queue = None
         try:
             args = payload.model_dump(exclude_none=True) if payload else {}
             args = SimulationArgs.from_mapping(args)
 
-            # Thread-safe queue for communication
-            message_queue = Queue()
+            # Spawn a fresh process so we can hard-kill it on timeout.
+            # 'spawn' is used explicitly for cross-platform safety (avoids
+            # fork+async deadlock issues on Linux and is the default on Windows).
+            result_queue = _MP_CTX.Queue()
+            proc = _MP_CTX.Process(
+                target=_simulation_worker,
+                args=(args, result_queue),
+                daemon=True,
+            )
+            proc.start()
 
-            def progress_callback(percent: float):
-                # Called from simulation thread - put message in queue
-                message_queue.put({"type": "progress", "percent": round(percent, 1)})
-
-            def run_simulation_thread():
-                try:
-                    result = simulate_cvt_model(
-                        args, progress_callback=progress_callback
-                    )
-                    message_queue.put({"type": "complete", "data": result})
-                except Exception as e:
-                    import traceback
-
-                    error_traceback = traceback.format_exc()
-                    print(error_traceback, flush=True)
-
-                    message_queue.put(
-                        {
-                            "type": "error",
-                            "message": str(e),
-                            "traceback": error_traceback,
-                        }
-                    )
-
-            # Start simulation in background thread
-            # TODO: Add cancellation to cvtModel to drop unused requests
-            sim_thread = threading.Thread(target=run_simulation_thread, daemon=True)
-            sim_thread.start()
+            start_time = time.monotonic()
 
             # Stream messages as they arrive
             while True:
+                elapsed = time.monotonic() - start_time
+                remaining = STREAM_TIMEOUT_SECONDS - elapsed
+
+                if remaining <= 0:
+                    # Hard-kill the subprocess – this is safe even for stuck
+                    # C-extension solvers because the OS terminates the process.
+                    # No explicit join here; the finally block always handles cleanup.
+                    proc.kill()
+                    yield json.dumps(
+                        {
+                            "type": "error",
+                            "message": f"Simulation timed out after {STREAM_TIMEOUT_SECONDS}s",
+                        }
+                    ) + "\n"
+                    return
+
                 try:
-                    # Block for up to 0.5 seconds waiting for a message
-                    message = message_queue.get(timeout=0.5)
+                    # Cap the wait so the timeout check above runs regularly.
+                    message = result_queue.get(timeout=min(0.5, remaining))
 
                     if message["type"] == "complete":
-                        result = message["data"]
-                        # Convert to Pydantic model the same way /run does
+                        # Result was already serialized to a dict by the worker.
                         pydantic_result = FormattedResultModel.model_validate(
-                            result, from_attributes=True
+                            message["data"]
                         )
                         yield json.dumps(
                             {
@@ -123,7 +175,7 @@ def run_stream(payload: SimulationArgsInput | None = None):  # type: ignore
                                 "data": pydantic_result.model_dump(),
                             }
                         ) + "\n"
-                        break
+                        return
                     elif message["type"] == "error":
                         yield json.dumps(
                             {
@@ -132,9 +184,9 @@ def run_stream(payload: SimulationArgsInput | None = None):  # type: ignore
                                 "traceback": message.get("traceback"),
                             }
                         ) + "\n"
-                        break
+                        return
                     else:
-                        # Progress update - yield immediately with padding to force flush
+                        # Progress update – yield immediately.
                         msg = json.dumps(message) + "\n"
                         # Add padding to force proxies/CDN to flush the chunk
                         # Uncomment these lines when running on servers that buffer small responses
@@ -143,17 +195,16 @@ def run_stream(payload: SimulationArgsInput | None = None):  # type: ignore
                         yield msg  # + padding
 
                 except Empty:
-                    # No message yet, check if thread is still alive
-                    if not sim_thread.is_alive():
-                        # Thread died without sending completion - something went wrong
+                    # No message yet; check whether the process is still alive.
+                    if not proc.is_alive():
                         yield json.dumps(
                             {
                                 "type": "error",
-                                "message": "Simulation thread terminated unexpectedly",
+                                "message": "Simulation process terminated unexpectedly",
                             }
                         ) + "\n"
-                        break
-                    # Otherwise continue waiting for messages
+                        return
+                    # Otherwise keep waiting for the next message.
 
         except Exception as e:
             import traceback
@@ -168,6 +219,18 @@ def run_stream(payload: SimulationArgsInput | None = None):  # type: ignore
                     "traceback": error_traceback,
                 }
             ) + "\n"
+
+        finally:
+            # Guarantee the subprocess is not left running if the client
+            # disconnects mid-stream or an exception escapes the loop.
+            if proc is not None:
+                if proc.is_alive():
+                    proc.kill()
+                proc.join(timeout=5)
+
+            if result_queue is not None:
+                result_queue.close()
+                result_queue.join_thread()
 
     return StreamingResponse(
         generate(),
