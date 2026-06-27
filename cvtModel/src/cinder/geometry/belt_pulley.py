@@ -8,13 +8,28 @@ from .belt_length import (
     solve_secondary_outer_radius,
     wrap_angles,
 )
-from .position import GeometryPosition, RadiusAtShift
+from .position import (
+    AxialCoordinateAtShift,
+    GeometryPosition,
+    RadiusAtShift,
+)
 from .spec import BeltPulleyGeometrySpec
 
 
 class BeltPulleyGeometry:
     """
-    Evaluate fixed belt-pulley geometry at a current shift position.
+    Evaluate fixed belt-pulley geometry at one global shift coordinate.
+
+    The global coordinate ``shift = s`` is the primary movable-sheave
+    coordinate. The returned GeometryPosition also supplies the corresponding
+    local actuator coordinates:
+
+        x_p(s) = s
+
+        x_s(s) = 2 tan(beta) [r_s,out(s) - r_s,out(0)]
+
+    Both local coordinates use the common convention that positive motion
+    closes the respective pulley. Thus an upshift has x_p > 0 and x_s < 0.
 
     Each evaluate(shift) call performs exactly one secondary-radius root
     solve, using the cached reachable endpoint radii as its bracket.
@@ -76,6 +91,18 @@ class BeltPulleyGeometry:
             ),
             primary_wrap_angle=primary_wrap_angle,
             secondary_wrap_angle=secondary_wrap_angle,
+            primary_axial_coordinate=AxialCoordinateAtShift(
+                value=shift,
+                d_value_ds=1.0,
+                d2_value_ds2=0.0,
+            ),
+            secondary_axial_coordinate=(
+                self._secondary_axial_coordinate(
+                    secondary_outer_radius=secondary_outer_radius,
+                    d_secondary_radius_ds=d_secondary_radius_ds,
+                    d2_secondary_radius_ds2=d2_secondary_radius_ds2,
+                )
+            ),
         )
 
     def _primary_outer_radius_kinematics(
@@ -146,6 +173,41 @@ class BeltPulleyGeometry:
         return (
             d_secondary_radius_ds,
             d2_secondary_radius_ds2,
+        )
+
+    def _secondary_axial_coordinate(
+        self,
+        *,
+        secondary_outer_radius: float,
+        d_secondary_radius_ds: float,
+        d2_secondary_radius_ds2: float,
+    ) -> AxialCoordinateAtShift:
+        """
+        Map secondary belt radius into the local secondary actuator
+        coordinate x_s.
+
+        x_s = 0 at s = 0. Positive x_s closes the secondary, so x_s
+        becomes negative as the primary shifts out and the secondary opens.
+        """
+
+        axial_distance_per_radius = 2.0 * tan(
+            self._spec.sheave_half_angle
+        )
+
+        return AxialCoordinateAtShift(
+            value=(
+                axial_distance_per_radius
+                * (
+                    secondary_outer_radius
+                    - self._spec.secondary_outer_radius_at_zero_shift
+                )
+            ),
+            d_value_ds=(
+                axial_distance_per_radius * d_secondary_radius_ds
+            ),
+            d2_value_ds2=(
+                axial_distance_per_radius * d2_secondary_radius_ds2
+            ),
         )
 
     def _radius_at_shift(

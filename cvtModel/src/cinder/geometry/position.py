@@ -12,6 +12,12 @@ class RadiusAtShift:
     d_effective_ds: float
     d2_effective_ds2: float
 
+@dataclass(frozen=True, slots=True)
+class AxialCoordinateAtShift:
+    value: float
+    d_value_ds: float
+    d2_value_ds2: float
+
 
 @dataclass(frozen=True, slots=True)
 class GeometryPosition:
@@ -22,3 +28,6 @@ class GeometryPosition:
 
     primary_wrap_angle: float
     secondary_wrap_angle: float
+
+    primary_axial_coordinate: AxialCoordinateAtShift
+    secondary_axial_coordinate: AxialCoordinateAtShift
