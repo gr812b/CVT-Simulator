@@ -1,44 +1,29 @@
+"""Composition of independent force laws into one pulley actuator."""
+
 from __future__ import annotations
 
-from .types import (
-    AxialForceLaw,
-    PulleyActuationResult,
-    PulleyActuationState,
-)
+from cinder.closure import AffineClosureScalar
+
+from .types import AxialForceLaw, PulleyActuationResult, PulleyActuationState
 
 
 class PulleyActuator:
-    """
-    Combine force-producing mechanisms for one pulley.
-
-    Every mechanism returns:
-
-        F_i = bias_i + gain_i * pulley_torque.
-
-    This class sums those local relations without knowing whether it represents
-    the primary or secondary pulley.
-    """
+    """Sum local force laws without knowing which pulley owns them."""
 
     def __init__(self, *force_laws: AxialForceLaw) -> None:
+        if not force_laws:
+            raise ValueError("PulleyActuator requires at least one force law.")
+
         self._force_laws = tuple(force_laws)
 
     @property
     def force_laws(self) -> tuple[AxialForceLaw, ...]:
         return self._force_laws
 
-    def evaluate(
-        self,
-        state: PulleyActuationState,
-    ) -> PulleyActuationResult:
-        total_bias_force = 0.0
-        total_torque_gain = 0.0
+    def evaluate(self, state: PulleyActuationState) -> PulleyActuationResult:
+        relation = AffineClosureScalar.zero()
 
         for force_law in self._force_laws:
-            contribution = force_law.force_relation(state)
-            total_bias_force += contribution.bias_force
-            total_torque_gain += contribution.torque_gain
+            relation = relation + force_law.evaluate(state)
 
-        return PulleyActuationResult(
-            bias_force=total_bias_force,
-            torque_gain=total_torque_gain,
-        )
+        return PulleyActuationResult(relation=relation)

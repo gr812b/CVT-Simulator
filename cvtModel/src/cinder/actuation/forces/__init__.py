@@ -1,24 +1,14 @@
+"""Concrete local force laws for CINDER pulley actuation."""
+
 from .axial_spring import AxialSpringForce, AxialSpringForceSpec
-from .centrifugal_ramp import (
-    CentrifugalRampForce,
-    CentrifugalRampForceSpec,
-)
-from .helix_torque_reaction import (
-    HelixTorqueReactionForce,
-    HelixTorqueReactionForceSpec,
-)
-from .torsional_spring import (
-    TorsionalSpringForce,
-    TorsionalSpringForceSpec,
-)
+from .centrifugal_ramp import CentrifugalRampForce, CentrifugalRampForceSpec
+from .secondary_helix import SecondaryHelixForce, SecondaryHelixForceSpec
 
 __all__ = [
     "AxialSpringForce",
     "AxialSpringForceSpec",
     "CentrifugalRampForce",
     "CentrifugalRampForceSpec",
-    "HelixTorqueReactionForce",
-    "HelixTorqueReactionForceSpec",
-    "TorsionalSpringForce",
-    "TorsionalSpringForceSpec",
+    "SecondaryHelixForce",
+    "SecondaryHelixForceSpec",
 ]

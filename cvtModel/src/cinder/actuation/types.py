@@ -1,24 +1,21 @@
+"""Public contracts used by CINDER pulley-actuation components."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
 from math import isfinite
 from typing import Protocol
 
+from cinder.closure import AffineClosureScalar, ClosureGains, ClosureUnknowns
+
 
 @dataclass(frozen=True, slots=True)
 class PulleyActuationState:
-    """
-    Known local state of one pulley actuator.
+    """Known local quantities available before the closure solve.
 
-    axial_position:
-        Local movable-sheave coordinate [m]. Positive always means that this
-        pulley closes and increases clamping.
-
-    axial_speed:
-        Time derivative of axial_position [m/s].
-
-    shaft_speed:
-        Pulley angular speed [rad/s].
+    ``axial_position`` is expressed in the particular actuator's local pulley
+    coordinate.  Positive local axial force always means that the pulley tends
+    to close and clamp.
     """
 
     axial_position: float
@@ -26,58 +23,41 @@ class PulleyActuationState:
     shaft_speed: float
 
     def __post_init__(self) -> None:
-        _require_finite(
-            axial_position=self.axial_position,
-            axial_speed=self.axial_speed,
-            shaft_speed=self.shaft_speed,
-        )
+        for name, value in (
+            ("axial_position", self.axial_position),
+            ("axial_speed", self.axial_speed),
+            ("shaft_speed", self.shaft_speed),
+        ):
+            if not isfinite(value):
+                raise ValueError(f"{name} must be finite.")
 
 
 @dataclass(frozen=True, slots=True)
 class PulleyActuationResult:
-    """
-    Local axial-force relation:
+    """The complete local axial-force relation returned by one actuator."""
 
-        axial_force = bias_force + torque_gain * pulley_torque
+    relation: AffineClosureScalar
 
-    ``bias_force`` and the evaluated ``axial_force`` are signed in the local
-    pulley coordinate. Positive means the mechanism tends to close and clamp
-    that pulley; negative means it tends to open it.
+    @property
+    def bias_force(self) -> float:
+        """Known local force at the current RHS evaluation point."""
 
-    ``torque_gain`` is the coefficient of the pulley torque that will be
-    selected by the eventual closure assembly:
-      - primary actuator: torque_gain multiplies tau_p;
-      - secondary actuator: torque_gain multiplies tau_s.
-    """
+        return self.relation.bias
 
-    bias_force: float
-    torque_gain: float
+    @property
+    def gains(self) -> ClosureGains:
+        """Gain row aligned with :class:`cinder.closure.ClosureUnknowns`."""
 
-    def __post_init__(self) -> None:
-        _require_finite(
-            bias_force=self.bias_force,
-            torque_gain=self.torque_gain,
-        )
+        return self.relation.gains
 
-    def force_at_torque(self, pulley_torque: float) -> float:
-        """Evaluate the relation after a pulley torque is known."""
+    def force(self, unknowns: ClosureUnknowns) -> float:
+        """Evaluate the local axial force after solving the closure."""
 
-        _require_finite(pulley_torque=pulley_torque)
-
-        return self.bias_force + self.torque_gain * pulley_torque
+        return self.relation.evaluate(unknowns)
 
 
 class AxialForceLaw(Protocol):
-    """One mechanism contributing a local axial-force relation."""
+    """One composable mechanism contributing local pulley axial force."""
 
-    def force_relation(
-        self,
-        state: PulleyActuationState,
-    ) -> PulleyActuationResult:
-        ...
-
-
-def _require_finite(**values: float) -> None:
-    for name, value in values.items():
-        if not isfinite(value):
-            raise ValueError(f"{name} must be finite.")
+    def evaluate(self, state: PulleyActuationState) -> AffineClosureScalar:
+        """Return an affine local axial-force contribution."""
