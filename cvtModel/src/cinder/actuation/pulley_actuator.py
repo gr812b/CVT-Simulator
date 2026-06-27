@@ -1,6 +1,6 @@
-# cinder/actuation/pulley_actuator.py
+from __future__ import annotations
 
-from cinder.actuation.types import (
+from .types import (
     AxialForceLaw,
     PulleyActuationResult,
     PulleyActuationState,
@@ -9,15 +9,22 @@ from cinder.actuation.types import (
 
 class PulleyActuator:
     """
-    Combines local force-producing mechanisms for one pulley.
+    Combine force-producing mechanisms for one pulley.
 
-    The returned relation is:
+    Every mechanism returns:
 
-        axial_force = bias_force + torque_gain * pulley_torque
+        F_i = bias_i + gain_i * pulley_torque.
+
+    This class sums those local relations without knowing whether it represents
+    the primary or secondary pulley.
     """
 
     def __init__(self, *force_laws: AxialForceLaw) -> None:
-        self._force_laws = force_laws
+        self._force_laws = tuple(force_laws)
+
+    @property
+    def force_laws(self) -> tuple[AxialForceLaw, ...]:
+        return self._force_laws
 
     def evaluate(
         self,
@@ -28,7 +35,6 @@ class PulleyActuator:
 
         for force_law in self._force_laws:
             contribution = force_law.force_relation(state)
-
             total_bias_force += contribution.bias_force
             total_torque_gain += contribution.torque_gain
 
