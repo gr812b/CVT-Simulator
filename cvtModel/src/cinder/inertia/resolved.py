@@ -2,8 +2,7 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
-from typing import Protocol
+from dataclasses import dataclass
 
 from .belt import BeltMass, BeltSection, ResolvedBeltMass
 from .primary import PrimaryInertia
@@ -14,7 +13,6 @@ from .secondary import (
     resolve_secondary_inertia,
 )
 from .shift import (
-    ConstantShiftKinematics,
     ShiftTranslationMass,
     resolve_shift_translation_mass,
 )
@@ -23,24 +21,21 @@ from .vehicle import VehicleInertia
 
 @dataclass(frozen=True, slots=True)
 class DrivetrainInertias:
-    """All fixed engine, CVT, belt, and shift-kinematic inputs."""
+    """All fixed engine, CVT, and belt physical inertia inputs."""
 
     primary: PrimaryInertia
     secondary: SecondaryInertia
     belt: BeltMass
-    shift_kinematics: ConstantShiftKinematics = field(
-        default_factory=ConstantShiftKinematics,
-    )
 
 
 @dataclass(frozen=True, slots=True)
 class ResolvedInertias:
     """
-    Constant quantities ready for the dynamic equations.
+    Fixed quantities ready for the dynamic equations.
 
-    The raw physical breakdown remains available through the nested objects;
-    no model equation needs to rebuild these fixed combinations on each RHS
-    evaluation.
+    ``shift`` stores the three physical translating masses. Its generalized
+    mass is evaluated from GeometryPosition during each RHS evaluation,
+    because dx_s/ds and dx_b/ds can change with shift.
     """
 
     primary: PrimaryInertia
@@ -58,10 +53,11 @@ def resolve_inertias(
     belt_outer_length: float,
 ) -> ResolvedInertias:
     """
-    Resolve the fixed inertia constants at system construction.
+    Resolve all fixed inertia quantities at system construction.
 
-    This is valid while the final-drive ratio, wheel radius, vehicle mass,
-    belt geometry, and the three shift-coordinate slopes remain fixed.
+    The final-drive reflection, belt mass, and physical translating masses
+    are fixed. The generalized shift coefficient is formed later from the
+    current geometry coordinates.
     """
 
     belt = drivetrain.belt.resolve(
@@ -85,6 +81,5 @@ def resolve_inertias(
                 drivetrain.secondary.moving_sheave_mass
             ),
             belt_mass=belt.mass,
-            kinematics=drivetrain.shift_kinematics,
         ),
     )

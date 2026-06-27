@@ -19,27 +19,9 @@ class BeltPulleyGeometry:
     Evaluate fixed belt-pulley geometry at one global shift coordinate.
 
     The global coordinate ``shift = s`` is the primary movable-sheave
-    coordinate. The returned GeometryPosition also supplies the
-    corresponding local actuator coordinates:
-
-        x_p(s) = s
-
-        x_s(s) = 2 tan(beta) [r_s,out(s) - r_s,out(0)]
-
-    Both local sheave coordinates use the common convention that positive
-    motion closes the respective pulley. Thus an upshift has x_p > 0 and
-    x_s < 0.
-
-    The lumped belt-shift model also uses the equivalent coordinate:
-
-        x_b(s) = s / 2.
-
-    This is the existing kinematic assumption behind the belt contribution
-    m_b / 4 to the shift translational mass. It does not alter belt length,
-    pulley radii, or the belt transport-speed state.
-
-    Each evaluate(shift) call performs exactly one secondary-radius root
-    solve, using the cached reachable endpoint radii as its bracket.
+    coordinate. The returned GeometryPosition also supplies local axial
+    coordinates for the primary sheave, secondary sheave, and the present
+    lumped belt-shift model.
     """
 
     def __init__(self, spec: BeltPulleyGeometrySpec) -> None:
@@ -220,25 +202,36 @@ class BeltPulleyGeometry:
             ),
         )
 
-    @staticmethod
     def _belt_axial_coordinate(
+        self,
         *,
         shift: float,
     ) -> AxialCoordinateAtShift:
         """
-        Return the equivalent belt axial coordinate used by the present
-        lumped shift-mass model.
+        Return the present lumped belt axial coordinate.
 
-            x_b = s / 2,
-            dx_b/ds = 1 / 2,
-            d²x_b/ds² = 0.
+        The belt does not move through the grooves during primary deadzone:
 
-        Therefore the belt's literal axial motion contributes
-        m_b (dx_b/ds)^2 = m_b / 4 to the shift translational mass.
+            x_b = 0                         for s <= s_deadzone
+            x_b = (s - s_deadzone) / 2     otherwise.
+
+        Thus only the primary movable sheave contributes to literal shift
+        translation during deadzone. Once the belt begins moving, its
+        contribution is m_b (dx_b/ds)^2 = m_b / 4.
+
+        TODO: replace this lumped x_b relation with a belt axial-motion
+        model derived from the distributed belt geometry.
         """
 
+        if shift <= self._spec.deadzone_shift:
+            return AxialCoordinateAtShift(
+                value=0.0,
+                d_value_ds=0.0,
+                d2_value_ds2=0.0,
+            )
+
         return AxialCoordinateAtShift(
-            value=0.5 * shift,
+            value=0.5 * (shift - self._spec.deadzone_shift),
             d_value_ds=0.5,
             d2_value_ds2=0.0,
         )

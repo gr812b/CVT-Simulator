@@ -9,12 +9,13 @@ from math import isfinite
 @dataclass(frozen=True, slots=True)
 class VehicleRoadLoadSpec:
     """
-    Fixed vehicle parameters used by the road-load model.
+    Fixed non-inertial road-load parameters.
 
-    All quantities use SI units.
+    Vehicle mass is intentionally absent. It is owned by
+    ``cinder.inertia.VehicleInertia`` so road forces and final-drive
+    reflected inertia use one shared physical mass.
     """
 
-    mass: float
     rolling_resistance_coefficient: float
     drag_coefficient: float
     frontal_area: float
@@ -24,7 +25,6 @@ class VehicleRoadLoadSpec:
     rolling_speed_regularization: float = 0.01
 
     def __post_init__(self) -> None:
-        _require_finite_positive("mass", self.mass)
         _require_finite_nonnegative(
             "rolling_resistance_coefficient",
             self.rolling_resistance_coefficient,

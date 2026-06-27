@@ -1,8 +1,11 @@
-"""Plot stationary-shift inertia referred to the primary shaft.
+"""Plot stationary-shift rotational inertia referred to the primary shaft.
 
-This is a diagnostic for a fixed CVT ratio, zero shift speed, and no slip. The
-actual solver keeps primary rotation, secondary rotation, belt transport, and
-shift as separate coordinates.
+This diagnostic keeps the CVT at a fixed ratio, zero shift speed, and no
+slip. The actual solver retains primary rotation, secondary rotation, belt
+transport, and shift as separate coordinates.
+
+Shift translation is intentionally not printed here: it is evaluated from
+the current GeometryPosition inside the RHS, not resolved as a constant.
 """
 
 from __future__ import annotations
@@ -103,7 +106,6 @@ def main() -> None:
         ),
         primary_effective_radius=arguments.primary_effective_radius,
     )
-    _print_shift_breakdown(inertias=inertias)
 
     figure, axis = plt.subplots()
     axis.plot(
@@ -225,22 +227,6 @@ def _print_rotational_breakdown(
             f"{secondary_movable:17.4f} | "
             f"{total:6.4f}"
         )
-
-
-def _print_shift_breakdown(*, inertias) -> None:
-    shift = inertias.shift
-
-    print("\nShift translational mass [kg]")
-    print(
-        " primary movable | secondary movable | belt axial motion | total"
-    )
-    print("-" * 72)
-    print(
-        f" {shift.primary_moving_sheave_contribution:15.4f} | "
-        f"{shift.secondary_moving_sheave_contribution:17.4f} | "
-        f"{shift.belt_contribution:17.4f} | "
-        f"{shift.total:5.4f}"
-    )
 
 
 if __name__ == "__main__":

@@ -5,6 +5,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from math import cos, isfinite, pi, sin, sqrt
 
+from cinder.inertia.vehicle import VehicleInertia
+
 from .final_drive import FixedFinalDrive
 from .spec import VehicleRoadLoadSpec
 
@@ -18,9 +20,9 @@ class RoadLoadResult:
         Positive longitudinal force acts forward on the vehicle.
 
     Torque convention:
-        ``secondary_external_torque`` is the external torque applied
-        to the secondary shaft by the vehicle and road. Positive torque
-        acts in the positive secondary rotation direction.
+        ``secondary_external_torque`` is the external torque applied to
+        the secondary shaft by the vehicle and road. Positive torque acts
+        in the positive secondary rotation direction.
     """
 
     secondary_angular_speed: float
@@ -40,22 +42,28 @@ class RoadLoadModel:
     Map current secondary speed and road grade to known road-load torque.
 
     The model contains no vehicle acceleration term and contributes no
-    closure gain. Reflected vehicle inertia belongs in the later inertia
-    layer, not here.
+    closure gain. Vehicle mass comes from ``VehicleInertia`` so the same
+    mass is used for grade, rolling resistance, and reflected inertia.
     """
 
     def __init__(
         self,
         *,
         spec: VehicleRoadLoadSpec,
+        vehicle: VehicleInertia,
         final_drive: FixedFinalDrive,
     ) -> None:
         self._spec = spec
+        self._vehicle = vehicle
         self._final_drive = final_drive
 
     @property
     def spec(self) -> VehicleRoadLoadSpec:
         return self._spec
+
+    @property
+    def vehicle(self) -> VehicleInertia:
+        return self._vehicle
 
     @property
     def final_drive(self) -> FixedFinalDrive:
@@ -117,14 +125,12 @@ class RoadLoadModel:
         )
 
     def _grade_force(self, *, grade_angle: float) -> float:
-        """
-        Return gravity's signed force along the road.
+        """Return F_grade = -m g sin(gamma)."""
 
-            F_grade = -m g sin(gamma)
-        """
-
-        return -self._spec.mass * self._spec.gravity * sin(
-            grade_angle
+        return -(
+            self._vehicle.mass
+            * self._spec.gravity
+            * sin(grade_angle)
         )
 
     def _rolling_force(
@@ -137,14 +143,11 @@ class RoadLoadModel:
         Return regularized rolling resistance.
 
             F_roll = -C_rr m g cos(gamma)
-                     v / sqrt(v^2 + v_eps^2)
-
-        The regularization makes rolling resistance smoothly vanish at
-        rest without imposing a static holding force.
+                     v / sqrt(v^2 + v_eps^2).
         """
 
         normal_force = (
-            self._spec.mass
+            self._vehicle.mass
             * self._spec.gravity
             * cos(grade_angle)
         )
@@ -161,11 +164,7 @@ class RoadLoadModel:
         )
 
     def _aerodynamic_force(self, *, vehicle_speed: float) -> float:
-        """
-        Return signed aerodynamic drag.
-
-            F_aero = -0.5 rho C_d A |v| v
-        """
+        """Return F_aero = -0.5 rho C_d A |v| v."""
 
         return (
             -0.5
