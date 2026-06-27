@@ -1,11 +1,15 @@
-"""Torque-reactive secondary helix with torsional spring and sheave inertia."""
+"""Secondary helix kinematics and local torque-reactive axial force."""
 
 from __future__ import annotations
 
 from dataclasses import dataclass
 from math import isfinite
 
-from cinder.closure import AffineClosureScalar, ClosureGains
+from cinder.closure import (
+    AffineClosureScalar,
+    ClosureGains,
+    ClosureUnknowns,
+)
 from cinder.profiles.helix import HelixProfile
 
 from ..types import PulleyActuationState
@@ -14,83 +18,119 @@ from ..types import PulleyActuationState
 @dataclass(frozen=True, slots=True)
 class SecondaryHelixForceSpec:
     """
-    Parameters of the physical secondary helix assembly.
+    Fixed geometric and elastic parameters of the secondary helix.
 
-    ``movable_sheave_rotational_inertia`` is I_M. It is the same physical
-    inertia that appears in the secondary rotational balance.
+    The movable sheave rotational inertia I_M is intentionally absent.
+    It is owned by the resolved secondary inertia and supplied when the
+    helix mechanism is constructed.
     """
 
     helix_profile: HelixProfile
-    movable_sheave_rotational_inertia: float
     torsional_stiffness: float
     initial_twist: float
     movable_sheave_torque_fraction: float = 0.5
 
     def __post_init__(self) -> None:
-        if (
-            not isfinite(self.movable_sheave_rotational_inertia)
-            or self.movable_sheave_rotational_inertia < 0.0
-        ):
-            raise ValueError(
-                "movable_sheave_rotational_inertia must be finite and "
-                "non-negative."
-            )
+        _require_nonnegative(
+            "torsional_stiffness",
+            self.torsional_stiffness,
+        )
+        _require_finite("initial_twist", self.initial_twist)
+        _require_finite(
+            "movable_sheave_torque_fraction",
+            self.movable_sheave_torque_fraction,
+        )
 
-        if (
-            not isfinite(self.torsional_stiffness)
-            or self.torsional_stiffness < 0.0
-        ):
-            raise ValueError(
-                "torsional_stiffness must be finite and non-negative."
-            )
 
-        if not isfinite(self.initial_twist):
-            raise ValueError("initial_twist must be finite.")
+@dataclass(frozen=True, slots=True)
+class SecondaryHelixEvaluation:
+    """
+    One secondary-helix evaluation at the current known state.
 
-        if not isfinite(self.movable_sheave_torque_fraction):
-            raise ValueError(
-                "movable_sheave_torque_fraction must be finite."
-            )
+    ``dtheta_ds`` and ``d2theta_ds2`` are the global derivatives used
+    directly by the secondary rotational balance:
+
+        alpha_M =
+            alpha_s
+            - d2theta_ds2 * s_dot^2
+            - dtheta_ds * s_ddot.
+
+    ``local_axial_force`` is still a force in the local secondary
+    coordinate x_s. The global shift equation later applies virtual
+    work once:
+
+        Q_s = F_xs * dx_s/ds.
+    """
+
+    theta: float
+    dtheta_ds: float
+    d2theta_ds2: float
+    local_axial_force: AffineClosureScalar
+
+    @property
+    def bias(self) -> float:
+        return self.local_axial_force.bias
+
+    @property
+    def gains(self) -> ClosureGains:
+        return self.local_axial_force.gains
+
+    def force(self, unknowns: ClosureUnknowns) -> float:
+        return self.local_axial_force.evaluate(unknowns)
 
 
 class SecondaryHelixForce:
     """
-    Return the *local* secondary axial-force relation.
+    Evaluate the local secondary helix force and global helix kinematics.
 
-    The helix profile is parameterized by local secondary coordinate x_s,
-    while the closure solve uses global shift coordinate s. With
+    The profile is parameterized by local secondary coordinate x_s.
+    Geometry provides x_s(s), dx_s/ds, and d2x_s/ds2 through
+    ``PulleyActuationState``.
 
-        H = dtheta/ds
-          = (dtheta/dx_s) (dx_s/ds)
+    For theta(x_s(s)):
 
-        H' = d²theta/ds²
-           = (d²theta/dx_s²) (dx_s/ds)²
-             + (dtheta/dx_s) (d²x_s/ds²),
+        H  = dtheta/ds
+           = (dtheta/dx_s) (dx_s/ds)
 
-    the movable sheave's absolute angular acceleration is
+        H' = d2theta/ds2
+           = (d2theta/dx_s2) (dx_s/ds)^2
+             + (dtheta/dx_s) (d2x_s/ds2).
 
-        alpha_M = alpha_s - H' s_dot² - H s_ddot.
-
-    This force law returns local force F_xs. The later global shift row
-    must apply virtual work once:
-
-        Q_s = F_xs (dx_s/ds).
-
-    That one factor produces the expected global helix terms
-    -I_M H alpha_s, I_M H² s_ddot, and I_M H H' s_dot².
+    The same H and H' are returned for use in the secondary rotational
+    equation, while the local force relation remains available for the
+    secondary clamp and global shift equation.
     """
 
-    def __init__(self, spec: SecondaryHelixForceSpec) -> None:
+    def __init__(
+        self,
+        *,
+        spec: SecondaryHelixForceSpec,
+        movable_sheave_rotational_inertia: float,
+    ) -> None:
+        _require_nonnegative(
+            "movable_sheave_rotational_inertia",
+            movable_sheave_rotational_inertia,
+        )
+
         self._spec = spec
+        self._movable_sheave_rotational_inertia = (
+            movable_sheave_rotational_inertia
+        )
 
     @property
     def spec(self) -> SecondaryHelixForceSpec:
         return self._spec
 
+    @property
+    def movable_sheave_rotational_inertia(self) -> float:
+        """Return I_M from the resolved secondary inertia."""
+
+        return self._movable_sheave_rotational_inertia
+
     def evaluate(
         self,
         state: PulleyActuationState,
-    ) -> AffineClosureScalar:
+    ) -> SecondaryHelixEvaluation:
         sample = self._spec.helix_profile.evaluate(
             state.axial_position
         )
@@ -109,27 +149,28 @@ class SecondaryHelixForce:
             + dtheta_dx * d2x_ds2
         )
 
-        inertia = self._spec.movable_sheave_rotational_inertia
-
         torsional_spring_torque = (
             self._spec.torsional_stiffness
             * (self._spec.initial_twist + theta)
         )
 
-        return AffineClosureScalar(
+        local_axial_force = AffineClosureScalar(
             bias=(
                 dtheta_dx * torsional_spring_torque
-                + inertia
+                + self._movable_sheave_rotational_inertia
                 * dtheta_dx
                 * d2theta_ds2
                 * shift_speed**2
             ),
             gains=ClosureGains(
                 secondary_angular_acceleration=(
-                    -inertia * dtheta_dx
+                    -self._movable_sheave_rotational_inertia
+                    * dtheta_dx
                 ),
                 shift_acceleration=(
-                    inertia * dtheta_dx * dtheta_ds
+                    self._movable_sheave_rotational_inertia
+                    * dtheta_dx
+                    * dtheta_ds
                 ),
                 secondary_torque=(
                     self._spec.movable_sheave_torque_fraction
@@ -137,3 +178,20 @@ class SecondaryHelixForce:
                 ),
             ),
         )
+
+        return SecondaryHelixEvaluation(
+            theta=theta,
+            dtheta_ds=dtheta_ds,
+            d2theta_ds2=d2theta_ds2,
+            local_axial_force=local_axial_force,
+        )
+
+
+def _require_finite(name: str, value: float) -> None:
+    if not isfinite(value):
+        raise ValueError(f"{name} must be finite.")
+
+
+def _require_nonnegative(name: str, value: float) -> None:
+    if not isfinite(value) or value < 0.0:
+        raise ValueError(f"{name} must be finite and non-negative.")

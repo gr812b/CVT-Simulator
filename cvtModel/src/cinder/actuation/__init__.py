@@ -1,9 +1,21 @@
 """Pulley actuation models for CINDER."""
 
-from .primary import CentrifugalPrimarySpec, build_centrifugal_primary
+from .primary import (
+    CentrifugalPrimarySpec,
+    build_centrifugal_primary,
+)
 from .pulley_actuator import PulleyActuator
-from .secondary import TorqueReactiveSecondarySpec, build_torque_reactive_secondary
-from .types import AxialForceLaw, PulleyActuationResult, PulleyActuationState
+from .secondary import (
+    TorqueReactiveSecondary,
+    TorqueReactiveSecondaryEvaluation,
+    TorqueReactiveSecondarySpec,
+    build_torque_reactive_secondary,
+)
+from .types import (
+    AxialForceLaw,
+    PulleyActuationResult,
+    PulleyActuationState,
+)
 
 __all__ = [
     "AxialForceLaw",
@@ -11,6 +23,8 @@ __all__ = [
     "PulleyActuationResult",
     "PulleyActuationState",
     "PulleyActuator",
+    "TorqueReactiveSecondary",
+    "TorqueReactiveSecondaryEvaluation",
     "TorqueReactiveSecondarySpec",
     "build_centrifugal_primary",
     "build_torque_reactive_secondary",
