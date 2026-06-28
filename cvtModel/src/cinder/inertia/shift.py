@@ -24,8 +24,9 @@ class ShiftTranslationMasses:
     at each RHS evaluation.
 
     The movable secondary sheave's rotational helix coupling is excluded
-    here; it remains in the secondary rotational and local helix-force
-    relations so that I_M is not counted twice.
+    here. It belongs to the later secondary helix dynamics coupling, where
+    its rotational inertia ``I_M`` enters both the secondary-rotation and
+    generalized-shift rows exactly once.
     """
 
     primary_moving_sheave_mass: float
@@ -34,8 +35,14 @@ class ShiftTranslationMasses:
 
     def __post_init__(self) -> None:
         for name, value in (
-            ("primary_moving_sheave_mass", self.primary_moving_sheave_mass),
-            ("secondary_moving_sheave_mass", self.secondary_moving_sheave_mass),
+            (
+                "primary_moving_sheave_mass",
+                self.primary_moving_sheave_mass,
+            ),
+            (
+                "secondary_moving_sheave_mass",
+                self.secondary_moving_sheave_mass,
+            ),
             ("belt_mass", self.belt_mass),
         ):
             _require_nonnegative(name, value)
@@ -46,7 +53,7 @@ class ShiftTranslationMasses:
         primary_axial_coordinate: AxialCoordinate,
         secondary_axial_coordinate: AxialCoordinate,
         belt_axial_coordinate: AxialCoordinate,
-    ) -> ShiftTranslationInertia:
+    ) -> "ShiftTranslationInertia":
         """
         Refer literal axial translation to the present global shift s.
 
@@ -119,10 +126,7 @@ class ShiftTranslationInertia:
 
     @property
     def belt_contribution(self) -> float:
-        return (
-            self.belt_mass
-            * self.belt_axial_coordinate_slope**2
-        )
+        return self.belt_mass * self.belt_axial_coordinate_slope**2
 
     @property
     def mass(self) -> float:
@@ -157,7 +161,7 @@ def resolve_shift_translation_masses(
     secondary_moving_sheave_mass: float,
     belt_mass: float,
 ) -> ShiftTranslationMasses:
-    """Store the fixed physical masses used by the later RHS evaluation."""
+    """Store fixed physical masses for later live-geometry evaluation."""
 
     return ShiftTranslationMasses(
         primary_moving_sheave_mass=primary_moving_sheave_mass,

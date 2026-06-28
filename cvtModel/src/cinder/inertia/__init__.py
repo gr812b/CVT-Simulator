@@ -20,9 +20,9 @@ from .secondary import (
     resolve_secondary_inertia,
 )
 from .shift import (
-    ShiftTranslationMass,
-    ShiftTranslationMassAtPosition,
-    resolve_shift_translation_mass,
+    ShiftTranslationInertia,
+    ShiftTranslationMasses,
+    resolve_shift_translation_masses,
 )
 from .vehicle import VehicleInertia
 
@@ -37,11 +37,11 @@ __all__ = [
     "ResolvedSecondaryInertia",
     "SecondaryFixedInertia",
     "SecondaryInertia",
-    "ShiftTranslationMass",
-    "ShiftTranslationMassAtPosition",
+    "ShiftTranslationInertia",
+    "ShiftTranslationMasses",
     "TrapezoidalBeltSection",
     "VehicleInertia",
     "resolve_inertias",
     "resolve_secondary_inertia",
-    "resolve_shift_translation_mass",
+    "resolve_shift_translation_masses",
 ]

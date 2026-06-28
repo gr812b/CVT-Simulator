@@ -1,3 +1,5 @@
+"""Helix-cam geometry built from a physical circumferential profile."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -22,19 +24,31 @@ class HelixSample:
 @dataclass(frozen=True, slots=True)
 class HelixProfile:
     """
-    Convert a physical circumferential-displacement profile u(x) into theta(x).
+    Convert a physical circumferential-displacement profile u(q) into
+    a local relative rotation theta(x).
 
-        theta(x) = theta_offset + u(x) / radius
+        q = sigma x
+        theta(x) = theta_offset + u(q) / radius
 
-    ``circumferential_profile`` is a normal scalar profile in the physical
-    (axial x, circumferential u) plane. It is not an angle-profile wrapper.
-    That distinction prevents the old normal-ramp and helix-angle conventions
-    from becoming entangled.
+    ``q`` is the non-negative travel coordinate used by ordinary profile
+    segments. ``x`` is the physical coordinate supplied by the mechanism
+    using the helix. ``profile_coordinate_sign = sigma`` bridges those
+    conventions without forcing every ``PiecewiseRamp`` to accept negative
+    segment lengths.
+
+    For a conventional secondary, positive x_s closes the pulley while
+    the helix travels forward as the secondary opens during an upshift.
+    Construct that profile with ``profile_coordinate_sign=-1`` so
+    q = -x_s >= 0. The default ``+1`` retains the direct x=q convention.
+
+    ``theta_offset`` is geometric clocking/reference. Torsional-spring
+    preload belongs separately in ``SecondaryHelixForceSpec.initial_twist``.
     """
 
     circumferential_profile: ScalarProfile
     radius: float
     theta_offset: float = 0.0
+    profile_coordinate_sign: int = 1
 
     def __post_init__(self) -> None:
         if not isfinite(self.radius) or self.radius <= 0.0:
@@ -43,21 +57,47 @@ class HelixProfile:
         if not isfinite(self.theta_offset):
             raise ValueError("theta_offset must be finite.")
 
+        if self.profile_coordinate_sign not in (-1, 1):
+            raise ValueError(
+                "profile_coordinate_sign must be either -1 or 1."
+            )
+
     @property
     def x_min(self) -> float:
-        return self.circumferential_profile.x_min
+        """Smallest valid physical local coordinate x."""
+
+        return min(
+            self.profile_coordinate_sign
+            * self.circumferential_profile.x_min,
+            self.profile_coordinate_sign
+            * self.circumferential_profile.x_max,
+        )
 
     @property
     def x_max(self) -> float:
-        return self.circumferential_profile.x_max
+        """Largest valid physical local coordinate x."""
+
+        return max(
+            self.profile_coordinate_sign
+            * self.circumferential_profile.x_min,
+            self.profile_coordinate_sign
+            * self.circumferential_profile.x_max,
+        )
 
     def evaluate(self, x: float) -> HelixSample:
-        profile = self.circumferential_profile.evaluate(x)
+        """Evaluate theta and its derivatives with respect to x."""
+
+        profile_coordinate = self.profile_coordinate_sign * x
+        profile = self.circumferential_profile.evaluate(profile_coordinate)
 
         return HelixSample(
             circumferential_displacement=profile.value,
             theta=self.theta_offset + profile.value / self.radius,
-            dtheta_dx=profile.first_derivative / self.radius,
+            dtheta_dx=(
+                self.profile_coordinate_sign
+                * profile.first_derivative
+                / self.radius
+            ),
             d2theta_dx2=profile.second_derivative / self.radius,
             helix_angle_magnitude=atan2(
                 1.0,
@@ -73,13 +113,14 @@ def linear_helix_segment(
     handedness: int = 1,
 ) -> LinearSegment:
     """
-    Build a direct u(x) linear segment from a constant helix angle.
+    Build a direct u(q) linear segment from a constant helix angle.
 
     The helix angle beta is measured from the circumferential direction:
 
-        du/dx = handedness * cot(beta)
+        du/dq = handedness * cot(beta)
 
-    A LineSegment stores the equivalent signed tangent angle from +x:
+    A ``LinearSegment`` stores the equivalent signed tangent angle from
+    +q:
 
         slope_angle = handedness * (90 degrees - beta).
     """
@@ -103,11 +144,11 @@ def circular_helix_segment(
     handedness: int = 1,
 ) -> CircularSegment:
     """
-    Build a circular u(x) segment from endpoint helix-angle magnitudes.
+    Build a circular u(q) segment from endpoint helix-angle magnitudes.
 
-    The resulting circle is in the physical (x, u) displacement plane. It
-    matches du/dx = handedness * cot(beta) at both endpoints. It does not
-    claim that beta(x) itself varies circularly.
+    The resulting circle is in the physical (q, u) displacement plane. It
+    matches du/dq = handedness * cot(beta) at both endpoints. It does not
+    claim that beta(q) itself varies circularly.
     """
 
     _validate_helix_angle_and_handedness(

@@ -1,9 +1,9 @@
-# cinder/geometry/spec.py
+"""Fixed belt-pulley geometry specifications and construction-time closure."""
 
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from math import inf, nextafter, pi, tan
+from math import inf, isfinite, nextafter, pi, tan
 
 from .belt_length import (
     solve_center_distance,
@@ -27,18 +27,19 @@ class BeltSectionSpec:
     center_of_mass_depth_from_outer: float = field(init=False)
 
     def __post_init__(self) -> None:
-        if self.height <= 0.0:
-            raise ValueError("height must be positive.")
+        _require_positive("height", self.height)
+        _require_positive("outer_width", self.outer_width)
+        _require_positive("inner_width", self.inner_width)
 
-        if self.outer_width <= 0.0:
-            raise ValueError("outer_width must be positive.")
-
-        if self.inner_width <= 0.0:
-            raise ValueError("inner_width must be positive.")
-
-        if not 0.0 <= self.cord_depth_from_outer <= self.height:
+        if (
+            not isfinite(self.cord_depth_from_outer)
+            or not 0.0
+            <= self.cord_depth_from_outer
+            <= self.height
+        ):
             raise ValueError(
-                "cord_depth_from_outer must lie within the belt height."
+                "cord_depth_from_outer must be finite and lie within "
+                "the belt height."
             )
 
         center_of_mass_depth = (
@@ -60,8 +61,9 @@ class BeltPulleyGeometrySpec:
     Fixed resolved geometry for one belt-pulley CVT.
 
     Reference radii and belt length are measured at the belt outer surface
-    in the s = 0 configuration. Effective radii, C2C, and the secondary
-    outer radius at s = max_shift are resolved once during construction.
+    in the s = 0 configuration. Effective radii, center distance, and the
+    secondary outer radius at s = max_shift are resolved once during
+    construction.
     """
 
     belt: BeltSectionSpec
@@ -84,30 +86,32 @@ class BeltPulleyGeometrySpec:
     secondary_outer_radius_at_max_shift: float = field(init=False)
 
     def __post_init__(self) -> None:
-        if self.belt_outer_length <= 0.0:
-            raise ValueError("belt_outer_length must be positive.")
+        _require_positive("belt_outer_length", self.belt_outer_length)
+        _require_positive(
+            "primary_outer_radius_at_zero_shift",
+            self.primary_outer_radius_at_zero_shift,
+        )
+        _require_positive(
+            "secondary_outer_radius_at_zero_shift",
+            self.secondary_outer_radius_at_zero_shift,
+        )
 
-        if self.primary_outer_radius_at_zero_shift <= 0.0:
+        if (
+            not isfinite(self.sheave_half_angle)
+            or not 0.0 < self.sheave_half_angle < pi / 2.0
+        ):
             raise ValueError(
-                "primary_outer_radius_at_zero_shift must be positive."
+                "sheave_half_angle must be finite and lie between 0 "
+                "and pi / 2."
             )
 
-        if self.secondary_outer_radius_at_zero_shift <= 0.0:
-            raise ValueError(
-                "secondary_outer_radius_at_zero_shift must be positive."
-            )
-
-        if not 0.0 < self.sheave_half_angle < pi / 2.0:
-            raise ValueError(
-                "sheave_half_angle must lie between 0 and pi / 2."
-            )
-
-        if self.deadzone_shift < 0.0:
-            raise ValueError("deadzone_shift cannot be negative.")
+        _require_nonnegative("deadzone_shift", self.deadzone_shift)
+        _require_nonnegative("max_shift", self.max_shift)
 
         if self.max_shift < self.deadzone_shift:
             raise ValueError(
-                "max_shift must be greater than or equal to deadzone_shift."
+                "max_shift must be greater than or equal to "
+                "deadzone_shift."
             )
 
         primary_effective_radius = (
@@ -123,18 +127,25 @@ class BeltPulleyGeometrySpec:
             raise ValueError("primary outer radius must exceed cord depth.")
 
         if secondary_effective_radius <= 0.0:
-            raise ValueError("secondary outer radius must exceed cord depth.")
+            raise ValueError(
+                "secondary outer radius must exceed cord depth."
+            )
 
         center_distance = solve_center_distance(
             belt_length=self.belt_outer_length,
-            primary_outer_radius=self.primary_outer_radius_at_zero_shift,
-            secondary_outer_radius=self.secondary_outer_radius_at_zero_shift,
+            primary_outer_radius=(
+                self.primary_outer_radius_at_zero_shift
+            ),
+            secondary_outer_radius=(
+                self.secondary_outer_radius_at_zero_shift
+            ),
         )
 
         active_shift_at_max = self.max_shift - self.deadzone_shift
         primary_outer_radius_at_max_shift = (
             self.primary_outer_radius_at_zero_shift
-            + active_shift_at_max / (2.0 * tan(self.sheave_half_angle))
+            + active_shift_at_max
+            / (2.0 * tan(self.sheave_half_angle))
         )
 
         # One broad setup solve establishes the lower endpoint used by all
@@ -144,7 +155,8 @@ class BeltPulleyGeometrySpec:
         # r_s <= L / pi - r_p follows from L >= pi(r_p + r_s).
         setup_upper_bound = min(
             center_distance - primary_outer_radius_at_max_shift,
-            self.belt_outer_length / pi - primary_outer_radius_at_max_shift,
+            self.belt_outer_length / pi
+            - primary_outer_radius_at_max_shift,
         )
 
         if setup_upper_bound <= 0.0:
@@ -158,12 +170,14 @@ class BeltPulleyGeometrySpec:
         # above zero rather than an arbitrary engineering offset.
         setup_lower_bound = nextafter(0.0, inf)
 
-        secondary_outer_radius_at_max_shift = solve_secondary_outer_radius(
-            belt_length=self.belt_outer_length,
-            center_distance=center_distance,
-            primary_outer_radius=primary_outer_radius_at_max_shift,
-            lower_bound=setup_lower_bound,
-            upper_bound=setup_upper_bound,
+        secondary_outer_radius_at_max_shift = (
+            solve_secondary_outer_radius(
+                belt_length=self.belt_outer_length,
+                center_distance=center_distance,
+                primary_outer_radius=primary_outer_radius_at_max_shift,
+                lower_bound=setup_lower_bound,
+                upper_bound=setup_upper_bound,
+            )
         )
 
         object.__setattr__(
@@ -187,3 +201,13 @@ class BeltPulleyGeometrySpec:
             "secondary_outer_radius_at_max_shift",
             secondary_outer_radius_at_max_shift,
         )
+
+
+def _require_positive(name: str, value: float) -> None:
+    if not isfinite(value) or value <= 0.0:
+        raise ValueError(f"{name} must be finite and positive.")
+
+
+def _require_nonnegative(name: str, value: float) -> None:
+    if not isfinite(value) or value < 0.0:
+        raise ValueError(f"{name} must be finite and non-negative.")

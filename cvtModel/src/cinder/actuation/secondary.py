@@ -22,7 +22,7 @@ class TorqueReactiveSecondarySpec:
 
     The helix geometry is intentionally not stored here. ``HelixProfile``
     is an independent physical geometry object shared by the local clamping
-    force at construction and, later, by secondary rotational dynamics.
+    force at construction and later by secondary helix dynamics.
     """
 
     axial_spring: AxialSpringForceSpec
@@ -33,14 +33,13 @@ def build_torque_reactive_secondary(
     *,
     spec: TorqueReactiveSecondarySpec,
     helix_profile: HelixProfile,
-    movable_sheave_rotational_inertia: float,
 ) -> PulleyActuator:
     """
     Build the secondary as a normal ``PulleyActuator``.
 
-    The returned object is only an axial-force aggregator. No special
-    secondary wrapper, no extra result exposure, and no helix rotational
-    kinematics are routed through it.
+    The returned object is only an axial-force aggregator. Movable-sheave
+    rotational inertia belongs to resolved inertia and later secondary
+    helix dynamics, not to this clamping construction.
     """
 
     return PulleyActuator(
@@ -48,8 +47,5 @@ def build_torque_reactive_secondary(
         SecondaryHelixForce(
             spec=spec.helix_force,
             helix_profile=helix_profile,
-            movable_sheave_rotational_inertia=(
-                movable_sheave_rotational_inertia
-            ),
         ),
     )

@@ -1,8 +1,8 @@
-# cinder/geometry/belt_length.py
+"""Open-belt length geometry and bracketed scalar closure solves."""
 
 from __future__ import annotations
 
-from math import asin, pi, sqrt
+from math import asin, isfinite, pi, sqrt
 
 from scipy.optimize import brentq
 
@@ -18,7 +18,7 @@ def wrap_angles(
     secondary_outer_radius: float,
 ) -> tuple[float, float]:
     """
-    Return the primary and secondary wrap angles for an open belt loop.
+    Return primary and secondary wrap angles for one open belt loop.
 
     All radii refer to the belt outer surface.
     """
@@ -48,9 +48,7 @@ def open_belt_length(
     primary_outer_radius: float,
     secondary_outer_radius: float,
 ) -> float:
-    """
-    Return the outer-surface length implied by one open belt loop.
-    """
+    """Return the outer-surface length implied by one open belt loop."""
 
     primary_wrap_angle, secondary_wrap_angle = wrap_angles(
         center_distance=center_distance,
@@ -78,12 +76,9 @@ def belt_length_residual(
     primary_outer_radius: float,
     secondary_outer_radius: float,
 ) -> float:
-    """
-    Return implied outer-surface belt length minus specified belt length.
-    """
+    """Return implied outer-surface belt length minus specified length."""
 
-    if belt_length <= 0.0:
-        raise ValueError("belt_length must be positive.")
+    _require_positive(belt_length=belt_length)
 
     return (
         open_belt_length(
@@ -102,10 +97,10 @@ def solve_center_distance(
     secondary_outer_radius: float,
 ) -> float:
     """
-    Solve the fixed center distance from one known reference geometry.
+    Solve fixed center distance from one known reference geometry.
 
-    The supplied belt length and pulley radii are measured at the belt
-    outer surface.
+    Supplied belt length and pulley radii are measured at the belt outer
+    surface.
     """
 
     _require_positive(
@@ -119,31 +114,10 @@ def solve_center_distance(
     )
     radius_sum = primary_outer_radius + secondary_outer_radius
 
-    # Physical lower bound:
-    #
-    # C must be at least r_p + r_s or the two outer belt envelopes overlap.
-    # This is automatically stricter than the mathematical domain condition
-    # C > |r_s - r_p|.
+    # Physical lower bound: outer belt envelopes cannot overlap.
     lower_bound = radius_sum
 
-    # Tighter upper bound:
-    #
-    # L = pi(r_p + r_s)
-    #     + 2(r_s - r_p) asin((r_s - r_p) / C)
-    #     + 2 sqrt(C^2 - (r_s - r_p)^2)
-    #
-    # Since (r_s - r_p) asin((r_s - r_p) / C) is non-negative:
-    #
-    # L >= pi(r_p + r_s) + 2 sqrt(C^2 - (r_s - r_p)^2).
-    #
-    # Therefore:
-    #
-    # C <= sqrt(
-    #     (r_s - r_p)^2
-    #     + ((L - pi(r_p + r_s)) / 2)^2
-    # ).
-    #
-    # This upper bound is exact when r_p == r_s.
+    # Tighter upper bound from the minimum possible wrapped length.
     straight_span_budget = belt_length - pi * radius_sum
 
     if straight_span_budget <= 0.0:
@@ -202,7 +176,7 @@ def solve_secondary_outer_radius(
     upper_bound: float,
 ) -> float:
     """
-    Solve the secondary outer radius inside a caller-supplied bracket.
+    Solve secondary outer radius inside a caller-supplied bracket.
 
     The caller is responsible for providing bounds that contain the
     physically reachable secondary-radius solution.
@@ -230,9 +204,8 @@ def solve_secondary_outer_radius(
     lower_value = residual(lower_bound)
     upper_value = residual(upper_bound)
 
-    # At s = 0 or s = s_max, the solution is one of the cached endpoint
-    # bounds. The endpoint and C2C are both floating-point roots, so accept
-    # a numerically zero residual directly.
+    # At s = 0 or s = s_max, the solution is one cached endpoint. The
+    # endpoint and C2C are floating-point roots, so accept numerical zero.
     if abs(lower_value) <= _ROOT_RESIDUAL_TOL:
         return lower_bound
 
@@ -255,5 +228,5 @@ def solve_secondary_outer_radius(
 
 def _require_positive(**values: float) -> None:
     for name, value in values.items():
-        if value <= 0.0:
-            raise ValueError(f"{name} must be positive.")
+        if not isfinite(value) or value <= 0.0:
+            raise ValueError(f"{name} must be finite and positive.")

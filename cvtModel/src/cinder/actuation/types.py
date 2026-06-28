@@ -18,65 +18,27 @@ class PulleyActuationState:
     """
     Known local quantities available before the closure solve.
 
-    ``axial_position`` and ``axial_speed`` use the particular actuator's
-    local pulley coordinate x. Positive local axial force tends to close
-    and clamp the pulley.
+    ``axial_position`` and ``axial_speed`` use the actuator's local pulley
+    coordinate x. Positive local axial force tends to close and clamp the
+    pulley. ``shaft_speed`` is the corresponding pulley-shaft speed.
 
-    The final three fields describe that local coordinate in terms of the
-    global shift coordinate s:
-
-        x_dot = (dx/ds) s_dot.
-
-    They are required by the secondary helix because its relative rotation
-    is theta(x(s)). Defaults retain the simple x = s mapping for existing
-    primary laws and direct tests.
+    Global coordinate conversion, helix inertia, and rotational-row
+    coupling deliberately do not belong in generic actuation state. They
+    are handled later by the dedicated secondary helix dynamics mechanism.
     """
 
     axial_position: float
     axial_speed: float
     shaft_speed: float
 
-    global_shift_speed: float | None = None
-    axial_coordinate_slope: float = 1.0
-    axial_coordinate_curvature: float = 0.0
-
     def __post_init__(self) -> None:
         for name, value in (
             ("axial_position", self.axial_position),
             ("axial_speed", self.axial_speed),
             ("shaft_speed", self.shaft_speed),
-            ("axial_coordinate_slope", self.axial_coordinate_slope),
-            (
-                "axial_coordinate_curvature",
-                self.axial_coordinate_curvature,
-            ),
         ):
             if not isfinite(value):
                 raise ValueError(f"{name} must be finite.")
-
-        if (
-            self.global_shift_speed is not None
-            and not isfinite(self.global_shift_speed)
-        ):
-            raise ValueError("global_shift_speed must be finite or None.")
-
-    @property
-    def resolved_global_shift_speed(self) -> float:
-        """
-        Return s_dot.
-
-        Existing direct uses that only provide local axial speed remain
-        valid for the default x = s coordinate. Core assembly should pass
-        the true global shift speed explicitly.
-        """
-
-        if self.global_shift_speed is not None:
-            return self.global_shift_speed
-
-        if self.axial_coordinate_slope != 0.0:
-            return self.axial_speed / self.axial_coordinate_slope
-
-        return 0.0
 
 
 @dataclass(frozen=True, slots=True)

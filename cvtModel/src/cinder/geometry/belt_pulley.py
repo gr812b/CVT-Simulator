@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from math import pi, sqrt, tan
+from math import isfinite, pi, sqrt, tan
 
 from .belt_length import (
     solve_secondary_outer_radius,
@@ -22,7 +22,7 @@ class BeltPulleyGeometry:
 
     The global coordinate ``shift = s`` is the primary movable-sheave
     coordinate. The returned ``GeometryPosition`` also supplies the three
-    physical axial coordinates used by local actuator laws and by the shift
+    physical axial coordinates used by local actuator laws and by shift
     translation inertia:
 
         x_p(s) = s
@@ -40,7 +40,7 @@ class BeltPulleyGeometry:
     when a distributed belt axial-motion model is introduced.
 
     Each ``evaluate(shift)`` call performs exactly one secondary-radius root
-    solve, using the cached reachable endpoint radii as its bracket.
+    solve, using cached reachable endpoint radii as its bracket.
     """
 
     def __init__(self, spec: BeltPulleyGeometrySpec) -> None:
@@ -63,8 +63,12 @@ class BeltPulleyGeometry:
             belt_length=self._spec.belt_outer_length,
             center_distance=self._spec.center_distance,
             primary_outer_radius=primary_outer_radius,
-            lower_bound=self._spec.secondary_outer_radius_at_max_shift,
-            upper_bound=self._spec.secondary_outer_radius_at_zero_shift,
+            lower_bound=(
+                self._spec.secondary_outer_radius_at_max_shift
+            ),
+            upper_bound=(
+                self._spec.secondary_outer_radius_at_zero_shift
+            ),
         )
 
         primary_wrap_angle, secondary_wrap_angle = wrap_angles(
@@ -149,13 +153,11 @@ class BeltPulleyGeometry:
         d2_primary_radius_ds2: float,
     ) -> tuple[float, float]:
         """
-        Return dr_s,out/ds and d²r_s,out/ds² from the differentiated
-        constant outer-belt-length constraint.
+        Return dr_s,out/ds and d²r_s,out/ds² from differentiated constant
+        outer-belt-length closure.
         """
 
-        radius_slope_ratio = (
-            primary_wrap_angle / secondary_wrap_angle
-        )
+        radius_slope_ratio = primary_wrap_angle / secondary_wrap_angle
 
         d_secondary_radius_ds = (
             -radius_slope_ratio * d_primary_radius_ds
@@ -177,10 +179,7 @@ class BeltPulleyGeometry:
             )
         )
 
-        return (
-            d_secondary_radius_ds,
-            d2_secondary_radius_ds2,
-        )
+        return d_secondary_radius_ds, d2_secondary_radius_ds2
 
     def _secondary_axial_coordinate(
         self,
@@ -190,11 +189,10 @@ class BeltPulleyGeometry:
         d2_secondary_radius_ds2: float,
     ) -> AxialCoordinateAtShift:
         """
-        Map secondary belt radius into the local secondary actuator
-        coordinate x_s.
+        Map secondary belt radius into local actuator coordinate x_s.
 
-        x_s = 0 at s = 0. Positive x_s closes the secondary, so x_s
-        becomes negative as the primary shifts out and the secondary opens.
+        x_s = 0 at s = 0. Positive x_s closes the secondary, so x_s becomes
+        negative as the primary shifts out and the secondary opens.
         """
 
         axial_distance_per_radius = 2.0 * tan(
@@ -221,7 +219,7 @@ class BeltPulleyGeometry:
         self,
         shift: float,
     ) -> AxialCoordinateAtShift:
-        """Return the current lumped belt axial coordinate x_b(s)."""
+        """Return present lumped belt axial coordinate x_b(s)."""
 
         if shift <= self._spec.deadzone_shift:
             return AxialCoordinateAtShift(
@@ -251,8 +249,7 @@ class BeltPulleyGeometry:
 
         return RadiusAtShift(
             effective=(
-                outer_radius
-                - self._spec.belt.cord_depth_from_outer
+                outer_radius - self._spec.belt.cord_depth_from_outer
             ),
             outer=outer_radius,
             center_of_mass=(
@@ -264,6 +261,9 @@ class BeltPulleyGeometry:
         )
 
     def _validate_shift(self, shift: float) -> None:
+        if not isfinite(shift):
+            raise ValueError("shift must be finite.")
+
         if not 0.0 <= shift <= self._spec.max_shift:
             raise ValueError(
                 f"shift={shift} is outside "
