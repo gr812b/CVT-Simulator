@@ -1,3 +1,5 @@
+"""Fixed-length belt-pulley geometry evaluated at one global shift state."""
+
 from __future__ import annotations
 
 from math import pi, sqrt, tan
@@ -19,9 +21,26 @@ class BeltPulleyGeometry:
     Evaluate fixed belt-pulley geometry at one global shift coordinate.
 
     The global coordinate ``shift = s`` is the primary movable-sheave
-    coordinate. The returned GeometryPosition also supplies local axial
-    coordinates for the primary sheave, secondary sheave, and the present
-    lumped belt-shift model.
+    coordinate. The returned ``GeometryPosition`` also supplies the three
+    physical axial coordinates used by local actuator laws and by the shift
+    translation inertia:
+
+        x_p(s) = s
+
+        x_s(s) = 2 tan(beta) [r_s,out(s) - r_s,out(0)]
+
+        x_b(s) = 0,                         s <= s_deadzone
+                = (s - s_deadzone) / 2,      s >  s_deadzone
+
+    Positive local coordinates close their respective pulley. Thus an
+    upshift has x_p > 0 and x_s < 0. The belt coordinate is a present
+    lumped axial-motion approximation: the belt remains stationary during
+    primary deadzone travel, then its representative axial motion is half
+    of the active primary displacement. Replace this mapping later only
+    when a distributed belt axial-motion model is introduced.
+
+    Each ``evaluate(shift)`` call performs exactly one secondary-radius root
+    solve, using the cached reachable endpoint radii as its bracket.
     """
 
     def __init__(self, spec: BeltPulleyGeometrySpec) -> None:
@@ -92,18 +111,14 @@ class BeltPulleyGeometry:
                     d2_secondary_radius_ds2=d2_secondary_radius_ds2,
                 )
             ),
-            belt_axial_coordinate=self._belt_axial_coordinate(
-                shift=shift,
-            ),
+            belt_axial_coordinate=self._belt_axial_coordinate(shift),
         )
 
     def _primary_outer_radius_kinematics(
         self,
         shift: float,
     ) -> tuple[float, float, float]:
-        """
-        Return r_p,out, dr_p,out/ds, and d²r_p,out/ds².
-        """
+        """Return r_p,out, dr_p,out/ds, and d²r_p,out/ds²."""
 
         if shift <= self._spec.deadzone_shift:
             return (
@@ -204,24 +219,9 @@ class BeltPulleyGeometry:
 
     def _belt_axial_coordinate(
         self,
-        *,
         shift: float,
     ) -> AxialCoordinateAtShift:
-        """
-        Return the present lumped belt axial coordinate.
-
-        The belt does not move through the grooves during primary deadzone:
-
-            x_b = 0                         for s <= s_deadzone
-            x_b = (s - s_deadzone) / 2     otherwise.
-
-        Thus only the primary movable sheave contributes to literal shift
-        translation during deadzone. Once the belt begins moving, its
-        contribution is m_b (dx_b/ds)^2 = m_b / 4.
-
-        TODO: replace this lumped x_b relation with a belt axial-motion
-        model derived from the distributed belt geometry.
-        """
+        """Return the current lumped belt axial coordinate x_b(s)."""
 
         if shift <= self._spec.deadzone_shift:
             return AxialCoordinateAtShift(
@@ -231,7 +231,7 @@ class BeltPulleyGeometry:
             )
 
         return AxialCoordinateAtShift(
-            value=0.5 * (shift - self._spec.deadzone_shift),
+            value=(shift - self._spec.deadzone_shift) / 2.0,
             d_value_ds=0.5,
             d2_value_ds2=0.0,
         )

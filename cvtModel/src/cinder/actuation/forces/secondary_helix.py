@@ -1,4 +1,4 @@
-"""Local secondary helix axial-force law."""
+"""Local torque-reactive secondary helix axial-force law."""
 
 from __future__ import annotations
 
@@ -14,14 +14,14 @@ from ..types import PulleyActuationState
 @dataclass(frozen=True, slots=True)
 class SecondaryHelixForceSpec:
     """
-    Elastic and torque-transfer parameters of the local helix force law.
+    Non-geometric parameters of the local secondary helix force law.
 
-    Helix geometry is deliberately absent. The physical ``HelixProfile`` is
-    passed separately when the force law is built, because the same profile
-    is also required later by secondary rotational dynamics.
+    The physical helix profile is deliberately absent. It is created and
+    retained independently at system construction, then passed into this
+    local force law and later directly into secondary rotational dynamics.
 
-    The movable-sheave rotational inertia I_M is likewise supplied
-    separately from resolved inertia data so it has one source of truth.
+    I_M is likewise absent: the resolved inertia object remains its single
+    physical source of truth.
     """
 
     torsional_stiffness: float
@@ -42,12 +42,11 @@ class SecondaryHelixForceSpec:
 
 class SecondaryHelixForce:
     """
-    Ordinary local axial-force law used by ``PulleyActuator``.
+    One normal local axial-force law for ``PulleyActuator``.
 
-    The local helix profile is theta(x_s). The force law uses that profile
-    to form the local secondary axial-force relation. It does not expose
-    helix kinematics for other equations; later rotational dynamics uses
-    the same separately owned ``HelixProfile`` directly.
+    The profile is evaluated in the local secondary coordinate x_s. The
+    force law remains a standard affine closure contributor; it exposes no
+    secondary-specific result object and owns no rotational-row interface.
     """
 
     def __init__(
@@ -61,7 +60,6 @@ class SecondaryHelixForce:
             "movable_sheave_rotational_inertia",
             movable_sheave_rotational_inertia,
         )
-
         self._spec = spec
         self._helix_profile = helix_profile
         self._movable_sheave_rotational_inertia = (
@@ -79,51 +77,55 @@ class SecondaryHelixForce:
         """
         Return the local secondary axial-force relation F_xs.
 
-        The profile is evaluated locally at x_s. The local movable-sheave
-        acceleration is represented through the global-shift closure
-        coefficients already carried by ``PulleyActuationState``.
+        Let theta = theta(x_s), with local derivatives theta_x and
+        theta_xx. The movable sheave has angular acceleration
+
+            alpha_M = alpha_s - theta_xx x_dot_s^2 - theta_x x_ddot_s.
+
+        With x_dot_s = x_s' s_dot and
+        x_ddot_s = x_s'' s_dot^2 + x_s' s_ddot, the force law is kept
+        affine in the core unknowns while all known s_dot squared terms
+        remain in the bias.
         """
 
         sample = self._helix_profile.evaluate(state.axial_position)
+        theta_x = sample.dtheta_dx
+        theta_xx = sample.d2theta_dx2
 
-        theta = sample.theta
-        dtheta_dx = sample.dtheta_dx
-        d2theta_dx2 = sample.d2theta_dx2
-
-        dx_ds = state.axial_coordinate_slope
-        d2x_ds2 = state.axial_coordinate_curvature
+        x_s_prime = state.axial_coordinate_slope
+        x_s_double_prime = state.axial_coordinate_curvature
         shift_speed = state.resolved_global_shift_speed
 
-        dtheta_ds = dtheta_dx * dx_ds
+        dtheta_ds = theta_x * x_s_prime
         d2theta_ds2 = (
-            d2theta_dx2 * dx_ds**2
-            + dtheta_dx * d2x_ds2
+            theta_xx * x_s_prime**2
+            + theta_x * x_s_double_prime
         )
 
         torsional_spring_torque = (
             self._spec.torsional_stiffness
-            * (self._spec.initial_twist + theta)
+            * (self._spec.initial_twist + sample.theta)
         )
         inertia = self._movable_sheave_rotational_inertia
 
         return AffineClosureScalar(
             bias=(
-                dtheta_dx * torsional_spring_torque
+                theta_x * torsional_spring_torque
                 + inertia
-                * dtheta_dx
+                * theta_x
                 * d2theta_ds2
                 * shift_speed**2
             ),
             gains=ClosureGains(
                 secondary_angular_acceleration=(
-                    -inertia * dtheta_dx
+                    -inertia * theta_x
                 ),
                 shift_acceleration=(
-                    inertia * dtheta_dx * dtheta_ds
+                    inertia * theta_x * dtheta_ds
                 ),
                 secondary_torque=(
                     self._spec.movable_sheave_torque_fraction
-                    * dtheta_dx
+                    * theta_x
                 ),
             ),
         )

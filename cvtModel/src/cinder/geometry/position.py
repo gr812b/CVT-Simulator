@@ -1,8 +1,14 @@
+"""Resolved belt-pulley geometry at one global shift coordinate."""
+
+from __future__ import annotations
+
 from dataclasses import dataclass
 
 
 @dataclass(frozen=True, slots=True)
 class RadiusAtShift:
+    """One belt reference radius and its global-shift derivatives."""
+
     effective: float
     outer: float
     center_of_mass: float
@@ -13,12 +19,7 @@ class RadiusAtShift:
 
 @dataclass(frozen=True, slots=True)
 class AxialCoordinateAtShift:
-    """
-    One physical or equivalent axial coordinate expressed in global shift s.
-
-    ``value`` is the coordinate at the current shift, while the derivative
-    fields give dx/ds and d²x/ds².
-    """
+    """One physical axial coordinate x(s) and its global derivatives."""
 
     value: float
     d_value_ds: float
@@ -27,6 +28,8 @@ class AxialCoordinateAtShift:
 
 @dataclass(frozen=True, slots=True)
 class GeometryPosition:
+    """All geometry needed by one RHS evaluation at a shift position."""
+
     shift: float
 
     primary: RadiusAtShift
@@ -37,5 +40,4 @@ class GeometryPosition:
 
     primary_axial_coordinate: AxialCoordinateAtShift
     secondary_axial_coordinate: AxialCoordinateAtShift
-
     belt_axial_coordinate: AxialCoordinateAtShift

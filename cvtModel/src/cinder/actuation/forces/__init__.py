@@ -1,4 +1,4 @@
-"""Concrete local force laws for CINDER pulley actuation."""
+"""Concrete local axial-force laws for CINDER pulley actuation."""
 
 from .axial_spring import AxialSpringForce, AxialSpringForceSpec
 from .centrifugal_ramp import (
@@ -6,7 +6,6 @@ from .centrifugal_ramp import (
     CentrifugalRampForceSpec,
 )
 from .secondary_helix import (
-    SecondaryHelixEvaluation,
     SecondaryHelixForce,
     SecondaryHelixForceSpec,
 )
@@ -16,7 +15,6 @@ __all__ = [
     "AxialSpringForceSpec",
     "CentrifugalRampForce",
     "CentrifugalRampForceSpec",
-    "SecondaryHelixEvaluation",
     "SecondaryHelixForce",
     "SecondaryHelixForceSpec",
 ]

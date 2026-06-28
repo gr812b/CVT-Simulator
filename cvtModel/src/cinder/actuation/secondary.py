@@ -1,4 +1,4 @@
-"""Construction for the ordinary torque-reactive secondary pulley actuator."""
+"""Construction of the ordinary torque-reactive secondary pulley actuator."""
 
 from __future__ import annotations
 
@@ -18,10 +18,11 @@ from .pulley_actuator import PulleyActuator
 @dataclass(frozen=True, slots=True)
 class TorqueReactiveSecondarySpec:
     """
-    Local secondary clamping-force parameters.
+    Secondary clamping-force parameters.
 
-    The physical helix profile is deliberately not stored here. It is shared
-    separately by the caller with later secondary rotational dynamics.
+    The helix geometry is intentionally not stored here. ``HelixProfile``
+    is an independent physical geometry object shared by the local clamping
+    force at construction and, later, by secondary rotational dynamics.
     """
 
     axial_spring: AxialSpringForceSpec
@@ -35,14 +36,11 @@ def build_torque_reactive_secondary(
     movable_sheave_rotational_inertia: float,
 ) -> PulleyActuator:
     """
-    Build a normal PulleyActuator for the secondary.
+    Build the secondary as a normal ``PulleyActuator``.
 
-    ``helix_profile`` is passed in independently instead of being owned by
-    ``TorqueReactiveSecondarySpec``. The caller keeps the same profile
-    reference for the later secondary rotational row.
-
-    ``movable_sheave_rotational_inertia`` is the resolved I_M and remains
-    the single physical source used by the local helix force law.
+    The returned object is only an axial-force aggregator. No special
+    secondary wrapper, no extra result exposure, and no helix rotational
+    kinematics are routed through it.
     """
 
     return PulleyActuator(
@@ -55,3 +53,8 @@ def build_torque_reactive_secondary(
             ),
         ),
     )
+
+
+# Compatibility spelling for package-level imports in the intermediate branch.
+# This is a factory alias, not a special secondary actuator class.
+TorqueReactiveSecondary = build_torque_reactive_secondary

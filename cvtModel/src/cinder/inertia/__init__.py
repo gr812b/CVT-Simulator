@@ -1,6 +1,11 @@
-"""Physical inertia inputs and construction-time resolved constants."""
+"""Physical and resolved inertia data for CINDER."""
 
-from .belt import BeltMass, ResolvedBeltMass
+from .belt import (
+    BeltMass,
+    BeltSection,
+    ResolvedBeltMass,
+    TrapezoidalBeltSection,
+)
 from .primary import PrimaryInertia
 from .resolved import (
     DrivetrainInertias,
@@ -8,29 +13,35 @@ from .resolved import (
     resolve_inertias,
 )
 from .secondary import (
+    FinalDriveInertiaMap,
     ResolvedSecondaryInertia,
     SecondaryFixedInertia,
     SecondaryInertia,
+    resolve_secondary_inertia,
 )
 from .shift import (
-    ShiftTranslationMass,
-    ShiftTranslationMassAtPosition,
-    resolve_shift_translation_mass,
+    ShiftTranslationInertia,
+    ShiftTranslationMasses,
+    resolve_shift_translation_masses,
 )
 from .vehicle import VehicleInertia
 
 __all__ = [
     "BeltMass",
+    "BeltSection",
     "DrivetrainInertias",
+    "FinalDriveInertiaMap",
     "PrimaryInertia",
     "ResolvedBeltMass",
     "ResolvedInertias",
     "ResolvedSecondaryInertia",
     "SecondaryFixedInertia",
     "SecondaryInertia",
-    "ShiftTranslationMass",
-    "ShiftTranslationMassAtPosition",
+    "ShiftTranslationInertia",
+    "ShiftTranslationMasses",
+    "TrapezoidalBeltSection",
     "VehicleInertia",
     "resolve_inertias",
-    "resolve_shift_translation_mass",
+    "resolve_secondary_inertia",
+    "resolve_shift_translation_masses",
 ]

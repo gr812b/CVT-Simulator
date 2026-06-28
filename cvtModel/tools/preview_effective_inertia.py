@@ -1,12 +1,4 @@
-"""Plot stationary-shift rotational inertia referred to the primary shaft.
-
-This diagnostic keeps the CVT at a fixed ratio, zero shift speed, and no
-slip. The actual solver retains primary rotation, secondary rotation, belt
-transport, and shift as separate coordinates.
-
-Shift translation is intentionally not printed here: it is evaluated from
-the current GeometryPosition inside the RHS, not resolved as a constant.
-"""
+"""Plot stationary-shift rotational inertia referred to the primary shaft."""
 
 from __future__ import annotations
 
@@ -132,16 +124,8 @@ def main() -> None:
 
 def _parse_arguments() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
-    parser.add_argument(
-        "--minimum-ratio",
-        type=float,
-        default=0.5,
-    )
-    parser.add_argument(
-        "--maximum-ratio",
-        type=float,
-        default=5.0,
-    )
+    parser.add_argument("--minimum-ratio", type=float, default=0.5)
+    parser.add_argument("--maximum-ratio", type=float, default=5.0)
     parser.add_argument(
         "--primary-effective-radius",
         type=float,
@@ -152,13 +136,10 @@ def _parse_arguments() -> argparse.Namespace:
 
     if arguments.minimum_ratio <= 0.0:
         raise ValueError("minimum_ratio must be positive.")
-
     if arguments.maximum_ratio <= arguments.minimum_ratio:
         raise ValueError("maximum_ratio must exceed minimum_ratio.")
-
     if arguments.primary_effective_radius <= 0.0:
         raise ValueError("primary_effective_radius must be positive.")
-
     return arguments
 
 
@@ -194,7 +175,6 @@ def _print_rotational_breakdown(
 
     for ratio in sample_ratios:
         scale = 1.0 / ratio**2
-
         engine = inertias.primary.engine_rotational_inertia
         primary_cvt = inertias.primary.cvt_rotational_inertia
         secondary_fixed = fixed.secondary_fixed_rotational_inertia * scale
@@ -216,16 +196,10 @@ def _print_rotational_breakdown(
         )
 
         print(
-            f"{ratio:6.2f} | "
-            f"{engine:6.4f} | "
-            f"{primary_cvt:11.4f} | "
-            f"{belt_transport:5.4f} | "
-            f"{secondary_fixed:15.4f} | "
-            f"{gearbox:7.4f} | "
-            f"{vehicle:7.4f} | "
-            f"{wheels:6.4f} | "
-            f"{secondary_movable:17.4f} | "
-            f"{total:6.4f}"
+            f"{ratio:6.2f} | {engine:6.4f} | {primary_cvt:11.4f} | "
+            f"{belt_transport:5.4f} | {secondary_fixed:15.4f} | "
+            f"{gearbox:7.4f} | {vehicle:7.4f} | {wheels:6.4f} | "
+            f"{secondary_movable:17.4f} | {total:6.4f}"
         )
 
 

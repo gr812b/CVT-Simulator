@@ -7,12 +7,12 @@ from math import isfinite
 from typing import Protocol
 
 
-class BeltSection(Protocol):
+class TrapezoidalBeltSection(Protocol):
     """
-    Minimum existing geometry data needed to determine the belt mass.
+    Minimum belt-section data needed to determine belt mass.
 
-    This matches ``BeltSectionSpec`` directly, so no geometry-side change
-    or derived ``cross_sectional_area`` property is required.
+    This intentionally uses the existing geometry fields directly, so the
+    inertia package does not require a new geometry-side property.
     """
 
     height: float
@@ -20,8 +20,8 @@ class BeltSection(Protocol):
     inner_width: float
 
 
-# Compatibility alias for code that used the earlier descriptive name.
-TrapezoidalBeltSection = BeltSection
+# Compatibility name for existing consumers. It refers to the same protocol.
+BeltSection = TrapezoidalBeltSection
 
 
 @dataclass(frozen=True, slots=True)
@@ -36,11 +36,11 @@ class BeltMass:
     def resolve(
         self,
         *,
-        belt_section: BeltSection,
+        belt_section: TrapezoidalBeltSection,
         outer_length: float,
     ) -> ResolvedBeltMass:
         """
-        Resolve belt mass from its trapezoidal cross-section.
+        Resolve mass from the trapezoidal cross-section.
 
             A_b = h (w_outer + w_inner) / 2
             m_b = rho_b A_b L_b

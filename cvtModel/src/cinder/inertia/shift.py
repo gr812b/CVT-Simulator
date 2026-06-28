@@ -1,20 +1,31 @@
-"""Literal axial translation mass in the global shift coordinate."""
+"""Physical translation masses and their current shift-coordinate inertia."""
 
 from __future__ import annotations
 
 from dataclasses import dataclass
 from math import isfinite
+from typing import Protocol
 
-from cinder.geometry.position import GeometryPosition
+
+class AxialCoordinate(Protocol):
+    """Minimum geometry data for one physical axial coordinate x(s)."""
+
+    d_value_ds: float
+    d2_value_ds2: float
 
 
 @dataclass(frozen=True, slots=True)
-class ShiftTranslationMass:
+class ShiftTranslationMasses:
     """
-    Fixed physical masses that translate through the shift coordinate.
+    Fixed physical masses participating in coordinated axial motion.
 
-    The corresponding generalized mass is state-dependent because the
-    secondary and belt coordinate slopes come from current geometry.
+    These are physical inputs, not already-reflected generalized masses.
+    Their coordinate slopes and curvatures come from ``GeometryPosition``
+    at each RHS evaluation.
+
+    The movable secondary sheave's rotational helix coupling is excluded
+    here; it remains in the secondary rotational and local helix-force
+    relations so that I_M is not counted twice.
     """
 
     primary_moving_sheave_mass: float
@@ -23,52 +34,32 @@ class ShiftTranslationMass:
 
     def __post_init__(self) -> None:
         for name, value in (
-            (
-                "primary_moving_sheave_mass",
-                self.primary_moving_sheave_mass,
-            ),
-            (
-                "secondary_moving_sheave_mass",
-                self.secondary_moving_sheave_mass,
-            ),
+            ("primary_moving_sheave_mass", self.primary_moving_sheave_mass),
+            ("secondary_moving_sheave_mass", self.secondary_moving_sheave_mass),
             ("belt_mass", self.belt_mass),
         ):
-            if not isfinite(value) or value < 0.0:
-                raise ValueError(
-                    f"{name} must be finite and non-negative."
-                )
+            _require_nonnegative(name, value)
 
-    def at_position(
+    def evaluate(
         self,
         *,
-        position: GeometryPosition,
-    ) -> ShiftTranslationMassAtPosition:
+        primary_axial_coordinate: AxialCoordinate,
+        secondary_axial_coordinate: AxialCoordinate,
+        belt_axial_coordinate: AxialCoordinate,
+    ) -> ShiftTranslationInertia:
         """
-        Evaluate literal translating mass from current geometry.
+        Refer literal axial translation to the present global shift s.
 
-            M_trans(s) =
-                m_p (dx_p/ds)^2
-                + m_s (dx_s/ds)^2
-                + m_b (dx_b/ds)^2.
+            M_trans(s) = sum_i m_i [x_i'(s)]^2
 
-        The associated known quadratic-speed coefficient is
+            C_trans(s) = sum_i m_i x_i'(s) x_i''(s)
 
-            C_trans(s) =
-                m_p (dx_p/ds)(d²x_p/ds²)
-                + m_s (dx_s/ds)(d²x_s/ds²)
-                + m_b (dx_b/ds)(d²x_b/ds²),
+        The eventual generalized shift row is:
 
-        so the translation contribution to the shift equation is
-
-            M_trans(s) s_ddot + C_trans(s) s_dot².
-
-        The movable secondary sheave's *rotational* helix coupling is not
-        included here; it remains in the secondary rotational and clamping
-        relations.
+            M_trans s_ddot + C_trans s_dot^2 = Q_s.
         """
 
-        return ShiftTranslationMassAtPosition(
-            shift=position.shift,
+        return ShiftTranslationInertia(
             primary_moving_sheave_mass=(
                 self.primary_moving_sheave_mass
             ),
@@ -77,42 +68,39 @@ class ShiftTranslationMass:
             ),
             belt_mass=self.belt_mass,
             primary_axial_coordinate_slope=(
-                position.primary_axial_coordinate.d_value_ds
-            ),
-            secondary_axial_coordinate_slope=(
-                position.secondary_axial_coordinate.d_value_ds
-            ),
-            belt_axial_coordinate_slope=(
-                position.belt_axial_coordinate.d_value_ds
+                primary_axial_coordinate.d_value_ds
             ),
             primary_axial_coordinate_curvature=(
-                position.primary_axial_coordinate.d2_value_ds2
+                primary_axial_coordinate.d2_value_ds2
+            ),
+            secondary_axial_coordinate_slope=(
+                secondary_axial_coordinate.d_value_ds
             ),
             secondary_axial_coordinate_curvature=(
-                position.secondary_axial_coordinate.d2_value_ds2
+                secondary_axial_coordinate.d2_value_ds2
+            ),
+            belt_axial_coordinate_slope=(
+                belt_axial_coordinate.d_value_ds
             ),
             belt_axial_coordinate_curvature=(
-                position.belt_axial_coordinate.d2_value_ds2
+                belt_axial_coordinate.d2_value_ds2
             ),
         )
 
 
 @dataclass(frozen=True, slots=True)
-class ShiftTranslationMassAtPosition:
-    """Breakdown of literal translating mass at one global shift position."""
-
-    shift: float
+class ShiftTranslationInertia:
+    """Current literal axial translation inertia in the global s coordinate."""
 
     primary_moving_sheave_mass: float
     secondary_moving_sheave_mass: float
     belt_mass: float
 
     primary_axial_coordinate_slope: float
-    secondary_axial_coordinate_slope: float
-    belt_axial_coordinate_slope: float
-
     primary_axial_coordinate_curvature: float
+    secondary_axial_coordinate_slope: float
     secondary_axial_coordinate_curvature: float
+    belt_axial_coordinate_slope: float
     belt_axial_coordinate_curvature: float
 
     @property
@@ -137,8 +125,8 @@ class ShiftTranslationMassAtPosition:
         )
 
     @property
-    def total(self) -> float:
-        """Return M_trans(s), the coefficient of s_ddot."""
+    def mass(self) -> float:
+        """Return M_trans(s)."""
 
         return (
             self.primary_moving_sheave_contribution
@@ -147,50 +135,37 @@ class ShiftTranslationMassAtPosition:
         )
 
     @property
-    def primary_quadratic_speed_coefficient(self) -> float:
+    def coordinate_curvature_coefficient(self) -> float:
+        """Return C_trans(s), the coefficient multiplying s_dot squared."""
+
         return (
             self.primary_moving_sheave_mass
             * self.primary_axial_coordinate_slope
             * self.primary_axial_coordinate_curvature
-        )
-
-    @property
-    def secondary_quadratic_speed_coefficient(self) -> float:
-        return (
-            self.secondary_moving_sheave_mass
+            + self.secondary_moving_sheave_mass
             * self.secondary_axial_coordinate_slope
             * self.secondary_axial_coordinate_curvature
-        )
-
-    @property
-    def belt_quadratic_speed_coefficient(self) -> float:
-        return (
-            self.belt_mass
+            + self.belt_mass
             * self.belt_axial_coordinate_slope
             * self.belt_axial_coordinate_curvature
         )
 
-    @property
-    def quadratic_speed_coefficient(self) -> float:
-        """Return C_trans(s), the coefficient of s_dot²."""
 
-        return (
-            self.primary_quadratic_speed_coefficient
-            + self.secondary_quadratic_speed_coefficient
-            + self.belt_quadratic_speed_coefficient
-        )
-
-
-def resolve_shift_translation_mass(
+def resolve_shift_translation_masses(
     *,
     primary_moving_sheave_mass: float,
     secondary_moving_sheave_mass: float,
     belt_mass: float,
-) -> ShiftTranslationMass:
-    """Resolve fixed physical masses used by shift translation."""
+) -> ShiftTranslationMasses:
+    """Store the fixed physical masses used by the later RHS evaluation."""
 
-    return ShiftTranslationMass(
+    return ShiftTranslationMasses(
         primary_moving_sheave_mass=primary_moving_sheave_mass,
         secondary_moving_sheave_mass=secondary_moving_sheave_mass,
         belt_mass=belt_mass,
     )
+
+
+def _require_nonnegative(name: str, value: float) -> None:
+    if not isfinite(value) or value < 0.0:
+        raise ValueError(f"{name} must be finite and non-negative.")

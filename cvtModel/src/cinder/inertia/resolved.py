@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from .belt import BeltMass, BeltSection, ResolvedBeltMass
+from .belt import BeltMass, ResolvedBeltMass, TrapezoidalBeltSection
 from .primary import PrimaryInertia
 from .secondary import (
     FinalDriveInertiaMap,
@@ -13,8 +13,8 @@ from .secondary import (
     resolve_secondary_inertia,
 )
 from .shift import (
-    ShiftTranslationMass,
-    resolve_shift_translation_mass,
+    ShiftTranslationMasses,
+    resolve_shift_translation_masses,
 )
 from .vehicle import VehicleInertia
 
@@ -33,15 +33,15 @@ class ResolvedInertias:
     """
     Fixed quantities ready for the dynamic equations.
 
-    ``shift`` stores the three physical translating masses. Its generalized
-    mass is evaluated from GeometryPosition during each RHS evaluation,
-    because dx_s/ds and dx_b/ds can change with shift.
+    ``shift`` stores physical translation masses only. Its generalized mass
+    and coordinate-curvature coefficient are evaluated from live geometry
+    on each RHS call.
     """
 
     primary: PrimaryInertia
     secondary: ResolvedSecondaryInertia
     belt: ResolvedBeltMass
-    shift: ShiftTranslationMass
+    shift: ShiftTranslationMasses
 
 
 def resolve_inertias(
@@ -49,16 +49,10 @@ def resolve_inertias(
     drivetrain: DrivetrainInertias,
     vehicle: VehicleInertia,
     final_drive: FinalDriveInertiaMap,
-    belt_section: BeltSection,
+    belt_section: TrapezoidalBeltSection,
     belt_outer_length: float,
 ) -> ResolvedInertias:
-    """
-    Resolve all fixed inertia quantities at system construction.
-
-    The final-drive reflection, belt mass, and physical translating masses
-    are fixed. The generalized shift coefficient is formed later from the
-    current geometry coordinates.
-    """
+    """Resolve physical constants that do not depend on the live shift state."""
 
     belt = drivetrain.belt.resolve(
         belt_section=belt_section,
@@ -73,7 +67,7 @@ def resolve_inertias(
             final_drive=final_drive,
         ),
         belt=belt,
-        shift=resolve_shift_translation_mass(
+        shift=resolve_shift_translation_masses(
             primary_moving_sheave_mass=(
                 drivetrain.primary.moving_sheave_mass
             ),
