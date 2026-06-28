@@ -1,8 +1,10 @@
-"""Torque-reactive secondary assembly."""
+"""Construction for the ordinary torque-reactive secondary pulley actuator."""
 
 from __future__ import annotations
 
 from dataclasses import dataclass
+
+from cinder.profiles.helix import HelixProfile
 
 from .forces import (
     AxialSpringForce,
@@ -10,106 +12,46 @@ from .forces import (
     SecondaryHelixForce,
     SecondaryHelixForceSpec,
 )
-from .types import PulleyActuationResult, PulleyActuationState
+from .pulley_actuator import PulleyActuator
 
 
 @dataclass(frozen=True, slots=True)
 class TorqueReactiveSecondarySpec:
-    """The standard secondary: local spring plus physical helix."""
+    """
+    Local secondary clamping-force parameters.
+
+    The physical helix profile is deliberately not stored here. It is shared
+    separately by the caller with later secondary rotational dynamics.
+    """
 
     axial_spring: AxialSpringForceSpec
-    helix: SecondaryHelixForceSpec
-
-
-@dataclass(frozen=True, slots=True)
-class TorqueReactiveSecondaryEvaluation:
-    """
-    Complete secondary result at one known-state evaluation.
-
-    ``local_axial_force`` combines the secondary axial spring and helix
-    relation. ``dtheta_ds`` and ``d2theta_ds2`` are retained alongside
-    it so the secondary rotation row and shift row use the same helix
-    kinematics.
-    """
-
-    local_axial_force: PulleyActuationResult
-    theta: float
-    dtheta_ds: float
-    d2theta_ds2: float
-
-
-class TorqueReactiveSecondary:
-    """
-    Evaluate the coupled local secondary actuation assembly.
-
-    This is intentionally not a generic ``PulleyActuator``: the
-    secondary helix contributes both local axial force and the global
-    helix kinematics needed by the secondary rotational balance.
-    """
-
-    def __init__(
-        self,
-        *,
-        spec: TorqueReactiveSecondarySpec,
-        movable_sheave_rotational_inertia: float,
-    ) -> None:
-        self._spec = spec
-        self._axial_spring = AxialSpringForce(spec.axial_spring)
-        self._helix = SecondaryHelixForce(
-            spec=spec.helix,
-            movable_sheave_rotational_inertia=(
-                movable_sheave_rotational_inertia
-            ),
-        )
-
-    @property
-    def spec(self) -> TorqueReactiveSecondarySpec:
-        return self._spec
-
-    @property
-    def movable_sheave_rotational_inertia(self) -> float:
-        """Return the one shared I_M used by this secondary."""
-
-        return self._helix.movable_sheave_rotational_inertia
-
-    def evaluate(
-        self,
-        state: PulleyActuationState,
-    ) -> TorqueReactiveSecondaryEvaluation:
-        spring_relation = self._axial_spring.evaluate(state)
-        helix = self._helix.evaluate(state)
-
-        local_relation = (
-            spring_relation
-            + helix.local_axial_force
-        )
-
-        return TorqueReactiveSecondaryEvaluation(
-            local_axial_force=PulleyActuationResult(
-                relation=local_relation,
-            ),
-            theta=helix.theta,
-            dtheta_ds=helix.dtheta_ds,
-            d2theta_ds2=helix.d2theta_ds2,
-        )
+    helix_force: SecondaryHelixForceSpec
 
 
 def build_torque_reactive_secondary(
     *,
     spec: TorqueReactiveSecondarySpec,
+    helix_profile: HelixProfile,
     movable_sheave_rotational_inertia: float,
-) -> TorqueReactiveSecondary:
+) -> PulleyActuator:
     """
-    Build the secondary from one actuation spec and the resolved I_M.
+    Build a normal PulleyActuator for the secondary.
 
-    Pass
-    ``resolved_inertias.secondary.movable_sheave_rotational_inertia``
-    here. No duplicate I_M belongs in ``SecondaryHelixForceSpec``.
+    ``helix_profile`` is passed in independently instead of being owned by
+    ``TorqueReactiveSecondarySpec``. The caller keeps the same profile
+    reference for the later secondary rotational row.
+
+    ``movable_sheave_rotational_inertia`` is the resolved I_M and remains
+    the single physical source used by the local helix force law.
     """
 
-    return TorqueReactiveSecondary(
-        spec=spec,
-        movable_sheave_rotational_inertia=(
-            movable_sheave_rotational_inertia
+    return PulleyActuator(
+        AxialSpringForce(spec.axial_spring),
+        SecondaryHelixForce(
+            spec=spec.helix_force,
+            helix_profile=helix_profile,
+            movable_sheave_rotational_inertia=(
+                movable_sheave_rotational_inertia
+            ),
         ),
     )

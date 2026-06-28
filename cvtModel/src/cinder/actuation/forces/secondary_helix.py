@@ -1,15 +1,11 @@
-"""Secondary helix kinematics and local torque-reactive axial force."""
+"""Local secondary helix axial-force law."""
 
 from __future__ import annotations
 
 from dataclasses import dataclass
 from math import isfinite
 
-from cinder.closure import (
-    AffineClosureScalar,
-    ClosureGains,
-    ClosureUnknowns,
-)
+from cinder.closure import AffineClosureScalar, ClosureGains
 from cinder.profiles.helix import HelixProfile
 
 from ..types import PulleyActuationState
@@ -18,14 +14,16 @@ from ..types import PulleyActuationState
 @dataclass(frozen=True, slots=True)
 class SecondaryHelixForceSpec:
     """
-    Fixed geometric and elastic parameters of the secondary helix.
+    Elastic and torque-transfer parameters of the local helix force law.
 
-    The movable sheave rotational inertia I_M is intentionally absent.
-    It is owned by the resolved secondary inertia and supplied when the
-    helix mechanism is constructed.
+    Helix geometry is deliberately absent. The physical ``HelixProfile`` is
+    passed separately when the force law is built, because the same profile
+    is also required later by secondary rotational dynamics.
+
+    The movable-sheave rotational inertia I_M is likewise supplied
+    separately from resolved inertia data so it has one source of truth.
     """
 
-    helix_profile: HelixProfile
     torsional_stiffness: float
     initial_twist: float
     movable_sheave_torque_fraction: float = 0.5
@@ -42,69 +40,21 @@ class SecondaryHelixForceSpec:
         )
 
 
-@dataclass(frozen=True, slots=True)
-class SecondaryHelixEvaluation:
-    """
-    One secondary-helix evaluation at the current known state.
-
-    ``dtheta_ds`` and ``d2theta_ds2`` are the global derivatives used
-    directly by the secondary rotational balance:
-
-        alpha_M =
-            alpha_s
-            - d2theta_ds2 * s_dot^2
-            - dtheta_ds * s_ddot.
-
-    ``local_axial_force`` is still a force in the local secondary
-    coordinate x_s. The global shift equation later applies virtual
-    work once:
-
-        Q_s = F_xs * dx_s/ds.
-    """
-
-    theta: float
-    dtheta_ds: float
-    d2theta_ds2: float
-    local_axial_force: AffineClosureScalar
-
-    @property
-    def bias(self) -> float:
-        return self.local_axial_force.bias
-
-    @property
-    def gains(self) -> ClosureGains:
-        return self.local_axial_force.gains
-
-    def force(self, unknowns: ClosureUnknowns) -> float:
-        return self.local_axial_force.evaluate(unknowns)
-
-
 class SecondaryHelixForce:
     """
-    Evaluate the local secondary helix force and global helix kinematics.
+    Ordinary local axial-force law used by ``PulleyActuator``.
 
-    The profile is parameterized by local secondary coordinate x_s.
-    Geometry provides x_s(s), dx_s/ds, and d2x_s/ds2 through
-    ``PulleyActuationState``.
-
-    For theta(x_s(s)):
-
-        H  = dtheta/ds
-           = (dtheta/dx_s) (dx_s/ds)
-
-        H' = d2theta/ds2
-           = (d2theta/dx_s2) (dx_s/ds)^2
-             + (dtheta/dx_s) (d2x_s/ds2).
-
-    The same H and H' are returned for use in the secondary rotational
-    equation, while the local force relation remains available for the
-    secondary clamp and global shift equation.
+    The local helix profile is theta(x_s). The force law uses that profile
+    to form the local secondary axial-force relation. It does not expose
+    helix kinematics for other equations; later rotational dynamics uses
+    the same separately owned ``HelixProfile`` directly.
     """
 
     def __init__(
         self,
         *,
         spec: SecondaryHelixForceSpec,
+        helix_profile: HelixProfile,
         movable_sheave_rotational_inertia: float,
     ) -> None:
         _require_nonnegative(
@@ -113,6 +63,7 @@ class SecondaryHelixForce:
         )
 
         self._spec = spec
+        self._helix_profile = helix_profile
         self._movable_sheave_rotational_inertia = (
             movable_sheave_rotational_inertia
         )
@@ -121,19 +72,19 @@ class SecondaryHelixForce:
     def spec(self) -> SecondaryHelixForceSpec:
         return self._spec
 
-    @property
-    def movable_sheave_rotational_inertia(self) -> float:
-        """Return I_M from the resolved secondary inertia."""
-
-        return self._movable_sheave_rotational_inertia
-
     def evaluate(
         self,
         state: PulleyActuationState,
-    ) -> SecondaryHelixEvaluation:
-        sample = self._spec.helix_profile.evaluate(
-            state.axial_position
-        )
+    ) -> AffineClosureScalar:
+        """
+        Return the local secondary axial-force relation F_xs.
+
+        The profile is evaluated locally at x_s. The local movable-sheave
+        acceleration is represented through the global-shift closure
+        coefficients already carried by ``PulleyActuationState``.
+        """
+
+        sample = self._helix_profile.evaluate(state.axial_position)
 
         theta = sample.theta
         dtheta_dx = sample.dtheta_dx
@@ -153,37 +104,28 @@ class SecondaryHelixForce:
             self._spec.torsional_stiffness
             * (self._spec.initial_twist + theta)
         )
+        inertia = self._movable_sheave_rotational_inertia
 
-        local_axial_force = AffineClosureScalar(
+        return AffineClosureScalar(
             bias=(
                 dtheta_dx * torsional_spring_torque
-                + self._movable_sheave_rotational_inertia
+                + inertia
                 * dtheta_dx
                 * d2theta_ds2
                 * shift_speed**2
             ),
             gains=ClosureGains(
                 secondary_angular_acceleration=(
-                    -self._movable_sheave_rotational_inertia
-                    * dtheta_dx
+                    -inertia * dtheta_dx
                 ),
                 shift_acceleration=(
-                    self._movable_sheave_rotational_inertia
-                    * dtheta_dx
-                    * dtheta_ds
+                    inertia * dtheta_dx * dtheta_ds
                 ),
                 secondary_torque=(
                     self._spec.movable_sheave_torque_fraction
                     * dtheta_dx
                 ),
             ),
-        )
-
-        return SecondaryHelixEvaluation(
-            theta=theta,
-            dtheta_ds=dtheta_ds,
-            d2theta_ds2=d2theta_ds2,
-            local_axial_force=local_axial_force,
         )
 
 
