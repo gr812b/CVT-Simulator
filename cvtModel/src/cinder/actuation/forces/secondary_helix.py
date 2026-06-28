@@ -124,8 +124,7 @@ class SecondaryHelixForce:
                     inertia * theta_x * dtheta_ds
                 ),
                 secondary_torque=(
-                    self._spec.movable_sheave_torque_fraction
-                    * theta_x
+                    self._spec.movable_sheave_torque_fraction * theta_x
                 ),
             ),
         )

@@ -53,8 +53,3 @@ def build_torque_reactive_secondary(
             ),
         ),
     )
-
-
-# Compatibility spelling for package-level imports in the intermediate branch.
-# This is a factory alias, not a special secondary actuator class.
-TorqueReactiveSecondary = build_torque_reactive_secondary

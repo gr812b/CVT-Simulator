@@ -6,8 +6,6 @@ from .primary import (
 )
 from .pulley_actuator import PulleyActuator
 from .secondary import (
-    TorqueReactiveSecondary,
-    TorqueReactiveSecondaryEvaluation,
     TorqueReactiveSecondarySpec,
     build_torque_reactive_secondary,
 )
@@ -23,8 +21,6 @@ __all__ = [
     "PulleyActuationResult",
     "PulleyActuationState",
     "PulleyActuator",
-    "TorqueReactiveSecondary",
-    "TorqueReactiveSecondaryEvaluation",
     "TorqueReactiveSecondarySpec",
     "build_centrifugal_primary",
     "build_torque_reactive_secondary",
