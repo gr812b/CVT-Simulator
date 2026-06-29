@@ -6,7 +6,6 @@ from math import asin, isfinite, pi, sqrt
 
 from scipy.optimize import brentq
 
-
 _ROOT_XTOL = 1e-12
 _ROOT_RESIDUAL_TOL = 1e-12
 
@@ -33,8 +32,7 @@ def wrap_angles(
 
     if abs(radius_difference) >= center_distance:
         raise ValueError(
-            "The outer-radius difference must be smaller than the center "
-            "distance."
+            "The outer-radius difference must be smaller than the center " "distance."
         )
 
     alpha = asin(radius_difference / center_distance)
@@ -58,9 +56,7 @@ def open_belt_length(
 
     radius_difference = secondary_outer_radius - primary_outer_radius
 
-    straight_span_length = sqrt(
-        center_distance**2 - radius_difference**2
-    )
+    straight_span_length = sqrt(center_distance**2 - radius_difference**2)
 
     return (
         primary_outer_radius * primary_wrap_angle
@@ -109,9 +105,7 @@ def solve_center_distance(
         secondary_outer_radius=secondary_outer_radius,
     )
 
-    radius_difference = abs(
-        secondary_outer_radius - primary_outer_radius
-    )
+    radius_difference = abs(secondary_outer_radius - primary_outer_radius)
     radius_sum = primary_outer_radius + secondary_outer_radius
 
     # Physical lower bound: outer belt envelopes cannot overlap.
@@ -125,10 +119,7 @@ def solve_center_distance(
             "The belt is too short for the supplied reference outer radii."
         )
 
-    upper_bound = sqrt(
-        radius_difference**2
-        + (straight_span_budget / 2.0) ** 2
-    )
+    upper_bound = sqrt(radius_difference**2 + (straight_span_budget / 2.0) ** 2)
 
     if lower_bound > upper_bound:
         raise ValueError(

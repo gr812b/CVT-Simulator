@@ -41,13 +41,9 @@ class SecondaryHelixForceSpec:
 
         if (
             not isfinite(self.movable_sheave_torque_fraction)
-            or not 0.0
-            <= self.movable_sheave_torque_fraction
-            <= 1.0
+            or not 0.0 <= self.movable_sheave_torque_fraction <= 1.0
         ):
-            raise ValueError(
-                "movable_sheave_torque_fraction must lie in [0, 1]."
-            )
+            raise ValueError("movable_sheave_torque_fraction must lie in [0, 1].")
 
 
 @dataclass(frozen=True, slots=True)
@@ -176,21 +172,16 @@ class SecondaryHelixForce:
         opening_slope = -state.local_axial_coordinate_slope
         opening_curvature = -state.local_axial_coordinate_curvature
 
-        theta_rate_per_shift = (
-            sample.dtheta_dopening * opening_slope
-        )
+        theta_rate_per_shift = sample.dtheta_dopening * opening_slope
         theta_acceleration_per_shift_squared = (
             sample.d2theta_dopening2 * opening_slope**2
             + sample.dtheta_dopening * opening_curvature
         )
 
-        torsional_spring_torque = (
-            self._spec.torsional_stiffness
-            * (self._spec.initial_twist + sample.theta)
+        torsional_spring_torque = self._spec.torsional_stiffness * (
+            self._spec.initial_twist + sample.theta
         )
-        movable_sheave_inertia = (
-            self._spec.movable_sheave_rotational_inertia
-        )
+        movable_sheave_inertia = self._spec.movable_sheave_rotational_inertia
 
         # tau_M_to_helix = spring + kappa_M tau_s - I_M alpha_M,
         # alpha_M = alpha_s - H' s_dot^2 - H s_ddot.
@@ -207,8 +198,7 @@ class SecondaryHelixForce:
             bias=force_per_reacted_torque * known_helix_torque,
             gains=ClosureGains(
                 secondary_angular_acceleration=(
-                    -force_per_reacted_torque
-                    * movable_sheave_inertia
+                    -force_per_reacted_torque * movable_sheave_inertia
                 ),
                 shift_acceleration=(
                     force_per_reacted_torque
@@ -216,8 +206,7 @@ class SecondaryHelixForce:
                     * theta_rate_per_shift
                 ),
                 secondary_torque=(
-                    force_per_reacted_torque
-                    * self._spec.movable_sheave_torque_fraction
+                    force_per_reacted_torque * self._spec.movable_sheave_torque_fraction
                 ),
             ),
         )

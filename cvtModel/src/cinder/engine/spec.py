@@ -15,9 +15,7 @@ class EngineTorquePoint:
 
     def __post_init__(self) -> None:
         if not isfinite(self.angular_speed) or self.angular_speed < 0.0:
-            raise ValueError(
-                "angular_speed must be finite and non-negative."
-            )
+            raise ValueError("angular_speed must be finite and non-negative.")
 
         if not isfinite(self.torque):
             raise ValueError("torque must be finite.")
@@ -61,9 +59,7 @@ class TorqueCurveSpec:
                 )
 
         if points[0].angular_speed <= 0.0:
-            raise ValueError(
-                "The first torque-point speed must be strictly positive."
-            )
+            raise ValueError("The first torque-point speed must be strictly positive.")
 
         if points[0].torque != 0.0:
             raise ValueError("The first torque point must have zero torque.")
@@ -97,8 +93,7 @@ class TorqueCurveSpec:
             or self.high_speed_braking_transition_width <= 0.0
         ):
             raise ValueError(
-                "high_speed_braking_transition_width must be finite and "
-                "positive."
+                "high_speed_braking_transition_width must be finite and " "positive."
             )
 
         object.__setattr__(self, "points", points)

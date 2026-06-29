@@ -26,9 +26,7 @@ class LinearSegment(RampSegment):
         require_finite(angle_degrees=self.angle_degrees)
 
         if not -90.0 < self.angle_degrees < 90.0:
-            raise ValueError(
-                "angle_degrees must lie strictly between -90 and 90."
-            )
+            raise ValueError("angle_degrees must lie strictly between -90 and 90.")
 
         object.__setattr__(
             self,

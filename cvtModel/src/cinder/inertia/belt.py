@@ -82,11 +82,7 @@ class ResolvedBeltMass:
     def mass(self) -> float:
         """Return m_b = rho_b A_b L_b."""
 
-        return (
-            self.density
-            * self.cross_sectional_area
-            * self.outer_length
-        )
+        return self.density * self.cross_sectional_area * self.outer_length
 
 
 def _require_positive(name: str, value: float) -> None:

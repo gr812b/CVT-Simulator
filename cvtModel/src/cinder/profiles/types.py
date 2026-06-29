@@ -47,6 +47,4 @@ def require_coordinate(*, x: float, x_min: float, x_max: float) -> None:
     require_finite(x=x)
 
     if not x_min <= x <= x_max:
-        raise ValueError(
-            f"x={x} is outside the valid interval [{x_min}, {x_max}]."
-        )
+        raise ValueError(f"x={x} is outside the valid interval [{x_min}, {x_max}].")

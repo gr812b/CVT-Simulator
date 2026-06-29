@@ -22,7 +22,6 @@ def test_default_reference_geometry_resolves_consistently() -> None:
         height=belt_height,
         outer_width=belt_width_top,
         inner_width=belt_width_bottom,
-
         # Compatibility convention for now: the old model used mid-thickness
         # as its "effective" radius. Replace when measured cord depth is known.
         cord_depth_from_outer=belt_height / 2.0,
@@ -38,19 +37,11 @@ def test_default_reference_geometry_resolves_consistently() -> None:
         max_shift=0.01905,
     )
 
-    assert spec.primary_outer_radius_at_zero_shift == pytest.approx(
-        0.0362077
-    )
-    assert spec.secondary_outer_radius_at_zero_shift == pytest.approx(
-        0.1016
-    )
+    assert spec.primary_outer_radius_at_zero_shift == pytest.approx(0.0362077)
+    assert spec.secondary_outer_radius_at_zero_shift == pytest.approx(0.1016)
 
-    assert spec.primary_effective_radius_at_zero_shift == pytest.approx(
-        0.0284226
-    )
-    assert spec.secondary_effective_radius_at_zero_shift == pytest.approx(
-        0.0938149
-    )
+    assert spec.primary_effective_radius_at_zero_shift == pytest.approx(0.0284226)
+    assert spec.secondary_effective_radius_at_zero_shift == pytest.approx(0.0938149)
 
     assert spec.belt.center_of_mass_depth_from_outer == pytest.approx(
         0.007477566089658234
@@ -95,7 +86,6 @@ def test_default_reference_geometry_resolves_consistently() -> None:
     r_p = spec.primary_outer_radius_at_zero_shift
     r_s = spec.secondary_outer_radius_at_zero_shift
     tighter_upper_bound = (
-        (r_s - r_p) ** 2
-        + ((spec.belt_outer_length - pi * (r_p + r_s)) / 2.0) ** 2
+        (r_s - r_p) ** 2 + ((spec.belt_outer_length - pi * (r_p + r_s)) / 2.0) ** 2
     ) ** 0.5
     assert spec.center_distance <= tighter_upper_bound

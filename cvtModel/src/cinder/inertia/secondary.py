@@ -100,10 +100,7 @@ class ResolvedSecondaryInertia:
 
     @property
     def absolute_rotation_inertia(self) -> float:
-        return (
-            self.fixed_side.total
-            + self.movable_sheave_rotational_inertia
-        )
+        return self.fixed_side.total + self.movable_sheave_rotational_inertia
 
 
 def resolve_secondary_inertia(
@@ -115,17 +112,11 @@ def resolve_secondary_inertia(
     """Resolve all constant secondary-side rotational coefficients once."""
 
     fixed_side = SecondaryFixedInertia(
-        secondary_fixed_rotational_inertia=(
-            secondary.fixed_rotational_inertia
-        ),
-        gearbox_input_rotational_inertia=(
-            secondary.gearbox_input_rotational_inertia
-        ),
+        secondary_fixed_rotational_inertia=(secondary.fixed_rotational_inertia),
+        gearbox_input_rotational_inertia=(secondary.gearbox_input_rotational_inertia),
         driven_wheel_rotational_inertia=(
             final_drive.secondary_inertia_from_wheel_rotation(
-                wheel_rotational_inertia=(
-                    vehicle.wheel_rotational_inertia
-                ),
+                wheel_rotational_inertia=(vehicle.wheel_rotational_inertia),
             )
         ),
         vehicle_translational_inertia=(
@@ -137,7 +128,5 @@ def resolve_secondary_inertia(
 
     return ResolvedSecondaryInertia(
         fixed_side=fixed_side,
-        movable_sheave_rotational_inertia=(
-            secondary.movable_sheave_rotational_inertia
-        ),
+        movable_sheave_rotational_inertia=(secondary.movable_sheave_rotational_inertia),
     )

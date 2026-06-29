@@ -33,9 +33,7 @@ class BeltSectionSpec:
 
         if (
             not isfinite(self.cord_depth_from_outer)
-            or not 0.0
-            <= self.cord_depth_from_outer
-            <= self.height
+            or not 0.0 <= self.cord_depth_from_outer <= self.height
         ):
             raise ValueError(
                 "cord_depth_from_outer must be finite and lie within "
@@ -101,8 +99,7 @@ class BeltPulleyGeometrySpec:
             or not 0.0 < self.sheave_half_angle < pi / 2.0
         ):
             raise ValueError(
-                "sheave_half_angle must be finite and lie between 0 "
-                "and pi / 2."
+                "sheave_half_angle must be finite and lie between 0 " "and pi / 2."
             )
 
         _require_nonnegative("deadzone_shift", self.deadzone_shift)
@@ -110,42 +107,32 @@ class BeltPulleyGeometrySpec:
 
         if self.max_shift < self.deadzone_shift:
             raise ValueError(
-                "max_shift must be greater than or equal to "
-                "deadzone_shift."
+                "max_shift must be greater than or equal to " "deadzone_shift."
             )
 
         primary_effective_radius = (
-            self.primary_outer_radius_at_zero_shift
-            - self.belt.cord_depth_from_outer
+            self.primary_outer_radius_at_zero_shift - self.belt.cord_depth_from_outer
         )
         secondary_effective_radius = (
-            self.secondary_outer_radius_at_zero_shift
-            - self.belt.cord_depth_from_outer
+            self.secondary_outer_radius_at_zero_shift - self.belt.cord_depth_from_outer
         )
 
         if primary_effective_radius <= 0.0:
             raise ValueError("primary outer radius must exceed cord depth.")
 
         if secondary_effective_radius <= 0.0:
-            raise ValueError(
-                "secondary outer radius must exceed cord depth."
-            )
+            raise ValueError("secondary outer radius must exceed cord depth.")
 
         center_distance = solve_center_distance(
             belt_length=self.belt_outer_length,
-            primary_outer_radius=(
-                self.primary_outer_radius_at_zero_shift
-            ),
-            secondary_outer_radius=(
-                self.secondary_outer_radius_at_zero_shift
-            ),
+            primary_outer_radius=(self.primary_outer_radius_at_zero_shift),
+            secondary_outer_radius=(self.secondary_outer_radius_at_zero_shift),
         )
 
         active_shift_at_max = self.max_shift - self.deadzone_shift
         primary_outer_radius_at_max_shift = (
             self.primary_outer_radius_at_zero_shift
-            + active_shift_at_max
-            / (2.0 * tan(self.sheave_half_angle))
+            + active_shift_at_max / (2.0 * tan(self.sheave_half_angle))
         )
 
         # One broad setup solve establishes the lower endpoint used by all
@@ -155,8 +142,7 @@ class BeltPulleyGeometrySpec:
         # r_s <= L / pi - r_p follows from L >= pi(r_p + r_s).
         setup_upper_bound = min(
             center_distance - primary_outer_radius_at_max_shift,
-            self.belt_outer_length / pi
-            - primary_outer_radius_at_max_shift,
+            self.belt_outer_length / pi - primary_outer_radius_at_max_shift,
         )
 
         if setup_upper_bound <= 0.0:
@@ -170,14 +156,12 @@ class BeltPulleyGeometrySpec:
         # above zero rather than an arbitrary engineering offset.
         setup_lower_bound = nextafter(0.0, inf)
 
-        secondary_outer_radius_at_max_shift = (
-            solve_secondary_outer_radius(
-                belt_length=self.belt_outer_length,
-                center_distance=center_distance,
-                primary_outer_radius=primary_outer_radius_at_max_shift,
-                lower_bound=setup_lower_bound,
-                upper_bound=setup_upper_bound,
-            )
+        secondary_outer_radius_at_max_shift = solve_secondary_outer_radius(
+            belt_length=self.belt_outer_length,
+            center_distance=center_distance,
+            primary_outer_radius=primary_outer_radius_at_max_shift,
+            lower_bound=setup_lower_bound,
+            upper_bound=setup_upper_bound,
         )
 
         object.__setattr__(

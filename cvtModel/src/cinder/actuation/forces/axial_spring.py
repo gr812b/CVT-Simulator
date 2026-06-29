@@ -70,8 +70,7 @@ class AxialSpringForce:
     def evaluate(self, state: PulleyActuationState) -> AffineClosureScalar:
         compression = (
             self._spec.initial_compression
-            + self._spec.compression_per_axial_position
-            * state.axial_position
+            + self._spec.compression_per_axial_position * state.axial_position
         )
 
         axial_force = (

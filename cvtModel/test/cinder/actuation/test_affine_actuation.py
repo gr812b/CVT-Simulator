@@ -32,9 +32,7 @@ def _state(
 
 
 def _linear_profile() -> PiecewiseRamp:
-    return PiecewiseRamp(
-        (LinearSegment(length=0.020, angle_degrees=45.0),)
-    )
+    return PiecewiseRamp((LinearSegment(length=0.020, angle_degrees=45.0),))
 
 
 def _curved_helix() -> HelixProfile:
@@ -121,10 +119,7 @@ def test_secondary_helix_uses_actual_cinder_helix_sample_fields() -> None:
 
     expected_bias = (
         sample.dtheta_dx * 10.0 * (0.1 + sample.theta)
-        + 0.2
-        * sample.dtheta_dx
-        * sample.d2theta_dx2
-        * state.axial_speed**2
+        + 0.2 * sample.dtheta_dx * sample.d2theta_dx2 * state.axial_speed**2
     )
 
     assert relation.bias == pytest.approx(expected_bias)

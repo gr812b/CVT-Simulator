@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from math import pi
 
 import pytest
 
@@ -40,9 +39,7 @@ def test_circular_segment_derivatives_match_finite_differences() -> None:
     after = segment.evaluate_local(x + step)
 
     first_difference = (after.value - before.value) / (2.0 * step)
-    second_difference = (
-        after.value - 2.0 * current.value + before.value
-    ) / step**2
+    second_difference = (after.value - 2.0 * current.value + before.value) / step**2
 
     assert current.first_derivative == pytest.approx(
         first_difference,

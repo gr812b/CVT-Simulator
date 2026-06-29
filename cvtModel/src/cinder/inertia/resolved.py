@@ -68,12 +68,8 @@ def resolve_inertias(
         ),
         belt=belt,
         shift=resolve_shift_translation_masses(
-            primary_moving_sheave_mass=(
-                drivetrain.primary.moving_sheave_mass
-            ),
-            secondary_moving_sheave_mass=(
-                drivetrain.secondary.moving_sheave_mass
-            ),
+            primary_moving_sheave_mass=(drivetrain.primary.moving_sheave_mass),
+            secondary_moving_sheave_mass=(drivetrain.secondary.moving_sheave_mass),
             belt_mass=belt.mass,
         ),
     )

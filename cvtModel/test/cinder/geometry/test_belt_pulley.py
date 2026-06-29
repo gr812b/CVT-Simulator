@@ -12,16 +12,9 @@ from cinder.geometry.belt_length import belt_length_residual
 from cinder.geometry.belt_pulley import BeltPulleyGeometry
 from cinder.geometry.spec import BeltPulleyGeometrySpec, BeltSectionSpec
 
+_REFERENCE_PATH = Path(__file__).parent / "data" / "default_geometry_positions.json"
 
-_REFERENCE_PATH = (
-    Path(__file__).parent
-    / "data"
-    / "default_geometry_positions.json"
-)
-
-_REFERENCE_POSITIONS = json.loads(
-    _REFERENCE_PATH.read_text()
-)["positions"]
+_REFERENCE_POSITIONS = json.loads(_REFERENCE_PATH.read_text())["positions"]
 
 
 def _default_spec() -> BeltPulleyGeometrySpec:
@@ -152,13 +145,11 @@ def test_geometry_satisfies_identities(
     )
 
     assert position.primary.center_of_mass == pytest.approx(
-        position.primary.outer
-        - spec.belt.center_of_mass_depth_from_outer,
+        position.primary.outer - spec.belt.center_of_mass_depth_from_outer,
         abs=1e-12,
     )
     assert position.secondary.center_of_mass == pytest.approx(
-        position.secondary.outer
-        - spec.belt.center_of_mass_depth_from_outer,
+        position.secondary.outer - spec.belt.center_of_mass_depth_from_outer,
         abs=1e-12,
     )
 
@@ -186,22 +177,18 @@ def test_active_radius_derivatives_match_finite_differences(
     current = geometry.evaluate(shift)
     after = geometry.evaluate(shift + step)
 
-    primary_first_difference = (
-        after.primary.outer - before.primary.outer
-    ) / (2.0 * step)
-    secondary_first_difference = (
-        after.secondary.outer - before.secondary.outer
-    ) / (2.0 * step)
+    primary_first_difference = (after.primary.outer - before.primary.outer) / (
+        2.0 * step
+    )
+    secondary_first_difference = (after.secondary.outer - before.secondary.outer) / (
+        2.0 * step
+    )
 
     primary_second_difference = (
-        after.primary.outer
-        - 2.0 * current.primary.outer
-        + before.primary.outer
+        after.primary.outer - 2.0 * current.primary.outer + before.primary.outer
     ) / step**2
     secondary_second_difference = (
-        after.secondary.outer
-        - 2.0 * current.secondary.outer
-        + before.secondary.outer
+        after.secondary.outer - 2.0 * current.secondary.outer + before.secondary.outer
     ) / step**2
 
     assert current.primary.d_effective_ds == pytest.approx(
@@ -227,10 +214,7 @@ def test_primary_slope_matches_sheave_geometry(
     geometry: BeltPulleyGeometry,
 ) -> None:
     spec = geometry.spec
-    active_shift = (
-        spec.deadzone_shift
-        + 0.5 * (spec.max_shift - spec.deadzone_shift)
-    )
+    active_shift = spec.deadzone_shift + 0.5 * (spec.max_shift - spec.deadzone_shift)
 
     position = geometry.evaluate(active_shift)
 

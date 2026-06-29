@@ -107,9 +107,7 @@ class PiecewiseRamp(ScalarProfile):
         tolerance = 1e-12
 
         for placement in self._placements:
-            local_end = placement.segment.evaluate_local(
-                placement.segment.length
-            ).value
+            local_end = placement.segment.evaluate_local(placement.segment.length).value
             value_end = placement.value_start + local_end
 
             lower_value = min(placement.value_start, value_end)
@@ -136,9 +134,7 @@ class PiecewiseRamp(ScalarProfile):
             return unique_matches[0]
 
         if len(unique_matches) > 1:
-            raise ValueError(
-                "target_height maps to multiple positions in this ramp."
-            )
+            raise ValueError("target_height maps to multiple positions in this ramp.")
 
         raise ValueError("target_height is not invertible within this ramp.")
 

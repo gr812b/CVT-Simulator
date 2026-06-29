@@ -63,12 +63,8 @@ class BeltPulleyGeometry:
             belt_length=self._spec.belt_outer_length,
             center_distance=self._spec.center_distance,
             primary_outer_radius=primary_outer_radius,
-            lower_bound=(
-                self._spec.secondary_outer_radius_at_max_shift
-            ),
-            upper_bound=(
-                self._spec.secondary_outer_radius_at_zero_shift
-            ),
+            lower_bound=(self._spec.secondary_outer_radius_at_max_shift),
+            upper_bound=(self._spec.secondary_outer_radius_at_zero_shift),
         )
 
         primary_wrap_angle, secondary_wrap_angle = wrap_angles(
@@ -131,9 +127,7 @@ class BeltPulleyGeometry:
                 0.0,
             )
 
-        radius_slope = 1.0 / (
-            2.0 * tan(self._spec.sheave_half_angle)
-        )
+        radius_slope = 1.0 / (2.0 * tan(self._spec.sheave_half_angle))
 
         return (
             self._spec.primary_outer_radius_at_zero_shift
@@ -159,24 +153,18 @@ class BeltPulleyGeometry:
 
         radius_slope_ratio = primary_wrap_angle / secondary_wrap_angle
 
-        d_secondary_radius_ds = (
-            -radius_slope_ratio * d_primary_radius_ds
-        )
+        d_secondary_radius_ds = -radius_slope_ratio * d_primary_radius_ds
 
         straight_span_length = sqrt(
             self._spec.center_distance**2
             - (secondary_outer_radius - primary_outer_radius) ** 2
         )
 
-        d2_secondary_radius_ds2 = (
-            -radius_slope_ratio * d2_primary_radius_ds2
-            - (
-                8.0 * pi**2 * d_primary_radius_ds**2
-                / (
-                    secondary_wrap_angle**3
-                    * straight_span_length
-                )
-            )
+        d2_secondary_radius_ds2 = -radius_slope_ratio * d2_primary_radius_ds2 - (
+            8.0
+            * pi**2
+            * d_primary_radius_ds**2
+            / (secondary_wrap_angle**3 * straight_span_length)
         )
 
         return d_secondary_radius_ds, d2_secondary_radius_ds2
@@ -195,9 +183,7 @@ class BeltPulleyGeometry:
         negative as the primary shifts out and the secondary opens.
         """
 
-        axial_distance_per_radius = 2.0 * tan(
-            self._spec.sheave_half_angle
-        )
+        axial_distance_per_radius = 2.0 * tan(self._spec.sheave_half_angle)
 
         return AxialCoordinateAtShift(
             value=(
@@ -207,12 +193,8 @@ class BeltPulleyGeometry:
                     - self._spec.secondary_outer_radius_at_zero_shift
                 )
             ),
-            d_value_ds=(
-                axial_distance_per_radius * d_secondary_radius_ds
-            ),
-            d2_value_ds2=(
-                axial_distance_per_radius * d2_secondary_radius_ds2
-            ),
+            d_value_ds=(axial_distance_per_radius * d_secondary_radius_ds),
+            d2_value_ds2=(axial_distance_per_radius * d2_secondary_radius_ds2),
         )
 
     def _belt_axial_coordinate(
@@ -248,13 +230,10 @@ class BeltPulleyGeometry:
         """
 
         return RadiusAtShift(
-            effective=(
-                outer_radius - self._spec.belt.cord_depth_from_outer
-            ),
+            effective=(outer_radius - self._spec.belt.cord_depth_from_outer),
             outer=outer_radius,
             center_of_mass=(
-                outer_radius
-                - self._spec.belt.center_of_mass_depth_from_outer
+                outer_radius - self._spec.belt.center_of_mass_depth_from_outer
             ),
             d_effective_ds=d_radius_ds,
             d2_effective_ds2=d2_radius_ds2,
@@ -266,6 +245,5 @@ class BeltPulleyGeometry:
 
         if not 0.0 <= shift <= self._spec.max_shift:
             raise ValueError(
-                f"shift={shift} is outside "
-                f"[0, {self._spec.max_shift}]."
+                f"shift={shift} is outside " f"[0, {self._spec.max_shift}]."
             )

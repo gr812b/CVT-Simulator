@@ -67,31 +67,17 @@ class ShiftTranslationMasses:
         """
 
         return ShiftTranslationInertia(
-            primary_moving_sheave_mass=(
-                self.primary_moving_sheave_mass
-            ),
-            secondary_moving_sheave_mass=(
-                self.secondary_moving_sheave_mass
-            ),
+            primary_moving_sheave_mass=(self.primary_moving_sheave_mass),
+            secondary_moving_sheave_mass=(self.secondary_moving_sheave_mass),
             belt_mass=self.belt_mass,
-            primary_axial_coordinate_slope=(
-                primary_axial_coordinate.d_value_ds
-            ),
-            primary_axial_coordinate_curvature=(
-                primary_axial_coordinate.d2_value_ds2
-            ),
-            secondary_axial_coordinate_slope=(
-                secondary_axial_coordinate.d_value_ds
-            ),
+            primary_axial_coordinate_slope=(primary_axial_coordinate.d_value_ds),
+            primary_axial_coordinate_curvature=(primary_axial_coordinate.d2_value_ds2),
+            secondary_axial_coordinate_slope=(secondary_axial_coordinate.d_value_ds),
             secondary_axial_coordinate_curvature=(
                 secondary_axial_coordinate.d2_value_ds2
             ),
-            belt_axial_coordinate_slope=(
-                belt_axial_coordinate.d_value_ds
-            ),
-            belt_axial_coordinate_curvature=(
-                belt_axial_coordinate.d2_value_ds2
-            ),
+            belt_axial_coordinate_slope=(belt_axial_coordinate.d_value_ds),
+            belt_axial_coordinate_curvature=(belt_axial_coordinate.d2_value_ds2),
         )
 
 
@@ -112,16 +98,12 @@ class ShiftTranslationInertia:
 
     @property
     def primary_moving_sheave_contribution(self) -> float:
-        return (
-            self.primary_moving_sheave_mass
-            * self.primary_axial_coordinate_slope**2
-        )
+        return self.primary_moving_sheave_mass * self.primary_axial_coordinate_slope**2
 
     @property
     def secondary_moving_sheave_contribution(self) -> float:
         return (
-            self.secondary_moving_sheave_mass
-            * self.secondary_axial_coordinate_slope**2
+            self.secondary_moving_sheave_mass * self.secondary_axial_coordinate_slope**2
         )
 
     @property

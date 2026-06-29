@@ -47,9 +47,7 @@ class CentrifugalRampForce:
         return self._spec
 
     def evaluate(self, state: PulleyActuationState) -> AffineClosureScalar:
-        ramp = self._spec.radial_displacement_profile.evaluate(
-            state.axial_position
-        )
+        ramp = self._spec.radial_displacement_profile.evaluate(state.axial_position)
         flyweight_radius = self._spec.radius_at_zero_position + ramp.value
 
         if flyweight_radius <= 0.0:

@@ -174,6 +174,4 @@ def _validate_helix_angle(helix_angle_degrees: float) -> None:
         raise ValueError("helix_angle_degrees must be finite.")
 
     if not 0.0 < helix_angle_degrees < 90.0:
-        raise ValueError(
-            "helix_angle_degrees must lie strictly between 0 and 90."
-        )
+        raise ValueError("helix_angle_degrees must lie strictly between 0 and 90.")

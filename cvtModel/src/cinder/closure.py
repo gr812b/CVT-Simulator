@@ -160,8 +160,7 @@ class ClosureGains:
 
         return ClosureGains(
             primary_angular_acceleration=(
-                self.primary_angular_acceleration
-                + other.primary_angular_acceleration
+                self.primary_angular_acceleration + other.primary_angular_acceleration
             ),
             secondary_angular_acceleration=(
                 self.secondary_angular_acceleration

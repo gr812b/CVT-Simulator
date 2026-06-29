@@ -20,13 +20,8 @@ class FixedFinalDrive:
     wheel_radius: float
 
     def __post_init__(self) -> None:
-        if (
-            not isfinite(self.reduction_ratio)
-            or self.reduction_ratio <= 0.0
-        ):
-            raise ValueError(
-                "reduction_ratio must be finite and positive."
-            )
+        if not isfinite(self.reduction_ratio) or self.reduction_ratio <= 0.0:
+            raise ValueError("reduction_ratio must be finite and positive.")
 
         if not isfinite(self.wheel_radius) or self.wheel_radius <= 0.0:
             raise ValueError("wheel_radius must be finite and positive.")
@@ -77,9 +72,7 @@ class FixedFinalDrive:
         """
 
         _require_nonnegative("vehicle_mass", vehicle_mass)
-        return vehicle_mass * (
-            self.wheel_radius / self.reduction_ratio
-        ) ** 2
+        return vehicle_mass * (self.wheel_radius / self.reduction_ratio) ** 2
 
     def secondary_inertia_from_wheel_rotation(
         self,
@@ -96,10 +89,7 @@ class FixedFinalDrive:
             "wheel_rotational_inertia",
             wheel_rotational_inertia,
         )
-        return (
-            wheel_rotational_inertia
-            / self.reduction_ratio**2
-        )
+        return wheel_rotational_inertia / self.reduction_ratio**2
 
 
 def _require_finite(name: str, value: float) -> None:

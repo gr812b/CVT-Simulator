@@ -43,24 +43,16 @@ class CircularSegment(RampSegment):
             raise ValueError("quadrant must be one of 1, 2, 3, or 4.")
 
         if not 0.0 <= self.angle_start_degrees < 90.0:
-            raise ValueError(
-                "angle_start_degrees must lie in [0, 90)."
-            )
+            raise ValueError("angle_start_degrees must lie in [0, 90).")
 
         if not 0.0 <= self.angle_end_degrees < 90.0:
-            raise ValueError(
-                "angle_end_degrees must lie in [0, 90)."
-            )
+            raise ValueError("angle_end_degrees must lie in [0, 90).")
 
         if self.quadrant in (2, 3):
-            valid_order = (
-                self.angle_start_degrees >= self.angle_end_degrees
-            )
+            valid_order = self.angle_start_degrees >= self.angle_end_degrees
             expected_order = "greater than or equal to"
         else:
-            valid_order = (
-                self.angle_start_degrees <= self.angle_end_degrees
-            )
+            valid_order = self.angle_start_degrees <= self.angle_end_degrees
             expected_order = "less than or equal to"
 
         if not valid_order:
@@ -125,13 +117,9 @@ class CircularSegment(RampSegment):
         for theta in candidates:
             x_local = self.radius * (cos(theta) - cos(self._theta_start))
             if -tolerance <= x_local <= self.length + tolerance:
-                sampled = self.evaluate_local(
-                    min(self.length, max(0.0, x_local))
-                )
+                sampled = self.evaluate_local(min(self.length, max(0.0, x_local)))
                 if abs(sampled.value - value) <= tolerance:
-                    valid_x.append(
-                        min(self.length, max(0.0, x_local))
-                    )
+                    valid_x.append(min(self.length, max(0.0, x_local)))
 
         unique_x: list[float] = []
         for x_local in valid_x:

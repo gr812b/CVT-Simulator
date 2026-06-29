@@ -101,16 +101,10 @@ class RoadLoadModel:
             vehicle_speed=vehicle_speed,
         )
 
-        external_force = (
-            grade_force
-            + rolling_force
-            + aerodynamic_force
-        )
+        external_force = grade_force + rolling_force + aerodynamic_force
 
-        secondary_external_torque = (
-            self._final_drive.secondary_torque_from_wheel_force(
-                wheel_force=external_force,
-            )
+        secondary_external_torque = self._final_drive.secondary_torque_from_wheel_force(
+            wheel_force=external_force,
         )
 
         return RoadLoadResult(
@@ -127,11 +121,7 @@ class RoadLoadModel:
     def _grade_force(self, *, grade_angle: float) -> float:
         """Return F_grade = -m g sin(gamma)."""
 
-        return -(
-            self._vehicle.mass
-            * self._spec.gravity
-            * sin(grade_angle)
-        )
+        return -(self._vehicle.mass * self._spec.gravity * sin(grade_angle))
 
     def _rolling_force(
         self,
@@ -146,21 +136,14 @@ class RoadLoadModel:
                      v / sqrt(v^2 + v_eps^2).
         """
 
-        normal_force = (
-            self._vehicle.mass
-            * self._spec.gravity
-            * cos(grade_angle)
-        )
+        normal_force = self._vehicle.mass * self._spec.gravity * cos(grade_angle)
 
         direction_factor = vehicle_speed / sqrt(
-            vehicle_speed**2
-            + self._spec.rolling_speed_regularization**2
+            vehicle_speed**2 + self._spec.rolling_speed_regularization**2
         )
 
         return (
-            -self._spec.rolling_resistance_coefficient
-            * normal_force
-            * direction_factor
+            -self._spec.rolling_resistance_coefficient * normal_force * direction_factor
         )
 
     def _aerodynamic_force(self, *, vehicle_speed: float) -> float:
@@ -186,6 +169,4 @@ def _validate_grade_angle(grade_angle: float) -> None:
         raise ValueError("grade_angle must be finite.")
 
     if not -pi / 2.0 < grade_angle < pi / 2.0:
-        raise ValueError(
-            "grade_angle must lie strictly between -pi/2 and pi/2."
-        )
+        raise ValueError("grade_angle must lie strictly between -pi/2 and pi/2.")

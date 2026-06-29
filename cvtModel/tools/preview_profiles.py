@@ -1,6 +1,6 @@
 # cvtModel/tools/preview_profiles.py
 """
-Visualize CINDER normal-ramp and helix-profile geometry.
+Visualize CINDER normal-ramp and conventional secondary-helix geometry.
 
 Run from cvtModel/:
 
@@ -20,9 +20,11 @@ For a non-interactive image instead of a window:
 
     python tools/preview_profiles.py helix --save artifacts/helix_preview.png --no-show
 
-Each command creates one composite figure.  The profile builders near the
-bottom are intentionally compact so they are easy to replace with a real
-hardware ramp once its dimensions are known.
+Each command creates one composite figure. The helix preview uses the
+conventional secondary opening-travel coordinate q: q = 0 at the closed
+reference and q > 0 as the secondary opens and winds the torsional spring.
+The profile builders near the bottom are intentionally compact so they are
+easy to replace with a real hardware ramp once its dimensions are known.
 """
 
 from __future__ import annotations
@@ -31,8 +33,6 @@ import argparse
 from dataclasses import dataclass
 from math import pi
 from pathlib import Path
-from typing import Sequence
-
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -70,11 +70,11 @@ class SampledRamp:
 
 @dataclass(frozen=True, slots=True)
 class SampledHelix:
-    x: np.ndarray
+    opening_travel: np.ndarray
     circumferential_displacement: np.ndarray
     theta: np.ndarray
-    dtheta_dx: np.ndarray
-    d2theta_dx2: np.ndarray
+    dtheta_dopening: np.ndarray
+    d2theta_dopening2: np.ndarray
     helix_angle_degrees: np.ndarray
 
 
@@ -98,18 +98,24 @@ def sample_helix(
     helix: HelixProfile,
     sample_count: int,
 ) -> SampledHelix:
-    x = np.linspace(helix.x_min, helix.x_max, sample_count)
-    samples = [helix.evaluate(float(value)) for value in x]
+    opening_travel = np.linspace(
+        helix.opening_travel_min,
+        helix.opening_travel_max,
+        sample_count,
+    )
+    samples = [helix.evaluate(float(value)) for value in opening_travel]
 
     return SampledHelix(
-        x=x,
+        opening_travel=opening_travel,
         circumferential_displacement=np.array(
             [sample.circumferential_displacement for sample in samples]
         ),
         theta=np.array([sample.theta for sample in samples]),
-        dtheta_dx=np.array([sample.dtheta_dx for sample in samples]),
-        d2theta_dx2=np.array(
-            [sample.d2theta_dx2 for sample in samples]
+        dtheta_dopening=np.array(
+            [sample.dtheta_dopening for sample in samples]
+        ),
+        d2theta_dopening2=np.array(
+            [sample.d2theta_dopening2 for sample in samples]
         ),
         helix_angle_degrees=np.degrees(
             np.array([sample.helix_angle_magnitude for sample in samples])
@@ -137,7 +143,7 @@ def add_segment_boundaries(ax, ramp: PiecewiseRamp) -> None:
 
 def build_helix_ramp(args: argparse.Namespace) -> PiecewiseRamp:
     """
-    Construct an editable demonstration u(x) profile.
+    Construct an editable conventional-secondary u(q) profile.
 
     Replace this function with a design-specific list of segments when a real
     helix path is ready.  The current examples are intentionally simple:
@@ -159,7 +165,6 @@ def build_helix_ramp(args: argparse.Namespace) -> PiecewiseRamp:
                 linear_helix_segment(
                     length=args.length,
                     helix_angle_degrees=args.helix_start_angle,
-                    handedness=args.handedness,
                 ),
             )
         )
@@ -171,7 +176,6 @@ def build_helix_ramp(args: argparse.Namespace) -> PiecewiseRamp:
                     length=args.length,
                     start_helix_angle_degrees=args.helix_start_angle,
                     end_helix_angle_degrees=args.helix_end_angle,
-                    handedness=args.handedness,
                 ),
             )
         )
@@ -185,13 +189,11 @@ def build_helix_ramp(args: argparse.Namespace) -> PiecewiseRamp:
                 linear_helix_segment(
                     length=linear_length,
                     helix_angle_degrees=args.helix_start_angle,
-                    handedness=args.handedness,
                 ),
                 circular_helix_segment(
                     length=circular_length,
                     start_helix_angle_degrees=args.helix_start_angle,
                     end_helix_angle_degrees=args.helix_end_angle,
-                    handedness=args.handedness,
                 ),
             )
         )
@@ -249,7 +251,7 @@ def plot_helix(
     surface_alpha: float,
 ):
     samples = sample_helix(helix, sample_count)
-    x_mm = samples.x * 1_000.0
+    opening_travel_mm = samples.opening_travel * 1_000.0
 
     figure = plt.figure(figsize=(17, 10), constrained_layout=True)
     grid = figure.add_gridspec(3, 4)
@@ -261,8 +263,8 @@ def plot_helix(
     ax_d2theta = figure.add_subplot(grid[1, 3])
     ax_beta = figure.add_subplot(grid[2, 2:])
 
-    z_bottom = float(samples.x[0])
-    z_top = float(samples.x[-1])
+    z_bottom = float(samples.opening_travel[0])
+    z_top = float(samples.opening_travel[-1])
 
     # The reference circles show the physical cylinder on which the helix
     # paths lie. The shaded surfaces are ruled surfaces down to the lower
@@ -300,8 +302,8 @@ def plot_helix(
             np.vstack((circumferential_y, circumferential_y)),
             np.vstack(
                 (
-                    samples.x,
-                    np.full_like(samples.x, z_bottom),
+                    samples.opening_travel,
+                    np.full_like(samples.opening_travel, z_bottom),
                 )
             ),
             alpha=surface_alpha,
@@ -312,7 +314,7 @@ def plot_helix(
         ax_3d.plot(
             circumferential_x,
             circumferential_y,
-            samples.x,
+            samples.opening_travel,
             linewidth=2.0,
             label=label,
         )
@@ -323,14 +325,14 @@ def plot_helix(
                 [circumferential_y[0]],
                 [z_bottom],
                 marker="o",
-                label="Start",
+                label="Closed reference ($q=0$)",
             )
             ax_3d.scatter(
                 [circumferential_x[-1]],
                 [circumferential_y[-1]],
                 [z_top],
                 marker="s",
-                label="End",
+                label=r"Opened reference ($q=q_{\max}$)",
             )
 
     z_extent = max(z_top - z_bottom, 1e-12)
@@ -341,8 +343,8 @@ def plot_helix(
     ax_3d.set_proj_type("ortho")
     ax_3d.set_xlabel("Circumferential x [m]")
     ax_3d.set_ylabel("Circumferential y [m]")
-    ax_3d.set_zlabel("Axial x [m]")
-    ax_3d.set_title("Physical helix path")
+    ax_3d.set_zlabel("Secondary opening travel q [m]")
+    ax_3d.set_title("Physical secondary-helix path")
     ax_3d.plot(
         [],
         [],
@@ -354,30 +356,33 @@ def plot_helix(
     ax_3d.legend(loc="upper left")
     ax_3d.view_init(elev=20.0, azim=45.0)
 
-    ax_u.plot(x_mm, samples.circumferential_displacement * 1_000.0)
+    ax_u.plot(
+        opening_travel_mm,
+        samples.circumferential_displacement * 1_000.0,
+    )
     ax_u.set_title("Circumferential displacement")
-    ax_u.set_xlabel("Axial position x [mm]")
-    ax_u.set_ylabel("u(x) [mm]")
+    ax_u.set_xlabel("Secondary opening travel q [mm]")
+    ax_u.set_ylabel("u(q) [mm]")
 
-    ax_theta.plot(x_mm, samples.theta)
-    ax_theta.set_title("Cam rotation")
-    ax_theta.set_xlabel("Axial position x [mm]")
-    ax_theta.set_ylabel("θ(x) [rad]")
+    ax_theta.plot(opening_travel_mm, samples.theta)
+    ax_theta.set_title("Spring-winding rotation")
+    ax_theta.set_xlabel("Secondary opening travel q [mm]")
+    ax_theta.set_ylabel("θ(q) [rad]")
 
-    ax_dtheta.plot(x_mm, samples.dtheta_dx)
-    ax_dtheta.set_title("Rotation gradient")
-    ax_dtheta.set_xlabel("Axial position x [mm]")
-    ax_dtheta.set_ylabel("dθ/dx [rad/m]")
+    ax_dtheta.plot(opening_travel_mm, samples.dtheta_dopening)
+    ax_dtheta.set_title("Winding gradient")
+    ax_dtheta.set_xlabel("Secondary opening travel q [mm]")
+    ax_dtheta.set_ylabel("dθ/dq [rad/m]")
 
-    ax_d2theta.plot(x_mm, samples.d2theta_dx2)
-    ax_d2theta.set_title("Rotation curvature")
-    ax_d2theta.set_xlabel("Axial position x [mm]")
-    ax_d2theta.set_ylabel("d²θ/dx² [rad/m²]")
+    ax_d2theta.plot(opening_travel_mm, samples.d2theta_dopening2)
+    ax_d2theta.set_title("Winding curvature")
+    ax_d2theta.set_xlabel("Secondary opening travel q [mm]")
+    ax_d2theta.set_ylabel("d²θ/dq² [rad/m²]")
 
-    ax_beta.plot(x_mm, samples.helix_angle_degrees)
+    ax_beta.plot(opening_travel_mm, samples.helix_angle_degrees)
     ax_beta.set_title("Local helix-angle magnitude")
-    ax_beta.set_xlabel("Axial position x [mm]")
-    ax_beta.set_ylabel("β(x) [deg]")
+    ax_beta.set_xlabel("Secondary opening travel q [mm]")
+    ax_beta.set_ylabel("β(q) [deg]")
 
     for axis in (ax_u, ax_theta, ax_dtheta, ax_d2theta, ax_beta):
         add_segment_boundaries(axis, ramp)
@@ -562,8 +567,12 @@ def plot_normal_ramp(
 def print_helix_summary(helix: HelixProfile, sample_count: int) -> None:
     samples = sample_helix(helix, sample_count)
 
-    print("Helix profile summary")
-    print(f"  axial range:       {samples.x[0]:.9f} to {samples.x[-1]:.9f} m")
+    print("Secondary helix profile summary")
+    print(
+        "  opening range:     "
+        f"{samples.opening_travel[0]:.9f} to "
+        f"{samples.opening_travel[-1]:.9f} m"
+    )
     print(
         "  u range:           "
         f"{samples.circumferential_displacement[0]:.9f} to "
@@ -579,14 +588,14 @@ def print_helix_summary(helix: HelixProfile, sample_count: int) -> None:
         f"{samples.helix_angle_degrees.max():.6f} deg"
     )
     print(
-        "  dtheta/dx range:   "
-        f"{samples.dtheta_dx.min():.9f} to "
-        f"{samples.dtheta_dx.max():.9f} rad/m"
+        "  dtheta/dq range:   "
+        f"{samples.dtheta_dopening.min():.9f} to "
+        f"{samples.dtheta_dopening.max():.9f} rad/m"
     )
     print(
-        "  d2theta/dx2 range: "
-        f"{samples.d2theta_dx2.min():.9f} to "
-        f"{samples.d2theta_dx2.max():.9f} rad/m^2"
+        "  d2theta/dq2 range: "
+        f"{samples.d2theta_dopening2.min():.9f} to "
+        f"{samples.d2theta_dopening2.max():.9f} rad/m^2"
     )
 
 
@@ -651,13 +660,6 @@ def parse_arguments() -> argparse.Namespace:
         type=float,
         default=DEFAULT_HELIX_RADIUS,
         help="Helix radius [m]. Used only in helix mode.",
-    )
-    parser.add_argument(
-        "--handedness",
-        type=int,
-        choices=(-1, 1),
-        default=1,
-        help="Helix handedness. +1 and -1 reverse the rotation direction.",
     )
     parser.add_argument(
         "--repeats",
@@ -766,8 +768,8 @@ def main() -> None:
             helix,
             ramp,
             title=(
-                "CINDER helix profile "
-                f"({args.scenario}, handedness={args.handedness:+d})"
+                "CINDER conventional secondary helix profile "
+                f"({args.scenario}; positive opening travel q)"
             ),
             repeats=args.repeats,
             sample_count=args.samples,
