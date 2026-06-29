@@ -1,5 +1,6 @@
 """Pulley actuation models for CINDER."""
 
+from .forces import SecondaryHelixActuationState
 from .primary import (
     CentrifugalPrimarySpec,
     build_centrifugal_primary,
@@ -21,6 +22,7 @@ __all__ = [
     "PulleyActuationResult",
     "PulleyActuationState",
     "PulleyActuator",
+    "SecondaryHelixActuationState",
     "TorqueReactiveSecondarySpec",
     "build_centrifugal_primary",
     "build_torque_reactive_secondary",

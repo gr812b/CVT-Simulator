@@ -16,15 +16,15 @@ from cinder.closure import (
 @dataclass(frozen=True, slots=True)
 class PulleyActuationState:
     """
-    Known local quantities available before the closure solve.
+    Known quantities shared by all local pulley-force laws.
 
-    ``axial_position`` and ``axial_speed`` use the actuator's local pulley
-    coordinate x. Positive local axial force tends to close and clamp the
-    pulley. ``shaft_speed`` is the corresponding pulley-shaft speed.
+    ``axial_position`` and ``axial_speed`` use the pulley-local coordinate x.
+    Positive local axial force tends to close and clamp the pulley.
+    ``shaft_speed`` is the corresponding pulley-shaft speed.
 
-    Global coordinate conversion, helix inertia, and rotational-row
-    coupling deliberately do not belong in generic actuation state. They
-    are handled later by the dedicated secondary helix dynamics mechanism.
+    Primary laws need only this generic state. Secondary helix force extends it
+    with the known mapping from global shift to the secondary local coordinate,
+    while the composed actuator remains an ordinary ``PulleyActuator``.
     """
 
     axial_position: float

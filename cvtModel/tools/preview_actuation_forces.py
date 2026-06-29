@@ -2,12 +2,13 @@
 
 Run from the cvtModel directory:
 
-    python tools/preview_actuation_forces.py
+    PYTHONPATH=src python tools/preview_actuation_forces.py
 
-The primary map varies primary shift s and shaft RPM.  The secondary map
-varies its local closing coordinate x_s and secondary torque tau_s.  Extra
-secondary closure unknowns are fixed command-line inputs so the full affine
-secondary relation is instantiated without making the plot harder to read.
+The primary map varies primary shift s and shaft RPM. The secondary map
+varies the physical secondary closing coordinate x_s and transmitted torque
+tau_s. The secondary relation is affine in tau_s, alpha_s, and s_ddot. The known
+shift-speed and acceleration values are selected command-line slices so the
+original force-map layout remains readable.
 
 Positive local force closes/clamps the relevant pulley; negative force opens it.
 """
@@ -18,6 +19,7 @@ import argparse
 from dataclasses import dataclass, replace
 from math import pi
 from pathlib import Path
+from typing import Callable
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -26,6 +28,7 @@ from matplotlib.colors import TwoSlopeNorm
 from cinder.actuation.forces import (
     AxialSpringForceSpec,
     CentrifugalRampForceSpec,
+    SecondaryHelixActuationState,
     SecondaryHelixForceSpec,
 )
 from cinder.actuation.primary import (
@@ -61,13 +64,28 @@ class PreviewParameters:
 
     secondary_helix_radius: float = 0.030
     secondary_helix_angle_degrees: float = 28.0
-    secondary_helix_handedness: int = 1
     secondary_torsional_stiffness: float = 8.0
     secondary_initial_twist: float = 1.40
     secondary_movable_sheave_inertia: float = 0.002
 
 
 DEFAULT_PARAMETERS = PreviewParameters()
+
+
+@dataclass(frozen=True, slots=True)
+class SecondaryPreviewKinematics:
+    """
+    Chosen local-to-global kinematic slice for the secondary force preview.
+
+    The actual RHS will obtain x_s', x_s'', and s_dot from geometry and
+    state. This standalone plot keeps them explicit so the original
+    x_s-versus-tau_s force-map layout remains useful before the full closure
+    assembly exists.
+    """
+
+    global_shift_speed: float
+    local_coordinate_slope: float
+    local_coordinate_curvature: float
 
 
 def radians_per_second_from_rpm(rpm: float) -> float:
@@ -105,6 +123,15 @@ def build_primary(parameters: PreviewParameters):
 
 
 def build_secondary(parameters: PreviewParameters):
+    """
+    Build the normal secondary PulleyActuator.
+
+    The primary preview uses x_p in [0, travel]. The public secondary
+    coordinate is x_s in [-travel, 0] during an upshift: x_s = 0 is
+    low-ratio closed and negative x_s opens the secondary. The shared helix
+    profile itself uses q = -x_s as its positive opening coordinate.
+    """
+
     helix_profile = HelixProfile(
         circumferential_profile=PiecewiseRamp(
             (
@@ -113,7 +140,6 @@ def build_secondary(parameters: PreviewParameters):
                     helix_angle_degrees=(
                         parameters.secondary_helix_angle_degrees
                     ),
-                    handedness=parameters.secondary_helix_handedness,
                 ),
             )
         ),
@@ -121,7 +147,7 @@ def build_secondary(parameters: PreviewParameters):
     )
 
     return build_torque_reactive_secondary(
-        TorqueReactiveSecondarySpec(
+        spec=TorqueReactiveSecondarySpec(
             axial_spring=AxialSpringForceSpec(
                 stiffness=parameters.secondary_axial_spring_stiffness,
                 initial_compression=(
@@ -129,37 +155,66 @@ def build_secondary(parameters: PreviewParameters):
                 ),
                 compression_per_axial_position=-1.0,
             ),
-            helix=SecondaryHelixForceSpec(
-                helix_profile=helix_profile,
-                movable_sheave_rotational_inertia=(
-                    parameters.secondary_movable_sheave_inertia
-                ),
+            helix_force=SecondaryHelixForceSpec(
                 torsional_stiffness=(
                     parameters.secondary_torsional_stiffness
                 ),
                 initial_twist=parameters.secondary_initial_twist,
+                movable_sheave_rotational_inertia=(
+                    parameters.secondary_movable_sheave_inertia
+                ),
                 movable_sheave_torque_fraction=0.5,
             ),
-        )
+        ),
+        helix_profile=helix_profile,
+    )
+
+
+def primary_state(
+    *,
+    axial_position: float,
+    shaft_speed_rpm: float,
+) -> PulleyActuationState:
+    return PulleyActuationState(
+        axial_position=axial_position,
+        axial_speed=0.0,
+        shaft_speed=radians_per_second_from_rpm(shaft_speed_rpm),
+    )
+
+
+def secondary_state(
+    *,
+    axial_position: float,
+    shaft_speed_rpm: float,
+    kinematics: SecondaryPreviewKinematics,
+) -> SecondaryHelixActuationState:
+    return SecondaryHelixActuationState(
+        axial_position=axial_position,
+        axial_speed=(
+            kinematics.local_coordinate_slope
+            * kinematics.global_shift_speed
+        ),
+        shaft_speed=radians_per_second_from_rpm(shaft_speed_rpm),
+        global_shift_speed=kinematics.global_shift_speed,
+        local_axial_coordinate_slope=kinematics.local_coordinate_slope,
+        local_axial_coordinate_curvature=(
+            kinematics.local_coordinate_curvature
+        ),
     )
 
 
 def evaluate_force(
     actuator,
     *,
-    axial_position: float,
-    axial_speed: float,
-    shaft_speed_rpm: float,
+    state: PulleyActuationState,
     unknowns: ClosureUnknowns,
 ) -> float:
-    result = actuator.evaluate(
-        PulleyActuationState(
-            axial_position=axial_position,
-            axial_speed=axial_speed,
-            shaft_speed=radians_per_second_from_rpm(shaft_speed_rpm),
-        )
-    )
-    return result.force(unknowns)
+    return actuator.evaluate(state).force(unknowns)
+
+
+StateFromPosition = Callable[[float, float], PulleyActuationState]
+UnknownsFromValue = Callable[[float], ClosureUnknowns]
+SpeedFromValue = Callable[[float], float]
 
 
 def force_surface(
@@ -167,9 +222,9 @@ def force_surface(
     *,
     positions: np.ndarray,
     varying_values: np.ndarray,
-    fixed_axial_speed: float,
-    shaft_speed_from_value,
-    unknowns_from_value,
+    state_from_position: StateFromPosition,
+    shaft_speed_from_value: SpeedFromValue,
+    unknowns_from_value: UnknownsFromValue,
 ) -> np.ndarray:
     values = np.empty((varying_values.size, positions.size))
 
@@ -180,9 +235,10 @@ def force_surface(
         for column, axial_position in enumerate(positions):
             values[row, column] = evaluate_force(
                 actuator,
-                axial_position=float(axial_position),
-                axial_speed=fixed_axial_speed,
-                shaft_speed_rpm=shaft_speed_rpm,
+                state=state_from_position(
+                    float(axial_position),
+                    shaft_speed_rpm,
+                ),
                 unknowns=unknowns,
             )
 
@@ -217,7 +273,6 @@ def plot_surface(
         norm=signed_norm(forces),
     )
 
-    # The contour exists only when this particular map crosses zero force.
     if float(np.min(forces)) <= 0.0 <= float(np.max(forces)):
         axis.contour(
             positions_mm,
@@ -242,9 +297,9 @@ def plot_input_slices(
     actuator,
     axial_positions: tuple[float, ...],
     varying_values: np.ndarray,
-    fixed_axial_speed: float,
-    shaft_speed_from_value,
-    unknowns_from_value,
+    state_from_position: StateFromPosition,
+    shaft_speed_from_value: SpeedFromValue,
+    unknowns_from_value: UnknownsFromValue,
     title: str,
     x_label: str,
     position_label: str,
@@ -253,9 +308,10 @@ def plot_input_slices(
         forces = [
             evaluate_force(
                 actuator,
-                axial_position=axial_position,
-                axial_speed=fixed_axial_speed,
-                shaft_speed_rpm=shaft_speed_from_value(float(value)),
+                state=state_from_position(
+                    axial_position,
+                    shaft_speed_from_value(float(value)),
+                ),
                 unknowns=unknowns_from_value(float(value)),
             )
             for value in varying_values
@@ -280,7 +336,7 @@ def plot_force_maps(
     primary_rpm_max: float,
     secondary_torque_min: float,
     secondary_torque_max: float,
-    secondary_axial_speed: float,
+    secondary_kinematics: SecondaryPreviewKinematics,
     secondary_angular_acceleration: float,
     shift_acceleration: float,
     samples: int,
@@ -289,7 +345,14 @@ def plot_force_maps(
     secondary = build_secondary(parameters)
 
     primary_positions = np.linspace(0.0, parameters.primary_travel, samples)
-    secondary_positions = np.linspace(0.0, parameters.secondary_travel, samples)
+
+    # Physical secondary coordinate: 0 is closed low ratio; negative opens it.
+    secondary_positions = np.linspace(
+        -parameters.secondary_travel,
+        0.0,
+        samples,
+    )
+
     primary_rpm = np.linspace(0.0, primary_rpm_max, samples)
     secondary_torque = np.linspace(
         secondary_torque_min,
@@ -298,6 +361,25 @@ def plot_force_maps(
     )
 
     primary_unknowns = ClosureUnknowns.zeros()
+
+    def primary_state_from_position(
+        axial_position: float,
+        shaft_speed_rpm: float,
+    ) -> PulleyActuationState:
+        return primary_state(
+            axial_position=axial_position,
+            shaft_speed_rpm=shaft_speed_rpm,
+        )
+
+    def secondary_state_from_position(
+        axial_position: float,
+        shaft_speed_rpm: float,
+    ) -> SecondaryHelixActuationState:
+        return secondary_state(
+            axial_position=axial_position,
+            shaft_speed_rpm=shaft_speed_rpm,
+            kinematics=secondary_kinematics,
+        )
 
     def secondary_unknowns(torque: float) -> ClosureUnknowns:
         return ClosureUnknowns(
@@ -310,7 +392,7 @@ def plot_force_maps(
         primary,
         positions=primary_positions,
         varying_values=primary_rpm,
-        fixed_axial_speed=0.0,
+        state_from_position=primary_state_from_position,
         shaft_speed_from_value=lambda rpm: rpm,
         unknowns_from_value=lambda _: primary_unknowns,
     )
@@ -318,7 +400,7 @@ def plot_force_maps(
         secondary,
         positions=secondary_positions,
         varying_values=secondary_torque,
-        fixed_axial_speed=secondary_axial_speed,
+        state_from_position=secondary_state_from_position,
         shaft_speed_from_value=lambda _: 0.0,
         unknowns_from_value=secondary_unknowns,
     )
@@ -345,8 +427,14 @@ def plot_force_maps(
         positions_mm=secondary_positions * 1_000.0,
         varying_values=secondary_torque,
         forces=secondary_surface,
-        title="Secondary: net force over local closure and torque",
-        x_label=r"Secondary local coordinate $x_s$ [mm]",
+        title=(
+            "Secondary: net force over local closure and torque "
+            r"(fixed $\dot{s}$, $\dot{\omega}_s$, $\ddot{s}$)"
+        ),
+        x_label=(
+            r"Secondary local closing coordinate $x_s$ [mm] "
+            r"(negative = opening)"
+        ),
         y_label=r"Secondary torque $\tau_s$ [N m]",
     )
 
@@ -362,22 +450,25 @@ def plot_force_maps(
         actuator=primary,
         axial_positions=primary_slice_positions,
         varying_values=primary_rpm,
-        fixed_axial_speed=0.0,
+        state_from_position=primary_state_from_position,
         shaft_speed_from_value=lambda rpm: rpm,
         unknowns_from_value=lambda _: primary_unknowns,
         title="Primary: force versus shaft speed",
         x_label="Primary speed [rpm]",
-        position_label=r"$s$",
+        position_label=r"$x_p$",
     )
     plot_input_slices(
         axes[1, 1],
         actuator=secondary,
         axial_positions=secondary_slice_positions,
         varying_values=secondary_torque,
-        fixed_axial_speed=secondary_axial_speed,
+        state_from_position=secondary_state_from_position,
         shaft_speed_from_value=lambda _: 0.0,
         unknowns_from_value=secondary_unknowns,
-        title="Secondary: force versus transmitted torque",
+        title=(
+            "Secondary: force versus transmitted torque "
+            r"(fixed $\dot{s}$, $\dot{\omega}_s$, $\ddot{s}$)"
+        ),
         x_label=r"Secondary torque $\tau_s$ [N m]",
         position_label=r"$x_s$",
     )
@@ -400,22 +491,49 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--secondary-travel-mm", type=float, default=19.05)
     parser.add_argument("--samples", type=int, default=121)
     parser.add_argument(
-        "--secondary-axial-speed",
+        "--shift-speed",
         type=float,
         default=0.0,
-        help="Fixed x_s_dot in the secondary convective-inertia bias [m/s].",
+        help=(
+            "Fixed global shift speed s_dot [m/s] used in the secondary "
+            "convective-inertia bias."
+        ),
+    )
+    parser.add_argument(
+        "--secondary-coordinate-slope",
+        type=float,
+        default=-1.0,
+        help=(
+            "Fixed dx_s/ds slice used by the standalone secondary preview. "
+            "The full RHS obtains this from geometry."
+        ),
+    )
+    parser.add_argument(
+        "--secondary-coordinate-curvature",
+        type=float,
+        default=0.0,
+        help=(
+            "Fixed d²x_s/ds² slice used by the standalone secondary preview. "
+            "The full RHS obtains this from geometry."
+        ),
     )
     parser.add_argument(
         "--secondary-angular-acceleration",
         type=float,
         default=0.0,
-        help="Fixed alpha_s for the preview's affine secondary relation [rad/s²].",
+        help=(
+            "Fixed alpha_s [rad/s²] used to evaluate the affine secondary "
+            "relation."
+        ),
     )
     parser.add_argument(
         "--shift-acceleration",
         type=float,
         default=0.0,
-        help="Fixed x_s_ddot / shift-acceleration term for the preview [m/s²].",
+        help=(
+            "Fixed s_ddot [m/s²] used to evaluate the affine secondary "
+            "relation."
+        ),
     )
     parser.add_argument("--save", type=Path)
     parser.add_argument("--no-show", action="store_true")
@@ -425,7 +543,9 @@ def parse_args() -> argparse.Namespace:
     if args.primary_rpm_max <= 0.0:
         parser.error("--primary-rpm-max must be positive.")
     if args.secondary_torque_min >= args.secondary_torque_max:
-        parser.error("--secondary-torque-min must be below --secondary-torque-max.")
+        parser.error(
+            "--secondary-torque-min must be below --secondary-torque-max."
+        )
     if args.primary_travel_mm <= 0.0 or args.secondary_travel_mm <= 0.0:
         parser.error("Both travel values must be positive.")
     if args.samples < 3:
@@ -442,13 +562,21 @@ def main() -> None:
         secondary_travel=args.secondary_travel_mm / 1_000.0,
     )
 
+    secondary_kinematics = SecondaryPreviewKinematics(
+        global_shift_speed=args.shift_speed,
+        local_coordinate_slope=args.secondary_coordinate_slope,
+        local_coordinate_curvature=args.secondary_coordinate_curvature,
+    )
+
     figure, primary_surface, secondary_surface = plot_force_maps(
         parameters=parameters,
         primary_rpm_max=args.primary_rpm_max,
         secondary_torque_min=args.secondary_torque_min,
         secondary_torque_max=args.secondary_torque_max,
-        secondary_axial_speed=args.secondary_axial_speed,
-        secondary_angular_acceleration=args.secondary_angular_acceleration,
+        secondary_kinematics=secondary_kinematics,
+        secondary_angular_acceleration=(
+            args.secondary_angular_acceleration
+        ),
         shift_acceleration=args.shift_acceleration,
         samples=args.samples,
     )
@@ -462,6 +590,21 @@ def main() -> None:
         "  secondary: "
         f"[{secondary_surface.min():.1f}, {secondary_surface.max():.1f}] N"
     )
+    print("Secondary preview kinematic slice")
+    print(f"  s_dot: {secondary_kinematics.global_shift_speed:.6g} m/s")
+    print(
+        "  dx_s/ds: "
+        f"{secondary_kinematics.local_coordinate_slope:.6g}"
+    )
+    print(
+        "  d²x_s/ds²: "
+        f"{secondary_kinematics.local_coordinate_curvature:.6g} 1/m"
+    )
+    print(
+        "  alpha_s: "
+        f"{args.secondary_angular_acceleration:.6g} rad/s²"
+    )
+    print(f"  s_ddot: {args.shift_acceleration:.6g} m/s²")
 
     if args.save is not None:
         args.save.parent.mkdir(parents=True, exist_ok=True)

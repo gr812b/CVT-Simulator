@@ -6,6 +6,7 @@ from .centrifugal_ramp import (
     CentrifugalRampForceSpec,
 )
 from .secondary_helix import (
+    SecondaryHelixActuationState,
     SecondaryHelixForce,
     SecondaryHelixForceSpec,
 )
@@ -15,6 +16,7 @@ __all__ = [
     "AxialSpringForceSpec",
     "CentrifugalRampForce",
     "CentrifugalRampForceSpec",
+    "SecondaryHelixActuationState",
     "SecondaryHelixForce",
     "SecondaryHelixForceSpec",
 ]

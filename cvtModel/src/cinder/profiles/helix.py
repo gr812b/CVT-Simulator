@@ -1,4 +1,4 @@
-"""Helix-cam geometry built from a physical circumferential profile."""
+"""Secondary helix-cam geometry parameterized by positive opening travel."""
 
 from __future__ import annotations
 
@@ -12,43 +12,49 @@ from .types import ScalarProfile
 
 @dataclass(frozen=True, slots=True)
 class HelixSample:
-    """Helix kinematics evaluated at one local axial coordinate."""
+    """Secondary helix kinematics at one positive opening travel coordinate."""
 
     circumferential_displacement: float
     theta: float
-    dtheta_dx: float
-    d2theta_dx2: float
+    dtheta_dopening: float
+    d2theta_dopening2: float
     helix_angle_magnitude: float
 
 
 @dataclass(frozen=True, slots=True)
 class HelixProfile:
     """
-    Convert a physical circumferential-displacement profile u(q) into
-    a local relative rotation theta(x).
+    Conventional torque-reactive secondary helix geometry.
 
-        q = sigma x
-        theta(x) = theta_offset + u(q) / radius
+    The profile coordinate ``q`` is positive secondary opening travel:
 
-    ``q`` is the non-negative travel coordinate used by ordinary profile
-    segments. ``x`` is the physical coordinate supplied by the mechanism
-    using the helix. ``profile_coordinate_sign = sigma`` bridges those
-    conventions without forcing every ``PiecewiseRamp`` to accept negative
-    segment lengths.
+        q = -x_s,
 
-    For a conventional secondary, positive x_s closes the pulley while
-    the helix travels forward as the secondary opens during an upshift.
-    Construct that profile with ``profile_coordinate_sign=-1`` so
-    q = -x_s >= 0. The default ``+1`` retains the direct x=q convention.
+    where the public pulley-local secondary coordinate ``x_s`` remains
+    positive in the closing direction. Thus:
 
-    ``theta_offset`` is geometric clocking/reference. Torsional-spring
+        q = 0       closed low-ratio reference,
+        q > 0       secondary opening during an upshift.
+
+    ``theta(q)`` is the positive spring-winding relative rotation between
+    the movable and fixed secondary sheaves. A conventional torque-reactive
+    secondary therefore requires:
+
+        dtheta / dq > 0.
+
+    This keeps the physical convention explicit: opening winds the torsional
+    spring further, and positive forward transmitted torque increases the
+    positive local closing force. The profile deliberately does not expose a
+    handedness or coordinate-sign option; an inverse torque-reactive helix is
+    outside the modeled mechanism.
+
+    ``theta_offset`` is purely geometric clocking/reference. Torsional-spring
     preload belongs separately in ``SecondaryHelixForceSpec.initial_twist``.
     """
 
     circumferential_profile: ScalarProfile
     radius: float
     theta_offset: float = 0.0
-    profile_coordinate_sign: int = 1
 
     def __post_init__(self) -> None:
         if not isfinite(self.radius) or self.radius <= 0.0:
@@ -57,51 +63,42 @@ class HelixProfile:
         if not isfinite(self.theta_offset):
             raise ValueError("theta_offset must be finite.")
 
-        if self.profile_coordinate_sign not in (-1, 1):
+    @property
+    def opening_travel_min(self) -> float:
+        """Smallest valid positive-opening coordinate q."""
+
+        return self.circumferential_profile.x_min
+
+    @property
+    def opening_travel_max(self) -> float:
+        """Largest valid positive-opening coordinate q."""
+
+        return self.circumferential_profile.x_max
+
+    def evaluate(self, opening_travel: float) -> HelixSample:
+        """
+        Evaluate spring-winding rotation and derivatives with respect to q.
+
+        ``opening_travel`` is q = -x_s, not the signed local closing
+        coordinate x_s.
+        """
+
+        profile = self.circumferential_profile.evaluate(opening_travel)
+
+        if profile.first_derivative <= 0.0:
             raise ValueError(
-                "profile_coordinate_sign must be either -1 or 1."
+                "A torque-reactive secondary helix requires positive "
+                "circumferential slope du/dq."
             )
-
-    @property
-    def x_min(self) -> float:
-        """Smallest valid physical local coordinate x."""
-
-        return min(
-            self.profile_coordinate_sign
-            * self.circumferential_profile.x_min,
-            self.profile_coordinate_sign
-            * self.circumferential_profile.x_max,
-        )
-
-    @property
-    def x_max(self) -> float:
-        """Largest valid physical local coordinate x."""
-
-        return max(
-            self.profile_coordinate_sign
-            * self.circumferential_profile.x_min,
-            self.profile_coordinate_sign
-            * self.circumferential_profile.x_max,
-        )
-
-    def evaluate(self, x: float) -> HelixSample:
-        """Evaluate theta and its derivatives with respect to x."""
-
-        profile_coordinate = self.profile_coordinate_sign * x
-        profile = self.circumferential_profile.evaluate(profile_coordinate)
 
         return HelixSample(
             circumferential_displacement=profile.value,
             theta=self.theta_offset + profile.value / self.radius,
-            dtheta_dx=(
-                self.profile_coordinate_sign
-                * profile.first_derivative
-                / self.radius
-            ),
-            d2theta_dx2=profile.second_derivative / self.radius,
+            dtheta_dopening=profile.first_derivative / self.radius,
+            d2theta_dopening2=profile.second_derivative / self.radius,
             helix_angle_magnitude=atan2(
                 1.0,
-                abs(profile.first_derivative),
+                profile.first_derivative,
             ),
         )
 
@@ -110,29 +107,25 @@ def linear_helix_segment(
     *,
     length: float,
     helix_angle_degrees: float,
-    handedness: int = 1,
 ) -> LinearSegment:
     """
-    Build a direct u(q) linear segment from a constant helix angle.
+    Build one conventional secondary-helix segment.
 
-    The helix angle beta is measured from the circumferential direction:
+    The helix angle beta is measured from the circumferential direction.
+    Positive opening travel q therefore gives:
 
-        du/dq = handedness * cot(beta)
+        du/dq = cot(beta) > 0.
 
-    A ``LinearSegment`` stores the equivalent signed tangent angle from
-    +q:
-
-        slope_angle = handedness * (90 degrees - beta).
+    There is intentionally no handedness parameter: CINDER's secondary helix
+    is defined around the ordinary torque-reactive orientation in which
+    opening winds the spring further and forward torque adds clamping force.
     """
 
-    _validate_helix_angle_and_handedness(
-        helix_angle_degrees=helix_angle_degrees,
-        handedness=handedness,
-    )
+    _validate_helix_angle(helix_angle_degrees)
 
     return LinearSegment(
         length=length,
-        angle_degrees=handedness * (90.0 - helix_angle_degrees),
+        angle_degrees=90.0 - helix_angle_degrees,
     )
 
 
@@ -141,24 +134,19 @@ def circular_helix_segment(
     length: float,
     start_helix_angle_degrees: float,
     end_helix_angle_degrees: float,
-    handedness: int = 1,
 ) -> CircularSegment:
     """
-    Build a circular u(q) segment from endpoint helix-angle magnitudes.
+    Build one conventional positive-slope circular secondary-helix segment.
 
-    The resulting circle is in the physical (q, u) displacement plane. It
-    matches du/dq = handedness * cot(beta) at both endpoints. It does not
-    claim that beta(q) itself varies circularly.
+    The circle is formed in the physical (q, u) plane and matches:
+
+        du/dq = cot(beta) > 0
+
+    at both endpoints. It does not assert that beta(q) itself is circular.
     """
 
-    _validate_helix_angle_and_handedness(
-        helix_angle_degrees=start_helix_angle_degrees,
-        handedness=handedness,
-    )
-    _validate_helix_angle_and_handedness(
-        helix_angle_degrees=end_helix_angle_degrees,
-        handedness=handedness,
-    )
+    _validate_helix_angle(start_helix_angle_degrees)
+    _validate_helix_angle(end_helix_angle_degrees)
 
     start_slope_angle = 90.0 - start_helix_angle_degrees
     end_slope_angle = 90.0 - end_helix_angle_degrees
@@ -167,13 +155,11 @@ def circular_helix_segment(
         return linear_helix_segment(
             length=length,
             helix_angle_degrees=start_helix_angle_degrees,
-            handedness=handedness,
         )
 
-    if handedness == 1:
-        quadrant = 2 if start_slope_angle >= end_slope_angle else 4
-    else:
-        quadrant = 3 if start_slope_angle >= end_slope_angle else 1
+    # CircularSegment's positive-slope quadrants are:
+    # Q2: steep -> gentle; Q4: gentle -> steep.
+    quadrant = 2 if start_slope_angle >= end_slope_angle else 4
 
     return CircularSegment(
         length=length,
@@ -183,11 +169,7 @@ def circular_helix_segment(
     )
 
 
-def _validate_helix_angle_and_handedness(
-    *,
-    helix_angle_degrees: float,
-    handedness: int,
-) -> None:
+def _validate_helix_angle(helix_angle_degrees: float) -> None:
     if not isfinite(helix_angle_degrees):
         raise ValueError("helix_angle_degrees must be finite.")
 
@@ -195,6 +177,3 @@ def _validate_helix_angle_and_handedness(
         raise ValueError(
             "helix_angle_degrees must lie strictly between 0 and 90."
         )
-
-    if handedness not in (-1, 1):
-        raise ValueError("handedness must be either -1 or 1.")
