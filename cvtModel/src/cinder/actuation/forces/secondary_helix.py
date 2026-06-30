@@ -65,15 +65,11 @@ class SecondaryHelixActuationState(PulleyActuationState):
         dx_s/ds,
         d2x_s/ds2.
 
-    With q' = -dx_s/ds and q'' = -d2x_s/ds2, the helix kinematics are:
+    Together with ``global_shift_speed = s_dot``, the shared helix-profile
+    kinematics give:
 
-        H  = dtheta/ds
-           = (dtheta/dq) q',
-
-        H' = d2theta/ds2
-           = (d2theta/dq2) q'^2 + (dtheta/dq) q''.
-
-    Together with ``global_shift_speed = s_dot``:
+        H  = dtheta/ds,
+        H' = d2theta/ds2,
 
         alpha_M = alpha_s - H' s_dot^2 - H s_ddot.
 
@@ -166,20 +162,14 @@ class SecondaryHelixForce:
                 "SecondaryHelixForce requires SecondaryHelixActuationState."
             )
 
-        opening_travel = -state.axial_position
-        sample = self._helix_profile.evaluate(opening_travel)
-
-        opening_slope = -state.local_axial_coordinate_slope
-        opening_curvature = -state.local_axial_coordinate_curvature
-
-        theta_rate_per_shift = sample.dtheta_dopening * opening_slope
-        theta_acceleration_per_shift_squared = (
-            sample.d2theta_dopening2 * opening_slope**2
-            + sample.dtheta_dopening * opening_curvature
+        kinematics = self._helix_profile.evaluate_shift_kinematics(
+            opening_travel=-state.axial_position,
+            d_opening_ds=-state.local_axial_coordinate_slope,
+            d2_opening_ds2=-state.local_axial_coordinate_curvature,
         )
 
         torsional_spring_torque = self._spec.torsional_stiffness * (
-            self._spec.initial_twist + sample.theta
+            self._spec.initial_twist + kinematics.theta
         )
         movable_sheave_inertia = self._spec.movable_sheave_rotational_inertia
 
@@ -188,11 +178,11 @@ class SecondaryHelixForce:
         known_helix_torque = (
             torsional_spring_torque
             + movable_sheave_inertia
-            * theta_acceleration_per_shift_squared
+            * kinematics.d2theta_ds2
             * state.global_shift_speed**2
         )
 
-        force_per_reacted_torque = sample.dtheta_dopening
+        force_per_reacted_torque = kinematics.dtheta_dopening
 
         return AffineClosureScalar(
             bias=force_per_reacted_torque * known_helix_torque,
@@ -203,10 +193,11 @@ class SecondaryHelixForce:
                 shift_acceleration=(
                     force_per_reacted_torque
                     * movable_sheave_inertia
-                    * theta_rate_per_shift
+                    * kinematics.dtheta_ds
                 ),
                 secondary_torque=(
-                    force_per_reacted_torque * self._spec.movable_sheave_torque_fraction
+                    force_per_reacted_torque
+                    * self._spec.movable_sheave_torque_fraction
                 ),
             ),
         )

@@ -12,13 +12,49 @@ from .types import ScalarProfile
 
 @dataclass(frozen=True, slots=True)
 class HelixSample:
-    """Secondary helix kinematics at one positive opening travel coordinate."""
+    """Secondary helix geometry at one positive opening-travel coordinate."""
 
     circumferential_displacement: float
     theta: float
     dtheta_dopening: float
     d2theta_dopening2: float
     helix_angle_magnitude: float
+
+
+@dataclass(frozen=True, slots=True)
+class HelixShiftKinematics:
+    """
+    One helix sample mapped into the common global shift coordinate.
+
+    The underlying profile uses positive secondary-opening travel ``q``.  The
+    caller supplies the known geometry map:
+
+        q = q(s),
+        dq_ds = dq / ds,
+        d2q_ds2 = d2q / ds2.
+
+    The returned values then provide the quantities needed consistently by
+    both the secondary actuator and the later secondary rotational row:
+
+        H  = dtheta / ds,
+        H' = d2theta / ds2.
+
+    This is geometry/kinematics only.  It contains no spring, torque, force,
+    or inertia quantities.
+    """
+
+    opening_travel: float
+    d_opening_ds: float
+    d2_opening_ds2: float
+
+    circumferential_displacement: float
+    theta: float
+    dtheta_dopening: float
+    d2theta_dopening2: float
+    helix_angle_magnitude: float
+
+    dtheta_ds: float
+    d2theta_ds2: float
 
 
 @dataclass(frozen=True, slots=True)
@@ -102,6 +138,54 @@ class HelixProfile:
             ),
         )
 
+    def evaluate_shift_kinematics(
+        self,
+        *,
+        opening_travel: float,
+        d_opening_ds: float,
+        d2_opening_ds2: float,
+    ) -> HelixShiftKinematics:
+        """
+        Evaluate the helix and map its derivatives to a common shift s.
+
+        The chain rule is:
+
+            dtheta_ds
+              = (dtheta/dq) (dq/ds),
+
+            d2theta_ds2
+              = (d2theta/dq2) (dq/ds)^2
+                + (dtheta/dq) (d2q/ds2).
+
+        Keeping this conversion here ensures that the actuator and future
+        rotational row use the same helix kinematics.
+        """
+
+        _require_finite("opening_travel", opening_travel)
+        _require_finite("d_opening_ds", d_opening_ds)
+        _require_finite("d2_opening_ds2", d2_opening_ds2)
+
+        sample = self.evaluate(opening_travel)
+
+        dtheta_ds = sample.dtheta_dopening * d_opening_ds
+        d2theta_ds2 = (
+            sample.d2theta_dopening2 * d_opening_ds**2
+            + sample.dtheta_dopening * d2_opening_ds2
+        )
+
+        return HelixShiftKinematics(
+            opening_travel=opening_travel,
+            d_opening_ds=d_opening_ds,
+            d2_opening_ds2=d2_opening_ds2,
+            circumferential_displacement=sample.circumferential_displacement,
+            theta=sample.theta,
+            dtheta_dopening=sample.dtheta_dopening,
+            d2theta_dopening2=sample.d2theta_dopening2,
+            helix_angle_magnitude=sample.helix_angle_magnitude,
+            dtheta_ds=dtheta_ds,
+            d2theta_ds2=d2theta_ds2,
+        )
+
 
 def linear_helix_segment(
     *,
@@ -175,3 +259,8 @@ def _validate_helix_angle(helix_angle_degrees: float) -> None:
 
     if not 0.0 < helix_angle_degrees < 90.0:
         raise ValueError("helix_angle_degrees must lie strictly between 0 and 90.")
+
+
+def _require_finite(name: str, value: float) -> None:
+    if not isfinite(value):
+        raise ValueError(f"{name} must be finite.")

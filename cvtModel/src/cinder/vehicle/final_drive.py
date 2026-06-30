@@ -1,4 +1,4 @@
-"""Fixed secondary-shaft to wheel reduction and inertia reflection."""
+"""Fixed secondary-shaft to wheel reduction, kinematics, and inertia reflection."""
 
 from __future__ import annotations
 
@@ -13,7 +13,12 @@ class FixedFinalDrive:
 
     ``reduction_ratio`` is defined as:
 
-        G = omega_secondary / omega_wheel
+        G = omega_secondary / omega_wheel.
+
+    With pure rolling at the driven wheel, the same fixed conversion maps
+    accumulated secondary-shaft angle to signed vehicle distance:
+
+        x_vehicle = r_w psi_secondary / G.
     """
 
     reduction_ratio: float
@@ -49,6 +54,24 @@ class FixedFinalDrive:
         return self.wheel_radius * self.wheel_angular_speed(
             secondary_angular_speed=secondary_angular_speed,
         )
+
+    def vehicle_distance_from_secondary_angle(
+        self,
+        *,
+        secondary_shaft_angle: float,
+    ) -> float:
+        """
+        Return signed vehicle distance from accumulated secondary-shaft angle.
+
+            x_vehicle = r_w psi_secondary / G.
+
+        The zero point is the user-selected initial road position. A road
+        profile can encode any physical route offset in its own distance
+        function, keeping this drivetrain mapping purely kinematic.
+        """
+
+        _require_finite("secondary_shaft_angle", secondary_shaft_angle)
+        return self.wheel_radius * secondary_shaft_angle / self.reduction_ratio
 
     def secondary_torque_from_wheel_force(
         self,
