@@ -1,10 +1,21 @@
 """Canonical instantaneous-closure coordinates for CINDER.
 
-The coupled CVT closure solve has one named six-column basis.  Components
+The coupled CVT closure solve has one named six-column basis. Components
 that contribute a scalar relation use this module rather than keeping their
 own tuple order or column indices.
 
     scalar = bias + gains dot unknowns
+
+A :class:`ClosureEquation` wraps one such affine residual.  The generic
+six-by-six trial solver converts the residual form
+
+    bias + gains dot unknowns = 0
+
+to the matrix form
+
+    A unknowns = b,
+
+using ``A = gains`` and ``b = -bias``.
 """
 
 from __future__ import annotations
@@ -12,7 +23,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from enum import IntEnum
 from math import isfinite
-from typing import Iterator
+from typing import Iterable, Iterator
 
 
 class ClosureUnknown(IntEnum):
@@ -33,7 +44,7 @@ CLOSURE_UNKNOWN_COUNT = len(ClosureUnknown)
 class ClosureUnknowns:
     """Solved instantaneous values in the canonical closure basis.
 
-    The field order is deliberately visible and named.  Matrix assembly should
+    The field order is deliberately visible and named. Matrix assembly should
     use :meth:`as_tuple` when it needs the corresponding ordered NumPy row or
     column.
     """
@@ -74,6 +85,22 @@ class ClosureUnknowns:
             secondary_torque=secondary_torque,
         )
 
+    @classmethod
+    def from_ordered_values(
+        cls,
+        values: Iterable[float],
+    ) -> "ClosureUnknowns":
+        """Construct from values in :class:`ClosureUnknown` column order."""
+
+        ordered_values = tuple(values)
+        if len(ordered_values) != CLOSURE_UNKNOWN_COUNT:
+            raise ValueError(
+                "ClosureUnknowns requires exactly "
+                f"{CLOSURE_UNKNOWN_COUNT} ordered values."
+            )
+
+        return cls(*ordered_values)
+
     def __getitem__(self, unknown: ClosureUnknown) -> float:
         return self.as_tuple()[int(unknown)]
 
@@ -108,7 +135,7 @@ class ClosureGains:
     """Gain row aligned with :class:`ClosureUnknowns`.
 
     Its fields have different physical units from the unknown values but the
-    same column ordering.  This separate type prevents a solved unknown vector
+    same column ordering. This separate type prevents a solved unknown vector
     from being accidentally used as a matrix gain row.
     """
 
@@ -172,6 +199,31 @@ class ClosureGains:
             secondary_torque=self.secondary_torque + other.secondary_torque,
         )
 
+    def __neg__(self) -> "ClosureGains":
+        return self.scaled(-1.0)
+
+    def __sub__(self, other: "ClosureGains") -> "ClosureGains":
+        if not isinstance(other, ClosureGains):
+            return NotImplemented
+        return self + (-other)
+
+    def scaled(self, factor: float) -> "ClosureGains":
+        """Return this gain row multiplied by one known scalar."""
+
+        _require_finite(factor=factor)
+        return ClosureGains(
+            primary_angular_acceleration=(
+                factor * self.primary_angular_acceleration
+            ),
+            secondary_angular_acceleration=(
+                factor * self.secondary_angular_acceleration
+            ),
+            belt_acceleration=factor * self.belt_acceleration,
+            shift_acceleration=factor * self.shift_acceleration,
+            primary_torque=factor * self.primary_torque,
+            secondary_torque=factor * self.secondary_torque,
+        )
+
     def dot(self, unknowns: ClosureUnknowns) -> float:
         """Evaluate this gain row against solved closure unknowns."""
 
@@ -213,8 +265,8 @@ class AffineClosureScalar:
 
         value = bias + gains.dot(unknowns)
 
-    This is deliberately not actuation-specific.  It can later represent a
-    force, torque, compatibility residual, or any other scalar equation whose
+    This is deliberately not actuation-specific. It can represent a force,
+    torque, compatibility residual, or any other scalar equation whose
     unknown-dependent part is linear in the six closure variables.
     """
 
@@ -228,6 +280,12 @@ class AffineClosureScalar:
     def zero(cls) -> "AffineClosureScalar":
         return cls()
 
+    @classmethod
+    def constant(cls, value: float) -> "AffineClosureScalar":
+        """Return a relation containing one known scalar and no gains."""
+
+        return cls(bias=value)
+
     def evaluate(self, unknowns: ClosureUnknowns) -> float:
         return self.bias + self.gains.dot(unknowns)
 
@@ -239,6 +297,65 @@ class AffineClosureScalar:
             bias=self.bias + other.bias,
             gains=self.gains + other.gains,
         )
+
+    def __neg__(self) -> "AffineClosureScalar":
+        return self.scaled(-1.0)
+
+    def __sub__(self, other: "AffineClosureScalar") -> "AffineClosureScalar":
+        if not isinstance(other, AffineClosureScalar):
+            return NotImplemented
+        return self + (-other)
+
+    def scaled(self, factor: float) -> "AffineClosureScalar":
+        """Return this relation multiplied by one known scalar."""
+
+        _require_finite(factor=factor)
+        return AffineClosureScalar(
+            bias=factor * self.bias,
+            gains=self.gains.scaled(factor),
+        )
+
+
+@dataclass(frozen=True, slots=True)
+class ClosureEquation:
+    """One named affine closure residual written in zero-equals form.
+
+    ``residual`` is always represented as:
+
+        residual(unknowns) = bias + gains.dot(unknowns).
+
+    The equation imposed by a closure solve is:
+
+        residual(unknowns) = 0.
+
+    Therefore the corresponding matrix row is ``gains`` and its right-hand
+    side is ``-bias``. Keeping that conversion here prevents individual CVT
+    row builders from independently choosing incompatible signs.
+    """
+
+    name: str
+    residual: AffineClosureScalar
+
+    def __post_init__(self) -> None:
+        if not self.name or not self.name.strip():
+            raise ValueError("ClosureEquation.name must be a non-empty string.")
+
+    @property
+    def matrix_row(self) -> tuple[float, float, float, float, float, float]:
+        """Return the matrix coefficients in canonical column order."""
+
+        return self.residual.gains.as_tuple()
+
+    @property
+    def right_hand_side(self) -> float:
+        """Return the matrix right-hand side for ``A unknowns = b``."""
+
+        return -self.residual.bias
+
+    def evaluate(self, unknowns: ClosureUnknowns) -> float:
+        """Evaluate this named residual after a trial solve."""
+
+        return self.residual.evaluate(unknowns)
 
 
 def _require_finite(**values: float) -> None:
