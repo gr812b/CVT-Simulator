@@ -112,9 +112,11 @@ class CVTDynamicsModel:
     Fixed assembled components needed to create a ``DynamicsSnapshot``.
 
     This is the system-level dependency container. It owns no mutable
-    simulation state and performs no lambda solve. The shared
-    ``secondary_helix_profile`` remains explicit because later rotational-row
-    assembly needs the same geometry independently of the actuator.
+    simulation state and performs no lambda solve. It owns the one physical
+    ``secondary_helix_profile`` and evaluates it once per state snapshot.
+    That single immutable ``HelixShiftKinematics`` result is passed to the
+    secondary actuator and retained for later secondary rotational-row
+    assembly.
 
     ``road_profile`` is defined in physical vehicle distance. The snapshot
     converts the integrated secondary-shaft angle to that distance using the
@@ -164,6 +166,12 @@ class CVTDynamicsModel:
         primary_coordinate = geometry.primary_axial_coordinate
         secondary_coordinate = geometry.secondary_axial_coordinate
 
+        secondary_helix = self.secondary_helix_profile.evaluate_shift_kinematics(
+            opening_travel=-secondary_coordinate.value,
+            d_opening_ds=-secondary_coordinate.d_value_ds,
+            d2_opening_ds2=-secondary_coordinate.d2_value_ds2,
+        )
+
         primary_actuation = self.primary_actuator.evaluate(
             PulleyActuationState(
                 axial_position=primary_coordinate.value,
@@ -182,17 +190,8 @@ class CVTDynamicsModel:
                 ),
                 shaft_speed=state.secondary_angular_speed,
                 global_shift_speed=state.shift_speed,
-                local_axial_coordinate_slope=secondary_coordinate.d_value_ds,
-                local_axial_coordinate_curvature=(
-                    secondary_coordinate.d2_value_ds2
-                ),
+                helix_kinematics=secondary_helix,
             )
-        )
-
-        secondary_helix = self.secondary_helix_profile.evaluate_shift_kinematics(
-            opening_travel=-secondary_coordinate.value,
-            d_opening_ds=-secondary_coordinate.d_value_ds,
-            d2_opening_ds2=-secondary_coordinate.d2_value_ds2,
         )
 
         vehicle_distance = (

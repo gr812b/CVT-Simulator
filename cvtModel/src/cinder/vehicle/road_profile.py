@@ -10,12 +10,14 @@ from typing import Callable, Protocol, runtime_checkable
 @dataclass(frozen=True, slots=True)
 class RoadProfileSample:
     """
-    Local road condition at one signed vehicle distance.
+    Local road condition queried at one signed vehicle distance.
 
     ``grade_angle`` is positive when the road rises in the positive vehicle
-    travel direction. The current road-load model needs only grade angle, but
-    retaining the queried distance in the sample makes a snapshot self-
-    describing and leaves a natural home for later surface or terrain data.
+    travel direction. The sample retains the distance at which it was queried
+    so a road-profile implementation can return a self-contained local result
+    and later extend it with terrain properties. ``DynamicsSnapshot`` does not
+    retain this intermediate sample; it consumes only the grade angle needed to
+    build ``RoadLoadResult``.
     """
 
     vehicle_distance: float
