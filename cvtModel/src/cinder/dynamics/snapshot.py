@@ -62,6 +62,7 @@ class DynamicsSnapshot:
     road_load: RoadLoadResult
 
     inertias: ResolvedInertias
+    sheave_half_angle: float
 
     @property
     def belt_transport_mass(self) -> float:
@@ -112,11 +113,9 @@ class CVTDynamicsModel:
     Fixed assembled components needed to create a ``DynamicsSnapshot``.
 
     This is the system-level dependency container. It owns no mutable
-    simulation state and performs no lambda solve. It owns the one physical
-    ``secondary_helix_profile`` and evaluates it once per state snapshot.
-    That single immutable ``HelixShiftKinematics`` result is passed to the
-    secondary actuator and retained for later secondary rotational-row
-    assembly.
+    simulation state and performs no lambda solve. The shared
+    ``secondary_helix_profile`` remains explicit because later rotational-row
+    assembly needs the same geometry independently of the actuator.
 
     ``road_profile`` is defined in physical vehicle distance. The snapshot
     converts the integrated secondary-shaft angle to that distance using the
@@ -129,6 +128,7 @@ class CVTDynamicsModel:
     secondary_helix_profile: HelixProfile
 
     inertias: ResolvedInertias
+    sheave_half_angle: float
     engine: FullThrottleTorqueCurve
     road_load: RoadLoadModel
     road_profile: RoadProfile = ConstantGradeRoadProfile()
@@ -166,12 +166,6 @@ class CVTDynamicsModel:
         primary_coordinate = geometry.primary_axial_coordinate
         secondary_coordinate = geometry.secondary_axial_coordinate
 
-        secondary_helix = self.secondary_helix_profile.evaluate_shift_kinematics(
-            opening_travel=-secondary_coordinate.value,
-            d_opening_ds=-secondary_coordinate.d_value_ds,
-            d2_opening_ds2=-secondary_coordinate.d2_value_ds2,
-        )
-
         primary_actuation = self.primary_actuator.evaluate(
             PulleyActuationState(
                 axial_position=primary_coordinate.value,
@@ -190,8 +184,17 @@ class CVTDynamicsModel:
                 ),
                 shaft_speed=state.secondary_angular_speed,
                 global_shift_speed=state.shift_speed,
-                helix_kinematics=secondary_helix,
+                local_axial_coordinate_slope=secondary_coordinate.d_value_ds,
+                local_axial_coordinate_curvature=(
+                    secondary_coordinate.d2_value_ds2
+                ),
             )
+        )
+
+        secondary_helix = self.secondary_helix_profile.evaluate_shift_kinematics(
+            opening_travel=-secondary_coordinate.value,
+            d_opening_ds=-secondary_coordinate.d_value_ds,
+            d2_opening_ds2=-secondary_coordinate.d2_value_ds2,
         )
 
         vehicle_distance = (
@@ -221,6 +224,7 @@ class CVTDynamicsModel:
             engine_torque=self.engine.evaluate(state.primary_angular_speed),
             road_load=road_load,
             inertias=self.inertias,
+            sheave_half_angle=self.geometry.spec.sheave_half_angle,
         )
 
         _validate_snapshot(snapshot)
@@ -251,8 +255,15 @@ def _validate_snapshot(snapshot: DynamicsSnapshot) -> None:
         ),
         "dtheta_ds": snapshot.secondary_helix.dtheta_ds,
         "d2theta_ds2": snapshot.secondary_helix.d2theta_ds2,
+        "sheave_half_angle": snapshot.sheave_half_angle,
     }
 
     for name, value in scalar_values.items():
         if not isfinite(value):
             raise ValueError(f"Dynamics snapshot produced non-finite {name}.")
+
+    if not 0.0 < snapshot.sheave_half_angle < 1.5707963267948966:
+        raise ValueError(
+            "Dynamics snapshot sheave_half_angle must lie strictly between "
+            "zero and pi/2."
+        )
