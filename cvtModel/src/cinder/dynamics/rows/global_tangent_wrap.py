@@ -11,18 +11,32 @@ def build_global_tangent_wrap_equation(
     *,
     snapshot: DynamicsSnapshot,
 ) -> ClosureEquation:
-    """Build the sum of the two pulley tension-jump equations.
+    """Build global compatibility of the two local tension jumps.
 
-    The derivation form is:
+    Define positive torque variables by their forward-drive roles:
 
-        tau_p/r_p + tau_s/r_s
+    ``tau_p``
+        primary pulley -> belt;
+
+    ``tau_s``
+        belt -> secondary pulley.
+
+    The secondary local wrap coordinate is opposite the global belt-travel
+    direction, so the two local jump relations combine to
+
+        tau_p / r_p - tau_s / r_s
           = rho_b A_b [
                 phi_p (r_p v_b_dot + r_p' s_dot v_b)
               + phi_s (r_s v_b_dot + r_s' s_dot v_b)
             ].
 
-    It has no lambda dependence and is therefore fixed across all lambda
-    trials at one ODE state.
+    In the held-ratio, zero-acceleration limit this reduces to
+
+        tau_p / r_p = tau_s / r_s,
+
+    which permits finite forward torque transfer. The row has no lambda
+    dependence and is therefore fixed across all lambda trials at one ODE
+    state.
     """
 
     geometry = snapshot.geometry
@@ -41,6 +55,12 @@ def build_global_tangent_wrap_equation(
         )
     )
 
+    # Residual form:
+    #
+    #   rhoA [phi_p a_p + phi_s a_s] - tau_p/r_p + tau_s/r_s = 0.
+    #
+    # The positive secondary coefficient is intentional: tau_s is defined as
+    # belt -> secondary, not secondary -> belt.
     return ClosureEquation(
         name="global_tangent_wrap",
         residual=AffineClosureScalar(
@@ -54,7 +74,7 @@ def build_global_tangent_wrap_equation(
                     )
                 ),
                 primary_torque=-1.0 / primary.effective,
-                secondary_torque=-1.0 / secondary.effective,
+                secondary_torque=1.0 / secondary.effective,
             ),
         ),
     )

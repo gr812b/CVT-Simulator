@@ -13,27 +13,34 @@ def build_wrap_endpoint_equation(
 ) -> ClosureEquation:
     """Build the closed-loop wrap-endpoint compatibility residual.
 
-    For fixed trial ``lambda_p, lambda_s`` this is affine in the closure
-    unknowns. In derivation notation, define:
+    For fixed trial ``lambda_p, lambda_s`` this row is affine in the closure
+    unknowns. Define
 
-        a_i = r_i v_b_dot + r_i' s_dot v_b.
+        a_p = r_p v_b_dot + r_p' s_dot v_b,
+        a_s = r_s v_b_dot + r_s' s_dot v_b,
+        r_j_ddot = r_j' s_ddot + r_j'' s_dot^2.
 
-    The imposed relation is:
+    With both local wrap coordinates directed from the common slack endpoint
+    to the common tight endpoint, but with the secondary local coordinate
+    opposite global belt travel,
 
-        [rhoA v_b^2 - rhoA r_p(r_p' s_ddot + r_p'' s_dot^2)
-         + rhoA a_p/lambda_p]
-        -
-        [rhoA v_b^2 - rhoA r_s(r_s' s_ddot + r_s'' s_dot^2)
-         + rhoA a_s/lambda_s]
-        -
-        [tau_p/r_p - rhoA phi_p a_p]
-        [1/(1-exp(lambda_p phi_p))
-         + exp(lambda_s phi_s)/(1-exp(lambda_s phi_s))]
+        Tbar_p = rhoA v_b^2 - rhoA r_p r_p_ddot + rhoA a_p / lambda_p,
+        Tbar_s = rhoA v_b^2 - rhoA r_s r_s_ddot - rhoA a_s / lambda_s.
+
+    The common span-tension difference is taken from the primary wrap:
+
+        D = tau_p/r_p - rhoA phi_p a_p.
+
+    Equality of the two expressions for the common slack-span tension gives
+
+        Tbar_p - Tbar_s
+          - D [1/(1 - exp(lambda_p phi_p))
+               - 1/(1 - exp(lambda_s phi_s))]
         = 0.
 
-    ``TrialContactTerms.endpoint_span_coefficient`` evaluates the final bracket
-    with ``expm1`` so it remains well-conditioned away from the explicitly
-    excluded exact-zero lambda limit.
+    ``TrialContactTerms.endpoint_span_coefficient`` evaluates the bracket with
+    ``expm1``. Exact-zero lambda remains explicitly excluded by the trial
+    context because the present analytical row contains ``1/lambda`` terms.
     """
 
     snapshot = context.snapshot
@@ -77,8 +84,10 @@ def build_wrap_endpoint_equation(
             * state.shift_speed**2
         ),
         gains=ClosureGains(
+            # The sign differs from the primary because the secondary local
+            # wrap coordinate is reversed relative to global belt travel.
             belt_acceleration=(
-                belt_linear_density
+                -belt_linear_density
                 * secondary.effective
                 * contact.secondary_inverse_lambda
             ),
@@ -90,7 +99,7 @@ def build_wrap_endpoint_equation(
         ),
     )
 
-    primary_tension_endpoint = AffineClosureScalar(
+    primary_tension_jump = AffineClosureScalar(
         bias=(
             -belt_linear_density
             * geometry.primary_wrap_angle
@@ -113,6 +122,6 @@ def build_wrap_endpoint_equation(
         residual=(
             primary_block
             - secondary_block
-            - primary_tension_endpoint.scaled(endpoint_span)
+            - primary_tension_jump.scaled(endpoint_span)
         ),
     )

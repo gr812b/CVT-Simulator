@@ -1,3 +1,7 @@
+# Replacement revision: shared-helix snapshot v3
+# This file must construct SecondaryHelixActuationState with
+# `global_shift_speed` and `helix_kinematics` only.
+
 """State-frozen inputs for repeated trial-lambda closure solves."""
 
 from __future__ import annotations
@@ -27,26 +31,12 @@ from .state import CVTDynamicState
 
 @dataclass(frozen=True, slots=True)
 class DynamicsSnapshot:
-    """
-    All quantities fixed across repeated lambda trials at one ODE state.
+    """All quantities fixed across repeated lambda trials at one ODE state.
 
-    It intentionally contains no trial lambda pair, no matrix, and no
-    intermediate road-profile data. A later trial-system object will use this
-    snapshot to assemble only the lambda-dependent pieces of the six-row
-    closure system.
-
-    At fixed state, the following are evaluated exactly once:
-
-    * pulley geometry and all shift derivatives;
-    * literal shift-translation inertia;
-    * primary and secondary affine actuator relations;
-    * secondary helix shift kinematics;
-    * engine torque;
-    * local road-load torque.
-
-    Vehicle distance and the sampled road profile are construction-time
-    intermediates only. The six-by-six rows consume the resulting
-    ``RoadLoadResult``, not the route query that produced it.
+    The snapshot intentionally contains no trial lambda pair, no assembled
+    matrix, and no intermediate road-profile sample. It captures only the
+    state-dependent quantities that rows may reuse across a full outer lambda
+    iteration.
     """
 
     state: CVTDynamicState
@@ -109,17 +99,15 @@ class DynamicsSnapshot:
 
 @dataclass(frozen=True, slots=True)
 class CVTDynamicsModel:
-    """
-    Fixed assembled components needed to create a ``DynamicsSnapshot``.
+    """Fixed components needed to create a :class:`DynamicsSnapshot`.
 
-    This is the system-level dependency container. It owns no mutable
-    simulation state and performs no lambda solve. The shared
-    ``secondary_helix_profile`` remains explicit because later rotational-row
-    assembly needs the same geometry independently of the actuator.
+    ``secondary_helix_profile`` is evaluated exactly once per snapshot. The
+    resulting :class:`HelixShiftKinematics` is passed into the secondary
+    actuator and retained in the snapshot for the secondary rotational row.
 
-    ``road_profile`` is defined in physical vehicle distance. The snapshot
-    converts the integrated secondary-shaft angle to that distance using the
-    final drive owned by ``road_load`` before sampling it.
+    The road profile is defined in physical vehicle distance. Snapshot
+    construction maps the integrated secondary-shaft angle to that distance
+    through the final drive before evaluating the local road load.
     """
 
     geometry: BeltPulleyGeometry
@@ -128,14 +116,12 @@ class CVTDynamicsModel:
     secondary_helix_profile: HelixProfile
 
     inertias: ResolvedInertias
-    sheave_half_angle: float
     engine: FullThrottleTorqueCurve
     road_load: RoadLoadModel
     road_profile: RoadProfile = ConstantGradeRoadProfile()
 
     def __post_init__(self) -> None:
-        # The closed secondary reference is x_s = 0, hence q = -x_s = 0.
-        # Reject a model whose helix cannot represent that reference point.
+        # Closed secondary reference: x_s = 0, so q = -x_s = 0.
         if not (
             self.secondary_helix_profile.opening_travel_min
             <= 0.0
@@ -154,24 +140,25 @@ class CVTDynamicsModel:
         *,
         state: CVTDynamicState,
     ) -> DynamicsSnapshot:
-        """
-        Evaluate every state-dependent, lambda-independent quantity once.
-
-        A root solver should call this once per ODE RHS evaluation, then reuse
-        the result for every trial ``(lambda_p, lambda_s)`` pair.
-        """
+        """Evaluate every state-dependent, lambda-independent quantity once."""
 
         geometry = self.geometry.evaluate(state.shift_position)
 
         primary_coordinate = geometry.primary_axial_coordinate
         secondary_coordinate = geometry.secondary_axial_coordinate
 
+        # Evaluate shared helix geometry before secondary actuation. The force
+        # law and the future secondary rotational row must use this same object.
+        secondary_helix = self.secondary_helix_profile.evaluate_shift_kinematics(
+            opening_travel=-secondary_coordinate.value,
+            d_opening_ds=-secondary_coordinate.d_value_ds,
+            d2_opening_ds2=-secondary_coordinate.d2_value_ds2,
+        )
+
         primary_actuation = self.primary_actuator.evaluate(
             PulleyActuationState(
                 axial_position=primary_coordinate.value,
-                axial_speed=(
-                    primary_coordinate.d_value_ds * state.shift_speed
-                ),
+                axial_speed=primary_coordinate.d_value_ds * state.shift_speed,
                 shaft_speed=state.primary_angular_speed,
             )
         )
@@ -184,17 +171,8 @@ class CVTDynamicsModel:
                 ),
                 shaft_speed=state.secondary_angular_speed,
                 global_shift_speed=state.shift_speed,
-                local_axial_coordinate_slope=secondary_coordinate.d_value_ds,
-                local_axial_coordinate_curvature=(
-                    secondary_coordinate.d2_value_ds2
-                ),
+                helix_kinematics=secondary_helix,
             )
-        )
-
-        secondary_helix = self.secondary_helix_profile.evaluate_shift_kinematics(
-            opening_travel=-secondary_coordinate.value,
-            d_opening_ds=-secondary_coordinate.d_value_ds,
-            d2_opening_ds2=-secondary_coordinate.d2_value_ds2,
         )
 
         vehicle_distance = (
@@ -232,7 +210,7 @@ class CVTDynamicsModel:
 
 
 def _validate_snapshot(snapshot: DynamicsSnapshot) -> None:
-    """Fail early if a component ever produces a non-finite snapshot value."""
+    """Fail early if a component produces a non-finite snapshot value."""
 
     scalar_values = {
         "engine_torque": snapshot.engine_torque,

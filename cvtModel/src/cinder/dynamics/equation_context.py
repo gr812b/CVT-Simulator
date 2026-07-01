@@ -109,13 +109,18 @@ def _build_trial_contact_terms(
     primary_exponent = lambda_primary * primary_wrap
     secondary_exponent = lambda_secondary * secondary_wrap
 
-    # 1 / (1 - exp(x)) = -1 / expm1(x)
-    # exp(x) / (1 - exp(x)) = -1 / expm1(x) - 1
-    # Writing both with expm1 avoids cancellation near x = 0.
+    # Endpoint compatibility uses the common slack-span tension:
+    #
+    #   1 / (1 - exp(x_p)) - 1 / (1 - exp(x_s))
+    #     = -1 / expm1(x_p) + 1 / expm1(x_s).
+    #
+    # The secondary term has the opposite sign because its local wrap
+    # coordinate is reversed relative to global belt travel. Using expm1
+    # avoids avoidable cancellation away from the explicitly excluded
+    # lambda = 0 limit.
     endpoint_span_coefficient = (
         -1.0 / expm1(primary_exponent)
-        - 1.0 / expm1(secondary_exponent)
-        - 1.0
+        + 1.0 / expm1(secondary_exponent)
     )
 
     return TrialContactTerms(
