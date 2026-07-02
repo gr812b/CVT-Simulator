@@ -56,11 +56,11 @@ _BOUND_ACTIVITY_ABSOLUTE_TOLERANCE: Final[float] = 1.0e-10
 
 @dataclass(frozen=True, slots=True)
 class FrictionUtilizationBounds:
-    """One-sided static-utilization intervals for the two lambda variables.
+    """Bounded static-utilization intervals for the two lambda variables.
 
-    Each interval must remain entirely positive or entirely negative until the
-    analytical lambda-to-zero limiting forms are implemented. The current
-    ``forward_drive`` constructor creates the familiar positive static box.
+    The normal-resultant 8x8 closure uses regular lambda-to-zero wrap maps,
+    so an interval may include zero. ``forward_drive`` still defaults to the
+    familiar non-negative static box.
     """
 
     primary_lower: float
@@ -69,12 +69,12 @@ class FrictionUtilizationBounds:
     secondary_upper: float
 
     def __post_init__(self) -> None:
-        _validate_one_sided_interval(
+        _validate_interval(
             name="primary lambda bounds",
             lower=self.primary_lower,
             upper=self.primary_upper,
         )
-        _validate_one_sided_interval(
+        _validate_interval(
             name="secondary lambda bounds",
             lower=self.secondary_lower,
             upper=self.secondary_upper,
@@ -86,15 +86,19 @@ class FrictionUtilizationBounds:
         *,
         primary_static_limit: float,
         secondary_static_limit: float,
-        minimum_utilization: float = 1.0e-3,
+        minimum_utilization: float = 0.0,
     ) -> "FrictionUtilizationBounds":
-        """Build the present positive static box away from lambda = 0."""
+        """Build the non-negative forward-drive static-utilization box."""
 
-        _require_finite_positive(
+        _require_finite_nonnegative(
             primary_static_limit=primary_static_limit,
             secondary_static_limit=secondary_static_limit,
             minimum_utilization=minimum_utilization,
         )
+        if minimum_utilization >= primary_static_limit:
+            raise ValueError("minimum_utilization must be below primary_static_limit.")
+        if minimum_utilization >= secondary_static_limit:
+            raise ValueError("minimum_utilization must be below secondary_static_limit.")
         return cls(
             primary_lower=minimum_utilization,
             primary_upper=primary_static_limit,
@@ -662,15 +666,19 @@ def _active_bounds(
     )
 
 
-def _validate_one_sided_interval(*, name: str, lower: float, upper: float) -> None:
+def _validate_interval(*, name: str, lower: float, upper: float) -> None:
+    """Validate one bounded scalar interval; zero is now admissible."""
+
     _require_finite(lower=lower, upper=upper)
     if not lower < upper:
         raise ValueError(f"{name} must satisfy lower < upper.")
-    if lower <= 0.0 <= upper:
-        raise ValueError(
-            f"{name} must remain strictly on one side of zero while the current "
-            "closure rows contain 1/lambda terms."
-        )
+
+
+def _require_finite_nonnegative(**values: float) -> None:
+    _require_finite(**values)
+    for name, value in values.items():
+        if value < 0.0:
+            raise ValueError(f"{name} must be non-negative.")
 
 
 def _require_finite_positive(**values: float) -> None:

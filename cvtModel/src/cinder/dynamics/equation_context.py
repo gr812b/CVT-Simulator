@@ -1,63 +1,71 @@
-"""State-fixed and lambda-trial context for CINDER's current closure rows."""
+"""State-fixed and lambda-trial quantities for CINDER's 8x8 closure rows."""
 
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from math import expm1, isfinite, tan
+from math import exp, expm1, isfinite
 
 from .snapshot import DynamicsSnapshot
 from .state import TrialFrictionUtilization
 
+_SMALL_ARGUMENT = 1.0e-4
+
 
 @dataclass(frozen=True, slots=True)
 class TrialContactTerms:
-    """Trial-lambda quantities shared by the two lambda-dependent rows.
+    """Regular fixed-lambda factors shared by traction and tension-loop rows.
 
-    The values in this object are fixed for one pair ``(lambda_p, lambda_s)``
-    and one state snapshot. They intentionally contain no solved closure
-    unknowns. Caching them here means the shift row and closed-loop endpoint
-    row use the exact same trial contact factors.
+    The normal-resultant formulation deliberately carries no ``1 / lambda``
+    factors. For each wrap, it stores the regular functions
 
-    Exact zero utilization is excluded for this first matrix layer because the
-    current analytical equations contain explicit ``1 / lambda`` factors. The
-    later lambda-root layer will decide how to treat the removable/degenerate
-    zero-traction limit without hiding it inside a row builder.
+        Phi_-(z) = [1 - exp(-z)] / z,
+        Psi_-(z) = [z - 1 + exp(-z)] / z^2,
+
+        Phi_+(z) = [exp(z) - 1] / z,
+        Psi_+(z) = [exp(z) - 1 - z] / z^2,
+
+    evaluated continuously at ``z = lambda phi = 0``. This makes a clamped,
+    zero-traction state well-defined:
+
+        lambda = 0, tau = 0, N > 0.
     """
 
-    primary_inverse_lambda: float
-    secondary_inverse_lambda: float
+    primary_lambda: float
+    secondary_lambda: float
 
-    primary_shift_torque_coefficient: float
-    secondary_shift_torque_coefficient: float
+    primary_exp_neg: float
+    secondary_exp_pos: float
 
-    endpoint_span_coefficient: float
+    primary_phi_minus: float
+    primary_psi_minus: float
+    secondary_phi_plus: float
+    secondary_psi_plus: float
 
     def __post_init__(self) -> None:
         for name, value in (
-            ("primary_inverse_lambda", self.primary_inverse_lambda),
-            ("secondary_inverse_lambda", self.secondary_inverse_lambda),
-            (
-                "primary_shift_torque_coefficient",
-                self.primary_shift_torque_coefficient,
-            ),
-            (
-                "secondary_shift_torque_coefficient",
-                self.secondary_shift_torque_coefficient,
-            ),
-            ("endpoint_span_coefficient", self.endpoint_span_coefficient),
+            ("primary_lambda", self.primary_lambda),
+            ("secondary_lambda", self.secondary_lambda),
+            ("primary_exp_neg", self.primary_exp_neg),
+            ("secondary_exp_pos", self.secondary_exp_pos),
+            ("primary_phi_minus", self.primary_phi_minus),
+            ("primary_psi_minus", self.primary_psi_minus),
+            ("secondary_phi_plus", self.secondary_phi_plus),
+            ("secondary_psi_plus", self.secondary_psi_plus),
         ):
             if not isfinite(value):
                 raise ValueError(f"{name} must be finite.")
 
+        for name, value in (
+            ("primary_phi_minus", self.primary_phi_minus),
+            ("secondary_phi_plus", self.secondary_phi_plus),
+        ):
+            if value == 0.0:
+                raise ValueError(f"{name} must be non-zero.")
+
 
 @dataclass(frozen=True, slots=True)
 class TrialEquationContext:
-    """Everything needed by one trial-lambda evaluation of rows 1 and 6.
-
-    ``DynamicsSnapshot`` contains all state-fixed mechanics. This context adds
-    only the trial friction utilizations and the contact terms derived from
-    them. The four rows that do not depend on lambda never need this object.
-    """
+    """Everything fixed for one trial ``(lambda_p, lambda_s)`` pair."""
 
     snapshot: DynamicsSnapshot
     friction_utilization: TrialFrictionUtilization
@@ -86,51 +94,53 @@ def _build_trial_contact_terms(
     snapshot: DynamicsSnapshot,
     friction_utilization: TrialFrictionUtilization,
 ) -> TrialContactTerms:
-    """Build stable shared contact factors for one lambda pair."""
+    """Build finite wrap-map factors for one lambda pair."""
 
     lambda_primary = friction_utilization.primary_lambda
     lambda_secondary = friction_utilization.secondary_lambda
 
-    if lambda_primary == 0.0 or lambda_secondary == 0.0:
-        raise ValueError(
-            "Trial lambda values must be non-zero while the closure rows "
-            "contain explicit 1/lambda factors."
-        )
-
-    primary_radius = snapshot.geometry.primary.effective
-    secondary_radius = snapshot.geometry.secondary.effective
-    primary_wrap = snapshot.geometry.primary_wrap_angle
-    secondary_wrap = snapshot.geometry.secondary_wrap_angle
-
-    tangent = tan(snapshot.sheave_half_angle)
-    if not isfinite(tangent) or tangent <= 0.0:
-        raise ValueError("sheave_half_angle must produce a positive finite tangent.")
-
-    primary_exponent = lambda_primary * primary_wrap
-    secondary_exponent = lambda_secondary * secondary_wrap
-
-    # Endpoint compatibility uses the common slack-span tension:
-    #
-    #   1 / (1 - exp(x_p)) - 1 / (1 - exp(x_s))
-    #     = -1 / expm1(x_p) + 1 / expm1(x_s).
-    #
-    # The secondary term has the opposite sign because its local wrap
-    # coordinate is reversed relative to global belt travel. Using expm1
-    # avoids avoidable cancellation away from the explicitly excluded
-    # lambda = 0 limit.
-    endpoint_span_coefficient = (
-        -1.0 / expm1(primary_exponent)
-        + 1.0 / expm1(secondary_exponent)
-    )
+    z_primary = lambda_primary * snapshot.geometry.primary_wrap_angle
+    z_secondary = lambda_secondary * snapshot.geometry.secondary_wrap_angle
 
     return TrialContactTerms(
-        primary_inverse_lambda=1.0 / lambda_primary,
-        secondary_inverse_lambda=1.0 / lambda_secondary,
-        primary_shift_torque_coefficient=(
-            1.0 / (2.0 * lambda_primary * primary_radius * tangent)
-        ),
-        secondary_shift_torque_coefficient=(
-            1.0 / (2.0 * lambda_secondary * secondary_radius * tangent)
-        ),
-        endpoint_span_coefficient=endpoint_span_coefficient,
+        primary_lambda=lambda_primary,
+        secondary_lambda=lambda_secondary,
+        primary_exp_neg=exp(-z_primary),
+        secondary_exp_pos=exp(z_secondary),
+        primary_phi_minus=_phi_minus(z_primary),
+        primary_psi_minus=_psi_minus(z_primary),
+        secondary_phi_plus=_phi_plus(z_secondary),
+        secondary_psi_plus=_psi_plus(z_secondary),
     )
+
+
+def _phi_minus(z: float) -> float:
+    """Return ``[1 - exp(-z)] / z`` with its continuous zero limit."""
+
+    if abs(z) < _SMALL_ARGUMENT:
+        return 1.0 - z / 2.0 + z**2 / 6.0 - z**3 / 24.0 + z**4 / 120.0
+    return -expm1(-z) / z
+
+
+def _psi_minus(z: float) -> float:
+    """Return ``[z - 1 + exp(-z)] / z^2`` with its zero limit."""
+
+    if abs(z) < _SMALL_ARGUMENT:
+        return 0.5 - z / 6.0 + z**2 / 24.0 - z**3 / 120.0 + z**4 / 720.0
+    return (z + expm1(-z)) / z**2
+
+
+def _phi_plus(z: float) -> float:
+    """Return ``[exp(z) - 1] / z`` with its continuous zero limit."""
+
+    if abs(z) < _SMALL_ARGUMENT:
+        return 1.0 + z / 2.0 + z**2 / 6.0 + z**3 / 24.0 + z**4 / 120.0
+    return expm1(z) / z
+
+
+def _psi_plus(z: float) -> float:
+    """Return ``[exp(z) - 1 - z] / z^2`` with its zero limit."""
+
+    if abs(z) < _SMALL_ARGUMENT:
+        return 0.5 + z / 6.0 + z**2 / 24.0 + z**3 / 120.0 + z**4 / 720.0
+    return (expm1(z) - z) / z**2

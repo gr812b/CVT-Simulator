@@ -18,7 +18,7 @@ from cinder.actuation.forces import (
 )
 from cinder.engine import FullThrottleTorqueCurve
 from cinder.geometry import BeltPulleyGeometry, GeometryPosition
-from cinder.inertia import ResolvedInertias, ShiftTranslationInertia
+from cinder.inertia import AxialTranslationInertias, ResolvedInertias
 from cinder.profiles import HelixProfile, HelixShiftKinematics
 from cinder.vehicle import (
     ConstantGradeRoadProfile,
@@ -43,7 +43,7 @@ class DynamicsSnapshot:
     state: CVTDynamicState
 
     geometry: GeometryPosition
-    shift_translation_inertia: ShiftTranslationInertia
+    axial_translation_inertias: AxialTranslationInertias
 
     primary_actuation: PulleyActuationResult
     secondary_actuation: PulleyActuationResult
@@ -209,7 +209,7 @@ class CVTDynamicsModel:
         snapshot = DynamicsSnapshot(
             state=state,
             geometry=geometry,
-            shift_translation_inertia=self.inertias.shift.evaluate(
+            axial_translation_inertias=self.inertias.axial_translation.evaluate(
                 primary_axial_coordinate=primary_coordinate,
                 secondary_axial_coordinate=secondary_coordinate,
                 belt_axial_coordinate=geometry.belt_axial_coordinate,
@@ -391,9 +391,23 @@ def _validate_snapshot(snapshot: DynamicsSnapshot) -> None:
         "secondary_absolute_rotational_inertia": (
             snapshot.secondary_absolute_rotational_inertia
         ),
-        "shift_translation_mass": snapshot.shift_translation_inertia.mass,
-        "shift_translation_curvature_coefficient": (
-            snapshot.shift_translation_inertia.coordinate_curvature_coefficient
+        "primary_axial_mass": snapshot.axial_translation_inertias.primary.mass,
+        "secondary_axial_mass": snapshot.axial_translation_inertias.secondary.mass,
+        "belt_axial_mass": snapshot.axial_translation_inertias.belt.mass,
+        "primary_axial_reflected_mass": (
+            snapshot.axial_translation_inertias.primary.reflected_mass
+        ),
+        "secondary_axial_reflected_mass": (
+            snapshot.axial_translation_inertias.secondary.reflected_mass
+        ),
+        "belt_axial_reflected_mass": (
+            snapshot.axial_translation_inertias.belt.reflected_mass
+        ),
+        "axial_generalized_mass": (
+            snapshot.axial_translation_inertias.generalized_mass
+        ),
+        "axial_generalized_curvature_coefficient": (
+            snapshot.axial_translation_inertias.generalized_curvature_coefficient
         ),
         "dtheta_ds": snapshot.secondary_helix.dtheta_ds,
         "d2theta_ds2": snapshot.secondary_helix.d2theta_ds2,

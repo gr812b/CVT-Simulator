@@ -13,8 +13,8 @@ from .secondary import (
     resolve_secondary_inertia,
 )
 from .shift import (
-    ShiftTranslationMasses,
-    resolve_shift_translation_masses,
+    AxialTranslationMasses,
+    resolve_axial_translation_masses,
 )
 from .vehicle import VehicleInertia
 
@@ -33,15 +33,15 @@ class ResolvedInertias:
     """
     Fixed quantities ready for the dynamic equations.
 
-    ``shift`` stores physical translation masses only. Its generalized mass
-    and coordinate-curvature coefficient are evaluated from live geometry
-    on each RHS call.
+    ``axial_translation`` stores literal primary, secondary, and belt
+    translation masses. Their coordinate mappings are evaluated from live
+    geometry on each RHS call.
     """
 
     primary: PrimaryInertia
     secondary: ResolvedSecondaryInertia
     belt: ResolvedBeltMass
-    shift: ShiftTranslationMasses
+    axial_translation: AxialTranslationMasses
 
 
 def resolve_inertias(
@@ -67,7 +67,7 @@ def resolve_inertias(
             final_drive=final_drive,
         ),
         belt=belt,
-        shift=resolve_shift_translation_masses(
+        axial_translation=resolve_axial_translation_masses(
             primary_moving_sheave_mass=(drivetrain.primary.moving_sheave_mass),
             secondary_moving_sheave_mass=(drivetrain.secondary.moving_sheave_mass),
             belt_mass=belt.mass,
