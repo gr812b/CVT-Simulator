@@ -21,14 +21,18 @@ class SecondaryHelixForceSpec:
     force law therefore owns only the force-model parameters, not a separate
     ``HelixProfile`` reference.
 
-    ``movable_sheave_rotational_inertia`` remains here because the torque
-    reaching the helix must first supply movable-sheave angular acceleration
-    before it can create axial clamp force.
+    ``movable_sheave_rotational_inertia`` is retained as an optional legacy
+    consistency value for standalone use. In a ``CVTDynamicsModel`` snapshot,
+    the authoritative value is supplied from ``ResolvedSecondaryInertia`` via
+    ``SecondaryHelixActuationState`` so the helix force and secondary rotation
+    row use one shared movable-sheave inertia.
     """
 
     torsional_stiffness: float
     initial_twist: float
-    movable_sheave_rotational_inertia: float
+    movable_sheave_rotational_inertia: float | None = None
+    # TODO: replace the present constant face-torque split with the derived
+    # effective/contact-dependent split when that contact model is introduced.
     movable_sheave_torque_fraction: float = 0.5
 
     def __post_init__(self) -> None:
@@ -37,10 +41,12 @@ class SecondaryHelixForceSpec:
             self.torsional_stiffness,
         )
         _require_finite("initial_twist", self.initial_twist)
-        _require_nonnegative(
-            "movable_sheave_rotational_inertia",
-            self.movable_sheave_rotational_inertia,
-        )
+
+        if self.movable_sheave_rotational_inertia is not None:
+            _require_nonnegative(
+                "movable_sheave_rotational_inertia",
+                self.movable_sheave_rotational_inertia,
+            )
 
         if (
             not isfinite(self.movable_sheave_torque_fraction)
@@ -68,10 +74,15 @@ class SecondaryHelixActuationState(PulleyActuationState):
     the snapshot for later secondary-rotational-row assembly, guaranteeing
     that the force law and rotational row use identical ``theta``, ``H``, and
     ``H'`` values.
+
+    In a full dynamics snapshot, ``movable_sheave_rotational_inertia`` is
+    supplied from the central secondary-inertia definition. It remains optional
+    only to preserve direct standalone evaluation with older force specs.
     """
 
     global_shift_speed: float
     helix_kinematics: HelixShiftKinematics
+    movable_sheave_rotational_inertia: float | None = None
 
     def __post_init__(self) -> None:
         PulleyActuationState.__post_init__(self)
@@ -80,6 +91,12 @@ class SecondaryHelixActuationState(PulleyActuationState):
         if not isinstance(self.helix_kinematics, HelixShiftKinematics):
             raise TypeError(
                 "helix_kinematics must be a HelixShiftKinematics instance."
+            )
+
+        if self.movable_sheave_rotational_inertia is not None:
+            _require_nonnegative(
+                "movable_sheave_rotational_inertia",
+                self.movable_sheave_rotational_inertia,
             )
 
         expected_opening_travel = -self.axial_position
@@ -150,7 +167,10 @@ class SecondaryHelixForce:
         torsional_spring_torque = self._spec.torsional_stiffness * (
             self._spec.initial_twist + kinematics.theta
         )
-        movable_sheave_inertia = self._spec.movable_sheave_rotational_inertia
+        movable_sheave_inertia = _resolve_movable_sheave_inertia(
+            state=state,
+            spec=self._spec,
+        )
 
         # tau_M_to_helix = spring + kappa_M tau_s - I_M alpha_M,
         # alpha_M = alpha_s - H' s_dot^2 - H s_ddot.
@@ -180,6 +200,25 @@ class SecondaryHelixForce:
                 ),
             ),
         )
+
+
+def _resolve_movable_sheave_inertia(
+    *,
+    state: SecondaryHelixActuationState,
+    spec: SecondaryHelixForceSpec,
+) -> float:
+    """Prefer the snapshot's central inertia, with a legacy standalone fallback."""
+
+    if state.movable_sheave_rotational_inertia is not None:
+        return state.movable_sheave_rotational_inertia
+
+    if spec.movable_sheave_rotational_inertia is not None:
+        return spec.movable_sheave_rotational_inertia
+
+    raise ValueError(
+        "movable sheave rotational inertia must be supplied by the dynamics "
+        "snapshot or SecondaryHelixForceSpec."
+    )
 
 
 def _require_finite(name: str, value: float) -> None:

@@ -1,19 +1,20 @@
-# Replacement revision: shared-helix snapshot v3
-# This file must construct SecondaryHelixActuationState with
-# `global_shift_speed` and `helix_kinematics` only.
-
 """State-frozen inputs for repeated trial-lambda closure solves."""
 
 from __future__ import annotations
 
 from dataclasses import dataclass
-from math import isfinite
+from math import isclose, isfinite
 
 from cinder.actuation import (
     PulleyActuationResult,
     PulleyActuationState,
     PulleyActuator,
     SecondaryHelixActuationState,
+)
+from cinder.actuation.forces import (
+    AxialSpringForce,
+    CentrifugalRampForce,
+    SecondaryHelixForce,
 )
 from cinder.engine import FullThrottleTorqueCurve
 from cinder.geometry import BeltPulleyGeometry, GeometryPosition
@@ -108,6 +109,10 @@ class CVTDynamicsModel:
     The road profile is defined in physical vehicle distance. Snapshot
     construction maps the integrated secondary-shaft angle to that distance
     through the final drive before evaluating the local road load.
+
+    Construction validates intersections between component domains and the
+    geometry's reachable shift range. This catches profile-range, spring-
+    compression, and shared-inertia mismatches before the ODE is evaluated.
     """
 
     geometry: BeltPulleyGeometry
@@ -121,19 +126,29 @@ class CVTDynamicsModel:
     road_profile: RoadProfile = ConstantGradeRoadProfile()
 
     def __post_init__(self) -> None:
-        # Closed secondary reference: x_s = 0, so q = -x_s = 0.
-        if not (
-            self.secondary_helix_profile.opening_travel_min
-            <= 0.0
-            <= self.secondary_helix_profile.opening_travel_max
-        ):
-            raise ValueError(
-                "secondary_helix_profile must include q=0 at the closed "
-                "secondary reference."
-            )
-
         if not isinstance(self.road_profile, RoadProfile):
             raise TypeError("road_profile must implement RoadProfile.sample().")
+
+        operating_positions = _operating_geometry_positions(self.geometry)
+        _validate_secondary_helix_domain(
+            helix_profile=self.secondary_helix_profile,
+            positions=operating_positions,
+        )
+        _validate_primary_ramp_domain(
+            actuator=self.primary_actuator,
+            positions=operating_positions,
+        )
+        _validate_compression_spring_domains(
+            primary_actuator=self.primary_actuator,
+            secondary_actuator=self.secondary_actuator,
+            positions=operating_positions,
+        )
+        _validate_shared_movable_sheave_inertia(
+            secondary_actuator=self.secondary_actuator,
+            central_inertia=(
+                self.inertias.secondary.movable_sheave_rotational_inertia
+            ),
+        )
 
     def snapshot(
         self,
@@ -148,7 +163,7 @@ class CVTDynamicsModel:
         secondary_coordinate = geometry.secondary_axial_coordinate
 
         # Evaluate shared helix geometry before secondary actuation. The force
-        # law and the future secondary rotational row must use this same object.
+        # law and the secondary rotational row use this same immutable object.
         secondary_helix = self.secondary_helix_profile.evaluate_shift_kinematics(
             opening_travel=-secondary_coordinate.value,
             d_opening_ds=-secondary_coordinate.d_value_ds,
@@ -172,6 +187,9 @@ class CVTDynamicsModel:
                 shaft_speed=state.secondary_angular_speed,
                 global_shift_speed=state.shift_speed,
                 helix_kinematics=secondary_helix,
+                movable_sheave_rotational_inertia=(
+                    self.inertias.secondary.movable_sheave_rotational_inertia
+                ),
             )
         )
 
@@ -207,6 +225,152 @@ class CVTDynamicsModel:
 
         _validate_snapshot(snapshot)
         return snapshot
+
+
+def _operating_geometry_positions(
+    geometry: BeltPulleyGeometry,
+) -> tuple[GeometryPosition, ...]:
+    """Evaluate the reachable shift endpoints plus the deadzone boundary."""
+
+    spec = geometry.spec
+    shifts = tuple(sorted({0.0, spec.deadzone_shift, spec.max_shift}))
+    return tuple(geometry.evaluate(shift) for shift in shifts)
+
+
+def _validate_secondary_helix_domain(
+    *,
+    helix_profile: HelixProfile,
+    positions: tuple[GeometryPosition, ...],
+) -> None:
+    """Ensure the reachable secondary opening travel lies on the helix profile."""
+
+    opening_travels = tuple(
+        -position.secondary_axial_coordinate.value for position in positions
+    )
+    minimum_opening = min(opening_travels)
+    maximum_opening = max(opening_travels)
+
+    if (
+        minimum_opening < helix_profile.opening_travel_min
+        or maximum_opening > helix_profile.opening_travel_max
+    ):
+        raise ValueError(
+            "secondary_helix_profile does not cover the geometry-reachable "
+            f"opening-travel interval [{minimum_opening}, {maximum_opening}]."
+        )
+
+
+def _validate_primary_ramp_domain(
+    *,
+    actuator: PulleyActuator,
+    positions: tuple[GeometryPosition, ...],
+) -> None:
+    """Ensure any centrifugal primary-ramp profile covers the shift interval."""
+
+    primary_positions = tuple(
+        position.primary_axial_coordinate.value for position in positions
+    )
+    minimum_position = min(primary_positions)
+    maximum_position = max(primary_positions)
+
+    for force_law in actuator.force_laws:
+        if not isinstance(force_law, CentrifugalRampForce):
+            continue
+
+        profile = force_law.spec.radial_displacement_profile
+        if minimum_position < profile.x_min or maximum_position > profile.x_max:
+            raise ValueError(
+                "primary centrifugal-ramp profile does not cover the "
+                f"geometry-reachable axial interval "
+                f"[{minimum_position}, {maximum_position}]."
+            )
+
+        for axial_position in primary_positions:
+            flyweight_radius = (
+                force_law.spec.radius_at_zero_position
+                + profile.evaluate(axial_position).value
+            )
+            if flyweight_radius <= 0.0:
+                raise ValueError(
+                    "primary centrifugal-ramp profile gives a non-positive "
+                    "flyweight radius in the reachable shift range."
+                )
+
+
+def _validate_compression_spring_domains(
+    *,
+    primary_actuator: PulleyActuator,
+    secondary_actuator: PulleyActuator,
+    positions: tuple[GeometryPosition, ...],
+) -> None:
+    """Reject a compression spring that would be evaluated in tension."""
+
+    _validate_actuator_springs(
+        name="primary",
+        actuator=primary_actuator,
+        axial_positions=tuple(
+            position.primary_axial_coordinate.value for position in positions
+        ),
+    )
+    _validate_actuator_springs(
+        name="secondary",
+        actuator=secondary_actuator,
+        axial_positions=tuple(
+            position.secondary_axial_coordinate.value for position in positions
+        ),
+    )
+
+
+def _validate_actuator_springs(
+    *,
+    name: str,
+    actuator: PulleyActuator,
+    axial_positions: tuple[float, ...],
+) -> None:
+    for force_law in actuator.force_laws:
+        if not isinstance(force_law, AxialSpringForce):
+            continue
+
+        spec = force_law.spec
+        compressions = tuple(
+            spec.initial_compression
+            + spec.compression_per_axial_position * axial_position
+            for axial_position in axial_positions
+        )
+        minimum_compression = min(compressions)
+
+        if minimum_compression < 0.0:
+            raise ValueError(
+                f"{name} compression spring reaches negative compression "
+                "within the geometry-reachable shift range."
+            )
+
+
+def _validate_shared_movable_sheave_inertia(
+    *,
+    secondary_actuator: PulleyActuator,
+    central_inertia: float,
+) -> None:
+    """Reject legacy helix-spec inertia values that disagree with central I_M."""
+
+    for force_law in secondary_actuator.force_laws:
+        if not isinstance(force_law, SecondaryHelixForce):
+            continue
+
+        configured_inertia = force_law.spec.movable_sheave_rotational_inertia
+        if configured_inertia is None:
+            continue
+
+        if not isclose(
+            configured_inertia,
+            central_inertia,
+            rel_tol=1e-12,
+            abs_tol=1e-12,
+        ):
+            raise ValueError(
+                "SecondaryHelixForceSpec movable_sheave_rotational_inertia "
+                "must match the central SecondaryInertia value."
+            )
 
 
 def _validate_snapshot(snapshot: DynamicsSnapshot) -> None:

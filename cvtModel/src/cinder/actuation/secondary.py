@@ -21,9 +21,11 @@ class TorqueReactiveSecondarySpec:
     Helix geometry is intentionally not stored here. ``CVTDynamicsModel`` owns
     the one physical ``HelixProfile``, evaluates it once per snapshot, and
     supplies that evaluated kinematics object to the secondary helix force.
-    The movable sheave inertia remains in ``SecondaryHelixForceSpec`` because
-    it affects the torque reaching the helix before that torque is converted to
-    clamp force.
+    The authoritative movable-sheave inertia belongs to ``SecondaryInertia``.
+    ``CVTDynamicsModel.snapshot()`` passes that one value into the helix force
+    state so the helix relation and secondary rotational row stay synchronized.
+    ``SecondaryHelixForceSpec`` may retain a legacy consistency value, but it
+    is not the source used by a full dynamics snapshot.
     """
 
     axial_spring: AxialSpringForceSpec
