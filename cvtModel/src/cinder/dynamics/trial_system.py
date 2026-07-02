@@ -1,4 +1,4 @@
-"""Generic state- and lambda-agnostic six-by-six affine closure solve."""
+"""Generic state- and lambda-agnostic affine closure solve."""
 
 from __future__ import annotations
 
@@ -11,26 +11,26 @@ from numpy.typing import NDArray
 
 from cinder.closure import CLOSURE_UNKNOWN_COUNT, ClosureEquation, ClosureUnknowns
 
-from .result import ClosureEquationResidual, TrialSixBySixResult
+from .result import ClosureEquationResidual, TrialClosureResult
 
 
-class TrialSixBySixSolveError(RuntimeError):
-    """Raised when a trial six-by-six system cannot be solved robustly."""
+class TrialClosureSolveError(RuntimeError):
+    """Raised when a trial closure system cannot be solved robustly."""
 
 
-class TrialSixBySixConditionError(TrialSixBySixSolveError):
+class TrialClosureConditionError(TrialClosureSolveError):
     """Raised when an optional matrix-condition threshold is exceeded."""
 
 
 @dataclass(frozen=True, slots=True)
-class TrialSixBySixSystem:
-    """One fully assembled six-equation affine closure system.
+class TrialClosureSystem:
+    """One fully assembled affine closure system.
 
     This class deliberately knows nothing about CVT geometry, wrap mechanics,
-    snapshots, or trial friction utilizations. A later CVT-specific builder
-    will construct its six :class:`~cinder.closure.ClosureEquation` objects
-    from one frozen dynamics snapshot and one trial ``(lambda_p, lambda_s)``
-    pair.
+    snapshots, or trial friction utilizations. A CVT-specific builder supplies
+    one :class:`~cinder.closure.ClosureEquation` for every canonical closure
+    unknown from one frozen dynamics snapshot and one trial
+    ``(lambda_p, lambda_s)`` pair.
 
     Every equation is written in residual form:
 
@@ -48,26 +48,26 @@ class TrialSixBySixSystem:
     def __post_init__(self) -> None:
         if len(self.equations) != CLOSURE_UNKNOWN_COUNT:
             raise ValueError(
-                "TrialSixBySixSystem requires exactly "
+                "TrialClosureSystem requires exactly "
                 f"{CLOSURE_UNKNOWN_COUNT} equations, got {len(self.equations)}."
             )
 
         for equation in self.equations:
             if not isinstance(equation, ClosureEquation):
                 raise TypeError(
-                    "TrialSixBySixSystem.equations must contain only "
+                    "TrialClosureSystem.equations must contain only "
                     "ClosureEquation objects."
                 )
 
         equation_names = tuple(equation.name for equation in self.equations)
         if len(set(equation_names)) != len(equation_names):
-            raise ValueError("TrialSixBySixSystem equation names must be unique.")
+            raise ValueError("TrialClosureSystem equation names must be unique.")
 
     @classmethod
     def from_equations(
         cls,
         equations: Iterable[ClosureEquation],
-    ) -> "TrialSixBySixSystem":
+    ) -> "TrialClosureSystem":
         """Construct a system from any iterable while freezing row order."""
 
         return cls(equations=tuple(equations))
@@ -95,6 +95,19 @@ class TrialSixBySixSystem:
             dtype=float,
         )
 
+        expected_matrix_shape = (CLOSURE_UNKNOWN_COUNT, CLOSURE_UNKNOWN_COUNT)
+        expected_vector_shape = (CLOSURE_UNKNOWN_COUNT,)
+        if matrix.shape != expected_matrix_shape:
+            raise ValueError(
+                "closure matrix must have shape "
+                f"{expected_matrix_shape}, got {matrix.shape}."
+            )
+        if right_hand_side.shape != expected_vector_shape:
+            raise ValueError(
+                "closure right-hand side must have shape "
+                f"{expected_vector_shape}, got {right_hand_side.shape}."
+            )
+
         _require_finite_array(matrix, name="closure matrix")
         _require_finite_array(right_hand_side, name="closure right-hand side")
 
@@ -106,7 +119,7 @@ class TrialSixBySixSystem:
         self,
         *,
         maximum_condition_number: float | None = None,
-    ) -> TrialSixBySixResult:
+    ) -> TrialClosureResult:
         """Solve this system and return the full named diagnostic result.
 
         ``maximum_condition_number`` is optional because early row-by-row work
@@ -125,8 +138,8 @@ class TrialSixBySixSystem:
             not isfinite(condition_number)
             or condition_number > maximum_condition_number
         ):
-            raise TrialSixBySixConditionError(
-                "Trial six-by-six matrix condition number "
+            raise TrialClosureConditionError(
+                "Trial closure matrix condition number "
                 f"{condition_number:.6g} exceeds configured limit "
                 f"{maximum_condition_number:.6g}."
             )
@@ -134,8 +147,8 @@ class TrialSixBySixSystem:
         try:
             solution_vector = np.linalg.solve(matrix, right_hand_side)
         except np.linalg.LinAlgError as error:
-            raise TrialSixBySixSolveError(
-                "Trial six-by-six closure matrix is singular and cannot be solved."
+            raise TrialClosureSolveError(
+                "Trial closure matrix is singular and cannot be solved."
             ) from error
 
         _require_finite_array(solution_vector, name="closure solution")
@@ -148,7 +161,7 @@ class TrialSixBySixSystem:
             for equation in self.equations
         )
 
-        return TrialSixBySixResult(
+        return TrialClosureResult(
             system=self,
             equations=self.equations,
             matrix=matrix,

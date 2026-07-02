@@ -1,4 +1,4 @@
-"""Immutable diagnostics returned by one generic six-by-six trial solve."""
+"""Immutable diagnostics returned by one generic trial closure solve."""
 
 from __future__ import annotations
 
@@ -9,10 +9,10 @@ from typing import TYPE_CHECKING
 import numpy as np
 from numpy.typing import NDArray
 
-from cinder.closure import ClosureEquation, ClosureUnknowns
+from cinder.closure import CLOSURE_UNKNOWN_COUNT, ClosureEquation, ClosureUnknowns
 
 if TYPE_CHECKING:
-    from .trial_system import TrialSixBySixSystem
+    from .trial_system import TrialClosureSystem
 
 
 @dataclass(frozen=True, slots=True)
@@ -30,8 +30,8 @@ class ClosureEquationResidual:
 
 
 @dataclass(frozen=True, slots=True)
-class TrialSixBySixResult:
-    """Full auditable outcome of one six-equation affine closure solve.
+class TrialClosureResult:
+    """Full auditable outcome of one affine closure solve.
 
     This result intentionally contains no CVT-specific contact logic. It is
     useful both while building individual rows and later inside trial-lambda
@@ -39,7 +39,7 @@ class TrialSixBySixResult:
     ``equations`` and the matrix rows.
     """
 
-    system: "TrialSixBySixSystem"
+    system: "TrialClosureSystem"
     equations: tuple[ClosureEquation, ...]
     matrix: NDArray[np.float64]
     right_hand_side: NDArray[np.float64]
@@ -50,6 +50,11 @@ class TrialSixBySixResult:
 
     def __post_init__(self) -> None:
         equation_count = len(self.equations)
+        if equation_count != CLOSURE_UNKNOWN_COUNT:
+            raise ValueError(
+                "equations must contain exactly "
+                f"{CLOSURE_UNKNOWN_COUNT} closure rows."
+            )
         if equation_count != len(self.equation_residuals):
             raise ValueError(
                 "equations and equation_residuals must have the same length."
@@ -62,19 +67,26 @@ class TrialSixBySixResult:
                 "equation_residuals must match equations in the same order."
             )
 
-        _validate_matrix(self.matrix, name="matrix", expected_shape=(6, 6))
+        _validate_matrix(
+            self.matrix,
+            name="matrix",
+            expected_shape=(CLOSURE_UNKNOWN_COUNT, CLOSURE_UNKNOWN_COUNT),
+        )
         _validate_vector(
             self.right_hand_side,
             name="right_hand_side",
-            expected_length=6,
+            expected_length=CLOSURE_UNKNOWN_COUNT,
         )
 
         if not isfinite(self.condition_number) and self.condition_number != float("inf"):
             raise ValueError("condition_number must be finite or positive infinity.")
         if self.condition_number < 0.0:
             raise ValueError("condition_number must be non-negative.")
-        if not 0 <= self.matrix_rank <= 6:
-            raise ValueError("matrix_rank must lie between 0 and 6.")
+        if not 0 <= self.matrix_rank <= CLOSURE_UNKNOWN_COUNT:
+            raise ValueError(
+                "matrix_rank must lie between 0 and "
+                f"{CLOSURE_UNKNOWN_COUNT}."
+            )
 
         object.__setattr__(self, "matrix", _immutable_float_array(self.matrix))
         object.__setattr__(
@@ -91,7 +103,7 @@ class TrialSixBySixResult:
 
     @property
     def max_abs_equation_residual(self) -> float:
-        """Largest absolute residual among the six imposed equations."""
+        """Largest absolute residual among the imposed closure equations."""
 
         return max(abs(residual.value) for residual in self.equation_residuals)
 

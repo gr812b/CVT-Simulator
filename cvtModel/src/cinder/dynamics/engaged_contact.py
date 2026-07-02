@@ -1,6 +1,6 @@
 """Reusable engaged-contact closure for stick and kinetic-slip branches.
 
-Every engaged branch uses the same six-by-six mechanical trial system:
+Every engaged branch uses the same closure mechanical trial system:
 
     snapshot + (lambda_p, lambda_s) -> A z = b -> relative contact motion.
 
@@ -10,7 +10,7 @@ Only the outer lambda policy changes:
 * primary-slip/secondary-stick: fix primary lambda kinetically, solve the
   secondary lambda so the secondary residual vanishes;
 * primary-stick/secondary-slip: mirror the above;
-* both-slip: fix both lambdas kinetically and evaluate the six-by-six once.
+* both-slip: fix both lambdas kinetically and evaluate the closure once.
 
 ``EngagedContactClosure.solve_bounded_stick_residuals`` is intentionally the
 single reusable nonlinear solver for both the two-dimensional stick--stick
@@ -37,8 +37,8 @@ from cinder.contact import (
     evaluate_contact_relative_motion,
 )
 from cinder.dynamics.equation_context import TrialEquationContext
-from cinder.dynamics.equations import build_trial_six_by_six_system
-from cinder.dynamics.result import TrialSixBySixResult
+from cinder.dynamics.equations import build_trial_closure_system
+from cinder.dynamics.result import TrialClosureResult
 from cinder.dynamics.snapshot import DynamicsSnapshot
 from cinder.dynamics.state import (
     CVTDynamicStateDerivative,
@@ -137,7 +137,7 @@ class EngagedContactSolveSettings:
     )
     optimizer_tolerance: float = _DEFAULT_OPTIMIZER_TOLERANCE
     maximum_function_evaluations: int = _DEFAULT_MAXIMUM_FUNCTION_EVALUATIONS
-    maximum_six_by_six_condition_number: float | None = None
+    maximum_closure_condition_number: float | None = None
 
     def __post_init__(self) -> None:
         if not self.static_bounds.contains(self.initial_guess):
@@ -149,10 +149,10 @@ class EngagedContactSolveSettings:
         _require_finite_positive(optimizer_tolerance=self.optimizer_tolerance)
         if self.maximum_function_evaluations < 1:
             raise ValueError("maximum_function_evaluations must be at least one.")
-        if self.maximum_six_by_six_condition_number is not None:
+        if self.maximum_closure_condition_number is not None:
             _require_finite_positive(
-                maximum_six_by_six_condition_number=(
-                    self.maximum_six_by_six_condition_number
+                maximum_closure_condition_number=(
+                    self.maximum_closure_condition_number
                 )
             )
 
@@ -166,10 +166,10 @@ class EngagedContactSolveSettings:
 
 @dataclass(frozen=True, slots=True)
 class EngagedContactTrial:
-    """One fixed-lambda six-by-six solve plus shared contact kinematics."""
+    """One fixed-lambda closure solve plus shared contact kinematics."""
 
     friction_utilization: TrialFrictionUtilization
-    six_by_six: TrialSixBySixResult
+    closure: TrialClosureResult
     relative_motion: ContactRelativeMotion
     state_derivative: CVTDynamicStateDerivative
 
@@ -227,8 +227,8 @@ class EngagedContactSolveResult:
         return self.trial.friction_utilization
 
     @property
-    def six_by_six(self) -> TrialSixBySixResult:
-        return self.trial.six_by_six
+    def closure(self) -> TrialClosureResult:
+        return self.trial.closure
 
     @property
     def relative_motion(self) -> ContactRelativeMotion:
@@ -247,7 +247,7 @@ class EngagedContactSolveResult:
 
 @dataclass(frozen=True, slots=True)
 class BothSlipResult:
-    """Direct engaged six-by-six result when both lambdas are kinetic-known."""
+    """Direct engaged closure result when both lambdas are kinetic-known."""
 
     trial: EngagedContactTrial
     primary_slip: KineticSlipSpecification
@@ -299,7 +299,7 @@ class EngagedContactClosure:
         self,
         *,
         friction_utilization: TrialFrictionUtilization,
-        maximum_six_by_six_condition_number: float | None = None,
+        maximum_closure_condition_number: float | None = None,
     ) -> EngagedContactTrial:
         """Build lambda-dependent rows, solve, and evaluate contact motion once."""
 
@@ -307,21 +307,21 @@ class EngagedContactClosure:
             snapshot=self.snapshot,
             friction_utilization=friction_utilization,
         )
-        six_by_six = build_trial_six_by_six_system(
+        closure = build_trial_closure_system(
             fixed_equations=self.fixed_equations,
             trial_context=context,
-        ).solve(maximum_condition_number=maximum_six_by_six_condition_number)
+        ).solve(maximum_condition_number=maximum_closure_condition_number)
         return EngagedContactTrial(
             friction_utilization=friction_utilization,
-            six_by_six=six_by_six,
+            closure=closure,
             relative_motion=evaluate_contact_relative_motion(
                 state=self.snapshot.state,
                 geometry=self.snapshot.geometry,
-                unknowns=six_by_six.unknowns,
+                unknowns=closure.unknowns,
             ),
             state_derivative=CVTDynamicStateDerivative.from_engaged_closure(
                 state=self.snapshot.state,
-                unknowns=six_by_six.unknowns,
+                unknowns=closure.unknowns,
             ),
         )
 
@@ -383,8 +383,8 @@ class EngagedContactClosure:
         def residual_vector(values: NDArray[np.float64]) -> NDArray[np.float64]:
             trial = self.evaluate_trial(
                 friction_utilization=utilization_from_free_values(values),
-                maximum_six_by_six_condition_number=(
-                    settings.maximum_six_by_six_condition_number
+                maximum_closure_condition_number=(
+                    settings.maximum_closure_condition_number
                 ),
             )
             return trial.relative_motion.acceleration_residual_vector(
@@ -392,7 +392,7 @@ class EngagedContactClosure:
             )
 
         # Three-point central differences sample small plus/minus lambda
-        # perturbations. That costs a few extra tiny six-by-six solves but
+        # perturbations. That costs a few extra tiny closure solves but
         # gives a less biased local Jacobian slope estimate across the narrow
         # residual corridor than one-sided differences.
         optimized = least_squares(
@@ -411,8 +411,8 @@ class EngagedContactClosure:
         utilization = utilization_from_free_values(np.asarray(optimized.x, dtype=float))
         trial = self.evaluate_trial(
             friction_utilization=utilization,
-            maximum_six_by_six_condition_number=(
-                settings.maximum_six_by_six_condition_number
+            maximum_closure_condition_number=(
+                settings.maximum_closure_condition_number
             ),
         )
         jacobian = np.asarray(optimized.jac, dtype=float)
@@ -509,9 +509,9 @@ class EngagedContactClosure:
         primary_slip: KineticSlipSpecification,
         secondary_slip: KineticSlipSpecification,
         contact_tolerances: ContactKinematicTolerances,
-        maximum_six_by_six_condition_number: float | None = None,
+        maximum_closure_condition_number: float | None = None,
     ) -> BothSlipResult:
-        """Fix both kinetic lambdas and solve the shared six-by-six once."""
+        """Fix both kinetic lambdas and solve the shared closure once."""
 
         _require_slip_interface(primary_slip, ContactInterface.PRIMARY)
         _require_slip_interface(secondary_slip, ContactInterface.SECONDARY)
@@ -524,7 +524,7 @@ class EngagedContactClosure:
                 primary_lambda=primary_slip.signed_lambda,
                 secondary_lambda=secondary_slip.signed_lambda,
             ),
-            maximum_six_by_six_condition_number=maximum_six_by_six_condition_number,
+            maximum_closure_condition_number=maximum_closure_condition_number,
         )
         return BothSlipResult(
             trial=trial,
@@ -578,7 +578,7 @@ def evaluate_both_slip(
     primary_slip: KineticSlipSpecification,
     secondary_slip: KineticSlipSpecification,
     contact_tolerances: ContactKinematicTolerances = ContactKinematicTolerances(),
-    maximum_six_by_six_condition_number: float | None = None,
+    maximum_closure_condition_number: float | None = None,
 ) -> BothSlipResult:
     """Convenience wrapper for the direct both-slip branch evaluation."""
 
@@ -586,7 +586,7 @@ def evaluate_both_slip(
         primary_slip=primary_slip,
         secondary_slip=secondary_slip,
         contact_tolerances=contact_tolerances,
-        maximum_six_by_six_condition_number=maximum_six_by_six_condition_number,
+        maximum_closure_condition_number=maximum_closure_condition_number,
     )
 
 

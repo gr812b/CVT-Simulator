@@ -1,4 +1,4 @@
-"""State, snapshots, engaged contact closure, and six-by-six assembly."""
+"""State, snapshots, engaged contact closure, and closure assembly."""
 
 from cinder.closure import ClosureEquation
 
@@ -15,8 +15,8 @@ from .engaged_contact import (
     solve_stick_stick,
 )
 from .equation_context import TrialContactTerms, TrialEquationContext
-from .equations import build_six_equations, build_trial_six_by_six_system
-from .result import ClosureEquationResidual, TrialSixBySixResult
+from .equations import build_closure_equations, build_trial_closure_system
+from .result import ClosureEquationResidual, TrialClosureResult
 from .snapshot import CVTDynamicsModel, DynamicsSnapshot
 from .state import (
     CVTDynamicState,
@@ -28,9 +28,9 @@ from .state_fixed_equations import (
     build_state_fixed_equations,
 )
 from .trial_system import (
-    TrialSixBySixConditionError,
-    TrialSixBySixSolveError,
-    TrialSixBySixSystem,
+    TrialClosureConditionError,
+    TrialClosureSolveError,
+    TrialClosureSystem,
 )
 
 __all__ = [
@@ -50,13 +50,13 @@ __all__ = [
     "TrialContactTerms",
     "TrialEquationContext",
     "TrialFrictionUtilization",
-    "TrialSixBySixConditionError",
-    "TrialSixBySixResult",
-    "TrialSixBySixSolveError",
-    "TrialSixBySixSystem",
-    "build_six_equations",
+    "TrialClosureConditionError",
+    "TrialClosureResult",
+    "TrialClosureSolveError",
+    "TrialClosureSystem",
+    "build_closure_equations",
     "build_state_fixed_equations",
-    "build_trial_six_by_six_system",
+    "build_trial_closure_system",
     "evaluate_both_slip",
     "solve_primary_slip_secondary_stick",
     "solve_primary_stick_secondary_slip",

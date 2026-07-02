@@ -46,7 +46,7 @@ class SlipDirection(str, Enum):
 class ContactRelativeMotion:
     """Velocity- and acceleration-level relative motion at both interfaces.
 
-    The stored values are calculated once from an already solved six-by-six
+    The stored values are calculated once from an already solved closure
     trial. Convenience methods merely read those four scalars; they do not
     re-evaluate geometry, actuation, the helix, or the linear system.
 

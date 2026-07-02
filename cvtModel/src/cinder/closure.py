@@ -1,13 +1,13 @@
 """Canonical instantaneous-closure coordinates for CINDER.
 
-The coupled CVT closure solve has one named six-column basis. Components
+The coupled CVT closure solve uses one named eight-column basis. Components
 that contribute a scalar relation use this module rather than keeping their
 own tuple order or column indices.
 
     scalar = bias + gains dot unknowns
 
-A :class:`ClosureEquation` wraps one such affine residual.  The generic
-six-by-six trial solver converts the residual form
+A :class:`ClosureEquation` wraps one such affine residual. The generic trial
+solver converts the residual form
 
     bias + gains dot unknowns = 0
 
@@ -35,6 +35,8 @@ class ClosureUnknown(IntEnum):
     SHIFT_ACCELERATION = 3
     PRIMARY_TORQUE = 4
     SECONDARY_TORQUE = 5
+    PRIMARY_NORMAL_RESULTANT = 6
+    SECONDARY_NORMAL_RESULTANT = 7
 
 
 CLOSURE_UNKNOWN_COUNT = len(ClosureUnknown)
@@ -55,6 +57,8 @@ class ClosureUnknowns:
     shift_acceleration: float = 0.0
     primary_torque: float = 0.0
     secondary_torque: float = 0.0
+    primary_normal_resultant: float = 0.0
+    secondary_normal_resultant: float = 0.0
 
     def __post_init__(self) -> None:
         _require_finite(**self._components())
@@ -73,6 +77,8 @@ class ClosureUnknowns:
         shift_acceleration: float = 0.0,
         primary_torque: float = 0.0,
         secondary_torque: float = 0.0,
+        primary_normal_resultant: float = 0.0,
+        secondary_normal_resultant: float = 0.0,
     ) -> "ClosureUnknowns":
         """Keyword-only constructor retained for readable call sites."""
 
@@ -83,13 +89,12 @@ class ClosureUnknowns:
             shift_acceleration=shift_acceleration,
             primary_torque=primary_torque,
             secondary_torque=secondary_torque,
+            primary_normal_resultant=primary_normal_resultant,
+            secondary_normal_resultant=secondary_normal_resultant,
         )
 
     @classmethod
-    def from_ordered_values(
-        cls,
-        values: Iterable[float],
-    ) -> "ClosureUnknowns":
+    def from_ordered_values(cls, values: Iterable[float]) -> "ClosureUnknowns":
         """Construct from values in :class:`ClosureUnknown` column order."""
 
         ordered_values = tuple(values)
@@ -107,7 +112,9 @@ class ClosureUnknowns:
     def __iter__(self) -> Iterator[float]:
         return iter(self.as_tuple())
 
-    def as_tuple(self) -> tuple[float, float, float, float, float, float]:
+    def as_tuple(
+        self,
+    ) -> tuple[float, float, float, float, float, float, float, float]:
         """Return values in :class:`ClosureUnknown` column order."""
 
         return (
@@ -117,6 +124,8 @@ class ClosureUnknowns:
             self.shift_acceleration,
             self.primary_torque,
             self.secondary_torque,
+            self.primary_normal_resultant,
+            self.secondary_normal_resultant,
         )
 
     def _components(self) -> dict[str, float]:
@@ -127,6 +136,8 @@ class ClosureUnknowns:
             "shift_acceleration": self.shift_acceleration,
             "primary_torque": self.primary_torque,
             "secondary_torque": self.secondary_torque,
+            "primary_normal_resultant": self.primary_normal_resultant,
+            "secondary_normal_resultant": self.secondary_normal_resultant,
         }
 
 
@@ -145,6 +156,8 @@ class ClosureGains:
     shift_acceleration: float = 0.0
     primary_torque: float = 0.0
     secondary_torque: float = 0.0
+    primary_normal_resultant: float = 0.0
+    secondary_normal_resultant: float = 0.0
 
     def __post_init__(self) -> None:
         _require_finite(**self._components())
@@ -163,6 +176,8 @@ class ClosureGains:
         shift_acceleration: float = 0.0,
         primary_torque: float = 0.0,
         secondary_torque: float = 0.0,
+        primary_normal_resultant: float = 0.0,
+        secondary_normal_resultant: float = 0.0,
     ) -> "ClosureGains":
         """Construct a named gain row without manually remembering indices."""
 
@@ -173,6 +188,8 @@ class ClosureGains:
             shift_acceleration=shift_acceleration,
             primary_torque=primary_torque,
             secondary_torque=secondary_torque,
+            primary_normal_resultant=primary_normal_resultant,
+            secondary_normal_resultant=secondary_normal_resultant,
         )
 
     def __getitem__(self, unknown: ClosureUnknown) -> float:
@@ -197,6 +214,12 @@ class ClosureGains:
             shift_acceleration=self.shift_acceleration + other.shift_acceleration,
             primary_torque=self.primary_torque + other.primary_torque,
             secondary_torque=self.secondary_torque + other.secondary_torque,
+            primary_normal_resultant=(
+                self.primary_normal_resultant + other.primary_normal_resultant
+            ),
+            secondary_normal_resultant=(
+                self.secondary_normal_resultant + other.secondary_normal_resultant
+            ),
         )
 
     def __neg__(self) -> "ClosureGains":
@@ -222,6 +245,8 @@ class ClosureGains:
             shift_acceleration=factor * self.shift_acceleration,
             primary_torque=factor * self.primary_torque,
             secondary_torque=factor * self.secondary_torque,
+            primary_normal_resultant=factor * self.primary_normal_resultant,
+            secondary_normal_resultant=factor * self.secondary_normal_resultant,
         )
 
     def dot(self, unknowns: ClosureUnknowns) -> float:
@@ -236,7 +261,9 @@ class ClosureGains:
             )
         )
 
-    def as_tuple(self) -> tuple[float, float, float, float, float, float]:
+    def as_tuple(
+        self,
+    ) -> tuple[float, float, float, float, float, float, float, float]:
         """Return gains in :class:`ClosureUnknown` column order."""
 
         return (
@@ -246,6 +273,8 @@ class ClosureGains:
             self.shift_acceleration,
             self.primary_torque,
             self.secondary_torque,
+            self.primary_normal_resultant,
+            self.secondary_normal_resultant,
         )
 
     def _components(self) -> dict[str, float]:
@@ -256,6 +285,8 @@ class ClosureGains:
             "shift_acceleration": self.shift_acceleration,
             "primary_torque": self.primary_torque,
             "secondary_torque": self.secondary_torque,
+            "primary_normal_resultant": self.primary_normal_resultant,
+            "secondary_normal_resultant": self.secondary_normal_resultant,
         }
 
 
@@ -267,7 +298,7 @@ class AffineClosureScalar:
 
     This is deliberately not actuation-specific. It can represent a force,
     torque, compatibility residual, or any other scalar equation whose
-    unknown-dependent part is linear in the six closure variables.
+    unknown-dependent part is linear in the closure variables.
     """
 
     bias: float = 0.0
@@ -341,7 +372,9 @@ class ClosureEquation:
             raise ValueError("ClosureEquation.name must be a non-empty string.")
 
     @property
-    def matrix_row(self) -> tuple[float, float, float, float, float, float]:
+    def matrix_row(
+        self,
+    ) -> tuple[float, float, float, float, float, float, float, float]:
         """Return the matrix coefficients in canonical column order."""
 
         return self.residual.gains.as_tuple()

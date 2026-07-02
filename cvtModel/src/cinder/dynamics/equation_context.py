@@ -1,4 +1,4 @@
-"""State-fixed and lambda-trial context for CINDER's six closure rows."""
+"""State-fixed and lambda-trial context for CINDER's current closure rows."""
 
 from __future__ import annotations
 
@@ -93,7 +93,7 @@ def _build_trial_contact_terms(
 
     if lambda_primary == 0.0 or lambda_secondary == 0.0:
         raise ValueError(
-            "Trial lambda values must be non-zero while the six-by-six rows "
+            "Trial lambda values must be non-zero while the closure rows "
             "contain explicit 1/lambda factors."
         )
 

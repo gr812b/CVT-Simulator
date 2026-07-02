@@ -1,4 +1,4 @@
-"""The four closure equations fixed for one dynamics snapshot."""
+"""State-fixed closure rows cached for one dynamics snapshot."""
 
 from __future__ import annotations
 
@@ -15,7 +15,7 @@ from .rows.secondary_rotation import build_secondary_rotation_equation
 
 @dataclass(frozen=True, slots=True)
 class StateFixedEquationBlock:
-    """Rows 2--5, built once for every state snapshot.
+    """Current state-fixed rows, built once for every state snapshot.
 
     These four equations do not depend on ``lambda_p`` or ``lambda_s`` and can
     be reused unchanged across every outer lambda-root trial at the same ODE
@@ -48,7 +48,7 @@ def build_state_fixed_equations(
     *,
     snapshot: DynamicsSnapshot,
 ) -> StateFixedEquationBlock:
-    """Build and cache the four fully state-fixed six-by-six rows."""
+    """Build and cache the current fully state-fixed closure rows."""
 
     return StateFixedEquationBlock(
         primary_rotation=build_primary_rotation_equation(snapshot=snapshot),

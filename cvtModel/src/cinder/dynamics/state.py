@@ -18,7 +18,7 @@ class CVTDynamicState:
 
     ``secondary_shaft_angle = psi_s`` accumulates secondary-shaft rotation for
     road-profile lookup. It is not a closure unknown, just as ``shift_speed``
-    is not; their derivatives are known after an engaged six-by-six solve.
+    is not; their derivatives are known after an engaged closure solve.
     """
 
     primary_angular_speed: float
@@ -45,7 +45,7 @@ class CVTDynamicStateDerivative:
 
     ``shift_position_rate`` and ``secondary_shaft_angle_rate`` are direct
     kinematic derivatives from the integrated state. All remaining entries
-    come from the six-by-six closure solution.
+    come from the closure solution.
     """
 
     primary_angular_acceleration: float
@@ -72,7 +72,7 @@ class CVTDynamicStateDerivative:
         state: CVTDynamicState,
         unknowns: "ClosureUnknowns",
     ) -> "CVTDynamicStateDerivative":
-        """Convert one engaged six-by-six solution into ODE derivatives."""
+        """Convert one engaged closure solution into ODE derivatives."""
 
         return cls(
             primary_angular_acceleration=unknowns.primary_angular_acceleration,
@@ -88,7 +88,7 @@ class CVTDynamicStateDerivative:
 class TrialFrictionUtilization:
     """One trial pair of signed outer wrap-friction utilizations.
 
-    These values are not ODE states and are not six-by-six unknowns. Engaged
+    These values are not ODE states and are not closure unknowns. Engaged
     branch logic either solves selected lambdas from stick residuals or fixes
     them to signed kinetic values in a slip branch.
     """

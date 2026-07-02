@@ -1,4 +1,4 @@
-"""CINDER-specific composition of the six instantaneous closure equations."""
+"""CINDER-specific assembly entry points for the instantaneous closure system."""
 
 from __future__ import annotations
 
@@ -6,26 +6,24 @@ from cinder.closure import ClosureEquation
 
 from .equation_context import TrialEquationContext
 from .state_fixed_equations import StateFixedEquationBlock
-from .trial_system import TrialSixBySixSystem
+from .trial_system import TrialClosureSystem
 from .rows.shift import build_shift_equation
 from .rows.wrap_endpoint import build_wrap_endpoint_equation
 
 
-def build_six_equations(
+def build_closure_equations(
     *,
     fixed_equations: StateFixedEquationBlock,
     trial_context: TrialEquationContext,
 ) -> tuple[ClosureEquation, ...]:
-    """Return the six equations in the same order as the derivation.
+    """Return the currently implemented closure rows.
 
-    Row order:
-
-    1. global shift dynamics;
-    2. primary rotational dynamics;
-    3. belt transport;
-    4. secondary rotational dynamics;
-    5. global tangential wrap compatibility;
-    6. closed-loop wrap endpoint compatibility.
+    This composition has deliberately not been padded or adapted after the
+    canonical basis expanded to include the two wrap normal resultants. The
+    normal-resultant rows and rebuilt contact/shift rows are the next physics
+    patch. Until then, passing this incomplete tuple to
+    :class:`TrialClosureSystem` correctly raises on the row-count mismatch
+    instead of silently projecting the two new unknowns away.
     """
 
     return (
@@ -38,15 +36,15 @@ def build_six_equations(
     )
 
 
-def build_trial_six_by_six_system(
+def build_trial_closure_system(
     *,
     fixed_equations: StateFixedEquationBlock,
     trial_context: TrialEquationContext,
-) -> TrialSixBySixSystem:
-    """Build one generic solver-ready six-by-six system for a lambda trial."""
+) -> TrialClosureSystem:
+    """Build one generic solver-ready closure system for a lambda trial."""
 
-    return TrialSixBySixSystem.from_equations(
-        build_six_equations(
+    return TrialClosureSystem.from_equations(
+        build_closure_equations(
             fixed_equations=fixed_equations,
             trial_context=trial_context,
         )
