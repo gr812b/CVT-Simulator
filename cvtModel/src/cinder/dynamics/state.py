@@ -1,4 +1,4 @@
-"""Integrated state, state derivative, and trial-contact inputs for CINDER dynamics."""
+"""Integrated CINDER state, state derivative, and trial lambda input."""
 
 from __future__ import annotations
 
@@ -12,22 +12,13 @@ if TYPE_CHECKING:
 
 @dataclass(frozen=True, slots=True)
 class CVTDynamicState:
-    """The six integrated CINDER states.
-
-    The state is ordered conceptually as:
+    """The six integrated CINDER states in conceptual order.
 
         [omega_p, omega_s, v_b, s, s_dot, psi_s].
 
-    ``secondary_shaft_angle = psi_s`` is accumulated secondary-shaft rotation,
-    not the secondary pulley axial coordinate ``x_s``. Its derivative is known
-    directly from the state:
-
-        psi_s_dot = omega_s.
-
-    It is included so position-dependent external environment models, such as a
-    road-grade profile, can be evaluated without introducing a vehicle-side
-    coordinate into the CVT mechanics. It is not an unknown in the six-by-six
-    instantaneous closure solve, just as ``shift_speed`` is not an unknown.
+    ``secondary_shaft_angle = psi_s`` accumulates secondary-shaft rotation for
+    road-profile lookup. It is not a closure unknown, just as ``shift_speed``
+    is not; their derivatives are known after an engaged six-by-six solve.
     """
 
     primary_angular_speed: float
@@ -50,13 +41,11 @@ class CVTDynamicState:
 
 @dataclass(frozen=True, slots=True)
 class CVTDynamicStateDerivative:
-    """Time derivative of :class:`CVTDynamicState` in matching field order.
+    """Time derivative aligned with :class:`CVTDynamicState`.
 
-    This is the integration-facing result once a contact regime has supplied a
-    valid closure solution.  The six-by-six solve determines the four dynamic
-    accelerations; the two kinematic state derivatives are copied directly:
-
-    The directly known kinematic components are ``s_dot`` and ``omega_s``.
+    ``shift_position_rate`` and ``secondary_shaft_angle_rate`` are direct
+    kinematic derivatives from the integrated state. All remaining entries
+    come from the six-by-six closure solution.
     """
 
     primary_angular_acceleration: float
@@ -83,7 +72,7 @@ class CVTDynamicStateDerivative:
         state: CVTDynamicState,
         unknowns: "ClosureUnknowns",
     ) -> "CVTDynamicStateDerivative":
-        """Map an accepted engaged closure solve into ODE state derivatives."""
+        """Convert one engaged six-by-six solution into ODE derivatives."""
 
         return cls(
             primary_angular_acceleration=unknowns.primary_angular_acceleration,
@@ -94,29 +83,14 @@ class CVTDynamicStateDerivative:
             secondary_shaft_angle_rate=state.secondary_angular_speed,
         )
 
-    def as_tuple(self) -> tuple[float, float, float, float, float, float]:
-        """Return derivatives in :class:`CVTDynamicState` field order."""
-
-        return (
-            self.primary_angular_acceleration,
-            self.secondary_angular_acceleration,
-            self.belt_acceleration,
-            self.shift_position_rate,
-            self.shift_acceleration,
-            self.secondary_shaft_angle_rate,
-        )
-
 
 @dataclass(frozen=True, slots=True)
 class TrialFrictionUtilization:
-    """One trial pair of dimensionless wrap-friction utilizations.
+    """One trial pair of signed outer wrap-friction utilizations.
 
-    These values are outer closure variables, not ODE states and not entries in
-    the six-column linear unknown vector. The later stick root solve will vary
-    them until the two local no-slip residuals vanish.
-
-    No static- or kinetic-friction bound is imposed here. Branch-specific
-    contact logic owns those admissibility checks.
+    These values are not ODE states and are not six-by-six unknowns. Engaged
+    branch logic either solves selected lambdas from stick residuals or fixes
+    them to signed kinetic values in a slip branch.
     """
 
     primary_lambda: float

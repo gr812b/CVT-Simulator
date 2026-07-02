@@ -1,7 +1,19 @@
-"""State, snapshots, contact closures, and six-by-six assembly for CINDER."""
+"""State, snapshots, engaged contact closure, and six-by-six assembly."""
 
 from cinder.closure import ClosureEquation
 
+from .engaged_contact import (
+    BothSlipResult,
+    EngagedContactClosure,
+    EngagedContactSolveResult,
+    EngagedContactSolveSettings,
+    EngagedContactTrial,
+    FrictionUtilizationBounds,
+    evaluate_both_slip,
+    solve_primary_slip_secondary_stick,
+    solve_primary_stick_secondary_slip,
+    solve_stick_stick,
+)
 from .equation_context import TrialContactTerms, TrialEquationContext
 from .equations import build_six_equations, build_trial_six_by_six_system
 from .result import ClosureEquationResidual, TrialSixBySixResult
@@ -15,16 +27,6 @@ from .state_fixed_equations import (
     StateFixedEquationBlock,
     build_state_fixed_equations,
 )
-from .stick_stick import (
-    EngagedStickStickEvaluation,
-    FrictionUtilizationBounds,
-    StickStickClosure,
-    StickStickSolveResult,
-    StickStickSolveSettings,
-    StickStickTrial,
-    evaluate_engaged_stick_stick,
-    solve_stick_stick,
-)
 from .trial_system import (
     TrialSixBySixConditionError,
     TrialSixBySixSolveError,
@@ -32,19 +34,19 @@ from .trial_system import (
 )
 
 __all__ = [
+    "BothSlipResult",
     "ClosureEquation",
     "ClosureEquationResidual",
     "CVTDynamicState",
     "CVTDynamicStateDerivative",
     "CVTDynamicsModel",
     "DynamicsSnapshot",
-    "EngagedStickStickEvaluation",
+    "EngagedContactClosure",
+    "EngagedContactSolveResult",
+    "EngagedContactSolveSettings",
+    "EngagedContactTrial",
     "FrictionUtilizationBounds",
     "StateFixedEquationBlock",
-    "StickStickClosure",
-    "StickStickSolveResult",
-    "StickStickSolveSettings",
-    "StickStickTrial",
     "TrialContactTerms",
     "TrialEquationContext",
     "TrialFrictionUtilization",
@@ -55,6 +57,8 @@ __all__ = [
     "build_six_equations",
     "build_state_fixed_equations",
     "build_trial_six_by_six_system",
-    "evaluate_engaged_stick_stick",
+    "evaluate_both_slip",
+    "solve_primary_slip_secondary_stick",
+    "solve_primary_stick_secondary_slip",
     "solve_stick_stick",
 ]

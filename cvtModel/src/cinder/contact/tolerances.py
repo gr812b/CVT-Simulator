@@ -1,4 +1,4 @@
-"""Shared kinematic tolerances for contact closure and regime transitions."""
+"""Shared kinematic tolerances for belt--pulley contact closure."""
 
 from __future__ import annotations
 
@@ -8,27 +8,28 @@ from math import isfinite
 
 @dataclass(frozen=True, slots=True)
 class ContactKinematicTolerances:
-    """Numerical thresholds shared by stick and slip contact logic.
+    """Numerical thresholds shared by all engaged contact regimes.
 
-    These are kinematic decision tolerances, not friction limits and not a
-    hysteresis policy.  The future regime selector may add separate entry and
-    exit hysteresis around them, but every branch should use the same
-    definitions of "near-zero relative speed" and "stick-compatible
-    acceleration residual".
+    These values describe only how the model interprets *kinematic* contact
+    compatibility. They are not friction coefficients and they are not a
+    hysteresis policy. A later regime selector can add separate entry/exit
+    hysteresis without redefining relative motion itself.
 
     Units:
         ``relative_speed_tolerance``
-            m/s;
+            m/s; established slip direction is read from relative speed beyond
+            this threshold.
         ``relative_acceleration_tolerance``
-            m/s^2, used only to infer an incipient slip direction when the
-            relative speed is numerically zero;
-        ``stick_acceleration_norm_tolerance``
-            m/s^2, applied to the Euclidean norm of the two stick residuals.
+            m/s²; used only as an incipient-slip hint when relative speed is
+            numerically near zero.
+        ``stick_acceleration_tolerance``
+            m/s²; maximum absolute acceleration-level compatibility residual
+            accepted at one interface that is declared sticking.
     """
 
     relative_speed_tolerance: float = 1.0e-7
     relative_acceleration_tolerance: float = 1.0e-8
-    stick_acceleration_norm_tolerance: float = 1.0e-8
+    stick_acceleration_tolerance: float = 1.0e-8
 
     def __post_init__(self) -> None:
         for name, value in (
@@ -37,10 +38,7 @@ class ContactKinematicTolerances:
                 "relative_acceleration_tolerance",
                 self.relative_acceleration_tolerance,
             ),
-            (
-                "stick_acceleration_norm_tolerance",
-                self.stick_acceleration_norm_tolerance,
-            ),
+            ("stick_acceleration_tolerance", self.stick_acceleration_tolerance),
         ):
             if not isfinite(value) or value <= 0.0:
                 raise ValueError(f"{name} must be finite and strictly positive.")
