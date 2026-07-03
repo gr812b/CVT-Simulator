@@ -1,14 +1,14 @@
-"""Map stick residuals over positive trial friction utilizations.
+"""Map stick residuals over normal-resultant closure lambda trials.
 
 This is a diagnostic only. It does *not* root-solve for lambdas or select a
-contact branch. It freezes one snapshot and rows 2--5, then evaluates the
-future stick residual map
+contact branch. It freezes one snapshot and the state-fixed row block, then
+evaluates the full normal-resultant closure followed by the stick residual map
 
     (lambda_p, lambda_s) -> (R_p, R_s)
 
-across the positive utilization domain used by the current forward-drive
-convention. Positive lambda_p represents primary-to-belt traction and
-positive lambda_s represents belt-to-secondary traction; the pulley-specific
+across the non-negative utilization domain used by the current forward-drive
+convention. Non-negative lambda_p represents primary-to-belt traction and
+non-negative lambda_s represents belt-to-secondary traction; the pulley-specific
 wrap equations already encode their opposite torque roles.
 
 The plots deliberately use visual scales that make the zero contours readable:
@@ -53,19 +53,24 @@ for _candidate in (_REPOSITORY_ROOT / "src", _REPOSITORY_ROOT):
     if (_candidate / "cinder").is_dir() and str(_candidate) not in sys.path:
         sys.path.insert(0, str(_candidate))
 
-from baja_trial_baseline import BajaTrialBaseline, build_baja_trial_baseline
+from baja_trial_baseline import (
+    BajaTrialBaseline,
+    BajaTrialConstants,
+    build_baja_trial_baseline,
+)
 from cinder.dynamics import (
     CVTDynamicState,
     TrialEquationContext,
     TrialFrictionUtilization,
     build_state_fixed_equations,
-    build_trial_six_by_six_system,
+    build_trial_closure_system,
 )
+from cinder.contact import evaluate_contact_relative_motion
 
 # Legacy test friction value. Replace with a model-owned contact property once
 # friction is part of the production contact-law configuration.
-DEFAULT_STATIC_UTILIZATION_LIMIT = 0.65
-DEFAULT_MINIMUM_UTILIZATION = 0.01
+DEFAULT_STATIC_UTILIZATION_LIMIT = BajaTrialConstants().static_utilization_limit
+DEFAULT_MINIMUM_UTILIZATION = 0.0
 DEFAULT_SAMPLES = 81
 DEFAULT_RESIDUAL_LINTHRESH = 1.0
 DEFAULT_RESIDUAL_CLIP_PERCENTILE = 99.0
@@ -87,12 +92,14 @@ class LambdaResidualMap:
     condition_number: np.ndarray
     primary_torque: np.ndarray
     secondary_torque: np.ndarray
+    primary_normal_resultant: np.ndarray
+    secondary_normal_resultant: np.ndarray
     determinant_jacobian: np.ndarray
 
 
 def parse_arguments() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="Map six-by-six stick residuals over positive lambda trials."
+        description="Map 8x8 normal-resultant stick residuals over lambda trials."
     )
     parser.add_argument(
         "--scenario",
@@ -104,13 +111,13 @@ def parse_arguments() -> argparse.Namespace:
         "--lambda-min",
         type=float,
         default=DEFAULT_MINIMUM_UTILIZATION,
-        help="Smallest positive lambda sampled; exact zero is not yet supported.",
+        help="Smallest lambda sampled; exact zero is supported by the normal-resultant closure.",
     )
     parser.add_argument(
         "--lambda-max",
         type=float,
         default=DEFAULT_STATIC_UTILIZATION_LIMIT,
-        help="Largest positive lambda sampled.",
+        help="Largest non-negative lambda sampled.",
     )
     parser.add_argument(
         "--samples",
@@ -167,8 +174,8 @@ def parse_arguments() -> argparse.Namespace:
     )
     args = parser.parse_args()
 
-    if not isfinite(args.lambda_min) or args.lambda_min <= 0.0:
-        parser.error("--lambda-min must be finite and strictly positive.")
+    if not isfinite(args.lambda_min) or args.lambda_min < 0.0:
+        parser.error("--lambda-min must be finite and non-negative.")
     if not isfinite(args.lambda_max) or args.lambda_max <= args.lambda_min:
         parser.error("--lambda-max must be finite and greater than --lambda-min.")
     if args.samples < 5:
@@ -270,6 +277,8 @@ def build_lambda_residual_map(
     condition_number = np.full(shape, np.nan)
     primary_torque = np.full(shape, np.nan)
     secondary_torque = np.full(shape, np.nan)
+    primary_normal_resultant = np.full(shape, np.nan)
+    secondary_normal_resultant = np.full(shape, np.nan)
 
     for secondary_index, lambda_secondary in enumerate(secondary_lambdas):
         for primary_index, lambda_primary in enumerate(primary_lambdas):
@@ -298,6 +307,12 @@ def build_lambda_residual_map(
             condition_number[secondary_index, primary_index] = result.condition_number
             primary_torque[secondary_index, primary_index] = result.unknowns.primary_torque
             secondary_torque[secondary_index, primary_index] = result.unknowns.secondary_torque
+            primary_normal_resultant[secondary_index, primary_index] = (
+                result.unknowns.primary_normal_resultant
+            )
+            secondary_normal_resultant[secondary_index, primary_index] = (
+                result.unknowns.secondary_normal_resultant
+            )
 
     residual_norm = np.hypot(primary_residual, secondary_residual)
     determinant_jacobian = _finite_difference_jacobian_determinant(
@@ -316,6 +331,8 @@ def build_lambda_residual_map(
         condition_number=condition_number,
         primary_torque=primary_torque,
         secondary_torque=secondary_torque,
+        primary_normal_resultant=primary_normal_resultant,
+        secondary_normal_resultant=secondary_normal_resultant,
         determinant_jacobian=determinant_jacobian,
     )
 
@@ -325,7 +342,7 @@ def _solve_trial(*, snapshot, fixed_equations, trial: TrialFrictionUtilization):
         snapshot=snapshot,
         friction_utilization=trial,
     )
-    system = build_trial_six_by_six_system(
+    system = build_trial_closure_system(
         fixed_equations=fixed_equations,
         trial_context=context,
     )
@@ -333,25 +350,17 @@ def _solve_trial(*, snapshot, fixed_equations, trial: TrialFrictionUtilization):
 
 
 def _no_slip_acceleration_errors(*, snapshot, unknowns) -> tuple[float, float]:
-    """Return acceleration-level sticking residuals in the global belt direction."""
+    """Return the canonical acceleration-level stick residuals."""
 
-    geometry = snapshot.geometry
-    state = snapshot.state
-    primary = (
-        unknowns.belt_acceleration
-        - geometry.primary.effective * unknowns.primary_angular_acceleration
-        - geometry.primary.d_effective_ds
-        * state.shift_speed
-        * state.primary_angular_speed
+    relative_motion = evaluate_contact_relative_motion(
+        state=snapshot.state,
+        geometry=snapshot.geometry,
+        unknowns=unknowns,
     )
-    secondary = (
-        unknowns.belt_acceleration
-        - geometry.secondary.effective * unknowns.secondary_angular_acceleration
-        - geometry.secondary.d_effective_ds
-        * state.shift_speed
-        * state.secondary_angular_speed
+    return (
+        relative_motion.primary_relative_acceleration,
+        relative_motion.secondary_relative_acceleration,
     )
-    return primary, secondary
 
 
 def _finite_difference_jacobian_determinant(
@@ -400,7 +409,11 @@ def _print_summary(
     print("\n" + "=" * 88)
     print(f"Scenario: {scenario}")
     print(
-        "Convention: lambda_p and lambda_s are sampled over the positive "
+        "Closure basis: [alpha_p, alpha_s, v_b_dot, s_ddot, "
+        "tau_p, tau_s, N_p, N_s]."
+    )
+    print(
+        "Convention: lambda_p and lambda_s are sampled over the non-negative "
         "forward-drive utilization domain."
     )
     print(
@@ -438,7 +451,7 @@ def _print_summary(
                 f"(zero contour {'present' if contains_zero else 'absent'})"
             )
     if not sampled:
-        print("No grid points produced a finite six-by-six trial solution.")
+        print("No grid points produced a finite normal-resultant closure solution.")
         return
 
     best_index = np.nanargmin(residual_map.residual_norm)
@@ -460,6 +473,10 @@ def _print_summary(
     print(
         f"  tau_p={residual_map.primary_torque[secondary_index, primary_index]:.6e} N m, "
         f"tau_s={residual_map.secondary_torque[secondary_index, primary_index]:.6e} N m"
+    )
+    print(
+        f"  N_p={residual_map.primary_normal_resultant[secondary_index, primary_index]:.6e} N, "
+        f"N_s={residual_map.secondary_normal_resultant[secondary_index, primary_index]:.6e} N"
     )
     print(
         f"  cond(A)={residual_map.condition_number[secondary_index, primary_index]:.6e}"
@@ -538,7 +555,7 @@ def plot_lambda_residual_map(
 
     figure.suptitle(
         "CINDER stick-residual map: "
-        f"{scenario} (positive lambda convention; {effective_samples}×"
+        f"{scenario} (non-negative lambda convention; {effective_samples}×"
         f"{effective_samples} grid)",
         fontsize=15,
     )
