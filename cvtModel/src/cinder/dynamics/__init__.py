@@ -1,4 +1,4 @@
-"""State, snapshots, engaged contact closure, and closure assembly."""
+"""State-frozen CVT mechanics, closure assembly, and branch-root solves."""
 
 from cinder.closure import ClosureEquation
 
@@ -8,7 +8,7 @@ from .engaged_contact import (
     EngagedContactSolveResult,
     EngagedContactSolveSettings,
     EngagedContactTrial,
-    FrictionUtilizationBounds,
+    LambdaSearchBounds,
     evaluate_both_slip,
     solve_primary_slip_secondary_stick,
     solve_primary_stick_secondary_slip,
@@ -18,11 +18,6 @@ from .equation_context import TrialContactTerms, TrialEquationContext
 from .equations import build_closure_equations, build_trial_closure_system
 from .result import ClosureEquationResidual, TrialClosureResult
 from .snapshot import CVTDynamicsModel, DynamicsSnapshot
-from .state import (
-    CVTDynamicState,
-    CVTDynamicStateDerivative,
-    TrialFrictionUtilization,
-)
 from .state_fixed_equations import (
     StateFixedEquationBlock,
     build_state_fixed_equations,
@@ -37,19 +32,16 @@ __all__ = [
     "BothSlipResult",
     "ClosureEquation",
     "ClosureEquationResidual",
-    "CVTDynamicState",
-    "CVTDynamicStateDerivative",
     "CVTDynamicsModel",
     "DynamicsSnapshot",
     "EngagedContactClosure",
     "EngagedContactSolveResult",
     "EngagedContactSolveSettings",
     "EngagedContactTrial",
-    "FrictionUtilizationBounds",
+    "LambdaSearchBounds",
     "StateFixedEquationBlock",
     "TrialContactTerms",
     "TrialEquationContext",
-    "TrialFrictionUtilization",
     "TrialClosureConditionError",
     "TrialClosureResult",
     "TrialClosureSolveError",

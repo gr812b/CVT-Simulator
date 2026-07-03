@@ -6,7 +6,7 @@ from dataclasses import dataclass, field
 from math import exp, expm1, isfinite
 
 from .snapshot import DynamicsSnapshot
-from .state import TrialFrictionUtilization
+from cinder.contact import ContactTractionUtilization
 
 _SMALL_ARGUMENT = 1.0e-4
 
@@ -65,18 +65,18 @@ class TrialContactTerms:
 
 @dataclass(frozen=True, slots=True)
 class TrialEquationContext:
-    """Everything fixed for one trial ``(lambda_p, lambda_s)`` pair."""
+    """Everything fixed for one trial signed ``(lambda_p, lambda_s)`` pair."""
 
     snapshot: DynamicsSnapshot
-    friction_utilization: TrialFrictionUtilization
+    traction_utilization: ContactTractionUtilization
     contact_terms: TrialContactTerms = field(init=False)
 
     def __post_init__(self) -> None:
         if not isinstance(self.snapshot, DynamicsSnapshot):
             raise TypeError("snapshot must be a DynamicsSnapshot instance.")
-        if not isinstance(self.friction_utilization, TrialFrictionUtilization):
+        if not isinstance(self.traction_utilization, ContactTractionUtilization):
             raise TypeError(
-                "friction_utilization must be a TrialFrictionUtilization instance."
+                "traction_utilization must be a ContactTractionUtilization instance."
             )
 
         object.__setattr__(
@@ -84,7 +84,7 @@ class TrialEquationContext:
             "contact_terms",
             _build_trial_contact_terms(
                 snapshot=self.snapshot,
-                friction_utilization=self.friction_utilization,
+                traction_utilization=self.traction_utilization,
             ),
         )
 
@@ -92,12 +92,12 @@ class TrialEquationContext:
 def _build_trial_contact_terms(
     *,
     snapshot: DynamicsSnapshot,
-    friction_utilization: TrialFrictionUtilization,
+    traction_utilization: ContactTractionUtilization,
 ) -> TrialContactTerms:
     """Build finite wrap-map factors for one lambda pair."""
 
-    lambda_primary = friction_utilization.primary_lambda
-    lambda_secondary = friction_utilization.secondary_lambda
+    lambda_primary = traction_utilization.primary_lambda
+    lambda_secondary = traction_utilization.secondary_lambda
 
     z_primary = lambda_primary * snapshot.geometry.primary_wrap_angle
     z_secondary = lambda_secondary * snapshot.geometry.secondary_wrap_angle

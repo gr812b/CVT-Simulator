@@ -27,7 +27,7 @@ from cinder.vehicle import (
     RoadProfile,
 )
 
-from .state import CVTDynamicState
+from cinder.integration import CVTDynamicState
 
 
 @dataclass(frozen=True, slots=True)

@@ -14,7 +14,7 @@ from .tolerances import ContactKinematicTolerances
 
 if TYPE_CHECKING:
     from cinder.closure import ClosureUnknowns
-    from cinder.dynamics.state import CVTDynamicState
+    from cinder.integration import CVTDynamicState
     from cinder.geometry import GeometryPosition
 
 

@@ -32,6 +32,8 @@ from cinder.contact import (
     ContactInterface,
     ContactKinematicTolerances,
     ContactRelativeMotion,
+    ContactTractionLaw,
+    ContactTractionUtilization,
     EngagedContactMode,
     KineticSlipSpecification,
     evaluate_contact_relative_motion,
@@ -40,10 +42,7 @@ from cinder.dynamics.equation_context import TrialEquationContext
 from cinder.dynamics.equations import build_trial_closure_system
 from cinder.dynamics.result import TrialClosureResult
 from cinder.dynamics.snapshot import DynamicsSnapshot
-from cinder.dynamics.state import (
-    CVTDynamicStateDerivative,
-    TrialFrictionUtilization,
-)
+from cinder.integration import CVTDynamicStateDerivative
 from cinder.dynamics.state_fixed_equations import (
     StateFixedEquationBlock,
     build_state_fixed_equations,
@@ -55,12 +54,12 @@ _BOUND_ACTIVITY_ABSOLUTE_TOLERANCE: Final[float] = 1.0e-10
 
 
 @dataclass(frozen=True, slots=True)
-class FrictionUtilizationBounds:
-    """Bounded static-utilization intervals for the two lambda variables.
+class LambdaSearchBounds:
+    """Numerical signed intervals used to search free stick lambdas.
 
-    The normal-resultant 8x8 closure uses regular lambda-to-zero wrap maps,
-    so an interval may include zero. ``forward_drive`` still defaults to the
-    familiar non-negative static box.
+    These intervals are solver safeguards, not physical traction limits.
+    Physical static capacity belongs to ``ContactTractionLaw`` and is assessed
+    only after the required lambda pair has been solved.
     """
 
     primary_lower: float
@@ -81,29 +80,23 @@ class FrictionUtilizationBounds:
         )
 
     @classmethod
-    def forward_drive(
+    def symmetric(
         cls,
         *,
-        primary_static_limit: float,
-        secondary_static_limit: float,
-        minimum_utilization: float = 0.0,
-    ) -> "FrictionUtilizationBounds":
-        """Build the non-negative forward-drive static-utilization box."""
+        primary_half_width: float,
+        secondary_half_width: float,
+    ) -> "LambdaSearchBounds":
+        """Build broad signed numerical search intervals around zero."""
 
-        _require_finite_nonnegative(
-            primary_static_limit=primary_static_limit,
-            secondary_static_limit=secondary_static_limit,
-            minimum_utilization=minimum_utilization,
+        _require_finite_positive(
+            primary_half_width=primary_half_width,
+            secondary_half_width=secondary_half_width,
         )
-        if minimum_utilization >= primary_static_limit:
-            raise ValueError("minimum_utilization must be below primary_static_limit.")
-        if minimum_utilization >= secondary_static_limit:
-            raise ValueError("minimum_utilization must be below secondary_static_limit.")
         return cls(
-            primary_lower=minimum_utilization,
-            primary_upper=primary_static_limit,
-            secondary_lower=minimum_utilization,
-            secondary_upper=secondary_static_limit,
+            primary_lower=-primary_half_width,
+            primary_upper=primary_half_width,
+            secondary_lower=-secondary_half_width,
+            secondary_upper=secondary_half_width,
         )
 
     def lower_at(self, interface: ContactInterface) -> float:
@@ -123,7 +116,7 @@ class FrictionUtilizationBounds:
     def contains_at(self, interface: ContactInterface, value: float) -> bool:
         return self.lower_at(interface) <= value <= self.upper_at(interface)
 
-    def contains(self, utilization: TrialFrictionUtilization) -> bool:
+    def contains(self, utilization: ContactTractionUtilization) -> bool:
         return (
             self.contains_at(ContactInterface.PRIMARY, utilization.primary_lambda)
             and self.contains_at(ContactInterface.SECONDARY, utilization.secondary_lambda)
@@ -132,10 +125,10 @@ class FrictionUtilizationBounds:
 
 @dataclass(frozen=True, slots=True)
 class EngagedContactSolveSettings:
-    """Numerical policy shared by the 2D and 1D sticking-lambda solves."""
+    """Numerical policy shared by the 2D and 1D required-lambda solves."""
 
-    static_bounds: FrictionUtilizationBounds
-    initial_guess: TrialFrictionUtilization
+    lambda_search_bounds: LambdaSearchBounds
+    initial_guess: ContactTractionUtilization
     contact_tolerances: ContactKinematicTolerances = field(
         default_factory=ContactKinematicTolerances
     )
@@ -144,8 +137,8 @@ class EngagedContactSolveSettings:
     maximum_closure_condition_number: float | None = None
 
     def __post_init__(self) -> None:
-        if not self.static_bounds.contains(self.initial_guess):
-            raise ValueError("initial_guess must lie inside the static lambda box.")
+        if not self.lambda_search_bounds.contains(self.initial_guess):
+            raise ValueError("initial_guess must lie inside the numerical lambda search box.")
         if not isinstance(self.contact_tolerances, ContactKinematicTolerances):
             raise TypeError(
                 "contact_tolerances must be a ContactKinematicTolerances instance."
@@ -172,7 +165,7 @@ class EngagedContactSolveSettings:
 class EngagedContactTrial:
     """One fixed-lambda closure solve plus shared contact kinematics."""
 
-    friction_utilization: TrialFrictionUtilization
+    traction_utilization: ContactTractionUtilization
     closure: TrialClosureResult
     relative_motion: ContactRelativeMotion
     state_derivative: CVTDynamicStateDerivative
@@ -180,7 +173,7 @@ class EngagedContactTrial:
 
 @dataclass(frozen=True, slots=True)
 class EngagedContactSolveResult:
-    """Outcome of the shared bounded 1D/2D sticking-residual solver."""
+    """Outcome of the shared bounded 1D/2D required-static-lambda solver."""
 
     mode: EngagedContactMode
     trial: EngagedContactTrial
@@ -227,8 +220,8 @@ class EngagedContactSolveResult:
         object.__setattr__(self, "jacobian", _immutable_array(self.jacobian))
 
     @property
-    def friction_utilization(self) -> TrialFrictionUtilization:
-        return self.trial.friction_utilization
+    def traction_utilization(self) -> ContactTractionUtilization:
+        return self.trial.traction_utilization
 
     @property
     def closure(self) -> TrialClosureResult:
@@ -247,6 +240,60 @@ class EngagedContactSolveResult:
     @property
     def sticking_residuals(self) -> NDArray[np.float64]:
         return self.relative_motion.acceleration_residual_vector(self.sticking_interfaces)
+
+    @property
+    def required_static_utilization(self) -> ContactTractionUtilization:
+        """Return both solved lambda requirements for a stick--stick result.
+
+        A mixed branch contains one prescribed kinetic lambda, so the complete
+        pair must not be read as two static requirements there. Use
+        :meth:`required_static_lambda_at` for its remaining sticking contact.
+        """
+
+        if self.mode is not EngagedContactMode.STICK_STICK:
+            raise ValueError(
+                "Both required static lambdas are available only for stick--stick."
+            )
+        return self.traction_utilization
+
+    def required_static_lambda_at(self, interface: ContactInterface) -> float:
+        """Return the solved lambda requirement at one declared sticking contact.
+
+        This quantity is meaningful only for an interface included in
+        ``sticking_interfaces``. A slipping interface instead has a prescribed
+        kinetic lambda and must not be interpreted as a static requirement.
+        """
+
+        if interface not in self.sticking_interfaces:
+            raise ValueError(
+                "A static lambda requirement is defined only at a sticking interface."
+            )
+        return self.traction_utilization.at(interface)
+
+    def required_static_margin_at(
+        self,
+        interface: ContactInterface,
+        *,
+        traction_law: ContactTractionLaw,
+    ) -> float:
+        """Return physical static-capacity clearance for one sticking contact."""
+
+        return traction_law.static_margin_at(
+            interface,
+            self.required_static_lambda_at(interface),
+        )
+
+    def sticking_interfaces_are_statically_admissible(
+        self,
+        *,
+        traction_law: ContactTractionLaw,
+    ) -> bool:
+        """Return whether every declared sticking contact has static capacity."""
+
+        return all(
+            self.required_static_margin_at(interface, traction_law=traction_law) >= 0.0
+            for interface in self.sticking_interfaces
+        )
 
 
 @dataclass(frozen=True, slots=True)
@@ -285,7 +332,7 @@ class BothSlipResult:
 
 @dataclass(frozen=True, slots=True)
 class EngagedContactClosure:
-    """State-frozen common trial evaluator with rows 2--5 cached once."""
+    """State-frozen common trial evaluator with five lambda-independent rows cached once."""
 
     snapshot: DynamicsSnapshot
     fixed_equations: StateFixedEquationBlock = field(init=False)
@@ -302,21 +349,21 @@ class EngagedContactClosure:
     def evaluate_trial(
         self,
         *,
-        friction_utilization: TrialFrictionUtilization,
+        traction_utilization: ContactTractionUtilization,
         maximum_closure_condition_number: float | None = None,
     ) -> EngagedContactTrial:
         """Build lambda-dependent rows, solve, and evaluate contact motion once."""
 
         context = TrialEquationContext(
             snapshot=self.snapshot,
-            friction_utilization=friction_utilization,
+            traction_utilization=traction_utilization,
         )
         closure = build_trial_closure_system(
             fixed_equations=self.fixed_equations,
             trial_context=context,
         ).solve(maximum_condition_number=maximum_closure_condition_number)
         return EngagedContactTrial(
-            friction_utilization=friction_utilization,
+            traction_utilization=traction_utilization,
             closure=closure,
             relative_motion=evaluate_contact_relative_motion(
                 state=self.snapshot.state,
@@ -342,8 +389,9 @@ class EngagedContactClosure:
 
         ``sticking_interfaces`` determines the nonlinear dimension. Two
         interfaces gives the stick--stick solve; one gives either mixed slip
-        branch. Each free lambda is bounded by its static interval, while the
-        slipping interface remains fixed at its signed kinetic lambda.
+        branch. Each free lambda is bounded only by the broad numerical search interval,
+        while the slipping interface remains fixed at its signed kinetic lambda.
+        Physical static admissibility is assessed separately after solving.
         """
 
         if not isinstance(mode, EngagedContactMode):
@@ -361,11 +409,11 @@ class EngagedContactClosure:
         )
 
         lower = np.asarray(
-            [settings.static_bounds.lower_at(interface) for interface in free_interfaces],
+            [settings.lambda_search_bounds.lower_at(interface) for interface in free_interfaces],
             dtype=float,
         )
         upper = np.asarray(
-            [settings.static_bounds.upper_at(interface) for interface in free_interfaces],
+            [settings.lambda_search_bounds.upper_at(interface) for interface in free_interfaces],
             dtype=float,
         )
         initial = np.asarray(
@@ -373,20 +421,20 @@ class EngagedContactClosure:
             dtype=float,
         )
         if np.any(initial < lower) or np.any(initial > upper):
-            raise ValueError("initial free lambda guesses must lie inside their static bounds.")
+            raise ValueError("initial free lambda guesses must lie inside their numerical search bounds.")
 
-        def utilization_from_free_values(values: NDArray[np.float64]) -> TrialFrictionUtilization:
+        def utilization_from_free_values(values: NDArray[np.float64]) -> ContactTractionUtilization:
             lambda_values = dict(fixed_lambdas)
             for interface, value in zip(free_interfaces, values, strict=True):
                 lambda_values[interface] = float(value)
-            return TrialFrictionUtilization(
+            return ContactTractionUtilization(
                 primary_lambda=lambda_values[ContactInterface.PRIMARY],
                 secondary_lambda=lambda_values[ContactInterface.SECONDARY],
             )
 
         def residual_vector(values: NDArray[np.float64]) -> NDArray[np.float64]:
             trial = self.evaluate_trial(
-                friction_utilization=utilization_from_free_values(values),
+                traction_utilization=utilization_from_free_values(values),
                 maximum_closure_condition_number=(
                     settings.maximum_closure_condition_number
                 ),
@@ -414,7 +462,7 @@ class EngagedContactClosure:
 
         utilization = utilization_from_free_values(np.asarray(optimized.x, dtype=float))
         trial = self.evaluate_trial(
-            friction_utilization=utilization,
+            traction_utilization=utilization,
             maximum_closure_condition_number=(
                 settings.maximum_closure_condition_number
             ),
@@ -428,7 +476,7 @@ class EngagedContactClosure:
 
         active_lower, active_upper = _active_bounds(
             utilization=utilization,
-            bounds=settings.static_bounds,
+            bounds=settings.lambda_search_bounds,
             interfaces=free_interfaces,
         )
         accepted = (
@@ -463,7 +511,7 @@ class EngagedContactClosure:
         *,
         settings: EngagedContactSolveSettings,
     ) -> EngagedContactSolveResult:
-        """Solve both free static lambdas against both stick residuals."""
+        """Solve the two lambdas required for simultaneous stick compatibility."""
 
         return self.solve_bounded_stick_residuals(
             mode=EngagedContactMode.STICK_STICK,
@@ -524,7 +572,7 @@ class EngagedContactClosure:
                 "contact_tolerances must be a ContactKinematicTolerances instance."
             )
         trial = self.evaluate_trial(
-            friction_utilization=TrialFrictionUtilization(
+            traction_utilization=ContactTractionUtilization(
                 primary_lambda=primary_slip.signed_lambda,
                 secondary_lambda=secondary_slip.signed_lambda,
             ),
@@ -638,8 +686,8 @@ def _require_slip_interface(
 
 def _active_bounds(
     *,
-    utilization: TrialFrictionUtilization,
-    bounds: FrictionUtilizationBounds,
+    utilization: ContactTractionUtilization,
+    bounds: LambdaSearchBounds,
     interfaces: tuple[ContactInterface, ...],
 ) -> tuple[tuple[bool, ...], tuple[bool, ...]]:
     values = {

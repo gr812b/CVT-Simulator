@@ -7,11 +7,9 @@ from cinder.closure import ClosureEquation
 from .equation_context import TrialEquationContext
 from .state_fixed_equations import StateFixedEquationBlock
 from .trial_system import TrialClosureSystem
-from .rows.primary_axial import build_primary_axial_equation
-from .rows.secondary_axial import build_secondary_axial_equation
-from .rows.tension_loop import build_tension_loop_equation
 from .rows.primary_traction import build_primary_traction_equation
 from .rows.secondary_traction import build_secondary_traction_equation
+from .rows.tension_loop import build_tension_loop_equation
 
 
 def build_closure_equations(
@@ -26,24 +24,16 @@ def build_closure_equations(
         [alpha_p, alpha_s, v_b_dot, s_ddot,
          tau_p, tau_s, N_p, N_s].
 
-    Rows:
+    The first five rows are fully frozen by the ODE state. The last three are
+    rebuilt for the current signed lambda trial:
 
-    1. primary shaft rotation;
-    2. whole-belt tangential momentum;
-    3. secondary shaft rotation;
-    4. primary physical axial balance;
-    5. secondary physical axial balance mapped through ``x_s(s)``;
-    6. primary integrated traction resultant;
-    7. secondary integrated traction resultant;
-    8. closed tension-loop compatibility.
+        tau_p / r_tau,p - lambda_p N_p = 0,
+        tau_s / r_tau,s - lambda_s N_s = 0,
+        C_T(lambda_p, lambda_s) = 0.
     """
 
     return (
-        fixed_equations.primary_rotation,
-        fixed_equations.belt_transport,
-        fixed_equations.secondary_rotation,
-        build_primary_axial_equation(context=trial_context),
-        build_secondary_axial_equation(context=trial_context),
+        *fixed_equations.as_tuple(),
         build_primary_traction_equation(context=trial_context),
         build_secondary_traction_equation(context=trial_context),
         build_tension_loop_equation(context=trial_context),

@@ -1,16 +1,18 @@
-ODE state
+Continuous ODE state
+    ↓
+`cinder.integration.CVTDynamicState`
     ↓
 DynamicsSnapshot
     ↓
-build_state_fixed_equations(snapshot)
-    → state-fixed mechanics cached for the full RHS evaluation
+`build_state_fixed_equations(snapshot)`
+    → five lambda-independent mechanics rows cached for the full RHS evaluation
 
 
-DynamicsSnapshot + trial λp, λs
+DynamicsSnapshot + trial signed λp, λs
     ↓
 TrialEquationContext
     ↓
-closure-row builders
+three lambda-dependent closure rows
     ↓
 8 affine closure rows
     ↓
@@ -26,17 +28,25 @@ Canonical closure basis:
 
 Current fixed-λ row order:
 
-    1. primary shaft rotation
-    2. whole-belt tangential momentum
-    3. secondary shaft rotation
-    4. primary physical axial balance
-    5. secondary physical axial balance, mapped through x_s(s)
-    6. primary integrated traction resultant
-    7. secondary integrated traction resultant
-    8. closed tension-loop compatibility
+    1. primary shaft rotation                    state-fixed
+    2. whole-belt tangential momentum            state-fixed
+    3. secondary shaft rotation                  state-fixed
+    4. primary physical axial balance            state-fixed
+    5. secondary physical axial balance          state-fixed
+    6. primary integrated traction resultant     lambda-dependent
+    7. secondary integrated traction resultant   lambda-dependent
+    8. closed tension-loop compatibility          lambda-dependent
 
-The snapshot resolves primary, secondary, and representative belt axial
-translation inertias individually. The current physical pulley axial rows use
-the primary and secondary entries directly. The belt axial entry remains
-explicit for the later derivation of its own distributed/representative axial
-force treatment; it is not silently absorbed into either pulley-local row.
+`ContactTractionUtilization` stores the signed effective traction ratios:
+
+    λ_j = Q_j / N_j = τ_j / (r_tau,j N_j).
+
+It is not a commanded percentage. A stick solve finds the static traction
+requirement. `ContactTractionLaw` separately decides whether that requirement
+lies within physical signed static limits. In a selected slip branch, the law
+provides the kinetic lambda magnitude and the stored slip direction supplies
+its sign.
+
+`LambdaSearchBounds` is strictly numerical. It intentionally must not be used
+as the physical traction limit, because a required stick solution outside
+physical capacity is useful information for selecting a slip branch.

@@ -15,11 +15,11 @@ from .tolerances import ContactKinematicTolerances
 
 @dataclass(frozen=True, slots=True)
 class KineticSlipSpecification:
-    """A known kinetic utilization at one slipping interface.
+    """A known kinetic lambda magnitude at one slipping interface.
 
     The branch selector/event logic supplies ``direction``. This object does
     not decide whether an interface should slip; it only maps the selected
-    kinematic direction to the signed utilization required by the present
+    kinematic direction to the signed lambda required by the present
     pulley-torque convention.
 
     Positive forward-drive variables mean:
@@ -38,15 +38,15 @@ class KineticSlipSpecification:
 
     interface: ContactInterface
     direction: SlipDirection
-    kinetic_utilization: float
+    kinetic_lambda_magnitude: float
 
     def __post_init__(self) -> None:
         if not isinstance(self.interface, ContactInterface):
             raise TypeError("interface must be a ContactInterface.")
         if self.direction is SlipDirection.INDETERMINATE:
             raise ValueError("A kinetic slip specification requires a direction.")
-        if not isfinite(self.kinetic_utilization) or self.kinetic_utilization <= 0.0:
-            raise ValueError("kinetic_utilization must be finite and strictly positive.")
+        if not isfinite(self.kinetic_lambda_magnitude) or self.kinetic_lambda_magnitude <= 0.0:
+            raise ValueError("kinetic_lambda_magnitude must be finite and strictly positive.")
 
     @property
     def signed_lambda(self) -> float:
@@ -54,13 +54,13 @@ class KineticSlipSpecification:
 
         if self.interface is ContactInterface.PRIMARY:
             if self.direction is SlipDirection.PULLEY_LEADS_BELT:
-                return self.kinetic_utilization
-            return -self.kinetic_utilization
+                return self.kinetic_lambda_magnitude
+            return -self.kinetic_lambda_magnitude
 
         if self.interface is ContactInterface.SECONDARY:
             if self.direction is SlipDirection.BELT_LEADS_PULLEY:
-                return self.kinetic_utilization
-            return -self.kinetic_utilization
+                return self.kinetic_lambda_magnitude
+            return -self.kinetic_lambda_magnitude
 
         raise ValueError(f"Unsupported contact interface: {self.interface!r}.")
 

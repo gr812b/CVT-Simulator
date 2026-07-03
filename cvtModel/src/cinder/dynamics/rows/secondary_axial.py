@@ -6,38 +6,34 @@ from math import isfinite, tan
 
 from cinder.closure import AffineClosureScalar, ClosureEquation, ClosureGains
 
-from ..equation_context import TrialEquationContext
+from ..snapshot import DynamicsSnapshot
 
 
 def build_secondary_axial_equation(
     *,
-    context: TrialEquationContext,
+    snapshot: DynamicsSnapshot,
 ) -> ClosureEquation:
-    """Build the physical secondary axial force balance in the global coordinate.
+    """Build the lambda-independent physical secondary axial balance.
 
-    The physical local secondary closing coordinate is supplied by geometry:
+    The local coordinate supplied by geometry satisfies
 
-        x_s = x_s(s),
         x_s_ddot = x_s'(s) s_ddot + x_s''(s) s_dot^2.
 
-    Positive local force closes the secondary. The belt wedge reaction opens
-    the movable sheave, so the local balance is
+    With positive local force closing the secondary, the balance is
 
         m_s x_s_ddot - F_s + N_s / (2 tan(beta)) = 0.
 
-    ``F_s`` is the snapshot's full affine secondary-actuation relation. It
-    already carries the helix coupling to secondary angular acceleration,
-    secondary torque, and global shift acceleration; this row must therefore
-    use it directly rather than project it once more through ``x_s'``.
+    ``F_s`` already contains its helix coupling to secondary acceleration,
+    secondary torque, and global shift acceleration. The row contains no trial
+    lambda, so it is built once per frozen state together with the other four
+    lambda-independent mechanics rows.
     """
 
-    snapshot = context.snapshot
     tangent = tan(snapshot.sheave_half_angle)
     if not isfinite(tangent) or tangent <= 0.0:
         raise ValueError("sheave_half_angle must produce a positive finite tangent.")
 
     inertia = snapshot.axial_translation_inertias.secondary
-
     inertial_relation = AffineClosureScalar(
         bias=inertia.local_known_inertial_force(
             shift_speed=snapshot.state.shift_speed
