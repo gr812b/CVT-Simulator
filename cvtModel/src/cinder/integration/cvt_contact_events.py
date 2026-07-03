@@ -33,6 +33,8 @@ def build_cvt_contact_events(
     evaluate: Callable[[float, NDArray[np.float64]], CVTContactEvaluation],
     traction_law,
     switching_settings,
+    relative_speed_tolerance: float = 1.0e-7,
+    relative_acceleration_tolerance: float = 1.0e-8,
     minimum_shift: float | None = None,
     maximum_shift: float | None = None,
     include_shift_boundary_events: bool = True,
@@ -44,6 +46,11 @@ def build_cvt_contact_events(
     guards and supplies its own geometry events, because upper-stop arrival is
     now a real constrained continuation rather than a terminal failure.
     """
+
+    if relative_speed_tolerance <= 0.0:
+        raise ValueError("relative_speed_tolerance must be strictly positive.")
+    if relative_acceleration_tolerance <= 0.0:
+        raise ValueError("relative_acceleration_tolerance must be strictly positive.")
 
     events: list[HybridEvent] = [
         HybridEvent(
@@ -110,11 +117,32 @@ def build_cvt_contact_events(
         # A finite-speed transition into stick would silently leave a nonzero
         # v_rel in a branch whose acceleration constraint merely preserves it.
         # Therefore the terminal re-stick event is the exact crossing v_rel=0.
+        def restick_indicator(
+            time: float,
+            vector: NDArray[np.float64],
+            *,
+            interface: ContactInterface = interface,
+            direction_sign: float = direction_sign,
+        ) -> float:
+            evaluation = evaluate(time, vector)
+            relative_speed = evaluation.relative_motion.relative_speed_at(interface)
+            relative_acceleration = evaluation.relative_motion.relative_acceleration_at(interface)
+            # A kinetic trajectory can only touch v_rel = 0 and return in the
+            # same Coulomb direction.  That is not a physical re-stick or a
+            # slip-direction reversal.  Re-arm the event at the exact root so
+            # a segmented integrator does not create a no-op transition.
+            if (
+                abs(relative_speed) <= relative_speed_tolerance
+                and direction_sign * relative_acceleration
+                > relative_acceleration_tolerance
+            ):
+                return relative_speed_tolerance
+            return direction_sign * relative_speed
+
         events.append(
             HybridEvent(
                 name=restick_event.value,
-                function=lambda time, vector, interface=interface, direction_sign=direction_sign: direction_sign
-                * evaluate(time, vector).relative_motion.relative_speed_at(interface),
+                function=restick_indicator,
                 direction=-1.0,
             )
         )

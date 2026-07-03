@@ -76,6 +76,14 @@ class CVTContactEvaluation:
         return self.branch_result.trial.closure.unknowns
 
     @property
+    def low_ratio_seat_reaction(self) -> float | None:
+        """Return the recovered closing reaction at the low-ratio seat."""
+
+        if isinstance(self.branch_result, EngagedContactSolveResult):
+            return self.branch_result.trial.low_ratio_seat_reaction
+        return self.branch_result.trial.low_ratio_seat_reaction
+
+    @property
     def upper_stop_reaction(self) -> float | None:
         """Return the recovered high-ratio stop reaction when constrained."""
 
@@ -335,6 +343,7 @@ class EngagedCVTContactEvaluator:
         *,
         state: CVTDynamicState,
         switching_settings: "CVTContactSwitchSettings",
+        shift_constraint: EngagedShiftConstraint = EngagedShiftConstraint.FREE,
     ) -> ContactRegime:
         """Classify established initial slip, otherwise test a stick candidate.
 
@@ -344,8 +353,11 @@ class EngagedCVTContactEvaluator:
 
         from .cvt_contact_switching import resolve_initial_engaged_regime
 
+        if not isinstance(shift_constraint, EngagedShiftConstraint):
+            raise TypeError("shift_constraint must be an EngagedShiftConstraint.")
         return resolve_initial_engaged_regime(
             evaluator=self,
             state=state,
             switching_settings=switching_settings,
+            shift_constraint=shift_constraint,
         )

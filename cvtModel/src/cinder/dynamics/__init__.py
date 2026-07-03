@@ -29,7 +29,9 @@ from .result import ClosureEquationResidual, TrialClosureResult
 from .snapshot import CVTDynamicsModel, DynamicsSnapshot
 from .shift_constraints import (
     EngagedShiftConstraint,
+    LowRatioSeatReaction,
     UpperStopReaction,
+    recover_low_ratio_seat_reaction,
     recover_upper_stop_reaction,
 )
 from .state_fixed_equations import (
@@ -60,6 +62,7 @@ __all__ = [
     "EngagedContactSolveSettings",
     "EngagedContactTrial",
     "LambdaSearchBounds",
+    "LowRatioSeatReaction",
     "UpperStopReaction",
     "StickResidualContinuation",
     "StateFixedEquationBlock",
@@ -73,6 +76,7 @@ __all__ = [
     "build_state_fixed_equations",
     "build_trial_closure_system",
     "evaluate_both_slip",
+    "recover_low_ratio_seat_reaction",
     "recover_upper_stop_reaction",
     "solve_primary_slip_secondary_stick",
     "solve_primary_stick_secondary_slip",

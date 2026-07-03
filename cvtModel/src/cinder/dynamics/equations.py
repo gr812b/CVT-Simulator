@@ -26,7 +26,7 @@ def build_closure_equations(
 
     The first five rows are fully frozen by the ODE state and active
     shift constraint.  The fourth row is either the free primary axial balance
-    or the upper-stop kinematic constraint ``s_ddot = 0``. The last three are
+    or a fixed-shift kinematic constraint ``s_ddot = 0``. The last three are
     rebuilt for the current signed lambda trial:
 
         tau_p / r_tau,p - lambda_p N_p = 0,

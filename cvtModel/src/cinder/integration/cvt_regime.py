@@ -1,10 +1,11 @@
-"""Top-level CVT operating regimes independent of the engaged contact topology.
+"""Top-level CVT operating regimes independent of contact topology.
 
-The contact regime is meaningful only when the primary has physically closed
-far enough to engage the belt.  Mechanical stops are separate unilateral
-constraints on the global shift coordinate.  Keeping those axes separate
-avoids impossible combinations such as a deadzone contact branch or an
-engaged lower-stop branch.
+The contact topology is meaningful only while the primary has physically
+closed enough to engage the belt.  Primary travel constraints are a separate
+axis.  The low-ratio seat at the engagement boundary is distinct from the
+lower *mechanical* stop below the deadzone: it retains engaged contact but
+prevents the belt/contact closure from using its normal reaction alone to
+force a neutral transition.
 """
 
 from __future__ import annotations
@@ -27,6 +28,7 @@ class CVTShiftConstraint(str, Enum):
 
     FREE = "free"
     LOWER_STOP = "lower_stop"
+    LOW_RATIO_SEAT = "low_ratio_seat"
     UPPER_STOP = "upper_stop"
 
 
@@ -38,13 +40,14 @@ class CVTOperatingRegime:
 
     * ``deadzone + free``;
     * ``deadzone + lower_stop``;
-    * ``engaged + free + ContactRegime``; and
+    * ``engaged + free + ContactRegime``;
+    * ``engaged + low_ratio_seat + ContactRegime``; and
     * ``engaged + upper_stop + ContactRegime``.
 
-    The lower mechanical stop lies below the primary engagement boundary, so
-    it is necessarily a deadzone condition.  Conversely, the upper stop is
-    necessarily an engaged condition.  A deadzone has no primary traction
-    closure and therefore carries no :class:`ContactRegime`.
+    The low-ratio seat is not a deadzone contact mode and not the lower
+    mechanical stop.  It is the engaged minimum-radius boundary at which the
+    primary may still clamp the belt.  It releases to deadzone only after the
+    primary actuator itself loses closing force.
     """
 
     engagement: CVTEngagementState
@@ -71,9 +74,12 @@ class CVTOperatingRegime:
             raise ValueError("An engaged regime requires a ContactRegime.")
         if self.shift_constraint not in (
             CVTShiftConstraint.FREE,
+            CVTShiftConstraint.LOW_RATIO_SEAT,
             CVTShiftConstraint.UPPER_STOP,
         ):
-            raise ValueError("An engaged regime may be free or at the upper stop only.")
+            raise ValueError(
+                "An engaged regime may be free, at the low-ratio seat, or at the upper stop."
+            )
 
     @classmethod
     def deadzone_free(cls) -> "CVTOperatingRegime":
@@ -94,6 +100,18 @@ class CVTOperatingRegime:
         return cls(
             engagement=CVTEngagementState.ENGAGED,
             shift_constraint=CVTShiftConstraint.FREE,
+            contact_regime=contact_regime,
+        )
+
+    @classmethod
+    def engaged_low_ratio_seat(
+        cls,
+        *,
+        contact_regime: ContactRegime,
+    ) -> "CVTOperatingRegime":
+        return cls(
+            engagement=CVTEngagementState.ENGAGED,
+            shift_constraint=CVTShiftConstraint.LOW_RATIO_SEAT,
             contact_regime=contact_regime,
         )
 

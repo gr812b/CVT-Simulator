@@ -23,9 +23,10 @@ class StateFixedEquationBlock:
     """Five lambda-independent mechanics rows for one engaged constraint.
 
     In free shift, ``shift_coordinate`` is the primary axial balance and
-    determines ``s_ddot``.  At the upper stop, it is replaced by the exact
+    determines ``s_ddot``.  At either fixed-shift engaged boundary—the
+    low-ratio seat or upper mechanical stop—it is replaced by the exact
     kinematic row ``s_ddot = 0``; the omitted primary axial balance is then
-    used solely to recover the physical unilateral stop reaction after solve.
+    used solely to recover the corresponding unilateral reaction after solve.
 
     The remaining four rows are unchanged.  In particular, the secondary axial
     balance remains active at the stop because the secondary has no separate
@@ -64,7 +65,7 @@ def build_state_fixed_equations(
     snapshot: DynamicsSnapshot,
     shift_constraint: EngagedShiftConstraint = EngagedShiftConstraint.FREE,
 ) -> StateFixedEquationBlock:
-    """Build and cache five state-fixed rows for free shift or upper stop."""
+    """Build and cache five state-fixed rows for one engaged shift constraint."""
 
     if not isinstance(shift_constraint, EngagedShiftConstraint):
         raise TypeError("shift_constraint must be an EngagedShiftConstraint.")

@@ -136,19 +136,19 @@ class CVTDynamicStateDerivative:
         )
 
     @classmethod
-    def from_upper_shift_stop_closure(
+    def from_fixed_engaged_shift_constraint_closure(
         cls,
         *,
         state: CVTDynamicState,
         unknowns: "ClosureUnknowns",
     ) -> "CVTDynamicStateDerivative":
-        """Convert an engaged upper-stop closure into ODE derivatives.
+        """Convert an engaged fixed-shift closure into ODE derivatives.
 
-        The closure's fourth row already enforces ``s_ddot = 0``.  This
-        factory also sets ``s_dot = 0`` explicitly in the derivative so a
-        constrained integration segment cannot inherit a tiny nonzero shift
-        velocity from numerical stage arithmetic.  Event transitions must
-        still project the state itself to the stop with ``shift_speed = 0``.
+        Both the low-ratio seat and high-ratio stop enforce ``s_ddot = 0`` in
+        the closure.  This factory also sets ``s_dot = 0`` explicitly so a
+        constrained segment cannot inherit a tiny nonzero shift velocity from
+        numerical stage arithmetic.  The event transition still projects the
+        state itself to zero axial speed before this RHS is entered.
         """
 
         return cls(

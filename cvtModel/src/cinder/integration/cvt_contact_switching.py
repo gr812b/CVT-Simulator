@@ -62,6 +62,7 @@ def resolve_initial_engaged_regime(
     evaluator: "EngagedCVTContactEvaluator",
     state: CVTDynamicState,
     switching_settings: CVTContactSwitchSettings,
+    shift_constraint: EngagedShiftConstraint = EngagedShiftConstraint.FREE,
 ) -> ContactRegime:
     """Choose a post-engagement initial contact regime from a supplied state."""
 
@@ -92,6 +93,7 @@ def resolve_initial_engaged_regime(
         time=0.0,
         vector=vector,
         regime=ContactRegime.stick_stick(),
+        shift_constraint=shift_constraint,
     )
     if _candidate_is_admissible(
         stick,
@@ -119,6 +121,7 @@ def resolve_initial_engaged_regime(
         old_regime=ContactRegime.stick_stick(),
         fired_event_names=tuple(fired),
         switching_settings=switching_settings,
+        shift_constraint=shift_constraint,
     )
     if transition.next_mode is None:
         raise RuntimeError(

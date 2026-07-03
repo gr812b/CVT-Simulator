@@ -49,6 +49,7 @@ from cinder.dynamics.state_fixed_equations import (
 )
 from cinder.dynamics.shift_constraints import (
     EngagedShiftConstraint,
+    recover_low_ratio_seat_reaction,
     recover_upper_stop_reaction,
 )
 
@@ -169,9 +170,9 @@ class EngagedContactSolveSettings:
 class EngagedContactTrial:
     """One fixed-lambda closure solve plus shared contact kinematics.
 
-    ``upper_stop_reaction`` is populated only when the fourth closure row is
-    the high-ratio constraint ``s_ddot = 0``.  It is the recovered unilateral
-    reaction, not an extra closure unknown.
+    A non-free fixed-shift closure recovers its unilateral reaction after the
+    solve.  The low-ratio seat reaction acts closing; the upper-stop reaction
+    acts opening.  Neither is an extra closure unknown.
     """
 
     traction_utilization: ContactTractionUtilization
@@ -179,17 +180,29 @@ class EngagedContactTrial:
     relative_motion: ContactRelativeMotion
     state_derivative: CVTDynamicStateDerivative
     shift_constraint: EngagedShiftConstraint
+    low_ratio_seat_reaction: float | None = None
     upper_stop_reaction: float | None = None
 
     def __post_init__(self) -> None:
         if not isinstance(self.shift_constraint, EngagedShiftConstraint):
             raise TypeError("shift_constraint must be an EngagedShiftConstraint.")
         if self.shift_constraint is EngagedShiftConstraint.FREE:
-            if self.upper_stop_reaction is not None:
-                raise ValueError("free shift must not carry an upper-stop reaction.")
+            if self.low_ratio_seat_reaction is not None or self.upper_stop_reaction is not None:
+                raise ValueError("free shift must not carry a fixed-shift reaction.")
             return
-        if self.upper_stop_reaction is None or not isfinite(self.upper_stop_reaction):
-            raise ValueError("upper-stop trial requires a finite recovered reaction.")
+        if self.shift_constraint is EngagedShiftConstraint.LOW_RATIO_SEAT:
+            if self.low_ratio_seat_reaction is None or not isfinite(self.low_ratio_seat_reaction):
+                raise ValueError("low-ratio seat trial requires a finite recovered reaction.")
+            if self.upper_stop_reaction is not None:
+                raise ValueError("low-ratio seat trial must not carry an upper-stop reaction.")
+            return
+        if self.shift_constraint is EngagedShiftConstraint.UPPER_STOP:
+            if self.upper_stop_reaction is None or not isfinite(self.upper_stop_reaction):
+                raise ValueError("upper-stop trial requires a finite recovered reaction.")
+            if self.low_ratio_seat_reaction is not None:
+                raise ValueError("upper-stop trial must not carry a low-ratio seat reaction.")
+            return
+        raise ValueError(f"Unsupported engaged shift constraint: {self.shift_constraint!r}.")
 
 
 @dataclass(frozen=True, slots=True)
@@ -395,10 +408,11 @@ class BothSlipResult:
 
 @dataclass(frozen=True, slots=True)
 class EngagedContactClosure:
-    """State-frozen common evaluator for free engaged shift or the upper stop.
+    """State-frozen common evaluator for free or fixed-shift engaged contact.
 
-    Both constraints retain the same eight unknowns and the same outer lambda
-    branch solvers.  Only the fourth lambda-independent row changes.
+    The free branch, low-ratio seat, and upper stop retain the same eight
+    unknowns and the same outer lambda branch solvers.  Only the fourth
+    lambda-independent row changes for a constrained coordinate.
     """
 
     snapshot: DynamicsSnapshot
@@ -435,21 +449,30 @@ class EngagedContactClosure:
             fixed_equations=self.fixed_equations,
             trial_context=context,
         ).solve(maximum_condition_number=maximum_closure_condition_number)
+        low_ratio_seat_reaction = None
+        upper_stop_reaction = None
         if self.shift_constraint is EngagedShiftConstraint.FREE:
             state_derivative = CVTDynamicStateDerivative.from_engaged_closure(
                 state=self.snapshot.state,
                 unknowns=closure.unknowns,
             )
-            upper_stop_reaction = None
         else:
-            state_derivative = CVTDynamicStateDerivative.from_upper_shift_stop_closure(
+            state_derivative = CVTDynamicStateDerivative.from_fixed_engaged_shift_constraint_closure(
                 state=self.snapshot.state,
                 unknowns=closure.unknowns,
             )
-            upper_stop_reaction = recover_upper_stop_reaction(
-                snapshot=self.snapshot,
-                unknowns=closure.unknowns,
-            ).opening_direction_magnitude
+            if self.shift_constraint is EngagedShiftConstraint.LOW_RATIO_SEAT:
+                low_ratio_seat_reaction = recover_low_ratio_seat_reaction(
+                    snapshot=self.snapshot,
+                    unknowns=closure.unknowns,
+                ).closing_direction_magnitude
+            elif self.shift_constraint is EngagedShiftConstraint.UPPER_STOP:
+                upper_stop_reaction = recover_upper_stop_reaction(
+                    snapshot=self.snapshot,
+                    unknowns=closure.unknowns,
+                ).opening_direction_magnitude
+            else:  # pragma: no cover - defensive enum exhaustiveness.
+                raise ValueError(f"Unsupported engaged shift constraint: {self.shift_constraint!r}.")
 
         return EngagedContactTrial(
             traction_utilization=traction_utilization,
@@ -461,6 +484,7 @@ class EngagedContactClosure:
             ),
             state_derivative=state_derivative,
             shift_constraint=self.shift_constraint,
+            low_ratio_seat_reaction=low_ratio_seat_reaction,
             upper_stop_reaction=upper_stop_reaction,
         )
 

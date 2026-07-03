@@ -90,6 +90,8 @@ class EngagedCVTHybridSystem:
             ),
             traction_law=self.traction_law,
             switching_settings=self.switching_settings,
+            relative_speed_tolerance=self.solve_settings.contact_tolerances.relative_speed_tolerance,
+            relative_acceleration_tolerance=self.solve_settings.contact_tolerances.relative_acceleration_tolerance,
             minimum_shift=self.shift_travel_limits.minimum_shift,
             maximum_shift=self.shift_travel_limits.maximum_shift,
         )

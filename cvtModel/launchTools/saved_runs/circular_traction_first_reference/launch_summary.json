@@ -1,0 +1,55 @@
+{
+  "candidate": {
+    "flyweight_mass_kg": 0.8,
+    "helix_angle_degrees": 20.0,
+    "secondary_torsional_pretension_degrees": 300.0,
+    "secondary_compression_preload_mm": 110.0,
+    "primary_ramp_kind": "circular_hard_to_soft",
+    "primary_ramp_angle_degrees": 30.0,
+    "primary_ramp_start_angle_degrees": 38.0,
+    "primary_ramp_end_angle_degrees": 30.0,
+    "resolved_primary_preload_mm": 104.6145479692159
+  },
+  "integration": {
+    "duration_s": 10.0,
+    "solver_method": "LSODA",
+    "max_step_ms": 20.0,
+    "relative_tolerance": 0.0001,
+    "absolute_tolerance": 1e-07
+  },
+  "metrics": {
+    "completed": 1,
+    "termination_reason": "final_time_reached",
+    "final_time_s": 10.0,
+    "segments": 7,
+    "transitions": 6,
+    "engagement_events": 1,
+    "disengagement_events": 0,
+    "first_engagement_time_s": 0.10806888178267816,
+    "longest_contiguous_engaged_duration_s": 3.937299405624339,
+    "primary_slip_start_time_s": 0.10806888178267816,
+    "primary_restuck_time_s": 2.1974598341357483,
+    "primary_restuck_primary_rpm": 3383.6707974529572,
+    "primary_restuck_shift_mm": 9.71227027604664,
+    "primary_slip_duration_s": 2.08939095235307,
+    "main_shift_onset_time_s": 0.8158281932288881,
+    "main_shift_onset_primary_rpm": 3071.101951248797,
+    "observed_shift_onset_time_s": 0.8158281932288881,
+    "observed_shift_onset_primary_rpm": 3071.101951248797,
+    "shift_10_to_90_s": 3.9689790576734385,
+    "maximum_main_shift_speed_mm_per_s": 52.392463141940205,
+    "upper_stop_time_s": 6.062700594375661,
+    "upper_stop_impact_time_s": 6.062700594375661,
+    "final_primary_rpm": 3887.512777295982,
+    "final_secondary_rpm": 3438.305173958334,
+    "final_shift_mm": 19.049999999999997,
+    "maximum_shift_mm": 19.049999999999997,
+    "maximum_shift_speed_mm_per_s": 342.48444090867525,
+    "persistent_engagement": 1,
+    "transition_reasons": "lower_stop_released_by_inward_free_shift_tendency | primary_closed_into_engaged_contact | low_ratio_seat_reached_perfectly_inelastic_projection | low_ratio_seat_released_by_tensile_reaction | contact_restuck_with_static_reserve | upper_stop_reached_perfectly_inelastic_impact",
+    "physical_audit_passed": null
+  },
+  "physical_audit": [
+    "Physical audit unavailable: test/cinder/hybrid_system_checks.py was not found."
+  ]
+}

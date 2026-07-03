@@ -5,7 +5,8 @@ not.  This adapter dispatches only between already-derived evaluators:
 
     deadzone/free <-> deadzone/lower stop
             <->
-    engaged/free/contact branch <-> engaged/upper stop/contact branch.
+    engaged/free/contact branch <-> engaged/low-ratio-seat/contact branch
+                                 <-> engaged/upper-stop/contact branch.
 
 Deadzone remains a reduced primary-disengaged model; it does not call the
 engaged lambda/tension closure.  Conversely, the upper stop remains an
@@ -41,10 +42,12 @@ from .cvt_regime_events import (
     build_deadzone_free_boundary_events,
     build_engaged_free_boundary_events,
     build_lower_stop_release_event,
+    build_low_ratio_seat_events,
     build_upper_stop_release_event,
 )
 from .cvt_regime_switching import (
     classify_initial_cvt_regime,
+    primary_independent_clamping_force_at_engagement,
     resolve_cvt_operating_transition,
 )
 from .hybrid import (
@@ -65,7 +68,7 @@ class CVTOperatingHybridSystem:
     """Segmented hybrid adapter over all currently derived CVT RHS regimes.
 
     The engaged evaluator owns lambda solves, contact branch algebra, and the
-    upper-stop constrained closure.  The deadzone evaluator owns neutral
+    low-ratio-seat / upper-stop constrained closures.  The deadzone evaluator owns neutral
     primary motion and the imposed belt-secondary lock.  This adapter only
     selects between those evaluators, exposes valid events, and delegates
     event transitions to the operating-regime resolver.
@@ -189,6 +192,8 @@ class CVTOperatingHybridSystem:
             ),
             traction_law=self.traction_law,
             switching_settings=self.switching_settings,
+            relative_speed_tolerance=self.solve_settings.contact_tolerances.relative_speed_tolerance,
+            relative_acceleration_tolerance=self.solve_settings.contact_tolerances.relative_acceleration_tolerance,
             include_shift_boundary_events=False,
         )
 
@@ -197,15 +202,30 @@ class CVTOperatingHybridSystem:
                 limits=self.operating_limits
             )
 
-        return contact_events + (
-            build_upper_stop_release_event(
-                opening_reaction=lambda event_time, vector: self._upper_stop_reaction(
+        if mode.shift_constraint is CVTShiftConstraint.LOW_RATIO_SEAT:
+            return contact_events + build_low_ratio_seat_events(
+                primary_clamping_force=lambda event_time, vector: self._primary_clamping_force(
+                    time=event_time,
+                    vector=vector,
+                ),
+                closing_reaction=lambda event_time, vector: self._low_ratio_seat_reaction(
                     time=event_time,
                     vector=vector,
                     contact_regime=mode.contact_regime,
-                )
-            ),
-        )
+                ),
+            )
+
+        if mode.shift_constraint is CVTShiftConstraint.UPPER_STOP:
+            return contact_events + (
+                build_upper_stop_release_event(
+                    opening_reaction=lambda event_time, vector: self._upper_stop_reaction(
+                        time=event_time,
+                        vector=vector,
+                        contact_regime=mode.contact_regime,
+                    )
+                ),
+            )
+        raise RuntimeError(f"Unsupported engaged shift constraint: {mode.shift_constraint!r}.")
 
     def transition(
         self,
@@ -284,6 +304,39 @@ class CVTOperatingHybridSystem:
             raise RuntimeError("Lower-stop evaluation did not recover a stop reaction.")
         return reaction
 
+    def _primary_clamping_force(
+        self,
+        *,
+        time: float,
+        vector: NDArray[np.float64],
+    ) -> float:
+        """Return the primary mechanism's own signed clamp at engagement."""
+
+        del time
+        return primary_independent_clamping_force_at_engagement(
+            evaluator=self.evaluator,
+            state=CVTDynamicState.from_vector(vector),
+            limits=self.operating_limits,
+        )
+
+    def _low_ratio_seat_reaction(
+        self,
+        *,
+        time: float,
+        vector: NDArray[np.float64],
+        contact_regime: ContactRegime,
+    ) -> float:
+        evaluation = self.evaluator.evaluate_vector(
+            time=time,
+            vector=vector,
+            regime=contact_regime,
+            shift_constraint=EngagedShiftConstraint.LOW_RATIO_SEAT,
+        )
+        reaction = evaluation.low_ratio_seat_reaction
+        if reaction is None:  # pragma: no cover - constrained evaluator invariant.
+            raise RuntimeError("Low-ratio seat closure did not return a seat reaction.")
+        return reaction
+
     def _upper_stop_reaction(
         self,
         *,
@@ -326,6 +379,22 @@ class CVTOperatingHybridSystem:
                 return CVTOperatingRegime.deadzone_free()
             return mode
 
+        if mode.shift_constraint is CVTShiftConstraint.LOW_RATIO_SEAT:
+            assert mode.contact_regime is not None
+            clamp = self._primary_clamping_force(time=0.0, vector=state.as_vector())
+            if clamp < 0.0:
+                return CVTOperatingRegime.deadzone_free()
+            reaction = self._low_ratio_seat_reaction(
+                time=0.0,
+                vector=state.as_vector(),
+                contact_regime=mode.contact_regime,
+            )
+            if reaction < 0.0:
+                return CVTOperatingRegime.engaged_free(
+                    contact_regime=mode.contact_regime,
+                )
+            return mode
+
         if mode.shift_constraint is CVTShiftConstraint.UPPER_STOP:
             assert mode.contact_regime is not None
             reaction = self._upper_stop_reaction(
@@ -347,6 +416,8 @@ class CVTOperatingHybridSystem:
             raise ValueError("An engaged shift constraint was requested for a deadzone mode.")
         if mode.shift_constraint is CVTShiftConstraint.FREE:
             return EngagedShiftConstraint.FREE
+        if mode.shift_constraint is CVTShiftConstraint.LOW_RATIO_SEAT:
+            return EngagedShiftConstraint.LOW_RATIO_SEAT
         if mode.shift_constraint is CVTShiftConstraint.UPPER_STOP:
             return EngagedShiftConstraint.UPPER_STOP
         raise RuntimeError(f"Unsupported engaged shift constraint: {mode.shift_constraint!r}.")
@@ -428,6 +499,18 @@ class CVTOperatingHybridSystem:
                     "A free engaged segment must start below upper_stop_shift, or exactly "
                     "at the upper stop with zero shift speed immediately after release."
                 )
+            return
+
+        if mode.shift_constraint is CVTShiftConstraint.LOW_RATIO_SEAT:
+            if not isclose(
+                state.shift_position,
+                engagement,
+                rel_tol=0.0,
+                abs_tol=tolerance,
+            ):
+                raise ValueError("A low-ratio-seat segment must start at engagement_shift.")
+            if not isclose(state.shift_speed, 0.0, rel_tol=0.0, abs_tol=tolerance):
+                raise ValueError("A low-ratio-seat segment must start with zero shift_speed.")
             return
 
         if mode.shift_constraint is CVTShiftConstraint.UPPER_STOP:

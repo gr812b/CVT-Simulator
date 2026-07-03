@@ -1,16 +1,20 @@
-"""Engaged-shift constraints and physical upper-stop reaction recovery.
+"""Engaged-shift constraints and recovered unilateral reactions.
 
 The free engaged closure solves the primary axial equation for ``s_ddot``.
-At the high-ratio mechanical stop, that degree of freedom is instead
-constrained:
+Two non-free constraints can instead hold the primary coordinate:
+
+* the low-ratio engagement seat at ``s = s_engage``; and
+* the high-ratio mechanical stop at ``s = s_upper``.
+
+Both constraints impose
 
     s_dot = 0,
     s_ddot = 0.
 
-The primary axial balance is not discarded.  Its residual is recovered after
-solving as the unilateral stop reaction.  This keeps the canonical eight
-closure unknowns unchanged and avoids a hidden state clamp or a ninth
-algebraic unknown.
+The primary axial balance is not discarded.  It is recovered after the
+8-by-8 solve as a unilateral reaction, preserving the canonical closure
+unknown basis and keeping the constraint force visible rather than hiding a
+state clamp inside the RHS.
 """
 
 from __future__ import annotations
@@ -25,20 +29,40 @@ from .snapshot import DynamicsSnapshot
 
 
 class EngagedShiftConstraint(str, Enum):
-    """How the engaged primary shift coordinate is treated in one closure."""
+    """How one engaged-contact closure constrains the primary shift coordinate."""
 
     FREE = "free"
+    LOW_RATIO_SEAT = "low_ratio_seat"
     UPPER_STOP = "upper_stop"
 
 
 @dataclass(frozen=True, slots=True)
-class UpperStopReaction:
-    """Recovered unilateral reaction of the engaged upper mechanical stop.
+class LowRatioSeatReaction:
+    """Recovered closing-direction reaction at the engaged low-ratio seat.
 
-    ``opening_direction_magnitude`` is positive when the high-ratio stop pushes
-    against an otherwise positive, further-closing free-shift tendency.  The
-    stop can remain active only while this magnitude is non-negative.
+    A positive value means the seat must push in the positive global-shift
+    direction to prevent further opening below the engaged minimum-radius
+    configuration.  This reaction determines whether the *seat* can hold; it
+    does not itself authorize primary disengagement.  Loss of primary actuator
+    clamp is the separate condition that permits deadzone entry.
     """
+
+    closing_direction_magnitude: float
+
+    def __post_init__(self) -> None:
+        if not isfinite(self.closing_direction_magnitude):
+            raise ValueError("closing_direction_magnitude must be finite.")
+
+    @property
+    def is_unilaterally_admissible(self) -> bool:
+        """Return whether the seat can push closed rather than pull open."""
+
+        return self.closing_direction_magnitude >= 0.0
+
+
+@dataclass(frozen=True, slots=True)
+class UpperStopReaction:
+    """Recovered opening-direction reaction of the high-ratio mechanical stop."""
 
     opening_direction_magnitude: float
 
@@ -57,25 +81,58 @@ def build_shift_constraint_equation(
     *,
     constraint: EngagedShiftConstraint,
 ) -> ClosureEquation:
-    """Build the fourth state-fixed closure row for one engaged constraint.
+    """Build the fourth state-fixed closure row for one fixed-shift constraint.
 
     The free case is represented by the ordinary primary axial row elsewhere.
-    At the upper stop, the replacement row is exactly ``s_ddot = 0``.  The
-    primary axial balance is evaluated after the solve to recover the stop
-    reaction, rather than adding a ninth unknown.
+    Both non-free constraints replace it with the exact kinematic row
+    ``s_ddot = 0``.  The omitted primary axial balance is recovered after the
+    solve with the direction appropriate to the active unilateral boundary.
     """
 
-    if constraint is not EngagedShiftConstraint.UPPER_STOP:
+    if constraint is EngagedShiftConstraint.FREE:
         raise ValueError(
-            "build_shift_constraint_equation() is only valid for the upper stop."
+            "build_shift_constraint_equation() is only valid for a non-free "
+            "engaged shift constraint."
         )
 
+    if constraint is EngagedShiftConstraint.LOW_RATIO_SEAT:
+        name = "low_ratio_seat_constraint"
+    elif constraint is EngagedShiftConstraint.UPPER_STOP:
+        name = "upper_shift_stop_constraint"
+    else:  # pragma: no cover - defensive enum exhaustiveness.
+        raise ValueError(f"Unsupported engaged shift constraint: {constraint!r}.")
+
     return ClosureEquation(
-        name="upper_shift_stop_constraint",
+        name=name,
         residual=AffineClosureScalar(
             gains=ClosureGains(shift_acceleration=1.0),
         ),
     )
+
+
+def recover_low_ratio_seat_reaction(
+    *,
+    snapshot: DynamicsSnapshot,
+    unknowns: ClosureUnknowns,
+) -> LowRatioSeatReaction:
+    """Recover the low-ratio seat reaction from the omitted primary row.
+
+    The unconstrained primary balance is
+
+        m_p s_ddot + C_p + N_p / (2 tan(beta)) - F_p = 0.
+
+    At the low-ratio seat, a positive reaction acts in the closing/global
+    positive-shift direction.  Therefore
+
+        R_seat = m_p s_ddot + C_p + N_p/(2 tan(beta)) - F_p.
+
+    The seat can hold only while ``R_seat >= 0``.  The separate engagement
+    transition policy decides when a nonnegative primary clamp is sufficient to
+    keep the belt engaged instead of allowing a deadzone transition.
+    """
+
+    residual = _free_primary_axial_residual(snapshot=snapshot, unknowns=unknowns)
+    return LowRatioSeatReaction(closing_direction_magnitude=residual)
 
 
 def recover_upper_stop_reaction(
@@ -83,21 +140,22 @@ def recover_upper_stop_reaction(
     snapshot: DynamicsSnapshot,
     unknowns: ClosureUnknowns,
 ) -> UpperStopReaction:
-    """Recover the upper-stop reaction from the omitted primary axial row.
+    """Recover the upper-stop opening reaction from the omitted primary row.
 
-    The free primary balance is
-
-        m_p s_ddot + m_p x_p'' s_dot^2 + N_p/(2 tan(beta)) - F_p = 0.
-
-    At the upper stop, the reaction acts in the opening direction, so
-
-        R_high = F_p - m_p x_p'' s_dot^2
-                 - m_p x_p' s_ddot - N_p/(2 tan(beta)).
-
-    The constrained row enforces ``s_ddot = 0``.  Keeping the general form
-    here makes this an exact negative of the omitted free primary-row residual
-    and gives a useful diagnostic if a caller inspects a non-ideal trial.
+    The high stop reaction is the negative of the unconstrained primary-row
+    residual because its positive direction opposes further positive shift.
     """
+
+    residual = _free_primary_axial_residual(snapshot=snapshot, unknowns=unknowns)
+    return UpperStopReaction(opening_direction_magnitude=-residual)
+
+
+def _free_primary_axial_residual(
+    *,
+    snapshot: DynamicsSnapshot,
+    unknowns: ClosureUnknowns,
+) -> float:
+    """Evaluate the free primary axial-row residual at one closure solution."""
 
     if not isinstance(snapshot, DynamicsSnapshot):
         raise TypeError("snapshot must be a DynamicsSnapshot instance.")
@@ -110,10 +168,9 @@ def recover_upper_stop_reaction(
 
     inertia = snapshot.axial_translation_inertias.primary
     primary_force = snapshot.primary_actuation.force(unknowns)
-    reaction = (
-        primary_force
-        - inertia.local_known_inertial_force(shift_speed=snapshot.state.shift_speed)
-        - inertia.local_shift_acceleration_gain * unknowns.shift_acceleration
-        - unknowns.primary_normal_resultant / (2.0 * tangent)
+    return (
+        inertia.local_known_inertial_force(shift_speed=snapshot.state.shift_speed)
+        + inertia.local_shift_acceleration_gain * unknowns.shift_acceleration
+        + unknowns.primary_normal_resultant / (2.0 * tangent)
+        - primary_force
     )
-    return UpperStopReaction(opening_direction_magnitude=reaction)
