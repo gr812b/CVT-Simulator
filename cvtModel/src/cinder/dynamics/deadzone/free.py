@@ -32,9 +32,13 @@ class DeadzoneDynamicsEvaluator:
         if not isinstance(self.model, CVTDynamicsModel):
             raise TypeError("model must be a CVTDynamicsModel instance.")
         if self.belt_secondary_lock_absolute_tolerance < 0.0:
-            raise ValueError("belt_secondary_lock_absolute_tolerance must be non-negative.")
+            raise ValueError(
+                "belt_secondary_lock_absolute_tolerance must be non-negative."
+            )
         if self.belt_secondary_lock_relative_tolerance < 0.0:
-            raise ValueError("belt_secondary_lock_relative_tolerance must be non-negative.")
+            raise ValueError(
+                "belt_secondary_lock_relative_tolerance must be non-negative."
+            )
 
     def snapshot(self, *, state: CVTDynamicState) -> DeadzoneSnapshot:
         """Construct and validate one deadzone frozen snapshot.
@@ -103,8 +107,7 @@ class DeadzoneDynamicsEvaluator:
 
     def _validate_belt_secondary_lock(self, *, snapshot: DeadzoneSnapshot) -> None:
         expected_speed = (
-            snapshot.belt_secondary_lock_radius
-            * snapshot.state.secondary_angular_speed
+            snapshot.belt_secondary_lock_radius * snapshot.state.secondary_angular_speed
         )
         if not isclose(
             snapshot.state.belt_speed,

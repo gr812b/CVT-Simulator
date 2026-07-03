@@ -248,7 +248,9 @@ def build_baja_trial_baseline(
     terminal_geometry = geometry.evaluate(c.max_shift)
     secondary_opening_travel = -terminal_geometry.secondary_axial_coordinate.value
     if secondary_opening_travel <= 0.0:
-        raise RuntimeError("Baseline geometry did not produce positive secondary opening.")
+        raise RuntimeError(
+            "Baseline geometry did not produce positive secondary opening."
+        )
 
     helix_profile = HelixProfile(
         circumferential_profile=PiecewiseRamp(
@@ -336,8 +338,7 @@ def build_baja_trial_baseline(
             ),
             high_speed_braking_torque=c.engine_governed_overspeed_torque,
             high_speed_braking_transition_width=(
-                c.engine_governed_overspeed_transition_width_rpm
-                * RPM_TO_RAD_PER_SECOND
+                c.engine_governed_overspeed_transition_width_rpm * RPM_TO_RAD_PER_SECOND
             ),
             # The generic PCHIP tail therefore gives an increasing-magnitude
             # negative governed torque from 4000 rpm to 5500 rpm, then a
@@ -371,9 +372,7 @@ def build_baja_trial_baseline(
         road_profile=ConstantGradeRoadProfile(),
     )
 
-    active_shift_position = c.deadzone_shift + 0.60 * (
-        c.max_shift - c.deadzone_shift
-    )
+    active_shift_position = c.deadzone_shift + 0.60 * (c.max_shift - c.deadzone_shift)
     deadzone_shift_position = 0.50 * c.deadzone_shift
 
     return BajaTrialBaseline(
@@ -414,7 +413,6 @@ def build_baja_trial_baseline(
     )
 
 
-
 def _validate_full_throttle_power_limit(
     *,
     engine: FullThrottleTorqueCurve,
@@ -444,7 +442,6 @@ def _validate_full_throttle_power_limit(
             "Supplied positive full-throttle torque map exceeds the configured "
             f"{power_limit_hp:.6g} hp cap: {maximum_power_w / WATTS_PER_MECHANICAL_HORSEPOWER:.4f} hp."
         )
-
 
 
 def _no_slip_state_at_shift(

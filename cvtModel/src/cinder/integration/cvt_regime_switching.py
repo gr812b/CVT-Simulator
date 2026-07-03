@@ -19,7 +19,10 @@ from cinder.dynamics.deadzone import DeadzoneDynamicsEvaluator
 from cinder.dynamics.shift_constraints import EngagedShiftConstraint
 
 from .cvt_contact_events import CVTContactEvent
-from .cvt_contact_switching import CVTContactSwitchSettings, resolve_cvt_contact_transition
+from .cvt_contact_switching import (
+    CVTContactSwitchSettings,
+    resolve_cvt_contact_transition,
+)
 from .cvt_operating_limits import CVTShiftOperatingLimits
 from .cvt_regime import CVTEngagementState, CVTOperatingRegime, CVTShiftConstraint
 from .cvt_regime_events import CVTRegimeEvent
@@ -90,7 +93,9 @@ def resolve_cvt_operating_transition(
     _validate_state_within_limits(state=state, limits=limits, tolerance=1.0e-8)
     fired = set(fired_event_names)
     geometry_events = _geometry_events_from(fired)
-    contact_events = tuple(name for name in fired_event_names if name not in _REGIME_EVENT_NAMES)
+    contact_events = tuple(
+        name for name in fired_event_names if name not in _REGIME_EVENT_NAMES
+    )
 
     if old_regime.engagement is CVTEngagementState.DEADZONE:
         return _resolve_deadzone_transition(
@@ -241,7 +246,9 @@ def _resolve_deadzone_transition(
                 reason="primary_closed_into_engaged_contact",
                 successor_state=engaged_state.as_vector(),
             )
-        raise RuntimeError("Deadzone free transition received no reachable geometry event.")
+        raise RuntimeError(
+            "Deadzone free transition received no reachable geometry event."
+        )
 
     if CVTRegimeEvent.LOWER_STOP_RELEASE in geometry_events:
         return HybridTransition(
@@ -253,7 +260,6 @@ def _resolve_deadzone_transition(
             ),
         )
     raise RuntimeError("Deadzone lower-stop transition requires LOWER_STOP_RELEASE.")
-
 
 
 def _resolve_lower_stop_arrival(
@@ -300,6 +306,7 @@ def _resolve_lower_stop_arrival(
         metadata=metadata,
         successor_state=projected,
     )
+
 
 def _resolve_engaged_transition(
     *,
@@ -376,7 +383,9 @@ def _resolve_engaged_transition(
             )
 
     if not contact_events:
-        raise RuntimeError("Engaged transition received no contact or relevant geometry event.")
+        raise RuntimeError(
+            "Engaged transition received no contact or relevant geometry event."
+        )
 
     constraint = _engaged_constraint_for_operating_regime(old_regime)
     contact_transition = resolve_cvt_contact_transition(
@@ -633,7 +642,9 @@ def _engaged_constraint_for_operating_regime(
         return EngagedShiftConstraint.LOW_RATIO_SEAT
     if regime.shift_constraint is CVTShiftConstraint.UPPER_STOP:
         return EngagedShiftConstraint.UPPER_STOP
-    raise ValueError(f"Unsupported engaged shift constraint: {regime.shift_constraint!r}.")
+    raise ValueError(
+        f"Unsupported engaged shift constraint: {regime.shift_constraint!r}."
+    )
 
 
 def _engaged_regime_for_constraint(
@@ -872,6 +883,7 @@ def _immediately_violated_contact_event_names(
                 ).value
             )
     return tuple(names)
+
 
 def _geometry_events_from(names: set[str]) -> set[CVTRegimeEvent]:
     events: set[CVTRegimeEvent] = set()

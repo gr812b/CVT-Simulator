@@ -29,7 +29,9 @@ class ContactRegime:
         if not isinstance(self.mode, EngagedContactMode):
             raise TypeError("mode must be an EngagedContactMode.")
         self._validate_interface(ContactInterface.PRIMARY, self.primary_slip_direction)
-        self._validate_interface(ContactInterface.SECONDARY, self.secondary_slip_direction)
+        self._validate_interface(
+            ContactInterface.SECONDARY, self.secondary_slip_direction
+        )
 
     @classmethod
     def stick_stick(cls) -> "ContactRegime":

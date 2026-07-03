@@ -60,15 +60,24 @@ _TOOLS_DIRECTORY = Path(__file__).resolve().parent
 _REPOSITORY_ROOT = _TOOLS_DIRECTORY.parent
 if str(_TOOLS_DIRECTORY) not in sys.path:
     sys.path.insert(0, str(_TOOLS_DIRECTORY))
-for candidate_path in (_REPOSITORY_ROOT / "src", _REPOSITORY_ROOT, _REPOSITORY_ROOT / "tools"):
+for candidate_path in (
+    _REPOSITORY_ROOT / "src",
+    _REPOSITORY_ROOT,
+    _REPOSITORY_ROOT / "tools",
+):
     if str(candidate_path) not in sys.path:
         sys.path.append(str(candidate_path))
 
 from cinder.dynamics.shift_constraints import EngagedShiftConstraint  # noqa: E402
 from cinder.integration import CVTDynamicState, HybridIntegratorSettings  # noqa: E402
 from cinder.integration.cvt_contact_events import build_cvt_contact_events  # noqa: E402
-from cinder.integration.cvt_operating_hybrid import CVTOperatingHybridSystem  # noqa: E402
-from cinder.integration.cvt_regime import CVTEngagementState, CVTShiftConstraint  # noqa: E402
+from cinder.integration.cvt_operating_hybrid import (
+    CVTOperatingHybridSystem,
+)  # noqa: E402
+from cinder.integration.cvt_regime import (
+    CVTEngagementState,
+    CVTShiftConstraint,
+)  # noqa: E402
 from cinder.integration.cvt_regime_events import (  # noqa: E402
     build_deadzone_free_boundary_events,
     build_engaged_free_boundary_events,
@@ -86,7 +95,9 @@ from launch_tuning_common import (  # noqa: E402
     resolve_primary_preload,
 )
 
-_DEFAULT_PRESET = _TOOLS_DIRECTORY / "presets" / "circular_traction_first_reference.json"
+_DEFAULT_PRESET = (
+    _TOOLS_DIRECTORY / "presets" / "circular_traction_first_reference.json"
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -140,7 +151,10 @@ class GradeProgramme:
         for phase in self.phases:
             if phase.start_s < previous_end - 1.0e-12 or phase.end_s <= phase.start_s:
                 raise ValueError("Grade phases must be ordered with positive duration.")
-            if previous_grade is not None and abs(phase.start_degrees - previous_grade) > 1.0e-9:
+            if (
+                previous_grade is not None
+                and abs(phase.start_degrees - previous_grade) > 1.0e-9
+            ):
                 raise ValueError("Adjacent grade phases must be grade-continuous.")
             previous_end = phase.end_s
             previous_grade = phase.end_degrees
@@ -174,22 +188,28 @@ class GradeProgramme:
         """
 
         t = 0.0
-        def add(name: str, duration: float, start: float, end: float, transition: bool) -> GradePhase:
+
+        def add(
+            name: str, duration: float, start: float, end: float, transition: bool
+        ) -> GradePhase:
             nonlocal t
             phase = GradePhase(name, t, t + duration, start, end, transition)
             t += duration
             return phase
-        return cls((
-            add("flat launch", 10.0, 0.0, 0.0, False),
-            add("rise to 30", 2.0, 0.0, 30.0, True),
-            add("30 degree hill", 10.0, 30.0, 30.0, False),
-            add("ease to 15", 2.0, 30.0, 15.0, True),
-            add("15 degree hill", 10.0, 15.0, 15.0, False),
-            add("turn to downhill", 2.0, 15.0, -20.0, True),
-            add("20 degree downhill", 4.0, -20.0, -20.0, False),
-            add("return to level", 2.0, -20.0, 0.0, True),
-            add("flat recovery", final_level_seconds, 0.0, 0.0, False),
-        ))
+
+        return cls(
+            (
+                add("flat launch", 10.0, 0.0, 0.0, False),
+                add("rise to 30", 2.0, 0.0, 30.0, True),
+                add("30 degree hill", 10.0, 30.0, 30.0, False),
+                add("ease to 15", 2.0, 30.0, 15.0, True),
+                add("15 degree hill", 10.0, 15.0, 15.0, False),
+                add("turn to downhill", 2.0, 15.0, -20.0, True),
+                add("20 degree downhill", 4.0, -20.0, -20.0, False),
+                add("return to level", 2.0, -20.0, 0.0, True),
+                add("flat recovery", final_level_seconds, 0.0, 0.0, False),
+            )
+        )
 
 
 class _TimeClockedRoadProfile:
@@ -205,7 +225,9 @@ class _TimeClockedRoadProfile:
         self.programme = programme
         self.current_time_s = 0.0
         self._profile = CallableRoadProfile(
-            grade_angle_function=lambda _distance: self.programme.grade_radians(self.current_time_s)
+            grade_angle_function=lambda _distance: self.programme.grade_radians(
+                self.current_time_s
+            )
         )
 
     def set_time(self, time_s: float) -> None:
@@ -251,7 +273,9 @@ class TimeAwareRoadHybridSystem(CVTOperatingHybridSystem):
                         )
                     ),
                 )
-            raise RuntimeError(f"Unsupported deadzone constraint: {mode.shift_constraint!r}.")
+            raise RuntimeError(
+                f"Unsupported deadzone constraint: {mode.shift_constraint!r}."
+            )
 
         constraint = self._engaged_constraint_for(mode)
         assert mode.contact_regime is not None
@@ -270,7 +294,9 @@ class TimeAwareRoadHybridSystem(CVTOperatingHybridSystem):
             include_shift_boundary_events=False,
         )
         if mode.shift_constraint is CVTShiftConstraint.FREE:
-            return contact_events + build_engaged_free_boundary_events(limits=self.operating_limits)
+            return contact_events + build_engaged_free_boundary_events(
+                limits=self.operating_limits
+            )
         if mode.shift_constraint is CVTShiftConstraint.LOW_RATIO_SEAT:
             return contact_events + build_low_ratio_seat_events(
                 primary_clamping_force=lambda event_time, vector: self._primary_clamping_force_at_time(
@@ -284,13 +310,19 @@ class TimeAwareRoadHybridSystem(CVTOperatingHybridSystem):
             return contact_events + (
                 build_upper_stop_release_event(
                     opening_reaction=lambda event_time, vector: self._upper_stop_reaction_at_time(
-                        time=event_time, vector=vector, contact_regime=mode.contact_regime
+                        time=event_time,
+                        vector=vector,
+                        contact_regime=mode.contact_regime,
                     )
                 ),
             )
-        raise RuntimeError(f"Unsupported engaged constraint: {mode.shift_constraint!r}.")
+        raise RuntimeError(
+            f"Unsupported engaged constraint: {mode.shift_constraint!r}."
+        )
 
-    def transition(self, time: float, state: NDArray[np.float64], mode, fired_event_names):
+    def transition(
+        self, time: float, state: NDArray[np.float64], mode, fired_event_names
+    ):
         self._set_time(time)
         return super().transition(time, state, mode, fired_event_names)
 
@@ -298,23 +330,37 @@ class TimeAwareRoadHybridSystem(CVTOperatingHybridSystem):
         self._set_time(0.0)
         return super().classify_initial_regime(state)
 
-    def _lower_stop_reaction_at_time(self, *, time: float, vector: NDArray[np.float64]) -> float:
+    def _lower_stop_reaction_at_time(
+        self, *, time: float, vector: NDArray[np.float64]
+    ) -> float:
         self._set_time(time)
         return self._lower_stop_reaction(vector=vector)
 
-    def _primary_clamping_force_at_time(self, *, time: float, vector: NDArray[np.float64]) -> float:
+    def _primary_clamping_force_at_time(
+        self, *, time: float, vector: NDArray[np.float64]
+    ) -> float:
         self._set_time(time)
         return self._primary_clamping_force(time=time, vector=vector)
 
-    def _low_ratio_seat_reaction_at_time(self, *, time: float, vector: NDArray[np.float64], contact_regime) -> float:
+    def _low_ratio_seat_reaction_at_time(
+        self, *, time: float, vector: NDArray[np.float64], contact_regime
+    ) -> float:
         self._set_time(time)
-        return self._low_ratio_seat_reaction(time=time, vector=vector, contact_regime=contact_regime)
+        return self._low_ratio_seat_reaction(
+            time=time, vector=vector, contact_regime=contact_regime
+        )
 
-    def _upper_stop_reaction_at_time(self, *, time: float, vector: NDArray[np.float64], contact_regime) -> float:
+    def _upper_stop_reaction_at_time(
+        self, *, time: float, vector: NDArray[np.float64], contact_regime
+    ) -> float:
         self._set_time(time)
-        return self._upper_stop_reaction(time=time, vector=vector, contact_regime=contact_regime)
+        return self._upper_stop_reaction(
+            time=time, vector=vector, contact_regime=contact_regime
+        )
 
-    def _contact_evaluation_at_time(self, *, time: float, vector: NDArray[np.float64], regime, shift_constraint):
+    def _contact_evaluation_at_time(
+        self, *, time: float, vector: NDArray[np.float64], regime, shift_constraint
+    ):
         self._set_time(time)
         return self.evaluator.evaluate_vector(
             time=time,
@@ -354,19 +400,30 @@ def parse_arguments() -> argparse.Namespace:
     parser.add_argument("--maximum-transitions", type=int, default=160)
     parser.add_argument("--plot-samples", type=int, default=1500)
     parser.add_argument("--run-audit", action="store_true")
-    parser.add_argument("--output-dir", type=Path, default=Path("artifacts/grade_program_response"))
+    parser.add_argument(
+        "--output-dir", type=Path, default=Path("artifacts/grade_program_response")
+    )
     parser.add_argument("--no-show", action="store_true")
     args = parser.parse_args()
-    for name in ("duration_s", "final_level_s", "initial_primary_rpm", "target_engagement_rpm"):
+    for name in (
+        "duration_s",
+        "final_level_s",
+        "initial_primary_rpm",
+        "target_engagement_rpm",
+    ):
         value = getattr(args, name)
         if not np.isfinite(value) or value <= 0.0:
             parser.error(f"--{name.replace('_', '-')} must be finite and positive.")
     for name in ("max_step_ms", "relative_tolerance", "absolute_tolerance"):
         value = getattr(args, name)
         if value is not None and (not np.isfinite(value) or value <= 0.0):
-            parser.error(f"--{name.replace('_', '-')} must be finite and positive when supplied.")
+            parser.error(
+                f"--{name.replace('_', '-')} must be finite and positive when supplied."
+            )
     if args.maximum_transitions < 1 or args.plot_samples < 200:
-        parser.error("--maximum-transitions must be at least one and --plot-samples at least 200.")
+        parser.error(
+            "--maximum-transitions must be at least one and --plot-samples at least 200."
+        )
     return args
 
 
@@ -377,11 +434,17 @@ def load_candidate(path: Path) -> tuple[TuneCandidate, dict[str, float | str]]:
     candidate = TuneCandidate(
         flyweight_mass_kg=float(data["flyweight_mass_kg"]),
         helix_angle_degrees=float(data["helix_angle_degrees"]),
-        secondary_torsional_pretension_degrees=float(data["secondary_torsional_pretension_degrees"]),
-        secondary_compression_preload_mm=float(data["secondary_compression_preload_mm"]),
+        secondary_torsional_pretension_degrees=float(
+            data["secondary_torsional_pretension_degrees"]
+        ),
+        secondary_compression_preload_mm=float(
+            data["secondary_compression_preload_mm"]
+        ),
         primary_ramp_kind=str(data["primary_ramp_kind"]),
         primary_ramp_angle_degrees=float(data.get("primary_ramp_angle_degrees", 30.0)),
-        primary_ramp_start_angle_degrees=float(data["primary_ramp_start_angle_degrees"]),
+        primary_ramp_start_angle_degrees=float(
+            data["primary_ramp_start_angle_degrees"]
+        ),
         primary_ramp_end_angle_degrees=float(data["primary_ramp_end_angle_degrees"]),
     )
     return candidate, dict(payload.get("integration", {}))
@@ -420,26 +483,45 @@ def allocate_samples(sizes: Sequence[int], maximum: int) -> list[int]:
     return allocation
 
 
-def sample_trace(*, system: TimeAwareRoadHybridSystem, result, programme: GradeProgramme, maximum_samples: int) -> ProgrammeTrace:
-    budgets = allocate_samples([segment.state.shape[1] for segment in result.segments], maximum_samples)
+def sample_trace(
+    *,
+    system: TimeAwareRoadHybridSystem,
+    result,
+    programme: GradeProgramme,
+    maximum_samples: int,
+) -> ProgrammeTrace:
+    budgets = allocate_samples(
+        [segment.state.shape[1] for segment in result.segments], maximum_samples
+    )
     rows = []
     final_drive = system.model.road_load.final_drive
     for segment, budget in zip(result.segments, budgets, strict=True):
-        indices = np.unique(np.linspace(0, segment.state.shape[1] - 1, budget, dtype=int))
+        indices = np.unique(
+            np.linspace(0, segment.state.shape[1] - 1, budget, dtype=int)
+        )
         for index in indices:
             time = float(segment.time[index])
             vector = np.asarray(segment.state[:, index], dtype=float).copy()
-            vector[3] = np.clip(vector[3], 0.0, system.operating_limits.upper_stop_shift)
+            vector[3] = np.clip(
+                vector[3], 0.0, system.operating_limits.upper_stop_shift
+            )
             state = CVTDynamicState.from_vector(vector)
             system._set_time(time)
             snapshot = system.model.snapshot(state=state)
-            distance = final_drive.vehicle_distance_from_secondary_angle(secondary_shaft_angle=state.secondary_shaft_angle)
-            rows.append((
-                time, vector, compact_mode(segment.mode),
-                float(np.rad2deg(programme.grade_radians(time))),
-                float(snapshot.road_load.secondary_external_torque),
-                float(snapshot.road_load.vehicle_speed), float(distance),
-            ))
+            distance = final_drive.vehicle_distance_from_secondary_angle(
+                secondary_shaft_angle=state.secondary_shaft_angle
+            )
+            rows.append(
+                (
+                    time,
+                    vector,
+                    compact_mode(segment.mode),
+                    float(np.rad2deg(programme.grade_radians(time))),
+                    float(snapshot.road_load.secondary_external_torque),
+                    float(snapshot.road_load.vehicle_speed),
+                    float(distance),
+                )
+            )
     rows.sort(key=lambda row: row[0])
     return ProgrammeTrace(
         time=np.asarray([row[0] for row in rows], dtype=float),
@@ -469,17 +551,30 @@ def short_event(reason: str) -> str:
     return reason.replace("_", " ")
 
 
-def plot_masked_runs(axis: plt.Axes, x: NDArray[np.float64], y: NDArray[np.float64], mask: NDArray[np.bool_], **kwargs) -> None:
+def plot_masked_runs(
+    axis: plt.Axes,
+    x: NDArray[np.float64],
+    y: NDArray[np.float64],
+    mask: NDArray[np.bool_],
+    **kwargs,
+) -> None:
     starts = np.flatnonzero(mask & np.r_[True, ~mask[:-1]])
     ends = np.flatnonzero(mask & np.r_[~mask[1:], True])
     label = kwargs.pop("label", None)
     for number, (start, end) in enumerate(zip(starts, ends, strict=True)):
         if end - start < 1:
             continue
-        axis.plot(x[start:end + 1], y[start:end + 1], label=label if number == 0 else None, **kwargs)
+        axis.plot(
+            x[start : end + 1],
+            y[start : end + 1],
+            label=label if number == 0 else None,
+            **kwargs,
+        )
 
 
-def annotate_transitions(axes: Iterable[plt.Axes], label_axes: Iterable[plt.Axes], result) -> None:
+def annotate_transitions(
+    axes: Iterable[plt.Axes], label_axes: Iterable[plt.Axes], result
+) -> None:
     axes = tuple(axes)
     label_axes = tuple(label_axes)
     for count, record in enumerate(result.transitions):
@@ -489,25 +584,39 @@ def annotate_transitions(axes: Iterable[plt.Axes], label_axes: Iterable[plt.Axes
         for axis in label_axes:
             axis.annotate(
                 short_event(record.transition.reason),
-                xy=(record.time, fraction), xycoords=("data", "axes fraction"),
-                xytext=(2, 0), textcoords="offset points", rotation=90,
-                va="top", ha="left", fontsize=6.0,
+                xy=(record.time, fraction),
+                xycoords=("data", "axes fraction"),
+                xytext=(2, 0),
+                textcoords="offset points",
+                rotation=90,
+                va="top",
+                ha="left",
+                fontsize=6.0,
             )
 
 
-def annotate_programme_boundaries(axes: Iterable[plt.Axes], grade_axis: plt.Axes, programme: GradeProgramme) -> None:
+def annotate_programme_boundaries(
+    axes: Iterable[plt.Axes], grade_axis: plt.Axes, programme: GradeProgramme
+) -> None:
     for phase in programme.phases[1:]:
         for axis in axes:
             axis.axvline(phase.start_s, linestyle=":", linewidth=0.9, alpha=0.7)
         grade_axis.annotate(
             phase.name,
-            xy=(phase.start_s, 0.04), xycoords=("data", "axes fraction"),
-            xytext=(2, 0), textcoords="offset points", rotation=90,
-            va="bottom", ha="left", fontsize=6.0,
+            xy=(phase.start_s, 0.04),
+            xycoords=("data", "axes fraction"),
+            xytext=(2, 0),
+            textcoords="offset points",
+            rotation=90,
+            va="bottom",
+            ha="left",
+            fontsize=6.0,
         )
 
 
-def plot_response(*, trace: ProgrammeTrace, result, resolved, programme: GradeProgramme):
+def plot_response(
+    *, trace: ProgrammeTrace, result, resolved, programme: GradeProgramme
+):
     t = trace.time
     primary_rpm = trace.state[0] * RPM_PER_RADIAN_PER_SECOND
     secondary_rpm = trace.state[1] * RPM_PER_RADIAN_PER_SECOND
@@ -527,8 +636,12 @@ def plot_response(*, trace: ProgrammeTrace, result, resolved, programme: GradePr
 
     shift_axis = axes[0, 1]
     shift_axis.plot(t, shift_mm, label=r"$s$")
-    shift_axis.axhline(resolved.constants.deadzone_shift / MILLIMETRE, linestyle="--", label="engage")
-    shift_axis.axhline(resolved.constants.max_shift / MILLIMETRE, linestyle="--", label="high stop")
+    shift_axis.axhline(
+        resolved.constants.deadzone_shift / MILLIMETRE, linestyle="--", label="engage"
+    )
+    shift_axis.axhline(
+        resolved.constants.max_shift / MILLIMETRE, linestyle="--", label="high stop"
+    )
     shift_axis.set_title("Shift coordinate and speed")
     shift_axis.set_xlabel("Time [s]")
     shift_axis.set_ylabel("Shift [mm]")
@@ -544,10 +657,17 @@ def plot_response(*, trace: ProgrammeTrace, result, resolved, programme: GradePr
     curve_axis.plot(secondary_rpm, primary_rpm, alpha=0.22, label="full trajectory")
     for index, phase in enumerate(programme.phases):
         include_end = index == len(programme.phases) - 1
-        mask = (t >= phase.start_s) & ((t <= phase.end_s) if include_end else (t < phase.end_s))
+        mask = (t >= phase.start_s) & (
+            (t <= phase.end_s) if include_end else (t < phase.end_s)
+        )
         plot_masked_runs(
-            curve_axis, secondary_rpm, primary_rpm, mask,
-            linestyle=":", linewidth=2.25, label=phase.display_label,
+            curve_axis,
+            secondary_rpm,
+            primary_rpm,
+            mask,
+            linestyle=":",
+            linewidth=2.25,
+            label=phase.display_label,
         )
     curve_axis.scatter([secondary_rpm[0]], [primary_rpm[0]], marker="o", label="launch")
     curve_axis.set_title("Shift curve: phase-dotted grade programme")
@@ -589,8 +709,16 @@ def plot_response(*, trace: ProgrammeTrace, result, resolved, programme: GradePr
     right_handles, right_labels = distance_axis.get_legend_handles_labels()
     vehicle_axis.legend(handles + right_handles, labels + right_labels, loc="best")
 
-    annotate_transitions((speed_axis, shift_axis, torque_axis, vehicle_axis), (speed_axis, shift_axis), result)
-    annotate_programme_boundaries((speed_axis, shift_axis, grade_axis, torque_axis, vehicle_axis), grade_axis, programme)
+    annotate_transitions(
+        (speed_axis, shift_axis, torque_axis, vehicle_axis),
+        (speed_axis, shift_axis),
+        result,
+    )
+    annotate_programme_boundaries(
+        (speed_axis, shift_axis, grade_axis, torque_axis, vehicle_axis),
+        grade_axis,
+        programme,
+    )
 
     figure.suptitle(
         "CINDER circular-primary controlled grade programme | "
@@ -600,7 +728,9 @@ def plot_response(*, trace: ProgrammeTrace, result, resolved, programme: GradePr
     return figure
 
 
-def programme_metrics(trace: ProgrammeTrace, programme: GradeProgramme) -> dict[str, float | None]:
+def programme_metrics(
+    trace: ProgrammeTrace, programme: GradeProgramme
+) -> dict[str, float | None]:
     shift_mm = trace.state[3] / MILLIMETRE
     shift_speed = trace.state[4] / MILLIMETRE
     metrics: dict[str, float | None] = {
@@ -616,7 +746,9 @@ def programme_metrics(trace: ProgrammeTrace, programme: GradeProgramme) -> dict[
     for phase in programme.phases:
         mask = (trace.time >= phase.start_s) & (trace.time <= phase.end_s)
         if np.any(mask):
-            metrics[f"min_shift_during_{phase.name.replace(' ', '_')}_mm"] = float(np.min(shift_mm[mask]))
+            metrics[f"min_shift_during_{phase.name.replace(' ', '_')}_mm"] = float(
+                np.min(shift_mm[mask])
+            )
     return metrics
 
 
@@ -624,7 +756,9 @@ def audit_result(*, system: TimeAwareRoadHybridSystem, result) -> tuple[str, lis
     try:
         from hybrid_system_checks import CVTSystemCheckSettings, check_cvt_hybrid_result
     except ImportError:
-        return "unavailable", ["Physical audit unavailable: hybrid_system_checks.py not found."]
+        return "unavailable", [
+            "Physical audit unavailable: hybrid_system_checks.py not found."
+        ]
     try:
         report = check_cvt_hybrid_result(
             system=system,
@@ -632,10 +766,16 @@ def audit_result(*, system: TimeAwareRoadHybridSystem, result) -> tuple[str, lis
             settings=CVTSystemCheckSettings(maximum_samples_per_segment=32),
         )
     except Exception as error:
-        return "unavailable", [f"Physical audit did not execute: {type(error).__name__}: {error}"]
+        return "unavailable", [
+            f"Physical audit did not execute: {type(error).__name__}: {error}"
+        ]
     if report.passed:
         return "pass", list(report.summary_lines())
-    legacy = {"mode_position_domain", "upper_stop_position", "upper_stop_unilateral_reaction"}
+    legacy = {
+        "mode_position_domain",
+        "upper_stop_position",
+        "upper_stop_unilateral_reaction",
+    }
     if report.failures and all(
         failure.invariant.value in legacy and "low_ratio_seat" in failure.location
         for failure in report.failures
@@ -650,19 +790,40 @@ def audit_result(*, system: TimeAwareRoadHybridSystem, result) -> tuple[str, lis
 def write_trace(path: Path, trace: ProgrammeTrace) -> None:
     with path.open("w", newline="", encoding="utf-8") as handle:
         writer = csv.writer(handle)
-        writer.writerow((
-            "time_s", "mode", "primary_rpm", "secondary_rpm", "belt_speed_mps", "shift_mm",
-            "shift_speed_mm_per_s", "secondary_shaft_angle_rad", "grade_degrees",
-            "secondary_road_torque_nm", "vehicle_speed_mps", "vehicle_distance_m",
-        ))
+        writer.writerow(
+            (
+                "time_s",
+                "mode",
+                "primary_rpm",
+                "secondary_rpm",
+                "belt_speed_mps",
+                "shift_mm",
+                "shift_speed_mm_per_s",
+                "secondary_shaft_angle_rad",
+                "grade_degrees",
+                "secondary_road_torque_nm",
+                "vehicle_speed_mps",
+                "vehicle_distance_m",
+            )
+        )
         for i, time in enumerate(trace.time):
             state = trace.state[:, i]
-            writer.writerow((
-                time, trace.mode[i], state[0] * RPM_PER_RADIAN_PER_SECOND,
-                state[1] * RPM_PER_RADIAN_PER_SECOND, state[2], state[3] / MILLIMETRE,
-                state[4] / MILLIMETRE, state[5], trace.grade_degrees[i],
-                trace.secondary_road_torque_nm[i], trace.vehicle_speed_mps[i], trace.vehicle_distance_m[i],
-            ))
+            writer.writerow(
+                (
+                    time,
+                    trace.mode[i],
+                    state[0] * RPM_PER_RADIAN_PER_SECOND,
+                    state[1] * RPM_PER_RADIAN_PER_SECOND,
+                    state[2],
+                    state[3] / MILLIMETRE,
+                    state[4] / MILLIMETRE,
+                    state[5],
+                    trace.grade_degrees[i],
+                    trace.secondary_road_torque_nm[i],
+                    trace.vehicle_speed_mps[i],
+                    trace.vehicle_distance_m[i],
+                )
+            )
 
 
 def main() -> None:
@@ -681,9 +842,15 @@ def main() -> None:
     # accepted candidates with 1e-3 / 1e-6 (and preferably the original 20 ms
     # cap) as a sensitivity check before drawing tuning conclusions.
     max_step_ms = float(args.max_step_ms if args.max_step_ms is not None else 50.0)
-    rtol = float(args.relative_tolerance if args.relative_tolerance is not None else 1.0e-2)
-    atol = float(args.absolute_tolerance if args.absolute_tolerance is not None else 1.0e-5)
-    resolved = resolve_primary_preload(candidate, target_engagement_rpm=args.target_engagement_rpm)
+    rtol = float(
+        args.relative_tolerance if args.relative_tolerance is not None else 1.0e-2
+    )
+    atol = float(
+        args.absolute_tolerance if args.absolute_tolerance is not None else 1.0e-5
+    )
+    resolved = resolve_primary_preload(
+        candidate, target_engagement_rpm=args.target_engagement_rpm
+    )
     system = build_system(resolved=resolved, programme=programme)
     settings = HybridIntegratorSettings(
         relative_tolerance=rtol,
@@ -698,9 +865,13 @@ def main() -> None:
     print("=" * 88)
     print(candidate.label())
     print(f"primary preload={resolved.resolved_primary_preload_mm:.3f} mm")
-    print(f"one {args.duration_s:.3g} s CINDER integration; programme ends at {programme.end_time_s:.1f} s")
+    print(
+        f"one {args.duration_s:.3g} s CINDER integration; programme ends at {programme.end_time_s:.1f} s"
+    )
     for phase in programme.phases:
-        print(f"  {phase.start_s:5.1f}–{phase.end_s:5.1f} s  {phase.name}: {phase.start_degrees:+.0f} -> {phase.end_degrees:+.0f} deg")
+        print(
+            f"  {phase.start_s:5.1f}–{phase.end_s:5.1f} s  {phase.name}: {phase.start_degrees:+.0f} -> {phase.end_degrees:+.0f} deg"
+        )
 
     result = system.integrate(
         time_span=(0.0, args.duration_s),
@@ -710,14 +881,24 @@ def main() -> None:
     if not result.completed:
         raise RuntimeError(f"Integration terminated early: {result.termination_reason}")
 
-    trace = sample_trace(system=system, result=result, programme=programme, maximum_samples=args.plot_samples)
-    figure = plot_response(trace=trace, result=result, resolved=resolved, programme=programme)
+    trace = sample_trace(
+        system=system,
+        result=result,
+        programme=programme,
+        maximum_samples=args.plot_samples,
+    )
+    figure = plot_response(
+        trace=trace, result=result, resolved=resolved, programme=programme
+    )
     figure.savefig(args.output_dir / "grade_program_response.png", dpi=160)
     write_trace(args.output_dir / "grade_program_trace.csv", trace)
     audit_status, audit_lines = (
         audit_result(system=system, result=result)
         if args.run_audit
-        else ("not_run", ["Not run by default; pass --run-audit for the slower physical audit."])
+        else (
+            "not_run",
+            ["Not run by default; pass --run-audit for the slower physical audit."],
+        )
     )
     summary = {
         "scenario": {
@@ -725,8 +906,11 @@ def main() -> None:
             "duration_s": args.duration_s,
             "programme": [
                 {
-                    "name": phase.name, "start_s": phase.start_s, "end_s": phase.end_s,
-                    "start_degrees": phase.start_degrees, "end_degrees": phase.end_degrees,
+                    "name": phase.name,
+                    "start_s": phase.start_s,
+                    "end_s": phase.end_s,
+                    "start_degrees": phase.start_degrees,
+                    "end_degrees": phase.end_degrees,
                     "transition": phase.transition,
                 }
                 for phase in programme.phases
@@ -743,17 +927,25 @@ def main() -> None:
             "resolved_primary_preload_mm": resolved.resolved_primary_preload_mm,
         },
         "integration": {
-            "method": method, "max_step_ms": max_step_ms, "rtol": rtol, "atol": atol,
-            "completed": result.completed, "segments": len(result.segments),
+            "method": method,
+            "max_step_ms": max_step_ms,
+            "rtol": rtol,
+            "atol": atol,
+            "completed": result.completed,
+            "segments": len(result.segments),
             "transitions": [record.transition.reason for record in result.transitions],
         },
         "programme_metrics": programme_metrics(trace, programme),
         "audit": {"status": audit_status, "lines": audit_lines},
     }
-    with (args.output_dir / "grade_program_summary.json").open("w", encoding="utf-8") as handle:
+    with (args.output_dir / "grade_program_summary.json").open(
+        "w", encoding="utf-8"
+    ) as handle:
         json.dump(summary, handle, indent=2)
 
-    print(f"\n{len(result.segments)} segments; {len(result.transitions)} transitions; audit={audit_status}")
+    print(
+        f"\n{len(result.segments)} segments; {len(result.transitions)} transitions; audit={audit_status}"
+    )
     for record in result.transitions:
         print(f"  t={record.time:.6f} s  {short_event(record.transition.reason)}")
     print("\nProgramme metrics")
@@ -761,7 +953,9 @@ def main() -> None:
         print(f"{name}: {value}")
     for line in audit_lines:
         print(f"  {line}")
-    print(f"\nWrote {args.output_dir / 'grade_program_response.png'}, {args.output_dir / 'grade_program_trace.csv'}, and {args.output_dir / 'grade_program_summary.json'}.")
+    print(
+        f"\nWrote {args.output_dir / 'grade_program_response.png'}, {args.output_dir / 'grade_program_trace.csv'}, and {args.output_dir / 'grade_program_summary.json'}."
+    )
 
     if args.no_show:
         plt.close(figure)

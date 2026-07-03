@@ -22,9 +22,7 @@ def build_primary_rotation_equation(
         residual=AffineClosureScalar(
             bias=-snapshot.engine_torque,
             gains=ClosureGains(
-                primary_angular_acceleration=(
-                    snapshot.primary_rotational_inertia
-                ),
+                primary_angular_acceleration=(snapshot.primary_rotational_inertia),
                 primary_torque=1.0,
             ),
         ),

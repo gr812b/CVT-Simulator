@@ -114,6 +114,7 @@ def build_cvt_contact_events(
             else CVTContactEvent.SECONDARY_RESTICK
         )
         direction_sign = _slip_direction_sign(regime.slip_direction_at(interface))
+
         # A finite-speed transition into stick would silently leave a nonzero
         # v_rel in a branch whose acceleration constraint merely preserves it.
         # Therefore the terminal re-stick event is the exact crossing v_rel=0.
@@ -126,7 +127,9 @@ def build_cvt_contact_events(
         ) -> float:
             evaluation = evaluate(time, vector)
             relative_speed = evaluation.relative_motion.relative_speed_at(interface)
-            relative_acceleration = evaluation.relative_motion.relative_acceleration_at(interface)
+            relative_acceleration = evaluation.relative_motion.relative_acceleration_at(
+                interface
+            )
             # A kinetic trajectory can only touch v_rel = 0 and return in the
             # same Coulomb direction.  That is not a physical re-stick or a
             # slip-direction reversal.  Re-arm the event at the exact root so

@@ -48,9 +48,7 @@ def build_secondary_rotation_equation(
                 secondary_angular_acceleration=(
                     snapshot.secondary_absolute_rotational_inertia
                 ),
-                shift_acceleration=(
-                    -movable_inertia * helix.dtheta_ds
-                ),
+                shift_acceleration=(-movable_inertia * helix.dtheta_ds),
                 secondary_torque=-1.0,
             ),
         ),

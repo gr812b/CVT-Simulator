@@ -181,9 +181,7 @@ def evaluate_contact_relative_motion(
         primary_relative_acceleration=(
             unknowns.belt_acceleration
             - primary.effective * unknowns.primary_angular_acceleration
-            - primary.d_effective_ds
-            * state.shift_speed
-            * state.primary_angular_speed
+            - primary.d_effective_ds * state.shift_speed * state.primary_angular_speed
         ),
         secondary_relative_acceleration=(
             unknowns.belt_acceleration

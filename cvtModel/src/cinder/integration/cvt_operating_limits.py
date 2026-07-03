@@ -56,7 +56,9 @@ class CVTShiftOperatingLimits:
         if self.lower_stop_shift < 0.0:
             raise ValueError("lower_stop_shift must not lie below the geometry domain.")
         if self.upper_stop_shift > geometry_spec.max_shift:
-            raise ValueError("upper_stop_shift must not exceed geometry.spec.max_shift.")
+            raise ValueError(
+                "upper_stop_shift must not exceed geometry.spec.max_shift."
+            )
         if self.engagement_shift != geometry_spec.deadzone_shift:
             raise ValueError(
                 "engagement_shift must equal geometry.spec.deadzone_shift: the current "

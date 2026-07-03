@@ -276,7 +276,9 @@ def _verify_public_solver_multistart(
 ) -> EngagedContactSolveResult | None:
     print("\nPublic-solver multistart check")
     print("-" * 112)
-    print("Each line calls solve_stick_stick(); no residual map or manual lambda solve is used.")
+    print(
+        "Each line calls solve_stick_stick(); no residual map or manual lambda solve is used."
+    )
     accepted: list[EngagedContactSolveResult] = []
 
     for seed_primary, seed_secondary in _seeds_within(bounds=bounds):
@@ -312,10 +314,14 @@ def _verify_public_solver_multistart(
             accepted.append(result)
 
     if not accepted:
-        print("No public-solver multistart call produced an accepted stick--stick root.")
+        print(
+            "No public-solver multistart call produced an accepted stick--stick root."
+        )
         return None
 
-    chosen = min(accepted, key=lambda candidate: np.linalg.norm(candidate.sticking_residuals))
+    chosen = min(
+        accepted, key=lambda candidate: np.linalg.norm(candidate.sticking_residuals)
+    )
     roots = np.asarray(
         [
             (
@@ -437,9 +443,7 @@ def _with_secondary_external_torque_offset(
         snapshot,
         road_load=replace(
             snapshot.road_load,
-            secondary_external_torque=(
-                snapshot.secondary_external_torque + offset
-            ),
+            secondary_external_torque=(snapshot.secondary_external_torque + offset),
         ),
     )
 
@@ -571,13 +575,25 @@ def _print_local_trend(*, samples: tuple[ResponseSample, ...], sweep_name: str) 
     for label, start, end in (
         ("tau_p", first_unknowns.primary_torque, last_unknowns.primary_torque),
         ("tau_s", first_unknowns.secondary_torque, last_unknowns.secondary_torque),
-        ("lambda_p", first.result.friction_utilization.primary_lambda, last.result.friction_utilization.primary_lambda),
-        ("lambda_s", first.result.friction_utilization.secondary_lambda, last.result.friction_utilization.secondary_lambda),
+        (
+            "lambda_p",
+            first.result.friction_utilization.primary_lambda,
+            last.result.friction_utilization.primary_lambda,
+        ),
+        (
+            "lambda_s",
+            first.result.friction_utilization.secondary_lambda,
+            last.result.friction_utilization.secondary_lambda,
+        ),
         ("s_ddot", first_unknowns.shift_acceleration, last_unknowns.shift_acceleration),
     ):
         slope = (end - start) / delta_offset
-        direction = "increases" if slope > 0.0 else "decreases" if slope < 0.0 else "is flat"
-        print(f"  {label:8s}: {direction:10s} over sweep; secant slope={slope:.6g} per offset unit")
+        direction = (
+            "increases" if slope > 0.0 else "decreases" if slope < 0.0 else "is flat"
+        )
+        print(
+            f"  {label:8s}: {direction:10s} over sweep; secant slope={slope:.6g} per offset unit"
+        )
 
 
 def _plot_sweeps(
@@ -587,16 +603,26 @@ def _plot_sweeps(
     for axis, (sweep, samples) in zip(axes.flat, all_samples, strict=True):
         offsets = np.asarray([sample.offset for sample in samples], dtype=float)
         tau_p = _series(samples, lambda result: result.closure.unknowns.primary_torque)
-        tau_s = _series(samples, lambda result: result.closure.unknowns.secondary_torque)
-        lambda_p = _series(samples, lambda result: result.friction_utilization.primary_lambda)
-        lambda_s = _series(samples, lambda result: result.friction_utilization.secondary_lambda)
+        tau_s = _series(
+            samples, lambda result: result.closure.unknowns.secondary_torque
+        )
+        lambda_p = _series(
+            samples, lambda result: result.friction_utilization.primary_lambda
+        )
+        lambda_s = _series(
+            samples, lambda result: result.friction_utilization.secondary_lambda
+        )
 
         left = axis
         right = left.twinx()
         line_tau_p = left.plot(offsets, tau_p, marker="o", label=r"$\tau_p$")
         line_tau_s = left.plot(offsets, tau_s, marker="s", label=r"$\tau_s$")
-        line_lambda_p = right.plot(offsets, lambda_p, marker="^", linestyle="--", label=r"$\lambda_p$")
-        line_lambda_s = right.plot(offsets, lambda_s, marker="v", linestyle="--", label=r"$\lambda_s$")
+        line_lambda_p = right.plot(
+            offsets, lambda_p, marker="^", linestyle="--", label=r"$\lambda_p$"
+        )
+        line_lambda_s = right.plot(
+            offsets, lambda_s, marker="v", linestyle="--", label=r"$\lambda_s$"
+        )
         left.axvline(0.0, linewidth=1.0)
         left.set_title(sweep.name)
         left.set_xlabel(f"additive offset [{sweep.unit}]")
@@ -606,7 +632,9 @@ def _plot_sweeps(
         lines = line_tau_p + line_tau_s + line_lambda_p + line_lambda_s
         left.legend(lines, [line.get_label() for line in lines], loc="best")
 
-    figure.suptitle("CINDER public stick--stick solver: one-at-a-time frozen-snapshot response")
+    figure.suptitle(
+        "CINDER public stick--stick solver: one-at-a-time frozen-snapshot response"
+    )
     return figure
 
 

@@ -14,7 +14,6 @@ from cinder.dynamics.shift_constraints import EngagedShiftConstraint
 from cinder.contact import (
     ContactInterface,
     ContactRegime,
-    ContactTractionLaw,
     EngagedContactMode,
     SlipDirection,
 )
@@ -69,8 +68,14 @@ def resolve_initial_engaged_regime(
     vector = state.as_vector()
     snapshot = evaluator.model.snapshot(state=state)
     tolerance = evaluator.solve_settings.contact_tolerances.relative_speed_tolerance
-    primary_speed = state.belt_speed - snapshot.geometry.primary.effective * state.primary_angular_speed
-    secondary_speed = state.belt_speed - snapshot.geometry.secondary.effective * state.secondary_angular_speed
+    primary_speed = (
+        state.belt_speed
+        - snapshot.geometry.primary.effective * state.primary_angular_speed
+    )
+    secondary_speed = (
+        state.belt_speed
+        - snapshot.geometry.secondary.effective * state.secondary_angular_speed
+    )
 
     primary_direction = _direction_from_established_speed(primary_speed, tolerance)
     secondary_direction = _direction_from_established_speed(secondary_speed, tolerance)
@@ -189,7 +194,11 @@ def resolve_cvt_contact_transition(
             return HybridTransition(
                 next_mode=candidate,
                 reason="contact_restuck_with_static_reserve",
-                metadata={"interfaces": tuple(interface.value for interface in restick_interfaces)},
+                metadata={
+                    "interfaces": tuple(
+                        interface.value for interface in restick_interfaces
+                    )
+                },
             )
 
         continuation = _select_zero_crossing_kinetic_continuation(
@@ -208,7 +217,9 @@ def resolve_cvt_contact_transition(
         return HybridTransition(
             next_mode=continuation,
             reason="kinetic_slip_direction_updated_at_zero_crossing",
-            metadata={"interfaces": tuple(interface.value for interface in restick_interfaces)},
+            metadata={
+                "interfaces": tuple(interface.value for interface in restick_interfaces)
+            },
         )
 
     capacity_interfaces = _interfaces_for_events(
@@ -233,10 +244,16 @@ def resolve_cvt_contact_transition(
         return HybridTransition(
             next_mode=candidate,
             reason="static_capacity_exhausted_entered_kinetic_slip",
-            metadata={"interfaces": tuple(interface.value for interface in capacity_interfaces)},
+            metadata={
+                "interfaces": tuple(
+                    interface.value for interface in capacity_interfaces
+                )
+            },
         )
 
-    raise RuntimeError(f"Unhandled CVT contact event set: {sorted(event.value for event in fired)}")
+    raise RuntimeError(
+        f"Unhandled CVT contact event set: {sorted(event.value for event in fired)}"
+    )
 
 
 def _select_capacity_loss_candidate(
@@ -278,7 +295,9 @@ def _select_capacity_loss_candidate(
             )
         if ContactInterface.SECONDARY in lost:
             mixed.extend(
-                ContactRegime.primary_stick_secondary_slip(secondary_direction=direction)
+                ContactRegime.primary_stick_secondary_slip(
+                    secondary_direction=direction
+                )
                 for direction in _slip_directions()
             )
         candidate = choose(mixed)
@@ -393,13 +412,17 @@ def _select_restick_candidate(
         if ContactInterface.PRIMARY in requested:
             candidates.append(
                 ContactRegime.primary_stick_secondary_slip(
-                    secondary_direction=old_regime.slip_direction_at(ContactInterface.SECONDARY)
+                    secondary_direction=old_regime.slip_direction_at(
+                        ContactInterface.SECONDARY
+                    )
                 )
             )
         if ContactInterface.SECONDARY in requested:
             candidates.append(
                 ContactRegime.primary_slip_secondary_stick(
-                    primary_direction=old_regime.slip_direction_at(ContactInterface.PRIMARY)
+                    primary_direction=old_regime.slip_direction_at(
+                        ContactInterface.PRIMARY
+                    )
                 )
             )
 
@@ -480,7 +503,9 @@ def _slip_directions_are_outgoing(
     for interface in regime.mode.slipping_interfaces:
         direction = regime.slip_direction_at(interface)
         relative_speed = evaluation.relative_motion.relative_speed_at(interface)
-        relative_acceleration = evaluation.relative_motion.relative_acceleration_at(interface)
+        relative_acceleration = evaluation.relative_motion.relative_acceleration_at(
+            interface
+        )
         sign = _direction_sign(direction)
         if abs(relative_speed) > tolerances.relative_speed_tolerance:
             if sign * relative_speed <= 0.0:

@@ -65,12 +65,18 @@ _TOOLS_DIRECTORY = Path(__file__).resolve().parent
 _REPOSITORY_ROOT = _TOOLS_DIRECTORY.parent
 if str(_TOOLS_DIRECTORY) not in sys.path:
     sys.path.insert(0, str(_TOOLS_DIRECTORY))
-for candidate_path in (_REPOSITORY_ROOT / "src", _REPOSITORY_ROOT, _REPOSITORY_ROOT / "tools"):
+for candidate_path in (
+    _REPOSITORY_ROOT / "src",
+    _REPOSITORY_ROOT,
+    _REPOSITORY_ROOT / "tools",
+):
     if str(candidate_path) not in sys.path:
         sys.path.append(str(candidate_path))
 
 from cinder.integration import CVTDynamicState, HybridIntegratorSettings  # noqa: E402
-from cinder.integration.cvt_operating_hybrid import CVTOperatingHybridSystem  # noqa: E402
+from cinder.integration.cvt_operating_hybrid import (
+    CVTOperatingHybridSystem,
+)  # noqa: E402
 from cinder.vehicle import CallableRoadProfile  # noqa: E402
 from launch_tuning_common import (  # noqa: E402
     MILLIMETRE,
@@ -81,7 +87,9 @@ from launch_tuning_common import (  # noqa: E402
     resolve_primary_preload,
 )
 
-_DEFAULT_PRESET = _TOOLS_DIRECTORY / "presets" / "circular_traction_first_reference.json"
+_DEFAULT_PRESET = (
+    _TOOLS_DIRECTORY / "presets" / "circular_traction_first_reference.json"
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -242,7 +250,9 @@ def parse_arguments() -> argparse.Namespace:
     for name in ("max_step_ms", "relative_tolerance", "absolute_tolerance"):
         value = getattr(args, name)
         if value is not None and (not np.isfinite(value) or value <= 0.0):
-            parser.error(f"--{name.replace('_', '-')} must be finite and positive when supplied.")
+            parser.error(
+                f"--{name.replace('_', '-')} must be finite and positive when supplied."
+            )
     if args.maximum_transitions < 1:
         parser.error("--maximum-transitions must be at least one.")
     if args.plot_samples < 250:
@@ -259,11 +269,17 @@ def load_candidate(path: Path) -> tuple[TuneCandidate, dict[str, float | str]]:
     candidate = TuneCandidate(
         flyweight_mass_kg=float(data["flyweight_mass_kg"]),
         helix_angle_degrees=float(data["helix_angle_degrees"]),
-        secondary_torsional_pretension_degrees=float(data["secondary_torsional_pretension_degrees"]),
-        secondary_compression_preload_mm=float(data["secondary_compression_preload_mm"]),
+        secondary_torsional_pretension_degrees=float(
+            data["secondary_torsional_pretension_degrees"]
+        ),
+        secondary_compression_preload_mm=float(
+            data["secondary_compression_preload_mm"]
+        ),
         primary_ramp_kind=str(data["primary_ramp_kind"]),
         primary_ramp_angle_degrees=float(data.get("primary_ramp_angle_degrees", 30.0)),
-        primary_ramp_start_angle_degrees=float(data["primary_ramp_start_angle_degrees"]),
+        primary_ramp_start_angle_degrees=float(
+            data["primary_ramp_start_angle_degrees"]
+        ),
         primary_ramp_end_angle_degrees=float(data["primary_ramp_end_angle_degrees"]),
     )
     return candidate, dict(payload.get("integration", {}))
@@ -276,7 +292,9 @@ def build_system(*, resolved, curve: DownhillRoadCurve) -> CVTOperatingHybridSys
     model = replace(
         template.model,
         road_profile=CallableRoadProfile(
-            grade_angle_function=lambda vehicle_distance: curve.grade_radians(vehicle_distance)
+            grade_angle_function=lambda vehicle_distance: curve.grade_radians(
+                vehicle_distance
+            )
         ),
     )
     return CVTOperatingHybridSystem(
@@ -316,17 +334,23 @@ def sample_trace(
 ) -> DownhillTrace:
     """Re-evaluate accepted states for road, engine, and vehicle-acceleration diagnostics."""
 
-    budgets = _allocate_samples([segment.state.shape[1] for segment in result.segments], maximum_samples)
+    budgets = _allocate_samples(
+        [segment.state.shape[1] for segment in result.segments], maximum_samples
+    )
     rows = []
     final_drive = system.model.road_load.final_drive
     speed_factor = final_drive.wheel_radius / final_drive.reduction_ratio
 
     for segment, budget in zip(result.segments, budgets, strict=True):
-        indices = np.unique(np.linspace(0, segment.state.shape[1] - 1, budget, dtype=int))
+        indices = np.unique(
+            np.linspace(0, segment.state.shape[1] - 1, budget, dtype=int)
+        )
         for index in indices:
             time = float(segment.time[index])
             vector = np.asarray(segment.state[:, index], dtype=float).copy()
-            vector[3] = np.clip(vector[3], 0.0, system.operating_limits.upper_stop_shift)
+            vector[3] = np.clip(
+                vector[3], 0.0, system.operating_limits.upper_stop_shift
+            )
             state = CVTDynamicState.from_vector(vector)
             snapshot = system.model.snapshot(state=state)
             derivative = system.rhs(time=time, state=vector, mode=segment.mode)
@@ -335,19 +359,21 @@ def sample_trace(
             )
             engine_torque = float(snapshot.engine_torque)
             engine_power_kw = engine_torque * state.primary_angular_speed / 1000.0
-            rows.append((
-                time,
-                vector,
-                _compact_mode(segment.mode),
-                float(distance),
-                float(snapshot.road_load.vehicle_speed),
-                float(speed_factor * derivative[1]),
-                float(np.rad2deg(curve.grade_radians(distance))),
-                float(snapshot.road_load.secondary_external_torque),
-                engine_torque,
-                engine_power_kw,
-                max(-engine_power_kw, 0.0),
-            ))
+            rows.append(
+                (
+                    time,
+                    vector,
+                    _compact_mode(segment.mode),
+                    float(distance),
+                    float(snapshot.road_load.vehicle_speed),
+                    float(speed_factor * derivative[1]),
+                    float(np.rad2deg(curve.grade_radians(distance))),
+                    float(snapshot.road_load.secondary_external_torque),
+                    engine_torque,
+                    engine_power_kw,
+                    max(-engine_power_kw, 0.0),
+                )
+            )
 
     rows.sort(key=lambda row: row[0])
     return DownhillTrace(
@@ -378,7 +404,12 @@ def _plot_masked_runs(
     for number, (start, end) in enumerate(zip(starts, ends, strict=True)):
         if end - start < 1:
             continue
-        axis.plot(x[start:end + 1], y[start:end + 1], label=label if number == 0 else None, **kwargs)
+        axis.plot(
+            x[start : end + 1],
+            y[start : end + 1],
+            label=label if number == 0 else None,
+            **kwargs,
+        )
 
 
 def _short_event(reason: str) -> str:
@@ -397,7 +428,9 @@ def _short_event(reason: str) -> str:
     return reason.replace("_", " ")
 
 
-def _annotate_transitions(axes: Iterable[plt.Axes], label_axes: Iterable[plt.Axes], result) -> None:
+def _annotate_transitions(
+    axes: Iterable[plt.Axes], label_axes: Iterable[plt.Axes], result
+) -> None:
     axes = tuple(axes)
     label_axes = tuple(label_axes)
     for count, record in enumerate(result.transitions):
@@ -418,7 +451,9 @@ def _annotate_transitions(axes: Iterable[plt.Axes], label_axes: Iterable[plt.Axe
             )
 
 
-def _first_true_time(time: NDArray[np.float64], mask: NDArray[np.bool_]) -> float | None:
+def _first_true_time(
+    time: NDArray[np.float64], mask: NDArray[np.bool_]
+) -> float | None:
     indices = np.flatnonzero(mask)
     return None if len(indices) == 0 else float(time[int(indices[0])])
 
@@ -442,7 +477,9 @@ def estimate_terminal_speed(
         -curve.maximum_downhill_degrees,
         atol=0.02,
     )
-    stable = full_grade & (np.abs(trace.vehicle_acceleration_mps2) <= acceleration_tolerance_mps2)
+    stable = full_grade & (
+        np.abs(trace.vehicle_acceleration_mps2) <= acceleration_tolerance_mps2
+    )
     if not stable[-1]:
         return TerminalSpeedEstimate(
             converged=False,
@@ -505,7 +542,12 @@ def plot_response(
     grade_axis = axes[0, 0]
     grade_axis.plot(t, trace.grade_degrees, label="grade")
     grade_axis.axhline(0.0, linestyle="--", linewidth=0.8)
-    grade_axis.axhline(-curve.maximum_downhill_degrees, linestyle=":", linewidth=0.9, label="downhill limit")
+    grade_axis.axhline(
+        -curve.maximum_downhill_degrees,
+        linestyle=":",
+        linewidth=0.9,
+        label="downhill limit",
+    )
     grade_axis.set_title("Physical road grade over full run")
     grade_axis.set_xlabel("Time [s]")
     grade_axis.set_ylabel("Grade [deg]")
@@ -514,8 +556,18 @@ def plot_response(
 
     distance_axis = axes[0, 1]
     distance_axis.plot(t, trace.vehicle_distance_m, label="vehicle distance")
-    distance_axis.axhline(curve.flat_approach_distance_m, linestyle="--", linewidth=0.8, label="ramp start")
-    distance_axis.axhline(curve.ramp_end_distance_m, linestyle=":", linewidth=0.9, label=f"−{curve.maximum_downhill_degrees:.0f}° reached")
+    distance_axis.axhline(
+        curve.flat_approach_distance_m,
+        linestyle="--",
+        linewidth=0.8,
+        label="ramp start",
+    )
+    distance_axis.axhline(
+        curve.ramp_end_distance_m,
+        linestyle=":",
+        linewidth=0.9,
+        label=f"−{curve.maximum_downhill_degrees:.0f}° reached",
+    )
     distance_axis.set_title("Road position through downhill curve")
     distance_axis.set_xlabel("Time [s]")
     distance_axis.set_ylabel("Distance [m]")
@@ -529,14 +581,23 @@ def plot_response(
     vehicle_axis.set_ylabel("Speed [km/h]")
     vehicle_axis.grid(True, alpha=0.25)
     acceleration_axis = vehicle_axis.twinx()
-    acceleration_axis.plot(t, trace.vehicle_acceleration_mps2, linestyle=":", label="vehicle accel")
+    acceleration_axis.plot(
+        t, trace.vehicle_acceleration_mps2, linestyle=":", label="vehicle accel"
+    )
     acceleration_axis.axhline(0.0, linestyle="--", linewidth=0.7)
     acceleration_axis.set_ylabel("Acceleration [m/s²]")
     left_handles, left_labels = vehicle_axis.get_legend_handles_labels()
     right_handles, right_labels = acceleration_axis.get_legend_handles_labels()
-    vehicle_axis.legend(left_handles + right_handles, left_labels + right_labels, loc="best")
+    vehicle_axis.legend(
+        left_handles + right_handles, left_labels + right_labels, loc="best"
+    )
     if terminal.converged and terminal.estimated_terminal_speed_kph is not None:
-        vehicle_axis.axhline(terminal.estimated_terminal_speed_kph, linestyle=":", linewidth=1.0, label="terminal estimate")
+        vehicle_axis.axhline(
+            terminal.estimated_terminal_speed_kph,
+            linestyle=":",
+            linewidth=1.0,
+            label="terminal estimate",
+        )
 
     speed_axis = axes[1, 0]
     speed_axis.plot(t, primary_rpm, label=r"$\omega_p$")
@@ -549,8 +610,18 @@ def plot_response(
 
     shift_axis = axes[1, 1]
     shift_axis.plot(t, shift_mm, label=r"$s$")
-    shift_axis.axhline(resolved.constants.deadzone_shift / MILLIMETRE, linestyle="--", linewidth=0.8, label="engage")
-    shift_axis.axhline(resolved.constants.max_shift / MILLIMETRE, linestyle="--", linewidth=0.8, label="high stop")
+    shift_axis.axhline(
+        resolved.constants.deadzone_shift / MILLIMETRE,
+        linestyle="--",
+        linewidth=0.8,
+        label="engage",
+    )
+    shift_axis.axhline(
+        resolved.constants.max_shift / MILLIMETRE,
+        linestyle="--",
+        linewidth=0.8,
+        label="high stop",
+    )
     shift_axis.set_title("Shift coordinate and shift rate")
     shift_axis.set_xlabel("Time [s]")
     shift_axis.set_ylabel("Shift [mm]")
@@ -560,17 +631,35 @@ def plot_response(
     shift_rate_axis.set_ylabel("Shift speed [mm/s]")
     left_handles, left_labels = shift_axis.get_legend_handles_labels()
     right_handles, right_labels = shift_rate_axis.get_legend_handles_labels()
-    shift_axis.legend(left_handles + right_handles, left_labels + right_labels, loc="best")
+    shift_axis.legend(
+        left_handles + right_handles, left_labels + right_labels, loc="best"
+    )
 
     curve_axis = axes[1, 2]
     curve_axis.plot(secondary_rpm, primary_rpm, alpha=0.20, label="full trajectory")
-    phase_index = np.asarray([curve.phase_index(distance) for distance in trace.vehicle_distance_m], dtype=int)
+    phase_index = np.asarray(
+        [curve.phase_index(distance) for distance in trace.vehicle_distance_m],
+        dtype=int,
+    )
     for phase, label in enumerate(curve.phase_labels):
-        _plot_masked_runs(curve_axis, secondary_rpm, primary_rpm, phase_index == phase, linestyle=":", linewidth=2.1, label=label)
+        _plot_masked_runs(
+            curve_axis,
+            secondary_rpm,
+            primary_rpm,
+            phase_index == phase,
+            linestyle=":",
+            linewidth=2.1,
+            label=label,
+        )
     curve_axis.scatter([secondary_rpm[0]], [primary_rpm[0]], marker="o", label="launch")
     if brake_start is not None:
         index = min(int(np.searchsorted(t, brake_start, side="left")), len(t) - 1)
-        curve_axis.scatter([secondary_rpm[index]], [primary_rpm[index]], marker="x", label="governed brake starts")
+        curve_axis.scatter(
+            [secondary_rpm[index]],
+            [primary_rpm[index]],
+            marker="x",
+            label="governed brake starts",
+        )
     curve_axis.set_title("Shift curve: route phase overlays")
     curve_axis.set_xlabel("Secondary speed [rpm]")
     curve_axis.set_ylabel("Primary speed [rpm]")
@@ -589,7 +678,9 @@ def plot_response(
 
     power_axis = axes[2, 1]
     power_axis.plot(t, trace.engine_power_kw, label=r"$P_{engine}$")
-    power_axis.plot(t, trace.engine_braking_power_kw, linestyle=":", label="braking magnitude")
+    power_axis.plot(
+        t, trace.engine_braking_power_kw, linestyle=":", label="braking magnitude"
+    )
     power_axis.axhline(0.0, linestyle="--", linewidth=0.8)
     power_axis.set_title("Crank power: negative = governed braking")
     power_axis.set_xlabel("Time [s]")
@@ -599,12 +690,16 @@ def plot_response(
 
     mode_axis = axes[2, 2]
     ordered_modes = list(dict.fromkeys(trace.mode))
-    mode_index = np.asarray([ordered_modes.index(mode) for mode in trace.mode], dtype=float)
+    mode_index = np.asarray(
+        [ordered_modes.index(mode) for mode in trace.mode], dtype=float
+    )
     mode_axis.step(t, mode_index, where="post", label="mode index")
     mode_axis.set_title("Operating-regime timeline")
     mode_axis.set_xlabel("Time [s]")
     mode_axis.set_ylabel("Mode index")
-    mode_axis.set_yticks(range(len(ordered_modes)), [str(index) for index in range(len(ordered_modes))])
+    mode_axis.set_yticks(
+        range(len(ordered_modes)), [str(index) for index in range(len(ordered_modes))]
+    )
     mode_axis.grid(True, alpha=0.25)
     mode_axis.legend(loc="best")
     mode_axis.text(
@@ -619,16 +714,37 @@ def plot_response(
     )
 
     _annotate_transitions(
-        (grade_axis, distance_axis, vehicle_axis, speed_axis, shift_axis, torque_axis, power_axis, mode_axis),
+        (
+            grade_axis,
+            distance_axis,
+            vehicle_axis,
+            speed_axis,
+            shift_axis,
+            torque_axis,
+            power_axis,
+            mode_axis,
+        ),
         (speed_axis, shift_axis),
         result,
     )
     if brake_start is not None:
-        for axis in (grade_axis, vehicle_axis, speed_axis, shift_axis, torque_axis, power_axis, mode_axis):
+        for axis in (
+            grade_axis,
+            vehicle_axis,
+            speed_axis,
+            shift_axis,
+            torque_axis,
+            power_axis,
+            mode_axis,
+        ):
             axis.axvline(brake_start, linestyle=":", linewidth=1.0, alpha=0.85)
     if terminal.converged and terminal.stable_window_start_time_s is not None:
         for axis in (vehicle_axis, speed_axis, shift_axis, torque_axis, power_axis):
-            axis.axvspan(terminal.stable_window_start_time_s, terminal.stable_window_end_time_s, alpha=0.10)
+            axis.axvspan(
+                terminal.stable_window_start_time_s,
+                terminal.stable_window_end_time_s,
+                alpha=0.10,
+            )
 
     figure.suptitle(
         "CINDER circular-primary downhill terminal-speed study | "
@@ -645,7 +761,11 @@ def plot_road_profile(*, curve: DownhillRoadCurve, final_distance_m: float):
     figure, axis = plt.subplots(figsize=(10, 4.5), constrained_layout=True)
     axis.plot(distance, grade, label="grade curve")
     axis.axvline(curve.flat_approach_distance_m, linestyle="--", label="ramp start")
-    axis.axvline(curve.ramp_end_distance_m, linestyle=":", label=f"−{curve.maximum_downhill_degrees:.0f}° reached")
+    axis.axvline(
+        curve.ramp_end_distance_m,
+        linestyle=":",
+        label=f"−{curve.maximum_downhill_degrees:.0f}° reached",
+    )
     axis.axhline(-curve.maximum_downhill_degrees, linestyle=":", linewidth=0.8)
     axis.set_title("Distance-indexed downhill road profile")
     axis.set_xlabel("Vehicle distance [m]")
@@ -660,13 +780,17 @@ def plot_engine_curve(*, system: CVTOperatingHybridSystem, resolved):
 
     engine = system.model.engine
     spec = engine.spec
-    rpm_limit = max(6500.0, spec.high_speed_braking_plateau_end * RPM_PER_RADIAN_PER_SECOND * 1.05)
+    rpm_limit = max(
+        6500.0, spec.high_speed_braking_plateau_end * RPM_PER_RADIAN_PER_SECOND * 1.05
+    )
     rpm = np.linspace(0.0, rpm_limit, 1000)
     angular_speed = rpm / RPM_PER_RADIAN_PER_SECOND
     torque = np.asarray([engine.evaluate(value) for value in angular_speed])
     power_hp = torque * angular_speed / 745.6998715822702
     governed_start_rpm = spec.maximum_speed * RPM_PER_RADIAN_PER_SECOND
-    plateau_start_rpm = spec.high_speed_braking_plateau_start * RPM_PER_RADIAN_PER_SECOND
+    plateau_start_rpm = (
+        spec.high_speed_braking_plateau_start * RPM_PER_RADIAN_PER_SECOND
+    )
 
     figure, axes = plt.subplots(1, 2, figsize=(13, 4.8), constrained_layout=True)
     torque_axis, power_axis = axes
@@ -681,7 +805,11 @@ def plot_engine_curve(*, system: CVTOperatingHybridSystem, resolved):
     torque_axis.legend(loc="best")
 
     power_axis.plot(rpm, power_hp, label="crank power")
-    power_axis.axhline(resolved.constants.engine_power_limit_hp, linestyle="--", label=f"{resolved.constants.engine_power_limit_hp:.0f} hp cap")
+    power_axis.axhline(
+        resolved.constants.engine_power_limit_hp,
+        linestyle="--",
+        label=f"{resolved.constants.engine_power_limit_hp:.0f} hp cap",
+    )
     power_axis.axhline(0.0, linestyle="--", linewidth=0.8)
     power_axis.axvline(governed_start_rpm, linestyle=":", label="governor onset")
     power_axis.set_title("Positive WOT power remains below cap")
@@ -702,8 +830,12 @@ def route_metrics(
     shift_mm = trace.state[3] / MILLIMETRE
     brake_mask = trace.engine_torque_nm < -1.0e-6
     braking_start = _first_true_time(trace.time, brake_mask)
-    ramp_start_time = _first_true_time(trace.time, trace.vehicle_distance_m >= curve.flat_approach_distance_m)
-    full_grade_time = _first_true_time(trace.time, trace.vehicle_distance_m >= curve.ramp_end_distance_m)
+    ramp_start_time = _first_true_time(
+        trace.time, trace.vehicle_distance_m >= curve.flat_approach_distance_m
+    )
+    full_grade_time = _first_true_time(
+        trace.time, trace.vehicle_distance_m >= curve.ramp_end_distance_m
+    )
     downhill_mask = trace.grade_degrees < -0.1
     return {
         "ramp_start_time_s": ramp_start_time,
@@ -717,8 +849,14 @@ def route_metrics(
         "peak_vehicle_speed_kph": float(np.max(trace.vehicle_speed_mps) * 3.6),
         "maximum_shift_mm": float(np.max(shift_mm)),
         "minimum_shift_mm": float(np.min(shift_mm)),
-        "minimum_shift_after_downhill_starts_mm": float(np.min(shift_mm[downhill_mask])) if np.any(downhill_mask) else None,
-        "maximum_backshift_speed_while_downhill_mm_per_s": float(np.min((trace.state[4] / MILLIMETRE)[downhill_mask])) if np.any(downhill_mask) else None,
+        "minimum_shift_after_downhill_starts_mm": (
+            float(np.min(shift_mm[downhill_mask])) if np.any(downhill_mask) else None
+        ),
+        "maximum_backshift_speed_while_downhill_mm_per_s": (
+            float(np.min((trace.state[4] / MILLIMETRE)[downhill_mask]))
+            if np.any(downhill_mask)
+            else None
+        ),
         "final_vehicle_speed_kph": float(trace.vehicle_speed_mps[-1] * 3.6),
         "final_vehicle_acceleration_mps2": terminal.final_vehicle_acceleration_mps2,
         "terminal_speed_converged": terminal.converged,
@@ -734,7 +872,9 @@ def audit_result(*, system: CVTOperatingHybridSystem, result) -> tuple[str, list
     try:
         from hybrid_system_checks import CVTSystemCheckSettings, check_cvt_hybrid_result
     except ImportError:
-        return "unavailable", ["Physical audit unavailable: hybrid_system_checks.py not found."]
+        return "unavailable", [
+            "Physical audit unavailable: hybrid_system_checks.py not found."
+        ]
     try:
         report = check_cvt_hybrid_result(
             system=system,
@@ -742,10 +882,16 @@ def audit_result(*, system: CVTOperatingHybridSystem, result) -> tuple[str, list
             settings=CVTSystemCheckSettings(maximum_samples_per_segment=32),
         )
     except Exception as error:
-        return "unavailable", [f"Physical audit did not execute: {type(error).__name__}: {error}"]
+        return "unavailable", [
+            f"Physical audit did not execute: {type(error).__name__}: {error}"
+        ]
     if report.passed:
         return "pass", list(report.summary_lines())
-    legacy = {"mode_position_domain", "upper_stop_position", "upper_stop_unilateral_reaction"}
+    legacy = {
+        "mode_position_domain",
+        "upper_stop_position",
+        "upper_stop_unilateral_reaction",
+    }
     if report.failures and all(
         failure.invariant.value in legacy and "low_ratio_seat" in failure.location
         for failure in report.failures
@@ -760,32 +906,48 @@ def audit_result(*, system: CVTOperatingHybridSystem, result) -> tuple[str, list
 def write_trace(path: Path, trace: DownhillTrace) -> None:
     with path.open("w", newline="", encoding="utf-8") as handle:
         writer = csv.writer(handle)
-        writer.writerow((
-            "time_s", "mode", "primary_rpm", "secondary_rpm", "belt_speed_mps", "shift_mm",
-            "shift_speed_mm_per_s", "secondary_shaft_angle_rad", "vehicle_distance_m",
-            "vehicle_speed_mps", "vehicle_acceleration_mps2", "grade_degrees", "secondary_road_torque_nm",
-            "engine_torque_nm", "engine_power_kw", "engine_braking_power_kw",
-        ))
+        writer.writerow(
+            (
+                "time_s",
+                "mode",
+                "primary_rpm",
+                "secondary_rpm",
+                "belt_speed_mps",
+                "shift_mm",
+                "shift_speed_mm_per_s",
+                "secondary_shaft_angle_rad",
+                "vehicle_distance_m",
+                "vehicle_speed_mps",
+                "vehicle_acceleration_mps2",
+                "grade_degrees",
+                "secondary_road_torque_nm",
+                "engine_torque_nm",
+                "engine_power_kw",
+                "engine_braking_power_kw",
+            )
+        )
         for index, time in enumerate(trace.time):
             state = trace.state[:, index]
-            writer.writerow((
-                time,
-                trace.mode[index],
-                state[0] * RPM_PER_RADIAN_PER_SECOND,
-                state[1] * RPM_PER_RADIAN_PER_SECOND,
-                state[2],
-                state[3] / MILLIMETRE,
-                state[4] / MILLIMETRE,
-                state[5],
-                trace.vehicle_distance_m[index],
-                trace.vehicle_speed_mps[index],
-                trace.vehicle_acceleration_mps2[index],
-                trace.grade_degrees[index],
-                trace.secondary_road_torque_nm[index],
-                trace.engine_torque_nm[index],
-                trace.engine_power_kw[index],
-                trace.engine_braking_power_kw[index],
-            ))
+            writer.writerow(
+                (
+                    time,
+                    trace.mode[index],
+                    state[0] * RPM_PER_RADIAN_PER_SECOND,
+                    state[1] * RPM_PER_RADIAN_PER_SECOND,
+                    state[2],
+                    state[3] / MILLIMETRE,
+                    state[4] / MILLIMETRE,
+                    state[5],
+                    trace.vehicle_distance_m[index],
+                    trace.vehicle_speed_mps[index],
+                    trace.vehicle_acceleration_mps2[index],
+                    trace.grade_degrees[index],
+                    trace.secondary_road_torque_nm[index],
+                    trace.engine_torque_nm[index],
+                    trace.engine_power_kw[index],
+                    trace.engine_braking_power_kw[index],
+                )
+            )
 
 
 def main() -> None:
@@ -798,10 +960,16 @@ def main() -> None:
     )
     method = str(args.solver_method or integration.get("solver_method", "LSODA"))
     max_step_ms = float(args.max_step_ms if args.max_step_ms is not None else 100.0)
-    rtol = float(args.relative_tolerance if args.relative_tolerance is not None else 1.0e-2)
-    atol = float(args.absolute_tolerance if args.absolute_tolerance is not None else 1.0e-5)
+    rtol = float(
+        args.relative_tolerance if args.relative_tolerance is not None else 1.0e-2
+    )
+    atol = float(
+        args.absolute_tolerance if args.absolute_tolerance is not None else 1.0e-5
+    )
 
-    resolved = resolve_primary_preload(candidate, target_engagement_rpm=args.target_engagement_rpm)
+    resolved = resolve_primary_preload(
+        candidate, target_engagement_rpm=args.target_engagement_rpm
+    )
     system = build_system(resolved=resolved, curve=curve)
     settings = HybridIntegratorSettings(
         relative_tolerance=rtol,
@@ -833,16 +1001,22 @@ def main() -> None:
     if not result.completed:
         raise RuntimeError(f"Integration terminated early: {result.termination_reason}")
 
-    trace = sample_trace(system=system, result=result, curve=curve, maximum_samples=args.plot_samples)
+    trace = sample_trace(
+        system=system, result=result, curve=curve, maximum_samples=args.plot_samples
+    )
     terminal = estimate_terminal_speed(
         trace=trace,
         curve=curve,
         stable_window_s=args.terminal_window_s,
         acceleration_tolerance_mps2=args.terminal_acceleration_tolerance_mps2,
     )
-    figure = plot_response(trace=trace, result=result, resolved=resolved, curve=curve, terminal=terminal)
+    figure = plot_response(
+        trace=trace, result=result, resolved=resolved, curve=curve, terminal=terminal
+    )
     figure.savefig(args.output_dir / "downhill_engine_braking.png", dpi=170)
-    profile_figure = plot_road_profile(curve=curve, final_distance_m=float(trace.vehicle_distance_m[-1]))
+    profile_figure = plot_road_profile(
+        curve=curve, final_distance_m=float(trace.vehicle_distance_m[-1])
+    )
     profile_figure.savefig(args.output_dir / "downhill_grade_profile.png", dpi=170)
     engine_figure = plot_engine_curve(system=system, resolved=resolved)
     engine_figure.savefig(args.output_dir / "engine_governed_torque_curve.png", dpi=170)
@@ -851,7 +1025,10 @@ def main() -> None:
     audit_status, audit_lines = (
         audit_result(system=system, result=result)
         if args.run_audit
-        else ("not_run", ["Not run by default; pass --run-audit for the slower physical audit."])
+        else (
+            "not_run",
+            ["Not run by default; pass --run-audit for the slower physical audit."],
+        )
     )
     metrics = route_metrics(trace=trace, curve=curve, terminal=terminal)
     summary = {
@@ -892,10 +1069,14 @@ def main() -> None:
         "metrics": metrics,
         "audit": {"status": audit_status, "lines": audit_lines},
     }
-    with (args.output_dir / "downhill_engine_braking_summary.json").open("w", encoding="utf-8") as handle:
+    with (args.output_dir / "downhill_engine_braking_summary.json").open(
+        "w", encoding="utf-8"
+    ) as handle:
         json.dump(summary, handle, indent=2)
 
-    print(f"\n{len(result.segments)} segments; {len(result.transitions)} transitions; audit={audit_status}")
+    print(
+        f"\n{len(result.segments)} segments; {len(result.transitions)} transitions; audit={audit_status}"
+    )
     for record in result.transitions:
         print(f"  t={record.time:.6f} s  {_short_event(record.transition.reason)}")
     print("\nDownhill metrics")

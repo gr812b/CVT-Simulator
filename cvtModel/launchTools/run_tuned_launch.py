@@ -41,7 +41,11 @@ _REPOSITORY_ROOT = _TOOLS_DIRECTORY.parent
 # intentional overlay and must not be shadowed by an older root-level copy.
 if str(_TOOLS_DIRECTORY) not in sys.path:
     sys.path.insert(0, str(_TOOLS_DIRECTORY))
-for _candidate in (_REPOSITORY_ROOT / "src", _REPOSITORY_ROOT, _REPOSITORY_ROOT / "tools"):
+for _candidate in (
+    _REPOSITORY_ROOT / "src",
+    _REPOSITORY_ROOT,
+    _REPOSITORY_ROOT / "tools",
+):
     if str(_candidate) not in sys.path:
         sys.path.append(str(_candidate))
 
@@ -61,9 +65,15 @@ from launch_tuning_common import (  # noqa: E402
 def parse_arguments() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     source = parser.add_mutually_exclusive_group(required=False)
-    source.add_argument("--ranked-csv", type=Path, help="CSV produced by screen_launch_tuning.py")
-    source.add_argument("--manual", action="store_true", help="Use manual parameters (the default).")
-    parser.add_argument("--rank", type=int, default=1, help="One-based valid rank in --ranked-csv.")
+    source.add_argument(
+        "--ranked-csv", type=Path, help="CSV produced by screen_launch_tuning.py"
+    )
+    source.add_argument(
+        "--manual", action="store_true", help="Use manual parameters (the default)."
+    )
+    parser.add_argument(
+        "--rank", type=int, default=1, help="One-based valid rank in --ranked-csv."
+    )
     parser.add_argument("--flyweight-mass-kg", type=float, default=0.80)
     parser.add_argument("--helix-angle-deg", type=float, default=20.0)
     parser.add_argument("--secondary-twist-deg", type=float, default=300.0)
@@ -74,9 +84,24 @@ def parse_arguments() -> argparse.Namespace:
         default="circular_hard_to_soft",
         help="Primary radial-ramp profile. The circular option starts steep and fades with shift travel.",
     )
-    parser.add_argument("--primary-ramp-angle-deg", type=float, default=30.0, help="Constant linear-ramp angle [deg].")
-    parser.add_argument("--primary-ramp-start-angle-deg", type=float, default=38.0, help="Circular-ramp low-ratio tangent angle [deg].")
-    parser.add_argument("--primary-ramp-end-angle-deg", type=float, default=30.0, help="Circular-ramp high-ratio tangent angle [deg].")
+    parser.add_argument(
+        "--primary-ramp-angle-deg",
+        type=float,
+        default=30.0,
+        help="Constant linear-ramp angle [deg].",
+    )
+    parser.add_argument(
+        "--primary-ramp-start-angle-deg",
+        type=float,
+        default=38.0,
+        help="Circular-ramp low-ratio tangent angle [deg].",
+    )
+    parser.add_argument(
+        "--primary-ramp-end-angle-deg",
+        type=float,
+        default=30.0,
+        help="Circular-ramp high-ratio tangent angle [deg].",
+    )
     parser.add_argument("--target-engagement-rpm", type=float, default=2000.0)
     parser.add_argument("--initial-primary-rpm", type=float, default=1800.0)
     parser.add_argument("--duration-s", type=float, default=10.0)
@@ -91,7 +116,9 @@ def parse_arguments() -> argparse.Namespace:
     parser.add_argument("--first-step-ms", type=float, default=None)
     parser.add_argument("--diagnostic-samples", type=int, default=1200)
     parser.add_argument("--maximum-transitions", type=int, default=60)
-    parser.add_argument("--output-dir", type=Path, default=Path("artifacts/tuned_launch"))
+    parser.add_argument(
+        "--output-dir", type=Path, default=Path("artifacts/tuned_launch")
+    )
     parser.add_argument("--no-show", action="store_true")
     args = parser.parse_args()
 
@@ -123,7 +150,9 @@ def parse_arguments() -> argparse.Namespace:
     if not 0.0 < args.primary_ramp_angle_deg < 89.0:
         parser.error("--primary-ramp-angle-deg must lie strictly between 0 and 89.")
     if not 0.0 < args.primary_ramp_start_angle_deg < 89.0:
-        parser.error("--primary-ramp-start-angle-deg must lie strictly between 0 and 89.")
+        parser.error(
+            "--primary-ramp-start-angle-deg must lie strictly between 0 and 89."
+        )
     if not 0.0 < args.primary_ramp_end_angle_deg < 89.0:
         parser.error("--primary-ramp-end-angle-deg must lie strictly between 0 and 89.")
     if (
@@ -147,7 +176,9 @@ def parse_arguments() -> argparse.Namespace:
 def _candidate_from_csv(path: Path, rank: int) -> tuple[TuneCandidate, float]:
     with path.open(newline="", encoding="utf-8") as handle:
         rows = list(csv.DictReader(handle))
-    validity_column = "dynamic_valid" if rows and "dynamic_valid" in rows[0] else "static_valid"
+    validity_column = (
+        "dynamic_valid" if rows and "dynamic_valid" in rows[0] else "static_valid"
+    )
     valid = [row for row in rows if row.get(validity_column) == "1"]
     if rank > len(valid):
         raise ValueError(
@@ -162,11 +193,19 @@ def _candidate_from_csv(path: Path, rank: int) -> tuple[TuneCandidate, float]:
             secondary_torsional_pretension_degrees=float(
                 row["secondary_torsional_pretension_degrees"]
             ),
-            secondary_compression_preload_mm=float(row["secondary_compression_preload_mm"]),
+            secondary_compression_preload_mm=float(
+                row["secondary_compression_preload_mm"]
+            ),
             primary_ramp_kind=row.get("primary_ramp_kind") or "linear",
-            primary_ramp_angle_degrees=float(row.get("primary_ramp_angle_degrees") or 30.0),
-            primary_ramp_start_angle_degrees=float(row.get("primary_ramp_start_angle_degrees") or 42.0),
-            primary_ramp_end_angle_degrees=float(row.get("primary_ramp_end_angle_degrees") or 12.0),
+            primary_ramp_angle_degrees=float(
+                row.get("primary_ramp_angle_degrees") or 30.0
+            ),
+            primary_ramp_start_angle_degrees=float(
+                row.get("primary_ramp_start_angle_degrees") or 42.0
+            ),
+            primary_ramp_end_angle_degrees=float(
+                row.get("primary_ramp_end_angle_degrees") or 12.0
+            ),
         ),
         float(row["target_engagement_rpm"]),
     )
@@ -177,7 +216,9 @@ def _optional_system_audit(*, system, result) -> tuple[bool | None, list[str]]:
 
     test_path = _REPOSITORY_ROOT / "test" / "cinder"
     if not test_path.exists():
-        return None, ["Physical audit unavailable: test/cinder/hybrid_system_checks.py was not found."]
+        return None, [
+            "Physical audit unavailable: test/cinder/hybrid_system_checks.py was not found."
+        ]
     if str(test_path) not in sys.path:
         sys.path.insert(0, str(test_path))
     try:
@@ -190,7 +231,9 @@ def _optional_system_audit(*, system, result) -> tuple[bool | None, list[str]]:
         )
         return report.passed, list(report.summary_lines())
     except Exception as error:
-        return None, [f"Physical audit failed to execute: {type(error).__name__}: {error}"]
+        return None, [
+            f"Physical audit failed to execute: {type(error).__name__}: {error}"
+        ]
 
 
 def _write_trace_csv(*, path: Path, trace) -> None:
@@ -239,7 +282,9 @@ def _write_trace_csv(*, path: Path, trace) -> None:
             )
 
 
-def _print_selected_tune(*, candidate: TuneCandidate, resolved, target_engagement: float, args) -> None:
+def _print_selected_tune(
+    *, candidate: TuneCandidate, resolved, target_engagement: float, args
+) -> None:
     print("Selected tune")
     print("=" * 88)
     print(candidate.label())
@@ -276,7 +321,9 @@ def main() -> None:
         )
         target_engagement = args.target_engagement_rpm
 
-    resolved = resolve_primary_preload(candidate, target_engagement_rpm=target_engagement)
+    resolved = resolve_primary_preload(
+        candidate, target_engagement_rpm=target_engagement
+    )
     _print_selected_tune(
         candidate=candidate,
         resolved=resolved,
@@ -321,16 +368,22 @@ def main() -> None:
             },
             "error": f"{type(error).__name__}: {error}",
         }
-        with (args.output_dir / "launch_failure.json").open("w", encoding="utf-8") as handle:
+        with (args.output_dir / "launch_failure.json").open(
+            "w", encoding="utf-8"
+        ) as handle:
             json.dump(failure, handle, indent=2)
         print("\nHybrid integration did not reach the requested final time.")
         print(f"{failure['error']}")
         print(f"Wrote {args.output_dir / 'launch_failure.json'}.")
         return
 
-    trace = sample_launch_trace(system=system, result=result, maximum_samples=args.diagnostic_samples)
+    trace = sample_launch_trace(
+        system=system, result=result, maximum_samples=args.diagnostic_samples
+    )
     metrics = transition_metrics(result=result, trace=trace, resolved=resolved)
-    metrics["physical_audit_passed"], audit_lines = _optional_system_audit(system=system, result=result)
+    metrics["physical_audit_passed"], audit_lines = _optional_system_audit(
+        system=system, result=result
+    )
 
     figure = plot_launch_diagnostics(
         trace=trace,
@@ -342,7 +395,9 @@ def main() -> None:
     ramp_figure = plot_primary_ramp_profile(resolved=resolved)
     ramp_figure.savefig(args.output_dir / "primary_ramp_profile.png", dpi=180)
     _write_trace_csv(path=args.output_dir / "launch_trace.csv", trace=trace)
-    with (args.output_dir / "launch_summary.json").open("w", encoding="utf-8") as handle:
+    with (args.output_dir / "launch_summary.json").open(
+        "w", encoding="utf-8"
+    ) as handle:
         json.dump(
             {
                 "candidate": {

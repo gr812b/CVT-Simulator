@@ -51,8 +51,9 @@ class EngagedCVTHybridSystem:
     evaluator: EngagedCVTContactEvaluator = field(init=False)
 
     def __post_init__(self) -> None:
-        limits = self.shift_travel_limits or EngagedShiftTravelLimits.from_geometry_spec(
-            self.model.geometry.spec
+        limits = (
+            self.shift_travel_limits
+            or EngagedShiftTravelLimits.from_geometry_spec(self.model.geometry.spec)
         )
         limits.validate_against_geometry_spec(self.model.geometry.spec)
         self.shift_travel_limits = limits

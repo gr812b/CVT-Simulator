@@ -34,10 +34,17 @@ for _candidate in (
     if str(_candidate) not in sys.path:
         sys.path.insert(0, str(_candidate))
 
-from baja_trial_baseline import BajaTrialConstants, build_baja_trial_baseline  # noqa: E402
+from baja_trial_baseline import (  # noqa: E402
+    BajaTrialConstants,
+    build_baja_trial_baseline,
+)
 from cinder.contact import ContactTractionLaw  # noqa: E402
-from cinder.dynamics import EngagedContactSolveSettings, LambdaSearchBounds  # noqa: E402
+from cinder.dynamics import (  # noqa: E402
+    EngagedContactSolveSettings,
+    LambdaSearchBounds,
+)
 from cinder.integration import CVTDynamicState, HybridIntegratorSettings  # noqa: E402
+
 try:  # noqa: E402
     from .hybrid_system_checks import (
         CVTSystemCheckSettings,
@@ -48,8 +55,12 @@ except ImportError:  # Direct execution: python test/cinder/run_hybrid_system_ch
         CVTSystemCheckSettings,
         check_cvt_hybrid_result,
     )
-from cinder.integration.cvt_operating_hybrid import CVTOperatingHybridSystem  # noqa: E402
-from cinder.integration.cvt_operating_limits import CVTShiftOperatingLimits  # noqa: E402
+from cinder.integration.cvt_operating_hybrid import (  # noqa: E402
+    CVTOperatingHybridSystem,
+)
+from cinder.integration.cvt_operating_limits import (  # noqa: E402
+    CVTShiftOperatingLimits,
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -106,7 +117,9 @@ def _lower_stop_release() -> tuple[CVTOperatingHybridSystem, CVTDynamicState, fl
     return _build_system(constants), baseline.deadzone_state, 0.040
 
 
-def _backshift_disengage_reengage() -> tuple[CVTOperatingHybridSystem, CVTDynamicState, float]:
+def _backshift_disengage_reengage() -> (
+    tuple[CVTOperatingHybridSystem, CVTDynamicState, float]
+):
     constants = BajaTrialConstants(primary_spring_initial_compression=0.100)
     baseline = build_baja_trial_baseline(constants)
     return _build_system(constants), baseline.active_shift_state, 0.040
@@ -125,7 +138,9 @@ def _upper_stop_hold() -> tuple[CVTOperatingHybridSystem, CVTDynamicState, float
     return _build_system(constants, upper_stop_shift=upper_stop), state, 0.250
 
 
-def _one_second_evolving_shafts() -> tuple[CVTOperatingHybridSystem, CVTDynamicState, float]:
+def _one_second_evolving_shafts() -> (
+    tuple[CVTOperatingHybridSystem, CVTDynamicState, float]
+):
     # Same physically coupled model as every other case.  This is not a fixed-
     # ratio fake: shaft speeds, belt speed, and shift coordinate are all free
     # to evolve and any resulting regime changes are checked.
@@ -238,7 +253,11 @@ def _run_scenario(
         f"segments={len(result.segments)}, final_t={result.final_time:.6f} s"
     )
     for segment_index, segment in enumerate(result.segments, start=1):
-        contact = "none" if segment.mode.contact_regime is None else segment.mode.contact_regime.mode.value
+        contact = (
+            "none"
+            if segment.mode.contact_regime is None
+            else segment.mode.contact_regime.mode.value
+        )
         print(
             f"  {segment_index:>2}: {segment.mode.engagement.value}/"
             f"{segment.mode.shift_constraint.value}/{contact} | "
@@ -246,10 +265,7 @@ def _run_scenario(
             f"events={segment.fired_event_names or ('none',)}"
         )
     for record in result.transitions:
-        print(
-            f"  transition @ {record.time:.6f} s: "
-            f"{record.transition.reason}"
-        )
+        print(f"  transition @ {record.time:.6f} s: " f"{record.transition.reason}")
     for line in report.summary_lines():
         print(f"  {line}")
 
@@ -316,12 +332,15 @@ def main() -> None:
     )
     passed = True
     for scenario in selected:
-        passed = _run_scenario(
-            scenario,
-            max_samples_per_segment=args.max_samples_per_segment,
-            save_dir=args.save_dir,
-            show=not args.no_show,
-        ) and passed
+        passed = (
+            _run_scenario(
+                scenario,
+                max_samples_per_segment=args.max_samples_per_segment,
+                save_dir=args.save_dir,
+                show=not args.no_show,
+            )
+            and passed
+        )
     if not passed:
         raise SystemExit(1)
 

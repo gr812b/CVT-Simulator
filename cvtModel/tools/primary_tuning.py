@@ -49,7 +49,9 @@ class PrimaryTuningRequest:
         if self.flyweight_mass <= 0.0:
             raise ValueError("flyweight_mass must be strictly positive.")
         if not 0.0 < self.ramp_angle_degrees < 89.0:
-            raise ValueError("ramp_angle_degrees must lie strictly between 0 and 89 degrees.")
+            raise ValueError(
+                "ramp_angle_degrees must lie strictly between 0 and 89 degrees."
+            )
         if self.spring_rate <= 0.0:
             raise ValueError("spring_rate must be strictly positive.")
         if self.explicit_preload < 0.0:
@@ -59,7 +61,9 @@ class PrimaryTuningRequest:
                 not isfinite(self.target_lower_stop_release_rpm)
                 or self.target_lower_stop_release_rpm <= 0.0
             ):
-                raise ValueError("target_lower_stop_release_rpm must be finite and positive.")
+                raise ValueError(
+                    "target_lower_stop_release_rpm must be finite and positive."
+                )
 
 
 @dataclass(frozen=True, slots=True)
@@ -182,7 +186,9 @@ def solve_preload_for_lower_stop_release(
     return float(preload)
 
 
-def lower_stop_primary_force(*, constants: BajaTrialConstants, primary_rpm: float) -> float:
+def lower_stop_primary_force(
+    *, constants: BajaTrialConstants, primary_rpm: float
+) -> float:
     """Return the unconstrained primary closing force at the lower stop."""
 
     if not isinstance(constants, BajaTrialConstants):

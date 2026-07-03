@@ -85,9 +85,7 @@ def build_tension_loop_equation(
             )
         )
         - primary_a.scaled(
-            primary_wrap
-            * contact.primary_psi_minus
-            / contact.primary_phi_minus
+            primary_wrap * contact.primary_psi_minus / contact.primary_phi_minus
         )
     )
 
@@ -111,9 +109,7 @@ def build_tension_loop_equation(
             )
         )
         - secondary_a.scaled(
-            secondary_wrap
-            * contact.secondary_psi_plus
-            / contact.secondary_phi_plus
+            secondary_wrap * contact.secondary_psi_plus / contact.secondary_phi_plus
         )
     )
 
@@ -126,12 +122,7 @@ def build_tension_loop_equation(
 
     return ClosureEquation(
         name="tension_loop",
-        residual=(
-            primary_entry
-            + primary_exit
-            - secondary_entry
-            - secondary_exit
-        ),
+        residual=(primary_entry + primary_exit - secondary_entry - secondary_exit),
     )
 
 
@@ -148,11 +139,7 @@ def _radial_offset(
 
     return AffineClosureScalar(
         bias=(
-            linear_density
-            * (
-                belt_speed**2
-                - radius * d2_radius_ds2 * shift_speed**2
-            )
+            linear_density * (belt_speed**2 - radius * d2_radius_ds2 * shift_speed**2)
         ),
         gains=ClosureGains(
             shift_acceleration=(-linear_density * radius * d_radius_ds),

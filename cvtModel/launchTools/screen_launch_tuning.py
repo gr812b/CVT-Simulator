@@ -35,7 +35,11 @@ _REPOSITORY_ROOT = _TOOLS_DIRECTORY.parent
 # intentional overlay and must not be shadowed by an older root-level copy.
 if str(_TOOLS_DIRECTORY) not in sys.path:
     sys.path.insert(0, str(_TOOLS_DIRECTORY))
-for _candidate in (_REPOSITORY_ROOT / "src", _REPOSITORY_ROOT, _REPOSITORY_ROOT / "tools"):
+for _candidate in (
+    _REPOSITORY_ROOT / "src",
+    _REPOSITORY_ROOT,
+    _REPOSITORY_ROOT / "tools",
+):
     if str(_candidate) not in sys.path:
         sys.path.append(str(_candidate))
 
@@ -118,7 +122,9 @@ def parse_arguments() -> argparse.Namespace:
         default=90.0,
         help="Penalty threshold for static free-shift acceleration at target + 200 rpm [m/s^2].",
     )
-    parser.add_argument("--output-dir", type=Path, default=Path("artifacts/launch_tuning"))
+    parser.add_argument(
+        "--output-dir", type=Path, default=Path("artifacts/launch_tuning")
+    )
     parser.add_argument("--no-show", action="store_true")
     args = parser.parse_args()
     args.flyweight_mass_kg = _float_list(args.flyweight_mass_kg)
@@ -150,15 +156,21 @@ def parse_arguments() -> argparse.Namespace:
     if not 0.0 < args.primary_ramp_angle_deg < 89.0:
         parser.error("--primary-ramp-angle-deg must lie strictly between 0 and 89.")
     if any(not 0.0 < value < 89.0 for value in args.primary_ramp_start_angle_deg):
-        parser.error("--primary-ramp-start-angle-deg values must lie strictly between 0 and 89.")
+        parser.error(
+            "--primary-ramp-start-angle-deg values must lie strictly between 0 and 89."
+        )
     if any(not 0.0 < value < 89.0 for value in args.primary_ramp_end_angle_deg):
-        parser.error("--primary-ramp-end-angle-deg values must lie strictly between 0 and 89.")
+        parser.error(
+            "--primary-ramp-end-angle-deg values must lie strictly between 0 and 89."
+        )
     if args.primary_ramp_kind == "circular_hard_to_soft" and any(
         start < end
         for start in args.primary_ramp_start_angle_deg
         for end in args.primary_ramp_end_angle_deg
     ):
-        parser.error("A hard-to-soft circular ramp requires every start angle to be >= every end angle.")
+        parser.error(
+            "A hard-to-soft circular ramp requires every start angle to be >= every end angle."
+        )
     return args
 
 
@@ -172,8 +184,14 @@ def _screen_grid(args: argparse.Namespace) -> np.ndarray:
 
 
 def _label(result: ScreenResult, rank: int) -> str:
-    onset = "--" if result.estimated_shift_onset_rpm is None else f"{result.estimated_shift_onset_rpm:.0f}"
-    modes = sorted({point.contact_mode for point in result.points if point.contact_mode})
+    onset = (
+        "--"
+        if result.estimated_shift_onset_rpm is None
+        else f"{result.estimated_shift_onset_rpm:.0f}"
+    )
+    modes = sorted(
+        {point.contact_mode for point in result.points if point.contact_mode}
+    )
     return f"#{rank}: onset={onset} rpm, {'/'.join(modes) or 'failed'}"
 
 
@@ -190,12 +208,22 @@ def _plot_screen(
     figure, axes = plt.subplots(2, 1, figsize=(12, 10), constrained_layout=True)
     reaction_axis, shift_axis = axes
 
-    reaction_rpm = np.linspace(target_engagement_rpm - 500.0, target_engagement_rpm + 500.0, 51)
+    reaction_rpm = np.linspace(
+        target_engagement_rpm - 500.0, target_engagement_rpm + 500.0, 51
+    )
     for rank, result in enumerate(shown, start=1):
         system, _ = build_operating_system(result.resolved.constants)
-        reactions = [lower_stop_reaction(system, primary_rpm=float(rpm)) for rpm in reaction_rpm]
-        reaction_axis.plot(reaction_rpm, reactions, label=f"#{rank}: {result.resolved.candidate.label()}")
-    reaction_axis.axvline(target_engagement_rpm, linestyle="--", label="engagement target")
+        reactions = [
+            lower_stop_reaction(system, primary_rpm=float(rpm)) for rpm in reaction_rpm
+        ]
+        reaction_axis.plot(
+            reaction_rpm,
+            reactions,
+            label=f"#{rank}: {result.resolved.candidate.label()}",
+        )
+    reaction_axis.axvline(
+        target_engagement_rpm, linestyle="--", label="engagement target"
+    )
     reaction_axis.axhline(0.0, linestyle=":")
     reaction_axis.set_title("Primary lower-stop reaction: resolved engagement target")
     reaction_axis.set_xlabel("Primary speed [rpm]")
@@ -206,11 +234,17 @@ def _plot_screen(
     for rank, result in enumerate(shown, start=1):
         rpms = [point.primary_rpm for point in result.points]
         accelerations = [
-            np.nan if point.shift_acceleration_m_per_s2 is None else point.shift_acceleration_m_per_s2
+            (
+                np.nan
+                if point.shift_acceleration_m_per_s2 is None
+                else point.shift_acceleration_m_per_s2
+            )
             for point in result.points
         ]
         shift_axis.plot(rpms, accelerations, marker="o", label=_label(result, rank))
-    shift_axis.axvline(target_shift_onset_rpm, linestyle="--", label="static onset target")
+    shift_axis.axvline(
+        target_shift_onset_rpm, linestyle="--", label="static onset target"
+    )
     shift_axis.axhline(0.0, linestyle=":")
     shift_axis.set_title("Near-low-ratio selected-contact free-shift acceleration")
     shift_axis.set_xlabel("Primary speed [rpm]")
@@ -291,9 +325,19 @@ def main() -> None:
             continue
         displayed += 1
         candidate = result.resolved.candidate
-        onset = "--" if result.estimated_shift_onset_rpm is None else f"{result.estimated_shift_onset_rpm:>18.1f}"
-        acceleration = "--" if result.acceleration_at_target_plus_200 is None else f"{result.acceleration_at_target_plus_200:>22.1f}"
-        modes = "/".join(sorted({p.contact_mode for p in result.points if p.contact_mode}))
+        onset = (
+            "--"
+            if result.estimated_shift_onset_rpm is None
+            else f"{result.estimated_shift_onset_rpm:>18.1f}"
+        )
+        acceleration = (
+            "--"
+            if result.acceleration_at_target_plus_200 is None
+            else f"{result.acceleration_at_target_plus_200:>22.1f}"
+        )
+        modes = "/".join(
+            sorted({p.contact_mode for p in result.points if p.contact_mode})
+        )
         print(
             f"{rank:>4} | {candidate.flyweight_mass_kg:>9.3f} | "
             f"{(('L' + format(candidate.primary_ramp_angle_degrees, '.0f')) if candidate.primary_ramp_kind == 'linear' else ('C' + format(candidate.primary_ramp_start_angle_degrees, '.0f') + '→' + format(candidate.primary_ramp_end_angle_degrees, '.0f'))):>7} | "
@@ -306,8 +350,12 @@ def main() -> None:
         if displayed >= args.top_n:
             break
     if not displayed:
-        print("No candidate produced a valid selected-contact static evaluation across the screen grid.")
-        print("Inspect ranked_tunes.csv and broaden the candidate range or check the branch diagnostics.")
+        print(
+            "No candidate produced a valid selected-contact static evaluation across the screen grid."
+        )
+        print(
+            "Inspect ranked_tunes.csv and broaden the candidate range or check the branch diagnostics."
+        )
 
     rejected = sum(not result.static_valid for result in ranked)
     print(

@@ -43,7 +43,11 @@ from typing import Final, Iterable
 import numpy as np
 
 _REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
-for _candidate in (_REPOSITORY_ROOT / "src", _REPOSITORY_ROOT, Path(__file__).resolve().parent):
+for _candidate in (
+    _REPOSITORY_ROOT / "src",
+    _REPOSITORY_ROOT,
+    Path(__file__).resolve().parent,
+):
     if _candidate.is_dir() and str(_candidate) not in sys.path:
         sys.path.insert(0, str(_candidate))
 
@@ -139,7 +143,9 @@ def main() -> int:
         "This tool separately checks contact compression and frictional dissipation."
     )
     print("\nSign rules used here")
-    print("  contact axial-force proxy: F_ax,j = tau_j / (2 lambda_j r_j tan(beta)) > 0")
+    print(
+        "  contact axial-force proxy: F_ax,j = tau_j / (2 lambda_j r_j tan(beta)) > 0"
+    )
     print("  primary kinetic dissipation: Q_p = -tau_p v_rel,p / r_p >= 0")
     print("  secondary kinetic dissipation: Q_s = +tau_s v_rel,s / r_s >= 0")
     print(
@@ -183,7 +189,9 @@ def main() -> int:
     print("\n" + "=" * 116)
     print("Interpretation")
     if not failures:
-        print("  All audited slipping contacts are compressive and dissipative for this baseline.")
+        print(
+            "  All audited slipping contacts are compressive and dissipative for this baseline."
+        )
     else:
         print(f"  Found {len(failures)} physical-admissibility violation(s):")
         for failure in failures:
@@ -207,10 +215,18 @@ def _parse_arguments() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description="Audit compression and dissipation of CINDER kinetic-slip candidates."
     )
-    parser.add_argument("--kinetic-utilization", type=float, default=DEFAULT_KINETIC_UTILIZATION)
-    parser.add_argument("--static-utilization", type=float, default=DEFAULT_STATIC_UTILIZATION)
-    parser.add_argument("--minimum-utilization", type=float, default=DEFAULT_MINIMUM_UTILIZATION)
-    parser.add_argument("--slip-speed-offset", type=float, default=DEFAULT_SLIP_SPEED_OFFSET)
+    parser.add_argument(
+        "--kinetic-utilization", type=float, default=DEFAULT_KINETIC_UTILIZATION
+    )
+    parser.add_argument(
+        "--static-utilization", type=float, default=DEFAULT_STATIC_UTILIZATION
+    )
+    parser.add_argument(
+        "--minimum-utilization", type=float, default=DEFAULT_MINIMUM_UTILIZATION
+    )
+    parser.add_argument(
+        "--slip-speed-offset", type=float, default=DEFAULT_SLIP_SPEED_OFFSET
+    )
     parser.add_argument(
         "--scan-shift-speed",
         action="store_true",
@@ -236,7 +252,9 @@ def _parse_arguments() -> argparse.Namespace:
     return args
 
 
-def _audit_primary_slip_secondary_stick(*, baseline, settings, kinetic_utilization: float, slip_speed_offset: float) -> list[str]:
+def _audit_primary_slip_secondary_stick(
+    *, baseline, settings, kinetic_utilization: float, slip_speed_offset: float
+) -> list[str]:
     print("\n" + "=" * 116)
     print("1. Primary slip / secondary stick")
     print("  Same state construction as preview_engaged_contact_modes.py.")
@@ -245,7 +263,8 @@ def _audit_primary_slip_secondary_stick(*, baseline, settings, kinetic_utilizati
     geometry = baseline.model.geometry.evaluate(base_state.shift_position)
     state = replace(
         base_state,
-        primary_angular_speed=(base_state.belt_speed + slip_speed_offset) / geometry.primary.effective,
+        primary_angular_speed=(base_state.belt_speed + slip_speed_offset)
+        / geometry.primary.effective,
     )
     specification = KineticSlipSpecification(
         interface=ContactInterface.PRIMARY,
@@ -266,7 +285,9 @@ def _audit_primary_slip_secondary_stick(*, baseline, settings, kinetic_utilizati
     )
 
 
-def _audit_primary_stick_secondary_slip(*, baseline, settings, kinetic_utilization: float, slip_speed_offset: float) -> list[str]:
+def _audit_primary_stick_secondary_slip(
+    *, baseline, settings, kinetic_utilization: float, slip_speed_offset: float
+) -> list[str]:
     print("\n" + "=" * 116)
     print("2. Primary stick / secondary slip")
     print("  Same state construction as preview_engaged_contact_modes.py.")
@@ -275,7 +296,8 @@ def _audit_primary_stick_secondary_slip(*, baseline, settings, kinetic_utilizati
     geometry = baseline.model.geometry.evaluate(base_state.shift_position)
     state = replace(
         base_state,
-        secondary_angular_speed=(base_state.belt_speed - slip_speed_offset) / geometry.secondary.effective,
+        secondary_angular_speed=(base_state.belt_speed - slip_speed_offset)
+        / geometry.secondary.effective,
     )
     specification = KineticSlipSpecification(
         interface=ContactInterface.SECONDARY,
@@ -296,7 +318,9 @@ def _audit_primary_stick_secondary_slip(*, baseline, settings, kinetic_utilizati
     )
 
 
-def _audit_both_slip_and_sign_enumeration(*, baseline, settings, kinetic_utilization: float, slip_speed_offset: float) -> list[str]:
+def _audit_both_slip_and_sign_enumeration(
+    *, baseline, settings, kinetic_utilization: float, slip_speed_offset: float
+) -> list[str]:
     print("\n" + "=" * 116)
     print("3. Both slip, plus all four signed-lambda combinations")
 
@@ -304,8 +328,10 @@ def _audit_both_slip_and_sign_enumeration(*, baseline, settings, kinetic_utiliza
     geometry = baseline.model.geometry.evaluate(base_state.shift_position)
     state = replace(
         base_state,
-        primary_angular_speed=(base_state.belt_speed + slip_speed_offset) / geometry.primary.effective,
-        secondary_angular_speed=(base_state.belt_speed - slip_speed_offset) / geometry.secondary.effective,
+        primary_angular_speed=(base_state.belt_speed + slip_speed_offset)
+        / geometry.primary.effective,
+        secondary_angular_speed=(base_state.belt_speed - slip_speed_offset)
+        / geometry.secondary.effective,
     )
     primary_specification = KineticSlipSpecification(
         interface=ContactInterface.PRIMARY,
@@ -373,12 +399,14 @@ def _audit_both_slip_and_sign_enumeration(*, baseline, settings, kinetic_utiliza
         )
     else:
         print(
-            f"\n  Result: {physically_admissible_pairs} signed pair(s) pass both physical checks.")
+            f"\n  Result: {physically_admissible_pairs} signed pair(s) pass both physical checks."
+        )
     return failures
 
 
-
-def _scan_mixed_mode_shift_speed(*, baseline, settings, kinetic_utilization: float, slip_speed_offset: float) -> None:
+def _scan_mixed_mode_shift_speed(
+    *, baseline, settings, kinetic_utilization: float, slip_speed_offset: float
+) -> None:
     """Continue both mixed branches through shift speed without changing slip speed.
 
     This is optional because it is a diagnostic continuation, not a future
@@ -416,9 +444,8 @@ def _scan_mixed_mode_shift_speed(*, baseline, settings, kinetic_utilization: flo
         state = replace(
             base_state,
             shift_speed=float(shift_speed),
-            primary_angular_speed=(
-                base_state.belt_speed + slip_speed_offset
-            ) / geometry.primary.effective,
+            primary_angular_speed=(base_state.belt_speed + slip_speed_offset)
+            / geometry.primary.effective,
         )
         closure = EngagedContactClosure(snapshot=baseline.model.snapshot(state=state))
         result = closure.solve_primary_slip_secondary_stick(
@@ -453,9 +480,8 @@ def _scan_mixed_mode_shift_speed(*, baseline, settings, kinetic_utilization: flo
         state = replace(
             base_state,
             shift_speed=float(shift_speed),
-            secondary_angular_speed=(
-                base_state.belt_speed - slip_speed_offset
-            ) / geometry.secondary.effective,
+            secondary_angular_speed=(base_state.belt_speed - slip_speed_offset)
+            / geometry.secondary.effective,
         )
         closure = EngagedContactClosure(snapshot=baseline.model.snapshot(state=state))
         result = closure.solve_primary_stick_secondary_slip(
@@ -480,7 +506,15 @@ def _scan_mixed_mode_shift_speed(*, baseline, settings, kinetic_utilization: flo
             f"{secondary.dissipation_power:+9.3f} | {str(physical):^8s}"
         )
 
-def _print_and_collect_branch_audit(*, label: str, snapshot, result, slipping_specifications: tuple[KineticSlipSpecification, ...], tolerances: ContactKinematicTolerances) -> list[str]:
+
+def _print_and_collect_branch_audit(
+    *,
+    label: str,
+    snapshot,
+    result,
+    slipping_specifications: tuple[KineticSlipSpecification, ...],
+    tolerances: ContactKinematicTolerances,
+) -> list[str]:
     print(
         f"  solver accepted={result.accepted}; lambda_p={result.trial.friction_utilization.primary_lambda:+.8f}; "
         f"lambda_s={result.trial.friction_utilization.secondary_lambda:+.8f}; "
@@ -495,12 +529,21 @@ def _print_and_collect_branch_audit(*, label: str, snapshot, result, slipping_sp
     )
 
 
-def _print_and_collect_direct_trial_audit(*, label: str, snapshot, trial, slipping_specifications: tuple[KineticSlipSpecification, ...], tolerances: ContactKinematicTolerances) -> list[str]:
+def _print_and_collect_direct_trial_audit(
+    *,
+    label: str,
+    snapshot,
+    trial,
+    slipping_specifications: tuple[KineticSlipSpecification, ...],
+    tolerances: ContactKinematicTolerances,
+) -> list[str]:
     audits = _audit_interfaces(trial=trial, snapshot=snapshot)
     failures: list[str] = []
     slipping_by_interface = {spec.interface: spec for spec in slipping_specifications}
 
-    print("  interface | lambda | tau [Nm] | v_rel [m/s] | F_ax proxy [N] | Q_diss [W] | checks")
+    print(
+        "  interface | lambda | tau [Nm] | v_rel [m/s] | F_ax proxy [N] | Q_diss [W] | checks"
+    )
     print("  " + "-" * 105)
     for audit in audits:
         specification = slipping_by_interface.get(audit.interface)
@@ -544,7 +587,9 @@ def _print_and_collect_direct_trial_audit(*, label: str, snapshot, trial, slippi
     return failures
 
 
-def _audit_interfaces(*, trial, snapshot) -> tuple[InterfacePhysicsAudit, InterfacePhysicsAudit]:
+def _audit_interfaces(
+    *, trial, snapshot
+) -> tuple[InterfacePhysicsAudit, InterfacePhysicsAudit]:
     """Evaluate the two contact power and compression identities once."""
 
     geometry = snapshot.geometry

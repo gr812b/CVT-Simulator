@@ -28,10 +28,17 @@ for _candidate in (_REPOSITORY_ROOT / "src", _REPOSITORY_ROOT):
 
 from baja_trial_baseline import BajaTrialConstants  # noqa: E402
 from cinder.contact import ContactTractionLaw  # noqa: E402
-from cinder.dynamics import EngagedContactSolveSettings, LambdaSearchBounds  # noqa: E402
+from cinder.dynamics import (
+    EngagedContactSolveSettings,
+    LambdaSearchBounds,
+)  # noqa: E402
 from cinder.integration import HybridIntegratorSettings  # noqa: E402
-from cinder.integration.cvt_operating_hybrid import CVTOperatingHybridSystem  # noqa: E402
-from cinder.integration.cvt_operating_limits import CVTShiftOperatingLimits  # noqa: E402
+from cinder.integration.cvt_operating_hybrid import (
+    CVTOperatingHybridSystem,
+)  # noqa: E402
+from cinder.integration.cvt_operating_limits import (
+    CVTShiftOperatingLimits,
+)  # noqa: E402
 from trim_shift_operating_point import solve_primary_preload_trim  # noqa: E402
 
 
@@ -73,7 +80,9 @@ def parse_arguments() -> argparse.Namespace:
         if not isfinite(value):
             parser.error(f"{name} must be finite.")
     if args.target_s_ddot <= 0.0:
-        parser.error("--target-s-ddot must be strictly positive for this arrival preview.")
+        parser.error(
+            "--target-s-ddot must be strictly positive for this arrival preview."
+        )
     if args.upper_stop_offset_mm <= 0.0:
         parser.error("--upper-stop-offset-mm must be strictly positive.")
     if args.duration_s <= 0.0 or args.max_step_ms <= 0.0:
@@ -158,10 +167,14 @@ def main() -> None:
             f"s_dot_end={segment.state[4, -1] * 1e3:.4f} mm/s"
         )
     for record in result.transitions:
-        next_mode = "terminal" if record.transition.next_mode is None else (
-            f"{record.transition.next_mode.engagement.value}/"
-            f"{record.transition.next_mode.shift_constraint.value}/"
-            f"{record.transition.next_mode.contact_regime.mode.value}"
+        next_mode = (
+            "terminal"
+            if record.transition.next_mode is None
+            else (
+                f"{record.transition.next_mode.engagement.value}/"
+                f"{record.transition.next_mode.shift_constraint.value}/"
+                f"{record.transition.next_mode.contact_regime.mode.value}"
+            )
         )
         reaction = record.transition.metadata.get("upper_stop_reaction")
         reaction_text = "" if reaction is None else f", R_high={float(reaction):+.3f} N"
@@ -171,7 +184,8 @@ def main() -> None:
         )
 
     visited_upper_stop = any(
-        segment.mode.shift_constraint.value == "upper_stop" for segment in result.segments
+        segment.mode.shift_constraint.value == "upper_stop"
+        for segment in result.segments
     )
     if not visited_upper_stop:
         raise RuntimeError("Preview did not enter the upper-stop constrained regime.")

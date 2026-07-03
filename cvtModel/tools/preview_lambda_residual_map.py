@@ -305,8 +305,12 @@ def build_lambda_residual_map(
             primary_residual[secondary_index, primary_index] = residual_primary
             secondary_residual[secondary_index, primary_index] = residual_secondary
             condition_number[secondary_index, primary_index] = result.condition_number
-            primary_torque[secondary_index, primary_index] = result.unknowns.primary_torque
-            secondary_torque[secondary_index, primary_index] = result.unknowns.secondary_torque
+            primary_torque[secondary_index, primary_index] = (
+                result.unknowns.primary_torque
+            )
+            secondary_torque[secondary_index, primary_index] = (
+                result.unknowns.secondary_torque
+            )
             primary_normal_resultant[secondary_index, primary_index] = (
                 result.unknowns.primary_normal_resultant
             )
@@ -409,8 +413,7 @@ def _print_summary(
     print("\n" + "=" * 88)
     print(f"Scenario: {scenario}")
     print(
-        "Closure basis: [alpha_p, alpha_s, v_b_dot, s_ddot, "
-        "tau_p, tau_s, N_p, N_s]."
+        "Closure basis: [alpha_p, alpha_s, v_b_dot, s_ddot, " "tau_p, tau_s, N_p, N_s]."
     )
     print(
         "Convention: lambda_p and lambda_s are sampled over the non-negative "
@@ -708,9 +711,7 @@ def _plot_residual_norm_with_contours(
 
 
 def _plot_signed_log_determinant(*, axis, x, y, determinant: np.ndarray) -> None:
-    signed_log_determinant = np.sign(determinant) * np.log10(
-        1.0 + np.abs(determinant)
-    )
+    signed_log_determinant = np.sign(determinant) * np.log10(1.0 + np.abs(determinant))
     limit = _robust_absolute_limit(signed_log_determinant, percentile=99.0)
     limit = max(limit, 1.0)
     plot = axis.contourf(
@@ -743,7 +744,9 @@ def _draw_zero_contour(
     label: str,
 ) -> None:
     finite_values = values[np.isfinite(values)]
-    if not finite_values.size or not (finite_values.min() <= 0.0 <= finite_values.max()):
+    if not finite_values.size or not (
+        finite_values.min() <= 0.0 <= finite_values.max()
+    ):
         return
 
     masked_values = np.ma.masked_invalid(values)
@@ -795,7 +798,9 @@ def _robust_absolute_limit(values: np.ndarray, *, percentile: float) -> float:
     return float(np.percentile(finite_values, percentile))
 
 
-def _positive_log_limits(values: np.ndarray, *, percentile: float) -> tuple[float, float]:
+def _positive_log_limits(
+    values: np.ndarray, *, percentile: float
+) -> tuple[float, float]:
     finite_positive = values[np.isfinite(values) & (values > 0.0)]
     if not finite_positive.size:
         return 1e-6, 1.0

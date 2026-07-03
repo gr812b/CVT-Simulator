@@ -166,12 +166,15 @@ class EngagedCVTContactEvaluator:
     model: CVTDynamicsModel
     traction_law: ContactTractionLaw
     solve_settings: EngagedContactSolveSettings
-    _cache_key: tuple[
-        float,
-        tuple[float, ...],
-        ContactRegime,
-        EngagedShiftConstraint,
-    ] | None = None
+    _cache_key: (
+        tuple[
+            float,
+            tuple[float, ...],
+            ContactRegime,
+            EngagedShiftConstraint,
+        ]
+        | None
+    ) = None
     _cache_value: CVTContactEvaluation | None = None
     _continuations: dict[
         tuple[ContactRegime, EngagedShiftConstraint],
@@ -188,7 +191,9 @@ class EngagedCVTContactEvaluator:
         if not isinstance(self.traction_law, ContactTractionLaw):
             raise TypeError("traction_law must be a ContactTractionLaw instance.")
         if not isinstance(self.solve_settings, EngagedContactSolveSettings):
-            raise TypeError("solve_settings must be an EngagedContactSolveSettings instance.")
+            raise TypeError(
+                "solve_settings must be an EngagedContactSolveSettings instance."
+            )
 
     def evaluate_vector(
         self,
@@ -289,7 +294,9 @@ class EngagedCVTContactEvaluator:
             # condition or branch physics. This continuation cache is essential
             # for practical long transient runs, where repeatedly starting each
             # stick solve from a global zero guess is unnecessarily expensive.
-            self._continuations[continuation_key] = StickResidualContinuation.from_result(result)
+            self._continuations[continuation_key] = (
+                StickResidualContinuation.from_result(result)
+            )
         self._cache_key = key
         self._cache_value = evaluation
         return evaluation

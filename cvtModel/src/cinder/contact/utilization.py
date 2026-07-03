@@ -50,9 +50,13 @@ class ContactTractionUtilization:
         if not isfinite(value):
             raise ValueError("value must be finite.")
         if interface is ContactInterface.PRIMARY:
-            return type(self)(primary_lambda=value, secondary_lambda=self.secondary_lambda)
+            return type(self)(
+                primary_lambda=value, secondary_lambda=self.secondary_lambda
+            )
         if interface is ContactInterface.SECONDARY:
-            return type(self)(primary_lambda=self.primary_lambda, secondary_lambda=value)
+            return type(self)(
+                primary_lambda=self.primary_lambda, secondary_lambda=value
+            )
         raise ValueError(f"Unsupported contact interface: {interface!r}.")
 
 

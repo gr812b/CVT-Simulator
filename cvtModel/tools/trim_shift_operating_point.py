@@ -53,7 +53,10 @@ from cinder.contact import (  # noqa: E402
     ContactTractionLaw,
     ContactTractionUtilization,
 )
-from cinder.dynamics import EngagedContactSolveSettings, LambdaSearchBounds  # noqa: E402
+from cinder.dynamics import (
+    EngagedContactSolveSettings,
+    LambdaSearchBounds,
+)  # noqa: E402
 from cinder.integration import CVTDynamicState  # noqa: E402
 from cinder.integration.cvt_hybrid import EngagedCVTHybridSystem  # noqa: E402
 from cinder.integration.hybrid import HybridIntegratorSettings  # noqa: E402
@@ -392,7 +395,9 @@ def build_hybrid_system(
     )
 
 
-def sample_trajectory(*, system: EngagedCVTHybridSystem, result, maximum_samples: int) -> TrajectoryTrace:
+def sample_trajectory(
+    *, system: EngagedCVTHybridSystem, result, maximum_samples: int
+) -> TrajectoryTrace:
     plan = list(iter_segment_samples(result.segments, maximum_samples=maximum_samples))
     count = len(plan)
     time = np.empty(count)
@@ -482,7 +487,9 @@ def print_summary(
     evaluation = operating_point.evaluation
     unknowns = evaluation.closure_unknowns
     required = evaluation.branch_result.required_static_utilization
-    delta_preload = operating_point.preload - reference_constants.primary_spring_initial_compression
+    delta_preload = (
+        operating_point.preload - reference_constants.primary_spring_initial_compression
+    )
     final = result.final_state
     initial = operating_point.state.as_vector()
 
@@ -536,7 +543,11 @@ def print_summary(
     if result.transitions:
         print("Transitions:")
         for record in result.transitions:
-            next_mode = "terminal" if record.transition.next_mode is None else record.transition.next_mode.mode.value
+            next_mode = (
+                "terminal"
+                if record.transition.next_mode is None
+                else record.transition.next_mode.mode.value
+            )
             print(
                 f"  t={record.time * 1e3:.6f} ms | events={','.join(record.fired_event_names)} "
                 f"| {record.transition.reason} -> {next_mode}"
@@ -579,7 +590,11 @@ def plot_trace(
 
     ax = axes[1, 0]
     ax.plot(time_ms, trace.shift_acceleration, label=r"$\ddot s$")
-    ax.axhline(target_shift_acceleration, linestyle="--", label=f"initial target ({target_label})")
+    ax.axhline(
+        target_shift_acceleration,
+        linestyle="--",
+        label=f"initial target ({target_label})",
+    )
     ax.axhline(0.0, linestyle=":", linewidth=1.0)
     ax.set_title("Shift acceleration and transmitted torques")
     ax.set_xlabel("Time [ms]")

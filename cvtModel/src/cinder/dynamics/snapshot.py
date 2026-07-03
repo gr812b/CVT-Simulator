@@ -145,9 +145,7 @@ class CVTDynamicsModel:
         )
         _validate_shared_movable_sheave_inertia(
             secondary_actuator=self.secondary_actuator,
-            central_inertia=(
-                self.inertias.secondary.movable_sheave_rotational_inertia
-            ),
+            central_inertia=(self.inertias.secondary.movable_sheave_rotational_inertia),
         )
 
     def snapshot(
@@ -181,9 +179,7 @@ class CVTDynamicsModel:
         secondary_actuation = self.secondary_actuator.evaluate(
             SecondaryHelixActuationState(
                 axial_position=secondary_coordinate.value,
-                axial_speed=(
-                    secondary_coordinate.d_value_ds * state.shift_speed
-                ),
+                axial_speed=(secondary_coordinate.d_value_ds * state.shift_speed),
                 shaft_speed=state.secondary_angular_speed,
                 global_shift_speed=state.shift_speed,
                 helix_kinematics=secondary_helix,

@@ -61,12 +61,18 @@ _TOOLS_DIRECTORY = Path(__file__).resolve().parent
 _REPOSITORY_ROOT = _TOOLS_DIRECTORY.parent
 if str(_TOOLS_DIRECTORY) not in sys.path:
     sys.path.insert(0, str(_TOOLS_DIRECTORY))
-for candidate_path in (_REPOSITORY_ROOT / "src", _REPOSITORY_ROOT, _REPOSITORY_ROOT / "tools"):
+for candidate_path in (
+    _REPOSITORY_ROOT / "src",
+    _REPOSITORY_ROOT,
+    _REPOSITORY_ROOT / "tools",
+):
     if str(candidate_path) not in sys.path:
         sys.path.append(str(candidate_path))
 
 from cinder.integration import CVTDynamicState, HybridIntegratorSettings  # noqa: E402
-from cinder.integration.cvt_operating_hybrid import CVTOperatingHybridSystem  # noqa: E402
+from cinder.integration.cvt_operating_hybrid import (
+    CVTOperatingHybridSystem,
+)  # noqa: E402
 from cinder.integration.hybrid import HybridIntegrationResult  # noqa: E402
 from cinder.vehicle import ConstantGradeRoadProfile  # noqa: E402
 from launch_tuning_common import (  # noqa: E402
@@ -78,7 +84,9 @@ from launch_tuning_common import (  # noqa: E402
     resolve_primary_preload,
 )
 
-_DEFAULT_PRESET = _TOOLS_DIRECTORY / "presets" / "circular_traction_first_reference.json"
+_DEFAULT_PRESET = (
+    _TOOLS_DIRECTORY / "presets" / "circular_traction_first_reference.json"
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -142,28 +150,44 @@ def parse_arguments() -> argparse.Namespace:
             "The transient and export run without it by default."
         ),
     )
-    parser.add_argument("--output-dir", type=Path, default=Path("artifacts/hill_step_response"))
+    parser.add_argument(
+        "--output-dir", type=Path, default=Path("artifacts/hill_step_response")
+    )
     parser.add_argument("--no-show", action="store_true")
     args = parser.parse_args()
 
     for name in (
-        "flat_duration_s", "hill_duration_s", "hill_grade_deg",
-        "initial_primary_rpm", "target_engagement_rpm", "hill_restart_s",
+        "flat_duration_s",
+        "hill_duration_s",
+        "hill_grade_deg",
+        "initial_primary_rpm",
+        "target_engagement_rpm",
+        "hill_restart_s",
     ):
         if not np.isfinite(getattr(args, name)):
             parser.error(f"--{name.replace('_', '-')} must be finite.")
     for name in ("max_step_ms", "relative_tolerance", "absolute_tolerance"):
         value = getattr(args, name)
         if value is not None and (not np.isfinite(value) or value <= 0.0):
-            parser.error(f"--{name.replace('_', '-')} must be finite and positive when supplied.")
+            parser.error(
+                f"--{name.replace('_', '-')} must be finite and positive when supplied."
+            )
     if args.flat_duration_s <= 0.0 or args.hill_duration_s <= 0.0:
         parser.error("Both duration arguments must be positive.")
     if not -89.0 < args.hill_grade_deg < 89.0:
         parser.error("--hill-grade-deg must lie strictly between -89 and 89.")
     if args.initial_primary_rpm < 0.0 or args.target_engagement_rpm <= 0.0:
-        parser.error("Initial RPM must be non-negative and target engagement RPM positive.")
-    if args.hill_restart_s < 0.0 or args.maximum_transitions < 1 or args.plot_samples < 100:
-        parser.error("hill restart must be non-negative; transitions >= 1; plot samples >= 100.")
+        parser.error(
+            "Initial RPM must be non-negative and target engagement RPM positive."
+        )
+    if (
+        args.hill_restart_s < 0.0
+        or args.maximum_transitions < 1
+        or args.plot_samples < 100
+    ):
+        parser.error(
+            "hill restart must be non-negative; transitions >= 1; plot samples >= 100."
+        )
     return args
 
 
@@ -177,12 +201,22 @@ def load_reference(path: Path) -> tuple[TuneCandidate, dict[str, float | str]]:
     candidate = TuneCandidate(
         flyweight_mass_kg=float(candidate_data["flyweight_mass_kg"]),
         helix_angle_degrees=float(candidate_data["helix_angle_degrees"]),
-        secondary_torsional_pretension_degrees=float(candidate_data["secondary_torsional_pretension_degrees"]),
-        secondary_compression_preload_mm=float(candidate_data["secondary_compression_preload_mm"]),
+        secondary_torsional_pretension_degrees=float(
+            candidate_data["secondary_torsional_pretension_degrees"]
+        ),
+        secondary_compression_preload_mm=float(
+            candidate_data["secondary_compression_preload_mm"]
+        ),
         primary_ramp_kind=str(candidate_data["primary_ramp_kind"]),
-        primary_ramp_angle_degrees=float(candidate_data.get("primary_ramp_angle_degrees", 30.0)),
-        primary_ramp_start_angle_degrees=float(candidate_data["primary_ramp_start_angle_degrees"]),
-        primary_ramp_end_angle_degrees=float(candidate_data["primary_ramp_end_angle_degrees"]),
+        primary_ramp_angle_degrees=float(
+            candidate_data.get("primary_ramp_angle_degrees", 30.0)
+        ),
+        primary_ramp_start_angle_degrees=float(
+            candidate_data["primary_ramp_start_angle_degrees"]
+        ),
+        primary_ramp_end_angle_degrees=float(
+            candidate_data["primary_ramp_end_angle_degrees"]
+        ),
     )
     return candidate, dict(integration_data)
 
@@ -191,7 +225,9 @@ def system_with_grade(*, resolved, grade_degrees: float) -> CVTOperatingHybridSy
     """Construct the normal hybrid system with only its road profile replaced."""
 
     template, _ = build_operating_system(resolved.constants)
-    model = replace(template.model, road_profile=ConstantGradeRoadProfile(radians(grade_degrees)))
+    model = replace(
+        template.model, road_profile=ConstantGradeRoadProfile(radians(grade_degrees))
+    )
     return CVTOperatingHybridSystem(
         model=model,
         traction_law=template.traction_law,
@@ -210,19 +246,27 @@ def final_mode(result) -> object | None:
 
 
 def integrate_phase(
-    *, system: CVTOperatingHybridSystem, start: float, end: float,
-    initial_state: CVTDynamicState, settings: HybridIntegratorSettings,
+    *,
+    system: CVTOperatingHybridSystem,
+    start: float,
+    end: float,
+    initial_state: CVTDynamicState,
+    settings: HybridIntegratorSettings,
     restart_s: float,
 ):
     """Integrate one fixed-grade phase, optionally in state/mode-continuous chunks."""
 
     if restart_s <= 0.0:
-        return system.integrate(time_span=(start, end), initial_state=initial_state, settings=settings)
+        return system.integrate(
+            time_span=(start, end), initial_state=initial_state, settings=settings
+        )
 
     chunks = []
     time = start
     state = initial_state
-    mode = None  # At the grade step, let CINDER classify under the new road torque once.
+    mode = (
+        None  # At the grade step, let CINDER classify under the new road torque once.
+    )
     while time < end - 1.0e-12:
         next_time = min(time + restart_s, end)
         result = system.integrate(
@@ -244,7 +288,9 @@ def integrate_phase(
     return HybridIntegrationResult(
         segments=tuple(segment for chunk in chunks for segment in chunk.segments),
         transitions=tuple(record for chunk in chunks for record in chunk.transitions),
-        completed=bool(chunks) and chunks[-1].completed and chunks[-1].final_time >= end - 1.0e-9,
+        completed=bool(chunks)
+        and chunks[-1].completed
+        and chunks[-1].final_time >= end - 1.0e-9,
         termination_reason=(
             "final_time_reached"
             if chunks and chunks[-1].completed and chunks[-1].final_time >= end - 1.0e-9
@@ -276,11 +322,17 @@ def allocate_segment_samples(sizes: list[int], total: int) -> list[int]:
     return allocation
 
 
-def sample_state_road_trace(phases: tuple[Phase, ...], maximum_samples: int) -> ResponseTrace:
+def sample_state_road_trace(
+    phases: tuple[Phase, ...], maximum_samples: int
+) -> ResponseTrace:
     """Sample state-known data across both phases without re-solving contact closure."""
 
-    segments = [(phase, segment) for phase in phases for segment in phase.result.segments]
-    budgets = allocate_segment_samples([segment.state.shape[1] for _, segment in segments], maximum_samples)
+    segments = [
+        (phase, segment) for phase in phases for segment in phase.result.segments
+    ]
+    budgets = allocate_segment_samples(
+        [segment.state.shape[1] for _, segment in segments], maximum_samples
+    )
     time_values: list[float] = []
     state_values: list[NDArray[np.float64]] = []
     phase_values: list[str] = []
@@ -293,7 +345,9 @@ def sample_state_road_trace(phases: tuple[Phase, ...], maximum_samples: int) -> 
     ratio_values: list[float] = []
 
     for (phase, segment), budget in zip(segments, budgets, strict=True):
-        indices = np.unique(np.linspace(0, segment.state.shape[1] - 1, budget, dtype=int))
+        indices = np.unique(
+            np.linspace(0, segment.state.shape[1] - 1, budget, dtype=int)
+        )
         for index in indices:
             vector = np.asarray(segment.state[:, index], dtype=float)
             state = CVTDynamicState.from_vector(vector)
@@ -307,12 +361,19 @@ def sample_state_road_trace(phases: tuple[Phase, ...], maximum_samples: int) -> 
             torque_values.append(float(road.secondary_external_torque))
             force_values.append(float(road.external_force))
             speed_values.append(float(road.vehicle_speed))
-            distance_values.append(float(
-                phase.system.model.road_load.final_drive.vehicle_distance_from_secondary_angle(
-                    secondary_shaft_angle=state.secondary_shaft_angle,
+            distance_values.append(
+                float(
+                    phase.system.model.road_load.final_drive.vehicle_distance_from_secondary_angle(
+                        secondary_shaft_angle=state.secondary_shaft_angle,
+                    )
                 )
-            ))
-            ratio_values.append(float(snapshot.geometry.secondary.effective / snapshot.geometry.primary.effective))
+            )
+            ratio_values.append(
+                float(
+                    snapshot.geometry.secondary.effective
+                    / snapshot.geometry.primary.effective
+                )
+            )
 
     return ResponseTrace(
         time=np.asarray(time_values, dtype=float),
@@ -347,7 +408,13 @@ def short_event(reason: str) -> str:
     return reason.replace("_", " ")
 
 
-def mark_events(axes: Iterable[plt.Axes], label_axes: Iterable[plt.Axes], phases: tuple[Phase, ...], step_time: float, hill_grade: float) -> None:
+def mark_events(
+    axes: Iterable[plt.Axes],
+    label_axes: Iterable[plt.Axes],
+    phases: tuple[Phase, ...],
+    step_time: float,
+    hill_grade: float,
+) -> None:
     """Show all event times, but write small labels only on key panels."""
 
     axes = tuple(axes)
@@ -356,9 +423,15 @@ def mark_events(axes: Iterable[plt.Axes], label_axes: Iterable[plt.Axes], phases
         axis.axvline(step_time, color="black", linestyle="-.", linewidth=1.0, alpha=0.8)
     for axis in label_axes:
         axis.annotate(
-            f"hill {hill_grade:.0f}°", xy=(step_time, 0.04), xycoords=("data", "axes fraction"),
-            xytext=(3, 0), textcoords="offset points", rotation=90,
-            va="bottom", ha="left", fontsize=6.5,
+            f"hill {hill_grade:.0f}°",
+            xy=(step_time, 0.04),
+            xycoords=("data", "axes fraction"),
+            xytext=(3, 0),
+            textcoords="offset points",
+            rotation=90,
+            va="bottom",
+            ha="left",
+            fontsize=6.5,
         )
     counter = 0
     for phase in phases:
@@ -369,14 +442,25 @@ def mark_events(axes: Iterable[plt.Axes], label_axes: Iterable[plt.Axes], phases
             for axis in label_axes:
                 axis.annotate(
                     short_event(record.transition.reason),
-                    xy=(record.time, fraction), xycoords=("data", "axes fraction"),
-                    xytext=(2, 0), textcoords="offset points", rotation=90,
-                    va="top", ha="left", fontsize=6.0,
+                    xy=(record.time, fraction),
+                    xycoords=("data", "axes fraction"),
+                    xytext=(2, 0),
+                    textcoords="offset points",
+                    rotation=90,
+                    va="top",
+                    ha="left",
+                    fontsize=6.0,
                 )
             counter += 1
 
 
-def plot_response(trace: ResponseTrace, phases: tuple[Phase, ...], resolved, step_time: float, hill_grade: float):
+def plot_response(
+    trace: ResponseTrace,
+    phases: tuple[Phase, ...],
+    resolved,
+    step_time: float,
+    hill_grade: float,
+):
     """Plot the backshift experiment without hidden mechanics recomputation."""
 
     time = trace.time
@@ -399,8 +483,12 @@ def plot_response(trace: ResponseTrace, phases: tuple[Phase, ...], resolved, ste
 
     shift_axis = axes[0, 1]
     shift_axis.plot(time, shift_mm, label=r"$s$")
-    shift_axis.axhline(resolved.constants.deadzone_shift / MILLIMETRE, linestyle="--", label="engage")
-    shift_axis.axhline(resolved.constants.max_shift / MILLIMETRE, linestyle="--", label="high stop")
+    shift_axis.axhline(
+        resolved.constants.deadzone_shift / MILLIMETRE, linestyle="--", label="engage"
+    )
+    shift_axis.axhline(
+        resolved.constants.max_shift / MILLIMETRE, linestyle="--", label="high stop"
+    )
     shift_axis.set_title("Shift coordinate and speed")
     shift_axis.set_xlabel("Time [s]")
     shift_axis.set_ylabel("Shift [mm]")
@@ -414,10 +502,17 @@ def plot_response(trace: ResponseTrace, phases: tuple[Phase, ...], resolved, ste
 
     curve_axis = axes[0, 2]
     curve_axis.plot(secondary_rpm[flat], primary_rpm[flat], label="level")
-    curve_axis.plot(secondary_rpm[~flat], primary_rpm[~flat], label=f"{hill_grade:.0f}° hill")
+    curve_axis.plot(
+        secondary_rpm[~flat], primary_rpm[~flat], label=f"{hill_grade:.0f}° hill"
+    )
     curve_axis.scatter([secondary_rpm[0]], [primary_rpm[0]], marker="o", label="launch")
     transition_index = int(np.argmin(np.abs(time - step_time)))
-    curve_axis.scatter([secondary_rpm[transition_index]], [primary_rpm[transition_index]], marker="s", label="hill step")
+    curve_axis.scatter(
+        [secondary_rpm[transition_index]],
+        [primary_rpm[transition_index]],
+        marker="s",
+        label="hill step",
+    )
     curve_axis.set_title("Shift curve: primary vs secondary speed")
     curve_axis.set_xlabel("Secondary speed [rpm]")
     curve_axis.set_ylabel("Primary speed [rpm]")
@@ -466,7 +561,9 @@ def plot_response(trace: ResponseTrace, phases: tuple[Phase, ...], resolved, ste
         step_time=step_time,
         hill_grade=hill_grade,
     )
-    figure.subplots_adjust(left=0.055, right=0.955, bottom=0.08, top=0.89, wspace=0.32, hspace=0.34)
+    figure.subplots_adjust(
+        left=0.055, right=0.955, bottom=0.08, top=0.89, wspace=0.32, hspace=0.34
+    )
     figure.suptitle(
         "CINDER circular-primary hill-step response | "
         f"{resolved.candidate.label()} | primary preload={resolved.resolved_primary_preload_mm:.2f} mm",
@@ -481,7 +578,9 @@ def audit_phase(phase: Phase) -> tuple[str, list[str]]:
     try:
         from hybrid_system_checks import CVTSystemCheckSettings, check_cvt_hybrid_result
     except ImportError:
-        return "unavailable", ["Physical audit unavailable: hybrid_system_checks.py not found."]
+        return "unavailable", [
+            "Physical audit unavailable: hybrid_system_checks.py not found."
+        ]
     try:
         report = check_cvt_hybrid_result(
             system=phase.system,
@@ -492,11 +591,15 @@ def audit_phase(phase: Phase) -> tuple[str, list[str]]:
             settings=CVTSystemCheckSettings(maximum_samples_per_segment=24),
         )
     except Exception as error:
-        return "unavailable", [f"Physical audit did not execute: {type(error).__name__}: {error}"]
+        return "unavailable", [
+            f"Physical audit did not execute: {type(error).__name__}: {error}"
+        ]
     if report.passed:
         return "pass", list(report.summary_lines())
     legacy = {
-        "mode_position_domain", "upper_stop_position", "upper_stop_unilateral_reaction",
+        "mode_position_domain",
+        "upper_stop_position",
+        "upper_stop_unilateral_reaction",
     }
     if report.failures and all(
         failure.invariant.value in legacy and "low_ratio_seat" in failure.location
@@ -509,11 +612,17 @@ def audit_phase(phase: Phase) -> tuple[str, list[str]]:
     return "fail", list(report.summary_lines())
 
 
-def backshift_metrics(hill_phase: Phase, trace: ResponseTrace, step_time: float) -> dict[str, float | None]:
+def backshift_metrics(
+    hill_phase: Phase, trace: ResponseTrace, step_time: float
+) -> dict[str, float | None]:
     """Extract direct, physically interpretable backshift response measures."""
 
     release = next(
-        (record for record in hill_phase.result.transitions if "upper_stop_released" in record.transition.reason),
+        (
+            record
+            for record in hill_phase.result.transitions
+            if "upper_stop_released" in record.transition.reason
+        ),
         None,
     )
     after = trace.time >= step_time - 1.0e-10
@@ -523,11 +632,19 @@ def backshift_metrics(hill_phase: Phase, trace: ResponseTrace, step_time: float)
     minimum_shift = float(np.min(shift_mm[after])) if np.any(after) else None
     return {
         "high_stop_release_time_s": None if release is None else float(release.time),
-        "high_stop_release_delay_s": None if release is None else float(release.time - step_time),
+        "high_stop_release_delay_s": (
+            None if release is None else float(release.time - step_time)
+        ),
         "shift_at_grade_step_mm": shift_at_step,
         "minimum_shift_after_grade_mm": minimum_shift,
-        "backshift_amount_mm": None if shift_at_step is None or minimum_shift is None else float(shift_at_step - minimum_shift),
-        "peak_backshift_speed_mm_per_s": float(np.min(trace.state[4, after]) / MILLIMETRE) if np.any(after) else None,
+        "backshift_amount_mm": (
+            None
+            if shift_at_step is None or minimum_shift is None
+            else float(shift_at_step - minimum_shift)
+        ),
+        "peak_backshift_speed_mm_per_s": (
+            float(np.min(trace.state[4, after]) / MILLIMETRE) if np.any(after) else None
+        ),
         "final_shift_mm": float(shift_mm[-1]),
         "final_primary_rpm": float(trace.state[0, -1] * RPM_PER_RADIAN_PER_SECOND),
         "final_secondary_rpm": float(trace.state[1, -1] * RPM_PER_RADIAN_PER_SECOND),
@@ -539,20 +656,44 @@ def write_trace(path: Path, trace: ResponseTrace) -> None:
 
     with path.open("w", newline="", encoding="utf-8") as handle:
         writer = csv.writer(handle)
-        writer.writerow((
-            "time_s", "phase", "mode", "primary_rpm", "secondary_rpm", "belt_speed_mps",
-            "shift_mm", "shift_speed_mm_per_s", "grade_degrees", "secondary_road_torque_nm",
-            "road_external_force_n", "vehicle_speed_mps", "vehicle_distance_m", "effective_ratio_secondary_over_primary",
-        ))
+        writer.writerow(
+            (
+                "time_s",
+                "phase",
+                "mode",
+                "primary_rpm",
+                "secondary_rpm",
+                "belt_speed_mps",
+                "shift_mm",
+                "shift_speed_mm_per_s",
+                "grade_degrees",
+                "secondary_road_torque_nm",
+                "road_external_force_n",
+                "vehicle_speed_mps",
+                "vehicle_distance_m",
+                "effective_ratio_secondary_over_primary",
+            )
+        )
         for i, time in enumerate(trace.time):
             state = trace.state[:, i]
-            writer.writerow((
-                time, trace.phase[i], trace.mode[i],
-                state[0] * RPM_PER_RADIAN_PER_SECOND, state[1] * RPM_PER_RADIAN_PER_SECOND,
-                state[2], state[3] / MILLIMETRE, state[4] / MILLIMETRE,
-                trace.grade_degrees[i], trace.road_torque_nm[i], trace.road_force_n[i],
-                trace.vehicle_speed_mps[i], trace.vehicle_distance_m[i], trace.effective_ratio[i],
-            ))
+            writer.writerow(
+                (
+                    time,
+                    trace.phase[i],
+                    trace.mode[i],
+                    state[0] * RPM_PER_RADIAN_PER_SECOND,
+                    state[1] * RPM_PER_RADIAN_PER_SECOND,
+                    state[2],
+                    state[3] / MILLIMETRE,
+                    state[4] / MILLIMETRE,
+                    trace.grade_degrees[i],
+                    trace.road_torque_nm[i],
+                    trace.road_force_n[i],
+                    trace.vehicle_speed_mps[i],
+                    trace.vehicle_distance_m[i],
+                    trace.effective_ratio[i],
+                )
+            )
 
 
 def main() -> None:
@@ -560,12 +701,21 @@ def main() -> None:
     candidate, integration = load_reference(args.preset)
     method = str(args.solver_method or integration.get("solver_method", "LSODA"))
     max_step_ms = float(args.max_step_ms or integration.get("max_step_ms", 20.0))
-    rtol = float(args.relative_tolerance or integration.get("relative_tolerance", 1.0e-4))
-    atol = float(args.absolute_tolerance or integration.get("absolute_tolerance", 1.0e-7))
-    resolved = resolve_primary_preload(candidate, target_engagement_rpm=args.target_engagement_rpm)
+    rtol = float(
+        args.relative_tolerance or integration.get("relative_tolerance", 1.0e-4)
+    )
+    atol = float(
+        args.absolute_tolerance or integration.get("absolute_tolerance", 1.0e-7)
+    )
+    resolved = resolve_primary_preload(
+        candidate, target_engagement_rpm=args.target_engagement_rpm
+    )
     settings = HybridIntegratorSettings(
-        relative_tolerance=rtol, absolute_tolerance=atol, method=method,
-        max_step=max_step_ms * 1.0e-3, maximum_transitions=args.maximum_transitions,
+        relative_tolerance=rtol,
+        absolute_tolerance=atol,
+        method=method,
+        max_step=max_step_ms * 1.0e-3,
+        maximum_transitions=args.maximum_transitions,
     )
     args.output_dir.mkdir(parents=True, exist_ok=True)
 
@@ -580,27 +730,41 @@ def main() -> None:
 
     level_system = system_with_grade(resolved=resolved, grade_degrees=0.0)
     level_result = integrate_phase(
-        system=level_system, start=0.0, end=args.flat_duration_s,
+        system=level_system,
+        start=0.0,
+        end=args.flat_duration_s,
         initial_state=launch_initial_state(primary_rpm=args.initial_primary_rpm),
-        settings=settings, restart_s=0.0,
+        settings=settings,
+        restart_s=0.0,
     )
     if not level_result.completed:
-        raise RuntimeError(f"Level phase terminated early: {level_result.termination_reason}")
-    hill_system = system_with_grade(resolved=resolved, grade_degrees=args.hill_grade_deg)
+        raise RuntimeError(
+            f"Level phase terminated early: {level_result.termination_reason}"
+        )
+    hill_system = system_with_grade(
+        resolved=resolved, grade_degrees=args.hill_grade_deg
+    )
     hill_result = integrate_phase(
-        system=hill_system, start=args.flat_duration_s, end=args.flat_duration_s + args.hill_duration_s,
+        system=hill_system,
+        start=args.flat_duration_s,
+        end=args.flat_duration_s + args.hill_duration_s,
         initial_state=CVTDynamicState.from_vector(level_result.final_state),
-        settings=settings, restart_s=args.hill_restart_s,
+        settings=settings,
+        restart_s=args.hill_restart_s,
     )
     if not hill_result.completed:
-        raise RuntimeError(f"Hill phase terminated early: {hill_result.termination_reason}")
+        raise RuntimeError(
+            f"Hill phase terminated early: {hill_result.termination_reason}"
+        )
 
     phases = (
         Phase("level", 0.0, level_system, level_result),
         Phase("hill", args.hill_grade_deg, hill_system, hill_result),
     )
     trace = sample_state_road_trace(phases, args.plot_samples)
-    figure = plot_response(trace, phases, resolved, args.flat_duration_s, args.hill_grade_deg)
+    figure = plot_response(
+        trace, phases, resolved, args.flat_duration_s, args.hill_grade_deg
+    )
     figure.savefig(args.output_dir / "hill_step_response.png", dpi=160)
     write_trace(args.output_dir / "hill_step_trace.csv", trace)
 
@@ -610,7 +774,9 @@ def main() -> None:
         else {
             phase.name: (
                 "not_run",
-                ["Not run by default; pass --run-audit for the slower per-phase physical audit."],
+                [
+                    "Not run by default; pass --run-audit for the slower per-phase physical audit."
+                ],
             )
             for phase in phases
         }
@@ -634,18 +800,42 @@ def main() -> None:
             "primary_ramp_end_angle_degrees": candidate.primary_ramp_end_angle_degrees,
             "resolved_primary_preload_mm": resolved.resolved_primary_preload_mm,
         },
-        "integration": {"method": method, "max_step_ms": max_step_ms, "rtol": rtol, "atol": atol},
-        "level": {"completed": level_result.completed, "segments": len(level_result.segments), "transitions": [record.transition.reason for record in level_result.transitions]},
-        "hill": {"completed": hill_result.completed, "segments": len(hill_result.segments), "transitions": [record.transition.reason for record in hill_result.transitions]},
+        "integration": {
+            "method": method,
+            "max_step_ms": max_step_ms,
+            "rtol": rtol,
+            "atol": atol,
+        },
+        "level": {
+            "completed": level_result.completed,
+            "segments": len(level_result.segments),
+            "transitions": [
+                record.transition.reason for record in level_result.transitions
+            ],
+        },
+        "hill": {
+            "completed": hill_result.completed,
+            "segments": len(hill_result.segments),
+            "transitions": [
+                record.transition.reason for record in hill_result.transitions
+            ],
+        },
         "backshift_metrics": metrics,
-        "audit": {name: {"status": status, "lines": lines} for name, (status, lines) in audits.items()},
+        "audit": {
+            name: {"status": status, "lines": lines}
+            for name, (status, lines) in audits.items()
+        },
     }
-    with (args.output_dir / "hill_step_summary.json").open("w", encoding="utf-8") as handle:
+    with (args.output_dir / "hill_step_summary.json").open(
+        "w", encoding="utf-8"
+    ) as handle:
         json.dump(summary, handle, indent=2)
 
     for phase in phases:
         status, lines = audits[phase.name]
-        print(f"\n{phase.name}: {len(phase.result.segments)} segments, {len(phase.result.transitions)} transitions, audit={status}")
+        print(
+            f"\n{phase.name}: {len(phase.result.segments)} segments, {len(phase.result.transitions)} transitions, audit={status}"
+        )
         for record in phase.result.transitions:
             print(f"  t={record.time:.6f} s  {short_event(record.transition.reason)}")
         for line in lines:
@@ -653,7 +843,9 @@ def main() -> None:
     print("\nBackshift metrics")
     for key, value in metrics.items():
         print(f"{key}: {value}")
-    print(f"\nWrote {args.output_dir / 'hill_step_response.png'}, {args.output_dir / 'hill_step_trace.csv'}, and {args.output_dir / 'hill_step_summary.json'}.")
+    print(
+        f"\nWrote {args.output_dir / 'hill_step_response.png'}, {args.output_dir / 'hill_step_trace.csv'}, and {args.output_dir / 'hill_step_summary.json'}."
+    )
 
     if args.no_show:
         plt.close(figure)

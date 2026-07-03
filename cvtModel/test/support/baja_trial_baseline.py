@@ -41,7 +41,12 @@ from cinder.inertia import (
     VehicleInertia,
     resolve_inertias,
 )
-from cinder.profiles import HelixProfile, LinearSegment, PiecewiseRamp, linear_helix_segment
+from cinder.profiles import (
+    HelixProfile,
+    LinearSegment,
+    PiecewiseRamp,
+    linear_helix_segment,
+)
 from cinder.vehicle import (
     ConstantGradeRoadProfile,
     FixedFinalDrive,
@@ -199,7 +204,9 @@ def build_baja_trial_baseline(
     terminal_geometry = geometry.evaluate(c.max_shift)
     secondary_opening_travel = -terminal_geometry.secondary_axial_coordinate.value
     if secondary_opening_travel <= 0.0:
-        raise RuntimeError("Baseline geometry did not produce positive secondary opening.")
+        raise RuntimeError(
+            "Baseline geometry did not produce positive secondary opening."
+        )
 
     helix_profile = HelixProfile(
         circumferential_profile=PiecewiseRamp(
@@ -309,9 +316,7 @@ def build_baja_trial_baseline(
         road_profile=ConstantGradeRoadProfile(),
     )
 
-    active_shift_position = c.deadzone_shift + 0.60 * (
-        c.max_shift - c.deadzone_shift
-    )
+    active_shift_position = c.deadzone_shift + 0.60 * (c.max_shift - c.deadzone_shift)
     deadzone_shift_position = 0.50 * c.deadzone_shift
 
     active_shift_state = _no_slip_state_at_shift(

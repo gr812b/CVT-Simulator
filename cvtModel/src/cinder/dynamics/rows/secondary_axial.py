@@ -35,9 +35,7 @@ def build_secondary_axial_equation(
 
     inertia = snapshot.axial_translation_inertias.secondary
     inertial_relation = AffineClosureScalar(
-        bias=inertia.local_known_inertial_force(
-            shift_speed=snapshot.state.shift_speed
-        ),
+        bias=inertia.local_known_inertial_force(shift_speed=snapshot.state.shift_speed),
         gains=ClosureGains(
             shift_acceleration=inertia.local_shift_acceleration_gain,
             secondary_normal_resultant=1.0 / (2.0 * tangent),

@@ -35,16 +35,35 @@ import numpy as np
 from numpy.typing import NDArray
 
 _REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
-for _candidate in (_REPOSITORY_ROOT / "src", _REPOSITORY_ROOT, _REPOSITORY_ROOT / "tools"):
+for _candidate in (
+    _REPOSITORY_ROOT / "src",
+    _REPOSITORY_ROOT,
+    _REPOSITORY_ROOT / "tools",
+):
     if str(_candidate) not in sys.path:
         sys.path.insert(0, str(_candidate))
 
-from baja_trial_baseline import BajaTrialConstants, RPM_TO_RAD_PER_SECOND, build_baja_trial_baseline  # noqa: E402
-from cinder.contact import ContactRegime, ContactTractionLaw, ContactTractionUtilization  # noqa: E402
-from cinder.dynamics import EngagedContactSolveSettings, LambdaSearchBounds  # noqa: E402
+from baja_trial_baseline import (
+    BajaTrialConstants,
+    RPM_TO_RAD_PER_SECOND,
+    build_baja_trial_baseline,
+)  # noqa: E402
+from cinder.contact import (
+    ContactRegime,
+    ContactTractionLaw,
+    ContactTractionUtilization,
+)  # noqa: E402
+from cinder.dynamics import (
+    EngagedContactSolveSettings,
+    LambdaSearchBounds,
+)  # noqa: E402
 from cinder.integration import CVTDynamicState  # noqa: E402
 from cinder.integration.cvt_contact import EngagedCVTContactEvaluator  # noqa: E402
-from primary_tuning import PrimaryTuningRequest, PrimaryTuningResult, resolve_primary_tuning  # noqa: E402
+from primary_tuning import (
+    PrimaryTuningRequest,
+    PrimaryTuningResult,
+    resolve_primary_tuning,
+)  # noqa: E402
 
 _RPM_PER_RADIAN_PER_SECOND = 60.0 / (2.0 * np.pi)
 
@@ -94,16 +113,23 @@ def _parse_arguments() -> argparse.Namespace:
         if not isfinite(value):
             parser.error(f"{name} must be finite.")
     if args.target_lower_stop_release_rpm is not None:
-        if not isfinite(args.target_lower_stop_release_rpm) or args.target_lower_stop_release_rpm <= 0.0:
+        if (
+            not isfinite(args.target_lower_stop_release_rpm)
+            or args.target_lower_stop_release_rpm <= 0.0
+        ):
             parser.error("--target-lower-stop-release-rpm must be finite and positive.")
     if args.shift_samples < 5:
         parser.error("--shift-samples must be at least five.")
-    if not args.primary_rpm or any((not isfinite(value) or value <= 0.0) for value in args.primary_rpm):
+    if not args.primary_rpm or any(
+        (not isfinite(value) or value <= 0.0) for value in args.primary_rpm
+    ):
         parser.error("--primary-rpm requires one or more finite positive values.")
     return args
 
 
-def _build_evaluator(constants: BajaTrialConstants, *, static_limit: float, kinetic_lambda: float) -> EngagedCVTContactEvaluator:
+def _build_evaluator(
+    constants: BajaTrialConstants, *, static_limit: float, kinetic_lambda: float
+) -> EngagedCVTContactEvaluator:
     baseline = build_baja_trial_baseline(constants)
     law = ContactTractionLaw.symmetric(
         primary_static_lambda_limit=static_limit,
@@ -119,7 +145,9 @@ def _build_evaluator(constants: BajaTrialConstants, *, static_limit: float, kine
                 primary_half_width=3.0,
                 secondary_half_width=3.0,
             ),
-            initial_guess=ContactTractionUtilization(primary_lambda=0.0, secondary_lambda=0.0),
+            initial_guess=ContactTractionUtilization(
+                primary_lambda=0.0, secondary_lambda=0.0
+            ),
             maximum_closure_condition_number=1.0e8,
         ),
     )
@@ -133,7 +161,9 @@ def _map_tuning(
     static_limit: float,
     kinetic_lambda: float,
 ) -> TuningMap:
-    evaluator = _build_evaluator(constants, static_limit=static_limit, kinetic_lambda=kinetic_lambda)
+    evaluator = _build_evaluator(
+        constants, static_limit=static_limit, kinetic_lambda=kinetic_lambda
+    )
     shift = np.linspace(
         constants.deadzone_shift + 0.05e-3,
         constants.max_shift - 0.05e-3,
@@ -148,7 +178,9 @@ def _map_tuning(
         omega_p = rpm * RPM_TO_RAD_PER_SECOND
         for shift_index, s in enumerate(shift):
             geometry = evaluator.model.geometry.evaluate(float(s))
-            omega_s = omega_p * geometry.primary.effective / geometry.secondary.effective
+            omega_s = (
+                omega_p * geometry.primary.effective / geometry.secondary.effective
+            )
             state = CVTDynamicState(
                 primary_angular_speed=omega_p,
                 secondary_angular_speed=omega_s,
@@ -167,9 +199,15 @@ def _map_tuning(
                 continue
             if not evaluation.branch_result.accepted:
                 continue
-            acceleration[rpm_index, shift_index] = evaluation.closure_unknowns.shift_acceleration
-            primary_lambda[rpm_index, shift_index] = evaluation.traction_utilization.primary_lambda
-            primary_force[rpm_index, shift_index] = evaluation.snapshot.primary_actuation.bias_force
+            acceleration[rpm_index, shift_index] = (
+                evaluation.closure_unknowns.shift_acceleration
+            )
+            primary_lambda[rpm_index, shift_index] = (
+                evaluation.traction_utilization.primary_lambda
+            )
+            primary_force[rpm_index, shift_index] = (
+                evaluation.snapshot.primary_actuation.bias_force
+            )
 
     return TuningMap(
         shift=shift,
@@ -180,9 +218,13 @@ def _map_tuning(
     )
 
 
-def _zero_crossings(shift: NDArray[np.float64], values: NDArray[np.float64]) -> tuple[tuple[float, bool], ...]:
+def _zero_crossings(
+    shift: NDArray[np.float64], values: NDArray[np.float64]
+) -> tuple[tuple[float, bool], ...]:
     crossings: list[tuple[float, bool]] = []
-    for left, right, f_left, f_right in zip(shift[:-1], shift[1:], values[:-1], values[1:], strict=True):
+    for left, right, f_left, f_right in zip(
+        shift[:-1], shift[1:], values[:-1], values[1:], strict=True
+    ):
         if not all(np.isfinite((f_left, f_right))) or f_left == f_right:
             continue
         if f_left == 0.0 or f_left * f_right < 0.0:
@@ -193,8 +235,12 @@ def _zero_crossings(shift: NDArray[np.float64], values: NDArray[np.float64]) -> 
     return tuple(crossings)
 
 
-def _plot_map(*, tuning: TuningMap, resolved: PrimaryTuningResult, static_limit: float) -> plt.Figure:
-    figure, axes = plt.subplots(3, 1, figsize=(11, 11), sharex=True, constrained_layout=True)
+def _plot_map(
+    *, tuning: TuningMap, resolved: PrimaryTuningResult, static_limit: float
+) -> plt.Figure:
+    figure, axes = plt.subplots(
+        3, 1, figsize=(11, 11), sharex=True, constrained_layout=True
+    )
     shift_mm = tuning.shift * 1.0e3
     for index, rpm in enumerate(tuning.primary_rpm):
         label = f"{rpm:.0f} rpm"
@@ -270,7 +316,9 @@ def main() -> None:
     for index, rpm in enumerate(tuning.primary_rpm):
         crossings = _zero_crossings(tuning.shift, tuning.shift_acceleration[index])
         if not crossings:
-            print(f"  {rpm:.0f} rpm: no in-range shift equilibrium in the forced stick map.")
+            print(
+                f"  {rpm:.0f} rpm: no in-range shift equilibrium in the forced stick map."
+            )
             continue
         rendered = ", ".join(
             f"{location * 1e3:.3f} mm ({'restoring' if stable else 'diverging'})"
@@ -278,7 +326,9 @@ def main() -> None:
         )
         print(f"  {rpm:.0f} rpm: equilibrium candidates: {rendered}")
 
-    figure = _plot_map(tuning=tuning, resolved=resolved, static_limit=args.static_lambda_limit)
+    figure = _plot_map(
+        tuning=tuning, resolved=resolved, static_limit=args.static_lambda_limit
+    )
     if args.save is not None:
         args.save.parent.mkdir(parents=True, exist_ok=True)
         figure.savefig(args.save, dpi=180)

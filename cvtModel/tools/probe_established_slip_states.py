@@ -120,11 +120,7 @@ class CaseSummary:
 
     @property
     def branch_admissible(self) -> bool:
-        return (
-            self.root_accepted
-            and self.direction_consistent
-            and self.normal_positive
-        )
+        return self.root_accepted and self.direction_consistent and self.normal_positive
 
 
 def parse_arguments() -> argparse.Namespace:
@@ -278,7 +274,9 @@ def _select_state(*, baseline: BajaTrialBaseline, scenario: str) -> CVTDynamicSt
     return baseline.active_shift_state
 
 
-def _settings(*, static_limit: float, forward_static_box: bool) -> EngagedContactSolveSettings:
+def _settings(
+    *, static_limit: float, forward_static_box: bool
+) -> EngagedContactSolveSettings:
     if forward_static_box:
         bounds = FrictionUtilizationBounds.forward_drive(
             primary_static_limit=static_limit,
@@ -412,7 +410,9 @@ def _slip_spec(
     )
 
 
-def _run_primary_slip_secondary_stick(*, case, snapshot, direction, kinetic_utilization, settings) -> CaseSummary:
+def _run_primary_slip_secondary_stick(
+    *, case, snapshot, direction, kinetic_utilization, settings
+) -> CaseSummary:
     slip = _slip_spec(
         interface=ContactInterface.PRIMARY,
         direction=direction,
@@ -433,7 +433,9 @@ def _run_primary_slip_secondary_stick(*, case, snapshot, direction, kinetic_util
     )
 
 
-def _run_primary_stick_secondary_slip(*, case, snapshot, direction, kinetic_utilization, settings) -> CaseSummary:
+def _run_primary_stick_secondary_slip(
+    *, case, snapshot, direction, kinetic_utilization, settings
+) -> CaseSummary:
     slip = _slip_spec(
         interface=ContactInterface.SECONDARY,
         direction=direction,
@@ -454,7 +456,15 @@ def _run_primary_stick_secondary_slip(*, case, snapshot, direction, kinetic_util
     )
 
 
-def _run_both_slip(*, case, snapshot, primary_direction, secondary_direction, kinetic_utilization, settings) -> CaseSummary:
+def _run_both_slip(
+    *,
+    case,
+    snapshot,
+    primary_direction,
+    secondary_direction,
+    kinetic_utilization,
+    settings,
+) -> CaseSummary:
     primary_slip = _slip_spec(
         interface=ContactInterface.PRIMARY,
         direction=primary_direction,
@@ -512,7 +522,9 @@ def _run_both_slip(*, case, snapshot, primary_direction, secondary_direction, ki
     )
 
 
-def _print_mixed_result(*, case, snapshot, result, slipping_interface, slip, settings) -> CaseSummary:
+def _print_mixed_result(
+    *, case, snapshot, result, slipping_interface, slip, settings
+) -> CaseSummary:
     unknowns = result.closure.unknowns
     motion = result.relative_motion
     normal_positive = (
@@ -583,7 +595,9 @@ def _print_common_solution(*, snapshot, unknowns, motion, slipping_interfaces) -
     for interface in (ContactInterface.PRIMARY, ContactInterface.SECONDARY):
         v_rel = motion.relative_speed_at(interface)
         a_rel = motion.relative_acceleration_at(interface)
-        force_on_belt = _contact_force_on_belt(interface=interface, unknowns=unknowns, geometry=geometry)
+        force_on_belt = _contact_force_on_belt(
+            interface=interface, unknowns=unknowns, geometry=geometry
+        )
         dissipation = -force_on_belt * v_rel
         tendency = v_rel * a_rel
         tag = "SLIP" if interface in slipping_interfaces else "STICK"
@@ -677,7 +691,14 @@ def plot_branch_summary(
     width = 0.34
 
     figure, axes = plt.subplots(2, 3, figsize=(18, 10), constrained_layout=True)
-    axis_lambda, axis_torque, axis_normal, axis_dissipation, axis_kinematics, axis_status = axes.flat
+    (
+        axis_lambda,
+        axis_torque,
+        axis_normal,
+        axis_dissipation,
+        axis_kinematics,
+        axis_status,
+    ) = axes.flat
 
     figure.suptitle(
         "CINDER established-slip branch summary — "
@@ -718,11 +739,19 @@ def plot_branch_summary(
     axis_normal.legend(loc="best")
     _format_case_axis(axis_normal, labels)
 
-    primary_dissipation = np.array([summary.primary.dissipation for summary in summaries])
-    secondary_dissipation = np.array([summary.secondary.dissipation for summary in summaries])
+    primary_dissipation = np.array(
+        [summary.primary.dissipation for summary in summaries]
+    )
+    secondary_dissipation = np.array(
+        [summary.secondary.dissipation for summary in summaries]
+    )
     axis_dissipation.axhline(0.0, linewidth=1.0)
-    axis_dissipation.bar(indices - width / 2.0, primary_dissipation, width, label=r"$P_{{\rm diss},p}$")
-    axis_dissipation.bar(indices + width / 2.0, secondary_dissipation, width, label=r"$P_{{\rm diss},s}$")
+    axis_dissipation.bar(
+        indices - width / 2.0, primary_dissipation, width, label=r"$P_{{\rm diss},p}$"
+    )
+    axis_dissipation.bar(
+        indices + width / 2.0, secondary_dissipation, width, label=r"$P_{{\rm diss},s}$"
+    )
     axis_dissipation.set_title("Contact dissipation")
     axis_dissipation.set_ylabel("power [W]")
     axis_dissipation.legend(loc="best")
@@ -776,7 +805,9 @@ def _draw_status_table(*, axis, summaries: list[CaseSummary]) -> None:
     rows = []
     for index, summary in enumerate(summaries, start=1):
         status = "admissible" if summary.branch_admissible else "check"
-        residual = "—" if summary.root_residual is None else f"{summary.root_residual:.1e}"
+        residual = (
+            "—" if summary.root_residual is None else f"{summary.root_residual:.1e}"
+        )
         rows.append(
             (
                 str(index),
@@ -789,7 +820,14 @@ def _draw_status_table(*, axis, summaries: list[CaseSummary]) -> None:
         )
     table = axis.table(
         cellText=rows,
-        colLabels=("case", "closure", "status", r"$\ddot{s}$", r"$\dot v_b$", "stick R"),
+        colLabels=(
+            "case",
+            "closure",
+            "status",
+            r"$\ddot{s}$",
+            r"$\dot v_b$",
+            "stick R",
+        ),
         cellLoc="center",
         loc="center",
     )

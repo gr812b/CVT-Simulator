@@ -89,9 +89,7 @@ class SecondaryHelixActuationState(PulleyActuationState):
         _require_finite("global_shift_speed", self.global_shift_speed)
 
         if not isinstance(self.helix_kinematics, HelixShiftKinematics):
-            raise TypeError(
-                "helix_kinematics must be a HelixShiftKinematics instance."
-            )
+            raise TypeError("helix_kinematics must be a HelixShiftKinematics instance.")
 
         if self.movable_sheave_rotational_inertia is not None:
             _require_nonnegative(
@@ -195,8 +193,7 @@ class SecondaryHelixForce:
                     * kinematics.dtheta_ds
                 ),
                 secondary_torque=(
-                    force_per_reacted_torque
-                    * self._spec.movable_sheave_torque_fraction
+                    force_per_reacted_torque * self._spec.movable_sheave_torque_fraction
                 ),
             ),
         )

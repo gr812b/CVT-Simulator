@@ -38,7 +38,11 @@ _REPOSITORY_ROOT = _TOOLS_DIRECTORY.parent
 # intentional overlay and must not be shadowed by an older root-level copy.
 if str(_TOOLS_DIRECTORY) not in sys.path:
     sys.path.insert(0, str(_TOOLS_DIRECTORY))
-for _candidate in (_REPOSITORY_ROOT / "src", _REPOSITORY_ROOT, _REPOSITORY_ROOT / "tools"):
+for _candidate in (
+    _REPOSITORY_ROOT / "src",
+    _REPOSITORY_ROOT,
+    _REPOSITORY_ROOT / "tools",
+):
     if str(_candidate) not in sys.path:
         sys.path.append(str(_candidate))
 
@@ -48,13 +52,23 @@ from baja_trial_baseline import (  # noqa: E402
     build_baja_trial_baseline,
 )
 from cinder.contact import ContactRegime, ContactTractionLaw  # noqa: E402
-from cinder.dynamics import EngagedContactSolveSettings, LambdaSearchBounds  # noqa: E402
+from cinder.dynamics import (
+    EngagedContactSolveSettings,
+    LambdaSearchBounds,
+)  # noqa: E402
 from cinder.dynamics.deadzone import DeadzoneEvaluation  # noqa: E402
 from cinder.integration import CVTDynamicState, HybridIntegratorSettings  # noqa: E402
 from cinder.integration.cvt_contact import CVTContactEvaluation  # noqa: E402
-from cinder.integration.cvt_operating_hybrid import CVTOperatingHybridSystem  # noqa: E402
-from cinder.integration.cvt_operating_limits import CVTShiftOperatingLimits  # noqa: E402
-from cinder.integration.cvt_regime import CVTEngagementState, CVTOperatingRegime  # noqa: E402
+from cinder.integration.cvt_operating_hybrid import (
+    CVTOperatingHybridSystem,
+)  # noqa: E402
+from cinder.integration.cvt_operating_limits import (
+    CVTShiftOperatingLimits,
+)  # noqa: E402
+from cinder.integration.cvt_regime import (
+    CVTEngagementState,
+    CVTOperatingRegime,
+)  # noqa: E402
 from cinder.profiles import CircularSegment, LinearSegment, PiecewiseRamp  # noqa: E402
 
 RPM_PER_RADIAN_PER_SECOND = 60.0 / (2.0 * np.pi)
@@ -139,7 +153,9 @@ class ScreenResult:
     score: float
     rejection_reason: str | None = None
 
-    def csv_row(self, *, rank: int | None = None) -> dict[str, float | int | str | None]:
+    def csv_row(
+        self, *, rank: int | None = None
+    ) -> dict[str, float | int | str | None]:
         c = self.resolved.candidate
         return {
             "rank": rank,
@@ -167,7 +183,9 @@ class ScreenResult:
             ),
             "stick_admissible_points": self.stick_admissible_points,
             "selected_contact_modes": " | ".join(
-                sorted({point.contact_mode for point in self.points if point.contact_mode})
+                sorted(
+                    {point.contact_mode for point in self.points if point.contact_mode}
+                )
             ),
             "static_valid": int(self.static_valid),
             "score": self.score,
@@ -210,17 +228,28 @@ def _validate_candidate(candidate: TuneCandidate) -> None:
     if candidate.secondary_compression_preload_mm < 0.0:
         raise ValueError("secondary compression preload must be non-negative.")
     if candidate.primary_ramp_kind not in {"linear", "circular_hard_to_soft"}:
-        raise ValueError("primary_ramp_kind must be 'linear' or 'circular_hard_to_soft'.")
+        raise ValueError(
+            "primary_ramp_kind must be 'linear' or 'circular_hard_to_soft'."
+        )
     if not 0.0 < candidate.primary_ramp_angle_degrees < 89.0:
-        raise ValueError("primary linear ramp angle must lie strictly between 0 and 89 degrees.")
+        raise ValueError(
+            "primary linear ramp angle must lie strictly between 0 and 89 degrees."
+        )
     if not 0.0 < candidate.primary_ramp_start_angle_degrees < 89.0:
-        raise ValueError("primary circular start angle must lie strictly between 0 and 89 degrees.")
+        raise ValueError(
+            "primary circular start angle must lie strictly between 0 and 89 degrees."
+        )
     if not 0.0 < candidate.primary_ramp_end_angle_degrees < 89.0:
-        raise ValueError("primary circular end angle must lie strictly between 0 and 89 degrees.")
+        raise ValueError(
+            "primary circular end angle must lie strictly between 0 and 89 degrees."
+        )
     if candidate.primary_ramp_kind == "circular_hard_to_soft" and (
-        candidate.primary_ramp_start_angle_degrees < candidate.primary_ramp_end_angle_degrees
+        candidate.primary_ramp_start_angle_degrees
+        < candidate.primary_ramp_end_angle_degrees
     ):
-        raise ValueError("hard-to-soft circular ramp requires start angle >= end angle.")
+        raise ValueError(
+            "hard-to-soft circular ramp requires start angle >= end angle."
+        )
 
 
 def candidate_constants(
@@ -347,7 +376,10 @@ def resolve_primary_preload(
         primary_rpm=target_engagement_rpm,
     )
     spring_rate = provisional_constants.primary_spring_rate
-    preload = provisional_constants.primary_spring_initial_compression - reaction / spring_rate
+    preload = (
+        provisional_constants.primary_spring_initial_compression
+        - reaction / spring_rate
+    )
     if preload < -1.0e-12:
         raise ValueError(
             "The requested engagement target requires negative primary preload for "
@@ -516,7 +548,9 @@ def _interpolate_acceleration(
         right_acceleration = right.shift_acceleration_m_per_s2
         if left_acceleration is None or right_acceleration is None:
             continue
-        fraction = (primary_rpm - left.primary_rpm) / (right.primary_rpm - left.primary_rpm)
+        fraction = (primary_rpm - left.primary_rpm) / (
+            right.primary_rpm - left.primary_rpm
+        )
         return left_acceleration + fraction * (right_acceleration - left_acceleration)
     return None
 
@@ -593,8 +627,12 @@ def screen_tune(
         point.minimum_static_margin
         for point in points
         if point.minimum_static_margin is not None
-        and abs(point.primary_rpm - target_shift_onset_rpm) <= 0.5 * (
-            static_rpm_grid[1] - static_rpm_grid[0] if len(static_rpm_grid) > 1 else 100.0
+        and abs(point.primary_rpm - target_shift_onset_rpm)
+        <= 0.5
+        * (
+            static_rpm_grid[1] - static_rpm_grid[0]
+            if len(static_rpm_grid) > 1
+            else 100.0
         )
     ]
     minimum_static_margin_near_target = min(target_margins) if target_margins else None
@@ -603,7 +641,9 @@ def screen_tune(
     if not static_valid:
         rejection_reason = "selected near-low-ratio contact branch did not solve with positive normal resultants across the screen grid"
     elif onset is None:
-        rejection_reason = "free shift acceleration does not cross zero inside the screen grid"
+        rejection_reason = (
+            "free shift acceleration does not cross zero inside the screen grid"
+        )
     elif acceleration_200 is None:
         rejection_reason = "target+200 rpm lies outside valid static interpolation"
 
@@ -687,7 +727,9 @@ def _sample_indices(count: int, maximum: int) -> NDArray[np.int64]:
     return np.unique(np.linspace(0, count - 1, maximum, dtype=np.int64))
 
 
-def _allocate_sample_budget(segment_sizes: Iterable[int], maximum: int) -> tuple[int, ...]:
+def _allocate_sample_budget(
+    segment_sizes: Iterable[int], maximum: int
+) -> tuple[int, ...]:
     sizes = tuple(segment_sizes)
     total = sum(sizes)
     if total <= maximum:
@@ -762,14 +804,17 @@ def sample_launch_trace(
                 primary_relative_speed.append(np.nan)
                 secondary_relative_speed.append(np.nan)
                 stop_reaction.append(
-                    np.nan if evaluation.stop_reaction is None else evaluation.stop_reaction
+                    np.nan
+                    if evaluation.stop_reaction is None
+                    else evaluation.stop_reaction
                 )
                 continue
 
             assert isinstance(evaluation, CVTContactEvaluation)
             unknowns = evaluation.closure_unknowns
             primary_surface.append(
-                evaluation.snapshot.geometry.primary.effective * state.primary_angular_speed
+                evaluation.snapshot.geometry.primary.effective
+                * state.primary_angular_speed
             )
             secondary_surface.append(
                 evaluation.snapshot.geometry.secondary.effective
@@ -781,13 +826,19 @@ def sample_launch_trace(
             secondary_lambda.append(evaluation.traction_utilization.secondary_lambda)
             primary_normal.append(evaluation.normal_primary)
             secondary_normal.append(evaluation.normal_secondary)
-            primary_relative_speed.append(evaluation.relative_motion.primary_relative_speed)
-            secondary_relative_speed.append(evaluation.relative_motion.secondary_relative_speed)
+            primary_relative_speed.append(
+                evaluation.relative_motion.primary_relative_speed
+            )
+            secondary_relative_speed.append(
+                evaluation.relative_motion.secondary_relative_speed
+            )
             active_constraint_reaction = evaluation.low_ratio_seat_reaction
             if active_constraint_reaction is None:
                 active_constraint_reaction = evaluation.upper_stop_reaction
             stop_reaction.append(
-                np.nan if active_constraint_reaction is None else active_constraint_reaction
+                np.nan
+                if active_constraint_reaction is None
+                else active_constraint_reaction
             )
 
     return LaunchTrace(
@@ -887,7 +938,9 @@ def plot_primary_ramp_profile(*, resolved: ResolvedTune):
     radius = constants.initial_flyweight_radius + displacement
     normalized_force = radius * slope
 
-    figure, axes = plt.subplots(3, 1, figsize=(10, 9), sharex=True, constrained_layout=True)
+    figure, axes = plt.subplots(
+        3, 1, figsize=(10, 9), sharex=True, constrained_layout=True
+    )
     axes[0].plot(shift / MILLIMETRE, displacement / MILLIMETRE)
     axes[0].set_ylabel(r"$\Delta r_f$ [mm]")
     axes[0].set_title(f"Primary flyweight-ramp profile: {ramp_name}")
@@ -956,7 +1009,9 @@ def plot_launch_diagnostics(
     shift_axis.set_ylabel("Shift coordinate [mm]")
     shift_axis.grid(True, alpha=0.25)
     shift_speed_axis = shift_axis.twinx()
-    shift_speed_axis.plot(time, state[4] / MILLIMETRE, linestyle=":", label=r"$\dot{s}$")
+    shift_speed_axis.plot(
+        time, state[4] / MILLIMETRE, linestyle=":", label=r"$\dot{s}$"
+    )
     shift_speed_axis.set_ylabel("Shift speed [mm/s]")
     handles, labels = shift_axis.get_legend_handles_labels()
     handles_2, labels_2 = shift_speed_axis.get_legend_handles_labels()
@@ -1074,7 +1129,9 @@ def plot_launch_diagnostics(
     return figure
 
 
-def transition_metrics(*, result, trace: LaunchTrace, resolved: ResolvedTune) -> dict[str, float | int | str | None]:
+def transition_metrics(
+    *, result, trace: LaunchTrace, resolved: ResolvedTune
+) -> dict[str, float | int | str | None]:
     """Extract launch metrics with the physical main-shift event kept explicit.
 
     Entering engaged contact produces a short capture transient.  It is not the
@@ -1106,7 +1163,8 @@ def transition_metrics(*, result, trace: LaunchTrace, resolved: ResolvedTune) ->
     upper_stop_impacts = [
         record
         for record in result.transitions
-        if "upper_stop" in record.transition.reason and "impact" in record.transition.reason
+        if "upper_stop" in record.transition.reason
+        and "impact" in record.transition.reason
     ]
     engaged_segment_durations = [
         segment.end_time - segment.start_time
@@ -1147,7 +1205,9 @@ def transition_metrics(*, result, trace: LaunchTrace, resolved: ResolvedTune) ->
         np.asarray(["primary_slip" in label for label in trace.mode_label], dtype=bool)
     )
     primary_slip_start_time = (
-        None if primary_slip_indices.size == 0 else float(trace.time[int(primary_slip_indices[0])])
+        None
+        if primary_slip_indices.size == 0
+        else float(trace.time[int(primary_slip_indices[0])])
     )
     primary_restuck_records = [
         record
@@ -1160,7 +1220,9 @@ def transition_metrics(*, result, trace: LaunchTrace, resolved: ResolvedTune) ->
         primary_restuck_primary_rpm = float(
             primary_restuck.post_transition_state[0] * RPM_PER_RADIAN_PER_SECOND
         )
-        primary_restuck_shift_mm = float(primary_restuck.post_transition_state[3] / MILLIMETRE)
+        primary_restuck_shift_mm = float(
+            primary_restuck.post_transition_state[3] / MILLIMETRE
+        )
     else:
         primary_restuck_time = None
         primary_restuck_primary_rpm = None
@@ -1179,7 +1241,9 @@ def transition_metrics(*, result, trace: LaunchTrace, resolved: ResolvedTune) ->
         "transitions": len(result.transitions),
         "engagement_events": len(engagement_times),
         "disengagement_events": len(disengagement_times),
-        "first_engagement_time_s": None if not engagement_times else float(engagement_times[0]),
+        "first_engagement_time_s": (
+            None if not engagement_times else float(engagement_times[0])
+        ),
         "longest_contiguous_engaged_duration_s": float(longest_engaged_duration),
         "primary_slip_start_time_s": primary_slip_start_time,
         "primary_restuck_time_s": primary_restuck_time,
@@ -1192,14 +1256,19 @@ def transition_metrics(*, result, trace: LaunchTrace, resolved: ResolvedTune) ->
         "observed_shift_onset_primary_rpm": main_shift_onset_primary_rpm,
         "shift_10_to_90_s": shift_10_to_90,
         "maximum_main_shift_speed_mm_per_s": maximum_main_shift_speed,
-        "upper_stop_time_s": None if not upper_stop_records else float(upper_stop_records[0].time),
-        "upper_stop_impact_time_s": None if not upper_stop_impacts else float(upper_stop_impacts[0].time),
+        "upper_stop_time_s": (
+            None if not upper_stop_records else float(upper_stop_records[0].time)
+        ),
+        "upper_stop_impact_time_s": (
+            None if not upper_stop_impacts else float(upper_stop_impacts[0].time)
+        ),
         "final_primary_rpm": float(primary_rpm[-1]),
         "final_secondary_rpm": float(trace.state[1, -1] * RPM_PER_RADIAN_PER_SECOND),
         "final_shift_mm": float(trace.state[3, -1] / MILLIMETRE),
         "maximum_shift_mm": float(np.max(trace.state[3]) / MILLIMETRE),
-        "maximum_shift_speed_mm_per_s": float(np.max(np.abs(trace.state[4])) / MILLIMETRE),
+        "maximum_shift_speed_mm_per_s": float(
+            np.max(np.abs(trace.state[4])) / MILLIMETRE
+        ),
         "persistent_engagement": int(longest_engaged_duration >= 0.050),
         "transition_reasons": " | ".join(reasons),
     }
-

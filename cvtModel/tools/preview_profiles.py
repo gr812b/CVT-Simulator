@@ -85,12 +85,8 @@ def sample_ramp(ramp: PiecewiseRamp, sample_count: int) -> SampledRamp:
     return SampledRamp(
         x=x,
         value=np.array([sample.value for sample in samples]),
-        first_derivative=np.array(
-            [sample.first_derivative for sample in samples]
-        ),
-        second_derivative=np.array(
-            [sample.second_derivative for sample in samples]
-        ),
+        first_derivative=np.array([sample.first_derivative for sample in samples]),
+        second_derivative=np.array([sample.second_derivative for sample in samples]),
     )
 
 
@@ -111,12 +107,8 @@ def sample_helix(
             [sample.circumferential_displacement for sample in samples]
         ),
         theta=np.array([sample.theta for sample in samples]),
-        dtheta_dopening=np.array(
-            [sample.dtheta_dopening for sample in samples]
-        ),
-        d2theta_dopening2=np.array(
-            [sample.d2theta_dopening2 for sample in samples]
-        ),
+        dtheta_dopening=np.array([sample.dtheta_dopening for sample in samples]),
+        d2theta_dopening2=np.array([sample.d2theta_dopening2 for sample in samples]),
         helix_angle_degrees=np.degrees(
             np.array([sample.helix_angle_magnitude for sample in samples])
         ),
@@ -564,6 +556,7 @@ def plot_normal_ramp(
     figure.suptitle(title)
     return figure
 
+
 def print_helix_summary(helix: HelixProfile, sample_count: int) -> None:
     samples = sample_helix(helix, sample_count)
 
@@ -579,8 +572,7 @@ def print_helix_summary(helix: HelixProfile, sample_count: int) -> None:
         f"{samples.circumferential_displacement[-1]:.9f} m"
     )
     print(
-        "  theta range:       "
-        f"{samples.theta[0]:.9f} to {samples.theta[-1]:.9f} rad"
+        "  theta range:       " f"{samples.theta[0]:.9f} to {samples.theta[-1]:.9f} rad"
     )
     print(
         "  helix angle range: "
@@ -605,8 +597,7 @@ def print_ramp_summary(ramp: PiecewiseRamp, sample_count: int) -> None:
     print("Normal ramp profile summary")
     print(f"  axial range:  {samples.x[0]:.9f} to {samples.x[-1]:.9f} m")
     print(
-        "  value range:  "
-        f"{samples.value.min():.9f} to {samples.value.max():.9f} m"
+        "  value range:  " f"{samples.value.min():.9f} to {samples.value.max():.9f} m"
     )
     print(
         "  slope range:  "
@@ -632,8 +623,7 @@ def parse_arguments() -> argparse.Namespace:
     parser.add_argument(
         "--scenario",
         help=(
-            "Helix: linear, circular, or piecewise. "
-            "Ramp: linear or linear-circular."
+            "Helix: linear, circular, or piecewise. " "Ramp: linear or linear-circular."
         ),
     )
     parser.add_argument("--length", type=float, default=DEFAULT_LENGTH)

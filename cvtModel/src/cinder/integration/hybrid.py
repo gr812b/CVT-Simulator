@@ -183,7 +183,9 @@ class HybridSegment(Generic[ModeT]):
         frozen_state = np.array(state, dtype=float, copy=True)
         frozen_state.setflags(write=False)
         if len(set(self.fired_event_names)) != len(self.fired_event_names):
-            raise ValueError("HybridSegment.fired_event_names must not contain duplicates.")
+            raise ValueError(
+                "HybridSegment.fired_event_names must not contain duplicates."
+            )
         object.__setattr__(self, "time", time)
         object.__setattr__(self, "state", frozen_state)
 
@@ -293,7 +295,9 @@ def integrate_hybrid(
         raise TypeError("settings must be a HybridIntegratorSettings instance.")
     start_time, final_time = (float(time_span[0]), float(time_span[1]))
     if not isfinite(start_time) or not isfinite(final_time) or final_time <= start_time:
-        raise ValueError("time_span must be finite with final time greater than start time.")
+        raise ValueError(
+            "time_span must be finite with final time greater than start time."
+        )
 
     current_time = start_time
     current_state = _mutable_vector(initial_state, name="initial_state")
@@ -420,7 +424,9 @@ def _fired_event_names(
         if event_times.size and abs(float(event_times[-1]) - endpoint) <= allowed:
             names.append(event.name)
     if not names:
-        raise RuntimeError("solve_ivp stopped on an event but no endpoint event was identified.")
+        raise RuntimeError(
+            "solve_ivp stopped on an event but no endpoint event was identified."
+        )
     return tuple(names)
 
 
@@ -433,7 +439,9 @@ def _validate_event_names(events: Sequence[HybridEvent]) -> None:
 def _coerce_rhs(values: ArrayLike, *, state_size: int) -> NDArray[np.float64]:
     derivative = np.asarray(values, dtype=float)
     if derivative.ndim != 1 or derivative.size != state_size:
-        raise ValueError("Hybrid RHS must return a finite vector aligned with the state.")
+        raise ValueError(
+            "Hybrid RHS must return a finite vector aligned with the state."
+        )
     if not np.all(np.isfinite(derivative)):
         raise FloatingPointError("Hybrid RHS returned non-finite values.")
     return derivative

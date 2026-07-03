@@ -90,11 +90,17 @@ class CVTOperatingHybridSystem:
         if not isinstance(self.traction_law, ContactTractionLaw):
             raise TypeError("traction_law must be a ContactTractionLaw instance.")
         if not isinstance(self.solve_settings, EngagedContactSolveSettings):
-            raise TypeError("solve_settings must be an EngagedContactSolveSettings instance.")
+            raise TypeError(
+                "solve_settings must be an EngagedContactSolveSettings instance."
+            )
         if not isinstance(self.operating_limits, CVTShiftOperatingLimits):
-            raise TypeError("operating_limits must be a CVTShiftOperatingLimits instance.")
+            raise TypeError(
+                "operating_limits must be a CVTShiftOperatingLimits instance."
+            )
         if not isinstance(self.switching_settings, CVTContactSwitchSettings):
-            raise TypeError("switching_settings must be a CVTContactSwitchSettings instance.")
+            raise TypeError(
+                "switching_settings must be a CVTContactSwitchSettings instance."
+            )
 
         self.operating_limits.validate_against_geometry_spec(self.model.geometry.spec)
         self.evaluator = EngagedCVTContactEvaluator(
@@ -151,7 +157,9 @@ class CVTOperatingHybridSystem:
     ) -> NDArray[np.float64]:
         """Return the derivative from the active regime-specific evaluator."""
 
-        return self.evaluate(time=time, state=state, mode=mode).state_derivative.as_vector()
+        return self.evaluate(
+            time=time, state=state, mode=mode
+        ).state_derivative.as_vector()
 
     def events(
         self,
@@ -225,7 +233,9 @@ class CVTOperatingHybridSystem:
                     )
                 ),
             )
-        raise RuntimeError(f"Unsupported engaged shift constraint: {mode.shift_constraint!r}.")
+        raise RuntimeError(
+            f"Unsupported engaged shift constraint: {mode.shift_constraint!r}."
+        )
 
     def transition(
         self,
@@ -413,14 +423,18 @@ class CVTOperatingHybridSystem:
         if not isinstance(mode, CVTOperatingRegime):
             raise TypeError("mode must be a CVTOperatingRegime instance.")
         if mode.engagement is not CVTEngagementState.ENGAGED:
-            raise ValueError("An engaged shift constraint was requested for a deadzone mode.")
+            raise ValueError(
+                "An engaged shift constraint was requested for a deadzone mode."
+            )
         if mode.shift_constraint is CVTShiftConstraint.FREE:
             return EngagedShiftConstraint.FREE
         if mode.shift_constraint is CVTShiftConstraint.LOW_RATIO_SEAT:
             return EngagedShiftConstraint.LOW_RATIO_SEAT
         if mode.shift_constraint is CVTShiftConstraint.UPPER_STOP:
             return EngagedShiftConstraint.UPPER_STOP
-        raise RuntimeError(f"Unsupported engaged shift constraint: {mode.shift_constraint!r}.")
+        raise RuntimeError(
+            f"Unsupported engaged shift constraint: {mode.shift_constraint!r}."
+        )
 
     def _validate_initial_mode_state(
         self,
@@ -435,24 +449,34 @@ class CVTOperatingHybridSystem:
         upper = self.operating_limits.upper_stop_shift
         tolerance = 1.0e-12
 
-        if state.shift_position < lower - tolerance or state.shift_position > upper + tolerance:
-            raise ValueError("Initial shift position lies outside physical operating limits.")
+        if (
+            state.shift_position < lower - tolerance
+            or state.shift_position > upper + tolerance
+        ):
+            raise ValueError(
+                "Initial shift position lies outside physical operating limits."
+            )
 
         if mode.engagement is CVTEngagementState.DEADZONE:
             if mode.shift_constraint is CVTShiftConstraint.FREE:
-                at_engagement_opening = isclose(
-                    state.shift_position,
-                    engagement,
-                    rel_tol=0.0,
-                    abs_tol=tolerance,
-                ) and state.shift_speed < 0.0
+                at_engagement_opening = (
+                    isclose(
+                        state.shift_position,
+                        engagement,
+                        rel_tol=0.0,
+                        abs_tol=tolerance,
+                    )
+                    and state.shift_speed < 0.0
+                )
                 if not (state.shift_position < engagement or at_engagement_opening):
                     raise ValueError(
                         "A free deadzone segment must start below engagement_shift, or exactly "
                         "at engagement_shift while opening."
                     )
                 if state.shift_position < lower - tolerance:
-                    raise ValueError("A deadzone state must not lie below lower_stop_shift.")
+                    raise ValueError(
+                        "A deadzone state must not lie below lower_stop_shift."
+                    )
                 # Validate the imposed neutral lock only after confirming this
                 # is a legal deadzone coordinate; stage-safe geometry must not
                 # mask an invalid initial operating regime.
@@ -466,9 +490,13 @@ class CVTOperatingHybridSystem:
                     rel_tol=0.0,
                     abs_tol=tolerance,
                 ):
-                    raise ValueError("A lower-stop segment must start at lower_stop_shift.")
+                    raise ValueError(
+                        "A lower-stop segment must start at lower_stop_shift."
+                    )
                 if not isclose(state.shift_speed, 0.0, rel_tol=0.0, abs_tol=tolerance):
-                    raise ValueError("A lower-stop segment must start with zero shift_speed.")
+                    raise ValueError(
+                        "A lower-stop segment must start with zero shift_speed."
+                    )
                 self.deadzone_evaluator.snapshot(state=state)
                 return
 
@@ -477,12 +505,15 @@ class CVTOperatingHybridSystem:
             )
 
         if mode.shift_constraint is CVTShiftConstraint.FREE:
-            at_engagement_closing = isclose(
-                state.shift_position,
-                engagement,
-                rel_tol=0.0,
-                abs_tol=tolerance,
-            ) and state.shift_speed >= 0.0
+            at_engagement_closing = (
+                isclose(
+                    state.shift_position,
+                    engagement,
+                    rel_tol=0.0,
+                    abs_tol=tolerance,
+                )
+                and state.shift_speed >= 0.0
+            )
             if not (state.shift_position > engagement or at_engagement_closing):
                 raise ValueError(
                     "A free engaged segment must start above engagement_shift, or exactly "
@@ -508,9 +539,13 @@ class CVTOperatingHybridSystem:
                 rel_tol=0.0,
                 abs_tol=tolerance,
             ):
-                raise ValueError("A low-ratio-seat segment must start at engagement_shift.")
+                raise ValueError(
+                    "A low-ratio-seat segment must start at engagement_shift."
+                )
             if not isclose(state.shift_speed, 0.0, rel_tol=0.0, abs_tol=tolerance):
-                raise ValueError("A low-ratio-seat segment must start with zero shift_speed.")
+                raise ValueError(
+                    "A low-ratio-seat segment must start with zero shift_speed."
+                )
             return
 
         if mode.shift_constraint is CVTShiftConstraint.UPPER_STOP:
@@ -520,9 +555,15 @@ class CVTOperatingHybridSystem:
                 rel_tol=0.0,
                 abs_tol=tolerance,
             ):
-                raise ValueError("An upper-stop segment must start at upper_stop_shift.")
+                raise ValueError(
+                    "An upper-stop segment must start at upper_stop_shift."
+                )
             if not isclose(state.shift_speed, 0.0, rel_tol=0.0, abs_tol=tolerance):
-                raise ValueError("An upper-stop segment must start with zero shift_speed.")
+                raise ValueError(
+                    "An upper-stop segment must start with zero shift_speed."
+                )
             return
 
-        raise RuntimeError(f"Unsupported initial shift constraint: {mode.shift_constraint!r}.")
+        raise RuntimeError(
+            f"Unsupported initial shift constraint: {mode.shift_constraint!r}."
+        )

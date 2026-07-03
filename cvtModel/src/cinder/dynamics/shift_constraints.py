@@ -23,7 +23,12 @@ from dataclasses import dataclass
 from enum import Enum
 from math import isfinite, tan
 
-from cinder.closure import AffineClosureScalar, ClosureEquation, ClosureGains, ClosureUnknowns
+from cinder.closure import (
+    AffineClosureScalar,
+    ClosureEquation,
+    ClosureGains,
+    ClosureUnknowns,
+)
 
 from .snapshot import DynamicsSnapshot
 

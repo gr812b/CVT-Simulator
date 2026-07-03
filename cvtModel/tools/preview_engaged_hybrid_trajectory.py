@@ -35,7 +35,11 @@ from numpy.typing import NDArray
 
 # Support both ``src/cinder`` repositories and direct-package overlays.
 _REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
-for _candidate in (_REPOSITORY_ROOT / "src", _REPOSITORY_ROOT, _REPOSITORY_ROOT / "tools"):
+for _candidate in (
+    _REPOSITORY_ROOT / "src",
+    _REPOSITORY_ROOT,
+    _REPOSITORY_ROOT / "tools",
+):
     if (_candidate / "cinder").is_dir() and str(_candidate) not in sys.path:
         sys.path.insert(0, str(_candidate))
 if str(_REPOSITORY_ROOT / "tools") not in sys.path:
@@ -207,7 +211,9 @@ def main() -> None:
     args = parse_arguments()
     baseline = build_baja_trial_baseline()
     scenarios = build_scenarios(baseline=baseline, args=args)
-    selected = scenarios.values() if args.scenario == "all" else (scenarios[args.scenario],)
+    selected = (
+        scenarios.values() if args.scenario == "all" else (scenarios[args.scenario],)
+    )
 
     figures = []
     for scenario in selected:
@@ -249,7 +255,9 @@ def main() -> None:
         plt.show()
 
 
-def build_scenarios(*, baseline: BajaTrialBaseline, args: argparse.Namespace) -> dict[str, Scenario]:
+def build_scenarios(
+    *, baseline: BajaTrialBaseline, args: argparse.Namespace
+) -> dict[str, Scenario]:
     """Build no-slip, one-slip, and two-slip diagnostics from one base state."""
 
     base = baseline.quasi_static_state
@@ -395,10 +403,14 @@ def replace_state(
     )
 
 
-def sample_trajectory(*, system: EngagedCVTHybridSystem, result, maximum_samples: int) -> TrajectoryTrace:
+def sample_trajectory(
+    *, system: EngagedCVTHybridSystem, result, maximum_samples: int
+) -> TrajectoryTrace:
     """Evaluate branch diagnostics on a bounded number of actual ODE samples."""
 
-    sample_plan = list(iter_segment_samples(result.segments, maximum_samples=maximum_samples))
+    sample_plan = list(
+        iter_segment_samples(result.segments, maximum_samples=maximum_samples)
+    )
     count = len(sample_plan)
     time = np.empty(count)
     state = np.empty((6, count))
@@ -446,10 +458,18 @@ def sample_trajectory(*, system: EngagedCVTHybridSystem, result, maximum_samples
         relative_speed_primary[index] = relative.primary_relative_speed
         relative_speed_secondary[index] = relative.secondary_relative_speed
         relative_acceleration_primary[index] = relative.primary_relative_acceleration
-        relative_acceleration_secondary[index] = relative.secondary_relative_acceleration
-        primary_dissipation[index] = -primary_belt_force * relative.primary_relative_speed
-        secondary_dissipation[index] = -secondary_belt_force * relative.secondary_relative_speed
-        closure_condition[index] = evaluation.branch_result.trial.closure.condition_number
+        relative_acceleration_secondary[index] = (
+            relative.secondary_relative_acceleration
+        )
+        primary_dissipation[index] = (
+            -primary_belt_force * relative.primary_relative_speed
+        )
+        secondary_dissipation[index] = (
+            -secondary_belt_force * relative.secondary_relative_speed
+        )
+        closure_condition[index] = (
+            evaluation.branch_result.trial.closure.condition_number
+        )
 
     return TrajectoryTrace(
         time=_freeze(time),
@@ -488,7 +508,9 @@ def iter_segment_samples(segments: Iterable, *, maximum_samples: int):
         if segment_index and indices.size and indices[0] == 0:
             indices = indices[1:]
         for index in indices:
-            yield segment.mode, float(segment.time[index]), np.asarray(segment.state[:, index], dtype=float)
+            yield segment.mode, float(segment.time[index]), np.asarray(
+                segment.state[:, index], dtype=float
+            )
 
 
 def endpoint_preserving_indices(count: int, *, maximum: int) -> NDArray[np.int_]:
@@ -497,7 +519,14 @@ def endpoint_preserving_indices(count: int, *, maximum: int) -> NDArray[np.int_]
     return np.unique(np.linspace(0, count - 1, maximum, dtype=int))
 
 
-def print_case_summary(*, scenario: Scenario, system: EngagedCVTHybridSystem, initial_regime, result, trace: TrajectoryTrace) -> None:
+def print_case_summary(
+    *,
+    scenario: Scenario,
+    system: EngagedCVTHybridSystem,
+    initial_regime,
+    result,
+    trace: TrajectoryTrace,
+) -> None:
     """Print the physical and hybrid checks that matter for one trajectory."""
 
     initial_evaluation = system.evaluator.evaluate_vector(
@@ -537,9 +566,11 @@ def print_case_summary(*, scenario: Scenario, system: EngagedCVTHybridSystem, in
     if result.transitions:
         print("Transitions:")
         for record in result.transitions:
-            next_label = "terminal" if record.transition.next_mode is None else _MODE_DISPLAY[
-                _MODE_CODE[record.transition.next_mode.mode.value]
-            ]
+            next_label = (
+                "terminal"
+                if record.transition.next_mode is None
+                else _MODE_DISPLAY[_MODE_CODE[record.transition.next_mode.mode.value]]
+            )
             print(
                 f"  t={record.time * 1e3: .6f} ms | events={','.join(record.fired_event_names)} "
                 f"| {record.transition.reason} -> {next_label}"
@@ -576,7 +607,12 @@ def print_case_summary(*, scenario: Scenario, system: EngagedCVTHybridSystem, in
     )
 
 
-def _print_dissipation_check(*, interface: str, relative_speed: NDArray[np.float64], dissipation: NDArray[np.float64]) -> None:
+def _print_dissipation_check(
+    *,
+    interface: str,
+    relative_speed: NDArray[np.float64],
+    dissipation: NDArray[np.float64],
+) -> None:
     slipping = np.abs(relative_speed) > 1.0e-7
     if not np.any(slipping):
         print(f"  {interface} contact: no established-slip samples in this window.")
@@ -679,7 +715,9 @@ def plot_case(*, scenario: Scenario, result, trace: TrajectoryTrace):
 def _combined_legend(left_axis, right_axis) -> None:
     left_handles, left_labels = left_axis.get_legend_handles_labels()
     right_handles, right_labels = right_axis.get_legend_handles_labels()
-    left_axis.legend(left_handles + right_handles, left_labels + right_labels, loc="best")
+    left_axis.legend(
+        left_handles + right_handles, left_labels + right_labels, loc="best"
+    )
 
 
 def _mark_transitions(*, axis, transitions) -> None:

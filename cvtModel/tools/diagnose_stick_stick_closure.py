@@ -271,9 +271,7 @@ def _build_restart_seeds(
     interior_lower = lower + margin
     interior_upper = upper - margin
     grid_values = (
-        ()
-        if grid_size == 1
-        else np.linspace(interior_lower, interior_upper, grid_size)
+        () if grid_size == 1 else np.linspace(interior_lower, interior_upper, grid_size)
     )
 
     seeds = [first]
@@ -326,7 +324,15 @@ def _solve_from_seeds(
             continue
         distinct.append(candidate)
 
-    return tuple(sorted(distinct, key=lambda candidate: (candidate.residual_norm, candidate.solve_result.closure.condition_number)))
+    return tuple(
+        sorted(
+            distinct,
+            key=lambda candidate: (
+                candidate.residual_norm,
+                candidate.solve_result.closure.condition_number,
+            ),
+        )
+    )
 
 
 def _same_root(left: RootCandidate, right: RootCandidate) -> bool:
@@ -464,7 +470,9 @@ def _print_closure_unknowns(*, selected: RootCandidate) -> None:
         print(f"{label:>10} = {value: .12e} {unit}")
 
 
-def _print_rotational_and_transport_ledgers(*, snapshot, selected: RootCandidate) -> None:
+def _print_rotational_and_transport_ledgers(
+    *, snapshot, selected: RootCandidate
+) -> None:
     unknowns = selected.solve_result.closure.unknowns
     state = snapshot.state
     geometry = snapshot.geometry
@@ -475,11 +483,16 @@ def _print_rotational_and_transport_ledgers(*, snapshot, selected: RootCandidate
     print("-" * 96)
 
     primary_terms = (
-        ("I_p alpha_p", snapshot.primary_rotational_inertia * unknowns.primary_angular_acceleration),
+        (
+            "I_p alpha_p",
+            snapshot.primary_rotational_inertia * unknowns.primary_angular_acceleration,
+        ),
         ("+ tau_p", unknowns.primary_torque),
         ("- tau_engine", -snapshot.engine_torque),
     )
-    _print_ledger("primary rotation: I_p alpha_p + tau_p - tau_engine = 0", primary_terms)
+    _print_ledger(
+        "primary rotation: I_p alpha_p + tau_p - tau_engine = 0", primary_terms
+    )
 
     belt_terms = (
         ("m_b v_b_dot", snapshot.belt_transport_mass * unknowns.belt_acceleration),
@@ -494,7 +507,10 @@ def _print_rotational_and_transport_ledgers(*, snapshot, selected: RootCandidate
             snapshot.secondary_absolute_rotational_inertia
             * unknowns.secondary_angular_acceleration,
         ),
-        ("- I_M H s_ddot", -movable_inertia * helix.dtheta_ds * unknowns.shift_acceleration),
+        (
+            "- I_M H s_ddot",
+            -movable_inertia * helix.dtheta_ds * unknowns.shift_acceleration,
+        ),
         ("- tau_s", -unknowns.secondary_torque),
         ("- tau_secondary,external", -snapshot.secondary_external_torque),
         (
@@ -525,8 +541,12 @@ def _print_axial_ledgers(*, snapshot, selected: RootCandidate) -> None:
     )
     primary_actuation_force = snapshot.primary_actuation.force(unknowns)
     secondary_actuation_force = snapshot.secondary_actuation.force(unknowns)
-    primary_wedge_opening_force = unknowns.primary_normal_resultant / (2.0 * beta_tangent)
-    secondary_wedge_opening_force = unknowns.secondary_normal_resultant / (2.0 * beta_tangent)
+    primary_wedge_opening_force = unknowns.primary_normal_resultant / (
+        2.0 * beta_tangent
+    )
+    secondary_wedge_opening_force = unknowns.secondary_normal_resultant / (
+        2.0 * beta_tangent
+    )
 
     print("\nAxial force ledgers")
     print("-" * 96)
@@ -600,7 +620,9 @@ def _print_unused_belt_axial_diagnostic(*, snapshot, selected: RootCandidate) ->
         + belt_inertia.generalized_curvature_coefficient * state.shift_speed**2
     )
 
-    print("\nRepresentative belt axial-mass diagnostic (not yet assigned to a physical row)")
+    print(
+        "\nRepresentative belt axial-mass diagnostic (not yet assigned to a physical row)"
+    )
     print("-" * 96)
     print(
         f"x_b'={belt_inertia.d_coordinate_ds:.6e}, "
@@ -745,12 +767,9 @@ def _reconstruct_wrap_endpoints(
     )
 
     straight_span_length = sqrt(
-        center_distance**2
-        - (geometry.secondary.outer - geometry.primary.outer) ** 2
+        center_distance**2 - (geometry.secondary.outer - geometry.primary.outer) ** 2
     )
-    span_acceleration_force = (
-        q * straight_span_length * unknowns.belt_acceleration
-    )
+    span_acceleration_force = q * straight_span_length * unknowns.belt_acceleration
 
     return WrapEndpointDiagnostic(
         primary_radial_offset=primary_c,
@@ -762,12 +781,8 @@ def _reconstruct_wrap_endpoints(
         secondary_lower_tension=secondary_lower,
         secondary_upper_tension=secondary_upper,
         straight_span_length=straight_span_length,
-        upper_span_residual=(
-            primary_upper - secondary_upper - span_acceleration_force
-        ),
-        lower_span_residual=(
-            secondary_lower - primary_lower - span_acceleration_force
-        ),
+        upper_span_residual=(primary_upper - secondary_upper - span_acceleration_force),
+        lower_span_residual=(secondary_lower - primary_lower - span_acceleration_force),
         tension_loop_residual=(
             primary_upper + primary_lower - secondary_lower - secondary_upper
         ),
@@ -785,10 +800,7 @@ def _print_affine_force_relation(*, title: str, relation, unknowns) -> None:
     ):
         if gain == 0.0:
             continue
-        print(
-            f"    {gain: .6e} * {label} ({value: .6e}) = "
-            f"{gain * value: .6e} N"
-        )
+        print(f"    {gain: .6e} * {label} ({value: .6e}) = " f"{gain * value: .6e} N")
     print(f"    total = {relation.evaluate(unknowns): .6e} N")
 
 
@@ -809,14 +821,13 @@ def _print_affine_row_breakdown(*, selected: RootCandidate) -> None:
         ):
             if gain == 0.0:
                 continue
-            print(
-                f"  {gain: .6e} * {label} ({value: .6e}) = "
-                f"{gain * value: .6e}"
-            )
+            print(f"  {gain: .6e} * {label} ({value: .6e}) = " f"{gain * value: .6e}")
         print(f"  residual = {equation.evaluate(unknowns): .6e}\n")
 
 
-def _print_local_sensitivity(*, closure, bounds, selected, requested_step: float) -> None:
+def _print_local_sensitivity(
+    *, closure, bounds, selected, requested_step: float
+) -> None:
     """Report central finite-difference sensitivities of selected root outputs."""
 
     root = selected.solve_result.friction_utilization
@@ -833,7 +844,9 @@ def _print_local_sensitivity(*, closure, bounds, selected, requested_step: float
         requested=requested_step,
     )
     if step_primary is None or step_secondary is None:
-        print("\nLocal lambda sensitivity skipped: selected root is too close to a bound.")
+        print(
+            "\nLocal lambda sensitivity skipped: selected root is too close to a bound."
+        )
         return
 
     plus_primary = closure.evaluate_trial(
@@ -890,7 +903,9 @@ def _print_local_sensitivity(*, closure, bounds, selected, requested_step: float
     )
 
 
-def _bounded_difference_step(*, value: float, lower: float, upper: float, requested: float) -> float | None:
+def _bounded_difference_step(
+    *, value: float, lower: float, upper: float, requested: float
+) -> float | None:
     available = min(value - lower, upper - value)
     if available <= 0.0:
         return None
@@ -900,14 +915,12 @@ def _bounded_difference_step(*, value: float, lower: float, upper: float, reques
 def _print_interpretation(*, snapshot, selected: RootCandidate) -> None:
     unknowns = selected.solve_result.closure.unknowns
     beta_tangent = tan(snapshot.sheave_half_angle)
-    primary_net = (
-        snapshot.primary_actuation.force(unknowns)
-        - unknowns.primary_normal_resultant / (2.0 * beta_tangent)
-    )
-    secondary_net = (
-        snapshot.secondary_actuation.force(unknowns)
-        - unknowns.secondary_normal_resultant / (2.0 * beta_tangent)
-    )
+    primary_net = snapshot.primary_actuation.force(
+        unknowns
+    ) - unknowns.primary_normal_resultant / (2.0 * beta_tangent)
+    secondary_net = snapshot.secondary_actuation.force(
+        unknowns
+    ) - unknowns.secondary_normal_resultant / (2.0 * beta_tangent)
 
     print("\nReading the shift acceleration")
     print("-" * 96)

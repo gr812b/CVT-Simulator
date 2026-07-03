@@ -41,7 +41,11 @@ _REPOSITORY_ROOT = _TOOLS_DIRECTORY.parent
 # intentional overlay and must not be shadowed by an older root-level copy.
 if str(_TOOLS_DIRECTORY) not in sys.path:
     sys.path.insert(0, str(_TOOLS_DIRECTORY))
-for _candidate in (_REPOSITORY_ROOT / "src", _REPOSITORY_ROOT, _REPOSITORY_ROOT / "tools"):
+for _candidate in (
+    _REPOSITORY_ROOT / "src",
+    _REPOSITORY_ROOT,
+    _REPOSITORY_ROOT / "tools",
+):
     if str(_candidate) not in sys.path:
         sys.path.append(str(_candidate))
 
@@ -82,7 +86,9 @@ def parse_arguments() -> argparse.Namespace:
         help="Preferred maximum time after engagement before the primary re-sticks [s].",
     )
     parser.add_argument("--minimum-upper-stop-time-s", type=float, default=5.5)
-    parser.add_argument("--output-dir", type=Path, default=Path("artifacts/launch_tuning"))
+    parser.add_argument(
+        "--output-dir", type=Path, default=Path("artifacts/launch_tuning")
+    )
     parser.add_argument("--no-show", action="store_true")
     args = parser.parse_args()
     for name in (
@@ -104,7 +110,9 @@ def parse_arguments() -> argparse.Namespace:
     if args.minimum_shift_10_to_90_s >= args.maximum_shift_10_to_90_s:
         parser.error("Require --minimum-shift-10-to-90-s < --maximum-shift-10-to-90-s.")
     if args.top_n < 1 or args.maximum_transitions < 1 or args.diagnostic_samples < 100:
-        parser.error("--top-n, --maximum-transitions, and --diagnostic-samples must be positive.")
+        parser.error(
+            "--top-n, --maximum-transitions, and --diagnostic-samples must be positive."
+        )
     if not args.solver_method.strip():
         parser.error("--solver-method must be non-empty.")
     return args
@@ -115,12 +123,22 @@ def _candidate_from_row(row: dict[str, str]) -> tuple[TuneCandidate, float]:
         TuneCandidate(
             flyweight_mass_kg=float(row["flyweight_mass_kg"]),
             helix_angle_degrees=float(row["helix_angle_degrees"]),
-            secondary_torsional_pretension_degrees=float(row["secondary_torsional_pretension_degrees"]),
-            secondary_compression_preload_mm=float(row["secondary_compression_preload_mm"]),
+            secondary_torsional_pretension_degrees=float(
+                row["secondary_torsional_pretension_degrees"]
+            ),
+            secondary_compression_preload_mm=float(
+                row["secondary_compression_preload_mm"]
+            ),
             primary_ramp_kind=row.get("primary_ramp_kind") or "linear",
-            primary_ramp_angle_degrees=float(row.get("primary_ramp_angle_degrees") or 30.0),
-            primary_ramp_start_angle_degrees=float(row.get("primary_ramp_start_angle_degrees") or 42.0),
-            primary_ramp_end_angle_degrees=float(row.get("primary_ramp_end_angle_degrees") or 12.0),
+            primary_ramp_angle_degrees=float(
+                row.get("primary_ramp_angle_degrees") or 30.0
+            ),
+            primary_ramp_start_angle_degrees=float(
+                row.get("primary_ramp_start_angle_degrees") or 42.0
+            ),
+            primary_ramp_end_angle_degrees=float(
+                row.get("primary_ramp_end_angle_degrees") or 12.0
+            ),
         ),
         float(row["target_engagement_rpm"]),
     )
@@ -135,7 +153,9 @@ def _load_candidates(path: Path, top_n: int) -> list[dict[str, str]]:
     return valid[:top_n]
 
 
-def _score(metrics: dict[str, object], args: argparse.Namespace) -> tuple[bool, float, str | None]:
+def _score(
+    metrics: dict[str, object], args: argparse.Namespace
+) -> tuple[bool, float, str | None]:
     if metrics["completed"] != 1:
         return False, np.inf, "integration did not reach final time"
     if metrics["persistent_engagement"] != 1:
@@ -155,23 +175,37 @@ def _score(metrics: dict[str, object], args: argparse.Namespace) -> tuple[bool, 
 
     score = abs(float(onset) - args.target_main_shift_rpm) / 150.0
     if float(duration) < args.minimum_shift_10_to_90_s:
-        score += 3.0 * (args.minimum_shift_10_to_90_s - float(duration)) / args.minimum_shift_10_to_90_s
+        score += (
+            3.0
+            * (args.minimum_shift_10_to_90_s - float(duration))
+            / args.minimum_shift_10_to_90_s
+        )
     if float(duration) > args.maximum_shift_10_to_90_s:
-        score += (float(duration) - args.maximum_shift_10_to_90_s) / args.maximum_shift_10_to_90_s
+        score += (
+            float(duration) - args.maximum_shift_10_to_90_s
+        ) / args.maximum_shift_10_to_90_s
     if float(peak) > args.maximum_main_shift_speed_mm_per_s:
-        score += (float(peak) - args.maximum_main_shift_speed_mm_per_s) / args.maximum_main_shift_speed_mm_per_s
+        score += (
+            float(peak) - args.maximum_main_shift_speed_mm_per_s
+        ) / args.maximum_main_shift_speed_mm_per_s
 
     primary_slip_duration = metrics.get("primary_slip_duration_s")
     if primary_slip_duration is None:
         score += 4.0
     elif float(primary_slip_duration) > args.target_primary_restick_time_s:
-        score += 2.0 * (
-            float(primary_slip_duration) - args.target_primary_restick_time_s
-        ) / args.target_primary_restick_time_s
+        score += (
+            2.0
+            * (float(primary_slip_duration) - args.target_primary_restick_time_s)
+            / args.target_primary_restick_time_s
+        )
 
     upper_stop = metrics["upper_stop_time_s"]
     if upper_stop is not None and float(upper_stop) < args.minimum_upper_stop_time_s:
-        score += 3.0 * (args.minimum_upper_stop_time_s - float(upper_stop)) / args.minimum_upper_stop_time_s
+        score += (
+            3.0
+            * (args.minimum_upper_stop_time_s - float(upper_stop))
+            / args.minimum_upper_stop_time_s
+        )
     return True, float(score), None
 
 
@@ -220,7 +254,9 @@ def _write_csv(rows: list[dict[str, object]], output: Path) -> None:
         writer.writerows(rows)
 
 
-def _plot_overview(rows: list[dict[str, object]], args: argparse.Namespace, output: Path) -> None:
+def _plot_overview(
+    rows: list[dict[str, object]], args: argparse.Namespace, output: Path
+) -> None:
     valid = [row for row in rows if row.get("dynamic_valid") == 1]
     if not valid:
         return
@@ -230,8 +266,12 @@ def _plot_overview(rows: list[dict[str, object]], args: argparse.Namespace, outp
         onset = float(row["main_shift_onset_primary_rpm"])
         duration = float(row["shift_10_to_90_s"])
         onset_axis.scatter([onset], [duration])
-        onset_axis.annotate(str(rank), xy=(onset, duration), xytext=(4, 4), textcoords="offset points")
-    onset_axis.axvline(args.target_main_shift_rpm, linestyle="--", label="main-shift target")
+        onset_axis.annotate(
+            str(rank), xy=(onset, duration), xytext=(4, 4), textcoords="offset points"
+        )
+    onset_axis.axvline(
+        args.target_main_shift_rpm, linestyle="--", label="main-shift target"
+    )
     onset_axis.axhspan(
         args.minimum_shift_10_to_90_s,
         args.maximum_shift_10_to_90_s,
@@ -246,11 +286,19 @@ def _plot_overview(rows: list[dict[str, object]], args: argparse.Namespace, outp
 
     ranks = np.arange(1, len(valid) + 1)
     upper_times = [
-        args.duration_s if row.get("upper_stop_time_s") in (None, "") else float(row["upper_stop_time_s"])
+        (
+            args.duration_s
+            if row.get("upper_stop_time_s") in (None, "")
+            else float(row["upper_stop_time_s"])
+        )
         for row in valid
     ]
     stop_axis.scatter(ranks, upper_times)
-    stop_axis.axhline(args.minimum_upper_stop_time_s, linestyle="--", label="minimum desirable stop time")
+    stop_axis.axhline(
+        args.minimum_upper_stop_time_s,
+        linestyle="--",
+        label="minimum desirable stop time",
+    )
     stop_axis.axhline(args.duration_s, linestyle=":", label="launch-window end")
     stop_axis.set_title("High-ratio stop timing")
     stop_axis.set_xlabel("Dynamic rank")
@@ -276,7 +324,9 @@ def main() -> None:
     for static_rank, static_row in enumerate(selected, start=1):
         candidate, engagement_target = _candidate_from_row(static_row)
         print(f"\n[{static_rank}/{len(selected)}] {candidate.label()}")
-        resolved = resolve_primary_preload(candidate, target_engagement_rpm=engagement_target)
+        resolved = resolve_primary_preload(
+            candidate, target_engagement_rpm=engagement_target
+        )
         try:
             system, result = integrate_resolved_tune(
                 resolved,
@@ -319,7 +369,9 @@ def main() -> None:
                 "dynamic_score": dynamic_score,
                 "dynamic_rejection_reason": rejection_reason,
             }
-            with (details_dir / f"static_rank_{static_rank:02d}.json").open("w", encoding="utf-8") as handle:
+            with (details_dir / f"static_rank_{static_rank:02d}.json").open(
+                "w", encoding="utf-8"
+            ) as handle:
                 json.dump(detail, handle, indent=2)
             rows.append(
                 _row_from_run(
@@ -347,7 +399,9 @@ def main() -> None:
                 )
             )
 
-    ranked = sorted(rows, key=lambda row: (row["dynamic_valid"] != 1, float(row["dynamic_score"])))
+    ranked = sorted(
+        rows, key=lambda row: (row["dynamic_valid"] != 1, float(row["dynamic_score"]))
+    )
     for rank, row in enumerate(ranked, start=1):
         row["dynamic_rank"] = rank
     args.output_dir.mkdir(parents=True, exist_ok=True)
@@ -358,7 +412,9 @@ def main() -> None:
 
     print("\nDynamic ranking")
     print("=" * 120)
-    print("rank | valid | onset rpm | 10-90 s | peak main speed mm/s | upper stop s | candidate")
+    print(
+        "rank | valid | onset rpm | 10-90 s | peak main speed mm/s | upper stop s | candidate"
+    )
     for row in ranked:
         print(
             f"{int(row['dynamic_rank']):>4} | {int(row['dynamic_valid']):>5} | "

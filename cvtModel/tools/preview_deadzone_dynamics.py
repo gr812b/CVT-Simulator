@@ -29,8 +29,12 @@ for _candidate in (_REPOSITORY_ROOT / "src", _REPOSITORY_ROOT):
 from baja_trial_baseline import build_baja_trial_baseline  # noqa: E402
 from cinder.dynamics import DeadzoneDynamicsEvaluator  # noqa: E402
 from cinder.integration import apply_perfectly_inelastic_lower_stop_impact  # noqa: E402
-from cinder.integration.cvt_regime_events import build_lower_stop_release_event  # noqa: E402
-from cinder.integration.cvt_operating_limits import CVTShiftOperatingLimits  # noqa: E402
+from cinder.integration.cvt_regime_events import (
+    build_lower_stop_release_event,
+)  # noqa: E402
+from cinder.integration.cvt_operating_limits import (
+    CVTShiftOperatingLimits,
+)  # noqa: E402
 
 
 def main() -> None:
@@ -52,7 +56,9 @@ def main() -> None:
     print(f"primary normal: {free.primary_normal_resultant:.3f} N")
     print(f"primary torque: {free.primary_transmitted_torque:.3f} N m")
     print(f"v_b - r_s omega_s: {free.belt_secondary_speed_residual:+.3e} m/s")
-    print(f"v_b_dot - r_s alpha_s: {free.belt_secondary_acceleration_residual:+.3e} m/s^2")
+    print(
+        f"v_b_dot - r_s alpha_s: {free.belt_secondary_acceleration_residual:+.3e} m/s^2"
+    )
     print(f"alpha_p: {derivative.primary_angular_acceleration:+.6f} rad/s^2")
     print(f"alpha_s: {derivative.secondary_angular_acceleration:+.6f} rad/s^2")
     print(f"s_ddot: {derivative.shift_acceleration:+.6f} m/s^2")
@@ -61,7 +67,9 @@ def main() -> None:
     # speed/load under the reduced neutral assumptions.
     changed_secondary = replace(
         baseline.deadzone_state,
-        secondary_angular_speed=(baseline.deadzone_state.secondary_angular_speed + 40.0),
+        secondary_angular_speed=(
+            baseline.deadzone_state.secondary_angular_speed + 40.0
+        ),
         belt_speed=(
             free.snapshot.belt_secondary_lock_radius
             * (baseline.deadzone_state.secondary_angular_speed + 40.0)
@@ -130,12 +138,16 @@ def main() -> None:
     assert release_event.function(0.0, releasing_state.as_vector()) < 0.0
 
     print("\nLower-stop diagnostic")
-    print(f"impact state: s={arrived.shift_position * 1e3:.4f} mm, s_dot={arrived.shift_speed * 1e3:.4f} mm/s")
+    print(
+        f"impact state: s={arrived.shift_position * 1e3:.4f} mm, s_dot={arrived.shift_speed * 1e3:.4f} mm/s"
+    )
     print(
         "R_low (closing positive): "
         f"{held.lower_stop_reaction.closing_direction_magnitude:+.6f} N"
     )
-    print(f"lower stop admissible: {held.lower_stop_reaction.is_unilaterally_admissible}")
+    print(
+        f"lower stop admissible: {held.lower_stop_reaction.is_unilaterally_admissible}"
+    )
     print(
         "release check at omega_p=400 rad/s: "
         f"R_low={releasing.lower_stop_reaction.closing_direction_magnitude:+.6f} N"

@@ -122,10 +122,9 @@ class LambdaSearchBounds:
         return self.lower_at(interface) <= value <= self.upper_at(interface)
 
     def contains(self, utilization: ContactTractionUtilization) -> bool:
-        return (
-            self.contains_at(ContactInterface.PRIMARY, utilization.primary_lambda)
-            and self.contains_at(ContactInterface.SECONDARY, utilization.secondary_lambda)
-        )
+        return self.contains_at(
+            ContactInterface.PRIMARY, utilization.primary_lambda
+        ) and self.contains_at(ContactInterface.SECONDARY, utilization.secondary_lambda)
 
 
 @dataclass(frozen=True, slots=True)
@@ -143,7 +142,9 @@ class EngagedContactSolveSettings:
 
     def __post_init__(self) -> None:
         if not self.lambda_search_bounds.contains(self.initial_guess):
-            raise ValueError("initial_guess must lie inside the numerical lambda search box.")
+            raise ValueError(
+                "initial_guess must lie inside the numerical lambda search box."
+            )
         if not isinstance(self.contact_tolerances, ContactKinematicTolerances):
             raise TypeError(
                 "contact_tolerances must be a ContactKinematicTolerances instance."
@@ -153,9 +154,7 @@ class EngagedContactSolveSettings:
             raise ValueError("maximum_function_evaluations must be at least one.")
         if self.maximum_closure_condition_number is not None:
             _require_finite_positive(
-                maximum_closure_condition_number=(
-                    self.maximum_closure_condition_number
-                )
+                maximum_closure_condition_number=(self.maximum_closure_condition_number)
             )
 
     def initial_guess_at(self, interface: ContactInterface) -> float:
@@ -187,22 +186,39 @@ class EngagedContactTrial:
         if not isinstance(self.shift_constraint, EngagedShiftConstraint):
             raise TypeError("shift_constraint must be an EngagedShiftConstraint.")
         if self.shift_constraint is EngagedShiftConstraint.FREE:
-            if self.low_ratio_seat_reaction is not None or self.upper_stop_reaction is not None:
+            if (
+                self.low_ratio_seat_reaction is not None
+                or self.upper_stop_reaction is not None
+            ):
                 raise ValueError("free shift must not carry a fixed-shift reaction.")
             return
         if self.shift_constraint is EngagedShiftConstraint.LOW_RATIO_SEAT:
-            if self.low_ratio_seat_reaction is None or not isfinite(self.low_ratio_seat_reaction):
-                raise ValueError("low-ratio seat trial requires a finite recovered reaction.")
+            if self.low_ratio_seat_reaction is None or not isfinite(
+                self.low_ratio_seat_reaction
+            ):
+                raise ValueError(
+                    "low-ratio seat trial requires a finite recovered reaction."
+                )
             if self.upper_stop_reaction is not None:
-                raise ValueError("low-ratio seat trial must not carry an upper-stop reaction.")
+                raise ValueError(
+                    "low-ratio seat trial must not carry an upper-stop reaction."
+                )
             return
         if self.shift_constraint is EngagedShiftConstraint.UPPER_STOP:
-            if self.upper_stop_reaction is None or not isfinite(self.upper_stop_reaction):
-                raise ValueError("upper-stop trial requires a finite recovered reaction.")
+            if self.upper_stop_reaction is None or not isfinite(
+                self.upper_stop_reaction
+            ):
+                raise ValueError(
+                    "upper-stop trial requires a finite recovered reaction."
+                )
             if self.low_ratio_seat_reaction is not None:
-                raise ValueError("upper-stop trial must not carry a low-ratio seat reaction.")
+                raise ValueError(
+                    "upper-stop trial must not carry a low-ratio seat reaction."
+                )
             return
-        raise ValueError(f"Unsupported engaged shift constraint: {self.shift_constraint!r}.")
+        raise ValueError(
+            f"Unsupported engaged shift constraint: {self.shift_constraint!r}."
+        )
 
 
 @dataclass(frozen=True, slots=True)
@@ -228,7 +244,9 @@ class StickResidualContinuation:
         expected = (len(self.sticking_interfaces), len(self.sticking_interfaces))
         array = np.asarray(self.jacobian, dtype=float)
         if array.shape != expected or not np.all(np.isfinite(array)):
-            raise ValueError("continuation jacobian shape must match sticking interfaces.")
+            raise ValueError(
+                "continuation jacobian shape must match sticking interfaces."
+            )
         if not np.all(np.isfinite(array)):
             raise ValueError("continuation jacobian must be finite.")
         if np.linalg.matrix_rank(array) < len(self.sticking_interfaces):
@@ -238,7 +256,9 @@ class StickResidualContinuation:
         object.__setattr__(self, "jacobian", frozen)
 
     @classmethod
-    def from_result(cls, result: "EngagedContactSolveResult") -> "StickResidualContinuation":
+    def from_result(
+        cls, result: "EngagedContactSolveResult"
+    ) -> "StickResidualContinuation":
         return cls(
             mode=result.mode,
             sticking_interfaces=result.sticking_interfaces,
@@ -270,14 +290,20 @@ class EngagedContactSolveResult:
 
     def __post_init__(self) -> None:
         if self.mode is EngagedContactMode.BOTH_SLIP:
-            raise ValueError("EngagedContactSolveResult is only for branches with stick residuals.")
+            raise ValueError(
+                "EngagedContactSolveResult is only for branches with stick residuals."
+            )
         if not self.sticking_interfaces:
-            raise ValueError("A bounded stick-residual result needs at least one sticking interface.")
+            raise ValueError(
+                "A bounded stick-residual result needs at least one sticking interface."
+            )
         if len(self.jacobian.shape) != 2 or self.jacobian.shape != (
             len(self.sticking_interfaces),
             len(self.sticking_interfaces),
         ):
-            raise ValueError("jacobian shape must match the number of sticking interfaces.")
+            raise ValueError(
+                "jacobian shape must match the number of sticking interfaces."
+            )
         if not np.all(np.isfinite(self.jacobian)):
             raise ValueError("jacobian must contain finite values.")
         if self.function_evaluations < 0:
@@ -315,7 +341,9 @@ class EngagedContactSolveResult:
 
     @property
     def sticking_residuals(self) -> NDArray[np.float64]:
-        return self.relative_motion.acceleration_residual_vector(self.sticking_interfaces)
+        return self.relative_motion.acceleration_residual_vector(
+            self.sticking_interfaces
+        )
 
     @property
     def required_static_utilization(self) -> ContactTractionUtilization:
@@ -457,9 +485,11 @@ class EngagedContactClosure:
                 unknowns=closure.unknowns,
             )
         else:
-            state_derivative = CVTDynamicStateDerivative.from_fixed_engaged_shift_constraint_closure(
-                state=self.snapshot.state,
-                unknowns=closure.unknowns,
+            state_derivative = (
+                CVTDynamicStateDerivative.from_fixed_engaged_shift_constraint_closure(
+                    state=self.snapshot.state,
+                    unknowns=closure.unknowns,
+                )
             )
             if self.shift_constraint is EngagedShiftConstraint.LOW_RATIO_SEAT:
                 low_ratio_seat_reaction = recover_low_ratio_seat_reaction(
@@ -472,7 +502,9 @@ class EngagedContactClosure:
                     unknowns=closure.unknowns,
                 ).opening_direction_magnitude
             else:  # pragma: no cover - defensive enum exhaustiveness.
-                raise ValueError(f"Unsupported engaged shift constraint: {self.shift_constraint!r}.")
+                raise ValueError(
+                    f"Unsupported engaged shift constraint: {self.shift_constraint!r}."
+                )
 
         return EngagedContactTrial(
             traction_utilization=traction_utilization,
@@ -510,7 +542,9 @@ class EngagedContactClosure:
         if not isinstance(mode, EngagedContactMode):
             raise TypeError("mode must be an EngagedContactMode.")
         if mode is EngagedContactMode.BOTH_SLIP:
-            raise ValueError("Both-slip has no stick residuals and uses evaluate_both_slip().")
+            raise ValueError(
+                "Both-slip has no stick residuals and uses evaluate_both_slip()."
+            )
         if not isinstance(settings, EngagedContactSolveSettings):
             raise TypeError("settings must be an EngagedContactSolveSettings instance.")
 
@@ -522,11 +556,17 @@ class EngagedContactClosure:
         )
 
         lower = np.asarray(
-            [settings.lambda_search_bounds.lower_at(interface) for interface in free_interfaces],
+            [
+                settings.lambda_search_bounds.lower_at(interface)
+                for interface in free_interfaces
+            ],
             dtype=float,
         )
         upper = np.asarray(
-            [settings.lambda_search_bounds.upper_at(interface) for interface in free_interfaces],
+            [
+                settings.lambda_search_bounds.upper_at(interface)
+                for interface in free_interfaces
+            ],
             dtype=float,
         )
         initial = np.asarray(
@@ -534,9 +574,13 @@ class EngagedContactClosure:
             dtype=float,
         )
         if np.any(initial < lower) or np.any(initial > upper):
-            raise ValueError("initial free lambda guesses must lie inside their numerical search bounds.")
+            raise ValueError(
+                "initial free lambda guesses must lie inside their numerical search bounds."
+            )
 
-        def utilization_from_free_values(values: NDArray[np.float64]) -> ContactTractionUtilization:
+        def utilization_from_free_values(
+            values: NDArray[np.float64],
+        ) -> ContactTractionUtilization:
             lambda_values = dict(fixed_lambdas)
             for interface, value in zip(free_interfaces, values, strict=True):
                 lambda_values[interface] = float(value)
@@ -607,12 +651,11 @@ class EngagedContactClosure:
             bounds=settings.lambda_search_bounds,
             interfaces=free_interfaces,
         )
-        accepted = (
-            bool(optimized.success)
-            and trial.relative_motion.are_stick_compatible(
-                sticking_interfaces,
-                tolerances=settings.contact_tolerances,
-            )
+        accepted = bool(
+            optimized.success
+        ) and trial.relative_motion.are_stick_compatible(
+            sticking_interfaces,
+            tolerances=settings.contact_tolerances,
         )
 
         return EngagedContactSolveResult(
@@ -818,9 +861,11 @@ def _try_continuation_prediction(
 
     previous = np.asarray(
         [
-            continuation.traction_utilization.primary_lambda
-            if interface is ContactInterface.PRIMARY
-            else continuation.traction_utilization.secondary_lambda
+            (
+                continuation.traction_utilization.primary_lambda
+                if interface is ContactInterface.PRIMARY
+                else continuation.traction_utilization.secondary_lambda
+            )
             for interface in free_interfaces
         ],
         dtype=float,
@@ -862,10 +907,14 @@ def _try_continuation_prediction(
         # Good Broyden update preserves a useful local derivative estimate
         # without spending four additional closure evaluations on central
         # finite differences after every successful continuation step.
-        jacobian = jacobian + np.outer(
-            residual_after - residual_before - jacobian @ step,
-            step,
-        ) / denominator
+        jacobian = (
+            jacobian
+            + np.outer(
+                residual_after - residual_before - jacobian @ step,
+                step,
+            )
+            / denominator
+        )
     if np.linalg.matrix_rank(jacobian) < len(free_interfaces):
         jacobian = np.asarray(continuation.jacobian, dtype=float)
 
@@ -910,12 +959,18 @@ def _validate_branch_layout(
         raise ValueError("fixed_lambdas must cover exactly the slipping interfaces.")
     if any(not isfinite(value) or value == 0.0 for value in fixed_lambdas.values()):
         raise ValueError("fixed kinetic lambdas must be finite and non-zero.")
-    if {spec.interface for spec in fixed_slip_specifications} != set(mode.slipping_interfaces):
-        raise ValueError("fixed_slip_specifications must match the slipping interfaces.")
+    if {spec.interface for spec in fixed_slip_specifications} != set(
+        mode.slipping_interfaces
+    ):
+        raise ValueError(
+            "fixed_slip_specifications must match the slipping interfaces."
+        )
     if len({spec.interface for spec in fixed_slip_specifications}) != len(
         fixed_slip_specifications
     ):
-        raise ValueError("fixed_slip_specifications must not contain duplicate interfaces.")
+        raise ValueError(
+            "fixed_slip_specifications must not contain duplicate interfaces."
+        )
 
     free_interfaces = sticking_interfaces
     if set(free_interfaces) | set(fixed_lambdas) != {

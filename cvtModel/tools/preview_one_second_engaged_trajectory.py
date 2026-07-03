@@ -37,9 +37,19 @@ for _candidate in (_REPOSITORY_ROOT / "src", _REPOSITORY_ROOT):
         sys.path.insert(0, str(_candidate))
 
 from baja_trial_baseline import BajaTrialConstants  # noqa: E402
-from cinder.contact import ContactKinematicTolerances, ContactRegime, ContactTractionLaw  # noqa: E402
-from cinder.dynamics import EngagedContactSolveSettings, LambdaSearchBounds  # noqa: E402
-from cinder.integration import EngagedShiftTravelLimits, HybridIntegratorSettings  # noqa: E402
+from cinder.contact import (
+    ContactKinematicTolerances,
+    ContactRegime,
+    ContactTractionLaw,
+)  # noqa: E402
+from cinder.dynamics import (
+    EngagedContactSolveSettings,
+    LambdaSearchBounds,
+)  # noqa: E402
+from cinder.integration import (
+    EngagedShiftTravelLimits,
+    HybridIntegratorSettings,
+)  # noqa: E402
 from cinder.integration.cvt_hybrid import EngagedCVTHybridSystem  # noqa: E402
 from trim_shift_operating_point import (  # noqa: E402
     sample_trajectory,
@@ -258,7 +268,9 @@ def main() -> None:
         plt.show()
 
 
-def print_summary(*, configuration: LongRunConfiguration, operating_point, result, trace) -> None:
+def print_summary(
+    *, configuration: LongRunConfiguration, operating_point, result, trace
+) -> None:
     initial = operating_point.state.as_vector()
     final = result.final_state
     initial_rpm = initial[:2] * _RPM_PER_RADIAN_PER_SECOND
@@ -308,7 +320,11 @@ def print_summary(*, configuration: LongRunConfiguration, operating_point, resul
     if result.transitions:
         print("Transitions:")
         for record in result.transitions:
-            next_mode = "terminal" if record.transition.next_mode is None else record.transition.next_mode.mode.value
+            next_mode = (
+                "terminal"
+                if record.transition.next_mode is None
+                else record.transition.next_mode.mode.value
+            )
             print(
                 f"  t={record.time:.6f} s | events={','.join(record.fired_event_names)} "
                 f"| {record.transition.reason} -> {next_mode}"

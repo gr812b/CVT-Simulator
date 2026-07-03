@@ -175,4 +175,6 @@ def _validate_deadzone_snapshot(snapshot: DeadzoneSnapshot) -> None:
     if snapshot.secondary_belt_locked_inertia <= 0.0:
         raise ValueError("Deadzone secondary-belt locked inertia must be positive.")
     if snapshot.primary_axial_inertia.local_shift_acceleration_gain <= 0.0:
-        raise ValueError("Deadzone primary axial inertia must have positive shift gain.")
+        raise ValueError(
+            "Deadzone primary axial inertia must have positive shift gain."
+        )

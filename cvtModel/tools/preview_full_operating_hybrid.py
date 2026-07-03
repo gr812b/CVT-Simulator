@@ -22,12 +22,22 @@ for _candidate in (_REPOSITORY_ROOT / "src", _REPOSITORY_ROOT):
     if (_candidate / "cinder").is_dir() and str(_candidate) not in sys.path:
         sys.path.insert(0, str(_candidate))
 
-from baja_trial_baseline import BajaTrialConstants, build_baja_trial_baseline  # noqa: E402
+from baja_trial_baseline import (
+    BajaTrialConstants,
+    build_baja_trial_baseline,
+)  # noqa: E402
 from cinder.contact import ContactTractionLaw  # noqa: E402
-from cinder.dynamics import EngagedContactSolveSettings, LambdaSearchBounds  # noqa: E402
+from cinder.dynamics import (
+    EngagedContactSolveSettings,
+    LambdaSearchBounds,
+)  # noqa: E402
 from cinder.integration import HybridIntegratorSettings  # noqa: E402
-from cinder.integration.cvt_operating_hybrid import CVTOperatingHybridSystem  # noqa: E402
-from cinder.integration.cvt_operating_limits import CVTShiftOperatingLimits  # noqa: E402
+from cinder.integration.cvt_operating_hybrid import (
+    CVTOperatingHybridSystem,
+)  # noqa: E402
+from cinder.integration.cvt_operating_limits import (
+    CVTShiftOperatingLimits,
+)  # noqa: E402
 
 
 def build_system(constants: BajaTrialConstants) -> CVTOperatingHybridSystem:

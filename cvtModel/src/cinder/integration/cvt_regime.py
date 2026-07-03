@@ -62,12 +62,16 @@ class CVTOperatingRegime:
 
         if self.engagement is CVTEngagementState.DEADZONE:
             if self.contact_regime is not None:
-                raise ValueError("A deadzone regime cannot carry an engaged contact regime.")
+                raise ValueError(
+                    "A deadzone regime cannot carry an engaged contact regime."
+                )
             if self.shift_constraint not in (
                 CVTShiftConstraint.FREE,
                 CVTShiftConstraint.LOWER_STOP,
             ):
-                raise ValueError("A deadzone regime may be free or at the lower stop only.")
+                raise ValueError(
+                    "A deadzone regime may be free or at the lower stop only."
+                )
             return
 
         if self.contact_regime is None:

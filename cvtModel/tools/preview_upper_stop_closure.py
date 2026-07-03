@@ -98,10 +98,14 @@ def main() -> None:
     print(f"stop admissible: {stop_trial.upper_stop_reaction >= 0.0}")
     print(f"free lambdas:  {free.traction_utilization}")
     print(f"stop lambdas:  {stop.traction_utilization}")
-    print(f"free torques:  {free_trial.closure.unknowns.primary_torque:.6f}, "
-          f"{free_trial.closure.unknowns.secondary_torque:.6f} N m")
-    print(f"stop torques:  {stop_trial.closure.unknowns.primary_torque:.6f}, "
-          f"{stop_trial.closure.unknowns.secondary_torque:.6f} N m")
+    print(
+        f"free torques:  {free_trial.closure.unknowns.primary_torque:.6f}, "
+        f"{free_trial.closure.unknowns.secondary_torque:.6f} N m"
+    )
+    print(
+        f"stop torques:  {stop_trial.closure.unknowns.primary_torque:.6f}, "
+        f"{stop_trial.closure.unknowns.secondary_torque:.6f} N m"
+    )
 
 
 if __name__ == "__main__":

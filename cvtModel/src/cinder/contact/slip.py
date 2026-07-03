@@ -45,8 +45,13 @@ class KineticSlipSpecification:
             raise TypeError("interface must be a ContactInterface.")
         if self.direction is SlipDirection.INDETERMINATE:
             raise ValueError("A kinetic slip specification requires a direction.")
-        if not isfinite(self.kinetic_lambda_magnitude) or self.kinetic_lambda_magnitude <= 0.0:
-            raise ValueError("kinetic_lambda_magnitude must be finite and strictly positive.")
+        if (
+            not isfinite(self.kinetic_lambda_magnitude)
+            or self.kinetic_lambda_magnitude <= 0.0
+        ):
+            raise ValueError(
+                "kinetic_lambda_magnitude must be finite and strictly positive."
+            )
 
     @property
     def signed_lambda(self) -> float:

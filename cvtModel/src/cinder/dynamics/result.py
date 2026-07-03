@@ -78,14 +78,15 @@ class TrialClosureResult:
             expected_length=CLOSURE_UNKNOWN_COUNT,
         )
 
-        if not isfinite(self.condition_number) and self.condition_number != float("inf"):
+        if not isfinite(self.condition_number) and self.condition_number != float(
+            "inf"
+        ):
             raise ValueError("condition_number must be finite or positive infinity.")
         if self.condition_number < 0.0:
             raise ValueError("condition_number must be non-negative.")
         if not 0 <= self.matrix_rank <= CLOSURE_UNKNOWN_COUNT:
             raise ValueError(
-                "matrix_rank must lie between 0 and "
-                f"{CLOSURE_UNKNOWN_COUNT}."
+                "matrix_rank must lie between 0 and " f"{CLOSURE_UNKNOWN_COUNT}."
             )
 
         object.__setattr__(self, "matrix", _immutable_float_array(self.matrix))
@@ -116,7 +117,9 @@ class TrialClosureResult:
         raise KeyError(f"No closure equation named {equation_name!r}.")
 
 
-def _immutable_float_array(values: NDArray[np.float64] | np.ndarray) -> NDArray[np.float64]:
+def _immutable_float_array(
+    values: NDArray[np.float64] | np.ndarray,
+) -> NDArray[np.float64]:
     array = np.array(values, dtype=float, copy=True)
     array.setflags(write=False)
     return array

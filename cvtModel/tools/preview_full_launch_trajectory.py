@@ -38,7 +38,11 @@ import numpy as np
 from numpy.typing import NDArray
 
 _REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
-for _candidate in (_REPOSITORY_ROOT / "src", _REPOSITORY_ROOT, _REPOSITORY_ROOT / "tools"):
+for _candidate in (
+    _REPOSITORY_ROOT / "src",
+    _REPOSITORY_ROOT,
+    _REPOSITORY_ROOT / "tools",
+):
     if str(_candidate) not in sys.path:
         sys.path.insert(0, str(_candidate))
 
@@ -53,12 +57,19 @@ from primary_tuning import (  # noqa: E402
     resolve_primary_tuning,
 )
 from cinder.contact import ContactTractionLaw  # noqa: E402
-from cinder.dynamics import EngagedContactSolveSettings, LambdaSearchBounds  # noqa: E402
+from cinder.dynamics import (
+    EngagedContactSolveSettings,
+    LambdaSearchBounds,
+)  # noqa: E402
 from cinder.dynamics.deadzone import DeadzoneEvaluation  # noqa: E402
 from cinder.integration import CVTDynamicState, HybridIntegratorSettings  # noqa: E402
 from cinder.integration.cvt_contact import CVTContactEvaluation  # noqa: E402
-from cinder.integration.cvt_operating_hybrid import CVTOperatingHybridSystem  # noqa: E402
-from cinder.integration.cvt_operating_limits import CVTShiftOperatingLimits  # noqa: E402
+from cinder.integration.cvt_operating_hybrid import (
+    CVTOperatingHybridSystem,
+)  # noqa: E402
+from cinder.integration.cvt_operating_limits import (
+    CVTShiftOperatingLimits,
+)  # noqa: E402
 from cinder.integration.cvt_regime import CVTOperatingRegime  # noqa: E402
 
 _RPM_PER_RADIAN_PER_SECOND = 60.0 / (2.0 * np.pi)
@@ -99,7 +110,9 @@ class LaunchTrace:
 
 def parse_arguments() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--duration-s", type=float, default=10.0, help="Simulation duration [s].")
+    parser.add_argument(
+        "--duration-s", type=float, default=10.0, help="Simulation duration [s]."
+    )
     parser.add_argument(
         "--initial-primary-rpm",
         type=float,
@@ -153,7 +166,9 @@ def parse_arguments() -> argparse.Namespace:
         help="Maximum accepted states re-evaluated for diagnostic traces.",
     )
     parser.add_argument("--save", type=Path, help="Optional PNG/PDF/SVG output path.")
-    parser.add_argument("--no-show", action="store_true", help="Do not open the matplotlib window.")
+    parser.add_argument(
+        "--no-show", action="store_true", help="Do not open the matplotlib window."
+    )
     args = parser.parse_args()
 
     for name, value in (
@@ -178,7 +193,9 @@ def parse_arguments() -> argparse.Namespace:
     if args.primary_preload_mm < 0.0:
         parser.error("--primary-preload-mm must be non-negative.")
     if not 0.0 < args.primary_ramp_angle_deg < 89.0:
-        parser.error("--primary-ramp-angle-deg must lie strictly between 0 and 89 degrees.")
+        parser.error(
+            "--primary-ramp-angle-deg must lie strictly between 0 and 89 degrees."
+        )
     if args.primary_spring_rate_n_per_m <= 0.0:
         parser.error("--primary-spring-rate-n-per-m must be strictly positive.")
     if args.target_lower_stop_release_rpm is not None:
@@ -186,7 +203,9 @@ def parse_arguments() -> argparse.Namespace:
             not isfinite(args.target_lower_stop_release_rpm)
             or args.target_lower_stop_release_rpm <= 0.0
         ):
-            parser.error("--target-lower-stop-release-rpm must be finite and strictly positive.")
+            parser.error(
+                "--target-lower-stop-release-rpm must be finite and strictly positive."
+            )
     if args.static_lambda_limit <= 0.0 or args.kinetic_lambda <= 0.0:
         parser.error("Traction limits must be strictly positive.")
     if args.max_step_ms <= 0.0:
@@ -262,7 +281,9 @@ def _sample_indices(count: int, maximum: int) -> NDArray[np.int64]:
     return np.unique(np.linspace(0, count - 1, maximum, dtype=np.int64))
 
 
-def _allocate_sample_budget(segment_sizes: Iterable[int], maximum: int) -> tuple[int, ...]:
+def _allocate_sample_budget(
+    segment_sizes: Iterable[int], maximum: int
+) -> tuple[int, ...]:
     sizes = tuple(segment_sizes)
     total = sum(sizes)
     if total <= maximum:
@@ -324,7 +345,10 @@ def sample_launch_trace(
             mode_labels.append(_mode_label(segment.mode))
             if isinstance(evaluation, DeadzoneEvaluation):
                 primary_surface.append(np.nan)
-                secondary_surface.append(evaluation.snapshot.belt_secondary_lock_radius * state.secondary_angular_speed)
+                secondary_surface.append(
+                    evaluation.snapshot.belt_secondary_lock_radius
+                    * state.secondary_angular_speed
+                )
                 primary_torque.append(evaluation.primary_transmitted_torque)
                 secondary_torque.append(np.nan)
                 primary_lambda.append(np.nan)
@@ -334,17 +358,21 @@ def sample_launch_trace(
                 primary_relative_speed.append(np.nan)
                 secondary_relative_speed.append(np.nan)
                 stop_reaction.append(
-                    np.nan if evaluation.stop_reaction is None else evaluation.stop_reaction
+                    np.nan
+                    if evaluation.stop_reaction is None
+                    else evaluation.stop_reaction
                 )
                 continue
 
             assert isinstance(evaluation, CVTContactEvaluation)
             unknowns = evaluation.closure_unknowns
             primary_surface.append(
-                evaluation.snapshot.geometry.primary.effective * state.primary_angular_speed
+                evaluation.snapshot.geometry.primary.effective
+                * state.primary_angular_speed
             )
             secondary_surface.append(
-                evaluation.snapshot.geometry.secondary.effective * state.secondary_angular_speed
+                evaluation.snapshot.geometry.secondary.effective
+                * state.secondary_angular_speed
             )
             primary_torque.append(unknowns.primary_torque)
             secondary_torque.append(unknowns.secondary_torque)
@@ -352,10 +380,16 @@ def sample_launch_trace(
             secondary_lambda.append(evaluation.traction_utilization.secondary_lambda)
             primary_normal.append(evaluation.normal_primary)
             secondary_normal.append(evaluation.normal_secondary)
-            primary_relative_speed.append(evaluation.relative_motion.primary_relative_speed)
-            secondary_relative_speed.append(evaluation.relative_motion.secondary_relative_speed)
+            primary_relative_speed.append(
+                evaluation.relative_motion.primary_relative_speed
+            )
+            secondary_relative_speed.append(
+                evaluation.relative_motion.secondary_relative_speed
+            )
             stop_reaction.append(
-                np.nan if evaluation.upper_stop_reaction is None else evaluation.upper_stop_reaction
+                np.nan
+                if evaluation.upper_stop_reaction is None
+                else evaluation.upper_stop_reaction
             )
 
     return LaunchTrace(
@@ -426,7 +460,13 @@ def _transition_state(result, record) -> NDArray[np.float64]:
     return np.asarray(record.post_transition_state, dtype=float)
 
 
-def plot_launch_trace(*, trace: LaunchTrace, result, constants: BajaTrialConstants, configuration: LaunchConfiguration):
+def plot_launch_trace(
+    *,
+    trace: LaunchTrace,
+    result,
+    constants: BajaTrialConstants,
+    configuration: LaunchConfiguration,
+):
     time = trace.time
     state = trace.state
     rpm_primary = state[0] * _RPM_PER_RADIAN_PER_SECOND
@@ -445,8 +485,12 @@ def plot_launch_trace(*, trace: LaunchTrace, result, constants: BajaTrialConstan
     shift_axis = axes[0, 1]
     shift_axis.plot(time, state[3] * 1.0e3, label=r"$s$")
     shift_axis.axhline(0.0, linestyle=":", label=r"$s_{\rm low}$")
-    shift_axis.axhline(constants.deadzone_shift * 1.0e3, linestyle="--", label=r"$s_{\rm engage}$")
-    shift_axis.axhline(constants.max_shift * 1.0e3, linestyle="--", label=r"$s_{\rm high}$")
+    shift_axis.axhline(
+        constants.deadzone_shift * 1.0e3, linestyle="--", label=r"$s_{\rm engage}$"
+    )
+    shift_axis.axhline(
+        constants.max_shift * 1.0e3, linestyle="--", label=r"$s_{\rm high}$"
+    )
     shift_axis.set_title("Shift coordinate and physical boundaries")
     shift_axis.set_xlabel("Time [s]")
     shift_axis.set_ylabel("Shift coordinate [mm]")
@@ -500,7 +544,9 @@ def plot_launch_trace(*, trace: LaunchTrace, result, constants: BajaTrialConstan
     lambda_axis = axes[1, 2]
     lambda_axis.plot(time, trace.primary_lambda, label=r"$\lambda_p$")
     lambda_axis.plot(time, trace.secondary_lambda, label=r"$\lambda_s$")
-    lambda_axis.axhline(configuration.static_lambda_limit, linestyle="--", label="static bounds")
+    lambda_axis.axhline(
+        configuration.static_lambda_limit, linestyle="--", label="static bounds"
+    )
     lambda_axis.axhline(-configuration.static_lambda_limit, linestyle="--")
     lambda_axis.set_title("Contact traction utilization")
     lambda_axis.set_xlabel("Time [s]")
@@ -567,7 +613,9 @@ def print_summary(
     final_rpm = result.final_state[:2] * _RPM_PER_RADIAN_PER_SECOND
     reasons = tuple(record.transition.reason for record in result.transitions)
     expected = {
-        "engagement": any("primary_closed_into_engaged_contact" in reason for reason in reasons),
+        "engagement": any(
+            "primary_closed_into_engaged_contact" in reason for reason in reasons
+        ),
         "upper stop": any("upper_stop_reached" in reason for reason in reasons),
     }
     print("\n" + "=" * 108)
@@ -604,7 +652,8 @@ def print_summary(
         f"final shift speed={result.final_state[4] * 1e3:+.5f} mm/s."
     )
     print(
-        "Expected sequence coverage: " + ", ".join(
+        "Expected sequence coverage: "
+        + ", ".join(
             f"{name}={'PASS' if observed else 'NOT OBSERVED'}"
             for name, observed in expected.items()
         )
@@ -612,7 +661,11 @@ def print_summary(
     if result.transitions:
         print("Transitions:")
         for record in result.transitions:
-            next_mode = "terminal" if record.transition.next_mode is None else _mode_label(record.transition.next_mode)
+            next_mode = (
+                "terminal"
+                if record.transition.next_mode is None
+                else _mode_label(record.transition.next_mode)
+            )
             print(
                 f"  t={record.time:.6f} s | events={','.join(record.fired_event_names)} | "
                 f"{record.transition.reason} -> {next_mode}"
@@ -652,7 +705,9 @@ def main() -> None:
         result=result,
         maximum_samples=configuration.diagnostic_samples,
     )
-    print_summary(result=result, trace=trace, configuration=configuration, tuning=tuning)
+    print_summary(
+        result=result, trace=trace, configuration=configuration, tuning=tuning
+    )
     figure = plot_launch_trace(
         trace=trace,
         result=result,

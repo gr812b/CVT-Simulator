@@ -235,9 +235,7 @@ class ClosureGains:
 
         _require_finite(factor=factor)
         return ClosureGains(
-            primary_angular_acceleration=(
-                factor * self.primary_angular_acceleration
-            ),
+            primary_angular_acceleration=(factor * self.primary_angular_acceleration),
             secondary_angular_acceleration=(
                 factor * self.secondary_angular_acceleration
             ),

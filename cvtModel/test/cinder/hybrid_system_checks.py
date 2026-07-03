@@ -47,7 +47,9 @@ class CVTInvariant(str, Enum):
     SHIFT_WITHIN_OPERATING_LIMITS = "shift_within_operating_limits"
     MODE_POSITION_DOMAIN = "mode_position_domain"
     DEADZONE_BELT_SECONDARY_SPEED_LOCK = "deadzone_belt_secondary_speed_lock"
-    DEADZONE_BELT_SECONDARY_ACCELERATION_LOCK = "deadzone_belt_secondary_acceleration_lock"
+    DEADZONE_BELT_SECONDARY_ACCELERATION_LOCK = (
+        "deadzone_belt_secondary_acceleration_lock"
+    )
     DEADZONE_PRIMARY_CONTACT_ABSENT = "deadzone_primary_contact_absent"
     LOWER_STOP_POSITION = "lower_stop_position"
     LOWER_STOP_KINEMATIC_CONSTRAINT = "lower_stop_kinematic_constraint"
@@ -94,7 +96,10 @@ class CVTSystemCheckSettings:
             ("shift_speed_tolerance", self.shift_speed_tolerance),
             ("shift_acceleration_tolerance", self.shift_acceleration_tolerance),
             ("deadzone_speed_lock_tolerance", self.deadzone_speed_lock_tolerance),
-            ("deadzone_acceleration_lock_tolerance", self.deadzone_acceleration_lock_tolerance),
+            (
+                "deadzone_acceleration_lock_tolerance",
+                self.deadzone_acceleration_lock_tolerance,
+            ),
             ("normal_resultant_tolerance", self.normal_resultant_tolerance),
             ("static_margin_tolerance", self.static_margin_tolerance),
             ("stick_acceleration_multiplier", self.stick_acceleration_multiplier),
@@ -162,9 +167,13 @@ class CVTSystemCheckReport:
         if self.minimum_static_margin is not None:
             lines.append(f"min static lambda margin: {self.minimum_static_margin:.6g}")
         if self.minimum_slip_dissipation is not None:
-            lines.append(f"min kinetic dissipation: {self.minimum_slip_dissipation:.6g} W")
+            lines.append(
+                f"min kinetic dissipation: {self.minimum_slip_dissipation:.6g} W"
+            )
         if self.minimum_stop_reaction is not None:
-            lines.append(f"min active stop reaction: {self.minimum_stop_reaction:.6g} N")
+            lines.append(
+                f"min active stop reaction: {self.minimum_stop_reaction:.6g} N"
+            )
         if self.maximum_closure_condition_number is not None:
             lines.append(
                 "max closure condition number: "
@@ -327,7 +336,8 @@ def _check_deadzone_sample(
         failures=failures,
     )
     _expect(
-        state.shift_position <= limits.engagement_shift + settings.shift_position_tolerance,
+        state.shift_position
+        <= limits.engagement_shift + settings.shift_position_tolerance,
         invariant=CVTInvariant.MODE_POSITION_DOMAIN,
         location=location,
         observed=state.shift_position,
@@ -357,7 +367,8 @@ def _check_deadzone_sample(
     )
     _expect(
         abs(evaluation.primary_normal_resultant) <= settings.normal_resultant_tolerance
-        and abs(evaluation.primary_transmitted_torque) <= settings.normal_resultant_tolerance,
+        and abs(evaluation.primary_transmitted_torque)
+        <= settings.normal_resultant_tolerance,
         invariant=CVTInvariant.DEADZONE_PRIMARY_CONTACT_ABSENT,
         location=location,
         observed=(
@@ -370,7 +381,8 @@ def _check_deadzone_sample(
 
     if mode.shift_constraint is CVTShiftConstraint.FREE:
         _expect(
-            state.shift_position >= limits.lower_stop_shift - settings.shift_position_tolerance,
+            state.shift_position
+            >= limits.lower_stop_shift - settings.shift_position_tolerance,
             invariant=CVTInvariant.MODE_POSITION_DOMAIN,
             location=location,
             observed=state.shift_position,
@@ -460,7 +472,8 @@ def _check_engaged_sample(
         failures=failures,
     )
     _expect(
-        state.shift_position >= limits.engagement_shift - settings.shift_position_tolerance,
+        state.shift_position
+        >= limits.engagement_shift - settings.shift_position_tolerance,
         invariant=CVTInvariant.MODE_POSITION_DOMAIN,
         location=location,
         observed=state.shift_position,
@@ -469,21 +482,27 @@ def _check_engaged_sample(
     )
     primary_normals.append(evaluation.normal_primary)
     secondary_normals.append(evaluation.normal_secondary)
-    closure_condition_numbers.append(evaluation.branch_result.trial.closure.condition_number)
+    closure_condition_numbers.append(
+        evaluation.branch_result.trial.closure.condition_number
+    )
     normal_floor = system.switching_settings.normal_resultant_floor
     _expect(
         evaluation.normal_primary >= normal_floor - settings.normal_resultant_tolerance
-        and evaluation.normal_secondary >= normal_floor - settings.normal_resultant_tolerance,
+        and evaluation.normal_secondary
+        >= normal_floor - settings.normal_resultant_tolerance,
         invariant=CVTInvariant.ENGAGED_NORMAL_FLOOR,
         location=location,
-        observed=(f"N_p={evaluation.normal_primary:.6g}, N_s={evaluation.normal_secondary:.6g}"),
+        observed=(
+            f"N_p={evaluation.normal_primary:.6g}, N_s={evaluation.normal_secondary:.6g}"
+        ),
         expected=f"both normals >= {normal_floor:g} (within check tolerance)",
         failures=failures,
     )
 
     if mode.shift_constraint is CVTShiftConstraint.FREE:
         _expect(
-            state.shift_position <= limits.upper_stop_shift + settings.shift_position_tolerance,
+            state.shift_position
+            <= limits.upper_stop_shift + settings.shift_position_tolerance,
             invariant=CVTInvariant.MODE_POSITION_DOMAIN,
             location=location,
             observed=state.shift_position,
@@ -511,7 +530,8 @@ def _check_engaged_sample(
         _expect(
             abs(state.shift_speed) <= settings.shift_speed_tolerance
             and abs(derivative.shift_position_rate) <= settings.shift_speed_tolerance
-            and abs(derivative.shift_acceleration) <= settings.shift_acceleration_tolerance,
+            and abs(derivative.shift_acceleration)
+            <= settings.shift_acceleration_tolerance,
             invariant=CVTInvariant.UPPER_STOP_KINEMATIC_CONSTRAINT,
             location=location,
             observed=(
@@ -547,7 +567,9 @@ def _check_engaged_sample(
         * system.solve_settings.contact_tolerances.stick_acceleration_tolerance
     )
     for interface in contact.mode.sticking_interfaces:
-        acceleration_residual = evaluation.relative_motion.relative_acceleration_at(interface)
+        acceleration_residual = evaluation.relative_motion.relative_acceleration_at(
+            interface
+        )
         _expect(
             abs(acceleration_residual) <= stick_tolerance,
             invariant=CVTInvariant.STICK_ACCELERATION_COMPATIBILITY,
@@ -556,7 +578,9 @@ def _check_engaged_sample(
             expected=f"abs(a_rel,{interface.value}) <= {stick_tolerance:g}",
             failures=failures,
         )
-        margin = evaluation.static_margin_at(interface, traction_law=system.traction_law)
+        margin = evaluation.static_margin_at(
+            interface, traction_law=system.traction_law
+        )
         static_margins.append(margin)
         _expect(
             margin >= -settings.static_margin_tolerance,
@@ -575,7 +599,9 @@ def _check_engaged_sample(
         direction_consistent,
         invariant=CVTInvariant.KINETIC_DIRECTION_CONSISTENCY,
         location=location,
-        observed="inconsistent" if contact.mode.slipping_interfaces else "not_applicable",
+        observed=(
+            "inconsistent" if contact.mode.slipping_interfaces else "not_applicable"
+        ),
         expected=(
             "all imposed kinetic slip directions consistent with established relative motion, "
             "or an exact re-stick zero-speed endpoint"
@@ -642,7 +668,9 @@ def _check_transition_resets(
             try:
                 snapshot = system.deadzone_evaluator.snapshot(state=state)
                 residual = snapshot.belt_secondary_speed_residual
-            except Exception as error:  # pragma: no cover - captures regression diagnostics.
+            except (
+                Exception
+            ) as error:  # pragma: no cover - captures regression diagnostics.
                 failures.append(
                     CVTInvariantViolation(
                         invariant=CVTInvariant.DISENGAGEMENT_CAPTURE_LOCK,
@@ -692,6 +720,7 @@ def _slip_directions_are_consistent_or_at_zero(
             return False
     return True
 
+
 def _kinetic_dissipation(
     *,
     evaluation: CVTContactEvaluation,
@@ -702,9 +731,14 @@ def _kinetic_dissipation(
     unknowns = evaluation.closure_unknowns
     relative_speed = evaluation.relative_motion.relative_speed_at(interface)
     if interface is ContactInterface.PRIMARY:
-        belt_force = unknowns.primary_torque / evaluation.snapshot.geometry.primary.effective
+        belt_force = (
+            unknowns.primary_torque / evaluation.snapshot.geometry.primary.effective
+        )
     elif interface is ContactInterface.SECONDARY:
-        belt_force = -unknowns.secondary_torque / evaluation.snapshot.geometry.secondary.effective
+        belt_force = (
+            -unknowns.secondary_torque
+            / evaluation.snapshot.geometry.secondary.effective
+        )
     else:  # pragma: no cover - enum exhaustiveness guard.
         raise ValueError(f"Unsupported contact interface: {interface!r}.")
     return -belt_force * relative_speed

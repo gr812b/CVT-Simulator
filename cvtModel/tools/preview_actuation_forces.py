@@ -106,16 +106,12 @@ def build_primary(parameters: PreviewParameters):
         CentrifugalPrimarySpec(
             centrifugal_ramp=CentrifugalRampForceSpec(
                 flyweight_mass=parameters.primary_flyweight_mass,
-                radius_at_zero_position=(
-                    parameters.primary_flyweight_radius_at_zero
-                ),
+                radius_at_zero_position=(parameters.primary_flyweight_radius_at_zero),
                 radial_displacement_profile=radial_profile,
             ),
             axial_spring=AxialSpringForceSpec(
                 stiffness=parameters.primary_spring_stiffness,
-                initial_compression=(
-                    parameters.primary_initial_spring_compression
-                ),
+                initial_compression=(parameters.primary_initial_spring_compression),
                 compression_per_axial_position=1.0,
             ),
         )
@@ -137,9 +133,7 @@ def build_secondary(parameters: PreviewParameters):
             (
                 linear_helix_segment(
                     length=parameters.secondary_travel,
-                    helix_angle_degrees=(
-                        parameters.secondary_helix_angle_degrees
-                    ),
+                    helix_angle_degrees=(parameters.secondary_helix_angle_degrees),
                 ),
             )
         ),
@@ -150,15 +144,11 @@ def build_secondary(parameters: PreviewParameters):
         spec=TorqueReactiveSecondarySpec(
             axial_spring=AxialSpringForceSpec(
                 stiffness=parameters.secondary_axial_spring_stiffness,
-                initial_compression=(
-                    parameters.secondary_initial_spring_compression
-                ),
+                initial_compression=(parameters.secondary_initial_spring_compression),
                 compression_per_axial_position=-1.0,
             ),
             helix_force=SecondaryHelixForceSpec(
-                torsional_stiffness=(
-                    parameters.secondary_torsional_stiffness
-                ),
+                torsional_stiffness=(parameters.secondary_torsional_stiffness),
                 initial_twist=parameters.secondary_initial_twist,
                 movable_sheave_rotational_inertia=(
                     parameters.secondary_movable_sheave_inertia
@@ -190,16 +180,11 @@ def secondary_state(
 ) -> SecondaryHelixActuationState:
     return SecondaryHelixActuationState(
         axial_position=axial_position,
-        axial_speed=(
-            kinematics.local_coordinate_slope
-            * kinematics.global_shift_speed
-        ),
+        axial_speed=(kinematics.local_coordinate_slope * kinematics.global_shift_speed),
         shaft_speed=radians_per_second_from_rpm(shaft_speed_rpm),
         global_shift_speed=kinematics.global_shift_speed,
         local_axial_coordinate_slope=kinematics.local_coordinate_slope,
-        local_axial_coordinate_curvature=(
-            kinematics.local_coordinate_curvature
-        ),
+        local_axial_coordinate_curvature=(kinematics.local_coordinate_curvature),
     )
 
 
@@ -432,8 +417,7 @@ def plot_force_maps(
             r"(fixed $\dot{s}$, $\dot{\omega}_s$, $\ddot{s}$)"
         ),
         x_label=(
-            r"Secondary local closing coordinate $x_s$ [mm] "
-            r"(negative = opening)"
+            r"Secondary local closing coordinate $x_s$ [mm] " r"(negative = opening)"
         ),
         y_label=r"Secondary torque $\tau_s$ [N m]",
     )
@@ -474,8 +458,7 @@ def plot_force_maps(
     )
 
     figure.suptitle(
-        "CINDER actuator preview: signed local force "
-        "(positive = pulley closing)"
+        "CINDER actuator preview: signed local force " "(positive = pulley closing)"
     )
     return figure, primary_surface, secondary_surface
 
@@ -522,18 +505,14 @@ def parse_args() -> argparse.Namespace:
         type=float,
         default=0.0,
         help=(
-            "Fixed alpha_s [rad/s²] used to evaluate the affine secondary "
-            "relation."
+            "Fixed alpha_s [rad/s²] used to evaluate the affine secondary " "relation."
         ),
     )
     parser.add_argument(
         "--shift-acceleration",
         type=float,
         default=0.0,
-        help=(
-            "Fixed s_ddot [m/s²] used to evaluate the affine secondary "
-            "relation."
-        ),
+        help=("Fixed s_ddot [m/s²] used to evaluate the affine secondary " "relation."),
     )
     parser.add_argument("--save", type=Path)
     parser.add_argument("--no-show", action="store_true")
@@ -543,9 +522,7 @@ def parse_args() -> argparse.Namespace:
     if args.primary_rpm_max <= 0.0:
         parser.error("--primary-rpm-max must be positive.")
     if args.secondary_torque_min >= args.secondary_torque_max:
-        parser.error(
-            "--secondary-torque-min must be below --secondary-torque-max."
-        )
+        parser.error("--secondary-torque-min must be below --secondary-torque-max.")
     if args.primary_travel_mm <= 0.0 or args.secondary_travel_mm <= 0.0:
         parser.error("Both travel values must be positive.")
     if args.samples < 3:
@@ -574,36 +551,22 @@ def main() -> None:
         secondary_torque_min=args.secondary_torque_min,
         secondary_torque_max=args.secondary_torque_max,
         secondary_kinematics=secondary_kinematics,
-        secondary_angular_acceleration=(
-            args.secondary_angular_acceleration
-        ),
+        secondary_angular_acceleration=(args.secondary_angular_acceleration),
         shift_acceleration=args.shift_acceleration,
         samples=args.samples,
     )
 
     print("Preview force ranges")
-    print(
-        "  primary: "
-        f"[{primary_surface.min():.1f}, {primary_surface.max():.1f}] N"
-    )
+    print("  primary: " f"[{primary_surface.min():.1f}, {primary_surface.max():.1f}] N")
     print(
         "  secondary: "
         f"[{secondary_surface.min():.1f}, {secondary_surface.max():.1f}] N"
     )
     print("Secondary preview kinematic slice")
     print(f"  s_dot: {secondary_kinematics.global_shift_speed:.6g} m/s")
-    print(
-        "  dx_s/ds: "
-        f"{secondary_kinematics.local_coordinate_slope:.6g}"
-    )
-    print(
-        "  d²x_s/ds²: "
-        f"{secondary_kinematics.local_coordinate_curvature:.6g} 1/m"
-    )
-    print(
-        "  alpha_s: "
-        f"{args.secondary_angular_acceleration:.6g} rad/s²"
-    )
+    print("  dx_s/ds: " f"{secondary_kinematics.local_coordinate_slope:.6g}")
+    print("  d²x_s/ds²: " f"{secondary_kinematics.local_coordinate_curvature:.6g} 1/m")
+    print("  alpha_s: " f"{args.secondary_angular_acceleration:.6g} rad/s²")
     print(f"  s_ddot: {args.shift_acceleration:.6g} m/s²")
 
     if args.save is not None:

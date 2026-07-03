@@ -252,7 +252,9 @@ def _kinetic_specification(
     )
 
 
-def _evaluate_mixed_reports(*, snapshot, settings, kinetic_utilization: float) -> tuple[MixedBranchReport, ...]:
+def _evaluate_mixed_reports(
+    *, snapshot, settings, kinetic_utilization: float
+) -> tuple[MixedBranchReport, ...]:
     primary_positive = _kinetic_specification(
         interface=ContactInterface.PRIMARY,
         direction=SlipDirection.PULLEY_LEADS_BELT,
@@ -320,7 +322,9 @@ def _evaluate_mixed_reports(*, snapshot, settings, kinetic_utilization: float) -
     return tuple(reports)
 
 
-def _evaluate_both_slip_reports(*, snapshot, kinetic_utilization: float, tolerances) -> tuple[BothSlipReport, ...]:
+def _evaluate_both_slip_reports(
+    *, snapshot, kinetic_utilization: float, tolerances
+) -> tuple[BothSlipReport, ...]:
     primary_directions = (
         SlipDirection.PULLEY_LEADS_BELT,
         SlipDirection.BELT_LEADS_PULLEY,
@@ -423,7 +427,14 @@ def _print_both_slip_reports(reports: tuple[BothSlipReport, ...]) -> None:
         )
 
 
-def _print_mixed_scan(*, snapshot, static_limit: float, kinetic_minimum: float, kinetic_maximum: float, samples: int) -> None:
+def _print_mixed_scan(
+    *,
+    snapshot,
+    static_limit: float,
+    kinetic_minimum: float,
+    kinetic_maximum: float,
+    samples: int,
+) -> None:
     print("\nMixed-branch kinetic-utilization scan")
     print("-" * 104)
     print(
@@ -463,9 +474,21 @@ def _print_mixed_scan(*, snapshot, static_limit: float, kinetic_minimum: float, 
     )
 
 
-def _print_scan_family(*, title: str, values: np.ndarray, static_limit: float, slip_factory: Callable[[float], KineticSlipSpecification], solve: Callable[[EngagedContactSolveSettings, KineticSlipSpecification], EngagedContactSolveResult]) -> None:
+def _print_scan_family(
+    *,
+    title: str,
+    values: np.ndarray,
+    static_limit: float,
+    slip_factory: Callable[[float], KineticSlipSpecification],
+    solve: Callable[
+        [EngagedContactSolveSettings, KineticSlipSpecification],
+        EngagedContactSolveResult,
+    ],
+) -> None:
     print(f"\n{title}")
-    print("  mu_k      lambda_p    lambda_s    a_rel,slip [m/s^2]  root  direction  static-bound")
+    print(
+        "  mu_k      lambda_p    lambda_s    a_rel,slip [m/s^2]  root  direction  static-bound"
+    )
     for value in values:
         settings = _settings(static_limit=static_limit)
         slip = slip_factory(float(value))

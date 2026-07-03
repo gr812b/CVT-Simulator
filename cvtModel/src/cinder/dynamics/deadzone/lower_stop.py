@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from math import isclose, isfinite
 
-from cinder.integration import CVTDynamicState, CVTDynamicStateDerivative
+from cinder.integration import CVTDynamicStateDerivative
 
 from .free import build_deadzone_free_derivative, require_known_primary_actuation
 from .result import DeadzoneEvaluation, LowerStopReaction
@@ -41,14 +41,18 @@ def evaluate_deadzone_lower_stop(
         rel_tol=0.0,
         abs_tol=1.0e-12,
     ):
-        raise ValueError("A lower-stop evaluation requires state.shift_position at lower_stop_shift.")
+        raise ValueError(
+            "A lower-stop evaluation requires state.shift_position at lower_stop_shift."
+        )
     if not isclose(
         snapshot.state.shift_speed,
         0.0,
         rel_tol=0.0,
         abs_tol=1.0e-12,
     ):
-        raise ValueError("A lower-stop evaluation requires zero shift_speed after impact projection.")
+        raise ValueError(
+            "A lower-stop evaluation requires zero shift_speed after impact projection."
+        )
 
     require_known_primary_actuation(snapshot=snapshot)
     free_derivative = build_deadzone_free_derivative(snapshot=snapshot)
