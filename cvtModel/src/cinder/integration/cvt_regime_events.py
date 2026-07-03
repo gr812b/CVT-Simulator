@@ -16,7 +16,6 @@ from numpy.typing import NDArray
 from .cvt_operating_limits import CVTShiftOperatingLimits
 from .hybrid import HybridEvent
 
-
 _BOUNDARY_REARM_TIME_SECONDS = 1.0e-6
 _BOUNDARY_REST_POSITION_TOLERANCE = 1.0e-12
 _BOUNDARY_REST_SPEED_TOLERANCE = 1.0e-12

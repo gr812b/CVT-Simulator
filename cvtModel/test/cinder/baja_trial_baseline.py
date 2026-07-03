@@ -56,7 +56,6 @@ from cinder.vehicle import (
     VehicleRoadLoadSpec,
 )
 
-
 INCH_TO_METRE: Final[float] = 0.0254
 FOOT_POUND_TO_NEWTON_METRE: Final[float] = 1.3558179483
 RPM_TO_RAD_PER_SECOND: Final[float] = 2.0 * 3.141592653589793 / 60.0

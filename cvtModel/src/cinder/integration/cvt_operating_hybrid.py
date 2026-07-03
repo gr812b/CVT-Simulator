@@ -59,7 +59,6 @@ from .hybrid import (
 )
 from .state import CVTDynamicState
 
-
 CVTRegimeEvaluation: TypeAlias = CVTContactEvaluation | DeadzoneEvaluation
 
 
