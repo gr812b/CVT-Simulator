@@ -1,0 +1,119 @@
+"""Mode-dependent event construction for the engaged CVT contact adapter."""
+
+from __future__ import annotations
+
+from enum import Enum
+from typing import Callable
+
+import numpy as np
+from numpy.typing import NDArray
+
+from cinder.contact import ContactInterface, ContactRegime, SlipDirection
+
+from .cvt_contact import CVTContactEvaluation
+from .hybrid import HybridEvent
+
+
+class CVTContactEvent(str, Enum):
+    """Named events understood by the engaged CVT transition resolver."""
+
+    PRIMARY_STATIC_CAPACITY = "primary_static_capacity"
+    SECONDARY_STATIC_CAPACITY = "secondary_static_capacity"
+    PRIMARY_RESTICK = "primary_restick"
+    SECONDARY_RESTICK = "secondary_restick"
+    PRIMARY_NORMAL_FLOOR = "primary_normal_floor"
+    SECONDARY_NORMAL_FLOOR = "secondary_normal_floor"
+    LOWER_SHIFT_STOP = "lower_shift_stop"
+    UPPER_SHIFT_STOP = "upper_shift_stop"
+
+
+def build_cvt_contact_events(
+    *,
+    regime: ContactRegime,
+    evaluate: Callable[[float, NDArray[np.float64]], CVTContactEvaluation],
+    traction_law,
+    switching_settings,
+    minimum_shift: float,
+    maximum_shift: float,
+) -> tuple[HybridEvent, ...]:
+    """Build only the events meaningful to the active engaged contact regime.
+
+    The physical travel stops are terminal guards until a dedicated constrained
+    stop-reaction branch is introduced. This prevents the free engaged model
+    from silently traversing a metal-on-metal limit or the unimplemented
+    deadzone below the configured lower stop.
+    """
+
+    events: list[HybridEvent] = [
+        HybridEvent(
+            name=CVTContactEvent.PRIMARY_NORMAL_FLOOR.value,
+            function=lambda time, vector: evaluate(time, vector).normal_primary
+            - switching_settings.normal_resultant_floor,
+            direction=-1.0,
+        ),
+        HybridEvent(
+            name=CVTContactEvent.SECONDARY_NORMAL_FLOOR.value,
+            function=lambda time, vector: evaluate(time, vector).normal_secondary
+            - switching_settings.normal_resultant_floor,
+            direction=-1.0,
+        ),
+        HybridEvent(
+            name=CVTContactEvent.LOWER_SHIFT_STOP.value,
+            function=lambda time, vector: float(vector[3] - minimum_shift),
+            direction=-1.0,
+        ),
+        HybridEvent(
+            name=CVTContactEvent.UPPER_SHIFT_STOP.value,
+            function=lambda time, vector: float(maximum_shift - vector[3]),
+            direction=-1.0,
+        ),
+    ]
+
+    for interface in regime.mode.sticking_interfaces:
+        event = (
+            CVTContactEvent.PRIMARY_STATIC_CAPACITY
+            if interface is ContactInterface.PRIMARY
+            else CVTContactEvent.SECONDARY_STATIC_CAPACITY
+        )
+        events.append(
+            HybridEvent(
+                name=event.value,
+                function=lambda time, vector, interface=interface: evaluate(
+                    time, vector
+                ).static_margin_at(
+                    interface,
+                    traction_law=traction_law,
+                )
+                - switching_settings.stick_exit_static_margin,
+                direction=-1.0,
+            )
+        )
+
+    for interface in regime.mode.slipping_interfaces:
+        restick_event = (
+            CVTContactEvent.PRIMARY_RESTICK
+            if interface is ContactInterface.PRIMARY
+            else CVTContactEvent.SECONDARY_RESTICK
+        )
+        direction_sign = _slip_direction_sign(regime.slip_direction_at(interface))
+        # A finite-speed transition into stick would silently leave a nonzero
+        # v_rel in a branch whose acceleration constraint merely preserves it.
+        # Therefore the terminal re-stick event is the exact crossing v_rel=0.
+        events.append(
+            HybridEvent(
+                name=restick_event.value,
+                function=lambda time, vector, interface=interface, direction_sign=direction_sign: direction_sign
+                * evaluate(time, vector).relative_motion.relative_speed_at(interface),
+                direction=-1.0,
+            )
+        )
+
+    return tuple(events)
+
+
+def _slip_direction_sign(direction: SlipDirection) -> float:
+    if direction is SlipDirection.BELT_LEADS_PULLEY:
+        return 1.0
+    if direction is SlipDirection.PULLEY_LEADS_BELT:
+        return -1.0
+    raise ValueError("A kinetic event requires a determinate slip direction.")

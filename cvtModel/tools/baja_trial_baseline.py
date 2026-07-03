@@ -1,7 +1,7 @@
-"""Baja-ish physical baseline for normal-resultant closure diagnostics.
+"""Baja-ish physical baseline for six-by-six trial diagnostics.
 
 This module intentionally centralizes the numerical values used by
-``preview_lambda_residual_map.py`` and its regression tests.  It is not yet a
+``preview_trial_six_by_six.py`` and its regression tests.  It is not yet a
 production vehicle configuration.  Values are tagged in comments as either:
 
 * legacy: copied from the previous simulator defaults supplied with this repo;
@@ -9,7 +9,8 @@ production vehicle configuration.  Values are tagged in comments as either:
 * placeholder: selected only because the old model did not provide a value.
 
 The test baseline uses a constant 30 degree primary radial ramp and a constant
-26 degree secondary helix, as requested.  The purpose is to exercise every normal-resultant closure row at credible\nscales before relying on a stick-lambda root solve.
+26 degree secondary helix, as requested.  The purpose is to exercise every
+six-by-six row at credible scales before the lambda root solver is introduced.
 """
 
 from __future__ import annotations
@@ -29,7 +30,9 @@ from cinder.actuation.forces import (
     CentrifugalRampForceSpec,
     SecondaryHelixForceSpec,
 )
-from cinder.dynamics import CVTDynamicState, CVTDynamicsModel, TrialFrictionUtilization
+from cinder.dynamics import CVTDynamicsModel
+from cinder.integration import CVTDynamicState
+from cinder.contact import ContactTractionUtilization
 from cinder.engine import EngineTorquePoint, FullThrottleTorqueCurve, TorqueCurveSpec
 from cinder.geometry import BeltPulleyGeometry, BeltPulleyGeometrySpec, BeltSectionSpec
 from cinder.inertia import (
@@ -125,23 +128,18 @@ class BajaTrialConstants:
     deadzone_shift_speed: float = 0.006  # m/s, deliberate nonzero test value
     secondary_shaft_angle: float = 250.0  # rad, arbitrary route position
 
-    # Contact diagnostics ----------------------------------------------------
-    static_utilization_limit: float = 0.65
-    # placeholder: retained from the previous lambda-map diagnostic until a
-    # model-owned static traction limit is introduced.
-
 
 @dataclass(frozen=True, slots=True)
 class BajaTrialBaseline:
-    """Fully assembled diagnostic model and engaged diagnostic states."""
+    """Fully assembled diagnostic model and two kinematically consistent states."""
 
     constants: BajaTrialConstants
     model: CVTDynamicsModel
     active_shift_state: CVTDynamicState
     quasi_static_state: CVTDynamicState
     deadzone_state: CVTDynamicState
-    default_trial: TrialFrictionUtilization
-    lambda_sweep: tuple[TrialFrictionUtilization, ...]
+    default_trial: ContactTractionUtilization
+    lambda_sweep: tuple[ContactTractionUtilization, ...]
 
 
 def build_baja_trial_baseline(
@@ -316,8 +314,6 @@ def build_baja_trial_baseline(
         road_profile=ConstantGradeRoadProfile(),
     )
 
-    # Deliberately beyond the deadzone: this is the default engaged
-    # fixed-ratio stick-stick diagnostic point.
     active_shift_position = c.deadzone_shift + 0.60 * (
         c.max_shift - c.deadzone_shift
     )
@@ -347,16 +343,16 @@ def build_baja_trial_baseline(
             shift_speed=c.deadzone_shift_speed,
             secondary_shaft_angle=c.secondary_shaft_angle,
         ),
-        default_trial=TrialFrictionUtilization(
+        default_trial=ContactTractionUtilization(
             primary_lambda=0.10,
             secondary_lambda=0.10,
         ),
         lambda_sweep=(
-            TrialFrictionUtilization(primary_lambda=0.05, secondary_lambda=0.05),
-            TrialFrictionUtilization(primary_lambda=0.10, secondary_lambda=0.10),
-            TrialFrictionUtilization(primary_lambda=0.15, secondary_lambda=0.10),
-            TrialFrictionUtilization(primary_lambda=0.10, secondary_lambda=0.15),
-            TrialFrictionUtilization(primary_lambda=0.20, secondary_lambda=0.20),
+            ContactTractionUtilization(primary_lambda=0.05, secondary_lambda=0.05),
+            ContactTractionUtilization(primary_lambda=0.10, secondary_lambda=0.10),
+            ContactTractionUtilization(primary_lambda=0.15, secondary_lambda=0.10),
+            ContactTractionUtilization(primary_lambda=0.10, secondary_lambda=0.15),
+            ContactTractionUtilization(primary_lambda=0.20, secondary_lambda=0.20),
         ),
     )
 

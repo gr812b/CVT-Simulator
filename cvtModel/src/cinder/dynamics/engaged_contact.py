@@ -172,6 +172,48 @@ class EngagedContactTrial:
 
 
 @dataclass(frozen=True, slots=True)
+class StickResidualContinuation:
+    """Local predictor state for consecutive stick-closure evaluations.
+
+    This is purely numerical continuation. It stores a previously converged
+    required-lambda point and a local residual Jacobian for one fixed contact
+    topology. A current state first takes one Newton prediction from that
+    point, validates the resulting contact residual directly, and falls back
+    to the existing bounded least-squares solve whenever the prediction is not
+    sufficiently accurate.
+    """
+
+    mode: EngagedContactMode
+    sticking_interfaces: tuple[ContactInterface, ...]
+    traction_utilization: ContactTractionUtilization
+    jacobian: NDArray[np.float64]
+
+    def __post_init__(self) -> None:
+        if self.mode is EngagedContactMode.BOTH_SLIP:
+            raise ValueError("Both-slip has no stick-residual continuation.")
+        expected = (len(self.sticking_interfaces), len(self.sticking_interfaces))
+        array = np.asarray(self.jacobian, dtype=float)
+        if array.shape != expected or not np.all(np.isfinite(array)):
+            raise ValueError("continuation jacobian shape must match sticking interfaces.")
+        if not np.all(np.isfinite(array)):
+            raise ValueError("continuation jacobian must be finite.")
+        if np.linalg.matrix_rank(array) < len(self.sticking_interfaces):
+            raise ValueError("continuation jacobian must be nonsingular.")
+        frozen = np.array(array, dtype=float, copy=True)
+        frozen.setflags(write=False)
+        object.__setattr__(self, "jacobian", frozen)
+
+    @classmethod
+    def from_result(cls, result: "EngagedContactSolveResult") -> "StickResidualContinuation":
+        return cls(
+            mode=result.mode,
+            sticking_interfaces=result.sticking_interfaces,
+            traction_utilization=result.traction_utilization,
+            jacobian=result.jacobian,
+        )
+
+
+@dataclass(frozen=True, slots=True)
 class EngagedContactSolveResult:
     """Outcome of the shared bounded 1D/2D required-static-lambda solver."""
 
@@ -384,6 +426,7 @@ class EngagedContactClosure:
         fixed_lambdas: Mapping[ContactInterface, float],
         fixed_slip_specifications: tuple[KineticSlipSpecification, ...],
         settings: EngagedContactSolveSettings,
+        continuation: StickResidualContinuation | None = None,
     ) -> EngagedContactSolveResult:
         """Run the one reusable bounded root solve for 2D or 1D stick closure.
 
@@ -442,6 +485,21 @@ class EngagedContactClosure:
             return trial.relative_motion.acceleration_residual_vector(
                 sticking_interfaces
             )
+
+        predicted = _try_continuation_prediction(
+            continuation=continuation,
+            mode=mode,
+            free_interfaces=free_interfaces,
+            lower=lower,
+            upper=upper,
+            utilization_from_free_values=utilization_from_free_values,
+            residual_vector=residual_vector,
+            closure=self,
+            settings=settings,
+            fixed_slip_specifications=fixed_slip_specifications,
+        )
+        if predicted is not None:
+            return predicted
 
         # Three-point central differences sample small plus/minus lambda
         # perturbations. That costs a few extra tiny closure solves but
@@ -510,6 +568,7 @@ class EngagedContactClosure:
         self,
         *,
         settings: EngagedContactSolveSettings,
+        continuation: StickResidualContinuation | None = None,
     ) -> EngagedContactSolveResult:
         """Solve the two lambdas required for simultaneous stick compatibility."""
 
@@ -519,6 +578,7 @@ class EngagedContactClosure:
             fixed_lambdas={},
             fixed_slip_specifications=(),
             settings=settings,
+            continuation=continuation,
         )
 
     def solve_primary_slip_secondary_stick(
@@ -526,6 +586,7 @@ class EngagedContactClosure:
         *,
         primary_slip: KineticSlipSpecification,
         settings: EngagedContactSolveSettings,
+        continuation: StickResidualContinuation | None = None,
     ) -> EngagedContactSolveResult:
         """Fix primary kinetic lambda and solve secondary stick residual only."""
 
@@ -536,6 +597,7 @@ class EngagedContactClosure:
             fixed_lambdas={ContactInterface.PRIMARY: primary_slip.signed_lambda},
             fixed_slip_specifications=(primary_slip,),
             settings=settings,
+            continuation=continuation,
         )
 
     def solve_primary_stick_secondary_slip(
@@ -543,6 +605,7 @@ class EngagedContactClosure:
         *,
         secondary_slip: KineticSlipSpecification,
         settings: EngagedContactSolveSettings,
+        continuation: StickResidualContinuation | None = None,
     ) -> EngagedContactSolveResult:
         """Fix secondary kinetic lambda and solve primary stick residual only."""
 
@@ -553,6 +616,7 @@ class EngagedContactClosure:
             fixed_lambdas={ContactInterface.SECONDARY: secondary_slip.signed_lambda},
             fixed_slip_specifications=(secondary_slip,),
             settings=settings,
+            continuation=continuation,
         )
 
     def evaluate_both_slip(
@@ -639,6 +703,108 @@ def evaluate_both_slip(
         secondary_slip=secondary_slip,
         contact_tolerances=contact_tolerances,
         maximum_closure_condition_number=maximum_closure_condition_number,
+    )
+
+
+def _try_continuation_prediction(
+    *,
+    continuation: StickResidualContinuation | None,
+    mode: EngagedContactMode,
+    free_interfaces: tuple[ContactInterface, ...],
+    lower: NDArray[np.float64],
+    upper: NDArray[np.float64],
+    utilization_from_free_values,
+    residual_vector,
+    closure: EngagedContactClosure,
+    settings: EngagedContactSolveSettings,
+    fixed_slip_specifications: tuple[KineticSlipSpecification, ...],
+) -> EngagedContactSolveResult | None:
+    """Attempt one bounded Newton correction from a compatible prior solve."""
+
+    if continuation is None:
+        return None
+    if (
+        continuation.mode is not mode
+        or continuation.sticking_interfaces != free_interfaces
+        or continuation.jacobian.shape != (len(free_interfaces), len(free_interfaces))
+    ):
+        return None
+
+    previous = np.asarray(
+        [
+            continuation.traction_utilization.primary_lambda
+            if interface is ContactInterface.PRIMARY
+            else continuation.traction_utilization.secondary_lambda
+            for interface in free_interfaces
+        ],
+        dtype=float,
+    )
+    if np.any(previous < lower) or np.any(previous > upper):
+        return None
+
+    try:
+        residual_before = residual_vector(previous)
+        correction = np.linalg.solve(continuation.jacobian, residual_before)
+    except (ArithmeticError, np.linalg.LinAlgError):
+        return None
+
+    candidate = np.clip(previous - correction, lower, upper)
+    if np.any(np.isclose(candidate, lower, rtol=0.0, atol=1.0e-14)) or np.any(
+        np.isclose(candidate, upper, rtol=0.0, atol=1.0e-14)
+    ):
+        return None
+
+    utilization = utilization_from_free_values(candidate)
+    try:
+        trial = closure.evaluate_trial(
+            traction_utilization=utilization,
+            maximum_closure_condition_number=settings.maximum_closure_condition_number,
+        )
+    except (ArithmeticError, ValueError, RuntimeError):
+        return None
+    residual_after = trial.relative_motion.acceleration_residual_vector(free_interfaces)
+    if not trial.relative_motion.are_stick_compatible(
+        free_interfaces,
+        tolerances=settings.contact_tolerances,
+    ):
+        return None
+
+    step = candidate - previous
+    denominator = float(step @ step)
+    jacobian = np.asarray(continuation.jacobian, dtype=float)
+    if denominator > 0.0:
+        # Good Broyden update preserves a useful local derivative estimate
+        # without spending four additional closure evaluations on central
+        # finite differences after every successful continuation step.
+        jacobian = jacobian + np.outer(
+            residual_after - residual_before - jacobian @ step,
+            step,
+        ) / denominator
+    if np.linalg.matrix_rank(jacobian) < len(free_interfaces):
+        jacobian = np.asarray(continuation.jacobian, dtype=float)
+
+    active_lower, active_upper = _active_bounds(
+        utilization=utilization,
+        bounds=settings.lambda_search_bounds,
+        interfaces=free_interfaces,
+    )
+    return EngagedContactSolveResult(
+        mode=mode,
+        trial=trial,
+        sticking_interfaces=free_interfaces,
+        fixed_slip_specifications=fixed_slip_specifications,
+        settings=settings,
+        optimizer_success=True,
+        optimizer_status=1,
+        optimizer_message="accepted bounded continuation Newton correction",
+        function_evaluations=2,
+        optimizer_cost=0.5 * float(residual_after @ residual_after),
+        jacobian=jacobian,
+        jacobian_determinant=float(np.linalg.det(jacobian)),
+        jacobian_condition_number=float(np.linalg.cond(jacobian)),
+        active_lower_bounds=active_lower,
+        active_upper_bounds=active_upper,
+        accepted=True,
     )
 
 

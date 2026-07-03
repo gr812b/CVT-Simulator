@@ -6,6 +6,7 @@ from .lambda_law import (
     StaticLambdaAssessment,
 )
 from .mode import EngagedContactMode
+from .regime import ContactRegime
 from .relative_motion import (
     ContactInterface,
     ContactRelativeMotion,
@@ -20,6 +21,7 @@ from .utilization import ContactTractionUtilization
 __all__ = [
     "ContactInterface",
     "ContactKinematicTolerances",
+    "ContactRegime",
     "ContactRelativeMotion",
     "ContactTractionLaw",
     "ContactTractionUtilization",
