@@ -136,6 +136,31 @@ class CVTDynamicStateDerivative:
         )
 
     @classmethod
+    def from_upper_shift_stop_closure(
+        cls,
+        *,
+        state: CVTDynamicState,
+        unknowns: "ClosureUnknowns",
+    ) -> "CVTDynamicStateDerivative":
+        """Convert an engaged upper-stop closure into ODE derivatives.
+
+        The closure's fourth row already enforces ``s_ddot = 0``.  This
+        factory also sets ``s_dot = 0`` explicitly in the derivative so a
+        constrained integration segment cannot inherit a tiny nonzero shift
+        velocity from numerical stage arithmetic.  Event transitions must
+        still project the state itself to the stop with ``shift_speed = 0``.
+        """
+
+        return cls(
+            primary_angular_acceleration=unknowns.primary_angular_acceleration,
+            secondary_angular_acceleration=unknowns.secondary_angular_acceleration,
+            belt_acceleration=unknowns.belt_acceleration,
+            shift_position_rate=0.0,
+            shift_acceleration=0.0,
+            secondary_shaft_angle_rate=state.secondary_angular_speed,
+        )
+
+    @classmethod
     def from_vector(cls, values: ArrayLike) -> "CVTDynamicStateDerivative":
         """Reconstruct the named derivative from one six-entry ODE vector."""
 

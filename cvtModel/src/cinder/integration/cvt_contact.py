@@ -25,6 +25,7 @@ from cinder.dynamics.engaged_contact import (
     StickResidualContinuation,
 )
 from cinder.dynamics.snapshot import CVTDynamicsModel, DynamicsSnapshot
+from cinder.dynamics.shift_constraints import EngagedShiftConstraint
 
 from .state import CVTDynamicState, CVTDynamicStateDerivative
 
@@ -40,6 +41,11 @@ class CVTContactEvaluation:
     state: CVTDynamicState
     snapshot: DynamicsSnapshot
     branch_result: EngagedContactSolveResult | BothSlipResult
+    shift_constraint: EngagedShiftConstraint = EngagedShiftConstraint.FREE
+
+    def __post_init__(self) -> None:
+        if not isinstance(self.shift_constraint, EngagedShiftConstraint):
+            raise TypeError("shift_constraint must be an EngagedShiftConstraint.")
 
     @property
     def mode(self) -> EngagedContactMode:
@@ -68,6 +74,14 @@ class CVTContactEvaluation:
         if isinstance(self.branch_result, EngagedContactSolveResult):
             return self.branch_result.closure.unknowns
         return self.branch_result.trial.closure.unknowns
+
+    @property
+    def upper_stop_reaction(self) -> float | None:
+        """Return the recovered high-ratio stop reaction when constrained."""
+
+        if isinstance(self.branch_result, EngagedContactSolveResult):
+            return self.branch_result.trial.upper_stop_reaction
+        return self.branch_result.trial.upper_stop_reaction
 
     @property
     def normal_primary(self) -> float:
@@ -144,9 +158,17 @@ class EngagedCVTContactEvaluator:
     model: CVTDynamicsModel
     traction_law: ContactTractionLaw
     solve_settings: EngagedContactSolveSettings
-    _cache_key: tuple[float, tuple[float, ...], ContactRegime] | None = None
+    _cache_key: tuple[
+        float,
+        tuple[float, ...],
+        ContactRegime,
+        EngagedShiftConstraint,
+    ] | None = None
     _cache_value: CVTContactEvaluation | None = None
-    _continuations: dict[ContactRegime, StickResidualContinuation] = field(
+    _continuations: dict[
+        tuple[ContactRegime, EngagedShiftConstraint],
+        StickResidualContinuation,
+    ] = field(
         default_factory=dict,
         init=False,
         repr=False,
@@ -166,13 +188,21 @@ class EngagedCVTContactEvaluator:
         time: float,
         vector: NDArray[np.float64],
         regime: ContactRegime,
+        shift_constraint: EngagedShiftConstraint = EngagedShiftConstraint.FREE,
     ) -> CVTContactEvaluation:
         """Evaluate the selected branch from the generic integration vector."""
 
         if not isfinite(time):
             raise ValueError("time must be finite.")
+        if not isinstance(shift_constraint, EngagedShiftConstraint):
+            raise TypeError("shift_constraint must be an EngagedShiftConstraint.")
         state = CVTDynamicState.from_vector(vector)
-        key = (float(time), tuple(float(value) for value in state.as_vector()), regime)
+        key = (
+            float(time),
+            tuple(float(value) for value in state.as_vector()),
+            regime,
+            shift_constraint,
+        )
         if key == self._cache_key and self._cache_value is not None:
             return self._cache_value
 
@@ -185,9 +215,13 @@ class EngagedCVTContactEvaluator:
         # a substitute for the future stop-reaction model.
         snapshot_state = self._geometry_safe_state(state)
         snapshot = self.model.snapshot(state=snapshot_state)
-        closure = EngagedContactClosure(snapshot=snapshot)
-        solve_settings = self._continuation_settings_for(regime)
-        continuation = self._continuations.get(regime)
+        closure = EngagedContactClosure(
+            snapshot=snapshot,
+            shift_constraint=shift_constraint,
+        )
+        continuation_key = (regime, shift_constraint)
+        solve_settings = self._continuation_settings_for(continuation_key)
+        continuation = self._continuations.get(continuation_key)
         if regime.mode is EngagedContactMode.STICK_STICK:
             result = closure.solve_stick_stick(
                 settings=solve_settings,
@@ -238,6 +272,7 @@ class EngagedCVTContactEvaluator:
             state=state,
             snapshot=snapshot,
             branch_result=result,
+            shift_constraint=shift_constraint,
         )
         if isinstance(result, EngagedContactSolveResult) and result.accepted:
             # The required lambdas vary smoothly while an ODE segment remains
@@ -246,7 +281,7 @@ class EngagedCVTContactEvaluator:
             # condition or branch physics. This continuation cache is essential
             # for practical long transient runs, where repeatedly starting each
             # stick solve from a global zero guess is unnecessarily expensive.
-            self._continuations[regime] = StickResidualContinuation.from_result(result)
+            self._continuations[continuation_key] = StickResidualContinuation.from_result(result)
         self._cache_key = key
         self._cache_value = evaluation
         return evaluation
@@ -262,7 +297,7 @@ class EngagedCVTContactEvaluator:
 
     def _continuation_settings_for(
         self,
-        regime: ContactRegime,
+        key: tuple[ContactRegime, EngagedShiftConstraint],
     ) -> EngagedContactSolveSettings:
         """Return solve settings warm-started from this regime's last root.
 
@@ -270,7 +305,7 @@ class EngagedCVTContactEvaluator:
         fallback source for a new regime or an inadmissible previous trial.
         """
 
-        continuation = self._continuations.get(regime)
+        continuation = self._continuations.get(key)
         if continuation is None:
             return self.solve_settings
         guess = continuation.traction_utilization
@@ -284,6 +319,7 @@ class EngagedCVTContactEvaluator:
         time: float,
         vector: NDArray[np.float64],
         regime: ContactRegime,
+        shift_constraint: EngagedShiftConstraint = EngagedShiftConstraint.FREE,
     ) -> NDArray[np.float64]:
         """Return the six CINDER derivatives for the active contact regime."""
 
@@ -291,6 +327,7 @@ class EngagedCVTContactEvaluator:
             time=time,
             vector=vector,
             regime=regime,
+            shift_constraint=shift_constraint,
         ).state_derivative.as_vector()
 
     def classify_initial_regime(

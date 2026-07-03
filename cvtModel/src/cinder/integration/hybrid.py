@@ -59,22 +59,44 @@ class HybridEvent:
 
 @dataclass(frozen=True, slots=True)
 class HybridTransition(Generic[ModeT]):
-    """One transition decision emitted after one or more terminal events."""
+    """One transition decision emitted after one or more terminal events.
+
+    ``successor_state`` is an optional explicit post-event state.  It keeps
+    impact, capture, and constraint projections out of a continuous RHS while
+    remaining generic: the hybrid runner neither knows nor assumes why a
+    domain system changed the state.
+    """
 
     next_mode: ModeT | None
     reason: str
     metadata: Mapping[str, Any] = field(default_factory=dict)
+    successor_state: ArrayLike | None = None
 
     def __post_init__(self) -> None:
         if not self.reason:
             raise ValueError("HybridTransition.reason must be non-empty.")
         object.__setattr__(self, "metadata", dict(self.metadata))
+        if self.successor_state is not None:
+            state = np.asarray(self.successor_state, dtype=float)
+            if state.ndim != 1 or state.size == 0 or not np.all(np.isfinite(state)):
+                raise ValueError(
+                    "HybridTransition.successor_state must be a non-empty finite vector."
+                )
+            frozen = np.array(state, dtype=float, copy=True)
+            frozen.setflags(write=False)
+            object.__setattr__(self, "successor_state", frozen)
 
     @property
     def terminates(self) -> bool:
         """Return whether this transition intentionally ends the run."""
 
         return self.next_mode is None
+
+    @property
+    def has_successor_state(self) -> bool:
+        """Return whether the transition explicitly projected/reset the state."""
+
+        return self.successor_state is not None
 
 
 class HybridSystem(Protocol[ModeT]):
@@ -176,18 +198,30 @@ class HybridSegment(Generic[ModeT]):
 
 @dataclass(frozen=True, slots=True)
 class HybridTransitionRecord(Generic[ModeT]):
-    """Immutable mode-change or intentional-stop record."""
+    """Immutable mode-change or intentional-stop record.
+
+    ``post_transition_state`` is recorded separately because a reset can make
+    the state discontinuous at one time instant. Segment histories retain the
+    pre-event solution produced by ``solve_ivp``; consumers that need impact
+    data should inspect this record rather than silently losing the jump.
+    """
 
     time: float
     previous_mode: ModeT
     fired_event_names: tuple[str, ...]
     transition: HybridTransition[ModeT]
+    post_transition_state: NDArray[np.float64]
 
     def __post_init__(self) -> None:
         if not isfinite(self.time):
             raise ValueError("transition time must be finite.")
         if not self.fired_event_names:
             raise ValueError("transition record requires at least one event name.")
+        state = _immutable_vector(
+            self.post_transition_state,
+            name="HybridTransitionRecord.post_transition_state",
+        )
+        object.__setattr__(self, "post_transition_state", state)
 
 
 @dataclass(frozen=True, slots=True)
@@ -211,6 +245,10 @@ class HybridIntegrationResult(Generic[ModeT]):
 
     @property
     def final_state(self) -> NDArray[np.float64]:
+        """Return the latest physical state, including a terminal reset if present."""
+
+        if self.transitions and self.transitions[-1].time == self.final_time:
+            return self.transitions[-1].post_transition_state
         values = np.array(self.segments[-1].state[:, -1], dtype=float, copy=True)
         values.setflags(write=False)
         return values
@@ -320,12 +358,26 @@ def integrate_hybrid(
             transition=transition,
         )
         segments.append(segment)
+        endpoint_state = np.asarray(segment.state[:, -1], dtype=float)
+        if transition.successor_state is None:
+            successor_state = np.array(endpoint_state, dtype=float, copy=True)
+        else:
+            successor_state = _mutable_vector(
+                transition.successor_state,
+                name="HybridTransition.successor_state",
+            )
+            if successor_state.size != current_state.size:
+                raise ValueError(
+                    "HybridTransition.successor_state must match the integrated state size."
+                )
+
         transitions.append(
             HybridTransitionRecord(
                 time=segment.end_time,
                 previous_mode=current_mode,
                 fired_event_names=event_names,
                 transition=transition,
+                post_transition_state=successor_state,
             )
         )
 
@@ -336,14 +388,15 @@ def integrate_hybrid(
                 completed=False,
                 termination_reason=transition.reason,
             )
-        if transition.next_mode == current_mode:
+        if transition.next_mode == current_mode and transition.successor_state is None:
             raise RuntimeError(
-                "Hybrid transition returned the exact active mode after a terminal "
-                "event. Return a distinct re-armed/disarmed mode or terminate."
+                "Hybrid transition returned the exact active mode without a state reset "
+                "after a terminal event. Return a distinct mode, provide successor_state, "
+                "or terminate."
             )
 
         current_time = segment.end_time
-        current_state = np.array(segment.state[:, -1], dtype=float, copy=True)
+        current_state = successor_state
         current_mode = transition.next_mode
 
     raise RuntimeError(

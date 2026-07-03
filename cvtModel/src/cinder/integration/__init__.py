@@ -16,10 +16,21 @@ from .hybrid import (
     integrate_hybrid,
 )
 from .cvt_shift_limits import EngagedShiftTravelLimits
+from .cvt_lower_stop import (
+    apply_perfectly_inelastic_lower_stop_impact,
+    lower_stop_release_value,
+)
+from .cvt_upper_stop import (
+    apply_perfectly_inelastic_upper_stop_impact,
+    upper_stop_release_value,
+)
 from .state import CVTDynamicState, CVTDynamicStateDerivative
 
 __all__ = [
+    "lower_stop_release_value",
+    "apply_perfectly_inelastic_lower_stop_impact",
     "CVTDynamicState",
+    "apply_perfectly_inelastic_upper_stop_impact",
     "EngagedShiftTravelLimits",
     "CVTDynamicStateDerivative",
     "HybridEvent",
@@ -30,4 +41,5 @@ __all__ = [
     "HybridTransition",
     "HybridTransitionRecord",
     "integrate_hybrid",
+    "upper_stop_release_value",
 ]

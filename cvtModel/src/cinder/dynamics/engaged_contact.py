@@ -47,6 +47,10 @@ from cinder.dynamics.state_fixed_equations import (
     StateFixedEquationBlock,
     build_state_fixed_equations,
 )
+from cinder.dynamics.shift_constraints import (
+    EngagedShiftConstraint,
+    recover_upper_stop_reaction,
+)
 
 _DEFAULT_OPTIMIZER_TOLERANCE: Final[float] = 1.0e-12
 _DEFAULT_MAXIMUM_FUNCTION_EVALUATIONS: Final[int] = 100
@@ -163,12 +167,29 @@ class EngagedContactSolveSettings:
 
 @dataclass(frozen=True, slots=True)
 class EngagedContactTrial:
-    """One fixed-lambda closure solve plus shared contact kinematics."""
+    """One fixed-lambda closure solve plus shared contact kinematics.
+
+    ``upper_stop_reaction`` is populated only when the fourth closure row is
+    the high-ratio constraint ``s_ddot = 0``.  It is the recovered unilateral
+    reaction, not an extra closure unknown.
+    """
 
     traction_utilization: ContactTractionUtilization
     closure: TrialClosureResult
     relative_motion: ContactRelativeMotion
     state_derivative: CVTDynamicStateDerivative
+    shift_constraint: EngagedShiftConstraint
+    upper_stop_reaction: float | None = None
+
+    def __post_init__(self) -> None:
+        if not isinstance(self.shift_constraint, EngagedShiftConstraint):
+            raise TypeError("shift_constraint must be an EngagedShiftConstraint.")
+        if self.shift_constraint is EngagedShiftConstraint.FREE:
+            if self.upper_stop_reaction is not None:
+                raise ValueError("free shift must not carry an upper-stop reaction.")
+            return
+        if self.upper_stop_reaction is None or not isfinite(self.upper_stop_reaction):
+            raise ValueError("upper-stop trial requires a finite recovered reaction.")
 
 
 @dataclass(frozen=True, slots=True)
@@ -374,18 +395,28 @@ class BothSlipResult:
 
 @dataclass(frozen=True, slots=True)
 class EngagedContactClosure:
-    """State-frozen common trial evaluator with five lambda-independent rows cached once."""
+    """State-frozen common evaluator for free engaged shift or the upper stop.
+
+    Both constraints retain the same eight unknowns and the same outer lambda
+    branch solvers.  Only the fourth lambda-independent row changes.
+    """
 
     snapshot: DynamicsSnapshot
+    shift_constraint: EngagedShiftConstraint = EngagedShiftConstraint.FREE
     fixed_equations: StateFixedEquationBlock = field(init=False)
 
     def __post_init__(self) -> None:
         if not isinstance(self.snapshot, DynamicsSnapshot):
             raise TypeError("snapshot must be a DynamicsSnapshot instance.")
+        if not isinstance(self.shift_constraint, EngagedShiftConstraint):
+            raise TypeError("shift_constraint must be an EngagedShiftConstraint.")
         object.__setattr__(
             self,
             "fixed_equations",
-            build_state_fixed_equations(snapshot=self.snapshot),
+            build_state_fixed_equations(
+                snapshot=self.snapshot,
+                shift_constraint=self.shift_constraint,
+            ),
         )
 
     def evaluate_trial(
@@ -404,6 +435,22 @@ class EngagedContactClosure:
             fixed_equations=self.fixed_equations,
             trial_context=context,
         ).solve(maximum_condition_number=maximum_closure_condition_number)
+        if self.shift_constraint is EngagedShiftConstraint.FREE:
+            state_derivative = CVTDynamicStateDerivative.from_engaged_closure(
+                state=self.snapshot.state,
+                unknowns=closure.unknowns,
+            )
+            upper_stop_reaction = None
+        else:
+            state_derivative = CVTDynamicStateDerivative.from_upper_shift_stop_closure(
+                state=self.snapshot.state,
+                unknowns=closure.unknowns,
+            )
+            upper_stop_reaction = recover_upper_stop_reaction(
+                snapshot=self.snapshot,
+                unknowns=closure.unknowns,
+            ).opening_direction_magnitude
+
         return EngagedContactTrial(
             traction_utilization=traction_utilization,
             closure=closure,
@@ -412,10 +459,9 @@ class EngagedContactClosure:
                 geometry=self.snapshot.geometry,
                 unknowns=closure.unknowns,
             ),
-            state_derivative=CVTDynamicStateDerivative.from_engaged_closure(
-                state=self.snapshot.state,
-                unknowns=closure.unknowns,
-            ),
+            state_derivative=state_derivative,
+            shift_constraint=self.shift_constraint,
+            upper_stop_reaction=upper_stop_reaction,
         )
 
     def solve_bounded_stick_residuals(
@@ -654,10 +700,14 @@ def solve_stick_stick(
     *,
     snapshot: DynamicsSnapshot,
     settings: EngagedContactSolveSettings,
+    shift_constraint: EngagedShiftConstraint = EngagedShiftConstraint.FREE,
 ) -> EngagedContactSolveResult:
     """Convenience wrapper for an engaged state known to be stick--stick."""
 
-    return EngagedContactClosure(snapshot=snapshot).solve_stick_stick(settings=settings)
+    return EngagedContactClosure(
+        snapshot=snapshot,
+        shift_constraint=shift_constraint,
+    ).solve_stick_stick(settings=settings)
 
 
 def solve_primary_slip_secondary_stick(
@@ -665,10 +715,14 @@ def solve_primary_slip_secondary_stick(
     snapshot: DynamicsSnapshot,
     primary_slip: KineticSlipSpecification,
     settings: EngagedContactSolveSettings,
+    shift_constraint: EngagedShiftConstraint = EngagedShiftConstraint.FREE,
 ) -> EngagedContactSolveResult:
     """Convenience wrapper for the primary-slip/secondary-stick branch."""
 
-    return EngagedContactClosure(snapshot=snapshot).solve_primary_slip_secondary_stick(
+    return EngagedContactClosure(
+        snapshot=snapshot,
+        shift_constraint=shift_constraint,
+    ).solve_primary_slip_secondary_stick(
         primary_slip=primary_slip,
         settings=settings,
     )
@@ -679,10 +733,14 @@ def solve_primary_stick_secondary_slip(
     snapshot: DynamicsSnapshot,
     secondary_slip: KineticSlipSpecification,
     settings: EngagedContactSolveSettings,
+    shift_constraint: EngagedShiftConstraint = EngagedShiftConstraint.FREE,
 ) -> EngagedContactSolveResult:
     """Convenience wrapper for the primary-stick/secondary-slip branch."""
 
-    return EngagedContactClosure(snapshot=snapshot).solve_primary_stick_secondary_slip(
+    return EngagedContactClosure(
+        snapshot=snapshot,
+        shift_constraint=shift_constraint,
+    ).solve_primary_stick_secondary_slip(
         secondary_slip=secondary_slip,
         settings=settings,
     )
@@ -695,10 +753,14 @@ def evaluate_both_slip(
     secondary_slip: KineticSlipSpecification,
     contact_tolerances: ContactKinematicTolerances = ContactKinematicTolerances(),
     maximum_closure_condition_number: float | None = None,
+    shift_constraint: EngagedShiftConstraint = EngagedShiftConstraint.FREE,
 ) -> BothSlipResult:
     """Convenience wrapper for the direct both-slip branch evaluation."""
 
-    return EngagedContactClosure(snapshot=snapshot).evaluate_both_slip(
+    return EngagedContactClosure(
+        snapshot=snapshot,
+        shift_constraint=shift_constraint,
+    ).evaluate_both_slip(
         primary_slip=primary_slip,
         secondary_slip=secondary_slip,
         contact_tolerances=contact_tolerances,

@@ -33,15 +33,16 @@ def build_cvt_contact_events(
     evaluate: Callable[[float, NDArray[np.float64]], CVTContactEvaluation],
     traction_law,
     switching_settings,
-    minimum_shift: float,
-    maximum_shift: float,
+    minimum_shift: float | None = None,
+    maximum_shift: float | None = None,
+    include_shift_boundary_events: bool = True,
 ) -> tuple[HybridEvent, ...]:
     """Build only the events meaningful to the active engaged contact regime.
 
-    The physical travel stops are terminal guards until a dedicated constrained
-    stop-reaction branch is introduced. This prevents the free engaged model
-    from silently traversing a metal-on-metal limit or the unimplemented
-    deadzone below the configured lower stop.
+    ``include_shift_boundary_events`` preserves the existing engaged-only
+    adapter behavior.  The operating-regime adapter disables those two legacy
+    guards and supplies its own geometry events, because upper-stop arrival is
+    now a real constrained continuation rather than a terminal failure.
     """
 
     events: list[HybridEvent] = [
@@ -57,17 +58,27 @@ def build_cvt_contact_events(
             - switching_settings.normal_resultant_floor,
             direction=-1.0,
         ),
-        HybridEvent(
-            name=CVTContactEvent.LOWER_SHIFT_STOP.value,
-            function=lambda time, vector: float(vector[3] - minimum_shift),
-            direction=-1.0,
-        ),
-        HybridEvent(
-            name=CVTContactEvent.UPPER_SHIFT_STOP.value,
-            function=lambda time, vector: float(maximum_shift - vector[3]),
-            direction=-1.0,
-        ),
     ]
+    if include_shift_boundary_events:
+        if minimum_shift is None or maximum_shift is None:
+            raise ValueError(
+                "minimum_shift and maximum_shift are required when "
+                "include_shift_boundary_events is true."
+            )
+        events.extend(
+            (
+                HybridEvent(
+                    name=CVTContactEvent.LOWER_SHIFT_STOP.value,
+                    function=lambda time, vector: float(vector[3] - minimum_shift),
+                    direction=-1.0,
+                ),
+                HybridEvent(
+                    name=CVTContactEvent.UPPER_SHIFT_STOP.value,
+                    function=lambda time, vector: float(maximum_shift - vector[3]),
+                    direction=-1.0,
+                ),
+            )
+        )
 
     for interface in regime.mode.sticking_interfaces:
         event = (

@@ -9,6 +9,8 @@ from typing import TYPE_CHECKING, Iterable
 import numpy as np
 from numpy.typing import NDArray
 
+from cinder.dynamics.shift_constraints import EngagedShiftConstraint
+
 from cinder.contact import (
     ContactInterface,
     ContactRegime,
@@ -133,6 +135,7 @@ def resolve_cvt_contact_transition(
     old_regime: ContactRegime,
     fired_event_names: tuple[str, ...],
     switching_settings: CVTContactSwitchSettings,
+    shift_constraint: EngagedShiftConstraint = EngagedShiftConstraint.FREE,
 ) -> HybridTransition[ContactRegime]:
     """Resolve a terminal engaged-contact event using its physical cause.
 
@@ -141,6 +144,9 @@ def resolve_cvt_contact_transition(
     constrained sticking branch.  Every candidate is re-evaluated with the
     existing branch solver before it is accepted.
     """
+
+    if not isinstance(shift_constraint, EngagedShiftConstraint):
+        raise TypeError("shift_constraint must be an EngagedShiftConstraint.")
 
     fired = {CVTContactEvent(name) for name in fired_event_names}
     if CVTContactEvent.LOWER_SHIFT_STOP in fired:
@@ -174,6 +180,7 @@ def resolve_cvt_contact_transition(
             old_regime=old_regime,
             restick_interfaces=restick_interfaces,
             switching_settings=switching_settings,
+            shift_constraint=shift_constraint,
         )
         if candidate is not None:
             return HybridTransition(
@@ -188,6 +195,7 @@ def resolve_cvt_contact_transition(
             old_regime=old_regime,
             zero_crossing_interfaces=restick_interfaces,
             switching_settings=switching_settings,
+            shift_constraint=shift_constraint,
         )
         if continuation is None:
             return HybridTransition(
@@ -212,6 +220,7 @@ def resolve_cvt_contact_transition(
             old_regime=old_regime,
             capacity_interfaces=capacity_interfaces,
             switching_settings=switching_settings,
+            shift_constraint=shift_constraint,
         )
         if candidate is None:
             return HybridTransition(
@@ -234,6 +243,7 @@ def _select_capacity_loss_candidate(
     old_regime: ContactRegime,
     capacity_interfaces: tuple[ContactInterface, ...],
     switching_settings: CVTContactSwitchSettings,
+    shift_constraint: EngagedShiftConstraint,
 ) -> ContactRegime | None:
     """Choose the least-relaxed direction-consistent kinetic successor.
 
@@ -253,6 +263,7 @@ def _select_capacity_loss_candidate(
             switching_settings=switching_settings,
             required_static_margin=switching_settings.stick_exit_static_margin,
             require_outgoing_directions=True,
+            shift_constraint=shift_constraint,
         )
 
     if old_regime.mode is EngagedContactMode.STICK_STICK:
@@ -306,6 +317,7 @@ def _select_zero_crossing_kinetic_continuation(
     old_regime: ContactRegime,
     zero_crossing_interfaces: tuple[ContactInterface, ...],
     switching_settings: CVTContactSwitchSettings,
+    shift_constraint: EngagedShiftConstraint,
 ) -> ContactRegime | None:
     """Select outgoing Coulomb direction(s) when stick remains unavailable."""
 
@@ -349,6 +361,7 @@ def _select_zero_crossing_kinetic_continuation(
         switching_settings=switching_settings,
         required_static_margin=switching_settings.stick_exit_static_margin,
         require_outgoing_directions=True,
+        shift_constraint=shift_constraint,
     )
 
 
@@ -359,6 +372,7 @@ def _select_restick_candidate(
     old_regime: ContactRegime,
     restick_interfaces: tuple[ContactInterface, ...],
     switching_settings: CVTContactSwitchSettings,
+    shift_constraint: EngagedShiftConstraint,
 ) -> ContactRegime | None:
     """Attempt only topology-tightening candidates after a velocity event."""
 
@@ -393,6 +407,7 @@ def _select_restick_candidate(
         switching_settings=switching_settings,
         required_static_margin=switching_settings.restick_static_margin,
         require_outgoing_directions=False,
+        shift_constraint=shift_constraint,
     )
 
 
@@ -404,6 +419,7 @@ def _best_admissible_candidate(
     switching_settings: CVTContactSwitchSettings,
     required_static_margin: float,
     require_outgoing_directions: bool,
+    shift_constraint: EngagedShiftConstraint,
 ) -> ContactRegime | None:
     accepted: list[tuple[float, ContactRegime]] = []
     for candidate in candidates:
@@ -411,6 +427,7 @@ def _best_admissible_candidate(
             time=0.0,
             vector=vector,
             regime=candidate,
+            shift_constraint=shift_constraint,
         )
         if not _candidate_is_admissible(
             evaluation,
