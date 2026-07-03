@@ -16,7 +16,7 @@ six-by-six row at credible scales before the lambda root solver is introduced.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from math import radians
+from math import isfinite, radians
 from typing import Final
 
 from cinder.actuation import (
@@ -61,6 +61,7 @@ from cinder.vehicle import (
 INCH_TO_METRE: Final[float] = 0.0254
 FOOT_POUND_TO_NEWTON_METRE: Final[float] = 1.3558179483
 RPM_TO_RAD_PER_SECOND: Final[float] = 2.0 * 3.141592653589793 / 60.0
+WATTS_PER_MECHANICAL_HORSEPOWER: Final[float] = 745.6998715822702
 
 
 @dataclass(frozen=True, slots=True)
@@ -106,6 +107,23 @@ class BajaTrialConstants:
     secondary_compression_spring_rate: float = 3_532.0  # legacy N/m
     secondary_spring_initial_compression: float = 0.1
     # legacy default retained; verify its intended unit/preload against hardware.
+
+    # Engine ---------------------------------------------------------------
+    # The supplied positive running points below are the legacy full-throttle
+    # Baja map.  Their PCHIP interpolation remains below the competition's
+    # 10 hp limit; do not add a hard P = tau*omega clamp inside CINDER.
+    #
+    # Above the 4000 rpm governed end of that map, the existing torque-curve
+    # implementation smoothly transitions from 0 N m to a finite negative
+    # *governed net torque*.  This represents throttle closure by the governor
+    # plus pumping/friction losses when the vehicle drives the engine faster
+    # than its permitted WOT operating range.  It is intentionally a tunable
+    # sensitivity assumption, not a measured coast-down curve.
+    engine_power_limit_hp: float = 10.0
+    engine_low_speed_braking_torque: float = -5.0
+    engine_low_speed_braking_peak_rpm: float = 500.0
+    engine_governed_overspeed_torque: float = -28.0
+    engine_governed_overspeed_transition_width_rpm: float = 1500.0
 
     # Inertia ---------------------------------------------------------------
     engine_rotational_inertia: float = 0.1  # legacy kg m^2
@@ -312,12 +330,25 @@ def build_baja_trial_baseline(
                     (4000.0, 0.0),
                 )
             ),
-            low_speed_braking_torque=-5.0,
-            low_speed_braking_peak_speed=500.0 * RPM_TO_RAD_PER_SECOND,
-            high_speed_braking_torque=-5.0,
-            high_speed_braking_transition_width=500.0 * RPM_TO_RAD_PER_SECOND,
-            # placeholder tails: old model bounded net torque at -5 N m.
+            low_speed_braking_torque=c.engine_low_speed_braking_torque,
+            low_speed_braking_peak_speed=(
+                c.engine_low_speed_braking_peak_rpm * RPM_TO_RAD_PER_SECOND
+            ),
+            high_speed_braking_torque=c.engine_governed_overspeed_torque,
+            high_speed_braking_transition_width=(
+                c.engine_governed_overspeed_transition_width_rpm
+                * RPM_TO_RAD_PER_SECOND
+            ),
+            # The generic PCHIP tail therefore gives an increasing-magnitude
+            # negative governed torque from 4000 rpm to 5500 rpm, then a
+            # bounded -28 N m plateau.  No generic engine-source edit is
+            # needed to express this curve.
         )
+    )
+
+    _validate_full_throttle_power_limit(
+        engine=engine,
+        power_limit_hp=c.engine_power_limit_hp,
     )
 
     road_load = RoadLoadModel(
@@ -381,6 +412,39 @@ def build_baja_trial_baseline(
             ContactTractionUtilization(primary_lambda=0.20, secondary_lambda=0.20),
         ),
     )
+
+
+
+def _validate_full_throttle_power_limit(
+    *,
+    engine: FullThrottleTorqueCurve,
+    power_limit_hp: float,
+) -> None:
+    """Reject a positive WOT curve that exceeds the diagnostic Baja cap.
+
+    The check samples only the supplied positive-torque operating range.  It
+    deliberately does *not* alter the curve, so the ODE still sees a smooth
+    PCHIP mapping rather than a solver-facing ``min(P/omega)`` kink.
+    """
+
+    if not isfinite(power_limit_hp) or power_limit_hp <= 0.0:
+        raise ValueError("engine_power_limit_hp must be finite and positive.")
+
+    maximum_power_w = max(
+        max(engine.evaluate(angular_speed), 0.0) * angular_speed
+        for angular_speed in (
+            engine.minimum_speed
+            + (engine.maximum_speed - engine.minimum_speed) * index / 1000.0
+            for index in range(1001)
+        )
+    )
+    limit_w = power_limit_hp * WATTS_PER_MECHANICAL_HORSEPOWER
+    if maximum_power_w > limit_w * (1.0 + 1.0e-9):
+        raise ValueError(
+            "Supplied positive full-throttle torque map exceeds the configured "
+            f"{power_limit_hp:.6g} hp cap: {maximum_power_w / WATTS_PER_MECHANICAL_HORSEPOWER:.4f} hp."
+        )
+
 
 
 def _no_slip_state_at_shift(
