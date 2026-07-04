@@ -1,0 +1,19 @@
+{
+  "name": "linear_slow_reference",
+  "purpose": "Archived prior slow-shift reference before circular-primary exploration.",
+  "candidate": {
+    "flyweight_mass_kg": 0.55,
+    "helix_angle_degrees": 20.0,
+    "secondary_torsional_pretension_degrees": 140.0,
+    "secondary_compression_preload_mm": 70.0,
+    "primary_ramp_kind": "linear",
+    "primary_ramp_angle_degrees": 30.0
+  },
+  "integration": {
+    "duration_s": 10.0,
+    "solver_method": "LSODA",
+    "max_step_ms": 10.0,
+    "relative_tolerance": 3e-05,
+    "absolute_tolerance": 1e-07
+  }
+}

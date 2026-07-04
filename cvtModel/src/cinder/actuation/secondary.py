@@ -4,8 +4,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from cinder.profiles.helix import HelixProfile
-
 from .forces import (
     AxialSpringForce,
     AxialSpringForceSpec,
@@ -20,11 +18,14 @@ class TorqueReactiveSecondarySpec:
     """
     Secondary clamping-force parameters.
 
-    The helix geometry is intentionally not stored here. ``HelixProfile`` is
-    independent physical geometry shared by the local clamping force and later
-    secondary rotational-row assembly. The movable sheave inertia is part of
-    ``SecondaryHelixForceSpec`` because it affects the actual torque reaching
-    the helix before that torque is converted to clamp force.
+    Helix geometry is intentionally not stored here. ``CVTDynamicsModel`` owns
+    the one physical ``HelixProfile``, evaluates it once per snapshot, and
+    supplies that evaluated kinematics object to the secondary helix force.
+    The authoritative movable-sheave inertia belongs to ``SecondaryInertia``.
+    ``CVTDynamicsModel.snapshot()`` passes that one value into the helix force
+    state so the helix relation and secondary rotational row stay synchronized.
+    ``SecondaryHelixForceSpec`` may retain a legacy consistency value, but it
+    is not the source used by a full dynamics snapshot.
     """
 
     axial_spring: AxialSpringForceSpec
@@ -34,20 +35,17 @@ class TorqueReactiveSecondarySpec:
 def build_torque_reactive_secondary(
     *,
     spec: TorqueReactiveSecondarySpec,
-    helix_profile: HelixProfile,
 ) -> PulleyActuator:
     """
     Build the secondary as one normal ``PulleyActuator``.
 
     The returned actuator sums direct axial-spring force and the
-    inertia-inclusive torque-reactive helix force. It has no special secondary
-    wrapper or result type.
+    inertia-inclusive torque-reactive helix force. It has no helix geometry of
+    its own; snapshot construction supplies the one shared helix evaluation to
+    the force law at runtime.
     """
 
     return PulleyActuator(
         AxialSpringForce(spec.axial_spring),
-        SecondaryHelixForce(
-            spec=spec.helix_force,
-            helix_profile=helix_profile,
-        ),
+        SecondaryHelixForce(spec=spec.helix_force),
     )

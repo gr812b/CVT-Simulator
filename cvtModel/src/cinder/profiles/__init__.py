@@ -2,6 +2,7 @@ from .circular_segment import CircularSegment
 from .helix import (
     HelixProfile,
     HelixSample,
+    HelixShiftKinematics,
     circular_helix_segment,
     linear_helix_segment,
 )
@@ -14,6 +15,7 @@ __all__ = [
     "CircularSegment",
     "HelixProfile",
     "HelixSample",
+    "HelixShiftKinematics",
     "LinearSegment",
     "PiecewiseRamp",
     "ProfileSample",

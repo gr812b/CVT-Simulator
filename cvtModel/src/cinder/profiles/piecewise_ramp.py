@@ -24,6 +24,11 @@ class PiecewiseRamp(ScalarProfile):
 
     At an exact segment junction, evaluate() uses the segment on the left.
     This is deterministic and permits designed slope/curvature discontinuities.
+
+    TODO: physical actuator and helix profiles that feed acceleration-level
+    dynamics should eventually opt into C1, and where curvature is used C2,
+    continuity checks. This generic profile container intentionally remains
+    permissive for CAD/design work for now.
     """
 
     def __init__(self, segments: Iterable[RampSegment] = ()) -> None:

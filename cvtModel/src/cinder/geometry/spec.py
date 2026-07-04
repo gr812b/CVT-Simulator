@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from math import inf, isfinite, nextafter, pi, tan
+from math import isfinite, pi, tan
 
 from .belt_length import (
     solve_center_distance,
@@ -117,6 +117,22 @@ class BeltPulleyGeometrySpec:
             self.secondary_outer_radius_at_zero_shift - self.belt.cord_depth_from_outer
         )
 
+        # The belt outer surface cannot be resolved to a radius below the full
+        # belt height: that would place part of the physical belt cross-section
+        # at or through the pulley axis.  The primary radius only grows with the
+        # present shift convention, so its zero-shift outer radius is its minimum.
+        minimum_outer_radius = self.belt.height
+
+        if self.primary_outer_radius_at_zero_shift < minimum_outer_radius:
+            raise ValueError(
+                "primary_outer_radius_at_zero_shift must be at least the belt height."
+            )
+
+        if self.secondary_outer_radius_at_zero_shift < minimum_outer_radius:
+            raise ValueError(
+                "secondary_outer_radius_at_zero_shift must be at least the belt height."
+            )
+
         if primary_effective_radius <= 0.0:
             raise ValueError("primary outer radius must exceed cord depth.")
 
@@ -145,16 +161,17 @@ class BeltPulleyGeometrySpec:
             self.belt_outer_length / pi - primary_outer_radius_at_max_shift,
         )
 
-        if setup_upper_bound <= 0.0:
-            raise ValueError(
-                "max_shift drives the primary radius beyond the reachable "
-                "belt-pulley geometry."
-            )
+        # The secondary outer radius must remain large enough to contain the
+        # full belt height.  This is stronger than merely keeping the cord-line
+        # radius positive and prevents the construction-time root solve from
+        # wandering into a geometrically meaningless tiny-radius solution.
+        setup_lower_bound = minimum_outer_radius
 
-        # Zero is the physical limiting lower bound. The solver requires a
-        # strictly positive radius, so use the nearest representable float
-        # above zero rather than an arbitrary engineering offset.
-        setup_lower_bound = nextafter(0.0, inf)
+        if setup_upper_bound < setup_lower_bound:
+            raise ValueError(
+                "max_shift drives the secondary radius below the minimum "
+                "physical outer radius set by the belt height."
+            )
 
         secondary_outer_radius_at_max_shift = solve_secondary_outer_radius(
             belt_length=self.belt_outer_length,

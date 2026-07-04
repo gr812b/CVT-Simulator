@@ -13,8 +13,8 @@ from .secondary import (
     resolve_secondary_inertia,
 )
 from .shift import (
-    ShiftTranslationMasses,
-    resolve_shift_translation_masses,
+    AxialTranslationMasses,
+    resolve_axial_translation_masses,
 )
 from .vehicle import VehicleInertia
 
@@ -30,29 +30,33 @@ class DrivetrainInertias:
 
 @dataclass(frozen=True, slots=True)
 class ResolvedInertias:
-    """
-    Fixed quantities ready for the dynamic equations.
+    """Fixed quantities ready for the dynamic equations.
 
-    ``shift`` stores physical translation masses only. Its generalized mass
-    and coordinate-curvature coefficient are evaluated from live geometry
-    on each RHS call.
+    ``axial_translation`` stores literal primary, secondary, and belt
+    translation masses. Their coordinate mappings are evaluated from live
+    geometry on each RHS call.
     """
 
     primary: PrimaryInertia
     secondary: ResolvedSecondaryInertia
     belt: ResolvedBeltMass
-    shift: ShiftTranslationMasses
+    axial_translation: AxialTranslationMasses
 
 
 def resolve_inertias(
     *,
     drivetrain: DrivetrainInertias,
-    vehicle: VehicleInertia,
-    final_drive: FinalDriveInertiaMap,
     belt_section: TrapezoidalBeltSection,
     belt_outer_length: float,
+    vehicle: VehicleInertia | None = None,
+    final_drive: FinalDriveInertiaMap | None = None,
 ) -> ResolvedInertias:
-    """Resolve physical constants that do not depend on the live shift state."""
+    """Resolve physical constants independent of the live shift state.
+
+    Preferred new usage omits ``vehicle`` and ``final_drive`` so that vehicle
+    inertia is supplied by a secondary attachment.  Supplying both preserves
+    the old fixed-reflection construction path for compatibility.
+    """
 
     belt = drivetrain.belt.resolve(
         belt_section=belt_section,
@@ -67,9 +71,9 @@ def resolve_inertias(
             final_drive=final_drive,
         ),
         belt=belt,
-        shift=resolve_shift_translation_masses(
-            primary_moving_sheave_mass=(drivetrain.primary.moving_sheave_mass),
-            secondary_moving_sheave_mass=(drivetrain.secondary.moving_sheave_mass),
+        axial_translation=resolve_axial_translation_masses(
+            primary_moving_sheave_mass=drivetrain.primary.moving_sheave_mass,
+            secondary_moving_sheave_mass=drivetrain.secondary.moving_sheave_mass,
             belt_mass=belt.mass,
         ),
     )

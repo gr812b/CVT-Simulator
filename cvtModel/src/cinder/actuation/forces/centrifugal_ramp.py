@@ -23,6 +23,12 @@ class CentrifugalRampForceSpec:
     The local axial force is:
 
         F = m_f omega^2 r_f(x) d(Delta_r_f)/dx.
+
+    This is the present quasi-static flyweight approximation: it keeps the
+    centrifugal generalized force but omits flyweight radial-motion inertia,
+    state-dependent flyweight rotational inertia, and their shift-acceleration
+    coupling. TODO: add those terms only when flyweight motion is promoted to
+    an explicit dynamic subsystem.
     """
 
     flyweight_mass: float
@@ -37,7 +43,7 @@ class CentrifugalRampForceSpec:
 
 
 class CentrifugalRampForce:
-    """Known centrifugal axial-force contribution of a primary ramp."""
+    """Known quasi-static centrifugal axial-force contribution of a primary ramp."""
 
     def __init__(self, spec: CentrifugalRampForceSpec) -> None:
         self._spec = spec

@@ -72,9 +72,7 @@ def align_zero_levels(
     """Align the displayed zero levels of two twinned vertical axes."""
 
     reference_minimum, reference_maximum = reference_axis.get_ylim()
-    zero_fraction = -reference_minimum / (
-        reference_maximum - reference_minimum
-    )
+    zero_fraction = -reference_minimum / (reference_maximum - reference_minimum)
 
     target_minimum = min(float(np.min(target_values)), 0.0)
     target_maximum = max(float(np.max(target_values)), 0.0)
@@ -83,9 +81,7 @@ def align_zero_levels(
         target_maximum,
         -target_minimum * (1.0 - zero_fraction) / zero_fraction,
     )
-    aligned_minimum = (
-        -aligned_maximum * zero_fraction / (1.0 - zero_fraction)
-    )
+    aligned_minimum = -aligned_maximum * zero_fraction / (1.0 - zero_fraction)
 
     target_axis.set_ylim(aligned_minimum, aligned_maximum)
 
@@ -111,9 +107,7 @@ def main() -> None:
     )
     power_values = angular_speed_values * torque_values
 
-    measured_rpm = np.array(
-        [point[0] for point in _BRIGGS_WOT_POINTS_RPM_FT_LBF]
-    )
+    measured_rpm = np.array([point[0] for point in _BRIGGS_WOT_POINTS_RPM_FT_LBF])
     measured_torque = np.array(
         [
             foot_pound_force_to_newton_meter(point[1])

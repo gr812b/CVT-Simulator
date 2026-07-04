@@ -1,4 +1,4 @@
-"""Secondary-side physical inertia data and fixed-drive reflection."""
+"""Secondary-side physical inertia data and optional legacy vehicle reflection."""
 
 from __future__ import annotations
 
@@ -10,7 +10,7 @@ from .vehicle import VehicleInertia
 
 
 class FinalDriveInertiaMap(Protocol):
-    """The two fixed-drive reflections needed by the secondary inertia."""
+    """The two fixed-drive reflections needed by the legacy secondary inertia."""
 
     def secondary_inertia_from_vehicle_mass(
         self,
@@ -29,15 +29,15 @@ class FinalDriveInertiaMap(Protocol):
 
 @dataclass(frozen=True, slots=True)
 class SecondaryInertia:
-    """
-    Fixed secondary-side physical properties.
+    """Fixed CVT-side physical secondary inertia data.
 
     ``fixed_rotational_inertia`` covers components rigidly attached directly to
     the secondary shaft. ``gearbox_input_rotational_inertia`` is the gearbox
     input-side inertia seen directly at that shaft.
 
     The movable sheave is stored separately because it has both absolute
-    secondary rotation and relative helix rotation.
+    secondary rotation and relative helix rotation.  Vehicle and wheel inertia
+    are normally supplied later by a downstream secondary attachment.
     """
 
     fixed_rotational_inertia: float
@@ -64,16 +64,18 @@ class SecondaryInertia:
 
 @dataclass(frozen=True, slots=True)
 class SecondaryFixedInertia:
-    """
-    The fixed-side secondary inertia I_s,F, with its full breakdown.
+    """The resolved fixed-side secondary inertia breakdown.
 
-    I_s,F = I_sec,F + I_gb + (I_wheel + m r_w^2) / G^2.
+    New CINDER assembly leaves the vehicle and driven-wheel terms at zero and
+    supplies them through ``LockedFinalDriveVehicle``.  The fields are retained
+    for compatibility with legacy callers that still resolve vehicle reflection
+    into the CINDER core.
     """
 
     secondary_fixed_rotational_inertia: float
     gearbox_input_rotational_inertia: float
-    driven_wheel_rotational_inertia: float
-    vehicle_translational_inertia: float
+    driven_wheel_rotational_inertia: float = 0.0
+    vehicle_translational_inertia: float = 0.0
 
     @property
     def total(self) -> float:
@@ -87,12 +89,10 @@ class SecondaryFixedInertia:
 
 @dataclass(frozen=True, slots=True)
 class ResolvedSecondaryInertia:
-    """
-    Secondary rotational constants used by the two secondary equations.
+    """Secondary rotational constants supplied by the CVT core.
 
-    ``fixed_side.total`` is I_s,F. The coefficient of secondary angular
-    acceleration in the secondary rotational balance is
-    ``absolute_rotation_inertia`` = I_s,F + I_M.
+    ``fixed_side.total`` is the core fixed-side inertia in new assembly.  The
+    secondary attachment contributes any downstream inertia at RHS evaluation.
     """
 
     fixed_side: SecondaryFixedInertia
@@ -100,33 +100,51 @@ class ResolvedSecondaryInertia:
 
     @property
     def absolute_rotation_inertia(self) -> float:
+        """Return fixed-side plus movable-sheave absolute rotation inertia."""
+
         return self.fixed_side.total + self.movable_sheave_rotational_inertia
 
 
 def resolve_secondary_inertia(
     *,
     secondary: SecondaryInertia,
-    vehicle: VehicleInertia,
-    final_drive: FinalDriveInertiaMap,
+    vehicle: VehicleInertia | None = None,
+    final_drive: FinalDriveInertiaMap | None = None,
 ) -> ResolvedSecondaryInertia:
-    """Resolve all constant secondary-side rotational coefficients once."""
+    """Resolve constant secondary-side inertia coefficients.
+
+    Passing neither ``vehicle`` nor ``final_drive`` produces the preferred
+    CVT-core-only inertia.  Passing both preserves the former reflected-vehicle
+    behavior for compatibility while callers migrate to a downstream
+    attachment.  Passing only one is rejected because it would hide an
+    incomplete physical coupling.
+    """
+
+    if (vehicle is None) != (final_drive is None):
+        raise ValueError(
+            "vehicle and final_drive must either both be supplied or both be omitted."
+        )
+
+    driven_wheel_rotational_inertia = 0.0
+    vehicle_translational_inertia = 0.0
+    if vehicle is not None and final_drive is not None:
+        driven_wheel_rotational_inertia = (
+            final_drive.secondary_inertia_from_wheel_rotation(
+                wheel_rotational_inertia=vehicle.wheel_rotational_inertia,
+            )
+        )
+        vehicle_translational_inertia = final_drive.secondary_inertia_from_vehicle_mass(
+            vehicle_mass=vehicle.mass,
+        )
 
     fixed_side = SecondaryFixedInertia(
-        secondary_fixed_rotational_inertia=(secondary.fixed_rotational_inertia),
-        gearbox_input_rotational_inertia=(secondary.gearbox_input_rotational_inertia),
-        driven_wheel_rotational_inertia=(
-            final_drive.secondary_inertia_from_wheel_rotation(
-                wheel_rotational_inertia=(vehicle.wheel_rotational_inertia),
-            )
-        ),
-        vehicle_translational_inertia=(
-            final_drive.secondary_inertia_from_vehicle_mass(
-                vehicle_mass=vehicle.mass,
-            )
-        ),
+        secondary_fixed_rotational_inertia=secondary.fixed_rotational_inertia,
+        gearbox_input_rotational_inertia=secondary.gearbox_input_rotational_inertia,
+        driven_wheel_rotational_inertia=driven_wheel_rotational_inertia,
+        vehicle_translational_inertia=vehicle_translational_inertia,
     )
 
     return ResolvedSecondaryInertia(
         fixed_side=fixed_side,
-        movable_sheave_rotational_inertia=(secondary.movable_sheave_rotational_inertia),
+        movable_sheave_rotational_inertia=secondary.movable_sheave_rotational_inertia,
     )

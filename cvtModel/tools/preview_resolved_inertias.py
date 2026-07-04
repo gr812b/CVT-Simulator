@@ -88,26 +88,48 @@ def print_fixed_inertias(inertias: object) -> None:
     shift_masses = inertias.shift
 
     print("\nFIXED ROTATIONAL INERTIAS [kg m^2]")
-    print(f"  primary engine inertia                 {primary.engine_rotational_inertia: .8f}")
-    print(f"  primary CVT inertia                    {primary.cvt_rotational_inertia: .8f}")
+    print(
+        f"  primary engine inertia                 {primary.engine_rotational_inertia: .8f}"
+    )
+    print(
+        f"  primary CVT inertia                    {primary.cvt_rotational_inertia: .8f}"
+    )
     print(f"  I_p = engine + primary CVT             {primary.rotational_inertia: .8f}")
-    print(f"  secondary fixed-sheave inertia         {fixed.secondary_fixed_rotational_inertia: .8f}")
-    print(f"  gearbox input inertia                  {fixed.gearbox_input_rotational_inertia: .8f}")
-    print(f"  driven-wheel inertia @ secondary       {fixed.driven_wheel_rotational_inertia: .8f}")
-    print(f"  vehicle translation @ secondary        {fixed.vehicle_translational_inertia: .8f}")
+    print(
+        f"  secondary fixed-sheave inertia         {fixed.secondary_fixed_rotational_inertia: .8f}"
+    )
+    print(
+        f"  gearbox input inertia                  {fixed.gearbox_input_rotational_inertia: .8f}"
+    )
+    print(
+        f"  driven-wheel inertia @ secondary       {fixed.driven_wheel_rotational_inertia: .8f}"
+    )
+    print(
+        f"  vehicle translation @ secondary        {fixed.vehicle_translational_inertia: .8f}"
+    )
     print(f"  I_s,F = fixed secondary-side total     {fixed.total: .8f}")
-    print(f"  movable secondary sheave I_M           {secondary.movable_sheave_rotational_inertia: .8f}")
-    print(f"  I_s,F + I_M                            {secondary.absolute_rotation_inertia: .8f}")
+    print(
+        f"  movable secondary sheave I_M           {secondary.movable_sheave_rotational_inertia: .8f}"
+    )
+    print(
+        f"  I_s,F + I_M                            {secondary.absolute_rotation_inertia: .8f}"
+    )
 
     print("\nFIXED BELT / TRANSLATING MASSES [kg]")
     print(f"  belt cross-sectional area              {belt.cross_sectional_area: .8e}")
     print(f"  belt outer length                      {belt.outer_length: .8f}")
     print(f"  belt mass m_b                          {belt.mass: .8f}")
-    print(f"  primary movable-sheave mass            {shift_masses.primary_moving_sheave_mass: .8f}")
-    print(f"  secondary movable-sheave mass          {shift_masses.secondary_moving_sheave_mass: .8f}")
+    print(
+        f"  primary movable-sheave mass            {shift_masses.primary_moving_sheave_mass: .8f}"
+    )
+    print(
+        f"  secondary movable-sheave mass          {shift_masses.secondary_moving_sheave_mass: .8f}"
+    )
 
 
-def print_at_shift(*, label: str, geometry: BeltPulleyGeometry, inertias: object, shift: float) -> None:
+def print_at_shift(
+    *, label: str, geometry: BeltPulleyGeometry, inertias: object, shift: float
+) -> None:
     """Print geometry-coordinates and generalized translation inertia at one s."""
     position = geometry.evaluate(shift)
     translation = inertias.shift.evaluate(
@@ -130,17 +152,33 @@ def print_at_shift(*, label: str, geometry: BeltPulleyGeometry, inertias: object
     fmt_coordinate("belt", position.belt_axial_coordinate)
 
     print("  translation-inertia contributions [kg]")
-    print(f"  primary movable sheave                {translation.primary_moving_sheave_contribution: .8f}")
-    print(f"  secondary movable sheave              {translation.secondary_moving_sheave_contribution: .8f}")
-    print(f"  belt representative axial motion      {translation.belt_contribution: .8f}")
+    print(
+        f"  primary movable sheave                {translation.primary_moving_sheave_contribution: .8f}"
+    )
+    print(
+        f"  secondary movable sheave              {translation.secondary_moving_sheave_contribution: .8f}"
+    )
+    print(
+        f"  belt representative axial motion      {translation.belt_contribution: .8f}"
+    )
     print(f"  M_trans(s)                            {translation.mass: .8f}")
-    print(f"  C_trans(s)                            {translation.coordinate_curvature_coefficient: .8f} kg/m")
+    print(
+        f"  C_trans(s)                            {translation.coordinate_curvature_coefficient: .8f} kg/m"
+    )
 
     print("  selected belt geometry")
-    print(f"  r_p,eff                               {position.primary.effective: .8f} m")
-    print(f"  r_s,eff                               {position.secondary.effective: .8f} m")
-    print(f"  phi_p                                 {position.primary_wrap_angle: .8f} rad")
-    print(f"  phi_s                                 {position.secondary_wrap_angle: .8f} rad")
+    print(
+        f"  r_p,eff                               {position.primary.effective: .8f} m"
+    )
+    print(
+        f"  r_s,eff                               {position.secondary.effective: .8f} m"
+    )
+    print(
+        f"  phi_p                                 {position.primary_wrap_angle: .8f} rad"
+    )
+    print(
+        f"  phi_s                                 {position.secondary_wrap_angle: .8f} rad"
+    )
 
 
 def main() -> None:

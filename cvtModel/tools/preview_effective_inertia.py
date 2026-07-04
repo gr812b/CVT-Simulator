@@ -80,12 +80,8 @@ def main() -> None:
         inertias.belt.mass * arguments.primary_effective_radius**2,
     )
 
-    secondary_fixed = (
-        inertias.secondary.fixed_side.total / ratios**2
-    )
-    secondary_movable = (
-        inertias.secondary.movable_sheave_rotational_inertia / ratios**2
-    )
+    secondary_fixed = inertias.secondary.fixed_side.total / ratios**2
+    secondary_movable = inertias.secondary.movable_sheave_rotational_inertia / ratios**2
     secondary_rotating = secondary_fixed + secondary_movable
 
     total = primary_rotating + belt_transport + secondary_rotating
@@ -152,8 +148,7 @@ def _sample_ratios(
     return tuple(
         ratio
         for index, ratio in enumerate(candidates)
-        if minimum_ratio <= ratio <= maximum_ratio
-        and ratio not in candidates[:index]
+        if minimum_ratio <= ratio <= maximum_ratio and ratio not in candidates[:index]
     )
 
 
@@ -181,9 +176,7 @@ def _print_rotational_breakdown(
         gearbox = fixed.gearbox_input_rotational_inertia * scale
         vehicle = fixed.vehicle_translational_inertia * scale
         wheels = fixed.driven_wheel_rotational_inertia * scale
-        secondary_movable = (
-            inertias.secondary.movable_sheave_rotational_inertia * scale
-        )
+        secondary_movable = inertias.secondary.movable_sheave_rotational_inertia * scale
         total = (
             engine
             + primary_cvt

@@ -1,4 +1,4 @@
-"""Physical translation masses and their current shift-coordinate inertia."""
+"""Individual axial-translation inertia data evaluated at one shift state."""
 
 from __future__ import annotations
 
@@ -8,26 +8,98 @@ from typing import Protocol
 
 
 class AxialCoordinate(Protocol):
-    """Minimum geometry data for one physical axial coordinate x(s)."""
+    """Minimum geometry data for one physical axial coordinate ``x(s)``."""
 
     d_value_ds: float
     d2_value_ds2: float
 
 
 @dataclass(frozen=True, slots=True)
-class ShiftTranslationMasses:
-    """
-    Fixed physical masses participating in coordinated axial motion.
+class AxialTranslationInertia:
+    """One literal translating mass and its current coordinate mapping.
 
-    These are physical inputs, not already-reflected generalized masses.
-    Their coordinate slopes and curvatures come from ``GeometryPosition``
-    at each RHS evaluation.
+    For a physical axial coordinate ``x(s)``, the local inertial force is
 
-    The movable secondary sheave's rotational helix coupling is excluded
-    here. It belongs to the later secondary helix dynamics coupling, where
-    its rotational inertia ``I_M`` enters both the secondary-rotation and
-    generalized-shift rows exactly once.
+        m x_ddot = m x'(s) s_ddot + m x''(s) s_dot^2.
+
+    The local terms belong in a physical component balance. ``reflected_mass``
+    and ``generalized_curvature_coefficient`` are exposed separately for any
+    later generalized-coordinate row; they are not silently substituted into a
+    pulley-local force balance.
     """
+
+    mass: float
+    d_coordinate_ds: float
+    d2_coordinate_ds2: float
+
+    def __post_init__(self) -> None:
+        _require_nonnegative("mass", self.mass)
+        _require_finite("d_coordinate_ds", self.d_coordinate_ds)
+        _require_finite("d2_coordinate_ds2", self.d2_coordinate_ds2)
+
+    @property
+    def local_shift_acceleration_gain(self) -> float:
+        """Return the ``s_ddot`` coefficient in ``m x_ddot``."""
+
+        return self.mass * self.d_coordinate_ds
+
+    def local_known_inertial_force(self, *, shift_speed: float) -> float:
+        """Return the known ``m x''(s) s_dot^2`` term in ``m x_ddot``."""
+
+        _require_finite("shift_speed", shift_speed)
+        return self.mass * self.d2_coordinate_ds2 * shift_speed**2
+
+    @property
+    def reflected_mass(self) -> float:
+        """Return ``m [x'(s)]^2`` for a later generalized shift row."""
+
+        return self.mass * self.d_coordinate_ds**2
+
+    @property
+    def generalized_curvature_coefficient(self) -> float:
+        """Return ``m x'(s) x''(s)`` for a later generalized shift row."""
+
+        return self.mass * self.d_coordinate_ds * self.d2_coordinate_ds2
+
+
+@dataclass(frozen=True, slots=True)
+class AxialTranslationInertias:
+    """Current individual axial inertias for primary, secondary, and belt.
+
+    ``primary`` and ``secondary`` feed their respective physical pulley axial
+    rows directly. ``belt`` remains explicit so a later belt axial-force model
+    can use the same geometry-owned representative coordinate without hiding
+    that mass inside either pulley row.
+    """
+
+    primary: AxialTranslationInertia
+    secondary: AxialTranslationInertia
+    belt: AxialTranslationInertia
+
+    @property
+    def generalized_mass(self) -> float:
+        """Return the sum of individual reflected masses, if needed later."""
+
+        return (
+            self.primary.reflected_mass
+            + self.secondary.reflected_mass
+            + self.belt.reflected_mass
+        )
+
+    @property
+    def generalized_curvature_coefficient(self) -> float:
+        """Return the sum of individual generalized curvature coefficients."""
+
+        return (
+            self.primary.generalized_curvature_coefficient
+            + self.secondary.generalized_curvature_coefficient
+            + self.belt.generalized_curvature_coefficient
+        )
+
+
+@dataclass(frozen=True, slots=True)
+class AxialTranslationMasses:
+    """Fixed physical masses participating in the present axial-motion model."""
 
     primary_moving_sheave_mass: float
     secondary_moving_sheave_mass: float
@@ -35,14 +107,8 @@ class ShiftTranslationMasses:
 
     def __post_init__(self) -> None:
         for name, value in (
-            (
-                "primary_moving_sheave_mass",
-                self.primary_moving_sheave_mass,
-            ),
-            (
-                "secondary_moving_sheave_mass",
-                self.secondary_moving_sheave_mass,
-            ),
+            ("primary_moving_sheave_mass", self.primary_moving_sheave_mass),
+            ("secondary_moving_sheave_mass", self.secondary_moving_sheave_mass),
             ("belt_mass", self.belt_mass),
         ):
             _require_nonnegative(name, value)
@@ -53,103 +119,46 @@ class ShiftTranslationMasses:
         primary_axial_coordinate: AxialCoordinate,
         secondary_axial_coordinate: AxialCoordinate,
         belt_axial_coordinate: AxialCoordinate,
-    ) -> "ShiftTranslationInertia":
-        """
-        Refer literal axial translation to the present global shift s.
+    ) -> AxialTranslationInertias:
+        """Resolve each literal axial inertia at the current geometry state."""
 
-            M_trans(s) = sum_i m_i [x_i'(s)]^2
-
-            C_trans(s) = sum_i m_i x_i'(s) x_i''(s)
-
-        The eventual generalized shift row is:
-
-            M_trans s_ddot + C_trans s_dot^2 = Q_s.
-        """
-
-        return ShiftTranslationInertia(
-            primary_moving_sheave_mass=(self.primary_moving_sheave_mass),
-            secondary_moving_sheave_mass=(self.secondary_moving_sheave_mass),
-            belt_mass=self.belt_mass,
-            primary_axial_coordinate_slope=(primary_axial_coordinate.d_value_ds),
-            primary_axial_coordinate_curvature=(primary_axial_coordinate.d2_value_ds2),
-            secondary_axial_coordinate_slope=(secondary_axial_coordinate.d_value_ds),
-            secondary_axial_coordinate_curvature=(
-                secondary_axial_coordinate.d2_value_ds2
+        return AxialTranslationInertias(
+            primary=AxialTranslationInertia(
+                mass=self.primary_moving_sheave_mass,
+                d_coordinate_ds=primary_axial_coordinate.d_value_ds,
+                d2_coordinate_ds2=primary_axial_coordinate.d2_value_ds2,
             ),
-            belt_axial_coordinate_slope=(belt_axial_coordinate.d_value_ds),
-            belt_axial_coordinate_curvature=(belt_axial_coordinate.d2_value_ds2),
+            secondary=AxialTranslationInertia(
+                mass=self.secondary_moving_sheave_mass,
+                d_coordinate_ds=secondary_axial_coordinate.d_value_ds,
+                d2_coordinate_ds2=secondary_axial_coordinate.d2_value_ds2,
+            ),
+            belt=AxialTranslationInertia(
+                mass=self.belt_mass,
+                d_coordinate_ds=belt_axial_coordinate.d_value_ds,
+                d2_coordinate_ds2=belt_axial_coordinate.d2_value_ds2,
+            ),
         )
 
 
-@dataclass(frozen=True, slots=True)
-class ShiftTranslationInertia:
-    """Current literal axial translation inertia in the global s coordinate."""
-
-    primary_moving_sheave_mass: float
-    secondary_moving_sheave_mass: float
-    belt_mass: float
-
-    primary_axial_coordinate_slope: float
-    primary_axial_coordinate_curvature: float
-    secondary_axial_coordinate_slope: float
-    secondary_axial_coordinate_curvature: float
-    belt_axial_coordinate_slope: float
-    belt_axial_coordinate_curvature: float
-
-    @property
-    def primary_moving_sheave_contribution(self) -> float:
-        return self.primary_moving_sheave_mass * self.primary_axial_coordinate_slope**2
-
-    @property
-    def secondary_moving_sheave_contribution(self) -> float:
-        return (
-            self.secondary_moving_sheave_mass * self.secondary_axial_coordinate_slope**2
-        )
-
-    @property
-    def belt_contribution(self) -> float:
-        return self.belt_mass * self.belt_axial_coordinate_slope**2
-
-    @property
-    def mass(self) -> float:
-        """Return M_trans(s)."""
-
-        return (
-            self.primary_moving_sheave_contribution
-            + self.secondary_moving_sheave_contribution
-            + self.belt_contribution
-        )
-
-    @property
-    def coordinate_curvature_coefficient(self) -> float:
-        """Return C_trans(s), the coefficient multiplying s_dot squared."""
-
-        return (
-            self.primary_moving_sheave_mass
-            * self.primary_axial_coordinate_slope
-            * self.primary_axial_coordinate_curvature
-            + self.secondary_moving_sheave_mass
-            * self.secondary_axial_coordinate_slope
-            * self.secondary_axial_coordinate_curvature
-            + self.belt_mass
-            * self.belt_axial_coordinate_slope
-            * self.belt_axial_coordinate_curvature
-        )
-
-
-def resolve_shift_translation_masses(
+def resolve_axial_translation_masses(
     *,
     primary_moving_sheave_mass: float,
     secondary_moving_sheave_mass: float,
     belt_mass: float,
-) -> ShiftTranslationMasses:
-    """Store fixed physical masses for later live-geometry evaluation."""
+) -> AxialTranslationMasses:
+    """Store physical masses for later live-geometry axial-inertia evaluation."""
 
-    return ShiftTranslationMasses(
+    return AxialTranslationMasses(
         primary_moving_sheave_mass=primary_moving_sheave_mass,
         secondary_moving_sheave_mass=secondary_moving_sheave_mass,
         belt_mass=belt_mass,
     )
+
+
+def _require_finite(name: str, value: float) -> None:
+    if not isfinite(value):
+        raise ValueError(f"{name} must be finite.")
 
 
 def _require_nonnegative(name: str, value: float) -> None:

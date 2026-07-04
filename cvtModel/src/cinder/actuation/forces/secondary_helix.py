@@ -3,10 +3,10 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from math import isfinite
+from math import isclose, isfinite
 
 from cinder.closure import AffineClosureScalar, ClosureGains
-from cinder.profiles.helix import HelixProfile
+from cinder.profiles import HelixShiftKinematics
 
 from ..types import PulleyActuationState
 
@@ -16,16 +16,23 @@ class SecondaryHelixForceSpec:
     """
     Non-geometric parameters of the local secondary helix-force law.
 
-    The shared ``HelixProfile`` is retained outside this specification because
-    it is physical geometry needed both here and by the later rotational-row
-    assembly. ``movable_sheave_rotational_inertia`` is retained here because
-    the torque reaching the helix must first supply movable-sheave angular
-    acceleration before it can create axial clamp force.
+    Helix geometry is evaluated once by ``CVTDynamicsModel.snapshot()`` and
+    supplied through ``SecondaryHelixActuationState.helix_kinematics``. This
+    force law therefore owns only the force-model parameters, not a separate
+    ``HelixProfile`` reference.
+
+    ``movable_sheave_rotational_inertia`` is retained as an optional legacy
+    consistency value for standalone use. In a ``CVTDynamicsModel`` snapshot,
+    the authoritative value is supplied from ``ResolvedSecondaryInertia`` via
+    ``SecondaryHelixActuationState`` so the helix force and secondary rotation
+    row use one shared movable-sheave inertia.
     """
 
     torsional_stiffness: float
     initial_twist: float
-    movable_sheave_rotational_inertia: float
+    movable_sheave_rotational_inertia: float | None = None
+    # TODO: replace the present constant face-torque split with the derived
+    # effective/contact-dependent split when that contact model is introduced.
     movable_sheave_torque_fraction: float = 0.5
 
     def __post_init__(self) -> None:
@@ -34,10 +41,12 @@ class SecondaryHelixForceSpec:
             self.torsional_stiffness,
         )
         _require_finite("initial_twist", self.initial_twist)
-        _require_nonnegative(
-            "movable_sheave_rotational_inertia",
-            self.movable_sheave_rotational_inertia,
-        )
+
+        if self.movable_sheave_rotational_inertia is not None:
+            _require_nonnegative(
+                "movable_sheave_rotational_inertia",
+                self.movable_sheave_rotational_inertia,
+            )
 
         if (
             not isfinite(self.movable_sheave_torque_fraction)
@@ -55,51 +64,49 @@ class SecondaryHelixActuationState(PulleyActuationState):
 
         axial_position = x_s.
 
-    Positive ``x_s`` closes the secondary. The helix instead uses its internal
-    positive opening coordinate:
+    Positive ``x_s`` closes the secondary. The shared helix kinematics instead
+    use the internal positive opening coordinate:
 
         q = -x_s.
 
-    Geometry supplies the map from common global shift ``s`` to ``x_s``:
+    ``helix_kinematics`` is evaluated once by the dynamics snapshot from the
+    current geometry and shift speed. The same immutable object is retained by
+    the snapshot for later secondary-rotational-row assembly, guaranteeing
+    that the force law and rotational row use identical ``theta``, ``H``, and
+    ``H'`` values.
 
-        dx_s/ds,
-        d2x_s/ds2.
-
-    With q' = -dx_s/ds and q'' = -d2x_s/ds2, the helix kinematics are:
-
-        H  = dtheta/ds
-           = (dtheta/dq) q',
-
-        H' = d2theta/ds2
-           = (d2theta/dq2) q'^2 + (dtheta/dq) q''.
-
-    Together with ``global_shift_speed = s_dot``:
-
-        alpha_M = alpha_s - H' s_dot^2 - H s_ddot.
-
-    The class remains a ``PulleyActuationState`` subclass so a normal
-    ``PulleyActuator`` still aggregates the axial spring and helix force.
+    In a full dynamics snapshot, ``movable_sheave_rotational_inertia`` is
+    supplied from the central secondary-inertia definition. It remains optional
+    only to preserve direct standalone evaluation with older force specs.
     """
 
     global_shift_speed: float
-    local_axial_coordinate_slope: float
-    local_axial_coordinate_curvature: float
+    helix_kinematics: HelixShiftKinematics
+    movable_sheave_rotational_inertia: float | None = None
 
     def __post_init__(self) -> None:
         PulleyActuationState.__post_init__(self)
+        _require_finite("global_shift_speed", self.global_shift_speed)
 
-        for name, value in (
-            ("global_shift_speed", self.global_shift_speed),
-            (
-                "local_axial_coordinate_slope",
-                self.local_axial_coordinate_slope,
-            ),
-            (
-                "local_axial_coordinate_curvature",
-                self.local_axial_coordinate_curvature,
-            ),
+        if not isinstance(self.helix_kinematics, HelixShiftKinematics):
+            raise TypeError("helix_kinematics must be a HelixShiftKinematics instance.")
+
+        if self.movable_sheave_rotational_inertia is not None:
+            _require_nonnegative(
+                "movable_sheave_rotational_inertia",
+                self.movable_sheave_rotational_inertia,
+            )
+
+        expected_opening_travel = -self.axial_position
+        if not isclose(
+            self.helix_kinematics.opening_travel,
+            expected_opening_travel,
+            rel_tol=1e-12,
+            abs_tol=1e-12,
         ):
-            _require_finite(name, value)
+            raise ValueError(
+                "helix_kinematics opening_travel must equal -axial_position."
+            )
 
 
 class SecondaryHelixForce:
@@ -127,33 +134,21 @@ class SecondaryHelixForce:
 
         F_helix = (dtheta/dq) tau_M_to_helix.
 
-    Thus ordinary positive forward torque has gain:
-
-        dF_helix/dtau_s = kappa_M dtheta/dq > 0.
-
-    The relation is affine in the closure unknowns ``tau_s``, ``alpha_s``,
-    and ``s_ddot``. The secondary itself remains a normal
-    ``PulleyActuator``.
+    The relation is affine in the closure unknowns ``tau_s``, ``alpha_s``, and
+    ``s_ddot``. The helix geometry itself is deliberately supplied through the
+    state rather than being re-evaluated here.
     """
 
     def __init__(
         self,
         *,
         spec: SecondaryHelixForceSpec,
-        helix_profile: HelixProfile,
     ) -> None:
         self._spec = spec
-        self._helix_profile = helix_profile
 
     @property
     def spec(self) -> SecondaryHelixForceSpec:
         return self._spec
-
-    @property
-    def helix_profile(self) -> HelixProfile:
-        """Return the shared physical secondary helix geometry."""
-
-        return self._helix_profile
 
     def evaluate(
         self,
@@ -166,33 +161,25 @@ class SecondaryHelixForce:
                 "SecondaryHelixForce requires SecondaryHelixActuationState."
             )
 
-        opening_travel = -state.axial_position
-        sample = self._helix_profile.evaluate(opening_travel)
-
-        opening_slope = -state.local_axial_coordinate_slope
-        opening_curvature = -state.local_axial_coordinate_curvature
-
-        theta_rate_per_shift = sample.dtheta_dopening * opening_slope
-        theta_acceleration_per_shift_squared = (
-            sample.d2theta_dopening2 * opening_slope**2
-            + sample.dtheta_dopening * opening_curvature
-        )
-
+        kinematics = state.helix_kinematics
         torsional_spring_torque = self._spec.torsional_stiffness * (
-            self._spec.initial_twist + sample.theta
+            self._spec.initial_twist + kinematics.theta
         )
-        movable_sheave_inertia = self._spec.movable_sheave_rotational_inertia
+        movable_sheave_inertia = _resolve_movable_sheave_inertia(
+            state=state,
+            spec=self._spec,
+        )
 
         # tau_M_to_helix = spring + kappa_M tau_s - I_M alpha_M,
         # alpha_M = alpha_s - H' s_dot^2 - H s_ddot.
         known_helix_torque = (
             torsional_spring_torque
             + movable_sheave_inertia
-            * theta_acceleration_per_shift_squared
+            * kinematics.d2theta_ds2
             * state.global_shift_speed**2
         )
 
-        force_per_reacted_torque = sample.dtheta_dopening
+        force_per_reacted_torque = kinematics.dtheta_dopening
 
         return AffineClosureScalar(
             bias=force_per_reacted_torque * known_helix_torque,
@@ -203,13 +190,32 @@ class SecondaryHelixForce:
                 shift_acceleration=(
                     force_per_reacted_torque
                     * movable_sheave_inertia
-                    * theta_rate_per_shift
+                    * kinematics.dtheta_ds
                 ),
                 secondary_torque=(
                     force_per_reacted_torque * self._spec.movable_sheave_torque_fraction
                 ),
             ),
         )
+
+
+def _resolve_movable_sheave_inertia(
+    *,
+    state: SecondaryHelixActuationState,
+    spec: SecondaryHelixForceSpec,
+) -> float:
+    """Prefer the snapshot's central inertia, with a legacy standalone fallback."""
+
+    if state.movable_sheave_rotational_inertia is not None:
+        return state.movable_sheave_rotational_inertia
+
+    if spec.movable_sheave_rotational_inertia is not None:
+        return spec.movable_sheave_rotational_inertia
+
+    raise ValueError(
+        "movable sheave rotational inertia must be supplied by the dynamics "
+        "snapshot or SecondaryHelixForceSpec."
+    )
 
 
 def _require_finite(name: str, value: float) -> None:
