@@ -30,6 +30,7 @@ from cinder.actuation.forces import (
     CentrifugalRampForceSpec,
     SecondaryHelixForceSpec,
 )
+from cinder.downstream import LockedFinalDriveVehicle
 from cinder.dynamics import CVTDynamicsModel
 from cinder.integration import CVTDynamicState
 from cinder.contact import ContactTractionUtilization
@@ -306,8 +307,6 @@ def build_baja_trial_baseline(
             ),
             belt=BeltMass(density=c.rubber_density),
         ),
-        vehicle=vehicle,
-        final_drive=final_drive,
         belt_section=belt,
         belt_outer_length=c.belt_outer_length,
     )
@@ -368,8 +367,10 @@ def build_baja_trial_baseline(
         secondary_helix_profile=helix_profile,
         inertias=inertias,
         engine=engine,
-        road_load=road_load,
-        road_profile=ConstantGradeRoadProfile(),
+        secondary_attachment=LockedFinalDriveVehicle(
+            road_load=road_load,
+            road_profile=ConstantGradeRoadProfile(),
+        ),
     )
 
     active_shift_position = c.deadzone_shift + 0.60 * (c.max_shift - c.deadzone_shift)

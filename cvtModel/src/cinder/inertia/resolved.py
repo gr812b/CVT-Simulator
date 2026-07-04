@@ -30,8 +30,7 @@ class DrivetrainInertias:
 
 @dataclass(frozen=True, slots=True)
 class ResolvedInertias:
-    """
-    Fixed quantities ready for the dynamic equations.
+    """Fixed quantities ready for the dynamic equations.
 
     ``axial_translation`` stores literal primary, secondary, and belt
     translation masses. Their coordinate mappings are evaluated from live
@@ -47,12 +46,17 @@ class ResolvedInertias:
 def resolve_inertias(
     *,
     drivetrain: DrivetrainInertias,
-    vehicle: VehicleInertia,
-    final_drive: FinalDriveInertiaMap,
     belt_section: TrapezoidalBeltSection,
     belt_outer_length: float,
+    vehicle: VehicleInertia | None = None,
+    final_drive: FinalDriveInertiaMap | None = None,
 ) -> ResolvedInertias:
-    """Resolve physical constants that do not depend on the live shift state."""
+    """Resolve physical constants independent of the live shift state.
+
+    Preferred new usage omits ``vehicle`` and ``final_drive`` so that vehicle
+    inertia is supplied by a secondary attachment.  Supplying both preserves
+    the old fixed-reflection construction path for compatibility.
+    """
 
     belt = drivetrain.belt.resolve(
         belt_section=belt_section,
@@ -68,8 +72,8 @@ def resolve_inertias(
         ),
         belt=belt,
         axial_translation=resolve_axial_translation_masses(
-            primary_moving_sheave_mass=(drivetrain.primary.moving_sheave_mass),
-            secondary_moving_sheave_mass=(drivetrain.secondary.moving_sheave_mass),
+            primary_moving_sheave_mass=drivetrain.primary.moving_sheave_mass,
+            secondary_moving_sheave_mass=drivetrain.secondary.moving_sheave_mass,
             belt_mass=belt.mass,
         ),
     )

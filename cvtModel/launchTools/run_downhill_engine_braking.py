@@ -50,7 +50,7 @@ from __future__ import annotations
 
 import argparse
 import csv
-from dataclasses import dataclass, replace
+from dataclasses import dataclass
 import json
 from math import radians
 from pathlib import Path
@@ -289,13 +289,12 @@ def build_system(*, resolved, curve: DownhillRoadCurve) -> CVTOperatingHybridSys
     """Install the physical distance-indexed road into an otherwise normal CINDER system."""
 
     template, _ = build_operating_system(resolved.constants)
-    model = replace(
-        template.model,
-        road_profile=CallableRoadProfile(
+    model = template.model.with_road_profile(
+        CallableRoadProfile(
             grade_angle_function=lambda vehicle_distance: curve.grade_radians(
                 vehicle_distance
             )
-        ),
+        )
     )
     return CVTOperatingHybridSystem(
         model=model,
@@ -338,7 +337,7 @@ def sample_trace(
         [segment.state.shape[1] for segment in result.segments], maximum_samples
     )
     rows = []
-    final_drive = system.model.road_load.final_drive
+    final_drive = system.model.locked_vehicle_attachment.final_drive
     speed_factor = final_drive.wheel_radius / final_drive.reduction_ratio
 
     for segment, budget in zip(result.segments, budgets, strict=True):
@@ -354,9 +353,7 @@ def sample_trace(
             state = CVTDynamicState.from_vector(vector)
             snapshot = system.model.snapshot(state=state)
             derivative = system.rhs(time=time, state=vector, mode=segment.mode)
-            distance = final_drive.vehicle_distance_from_secondary_angle(
-                secondary_shaft_angle=state.secondary_shaft_angle
-            )
+            distance = snapshot.vehicle_distance
             engine_torque = float(snapshot.engine_torque)
             engine_power_kw = engine_torque * state.primary_angular_speed / 1000.0
             rows.append(
@@ -365,10 +362,10 @@ def sample_trace(
                     vector,
                     _compact_mode(segment.mode),
                     float(distance),
-                    float(snapshot.road_load.vehicle_speed),
+                    float(snapshot.vehicle_road_load.vehicle_speed),
                     float(speed_factor * derivative[1]),
                     float(np.rad2deg(curve.grade_radians(distance))),
-                    float(snapshot.road_load.secondary_external_torque),
+                    float(snapshot.vehicle_road_load.secondary_external_torque),
                     engine_torque,
                     engine_power_kw,
                     max(-engine_power_kw, 0.0),

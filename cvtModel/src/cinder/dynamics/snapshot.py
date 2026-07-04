@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from math import isclose, isfinite
 
 from cinder.actuation import (
@@ -18,14 +18,14 @@ from cinder.actuation.forces import (
 )
 from cinder.engine import FullThrottleTorqueCurve
 from cinder.geometry import BeltPulleyGeometry, GeometryPosition
+from cinder.downstream import (
+    LockedFinalDriveVehicle,
+    SecondaryAttachment,
+    SecondaryBoundary,
+)
 from cinder.inertia import AxialTranslationInertias, ResolvedInertias
 from cinder.profiles import HelixProfile, HelixShiftKinematics
-from cinder.vehicle import (
-    ConstantGradeRoadProfile,
-    RoadLoadModel,
-    RoadLoadResult,
-    RoadProfile,
-)
+from cinder.vehicle import ConstantGradeRoadProfile, RoadLoadModel, RoadLoadResult, RoadProfile
 
 from cinder.integration import CVTDynamicState
 
@@ -34,10 +34,10 @@ from cinder.integration import CVTDynamicState
 class DynamicsSnapshot:
     """All quantities fixed across repeated lambda trials at one ODE state.
 
-    The snapshot intentionally contains no trial lambda pair, no assembled
-    matrix, and no intermediate road-profile sample. It captures only the
-    state-dependent quantities that rows may reuse across a full outer lambda
-    iteration.
+    The snapshot intentionally contains no trial lambda pair or assembled
+    matrix.  It includes the state-evaluated secondary boundary so the contact
+    closure sees the same downstream torque and inertia during every lambda
+    trial at this ODE point.
     """
 
     state: CVTDynamicState
@@ -50,10 +50,48 @@ class DynamicsSnapshot:
     secondary_helix: HelixShiftKinematics
 
     engine_torque: float
-    road_load: RoadLoadResult
+    secondary_boundary: SecondaryBoundary
 
     inertias: ResolvedInertias
     sheave_half_angle: float
+
+    @property
+    def road_load(self) -> RoadLoadResult | None:
+        """Return road data when the attachment is vehicle-backed.
+
+        Direct secondary-shaft loads have no vehicle observables and return
+        ``None`` here.  Vehicle-specific callers should use
+        :attr:`vehicle_road_load` for an explicit checked access path.
+        """
+
+        return self.secondary_boundary.road_load
+
+    @property
+    def vehicle_road_load(self) -> RoadLoadResult:
+        """Return vehicle road data or raise for a non-vehicle attachment.
+
+        This keeps launch/reporting code explicit about the fact that vehicle
+        observables belong to the locked vehicle attachment, not to every CVT
+        simulation.
+        """
+
+        road_load = self.secondary_boundary.road_load
+        if road_load is None:
+            raise RuntimeError(
+                "This secondary attachment does not provide vehicle road-load data."
+            )
+        return road_load
+
+    @property
+    def vehicle_distance(self) -> float:
+        """Return attachment vehicle distance or raise for a direct shaft load."""
+
+        distance = self.secondary_boundary.vehicle_distance
+        if distance is None:
+            raise RuntimeError(
+                "This secondary attachment does not provide vehicle distance."
+            )
+        return distance
 
     @property
     def belt_transport_mass(self) -> float:
@@ -74,10 +112,19 @@ class DynamicsSnapshot:
         return self.inertias.primary.rotational_inertia
 
     @property
-    def secondary_fixed_rotational_inertia(self) -> float:
-        """Return I_s,F."""
+    def secondary_attachment_rotational_inertia(self) -> float:
+        """Return state-frozen downstream inertia referred to the secondary."""
 
-        return self.inertias.secondary.fixed_side.total
+        return self.secondary_boundary.added_rotational_inertia
+
+    @property
+    def secondary_fixed_rotational_inertia(self) -> float:
+        """Return core fixed-side plus downstream secondary inertia."""
+
+        return (
+            self.inertias.secondary.fixed_side.total
+            + self.secondary_attachment_rotational_inertia
+        )
 
     @property
     def movable_secondary_rotational_inertia(self) -> float:
@@ -87,32 +134,35 @@ class DynamicsSnapshot:
 
     @property
     def secondary_absolute_rotational_inertia(self) -> float:
-        """Return I_s,F + I_M."""
+        """Return total absolute secondary inertia at this RHS evaluation."""
 
-        return self.inertias.secondary.absolute_rotation_inertia
+        return (
+            self.secondary_fixed_rotational_inertia
+            + self.movable_secondary_rotational_inertia
+        )
 
     @property
     def secondary_external_torque(self) -> float:
-        """Return the known signed road torque applied at the secondary."""
+        """Return signed external torque applied at the secondary."""
 
-        return self.road_load.secondary_external_torque
+        return self.secondary_boundary.external_torque
 
 
 @dataclass(frozen=True, slots=True)
 class CVTDynamicsModel:
     """Fixed components needed to create a :class:`DynamicsSnapshot`.
 
-    ``secondary_helix_profile`` is evaluated exactly once per snapshot. The
-    resulting :class:`HelixShiftKinematics` is passed into the secondary
-    actuator and retained in the snapshot for the secondary rotational row.
+    The preferred construction path passes a ``secondary_attachment``.  The
+    attachment owns the downstream boundary condition and may be a locked
+    final-drive vehicle, a dyno load, or another future driveline component.
+    The CVT core then remains responsible only for primary, belt, secondary,
+    shift, and contact mechanics.
 
-    The road profile is defined in physical vehicle distance. Snapshot
-    construction maps the integrated secondary-shaft angle to that distance
-    through the final drive before evaluating the local road load.
-
-    Construction validates intersections between component domains and the
-    geometry's reachable shift range. This catches profile-range, spring-
-    compression, and shared-inertia mismatches before the ODE is evaluated.
+    ``road_load`` and ``road_profile`` remain as a compatibility path for
+    existing callers.  That path creates a locked vehicle attachment whose
+    inertia contribution is disabled because the legacy inertia resolver has
+    already reflected it into the CVT core.  New assembly should use
+    ``secondary_attachment`` and resolve core inertias without vehicle terms.
     """
 
     geometry: BeltPulleyGeometry
@@ -122,12 +172,35 @@ class CVTDynamicsModel:
 
     inertias: ResolvedInertias
     engine: FullThrottleTorqueCurve
-    road_load: RoadLoadModel
+    road_load: RoadLoadModel | None = None
     road_profile: RoadProfile = ConstantGradeRoadProfile()
+    secondary_attachment: SecondaryAttachment | None = None
 
     def __post_init__(self) -> None:
         if not isinstance(self.road_profile, RoadProfile):
             raise TypeError("road_profile must implement RoadProfile.sample().")
+
+        attachment = self.secondary_attachment
+        if attachment is None:
+            if self.road_load is None:
+                raise ValueError(
+                    "Provide secondary_attachment, or provide legacy road_load and road_profile."
+                )
+            attachment = LockedFinalDriveVehicle(
+                road_load=self.road_load,
+                road_profile=self.road_profile,
+                include_reflected_vehicle_inertia=False,
+            )
+            object.__setattr__(self, "secondary_attachment", attachment)
+        else:
+            if self.road_load is not None:
+                raise ValueError(
+                    "Provide either secondary_attachment or legacy road_load/road_profile, not both."
+                )
+            if not callable(getattr(attachment, "evaluate", None)):
+                raise TypeError(
+                    "secondary_attachment must implement evaluate(state=...) -> SecondaryBoundary."
+                )
 
         operating_positions = _operating_geometry_positions(self.geometry)
         _validate_secondary_helix_domain(
@@ -148,6 +221,35 @@ class CVTDynamicsModel:
             central_inertia=(self.inertias.secondary.movable_sheave_rotational_inertia),
         )
 
+    @property
+    def locked_vehicle_attachment(self) -> LockedFinalDriveVehicle:
+        """Return the locked vehicle attachment or raise for a direct shaft load."""
+
+        attachment = self.secondary_attachment
+        if not isinstance(attachment, LockedFinalDriveVehicle):
+            raise RuntimeError(
+                "This model is not attached to a LockedFinalDriveVehicle."
+            )
+        return attachment
+
+    def with_road_profile(self, road_profile: RoadProfile) -> "CVTDynamicsModel":
+        """Return a locked-vehicle model with a replacement road profile.
+
+        This is the narrow replacement for ``dataclasses.replace(model,
+        road_profile=...)`` in launch tools.  It deliberately fails for a
+        direct secondary load, where a road profile has no physical meaning.
+        """
+
+        if not isinstance(road_profile, RoadProfile):
+            raise TypeError("road_profile must implement RoadProfile.sample().")
+        attachment = self.locked_vehicle_attachment.with_road_profile(road_profile)
+        return replace(
+            self,
+            road_load=None,
+            road_profile=road_profile,
+            secondary_attachment=attachment,
+        )
+
     def snapshot(
         self,
         *,
@@ -160,8 +262,6 @@ class CVTDynamicsModel:
         primary_coordinate = geometry.primary_axial_coordinate
         secondary_coordinate = geometry.secondary_axial_coordinate
 
-        # Evaluate shared helix geometry before secondary actuation. The force
-        # law and the secondary rotational row use this same immutable object.
         secondary_helix = self.secondary_helix_profile.evaluate_shift_kinematics(
             opening_travel=-secondary_coordinate.value,
             d_opening_ds=-secondary_coordinate.d_value_ds,
@@ -189,18 +289,14 @@ class CVTDynamicsModel:
             )
         )
 
-        vehicle_distance = (
-            self.road_load.final_drive.vehicle_distance_from_secondary_angle(
-                secondary_shaft_angle=state.secondary_shaft_angle,
+        attachment = self.secondary_attachment
+        if attachment is None:  # pragma: no cover - __post_init__ invariant.
+            raise RuntimeError("CVTDynamicsModel has no secondary attachment.")
+        secondary_boundary = attachment.evaluate(state=state)
+        if not isinstance(secondary_boundary, SecondaryBoundary):
+            raise TypeError(
+                "secondary_attachment.evaluate() must return SecondaryBoundary."
             )
-        )
-        grade_angle = self.road_profile.sample(
-            vehicle_distance=vehicle_distance,
-        ).grade_angle
-        road_load = self.road_load.evaluate(
-            secondary_angular_speed=state.secondary_angular_speed,
-            grade_angle=grade_angle,
-        )
 
         snapshot = DynamicsSnapshot(
             state=state,
@@ -214,14 +310,13 @@ class CVTDynamicsModel:
             secondary_actuation=secondary_actuation,
             secondary_helix=secondary_helix,
             engine_torque=self.engine.evaluate(state.primary_angular_speed),
-            road_load=road_load,
+            secondary_boundary=secondary_boundary,
             inertias=self.inertias,
             sheave_half_angle=self.geometry.spec.sheave_half_angle,
         )
 
         _validate_snapshot(snapshot)
         return snapshot
-
 
 def _operating_geometry_positions(
     geometry: BeltPulleyGeometry,
@@ -378,6 +473,9 @@ def _validate_snapshot(snapshot: DynamicsSnapshot) -> None:
         "belt_transport_mass": snapshot.belt_transport_mass,
         "belt_linear_density": snapshot.belt_linear_density,
         "primary_rotational_inertia": snapshot.primary_rotational_inertia,
+        "secondary_attachment_rotational_inertia": (
+            snapshot.secondary_attachment_rotational_inertia
+        ),
         "secondary_fixed_rotational_inertia": (
             snapshot.secondary_fixed_rotational_inertia
         ),

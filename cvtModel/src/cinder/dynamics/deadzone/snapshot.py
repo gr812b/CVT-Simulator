@@ -20,6 +20,7 @@ from math import isfinite
 
 from cinder.actuation import PulleyActuationResult, PulleyActuationState
 from cinder.geometry import GeometryPosition
+from cinder.downstream import SecondaryBoundary
 from cinder.inertia import AxialTranslationInertia, ResolvedInertias
 from cinder.integration import CVTDynamicState
 from cinder.vehicle import RoadLoadResult
@@ -42,7 +43,7 @@ class DeadzoneSnapshot:
     primary_axial_inertia: AxialTranslationInertia
     primary_actuation: PulleyActuationResult
     engine_torque: float
-    road_load: RoadLoadResult
+    secondary_boundary: SecondaryBoundary
     inertias: ResolvedInertias
 
     @property
@@ -69,14 +70,32 @@ class DeadzoneSnapshot:
         radius = self.belt_secondary_lock_radius
         return (
             self.inertias.secondary.absolute_rotation_inertia
+            + self.secondary_boundary.added_rotational_inertia
             + self.inertias.belt.mass * radius * radius
         )
 
     @property
-    def secondary_external_torque(self) -> float:
-        """Return the signed vehicle/road torque applied to the secondary."""
+    def road_load(self) -> RoadLoadResult | None:
+        """Return vehicle road data when supplied by the attachment."""
 
-        return self.road_load.secondary_external_torque
+        return self.secondary_boundary.road_load
+
+    @property
+    def vehicle_road_load(self) -> RoadLoadResult:
+        """Return vehicle road data or raise for a direct shaft attachment."""
+
+        road_load = self.road_load
+        if road_load is None:
+            raise RuntimeError(
+                "This secondary attachment does not provide vehicle road-load data."
+            )
+        return road_load
+
+    @property
+    def secondary_external_torque(self) -> float:
+        """Return the signed attachment torque applied to the secondary."""
+
+        return self.secondary_boundary.external_torque
 
     @property
     def belt_secondary_speed_residual(self) -> float:
@@ -124,18 +143,14 @@ def build_deadzone_snapshot(
         )
     )
 
-    vehicle_distance = (
-        model.road_load.final_drive.vehicle_distance_from_secondary_angle(
-            secondary_shaft_angle=state.secondary_shaft_angle,
+    attachment = model.secondary_attachment
+    if attachment is None:  # pragma: no cover - model invariant.
+        raise RuntimeError("CVTDynamicsModel has no secondary attachment.")
+    secondary_boundary = attachment.evaluate(state=state)
+    if not isinstance(secondary_boundary, SecondaryBoundary):
+        raise TypeError(
+            "secondary_attachment.evaluate() must return SecondaryBoundary."
         )
-    )
-    grade_angle = model.road_profile.sample(
-        vehicle_distance=vehicle_distance,
-    ).grade_angle
-    road_load = model.road_load.evaluate(
-        secondary_angular_speed=state.secondary_angular_speed,
-        grade_angle=grade_angle,
-    )
 
     primary_axial_inertia = model.inertias.axial_translation.evaluate(
         primary_axial_coordinate=primary_coordinate,
@@ -150,7 +165,7 @@ def build_deadzone_snapshot(
         primary_axial_inertia=primary_axial_inertia,
         primary_actuation=primary_actuation,
         engine_torque=model.engine.evaluate(state.primary_angular_speed),
-        road_load=road_load,
+        secondary_boundary=secondary_boundary,
         inertias=model.inertias,
     )
     _validate_deadzone_snapshot(snapshot)

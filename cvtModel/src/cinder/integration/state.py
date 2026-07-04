@@ -21,8 +21,10 @@ class CVTDynamicState:
 
     ``[omega_p, omega_s, v_b, s, s_dot, psi_s]``.
 
-    ``secondary_shaft_angle = psi_s`` accumulates secondary-shaft rotation for
-    road-profile lookup. It is a continuous ODE state, not a closure unknown.
+    ``secondary_shaft_angle = psi_s`` accumulates secondary-shaft rotation.
+    A locked final-drive vehicle attachment may map it to road distance, but
+    the CVT state itself does not assume that every downstream load is a
+    vehicle. It is a continuous ODE state, not a closure unknown.
     """
 
     primary_angular_speed: float

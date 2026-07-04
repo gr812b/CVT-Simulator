@@ -46,7 +46,7 @@ from __future__ import annotations
 
 import argparse
 import csv
-from dataclasses import dataclass, replace
+from dataclasses import dataclass
 from math import radians
 import json
 from pathlib import Path
@@ -225,8 +225,8 @@ def system_with_grade(*, resolved, grade_degrees: float) -> CVTOperatingHybridSy
     """Construct the normal hybrid system with only its road profile replaced."""
 
     template, _ = build_operating_system(resolved.constants)
-    model = replace(
-        template.model, road_profile=ConstantGradeRoadProfile(radians(grade_degrees))
+    model = template.model.with_road_profile(
+        ConstantGradeRoadProfile(radians(grade_degrees))
     )
     return CVTOperatingHybridSystem(
         model=model,
@@ -352,7 +352,7 @@ def sample_state_road_trace(
             vector = np.asarray(segment.state[:, index], dtype=float)
             state = CVTDynamicState.from_vector(vector)
             snapshot = phase.system.model.snapshot(state=state)
-            road = snapshot.road_load
+            road = snapshot.vehicle_road_load
             time_values.append(float(segment.time[index]))
             state_values.append(vector)
             phase_values.append(phase.name)
@@ -361,13 +361,7 @@ def sample_state_road_trace(
             torque_values.append(float(road.secondary_external_torque))
             force_values.append(float(road.external_force))
             speed_values.append(float(road.vehicle_speed))
-            distance_values.append(
-                float(
-                    phase.system.model.road_load.final_drive.vehicle_distance_from_secondary_angle(
-                        secondary_shaft_angle=state.secondary_shaft_angle,
-                    )
-                )
-            )
+            distance_values.append(float(snapshot.vehicle_distance))
             ratio_values.append(
                 float(
                     snapshot.geometry.secondary.effective

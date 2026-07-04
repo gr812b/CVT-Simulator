@@ -18,8 +18,8 @@ def build_secondary_rotation_equation(
         tau_s - tau_load
           = (I_s,F + I_M) alpha_s - I_M H' s_dot^2 - I_M H s_ddot.
 
-    ``RoadLoadResult.secondary_external_torque`` instead uses a signed external
-    torque convention, so the code form is:
+    ``DynamicsSnapshot.secondary_external_torque`` uses a signed downstream
+    attachment convention, so the code form is:
 
         tau_s + tau_external
           = (I_s,F + I_M) alpha_s - I_M H' s_dot^2 - I_M H s_ddot.

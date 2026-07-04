@@ -45,7 +45,7 @@ from __future__ import annotations
 
 import argparse
 import csv
-from dataclasses import dataclass, replace
+from dataclasses import dataclass
 from math import radians
 import json
 from pathlib import Path
@@ -453,7 +453,7 @@ def load_candidate(path: Path) -> tuple[TuneCandidate, dict[str, float | str]]:
 def build_system(*, resolved, programme: GradeProgramme) -> TimeAwareRoadHybridSystem:
     template, _ = build_operating_system(resolved.constants)
     time_profile = _TimeClockedRoadProfile(programme)
-    model = replace(template.model, road_profile=time_profile)
+    model = template.model.with_road_profile(time_profile)
     return TimeAwareRoadHybridSystem(
         time_profile=time_profile,
         model=model,
@@ -494,7 +494,6 @@ def sample_trace(
         [segment.state.shape[1] for segment in result.segments], maximum_samples
     )
     rows = []
-    final_drive = system.model.road_load.final_drive
     for segment, budget in zip(result.segments, budgets, strict=True):
         indices = np.unique(
             np.linspace(0, segment.state.shape[1] - 1, budget, dtype=int)
@@ -508,17 +507,15 @@ def sample_trace(
             state = CVTDynamicState.from_vector(vector)
             system._set_time(time)
             snapshot = system.model.snapshot(state=state)
-            distance = final_drive.vehicle_distance_from_secondary_angle(
-                secondary_shaft_angle=state.secondary_shaft_angle
-            )
+            distance = snapshot.vehicle_distance
             rows.append(
                 (
                     time,
                     vector,
                     compact_mode(segment.mode),
                     float(np.rad2deg(programme.grade_radians(time))),
-                    float(snapshot.road_load.secondary_external_torque),
-                    float(snapshot.road_load.vehicle_speed),
+                    float(snapshot.vehicle_road_load.secondary_external_torque),
+                    float(snapshot.vehicle_road_load.vehicle_speed),
                     float(distance),
                 )
             )

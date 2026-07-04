@@ -86,3 +86,18 @@ The default static screen studies 20° helix, 0.75–0.85 kg flyweights,
 260–300° secondary twist, 100–110 mm secondary preload, and 38–40° →
 28–30° circular profiles. Narrow or widen those command-line ranges rather
 than editing the tool code.
+
+## Secondary attachment refactor
+
+The launch tools now assemble the same locked final-drive vehicle through
+CINDER's explicit `LockedFinalDriveVehicle` attachment.  CLI inputs, figures,
+CSV columns, route behavior, and current default results are unchanged.  This
+is an internal ownership cleanup: CINDER's CVT core now receives a secondary
+boundary condition rather than directly assuming that every secondary load is
+a rigid vehicle.
+
+The standard route scripts still use a locked vehicle attachment, so they keep
+reporting vehicle speed, distance, road force, and reflected road torque as
+before.  Future secondary-dyno and one-way-bearing experiments can instead
+supply another secondary attachment without modifying the belt/contact
+closure or these normal vehicle workflows.
