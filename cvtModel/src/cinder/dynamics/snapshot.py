@@ -25,7 +25,12 @@ from cinder.downstream import (
 )
 from cinder.inertia import AxialTranslationInertias, ResolvedInertias
 from cinder.profiles import HelixProfile, HelixShiftKinematics
-from cinder.vehicle import ConstantGradeRoadProfile, RoadLoadModel, RoadLoadResult, RoadProfile
+from cinder.vehicle import (
+    ConstantGradeRoadProfile,
+    RoadLoadModel,
+    RoadLoadResult,
+    RoadProfile,
+)
 
 from cinder.integration import CVTDynamicState
 
@@ -317,6 +322,7 @@ class CVTDynamicsModel:
 
         _validate_snapshot(snapshot)
         return snapshot
+
 
 def _operating_geometry_positions(
     geometry: BeltPulleyGeometry,

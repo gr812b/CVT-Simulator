@@ -122,13 +122,10 @@ class LockedFinalDriveVehicle:
 
         if not self.include_reflected_vehicle_inertia:
             return 0.0
-        return (
-            self.final_drive.secondary_inertia_from_wheel_rotation(
-                wheel_rotational_inertia=self.vehicle.wheel_rotational_inertia,
-            )
-            + self.final_drive.secondary_inertia_from_vehicle_mass(
-                vehicle_mass=self.vehicle.mass,
-            )
+        return self.final_drive.secondary_inertia_from_wheel_rotation(
+            wheel_rotational_inertia=self.vehicle.wheel_rotational_inertia,
+        ) + self.final_drive.secondary_inertia_from_vehicle_mass(
+            vehicle_mass=self.vehicle.mass,
         )
 
     def with_road_profile(self, road_profile: RoadProfile) -> "LockedFinalDriveVehicle":
