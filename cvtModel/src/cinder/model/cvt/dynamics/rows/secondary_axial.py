@@ -44,5 +44,5 @@ def build_secondary_axial_equation(
 
     return ClosureEquation(
         name="secondary_axial",
-        residual=inertial_relation - snapshot.secondary_actuation.relation,
+        residual=inertial_relation - snapshot.secondary_actuation,
     )

@@ -34,8 +34,8 @@ from cinder.model.boundaries.output import LockedFinalDriveVehicle
 from cinder.model.system import (
     BeltContactSpec,
     CVTAssemblySpec,
-    CVTDynamicsModel,
     CVTSimulationCase,
+    HelicalPulleyCoupling,
     OperatingScenario,
     PulleyPairSpec,
     PulleySpec,
@@ -179,7 +179,6 @@ class BajaTrialBaseline:
     constants: BajaTrialConstants
     assembly: CVTAssemblySpec
     case: CVTSimulationCase
-    model: CVTDynamicsModel
     active_shift_state: CVTDynamicState
     quasi_static_state: CVTDynamicState
     deadzone_state: CVTDynamicState
@@ -380,7 +379,7 @@ def build_baja_trial_baseline(
             input=PulleySpec(actuator=primary_actuator),
             output=PulleySpec(
                 actuator=secondary_actuator,
-                helical_profile=helix_profile,
+                helical_coupling=HelicalPulleyCoupling(profile=helix_profile),
             ),
         ),
         inertias=inertias,
@@ -419,13 +418,10 @@ def build_baja_trial_baseline(
             initial_state=active_shift_state,
         ),
     )
-    model = CVTDynamicsModel.from_case(case)
-
     return BajaTrialBaseline(
         constants=c,
         assembly=assembly,
         case=case,
-        model=model,
         active_shift_state=active_shift_state,
         quasi_static_state=quasi_static_state,
         deadzone_state=deadzone_state,

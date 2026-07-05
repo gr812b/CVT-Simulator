@@ -62,6 +62,43 @@ from .state import CVTDynamicState
 CVTRegimeEvaluation: TypeAlias = CVTContactEvaluation | DeadzoneEvaluation
 
 
+@dataclass(frozen=True, slots=True)
+class CVTOperatingSystemConfig:
+    """Immutable execution settings used to build hybrid systems from cases.
+
+    This keeps physical configuration in :class:`CVTSimulationCase` and all
+    contact/hybrid numerical configuration in one separate object.  A route,
+    engine, or output-boundary change therefore edits a case and builds one new
+    runtime system through :meth:`build`; no runtime model is copied or edited.
+    """
+
+    traction_law: ContactTractionLaw
+    solve_settings: EngagedContactSolveSettings
+    operating_limits: CVTShiftOperatingLimits
+    switching_settings: CVTContactSwitchSettings = field(
+        default_factory=CVTContactSwitchSettings
+    )
+
+    def __post_init__(self) -> None:
+        if not isinstance(self.traction_law, ContactTractionLaw):
+            raise TypeError("traction_law must be a ContactTractionLaw instance.")
+        if not isinstance(self.solve_settings, EngagedContactSolveSettings):
+            raise TypeError("solve_settings must be an EngagedContactSolveSettings instance.")
+        if not isinstance(self.operating_limits, CVTShiftOperatingLimits):
+            raise TypeError("operating_limits must be a CVTShiftOperatingLimits instance.")
+        if not isinstance(self.switching_settings, CVTContactSwitchSettings):
+            raise TypeError("switching_settings must be a CVTContactSwitchSettings instance.")
+
+    def build(self, case: "CVTSimulationCase") -> "CVTOperatingHybridSystem":
+        return CVTOperatingHybridSystem.from_case(
+            case,
+            traction_law=self.traction_law,
+            solve_settings=self.solve_settings,
+            operating_limits=self.operating_limits,
+            switching_settings=self.switching_settings,
+        )
+
+
 @dataclass(slots=True)
 class CVTOperatingHybridSystem:
     """Segmented hybrid adapter over all currently derived CVT RHS regimes.
@@ -82,6 +119,40 @@ class CVTOperatingHybridSystem:
     )
     evaluator: EngagedCVTContactEvaluator = field(init=False)
     deadzone_evaluator: DeadzoneDynamicsEvaluator = field(init=False)
+
+    @classmethod
+    def from_case(
+        cls,
+        case: "CVTSimulationCase",
+        *,
+        traction_law: ContactTractionLaw,
+        solve_settings: EngagedContactSolveSettings,
+        operating_limits: CVTShiftOperatingLimits,
+        switching_settings: CVTContactSwitchSettings | None = None,
+    ) -> "CVTOperatingHybridSystem":
+        """Construct one runtime system through the sole case-to-model path.
+
+        The returned object deliberately stores only runtime mechanics and
+        hybrid settings.  Any edit to road, engine, vehicle, or initial
+        conditions is made by replacing a part of ``CVTSimulationCase`` and
+        calling this factory again.
+        """
+
+        from cinder.model.system import CVTDynamicsModel, CVTSimulationCase
+
+        if not isinstance(case, CVTSimulationCase):
+            raise TypeError("case must be a CVTSimulationCase.")
+        return cls(
+            model=CVTDynamicsModel.from_case(case),
+            traction_law=traction_law,
+            solve_settings=solve_settings,
+            operating_limits=operating_limits,
+            switching_settings=(
+                CVTContactSwitchSettings()
+                if switching_settings is None
+                else switching_settings
+            ),
+        )
 
     def __post_init__(self) -> None:
         if not isinstance(self.model, CVTDynamicsModel):

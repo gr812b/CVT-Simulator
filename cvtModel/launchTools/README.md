@@ -109,4 +109,4 @@ These tools now import CINDER through `cinder.model` and `cinder.execution`;
 they no longer depend on the compatibility paths.  The Baja baseline constructs
 a `CVTAssemblySpec`, connects an engine and locked vehicle output boundary in a
 `CVTSimulationCase`, and obtains the existing runtime evaluator through
-`CVTDynamicsModel.from_case(case)`.
+`CVTOperatingHybridSystem.from_case(case, ...)`.

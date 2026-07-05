@@ -79,8 +79,9 @@ from launch_tuning_common import (  # noqa: E402
     MILLIMETRE,
     RPM_PER_RADIAN_PER_SECOND,
     TuneCandidate,
-    build_operating_system,
-    model_with_output_road_profile,
+    build_operating_configuration,
+    build_system_from_case,
+    case_with_output_road_profile,
     launch_initial_state,
     resolve_primary_preload,
 )
@@ -225,18 +226,12 @@ def load_reference(path: Path) -> tuple[TuneCandidate, dict[str, float | str]]:
 def system_with_grade(*, resolved, grade_degrees: float) -> CVTOperatingHybridSystem:
     """Construct the normal hybrid system with only its road profile replaced."""
 
-    template, baseline = build_operating_system(resolved.constants)
-    model = model_with_output_road_profile(
+    configuration, baseline = build_operating_configuration(resolved.constants)
+    case = case_with_output_road_profile(
         baseline.case,
         ConstantGradeRoadProfile(radians(grade_degrees)),
     )
-    return CVTOperatingHybridSystem(
-        model=model,
-        traction_law=template.traction_law,
-        solve_settings=template.solve_settings,
-        operating_limits=template.operating_limits,
-        switching_settings=template.switching_settings,
-    )
+    return build_system_from_case(case, configuration=configuration)
 
 
 def final_mode(result) -> object | None:

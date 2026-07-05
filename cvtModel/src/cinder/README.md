@@ -19,7 +19,8 @@ contains no CVT force laws: it advances the evaluator through hybrid regimes.
 ## CVT-only assembly and executable case
 
 ```python
-from cinder.model.system import CVTAssemblySpec, CVTDynamicsModel, CVTSimulationCase
+from cinder.execution.hybrid.cvt_operating_hybrid import CVTOperatingSystemConfig
+from cinder.model.system import CVTAssemblySpec, CVTSimulationCase
 
 assembly = CVTAssemblySpec(...)
 case = CVTSimulationCase(
@@ -28,7 +29,12 @@ case = CVTSimulationCase(
     output_boundary=vehicle_or_dyno,
     scenario=scenario,
 )
-evaluator = CVTDynamicsModel.from_case(case)
+execution = CVTOperatingSystemConfig(
+    traction_law=traction_law,
+    solve_settings=solve_settings,
+    operating_limits=operating_limits,
+)
+system = execution.build(case)
 ```
 
 A final drive, wheel, vehicle, and road profile live in the output boundary,
@@ -40,13 +46,15 @@ not belong in `CVTAssemblySpec`.
 `PulleyActuator` sums force laws through `evaluate_relation()`, the minimal
 RHS-facing API. A mounted helical torque reaction receives a
 `PulleyClosureChannels` map from its host pulley rather than hard-coding input
-or output closure columns.
+or output closure columns.  The installed `HelicalPulleyCoupling` lives
+structurally inside that `PulleySpec`, rather than in a global selector object.
 
 The current six-state shift equations retain the validated output-pulley
 helical kinematics. Supporting an input-mounted helix in the complete dynamic
-system requires a generalized rotational-coordinate derivation. The actuator
-law itself is generic today and can be evaluated through the same contract on
-either pulley.
+system requires a generalized rotational-coordinate derivation, so assembly
+construction rejects that configuration rather than silently ignoring it. The
+actuator law itself is generic today and can be evaluated through the same
+contract on either pulley.
 
 ## Clean break
 

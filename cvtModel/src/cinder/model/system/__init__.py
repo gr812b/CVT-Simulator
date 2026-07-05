@@ -1,12 +1,26 @@
-"""System-level composition and state for CINDER."""
+"""System-level physical composition and runtime evaluator."""
 
-from .assembly import BeltContactSpec, CVTAssemblySpec, PulleyPairSpec, PulleySpec
+from .assembly import (
+    BeltContactSpec,
+    CVTAssemblySpec,
+    HelicalPulleyCoupling,
+    PulleyPairSpec,
+    PulleySpec,
+)
 from .case import CVTSimulationCase, OperatingScenario
 from .evaluator import CVTDynamicsModel, DynamicsSnapshot
 from .state import CVTDynamicState, CVTDynamicStateDerivative
 
 __all__ = [
-    "BeltContactSpec", "CVTAssemblySpec", "CVTDynamicsModel",
-    "CVTDynamicState", "CVTDynamicStateDerivative", "CVTSimulationCase",
-    "DynamicsSnapshot", "OperatingScenario", "PulleyPairSpec", "PulleySpec",
+    "BeltContactSpec",
+    "CVTAssemblySpec",
+    "CVTDynamicsModel",
+    "CVTDynamicState",
+    "CVTDynamicStateDerivative",
+    "CVTSimulationCase",
+    "DynamicsSnapshot",
+    "HelicalPulleyCoupling",
+    "OperatingScenario",
+    "PulleyPairSpec",
+    "PulleySpec",
 ]

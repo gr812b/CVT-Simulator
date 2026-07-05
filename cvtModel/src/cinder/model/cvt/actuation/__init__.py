@@ -17,9 +17,8 @@ from .forces import (
 from .pulley_actuator import PulleyActuator
 from .types import (
     AxialForceLaw,
-    HelicalTorqueReactionState,
-    PulleyActuationResult,
-    PulleyActuationState,
+    HelicalCouplingState,
+    PulleyActuationContext,
     PulleyClosureChannels,
 )
 
@@ -30,11 +29,10 @@ __all__ = [
     "CentrifugalActuatorSpec",
     "CentrifugalRampForce",
     "CentrifugalRampForceSpec",
+    "HelicalCouplingState",
     "HelicalTorqueReactionForce",
-    "HelicalTorqueReactionState",
     "HelicalTorqueReactionSpec",
-    "PulleyActuationResult",
-    "PulleyActuationState",
+    "PulleyActuationContext",
     "PulleyActuator",
     "PulleyClosureChannels",
     "TorqueReactiveActuatorSpec",

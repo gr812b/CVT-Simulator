@@ -163,7 +163,7 @@ def primary_independent_clamping_force_at_engagement(
             "primary actuator force. Add an explicit release law before using a "
             "primary actuation model with closure-unknown gains."
         )
-    return snapshot.primary_actuation.bias_force
+    return snapshot.primary_actuation.bias
 
 
 def capture_belt_to_secondary_at_disengagement(

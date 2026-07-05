@@ -18,10 +18,11 @@ from __future__ import annotations
 from dataclasses import dataclass
 from math import isfinite
 
-from cinder.model.cvt.actuation import PulleyActuationResult, PulleyActuationState
+from cinder.model.cvt.actuation import PulleyActuationContext, PulleyClosureChannels
 from cinder.model.cvt.geometry import GeometryPosition
 from cinder.model.boundaries.output import OutputBoundaryEvaluation
 from cinder.model.cvt.inertia import AxialTranslationInertia, ResolvedInertias
+from cinder.model.cvt.closure import AffineClosureScalar
 from cinder.execution.hybrid import CVTDynamicState
 from cinder.model.boundaries.output.vehicle import RoadLoadResult
 
@@ -41,7 +42,7 @@ class DeadzoneSnapshot:
     primary_geometry: GeometryPosition
     locked_geometry: GeometryPosition
     primary_axial_inertia: AxialTranslationInertia
-    primary_actuation: PulleyActuationResult
+    primary_actuation: AffineClosureScalar
     engine_torque: float
     output_boundary_evaluation: OutputBoundaryEvaluation
     inertias: ResolvedInertias
@@ -135,11 +136,12 @@ def build_deadzone_snapshot(
     locked_geometry = model.geometry.evaluate(engagement_shift)
     primary_coordinate = primary_geometry.primary_axial_coordinate
 
-    primary_actuation = model.primary_actuator.evaluate(
-        PulleyActuationState(
+    primary_actuation = model.primary_actuator.evaluate_relation(
+        PulleyActuationContext(
             axial_position=primary_coordinate.value,
             axial_speed=primary_coordinate.d_value_ds * state.shift_speed,
             shaft_speed=state.primary_angular_speed,
+            closure_channels=PulleyClosureChannels.input_pulley(),
         )
     )
 

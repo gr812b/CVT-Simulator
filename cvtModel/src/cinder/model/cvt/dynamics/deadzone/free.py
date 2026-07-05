@@ -135,7 +135,7 @@ def build_deadzone_free_derivative(
 
     primary_inertia = snapshot.primary_axial_inertia
     shift_acceleration = (
-        snapshot.primary_actuation.bias_force
+        snapshot.primary_actuation.bias
         - primary_inertia.local_known_inertial_force(
             shift_speed=snapshot.state.shift_speed,
         )

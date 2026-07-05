@@ -71,7 +71,7 @@ def evaluate_deadzone_lower_stop(
             primary_inertia.local_known_inertial_force(
                 shift_speed=snapshot.state.shift_speed,
             )
-            - snapshot.primary_actuation.bias_force
+            - snapshot.primary_actuation.bias
         )
     )
     return DeadzoneEvaluation(

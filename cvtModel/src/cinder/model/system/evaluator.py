@@ -6,12 +6,12 @@ from dataclasses import dataclass, replace
 from math import isfinite
 
 from cinder.model.cvt.actuation import (
-    PulleyActuationResult,
-    PulleyActuationState,
+    HelicalCouplingState,
+    PulleyActuationContext,
     PulleyActuator,
-    HelicalTorqueReactionState,
     PulleyClosureChannels,
 )
+from cinder.model.cvt.closure import AffineClosureScalar
 from cinder.model.cvt.actuation.forces import (
     AxialSpringForce,
     CentrifugalRampForce,
@@ -24,8 +24,9 @@ from cinder.model.boundaries.output import (
     OutputBoundaryEvaluation,
 )
 from cinder.model.cvt.inertia import AxialTranslationInertias, ResolvedInertias
-from cinder.model.cvt.profiles import HelixProfile, HelixShiftKinematics
+from cinder.model.cvt.profiles import HelixShiftKinematics
 from cinder.model.boundaries.output.vehicle import RoadLoadResult
+from .assembly import HelicalPulleyCoupling
 
 from cinder.execution.hybrid import CVTDynamicState
 
@@ -45,8 +46,8 @@ class DynamicsSnapshot:
     geometry: GeometryPosition
     axial_translation_inertias: AxialTranslationInertias
 
-    primary_actuation: PulleyActuationResult
-    secondary_actuation: PulleyActuationResult
+    primary_actuation: AffineClosureScalar
+    secondary_actuation: AffineClosureScalar
     secondary_helix: HelixShiftKinematics
 
     engine_torque: float
@@ -148,7 +149,7 @@ class DynamicsSnapshot:
         return self.output_boundary_evaluation.external_torque
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True, slots=True, init=False)
 class CVTDynamicsModel:
     """Runtime evaluator assembled exclusively from a :class:`CVTSimulationCase`.
 
@@ -161,10 +162,16 @@ class CVTDynamicsModel:
     geometry: BeltPulleyGeometry
     primary_actuator: PulleyActuator
     secondary_actuator: PulleyActuator
-    secondary_helix_profile: HelixProfile
+    output_helical_coupling: HelicalPulleyCoupling
     inertias: ResolvedInertias
     input_boundary: InputTorqueBoundary
     output_boundary: OutputBoundary
+
+    def __init__(self) -> None:
+        raise TypeError(
+            "CVTDynamicsModel is runtime-only; construct it with "
+            "CVTDynamicsModel.from_case(case)."
+        )
 
     def __post_init__(self) -> None:
         if not callable(getattr(self.input_boundary, "evaluate", None)):
@@ -174,7 +181,7 @@ class CVTDynamicsModel:
 
         operating_positions = _operating_geometry_positions(self.geometry)
         _validate_secondary_helix_domain(
-            helix_profile=self.secondary_helix_profile,
+            helix_coupling=self.output_helical_coupling,
             positions=operating_positions,
         )
         _validate_primary_ramp_domain(
@@ -189,17 +196,26 @@ class CVTDynamicsModel:
 
     @classmethod
     def from_case(cls, case: "CVTSimulationCase") -> "CVTDynamicsModel":
-        """Build the runtime evaluator from one explicit simulation case."""
+        """Build the evaluator through CINDER's sole editable case contract."""
 
-        return cls(
-            geometry=case.cvt.geometry,
-            primary_actuator=case.cvt.pulleys.input.actuator,
-            secondary_actuator=case.cvt.pulleys.output.actuator,
-            secondary_helix_profile=case.cvt.pulleys.output.helical_profile,
-            inertias=case.cvt.inertias,
-            input_boundary=case.input_boundary,
-            output_boundary=case.output_boundary,
+        from .case import CVTSimulationCase
+
+        if not isinstance(case, CVTSimulationCase):
+            raise TypeError("case must be a CVTSimulationCase.")
+        instance = object.__new__(cls)
+        object.__setattr__(instance, "geometry", case.cvt.geometry)
+        object.__setattr__(instance, "primary_actuator", case.cvt.pulleys.input.actuator)
+        object.__setattr__(instance, "secondary_actuator", case.cvt.pulleys.output.actuator)
+        object.__setattr__(
+            instance,
+            "output_helical_coupling",
+            _require_output_helical_coupling(case),
         )
+        object.__setattr__(instance, "inertias", case.cvt.inertias)
+        object.__setattr__(instance, "input_boundary", case.input_boundary)
+        object.__setattr__(instance, "output_boundary", case.output_boundary)
+        instance.__post_init__()
+        return instance
 
     def snapshot(
         self,
@@ -213,32 +229,38 @@ class CVTDynamicsModel:
         primary_coordinate = geometry.primary_axial_coordinate
         secondary_coordinate = geometry.secondary_axial_coordinate
 
-        secondary_helix = self.secondary_helix_profile.evaluate_shift_kinematics(
-            opening_travel=-secondary_coordinate.value,
-            d_opening_ds=-secondary_coordinate.d_value_ds,
-            d2_opening_ds2=-secondary_coordinate.d2_value_ds2,
+        secondary_helix = self.output_helical_coupling.evaluate_from_local_coordinate(
+            axial_position=secondary_coordinate.value,
+            d_axial_position_ds=secondary_coordinate.d_value_ds,
+            d2_axial_position_ds2=secondary_coordinate.d2_value_ds2,
         )
 
-        primary_actuation = self.primary_actuator.evaluate(
-            PulleyActuationState(
+        primary_actuation = self.primary_actuator.evaluate_relation(
+            PulleyActuationContext(
                 axial_position=primary_coordinate.value,
                 axial_speed=primary_coordinate.d_value_ds * state.shift_speed,
                 shaft_speed=state.primary_angular_speed,
+                closure_channels=PulleyClosureChannels.input_pulley(),
             )
         )
 
-        secondary_actuation = self.secondary_actuator.evaluate(
-            HelicalTorqueReactionState(
+        secondary_actuation = self.secondary_actuator.evaluate_relation(
+            PulleyActuationContext(
                 axial_position=secondary_coordinate.value,
-                axial_speed=(secondary_coordinate.d_value_ds * state.shift_speed),
+                axial_speed=secondary_coordinate.d_value_ds * state.shift_speed,
                 shaft_speed=state.secondary_angular_speed,
-                global_shift_speed=state.shift_speed,
-                helix_kinematics=secondary_helix,
+                shift_speed=state.shift_speed,
                 closure_channels=PulleyClosureChannels.output_pulley(),
-                movable_member_inertia=(
+                helical_coupling=HelicalCouplingState(
+                    kinematics=secondary_helix,
+                    opening_per_axial_position=(
+                        self.output_helical_coupling.opening_per_axial_position
+                    ),
+                    opening_offset=self.output_helical_coupling.opening_offset,
+                ),
+                movable_member_rotational_inertia=(
                     self.inertias.secondary.movable_sheave_rotational_inertia
                 ),
-                opening_per_axial_position=-1.0,
             )
         )
 
@@ -272,6 +294,13 @@ class CVTDynamicsModel:
         return snapshot
 
 
+def _require_output_helical_coupling(case: "CVTSimulationCase") -> HelicalPulleyCoupling:
+    coupling = case.cvt.pulleys.output.helical_coupling
+    if coupling is None:  # pragma: no cover - CVTAssemblySpec invariant.
+        raise ValueError("Current shift dynamics require output helical coupling.")
+    return coupling
+
+
 def _operating_geometry_positions(
     geometry: BeltPulleyGeometry,
 ) -> tuple[GeometryPosition, ...]:
@@ -284,26 +313,28 @@ def _operating_geometry_positions(
 
 def _validate_secondary_helix_domain(
     *,
-    helix_profile: HelixProfile,
+    helix_coupling: HelicalPulleyCoupling,
     positions: tuple[GeometryPosition, ...],
 ) -> None:
-    """Ensure the reachable secondary opening travel lies on the helix profile."""
+    """Ensure host output geometry remains inside the installed helix profile."""
 
     opening_travels = tuple(
-        -position.secondary_axial_coordinate.value for position in positions
+        helix_coupling.opening_offset
+        + helix_coupling.opening_per_axial_position
+        * position.secondary_axial_coordinate.value
+        for position in positions
     )
     minimum_opening = min(opening_travels)
     maximum_opening = max(opening_travels)
 
     if (
-        minimum_opening < helix_profile.opening_travel_min
-        or maximum_opening > helix_profile.opening_travel_max
+        minimum_opening < helix_coupling.profile.opening_travel_min
+        or maximum_opening > helix_coupling.profile.opening_travel_max
     ):
         raise ValueError(
-            "secondary_helix_profile does not cover the geometry-reachable "
+            "output helical_coupling does not cover the geometry-reachable "
             f"opening-travel interval [{minimum_opening}, {maximum_opening}]."
         )
-
 
 def _validate_primary_ramp_domain(
     *,

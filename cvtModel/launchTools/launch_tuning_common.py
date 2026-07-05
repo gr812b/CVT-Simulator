@@ -47,11 +47,12 @@ for _candidate in (
         sys.path.append(str(_candidate))
 
 from baja_trial_baseline import (  # noqa: E402
+    BajaTrialBaseline,
     BajaTrialConstants,
     RPM_TO_RAD_PER_SECOND,
     build_baja_trial_baseline,
 )
-from cinder.model.system import CVTDynamicsModel, CVTSimulationCase  # noqa: E402
+from cinder.model.system import CVTSimulationCase  # noqa: E402
 from cinder.model.boundaries.output import LockedFinalDriveVehicle  # noqa: E402
 from cinder.model.cvt.contact import ContactRegime, ContactTractionLaw  # noqa: E402
 from cinder.model.cvt.dynamics import (
@@ -63,6 +64,7 @@ from cinder.execution.hybrid import CVTDynamicState, HybridIntegratorSettings  #
 from cinder.execution.hybrid.cvt_contact import CVTContactEvaluation  # noqa: E402
 from cinder.execution.hybrid.cvt_operating_hybrid import (
     CVTOperatingHybridSystem,
+    CVTOperatingSystemConfig,
 )  # noqa: E402
 from cinder.execution.hybrid.cvt_operating_limits import (
     CVTShiftOperatingLimits,
@@ -283,13 +285,13 @@ def candidate_constants(
     return replace(BajaTrialConstants(), **updates)
 
 
-def build_operating_system(
+def build_operating_configuration(
     constants: BajaTrialConstants,
     *,
     static_lambda_limit: float = 0.65,
     kinetic_lambda_magnitude: float = 0.55,
-) -> tuple[CVTOperatingHybridSystem, object]:
-    """Build the normal hybrid operating system from one constants record."""
+) -> tuple[CVTOperatingSystemConfig, BajaTrialBaseline]:
+    """Build case-independent hybrid settings plus the immutable Baja case."""
 
     baseline = build_baja_trial_baseline(constants)
     traction_law = ContactTractionLaw.symmetric(
@@ -298,8 +300,7 @@ def build_operating_system(
         primary_kinetic_lambda_magnitude=kinetic_lambda_magnitude,
         secondary_kinetic_lambda_magnitude=kinetic_lambda_magnitude,
     )
-    system = CVTOperatingHybridSystem(
-        model=baseline.model,
+    configuration = CVTOperatingSystemConfig(
         traction_law=traction_law,
         solve_settings=EngagedContactSolveSettings(
             lambda_search_bounds=LambdaSearchBounds.symmetric(
@@ -315,8 +316,23 @@ def build_operating_system(
             upper_stop_shift=constants.max_shift,
         ),
     )
-    return system, baseline
+    return configuration, baseline
 
+
+def build_operating_system(
+    constants: BajaTrialConstants,
+    *,
+    static_lambda_limit: float = 0.65,
+    kinetic_lambda_magnitude: float = 0.55,
+) -> tuple[CVTOperatingHybridSystem, BajaTrialBaseline]:
+    """Build the normal hybrid system from the baseline simulation case."""
+
+    configuration, baseline = build_operating_configuration(
+        constants,
+        static_lambda_limit=static_lambda_limit,
+        kinetic_lambda_magnitude=kinetic_lambda_magnitude,
+    )
+    return configuration.build(baseline.case), baseline
 
 def launch_initial_state(*, primary_rpm: float = 1800.0) -> CVTDynamicState:
     """Return the requested rest-launch state: primary spinning, driven side at rest."""
@@ -1276,32 +1292,59 @@ def transition_metrics(
     }
 
 
-def model_with_output_road_profile(
+def require_locked_vehicle_output_boundary(
+    system: CVTOperatingHybridSystem,
+) -> LockedFinalDriveVehicle:
+    """Return the locked vehicle boundary carried by one runtime system.
+
+    This is intentionally a read-only inspection helper.  Editing a route still
+    starts from :class:`CVTSimulationCase` and rebuilds the runtime model via
+    :func:`case_with_output_road_profile`; a hybrid system is never treated as
+    an editable case container.
+    """
+
+    if not isinstance(system, CVTOperatingHybridSystem):
+        raise TypeError("system must be a CVTOperatingHybridSystem.")
+    boundary = system.model.output_boundary
+    if not isinstance(boundary, LockedFinalDriveVehicle):
+        raise TypeError(
+            "This operation requires a LockedFinalDriveVehicle output boundary; "
+            f"received {type(boundary).__name__}."
+        )
+    return boundary
+
+
+def case_with_output_road_profile(
     case: CVTSimulationCase,
     road_profile,
-) -> CVTDynamicsModel:
-    """Rebuild one model after replacing the route on its vehicle boundary.
+) -> CVTSimulationCase:
+    """Return one editable case with only its locked-vehicle route replaced.
 
-    ``CVTOperatingHybridSystem`` intentionally owns only a runtime model and
-    hybrid/contact settings; it is not the simulation-case container.  Route
-    replacement therefore starts from the explicit :class:`CVTSimulationCase`
-    returned by the baseline builder, replaces only the locked vehicle output
-    boundary, and reconstructs the evaluator through the sole public path.
+    This is configuration assembly only.  The caller then creates exactly one
+    runtime system through the explicit operating configuration and runs
+    one continuous hybrid integration.
     """
 
     if not isinstance(case, CVTSimulationCase):
-        raise TypeError(
-            "case must be a CVTSimulationCase; route replacement does not accept "
-            "a hybrid runtime system."
-        )
+        raise TypeError("case must be a CVTSimulationCase.")
     boundary = case.output_boundary
     if not isinstance(boundary, LockedFinalDriveVehicle):
         raise TypeError(
             "The requested road profile requires a LockedFinalDriveVehicle "
             "output boundary."
         )
-    updated_case = replace(
-        case,
-        output_boundary=boundary.with_road_profile(road_profile),
-    )
-    return CVTDynamicsModel.from_case(updated_case)
+    return case.with_output_boundary(boundary.with_road_profile(road_profile))
+
+
+def build_system_from_case(
+    case: CVTSimulationCase,
+    *,
+    configuration: CVTOperatingSystemConfig,
+) -> CVTOperatingHybridSystem:
+    """Build one runtime hybrid system from one fully specified immutable case."""
+
+    if not isinstance(case, CVTSimulationCase):
+        raise TypeError("case must be a CVTSimulationCase.")
+    if not isinstance(configuration, CVTOperatingSystemConfig):
+        raise TypeError("configuration must be a CVTOperatingSystemConfig.")
+    return configuration.build(case)

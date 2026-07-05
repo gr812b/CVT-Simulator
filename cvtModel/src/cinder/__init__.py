@@ -1,8 +1,4 @@
-"""CINDER: mechanics-first dynamic modelling for belt CVTs.
-
-Physical model composition lives under :mod:`cinder.model`; numerical time
-execution lives under :mod:`cinder.execution`.
-"""
+"""CINDER: mechanics-first dynamic modelling for belt CVTs."""
 
 from .model.system import (
     BeltContactSpec,
@@ -10,6 +6,7 @@ from .model.system import (
     CVTDynamicsModel,
     CVTDynamicState,
     CVTSimulationCase,
+    HelicalPulleyCoupling,
     OperatingScenario,
     PulleyPairSpec,
     PulleySpec,
@@ -21,6 +18,7 @@ __all__ = [
     "CVTDynamicsModel",
     "CVTDynamicState",
     "CVTSimulationCase",
+    "HelicalPulleyCoupling",
     "OperatingScenario",
     "PulleyPairSpec",
     "PulleySpec",

@@ -7,7 +7,7 @@ from math import isfinite
 
 from cinder.model.cvt.closure import AffineClosureScalar
 
-from ..types import PulleyActuationState
+from ..types import PulleyActuationContext
 
 
 @dataclass(frozen=True, slots=True)
@@ -67,7 +67,7 @@ class AxialSpringForce:
     def spec(self) -> AxialSpringForceSpec:
         return self._spec
 
-    def evaluate(self, state: PulleyActuationState) -> AffineClosureScalar:
+    def evaluate(self, state: PulleyActuationContext) -> AffineClosureScalar:
         compression = (
             self._spec.initial_compression
             + self._spec.compression_per_axial_position * state.axial_position

@@ -25,7 +25,7 @@ from __future__ import annotations
 
 import argparse
 import csv
-from dataclasses import dataclass, field, replace
+from dataclasses import dataclass, field
 from enum import Enum
 from math import pi, radians, sin
 from pathlib import Path
@@ -44,14 +44,20 @@ from cinder.execution.hybrid import (
     HybridTransition,
     integrate_hybrid,
 )
-from cinder.execution.hybrid.cvt_operating_hybrid import CVTOperatingHybridSystem
+from cinder.execution.hybrid.cvt_operating_hybrid import (
+    CVTOperatingHybridSystem,
+    CVTOperatingSystemConfig,
+)
+from cinder.model.system import CVTSimulationCase
 from cinder.execution.hybrid.cvt_regime import CVTOperatingRegime
 from cinder.model.boundaries.output.vehicle import CallableRoadProfile, RoadProfile
 
 from launch_tuning_common import (
     RPM_PER_RADIAN_PER_SECOND,
-    build_operating_system,
-    model_with_output_road_profile,
+    build_operating_configuration,
+    build_system_from_case,
+    case_with_output_road_profile,
+    require_locked_vehicle_output_boundary,
     launch_initial_state,
     resolve_primary_preload,
 )
@@ -223,7 +229,7 @@ class IdealOneWayBearingSystem:
     _effective_vehicle_mass: float = field(init=False, repr=False)
 
     def __post_init__(self) -> None:
-        attachment = self.locked.model.locked_vehicle_attachment
+        attachment = require_locked_vehicle_output_boundary(self.locked)
         final_drive = attachment.final_drive
         vehicle = attachment.vehicle
         self._speed_factor = final_drive.wheel_radius / final_drive.reduction_ratio
@@ -443,7 +449,7 @@ class IdealOneWayBearingSystem:
     def road_load_at(self, *, vehicle_position_m: float, vehicle_speed_mps: float):
         """Evaluate grade/rolling/aero forces from explicit vehicle states."""
 
-        attachment = self.locked.model.locked_vehicle_attachment
+        attachment = require_locked_vehicle_output_boundary(self.locked)
         grade = self.road_profile.sample(vehicle_distance=vehicle_position_m).grade_angle
         return attachment.road_load.evaluate(
             secondary_angular_speed=vehicle_speed_mps / self.speed_factor,
@@ -487,34 +493,27 @@ class IdealOneWayBearingSystem:
         return self.locked if mode.bearing is BearingMode.LOCKED else self.overrunning
 
 
-def build_locked_child(*, resolved, road_profile: RoadProfile) -> CVTOperatingHybridSystem:
-    """Build the standard CINDER vehicle model on one spatial road profile."""
+def build_locked_child(*, resolved, road_profile: RoadProfile) -> tuple[CVTSimulationCase, CVTOperatingSystemConfig, CVTOperatingHybridSystem]:
+    """Build one locked vehicle case and its runtime system."""
 
-    template, baseline = build_operating_system(resolved.constants)
-    model = model_with_output_road_profile(baseline.case, road_profile)
-    return CVTOperatingHybridSystem(
-        model=model,
-        traction_law=template.traction_law,
-        solve_settings=template.solve_settings,
-        operating_limits=template.operating_limits,
-        switching_settings=template.switching_settings,
+    configuration, baseline = build_operating_configuration(resolved.constants)
+    locked_case = case_with_output_road_profile(baseline.case, road_profile)
+    return (
+        locked_case,
+        configuration,
+        build_system_from_case(locked_case, configuration=configuration),
     )
 
 
-def build_overrunning_child(*, locked: CVTOperatingHybridSystem) -> CVTOperatingHybridSystem:
-    """Clone CINDER with the wheel/vehicle boundary physically removed."""
+def build_overrunning_child(
+    *,
+    locked_case: CVTSimulationCase,
+    configuration: CVTOperatingSystemConfig,
+) -> CVTOperatingHybridSystem:
+    """Build a separate zero-load output case for ideal bearing overrun."""
 
-    model = replace(
-        locked.model,
-        output_boundary=FixedOutputLoad(),
-    )
-    return CVTOperatingHybridSystem(
-        model=model,
-        traction_law=locked.traction_law,
-        solve_settings=locked.solve_settings,
-        operating_limits=locked.operating_limits,
-        switching_settings=locked.switching_settings,
-    )
+    overrun_case = locked_case.with_output_boundary(FixedOutputLoad())
+    return build_system_from_case(overrun_case, configuration=configuration)
 
 
 def _compact_mode(mode: OutputMode) -> str:
@@ -1100,8 +1099,14 @@ def run_scenario(
     """Run and write one comparison case in an isolated, reusable unit."""
 
     road_profile = scenario.road_profile()
-    locked_child = build_locked_child(resolved=resolved, road_profile=road_profile)
-    overrun_child = build_overrunning_child(locked=locked_child)
+    locked_case, configuration, locked_child = build_locked_child(
+        resolved=resolved,
+        road_profile=road_profile,
+    )
+    overrun_child = build_overrunning_child(
+        locked_case=locked_case,
+        configuration=configuration,
+    )
     locked_system = IdealOneWayBearingSystem(
         locked=locked_child,
         overrunning=overrun_child,

@@ -1,4 +1,9 @@
-"""Contracts shared by mounted CINDER pulley-actuation force laws."""
+"""Contracts shared by mounted CINDER pulley-actuation force laws.
+
+A force law is never told whether it is installed on the input or output
+pulley.  The host pulley supplies its local motion, optional kinematic
+coupling, and closure-column projection through :class:`PulleyActuationContext`.
+"""
 
 from __future__ import annotations
 
@@ -8,21 +13,14 @@ from typing import Protocol
 
 from cinder.model.cvt.closure import (
     AffineClosureScalar,
-    ClosureGains,
     ClosureUnknown,
-    ClosureUnknowns,
 )
 from cinder.model.cvt.profiles import HelixShiftKinematics
 
 
 @dataclass(frozen=True, slots=True)
 class PulleyClosureChannels:
-    """Closure columns belonging to one physical pulley shaft.
-
-    This is supplied by the pulley mount/system evaluator, not selected by a
-    force law.  It makes a force law reusable on either shaft without strings
-    such as ``mounted_pulley='driven'``.
-    """
+    """Closure unknowns belonging to one mounted pulley shaft."""
 
     shaft_angular_acceleration: ClosureUnknown
     shaft_torque: ClosureUnknown
@@ -46,85 +44,86 @@ class PulleyClosureChannels:
 
 
 @dataclass(frozen=True, slots=True)
-class PulleyActuationState:
-    """Known local quantities shared by all axial-force laws."""
+class HelicalCouplingState:
+    """Live local state supplied by a pulley-mounted helical coupling."""
+
+    kinematics: HelixShiftKinematics
+    opening_per_axial_position: float
+    opening_offset: float = 0.0
+
+    def __post_init__(self) -> None:
+        if not isinstance(self.kinematics, HelixShiftKinematics):
+            raise TypeError("kinematics must be a HelixShiftKinematics instance.")
+        if (
+            not isfinite(self.opening_per_axial_position)
+            or self.opening_per_axial_position == 0.0
+        ):
+            raise ValueError("opening_per_axial_position must be finite and non-zero.")
+        if not isfinite(self.opening_offset):
+            raise ValueError("opening_offset must be finite.")
+
+    def validate_local_position(self, axial_position: float) -> None:
+        if not isfinite(axial_position):
+            raise ValueError("axial_position must be finite.")
+        expected_opening = self.opening_offset + (
+            self.opening_per_axial_position * axial_position
+        )
+        if not isclose(
+            self.kinematics.opening_travel,
+            expected_opening,
+            rel_tol=1.0e-12,
+            abs_tol=1.0e-12,
+        ):
+            raise ValueError(
+                "helical coupling opening travel must match the host local coordinate."
+            )
+
+
+@dataclass(frozen=True, slots=True)
+class PulleyActuationContext:
+    """All local information available to a mounted actuator at one RHS point.
+
+    Basic laws such as springs and centrifugal ramps consume only the local
+    position/speed fields.  A helical torque-reaction law additionally consumes
+    the host closure channels and :attr:`helical_coupling`.
+    """
 
     axial_position: float
     axial_speed: float
     shaft_speed: float
+    shift_speed: float = 0.0
+    closure_channels: PulleyClosureChannels | None = None
+    helical_coupling: HelicalCouplingState | None = None
+    movable_member_rotational_inertia: float | None = None
 
     def __post_init__(self) -> None:
         for name, value in (
             ("axial_position", self.axial_position),
             ("axial_speed", self.axial_speed),
             ("shaft_speed", self.shaft_speed),
+            ("shift_speed", self.shift_speed),
         ):
             if not isfinite(value):
                 raise ValueError(f"{name} must be finite.")
-
-
-@dataclass(frozen=True, slots=True)
-class HelicalTorqueReactionState(PulleyActuationState):
-    """Additional state for one mounted helical torque-reaction law."""
-
-    global_shift_speed: float
-    helix_kinematics: HelixShiftKinematics
-    closure_channels: PulleyClosureChannels
-    movable_member_inertia: float | None = None
-    opening_per_axial_position: float = -1.0
-    opening_offset: float = 0.0
-
-    def __post_init__(self) -> None:
-        PulleyActuationState.__post_init__(self)
-        if not isfinite(self.global_shift_speed):
-            raise ValueError("global_shift_speed must be finite.")
-        if not isinstance(self.helix_kinematics, HelixShiftKinematics):
-            raise TypeError("helix_kinematics must be a HelixShiftKinematics instance.")
-        if not isinstance(self.closure_channels, PulleyClosureChannels):
-            raise TypeError("closure_channels must be a PulleyClosureChannels instance.")
-        if self.movable_member_inertia is not None and (
-            not isfinite(self.movable_member_inertia)
-            or self.movable_member_inertia < 0.0
+        if self.closure_channels is not None and not isinstance(
+            self.closure_channels, PulleyClosureChannels
         ):
-            raise ValueError("movable_member_inertia must be finite and non-negative.")
-        if not isfinite(self.opening_per_axial_position) or self.opening_per_axial_position == 0.0:
-            raise ValueError("opening_per_axial_position must be finite and non-zero.")
-        if not isfinite(self.opening_offset):
-            raise ValueError("opening_offset must be finite.")
-        expected_opening = self.opening_offset + (
-            self.opening_per_axial_position * self.axial_position
-        )
-        if not isclose(
-            self.helix_kinematics.opening_travel,
-            expected_opening,
-            rel_tol=1e-12,
-            abs_tol=1e-12,
+            raise TypeError("closure_channels must be a PulleyClosureChannels or None.")
+        if self.helical_coupling is not None:
+            if not isinstance(self.helical_coupling, HelicalCouplingState):
+                raise TypeError("helical_coupling must be a HelicalCouplingState or None.")
+            self.helical_coupling.validate_local_position(self.axial_position)
+        if self.movable_member_rotational_inertia is not None and (
+            not isfinite(self.movable_member_rotational_inertia)
+            or self.movable_member_rotational_inertia < 0.0
         ):
             raise ValueError(
-                "helix_kinematics opening_travel must match the mounted local coordinate."
+                "movable_member_rotational_inertia must be finite and non-negative."
             )
 
 
-@dataclass(frozen=True, slots=True)
-class PulleyActuationResult:
-    """The complete local axial-force relation returned by an actuator."""
-
-    relation: AffineClosureScalar
-
-    @property
-    def bias_force(self) -> float:
-        return self.relation.bias
-
-    @property
-    def gains(self) -> ClosureGains:
-        return self.relation.gains
-
-    def force(self, unknowns: ClosureUnknowns) -> float:
-        return self.relation.evaluate(unknowns)
-
-
 class AxialForceLaw(Protocol):
-    """One composable mechanism contributing local pulley axial force."""
+    """One composable local axial-force law."""
 
-    def evaluate(self, state: PulleyActuationState) -> AffineClosureScalar:
-        """Return an affine local axial-force contribution."""
+    def evaluate(self, context: PulleyActuationContext) -> AffineClosureScalar:
+        """Return one affine local axial-force contribution."""

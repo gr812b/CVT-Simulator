@@ -172,7 +172,7 @@ def _free_primary_axial_residual(
         raise ValueError("sheave_half_angle must produce a positive finite tangent.")
 
     inertia = snapshot.axial_translation_inertias.primary
-    primary_force = snapshot.primary_actuation.force(unknowns)
+    primary_force = snapshot.primary_actuation.evaluate(unknowns)
     return (
         inertia.local_known_inertial_force(shift_speed=snapshot.state.shift_speed)
         + inertia.local_shift_acceleration_gain * unknowns.shift_acceleration

@@ -8,7 +8,7 @@ from math import isfinite
 from cinder.model.cvt.closure import AffineClosureScalar
 from cinder.model.cvt.profiles.types import ScalarProfile
 
-from ..types import PulleyActuationState
+from ..types import PulleyActuationContext
 
 
 @dataclass(frozen=True, slots=True)
@@ -52,7 +52,7 @@ class CentrifugalRampForce:
     def spec(self) -> CentrifugalRampForceSpec:
         return self._spec
 
-    def evaluate(self, state: PulleyActuationState) -> AffineClosureScalar:
+    def evaluate(self, state: PulleyActuationContext) -> AffineClosureScalar:
         ramp = self._spec.radial_displacement_profile.evaluate(state.axial_position)
         flyweight_radius = self._spec.radius_at_zero_position + ramp.value
 

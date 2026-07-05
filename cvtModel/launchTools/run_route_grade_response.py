@@ -73,6 +73,7 @@ from cinder.execution.hybrid import CVTDynamicState, HybridIntegratorSettings  #
 from cinder.execution.hybrid.cvt_contact_events import build_cvt_contact_events  # noqa: E402
 from cinder.execution.hybrid.cvt_operating_hybrid import (
     CVTOperatingHybridSystem,
+    CVTOperatingSystemConfig,
 )  # noqa: E402
 from cinder.execution.hybrid.cvt_regime import (
     CVTEngagementState,
@@ -90,8 +91,8 @@ from launch_tuning_common import (  # noqa: E402
     MILLIMETRE,
     RPM_PER_RADIAN_PER_SECOND,
     TuneCandidate,
-    build_operating_system,
-    model_with_output_road_profile,
+    build_operating_configuration,
+    case_with_output_road_profile,
     launch_initial_state,
     resolve_primary_preload,
 )
@@ -251,6 +252,27 @@ class TimeAwareRoadHybridSystem(CVTOperatingHybridSystem):
     def __init__(self, *, time_profile: _TimeClockedRoadProfile, **kwargs) -> None:
         self._time_profile = time_profile
         super().__init__(**kwargs)
+
+    @classmethod
+    def from_case(
+        cls,
+        case,
+        *,
+        time_profile: _TimeClockedRoadProfile,
+        configuration: CVTOperatingSystemConfig,
+    ) -> "TimeAwareRoadHybridSystem":
+        """Build this time-aware adapter from one editable CINDER case."""
+
+        from cinder.model.system import CVTDynamicsModel
+
+        return cls(
+            time_profile=time_profile,
+            model=CVTDynamicsModel.from_case(case),
+            traction_law=configuration.traction_law,
+            solve_settings=configuration.solve_settings,
+            operating_limits=configuration.operating_limits,
+            switching_settings=configuration.switching_settings,
+        )
 
     def _set_time(self, time_s: float) -> None:
         self._time_profile.set_time(time_s)
@@ -452,16 +474,13 @@ def load_candidate(path: Path) -> tuple[TuneCandidate, dict[str, float | str]]:
 
 
 def build_system(*, resolved, programme: GradeProgramme) -> TimeAwareRoadHybridSystem:
-    template, baseline = build_operating_system(resolved.constants)
+    configuration, baseline = build_operating_configuration(resolved.constants)
     time_profile = _TimeClockedRoadProfile(programme)
-    model = model_with_output_road_profile(baseline.case, time_profile)
-    return TimeAwareRoadHybridSystem(
+    case = case_with_output_road_profile(baseline.case, time_profile)
+    return TimeAwareRoadHybridSystem.from_case(
+        case,
         time_profile=time_profile,
-        model=model,
-        traction_law=template.traction_law,
-        solve_settings=template.solve_settings,
-        operating_limits=template.operating_limits,
-        switching_settings=template.switching_settings,
+        configuration=configuration,
     )
 
 

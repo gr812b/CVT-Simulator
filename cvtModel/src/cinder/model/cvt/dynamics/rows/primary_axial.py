@@ -41,5 +41,5 @@ def build_primary_axial_equation(
 
     return ClosureEquation(
         name="primary_axial",
-        residual=inertial_relation - snapshot.primary_actuation.relation,
+        residual=inertial_relation - snapshot.primary_actuation,
     )

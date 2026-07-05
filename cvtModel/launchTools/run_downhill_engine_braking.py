@@ -82,8 +82,10 @@ from launch_tuning_common import (  # noqa: E402
     MILLIMETRE,
     RPM_PER_RADIAN_PER_SECOND,
     TuneCandidate,
-    build_operating_system,
-    model_with_output_road_profile,
+    build_operating_configuration,
+    build_system_from_case,
+    case_with_output_road_profile,
+    require_locked_vehicle_output_boundary,
     launch_initial_state,
     resolve_primary_preload,
 )
@@ -289,8 +291,8 @@ def load_candidate(path: Path) -> tuple[TuneCandidate, dict[str, float | str]]:
 def build_system(*, resolved, curve: DownhillRoadCurve) -> CVTOperatingHybridSystem:
     """Install the physical distance-indexed road into an otherwise normal CINDER system."""
 
-    template, baseline = build_operating_system(resolved.constants)
-    model = model_with_output_road_profile(
+    configuration, baseline = build_operating_configuration(resolved.constants)
+    case = case_with_output_road_profile(
         baseline.case,
         CallableRoadProfile(
             grade_angle_function=lambda vehicle_distance: curve.grade_radians(
@@ -298,13 +300,7 @@ def build_system(*, resolved, curve: DownhillRoadCurve) -> CVTOperatingHybridSys
             )
         ),
     )
-    return CVTOperatingHybridSystem(
-        model=model,
-        traction_law=template.traction_law,
-        solve_settings=template.solve_settings,
-        operating_limits=template.operating_limits,
-        switching_settings=template.switching_settings,
-    )
+    return build_system_from_case(case, configuration=configuration)
 
 
 def _compact_mode(mode) -> str:
@@ -339,7 +335,7 @@ def sample_trace(
         [segment.state.shape[1] for segment in result.segments], maximum_samples
     )
     rows = []
-    final_drive = system.model.locked_vehicle_attachment.final_drive
+    final_drive = require_locked_vehicle_output_boundary(system).final_drive
     speed_factor = final_drive.wheel_radius / final_drive.reduction_ratio
 
     for segment, budget in zip(result.segments, budgets, strict=True):
