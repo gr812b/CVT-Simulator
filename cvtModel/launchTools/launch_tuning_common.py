@@ -51,25 +51,27 @@ from baja_trial_baseline import (  # noqa: E402
     RPM_TO_RAD_PER_SECOND,
     build_baja_trial_baseline,
 )
-from cinder.contact import ContactRegime, ContactTractionLaw  # noqa: E402
-from cinder.dynamics import (
+from cinder.model.system import CVTDynamicsModel, CVTSimulationCase  # noqa: E402
+from cinder.model.boundaries.output import LockedFinalDriveVehicle  # noqa: E402
+from cinder.model.cvt.contact import ContactRegime, ContactTractionLaw  # noqa: E402
+from cinder.model.cvt.dynamics import (
     EngagedContactSolveSettings,
     LambdaSearchBounds,
 )  # noqa: E402
-from cinder.dynamics.deadzone import DeadzoneEvaluation  # noqa: E402
-from cinder.integration import CVTDynamicState, HybridIntegratorSettings  # noqa: E402
-from cinder.integration.cvt_contact import CVTContactEvaluation  # noqa: E402
-from cinder.integration.cvt_operating_hybrid import (
+from cinder.model.cvt.dynamics.deadzone import DeadzoneEvaluation  # noqa: E402
+from cinder.execution.hybrid import CVTDynamicState, HybridIntegratorSettings  # noqa: E402
+from cinder.execution.hybrid.cvt_contact import CVTContactEvaluation  # noqa: E402
+from cinder.execution.hybrid.cvt_operating_hybrid import (
     CVTOperatingHybridSystem,
 )  # noqa: E402
-from cinder.integration.cvt_operating_limits import (
+from cinder.execution.hybrid.cvt_operating_limits import (
     CVTShiftOperatingLimits,
 )  # noqa: E402
-from cinder.integration.cvt_regime import (
+from cinder.execution.hybrid.cvt_regime import (
     CVTEngagementState,
     CVTOperatingRegime,
 )  # noqa: E402
-from cinder.profiles import CircularSegment, LinearSegment, PiecewiseRamp  # noqa: E402
+from cinder.model.cvt.profiles import CircularSegment, LinearSegment, PiecewiseRamp  # noqa: E402
 
 RPM_PER_RADIAN_PER_SECOND = 60.0 / (2.0 * np.pi)
 MILLIMETRE = 1.0e-3
@@ -1272,3 +1274,34 @@ def transition_metrics(
         "persistent_engagement": int(longest_engaged_duration >= 0.050),
         "transition_reasons": " | ".join(reasons),
     }
+
+
+def model_with_output_road_profile(
+    case: CVTSimulationCase,
+    road_profile,
+) -> CVTDynamicsModel:
+    """Rebuild one model after replacing the route on its vehicle boundary.
+
+    ``CVTOperatingHybridSystem`` intentionally owns only a runtime model and
+    hybrid/contact settings; it is not the simulation-case container.  Route
+    replacement therefore starts from the explicit :class:`CVTSimulationCase`
+    returned by the baseline builder, replaces only the locked vehicle output
+    boundary, and reconstructs the evaluator through the sole public path.
+    """
+
+    if not isinstance(case, CVTSimulationCase):
+        raise TypeError(
+            "case must be a CVTSimulationCase; route replacement does not accept "
+            "a hybrid runtime system."
+        )
+    boundary = case.output_boundary
+    if not isinstance(boundary, LockedFinalDriveVehicle):
+        raise TypeError(
+            "The requested road profile requires a LockedFinalDriveVehicle "
+            "output boundary."
+        )
+    updated_case = replace(
+        case,
+        output_boundary=boundary.with_road_profile(road_profile),
+    )
+    return CVTDynamicsModel.from_case(updated_case)

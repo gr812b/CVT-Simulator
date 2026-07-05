@@ -69,17 +69,18 @@ for candidate_path in (
     if str(candidate_path) not in sys.path:
         sys.path.append(str(candidate_path))
 
-from cinder.integration import CVTDynamicState, HybridIntegratorSettings  # noqa: E402
-from cinder.integration.cvt_operating_hybrid import (
+from cinder.execution.hybrid import CVTDynamicState, HybridIntegratorSettings  # noqa: E402
+from cinder.execution.hybrid.cvt_operating_hybrid import (
     CVTOperatingHybridSystem,
 )  # noqa: E402
-from cinder.integration.hybrid import HybridIntegrationResult  # noqa: E402
-from cinder.vehicle import ConstantGradeRoadProfile  # noqa: E402
+from cinder.execution.hybrid.hybrid import HybridIntegrationResult  # noqa: E402
+from cinder.model.boundaries.output.vehicle import ConstantGradeRoadProfile  # noqa: E402
 from launch_tuning_common import (  # noqa: E402
     MILLIMETRE,
     RPM_PER_RADIAN_PER_SECOND,
     TuneCandidate,
     build_operating_system,
+    model_with_output_road_profile,
     launch_initial_state,
     resolve_primary_preload,
 )
@@ -224,9 +225,10 @@ def load_reference(path: Path) -> tuple[TuneCandidate, dict[str, float | str]]:
 def system_with_grade(*, resolved, grade_degrees: float) -> CVTOperatingHybridSystem:
     """Construct the normal hybrid system with only its road profile replaced."""
 
-    template, _ = build_operating_system(resolved.constants)
-    model = template.model.with_road_profile(
-        ConstantGradeRoadProfile(radians(grade_degrees))
+    template, baseline = build_operating_system(resolved.constants)
+    model = model_with_output_road_profile(
+        baseline.case,
+        ConstantGradeRoadProfile(radians(grade_degrees)),
     )
     return CVTOperatingHybridSystem(
         model=model,

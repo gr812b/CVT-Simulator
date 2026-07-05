@@ -19,42 +19,50 @@ from dataclasses import dataclass
 from math import isfinite, radians
 from typing import Final
 
-from cinder.actuation import (
-    CentrifugalPrimarySpec,
-    TorqueReactiveSecondarySpec,
-    build_centrifugal_primary,
-    build_torque_reactive_secondary,
+from cinder.model.cvt.actuation import (
+    CentrifugalActuatorSpec,
+    TorqueReactiveActuatorSpec,
+    build_centrifugal_actuator,
+    build_torque_reactive_actuator,
 )
-from cinder.actuation.forces import (
+from cinder.model.cvt.actuation.forces import (
     AxialSpringForceSpec,
     CentrifugalRampForceSpec,
-    SecondaryHelixForceSpec,
+    HelicalTorqueReactionSpec,
 )
-from cinder.downstream import LockedFinalDriveVehicle
-from cinder.dynamics import CVTDynamicsModel
-from cinder.integration import CVTDynamicState
-from cinder.contact import ContactTractionUtilization
-from cinder.engine import EngineTorquePoint, FullThrottleTorqueCurve, TorqueCurveSpec
-from cinder.geometry import BeltPulleyGeometry, BeltPulleyGeometrySpec, BeltSectionSpec
-from cinder.inertia import (
+from cinder.model.boundaries.output import LockedFinalDriveVehicle
+from cinder.model.system import (
+    BeltContactSpec,
+    CVTAssemblySpec,
+    CVTDynamicsModel,
+    CVTSimulationCase,
+    OperatingScenario,
+    PulleyPairSpec,
+    PulleySpec,
+)
+from cinder.execution.hybrid import CVTDynamicState
+from cinder.model.cvt.contact import ContactTractionUtilization
+from cinder.model.boundaries.input.engine import EngineTorquePoint, FullThrottleTorqueCurve, TorqueCurveSpec
+from cinder.model.cvt.geometry import BeltPulleyGeometry, BeltPulleyGeometrySpec, BeltSectionSpec
+from cinder.model.cvt.inertia import (
     BeltMass,
     DrivetrainInertias,
     PrimaryInertia,
     SecondaryInertia,
-    VehicleInertia,
     resolve_inertias,
 )
-from cinder.profiles import (
+from cinder.model.cvt.profiles import (
     CircularSegment,
     HelixProfile,
     LinearSegment,
     PiecewiseRamp,
     linear_helix_segment,
 )
-from cinder.vehicle import (
+from cinder.model.boundaries.output.vehicle import (
     ConstantGradeRoadProfile,
     FixedFinalDrive,
     RoadLoadModel,
+    VehicleInertia,
     VehicleRoadLoadSpec,
 )
 
@@ -139,6 +147,9 @@ class BajaTrialConstants:
     secondary_moving_sheave_mass: float = 0.705141  # project/CAD estimate, kg
 
     rubber_density: float = 1100.0  # legacy material-density constant, kg/m^3
+    belt_friction_coefficient: float = 0.30
+    # Assembly contact metadata. Current launch traction capacity remains
+    # configured through ContactTractionLaw lambda limits.
     vehicle_mass: float = 225.0 + 75.0  # legacy vehicle + driver masses, kg
     driven_wheel_rotational_inertia: float = 0.2
     # legacy value was labelled "all wheels"; temporarily treated as total driven-wheel inertia.
@@ -166,6 +177,8 @@ class BajaTrialBaseline:
     """Fully assembled diagnostic model and two kinematically consistent states."""
 
     constants: BajaTrialConstants
+    assembly: CVTAssemblySpec
+    case: CVTSimulationCase
     model: CVTDynamicsModel
     active_shift_state: CVTDynamicState
     quasi_static_state: CVTDynamicState
@@ -229,8 +242,8 @@ def build_baja_trial_baseline(
             f"received {c.primary_ramp_kind!r}."
         )
     primary_ramp = PiecewiseRamp((primary_ramp_segment,))
-    primary_actuator = build_centrifugal_primary(
-        CentrifugalPrimarySpec(
+    primary_actuator = build_centrifugal_actuator(
+        CentrifugalActuatorSpec(
             centrifugal_ramp=CentrifugalRampForceSpec(
                 flyweight_mass=c.flyweight_mass,
                 radius_at_zero_position=c.initial_flyweight_radius,
@@ -264,20 +277,17 @@ def build_baja_trial_baseline(
         ),
         radius=c.helix_radius,
     )
-    secondary_actuator = build_torque_reactive_secondary(
-        spec=TorqueReactiveSecondarySpec(
+    secondary_actuator = build_torque_reactive_actuator(
+        spec=TorqueReactiveActuatorSpec(
             axial_spring=AxialSpringForceSpec(
                 stiffness=c.secondary_compression_spring_rate,
                 initial_compression=c.secondary_spring_initial_compression,
                 compression_per_axial_position=-1.0,
             ),
-            helix_force=SecondaryHelixForceSpec(
+            helical_reaction=HelicalTorqueReactionSpec(
                 torsional_stiffness=c.secondary_torsional_spring_rate,
                 initial_twist=c.secondary_torsional_initial_twist,
-                movable_sheave_rotational_inertia=(
-                    c.secondary_movable_sheave_rotational_inertia
-                ),
-                movable_sheave_torque_fraction=0.5,
+                movable_member_torque_fraction=0.5,
             ),
         )
     )
@@ -360,46 +370,65 @@ def build_baja_trial_baseline(
         vehicle=vehicle,
         final_drive=final_drive,
     )
-    model = CVTDynamicsModel(
+    output_boundary = LockedFinalDriveVehicle(
+        road_load=road_load,
+        road_profile=ConstantGradeRoadProfile(),
+    )
+    assembly = CVTAssemblySpec(
         geometry=geometry,
-        primary_actuator=primary_actuator,
-        secondary_actuator=secondary_actuator,
-        secondary_helix_profile=helix_profile,
-        inertias=inertias,
-        engine=engine,
-        secondary_attachment=LockedFinalDriveVehicle(
-            road_load=road_load,
-            road_profile=ConstantGradeRoadProfile(),
+        pulleys=PulleyPairSpec(
+            input=PulleySpec(actuator=primary_actuator),
+            output=PulleySpec(
+                actuator=secondary_actuator,
+                helical_profile=helix_profile,
+            ),
         ),
+        inertias=inertias,
+        contact=BeltContactSpec(friction_coefficient=c.belt_friction_coefficient),
     )
 
     active_shift_position = c.deadzone_shift + 0.60 * (c.max_shift - c.deadzone_shift)
     deadzone_shift_position = 0.50 * c.deadzone_shift
+    active_shift_state = _no_slip_state_at_shift(
+        geometry=geometry,
+        shift_position=active_shift_position,
+        secondary_speed=c.active_secondary_speed,
+        shift_speed=c.active_shift_speed,
+        secondary_shaft_angle=c.secondary_shaft_angle,
+    )
+    quasi_static_state = _no_slip_state_at_shift(
+        geometry=geometry,
+        shift_position=active_shift_position,
+        secondary_speed=c.active_secondary_speed,
+        shift_speed=c.quasi_static_shift_speed,
+        secondary_shaft_angle=c.secondary_shaft_angle,
+    )
+    deadzone_state = _no_slip_state_at_shift(
+        geometry=geometry,
+        shift_position=deadzone_shift_position,
+        secondary_speed=c.deadzone_secondary_speed,
+        shift_speed=c.deadzone_shift_speed,
+        secondary_shaft_angle=c.secondary_shaft_angle,
+    )
+    case = CVTSimulationCase(
+        cvt=assembly,
+        input_boundary=engine,
+        output_boundary=output_boundary,
+        scenario=OperatingScenario(
+            time_span=(0.0, 10.0),
+            initial_state=active_shift_state,
+        ),
+    )
+    model = CVTDynamicsModel.from_case(case)
 
     return BajaTrialBaseline(
         constants=c,
+        assembly=assembly,
+        case=case,
         model=model,
-        active_shift_state=_no_slip_state_at_shift(
-            geometry=geometry,
-            shift_position=active_shift_position,
-            secondary_speed=c.active_secondary_speed,
-            shift_speed=c.active_shift_speed,
-            secondary_shaft_angle=c.secondary_shaft_angle,
-        ),
-        quasi_static_state=_no_slip_state_at_shift(
-            geometry=geometry,
-            shift_position=active_shift_position,
-            secondary_speed=c.active_secondary_speed,
-            shift_speed=c.quasi_static_shift_speed,
-            secondary_shaft_angle=c.secondary_shaft_angle,
-        ),
-        deadzone_state=_no_slip_state_at_shift(
-            geometry=geometry,
-            shift_position=deadzone_shift_position,
-            secondary_speed=c.deadzone_secondary_speed,
-            shift_speed=c.deadzone_shift_speed,
-            secondary_shaft_angle=c.secondary_shaft_angle,
-        ),
+        active_shift_state=active_shift_state,
+        quasi_static_state=quasi_static_state,
+        deadzone_state=deadzone_state,
         default_trial=ContactTractionUtilization(
             primary_lambda=0.10,
             secondary_lambda=0.10,

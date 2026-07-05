@@ -73,16 +73,17 @@ for candidate_path in (
     if str(candidate_path) not in sys.path:
         sys.path.append(str(candidate_path))
 
-from cinder.integration import CVTDynamicState, HybridIntegratorSettings  # noqa: E402
-from cinder.integration.cvt_operating_hybrid import (
+from cinder.execution.hybrid import CVTDynamicState, HybridIntegratorSettings  # noqa: E402
+from cinder.execution.hybrid.cvt_operating_hybrid import (
     CVTOperatingHybridSystem,
 )  # noqa: E402
-from cinder.vehicle import CallableRoadProfile  # noqa: E402
+from cinder.model.boundaries.output.vehicle import CallableRoadProfile  # noqa: E402
 from launch_tuning_common import (  # noqa: E402
     MILLIMETRE,
     RPM_PER_RADIAN_PER_SECOND,
     TuneCandidate,
     build_operating_system,
+    model_with_output_road_profile,
     launch_initial_state,
     resolve_primary_preload,
 )
@@ -288,13 +289,14 @@ def load_candidate(path: Path) -> tuple[TuneCandidate, dict[str, float | str]]:
 def build_system(*, resolved, curve: DownhillRoadCurve) -> CVTOperatingHybridSystem:
     """Install the physical distance-indexed road into an otherwise normal CINDER system."""
 
-    template, _ = build_operating_system(resolved.constants)
-    model = template.model.with_road_profile(
+    template, baseline = build_operating_system(resolved.constants)
+    model = model_with_output_road_profile(
+        baseline.case,
         CallableRoadProfile(
             grade_angle_function=lambda vehicle_distance: curve.grade_radians(
                 vehicle_distance
             )
-        )
+        ),
     )
     return CVTOperatingHybridSystem(
         model=model,
@@ -775,7 +777,7 @@ def plot_road_profile(*, curve: DownhillRoadCurve, final_distance_m: float):
 def plot_engine_curve(*, system: CVTOperatingHybridSystem, resolved):
     """Plot the exact PCHIP engine curve used by this run, including the governor tail."""
 
-    engine = system.model.engine
+    engine = system.model.input_boundary
     spec = engine.spec
     rpm_limit = max(
         6500.0, spec.high_speed_braking_plateau_end * RPM_PER_RADIAN_PER_SECOND * 1.05

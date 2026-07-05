@@ -23,20 +23,20 @@ from typing import TYPE_CHECKING, Iterable
 import numpy as np
 from numpy.typing import NDArray
 
-from cinder.contact import ContactInterface
-from cinder.dynamics.deadzone import DeadzoneEvaluation
+from cinder.model.cvt.contact import ContactInterface
+from cinder.model.cvt.dynamics.deadzone import DeadzoneEvaluation
 
-from cinder.integration.cvt_contact import CVTContactEvaluation
-from cinder.integration.cvt_regime import (
+from cinder.execution.hybrid.cvt_contact import CVTContactEvaluation
+from cinder.execution.hybrid.cvt_regime import (
     CVTEngagementState,
     CVTOperatingRegime,
     CVTShiftConstraint,
 )
-from cinder.integration.hybrid import HybridIntegrationResult
-from cinder.integration.state import CVTDynamicState
+from cinder.execution.hybrid.hybrid import HybridIntegrationResult
+from cinder.execution.hybrid.state import CVTDynamicState
 
 if TYPE_CHECKING:
-    from cinder.integration.cvt_operating_hybrid import CVTOperatingHybridSystem
+    from cinder.execution.hybrid.cvt_operating_hybrid import CVTOperatingHybridSystem
 
 
 class CVTInvariant(str, Enum):

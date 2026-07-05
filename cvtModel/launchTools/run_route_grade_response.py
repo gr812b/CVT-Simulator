@@ -68,29 +68,30 @@ for candidate_path in (
     if str(candidate_path) not in sys.path:
         sys.path.append(str(candidate_path))
 
-from cinder.dynamics.shift_constraints import EngagedShiftConstraint  # noqa: E402
-from cinder.integration import CVTDynamicState, HybridIntegratorSettings  # noqa: E402
-from cinder.integration.cvt_contact_events import build_cvt_contact_events  # noqa: E402
-from cinder.integration.cvt_operating_hybrid import (
+from cinder.model.cvt.dynamics.shift_constraints import EngagedShiftConstraint  # noqa: E402
+from cinder.execution.hybrid import CVTDynamicState, HybridIntegratorSettings  # noqa: E402
+from cinder.execution.hybrid.cvt_contact_events import build_cvt_contact_events  # noqa: E402
+from cinder.execution.hybrid.cvt_operating_hybrid import (
     CVTOperatingHybridSystem,
 )  # noqa: E402
-from cinder.integration.cvt_regime import (
+from cinder.execution.hybrid.cvt_regime import (
     CVTEngagementState,
     CVTShiftConstraint,
 )  # noqa: E402
-from cinder.integration.cvt_regime_events import (  # noqa: E402
+from cinder.execution.hybrid.cvt_regime_events import (  # noqa: E402
     build_deadzone_free_boundary_events,
     build_engaged_free_boundary_events,
     build_lower_stop_release_event,
     build_low_ratio_seat_events,
     build_upper_stop_release_event,
 )
-from cinder.vehicle import CallableRoadProfile  # noqa: E402
+from cinder.model.boundaries.output.vehicle import CallableRoadProfile  # noqa: E402
 from launch_tuning_common import (  # noqa: E402
     MILLIMETRE,
     RPM_PER_RADIAN_PER_SECOND,
     TuneCandidate,
     build_operating_system,
+    model_with_output_road_profile,
     launch_initial_state,
     resolve_primary_preload,
 )
@@ -451,9 +452,9 @@ def load_candidate(path: Path) -> tuple[TuneCandidate, dict[str, float | str]]:
 
 
 def build_system(*, resolved, programme: GradeProgramme) -> TimeAwareRoadHybridSystem:
-    template, _ = build_operating_system(resolved.constants)
+    template, baseline = build_operating_system(resolved.constants)
     time_profile = _TimeClockedRoadProfile(programme)
-    model = template.model.with_road_profile(time_profile)
+    model = model_with_output_road_profile(baseline.case, time_profile)
     return TimeAwareRoadHybridSystem(
         time_profile=time_profile,
         model=model,

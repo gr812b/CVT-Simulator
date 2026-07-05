@@ -1,7 +1,7 @@
 # CINDER launchTools — circular-primary / traction-first update
 
 Replace the contents of your existing `tools2/` launch-tools folder with this
-folder. No production CINDER source file is modified. The tools use CINDER's
+folder. No production reorganized CINDER source file is modified. The tools use CINDER's
 existing `CircularSegment` profile and select it only while constructing the
 Baja diagnostic baseline.
 
@@ -30,7 +30,7 @@ Baja diagnostic baseline.
 
 ## Current circular reference
 
-With the supplied updated CINDER source and LSODA, the 10 s reference run
+With the supplied updated reorganized CINDER source and LSODA, the 10 s reference run
 completed with:
 
 - main low-ratio-seat release: **3071 rpm**;
@@ -101,3 +101,12 @@ reporting vehicle speed, distance, road force, and reflected road torque as
 before.  Future secondary-dyno and one-way-bearing experiments can instead
 supply another secondary attachment without modifying the belt/contact
 closure or these normal vehicle workflows.
+
+
+## Package migration
+
+These tools now import CINDER through `cinder.model` and `cinder.execution`;
+they no longer depend on the compatibility paths.  The Baja baseline constructs
+a `CVTAssemblySpec`, connects an engine and locked vehicle output boundary in a
+`CVTSimulationCase`, and obtains the existing runtime evaluator through
+`CVTDynamicsModel.from_case(case)`.

@@ -35,8 +35,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 from numpy.typing import NDArray
 
-from cinder.downstream import FixedSecondaryLoad
-from cinder.integration import (
+from cinder.model.boundaries.output import FixedOutputLoad
+from cinder.execution.hybrid import (
     CVTDynamicState,
     HybridEvent,
     HybridIntegrationResult,
@@ -44,13 +44,14 @@ from cinder.integration import (
     HybridTransition,
     integrate_hybrid,
 )
-from cinder.integration.cvt_operating_hybrid import CVTOperatingHybridSystem
-from cinder.integration.cvt_regime import CVTOperatingRegime
-from cinder.vehicle import CallableRoadProfile, RoadProfile
+from cinder.execution.hybrid.cvt_operating_hybrid import CVTOperatingHybridSystem
+from cinder.execution.hybrid.cvt_regime import CVTOperatingRegime
+from cinder.model.boundaries.output.vehicle import CallableRoadProfile, RoadProfile
 
 from launch_tuning_common import (
     RPM_PER_RADIAN_PER_SECOND,
     build_operating_system,
+    model_with_output_road_profile,
     launch_initial_state,
     resolve_primary_preload,
 )
@@ -489,8 +490,8 @@ class IdealOneWayBearingSystem:
 def build_locked_child(*, resolved, road_profile: RoadProfile) -> CVTOperatingHybridSystem:
     """Build the standard CINDER vehicle model on one spatial road profile."""
 
-    template, _ = build_operating_system(resolved.constants)
-    model = template.model.with_road_profile(road_profile)
+    template, baseline = build_operating_system(resolved.constants)
+    model = model_with_output_road_profile(baseline.case, road_profile)
     return CVTOperatingHybridSystem(
         model=model,
         traction_law=template.traction_law,
@@ -505,7 +506,7 @@ def build_overrunning_child(*, locked: CVTOperatingHybridSystem) -> CVTOperating
 
     model = replace(
         locked.model,
-        secondary_attachment=FixedSecondaryLoad(),
+        output_boundary=FixedOutputLoad(),
     )
     return CVTOperatingHybridSystem(
         model=model,

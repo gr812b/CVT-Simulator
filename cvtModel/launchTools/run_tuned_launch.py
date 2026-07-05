@@ -215,12 +215,20 @@ def _optional_system_audit(*, system, result) -> tuple[bool | None, list[str]]:
     """Run the repository's system audit when the checkout exposes it."""
 
     test_path = _REPOSITORY_ROOT / "test" / "cinder"
-    if not test_path.exists():
+    local_check_path = _TOOLS_DIRECTORY
+    if test_path.exists():
+        audit_path = test_path
+    elif (local_check_path / "hybrid_system_checks.py").exists():
+        # The reorganized standalone launchTools bundle carries its audit
+        # alongside the runners, so it remains executable outside the former
+        # repository test/ layout.
+        audit_path = local_check_path
+    else:
         return None, [
-            "Physical audit unavailable: test/cinder/hybrid_system_checks.py was not found."
+            "Physical audit unavailable: hybrid_system_checks.py was not found."
         ]
-    if str(test_path) not in sys.path:
-        sys.path.insert(0, str(test_path))
+    if str(audit_path) not in sys.path:
+        sys.path.insert(0, str(audit_path))
     try:
         from hybrid_system_checks import CVTSystemCheckSettings, check_cvt_hybrid_result
 
