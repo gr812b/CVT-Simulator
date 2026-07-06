@@ -48,8 +48,16 @@ from cinder.execution.hybrid.cvt_operating_hybrid import (
 from cinder.execution.hybrid.cvt_operating_limits import CVTShiftOperatingLimits
 from cinder.model.cvt.contact import ContactTractionLaw, ContactTractionUtilization
 from cinder.model.cvt.dynamics import EngagedContactSolveSettings, LambdaSearchBounds
-from cinder.model.boundaries.input.engine import EngineTorquePoint, FullThrottleTorqueCurve, TorqueCurveSpec
-from cinder.model.cvt.geometry import BeltPulleyGeometry, BeltPulleyGeometrySpec, BeltSectionSpec
+from cinder.model.boundaries.input.engine import (
+    EngineTorquePoint,
+    FullThrottleTorqueCurve,
+    TorqueCurveSpec,
+)
+from cinder.model.cvt.geometry import (
+    BeltPulleyGeometry,
+    BeltPulleyGeometrySpec,
+    BeltSectionSpec,
+)
 from cinder.model.cvt.inertia import (
     BeltMass,
     DrivetrainInertias,
@@ -71,7 +79,6 @@ from cinder.model.boundaries.output.vehicle import (
     VehicleInertia,
     VehicleRoadLoadSpec,
 )
-
 
 INCH_TO_METRE: Final[float] = 0.0254
 FOOT_POUND_TO_NEWTON_METRE: Final[float] = 1.3558179483
@@ -501,6 +508,7 @@ def _no_slip_state_at_shift(
         secondary_shaft_angle=secondary_shaft_angle,
     )
 
+
 # Test-only runtime construction -------------------------------------------------
 # These helpers deliberately live under test/cinder, rather than in launchTools.
 # They are a deterministic mechanical fixture for CINDER's own package tests and
@@ -580,7 +588,9 @@ def case_with_output_road_profile(
 
     if not isinstance(case.output_boundary, LockedFinalDriveVehicle):
         raise TypeError("fixture case must use a LockedFinalDriveVehicle boundary.")
-    return case.with_output_boundary(case.output_boundary.with_road_profile(road_profile))
+    return case.with_output_boundary(
+        case.output_boundary.with_road_profile(road_profile)
+    )
 
 
 def build_system_from_case(

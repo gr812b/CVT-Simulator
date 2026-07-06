@@ -47,7 +47,9 @@ class GeometryStudiesTest(unittest.TestCase):
     def test_case_a_reconstructs_existing_resolved_geometry(self) -> None:
         resolved = self.case_a.geometry_spec
         reference = self.reference_spec
-        self.assertAlmostEqual(resolved.center_distance, reference.center_distance, places=12)
+        self.assertAlmostEqual(
+            resolved.center_distance, reference.center_distance, places=12
+        )
         self.assertAlmostEqual(
             resolved.primary_outer_radius_at_max_shift,
             reference.primary_outer_radius_at_max_shift,

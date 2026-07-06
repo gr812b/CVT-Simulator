@@ -47,7 +47,9 @@ class PublicContractsTest(unittest.TestCase):
         cls.baseline = build_baja_trial_baseline()
         cls.assembly = cls.baseline.assembly
 
-    def test_versioned_assembly_document_round_trip_preserves_runtime_geometry(self) -> None:
+    def test_versioned_assembly_document_round_trip_preserves_runtime_geometry(
+        self,
+    ) -> None:
         document = encode_assembly_document(self.assembly)
         self.assertEqual(document["schema_version"], 1)
         self.assertEqual(document["document_type"], "cinder_cvt_assembly")
@@ -59,12 +61,18 @@ class PublicContractsTest(unittest.TestCase):
             self.assembly.geometry.spec.center_distance,
         )
         self.assertEqual(
-            tuple(type(item) for item in reconstructed.pulleys.input.actuator.force_laws),
-            tuple(type(item) for item in self.assembly.pulleys.input.actuator.force_laws),
+            tuple(
+                type(item) for item in reconstructed.pulleys.input.actuator.force_laws
+            ),
+            tuple(
+                type(item) for item in self.assembly.pulleys.input.actuator.force_laws
+            ),
         )
         self.assertEqual(validate_assembly(reconstructed).errors, ())
 
-    def test_catalog_and_conventions_are_json_safe_and_useful_without_a_ui(self) -> None:
+    def test_catalog_and_conventions_are_json_safe_and_useful_without_a_ui(
+        self,
+    ) -> None:
         conventions = public_conventions().as_dict()
         catalog = component_catalog_document()
         json.dumps(conventions)
@@ -75,7 +83,9 @@ class PublicContractsTest(unittest.TestCase):
             {"axial_spring", "centrifugal_ramp", "helical_torque_reaction"},
         )
 
-    def test_validator_reports_optional_wrap_thresholds_as_structured_findings(self) -> None:
+    def test_validator_reports_optional_wrap_thresholds_as_structured_findings(
+        self,
+    ) -> None:
         report = validate_assembly(
             self.assembly,
             options=AssemblyValidationOptions(
@@ -92,7 +102,9 @@ class PublicContractsTest(unittest.TestCase):
             },
         )
 
-    def test_geometry_and_actuation_fields_project_to_self_describing_json_columns(self) -> None:
+    def test_geometry_and_actuation_fields_project_to_self_describing_json_columns(
+        self,
+    ) -> None:
         spec = self.assembly.geometry.spec
         context = GeometryDesignContext(
             belt=spec.belt,
@@ -153,9 +165,16 @@ class PublicContractsTest(unittest.TestCase):
             json.dumps(payload)
             self.assertIn("columns", payload)
             self.assertTrue(payload["columns"])
-            self.assertTrue(all("key" in column and "unit" in column for column in payload["columns"]))
+            self.assertTrue(
+                all(
+                    "key" in column and "unit" in column
+                    for column in payload["columns"]
+                )
+            )
 
-    def test_result_metrics_and_projection_are_derived_without_a_second_simulation(self) -> None:
+    def test_result_metrics_and_projection_are_derived_without_a_second_simulation(
+        self,
+    ) -> None:
         configuration, _ = build_operating_configuration(self.baseline.constants)
         case = replace(self.baseline.case, cvt=self.assembly)
         system = configuration.build(case)
