@@ -49,6 +49,7 @@ for _candidate in (
     if str(_candidate) not in sys.path:
         sys.path.append(str(_candidate))
 
+from cinder.results import ReportingGrid, ReportingSettings  # noqa: E402
 from launch_tuning_common import (  # noqa: E402
     TuneCandidate,
     integrate_resolved_tune,
@@ -337,6 +338,9 @@ def main() -> None:
                 absolute_tolerance=args.absolute_tolerance,
                 maximum_transitions=args.maximum_transitions,
                 method=args.solver_method,
+                reporting_settings=ReportingSettings(
+                    grid=ReportingGrid.uniform_count(args.diagnostic_samples),
+                ),
             )
             trace = sample_launch_trace(
                 system=system,

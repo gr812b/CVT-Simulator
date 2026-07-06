@@ -49,6 +49,7 @@ for _candidate in (
     if str(_candidate) not in sys.path:
         sys.path.append(str(_candidate))
 
+from cinder.results import ReportingGrid, ReportingSettings  # noqa: E402
 from launch_tuning_common import (  # noqa: E402
     MILLIMETRE,
     RPM_PER_RADIAN_PER_SECOND,
@@ -114,8 +115,14 @@ def parse_arguments() -> argparse.Namespace:
     parser.add_argument("--relative-tolerance", type=float, default=1.0e-4)
     parser.add_argument("--absolute-tolerance", type=float, default=1.0e-7)
     parser.add_argument("--first-step-ms", type=float, default=None)
-    parser.add_argument("--diagnostic-samples", type=int, default=1200)
+    parser.add_argument("--diagnostic-samples", type=int, default=None, help="Optional plotting/export cap; omitted keeps CINDER\'s full 10 ms report grid.")
     parser.add_argument("--maximum-transitions", type=int, default=60)
+    parser.add_argument(
+        "--report-step-ms",
+        type=float,
+        default=10.0,
+        help="Uniform result/export spacing [ms]; exact event points are retained as additional rows.",
+    )
     parser.add_argument(
         "--output-dir", type=Path, default=Path("artifacts/tuned_launch")
     )
@@ -162,10 +169,12 @@ def parse_arguments() -> argparse.Namespace:
         parser.error("A hard-to-soft circular ramp requires start angle >= end angle.")
     if args.relative_tolerance <= 0.0 or args.absolute_tolerance <= 0.0:
         parser.error("integration tolerances must be strictly positive.")
+    if not np.isfinite(args.report_step_ms) or args.report_step_ms <= 0.0:
+        parser.error("--report-step-ms must be finite and positive.")
     if args.rank < 1:
         parser.error("--rank must be at least one.")
-    if args.diagnostic_samples < 100:
-        parser.error("--diagnostic-samples must be at least 100.")
+    if args.diagnostic_samples is not None and args.diagnostic_samples < 100:
+        parser.error("--diagnostic-samples must be at least 100 when supplied.")
     if args.maximum_transitions < 1:
         parser.error("--maximum-transitions must be at least one.")
     if not args.solver_method.strip():
@@ -215,18 +224,26 @@ def _optional_system_audit(*, system, result) -> tuple[bool | None, list[str]]:
     """Run the repository's system audit when the checkout exposes it."""
 
     test_path = _REPOSITORY_ROOT / "test" / "cinder"
-    if not test_path.exists():
+    local_check_path = _TOOLS_DIRECTORY
+    if test_path.exists():
+        audit_path = test_path
+    elif (local_check_path / "hybrid_system_checks.py").exists():
+        # The reorganized standalone launchTools bundle carries its audit
+        # alongside the runners, so it remains executable outside the former
+        # repository test/ layout.
+        audit_path = local_check_path
+    else:
         return None, [
-            "Physical audit unavailable: test/cinder/hybrid_system_checks.py was not found."
+            "Physical audit unavailable: hybrid_system_checks.py was not found."
         ]
-    if str(test_path) not in sys.path:
-        sys.path.insert(0, str(test_path))
+    if str(audit_path) not in sys.path:
+        sys.path.insert(0, str(audit_path))
     try:
         from hybrid_system_checks import CVTSystemCheckSettings, check_cvt_hybrid_result
 
         report = check_cvt_hybrid_result(
             system=system,
-            result=result,
+            result=(result.trace.raw if hasattr(result, "trace") else result),
             settings=CVTSystemCheckSettings(maximum_samples_per_segment=96),
         )
         return report.passed, list(report.summary_lines())
@@ -344,6 +361,9 @@ def main() -> None:
             method=args.solver_method,
             first_step_seconds=(
                 None if args.first_step_ms is None else args.first_step_ms * 1.0e-3
+            ),
+            reporting_settings=ReportingSettings(
+                grid=ReportingGrid.uniform_time_step(args.report_step_ms * 1.0e-3),
             ),
         )
     except Exception as error:

@@ -23,20 +23,21 @@ from typing import TYPE_CHECKING, Iterable
 import numpy as np
 from numpy.typing import NDArray
 
-from cinder.contact import ContactInterface
-from cinder.dynamics.deadzone import DeadzoneEvaluation
+from cinder.model.cvt.contact import ContactInterface
+from cinder.model.cvt.dynamics.deadzone import DeadzoneEvaluation
+from cinder.results import inspect_cvt_state
 
-from cinder.integration.cvt_contact import CVTContactEvaluation
-from cinder.integration.cvt_regime import (
+from cinder.execution.hybrid.cvt_contact import CVTContactEvaluation
+from cinder.execution.hybrid.cvt_regime import (
     CVTEngagementState,
     CVTOperatingRegime,
     CVTShiftConstraint,
 )
-from cinder.integration.hybrid import HybridIntegrationResult
-from cinder.integration.state import CVTDynamicState
+from cinder.execution.hybrid.hybrid import HybridIntegrationResult
+from cinder.execution.hybrid.state import CVTDynamicState
 
 if TYPE_CHECKING:
-    from cinder.integration.cvt_operating_hybrid import CVTOperatingHybridSystem
+    from cinder.execution.hybrid.cvt_operating_hybrid import CVTOperatingHybridSystem
 
 
 class CVTInvariant(str, Enum):
@@ -236,7 +237,16 @@ def check_cvt_hybrid_result(
                 failures=failures,
             )
             try:
-                evaluation = system.evaluate(time=time, state=vector, mode=segment.mode)
+                inspection = inspect_cvt_state(
+                    system=system,
+                    time=time,
+                    vector=vector,
+                    mode=segment.mode,
+                    include_closure_audit=True,
+                )
+                evaluation = inspection.contact or inspection.deadzone
+                if evaluation is None:  # pragma: no cover - inspection exhaustiveness guard.
+                    raise RuntimeError("State inspection did not expose an active regime evaluation.")
             except Exception as error:  # pragma: no cover - diagnostic of a failed run.
                 failures.append(
                     CVTInvariantViolation(
@@ -280,6 +290,11 @@ def check_cvt_hybrid_result(
                     slip_dissipations=slip_dissipations,
                     stop_reactions=stop_reactions,
                     closure_condition_numbers=closure_condition_numbers,
+                    closure_condition_number=(
+                        None
+                        if inspection.closure_audit is None
+                        else inspection.closure_audit.condition_number
+                    ),
                 )
             else:  # pragma: no cover - TypeAlias exhaustiveness guard.
                 failures.append(
@@ -457,6 +472,7 @@ def _check_engaged_sample(
     slip_dissipations: list[float],
     stop_reactions: list[float],
     closure_condition_numbers: list[float],
+    closure_condition_number: float | None,
 ) -> None:
     limits = system.operating_limits
     state = evaluation.state
@@ -482,9 +498,8 @@ def _check_engaged_sample(
     )
     primary_normals.append(evaluation.normal_primary)
     secondary_normals.append(evaluation.normal_secondary)
-    closure_condition_numbers.append(
-        evaluation.branch_result.trial.closure.condition_number
-    )
+    if closure_condition_number is not None:
+        closure_condition_numbers.append(closure_condition_number)
     normal_floor = system.switching_settings.normal_resultant_floor
     _expect(
         evaluation.normal_primary >= normal_floor - settings.normal_resultant_tolerance

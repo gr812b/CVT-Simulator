@@ -1,0 +1,97 @@
+{
+  "schema_version": 1,
+  "document_type": "cinder_cvt_assembly",
+  "geometry": {
+    "belt": {
+      "height_m": 0.0155702,
+      "outer_width_m": 0.021335999999999997,
+      "inner_width_m": 0.0168148,
+      "cord_depth_from_outer_m": 0.0077851
+    },
+    "belt_outer_length_m": 0.9532619999999999,
+    "primary_outer_radius_at_zero_shift_m": 0.0284226,
+    "secondary_outer_radius_at_zero_shift_m": 0.1093851,
+    "sheave_half_angle_rad": 0.2007128639793479,
+    "deadzone_shift_m": 0.0024891999999999996,
+    "max_shift_m": 0.019049999999999997
+  },
+  "contact": {
+    "friction_coefficient": 0.3
+  },
+  "inertias": {
+    "primary": {
+      "engine_rotational_inertia_kg_m2": 0.1,
+      "cvt_rotational_inertia_kg_m2": 0.005,
+      "moving_sheave_mass_kg": 1.0681
+    },
+    "secondary": {
+      "fixed_rotational_inertia_kg_m2": 0.1,
+      "gearbox_input_rotational_inertia_kg_m2": 0.05,
+      "movable_sheave_rotational_inertia_kg_m2": 0.0025139,
+      "moving_sheave_mass_kg": 0.705141
+    },
+    "belt_density_kg_per_m3": 1100.0
+  },
+  "pulleys": {
+    "input": {
+      "components": [
+        {
+          "kind": "centrifugal_ramp",
+          "flyweight_mass_kg": 0.5,
+          "radius_at_zero_position_m": 0.04878,
+          "radial_displacement_profile": {
+            "kind": "piecewise_ramp",
+            "segments": [
+              {
+                "kind": "linear_segment",
+                "length_m": 0.019049999999999997,
+                "angle_degrees": 30.0
+              }
+            ]
+          }
+        },
+        {
+          "kind": "axial_spring",
+          "stiffness_N_per_m": 12784.0,
+          "initial_compression_m": 0.1,
+          "compression_per_axial_position": 1.0
+        }
+      ]
+    },
+    "output": {
+      "components": [
+        {
+          "kind": "axial_spring",
+          "stiffness_N_per_m": 3532.0,
+          "initial_compression_m": 0.1,
+          "compression_per_axial_position": -1.0
+        },
+        {
+          "kind": "helical_torque_reaction",
+          "torsional_stiffness_Nm_per_rad": 3.476,
+          "initial_twist_rad": 3.490658503988659,
+          "movable_member_torque_fraction": 0.5
+        }
+      ],
+      "helical_coupling": {
+        "opening_per_axial_position": -1.0,
+        "opening_offset_m": 0.0,
+        "profile": {
+          "kind": "helix_profile",
+          "circumferential_profile": {
+            "kind": "piecewise_ramp",
+            "segments": [
+              {
+                "kind": "linear_segment",
+                "length_m": 0.01312196399554005,
+                "angle_degrees": 64.0
+              }
+            ]
+          },
+          "radius_m": 0.04445,
+          "theta_offset_rad": 0.0
+        }
+      }
+    }
+  }
+}

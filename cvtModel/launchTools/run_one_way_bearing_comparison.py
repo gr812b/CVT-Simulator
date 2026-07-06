@@ -35,8 +35,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 from numpy.typing import NDArray
 
-from cinder.downstream import FixedSecondaryLoad
-from cinder.integration import (
+from cinder.model.boundaries.output import FixedOutputLoad
+from cinder.execution.hybrid import (
     CVTDynamicState,
     HybridEvent,
     HybridIntegrationResult,
@@ -44,13 +44,20 @@ from cinder.integration import (
     HybridTransition,
     integrate_hybrid,
 )
-from cinder.integration.cvt_operating_hybrid import CVTOperatingHybridSystem
-from cinder.integration.cvt_regime import CVTOperatingRegime
-from cinder.vehicle import CallableRoadProfile, RoadProfile
+from cinder.execution.hybrid.cvt_operating_hybrid import (
+    CVTOperatingHybridSystem,
+    CVTOperatingSystemConfig,
+)
+from cinder.model.system import CVTSimulationCase
+from cinder.execution.hybrid.cvt_regime import CVTOperatingRegime
+from cinder.model.boundaries.output.vehicle import CallableRoadProfile, RoadProfile
 
 from launch_tuning_common import (
     RPM_PER_RADIAN_PER_SECOND,
-    build_operating_system,
+    build_operating_configuration,
+    build_system_from_case,
+    case_with_output_road_profile,
+    require_locked_vehicle_output_boundary,
     launch_initial_state,
     resolve_primary_preload,
 )
@@ -222,7 +229,7 @@ class IdealOneWayBearingSystem:
     _effective_vehicle_mass: float = field(init=False, repr=False)
 
     def __post_init__(self) -> None:
-        attachment = self.locked.model.locked_vehicle_attachment
+        attachment = require_locked_vehicle_output_boundary(self.locked)
         final_drive = attachment.final_drive
         vehicle = attachment.vehicle
         self._speed_factor = final_drive.wheel_radius / final_drive.reduction_ratio
@@ -428,7 +435,7 @@ class IdealOneWayBearingSystem:
 
         candidate = np.asarray(state[:6], dtype=float).copy()
         candidate[5] = state[6] / self.speed_factor
-        evaluation = self.locked.evaluate(time=time, state=candidate, mode=cvt_mode)
+        evaluation = self.locked.inspect(time=time, state=candidate, mode=cvt_mode)
         alpha_secondary = evaluation.state_derivative.secondary_angular_acceleration
         road = self.road_load_at(
             vehicle_position_m=float(state[6]), vehicle_speed_mps=float(state[7])
@@ -442,7 +449,7 @@ class IdealOneWayBearingSystem:
     def road_load_at(self, *, vehicle_position_m: float, vehicle_speed_mps: float):
         """Evaluate grade/rolling/aero forces from explicit vehicle states."""
 
-        attachment = self.locked.model.locked_vehicle_attachment
+        attachment = require_locked_vehicle_output_boundary(self.locked)
         grade = self.road_profile.sample(vehicle_distance=vehicle_position_m).grade_angle
         return attachment.road_load.evaluate(
             secondary_angular_speed=vehicle_speed_mps / self.speed_factor,
@@ -486,34 +493,27 @@ class IdealOneWayBearingSystem:
         return self.locked if mode.bearing is BearingMode.LOCKED else self.overrunning
 
 
-def build_locked_child(*, resolved, road_profile: RoadProfile) -> CVTOperatingHybridSystem:
-    """Build the standard CINDER vehicle model on one spatial road profile."""
+def build_locked_child(*, resolved, road_profile: RoadProfile) -> tuple[CVTSimulationCase, CVTOperatingSystemConfig, CVTOperatingHybridSystem]:
+    """Build one locked vehicle case and its runtime system."""
 
-    template, _ = build_operating_system(resolved.constants)
-    model = template.model.with_road_profile(road_profile)
-    return CVTOperatingHybridSystem(
-        model=model,
-        traction_law=template.traction_law,
-        solve_settings=template.solve_settings,
-        operating_limits=template.operating_limits,
-        switching_settings=template.switching_settings,
+    configuration, baseline = build_operating_configuration(resolved.constants)
+    locked_case = case_with_output_road_profile(baseline.case, road_profile)
+    return (
+        locked_case,
+        configuration,
+        build_system_from_case(locked_case, configuration=configuration),
     )
 
 
-def build_overrunning_child(*, locked: CVTOperatingHybridSystem) -> CVTOperatingHybridSystem:
-    """Clone CINDER with the wheel/vehicle boundary physically removed."""
+def build_overrunning_child(
+    *,
+    locked_case: CVTSimulationCase,
+    configuration: CVTOperatingSystemConfig,
+) -> CVTOperatingHybridSystem:
+    """Build a separate zero-load output case for ideal bearing overrun."""
 
-    model = replace(
-        locked.model,
-        secondary_attachment=FixedSecondaryLoad(),
-    )
-    return CVTOperatingHybridSystem(
-        model=model,
-        traction_law=locked.traction_law,
-        solve_settings=locked.solve_settings,
-        operating_limits=locked.operating_limits,
-        switching_settings=locked.switching_settings,
-    )
+    overrun_case = locked_case.with_output_boundary(FixedOutputLoad())
+    return build_system_from_case(overrun_case, configuration=configuration)
 
 
 def _compact_mode(mode: OutputMode) -> str:
@@ -534,27 +534,52 @@ def _allocate_samples(sizes: Sequence[int], maximum: int) -> list[int]:
     return allocation
 
 
+def _uniform_report_times(*, start_time: float, end_time: float, step_seconds: float) -> NDArray[np.float64]:
+    duration = end_time - start_time
+    count = int(np.floor(duration / step_seconds))
+    values = start_time + step_seconds * np.arange(count + 1, dtype=float)
+    tolerance = 64.0 * np.finfo(float).eps * max(1.0, abs(start_time), abs(end_time))
+    if end_time - values[-1] > tolerance:
+        values = np.append(values, end_time)
+    else:
+        values[-1] = end_time
+    return values
+
+
+def _dense_segment_samples(*, segment, global_time: NDArray[np.float64]) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
+    scale = max(1.0, abs(segment.start_time), abs(segment.end_time))
+    tolerance = 128.0 * np.finfo(float).eps * scale
+    requested = global_time[(global_time >= segment.start_time - tolerance) & (global_time <= segment.end_time + tolerance)]
+    time = np.unique(np.concatenate((
+        np.asarray([segment.start_time], dtype=float),
+        requested,
+        np.asarray([segment.end_time], dtype=float),
+    )))
+    return time, segment.dense_state_at(time)
+
+
 def sample_trace(
     *,
     result: HybridIntegrationResult[OutputMode],
     system: IdealOneWayBearingSystem,
-    maximum_samples: int,
+    report_step_seconds: float,
 ) -> ComparisonTrace:
-    """Re-evaluate accepted states for speed, force, power, and energy diagnostics."""
+    """Build a uniform dense-output trace while retaining exact transition endpoints."""
 
-    budgets = _allocate_samples(
-        [segment.state.shape[1] for segment in result.segments], maximum_samples
+    if not np.isfinite(report_step_seconds) or report_step_seconds <= 0.0:
+        raise ValueError("report_step_seconds must be finite and positive.")
+    global_time = _uniform_report_times(
+        start_time=result.segments[0].start_time,
+        end_time=result.final_time,
+        step_seconds=report_step_seconds,
     )
     rows: list[tuple] = []
-    for segment, budget in zip(result.segments, budgets, strict=True):
-        indices = np.unique(
-            np.linspace(0, segment.state.shape[1] - 1, budget, dtype=int)
+    for segment in result.segments:
+        time_values, state_values = _dense_segment_samples(
+            segment=segment, global_time=global_time
         )
-        for index in indices:
-            if rows and index == 0:
-                continue
-            time = float(segment.time[index])
-            vector = np.asarray(segment.state[:, index], dtype=float).copy()
+        for index, time in enumerate(time_values):
+            vector = np.asarray(state_values[:, index], dtype=float).copy()
             vector[3] = np.clip(
                 vector[3], 0.0, system.locked.operating_limits.upper_stop_shift
             )
@@ -562,7 +587,7 @@ def sample_trace(
                 vehicle_position_m=float(vector[6]), vehicle_speed_mps=float(vector[7])
             )
             child = system._child(segment.mode)
-            evaluation = child.evaluate(time=time, state=vector[:6], mode=segment.mode.cvt)
+            evaluation = child.inspect(time=time, state=vector[:6], mode=segment.mode.cvt)
             derivative = evaluation.state_derivative.as_vector()
             if segment.mode.bearing is BearingMode.LOCKED:
                 output_torque = system.output_drive_torque(
@@ -1029,7 +1054,12 @@ def parse_arguments() -> argparse.Namespace:
     parser.add_argument("--relative-tolerance", type=float, default=1.0e-2)
     parser.add_argument("--absolute-tolerance", type=float, default=1.0e-5)
     parser.add_argument("--maximum-transitions", type=int, default=700)
-    parser.add_argument("--trace-samples", type=int, default=700)
+    parser.add_argument(
+        "--report-step-ms",
+        type=float,
+        default=10.0,
+        help="Uniform exported/report time spacing [ms]; exact hybrid transition points are retained in addition.",
+    )
     parser.add_argument("--release-torque-hysteresis-nm", type=float, default=0.5)
     parser.add_argument("--capture-torque-hysteresis-nm", type=float, default=0.5)
     parser.add_argument("--output-dir", type=Path, default=Path("artifacts/one_way_bearing_comparison"))
@@ -1045,14 +1075,13 @@ def parse_arguments() -> argparse.Namespace:
         "absolute_tolerance",
         "release_torque_hysteresis_nm",
         "capture_torque_hysteresis_nm",
+        "report_step_ms",
     ):
         value = getattr(args, name)
         if not np.isfinite(value) or value <= 0.0:
             parser.error(f"--{name.replace('_', '-')} must be finite and positive.")
     if args.maximum_transitions < 1:
         parser.error("--maximum-transitions must be at least one.")
-    if args.trace_samples < 150:
-        parser.error("--trace-samples must be at least 150.")
     return args
 
 
@@ -1090,7 +1119,7 @@ def run_scenario(
     settings: HybridIntegratorSettings,
     initial: CVTDynamicState,
     duration_s: float,
-    trace_samples: int,
+    report_step_seconds: float,
     performance_distance_m: float,
     output_dir: Path,
     release_torque_hysteresis_nm: float,
@@ -1099,8 +1128,14 @@ def run_scenario(
     """Run and write one comparison case in an isolated, reusable unit."""
 
     road_profile = scenario.road_profile()
-    locked_child = build_locked_child(resolved=resolved, road_profile=road_profile)
-    overrun_child = build_overrunning_child(locked=locked_child)
+    locked_case, configuration, locked_child = build_locked_child(
+        resolved=resolved,
+        road_profile=road_profile,
+    )
+    overrun_child = build_overrunning_child(
+        locked_case=locked_case,
+        configuration=configuration,
+    )
     locked_system = IdealOneWayBearingSystem(
         locked=locked_child,
         overrunning=overrun_child,
@@ -1122,20 +1157,20 @@ def run_scenario(
         time_span=(0.0, duration_s),
         initial_state=locked_system.initial_state(initial),
         initial_mode=locked_system.initial_mode(initial),
-        settings=settings,
+        settings=replace(settings, retain_dense_output=True),
     )
     one_way_result = integrate_hybrid(
         system=one_way_system,
         time_span=(0.0, duration_s),
         initial_state=one_way_system.initial_state(initial),
         initial_mode=one_way_system.initial_mode(initial),
-        settings=settings,
+        settings=replace(settings, retain_dense_output=True),
     )
     locked_trace = sample_trace(
-        result=locked_result, system=locked_system, maximum_samples=trace_samples
+        result=locked_result, system=locked_system, report_step_seconds=report_step_seconds
     )
     one_way_trace = sample_trace(
-        result=one_way_result, system=one_way_system, maximum_samples=trace_samples
+        result=one_way_result, system=one_way_system, report_step_seconds=report_step_seconds
     )
     locked_metric = calculate_metrics(
         scenario=scenario,
@@ -1226,7 +1261,7 @@ def main() -> None:
             settings=settings,
             initial=initial,
             duration_s=args.duration_s,
-            trace_samples=args.trace_samples,
+            report_step_seconds=args.report_step_ms * 1.0e-3,
             performance_distance_m=args.performance_distance_m,
             output_dir=args.output_dir,
             release_torque_hysteresis_nm=args.release_torque_hysteresis_nm,

@@ -18,7 +18,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.10'
+          python-version: '3.12'
 
       - name: Install Python dependencies
         run: |
@@ -39,18 +39,11 @@ jobs:
           black --check src test
         working-directory: ./cvtModel
 
-      - name: Run Python unit tests
+      - name: Run CINDER tests with coverage
         run: |
           source venv/bin/activate
-          coverage run -m unittest discover -s test/simulations -s test/utils
-        working-directory: ./cvtModel
-          
-      - name: Generate coverage report
-        run: |
-          source venv/bin/activate
+          coverage run -m pytest
           coverage report
-
-          python -m unittest discover -s test
         working-directory: ./cvtModel
 
   backend-tests:

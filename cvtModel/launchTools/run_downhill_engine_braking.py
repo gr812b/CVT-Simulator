@@ -73,16 +73,20 @@ for candidate_path in (
     if str(candidate_path) not in sys.path:
         sys.path.append(str(candidate_path))
 
-from cinder.integration import CVTDynamicState, HybridIntegratorSettings  # noqa: E402
-from cinder.integration.cvt_operating_hybrid import (
+from cinder.execution.hybrid import CVTDynamicState, HybridIntegratorSettings  # noqa: E402
+from cinder.results import ReportingGrid, ReportingSettings  # noqa: E402
+from cinder.execution.hybrid.cvt_operating_hybrid import (
     CVTOperatingHybridSystem,
 )  # noqa: E402
-from cinder.vehicle import CallableRoadProfile  # noqa: E402
+from cinder.model.boundaries.output.vehicle import CallableRoadProfile  # noqa: E402
 from launch_tuning_common import (  # noqa: E402
     MILLIMETRE,
     RPM_PER_RADIAN_PER_SECOND,
     TuneCandidate,
-    build_operating_system,
+    build_operating_configuration,
+    build_system_from_case,
+    case_with_output_road_profile,
+    require_locked_vehicle_output_boundary,
     launch_initial_state,
     resolve_primary_preload,
 )
@@ -222,7 +226,11 @@ def parse_arguments() -> argparse.Namespace:
     parser.add_argument("--relative-tolerance", type=float, default=None)
     parser.add_argument("--absolute-tolerance", type=float, default=None)
     parser.add_argument("--maximum-transitions", type=int, default=200)
-    parser.add_argument("--plot-samples", type=int, default=1800)
+    parser.add_argument(
+        "--report-step-ms", type=float, default=10.0,
+        help="Uniform result/export spacing [ms]; exact event points are retained as additional rows.",
+    )
+    parser.add_argument("--plot-samples", type=int, default=None, help="Optional plotting/export cap; omitted keeps CINDER\'s full 10 ms report grid.")
     parser.add_argument("--run-audit", action="store_true")
     parser.add_argument(
         "--output-dir",
@@ -253,10 +261,12 @@ def parse_arguments() -> argparse.Namespace:
             parser.error(
                 f"--{name.replace('_', '-')} must be finite and positive when supplied."
             )
+    if not np.isfinite(args.report_step_ms) or args.report_step_ms <= 0.0:
+        parser.error("--report-step-ms must be finite and positive.")
     if args.maximum_transitions < 1:
         parser.error("--maximum-transitions must be at least one.")
-    if args.plot_samples < 250:
-        parser.error("--plot-samples must be at least 250.")
+    if args.plot_samples is not None and args.plot_samples < 250:
+        parser.error("--plot-samples must be at least 250 when supplied.")
     return args
 
 
@@ -288,21 +298,16 @@ def load_candidate(path: Path) -> tuple[TuneCandidate, dict[str, float | str]]:
 def build_system(*, resolved, curve: DownhillRoadCurve) -> CVTOperatingHybridSystem:
     """Install the physical distance-indexed road into an otherwise normal CINDER system."""
 
-    template, _ = build_operating_system(resolved.constants)
-    model = template.model.with_road_profile(
+    configuration, baseline = build_operating_configuration(resolved.constants)
+    case = case_with_output_road_profile(
+        baseline.case,
         CallableRoadProfile(
             grade_angle_function=lambda vehicle_distance: curve.grade_radians(
                 vehicle_distance
             )
-        )
+        ),
     )
-    return CVTOperatingHybridSystem(
-        model=model,
-        traction_law=template.traction_law,
-        solve_settings=template.solve_settings,
-        operating_limits=template.operating_limits,
-        switching_settings=template.switching_settings,
-    )
+    return build_system_from_case(case, configuration=configuration)
 
 
 def _compact_mode(mode) -> str:
@@ -311,7 +316,9 @@ def _compact_mode(mode) -> str:
     return f"{mode.engagement.value}/{mode.shift_constraint.value}/{mode.contact_regime.mode.value}"
 
 
-def _allocate_samples(sizes: Sequence[int], maximum: int) -> list[int]:
+def _allocate_samples(sizes: Sequence[int], maximum: int | None) -> list[int]:
+    if maximum is None:
+        return list(sizes)
     total = sum(sizes)
     if total <= maximum:
         return list(sizes)
@@ -329,7 +336,7 @@ def sample_trace(
     system: CVTOperatingHybridSystem,
     result,
     curve: DownhillRoadCurve,
-    maximum_samples: int,
+    maximum_samples: int | None,
 ) -> DownhillTrace:
     """Re-evaluate accepted states for road, engine, and vehicle-acceleration diagnostics."""
 
@@ -337,7 +344,7 @@ def sample_trace(
         [segment.state.shape[1] for segment in result.segments], maximum_samples
     )
     rows = []
-    final_drive = system.model.locked_vehicle_attachment.final_drive
+    final_drive = require_locked_vehicle_output_boundary(system).final_drive
     speed_factor = final_drive.wheel_radius / final_drive.reduction_ratio
 
     for segment, budget in zip(result.segments, budgets, strict=True):
@@ -775,7 +782,7 @@ def plot_road_profile(*, curve: DownhillRoadCurve, final_distance_m: float):
 def plot_engine_curve(*, system: CVTOperatingHybridSystem, resolved):
     """Plot the exact PCHIP engine curve used by this run, including the governor tail."""
 
-    engine = system.model.engine
+    engine = system.model.input_boundary
     spec = engine.spec
     rpm_limit = max(
         6500.0, spec.high_speed_braking_plateau_end * RPM_PER_RADIAN_PER_SECOND * 1.05
@@ -990,10 +997,13 @@ def main() -> None:
         f"rtol={rtol:.1e}, atol={atol:.1e}"
     )
 
-    result = system.integrate(
+    result = system.run(
         time_span=(0.0, args.duration_s),
         initial_state=launch_initial_state(primary_rpm=args.initial_primary_rpm),
         settings=settings,
+        reporting_settings=ReportingSettings(
+            grid=ReportingGrid.uniform_time_step(args.report_step_ms * 1.0e-3),
+        ),
     )
     if not result.completed:
         raise RuntimeError(f"Integration terminated early: {result.termination_reason}")
@@ -1020,7 +1030,7 @@ def main() -> None:
     write_trace(args.output_dir / "downhill_engine_braking_trace.csv", trace)
 
     audit_status, audit_lines = (
-        audit_result(system=system, result=result)
+        audit_result(system=system, result=result.trace.raw)
         if args.run_audit
         else (
             "not_run",

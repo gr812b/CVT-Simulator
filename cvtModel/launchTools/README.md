@@ -1,7 +1,7 @@
 # CINDER launchTools — circular-primary / traction-first update
 
 Replace the contents of your existing `tools2/` launch-tools folder with this
-folder. No production CINDER source file is modified. The tools use CINDER's
+folder. No production reorganized CINDER source file is modified. The tools use CINDER's
 existing `CircularSegment` profile and select it only while constructing the
 Baja diagnostic baseline.
 
@@ -30,7 +30,7 @@ Baja diagnostic baseline.
 
 ## Current circular reference
 
-With the supplied updated CINDER source and LSODA, the 10 s reference run
+With the supplied updated reorganized CINDER source and LSODA, the 10 s reference run
 completed with:
 
 - main low-ratio-seat release: **3071 rpm**;
@@ -101,3 +101,26 @@ reporting vehicle speed, distance, road force, and reflected road torque as
 before.  Future secondary-dyno and one-way-bearing experiments can instead
 supply another secondary attachment without modifying the belt/contact
 closure or these normal vehicle workflows.
+
+
+## Package migration
+
+These tools now import CINDER through `cinder.model` and `cinder.execution`;
+they no longer depend on the compatibility paths.  The Baja baseline constructs
+a `CVTAssemblySpec`, connects an engine and locked vehicle output boundary in a
+`CVTSimulationCase`, and obtains the existing runtime evaluator through
+`CVTOperatingHybridSystem.from_case(case, ...)`.
+
+## Uniform exported traces
+
+The normal diagnostic tools now call CINDER's high-level `system.run()` path.
+Their CSV/plot traces use CINDER's default **10 ms uniform report grid**, sampled
+from SciPy's per-segment dense solution. The adaptive solver trace is still
+kept internally for audits and exact event timing. Every hybrid transition is
+added as its own exact pre/post pair even if it falls between two 10 ms grid
+points, so a CSV may contain repeated timestamps at a real reset or impact.
+
+`--plot-samples` / `--diagnostic-samples` are optional display/export caps.
+When omitted, the full 10 ms report grid is written. The one-way-bearing tool
+also uses a 10 ms dense-output grid for its custom eight-state wrapper; adjust
+it with `--report-step-ms`.

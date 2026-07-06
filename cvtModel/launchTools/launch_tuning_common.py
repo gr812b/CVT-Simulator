@@ -47,29 +47,34 @@ for _candidate in (
         sys.path.append(str(_candidate))
 
 from baja_trial_baseline import (  # noqa: E402
+    BajaTrialBaseline,
     BajaTrialConstants,
     RPM_TO_RAD_PER_SECOND,
     build_baja_trial_baseline,
 )
-from cinder.contact import ContactRegime, ContactTractionLaw  # noqa: E402
-from cinder.dynamics import (
+from cinder.model.system import CVTSimulationCase  # noqa: E402
+from cinder.results import ReportingSettings  # noqa: E402
+from cinder.model.boundaries.output import LockedFinalDriveVehicle  # noqa: E402
+from cinder.model.cvt.contact import ContactRegime, ContactTractionLaw  # noqa: E402
+from cinder.model.cvt.dynamics import (
     EngagedContactSolveSettings,
     LambdaSearchBounds,
 )  # noqa: E402
-from cinder.dynamics.deadzone import DeadzoneEvaluation  # noqa: E402
-from cinder.integration import CVTDynamicState, HybridIntegratorSettings  # noqa: E402
-from cinder.integration.cvt_contact import CVTContactEvaluation  # noqa: E402
-from cinder.integration.cvt_operating_hybrid import (
+from cinder.model.cvt.dynamics.deadzone import DeadzoneEvaluation  # noqa: E402
+from cinder.execution.hybrid import CVTDynamicState, HybridIntegratorSettings  # noqa: E402
+from cinder.execution.hybrid.cvt_contact import CVTContactEvaluation  # noqa: E402
+from cinder.execution.hybrid.cvt_operating_hybrid import (
     CVTOperatingHybridSystem,
+    CVTOperatingSystemConfig,
 )  # noqa: E402
-from cinder.integration.cvt_operating_limits import (
+from cinder.execution.hybrid.cvt_operating_limits import (
     CVTShiftOperatingLimits,
 )  # noqa: E402
-from cinder.integration.cvt_regime import (
+from cinder.execution.hybrid.cvt_regime import (
     CVTEngagementState,
     CVTOperatingRegime,
 )  # noqa: E402
-from cinder.profiles import CircularSegment, LinearSegment, PiecewiseRamp  # noqa: E402
+from cinder.model.cvt.profiles import CircularSegment, LinearSegment, PiecewiseRamp  # noqa: E402
 
 RPM_PER_RADIAN_PER_SECOND = 60.0 / (2.0 * np.pi)
 MILLIMETRE = 1.0e-3
@@ -281,13 +286,13 @@ def candidate_constants(
     return replace(BajaTrialConstants(), **updates)
 
 
-def build_operating_system(
+def build_operating_configuration(
     constants: BajaTrialConstants,
     *,
     static_lambda_limit: float = 0.65,
     kinetic_lambda_magnitude: float = 0.55,
-) -> tuple[CVTOperatingHybridSystem, object]:
-    """Build the normal hybrid operating system from one constants record."""
+) -> tuple[CVTOperatingSystemConfig, BajaTrialBaseline]:
+    """Build case-independent hybrid settings plus the immutable Baja case."""
 
     baseline = build_baja_trial_baseline(constants)
     traction_law = ContactTractionLaw.symmetric(
@@ -296,8 +301,7 @@ def build_operating_system(
         primary_kinetic_lambda_magnitude=kinetic_lambda_magnitude,
         secondary_kinetic_lambda_magnitude=kinetic_lambda_magnitude,
     )
-    system = CVTOperatingHybridSystem(
-        model=baseline.model,
+    configuration = CVTOperatingSystemConfig(
         traction_law=traction_law,
         solve_settings=EngagedContactSolveSettings(
             lambda_search_bounds=LambdaSearchBounds.symmetric(
@@ -313,8 +317,23 @@ def build_operating_system(
             upper_stop_shift=constants.max_shift,
         ),
     )
-    return system, baseline
+    return configuration, baseline
 
+
+def build_operating_system(
+    constants: BajaTrialConstants,
+    *,
+    static_lambda_limit: float = 0.65,
+    kinetic_lambda_magnitude: float = 0.55,
+) -> tuple[CVTOperatingHybridSystem, BajaTrialBaseline]:
+    """Build the normal hybrid system from the baseline simulation case."""
+
+    configuration, baseline = build_operating_configuration(
+        constants,
+        static_lambda_limit=static_lambda_limit,
+        kinetic_lambda_magnitude=kinetic_lambda_magnitude,
+    )
+    return configuration.build(baseline.case), baseline
 
 def launch_initial_state(*, primary_rpm: float = 1800.0) -> CVTDynamicState:
     """Return the requested rest-launch state: primary spinning, driven side at rest."""
@@ -696,6 +715,7 @@ def integrate_resolved_tune(
     first_step_seconds: float | None = None,
     static_lambda_limit: float = 0.65,
     kinetic_lambda_magnitude: float = 0.55,
+    reporting_settings: ReportingSettings | None = None,
 ):
     """Integrate the actual hybrid launch from the requested rest state."""
 
@@ -706,7 +726,7 @@ def integrate_resolved_tune(
         static_lambda_limit=static_lambda_limit,
         kinetic_lambda_magnitude=kinetic_lambda_magnitude,
     )
-    result = system.integrate(
+    result = system.run(
         time_span=(0.0, duration_seconds),
         initial_state=launch_initial_state(primary_rpm=initial_primary_rpm),
         settings=HybridIntegratorSettings(
@@ -717,6 +737,7 @@ def integrate_resolved_tune(
             first_step=first_step_seconds,
             maximum_transitions=maximum_transitions,
         ),
+        reporting_settings=reporting_settings,
     )
     return system, result
 
@@ -728,9 +749,11 @@ def _sample_indices(count: int, maximum: int) -> NDArray[np.int64]:
 
 
 def _allocate_sample_budget(
-    segment_sizes: Iterable[int], maximum: int
+    segment_sizes: Iterable[int], maximum: int | None
 ) -> tuple[int, ...]:
     sizes = tuple(segment_sizes)
+    if maximum is None:
+        return sizes
     total = sum(sizes)
     if total <= maximum:
         return sizes
@@ -756,7 +779,7 @@ def sample_launch_trace(
     *,
     system: CVTOperatingHybridSystem,
     result,
-    maximum_samples: int = 500,
+    maximum_samples: int | None = None,
 ) -> LaunchTrace:
     """Re-evaluate accepted samples for plotting and exportable diagnostics."""
 
@@ -784,7 +807,7 @@ def sample_launch_trace(
             time = float(segment.time[index])
             vector = np.asarray(segment.state[:, index], dtype=float)
             state = CVTDynamicState.from_vector(vector)
-            evaluation = system.evaluate(time=time, state=vector, mode=segment.mode)
+            evaluation = system.inspect(time=time, state=vector, mode=segment.mode)
             trace_time.append(time)
             trace_state.append(vector)
             labels.append(mode_label(segment.mode))
@@ -1272,3 +1295,61 @@ def transition_metrics(
         "persistent_engagement": int(longest_engaged_duration >= 0.050),
         "transition_reasons": " | ".join(reasons),
     }
+
+
+def require_locked_vehicle_output_boundary(
+    system: CVTOperatingHybridSystem,
+) -> LockedFinalDriveVehicle:
+    """Return the locked vehicle boundary carried by one runtime system.
+
+    This is intentionally a read-only inspection helper.  Editing a route still
+    starts from :class:`CVTSimulationCase` and rebuilds the runtime model via
+    :func:`case_with_output_road_profile`; a hybrid system is never treated as
+    an editable case container.
+    """
+
+    if not isinstance(system, CVTOperatingHybridSystem):
+        raise TypeError("system must be a CVTOperatingHybridSystem.")
+    boundary = system.model.output_boundary
+    if not isinstance(boundary, LockedFinalDriveVehicle):
+        raise TypeError(
+            "This operation requires a LockedFinalDriveVehicle output boundary; "
+            f"received {type(boundary).__name__}."
+        )
+    return boundary
+
+
+def case_with_output_road_profile(
+    case: CVTSimulationCase,
+    road_profile,
+) -> CVTSimulationCase:
+    """Return one editable case with only its locked-vehicle route replaced.
+
+    This is configuration assembly only.  The caller then creates exactly one
+    runtime system through the explicit operating configuration and runs
+    one continuous hybrid integration.
+    """
+
+    if not isinstance(case, CVTSimulationCase):
+        raise TypeError("case must be a CVTSimulationCase.")
+    boundary = case.output_boundary
+    if not isinstance(boundary, LockedFinalDriveVehicle):
+        raise TypeError(
+            "The requested road profile requires a LockedFinalDriveVehicle "
+            "output boundary."
+        )
+    return case.with_output_boundary(boundary.with_road_profile(road_profile))
+
+
+def build_system_from_case(
+    case: CVTSimulationCase,
+    *,
+    configuration: CVTOperatingSystemConfig,
+) -> CVTOperatingHybridSystem:
+    """Build one runtime hybrid system from one fully specified immutable case."""
+
+    if not isinstance(case, CVTSimulationCase):
+        raise TypeError("case must be a CVTSimulationCase.")
+    if not isinstance(configuration, CVTOperatingSystemConfig):
+        raise TypeError("configuration must be a CVTOperatingSystemConfig.")
+    return configuration.build(case)
