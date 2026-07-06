@@ -253,7 +253,7 @@ function createDefaultConfig(): ChartConfig {
 /**
  * Creates a complete chart configuration by merging user config with defaults
  */
-export function createChartConfig(userConfig: Partial<ChartConfig>, xData: number[], yData: number[][]): ChartConfig {
+export function createChartConfig(userConfig: Partial<ChartConfig>, xData: number[], yData: Array<Array<number | null>>): ChartConfig {
   const defaultConfig = createDefaultConfig();
   const mergedConfig: ChartConfig = {
     ...defaultConfig,
@@ -282,10 +282,10 @@ export function createChartConfig(userConfig: Partial<ChartConfig>, xData: numbe
 /**
  * Converts data points to ECharts dataset format
  */
-export function createDataset(xData: number[], yData: number[][], config: ChartConfig): EChartsOption['dataset'] {
+export function createDataset(xData: number[], yData: Array<Array<number | null>>, config: ChartConfig): EChartsOption['dataset'] {
 
 
-  const source: (string | number | Date)[][] = [[config.xAxis.name]];
+  const source: (string | number | Date | null)[][] = [[config.xAxis.name]];
 
   const seriesCount = yData[0]?.length || 0;
   for (let i = 0; i < seriesCount; i++) {
@@ -303,7 +303,7 @@ export function createDataset(xData: number[], yData: number[][], config: ChartC
 /**
  * Generates the series array for ECharts options
  */
-function createSeries(yData: number[][], config: ChartConfig): EChartsOption['series'] {
+function createSeries(yData: Array<Array<number | null>>, config: ChartConfig): EChartsOption['series'] {
   const seriesCount = yData[0]?.length || 0;
   const seriesArray: EChartsOption['series'] = [];
 
@@ -336,7 +336,7 @@ function createSeries(yData: number[][], config: ChartConfig): EChartsOption['se
  */
 export function generateEChartsOptions(
   xData: number[],
-  yData: number[][],
+  yData: Array<Array<number | null>>,
   config: ChartConfig,
   userOptions: Partial<EChartsOption> = {}
 ): EChartsOption {
@@ -474,7 +474,7 @@ export function generateEChartsOptions(
  */
 export function createChartOptions(
   xData: number[],
-  yData: number[][],
+  yData: Array<Array<number | null>>,
   partialConfig: Partial<ChartConfig> = {},
   chartOptions: Partial<EChartsOption> = {}
 ): EChartsOption {
@@ -488,17 +488,18 @@ export { COLORS as CHART_COLORS };
 /**
  * Determines the appropriate axis type based on data
  */
-export function inferAxisType(values: (number | string | Date)[]): 'time' | 'value' | 'category' {
-  if (values.length === 0) return 'category';
+export function inferAxisType(values: (number | string | Date | null)[]): 'time' | 'value' | 'category' {
+  const definedValues = values.filter((value): value is number | string | Date => value !== null);
+  if (definedValues.length === 0) return 'category';
   
-  // Check if all values are numbers
-  const numericCount = values.filter(v => typeof v === 'number' && Number.isFinite(v)).length;
-  if (numericCount === values.length) {
+  // Nulls represent intentional chart gaps; infer from the available samples.
+  const numericCount = definedValues.filter((value) => typeof value === 'number' && Number.isFinite(value)).length;
+  if (numericCount === definedValues.length) {
     return 'value';
   }
   
   // Check if values are dates or date-like strings
-  const dateCount = values.filter(v => {
+  const dateCount = definedValues.filter(v => {
     if (v instanceof Date) return true;
     if (typeof v === 'string') {
       const parsed = Date.parse(v);
@@ -507,7 +508,7 @@ export function inferAxisType(values: (number | string | Date)[]): 'time' | 'val
     return false;
   }).length;
   
-  const threshold = Math.max(1, Math.floor(values.length * VALIDATION.DATE_DETECTION_THRESHOLD));
+  const threshold = Math.max(1, Math.floor(definedValues.length * VALIDATION.DATE_DETECTION_THRESHOLD));
   if (dateCount >= threshold) {
     return 'time';
   }

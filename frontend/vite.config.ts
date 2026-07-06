@@ -12,12 +12,11 @@ export default defineConfig({
       '@assets': resolve(root, 'assets'),
       '@components': resolve(root, 'components'),
       '@styles': resolve(root, 'styles'),
-      '@types': resolve(root, 'types/index.ts'),
       '@pages': resolve(root, 'pages'),
       '@contexts': resolve(root, 'contexts'),
       '@utils': resolve(root, 'utils'),
       '@hooks': resolve(root, 'hooks'),
-      '@constants': resolve(root, 'constants'),
+      '@api': resolve(root, 'api'),
     },
   },
   css: {

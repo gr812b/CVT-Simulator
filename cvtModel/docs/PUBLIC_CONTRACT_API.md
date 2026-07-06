@@ -45,6 +45,19 @@ The document supports CINDER's built-in components:
 Unsupported custom Python force laws fail explicitly instead of being silently
 misrepresented.
 
+## Simulation-document JSON Schema
+
+```python
+from cinder.contracts import simulation_case_document_json_schema
+
+schema = simulation_case_document_json_schema()
+```
+
+This standard JSON Schema describes the complete, canonical-SI, version-one
+`cinder_simulation_case` document. API adapters can expose it directly and
+frontend build tooling can generate a `SimulationCaseDocument` type from it.
+It intentionally does not reflect CINDER internal dataclasses.
+
 ## Component catalog
 
 ```python
@@ -116,8 +129,10 @@ engagement, per-contact slip durations, speed/ratio extrema, traction
 utilization extrema, and integrated work/slip-dissipation values when those
 report channels were requested.
 
-`project_simulation_result` includes report segments, self-describing signals,
-exact transition records, metrics, warnings, and a JSON-safe final state.
+`project_simulation_result` includes one flattened `report_table`, self-describing
+signals, exact transition records, metrics, warnings, and a JSON-safe final
+state. Detailed `reported_segments` and the adaptive `raw_trace` are explicit
+opt-ins for inspection/debugging; neither is included by default.
 
 ## Explicit boundary
 

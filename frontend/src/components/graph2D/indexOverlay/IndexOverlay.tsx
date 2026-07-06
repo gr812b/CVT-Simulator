@@ -1,7 +1,7 @@
 import { useRef, useEffect, useCallback, useState } from 'react';
 import type { ECharts } from 'echarts';
 import styles from './IndexOverlay.module.scss';
-import { ReplayEventType } from '@utils/ReplayController';
+import { ReplayEventType } from '@utils/reportReplay';
 import { TooltipPosition } from '../chartOptions';
 
 interface AxisConfig {
@@ -11,7 +11,7 @@ interface AxisConfig {
 
 interface IndexOverlayProps {
   xData: number[];
-  yData: number[][];
+  yData: Array<Array<number | null>>;
   replayController: {
     on: (handler: (event: { type: string; currentIndex?: number }) => void) => () => void;
   };

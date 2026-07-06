@@ -45,7 +45,7 @@
               {
                 "kind": "linear_segment",
                 "length_m": 0.019049999999999997,
-                "angle_degrees": 30.0
+                "angle_rad": 0.5235987755982988
               }
             ]
           }
@@ -84,7 +84,7 @@
               {
                 "kind": "linear_segment",
                 "length_m": 0.01312196399554005,
-                "angle_degrees": 64.0
+                "angle_rad": 1.117010721276371
               }
             ]
           },

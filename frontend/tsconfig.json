@@ -10,12 +10,11 @@
       "@components/*": ["components/*"],
       "@assets/*": ["assets/*"],
       "@styles/*": ["styles/*"],
-      "@types": ["types/index.ts"],
       "@pages/*": ["pages/*"],
       "@contexts/*": ["contexts/*"],
       "@utils/*": ["utils/*"],
       "@hooks/*": ["hooks/*"],
-      "@constants/*": ["constants/*"],
+      "@api/*": ["api/*"],
     },
   }
 }

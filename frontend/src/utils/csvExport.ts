@@ -1,83 +1,22 @@
-type FlatRow = Record<string, unknown>;
+import type { ReportTable } from '@api/client';
 
-function isObjectRecord(value: unknown): value is Record<string, unknown> {
-    return typeof value === 'object' && value !== null && !Array.isArray(value);
+function escapeCsv(value: string | number | null): string {
+  const text = value === null ? '' : String(value);
+  return /[",\n\r]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
 }
 
-function flattenValue(value: unknown, path: string, output: FlatRow): void {
-    if (Array.isArray(value)) {
-        if (value.length === 0) {
-            output[path] = '';
-            return;
-        }
-
-        value.forEach((item, index) => {
-            const nextPath = path ? `${path}[${index}]` : `[${index}]`;
-            flattenValue(item, nextPath, output);
-        });
-        return;
-    }
-
-    if (isObjectRecord(value)) {
-        const entries = Object.entries(value);
-
-        if (!entries.length) {
-            output[path] = '';
-            return;
-        }
-
-        entries.forEach(([key, nestedValue]) => {
-            const nextPath = path ? `${path}.${key}` : key;
-            flattenValue(nestedValue, nextPath, output);
-        });
-        return;
-    }
-
-    output[path] = value ?? '';
-}
-
-function flattenRows(rows: ReadonlyArray<unknown>): FlatRow[] {
-    return rows.map((row) => {
-        const flattened: FlatRow = {};
-        flattenValue(row, '', flattened);
-        return flattened;
-    });
-}
-
-function escapeCsvField(value: unknown): string {
-    const str = value == null ? '' : String(value);
-    return /[",\n\r]/.test(str) ? `"${str.replace(/"/g, '""')}"` : str;
-}
-
-function toCsv(flattenedRows: ReadonlyArray<FlatRow>): string {
-    const headers = Array.from(
-        flattenedRows.reduce((keys, row) => {
-            Object.keys(row).forEach((key) => keys.add(key));
-            return keys;
-        }, new Set<string>())
-    );
-
-    const csvRows = [
-        headers.join(','),
-        ...flattenedRows.map((row) => headers.map((header) => escapeCsvField(row[header])).join(',')),
-    ];
-
-    return csvRows.join('\r\n');
-}
-
-export function downloadFlattenedCsv(rows: ReadonlyArray<unknown>, filePrefix = 'playback_data'): void {
-    const flattenedRows = flattenRows(rows);
-    const csv = toCsv(flattenedRows);
-
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    const url = window.URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-
-    link.href = url;
-    link.download = `${filePrefix}_${timestamp}.csv`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    window.URL.revokeObjectURL(url);
+/** Export exactly the CINDER report-table columns; no legacy nested-output flattening. */
+export function downloadReportTableCsv(table: ReportTable, filePrefix = 'cinder_simulation_report'): void {
+  const header = table.columns.map((column) => `${column.key} [${column.canonicalUnit}]`);
+  const rows = Array.from({ length: table.rowCount }, (_, row) => table.columns.map((column) => column.values[row] ?? null));
+  const csv = [header, ...rows].map((row) => row.map(escapeCsv).join(',')).join('\r\n');
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const anchor = document.createElement('a');
+  anchor.href = url;
+  anchor.download = `${filePrefix}_${new Date().toISOString().replace(/[:.]/g, '-')}.csv`;
+  document.body.append(anchor);
+  anchor.click();
+  anchor.remove();
+  URL.revokeObjectURL(url);
 }

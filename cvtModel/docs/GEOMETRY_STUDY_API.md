@@ -70,5 +70,4 @@ The sensitivity field returns `dR/ds` in ratio per metre and ratio per
 millimetre of **active** axial shift. It has no selected-path data; callers
 compose it with the independently sampled path.
 
-A project-local geometry smoke script can call these functions and plot the
-returned fields, but plotting and launch tooling belong outside `src/cinder`.
+The repository-level `launchTools/run_geometry_design_study.py` is an internal consumer of this API. It is not part of the installed CINDER package or its setup path.

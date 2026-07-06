@@ -1,0 +1,1203 @@
+{
+  "components": {
+    "schemas": {
+      "ActuationAxisRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "coordinate": {
+            "enum": [
+              "shift_position",
+              "shaft_speed",
+              "shift_speed",
+              "primary_angular_acceleration",
+              "secondary_angular_acceleration",
+              "belt_acceleration",
+              "shift_acceleration",
+              "primary_torque",
+              "secondary_torque",
+              "primary_normal_resultant",
+              "secondary_normal_resultant"
+            ],
+            "title": "Coordinate",
+            "type": "string"
+          },
+          "values": {
+            "items": {
+              "type": "number"
+            },
+            "maxItems": 1001,
+            "minItems": 1,
+            "title": "Values",
+            "type": "array"
+          }
+        },
+        "required": [
+          "coordinate",
+          "values"
+        ],
+        "title": "ActuationAxisRequest",
+        "type": "object"
+      },
+      "BeltSectionRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "cord_depth_from_outer_m": {
+            "minimum": 0.0,
+            "title": "Cord Depth From Outer M",
+            "type": "number"
+          },
+          "height_m": {
+            "exclusiveMinimum": 0.0,
+            "title": "Height M",
+            "type": "number"
+          },
+          "inner_width_m": {
+            "exclusiveMinimum": 0.0,
+            "title": "Inner Width M",
+            "type": "number"
+          },
+          "outer_width_m": {
+            "exclusiveMinimum": 0.0,
+            "title": "Outer Width M",
+            "type": "number"
+          }
+        },
+        "required": [
+          "height_m",
+          "outer_width_m",
+          "inner_width_m",
+          "cord_depth_from_outer_m"
+        ],
+        "title": "BeltSectionRequest",
+        "type": "object"
+      },
+      "ClampingResponseStudyRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "assembly_document": {
+            "additionalProperties": true,
+            "title": "Assembly Document",
+            "type": "object"
+          },
+          "axes": {
+            "items": {
+              "$ref": "#/components/schemas/ActuationAxisRequest"
+            },
+            "maxItems": 2,
+            "minItems": 1,
+            "title": "Axes",
+            "type": "array"
+          },
+          "closure_unknowns": {
+            "$ref": "#/components/schemas/ClosureUnknownValuesRequest"
+          },
+          "pulley": {
+            "enum": [
+              "input",
+              "output"
+            ],
+            "title": "Pulley",
+            "type": "string"
+          },
+          "shaft_speed_rad_per_s": {
+            "default": 0.0,
+            "title": "Shaft Speed Rad Per S",
+            "type": "number"
+          },
+          "shift_position_m": {
+            "minimum": 0.0,
+            "title": "Shift Position M",
+            "type": "number"
+          },
+          "shift_speed_m_per_s": {
+            "default": 0.0,
+            "title": "Shift Speed M Per S",
+            "type": "number"
+          }
+        },
+        "required": [
+          "assembly_document",
+          "pulley",
+          "shift_position_m",
+          "axes"
+        ],
+        "title": "ClampingResponseStudyRequest",
+        "type": "object"
+      },
+      "ClosureUnknownValuesRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "belt_acceleration_m_per_s2": {
+            "default": 0.0,
+            "title": "Belt Acceleration M Per S2",
+            "type": "number"
+          },
+          "primary_angular_acceleration_rad_per_s2": {
+            "default": 0.0,
+            "title": "Primary Angular Acceleration Rad Per S2",
+            "type": "number"
+          },
+          "primary_normal_resultant_N": {
+            "default": 0.0,
+            "title": "Primary Normal Resultant N",
+            "type": "number"
+          },
+          "primary_torque_Nm": {
+            "default": 0.0,
+            "title": "Primary Torque Nm",
+            "type": "number"
+          },
+          "secondary_angular_acceleration_rad_per_s2": {
+            "default": 0.0,
+            "title": "Secondary Angular Acceleration Rad Per S2",
+            "type": "number"
+          },
+          "secondary_normal_resultant_N": {
+            "default": 0.0,
+            "title": "Secondary Normal Resultant N",
+            "type": "number"
+          },
+          "secondary_torque_Nm": {
+            "default": 0.0,
+            "title": "Secondary Torque Nm",
+            "type": "number"
+          },
+          "shift_acceleration_m_per_s2": {
+            "default": 0.0,
+            "title": "Shift Acceleration M Per S2",
+            "type": "number"
+          }
+        },
+        "title": "ClosureUnknownValuesRequest",
+        "type": "object"
+      },
+      "ComponentCatalogResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "document": {
+            "additionalProperties": true,
+            "title": "Document",
+            "type": "object"
+          }
+        },
+        "required": [
+          "document"
+        ],
+        "title": "ComponentCatalogResponse",
+        "type": "object"
+      },
+      "ConventionsResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "document": {
+            "additionalProperties": true,
+            "title": "Document",
+            "type": "object"
+          }
+        },
+        "required": [
+          "document"
+        ],
+        "title": "ConventionsResponse",
+        "type": "object"
+      },
+      "CreateRunRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "include_raw_trace": {
+            "default": false,
+            "title": "Include Raw Trace",
+            "type": "boolean"
+          },
+          "include_reported_segments": {
+            "default": false,
+            "title": "Include Reported Segments",
+            "type": "boolean"
+          },
+          "simulation_case": {
+            "additionalProperties": true,
+            "title": "Simulation Case",
+            "type": "object"
+          }
+        },
+        "required": [
+          "simulation_case"
+        ],
+        "title": "CreateRunRequest",
+        "type": "object"
+      },
+      "EditorSchemaResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "document": {
+            "additionalProperties": true,
+            "title": "Document",
+            "type": "object"
+          }
+        },
+        "required": [
+          "document"
+        ],
+        "title": "EditorSchemaResponse",
+        "type": "object"
+      },
+      "EndpointRadiiGeometryStudyRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "context": {
+            "$ref": "#/components/schemas/GeometryDesignContextRequest"
+          },
+          "field_sampling": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/GeometryFieldSamplingRequest"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "minimum_primary_wrap_angle_rad": {
+            "anyOf": [
+              {
+                "exclusiveMinimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Minimum Primary Wrap Angle Rad"
+          },
+          "minimum_secondary_wrap_angle_rad": {
+            "anyOf": [
+              {
+                "exclusiveMinimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Minimum Secondary Wrap Angle Rad"
+          },
+          "primary_outer_radius_at_zero_shift_m": {
+            "exclusiveMinimum": 0.0,
+            "title": "Primary Outer Radius At Zero Shift M",
+            "type": "number"
+          },
+          "sample_count": {
+            "default": 301,
+            "maximum": 4001.0,
+            "minimum": 2.0,
+            "title": "Sample Count",
+            "type": "integer"
+          },
+          "secondary_outer_radius_at_zero_shift_m": {
+            "exclusiveMinimum": 0.0,
+            "title": "Secondary Outer Radius At Zero Shift M",
+            "type": "number"
+          }
+        },
+        "required": [
+          "context",
+          "primary_outer_radius_at_zero_shift_m",
+          "secondary_outer_radius_at_zero_shift_m"
+        ],
+        "title": "EndpointRadiiGeometryStudyRequest",
+        "type": "object"
+      },
+      "GeometryDesignContextRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "belt": {
+            "$ref": "#/components/schemas/BeltSectionRequest"
+          },
+          "belt_outer_length_m": {
+            "exclusiveMinimum": 0.0,
+            "title": "Belt Outer Length M",
+            "type": "number"
+          },
+          "deadzone_shift_m": {
+            "minimum": 0.0,
+            "title": "Deadzone Shift M",
+            "type": "number"
+          },
+          "max_shift_m": {
+            "minimum": 0.0,
+            "title": "Max Shift M",
+            "type": "number"
+          },
+          "sheave_half_angle_rad": {
+            "exclusiveMaximum": 1.5707963267948966,
+            "exclusiveMinimum": 0.0,
+            "title": "Sheave Half Angle Rad",
+            "type": "number"
+          }
+        },
+        "required": [
+          "belt",
+          "belt_outer_length_m",
+          "sheave_half_angle_rad",
+          "deadzone_shift_m",
+          "max_shift_m"
+        ],
+        "title": "GeometryDesignContextRequest",
+        "type": "object"
+      },
+      "GeometryFieldSamplingRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "primary_outer_radius_m": {
+            "items": {
+              "type": "number"
+            },
+            "minItems": 2,
+            "title": "Primary Outer Radius M",
+            "type": "array"
+          },
+          "secondary_outer_radius_m": {
+            "items": {
+              "type": "number"
+            },
+            "minItems": 2,
+            "title": "Secondary Outer Radius M",
+            "type": "array"
+          }
+        },
+        "required": [
+          "primary_outer_radius_m",
+          "secondary_outer_radius_m"
+        ],
+        "title": "GeometryFieldSamplingRequest",
+        "type": "object"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "title": "Detail",
+            "type": "array"
+          }
+        },
+        "title": "HTTPValidationError",
+        "type": "object"
+      },
+      "HealthResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "api_version": {
+            "default": "v1",
+            "title": "Api Version",
+            "type": "string"
+          },
+          "status": {
+            "default": "ok",
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "title": "HealthResponse",
+        "type": "object"
+      },
+      "PresetListResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "presets": {
+            "items": {
+              "$ref": "#/components/schemas/PresetSummary"
+            },
+            "title": "Presets",
+            "type": "array"
+          }
+        },
+        "required": [
+          "presets"
+        ],
+        "title": "PresetListResponse",
+        "type": "object"
+      },
+      "PresetResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "description": {
+            "default": "",
+            "title": "Description",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "simulation_case": {
+            "additionalProperties": true,
+            "title": "Simulation Case",
+            "type": "object"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "simulation_case"
+        ],
+        "title": "PresetResponse",
+        "type": "object"
+      },
+      "PresetSummary": {
+        "additionalProperties": false,
+        "properties": {
+          "description": {
+            "default": "",
+            "title": "Description",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name"
+        ],
+        "title": "PresetSummary",
+        "type": "object"
+      },
+      "RunResultResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "input_document_snapshot": {
+            "additionalProperties": true,
+            "title": "Input Document Snapshot",
+            "type": "object"
+          },
+          "result": {
+            "additionalProperties": true,
+            "title": "Result",
+            "type": "object"
+          },
+          "run": {
+            "$ref": "#/components/schemas/RunStatusResponse"
+          }
+        },
+        "required": [
+          "run",
+          "input_document_snapshot",
+          "result"
+        ],
+        "title": "RunResultResponse",
+        "type": "object"
+      },
+      "RunStatusResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "completed_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Completed At"
+          },
+          "error": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "started_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Started At"
+          },
+          "status": {
+            "enum": [
+              "queued",
+              "validating",
+              "running",
+              "completed",
+              "failed",
+              "timed_out"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "submitted_at": {
+            "format": "date-time",
+            "title": "Submitted At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "status",
+          "submitted_at"
+        ],
+        "title": "RunStatusResponse",
+        "type": "object"
+      },
+      "SimulationCaseDocumentRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "simulation_case": {
+            "additionalProperties": true,
+            "title": "Simulation Case",
+            "type": "object"
+          }
+        },
+        "required": [
+          "simulation_case"
+        ],
+        "title": "SimulationCaseDocumentRequest",
+        "type": "object"
+      },
+      "SimulationCaseJsonSchemaResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "document": {
+            "additionalProperties": true,
+            "title": "Document",
+            "type": "object"
+          }
+        },
+        "required": [
+          "document"
+        ],
+        "title": "SimulationCaseJsonSchemaResponse",
+        "type": "object"
+      },
+      "SimulationCaseValidationResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "validation": {
+            "additionalProperties": true,
+            "title": "Validation",
+            "type": "object"
+          }
+        },
+        "required": [
+          "validation"
+        ],
+        "title": "SimulationCaseValidationResponse",
+        "type": "object"
+      },
+      "StaticStudyResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "study": {
+            "additionalProperties": true,
+            "title": "Study",
+            "type": "object"
+          }
+        },
+        "required": [
+          "study"
+        ],
+        "title": "StaticStudyResponse",
+        "type": "object"
+      },
+      "TargetRatiosGeometryStudyRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "context": {
+            "$ref": "#/components/schemas/GeometryDesignContextRequest"
+          },
+          "field_sampling": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/GeometryFieldSamplingRequest"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "maximum_ratio": {
+            "exclusiveMinimum": 0.0,
+            "title": "Maximum Ratio",
+            "type": "number"
+          },
+          "minimum_primary_wrap_angle_rad": {
+            "anyOf": [
+              {
+                "exclusiveMinimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Minimum Primary Wrap Angle Rad"
+          },
+          "minimum_ratio": {
+            "exclusiveMinimum": 0.0,
+            "title": "Minimum Ratio",
+            "type": "number"
+          },
+          "minimum_secondary_wrap_angle_rad": {
+            "anyOf": [
+              {
+                "exclusiveMinimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Minimum Secondary Wrap Angle Rad"
+          },
+          "sample_count": {
+            "default": 301,
+            "maximum": 4001.0,
+            "minimum": 2.0,
+            "title": "Sample Count",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "context",
+          "maximum_ratio",
+          "minimum_ratio"
+        ],
+        "title": "TargetRatiosGeometryStudyRequest",
+        "type": "object"
+      },
+      "ValidationError": {
+        "properties": {
+          "ctx": {
+            "title": "Context",
+            "type": "object"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "title": "Location",
+            "type": "array"
+          },
+          "msg": {
+            "title": "Message",
+            "type": "string"
+          },
+          "type": {
+            "title": "Error Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError",
+        "type": "object"
+      }
+    }
+  },
+  "info": {
+    "description": "HTTP adapter around CINDER's public contracts. All CVT mechanics remain in CINDER; this service owns transport, runs, and presets.",
+    "title": "CVT Simulator API",
+    "version": "1.0.0"
+  },
+  "openapi": "3.1.0",
+  "paths": {
+    "/api/v1/health": {
+      "get": {
+        "operationId": "health_api_v1_health_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Health",
+        "tags": [
+          "health"
+        ]
+      }
+    },
+    "/api/v1/metadata/catalog": {
+      "get": {
+        "operationId": "catalog_api_v1_metadata_catalog_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ComponentCatalogResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Catalog",
+        "tags": [
+          "metadata"
+        ]
+      }
+    },
+    "/api/v1/metadata/conventions": {
+      "get": {
+        "operationId": "conventions_api_v1_metadata_conventions_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConventionsResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Conventions",
+        "tags": [
+          "metadata"
+        ]
+      }
+    },
+    "/api/v1/metadata/editor-schema": {
+      "get": {
+        "operationId": "editor_schema_api_v1_metadata_editor_schema_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EditorSchemaResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Editor Schema",
+        "tags": [
+          "metadata"
+        ]
+      }
+    },
+    "/api/v1/metadata/simulation-case-schema": {
+      "get": {
+        "operationId": "simulation_case_schema_api_v1_metadata_simulation_case_schema_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SimulationCaseJsonSchemaResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Simulation Case Schema",
+        "tags": [
+          "metadata"
+        ]
+      }
+    },
+    "/api/v1/presets": {
+      "get": {
+        "operationId": "list_presets_api_v1_presets_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PresetListResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "List Presets",
+        "tags": [
+          "presets"
+        ]
+      }
+    },
+    "/api/v1/presets/{preset_id}": {
+      "get": {
+        "operationId": "get_preset_api_v1_presets__preset_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "preset_id",
+            "required": true,
+            "schema": {
+              "title": "Preset Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PresetResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Preset",
+        "tags": [
+          "presets"
+        ]
+      }
+    },
+    "/api/v1/runs": {
+      "post": {
+        "operationId": "create_run_api_v1_runs_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateRunRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RunStatusResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Create Run",
+        "tags": [
+          "runs"
+        ]
+      }
+    },
+    "/api/v1/runs/{run_id}": {
+      "get": {
+        "operationId": "get_run_api_v1_runs__run_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "run_id",
+            "required": true,
+            "schema": {
+              "title": "Run Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RunStatusResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Run",
+        "tags": [
+          "runs"
+        ]
+      }
+    },
+    "/api/v1/runs/{run_id}/result": {
+      "get": {
+        "operationId": "get_run_result_api_v1_runs__run_id__result_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "run_id",
+            "required": true,
+            "schema": {
+              "title": "Run Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RunResultResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Run Result",
+        "tags": [
+          "runs"
+        ]
+      }
+    },
+    "/api/v1/simulation-cases/validate": {
+      "post": {
+        "operationId": "validate_simulation_case_api_v1_simulation_cases_validate_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SimulationCaseDocumentRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SimulationCaseValidationResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Validate Simulation Case",
+        "tags": [
+          "simulation cases"
+        ]
+      }
+    },
+    "/api/v1/studies/actuation/clamping-response": {
+      "post": {
+        "operationId": "clamping_response_api_v1_studies_actuation_clamping_response_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ClampingResponseStudyRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StaticStudyResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Clamping Response",
+        "tags": [
+          "studies"
+        ]
+      }
+    },
+    "/api/v1/studies/geometry/endpoint-radii": {
+      "post": {
+        "operationId": "geometry_endpoint_radii_api_v1_studies_geometry_endpoint_radii_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EndpointRadiiGeometryStudyRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StaticStudyResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Geometry Endpoint Radii",
+        "tags": [
+          "studies"
+        ]
+      }
+    },
+    "/api/v1/studies/geometry/target-ratios": {
+      "post": {
+        "operationId": "geometry_target_ratios_api_v1_studies_geometry_target_ratios_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TargetRatiosGeometryStudyRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StaticStudyResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Geometry Target Ratios",
+        "tags": [
+          "studies"
+        ]
+      }
+    }
+  }
+}

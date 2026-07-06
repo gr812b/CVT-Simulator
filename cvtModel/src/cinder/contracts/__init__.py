@@ -1,8 +1,8 @@
-"""Stable external contracts layered over CINDER's mechanics-first core.
+"""Stable public contracts layered over CINDER's mechanics-first core.
 
-These helpers are optional adapters for saved designs, backend transport,
-validation, standardized result projection, and cross-run metrics.  The core
-model and execution modules deliberately do not depend on them.
+These optional adapters own saved documents, validation, editable-field
+metadata, standardized projections, and metrics.  Core model/execution modules
+deliberately remain independent of JSON, HTTP, and frontend concerns.
 """
 
 from .catalog import (
@@ -25,6 +25,10 @@ from .document import (
     decode_assembly_document,
     encode_assembly_document,
 )
+from .editable_schema import (
+    EditableFieldDescriptor,
+    editable_simulation_case_schema,
+)
 from .projection import (
     project_assembly_validation,
     project_clamping_force_response,
@@ -36,32 +40,49 @@ from .projection import (
     project_simulation_result,
     to_jsonable,
 )
+from .schema import simulation_case_document_json_schema
 from .simulation import SimulationMetrics, summarize_simulation
+from .simulation_document import (
+    SIMULATION_CASE_DOCUMENT_TYPE,
+    DecodedSimulationCase,
+    UnsupportedSimulationDocumentError,
+    decode_simulation_case_document,
+    encode_simulation_case_document,
+)
 from .validation import (
     AssemblyValidationOptions,
     AssemblyValidationReport,
     ValidationFinding,
     validate_assembly,
+    validate_assembly_document,
+    validate_simulation_case_document,
 )
 
 __all__ = [
     "ASSEMBLY_DOCUMENT_TYPE",
+    "SIMULATION_CASE_DOCUMENT_TYPE",
     "AssemblyValidationOptions",
     "AssemblyValidationReport",
     "ComponentDescriptor",
     "ComponentParameter",
+    "DecodedSimulationCase",
     "DesignDocumentError",
+    "EditableFieldDescriptor",
     "PUBLIC_CONTRACT_VERSION",
     "PublicConventions",
     "PublicFieldDescriptor",
     "SimulationMetrics",
     "UnsupportedDesignDocumentError",
+    "UnsupportedSimulationDocumentError",
     "ValidationFinding",
     "component_catalog",
     "component_catalog_document",
     "decode_assembly_document",
+    "decode_simulation_case_document",
     "describe_public_field",
+    "editable_simulation_case_schema",
     "encode_assembly_document",
+    "encode_simulation_case_document",
     "project_assembly_validation",
     "project_clamping_force_response",
     "project_geometry_feasibility",
@@ -71,7 +92,10 @@ __all__ = [
     "project_ratio_sensitivity_field",
     "project_simulation_result",
     "public_conventions",
+    "simulation_case_document_json_schema",
     "summarize_simulation",
     "to_jsonable",
     "validate_assembly",
+    "validate_assembly_document",
+    "validate_simulation_case_document",
 ]

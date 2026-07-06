@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
-import type { Scene3DConfig, Model3DConfig, ModelTransform } from '@types';
+import type { Scene3DConfig, Model3DConfig, ModelTransform } from '@utils/sceneTypes';
 import { Model3D } from './Model3D';
 
 /**

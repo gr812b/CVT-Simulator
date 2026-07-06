@@ -1,8 +1,8 @@
 """JSON-safe projections of CINDER results and static-study data.
 
-Projection is intentionally separate from model objects.  Mechanics-first
-objects remain NumPy/dataclass friendly for Python users, while this module
-turns them into stable ordinary dictionaries for a backend boundary.
+Projection remains separate from mechanics.  CINDER model objects stay useful
+for Python/numerical callers, while this module supplies stable dictionaries for
+an HTTP boundary or saved result artifact.
 """
 
 from __future__ import annotations
@@ -10,6 +10,7 @@ from __future__ import annotations
 from collections.abc import Mapping, Sequence
 from dataclasses import asdict, is_dataclass
 from enum import Enum
+from math import isfinite
 from typing import Any
 
 import numpy as np
@@ -33,6 +34,10 @@ from .conventions import (
 from .simulation import summarize_simulation
 from .validation import AssemblyValidationReport
 
+# ---------------------------------------------------------------------------
+# Static studies
+# ---------------------------------------------------------------------------
+
 
 def project_clamping_force_response(
     field: ClampingForceResponseField,
@@ -50,23 +55,21 @@ def project_clamping_force_response(
 def project_geometry_path(path: GeometryPathTable) -> dict[str, Any]:
     """Project one sampled geometry path as ordinary named numeric columns."""
 
-    columns = {
-        "shift_m": path.shift,
-        "primary_outer_radius_m": path.primary_outer_radius,
-        "secondary_outer_radius_m": path.secondary_outer_radius,
-        "primary_effective_radius_m": path.primary_effective_radius,
-        "secondary_effective_radius_m": path.secondary_effective_radius,
-        "ratio": path.ratio,
-        "ratio_change_per_m_shift": path.ratio_change_per_m_shift,
-        "ratio_change_per_mm_shift": path.ratio_change_per_mm_shift,
-        "primary_wrap_angle_rad": path.primary_wrap_angle,
-        "secondary_wrap_angle_rad": path.secondary_wrap_angle,
-    }
     return _project_columns(
         kind="geometry_path",
         shape=path.shift.shape,
         axis_keys=("shift_m",),
-        columns=columns,
+        columns={
+            "shift_m": path.shift,
+            "primary_outer_radius_m": path.primary_outer_radius,
+            "secondary_outer_radius_m": path.secondary_outer_radius,
+            "primary_effective_radius_m": path.primary_effective_radius,
+            "secondary_effective_radius_m": path.secondary_effective_radius,
+            "ratio": path.ratio,
+            "ratio_change_per_m_shift": path.ratio_change_per_m_shift,
+            "primary_wrap_angle_rad": path.primary_wrap_angle,
+            "secondary_wrap_angle_rad": path.secondary_wrap_angle,
+        },
     )
 
 
@@ -94,7 +97,6 @@ def project_ratio_sensitivity_field(field: RatioSensitivityField) -> dict[str, A
             "primary_outer_radius_m": field.primary_outer_radius,
             "secondary_outer_radius_m": field.secondary_outer_radius,
             "ratio_change_per_m_shift": field.ratio_change_per_m_shift,
-            "ratio_change_per_mm_shift": field.ratio_change_per_mm_shift,
             "feasible_mask": field.feasible_mask,
         },
     )
@@ -143,16 +145,35 @@ def project_assembly_validation(report: AssemblyValidationReport) -> dict[str, A
     return report.as_dict()
 
 
-def project_simulation_result(result: CVTIntegrationResult) -> dict[str, Any]:
-    """Project report-grid simulation data, raw transitions, and standard metrics."""
+# ---------------------------------------------------------------------------
+# Simulation reports
+# ---------------------------------------------------------------------------
+
+
+def project_simulation_result(
+    result: CVTIntegrationResult,
+    *,
+    include_reported_segments: bool = False,
+    include_raw_trace: bool = False,
+) -> dict[str, Any]:
+    """Project standard report data, events, metrics, and optional raw trace.
+
+    ``report_table`` is the default frontend-oriented surface: a continuous
+    time-aligned column table across all hybrid segments. Event boundaries are
+    intentionally retained as duplicate timestamps when a projection/reset
+    creates a discontinuity. Detailed ``reported_segments`` and the accepted
+    solver-mesh ``raw_trace`` are both opt-in because they can materially
+    increase result payload size.
+    """
 
     if not isinstance(result, CVTIntegrationResult):
         raise TypeError("result must be a CVTIntegrationResult.")
-    return {
+
+    payload: dict[str, Any] = {
         "contract_version": PUBLIC_CONTRACT_VERSION,
         "kind": "simulation_result",
         "conventions": public_conventions().as_dict(),
-        "metrics": summarize_simulation(result).as_dict(),
+        "metrics": to_jsonable(summarize_simulation(result).as_dict()),
         "summary": {
             "duration_s": result.summary.duration,
             "segment_count": result.summary.segment_count,
@@ -160,25 +181,7 @@ def project_simulation_result(result: CVTIntegrationResult) -> dict[str, Any]:
             "final_state": _project_state(result.summary.final_state),
         },
         "warnings": list(result.warnings),
-        "segments": [
-            {
-                "mode": _project_mode(segment.mode),
-                "time_s": segment.time.tolist(),
-                "signals": [
-                    {
-                        **describe_public_field(
-                            signal.key,
-                            unit=signal.unit,
-                            label=signal.label,
-                        ).as_dict(),
-                        "group": signal.group,
-                        "values": signal.values.tolist(),
-                    }
-                    for signal in segment.signals.values()
-                ],
-            }
-            for segment in result.segments
-        ],
+        "report_table": _project_report_table(result),
         "transitions": [
             {
                 "time_s": record.time,
@@ -192,6 +195,138 @@ def project_simulation_result(result: CVTIntegrationResult) -> dict[str, Any]:
             for record in result.transitions
         ],
     }
+    if include_reported_segments:
+        payload["reported_segments"] = [
+            _project_reported_segment(segment) for segment in result.segments
+        ]
+    if include_raw_trace:
+        payload["raw_trace"] = _project_raw_trace(result)
+    return payload
+
+
+def _project_reported_segment(segment: object) -> dict[str, Any]:
+    time = np.asarray(getattr(segment, "time"), dtype=float)
+    signals = getattr(segment, "signals")
+    return {
+        "mode": _project_mode(getattr(segment, "mode")),
+        "time_s": _json_vector(time),
+        "signals": [
+            {
+                **describe_public_field(
+                    signal.key,
+                    unit=signal.unit,
+                    label=signal.label,
+                ).as_dict(),
+                "group": signal.group,
+                "values": _json_vector(signal.values),
+            }
+            for signal in signals.values()
+        ],
+    }
+
+
+def _project_report_table(result: CVTIntegrationResult) -> dict[str, Any]:
+    """Flatten reported hybrid segments into one front-end-ready column table."""
+
+    signal_metadata: dict[str, tuple[str, str, str, str]] = {}
+    ordered_signal_keys: list[str] = []
+    for segment in result.segments:
+        for key, signal in segment.signals.items():
+            if key not in signal_metadata:
+                signal_metadata[key] = (
+                    signal.unit,
+                    signal.label,
+                    signal.group,
+                    describe_public_field(
+                        signal.key, unit=signal.unit, label=signal.label
+                    ).dimension,
+                )
+                ordered_signal_keys.append(key)
+
+    time_values: list[float | None] = []
+    columns: dict[str, list[float | None]] = {key: [] for key in ordered_signal_keys}
+    segment_ranges: list[dict[str, Any]] = []
+    start_index = 0
+    for index, segment in enumerate(result.segments):
+        time = np.asarray(segment.time, dtype=float)
+        time_values.extend(_json_vector(time))
+        point_count = int(time.size)
+        for key in ordered_signal_keys:
+            signal = segment.signals.get(key)
+            if signal is None:
+                columns[key].extend([None] * point_count)
+            else:
+                columns[key].extend(_json_vector(signal.values))
+        segment_ranges.append(
+            {
+                "segment_index": index,
+                "start_index": start_index,
+                "end_index": start_index + point_count - 1,
+                "mode": _project_mode(segment.mode),
+            }
+        )
+        start_index += point_count
+
+    projected_columns: list[dict[str, Any]] = [
+        {
+            **describe_public_field("time_s").as_dict(),
+            "group": "time",
+            "values": time_values,
+        }
+    ]
+    for key in ordered_signal_keys:
+        unit, label, group, _dimension = signal_metadata[key]
+        projected_columns.append(
+            {
+                **describe_public_field(key, unit=unit, label=label).as_dict(),
+                "group": group,
+                "values": columns[key],
+            }
+        )
+
+    return {
+        "axis_key": "time_s",
+        "row_count": len(time_values),
+        "columns": projected_columns,
+        "segment_ranges": segment_ranges,
+        "preserves_duplicate_transition_times": True,
+    }
+
+
+def _project_raw_trace(result: CVTIntegrationResult) -> dict[str, Any]:
+    state_columns = (
+        ("primary_angular_speed_rad_per_s", "Primary angular speed", "rad/s"),
+        ("secondary_angular_speed_rad_per_s", "Secondary angular speed", "rad/s"),
+        ("belt_speed_m_per_s", "Belt speed", "m/s"),
+        ("shift_position_m", "Shift position", "m"),
+        ("shift_speed_m_per_s", "Shift speed", "m/s"),
+        ("secondary_shaft_angle_rad", "Secondary shaft angle", "rad"),
+    )
+    segments = []
+    for segment in result.trace.segments:
+        state = np.asarray(segment.state, dtype=float)
+        segments.append(
+            {
+                "mode": _project_mode(segment.mode),
+                "time_s": _json_vector(segment.time),
+                "state_columns": [
+                    {
+                        **describe_public_field(key, unit=unit, label=label).as_dict(),
+                        "values": _json_vector(state[row_index]),
+                    }
+                    for row_index, (key, label, unit) in enumerate(state_columns)
+                ],
+            }
+        )
+    return {
+        "kind": "adaptive_hybrid_trace",
+        "segments": segments,
+    }
+
+
+# ---------------------------------------------------------------------------
+# Generic JSON helpers
+# ---------------------------------------------------------------------------
 
 
 def _project_columns(
@@ -209,7 +344,7 @@ def _project_columns(
         "columns": [
             {
                 **describe_public_field(key).as_dict(),
-                "values": np.asarray(values).tolist(),
+                "values": _json_array(values),
             }
             for key, values in columns.items()
         ],
@@ -221,15 +356,13 @@ def _project_scalars(kind: str, values: Mapping[str, float]) -> dict[str, Any]:
         "contract_version": PUBLIC_CONTRACT_VERSION,
         "kind": kind,
         "scalars": [
-            {**describe_public_field(key).as_dict(), "value": value}
+            {**describe_public_field(key).as_dict(), "value": to_jsonable(value)}
             for key, value in values.items()
         ],
     }
 
 
 def _project_mode(mode: object) -> dict[str, Any]:
-    # CVTOperatingRegime has stable enum fields.  Kept duck-typed to leave this
-    # adapter independent from the execution package's import graph.
     engagement = getattr(mode, "engagement", None)
     constraint = getattr(mode, "shift_constraint", None)
     contact = getattr(mode, "contact_regime", None)
@@ -255,13 +388,42 @@ def _project_state(vector: object) -> dict[str, float]:
     }
 
 
+def _json_vector(values: object) -> list[float | None]:
+    vector = np.asarray(values, dtype=float)
+    if vector.ndim != 1:
+        raise ValueError("Expected one-dimensional numeric values for projection.")
+    return [float(value) if isfinite(float(value)) else None for value in vector]
+
+
+def _json_array(values: object) -> Any:
+    array = np.asarray(values)
+    if array.ndim == 0:
+        item = array.item()
+        return to_jsonable(item)
+    if array.dtype == np.bool_ or array.dtype == bool:
+        return array.tolist()
+    if np.issubdtype(array.dtype, np.number):
+        if array.ndim == 1:
+            return _json_vector(array)
+        return _json_array_recursive(array)
+    return to_jsonable(array.tolist())
+
+
+def _json_array_recursive(array: np.ndarray) -> list[Any]:
+    if array.ndim == 1:
+        return _json_vector(array)
+    return [_json_array_recursive(np.asarray(item)) for item in array]
+
+
 def to_jsonable(value: Any) -> Any:
-    """Convert ordinary CINDER/numpy values to JSON-safe Python primitives."""
+    """Convert ordinary CINDER/numpy values to strict JSON-safe primitives."""
 
     if isinstance(value, np.ndarray):
-        return value.tolist()
+        return _json_array(value)
     if isinstance(value, np.generic):
-        return value.item()
+        return to_jsonable(value.item())
+    if isinstance(value, float):
+        return value if isfinite(value) else None
     if isinstance(value, Enum):
         return value.value
     if is_dataclass(value):
