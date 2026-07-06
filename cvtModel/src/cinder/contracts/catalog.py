@@ -1,16 +1,15 @@
 """Factual catalog of document-supported CINDER construction blocks.
 
-The catalog is not a recommendation engine.  It only says which component
-kinds can be represented in the public design document and which fields they
-require.
+The catalog is not a recommendation engine.  It identifies built-in component
+kinds, supported pulley mounts, and the document fields each component needs.
 """
 
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, Literal
 
-from .conventions import PUBLIC_CONTRACT_VERSION
+from .conventions import PUBLIC_CONTRACT_VERSION, describe_public_field
 
 
 @dataclass(frozen=True, slots=True)
@@ -22,12 +21,22 @@ class ComponentParameter:
     description: str
     minimum: float | None = None
     maximum: float | None = None
+    value_kind: Literal["number", "object"] = "number"
+    dimension: str | None = None
 
     def as_dict(self) -> dict[str, Any]:
+        descriptor = describe_public_field(
+            self.key,
+            unit=self.unit,
+            label=self.label,
+            dimension=self.dimension,
+        )
         payload: dict[str, Any] = {
             "key": self.key,
             "label": self.label,
-            "unit": self.unit,
+            "value_kind": self.value_kind,
+            "canonical_unit": descriptor.unit,
+            "dimension": descriptor.dimension,
             "required": self.required,
             "description": self.description,
         }
@@ -57,7 +66,7 @@ class ComponentDescriptor:
 
 
 def component_catalog() -> tuple[ComponentDescriptor, ...]:
-    """Return document-supported physical components and their scalar inputs."""
+    """Return document-supported physical components and scalar inputs."""
 
     return (
         ComponentDescriptor(
@@ -72,6 +81,7 @@ def component_catalog() -> tuple[ComponentDescriptor, ...]:
                     True,
                     "Linear spring stiffness.",
                     0.0,
+                    dimension="linear_stiffness",
                 ),
                 ComponentParameter(
                     "initial_compression_m",
@@ -79,6 +89,7 @@ def component_catalog() -> tuple[ComponentDescriptor, ...]:
                     "m",
                     True,
                     "Compression at local coordinate zero.",
+                    dimension="length",
                 ),
                 ComponentParameter(
                     "compression_per_axial_position",
@@ -86,6 +97,7 @@ def component_catalog() -> tuple[ComponentDescriptor, ...]:
                     "1",
                     True,
                     "Signed local-coordinate mapping from axial position to spring compression.",
+                    dimension="dimensionless",
                 ),
             ),
         ),
@@ -101,6 +113,7 @@ def component_catalog() -> tuple[ComponentDescriptor, ...]:
                     True,
                     "Equivalent moving flyweight mass.",
                     0.0,
+                    dimension="mass",
                 ),
                 ComponentParameter(
                     "radius_at_zero_position_m",
@@ -109,6 +122,7 @@ def component_catalog() -> tuple[ComponentDescriptor, ...]:
                     True,
                     "Flyweight radius before profile displacement.",
                     0.0,
+                    dimension="length",
                 ),
                 ComponentParameter(
                     "radial_displacement_profile",
@@ -116,8 +130,11 @@ def component_catalog() -> tuple[ComponentDescriptor, ...]:
                     "object",
                     True,
                     "Piecewise ramp profile used by the flyweight mechanism.",
+                    value_kind="object",
+                    dimension="structure",
                 ),
             ),
+            supported_mounts=("input",),
         ),
         ComponentDescriptor(
             kind="helical_torque_reaction",
@@ -131,6 +148,7 @@ def component_catalog() -> tuple[ComponentDescriptor, ...]:
                     True,
                     "Helix torsional spring stiffness.",
                     0.0,
+                    dimension="torsional_stiffness",
                 ),
                 ComponentParameter(
                     "initial_twist_rad",
@@ -138,6 +156,7 @@ def component_catalog() -> tuple[ComponentDescriptor, ...]:
                     "rad",
                     True,
                     "Torsional preload at the helix reference.",
+                    dimension="angle",
                 ),
                 ComponentParameter(
                     "movable_member_torque_fraction",
@@ -147,6 +166,7 @@ def component_catalog() -> tuple[ComponentDescriptor, ...]:
                     "Fraction of reacted shaft torque assigned to the movable member.",
                     0.0,
                     1.0,
+                    dimension="dimensionless",
                 ),
             ),
             supported_mounts=("output",),

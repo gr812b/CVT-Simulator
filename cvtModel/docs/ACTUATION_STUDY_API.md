@@ -47,6 +47,7 @@ The frontend or backend can inspect these columns, choose the axes, and plot
 any returned force columns. The study performs no actuator-specific plotting
 or force calculations outside the production `PulleyActuator` path.
 
-A project-local plotting or smoke script may consume this table, write CSV
-output, check that contribution columns sum to the returned total, and plot only
-non-constant force columns. That script belongs outside `src/cinder`.
+The repository-level internal tool `launchTools/run_actuation_clamping_study.py` is a smoke-test consumer:
+it calls the study, writes raw CSV tables, checks that returned contribution
+columns sum to the returned total, and plots only non-constant returned force
+columns.

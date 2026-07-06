@@ -1,9 +1,10 @@
 """CINDER: mechanics-first dynamic modelling for belt CVTs.
 
 Core model, execution, results, and static studies remain independent of
-transport concerns.  Use :mod:`cinder.contracts` for the optional stable
-external boundary: versioned assembly documents, component catalogs,
-preflight validation, and JSON-safe result projection.
+transport concerns. Use :mod:`cinder.contracts` for the optional stable
+external boundary: versioned assembly and full simulation documents,
+editable-field metadata, document-path validation, and JSON-safe result
+projection.
 """
 
 __version__ = "0.1.0"

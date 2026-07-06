@@ -8,8 +8,9 @@ and explicit model-scope warnings.
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from math import isfinite
+import re
 from typing import Literal
 
 from cinder.model.cvt.actuation import (
@@ -28,14 +29,18 @@ class ValidationFinding:
     code: str
     message: str
     location: str
+    document_path: str | None = None
 
     def as_dict(self) -> dict[str, str]:
-        return {
+        payload = {
             "severity": self.severity,
             "code": self.code,
             "message": self.message,
             "location": self.location,
         }
+        if self.document_path is not None:
+            payload["document_path"] = self.document_path
+        return payload
 
 
 @dataclass(frozen=True, slots=True)
@@ -80,6 +85,7 @@ def validate_assembly(
     assembly: CVTAssemblySpec,
     *,
     options: AssemblyValidationOptions | None = None,
+    document_path_prefix: str | None = None,
 ) -> AssemblyValidationReport:
     """Validate an already constructed CVT assembly for common design hazards.
 
@@ -162,6 +168,17 @@ def validate_assembly(
         findings=findings,
     )
 
+    if document_path_prefix is not None:
+        findings = [
+            replace(
+                finding,
+                document_path=_document_path_for_location(
+                    finding.location, prefix=document_path_prefix
+                ),
+            )
+            for finding in findings
+        ]
+
     return AssemblyValidationReport(
         is_valid=not any(item.severity == "error" for item in findings),
         findings=tuple(findings),
@@ -234,3 +251,109 @@ def _warning(code: str, message: str, location: str) -> ValidationFinding:
 
 def _error(code: str, message: str, location: str) -> ValidationFinding:
     return ValidationFinding("error", code, message, location)
+
+
+def validate_assembly_document(
+    document: object,
+    *,
+    options: AssemblyValidationOptions | None = None,
+) -> AssemblyValidationReport:
+    """Validate one serialized assembly document with JSON-pointer findings.
+
+    Decoding remains the single source of constructor truth.  A malformed
+    document returns a structured error rather than leaking an exception into
+    a backend route; a successfully decoded document receives the normal
+    engineering preflight checks.
+    """
+
+    from .document import DesignDocumentError, decode_assembly_document
+
+    try:
+        assembly = decode_assembly_document(document)
+    except (DesignDocumentError, TypeError, ValueError) as error:
+        return AssemblyValidationReport(
+            is_valid=False,
+            findings=(
+                ValidationFinding(
+                    severity="error",
+                    code="document.decode_error",
+                    message=str(error),
+                    location="document",
+                    document_path="",
+                ),
+            ),
+        )
+    return validate_assembly(
+        assembly, options=options, document_path_prefix=""
+    )
+
+
+def validate_simulation_case_document(
+    document: object,
+    *,
+    options: AssemblyValidationOptions | None = None,
+) -> AssemblyValidationReport:
+    """Validate a full public simulation document with document-path findings."""
+
+    from .simulation_document import (
+        DecodedSimulationCase,
+        decode_simulation_case_document,
+    )
+
+    try:
+        decoded: DecodedSimulationCase = decode_simulation_case_document(document)
+    except (TypeError, ValueError) as error:
+        return AssemblyValidationReport(
+            is_valid=False,
+            findings=(
+                ValidationFinding(
+                    severity="error",
+                    code="document.decode_error",
+                    message=str(error),
+                    location="document",
+                    document_path="",
+                ),
+            ),
+        )
+
+    report = validate_assembly(
+        decoded.case.cvt,
+        options=options,
+        document_path_prefix="/assembly",
+    )
+    findings = list(report.findings)
+    try:
+        decoded.operating_system_config.operating_limits.validate_against_geometry_spec(
+            decoded.case.cvt.geometry.spec
+        )
+    except ValueError as error:
+        findings.append(
+            ValidationFinding(
+                severity="error",
+                code="execution.operating_limits_incompatible_with_geometry",
+                message=str(error),
+                location="execution.operating_limits",
+                document_path="/execution/operating_limits",
+            )
+        )
+
+    return AssemblyValidationReport(
+        is_valid=not any(item.severity == "error" for item in findings),
+        findings=tuple(findings),
+    )
+
+
+def _document_path_for_location(location: str, *, prefix: str) -> str:
+    """Map stable validation locations to a concrete public JSON Pointer."""
+
+    root = prefix.rstrip("/")
+    if location == "geometry" or location.startswith("geometry."):
+        if location == "geometry.primary_wrap_angle" or location == "geometry.secondary_wrap_angle":
+            return f"{root}/geometry"
+        return f"{root}/" + location.replace(".", "/")
+    if location.startswith("contact."):
+        return f"{root}/" + location.replace(".", "/")
+    match = re.fullmatch(r"pulleys\.(input|output)\.components\[(\d+)\]", location)
+    if match is not None:
+        return f"{root}/pulleys/{match.group(1)}/components/{match.group(2)}"
+    return root or ""
