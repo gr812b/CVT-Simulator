@@ -16,49 +16,67 @@ six-by-six row at credible scales before the lambda root solver is introduced.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from math import radians
+from math import isfinite, radians
 from typing import Final
 
-from cinder.actuation import (
-    CentrifugalPrimarySpec,
-    TorqueReactiveSecondarySpec,
-    build_centrifugal_primary,
-    build_torque_reactive_secondary,
+from cinder.model.cvt.actuation import (
+    CentrifugalActuatorSpec,
+    TorqueReactiveActuatorSpec,
+    build_centrifugal_actuator,
+    build_torque_reactive_actuator,
 )
-from cinder.actuation.forces import (
+from cinder.model.cvt.actuation.forces import (
     AxialSpringForceSpec,
     CentrifugalRampForceSpec,
-    SecondaryHelixForceSpec,
+    HelicalTorqueReactionSpec,
 )
-from cinder.dynamics import CVTDynamicsModel
-from cinder.integration import CVTDynamicState
-from cinder.contact import ContactTractionUtilization
-from cinder.engine import EngineTorquePoint, FullThrottleTorqueCurve, TorqueCurveSpec
-from cinder.geometry import BeltPulleyGeometry, BeltPulleyGeometrySpec, BeltSectionSpec
-from cinder.inertia import (
+from cinder.model.boundaries.output import LockedFinalDriveVehicle
+from cinder.model.system import (
+    BeltContactSpec,
+    CVTAssemblySpec,
+    CVTSimulationCase,
+    HelicalPulleyCoupling,
+    OperatingScenario,
+    PulleyPairSpec,
+    PulleySpec,
+)
+from cinder.execution.hybrid import CVTDynamicState
+from cinder.execution.hybrid.cvt_operating_hybrid import (
+    CVTOperatingHybridSystem,
+    CVTOperatingSystemConfig,
+)
+from cinder.execution.hybrid.cvt_operating_limits import CVTShiftOperatingLimits
+from cinder.model.cvt.contact import ContactTractionLaw, ContactTractionUtilization
+from cinder.model.cvt.dynamics import EngagedContactSolveSettings, LambdaSearchBounds
+from cinder.model.boundaries.input.engine import EngineTorquePoint, FullThrottleTorqueCurve, TorqueCurveSpec
+from cinder.model.cvt.geometry import BeltPulleyGeometry, BeltPulleyGeometrySpec, BeltSectionSpec
+from cinder.model.cvt.inertia import (
     BeltMass,
     DrivetrainInertias,
     PrimaryInertia,
     SecondaryInertia,
-    VehicleInertia,
     resolve_inertias,
 )
-from cinder.profiles import (
+from cinder.model.cvt.profiles import (
+    CircularSegment,
     HelixProfile,
     LinearSegment,
     PiecewiseRamp,
     linear_helix_segment,
 )
-from cinder.vehicle import (
+from cinder.model.boundaries.output.vehicle import (
     ConstantGradeRoadProfile,
     FixedFinalDrive,
     RoadLoadModel,
+    VehicleInertia,
     VehicleRoadLoadSpec,
 )
+
 
 INCH_TO_METRE: Final[float] = 0.0254
 FOOT_POUND_TO_NEWTON_METRE: Final[float] = 1.3558179483
 RPM_TO_RAD_PER_SECOND: Final[float] = 2.0 * 3.141592653589793 / 60.0
+WATTS_PER_MECHANICAL_HORSEPOWER: Final[float] = 745.6998715822702
 
 
 @dataclass(frozen=True, slots=True)
@@ -81,7 +99,14 @@ class BajaTrialConstants:
     deadzone_shift: float = (0.088 + 0.010) * INCH_TO_METRE  # legacy value
     max_shift: float = 0.75 * INCH_TO_METRE  # legacy value
 
-    primary_ramp_angle_degrees: float = 30.0  # requested constant test ramp
+    # The baseline still supports the original constant linear ramp, but the
+    # launch tools may select a hard-to-soft circular profile.  The circular
+    # profile has high initial slope (strong early clamp) which decays smoothly
+    # with shift travel; it is only a profile choice, not a new force law.
+    primary_ramp_kind: str = "linear"  # "linear" or "circular_hard_to_soft"
+    primary_ramp_angle_degrees: float = 30.0  # linear-ramp tangent angle
+    primary_ramp_start_angle_degrees: float = 42.0  # circular: strong low-ratio slope
+    primary_ramp_end_angle_degrees: float = 12.0  # circular: gentler high-ratio slope
     helix_angle_degrees: float = 26.0  # requested constant test helix
     initial_flyweight_radius: float = 0.04878  # legacy value
     helix_radius: float = 0.04445  # legacy value
@@ -98,6 +123,23 @@ class BajaTrialConstants:
     secondary_spring_initial_compression: float = 0.1
     # legacy default retained; verify its intended unit/preload against hardware.
 
+    # Engine ---------------------------------------------------------------
+    # The supplied positive running points below are the legacy full-throttle
+    # Baja map.  Their PCHIP interpolation remains below the competition's
+    # 10 hp limit; do not add a hard P = tau*omega clamp inside CINDER.
+    #
+    # Above the 4000 rpm governed end of that map, the existing torque-curve
+    # implementation smoothly transitions from 0 N m to a finite negative
+    # *governed net torque*.  This represents throttle closure by the governor
+    # plus pumping/friction losses when the vehicle drives the engine faster
+    # than its permitted WOT operating range.  It is intentionally a tunable
+    # sensitivity assumption, not a measured coast-down curve.
+    engine_power_limit_hp: float = 10.0
+    engine_low_speed_braking_torque: float = -5.0
+    engine_low_speed_braking_peak_rpm: float = 500.0
+    engine_governed_overspeed_torque: float = -28.0
+    engine_governed_overspeed_transition_width_rpm: float = 1500.0
+
     # Inertia ---------------------------------------------------------------
     engine_rotational_inertia: float = 0.1  # legacy kg m^2
     primary_cvt_rotational_inertia: float = 0.005
@@ -111,6 +153,9 @@ class BajaTrialConstants:
     secondary_moving_sheave_mass: float = 0.705141  # project/CAD estimate, kg
 
     rubber_density: float = 1100.0  # legacy material-density constant, kg/m^3
+    belt_friction_coefficient: float = 0.30
+    # Assembly contact metadata. Current launch traction capacity remains
+    # configured through ContactTractionLaw lambda limits.
     vehicle_mass: float = 225.0 + 75.0  # legacy vehicle + driver masses, kg
     driven_wheel_rotational_inertia: float = 0.2
     # legacy value was labelled "all wheels"; temporarily treated as total driven-wheel inertia.
@@ -138,7 +183,8 @@ class BajaTrialBaseline:
     """Fully assembled diagnostic model and two kinematically consistent states."""
 
     constants: BajaTrialConstants
-    model: CVTDynamicsModel
+    assembly: CVTAssemblySpec
+    case: CVTSimulationCase
     active_shift_state: CVTDynamicState
     quasi_static_state: CVTDynamicState
     deadzone_state: CVTDynamicState
@@ -180,16 +226,29 @@ def build_baja_trial_baseline(
     )
     geometry = BeltPulleyGeometry(geometry_spec)
 
-    primary_ramp = PiecewiseRamp(
-        (
-            LinearSegment(
-                length=c.max_shift,
-                angle_degrees=c.primary_ramp_angle_degrees,
-            ),
+    if c.primary_ramp_kind == "linear":
+        primary_ramp_segment = LinearSegment(
+            length=c.max_shift,
+            angle_degrees=c.primary_ramp_angle_degrees,
         )
-    )
-    primary_actuator = build_centrifugal_primary(
-        CentrifugalPrimarySpec(
+    elif c.primary_ramp_kind == "circular_hard_to_soft":
+        # Q2 gives positive radial displacement slope that decreases smoothly
+        # from steep to gentle.  Therefore m*omega^2*r_f*dr_f/ds is large near
+        # low ratio and falls away as the movable sheave shifts outward.
+        primary_ramp_segment = CircularSegment(
+            length=c.max_shift,
+            angle_start_degrees=c.primary_ramp_start_angle_degrees,
+            angle_end_degrees=c.primary_ramp_end_angle_degrees,
+            quadrant=2,
+        )
+    else:
+        raise ValueError(
+            "primary_ramp_kind must be 'linear' or 'circular_hard_to_soft'; "
+            f"received {c.primary_ramp_kind!r}."
+        )
+    primary_ramp = PiecewiseRamp((primary_ramp_segment,))
+    primary_actuator = build_centrifugal_actuator(
+        CentrifugalActuatorSpec(
             centrifugal_ramp=CentrifugalRampForceSpec(
                 flyweight_mass=c.flyweight_mass,
                 radius_at_zero_position=c.initial_flyweight_radius,
@@ -223,20 +282,17 @@ def build_baja_trial_baseline(
         ),
         radius=c.helix_radius,
     )
-    secondary_actuator = build_torque_reactive_secondary(
-        spec=TorqueReactiveSecondarySpec(
+    secondary_actuator = build_torque_reactive_actuator(
+        spec=TorqueReactiveActuatorSpec(
             axial_spring=AxialSpringForceSpec(
                 stiffness=c.secondary_compression_spring_rate,
                 initial_compression=c.secondary_spring_initial_compression,
                 compression_per_axial_position=-1.0,
             ),
-            helix_force=SecondaryHelixForceSpec(
+            helical_reaction=HelicalTorqueReactionSpec(
                 torsional_stiffness=c.secondary_torsional_spring_rate,
                 initial_twist=c.secondary_torsional_initial_twist,
-                movable_sheave_rotational_inertia=(
-                    c.secondary_movable_sheave_rotational_inertia
-                ),
-                movable_sheave_torque_fraction=0.5,
+                movable_member_torque_fraction=0.5,
             ),
         )
     )
@@ -266,8 +322,6 @@ def build_baja_trial_baseline(
             ),
             belt=BeltMass(density=c.rubber_density),
         ),
-        vehicle=vehicle,
-        final_drive=final_drive,
         belt_section=belt,
         belt_outer_length=c.belt_outer_length,
     )
@@ -292,12 +346,24 @@ def build_baja_trial_baseline(
                     (4000.0, 0.0),
                 )
             ),
-            low_speed_braking_torque=-5.0,
-            low_speed_braking_peak_speed=500.0 * RPM_TO_RAD_PER_SECOND,
-            high_speed_braking_torque=-5.0,
-            high_speed_braking_transition_width=500.0 * RPM_TO_RAD_PER_SECOND,
-            # placeholder tails: old model bounded net torque at -5 N m.
+            low_speed_braking_torque=c.engine_low_speed_braking_torque,
+            low_speed_braking_peak_speed=(
+                c.engine_low_speed_braking_peak_rpm * RPM_TO_RAD_PER_SECOND
+            ),
+            high_speed_braking_torque=c.engine_governed_overspeed_torque,
+            high_speed_braking_transition_width=(
+                c.engine_governed_overspeed_transition_width_rpm * RPM_TO_RAD_PER_SECOND
+            ),
+            # The generic PCHIP tail therefore gives an increasing-magnitude
+            # negative governed torque from 4000 rpm to 5500 rpm, then a
+            # bounded -28 N m plateau.  No generic engine-source edit is
+            # needed to express this curve.
         )
+    )
+
+    _validate_full_throttle_power_limit(
+        engine=engine,
+        power_limit_hp=c.engine_power_limit_hp,
     )
 
     road_load = RoadLoadModel(
@@ -309,44 +375,62 @@ def build_baja_trial_baseline(
         vehicle=vehicle,
         final_drive=final_drive,
     )
-    model = CVTDynamicsModel(
-        geometry=geometry,
-        primary_actuator=primary_actuator,
-        secondary_actuator=secondary_actuator,
-        secondary_helix_profile=helix_profile,
-        inertias=inertias,
-        engine=engine,
+    output_boundary = LockedFinalDriveVehicle(
         road_load=road_load,
         road_profile=ConstantGradeRoadProfile(),
+    )
+    assembly = CVTAssemblySpec(
+        geometry=geometry,
+        pulleys=PulleyPairSpec(
+            input=PulleySpec(actuator=primary_actuator),
+            output=PulleySpec(
+                actuator=secondary_actuator,
+                helical_coupling=HelicalPulleyCoupling(profile=helix_profile),
+            ),
+        ),
+        inertias=inertias,
+        contact=BeltContactSpec(friction_coefficient=c.belt_friction_coefficient),
     )
 
     active_shift_position = c.deadzone_shift + 0.60 * (c.max_shift - c.deadzone_shift)
     deadzone_shift_position = 0.50 * c.deadzone_shift
-
+    active_shift_state = _no_slip_state_at_shift(
+        geometry=geometry,
+        shift_position=active_shift_position,
+        secondary_speed=c.active_secondary_speed,
+        shift_speed=c.active_shift_speed,
+        secondary_shaft_angle=c.secondary_shaft_angle,
+    )
+    quasi_static_state = _no_slip_state_at_shift(
+        geometry=geometry,
+        shift_position=active_shift_position,
+        secondary_speed=c.active_secondary_speed,
+        shift_speed=c.quasi_static_shift_speed,
+        secondary_shaft_angle=c.secondary_shaft_angle,
+    )
+    deadzone_state = _no_slip_state_at_shift(
+        geometry=geometry,
+        shift_position=deadzone_shift_position,
+        secondary_speed=c.deadzone_secondary_speed,
+        shift_speed=c.deadzone_shift_speed,
+        secondary_shaft_angle=c.secondary_shaft_angle,
+    )
+    case = CVTSimulationCase(
+        cvt=assembly,
+        input_boundary=engine,
+        output_boundary=output_boundary,
+        scenario=OperatingScenario(
+            time_span=(0.0, 10.0),
+            initial_state=active_shift_state,
+        ),
+    )
     return BajaTrialBaseline(
         constants=c,
-        model=model,
-        active_shift_state=_no_slip_state_at_shift(
-            geometry=geometry,
-            shift_position=active_shift_position,
-            secondary_speed=c.active_secondary_speed,
-            shift_speed=c.active_shift_speed,
-            secondary_shaft_angle=c.secondary_shaft_angle,
-        ),
-        quasi_static_state=_no_slip_state_at_shift(
-            geometry=geometry,
-            shift_position=active_shift_position,
-            secondary_speed=c.active_secondary_speed,
-            shift_speed=c.quasi_static_shift_speed,
-            secondary_shaft_angle=c.secondary_shaft_angle,
-        ),
-        deadzone_state=_no_slip_state_at_shift(
-            geometry=geometry,
-            shift_position=deadzone_shift_position,
-            secondary_speed=c.deadzone_secondary_speed,
-            shift_speed=c.deadzone_shift_speed,
-            secondary_shaft_angle=c.secondary_shaft_angle,
-        ),
+        assembly=assembly,
+        case=case,
+        active_shift_state=active_shift_state,
+        quasi_static_state=quasi_static_state,
+        deadzone_state=deadzone_state,
         default_trial=ContactTractionUtilization(
             primary_lambda=0.10,
             secondary_lambda=0.10,
@@ -359,6 +443,37 @@ def build_baja_trial_baseline(
             ContactTractionUtilization(primary_lambda=0.20, secondary_lambda=0.20),
         ),
     )
+
+
+def _validate_full_throttle_power_limit(
+    *,
+    engine: FullThrottleTorqueCurve,
+    power_limit_hp: float,
+) -> None:
+    """Reject a positive WOT curve that exceeds the diagnostic Baja cap.
+
+    The check samples only the supplied positive-torque operating range.  It
+    deliberately does *not* alter the curve, so the ODE still sees a smooth
+    PCHIP mapping rather than a solver-facing ``min(P/omega)`` kink.
+    """
+
+    if not isfinite(power_limit_hp) or power_limit_hp <= 0.0:
+        raise ValueError("engine_power_limit_hp must be finite and positive.")
+
+    maximum_power_w = max(
+        max(engine.evaluate(angular_speed), 0.0) * angular_speed
+        for angular_speed in (
+            engine.minimum_speed
+            + (engine.maximum_speed - engine.minimum_speed) * index / 1000.0
+            for index in range(1001)
+        )
+    )
+    limit_w = power_limit_hp * WATTS_PER_MECHANICAL_HORSEPOWER
+    if maximum_power_w > limit_w * (1.0 + 1.0e-9):
+        raise ValueError(
+            "Supplied positive full-throttle torque map exceeds the configured "
+            f"{power_limit_hp:.6g} hp cap: {maximum_power_w / WATTS_PER_MECHANICAL_HORSEPOWER:.4f} hp."
+        )
 
 
 def _no_slip_state_at_shift(
@@ -385,3 +500,94 @@ def _no_slip_state_at_shift(
         shift_speed=shift_speed,
         secondary_shaft_angle=secondary_shaft_angle,
     )
+
+# Test-only runtime construction -------------------------------------------------
+# These helpers deliberately live under test/cinder, rather than in launchTools.
+# They are a deterministic mechanical fixture for CINDER's own package tests and
+# must not import plotting, project scripts, or repository-local tooling.
+
+
+def build_operating_configuration(
+    constants: BajaTrialConstants | None = None,
+    *,
+    static_lambda_limit: float = 0.65,
+    kinetic_lambda_magnitude: float = 0.55,
+) -> tuple[CVTOperatingSystemConfig, BajaTrialBaseline]:
+    """Build deterministic test-only execution settings and one baseline case."""
+
+    baseline = build_baja_trial_baseline(constants)
+    traction_law = ContactTractionLaw.symmetric(
+        primary_static_lambda_limit=static_lambda_limit,
+        secondary_static_lambda_limit=static_lambda_limit,
+        primary_kinetic_lambda_magnitude=kinetic_lambda_magnitude,
+        secondary_kinetic_lambda_magnitude=kinetic_lambda_magnitude,
+    )
+    configuration = CVTOperatingSystemConfig(
+        traction_law=traction_law,
+        solve_settings=EngagedContactSolveSettings(
+            lambda_search_bounds=LambdaSearchBounds.symmetric(
+                primary_half_width=3.0,
+                secondary_half_width=3.0,
+            ),
+            initial_guess=baseline.default_trial,
+            maximum_closure_condition_number=1.0e8,
+        ),
+        operating_limits=CVTShiftOperatingLimits(
+            lower_stop_shift=0.0,
+            engagement_shift=baseline.constants.deadzone_shift,
+            upper_stop_shift=baseline.constants.max_shift,
+        ),
+    )
+    return configuration, baseline
+
+
+def build_operating_system(
+    constants: BajaTrialConstants | None = None,
+    *,
+    static_lambda_limit: float = 0.65,
+    kinetic_lambda_magnitude: float = 0.55,
+) -> tuple[CVTOperatingHybridSystem, BajaTrialBaseline]:
+    """Build one runtime system from the test fixture case."""
+
+    configuration, baseline = build_operating_configuration(
+        constants,
+        static_lambda_limit=static_lambda_limit,
+        kinetic_lambda_magnitude=kinetic_lambda_magnitude,
+    )
+    return configuration.build(baseline.case), baseline
+
+
+def launch_initial_state(*, primary_rpm: float = 1800.0) -> CVTDynamicState:
+    """Return a rest-launch state: spinning primary and stationary driven side."""
+
+    if not isfinite(primary_rpm) or primary_rpm < 0.0:
+        raise ValueError("primary_rpm must be finite and non-negative.")
+    return CVTDynamicState(
+        primary_angular_speed=primary_rpm * RPM_TO_RAD_PER_SECOND,
+        secondary_angular_speed=0.0,
+        belt_speed=0.0,
+        shift_position=0.0,
+        shift_speed=0.0,
+        secondary_shaft_angle=0.0,
+    )
+
+
+def case_with_output_road_profile(
+    case: CVTSimulationCase,
+    road_profile: ConstantGradeRoadProfile,
+) -> CVTSimulationCase:
+    """Return a test case differing only in its locked-vehicle route."""
+
+    if not isinstance(case.output_boundary, LockedFinalDriveVehicle):
+        raise TypeError("fixture case must use a LockedFinalDriveVehicle boundary.")
+    return case.with_output_boundary(case.output_boundary.with_road_profile(road_profile))
+
+
+def build_system_from_case(
+    case: CVTSimulationCase,
+    *,
+    configuration: CVTOperatingSystemConfig,
+) -> CVTOperatingHybridSystem:
+    """Build the runtime system through CINDER's normal case/config boundary."""
+
+    return configuration.build(case)
