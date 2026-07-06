@@ -116,7 +116,9 @@ class PulleyActuationContext:
             raise TypeError("closure_channels must be a PulleyClosureChannels or None.")
         if self.helical_coupling is not None:
             if not isinstance(self.helical_coupling, HelicalCouplingState):
-                raise TypeError("helical_coupling must be a HelicalCouplingState or None.")
+                raise TypeError(
+                    "helical_coupling must be a HelicalCouplingState or None."
+                )
             self.helical_coupling.validate_local_position(self.axial_position)
         if self.movable_member_rotational_inertia is not None and (
             not isfinite(self.movable_member_rotational_inertia)
@@ -169,7 +171,9 @@ class ActuatorInspection:
         keys = tuple(item.key for item in self.contributions)
         if len(set(keys)) != len(keys):
             raise ValueError("ActuatorInspection contribution keys must be unique.")
-        if not all(isinstance(item, ActuationContribution) for item in self.contributions):
+        if not all(
+            isinstance(item, ActuationContribution) for item in self.contributions
+        ):
             raise TypeError("contributions must contain ActuationContribution values.")
 
     def resolve_total(self, unknowns: ClosureUnknowns) -> float:

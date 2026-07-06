@@ -1,10 +1,20 @@
 """Input-shaft boundaries such as engines, motors, or dynos."""
 
-from .engine import *
-
 from typing import Protocol
 
-class InputTorqueBoundary(Protocol):
-    def evaluate(self, angular_speed: float) -> float: ...
+from .engine import EngineTorquePoint, FullThrottleTorqueCurve, TorqueCurveSpec
 
-__all__ = [name for name in globals() if not name.startswith("_")]
+
+class InputTorqueBoundary(Protocol):
+    """Contract for a source torque applied to the CVT input shaft."""
+
+    def evaluate(self, angular_speed: float) -> float:
+        """Return signed shaft torque at one angular speed."""
+
+
+__all__ = [
+    "EngineTorquePoint",
+    "FullThrottleTorqueCurve",
+    "InputTorqueBoundary",
+    "TorqueCurveSpec",
+]

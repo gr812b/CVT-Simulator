@@ -84,9 +84,7 @@ class PulleySpec:
         if self.helical_coupling is not None and not isinstance(
             self.helical_coupling, HelicalPulleyCoupling
         ):
-            raise TypeError(
-                "helical_coupling must be a HelicalPulleyCoupling or None."
-            )
+            raise TypeError("helical_coupling must be a HelicalPulleyCoupling or None.")
         has_helical_force = any(
             isinstance(law, HelicalTorqueReactionForce)
             for law in self.actuator.force_laws

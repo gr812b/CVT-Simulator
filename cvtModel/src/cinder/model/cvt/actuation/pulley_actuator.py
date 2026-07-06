@@ -55,4 +55,6 @@ class PulleyActuator:
         total = AffineClosureScalar.zero()
         for contribution in contributions:
             total = total + contribution.relation
-        return ActuatorInspection(total_relation=total, contributions=tuple(contributions))
+        return ActuatorInspection(
+            total_relation=total, contributions=tuple(contributions)
+        )

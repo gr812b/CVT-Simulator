@@ -41,12 +41,20 @@ class HelicalTorqueReactionForce:
     def evaluate(self, context: PulleyActuationContext) -> AffineClosureScalar:
         return self._terms(context)[0]
 
-    def inspect(self, context: PulleyActuationContext) -> tuple[ActuationContribution, ...]:
+    def inspect(
+        self, context: PulleyActuationContext
+    ) -> tuple[ActuationContribution, ...]:
         """Expose the physical helix decomposition outside the RHS path."""
 
-        _, force_per_reacted_torque, spring_torque, curvature_torque, channels, inertia, kinematics = (
-            self._terms(context, retain_components=True)
-        )
+        (
+            _,
+            force_per_reacted_torque,
+            spring_torque,
+            curvature_torque,
+            channels,
+            inertia,
+            kinematics,
+        ) = self._terms(context, retain_components=True)
         return (
             ActuationContribution(
                 key="helix_torsional_preload",
@@ -67,7 +75,10 @@ class HelicalTorqueReactionForce:
                 label="Helix shaft-acceleration inertia",
                 relation=AffineClosureScalar(
                     gains=ClosureGains.from_by_unknown(
-                        {channels.shaft_angular_acceleration: -force_per_reacted_torque * inertia}
+                        {
+                            channels.shaft_angular_acceleration: -force_per_reacted_torque
+                            * inertia
+                        }
                     )
                 ),
             ),
@@ -78,7 +89,9 @@ class HelicalTorqueReactionForce:
                     gains=ClosureGains.from_by_unknown(
                         {
                             ClosureUnknown.SHIFT_ACCELERATION: (
-                                force_per_reacted_torque * inertia * kinematics.dtheta_ds
+                                force_per_reacted_torque
+                                * inertia
+                                * kinematics.dtheta_ds
                             )
                         }
                     )
@@ -132,13 +145,13 @@ class HelicalTorqueReactionForce:
         )
         gains = ClosureGains.from_by_unknown(
             {
-                channels.shaft_angular_acceleration: -force_per_reacted_torque * inertia,
+                channels.shaft_angular_acceleration: -force_per_reacted_torque
+                * inertia,
                 ClosureUnknown.SHIFT_ACCELERATION: (
                     force_per_reacted_torque * inertia * kinematics.dtheta_ds
                 ),
                 channels.shaft_torque: (
-                    force_per_reacted_torque
-                    * self._spec.movable_member_torque_fraction
+                    force_per_reacted_torque * self._spec.movable_member_torque_fraction
                 ),
             }
         )

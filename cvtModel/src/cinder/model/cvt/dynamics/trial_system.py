@@ -9,7 +9,11 @@ from typing import Iterable
 import numpy as np
 from numpy.typing import NDArray
 
-from cinder.model.cvt.closure import CLOSURE_UNKNOWN_COUNT, ClosureEquation, ClosureUnknowns
+from cinder.model.cvt.closure import (
+    CLOSURE_UNKNOWN_COUNT,
+    ClosureEquation,
+    ClosureUnknowns,
+)
 
 from .result import (
     ClosureEquationResidual,

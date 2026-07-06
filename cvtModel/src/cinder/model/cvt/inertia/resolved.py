@@ -6,7 +6,11 @@ from dataclasses import dataclass
 
 from .belt import BeltMass, ResolvedBeltMass, TrapezoidalBeltSection
 from .primary import PrimaryInertia
-from .secondary import ResolvedSecondaryInertia, SecondaryInertia, resolve_secondary_inertia
+from .secondary import (
+    ResolvedSecondaryInertia,
+    SecondaryInertia,
+    resolve_secondary_inertia,
+)
 from .shift import AxialTranslationMasses, resolve_axial_translation_masses
 
 

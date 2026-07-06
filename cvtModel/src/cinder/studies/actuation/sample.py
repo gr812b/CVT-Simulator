@@ -18,14 +18,12 @@ from cinder.model.system import CVTAssemblySpec, PulleySpec
 
 from .types import (
     ActuationOperatingPoint,
-    ActuationResponseAxis,
     ActuationResponseCoordinate,
     ActuationStateCoordinate,
     ClampingForceResponseField,
     PulleyClampingForceStudyRequest,
     PulleyLocation,
     affine_gain_column_key,
-    coordinate_column_key,
 )
 
 
@@ -76,7 +74,12 @@ def sample_pulley_clamping_force(
             )
 
         total = inspection.total_relation
-        _store(column_values, "total_clamping_force_N", index, total.evaluate(point.closure_unknowns))
+        _store(
+            column_values,
+            "total_clamping_force_N",
+            index,
+            total.evaluate(point.closure_unknowns),
+        )
         _store(column_values, "total_bias_force_N", index, total.bias)
         for contribution in inspection.contributions:
             _store(
@@ -123,7 +126,9 @@ def _allocate_force_columns(
         columns[f"{key}_bias_force_N"] = np.zeros(shape, dtype=float)
 
 
-def _store(columns: dict[str, np.ndarray], key: str, index: tuple[int, ...], value: float) -> None:
+def _store(
+    columns: dict[str, np.ndarray], key: str, index: tuple[int, ...], value: float
+) -> None:
     columns[key][index] = value
 
 
@@ -141,7 +146,9 @@ def _replace_coordinate(
     if isinstance(coordinate, ClosureUnknown):
         values = list(point.closure_unknowns.as_tuple())
         values[int(coordinate)] = value
-        return replace(point, closure_unknowns=ClosureUnknowns.from_ordered_values(values))
+        return replace(
+            point, closure_unknowns=ClosureUnknowns.from_ordered_values(values)
+        )
     raise TypeError(f"Unsupported actuation response coordinate: {coordinate!r}")
 
 
@@ -171,7 +178,9 @@ def _build_pulley_context(
         pulley_spec = cvt.pulleys.output
         coupling = pulley_spec.helical_coupling
         if coupling is None:  # pragma: no cover - CVTAssemblySpec invariant.
-            raise ValueError("Output clamping study requires an output helical coupling.")
+            raise ValueError(
+                "Output clamping study requires an output helical coupling."
+            )
         kinematics = coupling.evaluate_from_local_coordinate(
             axial_position=coordinate.value,
             d_axial_position_ds=coordinate.d_value_ds,

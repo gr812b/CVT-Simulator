@@ -21,7 +21,11 @@ from cinder.model.cvt.actuation import (
     HelicalTorqueReactionSpec,
     PulleyActuator,
 )
-from cinder.model.cvt.geometry import BeltPulleyGeometry, BeltPulleyGeometrySpec, BeltSectionSpec
+from cinder.model.cvt.geometry import (
+    BeltPulleyGeometry,
+    BeltPulleyGeometrySpec,
+    BeltSectionSpec,
+)
 from cinder.model.cvt.inertia import (
     BeltMass,
     DrivetrainInertias,
@@ -29,7 +33,12 @@ from cinder.model.cvt.inertia import (
     SecondaryInertia,
     resolve_inertias,
 )
-from cinder.model.cvt.profiles import CircularSegment, HelixProfile, LinearSegment, PiecewiseRamp
+from cinder.model.cvt.profiles import (
+    CircularSegment,
+    HelixProfile,
+    LinearSegment,
+    PiecewiseRamp,
+)
 from cinder.model.system import (
     BeltContactSpec,
     CVTAssemblySpec,
@@ -126,8 +135,12 @@ def decode_assembly_document(document: Mapping[str, Any]) -> CVTAssemblySpec:
     geometry_spec = BeltPulleyGeometrySpec(
         belt=belt,
         belt_outer_length=_number(geometry_doc, "belt_outer_length_m"),
-        primary_outer_radius_at_zero_shift=_number(geometry_doc, "primary_outer_radius_at_zero_shift_m"),
-        secondary_outer_radius_at_zero_shift=_number(geometry_doc, "secondary_outer_radius_at_zero_shift_m"),
+        primary_outer_radius_at_zero_shift=_number(
+            geometry_doc, "primary_outer_radius_at_zero_shift_m"
+        ),
+        secondary_outer_radius_at_zero_shift=_number(
+            geometry_doc, "secondary_outer_radius_at_zero_shift_m"
+        ),
         sheave_half_angle=_number(geometry_doc, "sheave_half_angle_rad"),
         deadzone_shift=_number(geometry_doc, "deadzone_shift_m"),
         max_shift=_number(geometry_doc, "max_shift_m"),
@@ -135,7 +148,9 @@ def decode_assembly_document(document: Mapping[str, Any]) -> CVTAssemblySpec:
     geometry = BeltPulleyGeometry(geometry_spec)
 
     contact_doc = _mapping(_require(root, "contact"), "contact")
-    contact = BeltContactSpec(friction_coefficient=_number(contact_doc, "friction_coefficient"))
+    contact = BeltContactSpec(
+        friction_coefficient=_number(contact_doc, "friction_coefficient")
+    )
 
     inertias_doc = _mapping(_require(root, "inertias"), "inertias")
     primary_doc = _mapping(_require(inertias_doc, "primary"), "inertias.primary")
@@ -143,14 +158,24 @@ def decode_assembly_document(document: Mapping[str, Any]) -> CVTAssemblySpec:
     inertias = resolve_inertias(
         drivetrain=DrivetrainInertias(
             primary=PrimaryInertia(
-                engine_rotational_inertia=_number(primary_doc, "engine_rotational_inertia_kg_m2"),
-                cvt_rotational_inertia=_number(primary_doc, "cvt_rotational_inertia_kg_m2"),
+                engine_rotational_inertia=_number(
+                    primary_doc, "engine_rotational_inertia_kg_m2"
+                ),
+                cvt_rotational_inertia=_number(
+                    primary_doc, "cvt_rotational_inertia_kg_m2"
+                ),
                 moving_sheave_mass=_number(primary_doc, "moving_sheave_mass_kg"),
             ),
             secondary=SecondaryInertia(
-                fixed_rotational_inertia=_number(secondary_doc, "fixed_rotational_inertia_kg_m2"),
-                gearbox_input_rotational_inertia=_number(secondary_doc, "gearbox_input_rotational_inertia_kg_m2"),
-                movable_sheave_rotational_inertia=_number(secondary_doc, "movable_sheave_rotational_inertia_kg_m2"),
+                fixed_rotational_inertia=_number(
+                    secondary_doc, "fixed_rotational_inertia_kg_m2"
+                ),
+                gearbox_input_rotational_inertia=_number(
+                    secondary_doc, "gearbox_input_rotational_inertia_kg_m2"
+                ),
+                movable_sheave_rotational_inertia=_number(
+                    secondary_doc, "movable_sheave_rotational_inertia_kg_m2"
+                ),
                 moving_sheave_mass=_number(secondary_doc, "moving_sheave_mass_kg"),
             ),
             belt=BeltMass(density=_number(inertias_doc, "belt_density_kg_per_m3")),
@@ -160,8 +185,12 @@ def decode_assembly_document(document: Mapping[str, Any]) -> CVTAssemblySpec:
     )
 
     pulleys_doc = _mapping(_require(root, "pulleys"), "pulleys")
-    input_pulley = _decode_pulley(_mapping(_require(pulleys_doc, "input"), "pulleys.input"), location="input")
-    output_pulley = _decode_pulley(_mapping(_require(pulleys_doc, "output"), "pulleys.output"), location="output")
+    input_pulley = _decode_pulley(
+        _mapping(_require(pulleys_doc, "input"), "pulleys.input"), location="input"
+    )
+    output_pulley = _decode_pulley(
+        _mapping(_require(pulleys_doc, "output"), "pulleys.output"), location="output"
+    )
 
     return CVTAssemblySpec(
         geometry=geometry,
@@ -173,7 +202,9 @@ def decode_assembly_document(document: Mapping[str, Any]) -> CVTAssemblySpec:
 
 def _encode_pulley(pulley: PulleySpec) -> dict[str, Any]:
     payload: dict[str, Any] = {
-        "components": [_encode_force_law(force_law) for force_law in pulley.actuator.force_laws],
+        "components": [
+            _encode_force_law(force_law) for force_law in pulley.actuator.force_laws
+        ],
     }
     if pulley.helical_coupling is not None:
         coupling = pulley.helical_coupling
@@ -186,20 +217,33 @@ def _encode_pulley(pulley: PulleySpec) -> dict[str, Any]:
 
 
 def _decode_pulley(payload: Mapping[str, Any], *, location: str) -> PulleySpec:
-    components = _sequence(_require(payload, "components"), f"pulleys.{location}.components")
+    components = _sequence(
+        _require(payload, "components"), f"pulleys.{location}.components"
+    )
     if not components:
         raise DesignDocumentError(f"pulleys.{location}.components must not be empty.")
     force_laws = tuple(
-        _decode_force_law(_mapping(component, f"pulleys.{location}.components[{index}]"))
+        _decode_force_law(
+            _mapping(component, f"pulleys.{location}.components[{index}]")
+        )
         for index, component in enumerate(components)
     )
     coupling_document = payload.get("helical_coupling")
     coupling = None
     if coupling_document is not None:
-        coupling_data = _mapping(coupling_document, f"pulleys.{location}.helical_coupling")
+        coupling_data = _mapping(
+            coupling_document, f"pulleys.{location}.helical_coupling"
+        )
         coupling = HelicalPulleyCoupling(
-            profile=_decode_helix_profile(_mapping(_require(coupling_data, "profile"), f"pulleys.{location}.helical_coupling.profile")),
-            opening_per_axial_position=_number(coupling_data, "opening_per_axial_position"),
+            profile=_decode_helix_profile(
+                _mapping(
+                    _require(coupling_data, "profile"),
+                    f"pulleys.{location}.helical_coupling.profile",
+                )
+            ),
+            opening_per_axial_position=_number(
+                coupling_data, "opening_per_axial_position"
+            ),
             opening_offset=_number(coupling_data, "opening_offset_m"),
         )
     return PulleySpec(actuator=PulleyActuator(*force_laws), helical_coupling=coupling)
@@ -220,7 +264,9 @@ def _encode_force_law(force_law: object) -> dict[str, Any]:
             "kind": "centrifugal_ramp",
             "flyweight_mass_kg": spec.flyweight_mass,
             "radius_at_zero_position_m": spec.radius_at_zero_position,
-            "radial_displacement_profile": _encode_piecewise_ramp(spec.radial_displacement_profile),
+            "radial_displacement_profile": _encode_piecewise_ramp(
+                spec.radial_displacement_profile
+            ),
         }
     if isinstance(force_law, HelicalTorqueReactionForce):
         spec = force_law.spec
@@ -242,7 +288,9 @@ def _decode_force_law(payload: Mapping[str, Any]) -> object:
             AxialSpringForceSpec(
                 stiffness=_number(payload, "stiffness_N_per_m"),
                 initial_compression=_number(payload, "initial_compression_m"),
-                compression_per_axial_position=_number(payload, "compression_per_axial_position"),
+                compression_per_axial_position=_number(
+                    payload, "compression_per_axial_position"
+                ),
             )
         )
     if kind == "centrifugal_ramp":
@@ -251,7 +299,10 @@ def _decode_force_law(payload: Mapping[str, Any]) -> object:
                 flyweight_mass=_number(payload, "flyweight_mass_kg"),
                 radius_at_zero_position=_number(payload, "radius_at_zero_position_m"),
                 radial_displacement_profile=_decode_piecewise_ramp(
-                    _mapping(_require(payload, "radial_displacement_profile"), "radial_displacement_profile")
+                    _mapping(
+                        _require(payload, "radial_displacement_profile"),
+                        "radial_displacement_profile",
+                    )
                 ),
             )
         )
@@ -260,7 +311,9 @@ def _decode_force_law(payload: Mapping[str, Any]) -> object:
             spec=HelicalTorqueReactionSpec(
                 torsional_stiffness=_number(payload, "torsional_stiffness_Nm_per_rad"),
                 initial_twist=_number(payload, "initial_twist_rad"),
-                movable_member_torque_fraction=_optional_number(payload, "movable_member_torque_fraction", default=0.5),
+                movable_member_torque_fraction=_optional_number(
+                    payload, "movable_member_torque_fraction", default=0.5
+                ),
             )
         )
     raise UnsupportedDesignDocumentError(f"Unsupported pulley component kind {kind!r}.")
@@ -279,7 +332,9 @@ def _encode_piecewise_ramp(profile: object) -> dict[str, Any]:
 
 def _decode_piecewise_ramp(payload: Mapping[str, Any]) -> PiecewiseRamp:
     if _string(payload, "kind") != "piecewise_ramp":
-        raise UnsupportedDesignDocumentError("Only kind='piecewise_ramp' is supported here.")
+        raise UnsupportedDesignDocumentError(
+            "Only kind='piecewise_ramp' is supported here."
+        )
     segments = _sequence(_require(payload, "segments"), "piecewise_ramp.segments")
     if not segments:
         raise DesignDocumentError("piecewise_ramp.segments must not be empty.")
@@ -312,7 +367,10 @@ def _encode_ramp_segment(segment: object) -> dict[str, Any]:
 def _decode_ramp_segment(payload: Mapping[str, Any]) -> LinearSegment | CircularSegment:
     kind = _string(payload, "kind")
     if kind == "linear_segment":
-        return LinearSegment(length=_number(payload, "length_m"), angle_degrees=_number(payload, "angle_degrees"))
+        return LinearSegment(
+            length=_number(payload, "length_m"),
+            angle_degrees=_number(payload, "angle_degrees"),
+        )
     if kind == "circular_segment":
         quadrant = _integer(payload, "quadrant")
         return CircularSegment(
@@ -327,7 +385,9 @@ def _decode_ramp_segment(payload: Mapping[str, Any]) -> LinearSegment | Circular
 def _encode_helix_profile(profile: HelixProfile) -> dict[str, Any]:
     return {
         "kind": "helix_profile",
-        "circumferential_profile": _encode_piecewise_ramp(profile.circumferential_profile),
+        "circumferential_profile": _encode_piecewise_ramp(
+            profile.circumferential_profile
+        ),
         "radius_m": profile.radius,
         "theta_offset_rad": profile.theta_offset,
     }
@@ -335,10 +395,15 @@ def _encode_helix_profile(profile: HelixProfile) -> dict[str, Any]:
 
 def _decode_helix_profile(payload: Mapping[str, Any]) -> HelixProfile:
     if _string(payload, "kind") != "helix_profile":
-        raise UnsupportedDesignDocumentError("Only kind='helix_profile' is supported here.")
+        raise UnsupportedDesignDocumentError(
+            "Only kind='helix_profile' is supported here."
+        )
     return HelixProfile(
         circumferential_profile=_decode_piecewise_ramp(
-            _mapping(_require(payload, "circumferential_profile"), "helix_profile.circumferential_profile")
+            _mapping(
+                _require(payload, "circumferential_profile"),
+                "helix_profile.circumferential_profile",
+            )
         ),
         radius=_number(payload, "radius_m"),
         theta_offset=_optional_number(payload, "theta_offset_rad", default=0.0),

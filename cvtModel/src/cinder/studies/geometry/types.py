@@ -35,12 +35,17 @@ class GeometryDesignContext:
         if not isinstance(self.belt, BeltSectionSpec):
             raise TypeError("belt must be a BeltSectionSpec.")
         _require_positive("belt_outer_length", self.belt_outer_length)
-        if not isfinite(self.sheave_half_angle) or not 0.0 < self.sheave_half_angle < pi / 2.0:
+        if (
+            not isfinite(self.sheave_half_angle)
+            or not 0.0 < self.sheave_half_angle < pi / 2.0
+        ):
             raise ValueError("sheave_half_angle must lie between 0 and pi / 2.")
         _require_nonnegative("deadzone_shift", self.deadzone_shift)
         _require_nonnegative("max_shift", self.max_shift)
         if self.max_shift < self.deadzone_shift:
-            raise ValueError("max_shift must be greater than or equal to deadzone_shift.")
+            raise ValueError(
+                "max_shift must be greater than or equal to deadzone_shift."
+            )
 
     @property
     def active_shift_travel(self) -> float:

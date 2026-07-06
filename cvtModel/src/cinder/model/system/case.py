@@ -60,10 +60,14 @@ class CVTSimulationCase:
         if not isinstance(self.scenario, OperatingScenario):
             raise TypeError("scenario must be an OperatingScenario.")
 
-    def with_input_boundary(self, input_boundary: InputTorqueBoundary) -> "CVTSimulationCase":
+    def with_input_boundary(
+        self, input_boundary: InputTorqueBoundary
+    ) -> "CVTSimulationCase":
         return replace(self, input_boundary=input_boundary)
 
-    def with_output_boundary(self, output_boundary: OutputBoundary) -> "CVTSimulationCase":
+    def with_output_boundary(
+        self, output_boundary: OutputBoundary
+    ) -> "CVTSimulationCase":
         return replace(self, output_boundary=output_boundary)
 
     def with_scenario(self, scenario: OperatingScenario) -> "CVTSimulationCase":

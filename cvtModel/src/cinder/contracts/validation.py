@@ -12,7 +12,11 @@ from dataclasses import dataclass
 from math import isfinite
 from typing import Literal
 
-from cinder.model.cvt.actuation import AxialSpringForce, CentrifugalRampForce, HelicalTorqueReactionForce
+from cinder.model.cvt.actuation import (
+    AxialSpringForce,
+    CentrifugalRampForce,
+    HelicalTorqueReactionForce,
+)
 from cinder.model.system import CVTAssemblySpec, PulleySpec
 
 
@@ -97,46 +101,58 @@ def validate_assembly(
     endpoints = (geometry.evaluate(0.0), geometry.evaluate(spec.max_shift))
 
     if spec.max_shift == spec.deadzone_shift:
-        findings.append(_warning(
-            "geometry.no_active_shift_travel",
-            "The geometry has no active shift travel after the primary deadzone.",
-            "geometry",
-        ))
+        findings.append(
+            _warning(
+                "geometry.no_active_shift_travel",
+                "The geometry has no active shift travel after the primary deadzone.",
+                "geometry",
+            )
+        )
     if assembly.contact.friction_coefficient == 0.0:
-        findings.append(_warning(
-            "contact.zero_friction_coefficient",
-            "The contact friction coefficient is zero, so traction capacity will be zero.",
-            "contact.friction_coefficient",
-        ))
+        findings.append(
+            _warning(
+                "contact.zero_friction_coefficient",
+                "The contact friction coefficient is zero, so traction capacity will be zero.",
+                "contact.friction_coefficient",
+            )
+        )
 
     if options.minimum_primary_wrap_angle_rad is not None:
         minimum = min(point.primary_wrap_angle for point in endpoints)
         if minimum < options.minimum_primary_wrap_angle_rad:
-            findings.append(_warning(
-                "geometry.primary_wrap_below_threshold",
-                "Primary wrap angle falls below the supplied engineering threshold.",
-                "geometry.primary_wrap_angle",
-            ))
+            findings.append(
+                _warning(
+                    "geometry.primary_wrap_below_threshold",
+                    "Primary wrap angle falls below the supplied engineering threshold.",
+                    "geometry.primary_wrap_angle",
+                )
+            )
     if options.minimum_secondary_wrap_angle_rad is not None:
         minimum = min(point.secondary_wrap_angle for point in endpoints)
         if minimum < options.minimum_secondary_wrap_angle_rad:
-            findings.append(_warning(
-                "geometry.secondary_wrap_below_threshold",
-                "Secondary wrap angle falls below the supplied engineering threshold.",
-                "geometry.secondary_wrap_angle",
-            ))
+            findings.append(
+                _warning(
+                    "geometry.secondary_wrap_below_threshold",
+                    "Secondary wrap angle falls below the supplied engineering threshold.",
+                    "geometry.secondary_wrap_angle",
+                )
+            )
 
     _validate_pulley(
         pulley=assembly.pulleys.input,
         location="pulleys.input",
-        local_positions=tuple(point.primary_axial_coordinate.value for point in endpoints),
+        local_positions=tuple(
+            point.primary_axial_coordinate.value for point in endpoints
+        ),
         opening_travels=None,
         findings=findings,
     )
     _validate_pulley(
         pulley=assembly.pulleys.output,
         location="pulleys.output",
-        local_positions=tuple(point.secondary_axial_coordinate.value for point in endpoints),
+        local_positions=tuple(
+            point.secondary_axial_coordinate.value for point in endpoints
+        ),
         opening_travels=tuple(
             assembly.pulleys.output.helical_coupling.opening_offset
             + assembly.pulleys.output.helical_coupling.opening_per_axial_position
@@ -166,11 +182,13 @@ def _validate_pulley(
         if isinstance(force_law, CentrifugalRampForce):
             profile = force_law.spec.radial_displacement_profile
             if profile.x_min > local_min or profile.x_max < local_max:
-                findings.append(_error(
-                    "actuation.profile_does_not_cover_local_travel",
-                    "Centrifugal-ramp profile does not cover the pulley local travel range.",
-                    law_location,
-                ))
+                findings.append(
+                    _error(
+                        "actuation.profile_does_not_cover_local_travel",
+                        "Centrifugal-ramp profile does not cover the pulley local travel range.",
+                        law_location,
+                    )
+                )
         if isinstance(force_law, AxialSpringForce):
             spec = force_law.spec
             compression_values = tuple(
@@ -178,27 +196,36 @@ def _validate_pulley(
                 for value in local_positions
             )
             if min(compression_values) < 0.0:
-                findings.append(_warning(
-                    "actuation.spring_leaves_compression",
-                    "An axial compression spring becomes tensile over part of the available travel.",
-                    law_location,
-                ))
+                findings.append(
+                    _warning(
+                        "actuation.spring_leaves_compression",
+                        "An axial compression spring becomes tensile over part of the available travel.",
+                        law_location,
+                    )
+                )
         if isinstance(force_law, HelicalTorqueReactionForce):
             if pulley.helical_coupling is None or opening_travels is None:
-                findings.append(_error(
-                    "actuation.helix_coupling_missing",
-                    "Helical torque reaction requires a matching helical coupling.",
-                    law_location,
-                ))
+                findings.append(
+                    _error(
+                        "actuation.helix_coupling_missing",
+                        "Helical torque reaction requires a matching helical coupling.",
+                        law_location,
+                    )
+                )
                 continue
             profile = pulley.helical_coupling.profile
             opening_min, opening_max = min(opening_travels), max(opening_travels)
-            if profile.opening_travel_min > opening_min or profile.opening_travel_max < opening_max:
-                findings.append(_error(
-                    "actuation.helix_profile_does_not_cover_opening_travel",
-                    "Helix profile does not cover the output pulley opening-travel range.",
-                    law_location,
-                ))
+            if (
+                profile.opening_travel_min > opening_min
+                or profile.opening_travel_max < opening_max
+            ):
+                findings.append(
+                    _error(
+                        "actuation.helix_profile_does_not_cover_opening_travel",
+                        "Helix profile does not cover the output pulley opening-travel range.",
+                        law_location,
+                    )
+                )
 
 
 def _warning(code: str, message: str, location: str) -> ValidationFinding:

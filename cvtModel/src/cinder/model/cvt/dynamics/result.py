@@ -9,7 +9,11 @@ from typing import TYPE_CHECKING
 import numpy as np
 from numpy.typing import NDArray
 
-from cinder.model.cvt.closure import CLOSURE_UNKNOWN_COUNT, ClosureEquation, ClosureUnknowns
+from cinder.model.cvt.closure import (
+    CLOSURE_UNKNOWN_COUNT,
+    ClosureEquation,
+    ClosureUnknowns,
+)
 
 if TYPE_CHECKING:
     from .trial_system import TrialClosureSystem

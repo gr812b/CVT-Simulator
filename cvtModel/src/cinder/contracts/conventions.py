@@ -37,12 +37,20 @@ class PublicConventions:
 
     contract_version: int = PUBLIC_CONTRACT_VERSION
     canonical_unit_system: str = "SI"
-    ratio_definition: str = "effective secondary radius divided by effective primary radius"
-    ratio_direction: str = "ratio greater than one is a reduction; increasing global shift reduces the ratio"
+    ratio_definition: str = (
+        "effective secondary radius divided by effective primary radius"
+    )
+    ratio_direction: str = (
+        "ratio greater than one is a reduction; increasing global shift reduces the ratio"
+    )
     shift_coordinate: str = "global shift increases primary closure and primary radius"
     clamping_force_sign: str = "positive local axial force closes the mounted pulley"
-    torque_sign: str = "positive shaft torque acts in the forward modeled rotation direction"
-    report_grid: str = "high-level simulation results use a 10 ms uniform reporting grid by default; raw adaptive trace remains available"
+    torque_sign: str = (
+        "positive shaft torque acts in the forward modeled rotation direction"
+    )
+    report_grid: str = (
+        "high-level simulation results use a 10 ms uniform reporting grid by default; raw adaptive trace remains available"
+    )
 
     def as_dict(self) -> dict[str, Any]:
         return {
@@ -62,14 +70,46 @@ class PublicConventions:
 # Exact descriptions for the recurring cross-study quantities.  Unknown keys
 # remain legal: callers still receive a deterministic label and inferred unit.
 _EXACT: dict[str, tuple[str, str, str]] = {
-    "ratio": ("CVT ratio", "1", "Effective secondary radius divided by effective primary radius."),
-    "ratio_span": ("Ratio span", "1", "Maximum CVT ratio divided by minimum CVT ratio."),
-    "feasible_mask": ("Geometrically feasible", "bool", "True where the sampled geometry is physically valid."),
-    "implied_belt_outer_length_m": ("Implied belt outer length", "m", "Belt length implied by a radius-plane point."),
-    "ratio_change_per_m_shift": ("Ratio change per shift travel", "1/m", "Geometric dR/ds."),
-    "ratio_change_per_mm_shift": ("Ratio change per millimetre of shift", "1/mm", "Geometric ratio change for one millimetre of global shift."),
-    "total_clamping_force_N": ("Total clamping force", "N", "Resolved mounted-actuator clamping force."),
-    "total_bias_force_N": ("Total clamping bias force", "N", "Actuator force with affine closure unknowns set to zero."),
+    "ratio": (
+        "CVT ratio",
+        "1",
+        "Effective secondary radius divided by effective primary radius.",
+    ),
+    "ratio_span": (
+        "Ratio span",
+        "1",
+        "Maximum CVT ratio divided by minimum CVT ratio.",
+    ),
+    "feasible_mask": (
+        "Geometrically feasible",
+        "bool",
+        "True where the sampled geometry is physically valid.",
+    ),
+    "implied_belt_outer_length_m": (
+        "Implied belt outer length",
+        "m",
+        "Belt length implied by a radius-plane point.",
+    ),
+    "ratio_change_per_m_shift": (
+        "Ratio change per shift travel",
+        "1/m",
+        "Geometric dR/ds.",
+    ),
+    "ratio_change_per_mm_shift": (
+        "Ratio change per millimetre of shift",
+        "1/mm",
+        "Geometric ratio change for one millimetre of global shift.",
+    ),
+    "total_clamping_force_N": (
+        "Total clamping force",
+        "N",
+        "Resolved mounted-actuator clamping force.",
+    ),
+    "total_bias_force_N": (
+        "Total clamping bias force",
+        "N",
+        "Actuator force with affine closure unknowns set to zero.",
+    ),
 }
 
 _SUFFIX_UNITS: tuple[tuple[str, str], ...] = (
@@ -103,7 +143,9 @@ def public_conventions() -> PublicConventions:
     return PublicConventions()
 
 
-def describe_public_field(key: str, *, unit: str | None = None, label: str | None = None) -> PublicFieldDescriptor:
+def describe_public_field(
+    key: str, *, unit: str | None = None, label: str | None = None
+) -> PublicFieldDescriptor:
     """Describe one public numeric key without requiring a frontend registry.
 
     Existing report signals already carry explicit label/unit values.  Static

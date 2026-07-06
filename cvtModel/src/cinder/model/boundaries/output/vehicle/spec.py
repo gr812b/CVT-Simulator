@@ -16,8 +16,13 @@ class VehicleInertia:
     def __post_init__(self) -> None:
         if not isfinite(self.mass) or self.mass <= 0.0:
             raise ValueError("mass must be finite and positive.")
-        if not isfinite(self.wheel_rotational_inertia) or self.wheel_rotational_inertia < 0.0:
-            raise ValueError("wheel_rotational_inertia must be finite and non-negative.")
+        if (
+            not isfinite(self.wheel_rotational_inertia)
+            or self.wheel_rotational_inertia < 0.0
+        ):
+            raise ValueError(
+                "wheel_rotational_inertia must be finite and non-negative."
+            )
 
 
 @dataclass(frozen=True, slots=True)

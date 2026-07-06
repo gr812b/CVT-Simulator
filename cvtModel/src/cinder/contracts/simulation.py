@@ -43,10 +43,7 @@ class SimulationMetrics:
     secondary_slip_dissipation_final_J: float | None
 
     def as_dict(self) -> dict[str, Any]:
-        return {
-            field: getattr(self, field)
-            for field in self.__dataclass_fields__
-        }
+        return {field: getattr(self, field) for field in self.__dataclass_fields__}
 
 
 def summarize_simulation(result: CVTIntegrationResult) -> SimulationMetrics:
@@ -68,7 +65,10 @@ def summarize_simulation(result: CVTIntegrationResult) -> SimulationMetrics:
     first_engagement_time: float | None = None
     for segment in result.trace.segments:
         mode = segment.mode
-        if mode.engagement is CVTEngagementState.ENGAGED and first_engagement_time is None:
+        if (
+            mode.engagement is CVTEngagementState.ENGAGED
+            and first_engagement_time is None
+        ):
             first_engagement_time = segment.start_time
         if mode.contact_regime is None:
             continue
@@ -90,7 +90,9 @@ def summarize_simulation(result: CVTIntegrationResult) -> SimulationMetrics:
         secondary_angular_speed_max_rad_per_s=maximum("state.secondary_angular_speed"),
         vehicle_speed_max_m_per_s=maximum("vehicle.speed"),
         vehicle_distance_final_m=final("vehicle.distance"),
-        ratio_min=_finite_min(_signal_values(result, "geometry.effective_ratio_secondary_over_primary")),
+        ratio_min=_finite_min(
+            _signal_values(result, "geometry.effective_ratio_secondary_over_primary")
+        ),
         ratio_max=maximum("geometry.effective_ratio_secondary_over_primary"),
         ratio_final=final("geometry.effective_ratio_secondary_over_primary"),
         primary_traction_utilization_max=maximum("contact.primary_lambda"),
@@ -103,7 +105,11 @@ def summarize_simulation(result: CVTIntegrationResult) -> SimulationMetrics:
 
 
 def _signal_values(result: CVTIntegrationResult, key: str) -> np.ndarray:
-    parts = [segment.signals[key].values for segment in result.segments if key in segment.signals]
+    parts = [
+        segment.signals[key].values
+        for segment in result.segments
+        if key in segment.signals
+    ]
     if not parts:
         return np.empty(0, dtype=float)
     return np.concatenate(parts)

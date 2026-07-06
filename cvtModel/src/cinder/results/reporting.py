@@ -51,26 +51,43 @@ class ReportingGrid:
 
     def __post_init__(self) -> None:
         if self.kind not in {"native", "uniform_count", "uniform_time_step"}:
-            raise ValueError("ReportingGrid.kind must be native, uniform_count, or uniform_time_step.")
+            raise ValueError(
+                "ReportingGrid.kind must be native, uniform_count, or uniform_time_step."
+            )
         if self.kind == "native":
             if self.count is not None or self.step_seconds is not None:
-                raise ValueError("native ReportingGrid does not accept count or step_seconds.")
+                raise ValueError(
+                    "native ReportingGrid does not accept count or step_seconds."
+                )
         elif self.kind == "uniform_count":
             if self.count is None or self.count < 2 or self.step_seconds is not None:
-                raise ValueError("uniform_count ReportingGrid requires count >= 2 only.")
+                raise ValueError(
+                    "uniform_count ReportingGrid requires count >= 2 only."
+                )
         else:
-            if self.step_seconds is None or not isfinite(self.step_seconds) or self.step_seconds <= 0.0 or self.count is not None:
-                raise ValueError("uniform_time_step ReportingGrid requires positive finite step_seconds only.")
+            if (
+                self.step_seconds is None
+                or not isfinite(self.step_seconds)
+                or self.step_seconds <= 0.0
+                or self.count is not None
+            ):
+                raise ValueError(
+                    "uniform_time_step ReportingGrid requires positive finite step_seconds only."
+                )
 
     @property
     def requires_dense_output(self) -> bool:
         return self.kind != "native"
 
-    def global_times(self, *, start_time: float, end_time: float) -> NDArray[np.float64]:
+    def global_times(
+        self, *, start_time: float, end_time: float
+    ) -> NDArray[np.float64]:
         if not isfinite(start_time) or not isfinite(end_time) or end_time < start_time:
             raise ValueError("Report time range must be finite and ordered.")
         if self.kind == "native":
-            raise RuntimeError("native ReportingGrid has no independently requested time grid.")
+            raise RuntimeError(
+                "native ReportingGrid has no independently requested time grid."
+            )
         if end_time == start_time:
             return np.asarray([start_time], dtype=float)
         if self.kind == "uniform_count":
@@ -80,7 +97,9 @@ class ReportingGrid:
         duration = end_time - start_time
         count = int(np.floor(duration / self.step_seconds))
         values = start_time + self.step_seconds * np.arange(count + 1, dtype=float)
-        tolerance = 64.0 * np.finfo(float).eps * max(1.0, abs(start_time), abs(end_time))
+        tolerance = (
+            64.0 * np.finfo(float).eps * max(1.0, abs(start_time), abs(end_time))
+        )
         if end_time - values[-1] > tolerance:
             values = np.append(values, end_time)
         else:
@@ -160,7 +179,9 @@ class CVTReportedSegment:
     def __post_init__(self) -> None:
         time = np.asarray(self.time, dtype=float)
         if time.ndim != 1 or time.size < 1 or not np.all(np.isfinite(time)):
-            raise ValueError("CVTReportedSegment.time must be a finite non-empty vector.")
+            raise ValueError(
+                "CVTReportedSegment.time must be a finite non-empty vector."
+            )
         frozen_time = np.array(time, dtype=float, copy=True)
         frozen_time.setflags(write=False)
         object.__setattr__(self, "time", frozen_time)
@@ -171,7 +192,9 @@ class CVTReportedSegment:
             if key != signal.key:
                 raise ValueError("signal mapping keys must equal NumericSignal.key.")
             if signal.values.size != time.size:
-                raise ValueError("every signal must align with the segment time vector.")
+                raise ValueError(
+                    "every signal must align with the segment time vector."
+                )
         object.__setattr__(self, "signals", signals)
 
     def signal(self, key: str) -> NumericSignal:
@@ -301,7 +324,9 @@ class CVTResultBuilder:
 
         global_times = None
         if settings.grid.requires_dense_output:
-            missing = [segment for segment in trace.segments if not segment.has_dense_output]
+            missing = [
+                segment for segment in trace.segments if not segment.has_dense_output
+            ]
             if missing:
                 raise RuntimeError(
                     "Uniform reporting requires solver-native dense output. Re-integrate "
@@ -374,21 +399,30 @@ class CVTResultBuilder:
         )
 
 
-def _sample_segment(raw_segment, *, grid: ReportingGrid, global_times: NDArray[np.float64] | None) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
+def _sample_segment(
+    raw_segment, *, grid: ReportingGrid, global_times: NDArray[np.float64] | None
+) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
     if grid.kind == "native":
         return raw_segment.time, raw_segment.state
     assert global_times is not None
     scale = max(1.0, abs(raw_segment.start_time), abs(raw_segment.end_time))
     tolerance = 128.0 * np.finfo(float).eps * scale
-    mask = (global_times >= raw_segment.start_time - tolerance) & (global_times <= raw_segment.end_time + tolerance)
+    mask = (global_times >= raw_segment.start_time - tolerance) & (
+        global_times <= raw_segment.end_time + tolerance
+    )
     requested = global_times[mask]
-    time = np.unique(np.concatenate((
-        np.asarray([raw_segment.start_time], dtype=float),
-        requested,
-        np.asarray([raw_segment.end_time], dtype=float),
-    )))
+    time = np.unique(
+        np.concatenate(
+            (
+                np.asarray([raw_segment.start_time], dtype=float),
+                requested,
+                np.asarray([raw_segment.end_time], dtype=float),
+            )
+        )
+    )
     state = raw_segment.dense_state_at(time)
     return time, state
+
 
 def _build_signals(
     *,
@@ -404,31 +438,142 @@ def _build_signals(
     def add(key: str, label: str, unit: str, group: str, data) -> None:
         values[key] = (label, unit, group, np.asarray(data, dtype=float))
 
-    add("state.primary_angular_speed", "Primary angular speed", "rad/s", "state", state[0])
-    add("state.secondary_angular_speed", "Secondary angular speed", "rad/s", "state", state[1])
+    add(
+        "state.primary_angular_speed",
+        "Primary angular speed",
+        "rad/s",
+        "state",
+        state[0],
+    )
+    add(
+        "state.secondary_angular_speed",
+        "Secondary angular speed",
+        "rad/s",
+        "state",
+        state[1],
+    )
     add("state.belt_speed", "Belt speed", "m/s", "state", state[2])
     add("state.shift_position", "Shift position", "m", "state", state[3])
     add("state.shift_speed", "Shift speed", "m/s", "state", state[4])
-    add("state.secondary_shaft_angle", "Secondary shaft angle", "rad", "state", state[5])
+    add(
+        "state.secondary_shaft_angle", "Secondary shaft angle", "rad", "state", state[5]
+    )
 
     primary_radius = np.array([item.geometry.primary.effective for item in inspections])
-    secondary_radius = np.array([item.geometry.secondary.effective for item in inspections])
-    add("geometry.primary_effective_radius", "Primary effective radius", "m", "geometry", primary_radius)
-    add("geometry.secondary_effective_radius", "Secondary effective radius", "m", "geometry", secondary_radius)
-    add("geometry.primary_outer_radius", "Primary outer radius", "m", "geometry", np.array([item.geometry.primary.outer for item in inspections]))
-    add("geometry.secondary_outer_radius", "Secondary outer radius", "m", "geometry", np.array([item.geometry.secondary.outer for item in inspections]))
-    add("geometry.effective_ratio_secondary_over_primary", "Effective ratio r_s / r_p", "1", "geometry", secondary_radius / primary_radius)
-    add("geometry.primary_wrap_angle", "Primary wrap angle", "rad", "geometry", np.array([item.geometry.primary_wrap_angle for item in inspections]))
-    add("geometry.secondary_wrap_angle", "Secondary wrap angle", "rad", "geometry", np.array([item.geometry.secondary_wrap_angle for item in inspections]))
+    secondary_radius = np.array(
+        [item.geometry.secondary.effective for item in inspections]
+    )
+    add(
+        "geometry.primary_effective_radius",
+        "Primary effective radius",
+        "m",
+        "geometry",
+        primary_radius,
+    )
+    add(
+        "geometry.secondary_effective_radius",
+        "Secondary effective radius",
+        "m",
+        "geometry",
+        secondary_radius,
+    )
+    add(
+        "geometry.primary_outer_radius",
+        "Primary outer radius",
+        "m",
+        "geometry",
+        np.array([item.geometry.primary.outer for item in inspections]),
+    )
+    add(
+        "geometry.secondary_outer_radius",
+        "Secondary outer radius",
+        "m",
+        "geometry",
+        np.array([item.geometry.secondary.outer for item in inspections]),
+    )
+    add(
+        "geometry.effective_ratio_secondary_over_primary",
+        "Effective ratio r_s / r_p",
+        "1",
+        "geometry",
+        secondary_radius / primary_radius,
+    )
+    add(
+        "geometry.primary_wrap_angle",
+        "Primary wrap angle",
+        "rad",
+        "geometry",
+        np.array([item.geometry.primary_wrap_angle for item in inspections]),
+    )
+    add(
+        "geometry.secondary_wrap_angle",
+        "Secondary wrap angle",
+        "rad",
+        "geometry",
+        np.array([item.geometry.secondary_wrap_angle for item in inspections]),
+    )
 
-    add("boundary.engine_torque", "Input boundary torque", "N m", "boundary", np.array([item.engine_torque for item in inspections]))
-    add("boundary.output_external_torque", "Output boundary torque", "N m", "boundary", np.array([item.output_boundary.external_torque for item in inspections]))
-    add("boundary.output_added_inertia", "Output added inertia", "kg m^2", "boundary", np.array([item.output_boundary.added_rotational_inertia for item in inspections]))
+    add(
+        "boundary.engine_torque",
+        "Input boundary torque",
+        "N m",
+        "boundary",
+        np.array([item.engine_torque for item in inspections]),
+    )
+    add(
+        "boundary.output_external_torque",
+        "Output boundary torque",
+        "N m",
+        "boundary",
+        np.array([item.output_boundary.external_torque for item in inspections]),
+    )
+    add(
+        "boundary.output_added_inertia",
+        "Output added inertia",
+        "kg m^2",
+        "boundary",
+        np.array(
+            [item.output_boundary.added_rotational_inertia for item in inspections]
+        ),
+    )
     road = [item.output_boundary.road_load for item in inspections]
-    add("vehicle.speed", "Vehicle speed", "m/s", "vehicle", np.array([np.nan if row is None else row.vehicle_speed for row in road]))
-    add("vehicle.distance", "Vehicle distance", "m", "vehicle", np.array([np.nan if item.output_boundary.vehicle_distance is None else item.output_boundary.vehicle_distance for item in inspections]))
-    add("vehicle.grade_angle", "Road grade", "rad", "vehicle", np.array([np.nan if row is None else row.grade_angle for row in road]))
-    add("vehicle.road_force", "Road external force", "N", "vehicle", np.array([np.nan if row is None else row.external_force for row in road]))
+    add(
+        "vehicle.speed",
+        "Vehicle speed",
+        "m/s",
+        "vehicle",
+        np.array([np.nan if row is None else row.vehicle_speed for row in road]),
+    )
+    add(
+        "vehicle.distance",
+        "Vehicle distance",
+        "m",
+        "vehicle",
+        np.array(
+            [
+                (
+                    np.nan
+                    if item.output_boundary.vehicle_distance is None
+                    else item.output_boundary.vehicle_distance
+                )
+                for item in inspections
+            ]
+        ),
+    )
+    add(
+        "vehicle.grade_angle",
+        "Road grade",
+        "rad",
+        "vehicle",
+        np.array([np.nan if row is None else row.grade_angle for row in road]),
+    )
+    add(
+        "vehicle.road_force",
+        "Road external force",
+        "N",
+        "vehicle",
+        np.array([np.nan if row is None else row.external_force for row in road]),
+    )
 
     if settings.include_actuation:
         _add_actuation_signals(add, inspections)
@@ -456,37 +601,54 @@ def _add_actuation_signals(add, inspections: tuple[CVTStateInspection, ...]) -> 
             f"{label} total clamp force",
             "N",
             "actuation",
-            np.array([
-                np.nan if actuator is None
-                else actuator.resolve_total(
-                    inspection.closure_unknowns or ClosureUnknowns.zeros()
-                )
-                for actuator, inspection in zip(available, inspections, strict=True)
-            ]),
+            np.array(
+                [
+                    (
+                        np.nan
+                        if actuator is None
+                        else actuator.resolve_total(
+                            inspection.closure_unknowns or ClosureUnknowns.zeros()
+                        )
+                    )
+                    for actuator, inspection in zip(available, inspections, strict=True)
+                ]
+            ),
         )
-        keys = sorted({
-            contribution.key
-            for actuator in available if actuator is not None
-            for contribution in actuator.contributions
-        })
+        keys = sorted(
+            {
+                contribution.key
+                for actuator in available
+                if actuator is not None
+                for contribution in actuator.contributions
+            }
+        )
         for key in keys:
             signal_label = next(
                 contribution.label
-                for actuator in available if actuator is not None
-                for contribution in actuator.contributions if contribution.key == key
+                for actuator in available
+                if actuator is not None
+                for contribution in actuator.contributions
+                if contribution.key == key
             )
             add(
                 f"{prefix}.{key}",
                 f"{label} {signal_label}",
                 "N",
                 "actuation",
-                np.array([
-                    np.nan if actuator is None
-                    else actuator.resolve_contributions(
-                        inspection.closure_unknowns or ClosureUnknowns.zeros()
-                    ).get(key, np.nan)
-                    for actuator, inspection in zip(available, inspections, strict=True)
-                ]),
+                np.array(
+                    [
+                        (
+                            np.nan
+                            if actuator is None
+                            else actuator.resolve_contributions(
+                                inspection.closure_unknowns or ClosureUnknowns.zeros()
+                            ).get(key, np.nan)
+                        )
+                        for actuator, inspection in zip(
+                            available, inspections, strict=True
+                        )
+                    ]
+                ),
             )
 
 
@@ -498,42 +660,171 @@ def _add_contact_signals(
 ) -> None:
     contact = [item.contact for item in inspections]
     unknowns = [item.closure_unknowns for item in inspections]
-    add("contact.primary_lambda", "Primary traction utilization", "1", "contact", np.array([np.nan if row is None else row.traction_utilization.primary_lambda for row in contact]))
-    add("contact.secondary_lambda", "Secondary traction utilization", "1", "contact", np.array([np.nan if row is None else row.traction_utilization.secondary_lambda for row in contact]))
-    add("contact.primary_relative_speed", "Primary relative speed", "m/s", "contact", np.array([np.nan if row is None else row.relative_motion.primary_relative_speed for row in contact]))
-    add("contact.secondary_relative_speed", "Secondary relative speed", "m/s", "contact", np.array([np.nan if row is None else row.relative_motion.secondary_relative_speed for row in contact]))
-    add("contact.primary_normal_resultant", "Primary normal resultant", "N", "contact", np.array([np.nan if row is None else row.normal_primary for row in contact]))
-    add("contact.secondary_normal_resultant", "Secondary normal resultant", "N", "contact", np.array([np.nan if row is None else row.normal_secondary for row in contact]))
-    add("contact.primary_transmitted_torque", "Primary transmitted torque", "N m", "contact", np.array([np.nan if row is None else row.primary_torque for row in unknowns]))
-    add("contact.secondary_transmitted_torque", "Secondary transmitted torque", "N m", "contact", np.array([np.nan if row is None else row.secondary_torque for row in unknowns]))
-    add("contact.primary_static_margin", "Primary static traction margin", "1", "contact", np.array([
-        np.nan if row is None else traction_law.static_margin_at(ContactInterface.PRIMARY, row.traction_utilization.primary_lambda)
-        for row in contact
-    ]))
-    add("contact.secondary_static_margin", "Secondary static traction margin", "1", "contact", np.array([
-        np.nan if row is None else traction_law.static_margin_at(ContactInterface.SECONDARY, row.traction_utilization.secondary_lambda)
-        for row in contact
-    ]))
+    add(
+        "contact.primary_lambda",
+        "Primary traction utilization",
+        "1",
+        "contact",
+        np.array(
+            [
+                np.nan if row is None else row.traction_utilization.primary_lambda
+                for row in contact
+            ]
+        ),
+    )
+    add(
+        "contact.secondary_lambda",
+        "Secondary traction utilization",
+        "1",
+        "contact",
+        np.array(
+            [
+                np.nan if row is None else row.traction_utilization.secondary_lambda
+                for row in contact
+            ]
+        ),
+    )
+    add(
+        "contact.primary_relative_speed",
+        "Primary relative speed",
+        "m/s",
+        "contact",
+        np.array(
+            [
+                np.nan if row is None else row.relative_motion.primary_relative_speed
+                for row in contact
+            ]
+        ),
+    )
+    add(
+        "contact.secondary_relative_speed",
+        "Secondary relative speed",
+        "m/s",
+        "contact",
+        np.array(
+            [
+                np.nan if row is None else row.relative_motion.secondary_relative_speed
+                for row in contact
+            ]
+        ),
+    )
+    add(
+        "contact.primary_normal_resultant",
+        "Primary normal resultant",
+        "N",
+        "contact",
+        np.array([np.nan if row is None else row.normal_primary for row in contact]),
+    )
+    add(
+        "contact.secondary_normal_resultant",
+        "Secondary normal resultant",
+        "N",
+        "contact",
+        np.array([np.nan if row is None else row.normal_secondary for row in contact]),
+    )
+    add(
+        "contact.primary_transmitted_torque",
+        "Primary transmitted torque",
+        "N m",
+        "contact",
+        np.array([np.nan if row is None else row.primary_torque for row in unknowns]),
+    )
+    add(
+        "contact.secondary_transmitted_torque",
+        "Secondary transmitted torque",
+        "N m",
+        "contact",
+        np.array([np.nan if row is None else row.secondary_torque for row in unknowns]),
+    )
+    add(
+        "contact.primary_static_margin",
+        "Primary static traction margin",
+        "1",
+        "contact",
+        np.array(
+            [
+                (
+                    np.nan
+                    if row is None
+                    else traction_law.static_margin_at(
+                        ContactInterface.PRIMARY,
+                        row.traction_utilization.primary_lambda,
+                    )
+                )
+                for row in contact
+            ]
+        ),
+    )
+    add(
+        "contact.secondary_static_margin",
+        "Secondary static traction margin",
+        "1",
+        "contact",
+        np.array(
+            [
+                (
+                    np.nan
+                    if row is None
+                    else traction_law.static_margin_at(
+                        ContactInterface.SECONDARY,
+                        row.traction_utilization.secondary_lambda,
+                    )
+                )
+                for row in contact
+            ]
+        ),
+    )
 
 
 def _add_observer_signals(add, time, state, inspections, offsets) -> None:
     primary_angle, engine_work, output_work, primary_loss, secondary_loss = offsets
     primary_angle_values = primary_angle + _cumulative_trapezoid(time, state[0])
     engine_power = np.array([item.engine_torque for item in inspections]) * state[0]
-    output_power = np.array([item.output_boundary.external_torque for item in inspections]) * state[1]
-    primary_slip_power = np.array([
-        _slip_power(item, ContactInterface.PRIMARY)
-        for item in inspections
-    ])
-    secondary_slip_power = np.array([
-        _slip_power(item, ContactInterface.SECONDARY)
-        for item in inspections
-    ])
-    add("observer.primary_shaft_angle", "Primary shaft angle", "rad", "observer", primary_angle_values)
-    add("observer.engine_work", "Engine boundary work", "J", "observer", engine_work + _cumulative_trapezoid(time, engine_power))
-    add("observer.output_boundary_work", "Output boundary work", "J", "observer", output_work + _cumulative_trapezoid(time, output_power))
-    add("observer.primary_slip_dissipation", "Primary contact slip dissipation", "J", "observer", primary_loss + _cumulative_trapezoid(time, primary_slip_power))
-    add("observer.secondary_slip_dissipation", "Secondary contact slip dissipation", "J", "observer", secondary_loss + _cumulative_trapezoid(time, secondary_slip_power))
+    output_power = (
+        np.array([item.output_boundary.external_torque for item in inspections])
+        * state[1]
+    )
+    primary_slip_power = np.array(
+        [_slip_power(item, ContactInterface.PRIMARY) for item in inspections]
+    )
+    secondary_slip_power = np.array(
+        [_slip_power(item, ContactInterface.SECONDARY) for item in inspections]
+    )
+    add(
+        "observer.primary_shaft_angle",
+        "Primary shaft angle",
+        "rad",
+        "observer",
+        primary_angle_values,
+    )
+    add(
+        "observer.engine_work",
+        "Engine boundary work",
+        "J",
+        "observer",
+        engine_work + _cumulative_trapezoid(time, engine_power),
+    )
+    add(
+        "observer.output_boundary_work",
+        "Output boundary work",
+        "J",
+        "observer",
+        output_work + _cumulative_trapezoid(time, output_power),
+    )
+    add(
+        "observer.primary_slip_dissipation",
+        "Primary contact slip dissipation",
+        "J",
+        "observer",
+        primary_loss + _cumulative_trapezoid(time, primary_slip_power),
+    )
+    add(
+        "observer.secondary_slip_dissipation",
+        "Secondary contact slip dissipation",
+        "J",
+        "observer",
+        secondary_loss + _cumulative_trapezoid(time, secondary_slip_power),
+    )
 
 
 def _slip_power(inspection: CVTStateInspection, interface: ContactInterface) -> float:
@@ -552,12 +843,39 @@ def _slip_power(inspection: CVTStateInspection, interface: ContactInterface) -> 
 
 def _add_audit_signals(add, inspections: tuple[CVTStateInspection, ...]) -> None:
     audits = [item.closure_audit for item in inspections]
-    add("audit.closure_condition_number", "Closure condition number", "1", "audit", np.array([np.nan if item is None else item.condition_number for item in audits]))
-    add("audit.closure_matrix_rank", "Closure matrix rank", "1", "audit", np.array([np.nan if item is None else item.matrix_rank for item in audits]))
-    add("audit.closure_max_abs_residual", "Closure maximum residual", "1", "audit", np.array([np.nan if item is None else item.max_abs_equation_residual for item in audits]))
+    add(
+        "audit.closure_condition_number",
+        "Closure condition number",
+        "1",
+        "audit",
+        np.array(
+            [np.nan if item is None else item.condition_number for item in audits]
+        ),
+    )
+    add(
+        "audit.closure_matrix_rank",
+        "Closure matrix rank",
+        "1",
+        "audit",
+        np.array([np.nan if item is None else item.matrix_rank for item in audits]),
+    )
+    add(
+        "audit.closure_max_abs_residual",
+        "Closure maximum residual",
+        "1",
+        "audit",
+        np.array(
+            [
+                np.nan if item is None else item.max_abs_equation_residual
+                for item in audits
+            ]
+        ),
+    )
 
 
-def _cumulative_trapezoid(time: NDArray[np.float64], rate: NDArray[np.float64]) -> NDArray[np.float64]:
+def _cumulative_trapezoid(
+    time: NDArray[np.float64], rate: NDArray[np.float64]
+) -> NDArray[np.float64]:
     values = np.zeros(time.size, dtype=float)
     if time.size > 1:
         values[1:] = np.cumsum(0.5 * (rate[:-1] + rate[1:]) * np.diff(time))

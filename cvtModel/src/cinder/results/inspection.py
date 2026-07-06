@@ -11,7 +11,7 @@ from cinder.model.cvt.closure import ClosureUnknowns
 from cinder.model.cvt.dynamics.deadzone import DeadzoneEvaluation
 from cinder.model.cvt.dynamics.engaged_contact import EngagedContactClosure
 from cinder.model.cvt.dynamics.result import TrialClosureResult
-from cinder.model.cvt.geometry import GeometryPosition, RadiusAtShift
+from cinder.model.cvt.geometry import RadiusAtShift
 from cinder.model.system.state import CVTDynamicState
 from cinder.execution.hybrid.cvt_contact import CVTContactEvaluation
 from cinder.execution.hybrid.cvt_regime import CVTEngagementState, CVTOperatingRegime
@@ -94,7 +94,9 @@ def inspect_cvt_state(
                 capture_diagnostics=True,
             )
             if not isinstance(audit_trial.closure, TrialClosureResult):
-                raise RuntimeError("Diagnostic closure reconstruction did not produce audit data.")
+                raise RuntimeError(
+                    "Diagnostic closure reconstruction did not produce audit data."
+                )
             audit = audit_trial.closure
         return CVTStateInspection(
             time=time,
@@ -109,7 +111,9 @@ def inspect_cvt_state(
             engine_torque=snapshot.engine_torque,
             output_boundary=snapshot.output_boundary_evaluation,
             primary_actuation=system.model.primary_actuator.inspect(primary_context),
-            secondary_actuation=system.model.secondary_actuator.inspect(secondary_context),
+            secondary_actuation=system.model.secondary_actuator.inspect(
+                secondary_context
+            ),
             closure_unknowns=evaluation.closure_unknowns,
             contact=evaluation,
             deadzone=None,

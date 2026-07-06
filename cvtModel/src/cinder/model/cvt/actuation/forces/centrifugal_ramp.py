@@ -71,7 +71,9 @@ class CentrifugalRampForce:
 
         return AffineClosureScalar(bias=axial_force)
 
-    def inspect(self, context: PulleyActuationContext) -> tuple[ActuationContribution, ...]:
+    def inspect(
+        self, context: PulleyActuationContext
+    ) -> tuple[ActuationContribution, ...]:
         return (
             ActuationContribution(
                 key="centrifugal_ramp",

@@ -68,9 +68,9 @@ def evaluate_ratio_sensitivity_field(
     )
 
     primary_radius_slope = 1.0 / (2.0 * tan(sheave_half_angle))
-    secondary_radius_slope = -(
-        grid.primary_wrap_angle / grid.secondary_wrap_angle
-    ) * primary_radius_slope
+    secondary_radius_slope = (
+        -(grid.primary_wrap_angle / grid.secondary_wrap_angle) * primary_radius_slope
+    )
 
     sensitivity_per_m = (
         secondary_radius_slope * grid.primary_effective_radius
@@ -189,10 +189,14 @@ def _evaluate_radius_grid(
     )
 
 
-def _radius_axis(name: str, values: NDArray[np.float64] | np.ndarray) -> NDArray[np.float64]:
+def _radius_axis(
+    name: str, values: NDArray[np.float64] | np.ndarray
+) -> NDArray[np.float64]:
     axis = np.asarray(values, dtype=float)
     if axis.ndim != 1 or axis.size < 2:
-        raise ValueError(f"{name} must be a one-dimensional array with at least two values.")
+        raise ValueError(
+            f"{name} must be a one-dimensional array with at least two values."
+        )
     if not np.all(np.isfinite(axis)) or np.any(axis <= 0.0):
         raise ValueError(f"{name} must contain only finite positive radii.")
     if np.any(np.diff(axis) <= 0.0):

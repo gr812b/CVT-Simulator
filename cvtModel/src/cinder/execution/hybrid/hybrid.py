@@ -196,7 +196,9 @@ class HybridSegment(Generic[ModeT]):
                 "HybridSegment.fired_event_names must not contain duplicates."
             )
         if self.dense_solution is not None and not callable(self.dense_solution):
-            raise TypeError("HybridSegment.dense_solution must be callable when provided.")
+            raise TypeError(
+                "HybridSegment.dense_solution must be callable when provided."
+            )
         object.__setattr__(self, "time", time)
         object.__setattr__(self, "state", frozen_state)
 
@@ -222,11 +224,18 @@ class HybridSegment(Generic[ModeT]):
                 "ReportingGrid.native()."
             )
         requested = np.asarray(times, dtype=float)
-        if requested.ndim != 1 or requested.size == 0 or not np.all(np.isfinite(requested)):
+        if (
+            requested.ndim != 1
+            or requested.size == 0
+            or not np.all(np.isfinite(requested))
+        ):
             raise ValueError("times must be a non-empty finite one-dimensional vector.")
         scale = max(1.0, abs(self.start_time), abs(self.end_time))
         tolerance = 128.0 * np.finfo(float).eps * scale
-        if requested[0] < self.start_time - tolerance or requested[-1] > self.end_time + tolerance:
+        if (
+            requested[0] < self.start_time - tolerance
+            or requested[-1] > self.end_time + tolerance
+        ):
             raise ValueError("Requested dense times must lie inside this segment.")
         clipped = np.clip(requested, self.start_time, self.end_time)
         values = np.asarray(self.dense_solution(clipped), dtype=float)
@@ -394,7 +403,9 @@ def integrate_hybrid(
                     mode=current_mode,
                     time=solution.t,
                     state=solution.y,
-                    dense_solution=solution.sol if settings.retain_dense_output else None,
+                    dense_solution=(
+                        solution.sol if settings.retain_dense_output else None
+                    ),
                 )
             )
             return HybridIntegrationResult(

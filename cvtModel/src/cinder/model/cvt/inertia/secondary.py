@@ -29,7 +29,10 @@ class SecondaryInertia:
         for name, value in (
             ("fixed_rotational_inertia", self.fixed_rotational_inertia),
             ("gearbox_input_rotational_inertia", self.gearbox_input_rotational_inertia),
-            ("movable_sheave_rotational_inertia", self.movable_sheave_rotational_inertia),
+            (
+                "movable_sheave_rotational_inertia",
+                self.movable_sheave_rotational_inertia,
+            ),
             ("moving_sheave_mass", self.moving_sheave_mass),
         ):
             if not isfinite(value) or value < 0.0:
@@ -45,7 +48,9 @@ class SecondaryFixedInertia:
 
     @property
     def total(self) -> float:
-        return self.output_fixed_rotational_inertia + self.gearbox_input_rotational_inertia
+        return (
+            self.output_fixed_rotational_inertia + self.gearbox_input_rotational_inertia
+        )
 
 
 @dataclass(frozen=True, slots=True)
@@ -62,7 +67,9 @@ class ResolvedSecondaryInertia:
         return self.fixed_side.total + self.movable_sheave_rotational_inertia
 
 
-def resolve_secondary_inertia(*, secondary: SecondaryInertia) -> ResolvedSecondaryInertia:
+def resolve_secondary_inertia(
+    *, secondary: SecondaryInertia
+) -> ResolvedSecondaryInertia:
     """Resolve constant output-pulley inertia owned by the CVT assembly."""
 
     return ResolvedSecondaryInertia(

@@ -18,13 +18,16 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field, replace
 from math import isclose
-from typing import TypeAlias
+from typing import TYPE_CHECKING, TypeAlias
 
 import numpy as np
 from numpy.typing import NDArray
 
 from cinder.model.cvt.contact import ContactRegime, ContactTractionLaw
-from cinder.model.cvt.dynamics.deadzone import DeadzoneDynamicsEvaluator, DeadzoneEvaluation
+from cinder.model.cvt.dynamics.deadzone import (
+    DeadzoneDynamicsEvaluator,
+    DeadzoneEvaluation,
+)
 from cinder.model.cvt.dynamics.engaged_contact import EngagedContactSolveSettings
 from cinder.model.cvt.dynamics.shift_constraints import EngagedShiftConstraint
 from cinder.model.system.evaluator import CVTDynamicsModel
@@ -60,6 +63,14 @@ from .hybrid import (
 )
 from .state import CVTDynamicState
 
+if TYPE_CHECKING:
+    from cinder.model.system.case import CVTSimulationCase
+    from cinder.results import (
+        CVTIntegrationResult,
+        CVTIntegrationTrace,
+        ReportingSettings,
+    )
+
 CVTRegimeEvaluation: TypeAlias = CVTContactEvaluation | DeadzoneEvaluation
 
 
@@ -84,11 +95,17 @@ class CVTOperatingSystemConfig:
         if not isinstance(self.traction_law, ContactTractionLaw):
             raise TypeError("traction_law must be a ContactTractionLaw instance.")
         if not isinstance(self.solve_settings, EngagedContactSolveSettings):
-            raise TypeError("solve_settings must be an EngagedContactSolveSettings instance.")
+            raise TypeError(
+                "solve_settings must be an EngagedContactSolveSettings instance."
+            )
         if not isinstance(self.operating_limits, CVTShiftOperatingLimits):
-            raise TypeError("operating_limits must be a CVTShiftOperatingLimits instance.")
+            raise TypeError(
+                "operating_limits must be a CVTShiftOperatingLimits instance."
+            )
         if not isinstance(self.switching_settings, CVTContactSwitchSettings):
-            raise TypeError("switching_settings must be a CVTContactSwitchSettings instance.")
+            raise TypeError(
+                "switching_settings must be a CVTContactSwitchSettings instance."
+            )
 
     def build(self, case: "CVTSimulationCase") -> "CVTOperatingHybridSystem":
         return CVTOperatingHybridSystem.from_case(
@@ -442,7 +459,10 @@ class CVTOperatingHybridSystem:
         if not isinstance(reporting_settings, ReportingSettings):
             raise TypeError("reporting_settings must be a ReportingSettings instance.")
         integration_settings = settings
-        if reporting_settings.grid.requires_dense_output and not settings.retain_dense_output:
+        if (
+            reporting_settings.grid.requires_dense_output
+            and not settings.retain_dense_output
+        ):
             integration_settings = replace(settings, retain_dense_output=True)
         return CVTResultBuilder(system=self).build(
             self.integrate_trace(

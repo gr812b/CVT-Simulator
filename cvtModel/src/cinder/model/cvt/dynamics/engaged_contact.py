@@ -488,7 +488,9 @@ class EngagedContactClosure:
             trial_context=context,
         )
         closure = (
-            trial_system.solve(maximum_condition_number=maximum_closure_condition_number)
+            trial_system.solve(
+                maximum_condition_number=maximum_closure_condition_number
+            )
             if capture_diagnostics
             else trial_system.solve_runtime(
                 maximum_condition_number=maximum_closure_condition_number

@@ -25,12 +25,18 @@ from cinder.studies.geometry import (
     RatioSensitivityField,
 )
 
-from .conventions import PUBLIC_CONTRACT_VERSION, describe_public_field, public_conventions
+from .conventions import (
+    PUBLIC_CONTRACT_VERSION,
+    describe_public_field,
+    public_conventions,
+)
 from .simulation import summarize_simulation
 from .validation import AssemblyValidationReport
 
 
-def project_clamping_force_response(field: ClampingForceResponseField) -> dict[str, Any]:
+def project_clamping_force_response(
+    field: ClampingForceResponseField,
+) -> dict[str, Any]:
     """Project one actuator response field as self-describing numeric columns."""
 
     return _project_columns(
@@ -97,22 +103,25 @@ def project_ratio_sensitivity_field(field: RatioSensitivityField) -> dict[str, A
 def project_geometry_summary(summary: GeometryDesignSummary) -> dict[str, Any]:
     """Project scalar geometry summary values with descriptors."""
 
-    return _project_scalars("geometry_summary", {
-        "center_distance_m": summary.center_distance,
-        "active_shift_travel_m": summary.active_shift_travel,
-        "active_primary_radial_travel_m": summary.active_primary_radial_travel,
-        "maximum_ratio": summary.maximum_ratio,
-        "minimum_ratio": summary.minimum_ratio,
-        "ratio_span": summary.ratio_span,
-        "primary_outer_radius_min_m": summary.primary_outer_radius_min,
-        "primary_outer_radius_max_m": summary.primary_outer_radius_max,
-        "secondary_outer_radius_min_m": summary.secondary_outer_radius_min,
-        "secondary_outer_radius_max_m": summary.secondary_outer_radius_max,
-        "primary_effective_radius_min_m": summary.primary_effective_radius_min,
-        "primary_effective_radius_max_m": summary.primary_effective_radius_max,
-        "secondary_effective_radius_min_m": summary.secondary_effective_radius_min,
-        "secondary_effective_radius_max_m": summary.secondary_effective_radius_max,
-    })
+    return _project_scalars(
+        "geometry_summary",
+        {
+            "center_distance_m": summary.center_distance,
+            "active_shift_travel_m": summary.active_shift_travel,
+            "active_primary_radial_travel_m": summary.active_primary_radial_travel,
+            "maximum_ratio": summary.maximum_ratio,
+            "minimum_ratio": summary.minimum_ratio,
+            "ratio_span": summary.ratio_span,
+            "primary_outer_radius_min_m": summary.primary_outer_radius_min,
+            "primary_outer_radius_max_m": summary.primary_outer_radius_max,
+            "secondary_outer_radius_min_m": summary.secondary_outer_radius_min,
+            "secondary_outer_radius_max_m": summary.secondary_outer_radius_max,
+            "primary_effective_radius_min_m": summary.primary_effective_radius_min,
+            "primary_effective_radius_max_m": summary.primary_effective_radius_max,
+            "secondary_effective_radius_min_m": summary.secondary_effective_radius_min,
+            "secondary_effective_radius_max_m": summary.secondary_effective_radius_max,
+        },
+    )
 
 
 def project_geometry_feasibility(report: GeometryFeasibilityReport) -> dict[str, Any]:
@@ -224,7 +233,9 @@ def _project_mode(mode: object) -> dict[str, Any]:
     engagement = getattr(mode, "engagement", None)
     constraint = getattr(mode, "shift_constraint", None)
     contact = getattr(mode, "contact_regime", None)
-    contact_mode = None if contact is None else getattr(contact.mode, "value", str(contact.mode))
+    contact_mode = (
+        None if contact is None else getattr(contact.mode, "value", str(contact.mode))
+    )
     return {
         "engagement": getattr(engagement, "value", str(engagement)),
         "shift_constraint": getattr(constraint, "value", str(constraint)),

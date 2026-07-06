@@ -86,7 +86,9 @@ class ActuationResponseAxis:
             )
         values = tuple(float(value) for value in self.values)
         if not values:
-            raise ValueError("ActuationResponseAxis.values must contain at least one value.")
+            raise ValueError(
+                "ActuationResponseAxis.values must contain at least one value."
+            )
         if not all(isfinite(value) for value in values):
             raise ValueError("ActuationResponseAxis.values must all be finite.")
         object.__setattr__(self, "values", values)
@@ -119,12 +121,16 @@ class PulleyClampingForceStudyRequest:
         if not isinstance(self.point, ActuationOperatingPoint):
             raise TypeError("point must be an ActuationOperatingPoint.")
         if not 1 <= len(self.axes) <= 2:
-            raise ValueError("axes must contain one or two ActuationResponseAxis values.")
+            raise ValueError(
+                "axes must contain one or two ActuationResponseAxis values."
+            )
         if not all(isinstance(axis, ActuationResponseAxis) for axis in self.axes):
             raise TypeError("axes must contain ActuationResponseAxis values.")
         coordinates = tuple(axis.coordinate for axis in self.axes)
         if len(set(coordinates)) != len(coordinates):
-            raise ValueError("Each actuation response axis must use a distinct coordinate.")
+            raise ValueError(
+                "Each actuation response axis must use a distinct coordinate."
+            )
 
 
 @dataclass(frozen=True, slots=True)

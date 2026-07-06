@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass, replace
+from dataclasses import dataclass
 from math import isfinite
+from typing import TYPE_CHECKING
 
 from cinder.model.cvt.actuation import (
     HelicalCouplingState,
@@ -15,7 +16,6 @@ from cinder.model.cvt.closure import AffineClosureScalar
 from cinder.model.cvt.actuation.forces import (
     AxialSpringForce,
     CentrifugalRampForce,
-    HelicalTorqueReactionForce,
 )
 from cinder.model.boundaries.input import InputTorqueBoundary
 from cinder.model.cvt.geometry import BeltPulleyGeometry, GeometryPosition
@@ -29,6 +29,9 @@ from cinder.model.boundaries.output.vehicle import RoadLoadResult
 from .assembly import HelicalPulleyCoupling
 
 from cinder.execution.hybrid import CVTDynamicState
+
+if TYPE_CHECKING:
+    from .case import CVTSimulationCase
 
 
 @dataclass(frozen=True, slots=True)
@@ -204,8 +207,12 @@ class CVTDynamicsModel:
             raise TypeError("case must be a CVTSimulationCase.")
         instance = object.__new__(cls)
         object.__setattr__(instance, "geometry", case.cvt.geometry)
-        object.__setattr__(instance, "primary_actuator", case.cvt.pulleys.input.actuator)
-        object.__setattr__(instance, "secondary_actuator", case.cvt.pulleys.output.actuator)
+        object.__setattr__(
+            instance, "primary_actuator", case.cvt.pulleys.input.actuator
+        )
+        object.__setattr__(
+            instance, "secondary_actuator", case.cvt.pulleys.output.actuator
+        )
         object.__setattr__(
             instance,
             "output_helical_coupling",
@@ -321,7 +328,9 @@ class CVTDynamicsModel:
         return snapshot
 
 
-def _require_output_helical_coupling(case: "CVTSimulationCase") -> HelicalPulleyCoupling:
+def _require_output_helical_coupling(
+    case: "CVTSimulationCase",
+) -> HelicalPulleyCoupling:
     coupling = case.cvt.pulleys.output.helical_coupling
     if coupling is None:  # pragma: no cover - CVTAssemblySpec invariant.
         raise ValueError("Current shift dynamics require output helical coupling.")
@@ -362,6 +371,7 @@ def _validate_secondary_helix_domain(
             "output helical_coupling does not cover the geometry-reachable "
             f"opening-travel interval [{minimum_opening}, {maximum_opening}]."
         )
+
 
 def _validate_primary_ramp_domain(
     *,
@@ -447,7 +457,6 @@ def _validate_actuator_springs(
                 f"{name} compression spring reaches negative compression "
                 "within the geometry-reachable shift range."
             )
-
 
 
 def _validate_snapshot(snapshot: DynamicsSnapshot) -> None:
