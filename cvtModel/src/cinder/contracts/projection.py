@@ -34,7 +34,6 @@ from .conventions import (
 from .simulation import summarize_simulation
 from .validation import AssemblyValidationReport
 
-
 # ---------------------------------------------------------------------------
 # Static studies
 # ---------------------------------------------------------------------------

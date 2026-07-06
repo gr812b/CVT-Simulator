@@ -623,7 +623,9 @@ def _build_signals(
         "vehicle",
         np.array([np.nan if row is None else row.aerodynamic_force for row in road]),
     )
-    vehicle_speed = np.array([np.nan if row is None else row.vehicle_speed for row in road])
+    vehicle_speed = np.array(
+        [np.nan if row is None else row.vehicle_speed for row in road]
+    )
     add(
         "vehicle.acceleration",
         "Vehicle acceleration",
@@ -937,8 +939,6 @@ def _add_audit_signals(add, inspections: tuple[CVTStateInspection, ...]) -> None
     )
 
 
-
-
 def _time_derivative(
     time: NDArray[np.float64], values: NDArray[np.float64]
 ) -> NDArray[np.float64]:
@@ -956,7 +956,9 @@ def _time_derivative(
     if data.size < 2:
         return derivative
 
-    tolerance = 64.0 * np.finfo(float).eps * max(1.0, float(np.max(np.abs(time_values))))
+    tolerance = (
+        64.0 * np.finfo(float).eps * max(1.0, float(np.max(np.abs(time_values))))
+    )
     delta_time = np.diff(time_values)
     delta_value = np.diff(data)
     valid = (delta_time > tolerance) & np.isfinite(delta_value)
@@ -967,6 +969,7 @@ def _time_derivative(
     if data.size > 2:
         derivative[1:-1] = 0.5 * (slopes[:-1] + slopes[1:])
     return derivative
+
 
 def _cumulative_trapezoid(
     time: NDArray[np.float64], rate: NDArray[np.float64]

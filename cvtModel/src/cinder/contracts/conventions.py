@@ -126,19 +126,34 @@ _EXACT: dict[str, tuple[str, str, str, str]] = {
     ),
     "time_s": ("Time", "s", "time", "Elapsed simulation time."),
     "vehicle.acceleration": (
-        "Vehicle acceleration", "m/s²", "acceleration", "Vehicle longitudinal acceleration."
+        "Vehicle acceleration",
+        "m/s²",
+        "acceleration",
+        "Vehicle longitudinal acceleration.",
     ),
     "geometry.effective_ratio_rate": (
-        "CVT ratio rate", "1/s", "ratio_rate", "Time derivative of effective CVT ratio."
+        "CVT ratio rate",
+        "1/s",
+        "ratio_rate",
+        "Time derivative of effective CVT ratio.",
     ),
     "geometry.primary_outer_radius_rate": (
-        "Primary outer radius rate", "m/s", "length_rate", "Time derivative of primary outer radius."
+        "Primary outer radius rate",
+        "m/s",
+        "length_rate",
+        "Time derivative of primary outer radius.",
     ),
     "geometry.secondary_outer_radius_rate": (
-        "Secondary outer radius rate", "m/s", "length_rate", "Time derivative of secondary outer radius."
+        "Secondary outer radius rate",
+        "m/s",
+        "length_rate",
+        "Time derivative of secondary outer radius.",
     ),
     "observer.engine_power": (
-        "Engine boundary power", "W", "power", "Input-boundary torque multiplied by primary speed."
+        "Engine boundary power",
+        "W",
+        "power",
+        "Input-boundary torque multiplied by primary speed.",
     ),
     "friction_coefficient": (
         "Friction coefficient",
@@ -263,7 +278,9 @@ def describe_public_field(
 
     resolved_unit = unit or inferred_unit
     resolved_dimension = dimension or (
-        _dimension_from_unit(resolved_unit) if unit is not None and exact is None else inferred_dimension
+        _dimension_from_unit(resolved_unit)
+        if unit is not None and exact is None
+        else inferred_dimension
     )
     return PublicFieldDescriptor(
         key=key,
@@ -272,7 +289,6 @@ def describe_public_field(
         dimension=resolved_dimension,
         description=description,
     )
-
 
 
 def _dimension_from_unit(unit: str) -> str:
@@ -307,6 +323,7 @@ def _dimension_from_unit(unit: str) -> str:
         "J": "energy",
     }
     return units.get(normalized, "dimensionless")
+
 
 def _infer_metadata(key: str) -> tuple[str, str]:
     for suffix, unit, dimension in _SUFFIX_METADATA:
