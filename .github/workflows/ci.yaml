@@ -6,9 +6,12 @@ on:
       - main
       - develop
 
+permissions:
+  contents: read
+
 jobs:
   simulator-tests:
-    name: Simulation Module Lint & Tests
+    name: CINDER Lint & Tests
     runs-on: ubuntu-latest
 
     steps:
@@ -16,76 +19,115 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
-          python-version: '3.12'
+          python-version: "3.12"
 
-      - name: Install Python dependencies
+      - name: Install CINDER and development tools
+        working-directory: ./cvtModel
         run: |
           python -m venv venv
           source venv/bin/activate
-          pip install -e .[dev]
-        working-directory: ./cvtModel
+          python -m pip install --upgrade pip
+          python -m pip install -e .
+          python -m pip install "black>=24" "coverage>=7" "flake8>=7" "pytest>=8"
 
       - name: Run flake8
+        working-directory: ./cvtModel
         run: |
           source venv/bin/activate
-          flake8 src test
-        working-directory: ./cvtModel
+          targets=(src)
+          [[ -d test ]] && targets+=(test)
+          [[ -d tests ]] && targets+=(tests)
+          python -m flake8 "${targets[@]}"
 
-      - name: Run black (check)
+      - name: Run Black check
+        working-directory: ./cvtModel
         run: |
           source venv/bin/activate
-          black --check src test
-        working-directory: ./cvtModel
+          targets=(src)
+          [[ -d test ]] && targets+=(test)
+          [[ -d tests ]] && targets+=(tests)
+          python -m black --check "${targets[@]}"
 
       - name: Run CINDER tests with coverage
+        working-directory: ./cvtModel
         run: |
           source venv/bin/activate
-          coverage run -m pytest
-          coverage report
-        working-directory: ./cvtModel
+          python -m coverage run -m pytest
+          python -m coverage report
 
   backend-tests:
-    name: Backend Lint & Tests
+    name: Backend Lint & Contract Validation
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
-          python-version: '3.10'
+          python-version: "3.10"
 
-      - name: Install Python dependencies
+      - name: Install backend, CINDER, and development tools
+        working-directory: ./backend
         run: |
           python -m venv venv
           source venv/bin/activate
-          pip install -r requirements.txt
-        working-directory: ./backend
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt
+          python -m pip install -e ../cvtModel
+          python -m pip install "black>=24" "flake8>=7"
 
       - name: Run flake8
+        working-directory: ./backend
         run: |
           source venv/bin/activate
-          flake8 app
-        working-directory: ./backend
+          python -m flake8 app
 
-      - name: Run black (check)
+      - name: Run Black check
+        working-directory: ./backend
         run: |
           source venv/bin/activate
-          black --check app
-        working-directory: ./backend
+          python -m black --check app
 
-      - name: Run compiler
+      - name: Compile backend modules
+        working-directory: ./backend
         run: |
           source venv/bin/activate
-          python -m compileall app/
+          python -m compileall -q app
+
+      - name: Verify bundled tuned-launch preset
         working-directory: ./backend
+        run: |
+          source venv/bin/activate
+          python - <<'PY'
+          from pathlib import Path
+
+          from app.storage.preset_store import JsonPresetStore
+
+          preset = JsonPresetStore(Path("presets")).get("baja-launch-baseline")
+          assert preset.simulation_case["scenario"]["time_span_s"] == [0.0, 10.0]
+          print("Verified baja-launch-baseline preset with a 10.0 s scenario.")
+          PY
+
+      - name: Export backend contract artifacts
+        working-directory: ./backend
+        run: |
+          source venv/bin/activate
+          python -m app.scripts.export_contract_artifacts --output-dir generated
+
+      - name: Upload backend contract artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-contract-artifacts
+          path: backend/generated
+          if-no-files-found: error
 
   web-tests:
-    name: Web Lint & Tests
+    name: Frontend Lint & Build
+    needs: backend-tests
     runs-on: ubuntu-latest
 
     steps:
@@ -99,21 +141,38 @@ jobs:
           cache: npm
           cache-dependency-path: frontend/package-lock.json
 
-      - name: Install dependencies
-        run: npm ci
+      - name: Download backend contract artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: backend-contract-artifacts
+          path: backend/generated
+
+      - name: Install frontend dependencies
         working-directory: ./frontend
+        run: npm ci
+
+      - name: Verify generated frontend contracts are current
+        run: |
+          npm --prefix frontend run contracts:generate
+          if [[ -n "$(git status --porcelain -- frontend/src/api/generated)" ]]; then
+            echo "Generated frontend contract files are stale."
+            echo "Run: npm --prefix frontend run contracts:generate"
+            git status --short -- frontend/src/api/generated
+            git diff -- frontend/src/api/generated
+            exit 1
+          fi
 
       - name: Run ESLint
+        working-directory: ./frontend
         run: npm run lint
-        working-directory: ./frontend
-      
-      - name: Build frontend
-        run: npm run build
-        working-directory: ./frontend
 
-      - name: Upload artifacts
+      - name: Build frontend
+        working-directory: ./frontend
+        run: npm run build
+
+      - name: Upload frontend build
         uses: actions/upload-artifact@v4
         with:
           name: frontend-build
-          path: ./frontend/dist
-          
+          path: frontend/dist
+          if-no-files-found: error

@@ -1,31 +1,24 @@
-# Dependencies
+# Dependencies and build output
 node_modules/
-
-# Build outputs
 dist/
-build/
-
-# Testing
 coverage/
 
-# IDE
+# Local environment files; the example remains available as documentation.
+.env
+.env.*
+!.env.example
+
+# Editor, OS, and test artifacts
 .vscode/
 .idea/
 *.swp
 *.swo
-
-# Environment
-.env
-.env.local
-.env.development
-.env.test
-.env.production
-
-# Logs
+.DS_Store
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
-# Development files
-*.md
-!README.md
+# Repository-local artifacts not needed in the frontend image
+*.zip
+*.patch
+*.pdf

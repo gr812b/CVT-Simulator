@@ -1,6 +1,4 @@
-fastapi>=0.116,<1.0
-uvicorn[standard]>=0.35,<1.0
-pydantic>=2.11,<3.0
-# CINDER is the local mechanics package; the backend imports it only through
-# app.application.cinder_gateway.
+# Local backend installation.
+# Keep CINDER editable locally so source changes take effect without rebuilding.
+-r requirements-runtime.txt
 -e ../cvtModel

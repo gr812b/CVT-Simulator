@@ -14,19 +14,49 @@ FastAPI routes → application services → cinder_gateway → CINDER public con
 `cinder.*` imports. Routes and storage operate on plain JSON-safe public
 documents and projections.
 
-## Run locally
+## Local development
 
 From `backend/`:
 
 ```bash
 python -m venv venv
-venv\Scripts\activate             # Mac: source venv/bin/activate    
+venv\Scripts\activate             # macOS/Linux: source venv/bin/activate
+python -m pip install --upgrade pip
 python -m pip install -r requirements-dev.txt
 uvicorn app.main:app --reload
 ```
 
+`requirements.txt` is the local-development entry point. It installs CINDER
+from the sibling `../cvtModel` directory in editable mode, so CINDER source
+changes are available immediately without rebuilding a package.
+
 The API is served at `http://localhost:8000/api/v1`; Swagger UI is at
 `http://localhost:8000/docs`.
+
+## Production container
+
+Build from the repository root, not from `backend/`, so Docker can copy both
+the backend and the sibling CINDER package:
+
+```bash
+docker build -f backend/Dockerfile -t cvt-simulator-api .
+docker run --rm -p 8000:8000 cvt-simulator-api
+```
+
+The container installs CINDER normally from the copied `cvtModel/` source. It
+uses `requirements-runtime.txt`, which intentionally excludes the local
+editable `-e ../cvtModel` dependency. This makes the deployed image independent
+of the host checkout path while preserving the convenient local workflow.
+
+The backend preset files are copied with `backend/`; for example, the tuned
+launch preset is available at `/app/presets/baja-launch-baseline.json` inside
+the image.
+
+To confirm the image contains the expected preset:
+
+```bash
+docker run --rm cvt-simulator-api python -c "from pathlib import Path; print((Path('/app/presets') / 'baja-launch-baseline.json').is_file())"
+```
 
 ## Main endpoints
 
@@ -66,7 +96,7 @@ This writes:
 
 Use generated types in the frontend; do not create a parallel parameter map.
 
-## Tests
+## Tests and formatting
 
 ```bash
 python -m pytest

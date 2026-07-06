@@ -1,23 +1,28 @@
-# name of the workflow.
-# this is optional.
 name: Containerize
 
 on:
   push:
     branches:
-      - develop # Set to '**' for testing on all branches
-  workflow_dispatch: # Allow manual triggering
+      - develop
+  workflow_dispatch:
+
+concurrency:
+  group: containerize-${{ github.ref }}
+  cancel-in-progress: true
 
 env:
   REGISTRY_GH: ghcr.io
+  BACKEND_IMAGE: ghcr.io/${{ github.repository_owner }}/cvt-simulator-backend
+  FRONTEND_IMAGE: ghcr.io/${{ github.repository_owner }}/cvt-simulator-frontend
 
-#This also includes how I upload it to our forgejo instance, feel free to add or remove it to the github container registry
 jobs:
   deploy:
+    name: Build and publish images
     runs-on: ubuntu-latest
     permissions:
       contents: read
       packages: write
+
     steps:
       - name: Install Git LFS
         run: |
@@ -30,6 +35,17 @@ jobs:
         with:
           lfs: true
 
+      - name: Verify container build inputs
+        run: |
+          test -f cvtModel/pyproject.toml
+          test -f backend/Dockerfile
+          test -f frontend/Dockerfile
+          test -f frontend/package-lock.json
+          test -f frontend/nginx.conf
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
       - name: Log into GitHub Container Registry
         uses: docker/login-action@v3
         with:
@@ -37,22 +53,37 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      # The backend needs repository-root context because it installs cvtModel.
       - name: Build and push backend
         uses: docker/build-push-action@v6
         with:
           context: .
           file: backend/Dockerfile
           push: true
+          pull: true
           tags: |
-            ${{ env.REGISTRY_GH }}/${{ github.repository_owner }}/cvt-simulator-backend:latest
-            ${{ env.REGISTRY_GH }}/${{ github.repository_owner }}/cvt-simulator-backend:${{ github.sha }}
+            ${{ env.BACKEND_IMAGE }}:latest
+            ${{ env.BACKEND_IMAGE }}:${{ github.sha }}
+          labels: |
+            org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
+            org.opencontainers.image.revision=${{ github.sha }}
+          cache-from: type=gha,scope=cvt-backend
+          cache-to: type=gha,mode=max,scope=cvt-backend
 
+      # The frontend needs only frontend/ context. This makes frontend/.dockerignore
+      # effective and avoids sending CINDER, backend, PDFs, and tooling to Docker.
       - name: Build and push frontend
         uses: docker/build-push-action@v6
         with:
-          context: .
-          file: frontend/Dockerfile
+          context: ./frontend
+          file: ./frontend/Dockerfile
           push: true
+          pull: true
           tags: |
-            ${{ env.REGISTRY_GH }}/${{ github.repository_owner }}/cvt-simulator-frontend:latest
-            ${{ env.REGISTRY_GH }}/${{ github.repository_owner }}/cvt-simulator-frontend:${{ github.sha }}
+            ${{ env.FRONTEND_IMAGE }}:latest
+            ${{ env.FRONTEND_IMAGE }}:${{ github.sha }}
+          labels: |
+            org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
+            org.opencontainers.image.revision=${{ github.sha }}
+          cache-from: type=gha,scope=cvt-frontend
+          cache-to: type=gha,mode=max,scope=cvt-frontend
