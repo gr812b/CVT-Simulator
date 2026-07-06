@@ -3,6 +3,9 @@ from __future__ import annotations
 from dataclasses import replace
 import unittest
 
+import numpy as np
+from numpy.testing import assert_allclose
+
 from cinder.execution.hybrid import HybridIntegratorSettings
 from fixtures import (
     BajaTrialConstants,
@@ -28,19 +31,41 @@ class ReferenceLaunchTest(unittest.TestCase):
                 maximum_transitions=30,
             ),
         )
-        expected = (
-            400.2355139994592,
-            88.21088288769612,
-            8.038864928086767,
-            0.008598466530414205,
-            -1.5904072322829304e-06,
-            107.83974641620406,
+        # LSODA terminal values can differ slightly across supported SciPy,
+        # BLAS, and platform builds. The hybrid transition sequence and final
+        # operating point are the regression target; bit-level terminal-state
+        # equality is not a public solver contract.
+        expected_nonzero_state = np.asarray(
+            (
+                400.2355139994592,
+                88.21088288769612,
+                8.038864928086767,
+                0.008598466530414205,
+                107.83974641620406,
+            ),
+            dtype=float,
         )
+        actual_nonzero_state = result.final_state[[0, 1, 2, 3, 5]]
+
         self.assertEqual(result.termination_reason, "final_time_reached")
         self.assertEqual(len(result.segments), 5)
         self.assertEqual(len(result.transitions), 4)
-        for actual, target in zip(result.final_state, expected, strict=True):
-            self.assertAlmostEqual(float(actual), target, places=12)
+        self.assertEqual(
+            tuple(record.transition.reason for record in result.transitions),
+            (
+                "lower_stop_released_by_inward_free_shift_tendency",
+                "primary_closed_into_engaged_contact",
+                "low_ratio_seat_reached_perfectly_inelastic_projection",
+                "low_ratio_seat_released_by_tensile_reaction",
+            ),
+        )
+        assert_allclose(
+            actual_nonzero_state,
+            expected_nonzero_state,
+            rtol=1.0e-6,
+            atol=1.0e-7,
+        )
+        self.assertLess(abs(float(result.final_state[4])), 5.0e-5)
 
     def test_dense_output_preserves_native_hybrid_solution(self) -> None:
         configuration, baseline = build_operating_configuration(BajaTrialConstants())
