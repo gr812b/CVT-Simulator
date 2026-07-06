@@ -4,6 +4,7 @@ import { Dashboard } from '@pages/dashboard/Dashboard';
 import { Input } from '@pages/input/Input';
 import { Playback } from '@pages/playback/Playback';
 import { Demo } from '@pages/demo/Demo';
+import { GeometryStudy } from '@pages/geometry/GeometryStudy';
 
 export const App = () => {
     return (
@@ -13,6 +14,7 @@ export const App = () => {
             <Route path='/input' element={<Input/>} />
             <Route path='/playback' element={<Playback/>} />
             <Route path='/demo' element={<Demo/>} />
+            <Route path='/geometry' element={<GeometryStudy/>} />
             <Route path='*' element={<div>404 - Not found</div>} />
         </Routes>
     )

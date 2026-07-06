@@ -1,0 +1,22 @@
+.page { min-height: 100vh; padding: 2rem clamp(1.25rem, 6vw, 8rem) 4rem; color: var(--text-color); background: var(--background); }
+.header, .cardHeader { display: flex; align-items: flex-start; justify-content: space-between; gap: 1.5rem; }
+.header { max-width: 84rem; margin: 0 auto 2rem; }
+.header h1, .card h2 { margin: 0; }
+.header h1 { font-size: clamp(2rem, 4vw, 3.2rem); }
+.header p, .card p { max-width: 72ch; margin: 0.5rem 0 0; opacity: 0.72; }
+.eyebrow { margin: 0 0 0.5rem !important; color: var(--primary); font-size: 0.8rem; font-weight: 700; letter-spacing: 0.08em; opacity: 1 !important; text-transform: uppercase; }
+.actions { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+.actions button, .cardHeader > button { padding: 0.65rem 0.85rem; border: 1px solid var(--accent); border-radius: 999px; color: var(--text-color); background: transparent; cursor: pointer; font: inherit; }
+.actions button:hover, .cardHeader > button:hover { color: var(--background); background: var(--text-color); }
+.actions button:disabled, .cardHeader > button:disabled { cursor: wait; opacity: 0.55; }
+.card { max-width: 84rem; margin: 1rem auto; padding: 1.25rem; border: 1px solid var(--accent); border-radius: 0.8rem; background: color-mix(in srgb, var(--background) 96%, var(--text-color)); }
+.fieldGrid, .summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr)); gap: 1rem; margin-top: 1.25rem; }
+.summaryItem { display: grid; gap: 0.25rem; padding: 0.75rem; border-radius: 0.45rem; background: color-mix(in srgb, var(--text-color) 6%, var(--background)); }
+.summaryItem span { font-size: 0.8rem; opacity: 0.65; overflow-wrap: anywhere; }
+.summaryItem strong { color: var(--primary); overflow-wrap: anywhere; }
+.good { color: #66c39a; opacity: 1 !important; }.bad { color: #ef7777; opacity: 1 !important; }.muted { opacity: 0.58; }
+.findings { display: grid; gap: 0.65rem; margin: 1rem 0 0; padding: 0; list-style: none; }
+.findings li { display: grid; gap: 0.25rem; padding: 0.7rem; border-left: 3px solid var(--accent); border-radius: 0.25rem; background: color-mix(in srgb, var(--text-color) 5%, var(--background)); }
+.warningFinding { border-left-color: #e6b85c !important; }.errorFinding { border-left-color: #ef7777 !important; }.errorCard { border-color: #ef7777; }
+.tableScroll { max-width: 100%; overflow: auto; margin-top: 1rem; }.table { width: max-content; min-width: 100%; border-collapse: collapse; font-size: 0.8rem; }.table th, .table td { padding: 0.55rem 0.7rem; border-bottom: 1px solid var(--accent); text-align: right; white-space: nowrap; }.table th { position: sticky; top: 0; background: var(--background); }.table th:first-child, .table td:first-child { text-align: left; }.table small { display: block; margin-top: 0.15rem; font-weight: 400; opacity: 0.6; }
+@media (max-width: 48rem) { .header, .cardHeader { flex-direction: column; } }

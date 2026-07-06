@@ -11,7 +11,7 @@ interface UseScene3DOptions {
 
 interface UseScene3DReturn {
   /** Reference to attach to the container element */
-  containerRef: React.RefObject<HTMLDivElement | null>;
+  containerRef: React.RefObject<HTMLDivElement>;
   /** The scene controller instance (null until mounted) */
   sceneController: Scene3DController | null;
   /** Whether the scene is ready */

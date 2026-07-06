@@ -26,7 +26,7 @@ export interface UseSimulationsReturn {
   groupedSimulations: GroupedSimulations;
   selectedSimulation: SavedSimulation | null;
   selectedId: string | null;
-  fileInputRef: React.RefObject<HTMLInputElement | null>;
+  fileInputRef: React.RefObject<HTMLInputElement>;
   // Selection state
   hasSelection: boolean;
   isDefaultSelected: boolean;

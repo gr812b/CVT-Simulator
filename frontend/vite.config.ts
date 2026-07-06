@@ -18,6 +18,7 @@ export default defineConfig({
       '@utils': resolve(root, 'utils'),
       '@hooks': resolve(root, 'hooks'),
       '@constants': resolve(root, 'constants'),
+      '@api': resolve(root, 'api'),
     },
   },
   css: {

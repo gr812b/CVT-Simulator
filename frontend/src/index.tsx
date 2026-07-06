@@ -2,10 +2,11 @@ import '@styles/_base.scss'
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { BrowserRouter } from 'react-router-dom'
-import { App } from '@pages/app/App.tsx'
+import { App } from '@pages/app/App'
 import { ThemeProvider } from '@contexts/ThemeContext';
 import { ParameterProvider } from '@contexts/ParameterContext';
 import { LoadingProvider } from '@contexts/LoadingContext';
+import { SimulationCaseProvider } from '@contexts/SimulationCaseContext';
 
 const rootElement = document.getElementById('root');
 if (!rootElement) {
@@ -17,13 +18,15 @@ const root = createRoot(rootElement as HTMLElement);
 root.render(
   <StrictMode>
     <ThemeProvider>
-      <ParameterProvider>
+      <SimulationCaseProvider>
+        <ParameterProvider>
         <LoadingProvider>
           <BrowserRouter>
             <App />
           </BrowserRouter>
         </LoadingProvider>
-      </ParameterProvider>
+        </ParameterProvider>
+      </SimulationCaseProvider>
     </ThemeProvider>
   </StrictMode>,
 )

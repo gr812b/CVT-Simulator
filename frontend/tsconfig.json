@@ -16,6 +16,7 @@
       "@utils/*": ["utils/*"],
       "@hooks/*": ["hooks/*"],
       "@constants/*": ["constants/*"],
+      "@api/*": ["api/*"]
     },
   }
 }
