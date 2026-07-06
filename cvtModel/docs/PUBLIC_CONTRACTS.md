@@ -189,3 +189,18 @@ The selected display unit is an application preference. Physical semantics and
 canonical base-SI values remain CINDER-owned. CINDER may internally use
 convenience representations such as degree-based ramp classes, but document and
 projection boundaries emit radians, metres, and other base-SI values.
+
+## JSON Schema export
+
+CINDER exposes the public version-one simulation document as standard JSON
+Schema. This is intended for API adapters and frontend build tooling; it does
+not expose internal mechanics dataclasses.
+
+```python
+from cinder.contracts import simulation_case_document_json_schema
+
+schema = simulation_case_document_json_schema()
+```
+
+The schema is canonical SI and describes the same `cinder_simulation_case`
+document accepted by `decode_simulation_case_document(...)`.

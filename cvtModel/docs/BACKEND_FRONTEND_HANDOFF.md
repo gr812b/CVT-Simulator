@@ -31,10 +31,12 @@ The first backend endpoints can directly wrap these functions:
 
 ```text
 GET  /metadata/conventions       -> public_conventions().as_dict()
-GET  /metadata/components        -> component_catalog_document()
-GET  /metadata/editable-schema   -> editable_simulation_case_schema()
-POST /designs/validate           -> validate_simulation_case_document(document)
-POST /runs                        -> decode -> run -> project
+GET  /metadata/conventions              -> public_conventions().as_dict()
+GET  /metadata/catalog                  -> component_catalog_document()
+GET  /metadata/editor-schema            -> editable_simulation_case_schema()
+GET  /metadata/simulation-case-schema   -> simulation_case_document_json_schema()
+POST /simulation-cases/validate         -> validate_simulation_case_document(document)
+POST /runs                               -> decode -> run -> project
 ```
 
 Static study endpoints can use the existing CINDER geometry and actuation
@@ -52,9 +54,9 @@ it must not know CVT-specific paths or derive any missing mechanical values.
 
 Render charts from the one default `report_table.columns` plus `transitions`.
 Request `reported_segments` or `raw_trace` only for an explicit inspection
-workflow. A backend view manifest can later decide which signal groups/panels
-appear on a route, but the frontend should not reconstruct a signal from other
-output fields.
+workflow. The frontend chooses chart layout, styling, visible series, and optional
+reference overlays from stable report columns plus the submitted document. It
+should not reconstruct a physical signal from other output fields.
 
 For 3D animation, read CINDER-projected geometry signal columns. Frontend math
 is limited to scene-coordinate calibration and metres-to-render-scale mapping.

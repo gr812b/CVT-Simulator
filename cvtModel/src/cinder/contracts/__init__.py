@@ -40,6 +40,7 @@ from .projection import (
     project_simulation_result,
     to_jsonable,
 )
+from .schema import simulation_case_document_json_schema
 from .simulation import SimulationMetrics, summarize_simulation
 from .simulation_document import (
     SIMULATION_CASE_DOCUMENT_TYPE,
@@ -91,6 +92,7 @@ __all__ = [
     "project_ratio_sensitivity_field",
     "project_simulation_result",
     "public_conventions",
+    "simulation_case_document_json_schema",
     "summarize_simulation",
     "to_jsonable",
     "validate_assembly",

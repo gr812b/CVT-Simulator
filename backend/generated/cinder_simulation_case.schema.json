@@ -1,0 +1,1440 @@
+{
+  "$defs": {
+    "assembly": {
+      "additionalProperties": false,
+      "properties": {
+        "contact": {
+          "additionalProperties": false,
+          "properties": {
+            "friction_coefficient": {
+              "minimum": 0.0,
+              "type": "number"
+            }
+          },
+          "required": [
+            "friction_coefficient"
+          ],
+          "type": "object"
+        },
+        "document_type": {
+          "const": "cinder_cvt_assembly"
+        },
+        "geometry": {
+          "additionalProperties": false,
+          "properties": {
+            "belt": {
+              "additionalProperties": false,
+              "properties": {
+                "cord_depth_from_outer_m": {
+                  "minimum": 0.0,
+                  "type": "number"
+                },
+                "height_m": {
+                  "exclusiveMinimum": 0.0,
+                  "type": "number"
+                },
+                "inner_width_m": {
+                  "exclusiveMinimum": 0.0,
+                  "type": "number"
+                },
+                "outer_width_m": {
+                  "exclusiveMinimum": 0.0,
+                  "type": "number"
+                }
+              },
+              "required": [
+                "height_m",
+                "outer_width_m",
+                "inner_width_m",
+                "cord_depth_from_outer_m"
+              ],
+              "type": "object"
+            },
+            "belt_outer_length_m": {
+              "exclusiveMinimum": 0.0,
+              "type": "number"
+            },
+            "deadzone_shift_m": {
+              "minimum": 0.0,
+              "type": "number"
+            },
+            "max_shift_m": {
+              "minimum": 0.0,
+              "type": "number"
+            },
+            "primary_outer_radius_at_zero_shift_m": {
+              "exclusiveMinimum": 0.0,
+              "type": "number"
+            },
+            "secondary_outer_radius_at_zero_shift_m": {
+              "exclusiveMinimum": 0.0,
+              "type": "number"
+            },
+            "sheave_half_angle_rad": {
+              "exclusiveMaximum": 1.5707963267948966,
+              "exclusiveMinimum": 0.0,
+              "type": "number"
+            }
+          },
+          "required": [
+            "belt",
+            "belt_outer_length_m",
+            "primary_outer_radius_at_zero_shift_m",
+            "secondary_outer_radius_at_zero_shift_m",
+            "sheave_half_angle_rad",
+            "deadzone_shift_m",
+            "max_shift_m"
+          ],
+          "type": "object"
+        },
+        "inertias": {
+          "additionalProperties": false,
+          "properties": {
+            "belt_density_kg_per_m3": {
+              "exclusiveMinimum": 0.0,
+              "type": "number"
+            },
+            "primary": {
+              "additionalProperties": false,
+              "properties": {
+                "cvt_rotational_inertia_kg_m2": {
+                  "minimum": 0.0,
+                  "type": "number"
+                },
+                "engine_rotational_inertia_kg_m2": {
+                  "minimum": 0.0,
+                  "type": "number"
+                },
+                "moving_sheave_mass_kg": {
+                  "minimum": 0.0,
+                  "type": "number"
+                }
+              },
+              "required": [
+                "engine_rotational_inertia_kg_m2",
+                "cvt_rotational_inertia_kg_m2",
+                "moving_sheave_mass_kg"
+              ],
+              "type": "object"
+            },
+            "secondary": {
+              "additionalProperties": false,
+              "properties": {
+                "fixed_rotational_inertia_kg_m2": {
+                  "minimum": 0.0,
+                  "type": "number"
+                },
+                "gearbox_input_rotational_inertia_kg_m2": {
+                  "minimum": 0.0,
+                  "type": "number"
+                },
+                "movable_sheave_rotational_inertia_kg_m2": {
+                  "minimum": 0.0,
+                  "type": "number"
+                },
+                "moving_sheave_mass_kg": {
+                  "minimum": 0.0,
+                  "type": "number"
+                }
+              },
+              "required": [
+                "fixed_rotational_inertia_kg_m2",
+                "gearbox_input_rotational_inertia_kg_m2",
+                "movable_sheave_rotational_inertia_kg_m2",
+                "moving_sheave_mass_kg"
+              ],
+              "type": "object"
+            }
+          },
+          "required": [
+            "primary",
+            "secondary",
+            "belt_density_kg_per_m3"
+          ],
+          "type": "object"
+        },
+        "pulleys": {
+          "additionalProperties": false,
+          "properties": {
+            "input": {
+              "additionalProperties": false,
+              "properties": {
+                "components": {
+                  "items": {
+                    "oneOf": [
+                      {
+                        "additionalProperties": false,
+                        "properties": {
+                          "compression_per_axial_position": {
+                            "type": "number"
+                          },
+                          "initial_compression_m": {
+                            "type": "number"
+                          },
+                          "kind": {
+                            "const": "axial_spring"
+                          },
+                          "stiffness_N_per_m": {
+                            "exclusiveMinimum": 0.0,
+                            "type": "number"
+                          }
+                        },
+                        "required": [
+                          "kind",
+                          "stiffness_N_per_m",
+                          "initial_compression_m",
+                          "compression_per_axial_position"
+                        ],
+                        "type": "object"
+                      },
+                      {
+                        "additionalProperties": false,
+                        "properties": {
+                          "flyweight_mass_kg": {
+                            "exclusiveMinimum": 0.0,
+                            "type": "number"
+                          },
+                          "kind": {
+                            "const": "centrifugal_ramp"
+                          },
+                          "radial_displacement_profile": {
+                            "additionalProperties": false,
+                            "properties": {
+                              "kind": {
+                                "const": "piecewise_ramp"
+                              },
+                              "segments": {
+                                "items": {
+                                  "oneOf": [
+                                    {
+                                      "additionalProperties": false,
+                                      "properties": {
+                                        "angle_rad": {
+                                          "type": "number"
+                                        },
+                                        "kind": {
+                                          "const": "linear_segment"
+                                        },
+                                        "length_m": {
+                                          "exclusiveMinimum": 0.0,
+                                          "type": "number"
+                                        }
+                                      },
+                                      "required": [
+                                        "kind",
+                                        "length_m",
+                                        "angle_rad"
+                                      ],
+                                      "type": "object"
+                                    },
+                                    {
+                                      "additionalProperties": false,
+                                      "properties": {
+                                        "angle_end_rad": {
+                                          "type": "number"
+                                        },
+                                        "angle_start_rad": {
+                                          "type": "number"
+                                        },
+                                        "kind": {
+                                          "const": "circular_segment"
+                                        },
+                                        "length_m": {
+                                          "exclusiveMinimum": 0.0,
+                                          "type": "number"
+                                        },
+                                        "quadrant": {
+                                          "enum": [
+                                            -1,
+                                            1
+                                          ],
+                                          "type": "integer"
+                                        }
+                                      },
+                                      "required": [
+                                        "kind",
+                                        "length_m",
+                                        "angle_start_rad",
+                                        "angle_end_rad",
+                                        "quadrant"
+                                      ],
+                                      "type": "object"
+                                    }
+                                  ]
+                                },
+                                "minItems": 1,
+                                "type": "array"
+                              }
+                            },
+                            "required": [
+                              "kind",
+                              "segments"
+                            ],
+                            "type": "object"
+                          },
+                          "radius_at_zero_position_m": {
+                            "minimum": 0.0,
+                            "type": "number"
+                          }
+                        },
+                        "required": [
+                          "kind",
+                          "flyweight_mass_kg",
+                          "radius_at_zero_position_m",
+                          "radial_displacement_profile"
+                        ],
+                        "type": "object"
+                      },
+                      {
+                        "additionalProperties": false,
+                        "properties": {
+                          "initial_twist_rad": {
+                            "type": "number"
+                          },
+                          "kind": {
+                            "const": "helical_torque_reaction"
+                          },
+                          "movable_member_torque_fraction": {
+                            "maximum": 1.0,
+                            "minimum": 0.0,
+                            "type": "number"
+                          },
+                          "torsional_stiffness_Nm_per_rad": {
+                            "exclusiveMinimum": 0.0,
+                            "type": "number"
+                          }
+                        },
+                        "required": [
+                          "kind",
+                          "torsional_stiffness_Nm_per_rad",
+                          "initial_twist_rad",
+                          "movable_member_torque_fraction"
+                        ],
+                        "type": "object"
+                      }
+                    ]
+                  },
+                  "minItems": 1,
+                  "type": "array"
+                },
+                "helical_coupling": {
+                  "anyOf": [
+                    {
+                      "type": "null"
+                    },
+                    {
+                      "additionalProperties": false,
+                      "properties": {
+                        "opening_offset_m": {
+                          "type": "number"
+                        },
+                        "opening_per_axial_position": {
+                          "type": "number"
+                        },
+                        "profile": {
+                          "additionalProperties": false,
+                          "properties": {
+                            "circumferential_profile": {
+                              "additionalProperties": false,
+                              "properties": {
+                                "kind": {
+                                  "const": "piecewise_ramp"
+                                },
+                                "segments": {
+                                  "items": {
+                                    "oneOf": [
+                                      {
+                                        "additionalProperties": false,
+                                        "properties": {
+                                          "angle_rad": {
+                                            "type": "number"
+                                          },
+                                          "kind": {
+                                            "const": "linear_segment"
+                                          },
+                                          "length_m": {
+                                            "exclusiveMinimum": 0.0,
+                                            "type": "number"
+                                          }
+                                        },
+                                        "required": [
+                                          "kind",
+                                          "length_m",
+                                          "angle_rad"
+                                        ],
+                                        "type": "object"
+                                      },
+                                      {
+                                        "additionalProperties": false,
+                                        "properties": {
+                                          "angle_end_rad": {
+                                            "type": "number"
+                                          },
+                                          "angle_start_rad": {
+                                            "type": "number"
+                                          },
+                                          "kind": {
+                                            "const": "circular_segment"
+                                          },
+                                          "length_m": {
+                                            "exclusiveMinimum": 0.0,
+                                            "type": "number"
+                                          },
+                                          "quadrant": {
+                                            "enum": [
+                                              -1,
+                                              1
+                                            ],
+                                            "type": "integer"
+                                          }
+                                        },
+                                        "required": [
+                                          "kind",
+                                          "length_m",
+                                          "angle_start_rad",
+                                          "angle_end_rad",
+                                          "quadrant"
+                                        ],
+                                        "type": "object"
+                                      }
+                                    ]
+                                  },
+                                  "minItems": 1,
+                                  "type": "array"
+                                }
+                              },
+                              "required": [
+                                "kind",
+                                "segments"
+                              ],
+                              "type": "object"
+                            },
+                            "kind": {
+                              "const": "helix_profile"
+                            },
+                            "radius_m": {
+                              "exclusiveMinimum": 0.0,
+                              "type": "number"
+                            },
+                            "theta_offset_rad": {
+                              "type": "number"
+                            }
+                          },
+                          "required": [
+                            "kind",
+                            "circumferential_profile",
+                            "radius_m",
+                            "theta_offset_rad"
+                          ],
+                          "type": "object"
+                        }
+                      },
+                      "required": [
+                        "opening_per_axial_position",
+                        "opening_offset_m",
+                        "profile"
+                      ],
+                      "type": "object"
+                    }
+                  ]
+                }
+              },
+              "required": [
+                "components"
+              ],
+              "type": "object"
+            },
+            "output": {
+              "additionalProperties": false,
+              "properties": {
+                "components": {
+                  "items": {
+                    "oneOf": [
+                      {
+                        "additionalProperties": false,
+                        "properties": {
+                          "compression_per_axial_position": {
+                            "type": "number"
+                          },
+                          "initial_compression_m": {
+                            "type": "number"
+                          },
+                          "kind": {
+                            "const": "axial_spring"
+                          },
+                          "stiffness_N_per_m": {
+                            "exclusiveMinimum": 0.0,
+                            "type": "number"
+                          }
+                        },
+                        "required": [
+                          "kind",
+                          "stiffness_N_per_m",
+                          "initial_compression_m",
+                          "compression_per_axial_position"
+                        ],
+                        "type": "object"
+                      },
+                      {
+                        "additionalProperties": false,
+                        "properties": {
+                          "flyweight_mass_kg": {
+                            "exclusiveMinimum": 0.0,
+                            "type": "number"
+                          },
+                          "kind": {
+                            "const": "centrifugal_ramp"
+                          },
+                          "radial_displacement_profile": {
+                            "additionalProperties": false,
+                            "properties": {
+                              "kind": {
+                                "const": "piecewise_ramp"
+                              },
+                              "segments": {
+                                "items": {
+                                  "oneOf": [
+                                    {
+                                      "additionalProperties": false,
+                                      "properties": {
+                                        "angle_rad": {
+                                          "type": "number"
+                                        },
+                                        "kind": {
+                                          "const": "linear_segment"
+                                        },
+                                        "length_m": {
+                                          "exclusiveMinimum": 0.0,
+                                          "type": "number"
+                                        }
+                                      },
+                                      "required": [
+                                        "kind",
+                                        "length_m",
+                                        "angle_rad"
+                                      ],
+                                      "type": "object"
+                                    },
+                                    {
+                                      "additionalProperties": false,
+                                      "properties": {
+                                        "angle_end_rad": {
+                                          "type": "number"
+                                        },
+                                        "angle_start_rad": {
+                                          "type": "number"
+                                        },
+                                        "kind": {
+                                          "const": "circular_segment"
+                                        },
+                                        "length_m": {
+                                          "exclusiveMinimum": 0.0,
+                                          "type": "number"
+                                        },
+                                        "quadrant": {
+                                          "enum": [
+                                            -1,
+                                            1
+                                          ],
+                                          "type": "integer"
+                                        }
+                                      },
+                                      "required": [
+                                        "kind",
+                                        "length_m",
+                                        "angle_start_rad",
+                                        "angle_end_rad",
+                                        "quadrant"
+                                      ],
+                                      "type": "object"
+                                    }
+                                  ]
+                                },
+                                "minItems": 1,
+                                "type": "array"
+                              }
+                            },
+                            "required": [
+                              "kind",
+                              "segments"
+                            ],
+                            "type": "object"
+                          },
+                          "radius_at_zero_position_m": {
+                            "minimum": 0.0,
+                            "type": "number"
+                          }
+                        },
+                        "required": [
+                          "kind",
+                          "flyweight_mass_kg",
+                          "radius_at_zero_position_m",
+                          "radial_displacement_profile"
+                        ],
+                        "type": "object"
+                      },
+                      {
+                        "additionalProperties": false,
+                        "properties": {
+                          "initial_twist_rad": {
+                            "type": "number"
+                          },
+                          "kind": {
+                            "const": "helical_torque_reaction"
+                          },
+                          "movable_member_torque_fraction": {
+                            "maximum": 1.0,
+                            "minimum": 0.0,
+                            "type": "number"
+                          },
+                          "torsional_stiffness_Nm_per_rad": {
+                            "exclusiveMinimum": 0.0,
+                            "type": "number"
+                          }
+                        },
+                        "required": [
+                          "kind",
+                          "torsional_stiffness_Nm_per_rad",
+                          "initial_twist_rad",
+                          "movable_member_torque_fraction"
+                        ],
+                        "type": "object"
+                      }
+                    ]
+                  },
+                  "minItems": 1,
+                  "type": "array"
+                },
+                "helical_coupling": {
+                  "anyOf": [
+                    {
+                      "type": "null"
+                    },
+                    {
+                      "additionalProperties": false,
+                      "properties": {
+                        "opening_offset_m": {
+                          "type": "number"
+                        },
+                        "opening_per_axial_position": {
+                          "type": "number"
+                        },
+                        "profile": {
+                          "additionalProperties": false,
+                          "properties": {
+                            "circumferential_profile": {
+                              "additionalProperties": false,
+                              "properties": {
+                                "kind": {
+                                  "const": "piecewise_ramp"
+                                },
+                                "segments": {
+                                  "items": {
+                                    "oneOf": [
+                                      {
+                                        "additionalProperties": false,
+                                        "properties": {
+                                          "angle_rad": {
+                                            "type": "number"
+                                          },
+                                          "kind": {
+                                            "const": "linear_segment"
+                                          },
+                                          "length_m": {
+                                            "exclusiveMinimum": 0.0,
+                                            "type": "number"
+                                          }
+                                        },
+                                        "required": [
+                                          "kind",
+                                          "length_m",
+                                          "angle_rad"
+                                        ],
+                                        "type": "object"
+                                      },
+                                      {
+                                        "additionalProperties": false,
+                                        "properties": {
+                                          "angle_end_rad": {
+                                            "type": "number"
+                                          },
+                                          "angle_start_rad": {
+                                            "type": "number"
+                                          },
+                                          "kind": {
+                                            "const": "circular_segment"
+                                          },
+                                          "length_m": {
+                                            "exclusiveMinimum": 0.0,
+                                            "type": "number"
+                                          },
+                                          "quadrant": {
+                                            "enum": [
+                                              -1,
+                                              1
+                                            ],
+                                            "type": "integer"
+                                          }
+                                        },
+                                        "required": [
+                                          "kind",
+                                          "length_m",
+                                          "angle_start_rad",
+                                          "angle_end_rad",
+                                          "quadrant"
+                                        ],
+                                        "type": "object"
+                                      }
+                                    ]
+                                  },
+                                  "minItems": 1,
+                                  "type": "array"
+                                }
+                              },
+                              "required": [
+                                "kind",
+                                "segments"
+                              ],
+                              "type": "object"
+                            },
+                            "kind": {
+                              "const": "helix_profile"
+                            },
+                            "radius_m": {
+                              "exclusiveMinimum": 0.0,
+                              "type": "number"
+                            },
+                            "theta_offset_rad": {
+                              "type": "number"
+                            }
+                          },
+                          "required": [
+                            "kind",
+                            "circumferential_profile",
+                            "radius_m",
+                            "theta_offset_rad"
+                          ],
+                          "type": "object"
+                        }
+                      },
+                      "required": [
+                        "opening_per_axial_position",
+                        "opening_offset_m",
+                        "profile"
+                      ],
+                      "type": "object"
+                    }
+                  ]
+                }
+              },
+              "required": [
+                "components"
+              ],
+              "type": "object"
+            }
+          },
+          "required": [
+            "input",
+            "output"
+          ],
+          "type": "object"
+        },
+        "schema_version": {
+          "const": 1
+        }
+      },
+      "required": [
+        "schema_version",
+        "document_type",
+        "geometry",
+        "contact",
+        "inertias",
+        "pulleys"
+      ],
+      "type": "object"
+    },
+    "execution": {
+      "additionalProperties": false,
+      "properties": {
+        "integrator": {
+          "additionalProperties": false,
+          "properties": {
+            "absolute_tolerance": {
+              "exclusiveMinimum": 0.0,
+              "type": "number"
+            },
+            "event_time_tolerance_s": {
+              "exclusiveMinimum": 0.0,
+              "type": "number"
+            },
+            "first_step_s": {
+              "anyOf": [
+                {
+                  "type": "null"
+                },
+                {
+                  "exclusiveMinimum": 0.0,
+                  "type": "number"
+                }
+              ]
+            },
+            "max_step_s": {
+              "exclusiveMinimum": 0.0,
+              "type": "number"
+            },
+            "maximum_transitions": {
+              "minimum": 0,
+              "type": "integer"
+            },
+            "method": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "relative_tolerance": {
+              "exclusiveMinimum": 0.0,
+              "type": "number"
+            },
+            "retain_dense_output": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "relative_tolerance",
+            "absolute_tolerance",
+            "method",
+            "max_step_s",
+            "first_step_s",
+            "maximum_transitions",
+            "event_time_tolerance_s",
+            "retain_dense_output"
+          ],
+          "type": "object"
+        },
+        "operating_limits": {
+          "additionalProperties": false,
+          "properties": {
+            "engagement_shift_m": {
+              "type": "number"
+            },
+            "lower_stop_shift_m": {
+              "type": "number"
+            },
+            "upper_stop_shift_m": {
+              "type": "number"
+            }
+          },
+          "required": [
+            "lower_stop_shift_m",
+            "engagement_shift_m",
+            "upper_stop_shift_m"
+          ],
+          "type": "object"
+        },
+        "reporting": {
+          "additionalProperties": false,
+          "properties": {
+            "grid": {
+              "oneOf": [
+                {
+                  "additionalProperties": false,
+                  "properties": {
+                    "count": {
+                      "type": "null"
+                    },
+                    "kind": {
+                      "const": "native"
+                    },
+                    "step_seconds": {
+                      "type": "null"
+                    }
+                  },
+                  "required": [
+                    "kind",
+                    "count",
+                    "step_seconds"
+                  ],
+                  "type": "object"
+                },
+                {
+                  "additionalProperties": false,
+                  "properties": {
+                    "count": {
+                      "minimum": 2,
+                      "type": "integer"
+                    },
+                    "kind": {
+                      "const": "uniform_count"
+                    },
+                    "step_seconds": {
+                      "type": "null"
+                    }
+                  },
+                  "required": [
+                    "kind",
+                    "count",
+                    "step_seconds"
+                  ],
+                  "type": "object"
+                },
+                {
+                  "additionalProperties": false,
+                  "properties": {
+                    "count": {
+                      "type": "null"
+                    },
+                    "kind": {
+                      "const": "uniform_time_step"
+                    },
+                    "step_seconds": {
+                      "exclusiveMinimum": 0.0,
+                      "type": "number"
+                    }
+                  },
+                  "required": [
+                    "kind",
+                    "count",
+                    "step_seconds"
+                  ],
+                  "type": "object"
+                }
+              ]
+            },
+            "include_actuation": {
+              "type": "boolean"
+            },
+            "include_closure_audit": {
+              "type": "boolean"
+            },
+            "include_contact": {
+              "type": "boolean"
+            },
+            "include_integrated_observers": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "grid",
+            "include_contact",
+            "include_actuation",
+            "include_closure_audit",
+            "include_integrated_observers"
+          ],
+          "type": "object"
+        },
+        "solve_settings": {
+          "additionalProperties": false,
+          "properties": {
+            "contact_tolerances": {
+              "additionalProperties": false,
+              "properties": {
+                "relative_acceleration_tolerance_m_per_s2": {
+                  "minimum": 0.0,
+                  "type": "number"
+                },
+                "relative_speed_tolerance_m_per_s": {
+                  "minimum": 0.0,
+                  "type": "number"
+                },
+                "stick_acceleration_tolerance_m_per_s2": {
+                  "minimum": 0.0,
+                  "type": "number"
+                }
+              },
+              "required": [
+                "relative_speed_tolerance_m_per_s",
+                "relative_acceleration_tolerance_m_per_s2",
+                "stick_acceleration_tolerance_m_per_s2"
+              ],
+              "type": "object"
+            },
+            "initial_guess": {
+              "additionalProperties": false,
+              "properties": {
+                "primary_lambda": {
+                  "type": "number"
+                },
+                "secondary_lambda": {
+                  "type": "number"
+                }
+              },
+              "required": [
+                "primary_lambda",
+                "secondary_lambda"
+              ],
+              "type": "object"
+            },
+            "lambda_search_bounds": {
+              "additionalProperties": false,
+              "properties": {
+                "primary_lower": {
+                  "type": "number"
+                },
+                "primary_upper": {
+                  "type": "number"
+                },
+                "secondary_lower": {
+                  "type": "number"
+                },
+                "secondary_upper": {
+                  "type": "number"
+                }
+              },
+              "required": [
+                "primary_lower",
+                "primary_upper",
+                "secondary_lower",
+                "secondary_upper"
+              ],
+              "type": "object"
+            },
+            "maximum_closure_condition_number": {
+              "exclusiveMinimum": 0.0,
+              "type": "number"
+            },
+            "maximum_function_evaluations": {
+              "minimum": 0,
+              "type": "integer"
+            },
+            "optimizer_tolerance": {
+              "exclusiveMinimum": 0.0,
+              "type": "number"
+            }
+          },
+          "required": [
+            "lambda_search_bounds",
+            "initial_guess",
+            "contact_tolerances",
+            "optimizer_tolerance",
+            "maximum_function_evaluations",
+            "maximum_closure_condition_number"
+          ],
+          "type": "object"
+        },
+        "switching_settings": {
+          "additionalProperties": false,
+          "properties": {
+            "normal_resultant_floor_N": {
+              "minimum": 0.0,
+              "type": "number"
+            },
+            "restick_static_margin": {
+              "minimum": 0.0,
+              "type": "number"
+            },
+            "stick_exit_static_margin": {
+              "minimum": 0.0,
+              "type": "number"
+            }
+          },
+          "required": [
+            "stick_exit_static_margin",
+            "restick_static_margin",
+            "normal_resultant_floor_N"
+          ],
+          "type": "object"
+        },
+        "traction_law": {
+          "additionalProperties": false,
+          "properties": {
+            "primary_kinetic_lambda_magnitude": {
+              "minimum": 0.0,
+              "type": "number"
+            },
+            "primary_static_lambda_limit": {
+              "minimum": 0.0,
+              "type": "number"
+            },
+            "secondary_kinetic_lambda_magnitude": {
+              "minimum": 0.0,
+              "type": "number"
+            },
+            "secondary_static_lambda_limit": {
+              "minimum": 0.0,
+              "type": "number"
+            }
+          },
+          "required": [
+            "primary_static_lambda_limit",
+            "secondary_static_lambda_limit",
+            "primary_kinetic_lambda_magnitude",
+            "secondary_kinetic_lambda_magnitude"
+          ],
+          "type": "object"
+        }
+      },
+      "required": [
+        "traction_law",
+        "solve_settings",
+        "operating_limits",
+        "switching_settings",
+        "integrator",
+        "reporting"
+      ],
+      "type": "object"
+    },
+    "inputBoundary": {
+      "additionalProperties": false,
+      "properties": {
+        "high_speed_braking_torque_Nm": {
+          "type": "number"
+        },
+        "high_speed_braking_transition_width_rad_per_s": {
+          "minimum": 0.0,
+          "type": "number"
+        },
+        "kind": {
+          "const": "full_throttle_torque_curve"
+        },
+        "low_speed_braking_peak_speed_rad_per_s": {
+          "minimum": 0.0,
+          "type": "number"
+        },
+        "low_speed_braking_torque_Nm": {
+          "type": "number"
+        },
+        "points": {
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "angular_speed_rad_per_s": {
+                "minimum": 0.0,
+                "type": "number"
+              },
+              "torque_Nm": {
+                "type": "number"
+              }
+            },
+            "required": [
+              "angular_speed_rad_per_s",
+              "torque_Nm"
+            ],
+            "type": "object"
+          },
+          "minItems": 2,
+          "type": "array"
+        }
+      },
+      "required": [
+        "kind",
+        "points",
+        "low_speed_braking_torque_Nm",
+        "low_speed_braking_peak_speed_rad_per_s",
+        "high_speed_braking_torque_Nm",
+        "high_speed_braking_transition_width_rad_per_s"
+      ],
+      "type": "object"
+    },
+    "outputBoundary": {
+      "oneOf": [
+        {
+          "additionalProperties": false,
+          "properties": {
+            "added_rotational_inertia_kg_m2": {
+              "minimum": 0.0,
+              "type": "number"
+            },
+            "external_torque_Nm": {
+              "type": "number"
+            },
+            "kind": {
+              "const": "fixed_output_load"
+            }
+          },
+          "required": [
+            "kind",
+            "external_torque_Nm",
+            "added_rotational_inertia_kg_m2"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "final_drive": {
+              "additionalProperties": false,
+              "properties": {
+                "reduction_ratio": {
+                  "exclusiveMinimum": 0.0,
+                  "type": "number"
+                },
+                "wheel_radius_m": {
+                  "exclusiveMinimum": 0.0,
+                  "type": "number"
+                }
+              },
+              "required": [
+                "reduction_ratio",
+                "wheel_radius_m"
+              ],
+              "type": "object"
+            },
+            "kind": {
+              "const": "locked_final_drive_vehicle"
+            },
+            "road_load": {
+              "additionalProperties": false,
+              "properties": {
+                "air_density_kg_per_m3": {
+                  "minimum": 0.0,
+                  "type": "number"
+                },
+                "drag_coefficient": {
+                  "minimum": 0.0,
+                  "type": "number"
+                },
+                "frontal_area_m2": {
+                  "minimum": 0.0,
+                  "type": "number"
+                },
+                "gravity_m_per_s2": {
+                  "exclusiveMinimum": 0.0,
+                  "type": "number"
+                },
+                "rolling_resistance_coefficient": {
+                  "minimum": 0.0,
+                  "type": "number"
+                },
+                "rolling_speed_regularization_m_per_s": {
+                  "exclusiveMinimum": 0.0,
+                  "type": "number"
+                }
+              },
+              "required": [
+                "rolling_resistance_coefficient",
+                "drag_coefficient",
+                "frontal_area_m2",
+                "air_density_kg_per_m3",
+                "gravity_m_per_s2",
+                "rolling_speed_regularization_m_per_s"
+              ],
+              "type": "object"
+            },
+            "road_profile": {
+              "additionalProperties": false,
+              "properties": {
+                "grade_angle_rad": {
+                  "type": "number"
+                },
+                "kind": {
+                  "const": "constant_grade"
+                }
+              },
+              "required": [
+                "kind",
+                "grade_angle_rad"
+              ],
+              "type": "object"
+            },
+            "vehicle": {
+              "additionalProperties": false,
+              "properties": {
+                "mass_kg": {
+                  "exclusiveMinimum": 0.0,
+                  "type": "number"
+                },
+                "wheel_rotational_inertia_kg_m2": {
+                  "minimum": 0.0,
+                  "type": "number"
+                }
+              },
+              "required": [
+                "mass_kg",
+                "wheel_rotational_inertia_kg_m2"
+              ],
+              "type": "object"
+            }
+          },
+          "required": [
+            "kind",
+            "vehicle",
+            "final_drive",
+            "road_load",
+            "road_profile"
+          ],
+          "type": "object"
+        }
+      ]
+    },
+    "scenario": {
+      "additionalProperties": false,
+      "properties": {
+        "initial_mode": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "additionalProperties": false,
+              "properties": {
+                "contact_regime": {
+                  "anyOf": [
+                    {
+                      "type": "null"
+                    },
+                    {
+                      "additionalProperties": false,
+                      "properties": {
+                        "mode": {
+                          "enum": [
+                            "stick_stick",
+                            "primary_slip_secondary_stick",
+                            "primary_stick_secondary_slip",
+                            "both_slip"
+                          ]
+                        },
+                        "primary_slip_direction": {
+                          "anyOf": [
+                            {
+                              "type": "null"
+                            },
+                            {
+                              "enum": [
+                                "belt_leads_pulley",
+                                "pulley_leads_belt",
+                                "indeterminate"
+                              ]
+                            }
+                          ]
+                        },
+                        "secondary_slip_direction": {
+                          "anyOf": [
+                            {
+                              "type": "null"
+                            },
+                            {
+                              "enum": [
+                                "belt_leads_pulley",
+                                "pulley_leads_belt",
+                                "indeterminate"
+                              ]
+                            }
+                          ]
+                        }
+                      },
+                      "required": [
+                        "mode",
+                        "primary_slip_direction",
+                        "secondary_slip_direction"
+                      ],
+                      "type": "object"
+                    }
+                  ]
+                },
+                "engagement": {
+                  "enum": [
+                    "deadzone",
+                    "engaged"
+                  ]
+                },
+                "shift_constraint": {
+                  "enum": [
+                    "free",
+                    "lower_stop",
+                    "low_ratio_seat",
+                    "upper_stop"
+                  ]
+                }
+              },
+              "required": [
+                "engagement",
+                "shift_constraint",
+                "contact_regime"
+              ],
+              "type": "object"
+            }
+          ]
+        },
+        "initial_state": {
+          "additionalProperties": false,
+          "properties": {
+            "belt_speed_m_per_s": {
+              "type": "number"
+            },
+            "primary_angular_speed_rad_per_s": {
+              "type": "number"
+            },
+            "secondary_angular_speed_rad_per_s": {
+              "type": "number"
+            },
+            "secondary_shaft_angle_rad": {
+              "type": "number"
+            },
+            "shift_position_m": {
+              "type": "number"
+            },
+            "shift_speed_m_per_s": {
+              "type": "number"
+            }
+          },
+          "required": [
+            "primary_angular_speed_rad_per_s",
+            "secondary_angular_speed_rad_per_s",
+            "belt_speed_m_per_s",
+            "shift_position_m",
+            "shift_speed_m_per_s",
+            "secondary_shaft_angle_rad"
+          ],
+          "type": "object"
+        },
+        "time_span_s": {
+          "items": false,
+          "maxItems": 2,
+          "minItems": 2,
+          "prefixItems": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "number"
+            }
+          ],
+          "type": "array"
+        }
+      },
+      "required": [
+        "time_span_s",
+        "initial_state",
+        "initial_mode"
+      ],
+      "type": "object"
+    }
+  },
+  "$id": "https://cinder-cvt.dev/schemas/cinder_simulation_case.v1.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "Version-one executable CINDER simulation case. All physical values use canonical SI units.",
+  "properties": {
+    "assembly": {
+      "$ref": "#/$defs/assembly"
+    },
+    "document_type": {
+      "const": "cinder_simulation_case"
+    },
+    "execution": {
+      "$ref": "#/$defs/execution"
+    },
+    "input_boundary": {
+      "$ref": "#/$defs/inputBoundary"
+    },
+    "output_boundary": {
+      "$ref": "#/$defs/outputBoundary"
+    },
+    "scenario": {
+      "$ref": "#/$defs/scenario"
+    },
+    "schema_version": {
+      "const": 1
+    }
+  },
+  "required": [
+    "schema_version",
+    "document_type",
+    "assembly",
+    "input_boundary",
+    "output_boundary",
+    "scenario",
+    "execution"
+  ],
+  "title": "CINDER simulation case document",
+  "type": "object"
+}
