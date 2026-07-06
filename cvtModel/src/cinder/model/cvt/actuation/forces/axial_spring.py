@@ -7,7 +7,7 @@ from math import isfinite
 
 from cinder.model.cvt.closure import AffineClosureScalar
 
-from ..types import PulleyActuationContext
+from ..types import ActuationContribution, PulleyActuationContext
 
 
 @dataclass(frozen=True, slots=True)
@@ -80,3 +80,12 @@ class AxialSpringForce:
         )
 
         return AffineClosureScalar(bias=axial_force)
+
+    def inspect(self, context: PulleyActuationContext) -> tuple[ActuationContribution, ...]:
+        return (
+            ActuationContribution(
+                key="axial_spring",
+                label="Axial spring",
+                relation=self.evaluate(context),
+            ),
+        )

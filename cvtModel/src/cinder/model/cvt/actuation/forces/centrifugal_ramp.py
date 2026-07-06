@@ -8,7 +8,7 @@ from math import isfinite
 from cinder.model.cvt.closure import AffineClosureScalar
 from cinder.model.cvt.profiles.types import ScalarProfile
 
-from ..types import PulleyActuationContext
+from ..types import ActuationContribution, PulleyActuationContext
 
 
 @dataclass(frozen=True, slots=True)
@@ -70,6 +70,15 @@ class CentrifugalRampForce:
         )
 
         return AffineClosureScalar(bias=axial_force)
+
+    def inspect(self, context: PulleyActuationContext) -> tuple[ActuationContribution, ...]:
+        return (
+            ActuationContribution(
+                key="centrifugal_ramp",
+                label="Centrifugal ramp",
+                relation=self.evaluate(context),
+            ),
+        )
 
 
 def _require_nonnegative(**values: float) -> None:

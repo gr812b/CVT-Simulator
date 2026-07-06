@@ -16,14 +16,20 @@ from .forces import (
 )
 from .pulley_actuator import PulleyActuator
 from .types import (
+    ActuationContribution,
+    ActuatorInspection,
     AxialForceLaw,
+    InspectableAxialForceLaw,
     HelicalCouplingState,
     PulleyActuationContext,
     PulleyClosureChannels,
 )
 
 __all__ = [
+    "ActuationContribution",
+    "ActuatorInspection",
     "AxialForceLaw",
+    "InspectableAxialForceLaw",
     "AxialSpringForce",
     "AxialSpringForceSpec",
     "CentrifugalActuatorSpec",

@@ -7,7 +7,7 @@ from math import isfinite
 
 from cinder.model.cvt.closure import AffineClosureScalar, ClosureGains, ClosureUnknown
 
-from ..types import PulleyActuationContext
+from ..types import ActuationContribution, PulleyActuationContext
 
 
 @dataclass(frozen=True, slots=True)
@@ -39,6 +39,73 @@ class HelicalTorqueReactionForce:
         return self._spec
 
     def evaluate(self, context: PulleyActuationContext) -> AffineClosureScalar:
+        return self._terms(context)[0]
+
+    def inspect(self, context: PulleyActuationContext) -> tuple[ActuationContribution, ...]:
+        """Expose the physical helix decomposition outside the RHS path."""
+
+        _, force_per_reacted_torque, spring_torque, curvature_torque, channels, inertia, kinematics = (
+            self._terms(context, retain_components=True)
+        )
+        return (
+            ActuationContribution(
+                key="helix_torsional_preload",
+                label="Helix torsional preload",
+                relation=AffineClosureScalar(
+                    bias=force_per_reacted_torque * spring_torque
+                ),
+            ),
+            ActuationContribution(
+                key="helix_shift_speed_curvature",
+                label="Helix shift-speed curvature inertia",
+                relation=AffineClosureScalar(
+                    bias=force_per_reacted_torque * curvature_torque
+                ),
+            ),
+            ActuationContribution(
+                key="helix_shaft_acceleration_inertia",
+                label="Helix shaft-acceleration inertia",
+                relation=AffineClosureScalar(
+                    gains=ClosureGains.from_by_unknown(
+                        {channels.shaft_angular_acceleration: -force_per_reacted_torque * inertia}
+                    )
+                ),
+            ),
+            ActuationContribution(
+                key="helix_shift_acceleration_inertia",
+                label="Helix shift-acceleration inertia",
+                relation=AffineClosureScalar(
+                    gains=ClosureGains.from_by_unknown(
+                        {
+                            ClosureUnknown.SHIFT_ACCELERATION: (
+                                force_per_reacted_torque * inertia * kinematics.dtheta_ds
+                            )
+                        }
+                    )
+                ),
+            ),
+            ActuationContribution(
+                key="helix_reacted_shaft_torque",
+                label="Helix reacted shaft torque",
+                relation=AffineClosureScalar(
+                    gains=ClosureGains.from_by_unknown(
+                        {
+                            channels.shaft_torque: (
+                                force_per_reacted_torque
+                                * self._spec.movable_member_torque_fraction
+                            )
+                        }
+                    )
+                ),
+            ),
+        )
+
+    def _terms(
+        self,
+        context: PulleyActuationContext,
+        *,
+        retain_components: bool = False,
+    ):
         coupling = context.helical_coupling
         channels = context.closure_channels
         inertia = context.movable_member_rotational_inertia
@@ -59,9 +126,7 @@ class HelicalTorqueReactionForce:
         spring_torque = self._spec.torsional_stiffness * (
             self._spec.initial_twist + kinematics.theta
         )
-        known_reacted_torque = (
-            spring_torque + inertia * kinematics.d2theta_ds2 * context.shift_speed**2
-        )
+        curvature_torque = inertia * kinematics.d2theta_ds2 * context.shift_speed**2
         force_per_reacted_torque = (
             -coupling.opening_per_axial_position * kinematics.dtheta_dopening
         )
@@ -77,10 +142,21 @@ class HelicalTorqueReactionForce:
                 ),
             }
         )
-        return AffineClosureScalar(
-            bias=force_per_reacted_torque * known_reacted_torque,
+        relation = AffineClosureScalar(
+            bias=force_per_reacted_torque * (spring_torque + curvature_torque),
             gains=gains,
         )
+        if retain_components:
+            return (
+                relation,
+                force_per_reacted_torque,
+                spring_torque,
+                curvature_torque,
+                channels,
+                inertia,
+                kinematics,
+            )
+        return (relation,)
 
 
 def _require_finite(name: str, value: float) -> None:

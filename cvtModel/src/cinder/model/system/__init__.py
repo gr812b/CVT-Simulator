@@ -9,6 +9,7 @@ from .assembly import (
 )
 from .case import CVTSimulationCase, OperatingScenario
 from .evaluator import CVTDynamicsModel, DynamicsSnapshot
+from .runtime import RuntimeEvaluation
 from .state import CVTDynamicState, CVTDynamicStateDerivative
 
 __all__ = [
@@ -19,6 +20,7 @@ __all__ = [
     "CVTDynamicStateDerivative",
     "CVTSimulationCase",
     "DynamicsSnapshot",
+    "RuntimeEvaluation",
     "HelicalPulleyCoupling",
     "OperatingScenario",
     "PulleyPairSpec",

@@ -46,7 +46,7 @@ from __future__ import annotations
 
 import argparse
 import csv
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from math import radians
 import json
 from pathlib import Path
@@ -74,6 +74,12 @@ from cinder.execution.hybrid.cvt_operating_hybrid import (
     CVTOperatingHybridSystem,
 )  # noqa: E402
 from cinder.execution.hybrid.hybrid import HybridIntegrationResult  # noqa: E402
+from cinder.results import (  # noqa: E402
+    CVTIntegrationTrace,
+    ReportingGrid,
+    CVTResultBuilder,
+    ReportingSettings,
+)
 from cinder.model.boundaries.output.vehicle import ConstantGradeRoadProfile  # noqa: E402
 from launch_tuning_common import (  # noqa: E402
     MILLIMETRE,
@@ -143,7 +149,11 @@ def parse_arguments() -> argparse.Namespace:
         help="Numerical-only uphill restart interval; 0 keeps one uninterrupted hill integration.",
     )
     parser.add_argument("--maximum-transitions", type=int, default=80)
-    parser.add_argument("--plot-samples", type=int, default=700)
+    parser.add_argument(
+        "--report-step-ms", type=float, default=10.0,
+        help="Uniform result/export spacing [ms]; exact event points are retained as additional rows.",
+    )
+    parser.add_argument("--plot-samples", type=int, default=None, help="Optional plotting/export cap; omitted keeps CINDER\'s full 10 ms report grid.")
     parser.add_argument(
         "--run-audit",
         action="store_true",
@@ -182,13 +192,15 @@ def parse_arguments() -> argparse.Namespace:
         parser.error(
             "Initial RPM must be non-negative and target engagement RPM positive."
         )
+    if not np.isfinite(args.report_step_ms) or args.report_step_ms <= 0.0:
+        parser.error("--report-step-ms must be finite and positive.")
     if (
         args.hill_restart_s < 0.0
         or args.maximum_transitions < 1
-        or args.plot_samples < 100
+        or (args.plot_samples is not None and args.plot_samples < 100)
     ):
         parser.error(
-            "hill restart must be non-negative; transitions >= 1; plot samples >= 100."
+            "hill restart must be non-negative; transitions >= 1; plot samples >= 100 when supplied."
         )
     return args
 
@@ -250,27 +262,35 @@ def integrate_phase(
     initial_state: CVTDynamicState,
     settings: HybridIntegratorSettings,
     restart_s: float,
+    reporting_settings: ReportingSettings,
 ):
     """Integrate one fixed-grade phase, optionally in state/mode-continuous chunks."""
 
     if restart_s <= 0.0:
-        return system.integrate(
-            time_span=(start, end), initial_state=initial_state, settings=settings
+        return system.run(
+            time_span=(start, end),
+            initial_state=initial_state,
+            settings=settings,
+            reporting_settings=reporting_settings,
         )
 
+    # Numerical restarts still form one user-facing result.  Each raw chunk
+    # retains SciPy dense output; after joining their segments, CINDER
+    # materializes one standard 10 ms report grid over the complete phase.
     chunks = []
     time = start
     state = initial_state
     mode = (
         None  # At the grade step, let CINDER classify under the new road torque once.
     )
+    dense_settings = replace(settings, retain_dense_output=True)
     while time < end - 1.0e-12:
         next_time = min(time + restart_s, end)
         result = system.integrate(
             time_span=(time, next_time),
             initial_state=state,
             initial_regime=mode,
-            settings=settings,
+            settings=dense_settings,
         )
         chunks.append(result)
         if not result.completed or result.final_time < next_time - 1.0e-9:
@@ -282,7 +302,7 @@ def integrate_phase(
         state = CVTDynamicState.from_vector(result.final_state)
         mode = next_mode
 
-    return HybridIntegrationResult(
+    raw = HybridIntegrationResult(
         segments=tuple(segment for chunk in chunks for segment in chunk.segments),
         transitions=tuple(record for chunk in chunks for record in chunk.transitions),
         completed=bool(chunks)
@@ -294,6 +314,10 @@ def integrate_phase(
             else (chunks[-1].termination_reason if chunks else "no_chunks_integrated")
         ),
     )
+    return CVTResultBuilder(system=system).build(
+        CVTIntegrationTrace(raw=raw),
+        settings=reporting_settings,
+    )
 
 
 def mode_text(mode) -> str:
@@ -304,9 +328,11 @@ def mode_text(mode) -> str:
     return f"{mode.engagement.value}/{mode.shift_constraint.value}/{mode.contact_regime.mode.value}"
 
 
-def allocate_segment_samples(sizes: list[int], total: int) -> list[int]:
-    """Allocate a bounded plotting budget across all hybrid segments."""
+def allocate_segment_samples(sizes: list[int], total: int | None) -> list[int]:
+    """Allocate an optional plotting budget across all hybrid segments."""
 
+    if total is None:
+        return sizes
     size_sum = sum(sizes)
     if size_sum <= total:
         return sizes
@@ -320,7 +346,7 @@ def allocate_segment_samples(sizes: list[int], total: int) -> list[int]:
 
 
 def sample_state_road_trace(
-    phases: tuple[Phase, ...], maximum_samples: int
+    phases: tuple[Phase, ...], maximum_samples: int | None
 ) -> ResponseTrace:
     """Sample state-known data across both phases without re-solving contact closure."""
 
@@ -575,7 +601,7 @@ def audit_phase(phase: Phase) -> tuple[str, list[str]]:
     try:
         report = check_cvt_hybrid_result(
             system=phase.system,
-            result=phase.result,
+            result=phase.result.trace.raw,
             # Keep this optional audit practical for a 20 s two-phase scenario.
             # The existing dedicated audit harness remains the right place for
             # exhaustive validation with its own high sample budget.
@@ -709,6 +735,9 @@ def main() -> None:
         maximum_transitions=args.maximum_transitions,
     )
     args.output_dir.mkdir(parents=True, exist_ok=True)
+    reporting_settings = ReportingSettings(
+        grid=ReportingGrid.uniform_time_step(args.report_step_ms * 1.0e-3),
+    )
 
     print("Hill-step response")
     print("=" * 88)
@@ -727,6 +756,7 @@ def main() -> None:
         initial_state=launch_initial_state(primary_rpm=args.initial_primary_rpm),
         settings=settings,
         restart_s=0.0,
+        reporting_settings=reporting_settings,
     )
     if not level_result.completed:
         raise RuntimeError(
@@ -742,6 +772,7 @@ def main() -> None:
         initial_state=CVTDynamicState.from_vector(level_result.final_state),
         settings=settings,
         restart_s=args.hill_restart_s,
+        reporting_settings=reporting_settings,
     )
     if not hill_result.completed:
         raise RuntimeError(

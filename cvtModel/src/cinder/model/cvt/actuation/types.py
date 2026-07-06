@@ -3,17 +3,22 @@
 A force law is never told whether it is installed on the input or output
 pulley.  The host pulley supplies its local motion, optional kinematic
 coupling, and closure-column projection through :class:`PulleyActuationContext`.
+
+The runtime path consumes only affine relations.  Rich named contribution
+objects are intentionally created only when :meth:`PulleyActuator.inspect`
+is requested after an integration.
 """
 
 from __future__ import annotations
 
 from dataclasses import dataclass
 from math import isclose, isfinite
-from typing import Protocol
+from typing import Protocol, runtime_checkable
 
 from cinder.model.cvt.closure import (
     AffineClosureScalar,
     ClosureUnknown,
+    ClosureUnknowns,
 )
 from cinder.model.cvt.profiles import HelixShiftKinematics
 
@@ -122,8 +127,70 @@ class PulleyActuationContext:
             )
 
 
+@dataclass(frozen=True, slots=True)
+class ActuationContribution:
+    """One named affine term exposed only by the post-integration inspect path."""
+
+    key: str
+    label: str
+    relation: AffineClosureScalar
+
+    def __post_init__(self) -> None:
+        if not self.key or not self.key.strip():
+            raise ValueError("ActuationContribution.key must be non-empty.")
+        if not self.label or not self.label.strip():
+            raise ValueError("ActuationContribution.label must be non-empty.")
+        if not isinstance(self.relation, AffineClosureScalar):
+            raise TypeError("relation must be an AffineClosureScalar instance.")
+
+    def resolve(self, unknowns: ClosureUnknowns) -> float:
+        """Resolve this named affine contribution at one closure solution."""
+
+        return self.relation.evaluate(unknowns)
+
+
+@dataclass(frozen=True, slots=True)
+class ActuatorInspection:
+    """Named local-force decomposition for one mounted actuator.
+
+    ``total_relation`` is exactly the relation used by the RHS.  The
+    contribution relations sum to that total.  This object is deliberately not
+    produced by :meth:`PulleyActuator.evaluate_relation`.
+    """
+
+    total_relation: AffineClosureScalar
+    contributions: tuple[ActuationContribution, ...]
+
+    def __post_init__(self) -> None:
+        if not isinstance(self.total_relation, AffineClosureScalar):
+            raise TypeError("total_relation must be an AffineClosureScalar instance.")
+        if not self.contributions:
+            raise ValueError("ActuatorInspection requires at least one contribution.")
+        keys = tuple(item.key for item in self.contributions)
+        if len(set(keys)) != len(keys):
+            raise ValueError("ActuatorInspection contribution keys must be unique.")
+        if not all(isinstance(item, ActuationContribution) for item in self.contributions):
+            raise TypeError("contributions must contain ActuationContribution values.")
+
+    def resolve_total(self, unknowns: ClosureUnknowns) -> float:
+        return self.total_relation.evaluate(unknowns)
+
+    def resolve_contributions(self, unknowns: ClosureUnknowns) -> dict[str, float]:
+        return {item.key: item.resolve(unknowns) for item in self.contributions}
+
+
 class AxialForceLaw(Protocol):
     """One composable local axial-force law."""
 
     def evaluate(self, context: PulleyActuationContext) -> AffineClosureScalar:
         """Return one affine local axial-force contribution."""
+
+
+@runtime_checkable
+class InspectableAxialForceLaw(AxialForceLaw, Protocol):
+    """Optional rich decomposition contract used outside the RHS hot path."""
+
+    def inspect(
+        self, context: PulleyActuationContext
+    ) -> tuple[ActuationContribution, ...]:
+        """Return named affine contributions that sum to :meth:`evaluate`."""

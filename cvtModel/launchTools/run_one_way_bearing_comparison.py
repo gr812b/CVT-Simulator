@@ -25,7 +25,7 @@ from __future__ import annotations
 
 import argparse
 import csv
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from enum import Enum
 from math import pi, radians, sin
 from pathlib import Path
@@ -435,7 +435,7 @@ class IdealOneWayBearingSystem:
 
         candidate = np.asarray(state[:6], dtype=float).copy()
         candidate[5] = state[6] / self.speed_factor
-        evaluation = self.locked.evaluate(time=time, state=candidate, mode=cvt_mode)
+        evaluation = self.locked.inspect(time=time, state=candidate, mode=cvt_mode)
         alpha_secondary = evaluation.state_derivative.secondary_angular_acceleration
         road = self.road_load_at(
             vehicle_position_m=float(state[6]), vehicle_speed_mps=float(state[7])
@@ -534,27 +534,52 @@ def _allocate_samples(sizes: Sequence[int], maximum: int) -> list[int]:
     return allocation
 
 
+def _uniform_report_times(*, start_time: float, end_time: float, step_seconds: float) -> NDArray[np.float64]:
+    duration = end_time - start_time
+    count = int(np.floor(duration / step_seconds))
+    values = start_time + step_seconds * np.arange(count + 1, dtype=float)
+    tolerance = 64.0 * np.finfo(float).eps * max(1.0, abs(start_time), abs(end_time))
+    if end_time - values[-1] > tolerance:
+        values = np.append(values, end_time)
+    else:
+        values[-1] = end_time
+    return values
+
+
+def _dense_segment_samples(*, segment, global_time: NDArray[np.float64]) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
+    scale = max(1.0, abs(segment.start_time), abs(segment.end_time))
+    tolerance = 128.0 * np.finfo(float).eps * scale
+    requested = global_time[(global_time >= segment.start_time - tolerance) & (global_time <= segment.end_time + tolerance)]
+    time = np.unique(np.concatenate((
+        np.asarray([segment.start_time], dtype=float),
+        requested,
+        np.asarray([segment.end_time], dtype=float),
+    )))
+    return time, segment.dense_state_at(time)
+
+
 def sample_trace(
     *,
     result: HybridIntegrationResult[OutputMode],
     system: IdealOneWayBearingSystem,
-    maximum_samples: int,
+    report_step_seconds: float,
 ) -> ComparisonTrace:
-    """Re-evaluate accepted states for speed, force, power, and energy diagnostics."""
+    """Build a uniform dense-output trace while retaining exact transition endpoints."""
 
-    budgets = _allocate_samples(
-        [segment.state.shape[1] for segment in result.segments], maximum_samples
+    if not np.isfinite(report_step_seconds) or report_step_seconds <= 0.0:
+        raise ValueError("report_step_seconds must be finite and positive.")
+    global_time = _uniform_report_times(
+        start_time=result.segments[0].start_time,
+        end_time=result.final_time,
+        step_seconds=report_step_seconds,
     )
     rows: list[tuple] = []
-    for segment, budget in zip(result.segments, budgets, strict=True):
-        indices = np.unique(
-            np.linspace(0, segment.state.shape[1] - 1, budget, dtype=int)
+    for segment in result.segments:
+        time_values, state_values = _dense_segment_samples(
+            segment=segment, global_time=global_time
         )
-        for index in indices:
-            if rows and index == 0:
-                continue
-            time = float(segment.time[index])
-            vector = np.asarray(segment.state[:, index], dtype=float).copy()
+        for index, time in enumerate(time_values):
+            vector = np.asarray(state_values[:, index], dtype=float).copy()
             vector[3] = np.clip(
                 vector[3], 0.0, system.locked.operating_limits.upper_stop_shift
             )
@@ -562,7 +587,7 @@ def sample_trace(
                 vehicle_position_m=float(vector[6]), vehicle_speed_mps=float(vector[7])
             )
             child = system._child(segment.mode)
-            evaluation = child.evaluate(time=time, state=vector[:6], mode=segment.mode.cvt)
+            evaluation = child.inspect(time=time, state=vector[:6], mode=segment.mode.cvt)
             derivative = evaluation.state_derivative.as_vector()
             if segment.mode.bearing is BearingMode.LOCKED:
                 output_torque = system.output_drive_torque(
@@ -1029,7 +1054,12 @@ def parse_arguments() -> argparse.Namespace:
     parser.add_argument("--relative-tolerance", type=float, default=1.0e-2)
     parser.add_argument("--absolute-tolerance", type=float, default=1.0e-5)
     parser.add_argument("--maximum-transitions", type=int, default=700)
-    parser.add_argument("--trace-samples", type=int, default=700)
+    parser.add_argument(
+        "--report-step-ms",
+        type=float,
+        default=10.0,
+        help="Uniform exported/report time spacing [ms]; exact hybrid transition points are retained in addition.",
+    )
     parser.add_argument("--release-torque-hysteresis-nm", type=float, default=0.5)
     parser.add_argument("--capture-torque-hysteresis-nm", type=float, default=0.5)
     parser.add_argument("--output-dir", type=Path, default=Path("artifacts/one_way_bearing_comparison"))
@@ -1045,14 +1075,13 @@ def parse_arguments() -> argparse.Namespace:
         "absolute_tolerance",
         "release_torque_hysteresis_nm",
         "capture_torque_hysteresis_nm",
+        "report_step_ms",
     ):
         value = getattr(args, name)
         if not np.isfinite(value) or value <= 0.0:
             parser.error(f"--{name.replace('_', '-')} must be finite and positive.")
     if args.maximum_transitions < 1:
         parser.error("--maximum-transitions must be at least one.")
-    if args.trace_samples < 150:
-        parser.error("--trace-samples must be at least 150.")
     return args
 
 
@@ -1090,7 +1119,7 @@ def run_scenario(
     settings: HybridIntegratorSettings,
     initial: CVTDynamicState,
     duration_s: float,
-    trace_samples: int,
+    report_step_seconds: float,
     performance_distance_m: float,
     output_dir: Path,
     release_torque_hysteresis_nm: float,
@@ -1128,20 +1157,20 @@ def run_scenario(
         time_span=(0.0, duration_s),
         initial_state=locked_system.initial_state(initial),
         initial_mode=locked_system.initial_mode(initial),
-        settings=settings,
+        settings=replace(settings, retain_dense_output=True),
     )
     one_way_result = integrate_hybrid(
         system=one_way_system,
         time_span=(0.0, duration_s),
         initial_state=one_way_system.initial_state(initial),
         initial_mode=one_way_system.initial_mode(initial),
-        settings=settings,
+        settings=replace(settings, retain_dense_output=True),
     )
     locked_trace = sample_trace(
-        result=locked_result, system=locked_system, maximum_samples=trace_samples
+        result=locked_result, system=locked_system, report_step_seconds=report_step_seconds
     )
     one_way_trace = sample_trace(
-        result=one_way_result, system=one_way_system, maximum_samples=trace_samples
+        result=one_way_result, system=one_way_system, report_step_seconds=report_step_seconds
     )
     locked_metric = calculate_metrics(
         scenario=scenario,
@@ -1232,7 +1261,7 @@ def main() -> None:
             settings=settings,
             initial=initial,
             duration_s=args.duration_s,
-            trace_samples=args.trace_samples,
+            report_step_seconds=args.report_step_ms * 1.0e-3,
             performance_distance_m=args.performance_distance_m,
             output_dir=args.output_dir,
             release_torque_hysteresis_nm=args.release_torque_hysteresis_nm,

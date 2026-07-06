@@ -70,6 +70,7 @@ for candidate_path in (
 
 from cinder.model.cvt.dynamics.shift_constraints import EngagedShiftConstraint  # noqa: E402
 from cinder.execution.hybrid import CVTDynamicState, HybridIntegratorSettings  # noqa: E402
+from cinder.results import ReportingGrid, ReportingSettings  # noqa: E402
 from cinder.execution.hybrid.cvt_contact_events import build_cvt_contact_events  # noqa: E402
 from cinder.execution.hybrid.cvt_operating_hybrid import (
     CVTOperatingHybridSystem,
@@ -277,9 +278,11 @@ class TimeAwareRoadHybridSystem(CVTOperatingHybridSystem):
     def _set_time(self, time_s: float) -> None:
         self._time_profile.set_time(time_s)
 
-    def evaluate(self, *, time: float, state: NDArray[np.float64], mode):
+    def _evaluate_physics(self, *, time: float, state: NDArray[np.float64], mode):
+        """Apply the programmed road clock before either RHS or inspection physics."""
+
         self._set_time(time)
-        return super().evaluate(time=time, state=state, mode=mode)
+        return super()._evaluate_physics(time=time, state=state, mode=mode)
 
     def events(self, time: float, state: NDArray[np.float64], mode):
         """Build event functions whose state evaluation carries the correct time."""
@@ -421,7 +424,13 @@ def parse_arguments() -> argparse.Namespace:
     parser.add_argument("--relative-tolerance", type=float, default=None)
     parser.add_argument("--absolute-tolerance", type=float, default=None)
     parser.add_argument("--maximum-transitions", type=int, default=160)
-    parser.add_argument("--plot-samples", type=int, default=1500)
+    parser.add_argument(
+        "--report-step-ms",
+        type=float,
+        default=10.0,
+        help="Uniform result/export spacing [ms]; exact event points are retained as additional rows.",
+    )
+    parser.add_argument("--plot-samples", type=int, default=None, help="Optional plotting/export cap; omitted keeps CINDER\'s full 10 ms report grid.")
     parser.add_argument("--run-audit", action="store_true")
     parser.add_argument(
         "--output-dir", type=Path, default=Path("artifacts/grade_program_response")
@@ -443,9 +452,11 @@ def parse_arguments() -> argparse.Namespace:
             parser.error(
                 f"--{name.replace('_', '-')} must be finite and positive when supplied."
             )
-    if args.maximum_transitions < 1 or args.plot_samples < 200:
+    if not np.isfinite(args.report_step_ms) or args.report_step_ms <= 0.0:
+        parser.error("--report-step-ms must be finite and positive.")
+    if args.maximum_transitions < 1 or (args.plot_samples is not None and args.plot_samples < 200):
         parser.error(
-            "--maximum-transitions must be at least one and --plot-samples at least 200."
+            "--maximum-transitions must be at least one and --plot-samples at least 200 when supplied."
         )
     return args
 
@@ -490,7 +501,9 @@ def compact_mode(mode) -> str:
     return f"{mode.engagement.value}/{mode.shift_constraint.value}/{mode.contact_regime.mode.value}"
 
 
-def allocate_samples(sizes: Sequence[int], maximum: int) -> list[int]:
+def allocate_samples(sizes: Sequence[int], maximum: int | None) -> list[int]:
+    if maximum is None:
+        return list(sizes)
     total = sum(sizes)
     if total <= maximum:
         return list(sizes)
@@ -508,7 +521,7 @@ def sample_trace(
     system: TimeAwareRoadHybridSystem,
     result,
     programme: GradeProgramme,
-    maximum_samples: int,
+    maximum_samples: int | None,
 ) -> ProgrammeTrace:
     budgets = allocate_samples(
         [segment.state.shape[1] for segment in result.segments], maximum_samples
@@ -890,10 +903,13 @@ def main() -> None:
             f"  {phase.start_s:5.1f}–{phase.end_s:5.1f} s  {phase.name}: {phase.start_degrees:+.0f} -> {phase.end_degrees:+.0f} deg"
         )
 
-    result = system.integrate(
+    result = system.run(
         time_span=(0.0, args.duration_s),
         initial_state=launch_initial_state(primary_rpm=args.initial_primary_rpm),
         settings=settings,
+        reporting_settings=ReportingSettings(
+            grid=ReportingGrid.uniform_time_step(args.report_step_ms * 1.0e-3),
+        ),
     )
     if not result.completed:
         raise RuntimeError(f"Integration terminated early: {result.termination_reason}")
@@ -910,7 +926,7 @@ def main() -> None:
     figure.savefig(args.output_dir / "grade_program_response.png", dpi=160)
     write_trace(args.output_dir / "grade_program_trace.csv", trace)
     audit_status, audit_lines = (
-        audit_result(system=system, result=result)
+        audit_result(system=system, result=result.trace.raw)
         if args.run_audit
         else (
             "not_run",

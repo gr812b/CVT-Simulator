@@ -11,7 +11,11 @@ from numpy.typing import NDArray
 
 from cinder.model.cvt.closure import CLOSURE_UNKNOWN_COUNT, ClosureEquation, ClosureUnknowns
 
-from .result import ClosureEquationResidual, TrialClosureResult
+from .result import (
+    ClosureEquationResidual,
+    TrialClosureResult,
+    TrialClosureRuntimeResult,
+)
 
 
 class TrialClosureSolveError(RuntimeError):
@@ -115,25 +119,54 @@ class TrialClosureSystem:
         right_hand_side.setflags(write=False)
         return matrix, right_hand_side
 
+    def solve_runtime(
+        self,
+        *,
+        maximum_condition_number: float | None = None,
+    ) -> TrialClosureRuntimeResult:
+        """Solve the closure for the RHS without allocating audit diagnostics.
+
+        The hot path requires only the eight solved unknowns.  A condition
+        number is evaluated only when a configured safety threshold requires
+        it; rank, residual records, and immutable matrix copies remain in the
+        explicit diagnostic :meth:`solve` path.
+        """
+
+        _validate_condition_limit(maximum_condition_number)
+        matrix, right_hand_side = self.assemble()
+        if maximum_condition_number is not None:
+            condition_number = float(np.linalg.cond(matrix))
+            if (
+                not isfinite(condition_number)
+                or condition_number > maximum_condition_number
+            ):
+                raise TrialClosureConditionError(
+                    "Trial closure matrix condition number "
+                    f"{condition_number:.6g} exceeds configured limit "
+                    f"{maximum_condition_number:.6g}."
+                )
+        try:
+            solution_vector = np.linalg.solve(matrix, right_hand_side)
+        except np.linalg.LinAlgError as error:
+            raise TrialClosureSolveError(
+                "Trial closure matrix is singular and cannot be solved."
+            ) from error
+        _require_finite_array(solution_vector, name="closure solution")
+        return TrialClosureRuntimeResult(
+            unknowns=ClosureUnknowns.from_ordered_values(solution_vector)
+        )
+
     def solve(
         self,
         *,
         maximum_condition_number: float | None = None,
     ) -> TrialClosureResult:
-        """Solve this system and return the full named diagnostic result.
-
-        ``maximum_condition_number`` is optional because early row-by-row work
-        benefits from seeing the actual condition number rather than rejecting a
-        configuration solely due to a provisional threshold. When supplied, it
-        must be a positive finite value and is checked before solving.
-        """
+        """Solve this system and materialize full named audit diagnostics."""
 
         _validate_condition_limit(maximum_condition_number)
         matrix, right_hand_side = self.assemble()
-
         condition_number = float(np.linalg.cond(matrix))
         matrix_rank = int(np.linalg.matrix_rank(matrix))
-
         if maximum_condition_number is not None and (
             not isfinite(condition_number)
             or condition_number > maximum_condition_number
@@ -143,14 +176,12 @@ class TrialClosureSystem:
                 f"{condition_number:.6g} exceeds configured limit "
                 f"{maximum_condition_number:.6g}."
             )
-
         try:
             solution_vector = np.linalg.solve(matrix, right_hand_side)
         except np.linalg.LinAlgError as error:
             raise TrialClosureSolveError(
                 "Trial closure matrix is singular and cannot be solved."
             ) from error
-
         _require_finite_array(solution_vector, name="closure solution")
         unknowns = ClosureUnknowns.from_ordered_values(solution_vector)
         equation_residuals = tuple(
@@ -160,7 +191,6 @@ class TrialClosureSystem:
             )
             for equation in self.equations
         )
-
         return TrialClosureResult(
             system=self,
             equations=self.equations,

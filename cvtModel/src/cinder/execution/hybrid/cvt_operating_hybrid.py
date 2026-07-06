@@ -16,7 +16,7 @@ are built only for boundaries reachable from the active physical regime.
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from math import isclose
 from typing import TypeAlias
 
@@ -28,6 +28,7 @@ from cinder.model.cvt.dynamics.deadzone import DeadzoneDynamicsEvaluator, Deadzo
 from cinder.model.cvt.dynamics.engaged_contact import EngagedContactSolveSettings
 from cinder.model.cvt.dynamics.shift_constraints import EngagedShiftConstraint
 from cinder.model.system.evaluator import CVTDynamicsModel
+from cinder.model.system.runtime import RuntimeEvaluation
 
 from .cvt_contact import CVTContactEvaluation, EngagedCVTContactEvaluator
 from .cvt_contact_events import build_cvt_contact_events
@@ -180,19 +181,14 @@ class CVTOperatingHybridSystem:
         )
         self.deadzone_evaluator = DeadzoneDynamicsEvaluator(model=self.model)
 
-    def evaluate(
+    def _evaluate_physics(
         self,
         *,
         time: float,
         state: NDArray[np.float64],
         mode: CVTOperatingRegime,
     ) -> CVTRegimeEvaluation:
-        """Evaluate the active physical regime without mixing its equations.
-
-        ``time`` is consumed by the engaged contact evaluator's exact-state
-        cache.  The current reduced deadzone equations are autonomous apart
-        from their integrated state and intentionally do not need it.
-        """
+        """Evaluate active mechanics for runtime, events, or explicit inspection."""
 
         if not isinstance(mode, CVTOperatingRegime):
             raise TypeError("mode must be a CVTOperatingRegime instance.")
@@ -219,17 +215,45 @@ class CVTOperatingHybridSystem:
             shift_constraint=constraint,
         )
 
+    def evaluate_runtime(
+        self,
+        *,
+        time: float,
+        state: NDArray[np.float64],
+        mode: CVTOperatingRegime,
+    ) -> RuntimeEvaluation:
+        """Return only what the continuous integrator needs to advance state."""
+
+        physics = self._evaluate_physics(time=time, state=state, mode=mode)
+        return RuntimeEvaluation(state_derivative=physics.state_derivative)
+
+    def inspect(
+        self,
+        *,
+        time: float,
+        state: NDArray[np.float64],
+        mode: CVTOperatingRegime,
+    ) -> CVTRegimeEvaluation:
+        """Return detailed state mechanics for audit/report reconstruction.
+
+        This is intentionally separate from :meth:`rhs`.  It exposes the
+        existing closure/contact physics needed by CINDER's results layer, but
+        callers should not invoke it per RHS stage.
+        """
+
+        return self._evaluate_physics(time=time, state=state, mode=mode)
+
     def rhs(
         self,
         time: float,
         state: NDArray[np.float64],
         mode: CVTOperatingRegime,
     ) -> NDArray[np.float64]:
-        """Return the derivative from the active regime-specific evaluator."""
+        """Return the lean runtime derivative for the active physical regime."""
 
-        return self.evaluate(
+        return self.evaluate_runtime(
             time=time, state=state, mode=mode
-        ).state_derivative.as_vector()
+        ).derivative_vector()
 
     def events(
         self,
@@ -371,6 +395,63 @@ class CVTOperatingHybridSystem:
             initial_state=initial_state.as_vector(),
             initial_mode=mode,
             settings=settings,
+        )
+
+    def integrate_trace(
+        self,
+        *,
+        time_span: tuple[float, float],
+        initial_state: CVTDynamicState,
+        initial_regime: CVTOperatingRegime | None = None,
+        settings: HybridIntegratorSettings = HybridIntegratorSettings(),
+    ) -> "CVTIntegrationTrace":
+        """Return the raw segment-preserving trace without report materialization."""
+
+        from cinder.results import CVTIntegrationTrace
+
+        return CVTIntegrationTrace(
+            raw=self.integrate(
+                time_span=time_span,
+                initial_state=initial_state,
+                initial_regime=initial_regime,
+                settings=settings,
+            )
+        )
+
+    def run(
+        self,
+        *,
+        time_span: tuple[float, float],
+        initial_state: CVTDynamicState,
+        initial_regime: CVTOperatingRegime | None = None,
+        settings: HybridIntegratorSettings = HybridIntegratorSettings(),
+        reporting_settings: "ReportingSettings | None" = None,
+    ) -> "CVTIntegrationResult":
+        """Integrate once, then materialize a user-facing result.
+
+        When ``reporting_settings`` is omitted, CINDER returns the standard
+        10 ms uniform report grid while preserving the adaptive raw trace in
+        ``result.trace``.  Use ``ReportingSettings.native()`` for an
+        accepted-step report, or ``integrate_trace()`` for no report pass.
+        """
+
+        from cinder.results import CVTResultBuilder, ReportingSettings
+
+        if reporting_settings is None:
+            reporting_settings = ReportingSettings.standard()
+        if not isinstance(reporting_settings, ReportingSettings):
+            raise TypeError("reporting_settings must be a ReportingSettings instance.")
+        integration_settings = settings
+        if reporting_settings.grid.requires_dense_output and not settings.retain_dense_output:
+            integration_settings = replace(settings, retain_dense_output=True)
+        return CVTResultBuilder(system=self).build(
+            self.integrate_trace(
+                time_span=time_span,
+                initial_state=initial_state,
+                initial_regime=initial_regime,
+                settings=integration_settings,
+            ),
+            settings=reporting_settings,
         )
 
     def _lower_stop_reaction(self, *, vector: NDArray[np.float64]) -> float:

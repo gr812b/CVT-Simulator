@@ -30,6 +30,22 @@ class ClosureEquationResidual:
 
 
 @dataclass(frozen=True, slots=True)
+class TrialClosureRuntimeResult:
+    """Lean closure outcome retained by the numerical runtime path.
+
+    The RHS needs only solved closure unknowns.  Matrix condition numbers,
+    rank, named residuals, and immutable matrix copies are audit diagnostics
+    and are materialized separately by :meth:`TrialClosureSystem.solve`.
+    """
+
+    unknowns: ClosureUnknowns
+
+    def __post_init__(self) -> None:
+        if not isinstance(self.unknowns, ClosureUnknowns):
+            raise TypeError("unknowns must be a ClosureUnknowns instance.")
+
+
+@dataclass(frozen=True, slots=True)
 class TrialClosureResult:
     """Full auditable outcome of one affine closure solve.
 

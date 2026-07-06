@@ -53,6 +53,7 @@ from baja_trial_baseline import (  # noqa: E402
     build_baja_trial_baseline,
 )
 from cinder.model.system import CVTSimulationCase  # noqa: E402
+from cinder.results import ReportingSettings  # noqa: E402
 from cinder.model.boundaries.output import LockedFinalDriveVehicle  # noqa: E402
 from cinder.model.cvt.contact import ContactRegime, ContactTractionLaw  # noqa: E402
 from cinder.model.cvt.dynamics import (
@@ -714,6 +715,7 @@ def integrate_resolved_tune(
     first_step_seconds: float | None = None,
     static_lambda_limit: float = 0.65,
     kinetic_lambda_magnitude: float = 0.55,
+    reporting_settings: ReportingSettings | None = None,
 ):
     """Integrate the actual hybrid launch from the requested rest state."""
 
@@ -724,7 +726,7 @@ def integrate_resolved_tune(
         static_lambda_limit=static_lambda_limit,
         kinetic_lambda_magnitude=kinetic_lambda_magnitude,
     )
-    result = system.integrate(
+    result = system.run(
         time_span=(0.0, duration_seconds),
         initial_state=launch_initial_state(primary_rpm=initial_primary_rpm),
         settings=HybridIntegratorSettings(
@@ -735,6 +737,7 @@ def integrate_resolved_tune(
             first_step=first_step_seconds,
             maximum_transitions=maximum_transitions,
         ),
+        reporting_settings=reporting_settings,
     )
     return system, result
 
@@ -746,9 +749,11 @@ def _sample_indices(count: int, maximum: int) -> NDArray[np.int64]:
 
 
 def _allocate_sample_budget(
-    segment_sizes: Iterable[int], maximum: int
+    segment_sizes: Iterable[int], maximum: int | None
 ) -> tuple[int, ...]:
     sizes = tuple(segment_sizes)
+    if maximum is None:
+        return sizes
     total = sum(sizes)
     if total <= maximum:
         return sizes
@@ -774,7 +779,7 @@ def sample_launch_trace(
     *,
     system: CVTOperatingHybridSystem,
     result,
-    maximum_samples: int = 500,
+    maximum_samples: int | None = None,
 ) -> LaunchTrace:
     """Re-evaluate accepted samples for plotting and exportable diagnostics."""
 
@@ -802,7 +807,7 @@ def sample_launch_trace(
             time = float(segment.time[index])
             vector = np.asarray(segment.state[:, index], dtype=float)
             state = CVTDynamicState.from_vector(vector)
-            evaluation = system.evaluate(time=time, state=vector, mode=segment.mode)
+            evaluation = system.inspect(time=time, state=vector, mode=segment.mode)
             trace_time.append(time)
             trace_state.append(vector)
             labels.append(mode_label(segment.mode))

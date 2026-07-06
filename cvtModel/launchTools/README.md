@@ -110,3 +110,17 @@ they no longer depend on the compatibility paths.  The Baja baseline constructs
 a `CVTAssemblySpec`, connects an engine and locked vehicle output boundary in a
 `CVTSimulationCase`, and obtains the existing runtime evaluator through
 `CVTOperatingHybridSystem.from_case(case, ...)`.
+
+## Uniform exported traces
+
+The normal diagnostic tools now call CINDER's high-level `system.run()` path.
+Their CSV/plot traces use CINDER's default **10 ms uniform report grid**, sampled
+from SciPy's per-segment dense solution. The adaptive solver trace is still
+kept internally for audits and exact event timing. Every hybrid transition is
+added as its own exact pre/post pair even if it falls between two 10 ms grid
+points, so a CSV may contain repeated timestamps at a real reset or impact.
+
+`--plot-samples` / `--diagnostic-samples` are optional display/export caps.
+When omitted, the full 10 ms report grid is written. The one-way-bearing tool
+also uses a 10 ms dense-output grid for its custom eight-state wrapper; adjust
+it with `--report-step-ms`.

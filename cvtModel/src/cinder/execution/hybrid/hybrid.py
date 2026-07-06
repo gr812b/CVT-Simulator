@@ -14,6 +14,7 @@ ModeT = TypeVar("ModeT")
 
 HybridRhs = Callable[[float, NDArray[np.float64]], NDArray[np.float64]]
 HybridEventFunction = Callable[[float, NDArray[np.float64]], float]
+DenseStateSolution = Callable[[ArrayLike], NDArray[np.float64]]
 
 
 def _require_finite_positive(**values: float) -> None:
@@ -144,6 +145,7 @@ class HybridIntegratorSettings:
     first_step: float | None = None
     maximum_transitions: int = 100
     event_time_tolerance: float = 1.0e-10
+    retain_dense_output: bool = False
 
     def __post_init__(self) -> None:
         _require_finite_positive(
@@ -161,6 +163,8 @@ class HybridIntegratorSettings:
             _require_finite_positive(first_step=self.first_step)
         if self.maximum_transitions < 1:
             raise ValueError("maximum_transitions must be at least one.")
+        if not isinstance(self.retain_dense_output, bool):
+            raise TypeError("retain_dense_output must be bool.")
 
 
 @dataclass(frozen=True, slots=True)
@@ -172,6 +176,11 @@ class HybridSegment(Generic[ModeT]):
     state: NDArray[np.float64]
     fired_event_names: tuple[str, ...] = ()
     transition: HybridTransition[ModeT] | None = None
+    dense_solution: DenseStateSolution | None = field(
+        default=None,
+        repr=False,
+        compare=False,
+    )
 
     def __post_init__(self) -> None:
         time = _immutable_vector(self.time, name="HybridSegment.time")
@@ -186,8 +195,53 @@ class HybridSegment(Generic[ModeT]):
             raise ValueError(
                 "HybridSegment.fired_event_names must not contain duplicates."
             )
+        if self.dense_solution is not None and not callable(self.dense_solution):
+            raise TypeError("HybridSegment.dense_solution must be callable when provided.")
         object.__setattr__(self, "time", time)
         object.__setattr__(self, "state", frozen_state)
+
+    @property
+    def has_dense_output(self) -> bool:
+        """Return whether this segment retained SciPy's native dense solution."""
+
+        return self.dense_solution is not None
+
+    def dense_state_at(self, times: ArrayLike) -> NDArray[np.float64]:
+        """Evaluate the solver-native continuous solution within this segment.
+
+        This deliberately delegates interpolation to ``solve_ivp``'s dense
+        output object.  CINDER does not perform its own state interpolation.
+        Segment boundaries remain exact raw states so hybrid resets are never
+        interpolated across.
+        """
+
+        if self.dense_solution is None:
+            raise RuntimeError(
+                "This segment has no retained dense output. Re-integrate with "
+                "HybridIntegratorSettings(retain_dense_output=True), or use "
+                "ReportingGrid.native()."
+            )
+        requested = np.asarray(times, dtype=float)
+        if requested.ndim != 1 or requested.size == 0 or not np.all(np.isfinite(requested)):
+            raise ValueError("times must be a non-empty finite one-dimensional vector.")
+        scale = max(1.0, abs(self.start_time), abs(self.end_time))
+        tolerance = 128.0 * np.finfo(float).eps * scale
+        if requested[0] < self.start_time - tolerance or requested[-1] > self.end_time + tolerance:
+            raise ValueError("Requested dense times must lie inside this segment.")
+        clipped = np.clip(requested, self.start_time, self.end_time)
+        values = np.asarray(self.dense_solution(clipped), dtype=float)
+        if values.ndim == 1:
+            values = values[:, np.newaxis]
+        expected_shape = (self.state.shape[0], requested.size)
+        if values.shape != expected_shape or not np.all(np.isfinite(values)):
+            raise RuntimeError("Dense solution returned invalid state values.")
+        values = np.array(values, dtype=float, copy=True)
+        if abs(float(clipped[0]) - self.start_time) <= tolerance:
+            values[:, 0] = self.state[:, 0]
+        if abs(float(clipped[-1]) - self.end_time) <= tolerance:
+            values[:, -1] = self.state[:, -1]
+        values.setflags(write=False)
+        return values
 
     @property
     def start_time(self) -> float:
@@ -323,6 +377,7 @@ def integrate_hybrid(
             max_step=settings.max_step,
             first_step=settings.first_step,
             events=scipy_events if scipy_events else None,
+            dense_output=settings.retain_dense_output,
         )
         if not solution.success:
             raise RuntimeError(f"solve_ivp failed: {solution.message}")
@@ -339,6 +394,7 @@ def integrate_hybrid(
                     mode=current_mode,
                     time=solution.t,
                     state=solution.y,
+                    dense_solution=solution.sol if settings.retain_dense_output else None,
                 )
             )
             return HybridIntegrationResult(
@@ -360,6 +416,7 @@ def integrate_hybrid(
             state=solution.y,
             fired_event_names=event_names,
             transition=transition,
+            dense_solution=solution.sol if settings.retain_dense_output else None,
         )
         segments.append(segment)
         endpoint_state = np.asarray(segment.state[:, -1], dtype=float)

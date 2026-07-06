@@ -25,7 +25,11 @@ from .engaged_contact import (
 )
 from .equation_context import TrialContactTerms, TrialEquationContext
 from .equations import build_closure_equations, build_trial_closure_system
-from .result import ClosureEquationResidual, TrialClosureResult
+from .result import (
+    ClosureEquationResidual,
+    TrialClosureResult,
+    TrialClosureRuntimeResult,
+)
 from .shift_constraints import (
     EngagedShiftConstraint,
     LowRatioSeatReaction,
@@ -67,6 +71,7 @@ __all__ = [
     "TrialEquationContext",
     "TrialClosureConditionError",
     "TrialClosureResult",
+    "TrialClosureRuntimeResult",
     "TrialClosureSolveError",
     "TrialClosureSystem",
     "build_closure_equations",

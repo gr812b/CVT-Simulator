@@ -217,6 +217,50 @@ class CVTDynamicsModel:
         instance.__post_init__()
         return instance
 
+    def primary_actuation_context(
+        self,
+        *,
+        state: CVTDynamicState,
+        geometry: GeometryPosition,
+    ) -> PulleyActuationContext:
+        """Build the generic input-pulley actuator context at one state."""
+
+        coordinate = geometry.primary_axial_coordinate
+        return PulleyActuationContext(
+            axial_position=coordinate.value,
+            axial_speed=coordinate.d_value_ds * state.shift_speed,
+            shaft_speed=state.primary_angular_speed,
+            closure_channels=PulleyClosureChannels.input_pulley(),
+        )
+
+    def output_actuation_context(
+        self,
+        *,
+        state: CVTDynamicState,
+        geometry: GeometryPosition,
+        helical_kinematics: HelixShiftKinematics,
+    ) -> PulleyActuationContext:
+        """Build the generic output-pulley actuator context at one state."""
+
+        coordinate = geometry.secondary_axial_coordinate
+        return PulleyActuationContext(
+            axial_position=coordinate.value,
+            axial_speed=coordinate.d_value_ds * state.shift_speed,
+            shaft_speed=state.secondary_angular_speed,
+            shift_speed=state.shift_speed,
+            closure_channels=PulleyClosureChannels.output_pulley(),
+            helical_coupling=HelicalCouplingState(
+                kinematics=helical_kinematics,
+                opening_per_axial_position=(
+                    self.output_helical_coupling.opening_per_axial_position
+                ),
+                opening_offset=self.output_helical_coupling.opening_offset,
+            ),
+            movable_member_rotational_inertia=(
+                self.inertias.secondary.movable_sheave_rotational_inertia
+            ),
+        )
+
     def snapshot(
         self,
         *,
@@ -236,31 +280,14 @@ class CVTDynamicsModel:
         )
 
         primary_actuation = self.primary_actuator.evaluate_relation(
-            PulleyActuationContext(
-                axial_position=primary_coordinate.value,
-                axial_speed=primary_coordinate.d_value_ds * state.shift_speed,
-                shaft_speed=state.primary_angular_speed,
-                closure_channels=PulleyClosureChannels.input_pulley(),
-            )
+            self.primary_actuation_context(state=state, geometry=geometry)
         )
 
         secondary_actuation = self.secondary_actuator.evaluate_relation(
-            PulleyActuationContext(
-                axial_position=secondary_coordinate.value,
-                axial_speed=secondary_coordinate.d_value_ds * state.shift_speed,
-                shaft_speed=state.secondary_angular_speed,
-                shift_speed=state.shift_speed,
-                closure_channels=PulleyClosureChannels.output_pulley(),
-                helical_coupling=HelicalCouplingState(
-                    kinematics=secondary_helix,
-                    opening_per_axial_position=(
-                        self.output_helical_coupling.opening_per_axial_position
-                    ),
-                    opening_offset=self.output_helical_coupling.opening_offset,
-                ),
-                movable_member_rotational_inertia=(
-                    self.inertias.secondary.movable_sheave_rotational_inertia
-                ),
+            self.output_actuation_context(
+                state=state,
+                geometry=geometry,
+                helical_kinematics=secondary_helix,
             )
         )
 

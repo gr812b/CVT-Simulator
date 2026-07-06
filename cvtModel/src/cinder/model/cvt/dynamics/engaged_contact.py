@@ -40,7 +40,10 @@ from cinder.model.cvt.contact import (
 )
 from cinder.model.cvt.dynamics.equation_context import TrialEquationContext
 from cinder.model.cvt.dynamics.equations import build_trial_closure_system
-from cinder.model.cvt.dynamics.result import TrialClosureResult
+from cinder.model.cvt.dynamics.result import (
+    TrialClosureResult,
+    TrialClosureRuntimeResult,
+)
 from cinder.model.system.evaluator import DynamicsSnapshot
 from cinder.execution.hybrid import CVTDynamicStateDerivative
 from cinder.model.cvt.dynamics.state_fixed_equations import (
@@ -175,7 +178,7 @@ class EngagedContactTrial:
     """
 
     traction_utilization: ContactTractionUtilization
-    closure: TrialClosureResult
+    closure: TrialClosureResult | TrialClosureRuntimeResult
     relative_motion: ContactRelativeMotion
     state_derivative: CVTDynamicStateDerivative
     shift_constraint: EngagedShiftConstraint
@@ -326,7 +329,7 @@ class EngagedContactSolveResult:
         return self.trial.traction_utilization
 
     @property
-    def closure(self) -> TrialClosureResult:
+    def closure(self) -> TrialClosureResult | TrialClosureRuntimeResult:
         return self.trial.closure
 
     @property
@@ -466,17 +469,31 @@ class EngagedContactClosure:
         *,
         traction_utilization: ContactTractionUtilization,
         maximum_closure_condition_number: float | None = None,
+        capture_diagnostics: bool = False,
     ) -> EngagedContactTrial:
-        """Build lambda-dependent rows, solve, and evaluate contact motion once."""
+        """Build lambda-dependent rows and solve one fixed-lambda trial.
+
+        Runtime root iterations retain only closure unknowns.  The optional
+        diagnostic path is used after integration for a selected report point
+        and materializes the closure matrix, row residuals, rank, and condition
+        number exactly once.
+        """
 
         context = TrialEquationContext(
             snapshot=self.snapshot,
             traction_utilization=traction_utilization,
         )
-        closure = build_trial_closure_system(
+        trial_system = build_trial_closure_system(
             fixed_equations=self.fixed_equations,
             trial_context=context,
-        ).solve(maximum_condition_number=maximum_closure_condition_number)
+        )
+        closure = (
+            trial_system.solve(maximum_condition_number=maximum_closure_condition_number)
+            if capture_diagnostics
+            else trial_system.solve_runtime(
+                maximum_condition_number=maximum_closure_condition_number
+            )
+        )
         low_ratio_seat_reaction = None
         upper_stop_reaction = None
         if self.shift_constraint is EngagedShiftConstraint.FREE:
