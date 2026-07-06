@@ -1,13 +1,13 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import styles from './Playbar.module.scss';
-import { ReplayController, ReplayEventType, StateType } from '@utils/ReplayController';
+import { ReportReplayController, ReplayEventType, StateType } from '@utils/reportReplay';
 import { DiscreteSlider } from '@components/Slider/Slider';
 import { SpeedSelector } from '@components/SpeedSelector/SpeedSelector';
 import PlayIcon from '@assets/icons/play.svg?react';
 import PauseIcon from '@assets/icons/pause.svg?react';
 
 interface PlaybarProps {
-  replayController: ReplayController;
+  replayController: ReportReplayController;
   times: number[];
 }
 

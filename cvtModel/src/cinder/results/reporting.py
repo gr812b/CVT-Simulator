@@ -491,12 +491,40 @@ def _build_signals(
         "geometry",
         np.array([item.geometry.secondary.outer for item in inspections]),
     )
+    effective_ratio = secondary_radius / primary_radius
+    primary_outer_radius = np.array(
+        [item.geometry.primary.outer for item in inspections]
+    )
+    secondary_outer_radius = np.array(
+        [item.geometry.secondary.outer for item in inspections]
+    )
     add(
         "geometry.effective_ratio_secondary_over_primary",
         "Effective ratio r_s / r_p",
         "1",
         "geometry",
-        secondary_radius / primary_radius,
+        effective_ratio,
+    )
+    add(
+        "geometry.effective_ratio_rate",
+        "Effective ratio rate",
+        "1/s",
+        "geometry",
+        _time_derivative(time, effective_ratio),
+    )
+    add(
+        "geometry.primary_outer_radius_rate",
+        "Primary outer radius rate",
+        "m/s",
+        "geometry",
+        _time_derivative(time, primary_outer_radius),
+    )
+    add(
+        "geometry.secondary_outer_radius_rate",
+        "Secondary outer radius rate",
+        "m/s",
+        "geometry",
+        _time_derivative(time, secondary_outer_radius),
     )
     add(
         "geometry.primary_wrap_angle",
@@ -573,6 +601,35 @@ def _build_signals(
         "N",
         "vehicle",
         np.array([np.nan if row is None else row.external_force for row in road]),
+    )
+    add(
+        "vehicle.grade_force",
+        "Grade force",
+        "N",
+        "vehicle",
+        np.array([np.nan if row is None else row.grade_force for row in road]),
+    )
+    add(
+        "vehicle.rolling_resistance_force",
+        "Rolling-resistance force",
+        "N",
+        "vehicle",
+        np.array([np.nan if row is None else row.rolling_force for row in road]),
+    )
+    add(
+        "vehicle.aerodynamic_force",
+        "Aerodynamic force",
+        "N",
+        "vehicle",
+        np.array([np.nan if row is None else row.aerodynamic_force for row in road]),
+    )
+    vehicle_speed = np.array([np.nan if row is None else row.vehicle_speed for row in road])
+    add(
+        "vehicle.acceleration",
+        "Vehicle acceleration",
+        "m/s^2",
+        "vehicle",
+        _time_derivative(time, vehicle_speed),
     )
 
     if settings.include_actuation:
@@ -780,6 +837,13 @@ def _add_observer_signals(add, time, state, inspections, offsets) -> None:
     primary_angle, engine_work, output_work, primary_loss, secondary_loss = offsets
     primary_angle_values = primary_angle + _cumulative_trapezoid(time, state[0])
     engine_power = np.array([item.engine_torque for item in inspections]) * state[0]
+    add(
+        "observer.engine_power",
+        "Engine boundary power",
+        "W",
+        "observer",
+        engine_power,
+    )
     output_power = (
         np.array([item.output_boundary.external_torque for item in inspections])
         * state[1]
@@ -872,6 +936,37 @@ def _add_audit_signals(add, inspections: tuple[CVTStateInspection, ...]) -> None
         ),
     )
 
+
+
+
+def _time_derivative(
+    time: NDArray[np.float64], values: NDArray[np.float64]
+) -> NDArray[np.float64]:
+    """Return a finite one-sided/central rate on one monotone report segment.
+
+    Hybrid transitions live in separate report segments, so equal timestamps are
+    retained only when segments are flattened for transport.  This helper
+    therefore differentiates inside each segment and returns zero for a
+    single-point or non-finite interval rather than emitting a false infinity.
+    """
+
+    time_values = np.asarray(time, dtype=float)
+    data = np.asarray(values, dtype=float)
+    derivative = np.zeros_like(data, dtype=float)
+    if data.size < 2:
+        return derivative
+
+    tolerance = 64.0 * np.finfo(float).eps * max(1.0, float(np.max(np.abs(time_values))))
+    delta_time = np.diff(time_values)
+    delta_value = np.diff(data)
+    valid = (delta_time > tolerance) & np.isfinite(delta_value)
+    slopes = np.zeros_like(delta_value, dtype=float)
+    slopes[valid] = delta_value[valid] / delta_time[valid]
+    derivative[0] = slopes[0]
+    derivative[-1] = slopes[-1]
+    if data.size > 2:
+        derivative[1:-1] = 0.5 * (slopes[:-1] + slopes[1:])
+    return derivative
 
 def _cumulative_trapezoid(
     time: NDArray[np.float64], rate: NDArray[np.float64]

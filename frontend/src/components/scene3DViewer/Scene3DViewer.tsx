@@ -1,338 +1,60 @@
-import { useCallback, useEffect, useState } from 'react';
-import type { Model3DConfig } from '@types';
-import { useScene3D } from '@hooks/useScene3D';
-import { ReplayController, ReplayEventType } from '@utils/ReplayController';
-import { getConstants, type ConstantsResponse } from '@utils/api';
-import { convertConstants, convertValue } from '@utils/conversion';
-import styles from './Scene3DViewer.module.scss';
-import { SCENE_DISTANCE_UNIT, SCENE_ANGLE_UNIT, primaryOffset, secondaryOffset } from './modelConfigs';
-import { loadCVTModels, setupSceneLighting, setupSceneGrid, setupBelt, setupAxisHelpers, setupVerticalGrid } from './sceneElements';
-import { updateBeltMesh, type BeltPathData } from './beltGeometry';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import * as THREE from 'three';
+import type { SimulationCaseDocument, ReportTable } from '@api/client';
+import { reportColumn, valueAt } from '@utils/reportTable';
+import type { ReportReplayController } from '@utils/reportReplay';
+import { useScene3D } from '@hooks/useScene3D';
+import type { Model3DConfig } from '@utils/sceneTypes';
+import styles from './Scene3DViewer.module.scss';
+import { primaryOffset, secondaryOffset } from './modelConfigs';
+import { loadCVTModels, setupAxisHelpers, setupBelt, setupSceneGrid, setupSceneLighting, setupVerticalGrid } from './sceneElements';
+import { updateBeltMesh, type BeltPathData } from './beltGeometry';
+import { sceneDistance, sceneGeometry } from './sceneSpec';
 
-interface Scene3DViewerProps {
-  replayController: ReplayController;
-  className?: string;
-}
+interface Scene3DViewerProps { replayController: ReportReplayController; table: ReportTable; document: SimulationCaseDocument; className?: string; }
+const candidates = (table: ReportTable, keys: string[]): string | undefined => keys.find((key) => reportColumn(table, key) !== undefined);
+const finite = (value: number | null | undefined, fallback: number) => typeof value === 'number' && Number.isFinite(value) ? value : fallback;
 
-/**
- * 3D viewer component that displays animated models based on simulation data.
- * Coordinates the 3D scene and subscribes to the replay controller.
- * 
- * TODO: When implementing centralized unit management context, update this component
- * to get the source unit configuration from context instead of hardcoding BAJA preset.
- */
-export const Scene3DViewer = ({ replayController, className }: Scene3DViewerProps) => {
-  const [loadedModels, setLoadedModels] = useState<Model3DConfig[]>([]);
-  const [constants, setConstants] = useState<ConstantsResponse | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [beltMesh, setBeltMesh] = useState<THREE.Mesh | null>(null);
-  const [beltVisible, setBeltVisible] = useState(true);
-  const [showAngularRotation, setShowAngularRotation] = useState(true);
-  const [gridsVisible, setGridsVisible] = useState(false);
-  const [crossSectionEnabled, setCrossSectionEnabled] = useState(false);
-  const [gridObjects, setGridObjects] = useState<THREE.Object3D[]>([]);
-  const [initialHelixRotation, setInitialHelixRotation] = useState<number>(0);
+/** Original CAD scene, now driven only by submitted document dimensions and flattened report columns. */
+export const Scene3DViewer = ({ replayController, table, document, className }: Scene3DViewerProps) => {
+  const geometry = useMemo(() => sceneGeometry(document), [document]);
+  const [models, setModels] = useState<Model3DConfig[]>([]); const [isLoading, setLoading] = useState(true); const [beltMesh, setBeltMesh] = useState<THREE.Mesh | null>(null);
+  const [beltVisible, setBeltVisible] = useState(true); const [showAngularRotation, setShowAngularRotation] = useState(true); const [gridsVisible, setGridsVisible] = useState(false); const [crossSectionEnabled, setCrossSectionEnabled] = useState(false); const [gridObjects, setGridObjects] = useState<THREE.Object3D[]>([]);
+  const primaryRadiusKey = useMemo(() => candidates(table, ['geometry.primary_effective_radius', 'geometry.primary_effective_radius_m']), [table]);
+  const secondaryRadiusKey = useMemo(() => candidates(table, ['geometry.secondary_effective_radius', 'geometry.secondary_effective_radius_m']), [table]);
+  const shiftKey = useMemo(() => candidates(table, ['state.shift_position', 'state.shift_position_m']), [table]);
+  const primaryAngleKey = useMemo(() => candidates(table, ['state.primary_shaft_angle', 'state.primary_angular_position']), [table]);
+  const primarySpeedKey = useMemo(() => candidates(table, ['state.primary_angular_speed', 'state.primary_angular_speed_rad_per_s']), [table]);
+  const secondaryAngleKey = useMemo(() => candidates(table, ['state.secondary_shaft_angle', 'state.secondary_shaft_angle_rad']), [table]);
+  const primaryWrapKey = useMemo(() => candidates(table, ['geometry.primary_wrap_angle_rad', 'geometry.primary_wrap_angle']), [table]);
+  const secondaryWrapKey = useMemo(() => candidates(table, ['geometry.secondary_wrap_angle_rad', 'geometry.secondary_wrap_angle']), [table]);
+  const timeKey = table.axisKey;
 
-  const degToRad = useCallback((deg: number): number => deg * (Math.PI / 180), []);
+  useEffect(() => { setLoading(true); void loadCVTModels(geometry).then(setModels).finally(() => setLoading(false)); }, [geometry]);
+  const { containerRef, sceneController } = useScene3D({ sceneConfig: { camera: { type: 'perspective', fov: 50, position: [7, 7, 12], lookAt: [0, 0, 0] }, enableControls: true, backgroundColor: 0x2a2a2a, antialias: true }, models });
+  useEffect(() => sceneController ? setupSceneLighting(sceneController) : undefined, [sceneController]);
+  useEffect(() => { if (!sceneController) return; const cleanups = [setupSceneGrid(sceneController), setupAxisHelpers(sceneController), setupVerticalGrid(sceneController)]; const grids: THREE.Object3D[] = []; sceneController.getScene().traverse((object) => { if (object instanceof THREE.GridHelper || object instanceof THREE.AxesHelper) { object.visible = gridsVisible; grids.push(object); } }); setGridObjects(grids); return () => cleanups.forEach((cleanup) => cleanup()); }, [sceneController, gridsVisible]);
+  useEffect(() => { if (!sceneController) return; const setup = setupBelt(sceneController, geometry); setup.beltMesh.visible = beltVisible; setBeltMesh(setup.beltMesh); return setup.cleanup; }, [beltVisible, geometry, sceneController]);
 
-  /**
-   * Helper to convert any distance value from BAJA units (meters) to the scene's distance unit.
-   * Use this for all distance values used in the 3D scene.
-   * 
-   * TODO: Replace hardcoded 'm' with value from centralized unit context when available.
-   */
-  const toSceneDistance = useCallback((valueInMeters: number): number => {
-    return convertValue(valueInMeters, 'distance', SCENE_DISTANCE_UNIT);
-  }, []);
+  const updateScene = useCallback((index: number) => {
+    if (!sceneController || !beltMesh) return;
+    const primaryRadius = sceneDistance(finite(primaryRadiusKey ? valueAt(table, primaryRadiusKey, index) : null, 0.041));
+    const secondaryRadius = sceneDistance(finite(secondaryRadiusKey ? valueAt(table, secondaryRadiusKey, index) : null, 0.101));
+    const shift = sceneDistance(finite(shiftKey ? valueAt(table, shiftKey, index) : null, 0));
+    const time = finite(valueAt(table, timeKey, index), 0);
+    const primaryAngle = finite(primaryAngleKey ? valueAt(table, primaryAngleKey, index) : null, finite(primarySpeedKey ? valueAt(table, primarySpeedKey, index) : null, 0) * time);
+    const secondaryAngle = finite(secondaryAngleKey ? valueAt(table, secondaryAngleKey, index) : null, 0);
+    const primaryWrap = finite(primaryWrapKey ? valueAt(table, primaryWrapKey, index) : null, Math.PI);
+    const secondaryWrap = finite(secondaryWrapKey ? valueAt(table, secondaryWrapKey, index) : null, Math.PI);
+    const secondaryShift = Math.max(0, shift - geometry.deadzoneShift);
+    sceneController.updateModels({ primaryFixed: { rotation: [0, Math.PI, showAngularRotation ? -primaryAngle : 0] }, primaryMoving: { position: [0, 0, -(primaryOffset + geometry.maxShift - shift)] }, secondaryFixed: { rotation: [0, 0, showAngularRotation ? secondaryAngle : 0] }, secondaryMoving: { position: [0, 0, -(secondaryOffset + secondaryShift)], rotation: [0, 0, -secondaryAngle] } });
+    const data: BeltPathData = { primaryRadius, primaryPosition: [-geometry.centreDistance / 2, 0, -Math.max(geometry.deadzoneShift, shift) / 2], secondaryRadius, secondaryPosition: [geometry.centreDistance / 2, 0, -Math.max(geometry.deadzoneShift, shift) / 2], primaryWrapAngle: primaryWrap, secondaryWrapAngle: secondaryWrap };
+    updateBeltMesh(beltMesh, data, geometry);
+  }, [beltMesh, geometry, primaryAngleKey, primaryRadiusKey, primarySpeedKey, primaryWrapKey, secondaryAngleKey, secondaryRadiusKey, secondaryWrapKey, sceneController, shiftKey, showAngularRotation, table, timeKey]);
+  useEffect(() => { updateScene(0); return replayController.on((event) => { if (event.type === 'Progress') updateScene(event.currentIndex); }); }, [replayController, updateScene]);
+  useEffect(() => { if (beltMesh) beltMesh.visible = beltVisible; }, [beltMesh, beltVisible]);
+  useEffect(() => { gridObjects.forEach((grid) => { grid.visible = gridsVisible; }); }, [gridObjects, gridsVisible]);
+  useEffect(() => { if (!sceneController) return; const renderer = sceneController.getRenderer(); renderer.localClippingEnabled = crossSectionEnabled; const apply = (id: string, x: number) => { const model = sceneController.getModel(id); if (!model) return; const plane = new THREE.Plane(new THREE.Vector3(1, 0, 0), -x); model.object3D.traverse((object) => { if (!(object instanceof THREE.Mesh)) return; const materials = Array.isArray(object.material) ? object.material : [object.material]; materials.forEach((material) => { material.clippingPlanes = crossSectionEnabled ? [plane] : []; }); }); }; apply('primaryFixed', -geometry.centreDistance / 2); apply('secondaryFixed', geometry.centreDistance / 2); }, [crossSectionEnabled, geometry.centreDistance, sceneController]);
 
-  // Fetch simulator constants
-  useEffect(() => {
-    setIsLoading(true);
-    getConstants()
-      .then((rawConstants) => {
-        // Convert all constants to scene units
-        const converted = convertConstants(rawConstants, { distance: SCENE_DISTANCE_UNIT, angle: SCENE_ANGLE_UNIT });
-        setConstants(converted);
-      })
-      .catch((error) => alert(`Failed to load simulator constants: ${error instanceof Error ? error.message : String(error)}`));
-  }, []);
-
-  useEffect(() => {
-    if (!constants) return;
-
-    loadCVTModels(constants)
-      .then((models) => {
-        setLoadedModels(models);
-        setIsLoading(false);
-      })
-      .catch((error) => {
-        alert(`Failed to load 3D models: ${error instanceof Error ? error.message : String(error)}`);
-        setIsLoading(false);
-      });
-  }, [constants]);
-
-  const { containerRef, sceneController } = useScene3D({
-    sceneConfig: {
-      camera: {
-        type: 'perspective',
-        fov: 50,
-        position: [7, 7, 12],
-        lookAt: [0, 0, 0],
-      },
-      enableControls: true,
-      backgroundColor: 0x2a2a2a,
-      antialias: true,
-    },
-    models: loadedModels,
-  });
-
-  useEffect(() => {
-    if (!sceneController) return;
-    return setupSceneLighting(sceneController);
-  }, [sceneController]);
-
-  useEffect(() => {
-    if (!sceneController) return;
-    const cleanup1 = setupSceneGrid(sceneController);
-    const cleanup2 = setupAxisHelpers(sceneController);
-    const cleanup3 = setupVerticalGrid(sceneController);
-    
-    // Get the grid objects from the scene to control visibility
-    const grids: THREE.Object3D[] = [];
-    sceneController.getScene().traverse((obj) => {
-      if (obj instanceof THREE.GridHelper || obj instanceof THREE.AxesHelper) {
-        obj.visible = gridsVisible;
-        grids.push(obj);
-      }
-    });
-    setGridObjects(grids);
-    
-    return () => {
-      cleanup1();
-      cleanup2();
-      cleanup3();
-    };
-  }, [sceneController, gridsVisible]);
-
-  // Setup belt mesh with initial data from replay controller
-  useEffect(() => {
-    if (!sceneController || !constants) return;
-
-    // Get first data point to initialize belt with real values
-    const firstDataPoint = replayController.getFirstDataPoint();
-    if (!firstDataPoint) return;
-
-    // Store initial helix rotation for relative rotation calculations
-    const firstBreakdown = firstDataPoint.contact_breakdown.shift?.secondaryPulleyState?.pulley_breakdown;
-    const firstHelixRotation = (firstBreakdown && 'helix_force' in firstBreakdown)
-      ? firstBreakdown.helix_force.springTorque.rotation
-      : 0;
-    setInitialHelixRotation(firstHelixRotation);
-
-    const primaryRadius = firstDataPoint.contact_breakdown.geometry.primary_effective_radius ?? constants.min_prim_radius;
-    const secondaryRadius = firstDataPoint.contact_breakdown.geometry.secondary_effective_radius ?? constants.max_sec_radius;
-    const primaryWrapAngleDeg = firstDataPoint.contact_breakdown.geometry.primary_wrap_angle ?? 180;
-    const secondaryWrapAngleDeg = firstDataPoint.contact_breakdown.geometry.secondary_wrap_angle ?? 180;
-    const shiftDistance = firstDataPoint.state.s ?? 0;
-
-    const primaryWrapAngle = primaryWrapAngleDeg * (Math.PI / 180);
-    const secondaryWrapAngle = secondaryWrapAngleDeg * (Math.PI / 180);
-    const shiftDistanceScene = toSceneDistance(shiftDistance);
-    const primaryRadiusScene = toSceneDistance(primaryRadius);
-    const secondaryRadiusScene = toSceneDistance(secondaryRadius);
-
-    // Belt starts offset and doesn't move until shift distance exceeds initial_sheave_displacement
-    const effectiveBeltShift = Math.max(constants.initial_sheave_displacement, shiftDistanceScene);
-    const beltZ = -effectiveBeltShift / 2;
-
-    const initialPathData: BeltPathData = {
-      primaryRadius: primaryRadiusScene,
-      primaryPosition: [-constants.center_to_center / 2, 0, beltZ],
-      secondaryRadius: secondaryRadiusScene,
-      secondaryPosition: [constants.center_to_center / 2, 0, beltZ],
-      primaryWrapAngle,
-      secondaryWrapAngle,
-    };
-
-    const { beltMesh: mesh, cleanup } = setupBelt(sceneController, constants);
-    mesh.visible = beltVisible;
-    // Update with actual first data point immediately
-    updateBeltMesh(mesh, initialPathData, constants);
-    setBeltMesh(mesh);
-
-    return cleanup;
-  }, [sceneController, constants, replayController, toSceneDistance, beltVisible]);
-
-  // Subscribe to replay controller and update models
-  useEffect(() => {
-    if (!sceneController || !constants || !beltMesh) return;
-
-    const unsubscribe = replayController.on((event) => {
-      if (event.type === ReplayEventType.Progress) {
-        // Extract angular positions and shift distance
-        const primaryAngularPositionDeg = event.data.derived_state.engine_angular_position ?? 0;
-        const secondaryAngularPositionDeg = event.data.derived_state.secondary_angular_position ?? 0;
-        const secondaryBreakdown = event.data.contact_breakdown.shift.secondaryPulleyState.pulley_breakdown;
-        const secondaryHelixRotationDeg = (secondaryBreakdown && 'helix_force' in secondaryBreakdown) 
-          ? secondaryBreakdown.helix_force.springTorque.rotation - initialHelixRotation
-          : 0;
-        const primaryAngularPosition = degToRad(primaryAngularPositionDeg);
-        const secondaryAngularPosition = degToRad(secondaryAngularPositionDeg);
-        const secondaryHelixRotation = degToRad(secondaryHelixRotationDeg);
-        const shiftDistance = event.data.state?.s ?? 0;
-
-        // Get pulley states for belt calculation
-        const primaryRadius = event.data.contact_breakdown.geometry.primary_effective_radius ?? constants.min_prim_radius;
-        const secondaryRadius = event.data.contact_breakdown.geometry.secondary_effective_radius ?? constants.max_sec_radius;
-        const primaryWrapAngleDeg = event.data.contact_breakdown.geometry.primary_wrap_angle ?? 180;
-        const secondaryWrapAngleDeg = event.data.contact_breakdown.geometry.secondary_wrap_angle ?? 180;
-
-        // Convert wrap angles from degrees to radians for Three.js
-        const primaryWrapAngle = degToRad(primaryWrapAngleDeg);
-        const secondaryWrapAngle = degToRad(secondaryWrapAngleDeg);
-
-        // Playback data is converted to BAJA preset where angles are degrees.
-        // Convert to radians before applying Three.js rotations.
-        const shiftDistanceScene = toSceneDistance(shiftDistance);
-        const primaryRadiusScene = toSceneDistance(primaryRadius);
-        const secondaryRadiusScene = toSceneDistance(secondaryRadius);
-
-
-        // Secondary doesn't move until shift distance exceeds initial_sheave_displacement
-        const effectiveSecondaryShift = Math.max(0, shiftDistanceScene - constants.initial_sheave_displacement);
-
-        // Update all models
-        sceneController.updateModels({
-          primaryFixed: {
-            rotation: [0, Math.PI, showAngularRotation ? -primaryAngularPosition : 0],
-          },
-          primaryMoving: {
-            // Primary closes as shift increases: max_shift - shift_distance
-            // Position is relative to parent (primaryFixed), so just the offset change
-            position: [0, 0, -(primaryOffset + constants.max_shift - shiftDistanceScene)],
-          },
-          secondaryFixed: {
-            rotation: [0, 0, showAngularRotation ? secondaryAngularPosition : 0],
-          },
-          secondaryMoving: {
-            // Secondary opens as shift increases: shift_distance
-            // Position is relative to parent (secondaryFixed), so apply the offset
-            // Only moves after initial_sheave_displacement is exceeded
-            position: [0, 0, -(secondaryOffset + effectiveSecondaryShift)],
-            // Add helix spring rotation (relative to the fixed sheave)
-            rotation: [0, 0, -secondaryHelixRotation],
-          },
-        });
-
-        // Update belt mesh - starts at initial_sheave_displacement and only moves when shift exceeds it
-        const effectiveBeltShift = Math.max(constants.initial_sheave_displacement, shiftDistanceScene);
-        const beltZ = -effectiveBeltShift / 2;
-
-        const beltPathData: BeltPathData = {
-          primaryRadius: primaryRadiusScene,
-          primaryPosition: [-constants.center_to_center / 2, 0, beltZ],
-          secondaryRadius: secondaryRadiusScene,
-          secondaryPosition: [constants.center_to_center / 2, 0, beltZ],
-          primaryWrapAngle,
-          secondaryWrapAngle,
-        };
-
-        updateBeltMesh(beltMesh, beltPathData, constants);
-      }
-    });
-
-    return unsubscribe;
-  }, [sceneController, replayController, constants, toSceneDistance, beltMesh, initialHelixRotation, showAngularRotation, degToRad]);
-
-  // Update belt visibility when state changes
-  useEffect(() => {
-    if (beltMesh) {
-      beltMesh.visible = beltVisible;
-    }
-  }, [beltVisible, beltMesh]);
-
-  // Update grid visibility when state changes
-  useEffect(() => {
-    gridObjects.forEach(grid => {
-      grid.visible = gridsVisible;
-    });
-  }, [gridsVisible, gridObjects]);
-
-  // Toggle per-pulley YZ cross-sections through each pulley centerline.
-  useEffect(() => {
-    if (!sceneController || !constants) return;
-
-    const renderer = sceneController.getRenderer();
-    renderer.localClippingEnabled = crossSectionEnabled;
-
-    const primaryCenterX = -constants.center_to_center / 2;
-    const secondaryCenterX = constants.center_to_center / 2;
-
-    const primaryPlane = new THREE.Plane(new THREE.Vector3(1, 0, 0), -primaryCenterX);
-    const secondaryPlane = new THREE.Plane(new THREE.Vector3(1, 0, 0), -secondaryCenterX);
-
-    const applyModelClipping = (modelId: string, plane: THREE.Plane) => {
-      const model = sceneController.getModel(modelId);
-      if (!model) return;
-
-      model.object3D.traverse((obj) => {
-        if (!(obj instanceof THREE.Mesh)) return;
-
-        const applyClipping = (material: THREE.Material) => {
-          const meshMaterial = material as THREE.Material & { clippingPlanes?: THREE.Plane[] };
-          meshMaterial.clippingPlanes = crossSectionEnabled ? [plane] : [];
-        };
-
-        if (Array.isArray(obj.material)) {
-          obj.material.forEach(applyClipping);
-        } else {
-          applyClipping(obj.material);
-        }
-      });
-    };
-
-    // Apply to top-level pulley nodes; children inherit by traversal.
-    applyModelClipping('primaryFixed', primaryPlane);
-    applyModelClipping('secondaryFixed', secondaryPlane);
-  }, [sceneController, constants, crossSectionEnabled]);
-
-  return (
-    <div ref={containerRef} className={`${styles.scene3dViewer} ${className ?? ''}`}>
-      {isLoading && (
-        <div className={styles.loadingOverlay}>
-          <div className={styles.spinner} />
-          <p>Loading 3D models...</p>
-        </div>
-      )}
-      <button
-        className={styles.toggleBeltButton}
-        onClick={() => setBeltVisible(!beltVisible)}
-        title={beltVisible ? 'Hide Belt' : 'Show Belt'}
-      >
-        {beltVisible ? '🔴' : '⚪'} Belt
-      </button>
-      <button
-        className={styles.toggleRotationButton}
-        onClick={() => setShowAngularRotation(!showAngularRotation)}
-        title={showAngularRotation ? 'Hide Angular Rotation' : 'Show Angular Rotation'}
-      >
-        {showAngularRotation ? '🔵' : '⚪'} Rotation
-      </button>
-      <button
-        className={styles.toggleGridsButton}
-        onClick={() => setGridsVisible(!gridsVisible)}
-        title={gridsVisible ? 'Hide Grids' : 'Show Grids'}
-      >
-        {gridsVisible ? '🟢' : '⚪'} Grids
-      </button>
-      <button
-        className={styles.toggleSectionButton}
-        onClick={() => setCrossSectionEnabled(!crossSectionEnabled)}
-        title={crossSectionEnabled ? 'Disable Cross-Section View' : 'Enable Cross-Section View'}
-      >
-        {crossSectionEnabled ? '🟡' : '⚪'} Section
-      </button>
-    </div>
-  );
+  return <div ref={containerRef} className={`${styles.scene3dViewer} ${className ?? ''}`}>{isLoading && <div className={styles.loadingOverlay}><div className={styles.spinner} /><p>Loading 3D models...</p></div>}<button className={styles.toggleBeltButton} onClick={() => setBeltVisible((current) => !current)} title={beltVisible ? 'Hide Belt' : 'Show Belt'}>{beltVisible ? '🔴' : '⚪'} Belt</button><button className={styles.toggleRotationButton} onClick={() => setShowAngularRotation((current) => !current)} title={showAngularRotation ? 'Hide Angular Rotation' : 'Show Angular Rotation'}>{showAngularRotation ? '🔵' : '⚪'} Rotation</button><button className={styles.toggleGridsButton} onClick={() => setGridsVisible((current) => !current)} title={gridsVisible ? 'Hide Grids' : 'Show Grids'}>{gridsVisible ? '🟢' : '⚪'} Grids</button><button className={styles.toggleSectionButton} onClick={() => setCrossSectionEnabled((current) => !current)} title={crossSectionEnabled ? 'Disable Cross-Section View' : 'Enable Cross-Section View'}>{crossSectionEnabled ? '🟡' : '⚪'} Section</button></div>;
 };

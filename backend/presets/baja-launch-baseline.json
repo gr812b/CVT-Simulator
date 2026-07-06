@@ -1,0 +1,254 @@
+{
+  "id": "baja-launch-baseline",
+  "name": "Baja Tuned Launch",
+  "description": "CINDER document matching launchTools/run_tuned_launch.py defaults: 10 s LSODA run, 10 ms reporting grid, 0.80 kg flyweights, 20\u00b0 helix, 300\u00b0 secondary twist, 110 mm secondary preload, and a 38\u00b0\u219230\u00b0 circular primary ramp. Primary preload is the lower-stop-release value resolved at 2000 rpm.",
+  "simulation_case": {
+    "schema_version": 1,
+    "document_type": "cinder_simulation_case",
+    "assembly": {
+      "schema_version": 1,
+      "document_type": "cinder_cvt_assembly",
+      "geometry": {
+        "belt": {
+          "height_m": 0.0155702,
+          "outer_width_m": 0.021335999999999997,
+          "inner_width_m": 0.0168148,
+          "cord_depth_from_outer_m": 0.0077851
+        },
+        "belt_outer_length_m": 0.9532619999999999,
+        "primary_outer_radius_at_zero_shift_m": 0.0284226,
+        "secondary_outer_radius_at_zero_shift_m": 0.1093851,
+        "sheave_half_angle_rad": 0.2007128639793479,
+        "deadzone_shift_m": 0.0024891999999999996,
+        "max_shift_m": 0.019049999999999997
+      },
+      "contact": {
+        "friction_coefficient": 0.3
+      },
+      "inertias": {
+        "primary": {
+          "engine_rotational_inertia_kg_m2": 0.1,
+          "cvt_rotational_inertia_kg_m2": 0.005,
+          "moving_sheave_mass_kg": 1.0681
+        },
+        "secondary": {
+          "fixed_rotational_inertia_kg_m2": 0.1,
+          "gearbox_input_rotational_inertia_kg_m2": 0.05,
+          "movable_sheave_rotational_inertia_kg_m2": 0.0025139,
+          "moving_sheave_mass_kg": 0.705141
+        },
+        "belt_density_kg_per_m3": 1100.0
+      },
+      "pulleys": {
+        "input": {
+          "components": [
+            {
+              "kind": "centrifugal_ramp",
+              "flyweight_mass_kg": 0.8,
+              "radius_at_zero_position_m": 0.04878,
+              "radial_displacement_profile": {
+                "kind": "piecewise_ramp",
+                "segments": [
+                  {
+                    "kind": "circular_segment",
+                    "length_m": 0.019049999999999997,
+                    "angle_start_rad": 0.6632251157578453,
+                    "angle_end_rad": 0.5235987755982988,
+                    "quadrant": 2
+                  }
+                ]
+              }
+            },
+            {
+              "kind": "axial_spring",
+              "stiffness_N_per_m": 12784.0,
+              "initial_compression_m": 0.1046145479692159,
+              "compression_per_axial_position": 1.0
+            }
+          ]
+        },
+        "output": {
+          "components": [
+            {
+              "kind": "axial_spring",
+              "stiffness_N_per_m": 3532.0,
+              "initial_compression_m": 0.11,
+              "compression_per_axial_position": -1.0
+            },
+            {
+              "kind": "helical_torque_reaction",
+              "torsional_stiffness_Nm_per_rad": 3.476,
+              "initial_twist_rad": 5.235987755982989,
+              "movable_member_torque_fraction": 0.5
+            }
+          ],
+          "helical_coupling": {
+            "opening_per_axial_position": -1.0,
+            "opening_offset_m": 0.0,
+            "profile": {
+              "kind": "helix_profile",
+              "circumferential_profile": {
+                "kind": "piecewise_ramp",
+                "segments": [
+                  {
+                    "kind": "linear_segment",
+                    "length_m": 0.01312196399554005,
+                    "angle_rad": 1.2217304763960306
+                  }
+                ]
+              },
+              "radius_m": 0.04445,
+              "theta_offset_rad": 0.0
+            }
+          }
+        }
+      }
+    },
+    "input_boundary": {
+      "kind": "full_throttle_torque_curve",
+      "points": [
+        {
+          "angular_speed_rad_per_s": 104.71975511965977,
+          "torque_Nm": 0.0
+        },
+        {
+          "angular_speed_rad_per_s": 188.49555921538757,
+          "torque_Nm": 24.4047230694
+        },
+        {
+          "angular_speed_rad_per_s": 251.32741228718345,
+          "torque_Nm": 25.08263204355
+        },
+        {
+          "angular_speed_rad_per_s": 272.2713633111154,
+          "torque_Nm": 24.54030486423
+        },
+        {
+          "angular_speed_rad_per_s": 293.21531433504737,
+          "torque_Nm": 23.591232300419996
+        },
+        {
+          "angular_speed_rad_per_s": 314.1592653589793,
+          "torque_Nm": 22.50657794178
+        },
+        {
+          "angular_speed_rad_per_s": 335.1032163829112,
+          "torque_Nm": 20.87959640382
+        },
+        {
+          "angular_speed_rad_per_s": 356.0471674068432,
+          "torque_Nm": 19.659360250349998
+        },
+        {
+          "angular_speed_rad_per_s": 376.99111843077515,
+          "torque_Nm": 18.303542302049998
+        },
+        {
+          "angular_speed_rad_per_s": 418.87902047863906,
+          "torque_Nm": 0.0
+        }
+      ],
+      "low_speed_braking_torque_Nm": -5.0,
+      "low_speed_braking_peak_speed_rad_per_s": 52.35987755982988,
+      "high_speed_braking_torque_Nm": -28.0,
+      "high_speed_braking_transition_width_rad_per_s": 157.07963267948966
+    },
+    "output_boundary": {
+      "kind": "locked_final_drive_vehicle",
+      "vehicle": {
+        "mass_kg": 300.0,
+        "wheel_rotational_inertia_kg_m2": 0.2
+      },
+      "final_drive": {
+        "reduction_ratio": 7.556,
+        "wheel_radius_m": 0.2794
+      },
+      "road_load": {
+        "rolling_resistance_coefficient": 0.015,
+        "drag_coefficient": 0.6,
+        "frontal_area_m2": 1.11484,
+        "air_density_kg_per_m3": 1.225,
+        "gravity_m_per_s2": 9.80665,
+        "rolling_speed_regularization_m_per_s": 0.01
+      },
+      "road_profile": {
+        "kind": "constant_grade",
+        "grade_angle_rad": 0.0
+      }
+    },
+    "scenario": {
+      "time_span_s": [
+        0.0,
+        30.0
+      ],
+      "initial_state": {
+        "primary_angular_speed_rad_per_s": 188.49555921538757,
+        "secondary_angular_speed_rad_per_s": 0.0,
+        "belt_speed_m_per_s": 0.0,
+        "shift_position_m": 0.0,
+        "shift_speed_m_per_s": 0.0,
+        "secondary_shaft_angle_rad": 0.0
+      },
+      "initial_mode": null
+    },
+    "execution": {
+      "traction_law": {
+        "primary_static_lambda_limit": 0.65,
+        "secondary_static_lambda_limit": 0.65,
+        "primary_kinetic_lambda_magnitude": 0.55,
+        "secondary_kinetic_lambda_magnitude": 0.55
+      },
+      "solve_settings": {
+        "lambda_search_bounds": {
+          "primary_lower": -3.0,
+          "primary_upper": 3.0,
+          "secondary_lower": -3.0,
+          "secondary_upper": 3.0
+        },
+        "initial_guess": {
+          "primary_lambda": 0.1,
+          "secondary_lambda": 0.1
+        },
+        "contact_tolerances": {
+          "relative_speed_tolerance_m_per_s": 1e-07,
+          "relative_acceleration_tolerance_m_per_s2": 1e-08,
+          "stick_acceleration_tolerance_m_per_s2": 1e-08
+        },
+        "optimizer_tolerance": 1e-12,
+        "maximum_function_evaluations": 100,
+        "maximum_closure_condition_number": 100000000.0
+      },
+      "operating_limits": {
+        "lower_stop_shift_m": 0.0,
+        "engagement_shift_m": 0.0024891999999999996,
+        "upper_stop_shift_m": 0.019049999999999997
+      },
+      "switching_settings": {
+        "stick_exit_static_margin": 0.0,
+        "restick_static_margin": 0.001,
+        "normal_resultant_floor_N": 1e-06
+      },
+      "integrator": {
+        "relative_tolerance": 0.0001,
+        "absolute_tolerance": 1e-07,
+        "method": "LSODA",
+        "max_step_s": 0.02,
+        "first_step_s": null,
+        "maximum_transitions": 60,
+        "event_time_tolerance_s": 1e-10,
+        "retain_dense_output": false
+      },
+      "reporting": {
+        "grid": {
+          "kind": "uniform_time_step",
+          "count": null,
+          "step_seconds": 0.01
+        },
+        "include_contact": true,
+        "include_actuation": true,
+        "include_closure_audit": false,
+        "include_integrated_observers": true
+      }
+    }
+  }
+}

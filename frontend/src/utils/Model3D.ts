@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import type { Model3DConfig, ModelTransform } from '@types';
+import type { Model3DConfig, ModelTransform } from '@utils/sceneTypes';
 
 /**
  * Represents a 3D model with hierarchical transformations.

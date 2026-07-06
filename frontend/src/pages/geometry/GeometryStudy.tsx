@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { QuantityInput } from '@components/quantityInput/QuantityInput';
 import {
@@ -100,8 +100,9 @@ function PathTable({ study }: { study: GeometryStudyResult }) {
 /** A deliberately small proof that the new frontend transport path works. */
 export const GeometryStudy = () => {
   const navigate = useNavigate();
-  const { document, source, validation, loadPreset, setValueAtPath, setValidation } = useSimulationCase();
+  const { document, source, validation, loadPreset, setValueAtPath, setValidation, ensureReady } = useSimulationCase();
   const [study, setStudy] = useState<GeometryStudyResult | null>(null);
+  useEffect(() => { void ensureReady(); }, [ensureReady]);
   const [busy, setBusy] = useState<'preset' | 'validation' | 'study' | null>(null);
   const [requestError, setRequestError] = useState<string | null>(null);
 

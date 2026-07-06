@@ -1,4 +1,4 @@
-/** Generic RFC 6901 helpers for a JSON-compatible CINDER document. */
+/** RFC 6901 helpers for plain JSON CINDER documents. */
 export type JsonValue =
   | null
   | boolean
@@ -10,10 +10,11 @@ export type JsonValue =
 function tokens(pointer: string): string[] {
   if (pointer === '') return [];
   if (!pointer.startsWith('/')) throw new Error(`JSON Pointer must start with '/': ${pointer}`);
-  return pointer
-    .slice(1)
-    .split('/')
-    .map((token) => token.replace(/~1/g, '/').replace(/~0/g, '~'));
+  return pointer.slice(1).split('/').map((token) => token.replace(/~1/g, '/').replace(/~0/g, '~'));
+}
+
+function escapeToken(token: string): string {
+  return token.replace(/~/g, '~0').replace(/\//g, '~1');
 }
 
 function isContainer(value: unknown): value is Record<string, unknown> | unknown[] {
@@ -41,10 +42,6 @@ export function getValueAtJsonPointer(document: unknown, pointer: string): unkno
   return current;
 }
 
-/**
- * Replace an existing document field immutably. CINDER documents are plain JSON,
- * so cloning does not involve model classes, browser-only APIs, or CVT logic.
- */
 export function setValueAtJsonPointer<T>(document: T, pointer: string, value: JsonValue): T {
   const path = tokens(pointer);
   if (path.length === 0) return value as T;
@@ -71,4 +68,51 @@ export function setValueAtJsonPointer<T>(document: T, pointer: string, value: Js
     current[finalToken] = value;
   }
   return next as T;
+}
+
+/** Expand a schema template containing `*` over concrete arrays in a document. */
+export function expandJsonPointerTemplate(document: unknown, pointerTemplate: string): string[] {
+  const templateTokens = tokens(pointerTemplate);
+  const results: string[] = [];
+
+  function visit(current: unknown, index: number, path: string[]): void {
+    if (index === templateTokens.length) {
+      results.push(`/${path.map(escapeToken).join('/')}`);
+      return;
+    }
+
+    const token = templateTokens[index];
+    if (token === '*') {
+      if (!Array.isArray(current)) return;
+      current.forEach((entry, arrayIndex) => visit(entry, index + 1, [...path, String(arrayIndex)]));
+      return;
+    }
+
+    if (!isContainer(current)) return;
+    if (Array.isArray(current)) {
+      const arrayIndex = Number(token);
+      if (!Number.isInteger(arrayIndex) || arrayIndex < 0 || arrayIndex >= current.length) return;
+      visit(current[arrayIndex], index + 1, [...path, token]);
+      return;
+    }
+    if (!(token in current)) return;
+    visit(current[token], index + 1, [...path, token]);
+  }
+
+  visit(document, 0, []);
+  return results;
+}
+
+/** Substitute template wildcards using the corresponding concrete field path. */
+export function materializeJsonPointerTemplate(template: string, concretePath: string): string {
+  const templateTokens = tokens(template);
+  const concreteTokens = tokens(concretePath);
+  const wildcards = concreteTokens.filter((_, index) => templateTokens[index] === '*');
+  let wildcardIndex = 0;
+  return `/${templateTokens.map((token) => {
+    if (token !== '*') return escapeToken(token);
+    const replacement = wildcards[wildcardIndex++];
+    if (replacement === undefined) throw new Error(`Cannot materialize '${template}' from '${concretePath}'.`);
+    return escapeToken(replacement);
+  }).join('/')}`;
 }

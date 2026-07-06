@@ -1,26 +1,19 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@components/button/Button';
 import { ParameterAccordion } from '@components/parameterAccordion/ParameterAccordion';
-import { InputField } from '@components/inputField/InputField';
+import { ParameterDescription } from '@components/parameterDescription/ParameterDescription';
 import { RampBuilder } from '@components/rampBuilder/RampBuilder';
 import { RampPreview } from '@components/rampBuilder/RampPreview';
-import { ParameterDescription } from '@components/parameterDescription/ParameterDescription';
 import { LoadingOverlay } from '@components/loadingOverlay/LoadingOverlay';
-import { SolverResults } from '@components/solverResults/SolverResults';
-import { SaveModal } from '@components/saveModal/SaveModal';
-import { GROUP_TITLES, PARAMETERS, type Parameter, type ParameterGroup, type PiecewiseRampConfig, type ParameterValue, type ParameterState } from '@types';
-import { useParameter } from '@contexts/ParameterContext';
 import { useLoading } from '@contexts/LoadingContext';
-import { useFormState } from '@hooks/useFormState';
+import { useSimulationCase } from '@contexts/SimulationCaseContext';
+import { validateSimulationCase } from '@api/client';
+import { getValueAtJsonPointer } from '@utils/jsonPointer';
+import { editorToRamp, rampToEditor } from '@utils/rampEditor';
 import { useRunSimulation } from '@hooks/useRunSimulation';
-import { useSessionPersistence } from '@hooks/useSessionPersistence';
-import {
-    getLoadedSimulationId,
-    getSimulation,
-    getRecentRuns,
-} from '@utils/localStorage';
-import { getDefaultSimulations } from '@constants/defaultSimulations';
+import { DocumentQuantityInput } from './DocumentQuantityInput';
+import { GROUPS, GROUP_TITLES, resolveSurface, type ResolvedTuningField, type TuningGroup } from './tuningSurface';
 import Home from '@assets/icons/home.svg?react';
 import ArrowUpCircle from '@assets/icons/arrow_up_circle.svg?react';
 import ArrowDownCircle from '@assets/icons/arrow_down_circle.svg?react';
@@ -29,254 +22,28 @@ import PlayOutline from '@assets/icons/play_outline.svg?react';
 import Edit from '@assets/icons/edit.svg?react';
 import styles from './Input.module.scss';
 
-// Precomputed list of all groups and parameters
-const allGroups = Object.keys(GROUP_TITLES) as ParameterGroup[];
-const allParameters = Object.keys(PARAMETERS) as Parameter[];
-
-// Precompute expanded and collapsed states for all accordions
-const expandedState: Record<ParameterGroup, boolean> = Object.fromEntries(allGroups.map(group => [group, true])) as Record<ParameterGroup, boolean>;
-const collapsedState: Record<ParameterGroup, boolean> = Object.fromEntries(allGroups.map(group => [group, false])) as Record<ParameterGroup, boolean>;
+const expandedState = Object.fromEntries(GROUPS.map((group) => [group, true])) as Record<TuningGroup, boolean>;
+const collapsedState = Object.fromEntries(GROUPS.map((group) => [group, false])) as Record<TuningGroup, boolean>;
 
 export const Input = () => {
-    const { setMultipleParameters, parameters } = useParameter();
-    const { isLoading, loadingMessage } = useLoading();
-    const formState = useFormState(parameters);
-    const navigate = useNavigate();
-    const { runSimulation } = useRunSimulation();
-    const { isFieldChanged, hasChanges, resetToBaseline, baselineParameters } = useSessionPersistence();
-    const hasSessionChanges = hasChanges();
-    const selectedSetName = useMemo(() => {
-        const loadedId = getLoadedSimulationId();
-        if (!loadedId) return 'New Parameter Set';
-        if (loadedId === 'session_baseline') return 'Session Parameters';
-
-        const savedSimulation = getSimulation(loadedId);
-        if (savedSimulation) return savedSimulation.name;
-
-        const defaultSimulation = getDefaultSimulations().find((simulation) => simulation.id === loadedId);
-        if (defaultSimulation) return defaultSimulation.name;
-
-        const recentRun = getRecentRuns().find((simulation) => simulation.id === loadedId);
-        if (recentRun) return recentRun.name;
-
-        return 'Selected Parameter Set';
-    }, [parameters]);
-
-    // State to manage which accordions are expanded
-    const [expanded, setExpanded] = useState<Record<ParameterGroup, boolean>>(expandedState);
-
-    // State to track which input field was most recently being used
-    const [activeField, setActiveField] = useState<Parameter | null>(null);
-
-    // State to manage save modal visibility
-    const [isSaveModalOpen, setIsSaveModalOpen] = useState(false);
-
-    // Handler to toggle individual accordion
-    const toggleAccordion = (group: keyof typeof expanded) => {
-        setExpanded((prev) => ({ ...prev, [group]: !prev[group] }));
-    };
-
-    // Handle form submission and API call
-    const handleSubmit = async () => {
-        if (!formState.validateAll()) {
-            return;
-        }
-
-        const parsedValues = formState.getParsedValues();
-        setMultipleParameters(parsedValues);
-        formState.markAsSaved();
-
-        await runSimulation(parsedValues);
-    };
-
-    // Handle save to library
-    const handleSave = () => {
-        if (formState.validateAll()) {
-            setIsSaveModalOpen(true);
-        }
-    };
-
-    // Handle successful save from modal
-    const handleSaveComplete = () => {
-        const parsedValues = formState.getParsedValues();
-        setMultipleParameters(parsedValues);
-        formState.markAsSaved();
-    };
-
-    // Get parameter description based on active field
-    const getParameterInformation = (key: Parameter | null) => {
-        const parameter = key ? PARAMETERS[key] : null;
-        const isRamp = parameter?.type === 'ramp';
-        
-        return (
-            <>
-                <ParameterDescription
-                    name={parameter ? parameter.label : "No Parameter Selected"}
-                    description={parameter ? parameter.description : "Click on an input field to see its description."}
-                    img={parameter ? parameter.img : undefined}
-                />
-                {isRamp && key && formState.values[key] && (
-                    <RampPreview config={formState.values[key] as PiecewiseRampConfig} />
-                )}
-            </>
-        );
-    }
-
-    // Handle reset to baseline
-    const handleReset = () => {
-        const confirmed = window.confirm('Reset all parameters to their original values? This will discard all changes.');
-        if (!confirmed) return;
-        
-        // Reset both parameter context and form state to baseline
-        resetToBaseline();
-        formState.resetToValues(baselineParameters);
-    };
-
-    // Handle field changes - update both formState and parameter context
-    const handleFieldChange = (paramKey: Parameter, value: ParameterValue) => {
-        // Update form state (validation, touched, etc.)
-        formState.updateField(paramKey, value);
-        
-        // Immediately update parameter context for auto-validation and change detection
-        const paramConfig = PARAMETERS[paramKey];
-        let parsedValue: number | string | boolean | PiecewiseRampConfig;
-        
-        if (paramConfig.type === 'number') {
-            parsedValue = Number(value);
-        } else if (paramConfig.type === 'ramp') {
-            parsedValue = value as PiecewiseRampConfig;
-        } else if (paramConfig.type === 'boolean') {
-            parsedValue = typeof value === 'string' ? value.toLowerCase() === 'true' : Boolean(value);
-        } else {
-            parsedValue = value as string;
-        }
-        
-        setMultipleParameters({ [paramKey]: parsedValue } as Partial<ParameterState>);
-    };
-
-    return (
-        <div className={styles.input}>
-            <LoadingOverlay isVisible={isLoading} message={loadingMessage} />
-            <SaveModal
-                isOpen={isSaveModalOpen}
-                onClose={() => setIsSaveModalOpen(false)}
-                parameters={formState.getParsedValues()}
-                onSave={handleSaveComplete}
-            />
-            <div className={styles.topBar}>
-                <div className={styles.navButtons}>
-                    <Button
-                        text={'Home'}
-                        icon={Home}
-                        onClick={() => navigate('/')}
-                    />
-                    <Button
-                        text={'Dashboard'}
-                        icon={ArrowLeft}
-                        onClick={() => navigate('/dashboard')}
-                    />
-                </div>
-                <div className={styles.sessionInfo} title={selectedSetName}>
-                    <span className={styles.selectedSetName}>{selectedSetName}</span>
-                    {hasSessionChanges && (
-                        <span className={styles.changesBadge}>
-                            <span className={styles.changeIndicator} />
-                            <span>Changes</span>
-                        </span>
-                    )}
-                </div>
-                <div className={styles.topBarSpacer} />
-            </div>
-            <div className={styles.solverResultsPosition}>
-                <SolverResults />
-            </div>
-            <div className={styles.inputGrid}>
-                <div className={styles.parameterInputContainer}>
-                    {allGroups.map((groupKey) => (
-                        <ParameterAccordion
-                            key={groupKey}
-                            title={GROUP_TITLES[groupKey]}
-                            isExpanded={expanded[groupKey]}
-                            onToggle={() => toggleAccordion(groupKey)}
-                        >
-                            {allParameters
-                                .filter(paramKey => PARAMETERS[paramKey].group === groupKey)
-                                .map(paramKey => {
-                                    const param = PARAMETERS[paramKey];
-                                    const { label, units, type } = param;
-                                    const hasError = formState.touched[paramKey] && formState.errors[paramKey];
-                                    const hasChanged = isFieldChanged(paramKey);
-                                    
-                                    // Handle ramp parameter differently
-                                    if (type === 'ramp') {
-                                        return (
-                                            <div key={paramKey} onFocus={() => setActiveField(paramKey)}>
-                                                <RampBuilder
-                                                    value={formState.values[paramKey] as PiecewiseRampConfig | null}
-                                                    onChange={(config) => handleFieldChange(paramKey, config)}
-                                                    className={styles.rampBuilder}
-                                                    hasChanged={hasChanged}
-                                                />
-                                            </div>
-                                        );
-                                    }
-                                    
-                                    return (
-                                        <InputField
-                                            key={paramKey}
-                                            className={styles.baseInputField}
-                                            label={`${label} (${units})`}
-                                            value={formState.values[paramKey] as string}
-                                            error={hasError ? formState.errors[paramKey] : null}
-                                            hasChanged={hasChanged}
-                                            onChange={(e) => handleFieldChange(paramKey, e.target.value)}
-                                            onFocus={() => {
-                                                setActiveField(paramKey);
-                                                formState.touchField(paramKey);
-                                            }}
-                                        />
-                                    );
-                                })}
-                        </ParameterAccordion>
-                    ))}
-                </div>
-                <div className={styles.parameterInformationContainer}>
-                    {getParameterInformation(activeField)}
-                </div>
-                <div className={styles.inputButtonsContainer}>
-                    <Button
-                        text='Expand All'
-                        icon={ArrowDownCircle}
-                        onClick={() => setExpanded(expandedState)}
-                    />
-                    <Button
-                        text='Collapse All'
-                        icon={ArrowUpCircle}
-                        iconSide='right'
-                        onClick={() => setExpanded(collapsedState)}
-                    />
-                </div>
-                <div className={styles.nextButtonContainer}>
-                    <Button
-                        text='Reset'
-                        icon={ArrowLeft}
-                        onClick={handleReset}
-                        disabled={!hasChanges()}
-                    />
-                    <Button
-                        text='Save As...'
-                        icon={Edit}
-                        onClick={handleSave}
-                        disabled={!formState.isValid()}
-                    />
-                    <Button
-                        text='Run'
-                        icon={PlayOutline}
-                        onClick={handleSubmit}
-                        disabled={!formState.isValid()}
-                    />
-                </div>
-            </div>
-        </div>
-    );
+  const navigate = useNavigate(); const { isLoading, loadingMessage, setLoading } = useLoading(); const { document, source, editorSchema, validation, ensureReady, loadPreset, setValueAtPath, setValidation } = useSimulationCase(); const { runSimulation } = useRunSimulation();
+  const [expanded, setExpanded] = useState<Record<TuningGroup, boolean>>(expandedState); const [active, setActive] = useState<string | null>(null); const [readyError, setReadyError] = useState<string | null>(null);
+  useEffect(() => { void ensureReady().catch((error) => setReadyError(error instanceof Error ? error.message : String(error))); }, [ensureReady]);
+  const fields = useMemo(() => document ? resolveSurface(document, editorSchema) : [], [document, editorSchema]);
+  const activeField = fields.find((field) => field.id === active) ?? null;
+  const findingFor = (field: ResolvedTuningField): string | null => validation?.findings.find((finding) => finding.severity === 'error' && (finding.documentPath === field.path || finding.location === field.path))?.message ?? null;
+  const validate = async () => { if (!document) return; setLoading(true, 'Validating CINDER simulation case...'); try { setValidation(await validateSimulationCase(document)); } finally { setLoading(false); } };
+  const reset = async () => { if (!window.confirm('Reset the editable tuning surface to the Baja launch baseline?')) return; setLoading(true, 'Loading Baja launch baseline...'); try { await loadPreset('baja-launch-baseline'); } finally { setLoading(false); } };
+  const run = async () => { if (document) await runSimulation(document); };
+  if (document === null) return <div className={styles.input}><LoadingOverlay isVisible={isLoading} message={loadingMessage} /><div className={styles.parameterInformationContainer}><ParameterDescription name="Loading Baja baseline" description={readyError ?? 'Loading the canonical CINDER simulation document…'} /></div></div>;
+  return <div className={styles.input}><LoadingOverlay isVisible={isLoading} message={loadingMessage} />
+    <div className={styles.topBar}><div className={styles.navButtons}><Button text="Home" icon={Home} onClick={() => navigate('/')} /><Button text="Baja Baseline" icon={ArrowLeft} onClick={() => void reset()} /></div><div className={styles.sessionInfo} title={source?.description ?? ''}><span className={styles.selectedSetName}>{source?.name ?? 'Baja Launch Baseline'}</span>{validation && <span className={styles.changesBadge}><span className={styles.changeIndicator} /><span>{validation.isValid ? 'Validated' : 'Needs attention'}</span></span>}</div><div className={styles.topBarSpacer} /></div>
+    <div className={styles.inputGrid}><div className={styles.parameterInputContainer}>{GROUPS.map((group) => <ParameterAccordion key={group} title={GROUP_TITLES[group]} isExpanded={expanded[group]} onToggle={() => setExpanded((current) => ({ ...current, [group]: !current[group] }))}>{fields.filter((field) => field.group === group).map((field) => {
+      const value = getValueAtJsonPointer(document, field.path); const error = findingFor(field); if (field.kind === 'ramp') { const editorValue = rampToEditor(value); return <div key={field.id} onFocus={() => setActive(field.id)}><RampBuilder value={editorValue} hasChanged={false} onChange={(next) => setValueAtPath(field.path, editorToRamp(next))} /></div>; }
+      return typeof value === 'number' ? <DocumentQuantityInput key={field.id} label={field.label} valueSi={value} dimension={field.dimension} canonicalUnit={field.canonicalUnit} minimum={field.minimum} error={error} onFocus={() => setActive(field.id)} onChangeSi={(next) => setValueAtPath(field.path, next)} /> : null;
+    })}</ParameterAccordion>)}</div>
+      <div className={styles.parameterInformationContainer}><ParameterDescription name={activeField?.label ?? 'No Parameter Selected'} description={activeField?.description ?? 'Click on an input field to see its CINDER description.'} img={activeField?.image} />{activeField?.kind === 'ramp' && <RampPreview config={rampToEditor(getValueAtJsonPointer(document, activeField.path))} />}</div>
+      <div className={styles.inputButtonsContainer}><Button text="Expand All" icon={ArrowDownCircle} onClick={() => setExpanded(expandedState)} /><Button text="Collapse All" icon={ArrowUpCircle} iconSide="right" onClick={() => setExpanded(collapsedState)} /></div>
+      <div className={styles.nextButtonContainer}><Button text="Reset" icon={ArrowLeft} onClick={() => void reset()} /><Button text="Validate" icon={Edit} onClick={() => void validate()} /><Button text="Run" icon={PlayOutline} onClick={() => void run()} /></div>
+    </div></div>;
 };

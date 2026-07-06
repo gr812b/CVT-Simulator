@@ -125,6 +125,21 @@ _EXACT: dict[str, tuple[str, str, str, str]] = {
         "Actuator force with affine closure unknowns set to zero.",
     ),
     "time_s": ("Time", "s", "time", "Elapsed simulation time."),
+    "vehicle.acceleration": (
+        "Vehicle acceleration", "m/s²", "acceleration", "Vehicle longitudinal acceleration."
+    ),
+    "geometry.effective_ratio_rate": (
+        "CVT ratio rate", "1/s", "ratio_rate", "Time derivative of effective CVT ratio."
+    ),
+    "geometry.primary_outer_radius_rate": (
+        "Primary outer radius rate", "m/s", "length_rate", "Time derivative of primary outer radius."
+    ),
+    "geometry.secondary_outer_radius_rate": (
+        "Secondary outer radius rate", "m/s", "length_rate", "Time derivative of secondary outer radius."
+    ),
+    "observer.engine_power": (
+        "Engine boundary power", "W", "power", "Input-boundary torque multiplied by primary speed."
+    ),
     "friction_coefficient": (
         "Friction coefficient",
         "1",
@@ -246,14 +261,52 @@ def describe_public_field(
         inferred_unit, inferred_dimension = _infer_metadata(key)
         description = ""
 
+    resolved_unit = unit or inferred_unit
+    resolved_dimension = dimension or (
+        _dimension_from_unit(resolved_unit) if unit is not None and exact is None else inferred_dimension
+    )
     return PublicFieldDescriptor(
         key=key,
         label=label or inferred_label,
-        unit=unit or inferred_unit,
-        dimension=dimension or inferred_dimension,
+        unit=resolved_unit,
+        dimension=resolved_dimension,
         description=description,
     )
 
+
+
+def _dimension_from_unit(unit: str) -> str:
+    """Map a carried SI unit to display metadata for generic report signals."""
+
+    normalized = unit.replace(" ", "").replace("^", "")
+    units = {
+        "1": "dimensionless",
+        "s": "time",
+        "m": "length",
+        "m²": "area",
+        "m3": "volume",
+        "m³": "volume",
+        "rad": "angle",
+        "rad/s": "angular_speed",
+        "rad/s²": "angular_acceleration",
+        "m/s": "speed",
+        "m/s²": "acceleration",
+        "m/s2": "acceleration",
+        "N": "force",
+        "Nm": "torque",
+        "N·m": "torque",
+        "kg": "mass",
+        "kg/m³": "density",
+        "kg/m3": "density",
+        "kg·m²": "inertia",
+        "kgm2": "inertia",
+        "N/m": "stiffness",
+        "N·m/rad": "stiffness",
+        "Nm/rad": "stiffness",
+        "W": "power",
+        "J": "energy",
+    }
+    return units.get(normalized, "dimensionless")
 
 def _infer_metadata(key: str) -> tuple[str, str]:
     for suffix, unit, dimension in _SUFFIX_METADATA:
