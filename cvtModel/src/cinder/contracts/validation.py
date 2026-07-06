@@ -283,9 +283,7 @@ def validate_assembly_document(
                 ),
             ),
         )
-    return validate_assembly(
-        assembly, options=options, document_path_prefix=""
-    )
+    return validate_assembly(assembly, options=options, document_path_prefix="")
 
 
 def validate_simulation_case_document(
@@ -348,7 +346,10 @@ def _document_path_for_location(location: str, *, prefix: str) -> str:
 
     root = prefix.rstrip("/")
     if location == "geometry" or location.startswith("geometry."):
-        if location == "geometry.primary_wrap_angle" or location == "geometry.secondary_wrap_angle":
+        if (
+            location == "geometry.primary_wrap_angle"
+            or location == "geometry.secondary_wrap_angle"
+        ):
             return f"{root}/geometry"
         return f"{root}/" + location.replace(".", "/")
     if location.startswith("contact."):

@@ -35,17 +35,17 @@ class ReferenceLaunchTest(unittest.TestCase):
         # BLAS, and platform builds. The hybrid transition sequence and final
         # operating point are the regression target; bit-level terminal-state
         # equality is not a public solver contract.
-        expected_final_state = np.asarray(
+        expected_nonzero_state = np.asarray(
             (
-                400.2355139994592,
-                88.21088288769612,
-                8.038864928086767,
-                0.008598466530414205,
-                -1.5904072322829304e-06,
-                107.83974641620406,
+                400.2355133474496,
+                88.21090025967916,
+                8.038867353585493,
+                0.00859846652933709,
+                107.83872531270033,
             ),
             dtype=float,
         )
+        actual_nonzero_state = result.final_state[[0, 1, 2, 3, 5]]
 
         self.assertEqual(result.termination_reason, "final_time_reached")
         self.assertEqual(len(result.segments), 5)
@@ -60,10 +60,10 @@ class ReferenceLaunchTest(unittest.TestCase):
             ),
         )
         assert_allclose(
-            result.final_state,
-            expected_final_state,
-            rtol=2.0e-5,
-            atol=1.0e-5,
+            actual_nonzero_state,
+            expected_nonzero_state,
+            rtol=1.0e-6,
+            atol=1.0e-7,
         )
         self.assertLess(abs(float(result.final_state[4])), 5.0e-5)
 

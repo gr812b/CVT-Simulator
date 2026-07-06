@@ -108,12 +108,20 @@ print(payload["transitions"])        # exact hybrid transition markers
 transition that projects the state is represented by duplicate timestamps, not
 by interpolating through the discontinuity. The frontend may plot this directly.
 
-For a large debug/inspection response, include the accepted solver mesh too:
+For detailed hybrid inspection, request only the extra data you need:
 
 ```python
-payload = project_simulation_result(result, include_raw_trace=True)
+payload = project_simulation_result(
+    result,
+    include_reported_segments=True,  # uniform report split by hybrid segment
+    include_raw_trace=True,          # accepted adaptive solver mesh
+)
+reported_segments = payload["reported_segments"]
 raw_trace = payload["raw_trace"]
 ```
+
+Those payloads are intentionally opt-in. Normal charts, playback, and 3D views
+should use the single default `report_table`.
 
 ## Discover editable fields instead of maintaining parameter maps
 
@@ -126,7 +134,10 @@ for field in schema["fields"]:
 ```
 
 Each descriptor names a document path, type, canonical unit, physical
-dimension, bounds when known, and an optional discriminator condition. Repeated
+dimension, exposure level, bounds when known, and an optional discriminator
+condition. `design` fields describe CVT hardware, `scenario` fields describe a
+run's boundaries and initial state, and `advanced_execution` fields describe
+numerical/reporting controls. Repeated
 items use `*` in `path_template`; for example:
 
 ```text

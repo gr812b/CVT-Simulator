@@ -185,11 +185,60 @@ def component_catalog_document() -> dict[str, Any]:
             {
                 "kind": "piecewise_ramp",
                 "description": "Ordered linear and/or circular local ramp segments.",
-                "segment_kinds": ["linear_segment", "circular_segment"],
+                "segment_kinds": [
+                    {
+                        "kind": "linear_segment",
+                        "parameters": [
+                            {
+                                "key": "length_m",
+                                "canonical_unit": "m",
+                                "dimension": "length",
+                            },
+                            {
+                                "key": "angle_rad",
+                                "canonical_unit": "rad",
+                                "dimension": "angle",
+                            },
+                        ],
+                    },
+                    {
+                        "kind": "circular_segment",
+                        "parameters": [
+                            {
+                                "key": "length_m",
+                                "canonical_unit": "m",
+                                "dimension": "length",
+                            },
+                            {
+                                "key": "angle_start_rad",
+                                "canonical_unit": "rad",
+                                "dimension": "angle",
+                            },
+                            {
+                                "key": "angle_end_rad",
+                                "canonical_unit": "rad",
+                                "dimension": "angle",
+                            },
+                            {
+                                "key": "quadrant",
+                                "value_kind": "integer",
+                                "dimension": "dimensionless",
+                            },
+                        ],
+                    },
+                ],
             },
             {
                 "kind": "helix_profile",
                 "description": "Secondary helix defined by a positive-opening circumferential piecewise ramp and radius.",
+                "parameters": [
+                    {"key": "radius_m", "canonical_unit": "m", "dimension": "length"},
+                    {
+                        "key": "theta_offset_rad",
+                        "canonical_unit": "rad",
+                        "dimension": "angle",
+                    },
+                ],
             },
         ],
     }

@@ -129,7 +129,8 @@ A field descriptor is intentionally generic:
   "canonical_unit": "m",
   "minimum": null,
   "required": true,
-  "section": "Scenario"
+  "section": "Scenario",
+  "exposure": "scenario"
 }
 ```
 
@@ -137,8 +138,15 @@ A path template with `*` represents one array item. `supported_discriminators`
 describes all built-in structural variants. The component catalog is included as
 factual metadata, including supported mounts and component parameter types.
 
+Each field also has one exposure level:
+
+- `design` — CVT hardware and component design inputs;
+- `scenario` — boundaries, road/load conditions, and initial conditions;
+- `advanced_execution` — numerical/contact/reporting settings retained for
+  reproducibility but normally hidden behind an advanced panel.
+
 This is intentionally not a UI layout engine. The application controls tabs,
-card order, copy, advanced-mode visibility, and visual treatment.
+card order, copy, and visual treatment.
 
 ## Result projections
 
@@ -152,9 +160,12 @@ The result contains:
 - `metrics`: standard cross-run scalar metrics;
 - `summary`: terminal state and segment/transition counts;
 - `report_table`: continuous time-aligned data for generic charts, playback, and 3D animation;
-- `reported_segments`: the same report data preserved by hybrid mode segment;
 - `transitions`: exact event/transition markers;
+- optional `reported_segments` when `include_reported_segments=True`;
 - optional `raw_trace` when `include_raw_trace=True`.
+
+The default projection deliberately contains one report surface only. It does
+not duplicate the table under a legacy `segments` key.
 
 `report_table.columns` are descriptors plus aligned value vectors. Missing
 optional signals appear as `null`, not nonstandard JSON `NaN`. A segment
@@ -175,4 +186,6 @@ description
 ```
 
 The selected display unit is an application preference. Physical semantics and
-canonical values remain CINDER-owned.
+canonical base-SI values remain CINDER-owned. CINDER may internally use
+convenience representations such as degree-based ramp classes, but document and
+projection boundaries emit radians, metres, and other base-SI values.

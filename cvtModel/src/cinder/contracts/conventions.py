@@ -47,13 +47,17 @@ class PublicConventions:
 
     contract_version: int = PUBLIC_CONTRACT_VERSION
     canonical_unit_system: str = "SI"
-    ratio_definition: str = "effective secondary radius divided by effective primary radius"
+    ratio_definition: str = (
+        "effective secondary radius divided by effective primary radius"
+    )
     ratio_direction: str = (
         "ratio greater than one is a reduction; increasing global shift reduces the ratio"
     )
     shift_coordinate: str = "global shift increases primary closure and primary radius"
     clamping_force_sign: str = "positive local axial force closes the mounted pulley"
-    torque_sign: str = "positive shaft torque acts in the forward modeled rotation direction"
+    torque_sign: str = (
+        "positive shaft torque acts in the forward modeled rotation direction"
+    )
     report_grid: str = (
         "high-level simulation results use a 10 ms uniform reporting grid by default; "
         "raw adaptive trace remains available"
@@ -108,12 +112,6 @@ _EXACT: dict[str, tuple[str, str, str, str]] = {
         "inverse_length",
         "Geometric dR/ds.",
     ),
-    "ratio_change_per_mm_shift": (
-        "Ratio change per millimetre of shift",
-        "1/mm",
-        "inverse_length",
-        "Geometric ratio change for one millimetre of global shift.",
-    ),
     "total_clamping_force_N": (
         "Total clamping force",
         "N",
@@ -127,15 +125,60 @@ _EXACT: dict[str, tuple[str, str, str, str]] = {
         "Actuator force with affine closure unknowns set to zero.",
     ),
     "time_s": ("Time", "s", "time", "Elapsed simulation time."),
-    "friction_coefficient": ("Friction coefficient", "1", "dimensionless", "Belt--pulley friction coefficient."),
-    "rolling_resistance_coefficient": ("Rolling resistance coefficient", "1", "dimensionless", "Road rolling-resistance coefficient."),
-    "drag_coefficient": ("Drag coefficient", "1", "dimensionless", "Aerodynamic drag coefficient."),
-    "reduction_ratio": ("Final-drive reduction ratio", "1", "dimensionless", "Secondary angular speed divided by wheel angular speed."),
-    "optimizer_tolerance": ("Optimizer tolerance", "1", "dimensionless", "Nonlinear contact solver tolerance."),
-    "relative_tolerance": ("Relative tolerance", "1", "dimensionless", "Adaptive integration relative tolerance."),
-    "absolute_tolerance": ("Absolute tolerance", "1", "dimensionless", "Adaptive integration absolute tolerance."),
-    "stick_exit_static_margin": ("Stick exit static margin", "1", "dimensionless", "Static traction reserve required to remain sticking."),
-    "restick_static_margin": ("Restick static margin", "1", "dimensionless", "Static traction reserve required to reattach a contact."),
+    "friction_coefficient": (
+        "Friction coefficient",
+        "1",
+        "dimensionless",
+        "Belt--pulley friction coefficient.",
+    ),
+    "rolling_resistance_coefficient": (
+        "Rolling resistance coefficient",
+        "1",
+        "dimensionless",
+        "Road rolling-resistance coefficient.",
+    ),
+    "drag_coefficient": (
+        "Drag coefficient",
+        "1",
+        "dimensionless",
+        "Aerodynamic drag coefficient.",
+    ),
+    "reduction_ratio": (
+        "Final-drive reduction ratio",
+        "1",
+        "dimensionless",
+        "Secondary angular speed divided by wheel angular speed.",
+    ),
+    "optimizer_tolerance": (
+        "Optimizer tolerance",
+        "1",
+        "dimensionless",
+        "Nonlinear contact solver tolerance.",
+    ),
+    "relative_tolerance": (
+        "Relative tolerance",
+        "1",
+        "dimensionless",
+        "Adaptive integration relative tolerance.",
+    ),
+    "absolute_tolerance": (
+        "Absolute tolerance",
+        "1",
+        "dimensionless",
+        "Adaptive integration absolute tolerance.",
+    ),
+    "stick_exit_static_margin": (
+        "Stick exit static margin",
+        "1",
+        "dimensionless",
+        "Static traction reserve required to remain sticking.",
+    ),
+    "restick_static_margin": (
+        "Restick static margin",
+        "1",
+        "dimensionless",
+        "Static traction reserve required to reattach a contact.",
+    ),
 }
 
 # Ordered longest-first so a compound unit wins over a suffix such as ``_N``.
@@ -152,18 +195,14 @@ _SUFFIX_METADATA: tuple[tuple[str, str, str], ...] = (
     ("_m_per_s2", "m/s²", "acceleration"),
     ("_rad_per_s", "rad/s", "angular_speed"),
     ("_m_per_s", "m/s", "speed"),
-    ("_per_mm", "1/mm", "inverse_length"),
     ("_per_m", "1/m", "inverse_length"),
     ("_dimensionless", "1", "dimensionless"),
     ("_Nm", "N·m", "torque"),
-    ("_rpm", "rpm", "angular_speed"),
-    ("_deg", "deg", "angle"),
     ("_N", "N", "force"),
     ("_W", "W", "power"),
     ("_J", "J", "energy"),
     ("_kg", "kg", "mass"),
     ("_m2", "m²", "area"),
-    ("_mm", "mm", "length"),
     ("_m", "m", "length"),
     ("_rad", "rad", "angle"),
     ("_s", "s", "time"),

@@ -41,7 +41,9 @@ or backend frameworks.
 - ad hoc launch, hill, and braking studies
 
 Those scripts may import `cinder.*`, but they are not part of the public CINDER
-package contract.
+package contract. CINDER tests must not import `launchTools`: test-only baseline
+builders live under `test/cinder/` so the library test suite stays independent
+of plotting and project experimentation dependencies.
 
 ## The legacy package
 

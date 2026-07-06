@@ -198,7 +198,10 @@ class PublicContractsTest(unittest.TestCase):
         json.dumps(payload)
         self.assertEqual(payload["kind"], "simulation_result")
         self.assertIn("metrics", payload)
-        self.assertTrue(payload["segments"])
+        self.assertIn("report_table", payload)
+        self.assertGreater(payload["report_table"]["row_count"], 0)
+        self.assertNotIn("segments", payload)
+        self.assertNotIn("reported_segments", payload)
 
 
 if __name__ == "__main__":

@@ -39,6 +39,7 @@ from .validation import AssemblyValidationReport
 # Static studies
 # ---------------------------------------------------------------------------
 
+
 def project_clamping_force_response(
     field: ClampingForceResponseField,
 ) -> dict[str, Any]:
@@ -67,7 +68,6 @@ def project_geometry_path(path: GeometryPathTable) -> dict[str, Any]:
             "secondary_effective_radius_m": path.secondary_effective_radius,
             "ratio": path.ratio,
             "ratio_change_per_m_shift": path.ratio_change_per_m_shift,
-            "ratio_change_per_mm_shift": path.ratio_change_per_mm_shift,
             "primary_wrap_angle_rad": path.primary_wrap_angle,
             "secondary_wrap_angle_rad": path.secondary_wrap_angle,
         },
@@ -98,7 +98,6 @@ def project_ratio_sensitivity_field(field: RatioSensitivityField) -> dict[str, A
             "primary_outer_radius_m": field.primary_outer_radius,
             "secondary_outer_radius_m": field.secondary_outer_radius,
             "ratio_change_per_m_shift": field.ratio_change_per_m_shift,
-            "ratio_change_per_mm_shift": field.ratio_change_per_mm_shift,
             "feasible_mask": field.feasible_mask,
         },
     )
@@ -151,27 +150,26 @@ def project_assembly_validation(report: AssemblyValidationReport) -> dict[str, A
 # Simulation reports
 # ---------------------------------------------------------------------------
 
+
 def project_simulation_result(
     result: CVTIntegrationResult,
     *,
+    include_reported_segments: bool = False,
     include_raw_trace: bool = False,
 ) -> dict[str, Any]:
     """Project standard report data, events, metrics, and optional raw trace.
 
     ``report_table`` is the default frontend-oriented surface: a continuous
-    time-aligned column table across all hybrid segments.  Event boundaries are
+    time-aligned column table across all hybrid segments. Event boundaries are
     intentionally retained as duplicate timestamps when a projection/reset
-    creates a discontinuity.  ``reported_segments`` preserves the original
-    mode segmentation for detailed callers.  ``raw_trace`` is optional because
-    accepted solver meshes can be substantially larger than the report grid.
+    creates a discontinuity. Detailed ``reported_segments`` and the accepted
+    solver-mesh ``raw_trace`` are both opt-in because they can materially
+    increase result payload size.
     """
 
     if not isinstance(result, CVTIntegrationResult):
         raise TypeError("result must be a CVTIntegrationResult.")
 
-    reported_segments = [
-        _project_reported_segment(segment) for segment in result.segments
-    ]
     payload: dict[str, Any] = {
         "contract_version": PUBLIC_CONTRACT_VERSION,
         "kind": "simulation_result",
@@ -185,11 +183,6 @@ def project_simulation_result(
         },
         "warnings": list(result.warnings),
         "report_table": _project_report_table(result),
-        "reported_segments": reported_segments,
-        # Kept as a public compatibility alias for callers that consumed the
-        # first contract release. New integrations should prefer the clearer
-        # reported_segments name or report_table for charts/playback.
-        "segments": reported_segments,
         "transitions": [
             {
                 "time_s": record.time,
@@ -203,6 +196,10 @@ def project_simulation_result(
             for record in result.transitions
         ],
     }
+    if include_reported_segments:
+        payload["reported_segments"] = [
+            _project_reported_segment(segment) for segment in result.segments
+        ]
     if include_raw_trace:
         payload["raw_trace"] = _project_raw_trace(result)
     return payload
@@ -241,14 +238,14 @@ def _project_report_table(result: CVTIntegrationResult) -> dict[str, Any]:
                     signal.unit,
                     signal.label,
                     signal.group,
-                    describe_public_field(signal.key, unit=signal.unit, label=signal.label).dimension,
+                    describe_public_field(
+                        signal.key, unit=signal.unit, label=signal.label
+                    ).dimension,
                 )
                 ordered_signal_keys.append(key)
 
     time_values: list[float | None] = []
-    columns: dict[str, list[float | None]] = {
-        key: [] for key in ordered_signal_keys
-    }
+    columns: dict[str, list[float | None]] = {key: [] for key in ordered_signal_keys}
     segment_ranges: list[dict[str, Any]] = []
     start_index = 0
     for index, segment in enumerate(result.segments):
@@ -331,6 +328,7 @@ def _project_raw_trace(result: CVTIntegrationResult) -> dict[str, Any]:
 # ---------------------------------------------------------------------------
 # Generic JSON helpers
 # ---------------------------------------------------------------------------
+
 
 def _project_columns(
     *,

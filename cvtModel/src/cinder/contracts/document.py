@@ -8,8 +8,8 @@ Python callers.
 
 from __future__ import annotations
 
-from collections.abc import Mapping, Sequence
-from math import isfinite
+from collections.abc import Mapping
+from math import degrees, radians
 from typing import Any
 
 from cinder.model.cvt.actuation import (
@@ -48,12 +48,18 @@ from cinder.model.system import (
 )
 
 from .conventions import PUBLIC_CONTRACT_VERSION
+from ._decode import (
+    DesignDocumentError,
+    optional_number as _optional_number,
+    require as _require,
+    require_integer as _integer,
+    require_mapping as _mapping,
+    require_number as _number,
+    require_sequence as _sequence,
+    require_string as _string,
+)
 
 ASSEMBLY_DOCUMENT_TYPE = "cinder_cvt_assembly"
-
-
-class DesignDocumentError(ValueError):
-    """Raised when a design document is malformed or unsupported."""
 
 
 class UnsupportedDesignDocumentError(DesignDocumentError):
@@ -349,14 +355,14 @@ def _encode_ramp_segment(segment: object) -> dict[str, Any]:
         return {
             "kind": "linear_segment",
             "length_m": segment.length,
-            "angle_degrees": segment.angle_degrees,
+            "angle_rad": radians(segment.angle_degrees),
         }
     if isinstance(segment, CircularSegment):
         return {
             "kind": "circular_segment",
             "length_m": segment.length,
-            "angle_start_degrees": segment.angle_start_degrees,
-            "angle_end_degrees": segment.angle_end_degrees,
+            "angle_start_rad": radians(segment.angle_start_degrees),
+            "angle_end_rad": radians(segment.angle_end_degrees),
             "quadrant": segment.quadrant,
         }
     raise UnsupportedDesignDocumentError(
@@ -369,14 +375,14 @@ def _decode_ramp_segment(payload: Mapping[str, Any]) -> LinearSegment | Circular
     if kind == "linear_segment":
         return LinearSegment(
             length=_number(payload, "length_m"),
-            angle_degrees=_number(payload, "angle_degrees"),
+            angle_degrees=degrees(_number(payload, "angle_rad")),
         )
     if kind == "circular_segment":
         quadrant = _integer(payload, "quadrant")
         return CircularSegment(
             length=_number(payload, "length_m"),
-            angle_start_degrees=_number(payload, "angle_start_degrees"),
-            angle_end_degrees=_number(payload, "angle_end_degrees"),
+            angle_start_degrees=degrees(_number(payload, "angle_start_rad")),
+            angle_end_degrees=degrees(_number(payload, "angle_end_rad")),
             quadrant=quadrant,
         )
     raise UnsupportedDesignDocumentError(f"Unsupported ramp segment kind {kind!r}.")
@@ -420,50 +426,3 @@ def _require_exact_schema(document: Mapping[str, Any]) -> None:
         raise UnsupportedDesignDocumentError(
             f"document_type must be {ASSEMBLY_DOCUMENT_TYPE!r}."
         )
-
-
-def _mapping(value: object, path: str) -> Mapping[str, Any]:
-    if not isinstance(value, Mapping):
-        raise DesignDocumentError(f"{path} must be an object.")
-    return value
-
-
-def _sequence(value: object, path: str) -> Sequence[Any]:
-    if isinstance(value, (str, bytes)) or not isinstance(value, Sequence):
-        raise DesignDocumentError(f"{path} must be an array.")
-    return value
-
-
-def _require(mapping: Mapping[str, Any], key: str) -> Any:
-    try:
-        return mapping[key]
-    except KeyError as error:
-        raise DesignDocumentError(f"Missing required field {key!r}.") from error
-
-
-def _number(mapping: Mapping[str, Any], key: str) -> float:
-    value = _require(mapping, key)
-    if isinstance(value, bool) or not isinstance(value, (int, float)):
-        raise DesignDocumentError(f"{key} must be a finite number.")
-    numeric = float(value)
-    if not isfinite(numeric):
-        raise DesignDocumentError(f"{key} must be finite.")
-    return numeric
-
-
-def _optional_number(mapping: Mapping[str, Any], key: str, *, default: float) -> float:
-    return default if key not in mapping else _number(mapping, key)
-
-
-def _integer(mapping: Mapping[str, Any], key: str) -> int:
-    value = _require(mapping, key)
-    if isinstance(value, bool) or not isinstance(value, int):
-        raise DesignDocumentError(f"{key} must be an integer.")
-    return value
-
-
-def _string(mapping: Mapping[str, Any], key: str) -> str:
-    value = _require(mapping, key)
-    if not isinstance(value, str) or not value.strip():
-        raise DesignDocumentError(f"{key} must be a non-empty string.")
-    return value

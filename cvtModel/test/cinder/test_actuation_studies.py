@@ -22,9 +22,7 @@ class ActuationStudiesTest(unittest.TestCase):
         cls.baseline = build_baja_trial_baseline()
         cls.cvt = cls.baseline.assembly
 
-    def test_input_clamping_response_returns_force_columns_from_existing_actuator(
-        self,
-    ) -> None:
+    def test_input_clamping_response_returns_force_columns_from_existing_actuator(self) -> None:
         field = sample_pulley_clamping_force(
             PulleyClampingForceStudyRequest(
                 cvt=self.cvt,
@@ -67,9 +65,7 @@ class ActuationStudiesTest(unittest.TestCase):
             field.column("centrifugal_ramp_clamping_force_N")[-1, 0],
         )
 
-    def test_output_clamping_response_resolves_helix_against_actual_closure_torque(
-        self,
-    ) -> None:
+    def test_output_clamping_response_resolves_helix_against_actual_closure_torque(self) -> None:
         field = sample_pulley_clamping_force(
             PulleyClampingForceStudyRequest(
                 cvt=self.cvt,

@@ -50,9 +50,11 @@ Use field `dimension` and `canonical_unit` for a generic display-unit editor.
 The conversion layer may understand physical units such as metres and RPM, but
 it must not know CVT-specific paths or derive any missing mechanical values.
 
-Render charts from `report_table.columns` plus `transitions`. A backend view
-manifest can later decide which signal groups/panels appear on a route, but the
-frontend should not reconstruct a signal from other output fields.
+Render charts from the one default `report_table.columns` plus `transitions`.
+Request `reported_segments` or `raw_trace` only for an explicit inspection
+workflow. A backend view manifest can later decide which signal groups/panels
+appear on a route, but the frontend should not reconstruct a signal from other
+output fields.
 
 For 3D animation, read CINDER-projected geometry signal columns. Frontend math
 is limited to scene-coordinate calibration and metres-to-render-scale mapping.

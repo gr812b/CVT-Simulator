@@ -29,17 +29,13 @@ class ResultsLayerTest(unittest.TestCase):
             initial_state=launch_initial_state(primary_rpm=2200.0),
             settings=self.settings,
         )
-        engaged = next(
-            segment for segment in trace.segments if segment.mode.contact_regime
-        )
+        engaged = next(segment for segment in trace.segments if segment.mode.contact_regime)
         evaluation = self.system.inspect(
             time=float(engaged.time[-1]),
             state=engaged.state[:, -1],
             mode=engaged.mode,
         )
-        self.assertIsInstance(
-            evaluation.branch_result.trial.closure, TrialClosureRuntimeResult
-        )
+        self.assertIsInstance(evaluation.branch_result.trial.closure, TrialClosureRuntimeResult)
 
     def test_result_builder_keeps_trace_and_exposes_standard_channels(self) -> None:
         trace = self.system.integrate_trace(
@@ -55,9 +51,7 @@ class ResultsLayerTest(unittest.TestCase):
                 grid=ReportingGrid.uniform_count(30),
             ),
         )
-        self.assertEqual(
-            result.summary.final_state.tolist(), trace.final_state.tolist()
-        )
+        self.assertEqual(result.summary.final_state.tolist(), trace.final_state.tolist())
         keys = set().union(*(segment.signals.keys() for segment in result.segments))
         self.assertIn("geometry.effective_ratio_secondary_over_primary", keys)
         self.assertIn("actuation.primary.axial_spring", keys)
@@ -70,18 +64,14 @@ class ResultsLayerTest(unittest.TestCase):
             initial_state=self.initial,
             settings=self.settings,
         )
-        self.assertTrue(
-            all(segment.has_dense_output for segment in result.trace.segments)
-        )
+        self.assertTrue(all(segment.has_dense_output for segment in result.trace.segments))
         first = result.segments[0]
         self.assertAlmostEqual(first.time[0], 0.0)
         self.assertTrue(np.any(np.isclose(first.time, 0.01)))
         self.assertEqual(result.transitions, result.trace.transitions)
         self.assertEqual(result.segments[0].state.shape[0], 6)
 
-    def test_uniform_grid_uses_solver_dense_output_and_preserves_transition_endpoints(
-        self,
-    ) -> None:
+    def test_uniform_grid_uses_solver_dense_output_and_preserves_transition_endpoints(self) -> None:
         result = self.system.run(
             time_span=(0.0, 1.0),
             initial_state=self.initial,
@@ -90,9 +80,7 @@ class ResultsLayerTest(unittest.TestCase):
                 grid=ReportingGrid.uniform_time_step(0.01),
             ),
         )
-        self.assertTrue(
-            all(segment.has_dense_output for segment in result.trace.segments)
-        )
+        self.assertTrue(all(segment.has_dense_output for segment in result.trace.segments))
         self.assertAlmostEqual(result.segments[0].time[0], 0.0)
         self.assertAlmostEqual(result.segments[-1].time[-1], 1.0)
         reported_times = np.concatenate([segment.time for segment in result.segments])

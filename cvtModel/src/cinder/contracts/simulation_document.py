@@ -7,9 +7,8 @@ module depends on these document helpers.
 
 from __future__ import annotations
 
-from collections.abc import Mapping, Sequence
+from collections.abc import Mapping
 from dataclasses import dataclass
-from math import isfinite
 from typing import Any
 
 from cinder.execution.hybrid.cvt_contact_switching import CVTContactSwitchSettings
@@ -47,6 +46,17 @@ from cinder.model.system import CVTDynamicState, CVTSimulationCase, OperatingSce
 from cinder.results import ReportingGrid, ReportingSettings
 
 from .conventions import PUBLIC_CONTRACT_VERSION
+from ._decode import (
+    require as _require,
+    require_boolean as _boolean,
+    require_finite_number as _finite_number,
+    require_integer as _integer,
+    require_mapping as _mapping,
+    require_number as _number,
+    require_number_or_infinity as _number_or_infinity,
+    require_sequence as _sequence,
+    require_string as _string,
+)
 from .document import (
     DesignDocumentError,
     UnsupportedDesignDocumentError,
@@ -166,9 +176,7 @@ def decode_simulation_case_document(
             _mapping(_require(execution, "traction_law"), "execution.traction_law")
         ),
         solve_settings=_decode_solve_settings(
-            _mapping(
-                _require(execution, "solve_settings"), "execution.solve_settings"
-            )
+            _mapping(_require(execution, "solve_settings"), "execution.solve_settings")
         ),
         operating_limits=_decode_operating_limits(
             _mapping(
@@ -247,15 +255,11 @@ def _decode_input_boundary(payload: Mapping[str, Any]) -> FullThrottleTorqueCurv
                 )
                 for index, point in enumerate(points)
             ),
-            low_speed_braking_torque=_number(
-                payload, "low_speed_braking_torque_Nm"
-            ),
+            low_speed_braking_torque=_number(payload, "low_speed_braking_torque_Nm"),
             low_speed_braking_peak_speed=_number(
                 payload, "low_speed_braking_peak_speed_rad_per_s"
             ),
-            high_speed_braking_torque=_number(
-                payload, "high_speed_braking_torque_Nm"
-            ),
+            high_speed_braking_torque=_number(payload, "high_speed_braking_torque_Nm"),
             high_speed_braking_transition_width=_number(
                 payload, "high_speed_braking_transition_width_rad_per_s"
             ),
@@ -306,14 +310,14 @@ def _encode_output_boundary(boundary: object) -> dict[str, Any]:
     )
 
 
-def _decode_output_boundary(payload: Mapping[str, Any]) -> FixedOutputLoad | LockedFinalDriveVehicle:
+def _decode_output_boundary(
+    payload: Mapping[str, Any],
+) -> FixedOutputLoad | LockedFinalDriveVehicle:
     kind = _string(payload, "kind")
     if kind == "fixed_output_load":
         return FixedOutputLoad(
             external_torque=_number(payload, "external_torque_Nm"),
-            added_rotational_inertia=_number(
-                payload, "added_rotational_inertia_kg_m2"
-            ),
+            added_rotational_inertia=_number(payload, "added_rotational_inertia_kg_m2"),
         )
     if kind != "locked_final_drive_vehicle":
         raise UnsupportedSimulationDocumentError(
@@ -383,16 +387,21 @@ def _encode_scenario(scenario: OperatingScenario) -> dict[str, Any]:
 
 
 def _decode_scenario(payload: Mapping[str, Any]) -> OperatingScenario:
-    time_span_values = _sequence(_require(payload, "time_span_s"), "scenario.time_span_s")
+    time_span_values = _sequence(
+        _require(payload, "time_span_s"), "scenario.time_span_s"
+    )
     if len(time_span_values) != 2:
-        raise DesignDocumentError("scenario.time_span_s must contain exactly two values.")
+        raise DesignDocumentError(
+            "scenario.time_span_s must contain exactly two values."
+        )
     state_doc = _mapping(_require(payload, "initial_state"), "scenario.initial_state")
     return OperatingScenario(
-        time_span=(_finite_number(time_span_values[0], "scenario.time_span_s[0]"), _finite_number(time_span_values[1], "scenario.time_span_s[1]")),
+        time_span=(
+            _finite_number(time_span_values[0], "scenario.time_span_s[0]"),
+            _finite_number(time_span_values[1], "scenario.time_span_s[1]"),
+        ),
         initial_state=CVTDynamicState(
-            primary_angular_speed=_number(
-                state_doc, "primary_angular_speed_rad_per_s"
-            ),
+            primary_angular_speed=_number(state_doc, "primary_angular_speed_rad_per_s"),
             secondary_angular_speed=_number(
                 state_doc, "secondary_angular_speed_rad_per_s"
             ),
@@ -416,17 +425,23 @@ def _encode_initial_mode(mode: object) -> dict[str, Any] | None:
     return {
         "engagement": mode.engagement.value,
         "shift_constraint": mode.shift_constraint.value,
-        "contact_regime": None
-        if contact is None
-        else {
-            "mode": contact.mode.value,
-            "primary_slip_direction": None
-            if contact.primary_slip_direction is None
-            else contact.primary_slip_direction.value,
-            "secondary_slip_direction": None
-            if contact.secondary_slip_direction is None
-            else contact.secondary_slip_direction.value,
-        },
+        "contact_regime": (
+            None
+            if contact is None
+            else {
+                "mode": contact.mode.value,
+                "primary_slip_direction": (
+                    None
+                    if contact.primary_slip_direction is None
+                    else contact.primary_slip_direction.value
+                ),
+                "secondary_slip_direction": (
+                    None
+                    if contact.secondary_slip_direction is None
+                    else contact.secondary_slip_direction.value
+                ),
+            }
+        ),
     }
 
 
@@ -438,7 +453,9 @@ def _decode_initial_mode(value: object) -> CVTOperatingRegime | None:
         engagement = CVTEngagementState(_string(payload, "engagement"))
         shift_constraint = CVTShiftConstraint(_string(payload, "shift_constraint"))
     except ValueError as error:
-        raise DesignDocumentError("scenario.initial_mode contains an unknown regime value.") from error
+        raise DesignDocumentError(
+            "scenario.initial_mode contains an unknown regime value."
+        ) from error
     contact_value = payload.get("contact_regime")
     contact_regime = None
     if contact_value is not None:
@@ -512,9 +529,17 @@ def _encode_solve_settings(settings: EngagedContactSolveSettings) -> dict[str, A
 
 
 def _decode_solve_settings(payload: Mapping[str, Any]) -> EngagedContactSolveSettings:
-    bounds = _mapping(_require(payload, "lambda_search_bounds"), "execution.solve_settings.lambda_search_bounds")
-    initial = _mapping(_require(payload, "initial_guess"), "execution.solve_settings.initial_guess")
-    tolerances = _mapping(_require(payload, "contact_tolerances"), "execution.solve_settings.contact_tolerances")
+    bounds = _mapping(
+        _require(payload, "lambda_search_bounds"),
+        "execution.solve_settings.lambda_search_bounds",
+    )
+    initial = _mapping(
+        _require(payload, "initial_guess"), "execution.solve_settings.initial_guess"
+    )
+    tolerances = _mapping(
+        _require(payload, "contact_tolerances"),
+        "execution.solve_settings.contact_tolerances",
+    )
     condition_number = payload.get("maximum_closure_condition_number")
     return EngagedContactSolveSettings(
         lambda_search_bounds=LambdaSearchBounds(
@@ -539,9 +564,7 @@ def _decode_solve_settings(payload: Mapping[str, Any]) -> EngagedContactSolveSet
             ),
         ),
         optimizer_tolerance=_number(payload, "optimizer_tolerance"),
-        maximum_function_evaluations=_integer(
-            payload, "maximum_function_evaluations"
-        ),
+        maximum_function_evaluations=_integer(payload, "maximum_function_evaluations"),
         maximum_closure_condition_number=(
             None
             if condition_number is None
@@ -652,9 +675,7 @@ def _decode_reporting_settings(payload: Mapping[str, Any]) -> ReportingSettings:
         include_contact=_boolean(payload, "include_contact"),
         include_actuation=_boolean(payload, "include_actuation"),
         include_closure_audit=_boolean(payload, "include_closure_audit"),
-        include_integrated_observers=_boolean(
-            payload, "include_integrated_observers"
-        ),
+        include_integrated_observers=_boolean(payload, "include_integrated_observers"),
     )
 
 
@@ -667,66 +688,6 @@ def _require_document_header(document: Mapping[str, Any]) -> None:
         raise UnsupportedSimulationDocumentError(
             f"document_type must be {SIMULATION_CASE_DOCUMENT_TYPE!r}."
         )
-
-
-def _mapping(value: object, path: str) -> Mapping[str, Any]:
-    if not isinstance(value, Mapping):
-        raise DesignDocumentError(f"{path} must be an object.")
-    return value
-
-
-def _sequence(value: object, path: str) -> Sequence[Any]:
-    if isinstance(value, (str, bytes)) or not isinstance(value, Sequence):
-        raise DesignDocumentError(f"{path} must be an array.")
-    return value
-
-
-def _require(mapping: Mapping[str, Any], key: str) -> Any:
-    try:
-        return mapping[key]
-    except KeyError as error:
-        raise DesignDocumentError(f"Missing required field {key!r}.") from error
-
-
-def _number(mapping: Mapping[str, Any], key: str) -> float:
-    return _finite_number(_require(mapping, key), key)
-
-
-def _finite_number(value: object, path: str) -> float:
-    if isinstance(value, bool) or not isinstance(value, (int, float)):
-        raise DesignDocumentError(f"{path} must be a finite number.")
-    numeric = float(value)
-    if not isfinite(numeric):
-        raise DesignDocumentError(f"{path} must be finite.")
-    return numeric
-
-
-def _number_or_infinity(mapping: Mapping[str, Any], key: str) -> float:
-    value = _require(mapping, key)
-    if isinstance(value, str) and value == "infinity":
-        return float("inf")
-    return _finite_number(value, key)
-
-
-def _integer(mapping: Mapping[str, Any], key: str) -> int:
-    value = _require(mapping, key)
-    if isinstance(value, bool) or not isinstance(value, int):
-        raise DesignDocumentError(f"{key} must be an integer.")
-    return value
-
-
-def _string(mapping: Mapping[str, Any], key: str) -> str:
-    value = _require(mapping, key)
-    if not isinstance(value, str) or not value.strip():
-        raise DesignDocumentError(f"{key} must be a non-empty string.")
-    return value
-
-
-def _boolean(mapping: Mapping[str, Any], key: str) -> bool:
-    value = _require(mapping, key)
-    if not isinstance(value, bool):
-        raise DesignDocumentError(f"{key} must be a boolean.")
-    return value
 
 
 def _optional_enum(
