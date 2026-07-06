@@ -12,6 +12,8 @@ cinder/
   execution/
     hybrid/       # integration, modes, events, impacts, and transition logic
   results/        # raw traces, state inspection, signal materialization, observers, audit access
+  studies/        # static engineering analyses built above resolved model objects
+    geometry/     # Case A/B geometry solves, paths, radius planes, sensitivity fields
 ```
 
 `model` contains physical laws and state-frozen evaluation. `execution` contains
@@ -19,8 +21,22 @@ no CVT force laws: it advances the evaluator through hybrid regimes. `results`
 replays the same model at selected saved states after integration; it does not
 change the integrated trajectory.
 
-`studies` remain intentionally deferred. Direct geometry, profile, and actuator
-map APIs will be added on top of the same model contracts in the next phase.
+## Static geometry studies
+
+`cinder.studies.geometry` adds a small design-study layer above the resolved
+`BeltPulleyGeometrySpec`. It deliberately does not add plotting or frontend
+objects. The two solvers are:
+
+- `solve_geometry_from_endpoint_radii(...)` for Case A, using the low-ratio
+  primary/secondary outer radii;
+- `solve_geometry_from_target_ratios(...)` for Case B, using desired maximum
+  and minimum effective-radius ratios.
+
+Both return the same `ResolvedGeometryDesign`, which can be passed to the
+independent `sample_geometry_path`, `evaluate_radius_plane`,
+`evaluate_ratio_sensitivity_field`, and `evaluate_geometry_feasibility` calls.
+The last two calls return numeric fields for client-side contour and surface
+rendering; CINDER itself has no plotting dependency.
 
 ## CVT-only assembly and executable case
 
@@ -164,5 +180,6 @@ contract on either pulley.
 
 ## Clean break
 
-Only the `model`, `execution`, and `results` paths exist in this package. There
-are no legacy root modules, alias packages, or fallback constructor paths.
+The package contains `model`, `execution`, `results`, and the static `studies`
+layer. There are no legacy root modules, alias packages, or fallback constructor
+paths.
