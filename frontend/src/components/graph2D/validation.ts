@@ -20,7 +20,7 @@ export const VALIDATION = {
 /**
  * Validates an array of data points
  */
-export function validateData(xData: number[], yData: number[][]): ValidationResult {
+export function validateData(xData: number[], yData: Array<Array<number | null>>): ValidationResult {
   const errors: string[] = [];
   const warnings: string[] = [];
   
@@ -63,12 +63,10 @@ export function validateData(xData: number[], yData: number[][]): ValidationResu
 
   yData.forEach((y, index) => {
     for (const yValue of y) {
-      if (typeof yValue !== 'number' || !Number.isFinite(yValue)) {
+      // Null is an intentional report gap and is rendered by ECharts as a break
+      // in the line. Non-finite numeric values remain invalid.
+      if (yValue !== null && (typeof yValue !== 'number' || !Number.isFinite(yValue))) {
         errors.push(`Y value at index ${index} is not a valid number`);
-      }
-
-      if (yValue === null || yValue === undefined) {
-        errors.push(`Y value at index ${index} has null/undefined value`);
       }
     }
   });

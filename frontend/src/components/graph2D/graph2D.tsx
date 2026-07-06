@@ -15,7 +15,7 @@ export interface Graph2DProps {
   /** X-axis data points */
   xData: number[];
   /** Y-axis data points */
-  yData: number[][];
+  yData: Array<Array<number | null>>;
   /** Chart configuration */
   config: ChartConfig;
   /** Additional ECharts options to merge (for advanced customization) */

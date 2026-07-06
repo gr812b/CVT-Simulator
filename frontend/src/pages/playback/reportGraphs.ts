@@ -46,15 +46,24 @@ function column(table: ReportTable, key: string): ReportColumn | undefined {
   return table.columns.find((candidate) => candidate.key === key);
 }
 
-function shown(columnValue: ReportColumn): number[] {
-  let lastFinite = 0;
+type ChartValue = number | null;
+
+/**
+ * A report gap must stay a gap. Carrying the prior value forward makes an
+ * unavailable signal look valid and can conceal a reporting or solver issue.
+ */
+function shown(columnValue: ReportColumn): ChartValue[] {
   return columnValue.values.map((value) => {
-    const finite = typeof value === 'number' && Number.isFinite(value) ? value : lastFinite;
-    lastFinite = finite;
+    if (typeof value !== 'number' || !Number.isFinite(value)) return null;
     return isQuantityDimension(columnValue.dimension)
-      ? siToDisplay(finite, defaultDisplayUnit(columnValue.dimension))
-      : finite;
+      ? siToDisplay(value, defaultDisplayUnit(columnValue.dimension))
+      : value;
   });
+}
+
+function shownXAxis(columnValue: ReportColumn): number[] | null {
+  const values = shown(columnValue);
+  return values.every((value): value is number => value !== null) ? values : null;
 }
 
 function unit(columnValue: ReportColumn): string {
@@ -83,11 +92,12 @@ export function buildReportGraphs(table: ReportTable): GraphCategory[] {
       showYLine: false,
       tooltipPosition: chart.tooltip,
     };
-    const xData = shown(x);
+    const xData = shownXAxis(x);
+    if (xData === null) return;
     const seriesData = y.map((entry) => shown(entry.column));
     const graph = {
       xData,
-      yData: xData.map((_, index) => seriesData.map((values) => values[index] ?? 0)),
+      yData: xData.map((_, index) => seriesData.map((values) => values[index] ?? null)),
       config,
     };
     const existing = categories.get(category) ?? { title: category, graphs: [] };

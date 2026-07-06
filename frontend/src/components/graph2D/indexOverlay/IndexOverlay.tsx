@@ -11,7 +11,7 @@ interface AxisConfig {
 
 interface IndexOverlayProps {
   xData: number[];
-  yData: number[][];
+  yData: Array<Array<number | null>>;
   replayController: {
     on: (handler: (event: { type: string; currentIndex?: number }) => void) => () => void;
   };

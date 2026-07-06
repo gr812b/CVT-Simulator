@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import * as THREE from 'three';
 import type { SimulationCaseDocument, ReportTable } from '@api/client';
-import { reportColumn, valueAt } from '@utils/reportTable';
+import { valueAt } from '@utils/reportTable';
 import type { ReportReplayController } from '@utils/reportReplay';
 import { useScene3D } from '@hooks/useScene3D';
 import type { Model3DConfig } from '@utils/sceneTypes';
@@ -12,7 +12,6 @@ import { updateBeltMesh, type BeltPathData } from './beltGeometry';
 import { sceneDistance, sceneGeometry } from './sceneSpec';
 
 interface Scene3DViewerProps { replayController: ReportReplayController; table: ReportTable; document: SimulationCaseDocument; className?: string; }
-const candidates = (table: ReportTable, keys: string[]): string | undefined => keys.find((key) => reportColumn(table, key) !== undefined);
 const finite = (value: number | null | undefined, fallback: number) => typeof value === 'number' && Number.isFinite(value) ? value : fallback;
 
 /** Original CAD scene, now driven only by submitted document dimensions and flattened report columns. */
@@ -20,14 +19,14 @@ export const Scene3DViewer = ({ replayController, table, document, className }: 
   const geometry = useMemo(() => sceneGeometry(document), [document]);
   const [models, setModels] = useState<Model3DConfig[]>([]); const [isLoading, setLoading] = useState(true); const [beltMesh, setBeltMesh] = useState<THREE.Mesh | null>(null);
   const [beltVisible, setBeltVisible] = useState(true); const [showAngularRotation, setShowAngularRotation] = useState(true); const [gridsVisible, setGridsVisible] = useState(false); const [crossSectionEnabled, setCrossSectionEnabled] = useState(false); const [gridObjects, setGridObjects] = useState<THREE.Object3D[]>([]);
-  const primaryRadiusKey = useMemo(() => candidates(table, ['geometry.primary_effective_radius', 'geometry.primary_effective_radius_m']), [table]);
-  const secondaryRadiusKey = useMemo(() => candidates(table, ['geometry.secondary_effective_radius', 'geometry.secondary_effective_radius_m']), [table]);
-  const shiftKey = useMemo(() => candidates(table, ['state.shift_position', 'state.shift_position_m']), [table]);
-  const primaryAngleKey = useMemo(() => candidates(table, ['state.primary_shaft_angle', 'state.primary_angular_position']), [table]);
-  const primarySpeedKey = useMemo(() => candidates(table, ['state.primary_angular_speed', 'state.primary_angular_speed_rad_per_s']), [table]);
-  const secondaryAngleKey = useMemo(() => candidates(table, ['state.secondary_shaft_angle', 'state.secondary_shaft_angle_rad']), [table]);
-  const primaryWrapKey = useMemo(() => candidates(table, ['geometry.primary_wrap_angle_rad', 'geometry.primary_wrap_angle']), [table]);
-  const secondaryWrapKey = useMemo(() => candidates(table, ['geometry.secondary_wrap_angle_rad', 'geometry.secondary_wrap_angle']), [table]);
+  const primaryRadiusKey = 'geometry.primary_effective_radius';
+  const secondaryRadiusKey = 'geometry.secondary_effective_radius';
+  const shiftKey = 'state.shift_position';
+  const primaryAngleKey = 'state.primary_shaft_angle';
+  const primarySpeedKey = 'state.primary_angular_speed';
+  const secondaryAngleKey = 'state.secondary_shaft_angle';
+  const primaryWrapKey = 'geometry.primary_wrap_angle_rad';
+  const secondaryWrapKey = 'geometry.secondary_wrap_angle_rad';
   const timeKey = table.axisKey;
 
   useEffect(() => { setLoading(true); void loadCVTModels(geometry).then(setModels).finally(() => setLoading(false)); }, [geometry]);
