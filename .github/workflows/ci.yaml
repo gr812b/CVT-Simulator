@@ -108,8 +108,8 @@ jobs:
           from app.storage.preset_store import JsonPresetStore
 
           preset = JsonPresetStore(Path("presets")).get("baja-launch-baseline")
-          assert preset.simulation_case["scenario"]["time_span_s"] == [0.0, 10.0]
-          print("Verified baja-launch-baseline preset with a 10.0 s scenario.")
+          assert preset.simulation_case["scenario"]["time_span_s"] == [0.0, 30.0]
+          print("Verified baja-launch-baseline preset with a 30.0 s scenario.")
           PY
 
       - name: Export backend contract artifacts
