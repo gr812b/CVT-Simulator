@@ -23,7 +23,7 @@ Q: What would be those workflows? <br>
 A: Three workflows where the result of each one feeds into the next. The reason they are separate is that you are likely to repeat each one multiple times before moving on to the next one.
 
 1. Input vehicle details
-2. If possible, input a specific set of combinations of pulley geometry values and goals which determine a specific pulley geometry. The tool would output the pulley geometry and metrics about that geometry. If not possible, one flow for inputting values and one flow for inputting goals.
+2. Input to get pulley geometry and metrics about that geometry. 
 2a. Input pulley geometry values, tool calculates and outputs metrics about the geometry
 2b. Input goals for the pulley geometry, tool calculates and outputs the pulley geometry and metrics about that geometry.
 3. Turn a viable pulley geometry into a actuating CVT. Have vehicle details and pulley geometry. The user inputs actuating parameters of the CVT. The output is information about the selected inputs and how they would perform in certain metrics. No optimization just user inputs
@@ -78,6 +78,7 @@ A:
 - Maximum torque
 - Top speed 
 - Average speed
+- Belt Selection (from a list of available belts) (no custom belts)
 
 #### Workflow 2: Generate Pulley Geometry and Metrics
 
