@@ -4,9 +4,6 @@ on:
   push:
     branches:
       - develop
-  pull_request:
-    branches:
-      - develop
   workflow_dispatch:
 
 concurrency:
@@ -20,7 +17,7 @@ env:
 
 jobs:
   deploy:
-    name: Build container images
+    name: Build and publish container images
     runs-on: ubuntu-latest
 
     permissions:
@@ -42,7 +39,7 @@ jobs:
       - name: Verify container build inputs
         shell: bash
         run: |
-          set -uo pipefail
+          set -euo pipefail
 
           required_files=(
             "cvtModel/setup.py"
@@ -53,60 +50,16 @@ jobs:
             "frontend/nginx.conf"
           )
 
-          missing_files=()
-          untracked_files=()
-
-          echo "Repository root: $(pwd)"
-          echo "Checked-out commit: $(git rev-parse --short HEAD)"
-          echo
-
           for file in "${required_files[@]}"; do
-            if [[ -f "$file" ]]; then
-              echo "Found on runner: $file"
-            else
-              echo "::error file=$file::Missing from the checked-out runner filesystem: $file"
-              missing_files+=("$file")
-            fi
-
-            if git ls-files --error-unmatch "$file" >/dev/null 2>&1; then
-              echo "Tracked in this commit: $file"
-            else
-              echo "::warning file=$file::Not tracked in this checked-out commit: $file"
-              untracked_files+=("$file")
-            fi
-
-            echo
+            [[ -f "$file" ]] || {
+              echo "::error file=$file::Missing required container build input: $file"
+              exit 1
+            }
           done
-
-          echo "Relevant files visible to GitHub Actions:"
-          for directory in cvtModel backend frontend; do
-            echo "--- $directory ---"
-            if [[ -d "$directory" ]]; then
-              find "$directory" -maxdepth 2 -type f | sort
-            else
-              echo "Directory not present"
-            fi
-          done
-
-          if (( ${#missing_files[@]} > 0 )); then
-            echo
-            echo "Missing required files:"
-            printf '  - %s\n' "${missing_files[@]}"
-
-            if (( ${#untracked_files[@]} > 0 )); then
-              echo
-              echo "Files not tracked in this commit:"
-              printf '  - %s\n' "${untracked_files[@]}"
-            fi
-
-            exit 1
-          fi
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      # Pull requests and workflow_dispatch runs build only. Only pushes to develop
-      # publish image tags, so PR verification cannot overwrite deployed images.
       - name: Log into GitHub Container Registry
         if: github.event_name == 'push' && github.ref == 'refs/heads/develop'
         uses: docker/login-action@v3
@@ -115,7 +68,6 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      # The backend needs repository-root context because it installs cvtModel.
       - name: Build and push backend
         uses: docker/build-push-action@v6
         with:
@@ -132,8 +84,6 @@ jobs:
           cache-from: type=gha,scope=cvt-backend
           cache-to: type=gha,mode=max,scope=cvt-backend
 
-      # The frontend uses a narrow Docker context, keeping unrelated repository files
-      # out of the Docker build context while preserving frontend/nginx.conf.
       - name: Build and push frontend
         uses: docker/build-push-action@v6
         with:
