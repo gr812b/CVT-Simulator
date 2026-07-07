@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
 
 concurrency:
-  group: containerize-${{ github.ref }}
+  group: containerize-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 env:
@@ -17,8 +17,9 @@ env:
 
 jobs:
   deploy:
-    name: Build and publish images
+    name: Build and publish container images
     runs-on: ubuntu-latest
+
     permissions:
       contents: read
       packages: write
@@ -36,30 +37,43 @@ jobs:
           lfs: true
 
       - name: Verify container build inputs
+        shell: bash
         run: |
-          test -f cvtModel/pyproject.toml
-          test -f backend/Dockerfile
-          test -f frontend/Dockerfile
-          test -f frontend/package-lock.json
-          test -f frontend/nginx.conf
+          set -euo pipefail
+
+          required_files=(
+            "cvtModel/setup.py"
+            "cvtModel/setup.cfg"
+            "backend/Dockerfile"
+            "frontend/Dockerfile"
+            "frontend/package-lock.json"
+            "frontend/nginx.conf"
+          )
+
+          for file in "${required_files[@]}"; do
+            [[ -f "$file" ]] || {
+              echo "::error file=$file::Missing required container build input: $file"
+              exit 1
+            }
+          done
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
       - name: Log into GitHub Container Registry
+        if: github.event_name == 'push' && github.ref == 'refs/heads/develop'
         uses: docker/login-action@v3
         with:
           registry: ${{ env.REGISTRY_GH }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      # The backend needs repository-root context because it installs cvtModel.
       - name: Build and push backend
         uses: docker/build-push-action@v6
         with:
           context: .
           file: backend/Dockerfile
-          push: true
+          push: ${{ github.event_name == 'push' && github.ref == 'refs/heads/develop' }}
           pull: true
           tags: |
             ${{ env.BACKEND_IMAGE }}:latest
@@ -70,14 +84,12 @@ jobs:
           cache-from: type=gha,scope=cvt-backend
           cache-to: type=gha,mode=max,scope=cvt-backend
 
-      # The frontend needs only frontend/ context. This makes frontend/.dockerignore
-      # effective and avoids sending CINDER, backend, PDFs, and tooling to Docker.
       - name: Build and push frontend
         uses: docker/build-push-action@v6
         with:
           context: ./frontend
           file: ./frontend/Dockerfile
-          push: true
+          push: ${{ github.event_name == 'push' && github.ref == 'refs/heads/develop' }}
           pull: true
           tags: |
             ${{ env.FRONTEND_IMAGE }}:latest

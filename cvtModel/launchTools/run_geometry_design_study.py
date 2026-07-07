@@ -32,7 +32,7 @@ from cinder.studies.geometry import (
     solve_geometry_from_target_ratios,
     summarize_geometry_design,
 )
-from launchTools.baja_trial_baseline import build_baja_trial_baseline
+from baja_trial_baseline import build_baja_trial_baseline
 
 
 def parse_arguments() -> argparse.Namespace:
