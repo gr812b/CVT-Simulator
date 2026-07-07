@@ -26,7 +26,7 @@ A: Three workflows where the result of each one feeds into the next. The reason 
 2. Input to get pulley geometry and metrics about that geometry. 
 2a. Input pulley geometry values, tool calculates and outputs metrics about the geometry
 2b. Input goals for the pulley geometry, tool calculates and outputs the pulley geometry and metrics about that geometry.
-3. Turn a viable pulley geometry into a actuating CVT. Have vehicle details and pulley geometry. The user inputs actuating parameters of the CVT. The output is information about the selected inputs and how they would perform in certain metrics. No optimization just user inputs
+3. The user inputs actuating parameters of the CVT. The output is information about the selected inputs and how they would perform in certain metrics. No optimization just user inputs
 4. Tuning flows, there's multiple versions of the tuning flow. They all share that they take all the inputs and then output time integrated results over multiple metrics. <br>
 4a. Give one set of inputs. The tool would time integrate over the metrics. Outputs would be the time results over the metrics for those inputs. The goal is to be able to see how that specific set of inputs performs over the metrics. <br>
 4b. Give two or more specific set of inputs. The tool would time integrate for those sets of inputs over the metrics. Outputs would be the time results over the metrics for those inputs. The goal is to be able to compare the results of different sets of inputs to see how they perform. <br>
