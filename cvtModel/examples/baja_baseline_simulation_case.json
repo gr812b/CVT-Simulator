@@ -23,13 +23,11 @@
     },
     "inertias": {
       "primary": {
-        "engine_rotational_inertia_kg_m2": 0.1,
-        "cvt_rotational_inertia_kg_m2": 0.005,
+        "rotating_hardware_inertia_kg_m2": 0.005,
         "moving_sheave_mass_kg": 1.0681
       },
       "secondary": {
-        "fixed_rotational_inertia_kg_m2": 0.1,
-        "gearbox_input_rotational_inertia_kg_m2": 0.05,
+        "fixed_rotating_hardware_inertia_kg_m2": 0.1,
         "movable_sheave_rotational_inertia_kg_m2": 0.0025139,
         "moving_sheave_mass_kg": 0.705141
       },
@@ -121,7 +119,8 @@
     "low_speed_braking_torque_Nm": -5.0,
     "low_speed_braking_peak_speed_rad_per_s": 52.35987755982988,
     "high_speed_braking_torque_Nm": -28.0,
-    "high_speed_braking_transition_width_rad_per_s": 157.07963267948966
+    "high_speed_braking_transition_width_rad_per_s": 157.07963267948966,
+    "equivalent_rotational_inertia_kg_m2": 0.1
   },
   "output_boundary": {
     "kind": "locked_final_drive_vehicle",
@@ -144,7 +143,8 @@
     "road_profile": {
       "kind": "constant_grade",
       "grade_angle_rad": 0.0
-    }
+    },
+    "direct_secondary_shaft_inertia_kg_m2": 0.05
   },
   "scenario": {
     "time_span_s": [

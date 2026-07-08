@@ -235,14 +235,8 @@ def _fields() -> tuple[EditableFieldDescriptor, ...]:
         ),
         # Inertia -----------------------------------------------------------
         _quantity(
-            "/assembly/inertias/primary/engine_rotational_inertia_kg_m2",
-            "engine_rotational_inertia_kg_m2",
-            section=inertia,
-            minimum=0.0,
-        ),
-        _quantity(
-            "/assembly/inertias/primary/cvt_rotational_inertia_kg_m2",
-            "primary_cvt_rotational_inertia_kg_m2",
+            "/assembly/inertias/primary/rotating_hardware_inertia_kg_m2",
+            "primary_rotating_hardware_inertia_kg_m2",
             section=inertia,
             minimum=0.0,
         ),
@@ -253,14 +247,8 @@ def _fields() -> tuple[EditableFieldDescriptor, ...]:
             minimum=0.0,
         ),
         _quantity(
-            "/assembly/inertias/secondary/fixed_rotational_inertia_kg_m2",
-            "secondary_fixed_rotational_inertia_kg_m2",
-            section=inertia,
-            minimum=0.0,
-        ),
-        _quantity(
-            "/assembly/inertias/secondary/gearbox_input_rotational_inertia_kg_m2",
-            "gearbox_input_rotational_inertia_kg_m2",
+            "/assembly/inertias/secondary/fixed_rotating_hardware_inertia_kg_m2",
+            "secondary_fixed_rotating_hardware_inertia_kg_m2",
             section=inertia,
             minimum=0.0,
         ),
@@ -316,16 +304,22 @@ def _fields() -> tuple[EditableFieldDescriptor, ...]:
             section=input_boundary,
             minimum=0.0,
         ),
+        _quantity(
+            "/input_boundary/equivalent_rotational_inertia_kg_m2",
+            "input_equivalent_rotational_inertia_kg_m2",
+            section=input_boundary,
+            minimum=0.0,
+        ),
         # Fixed output boundary --------------------------------------------
         _quantity(
-            "/output_boundary/external_torque_Nm",
-            "external_torque_Nm",
+            "/output_boundary/load_torque_Nm",
+            "load_torque_Nm",
             section=output_boundary,
             when={"/output_boundary/kind": "fixed_output_load"},
         ),
         _quantity(
-            "/output_boundary/added_rotational_inertia_kg_m2",
-            "added_rotational_inertia_kg_m2",
+            "/output_boundary/equivalent_rotational_inertia_kg_m2",
+            "output_equivalent_rotational_inertia_kg_m2",
             section=output_boundary,
             minimum=0.0,
             when={"/output_boundary/kind": "fixed_output_load"},
@@ -405,6 +399,13 @@ def _fields() -> tuple[EditableFieldDescriptor, ...]:
             "/output_boundary/road_profile/grade_angle_rad",
             "grade_angle_rad",
             section=output_boundary,
+            when={"/output_boundary/kind": "locked_final_drive_vehicle"},
+        ),
+        _quantity(
+            "/output_boundary/direct_secondary_shaft_inertia_kg_m2",
+            "direct_secondary_shaft_inertia_kg_m2",
+            section=output_boundary,
+            minimum=0.0,
             when={"/output_boundary/kind": "locked_final_drive_vehicle"},
         ),
         # Scenario ----------------------------------------------------------

@@ -253,26 +253,22 @@ def _definitions() -> dict[str, Any]:
                 {
                     "primary": object_schema(
                         {
-                            "engine_rotational_inertia_kg_m2": nonnegative,
-                            "cvt_rotational_inertia_kg_m2": nonnegative,
+                            "rotating_hardware_inertia_kg_m2": nonnegative,
                             "moving_sheave_mass_kg": nonnegative,
                         },
                         [
-                            "engine_rotational_inertia_kg_m2",
-                            "cvt_rotational_inertia_kg_m2",
+                            "rotating_hardware_inertia_kg_m2",
                             "moving_sheave_mass_kg",
                         ],
                     ),
                     "secondary": object_schema(
                         {
-                            "fixed_rotational_inertia_kg_m2": nonnegative,
-                            "gearbox_input_rotational_inertia_kg_m2": nonnegative,
+                            "fixed_rotating_hardware_inertia_kg_m2": nonnegative,
                             "movable_sheave_rotational_inertia_kg_m2": nonnegative,
                             "moving_sheave_mass_kg": nonnegative,
                         },
                         [
-                            "fixed_rotational_inertia_kg_m2",
-                            "gearbox_input_rotational_inertia_kg_m2",
+                            "fixed_rotating_hardware_inertia_kg_m2",
                             "movable_sheave_rotational_inertia_kg_m2",
                             "moving_sheave_mass_kg",
                         ],
@@ -310,6 +306,7 @@ def _definitions() -> dict[str, Any]:
             "low_speed_braking_peak_speed_rad_per_s": nonnegative,
             "high_speed_braking_torque_Nm": number,
             "high_speed_braking_transition_width_rad_per_s": nonnegative,
+            "equivalent_rotational_inertia_kg_m2": nonnegative,
         },
         [
             "kind",
@@ -318,16 +315,17 @@ def _definitions() -> dict[str, Any]:
             "low_speed_braking_peak_speed_rad_per_s",
             "high_speed_braking_torque_Nm",
             "high_speed_braking_transition_width_rad_per_s",
+            "equivalent_rotational_inertia_kg_m2",
         ],
     )
 
     fixed_output = object_schema(
         {
             "kind": {"const": "fixed_output_load"},
-            "external_torque_Nm": number,
-            "added_rotational_inertia_kg_m2": nonnegative,
+            "load_torque_Nm": number,
+            "equivalent_rotational_inertia_kg_m2": nonnegative,
         },
-        ["kind", "external_torque_Nm", "added_rotational_inertia_kg_m2"],
+        ["kind", "load_torque_Nm", "equivalent_rotational_inertia_kg_m2"],
     )
     vehicle_output = object_schema(
         {
@@ -365,8 +363,16 @@ def _definitions() -> dict[str, Any]:
                 {"kind": {"const": "constant_grade"}, "grade_angle_rad": number},
                 ["kind", "grade_angle_rad"],
             ),
+            "direct_secondary_shaft_inertia_kg_m2": nonnegative,
         },
-        ["kind", "vehicle", "final_drive", "road_load", "road_profile"],
+        [
+            "kind",
+            "vehicle",
+            "final_drive",
+            "road_load",
+            "road_profile",
+            "direct_secondary_shaft_inertia_kg_m2",
+        ],
     )
 
     initial_state = object_schema(

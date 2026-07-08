@@ -549,19 +549,19 @@ def _build_signals(
         np.array([item.engine_torque for item in inspections]),
     )
     add(
-        "boundary.output_external_torque",
-        "Output boundary torque",
+        "boundary.output_load_torque",
+        "Output boundary load torque",
         "N m",
         "boundary",
-        np.array([item.output_boundary.external_torque for item in inspections]),
+        np.array([item.output_boundary.load_torque for item in inspections]),
     )
     add(
-        "boundary.output_added_inertia",
-        "Output added inertia",
+        "boundary.output_equivalent_inertia",
+        "Output equivalent inertia",
         "kg m^2",
         "boundary",
         np.array(
-            [item.output_boundary.added_rotational_inertia for item in inspections]
+            [item.output_boundary.equivalent_rotational_inertia for item in inspections]
         ),
     )
     road = [item.output_boundary.road_load for item in inspections]
@@ -847,7 +847,7 @@ def _add_observer_signals(add, time, state, inspections, offsets) -> None:
         engine_power,
     )
     output_power = (
-        np.array([item.output_boundary.external_torque for item in inspections])
+        np.array([item.output_boundary.load_torque for item in inspections])
         * state[1]
     )
     primary_slip_power = np.array(

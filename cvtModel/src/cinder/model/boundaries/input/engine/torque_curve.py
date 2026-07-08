@@ -6,6 +6,7 @@ from math import isfinite
 
 from scipy.interpolate import PchipInterpolator
 
+from ..attachment import InputBoundaryEvaluation
 from .spec import EngineTorquePoint, TorqueCurveSpec
 
 
@@ -18,8 +19,22 @@ class FullThrottleTorqueCurve:
     driven engine to apply finite resisting torque below and above them.
     """
 
-    def __init__(self, spec: TorqueCurveSpec) -> None:
+    def __init__(
+        self,
+        spec: TorqueCurveSpec,
+        *,
+        equivalent_rotational_inertia: float = 0.0,
+    ) -> None:
+        if (
+            not isfinite(equivalent_rotational_inertia)
+            or equivalent_rotational_inertia < 0.0
+        ):
+            raise ValueError(
+                "equivalent_rotational_inertia must be finite and non-negative."
+            )
+
         self._spec = spec
+        self._equivalent_rotational_inertia = equivalent_rotational_inertia
 
         extended_points = (
             EngineTorquePoint(angular_speed=0.0, torque=0.0),
@@ -56,7 +71,13 @@ class FullThrottleTorqueCurve:
     def maximum_speed(self) -> float:
         return self._spec.maximum_speed
 
-    def evaluate(self, angular_speed: float) -> float:
+    @property
+    def equivalent_rotational_inertia(self) -> float:
+        """Return engine/input-side inertia referred to the primary shaft."""
+
+        return self._equivalent_rotational_inertia
+
+    def torque_at(self, angular_speed: float) -> float:
         """Return full-throttle net crankshaft torque in N m."""
 
         if not isfinite(angular_speed):
@@ -69,3 +90,11 @@ class FullThrottleTorqueCurve:
             return self._spec.high_speed_braking_torque
 
         return float(self._interpolator(angular_speed))
+
+    def evaluate(self, angular_speed: float) -> InputBoundaryEvaluation:
+        """Return input-shaft torque and equivalent inertia."""
+
+        return InputBoundaryEvaluation(
+            source_torque=self.torque_at(angular_speed),
+            equivalent_rotational_inertia=self.equivalent_rotational_inertia,
+        )

@@ -17,7 +17,7 @@ from cinder.model.cvt.actuation.forces import (
     AxialSpringForce,
     CentrifugalRampForce,
 )
-from cinder.model.boundaries.input import InputTorqueBoundary
+from cinder.model.boundaries.input import InputBoundary, InputBoundaryEvaluation
 from cinder.model.cvt.geometry import BeltPulleyGeometry, GeometryPosition
 from cinder.model.boundaries.output import (
     OutputBoundary,
@@ -53,7 +53,7 @@ class DynamicsSnapshot:
     secondary_actuation: AffineClosureScalar
     secondary_helix: HelixShiftKinematics
 
-    engine_torque: float
+    input_boundary_evaluation: InputBoundaryEvaluation
     output_boundary_evaluation: OutputBoundaryEvaluation
 
     inertias: ResolvedInertias
@@ -110,16 +110,43 @@ class DynamicsSnapshot:
         return self.inertias.belt.density * self.inertias.belt.cross_sectional_area
 
     @property
-    def primary_rotational_inertia(self) -> float:
-        """Return I_p."""
+    def primary_core_rotational_inertia(self) -> float:
+        """Return CVT-owned primary hardware inertia."""
 
         return self.inertias.primary.rotational_inertia
 
     @property
-    def output_boundary_added_rotational_inertia(self) -> float:
+    def input_boundary_equivalent_rotational_inertia(self) -> float:
+        """Return upstream inertia referred to the primary shaft."""
+
+        return self.input_boundary_evaluation.equivalent_rotational_inertia
+
+    @property
+    def primary_rotational_inertia(self) -> float:
+        """Return CVT primary hardware plus input-boundary inertia."""
+
+        return (
+            self.primary_core_rotational_inertia
+            + self.input_boundary_equivalent_rotational_inertia
+        )
+
+    @property
+    def engine_torque(self) -> float:
+        """Return signed input-boundary source torque."""
+
+        return self.input_boundary_evaluation.source_torque
+
+    @property
+    def output_boundary_equivalent_rotational_inertia(self) -> float:
         """Return state-frozen downstream inertia referred to the secondary."""
 
-        return self.output_boundary_evaluation.added_rotational_inertia
+        return self.output_boundary_evaluation.equivalent_rotational_inertia
+
+    @property
+    def output_boundary_added_rotational_inertia(self) -> float:
+        """Compatibility alias for output boundary equivalent inertia."""
+
+        return self.output_boundary_equivalent_rotational_inertia
 
     @property
     def secondary_fixed_rotational_inertia(self) -> float:
@@ -127,7 +154,7 @@ class DynamicsSnapshot:
 
         return (
             self.inertias.secondary.fixed_side.total
-            + self.output_boundary_added_rotational_inertia
+            + self.output_boundary_equivalent_rotational_inertia
         )
 
     @property
@@ -146,10 +173,16 @@ class DynamicsSnapshot:
         )
 
     @property
-    def secondary_external_torque(self) -> float:
-        """Return signed external torque applied at the secondary."""
+    def secondary_load_torque(self) -> float:
+        """Return signed output-boundary load torque applied at the secondary."""
 
-        return self.output_boundary_evaluation.external_torque
+        return self.output_boundary_evaluation.load_torque
+
+    @property
+    def secondary_external_torque(self) -> float:
+        """Compatibility alias for secondary_load_torque."""
+
+        return self.secondary_load_torque
 
 
 @dataclass(frozen=True, slots=True, init=False)
@@ -167,7 +200,7 @@ class CVTDynamicsModel:
     secondary_actuator: PulleyActuator
     output_helical_coupling: HelicalPulleyCoupling
     inertias: ResolvedInertias
-    input_boundary: InputTorqueBoundary
+    input_boundary: InputBoundary
     output_boundary: OutputBoundary
 
     def __init__(self) -> None:
@@ -318,7 +351,9 @@ class CVTDynamicsModel:
             primary_actuation=primary_actuation,
             secondary_actuation=secondary_actuation,
             secondary_helix=secondary_helix,
-            engine_torque=self.input_boundary.evaluate(state.primary_angular_speed),
+            input_boundary_evaluation=_evaluate_input_boundary(
+                self.input_boundary, state.primary_angular_speed
+            ),
             output_boundary_evaluation=output_boundary_evaluation,
             inertias=self.inertias,
             sheave_half_angle=self.geometry.spec.sheave_half_angle,
@@ -326,6 +361,17 @@ class CVTDynamicsModel:
 
         _validate_snapshot(snapshot)
         return snapshot
+
+
+def _evaluate_input_boundary(
+    boundary: InputBoundary, angular_speed: float
+) -> InputBoundaryEvaluation:
+    evaluation = boundary.evaluate(angular_speed)
+    if not isinstance(evaluation, InputBoundaryEvaluation):
+        raise TypeError(
+            "input_boundary.evaluate() must return InputBoundaryEvaluation."
+        )
+    return evaluation
 
 
 def _require_output_helical_coupling(
@@ -464,12 +510,15 @@ def _validate_snapshot(snapshot: DynamicsSnapshot) -> None:
 
     scalar_values = {
         "engine_torque": snapshot.engine_torque,
-        "secondary_external_torque": snapshot.secondary_external_torque,
+        "secondary_load_torque": snapshot.secondary_load_torque,
         "belt_transport_mass": snapshot.belt_transport_mass,
         "belt_linear_density": snapshot.belt_linear_density,
         "primary_rotational_inertia": snapshot.primary_rotational_inertia,
-        "output_boundary_added_rotational_inertia": (
-            snapshot.output_boundary_added_rotational_inertia
+        "input_boundary_equivalent_rotational_inertia": (
+            snapshot.input_boundary_equivalent_rotational_inertia
+        ),
+        "output_boundary_equivalent_rotational_inertia": (
+            snapshot.output_boundary_equivalent_rotational_inertia
         ),
         "secondary_fixed_rotational_inertia": (
             snapshot.secondary_fixed_rotational_inertia

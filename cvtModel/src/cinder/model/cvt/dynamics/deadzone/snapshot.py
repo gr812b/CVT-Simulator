@@ -21,6 +21,7 @@ from typing import Final
 
 from cinder.model.cvt.actuation import PulleyActuationContext, PulleyClosureChannels
 from cinder.model.cvt.geometry import GeometryPosition
+from cinder.model.boundaries.input import InputBoundaryEvaluation
 from cinder.model.boundaries.output import OutputBoundaryEvaluation
 from cinder.model.cvt.inertia import AxialTranslationInertia, ResolvedInertias
 from cinder.model.cvt.closure import AffineClosureScalar
@@ -47,7 +48,7 @@ class DeadzoneSnapshot:
     locked_geometry: GeometryPosition
     primary_axial_inertia: AxialTranslationInertia
     primary_actuation: AffineClosureScalar
-    engine_torque: float
+    input_boundary_evaluation: InputBoundaryEvaluation
     output_boundary_evaluation: OutputBoundaryEvaluation
     inertias: ResolvedInertias
 
@@ -61,7 +62,10 @@ class DeadzoneSnapshot:
     def primary_rotational_inertia(self) -> float:
         """Return the directly rotating primary inertia."""
 
-        return self.inertias.primary.rotational_inertia
+        return (
+            self.inertias.primary.rotational_inertia
+            + self.input_boundary_evaluation.equivalent_rotational_inertia
+        )
 
     @property
     def secondary_belt_locked_inertia(self) -> float:
@@ -75,7 +79,7 @@ class DeadzoneSnapshot:
         radius = self.belt_secondary_lock_radius
         return (
             self.inertias.secondary.absolute_rotation_inertia
-            + self.output_boundary_evaluation.added_rotational_inertia
+            + self.output_boundary_evaluation.equivalent_rotational_inertia
             + self.inertias.belt.mass * radius * radius
         )
 
@@ -97,10 +101,22 @@ class DeadzoneSnapshot:
         return road_load
 
     @property
-    def secondary_external_torque(self) -> float:
-        """Return the signed attachment torque applied to the secondary."""
+    def secondary_load_torque(self) -> float:
+        """Return the signed load torque applied to the secondary."""
 
-        return self.output_boundary_evaluation.external_torque
+        return self.output_boundary_evaluation.load_torque
+
+    @property
+    def secondary_external_torque(self) -> float:
+        """Compatibility alias for secondary_load_torque."""
+
+        return self.secondary_load_torque
+
+    @property
+    def engine_torque(self) -> float:
+        """Return signed input-boundary source torque."""
+
+        return self.input_boundary_evaluation.source_torque
 
     @property
     def belt_secondary_speed_residual(self) -> float:
@@ -164,13 +180,21 @@ def build_deadzone_snapshot(
         belt_axial_coordinate=locked_geometry.belt_axial_coordinate,
     ).primary
 
+    input_boundary_evaluation = model.input_boundary.evaluate(
+        state.primary_angular_speed
+    )
+    if not isinstance(input_boundary_evaluation, InputBoundaryEvaluation):
+        raise TypeError(
+            "input_boundary.evaluate() must return InputBoundaryEvaluation."
+        )
+
     snapshot = DeadzoneSnapshot(
         state=state,
         primary_geometry=primary_geometry,
         locked_geometry=locked_geometry,
         primary_axial_inertia=primary_axial_inertia,
         primary_actuation=primary_actuation,
-        engine_torque=model.input_boundary.evaluate(state.primary_angular_speed),
+        input_boundary_evaluation=input_boundary_evaluation,
         output_boundary_evaluation=output_boundary_evaluation,
         inertias=model.inertias,
     )
@@ -184,7 +208,7 @@ def _validate_deadzone_snapshot(snapshot: DeadzoneSnapshot) -> None:
         ("primary_rotational_inertia", snapshot.primary_rotational_inertia),
         ("secondary_belt_locked_inertia", snapshot.secondary_belt_locked_inertia),
         ("engine_torque", snapshot.engine_torque),
-        ("secondary_external_torque", snapshot.secondary_external_torque),
+        ("secondary_load_torque", snapshot.secondary_load_torque),
     ):
         if not isfinite(value):
             raise ValueError(f"Deadzone snapshot {name} must be finite.")

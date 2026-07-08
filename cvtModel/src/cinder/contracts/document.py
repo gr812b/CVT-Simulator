@@ -100,13 +100,11 @@ def encode_assembly_document(assembly: CVTAssemblySpec) -> dict[str, Any]:
         },
         "inertias": {
             "primary": {
-                "engine_rotational_inertia_kg_m2": primary.engine_rotational_inertia,
-                "cvt_rotational_inertia_kg_m2": primary.cvt_rotational_inertia,
+                "rotating_hardware_inertia_kg_m2": primary.rotating_hardware_inertia,
                 "moving_sheave_mass_kg": masses.primary_moving_sheave_mass,
             },
             "secondary": {
-                "fixed_rotational_inertia_kg_m2": secondary.fixed_side.output_fixed_rotational_inertia,
-                "gearbox_input_rotational_inertia_kg_m2": secondary.fixed_side.gearbox_input_rotational_inertia,
+                "fixed_rotating_hardware_inertia_kg_m2": secondary.fixed_side.fixed_rotating_hardware_inertia,
                 "movable_sheave_rotational_inertia_kg_m2": secondary.movable_sheave_rotational_inertia,
                 "moving_sheave_mass_kg": masses.secondary_moving_sheave_mass,
             },
@@ -164,20 +162,14 @@ def decode_assembly_document(document: Mapping[str, Any]) -> CVTAssemblySpec:
     inertias = resolve_inertias(
         drivetrain=DrivetrainInertias(
             primary=PrimaryInertia(
-                engine_rotational_inertia=_number(
-                    primary_doc, "engine_rotational_inertia_kg_m2"
-                ),
-                cvt_rotational_inertia=_number(
-                    primary_doc, "cvt_rotational_inertia_kg_m2"
+                rotating_hardware_inertia=_number(
+                    primary_doc, "rotating_hardware_inertia_kg_m2"
                 ),
                 moving_sheave_mass=_number(primary_doc, "moving_sheave_mass_kg"),
             ),
             secondary=SecondaryInertia(
-                fixed_rotational_inertia=_number(
-                    secondary_doc, "fixed_rotational_inertia_kg_m2"
-                ),
-                gearbox_input_rotational_inertia=_number(
-                    secondary_doc, "gearbox_input_rotational_inertia_kg_m2"
+                fixed_rotating_hardware_inertia=_number(
+                    secondary_doc, "fixed_rotating_hardware_inertia_kg_m2"
                 ),
                 movable_sheave_rotational_inertia=_number(
                     secondary_doc, "movable_sheave_rotational_inertia_kg_m2"

@@ -1,14 +1,14 @@
 """Output-shaft boundaries for composable CINDER drivetrain simulations.
 
-The CVT/contact core owns the primary, belt, and secondary mechanics.  A
-``OutputBoundary`` supplies the *known* boundary condition at the
-output shaft for one ODE state: added rotational inertia and external
-secondary torque.  A conventional locked final-drive vehicle is one
-attachment; a dyno or prescribed output-shaft load is another.
+The CVT/contact core owns the primary, belt, and secondary mechanics. An
+``OutputBoundary`` supplies the known boundary condition at the output shaft for
+one ODE state: equivalent rotational inertia and signed load torque. A
+conventional locked final-drive vehicle is one attachment; a dyno or prescribed
+output-shaft load is another.
 
-Keeping this boundary outside the CVT closure preserves the existing 8x8
-contact solve while avoiding a permanent assumption that the secondary is
-always rigidly tied to a vehicle.
+Keeping this boundary outside the CVT closure preserves the existing contact
+solve while avoiding a permanent assumption that the secondary is always rigidly
+tied to a vehicle.
 """
 
 from __future__ import annotations
@@ -34,34 +34,47 @@ if TYPE_CHECKING:
 class OutputBoundaryEvaluation:
     """Known downstream contribution to one output-shaft RHS evaluation.
 
-    ``added_rotational_inertia`` is referred directly to the output shaft
-    and is added to CINDER's resolved CVT-side secondary inertia.  The signed
-    ``external_torque`` is applied *to* the output shaft, matching the
-    existing secondary rotational-row convention.
+    ``equivalent_rotational_inertia`` is referred directly to the output shaft
+    and is added to CINDER's resolved CVT-side secondary inertia. The signed
+    ``load_torque`` is applied *to* the output shaft, matching the existing
+    secondary rotational-row convention. A negative value resists positive
+    secondary rotation; a positive value drives the secondary from downstream.
 
-    Vehicle-specific observables are optional.  They are populated by
+    Vehicle-specific observables are optional. They are populated by
     :class:`LockedFinalDriveVehicle` so existing launch tools can continue to
-    report road force, vehicle speed, and vehicle distance without making
-    those quantities mandatory for every secondary attachment.
+    report road force, vehicle speed, and vehicle distance without making those
+    quantities mandatory for every secondary attachment.
     """
 
-    added_rotational_inertia: float = 0.0
-    external_torque: float = 0.0
+    equivalent_rotational_inertia: float = 0.0
+    load_torque: float = 0.0
     road_load: RoadLoadResult | None = None
     vehicle_distance: float | None = None
 
     def __post_init__(self) -> None:
         if (
-            not isfinite(self.added_rotational_inertia)
-            or self.added_rotational_inertia < 0.0
+            not isfinite(self.equivalent_rotational_inertia)
+            or self.equivalent_rotational_inertia < 0.0
         ):
             raise ValueError(
-                "added_rotational_inertia must be finite and non-negative."
+                "equivalent_rotational_inertia must be finite and non-negative."
             )
-        if not isfinite(self.external_torque):
-            raise ValueError("external_torque must be finite.")
+        if not isfinite(self.load_torque):
+            raise ValueError("load_torque must be finite.")
         if self.vehicle_distance is not None and not isfinite(self.vehicle_distance):
             raise ValueError("vehicle_distance must be finite when supplied.")
+
+    @property
+    def added_rotational_inertia(self) -> float:
+        """Compatibility alias for the new equivalent-rotational-inertia name."""
+
+        return self.equivalent_rotational_inertia
+
+    @property
+    def external_torque(self) -> float:
+        """Compatibility alias for the new load-torque name."""
+
+        return self.load_torque
 
 
 @runtime_checkable
@@ -79,21 +92,32 @@ class LockedFinalDriveVehicle:
     This preserves the existing launch-model physics:
 
     * vehicle position and speed are mapped from secondary angle and speed;
-    * grade, rolling resistance, and aero load are reflected as secondary
-      external torque; and
-    * vehicle translation plus driven-wheel rotation are reflected as added
-      secondary inertia.
+    * grade, rolling resistance, and aero load are reflected as secondary load
+      torque; and
+    * vehicle translation plus driven-wheel rotation are reflected as
+      equivalent secondary inertia.
 
+    ``direct_secondary_shaft_inertia`` captures gearbox input inertia or other
+    non-CVT hardware rigidly attached to the secondary shaft. It belongs to the
+    output boundary, not the CVT assembly.
     """
 
     road_load: RoadLoadModel
     road_profile: RoadProfile = ConstantGradeRoadProfile()
+    direct_secondary_shaft_inertia: float = 0.0
 
     def __post_init__(self) -> None:
         if not isinstance(self.road_load, RoadLoadModel):
             raise TypeError("road_load must be a RoadLoadModel instance.")
         if not isinstance(self.road_profile, RoadProfile):
             raise TypeError("road_profile must implement RoadProfile.sample().")
+        if (
+            not isfinite(self.direct_secondary_shaft_inertia)
+            or self.direct_secondary_shaft_inertia < 0.0
+        ):
+            raise ValueError(
+                "direct_secondary_shaft_inertia must be finite and non-negative."
+            )
 
     @property
     def final_drive(self) -> FixedFinalDrive:
@@ -109,12 +133,16 @@ class LockedFinalDriveVehicle:
 
     @property
     def reflected_rotational_inertia(self) -> float:
-        """Return wheel plus translation inertia referred to the secondary."""
+        """Return boundary-owned inertia referred to the secondary."""
 
-        return self.final_drive.secondary_inertia_from_wheel_rotation(
-            wheel_rotational_inertia=self.vehicle.wheel_rotational_inertia,
-        ) + self.final_drive.secondary_inertia_from_vehicle_mass(
-            vehicle_mass=self.vehicle.mass,
+        return (
+            self.direct_secondary_shaft_inertia
+            + self.final_drive.secondary_inertia_from_wheel_rotation(
+                wheel_rotational_inertia=self.vehicle.wheel_rotational_inertia,
+            )
+            + self.final_drive.secondary_inertia_from_vehicle_mass(
+                vehicle_mass=self.vehicle.mass,
+            )
         )
 
     def with_road_profile(self, road_profile: RoadProfile) -> "LockedFinalDriveVehicle":
@@ -136,8 +164,8 @@ class LockedFinalDriveVehicle:
             grade_angle=grade_angle,
         )
         return OutputBoundaryEvaluation(
-            added_rotational_inertia=self.reflected_rotational_inertia,
-            external_torque=road_load.secondary_external_torque,
+            equivalent_rotational_inertia=self.reflected_rotational_inertia,
+            load_torque=road_load.secondary_external_torque,
             road_load=road_load,
             vehicle_distance=vehicle_distance,
         )
@@ -147,31 +175,43 @@ class LockedFinalDriveVehicle:
 class FixedOutputLoad:
     """Constant direct output-shaft load for dyno-style CVT tests.
 
-    ``external_torque`` follows CINDER's signed convention: a negative value
+    ``load_torque`` follows CINDER's signed convention: a negative value
     opposes positive secondary rotation, while a positive value drives the
-    secondary from downstream.  ``added_rotational_inertia`` is any constant
-    inertia rigidly attached to the output shaft.
+    secondary from downstream. ``equivalent_rotational_inertia`` is any constant
+    non-CVT inertia rigidly attached to the output shaft.
     """
 
-    external_torque: float = 0.0
-    added_rotational_inertia: float = 0.0
+    load_torque: float = 0.0
+    equivalent_rotational_inertia: float = 0.0
 
     def __post_init__(self) -> None:
-        if not isfinite(self.external_torque):
-            raise ValueError("external_torque must be finite.")
+        if not isfinite(self.load_torque):
+            raise ValueError("load_torque must be finite.")
         if (
-            not isfinite(self.added_rotational_inertia)
-            or self.added_rotational_inertia < 0.0
+            not isfinite(self.equivalent_rotational_inertia)
+            or self.equivalent_rotational_inertia < 0.0
         ):
             raise ValueError(
-                "added_rotational_inertia must be finite and non-negative."
+                "equivalent_rotational_inertia must be finite and non-negative."
             )
+
+    @property
+    def external_torque(self) -> float:
+        """Compatibility alias for the new load-torque name."""
+
+        return self.load_torque
+
+    @property
+    def added_rotational_inertia(self) -> float:
+        """Compatibility alias for the new equivalent-inertia name."""
+
+        return self.equivalent_rotational_inertia
 
     def evaluate(self, *, state: "CVTDynamicState") -> OutputBoundaryEvaluation:
         """Return the same direct boundary for every state."""
 
         del state
         return OutputBoundaryEvaluation(
-            added_rotational_inertia=self.added_rotational_inertia,
-            external_torque=self.external_torque,
+            equivalent_rotational_inertia=self.equivalent_rotational_inertia,
+            load_torque=self.load_torque,
         )

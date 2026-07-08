@@ -135,13 +135,13 @@ class BajaTrialConstants:
     engine_governed_overspeed_transition_width_rpm: float = 1500.0
 
     # Inertia ---------------------------------------------------------------
-    engine_rotational_inertia: float = 0.1  # legacy kg m^2
-    primary_cvt_rotational_inertia: float = 0.005
+    input_equivalent_rotational_inertia: float = 0.1  # engine/flywheel, kg m^2
+    primary_rotating_hardware_inertia: float = 0.005
     # placeholder: the old system did not split primary pulley spin inertia.
     primary_moving_sheave_mass: float = 1.0681  # project/CAD estimate, kg
 
-    secondary_fixed_rotational_inertia: float = 0.1  # legacy kg m^2
-    gearbox_input_rotational_inertia: float = 0.05  # legacy kg m^2
+    secondary_fixed_rotating_hardware_inertia: float = 0.1  # CVT secondary hardware, kg m^2
+    direct_secondary_shaft_inertia: float = 0.05  # gearbox/input shaft, kg m^2
     secondary_movable_sheave_rotational_inertia: float = 0.0025139
     # project/CAD estimate, kg m^2; confirm against final CAD mass properties.
     secondary_moving_sheave_mass: float = 0.705141  # project/CAD estimate, kg
@@ -302,13 +302,13 @@ def build_baja_trial_baseline(
     inertias = resolve_inertias(
         drivetrain=DrivetrainInertias(
             primary=PrimaryInertia(
-                engine_rotational_inertia=c.engine_rotational_inertia,
-                cvt_rotational_inertia=c.primary_cvt_rotational_inertia,
+                rotating_hardware_inertia=c.primary_rotating_hardware_inertia,
                 moving_sheave_mass=c.primary_moving_sheave_mass,
             ),
             secondary=SecondaryInertia(
-                fixed_rotational_inertia=c.secondary_fixed_rotational_inertia,
-                gearbox_input_rotational_inertia=c.gearbox_input_rotational_inertia,
+                fixed_rotating_hardware_inertia=(
+                    c.secondary_fixed_rotating_hardware_inertia
+                ),
                 movable_sheave_rotational_inertia=(
                     c.secondary_movable_sheave_rotational_inertia
                 ),
@@ -352,7 +352,8 @@ def build_baja_trial_baseline(
             # negative governed torque from 4000 rpm to 5500 rpm, then a
             # bounded -28 N m plateau.  No generic engine-source edit is
             # needed to express this curve.
-        )
+        ),
+        equivalent_rotational_inertia=c.input_equivalent_rotational_inertia,
     )
 
     _validate_full_throttle_power_limit(
@@ -372,6 +373,7 @@ def build_baja_trial_baseline(
     output_boundary = LockedFinalDriveVehicle(
         road_load=road_load,
         road_profile=ConstantGradeRoadProfile(),
+        direct_secondary_shaft_inertia=c.direct_secondary_shaft_inertia,
     )
     assembly = CVTAssemblySpec(
         geometry=geometry,
@@ -455,7 +457,7 @@ def _validate_full_throttle_power_limit(
         raise ValueError("engine_power_limit_hp must be finite and positive.")
 
     maximum_power_w = max(
-        max(engine.evaluate(angular_speed), 0.0) * angular_speed
+        max(engine.torque_at(angular_speed), 0.0) * angular_speed
         for angular_speed in (
             engine.minimum_speed
             + (engine.maximum_speed - engine.minimum_speed) * index / 1000.0

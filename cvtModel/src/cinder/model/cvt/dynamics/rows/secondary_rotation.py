@@ -13,23 +13,20 @@ def build_secondary_rotation_equation(
 ) -> ClosureEquation:
     """Build the total-secondary angular-momentum equation.
 
-    In derivation notation with ``tau_load`` as a positive opposing magnitude,
+    In derivation notation with ``tau_load`` as a signed output-boundary torque,
 
         tau_s - tau_load
           = (I_s,F + I_M) alpha_s - I_M H' s_dot^2 - I_M H s_ddot.
 
-    ``DynamicsSnapshot.secondary_external_torque`` uses a signed downstream
-    attachment convention, so the code form is:
-
-        tau_s + tau_external
-          = (I_s,F + I_M) alpha_s - I_M H' s_dot^2 - I_M H s_ddot.
-
-    The returned zero-equals residual is therefore:
+    ``DynamicsSnapshot.secondary_load_torque`` uses the signed output-boundary
+    convention: negative torque resists positive secondary rotation and
+    positive torque drives from downstream. The returned zero-equals residual is
+    therefore:
 
         (I_s,F + I_M) alpha_s
         - I_M H s_ddot
         - tau_s
-        - tau_external
+        - tau_load
         - I_M H' s_dot^2 = 0.
     """
 
@@ -41,7 +38,7 @@ def build_secondary_rotation_equation(
         name="secondary_rotation",
         residual=AffineClosureScalar(
             bias=(
-                -snapshot.secondary_external_torque
+                -snapshot.secondary_load_torque
                 - movable_inertia * helix.d2theta_ds2 * shift_speed**2
             ),
             gains=ClosureGains(

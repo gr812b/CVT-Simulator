@@ -20,13 +20,11 @@
   },
   "inertias": {
     "primary": {
-      "engine_rotational_inertia_kg_m2": 0.1,
-      "cvt_rotational_inertia_kg_m2": 0.005,
+      "rotating_hardware_inertia_kg_m2": 0.005,
       "moving_sheave_mass_kg": 1.0681
     },
     "secondary": {
-      "fixed_rotational_inertia_kg_m2": 0.1,
-      "gearbox_input_rotational_inertia_kg_m2": 0.05,
+      "fixed_rotating_hardware_inertia_kg_m2": 0.1,
       "movable_sheave_rotational_inertia_kg_m2": 0.0025139,
       "moving_sheave_mass_kg": 0.705141
     },

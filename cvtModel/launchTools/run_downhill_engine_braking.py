@@ -789,7 +789,7 @@ def plot_engine_curve(*, system: CVTOperatingHybridSystem, resolved):
     )
     rpm = np.linspace(0.0, rpm_limit, 1000)
     angular_speed = rpm / RPM_PER_RADIAN_PER_SECOND
-    torque = np.asarray([engine.evaluate(value) for value in angular_speed])
+    torque = np.asarray([engine.torque_at(value) for value in angular_speed])
     power_hp = torque * angular_speed / 745.6998715822702
     governed_start_rpm = spec.maximum_speed * RPM_PER_RADIAN_PER_SECOND
     plateau_start_rpm = (

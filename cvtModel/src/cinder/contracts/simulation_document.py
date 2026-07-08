@@ -229,6 +229,7 @@ def _encode_input_boundary(boundary: object) -> dict[str, Any]:
         "low_speed_braking_peak_speed_rad_per_s": spec.low_speed_braking_peak_speed,
         "high_speed_braking_torque_Nm": spec.high_speed_braking_torque,
         "high_speed_braking_transition_width_rad_per_s": spec.high_speed_braking_transition_width,
+        "equivalent_rotational_inertia_kg_m2": boundary.equivalent_rotational_inertia,
     }
 
 
@@ -263,7 +264,10 @@ def _decode_input_boundary(payload: Mapping[str, Any]) -> FullThrottleTorqueCurv
             high_speed_braking_transition_width=_number(
                 payload, "high_speed_braking_transition_width_rad_per_s"
             ),
-        )
+        ),
+        equivalent_rotational_inertia=_number(
+            payload, "equivalent_rotational_inertia_kg_m2"
+        ),
     )
 
 
@@ -271,8 +275,8 @@ def _encode_output_boundary(boundary: object) -> dict[str, Any]:
     if isinstance(boundary, FixedOutputLoad):
         return {
             "kind": "fixed_output_load",
-            "external_torque_Nm": boundary.external_torque,
-            "added_rotational_inertia_kg_m2": boundary.added_rotational_inertia,
+            "load_torque_Nm": boundary.load_torque,
+            "equivalent_rotational_inertia_kg_m2": boundary.equivalent_rotational_inertia,
         }
     if isinstance(boundary, LockedFinalDriveVehicle):
         if not isinstance(boundary.road_profile, ConstantGradeRoadProfile):
@@ -304,6 +308,7 @@ def _encode_output_boundary(boundary: object) -> dict[str, Any]:
                 "kind": "constant_grade",
                 "grade_angle_rad": boundary.road_profile.grade_angle,
             },
+            "direct_secondary_shaft_inertia_kg_m2": boundary.direct_secondary_shaft_inertia,
         }
     raise UnsupportedSimulationDocumentError(
         f"Cannot encode unsupported output boundary {type(boundary).__name__}."
@@ -316,8 +321,10 @@ def _decode_output_boundary(
     kind = _string(payload, "kind")
     if kind == "fixed_output_load":
         return FixedOutputLoad(
-            external_torque=_number(payload, "external_torque_Nm"),
-            added_rotational_inertia=_number(payload, "added_rotational_inertia_kg_m2"),
+            load_torque=_number(payload, "load_torque_Nm"),
+            equivalent_rotational_inertia=_number(
+                payload, "equivalent_rotational_inertia_kg_m2"
+            ),
         )
     if kind != "locked_final_drive_vehicle":
         raise UnsupportedSimulationDocumentError(
@@ -366,6 +373,9 @@ def _decode_output_boundary(
         road_load=road_load,
         road_profile=ConstantGradeRoadProfile(
             grade_angle=_number(road_profile_doc, "grade_angle_rad")
+        ),
+        direct_secondary_shaft_inertia=_number(
+            payload, "direct_secondary_shaft_inertia_kg_m2"
         ),
     )
 

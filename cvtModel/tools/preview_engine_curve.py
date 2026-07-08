@@ -103,7 +103,7 @@ def main() -> None:
     rpm_values = np.linspace(0.0, arguments.maximum_rpm, 1_000)
     angular_speed_values = rpm_values * _RPM_TO_RAD_PER_SECOND
     torque_values = np.array(
-        [torque_curve.evaluate(float(speed)) for speed in angular_speed_values]
+        [torque_curve.torque_at(float(speed)) for speed in angular_speed_values]
     )
     power_values = angular_speed_values * torque_values
 

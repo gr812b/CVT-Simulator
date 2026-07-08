@@ -5,7 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass, replace
 from typing import Any
 
-from cinder.model.boundaries.input import InputTorqueBoundary
+from cinder.model.boundaries.input import InputBoundary
 from cinder.model.boundaries.output import OutputBoundary
 from .assembly import CVTAssemblySpec
 from .state import CVTDynamicState
@@ -46,7 +46,7 @@ class CVTSimulationCase:
     """
 
     cvt: CVTAssemblySpec
-    input_boundary: InputTorqueBoundary
+    input_boundary: InputBoundary
     output_boundary: OutputBoundary
     scenario: OperatingScenario
 
@@ -61,7 +61,7 @@ class CVTSimulationCase:
             raise TypeError("scenario must be an OperatingScenario.")
 
     def with_input_boundary(
-        self, input_boundary: InputTorqueBoundary
+        self, input_boundary: InputBoundary
     ) -> "CVTSimulationCase":
         return replace(self, input_boundary=input_boundary)
 
