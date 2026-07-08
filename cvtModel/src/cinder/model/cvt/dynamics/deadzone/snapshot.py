@@ -15,8 +15,9 @@ normal-resultant, tension-loop, or engaged traction quantities.
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from math import isfinite
+from typing import Final
 
 from cinder.model.cvt.actuation import PulleyActuationContext, PulleyClosureChannels
 from cinder.model.cvt.geometry import GeometryPosition
@@ -27,6 +28,9 @@ from cinder.execution.hybrid import CVTDynamicState
 from cinder.model.boundaries.output.vehicle import RoadLoadResult
 
 from cinder.model.system.evaluator import CVTDynamicsModel
+
+
+_DEADZONE_SHIFT_DOMAIN_TOLERANCE: Final[float] = 1.0e-12
 
 
 @dataclass(frozen=True, slots=True)
@@ -127,10 +131,13 @@ def build_deadzone_snapshot(
         raise TypeError("state must be a CVTDynamicState instance.")
 
     engagement_shift = model.geometry.spec.deadzone_shift
-    if state.shift_position > engagement_shift:
+    if state.shift_position > engagement_shift + _DEADZONE_SHIFT_DOMAIN_TOLERANCE:
         raise ValueError(
             "Deadzone snapshot requires shift_position <= geometry.spec.deadzone_shift."
         )
+
+    if state.shift_position > engagement_shift:
+        state = replace(state, shift_position=engagement_shift)
 
     primary_geometry = model.geometry.evaluate(state.shift_position)
     locked_geometry = model.geometry.evaluate(engagement_shift)

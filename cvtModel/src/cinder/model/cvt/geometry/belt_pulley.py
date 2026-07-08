@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from math import isfinite, pi, sqrt, tan
+from typing import Final
 
 from .belt_length import (
     solve_secondary_outer_radius,
@@ -14,6 +15,9 @@ from .position import (
     RadiusAtShift,
 )
 from .spec import BeltPulleyGeometrySpec
+
+
+_SHIFT_DOMAIN_ABSOLUTE_TOLERANCE: Final[float] = 1.0e-12
 
 
 class BeltPulleyGeometry:
@@ -51,7 +55,7 @@ class BeltPulleyGeometry:
         return self._spec
 
     def evaluate(self, shift: float) -> GeometryPosition:
-        self._validate_shift(shift)
+        shift = self._coerce_shift_to_domain(shift)
 
         (
             primary_outer_radius,
@@ -239,11 +243,31 @@ class BeltPulleyGeometry:
             d2_effective_ds2=d2_radius_ds2,
         )
 
-    def _validate_shift(self, shift: float) -> None:
+    def _coerce_shift_to_domain(self, shift: float) -> float:
+        """Return ``shift`` clipped to the geometry domain within roundoff.
+
+        Hybrid event localization and dense-output reconstruction can produce
+        endpoint states such as ``nextafter(max_shift, +inf)`` even though the
+        physical event landed on the stop.  Those values should evaluate the
+        stop geometry, not fail a strict floating-point inequality.  Larger
+        excursions are still rejected because they indicate a real caller or
+        event-handling error.
+        """
+
         if not isfinite(shift):
             raise ValueError("shift must be finite.")
 
-        if not 0.0 <= shift <= self._spec.max_shift:
+        tolerance = max(
+            _SHIFT_DOMAIN_ABSOLUTE_TOLERANCE,
+            128.0 * abs(self._spec.max_shift) * 2.220446049250313e-16,
+        )
+        if shift < -tolerance or shift > self._spec.max_shift + tolerance:
             raise ValueError(
                 f"shift={shift} is outside " f"[0, {self._spec.max_shift}]."
             )
+
+        if shift < 0.0:
+            return 0.0
+        if shift > self._spec.max_shift:
+            return self._spec.max_shift
+        return shift
