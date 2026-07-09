@@ -10,7 +10,6 @@ from fastapi.testclient import TestClient
 from app.core.settings import Settings
 from app.main import create_app
 
-
 ROOT = Path(__file__).resolve().parents[1]
 
 
@@ -136,3 +135,29 @@ def test_run_lifecycle_journey_and_invalid_document() -> None:
     rejected = client.post("/api/v1/runs", json={"simulation_case": invalid_document})
     assert rejected.status_code == 422
     assert rejected.json()["error"]["code"] == "simulation_case_invalid"
+
+
+def test_direct_run_accepts_frozen_input_response_envelope() -> None:
+    client = build_client()
+    document = baseline_document(client)
+    short_document = copy.deepcopy(document)
+    short_document["scenario"]["time_span_s"] = [0.0, 0.03]
+
+    created = client.post("/api/v1/runs", json={"simulation_case": short_document})
+    assert created.status_code == 202
+    run_id = created.json()["id"]
+
+    input_response = client.get(f"/api/v1/runs/{run_id}/input")
+    assert input_response.status_code == 200
+    input_envelope = input_response.json()
+
+    rerun_from_envelope = client.post("/api/v1/runs", json=input_envelope)
+    assert rerun_from_envelope.status_code == 202
+    rerun_status = rerun_from_envelope.json()
+    assert rerun_status["status"] == "completed"
+
+    rerun_from_raw_document = client.post(
+        "/api/v1/runs", json=input_envelope["input_document_snapshot"]
+    )
+    assert rerun_from_raw_document.status_code == 202
+    assert rerun_from_raw_document.json()["status"] == "completed"

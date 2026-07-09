@@ -301,3 +301,10 @@ front_end_output.csv
 # build folders
 unity/
 artifacts/
+
+
+backend/cvt_simulator_dev.db
+backend/**/black_box_api_artifacts/
+**/__pycache__/
+.pytest_cache/
+*.pyc

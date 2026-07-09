@@ -97,22 +97,17 @@
             "primary": {
               "additionalProperties": false,
               "properties": {
-                "cvt_rotational_inertia_kg_m2": {
-                  "minimum": 0.0,
-                  "type": "number"
-                },
-                "engine_rotational_inertia_kg_m2": {
-                  "minimum": 0.0,
-                  "type": "number"
-                },
                 "moving_sheave_mass_kg": {
+                  "minimum": 0.0,
+                  "type": "number"
+                },
+                "rotating_hardware_inertia_kg_m2": {
                   "minimum": 0.0,
                   "type": "number"
                 }
               },
               "required": [
-                "engine_rotational_inertia_kg_m2",
-                "cvt_rotational_inertia_kg_m2",
+                "rotating_hardware_inertia_kg_m2",
                 "moving_sheave_mass_kg"
               ],
               "type": "object"
@@ -120,11 +115,7 @@
             "secondary": {
               "additionalProperties": false,
               "properties": {
-                "fixed_rotational_inertia_kg_m2": {
-                  "minimum": 0.0,
-                  "type": "number"
-                },
-                "gearbox_input_rotational_inertia_kg_m2": {
+                "fixed_rotating_hardware_inertia_kg_m2": {
                   "minimum": 0.0,
                   "type": "number"
                 },
@@ -138,8 +129,7 @@
                 }
               },
               "required": [
-                "fixed_rotational_inertia_kg_m2",
-                "gearbox_input_rotational_inertia_kg_m2",
+                "fixed_rotating_hardware_inertia_kg_m2",
                 "movable_sheave_rotational_inertia_kg_m2",
                 "moving_sheave_mass_kg"
               ],
@@ -1075,6 +1065,10 @@
     "inputBoundary": {
       "additionalProperties": false,
       "properties": {
+        "equivalent_rotational_inertia_kg_m2": {
+          "minimum": 0.0,
+          "type": "number"
+        },
         "high_speed_braking_torque_Nm": {
           "type": "number"
         },
@@ -1120,7 +1114,8 @@
         "low_speed_braking_torque_Nm",
         "low_speed_braking_peak_speed_rad_per_s",
         "high_speed_braking_torque_Nm",
-        "high_speed_braking_transition_width_rad_per_s"
+        "high_speed_braking_transition_width_rad_per_s",
+        "equivalent_rotational_inertia_kg_m2"
       ],
       "type": "object"
     },
@@ -1129,27 +1124,31 @@
         {
           "additionalProperties": false,
           "properties": {
-            "added_rotational_inertia_kg_m2": {
+            "equivalent_rotational_inertia_kg_m2": {
               "minimum": 0.0,
-              "type": "number"
-            },
-            "external_torque_Nm": {
               "type": "number"
             },
             "kind": {
               "const": "fixed_output_load"
+            },
+            "load_torque_Nm": {
+              "type": "number"
             }
           },
           "required": [
             "kind",
-            "external_torque_Nm",
-            "added_rotational_inertia_kg_m2"
+            "load_torque_Nm",
+            "equivalent_rotational_inertia_kg_m2"
           ],
           "type": "object"
         },
         {
           "additionalProperties": false,
           "properties": {
+            "direct_secondary_shaft_inertia_kg_m2": {
+              "minimum": 0.0,
+              "type": "number"
+            },
             "final_drive": {
               "additionalProperties": false,
               "properties": {
@@ -1249,7 +1248,8 @@
             "vehicle",
             "final_drive",
             "road_load",
-            "road_profile"
+            "road_profile",
+            "direct_secondary_shaft_inertia_kg_m2"
           ],
           "type": "object"
         }
