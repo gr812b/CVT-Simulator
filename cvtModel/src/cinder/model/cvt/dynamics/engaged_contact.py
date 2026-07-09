@@ -45,7 +45,7 @@ from cinder.model.cvt.dynamics.result import (
     TrialClosureRuntimeResult,
 )
 from cinder.model.system.evaluator import DynamicsSnapshot
-from cinder.execution.hybrid import CVTDynamicStateDerivative
+from cinder.model.system.state import CVTStateDerivative
 from cinder.model.cvt.dynamics.state_fixed_equations import (
     StateFixedEquationBlock,
     build_state_fixed_equations,
@@ -67,7 +67,10 @@ class LambdaSearchBounds:
 
     These intervals are solver safeguards, not physical traction limits.
     Physical static capacity belongs to ``ContactTractionLaw`` and is assessed
-    only after the required lambda pair has been solved.
+    only after the required lambda pair has been solved. Defaults are derived
+    from the physical contact limits and deliberately extend beyond them so the
+    solver can discover an over-capacity static requirement before a slip
+    branch is selected.
     """
 
     primary_lower: float
@@ -107,6 +110,41 @@ class LambdaSearchBounds:
             secondary_upper=secondary_half_width,
         )
 
+    @classmethod
+    def from_traction_law(
+        cls,
+        traction_law: ContactTractionLaw,
+        *,
+        overshoot_factor: float = 3.0,
+        minimum_half_width: float = 1.0,
+    ) -> "LambdaSearchBounds":
+        """Choose robust numerical search intervals from contact friction.
+
+        The static intervals define where a sticking solution is physically
+        admissible. The search interval is intentionally wider so an
+        inadmissible requirement can still be solved and then classified as a
+        capacity violation.
+        """
+
+        _require_finite_positive(
+            overshoot_factor=overshoot_factor,
+            minimum_half_width=minimum_half_width,
+        )
+
+        def half_width(interface: ContactInterface) -> float:
+            interval = traction_law.static_interval_at(interface)
+            physical = max(
+                abs(interval.lower),
+                abs(interval.upper),
+                traction_law.kinetic_lambda_magnitude_at(interface),
+            )
+            return max(minimum_half_width, overshoot_factor * physical)
+
+        return cls.symmetric(
+            primary_half_width=half_width(ContactInterface.PRIMARY),
+            secondary_half_width=half_width(ContactInterface.SECONDARY),
+        )
+
     def lower_at(self, interface: ContactInterface) -> float:
         if interface is ContactInterface.PRIMARY:
             return self.primary_lower
@@ -132,10 +170,17 @@ class LambdaSearchBounds:
 
 @dataclass(frozen=True, slots=True)
 class EngagedContactSolveSettings:
-    """Numerical policy shared by the 2D and 1D required-lambda solves."""
+    """Numerical policy shared by the 2D and 1D required-lambda solves.
 
-    lambda_search_bounds: LambdaSearchBounds
-    initial_guess: ContactTractionUtilization
+    The default constructor is intentionally usable. Missing lambda search
+    bounds and initial guesses are completed by
+    :meth:`with_defaults_from_traction_law` when the solver is attached to a
+    plant. These values affect numerical search behavior only; contact physics
+    comes from the assembly's ``BeltContactSpec``.
+    """
+
+    lambda_search_bounds: LambdaSearchBounds | None = None
+    initial_guess: ContactTractionUtilization | None = None
     contact_tolerances: ContactKinematicTolerances = field(
         default_factory=ContactKinematicTolerances
     )
@@ -144,7 +189,19 @@ class EngagedContactSolveSettings:
     maximum_closure_condition_number: float | None = None
 
     def __post_init__(self) -> None:
-        if not self.lambda_search_bounds.contains(self.initial_guess):
+        if self.lambda_search_bounds is not None and not isinstance(
+            self.lambda_search_bounds, LambdaSearchBounds
+        ):
+            raise TypeError("lambda_search_bounds must be LambdaSearchBounds or None.")
+        if self.initial_guess is not None and not isinstance(
+            self.initial_guess, ContactTractionUtilization
+        ):
+            raise TypeError("initial_guess must be ContactTractionUtilization or None.")
+        if (
+            self.lambda_search_bounds is not None
+            and self.initial_guess is not None
+            and not self.lambda_search_bounds.contains(self.initial_guess)
+        ):
             raise ValueError(
                 "initial_guess must lie inside the numerical lambda search box."
             )
@@ -160,7 +217,34 @@ class EngagedContactSolveSettings:
                 maximum_closure_condition_number=(self.maximum_closure_condition_number)
             )
 
+    def with_defaults_from_traction_law(
+        self, traction_law: ContactTractionLaw
+    ) -> "EngagedContactSolveSettings":
+        """Return a complete settings object using physics-derived defaults."""
+
+        bounds = self.lambda_search_bounds or LambdaSearchBounds.from_traction_law(
+            traction_law
+        )
+        guess = self.initial_guess or ContactTractionUtilization(
+            primary_lambda=0.0,
+            secondary_lambda=0.0,
+        )
+        if not bounds.contains(guess):
+            raise ValueError(
+                "initial_guess must lie inside the numerical lambda search box."
+            )
+        return EngagedContactSolveSettings(
+            lambda_search_bounds=bounds,
+            initial_guess=guess,
+            contact_tolerances=self.contact_tolerances,
+            optimizer_tolerance=self.optimizer_tolerance,
+            maximum_function_evaluations=self.maximum_function_evaluations,
+            maximum_closure_condition_number=self.maximum_closure_condition_number,
+        )
+
     def initial_guess_at(self, interface: ContactInterface) -> float:
+        if self.initial_guess is None:
+            raise RuntimeError("EngagedContactSolveSettings was not completed.")
         if interface is ContactInterface.PRIMARY:
             return self.initial_guess.primary_lambda
         if interface is ContactInterface.SECONDARY:
@@ -180,7 +264,7 @@ class EngagedContactTrial:
     traction_utilization: ContactTractionUtilization
     closure: TrialClosureResult | TrialClosureRuntimeResult
     relative_motion: ContactRelativeMotion
-    state_derivative: CVTDynamicStateDerivative
+    state_derivative: CVTStateDerivative
     shift_constraint: EngagedShiftConstraint
     low_ratio_seat_reaction: float | None = None
     upper_stop_reaction: float | None = None
@@ -337,7 +421,7 @@ class EngagedContactSolveResult:
         return self.trial.relative_motion
 
     @property
-    def state_derivative(self) -> CVTDynamicStateDerivative:
+    def state_derivative(self) -> CVTStateDerivative:
         """Return the ODE derivative associated with this branch trial."""
 
         return self.trial.state_derivative
@@ -499,13 +583,13 @@ class EngagedContactClosure:
         low_ratio_seat_reaction = None
         upper_stop_reaction = None
         if self.shift_constraint is EngagedShiftConstraint.FREE:
-            state_derivative = CVTDynamicStateDerivative.from_engaged_closure(
+            state_derivative = CVTStateDerivative.from_engaged_closure(
                 state=self.snapshot.state,
                 unknowns=closure.unknowns,
             )
         else:
             state_derivative = (
-                CVTDynamicStateDerivative.from_fixed_engaged_shift_constraint_closure(
+                CVTStateDerivative.from_fixed_engaged_shift_constraint_closure(
                     state=self.snapshot.state,
                     unknowns=closure.unknowns,
                 )

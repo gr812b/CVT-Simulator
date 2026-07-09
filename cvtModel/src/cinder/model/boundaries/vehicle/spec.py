@@ -1,4 +1,4 @@
-"""Vehicle-side output-boundary specifications."""
+"""Vehicle and road-load specifications used by shaft boundaries."""
 
 from __future__ import annotations
 
@@ -8,7 +8,7 @@ from math import isfinite
 
 @dataclass(frozen=True, slots=True)
 class VehicleInertia:
-    """Vehicle mass and combined driven-wheel spin inertia."""
+    """Vehicle mass and combined wheel spin inertia."""
 
     mass: float
     wheel_rotational_inertia: float = 0.0

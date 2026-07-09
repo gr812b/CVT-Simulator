@@ -5,6 +5,7 @@ than being imported here: dynamics depends on this package's state definitions,
 so eagerly importing the CVT adapter would create an import cycle.
 """
 
+from .composed import ComposedCVTHybridSystem, ComposedCVTMode
 from .hybrid import (
     HybridEvent,
     HybridIntegrationResult,
@@ -15,7 +16,6 @@ from .hybrid import (
     HybridTransitionRecord,
     integrate_hybrid,
 )
-from .cvt_shift_limits import EngagedShiftTravelLimits
 from .cvt_lower_stop import (
     apply_perfectly_inelastic_lower_stop_impact,
     lower_stop_release_value,
@@ -24,15 +24,16 @@ from .cvt_upper_stop import (
     apply_perfectly_inelastic_upper_stop_impact,
     upper_stop_release_value,
 )
-from .state import CVTDynamicState, CVTDynamicStateDerivative
+from .state import CVTState, CVTStateDerivative
 
 __all__ = [
     "lower_stop_release_value",
     "apply_perfectly_inelastic_lower_stop_impact",
-    "CVTDynamicState",
+    "CVTState",
     "apply_perfectly_inelastic_upper_stop_impact",
-    "EngagedShiftTravelLimits",
-    "CVTDynamicStateDerivative",
+    "CVTStateDerivative",
+    "ComposedCVTHybridSystem",
+    "ComposedCVTMode",
     "HybridEvent",
     "HybridIntegrationResult",
     "HybridIntegratorSettings",

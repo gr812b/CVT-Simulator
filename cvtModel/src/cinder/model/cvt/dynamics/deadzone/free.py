@@ -7,8 +7,9 @@ from math import isclose
 
 import numpy as np
 
-from cinder.model.system.evaluator import CVTDynamicsModel
-from cinder.execution.hybrid import CVTDynamicState, CVTDynamicStateDerivative
+from cinder.model.system.evaluator import MechanicalCVTPlant
+from cinder.model.system.ports import CVTShaftBoundaryValues
+from cinder.model.system.state import CVTState, CVTStateDerivative
 
 from .result import DeadzoneEvaluation
 from .snapshot import DeadzoneSnapshot, build_deadzone_snapshot
@@ -24,13 +25,13 @@ class DeadzoneDynamicsEvaluator:
     low-ratio geometry.
     """
 
-    model: CVTDynamicsModel
+    model: MechanicalCVTPlant
     belt_secondary_lock_absolute_tolerance: float = 1.0e-9
     belt_secondary_lock_relative_tolerance: float = 1.0e-9
 
     def __post_init__(self) -> None:
-        if not isinstance(self.model, CVTDynamicsModel):
-            raise TypeError("model must be a CVTDynamicsModel instance.")
+        if not isinstance(self.model, MechanicalCVTPlant):
+            raise TypeError("model must be a MechanicalCVTPlant instance.")
         if self.belt_secondary_lock_absolute_tolerance < 0.0:
             raise ValueError(
                 "belt_secondary_lock_absolute_tolerance must be non-negative."
@@ -40,7 +41,12 @@ class DeadzoneDynamicsEvaluator:
                 "belt_secondary_lock_relative_tolerance must be non-negative."
             )
 
-    def snapshot(self, *, state: CVTDynamicState) -> DeadzoneSnapshot:
+    def snapshot(
+        self,
+        *,
+        state: CVTState,
+        shaft_boundaries: CVTShaftBoundaryValues | None = None,
+    ) -> DeadzoneSnapshot:
         """Construct and validate one deadzone frozen snapshot.
 
         During event localization, a rejected Runge--Kutta stage can lie just
@@ -54,11 +60,12 @@ class DeadzoneDynamicsEvaluator:
         snapshot = build_deadzone_snapshot(
             model=self.model,
             state=self._geometry_safe_state(state),
+            shaft_boundaries=shaft_boundaries,
         )
         self._validate_belt_secondary_lock(snapshot=snapshot)
         return snapshot
 
-    def _geometry_safe_state(self, state: CVTDynamicState) -> CVTDynamicState:
+    def _geometry_safe_state(self, state: CVTState) -> CVTState:
         """Project only out-of-domain integration stages into deadzone geometry."""
 
         spec = self.model.geometry.spec
@@ -67,7 +74,12 @@ class DeadzoneDynamicsEvaluator:
             return state
         return replace(state, shift_position=safe_shift)
 
-    def evaluate_free(self, *, state: CVTDynamicState) -> DeadzoneEvaluation:
+    def evaluate_free(
+        self,
+        *,
+        state: CVTState,
+        shaft_boundaries: CVTShaftBoundaryValues | None = None,
+    ) -> DeadzoneEvaluation:
         """Return the reduced RHS for free primary travel below engagement.
 
         The governing equations are
@@ -81,7 +93,7 @@ class DeadzoneDynamicsEvaluator:
         or tension-loop equation is present.
         """
 
-        snapshot = self.snapshot(state=state)
+        snapshot = self.snapshot(state=state, shaft_boundaries=shaft_boundaries)
         derivative = build_deadzone_free_derivative(snapshot=snapshot)
         return DeadzoneEvaluation(
             state=state,
@@ -92,14 +104,15 @@ class DeadzoneDynamicsEvaluator:
     def evaluate_lower_stop(
         self,
         *,
-        state: CVTDynamicState,
+        state: CVTState,
         lower_stop_shift: float,
+        shaft_boundaries: CVTShaftBoundaryValues | None = None,
     ) -> DeadzoneEvaluation:
         """Return constrained deadzone dynamics at the lower mechanical stop."""
 
         from .lower_stop import evaluate_deadzone_lower_stop
 
-        snapshot = self.snapshot(state=state)
+        snapshot = self.snapshot(state=state, shaft_boundaries=shaft_boundaries)
         return evaluate_deadzone_lower_stop(
             snapshot=snapshot,
             lower_stop_shift=lower_stop_shift,
@@ -124,13 +137,13 @@ class DeadzoneDynamicsEvaluator:
 def build_deadzone_free_derivative(
     *,
     snapshot: DeadzoneSnapshot,
-) -> CVTDynamicStateDerivative:
+) -> CVTStateDerivative:
     """Assemble the direct reduced deadzone derivative from one snapshot."""
 
     require_known_primary_actuation(snapshot=snapshot)
 
     primary_angular_acceleration = (
-        snapshot.engine_torque / snapshot.primary_rotational_inertia
+        snapshot.primary_external_torque / snapshot.primary_rotational_inertia
     )
 
     primary_inertia = snapshot.primary_axial_inertia
@@ -145,7 +158,7 @@ def build_deadzone_free_derivative(
         snapshot.secondary_external_torque / snapshot.secondary_belt_locked_inertia
     )
 
-    return CVTDynamicStateDerivative(
+    return CVTStateDerivative(
         primary_angular_acceleration=primary_angular_acceleration,
         secondary_angular_acceleration=secondary_angular_acceleration,
         belt_acceleration=(
@@ -153,7 +166,6 @@ def build_deadzone_free_derivative(
         ),
         shift_position_rate=snapshot.state.shift_speed,
         shift_acceleration=shift_acceleration,
-        secondary_shaft_angle_rate=snapshot.state.secondary_angular_speed,
     )
 
 

@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "document_type": "cinder_simulation_case",
+  "document_type": "cinder_composed_simulation_case",
   "assembly": {
     "schema_version": 1,
     "document_type": "cinder_cvt_assembly",
@@ -19,11 +19,13 @@
       "max_shift_m": 0.019049999999999997
     },
     "contact": {
-      "friction_coefficient": 0.3
+      "static_friction_coefficient": 0.65,
+      "kinetic_friction_coefficient": 0.55
     },
     "inertias": {
       "primary": {
-        "rotating_hardware_inertia_kg_m2": 0.005,
+        "fixed_rotating_hardware_inertia_kg_m2": 0.005,
+        "movable_sheave_rotational_inertia_kg_m2": 0.0,
         "moving_sheave_mass_kg": 1.0681
       },
       "secondary": {
@@ -34,7 +36,7 @@
       "belt_density_kg_per_m3": 1100.0
     },
     "pulleys": {
-      "input": {
+      "primary": {
         "components": [
           {
             "kind": "centrifugal_ramp",
@@ -59,7 +61,7 @@
           }
         ]
       },
-      "output": {
+      "secondary": {
         "components": [
           {
             "kind": "axial_spring",
@@ -75,8 +77,6 @@
           }
         ],
         "helical_coupling": {
-          "opening_per_axial_position": -1.0,
-          "opening_offset_m": 0.0,
           "profile": {
             "kind": "helix_profile",
             "circumferential_profile": {
@@ -89,130 +89,123 @@
                 }
               ]
             },
-            "radius_m": 0.04445,
-            "theta_offset_rad": 0.0
+            "radius_m": 0.04445
           }
         }
       }
     }
   },
-  "input_boundary": {
-    "kind": "full_throttle_torque_curve",
-    "points": [
-      {
-        "angular_speed_rad_per_s": 251.32741228718345,
-        "torque_Nm": 0.0
+  "shaft_boundaries": {
+    "primary": {
+      "kind": "full_throttle_engine",
+      "points": [
+        {
+          "angular_speed_rad_per_s": 104.71975511965977,
+          "torque_Nm": 0.0
+        },
+        {
+          "angular_speed_rad_per_s": 188.49555921538757,
+          "torque_Nm": 24.4047230694
+        },
+        {
+          "angular_speed_rad_per_s": 251.32741228718345,
+          "torque_Nm": 25.08263204355
+        },
+        {
+          "angular_speed_rad_per_s": 272.2713633111154,
+          "torque_Nm": 24.54030486423
+        },
+        {
+          "angular_speed_rad_per_s": 293.21531433504737,
+          "torque_Nm": 23.591232300419996
+        },
+        {
+          "angular_speed_rad_per_s": 314.1592653589793,
+          "torque_Nm": 22.50657794178
+        },
+        {
+          "angular_speed_rad_per_s": 335.1032163829112,
+          "torque_Nm": 20.87959640382
+        },
+        {
+          "angular_speed_rad_per_s": 356.0471674068432,
+          "torque_Nm": 19.659360250349998
+        },
+        {
+          "angular_speed_rad_per_s": 376.99111843077515,
+          "torque_Nm": 18.303542302049998
+        },
+        {
+          "angular_speed_rad_per_s": 418.87902047863906,
+          "torque_Nm": 0.0
+        }
+      ],
+      "low_speed_braking_torque_Nm": -5.0,
+      "low_speed_braking_peak_speed_rad_per_s": 52.35987755982988,
+      "high_speed_braking_torque_Nm": -28.0,
+      "high_speed_braking_transition_width_rad_per_s": 157.07963267948966,
+      "equivalent_rotational_inertia_kg_m2": 0.1
+    },
+    "secondary": {
+      "kind": "locked_final_drive",
+      "vehicle": {
+        "mass_kg": 300.0,
+        "wheel_rotational_inertia_kg_m2": 0.2
       },
-      {
-        "angular_speed_rad_per_s": 272.2713633111154,
-        "torque_Nm": 24.5
+      "final_drive": {
+        "reduction_ratio": 7.556,
+        "wheel_radius_m": 0.2794
       },
-      {
-        "angular_speed_rad_per_s": 335.1032163829113,
-        "torque_Nm": 22.0
+      "road_load": {
+        "rolling_resistance_coefficient": 0.015,
+        "drag_coefficient": 0.6,
+        "frontal_area_m2": 1.11484,
+        "air_density_kg_per_m3": 1.225,
+        "gravity_m_per_s2": 9.80665,
+        "rolling_speed_regularization_m_per_s": 0.01
       },
-      {
-        "angular_speed_rad_per_s": 418.87902047863906,
-        "torque_Nm": 0.0
-      }
-    ],
-    "low_speed_braking_torque_Nm": -5.0,
-    "low_speed_braking_peak_speed_rad_per_s": 52.35987755982988,
-    "high_speed_braking_torque_Nm": -28.0,
-    "high_speed_braking_transition_width_rad_per_s": 157.07963267948966,
-    "equivalent_rotational_inertia_kg_m2": 0.1
+      "road_profile": {
+        "kind": "constant_grade",
+        "grade_angle_rad": 0.0
+      },
+      "direct_secondary_shaft_inertia_kg_m2": 0.05
+    }
   },
-  "output_boundary": {
-    "kind": "locked_final_drive_vehicle",
-    "vehicle": {
-      "mass_kg": 300,
-      "wheel_rotational_inertia_kg_m2": 0.2
-    },
-    "final_drive": {
-      "reduction_ratio": 7.556,
-      "wheel_radius_m": 0.2794
-    },
-    "road_load": {
-      "rolling_resistance_coefficient": 0.015,
-      "drag_coefficient": 0.6,
-      "frontal_area_m2": 1.11484,
-      "air_density_kg_per_m3": 1.225,
-      "gravity_m_per_s2": 9.80665,
-      "rolling_speed_regularization_m_per_s": 0.01
-    },
-    "road_profile": {
-      "kind": "constant_grade",
-      "grade_angle_rad": 0.0
-    },
-    "direct_secondary_shaft_inertia_kg_m2": 0.05
+  "host": {
+    "kind": "secondary_shaft_angle",
+    "initial_state": {
+      "secondary_shaft_angle_rad": 0.0
+    }
   },
   "scenario": {
     "time_span_s": [
       0.0,
-      3.0
+      5.0
     ],
-    "initial_state": {
+    "initial_cvt_state": {
       "primary_angular_speed_rad_per_s": 188.49555921538757,
       "secondary_angular_speed_rad_per_s": 0.0,
       "belt_speed_m_per_s": 0.0,
       "shift_position_m": 0.0,
-      "shift_speed_m_per_s": 0.0,
-      "secondary_shaft_angle_rad": 0.0
-    },
-    "initial_mode": null
+      "shift_speed_m_per_s": 0.0
+    }
   },
   "execution": {
-    "traction_law": {
-      "primary_static_lambda_limit": 0.65,
-      "secondary_static_lambda_limit": 0.65,
-      "primary_kinetic_lambda_magnitude": 0.55,
-      "secondary_kinetic_lambda_magnitude": 0.55
-    },
-    "solve_settings": {
-      "lambda_search_bounds": {
-        "primary_lower": -3.0,
-        "primary_upper": 3.0,
-        "secondary_lower": -3.0,
-        "secondary_upper": 3.0
-      },
-      "initial_guess": {
-        "primary_lambda": 0.0,
-        "secondary_lambda": 0.0
-      },
-      "contact_tolerances": {
-        "relative_speed_tolerance_m_per_s": 1e-07,
-        "relative_acceleration_tolerance_m_per_s2": 1e-08,
-        "stick_acceleration_tolerance_m_per_s2": 1e-08
-      },
-      "optimizer_tolerance": 1e-12,
-      "maximum_function_evaluations": 100,
-      "maximum_closure_condition_number": 100000000.0
-    },
-    "operating_limits": {
-      "lower_stop_shift_m": 0.0,
-      "engagement_shift_m": 0.0024891999999999996,
-      "upper_stop_shift_m": 0.019049999999999997
-    },
-    "switching_settings": {
-      "stick_exit_static_margin": 0.0,
-      "restick_static_margin": 0.001,
-      "normal_resultant_floor_N": 1e-06
-    },
     "integrator": {
-      "relative_tolerance": 3e-05,
-      "absolute_tolerance": 1e-07,
+      "relative_tolerance": 0.01,
+      "absolute_tolerance": 1e-05,
       "method": "LSODA",
-      "max_step_s": 0.005,
-      "first_step_s": null,
-      "maximum_transitions": 30,
-      "event_time_tolerance_s": 1e-10,
-      "retain_dense_output": false
+      "max_step": 0.05,
+      "first_step": null,
+      "maximum_transitions": 80,
+      "event_time_tolerance": 1e-10,
+      "retain_dense_output": true
     },
     "reporting": {
       "grid": {
         "kind": "uniform_time_step",
         "count": null,
-        "step_seconds": 0.01
+        "step_seconds": 0.05
       },
       "include_contact": true,
       "include_actuation": true,

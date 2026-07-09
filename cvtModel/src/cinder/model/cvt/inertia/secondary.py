@@ -1,4 +1,4 @@
-"""CVT-core output-pulley inertia data."""
+"""CVT-core secondary-pulley inertia data."""
 
 from __future__ import annotations
 
@@ -8,11 +8,11 @@ from math import isfinite
 
 @dataclass(frozen=True, slots=True)
 class SecondaryInertia:
-    """CVT-owned output-pulley inertia data.
+    """CVT-owned secondary-pulley inertia data.
 
     ``fixed_rotating_hardware_inertia`` covers only CVT components rigidly
     attached directly to the secondary shaft. Gearbox, wheel, vehicle, dyno,
-    sled, or other downstream inertia belongs to the selected output boundary
+    sled, or other downstream inertia belongs to the selected shaft boundary
     and is added at runtime. The movable sheave remains separate because it has
     both absolute pulley rotation and relative helix rotation.
     """
@@ -36,16 +36,10 @@ class SecondaryInertia:
             if not isfinite(value) or value < 0.0:
                 raise ValueError(f"{name} must be finite and non-negative.")
 
-    @property
-    def fixed_rotational_inertia(self) -> float:
-        """Compatibility alias for existing callers."""
-
-        return self.fixed_rotating_hardware_inertia
-
 
 @dataclass(frozen=True, slots=True)
 class SecondaryFixedInertia:
-    """Resolved constant output-pulley inertia owned by the CVT core."""
+    """Resolved constant secondary-pulley inertia owned by the CVT core."""
 
     fixed_rotating_hardware_inertia: float
 
@@ -53,16 +47,10 @@ class SecondaryFixedInertia:
     def total(self) -> float:
         return self.fixed_rotating_hardware_inertia
 
-    @property
-    def output_fixed_rotational_inertia(self) -> float:
-        """Compatibility alias for existing callers."""
-
-        return self.fixed_rotating_hardware_inertia
-
 
 @dataclass(frozen=True, slots=True)
 class ResolvedSecondaryInertia:
-    """Output-pulley rotational constants supplied by the CVT core."""
+    """Secondary-pulley rotational constants supplied by the CVT core."""
 
     fixed_side: SecondaryFixedInertia
     movable_sheave_rotational_inertia: float
@@ -77,7 +65,7 @@ class ResolvedSecondaryInertia:
 def resolve_secondary_inertia(
     *, secondary: SecondaryInertia
 ) -> ResolvedSecondaryInertia:
-    """Resolve constant output-pulley inertia owned by the CVT assembly."""
+    """Resolve constant secondary-pulley inertia owned by the CVT assembly."""
 
     return ResolvedSecondaryInertia(
         fixed_side=SecondaryFixedInertia(

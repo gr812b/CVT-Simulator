@@ -1,8 +1,5 @@
-"""Compatibility re-export for execution modules.
+"""Re-export of the mechanical CVT core state definitions."""
 
-The actual state definition belongs to ``cinder.model.system.state``.
-"""
+from cinder.model.system.state import CVTState, CVTStateDerivative
 
-from cinder.model.system.state import CVTDynamicState, CVTDynamicStateDerivative
-
-__all__ = ["CVTDynamicState", "CVTDynamicStateDerivative"]
+__all__ = ["CVTState", "CVTStateDerivative"]

@@ -96,11 +96,13 @@ def encode_assembly_document(assembly: CVTAssemblySpec) -> dict[str, Any]:
             "max_shift_m": spec.max_shift,
         },
         "contact": {
-            "friction_coefficient": assembly.contact.friction_coefficient,
+            "static_friction_coefficient": assembly.contact.static_friction_coefficient,
+            "kinetic_friction_coefficient": assembly.contact.kinetic_friction_coefficient,
         },
         "inertias": {
             "primary": {
-                "rotating_hardware_inertia_kg_m2": primary.rotating_hardware_inertia,
+                "fixed_rotating_hardware_inertia_kg_m2": primary.fixed_rotating_hardware_inertia,
+                "movable_sheave_rotational_inertia_kg_m2": primary.movable_sheave_rotational_inertia,
                 "moving_sheave_mass_kg": masses.primary_moving_sheave_mass,
             },
             "secondary": {
@@ -111,8 +113,8 @@ def encode_assembly_document(assembly: CVTAssemblySpec) -> dict[str, Any]:
             "belt_density_kg_per_m3": assembly.inertias.belt.density,
         },
         "pulleys": {
-            "input": _encode_pulley(assembly.pulleys.input),
-            "output": _encode_pulley(assembly.pulleys.output),
+            "primary": _encode_pulley(assembly.pulleys.primary),
+            "secondary": _encode_pulley(assembly.pulleys.secondary),
         },
     }
 
@@ -153,7 +155,10 @@ def decode_assembly_document(document: Mapping[str, Any]) -> CVTAssemblySpec:
 
     contact_doc = _mapping(_require(root, "contact"), "contact")
     contact = BeltContactSpec(
-        friction_coefficient=_number(contact_doc, "friction_coefficient")
+        static_friction_coefficient=_number(contact_doc, "static_friction_coefficient"),
+        kinetic_friction_coefficient=_optional_number(
+            contact_doc, "kinetic_friction_coefficient", default=None
+        ),
     )
 
     inertias_doc = _mapping(_require(root, "inertias"), "inertias")
@@ -162,8 +167,11 @@ def decode_assembly_document(document: Mapping[str, Any]) -> CVTAssemblySpec:
     inertias = resolve_inertias(
         drivetrain=DrivetrainInertias(
             primary=PrimaryInertia(
-                rotating_hardware_inertia=_number(
-                    primary_doc, "rotating_hardware_inertia_kg_m2"
+                fixed_rotating_hardware_inertia=_number(
+                    primary_doc, "fixed_rotating_hardware_inertia_kg_m2"
+                ),
+                movable_sheave_rotational_inertia=_number(
+                    primary_doc, "movable_sheave_rotational_inertia_kg_m2"
                 ),
                 moving_sheave_mass=_number(primary_doc, "moving_sheave_mass_kg"),
             ),
@@ -183,16 +191,16 @@ def decode_assembly_document(document: Mapping[str, Any]) -> CVTAssemblySpec:
     )
 
     pulleys_doc = _mapping(_require(root, "pulleys"), "pulleys")
-    input_pulley = _decode_pulley(
-        _mapping(_require(pulleys_doc, "input"), "pulleys.input"), location="input"
+    primary_pulley = _decode_pulley(
+        _mapping(_require(pulleys_doc, "primary"), "pulleys.primary"), location="primary"
     )
-    output_pulley = _decode_pulley(
-        _mapping(_require(pulleys_doc, "output"), "pulleys.output"), location="output"
+    secondary_pulley = _decode_pulley(
+        _mapping(_require(pulleys_doc, "secondary"), "pulleys.secondary"), location="secondary"
     )
 
     return CVTAssemblySpec(
         geometry=geometry,
-        pulleys=PulleyPairSpec(input=input_pulley, output=output_pulley),
+        pulleys=PulleyPairSpec(primary=primary_pulley, secondary=secondary_pulley),
         inertias=inertias,
         contact=contact,
     )
@@ -207,8 +215,6 @@ def _encode_pulley(pulley: PulleySpec) -> dict[str, Any]:
     if pulley.helical_coupling is not None:
         coupling = pulley.helical_coupling
         payload["helical_coupling"] = {
-            "opening_per_axial_position": coupling.opening_per_axial_position,
-            "opening_offset_m": coupling.opening_offset,
             "profile": _encode_helix_profile(coupling.profile),
         }
     return payload
@@ -238,11 +244,7 @@ def _decode_pulley(payload: Mapping[str, Any], *, location: str) -> PulleySpec:
                     _require(coupling_data, "profile"),
                     f"pulleys.{location}.helical_coupling.profile",
                 )
-            ),
-            opening_per_axial_position=_number(
-                coupling_data, "opening_per_axial_position"
-            ),
-            opening_offset=_number(coupling_data, "opening_offset_m"),
+            )
         )
     return PulleySpec(actuator=PulleyActuator(*force_laws), helical_coupling=coupling)
 
@@ -387,7 +389,6 @@ def _encode_helix_profile(profile: HelixProfile) -> dict[str, Any]:
             profile.circumferential_profile
         ),
         "radius_m": profile.radius,
-        "theta_offset_rad": profile.theta_offset,
     }
 
 
@@ -404,7 +405,6 @@ def _decode_helix_profile(payload: Mapping[str, Any]) -> HelixProfile:
             )
         ),
         radius=_number(payload, "radius_m"),
-        theta_offset=_optional_number(payload, "theta_offset_rad", default=0.0),
     )
 
 

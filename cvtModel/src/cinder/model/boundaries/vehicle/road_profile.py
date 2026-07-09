@@ -128,7 +128,7 @@ class CallableRoadProfile:
     Adapt a user-supplied ``grade_angle(vehicle_distance)`` function.
 
     The callable is intentionally defined in physical vehicle distance rather
-    than in a CVT coordinate. ``CVTDynamicsModel`` performs the one fixed
+    than in a CVT coordinate. ``MechanicalCVTPlant`` performs the one fixed
     final-drive conversion from accumulated secondary-shaft angle before it
     samples this profile.
     """

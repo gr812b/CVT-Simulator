@@ -1,9 +1,10 @@
 """Numerical execution primitives for CINDER."""
 
 from .hybrid import (
-    CVTDynamicState,
-    CVTDynamicStateDerivative,
-    EngagedShiftTravelLimits,
+    ComposedCVTHybridSystem,
+    ComposedCVTMode,
+    CVTState,
+    CVTStateDerivative,
     HybridEvent,
     HybridIntegrationResult,
     HybridIntegratorSettings,
@@ -19,9 +20,10 @@ from .hybrid import (
 )
 
 __all__ = [
-    "CVTDynamicState",
-    "CVTDynamicStateDerivative",
-    "EngagedShiftTravelLimits",
+    "ComposedCVTHybridSystem",
+    "ComposedCVTMode",
+    "CVTState",
+    "CVTStateDerivative",
     "HybridEvent",
     "HybridIntegrationResult",
     "HybridIntegratorSettings",

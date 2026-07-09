@@ -161,49 +161,39 @@ def _build_pulley_context(
     geometry = cvt.geometry.evaluate(point.shift_position)
     pulley_spec: PulleySpec
 
-    if pulley is PulleyLocation.INPUT:
+    if pulley is PulleyLocation.PRIMARY:
         coordinate = geometry.primary_axial_coordinate
-        pulley_spec = cvt.pulleys.input
-        context = PulleyActuationContext(
-            axial_position=coordinate.value,
-            axial_speed=coordinate.d_value_ds * point.shift_speed,
-            shaft_speed=point.shaft_speed,
-            shift_speed=point.shift_speed,
-            closure_channels=PulleyClosureChannels.input_pulley(),
-        )
-        return pulley_spec.actuator, context
-
-    if pulley is PulleyLocation.OUTPUT:
+        pulley_spec = cvt.pulleys.primary
+        closure_channels = PulleyClosureChannels.primary()
+        movable_member_rotational_inertia = cvt.inertias.primary.movable_sheave_rotational_inertia
+    elif pulley is PulleyLocation.SECONDARY:
         coordinate = geometry.secondary_axial_coordinate
-        pulley_spec = cvt.pulleys.output
-        coupling = pulley_spec.helical_coupling
-        if coupling is None:  # pragma: no cover - CVTAssemblySpec invariant.
-            raise ValueError(
-                "Output clamping study requires an output helical coupling."
-            )
-        kinematics = coupling.evaluate_from_local_coordinate(
-            axial_position=coordinate.value,
-            d_axial_position_ds=coordinate.d_value_ds,
-            d2_axial_position_ds2=coordinate.d2_value_ds2,
-        )
-        context = PulleyActuationContext(
-            axial_position=coordinate.value,
-            axial_speed=coordinate.d_value_ds * point.shift_speed,
-            shaft_speed=point.shaft_speed,
-            shift_speed=point.shift_speed,
-            closure_channels=PulleyClosureChannels.output_pulley(),
-            helical_coupling=HelicalCouplingState(
-                kinematics=kinematics,
-                opening_per_axial_position=coupling.opening_per_axial_position,
-                opening_offset=coupling.opening_offset,
-            ),
-            movable_member_rotational_inertia=(
-                cvt.inertias.secondary.movable_sheave_rotational_inertia
-            ),
-        )
-        return pulley_spec.actuator, context
+        pulley_spec = cvt.pulleys.secondary
+        closure_channels = PulleyClosureChannels.secondary()
+        movable_member_rotational_inertia = cvt.inertias.secondary.movable_sheave_rotational_inertia
+    else:  # pragma: no cover - PulleyLocation enum exhaustiveness.
+        raise TypeError(f"Unsupported pulley location: {pulley!r}")
 
-    raise TypeError(f"Unsupported pulley location: {pulley!r}")
+    coupling_state = None
+    if pulley_spec.helical_coupling is not None:
+        coupling_state = HelicalCouplingState(
+            kinematics=pulley_spec.helical_coupling.evaluate_from_local_coordinate(
+                axial_position=coordinate.value,
+                d_axial_position_ds=coordinate.d_value_ds,
+                d2_axial_position_ds2=coordinate.d2_value_ds2,
+            ),
+        )
+
+    context = PulleyActuationContext(
+        axial_position=coordinate.value,
+        axial_speed=coordinate.d_value_ds * point.shift_speed,
+        shaft_speed=point.shaft_speed,
+        shift_speed=point.shift_speed,
+        closure_channels=closure_channels,
+        helical_coupling=coupling_state,
+        movable_member_rotational_inertia=movable_member_rotational_inertia,
+    )
+    return pulley_spec.actuator, context
 
 
 def _validate_shift_position(cvt: CVTAssemblySpec, shift_position: float) -> None:

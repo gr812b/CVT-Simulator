@@ -17,6 +17,7 @@ from numpy.typing import NDArray
 from cinder.model.cvt.contact import ContactInterface, ContactRegime
 from cinder.model.cvt.dynamics.deadzone import DeadzoneDynamicsEvaluator
 from cinder.model.cvt.dynamics.shift_constraints import EngagedShiftConstraint
+from cinder.model.system.ports import CVTShaftBoundaryValues
 
 from .cvt_contact_events import CVTContactEvent
 from .cvt_contact_switching import (
@@ -27,7 +28,7 @@ from .cvt_operating_limits import CVTShiftOperatingLimits
 from .cvt_regime import CVTEngagementState, CVTOperatingRegime, CVTShiftConstraint
 from .cvt_regime_events import CVTRegimeEvent
 from .hybrid import HybridTransition
-from .state import CVTDynamicState
+from .state import CVTState
 
 if TYPE_CHECKING:
     from .cvt_contact import CVTContactEvaluation, EngagedCVTContactEvaluator
@@ -39,9 +40,10 @@ _PRIMARY_CLAMP_EVENT_TOLERANCE = 1.0e-8
 def classify_initial_cvt_regime(
     *,
     evaluator: "EngagedCVTContactEvaluator",
-    state: CVTDynamicState,
+    state: CVTState,
     limits: CVTShiftOperatingLimits,
     switching_settings: CVTContactSwitchSettings,
+    shaft_boundaries: CVTShaftBoundaryValues | None = None,
 ) -> CVTOperatingRegime:
     """Classify an initial state into one physically meaningful regime.
 
@@ -64,6 +66,7 @@ def classify_initial_cvt_regime(
     contact = evaluator.classify_initial_regime(
         state=state,
         switching_settings=switching_settings,
+        shaft_boundaries=shaft_boundaries,
     )
     if s == limits.upper_stop_shift:
         return CVTOperatingRegime.engaged_upper_stop(contact_regime=contact)
@@ -80,6 +83,7 @@ def resolve_cvt_operating_transition(
     fired_event_names: tuple[str, ...],
     limits: CVTShiftOperatingLimits,
     switching_settings: CVTContactSwitchSettings,
+    shaft_boundaries: CVTShaftBoundaryValues | None = None,
 ) -> HybridTransition[CVTOperatingRegime]:
     """Resolve only successors allowed by the active physical regime.
 
@@ -89,7 +93,7 @@ def resolve_cvt_operating_transition(
     into the same free/upper-stop operating constraint.
     """
 
-    state = CVTDynamicState.from_vector(vector)
+    state = CVTState.from_vector(vector)
     _validate_state_within_limits(state=state, limits=limits, tolerance=1.0e-8)
     fired = set(fired_event_names)
     geometry_events = _geometry_events_from(fired)
@@ -108,6 +112,7 @@ def resolve_cvt_operating_transition(
             evaluator=evaluator,
             deadzone_evaluator=deadzone_evaluator,
             switching_settings=switching_settings,
+            shaft_boundaries=shaft_boundaries,
         )
 
     return _resolve_engaged_transition(
@@ -120,6 +125,7 @@ def resolve_cvt_operating_transition(
         limits=limits,
         evaluator=evaluator,
         switching_settings=switching_settings,
+        shaft_boundaries=shaft_boundaries,
     )
 
 
@@ -139,8 +145,9 @@ def project_inelastic_shift_constraint(
 def primary_independent_clamping_force_at_engagement(
     *,
     evaluator: "EngagedCVTContactEvaluator",
-    state: CVTDynamicState,
+    state: CVTState,
     limits: CVTShiftOperatingLimits,
+    shaft_boundaries: CVTShaftBoundaryValues | None = None,
 ) -> float:
     """Return the primary actuator's signed force at the engagement boundary.
 
@@ -156,7 +163,7 @@ def primary_independent_clamping_force_at_engagement(
         shift_position=limits.engagement_shift,
         shift_speed=0.0,
     )
-    snapshot = evaluator.model.snapshot(state=boundary_state)
+    snapshot = evaluator.model.snapshot(state=boundary_state, shaft_boundaries=shaft_boundaries)
     if any(value != 0.0 for value in snapshot.primary_actuation.gains.as_tuple()):
         raise NotImplementedError(
             "Primary-clamp disengagement gating requires an independently known "
@@ -169,8 +176,9 @@ def primary_independent_clamping_force_at_engagement(
 def capture_belt_to_secondary_at_disengagement(
     *,
     evaluator: "EngagedCVTContactEvaluator",
-    state: CVTDynamicState,
+    state: CVTState,
     limits: CVTShiftOperatingLimits,
+    shaft_boundaries: CVTShaftBoundaryValues | None = None,
 ) -> NDArray[np.float64]:
     """Apply the temporary perfectly inelastic belt-secondary capture map.
 
@@ -183,10 +191,13 @@ def capture_belt_to_secondary_at_disengagement(
     """
 
     boundary_state = replace(state, shift_position=limits.engagement_shift)
-    snapshot = evaluator.model.snapshot(state=boundary_state)
+    snapshot = evaluator.model.snapshot(state=boundary_state, shaft_boundaries=shaft_boundaries)
     radius = snapshot.geometry.secondary.effective
     belt_mass = snapshot.belt_transport_mass
-    secondary_inertia = snapshot.secondary_absolute_rotational_inertia
+    secondary_inertia = (
+        snapshot.secondary_absolute_rotational_inertia
+        + snapshot.shaft_boundaries.secondary.equivalent_inertia
+    )
     combined_inertia = secondary_inertia + belt_mass * radius * radius
     if combined_inertia <= 0.0:
         raise RuntimeError("Deadzone belt-secondary capture has non-positive inertia.")
@@ -204,7 +215,7 @@ def capture_belt_to_secondary_at_disengagement(
 
 def _resolve_deadzone_transition(
     *,
-    state: CVTDynamicState,
+    state: CVTState,
     vector: NDArray[np.float64],
     old_regime: CVTOperatingRegime,
     geometry_events: set[CVTRegimeEvent],
@@ -213,6 +224,7 @@ def _resolve_deadzone_transition(
     evaluator: "EngagedCVTContactEvaluator",
     deadzone_evaluator: DeadzoneDynamicsEvaluator,
     switching_settings: CVTContactSwitchSettings,
+    shaft_boundaries: CVTShaftBoundaryValues | None = None,
 ) -> HybridTransition[CVTOperatingRegime]:
     if contact_events:
         raise RuntimeError("Deadzone cannot receive engaged-contact event names.")
@@ -223,9 +235,10 @@ def _resolve_deadzone_transition(
                 vector=vector,
                 limits=limits,
                 deadzone_evaluator=deadzone_evaluator,
+                shaft_boundaries=shaft_boundaries,
             )
         if CVTRegimeEvent.ENGAGEMENT_REACHED in geometry_events:
-            boundary_state = CVTDynamicState.from_vector(
+            boundary_state = CVTState.from_vector(
                 project_inelastic_shift_constraint(
                     vector=vector,
                     shift_position=limits.engagement_shift,
@@ -236,10 +249,11 @@ def _resolve_deadzone_transition(
             # common boundary-position projection above.
             engaged_vector = boundary_state.as_vector().copy()
             engaged_vector[4] = vector[4]
-            engaged_state = CVTDynamicState.from_vector(engaged_vector)
+            engaged_state = CVTState.from_vector(engaged_vector)
             contact = evaluator.classify_initial_regime(
                 state=engaged_state,
                 switching_settings=switching_settings,
+                shaft_boundaries=shaft_boundaries,
             )
             return HybridTransition(
                 next_mode=CVTOperatingRegime.engaged_free(contact_regime=contact),
@@ -267,6 +281,7 @@ def _resolve_lower_stop_arrival(
     vector: NDArray[np.float64],
     limits: CVTShiftOperatingLimits,
     deadzone_evaluator: DeadzoneDynamicsEvaluator,
+    shaft_boundaries: CVTShaftBoundaryValues | None = None,
 ) -> HybridTransition[CVTOperatingRegime]:
     """Apply the low-stop impact, then accept or immediately release it.
 
@@ -281,8 +296,9 @@ def _resolve_lower_stop_arrival(
         shift_position=limits.lower_stop_shift,
     )
     evaluation = deadzone_evaluator.evaluate_lower_stop(
-        state=CVTDynamicState.from_vector(projected),
+        state=CVTState.from_vector(projected),
         lower_stop_shift=limits.lower_stop_shift,
+        shaft_boundaries=shaft_boundaries,
     )
     reaction = evaluation.stop_reaction
     if reaction is None:  # pragma: no cover - lower-stop evaluator invariant.
@@ -311,7 +327,7 @@ def _resolve_lower_stop_arrival(
 def _resolve_engaged_transition(
     *,
     time: float,
-    state: CVTDynamicState,
+    state: CVTState,
     vector: NDArray[np.float64],
     old_regime: CVTOperatingRegime,
     geometry_events: set[CVTRegimeEvent],
@@ -319,6 +335,7 @@ def _resolve_engaged_transition(
     limits: CVTShiftOperatingLimits,
     evaluator: "EngagedCVTContactEvaluator",
     switching_settings: CVTContactSwitchSettings,
+    shaft_boundaries: CVTShaftBoundaryValues | None = None,
 ) -> HybridTransition[CVTOperatingRegime]:
     """Resolve one engaged event without letting belt reaction select neutral.
 
@@ -339,6 +356,7 @@ def _resolve_engaged_transition(
                 limits=limits,
                 evaluator=evaluator,
                 switching_settings=switching_settings,
+                shaft_boundaries=shaft_boundaries,
             )
         if CVTRegimeEvent.UPPER_STOP_REACHED in geometry_events:
             return _resolve_upper_stop_arrival(
@@ -349,6 +367,7 @@ def _resolve_engaged_transition(
                 limits=limits,
                 evaluator=evaluator,
                 switching_settings=switching_settings,
+                shaft_boundaries=shaft_boundaries,
             )
 
     if old_regime.shift_constraint is CVTShiftConstraint.LOW_RATIO_SEAT:
@@ -358,6 +377,7 @@ def _resolve_engaged_transition(
                 old_contact_regime=old_regime.contact_regime,
                 limits=limits,
                 evaluator=evaluator,
+                shaft_boundaries=shaft_boundaries,
             )
         if CVTRegimeEvent.LOW_RATIO_SEAT_RELEASE in geometry_events:
             return _resolve_low_ratio_seat_release(
@@ -368,6 +388,7 @@ def _resolve_engaged_transition(
                 limits=limits,
                 evaluator=evaluator,
                 switching_settings=switching_settings,
+                shaft_boundaries=shaft_boundaries,
             )
 
     if old_regime.shift_constraint is CVTShiftConstraint.UPPER_STOP:
@@ -380,6 +401,7 @@ def _resolve_engaged_transition(
                 limits=limits,
                 evaluator=evaluator,
                 switching_settings=switching_settings,
+                shaft_boundaries=shaft_boundaries,
             )
 
     if not contact_events:
@@ -396,6 +418,7 @@ def _resolve_engaged_transition(
         fired_event_names=contact_events,
         switching_settings=switching_settings,
         shift_constraint=constraint,
+        shaft_boundaries=shaft_boundaries,
     )
     if contact_transition.terminates:
         return HybridTransition(
@@ -439,6 +462,7 @@ def _resolve_low_ratio_seat_arrival(
     limits: CVTShiftOperatingLimits,
     evaluator: "EngagedCVTContactEvaluator",
     switching_settings: CVTContactSwitchSettings,
+    shaft_boundaries: CVTShaftBoundaryValues | None = None,
 ) -> HybridTransition[CVTOperatingRegime]:
     """Enter the low-ratio seat before deciding whether neutral is permitted."""
 
@@ -454,6 +478,7 @@ def _resolve_low_ratio_seat_arrival(
         constraint=EngagedShiftConstraint.LOW_RATIO_SEAT,
         evaluator=evaluator,
         switching_settings=switching_settings,
+        shaft_boundaries=shaft_boundaries,
     )
     if contact_transition is not None and contact_transition.terminates:
         return HybridTransition(
@@ -471,16 +496,18 @@ def _resolve_low_ratio_seat_arrival(
         vector=projected,
         regime=contact_regime,
         shift_constraint=EngagedShiftConstraint.LOW_RATIO_SEAT,
+        shaft_boundaries=shaft_boundaries,
     )
     seat_reaction = seat_evaluation.low_ratio_seat_reaction
     if seat_reaction is None:  # pragma: no cover - constrained evaluator invariant.
         raise RuntimeError("Low-ratio seat evaluation did not recover a seat reaction.")
 
-    projected_state = CVTDynamicState.from_vector(projected)
+    projected_state = CVTState.from_vector(projected)
     primary_clamp = primary_independent_clamping_force_at_engagement(
         evaluator=evaluator,
         state=projected_state,
         limits=limits,
+        shaft_boundaries=shaft_boundaries,
     )
     metadata: dict[str, object] = {
         "low_ratio_seat_reaction": seat_reaction,
@@ -506,6 +533,7 @@ def _resolve_low_ratio_seat_arrival(
                 evaluator=evaluator,
                 state=projected_state,
                 limits=limits,
+                shaft_boundaries=shaft_boundaries,
             ),
         )
 
@@ -535,6 +563,7 @@ def _resolve_low_ratio_seat_disengagement(
     old_contact_regime: ContactRegime,
     limits: CVTShiftOperatingLimits,
     evaluator: "EngagedCVTContactEvaluator",
+    shaft_boundaries: CVTShaftBoundaryValues | None = None,
 ) -> HybridTransition[CVTOperatingRegime]:
     """Release the seated belt to deadzone after primary clamp is lost."""
 
@@ -543,11 +572,12 @@ def _resolve_low_ratio_seat_disengagement(
         vector=vector,
         shift_position=limits.engagement_shift,
     )
-    projected_state = CVTDynamicState.from_vector(projected)
+    projected_state = CVTState.from_vector(projected)
     primary_clamp = primary_independent_clamping_force_at_engagement(
         evaluator=evaluator,
         state=projected_state,
         limits=limits,
+        shaft_boundaries=shaft_boundaries,
     )
     if primary_clamp > _PRIMARY_CLAMP_EVENT_TOLERANCE:
         raise RuntimeError(
@@ -564,6 +594,7 @@ def _resolve_low_ratio_seat_disengagement(
             evaluator=evaluator,
             state=projected_state,
             limits=limits,
+            shaft_boundaries=shaft_boundaries,
         ),
     )
 
@@ -577,6 +608,7 @@ def _resolve_low_ratio_seat_release(
     limits: CVTShiftOperatingLimits,
     evaluator: "EngagedCVTContactEvaluator",
     switching_settings: CVTContactSwitchSettings,
+    shaft_boundaries: CVTShaftBoundaryValues | None = None,
 ) -> HybridTransition[CVTOperatingRegime]:
     """Release a tensile low-ratio seat into free engaged shift."""
 
@@ -584,11 +616,12 @@ def _resolve_low_ratio_seat_release(
         vector=vector,
         shift_position=limits.engagement_shift,
     )
-    projected_state = CVTDynamicState.from_vector(projected)
+    projected_state = CVTState.from_vector(projected)
     primary_clamp = primary_independent_clamping_force_at_engagement(
         evaluator=evaluator,
         state=projected_state,
         limits=limits,
+        shaft_boundaries=shaft_boundaries,
     )
     if primary_clamp < 0.0:
         return _resolve_low_ratio_seat_disengagement(
@@ -596,6 +629,7 @@ def _resolve_low_ratio_seat_release(
             old_contact_regime=old_contact_regime,
             limits=limits,
             evaluator=evaluator,
+            shaft_boundaries=shaft_boundaries,
         )
 
     contact_regime, contact_transition = _resolve_contact_at_constraint(
@@ -606,6 +640,7 @@ def _resolve_low_ratio_seat_release(
         constraint=EngagedShiftConstraint.FREE,
         evaluator=evaluator,
         switching_settings=switching_settings,
+        shaft_boundaries=shaft_boundaries,
     )
     if contact_transition is not None and contact_transition.terminates:
         return HybridTransition(
@@ -670,6 +705,7 @@ def _resolve_upper_stop_arrival(
     limits: CVTShiftOperatingLimits,
     evaluator: "EngagedCVTContactEvaluator",
     switching_settings: CVTContactSwitchSettings,
+    shaft_boundaries: CVTShaftBoundaryValues | None = None,
 ) -> HybridTransition[CVTOperatingRegime]:
     """Apply the axial impact, then accept or immediately release the stop.
 
@@ -690,6 +726,7 @@ def _resolve_upper_stop_arrival(
         constraint=EngagedShiftConstraint.UPPER_STOP,
         evaluator=evaluator,
         switching_settings=switching_settings,
+        shaft_boundaries=shaft_boundaries,
     )
     if contact_transition is not None and contact_transition.terminates:
         return HybridTransition(
@@ -707,6 +744,7 @@ def _resolve_upper_stop_arrival(
         vector=projected,
         regime=contact_regime,
         shift_constraint=EngagedShiftConstraint.UPPER_STOP,
+        shaft_boundaries=shaft_boundaries,
     )
     reaction = evaluation.upper_stop_reaction
     if reaction is None:  # pragma: no cover - constrained evaluator invariant.
@@ -752,6 +790,7 @@ def _resolve_upper_stop_release(
     limits: CVTShiftOperatingLimits,
     evaluator: "EngagedCVTContactEvaluator",
     switching_settings: CVTContactSwitchSettings,
+    shaft_boundaries: CVTShaftBoundaryValues | None = None,
 ) -> HybridTransition[CVTOperatingRegime]:
     """Release the high stop and re-evaluate contact in free shift.
 
@@ -774,6 +813,7 @@ def _resolve_upper_stop_release(
         constraint=EngagedShiftConstraint.FREE,
         evaluator=evaluator,
         switching_settings=switching_settings,
+        shaft_boundaries=shaft_boundaries,
     )
     if contact_transition is not None and contact_transition.terminates:
         return HybridTransition(
@@ -812,6 +852,7 @@ def _resolve_contact_at_constraint(
     constraint: EngagedShiftConstraint,
     evaluator: "EngagedCVTContactEvaluator",
     switching_settings: CVTContactSwitchSettings,
+    shaft_boundaries: CVTShaftBoundaryValues | None = None,
 ) -> tuple[ContactRegime, HybridTransition[ContactRegime] | None]:
     """Resolve supplied plus immediately-active contact violations once.
 
@@ -827,6 +868,7 @@ def _resolve_contact_at_constraint(
         vector=vector,
         regime=old_contact_regime,
         shift_constraint=constraint,
+        shaft_boundaries=shaft_boundaries,
     )
     event_names = list(contact_events)
     event_names.extend(
@@ -848,6 +890,7 @@ def _resolve_contact_at_constraint(
         fired_event_names=tuple(event_names),
         switching_settings=switching_settings,
         shift_constraint=constraint,
+        shaft_boundaries=shaft_boundaries,
     )
     if transition.terminates:
         return old_contact_regime, transition
@@ -898,7 +941,7 @@ _REGIME_EVENT_NAMES = frozenset(event.value for event in CVTRegimeEvent)
 
 def _validate_state_within_limits(
     *,
-    state: CVTDynamicState,
+    state: CVTState,
     limits: CVTShiftOperatingLimits,
     tolerance: float = 0.0,
 ) -> None:

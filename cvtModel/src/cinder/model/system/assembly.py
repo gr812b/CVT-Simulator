@@ -1,8 +1,8 @@
 """CVT-only physical assembly composition.
 
-This module contains belt/pulley hardware only.  Engines, final drives,
-wheels, vehicles, and road loads are external boundaries on a
-:class:`~cinder.model.system.case.CVTSimulationCase`.
+This module contains belt/pulley hardware only. Engines, final drives,
+vehicles, road loads, and dynos are shaft boundaries supplied by a host
+simulation.
 """
 
 from __future__ import annotations
@@ -11,6 +11,7 @@ from dataclasses import dataclass
 from math import isfinite
 
 from cinder.model.cvt.actuation import HelicalTorqueReactionForce, PulleyActuator
+from cinder.model.cvt.contact import ContactTractionLaw
 from cinder.model.cvt.geometry import BeltPulleyGeometry
 from cinder.model.cvt.inertia import ResolvedInertias
 from cinder.model.cvt.profiles import HelixProfile, HelixShiftKinematics
@@ -18,39 +19,62 @@ from cinder.model.cvt.profiles import HelixProfile, HelixShiftKinematics
 
 @dataclass(frozen=True, slots=True)
 class BeltContactSpec:
-    """CVT belt/pulley contact constants independent of a traction solver."""
+    """Belt/pulley friction constants owned by the CVT assembly.
 
-    friction_coefficient: float
+    The contact solver is fixed by CINDER. Users provide physical friction
+    coefficients; the plant converts them into the internal signed traction
+    law used by the stick/slip closure.
+    """
+
+    static_friction_coefficient: float
+    kinetic_friction_coefficient: float | None = None
 
     def __post_init__(self) -> None:
-        if not isfinite(self.friction_coefficient) or self.friction_coefficient < 0.0:
-            raise ValueError("friction_coefficient must be finite and non-negative.")
+        if (
+            not isfinite(self.static_friction_coefficient)
+            or self.static_friction_coefficient <= 0.0
+        ):
+            raise ValueError("static_friction_coefficient must be finite and strictly positive.")
+        if self.kinetic_friction_coefficient is not None and (
+            not isfinite(self.kinetic_friction_coefficient)
+            or self.kinetic_friction_coefficient <= 0.0
+        ):
+            raise ValueError("kinetic_friction_coefficient must be finite and strictly positive.")
+
+    @property
+    def resolved_kinetic_friction_coefficient(self) -> float:
+        return (
+            self.static_friction_coefficient
+            if self.kinetic_friction_coefficient is None
+            else self.kinetic_friction_coefficient
+        )
+
+    def traction_law(self) -> ContactTractionLaw:
+        """Build the internal contact-capacity law from friction coefficients."""
+
+        return ContactTractionLaw.symmetric(
+            primary_static_lambda_limit=self.static_friction_coefficient,
+            secondary_static_lambda_limit=self.static_friction_coefficient,
+            primary_kinetic_lambda_magnitude=self.resolved_kinetic_friction_coefficient,
+            secondary_kinetic_lambda_magnitude=self.resolved_kinetic_friction_coefficient,
+        )
 
 
 @dataclass(frozen=True, slots=True)
 class HelicalPulleyCoupling:
-    """Relative-rotation geometry physically installed on one pulley.
+    """Relative-rotation geometry installed on one pulley.
 
-    The coupling belongs structurally to its host :class:`PulleySpec`; it is
-    neither a secondary-only field nor selected by a ``mounted_pulley`` string.
-    It can be mounted on either side.  The present six-state equations activate
-    the output-side form, while the actuator-law contract is already generic.
+    The coupling belongs to its host :class:`PulleySpec`. The profile coordinate
+    is the pulley-local opening travel ``q = -x``, where the pulley-local axial
+    coordinate ``x`` is positive closing. This mapping is part of the CVT
+    geometry convention and is not user-configurable.
     """
 
     profile: HelixProfile
-    opening_per_axial_position: float = -1.0
-    opening_offset: float = 0.0
 
     def __post_init__(self) -> None:
         if not isinstance(self.profile, HelixProfile):
             raise TypeError("profile must be a HelixProfile.")
-        if (
-            not isfinite(self.opening_per_axial_position)
-            or self.opening_per_axial_position == 0.0
-        ):
-            raise ValueError("opening_per_axial_position must be finite and non-zero.")
-        if not isfinite(self.opening_offset):
-            raise ValueError("opening_offset must be finite.")
 
     def evaluate_from_local_coordinate(
         self,
@@ -59,21 +83,16 @@ class HelicalPulleyCoupling:
         d_axial_position_ds: float,
         d2_axial_position_ds2: float,
     ) -> HelixShiftKinematics:
-        """Evaluate host-relative helix kinematics from the local axial map."""
-
-        opening_travel = self.opening_offset + (
-            self.opening_per_axial_position * axial_position
-        )
         return self.profile.evaluate_shift_kinematics(
-            opening_travel=opening_travel,
-            d_opening_ds=self.opening_per_axial_position * d_axial_position_ds,
-            d2_opening_ds2=self.opening_per_axial_position * d2_axial_position_ds2,
+            opening_travel=-axial_position,
+            d_opening_ds=-d_axial_position_ds,
+            d2_opening_ds2=-d2_axial_position_ds2,
         )
 
 
 @dataclass(frozen=True, slots=True)
 class PulleySpec:
-    """One physical pulley, its actuator, and optional relative-motion hardware."""
+    """One physical pulley and its mounted local actuator/coupling hardware."""
 
     actuator: PulleyActuator
     helical_coupling: HelicalPulleyCoupling | None = None
@@ -99,15 +118,19 @@ class PulleySpec:
 
 @dataclass(frozen=True, slots=True)
 class PulleyPairSpec:
-    """Input and output pulley hardware, named by shaft boundary."""
+    """Primary and secondary pulley hardware.
 
-    input: PulleySpec
-    output: PulleySpec
+    The names define CVT sign conventions only. They do not imply engine side,
+    vehicle side, power-flow direction, or actuation type.
+    """
+
+    primary: PulleySpec
+    secondary: PulleySpec
 
 
 @dataclass(frozen=True, slots=True)
 class CVTAssemblySpec:
-    """Complete CVT-only assembly required by the current mechanical model."""
+    """Complete CVT-only assembly required by the mechanical plant."""
 
     geometry: BeltPulleyGeometry
     pulleys: PulleyPairSpec
@@ -123,14 +146,3 @@ class CVTAssemblySpec:
             raise TypeError("inertias must be a ResolvedInertias.")
         if not isinstance(self.contact, BeltContactSpec):
             raise TypeError("contact must be a BeltContactSpec.")
-        if self.pulleys.output.helical_coupling is None:
-            raise ValueError(
-                "The current six-state shift dynamics require an output-pulley "
-                "helical_coupling."
-            )
-        if self.pulleys.input.helical_coupling is not None:
-            raise NotImplementedError(
-                "The generic helical actuator law can be mounted and inspected on "
-                "either pulley, but the current six-state dynamics implement only "
-                "the output-pulley relative-rotation coordinate."
-            )

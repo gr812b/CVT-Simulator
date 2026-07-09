@@ -149,11 +149,11 @@ _EXACT: dict[str, tuple[str, str, str, str]] = {
         "length_rate",
         "Time derivative of secondary outer radius.",
     ),
-    "observer.engine_power": (
-        "Engine boundary power",
+    "observer.primary_boundary_power": (
+        "Primary boundary power",
         "W",
         "power",
-        "Input-boundary torque multiplied by primary speed.",
+        "Primary shaft-boundary torque multiplied by primary speed.",
     ),
     "friction_coefficient": (
         "Friction coefficient",

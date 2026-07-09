@@ -1,4 +1,10 @@
-"""Continuous CINDER ODE state and its aligned time derivative."""
+"""Core CVT ODE state and its aligned derivative.
+
+The mechanical CVT plant integrates only the states that belong to the CVT
+itself. Shaft angle, vehicle position, wheel speed, suspension states, and
+controller states are host states layered around the plant by a composed
+simulation.
+"""
 
 from __future__ import annotations
 
@@ -12,19 +18,19 @@ from numpy.typing import ArrayLike, NDArray
 if TYPE_CHECKING:
     from cinder.model.cvt.closure import ClosureUnknowns
 
-_STATE_SIZE = 6
+_CVT_STATE_SIZE = 5
 
 
 @dataclass(frozen=True, slots=True)
-class CVTDynamicState:
-    """The six integrated CINDER states in conceptual order.
+class CVTState:
+    """The five integrated states owned by the mechanical CVT plant.
 
-    ``[omega_p, omega_s, v_b, s, s_dot, psi_s]``.
+    ``[omega_p, omega_s, v_b, s, s_dot]``.
 
-    ``secondary_shaft_angle = psi_s`` accumulates secondary-shaft rotation.
-    A locked final-drive vehicle attachment may map it to road distance, but
-    the CVT state itself does not assume that every downstream load is a
-    vehicle. It is a continuous ODE state, not a closure unknown.
+    The state intentionally stops at the secondary shaft speed. A simulation
+    that needs secondary angle, vehicle position, tire slip, or suspension
+    motion should add those as host states and pass their effects back to the
+    CVT through shaft boundary values.
     """
 
     primary_angular_speed: float
@@ -32,7 +38,6 @@ class CVTDynamicState:
     belt_speed: float
     shift_position: float
     shift_speed: float
-    secondary_shaft_angle: float
 
     def __post_init__(self) -> None:
         _require_finite(
@@ -41,12 +46,9 @@ class CVTDynamicState:
             belt_speed=self.belt_speed,
             shift_position=self.shift_position,
             shift_speed=self.shift_speed,
-            secondary_shaft_angle=self.secondary_shaft_angle,
         )
 
     def as_vector(self) -> NDArray[np.float64]:
-        """Return the immutable solve_ivp-compatible state vector."""
-
         values = np.asarray(
             (
                 self.primary_angular_speed,
@@ -54,7 +56,6 @@ class CVTDynamicState:
                 self.belt_speed,
                 self.shift_position,
                 self.shift_speed,
-                self.secondary_shaft_angle,
             ),
             dtype=float,
         )
@@ -62,35 +63,26 @@ class CVTDynamicState:
         return values
 
     @classmethod
-    def from_vector(cls, values: ArrayLike) -> "CVTDynamicState":
-        """Reconstruct the named state from one six-entry ODE vector."""
-
-        vector = _coerce_vector(values=values, name="CVTDynamicState")
+    def from_vector(cls, values: ArrayLike) -> "CVTState":
+        vector = _coerce_vector(values=values, name="CVTState")
         return cls(
             primary_angular_speed=float(vector[0]),
             secondary_angular_speed=float(vector[1]),
             belt_speed=float(vector[2]),
             shift_position=float(vector[3]),
             shift_speed=float(vector[4]),
-            secondary_shaft_angle=float(vector[5]),
         )
 
 
 @dataclass(frozen=True, slots=True)
-class CVTDynamicStateDerivative:
-    """Time derivative aligned with :class:`CVTDynamicState`.
-
-    ``shift_position_rate`` and ``secondary_shaft_angle_rate`` are direct
-    kinematic derivatives from the integrated state. The remaining entries
-    come from the active engaged-contact closure.
-    """
+class CVTStateDerivative:
+    """Time derivative aligned with :class:`CVTState`."""
 
     primary_angular_acceleration: float
     secondary_angular_acceleration: float
     belt_acceleration: float
     shift_position_rate: float
     shift_acceleration: float
-    secondary_shaft_angle_rate: float
 
     def __post_init__(self) -> None:
         _require_finite(
@@ -99,12 +91,9 @@ class CVTDynamicStateDerivative:
             belt_acceleration=self.belt_acceleration,
             shift_position_rate=self.shift_position_rate,
             shift_acceleration=self.shift_acceleration,
-            secondary_shaft_angle_rate=self.secondary_shaft_angle_rate,
         )
 
     def as_vector(self) -> NDArray[np.float64]:
-        """Return the immutable solve_ivp-compatible derivative vector."""
-
         values = np.asarray(
             (
                 self.primary_angular_acceleration,
@@ -112,7 +101,6 @@ class CVTDynamicStateDerivative:
                 self.belt_acceleration,
                 self.shift_position_rate,
                 self.shift_acceleration,
-                self.secondary_shaft_angle_rate,
             ),
             dtype=float,
         )
@@ -123,35 +111,25 @@ class CVTDynamicStateDerivative:
     def from_engaged_closure(
         cls,
         *,
-        state: CVTDynamicState,
+        state: CVTState,
         unknowns: "ClosureUnknowns",
-    ) -> "CVTDynamicStateDerivative":
-        """Convert one engaged closure solution into ODE derivatives."""
-
+    ) -> "CVTStateDerivative":
         return cls(
             primary_angular_acceleration=unknowns.primary_angular_acceleration,
             secondary_angular_acceleration=unknowns.secondary_angular_acceleration,
             belt_acceleration=unknowns.belt_acceleration,
             shift_position_rate=state.shift_speed,
             shift_acceleration=unknowns.shift_acceleration,
-            secondary_shaft_angle_rate=state.secondary_angular_speed,
         )
 
     @classmethod
     def from_fixed_engaged_shift_constraint_closure(
         cls,
         *,
-        state: CVTDynamicState,
+        state: CVTState,
         unknowns: "ClosureUnknowns",
-    ) -> "CVTDynamicStateDerivative":
-        """Convert an engaged fixed-shift closure into ODE derivatives.
-
-        Both the low-ratio seat and high-ratio stop enforce ``s_ddot = 0`` in
-        the closure.  This factory also sets ``s_dot = 0`` explicitly so a
-        constrained segment cannot inherit a tiny nonzero shift velocity from
-        numerical stage arithmetic.  The event transition still projects the
-        state itself to zero axial speed before this RHS is entered.
-        """
+    ) -> "CVTStateDerivative":
+        """Convert an engaged fixed-shift closure into ODE derivatives."""
 
         return cls(
             primary_angular_acceleration=unknowns.primary_angular_acceleration,
@@ -159,28 +137,25 @@ class CVTDynamicStateDerivative:
             belt_acceleration=unknowns.belt_acceleration,
             shift_position_rate=0.0,
             shift_acceleration=0.0,
-            secondary_shaft_angle_rate=state.secondary_angular_speed,
         )
 
     @classmethod
-    def from_vector(cls, values: ArrayLike) -> "CVTDynamicStateDerivative":
-        """Reconstruct the named derivative from one six-entry ODE vector."""
-
-        vector = _coerce_vector(values=values, name="CVTDynamicStateDerivative")
+    def from_vector(cls, values: ArrayLike) -> "CVTStateDerivative":
+        vector = _coerce_vector(values=values, name="CVTStateDerivative")
         return cls(
             primary_angular_acceleration=float(vector[0]),
             secondary_angular_acceleration=float(vector[1]),
             belt_acceleration=float(vector[2]),
             shift_position_rate=float(vector[3]),
             shift_acceleration=float(vector[4]),
-            secondary_shaft_angle_rate=float(vector[5]),
         )
+
 
 
 def _coerce_vector(*, values: ArrayLike, name: str) -> NDArray[np.float64]:
     vector = np.asarray(values, dtype=float)
-    if vector.ndim != 1 or vector.size != _STATE_SIZE:
-        raise ValueError(f"{name} vector must contain exactly {_STATE_SIZE} entries.")
+    if vector.ndim != 1 or vector.size != _CVT_STATE_SIZE:
+        raise ValueError(f"{name} vector must contain exactly {_CVT_STATE_SIZE} entries.")
     if not np.all(np.isfinite(vector)):
         raise ValueError(f"{name} vector entries must be finite.")
     return vector

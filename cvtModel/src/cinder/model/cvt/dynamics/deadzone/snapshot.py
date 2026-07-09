@@ -21,14 +21,13 @@ from typing import Final
 
 from cinder.model.cvt.actuation import PulleyActuationContext, PulleyClosureChannels
 from cinder.model.cvt.geometry import GeometryPosition
-from cinder.model.boundaries.input import InputBoundaryEvaluation
-from cinder.model.boundaries.output import OutputBoundaryEvaluation
 from cinder.model.cvt.inertia import AxialTranslationInertia, ResolvedInertias
 from cinder.model.cvt.closure import AffineClosureScalar
-from cinder.execution.hybrid import CVTDynamicState
-from cinder.model.boundaries.output.vehicle import RoadLoadResult
+from cinder.model.system.state import CVTState
+from cinder.model.boundaries.vehicle import RoadLoadResult
 
-from cinder.model.system.evaluator import CVTDynamicsModel
+from cinder.model.system.evaluator import MechanicalCVTPlant
+from cinder.model.system.ports import CVTShaftBoundaryValues
 
 
 _DEADZONE_SHIFT_DOMAIN_TOLERANCE: Final[float] = 1.0e-12
@@ -43,13 +42,12 @@ class DeadzoneSnapshot:
     low-ratio secondary radius used by the imposed belt-secondary lock.
     """
 
-    state: CVTDynamicState
+    state: CVTState
     primary_geometry: GeometryPosition
     locked_geometry: GeometryPosition
     primary_axial_inertia: AxialTranslationInertia
     primary_actuation: AffineClosureScalar
-    input_boundary_evaluation: InputBoundaryEvaluation
-    output_boundary_evaluation: OutputBoundaryEvaluation
+    shaft_boundaries: CVTShaftBoundaryValues
     inertias: ResolvedInertias
 
     @property
@@ -63,8 +61,8 @@ class DeadzoneSnapshot:
         """Return the directly rotating primary inertia."""
 
         return (
-            self.inertias.primary.rotational_inertia
-            + self.input_boundary_evaluation.equivalent_rotational_inertia
+            self.inertias.primary.absolute_rotation_inertia
+            + self.shaft_boundaries.primary.equivalent_inertia
         )
 
     @property
@@ -79,44 +77,38 @@ class DeadzoneSnapshot:
         radius = self.belt_secondary_lock_radius
         return (
             self.inertias.secondary.absolute_rotation_inertia
-            + self.output_boundary_evaluation.equivalent_rotational_inertia
+            + self.shaft_boundaries.secondary.equivalent_inertia
             + self.inertias.belt.mass * radius * radius
         )
 
     @property
     def road_load(self) -> RoadLoadResult | None:
-        """Return vehicle road data when supplied by the attachment."""
+        """Return vehicle road data when supplied by the shaft boundary."""
 
-        return self.output_boundary_evaluation.road_load
+        return self.shaft_boundaries.secondary.metadata.get("road_load")
 
     @property
     def vehicle_road_load(self) -> RoadLoadResult:
-        """Return vehicle road data or raise for a direct shaft attachment."""
+        """Return vehicle road data or raise for a direct shaft boundary."""
 
         road_load = self.road_load
         if road_load is None:
             raise RuntimeError(
-                "This output boundary does not provide vehicle road-load data."
+                "This shaft boundary does not provide vehicle road-load data."
             )
         return road_load
 
     @property
-    def secondary_load_torque(self) -> float:
-        """Return the signed load torque applied to the secondary."""
+    def primary_external_torque(self) -> float:
+        """Return the signed torque applied to the primary shaft."""
 
-        return self.output_boundary_evaluation.load_torque
+        return self.shaft_boundaries.primary.external_torque
 
     @property
     def secondary_external_torque(self) -> float:
-        """Compatibility alias for secondary_load_torque."""
+        """Return the signed torque applied to the secondary shaft."""
 
-        return self.secondary_load_torque
-
-    @property
-    def engine_torque(self) -> float:
-        """Return signed input-boundary source torque."""
-
-        return self.input_boundary_evaluation.source_torque
+        return self.shaft_boundaries.secondary.external_torque
 
     @property
     def belt_secondary_speed_residual(self) -> float:
@@ -130,8 +122,9 @@ class DeadzoneSnapshot:
 
 def build_deadzone_snapshot(
     *,
-    model: CVTDynamicsModel,
-    state: CVTDynamicState,
+    model: MechanicalCVTPlant,
+    state: CVTState,
+    shaft_boundaries: CVTShaftBoundaryValues | None = None,
 ) -> DeadzoneSnapshot:
     """Build one frozen deadzone snapshot without invoking engaged contact.
 
@@ -141,10 +134,10 @@ def build_deadzone_snapshot(
     primary coordinate lies below engagement.
     """
 
-    if not isinstance(model, CVTDynamicsModel):
-        raise TypeError("model must be a CVTDynamicsModel instance.")
-    if not isinstance(state, CVTDynamicState):
-        raise TypeError("state must be a CVTDynamicState instance.")
+    if not isinstance(model, MechanicalCVTPlant):
+        raise TypeError("model must be a MechanicalCVTPlant instance.")
+    if not isinstance(state, CVTState):
+        raise TypeError("state must be a CVTState instance.")
 
     engagement_shift = model.geometry.spec.deadzone_shift
     if state.shift_position > engagement_shift + _DEADZONE_SHIFT_DOMAIN_TOLERANCE:
@@ -164,15 +157,14 @@ def build_deadzone_snapshot(
             axial_position=primary_coordinate.value,
             axial_speed=primary_coordinate.d_value_ds * state.shift_speed,
             shaft_speed=state.primary_angular_speed,
-            closure_channels=PulleyClosureChannels.input_pulley(),
+            closure_channels=PulleyClosureChannels.primary(),
         )
     )
 
-    output_boundary_evaluation = model.output_boundary.evaluate(state=state)
-    if not isinstance(output_boundary_evaluation, OutputBoundaryEvaluation):
-        raise TypeError(
-            "output_boundary.evaluate() must return OutputBoundaryEvaluation."
-        )
+    if shaft_boundaries is None:
+        shaft_boundaries = CVTShaftBoundaryValues.zero()
+    if not isinstance(shaft_boundaries, CVTShaftBoundaryValues):
+        raise TypeError("shaft_boundaries must be a CVTShaftBoundaryValues.")
 
     primary_axial_inertia = model.inertias.axial_translation.evaluate(
         primary_axial_coordinate=primary_coordinate,
@@ -180,22 +172,13 @@ def build_deadzone_snapshot(
         belt_axial_coordinate=locked_geometry.belt_axial_coordinate,
     ).primary
 
-    input_boundary_evaluation = model.input_boundary.evaluate(
-        state.primary_angular_speed
-    )
-    if not isinstance(input_boundary_evaluation, InputBoundaryEvaluation):
-        raise TypeError(
-            "input_boundary.evaluate() must return InputBoundaryEvaluation."
-        )
-
     snapshot = DeadzoneSnapshot(
         state=state,
         primary_geometry=primary_geometry,
         locked_geometry=locked_geometry,
         primary_axial_inertia=primary_axial_inertia,
         primary_actuation=primary_actuation,
-        input_boundary_evaluation=input_boundary_evaluation,
-        output_boundary_evaluation=output_boundary_evaluation,
+        shaft_boundaries=shaft_boundaries,
         inertias=model.inertias,
     )
     _validate_deadzone_snapshot(snapshot)
@@ -207,8 +190,8 @@ def _validate_deadzone_snapshot(snapshot: DeadzoneSnapshot) -> None:
         ("belt_secondary_lock_radius", snapshot.belt_secondary_lock_radius),
         ("primary_rotational_inertia", snapshot.primary_rotational_inertia),
         ("secondary_belt_locked_inertia", snapshot.secondary_belt_locked_inertia),
-        ("engine_torque", snapshot.engine_torque),
-        ("secondary_load_torque", snapshot.secondary_load_torque),
+        ("primary_external_torque", snapshot.primary_external_torque),
+        ("secondary_external_torque", snapshot.secondary_external_torque),
     ):
         if not isfinite(value):
             raise ValueError(f"Deadzone snapshot {name} must be finite.")

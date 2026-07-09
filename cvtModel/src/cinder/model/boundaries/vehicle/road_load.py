@@ -1,11 +1,9 @@
-# cinder/vehicle/road_load.py
-
 from __future__ import annotations
 
 from dataclasses import dataclass
 from math import cos, isfinite, pi, sin, sqrt
 
-from cinder.model.boundaries.output.vehicle.spec import VehicleInertia
+from cinder.model.boundaries.vehicle.spec import VehicleInertia
 
 from .final_drive import FixedFinalDrive
 from .spec import VehicleRoadLoadSpec

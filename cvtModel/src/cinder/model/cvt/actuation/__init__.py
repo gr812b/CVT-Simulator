@@ -23,6 +23,8 @@ from .types import (
     HelicalCouplingState,
     PulleyActuationContext,
     PulleyClosureChannels,
+    PulleyElement,
+    PulleyElementContribution,
 )
 
 __all__ = [
@@ -41,6 +43,8 @@ __all__ = [
     "PulleyActuationContext",
     "PulleyActuator",
     "PulleyClosureChannels",
+    "PulleyElement",
+    "PulleyElementContribution",
     "TorqueReactiveActuatorSpec",
     "build_centrifugal_actuator",
     "build_torque_reactive_actuator",

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from cinder.model.system.state import CVTDynamicStateDerivative
+from cinder.model.system.state import CVTStateDerivative
 
 
 @dataclass(frozen=True, slots=True)
@@ -16,9 +16,9 @@ class RuntimeEvaluation:
     through CINDER's results inspect/report layer after integration.
     """
 
-    state_derivative: CVTDynamicStateDerivative
+    state_derivative: CVTStateDerivative
 
     def derivative_vector(self):
-        """Return the aligned six-entry derivative vector."""
+        """Return the aligned five-entry derivative vector."""
 
         return self.state_derivative.as_vector()

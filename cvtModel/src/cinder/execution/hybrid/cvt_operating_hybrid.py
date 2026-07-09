@@ -18,24 +18,25 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field, replace
 from math import isclose
-from typing import TYPE_CHECKING, TypeAlias
+from typing import TYPE_CHECKING, Callable, TypeAlias
 
 import numpy as np
 from numpy.typing import NDArray
 
-from cinder.model.cvt.contact import ContactRegime, ContactTractionLaw
+from cinder.model.cvt.contact import ContactRegime
 from cinder.model.cvt.dynamics.deadzone import (
     DeadzoneDynamicsEvaluator,
     DeadzoneEvaluation,
 )
 from cinder.model.cvt.dynamics.engaged_contact import EngagedContactSolveSettings
 from cinder.model.cvt.dynamics.shift_constraints import EngagedShiftConstraint
-from cinder.model.system.evaluator import CVTDynamicsModel
+from cinder.model.system.evaluator import MechanicalCVTPlant
 from cinder.model.system.runtime import RuntimeEvaluation
+from cinder.model.system.ports import CVTShaftBoundaryValues
 
 from .cvt_contact import CVTContactEvaluation, EngagedCVTContactEvaluator
 from .cvt_contact_events import build_cvt_contact_events
-from .cvt_contact_switching import CVTContactSwitchSettings
+from .cvt_contact_switching import CVTEventSwitchingTolerances
 from .cvt_operating_limits import CVTShiftOperatingLimits
 from .cvt_regime import (
     CVTEngagementState,
@@ -61,10 +62,9 @@ from .hybrid import (
     HybridTransition,
     integrate_hybrid,
 )
-from .state import CVTDynamicState
+from .state import CVTState
 
 if TYPE_CHECKING:
-    from cinder.model.system.case import CVTSimulationCase
     from cinder.results import (
         CVTIntegrationResult,
         CVTIntegrationTrace,
@@ -72,48 +72,47 @@ if TYPE_CHECKING:
     )
 
 CVTRegimeEvaluation: TypeAlias = CVTContactEvaluation | DeadzoneEvaluation
+ShaftBoundaryProvider: TypeAlias = Callable[[float, NDArray[np.float64]], CVTShaftBoundaryValues]
 
 
 @dataclass(frozen=True, slots=True)
 class CVTOperatingSystemConfig:
-    """Immutable execution settings used to build hybrid systems from cases.
+    """Optional numerical policy for the CVT hybrid solver.
 
-    This keeps physical configuration in :class:`CVTSimulationCase` and all
-    contact/hybrid numerical configuration in one separate object.  A route,
-    engine, or output-boundary change therefore edits a case and builds one new
-    runtime system through :meth:`build`; no runtime model is copied or edited.
+    Physical behavior is defined by the assembly: geometry, contact friction,
+    actuators, couplers, and inertias. This config contains only numerical
+    overrides. Omitted values are completed from the plant when the solver is
+    built.
     """
 
-    traction_law: ContactTractionLaw
-    solve_settings: EngagedContactSolveSettings
-    operating_limits: CVTShiftOperatingLimits
-    switching_settings: CVTContactSwitchSettings = field(
-        default_factory=CVTContactSwitchSettings
+    solve_settings: EngagedContactSolveSettings = field(
+        default_factory=EngagedContactSolveSettings
+    )
+    switching_tolerances: CVTEventSwitchingTolerances = field(
+        default_factory=CVTEventSwitchingTolerances
     )
 
+    @property
+    def switching_settings(self) -> CVTEventSwitchingTolerances:
+        """Internal compatibility name used by the event resolver."""
+
+        return self.switching_tolerances
+
     def __post_init__(self) -> None:
-        if not isinstance(self.traction_law, ContactTractionLaw):
-            raise TypeError("traction_law must be a ContactTractionLaw instance.")
         if not isinstance(self.solve_settings, EngagedContactSolveSettings):
             raise TypeError(
                 "solve_settings must be an EngagedContactSolveSettings instance."
             )
-        if not isinstance(self.operating_limits, CVTShiftOperatingLimits):
+        if not isinstance(self.switching_tolerances, CVTEventSwitchingTolerances):
             raise TypeError(
-                "operating_limits must be a CVTShiftOperatingLimits instance."
-            )
-        if not isinstance(self.switching_settings, CVTContactSwitchSettings):
-            raise TypeError(
-                "switching_settings must be a CVTContactSwitchSettings instance."
+                "switching_tolerances must be a CVTEventSwitchingTolerances instance."
             )
 
-    def build(self, case: "CVTSimulationCase") -> "CVTOperatingHybridSystem":
-        return CVTOperatingHybridSystem.from_case(
-            case,
-            traction_law=self.traction_law,
+    def build(self, plant: MechanicalCVTPlant) -> "CVTOperatingHybridSystem":
+        return CVTOperatingHybridSystem(
+            model=plant,
             solve_settings=self.solve_settings,
-            operating_limits=self.operating_limits,
-            switching_settings=self.switching_settings,
+            switching_settings=self.switching_tolerances,
         )
 
 
@@ -128,69 +127,41 @@ class CVTOperatingHybridSystem:
     event transitions to the operating-regime resolver.
     """
 
-    model: CVTDynamicsModel
-    traction_law: ContactTractionLaw
-    solve_settings: EngagedContactSolveSettings
-    operating_limits: CVTShiftOperatingLimits
-    switching_settings: CVTContactSwitchSettings = field(
-        default_factory=CVTContactSwitchSettings
+    model: MechanicalCVTPlant
+    solve_settings: EngagedContactSolveSettings = field(
+        default_factory=EngagedContactSolveSettings
     )
+    switching_settings: CVTEventSwitchingTolerances = field(
+        default_factory=CVTEventSwitchingTolerances
+    )
+    operating_limits: CVTShiftOperatingLimits = field(init=False)
     evaluator: EngagedCVTContactEvaluator = field(init=False)
     deadzone_evaluator: DeadzoneDynamicsEvaluator = field(init=False)
 
-    @classmethod
-    def from_case(
-        cls,
-        case: "CVTSimulationCase",
-        *,
-        traction_law: ContactTractionLaw,
-        solve_settings: EngagedContactSolveSettings,
-        operating_limits: CVTShiftOperatingLimits,
-        switching_settings: CVTContactSwitchSettings | None = None,
-    ) -> "CVTOperatingHybridSystem":
-        """Construct one runtime system through the sole case-to-model path.
+    @property
+    def traction_law(self):
+        """Internal contact-capacity law derived from ``model.contact``."""
 
-        The returned object deliberately stores only runtime mechanics and
-        hybrid settings.  Any edit to road, engine, vehicle, or initial
-        conditions is made by replacing a part of ``CVTSimulationCase`` and
-        calling this factory again.
-        """
-
-        from cinder.model.system import CVTDynamicsModel, CVTSimulationCase
-
-        if not isinstance(case, CVTSimulationCase):
-            raise TypeError("case must be a CVTSimulationCase.")
-        return cls(
-            model=CVTDynamicsModel.from_case(case),
-            traction_law=traction_law,
-            solve_settings=solve_settings,
-            operating_limits=operating_limits,
-            switching_settings=(
-                CVTContactSwitchSettings()
-                if switching_settings is None
-                else switching_settings
-            ),
-        )
+        return self.model.traction_law
 
     def __post_init__(self) -> None:
-        if not isinstance(self.model, CVTDynamicsModel):
-            raise TypeError("model must be a CVTDynamicsModel instance.")
-        if not isinstance(self.traction_law, ContactTractionLaw):
-            raise TypeError("traction_law must be a ContactTractionLaw instance.")
+        if not isinstance(self.model, MechanicalCVTPlant):
+            raise TypeError("model must be a MechanicalCVTPlant instance.")
         if not isinstance(self.solve_settings, EngagedContactSolveSettings):
             raise TypeError(
                 "solve_settings must be an EngagedContactSolveSettings instance."
             )
-        if not isinstance(self.operating_limits, CVTShiftOperatingLimits):
+        if not isinstance(self.switching_settings, CVTEventSwitchingTolerances):
             raise TypeError(
-                "operating_limits must be a CVTShiftOperatingLimits instance."
-            )
-        if not isinstance(self.switching_settings, CVTContactSwitchSettings):
-            raise TypeError(
-                "switching_settings must be a CVTContactSwitchSettings instance."
+                "switching_settings must be a CVTEventSwitchingTolerances instance."
             )
 
-        self.operating_limits.validate_against_geometry_spec(self.model.geometry.spec)
+        self.operating_limits = CVTShiftOperatingLimits.from_geometry_spec(
+            self.model.geometry.spec
+        )
+        self.solve_settings = self.solve_settings.with_defaults_from_traction_law(
+            self.traction_law
+        )
         self.evaluator = EngagedCVTContactEvaluator(
             model=self.model,
             traction_law=self.traction_law,
@@ -198,26 +169,60 @@ class CVTOperatingHybridSystem:
         )
         self.deadzone_evaluator = DeadzoneDynamicsEvaluator(model=self.model)
 
+    @staticmethod
+    def _resolve_boundaries(
+        *,
+        time: float,
+        state: NDArray[np.float64],
+        shaft_boundaries: CVTShaftBoundaryValues | None,
+        boundary_provider: ShaftBoundaryProvider | None,
+    ) -> CVTShaftBoundaryValues:
+        if shaft_boundaries is not None and boundary_provider is not None:
+            raise ValueError("Provide shaft_boundaries or boundary_provider, not both.")
+        if boundary_provider is not None:
+            value = boundary_provider(time, state)
+            if not isinstance(value, CVTShaftBoundaryValues):
+                raise TypeError("boundary_provider must return CVTShaftBoundaryValues.")
+            return value
+        if shaft_boundaries is None:
+            return CVTShaftBoundaryValues.zero()
+        if not isinstance(shaft_boundaries, CVTShaftBoundaryValues):
+            raise TypeError("shaft_boundaries must be CVTShaftBoundaryValues.")
+        return shaft_boundaries
+
     def _evaluate_physics(
         self,
         *,
         time: float,
         state: NDArray[np.float64],
         mode: CVTOperatingRegime,
+        shaft_boundaries: CVTShaftBoundaryValues | None = None,
+        boundary_provider: ShaftBoundaryProvider | None = None,
     ) -> CVTRegimeEvaluation:
         """Evaluate active mechanics for runtime, events, or explicit inspection."""
 
         if not isinstance(mode, CVTOperatingRegime):
             raise TypeError("mode must be a CVTOperatingRegime instance.")
 
+        resolved_boundaries = self._resolve_boundaries(
+            time=time,
+            state=state,
+            shaft_boundaries=shaft_boundaries,
+            boundary_provider=boundary_provider,
+        )
+
         if mode.engagement is CVTEngagementState.DEADZONE:
-            deadzone_state = CVTDynamicState.from_vector(state)
+            deadzone_state = CVTState.from_vector(state)
             if mode.shift_constraint is CVTShiftConstraint.FREE:
-                return self.deadzone_evaluator.evaluate_free(state=deadzone_state)
+                return self.deadzone_evaluator.evaluate_free(
+                    state=deadzone_state,
+                    shaft_boundaries=resolved_boundaries,
+                )
             if mode.shift_constraint is CVTShiftConstraint.LOWER_STOP:
                 return self.deadzone_evaluator.evaluate_lower_stop(
                     state=deadzone_state,
                     lower_stop_shift=self.operating_limits.lower_stop_shift,
+                    shaft_boundaries=resolved_boundaries,
                 )
             raise RuntimeError(
                 f"Unsupported deadzone shift constraint: {mode.shift_constraint!r}."
@@ -230,6 +235,7 @@ class CVTOperatingHybridSystem:
             vector=state,
             regime=mode.contact_regime,
             shift_constraint=constraint,
+            shaft_boundaries=resolved_boundaries,
         )
 
     def evaluate_runtime(
@@ -238,10 +244,18 @@ class CVTOperatingHybridSystem:
         time: float,
         state: NDArray[np.float64],
         mode: CVTOperatingRegime,
+        shaft_boundaries: CVTShaftBoundaryValues | None = None,
+        boundary_provider: ShaftBoundaryProvider | None = None,
     ) -> RuntimeEvaluation:
         """Return only what the continuous integrator needs to advance state."""
 
-        physics = self._evaluate_physics(time=time, state=state, mode=mode)
+        physics = self._evaluate_physics(
+            time=time,
+            state=state,
+            mode=mode,
+            shaft_boundaries=shaft_boundaries,
+            boundary_provider=boundary_provider,
+        )
         return RuntimeEvaluation(state_derivative=physics.state_derivative)
 
     def inspect(
@@ -250,6 +264,8 @@ class CVTOperatingHybridSystem:
         time: float,
         state: NDArray[np.float64],
         mode: CVTOperatingRegime,
+        shaft_boundaries: CVTShaftBoundaryValues | None = None,
+        boundary_provider: ShaftBoundaryProvider | None = None,
     ) -> CVTRegimeEvaluation:
         """Return detailed state mechanics for audit/report reconstruction.
 
@@ -258,7 +274,13 @@ class CVTOperatingHybridSystem:
         callers should not invoke it per RHS stage.
         """
 
-        return self._evaluate_physics(time=time, state=state, mode=mode)
+        return self._evaluate_physics(
+            time=time,
+            state=state,
+            mode=mode,
+            shaft_boundaries=shaft_boundaries,
+            boundary_provider=boundary_provider,
+        )
 
     def rhs(
         self,
@@ -272,17 +294,60 @@ class CVTOperatingHybridSystem:
             time=time, state=state, mode=mode
         ).derivative_vector()
 
+
+    def rhs_with_boundaries(
+        self,
+        time: float,
+        state: NDArray[np.float64],
+        mode: CVTOperatingRegime,
+        shaft_boundaries: CVTShaftBoundaryValues,
+    ) -> NDArray[np.float64]:
+        """Return the CVT derivative using externally supplied shaft boundaries."""
+
+        return self.evaluate_runtime(
+            time=time,
+            state=state,
+            mode=mode,
+            shaft_boundaries=shaft_boundaries,
+        ).derivative_vector()
+
+    def rhs_with_boundary_provider(
+        self,
+        time: float,
+        state: NDArray[np.float64],
+        mode: CVTOperatingRegime,
+        boundary_provider: ShaftBoundaryProvider,
+    ) -> NDArray[np.float64]:
+        """Return the CVT derivative using a state-dependent boundary provider."""
+
+        return self.evaluate_runtime(
+            time=time,
+            state=state,
+            mode=mode,
+            boundary_provider=boundary_provider,
+        ).derivative_vector()
+
     def events(
         self,
         time: float,
         state: NDArray[np.float64],
         mode: CVTOperatingRegime,
+        shaft_boundaries: CVTShaftBoundaryValues | None = None,
+        boundary_provider: ShaftBoundaryProvider | None = None,
     ) -> tuple[HybridEvent, ...]:
         """Build exactly the physical events reachable from ``mode``."""
 
-        del time, state  # Event factories capture only mode-dependent mechanics.
+        del time, state
         if not isinstance(mode, CVTOperatingRegime):
             raise TypeError("mode must be a CVTOperatingRegime instance.")
+
+        def boundaries_at(event_time: float, vector: NDArray[np.float64]) -> CVTShaftBoundaryValues:
+            return self._resolve_boundaries(
+                time=event_time,
+                state=vector,
+                shaft_boundaries=shaft_boundaries,
+                boundary_provider=boundary_provider,
+            )
 
         if mode.engagement is CVTEngagementState.DEADZONE:
             if mode.shift_constraint is CVTShiftConstraint.FREE:
@@ -290,8 +355,9 @@ class CVTOperatingHybridSystem:
             if mode.shift_constraint is CVTShiftConstraint.LOWER_STOP:
                 return (
                     build_lower_stop_release_event(
-                        closing_reaction=lambda _time, vector: self._lower_stop_reaction(
+                        closing_reaction=lambda event_time, vector: self._lower_stop_reaction(
                             vector=vector,
+                            shaft_boundaries=boundaries_at(event_time, vector),
                         )
                     ),
                 )
@@ -308,6 +374,7 @@ class CVTOperatingHybridSystem:
                 vector=vector,
                 regime=mode.contact_regime,
                 shift_constraint=constraint,
+                shaft_boundaries=boundaries_at(event_time, vector),
             ),
             traction_law=self.traction_law,
             switching_settings=self.switching_settings,
@@ -326,11 +393,13 @@ class CVTOperatingHybridSystem:
                 primary_clamping_force=lambda event_time, vector: self._primary_clamping_force(
                     time=event_time,
                     vector=vector,
+                    shaft_boundaries=boundaries_at(event_time, vector),
                 ),
                 closing_reaction=lambda event_time, vector: self._low_ratio_seat_reaction(
                     time=event_time,
                     vector=vector,
                     contact_regime=mode.contact_regime,
+                    shaft_boundaries=boundaries_at(event_time, vector),
                 ),
             )
 
@@ -341,11 +410,40 @@ class CVTOperatingHybridSystem:
                         time=event_time,
                         vector=vector,
                         contact_regime=mode.contact_regime,
+                        shaft_boundaries=boundaries_at(event_time, vector),
                     )
                 ),
             )
         raise RuntimeError(
             f"Unsupported engaged shift constraint: {mode.shift_constraint!r}."
+        )
+
+    def events_with_boundaries(
+        self,
+        time: float,
+        state: NDArray[np.float64],
+        mode: CVTOperatingRegime,
+        shaft_boundaries: CVTShaftBoundaryValues,
+    ) -> tuple[HybridEvent, ...]:
+        return self.events(
+            time=time,
+            state=state,
+            mode=mode,
+            shaft_boundaries=shaft_boundaries,
+        )
+
+    def events_with_boundary_provider(
+        self,
+        time: float,
+        state: NDArray[np.float64],
+        mode: CVTOperatingRegime,
+        boundary_provider: ShaftBoundaryProvider,
+    ) -> tuple[HybridEvent, ...]:
+        return self.events(
+            time=time,
+            state=state,
+            mode=mode,
+            boundary_provider=boundary_provider,
         )
 
     def transition(
@@ -354,9 +452,17 @@ class CVTOperatingHybridSystem:
         state: NDArray[np.float64],
         mode: CVTOperatingRegime,
         fired_event_names: tuple[str, ...],
+        shaft_boundaries: CVTShaftBoundaryValues | None = None,
+        boundary_provider: ShaftBoundaryProvider | None = None,
     ) -> HybridTransition[CVTOperatingRegime]:
         """Resolve event successors and explicit impact/capture resets."""
 
+        resolved_boundaries = self._resolve_boundaries(
+            time=time,
+            state=state,
+            shaft_boundaries=shaft_boundaries,
+            boundary_provider=boundary_provider,
+        )
         return resolve_cvt_operating_transition(
             evaluator=self.evaluator,
             deadzone_evaluator=self.deadzone_evaluator,
@@ -366,9 +472,47 @@ class CVTOperatingHybridSystem:
             fired_event_names=fired_event_names,
             limits=self.operating_limits,
             switching_settings=self.switching_settings,
+            shaft_boundaries=resolved_boundaries,
         )
 
-    def classify_initial_regime(self, state: CVTDynamicState) -> CVTOperatingRegime:
+    def transition_with_boundaries(
+        self,
+        time: float,
+        state: NDArray[np.float64],
+        mode: CVTOperatingRegime,
+        fired_event_names: tuple[str, ...],
+        shaft_boundaries: CVTShaftBoundaryValues,
+    ) -> HybridTransition[CVTOperatingRegime]:
+        return self.transition(
+            time=time,
+            state=state,
+            mode=mode,
+            fired_event_names=fired_event_names,
+            shaft_boundaries=shaft_boundaries,
+        )
+
+    def transition_with_boundary_provider(
+        self,
+        time: float,
+        state: NDArray[np.float64],
+        mode: CVTOperatingRegime,
+        fired_event_names: tuple[str, ...],
+        boundary_provider: ShaftBoundaryProvider,
+    ) -> HybridTransition[CVTOperatingRegime]:
+        return self.transition(
+            time=time,
+            state=state,
+            mode=mode,
+            fired_event_names=fired_event_names,
+            boundary_provider=boundary_provider,
+        )
+
+    def classify_initial_regime(
+        self,
+        state: CVTState,
+        shaft_boundaries: CVTShaftBoundaryValues | None = None,
+        boundary_provider: ShaftBoundaryProvider | None = None,
+    ) -> CVTOperatingRegime:
         """Classify an initial state across deadzone and engaged operation.
 
         A state placed exactly at a unilateral stop is checked against that
@@ -376,29 +520,44 @@ class CVTOperatingHybridSystem:
         corresponding free mode, never as a silently tensile constraint.
         """
 
-        if not isinstance(state, CVTDynamicState):
-            raise TypeError("state must be a CVTDynamicState instance.")
+        if not isinstance(state, CVTState):
+            raise TypeError("state must be a CVTState instance.")
+        resolved_boundaries = self._resolve_boundaries(
+            time=0.0,
+            state=state.as_vector(),
+            shaft_boundaries=shaft_boundaries,
+            boundary_provider=boundary_provider,
+        )
         mode = classify_initial_cvt_regime(
             evaluator=self.evaluator,
             state=state,
             limits=self.operating_limits,
             switching_settings=self.switching_settings,
+            shaft_boundaries=resolved_boundaries,
         )
-        self._validate_initial_mode_state(mode=mode, state=state)
-        return self._release_inadmissible_initial_stop(mode=mode, state=state)
+        self._validate_initial_mode_state(
+            mode=mode,
+            state=state,
+            shaft_boundaries=resolved_boundaries,
+        )
+        return self._release_inadmissible_initial_stop(
+            mode=mode,
+            state=state,
+            shaft_boundaries=resolved_boundaries,
+        )
 
     def integrate(
         self,
         *,
         time_span: tuple[float, float],
-        initial_state: CVTDynamicState,
+        initial_state: CVTState,
         initial_regime: CVTOperatingRegime | None = None,
         settings: HybridIntegratorSettings = HybridIntegratorSettings(),
     ) -> HybridIntegrationResult[CVTOperatingRegime]:
         """Integrate all currently implemented operating regimes."""
 
-        if not isinstance(initial_state, CVTDynamicState):
-            raise TypeError("initial_state must be a CVTDynamicState instance.")
+        if not isinstance(initial_state, CVTState):
+            raise TypeError("initial_state must be a CVTState instance.")
         mode = initial_regime or self.classify_initial_regime(initial_state)
         if not isinstance(mode, CVTOperatingRegime):
             raise TypeError("initial_regime must be a CVTOperatingRegime instance.")
@@ -418,7 +577,7 @@ class CVTOperatingHybridSystem:
         self,
         *,
         time_span: tuple[float, float],
-        initial_state: CVTDynamicState,
+        initial_state: CVTState,
         initial_regime: CVTOperatingRegime | None = None,
         settings: HybridIntegratorSettings = HybridIntegratorSettings(),
     ) -> "CVTIntegrationTrace":
@@ -439,7 +598,7 @@ class CVTOperatingHybridSystem:
         self,
         *,
         time_span: tuple[float, float],
-        initial_state: CVTDynamicState,
+        initial_state: CVTState,
         initial_regime: CVTOperatingRegime | None = None,
         settings: HybridIntegratorSettings = HybridIntegratorSettings(),
         reporting_settings: "ReportingSettings | None" = None,
@@ -474,11 +633,17 @@ class CVTOperatingHybridSystem:
             settings=reporting_settings,
         )
 
-    def _lower_stop_reaction(self, *, vector: NDArray[np.float64]) -> float:
-        state = CVTDynamicState.from_vector(vector)
+    def _lower_stop_reaction(
+        self,
+        *,
+        vector: NDArray[np.float64],
+        shaft_boundaries: CVTShaftBoundaryValues | None = None,
+    ) -> float:
+        state = CVTState.from_vector(vector)
         evaluation = self.deadzone_evaluator.evaluate_lower_stop(
             state=state,
             lower_stop_shift=self.operating_limits.lower_stop_shift,
+            shaft_boundaries=shaft_boundaries,
         )
         reaction = evaluation.stop_reaction
         if reaction is None:  # pragma: no cover - lower-stop evaluator invariant.
@@ -490,14 +655,16 @@ class CVTOperatingHybridSystem:
         *,
         time: float,
         vector: NDArray[np.float64],
+        shaft_boundaries: CVTShaftBoundaryValues | None = None,
     ) -> float:
         """Return the primary mechanism's own signed clamp at engagement."""
 
         del time
         return primary_independent_clamping_force_at_engagement(
             evaluator=self.evaluator,
-            state=CVTDynamicState.from_vector(vector),
+            state=CVTState.from_vector(vector),
             limits=self.operating_limits,
+            shaft_boundaries=shaft_boundaries,
         )
 
     def _low_ratio_seat_reaction(
@@ -506,12 +673,14 @@ class CVTOperatingHybridSystem:
         time: float,
         vector: NDArray[np.float64],
         contact_regime: ContactRegime,
+        shaft_boundaries: CVTShaftBoundaryValues | None = None,
     ) -> float:
         evaluation = self.evaluator.evaluate_vector(
             time=time,
             vector=vector,
             regime=contact_regime,
             shift_constraint=EngagedShiftConstraint.LOW_RATIO_SEAT,
+            shaft_boundaries=shaft_boundaries,
         )
         reaction = evaluation.low_ratio_seat_reaction
         if reaction is None:  # pragma: no cover - constrained evaluator invariant.
@@ -524,12 +693,14 @@ class CVTOperatingHybridSystem:
         time: float,
         vector: NDArray[np.float64],
         contact_regime: ContactRegime,
+        shaft_boundaries: CVTShaftBoundaryValues | None = None,
     ) -> float:
         evaluation = self.evaluator.evaluate_vector(
             time=time,
             vector=vector,
             regime=contact_regime,
             shift_constraint=EngagedShiftConstraint.UPPER_STOP,
+            shaft_boundaries=shaft_boundaries,
         )
         reaction = evaluation.upper_stop_reaction
         if reaction is None:  # pragma: no cover - constrained evaluator invariant.
@@ -540,7 +711,8 @@ class CVTOperatingHybridSystem:
         self,
         *,
         mode: CVTOperatingRegime,
-        state: CVTDynamicState,
+        state: CVTState,
+        shaft_boundaries: CVTShaftBoundaryValues | None = None,
     ) -> CVTOperatingRegime:
         """Return a free mode when an initial unilateral stop would pull.
 
@@ -554,6 +726,7 @@ class CVTOperatingHybridSystem:
             reaction = self.deadzone_evaluator.evaluate_lower_stop(
                 state=state,
                 lower_stop_shift=self.operating_limits.lower_stop_shift,
+                shaft_boundaries=shaft_boundaries,
             ).stop_reaction
             assert reaction is not None
             if reaction < 0.0:
@@ -562,13 +735,18 @@ class CVTOperatingHybridSystem:
 
         if mode.shift_constraint is CVTShiftConstraint.LOW_RATIO_SEAT:
             assert mode.contact_regime is not None
-            clamp = self._primary_clamping_force(time=0.0, vector=state.as_vector())
+            clamp = self._primary_clamping_force(
+                time=0.0,
+                vector=state.as_vector(),
+                shaft_boundaries=shaft_boundaries,
+            )
             if clamp < 0.0:
                 return CVTOperatingRegime.deadzone_free()
             reaction = self._low_ratio_seat_reaction(
                 time=0.0,
                 vector=state.as_vector(),
                 contact_regime=mode.contact_regime,
+                shaft_boundaries=shaft_boundaries,
             )
             if reaction < 0.0:
                 return CVTOperatingRegime.engaged_free(
@@ -582,6 +760,7 @@ class CVTOperatingHybridSystem:
                 time=0.0,
                 vector=state.as_vector(),
                 contact_regime=mode.contact_regime,
+                shaft_boundaries=shaft_boundaries,
             )
             if reaction < 0.0:
                 return CVTOperatingRegime.engaged_free(
@@ -611,7 +790,8 @@ class CVTOperatingHybridSystem:
         self,
         *,
         mode: CVTOperatingRegime,
-        state: CVTDynamicState,
+        state: CVTState,
+        shaft_boundaries: CVTShaftBoundaryValues | None = None,
     ) -> None:
         """Validate the state against the specific RHS it is about to enter."""
 
@@ -651,7 +831,10 @@ class CVTOperatingHybridSystem:
                 # Validate the imposed neutral lock only after confirming this
                 # is a legal deadzone coordinate; stage-safe geometry must not
                 # mask an invalid initial operating regime.
-                self.deadzone_evaluator.snapshot(state=state)
+                self.deadzone_evaluator.snapshot(
+                    state=state,
+                    shaft_boundaries=shaft_boundaries,
+                )
                 return
 
             if mode.shift_constraint is CVTShiftConstraint.LOWER_STOP:
@@ -668,7 +851,10 @@ class CVTOperatingHybridSystem:
                     raise ValueError(
                         "A lower-stop segment must start with zero shift_speed."
                     )
-                self.deadzone_evaluator.snapshot(state=state)
+                self.deadzone_evaluator.snapshot(
+                    state=state,
+                    shaft_boundaries=shaft_boundaries,
+                )
                 return
 
             raise RuntimeError(

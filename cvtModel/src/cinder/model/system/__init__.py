@@ -1,5 +1,6 @@
-"""System-level physical composition and runtime evaluator."""
+"""System-level CVT plant, assembly, state, and shaft-port contracts."""
 
+from .case import CVTAssemblyCase, OperatingScenario
 from .assembly import (
     BeltContactSpec,
     CVTAssemblySpec,
@@ -7,22 +8,24 @@ from .assembly import (
     PulleyPairSpec,
     PulleySpec,
 )
-from .case import CVTSimulationCase, OperatingScenario
-from .evaluator import CVTDynamicsModel, DynamicsSnapshot
+from .evaluator import DynamicsSnapshot, MechanicalCVTPlant
+from .ports import CVTShaftBoundaryValues, ShaftBoundaryValue
 from .runtime import RuntimeEvaluation
-from .state import CVTDynamicState, CVTDynamicStateDerivative
+from .state import CVTState, CVTStateDerivative
 
 __all__ = [
+    "CVTAssemblyCase",
+    "OperatingScenario",
     "BeltContactSpec",
     "CVTAssemblySpec",
-    "CVTDynamicsModel",
-    "CVTDynamicState",
-    "CVTDynamicStateDerivative",
-    "CVTSimulationCase",
+    "MechanicalCVTPlant",
+    "CVTState",
+    "CVTStateDerivative",
+    "CVTShaftBoundaryValues",
+    "ShaftBoundaryValue",
     "DynamicsSnapshot",
     "RuntimeEvaluation",
     "HelicalPulleyCoupling",
-    "OperatingScenario",
     "PulleyPairSpec",
     "PulleySpec",
 ]

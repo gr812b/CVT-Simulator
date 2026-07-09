@@ -1,7 +1,7 @@
 """Contracts shared by mounted CINDER pulley-actuation force laws.
 
-A force law is never told whether it is installed on the input or output
-pulley.  The host pulley supplies its local motion, optional kinematic
+A force law is never told which named pulley hosts it. The host pulley
+supplies its local motion, optional kinematic
 coupling, and closure-column projection through :class:`PulleyActuationContext`.
 
 The runtime path consumes only affine relations.  Rich named contribution
@@ -11,7 +11,7 @@ is requested after an integration.
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from math import isclose, isfinite
 from typing import Protocol, runtime_checkable
 
@@ -23,6 +23,57 @@ from cinder.model.cvt.closure import (
 from cinder.model.cvt.profiles import HelixShiftKinematics
 
 
+
+
+@dataclass(frozen=True, slots=True)
+class PulleyElementContribution:
+    """Affine mechanical contribution from one pulley-mounted element.
+
+    ``closing_force`` is positive in the local pulley-closing direction.
+    ``shaft_torque`` is positive in the positive rotation direction of the
+    pulley shaft.  Simple axial actuators only populate ``closing_force``;
+    dynamic couplings such as a helix may populate both.
+    """
+
+    closing_force: AffineClosureScalar = field(default_factory=AffineClosureScalar.zero)
+    shaft_torque: AffineClosureScalar = field(default_factory=AffineClosureScalar.zero)
+
+    def __post_init__(self) -> None:
+        if not isinstance(self.closing_force, AffineClosureScalar):
+            raise TypeError("closing_force must be an AffineClosureScalar.")
+        if not isinstance(self.shaft_torque, AffineClosureScalar):
+            raise TypeError("shaft_torque must be an AffineClosureScalar.")
+
+    @classmethod
+    def zero(cls) -> "PulleyElementContribution":
+        return cls()
+
+    @classmethod
+    def from_closing_force(
+        cls, relation: AffineClosureScalar
+    ) -> "PulleyElementContribution":
+        return cls(closing_force=relation)
+
+    def __add__(
+        self, other: "PulleyElementContribution"
+    ) -> "PulleyElementContribution":
+        if not isinstance(other, PulleyElementContribution):
+            return NotImplemented
+        return PulleyElementContribution(
+            closing_force=self.closing_force + other.closing_force,
+            shaft_torque=self.shaft_torque + other.shaft_torque,
+        )
+
+
+class PulleyElement(Protocol):
+    """One mounted component that can affect a pulley force and/or shaft torque."""
+
+    def evaluate_element(
+        self, context: "PulleyActuationContext"
+    ) -> PulleyElementContribution:
+        """Return the element contribution at one frozen RHS state."""
+
+
 @dataclass(frozen=True, slots=True)
 class PulleyClosureChannels:
     """Closure unknowns belonging to one mounted pulley shaft."""
@@ -32,7 +83,7 @@ class PulleyClosureChannels:
     normal_resultant: ClosureUnknown
 
     @classmethod
-    def input_pulley(cls) -> "PulleyClosureChannels":
+    def primary(cls) -> "PulleyClosureChannels":
         return cls(
             shaft_angular_acceleration=ClosureUnknown.PRIMARY_ANGULAR_ACCELERATION,
             shaft_torque=ClosureUnknown.PRIMARY_TORQUE,
@@ -40,7 +91,7 @@ class PulleyClosureChannels:
         )
 
     @classmethod
-    def output_pulley(cls) -> "PulleyClosureChannels":
+    def secondary(cls) -> "PulleyClosureChannels":
         return cls(
             shaft_angular_acceleration=ClosureUnknown.SECONDARY_ANGULAR_ACCELERATION,
             shaft_torque=ClosureUnknown.SECONDARY_TORQUE,
@@ -48,31 +99,25 @@ class PulleyClosureChannels:
         )
 
 
+
 @dataclass(frozen=True, slots=True)
 class HelicalCouplingState:
-    """Live local state supplied by a pulley-mounted helical coupling."""
+    """Live local state supplied by a pulley-mounted helical coupling.
+
+    The opening coordinate is always ``q = -x`` for local axial coordinate
+    ``x`` positive closing. The mapping is not a tunable actuator parameter.
+    """
 
     kinematics: HelixShiftKinematics
-    opening_per_axial_position: float
-    opening_offset: float = 0.0
 
     def __post_init__(self) -> None:
         if not isinstance(self.kinematics, HelixShiftKinematics):
             raise TypeError("kinematics must be a HelixShiftKinematics instance.")
-        if (
-            not isfinite(self.opening_per_axial_position)
-            or self.opening_per_axial_position == 0.0
-        ):
-            raise ValueError("opening_per_axial_position must be finite and non-zero.")
-        if not isfinite(self.opening_offset):
-            raise ValueError("opening_offset must be finite.")
 
     def validate_local_position(self, axial_position: float) -> None:
         if not isfinite(axial_position):
             raise ValueError("axial_position must be finite.")
-        expected_opening = self.opening_offset + (
-            self.opening_per_axial_position * axial_position
-        )
+        expected_opening = -axial_position
         if not isclose(
             self.kinematics.opening_travel,
             expected_opening,
@@ -80,7 +125,7 @@ class HelicalCouplingState:
             abs_tol=1.0e-12,
         ):
             raise ValueError(
-                "helical coupling opening travel must match the host local coordinate."
+                "helical coupling opening travel must match q = -axial_position."
             )
 
 

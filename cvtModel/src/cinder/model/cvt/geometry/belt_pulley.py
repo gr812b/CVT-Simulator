@@ -118,6 +118,18 @@ class BeltPulleyGeometry:
             belt_axial_coordinate=self._belt_axial_coordinate(shift),
         )
 
+
+    def secondary_opening_travel_at_shift(self, shift: float) -> float:
+        """Return positive secondary opening travel at one shift coordinate."""
+
+        return -self.evaluate(shift).secondary_axial_coordinate.value
+
+    @property
+    def secondary_opening_travel_at_max_shift(self) -> float:
+        """Return positive secondary opening travel at the upper shift stop."""
+
+        return self.secondary_opening_travel_at_shift(self._spec.max_shift)
+
     def _primary_outer_radius_kinematics(
         self,
         shift: float,

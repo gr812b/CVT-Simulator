@@ -15,7 +15,7 @@ class FixedFinalDrive:
 
         G = omega_secondary / omega_wheel.
 
-    With pure rolling at the driven wheel, the same fixed conversion maps
+    With pure rolling at the wheel, the same fixed conversion maps
     accumulated secondary-shaft angle to signed vehicle distance:
 
         x_vehicle = r_w psi_secondary / G.
@@ -103,7 +103,7 @@ class FixedFinalDrive:
         wheel_rotational_inertia: float,
     ) -> float:
         """
-        Reflect driven-wheel spin inertia to the secondary shaft.
+        Reflect wheel spin inertia to the secondary shaft.
 
             I_wheels@secondary = I_wheels / G^2.
         """

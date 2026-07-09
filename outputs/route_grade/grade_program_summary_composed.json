@@ -1,0 +1,54 @@
+{
+  "completed": true,
+  "termination_reason": "final_time_reached",
+  "segments": 11,
+  "transitions": [
+    {
+      "time": 0.08903075832922323,
+      "reason": "lower_stop_released_by_inward_free_shift_tendency"
+    },
+    {
+      "time": 0.10770081881068092,
+      "reason": "primary_closed_into_engaged_contact"
+    },
+    {
+      "time": 0.11151862657828379,
+      "reason": "low_ratio_seat_reached_perfectly_inelastic_projection"
+    },
+    {
+      "time": 0.8155732128185016,
+      "reason": "low_ratio_seat_released_by_tensile_reaction"
+    },
+    {
+      "time": 2.1971402383946863,
+      "reason": "contact_restuck_with_static_reserve"
+    },
+    {
+      "time": 6.063024272825016,
+      "reason": "upper_stop_reached_perfectly_inelastic_impact"
+    },
+    {
+      "time": 11.48871639244674,
+      "reason": "upper_stop_released_by_tensile_reaction"
+    },
+    {
+      "time": 35.99514296070897,
+      "reason": "upper_stop_reached_perfectly_inelastic_impact"
+    },
+    {
+      "time": 38.29370748668375,
+      "reason": "static_capacity_exhausted_entered_kinetic_slip"
+    },
+    {
+      "time": 42.50355223137916,
+      "reason": "contact_restuck_with_static_reserve"
+    }
+  ],
+  "resolved_primary_preload_mm": 104.6145479692159,
+  "final_primary_rpm": 4065.814117002498,
+  "final_secondary_rpm": 3596.7487610744156,
+  "final_vehicle_speed_kmh": 50.1390006987367,
+  "final_vehicle_distance_m": 423.20892360277736,
+  "max_shift_mm": 19.049999999999997,
+  "min_shift_mm": 0.0
+}

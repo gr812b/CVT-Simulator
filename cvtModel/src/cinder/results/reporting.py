@@ -12,6 +12,7 @@ from numpy.typing import NDArray
 from cinder.model.cvt.contact import ContactInterface, ContactTractionLaw
 from cinder.model.cvt.closure import ClosureUnknowns
 from cinder.execution.hybrid.cvt_regime import CVTOperatingRegime
+from cinder.execution.hybrid.composed import ComposedCVTHybridSystem, ComposedCVTMode
 
 from .inspection import CVTStateInspection, inspect_cvt_state
 from .trace import CVTIntegrationTrace
@@ -210,7 +211,7 @@ class CVTReportedSegment:
 
     @property
     def state(self) -> NDArray[np.float64]:
-        """Return the aligned six-state report matrix.
+        """Return the aligned five-state report matrix.
 
         This is a convenience view for numerical tools that need a state
         matrix while consuming a materialized report.  It is reconstructed
@@ -224,7 +225,6 @@ class CVTReportedSegment:
             "state.belt_speed",
             "state.shift_position",
             "state.shift_speed",
-            "state.secondary_shaft_angle",
         )
         matrix = np.vstack([self.signal(key).values for key in keys])
         matrix.setflags(write=False)
@@ -254,8 +254,8 @@ class CVTResultSummary:
         if not isfinite(self.duration) or self.duration < 0.0:
             raise ValueError("duration must be finite and non-negative.")
         values = np.asarray(self.final_state, dtype=float)
-        if values.shape != (6,) or not np.all(np.isfinite(values)):
-            raise ValueError("final_state must contain six finite values.")
+        if values.ndim != 1 or values.size < 5 or not np.all(np.isfinite(values)):
+            raise ValueError("final_state must contain at least the five finite CVT state values.")
         frozen = np.array(values, dtype=float, copy=True)
         frozen.setflags(write=False)
         object.__setattr__(self, "final_state", frozen)
@@ -302,8 +302,30 @@ class CVTIntegrationResult:
 class CVTResultBuilder:
     """Materialize standard mechanics signals on a selected report-time grid."""
 
-    def __init__(self, *, system: "CVTOperatingHybridSystem") -> None:
+    def __init__(self, *, system) -> None:
         self._system = system
+        self._is_composed = isinstance(system, ComposedCVTHybridSystem)
+
+    @property
+    def _cvt_system(self):
+        return self._system.cvt if self._is_composed else self._system
+
+    def _cvt_mode(self, mode):
+        if self._is_composed:
+            if not isinstance(mode, ComposedCVTMode):
+                raise TypeError("Composed traces must use ComposedCVTMode.")
+            return mode.cvt
+        return mode
+
+    def _cvt_state_matrix(self, state: NDArray[np.float64]) -> NDArray[np.float64]:
+        if self._is_composed:
+            return self._system.layout.view_matrix(state, "cvt")
+        return state
+
+    def _shaft_boundaries_for_sample(self, *, time: float, full_state: NDArray[np.float64]):
+        if self._is_composed:
+            return self._system._shaft_boundaries(time=time, state=full_state)
+        return None
 
     def build(
         self,
@@ -315,8 +337,8 @@ class CVTResultBuilder:
             raise TypeError("trace must be a CVTIntegrationTrace instance.")
         # ``build(trace)`` is the low-level trace consumer, so preserve the
         # accepted solver mesh unless the caller explicitly requests a report
-        # grid.  The high-level ``system.run()`` convenience path selects the
-        # standard 10 ms grid instead.
+        # grid.  Composed launch/reporting helpers select the standard 10 ms
+        # grid explicitly when they need uniform exported traces.
         if settings is None:
             settings = ReportingSettings.native()
         if not isinstance(settings, ReportingSettings):
@@ -348,39 +370,44 @@ class CVTResultBuilder:
                 grid=settings.grid,
                 global_times=global_times,
             )
+            cvt_state_matrix = self._cvt_state_matrix(state)
             inspections = tuple(
                 inspect_cvt_state(
-                    system=self._system,
+                    system=self._cvt_system,
                     time=float(time[index]),
-                    vector=state[:, index],
-                    mode=raw_segment.mode,
+                    vector=cvt_state_matrix[:, index],
+                    mode=self._cvt_mode(raw_segment.mode),
+                    shaft_boundaries=self._shaft_boundaries_for_sample(
+                        time=float(time[index]),
+                        full_state=state[:, index],
+                    ),
                     include_closure_audit=settings.include_closure_audit,
                 )
                 for index in range(time.size)
             )
             signals = _build_signals(
                 time=time,
-                state=state,
+                state=cvt_state_matrix,
                 inspections=inspections,
                 settings=settings,
-                traction_law=self._system.traction_law,
+                traction_law=self._cvt_system.traction_law,
                 observer_offsets=observer_offsets,
             )
             if settings.include_integrated_observers:
                 observer_offsets = (
                     float(signals["observer.primary_shaft_angle"].values[-1]),
-                    float(signals["observer.engine_work"].values[-1]),
-                    float(signals["observer.output_boundary_work"].values[-1]),
+                    float(signals["observer.primary_boundary_work"].values[-1]),
+                    float(signals["observer.secondary_boundary_work"].values[-1]),
                     float(signals["observer.primary_slip_dissipation"].values[-1]),
                     float(signals["observer.secondary_slip_dissipation"].values[-1]),
                 )
-            if any(item.output_boundary.road_load is None for item in inspections):
-                warning = "Vehicle-only road channels are NaN for at least one non-vehicle output boundary."
+            if any(item.shaft_boundaries.road_load is None for item in inspections):
+                warning = "Vehicle-only road channels are NaN for at least one non-vehicle shaft boundary."
                 if warning not in warnings:
                     warnings.append(warning)
             reported.append(
                 CVTReportedSegment(
-                    mode=raw_segment.mode,
+                    mode=self._cvt_mode(raw_segment.mode),
                     time=time,
                     signals=signals,
                 )
@@ -393,7 +420,7 @@ class CVTResultBuilder:
                 duration=trace.final_time - trace.segments[0].start_time,
                 segment_count=len(trace.segments),
                 transition_count=len(trace.transitions),
-                final_state=trace.final_state,
+                final_state=(self._system.layout.view(trace.final_state, "cvt") if self._is_composed else trace.final_state),
             ),
             warnings=tuple(warnings),
         )
@@ -455,10 +482,6 @@ def _build_signals(
     add("state.belt_speed", "Belt speed", "m/s", "state", state[2])
     add("state.shift_position", "Shift position", "m", "state", state[3])
     add("state.shift_speed", "Shift speed", "m/s", "state", state[4])
-    add(
-        "state.secondary_shaft_angle", "Secondary shaft angle", "rad", "state", state[5]
-    )
-
     primary_radius = np.array([item.geometry.primary.effective for item in inspections])
     secondary_radius = np.array(
         [item.geometry.secondary.effective for item in inspections]
@@ -542,29 +565,29 @@ def _build_signals(
     )
 
     add(
-        "boundary.engine_torque",
-        "Input boundary torque",
+        "boundary.primary_external_torque",
+        "Primary shaft external torque",
         "N m",
         "boundary",
-        np.array([item.engine_torque for item in inspections]),
+        np.array([item.primary_external_torque for item in inspections]),
     )
     add(
-        "boundary.output_load_torque",
-        "Output boundary load torque",
+        "boundary.secondary_external_torque",
+        "Secondary shaft external torque",
         "N m",
         "boundary",
-        np.array([item.output_boundary.load_torque for item in inspections]),
+        np.array([item.shaft_boundaries.secondary_external_torque for item in inspections]),
     )
     add(
-        "boundary.output_equivalent_inertia",
-        "Output equivalent inertia",
+        "boundary.secondary_equivalent_inertia",
+        "Secondary equivalent inertia",
         "kg m^2",
         "boundary",
         np.array(
-            [item.output_boundary.equivalent_rotational_inertia for item in inspections]
+            [item.shaft_boundaries.secondary_equivalent_inertia for item in inspections]
         ),
     )
-    road = [item.output_boundary.road_load for item in inspections]
+    road = [item.shaft_boundaries.road_load for item in inspections]
     add(
         "vehicle.speed",
         "Vehicle speed",
@@ -581,8 +604,8 @@ def _build_signals(
             [
                 (
                     np.nan
-                    if item.output_boundary.vehicle_distance is None
-                    else item.output_boundary.vehicle_distance
+                    if item.shaft_boundaries.vehicle_distance is None
+                    else item.shaft_boundaries.vehicle_distance
                 )
                 for item in inspections
             ]
@@ -836,18 +859,18 @@ def _add_contact_signals(
 
 
 def _add_observer_signals(add, time, state, inspections, offsets) -> None:
-    primary_angle, engine_work, output_work, primary_loss, secondary_loss = offsets
+    primary_angle, primary_boundary_work, secondary_boundary_work, primary_loss, secondary_loss = offsets
     primary_angle_values = primary_angle + _cumulative_trapezoid(time, state[0])
-    engine_power = np.array([item.engine_torque for item in inspections]) * state[0]
+    primary_boundary_power = np.array([item.primary_external_torque for item in inspections]) * state[0]
     add(
-        "observer.engine_power",
-        "Engine boundary power",
+        "observer.primary_boundary_power",
+        "Primary boundary power",
         "W",
         "observer",
-        engine_power,
+        primary_boundary_power,
     )
-    output_power = (
-        np.array([item.output_boundary.load_torque for item in inspections])
+    secondary_boundary_power = (
+        np.array([item.shaft_boundaries.secondary_external_torque for item in inspections])
         * state[1]
     )
     primary_slip_power = np.array(
@@ -864,18 +887,18 @@ def _add_observer_signals(add, time, state, inspections, offsets) -> None:
         primary_angle_values,
     )
     add(
-        "observer.engine_work",
-        "Engine boundary work",
+        "observer.primary_boundary_work",
+        "Primary boundary work",
         "J",
         "observer",
-        engine_work + _cumulative_trapezoid(time, engine_power),
+        primary_boundary_work + _cumulative_trapezoid(time, primary_boundary_power),
     )
     add(
-        "observer.output_boundary_work",
-        "Output boundary work",
+        "observer.secondary_boundary_work",
+        "Secondary boundary work",
         "J",
         "observer",
-        output_work + _cumulative_trapezoid(time, output_power),
+        secondary_boundary_work + _cumulative_trapezoid(time, secondary_boundary_power),
     )
     add(
         "observer.primary_slip_dissipation",
