@@ -1,6 +1,6 @@
 # CVT Simulator frontend
 
-The frontend is a Vite/React single-page application using only the CINDER v1 API.
+The frontend is a Vite/React single-page application using the database-backed CVT Simulator API. Normal runs resolve seeded/released library objects instead of posting raw CINDER documents from the UI.
 
 ## Local development
 
@@ -16,9 +16,29 @@ npm run dev
 
 ```text
 VITE_API_BASE_URL=http://localhost:8000
+VITE_DEMO_USER_ID=00000000-0000-4000-8000-000000000001
+VITE_DEMO_ACCOUNT_ID=00000000-0000-4000-8000-000000000002
 ```
 
-The API client already names routes such as `/api/v1/presets` and `/api/v1/runs`; do **not** add `/api/v1` to `VITE_API_BASE_URL`.
+The demo IDs are the explicit local-development rows seeded by `python -m app.scripts.init_database`. They are test/demo defaults only; real auth should replace that configuration boundary later.
+
+The API client already names routes such as `/api/v1/library/*` and `/api/v1/runs/from-library`; do **not** add `/api/v1` to `VITE_API_BASE_URL`.
+
+
+## Current product flow
+
+The app intentionally exposes a narrow V1 run setup:
+
+```text
+seeded released Baja vehicle assembly (500 lb default or 400 lb lightweight)
+  -> selected tune
+  -> selected load case (flat, 20° hill, or ~10 s flat-to-30° route-intent seed)
+  -> selected execution preset
+  -> POST /api/v1/runs/from-library
+  -> GET /api/v1/runs/{run_id}/result for playback
+```
+
+Engine and CVT hardware editing are hidden until dedicated database object editors exist. The current vehicle dropdown switches between seeded output-system masses only. The legacy direct `POST /runs` contract path remains backend/debug-only and is not part of the normal frontend flow.
 
 Useful checks:
 

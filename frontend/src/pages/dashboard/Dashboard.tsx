@@ -1,190 +1,84 @@
-import { useCallback, useEffect, useMemo, useRef, useState, type ChangeEvent } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styles from './Dashboard.module.scss';
 import { Button } from '@components/button/Button';
 import { LoadingOverlay } from '@components/loadingOverlay/LoadingOverlay';
 import { SimulationsTable } from '@components/simulationsTable/SimulationsTable';
 import { useLoading } from '@contexts/LoadingContext';
-import { useSimulationCase, type SimulationCaseSource } from '@contexts/SimulationCaseContext';
 import { useRunSimulation } from '@hooks/useRunSimulation';
-import { listPresets, loadPreset, type PresetSummary, type SimulationCaseDocument } from '@api/client';
+import {
+  buildLibraryRunSelection,
+  getDefaultRunSetup,
+  type DefaultRunSetup,
+} from '@api/client';
 import PlayOutline from '@assets/icons/play_outline.svg?react';
 import Edit from '@assets/icons/edit.svg?react';
-import TrashCan from '@assets/icons/trash_can.svg?react';
-import Plus from '@assets/icons/plus.svg?react';
-import ArrowUpCircle from '@assets/icons/arrow_up_circle.svg?react';
-import ArrowDownCircle from '@assets/icons/arrow_down_circle.svg?react';
 import Home from '@assets/icons/home.svg?react';
 
-const BASELINE_PRESET_ID = 'baja-launch-baseline';
-
-function sourceFor(preset: PresetSummary): SimulationCaseSource {
-  return { presetId: preset.id, name: preset.name, description: preset.description };
-}
-
-function downloadDocument(name: string, document: SimulationCaseDocument): void {
-  const blob = new Blob([JSON.stringify(document, null, 2)], { type: 'application/json' });
-  const url = URL.createObjectURL(blob);
-  const anchor = window.document.createElement('a');
-  anchor.href = url;
-  anchor.download = `${name.replace(/[^a-z0-9]+/gi, '-').replace(/^-|-$/g, '').toLowerCase() || 'cinder-simulation-case'}.json`;
-  anchor.click();
-  URL.revokeObjectURL(url);
-}
-
-function readImportedDocument(raw: unknown): SimulationCaseDocument {
-  if (typeof raw !== 'object' || raw === null || Array.isArray(raw)) {
-    throw new Error('The selected file must contain a CINDER simulation document object.');
-  }
-  const candidate = raw as Record<string, unknown>;
-  const document = candidate.simulation_case ?? candidate;
-  if (typeof document !== 'object' || document === null || Array.isArray(document)) {
-    throw new Error('The selected file does not contain a CINDER simulation document.');
-  }
-  return document as SimulationCaseDocument;
-}
-
 /**
- * Preserves the original simulation-library page while sourcing rows directly
- * from immutable CINDER presets. Imported documents remain browser-session
- * drafts; no legacy saved-parameter format is revived.
+ * Product dashboard: pick a released vehicle baseline and run it through the
+ * database-backed library endpoint. The old raw CINDER preset workflow is
+ * intentionally not part of the normal UI anymore.
  */
 export const Dashboard = () => {
   const navigate = useNavigate();
-  const { isLoading, loadingMessage, setLoading } = useLoading();
-  const { replaceDocument } = useSimulationCase();
-  const { runSimulation } = useRunSimulation();
-  const [presets, setPresets] = useState<PresetSummary[]>([]);
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const { isLoading, loadingMessage } = useLoading();
+  const { runLibrarySetup } = useRunSimulation();
+  const [setup, setSetup] = useState<DefaultRunSetup | null>(null);
+  const [selectedVehicleAssemblyId, setSelectedVehicleAssemblyId] = useState<string | null>(null);
   const [listError, setListError] = useState<string | null>(null);
-  const [isLoadingPresets, setIsLoadingPresets] = useState(true);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isLoadingSetup, setIsLoadingSetup] = useState(true);
 
-  const selectedPreset = useMemo(
-    () => presets.find((preset) => preset.id === selectedId) ?? null,
-    [presets, selectedId],
+  const selectedVehicleAssembly = useMemo(
+    () => setup?.vehicleAssemblies.find((assembly) => assembly.id === selectedVehicleAssemblyId) ?? setup?.selectedVehicleAssembly ?? null,
+    [selectedVehicleAssemblyId, setup],
   );
 
-  const refreshPresets = useCallback(async () => {
-    setIsLoadingPresets(true);
+  const refreshSetup = useCallback(async () => {
+    setIsLoadingSetup(true);
     setListError(null);
     try {
-      const next = await listPresets();
-      setPresets(next);
-      setSelectedId((current) => current && next.some((preset) => preset.id === current)
+      const next = await getDefaultRunSetup();
+      setSetup(next);
+      setSelectedVehicleAssemblyId((current) => current && next.vehicleAssemblies.some((assembly) => assembly.id === current)
         ? current
-        : (next.find((preset) => preset.id === BASELINE_PRESET_ID)?.id ?? next[0]?.id ?? null));
+        : next.selectedVehicleAssembly.id);
     } catch (error) {
       setListError(error instanceof Error ? error.message : String(error));
     } finally {
-      setIsLoadingPresets(false);
+      setIsLoadingSetup(false);
     }
   }, []);
 
-  useEffect(() => { void refreshPresets(); }, [refreshPresets]);
-
-  const resolveSelectedPreset = useCallback(async () => {
-    if (selectedPreset === null) throw new Error('Select a CINDER preset first.');
-    setLoading(true, `Loading ${selectedPreset.name}…`);
-    const loaded = await loadPreset(selectedPreset.id);
-    replaceDocument(loaded.simulationCase, sourceFor(loaded));
-    return loaded;
-  }, [replaceDocument, selectedPreset, setLoading]);
+  useEffect(() => { void refreshSetup(); }, [refreshSetup]);
 
   const handleRun = useCallback(async () => {
-    try {
-      const loaded = await resolveSelectedPreset();
-      await runSimulation(loaded.simulationCase);
-    } catch (error) {
-      alert(`Could not prepare simulation: ${error instanceof Error ? error.message : String(error)}`);
-      setLoading(false);
-    }
-  }, [resolveSelectedPreset, runSimulation, setLoading]);
-
-  const handleEdit = useCallback(async () => {
-    try {
-      await resolveSelectedPreset();
-      navigate('/input');
-    } catch (error) {
-      alert(`Could not load simulation: ${error instanceof Error ? error.message : String(error)}`);
-    } finally {
-      setLoading(false);
-    }
-  }, [navigate, resolveSelectedPreset, setLoading]);
-
-  const handleExport = useCallback(async () => {
-    try {
-      const loaded = await resolveSelectedPreset();
-      downloadDocument(loaded.name, loaded.simulationCase);
-    } catch (error) {
-      alert(`Could not export simulation: ${error instanceof Error ? error.message : String(error)}`);
-    } finally {
-      setLoading(false);
-    }
-  }, [resolveSelectedPreset, setLoading]);
-
-  const handleNew = useCallback(async () => {
-    const baseline = presets.find((preset) => preset.id === BASELINE_PRESET_ID);
-    if (!baseline) {
-      alert('The Baja tuned-launch CINDER preset is not available from this backend.');
-      return;
-    }
-    setSelectedId(baseline.id);
-    try {
-      setLoading(true, `Loading ${baseline.name}…`);
-      const loaded = await loadPreset(baseline.id);
-      replaceDocument(loaded.simulationCase, sourceFor(loaded));
-      navigate('/input');
-    } catch (error) {
-      alert(`Could not create simulation: ${error instanceof Error ? error.message : String(error)}`);
-    } finally {
-      setLoading(false);
-    }
-  }, [navigate, presets, replaceDocument, setLoading]);
-
-  const handleImport = useCallback(() => fileInputRef.current?.click(), []);
-  const handleFileChange = useCallback(async (event: ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    event.target.value = '';
-    if (!file) return;
-    try {
-      setLoading(true, `Importing ${file.name}…`);
-      const imported = readImportedDocument(JSON.parse(await file.text()));
-      replaceDocument(imported, {
-        presetId: `local:${file.name}`,
-        name: file.name.replace(/\.json$/i, ''),
-        description: 'Imported CINDER simulation document (browser-session draft).',
-      });
-      navigate('/input');
-    } catch (error) {
-      alert(`Could not import simulation: ${error instanceof Error ? error.message : String(error)}`);
-    } finally {
-      setLoading(false);
-    }
-  }, [navigate, replaceDocument, setLoading]);
+    if (setup === null || selectedVehicleAssembly === null) return;
+    const selection = buildLibraryRunSelection(setup, { vehicleAssemblyId: selectedVehicleAssembly.id });
+    await runLibrarySetup(selection);
+  }, [runLibrarySetup, selectedVehicleAssembly, setup]);
 
   return (
     <div className={styles.dashboard}>
       <LoadingOverlay isVisible={isLoading} message={loadingMessage} />
       <div className={styles.topBar}>
         <Button text="Home" icon={Home} className={styles.navButton} onClick={() => navigate('/')} />
+        <div className={styles.headerCopy}>
+          <h1>CVT Run Library</h1>
+          <p>Run the seeded Baja baseline with the current default tune, load case, and execution preset.</p>
+        </div>
       </div>
       <SimulationsTable
-        presets={presets}
-        selectedId={selectedId}
-        onSelect={setSelectedId}
-        isLoading={isLoadingPresets}
+        vehicleAssemblies={setup?.vehicleAssemblies ?? []}
+        selectedId={selectedVehicleAssembly?.id ?? null}
+        onSelect={setSelectedVehicleAssemblyId}
+        isLoading={isLoadingSetup}
         error={listError}
       />
       <div className={styles.buttonsContainer}>
-        <Button text="Run" icon={PlayOutline} className={styles.button} disabled={selectedPreset === null} onClick={() => void handleRun()} />
-        <Button text="Edit" icon={Edit} className={styles.button} disabled={selectedPreset === null} onClick={() => void handleEdit()} />
-        <Button text="Delete" icon={TrashCan} className={styles.button} disabled title="CINDER backend presets are immutable." />
-        <Button text="Export" icon={ArrowUpCircle} className={styles.button} disabled={selectedPreset === null} onClick={() => void handleExport()} />
-        <Button text="Import" icon={ArrowDownCircle} className={styles.button} onClick={handleImport} />
-        <Button text="New" icon={Plus} className={styles.button} onClick={() => void handleNew()} />
+        <Button text="Run" icon={PlayOutline} className={styles.button} disabled={selectedVehicleAssembly === null} onClick={() => void handleRun()} />
+        <Button text="Tune / Load Setup" icon={Edit} className={styles.button} onClick={() => navigate('/input')} />
       </div>
-      <input ref={fileInputRef} type="file" accept="application/json,.json" style={{ display: 'none' }} onChange={handleFileChange} />
     </div>
   );
 };

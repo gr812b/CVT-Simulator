@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@components/button/Button';
 import { ParameterAccordion } from '@components/parameterAccordion/ParameterAccordion';
@@ -7,13 +7,28 @@ import { RampBuilder } from '@components/rampBuilder/RampBuilder';
 import { RampPreview } from '@components/rampBuilder/RampPreview';
 import { LoadingOverlay } from '@components/loadingOverlay/LoadingOverlay';
 import { useLoading } from '@contexts/LoadingContext';
-import { useSimulationCase } from '@contexts/SimulationCaseContext';
-import { validateSimulationCase } from '@api/client';
-import { getValueAtJsonPointer } from '@utils/jsonPointer';
-import { editorToRamp, rampToEditor } from '@utils/rampEditor';
 import { useRunSimulation } from '@hooks/useRunSimulation';
+import {
+  buildLibraryRunSelection,
+  buildRunSetupForVehicle,
+  getDefaultRunSetup,
+  updateTuneValues,
+  type DefaultRunSetup,
+  type ExecutionPresetSummary,
+  type LoadCaseSummary,
+  type TuneSummary,
+} from '@api/client';
+import { editorToRamp, rampToEditor } from '@utils/rampEditor';
 import { DocumentQuantityInput } from './DocumentQuantityInput';
-import { GROUPS, GROUP_TITLES, resolveSurface, type ResolvedTuningField, type TuningGroup } from './tuningSurface';
+import {
+  GROUPS,
+  GROUP_TITLES,
+  resolveTuneSurface,
+  setTuneFieldValue,
+  valueForTuneField,
+  type ResolvedTuningField,
+  type TuningGroup,
+} from './tuningSurface';
 import Home from '@assets/icons/home.svg?react';
 import ArrowUpCircle from '@assets/icons/arrow_up_circle.svg?react';
 import ArrowDownCircle from '@assets/icons/arrow_down_circle.svg?react';
@@ -25,25 +40,262 @@ import styles from './Input.module.scss';
 const expandedState = Object.fromEntries(GROUPS.map((group) => [group, true])) as Record<TuningGroup, boolean>;
 const collapsedState = Object.fromEntries(GROUPS.map((group) => [group, false])) as Record<TuningGroup, boolean>;
 
+function selectValue<T extends { id: string }>(items: T[], id: string | null): T | null {
+  if (id === null) return null;
+  return items.find((item) => item.id === id) ?? null;
+}
+
+function tuneValuesEqual(a: Record<string, unknown>, b: Record<string, unknown>): boolean {
+  return JSON.stringify(a) === JSON.stringify(b);
+}
+
+function numberValue(value: unknown): number | null {
+  return typeof value === 'number' && Number.isFinite(value) ? value : null;
+}
+
+/**
+ * Run setup edits DB tune values only. Engine/CVT hardware/output-system data
+ * remain pinned by the released seeded Baja assembly, while load and execution
+ * are explicit selectors below. Test/demo account IDs stay in the API boundary.
+ */
 export const Input = () => {
-  const navigate = useNavigate(); const { isLoading, loadingMessage, setLoading } = useLoading(); const { document, source, editorSchema, validation, ensureReady, loadPreset, setValueAtPath, setValidation } = useSimulationCase(); const { runSimulation } = useRunSimulation();
-  const [expanded, setExpanded] = useState<Record<TuningGroup, boolean>>(expandedState); const [active, setActive] = useState<string | null>(null); const [readyError, setReadyError] = useState<string | null>(null);
-  useEffect(() => { void ensureReady().catch((error) => setReadyError(error instanceof Error ? error.message : String(error))); }, [ensureReady]);
-  const fields = useMemo(() => document ? resolveSurface(document, editorSchema) : [], [document, editorSchema]);
-  const activeField = fields.find((field) => field.id === active) ?? null;
-  const findingFor = (field: ResolvedTuningField): string | null => validation?.findings.find((finding) => finding.severity === 'error' && (finding.documentPath === field.path || finding.location === field.path))?.message ?? null;
-  const validate = async () => { if (!document) return; setLoading(true, 'Validating CINDER simulation case...'); try { setValidation(await validateSimulationCase(document)); } finally { setLoading(false); } };
-  const reset = async () => { if (!window.confirm('Reset the editable tuning surface to the Baja launch baseline?')) return; setLoading(true, 'Loading Baja launch baseline...'); try { await loadPreset('baja-launch-baseline'); } finally { setLoading(false); } };
-  const run = async () => { if (document) await runSimulation(document); };
-  if (document === null) return <div className={styles.input}><LoadingOverlay isVisible={isLoading} message={loadingMessage} /><div className={styles.parameterInformationContainer}><ParameterDescription name="Loading Baja baseline" description={readyError ?? 'Loading the canonical CINDER simulation document…'} /></div></div>;
-  return <div className={styles.input}><LoadingOverlay isVisible={isLoading} message={loadingMessage} />
-    <div className={styles.topBar}><div className={styles.navButtons}><Button text="Home" icon={Home} onClick={() => navigate('/')} /><Button text="Baja Baseline" icon={ArrowLeft} onClick={() => void reset()} /></div><div className={styles.sessionInfo} title={source?.description ?? ''}><span className={styles.selectedSetName}>{source?.name ?? 'Baja Launch Baseline'}</span>{validation && <span className={styles.changesBadge}><span className={styles.changeIndicator} /><span>{validation.isValid ? 'Validated' : 'Needs attention'}</span></span>}</div><div className={styles.topBarSpacer} /></div>
-    <div className={styles.inputGrid}><div className={styles.parameterInputContainer}>{GROUPS.map((group) => <ParameterAccordion key={group} title={GROUP_TITLES[group]} isExpanded={expanded[group]} onToggle={() => setExpanded((current) => ({ ...current, [group]: !current[group] }))}>{fields.filter((field) => field.group === group).map((field) => {
-      const value = getValueAtJsonPointer(document, field.path); const error = findingFor(field); if (field.kind === 'ramp') { const editorValue = rampToEditor(value); return <div key={field.id} onFocus={() => setActive(field.id)}><RampBuilder value={editorValue} hasChanged={false} onChange={(next) => setValueAtPath(field.path, editorToRamp(next))} /></div>; }
-      return typeof value === 'number' ? <DocumentQuantityInput key={field.id} label={field.label} valueSi={value} dimension={field.dimension} canonicalUnit={field.canonicalUnit} minimum={field.minimum} error={error} onFocus={() => setActive(field.id)} onChangeSi={(next) => setValueAtPath(field.path, next)} /> : null;
-    })}</ParameterAccordion>)}</div>
-      <div className={styles.parameterInformationContainer}><ParameterDescription name={activeField?.label ?? 'No Parameter Selected'} description={activeField?.description ?? 'Click on an input field to see its CINDER description.'} img={activeField?.image} />{activeField?.kind === 'ramp' && <RampPreview config={rampToEditor(getValueAtJsonPointer(document, activeField.path))} />}</div>
-      <div className={styles.inputButtonsContainer}><Button text="Expand All" icon={ArrowDownCircle} onClick={() => setExpanded(expandedState)} /><Button text="Collapse All" icon={ArrowUpCircle} iconSide="right" onClick={() => setExpanded(collapsedState)} /></div>
-      <div className={styles.nextButtonContainer}><Button text="Reset" icon={ArrowLeft} onClick={() => void reset()} /><Button text="Validate" icon={Edit} onClick={() => void validate()} /><Button text="Run" icon={PlayOutline} onClick={() => void run()} /></div>
-    </div></div>;
+  const navigate = useNavigate();
+  const { isLoading, loadingMessage, setLoading } = useLoading();
+  const { runLibrarySetup } = useRunSimulation();
+  const [setup, setSetup] = useState<DefaultRunSetup | null>(null);
+  const [setupError, setSetupError] = useState<string | null>(null);
+  const [expanded, setExpanded] = useState<Record<TuningGroup, boolean>>(expandedState);
+  const [active, setActive] = useState<string | null>(null);
+  const [selectedVehicleAssemblyId, setSelectedVehicleAssemblyId] = useState<string | null>(null);
+  const [selectedTuneId, setSelectedTuneId] = useState<string | null>(null);
+  const [selectedLoadCaseId, setSelectedLoadCaseId] = useState<string | null>(null);
+  const [selectedExecutionPresetId, setSelectedExecutionPresetId] = useState<string | null>(null);
+  const [tuneValues, setTuneValues] = useState<Record<string, unknown>>({});
+  const [savedTuneValues, setSavedTuneValues] = useState<Record<string, unknown>>({});
+
+  const refreshSetup = useCallback(async () => {
+    setLoading(true, 'Loading seeded Baja run setup...');
+    setSetupError(null);
+    try {
+      const next = await getDefaultRunSetup();
+      setSetup(next);
+      setSelectedVehicleAssemblyId(next.selectedVehicleAssembly.id);
+      setSelectedTuneId(next.selectedTune?.id ?? null);
+      setSelectedLoadCaseId(next.selectedLoadCase?.id ?? null);
+      setSelectedExecutionPresetId(next.selectedExecutionPreset?.id ?? null);
+      setTuneValues(next.selectedTune?.values ?? {});
+      setSavedTuneValues(next.selectedTune?.values ?? {});
+    } catch (error) {
+      setSetupError(error instanceof Error ? error.message : String(error));
+    } finally {
+      setLoading(false);
+    }
+  }, [setLoading]);
+
+  useEffect(() => { void refreshSetup(); }, [refreshSetup]);
+
+  const selectedVehicleAssembly = useMemo(() => selectValue(setup?.vehicleAssemblies ?? [], selectedVehicleAssemblyId), [selectedVehicleAssemblyId, setup]);
+  const selectedTune = useMemo<TuneSummary | null>(() => selectValue(setup?.tunes ?? [], selectedTuneId), [selectedTuneId, setup]);
+  const selectedLoadCase = useMemo<LoadCaseSummary | null>(() => selectValue(setup?.loadCases ?? [], selectedLoadCaseId), [selectedLoadCaseId, setup]);
+  const selectedExecutionPreset = useMemo<ExecutionPresetSummary | null>(() => selectValue(setup?.executionPresets ?? [], selectedExecutionPresetId), [selectedExecutionPresetId, setup]);
+  const fields = useMemo(() => resolveTuneSurface(setup?.tuningParameters ?? []), [setup]);
+  const activeField = fields.find((field) => field.key === active) ?? null;
+  const hasUnsavedTuneChanges = selectedTune !== null && !tuneValuesEqual(tuneValues, savedTuneValues);
+
+  const chooseVehicleAssembly = useCallback(async (nextId: string) => {
+    if (setup === null || nextId === selectedVehicleAssemblyId) return;
+    if (hasUnsavedTuneChanges && !window.confirm('Switching vehicle baselines will reload the tune list. Discard unsaved visible tune changes?')) {
+      return;
+    }
+
+    setLoading(true, 'Loading selected Baja baseline...');
+    setSetupError(null);
+    try {
+      const next = await buildRunSetupForVehicle(
+        setup.vehicleAssemblies,
+        nextId,
+        setup.accountId,
+        setup.createdByUserId,
+      );
+      setSetup(next);
+      setSelectedVehicleAssemblyId(next.selectedVehicleAssembly.id);
+      setSelectedTuneId(next.selectedTune?.id ?? null);
+      setSelectedLoadCaseId(next.selectedLoadCase?.id ?? selectedLoadCaseId);
+      setSelectedExecutionPresetId(next.selectedExecutionPreset?.id ?? selectedExecutionPresetId);
+      setTuneValues(next.selectedTune?.values ?? {});
+      setSavedTuneValues(next.selectedTune?.values ?? {});
+    } catch (error) {
+      setSetupError(error instanceof Error ? error.message : String(error));
+    } finally {
+      setLoading(false);
+    }
+  }, [hasUnsavedTuneChanges, selectedExecutionPresetId, selectedLoadCaseId, selectedVehicleAssemblyId, setLoading, setup]);
+
+  const chooseTune = useCallback((nextId: string) => {
+    const nextTune = setup?.tunes.find((tune) => tune.id === nextId) ?? null;
+    setSelectedTuneId(nextTune?.id ?? null);
+    setTuneValues(nextTune?.values ?? {});
+    setSavedTuneValues(nextTune?.values ?? {});
+  }, [setup?.tunes]);
+
+  const updateField = useCallback((field: ResolvedTuningField, next: unknown) => {
+    setTuneValues((current) => setTuneFieldValue(current, field, next));
+  }, []);
+
+  const saveTune = useCallback(async (): Promise<TuneSummary | null> => {
+    if (selectedTune === null) return null;
+    setLoading(true, 'Saving tune values...');
+    try {
+      const saved = await updateTuneValues(selectedTune.id, tuneValues);
+      setSavedTuneValues(saved.values);
+      setSetup((current) => current === null ? current : {
+        ...current,
+        tunes: current.tunes.map((tune) => tune.id === saved.id ? saved : tune),
+        selectedTune: current.selectedTune?.id === saved.id ? saved : current.selectedTune,
+      });
+      return saved;
+    } finally {
+      setLoading(false);
+    }
+  }, [selectedTune, setLoading, tuneValues]);
+
+  const resetTune = useCallback(() => {
+    if (!window.confirm('Reset the visible tune fields to the last saved tune values?')) return;
+    setTuneValues(savedTuneValues);
+  }, [savedTuneValues]);
+
+  const run = useCallback(async () => {
+    if (setup === null) return;
+    if (selectedTune !== null && hasUnsavedTuneChanges) await saveTune();
+    const selection = buildLibraryRunSelection(setup, {
+      vehicleAssemblyId: selectedVehicleAssemblyId ?? undefined,
+      tuneId: selectedTuneId,
+      loadCaseId: selectedLoadCaseId,
+      executionPresetId: selectedExecutionPresetId,
+    });
+    await runLibrarySetup(selection);
+  }, [hasUnsavedTuneChanges, runLibrarySetup, saveTune, selectedExecutionPresetId, selectedLoadCaseId, selectedTune, selectedTuneId, selectedVehicleAssemblyId, setup]);
+
+  if (setup === null) {
+    return (
+      <div className={styles.input}>
+        <LoadingOverlay isVisible={isLoading} message={loadingMessage} />
+        <div className={styles.parameterInformationContainer}>
+          <ParameterDescription name="Loading Baja baseline" description={setupError ?? 'Loading the seeded database-backed run setup…'} />
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className={styles.input}>
+      <LoadingOverlay isVisible={isLoading} message={loadingMessage} />
+      <div className={styles.topBar}>
+        <div className={styles.navButtons}>
+          <Button text="Home" icon={Home} onClick={() => navigate('/')} />
+          <Button text="Library" icon={ArrowLeft} onClick={() => navigate('/dashboard')} />
+        </div>
+        <div className={styles.sessionInfo} title={selectedVehicleAssembly?.description ?? setup.selectedVehicleAssembly.description ?? ''}>
+          <span className={styles.selectedSetName}>Baja Run Setup</span>
+          <span className={styles.changesBadge}>
+            <span className={styles.changeIndicator} />
+            <span>{hasUnsavedTuneChanges ? 'Unsaved tune changes' : 'Seeded Baja baseline'}</span>
+          </span>
+        </div>
+        <div className={styles.topBarSpacer} />
+      </div>
+
+      <div className={styles.inputGrid}>
+        <div className={styles.parameterInputContainer}>
+          <section className={styles.setupCard}>
+            <h2>Baseline and simulation load</h2>
+            <label className={styles.selectField}>
+              <span>Vehicle baseline</span>
+              <select value={selectedVehicleAssemblyId ?? ''} onChange={(event) => void chooseVehicleAssembly(event.target.value)} disabled={setup.vehicleAssemblies.length === 0}>
+                {setup.vehicleAssemblies.map((assembly) => <option key={assembly.id} value={assembly.id}>{assembly.name}{assembly.isDefault ? ' · Default' : ''}</option>)}
+              </select>
+            </label>
+            <label className={styles.selectField}>
+              <span>Tune being edited</span>
+              <select value={selectedTuneId ?? ''} onChange={(event) => chooseTune(event.target.value)} disabled={setup.tunes.length === 0}>
+                {setup.tunes.map((tune) => <option key={tune.id} value={tune.id}>{tune.name}</option>)}
+              </select>
+            </label>
+            <label className={styles.selectField}>
+              <span>Load case</span>
+              <select value={selectedLoadCaseId ?? ''} onChange={(event) => setSelectedLoadCaseId(event.target.value || null)} disabled={setup.loadCases.length === 0}>
+                {setup.loadCases.map((loadCase) => <option key={loadCase.id} value={loadCase.id}>{loadCase.name}</option>)}
+              </select>
+            </label>
+            <label className={styles.selectField}>
+              <span>Execution preset</span>
+              <select value={selectedExecutionPresetId ?? ''} onChange={(event) => setSelectedExecutionPresetId(event.target.value || null)} disabled={setup.executionPresets.length === 0}>
+                {setup.executionPresets.map((preset) => <option key={preset.id} value={preset.id}>{preset.name}</option>)}
+              </select>
+            </label>
+            <p className={styles.helperText}>Engine and CVT hardware stay shared by the seeded Baja baselines. The vehicle dropdown changes the pinned output-system mass; the boxes below update the selected CVT tune only.</p>
+          </section>
+
+          {GROUPS.map((group) => (
+            <ParameterAccordion key={group} title={GROUP_TITLES[group]} isExpanded={expanded[group]} onToggle={() => setExpanded((current) => ({ ...current, [group]: !current[group] }))}>
+              {fields.filter((field) => field.group === group).map((field) => {
+                const value = valueForTuneField(field, tuneValues);
+                const original = valueForTuneField(field, savedTuneValues);
+                const changed = JSON.stringify(value) !== JSON.stringify(original);
+                if (field.kind === 'ramp') {
+                  return (
+                    <div key={field.key} onFocus={() => setActive(field.key)}>
+                      <RampBuilder value={rampToEditor(value)} hasChanged={changed} onChange={(next) => updateField(field, editorToRamp(next))} />
+                    </div>
+                  );
+                }
+                const numeric = numberValue(value);
+                return numeric === null ? null : (
+                  <DocumentQuantityInput
+                    key={field.key}
+                    label={field.label}
+                    valueSi={numeric}
+                    dimension={field.dimension}
+                    canonicalUnit={field.canonicalUnit}
+                    minimum={field.minimum}
+                    hasChanged={changed}
+                    onFocus={() => setActive(field.key)}
+                    onChangeSi={(next) => updateField(field, next)}
+                  />
+                );
+              })}
+            </ParameterAccordion>
+          ))}
+        </div>
+
+        <div className={styles.parameterInformationContainer}>
+          <ParameterDescription
+            name={setupError ?? activeField?.label ?? 'No tune parameter selected'}
+            description={setupError ?? activeField?.description ?? 'Click a tune input to see what DB tune key it edits. Vehicle baseline, load case, and execution are selected above; engine/CVT hardware stay pinned by the seeded baseline.'}
+            img={activeField?.image}
+          />
+          {activeField?.kind === 'ramp' && <RampPreview config={rampToEditor(valueForTuneField(activeField, tuneValues))} />}
+          <section className={styles.summaryCard}>
+            <h2>Current DB selection</h2>
+            <dl>
+              <dt>Vehicle</dt><dd>{selectedVehicleAssembly?.name ?? setup.selectedVehicleAssembly.name}</dd>
+              <dt>Tune</dt><dd>{selectedTune?.name ?? 'None'}</dd>
+              <dt>Load case</dt><dd>{selectedLoadCase?.name ?? 'None'}</dd>
+              <dt>Execution</dt><dd>{selectedExecutionPreset?.name ?? 'None'}</dd>
+            </dl>
+          </section>
+        </div>
+
+        <div className={styles.inputButtonsContainer}>
+          <Button text="Expand All" icon={ArrowDownCircle} onClick={() => setExpanded(expandedState)} />
+          <Button text="Collapse All" icon={ArrowUpCircle} iconSide="right" onClick={() => setExpanded(collapsedState)} />
+        </div>
+        <div className={styles.nextButtonContainer}>
+          <Button text="Reset Tune" icon={ArrowLeft} disabled={!hasUnsavedTuneChanges} onClick={resetTune} />
+          <Button text="Save Tune" icon={Edit} disabled={selectedTune === null || !hasUnsavedTuneChanges} onClick={() => void saveTune()} />
+          <Button text="Run" icon={PlayOutline} disabled={setupError !== null || selectedTune === null} onClick={() => void run()} />
+        </div>
+      </div>
+    </div>
+  );
 };

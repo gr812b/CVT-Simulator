@@ -67,9 +67,25 @@ This creates `./cvt_simulator_dev.db` and inserts deterministic seed data:
 - one demo account/user;
 - one official/default seeded engine boundary;
 - one default seeded CVT hardware design;
-- one default seeded output system with gearbox/final-drive data owned outside the CVT;
-- one default vehicle assembly pinning the released versions;
-- one tune, one flat-launch load case, and one execution preset.
+- two seeded output systems with gearbox/final-drive data owned outside the CVT: 500 lb default and 400 lb lightweight variants;
+- two seeded vehicle assemblies pinning the same released engine/CVT versions while varying only output-system mass;
+- seeded baseline tunes for those assemblies;
+- three load cases: flat launch, 20° hill launch, and a V1 ~10 s flat-to-30° route-intent seed;
+- one execution preset.
+
+The current public CINDER document supports only `constant_grade` road profiles. The
+"~10 s flat into 30° hill" seed records the intended route shape in metadata and
+executes with the 30° grade until a distance-varying road-profile contract is added. Its
+metadata also records the intended roughly 10 s flat lead-in for the future route-profile contract.
+
+The frontend's local `.env.example` points at these explicit demo IDs:
+
+```text
+VITE_DEMO_USER_ID=00000000-0000-4000-8000-000000000001
+VITE_DEMO_ACCOUNT_ID=00000000-0000-4000-8000-000000000002
+```
+
+These IDs are seed/test data only. Real auth should replace that boundary later.
 
 Use a custom SQLite path if desired:
 

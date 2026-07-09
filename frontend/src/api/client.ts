@@ -173,6 +173,111 @@ export interface GeometryStudyResult {
 
 export type GeometryEndpointRadiiRequest = components['schemas']['EndpointRadiiGeometryStudyRequest'];
 
+export type LibraryResource = 'engines' | 'cvt-designs' | 'output-systems' | 'vehicle-assemblies';
+
+export interface LibraryObjectSummary {
+  id: string;
+  resource: LibraryResource;
+  name: string;
+  description: string | null;
+  lifecycleStatus: string;
+  catalogStatus: string;
+  catalogPriority: number;
+  isDefault: boolean;
+  sourceLabel: string | null;
+  releasedVersionId: string | null;
+}
+
+export interface TuneSummary {
+  id: string;
+  name: string;
+  notes: string | null;
+  values: Record<string, unknown>;
+  vehicleAssemblyId: string;
+  cvtDesignId: string;
+}
+
+export interface LoadCaseSummary {
+  id: string;
+  name: string;
+  kind: string;
+  visibility: string;
+}
+
+export interface ExecutionPresetSummary {
+  id: string;
+  name: string;
+  kind: string;
+  isSystemDefault: boolean;
+}
+
+export type TuneParameterGroup = 'primary' | 'ramp' | 'secondary' | 'helix';
+export type TuneParameterKind = 'number' | 'ramp';
+
+export interface TuneParameter {
+  key: string;
+  label: string;
+  description: string;
+  group: TuneParameterGroup;
+  kind: TuneParameterKind;
+  canonicalUnit: string;
+  dimension?: string;
+  minimum?: number;
+  maximum?: number;
+  defaultValue?: unknown;
+}
+
+export interface CvtDesignVersionSummary {
+  id: string;
+  objectId: string;
+  payload: Record<string, unknown>;
+  tuningSchema: { parameters: TuneParameter[] };
+}
+
+export interface VehicleAssemblyVersionSummary {
+  id: string;
+  objectId: string;
+  assemblyPayload: {
+    engineVersionId: string;
+    cvtDesignVersionId: string;
+    outputSystemVersionId: string;
+  };
+}
+
+export interface LibraryRunSelection {
+  accountId: string;
+  createdByUserId: string | null;
+  vehicleAssemblyVersionId: string;
+  tuneId: string | null;
+  loadCaseId: string | null;
+  executionPresetId: string | null;
+}
+
+export interface DefaultRunSetup {
+  accountId: string;
+  createdByUserId: string | null;
+  vehicleAssemblies: LibraryObjectSummary[];
+  selectedVehicleAssembly: LibraryObjectSummary;
+  tunes: TuneSummary[];
+  selectedTune: TuneSummary | null;
+  loadCases: LoadCaseSummary[];
+  selectedLoadCase: LoadCaseSummary | null;
+  executionPresets: ExecutionPresetSummary[];
+  selectedExecutionPreset: ExecutionPresetSummary | null;
+  vehicleAssemblyVersion: VehicleAssemblyVersionSummary;
+  cvtDesignVersion: CvtDesignVersionSummary;
+  tuningParameters: TuneParameter[];
+  selection: LibraryRunSelection;
+}
+
+export interface RunPreview {
+  profileName: string;
+  profileVersion: number;
+  originalRowCount: number;
+  rowCount: number;
+  columns: Record<string, Array<number | null>>;
+}
+
 type JsonObject = Record<string, unknown>;
 
 export class ApiClientError extends Error {
@@ -195,6 +300,14 @@ export class SimulationRunError extends ApiClientError {
 
 const baseUrl = (import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8000').replace(/\/+$/, '');
 const client = createClient<paths>({ baseUrl });
+
+/**
+ * Local-development/demo IDs seeded by the backend database initializer.
+ * These are explicitly test/demo defaults; real auth should replace only this
+ * configuration boundary instead of leaking account/user IDs across the UI.
+ */
+export const DEMO_ACCOUNT_ID = import.meta.env.VITE_DEMO_ACCOUNT_ID ?? '00000000-0000-4000-8000-000000000002';
+export const DEMO_USER_ID = import.meta.env.VITE_DEMO_USER_ID ?? '00000000-0000-4000-8000-000000000001';
 
 function object(value: unknown, name: string): JsonObject {
   if (typeof value !== 'object' || value === null || Array.isArray(value)) {
@@ -251,6 +364,20 @@ function dataOrThrow<T>(response: { data?: T; error?: unknown; response: Respons
   return response.data;
 }
 
+async function apiJson<T>(path: string, init: RequestInit = {}): Promise<T> {
+  const headers = new Headers(init.headers);
+  if (init.body !== undefined && !headers.has('Content-Type')) {
+    headers.set('Content-Type', 'application/json');
+  }
+  const response = await fetch(`${baseUrl}${path}`, { ...init, headers });
+  const text = await response.text();
+  const payload = text.length > 0 ? JSON.parse(text) as unknown : null;
+  if (!response.ok) {
+    throw new ApiClientError(failMessage(payload), response.status, payload);
+  }
+  return payload as T;
+}
+
 function wireDocument(document: SimulationCaseDocument): JsonObject {
   return document as unknown as JsonObject;
 }
@@ -278,6 +405,146 @@ function parseRunStatus(raw: unknown): RunStatus {
     startedAt: value.started_at === null ? null : string(value.started_at, 'run status.started_at'),
     completedAt: value.completed_at === null ? null : string(value.completed_at, 'run status.completed_at'),
     error: parseProblem(value.error),
+  };
+}
+
+
+function parseLibraryObject(raw: unknown): LibraryObjectSummary {
+  const item = object(raw, 'library object');
+  const resource = string(item.resource, 'library object.resource') as LibraryResource;
+  if (!['engines', 'cvt-designs', 'output-systems', 'vehicle-assemblies'].includes(resource)) {
+    throw new ApiClientError(`Unexpected library resource '${resource}'.`);
+  }
+  return {
+    id: string(item.id, 'library object.id'),
+    resource,
+    name: string(item.name, 'library object.name'),
+    description: item.description === null ? null : string(item.description, 'library object.description'),
+    lifecycleStatus: string(item.lifecycle_status, 'library object.lifecycle_status'),
+    catalogStatus: string(item.catalog_status, 'library object.catalog_status'),
+    catalogPriority: number(item.catalog_priority, 'library object.catalog_priority'),
+    isDefault: boolean(item.is_default, 'library object.is_default'),
+    sourceLabel: item.source_label === null ? null : string(item.source_label, 'library object.source_label'),
+    releasedVersionId: item.released_version_id === null ? null : string(item.released_version_id, 'library object.released_version_id'),
+  };
+}
+
+function parseTune(raw: unknown): TuneSummary {
+  const item = object(raw, 'tune');
+  return {
+    id: string(item.id, 'tune.id'),
+    name: string(item.name, 'tune.name'),
+    notes: item.notes === null ? null : string(item.notes, 'tune.notes'),
+    values: object(item.values, 'tune.values'),
+    vehicleAssemblyId: string(item.vehicle_assembly_id, 'tune.vehicle_assembly_id'),
+    cvtDesignId: string(item.cvt_design_id, 'tune.cvt_design_id'),
+  };
+}
+
+function parseLoadCase(raw: unknown): LoadCaseSummary {
+  const item = object(raw, 'load case');
+  return {
+    id: string(item.id, 'load case.id'),
+    name: string(item.name, 'load case.name'),
+    kind: string(item.kind, 'load case.kind'),
+    visibility: string(item.visibility, 'load case.visibility'),
+  };
+}
+
+function parseExecutionPreset(raw: unknown): ExecutionPresetSummary {
+  const item = object(raw, 'execution preset');
+  return {
+    id: string(item.id, 'execution preset.id'),
+    name: string(item.name, 'execution preset.name'),
+    kind: string(item.kind, 'execution preset.kind'),
+    isSystemDefault: boolean(item.is_system_default, 'execution preset.is_system_default'),
+  };
+}
+
+function parseTuneParameter(raw: unknown): TuneParameter {
+  const item = object(raw, 'tuning parameter');
+  const group = string(item.group ?? 'primary', 'tuning parameter.group') as TuneParameterGroup;
+  const kind = string(item.kind ?? 'number', 'tuning parameter.kind') as TuneParameterKind;
+  if (!['primary', 'ramp', 'secondary', 'helix'].includes(group)) {
+    throw new ApiClientError(`Unexpected tuning parameter group '${group}'.`);
+  }
+  if (!['number', 'ramp'].includes(kind)) {
+    throw new ApiClientError(`Unexpected tuning parameter kind '${kind}'.`);
+  }
+  return {
+    key: string(item.key, 'tuning parameter.key'),
+    label: string(item.label, 'tuning parameter.label'),
+    description: typeof item.description === 'string' ? item.description : '',
+    group,
+    kind,
+    canonicalUnit: typeof item.unit === 'string' ? item.unit : '1',
+    dimension: typeof item.dimension === 'string' ? item.dimension : undefined,
+    minimum: optionalNumber(item.min, 'tuning parameter.min'),
+    maximum: optionalNumber(item.max, 'tuning parameter.max'),
+    defaultValue: item.default,
+  };
+}
+
+function parseVehicleAssemblyVersion(raw: unknown): VehicleAssemblyVersionSummary {
+  const item = object(raw, 'vehicle assembly version');
+  const payload = object(item.assembly_payload ?? item.payload ?? {}, 'vehicle assembly version.assembly_payload');
+
+  // Vehicle-assembly versions pin engine/CVT/output versions as first-class
+  // columns. Older/forked payloads may also echo those IDs inside the payload,
+  // so accept both shapes but prefer the canonical top-level API fields.
+  const engineVersionId = item.engine_version_id ?? payload.engine_version_id;
+  const cvtDesignVersionId = item.cvt_design_version_id ?? payload.cvt_design_version_id;
+  const outputSystemVersionId = item.output_system_version_id ?? payload.output_system_version_id;
+
+  return {
+    id: string(item.id, 'vehicle assembly version.id'),
+    objectId: string(item.object_id, 'vehicle assembly version.object_id'),
+    assemblyPayload: {
+      engineVersionId: string(engineVersionId, 'vehicle assembly version.engine_version_id'),
+      cvtDesignVersionId: string(cvtDesignVersionId, 'vehicle assembly version.cvt_design_version_id'),
+      outputSystemVersionId: string(outputSystemVersionId, 'vehicle assembly version.output_system_version_id'),
+    },
+  };
+}
+
+function parseCvtDesignVersion(raw: unknown): CvtDesignVersionSummary {
+  const item = object(raw, 'CVT design version');
+  const tuningSchema = object(item.tuning_schema ?? {}, 'CVT design version.tuning_schema');
+  return {
+    id: string(item.id, 'CVT design version.id'),
+    objectId: string(item.object_id, 'CVT design version.object_id'),
+    payload: object(item.cinder_assembly ?? item.payload, 'CVT design version.cinder_assembly'),
+    tuningSchema: {
+      parameters: array(tuningSchema.parameters ?? [], 'CVT tuning_schema.parameters').map(parseTuneParameter),
+    },
+  };
+}
+
+function pickPreferred<T extends { isDefault?: boolean; isSystemDefault?: boolean; name: string }>(items: T[]): T | null {
+  return items.find((item) => item.isDefault === true || item.isSystemDefault === true)
+    ?? items.find((item) => /flat launch|baseline|default/i.test(item.name))
+    ?? items[0]
+    ?? null;
+}
+
+function buildDefaultSelection(args: {
+  accountId: string;
+  createdByUserId: string | null;
+  vehicleAssembly: LibraryObjectSummary;
+  tune: TuneSummary | null;
+  loadCase: LoadCaseSummary | null;
+  executionPreset: ExecutionPresetSummary | null;
+}): LibraryRunSelection {
+  if (args.vehicleAssembly.releasedVersionId === null) {
+    throw new ApiClientError(`Vehicle assembly '${args.vehicleAssembly.name}' has no released version.`);
+  }
+  return {
+    accountId: args.accountId,
+    createdByUserId: args.createdByUserId,
+    vehicleAssemblyVersionId: args.vehicleAssembly.releasedVersionId,
+    tuneId: args.tune?.id ?? null,
+    loadCaseId: args.loadCase?.id ?? null,
+    executionPresetId: args.executionPreset?.id ?? null,
   };
 }
 
@@ -463,6 +730,186 @@ function parseSimulationResult(raw: unknown): SimulationResult {
         postTransitionState: object(transition.post_transition_state, 'simulation transition.post_transition_state') as Record<string, number>,
       };
     }),
+  };
+}
+
+
+export async function listVehicleAssemblies(options: { publicOnly?: boolean } = {}): Promise<LibraryObjectSummary[]> {
+  const params = new URLSearchParams();
+  if (options.publicOnly ?? true) params.set('public_only', 'true');
+  const data = await apiJson<{ items: unknown[] }>(`/api/v1/library/vehicle-assemblies?${params.toString()}`);
+  return array(data.items, 'vehicle assemblies').map(parseLibraryObject)
+    .filter((item) => item.releasedVersionId !== null);
+}
+
+export async function listTunes(options: { accountId?: string; vehicleAssemblyId?: string } = {}): Promise<TuneSummary[]> {
+  const params = new URLSearchParams();
+  if (options.accountId) params.set('account_id', options.accountId);
+  if (options.vehicleAssemblyId) params.set('vehicle_assembly_id', options.vehicleAssemblyId);
+  const query = params.toString();
+  const data = await apiJson<{ items: unknown[] }>(`/api/v1/library/tunes${query ? `?${query}` : ''}`);
+  return array(data.items, 'tunes').map(parseTune);
+}
+
+export async function listLoadCases(options: { accountId?: string } = {}): Promise<LoadCaseSummary[]> {
+  const params = new URLSearchParams();
+  if (options.accountId) params.set('account_id', options.accountId);
+  const query = params.toString();
+  const data = await apiJson<{ items: unknown[] }>(`/api/v1/library/load-cases${query ? `?${query}` : ''}`);
+  return array(data.items, 'load cases').map(parseLoadCase);
+}
+
+export async function listExecutionPresets(options: { accountId?: string; includeSystem?: boolean } = {}): Promise<ExecutionPresetSummary[]> {
+  const params = new URLSearchParams();
+  if (options.accountId) params.set('account_id', options.accountId);
+  if (options.includeSystem !== undefined) params.set('include_system', String(options.includeSystem));
+  const query = params.toString();
+  const data = await apiJson<{ items: unknown[] }>(`/api/v1/library/execution-presets${query ? `?${query}` : ''}`);
+  return array(data.items, 'execution presets').map(parseExecutionPreset);
+}
+
+export async function getVehicleAssemblyVersion(versionId: string): Promise<VehicleAssemblyVersionSummary> {
+  const data = await apiJson<unknown>(`/api/v1/library/vehicle-assemblies/versions/${encodeURIComponent(versionId)}`);
+  return parseVehicleAssemblyVersion(data);
+}
+
+export async function getCvtDesignVersion(versionId: string): Promise<CvtDesignVersionSummary> {
+  const data = await apiJson<unknown>(`/api/v1/library/cvt-designs/versions/${encodeURIComponent(versionId)}`);
+  return parseCvtDesignVersion(data);
+}
+
+export async function updateTuneValues(tuneId: string, values: Record<string, unknown>): Promise<TuneSummary> {
+  const data = await apiJson<unknown>(`/api/v1/library/tunes/${encodeURIComponent(tuneId)}`, {
+    method: 'PATCH',
+    body: JSON.stringify({ values }),
+  });
+  return parseTune(data);
+}
+
+export async function getDefaultRunSetup(): Promise<DefaultRunSetup> {
+  const accountId = DEMO_ACCOUNT_ID;
+  const createdByUserId = DEMO_USER_ID;
+  const vehicleAssemblies = await listVehicleAssemblies({ publicOnly: true });
+  const selectedVehicleAssembly = pickPreferred(vehicleAssemblies);
+  if (selectedVehicleAssembly === null) {
+    throw new ApiClientError('No released public vehicle assembly is available. Seed the database first.');
+  }
+  return buildRunSetupForVehicle(vehicleAssemblies, selectedVehicleAssembly.id, accountId, createdByUserId);
+}
+
+export async function buildRunSetupForVehicle(
+  vehicleAssemblies: LibraryObjectSummary[],
+  vehicleAssemblyId: string,
+  accountId = DEMO_ACCOUNT_ID,
+  createdByUserId: string | null = DEMO_USER_ID,
+): Promise<DefaultRunSetup> {
+  const selectedVehicleAssembly = vehicleAssemblies.find((assembly) => assembly.id === vehicleAssemblyId) ?? null;
+  if (selectedVehicleAssembly === null) {
+    throw new ApiClientError('Selected vehicle assembly is not available.');
+  }
+  if (selectedVehicleAssembly.releasedVersionId === null) {
+    throw new ApiClientError(`Vehicle assembly '${selectedVehicleAssembly.name}' has no released version.`);
+  }
+
+  const vehicleAssemblyVersion = await getVehicleAssemblyVersion(selectedVehicleAssembly.releasedVersionId);
+  const cvtDesignVersion = await getCvtDesignVersion(vehicleAssemblyVersion.assemblyPayload.cvtDesignVersionId);
+
+  const [assemblyTunes, allTunes, loadCases, executionPresets] = await Promise.all([
+    listTunes({ accountId, vehicleAssemblyId: selectedVehicleAssembly.id }),
+    listTunes({ accountId }),
+    listLoadCases({ accountId }),
+    listExecutionPresets({ accountId, includeSystem: true }),
+  ]);
+
+  const tunes = assemblyTunes.length > 0 ? assemblyTunes : allTunes;
+  const selectedTune = pickPreferred(tunes);
+  const selectedLoadCase = pickPreferred(loadCases);
+  const selectedExecutionPreset = pickPreferred(executionPresets);
+
+  return {
+    accountId,
+    createdByUserId,
+    vehicleAssemblies,
+    selectedVehicleAssembly,
+    tunes,
+    selectedTune,
+    loadCases,
+    selectedLoadCase,
+    executionPresets,
+    selectedExecutionPreset,
+    vehicleAssemblyVersion,
+    cvtDesignVersion,
+    tuningParameters: cvtDesignVersion.tuningSchema.parameters,
+    selection: buildDefaultSelection({
+      accountId,
+      createdByUserId,
+      vehicleAssembly: selectedVehicleAssembly,
+      tune: selectedTune,
+      loadCase: selectedLoadCase,
+      executionPreset: selectedExecutionPreset,
+    }),
+  };
+}
+
+export function buildLibraryRunSelection(
+  setup: DefaultRunSetup,
+  overrides: {
+    vehicleAssemblyId?: string;
+    tuneId?: string | null;
+    loadCaseId?: string | null;
+    executionPresetId?: string | null;
+  } = {},
+): LibraryRunSelection {
+  const vehicleAssembly = setup.vehicleAssemblies.find((item) => item.id === (overrides.vehicleAssemblyId ?? setup.selectedVehicleAssembly.id));
+  if (vehicleAssembly === undefined) throw new ApiClientError('Selected vehicle assembly is not available.');
+  const tune = overrides.tuneId === null ? null : setup.tunes.find((item) => item.id === (overrides.tuneId ?? setup.selectedTune?.id));
+  const loadCase = overrides.loadCaseId === null ? null : setup.loadCases.find((item) => item.id === (overrides.loadCaseId ?? setup.selectedLoadCase?.id));
+  const executionPreset = overrides.executionPresetId === null ? null : setup.executionPresets.find((item) => item.id === (overrides.executionPresetId ?? setup.selectedExecutionPreset?.id));
+  return buildDefaultSelection({
+    accountId: setup.accountId,
+    createdByUserId: setup.createdByUserId,
+    vehicleAssembly,
+    tune: tune ?? null,
+    loadCase: loadCase ?? null,
+    executionPreset: executionPreset ?? null,
+  });
+}
+
+export async function submitLibraryRun(selection: LibraryRunSelection): Promise<RunStatus> {
+  const data = await apiJson<unknown>('/api/v1/runs/from-library', {
+    method: 'POST',
+    body: JSON.stringify({
+      account_id: selection.accountId,
+      created_by_user_id: selection.createdByUserId,
+      vehicle_assembly_version_id: selection.vehicleAssemblyVersionId,
+      tune_id: selection.tuneId,
+      load_case_id: selection.loadCaseId,
+      execution_preset_id: selection.executionPresetId,
+      include_raw_trace: false,
+      include_reported_segments: false,
+    }),
+  });
+  return parseRunStatus(data);
+}
+
+export async function rerunSimulationRun(runId: string): Promise<RunStatus> {
+  const data = await apiJson<unknown>(`/api/v1/runs/${encodeURIComponent(runId)}/rerun`, {
+    method: 'POST',
+    body: JSON.stringify({ created_by_user_id: DEMO_USER_ID }),
+  });
+  return parseRunStatus(data);
+}
+
+export async function getRunPreview(runId: string): Promise<RunPreview> {
+  const data = await apiJson<unknown>(`/api/v1/runs/${encodeURIComponent(runId)}/preview`);
+  const envelope = object(data, 'run preview response');
+  const preview = object(envelope.preview, 'run preview');
+  return {
+    profileName: string(preview.profile_name, 'preview.profile_name'),
+    profileVersion: number(preview.profile_version, 'preview.profile_version'),
+    originalRowCount: number(preview.original_row_count, 'preview.original_row_count'),
+    rowCount: number(preview.row_count, 'preview.row_count'),
+    columns: object(preview.columns, 'preview.columns') as Record<string, Array<number | null>>,
   };
 }
 
