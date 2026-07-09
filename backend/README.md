@@ -70,13 +70,12 @@ This creates `./cvt_simulator_dev.db` and inserts deterministic seed data:
 - two seeded output systems with gearbox/final-drive data owned outside the CVT: 500 lb default and 400 lb lightweight variants;
 - two seeded vehicle assemblies pinning the same released engine/CVT versions while varying only output-system mass;
 - seeded baseline tunes for those assemblies;
-- three load cases: flat launch, 20° hill launch, and a V1 ~10 s flat-to-30° route-intent seed;
+- three load cases: flat launch, 20° hill launch, and a 90 m flat-then-30° hill route;
 - one execution preset.
 
-The current public CINDER document supports only `constant_grade` road profiles. The
-"~10 s flat into 30° hill" seed records the intended route shape in metadata and
-executes with the 30° grade until a distance-varying road-profile contract is added. Its
-metadata also records the intended roughly 10 s flat lead-in for the future route-profile contract.
+The current public CINDER document supports both constant-grade and distance-indexed
+`piecewise_constant_grade` road profiles. The "90 m flat into 30° hill" seed executes
+as a true staged route: level ground until 90 m vehicle distance, then a 30° grade.
 
 The frontend's local `.env.example` points at these explicit demo IDs:
 

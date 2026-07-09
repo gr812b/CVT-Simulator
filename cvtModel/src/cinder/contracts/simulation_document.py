@@ -29,6 +29,8 @@ from cinder.model.boundaries.output import FixedOutputLoad, LockedFinalDriveVehi
 from cinder.model.boundaries.output.vehicle import (
     ConstantGradeRoadProfile,
     FixedFinalDrive,
+    PiecewiseConstantGradeRoadProfile,
+    PiecewiseConstantGradeSegment,
     RoadLoadModel,
     VehicleInertia,
     VehicleRoadLoadSpec,
@@ -97,7 +99,7 @@ def encode_simulation_case_document(
 
     Only concrete built-ins already supported by CINDER's public document
     contract are serialized: ``FullThrottleTorqueCurve``, ``FixedOutputLoad``,
-    and ``LockedFinalDriveVehicle`` with a constant-grade road profile.
+    and ``LockedFinalDriveVehicle`` with versioned road-profile documents.
     Custom callables remain Python extension points rather than being silently
     serialized as lossy pseudo-documents.
     """
@@ -279,10 +281,6 @@ def _encode_output_boundary(boundary: object) -> dict[str, Any]:
             "equivalent_rotational_inertia_kg_m2": boundary.equivalent_rotational_inertia,
         }
     if isinstance(boundary, LockedFinalDriveVehicle):
-        if not isinstance(boundary.road_profile, ConstantGradeRoadProfile):
-            raise UnsupportedSimulationDocumentError(
-                "Only ConstantGradeRoadProfile is serializable in version-one documents."
-            )
         spec = boundary.road_load.spec
         vehicle = boundary.vehicle
         final_drive = boundary.final_drive
@@ -304,15 +302,60 @@ def _encode_output_boundary(boundary: object) -> dict[str, Any]:
                 "gravity_m_per_s2": spec.gravity,
                 "rolling_speed_regularization_m_per_s": spec.rolling_speed_regularization,
             },
-            "road_profile": {
-                "kind": "constant_grade",
-                "grade_angle_rad": boundary.road_profile.grade_angle,
-            },
+            "road_profile": _encode_road_profile(boundary.road_profile),
             "direct_secondary_shaft_inertia_kg_m2": boundary.direct_secondary_shaft_inertia,
         }
     raise UnsupportedSimulationDocumentError(
         f"Cannot encode unsupported output boundary {type(boundary).__name__}."
     )
+
+
+def _encode_road_profile(profile: object) -> dict[str, Any]:
+    if isinstance(profile, ConstantGradeRoadProfile):
+        return {
+            "kind": "constant_grade",
+            "grade_angle_rad": profile.grade_angle,
+        }
+    if isinstance(profile, PiecewiseConstantGradeRoadProfile):
+        return {
+            "kind": "piecewise_constant_grade",
+            "segments": [
+                {
+                    "start_distance_m": segment.start_distance,
+                    "grade_angle_rad": segment.grade_angle,
+                }
+                for segment in profile.segments
+            ],
+        }
+    raise UnsupportedSimulationDocumentError(
+        f"Cannot encode unsupported road profile {type(profile).__name__}."
+    )
+
+
+def _decode_road_profile(payload: Mapping[str, Any]) -> ConstantGradeRoadProfile | PiecewiseConstantGradeRoadProfile:
+    profile_kind = _string(payload, "kind")
+    if profile_kind == "constant_grade":
+        return ConstantGradeRoadProfile(grade_angle=_number(payload, "grade_angle_rad"))
+    if profile_kind == "piecewise_constant_grade":
+        segments_payload = _sequence(_require(payload, "segments"), "road_profile.segments")
+        segments = tuple(
+            PiecewiseConstantGradeSegment(
+                start_distance=_number(
+                    _mapping(segment_payload, f"road_profile.segments[{index}]"),
+                    "start_distance_m",
+                ),
+                grade_angle=_number(
+                    _mapping(segment_payload, f"road_profile.segments[{index}]"),
+                    "grade_angle_rad",
+                ),
+            )
+            for index, segment_payload in enumerate(segments_payload)
+        )
+        return PiecewiseConstantGradeRoadProfile(segments=segments)
+    raise UnsupportedSimulationDocumentError(
+        f"Unsupported output_boundary.road_profile kind {profile_kind!r}."
+    )
+
 
 
 def _decode_output_boundary(
@@ -340,11 +383,7 @@ def _decode_output_boundary(
     road_profile_doc = _mapping(
         _require(payload, "road_profile"), "output_boundary.road_profile"
     )
-    profile_kind = _string(road_profile_doc, "kind")
-    if profile_kind != "constant_grade":
-        raise UnsupportedSimulationDocumentError(
-            f"Unsupported output_boundary.road_profile kind {profile_kind!r}."
-        )
+    road_profile = _decode_road_profile(road_profile_doc)
     road_load = RoadLoadModel(
         spec=VehicleRoadLoadSpec(
             rolling_resistance_coefficient=_number(
@@ -371,9 +410,7 @@ def _decode_output_boundary(
     )
     return LockedFinalDriveVehicle(
         road_load=road_load,
-        road_profile=ConstantGradeRoadProfile(
-            grade_angle=_number(road_profile_doc, "grade_angle_rad")
-        ),
+        road_profile=road_profile,
         direct_secondary_shaft_inertia=_number(
             payload, "direct_secondary_shaft_inertia_kg_m2"
         ),

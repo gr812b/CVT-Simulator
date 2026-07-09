@@ -64,6 +64,7 @@ SEED_HEAVY_VEHICLE_MASS_KG = 500.0 * POUND_TO_KG
 SEED_LIGHT_VEHICLE_MASS_KG = 400.0 * POUND_TO_KG
 SEED_HILL_20_DEG_RAD = radians(20.0)
 SEED_HILL_30_DEG_RAD = radians(30.0)
+SEED_FLAT_RUNUP_DISTANCE_M = 90.0
 
 INSTITUTION_SEEDS: tuple[dict[str, Any], ...] = (
     {
@@ -465,20 +466,19 @@ def seed_database(session: Session, *, preset_path: Path | None = None) -> None:
             LoadCase(
                 id=SEED_LOAD_CASE_FLAT_THEN_HILL_20_ID,
                 account_id=account.id,
-                name="~10 s flat into 30° hill",
+                name="90 m flat into 30° hill",
                 kind="route_launch",
                 visibility="public",
                 payload=_load_case_payload(
                     split["load_case"],
-                    grade_angle_rad=SEED_HILL_30_DEG_RAD,
+                    road_profile=_flat_then_hill_road_profile(),
                     metadata={
-                        "route_intent": "ten_second_flat_then_30deg_hill",
-                        "flat_segment_duration_s": 10.0,
+                        "route_intent": "distance_flat_then_30deg_hill",
+                        "flat_segment_distance_m": SEED_FLAT_RUNUP_DISTANCE_M,
                         "hill_grade_angle_rad": SEED_HILL_30_DEG_RAD,
-                        "v1_encoding_note": (
-                            "Current public CINDER documents support only constant_grade; "
-                            "this seed uses the 30 degree grade for execution and records "
-                            "the intended roughly 10 s flat lead-in for a future time- or distance-varying road-profile contract."
+                        "description": (
+                            "Executable route profile: flat launch until 90 m vehicle distance, "
+                            "then a 30 degree hill."
                         ),
                     },
                 ),
@@ -678,19 +678,18 @@ def _refresh_seed_run_setups(session: Session, split: JsonDict) -> None:
         session,
         load_case_id=SEED_LOAD_CASE_FLAT_THEN_HILL_20_ID,
         account_id=account.id,
-        name="~10 s flat into 30° hill",
+        name="90 m flat into 30° hill",
         kind="route_launch",
         payload=_load_case_payload(
             split["load_case"],
-            grade_angle_rad=SEED_HILL_30_DEG_RAD,
+            road_profile=_flat_then_hill_road_profile(),
             metadata={
-                "route_intent": "ten_second_flat_then_30deg_hill",
-                "flat_segment_duration_s": 10.0,
+                "route_intent": "distance_flat_then_30deg_hill",
+                "flat_segment_distance_m": SEED_FLAT_RUNUP_DISTANCE_M,
                 "hill_grade_angle_rad": SEED_HILL_30_DEG_RAD,
-                "v1_encoding_note": (
-                    "Current public CINDER documents support only constant_grade; "
-                    "this seed uses the 30 degree grade for execution and records "
-                    "the intended roughly 10 s flat lead-in for a future time- or distance-varying road-profile contract."
+                "description": (
+                    "Executable route profile: flat launch until 90 m vehicle distance, "
+                    "then a 30 degree hill."
                 ),
             },
         ),
@@ -902,17 +901,37 @@ def _with_vehicle_mass(output_boundary: JsonDict, mass_kg: float) -> JsonDict:
 def _load_case_payload(
     base_load_case: JsonDict,
     *,
-    grade_angle_rad: float,
+    grade_angle_rad: float | None = None,
+    road_profile: JsonDict | None = None,
     metadata: JsonDict | None = None,
 ) -> JsonDict:
     payload = copy.deepcopy(base_load_case)
-    payload.setdefault("output_boundary_overrides", {})["road_profile"] = {
-        "kind": "constant_grade",
-        "grade_angle_rad": grade_angle_rad,
-    }
+    if road_profile is None:
+        if grade_angle_rad is None:
+            raise ValueError("grade_angle_rad or road_profile must be supplied.")
+        road_profile = {
+            "kind": "constant_grade",
+            "grade_angle_rad": grade_angle_rad,
+        }
+    payload.setdefault("output_boundary_overrides", {})["road_profile"] = copy.deepcopy(
+        road_profile
+    )
     if metadata is not None:
         payload.setdefault("metadata", {}).update(copy.deepcopy(metadata))
     return payload
+
+
+def _flat_then_hill_road_profile() -> JsonDict:
+    return {
+        "kind": "piecewise_constant_grade",
+        "segments": [
+            {"start_distance_m": 0.0, "grade_angle_rad": 0.0},
+            {
+                "start_distance_m": SEED_FLAT_RUNUP_DISTANCE_M,
+                "grade_angle_rad": SEED_HILL_30_DEG_RAD,
+            },
+        ],
+    }
 
 
 def _seed_institutions(session: Session) -> None:

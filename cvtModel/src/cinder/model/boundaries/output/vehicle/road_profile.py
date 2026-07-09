@@ -61,6 +61,68 @@ class ConstantGradeRoadProfile:
 
 
 @dataclass(frozen=True, slots=True)
+class PiecewiseConstantGradeSegment:
+    """One constant-grade route segment starting at signed vehicle distance."""
+
+    start_distance: float
+    grade_angle: float
+
+    def __post_init__(self) -> None:
+        _require_finite("start_distance", self.start_distance)
+        _validate_grade_angle(self.grade_angle)
+
+
+@dataclass(frozen=True, slots=True)
+class PiecewiseConstantGradeRoadProfile:
+    """Distance-indexed route made from constant-grade segments.
+
+    Segments are evaluated by signed vehicle distance. The grade from the
+    greatest ``start_distance`` not exceeding the queried distance is used;
+    distances before the first segment use the first segment. This keeps a
+    launch route such as "flat for 90 m, then 30 degrees uphill" executable
+    without requiring a time-varying forcing function.
+    """
+
+    segments: tuple[PiecewiseConstantGradeSegment, ...]
+
+    def __post_init__(self) -> None:
+        if not self.segments:
+            raise ValueError("PiecewiseConstantGradeRoadProfile requires at least one segment.")
+
+        previous_start: float | None = None
+        for index, segment in enumerate(self.segments):
+            if not isinstance(segment, PiecewiseConstantGradeSegment):
+                raise TypeError(
+                    "segments must contain PiecewiseConstantGradeSegment instances."
+                )
+            if previous_start is not None and segment.start_distance <= previous_start:
+                raise ValueError(
+                    "segment start distances must be strictly increasing."
+                )
+            if index == 0 and segment.start_distance != 0.0:
+                raise ValueError("the first road-profile segment must start at 0.0 m.")
+            previous_start = segment.start_distance
+
+    def sample(
+        self,
+        *,
+        vehicle_distance: float,
+    ) -> RoadProfileSample:
+        _require_finite("vehicle_distance", vehicle_distance)
+
+        active = self.segments[0]
+        for segment in self.segments[1:]:
+            if vehicle_distance < segment.start_distance:
+                break
+            active = segment
+
+        return RoadProfileSample(
+            vehicle_distance=vehicle_distance,
+            grade_angle=active.grade_angle,
+        )
+
+
+@dataclass(frozen=True, slots=True)
 class CallableRoadProfile:
     """
     Adapt a user-supplied ``grade_angle(vehicle_distance)`` function.

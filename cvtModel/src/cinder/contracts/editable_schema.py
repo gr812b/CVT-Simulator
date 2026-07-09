@@ -130,7 +130,10 @@ def editable_simulation_case_schema() -> dict[str, Any]:
                 "fixed_output_load",
                 "locked_final_drive_vehicle",
             ],
-            "/output_boundary/road_profile/kind": ["constant_grade"],
+            "/output_boundary/road_profile/kind": [
+                "constant_grade",
+                "piecewise_constant_grade",
+            ],
             "/execution/reporting/grid/kind": [
                 "native",
                 "uniform_count",
@@ -399,7 +402,29 @@ def _fields() -> tuple[EditableFieldDescriptor, ...]:
             "/output_boundary/road_profile/grade_angle_rad",
             "grade_angle_rad",
             section=output_boundary,
-            when={"/output_boundary/kind": "locked_final_drive_vehicle"},
+            when={
+                "/output_boundary/kind": "locked_final_drive_vehicle",
+                "/output_boundary/road_profile/kind": "constant_grade",
+            },
+        ),
+        _quantity(
+            "/output_boundary/road_profile/segments/*/start_distance_m",
+            "start_distance_m",
+            section=output_boundary,
+            minimum=0.0,
+            when={
+                "/output_boundary/kind": "locked_final_drive_vehicle",
+                "/output_boundary/road_profile/kind": "piecewise_constant_grade",
+            },
+        ),
+        _quantity(
+            "/output_boundary/road_profile/segments/*/grade_angle_rad",
+            "grade_angle_rad",
+            section=output_boundary,
+            when={
+                "/output_boundary/kind": "locked_final_drive_vehicle",
+                "/output_boundary/road_profile/kind": "piecewise_constant_grade",
+            },
         ),
         _quantity(
             "/output_boundary/direct_secondary_shaft_inertia_kg_m2",

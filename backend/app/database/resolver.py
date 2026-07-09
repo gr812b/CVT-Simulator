@@ -197,8 +197,19 @@ def _unescape_json_pointer(value: str) -> str:
 
 def _deep_merge(target: JsonDict, overrides: JsonDict) -> JsonDict:
     for key, value in overrides.items():
-        if isinstance(value, dict) and isinstance(target.get(key), dict):
-            _deep_merge(target[key], value)
+        existing = target.get(key)
+        if isinstance(value, dict) and isinstance(existing, dict):
+            # Discriminated sub-documents must be replaced when their kind changes.
+            # Otherwise a constant-grade road profile updated to a piecewise route
+            # would keep stale fields such as grade_angle_rad from the old shape.
+            if (
+                "kind" in value
+                and "kind" in existing
+                and value["kind"] != existing["kind"]
+            ):
+                target[key] = copy.deepcopy(value)
+            else:
+                _deep_merge(existing, value)
         else:
             target[key] = copy.deepcopy(value)
     return target

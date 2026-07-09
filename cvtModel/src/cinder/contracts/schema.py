@@ -359,10 +359,34 @@ def _definitions() -> dict[str, Any]:
                     "rolling_speed_regularization_m_per_s",
                 ],
             ),
-            "road_profile": object_schema(
-                {"kind": {"const": "constant_grade"}, "grade_angle_rad": number},
-                ["kind", "grade_angle_rad"],
-            ),
+            "road_profile": {
+                "oneOf": [
+                    object_schema(
+                        {
+                            "kind": {"const": "constant_grade"},
+                            "grade_angle_rad": number,
+                        },
+                        ["kind", "grade_angle_rad"],
+                    ),
+                    object_schema(
+                        {
+                            "kind": {"const": "piecewise_constant_grade"},
+                            "segments": {
+                                "type": "array",
+                                "minItems": 1,
+                                "items": object_schema(
+                                    {
+                                        "start_distance_m": number,
+                                        "grade_angle_rad": number,
+                                    },
+                                    ["start_distance_m", "grade_angle_rad"],
+                                ),
+                            },
+                        },
+                        ["kind", "segments"],
+                    ),
+                ]
+            },
             "direct_secondary_shaft_inertia_kg_m2": nonnegative,
         },
         [

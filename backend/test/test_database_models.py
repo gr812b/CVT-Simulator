@@ -29,6 +29,7 @@ from app.database.seed import (
     SEED_ASSEMBLY_VERSION_ID,
     SEED_EXECUTION_PRESET_ID,
     SEED_ENGINE_VERSION_ID,
+    SEED_LOAD_CASE_FLAT_THEN_HILL_20_ID,
     SEED_LOAD_CASE_ID,
     SEED_TUNE_ID,
     seed_database,
@@ -141,6 +142,35 @@ def test_resolver_builds_frozen_simulation_case_from_released_versions() -> None
     finally:
         session.close()
 
+
+
+def test_seeded_flat_then_hill_load_case_resolves_as_piecewise_route() -> None:
+    _, session = build_session()
+    try:
+        seed_database(session)
+        session.commit()
+
+        document = resolve_simulation_case(
+            session,
+            vehicle_assembly_version_id=SEED_ASSEMBLY_VERSION_ID,
+            tune_id=SEED_TUNE_ID,
+            load_case_id=SEED_LOAD_CASE_FLAT_THEN_HILL_20_ID,
+            execution_preset_id=SEED_EXECUTION_PRESET_ID,
+        )
+
+        road_profile = document["output_boundary"]["road_profile"]
+        assert road_profile == {
+            "kind": "piecewise_constant_grade",
+            "segments": [
+                {"start_distance_m": 0.0, "grade_angle_rad": 0.0},
+                {
+                    "start_distance_m": 90.0,
+                    "grade_angle_rad": 0.5235987755982988,
+                },
+            ],
+        }
+    finally:
+        session.close()
 
 def test_model_payload_columns_use_jsonb_on_postgres() -> None:
     dialect = postgresql.dialect()

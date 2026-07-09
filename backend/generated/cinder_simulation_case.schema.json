@@ -1209,20 +1209,57 @@
               "type": "object"
             },
             "road_profile": {
-              "additionalProperties": false,
-              "properties": {
-                "grade_angle_rad": {
-                  "type": "number"
+              "oneOf": [
+                {
+                  "additionalProperties": false,
+                  "properties": {
+                    "grade_angle_rad": {
+                      "type": "number"
+                    },
+                    "kind": {
+                      "const": "constant_grade"
+                    }
+                  },
+                  "required": [
+                    "kind",
+                    "grade_angle_rad"
+                  ],
+                  "type": "object"
                 },
-                "kind": {
-                  "const": "constant_grade"
+                {
+                  "additionalProperties": false,
+                  "properties": {
+                    "kind": {
+                      "const": "piecewise_constant_grade"
+                    },
+                    "segments": {
+                      "items": {
+                        "additionalProperties": false,
+                        "properties": {
+                          "grade_angle_rad": {
+                            "type": "number"
+                          },
+                          "start_distance_m": {
+                            "type": "number"
+                          }
+                        },
+                        "required": [
+                          "start_distance_m",
+                          "grade_angle_rad"
+                        ],
+                        "type": "object"
+                      },
+                      "minItems": 1,
+                      "type": "array"
+                    }
+                  },
+                  "required": [
+                    "kind",
+                    "segments"
+                  ],
+                  "type": "object"
                 }
-              },
-              "required": [
-                "kind",
-                "grade_angle_rad"
-              ],
-              "type": "object"
+              ]
             },
             "vehicle": {
               "additionalProperties": false,

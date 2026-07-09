@@ -7,11 +7,12 @@
 
 export type OutputBoundary =
   | {
-      added_rotational_inertia_kg_m2: number;
-      external_torque_Nm: number;
+      equivalent_rotational_inertia_kg_m2: number;
       kind: "fixed_output_load";
+      load_torque_Nm: number;
     }
   | {
+      direct_secondary_shaft_inertia_kg_m2: number;
       final_drive: {
         reduction_ratio: number;
         wheel_radius_m: number;
@@ -25,10 +26,27 @@ export type OutputBoundary =
         rolling_resistance_coefficient: number;
         rolling_speed_regularization_m_per_s: number;
       };
-      road_profile: {
-        grade_angle_rad: number;
-        kind: "constant_grade";
-      };
+      road_profile:
+        | {
+            grade_angle_rad: number;
+            kind: "constant_grade";
+          }
+        | {
+            kind: "piecewise_constant_grade";
+            /**
+             * @minItems 1
+             */
+            segments: [
+              {
+                grade_angle_rad: number;
+                start_distance_m: number;
+              },
+              ...{
+                grade_angle_rad: number;
+                start_distance_m: number;
+              }[]
+            ];
+          };
       vehicle: {
         mass_kg: number;
         wheel_rotational_inertia_kg_m2: number;
@@ -69,13 +87,11 @@ export interface Assembly {
   inertias: {
     belt_density_kg_per_m3: number;
     primary: {
-      cvt_rotational_inertia_kg_m2: number;
-      engine_rotational_inertia_kg_m2: number;
       moving_sheave_mass_kg: number;
+      rotating_hardware_inertia_kg_m2: number;
     };
     secondary: {
-      fixed_rotational_inertia_kg_m2: number;
-      gearbox_input_rotational_inertia_kg_m2: number;
+      fixed_rotating_hardware_inertia_kg_m2: number;
       movable_sheave_rotational_inertia_kg_m2: number;
       moving_sheave_mass_kg: number;
     };
@@ -479,6 +495,7 @@ export interface Execution {
   };
 }
 export interface InputBoundary {
+  equivalent_rotational_inertia_kg_m2: number;
   high_speed_braking_torque_Nm: number;
   high_speed_braking_transition_width_rad_per_s: number;
   kind: "full_throttle_torque_curve";

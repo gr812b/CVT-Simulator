@@ -5,6 +5,8 @@ from .road_load import RoadLoadModel, RoadLoadResult
 from .road_profile import (
     CallableRoadProfile,
     ConstantGradeRoadProfile,
+    PiecewiseConstantGradeRoadProfile,
+    PiecewiseConstantGradeSegment,
     RoadProfile,
     RoadProfileSample,
 )
@@ -13,6 +15,8 @@ from .spec import VehicleInertia, VehicleRoadLoadSpec
 __all__ = [
     "CallableRoadProfile",
     "ConstantGradeRoadProfile",
+    "PiecewiseConstantGradeRoadProfile",
+    "PiecewiseConstantGradeSegment",
     "FixedFinalDrive",
     "RoadLoadModel",
     "RoadLoadResult",

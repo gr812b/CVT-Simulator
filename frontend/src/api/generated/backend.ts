@@ -21,6 +21,265 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/library/execution-presets": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Execution Presets */
+        get: operations["list_execution_presets_api_v1_library_execution_presets_get"];
+        put?: never;
+        /** Create Execution Preset */
+        post: operations["create_execution_preset_api_v1_library_execution_presets_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/library/execution-presets/{preset_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Update Execution Preset */
+        patch: operations["update_execution_preset_api_v1_library_execution_presets__preset_id__patch"];
+        trace?: never;
+    };
+    "/api/v1/library/institutions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Institutions */
+        get: operations["list_institutions_api_v1_library_institutions_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/library/load-cases": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Load Cases */
+        get: operations["list_load_cases_api_v1_library_load_cases_get"];
+        put?: never;
+        /** Create Load Case */
+        post: operations["create_load_case_api_v1_library_load_cases_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/library/load-cases/{load_case_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Update Load Case */
+        patch: operations["update_load_case_api_v1_library_load_cases__load_case_id__patch"];
+        trace?: never;
+    };
+    "/api/v1/library/tunes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Tunes */
+        get: operations["list_tunes_api_v1_library_tunes_get"];
+        put?: never;
+        /** Create Tune */
+        post: operations["create_tune_api_v1_library_tunes_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/library/tunes/{tune_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Update Tune */
+        patch: operations["update_tune_api_v1_library_tunes__tune_id__patch"];
+        trace?: never;
+    };
+    "/api/v1/library/{resource}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Library Objects */
+        get: operations["list_library_objects_api_v1_library__resource__get"];
+        put?: never;
+        /** Create Library Object */
+        post: operations["create_library_object_api_v1_library__resource__post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/library/{resource}/versions/{version_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Library Version */
+        get: operations["get_library_version_api_v1_library__resource__versions__version_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/library/{resource}/versions/{version_id}/deprecate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Deprecate Library Version */
+        post: operations["deprecate_library_version_api_v1_library__resource__versions__version_id__deprecate_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/library/{resource}/versions/{version_id}/fork": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Fork Library Version */
+        post: operations["fork_library_version_api_v1_library__resource__versions__version_id__fork_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/library/{resource}/{object_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Library Object */
+        get: operations["get_library_object_api_v1_library__resource___object_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/library/{resource}/{object_id}/archive": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Archive Library Object */
+        post: operations["archive_library_object_api_v1_library__resource___object_id__archive_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/library/{resource}/{object_id}/draft": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Update Library Draft */
+        patch: operations["update_library_draft_api_v1_library__resource___object_id__draft_patch"];
+        trace?: never;
+    };
+    "/api/v1/library/{resource}/{object_id}/release": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Release Library Object */
+        post: operations["release_library_object_api_v1_library__resource___object_id__release_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/metadata/catalog": {
         parameters: {
             query?: never;
@@ -130,10 +389,44 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
+        /**
+         * List Runs
+         * @description List persisted database-backed runs.
+         *
+         *     Direct in-memory debug runs are intentionally not listed because they are
+         *     process-local and not part of durable history.
+         */
+        get: operations["list_runs_api_v1_runs_get"];
+        put?: never;
+        /**
+         * Create Run
+         * @description Submit a complete CINDER simulation-case document directly.
+         *
+         *     This remains the debug/contract endpoint. Database-backed product flows
+         *     should use ``POST /runs/from-library`` so the resolved input contract and
+         *     result artifacts are persisted.
+         */
+        post: operations["create_run_api_v1_runs_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/runs/from-library": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
         get?: never;
         put?: never;
-        /** Create Run */
-        post: operations["create_run_api_v1_runs_post"];
+        /**
+         * Create Run From Library
+         * @description Resolve released database objects into a frozen CINDER case and run it.
+         */
+        post: operations["create_run_from_library_api_v1_runs_from_library_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -151,6 +444,74 @@ export interface paths {
         get: operations["get_run_api_v1_runs__run_id__get"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/runs/{run_id}/input": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Run Input
+         * @description Return the frozen simulation input document for inspection/debugging.
+         *
+         *     This remains available even when a persisted library run's full-result
+         *     artifact has been evicted. Product reruns should use ``POST
+         *     /runs/{run_id}/rerun`` so the regenerated result is persisted.
+         */
+        get: operations["get_run_input_api_v1_runs__run_id__input_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/runs/{run_id}/preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Run Preview
+         * @description Return the durable lightweight preview for charts and run browsing.
+         */
+        get: operations["get_run_preview_api_v1_runs__run_id__preview_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/runs/{run_id}/rerun": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Rerun Stored Run
+         * @description Rerun a persisted library run from its frozen stored input.
+         *
+         *     This is the product-facing path for old runs whose full-result artifact was
+         *     evicted. It does not re-resolve current library objects, so archived,
+         *     deprecated, or edited source objects cannot change the rerun semantics.
+         */
+        post: operations["rerun_stored_run_api_v1_runs__run_id__rerun_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -256,6 +617,15 @@ export interface components {
             /** Values */
             values: number[];
         };
+        /** ArchiveLibraryObjectRequest */
+        ArchiveLibraryObjectRequest: {
+            /**
+             * Lifecycle Status
+             * @default archived
+             * @enum {string}
+             */
+            lifecycle_status: "active" | "deprecated" | "archived";
+        };
         /** BeltSectionRequest */
         BeltSectionRequest: {
             /** Cord Depth From Outer M */
@@ -351,6 +721,119 @@ export interface components {
                 [key: string]: unknown;
             };
         };
+        /** CreateExecutionPresetRequest */
+        CreateExecutionPresetRequest: {
+            /** Account Id */
+            account_id?: string | null;
+            /**
+             * Is System Default
+             * @default false
+             */
+            is_system_default: boolean;
+            /**
+             * Kind
+             * @default simulation
+             */
+            kind: string;
+            /** Name */
+            name: string;
+            /** Payload */
+            payload: {
+                [key: string]: unknown;
+            };
+        };
+        /** CreateLibraryObjectRequest */
+        CreateLibraryObjectRequest: {
+            /** Account Id */
+            account_id: string;
+            /**
+             * Catalog Priority
+             * @default 0
+             */
+            catalog_priority: number;
+            /**
+             * Catalog Status
+             * @default user_created
+             * @enum {string}
+             */
+            catalog_status: "user_created" | "official" | "ots_part" | "seeded_example" | "admin_curated" | "community";
+            /** Description */
+            description?: string | null;
+            /** Draft Payload */
+            draft_payload?: {
+                [key: string]: unknown;
+            } | null;
+            /**
+             * Gallery Listed
+             * @default false
+             */
+            gallery_listed: boolean;
+            /**
+             * Is Default
+             * @default false
+             */
+            is_default: boolean;
+            /** Name */
+            name: string;
+            /** Slug */
+            slug?: string | null;
+            /** Source Label */
+            source_label?: string | null;
+            /** Source Notes */
+            source_notes?: string | null;
+            /** Source Url */
+            source_url?: string | null;
+            /**
+             * Visibility
+             * @default private
+             * @enum {string}
+             */
+            visibility: "private" | "unlisted" | "public";
+        };
+        /** CreateLibraryRunRequest */
+        CreateLibraryRunRequest: {
+            /** Account Id */
+            account_id: string;
+            /** Created By User Id */
+            created_by_user_id?: string | null;
+            /** Execution Preset Id */
+            execution_preset_id?: string | null;
+            /**
+             * Include Raw Trace
+             * @default false
+             */
+            include_raw_trace: boolean;
+            /**
+             * Include Reported Segments
+             * @default false
+             */
+            include_reported_segments: boolean;
+            /** Load Case Id */
+            load_case_id?: string | null;
+            /** Tune Id */
+            tune_id?: string | null;
+            /** Vehicle Assembly Version Id */
+            vehicle_assembly_version_id: string;
+        };
+        /** CreateLoadCaseRequest */
+        CreateLoadCaseRequest: {
+            /** Account Id */
+            account_id: string;
+            /** Kind */
+            kind: string;
+            /** Name */
+            name: string;
+            /** Payload */
+            payload: {
+                [key: string]: unknown;
+            };
+            /**
+             * Visibility
+             * @default private
+             * @enum {string}
+             */
+            visibility: "private" | "unlisted" | "public";
+        };
         /** CreateRunRequest */
         CreateRunRequest: {
             /**
@@ -367,6 +850,36 @@ export interface components {
             simulation_case: {
                 [key: string]: unknown;
             };
+        };
+        /** CreateTuneRequest */
+        CreateTuneRequest: {
+            /** Account Id */
+            account_id: string;
+            /** Cvt Design Id */
+            cvt_design_id: string;
+            /** Name */
+            name: string;
+            /** Notes */
+            notes?: string | null;
+            /** Values */
+            values: {
+                [key: string]: unknown;
+            };
+            /** Vehicle Assembly Id */
+            vehicle_assembly_id: string;
+        };
+        /** DeprecateVersionRequest */
+        DeprecateVersionRequest: {
+            /** Message */
+            message?: string | null;
+            /** Superseded By Version Id */
+            superseded_by_version_id?: string | null;
+            /**
+             * Validation Status
+             * @default deprecated
+             * @enum {string}
+             */
+            validation_status: "valid" | "needs_migration" | "deprecated" | "unsupported" | "invalid";
         };
         /** EditorSchemaResponse */
         EditorSchemaResponse: {
@@ -392,6 +905,57 @@ export interface components {
             sample_count: number;
             /** Secondary Outer Radius At Zero Shift M */
             secondary_outer_radius_at_zero_shift_m: number;
+        };
+        /** ExecutionPresetListResponse */
+        ExecutionPresetListResponse: {
+            /** Items */
+            items: components["schemas"]["ExecutionPresetResponse"][];
+        };
+        /** ExecutionPresetResponse */
+        ExecutionPresetResponse: {
+            /** Account Id */
+            account_id: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Id */
+            id: string;
+            /** Is System Default */
+            is_system_default: boolean;
+            /** Kind */
+            kind: string;
+            /** Name */
+            name: string;
+            /** Payload */
+            payload: {
+                [key: string]: unknown;
+            };
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+        };
+        /** ForkLibraryVersionRequest */
+        ForkLibraryVersionRequest: {
+            /** Account Id */
+            account_id: string;
+            /** Created By User Id */
+            created_by_user_id?: string | null;
+            /** Description */
+            description?: string | null;
+            /** Name */
+            name?: string | null;
+            /** Slug */
+            slug?: string | null;
+            /**
+             * Visibility
+             * @default private
+             * @enum {string}
+             */
+            visibility: "private" | "unlisted" | "public";
         };
         /** GeometryDesignContextRequest */
         GeometryDesignContextRequest: {
@@ -430,6 +994,237 @@ export interface components {
              */
             status: string;
         };
+        /** InstitutionListResponse */
+        InstitutionListResponse: {
+            /** Items */
+            items: components["schemas"]["InstitutionResponse"][];
+        };
+        /** InstitutionResponse */
+        InstitutionResponse: {
+            /** Aliases */
+            aliases: string[];
+            /** Country Code */
+            country_code: string | null;
+            /** Email Domains */
+            email_domains: string[];
+            /** Id */
+            id: string;
+            /** Institution Type */
+            institution_type: string;
+            /** Is Verified */
+            is_verified: boolean;
+            /** Name */
+            name: string;
+            /** Region */
+            region: string | null;
+            /** Slug */
+            slug: string;
+            /** Website Url */
+            website_url: string | null;
+        };
+        /** LibraryObjectDetailResponse */
+        LibraryObjectDetailResponse: {
+            object: components["schemas"]["LibraryObjectResponse"];
+            released_version?: components["schemas"]["LibraryVersionResponse"] | null;
+            /** Versions */
+            versions?: components["schemas"]["LibraryVersionResponse"][];
+        };
+        /** LibraryObjectListResponse */
+        LibraryObjectListResponse: {
+            /** Items */
+            items: components["schemas"]["LibraryObjectResponse"][];
+        };
+        /** LibraryObjectResponse */
+        LibraryObjectResponse: {
+            /** Account Id */
+            account_id: string;
+            /** Catalog Priority */
+            catalog_priority: number;
+            /**
+             * Catalog Status
+             * @enum {string}
+             */
+            catalog_status: "user_created" | "official" | "ots_part" | "seeded_example" | "admin_curated" | "community";
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Deleted At */
+            deleted_at: string | null;
+            /** Description */
+            description: string | null;
+            /** Draft Payload */
+            draft_payload: {
+                [key: string]: unknown;
+            } | null;
+            /** Draft Updated At */
+            draft_updated_at: string | null;
+            /** Forked From Version Id */
+            forked_from_version_id: string | null;
+            /** Gallery Listed */
+            gallery_listed: boolean;
+            /** Id */
+            id: string;
+            /** Is Default */
+            is_default: boolean;
+            /**
+             * Lifecycle Status
+             * @enum {string}
+             */
+            lifecycle_status: "active" | "deprecated" | "archived";
+            /** Name */
+            name: string;
+            /** Released Version Id */
+            released_version_id: string | null;
+            /**
+             * Resource
+             * @enum {string}
+             */
+            resource: "engines" | "cvt-designs" | "output-systems" | "vehicle-assemblies";
+            /** Slug */
+            slug: string | null;
+            /** Source Label */
+            source_label: string | null;
+            /** Source Notes */
+            source_notes: string | null;
+            /** Source Url */
+            source_url: string | null;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+            /**
+             * Visibility
+             * @enum {string}
+             */
+            visibility: "private" | "unlisted" | "public";
+        };
+        /** LibraryVersionResponse */
+        LibraryVersionResponse: {
+            /** Assembly Payload */
+            assembly_payload?: {
+                [key: string]: unknown;
+            } | null;
+            /** Attribution Institution Id */
+            attribution_institution_id: string | null;
+            /** Attribution Label */
+            attribution_label: string | null;
+            /** Cinder Assembly */
+            cinder_assembly?: {
+                [key: string]: unknown;
+            } | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Created By User Id */
+            created_by_user_id: string | null;
+            /** Cvt Design Version Id */
+            cvt_design_version_id?: string | null;
+            /** Deprecated At */
+            deprecated_at: string | null;
+            /** Engine Version Id */
+            engine_version_id?: string | null;
+            /** Id */
+            id: string;
+            /** Input Boundary */
+            input_boundary?: {
+                [key: string]: unknown;
+            } | null;
+            /** Object Id */
+            object_id: string;
+            /** Output Boundary Template */
+            output_boundary_template?: {
+                [key: string]: unknown;
+            } | null;
+            /** Output System Version Id */
+            output_system_version_id?: string | null;
+            /** Payload */
+            payload: {
+                [key: string]: unknown;
+            };
+            /** Payload Hash */
+            payload_hash: string;
+            /** Payload Schema Name */
+            payload_schema_name: string;
+            /** Payload Schema Version */
+            payload_schema_version: number;
+            /** Release Notes */
+            release_notes: string | null;
+            /**
+             * Resource
+             * @enum {string}
+             */
+            resource: "engines" | "cvt-designs" | "output-systems" | "vehicle-assemblies";
+            /** Schema Version */
+            schema_version: number;
+            /** Summary */
+            summary: {
+                [key: string]: unknown;
+            };
+            /** Superseded By Version Id */
+            superseded_by_version_id: string | null;
+            /** Tuning Schema */
+            tuning_schema?: {
+                [key: string]: unknown;
+            } | null;
+            /** Validation Messages */
+            validation_messages: {
+                [key: string]: unknown;
+            }[];
+            /**
+             * Validation Status
+             * @enum {string}
+             */
+            validation_status: "valid" | "needs_migration" | "deprecated" | "unsupported" | "invalid";
+            /** Version Number */
+            version_number: number;
+            /**
+             * Visibility At Release
+             * @enum {string}
+             */
+            visibility_at_release: "private" | "unlisted" | "public";
+        };
+        /** LoadCaseListResponse */
+        LoadCaseListResponse: {
+            /** Items */
+            items: components["schemas"]["LoadCaseResponse"][];
+        };
+        /** LoadCaseResponse */
+        LoadCaseResponse: {
+            /** Account Id */
+            account_id: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Deleted At */
+            deleted_at: string | null;
+            /** Id */
+            id: string;
+            /** Kind */
+            kind: string;
+            /** Name */
+            name: string;
+            /** Payload */
+            payload: {
+                [key: string]: unknown;
+            };
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+            /**
+             * Visibility
+             * @enum {string}
+             */
+            visibility: "private" | "unlisted" | "public";
+        };
         /** PresetListResponse */
         PresetListResponse: {
             /** Presets */
@@ -463,6 +1258,94 @@ export interface components {
             /** Name */
             name: string;
         };
+        /** ReleaseLibraryObjectRequest */
+        ReleaseLibraryObjectRequest: {
+            /** Assembly Payload */
+            assembly_payload?: {
+                [key: string]: unknown;
+            } | null;
+            /** Attribution Institution Id */
+            attribution_institution_id?: string | null;
+            /** Attribution Label */
+            attribution_label?: string | null;
+            /** Created By User Id */
+            created_by_user_id?: string | null;
+            /** Cvt Design Version Id */
+            cvt_design_version_id?: string | null;
+            /** Engine Version Id */
+            engine_version_id?: string | null;
+            /** Output System Version Id */
+            output_system_version_id?: string | null;
+            /** Payload */
+            payload?: {
+                [key: string]: unknown;
+            } | null;
+            /** Payload Schema Name */
+            payload_schema_name?: string | null;
+            /**
+             * Payload Schema Version
+             * @default 1
+             */
+            payload_schema_version: number;
+            /** Release Notes */
+            release_notes?: string | null;
+            /** Summary */
+            summary?: {
+                [key: string]: unknown;
+            };
+            /** Tuning Schema */
+            tuning_schema?: {
+                [key: string]: unknown;
+            } | null;
+            /** Validation Messages */
+            validation_messages?: {
+                [key: string]: unknown;
+            }[];
+            /**
+             * Validation Status
+             * @default valid
+             * @enum {string}
+             */
+            validation_status: "valid" | "needs_migration" | "deprecated" | "unsupported" | "invalid";
+            /** Visibility At Release */
+            visibility_at_release?: ("private" | "unlisted" | "public") | null;
+        };
+        /** RerunStoredRunRequest */
+        RerunStoredRunRequest: {
+            /** Created By User Id */
+            created_by_user_id?: string | null;
+            /**
+             * Include Raw Trace
+             * @default false
+             */
+            include_raw_trace: boolean;
+            /**
+             * Include Reported Segments
+             * @default false
+             */
+            include_reported_segments: boolean;
+        };
+        /** RunInputResponse */
+        RunInputResponse: {
+            /** Input Document Snapshot */
+            input_document_snapshot: {
+                [key: string]: unknown;
+            };
+            run: components["schemas"]["RunStatusResponse"];
+        };
+        /** RunListResponse */
+        RunListResponse: {
+            /** Items */
+            items?: components["schemas"]["RunStatusResponse"][];
+        };
+        /** RunPreviewResponse */
+        RunPreviewResponse: {
+            /** Preview */
+            preview: {
+                [key: string]: unknown;
+            };
+            run: components["schemas"]["RunStatusResponse"];
+        };
         /** RunResultResponse */
         RunResultResponse: {
             /** Input Document Snapshot */
@@ -477,14 +1360,26 @@ export interface components {
         };
         /** RunStatusResponse */
         RunStatusResponse: {
+            /** Cache Entry Id */
+            cache_entry_id?: string | null;
+            /** Cache Hit */
+            cache_hit?: boolean | null;
             /** Completed At */
             completed_at?: string | null;
+            /** Contract Hash */
+            contract_hash?: string | null;
             /** Error */
             error?: {
                 [key: string]: unknown;
             } | null;
             /** Id */
             id: string;
+            /**
+             * Source
+             * @default direct
+             * @enum {string}
+             */
+            source: "direct" | "library";
             /** Started At */
             started_at?: string | null;
             /**
@@ -497,6 +1392,12 @@ export interface components {
              * Format: date-time
              */
             submitted_at: string;
+            /** Summary Scalars */
+            summary_scalars?: {
+                [key: string]: unknown;
+            };
+            /** Vehicle Assembly Version Id */
+            vehicle_assembly_version_id?: string | null;
         };
         /** SimulationCaseDocumentRequest */
         SimulationCaseDocumentRequest: {
@@ -544,6 +1445,108 @@ export interface components {
              */
             sample_count: number;
         };
+        /** TuneListResponse */
+        TuneListResponse: {
+            /** Items */
+            items: components["schemas"]["TuneResponse"][];
+        };
+        /** TuneResponse */
+        TuneResponse: {
+            /** Account Id */
+            account_id: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Cvt Design Id */
+            cvt_design_id: string;
+            /** Deleted At */
+            deleted_at: string | null;
+            /** Id */
+            id: string;
+            /** Name */
+            name: string;
+            /** Notes */
+            notes: string | null;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+            /** Values */
+            values: {
+                [key: string]: unknown;
+            };
+            /** Vehicle Assembly Id */
+            vehicle_assembly_id: string;
+        };
+        /** UpdateExecutionPresetRequest */
+        UpdateExecutionPresetRequest: {
+            /** Is System Default */
+            is_system_default?: boolean | null;
+            /** Kind */
+            kind?: string | null;
+            /** Name */
+            name?: string | null;
+            /** Payload */
+            payload?: {
+                [key: string]: unknown;
+            } | null;
+        };
+        /** UpdateLibraryDraftRequest */
+        UpdateLibraryDraftRequest: {
+            /** Catalog Priority */
+            catalog_priority?: number | null;
+            /** Catalog Status */
+            catalog_status?: ("user_created" | "official" | "ots_part" | "seeded_example" | "admin_curated" | "community") | null;
+            /** Description */
+            description?: string | null;
+            /** Draft Payload */
+            draft_payload?: {
+                [key: string]: unknown;
+            } | null;
+            /** Gallery Listed */
+            gallery_listed?: boolean | null;
+            /** Is Default */
+            is_default?: boolean | null;
+            /** Name */
+            name?: string | null;
+            /** Slug */
+            slug?: string | null;
+            /** Source Label */
+            source_label?: string | null;
+            /** Source Notes */
+            source_notes?: string | null;
+            /** Source Url */
+            source_url?: string | null;
+            /** Visibility */
+            visibility?: ("private" | "unlisted" | "public") | null;
+        };
+        /** UpdateLoadCaseRequest */
+        UpdateLoadCaseRequest: {
+            /** Kind */
+            kind?: string | null;
+            /** Name */
+            name?: string | null;
+            /** Payload */
+            payload?: {
+                [key: string]: unknown;
+            } | null;
+            /** Visibility */
+            visibility?: ("private" | "unlisted" | "public") | null;
+        };
+        /** UpdateTuneRequest */
+        UpdateTuneRequest: {
+            /** Name */
+            name?: string | null;
+            /** Notes */
+            notes?: string | null;
+            /** Values */
+            values?: {
+                [key: string]: unknown;
+            } | null;
+        };
         /** ValidationError */
         ValidationError: {
             /** Context */
@@ -582,6 +1585,653 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HealthResponse"];
+                };
+            };
+        };
+    };
+    list_execution_presets_api_v1_library_execution_presets_get: {
+        parameters: {
+            query?: {
+                account_id?: string | null;
+                include_system?: boolean;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ExecutionPresetListResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_execution_preset_api_v1_library_execution_presets_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateExecutionPresetRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ExecutionPresetResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_execution_preset_api_v1_library_execution_presets__preset_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                preset_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateExecutionPresetRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ExecutionPresetResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_institutions_api_v1_library_institutions_get: {
+        parameters: {
+            query?: {
+                query?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InstitutionListResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_load_cases_api_v1_library_load_cases_get: {
+        parameters: {
+            query?: {
+                account_id?: string | null;
+                include_deleted?: boolean;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LoadCaseListResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_load_case_api_v1_library_load_cases_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateLoadCaseRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LoadCaseResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_load_case_api_v1_library_load_cases__load_case_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                load_case_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateLoadCaseRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LoadCaseResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_tunes_api_v1_library_tunes_get: {
+        parameters: {
+            query?: {
+                account_id?: string | null;
+                vehicle_assembly_id?: string | null;
+                include_deleted?: boolean;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TuneListResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_tune_api_v1_library_tunes_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateTuneRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TuneResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_tune_api_v1_library_tunes__tune_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                tune_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateTuneRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TuneResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_library_objects_api_v1_library__resource__get: {
+        parameters: {
+            query?: {
+                account_id?: string | null;
+                public_only?: boolean;
+                include_archived?: boolean;
+                include_deleted?: boolean;
+            };
+            header?: never;
+            path: {
+                resource: "engines" | "cvt-designs" | "output-systems" | "vehicle-assemblies";
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LibraryObjectListResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_library_object_api_v1_library__resource__post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                resource: "engines" | "cvt-designs" | "output-systems" | "vehicle-assemblies";
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateLibraryObjectRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LibraryObjectResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_library_version_api_v1_library__resource__versions__version_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                resource: "engines" | "cvt-designs" | "output-systems" | "vehicle-assemblies";
+                version_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LibraryVersionResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    deprecate_library_version_api_v1_library__resource__versions__version_id__deprecate_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                resource: "engines" | "cvt-designs" | "output-systems" | "vehicle-assemblies";
+                version_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DeprecateVersionRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LibraryVersionResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    fork_library_version_api_v1_library__resource__versions__version_id__fork_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                resource: "engines" | "cvt-designs" | "output-systems" | "vehicle-assemblies";
+                version_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ForkLibraryVersionRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LibraryObjectResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_library_object_api_v1_library__resource___object_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                resource: "engines" | "cvt-designs" | "output-systems" | "vehicle-assemblies";
+                object_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LibraryObjectDetailResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    archive_library_object_api_v1_library__resource___object_id__archive_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                resource: "engines" | "cvt-designs" | "output-systems" | "vehicle-assemblies";
+                object_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["ArchiveLibraryObjectRequest"] | null;
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LibraryObjectResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_library_draft_api_v1_library__resource___object_id__draft_patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                resource: "engines" | "cvt-designs" | "output-systems" | "vehicle-assemblies";
+                object_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateLibraryDraftRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LibraryObjectResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    release_library_object_api_v1_library__resource___object_id__release_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                resource: "engines" | "cvt-designs" | "output-systems" | "vehicle-assemblies";
+                object_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReleaseLibraryObjectRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LibraryVersionResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };
@@ -717,6 +2367,39 @@ export interface operations {
             };
         };
     };
+    list_runs_api_v1_runs_get: {
+        parameters: {
+            query?: {
+                account_id?: string | null;
+                vehicle_assembly_version_id?: string | null;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RunListResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     create_run_api_v1_runs_post: {
         parameters: {
             query?: never;
@@ -727,6 +2410,39 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": components["schemas"]["CreateRunRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RunStatusResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_run_from_library_api_v1_runs_from_library_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateLibraryRunRequest"];
             };
         };
         responses: {
@@ -763,6 +2479,103 @@ export interface operations {
         responses: {
             /** @description Successful Response */
             200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RunStatusResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_run_input_api_v1_runs__run_id__input_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                run_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RunInputResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_run_preview_api_v1_runs__run_id__preview_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                run_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RunPreviewResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    rerun_stored_run_api_v1_runs__run_id__rerun_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                run_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["RerunStoredRunRequest"] | null;
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            202: {
                 headers: {
                     [name: string]: unknown;
                 };

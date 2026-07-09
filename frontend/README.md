@@ -32,7 +32,7 @@ The app intentionally exposes a narrow V1 run setup:
 ```text
 seeded released Baja vehicle assembly (500 lb default or 400 lb lightweight)
   -> selected tune
-  -> selected load case (flat, 20° hill, or ~10 s flat-to-30° route-intent seed)
+  -> selected load case (flat, 20° hill, or 90 m flat into 30° hill)
   -> selected execution preset
   -> POST /api/v1/runs/from-library
   -> GET /api/v1/runs/{run_id}/result for playback
