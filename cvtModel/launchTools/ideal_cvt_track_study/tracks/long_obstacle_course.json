@@ -1,0 +1,261 @@
+{
+  "name": "Long mixed obstacle course",
+  "notes": "A synthetic 6000 m development course, exactly ten times the Lot M distance. It exists to exercise the track builder: hills, low-traction surfaces, banked curvature, slaloms, rough patches, logs, profile obstacles, and two whoop trains. Values are illustrative and should be calibrated against measured terrain before design conclusions are drawn.",
+  "sections": [
+    {
+      "name": "Gravel launch plain",
+      "length_m": 700.0,
+      "grade_degrees": 0.0,
+      "friction_coefficient": 0.66,
+      "rolling_resistance_coefficient": 0.024,
+      "surface": "gravel"
+    },
+    {
+      "name": "Dirt climb",
+      "length_m": 500.0,
+      "grade_degrees": 4.0,
+      "friction_coefficient": 0.61,
+      "rolling_resistance_coefficient": 0.03,
+      "surface": "packed dirt"
+    },
+    {
+      "name": "Rolling gravel",
+      "length_m": 600.0,
+      "grade_degrees": 1.0,
+      "friction_coefficient": 0.6,
+      "rolling_resistance_coefficient": 0.028,
+      "surface": "gravel"
+    },
+    {
+      "name": "Loose downhill",
+      "length_m": 500.0,
+      "grade_degrees": -6.0,
+      "friction_coefficient": 0.54,
+      "rolling_resistance_coefficient": 0.034,
+      "surface": "loose dirt"
+    },
+    {
+      "name": "Forest floor",
+      "length_m": 700.0,
+      "grade_degrees": 0.0,
+      "friction_coefficient": 0.57,
+      "rolling_resistance_coefficient": 0.04,
+      "surface": "forest soil"
+    },
+    {
+      "name": "Rocky climb",
+      "length_m": 500.0,
+      "grade_degrees": 7.0,
+      "friction_coefficient": 0.64,
+      "rolling_resistance_coefficient": 0.055,
+      "surface": "rock and dirt"
+    },
+    {
+      "name": "Grass descent",
+      "length_m": 500.0,
+      "grade_degrees": -4.0,
+      "friction_coefficient": 0.52,
+      "rolling_resistance_coefficient": 0.03,
+      "surface": "grass"
+    },
+    {
+      "name": "Asphalt transit",
+      "length_m": 800.0,
+      "grade_degrees": 0.0,
+      "friction_coefficient": 0.9,
+      "rolling_resistance_coefficient": 0.012,
+      "surface": "asphalt"
+    },
+    {
+      "name": "Mixed-surface rise",
+      "length_m": 500.0,
+      "grade_degrees": 3.0,
+      "friction_coefficient": 0.62,
+      "rolling_resistance_coefficient": 0.032,
+      "surface": "mixed"
+    },
+    {
+      "name": "Gravel finish",
+      "length_m": 700.0,
+      "grade_degrees": 0.0,
+      "friction_coefficient": 0.65,
+      "rolling_resistance_coefficient": 0.025,
+      "surface": "gravel"
+    }
+  ],
+  "features": [
+    {
+      "type": "curvature_segment",
+      "name": "Opening sweeper",
+      "start_m": 620.0,
+      "length_m": 80.0,
+      "radius_m": 22.0,
+      "direction": "right",
+      "bank_angle_degrees": 6.0
+    },
+    {
+      "type": "log_crossing",
+      "name": "Single opening log",
+      "position_m": 900.0,
+      "crossing_length_m": 1.4,
+      "height_m": 0.2,
+      "effective_lift_fraction": 0.3,
+      "impact_loss_coefficient_kg": 7.0,
+      "traction_multiplier": 0.9
+    },
+    {
+      "type": "surface_patch",
+      "name": "Mud pocket",
+      "start_m": 1080.0,
+      "length_m": 150.0,
+      "friction_coefficient": 0.35,
+      "rolling_resistance_coefficient": 0.085,
+      "surface": "mud"
+    },
+    {
+      "type": "whoop_train",
+      "name": "First whoop train",
+      "start_m": 1450.0,
+      "count": 10,
+      "wavelength_m": 3.0,
+      "height_m": 0.16,
+      "energy_loss_j_per_whoop": 120.0,
+      "minimum_normal_load_scale": 0.15,
+      "maximum_normal_load_scale": 1.8,
+      "traction_multiplier": 0.95
+    },
+    {
+      "type": "curvature_segment",
+      "name": "Loose downhill hairpin",
+      "start_m": 1760.0,
+      "length_m": 60.0,
+      "radius_m": 13.0,
+      "direction": "left"
+    },
+    {
+      "type": "log_crossing",
+      "name": "Forest double-height log",
+      "position_m": 2350.0,
+      "crossing_length_m": 1.6,
+      "height_m": 0.27,
+      "effective_lift_fraction": 0.38,
+      "impact_loss_coefficient_kg": 10.0,
+      "traction_multiplier": 0.82
+    },
+    {
+      "type": "surface_patch",
+      "name": "Deep sand section",
+      "start_m": 2700.0,
+      "length_m": 180.0,
+      "friction_coefficient": 0.48,
+      "rolling_resistance_coefficient": 0.1,
+      "surface": "deep sand"
+    },
+    {
+      "type": "curvature_segment",
+      "name": "Rocky climb bend",
+      "start_m": 3220.0,
+      "length_m": 90.0,
+      "radius_m": 24.0,
+      "direction": "right",
+      "bank_angle_degrees": -3.0
+    },
+    {
+      "type": "surface_patch",
+      "name": "Wet grass",
+      "start_m": 3600.0,
+      "length_m": 250.0,
+      "friction_coefficient": 0.38,
+      "rolling_resistance_coefficient": 0.042,
+      "surface": "wet grass"
+    },
+    {
+      "type": "whoop_train",
+      "name": "Fast whoop train",
+      "start_m": 4020.0,
+      "count": 12,
+      "wavelength_m": 2.8,
+      "height_m": 0.2,
+      "energy_loss_j_per_whoop": 180.0,
+      "minimum_normal_load_scale": 0.08,
+      "maximum_normal_load_scale": 2.0,
+      "traction_multiplier": 0.92
+    },
+    {
+      "type": "curvature_segment",
+      "name": "Asphalt hairpin",
+      "start_m": 4520.0,
+      "length_m": 65.0,
+      "radius_m": 10.0,
+      "direction": "left"
+    },
+    {
+      "type": "log_crossing",
+      "name": "Late-course log",
+      "position_m": 5200.0,
+      "crossing_length_m": 1.3,
+      "height_m": 0.18,
+      "effective_lift_fraction": 0.28,
+      "impact_loss_coefficient_kg": 6.0,
+      "traction_multiplier": 0.88
+    },
+    {
+      "type": "curvature_segment",
+      "name": "Finishing bend",
+      "start_m": 5700.0,
+      "length_m": 90.0,
+      "radius_m": 16.0,
+      "direction": "right"
+    },
+    {
+      "type": "rough_patch",
+      "name": "Rock garden ruts",
+      "start_m": 2050.0,
+      "length_m": 140.0,
+      "roughness_wavelength_m": 2.2,
+      "normal_load_variation_fraction": 0.28,
+      "minimum_normal_load_scale": 0.25,
+      "maximum_normal_load_scale": 1.65,
+      "energy_loss_j_per_m": 45.0,
+      "speed_squared_resistance_coefficient_kg_per_m": 0.22,
+      "friction_multiplier": 0.92,
+      "rolling_resistance_multiplier": 1.25,
+      "surface": "rocky ruts"
+    },
+    {
+      "type": "slalom_segment",
+      "name": "Asphalt cone slalom",
+      "start_m": 4300.0,
+      "length_m": 120.0,
+      "bend_count": 8,
+      "peak_curvature_1_per_m": 0.075,
+      "initial_direction": "left"
+    },
+    {
+      "type": "profile_obstacle",
+      "name": "Drainage pipe",
+      "start_m": 4975.0,
+      "length_m": 1.3,
+      "vertical_amplitude_m": 0.16,
+      "profile_kind": "pipe",
+      "fixed_energy_loss_j": 350.0,
+      "impact_loss_coefficient_kg": 4.0,
+      "traction_multiplier": 0.9,
+      "minimum_normal_load_scale": 0.05,
+      "maximum_normal_load_scale": 2.2
+    },
+    {
+      "type": "profile_obstacle",
+      "name": "Late course hole",
+      "start_m": 5480.0,
+      "length_m": 2.4,
+      "vertical_amplitude_m": -0.14,
+      "profile_kind": "hole",
+      "fixed_energy_loss_j": 250.0,
+      "impact_loss_coefficient_kg": 3.5,
+      "traction_multiplier": 0.85,
+      "minimum_normal_load_scale": 0.0,
+      "maximum_normal_load_scale": 2.0
+    }
+  ]
+}

@@ -308,3 +308,5 @@ backend/**/black_box_api_artifacts/
 **/__pycache__/
 .pytest_cache/
 *.pyc
+
+outputs/

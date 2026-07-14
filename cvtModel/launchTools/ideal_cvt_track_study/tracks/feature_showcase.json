@@ -1,0 +1,99 @@
+{
+  "name": "Track builder feature showcase",
+  "notes": "Short synthetic validation track exercising every built-in physical feature. Values are illustrative.",
+  "sections": [
+    {
+      "name": "Dirt base",
+      "length_m": 500.0,
+      "grade_degrees": 0.0,
+      "friction_coefficient": 0.62,
+      "rolling_resistance_coefficient": 0.03,
+      "surface": "dirt"
+    }
+  ],
+  "features": [
+    {
+      "type": "surface_patch",
+      "name": "Wet patch",
+      "start_m": 25.0,
+      "length_m": 35.0,
+      "friction_coefficient": 0.38,
+      "rolling_resistance_coefficient": 0.045,
+      "surface": "wet dirt"
+    },
+    {
+      "type": "curvature_segment",
+      "name": "Banked left bend",
+      "start_m": 80.0,
+      "length_m": 40.0,
+      "radius_m": 15.0,
+      "direction": "left",
+      "bank_angle_degrees": 8.0
+    },
+    {
+      "type": "slalom_segment",
+      "name": "Six bend slalom",
+      "start_m": 135.0,
+      "length_m": 60.0,
+      "bend_count": 6,
+      "peak_curvature_1_per_m": 0.09,
+      "initial_direction": "right"
+    },
+    {
+      "type": "rough_patch",
+      "name": "Rutted section",
+      "start_m": 210.0,
+      "length_m": 55.0,
+      "roughness_wavelength_m": 2.5,
+      "normal_load_variation_fraction": 0.25,
+      "energy_loss_j_per_m": 30.0,
+      "speed_squared_resistance_coefficient_kg_per_m": 0.18,
+      "rolling_resistance_multiplier": 1.4,
+      "surface": "ruts"
+    },
+    {
+      "type": "log_crossing",
+      "name": "Log",
+      "position_m": 290.0,
+      "crossing_length_m": 1.4,
+      "height_m": 0.2,
+      "effective_lift_fraction": 0.32,
+      "impact_loss_coefficient_kg": 6.0,
+      "traction_multiplier": 0.88
+    },
+    {
+      "type": "profile_obstacle",
+      "name": "Pipe",
+      "start_m": 330.0,
+      "length_m": 1.2,
+      "vertical_amplitude_m": 0.15,
+      "profile_kind": "pipe",
+      "fixed_energy_loss_j": 250.0,
+      "impact_loss_coefficient_kg": 3.0,
+      "traction_multiplier": 0.9
+    },
+    {
+      "type": "profile_obstacle",
+      "name": "Hole",
+      "start_m": 365.0,
+      "length_m": 2.0,
+      "vertical_amplitude_m": -0.12,
+      "profile_kind": "hole",
+      "fixed_energy_loss_j": 180.0,
+      "impact_loss_coefficient_kg": 2.5,
+      "traction_multiplier": 0.85
+    },
+    {
+      "type": "whoop_train",
+      "name": "Whoops",
+      "start_m": 405.0,
+      "count": 8,
+      "wavelength_m": 3.0,
+      "height_m": 0.16,
+      "energy_loss_j_per_whoop": 100.0,
+      "minimum_normal_load_scale": 0.1,
+      "maximum_normal_load_scale": 1.8,
+      "traction_multiplier": 0.95
+    }
+  ]
+}

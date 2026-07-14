@@ -1,0 +1,72 @@
+{
+  "name": "Lot M baseline estimate",
+  "notes": "Provisional 600 m baseline. The two hairpins are now physical curvature segments rather than arbitrary track speed caps. Their radii are chosen so the friction-limited corner speed is approximately 5.5 m/s on the local surface.",
+  "sections": [
+    {
+      "name": "Gravel flat",
+      "length_m": 150.0,
+      "grade_degrees": 0.0,
+      "friction_coefficient": 0.65,
+      "rolling_resistance_coefficient": 0.025,
+      "surface": "gravel"
+    },
+    {
+      "name": "Gravel downhill",
+      "length_m": 135.0,
+      "grade_degrees": -5.0,
+      "friction_coefficient": 0.60,
+      "rolling_resistance_coefficient": 0.025,
+      "surface": "gravel"
+    },
+    {
+      "name": "Gravel hairpin",
+      "length_m": 15.0,
+      "grade_degrees": -5.0,
+      "friction_coefficient": 0.55,
+      "rolling_resistance_coefficient": 0.030,
+      "surface": "gravel"
+    },
+    {
+      "name": "Asphalt uphill",
+      "length_m": 150.0,
+      "grade_degrees": 5.0,
+      "friction_coefficient": 0.85,
+      "rolling_resistance_coefficient": 0.015,
+      "surface": "asphalt"
+    },
+    {
+      "name": "Asphalt flat",
+      "length_m": 135.0,
+      "grade_degrees": 0.0,
+      "friction_coefficient": 0.90,
+      "rolling_resistance_coefficient": 0.012,
+      "surface": "asphalt"
+    },
+    {
+      "name": "Asphalt hairpin / lap end",
+      "length_m": 15.0,
+      "grade_degrees": 0.0,
+      "friction_coefficient": 0.85,
+      "rolling_resistance_coefficient": 0.015,
+      "surface": "asphalt"
+    }
+  ],
+  "features": [
+    {
+      "type": "curvature_segment",
+      "name": "Gravel hairpin curvature",
+      "start_m": 285.0,
+      "length_m": 15.0,
+      "radius_m": 5.6298624979,
+      "direction": "left"
+    },
+    {
+      "type": "curvature_segment",
+      "name": "Asphalt hairpin curvature",
+      "start_m": 585.0,
+      "length_m": 15.0,
+      "radius_m": 3.6289900521,
+      "direction": "left"
+    }
+  ]
+}

@@ -1,0 +1,50 @@
+[gps]
+lap_gate_name = "Turn 1"
+lap_gate_radius_m = 15.0
+minimum_lap_time_s = 120.0
+stationary_speed_kmh = 3.0
+maximum_reasonable_speed_kmh = 80.0
+maximum_normal_time_step_s = 2.5
+maximum_map_error_m = 20.0
+centreline_spacing_m = 3.0
+profile_spacing_m = 5.0
+speed_outlier_threshold_kmh = 12.0
+default_recovery_fraction = 0.98
+default_recovery_limit_m = 60.0
+
+[metric]
+spatial_step_m = 1.0
+approach_distance_m = 30.0
+approach_gap_m = 10.0
+immediate_entry_window_m = 5.0
+end_speed_window_m = 2.0
+post_event_gap_m = 5.0
+post_event_window_m = 15.0
+recovery_fraction = 0.98
+recovery_limit_m = 60.0
+minimum_raw_samples_in_event = 2
+minimum_raw_samples_approach_through_end = 3
+grouping_recovery_fraction_threshold = 0.50
+grouping_resolution_multiplier = 1.0
+full_throttle_threshold_pct = 80.0
+brake_active_threshold = 0.5
+wheel_slip_ratio_threshold = 0.15
+
+# Uncomment both when engine RPM is logged and a study-specific band is chosen.
+# power_band_min_rpm = 3000.0
+# power_band_max_rpm = 3800.0
+
+[signature]
+local_half_window_m = 5.0
+interpolation_step_m = 1.0
+baseline_step_m = 5.0
+slowdown_event_threshold_kmh = 1.0
+strong_track_percentile = 75.0
+strong_lap_fraction = 0.70
+moderate_track_percentile = 50.0
+moderate_lap_fraction = 0.50
+minimum_valid_laps = 6
+
+[output]
+write_excel = true
+write_plots = true
