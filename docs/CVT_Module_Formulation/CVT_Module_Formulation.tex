@@ -2123,37 +2123,32 @@ current values of $\omega_p$, $\omega_s$, $s$, $\dot{s}$, and $v_b$.
 \section{Pulley Geometry}\label{sec:geometry}
 
 The conceptual overview introduced the CVT as two variable-radius pulleys
-connected by a single belt. The primary and secondary pulleys do not choose
-their radii independently: when the belt moves outward on one pulley, it must
-move inward on the other. The transmission ratio is therefore not a separate
-mechanism, but a consequence of where the belt sits on the two pulleys.
+connected by a single belt. Moving the pulley sheaves changes where the belt
+sits on each pulley, and the resulting pair of pulley radii determines the
+transmission ratio.
 
-This section turns that idea into the geometric and kinematic relationships
-needed later in the model. The analysis uses the axial shift position \(s\) 
-and the CVT axial direction defined in \Cref{sec:cvt_axial_direction}. 
-At this point, the question is not why the CVT shifts. That requires the
-mechanical actuation, contact, and drivetrain dynamics developed later. The
-question here is more basic:
+Both pulleys contain a movable sheave. Let \(x_p\) denote the axial position of
+the movable primary sheave and \(x_s\) the axial position of the movable
+secondary sheave. The central question of this section is
 
 \[
-\text{if } s,\ \dot{s},\ \text{and } \ddot{s} \text{ are known, what are the pulley radii,}
+\text{if } x_p,\ x_s \text{ and their first and second time derivatives are known,}
 \]
 \[
-\text{and how are those radii moving?}
+\text{what are the pulley radii, and how are those radii moving?}
 \]
 
-The natural place to start is the shape of the pulleys themselves. A belt sitting
-in a V-groove has a direct connection between axial motion and radial position.
-Since the same belt connects both pulleys, the two pulley radii must also be
-related to each other. The goal of this section is to use those geometric facts
-to obtain the radius and ratio relationships needed before any forces are
-introduced.
+Answering this question begins locally. The axial position of each movable
+sheave must first be related to the belt radius on its own pulley. The two
+results must then be brought together, since the primary and secondary radii
+belong to the same belt loop. Considering the complete belt will determine
+which positions of the two movable sheaves can occur together.
 
-Once the position-level geometry is clear, the same relationships can be viewed
-as time-varying quantities. If the shift coordinate moves, then the pulley radii
-move with it. The remaining kinematic task is therefore to differentiate the
-geometric relationships so that radius rates, radius accelerations, and ratio
-rate can be expressed consistently from the same foundation.
+The position-level geometry is developed first. The resulting relationships
+can then be differentiated to obtain the radius rates and radius accelerations
+from the motion of the sheaves.
+
+The natural place to begin is the geometry of a single pulley.
 
 
 % ==============================================================
