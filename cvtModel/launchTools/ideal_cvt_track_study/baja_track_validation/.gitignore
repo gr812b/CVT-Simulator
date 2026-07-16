@@ -1,9 +1,0 @@
-__pycache__/
-*.py[cod]
-*.egg-info/
-.venv/
-dist/
-build/
-results/
-.DS_Store
-
