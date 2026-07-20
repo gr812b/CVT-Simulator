@@ -2150,8 +2150,242 @@ from the motion of the sheaves.
 
 The natural place to begin is the geometry of a single pulley.
 
+\subsection{Local Pulley Geometry}
+\label{sec:local_pulley_geometry}
 
-% ==============================================================
+The first part of the geometric question can be answered on a single pulley:
+how does the axial position of its movable sheave determine the pulley radius?
+The same conical geometry appears on both pulleys, so the relationship can be
+derived once and then applied to the primary and secondary.
+
+The axial direction and primary-sheave convention were introduced in
+\Cref{sec:cvt_axial_direction} and illustrated in
+\Fig{fig:cvt_axial_direction}. The local coordinates \(x_p\) and \(x_s\)
+follow the same convention on their respective pulleys.
+
+For either pulley \(j\in\{p,s\}\), \(x_j=0\) denotes the fully open
+configuration. Increasing \(x_j\) moves the movable sheave toward the fixed
+sheave and closes the pulley, while decreasing \(x_j\) opens it. The
+corresponding velocity follows the same sign convention:
+\(\dot{x}_j>0\) denotes closing motion and \(\dot{x}_j<0\) denotes opening
+motion.
+
+The primary therefore begins at \(x_p=0\) and moves in the positive direction
+as it closes. The secondary begins in a closed position, with \(x_s>0\), and
+moves toward smaller values of \(x_s\) as it opens.
+
+Consider a belt seated between two straight sheave faces with half-angle
+\(\beta\), as shown in \Cref{fig:local_pulley_geometry}. Let
+\(b_{\mathrm{in}}\) denote the width of the belt at its inner surface. As
+assumed in \Cref{assump:fixed-belt-cross-section}, this width remains constant.
+
+Suppose the movable sheave closes the pulley by a distance \(\Delta x_j\).
+At the original belt radius, the available space between the sheaves is
+therefore reduced from \(b_{\mathrm{in}}\) to
+
+\[
+b_{\mathrm{in}}-\Delta x_j.
+\]
+
+The belt responds by moving outward through a radial distance
+\(\Delta r_j\). At its new position, the angled sheave faces provide an
+additional axial distance \(d\) on each side.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.7\linewidth]
+{figures/geometry/local_pulley_geometry.png}
+\caption{
+Local geometry of a belt moving outward between the sheave faces of pulley
+\(j\). Closing the pulley by \(\Delta x\) reduces the available width at
+the original belt position to \(b_{\mathrm{in}}-\Delta x\). Moving outward
+by \(\Delta r\) provides an additional axial distance \(d\) at each
+sheave face.
+}
+\label{fig:local_pulley_geometry}
+\end{figure}
+
+At the new radius, the total space between the sheave faces must again equal
+the fixed belt width. Reading directly from
+\Cref{fig:local_pulley_geometry},
+
+\begin{equation}
+b_{\mathrm{in}}
+=
+2d+\left(b_{\mathrm{in}}-\Delta x_j\right).
+\label{eq:local_width_balance}
+\end{equation}
+
+The right triangle beside either sheave face relates \(d\) to the radial
+movement. For the sheave half-angle \(\beta\),
+
+\begin{equation}
+\tan\beta
+=
+\frac{d}{\Delta r_j},
+\end{equation}
+
+and therefore
+
+\begin{equation}
+d
+=
+\Delta r_j\tan\beta.
+\label{eq:local_triangle_distance}
+\end{equation}
+
+Substituting \Cref{eq:local_triangle_distance} into
+\Cref{eq:local_width_balance} gives
+
+\begin{equation}
+b_{\mathrm{in}}
+=
+2\Delta r_j\tan\beta
++
+\left(b_{\mathrm{in}}-\Delta x_j\right).
+\end{equation}
+
+The constant belt-width terms cancel, leaving
+
+\begin{equation}
+\Delta r_j
+=
+\frac{\Delta x_j}{2\tan\beta}.
+\label{eq:local_cone_geometry}
+\end{equation}
+
+This is the basic axial-to-radial relationship of the pulley. Closing the
+pulley moves the belt outward, while opening it moves the belt inward. A
+smaller sheave angle produces more radial movement for the same axial motion,
+whereas a larger sheave angle produces less.
+
+Taking the infinitesimal limit of
+\Cref{eq:local_cone_geometry} gives
+
+\begin{equation}
+\frac{dr_j}{dx_j}
+=
+\frac{1}{2\tan\beta}.
+\label{eq:local_radius_position_derivative}
+\end{equation}
+
+Because the sheave faces are straight, this slope is constant.
+
+\paragraph{Radius convention}
+
+The derivation above follows the inner surface of the belt, where
+\(b_{\mathrm{in}}\) is defined. The belt also has the finite radial height
+\(h_b\), so its inner and outer surfaces occupy different radii. Let
+\(r_{j,\mathrm{inner}}\) and \(r_{j,\mathrm{outer}}\) denote those radii.
+They are related by
+
+\begin{equation}
+r_{j,\mathrm{outer}}
+=
+r_{j,\mathrm{inner}}+h_b.
+\label{eq:inner_outer_radius_relation}
+\end{equation}
+
+The fixed-cross-section assumption in
+\Cref{assump:fixed-belt-cross-section} also makes \(h_b\) constant.
+Consequently, the inner and outer surfaces undergo the same radial
+displacement, and the axial-to-radial relationship derived above applies to
+either one.
+
+An absolute pulley radius must nevertheless identify which belt surface is
+being measured. The outer surface is used here because it provides a
+convenient and directly measurable reference. Throughout the geometric
+development,
+
+\begin{equation}
+r_j
+\equiv
+r_{j,\mathrm{outer}}.
+\label{eq:geometry_radius_convention}
+\end{equation}
+
+The derivative in \Cref{eq:local_radius_position_derivative} describes how
+this radius changes, but one known configuration is needed to establish its
+absolute value. Let \(x_{j,\mathrm{ref}}\) denote a known axial position at
+which the belt is seated, and let \(r_{j,\mathrm{ref}}\) denote the outer
+pulley radius measured at that same position. The outer radius at any other seated
+position is then
+
+\begin{equation}
+r_j(x_j)
+=
+r_{j,\mathrm{ref}}
++
+\frac{x_j-x_{j,\mathrm{ref}}}{2\tan\beta}.
+\label{eq:local_radius_map}
+\end{equation}
+
+The pair
+\(\left(x_{j,\mathrm{ref}},r_{j,\mathrm{ref}}\right)\)
+simply anchors the linear relationship to a known physical configuration.
+
+For the secondary pulley, a convenient reference is its known closed starting
+position. The secondary begins with the belt seated at a large radius and
+opens as the CVT shifts. Since opening corresponds to decreasing \(x_s\),
+\Cref{eq:local_radius_map} produces the corresponding decrease in \(r_s\).
+
+The primary begins from the opposite condition, with an important
+geometric asymmetry between the two pulleys. The secondary begins closed with
+the belt already seated, whereas the primary begins fully open. In this open
+configuration, the distance between the primary sheaves can be greater than
+the belt width. Initial positive motion of the primary sheave therefore closes
+the empty clearance without yet moving the belt.
+
+This interval is the \emph{primary deadzone}. Let
+\(x_{p,\mathrm{dz}}\) denote the primary position at which the movable sheave
+first reaches the belt. Within the deadzone,
+
+\[
+0\leq x_p<x_{p,\mathrm{dz}},
+\]
+
+the primary coordinate changes, but the belt remains at its minimum primary
+radius. At \(x_p=x_{p,\mathrm{dz}}\), the clearance has been removed and the
+belt becomes seated between the sheave faces. Further closure then moves the
+belt outward according to the local geometry derived above.
+
+The first-contact position provides the natural reference for the seated
+primary branch:
+
+\[
+x_{p,\mathrm{ref}}=x_{p,\mathrm{dz}},
+\qquad
+r_{p,\mathrm{ref}}=r_{p,\min}.
+\]
+
+The complete primary radius map is therefore
+
+\begin{equation}
+r_p(x_p)
+=
+\begin{cases}
+r_{p,\min},
+& 0\leq x_p<x_{p,\mathrm{dz}},\\[8pt]
+\displaystyle
+r_{p,\min}
++
+\frac{x_p-x_{p,\mathrm{dz}}}{2\tan\beta},
+& x_{p,\mathrm{dz}}\leq x_p\leq x_{p,\max}.
+\end{cases}
+\label{eq:primary_local_radius_map}
+\end{equation}
+
+The linear axial-to-radial relationship in
+\Cref{eq:local_radius_map} is standard in reduced CVT geometry models
+\cite{duan,ballew}. It applies to both pulleys whenever the belt is seated,
+while \Cref{eq:primary_local_radius_map} extends the primary description
+through the deadzone before contact.
+
+The local geometry now tells us the pulley radius associated with either
+movable-sheave position. To determine which primary and secondary positions
+can occur together, the two local descriptions must next be joined through the
+geometry of the complete belt.
+
 \subsection{Shift Coordinate, Deadzone, and Primary Closure}
 \label{sec:shift_definition}
 
@@ -2207,6 +2441,8 @@ Although the secondary pulley also contains a movable sheave, its axial
 position is not denoted by \(s\). Throughout this section, \(s\) refers only
 to primary-sheave closure and is used to describe the resulting belt position
 on the primary pulley.
+
+
 
 % --------------------------------------------------------------
 
