@@ -2138,24 +2138,15 @@ transmission ratio.
 
 Both pulleys contain a movable sheave. Let \(x_p\) denote the axial position of
 the movable primary sheave and \(x_s\) the axial position of the movable
-secondary sheave. The central question of this section is
+secondary sheave. The geometric problem is therefore twofold: how does the
+axial position of each movable sheave set the belt radius on its own pulley,
+and how does the shared belt constrain the two pulley positions to move
+together?
 
-\[
-\text{if } x_p,\ x_s \text{ and their first and second time derivatives are known,}
-\]
-\[
-\text{what are the pulley radii, and how are those radii moving?}
-\]
-
-Answering this question begins locally. The axial position of each movable
-sheave must first be related to the belt radius on its own pulley. The two
-results must then be brought together, since the primary and secondary radii
-belong to the same belt loop. Considering the complete belt will determine
-which positions of the two movable sheaves can occur together.
-
-The position-level geometry is developed first. The resulting relationships
-can then be differentiated to obtain the radius rates and radius accelerations
-from the motion of the sheaves.
+The first question can be answered from the local geometry of each pulley.
+The second requires following the belt around the complete loop. Once these
+position relationships are known, they can be differentiated to obtain the
+corresponding radius rates and accelerations.
 
 The natural place to begin is the geometry of a single pulley.
 
@@ -2546,7 +2537,9 @@ therefore satisfy
     \label{eq:belt_length_compatibility}
 \end{equation}
 
-where \(L_b\) is the fixed belt length. This is the geometric compatibility
+where \(L_b\) is the fixed belt length expressed using the same outer-surface
+reference adopted for \(r_p\) and \(r_s\) in
+\Cref{eq:geometry_radius_convention}. This is the geometric compatibility
 condition for the belt loop. Once any two of \(r_p\), \(r_s\), and \(C\) are
 known, the condition determines the third.
 
@@ -2924,7 +2917,10 @@ additional belt path would be required if one pulley radius increased while
 the other radius remained fixed. The actual pulley motion must make these two
 changes cancel. We therefore calculate the two sensitivities next.
 
-The quantities that change inside the belt-length relation are
+The span angle and straight-span length entering the belt-length relation were
+derived in
+\Cref{eq:belt_span_angle,eq:belt_straight_span_length}. Writing them together
+in the form needed for differentiation,
 
 \begin{equation}
     \delta
@@ -2937,8 +2933,9 @@ The quantities that change inside the belt-length relation are
     \label{eq:belt_rate_geometry_recalled}
 \end{equation}
 
-where \(\delta\) sets the wrap angles and \(l\) is the length of either
-straight span. Using these quantities, the exact path length from
+Here, \(\delta\) sets the wrap angles through
+\Cref{eq:pulley_wrap_angles}, while \(l\) is the length of either straight
+span. Using these quantities, the exact path length from
 \Cref{eq:belt_length_exact} is
 
 \begin{equation}
@@ -3643,7 +3640,7 @@ in \Cref{eq:primary_radius_acceleration,eq:secondary_radius_acceleration}
 apply within the deadzone and engaged branches, while first contact is treated
 as the transition between them.
 
-TODO: Update remark box once I have a section on numerical simulation transitions.
+% TODO: Add a cross-reference once the numerical transition section exists.
 \end{remarkbox}
 
 \begin{remarkbox}[Remark (Practical Consequences of the Pulley Geometry)]
@@ -3656,15 +3653,15 @@ and sheave angle shape the available ratio range and ratio-change sensitivity.
 \end{remarkbox}
 
 % --------------------------------------------------------------
-\subsection{Section Conclusion}
+\subsection{Geometric Closure and Model Scope}
 \label{sec:geometry_conclusion}
 
-The pulley geometry is now closed by the single shift coordinate. The
-definition in \Cref{eq:system_shift_coordinate} fixes the primary position,
-while \Cref{eq:secondary_coordinate_map} supplies the unique compatible
-secondary position. The local pulley maps in
-\Cref{eq:local_radius_map,eq:primary_local_radius_map} then give the two pulley
-radii. Finally, the rate and acceleration relations in
+Specifying the shift state now determines the complete modeled pulley
+geometry. The definition in \Cref{eq:system_shift_coordinate} sets the primary
+position directly, while \Cref{eq:secondary_coordinate_map} gives the unique
+compatible secondary position. The local pulley maps in
+\Cref{eq:local_radius_map,eq:primary_local_radius_map} convert those two
+positions into pulley radii. Finally, the rate and acceleration relations in
 \Cref{eq:primary_radius_rate,eq:secondary_radius_rate,%
 eq:primary_radius_acceleration,eq:secondary_radius_acceleration} determine how
 those radii move. Thus, for any admissible shift state,
@@ -3678,16 +3675,16 @@ those radii move. Thus, for any admissible shift state,
     \right).
 \]
 
-This closure follows from the geometric representation used throughout the
+These results follow from the geometric representation used throughout the
 section. The belt cross-section is fixed under
 \AssRef{assump:fixed-belt-cross-section}, the belt length is fixed under
 \AssRef{assump:constant_belt_length}, and
 \AssRef{assump:uniform_contact_radius} represents the belt path on each pulley
 by a single radius over its wrap. The centre distance is established once by
 \Cref{eq:center_distance_root} and then remains fixed by the pulley-shaft
-spacing. With the two wrapped arcs joined by the straight tangent spans in
-\Fig{fig:belt_loop_geometry}, specifying \(s\) leaves no further geometric
-freedom in the modeled belt path.
+spacing. Under these conditions, the two wrapped arcs and straight tangent
+spans in \Fig{fig:belt_loop_geometry} can form only one modeled belt path for
+each admissible value of \(s\).
 
 \paragraph{Relation to prior transient models}
 
@@ -3726,7 +3723,6 @@ ask how the belt or chain deforms and migrates within that path. Those internal
 motions lie outside the present geometric layer; within the assumptions stated
 above, the global pulley geometry and its motion are fully determined.
 % --------------------------------------------------------------
-
 \section{Pulley Axial Force Models}\label{sec:axial}
 
 The geometric relations developed in the previous section define how
