@@ -2193,7 +2193,7 @@ additional axial distance \(d\) on each side.
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=0.7\linewidth]
+\includegraphics[width=\linewidth]
 {figures/geometry/local_pulley_geometry.png}
 \caption{
 Local geometry of a belt moving outward between the sheave faces of pulley
@@ -2329,12 +2329,12 @@ position. The secondary begins with the belt seated at a large radius and
 opens as the CVT shifts. Since opening corresponds to decreasing \(x_s\),
 \Cref{eq:local_radius_map} produces the corresponding decrease in \(r_s\).
 
-The primary begins from the opposite condition, with an important
-geometric asymmetry between the two pulleys. The secondary begins closed with
-the belt already seated, whereas the primary begins fully open. In this open
-configuration, the distance between the primary sheaves can be greater than
-the belt width. Initial positive motion of the primary sheave therefore closes
-the empty clearance without yet moving the belt.
+The primary introduces an important geometric asymmetry: it can open farther
+than the width of the belt. At \(x_p=0\), the distance between the primary
+sheaves can therefore exceed \(b_{\mathrm{in}}\). Initial positive motion of
+the movable primary sheave only removes this clearance, leaving the belt at
+the same radius. The primary radius begins to increase only once the movable
+sheave reaches the belt.
 
 This interval is the \emph{primary deadzone}. Let
 \(x_{p,\mathrm{dz}}\) denote the primary position at which the movable sheave
@@ -2386,186 +2386,230 @@ movable-sheave position. To determine which primary and secondary positions
 can occur together, the two local descriptions must next be joined through the
 geometry of the complete belt.
 
-\subsection{Shift Coordinate, Deadzone, and Primary Closure}
-\label{sec:shift_definition}
-
-The shift coordinate \(s\) was defined in \Cref{sec:cvt_axial_direction} as the
-axial displacement of the movable primary sheave. Since the primary is the
-driving pulley on the engine side of the CVT, this primary sheave motion is
-used as the reference motion for the ratio change.
-
-The reference position is the fully open primary pulley,
-
-\[
-s = 0.
-\]
-
-In this position, the primary sheaves are farthest apart and the belt sits at
-its smallest primary radius. As \(s\) increases, the movable primary sheave
-moves toward the fixed sheave. This closes the primary pulley and moves the CVT
-toward upshift.
-
-Two other positions complete the useful range of the coordinate. The first is
-the deadzone position \(s_{\mathrm{dz}}\). In the fully open configuration, the
-primary gap may be wider than the belt, so the movable sheave can travel a
-short distance before it actually begins to squeeze the belt. During this open
-region,
-
-\[
-0 \le s < s_{\mathrm{dz}},
-\]
-
-the primary sheave is moving, but the belt has not yet been forced outward. The
-primary radius therefore remains unchanged.
-
-Once the deadzone is taken up,
-
-\[
-s_{\mathrm{dz}} \le s,
-\]
-
-the belt is seated against the sheave faces. Further closure of the primary
-V-groove now forces the belt outward to a larger radius.
-
-The second position is the maximum shift position \(s_{\max}\). This is the
-largest possible primary closure. Physically, it corresponds to the end of the
-movable sheave travel: the pulley has closed as far as the hardware allows, so
-the two sheave components cannot move farther together. The modeled shift range
-is therefore
-
-\[
-0 \le s \le s_{\max}.
-\]
-
-Although the secondary pulley also contains a movable sheave, its axial
-position is not denoted by \(s\). Throughout this section, \(s\) refers only
-to primary-sheave closure and is used to describe the resulting belt position
-on the primary pulley.
-
-
 
 % --------------------------------------------------------------
+\subsection{Complete Belt-Loop Geometry}
+\label{sec:belt_loop_geometry}
 
-\subsection{Primary Outer Radius as a Function of Shift}
-\label{sec:rp}
+The local pulley geometry describes how axial motion changes the radius on
+each pulley. The belt, however, passes around both pulleys. To connect the two
+radii, the belt must now be followed around the complete loop.
 
-Since the shift coordinate \(s\) directly measures closure of the primary
-pulley, the first geometric relationship to establish is between primary
-closure and radial motion of the belt. Before the deadzone is taken up, the
-movable sheave can move without changing where the belt sits. Once the belt is
-seated between the sheave faces, further closure forces it outward.
+The belt path consists of four parts: a wrapped arc on the primary pulley, a
+wrapped arc on the secondary pulley, and two equal straight spans. Under
+\Cref{assump:uniform_contact_radius}, each wrapped portion is represented by
+a single radius over its full contact angle. If each straight span has length
+\(l\), and the primary and secondary wrap angles are \(\phi_p\) and \(\phi_s\),
+the total geometric length of the loop is
 
-This behavior follows from the belt's fixed cross-section. As assumed in
-\Cref{assump:fixed-belt-cross-section}, the belt has a fixed axial width and a
-fixed radial height. Its fixed width is what prevents it from remaining at the
-same radius as the sheaves close: once the gap becomes smaller than the belt,
-the belt must move outward along the conical faces.
+\begin{equation}
+    L_{\mathrm{geo}}
+    =
+    r_p\phi_p+r_s\phi_s+2l.
+    \label{eq:belt_length_components}
+\end{equation}
 
-Consider the instant at which the belt has just become seated, at
-\(s=s_{\mathrm{dz}}\). Let \(b_{\mathrm{in}}\) denote the fixed width of the
-belt's inner base. At this instant, the sheave gap at the inner base is also
-\(b_{\mathrm{in}}\). Now let the movable primary sheave close by a further
-amount \(\Delta s\). At the original radial position, the gap is then reduced
-to \(b_{\mathrm{in}}-\Delta s\). The belt cannot remain there with the same
-width, so it moves outward by \(\Delta r\), as shown in
-\Cref{fig:primary_geometry}.
+The quantities \(l\), \(\phi_p\), and \(\phi_s\) follow directly from the
+geometry shown in \Fig{fig:belt_loop_geometry}.
 
 \begin{figure}[H]
-\centering
-\includegraphics[width=0.7\linewidth]{old_figures/axial_to_radial.png}
-\caption{
-Primary V-groove geometry after the belt has become seated. A further closure
-\(\Delta s\) reduces the gap at the original belt position from
-\(b_{\mathrm{in}}\) to \(b_{\mathrm{in}}-\Delta s\). As the belt moves outward
-by \(\Delta r\), the angled sheave faces provide an additional axial space
-\(x\) on each side.
-}
-\label{fig:primary_geometry}
+    \centering
+    \includegraphics[width=\textwidth]
+        {figures/geometry/belt_loop_geometry.png}
+    \caption{
+    Geometry of the complete belt loop. The belt path consists of two wrapped
+    arcs and two equal straight spans of length \(l\). Unequal pulley radii
+    incline the straight spans by the angle \(\delta\), producing the primary
+    and secondary wrap angles \(\phi_p\) and \(\phi_s\).
+    }
+    \label{fig:belt_loop_geometry}
 \end{figure}
 
-At the belt's new radial position, the two angled sheave faces provide an
-additional space \(x\) on either side. The belt still has the same width
-\(b_{\mathrm{in}}\), so the available gap must satisfy
+Consider the right triangle in the upper span in
+\Fig{fig:belt_loop_geometry}. The line joining the pulley centres forms its
+hypotenuse and has length \(C\). One side lies along the straight belt span
+and therefore has length \(l\).
 
-\[
-b_{\mathrm{in}}-\Delta s+2x=b_{\mathrm{in}}.
-\]
-
-Thus,
-
-\[
-\Delta s=2x.
-\]
-
-The small triangle beside either sheave face relates this side contribution to
-the radial rise. For the sheave half-angle \(\beta\),
-
-\[
-\tan\beta=\frac{x}{\Delta r},
-\]
-
-so that
-
-\[
-x=\Delta r\tan\beta.
-\]
-
-Substituting this result into the gap relation above gives
+The other side is perpendicular to the span. The primary and secondary radii
+drawn to their respective contact points are also perpendicular to this span
+and are therefore parallel. As shown by the orange construction in
+\Fig{fig:belt_loop_geometry}, the difference between their lengths gives the
+remaining side of the triangle, \(r_s-r_p\). The triangle therefore satisfies
 
 \begin{equation}
-\Delta r=\frac{\Delta s}{2\tan\beta}.
-\label{eq:cone_geometry}
+    l^2+\left(r_s-r_p\right)^2=C^2,
 \end{equation}
 
-This is the basic wedge relation for the primary pulley: axial closure of the
-sheaves becomes radial motion of the belt. A smaller sheave angle produces more
-radial motion for the same axial closure, while a larger sheave angle produces
-less.
-
-Taking the infinitesimal limit of \Cref{eq:cone_geometry} yields the local
-geometric relationship between axial shift and belt radius,
+and the length of either straight span is
 
 \begin{equation}
-\frac{dr}{ds}=\frac{1}{2\tan\beta}.
-\label{eq:cone_geometry_diff}
+    l
+    =
+    \sqrt{C^2-\left(r_s-r_p\right)^2}.
+    \label{eq:belt_straight_span_length}
 \end{equation}
 
-Because the sheave face is straight, this derivative is constant, meaning that
-radial position varies linearly with axial displacement.
+This expression requires
 
-The radial change \(\Delta r\) is the same whether it is measured at the inner
-or outer surface of the belt, because the belt's radial height is fixed. The
-radii themselves differ by that fixed height. The radius used for the belt-path
-geometry is the \emph{primary outer radius},
-\(r_{p,\mathrm{outer}}\), measured to the outside surface of the belt. The
-corresponding inner radius is
+\begin{equation}
+    \left|r_s-r_p\right|<C.
+\end{equation}
 
-\[
-r_{p,\mathrm{inner}}
-=
-r_{p,\mathrm{outer}}-h_b,
-\]
+This condition is already enforced by the physical separation of the pulleys.
+The pulley circles must remain apart, requiring
+\(C>r_s+r_p\), and \(r_s+r_p\) is necessarily greater than
+\(\left|r_s-r_p\right|\).
 
-where \(h_b\) is the belt radial height. The effective torque radius is
-introduced later.
+The straight-span length accounts for only two parts of the belt path. The
+two wrapped portions still depend on how the straight spans meet the pulleys.
+If the pulley radii are equal, the spans are parallel to the line joining the
+pulley centres and the belt wraps halfway around each pulley. Both wrap angles
+are then equal to \(\pi\).
 
-Let \(r_{p,\mathrm{outer},\min}\) denote the primary outer radius at the fully
-open position. The deadzone and the V-groove relation can now be summarized in
-one radius map:
+When the radii differ, the straight spans rotate through the angle
+\(\delta\) shown in \Fig{fig:belt_loop_geometry}. The same right triangle gives
 
-\bigeq{eq:primary_radius}{Primary Outer Radius}{
-r_{p,\mathrm{outer}}(s)=
-\begin{cases}
-r_{p,\mathrm{outer},\min}, & 0\le s<s_{\mathrm{dz}}, \\[8pt]
-r_{p,\mathrm{outer},\min}
-+\dfrac{s-s_{\mathrm{dz}}}{2\tan\beta},
-& s_{\mathrm{dz}}\le s\le s_{\max}.
-\end{cases}
+\begin{equation}
+    \sin\delta
+    =
+    \frac{r_s-r_p}{C},
+\end{equation}
+
+and therefore
+
+\begin{equation}
+    \delta
+    =
+    \sin^{-1}\!\left(\frac{r_s-r_p}{C}\right).
+    \label{eq:belt_span_angle}
+\end{equation}
+
+The angle \(\delta\) is signed. For the configuration shown,
+\(r_s>r_p\), so \(\delta>0\). The primary wrap loses an angle
+\(\delta\) at each end of its contact arc, while the secondary wrap gains the
+same amount at each end. Their wrap angles are therefore
+
+\begin{equation}
+    \phi_p=\pi-2\delta,
+    \qquad
+    \phi_s=\pi+2\delta.
+    \label{eq:pulley_wrap_angles}
+\end{equation}
+
+If \(r_p>r_s\), then \(\delta<0\), and the same equations automatically
+reverse which pulley has the larger wrap angle.
+
+The complete belt length follows by adding the two wrapped arcs and the two
+straight spans. Substituting
+\Cref{eq:belt_straight_span_length,eq:belt_span_angle,eq:pulley_wrap_angles}
+into \Cref{eq:belt_length_components} gives
+
+\bigeq{eq:belt_geometric_length}
+{Complete geometric belt length}
+{
+\begin{aligned}
+L_{\mathrm{geo}}(r_p,r_s,C)
+={}&
+\pi\left(r_p+r_s\right)
+\\
+&+
+2\left(r_s-r_p\right)
+\sin^{-1}\!\left(\frac{r_s-r_p}{C}\right)
+\\
+&+
+2\sqrt{C^2-\left(r_s-r_p\right)^2}
+\end{aligned}
 }
 
-Before the belt is squeezed, the primary radius remains fixed. Once the
-deadzone has been taken up, each additional amount of primary closure moves the
-belt outward according to the same V-groove geometry.
+Each term still corresponds directly to part of the belt path. The first is
+the combined half-circle contribution from the two pulley wraps. The second
+accounts for the unequal wrap angles, and the third is the combined length of
+the two straight spans.
+
+When the pulley radii are equal, the straight spans are parallel, both wrap
+angles are \(\pi\), and the unequal-wrap correction vanishes. In this special
+case, \Cref{eq:belt_geometric_length} reduces to
+
+\begin{equation}
+    L_{\mathrm{geo}}
+    =
+    \pi\left(r_p+r_s\right)+2C.
+\end{equation}
+
+For any chosen values of \(r_p\), \(r_s\), and \(C\),
+\Cref{eq:belt_geometric_length} tells us how much belt is required to follow
+that path. The installed belt cannot change its total length as the pulleys
+shift. Under \Cref{assump:constant_belt_length}, every possible pulley
+position must therefore satisfy
+
+\begin{equation}
+    L_{\mathrm{geo}}(r_p,r_s,C)=L_b,
+    \label{eq:belt_length_compatibility}
+\end{equation}
+
+where \(L_b\) is the fixed belt length. This is the geometric compatibility
+condition for the belt loop. Once any two of \(r_p\), \(r_s\), and \(C\) are
+known, the condition determines the third.
+
+For a particular CVT, the first quantity to determine is the centre distance
+\(C\). The pulley radii change as the sheaves move, but the pulley shafts do
+not move with them. Once the CVT is assembled, \(C\) remains fixed throughout
+the simulation.
+
+The fixed centre distance can be found from any installed pulley position
+that can be measured. At that position, the belt length and the two pulley
+radii are known. Denoting the measured radii by
+\(r_{p,\mathrm{ref}}\) and \(r_{s,\mathrm{ref}}\), the only unknown in
+\Cref{eq:belt_length_compatibility} is \(C\).
+
+The expanded length relation cannot be rearranged into a useful explicit
+expression for \(C\), because \(C\) appears both inside the square root and
+inside the inverse sine. The centre distance is therefore found with a
+one-dimensional root solve. Define the belt-length residual as
+
+\begin{equation}
+    \mathcal{R}_L(r_p,r_s,C)
+    =
+    L_{\mathrm{geo}}(r_p,r_s,C)-L_b.
+    \label{eq:belt_length_residual}
+\end{equation}
+
+For a trial value of \(C\), a positive residual means that the resulting path
+would require more belt than is available. A negative residual means that it
+would require less. The correct centre distance is the value for which the
+required and available belt lengths match:
+
+\begin{equation}
+    \mathcal{R}_L
+    \left(
+        r_{p,\mathrm{ref}},
+        r_{s,\mathrm{ref}},
+        C
+    \right)
+    =0.
+    \label{eq:center_distance_root}
+\end{equation}
+
+This root solve is performed once when the CVT geometry is established.
+Afterward, both \(C\) and \(L_b\) remain fixed. As one pulley radius changes,
+the same compatibility condition determines the radius required at the other
+pulley.
+
+The open-belt construction used here is standard. A common reduced
+approximation replaces the exact path by
+\(2C+\pi(r_p+r_s)\), which is exact when the pulley radii are equal but omits
+the changes in straight-span length and wrap angle when they differ. The
+geometric treatment used by Duan et al.\ is closer in form to the present
+approach, although their belt is extensible \cite{duan}. Here, the exact
+unequal-radius geometry is retained while the total belt length remains
+fixed.
+
+The local relations \(r_p(x_p)\) and \(r_s(x_s)\) now describe how each
+pulley produces its radius, while
+\Cref{eq:belt_length_compatibility} describes which pairs of radii can belong
+to the same belt loop. Combining these results gives the relationship between
+the two local axial coordinates.
+% --------------------------------------------------------------
 
 \subsection{Fixed Belt Length and Pulley Coupling}
 \label{sec:belt_length}
@@ -2811,7 +2855,7 @@ belt-length residual vanishes. Details of the numerical procedure, including
 the search interval and convergence criterion, are given in
 \Cref{app:geometry-root-solve}. Because this calculation uses only fixed belt
 and sheave geometry, it is performed once during geometry initialization. The
-resulting value of \(C\) then remains fixed throughout the simulation.
+resulting value of \(C\) then remains fixed throughout operation.
 
 \begin{remarkbox}[Remark (Dependence of the Reference Geometry)]
 At the reference configuration, the belt length \(L_b\), center-to-center
