@@ -1315,742 +1315,459 @@ or vehicle load propagates through the CVT. The resulting effect on clamping,
 traction state, shift behaviour, torque transfer, engine speed, and vehicle
 acceleration can then be examined within the assumptions of the model.
 
-\chapter{Model Setup}
+\chapter{Model Definition and Simulation Problem}
+\label{chap:model_setup}
 
-\section{System Definition}
+Chapter~1 established the need for a first-principles formulation in which
+shaft motion, belt motion, and ratio evolution emerge from the mechanics of the
+CVT. This chapter turns that objective into a simulation problem. It defines
+what is included in the model, how systems outside the CVT act at its two shaft
+boundaries, the assumptions and sign conventions used throughout the
+formulation, and the state variables advanced through time.
 
-Placeholder
+At any instant, the current state and the mechanical conditions at the two
+shaft boundaries are known. The formulation developed in Chapter~3 determines
+the corresponding state derivative, and numerical integration advances the
+solution. This chapter therefore defines the system to be simulated;
+Chapter~3 derives the mechanics that govern its evolution.
 
-\section{Modeling Assumptions}\label{sec:assumptions}
+% ==============================================================
+\section{Modeled System and External Boundaries}
+\label{sec:system_definition}
 
-The following assumptions define the modeling scope and physical idealizations
-used in the CVT dynamic formulation. These assumptions establish the limits
-within which the derived equations remain valid.
+The modeled system is the complete mechanically actuated rubber V-belt CVT.
+It contains the primary and secondary pulley assemblies, the complete belt
+loop, and both belt--pulley contacts. The primary flyweights, ramp, and spring,
+together with the secondary spring and helix, are included because they act
+directly on the pulley assemblies. The masses and rotational inertias of the
+belt, pulleys, movable components, and actuation hardware also lie within the
+model boundary.
 
-% ======================================================
+The boundary is cut through the primary and secondary shafts, as shown in
+\Cref{fig:cvt_system_boundary}. Systems attached beyond those cuts are
+represented through their mechanical action at the corresponding shaft. This
+keeps the CVT formulation independent of a particular vehicle, engine, or test
+apparatus.
+
+\begin{figure}[H]
+\centering
+{%
+\small
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{c c c c c}
+\fbox{%
+\parbox[c][2.4cm][c]{0.18\textwidth}{%
+\centering
+\textbf{Primary-side system}\\[4pt]
+Engine, motor, dynamometer, or other attached system
+}}
+& $\longleftrightarrow$ &
+\fbox{%
+\parbox[c][3.0cm][c]{0.42\textwidth}{%
+\centering
+\textbf{Modeled CVT}\\[5pt]
+Primary assembly
+$\longleftrightarrow$
+belt loop
+$\longleftrightarrow$
+secondary assembly\\[5pt]
+Both contacts, both actuation mechanisms, and retained CVT inertia
+}}
+& $\longleftrightarrow$ &
+\fbox{%
+\parbox[c][2.4cm][c]{0.18\textwidth}{%
+\centering
+\textbf{Secondary-side system}\\[4pt]
+Vehicle, dynamometer, or other attached system
+}}
+\end{tabular}
+}
+\caption{
+System boundary of the CVT formulation. The primary and secondary shaft cuts
+separate the modeled CVT from interchangeable attached systems. At either cut,
+the attached system is represented by the torque and equivalent inertia that
+it presents to the shaft. The shaft motion remains part of the CVT simulation.
+}
+\label{fig:cvt_system_boundary}
+\end{figure}
+
+\subsection{Torque--Inertia Boundary Contract}
+\label{sec:external_boundary_contract}
+
+At either shaft cut, everything beyond the modeled CVT is reduced to the
+mechanical load it presents at that shaft: an applied torque and an attached or
+reflected inertia. The two boundary descriptions are written as
+
+\begin{equation}
+\mathcal{B}_p=\bigl(\tau_{\mathrm{B},p},I_{\mathrm{B},p}\bigr),
+\qquad
+\mathcal{B}_s=\bigl(\tau_{\mathrm{B},s},I_{\mathrm{B},s}\bigr),
+\label{eq:boundary_contract}
+\end{equation}
+
+and are summarized in \Cref{tab:boundary_contract}.
+
+\begin{table}[H]
+\centering
+\caption{Mechanical information supplied at the external shaft boundaries.}
+\label{tab:boundary_contract}
+\begin{tabular}{p{0.25\linewidth} p{0.24\linewidth} p{0.31\linewidth}}
+\toprule
+\textbf{Boundary} & \textbf{Applied torque} & \textbf{Inertia seen at shaft} \\
+\midrule
+Primary-side shaft
+& $\tau_{\mathrm{B},p}$
+& $I_{\mathrm{B},p}$ \\[5pt]
+
+Secondary-side shaft
+& $\tau_{\mathrm{B},s}$
+& $I_{\mathrm{B},s}$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The shaft speeds are retained and advanced by the CVT simulation. During an
+evaluation, the current primary and secondary speeds are made available to the
+corresponding attached systems. Each attached system may use that speed, time,
+and its own internal information to compute the torque and equivalent inertia
+that it presents at the shaft cut. Only this torque--inertia pair is returned
+to the CVT formulation. The pair enters the coupled shaft dynamics, which
+determine the shaft acceleration subsequently used by the time integrator to
+update the speed.
+
+A prescribed torque curve or load law therefore prescribes the boundary
+relation, not the shaft motion. Neither $\omega_p$ nor $\omega_s$ is imposed by
+an attached system; both remain dynamic results of the CVT formulation.
+
+A positive boundary torque acts in the positive rotational direction defined
+for that shaft, and the equivalent inertia is expressed about the same shaft
+coordinate. Pulley, sheave, flyweight, helix, and belt inertias are assigned to
+the CVT; $I_{\mathrm{B},p}$ and $I_{\mathrm{B},s}$ account only for inertia
+beyond the two shaft cuts.
+
+Engine, vehicle, electric-dynamometer, and hydraulic-dynamometer
+implementations are given separately in the appendices as particular
+realizations of this common contract.
+
+The two cuts are called the primary-side and secondary-side boundaries so the
+terminology remains valid under either direction of power flow. Any attached
+system that can supply the torque--inertia description in
+\Cref{eq:boundary_contract} can be coupled to the same CVT equations.
+
+% ==============================================================
+\section{Modeling Assumptions}
+\label{sec:assumptions}
+
+The following assumptions define the physical resolution of the formulation
+and the operating scope within which its results are interpreted.
+
+% --------------------------------------------------------------
 \subsection{Material and Structural Idealizations}
 
 \begin{assumptionblock}{assump:material_constancy}{Constant Material Properties}
-Material properties of structural components are treated as constant.
-No temperature-dependent material variation is modeled.
-Thermal effects are not solved as part of this system.
+The material properties assigned to the modeled components remain constant
+during a simulation. Temperature-dependent material variation and thermal
+state evolution are outside the present formulation.
 \end{assumptionblock}
 
 \begin{assumptionblock}{assump:rigid_components}{Rigid Structural Components}
-All structural components (pulleys, shafts, housing) are modeled as rigid bodies.
-Elastic deformation under operational loading is neglected.
-The belt is assumed axially rigid (no longitudinal stretch),
-while still conforming geometrically around pulleys.
+The pulleys, shafts, housing, and actuation hardware are represented as rigid
+bodies. The belt is inextensible along its length while remaining free to bend
+around the pulleys. Elastic deformation of the hardware and longitudinal belt
+stretch are neglected.
 \end{assumptionblock}
 
 \begin{assumptionblock}{assump:no_wear}{Negligible Wear and Surface Evolution}
-Component wear, belt degradation, and pulley surface evolution
-are neglected.
-The model represents short-term operational behavior.
+Component wear, belt degradation, and pulley-surface evolution are negligible
+over the simulated interval. Component geometry and surface condition are
+therefore treated as unchanged.
 \end{assumptionblock}
 
-% ======================================================
+% --------------------------------------------------------------
 \subsection{Contact and Friction Modeling}
 
 \begin{assumptionblock}{assump:ideal_friction}{Idealized Belt--Pulley Friction Law}
-Belt traction is modeled using a simplified dry-friction law with an
-explicit stick--slip transition rule.
-The model distinguishes between gross adhered contact and gross slipping
-contact at each pulley.
-Microscopic contact mechanics, rubber hysteresis, local creep,
-partial slip within the contact patch, lubrication effects,
-and detailed Stribeck behavior are not explicitly modeled.
+Each belt--pulley contact is represented by a gross stick--slip law. A sticking
+contact develops the tangential traction required by the coupled motion up to
+its static limit. A slipping contact develops signed kinetic traction opposing
+the relative motion. Microscopic contact mechanics, rubber hysteresis, local
+creep, partial slip within a wrap, lubrication, and detailed Stribeck behavior
+are not resolved.
 \end{assumptionblock}
 
-\begin{assumptionblock}{assump:constant_friction}{Constant Effective Friction Coefficient}
-The belt--pulley coefficient of friction is treated as constant.
-It does not evolve with temperature, wear, belt conditioning,
-surface contamination, normal pressure, or slip speed.
-Separate static and kinetic friction coefficients may be used,
-but each is treated as constant during a given simulation.
+\begin{assumptionblock}{assump:constant_friction}{Constant Effective Friction Coefficients}
+The effective static and kinetic belt--pulley friction coefficients remain
+constant during a simulation. Their dependence on temperature, wear, belt
+conditioning, contamination, normal pressure, and slip speed is neglected.
 \end{assumptionblock}
 
-\begin{assumptionblock}{assump:averaged_contact}{Averaged Contact Distribution}
-Contact pressure and traction over the pulley wrap angle
-are treated as effectively uniform or averaged.
-Localized edge loading and non-uniform stress distributions are neglected.
+\begin{assumptionblock}{assump:averaged_contact}{Integrated Contact Representation}
+The distributed loading over each pulley wrap is represented through its
+integrated normal and tangential effects. Local pressure variation, edge
+loading, and spatial redistribution of contact stress are not resolved
+separately.
 \end{assumptionblock}
 
-\begin{assumptionblock}{assump:gross_tangential_traction}{Gross Tangential Traction Approximation}
-Belt--pulley traction is resolved only in the gross tangential direction
-around each pulley wrap.
-Radial belt migration through the sheave groove during shift is not modeled
-as a separate friction demand.
-Local radial sliding, local creep, and contact redistribution associated
-with radial belt motion are not resolved.
+\begin{assumptionblock}{assump:gross_tangential_traction}{Circumferential Traction Approximation}
+Belt--pulley traction is resolved in the circumferential transport direction.
+Radial belt migration through the sheave groove is not assigned a separate
+friction demand. Local radial sliding, local creep, and traction redistribution
+associated with radial motion are outside the present contact representation.
 \end{assumptionblock}
 
 \begin{assumptionblock}{assump:secondary_face_torque_split}{Equal Secondary Sheave-Face Torque Partition}
-The torque transmitted from the belt to the secondary pulley is treated as
-equally shared between the fixed and movable secondary sheave faces.
-Face-level torque redistribution between the fixed and movable sheaves is
-not resolved.
-Changes in torque share due to helix-induced relative rotation, local belt
-deformation, contact pressure redistribution, and face-level microslip are
-neglected.
+Torque transferred from the belt to the secondary pulley is shared equally by
+the fixed and movable sheave faces. Face-level redistribution caused by helix
+motion, belt deformation, pressure redistribution, or microslip is neglected.
 \end{assumptionblock}
 
-% ======================================================
+% --------------------------------------------------------------
 \subsection{Geometric and Kinematic Idealizations}
 
-\begin{assumptionblock}{assump:axis_alignment}{Perfect Axis Alignment}
-Primary and secondary pulley axes are assumed perfectly aligned.
-Misalignment, shaft eccentricity, and geometric runout are neglected.
+\begin{assumptionblock}{assump:axis_alignment}{Aligned Pulley Axes and Fixed Center Distance}
+The primary and secondary pulley axes remain parallel, and their center
+distance remains fixed. Shaft misalignment, eccentricity, bearing motion, and
+geometric runout are neglected.
 \end{assumptionblock}
 
 \begin{assumptionblock}{assump:fixed-belt-cross-section}{Fixed Belt Cross-Section}
 The belt retains the same cross-sectional shape and dimensions as it shifts.
-In particular, its inner width \(b_{\mathrm{in}}\) and radial height \(h_b\)
-are treated as constant. Compression between the sheave faces, lateral
-bulging, and centrifugal growth of the belt cross-section are neglected.
-The belt may still bend along its length to wrap around the pulleys.
+Its inner width $b_{\mathrm{in}}$ and radial height $h_b$ remain constant.
+Compression between the sheave faces, lateral bulging, and centrifugal growth
+of the cross-section are neglected, while bending along the belt path remains
+permitted.
 \end{assumptionblock}
 
 \begin{assumptionblock}{assump:constant_belt_length}{Constant Belt Length}
-The belt length is treated as constant.
-Longitudinal elasticity, transient stretch, permanent creep, and
-progressive elongation are not modeled.
-Effective pulley radii are determined solely from geometry
-and belt-length constraints.
+The belt length remains constant. Longitudinal elasticity, transient stretch,
+permanent creep, and progressive elongation are neglected. Every admissible
+pulley configuration must therefore satisfy the same closed belt length.
 \end{assumptionblock}
 
 \begin{assumptionblock}{assump:single_belt_speed}{Single Belt Transport Speed}
-The belt is represented by a single lumped transport speed.
-Internal belt shear, belt span vibration, local belt stretch,
-and separate belt speeds on the two sheave faces are not resolved.
+The belt is represented by one transport speed around the complete loop.
+Internal shear, span vibration, local stretch, and different transport speeds
+on the two sheave faces are not resolved.
 \end{assumptionblock}
 
-\begin{assumptionblock}{assump:uniform_contact_radius}{Uniform Contact Radius Around Wrap}
-At any given instant, the belt contacts each pulley at a single,
-uniform effective radius throughout the entire wrap angle.
-The contact radius is constant around the circumference of contact,
-with no spiral or progressive radial variation along the wrap.
-While the effective radius may evolve with axial shift position,
-it remains spatially uniform at each time instant.
+\begin{assumptionblock}{assump:uniform_contact_radius}{Uniform Contact Radius Around Each Wrap}
+At any instant, the belt follows one contact radius around each pulley wrap.
+Spiral or progressive radial variation through a wrap is neglected. The radius
+may evolve as the CVT shifts while remaining spatially uniform around the
+contact at that instant.
 \end{assumptionblock}
 
-% ======================================================
+% --------------------------------------------------------------
 \subsection{Dynamic and Inertial Modeling}
 
 \begin{assumptionblock}{assump:lumped_inertia}{Lumped Inertia Representation}
-Rotational inertias of the engine, pulleys, drivetrain,
-and wheels are represented as lumped equivalent inertias.
-Distributed shaft flex and torsional compliance are neglected.
+The inertia of each retained CVT component is represented by an equivalent
+lumped mass or rotational inertia. Inertia belonging to an attached system is
+supplied separately through $I_{\mathrm{B},p}$ or $I_{\mathrm{B},s}$.
+Distributed shaft flexibility and torsional compliance are neglected.
 \end{assumptionblock}
 
-\begin{assumptionblock}{assump:no_vibration}{Negligible Vibrational Effects}
-High-frequency vibrational effects, structural resonances,
-and drivetrain oscillations are neglected.
-The model captures dominant rigid-body dynamics only.
+\begin{assumptionblock}{assump:no_vibration}{Negligible High-Frequency Vibration}
+High-frequency belt, shaft, and structural vibration is neglected. The
+formulation retains the dominant rigid-body shaft rotation, belt transport,
+and sheave-shift dynamics.
 \end{assumptionblock}
 
-\begin{assumptionblock}{assump:no_parasitic_losses}{Negligible Parasitic Friction}
-Frictional losses in non-critical components
-(e.g., bearings, seals, auxiliary shafts)
-are neglected.
-Only friction directly relevant to belt traction
-and CVT torque transfer is modeled.
+\begin{assumptionblock}{assump:no_parasitic_losses}{Negligible Unmodeled Parasitic Friction}
+Bearing, seal, and auxiliary-hardware losses are neglected unless introduced
+explicitly through an actuator or boundary model. Belt traction remains part
+of the core CVT mechanics.
 \end{assumptionblock}
 
-\begin{assumptionblock}{assump:no_explicit_loss_model}{No Explicit CVT Loss or Thermal Model}
-The model resolves torque transfer, traction admissibility, and slip state.
-Heat generation, temperature rise, wear, and efficiency loss are not solved.
-Power dissipated during slip is not propagated into a thermal,
-wear, or degradation model.
+\begin{assumptionblock}{assump:no_explicit_loss_model}{No Separate Empirical Loss or Thermal Model}
+The formulation resolves torque transfer and gross sliding at the belt
+contacts. Sliding work is not propagated into temperature, wear, or
+temperature-dependent properties, and additional loss mechanisms such as belt
+hysteresis and flexural loss are not represented by an empirical efficiency
+model.
 \end{assumptionblock}
 
-\subsection{Environmental and Operational Scope}
+% --------------------------------------------------------------
+\subsection{Boundary and Operational Scope}
 
 \begin{assumptionblock}{assump:gravity_internal}{Negligible Gravitational Influence on CVT Internals}
-Gravitational forces acting on CVT internal components
-are negligible relative to centrifugal and contact forces
-at operating speeds.
+Gravitational forces on internal CVT components are negligible relative to the
+centrifugal, spring, inertial, and contact loads developed during operation.
 \end{assumptionblock}
 
-\begin{assumptionblock}{assump:full_throttle_model}{Full-Throttle Engine Model}
-The engine is modeled using a prescribed full-throttle torque curve.
-Load feedback modifies engine speed dynamically,
-but part-throttle dynamics and throttle transients
-are not explicitly modeled.
+\begin{assumptionblock}{assump:full_throttle_model}{Reference Full-Throttle Engine Boundary}
+The reference vehicle simulations use a prescribed full-throttle engine torque
+curve. Engine speed remains dynamically coupled to the CVT, while part-throttle
+and throttle-transient states are outside that particular boundary model. Other
+primary-side boundary models may be coupled through
+\Cref{eq:boundary_contract}.
 \end{assumptionblock}
 
-\section{Reference Material}\label{sec:notation}
-This section records any information for easy reference.
+% ==============================================================
+\section{Coordinate and Sign Conventions}
+\label{sec:notation}
+\label{sec:sign}
 
-\subsection{Coordinate and Sign Conventions}\label{sec:sign}
-
-A consistent set of coordinate directions and sign conventions
-is adopted throughout this document. All equations follow these conventions.
-
-% --------------------------------------------------------------
-\subsubsection{Vehicle Longitudinal Coordinate and Incline Angle}
-\label{sec:vehicle_longitudinal}
-
-Vehicle motion is modeled along a single longitudinal coordinate
-that follows the surface of the road.
-
-The coordinate $x$ is defined locally along the direction of travel,
-tangent to the road surface. The positive direction, $+x$, corresponds
-to the forward direction of vehicle motion.
-
-Because the road may be inclined relative to horizontal, the local
-direction of the $x$ axis depends on the road slope. The incline angle
-is denoted by $\alpha$ and is measured between the road surface and a
-horizontal reference line.
-
-\[
-\alpha > 0 \quad \text{: uphill in the $+x$ direction}
-\]
-
-\[
-\alpha < 0 \quad \text{: downhill in the $+x$ direction}
-\]
-
-As illustrated in \Fig{fig:vehicle_longitudinal_axis}, the $x$ direction
-always lies tangent to the road surface. Consequently, the orientation
-of the longitudinal axis varies with the local road incline $\alpha$.
-
-Vehicle velocity is defined along this coordinate. A velocity
-$v > 0$ corresponds to motion in the forward $+x$ direction along
-the road, while $v < 0$ corresponds to motion in the opposite direction.
-
-These definitions establish the geometric orientation of vehicle motion
-and the sign convention for road incline used throughout the model.
-
-\begin{figure}[H]
-\centering
-\includegraphics[width=\textwidth]{illustrations/coordinate/vehicle_longitudinal.png}
-\caption{
-Definition of the longitudinal vehicle coordinate and incline angle.
-The coordinate $x$ is defined tangent to the road surface and
-points in the forward direction of travel. The road incline
-$\alpha$ is measured relative to the horizontal reference line.
-Positive $\alpha$ corresponds to uphill motion in the $+x$
-direction, while negative $\alpha$ corresponds to downhill slope.
-}
-\label{fig:vehicle_longitudinal_axis}
-\end{figure}
+A consistent set of coordinate directions and sign conventions is adopted
+throughout this document. All equations follow these conventions. Coordinates
+belonging only to a particular engine, vehicle, or dynamometer are defined with
+the corresponding boundary model.
 
 % --------------------------------------------------------------
-\subsubsection{Rotational Sign Convention}
+\subsection{Rotational Sign Convention}
 \label{sec:rotational_sign}
 
-All rotating components in the drivetrain follow a consistent angular
-sign convention defined relative to forward vehicle motion.
+All rotating components in the reference drivetrain follow a consistent
+angular sign convention defined relative to forward vehicle motion. Their
+positive directions are chosen such that positive drivetrain rotation produces
+forward vehicle motion.
 
-The positive longitudinal direction $+x$ was defined previously as the
-forward direction of travel along the road surface. The rotational
-directions of all drivetrain components are chosen such that positive
-rotation produces vehicle motion in this $+x$ direction.
+As illustrated in \Cref{fig:rotational_sign}, positive wheel angular velocity
+$\omega_w>0$ corresponds to wheel rotation that drives the vehicle forward.
+The same convention is propagated upstream through the drivetrain. Positive
+rotation of the secondary pulley, $\omega_s>0$, is the direction that produces
+this wheel motion through the final reduction and axle. Positive rotation of
+the primary pulley, $\omega_p>0$, is the direction that drives the secondary
+pulley in this same sense through the CVT belt.
 
-As illustrated in \Fig{fig:rotational_sign}, positive wheel angular
-velocity $\omega_w > 0$ corresponds to wheel rotation that drives the
-vehicle forward along $+x$.
-
-The same convention is propagated upstream through the drivetrain.
-Positive rotation of the secondary pulley, $\omega_s > 0$, corresponds
-to the direction of rotation that produces this forward wheel motion
-through the final reduction gearbox and axle.
-
-Likewise, positive rotation of the primary pulley, $\omega_p > 0$,
-corresponds to the direction that drives the secondary pulley in this
-same sense through the CVT belt.
-
-Engine angular velocity follows the same convention. The engine rotates
-positively when it drives the primary pulley in the defined positive
-direction.
-
-Torque follows the same sign convention. A torque is considered
-positive when it acts in the defined positive rotational direction
-and therefore tends to increase the corresponding angular velocity.
+Torque follows the same sign convention. A torque is positive when it acts in
+the defined positive rotational direction and therefore tends to increase the
+corresponding angular velocity. The coordinate signs remain fixed when a
+torque resists the current motion or when power flow reverses.
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=\textwidth]{./illustrations/coordinate/rotational_directions.png}
+\includegraphics[width=\textwidth]{illustrations/coordinate/rotational_directions.png}
 \caption{
-Rotational sign convention for the drivetrain. Positive angular
-velocities for the wheels ($\omega_w$), secondary pulley ($\omega_s$),
-and primary pulley ($\omega_p$) are defined such that drivetrain
-rotation produces forward vehicle motion along the $+x$ direction.
+Rotational sign convention for the reference drivetrain. Positive angular
+velocities for the wheels ($\omega_w$), secondary pulley ($\omega_s$), and
+primary pulley ($\omega_p$) are defined such that drivetrain rotation produces
+forward vehicle motion.
 }
 \label{fig:rotational_sign}
 \end{figure}
 
+The belt loop is assigned a positive path direction consistent with transport
+produced by positive primary rotation. The belt transport speed $v_b$ is
+positive in this direction and negative in the opposite direction. This sign
+choice defines belt motion independently of whether either belt--pulley contact
+is sticking or slipping.
+
 % --------------------------------------------------------------
-\subsubsection{CVT Axial Direction}
+\subsection{Axial Sheave Direction}
 \label{sec:cvt_axial_direction}
 
 The axial coordinate of the primary pulley is defined along the axis of the
-pulley shaft, parallel to the pulley centerline and perpendicular to the
-plane of belt rotation.
+pulley shaft, parallel to the pulley centerline and perpendicular to the plane
+of belt rotation.
 
 In the reference configuration shown in
-\Fig{fig:cvt_axial_direction} (left), the primary pulley is fully open.
-The movable sheave is separated from the fixed sheave by the initial gap,
-and this configuration defines the origin of the axial coordinate.
-
-The axial variable $s$ measures the translation of the movable sheave
-relative to this open configuration.
-
-\[
-s = 0 \quad \text{: fully open configuration}
-\]
-
-A positive value of $s$ corresponds to the movable sheave translating
-toward the fixed sheave along the pulley axis.
+\Cref{fig:cvt_axial_direction} (left), the primary pulley is fully open. The
+movable sheave is separated from the fixed sheave by the initial gap, and this
+configuration defines the origin of the axial coordinate. The axial variable
+$s$ measures the translation of the movable sheave relative to this open
+configuration:
 
 \[
-s > 0 \quad \text{: sheave closing motion}
+s=0 \quad \text{: fully open configuration}.
 \]
 
-As the movable sheave closes, the belt is squeezed between the conical
-faces and is forced outward along the pulley ramps. This increases the
-effective belt radius on the primary pulley and corresponds to an
-upshift of the transmission.
+A positive value of $s$ corresponds to the movable sheave translating toward
+the fixed sheave along the pulley axis:
 
-The maximum displacement $s = S_{\max}$ corresponds to the fully closed
-configuration shown in \Fig{fig:cvt_axial_direction} (right).
+\[
+s>0 \quad \text{: sheave-closing motion}.
+\]
 
-Although $s$ is defined using the primary pulley, the motion cannot
-occur independently. Because the belt length remains constrained,
-closure of the primary pulley forces the secondary pulley to open.
-The precise geometric relationship between these motions will be
-derived later.
+As the movable sheave closes, the belt is squeezed between the conical faces
+and is forced outward along the pulley ramps. This increases the effective belt
+radius on the primary pulley and corresponds to an upshift of the transmission.
+The maximum displacement $s=S_{\max}$ corresponds to the fully closed
+configuration shown in \Cref{fig:cvt_axial_direction} (right).
 
-Axial velocity follows the same sign convention: $\dot{s} > 0$
-corresponds to the movable sheave translating toward the fixed
-sheave.
+Although $s$ is defined using the primary pulley, the motion cannot occur
+independently. Because the belt length remains constrained, closure of the
+primary pulley forces the secondary pulley to open. The precise geometric
+relationship between these motions will be derived later. The primary pulley
+is used here as the example; the same local convention---positive axial motion
+closes the sheave pair---applies when the secondary pulley is considered.
+
+Axial velocity follows the same sign convention: $\dot{s}>0$ corresponds to
+the primary movable sheave translating toward its fixed sheave.
 
 \begin{figure}[H]
 \centering
 \includegraphics[width=\textwidth]{illustrations/coordinate/axial_direction.png}
 \caption{
-Definition of the primary axial coordinate. The system begins in an open 
-configuration. The axial displacement $s$ measures how much the movable 
-sheave has closed from this initial position. Increasing $s$ increases 
-primary effective radius and is coupled to secondary axial motion.
+Definition of the primary axial coordinate. The system begins in an open
+configuration. The axial displacement $s$ measures how much the movable
+sheave has closed from this initial position. Increasing $s$ increases primary
+effective radius and is coupled to secondary axial motion.
 }
 \label{fig:cvt_axial_direction}
 \end{figure}
 
 % --------------------------------------------------------------
-\subsubsection{Radial and Tangential Directions}
+\subsection{Local Radial and Tangential Directions}
 \label{sec:radial_direction}
 
-Within the plane of pulley rotation, directions are defined using the
-standard polar coordinate convention commonly used in rotational mechanics.
+Within the plane of pulley rotation, directions are defined using the standard
+polar coordinate convention commonly used in rotational mechanics.
 
-At any point in the plane, two orthogonal directions are defined:
-the radial direction $\hat e_r$ and the tangential direction $\hat e_\theta$.
-These directions form a local coordinate basis centered on the pulley axis.
+At any point in the plane, two orthogonal directions are defined: the radial
+direction $\hat e_r$ and the tangential direction $\hat e_\theta$. These
+directions form a local coordinate basis centered on the pulley axis.
 
-The radial direction lies in the plane of rotation and points directly
-outward from the center of the pulley. A radial force is defined as
-positive when it acts away from the center of rotation. Thus,
-$F_r > 0$ corresponds to a force directed outward along $\hat e_r$.
+The radial direction lies in the plane of rotation and points directly outward
+from the center of the pulley. A radial force is defined as positive when it
+acts away from the center of rotation. Thus, $F_r>0$ corresponds to a force
+directed outward along $\hat e_r$.
 
-The tangential direction lies in the plane of rotation and is
-perpendicular to the radial direction. The positive tangential
-direction $\hat e_\theta$ is defined to be consistent with the
-positive rotational convention introduced in
-\Sec{sec:rotational_sign}. Tangential motion in this direction
-corresponds to motion produced by positive angular velocity.
+The tangential direction lies in the plane of rotation and is perpendicular to
+the radial direction. The positive tangential direction $\hat e_\theta$ is
+defined to be consistent with the positive rotational convention introduced in
+\Cref{sec:rotational_sign}. Tangential motion in this direction corresponds to
+motion produced by positive angular velocity.
 
-Figure~\ref{fig:radial_direction} illustrates these directions using
-physical examples from the primary pulley. The centrifugal flyweights
-generate outward radial forces $F_r$, while the belt moves along the
-tangential direction with velocity $v_t$. These quantities serve as
-representative examples of forces and motion that act along the radial
-and tangential directions.
+\Cref{fig:radial_direction} illustrates these directions using examples from
+the primary pulley. The centrifugal flyweights generate outward radial forces
+$F_r$, while the belt moves along the tangential direction with velocity $v_t$.
+These quantities serve as representative examples of forces and motion that
+act along the radial and tangential directions. The same local basis applies at
+the secondary pulley.
 
-The previously defined axial direction is perpendicular to this plane
-of rotation and points along the pulley shaft, into the page.
+The previously defined axial direction is perpendicular to this plane of
+rotation and points along the pulley shaft, into the page.
 
 \begin{figure}[H]
 \centering
 \includegraphics[width=\textwidth]{illustrations/coordinate/radial_tangential_direction.png}
 \caption{
-Radial and tangential directions in the plane of pulley rotation.
-The radial direction $\hat e_r$ points outward from the center of the
-pulley, while the tangential direction $\hat e_\theta$ is perpendicular
-to $\hat e_r$ and aligned with positive rotation. Example quantities
-illustrated include outward radial forces $F_r$ generated by flyweights
-and tangential belt velocity $v_t$. For reference, the previously defined
-axial coordinate $s$ is perpendicular to the page in this view and
-points along the pulley shaft, into the page.
+Radial and tangential directions in the plane of pulley rotation. The radial
+direction $\hat e_r$ points outward from the center of the pulley, while the
+tangential direction $\hat e_\theta$ is perpendicular to $\hat e_r$ and aligned
+with positive rotation. Example quantities illustrated on the primary pulley
+include outward radial forces $F_r$ generated by the flyweights and tangential
+belt velocity $v_t$. The same local directions apply at the secondary pulley.
+For reference, the axial coordinate $s$ is perpendicular to the page in this
+view and points along the pulley shaft, into the page.
 }
 \label{fig:radial_direction}
 \end{figure}
 
-\section{Governing Principles}\label{sec:principles}
-
-% NOTE:
-% Using the format:
-% \theory{th:key}{Title}{<equation>}{<description>}{<source>}[<derivation>]
-%
-% Keep th: keys stable so references never break.
-
-% -------------------------
-% Mechanics (forces/torques)
-% -------------------------
-
-\theory
-{th:newton-trans}
-{Newton's Second Law (Translation)}
-{\sum F = m a}
-{
-\begin{itemize}
-  \item $\sum F$ is the net force (\si{\newton})
-  \item $m$ is mass (\si{\kilogram})
-  \item $a$ is acceleration (\si{\meter\per\second\squared})
-\end{itemize}
-}
-{Standard mechanics identity.}
-[
-From the definition of acceleration and empirical laws of motion; used here as a governing relationship.
-]
-
-\theory
-{th:newton-rot}
-{Newton's Second Law (Rotation)}
-{\sum \tau = I \alpha}
-{
-\begin{itemize}
-  \item $\sum \tau$ is net torque (\si{\newton\meter})
-  \item $I$ is moment of inertia (\si{\kilogram\meter\squared})
-  \item $\alpha$ is angular acceleration (\si{\radian\per\second\squared})
-\end{itemize}
-}
-{Standard rigid-body dynamics identity.}
-[
-Standard rigid-body rotational dynamics relationship.
-]
-
-\theory
-{th:torque_definition}
-{Torque Definition}
-{\tau = F r}
-{
-\begin{itemize}
-  \item $\tau$ is torque (\si{\newton\meter})
-  \item $F$ is tangential force (\si{\newton})
-  \item $r$ is moment arm radius (\si{\meter})
-\end{itemize}
-}
-{Standard mechanics identity.}
-[
-Defines torque as the product of tangential force and moment arm.
-Equivalently, $F = \tau / r$ gives the tangential force from a known torque.
-]
-
-\theory
-{th:kinetic_energy_trans}
-{Kinetic Energy (Translational)}
-{T = \frac{1}{2} m v^2}
-{
-\begin{itemize}
-  \item $T$ is kinetic energy (\si{\joule})
-  \item $m$ is mass (\si{\kilogram})
-  \item $v$ is velocity (\si{\meter\per\second})
-\end{itemize}
-}
-{Standard mechanics identity.}
-[
-Translational kinetic energy of a point mass or rigid body moving with velocity $v$.
-]
-
-\theory
-{th:centrifugal_force}
-{Centrifugal Force}
-{F_c = m \omega^2 r}
-{
-\begin{itemize}
-  \item $F_c$ is centrifugal force (\si{\newton})
-  \item $m$ is mass (\si{\kilogram})
-  \item $\omega$ is angular velocity (\si{\radian\per\second})
-  \item $r$ is radius from the axis of rotation (\si{\meter})
-\end{itemize}
-}
-{Standard circular-motion identity.}
-[
-Derived from circular motion kinematics where $a_c = \omega^2 r$, then applying $F = ma$.
-]
-
-% -------------------------
-% Springs / elasticity
-% -------------------------
-
-\theory
-{th:hooke_linear}
-{Hooke's Law (Compressional)}
-{F = k \Delta x}
-{
-\begin{itemize}
-  \item $F$ is force (\si{\newton})
-  \item $k$ is spring constant (\si{\newton\per\meter})
-  \item $\Delta x$ is displacement (\si{\meter})
-\end{itemize}
-}
-{Standard linear-elastic constitutive identity.}
-[
-Linear spring constitutive relationship in the elastic regime.
-]
-
-\theory
-{th:hooke_torsional}
-{Hooke's Law (Torsional)}
-{F = \frac{k \Delta \theta}{r}}
-{
-\begin{itemize}
-  \item $F$ is force (\si{\newton})
-  \item $k$ is torsional spring constant (\si{\newton\meter\per\radian})
-  \item $\Delta \theta$ is angular deflection (\si{\radian})
-  \item $r$ is torque arm radius (\si{\meter})
-\end{itemize}
-}
-{Standard torsional spring identity.}
-[
-Starting from $\tau = k\Delta\theta$ and $\tau = Fr$, then $F = \frac{k\Delta\theta}{r}$.
-]
-
-% -------------------------
-% Powertrain relationships
-% -------------------------
-
-\theory
-{th:engine_torque_power}
-{Engine Torque from Power}
-{\tau = \frac{P}{\omega}}
-{
-\begin{itemize}
-  \item $\tau$ is torque (\si{\newton\meter})
-  \item $P$ is power (\si{\watt})
-  \item $\omega$ is angular velocity (\si{\radian\per\second})
-\end{itemize}
-}
-{Standard rotational power identity.}
-[
-From the rotational power relationship $P=\tau\omega$.
-]
-
-% -------------------------
-% Friction / belt traction
-% -------------------------
-
-\theory
-{th:coulomb_friction}
-{Coulomb Friction}
-{F_f = \mu_s F_n}
-{
-\begin{itemize}
-  \item $F_f$ is friction force (\si{\newton})
-  \item $\mu_s$ is coefficient of static friction (unitless)
-  \item $F_n$ is normal force (\si{\newton})
-\end{itemize}
-}
-{Standard dry-friction model identity.}
-[
-Coulomb friction model for impending slip.
-]
-
-\theory
-{th:capstan}
-{Capstan Equation}
-{T_1 = T_2 e^{\mu \theta}}
-{
-\begin{itemize}
-  \item $T_1$ is tight-side belt tension (\si{\newton})
-  \item $T_2$ is slack-side belt tension (\si{\newton})
-  \item $\mu$ is belt--pulley friction coefficient (unitless)
-  \item $\theta$ is wrap angle (\si{\radian})
-\end{itemize}
-}
-{\citet{CapstanEquation2021}.}
-[
-Differential force balance on an infinitesimal belt element on a pulley yields $\frac{\dd T}{T}=\mu\,\dd\theta$, then integrate over wrap.
-]
-
-
-
-% -------------------------
-% Fluids / aero (if used)
-% -------------------------
-
-\theory
-{th:density}
-{Density}
-{\rho = \frac{m}{V}}
-{
-\begin{itemize}
-  \item $\rho$ is density (\si{\kilogram\per\meter\cubed})
-  \item $m$ is mass (\si{\kilogram})
-  \item $V$ is volume (\si{\meter\cubed})
-\end{itemize}
-}
-{Standard definition.}
-[
-Definition of density.
-]
-
-\theory
-{th:air_resistance}
-{Air Resistance (Quadratic Drag)}
-{F_d = \frac{1}{2}\rho v^2 C_d A}
-{
-\begin{itemize}
-  \item $F_d$ is drag force (\si{\newton})
-  \item $\rho$ is fluid density (\si{\kilogram\per\meter\cubed})
-  \item $v$ is object speed relative to fluid (\si{\meter\per\second})
-  \item $C_d$ is drag coefficient (unitless)
-  \item $A$ is reference area (\si{\meter\squared})
-\end{itemize}
-}
-{Standard aerodynamic drag model identity.}
-[
-Standard empirical/derived quadratic drag model; applicable at moderate to high Reynolds number.
-]
-
-\theory
-{th:rolling_resistance}
-{Rolling Resistance}
-{F_r = C_r N}
-{
-\begin{itemize}
-  \item $F_r$ is rolling resistance force (\si{\newton})
-  \item $C_r$ is coefficient of rolling resistance (unitless)
-  \item $N$ is normal force (\si{\newton})
-\end{itemize}
-}
-{Standard rolling-resistance model identity.}
-[
-Rolling resistance arises from deformation of contact surfaces (tire and road). For a vehicle on level ground, $N = mg$ where $m$ is vehicle mass and $g$ is gravitational acceleration.
-]
-
-\theory
-{th:gravity_force}
-{Gravitational Force}
-{F_g = mg}
-{
-\begin{itemize}
-  \item $F_g$ is gravitational force (\si{\newton})
-  \item $m$ is mass (\si{\kilogram})
-  \item $g$ is gravitational acceleration (\si{\meter\per\second\squared})
-\end{itemize}
-}
-{Standard near-Earth mechanics identity.}
-[
-Near Earth's surface, $g \approx 9.81$ \si{\meter\per\second\squared}. On an incline with angle $\theta$, the component parallel to the surface is $F_g \sin\theta$.
-]
-
-
 % ==============================================================
-
-\subsection{Model Quantity Roles and Evaluation Flow}
-\label{sec:model_evaluation_flow}
-
-The model distinguishes between quantities specified for a CVT configuration,
-quantities derived once during setup, dynamic states advanced in time, and
-algebraic quantities evaluated from the current state. Here, \emph{fixed} means
-fixed during one simulation run. A fixed quantity may still be changed when a
-different CVT configuration or operating case is defined.
-
-The physical constants and fixed material properties used by the model are
-listed in \Cref{tab:physical_constants}, while the user-specified CVT,
-belt, and drivetrain parameters are listed in \Cref{tab:model_parameters}.
-These specified quantities include the belt length, belt cross-section,
-sheave geometry, and endpoint pulley radii. They define the particular CVT being
-modeled, but they are not dynamic states.
-
-The center-to-center distance is different. It is not prescribed independently
-in the present parameterization. Instead, it is derived once from the specified
-belt length and the known reference pulley radii, as developed in
-\Cref{sec:secondary_radius}. It is then retained as a fixed geometric quantity
-for the remainder of the run.
-
-\begin{table}[H]
-\centering
-\caption{Roles of quantities in the model evaluation.}
-\label{tab:model_quantity_roles}
-\begin{tabular}{p{0.24\linewidth} p{0.22\linewidth} p{0.43\linewidth}}
-\toprule
-\textbf{Role} & \textbf{Assigned or evaluated} & \textbf{Examples} \\
-\midrule
-Physical constants and fixed properties
-& Before simulation
-& \(g\), material densities, and other values treated as invariant within the model scope. \\[4pt]
-
-Specified configuration parameters
-& Before geometry initialization
-& \(L_b\), \(b_{\mathrm{in}}\), \(h_b\), sheave angle \(\beta\), and endpoint pulley radii. \\[4pt]
-
-Derived fixed geometry
-& Once during geometry initialization
-& Center-to-center distance \(C\). \\[4pt]
-
-Dynamic state variables
-& Advanced by the ODE integrator
-& \(\omega_p\), \(\omega_s\), \(s\), \(\dot{s}\), and \(v_b\). \\[4pt]
-
-State-dependent algebraic quantities
-& At each evaluation of the system equations
-& \(r_p(s)\), \(r_s(s)\), \(\lambda\), wrap angles, span length, effective radii, and other current geometry quantities. \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-The calculation has two levels. Geometry initialization first uses the
-specified configuration data to establish \(C\). During the simulation, each
-evaluation of the system equations begins from the current state. The shift
-coordinate gives the primary radius, the fixed belt-length condition gives the
-compatible secondary radius, and the remaining belt-path quantities then follow
-directly from the current geometry:
-
-\[
-\mathbf{x}(t)
-\;\longrightarrow\;
-s
-\;\longrightarrow\;
-r_{p,\mathrm{outer}}(s)
-\;\longrightarrow\;
-r_{s,\mathrm{outer}}(s)
-\;\longrightarrow\;
-\lambda,\ \phi_p,\ \phi_s,\ \ell
-\;\longrightarrow\;
-\text{forces, torques, and } \dot{\mathbf{x}}.
-\]
-
-The secondary-radius calculation is an algebraic geometry closure within an
-evaluation of the system equations; it is not an additional dynamic state.
-Once the two radii are known, \(\lambda\), the wrap angles, and the straight-span
-length are evaluated directly. A numerical time integrator may evaluate the
-system equations multiple times within one time step, so this geometry closure
-is performed for each such evaluation rather than only once per accepted time
-step.
-
 \section{System State Definition}
 \label{sec:state}
 
-The dynamic behavior of the CVT system is described using a set of
-\emph{state variables}. A state variable is a quantity whose future
-evolution is determined by its current value and the governing
-differential equations of the system.
+The simulation advances a state vector through time. At the beginning of each
+model evaluation, these state variables are known and describe the current
+motion and shift configuration of the CVT.
 
-In numerical simulation, state variables are the quantities that are
-explicitly integrated forward in time. All other model quantities
-— such as torque transfer, transmission ratio, belt forces, and
-contact conditions — are computed algebraically from these states.
-
-% --------------------------------------------------------------
 \subsection{State Vector}
 \label{sec:state_vector}
 
 \bigeq{eq:state-vector}{State Vector}{
-\vect{x}(t) =
+\vect{x}(t)=
 \begin{bmatrix}
 \omega_p \\
 \omega_s \\
@@ -2060,73 +1777,170 @@ v_b
 \end{bmatrix}
 }
 
-where:
+Here, $\omega_p$ and $\omega_s$ are the primary and secondary shaft speeds,
+$s$ is the primary axial shift position, $\dot{s}$ is its velocity, and $v_b$
+is the belt transport speed.
 
-\begin{itemize}
-    \item $\omega_p$ is the angular speed of the primary pulley 
-    (\si{\radian\per\second}),
+These are the quantities whose current values must be carried into the next
+instant. The rotational mechanics depend on shaft speed rather than absolute
+shaft angle, so absolute angular positions need not be stored. Similarly, the
+lumped belt representation depends on transport speed rather than which
+material point occupies a particular location, so no belt-phase coordinate is
+required. Shift position is retained because the current geometry and
+actuation depend on where the pulleys are in their travel, and $\dot{s}$ is
+retained because the shift motion is governed by second-order dynamics.
 
-    \item $\omega_s$ is the angular speed of the secondary pulley 
-    (\si{\radian\per\second}),
+\subsection{Initial-Value Problem and Time Integration}
 
-    \item $s$ is the axial shift position of the primary sheave
-    (\si{\meter}),
+At a chosen starting time $t_0$, the simulation is initialized with
 
-    \item $\dot{s}$ is the axial shift velocity 
-    (\si{\meter\per\second}).
+\begin{equation}
+\vect{x}(t_0)=\vect{x}_0.
+\label{eq:initial_state}
+\end{equation}
 
-    \item $v_b$ is the belt transport speed (\si{\meter\per\second}).
-\end{itemize}
+The initial state may be any mechanically admissible condition within the
+modeled regimes. From that point onward, the formulation evaluates the time
+derivative of the state from the current state, the fixed CVT data, and the
+torque--inertia pairs returned at the two shaft boundaries. At the highest
+level, this evolution law is written as
 
-% --------------------------------------------------------------
-\subsection{Independent Dynamic Degrees of Freedom}
+\begin{equation}
+\dot{\vect{x}}(t)
+=
+\mathcal{F}\!\left(
+t,
+\vect{x}(t);
+\vect{\theta},
+\mathcal{B}_p,
+\mathcal{B}_s
+\right),
+\label{eq:abstract_evolution_law}
+\end{equation}
 
-The five state variables above are the dynamic degrees of freedom of the
-present state-space model.
+where $\vect{\theta}$ collects the fixed physical and configuration data, and
+$\mathcal{B}_p$ and $\mathcal{B}_s$ are the boundary pairs evaluated using the
+current shaft speeds. Chapter~3 constructs $\mathcal{F}$ from the CVT geometry,
+pulley dynamics, belt mechanics, and contact laws.
 
-The primary pulley can rotate independently under engine input and belt interaction. 
-Its angular speed $\omega_p$ therefore represents one rotational degree of freedom.
+A numerical time integrator repeatedly evaluates
+\Cref{eq:abstract_evolution_law} and advances the state according to
 
-The secondary pulley also rotates and interacts with both the belt and the external 
-drivetrain load. Its angular speed $\omega_s$ represents a second independent 
-rotational degree of freedom.
+\begin{equation}
+\vect{x}(t)
+=
+\vect{x}_0
++
+\int_{t_0}^{t}
+\dot{\vect{x}}(\xi)\,\mathrm{d}\xi.
+\label{eq:state_time_integration}
+\end{equation}
 
-In addition to rotation, the CVT includes axial motion of the primary sheave. 
-This axial displacement $s$ determines the effective pulley geometry and therefore 
-the transmission ratio. The axial motion is mechanically independent of pure rotation 
-and must be modeled explicitly.
+Contact transitions, engagement, and travel boundaries may change the
+particular form of $\mathcal{F}$ during the simulation. Their event conditions
+and regime-specific equations are developed after the corresponding mechanics
+have been derived.
 
-Because axial motion follows second-order dynamics, both the axial position $s$ 
-and its rate $\dot{s}$ are required to fully describe its evolution.
+This construction is fully dynamic. The boundary models define the external
+torque and inertia seen by the CVT, while the coupled mechanics and time
+integration determine the evolving shaft speeds, belt speed, shift position,
+and transmission ratio.
 
-The quantity $v_b$ is treated as an independent belt-transport degree of
-freedom. While detailed internal
-belt mechanics remain unresolved, $v_b$ is modeled as a dynamic state whose
-evolution is given by an explicit equation of motion derived from torque,
-traction, and compatibility relations at the pulley–belt interfaces.
+% ==============================================================
+\section{Model Quantity Roles and Evaluation Flow}
+\label{sec:model_evaluation_flow}
 
-% --------------------------------------------------------------
-\subsection{Time Integration Perspective}
+The constants and parameters collected in \Cref{tab:physical_constants} and
+\Cref{tab:model_parameters} serve different computational roles from the state
+and boundary data. \Cref{tab:model_quantity_roles} places these quantities in
+the high-level simulation workflow.
 
-During numerical simulation, the state vector is advanced forward in time.
+\begin{table}[H]
+\centering
+\caption{High-level roles of quantities used in the simulation.}
+\label{tab:model_quantity_roles}
+\begin{tabular}{
+>{\raggedright\arraybackslash}p{0.19\linewidth}
+>{\raggedright\arraybackslash}p{0.25\linewidth}
+>{\raggedright\arraybackslash}p{0.45\linewidth}}
+\toprule
+\textbf{Quantity role} & \textbf{Source} & \textbf{Use during simulation} \\
+\midrule
+Fixed model data
+& Reference data and selected CVT configuration
+& Define the modeled hardware and remain fixed for the selected simulation.
+  \\[5pt]
 
-At each timestep $\Delta t$:
+Initialized data
+& Fixed model data
+& Established once for the selected configuration and reused during time
+  integration. \\[5pt]
 
-\begin{itemize}
-    \item The angular speeds $\omega_p$ and $\omega_s$ are updated according 
-    to their angular accelerations.
+State variables
+& Initial condition and integrator
+& Record the current CVT motion and shift configuration at time $t$. \\[5pt]
 
-    \item The axial position $s$ is updated using its current velocity $\dot{s}$.
+Boundary data
+& Attached-system models evaluated at the current shaft speeds
+& Give the applied torque and attached or reflected inertia seen at each shaft
+  cut for the current evaluation. \\[5pt]
 
-    \item The axial velocity $\dot{s}$ is updated according to the axial acceleration.
-    
-    \item The belt transport speed $v_b$ is updated according to its angular acceleration.
-\end{itemize}
+Instantaneous results
+& Current model evaluation
+& Provide the state derivative and event information requested by the
+  integrator. \\
+\bottomrule
+\end{tabular}
+\end{table}
 
-The angular and axial accelerations are determined from the governing 
-equations derived in subsequent sections. Once the state vector has been 
-updated, all other quantities in the model are computed directly from the 
-current values of $\omega_p$, $\omega_s$, $s$, $\dot{s}$, and $v_b$.
+The simulation proceeds at two levels. Initialization checks the selected CVT
+data, establishes quantities fixed by that configuration, assigns the initial
+state, and identifies the initial mechanical regime. Time integration then
+repeats the following high-level evaluation:
+
+\begin{enumerate}
+    \item The integrator supplies a trial time and the corresponding current
+          state $\vect{x}(t)$, including $\omega_p$ and $\omega_s$.
+    \item Each attached system uses the corresponding current shaft speed to
+          evaluate the torque and equivalent inertia it presents at the shaft
+          cut.
+    \item The coupled CVT mechanics use the current state, fixed model data,
+          and both boundary pairs to evaluate $\dot{\vect{x}}(t)$ and the event
+          conditions for the current mechanical regime.
+    \item The integrator advances every state variable, including both shaft
+          speeds. If an event is encountered, the applicable regime is updated
+          and integration continues from that event state.
+\end{enumerate}
+
+This process can be summarized as
+
+\begin{equation}
+\begin{aligned}
+\omega_p(t)\longrightarrow\mathcal{B}_p,
+\qquad
+\omega_s(t)\longrightarrow\mathcal{B}_s
+&\phantom{\longrightarrow}
+&&\text{boundary evaluation},\\
+\left\{t,\ \vect{x}(t),\ \vect{\theta},\
+\mathcal{B}_p,\ \mathcal{B}_s\right\}
+&\longrightarrow
+\dot{\vect{x}}(t)
+&&\text{coupled CVT mechanics},\\
+\dot{\vect{x}}(t)
+&\longrightarrow
+\vect{x}(t')
+&&\text{time integration}.
+\end{aligned}
+\label{eq:model_evaluation_flow}
+\end{equation}
+
+Chapter~3 supplies the mechanics contained in the first arrow. Geometry is
+developed first because the current shift state fixes the instantaneous pulley
+configuration. The axial, rotational, belt-loop, and contact relations are
+then exposed in sequence before they are assembled into the evolution law.
+This ordering supports the derivation; the completed relations are evaluated
+together as one coupled instantaneous problem.
+
 
 \chapter{Derivation}
 \section{Pulley Geometry}\label{sec:geometry}
