@@ -1403,6 +1403,14 @@ Primary and secondary pulley axes are assumed perfectly aligned.
 Misalignment, shaft eccentricity, and geometric runout are neglected.
 \end{assumptionblock}
 
+\begin{assumptionblock}{assump:fixed-belt-cross-section}{Fixed Belt Cross-Section}
+The belt retains the same cross-sectional shape and dimensions as it shifts.
+In particular, its inner width \(b_{\mathrm{in}}\) and radial height \(h_b\)
+are treated as constant. Compression between the sheave faces, lateral
+bulging, and centrifugal growth of the belt cross-section are neglected.
+The belt may still bend along its length to wrap around the pulleys.
+\end{assumptionblock}
+
 \begin{assumptionblock}{assump:constant_belt_length}{Constant Belt Length}
 The belt length is treated as constant.
 Longitudinal elasticity, transient stretch, permanent creep, and
@@ -2178,7 +2186,7 @@ moves toward smaller values of \(x_s\) as it opens.
 Consider a belt seated between two straight sheave faces with half-angle
 \(\beta\), as shown in \Cref{fig:local_pulley_geometry}. Let
 \(b_{\mathrm{in}}\) denote the width of the belt at its inner surface. As
-assumed in \Cref{assump:fixed-belt-cross-section}, this width remains constant.
+assumed in \AssRef{assump:fixed-belt-cross-section}, this width remains constant.
 
 Suppose the movable sheave closes the pulley by a distance \(\Delta x_j\).
 At the original belt radius, the available space between the sheaves is
@@ -2288,7 +2296,7 @@ r_{j,\mathrm{inner}}+h_b.
 \end{equation}
 
 The fixed-cross-section assumption in
-\Cref{assump:fixed-belt-cross-section} also makes \(h_b\) constant.
+\AssRef{assump:fixed-belt-cross-section} also makes \(h_b\) constant.
 Consequently, the inner and outer surfaces undergo the same radial
 displacement, and the axial-to-radial relationship derived above applies to
 either one.
@@ -2398,7 +2406,7 @@ radii, the belt must now be followed around the complete loop.
 
 The belt path consists of four parts: a wrapped arc on the primary pulley, a
 wrapped arc on the secondary pulley, and two equal straight spans. Under
-\Cref{assump:uniform_contact_radius}, each wrapped portion is represented by
+\AssRef{assump:uniform_contact_radius}, each wrapped portion is represented by
 a single radius over its full contact angle. If each straight span has length
 \(l\), and the primary and secondary wrap angles are \(\phi_p\) and \(\phi_s\),
 the total geometric length of the loop is
@@ -2530,7 +2538,7 @@ the two straight spans.
 For any chosen values of \(r_p\), \(r_s\), and \(C\),
 \Cref{eq:belt_length_exact} tells us how much belt is required to follow that
 path. The installed belt cannot change its total length as the pulleys shift.
-Under \Cref{assump:constant_belt_length}, every possible pulley position must
+Under \AssRef{assump:constant_belt_length}, every possible pulley position must
 therefore satisfy
 
 \begin{equation}
@@ -2718,7 +2726,7 @@ compatibility curve.
 To reveal the shape of this curve, either local coordinate could be chosen as
 a starting point. Take $x_p$ simply as an arbitrary choice. For each value of
 $x_p$, the primary relation gives $r_p(x_p)$. The shaft spacing fixes $C$, and
-$L_b$ remains fixed by \Cref{assump:constant_belt_length}, so the belt-length
+$L_b$ remains fixed by \AssRef{assump:constant_belt_length}, so the belt-length
 residual can then be solved for the required secondary radius $r_s$. The local
 secondary relation finally gives the corresponding position $x_s$:
 
@@ -2890,7 +2898,7 @@ At every compatible position,
 \end{equation}
 
 The centre distance \(C\) is fixed by the pulley shafts, while \(L_b\) is
-constant under \Cref{assump:constant_belt_length}. A small change in \(s\)
+constant under \AssRef{assump:constant_belt_length}. A small change in \(s\)
 therefore cannot change the geometric length of the belt path:
 
 \begin{equation}
@@ -3194,790 +3202,530 @@ compatibility curve.
 % --------------------------------------------------------------
 
 
-\subsection{Pitch Radius and Geometric CVT Ratio}
-\label{sec:pitch_radius_and_ratio}
+% --------------------------------------------------------------
 
-The two outer radii now locate the belt within both pulley grooves and define
-the outer belt path. This is sufficient for the belt-length geometry, including
-the wrap angles and straight-span length derived in \Cref{sec:belt_length}.
+% --------------------------------------------------------------
 
-The next quantities of interest concern belt motion and torque transfer. For
-these purposes, the outer belt surface is not the appropriate reference. The
-longitudinal tension in a rubber V-belt is carried by its reinforcement cords,
-so the radius associated with belt transport and the tension moment arm lies at
-the cord layer rather than at the outer surface.
 
-The radius of the cord layer is commonly called the \emph{pitch radius}, or
-\emph{cord radius}. \citet{Gerbert1996} identifies the pitch radius with the
-cord radius and uses it to relate belt motion and transmitted torque.
+% --------------------------------------------------------------
+\subsection{Pulley-Radius Accelerations}
+\label{sec:pulley_radius_accelerations}
 
-Let \(d_{\mathrm{cord}}\) denote the fixed radial distance from the outer belt
-surface to the centre of the cord layer, where
+The pulley-radius rates in
+\Cref{eq:primary_radius_rate,eq:secondary_radius_rate} were obtained by
+multiplying the slope of each geometric mapping by the shift velocity
+\(\dot s\). Their accelerations follow by asking how those rates change. On
+the primary, the mapping slope is constant within each branch. On the
+secondary, the slope in \Cref{eq:secondary_coordinate_slope} changes as the
+pulley radii and wrap angles change. The secondary acceleration must therefore
+account for both the imposed shift acceleration and the changing geometric
+slope.
 
-\[
-0 \leq d_{\mathrm{cord}} \leq h_b.
-\]
+\paragraph{Primary radius acceleration}
 
-The primary and secondary pitch radii are therefore
+The primary coordinate requires no additional geometry. The system-coordinate
+definition in \Cref{eq:system_shift_coordinate} gives \(x_p(s)=s\), so
+
+\begin{equation}
+    x_p'(s)=1,
+    \qquad
+    x_p''(s)=0,
+    \label{eq:primary_coordinate_derivatives}
+\end{equation}
+
+and therefore
+
+\begin{equation}
+    \dot x_p=\dot s,
+    \qquad
+    \ddot x_p=\ddot s.
+    \label{eq:primary_axial_acceleration}
+\end{equation}
+
+The general shift-to-time relation in \Cref{eq:shift_to_time_rate} gives the
+primary radius rate in the form
+
+\begin{equation}
+    \dot r_p=r_p'(s)\dot s.
+    \label{eq:primary_radius_rate_acceleration_start}
+\end{equation}
+
+Differentiating this product with respect to time gives
 
 \begin{align}
-r_{p,\mathrm{pitch}}(s)
-&=
-r_{p,\mathrm{outer}}(s)-d_{\mathrm{cord}},
-\label{eq:primary_pitch_radius}\\[4pt]
-r_{s,\mathrm{pitch}}(s)
-&=
-r_{s,\mathrm{outer}}(s)-d_{\mathrm{cord}}.
-\label{eq:secondary_pitch_radius}
+    \ddot r_p
+    &=
+    \frac{d}{dt}
+    \left[
+        r_p'(s)\dot s
+    \right]
+    \nonumber\\
+    &=
+    \frac{d r_p'}{dt}\dot s
+    +
+    r_p'(s)\ddot s.
+    \label{eq:primary_radius_acceleration_product_rule}
 \end{align}
 
-Because the same belt offset is applied at both pulleys,
-
-\[
-r_{s,\mathrm{pitch}}(s)-r_{p,\mathrm{pitch}}(s)
-=
-r_{s,\mathrm{outer}}(s)-r_{p,\mathrm{outer}}(s).
-\]
-
-The tangency angle, wrap angles, and straight-span length are therefore
-unchanged by this change of reference radius. The pitch radii are introduced
-only to describe the belt's transport motion and its torque moment arms.
-
-The two pitch radii also describe the effective gearing associated with the
-belt's current position. Define the geometric CVT ratio as
-
-\bigeq{eq:cvt_ratio}{Geometric CVT Ratio}{
-R_g(s)
-=
-\frac{r_{s,\mathrm{pitch}}(s)}
-     {r_{p,\mathrm{pitch}}(s)}.
-}
-
-This ratio describes the pulley leverage made available by the current belt
-position. A large secondary pitch radius together with a small primary pitch
-radius gives a large reduction ratio. As the primary sheave closes, the belt
-moves outward on the primary and inward on the secondary, causing
-\(R_g(s)\) to decrease.
-
-Unlike a pair of rigid meshed gears, however, the belt does not automatically
-transfer motion and torque through this exact ratio. The geometric ratio
-describes the gearing available from the pulley geometry; whether that gearing
-is realized depends on the belt maintaining sufficient traction at the pulley
-contacts.
-
-\subsection{Pulley-Radius Rates and Accelerations}
-\label{sec:pulley_radius_rates}
-
-The geometry above determines where the belt sits on each pulley at a given
-shift position \(s\). When the primary sheave begins to move, those belt
-positions must move as well. The next quantities to establish are therefore the
-primary and secondary radial rates, \(\dot r_p\) and \(\dot r_s\), followed by
-their radial accelerations, \(\ddot r_p\) and \(\ddot r_s\).
-
-The fixed belt-length geometry was written using the outer belt radii, while
-belt transport and the geometric CVT ratio use the pitch radii. For the rate
-relations, that distinction disappears. For either pulley \(j\in\{p,s\}\),
+Because \(r_p'\) is itself a function of \(s\),
 
 \begin{equation}
-r_{j,\mathrm{pitch}}
-=
-r_{j,\mathrm{outer}}-d_{\mathrm{cord}}.
-\label{eq:pitch_outer_radius_offset}
+    \frac{d r_p'}{dt}
+    =
+    r_p''(s)\dot s.
+    \label{eq:primary_radius_slope_time_derivative}
 \end{equation}
 
-The cord offset is fixed for the selected belt. Differentiating with respect to
-\(s\) or time therefore removes it:
-
-\begin{align}
-\frac{d r_{j,\mathrm{pitch}}}{ds}
-&=
-\frac{d r_{j,\mathrm{outer}}}{ds},
-\label{eq:pitch_outer_shift_rate_equivalence}\\[4pt]
-\dot r_{j,\mathrm{pitch}}
-&=
-\dot r_{j,\mathrm{outer}},
-\label{eq:pitch_outer_time_rate_equivalence}\\[4pt]
-\ddot r_{j,\mathrm{pitch}}
-&=
-\ddot r_{j,\mathrm{outer}}.
-\label{eq:pitch_outer_acceleration_equivalence}
-\end{align}
-
-Thus, the same radial rates and accelerations apply whichever reference surface
-is used. To avoid carrying repeated subscripts, \(r_p\) and \(r_s\) denote the
-primary and secondary radii throughout the remainder of this section.
-
-\subsubsection{Primary Radius Rate and Acceleration}
-\label{sec:primary_radius_rates}
-
-The primary radius is already known explicitly from the primary sheave
-geometry. Recalling \Cref{eq:primary_radius},
+Substituting \Cref{eq:primary_radius_slope_time_derivative} into
+\Cref{eq:primary_radius_acceleration_product_rule} gives
 
 \begin{equation}
-r_p(s)
-=
-\begin{cases}
-r_{p,\min},
-& 0\leq s<s_{\mathrm{dz}},\\[8pt]
-\displaystyle
-r_{p,\min}+\frac{s-s_{\mathrm{dz}}}{2\tan\beta},
-& s_{\mathrm{dz}}\leq s\leq s_{\max}.
-\end{cases}
-\label{eq:primary_radius_recalled}
+    \ddot r_p
+    =
+    r_p''(s)\dot s^2
+    +
+    r_p'(s)\ddot s.
+    \label{eq:primary_radius_acceleration_chain}
 \end{equation}
 
-The primary radius changes in time only because the shift coordinate changes in
-time. Using the chain rule,
+Within either smooth branch of the primary radius map,
+\(r_p'(s)\) is constant. Hence
 
 \begin{equation}
-\dot r_p
-=
-\frac{d r_p}{ds}\dot s.
-\label{eq:primary_radius_rate_chain}
+    r_p''(s)=0.
+    \label{eq:primary_radius_mapping_curvature}
 \end{equation}
 
-The derivative \(dr_p/ds\) comes directly from
-\Cref{eq:primary_radius_recalled}. In the dead zone, changing \(s\) does not yet
-move the belt radially. Once the sheave faces engage the belt, the conical
-geometry gives a constant radial change for each unit of axial shift:
+Using the primary slopes from
+\Cref{eq:primary_radius_shift_derivative}, the primary radius acceleration is
 
-\begin{equation}
-\frac{d r_p}{ds}
-=
-\begin{cases}
-0,
-& 0\leq s<s_{\mathrm{dz}},\\[10pt]
-\displaystyle
-\frac{1}{2\tan\beta},
-& s_{\mathrm{dz}}<s\leq s_{\max}.
-\end{cases}
-\label{eq:primary_radius_shift_derivative}
-\end{equation}
-
-Substituting this result into \Cref{eq:primary_radius_rate_chain} gives
-
-\bigeq{eq:primary_radius_rate}{Primary Radius Rate}{
-\dot r_p
-=
-\begin{cases}
-0,
-& 0\leq s<s_{\mathrm{dz}},\\[10pt]
-\displaystyle
-\frac{\dot s}{2\tan\beta},
-& s_{\mathrm{dz}}<s\leq s_{\max}.
-\end{cases}
-}
-
-To obtain the radial acceleration, differentiate
-\Cref{eq:primary_radius_rate_chain} once more. This is a product of
-\(dr_p/ds\) and \(\dot s\), so use the product rule:
-
-\begin{align}
-\ddot r_p
-&=
-\frac{d}{dt}
-\left(
-\frac{d r_p}{ds}\dot s
-\right)
-\nonumber\\
-&=
-\frac{d}{dt}
-\left(
-\frac{d r_p}{ds}
-\right)\dot s
-+
-\frac{d r_p}{ds}\ddot s
-\nonumber\\
-&=
-\frac{d^2r_p}{ds^2}\dot s^2
-+
-\frac{d r_p}{ds}\ddot s.
-\label{eq:primary_radius_acceleration_chain}
-\end{align}
-
-Within either smooth branch of \Cref{eq:primary_radius_recalled}, the
-slope \(dr_p/ds\) is constant. Hence \(d^2r_p/ds^2=0\), leaving
-
-\bigeq{eq:primary_radius_acceleration}{Primary Radius Acceleration}{
+\bigeq{eq:primary_radius_acceleration}
+{Primary Radius Acceleration}
+{
 \ddot r_p
 =
 \begin{cases}
-0,
-& 0\leq s<s_{\mathrm{dz}},\\[10pt]
-\displaystyle
-\frac{\ddot s}{2\tan\beta},
-& s_{\mathrm{dz}}<s\leq s_{\max}.
+    0,
+    & 0\leq s<x_{p,\mathrm{dz}},\\[10pt]
+    \displaystyle
+    \frac{\ddot s}{2\tan\beta},
+    & x_{p,\mathrm{dz}}<s\leq x_{p,\max}.
 \end{cases}
 }
 
-\begin{remarkbox}[Remark (Dead-Zone Boundary)]
-The idealized primary-radius map changes slope at \(s=s_{\mathrm{dz}}\), so
-its ordinary second derivative is not defined at that single point. The
-expressions above apply within the dead-zone and active-shift branches; the
-boundary is handled as a regime transition.
-\end{remarkbox}
+The result is direct: within the deadzone the primary radius remains fixed,
+while after contact the shift acceleration is converted into radial
+acceleration by the same constant sheave slope found in
+\Cref{eq:primary_radius_shift_derivative}.
 
-\subsubsection{Secondary Radius Rate}
-\label{sec:secondary_radius_rate}
+\paragraph{Secondary coordinate curvature}
 
-The secondary radius is not prescribed directly by the shift coordinate. It is
-the radius required to keep the fixed belt compatible with the current primary
-radius. Its rate must therefore come from differentiating the belt-length
-compatibility condition itself.
-
-Recall the residual from \Cref{eq:belt_length_residual}:
-
-\begin{equation}
-\begin{aligned}
-\mathcal{R}_{\mathrm{belt}}(r_p,r_s,C)
-={}&
-\pi(r_p+r_s)
-+
-2(r_s-r_p)
-\sin^{-1}\!\left(
-\frac{r_s-r_p}{C}
-\right)\\
-&+
-2\sqrt{C^2-(r_s-r_p)^2}
--L_b
-=
-0.
-\end{aligned}
-\label{eq:belt_length_residual_recalled}
-\end{equation}
-
-Here, \(C\) and \(L_b\) remain fixed, while \(r_p\) and \(r_s\) can both vary
-with time. Using the multivariable chain rule,
-
-\begin{equation}
-\frac{\partial\mathcal{R}_{\mathrm{belt}}}{\partial r_p}\dot r_p
-+
-\frac{\partial\mathcal{R}_{\mathrm{belt}}}{\partial r_s}\dot r_s
-=
-0.
-\label{eq:secondary_radius_rate_constraint}
-\end{equation}
-
-The two partial derivatives tell us how the required belt-path length changes
-when one pulley radius changes while the other radius and the center distance
-are held fixed. We find them next.
-
-\paragraph{Partial derivative with respect to \(r_p\)}
-
-Start with the inverse-sine contribution. It is a product, so its derivative
-contains one term from differentiating \(r_s-r_p\) and a second from
-differentiating the inverse-sine factor:
-
-\begin{align}
-&
-\frac{\partial}{\partial r_p}
-\left[
-(r_s-r_p)
-\sin^{-1}\!\left(
-\frac{r_s-r_p}{C}
-\right)
-\right]
-\nonumber\\
-={}&
-\frac{\partial(r_s-r_p)}{\partial r_p}
-\sin^{-1}\!\left(
-\frac{r_s-r_p}{C}
-\right)
-+
-(r_s-r_p)
-\frac{\partial}{\partial r_p}
-\sin^{-1}\!\left(
-\frac{r_s-r_p}{C}
-\right).
-\label{eq:product_rule_asin_primary_start}
-\end{align}
-
-For the first factor, \(r_s\) is held fixed:
-
-\begin{equation}
-\frac{\partial(r_s-r_p)}{\partial r_p}
-=
--1.
-\label{eq:linear_difference_primary_derivative}
-\end{equation}
-
-For the inverse-sine factor, the chain rule gives
-
-\begin{align}
-\frac{\partial}{\partial r_p}
-\sin^{-1}\!\left(
-\frac{r_s-r_p}{C}
-\right)
-&=
--\frac{1/C}
-{\sqrt{
-1-\left(\dfrac{r_s-r_p}{C}\right)^2
-}}
-\nonumber\\
-&=
--\frac{1}
-{\sqrt{C^2-(r_s-r_p)^2}}.
-\label{eq:asin_primary_derivative}
-\end{align}
-
-Substituting the two derivatives into \Cref{eq:product_rule_asin_primary_start} gives
-
-\begin{align}
-&
-\frac{\partial}{\partial r_p}
-\left[
-(r_s-r_p)
-\sin^{-1}\!\left(
-\frac{r_s-r_p}{C}
-\right)
-\right]
-\nonumber\\
-={}&
--\sin^{-1}\!\left(
-\frac{r_s-r_p}{C}
-\right)
--
-\frac{r_s-r_p}
-{\sqrt{C^2-(r_s-r_p)^2}}.
-\label{eq:product_rule_asin_primary_final}
-\end{align}
-
-The remaining nonlinear contribution comes from the straight spans. Using the
-chain rule,
-
-\begin{align}
-&
-\frac{\partial}{\partial r_p}
-\left[
-2\sqrt{C^2-(r_s-r_p)^2}
-\right]
-\nonumber\\
-={}&
-2
-\left[
-\frac{1}
-{2\sqrt{C^2-(r_s-r_p)^2}}
-\right]
-\left[
-2(r_s-r_p)
-\right]
-\nonumber\\
-={}&
-\frac{2(r_s-r_p)}
-{\sqrt{C^2-(r_s-r_p)^2}}.
-\label{eq:square_root_primary_derivative}
-\end{align}
-
-We can now assemble the derivative of the full residual. The terms involving
-the straight-span square root appear with equal magnitude and opposite sign:
-
-\begin{align}
-\frac{\partial\mathcal{R}_{\mathrm{belt}}}{\partial r_p}
-={}&
-\pi
-+
-2\left[
--\sin^{-1}\!\left(
-\frac{r_s-r_p}{C}
-\right)
--
-\frac{r_s-r_p}
-{\sqrt{C^2-(r_s-r_p)^2}}
-\right]
-+
-\frac{2(r_s-r_p)}
-{\sqrt{C^2-(r_s-r_p)^2}}
-\nonumber\\
-={}&
-\pi
--
-2\sin^{-1}\!\left(
-\frac{r_s-r_p}{C}
-\right)
-\nonumber\\
-={}&
-\phi_p.
-\label{eq:belt_residual_primary_partial}
-\end{align}
-
-\paragraph{Partial derivative with respect to \(r_s\)}
-
-The calculation with respect to \(r_s\) follows the same steps. The only
-difference is that increasing \(r_s\) increases the radius difference
-\(r_s-r_p\), rather than decreasing it. Thus,
-
-\begin{equation}
-\frac{\partial(r_s-r_p)}{\partial r_s}
-=
-1,
-\qquad
-\frac{\partial}{\partial r_s}
-\sin^{-1}\!\left(
-\frac{r_s-r_p}{C}
-\right)
-=
-\frac{1}
-{\sqrt{C^2-(r_s-r_p)^2}}.
-\label{eq:secondary_partial_component_derivatives}
-\end{equation}
-
-Using these signs in the same product-rule calculation gives
-
-\begin{equation}
-\frac{\partial}{\partial r_s}
-\left[
-(r_s-r_p)
-\sin^{-1}\!\left(
-\frac{r_s-r_p}{C}
-\right)
-\right]
-=
-\sin^{-1}\!\left(
-\frac{r_s-r_p}{C}
-\right)
-+
-\frac{r_s-r_p}
-{\sqrt{C^2-(r_s-r_p)^2}}.
-\label{eq:product_rule_asin_secondary_final}
-\end{equation}
-
-The straight-span contribution changes sign as well:
-
-\begin{equation}
-\frac{\partial}{\partial r_s}
-\left[
-2\sqrt{C^2-(r_s-r_p)^2}
-\right]
-=
--\frac{2(r_s-r_p)}
-{\sqrt{C^2-(r_s-r_p)^2}}.
-\label{eq:square_root_secondary_derivative}
-\end{equation}
-
-Assembling the full derivative gives
-
-\begin{align}
-\frac{\partial\mathcal{R}_{\mathrm{belt}}}{\partial r_s}
-={}&
-\pi
-+
-2\left[
-\sin^{-1}\!\left(
-\frac{r_s-r_p}{C}
-\right)
-+
-\frac{r_s-r_p}
-{\sqrt{C^2-(r_s-r_p)^2}}
-\right]
--
-\frac{2(r_s-r_p)}
-{\sqrt{C^2-(r_s-r_p)^2}}
-\nonumber\\
-={}&
-\pi
-+
-2\sin^{-1}\!\left(
-\frac{r_s-r_p}{C}
-\right)
-\nonumber\\
-={}&
-\phi_s.
-\label{eq:belt_residual_secondary_partial}
-\end{align}
-
-Again, the square-root terms cancel. The two sensitivities are therefore the
-two wrap angles:
-
-\begin{equation}
-\frac{\partial\mathcal{R}_{\mathrm{belt}}}{\partial r_p}
-=
-\phi_p,
-\qquad
-\frac{\partial\mathcal{R}_{\mathrm{belt}}}{\partial r_s}
-=
-\phi_s.
-\label{eq:belt_residual_partials_as_wrap_angles}
-\end{equation}
-
-Substituting these results into \Cref{eq:secondary_radius_rate_constraint}
-gives
-
-\begin{equation}
-\phi_p\dot r_p+\phi_s\dot r_s=0.
-\label{eq:wrap_weighted_radius_rate_balance}
-\end{equation}
-
-This says that, under fixed belt length, the two radial motions are weighted by
-their current wrap angles. Solving for the secondary radius rate,
-
-\begin{equation}
-\dot r_s
-=
--\frac{\phi_p}{\phi_s}\dot r_p.
-\label{eq:secondary_radius_rate_general}
-\end{equation}
-
-Finally, inserting the primary radius rate from
-\Cref{eq:primary_radius_rate} gives
-
-\bigeq{eq:secondary_radius_rate}{Secondary Radius Rate}{
-\dot r_s
-=
-\begin{cases}
-0,
-& 0\leq s<s_{\mathrm{dz}},\\[12pt]
-\displaystyle
--\frac{\phi_p}{\phi_s}
-\frac{\dot s}{2\tan\beta},
-& s_{\mathrm{dz}}<s\leq s_{\max}.
-\end{cases}
-}
-
-The negative sign is the geometric consequence of the fixed belt length: as the
-belt moves outward on the primary pulley, it must move inward on the secondary
-pulley.
-
-\subsubsection{Secondary Radius Acceleration}
-\label{sec:secondary_radius_acceleration}
-
-The secondary radius rate is not constant while the CVT shifts, because the
-wrap angles themselves change as the belt moves. To find \(\ddot r_s\), first
-find the rates of the wrap angles appearing in
-\Cref{eq:wrap_weighted_radius_rate_balance}.
-
-The two wrap angles are determined by the tangency angle,
+The secondary mapping is not linear after contact. Its first derivative was
+found from the fixed-length rate balance in
+\Cref{eq:secondary_coordinate_slope_balance}:
 
 \[
-\lambda
-=
-\sin^{-1}\!\left(
-\frac{r_s-r_p}{C}
-\right).
+    \phi_p+\phi_s x_s'=0.
 \]
 
-Using the chain rule,
+The balance in \Cref{eq:secondary_coordinate_slope_balance} contains the
+information needed for the second derivative. We will differentiate it once
+more with respect to \(s\), which first requires the rates at which the two
+wrap angles change with \(s\).
 
-\begin{align}
-\dot\lambda
-&=
-\frac{\dot r_s-\dot r_p}
-{\sqrt{C^2-(r_s-r_p)^2}}.
-\label{eq:tangency_angle_rate}
-\end{align}
-
-Since \(\phi_p=\pi-2\lambda\) and \(\phi_s=\pi+2\lambda\),
-
-\begin{align}
-\dot\phi_p
-&=
--2\dot\lambda
-=
-\frac{2(\dot r_p-\dot r_s)}
-{\sqrt{C^2-(r_s-r_p)^2}},
-\label{eq:primary_wrap_angle_rate}\\[6pt]
-\dot\phi_s
-&=
-2\dot\lambda
-=
--\frac{2(\dot r_p-\dot r_s)}
-{\sqrt{C^2-(r_s-r_p)^2}}.
-\label{eq:secondary_wrap_angle_rate}
-\end{align}
-
-Now differentiate the rate balance,
-\(\phi_p\dot r_p+\phi_s\dot r_s=0\). Each term is the product of a changing
-wrap angle and a changing radius rate, so use the product rule on both:
-
-\begin{align}
-0
-&=
-\frac{d}{dt}
-\left(
-\phi_p\dot r_p+\phi_s\dot r_s
-\right)
-\nonumber\\
-&=
-\dot\phi_p\dot r_p
-+
-\phi_p\ddot r_p
-+
-\dot\phi_s\dot r_s
-+
-\phi_s\ddot r_s.
-\label{eq:wrap_weighted_radius_acceleration_start}
-\end{align}
-
-Substituting the wrap-angle rates from
-\Cref{eq:primary_wrap_angle_rate,eq:secondary_wrap_angle_rate} gives
-
-\begin{align}
-0
-={}&
-\frac{2(\dot r_p-\dot r_s)}
-{\sqrt{C^2-(r_s-r_p)^2}}\dot r_p
-+
-\phi_p\ddot r_p
--
-\frac{2(\dot r_p-\dot r_s)}
-{\sqrt{C^2-(r_s-r_p)^2}}\dot r_s
-+
-\phi_s\ddot r_s
-\nonumber\\
-={}&
-\phi_p\ddot r_p
-+
-\phi_s\ddot r_s
-+
-\frac{2(\dot r_p-\dot r_s)^2}
-{\sqrt{C^2-(r_s-r_p)^2}}.
-\label{eq:wrap_weighted_radius_acceleration_balance}
-\end{align}
-
-The final term is present because a changing radius changes the wrap angles as
-well as the radius itself. Solving for the secondary radial acceleration gives
+The required geometric quantities were defined in
+\Cref{eq:belt_span_angle,eq:pulley_wrap_angles}. Written together, they are
 
 \begin{equation}
-\ddot r_s
-=
--\frac{\phi_p}{\phi_s}\ddot r_p
--
-\frac{2}
-{\phi_s\sqrt{C^2-(r_s-r_p)^2}}
-\left(\dot r_p-\dot r_s\right)^2.
-\label{eq:secondary_radius_acceleration_general}
+    \delta
+    =
+    \sin^{-1}\!\left(\frac{r_s-r_p}{C}\right),
+    \qquad
+    \phi_p=\pi-2\delta,
+    \qquad
+    \phi_s=\pi+2\delta.
+    \label{eq:wrap_geometry_for_acceleration}
 \end{equation}
 
-The remaining difference of radius rates can be written using the result
-already obtained in \Cref{eq:secondary_radius_rate_general}:
-
-\begin{align}
-\dot r_p-\dot r_s
-&=
-\dot r_p
-+
-\frac{\phi_p}{\phi_s}\dot r_p
-\nonumber\\
-&=
-\frac{\phi_p+\phi_s}{\phi_s}\dot r_p
-\nonumber\\
-&=
-\frac{2\pi}{\phi_s}\dot r_p.
-\label{eq:radius_rate_difference}
-\end{align}
-
-Substituting this into \Cref{eq:secondary_radius_acceleration_general} gives
+As \(s\) changes, both \(r_p\) and \(r_s\) change, so the radius difference
+inside \(\delta\) changes at the rate
 
 \begin{equation}
-\ddot r_s
-=
--\frac{\phi_p}{\phi_s}\ddot r_p
--
-\frac{8\pi^2}
-{\phi_s^3\sqrt{C^2-(r_s-r_p)^2}}
-\dot r_p^2.
-\label{eq:secondary_radius_acceleration_primary_form}
+    \frac{d}{ds}(r_s-r_p)
+    =
+    r_s'-r_p'.
+    \label{eq:radius_difference_shift_derivative}
 \end{equation}
 
-Finally, insert the primary radius rate and acceleration from
-\Cref{eq:primary_radius_rate,eq:primary_radius_acceleration}:
+Applying the chain rule to \(\delta\), and using the straight-span length from
+\Cref{eq:belt_straight_span_length} in the final line, gives
 
-\bigeq{eq:secondary_radius_acceleration}{Secondary Radius Acceleration}{
+\begin{align}
+    \delta'
+    &=
+    \frac{1}
+    {\sqrt{1-\left(\dfrac{r_s-r_p}{C}\right)^2}}
+    \left(
+        \frac{r_s'-r_p'}{C}
+    \right)
+    \nonumber\\
+    &=
+    \frac{r_s'-r_p'}
+    {\sqrt{C^2-(r_s-r_p)^2}}
+    \nonumber\\
+    &=
+    \frac{r_s'-r_p'}{l}.
+    \label{eq:span_angle_shift_derivative}
+\end{align}
+
+After primary contact, the local pulley slopes are given by
+\Cref{eq:engaged_local_radius_slopes}:
+
+\[
+    r_p'
+    =
+    \frac{1}{2\tan\beta},
+    \qquad
+    r_s'
+    =
+    \frac{x_s'}{2\tan\beta}.
+\]
+
+Substituting these slopes into
+\Cref{eq:span_angle_shift_derivative} gives
+
+\begin{align}
+    \delta'
+    &=
+    \frac{
+        \dfrac{x_s'}{2\tan\beta}
+        -
+        \dfrac{1}{2\tan\beta}
+    }{l}
+    \nonumber\\
+    &=
+    \frac{x_s'-1}{2l\tan\beta}.
+    \label{eq:span_angle_shift_derivative_coordinate_form}
+\end{align}
+
+The wrap-angle derivatives now follow directly from
+\Cref{eq:wrap_geometry_for_acceleration}:
+
+\begin{equation}
+    \phi_p'=-2\delta',
+    \qquad
+    \phi_s'=2\delta'.
+    \label{eq:wrap_angle_shift_derivatives}
+\end{equation}
+
+We can now differentiate the secondary slope balance in
+\Cref{eq:secondary_coordinate_slope_balance}. The primary term
+contributes \(\phi_p'\), while the secondary term requires the product rule
+because both \(\phi_s\) and \(x_s'\) change with \(s\):
+
+\begin{align}
+    0
+    &=
+    \frac{d}{ds}
+    \left(
+        \phi_p+\phi_s x_s'
+    \right)
+    \nonumber\\
+    &=
+    \phi_p'
+    +
+    \phi_s'x_s'
+    +
+    \phi_s x_s''.
+    \label{eq:secondary_coordinate_curvature_balance}
+\end{align}
+
+Substituting the wrap-angle derivatives from
+\Cref{eq:wrap_angle_shift_derivatives} gives
+
+\begin{equation}
+    -2\delta'
+    +
+    2\delta'x_s'
+    +
+    \phi_s x_s''
+    =0.
+    \label{eq:secondary_coordinate_curvature_delta_form}
+\end{equation}
+
+Solving first for \(x_s''\),
+
+\begin{align}
+    \phi_s x_s''
+    &=
+    2\delta'(1-x_s'),
+    \nonumber\\
+    x_s''
+    &=
+    \frac{2\delta'(1-x_s')}{\phi_s}.
+    \label{eq:secondary_coordinate_curvature_first_form}
+\end{align}
+
+Using the expression for \(\delta'\) from
+\Cref{eq:span_angle_shift_derivative_coordinate_form},
+
+\begin{align}
+    x_s''
+    &=
+    \frac{2}{\phi_s}
+    \left(
+        \frac{x_s'-1}{2l\tan\beta}
+    \right)
+    (1-x_s')
+    \nonumber\\
+    &=
+    -\frac{(1-x_s')^2}
+    {\phi_s l\tan\beta}.
+    \label{eq:secondary_coordinate_curvature_slope_form}
+\end{align}
+
+On the engaged branch, the first-derivative result in
+\Cref{eq:secondary_coordinate_slope} gives
+\(x_s'=-\phi_p/\phi_s\). The remaining factor can therefore be simplified:
+
+\begin{align}
+    1-x_s'
+    &=
+    1+\frac{\phi_p}{\phi_s}
+    \nonumber\\
+    &=
+    \frac{\phi_s+\phi_p}{\phi_s}
+    \nonumber\\
+    &=
+    \frac{2\pi}{\phi_s},
+    \label{eq:secondary_coordinate_one_minus_slope}
+\end{align}
+
+where \(\phi_p+\phi_s=2\pi\) follows from
+\Cref{eq:pulley_wrap_angles}. Substituting this result into
+\Cref{eq:secondary_coordinate_curvature_slope_form} gives the curvature of
+the secondary coordinate mapping:
+
+\bigeq{eq:secondary_coordinate_curvature}
+{Secondary Coordinate Curvature}
+{
+x_s''(s)
+=
+\begin{cases}
+    0,
+    & 0\leq s<x_{p,\mathrm{dz}},\\[12pt]
+    \displaystyle
+    -\frac{4\pi^2}
+    {\phi_s^3 l\tan\beta},
+    & x_{p,\mathrm{dz}}<s\leq x_{p,\max}.
+\end{cases}
+}
+
+The deadzone branch in \Cref{eq:secondary_coordinate_map} is horizontal, so
+both \(x_s'\) and \(x_s''\) are zero there. On the engaged branch,
+\(x_s''<0\): as the primary closes, the secondary mapping becomes
+progressively steeper in the opening direction.
+
+\paragraph{Secondary axial and radial accelerations}
+
+The curvature in \Cref{eq:secondary_coordinate_curvature} describes how the
+slope of the compatibility curve changes with position. To convert it into
+acceleration, begin with the secondary axial velocity from
+\Cref{eq:secondary_axial_rate}:
+
+\[
+    \dot x_s=x_s'(s)\dot s.
+\]
+
+Differentiating with respect to time gives
+
+\begin{align}
+    \ddot x_s
+    &=
+    \frac{d}{dt}
+    \left[
+        x_s'(s)\dot s
+    \right]
+    \nonumber\\
+    &=
+    \frac{d x_s'}{dt}\dot s
+    +
+    x_s'(s)\ddot s.
+    \label{eq:secondary_axial_acceleration_product_rule}
+\end{align}
+
+Because \(x_s'\) changes only through \(s\),
+
+\begin{equation}
+    \frac{d x_s'}{dt}
+    =
+    x_s''(s)\dot s.
+    \label{eq:secondary_slope_time_derivative}
+\end{equation}
+
+The secondary axial acceleration is therefore
+
+\begin{equation}
+    \ddot x_s
+    =
+    x_s'(s)\ddot s
+    +
+    x_s''(s)\dot s^2.
+    \label{eq:secondary_axial_acceleration_chain}
+\end{equation}
+
+Substituting the slope from \Cref{eq:secondary_coordinate_slope} and the
+curvature from \Cref{eq:secondary_coordinate_curvature} gives
+
+\bigeq{eq:secondary_axial_acceleration}
+{Secondary Axial Acceleration}
+{
+\ddot x_s
+=
+\begin{cases}
+    0,
+    & 0\leq s<x_{p,\mathrm{dz}},\\[12pt]
+    \displaystyle
+    -\frac{\phi_p}{\phi_s}\ddot s
+    -
+    \frac{4\pi^2}
+    {\phi_s^3 l\tan\beta}\dot s^2,
+    & x_{p,\mathrm{dz}}<s\leq x_{p,\max}.
+\end{cases}
+}
+
+The local radius derivative in \Cref{eq:local_radius_position_derivative} is
+the constant \(1/(2\tan\beta)\). Applying it to the secondary gives
+
+\begin{equation}
+    \ddot r_s
+    =
+    \frac{1}{2\tan\beta}\ddot x_s.
+    \label{eq:secondary_local_acceleration_map}
+\end{equation}
+
+Substituting \Cref{eq:secondary_axial_acceleration} into
+\Cref{eq:secondary_local_acceleration_map} gives
+
+\bigeq{eq:secondary_radius_acceleration}
+{Secondary Radius Acceleration}
+{
 \ddot r_s
 =
 \begin{cases}
-0,
-& 0\leq s<s_{\mathrm{dz}},\\[14pt]
-\displaystyle
--\frac{\phi_p}{\phi_s}
-\frac{\ddot s}{2\tan\beta}
--
-\frac{2\pi^2}
-{\phi_s^3
-\sqrt{C^2-(r_s-r_p)^2}
-\tan^2\beta}
-\dot s^2,
-& s_{\mathrm{dz}}<s\leq s_{\max}.
+    0,
+    & 0\leq s<x_{p,\mathrm{dz}},\\[14pt]
+    \displaystyle
+    -\frac{\phi_p}{\phi_s}
+    \frac{\ddot s}{2\tan\beta}
+    -
+    \frac{2\pi^2}
+    {\phi_s^3 l\tan^2\beta}\dot s^2,
+    & x_{p,\mathrm{dz}}<s\leq x_{p,\max}.
 \end{cases}
 }
 
-\begin{remarkbox}[Remark (Rate of the Geometric CVT Ratio)]
-The individual pulley-radius rates and accelerations are the quantities needed
-in the subsequent development. They can also be combined to determine how
-quickly the geometric CVT ratio changes. This result is not required in the
-main derivation, but it gives a useful design-level view of how sheave angle and
-current pulley geometry shape the available ratio-change rate. The derivation
-is given in \Cref{app:ratio-rate}.
+The two terms have different physical origins. The first comes from the
+imposed shift acceleration, converted through the coordinate slope in
+\Cref{eq:secondary_coordinate_slope} and the local pulley slope in
+\Cref{eq:local_radius_position_derivative}. The second comes from the
+curvature in \Cref{eq:secondary_coordinate_curvature}: even when
+\(\ddot s=0\), moving through the engaged branch changes
+\(-\phi_p/\phi_s\), so the secondary velocity continues to change.
+
+\begin{remarkbox}[Remark (Deadzone Boundary)]
+The idealized maps in
+\Cref{eq:primary_local_radius_map,eq:secondary_coordinate_map} change slope
+when the primary first reaches the belt at \(s=x_{p,\mathrm{dz}}\). Their
+first derivatives therefore change discontinuously, and their ordinary second
+derivatives are not defined at that single point. The acceleration relations
+in \Cref{eq:primary_radius_acceleration,eq:secondary_radius_acceleration}
+apply within the deadzone and engaged branches, while first contact is treated
+as the transition between them.
+
+TODO: Update remark box once I have a section on numerical simulation transitions.
 \end{remarkbox}
 
-\paragraph{Relation to prior transient models}
+\begin{remarkbox}[Remark (Practical Consequences of the Pulley Geometry)]
+The radius, rate, and acceleration relations derived in this section describe
+how the pulley geometry evolves as the CVT shifts. \Cref{app:ratio-rate}
+explores the practical consequences of these results in more detail. In
+particular, it examines the resulting geometric CVT ratio and ratio-change
+rate across the shift travel, together with how the current pulley geometry
+and sheave angle shape the available ratio range and ratio-change sensitivity.
+\end{remarkbox}
 
-The radius-rate and radius-acceleration relations above follow from the
-particular global belt-path representation adopted here: fixed belt length and
-center-to-center distance, one nominal radius over each pulley contact arc, and
-straight tangent spans between the pulleys. Within this representation, the
-shift coordinate \(s\) determines the primary radius, while the belt-length
-condition determines the compatible secondary radius. Differentiating that same
-condition then gives the coupled radius rates and accelerations required by the
-remainder of the model.
-
-\citet{DuanEtAl2016} develop a closely related chain-CVT geometry, including
-the open-belt arc-and-tangent path and the wedge relation between
-movable-sheave axial motion and nominal radius motion. Their formulation
-retains an additional elastic path-length degree of freedom: chain extension
-and its rate contribute to span tension, while pulley deformation produces a
-local difference between the nominal pulley radius and the radius followed by
-an individual chain element. The present formulation instead holds the nominal
-belt path at fixed length and does not resolve a spatial deformation field.
-Within those assumptions, it provides the compatible nominal radius pair and
-its rates directly from
-\[
-s,\ \dot s,\ \ddot s
-\quad\longrightarrow\quad
-r_p,\ \dot r_p,\ \ddot r_p,\ 
-r_s,\ \dot r_s,\ \ddot r_s.
-\]
-The corresponding tradeoff is that elastic path-length change and
-deformation-induced local radius variation are excluded from this geometric
-layer.
-
-Rubber-belt transient models use more than one representation of radius
-evolution. Analytical shift-mechanics models, such as those of
-\citet{Sorge2008} and \citet{CammalleriSorge2009}, describe local belt
-migration through a pulley wrap, coupling radial motion to circumferential
-transport, sliding, and contact-region mechanics. Discretized rubber-belt
-models, such as those of \citet{JulioPlante2011} and \citet{Ballew2015}, obtain the
-evolving belt geometry from the motion and contact state of individual belt
-elements. Those approaches can resolve local belt deformation, tension
-redistribution, and contact motion in greater detail, but require additional
-spatial or nodal states and associated contact laws.
-
-The present model does not attempt to reproduce that internal belt trajectory.
-It instead uses the global belt-path geometry to provide the compatible nominal
-pulley radii and their derivatives from the single primary shift coordinate.
-This lower-order closure is useful here because those quantities enter directly
-into the subsequent belt-transport, traction, and rotational equations.
-
-
+% --------------------------------------------------------------
 \subsection{Section Conclusion}
 \label{sec:geometry_conclusion}
 
-The pulley geometry is now closed by a single shift coordinate. At any
-admissible value of \(s\), the primary sheave geometry fixes the primary belt
-radius, while fixed belt length determines the compatible secondary radius.
-Together, these radii determine the belt path, the pitch radii, and the
-geometric ratio made available by the current pulley arrangement.
+The pulley geometry is now closed by the single shift coordinate. The
+definition in \Cref{eq:system_shift_coordinate} fixes the primary position,
+while \Cref{eq:secondary_coordinate_map} supplies the unique compatible
+secondary position. The local pulley maps in
+\Cref{eq:local_radius_map,eq:primary_local_radius_map} then give the two pulley
+radii. Finally, the rate and acceleration relations in
+\Cref{eq:primary_radius_rate,eq:secondary_radius_rate,%
+eq:primary_radius_acceleration,eq:secondary_radius_acceleration} determine how
+those radii move. Thus, for any admissible shift state,
 
-The same geometry also determines how these quantities move when the shift
-coordinate changes. A primary sheave displacement produces a corresponding
-primary radial motion, while the fixed belt length constrains the secondary
-radius to respond with it. The resulting radius rates and accelerations are
-therefore not separate assumptions; they follow from the same belt-path
-geometry that determines the instantaneous ratio.
+\[
+    \left(s,\dot s,\ddot s\right)
+    \quad\longmapsto\quad
+    \left(
+        r_p,\dot r_p,\ddot r_p,
+        r_s,\dot r_s,\ddot r_s
+    \right).
+\]
 
-This completes the geometric part of the model. The remaining development can
-treat the pulley radii, belt path, and their motion as a consistent consequence
-of the current shift state, rather than as independent quantities.
+This closure follows from the geometric representation used throughout the
+section. The belt cross-section is fixed under
+\AssRef{assump:fixed-belt-cross-section}, the belt length is fixed under
+\AssRef{assump:constant_belt_length}, and
+\AssRef{assump:uniform_contact_radius} represents the belt path on each pulley
+by a single radius over its wrap. The centre distance is established once by
+\Cref{eq:center_distance_root} and then remains fixed by the pulley-shaft
+spacing. With the two wrapped arcs joined by the straight tangent spans in
+\Fig{fig:belt_loop_geometry}, specifying \(s\) leaves no further geometric
+freedom in the modeled belt path.
 
+\paragraph{Relation to prior transient models}
+
+These choices also define the level of detail represented by the present
+geometry. It determines the complete belt path that is globally compatible
+with the imposed shift position, but it does not track the trajectory of each
+belt element through the pulley wraps.
+
+\citet{DuanEtAl2016} begin from closely related open-belt arc-and-tangent
+geometry and the same wedge relationship between movable-sheave motion and
+nominal radius motion. Their chain-CVT formulation retains additional internal
+deformation. Chain extension and its rate contribute to the span tension, and
+pulley deformation allows the local radius followed by a chain element to
+differ from the nominal pulley radius. The present formulation instead fixes
+the belt length through \AssRef{assump:constant_belt_length} and uses one contact
+radius over each pulley through \AssRef{assump:uniform_contact_radius}.
+Consequently, elastic path-length change and deformation-induced variation of
+the local contact radius are not represented in this geometric closure.
+
+Rubber-belt transient models resolve the same shifting process at several
+levels of detail. Analytical shift-mechanics models, such as those of
+\citet{Sorge2008} and \citet{CammalleriSorge2009}, describe local radial belt
+migration through a pulley wrap and couple it to circumferential transport,
+sliding, and the mechanics of the contact region. Discretized rubber-belt
+models, such as those of \citet{JulioPlante2011} and \citet{Ballew2015},
+instead obtain the evolving belt geometry from the motion and contact state of
+individual belt elements. These approaches can resolve local deformation,
+tension redistribution, and contact migration in greater detail, but require
+additional spatial or nodal states and the contact laws that govern them.
+
+The distinction is therefore one of model resolution. The present formulation
+uses the global compatibility condition in \Cref{eq:belt_length_compatibility}
+to find the representative pulley-radius pair and its derivatives directly
+from \(s\), \(\dot s\), and \(\ddot s\). The cited transient models additionally
+ask how the belt or chain deforms and migrates within that path. Those internal
+motions lie outside the present geometric layer; within the assumptions stated
+above, the global pulley geometry and its motion are fully determined.
+% --------------------------------------------------------------
 
 \section{Pulley Axial Force Models}\label{sec:axial}
 
