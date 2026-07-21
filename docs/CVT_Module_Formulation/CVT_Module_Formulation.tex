@@ -2802,8 +2802,395 @@ The secondary mapping is then
 The first branch holds the secondary fixed while the primary closes its
 clearance; the second returns the unique compatible position after belt
 contact. Both give $x_{s,\max}$ at $s=x_{p,\mathrm{dz}}$, so the mapping is
-continuous. The positions of both movable sheaves are now determined by $s$;
-the remaining kinematic question is how they move when $s$ changes with time.
+continuous. The shift coordinate therefore determines both movable-sheave 
+positions and, through the local pulley relations, both pulley radii. The 
+position geometry is now complete. What remains is to determine how these 
+positions and radii move when $s$ changes with time.
+
+% --------------------------------------------------------------
+\subsection{Pulley-Radius Rates}
+\label{sec:pulley_radius_rates}
+
+The shift coordinate now determines the positions of both movable sheaves and
+the corresponding pulley radii. Its rate form asks the same geometric question
+over a small motion: if the primary closes by an amount \(ds\), how far must
+the secondary open, and how quickly do the two pulley radii change?
+
+We first find how each local coordinate and pulley radius changes per unit
+\(s\). Throughout this subsection, a prime denotes differentiation with
+respect to \(s\). For either pulley \(j\in\{p,s\}\), the corresponding time
+rates are then
+
+\begin{equation}
+    \dot x_j=x_j'(s)\dot s,
+    \qquad
+    \dot r_j=r_j'(s)\dot s.
+    \label{eq:shift_to_time_rate}
+\end{equation}
+
+\paragraph{Primary radius rate}
+
+The primary side follows immediately from the definition \(x_p(s)=s\):
+
+\begin{equation}
+    x_p'(s)=1,
+    \qquad
+    \dot x_p=\dot s.
+    \label{eq:primary_axial_rate}
+\end{equation}
+
+The corresponding radius map is constant through the primary deadzone and
+linear after the movable sheave reaches the belt. Differentiating
+\Cref{eq:primary_local_radius_map} therefore gives
+
+\begin{equation}
+    r_p'(s)
+    =
+    \begin{cases}
+        0,
+        & 0\leq s<x_{p,\mathrm{dz}},\\[8pt]
+        \displaystyle
+        \frac{1}{2\tan\beta},
+        & x_{p,\mathrm{dz}}<s\leq x_{p,\max}.
+    \end{cases}
+    \label{eq:primary_radius_shift_derivative}
+\end{equation}
+
+Multiplying this slope by \(\dot s\) gives
+
+\bigeq{eq:primary_radius_rate}
+{Primary Radius Rate}
+{
+\dot r_p
+=
+\begin{cases}
+    0,
+    & 0\leq s<x_{p,\mathrm{dz}},\\[10pt]
+    \displaystyle
+    \frac{\dot s}{2\tan\beta},
+    & x_{p,\mathrm{dz}}<s\leq x_{p,\max}.
+\end{cases}
+}
+
+Thus, the primary sheave can move while crossing the deadzone even though the
+primary belt radius does not. After contact, the sheave angle fixes the radial
+change produced by each unit of primary closure.
+
+\paragraph{Secondary coordinate and radius rates}
+
+The secondary requires one additional step. Its local pulley relation tells
+us how \(r_s\) changes when \(x_s\) changes, but it does not tell us how far the
+secondary must move. That motion is set by the fixed belt loop.
+
+At every compatible position,
+
+\begin{equation}
+    L_{\mathrm{geo}}\!\left(r_p(s),r_s(s),C\right)=L_b.
+    \label{eq:belt_length_along_shift}
+\end{equation}
+
+The centre distance \(C\) is fixed by the pulley shafts, while \(L_b\) is
+constant under \Cref{assump:constant_belt_length}. A small change in \(s\)
+therefore cannot change the geometric length of the belt path:
+
+\begin{equation}
+    \frac{dL_{\mathrm{geo}}}{ds}=0.
+    \label{eq:belt_length_shift_derivative_zero}
+\end{equation}
+
+Both radii change during this motion. The change caused by \(r_p\) is the
+sensitivity of the belt length to \(r_p\), multiplied by the actual rate
+\(r_p'\). The secondary contributes in the same way. Applying the chain rule
+to \Cref{eq:belt_length_along_shift} gives
+
+\begin{equation}
+    \frac{\partial L_{\mathrm{geo}}}{\partial r_p}r_p'
+    +
+    \frac{\partial L_{\mathrm{geo}}}{\partial r_s}r_s'
+    =0.
+    \label{eq:radius_slope_compatibility}
+\end{equation}
+
+The two partial derivatives have a direct purpose: each tells us how much
+additional belt path would be required if one pulley radius increased while
+the other radius remained fixed. The actual pulley motion must make these two
+changes cancel. We therefore calculate the two sensitivities next.
+
+The quantities that change inside the belt-length relation are
+
+\begin{equation}
+    \delta
+    =
+    \sin^{-1}\!\left(\frac{r_s-r_p}{C}\right),
+    \qquad
+    l
+    =
+    \sqrt{C^2-(r_s-r_p)^2},
+    \label{eq:belt_rate_geometry_recalled}
+\end{equation}
+
+where \(\delta\) sets the wrap angles and \(l\) is the length of either
+straight span. Using these quantities, the exact path length from
+\Cref{eq:belt_length_exact} is
+
+\begin{equation}
+    L_{\mathrm{geo}}
+    =
+    \pi(r_p+r_s)
+    +
+    2(r_s-r_p)\delta
+    +
+    2l.
+    \label{eq:belt_length_rate_form}
+\end{equation}
+
+First, hold \(r_s\) and \(C\) fixed and increase \(r_p\). The radius difference
+\(r_s-r_p\) then decreases at the same rate:
+
+\begin{equation}
+    \frac{\partial(r_s-r_p)}{\partial r_p}=-1.
+    \label{eq:radius_difference_primary_derivative}
+\end{equation}
+
+Using this result in the definitions of \(\delta\) and \(l\) gives
+
+\begin{align}
+    \frac{\partial\delta}{\partial r_p}
+    &=
+    \frac{1}
+    {\sqrt{1-\left(\dfrac{r_s-r_p}{C}\right)^2}}
+    \left(-\frac{1}{C}\right)
+    \nonumber\\
+    &=
+    -\frac{1}
+    {\sqrt{C^2-(r_s-r_p)^2}}
+    =
+    -\frac{1}{l},
+    \label{eq:span_angle_primary_derivative}\\[8pt]
+    \frac{\partial l}{\partial r_p}
+    &=
+    \frac{1}
+    {2\sqrt{C^2-(r_s-r_p)^2}}
+    \left[2(r_s-r_p)\right]
+    \nonumber\\
+    &=
+    \frac{r_s-r_p}{l}.
+    \label{eq:straight_span_primary_derivative}
+\end{align}
+
+We can now differentiate the complete path length in
+\Cref{eq:belt_length_rate_form}. The first term differentiates directly, the
+wrap correction requires the product rule, and the final term contains the
+changing straight spans:
+
+\begin{align}
+    \frac{\partial L_{\mathrm{geo}}}{\partial r_p}
+    &=
+    \pi
+    +
+    2\left[
+        (-1)\delta
+        +
+        (r_s-r_p)\left(-\frac{1}{l}\right)
+    \right]
+    +
+    2\left(\frac{r_s-r_p}{l}\right)
+    \nonumber\\
+    &=
+    \pi-2\delta
+    \nonumber\\
+    &=
+    \phi_p.
+    \label{eq:belt_length_primary_sensitivity}
+\end{align}
+
+The two terms containing \((r_s-r_p)/l\) cancel. The remaining sensitivity is
+the primary wrap angle.
+
+The secondary calculation follows the same path, but increasing \(r_s\)
+increases the radius difference:
+
+\begin{equation}
+    \frac{\partial(r_s-r_p)}{\partial r_s}=1.
+    \label{eq:radius_difference_secondary_derivative}
+\end{equation}
+
+The corresponding derivatives of \(\delta\) and \(l\) are
+
+\begin{align}
+    \frac{\partial\delta}{\partial r_s}
+    &=
+    \frac{1}
+    {\sqrt{1-\left(\dfrac{r_s-r_p}{C}\right)^2}}
+    \left(\frac{1}{C}\right)
+    \nonumber\\
+    &=
+    \frac{1}{l},
+    \label{eq:span_angle_secondary_derivative}\\[8pt]
+    \frac{\partial l}{\partial r_s}
+    &=
+    \frac{1}
+    {2\sqrt{C^2-(r_s-r_p)^2}}
+    \left[-2(r_s-r_p)\right]
+    \nonumber\\
+    &=
+    -\frac{r_s-r_p}{l}.
+    \label{eq:straight_span_secondary_derivative}
+\end{align}
+
+Differentiating the full path length with these signs gives
+
+\begin{align}
+    \frac{\partial L_{\mathrm{geo}}}{\partial r_s}
+    &=
+    \pi
+    +
+    2\left[
+        (1)\delta
+        +
+        (r_s-r_p)\left(\frac{1}{l}\right)
+    \right]
+    +
+    2\left(-\frac{r_s-r_p}{l}\right)
+    \nonumber\\
+    &=
+    \pi+2\delta
+    \nonumber\\
+    &=
+    \phi_s.
+    \label{eq:belt_length_secondary_sensitivity}
+\end{align}
+
+Again, the terms involving the changing straight-span length cancel. The
+sensitivity to the secondary radius is the secondary wrap angle. Together,
+
+\begin{equation}
+    \frac{\partial L_{\mathrm{geo}}}{\partial r_p}
+    =
+    \phi_p,
+    \qquad
+    \frac{\partial L_{\mathrm{geo}}}{\partial r_s}
+    =
+    \phi_s.
+    \label{eq:belt_length_radius_sensitivities}
+\end{equation}
+
+This result also has a simple geometric interpretation. If one pulley radius
+increases by a small amount while the other is held fixed, the required belt
+path increases by that radial change multiplied by the angle over which the
+belt wraps the pulley. The remaining changes in the tangent geometry cancel
+one another.
+
+Returning to the fixed-length condition
+\Cref{eq:radius_slope_compatibility}, the two radial changes must therefore
+satisfy
+
+\begin{equation}
+    \phi_p r_p'
+    +
+    \phi_s r_s'
+    =0.
+    \label{eq:wrap_weighted_radius_slope_balance}
+\end{equation}
+
+After primary contact, the local pulley relation gives the same
+axial-to-radial slope on both pulleys. Since \(x_p'=1\),
+
+\begin{equation}
+    r_p'
+    =
+    \frac{1}{2\tan\beta},
+    \qquad
+    r_s'
+    =
+    \frac{1}{2\tan\beta}x_s'.
+    \label{eq:engaged_local_radius_slopes}
+\end{equation}
+
+Substituting these two slopes into
+\Cref{eq:wrap_weighted_radius_slope_balance} gives
+
+\begin{equation}
+    \phi_p
+    \left(\frac{1}{2\tan\beta}\right)
+    +
+    \phi_s
+    \left(\frac{1}{2\tan\beta}x_s'\right)
+    =0.
+    \label{eq:secondary_coordinate_slope_substitution}
+\end{equation}
+
+The common local pulley slope cancels, leaving
+
+\begin{equation}
+    \phi_p+\phi_s x_s'=0.
+    \label{eq:secondary_coordinate_slope_balance}
+\end{equation}
+
+Solving for the slope of the secondary mapping gives
+
+\bigeq{eq:secondary_coordinate_slope}
+{Secondary Coordinate Slope}
+{
+x_s'(s)
+=
+\begin{cases}
+    0,
+    & 0\leq s<x_{p,\mathrm{dz}},\\[10pt]
+    \displaystyle
+    -\frac{\phi_p}{\phi_s},
+    & x_{p,\mathrm{dz}}<s\leq x_{p,\max}.
+\end{cases}
+}
+
+Within the deadzone, the primary radius does not change, so neither the
+compatible secondary radius nor \(x_s\) changes. After contact,
+\(x_s'<0\): primary closure requires the secondary to open. Its magnitude is
+not generally one and changes with the two wrap angles, which is why the
+engaged branch in \Fig{fig:pulley_coordinate_compatibility} is curved rather
+than straight.
+
+The time rate of the secondary coordinate is now obtained by multiplying this
+slope by \(\dot s\):
+
+\begin{equation}
+    \dot x_s
+    =
+    x_s'(s)\dot s
+    =
+    \begin{cases}
+        0,
+        & 0\leq s<x_{p,\mathrm{dz}},\\[10pt]
+        \displaystyle
+        -\frac{\phi_p}{\phi_s}\dot s,
+        & x_{p,\mathrm{dz}}<s\leq x_{p,\max}.
+    \end{cases}
+    \label{eq:secondary_axial_rate}
+\end{equation}
+
+Applying the local axial-to-radial slope once more gives the secondary radius
+rate:
+
+\bigeq{eq:secondary_radius_rate}
+{Secondary Radius Rate}
+{
+\dot r_s
+=
+\begin{cases}
+    0,
+    & 0\leq s<x_{p,\mathrm{dz}},\\[12pt]
+    \displaystyle
+    -\frac{\phi_p}{\phi_s}
+    \frac{\dot s}{2\tan\beta},
+    & x_{p,\mathrm{dz}}<s\leq x_{p,\max}.
+\end{cases}
+}
+
+The two pulley-radius rates are now determined by \(s\) and \(\dot s\).
+However, the secondary multiplier \(-\phi_p/\phi_s\) changes as the radii and
+wrap angles change. Even if \(\dot s\) is constant, the secondary rate is not.
+Its acceleration must therefore include the changing slope of the
+compatibility curve.
 % --------------------------------------------------------------
 
 
