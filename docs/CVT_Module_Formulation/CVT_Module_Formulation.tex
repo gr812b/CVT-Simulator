@@ -2455,8 +2455,8 @@ This expression requires
     \left|r_s-r_p\right|<C.
 \end{equation}
 
-This condition is already enforced by the physical separation of the pulleys.
-The pulley circles must remain apart, requiring
+This condition is already enforced by the physical separation of the
+pulleys. The pulley circles must remain apart, requiring
 \(C>r_s+r_p\), and \(r_s+r_p\) is necessarily greater than
 \(\left|r_s-r_p\right|\).
 
@@ -2504,8 +2504,8 @@ straight spans. Substituting
 \Cref{eq:belt_straight_span_length,eq:belt_span_angle,eq:pulley_wrap_angles}
 into \Cref{eq:belt_length_components} gives
 
-\bigeq{eq:belt_geometric_length}
-{Complete geometric belt length}
+\bigeq{eq:belt_length_exact}
+{Exact geometric belt length}
 {
 \begin{aligned}
 L_{\mathrm{geo}}(r_p,r_s,C)
@@ -2526,21 +2526,11 @@ the combined half-circle contribution from the two pulley wraps. The second
 accounts for the unequal wrap angles, and the third is the combined length of
 the two straight spans.
 
-When the pulley radii are equal, the straight spans are parallel, both wrap
-angles are \(\pi\), and the unequal-wrap correction vanishes. In this special
-case, \Cref{eq:belt_geometric_length} reduces to
-
-\begin{equation}
-    L_{\mathrm{geo}}
-    =
-    \pi\left(r_p+r_s\right)+2C.
-\end{equation}
-
 For any chosen values of \(r_p\), \(r_s\), and \(C\),
-\Cref{eq:belt_geometric_length} tells us how much belt is required to follow
-that path. The installed belt cannot change its total length as the pulleys
-shift. Under \Cref{assump:constant_belt_length}, every possible pulley
-position must therefore satisfy
+\Cref{eq:belt_length_exact} tells us how much belt is required to follow that
+path. The installed belt cannot change its total length as the pulleys shift.
+Under \Cref{assump:constant_belt_length}, every possible pulley position must
+therefore satisfy
 
 \begin{equation}
     L_{\mathrm{geo}}(r_p,r_s,C)=L_b,
@@ -2554,7 +2544,7 @@ known, the condition determines the third.
 For a particular CVT, the first quantity to determine is the centre distance
 \(C\). The pulley radii change as the sheaves move, but the pulley shafts do
 not move with them. Once the CVT is assembled, \(C\) remains fixed throughout
-the simulation.
+operation.
 
 The fixed centre distance can be found from any installed pulley position
 that can be measured. At that position, the belt length and the two pulley
@@ -2562,10 +2552,13 @@ radii are known. Denoting the measured radii by
 \(r_{p,\mathrm{ref}}\) and \(r_{s,\mathrm{ref}}\), the only unknown in
 \Cref{eq:belt_length_compatibility} is \(C\).
 
-The expanded length relation cannot be rearranged into a useful explicit
-expression for \(C\), because \(C\) appears both inside the square root and
-inside the inverse sine. The centre distance is therefore found with a
-one-dimensional root solve. Define the belt-length residual as
+In the general unequal-radius case, \(C\) appears both inside the square root
+and inside the inverse sine. The exact relation therefore cannot be
+rearranged into a useful explicit expression for \(C\). Instead, the centre
+distance is found with a one-dimensional root solve.
+
+For a trial centre distance, the difference between the belt length required
+by the geometry and the belt length actually available is
 
 \begin{equation}
     \mathcal{R}_L(r_p,r_s,C)
@@ -2574,10 +2567,10 @@ one-dimensional root solve. Define the belt-length residual as
     \label{eq:belt_length_residual}
 \end{equation}
 
-For a trial value of \(C\), a positive residual means that the resulting path
-would require more belt than is available. A negative residual means that it
-would require less. The correct centre distance is the value for which the
-required and available belt lengths match:
+A positive residual means that the trial geometry requires more belt than is
+available. A negative residual means that it requires less. The correct
+centre distance is the value for which the required and available lengths
+match:
 
 \begin{equation}
     \mathcal{R}_L
@@ -2590,19 +2583,98 @@ required and available belt lengths match:
     \label{eq:center_distance_root}
 \end{equation}
 
-This root solve is performed once when the CVT geometry is established.
-Afterward, both \(C\) and \(L_b\) remain fixed. As one pulley radius changes,
-the same compatibility condition determines the radius required at the other
-pulley.
+The root solver varies \(C\) until this condition is satisfied.
 
-The open-belt construction used here is standard. A common reduced
-approximation replaces the exact path by
-\(2C+\pi(r_p+r_s)\), which is exact when the pulley radii are equal but omits
-the changes in straight-span length and wrap angle when they differ. The
-geometric treatment used by Duan et al.\ is closer in form to the present
-approach, although their belt is extensible \cite{duan}. Here, the exact
-unequal-radius geometry is retained while the total belt length remains
-fixed.
+\begin{remarkbox}[Remark (Simplified Belt-Length Relation)]
+
+The exact root solve is required because changing pulley radii alter both the
+straight-span lengths and the wrap angles. When the radius difference is
+small relative to the centre distance,
+
+\[
+\frac{\left|r_s-r_p\right|}{C}\ll 1,
+\]
+
+the straight-span angle is also small:
+
+\[
+\delta
+=
+\sin^{-1}\!\left(\frac{r_s-r_p}{C}\right)
+\approx 0.
+\]
+
+A common simplification is to neglect the resulting wrap-angle correction
+while retaining the exact straight-span length. The compatibility relation
+then becomes
+
+\[
+L_b
+\approx
+\pi\left(r_p+r_s\right)
++
+2\sqrt{C^2-\left(r_s-r_p\right)^2}.
+\]
+
+Unlike the exact relation, this approximation can be rearranged directly.
+For example, the centre distance is
+
+\[
+C
+\approx
+\sqrt{
+    \left(r_s-r_p\right)^2
+    +
+    \frac{1}{4}
+    \left[
+        L_b-\pi\left(r_p+r_s\right)
+    \right]^2
+}.
+\]
+
+The present model retains the exact relation. The effect of using the
+simplified form is examined in
+\Cref{sec:approximation-validation}.
+
+\end{remarkbox}
+
+Once the initial root solve has determined \(C\), both the centre distance and
+the belt length are known constants. The compatibility condition can then be
+used to connect the two pulley radii at every subsequent position.
+
+Suppose the primary radius \(r_p\) is known. Substituting \(r_p\), \(C\), and
+\(L_b\) into \Cref{eq:belt_length_residual} leaves the secondary radius as the
+only unknown. Its compatible value is found from
+
+\begin{equation}
+    \mathcal{R}_L(r_p,r_s,C)=0
+    \qquad
+    \text{solved for } r_s.
+    \label{eq:secondary_radius_compatibility}
+\end{equation}
+
+The resulting \(r_s\) is the secondary radius required for the same fixed
+belt to pass around both pulleys. The calculation also works in the opposite
+direction. If \(r_s\) is known instead, the compatible primary radius follows
+from
+
+\begin{equation}
+    \mathcal{R}_L(r_p,r_s,C)=0
+    \qquad
+    \text{solved for } r_p.
+    \label{eq:primary_radius_compatibility}
+\end{equation}
+
+Thus, once \(C\) has been established, either pulley radius can be used to
+determine the other. The two radii remain local geometric quantities, but
+they cannot vary independently while belonging to the same fixed-length belt
+loop.
+
+The arc-and-tangent construction used above is standard in belt-drive
+geometry. \citet{BudynasNisbett2015} presents the same underlying construction
+for relating pulley radii, straight spans, wrap angles, and total belt length.
+The exact geometry is retained here because it provides the compatibility
+relation between the two shifting pulleys.
 
 The local relations \(r_p(x_p)\) and \(r_s(x_s)\) now describe how each
 pulley produces its radius, while
