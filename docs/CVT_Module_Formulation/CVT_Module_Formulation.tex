@@ -1515,10 +1515,10 @@ friction demand. Local radial sliding, local creep, and traction redistribution
 associated with radial motion are outside the present contact representation.
 \end{assumptionblock}
 
-\begin{assumptionblock}{assump:secondary_face_torque_split}{Equal Secondary Sheave-Face Torque Partition}
-Torque transferred from the belt to the secondary pulley is shared equally by
-the fixed and movable sheave faces. Face-level redistribution caused by helix
-motion, belt deformation, pressure redistribution, or microslip is neglected.
+\begin{assumptionblock}{assump:equal_normal_load_partition}{Equal Sheave-Face Normal-Load Partition}
+At each pulley, the total belt normal load is assumed to be shared equally 
+between the fixed and movable sheave faces. Face-to-face redistribution of 
+the normal load is not resolved.
 \end{assumptionblock}
 
 % --------------------------------------------------------------
@@ -3536,7 +3536,37 @@ from \(s\), \(\dot s\), and \(\ddot s\). The cited transient models additionally
 ask how the belt or chain deforms and migrates within that path. Those internal
 motions lie outside the present geometric layer; within the assumptions stated
 above, the global pulley geometry and its motion are fully determined.
+
+This closure determines which sheave and radius motions are compatible with
+the modeled belt path, but it does not determine which compatible acceleration
+occurs. In particular, every acceleration relation above still contains the
+shift acceleration \(\ddot s\). Its value must be consistent with the forces
+and inertias acting on the two movable pulley assemblies.
 % --------------------------------------------------------------
+
+
+\section{Axial Actuation and Sheave Balances}
+\label{sec:axial_actuation_balances}
+
+The use of a single shift coordinate should not be confused with the motion of
+a single axial body. Belt-length compatibility ties the motions of the primary
+and secondary movable sheaves together, but the sheaves remain separate
+assemblies. Each carries its own inertia, is loaded by its own actuation
+mechanism, and receives its own reaction from the belt.
+
+At a given \(s\) and \(\dot{s}\), any value of \(\ddot{s}\) implies a particular
+primary acceleration \(\ddot{x}_p\) and a compatible secondary acceleration
+\(\ddot{x}_s\) through the geometry derived above. For that motion to occur,
+both accelerations must satisfy Newton's second law simultaneously. The
+primary equation involves the flyweight mechanism, return spring, and primary
+belt reaction, while the secondary equation involves the axial spring,
+torque-reactive helix, and secondary belt reaction. The two equations therefore
+constrain the same shift acceleration through distinct physical load paths.
+
+The primary load path begins at the flyweight--ramp contact. The flyweights
+move radially, whereas the movable sheave translates axially; the ramp relates
+these motions and transmits force between them.
+
 \section{Pulley Axial Force Models}\label{sec:axial}
 
 The geometric relations developed in the previous section define how
