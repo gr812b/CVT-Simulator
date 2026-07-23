@@ -1515,7 +1515,7 @@ friction demand. Local radial sliding, local creep, and traction redistribution
 associated with radial motion are outside the present contact representation.
 \end{assumptionblock}
 
-\begin{assumptionblock}{assump:equal_normal_load_partition}{Equal Sheave-Face Normal-Load Partition}
+\begin{assumptionblock}{assump:equal_sheave_normal_load}{Equal Normal Load on Both Sheave Faces}
 At each pulley, the total belt normal load is assumed to be shared equally 
 between the fixed and movable sheave faces. Face-to-face redistribution of 
 the normal load is not resolved.
@@ -3545,26 +3545,31 @@ and inertias acting on the two movable pulley assemblies.
 % --------------------------------------------------------------
 
 
+% Copy-ready continuation of the completed pulley-geometry section.
+% This fragment contains the opening of the axial-actuation section and the
+% complete primary movable-sheave balance. It is intended to be followed by
+% the secondary movable-sheave balance.
+
 % --------------------------------------------------------------
 \section{Axial Actuation and Sheave Balances}
 \label{sec:axial_actuation_balances}
 
 The preceding section determined the pulley configuration permitted by the
-hardware.  Once the shift position \(s\) is known, the primary position is
+hardware. Once the shift position \(s\) is known, the primary position is
 \(x_p=s\), the belt-length constraint fixes the compatible secondary position
-\(x_s(s)\), and the corresponding pulley radii follow.  Their rates are fixed
-by \(s\) and \(\dot s\).  Their accelerations can also be written in terms of a
+\(x_s(s)\), and the corresponding pulley radii follow. Their rates are fixed
+by \(s\) and \(\dot s\), while their accelerations can be written in terms of a
 candidate shift acceleration \(\ddot s\).
 
-Geometry alone cannot select that acceleration.  It states how the two
+Geometry alone cannot select that acceleration. It states how the two movable
 sheaves must move if the shift coordinate accelerates, but it does not state
-whether the forces acting on the hardware can produce that motion.  That is
-the remaining axial-dynamics question.
+whether the forces acting on the hardware can produce that motion. That is the
+remaining axial-dynamics question.
 
-The geometric coupling also does not turn the two movable sheaves into one
-rigid body.  The primary and secondary remain separate physical assemblies,
-each with its own actuator, moving inertia, and belt reaction.  For any
-candidate \(\ddot s\), the geometry established their local accelerations as
+The geometric coupling also does not make the two movable sheaves one rigid
+body. The primary and secondary remain separate physical assemblies, each with
+its own actuator, moving inertia, and belt reaction. For any candidate
+\(\ddot s\), the preceding geometry gives their compatible accelerations as
 
 \begin{equation}
     \ddot x_p=\ddot s,
@@ -3577,140 +3582,112 @@ candidate \(\ddot s\), the geometry established their local accelerations as
     \label{eq:axial_accelerations_recalled}
 \end{equation}
 
-The physically realized shift acceleration must make both assemblies satisfy
-Newton's second law with these compatible accelerations.  The belt reactions
-appearing in the two balances are not prescribed clamping inputs; they are
-internal contact loads that must agree with the belt and pulley mechanics
-developed later.  The local balances are derived here one assembly at a time,
-beginning with the primary.
+The realized value of \(\ddot s\) must allow both assemblies to satisfy
+Newton's second law with these same compatible accelerations. The two local
+balances are therefore constructed separately, beginning with the primary.
 
 % --------------------------------------------------------------
 \subsection{Primary Movable-Sheave Balance}
 \label{sec:primary_movable_sheave_balance}
 
-The conceptual overview introduced the primary as the speed-sensitive side of
-the mechanical CVT.  Its flyweights rotate with the primary pulley and bear
-against ramps connected to the movable sheave.  As the flyweights move
-outward, the inclined ramps convert their radial action into an axial force
-that pushes the movable sheave toward the fixed sheave.  The primary
-compression spring pushes the same assembly in the opposite direction and
-therefore resists closure.
+The primary clamping mechanism was introduced in the conceptual overview. Its
+flyweights rotate with the primary pulley and press against ramps attached to
+the movable assembly. As the flyweights move outward, the ramps redirect their
+radial action into an axial force that closes the primary. The compression
+spring pushes the movable assembly in the opposite direction and resists that
+closure.
 
-At low primary speed, the spring holds the pulley open.  As the primary speed
-increases, the flyweights load the ramps more strongly.  While the movable
-sheave remains inside the primary deadzone established in
-\Cref{sec:local_pulley_geometry}, a closing force larger than the spring force
-leaves a net force that accelerates the assembly toward the fixed sheave.
-Once the movable sheave reaches the belt, further closure squeezes the belt
-between the two inclined faces.  The belt then presses back on the movable
-face, adding a second force that opposes closure.
+When the belt is seated between the sheaves, closing the primary also squeezes
+the belt. The belt presses back on the inclined sheave faces, so the reaction on
+the movable face provides a second force opposing closure. The primary motion
+is therefore set by one closing load from the flyweight--ramp mechanism and two
+opening loads from the spring and belt.
 
-\Cref{fig:primary_axial_mechanism} gathers this complete load path in one
-mechanism-level free body before the individual loads are derived.
+\Cref{fig:primary_axial_mechanism} shows these loads on the complete movable
+assembly.
 
-% FIGURE REVISION SPECIFICATION FOR THE AUTHOR-CREATED ASSET:
-% 1. Retain the existing primary cross-section and its recognizable hardware.
-% 2. Shade the movable sheave, ramp carrier, and every component that
-%    translates rigidly with them in light grey.  These parts form m_p.
-% 3. Leave the flyweights visually distinct because their radial motion is
-%    derived separately; they are not included in m_p.
-% 4. Label the closing direction +s (= +x_p) toward the fixed sheave.
-% 5. Show only the three high-level external axial loads used in the free body:
-%       F_{p,fly}     in the closing direction,
-%       F_{p,spring}  in the opening direction, and
-%       F_{p,belt}    in the opening direction at the belt contact.
-% 6. Keep the belt blue.  Do not place a ramp-contact reaction symbol in this
-%    overview; the radial contact load is introduced only when it is needed.
-% 7. If space permits, retain r_f(s) from the shaft axis to a flyweight centre
-%    of mass.  A small ramp detail may show ds, dr_f, and alpha_p, but it should
-%    remain visually subordinate to the three-force axial free body.
+% AUTHOR FIGURE NOTE:
+% Retain the recognizable primary cross-section. Shade the movable sheave,
+% ramp carrier, and every part that translates rigidly with them; together
+% these parts form m_p. Keep the flyweights visually separate. Mark +s toward
+% the fixed sheave and show only the three high-level axial loads on the shaded
+% assembly: F_{p,fly} in +s, with F_{p,spring} and F_{p,belt} opposing +s.
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.92\linewidth]
         {illustrations/pulleyForces/primary_cvt_mechanisms.png}
-    \caption{Primary clamping mechanism and movable-assembly free body.  The
-    flyweight--ramp mechanism applies the axial closing force
-    \(F_{p,\mathrm{fly}}\).  The primary spring applies the opposing force
-    \(F_{p,\mathrm{spring}}\), and, after contact, the belt applies the
-    opposing force \(F_{p,\mathrm{belt}}\).  The shaded movable sheave and ramp
-    carrier translate together with mass \(m_p\) in the positive closing
-    direction \(+s=+x_p\).}
+    \caption{Primary clamping mechanism and axial free body of the movable
+    assembly. The flyweight--ramp mechanism closes the primary, while the
+    spring and belt reaction oppose closure.}
     \label{fig:primary_axial_mechanism}
 \end{figure}
 
-\subsubsection{The Axial Free Body}
+\subsubsection{Axial Free Body}
 
-Isolate the shaded movable assembly in
-\Cref{fig:primary_axial_mechanism}.  Let \(m_p\) be the mass of the movable
-sheave, ramp carrier, and any other component that translates rigidly with
-them.  The flyweights are not included in \(m_p\): the ramps make them move
-radially as the sheave moves axially, so their inertia must be accounted for
-through that motion rather than added directly to the translating mass.
+Isolate the shaded assembly in \Cref{fig:primary_axial_mechanism}. Let \(m_p\)
+be the mass of the movable sheave, ramp carrier, and every other component that
+translates rigidly with them. The flyweights are kept separate from \(m_p\)
+because their radius changes as the sheave moves.
 
-The figure exposes three axial forces on the movable assembly.  The
-flyweight--ramp mechanism supplies \(F_{p,\mathrm{fly}}\) in the positive
-closing direction.  The spring supplies \(F_{p,\mathrm{spring}}\) in the
-opening direction.  After belt contact, the belt supplies
-\(F_{p,\mathrm{belt}}\), also in the opening direction.  Since the primary
-coordinate was chosen as the system shift coordinate, \(x_p=s\) and
-\(\ddot x_p=\ddot s\).  Newton's second law in the axial direction is
-therefore
+The figure gives the force directions directly. The flyweight--ramp mechanism
+supplies \(F_{p,\mathrm{fly}}\) in the positive closing direction. The spring
+and belt supply \(F_{p,\mathrm{spring}}\) and \(F_{p,\mathrm{belt}}\) in the
+opening direction. Since \(x_p=s\), the acceleration of the movable assembly
+is \(\ddot s\). Newton's second law therefore gives
 
 \begin{equation}
-\boxed{
     m_p\ddot s
     =
     F_{p,\mathrm{fly}}
     -F_{p,\mathrm{spring}}
     -F_{p,\mathrm{belt}}.
-}
     \label{eq:primary_movable_sheave_balance}
 \end{equation}
 
-Every sign follows directly from the free body.  The remaining task is to
-determine the magnitude of each force from the mechanism that creates it.
+Each sign now follows from the physical free body. What remains is to find the
+magnitude of the three loads, beginning with the flyweight--ramp mechanism.
 
 % --------------------------------------------------------------
 \subsubsection{Flyweight--Ramp Closing Force}
 \label{sec:primary_flyweight_ramp_force}
 
-\paragraph{How the ramp couples the two motions}
+\paragraph{Ramp geometry}
 
-The ramp is the inclined contact surface between a flyweight and the carrier
-attached to the movable sheave.  A flyweight can move outward from the shaft,
-whereas the movable sheave can move only axially.  Contact with the ramp makes
-those motions compatible: outward flyweight motion requires the ramp carrier
-to move in the closing direction, and an axial movement of the carrier fixes
-the radial position of the flyweight.
-
-Let \(r_f\) be the complete distance from the primary shaft axis to the
-effective centre of mass of the flyweights.  The assembled ramp geometry makes
-that radius a function of the primary position and hence of the shift
-coordinate:
+The flyweights move radially while the ramp carrier moves axially. Contact
+between them makes these two motions compatible. Let \(r_f\) be the distance
+from the primary shaft axis to the effective centre of mass of a flyweight.
+The ramp profile fixes this radius at every primary position, so
 
 \begin{equation}
     r_f=r_f(s).
     \label{eq:primary_ramp_map}
 \end{equation}
 
-Thus, \(r_f(0)\) is already the full centre-of-mass radius in the open
-reference configuration.  It is not an increment that must be added to a
-second reference radius.
+The local ramp angle must describe the same motion. As the carrier advances by
+\(ds\) in the global closing direction \(+s\), the flyweight moves by \(ds\)
+in the opposite axial direction relative to the carrier and by \(dr_f\)
+radially outward. \Cref{fig:primary_ramp_geometry} shows this local motion.
 
-Now move the mechanism through a small compatible displacement.  If the
-movable sheave closes by \(ds\), the flyweights move outward by
+% AUTHOR FIGURE NOTE:
+% Draw a close-up of one flyweight and its ramp. Show the flyweight centre of
+% mass at radius r_f(s), the outward radial direction, and the ramp carrier's
+% global +s direction. In the carrier frame, show the flyweight's small motion
+% as ds in the negative axial direction and dr_f outward. Draw the resulting
+% right triangle and measure alpha_p from the negative axial direction to the
+% local ramp tangent. Do not add force vectors to this geometry figure.
+\begin{figure}[H]
+    \centering
+    % \includegraphics[width=0.72\linewidth]
+    %     {illustrations/pulleyForces/primary_flyweight_ramp_geometry.png}
+    \caption{Local flyweight--ramp geometry. A carrier displacement \(ds\) in
+    the closing direction moves the flyweight by \(ds\) in the negative axial
+    direction relative to the carrier and by \(dr_f\) radially outward. The
+    local ramp angle \(\alpha_p\) is measured from that negative axial
+    direction.}
+    \label{fig:primary_ramp_geometry}
+\end{figure}
 
-\begin{equation}
-    dr_f
-    =
-    \frac{dr_f}{ds}\,ds.
-    \label{eq:primary_ramp_increment}
-\end{equation}
-
-The derivative \(dr_f/ds\) is the local ramp motion ratio: it states how much
-radial flyweight travel accompanies one unit of axial sheave travel.  If the
-local ramp angle \(\alpha_p\) is measured from the positive axial direction,
-the same displacement triangle gives
+From the figure, the right-angle geometry gives
 
 \begin{equation}
     \tan\alpha_p
@@ -3719,39 +3696,26 @@ the same displacement triangle gives
     \label{eq:primary_ramp_angle}
 \end{equation}
 
-This map is used only while the flyweight remains on one physical closing
-flank.  On each active smooth branch, the radius is positive, the ramp carries
-the flyweight outward as the primary closes, and the slope and curvature are
-finite:
+Thus, \(dr_f/ds\) is the local motion ratio of the ramp: it states how much
+radial flyweight motion accompanies one unit of axial primary motion.
 
-\begin{equation}
-    r_f(s)>0,
-    \qquad
-    0\leq\frac{dr_f}{ds}<\infty,
-    \qquad
-    \left|\frac{d^2r_f}{ds^2}\right|<\infty.
-    \label{eq:primary_ramp_geometric_admissibility}
-\end{equation}
+\paragraph{Flyweight motion}
 
-The map is single-valued and \(C^1\) over its modeled travel and is \(C^2\)
-within each active smooth branch.  A travel stop, a change of contacted flank,
-or a nonsmooth profile junction ends the current branch and is treated as a
-mechanism event.  These requirements ensure that the ramp position, velocity,
-and acceleration used below are physically defined.
+The axial force delivered through the ramp depends on the radial load applied
+by the flyweights. Because the flyweights accelerate as they move along the
+ramp, that load cannot be found from primary speed alone. Their radial motion
+must first be obtained from the ramp profile.
 
-\paragraph{The radial motion of the flyweights}
-
-Because the ramp fixes \(r_f\) from \(s\), it also fixes the radial flyweight
-velocity.  Differentiating \Cref{eq:primary_ramp_map} gives
+Differentiating \(r_f(s)\) once gives the radial speed,
 
 \begin{equation}
     \dot r_f
     =
-    \frac{dr_f}{ds}\dot s.
+    \frac{dr_f}{ds}\dot s,
     \label{eq:primary_flyweight_radius_rate}
 \end{equation}
 
-Differentiating once more gives
+and differentiating again gives the second derivative of the radius,
 
 \begin{equation}
     \ddot r_f
@@ -3762,27 +3726,44 @@ Differentiating once more gives
     \label{eq:primary_flyweight_radius_acceleration}
 \end{equation}
 
-The first term is the radial acceleration produced by axial sheave
-acceleration.  The second comes from ramp curvature.  Even if the sheave moves
-axially at constant speed, the flyweight's radial speed changes when the ramp
-slope changes.
+The first term comes from axial acceleration of the carrier. The second comes
+from ramp curvature: even at constant \(\dot s\), the flyweight's radial speed
+changes wherever the ramp slope changes.
 
-\paragraph{How much radial load reaches the ramp}
+These relations require a physical radius and a smooth, finite motion ratio.
+Over the modeled ramp travel,
 
-The familiar stationary flyweight calculation uses the rotational load
-\(m_fr_f\omega_p^2\).  Here the flyweights can also move radially, so they are
-accelerating objects in their own right.  Their radial inertia must be included
-before the load passed into the ramp can be known.
+\begin{equation}
+    r_f(s)>0,
+    \qquad
+    0\leq\frac{dr_f}{ds}<\infty,
+    \qquad
+    \left|\frac{d^2r_f}{ds^2}\right|<\infty.
+    \label{eq:primary_ramp_geometric_admissibility}
+\end{equation}
 
-Let \(m_f\) denote the total effective mass of the flyweights represented at
-the common radius \(r_f\).  For \(n_f\) identical flyweights of individual
-effective mass \(m_{f,1}\), \(m_f=n_fm_{f,1}\).
+Beyond these restrictions, \(r_f(s)\) may describe any admissible ramp
+profile. A constant-angle ramp is simply the special case in which
+\(dr_f/ds\) is constant.
 
-Consider the flyweights from a stationary inertial frame.  Their radial
-position is \(\mathbf r_f=r_f\mathbf e_r\), where \(\mathbf e_r\) points
-outward from the shaft and turns with the primary.  Let \(\mathbf e_\theta\)
-point tangentially in the direction of rotation.  As the primary turns, these
-unit vectors satisfy
+\paragraph{Radial load on the ramp}
+
+The ramp profile has now supplied the flyweight's change in radius. Since the
+flyweight is also travelling around the shaft, its inertial radial acceleration
+must also include the inward acceleration required to turn that circular
+motion.
+
+Under \AssRef{assump:lumped_inertia}, the complete set of flyweights is
+represented by a total effective mass \(m_f\) at the common radius \(r_f\).
+Its position in a stationary inertial frame is
+
+\begin{equation}
+    \mathbf r_f=r_f\mathbf e_r,
+    \label{eq:primary_flyweight_position_vector}
+\end{equation}
+
+where \(\mathbf e_r\) points radially outward and \(\mathbf e_\theta\) points
+in the direction of rotation. As the primary turns,
 
 \begin{equation}
     \dot{\mathbf e}_r
@@ -3795,7 +3776,7 @@ unit vectors satisfy
     \label{eq:primary_rotating_basis_rates}
 \end{equation}
 
-The flyweight velocity is therefore
+Differentiating the position gives the flyweight velocity,
 
 \begin{equation}
     \dot{\mathbf r}_f
@@ -3806,8 +3787,8 @@ The flyweight velocity is therefore
     \label{eq:primary_flyweight_velocity}
 \end{equation}
 
-Differentiating once more and taking only the component along
-\(\mathbf e_r\) gives
+Differentiating once more and taking the component along \(\mathbf e_r\)
+gives
 
 \begin{equation}
     a_{f,r}
@@ -3816,42 +3797,41 @@ Differentiating once more and taking only the component along
     \label{eq:primary_flyweight_radial_acceleration_component}
 \end{equation}
 
-The term \(\ddot r_f\) is the actual outward change of radius.  The term
-\(-r_f\omega_p^2\) is the inward centripetal acceleration required to turn the
-flyweight around the shaft.  Angular acceleration changes the tangential
-acceleration, so it does not appear in this radial projection.
+Here \(\ddot r_f\) is the outward radial acceleration associated with motion
+along the ramp, while \(-r_f\omega_p^2\) is the inward centripetal
+acceleration. Primary angular acceleration contributes only to the tangential
+component and therefore does not appear in this radial projection.
 
-Let \(F_{p,\mathrm{rad}}\) denote the magnitude of the inward radial contact
-force exerted by all active ramps on the flyweights.  Taking the outward
-radial direction as positive, Newton's second law gives
+Within this reduced flyweight model, the ramps supply the inward radial force
+that constrains the effective mass to this motion. Let
+\(F_{p,\mathrm{rad}}\) be the magnitude of that force for the complete
+flyweight set. Taking the outward radial direction as positive, Newton's
+second law gives
 
 \begin{equation}
     -F_{p,\mathrm{rad}}
     =
-    m_f\left(\ddot r_f-r_f\omega_p^2\right).
+    m_f\left(\ddot r_f-r_f\omega_p^2\right),
     \label{eq:primary_flyweight_radial_balance}
 \end{equation}
 
-Solving for the contact load gives
+and hence
 
 \begin{equation}
-\boxed{
     F_{p,\mathrm{rad}}
     =
     m_f\left(r_f\omega_p^2-\ddot r_f\right).
-}
     \label{eq:primary_ramp_radial_load}
 \end{equation}
 
-At fixed radius, the ramps supply the familiar inward centripetal force
-\(m_fr_f\omega_p^2\).  By Newton's third law, the flyweights press outward on
-the ramps with the same magnitude.  If the flyweights are already
-accelerating outward, part of the rotational loading is producing that motion,
-so less of it is passed into the ramps at that instant.
+At fixed radius, the ramp supplies the familiar inward centripetal load
+\(m_fr_f\omega_p^2\). If the flyweights are accelerating outward, part of the
+available radial action produces that acceleration, so the load passed into
+the ramp is smaller.
 
-A ramp contact is unilateral: the ramp can push on the flyweight, but it
-cannot pull the flyweight back toward the surface.  The active-contact branch
-therefore also requires
+As described above, the flyweights follow the ramp by pressing into it. The
+contact can push, but cannot pull, so the assumed ramp-following motion
+requires
 
 \begin{equation}
     F_{p,\mathrm{rad}}\geq0
@@ -3860,17 +3840,16 @@ therefore also requires
     \label{eq:primary_ramp_dynamic_admissibility}
 \end{equation}
 
-If this condition fails, the assumed ramp contact has been lost and the
-current mechanism branch no longer applies.
+This condition checks that the required inward load can be supplied by
+compressive contact with the ramp.
 
-\paragraph{How the radial load becomes axial closing force}
+\paragraph{Axial force delivered to the movable assembly}
 
-Ramp friction is neglected under
-\AssRef{assump:no_parasitic_losses}.  Over the compatible displacement in
-\Cref{eq:primary_ramp_increment}, the radial and axial components of the
-frictionless contact force form the same local force-conversion ratio as the
-ramp displacement triangle.  Equivalently, the radial work transferred from
-the flyweights equals the axial work delivered to the movable assembly:
+By Newton's third law, the flyweights press back on the ramps with the same
+radial load. With ramp friction neglected under
+\AssRef{assump:no_parasitic_losses}, the compatible radial and axial motions
+provide the force conversion. Over a small displacement, the work transferred
+through the ramp satisfies
 
 \begin{equation}
     F_{p,\mathrm{fly}}\,ds
@@ -3879,8 +3858,8 @@ the flyweights equals the axial work delivered to the movable assembly:
     \label{eq:primary_ramp_work_conversion}
 \end{equation}
 
-Using \(dr_f=(dr_f/ds)ds\), the closing force supplied by the complete
-flyweight--ramp mechanism is
+Using the motion ratio from \Cref{eq:primary_ramp_angle}, the axial closing
+force is therefore
 
 \begin{equation}
     F_{p,\mathrm{fly}}
@@ -3891,20 +3870,8 @@ flyweight--ramp mechanism is
     \label{eq:primary_ramp_force_conversion}
 \end{equation}
 
-Substituting the radial balance from
-\Cref{eq:primary_ramp_radial_load} gives
-
-\begin{equation}
-    F_{p,\mathrm{fly}}
-    =
-    m_f\left(r_f\omega_p^2-\ddot r_f\right)
-    \frac{dr_f}{ds}.
-    \label{eq:primary_flyweight_force_before_chain_rule}
-\end{equation}
-
-Finally, substituting the ramp-imposed acceleration from
-\Cref{eq:primary_flyweight_radius_acceleration} expresses the closing force
-entirely through the primary motion:
+Substituting the radial load and the ramp-imposed value of \(\ddot r_f\)
+expresses the complete closing force through the primary motion:
 
 \begin{equation}
 \boxed{
@@ -3923,8 +3890,8 @@ entirely through the primary motion:
     \label{eq:primary_flyweight_axial_force}
 \end{equation}
 
-If the sheave and flyweights are instantaneously stationary in the shift
-direction, the acceleration terms vanish and the result reduces to
+If the shift position is held fixed, then \(\dot s=0\) and \(\ddot s=0\).
+The flyweight force reduces to
 
 \begin{equation}
     F_{p,\mathrm{fly}}
@@ -3933,125 +3900,74 @@ direction, the acceleration terms vanish and the result reduces to
     \label{eq:primary_flyweight_quasistatic_limit}
 \end{equation}
 
-the familiar centrifugal-load-times-ramp-ratio expression.  The full result
-retains the flyweight acceleration omitted by that stationary calculation.
+which is the familiar centrifugal-load-times-ramp-ratio result. The full
+expression retains the radial acceleration that occurs while the primary is
+shifting.
 
 % --------------------------------------------------------------
 \subsubsection{Primary Spring Opening Force}
 \label{sec:primary_spring_force}
 
 The primary compression spring acts directly on the movable assembly and
-pushes it away from the fixed sheave.  It is already compressed when the CVT
-is assembled, so it applies an opening force even at \(s=0\).  Let this
-installed preload force be \(F_{p,\mathrm{pre}}\geq0\), and let \(k_p\) be the
-spring stiffness.
-
-Closing the primary by \(s\) adds the same amount of spring compression, so it
-adds the force \(k_ps\).  The total spring force opposing closure is therefore
+pushes it away from the fixed sheave. Let \(x_{p,\mathrm{pre}}\) be its
+compression at \(s=0\), and let \(k_p\) be its stiffness. Closing the primary
+by \(s\) adds the same amount of compression, so the spring force opposing
+closure is
 
 \begin{equation}
-\boxed{
     F_{p,\mathrm{spring}}
     =
-    F_{p,\mathrm{pre}}+k_ps.
-}
+    k_p\left(x_{p,\mathrm{pre}}+s\right).
     \label{eq:primary_spring_force}
 \end{equation}
-
-If the installed preload is measured as a compression
-\(x_{p,\mathrm{pre}}\), then
-\(F_{p,\mathrm{pre}}=k_px_{p,\mathrm{pre}}\).  Writing the balance in terms of
-the preload force keeps the physical load at \(s=0\) explicit.
 
 % --------------------------------------------------------------
 \subsubsection{Belt Opening Reaction}
 \label{sec:primary_belt_opening_reaction}
 
-Within the primary deadzone, the movable sheave has not yet reached the belt,
-so the belt exerts no force on that sheave.  Once contact occurs, continued
-closure attempts to squeeze the belt between the two inclined faces.  The
-belt prevents the sheave faces from passing through it, so a surface-normal
-contact force develops on each face.  By Newton's third law, the belt exerts
-an equal-and-opposite normal reaction on each sheave.  The axial components of
-those reactions push the two sheaves apart.
+With the belt seated between the primary sheaves, closing the movable sheave
+squeezes the belt between the two inclined faces. The belt therefore presses
+normally against both faces, and the reaction on the movable face pushes that
+sheave open.
 
-Only the reaction on the movable face belongs on the free body in
-\Cref{fig:primary_axial_mechanism}.  Let \(N_{p,M}\) denote the integrated
-surface-normal reaction exerted by the belt on that face.  The sheave face is
-inclined by the half-angle \(\beta\) from the radial direction, so its normal is
-inclined by \(\beta\) from the axial direction.  The axial component opposing
-closure is consequently
+Let \(N_p\) be the total integrated normal load at the primary. 
+By \Cref{assump:equal_sheave_normal_load}, the movable primary face
+carries \(N_p/2\). Because the face normal is inclined by the sheave
+half-angle \(\beta\) from the axial direction, the belt reaction opposing
+closure is
 
 \begin{equation}
     F_{p,\mathrm{belt}}
     =
-    N_{p,M}\cos\beta.
-    \label{eq:primary_movable_face_axial_reaction}
-\end{equation}
-
-The cosine appears because the surface-normal reaction is being projected
-into the axial direction.  The normal reaction on the fixed face acts on a
-different body and therefore does not appear directly in the movable-sheave
-balance.
-
-The reduced contact model represents the total integrated primary normal load
-over both faces by
-
-\begin{equation}
-    N_p=N_{p,M}+N_{p,F},
-    \label{eq:primary_total_normal_load}
-\end{equation}
-
-where \(N_{p,F}\) is the corresponding reaction on the fixed face.  The
-averaged contact representation does not resolve redistribution between the
-two symmetric faces, so it adopts the equal face-normal-load partition
-
-% DOCUMENT-INTEGRATION NOTE:
-% If all model closures are collected in the Chapter 2 assumptions, promote
-% this equal face-normal-load partition to its own assumption there.  Do not
-% cite the existing equal secondary face-torque partition: torque sharing does
-% not imply equal normal loading.
-
-\begin{equation}
-    N_{p,M}=N_{p,F}=\frac{N_p}{2}.
-    \label{eq:primary_face_normal_partition}
-\end{equation}
-
-This is a normal-load partition, distinct from any assumption about how belt
-torque is shared between sheave faces.  The belt force in the primary free
-body is therefore
-
-\begin{equation}
-\boxed{
-    F_{p,\mathrm{belt}}
-    =
-    \begin{cases}
-        0,
-        & 0\leq s<x_{p,\mathrm{dz}},\\[8pt]
-        \displaystyle
-        \frac{N_p}{2}\cos\beta,
-        & x_{p,\mathrm{dz}}\leq s\leq x_{p,\max}.
-    \end{cases}
-}
+    \frac{N_p}{2}\cos\beta.
     \label{eq:primary_belt_axial_reaction}
 \end{equation}
 
-The contact is unilateral, so \(N_p\geq0\).  At first contact the reaction may
-still be zero; it becomes positive only when the coupled dynamics require the
-belt and sheave to press against one another.
+\begin{equation}
+    F_{p,\mathrm{belt}}
+    =
+    \frac{N_p}{2}\cos\beta.
+    \label{eq:primary_belt_axial_reaction}
+\end{equation}
+
+This force acts in the opening direction shown in
+\Cref{fig:primary_axial_mechanism}. Since the belt contact can press but cannot
+pull, \(N_p\geq0\).
 
 % --------------------------------------------------------------
 \subsubsection{Completed Primary Balance}
 \label{sec:completed_primary_balance}
 
-The three loads in the primary free body are now defined.  Substituting
+The three loads in the primary free body have now been expressed through the
+coupled CVT variables. Substituting
 \Cref{eq:primary_flyweight_axial_force,eq:primary_spring_force,%
 eq:primary_belt_axial_reaction} into
 \Cref{eq:primary_movable_sheave_balance} and collecting the terms multiplying
-\(\ddot s\) gives, on the belt-contact branch,
+\(\ddot s\) gives
 
-\begin{equation}
-\boxed{
+\bigeq{eq:completed_primary_axial_balance}
+{Completed Primary Balance}
+{
 \begin{aligned}
     \left[
         m_p
@@ -4068,71 +3984,592 @@ eq:primary_belt_axial_reaction} into
     \dot s^2
     \\
     &-
-    \left(F_{p,\mathrm{pre}}+k_ps\right)
+    k_p\left(x_{p,\mathrm{pre}}+s\right)
     -
     \frac{N_p}{2}\cos\beta.
 \end{aligned}
 }
-    \label{eq:completed_primary_axial_balance}
-\end{equation}
 
-Before belt contact, the same balance applies with \(N_p=0\).  Every remaining
-term has a direct physical source.  Primary rotation produces the first
-closing term on the right.  If the ramp steepens as the sheave closes,
-\(d^2r_f/ds^2>0\), some of that closing action is used to increase the radial
-speed of the flyweights; the curvature term therefore opposes closure.  A
-locally shallowing ramp reverses that contribution.  The spring and belt
-reaction provide the two opening loads.
+Every term follows from a specific part of the primary mechanism. Primary
+rotation produces the first closing term on the right. The spring and belt
+reaction provide the two opening loads. The remaining ramp term comes from
+curvature: if the ramp steepens as the primary closes,
+\(d^2r_f/ds^2>0\), some of the flyweight action is used to increase radial
+speed and the term opposes closure. If the ramp locally shallows, the same term
+acts in the opposite direction.
 
-The flyweights also appear in the inertia multiplying \(\ddot s\).  One factor
-\(dr_f/ds\) converts axial sheave acceleration into radial flyweight
-acceleration.  The second converts the associated radial load back into the
-axial direction.  Their product gives the flyweight mass reflected into the
-shift coordinate:
+The flyweights also increase the inertia seen in the axial coordinate. One
+factor of \(dr_f/ds\) maps axial sheave acceleration into radial flyweight
+acceleration; the second maps the associated radial load back into axial force.
+The resulting reflected flyweight mass is therefore
+\(m_f(dr_f/ds)^2\), exactly as it appears beside \(m_p\) on the left-hand side.
 
-\begin{equation}
-\boxed{
-    m_{f,\mathrm{ref}}
-    =
-    m_f\left(\frac{dr_f}{ds}\right)^2.
-}
-    \label{eq:primary_reflected_flyweight_mass}
-\end{equation}
-
-The limiting cases follow directly.  A locally linear ramp has
-\(d^2r_f/ds^2=0\), so its curvature load vanishes.  A stationary shift
-mechanism recovers the familiar quasi-static flyweight law in
-\Cref{eq:primary_flyweight_quasistatic_limit}.  Within the deadzone, the belt
-term vanishes.  In every branch, the ramp-contact condition in
-\Cref{eq:primary_ramp_dynamic_admissibility} must remain satisfied.
+The limiting cases are immediate. A locally linear ramp has
+\(d^2r_f/ds^2=0\), so the curvature load vanishes. Holding the shift position
+fixed removes both flyweight-acceleration terms and recovers the quasi-static
+relation in \Cref{eq:primary_flyweight_quasistatic_limit}.
 
 \paragraph{Relation to existing primary-actuator models}
 
-The quasi-static limit is the conventional treatment of a mechanically
-actuated primary.  \citet{KimEtAl2002} derive driver thrust from centrifugal
-roller equilibrium and the instantaneous actuator geometry, then represent
-transient ratio motion with a fitted first-order shift relation.
-\citet{Messick2018} computes primary axial force from the flyweight rotational
-load and a measured radial-to-axial displacement ratio before subtracting the
-spring force.  \citet{Skinner2020} similarly balances the centrifugal loading
-of the flyweights and their links against the required spring and clamping
-loads.
-
-These formulations retain the central dependence on \(r_f\omega_p^2\), ramp
-geometry, and spring compression.  An explicit radial flyweight acceleration
-\(\ddot r_f\) was not identified in the reviewed primary-actuator equations.
-Retaining it here produces both the reflected mass in
-\Cref{eq:primary_reflected_flyweight_mass} and the curvature load in
-\Cref{eq:completed_primary_axial_balance}.  Reflecting inertia through a
-kinematic constraint is standard mechanism dynamics; the distinction is its
-explicit inclusion in the primary actuator of the coupled transient CVT
-balance, not a claim of a new mechanics principle.
+The primary-actuator models of \citet{KimEtAl2002} and
+\citet{Messick2018} use the familiar quasi-static centrifugal-load and ramp
+relation without retaining the radial acceleration of the flyweights.
+Retaining that acceleration here produces the reflected flyweight inertia and
+ramp-curvature term in the transient primary balance.
 
 At a known \(s\), \(\dot s\), and \(\omega_p\), the completed primary balance
 still contains the unknown shift acceleration \(\ddot s\) and belt normal load
-\(N_p\).  The primary therefore cannot determine either its motion or its belt
-reaction in isolation.  The secondary movable assembly supplies the next
-local balance on the same compatible shift motion.
+\(N_p\). The primary therefore cannot determine its motion or belt reaction in
+isolation. The secondary movable assembly supplies the next balance on the
+same compatible shift motion.
+
+
+% --------------------------------------------------------------
+
+\subsection{Secondary Movable-Sheave Balance}
+\label{sec:secondary_movable_sheave_balance}
+
+The secondary clamping mechanism was also introduced in the conceptual
+overview. Its spring presses the movable sheave toward the fixed sheave, while
+the helix makes the clamping force respond to transmitted torque. Torque acting
+on the movable sheave tries to rotate it relative to the fixed sheave. The
+inclined helix constrains that relative rotation and redirects the resulting
+reaction into an additional axial closing force.
+
+The secondary movable assembly therefore has two coupled motions. It
+translates along the shaft and, whenever the sheave shifts, rotates slightly
+relative to the fixed sheave. The same helix that creates torque-reactive
+clamping also determines this relative rotation, so both the translational and
+rotational inertia of the movable assembly enter its axial balance.
+
+The local secondary coordinate remains the clearest way to expose that
+mechanism. As established in \Cref{sec:geometry}, \(x_s>0\) points from the open
+secondary toward the fixed sheave and therefore denotes closing motion. In
+this coordinate, the helix and spring close the secondary, while the belt
+reaction opens it. \Cref{fig:secondary_axial_mechanism} maps those loads onto
+the movable assembly.
+
+% AUTHOR FIGURE NOTE:
+% Use the recognizable secondary assembly and show the same movable body in
+% two complementary views. In the axial view, shade the movable sheave and all
+% hardware that translates rigidly with it; together these parts form m_s.
+% Mark +x_s toward the fixed sheave. Show F_{s,helix} and F_{s,spring} in +x_s
+% and F_{s,belt} opposing +x_s. In a small torque-path inset, show the total
+% belt torque tau_s splitting equally between the two sheave faces: tau_s/2 on
+% the fixed face passes directly into the fixed hub, while tau_s/2 acts on the
+% movable face. Show the torsional spring torque acting on the movable assembly
+% in the same positive rotational direction and the helix reaction torque in
+% the opposite direction. Leave the detailed helix triangle for the following
+% close-up figure.
+\begin{figure}[H]
+    \centering
+    % \includegraphics[width=0.90\linewidth]
+    %     {illustrations/pulleyForces/secondary_3d_model.png}
+    \caption{Secondary clamping mechanism and free body of the movable
+    assembly. The spring and helix close the secondary, while the belt reaction
+    opens it. The inset follows the portion of the transmitted torque that
+    enters through the movable sheave face.}
+    \label{fig:secondary_axial_mechanism}
+\end{figure}
+
+\subsubsection{Axial Free Body}
+
+Isolate the shaded assembly in \Cref{fig:secondary_axial_mechanism}. Let
+\(m_s\) be the mass of the movable sheave and every component that translates
+rigidly with it. The helix supplies the closing force
+\(F_{s,\mathrm{helix}}\), and the spring supplies the closing force
+\(F_{s,\mathrm{spring}}\). The belt reaction
+\(F_{s,\mathrm{belt}}\) acts in the opening direction. Newton's second law in
+the local secondary coordinate is therefore
+
+\begin{equation}
+    m_s\ddot x_s
+    =
+    F_{s,\mathrm{helix}}
+    +F_{s,\mathrm{spring}}
+    -F_{s,\mathrm{belt}}.
+    \label{eq:secondary_movable_sheave_balance}
+\end{equation}
+
+The spring and belt loads follow directly from axial compression and contact.
+The helix load requires one additional step: the torque reacted by the helix
+must first be found from the rotational free body of the same movable
+assembly.
+
+% --------------------------------------------------------------
+\subsubsection{Torque-Reactive Helix Closing Force}
+\label{sec:secondary_helix_closing_force}
+
+\paragraph{Torque entering the movable sheave}
+
+Let \(\tau_s\) denote the total signed torque exerted by the belt on the
+secondary pulley. By
+\AssRef{assump:secondary_face_torque_split}, the fixed and movable sheave
+faces each receive one half of this torque. The fixed-face share enters the
+fixed hub directly. The torque applied to the movable assembly is
+
+\begin{equation}
+    \tau_{s,M}
+    =
+    \frac{\tau_s}{2}.
+    \label{eq:secondary_movable_face_belt_torque}
+\end{equation}
+
+This movable-face share is the part of the belt torque that appears on the
+rotational free body in \Cref{fig:secondary_axial_mechanism}. Whether all of it
+reaches the helix depends on how the movable assembly is accelerating.
+
+\paragraph{Helix geometry}
+
+Let \(\theta_s\) measure the angular advance of the movable sheave relative to
+the fixed sheave in the positive secondary rotation direction. The helix is
+oriented so that closing motion advances the movable sheave; hence increasing
+\(x_s\) increases \(\theta_s\). Taking the open secondary as the angular
+reference gives
+
+\begin{equation}
+    \theta_s=\theta_s(x_s),
+    \qquad
+    \theta_s(0)=0.
+    \label{eq:secondary_helix_rotation_map}
+\end{equation}
+
+The local motion ratio can be read by unwrapping the helix from its effective
+cylindrical radius \(r_h\). A small relative rotation \(d\theta_s\) produces a
+circumferential displacement \(r_h d\theta_s\), while the same motion closes
+the sheave by \(dx_s\). \Cref{fig:secondary_helix_geometry} shows the resulting
+right triangle.
+
+% AUTHOR FIGURE NOTE:
+% Draw one helix track unwrapped from a cylinder of effective radius r_h. Mark
+% the circumferential run r_h dtheta_s, the axial closing rise dx_s, and the
+% local tangent to the track. Measure alpha_s from the circumferential
+% direction to that tangent. Show +theta_s as movable-sheave advance and +x_s
+% as secondary closure. Include no force vectors; the figure's only job is to
+% establish the motion ratio.
+\begin{figure}[H]
+    \centering
+    % \includegraphics[width=0.70\linewidth]
+    %     {illustrations/pulleyForces/secondary_helix_torque_to_axial.png}
+    \caption{Local secondary-helix geometry after the cylindrical track is
+    unwrapped. Relative rotation through \(d\theta_s\) and axial closure through
+    \(dx_s\) are two components of the same constrained motion.}
+    \label{fig:secondary_helix_geometry}
+\end{figure}
+
+From the figure, the right-angle geometry gives
+
+\begin{equation}
+    \tan\alpha_s
+    =
+    \frac{dx_s}{r_h\,d\theta_s},
+    \qquad
+    \frac{d\theta_s}{dx_s}
+    =
+    \frac{1}{r_h\tan\alpha_s}.
+    \label{eq:secondary_helix_motion_ratio}
+\end{equation}
+
+Thus, \(d\theta_s/dx_s\) states how much relative rotation accompanies one
+unit of secondary closure. A shallower helix produces more relative rotation
+per unit axial travel and therefore a larger torque-to-force conversion.
+
+\paragraph{Movable-sheave rotation}
+
+The reacted helix torque cannot be found from \(\tau_s/2\) alone because some
+of the applied torque may be accelerating the movable assembly. Its angular
+acceleration follows directly from the constrained motion just established.
+
+The fixed sheave rotates with the secondary shaft at \(\omega_s\). Since
+\(\theta_s\) is the angular advance of the movable sheave relative to it, the
+movable-sheave angular velocity is
+
+\begin{equation}
+    \omega_{s,M}
+    =
+    \omega_s+\dot\theta_s
+    =
+    \omega_s
+    +
+    \frac{d\theta_s}{dx_s}\dot x_s.
+    \label{eq:secondary_movable_sheave_speed}
+\end{equation}
+
+Closing motion therefore makes the movable sheave run ahead of the fixed
+sheave, while opening motion makes it lag. Differentiating once more gives the
+angular acceleration needed by the torque balance,
+
+\begin{equation}
+    \dot\omega_{s,M}
+    =
+    \dot\omega_s
+    +
+    \frac{d\theta_s}{dx_s}\ddot x_s
+    +
+    \frac{d^2\theta_s}{dx_s^2}\dot x_s^2.
+    \label{eq:secondary_movable_sheave_acceleration}
+\end{equation}
+
+The second term is the relative angular acceleration produced by axial
+acceleration. The third is the helix-curvature contribution: even at constant
+\(\dot x_s\), the relative angular speed changes wherever the local helix slope
+changes. Over the modeled travel, the captured helix profile is taken to have
+a positive, finite motion ratio and finite curvature,
+
+\begin{equation}
+    0<\frac{d\theta_s}{dx_s}<\infty,
+    \qquad
+    \left|\frac{d^2\theta_s}{dx_s^2}\right|<\infty.
+    \label{eq:secondary_helix_geometric_admissibility}
+\end{equation}
+
+Within these restrictions, \(\theta_s(x_s)\) may describe any smooth captured
+helix profile. A constant-angle helix is the special case in which
+\(d\theta_s/dx_s\) is constant.
+
+\paragraph{Torsional spring torque}
+
+The secondary spring is twisted as well as compressed. Let
+\(\theta_{s,\mathrm{pre}}\) be its torsional deflection when \(x_s=0\). Closing
+the secondary advances the movable sheave by \(\theta_s(x_s)\), allowing the
+spring to unwind by the same angle. Its remaining torsional deflection is
+therefore \(\theta_{s,\mathrm{pre}}-\theta_s(x_s)\). The spring acts on the
+movable assembly in the positive relative-rotation direction with torque
+
+\begin{equation}
+    \tau_{s,\mathrm{spring}}
+    =
+    k_{s,\theta}
+    \left[
+        \theta_{s,\mathrm{pre}}-\theta_s(x_s)
+    \right].
+    \label{eq:secondary_torsional_spring_torque}
+\end{equation}
+
+This torque tends to advance the movable sheave and therefore assists
+secondary closure through the helix.
+
+\paragraph{Torque reacted through the helix}
+
+Let \(I_{s,M}\) be the rotational inertia of the movable secondary assembly
+about the shaft axis. Define \(\tau_{s,\mathrm{helix}}\) as the signed torque
+passed from that assembly into the helix. The equal-and-opposite helix reaction
+on the movable assembly opposes its positive relative rotation. Its rotational
+free body therefore gives
+
+\begin{equation}
+    \frac{\tau_s}{2}
+    +\tau_{s,\mathrm{spring}}
+    -\tau_{s,\mathrm{helix}}
+    =
+    I_{s,M}\dot\omega_{s,M}.
+    \label{eq:secondary_movable_sheave_torque_balance}
+\end{equation}
+
+Solving for the torque carried by the helix and substituting the spring torque
+and movable-sheave acceleration gives
+
+\begin{equation}
+\begin{aligned}
+    \tau_{s,\mathrm{helix}}
+    ={}&
+    \frac{\tau_s}{2}
+    +
+    k_{s,\theta}
+    \left[
+        \theta_{s,\mathrm{pre}}-\theta_s(x_s)
+    \right]
+    \\
+    &-
+    I_{s,M}
+    \left[
+        \dot\omega_s
+        +
+        \frac{d\theta_s}{dx_s}\ddot x_s
+        +
+        \frac{d^2\theta_s}{dx_s^2}\dot x_s^2
+    \right].
+\end{aligned}
+    \label{eq:secondary_reacted_helix_torque}
+\end{equation}
+
+The first two terms try to rotate the movable sheave ahead of the fixed sheave.
+The inertial term is the torque used to angularly accelerate the movable
+assembly. The torque left after that acceleration is the torque reacted by the
+helix.
+
+\paragraph{Axial force delivered through the helix}
+
+The helix converts this reacted torque into the closing force needed by the
+axial free body. With helix friction neglected under
+\AssRef{assump:no_parasitic_losses}, a small compatible motion transfers equal
+work through the rotational and axial directions,
+
+\begin{equation}
+    F_{s,\mathrm{helix}}\,dx_s
+    =
+    \tau_{s,\mathrm{helix}}\,d\theta_s.
+    \label{eq:secondary_helix_work_conversion}
+\end{equation}
+
+Using the motion ratio already obtained from the helix geometry gives
+
+\begin{equation}
+    F_{s,\mathrm{helix}}
+    =
+    \tau_{s,\mathrm{helix}}
+    \frac{d\theta_s}{dx_s}.
+    \label{eq:secondary_helix_force_conversion}
+\end{equation}
+
+For the reference positive-torque direction, a positive reacted torque
+therefore produces a positive closing force. Substituting
+\Cref{eq:secondary_reacted_helix_torque} makes that force explicit:
+
+\begin{equation}
+\begin{aligned}
+    F_{s,\mathrm{helix}}
+    ={}&
+    \frac{d\theta_s}{dx_s}
+    \Bigg\{
+        \frac{\tau_s}{2}
+        +
+        k_{s,\theta}
+        \left[
+            \theta_{s,\mathrm{pre}}-\theta_s(x_s)
+        \right]
+    \\
+    &\hspace{3.7em}
+        -I_{s,M}
+        \left[
+            \dot\omega_s
+            +
+            \frac{d\theta_s}{dx_s}\ddot x_s
+            +
+            \frac{d^2\theta_s}{dx_s^2}\dot x_s^2
+        \right]
+    \Bigg\}.
+\end{aligned}
+    \label{eq:secondary_helix_closing_force}
+\end{equation}
+
+% --------------------------------------------------------------
+\subsubsection{Direct Axial Spring Closing Force}
+\label{sec:secondary_spring_closing_force}
+
+The same spring also pushes directly on the movable assembly through axial
+compression. Let \(x_{s,\mathrm{pre}}\) be its compression at the open reference
+\(x_s=0\). Closing the secondary by \(x_s\) lets the spring extend by the same
+amount, leaving the compression \(x_{s,\mathrm{pre}}-x_s\). The resulting
+closing force is
+
+\begin{equation}
+    F_{s,\mathrm{spring}}
+    =
+    k_{s,x}
+    \left(x_{s,\mathrm{pre}}-x_s\right).
+    \label{eq:secondary_axial_spring_force}
+\end{equation}
+
+This direct spring force provides secondary clamping even when no torque is
+being transmitted through the belt.
+
+% --------------------------------------------------------------
+\subsubsection{Belt Opening Reaction}
+\label{sec:secondary_belt_opening_reaction}
+
+The seated belt presses back on the secondary faces in the same way as on the
+primary. Let \(N_s\) be the total integrated normal load over both secondary
+faces. By \AssRef{assump:equal_sheave_normal_load}, the movable face carries
+\(N_s/2\). Projecting that face-normal reaction into the axial direction gives
+the opening force
+
+\begin{equation}
+    F_{s,\mathrm{belt}}
+    =
+    \frac{N_s}{2}\cos\beta.
+    \label{eq:secondary_belt_axial_reaction}
+\end{equation}
+
+% --------------------------------------------------------------
+\subsubsection{Completed Secondary Balance}
+\label{sec:completed_secondary_balance}
+
+The three loads in the secondary axial free body have now been expressed
+through the coupled CVT variables. Substituting
+\Cref{eq:secondary_helix_closing_force,eq:secondary_axial_spring_force,%
+eq:secondary_belt_axial_reaction} into
+\Cref{eq:secondary_movable_sheave_balance} and collecting the terms that
+multiply \(\ddot x_s\) gives
+
+\bigeq{eq:completed_secondary_axial_balance}
+{Completed Secondary Balance}
+{
+\begin{aligned}
+    \left[
+        m_s
+        +
+        I_{s,M}
+        \left(\frac{d\theta_s}{dx_s}\right)^2
+    \right]\ddot x_s
+    ={}&
+    \left[
+        \frac{\tau_s}{2}
+        +
+        k_{s,\theta}
+        \left(
+            \theta_{s,\mathrm{pre}}-\theta_s
+        \right)
+        -
+        I_{s,M}\dot\omega_s
+    \right]
+    \frac{d\theta_s}{dx_s}
+    \\
+    &-
+    I_{s,M}
+    \frac{d\theta_s}{dx_s}
+    \frac{d^2\theta_s}{dx_s^2}
+    \dot x_s^2
+    \\
+    &+
+    k_{s,x}
+    \left(x_{s,\mathrm{pre}}-x_s\right)
+    -
+    \frac{N_s}{2}\cos\beta.
+\end{aligned}
+}
+
+Every term follows from the two free bodies of the movable assembly. The
+movable-face belt torque and the torsional spring load the helix. Accelerating
+the whole movable assembly with the secondary shaft consumes the torque
+\(I_{s,M}\dot\omega_s\); the remainder is converted into axial force by
+\(d\theta_s/dx_s\). The direct spring force closes the sheave, while the belt
+reaction opens it.
+
+The helix also reflects rotational inertia into the axial coordinate. One
+factor of \(d\theta_s/dx_s\) maps axial acceleration into relative angular
+acceleration; the second converts the associated reaction torque back into
+axial force. The resulting added axial inertia is therefore
+\(I_{s,M}(d\theta_s/dx_s)^2\).
+
+The remaining velocity-dependent term comes from helix curvature. If the
+rotation-per-closure increases as the secondary closes,
+\(d^2\theta_s/dx_s^2>0\), part of the helix torque is used to increase the
+relative angular speed and the term opposes closure. If the motion ratio
+decreases, the same term acts in the opposite direction. A constant-angle
+helix has \(d^2\theta_s/dx_s^2=0\), so this curvature load vanishes.
+
+At fixed secondary position and constant shaft speed,
+\(\dot x_s=\ddot x_s=\dot\omega_s=0\). The helix force then reduces to the
+quasi-static torque-cam relation
+
+\begin{equation}
+    F_{s,\mathrm{helix}}
+    =
+    \left[
+        \frac{\tau_s}{2}
+        +
+        k_{s,\theta}
+        \left(
+            \theta_{s,\mathrm{pre}}-\theta_s
+        \right)
+    \right]
+    \frac{d\theta_s}{dx_s}.
+    \label{eq:secondary_helix_quasistatic_limit}
+\end{equation}
+
+\paragraph{Relation to existing secondary-actuator models}
+
+The torque-cam model of \citet{KimEtAl2002} relates driven thrust
+quasi-statically to transmitted torque, cam geometry, and spring loading.
+\citet{SorgeCammalleri2011} explicitly resolve the relative rotation of the
+fixed and movable driven sheaves during shift, while neglecting mechanical
+inertia terms other than belt centrifugal effects. Applying Newton's law to
+that relative motion here produces the reflected movable-sheave inertia and
+helix-curvature term in the transient secondary balance.
+
+% --------------------------------------------------------------
+\subsubsection{Mapping to the Shared Shift Coordinate}
+\label{sec:secondary_balance_shift_mapping}
+
+The secondary mechanics have deliberately been written in their local
+coordinate. The belt-length geometry derived earlier supplies the final map
+back to the common shift coordinate,
+
+\begin{equation}
+    x_s=x_s(s),
+    \qquad
+    \dot x_s
+    =
+    \frac{dx_s}{ds}\dot s,
+    \qquad
+    \ddot x_s
+    =
+    \frac{dx_s}{ds}\ddot s
+    +
+    \frac{d^2x_s}{ds^2}\dot s^2.
+    \label{eq:secondary_local_to_shift_map}
+\end{equation}
+
+Substituting these kinematics into
+\Cref{eq:completed_secondary_axial_balance} gives the secondary balance in the
+same coordinate as the primary:
+
+\begin{equation}
+\begin{aligned}
+    &\left[
+        m_s
+        +
+        I_{s,M}
+        \left(\frac{d\theta_s}{dx_s}\right)^2
+    \right]
+    \left[
+        \frac{dx_s}{ds}\ddot s
+        +
+        \frac{d^2x_s}{ds^2}\dot s^2
+    \right]
+    \\
+    &\quad={}
+    \frac{d\theta_s}{dx_s}
+    \Bigg[
+        \frac{\tau_s}{2}
+        +
+        k_{s,\theta}
+        \left(
+            \theta_{s,\mathrm{pre}}-\theta_s
+        \right)
+        -
+        I_{s,M}\dot\omega_s
+        -
+        I_{s,M}
+        \frac{d^2\theta_s}{dx_s^2}
+        \left(\frac{dx_s}{ds}\right)^2
+        \dot s^2
+    \Bigg]
+    \\
+    &\qquad
+    +k_{s,x}
+    \left(x_{s,\mathrm{pre}}-x_s\right)
+    -
+    \frac{N_s}{2}\cos\beta,
+\end{aligned}
+    \label{eq:secondary_balance_in_shift_coordinate}
+\end{equation}
+
+where \(x_s\), \(\theta_s\), and their local derivatives are evaluated at
+\(x_s=x_s(s)\). Since \(dx_s/ds<0\) over the engaged shift range, increasing
+the global shift coordinate opens the secondary. The geometric derivative in
+\Cref{eq:secondary_balance_in_shift_coordinate} carries that reversal directly
+into the balance.
+
+The primary and secondary axial free bodies now describe the same compatible
+shift motion from their respective sides of the belt. They still contain the
+unknown normal reactions \(N_p\) and \(N_s\); the secondary additionally
+contains the contact torque \(\tau_s\) and shaft acceleration
+\(\dot\omega_s\). These are supplied only when the rotational load path and
+belt contacts are added to the same coupled problem.
+
+
 \section{Rotational and Belt Transport Dynamics}
 \label{sec:rot-belt-dynamics}
 
