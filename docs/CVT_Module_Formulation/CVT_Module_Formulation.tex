@@ -4024,117 +4024,148 @@ isolation. The secondary movable assembly supplies the next balance on the
 same compatible shift motion.
 
 
-% --------------------------------------------------------------
+% Copy-ready secondary movable-sheave subsection.
+% The surrounding manuscript is expected to define \AssRef, \citet, and
+% \bigeq as in the current formulation.
 
 % --------------------------------------------------------------
 \subsection{Secondary Movable-Sheave Balance}
 \label{sec:secondary_movable_sheave_balance}
 
-The secondary clamping mechanism was also introduced in the conceptual
-overview. Its single installed spring acts on the movable assembly in two
-ways. Axial compression pushes the movable sheave toward the fixed sheave,
-while torsional winding applies a torque that tends to advance it relative to
-the fixed half. CINDER represents these two actions by separate linear
-constitutive components, \(k_{s,x}\) and \(k_{s,\theta}\), while neglecting
-cross-coupling and hysteresis between axial compression and twist. The same
-reduced decomposition appears in the actuator model of
-\citet{KimEtAl2002}, where the driven thrust contains both a direct spring
-force and a torque-cam contribution from spring twist.
+The primary closes mainly in response to rotational speed. The secondary is
+torque reactive: torque transmitted through the pulley can also increase the
+axial force clamping the belt.
 
-The belt also applies torque to the movable face. If that face were free, the
-belt and spring torques could rotate it independently of the fixed sheave. The
-helix instead constrains the relative rotation to follow an inclined path. In
-doing so, it carries a reaction torque and converts that internal load into an
-axial force.
+To see how, begin with the two secondary sheaves rotationally disconnected.
+The fixed sheave rotates with the secondary shaft. The movable sheave can slide
+along that shaft and rotate relative to the fixed sheave. Because the belt
+contacts the two faces separately, it applies torque to each body. With no
+connection between them, the two bodies can accelerate differently and rotate
+relative to one another.
 
-The parent formulation treats the helix as a captured, two-sided slot. Either
-flank may therefore carry the reaction needed to maintain the helical motion,
-and the helix torque and force remain signed quantities. The corresponding
-restriction for a one-sided ramp is stated after the helix load has been
-defined.
+Now place a pin on the movable sheave in a straight slot running along the
+shaft. The movable sheave remains free to slide, but the pin prevents relative
+rotation. Whenever the two sheaves tend to rotate differently, the pin presses
+against the side of the slot and a normal reaction develops. Because the slot
+is axial, this normal acts entirely in the circumferential direction. It
+transfers torque between the sheaves but produces no axial force.
 
-The secondary movable assembly consequently has two coupled motions. It
-translates along the shaft and, whenever the sheave shifts, rotates slightly
-relative to the fixed sheave. Some of the applied torque may be required to
-produce its angular acceleration; the remaining torque is carried by the
-helix. That helix-carried torque is both the load borne by the slot and the
-source of the torque-reactive axial force.
+A helix is the same slot tilted around the shaft. The contact normal remains
+perpendicular to the slot surface, but now has both circumferential and axial
+components. The circumferential component continues to couple the rotational
+motion of the sheaves, while the axial component acts on the movable sheave.
+Relative rotation is therefore allowed only when accompanied by axial travel
+along the helix.
 
-The local secondary coordinate remains the clearest way to expose that
-mechanism. As established in \Cref{sec:geometry}, \(x_s>0\) points from the open
-secondary toward the fixed sheave and therefore denotes closing motion. This
-is opposite to the usual upshift motion: an upshift opens the secondary, so
-\(\dot x_s<0\), whereas a downshift closes it, so \(\dot x_s>0\). Positive
-axial force in this local coordinate therefore closes the secondary.
-\Cref{fig:secondary_axial_mechanism} maps the axial loads onto the movable
-assembly.
+These three cases and their contact reactions are compared in
+\Cref{fig:secondary_constraint_progression}.
 
-% AUTHOR FIGURE NOTE:
-% Use the recognizable secondary assembly and show the same movable body in
-% two complementary views. In the axial view, shade the movable sheave and all
-% hardware that translates rigidly with it; together these parts form m_s.
-% Mark +x_s toward the fixed sheave. Show F_{s,helix} and F_{s,spring} in +x_s
-% and F_{s,belt} opposing +x_s. These are positive reference directions, not a
-% claim that the helix force must always be positive. Add a shaft-axis inset
-% showing the rotational free body of the same movable assembly: tau_{s,M} and
-% tau_{s,spring} act in +theta_s, while the helix reaction acts oppositely as
-% -tau_{s,helix}. Keep the fixed sheave outside the isolated movable body. A
-% small companion cue may show the other belt-torque share entering the fixed
-% sheave directly, but leave the detailed helix triangle for the later figure.
 \begin{figure}[H]
     \centering
-    % \includegraphics[width=0.90\linewidth]
-    %     {illustrations/pulleyForces/secondary_3d_model.png}
-    \caption{Secondary movable assembly and its axial and rotational free
-    bodies. Positive axial force closes the secondary; positive relative
-    rotation advances the movable sheave along the helix.}
-    \label{fig:secondary_axial_mechanism}
+    \fbox{%
+    \begin{minipage}{0.88\linewidth}
+    \textbf{Figure brief -- from independent sheaves to a helix.}
+    Show three panels using the same fixed and movable sheaves: no slot, a
+    straight axial slot, and an inclined helical slot. In each panel, show the
+    circumferential force tending to move the pin relative to the fixed sheave
+    and the available slot-normal reaction. With no slot, show no normal
+    reaction. In the straight-slot case, show the normal acting entirely
+    circumferentially. In the helical-slot case, draw the normal perpendicular
+    to the inclined surface and resolve it into circumferential and axial
+    components. Also show that the straight slot permits axial translation
+    without relative rotation, whereas the helix permits relative rotation
+    only together with axial travel.
+    \end{minipage}%
+    }
+    \caption{Contact reactions for rotationally disconnected sheaves, a
+    straight axial slot, and an inclined helical slot.}
+    \label{fig:secondary_constraint_progression}
 \end{figure}
 
-\subsubsection{Axial Free Body}
+If the axial component of the helix reaction cannot overcome the other axial
+loads, the movable sheave remains at its current position. Its relative angle
+then remains fixed, and the two sheaves rotate together. If the axial loads do
+not balance, the movable sheave travels along the helix and rotates by the
+amount required by the slot geometry.
 
-Isolate the shaded assembly in \Cref{fig:secondary_axial_mechanism}. Let
-\(m_s\) be the mass of the movable sheave and every component that translates
-rigidly with it. Let \(F_{s,\mathrm{helix}}\) be the signed axial force
-transmitted by the helix, positive when it closes the secondary. The spring
-supplies the closing force \(F_{s,\mathrm{spring}}\), while the belt reaction
-\(F_{s,\mathrm{belt}}\) acts in the opening direction. Newton's second law in
-the local secondary coordinate is therefore
+In the actual secondary, the belt and spring load this mechanism. The belt
+applies torque to the two sheave faces separately. The secondary spring is
+installed both compressed and twisted: its torsional preload tends to rotate
+the movable sheave relative to the fixed sheave, while its axial compression
+pushes the movable sheave toward closure. The torsional action loads the
+helix; the axial action enters the movable-sheave balance directly.
 
-\begin{equation}
-    m_s\ddot x_s
-    =
-    F_{s,\mathrm{helix}}
-    +F_{s,\mathrm{spring}}
-    -F_{s,\mathrm{belt}}.
-    \label{eq:secondary_movable_sheave_balance}
-\end{equation}
+We ultimately need that axial balance to determine the motion of the movable
+sheave. The direct spring and belt forces are straightforward. The helix force
+is not, because it depends on the torque reacted at the pin--helix contact.
+This sets the order of the derivation:
 
-The helix force is the only load in this axial free body that begins as a
-torque. Determining \(F_{s,\mathrm{helix}}\) therefore first requires a more
-basic quantity: the torque actually carried by the helix.
+\begin{enumerate}
+    \item use the rotational balance to find the torque carried by the helix;
+    \item use the helix geometry to convert that torque into axial force; and
+    \item add this force to the direct spring and belt loads in the axial
+    balance.
+\end{enumerate}
 
 % --------------------------------------------------------------
-\subsubsection{Torque-Reactive Helix Force}
-\label{sec:secondary_helix_closing_force}
+\subsubsection{Rotational Loading of the Movable Sheave}
+\label{sec:secondary_rotational_loading}
 
-\paragraph{Torque carried by the helix}
+As established in \Cref{sec:geometry}, \(x_s\) is measured from the open
+secondary toward the fixed sheave, so \(+x_s\) closes the pulley. Let
+\(\theta_s\) measure the rotation of the movable sheave relative to the fixed
+sheave. Choose \(+\theta_s\) so that motion along the helix toward \(+x_s\)
+also increases \(\theta_s\).
 
-If the helix constraint were removed, the belt torque on the movable face and
-the torsional spring torque would be free to rotate the movable sheave relative
-to the fixed half. With the helix engaged, it supplies the reaction that
-constrains this motion to the helical path. That reaction torque is important
-twice: it is the load carried by the helix hardware, and its inclined line of
-action is what produces \(F_{s,\mathrm{helix}}\).
+With these directions set, the first question is what loads the helix
+circumferentially. The belt applies torque to the movable face, and the
+twisted spring applies torque between the two sheaves. The pin--helix contact
+supplies the torque that constrains the resulting relative motion to follow
+the slot.
 
-Let \(\tau_{s,M}\) be the signed belt torque applied to the movable secondary
-face, and let \(\tau_{s,\mathrm{spring}}\) be the torsional spring torque
-advancing the movable sheave. Define positive
-\(\tau_{s,\mathrm{helix}}\) as the total torque passed from the movable
-assembly into all of the helix tracks in the direction associated with
-closure. The equal-and-opposite helix reaction on the movable assembly opposes
-that relative advance. If \(I_{s,M}\) is the rotational inertia of the parts
-that rotate with the movable sheave, its rotational free body gives
+\Cref{fig:secondary_rotational_free_body} shows this torque path and the
+rotational free body of the movable assembly.
+
+\begin{figure}[H]
+    \centering
+    \fbox{%
+    \begin{minipage}{0.88\linewidth}
+    \textbf{Figure brief -- secondary rotational load path.}
+    Use a shaft-axis view with the fixed sheave/shaft assembly and movable
+    sheave shown as separate rotating bodies. Show the belt applying
+    \(\tau_{s,F}\) and \(\tau_{s,M}\) to the two faces. Show the torsional
+    spring acting between the bodies. At the pin--helix contact, show the
+    circumferential component of the normal reaction and the corresponding
+    moment \(\tau_{s,\mathrm{helix}}\) about the shaft. Beside this view,
+    isolate the movable assembly and show
+    \(\tau_{s,M}\) and \(\tau_{s,\mathrm{spring}}\) in the \(+\theta_s\)
+    direction and the contact torque in the opposite direction. Do not include
+    axial forces.
+    \end{minipage}%
+    }
+    \caption{Rotational loading of the fixed and movable secondary sheaves,
+    together with the rotational free body of the movable assembly.}
+    \label{fig:secondary_rotational_free_body}
+\end{figure}
+
+Our goal is to find the torque reacted at the pin--helix contact. To do so,
+isolate the movable assembly and apply Newton's second law for rotation. Use
+the following quantities:
+
+\begin{itemize}
+    \item \(I_{s,M}\): rotational inertia of the movable sheave and every
+    component that rotates rigidly with it;
+    \item \(\omega_{s,M}\): absolute angular velocity of that assembly;
+    \item \(\tau_{s,M}\): signed belt torque applied to the movable face;
+    \item \(\tau_{s,\mathrm{spring}}\): signed spring torque applied to the
+    movable assembly; and
+    \item \(\tau_{s,\mathrm{helix}}\): the contact torque at the pin--helix
+    connection, produced by the circumferential component of the contact
+    normal. A positive \(\tau_{s,\mathrm{helix}}\) acts on the movable
+    assembly in \(-\theta_s\).
+\end{itemize}
+
+The rotational balance is therefore
 
 \begin{equation}
     \tau_{s,M}
@@ -4145,7 +4176,7 @@ that rotate with the movable sheave, its rotational free body gives
     \label{eq:secondary_movable_sheave_torque_balance}
 \end{equation}
 
-Solving this balance for the internal helix load exposes the torque path:
+Solving for the helix torque gives
 
 \begin{equation}
     \tau_{s,\mathrm{helix}}
@@ -4156,16 +4187,27 @@ Solving this balance for the internal helix load exposes the torque path:
     \label{eq:secondary_reacted_helix_torque_structure}
 \end{equation}
 
-The belt and spring supply torque to the movable assembly. Part of that torque
-changes its angular velocity; the remainder must be carried by the helix.
+\Cref{eq:secondary_reacted_helix_torque_structure} gives the contact torque we
+want, but its right-hand side still needs three relations:
 
-Let \(\tau_s\) denote the total signed torque exerted by the belt on the
-secondary pulley. Under
-\AssRef{assump:secondary_face_torque_split}, the fixed and movable sheave faces
-receive equal shares. The fixed-face half enters the fixed sheave and hub
-directly. Only the movable-face half enters the isolated rotational free body
-above and can load the helix through that body. Its belt-torque input is
-therefore
+\begin{itemize}
+    \item the share of belt torque applied to the movable face,
+    \(\tau_{s,M}\);
+    \item the torque supplied by the wound spring,
+    \(\tau_{s,\mathrm{spring}}\); and
+    \item the absolute angular acceleration of the movable assembly,
+    \(\dot\omega_{s,M}\).
+\end{itemize}
+
+The belt term follows immediately from the face-torque assumption.
+
+\paragraph{Movable-face belt torque}
+
+Let \(\tau_s\) be the total signed torque exerted by the belt on the secondary,
+so
+\(\tau_s=\tau_{s,F}+\tau_{s,M}\). Under
+\AssRef{assump:secondary_face_torque_split}, the two faces receive equal
+shares. Only the movable-face share appears in its free body:
 
 \begin{equation}
     \tau_{s,M}
@@ -4174,53 +4216,49 @@ therefore
     \label{eq:secondary_movable_face_belt_torque}
 \end{equation}
 
-This partition is a consequential reduced-contact assumption, not a general
-property of a helical secondary. \citet{SorgeCammalleri2011} show that the
-relative motion of the two half-pulleys gives their faces different angular
-velocities and sliding conditions. The resulting face torques are generally
-unequal, and their local tangential contributions may even act in opposite
-directions over parts of the wrap. CINDER does not resolve that face-level
-redistribution. Because the movable-face share enters
-\(\tau_{s,\mathrm{helix}}\) directly, the predicted helix load inherits this
-equal-partition approximation.
+This equal split is a reduced-contact assumption. During shift, the two faces
+can have different angular velocities and sliding conditions, so their torque
+shares need not be equal \citep{SorgeCammalleri2011}. Because the present
+contact model does not resolve that redistribution, the helix torque inherits
+the equal-split approximation.
 
-The remaining acceleration in
-\Cref{eq:secondary_reacted_helix_torque_structure} is not simply the secondary
-shaft acceleration. The movable sheave spins with the shaft while also
-twisting relative to the fixed sheave as it shifts. The helix geometry
-determines that additional motion.
+The remaining terms both depend on the helix kinematics:
+\(\dot\omega_{s,M}\) depends on how the movable sheave rotates as it shifts,
+and the spring torque depends on how far that motion unwinds the spring. We
+therefore derive the relation between \(x_s\) and \(\theta_s\) next.
 
-\paragraph{Helix geometry}
+% --------------------------------------------------------------
+\subsubsection{Motion Imposed by the Helix}
+\label{sec:secondary_helix_kinematics}
 
-Let \(\theta_s\) measure the angular advance of the movable sheave relative to
-the fixed sheave in the positive secondary rotation direction. The helix is
-oriented so that closing motion advances the movable sheave: increasing
-\(x_s\) therefore increases \(\theta_s\).
+The helix geometry tells us how axial shift changes the relative angle of the
+movable sheave. Unwrap one track from its effective cylindrical radius
+\(r_h\). A small relative rotation \(d\theta_s\) moves the pin by
+\(r_h\,d\theta_s\) circumferentially while the sheave moves by \(dx_s\)
+axially. Let \(\alpha_s\) be the local helix angle measured from the
+circumferential direction.
 
-The relation between these motions can be read by unwrapping the helix from
-its effective cylindrical radius \(r_h\). A small relative rotation
-\(d\theta_s\) produces a circumferential displacement \(r_h d\theta_s\),
-while the same motion closes the sheave by \(dx_s\).
-\Cref{fig:secondary_helix_geometry} shows the resulting right triangle.
-
-% AUTHOR FIGURE NOTE:
-% Draw one helix track unwrapped from a cylinder of effective radius r_h. Mark
-% the circumferential run r_h dtheta_s, the axial closing rise dx_s, and the
-% local tangent to the track. Measure alpha_s from the circumferential
-% direction to that tangent. Show +theta_s as movable-sheave advance and +x_s
-% as secondary closure. Include no force vectors; the figure's only job is to
-% establish the motion ratio.
 \begin{figure}[H]
     \centering
-    % \includegraphics[width=0.70\linewidth]
-    %     {illustrations/pulleyForces/secondary_helix_torque_to_axial.png}
-    \caption{Local secondary-helix geometry after the cylindrical track is
-    unwrapped. Relative rotation through \(d\theta_s\) and axial closure through
-    \(dx_s\) are two components of the same constrained motion.}
+    \fbox{%
+    \begin{minipage}{0.88\linewidth}
+    \textbf{Figure brief -- unwrapped helix geometry and contact reaction.}
+    Unwrap one helix track from a cylinder of radius \(r_h\). In the first
+    panel, show the circumferential run \(r_h\,d\theta_s\), axial rise
+    \(dx_s\), track tangent, and \(\alpha_s\) measured from the
+    circumferential direction. In a companion panel at the same angle, resolve
+    the pin--track reaction into the circumferential component that produces
+    \(\tau_{s,\mathrm{helix}}\) and the axial component
+    \(F_{s,\mathrm{helix}}\). Make clear that both come from one contact
+    reaction.
+    \end{minipage}%
+    }
+    \caption{Unwrapped secondary-helix geometry. The same track angle relates
+    relative rotation to axial travel and reaction torque to axial force.}
     \label{fig:secondary_helix_geometry}
 \end{figure}
 
-From the figure, the right-angle geometry gives
+From the triangle in \Cref{fig:secondary_helix_geometry},
 
 \begin{equation}
     \tan\alpha_s
@@ -4233,35 +4271,32 @@ From the figure, the right-angle geometry gives
     \label{eq:secondary_helix_motion_ratio}
 \end{equation}
 
-Thus, \(d\theta_s/dx_s\) states how much relative rotation accompanies one
-unit of secondary closure. A shallower helix produces more relative rotation
-per unit axial travel and, as the force conversion below will show, more axial
-force for a given helix torque.
+Thus, \(d\theta_s/dx_s\) is the relative rotation required per unit axial
+travel. Returning to the straight axial slot from the opening example,
+\(\alpha_s\rightarrow\pi/2\) and \(d\theta_s/dx_s\rightarrow0\), as expected.
 
-This local change law establishes the relative-rotation map. Taking the open
-secondary as the angular reference gives
+Taking \(\theta_s(0)=0\) at the open secondary, integrate the local motion
+ratio to obtain
 
 \begin{equation}
     \theta_s(x_s)
     =
     \int_{0}^{x_s}
     \frac{1}{r_h\tan\alpha_s(\xi)}
-    \,d\xi,
-    \qquad
-    \theta_s(0)=0,
+    \,d\xi.
     \label{eq:secondary_helix_rotation_map}
 \end{equation}
 
-where \(\alpha_s(\xi)\) is the local track angle at position \(\xi\). A
-constant-angle helix makes \(\theta_s\) linear in \(x_s\); a varying-angle
-profile changes the local motion ratio along the travel.
+\Cref{eq:secondary_helix_rotation_map} defines the helix as a function
+\(\theta_s(x_s)\): for each axial position, it gives the relative angle
+enforced by the track. The function need not come from a constant helix
+angle. Any supplied function may be used provided it is single-valued and
+monotonically increasing over the admissible shift range.
 
-\paragraph{Movable-sheave rotation}
-
-The rotational balance requires the absolute angular acceleration of the
-movable sheave. The fixed sheave rotates with the secondary shaft at
-\(\omega_s\). Since \(\theta_s\) measures the movable sheave's angular advance
-relative to it, the movable-sheave angular velocity is
+We can now use this function to determine the two remaining quantities in the
+rotational balance. First consider the absolute motion of the movable sheave.
+The fixed sheave rotates with the secondary shaft at \(\omega_s\), while the
+movable sheave also has the relative rotation \(\theta_s\):
 
 \begin{equation}
     \omega_{s,M}
@@ -4274,9 +4309,8 @@ relative to it, the movable-sheave angular velocity is
     \label{eq:secondary_movable_sheave_speed}
 \end{equation}
 
-Closing motion therefore makes the movable sheave advance, while the opening
-motion of a normal upshift makes it lag. Differentiating the same relation
-gives the acceleration required by the rotational free body:
+Differentiating gives the angular acceleration required by the rotational
+balance:
 
 \begin{equation}
     \dot\omega_{s,M}
@@ -4289,37 +4323,43 @@ gives the acceleration required by the rotational free body:
     \label{eq:secondary_movable_sheave_acceleration}
 \end{equation}
 
-The second term is the relative angular acceleration produced by axial
-acceleration. The third is the helix-curvature contribution: even at constant
-\(\dot x_s\), the relative angular speed changes wherever the local helix slope
-changes. Over the modeled travel, the helix profile is taken to have a
-positive, finite motion ratio and finite curvature,
+The shaft acceleration \(\dot\omega_s\) remains unknown here because
+\(\omega_s\) is a state of the coupled CVT model. It is solved together with
+the axial motion rather than by the helix relation alone.
+
+The term proportional to \(\ddot x_s\) is the angular acceleration caused by
+axial acceleration. The term proportional to \(\dot x_s^2\) appears only when
+the motion ratio varies with position.
+
+\Cref{eq:secondary_movable_sheave_acceleration} also introduces
+\(d^2\theta_s/dx_s^2\), adding a smoothness requirement. Over the admissible
+shift range, require
 
 \begin{equation}
-    0<\frac{d\theta_s}{dx_s}<\infty,
+    0<
+    \frac{d\theta_s}{dx_s}
+    <\infty,
     \qquad
-    \left|\frac{d^2\theta_s}{dx_s^2}\right|<\infty.
+    \left|
+    \frac{d^2\theta_s}{dx_s^2}
+    \right|
+    <\infty.
     \label{eq:secondary_helix_geometric_admissibility}
 \end{equation}
 
-Within these restrictions, \(\theta_s(x_s)\) may describe any smooth helix
-profile. A C38\(\rightarrow\)30 profile therefore needs a smooth blend; a
-literal corner has no finite curvature and is treated as a separate mechanism
-transition.
+Any nominal multi-angle segments are therefore joined smoothly rather than
+meeting at a sharp corner.
 
-\paragraph{Torsional spring torque}
+% --------------------------------------------------------------
+\subsubsection{Torsional Spring Loading}
+\label{sec:secondary_torsional_spring_loading}
 
-The other local quantity in the rotational balance is the torsional action of
-the same secondary spring introduced above. Its twist is set by the relative
-angle \(\theta_s\). During a normal upshift, the secondary opens: \(x_s\) and
-\(\theta_s\) decrease, winding the spring farther. During a downshift, the
-secondary closes: \(x_s\) and \(\theta_s\) increase, allowing the spring to
-unwind.
-
-Let \(\theta_{s,\mathrm{pre}}\) be the torsional deflection at the open
-reference \(x_s=0\). At a general position, its remaining deflection is
-\(\theta_{s,\mathrm{pre}}-\theta_s(x_s)\). The spring therefore acts on the
-movable assembly in the positive relative-rotation direction with torque
+The same helix function tells us how much the spring has unwound. Let
+\(k_{s,\theta}\) be the spring's torsional stiffness and
+\(\theta_{s,\mathrm{pre}}\) its twist at \(x_s=0\). Increasing \(\theta_s\)
+reduces this twist, leaving
+\(\theta_{s,\mathrm{pre}}-\theta_s(x_s)\). The resulting torque on the
+movable assembly is
 
 \begin{equation}
     \tau_{s,\mathrm{spring}}
@@ -4331,15 +4371,11 @@ movable assembly in the positive relative-rotation direction with torque
     \label{eq:secondary_torsional_spring_torque}
 \end{equation}
 
-As long as the spring remains preloaded, this torque advances the movable
-sheave and assists the positive closing motion while the spring unwinds.
+While the spring remains preloaded, this quantity is positive.
 
-\paragraph{Completed helix torque}
-
-The face-torque share, spring law, and movable-sheave acceleration now supply
-every term in
+We now have relations for all three terms on the right-hand side of
 \Cref{eq:secondary_reacted_helix_torque_structure}. Substituting them gives
-the torque actually carried by the helix:
+the pin--helix contact torque:
 
 \begin{equation}
 \boxed{
@@ -4367,18 +4403,23 @@ the torque actually carried by the helix:
     \label{eq:secondary_reacted_helix_torque}
 \end{equation}
 
-The first two terms try to rotate the movable sheave ahead of the fixed sheave.
-The inertial term is the torque required to give that sheave its absolute
-angular acceleration. The torque left after satisfying that rotational motion
-is the torque carried by the helix.
+This completes the rotational part of the derivation. The next step is to use
+the pin--helix contact geometry to find the axial force associated with this
+torque.
 
-\paragraph{Axial force delivered through the helix}
+% --------------------------------------------------------------
+\subsubsection{Axial Component of the Helix Reaction}
+\label{sec:secondary_helix_closing_force}
 
-The reason for isolating \(\tau_{s,\mathrm{helix}}\) is now direct: the same
-reaction that loads the helix tracks also supplies the unknown force in the
-axial free body. With helix friction neglected under
-\AssRef{assump:no_parasitic_losses}, a small compatible motion transfers equal
-work through the rotational and axial directions,
+The torque above is the moment produced by the circumferential component of
+the contact normal. Let \(F_{s,\mathrm{helix}}\) denote the signed axial force
+produced by the helix reaction, positive in \(+x_s\).
+
+With helix friction neglected under
+\AssRef{assump:no_parasitic_losses}, the normal reaction does no work as the
+pin moves along the slot. On the movable sheave, its axial component contributes
+\(F_{s,\mathrm{helix}}\,dx_s\), while its circumferential component contributes
+\(-\tau_{s,\mathrm{helix}}\,d\theta_s\). Their sum is zero, so
 
 \begin{equation}
     F_{s,\mathrm{helix}}\,dx_s
@@ -4387,7 +4428,7 @@ work through the rotational and axial directions,
     \label{eq:secondary_helix_work_conversion}
 \end{equation}
 
-Using the motion ratio already obtained from the helix geometry gives
+Using the motion ratio gives
 
 \begin{equation}
     F_{s,\mathrm{helix}}
@@ -4397,20 +4438,20 @@ Using the motion ratio already obtained from the helix geometry gives
     \label{eq:secondary_helix_force_conversion}
 \end{equation}
 
-Because \(d\theta_s/dx_s>0\), the axial force has the same sign as the reacted
-torque. A positive \(\tau_{s,\mathrm{helix}}\) therefore closes the secondary,
-whereas a negative value loads the opposite flank of the modeled slot and
-opens it. The sign of the belt torque alone does not determine this direction:
-the spring and movable-sheave inertia also contribute to the helix torque.
+The motion ratio \(d\theta_s/dx_s\) is therefore the mathematical origin of
+the axial effect: it converts the contact torque into axial force. In the
+straight-slot limit used in the opening example, this ratio is zero, so the
+slot can react torque while the axial conversion vanishes.
 
-If the hardware is instead represented by a one-sided ramp, the same engaged
-equations are admissible only while
-\(\tau_{s,\mathrm{helix}}\geq0\). A negative required value means that the
-loaded flank cannot sustain the reaction and has unloaded; the corresponding
-contact reduction is introduced with the later mechanism regimes.
+The signed relation assumes that contact is maintained. A captured, two-sided
+slot can load either flank and carry either sign of
+\(\tau_{s,\mathrm{helix}}\). A one-sided ramp can only push; with the present
+sign convention, contact requires
+\(\tau_{s,\mathrm{helix}}\geq0\). A negative result means the pin has separated
+from the loaded flank.
 
-Substituting \Cref{eq:secondary_reacted_helix_torque} makes the helix force
-explicit:
+Substituting \Cref{eq:secondary_reacted_helix_torque} gives the helix force in
+terms of the model variables:
 
 \begin{equation}
 \begin{aligned}
@@ -4439,16 +4480,61 @@ explicit:
     \label{eq:secondary_helix_closing_force}
 \end{equation}
 
+This gives \(F_{s,\mathrm{helix}}\). We can now place it beside the direct
+spring and belt forces and write the movable-sheave axial balance.
+
 % --------------------------------------------------------------
-\subsubsection{Direct Axial Spring Closing Force}
+\subsubsection{Axial Free Body}
+\label{sec:secondary_axial_free_body}
+
+\Cref{fig:secondary_axial_free_body} now isolates the movable assembly in the
+axial direction.
+
+\begin{figure}[H]
+    \centering
+    \fbox{%
+    \begin{minipage}{0.88\linewidth}
+    \textbf{Figure brief -- secondary axial free body.}
+    Show a recognizable axial section of the secondary. Shade the movable
+    sheave and every component that translates rigidly with it; together these
+    parts form \(m_s\). Mark \(+x_s\) toward the fixed sheave. Show
+    \(F_{s,\mathrm{spring}}\) toward closure,
+    \(F_{s,\mathrm{belt}}\) toward opening, and the signed
+    \(F_{s,\mathrm{helix}}\) at the helix contact. If the full contact reaction
+    is included, draw it faintly and identify
+    \(F_{s,\mathrm{helix}}\) as its axial component. Do not repeat the torque
+    arrows.
+    \end{minipage}%
+    }
+    \caption{Axial free body of the movable secondary assembly.}
+    \label{fig:secondary_axial_free_body}
+    \label{fig:secondary_axial_mechanism}
+\end{figure}
+
+Let \(m_s\) be the mass of the movable sheave and every component that
+translates rigidly with it. Three axial loads act on this assembly. The
+pin--helix contact contributes \(F_{s,\mathrm{helix}}\), derived above. The
+compressed spring pushes the movable sheave toward the fixed sheave in
+\(+x_s\). The belt pushes the two sheave faces apart, so its reaction on the
+movable face acts in \(-x_s\), just as on the primary. Newton's second law
+therefore gives
+
+\begin{equation}
+    m_s\ddot x_s
+    =
+    F_{s,\mathrm{helix}}
+    +F_{s,\mathrm{spring}}
+    -F_{s,\mathrm{belt}}.
+    \label{eq:secondary_movable_sheave_balance}
+\end{equation}
+
+\paragraph{Direct axial spring force}
 \label{sec:secondary_spring_closing_force}
 
-The same physical spring also pushes directly on the movable assembly through
-the independent axial component declared at the start of this subsection. Let
-\(x_{s,\mathrm{pre}}\) be its compression at the open reference \(x_s=0\).
-Closing the secondary by \(x_s\) lets the spring extend by the same amount,
-leaving the compression \(x_{s,\mathrm{pre}}-x_s\). The resulting closing
-force is
+The spring force follows directly from its compression. Let \(k_{s,x}\) be the
+axial stiffness and \(x_{s,\mathrm{pre}}\) the compression at \(x_s=0\).
+Closing the secondary by \(x_s\) lets the spring extend by the same amount, so
+its remaining compression is \(x_{s,\mathrm{pre}}-x_s\). Hence,
 
 \begin{equation}
     F_{s,\mathrm{spring}}
@@ -4458,20 +4544,21 @@ force is
     \label{eq:secondary_axial_spring_force}
 \end{equation}
 
-Thus, the normal upshift motion \(\dot x_s<0\) compresses the spring farther,
-whereas the positive closing motion of a downshift lets it extend. Its force
-still points in the positive closing direction and provides secondary
-clamping even when no torque is being transmitted through the belt.
+This force and the torque in
+\Cref{eq:secondary_torsional_spring_torque} come from the same installed
+spring. Following the reduced decomposition of \citet{KimEtAl2002}, the model
+represents its axial compression and torsional twist with separate linear
+laws. Compression--twist coupling, hysteresis, and end-contact friction are
+neglected.
 
-% --------------------------------------------------------------
-\subsubsection{Belt Opening Reaction}
+\paragraph{Belt opening reaction}
 \label{sec:secondary_belt_opening_reaction}
 
-The seated belt presses back on the secondary faces in the same way as on the
-primary. Let \(N_s\) be the total integrated normal load over both secondary
-faces. By \AssRef{assump:equal_sheave_normal_load}, the movable face carries
-\(N_s/2\). Projecting that face-normal reaction into the axial direction gives
-the opening force
+The belt opening force follows the same projection already used on the
+primary. Let \(N_s\) be the integrated normal load over both secondary faces.
+Under
+\AssRef{assump:equal_sheave_normal_load}, the movable face carries \(N_s/2\),
+giving
 
 \begin{equation}
     F_{s,\mathrm{belt}}
@@ -4484,12 +4571,10 @@ the opening force
 \subsubsection{Completed Local Secondary Balance}
 \label{sec:completed_secondary_balance}
 
-The three loads in the secondary axial free body have now been expressed
-through the coupled CVT variables. Substituting
-\Cref{eq:secondary_helix_closing_force,eq:secondary_axial_spring_force,%
-eq:secondary_belt_axial_reaction} into
-\Cref{eq:secondary_movable_sheave_balance} and collecting the terms that
-multiply \(\ddot x_s\) gives
+We now have a relation for every term in the axial free body. Substitute them
+into
+\Cref{eq:secondary_movable_sheave_balance} and collect the terms multiplying
+\(\ddot x_s\):
 
 \begin{equation}
 \begin{aligned}
@@ -4527,29 +4612,28 @@ multiply \(\ddot x_s\) gives
     \label{eq:completed_secondary_axial_balance}
 \end{equation}
 
-Every term follows from the two free bodies of the movable assembly. The
-movable-face belt torque and the torsional spring load the helix. A positive
-shaft acceleration requires the inertial torque
-\(I_{s,M}\dot\omega_s\) and therefore reduces the signed torque available to
-the helix; during shaft deceleration, that inertial contribution reverses
-direction. The direct spring force closes the sheave, while the belt reaction
-opens it.
+The completed equation separates into four physical pieces:
 
-The helix also reflects rotational inertia into the axial coordinate. One
-factor of \(d\theta_s/dx_s\) maps axial acceleration into relative angular
-acceleration; the second converts the associated reaction torque back into
-axial force. The resulting added axial inertia is therefore
-\(I_{s,M}(d\theta_s/dx_s)^2\).
+\begin{itemize}
+    \item \(m_s+I_{s,M}(d\theta_s/dx_s)^2\) is the axial inertia: the
+    translating mass plus the movable assembly's rotational inertia reflected
+    through the helix;
+    \item the first bracket contains the belt torque, torsional spring torque,
+    and torque required by shaft angular acceleration;
+    \item the term proportional to \(\dot x_s^2\) accounts for a helix motion
+    ratio that varies with position; and
+    \item the last two terms are the direct spring closing force and belt
+    opening force.
+\end{itemize}
 
-The remaining velocity-dependent term comes from helix curvature. If the
-rotation-per-closure increases as the secondary closes,
-\(d^2\theta_s/dx_s^2>0\), part of the helix torque is used to increase the
-relative angular speed and the term opposes closure. If the motion ratio
-decreases, the same term acts in the opposite direction. A constant-angle
-helix has \(d^2\theta_s/dx_s^2=0\), so this curvature load vanishes.
+This is the axial equation of motion we set out to obtain. If its right-hand
+side remains zero and the sheave is initially stationary, \(x_s\) and
+\(\theta_s\) remain fixed while the two sheaves rotate together. A nonzero
+right-hand side accelerates the sheave axially, and
+\(\theta_s(x_s)\) fixes the accompanying relative rotation.
 
-At fixed secondary position and constant shaft speed,
-\(\dot x_s=\ddot x_s=\dot\omega_s=0\). The helix force then reduces to the
+As a check, consider a fixed secondary position and constant shaft speed:
+\(\dot x_s=\ddot x_s=\dot\omega_s=0\). The result reduces to the familiar
 quasi-static torque-cam relation
 
 \begin{equation}
@@ -4571,9 +4655,9 @@ quasi-static torque-cam relation
 \subsubsection{Mapping to the Shared Shift Coordinate}
 \label{sec:secondary_balance_shift_mapping}
 
-The secondary mechanics have deliberately been written in their local
-coordinate. The belt-length geometry derived earlier supplies the final map
-back to the common shift coordinate,
+The local coordinate \(x_s\) made the secondary mechanics clear, but the full
+CVT model evolves the shared shift coordinate \(s\). The belt-length geometry
+supplies the required map:
 
 \begin{equation}
     x_s=x_s(s),
@@ -4590,9 +4674,9 @@ back to the common shift coordinate,
     \label{eq:secondary_local_to_shift_map}
 \end{equation}
 
-Substituting these kinematics into
-\Cref{eq:completed_secondary_axial_balance} and rearranging so that the
-coefficient of \(\ddot s\) remains alone on the left gives
+Substitute these derivatives into
+\Cref{eq:completed_secondary_axial_balance} and collect the coefficient of
+\(\ddot s\):
 
 \bigeq{eq:secondary_balance_in_shift_coordinate}
 {Completed Secondary Balance}
@@ -4642,35 +4726,29 @@ coefficient of \(\ddot s\) remains alone on the left gives
 \end{aligned}
 }
 
-where \(x_s\), \(\theta_s\), and their local derivatives are evaluated at
-\(x_s=x_s(s)\). Since \(dx_s/ds<0\) over the engaged shift range, increasing
-the global shift coordinate opens the secondary. The geometric derivative in
-\Cref{eq:secondary_balance_in_shift_coordinate} carries that reversal directly
-into the balance.
+Here \(x_s\), \(\theta_s\), and their local derivatives are evaluated at
+\(x_s=x_s(s)\). Since \(dx_s/ds<0\), increasing \(s\) closes the primary but
+opens the secondary. The mapping carries this sign change automatically.
 
 \paragraph{Relation to existing secondary-actuator models}
 
-The torque-cam model of \citet{KimEtAl2002} relates driven thrust
-quasi-statically to transmitted torque and cam geometry, while representing
-the same secondary spring through direct axial thrust and a torsional
-contribution to cam thrust. The present spring decomposition follows that
-reduced mechanical picture.
+\citet{KimEtAl2002} combine direct axial spring thrust with torque-reactive cam
+thrust from belt and torsional spring loading. The present formulation keeps
+that reduced actuator picture and writes the rotational and axial inertia
+explicitly.
 
-\citet{SorgeCammalleri2011} resolve the different sliding conditions and
-unequal torque contributions of the fixed and movable faces, but neglect the
-mechanical inertia associated with their relative shift motion. CINDER makes
-the opposite trade in model detail: it imposes the equal face-torque partition
-but retains movable-sheave inertia. The latter produces the reflected
-\(I_{s,M}(d\theta_s/dx_s)^2\) term and the helix-curvature load; the former
-means that the resulting torque-reactive clamp force remains only as accurate
-as the assumed movable-face share.
+\citet{SorgeCammalleri2011} resolve the unequal face torques created by
+different sliding conditions on the fixed and movable sheaves, while
+neglecting the mechanical inertia of their relative shift motion. The present
+model makes the complementary approximation: it divides belt torque equally
+between the faces but retains the movable assembly's rotational inertia. That
+inertia produces both the reflected
+\(I_{s,M}(d\theta_s/dx_s)^2\) term and the helix-curvature term.
 
-The two axial free bodies now describe the same compatible shift motion, but
-still contain the unknown reactions \(N_p\) and \(N_s\); the secondary also
-contains \(\tau_s\) and \(\dot\omega_s\). These enter with the rotational and
-contact equations. Because the movable sheave both spins and twists, the later
-shaft balance must retain the reciprocal shift--rotation coupling without
-adding \(I_{s,M}\) again as an uncoupled inertia.
+The primary and secondary balances now describe the same shift motion. The
+rotational and belt-contact equations supply the remaining quantities
+\(N_p\), \(N_s\), \(\tau_s\), and \(\dot\omega_s\). 
+
 
 \section{Rotational and Belt Transport Dynamics}
 \label{sec:rot-belt-dynamics}
