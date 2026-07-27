@@ -3613,6 +3613,28 @@ motion. We first construct those balances in the local sheave coordinates
 geometric maps established above then express both balances through the shared
 shift coordinate \(s\).
 
+% Replacement for the opening of the axial-actuation section and the complete
+% primary movable-sheave subsection.
+% The approved secondary movable-sheave subsection follows this material
+% unchanged.
+
+% --------------------------------------------------------------
+\section{Axial Actuation and Sheave Balances}
+\label{sec:axial_actuation_balances}
+
+The preceding section established how the two movable sheaves must move
+together. It did not determine the motion itself. That requires the forces
+acting on each movable assembly and the inertia that those forces must
+accelerate.
+
+The primary and secondary remain separate mechanisms even though the belt
+geometry couples their positions. Each has its own actuator, spring, moving
+hardware, and belt reaction, so each must satisfy its own axial equation of
+motion. We first construct those balances in the local sheave coordinates
+\(x_p\) and \(x_s\), where the physical force directions are clearest. The
+geometric maps established above then express both balances through the shared
+shift coordinate \(s\).
+
 % --------------------------------------------------------------
 \subsection{Primary Movable-Sheave Balance}
 \label{sec:primary_movable_sheave_balance}
@@ -3756,8 +3778,8 @@ radially outward:
 \end{equation}
 
 The centrifugal force tends to increase \(q_f\). The ramp normal opposes that
-motion, and the pivot reaction passes through \(P\). Taking moments about the
-flyweight pivots gives
+motion. The pivot reaction passes through \(P\), so it produces no moment about
+the pivot. Taking moments about the flyweight pivots gives
 
 \begin{equation}
     \tau_{f,\mathrm{cent}}
@@ -3780,9 +3802,9 @@ a separate contact angle or moment arm.
 
 \paragraph{Motion imposed by the ramp contact}
 
-While the roller remains on one ramp branch, the flyweight and movable
-assembly cannot move independently. Each value of \(x_p\) fixes both the
-flyweight angle and its centre-of-mass radius:
+While the flyweight remains in contact with the ramp, the movable-sheave
+position \(x_p\) uniquely fixes both the flyweight angle and its
+centre-of-mass radius:
 
 \begin{equation}
     q_f=q_f(x_p),
@@ -3806,9 +3828,9 @@ motion then produces
     \label{eq:primary_flyweight_compatible_motion}
 \end{equation}
 
-On the regular closing branch shown in the figure, both motion ratios are
-finite, \(dq_f/dx_p>0\), and \(dr_f/dx_p\geq0\). Thus \(q_f\) changes
-monotonically with \(x_p\) and can be used as the local coordinate for the
+During standard operation, these maps are monotonic and their motion ratios
+remain finite, with \(dq_f/dx_p>0\) and \(dr_f/dx_p\geq0\). In particular,
+the first condition allows \(q_f\) to serve as the local coordinate for the
 moment conversions below.
 
 \begin{remarkbox}
@@ -3836,9 +3858,11 @@ motion is \(F_{f,\mathrm{cent}}\,dr_f\). Its equivalent moment acts through
 
 The ramp contact transfers work from the flyweight to the movable assembly.
 Under \AssRef{assump:no_parasitic_losses}, the contact is frictionless. The
-ramp carrier moves only axially, so the work delivered to it by all of the
-contact normals is \(F_{p,\mathrm{fly}}\,dx_p\). The opposing contact moment
-on the flyweights therefore satisfies
+ramp carrier moves only axially, so only the axial component of the total
+ramp-contact force performs work on it. That component is
+\(F_{p,\mathrm{fly}}\), and the work delivered is therefore
+\(F_{p,\mathrm{fly}}\,dx_p\). The opposing contact moment on the flyweights
+therefore satisfies
 
 \begin{equation}
     \tau_{f,\mathrm{contact}}\,dq_f
@@ -3878,23 +3902,9 @@ every term can be read directly from the compatible motion:
     \label{eq:primary_flyweight_moment_balance_geometry}
 \end{equation}
 
-The two maps in \Cref{eq:primary_flyweight_geometry_maps} relate these moment
-arms to the axial coordinate:
-
-\begin{equation}
-    \frac{dr_f}{dq_f}
-    =
-    \frac{dr_f/dx_p}{dq_f/dx_p},
-    \qquad
-    \frac{dx_p}{dq_f}
-    =
-    \frac{1}{dq_f/dx_p}.
-    \label{eq:primary_flyweight_effective_moment_arms}
-\end{equation}
-
-Using these relations and
-\Cref{eq:primary_flyweight_centrifugal_force}, then solving for the axial
-force, gives
+Multiplying this balance by \(dq_f/dx_p\), rearranging for
+\(F_{p,\mathrm{fly}}\), and substituting
+\Cref{eq:primary_flyweight_centrifugal_force} gives
 
 \begin{equation}
 \boxed{
@@ -4013,9 +4023,11 @@ compression when the primary is open at \(x_p=0\). Closing the sheave by
 \paragraph{Belt reaction}
 
 Let \(N_p\) be the total integrated normal load over both primary sheave
-faces. Under \AssRef{assump:equal_sheave_normal_load}, the movable face
-carries \(N_p/2\). Its normal is inclined by the sheave half-angle \(\beta\)
-from the axial direction, so the opening force on the movable face is
+faces. This load is coupled to the belt and the secondary balance, so it
+remains an unknown at this stage. Under
+\AssRef{assump:equal_sheave_normal_load}, the movable face carries \(N_p/2\).
+Its normal is inclined by the sheave half-angle \(\beta\) from the axial
+direction, so the opening force on the movable face is
 
 \begin{equation}
     F_{p,\mathrm{belt}}
@@ -4028,7 +4040,7 @@ from the axial direction, so the opening force on the movable face is
 \subsubsection{Completed Primary Balance}
 \label{sec:completed_primary_balance}
 
-Every term in the original free body is now known at the mechanism level.
+Each force in the original free body now has a mechanism-level expression.
 Substitute
 \Cref{eq:primary_flyweight_axial_force,eq:primary_spring_force,%
 eq:primary_belt_axial_reaction} into
@@ -4070,7 +4082,7 @@ even when \(\dot x_p\) is constant, producing the term proportional to
 \(\dot x_p^2\). The spring and belt forces act directly on the movable
 assembly and oppose closure exactly as shown in the first free body.
 
-This is the primary axial equation of motion. It determines how the
+This is the primary axial equation of motion. It states how the
 flyweight action is divided among spring compression, belt loading, and
 acceleration of the translating and pivoting hardware.
 
@@ -4149,12 +4161,36 @@ shared shift coordinate:
     \label{eq:primary_local_to_shift_map}
 \end{equation}
 
-Applying this substitution to
-\Cref{eq:completed_primary_axial_balance} gives the primary condition on the
-shared shift motion. The secondary movable sheave follows that same motion
-through \(x_s(s)\), but its axial loading is created by the torque-reactive
-helix considered next.
+Since \(x_p=s\), the flyweight maps can now be read as \(q_f=q_f(s)\) and
+\(r_f=r_f(s)\). Substituting these relations into
+\Cref{eq:completed_primary_axial_balance} gives the fully expanded primary
+condition on the shared shift motion:
 
+\bigeq{eq:primary_balance_in_shift_coordinate}
+{Completed Primary Balance}
+{
+\begin{aligned}
+    \left[
+        m_p
+        +
+        I_f
+        \left(\frac{dq_f}{ds}\right)^2
+    \right]\ddot s
+    ={}&
+    m_fr_f(s)\omega_p^2\frac{dr_f}{ds}
+    \\
+    &-
+    I_f
+    \frac{dq_f}{ds}
+    \frac{d^2q_f}{ds^2}
+    \dot s^2
+    \\
+    &-
+    k_p\left(x_{p,\mathrm{pre}}+s\right)
+    -
+    \frac{N_p}{2}\cos\beta.
+\end{aligned}
+}
 
 \subsection{Secondary Movable-Sheave Balance}
 \label{sec:secondary_movable_sheave_balance}
