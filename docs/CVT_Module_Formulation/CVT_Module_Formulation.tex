@@ -3586,355 +3586,436 @@ The realized value of \(\ddot s\) must allow both assemblies to satisfy
 Newton's second law with these same compatible accelerations. The two local
 balances are therefore constructed separately, beginning with the primary.
 
+% Copy-ready primary movable-sheave subsection.
+% The surrounding manuscript is expected to define \AssRef, \citet, and
+% \Cref as in the current formulation.
+
+% --------------------------------------------------------------
+% Replacement for the opening of the axial-actuation section and the complete
+% primary movable-sheave subsection.
+% The approved secondary movable-sheave subsection follows this material
+% unchanged.
+
+% --------------------------------------------------------------
+\section{Axial Actuation and Sheave Balances}
+\label{sec:axial_actuation_balances}
+
+The preceding section established how the two movable sheaves must move
+together. It did not determine the motion itself. That requires the forces
+acting on each movable assembly and the inertia that those forces must
+accelerate.
+
+The primary and secondary remain separate mechanisms even though the belt
+geometry couples their positions. Each has its own actuator, spring, moving
+hardware, and belt reaction, so each must satisfy its own axial equation of
+motion. We first construct those balances in the local sheave coordinates
+\(x_p\) and \(x_s\), where the physical force directions are clearest. The
+geometric maps established above then express both balances through the shared
+shift coordinate \(s\).
+
 % --------------------------------------------------------------
 \subsection{Primary Movable-Sheave Balance}
 \label{sec:primary_movable_sheave_balance}
 
-The primary clamping mechanism was introduced in the conceptual overview. Its
-flyweights rotate with the primary pulley and press against ramps attached to
-the movable assembly. As the flyweights move outward, the ramps redirect their
-radial action into an axial force that closes the primary. The compression
-spring pushes the movable assembly in the opposite direction and resists that
-closure.
+The primary creates its closing force with flyweights and ramps. As the
+primary rotates, each flyweight swings radially outward and presses against a
+ramp carried by the movable assembly. The contact reaction pushes that
+assembly toward the fixed sheave. The primary spring opposes closure, and,
+while the belt is engaged, the sheave faces squeeze the belt and receive an
+opening normal reaction in return.
 
-When the belt is seated between the sheaves, closing the primary also squeezes
-the belt. The belt presses back on the inclined sheave faces, so the reaction on
-the movable face provides a second force opposing closure. The primary motion
-is therefore set by one closing load from the flyweight--ramp mechanism and two
-opening loads from the spring and belt.
+During a shift, these loads do more than oppose one another. Their resultant
+must accelerate the hardware. The first step is therefore to identify exactly
+which parts share the axial acceleration of the movable sheave.
 
-\Cref{fig:primary_axial_mechanism} shows these loads on the complete movable
-assembly.
+The movable sheave, ramp carrier, and every guide, spacer, or other component
+fastened rigidly to them translate together along the shaft. The flyweights
+do not: they turn about pivots carried by the rotating primary. They must be
+left outside the translating free body and treated through their own motion.
+The mechanism and the resulting axial free body are shown together in
+\Cref{fig:primary_clamping_mechanism}.
 
-% AUTHOR FIGURE NOTE:
-% Retain the recognizable primary cross-section. Shade the movable sheave,
-% ramp carrier, and every part that translates rigidly with them; together
-% these parts form m_p. Keep the flyweights visually separate. Mark +s toward
-% the fixed sheave and show only the three high-level axial loads on the shaded
-% assembly: F_{p,fly} in +s, with F_{p,spring} and F_{p,belt} opposing +s.
 \begin{figure}[H]
     \centering
-    \includegraphics[width=0.92\linewidth]
-        {illustrations/pulleyForces/primary_cvt_mechanisms.png}
-    \caption{Primary clamping mechanism and axial free body of the movable
-    assembly. The flyweight--ramp mechanism closes the primary, while the
-    spring and belt reaction oppose closure.}
-    \label{fig:primary_axial_mechanism}
+    \fbox{%
+    \begin{minipage}{0.88\linewidth}
+    \textbf{Figure brief -- primary mechanism and movable-assembly free
+    body.}
+    Use two coordinated panels based on a recognizable axial section of the
+    primary. In the mechanism panel, show the fixed sheave, movable sheave,
+    belt, compression spring, ramp carrier, and pivoted flyweights. Shade the
+    movable sheave, ramp carrier, and every component that translates rigidly
+    with them. Keep the pivoted flyweights outside the shaded boundary. Mark
+    \(+x_p\) from the open primary toward the fixed sheave. At one
+    flyweight--ramp contact, show the complete normal on each body and trace
+    its axial effect into the shaded assembly. In the free-body panel,
+    isolate only the shaded assembly and show
+    \(F_{p,\mathrm{fly}}\) toward closure and
+    \(F_{p,\mathrm{spring}}\) and \(F_{p,\mathrm{belt}}\) toward opening.
+    \end{minipage}%
+    }
+    \caption{Primary mechanism and axial free body of the movable assembly.
+    The shaded parts translate rigidly with \(x_p\); the flyweights pivot
+    separately and transmit their closing action through the ramp contacts.}
+    \label{fig:primary_clamping_mechanism}
 \end{figure}
 
-\subsubsection{Axial Free Body}
+As established in \Cref{sec:geometry}, positive \(x_p\) closes the primary.
+Let \(m_p\) be the total mass of the movable sheave, ramp carrier, and every
+other component that translates rigidly with them. The three axial forces
+shown in \Cref{fig:primary_clamping_mechanism} are:
 
-Isolate the shaded assembly in \Cref{fig:primary_axial_mechanism}. Let \(m_p\)
-be the mass of the movable sheave, ramp carrier, and every other component that
-translates rigidly with them. The flyweights are kept separate from \(m_p\)
-because their radius changes as the sheave moves.
+\begin{itemize}
+    \item \(F_{p,\mathrm{fly}}\), the total closing force delivered to the
+          ramp carrier by the flyweight contacts;
+    \item \(F_{p,\mathrm{spring}}\), the opening force exerted by the primary
+          spring; and
+    \item \(F_{p,\mathrm{belt}}\), the opening force exerted by the belt on
+          the movable face.
+\end{itemize}
 
-The figure gives the force directions directly. The flyweight--ramp mechanism
-supplies \(F_{p,\mathrm{fly}}\) in the positive closing direction. The spring
-and belt supply \(F_{p,\mathrm{spring}}\) and \(F_{p,\mathrm{belt}}\) in the
-opening direction. Since \(x_p=s\), the acceleration of the movable assembly
-is \(\ddot s\). Newton's second law therefore gives
+Newton's second law along the shaft is therefore
 
 \begin{equation}
-    m_p\ddot s
+    m_p\ddot x_p
     =
     F_{p,\mathrm{fly}}
-    -F_{p,\mathrm{spring}}
-    -F_{p,\mathrm{belt}}.
+    -
+    F_{p,\mathrm{spring}}
+    -
+    F_{p,\mathrm{belt}}.
     \label{eq:primary_movable_sheave_balance}
 \end{equation}
 
-Each sign now follows from the physical free body. What remains is to find the
-magnitude of the three loads, beginning with the flyweight--ramp mechanism.
+This free body tells us exactly what remains to be found. The spring force
+will follow from its compression, and the belt force from the normal reaction
+on the conical face. The flyweight force is harder. It is the axial result of
+a contact on a body that pivots rather than translating rigidly with the
+sheave. We therefore determine \(F_{p,\mathrm{fly}}\) first.
 
 % --------------------------------------------------------------
-\subsubsection{Flyweight--Ramp Closing Force}
-\label{sec:primary_flyweight_ramp_force}
+\subsubsection{Force Transmitted by the Flyweights}
+\label{sec:primary_flyweight_closing_force}
 
-\paragraph{Ramp geometry}
+\paragraph{Flyweight free body}
 
-The flyweights move radially while the ramp carrier moves axially. Contact
-between them makes these two motions compatible. Let \(r_f\) be the distance
-from the primary shaft axis to the effective centre of mass of a flyweight.
-The ramp profile fixes this radius at every primary position, so
+Consider one flyweight in the radial--axial plane shown in
+\Cref{fig:primary_flyweight_free_body}. Its pivot is \(P\), and \(G\) is its
+effective centre of mass. The angle \(q_f\) is measured at \(P\) from the
+positive axial direction to the body-fixed line from \(P\) to \(G\). Thus,
+\(q_f=0\) places that line along the shaft, \(q_f=\pi/2\) places it radially
+outward, and positive \(q_f\) is the direction in which the flyweight swings
+outward. The radius \(r_f\) is the full radial distance from the primary shaft
+axis to \(G\).
 
-\begin{equation}
-    r_f=r_f(s).
-    \label{eq:primary_ramp_map}
-\end{equation}
-
-The local ramp angle must describe the same motion. As the carrier advances by
-\(ds\) in the global closing direction \(+s\), the flyweight moves by \(ds\)
-in the opposite axial direction relative to the carrier and by \(dr_f\)
-radially outward. \Cref{fig:primary_ramp_geometry} shows this local motion.
-
-% AUTHOR FIGURE NOTE:
-% Draw a close-up of one flyweight and its ramp. Show the flyweight centre of
-% mass at radius r_f(s), the outward radial direction, and the ramp carrier's
-% global +s direction. In the carrier frame, show the flyweight's small motion
-% as ds in the negative axial direction and dr_f outward. Draw the resulting
-% right triangle and measure alpha_p from the negative axial direction to the
-% local ramp tangent. Do not add force vectors to this geometry figure.
 \begin{figure}[H]
     \centering
-    % \includegraphics[width=0.72\linewidth]
-    %     {illustrations/pulleyForces/primary_flyweight_ramp_geometry.png}
-    \caption{Local flyweight--ramp geometry. A carrier displacement \(ds\) in
-    the closing direction moves the flyweight by \(ds\) in the negative axial
-    direction relative to the carrier and by \(dr_f\) radially outward. The
-    local ramp angle \(\alpha_p\) is measured from that negative axial
-    direction.}
-    \label{fig:primary_ramp_geometry}
+    \fbox{%
+    \begin{minipage}{0.88\linewidth}
+    \textbf{Figure brief -- flyweight free body and compatible motion.}
+    Use two panels in the same radial--axial plane. In the first, show one
+    pivoted flyweight pressing against a ramp attached to the movable
+    assembly. Mark the shaft axis, \(+\mathbf e_x\), outward
+    \(+\mathbf e_r\), pivot \(P\), centre of mass \(G\), and the line
+    \(PG\). Draw \(q_f\) from \(+\mathbf e_x\) to \(PG\), with small
+    reference sketches or labels indicating \(q_f=0\) as axial and
+    \(q_f=\pi/2\) as radial. Draw \(r_f\) from the shaft axis to \(G\).
+    On the isolated flyweight, show the pivot reaction, the ramp-contact
+    normal, and the outward centrifugal force at \(G\). Indicate the
+    opposing moments \(\tau_{f,\mathrm{cent}}\) and
+    \(\tau_{f,\mathrm{contact}}\) about the circumferential pivot axis. In
+    the second panel, show one small compatible motion: the flyweight turns
+    through \(dq_f\), \(G\) moves radially through \(dr_f\), and the ramp
+    carrier closes through \(dx_p\). Keep the equal-and-opposite contact
+    normals visible on the flyweight and ramp.
+    \end{minipage}%
+    }
+    \caption{Flyweight free body and the motion permitted by the active ramp
+    contact. The angle \(q_f\) describes flyweight rotation about \(P\);
+    \(r_f\) describes the radial position of its centre of mass about the
+    primary shaft.}
+    \label{fig:primary_flyweight_free_body}
 \end{figure}
 
-From the figure, the right-angle geometry gives
+The figure shows one flyweight, but the primary uses a symmetric set whose
+members follow the same \(q_f\) and \(r_f\). Let \(m_f\) be their total
+effective mass, let \(I_f\) be the sum of their mass moments of inertia about
+their individual pivot axes, and let \(F_{p,\mathrm{fly}}\) include the axial
+contribution from every ramp contact.
+
+We describe the flyweights in a frame rotating with the primary. In this
+frame the pivots are stationary, and the flyweights turn only through
+\(q_f\). The centrifugal force acting at their effective centre of mass is
+radially outward:
 
 \begin{equation}
-    \tan\alpha_p
+    F_{f,\mathrm{cent}}
     =
-    \frac{dr_f}{ds}.
-    \label{eq:primary_ramp_angle}
+    m_fr_f\omega_p^2.
+    \label{eq:primary_flyweight_centrifugal_force}
 \end{equation}
 
-Thus, \(dr_f/ds\) is the local motion ratio of the ramp: it states how much
-radial flyweight motion accompanies one unit of axial primary motion.
-
-\paragraph{Flyweight motion}
-
-The axial force delivered through the ramp depends on the radial load applied
-by the flyweights. Because the flyweights accelerate as they move along the
-ramp, that load cannot be found from primary speed alone. Their radial motion
-must first be obtained from the ramp profile.
-
-Differentiating \(r_f(s)\) once gives the radial speed,
+The centrifugal force tends to increase \(q_f\). The ramp normal opposes that
+motion, and the pivot reaction passes through \(P\). Taking moments about the
+flyweight pivots gives
 
 \begin{equation}
-    \dot r_f
+    \tau_{f,\mathrm{cent}}
+    -
+    \tau_{f,\mathrm{contact}}
     =
-    \frac{dr_f}{ds}\dot s,
-    \label{eq:primary_flyweight_radius_rate}
+    I_f\ddot q_f.
+    \label{eq:primary_flyweight_moment_balance}
 \end{equation}
 
-and differentiating again gives the second derivative of the radius,
+This is the ordinary rotational equation of motion for the pivoting
+flyweights. In the rotating frame, the Euler and Coriolis forces point
+circumferentially, parallel to the pivot axis, and therefore create no moment
+about that axis.
+
+Equation \eqref{eq:primary_flyweight_moment_balance} has the form we need, but
+the two moments still depend on the contact construction. The small motion in
+\Cref{fig:primary_flyweight_free_body} lets us find both without introducing
+a separate contact angle or moment arm.
+
+\paragraph{Motion imposed by the ramp contact}
+
+While the roller remains on one ramp branch, the flyweight and movable
+assembly cannot move independently. Each value of \(x_p\) fixes both the
+flyweight angle and its centre-of-mass radius:
 
 \begin{equation}
-    \ddot r_f
-    =
-    \frac{dr_f}{ds}\ddot s
-    +
-    \frac{d^2r_f}{ds^2}\dot s^2.
-    \label{eq:primary_flyweight_radius_acceleration}
-\end{equation}
-
-The first term comes from axial acceleration of the carrier. The second comes
-from ramp curvature: even at constant \(\dot s\), the flyweight's radial speed
-changes wherever the ramp slope changes.
-
-These relations require a physical radius and a smooth, finite motion ratio.
-Over the modeled ramp travel,
-
-\begin{equation}
-    r_f(s)>0,
+    q_f=q_f(x_p),
     \qquad
-    0\leq\frac{dr_f}{ds}<\infty,
+    r_f=r_f(x_p).
+    \label{eq:primary_flyweight_geometry_maps}
+\end{equation}
+
+With the assembled primary held at \(x_p=0\), the measurable values
+\(q_f(0)=q_{f,0}\) and \(r_f(0)=r_{f,0}\) anchor these maps. A small sheave
+motion then produces
+
+\begin{equation}
+    dq_f
+    =
+    \frac{dq_f}{dx_p}\,dx_p,
     \qquad
-    \left|\frac{d^2r_f}{ds^2}\right|<\infty.
-    \label{eq:primary_ramp_geometric_admissibility}
-\end{equation}
-
-Beyond these restrictions, \(r_f(s)\) may describe any admissible ramp
-profile. A constant-angle ramp is simply the special case in which
-\(dr_f/ds\) is constant.
-
-\paragraph{Radial load on the ramp}
-
-The ramp profile has now supplied the flyweight's change in radius. Since the
-flyweight is also travelling around the shaft, its inertial radial acceleration
-must also include the inward acceleration required to turn that circular
-motion.
-
-Under \AssRef{assump:lumped_inertia}, the complete set of flyweights is
-represented by a total effective mass \(m_f\) at the common radius \(r_f\).
-Its position in a stationary inertial frame is
-
-\begin{equation}
-    \mathbf r_f=r_f\mathbf e_r,
-    \label{eq:primary_flyweight_position_vector}
-\end{equation}
-
-where \(\mathbf e_r\) points radially outward and \(\mathbf e_\theta\) points
-in the direction of rotation. As the primary turns,
-
-\begin{equation}
-    \dot{\mathbf e}_r
+    dr_f
     =
-    \omega_p\mathbf e_\theta,
+    \frac{dr_f}{dx_p}\,dx_p.
+    \label{eq:primary_flyweight_compatible_motion}
+\end{equation}
+
+On the regular closing branch shown in the figure, both motion ratios are
+finite, \(dq_f/dx_p>0\), and \(dr_f/dx_p\geq0\). Thus \(q_f\) changes
+monotonically with \(x_p\) and can be used as the local coordinate for the
+moment conversions below.
+
+\begin{remarkbox}
+\textbf{Mechanism-specific geometry.}
+The appendix derives \(q_f(x_p)\) and \(r_f(x_p)\) for the two common
+constructions used here: a pivoted arm whose roller presses against a ramp on
+the movable assembly, and an inclined or shaped pivoted flyweight that presses
+against a button or roller on that assembly. Their contact geometry differs,
+but once these two maps are known, the force derivation below is unchanged.
+\end{remarkbox}
+
+\paragraph{Moments from compatible work}
+
+The first work relation follows directly from the force and motion shown in
+the figure. The centrifugal force is radial, so its work during the small
+motion is \(F_{f,\mathrm{cent}}\,dr_f\). Its equivalent moment acts through
+\(dq_f\), giving
+
+\begin{equation}
+    \tau_{f,\mathrm{cent}}\,dq_f
+    =
+    F_{f,\mathrm{cent}}\,dr_f.
+    \label{eq:primary_centrifugal_work}
+\end{equation}
+
+The ramp contact transfers work from the flyweight to the movable assembly.
+Under \AssRef{assump:no_parasitic_losses}, the contact is frictionless. The
+ramp carrier moves only axially, so the work delivered to it by all of the
+contact normals is \(F_{p,\mathrm{fly}}\,dx_p\). The opposing contact moment
+on the flyweights therefore satisfies
+
+\begin{equation}
+    \tau_{f,\mathrm{contact}}\,dq_f
+    =
+    F_{p,\mathrm{fly}}\,dx_p.
+    \label{eq:primary_contact_work}
+\end{equation}
+
+Dividing these relations by \(dq_f\) converts each force into its moment about
+the flyweight pivot:
+
+\begin{equation}
+    \tau_{f,\mathrm{cent}}
+    =
+    F_{f,\mathrm{cent}}
+    \frac{dr_f}{dq_f},
     \qquad
-    \dot{\mathbf e}_\theta
+    \tau_{f,\mathrm{contact}}
     =
-    -\omega_p\mathbf e_r.
-    \label{eq:primary_rotating_basis_rates}
-\end{equation}
-
-Differentiating the position gives the flyweight velocity,
-
-\begin{equation}
-    \dot{\mathbf r}_f
-    =
-    \dot r_f\mathbf e_r
-    +
-    r_f\omega_p\mathbf e_\theta.
-    \label{eq:primary_flyweight_velocity}
-\end{equation}
-
-Differentiating once more and taking the component along \(\mathbf e_r\)
-gives
-
-\begin{equation}
-    a_{f,r}
-    =
-    \ddot r_f-r_f\omega_p^2.
-    \label{eq:primary_flyweight_radial_acceleration_component}
-\end{equation}
-
-Here \(\ddot r_f\) is the outward radial acceleration associated with motion
-along the ramp, while \(-r_f\omega_p^2\) is the inward centripetal
-acceleration. Primary angular acceleration contributes only to the tangential
-component and therefore does not appear in this radial projection.
-
-Within this reduced flyweight model, the ramps supply the inward radial force
-that constrains the effective mass to this motion. Let
-\(F_{p,\mathrm{rad}}\) be the magnitude of that force for the complete
-flyweight set. Taking the outward radial direction as positive, Newton's
-second law gives
-
-\begin{equation}
-    -F_{p,\mathrm{rad}}
-    =
-    m_f\left(\ddot r_f-r_f\omega_p^2\right),
-    \label{eq:primary_flyweight_radial_balance}
-\end{equation}
-
-and hence
-
-\begin{equation}
-    F_{p,\mathrm{rad}}
-    =
-    m_f\left(r_f\omega_p^2-\ddot r_f\right).
-    \label{eq:primary_ramp_radial_load}
-\end{equation}
-
-At fixed radius, the ramp supplies the familiar inward centripetal load
-\(m_fr_f\omega_p^2\). If the flyweights are accelerating outward, part of the
-available radial action produces that acceleration, so the load passed into
-the ramp is smaller.
-
-As described above, the flyweights follow the ramp by pressing into it. The
-contact can push, but cannot pull, so the assumed ramp-following motion
-requires
-
-\begin{equation}
-    F_{p,\mathrm{rad}}\geq0
-    \qquad\Longleftrightarrow\qquad
-    r_f\omega_p^2-\ddot r_f\geq0.
-    \label{eq:primary_ramp_dynamic_admissibility}
-\end{equation}
-
-This condition checks that the required inward load can be supplied by
-compressive contact with the ramp.
-
-\paragraph{Axial force delivered to the movable assembly}
-
-By Newton's third law, the flyweights press back on the ramps with the same
-radial load. With ramp friction neglected under
-\AssRef{assump:no_parasitic_losses}, the compatible radial and axial motions
-provide the force conversion. Over a small displacement, the work transferred
-through the ramp satisfies
-
-\begin{equation}
-    F_{p,\mathrm{fly}}\,ds
-    =
-    F_{p,\mathrm{rad}}\,dr_f.
-    \label{eq:primary_ramp_work_conversion}
-\end{equation}
-
-Using the motion ratio from \Cref{eq:primary_ramp_angle}, the axial closing
-force is therefore
-
-\begin{equation}
     F_{p,\mathrm{fly}}
-    =
-    F_{p,\mathrm{rad}}\frac{dr_f}{ds}
-    =
-    F_{p,\mathrm{rad}}\tan\alpha_p.
-    \label{eq:primary_ramp_force_conversion}
+    \frac{dx_p}{dq_f}.
+    \label{eq:primary_flyweight_moment_conversions}
 \end{equation}
 
-Substituting the radial load and the ramp-imposed value of \(\ddot r_f\)
-expresses the complete closing force through the primary motion:
+Substitution into
+\Cref{eq:primary_flyweight_moment_balance} gives a moment balance in which
+every term can be read directly from the compatible motion:
+
+\begin{equation}
+    F_{f,\mathrm{cent}}
+    \frac{dr_f}{dq_f}
+    -
+    F_{p,\mathrm{fly}}
+    \frac{dx_p}{dq_f}
+    =
+    I_f\ddot q_f.
+    \label{eq:primary_flyweight_moment_balance_geometry}
+\end{equation}
+
+The two maps in \Cref{eq:primary_flyweight_geometry_maps} relate these moment
+arms to the axial coordinate:
+
+\begin{equation}
+    \frac{dr_f}{dq_f}
+    =
+    \frac{dr_f/dx_p}{dq_f/dx_p},
+    \qquad
+    \frac{dx_p}{dq_f}
+    =
+    \frac{1}{dq_f/dx_p}.
+    \label{eq:primary_flyweight_effective_moment_arms}
+\end{equation}
+
+Using these relations and
+\Cref{eq:primary_flyweight_centrifugal_force}, then solving for the axial
+force, gives
 
 \begin{equation}
 \boxed{
     F_{p,\mathrm{fly}}
     =
-    m_f
-    \left[
-        r_f\omega_p^2
-        -
-        \frac{dr_f}{ds}\ddot s
-        -
-        \frac{d^2r_f}{ds^2}\dot s^2
-    \right]
-    \frac{dr_f}{ds}.
+    m_fr_f\omega_p^2\frac{dr_f}{dx_p}
+    -
+    I_f\ddot q_f\frac{dq_f}{dx_p}.
+}
+    \label{eq:primary_flyweight_force_before_kinematics}
+\end{equation}
+
+The first term is the radial centrifugal work converted into axial work. The
+second is the portion required to accelerate the flyweights about their
+pivots. What remains is transmitted to the movable assembly.
+
+\paragraph{Flyweight acceleration}
+
+The force law now requires \(\ddot q_f\). Since the ramp contact already gives
+\(q_f\) as a function of \(x_p\), its angular velocity is
+
+\begin{equation}
+    \dot q_f
+    =
+    \frac{dq_f}{dx_p}\dot x_p,
+    \label{eq:primary_flyweight_angular_velocity}
+\end{equation}
+
+and one more derivative gives
+
+\begin{equation}
+    \ddot q_f
+    =
+    \frac{dq_f}{dx_p}\ddot x_p
+    +
+    \frac{d^2q_f}{dx_p^2}\dot x_p^2.
+    \label{eq:primary_flyweight_angular_acceleration}
+\end{equation}
+
+The second term appears when the amount of flyweight rotation required per
+unit sheave travel changes along the ramp. Even at constant \(\dot x_p\), the
+flyweight then changes angular speed as it moves.
+
+This acceleration is why \(q_f(x_p)\) must be twice continuously
+differentiable on an active contact branch. The centrifugal conversion uses
+only the first derivative of \(r_f(x_p)\), so that map need only be once
+continuously differentiable:
+
+\begin{equation}
+    q_f\in C^2,
+    \qquad
+    r_f\in C^1.
+    \label{eq:primary_flyweight_branch_requirements}
+\end{equation}
+
+Substituting
+\Cref{eq:primary_flyweight_angular_acceleration} into
+\Cref{eq:primary_flyweight_force_before_kinematics} completes the flyweight
+force:
+
+\begin{equation}
+\boxed{
+\begin{aligned}
+    F_{p,\mathrm{fly}}
+    ={}&
+    m_fr_f\omega_p^2\frac{dr_f}{dx_p}
+    -
+    I_f
+    \left(\frac{dq_f}{dx_p}\right)^2
+    \ddot x_p
+    \\
+    &-
+    I_f
+    \frac{dq_f}{dx_p}
+    \frac{d^2q_f}{dx_p^2}
+    \dot x_p^2.
+\end{aligned}
 }
     \label{eq:primary_flyweight_axial_force}
 \end{equation}
 
-If the shift position is held fixed, then \(\dot s=0\) and \(\ddot s=0\).
-The flyweight force reduces to
+The derivative \(dr_f/dx_p\) is the flyweight mechanism's centrifugal
+mechanical advantage: it measures the radial centre-of-mass motion available
+per unit axial closure. The factor
+\(I_f(dq_f/dx_p)^2\) is the flyweights' pivoting inertia reflected into the
+axial coordinate. The remaining term accounts for a pivoting motion ratio
+that changes with position.
 
-\begin{equation}
-    F_{p,\mathrm{fly}}
-    =
-    m_fr_f\omega_p^2\frac{dr_f}{ds},
-    \label{eq:primary_flyweight_quasistatic_limit}
-\end{equation}
-
-which is the familiar centrifugal-load-times-ramp-ratio result. The full
-expression retains the radial acceleration that occurs while the primary is
-shifting.
+The result applies while the selected roller--ramp contact remains
+compressive. For the one-sided closing contact shown here, this requires
+\(F_{p,\mathrm{fly}}\geq0\). A travel stop, a contact switch, or loss of
+compression ends the current branch and selects the next admissible
+mechanism condition.
 
 % --------------------------------------------------------------
-\subsubsection{Primary Spring Opening Force}
-\label{sec:primary_spring_force}
+\subsubsection{Spring and Belt Forces}
+\label{sec:primary_direct_forces}
 
-The primary compression spring acts directly on the movable assembly and
-pushes it away from the fixed sheave. Let \(x_{p,\mathrm{pre}}\) be its
-compression at \(s=0\), and let \(k_p\) be its stiffness. Closing the primary
-by \(s\) adds the same amount of compression, so the spring force opposing
-closure is
+The two remaining forces in
+\Cref{eq:primary_movable_sheave_balance} act directly on the translating
+assembly.
+
+\paragraph{Primary spring}
+
+Let \(k_p\) be the spring stiffness and \(x_{p,\mathrm{pre}}\) its installed
+compression when the primary is open at \(x_p=0\). Closing the sheave by
+\(x_p\) adds the same amount of compression, so the spring opening force is
 
 \begin{equation}
     F_{p,\mathrm{spring}}
     =
-    k_p\left(x_{p,\mathrm{pre}}+s\right).
+    k_p\left(x_{p,\mathrm{pre}}+x_p\right).
     \label{eq:primary_spring_force}
 \end{equation}
 
-% --------------------------------------------------------------
-\subsubsection{Belt Opening Reaction}
-\label{sec:primary_belt_opening_reaction}
+\paragraph{Belt reaction}
 
-With the belt seated between the primary sheaves, closing the movable sheave
-squeezes the belt between the two inclined faces. The belt therefore presses
-normally against both faces, and the reaction on the movable face pushes that
-sheave open.
-
-Let \(N_p\) be the total integrated normal load at the primary. 
-By \Cref{assump:equal_sheave_normal_load}, the movable primary face
-carries \(N_p/2\). Because the face normal is inclined by the sheave
-half-angle \(\beta\) from the axial direction, the belt reaction opposing
-closure is
+Let \(N_p\) be the total integrated normal load over both primary sheave
+faces. Under \AssRef{assump:equal_sheave_normal_load}, the movable face
+carries \(N_p/2\). Its normal is inclined by the sheave half-angle \(\beta\)
+from the axial direction, so the opening force on the movable face is
 
 \begin{equation}
     F_{p,\mathrm{belt}}
@@ -3942,97 +4023,143 @@ closure is
     \frac{N_p}{2}\cos\beta.
     \label{eq:primary_belt_axial_reaction}
 \end{equation}
-
-\begin{equation}
-    F_{p,\mathrm{belt}}
-    =
-    \frac{N_p}{2}\cos\beta.
-    \label{eq:primary_belt_axial_reaction}
-\end{equation}
-
-This force acts in the opening direction shown in
-\Cref{fig:primary_axial_mechanism}. Since the belt contact can press but cannot
-pull, \(N_p\geq0\).
 
 % --------------------------------------------------------------
 \subsubsection{Completed Primary Balance}
 \label{sec:completed_primary_balance}
 
-The three loads in the primary free body have now been expressed through the
-coupled CVT variables. Substituting
+Every term in the original free body is now known at the mechanism level.
+Substitute
 \Cref{eq:primary_flyweight_axial_force,eq:primary_spring_force,%
 eq:primary_belt_axial_reaction} into
-\Cref{eq:primary_movable_sheave_balance} and collecting the terms multiplying
-\(\ddot s\) gives
+\Cref{eq:primary_movable_sheave_balance} and collect the terms multiplying
+\(\ddot x_p\):
 
-\bigeq{eq:completed_primary_axial_balance}
-{Completed Primary Balance}
-{
+\begin{equation}
+\boxed{
 \begin{aligned}
     \left[
         m_p
         +
-        m_f\left(\frac{dr_f}{ds}\right)^2
-    \right]\ddot s
+        I_f
+        \left(\frac{dq_f}{dx_p}\right)^2
+    \right]\ddot x_p
     ={}&
-    m_fr_f\omega_p^2\frac{dr_f}{ds}
+    m_fr_f\omega_p^2\frac{dr_f}{dx_p}
     \\
     &-
-    m_f
-    \frac{dr_f}{ds}
-    \frac{d^2r_f}{ds^2}
-    \dot s^2
+    I_f
+    \frac{dq_f}{dx_p}
+    \frac{d^2q_f}{dx_p^2}
+    \dot x_p^2
     \\
     &-
-    k_p\left(x_{p,\mathrm{pre}}+s\right)
+    k_p\left(x_{p,\mathrm{pre}}+x_p\right)
     -
     \frac{N_p}{2}\cos\beta.
 \end{aligned}
 }
+    \label{eq:completed_primary_axial_balance}
+\end{equation}
 
-Every term follows from a specific part of the primary mechanism. Primary
-rotation produces the first closing term on the right. The spring and belt
-reaction provide the two opening loads. The remaining ramp term comes from
-curvature: if the ramp steepens as the primary closes,
-\(d^2r_f/ds^2>0\), some of the flyweight action is used to increase radial
-speed and the term opposes closure. If the ramp locally shallows, the same term
-acts in the opposite direction.
+The flyweights now appear in two physically different ways. Primary speed
+provides the closing drive on the right, while their pivoting inertia adds to
+the inertia that the axial motion must accelerate on the left. If the motion
+ratio \(dq_f/dx_p\) changes along the ramp, the flyweights also accelerate
+even when \(\dot x_p\) is constant, producing the term proportional to
+\(\dot x_p^2\). The spring and belt forces act directly on the movable
+assembly and oppose closure exactly as shown in the first free body.
 
-The flyweights also increase the inertia seen in the axial coordinate. One
-factor of \(dr_f/ds\) maps axial sheave acceleration into radial flyweight
-acceleration; the second maps the associated radial load back into axial force.
-The resulting reflected flyweight mass is therefore
-\(m_f(dr_f/ds)^2\), exactly as it appears beside \(m_p\) on the left-hand side.
-
-The limiting cases are immediate. A locally linear ramp has
-\(d^2r_f/ds^2=0\), so the curvature load vanishes. Holding the shift position
-fixed removes both flyweight-acceleration terms and recovers the quasi-static
-relation in \Cref{eq:primary_flyweight_quasistatic_limit}.
-
-\paragraph{Relation to existing primary-actuator models}
-
-The primary-actuator models of \citet{KimEtAl2002} and
-\citet{Messick2018} use the familiar quasi-static centrifugal-load and ramp
-relation without retaining the radial acceleration of the flyweights.
-Retaining that acceleration here produces the reflected flyweight inertia and
-ramp-curvature term in the transient primary balance.
-
-At a known \(s\), \(\dot s\), and \(\omega_p\), the completed primary balance
-still contains the unknown shift acceleration \(\ddot s\) and belt normal load
-\(N_p\). The primary therefore cannot determine its motion or belt reaction in
-isolation. The secondary movable assembly supplies the next balance on the
-same compatible shift motion.
-
-
-% Copy-ready secondary movable-sheave subsection.
-% The surrounding manuscript is expected to define \AssRef, \citet, and
-% \bigeq as in the current formulation.
+This is the primary axial equation of motion. It determines how the
+flyweight action is divided among spring compression, belt loading, and
+acceleration of the translating and pivoting hardware.
 
 % --------------------------------------------------------------
+\subsubsection{Classical Limit and Relation to Existing Models}
+\label{sec:primary_classical_limit}
+
+If the flyweights' pivoting inertia is neglected, their transmitted force
+reduces to
+
+\begin{equation}
+    F_{p,\mathrm{fly}}^{\mathrm{qs}}
+    =
+    m_fr_f\omega_p^2\frac{dr_f}{dx_p}.
+    \label{eq:primary_flyweight_quasistatic_limit}
+\end{equation}
+
+For the familiar straight-ramp radial-slider model, let \(\alpha_p\) be the
+ramp angle measured from the positive axial direction. Its geometry gives
+
+\begin{equation}
+    \frac{dr_f}{dx_p}
+    =
+    \tan\alpha_p,
+    \label{eq:primary_straight_ramp_motion_ratio}
+\end{equation}
+
+and therefore
+
+\begin{equation}
+    F_{p,\mathrm{fly}}^{\mathrm{qs}}
+    =
+    m_fr_f\omega_p^2\tan\alpha_p.
+    \label{eq:primary_flyweight_classical_limit}
+\end{equation}
+
+At axial equilibrium, the corresponding primary balance is
+
+\begin{equation}
+    m_fr_f\omega_p^2\tan\alpha_p
+    =
+    k_p\left(x_{p,\mathrm{pre}}+x_p\right)
+    +
+    \frac{N_p}{2}\cos\beta.
+    \label{eq:primary_classical_equilibrium}
+\end{equation}
+
+This is the conventional centrifugal-force-times-ramp-ratio result used in
+mechanically actuated CVT models such as
+\citet{KimEtAl2002}, \citet{Messick2018}, and \citet{Skinner2020}. Their
+primary actuator relations determine thrust from the instantaneous
+centrifugal loading and contact geometry. The present formulation retains
+that limit, but also carries the flyweights' pivoting inertia through the
+contact motion during a shift. This produces the reflected-inertia and
+changing-motion-ratio terms in
+\Cref{eq:completed_primary_axial_balance}; an equivalent transient
+flyweight-inertia contribution was not identified in the reviewed
+mechanically actuated rubber-belt CVT formulations. The model still treats
+the components as rigid and the ramp contacts as frictionless, and it does
+not resolve roller spin or contact compliance.
+
+% --------------------------------------------------------------
+\subsubsection{Mapping to the Shared Shift Coordinate}
+\label{sec:primary_balance_shift_mapping}
+
+The local coordinate \(x_p\) kept every force tied to the physical primary
+free body. The geometry established earlier chose the same motion as the
+shared shift coordinate:
+
+\begin{equation}
+    x_p=s,
+    \qquad
+    \dot x_p=\dot s,
+    \qquad
+    \ddot x_p=\ddot s.
+    \label{eq:primary_local_to_shift_map}
+\end{equation}
+
+Applying this substitution to
+\Cref{eq:completed_primary_axial_balance} gives the primary condition on the
+shared shift motion. The secondary movable sheave follows that same motion
+through \(x_s(s)\), but its axial loading is created by the torque-reactive
+helix considered next.
+
+
 \subsection{Secondary Movable-Sheave Balance}
 \label{sec:secondary_movable_sheave_balance}
 
-The primary closes mainly in response to rotational speed. The secondary is
+While the primary closes mainly in response to rotational speed, the secondary is
 torque reactive: torque transmitted through the pulley can also increase the
 axial force clamping the belt.
 
