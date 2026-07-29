@@ -3654,8 +3654,7 @@ centre of mass. The angle \(q_f\) is measured at \(P\) from the
 positive axial direction to the body-fixed line from \(P\) to \(G\). Thus,
 \(q_f=0\) places that line along the shaft, \(q_f=\pi/2\) places it radially
 outward, and positive \(q_f\) is the direction in which the flyweight swings
-outward. The radius \(r_f\) is the full radial distance from the primary shaft
-axis to \(G\).
+outward.
 
 \begin{figure}[H]
     \centering
@@ -3668,8 +3667,8 @@ axis to \(G\).
     \(+\mathbf e_r\), pivot \(P\), centre of mass \(G\), and the line
     \(PG\). Draw \(q_f\) from \(+\mathbf e_x\) to \(PG\), with small
     reference sketches or labels indicating \(q_f=0\) as axial and
-    \(q_f=\pi/2\) as radial. Draw \(r_f\) from the shaft axis to \(G\).
-    Show the primary rotation \(\omega_p\) about the shaft axis, and show the
+    \(q_f=\pi/2\) as radial. Show the primary rotation \(\omega_p\) about the
+    shaft axis, and show the
     circumferential pivot axis through \(P\), perpendicular to the
     radial--axial plane, about which \(q_f\) changes.
     On the isolated flyweight, show the pivot reaction, the ramp-contact
@@ -3678,9 +3677,10 @@ axis to \(G\).
     opposing moments \(\tau_{f,\mathrm{cent}}\) and
     \(\tau_{f,\mathrm{contact}}\) about the circumferential pivot axis. In
     the second panel, show one small compatible motion: the flyweight turns
-    through \(dq_f\), \(G\) moves radially through \(dr_f\), and the ramp
-    carrier closes through \(dx_p\). Keep the equal-and-opposite contact
-    normals visible on the flyweight and ramp.
+    through \(dq_f\), the ramp carrier closes through \(dx_p\), and a
+    representative mass element at shaft radius \(\rho\) moves radially
+    through \(d\rho\). Keep the equal-and-opposite contact normals visible on
+    the flyweight and ramp.
     \end{minipage}%
     }
     \caption{Flyweight free body and the motion permitted while ramp contact
@@ -3691,12 +3691,11 @@ axis to \(G\).
 \end{figure}
 
 The figure shows one representative flyweight, but the primary contains a
-symmetric set of identical flyweights. They all follow the same \(q_f\), and
-their centres of mass all lie at the same shaft radius \(r_f\). Throughout
-this section, \(m_f\), \(I_f\), \(J_{f,p}\), the flyweight moments, and
-\(F_{p,\mathrm{fly}}\) are the combined quantities for the complete set.
-The one-flyweight figure therefore describes the shared geometry without
-requiring a separate multiplier in the equations.
+symmetric set of identical flyweights. They all follow the same \(q_f\).
+Throughout this section, \(I_f\), \(J_{f,p}\), the flyweight moments, and
+\(F_{p,\mathrm{fly}}\) are the combined quantities for the complete set. The
+one-flyweight figure therefore describes the shared geometry without requiring
+a separate multiplier in the equations.
 
 There are nevertheless two distinct rotations in the mechanism, about two
 different axes:
@@ -3711,11 +3710,33 @@ different axes:
 
 Each rotation has its own inertia property. The combined inertia \(I_f\) is
 measured about the flyweights' individual pivot axes and belongs to the
-\(q_f\) motion. The combined inertia \(J_{f,p}(x_p)\) is measured about the
+\(q_f\) motion. The combined inertia \(J_{f,p}\) is measured about the
 primary shaft axis and belongs to the \(\omega_p\) rotation. Both already
 include every flyweight. For rigid flyweights, \(I_f\) is constant;
 \(J_{f,p}\) can change because the same mass moves to different shaft radii
 as the flyweights swing.
+
+While ramp contact is maintained, \(x_p\) fixes the complete flyweight pose.
+For a specified mechanism geometry and mass distribution, the two
+configuration-dependent quantities required below are therefore known maps of
+the sheave position:
+
+\begin{equation}
+    q_f=q_f(x_p),
+    \qquad
+    J_{f,p}=J_{f,p}(x_p).
+    \label{eq:primary_flyweight_geometry_maps}
+\end{equation}
+
+\begin{remarkbox}[Mechanism-specific geometry and mass properties.]
+The appendix derives these maps for the two common constructions used here: a
+pivoted arm whose roller presses against a ramp on the movable assembly, and
+an inclined or shaped pivoted flyweight that presses against a button or
+roller on that assembly. The contact geometry determines \(q_f(x_p)\);
+applying the known component geometry and mass distribution to that pose
+determines \(J_{f,p}(x_p)\), while \(I_f\) remains constant. The main
+derivation needs only these two maps and \(I_f\).
+\end{remarkbox}
 
 We first write the equation for the pivoting motion. Describe the flyweights
 in a frame rotating with the primary. Their pivots are stationary in this
@@ -3744,39 +3765,6 @@ Equation \eqref{eq:primary_flyweight_moment_balance} has the form we need, but
 the two moments still depend on the contact construction. The small motion in
 \Cref{fig:primary_flyweight_free_body} lets us find both without introducing
 a separate contact angle or moment arm.
-
-\paragraph{Motion imposed by the ramp contact}
-
-While the flyweight remains in contact with the ramp, the movable-sheave
-position \(x_p\) uniquely fixes its complete pose. The flyweight angle and
-centre-of-mass radius are therefore known functions of the same coordinate:
-
-\begin{equation}
-    q_f=q_f(x_p),
-    \qquad
-    r_f=r_f(x_p).
-    \label{eq:primary_flyweight_geometry_maps}
-\end{equation}
-
-With the assembled primary held at \(x_p=0\), the measurable values
-\(q_f(0)=q_{f,0}\) and \(r_f(0)=r_{f,0}\) anchor the kinematic maps. A small
-sheave motion then produces
-
-\begin{equation}
-    dq_f
-    =
-    \frac{dq_f}{dx_p}\,dx_p,
-    \qquad
-    dr_f
-    =
-    \frac{dr_f}{dx_p}\,dx_p.
-    \label{eq:primary_flyweight_compatible_motion}
-\end{equation}
-
-During standard operation, \(q_f(x_p)\) and \(r_f(x_p)\) are monotonic and
-their motion ratios remain finite, with \(dq_f/dx_p>0\) and
-\(dr_f/dx_p\geq0\). These derivatives measure the flyweight rotation and
-radial centre-of-mass travel produced by one unit of sheave closure.
 
 \paragraph{Converting the moments to axial force}
 
@@ -3833,39 +3821,20 @@ corresponding change of the complete mass distribution is simply
     \label{eq:primary_centrifugal_work}
 \end{equation}
 
-To express the moment balance through the sheave motion, multiply
-\Cref{eq:primary_flyweight_moment_balance} by \(dq_f/dx_p\). The two work
-relations above, together with
-\(dq_f=(dq_f/dx_p)\,dx_p\) and
-\(dJ_{f,p}=(dJ_{f,p}/dx_p)\,dx_p\), give
-
-\begin{equation}
-    \tau_{f,\mathrm{cent}}
-    \frac{dq_f}{dx_p}
-    =
-    \frac{1}{2}\omega_p^2\frac{dJ_{f,p}}{dx_p},
-    \qquad
-    \tau_{f,\mathrm{contact}}
-    \frac{dq_f}{dx_p}
-    =
-    F_{p,\mathrm{fly}}.
-    \label{eq:primary_flyweight_axial_work_conversions}
-\end{equation}
-
-The flyweight moment balance can therefore be written directly in the axial
-coordinate:
+Multiplying the left- and right-hand sides of both \Cref{eq:primary_centrifugal_work,eq:primary_contact_work} by \(dq_f\)
+and then substituting into \Cref{eq:primary_flyweight_moment_balance} gives
 
 \begin{equation}
     \frac{1}{2}\omega_p^2
-    \frac{dJ_{f,p}}{dx_p}
+    dJ_{f,p}
     -
-    F_{p,\mathrm{fly}}
+    F_{p,\mathrm{fly}}dx_p
     =
-    I_f\ddot q_f\frac{dq_f}{dx_p}.
+    I_f\ddot q_f dq_f.
     \label{eq:primary_flyweight_moment_balance_axial}
 \end{equation}
 
-Rearranging for \(F_{p,\mathrm{fly}}\) gives
+Rearranging for \(F_{p,\mathrm{fly}}\) then gives
 \nopagebreak[4]
 
 \begin{equation}
@@ -3962,17 +3931,6 @@ one-sided closing contact shown here, this requires
 \(F_{p,\mathrm{fly}}\geq0\). If the roller reaches a travel stop, loses
 contact, or transfers to another surface, the geometry for that condition
 must be used instead.
-
-\begin{remarkbox}
-\textbf{Mechanism-specific geometry and mass properties.}
-The appendix derives \(q_f(x_p)\), \(r_f(x_p)\), and \(J_{f,p}(x_p)\) for the
-two common constructions used here: a pivoted arm whose roller presses against
-a ramp on the movable assembly, and an inclined or shaped pivoted flyweight
-that presses against a button or roller on that assembly. The contact geometry
-fixes the pose, while the component geometry and mass distribution determine
-\(I_f\) and \(J_{f,p}\). The main derivation needs only the resulting
-properties and functions.
-\end{remarkbox}
 
 % --------------------------------------------------------------
 \subsubsection{Spring and Belt Forces}
@@ -4078,40 +4036,19 @@ The transmitted force then reduces to
     \label{eq:primary_flyweight_quasistatic_limit}
 \end{equation}
 
-This exact quasi-static result contains the familiar centre-of-mass model.
-All flyweight centres of mass lie at the same radius \(r_f\). Let
-\(J_{f,G}^{\parallel p}\) be the flyweights' combined mass moment about axes
-through those centres of mass and parallel to the primary shaft. Applying the
-parallel-axis theorem to the complete symmetric set gives
+The familiar reduced form follows by treating the flyweights as lumped masses.
+Let \(m_f\) be their total mass and \(r_f\) their common instantaneous
+centre-of-mass radius. Then
 
 \begin{equation}
-\begin{aligned}
     J_{f,p}
-    &=
-    m_fr_f^2
-    +
-    J_{f,G}^{\parallel p},
-    \\
-    \frac{1}{2}\frac{dJ_{f,p}}{dx_p}
-    &=
-    m_fr_f\frac{dr_f}{dx_p}
-    +
-    \frac{1}{2}\frac{dJ_{f,G}^{\parallel p}}{dx_p}
-    \\
-    &\approx
-    m_fr_f\frac{dr_f}{dx_p}.
-\end{aligned}
-    \label{eq:primary_flyweight_distributed_mass_correction}
+    =
+    m_fr_f^2.
+    \label{eq:primary_flyweight_lumped_inertia}
 \end{equation}
 
-The second term is the correction for the flyweights' finite shape. It
-vanishes for a point-mass representation and may be neglected when the
-centroidal inertia changes little over the shift. Under that approximation,
-\Cref{eq:primary_flyweight_quasistatic_limit} returns the usual
-centre-of-mass expression.
-
-For the familiar straight-ramp radial-slider model, let \(\alpha_p\) be the
-ramp angle measured from the positive axial direction. Its geometry gives
+For a straight ramp, let \(\alpha_p\) be measured from the positive axial
+direction. Its geometry gives
 
 \begin{equation}
     \frac{dr_f}{dx_p}
@@ -4120,7 +4057,7 @@ ramp angle measured from the positive axial direction. Its geometry gives
     \label{eq:primary_straight_ramp_motion_ratio}
 \end{equation}
 
-and therefore
+so \Cref{eq:primary_flyweight_quasistatic_limit} becomes
 
 \begin{equation}
     F_{p,\mathrm{fly}}^{\mathrm{qs}}
@@ -4155,7 +4092,7 @@ configuration. Kim et al.\ represent the measured shift response with a
 separate identified first-order ratio law, while Messick explicitly treats
 shifting as quasi-equilibrium. The present formulation contains their
 centre-of-mass equilibrium result as the limit in
-\Cref{eq:primary_flyweight_distributed_mass_correction}, but continues the
+\Cref{eq:primary_flyweight_classical_limit}, but continues the
 flyweight moment balance through \(I_f\ddot q_f\). Mapping that pivot
 acceleration into \(x_p\) produces the reflected-inertia and
 changing-motion-ratio terms in
@@ -4184,8 +4121,8 @@ shared shift coordinate:
     \label{eq:primary_local_to_shift_map}
 \end{equation}
 
-Since \(x_p=s\), the flyweight maps can now be read as \(q_f=q_f(s)\),
-\(r_f=r_f(s)\), and \(J_{f,p}=J_{f,p}(s)\). Substituting these relations into
+Since \(x_p=s\), the flyweight maps can now be read as \(q_f=q_f(s)\) and
+\(J_{f,p}=J_{f,p}(s)\). Substituting these relations into
 \Cref{eq:completed_primary_axial_balance} gives the fully expanded primary
 condition on the shared shift motion:
 \nopagebreak[4]
