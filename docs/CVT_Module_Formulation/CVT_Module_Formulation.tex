@@ -3772,10 +3772,34 @@ flyweight set, the moment balance is
 \end{equation}
 
 Equation \eqref{eq:primary_flyweight_moment_balance} gives the rotational
-balance about the flyweight pivots. Next we must find the centrifugal and 
-contact moments.
+balance about the flyweight pivots. Here \(I_f\) is known, while the three
+remaining quantities \(\ddot q_f\), \(\tau_{f,\mathrm{cent}}\), and
+\(\tau_{f,\mathrm{contact}}\) must be expressed through the primary motion.
+We begin with the flyweight acceleration.
 
-Both could be found by resolving the forces and constructing their moment arms
+The contact geometry already gives \(q_f=q_f(x_p)\). Differentiating this
+relation once and then again gives
+
+\begin{align}
+    \dot q_f
+    &=
+    \frac{dq_f}{dx_p}\dot x_p,
+    \label{eq:primary_flyweight_angular_velocity}
+    \\
+    \ddot q_f
+    &=
+    \frac{dq_f}{dx_p}\ddot x_p
+    +
+    \frac{d^2q_f}{dx_p^2}\dot x_p^2.
+    \label{eq:primary_flyweight_angular_acceleration}
+\end{align}
+
+The second term appears when the amount of flyweight rotation required per
+unit sheave travel changes along the ramp. Even at constant \(\dot x_p\), the
+flyweight then changes angular speed as it moves.
+
+For the two torques, both could be found by resolving the forces and 
+constructing their moment arms
 for the specific flyweight geometry. A more convenient approach is equivalent
 virtual work. Hold the mechanism at its current position and imagine a small
 compatible motion. During this motion, a moment \(\tau_f\) acting through
@@ -3820,72 +3844,31 @@ defined above,
     \label{eq:primary_contact_work}
 \end{equation}
 
-
-Multiplying the left- and right-hand sides of each 
-\Cref{eq:primary_centrifugal_work,eq:primary_contact_work} by \(dq_f\) 
-and substituting into \Cref{eq:primary_flyweight_moment_balance} gives
+All three quantities in
+\Cref{eq:primary_flyweight_moment_balance} now have usable expressions.
+Multiplying that balance by \(dq_f\) and substituting
+\Cref{eq:primary_flyweight_angular_acceleration,%
+eq:primary_centrifugal_work,eq:primary_contact_work} gives
 
 \begin{equation}
-    \frac{1}{2}\omega_p^2
-    dJ_{f,p}
+\begin{aligned}
+    \frac{1}{2}\omega_p^2 dJ_{f,p}
     -
-    F_{p,\mathrm{fly}} dx_p
+    F_{p,\mathrm{fly}}\,dx_p
     =
-    I_f\ddot q_f dq_f.
+    I_f
+    \left(
+        \frac{dq_f}{dx_p}\ddot x_p
+        +
+        \frac{d^2q_f}{dx_p^2}\dot x_p^2
+    \right)
+    dq_f.
+\end{aligned}
     \label{eq:primary_flyweight_moment_balance_axial}
 \end{equation}
 
-Rearranging for \(F_{p,\mathrm{fly}}\) then gives
+Rearranging for \(F_{p,\mathrm{fly}}\) gives
 \nopagebreak[4]
-
-\begin{equation}
-    F_{p,\mathrm{fly}}
-    =
-    \frac{1}{2}\omega_p^2\frac{dJ_{f,p}}{dx_p}
-    -
-    I_f\ddot q_f\frac{dq_f}{dx_p}.
-    \label{eq:primary_flyweight_force_before_kinematics}
-\end{equation}
-
-The first term comes from carrying the flyweights around the primary shaft
-at \(\omega_p\); it therefore uses the shaft-axis property \(J_{f,p}\). The
-second is the portion required to accelerate the flyweights about their own
-pivots; it therefore uses the pivot-axis property \(I_f\). What remains is
-transmitted to the movable assembly.
-
-\paragraph{Flyweight acceleration}
-
-The force relation has now been reduced to one remaining flyweight quantity,
-\(\ddot q_f\). Ramp contact makes this acceleration a consequence of the sheave
-motion rather than an independent state. Since the contact geometry already
-gives \(q_f\) as a function of \(x_p\), its angular velocity is
-
-\begin{equation}
-    \dot q_f
-    =
-    \frac{dq_f}{dx_p}\dot x_p,
-    \label{eq:primary_flyweight_angular_velocity}
-\end{equation}
-
-and one more derivative gives
-
-\begin{equation}
-    \ddot q_f
-    =
-    \frac{dq_f}{dx_p}\ddot x_p
-    +
-    \frac{d^2q_f}{dx_p^2}\dot x_p^2.
-    \label{eq:primary_flyweight_angular_acceleration}
-\end{equation}
-
-The second term appears when the amount of flyweight rotation required per
-unit sheave travel changes along the ramp. Even at constant \(\dot x_p\), the
-flyweight then changes angular speed as it moves.
-
-Substituting
-\Cref{eq:primary_flyweight_angular_acceleration} into
-\Cref{eq:primary_flyweight_force_before_kinematics} completes the flyweight
-force:
 
 \begin{equation}
 \boxed{
@@ -3911,10 +3894,12 @@ force:
 The result now has the form required by the movable-sheave free body. The
 first term is the centrifugal drive, the second reflects flyweight pivot
 inertia into the axial motion, and the third appears when the ramp changes
-that motion ratio with position.
+that motion ratio with position. The result applies while the roller remains 
+pressed against the ramp. For the one-sided closing contact shown here, 
+this requires \(F_{p,\mathrm{fly}}\geq0\).
 
 \begin{remarkbox}
-\textbf{Smoothness of the flyweight maps.}
+[Smoothness of the flyweight maps.]
 The completed force law uses \(q_f''(x_p)\) and \(J_{f,p}'(x_p)\). Therefore,
 while ramp contact is maintained, the supplied mechanism maps must satisfy
 \[
@@ -3926,17 +3911,13 @@ This is a requirement on the fitted or constructed maps, not an additional
 equation of motion.
 \end{remarkbox}
 
-The result applies while the roller remains pressed against the ramp. For the
-one-sided closing contact shown here, this requires
-\(F_{p,\mathrm{fly}}\geq0\). If the roller reaches a travel stop, loses
-contact, or transfers to another surface, the geometry for that condition
-must be used instead.
+
 
 % --------------------------------------------------------------
 \subsubsection{Spring and Belt Forces}
 \label{sec:primary_direct_forces}
 
-The two remaining forces in
+Back to the axial force balamce, the two remaining forces in
 \Cref{eq:primary_movable_sheave_balance} act directly on the translating
 assembly.
 
