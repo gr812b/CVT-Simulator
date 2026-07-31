@@ -4280,7 +4280,7 @@ belt--face contacts can therefore have different sliding conditions, so their
 torques need not divide equally.
 
 \begin{remarkbox}
-\textbf{Why the face-torque split can matter.}
+[Why the face-torque split can matter.]
 \citet{SorgeCammalleri2011} resolve the two contacts separately and show that
 the face torques can depart substantially from an equal split; distributed
 tangential forces on the two faces can even act in opposite directions over
@@ -4495,31 +4495,6 @@ the axial effect: it converts the contact torque into axial force. In the
 straight-slot limit used in the opening example, this ratio is zero, so the
 slot can react torque while the axial conversion vanishes.
 
-\begin{remarkbox}
-\textbf{Direct sensitivity to the face-torque split.}
-For \(\tau_s\neq0\), let
-\(\chi_s=\tau_{s,M}/\tau_s\) be the signed fraction of total secondary belt
-torque applied to the movable face. Then
-\[
-\begin{aligned}
-    F_{s,\mathrm{helix}}^{(\mathrm{belt})}
-    &=
-    \chi_s\tau_s\frac{d\theta_s}{dx_s},
-    \\
-    \widehat F_{s,\mathrm{helix}}^{(\mathrm{belt})}
-    -
-    F_{s,\mathrm{helix}}^{(\mathrm{belt})}
-    &=
-    \left(\frac{1}{2}-\chi_s\right)
-    \tau_s\frac{d\theta_s}{dx_s},
-\end{aligned}
-\]
-where the hat denotes the equal-split prediction. This relation states the
-thrust error directly, but it does not estimate \(\chi_s\) for the present
-CVT. That requires a face-resolved contact law or experimental
-identification.
-\end{remarkbox}
-
 The signed relation assumes that contact is maintained. A captured, two-sided
 slot can load either flank and carry either sign of
 \(\tau_{s,\mathrm{helix}}\). A one-sided ramp can only push; with the present
@@ -4565,7 +4540,7 @@ accelerate the movable assembly, and only the remainder is converted into
 axial thrust.
 
 \begin{remarkbox}
-\textbf{Admissible helix maps.}
+[Admissible helix maps.]
 The completed force uses the first two derivatives of \(\theta_s(x_s)\).
 Over the active shift range, the supplied helix map must therefore be
 single-valued and twice continuously differentiable, with a finite, nonzero
@@ -4852,7 +4827,8 @@ These displays describe the same physical shift from opposite sides of the
 belt loop. Increasing \(s\) closes the primary and opens the secondary, so
 \(dx_s/ds<0\). If the fixed-length geometry is nonlinear, the amount of
 secondary travel required per unit primary travel also changes, producing the
-term \(d^2x_s/ds^2\).
+term \(d^2x_s/ds^2\). Both derivatives are supplied by the fixed-length belt
+map established earlier.
 
 \subsubsection{Two Conditions on One Shift Motion}
 \label{sec:two_axial_conditions_one_shift_motion}
@@ -4890,10 +4866,25 @@ For the primary, substituting
 Because \(x_p=s\), no new geometric term is introduced: the primary local
 balance is simply read through the shared coordinate.
 
-For the secondary, substitute
+For the secondary, the acceleration and the forces must both be expressed
+along \(s\). When the shared coordinate changes through \(ds\), the secondary
+moves through
+\[
+    dx_s=\frac{dx_s}{ds}\,ds.
+\]
+A local secondary force \(F_s\) therefore performs the work
+\[
+    F_s\,dx_s
+    =
+    \left(
+        F_s\frac{dx_s}{ds}
+    \right)ds,
+\]
+so its equivalent force along the shared coordinate is
+\(F_s\,dx_s/ds\). Substituting
 \Cref{eq:secondary_local_to_shift_map} into
-\Cref{eq:completed_secondary_axial_balance} and collect the coefficient of
-\(\ddot s\):
+\Cref{eq:completed_secondary_axial_balance} and applying this same mapping to
+the entire balance gives
 
 \bigeq{eq:secondary_balance_in_shift_coordinate}
 {Secondary Condition on the Shared Shift Motion}
@@ -4905,25 +4896,29 @@ For the secondary, substitute
         I_{s,M}
         \left(\frac{d\theta_s}{dx_s}\right)^2
     \right]
-    \frac{dx_s}{ds}\ddot s
+    \left(\frac{dx_s}{ds}\right)^2\ddot s
     ={}&
-    \frac{d\theta_s}{dx_s}
-    \left[
-        \frac{\tau_s}{2}
+    \frac{dx_s}{ds}
+    \Bigg\{
+        \frac{d\theta_s}{dx_s}
+        \left[
+            \frac{\tau_s}{2}
+            +
+            k_{s,\theta}
+            \left(
+                \theta_{s,\mathrm{pre}}-\theta_s
+            \right)
+            -
+            I_{s,M}\dot\omega_s
+        \right]
+        \\
+        &\hspace{3.2em}
         +
-        k_{s,\theta}
-        \left(
-            \theta_{s,\mathrm{pre}}-\theta_s
-        \right)
+        k_{s,x}
+        \left(x_{s,\mathrm{pre}}-x_s\right)
         -
-        I_{s,M}\dot\omega_s
-    \right]
-    \\
-    &+
-    k_{s,x}
-    \left(x_{s,\mathrm{pre}}-x_s\right)
-    -
-    \frac{N_s}{2}\cos\beta
+        \frac{N_s}{2}\cos\beta
+    \Bigg\}
     \\
     &-
     \Bigg\{
@@ -4933,12 +4928,15 @@ For the secondary, substitute
             I_{s,M}
             \left(\frac{d\theta_s}{dx_s}\right)^2
         \right]
+        \frac{dx_s}{ds}
         \frac{d^2x_s}{ds^2}
+        \\
+        &\hspace{3.2em}
         +
         I_{s,M}
         \frac{d\theta_s}{dx_s}
         \frac{d^2\theta_s}{dx_s^2}
-        \left(\frac{dx_s}{ds}\right)^2
+        \left(\frac{dx_s}{ds}\right)^3
     \Bigg\}\dot s^2.
 \end{aligned}
 }
@@ -4946,39 +4944,30 @@ For the secondary, substitute
 Here \(x_s\), \(\theta_s\), and all local derivatives are evaluated at
 \(x_s=x_s(s)\).
 
-The factor multiplying \(dx_s/ds\) is still the positive local inertia
-\[
-    m_s
-    +
-    I_{s,M}
-    \left(\frac{d\theta_s}{dx_s}\right)^2.
-\]
-The negative sign of \(dx_s/ds\) does not create negative inertia. It only
-records that positive \(s\) and positive \(x_s\) point in opposite physical
-shift directions.
+The squared motion ratio on the left reflects the secondary inertia into the
+shared motion. Direction instead enters through the force factor \(dx_s/ds\).
+Because this factor is negative, increasing \(s\) opens the secondary. A force
+that acts in the positive secondary-closing direction therefore maps into the
+direction of decreasing \(s\): it resists the rise of \(s\) and contributes
+toward reducing \(\ddot s\). A force that opens the secondary maps in the
+opposite direction. In particular, the belt normal force already carries a
+negative sign in the local secondary balance, so the two signs combine and its
+mapped contribution acts toward increasing \(s\).
 
-The last line also contains two different curvature effects. The term
-\[
-    \frac{d^2x_s}{ds^2}\dot s^2
-\]
-comes from the belt geometry: it appears when the required secondary travel
-per unit primary travel changes with ratio. The term
-\[
-    \frac{d^2\theta_s}{dx_s^2}
-    \left(\frac{dx_s}{ds}\right)^2\dot s^2
-\]
-comes from the helix: it appears when the relative rotation required per unit
-secondary travel changes along the track. One belongs to the map between the
-two pulleys; the other belongs to the mechanism inside the secondary.
+The terms proportional to \(\dot s^2\) retain two distinct geometric origins.
+The derivative \(d^2x_s/ds^2\) comes from the belt geometry and appears when
+the required secondary travel per unit primary travel changes with ratio. The
+derivative \(d^2\theta_s/dx_s^2\) comes from the helix and appears when the
+relative rotation required per unit secondary travel changes along the track.
+The accompanying factors of \(dx_s/ds\) carry each local effect into the
+shared coordinate.
 
-Most importantly, mapping the equations does not merge the pulleys into one
-axial free body. The two displayed balances remain separate physical
-conditions. They do not predict two competing shift accelerations; they
-require one candidate \(\ddot s\) to satisfy both movable assemblies at once.
-The belt normal reactions and the other coupled rotational and contact
-quantities are what allow both free bodies to be satisfied simultaneously.
-Those quantities are supplied by the later shaft, belt, and contact
-relations, rather than by either axial balance alone.
+Mapping the balances into \(s\) does not merge the pulleys into one axial free
+body. They remain separate physical conditions on the same shift motion: one
+candidate \(\ddot s\) must satisfy both movable assemblies at once. The belt
+normal reactions and the other coupled rotational and contact quantities make
+that possible. Those quantities are supplied by the later shaft, belt, and
+contact relations rather than by either axial balance alone.
 
 \subsubsection{Relation to Existing Dynamic Mappings}
 \label{sec:relation_to_existing_dynamic_mappings}
