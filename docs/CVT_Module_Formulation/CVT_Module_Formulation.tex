@@ -5035,26 +5035,87 @@ formulations, no equivalent combination of these features was identified.
 \subsection{What the Axial Balances Establish}
 \label{sec:axial_balance_synthesis}
 
-The primary and secondary now have complete local equations of motion. The
-primary converts shaft speed into closing force through the changing
-shaft-axis inertia of the flyweights. The secondary converts belt and spring
-torque into axial force through the helix.
-In both cases, part of the actuator action accelerates internal rotating
-hardware before the remainder can load the belt.
+The primary and secondary now have complete axial equations of motion in
+their natural coordinates. On the primary, shaft speed produces a closing
+action because the flyweight centres of mass move outward as the movable
+sheave closes. Part of that action accelerates the flyweights about their
+pivots before the remainder is transmitted to the movable assembly. On the
+secondary, the belt and torsional-spring torques act through the helix. Part
+of their action changes the rotation of the movable sheave relative to the
+shaft-side assembly before the remainder appears as axial force.
 
-This produces the same deeper structure on both sides. A position-dependent
-motion ratio reflects internal rotational inertia into the local axial
-coordinate, and curvature of that motion ratio produces a velocity-squared
-term. The shared belt geometry then adds a second layer of kinematics: it
-expresses the two local accelerations through one \(\ddot s\), with its own
-curvature term on the secondary side.
+Although the two actuators are physically different, their constrained
+motions produce the same underlying structure. The map \(q_f(x_p)\) reflects
+the flyweights' pivot inertia into the primary axial coordinate, while the
+helix map \(\theta_s(x_s)\) reflects the movable-sheave rotational inertia into
+the secondary coordinate. In each case, the local motion ratio contributes
+an effective axial inertia, and variation of that ratio with position
+produces a velocity-squared term. The primary closing action is additionally
+set by \(dr_f/dx_p\), while the secondary balance couples to the shaft
+acceleration because its movable sheave rotates relative to an assembly that
+is itself rotating.
 
-The axial model is therefore complete as a pair of free-body relations, but
-it is not an isolated solution for the shift acceleration. Belt normal loads,
-transmitted torques, and shaft accelerations remain coupled to the rotational
-and belt-contact mechanics developed next. Once those relations are added,
-the two balances derived here participate in one simultaneous dynamic
-solution for the CVT.
+The shared belt geometry adds a second layer of constrained motion. The
+primary map \(x_p(s)=s\) carries its local balance directly into the shift
+coordinate, whereas the secondary map \(x_s(s)\) reflects its local motion
+into the same \(\ddot{s}\) and contributes its own velocity-squared curvature
+term. Both free-body relations must therefore be satisfied by one shift
+motion.
+
+They do not, however, determine that motion in isolation. At this stage, the
+two axial equations contain the five unknown quantities
+\[
+    \ddot{s},
+    \qquad N_p,
+    \qquad N_s,
+    \qquad \tau_s,
+    \qquad \dot{\omega}_s.
+\]
+The belt normal loads, transmitted secondary torque, and secondary shaft
+acceleration follow only when the rotational and belt-contact mechanics are
+added. The two balances derived here therefore form the axial part of one
+simultaneous dynamic solution for the engaged CVT.
+
+This completes the axial force description. Attention now turns from
+translation along the pulley shafts to rotation about them.
+
+\section{Rotational Dynamics of the Pulley Assemblies}
+\label{sec:pulley_rotational_dynamics}
+
+The external torque path through the CVT is straightforward. Engine torque
+drives the primary pulley, the belt removes torque from the primary and applies
+it to the secondary, and the downstream drivetrain resists the secondary. The
+rotational dynamics follow from the angular-momentum balance about each pulley
+shaft,
+\begin{equation}
+    \sum \tau = \frac{dH}{dt}.
+    \label{eq:angular_momentum_balance}
+\end{equation}
+
+If every component remained fixed relative to its shaft and its mass
+distribution did not change, then \(H=I\omega\), and
+\Cref{eq:angular_momentum_balance} would reduce to the familiar form
+\begin{equation}
+    \sum \tau = I\dot{\omega}.
+    \label{eq:fixed_inertia_rotational_balance}
+\end{equation}
+Most of each pulley assembly can be treated in exactly this way. Shifting, however,
+alters the angular momentum in two specific places.
+
+On the primary, the flyweights move outward as the actuator deploys. Their
+changing radius changes the angular momentum carried at a given primary speed.
+On the secondary, the helix causes the movable sheave to rotate relative to the
+shaft-side assembly as it translates, so its angular speed is not generally
+equal to \(\omega_s\).
+
+The positions of both moving components were already determined by the shared
+shift coordinate in \Cref{sec:axial_dynamics}. Their motions therefore
+introduce no additional independent coordinates. They must nevertheless be
+retained in the rotational balances because, as the CVT shifts, they change
+the angular momentum carried by the corresponding pulley assemblies. This
+leaves a precise question: with these internal motions already constrained by
+the shift coordinate, what angular momentum does each complete pulley assembly
+carry, and how does it change with time?
 
 
 \section{Rotational and Belt Transport Dynamics}
