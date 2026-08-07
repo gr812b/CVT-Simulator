@@ -3752,7 +3752,7 @@ Together with the constant \(I_f\), these maps abstract the physical geometry
 of the flyweight mechanism into the quantities required by the general force
 balance.
 
-\begin{remarkbox}[Constructing the flyweight maps]
+\begin{remarkbox}[Remark (Constructing the flyweight maps)]
 The mechanism-specific construction is not carried out here.
 \Cref{sec:primary_flyweight_geometry_examples} works through two common
 flyweight arrangements, showing how their geometry and mass distribution
@@ -3891,8 +3891,7 @@ pivots and therefore use the pivot-axis property \(I_f\): the first reflects
 \(\ddot x_p\) through the motion ratio, while the second appears when that
 motion ratio changes with position.
 
-\begin{remarkbox}
-[Admissible flyweight maps.]
+\begin{remarkbox}[Remark (Admissible flyweight maps)]
 The completed force law uses \(q_f''(x_p)\) and \(J_{f,p}'(x_p)\), while the
 selected coordinate directions require primary closure to correspond to
 outward flyweight rotation. Over the admissible shift range, the supplied
@@ -4318,8 +4317,7 @@ face rotates slightly faster or slower than the fixed face. The two
 belt--face contacts can therefore have different sliding conditions, so their
 torques need not divide equally.
 
-\begin{remarkbox}
-[Why the face-torque split can matter.]
+\begin{remarkbox}[Remark (Why the face-torque split can matter)]
 \citet{SorgeCammalleri2011} resolve the two contacts separately and show that
 the face torques can depart substantially from an equal split; distributed
 tangential forces on the two faces can even act in opposite directions over
@@ -4350,25 +4348,13 @@ the conventional helix orientation considered here,
 
 \begin{figure}[H]
     \centering
-    \fbox{%
-    \begin{minipage}{0.88\linewidth}
-    \textbf{Figure brief -- unwrapped helix geometry and contact reaction.}
-    Unwrap one helix track from a cylinder of radius \(r_h\). In the first
-    panel, mark the positive circumferential and axial directions, then show
-    the signed circumferential run \(r_h\,d\theta_s\), axial rise \(dx_s\),
-    track tangent, and signed angle \(\alpha_s\). In a companion panel at the
-    same angle, resolve the pin--track reaction into the circumferential
-    component that produces \(\tau_{s,\mathrm{helix}}\) and the axial component
-    \(F_{s,\mathrm{helix}}\). Make clear that both come from one contact
-    reaction.
-    \end{minipage}%
-    }
+    \includegraphics[width=\linewidth]{./figures/actuation/helix_unwrap.png}
     \caption{Unwrapped secondary-helix geometry. The same track angle relates
     relative rotation to axial travel and reaction torque to axial force.}
     \label{fig:secondary_helix_geometry}
 \end{figure}
 
-From the triangle in \Cref{fig:secondary_helix_geometry},
+Taking the infinitesimal limit of the triangle in \Cref{fig:secondary_helix_geometry},
 
 \begin{equation}
     \tan\alpha_s
@@ -4577,8 +4563,7 @@ driving torques inside the braces; part of that torque may be required to
 accelerate the movable assembly, and only the remainder is converted into
 axial thrust.
 
-\begin{remarkbox}
-[Admissible helix maps.]
+\begin{remarkbox}[Remark (Admissible helix maps)]
 The completed force uses the first two derivatives of \(\theta_s(x_s)\).
 Over the admissible shift range, the supplied helix map must therefore be
 single-valued and twice continuously differentiable, with a finite, nonzero
