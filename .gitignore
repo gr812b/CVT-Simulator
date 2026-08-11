@@ -310,3 +310,6 @@ backend/**/black_box_api_artifacts/
 *.pyc
 
 outputs/
+
+# Production deployment secrets
+/.env
