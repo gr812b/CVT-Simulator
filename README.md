@@ -148,7 +148,8 @@ docker compose ps
 This is the one special step for a brand-new database:
 
 ```bash
-docker compose run --rm cvt-backend   sh -c "alembic upgrade head && python -m app.scripts.init_database"
+docker compose run --rm cvt-backend \
+  sh -c "alembic upgrade head && python -m app.scripts.init_database"
 ```
 
 The initializer creates the deterministic demo account and the released library
@@ -217,12 +218,12 @@ Normal production uses:
 CVT_TAG=latest
 ```
 
-The existing GitHub Actions container workflow publishes new `latest` backend
-and frontend images whenever `develop` is pushed.
+The GitHub Actions container workflow publishes new `latest` backend and
+frontend images whenever `develop` is pushed.
 
-Watchtower can continue to update those two containers exactly as before. When
-a new backend image is recreated, its startup command applies pending database
-migrations before the API starts.
+Watchtower can continue to update those two containers. When a new backend
+image is recreated, its startup command applies pending database migrations
+before the API starts.
 
 The PostgreSQL service has this label:
 
@@ -237,33 +238,34 @@ the database image deliberately rather than as part of an application release.
 No Git pull, source build, or server-side repository checkout is involved in
 normal deployment.
 
-## Publishing and testing an unmerged branch
+## Publishing and testing a non-latest branch image
 
-The `Containerize` GitHub Actions workflow supports two paths:
+The `Containerize` workflow supports two publishing paths:
 
 - a push to `develop` publishes `latest` plus the commit SHA;
-- a manual run publishes the manually supplied tag plus the commit SHA.
+- a manual workflow run publishes a supplied non-`latest` tag plus the commit SHA.
 
-A manual build is not allowed to overwrite `latest`.
+Manual runs cannot overwrite `latest`.
 
-For PR 459, after this workflow change exists on the branch:
+Once this workflow exists on the repository's default branch, another branch
+can be tested without merging it:
 
 1. Open **Actions -> Containerize -> Run workflow**.
-2. Select `model-fixes-and-contract-update`.
-3. Set the image tag to `pr-459`.
+2. Select the branch to build.
+3. Supply a unique image tag, for example `test-my-feature`.
 4. Run the workflow.
 
-GitHub will publish:
+GitHub publishes matching backend and frontend images:
 
 ```text
-ghcr.io/gr812b/cvt-simulator-backend:pr-459
-ghcr.io/gr812b/cvt-simulator-frontend:pr-459
+ghcr.io/gr812b/cvt-simulator-backend:test-my-feature
+ghcr.io/gr812b/cvt-simulator-frontend:test-my-feature
 ```
 
-To deploy those images on the server, change:
+To deploy those images, set:
 
 ```dotenv
-CVT_TAG=pr-459
+CVT_TAG=test-my-feature
 ```
 
 then run:
@@ -273,16 +275,15 @@ docker compose pull cvt-backend cvt-frontend
 docker compose up -d
 ```
 
-Watchtower will subsequently follow the `pr-459` tag while the containers use
-that tag.
+Watchtower will subsequently follow that tag while the deployment uses it.
 
-To return to the normal `develop` images:
+To return to normal production images, set:
 
 ```dotenv
 CVT_TAG=latest
 ```
 
-then:
+then run:
 
 ```bash
 docker compose pull cvt-backend cvt-frontend
@@ -334,7 +335,9 @@ Create a plain SQL backup:
 
 ```bash
 cd /opt/cvt-simulator
-docker compose exec -T postgres   pg_dump -U cvt -d cvt_simulator   > "cvt_simulator_$(date +%Y%m%d_%H%M%S).sql"
+docker compose exec -T postgres \
+  pg_dump -U cvt -d cvt_simulator \
+  > "cvt_simulator_$(date +%Y%m%d_%H%M%S).sql"
 ```
 
 For releases containing meaningful database migrations, making a backup before
@@ -351,15 +354,21 @@ docker compose stop cvt-frontend cvt-backend
 Recreate the database:
 
 ```bash
-docker compose exec -T postgres   psql -U cvt -d postgres   -c "DROP DATABASE IF EXISTS cvt_simulator;"
+docker compose exec -T postgres \
+  psql -U cvt -d postgres \
+  -c "DROP DATABASE IF EXISTS cvt_simulator;"
 
-docker compose exec -T postgres   psql -U cvt -d postgres   -c "CREATE DATABASE cvt_simulator OWNER cvt;"
+docker compose exec -T postgres \
+  psql -U cvt -d postgres \
+  -c "CREATE DATABASE cvt_simulator OWNER cvt;"
 ```
 
 Restore:
 
 ```bash
-docker compose exec -T postgres   psql -U cvt -d cvt_simulator   < your-backup.sql
+docker compose exec -T postgres \
+  psql -U cvt -d cvt_simulator \
+  < your-backup.sql
 ```
 
 Start the application again:
