@@ -1,8 +1,8 @@
 """Resolve versioned database objects into a frozen CINDER simulation case.
 
-This module is independent from HTTP transport. Routes and smoke tests use it to
-turn released library versions plus tune/load/execution choices into the exact
-CINDER document stored on a run.
+The database deliberately stores engine/CVT/output/load/execution objects
+separately. This module is the translation boundary that resolves those V1
+library objects into CINDER's current public composed-simulation contract.
 """
 
 from __future__ import annotations
@@ -25,6 +25,21 @@ from app.database.models import (
 
 JsonDict = dict[str, Any]
 
+CURRENT_SIMULATION_DOCUMENT_TYPE = "cinder_composed_simulation_case"
+CURRENT_ASSEMBLY_DOCUMENT_TYPE = "cinder_cvt_assembly"
+
+# The Run cache still hashes these compatibility aliases in V1. Keep them on
+# the resolved document until the database/run-cache contract is revised.
+V1_EXECUTABLE_HASH_KEYS = (
+    "schema_version",
+    "document_type",
+    "assembly",
+    "input_boundary",
+    "output_boundary",
+    "scenario",
+    "execution",
+)
+
 
 def resolve_simulation_case(
     session: Session,
@@ -34,7 +49,7 @@ def resolve_simulation_case(
     load_case_id: str | None = None,
     execution_preset_id: str | None = None,
 ) -> JsonDict:
-    """Build a complete, immutable CINDER case from released versions and options."""
+    """Build one immutable current-format CINDER case from V1 library objects."""
 
     assembly_version = session.get(VehicleAssemblyVersion, vehicle_assembly_version_id)
     if assembly_version is None:
@@ -55,43 +70,62 @@ def resolve_simulation_case(
         assembly_version=assembly_version,
     )
 
-    cinder_assembly = copy.deepcopy(cvt_version.cinder_assembly)
+    # Tune values are intentionally applied to the stored V1 CVT payload before
+    # translating it. The existing tuning-schema JSON pointers therefore remain
+    # valid and the frontend tuning surface does not need to change.
+    stored_assembly = copy.deepcopy(cvt_version.cinder_assembly)
     tune_snapshot: JsonDict = {}
     if tune_id is not None:
         tune = session.get(Tune, tune_id)
         if tune is None:
             raise ValueError(f"Unknown tune {tune_id!r}.")
         tune_snapshot = copy.deepcopy(tune.values)
-        apply_tune(cinder_assembly, cvt_version.tuning_schema, tune_snapshot)
+        apply_tune(stored_assembly, cvt_version.tuning_schema, tune_snapshot)
 
-    output_boundary = copy.deepcopy(output_version.output_boundary_template)
-    scenario: JsonDict = {}
+    stored_secondary_boundary = copy.deepcopy(output_version.output_boundary_template)
+    stored_scenario: JsonDict = {}
     load_case_snapshot: JsonDict = {}
     if load_case_id is not None:
         load_case = session.get(LoadCase, load_case_id)
         if load_case is None:
             raise ValueError(f"Unknown load case {load_case_id!r}.")
         load_case_snapshot = copy.deepcopy(load_case.payload)
-        scenario = copy.deepcopy(load_case.payload.get("scenario", {}))
-        _deep_merge(output_boundary, load_case.payload.get("output_boundary_overrides", {}))
+        stored_scenario = copy.deepcopy(load_case.payload.get("scenario", {}))
+        _deep_merge(
+            stored_secondary_boundary,
+            load_case.payload.get("output_boundary_overrides", {}),
+        )
 
-    execution: JsonDict = {}
+    stored_execution: JsonDict = {}
     execution_snapshot: JsonDict = {}
     if execution_preset_id is not None:
         execution_preset = session.get(ExecutionPreset, execution_preset_id)
         if execution_preset is None:
             raise ValueError(f"Unknown execution preset {execution_preset_id!r}.")
         execution_snapshot = copy.deepcopy(execution_preset.payload)
-        execution = copy.deepcopy(execution_preset.payload)
+        stored_execution = copy.deepcopy(execution_preset.payload)
+
+    assembly = _current_assembly_document(stored_assembly, stored_execution)
+    primary_boundary = _current_primary_boundary(engine_version.input_boundary)
+    secondary_boundary = _current_secondary_boundary(stored_secondary_boundary)
+    host, scenario = _current_host_and_scenario(stored_scenario)
+    execution = _current_execution(stored_execution)
 
     document: JsonDict = {
         "schema_version": 1,
-        "document_type": "cinder_simulation_case",
-        "assembly": cinder_assembly,
-        "input_boundary": copy.deepcopy(engine_version.input_boundary),
-        "output_boundary": output_boundary,
+        "document_type": CURRENT_SIMULATION_DOCUMENT_TYPE,
+        "assembly": assembly,
+        "shaft_boundaries": {
+            "primary": primary_boundary,
+            "secondary": secondary_boundary,
+        },
+        "host": host,
         "scenario": scenario,
         "execution": execution,
+        # V1 compatibility aliases used only by the existing run-cache hash.
+        # CINDER ignores these extra top-level fields.
+        "input_boundary": copy.deepcopy(primary_boundary),
+        "output_boundary": copy.deepcopy(secondary_boundary),
         "database_resolution": {
             "engine_version_id": engine_version.id,
             "cvt_design_version_id": cvt_version.id,
@@ -106,22 +140,330 @@ def resolve_simulation_case(
             "version_warnings": version_warnings,
         },
     }
+
+    # Match backend.app.database.runs.executable_contract for the current V1
+    # database schema/cache implementation. The aliases above ensure engine and
+    # output-system differences remain part of the cache key.
     document["contract_hash"] = canonical_json_hash(
         {
             key: copy.deepcopy(document[key])
-            for key in (
-                "schema_version",
-                "document_type",
-                "assembly",
-                "input_boundary",
-                "output_boundary",
-                "scenario",
-                "execution",
-            )
+            for key in V1_EXECUTABLE_HASH_KEYS
             if key in document
         }
     )
     return document
+
+
+def _current_assembly_document(
+    stored_assembly: JsonDict,
+    stored_execution: JsonDict,
+) -> JsonDict:
+    """Translate the V1 stored CVT payload to the current assembly contract."""
+
+    assembly = copy.deepcopy(stored_assembly)
+    assembly["schema_version"] = 1
+    assembly["document_type"] = CURRENT_ASSEMBLY_DOCUMENT_TYPE
+
+    pulleys = assembly.setdefault("pulleys", {})
+    if "primary" not in pulleys and "input" in pulleys:
+        pulleys["primary"] = pulleys.pop("input")
+    if "secondary" not in pulleys and "output" in pulleys:
+        pulleys["secondary"] = pulleys.pop("output")
+
+    if "primary" not in pulleys or "secondary" not in pulleys:
+        raise ValueError(
+            "CVT design must define both primary and secondary pulley payloads."
+        )
+
+    _normalize_contact(assembly, stored_execution)
+    _normalize_inertias(assembly)
+    return assembly
+
+
+def _normalize_contact(assembly: JsonDict, stored_execution: JsonDict) -> None:
+    contact = assembly.setdefault("contact", {})
+    traction = stored_execution.get("traction_law", {})
+    if not isinstance(traction, dict):
+        traction = {}
+
+    legacy_friction = contact.get("friction_coefficient")
+    fallback = (
+        float(legacy_friction)
+        if isinstance(legacy_friction, (int, float)) and not isinstance(legacy_friction, bool)
+        else None
+    )
+
+    static = _shared_traction_limit(
+        traction,
+        "primary_static_lambda_limit",
+        "secondary_static_lambda_limit",
+        fallback=fallback,
+        label="static",
+    )
+    kinetic = _shared_traction_limit(
+        traction,
+        "primary_kinetic_lambda_magnitude",
+        "secondary_kinetic_lambda_magnitude",
+        fallback=static,
+        label="kinetic",
+    )
+
+    contact.clear()
+    contact["static_friction_coefficient"] = static
+    contact["kinetic_friction_coefficient"] = kinetic
+
+
+def _shared_traction_limit(
+    traction: JsonDict,
+    primary_key: str,
+    secondary_key: str,
+    *,
+    fallback: float | None,
+    label: str,
+) -> float:
+    primary = traction.get(primary_key)
+    secondary = traction.get(secondary_key)
+
+    if primary is None and secondary is None:
+        if fallback is None:
+            raise ValueError(
+                f"Cannot resolve {label} belt-contact coefficient from the V1 payload."
+            )
+        return float(fallback)
+
+    if primary is None:
+        primary = secondary
+    if secondary is None:
+        secondary = primary
+
+    if (
+        isinstance(primary, bool)
+        or isinstance(secondary, bool)
+        or not isinstance(primary, (int, float))
+        or not isinstance(secondary, (int, float))
+    ):
+        raise ValueError(f"{label.capitalize()} traction limits must be numeric.")
+
+    primary_value = float(primary)
+    secondary_value = float(secondary)
+    if abs(primary_value - secondary_value) > 1e-12:
+        raise ValueError(
+            "The current CINDER public contract uses one belt-contact "
+            f"{label} coefficient, but the V1 primary/secondary limits differ "
+            f"({primary_value} vs {secondary_value})."
+        )
+    return primary_value
+
+
+def _normalize_inertias(assembly: JsonDict) -> None:
+    inertias = assembly.get("inertias")
+    if not isinstance(inertias, dict):
+        raise ValueError("CVT design is missing inertias.")
+
+    primary = inertias.get("primary")
+    secondary = inertias.get("secondary")
+    if not isinstance(primary, dict) or not isinstance(secondary, dict):
+        raise ValueError("CVT design must define primary and secondary inertias.")
+
+    _rename_first_present(
+        primary,
+        "fixed_rotating_hardware_inertia_kg_m2",
+        (
+            "rotating_hardware_inertia_kg_m2",
+            "cvt_rotational_inertia_kg_m2",
+        ),
+    )
+    primary.setdefault("movable_sheave_rotational_inertia_kg_m2", 0.0)
+    primary.pop("engine_rotational_inertia_kg_m2", None)
+
+    _rename_first_present(
+        secondary,
+        "fixed_rotating_hardware_inertia_kg_m2",
+        (
+            "fixed_rotational_inertia_kg_m2",
+            "rotating_hardware_inertia_kg_m2",
+        ),
+    )
+    secondary.setdefault("movable_sheave_rotational_inertia_kg_m2", 0.0)
+    secondary.pop("gearbox_input_rotational_inertia_kg_m2", None)
+
+    required_primary = (
+        "fixed_rotating_hardware_inertia_kg_m2",
+        "movable_sheave_rotational_inertia_kg_m2",
+        "moving_sheave_mass_kg",
+    )
+    required_secondary = required_primary
+    for key in required_primary:
+        if key not in primary:
+            raise ValueError(f"Primary inertia payload is missing {key!r}.")
+    for key in required_secondary:
+        if key not in secondary:
+            raise ValueError(f"Secondary inertia payload is missing {key!r}.")
+
+
+def _rename_first_present(
+    payload: JsonDict,
+    target_key: str,
+    source_keys: tuple[str, ...],
+) -> None:
+    if target_key in payload:
+        for source_key in source_keys:
+            payload.pop(source_key, None)
+        return
+
+    for source_key in source_keys:
+        if source_key in payload:
+            payload[target_key] = payload.pop(source_key)
+            break
+
+    for source_key in source_keys:
+        payload.pop(source_key, None)
+
+
+def _current_primary_boundary(stored_boundary: JsonDict) -> JsonDict:
+    boundary = copy.deepcopy(stored_boundary)
+    kind = boundary.get("kind")
+    if kind == "full_throttle_torque_curve":
+        boundary["kind"] = "full_throttle_engine"
+    elif kind != "full_throttle_engine":
+        raise ValueError(f"Unsupported V1 engine boundary kind {kind!r}.")
+    return boundary
+
+
+def _current_secondary_boundary(stored_boundary: JsonDict) -> JsonDict:
+    boundary = copy.deepcopy(stored_boundary)
+    kind = boundary.get("kind")
+    if kind == "locked_final_drive_vehicle":
+        boundary["kind"] = "locked_final_drive"
+    elif kind != "locked_final_drive":
+        raise ValueError(f"Unsupported V1 output boundary kind {kind!r}.")
+
+    # This belonged to the old boundary layer and is not part of the current
+    # composed CINDER public contract.
+    boundary.pop("drivetrain_loss_model", None)
+    return boundary
+
+
+def _current_host_and_scenario(stored_scenario: JsonDict) -> tuple[JsonDict, JsonDict]:
+    if not stored_scenario:
+        raise ValueError("Load case does not define a scenario.")
+
+    span = copy.deepcopy(stored_scenario.get("time_span_s"))
+    if not isinstance(span, list) or len(span) != 2:
+        raise ValueError("scenario.time_span_s must contain exactly two values.")
+
+    legacy_initial = stored_scenario.get("initial_state")
+    current_initial = stored_scenario.get("initial_cvt_state")
+    if isinstance(current_initial, dict):
+        initial = copy.deepcopy(current_initial)
+        legacy_host_source = stored_scenario.get("initial_host_state", {})
+    elif isinstance(legacy_initial, dict):
+        initial = copy.deepcopy(legacy_initial)
+        legacy_host_source = legacy_initial
+    else:
+        raise ValueError(
+            "Scenario must define initial_state or initial_cvt_state."
+        )
+
+    cvt_keys = (
+        "primary_angular_speed_rad_per_s",
+        "secondary_angular_speed_rad_per_s",
+        "belt_speed_m_per_s",
+        "shift_position_m",
+        "shift_speed_m_per_s",
+    )
+    missing = [key for key in cvt_keys if key not in initial]
+    if missing:
+        raise ValueError(
+            "Scenario initial state is missing required CVT values: "
+            + ", ".join(missing)
+        )
+
+    initial_cvt_state = {key: copy.deepcopy(initial[key]) for key in cvt_keys}
+
+    shaft_angle = 0.0
+    if isinstance(legacy_host_source, dict):
+        shaft_angle = legacy_host_source.get("secondary_shaft_angle_rad", 0.0)
+
+    has_vehicle_state = isinstance(legacy_host_source, dict) and (
+        "vehicle_position_m" in legacy_host_source
+        or "vehicle_speed_m_per_s" in legacy_host_source
+    )
+    if has_vehicle_state:
+        host = {
+            "kind": "tire_vehicle",
+            "initial_state": {
+                "secondary_shaft_angle_rad": shaft_angle,
+                "vehicle_position_m": legacy_host_source.get("vehicle_position_m", 0.0),
+                "vehicle_speed_m_per_s": legacy_host_source.get("vehicle_speed_m_per_s", 0.0),
+            },
+        }
+    else:
+        host = {
+            "kind": "secondary_shaft_angle",
+            "initial_state": {
+                "secondary_shaft_angle_rad": shaft_angle,
+            },
+        }
+
+    scenario = {
+        "time_span_s": span,
+        "initial_cvt_state": initial_cvt_state,
+    }
+    return host, scenario
+
+
+def _current_execution(stored_execution: JsonDict) -> JsonDict:
+    if not stored_execution:
+        raise ValueError("Execution preset payload is empty.")
+
+    integrator = stored_execution.get("integrator")
+    reporting = stored_execution.get("reporting")
+    if not isinstance(integrator, dict):
+        raise ValueError("Execution preset is missing integrator settings.")
+    if not isinstance(reporting, dict):
+        raise ValueError("Execution preset is missing reporting settings.")
+
+    current_integrator = copy.deepcopy(integrator)
+    _rename_key_if_needed(current_integrator, "max_step", "max_step_s")
+    _rename_key_if_needed(current_integrator, "first_step", "first_step_s")
+    _rename_key_if_needed(
+        current_integrator,
+        "event_time_tolerance",
+        "event_time_tolerance_s",
+    )
+
+    required = (
+        "relative_tolerance",
+        "absolute_tolerance",
+        "method",
+        "max_step",
+        "first_step",
+        "maximum_transitions",
+        "event_time_tolerance",
+        "retain_dense_output",
+    )
+    missing = [key for key in required if key not in current_integrator]
+    if missing:
+        raise ValueError(
+            "Execution integrator is missing required values: " + ", ".join(missing)
+        )
+
+    # Only the current public execution contract is emitted. Legacy traction,
+    # closure, operating-limit, and switching dictionaries were internal to the
+    # previous execution layer; the belt traction coefficients are translated
+    # into assembly.contact above.
+    return {
+        "integrator": current_integrator,
+        "reporting": copy.deepcopy(reporting),
+    }
+
+
+def _rename_key_if_needed(payload: JsonDict, current_key: str, legacy_key: str) -> None:
+    if current_key not in payload and legacy_key in payload:
+        payload[current_key] = payload.pop(legacy_key)
+    else:
+        payload.pop(legacy_key, None)
 
 
 def _collect_version_warnings(
@@ -158,12 +500,7 @@ def _collect_version_warnings(
 
 
 def apply_tune(cinder_assembly: JsonDict, tuning_schema: JsonDict, values: JsonDict) -> None:
-    """Apply tune values to a CINDER assembly using JSON pointer paths.
-
-    Unknown tune keys are ignored deliberately in V1 so old runs remain loadable if
-    a design's tuning schema changes. The released version and run snapshot are
-    still the source of truth.
-    """
+    """Apply tune values to the stored V1 assembly using its JSON-pointer schema."""
 
     params = tuning_schema.get("parameters", [])
     path_by_key = {
@@ -199,9 +536,9 @@ def _deep_merge(target: JsonDict, overrides: JsonDict) -> JsonDict:
     for key, value in overrides.items():
         existing = target.get(key)
         if isinstance(value, dict) and isinstance(existing, dict):
-            # Discriminated sub-documents must be replaced when their kind changes.
-            # Otherwise a constant-grade road profile updated to a piecewise route
-            # would keep stale fields such as grade_angle_rad from the old shape.
+            # Discriminated sub-documents must be replaced when their kind
+            # changes. Otherwise a constant-grade profile changed to a
+            # piecewise route would keep stale legacy fields.
             if (
                 "kind" in value
                 and "kind" in existing
