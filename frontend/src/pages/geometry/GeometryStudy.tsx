@@ -9,6 +9,7 @@ import {
   type ProjectedField,
   type ProjectedScalar,
 } from '@api/client';
+import { simulationCaseGeometry } from '@api/simulationCaseGeometry';
 import { useSimulationCase } from '@contexts/SimulationCaseContext';
 import { formatProjectedQuantity, formatQuantity, type QuantityDimension } from '@utils/units';
 import styles from './GeometryStudy.module.scss';
@@ -106,7 +107,7 @@ export const GeometryStudy = () => {
   const [busy, setBusy] = useState<'preset' | 'validation' | 'study' | null>(null);
   const [requestError, setRequestError] = useState<string | null>(null);
 
-  const geometry = document?.assembly.geometry ?? null;
+  const geometry = document === null ? null : simulationCaseGeometry(document);
   const fieldValues = useMemo(() => {
     if (geometry === null) return new Map<string, number>();
     return new Map<string, number>([
@@ -170,14 +171,14 @@ export const GeometryStudy = () => {
               <button disabled={busy !== null} onClick={() => void invoke('study', async () => {
                 setStudy(await runEndpointRadiiGeometryStudy({
                   context: {
-                    belt: document.assembly.geometry.belt,
-                    belt_outer_length_m: document.assembly.geometry.belt_outer_length_m,
-                    sheave_half_angle_rad: document.assembly.geometry.sheave_half_angle_rad,
-                    deadzone_shift_m: document.assembly.geometry.deadzone_shift_m,
-                    max_shift_m: document.assembly.geometry.max_shift_m,
+                    belt: geometry.belt,
+                    belt_outer_length_m: geometry.belt_outer_length_m,
+                    sheave_half_angle_rad: geometry.sheave_half_angle_rad,
+                    deadzone_shift_m: geometry.deadzone_shift_m,
+                    max_shift_m: geometry.max_shift_m,
                   },
-                  primary_outer_radius_at_zero_shift_m: document.assembly.geometry.primary_outer_radius_at_zero_shift_m,
-                  secondary_outer_radius_at_zero_shift_m: document.assembly.geometry.secondary_outer_radius_at_zero_shift_m,
+                  primary_outer_radius_at_zero_shift_m: geometry.primary_outer_radius_at_zero_shift_m,
+                  secondary_outer_radius_at_zero_shift_m: geometry.secondary_outer_radius_at_zero_shift_m,
                   sample_count: 101,
                 }));
               })}>{busy === 'study' ? 'Running…' : 'Run geometry study'}</button>
