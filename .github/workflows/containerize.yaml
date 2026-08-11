@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - develop
-      - model-fixes-and-contract-update
   workflow_dispatch:
     inputs:
       image_tag:
@@ -73,14 +72,7 @@ jobs:
           set -euo pipefail
 
           if [[ "${{ github.event_name }}" == "push" ]]; then
-            if [[ "${{ github.ref_name }}" == "develop" ]]; then
-              tag="latest"
-            elif [[ "${{ github.ref_name }}" == "model-fixes-and-contract-update" ]]; then
-              tag="pr-459"
-            else
-              echo "Unexpected push branch"
-              exit 1
-            fi
+            tag="latest"
           else
             tag="${MANUAL_TAG}"
 
