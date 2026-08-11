@@ -55,9 +55,7 @@ class DeadzoneEvaluation:
         if not isinstance(self.snapshot, DeadzoneSnapshot):
             raise TypeError("snapshot must be a DeadzoneSnapshot instance.")
         if not isinstance(self.state_derivative, CVTStateDerivative):
-            raise TypeError(
-                "state_derivative must be a CVTStateDerivative instance."
-            )
+            raise TypeError("state_derivative must be a CVTStateDerivative instance.")
 
     @property
     def primary_normal_resultant(self) -> float:

@@ -153,7 +153,9 @@ class BajaTrialConstants:
     # placeholder: the old system did not split primary pulley spin inertia.
     primary_moving_sheave_mass: float = 1.0681  # project/CAD estimate, kg
 
-    secondary_fixed_rotating_hardware_inertia: float = 0.1  # CVT secondary hardware, kg m^2
+    secondary_fixed_rotating_hardware_inertia: float = (
+        0.1  # CVT secondary hardware, kg m^2
+    )
     direct_secondary_shaft_inertia: float = 0.05  # gearbox/input shaft, kg m^2
     secondary_movable_sheave_rotational_inertia: float = 0.0025139
     # project/CAD estimate, kg m^2; confirm against final CAD mass properties.

@@ -116,12 +116,16 @@ def encode_simulation_case_document(
     }
 
 
-def decode_simulation_case_document(document: Mapping[str, Any]) -> DecodedSimulationCase:
+def decode_simulation_case_document(
+    document: Mapping[str, Any],
+) -> DecodedSimulationCase:
     """Decode one composed simulation-case document into executable objects."""
 
     root = _mapping(document, "document")
     _require_document_header(root)
-    assembly = decode_assembly_document(_mapping(_require(root, "assembly"), "assembly"))
+    assembly = decode_assembly_document(
+        _mapping(_require(root, "assembly"), "assembly")
+    )
     plant = MechanicalCVTPlant.from_assembly(assembly)
 
     boundaries_doc = _mapping(_require(root, "shaft_boundaries"), "shaft_boundaries")
@@ -133,12 +137,16 @@ def decode_simulation_case_document(document: Mapping[str, Any]) -> DecodedSimul
     )
 
     host_doc = _mapping(_require(root, "host"), "host")
-    host, initial_host_state = _decode_host(host_doc, secondary_boundary=secondary_boundary)
+    host, initial_host_state = _decode_host(
+        host_doc, secondary_boundary=secondary_boundary
+    )
 
     scenario = _mapping(_require(root, "scenario"), "scenario")
     span = _sequence(_require(scenario, "time_span_s"), "scenario.time_span_s")
     if len(span) != 2:
-        raise DesignDocumentError("scenario.time_span_s must contain exactly two numbers.")
+        raise DesignDocumentError(
+            "scenario.time_span_s must contain exactly two numbers."
+        )
     time_span = (float(span[0]), float(span[1]))
     initial_cvt_state = _decode_cvt_state(
         _mapping(_require(scenario, "initial_cvt_state"), "scenario.initial_cvt_state")
@@ -164,7 +172,11 @@ def decode_simulation_case_document(document: Mapping[str, Any]) -> DecodedSimul
     )
     initial_mode = system.classify_initial_mode(initial_state)
     # Preserve time_span on the object for callers that want a one-line run.
-    object.__setattr__(integrator_settings, "_cinder_time_span", time_span) if False else None
+    (
+        object.__setattr__(integrator_settings, "_cinder_time_span", time_span)
+        if False
+        else None
+    )
     decoded = DecodedSimulationCase(
         assembly=assembly,
         plant=plant,
@@ -259,20 +271,32 @@ def _decode_shaft_boundary(payload: Mapping[str, Any]) -> object:
             TorqueCurveSpec(
                 points=tuple(
                     EngineTorquePoint(
-                        angular_speed=_number(_mapping(p, f"points[{i}]"), "angular_speed_rad_per_s"),
+                        angular_speed=_number(
+                            _mapping(p, f"points[{i}]"), "angular_speed_rad_per_s"
+                        ),
                         torque=_number(_mapping(p, f"points[{i}]"), "torque_Nm"),
                     )
                     for i, p in enumerate(points)
                 ),
-                low_speed_braking_torque=_number(payload, "low_speed_braking_torque_Nm"),
-                low_speed_braking_peak_speed=_number(payload, "low_speed_braking_peak_speed_rad_per_s"),
-                high_speed_braking_torque=_number(payload, "high_speed_braking_torque_Nm"),
-                high_speed_braking_transition_width=_number(payload, "high_speed_braking_transition_width_rad_per_s"),
+                low_speed_braking_torque=_number(
+                    payload, "low_speed_braking_torque_Nm"
+                ),
+                low_speed_braking_peak_speed=_number(
+                    payload, "low_speed_braking_peak_speed_rad_per_s"
+                ),
+                high_speed_braking_torque=_number(
+                    payload, "high_speed_braking_torque_Nm"
+                ),
+                high_speed_braking_transition_width=_number(
+                    payload, "high_speed_braking_transition_width_rad_per_s"
+                ),
             )
         )
         return FullThrottleEngineBoundary(
             curve,
-            equivalent_rotational_inertia=_number(payload, "equivalent_rotational_inertia_kg_m2"),
+            equivalent_rotational_inertia=_number(
+                payload, "equivalent_rotational_inertia_kg_m2"
+            ),
         )
     if kind == "locked_final_drive":
         vehicle_doc = _mapping(_require(payload, "vehicle"), "vehicle")
@@ -280,16 +304,22 @@ def _decode_shaft_boundary(payload: Mapping[str, Any]) -> object:
         road_load_doc = _mapping(_require(payload, "road_load"), "road_load")
         road_load = RoadLoadModel(
             spec=VehicleRoadLoadSpec(
-                rolling_resistance_coefficient=_number(road_load_doc, "rolling_resistance_coefficient"),
+                rolling_resistance_coefficient=_number(
+                    road_load_doc, "rolling_resistance_coefficient"
+                ),
                 drag_coefficient=_number(road_load_doc, "drag_coefficient"),
                 frontal_area=_number(road_load_doc, "frontal_area_m2"),
                 air_density=_number(road_load_doc, "air_density_kg_per_m3"),
                 gravity=_number(road_load_doc, "gravity_m_per_s2"),
-                rolling_speed_regularization=_number(road_load_doc, "rolling_speed_regularization_m_per_s"),
+                rolling_speed_regularization=_number(
+                    road_load_doc, "rolling_speed_regularization_m_per_s"
+                ),
             ),
             vehicle=VehicleInertia(
                 mass=_number(vehicle_doc, "mass_kg"),
-                wheel_rotational_inertia=_number(vehicle_doc, "wheel_rotational_inertia_kg_m2"),
+                wheel_rotational_inertia=_number(
+                    vehicle_doc, "wheel_rotational_inertia_kg_m2"
+                ),
             ),
             final_drive=FixedFinalDrive(
                 reduction_ratio=_number(final_drive_doc, "reduction_ratio"),
@@ -301,15 +331,22 @@ def _decode_shaft_boundary(payload: Mapping[str, Any]) -> object:
             road_profile=_decode_road_profile(
                 _mapping(_require(payload, "road_profile"), "road_profile")
             ),
-            direct_secondary_shaft_inertia=_number(payload, "direct_secondary_shaft_inertia_kg_m2"),
+            direct_secondary_shaft_inertia=_number(
+                payload, "direct_secondary_shaft_inertia_kg_m2"
+            ),
         )
-    raise UnsupportedSimulationDocumentError(f"Unsupported shaft boundary kind {kind!r}.")
+    raise UnsupportedSimulationDocumentError(
+        f"Unsupported shaft boundary kind {kind!r}."
+    )
 
 
 def _encode_host(host: object, initial_host_state) -> dict[str, Any]:
     values = list(map(float, initial_host_state))
     if isinstance(host, SecondaryShaftAngleHost):
-        return {"kind": "secondary_shaft_angle", "initial_state": {"secondary_shaft_angle_rad": values[0]}}
+        return {
+            "kind": "secondary_shaft_angle",
+            "initial_state": {"secondary_shaft_angle_rad": values[0]},
+        }
     if isinstance(host, TireVehicleHost):
         return {
             "kind": "tire_vehicle",
@@ -319,7 +356,9 @@ def _encode_host(host: object, initial_host_state) -> dict[str, Any]:
                 "vehicle_speed_m_per_s": values[2],
             },
         }
-    raise UnsupportedSimulationDocumentError(f"Cannot serialize host {type(host).__name__}.")
+    raise UnsupportedSimulationDocumentError(
+        f"Cannot serialize host {type(host).__name__}."
+    )
 
 
 def _decode_host(payload: Mapping[str, Any], *, secondary_boundary: object):
@@ -365,8 +404,12 @@ def _decode_road_profile(payload: Mapping[str, Any]) -> object:
         return PiecewiseConstantGradeRoadProfile(
             tuple(
                 PiecewiseConstantGradeSegment(
-                    start_distance=_number(_mapping(s, f"segments[{i}]"), "start_distance_m"),
-                    grade_angle=_number(_mapping(s, f"segments[{i}]"), "grade_angle_rad"),
+                    start_distance=_number(
+                        _mapping(s, f"segments[{i}]"), "start_distance_m"
+                    ),
+                    grade_angle=_number(
+                        _mapping(s, f"segments[{i}]"), "grade_angle_rad"
+                    ),
                 )
                 for i, s in enumerate(segments)
             )
@@ -394,7 +437,9 @@ def _decode_integrator_settings(payload: Mapping[str, Any]) -> HybridIntegratorS
         absolute_tolerance=_number(payload, "absolute_tolerance"),
         method=_string(payload, "method"),
         max_step=_number_or_infinity(payload, "max_step"),
-        first_step=None if first_step is None else _finite_number(payload, "first_step"),
+        first_step=(
+            None if first_step is None else _finite_number(payload, "first_step")
+        ),
         maximum_transitions=_integer(payload, "maximum_transitions"),
         event_time_tolerance=_number(payload, "event_time_tolerance"),
         retain_dense_output=_boolean(payload, "retain_dense_output"),
@@ -404,7 +449,11 @@ def _decode_integrator_settings(payload: Mapping[str, Any]) -> HybridIntegratorS
 def _encode_reporting_settings(settings: ReportingSettings) -> dict[str, Any]:
     grid = settings.grid
     return {
-        "grid": {"kind": grid.kind, "count": grid.count, "step_seconds": grid.step_seconds},
+        "grid": {
+            "kind": grid.kind,
+            "count": grid.count,
+            "step_seconds": grid.step_seconds,
+        },
         "include_contact": settings.include_contact,
         "include_actuation": settings.include_actuation,
         "include_closure_audit": settings.include_closure_audit,
@@ -422,7 +471,9 @@ def _decode_reporting_settings(payload: Mapping[str, Any]) -> ReportingSettings:
     elif kind == "uniform_time_step":
         grid = ReportingGrid.uniform_time_step(_number(grid_doc, "step_seconds"))
     else:
-        raise UnsupportedSimulationDocumentError(f"Unsupported reporting grid kind {kind!r}.")
+        raise UnsupportedSimulationDocumentError(
+            f"Unsupported reporting grid kind {kind!r}."
+        )
     return ReportingSettings(
         grid=grid,
         include_contact=_boolean(payload, "include_contact"),

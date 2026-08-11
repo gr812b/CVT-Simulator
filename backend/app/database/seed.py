@@ -461,7 +461,9 @@ def seed_database(session: Session, *, preset_path: Path | None = None) -> None:
                 name="20° hill launch",
                 kind="hill_launch",
                 visibility="public",
-                payload=_load_case_payload(split["load_case"], grade_angle_rad=SEED_HILL_20_DEG_RAD),
+                payload=_load_case_payload(
+                    split["load_case"], grade_angle_rad=SEED_HILL_20_DEG_RAD
+                ),
             ),
             LoadCase(
                 id=SEED_LOAD_CASE_FLAT_THEN_HILL_20_ID,
@@ -554,7 +556,6 @@ def split_simulation_case_for_database(simulation_case: JsonDict) -> JsonDict:
         },
         "execution": copy.deepcopy(simulation_case["execution"]),
     }
-
 
 
 def _refresh_seed_run_setups(session: Session, split: JsonDict) -> None:
@@ -1069,6 +1070,7 @@ def _baseline_tuning_schema() -> JsonDict:
         ]
     }
 
+
 def _component_by_kind(cinder_assembly: JsonDict, mount: str, kind: str) -> JsonDict | None:
     components = cinder_assembly.get("pulleys", {}).get(mount, {}).get("components", [])
     if not isinstance(components, list):
@@ -1128,6 +1130,7 @@ def _extract_baseline_tune(cinder_assembly: JsonDict) -> JsonDict:
         pass
 
     return values
+
 
 def _engine_summary(input_boundary: JsonDict) -> JsonDict:
     points = input_boundary.get("points", [])

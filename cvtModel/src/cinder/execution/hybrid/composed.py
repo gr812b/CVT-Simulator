@@ -10,7 +10,11 @@ from numpy.typing import NDArray
 
 from cinder.core import StateBlock, StateLayout
 from cinder.hosts import CVTHost, NoHost
-from cinder.model.boundaries import FixedShaftBoundary, ShaftBoundary, ShaftBoundaryContext
+from cinder.model.boundaries import (
+    FixedShaftBoundary,
+    ShaftBoundary,
+    ShaftBoundaryContext,
+)
 from cinder.model.system import CVTShaftBoundaryValues, CVTState, MechanicalCVTPlant
 
 from .cvt_operating_hybrid import CVTOperatingHybridSystem
@@ -72,7 +76,11 @@ class ComposedCVTHybridSystem:
         cvt = CVTOperatingHybridSystem(
             model=plant,
             **({} if solve_settings is None else {"solve_settings": solve_settings}),
-            **({} if switching_tolerances is None else {"switching_settings": switching_tolerances}),
+            **(
+                {}
+                if switching_tolerances is None
+                else {"switching_settings": switching_tolerances}
+            ),
         )
         return cls(
             cvt=cvt,
@@ -81,8 +89,12 @@ class ComposedCVTHybridSystem:
             host=host or NoHost(),
         )
 
-    def initial_state(self, *, cvt_state: CVTState, host_state: NDArray[np.float64]) -> NDArray[np.float64]:
-        return self.layout.pack(cvt=cvt_state.as_vector(), **{self.host.state_block.name: host_state})
+    def initial_state(
+        self, *, cvt_state: CVTState, host_state: NDArray[np.float64]
+    ) -> NDArray[np.float64]:
+        return self.layout.pack(
+            cvt=cvt_state.as_vector(), **{self.host.state_block.name: host_state}
+        )
 
     def classify_initial_mode(self, state: NDArray[np.float64]) -> ComposedCVTMode:
         cvt_state = CVTState.from_vector(self.layout.view(state, "cvt"))
@@ -94,7 +106,9 @@ class ComposedCVTHybridSystem:
             )
         )
 
-    def rhs(self, time: float, state: NDArray[np.float64], mode: ComposedCVTMode) -> NDArray[np.float64]:
+    def rhs(
+        self, time: float, state: NDArray[np.float64], mode: ComposedCVTMode
+    ) -> NDArray[np.float64]:
         cvt_vector = self.layout.view(state, "cvt")
         host_vector = self.layout.view(state, self.host.state_block.name)
         cvt_state = CVTState.from_vector(cvt_vector)
@@ -113,7 +127,9 @@ class ComposedCVTHybridSystem:
         )
         return self.layout.pack(cvt=dy_cvt, **{self.host.state_block.name: dy_host})
 
-    def events(self, time: float, state: NDArray[np.float64], mode: ComposedCVTMode) -> Sequence[HybridEvent]:
+    def events(
+        self, time: float, state: NDArray[np.float64], mode: ComposedCVTMode
+    ) -> Sequence[HybridEvent]:
         cvt_vector = self.layout.view(state, "cvt")
         shaft_values = self._shaft_boundaries(time=time, state=state)
         cvt_events = self.cvt.events_with_boundaries(
@@ -131,7 +147,9 @@ class ComposedCVTHybridSystem:
             host_state=host_vector,
             shaft_boundaries=shaft_values,
         )
-        return tuple(lifted) + tuple(self._lift_host_event(event) for event in host_events)
+        return tuple(lifted) + tuple(
+            self._lift_host_event(event) for event in host_events
+        )
 
     def transition(
         self,
@@ -140,8 +158,16 @@ class ComposedCVTHybridSystem:
         mode: ComposedCVTMode,
         fired_event_names: tuple[str, ...],
     ) -> HybridTransition[ComposedCVTMode]:
-        cvt_fired = tuple(name.removeprefix("cvt:") for name in fired_event_names if name.startswith("cvt:"))
-        host_fired = tuple(name.removeprefix("host:") for name in fired_event_names if name.startswith("host:"))
+        cvt_fired = tuple(
+            name.removeprefix("cvt:")
+            for name in fired_event_names
+            if name.startswith("cvt:")
+        )
+        host_fired = tuple(
+            name.removeprefix("host:")
+            for name in fired_event_names
+            if name.startswith("host:")
+        )
         successor = np.array(state, dtype=float, copy=True)
         next_cvt_mode = mode.cvt
         reason_parts: list[str] = []
@@ -167,7 +193,9 @@ class ComposedCVTHybridSystem:
             assert cvt_transition.next_mode is not None
             next_cvt_mode = cvt_transition.next_mode
             if cvt_transition.successor_state is not None:
-                successor = self.layout.replace_block(successor, "cvt", cvt_transition.successor_state)
+                successor = self.layout.replace_block(
+                    successor, "cvt", cvt_transition.successor_state
+                )
 
         if host_fired:
             cvt_state = CVTState.from_vector(self.layout.view(successor, "cvt"))
@@ -205,7 +233,6 @@ class ComposedCVTHybridSystem:
             successor_state=successor,
         )
 
-
     def integrate_trace(
         self,
         *,
@@ -216,7 +243,10 @@ class ComposedCVTHybridSystem:
     ):
         """Return a raw trace for this composed CVT-host system."""
 
-        from cinder.execution.hybrid.hybrid import HybridIntegratorSettings, integrate_hybrid
+        from cinder.execution.hybrid.hybrid import (
+            HybridIntegratorSettings,
+            integrate_hybrid,
+        )
         from cinder.results import CVTIntegrationTrace
 
         if settings is None:
@@ -250,7 +280,10 @@ class ComposedCVTHybridSystem:
             settings = HybridIntegratorSettings()
         if reporting_settings is None:
             reporting_settings = ReportingSettings.standard()
-        if reporting_settings.grid.requires_dense_output and not settings.retain_dense_output:
+        if (
+            reporting_settings.grid.requires_dense_output
+            and not settings.retain_dense_output
+        ):
             settings = replace(settings, retain_dense_output=True)
         return CVTResultBuilder(system=self).build(
             self.integrate_trace(
@@ -262,7 +295,9 @@ class ComposedCVTHybridSystem:
             settings=reporting_settings,
         )
 
-    def _lift_cvt_event(self, *, event: HybridEvent, mode: ComposedCVTMode) -> HybridEvent:
+    def _lift_cvt_event(
+        self, *, event: HybridEvent, mode: ComposedCVTMode
+    ) -> HybridEvent:
         def callback(time: float, state: NDArray[np.float64]) -> float:
             cvt_vector = self.layout.view(state, "cvt")
             # Rebuild the CVT event with the boundary values at the full state
@@ -295,7 +330,9 @@ class ComposedCVTHybridSystem:
             terminal=event.terminal,
         )
 
-    def _shaft_boundaries(self, *, time: float, state: NDArray[np.float64]) -> CVTShaftBoundaryValues:
+    def _shaft_boundaries(
+        self, *, time: float, state: NDArray[np.float64]
+    ) -> CVTShaftBoundaryValues:
         cvt_vector = self.layout.view(state, "cvt")
         host_vector = self.layout.view(state, self.host.state_block.name)
         cvt_state = CVTState.from_vector(cvt_vector)
@@ -305,9 +342,13 @@ class ComposedCVTHybridSystem:
             host_state=host_vector,
         )
         primary = self.primary_boundary.evaluate(
-            ShaftBoundaryContext(time=time, cvt=cvt_state, shaft="primary", host=host_context)
+            ShaftBoundaryContext(
+                time=time, cvt=cvt_state, shaft="primary", host=host_context
+            )
         )
         secondary = self.secondary_boundary.evaluate(
-            ShaftBoundaryContext(time=time, cvt=cvt_state, shaft="secondary", host=host_context)
+            ShaftBoundaryContext(
+                time=time, cvt=cvt_state, shaft="secondary", host=host_context
+            )
         )
         return CVTShaftBoundaryValues(primary=primary, secondary=secondary)

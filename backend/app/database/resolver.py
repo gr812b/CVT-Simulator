@@ -145,11 +145,7 @@ def resolve_simulation_case(
     # database schema/cache implementation. The aliases above ensure engine and
     # output-system differences remain part of the cache key.
     document["contract_hash"] = canonical_json_hash(
-        {
-            key: copy.deepcopy(document[key])
-            for key in V1_EXECUTABLE_HASH_KEYS
-            if key in document
-        }
+        {key: copy.deepcopy(document[key]) for key in V1_EXECUTABLE_HASH_KEYS if key in document}
     )
     return document
 
@@ -171,9 +167,7 @@ def _current_assembly_document(
         pulleys["secondary"] = pulleys.pop("output")
 
     if "primary" not in pulleys or "secondary" not in pulleys:
-        raise ValueError(
-            "CVT design must define both primary and secondary pulley payloads."
-        )
+        raise ValueError("CVT design must define both primary and secondary pulley payloads.")
 
     _normalize_contact(assembly, stored_execution)
     _normalize_inertias(assembly)
@@ -361,9 +355,7 @@ def _current_host_and_scenario(stored_scenario: JsonDict) -> tuple[JsonDict, Jso
         initial = copy.deepcopy(legacy_initial)
         legacy_host_source = legacy_initial
     else:
-        raise ValueError(
-            "Scenario must define initial_state or initial_cvt_state."
-        )
+        raise ValueError("Scenario must define initial_state or initial_cvt_state.")
 
     cvt_keys = (
         "primary_angular_speed_rad_per_s",
@@ -375,8 +367,7 @@ def _current_host_and_scenario(stored_scenario: JsonDict) -> tuple[JsonDict, Jso
     missing = [key for key in cvt_keys if key not in initial]
     if missing:
         raise ValueError(
-            "Scenario initial state is missing required CVT values: "
-            + ", ".join(missing)
+            "Scenario initial state is missing required CVT values: " + ", ".join(missing)
         )
 
     initial_cvt_state = {key: copy.deepcopy(initial[key]) for key in cvt_keys}
@@ -386,8 +377,7 @@ def _current_host_and_scenario(stored_scenario: JsonDict) -> tuple[JsonDict, Jso
         shaft_angle = legacy_host_source.get("secondary_shaft_angle_rad", 0.0)
 
     has_vehicle_state = isinstance(legacy_host_source, dict) and (
-        "vehicle_position_m" in legacy_host_source
-        or "vehicle_speed_m_per_s" in legacy_host_source
+        "vehicle_position_m" in legacy_host_source or "vehicle_speed_m_per_s" in legacy_host_source
     )
     if has_vehicle_state:
         host = {
@@ -445,9 +435,7 @@ def _current_execution(stored_execution: JsonDict) -> JsonDict:
     )
     missing = [key for key in required if key not in current_integrator]
     if missing:
-        raise ValueError(
-            "Execution integrator is missing required values: " + ", ".join(missing)
-        )
+        raise ValueError("Execution integrator is missing required values: " + ", ".join(missing))
 
     # Only the current public execution contract is emitted. Legacy traction,
     # closure, operating-limit, and switching dictionaries were internal to the
@@ -539,11 +527,7 @@ def _deep_merge(target: JsonDict, overrides: JsonDict) -> JsonDict:
             # Discriminated sub-documents must be replaced when their kind
             # changes. Otherwise a constant-grade profile changed to a
             # piecewise route would keep stale legacy fields.
-            if (
-                "kind" in value
-                and "kind" in existing
-                and value["kind"] != existing["kind"]
-            ):
+            if "kind" in value and "kind" in existing and value["kind"] != existing["kind"]:
                 target[key] = copy.deepcopy(value)
             else:
                 _deep_merge(existing, value)

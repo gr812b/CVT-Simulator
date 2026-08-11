@@ -175,7 +175,6 @@ class PublicContractsTest(unittest.TestCase):
                 )
             )
 
-
     def test_piecewise_constant_road_profile_document_is_executable_by_distance(
         self,
     ) -> None:

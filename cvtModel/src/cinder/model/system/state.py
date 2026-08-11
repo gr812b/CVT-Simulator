@@ -151,11 +151,12 @@ class CVTStateDerivative:
         )
 
 
-
 def _coerce_vector(*, values: ArrayLike, name: str) -> NDArray[np.float64]:
     vector = np.asarray(values, dtype=float)
     if vector.ndim != 1 or vector.size != _CVT_STATE_SIZE:
-        raise ValueError(f"{name} vector must contain exactly {_CVT_STATE_SIZE} entries.")
+        raise ValueError(
+            f"{name} vector must contain exactly {_CVT_STATE_SIZE} entries."
+        )
     if not np.all(np.isfinite(vector)):
         raise ValueError(f"{name} vector entries must be finite.")
     return vector

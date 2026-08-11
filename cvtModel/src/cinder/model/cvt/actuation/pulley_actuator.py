@@ -42,8 +42,11 @@ class PulleyActuator:
             if hasattr(force_law, "evaluate_element"):
                 contribution = contribution + force_law.evaluate_element(context)
             else:
-                contribution = contribution + PulleyElementContribution.from_closing_force(
-                    force_law.evaluate(context)
+                contribution = (
+                    contribution
+                    + PulleyElementContribution.from_closing_force(
+                        force_law.evaluate(context)
+                    )
                 )
         return contribution
 

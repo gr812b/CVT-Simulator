@@ -192,10 +192,12 @@ def decode_assembly_document(document: Mapping[str, Any]) -> CVTAssemblySpec:
 
     pulleys_doc = _mapping(_require(root, "pulleys"), "pulleys")
     primary_pulley = _decode_pulley(
-        _mapping(_require(pulleys_doc, "primary"), "pulleys.primary"), location="primary"
+        _mapping(_require(pulleys_doc, "primary"), "pulleys.primary"),
+        location="primary",
     )
     secondary_pulley = _decode_pulley(
-        _mapping(_require(pulleys_doc, "secondary"), "pulleys.secondary"), location="secondary"
+        _mapping(_require(pulleys_doc, "secondary"), "pulleys.secondary"),
+        location="secondary",
     )
 
     return CVTAssemblySpec(

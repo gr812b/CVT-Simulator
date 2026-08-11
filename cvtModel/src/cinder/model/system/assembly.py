@@ -34,12 +34,16 @@ class BeltContactSpec:
             not isfinite(self.static_friction_coefficient)
             or self.static_friction_coefficient <= 0.0
         ):
-            raise ValueError("static_friction_coefficient must be finite and strictly positive.")
+            raise ValueError(
+                "static_friction_coefficient must be finite and strictly positive."
+            )
         if self.kinetic_friction_coefficient is not None and (
             not isfinite(self.kinetic_friction_coefficient)
             or self.kinetic_friction_coefficient <= 0.0
         ):
-            raise ValueError("kinetic_friction_coefficient must be finite and strictly positive.")
+            raise ValueError(
+                "kinetic_friction_coefficient must be finite and strictly positive."
+            )
 
     @property
     def resolved_kinetic_friction_coefficient(self) -> float:

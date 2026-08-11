@@ -29,7 +29,6 @@ from cinder.model.boundaries.vehicle import RoadLoadResult
 from cinder.model.system.evaluator import MechanicalCVTPlant
 from cinder.model.system.ports import CVTShaftBoundaryValues
 
-
 _DEADZONE_SHIFT_DOMAIN_TOLERANCE: Final[float] = 1.0e-12
 
 

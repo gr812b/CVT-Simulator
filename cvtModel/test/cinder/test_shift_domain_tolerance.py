@@ -48,7 +48,9 @@ class ShiftDomainToleranceTest(unittest.TestCase):
 
         snapshot = build_deadzone_snapshot(model=model, state=rounded_state)
 
-        self.assertEqual(snapshot.state.shift_position, model.geometry.spec.deadzone_shift)
+        self.assertEqual(
+            snapshot.state.shift_position, model.geometry.spec.deadzone_shift
+        )
 
 
 if __name__ == "__main__":

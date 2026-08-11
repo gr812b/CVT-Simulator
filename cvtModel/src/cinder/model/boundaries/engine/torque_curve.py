@@ -70,4 +70,3 @@ class FullThrottleTorqueCurve:
             return self._spec.high_speed_braking_torque
 
         return float(self._interpolator(angular_speed))
-

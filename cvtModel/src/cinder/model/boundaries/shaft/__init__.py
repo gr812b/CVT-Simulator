@@ -77,7 +77,9 @@ class FullThrottleEngineBoundary:
             not isfinite(equivalent_rotational_inertia)
             or equivalent_rotational_inertia < 0.0
         ):
-            raise ValueError("equivalent_rotational_inertia must be finite and non-negative.")
+            raise ValueError(
+                "equivalent_rotational_inertia must be finite and non-negative."
+            )
         self._torque_curve = torque_curve
         self._equivalent_rotational_inertia = float(equivalent_rotational_inertia)
 
@@ -95,6 +97,7 @@ class FullThrottleEngineBoundary:
             external_torque=torque,
             equivalent_inertia=self._equivalent_rotational_inertia,
         )
+
 
 from cinder.model.boundaries.vehicle import (  # noqa: E402
     ConstantGradeRoadProfile,
@@ -125,7 +128,9 @@ class LockedFinalDriveShaftBoundary:
             not isfinite(self.direct_secondary_shaft_inertia)
             or self.direct_secondary_shaft_inertia < 0.0
         ):
-            raise ValueError("direct_secondary_shaft_inertia must be finite and non-negative.")
+            raise ValueError(
+                "direct_secondary_shaft_inertia must be finite and non-negative."
+            )
 
     @property
     def reflected_rotational_inertia(self) -> float:
@@ -141,17 +146,23 @@ class LockedFinalDriveShaftBoundary:
 
     def evaluate(self, context: ShaftBoundaryContext) -> ShaftBoundaryValue:
         if context.shaft != "secondary":
-            raise ValueError("LockedFinalDriveShaftBoundary must be attached to secondary.")
+            raise ValueError(
+                "LockedFinalDriveShaftBoundary must be attached to secondary."
+            )
         try:
             secondary_angle = float(context.host["secondary_shaft_angle"])
         except KeyError as exc:
             raise KeyError(
                 "LockedFinalDriveShaftBoundary requires host['secondary_shaft_angle']."
             ) from exc
-        vehicle_distance = self.road_load.final_drive.vehicle_distance_from_secondary_angle(
-            secondary_shaft_angle=secondary_angle,
+        vehicle_distance = (
+            self.road_load.final_drive.vehicle_distance_from_secondary_angle(
+                secondary_shaft_angle=secondary_angle,
+            )
         )
-        grade_angle = self.road_profile.sample(vehicle_distance=vehicle_distance).grade_angle
+        grade_angle = self.road_profile.sample(
+            vehicle_distance=vehicle_distance
+        ).grade_angle
         road_load = self.road_load.evaluate(
             secondary_angular_speed=context.cvt.secondary_angular_speed,
             grade_angle=grade_angle,
@@ -213,7 +224,9 @@ class TireCoupledShaftBoundary:
             not isfinite(self.direct_secondary_shaft_inertia)
             or self.direct_secondary_shaft_inertia < 0.0
         ):
-            raise ValueError("direct_secondary_shaft_inertia must be finite and non-negative.")
+            raise ValueError(
+                "direct_secondary_shaft_inertia must be finite and non-negative."
+            )
 
     @property
     def wheel_rotational_inertia_referred_to_secondary(self) -> float:
@@ -227,9 +240,13 @@ class TireCoupledShaftBoundary:
         try:
             vehicle_speed = float(context.host["vehicle_speed"])
         except KeyError as exc:
-            raise KeyError("TireCoupledShaftBoundary requires host['vehicle_speed'].") from exc
+            raise KeyError(
+                "TireCoupledShaftBoundary requires host['vehicle_speed']."
+            ) from exc
         vehicle_position = float(context.host.get("vehicle_position", 0.0))
-        grade_angle = self.road_profile.sample(vehicle_distance=vehicle_position).grade_angle
+        grade_angle = self.road_profile.sample(
+            vehicle_distance=vehicle_position
+        ).grade_angle
         wheel_speed = self.road_load.final_drive.wheel_angular_speed(
             secondary_angular_speed=context.cvt.secondary_angular_speed,
         )

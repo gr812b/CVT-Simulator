@@ -143,7 +143,6 @@ def test_resolver_builds_frozen_simulation_case_from_released_versions() -> None
         session.close()
 
 
-
 def test_seeded_flat_then_hill_load_case_resolves_as_piecewise_route() -> None:
     _, session = build_session()
     try:
@@ -171,6 +170,7 @@ def test_seeded_flat_then_hill_load_case_resolves_as_piecewise_route() -> None:
         }
     finally:
         session.close()
+
 
 def test_model_payload_columns_use_jsonb_on_postgres() -> None:
     dialect = postgresql.dialect()

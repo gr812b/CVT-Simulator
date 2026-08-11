@@ -18,7 +18,9 @@ from .inspection import CVTStateInspection, inspect_cvt_state
 from .trace import CVTIntegrationTrace
 
 if TYPE_CHECKING:
-    from cinder.execution.hybrid.cvt_operating_hybrid import CVTOperatingHybridSystem
+    from cinder.execution.hybrid.cvt_operating_hybrid import (
+        CVTOperatingHybridSystem,
+    )  # noqa: F401
 
 
 DEFAULT_REPORT_TIME_STEP_SECONDS = 0.01
@@ -255,7 +257,9 @@ class CVTResultSummary:
             raise ValueError("duration must be finite and non-negative.")
         values = np.asarray(self.final_state, dtype=float)
         if values.ndim != 1 or values.size < 5 or not np.all(np.isfinite(values)):
-            raise ValueError("final_state must contain at least the five finite CVT state values.")
+            raise ValueError(
+                "final_state must contain at least the five finite CVT state values."
+            )
         frozen = np.array(values, dtype=float, copy=True)
         frozen.setflags(write=False)
         object.__setattr__(self, "final_state", frozen)
@@ -322,7 +326,9 @@ class CVTResultBuilder:
             return self._system.layout.view_matrix(state, "cvt")
         return state
 
-    def _shaft_boundaries_for_sample(self, *, time: float, full_state: NDArray[np.float64]):
+    def _shaft_boundaries_for_sample(
+        self, *, time: float, full_state: NDArray[np.float64]
+    ):
         if self._is_composed:
             return self._system._shaft_boundaries(time=time, state=full_state)
         return None
@@ -420,7 +426,11 @@ class CVTResultBuilder:
                 duration=trace.final_time - trace.segments[0].start_time,
                 segment_count=len(trace.segments),
                 transition_count=len(trace.transitions),
-                final_state=(self._system.layout.view(trace.final_state, "cvt") if self._is_composed else trace.final_state),
+                final_state=(
+                    self._system.layout.view(trace.final_state, "cvt")
+                    if self._is_composed
+                    else trace.final_state
+                ),
             ),
             warnings=tuple(warnings),
         )
@@ -576,7 +586,9 @@ def _build_signals(
         "Secondary shaft external torque",
         "N m",
         "boundary",
-        np.array([item.shaft_boundaries.secondary_external_torque for item in inspections]),
+        np.array(
+            [item.shaft_boundaries.secondary_external_torque for item in inspections]
+        ),
     )
     add(
         "boundary.secondary_equivalent_inertia",
@@ -859,9 +871,17 @@ def _add_contact_signals(
 
 
 def _add_observer_signals(add, time, state, inspections, offsets) -> None:
-    primary_angle, primary_boundary_work, secondary_boundary_work, primary_loss, secondary_loss = offsets
+    (
+        primary_angle,
+        primary_boundary_work,
+        secondary_boundary_work,
+        primary_loss,
+        secondary_loss,
+    ) = offsets
     primary_angle_values = primary_angle + _cumulative_trapezoid(time, state[0])
-    primary_boundary_power = np.array([item.primary_external_torque for item in inspections]) * state[0]
+    primary_boundary_power = (
+        np.array([item.primary_external_torque for item in inspections]) * state[0]
+    )
     add(
         "observer.primary_boundary_power",
         "Primary boundary power",
@@ -870,7 +890,9 @@ def _add_observer_signals(add, time, state, inspections, offsets) -> None:
         primary_boundary_power,
     )
     secondary_boundary_power = (
-        np.array([item.shaft_boundaries.secondary_external_torque for item in inspections])
+        np.array(
+            [item.shaft_boundaries.secondary_external_torque for item in inspections]
+        )
         * state[1]
     )
     primary_slip_power = np.array(

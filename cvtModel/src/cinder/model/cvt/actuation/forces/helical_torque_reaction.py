@@ -12,7 +12,11 @@ from math import isfinite
 
 from cinder.model.cvt.closure import AffineClosureScalar, ClosureGains, ClosureUnknown
 
-from ..types import ActuationContribution, PulleyActuationContext, PulleyElementContribution
+from ..types import (
+    ActuationContribution,
+    PulleyActuationContext,
+    PulleyElementContribution,
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -50,14 +54,18 @@ class HelicalTorqueReactionForce:
     def evaluate(self, context: PulleyActuationContext) -> AffineClosureScalar:
         return self.evaluate_element(context).closing_force
 
-    def evaluate_element(self, context: PulleyActuationContext) -> PulleyElementContribution:
+    def evaluate_element(
+        self, context: PulleyActuationContext
+    ) -> PulleyElementContribution:
         terms = self._terms(context)
         return PulleyElementContribution(
             closing_force=terms.closing_force,
             shaft_torque=terms.movable_member_shaft_torque,
         )
 
-    def inspect(self, context: PulleyActuationContext) -> tuple[ActuationContribution, ...]:
+    def inspect(
+        self, context: PulleyActuationContext
+    ) -> tuple[ActuationContribution, ...]:
         terms = self._terms(context)
         channels = terms.channels
         inertia = terms.movable_member_inertia
@@ -126,11 +134,17 @@ class HelicalTorqueReactionForce:
         channels = context.closure_channels
         inertia = context.movable_member_rotational_inertia
         if coupling is None:
-            raise ValueError("HelicalTorqueReactionForce requires a host helical_coupling.")
+            raise ValueError(
+                "HelicalTorqueReactionForce requires a host helical_coupling."
+            )
         if channels is None:
-            raise ValueError("HelicalTorqueReactionForce requires host closure_channels.")
+            raise ValueError(
+                "HelicalTorqueReactionForce requires host closure_channels."
+            )
         if inertia is None:
-            raise ValueError("HelicalTorqueReactionForce requires host movable-member inertia.")
+            raise ValueError(
+                "HelicalTorqueReactionForce requires host movable-member inertia."
+            )
 
         kinematics = coupling.kinematics
         spring_torque = self._spec.torsional_stiffness * (
@@ -142,12 +156,14 @@ class HelicalTorqueReactionForce:
             bias=force_per_reacted_torque * (spring_torque + curvature_torque),
             gains=ClosureGains.from_by_unknown(
                 {
-                    channels.shaft_angular_acceleration: -force_per_reacted_torque * inertia,
+                    channels.shaft_angular_acceleration: -force_per_reacted_torque
+                    * inertia,
                     ClosureUnknown.SHIFT_ACCELERATION: (
                         force_per_reacted_torque * inertia * kinematics.dtheta_ds
                     ),
                     channels.shaft_torque: (
-                        force_per_reacted_torque * self._spec.movable_member_torque_fraction
+                        force_per_reacted_torque
+                        * self._spec.movable_member_torque_fraction
                     ),
                 }
             ),

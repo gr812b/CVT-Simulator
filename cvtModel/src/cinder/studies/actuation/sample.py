@@ -165,12 +165,16 @@ def _build_pulley_context(
         coordinate = geometry.primary_axial_coordinate
         pulley_spec = cvt.pulleys.primary
         closure_channels = PulleyClosureChannels.primary()
-        movable_member_rotational_inertia = cvt.inertias.primary.movable_sheave_rotational_inertia
+        movable_member_rotational_inertia = (
+            cvt.inertias.primary.movable_sheave_rotational_inertia
+        )
     elif pulley is PulleyLocation.SECONDARY:
         coordinate = geometry.secondary_axial_coordinate
         pulley_spec = cvt.pulleys.secondary
         closure_channels = PulleyClosureChannels.secondary()
-        movable_member_rotational_inertia = cvt.inertias.secondary.movable_sheave_rotational_inertia
+        movable_member_rotational_inertia = (
+            cvt.inertias.secondary.movable_sheave_rotational_inertia
+        )
     else:  # pragma: no cover - PulleyLocation enum exhaustiveness.
         raise TypeError(f"Unsupported pulley location: {pulley!r}")
 

@@ -57,7 +57,9 @@ class DynamicsSnapshot:
     def vehicle_road_load(self):
         road_load = self.road_load
         if road_load is None:
-            raise RuntimeError("This shaft boundary does not provide vehicle road-load data.")
+            raise RuntimeError(
+                "This shaft boundary does not provide vehicle road-load data."
+            )
         return road_load
 
     @property
@@ -86,11 +88,17 @@ class DynamicsSnapshot:
 
     @property
     def primary_rotational_inertia(self) -> float:
-        return self.inertias.primary.absolute_rotation_inertia + self.primary_boundary_equivalent_inertia
+        return (
+            self.inertias.primary.absolute_rotation_inertia
+            + self.primary_boundary_equivalent_inertia
+        )
 
     @property
     def secondary_fixed_rotational_inertia(self) -> float:
-        return self.inertias.secondary.fixed_side.total + self.secondary_boundary_equivalent_inertia
+        return (
+            self.inertias.secondary.fixed_side.total
+            + self.secondary_boundary_equivalent_inertia
+        )
 
     @property
     def movable_secondary_rotational_inertia(self) -> float:
@@ -98,7 +106,10 @@ class DynamicsSnapshot:
 
     @property
     def secondary_absolute_rotational_inertia(self) -> float:
-        return self.secondary_fixed_rotational_inertia + self.movable_secondary_rotational_inertia
+        return (
+            self.secondary_fixed_rotational_inertia
+            + self.movable_secondary_rotational_inertia
+        )
 
     @property
     def primary_external_torque(self) -> float:
@@ -135,8 +146,12 @@ class MechanicalCVTPlant:
             ("secondary", self.secondary_helical_coupling),
         ):
             if coupling is not None:
-                _validate_helix_domain(name=name, helix_coupling=coupling, positions=positions)
-        _validate_primary_ramp_domain(actuator=self.primary_actuator, positions=positions)
+                _validate_helix_domain(
+                    name=name, helix_coupling=coupling, positions=positions
+                )
+        _validate_primary_ramp_domain(
+            actuator=self.primary_actuator, positions=positions
+        )
         _validate_compression_spring_domains(
             primary_actuator=self.primary_actuator,
             secondary_actuator=self.secondary_actuator,
@@ -149,15 +164,26 @@ class MechanicalCVTPlant:
             raise TypeError("assembly must be a CVTAssemblySpec.")
         instance = object.__new__(cls)
         object.__setattr__(instance, "geometry", assembly.geometry)
-        object.__setattr__(instance, "primary_actuator", assembly.pulleys.primary.actuator)
-        object.__setattr__(instance, "secondary_actuator", assembly.pulleys.secondary.actuator)
-        object.__setattr__(instance, "primary_helical_coupling", assembly.pulleys.primary.helical_coupling)
-        object.__setattr__(instance, "secondary_helical_coupling", assembly.pulleys.secondary.helical_coupling)
+        object.__setattr__(
+            instance, "primary_actuator", assembly.pulleys.primary.actuator
+        )
+        object.__setattr__(
+            instance, "secondary_actuator", assembly.pulleys.secondary.actuator
+        )
+        object.__setattr__(
+            instance,
+            "primary_helical_coupling",
+            assembly.pulleys.primary.helical_coupling,
+        )
+        object.__setattr__(
+            instance,
+            "secondary_helical_coupling",
+            assembly.pulleys.secondary.helical_coupling,
+        )
         object.__setattr__(instance, "inertias", assembly.inertias)
         object.__setattr__(instance, "contact", assembly.contact)
         instance.__post_init__()
         return instance
-
 
     @property
     def traction_law(self):
@@ -165,7 +191,9 @@ class MechanicalCVTPlant:
 
         return self.contact.traction_law()
 
-    def primary_actuation_context(self, *, state: CVTState, geometry: GeometryPosition) -> PulleyActuationContext:
+    def primary_actuation_context(
+        self, *, state: CVTState, geometry: GeometryPosition
+    ) -> PulleyActuationContext:
         return self._actuation_context(
             side="primary",
             state=state,
@@ -176,7 +204,9 @@ class MechanicalCVTPlant:
             movable_member_rotational_inertia=self.inertias.primary.movable_sheave_rotational_inertia,
         )
 
-    def secondary_actuation_context(self, *, state: CVTState, geometry: GeometryPosition) -> PulleyActuationContext:
+    def secondary_actuation_context(
+        self, *, state: CVTState, geometry: GeometryPosition
+    ) -> PulleyActuationContext:
         return self._actuation_context(
             side="secondary",
             state=state,
@@ -231,10 +261,14 @@ class MechanicalCVTPlant:
 
         geometry = self.geometry.evaluate(state.shift_position)
         primary_context = self.primary_actuation_context(state=state, geometry=geometry)
-        secondary_context = self.secondary_actuation_context(state=state, geometry=geometry)
+        secondary_context = self.secondary_actuation_context(
+            state=state, geometry=geometry
+        )
 
         primary_mechanism = self.primary_actuator.evaluate_element(primary_context)
-        secondary_mechanism = self.secondary_actuator.evaluate_element(secondary_context)
+        secondary_mechanism = self.secondary_actuator.evaluate_element(
+            secondary_context
+        )
         primary_element = primary_mechanism
         secondary_element = secondary_mechanism
 
@@ -255,9 +289,14 @@ class MechanicalCVTPlant:
             ),
         )
 
-        secondary_rigid_inertia = self.inertias.secondary.fixed_side.total + shaft_boundaries.secondary.equivalent_inertia
+        secondary_rigid_inertia = (
+            self.inertias.secondary.fixed_side.total
+            + shaft_boundaries.secondary.equivalent_inertia
+        )
         if self.secondary_helical_coupling is None:
-            secondary_rigid_inertia += self.inertias.secondary.movable_sheave_rotational_inertia
+            secondary_rigid_inertia += (
+                self.inertias.secondary.movable_sheave_rotational_inertia
+            )
         secondary_element = secondary_element + PulleyElementContribution(
             closing_force=_axial_inertial_reaction(
                 axial_inertia=axial_inertias.secondary,
@@ -269,8 +308,16 @@ class MechanicalCVTPlant:
             ),
         )
 
-        primary_helix = primary_context.helical_coupling.kinematics if primary_context.helical_coupling else None
-        secondary_helix = secondary_context.helical_coupling.kinematics if secondary_context.helical_coupling else None
+        primary_helix = (
+            primary_context.helical_coupling.kinematics
+            if primary_context.helical_coupling
+            else None
+        )
+        secondary_helix = (
+            secondary_context.helical_coupling.kinematics
+            if secondary_context.helical_coupling
+            else None
+        )
 
         snapshot = DynamicsSnapshot(
             state=state,
@@ -289,7 +336,9 @@ class MechanicalCVTPlant:
         _validate_snapshot(snapshot)
         return snapshot
 
-    def _primary_rigid_inertia(self, *, shaft_boundaries: CVTShaftBoundaryValues) -> float:
+    def _primary_rigid_inertia(
+        self, *, shaft_boundaries: CVTShaftBoundaryValues
+    ) -> float:
         inertia = (
             self.inertias.primary.fixed_rotating_hardware_inertia
             + shaft_boundaries.primary.equivalent_inertia
@@ -299,39 +348,63 @@ class MechanicalCVTPlant:
         return inertia
 
 
-def _axial_inertial_reaction(*, axial_inertia, shift_speed: float) -> AffineClosureScalar:
+def _axial_inertial_reaction(
+    *, axial_inertia, shift_speed: float
+) -> AffineClosureScalar:
     return AffineClosureScalar(
         bias=-axial_inertia.local_known_inertial_force(shift_speed=shift_speed),
-        gains=ClosureGains(shift_acceleration=-axial_inertia.local_shift_acceleration_gain),
+        gains=ClosureGains(
+            shift_acceleration=-axial_inertia.local_shift_acceleration_gain
+        ),
     )
 
 
-def _rigid_shaft_inertial_torque(*, unknown: ClosureUnknown, inertia: float) -> AffineClosureScalar:
+def _rigid_shaft_inertial_torque(
+    *, unknown: ClosureUnknown, inertia: float
+) -> AffineClosureScalar:
     return AffineClosureScalar(gains=ClosureGains.from_by_unknown({unknown: -inertia}))
 
 
-def _operating_geometry_positions(geometry: BeltPulleyGeometry) -> tuple[GeometryPosition, ...]:
+def _operating_geometry_positions(
+    geometry: BeltPulleyGeometry,
+) -> tuple[GeometryPosition, ...]:
     spec = geometry.spec
     shifts = tuple(sorted({0.0, spec.deadzone_shift, spec.max_shift}))
     return tuple(geometry.evaluate(shift) for shift in shifts)
 
 
-def _validate_helix_domain(*, name: str, helix_coupling: HelicalPulleyCoupling, positions: tuple[GeometryPosition, ...]) -> None:
+def _validate_helix_domain(
+    *,
+    name: str,
+    helix_coupling: HelicalPulleyCoupling,
+    positions: tuple[GeometryPosition, ...],
+) -> None:
     values = []
     for position in positions:
-        coordinate = position.primary_axial_coordinate if name == "primary" else position.secondary_axial_coordinate
+        coordinate = (
+            position.primary_axial_coordinate
+            if name == "primary"
+            else position.secondary_axial_coordinate
+        )
         values.append(-coordinate.value)
     minimum_opening = min(values)
     maximum_opening = max(values)
-    if minimum_opening < helix_coupling.profile.opening_travel_min or maximum_opening > helix_coupling.profile.opening_travel_max:
+    if (
+        minimum_opening < helix_coupling.profile.opening_travel_min
+        or maximum_opening > helix_coupling.profile.opening_travel_max
+    ):
         raise ValueError(
             f"{name} helical_coupling does not cover the geometry-reachable opening-travel interval "
             f"[{minimum_opening}, {maximum_opening}]."
         )
 
 
-def _validate_primary_ramp_domain(*, actuator: PulleyActuator, positions: tuple[GeometryPosition, ...]) -> None:
-    primary_positions = tuple(position.primary_axial_coordinate.value for position in positions)
+def _validate_primary_ramp_domain(
+    *, actuator: PulleyActuator, positions: tuple[GeometryPosition, ...]
+) -> None:
+    primary_positions = tuple(
+        position.primary_axial_coordinate.value for position in positions
+    )
     minimum_position = min(primary_positions)
     maximum_position = max(primary_positions)
     for force_law in actuator.force_laws:
@@ -344,32 +417,54 @@ def _validate_primary_ramp_domain(*, actuator: PulleyActuator, positions: tuple[
                 f"axial interval [{minimum_position}, {maximum_position}]."
             )
         for axial_position in primary_positions:
-            flyweight_radius = force_law.spec.radius_at_zero_position + profile.evaluate(axial_position).value
+            flyweight_radius = (
+                force_law.spec.radius_at_zero_position
+                + profile.evaluate(axial_position).value
+            )
             if flyweight_radius <= 0.0:
-                raise ValueError("primary centrifugal-ramp profile gives a non-positive flyweight radius.")
+                raise ValueError(
+                    "primary centrifugal-ramp profile gives a non-positive flyweight radius."
+                )
 
 
-def _validate_compression_spring_domains(*, primary_actuator: PulleyActuator, secondary_actuator: PulleyActuator, positions: tuple[GeometryPosition, ...]) -> None:
+def _validate_compression_spring_domains(
+    *,
+    primary_actuator: PulleyActuator,
+    secondary_actuator: PulleyActuator,
+    positions: tuple[GeometryPosition, ...],
+) -> None:
     _validate_actuator_springs(
         name="primary",
         actuator=primary_actuator,
-        axial_positions=tuple(position.primary_axial_coordinate.value for position in positions),
+        axial_positions=tuple(
+            position.primary_axial_coordinate.value for position in positions
+        ),
     )
     _validate_actuator_springs(
         name="secondary",
         actuator=secondary_actuator,
-        axial_positions=tuple(position.secondary_axial_coordinate.value for position in positions),
+        axial_positions=tuple(
+            position.secondary_axial_coordinate.value for position in positions
+        ),
     )
 
 
-def _validate_actuator_springs(*, name: str, actuator: PulleyActuator, axial_positions: tuple[float, ...]) -> None:
+def _validate_actuator_springs(
+    *, name: str, actuator: PulleyActuator, axial_positions: tuple[float, ...]
+) -> None:
     for force_law in actuator.force_laws:
         if not isinstance(force_law, AxialSpringForce):
             continue
         spec = force_law.spec
-        compressions = tuple(spec.initial_compression + spec.compression_per_axial_position * axial_position for axial_position in axial_positions)
+        compressions = tuple(
+            spec.initial_compression
+            + spec.compression_per_axial_position * axial_position
+            for axial_position in axial_positions
+        )
         if min(compressions) < 0.0:
-            raise ValueError(f"{name} compression spring reaches negative compression in the shift range.")
+            raise ValueError(
+                f"{name} compression spring reaches negative compression in the shift range."
+            )
 
 
 def _validate_snapshot(snapshot: DynamicsSnapshot) -> None:
@@ -395,4 +490,6 @@ def _validate_snapshot(snapshot: DynamicsSnapshot) -> None:
         if not isfinite(value):
             raise ValueError(f"Dynamics snapshot produced non-finite {name}.")
     if not 0.0 < snapshot.sheave_half_angle < 1.5707963267948966:
-        raise ValueError("Dynamics snapshot sheave_half_angle must lie strictly between zero and pi/2.")
+        raise ValueError(
+            "Dynamics snapshot sheave_half_angle must lie strictly between zero and pi/2."
+        )

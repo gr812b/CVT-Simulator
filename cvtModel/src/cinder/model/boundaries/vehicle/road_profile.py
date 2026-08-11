@@ -87,7 +87,9 @@ class PiecewiseConstantGradeRoadProfile:
 
     def __post_init__(self) -> None:
         if not self.segments:
-            raise ValueError("PiecewiseConstantGradeRoadProfile requires at least one segment.")
+            raise ValueError(
+                "PiecewiseConstantGradeRoadProfile requires at least one segment."
+            )
 
         previous_start: float | None = None
         for index, segment in enumerate(self.segments):
@@ -96,9 +98,7 @@ class PiecewiseConstantGradeRoadProfile:
                     "segments must contain PiecewiseConstantGradeSegment instances."
                 )
             if previous_start is not None and segment.start_distance <= previous_start:
-                raise ValueError(
-                    "segment start distances must be strictly increasing."
-                )
+                raise ValueError("segment start distances must be strictly increasing.")
             if index == 0 and segment.start_distance != 0.0:
                 raise ValueError("the first road-profile segment must start at 0.0 m.")
             previous_start = segment.start_distance

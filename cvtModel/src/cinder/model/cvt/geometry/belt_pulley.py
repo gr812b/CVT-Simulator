@@ -16,7 +16,6 @@ from .position import (
 )
 from .spec import BeltPulleyGeometrySpec
 
-
 _SHIFT_DOMAIN_ABSOLUTE_TOLERANCE: Final[float] = 1.0e-12
 
 
@@ -117,7 +116,6 @@ class BeltPulleyGeometry:
             ),
             belt_axial_coordinate=self._belt_axial_coordinate(shift),
         )
-
 
     def secondary_opening_travel_at_shift(self, shift: float) -> float:
         """Return positive secondary opening travel at one shift coordinate."""

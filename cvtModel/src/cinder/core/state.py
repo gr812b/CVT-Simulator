@@ -99,8 +99,6 @@ class StateLayout:
         vector.setflags(write=False)
         return vector
 
-
-
     def view_matrix(self, matrix, block: str) -> NDArray[np.float64]:
         """Return a named block from a column-major state history matrix."""
 
@@ -113,7 +111,9 @@ class StateLayout:
         result.setflags(write=False)
         return result
 
-    def replace_block(self, vector: ArrayLike, block: str, values: ArrayLike) -> NDArray[np.float64]:
+    def replace_block(
+        self, vector: ArrayLike, block: str, values: ArrayLike
+    ) -> NDArray[np.float64]:
         """Return ``vector`` with one named block replaced."""
 
         if block not in self._slices:
@@ -125,7 +125,9 @@ class StateLayout:
         block_slice = self._slices[block]
         block_size = block_slice.stop - block_slice.start
         if replacement.ndim != 1 or replacement.size != block_size:
-            raise ValueError(f"Replacement for block {block!r} must contain {block_size} entries.")
+            raise ValueError(
+                f"Replacement for block {block!r} must contain {block_size} entries."
+            )
         result[block_slice] = replacement
         if not np.all(np.isfinite(result)):
             raise ValueError("Replaced state vector must be finite.")

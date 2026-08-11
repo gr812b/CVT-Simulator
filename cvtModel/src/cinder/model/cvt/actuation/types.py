@@ -23,8 +23,6 @@ from cinder.model.cvt.closure import (
 from cinder.model.cvt.profiles import HelixShiftKinematics
 
 
-
-
 @dataclass(frozen=True, slots=True)
 class PulleyElementContribution:
     """Affine mechanical contribution from one pulley-mounted element.
@@ -97,7 +95,6 @@ class PulleyClosureChannels:
             shaft_torque=ClosureUnknown.SECONDARY_TORQUE,
             normal_resultant=ClosureUnknown.SECONDARY_NORMAL_RESULTANT,
         )
-
 
 
 @dataclass(frozen=True, slots=True)

@@ -27,7 +27,9 @@ class OperatingScenario:
         if not isinstance(self.initial_cvt_state, CVTState):
             raise TypeError("initial_cvt_state must be a CVTState.")
 
-    def with_initial_cvt_state(self, initial_cvt_state: CVTState) -> "OperatingScenario":
+    def with_initial_cvt_state(
+        self, initial_cvt_state: CVTState
+    ) -> "OperatingScenario":
         return replace(self, initial_cvt_state=initial_cvt_state)
 
     def with_time_span(self, time_span: tuple[float, float]) -> "OperatingScenario":

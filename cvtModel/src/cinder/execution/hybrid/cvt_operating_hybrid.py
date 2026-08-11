@@ -72,7 +72,9 @@ if TYPE_CHECKING:
     )
 
 CVTRegimeEvaluation: TypeAlias = CVTContactEvaluation | DeadzoneEvaluation
-ShaftBoundaryProvider: TypeAlias = Callable[[float, NDArray[np.float64]], CVTShaftBoundaryValues]
+ShaftBoundaryProvider: TypeAlias = Callable[
+    [float, NDArray[np.float64]], CVTShaftBoundaryValues
+]
 
 
 @dataclass(frozen=True, slots=True)
@@ -294,7 +296,6 @@ class CVTOperatingHybridSystem:
             time=time, state=state, mode=mode
         ).derivative_vector()
 
-
     def rhs_with_boundaries(
         self,
         time: float,
@@ -341,7 +342,9 @@ class CVTOperatingHybridSystem:
         if not isinstance(mode, CVTOperatingRegime):
             raise TypeError("mode must be a CVTOperatingRegime instance.")
 
-        def boundaries_at(event_time: float, vector: NDArray[np.float64]) -> CVTShaftBoundaryValues:
+        def boundaries_at(
+            event_time: float, vector: NDArray[np.float64]
+        ) -> CVTShaftBoundaryValues:
             return self._resolve_boundaries(
                 time=event_time,
                 state=vector,

@@ -163,7 +163,9 @@ def primary_independent_clamping_force_at_engagement(
         shift_position=limits.engagement_shift,
         shift_speed=0.0,
     )
-    snapshot = evaluator.model.snapshot(state=boundary_state, shaft_boundaries=shaft_boundaries)
+    snapshot = evaluator.model.snapshot(
+        state=boundary_state, shaft_boundaries=shaft_boundaries
+    )
     if any(value != 0.0 for value in snapshot.primary_actuation.gains.as_tuple()):
         raise NotImplementedError(
             "Primary-clamp disengagement gating requires an independently known "
@@ -191,7 +193,9 @@ def capture_belt_to_secondary_at_disengagement(
     """
 
     boundary_state = replace(state, shift_position=limits.engagement_shift)
-    snapshot = evaluator.model.snapshot(state=boundary_state, shaft_boundaries=shaft_boundaries)
+    snapshot = evaluator.model.snapshot(
+        state=boundary_state, shaft_boundaries=shaft_boundaries
+    )
     radius = snapshot.geometry.secondary.effective
     belt_mass = snapshot.belt_transport_mass
     secondary_inertia = (

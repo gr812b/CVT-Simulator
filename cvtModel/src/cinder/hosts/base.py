@@ -77,18 +77,42 @@ class NoHost:
     def initial_state(self) -> NDArray[np.float64]:
         return np.zeros(1, dtype=float)
 
-    def context(self, *, time: float, cvt_state: CVTState, host_state: NDArray[np.float64]) -> Mapping[str, Any]:
+    def context(
+        self, *, time: float, cvt_state: CVTState, host_state: NDArray[np.float64]
+    ) -> Mapping[str, Any]:
         del time, cvt_state, host_state
         return {}
 
-    def rhs(self, *, time: float, cvt_state: CVTState, host_state: NDArray[np.float64], shaft_boundaries: CVTShaftBoundaryValues) -> NDArray[np.float64]:
+    def rhs(
+        self,
+        *,
+        time: float,
+        cvt_state: CVTState,
+        host_state: NDArray[np.float64],
+        shaft_boundaries: CVTShaftBoundaryValues,
+    ) -> NDArray[np.float64]:
         del time, cvt_state, host_state, shaft_boundaries
         return np.zeros(1, dtype=float)
 
-    def events(self, *, time: float, cvt_state: CVTState, host_state: NDArray[np.float64], shaft_boundaries: CVTShaftBoundaryValues) -> Sequence[HybridEvent]:
+    def events(
+        self,
+        *,
+        time: float,
+        cvt_state: CVTState,
+        host_state: NDArray[np.float64],
+        shaft_boundaries: CVTShaftBoundaryValues,
+    ) -> Sequence[HybridEvent]:
         del time, cvt_state, host_state, shaft_boundaries
         return ()
 
-    def transition(self, *, time: float, cvt_state: CVTState, host_state: NDArray[np.float64], shaft_boundaries: CVTShaftBoundaryValues, fired_event_names: tuple[str, ...]) -> HybridTransition[Any] | None:
+    def transition(
+        self,
+        *,
+        time: float,
+        cvt_state: CVTState,
+        host_state: NDArray[np.float64],
+        shaft_boundaries: CVTShaftBoundaryValues,
+        fired_event_names: tuple[str, ...],
+    ) -> HybridTransition[Any] | None:
         del time, cvt_state, host_state, shaft_boundaries, fired_event_names
         return None
