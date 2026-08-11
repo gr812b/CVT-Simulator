@@ -4,10 +4,11 @@ on:
   push:
     branches:
       - develop
+      - model-fixes-and-contract-update
   workflow_dispatch:
     inputs:
       image_tag:
-        description: "Non-latest tag to publish for this manual build (for example pr-459)"
+        description: "Non-latest tag to publish for this manual build"
         required: true
         default: "manual"
         type: string
@@ -72,7 +73,14 @@ jobs:
           set -euo pipefail
 
           if [[ "${{ github.event_name }}" == "push" ]]; then
-            tag="latest"
+            if [[ "${{ github.ref_name }}" == "develop" ]]; then
+              tag="latest"
+            elif [[ "${{ github.ref_name }}" == "model-fixes-and-contract-update" ]]; then
+              tag="pr-459"
+            else
+              echo "Unexpected push branch"
+              exit 1
+            fi
           else
             tag="${MANUAL_TAG}"
 
