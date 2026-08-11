@@ -18,9 +18,9 @@ from .inspection import CVTStateInspection, inspect_cvt_state
 from .trace import CVTIntegrationTrace
 
 if TYPE_CHECKING:
-    from cinder.execution.hybrid.cvt_operating_hybrid import (
+    from cinder.execution.hybrid.cvt_operating_hybrid import (  # noqa: F401
         CVTOperatingHybridSystem,
-    )  # noqa: F401
+    )
 
 
 DEFAULT_REPORT_TIME_STEP_SECONDS = 0.01
