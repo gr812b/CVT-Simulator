@@ -120,3 +120,5 @@ export interface LockedFinalDriveBoundary {
     wheel_rotational_inertia_kg_m2: number;
   };
 }
+
+export type CINDERSimulationCaseDocument = CINDERComposedCVTSimulationCase;
