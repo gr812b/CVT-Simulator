@@ -1,7 +1,14 @@
 import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from 'react';
-import { getSimulationResult, getSimulationRun, type CompletedSimulationRun, type RunStatus } from '@api/client';
+import {
+  getSimulationResult,
+  getSimulationRun,
+  rerunSimulationRun,
+  waitForSimulationRun,
+  type CompletedSimulationRun,
+  type RunStatus,
+} from '@api/client';
 
-const RUN_ID_STORAGE_KEY = 'cinder-active-run-id-v2';
+const RUN_ID_STORAGE_KEY = 'cinder-active-run-id-v3';
 
 interface SimulationRunContextValue {
   completedRun: CompletedSimulationRun | null;
@@ -9,6 +16,7 @@ interface SimulationRunContextValue {
   setCompletedRun: (run: CompletedSimulationRun) => void;
   setActiveRun: (run: RunStatus | null) => void;
   restoreCompletedRun: () => Promise<CompletedSimulationRun | null>;
+  rerunCompletedRun: (runId?: string) => Promise<CompletedSimulationRun>;
   clearRun: () => void;
 }
 
@@ -42,6 +50,19 @@ export const SimulationRunProvider = ({ children }: { children: ReactNode }) => 
     return restored;
   }, [completedRun]);
 
+  const rerunCompletedRun = useCallback(async (runId?: string): Promise<CompletedSimulationRun> => {
+    const sourceRunId = runId ?? activeRun?.id ?? completedRun?.run.id ?? sessionStorage.getItem(RUN_ID_STORAGE_KEY);
+    if (!sourceRunId) throw new Error('No completed library run is available to rerun.');
+    const submitted = await rerunSimulationRun(sourceRunId);
+    setActiveRunState(submitted);
+    sessionStorage.setItem(RUN_ID_STORAGE_KEY, submitted.id);
+    const completedStatus = await waitForSimulationRun(submitted.id);
+    setActiveRunState(completedStatus);
+    const rerun = await getSimulationResult(submitted.id);
+    setCompletedRunState(rerun);
+    return rerun;
+  }, [activeRun?.id, completedRun?.run.id]);
+
   const clearRun = useCallback(() => {
     setCompletedRunState(null);
     setActiveRunState(null);
@@ -54,8 +75,9 @@ export const SimulationRunProvider = ({ children }: { children: ReactNode }) => 
     setCompletedRun,
     setActiveRun,
     restoreCompletedRun,
+    rerunCompletedRun,
     clearRun,
-  }), [completedRun, activeRun, setCompletedRun, setActiveRun, restoreCompletedRun, clearRun]);
+  }), [completedRun, activeRun, setCompletedRun, setActiveRun, restoreCompletedRun, rerunCompletedRun, clearRun]);
 
   return <SimulationRunContext.Provider value={value}>{children}</SimulationRunContext.Provider>;
 };

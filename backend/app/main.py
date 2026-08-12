@@ -8,6 +8,7 @@ from fastapi.responses import JSONResponse
 
 from app.api.v1.router import router as v1_router
 from app.application.container import build_container
+from app.database.session import make_engine, make_session_factory
 from app.core.errors import ApiProblem
 from app.core.settings import Settings
 from app.schemas.common import HealthResponse
@@ -24,11 +25,13 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         ),
     )
     app.state.container = build_container(settings)
+    app.state.database_engine = make_engine(settings.database_url, echo=settings.database_echo)
+    app.state.database_session_factory = make_session_factory(app.state.database_engine)
     app.add_middleware(
         CORSMiddleware,
         allow_origins=list(settings.cors_origins),
         allow_credentials=True,
-        allow_methods=["GET", "POST"],
+        allow_methods=["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
         allow_headers=["*"],
     )
 

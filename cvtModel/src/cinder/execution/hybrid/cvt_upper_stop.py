@@ -11,14 +11,14 @@ from __future__ import annotations
 from dataclasses import replace
 from math import isfinite
 
-from .state import CVTDynamicState
+from .state import CVTState
 
 
 def apply_perfectly_inelastic_upper_stop_impact(
     *,
-    state: CVTDynamicState,
+    state: CVTState,
     upper_stop_shift: float,
-) -> CVTDynamicState:
+) -> CVTState:
     """Project one free engaged arrival onto the high-ratio mechanical stop.
 
     This first stop model is intentionally perfectly inelastic in the axial
@@ -32,8 +32,8 @@ def apply_perfectly_inelastic_upper_stop_impact(
     redistribution is modelled explicitly.
     """
 
-    if not isinstance(state, CVTDynamicState):
-        raise TypeError("state must be a CVTDynamicState instance.")
+    if not isinstance(state, CVTState):
+        raise TypeError("state must be a CVTState instance.")
     if not isfinite(upper_stop_shift):
         raise ValueError("upper_stop_shift must be finite.")
 

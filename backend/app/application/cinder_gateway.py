@@ -80,9 +80,9 @@ class CinderGateway:
         decoded = decode_simulation_case_document(document)
         system = decoded.build_system()
         result = system.run(
-            time_span=decoded.case.scenario.time_span,
-            initial_state=decoded.case.scenario.initial_state,
-            initial_regime=decoded.case.scenario.initial_mode,
+            time_span=decoded.time_span,
+            initial_state=decoded.initial_state,
+            initial_mode=decoded.initial_mode,
             settings=decoded.integrator_settings,
             reporting_settings=decoded.reporting_settings,
         )
@@ -230,7 +230,9 @@ class CinderGateway:
         return result
 
 
-def _actuation_coordinate(value: str) -> ActuationStateCoordinate | ClosureUnknown:
+def _actuation_coordinate(
+    value: str,
+) -> ActuationStateCoordinate | ClosureUnknown:
     state_coordinates = {
         "shift_position": ActuationStateCoordinate.SHIFT_POSITION,
         "shaft_speed": ActuationStateCoordinate.SHAFT_SPEED,
@@ -271,7 +273,12 @@ def _string(payload: Mapping[str, Any], key: str) -> str:
     return value
 
 
-def _number(payload: Mapping[str, Any], key: str, *, default: float | None = None) -> float:
+def _number(
+    payload: Mapping[str, Any],
+    key: str,
+    *,
+    default: float | None = None,
+) -> float:
     if key not in payload:
         if default is not None:
             return default

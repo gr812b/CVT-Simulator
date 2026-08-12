@@ -5,14 +5,14 @@ from __future__ import annotations
 from dataclasses import replace
 from math import isfinite
 
-from .state import CVTDynamicState
+from .state import CVTState
 
 
 def apply_perfectly_inelastic_lower_stop_impact(
     *,
-    state: CVTDynamicState,
+    state: CVTState,
     lower_stop_shift: float,
-) -> CVTDynamicState:
+) -> CVTState:
     """Project deadzone arrival onto the low-ratio mechanical stop.
 
     This is the symmetric first-order stop model used at the upper stop:
@@ -25,8 +25,8 @@ def apply_perfectly_inelastic_lower_stop_impact(
     coupling is promoted into the impact model.
     """
 
-    if not isinstance(state, CVTDynamicState):
-        raise TypeError("state must be a CVTDynamicState instance.")
+    if not isinstance(state, CVTState):
+        raise TypeError("state must be a CVTState instance.")
     if not isfinite(lower_stop_shift):
         raise ValueError("lower_stop_shift must be finite.")
 

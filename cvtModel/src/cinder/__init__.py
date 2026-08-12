@@ -1,51 +1,74 @@
-"""CINDER: mechanics-first dynamic modelling for belt CVTs.
-
-Core model, execution, results, and static studies remain independent of
-transport concerns. Use :mod:`cinder.contracts` for the optional stable
-external boundary: versioned assembly and full simulation documents,
-editable-field metadata, document-path validation, and JSON-safe result
-projection.
-"""
+"""CINDER: mechanics-first dynamic modelling for belt CVTs."""
 
 __version__ = "0.1.0"
 
-from .results import (
-    DEFAULT_REPORT_TIME_STEP_SECONDS,
-    CVTIntegrationResult,
-    CVTIntegrationTrace,
-    CVTResultBuilder,
-    NumericSignal,
-    ReportingGrid,
-    ReportingSettings,
-)
+from .core import StateBlock, StateLayout, StatePatch
+from .execution.hybrid import ComposedCVTHybridSystem, ComposedCVTMode, integrate_hybrid
 from .model.system import (
     BeltContactSpec,
     CVTAssemblySpec,
-    CVTDynamicsModel,
-    CVTDynamicState,
-    CVTSimulationCase,
+    CVTShaftBoundaryValues,
+    CVTState,
+    CVTStateDerivative,
     HelicalPulleyCoupling,
-    OperatingScenario,
+    MechanicalCVTPlant,
     PulleyPairSpec,
     PulleySpec,
+    ShaftBoundaryValue,
 )
+from .model.boundaries import (
+    ConstantGradeRoadProfile,
+    EngineTorquePoint,
+    FixedFinalDrive,
+    FixedShaftBoundary,
+    FullThrottleEngineBoundary,
+    FullThrottleTorqueCurve,
+    LockedFinalDriveShaftBoundary,
+    RoadLoadModel,
+    ShaftBoundary,
+    ShaftBoundaryContext,
+    TanhLongitudinalTire,
+    TireCoupledShaftBoundary,
+    TorqueCurveSpec,
+    VehicleInertia,
+    VehicleRoadLoadSpec,
+)
+from .hosts import NoHost, SecondaryShaftAngleHost, TireVehicleHost
 
 __all__ = [
     "BeltContactSpec",
-    "DEFAULT_REPORT_TIME_STEP_SECONDS",
-    "CVTIntegrationResult",
-    "CVTIntegrationTrace",
-    "CVTResultBuilder",
+    "ComposedCVTHybridSystem",
+    "ComposedCVTMode",
     "CVTAssemblySpec",
-    "CVTDynamicsModel",
-    "CVTDynamicState",
-    "CVTSimulationCase",
+    "CVTShaftBoundaryValues",
+    "CVTState",
+    "CVTStateDerivative",
+    "FixedShaftBoundary",
+    "FullThrottleEngineBoundary",
     "HelicalPulleyCoupling",
-    "OperatingScenario",
-    "NumericSignal",
-    "ReportingGrid",
-    "ReportingSettings",
+    "integrate_hybrid",
+    "SecondaryShaftAngleHost",
+    "LockedFinalDriveShaftBoundary",
+    "MechanicalCVTPlant",
     "PulleyPairSpec",
     "PulleySpec",
+    "ShaftBoundary",
+    "ShaftBoundaryContext",
+    "ShaftBoundaryValue",
+    "StateBlock",
+    "StateLayout",
+    "StatePatch",
+    "NoHost",
+    "TanhLongitudinalTire",
+    "TireVehicleHost",
+    "TireCoupledShaftBoundary",
+    "ConstantGradeRoadProfile",
+    "EngineTorquePoint",
+    "FixedFinalDrive",
+    "FullThrottleTorqueCurve",
+    "RoadLoadModel",
+    "TorqueCurveSpec",
+    "VehicleInertia",
+    "VehicleRoadLoadSpec",
     "__version__",
 ]

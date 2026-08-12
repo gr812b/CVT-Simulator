@@ -24,10 +24,11 @@ from cinder.model.cvt.dynamics.engaged_contact import (
     EngagedContactSolveSettings,
     StickResidualContinuation,
 )
-from cinder.model.system.evaluator import CVTDynamicsModel, DynamicsSnapshot
+from cinder.model.system.evaluator import MechanicalCVTPlant, DynamicsSnapshot
+from cinder.model.system.ports import CVTShaftBoundaryValues
 from cinder.model.cvt.dynamics.shift_constraints import EngagedShiftConstraint
 
-from .state import CVTDynamicState, CVTDynamicStateDerivative
+from .state import CVTState, CVTStateDerivative
 
 if TYPE_CHECKING:
     from .cvt_contact_switching import CVTContactSwitchSettings
@@ -38,7 +39,7 @@ class CVTContactEvaluation:
     """One branch evaluation at one state, including closure diagnostics."""
 
     regime: ContactRegime
-    state: CVTDynamicState
+    state: CVTState
     snapshot: DynamicsSnapshot
     branch_result: EngagedContactSolveResult | BothSlipResult
     shift_constraint: EngagedShiftConstraint = EngagedShiftConstraint.FREE
@@ -64,7 +65,7 @@ class CVTContactEvaluation:
         return self.branch_result.trial.relative_motion
 
     @property
-    def state_derivative(self) -> CVTDynamicStateDerivative:
+    def state_derivative(self) -> CVTStateDerivative:
         if isinstance(self.branch_result, EngagedContactSolveResult):
             return self.branch_result.state_derivative
         return self.branch_result.trial.state_derivative
@@ -163,7 +164,7 @@ class EngagedCVTContactEvaluator:
     cache changes no physics and only avoids duplicated outer lambda solves.
     """
 
-    model: CVTDynamicsModel
+    model: MechanicalCVTPlant
     traction_law: ContactTractionLaw
     solve_settings: EngagedContactSolveSettings
     _cache_key: (
@@ -186,8 +187,8 @@ class EngagedCVTContactEvaluator:
     )
 
     def __post_init__(self) -> None:
-        if not isinstance(self.model, CVTDynamicsModel):
-            raise TypeError("model must be a CVTDynamicsModel instance.")
+        if not isinstance(self.model, MechanicalCVTPlant):
+            raise TypeError("model must be a MechanicalCVTPlant instance.")
         if not isinstance(self.traction_law, ContactTractionLaw):
             raise TypeError("traction_law must be a ContactTractionLaw instance.")
         if not isinstance(self.solve_settings, EngagedContactSolveSettings):
@@ -202,6 +203,7 @@ class EngagedCVTContactEvaluator:
         vector: NDArray[np.float64],
         regime: ContactRegime,
         shift_constraint: EngagedShiftConstraint = EngagedShiftConstraint.FREE,
+        shaft_boundaries: CVTShaftBoundaryValues | None = None,
     ) -> CVTContactEvaluation:
         """Evaluate the selected branch from the generic integration vector."""
 
@@ -209,12 +211,13 @@ class EngagedCVTContactEvaluator:
             raise ValueError("time must be finite.")
         if not isinstance(shift_constraint, EngagedShiftConstraint):
             raise TypeError("shift_constraint must be an EngagedShiftConstraint.")
-        state = CVTDynamicState.from_vector(vector)
+        state = CVTState.from_vector(vector)
         key = (
             float(time),
             tuple(float(value) for value in state.as_vector()),
             regime,
             shift_constraint,
+            _boundary_cache_key(shaft_boundaries),
         )
         if key == self._cache_key and self._cache_value is not None:
             return self._cache_value
@@ -227,7 +230,10 @@ class EngagedCVTContactEvaluator:
         # still terminate exactly at the configured physical stop; this is not
         # a substitute for the future stop-reaction model.
         snapshot_state = self._geometry_safe_state(state)
-        snapshot = self.model.snapshot(state=snapshot_state)
+        snapshot = self.model.snapshot(
+            state=snapshot_state,
+            shaft_boundaries=shaft_boundaries,
+        )
         closure = EngagedContactClosure(
             snapshot=snapshot,
             shift_constraint=shift_constraint,
@@ -301,7 +307,7 @@ class EngagedCVTContactEvaluator:
         self._cache_value = evaluation
         return evaluation
 
-    def _geometry_safe_state(self, state: CVTDynamicState) -> CVTDynamicState:
+    def _geometry_safe_state(self, state: CVTState) -> CVTState:
         """Project only out-of-domain integrator stages to valid geometry."""
 
         spec = self.model.geometry.spec
@@ -335,6 +341,7 @@ class EngagedCVTContactEvaluator:
         vector: NDArray[np.float64],
         regime: ContactRegime,
         shift_constraint: EngagedShiftConstraint = EngagedShiftConstraint.FREE,
+        shaft_boundaries: CVTShaftBoundaryValues | None = None,
     ) -> NDArray[np.float64]:
         """Return the six CINDER derivatives for the active contact regime."""
 
@@ -343,14 +350,16 @@ class EngagedCVTContactEvaluator:
             vector=vector,
             regime=regime,
             shift_constraint=shift_constraint,
+            shaft_boundaries=shaft_boundaries,
         ).state_derivative.as_vector()
 
     def classify_initial_regime(
         self,
         *,
-        state: CVTDynamicState,
+        state: CVTState,
         switching_settings: "CVTContactSwitchSettings",
         shift_constraint: EngagedShiftConstraint = EngagedShiftConstraint.FREE,
+        shaft_boundaries: CVTShaftBoundaryValues | None = None,
     ) -> ContactRegime:
         """Classify established initial slip, otherwise test a stick candidate.
 
@@ -367,4 +376,16 @@ class EngagedCVTContactEvaluator:
             state=state,
             switching_settings=switching_settings,
             shift_constraint=shift_constraint,
+            shaft_boundaries=shaft_boundaries,
         )
+
+
+def _boundary_cache_key(boundaries: CVTShaftBoundaryValues | None):
+    if boundaries is None:
+        return None
+    return (
+        boundaries.primary.external_torque,
+        boundaries.primary.equivalent_inertia,
+        boundaries.secondary.external_torque,
+        boundaries.secondary.equivalent_inertia,
+    )

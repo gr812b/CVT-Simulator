@@ -7,7 +7,7 @@ need an engine, vehicle boundary, contact solve, or time integration.
 field = sample_pulley_clamping_force(
     PulleyClampingForceStudyRequest(
         cvt=assembly,
-        pulley=PulleyLocation.OUTPUT,
+        pulley=PulleyLocation.SECONDARY,
         point=ActuationOperatingPoint(
             shift_position=...,            # global CVT shift coordinate [m]
             shaft_speed=...,               # selected-pulley speed [rad/s]

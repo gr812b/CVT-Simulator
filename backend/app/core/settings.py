@@ -17,6 +17,8 @@ class Settings:
     run_timeout_seconds: float = 120.0
     run_executor_mode: Literal["process", "inline"] = "process"
     cors_origins: tuple[str, ...] = ("http://localhost:5173",)
+    database_url: str = "sqlite:///./cvt_simulator_dev.db"
+    database_echo: bool = False
 
     @classmethod
     def from_environment(cls) -> "Settings":
@@ -27,6 +29,8 @@ class Settings:
         timeout = float(getenv("CVT_RUN_TIMEOUT_SECONDS", "120"))
         if timeout <= 0.0:
             raise ValueError("CVT_RUN_TIMEOUT_SECONDS must be positive.")
+        database_url = getenv("CVT_DATABASE_URL", "sqlite:///./cvt_simulator_dev.db")
+        database_echo = getenv("CVT_DATABASE_ECHO", "0").strip().lower() in {"1", "true", "yes"}
         origins = tuple(
             item.strip()
             for item in getenv("CVT_CORS_ORIGINS", "http://localhost:5173").split(",")
@@ -37,6 +41,8 @@ class Settings:
             run_timeout_seconds=timeout,
             run_executor_mode=requested_mode,  # type: ignore[arg-type]
             cors_origins=origins,
+            database_url=database_url,
+            database_echo=database_echo,
         )
 
     def resolved_preset_directory(self) -> Path:

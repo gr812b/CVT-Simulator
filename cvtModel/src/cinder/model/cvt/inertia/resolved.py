@@ -16,7 +16,7 @@ from .shift import AxialTranslationMasses, resolve_axial_translation_masses
 
 @dataclass(frozen=True, slots=True)
 class DrivetrainInertias:
-    """All fixed engine-side, CVT-side, and belt inertia inputs."""
+    """CVT-owned primary, secondary, and belt inertia inputs."""
 
     primary: PrimaryInertia
     secondary: SecondaryInertia
@@ -27,7 +27,7 @@ class DrivetrainInertias:
 class ResolvedInertias:
     """Fixed CVT quantities ready for the dynamic equations.
 
-    ``axial_translation`` stores literal primary, output-pulley, and belt
+    ``axial_translation`` stores literal primary, secondary, and belt
     translation masses. Their coordinate mappings are evaluated from live
     geometry on each RHS call.
     """

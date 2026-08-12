@@ -1,9 +1,6 @@
 # CINDER launchTools — circular-primary / traction-first update
 
-Replace the contents of your existing `tools2/` launch-tools folder with this
-folder. No production reorganized CINDER source file is modified. The tools use CINDER's
-existing `CircularSegment` profile and select it only while constructing the
-Baja diagnostic baseline.
+These launch tools are written against the composed CINDER architecture. They build a CVT assembly, attach primary/secondary shaft boundaries, and run the resulting `ComposedCVTHybridSystem`.
 
 ## What changed
 
@@ -49,7 +46,7 @@ actual spring travel and hardware limits.
 ## Run the circular reference
 
 ```powershell
-python tools2/run_tuned_launch.py --duration-s 10 --no-show `
+python launchTools/run_tuned_launch.py --duration-s 10 --no-show `
   --output-dir artifacts/circular_traction_first
 ```
 
@@ -58,7 +55,7 @@ The defaults already select the circular reference and LSODA settings.
 ## Re-run the saved linear reference
 
 ```powershell
-python tools2/run_tuned_launch.py --manual `
+python launchTools/run_tuned_launch.py --manual `
   --flyweight-mass-kg 0.55 --helix-angle-deg 20 `
   --secondary-twist-deg 140 --secondary-preload-mm 70 `
   --primary-ramp-kind linear --primary-ramp-angle-deg 30 `
@@ -69,15 +66,15 @@ python tools2/run_tuned_launch.py --manual `
 ## Search workflow
 
 ```powershell
-python tools2/screen_launch_tuning.py --no-show `
+python launchTools/screen_launch_tuning.py --no-show `
   --output-dir artifacts/circular_screen
 
-python tools2/preflight_launch_sweep.py `
+python launchTools/preflight_launch_sweep.py `
   --ranked-csv artifacts/circular_screen/ranked_tunes.csv `
   --top-n 6 --duration-s 10 --no-show `
   --output-dir artifacts/circular_preflight
 
-python tools2/run_tuned_launch.py `
+python launchTools/run_tuned_launch.py `
   --ranked-csv artifacts/circular_preflight/full_launch_ranked.csv --rank 1 `
   --duration-s 10 --no-show --output-dir artifacts/circular_selected
 ```
@@ -87,40 +84,25 @@ The default static screen studies 20° helix, 0.75–0.85 kg flyweights,
 28–30° circular profiles. Narrow or widen those command-line ranges rather
 than editing the tool code.
 
-## Secondary attachment refactor
+## Composed simulation architecture
 
-The launch tools now assemble the same locked final-drive vehicle through
-CINDER's explicit `LockedFinalDriveVehicle` attachment.  CLI inputs, figures,
-CSV columns, route behavior, and current default results are unchanged.  This
-is an internal ownership cleanup: CINDER's CVT core now receives a secondary
-boundary condition rather than directly assuming that every secondary load is
-a rigid vehicle.
+The launch tools build the same physical Baja baseline through the current public path:
 
-The standard route scripts still use a locked vehicle attachment, so they keep
-reporting vehicle speed, distance, road force, and reflected road torque as
-before.  Future secondary-dyno and one-way-bearing experiments can instead
-supply another secondary attachment without modifying the belt/contact
-closure or these normal vehicle workflows.
+1. construct a `CVTAssemblySpec`;
+2. create `MechanicalCVTPlant.from_assembly(assembly)`;
+3. connect `FullThrottleEngineBoundary` on the primary shaft;
+4. connect `LockedFinalDriveShaftBoundary` on the secondary shaft;
+5. carry secondary shaft angle in `SecondaryShaftAngleHost`;
+6. run the resulting `ComposedCVTHybridSystem`.
 
-
-## Package migration
-
-These tools now import CINDER through `cinder.model` and `cinder.execution`;
-they no longer depend on the compatibility paths.  The Baja baseline constructs
-a `CVTAssemblySpec`, connects an engine and locked vehicle output boundary in a
-`CVTSimulationCase`, and obtains the existing runtime evaluator through
-`CVTOperatingHybridSystem.from_case(case, ...)`.
+The CVT core receives only primary/secondary shaft-port values. Vehicle speed, distance, road load, and reflected road torque are reported from secondary-boundary metadata. A dyno, brake, motor, tire-coupled vehicle, or custom host can be connected by replacing the shaft boundary and host without changing the CVT plant.
 
 ## Uniform exported traces
 
-The normal diagnostic tools now call CINDER's high-level `system.run()` path.
-Their CSV/plot traces use CINDER's default **10 ms uniform report grid**, sampled
-from SciPy's per-segment dense solution. The adaptive solver trace is still
-kept internally for audits and exact event timing. Every hybrid transition is
-added as its own exact pre/post pair even if it falls between two 10 ms grid
-points, so a CSV may contain repeated timestamps at a real reset or impact.
+The normal diagnostic tools use the composed hybrid runner directly and export a uniform report grid sampled from SciPy's per-segment dense solution. The adaptive solver trace is still kept internally for audits and exact event timing. Every hybrid transition is added as its own exact pre/post pair even if it falls between report-grid points, so a CSV may contain repeated timestamps at a real reset or impact.
 
 `--plot-samples` / `--diagnostic-samples` are optional display/export caps.
-When omitted, the full 10 ms report grid is written. The one-way-bearing tool
-also uses a 10 ms dense-output grid for its custom eight-state wrapper; adjust
-it with `--report-step-ms`.
+When omitted, the full 10 ms report grid is written. Wrapper scripts forward to the canonical composed route-grade runner unless they add their own study-specific post-processing.
+
+
+The route-grade default report step is 50 ms. Use `--report-step-s` for denser exported CSV/plots when needed.

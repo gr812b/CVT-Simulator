@@ -14,7 +14,7 @@ from .tolerances import ContactKinematicTolerances
 
 if TYPE_CHECKING:
     from cinder.model.cvt.closure import ClosureUnknowns
-    from cinder.execution.hybrid import CVTDynamicState
+    from cinder.model.system.state import CVTState
     from cinder.model.cvt.geometry import GeometryPosition
 
 
@@ -162,7 +162,7 @@ class ContactRelativeMotion:
 
 def evaluate_contact_relative_motion(
     *,
-    state: "CVTDynamicState",
+    state: "CVTState",
     geometry: "GeometryPosition",
     unknowns: "ClosureUnknowns",
 ) -> ContactRelativeMotion:

@@ -5,483 +5,80 @@
  * and run json-schema-to-typescript to regenerate this file.
  */
 
-export type OutputBoundary =
+export type Host = {
+  initial_state: {
+    secondary_shaft_angle_rad: number;
+  };
+  kind: "secondary_shaft_angle";
+};
+export type ShaftBoundary = FixedShaftBoundary | FullThrottleEngineBoundary | LockedFinalDriveBoundary;
+export type RoadProfile =
   | {
-      added_rotational_inertia_kg_m2: number;
-      external_torque_Nm: number;
-      kind: "fixed_output_load";
+      grade_angle_rad: number;
+      kind: "constant_grade";
     }
   | {
-      final_drive: {
-        reduction_ratio: number;
-        wheel_radius_m: number;
-      };
-      kind: "locked_final_drive_vehicle";
-      road_load: {
-        air_density_kg_per_m3: number;
-        drag_coefficient: number;
-        frontal_area_m2: number;
-        gravity_m_per_s2: number;
-        rolling_resistance_coefficient: number;
-        rolling_speed_regularization_m_per_s: number;
-      };
-      road_profile: {
+      kind: "piecewise_constant_grade";
+      segments: {
         grade_angle_rad: number;
-        kind: "constant_grade";
-      };
-      vehicle: {
-        mass_kg: number;
-        wheel_rotational_inertia_kg_m2: number;
-      };
+        start_distance_m: number;
+      }[];
     };
 
-/**
- * Version-one executable CINDER simulation case. All physical values use canonical SI units.
- */
-export interface CINDERSimulationCaseDocument {
-  assembly: Assembly;
-  document_type: "cinder_simulation_case";
-  execution: Execution;
-  input_boundary: InputBoundary;
-  output_boundary: OutputBoundary;
-  scenario: Scenario;
-  schema_version: 1;
-}
-export interface Assembly {
-  contact: {
-    friction_coefficient: number;
+export interface CINDERComposedCVTSimulationCase {
+  assembly: {
+    [k: string]: unknown;
   };
-  document_type: "cinder_cvt_assembly";
-  geometry: {
-    belt: {
-      cord_depth_from_outer_m: number;
-      height_m: number;
-      inner_width_m: number;
-      outer_width_m: number;
-    };
-    belt_outer_length_m: number;
-    deadzone_shift_m: number;
-    max_shift_m: number;
-    primary_outer_radius_at_zero_shift_m: number;
-    secondary_outer_radius_at_zero_shift_m: number;
-    sheave_half_angle_rad: number;
+  document_type: "cinder_composed_simulation_case";
+  execution: {
+    integrator: Integrator;
+    reporting: Reporting;
   };
-  inertias: {
-    belt_density_kg_per_m3: number;
-    primary: {
-      cvt_rotational_inertia_kg_m2: number;
-      engine_rotational_inertia_kg_m2: number;
-      moving_sheave_mass_kg: number;
-    };
-    secondary: {
-      fixed_rotational_inertia_kg_m2: number;
-      gearbox_input_rotational_inertia_kg_m2: number;
-      movable_sheave_rotational_inertia_kg_m2: number;
-      moving_sheave_mass_kg: number;
-    };
-  };
-  pulleys: {
-    input: {
-      /**
-       * @minItems 1
-       */
-      components: [
-        (
-          | {
-              compression_per_axial_position: number;
-              initial_compression_m: number;
-              kind: "axial_spring";
-              stiffness_N_per_m: number;
-            }
-          | {
-              flyweight_mass_kg: number;
-              kind: "centrifugal_ramp";
-              radial_displacement_profile: {
-                kind: "piecewise_ramp";
-                /**
-                 * @minItems 1
-                 */
-                segments: [
-                  (
-                    | {
-                        angle_rad: number;
-                        kind: "linear_segment";
-                        length_m: number;
-                      }
-                    | {
-                        angle_end_rad: number;
-                        angle_start_rad: number;
-                        kind: "circular_segment";
-                        length_m: number;
-                        quadrant: -1 | 1;
-                      }
-                  ),
-                  ...(
-                    | {
-                        angle_rad: number;
-                        kind: "linear_segment";
-                        length_m: number;
-                      }
-                    | {
-                        angle_end_rad: number;
-                        angle_start_rad: number;
-                        kind: "circular_segment";
-                        length_m: number;
-                        quadrant: -1 | 1;
-                      }
-                  )[]
-                ];
-              };
-              radius_at_zero_position_m: number;
-            }
-          | {
-              initial_twist_rad: number;
-              kind: "helical_torque_reaction";
-              movable_member_torque_fraction: number;
-              torsional_stiffness_Nm_per_rad: number;
-            }
-        ),
-        ...(
-          | {
-              compression_per_axial_position: number;
-              initial_compression_m: number;
-              kind: "axial_spring";
-              stiffness_N_per_m: number;
-            }
-          | {
-              flyweight_mass_kg: number;
-              kind: "centrifugal_ramp";
-              radial_displacement_profile: {
-                kind: "piecewise_ramp";
-                /**
-                 * @minItems 1
-                 */
-                segments: [
-                  (
-                    | {
-                        angle_rad: number;
-                        kind: "linear_segment";
-                        length_m: number;
-                      }
-                    | {
-                        angle_end_rad: number;
-                        angle_start_rad: number;
-                        kind: "circular_segment";
-                        length_m: number;
-                        quadrant: -1 | 1;
-                      }
-                  ),
-                  ...(
-                    | {
-                        angle_rad: number;
-                        kind: "linear_segment";
-                        length_m: number;
-                      }
-                    | {
-                        angle_end_rad: number;
-                        angle_start_rad: number;
-                        kind: "circular_segment";
-                        length_m: number;
-                        quadrant: -1 | 1;
-                      }
-                  )[]
-                ];
-              };
-              radius_at_zero_position_m: number;
-            }
-          | {
-              initial_twist_rad: number;
-              kind: "helical_torque_reaction";
-              movable_member_torque_fraction: number;
-              torsional_stiffness_Nm_per_rad: number;
-            }
-        )[]
-      ];
-      helical_coupling?: null | {
-        opening_offset_m: number;
-        opening_per_axial_position: number;
-        profile: {
-          circumferential_profile: {
-            kind: "piecewise_ramp";
-            /**
-             * @minItems 1
-             */
-            segments: [
-              (
-                | {
-                    angle_rad: number;
-                    kind: "linear_segment";
-                    length_m: number;
-                  }
-                | {
-                    angle_end_rad: number;
-                    angle_start_rad: number;
-                    kind: "circular_segment";
-                    length_m: number;
-                    quadrant: -1 | 1;
-                  }
-              ),
-              ...(
-                | {
-                    angle_rad: number;
-                    kind: "linear_segment";
-                    length_m: number;
-                  }
-                | {
-                    angle_end_rad: number;
-                    angle_start_rad: number;
-                    kind: "circular_segment";
-                    length_m: number;
-                    quadrant: -1 | 1;
-                  }
-              )[]
-            ];
-          };
-          kind: "helix_profile";
-          radius_m: number;
-          theta_offset_rad: number;
-        };
-      };
-    };
-    output: {
-      /**
-       * @minItems 1
-       */
-      components: [
-        (
-          | {
-              compression_per_axial_position: number;
-              initial_compression_m: number;
-              kind: "axial_spring";
-              stiffness_N_per_m: number;
-            }
-          | {
-              flyweight_mass_kg: number;
-              kind: "centrifugal_ramp";
-              radial_displacement_profile: {
-                kind: "piecewise_ramp";
-                /**
-                 * @minItems 1
-                 */
-                segments: [
-                  (
-                    | {
-                        angle_rad: number;
-                        kind: "linear_segment";
-                        length_m: number;
-                      }
-                    | {
-                        angle_end_rad: number;
-                        angle_start_rad: number;
-                        kind: "circular_segment";
-                        length_m: number;
-                        quadrant: -1 | 1;
-                      }
-                  ),
-                  ...(
-                    | {
-                        angle_rad: number;
-                        kind: "linear_segment";
-                        length_m: number;
-                      }
-                    | {
-                        angle_end_rad: number;
-                        angle_start_rad: number;
-                        kind: "circular_segment";
-                        length_m: number;
-                        quadrant: -1 | 1;
-                      }
-                  )[]
-                ];
-              };
-              radius_at_zero_position_m: number;
-            }
-          | {
-              initial_twist_rad: number;
-              kind: "helical_torque_reaction";
-              movable_member_torque_fraction: number;
-              torsional_stiffness_Nm_per_rad: number;
-            }
-        ),
-        ...(
-          | {
-              compression_per_axial_position: number;
-              initial_compression_m: number;
-              kind: "axial_spring";
-              stiffness_N_per_m: number;
-            }
-          | {
-              flyweight_mass_kg: number;
-              kind: "centrifugal_ramp";
-              radial_displacement_profile: {
-                kind: "piecewise_ramp";
-                /**
-                 * @minItems 1
-                 */
-                segments: [
-                  (
-                    | {
-                        angle_rad: number;
-                        kind: "linear_segment";
-                        length_m: number;
-                      }
-                    | {
-                        angle_end_rad: number;
-                        angle_start_rad: number;
-                        kind: "circular_segment";
-                        length_m: number;
-                        quadrant: -1 | 1;
-                      }
-                  ),
-                  ...(
-                    | {
-                        angle_rad: number;
-                        kind: "linear_segment";
-                        length_m: number;
-                      }
-                    | {
-                        angle_end_rad: number;
-                        angle_start_rad: number;
-                        kind: "circular_segment";
-                        length_m: number;
-                        quadrant: -1 | 1;
-                      }
-                  )[]
-                ];
-              };
-              radius_at_zero_position_m: number;
-            }
-          | {
-              initial_twist_rad: number;
-              kind: "helical_torque_reaction";
-              movable_member_torque_fraction: number;
-              torsional_stiffness_Nm_per_rad: number;
-            }
-        )[]
-      ];
-      helical_coupling?: null | {
-        opening_offset_m: number;
-        opening_per_axial_position: number;
-        profile: {
-          circumferential_profile: {
-            kind: "piecewise_ramp";
-            /**
-             * @minItems 1
-             */
-            segments: [
-              (
-                | {
-                    angle_rad: number;
-                    kind: "linear_segment";
-                    length_m: number;
-                  }
-                | {
-                    angle_end_rad: number;
-                    angle_start_rad: number;
-                    kind: "circular_segment";
-                    length_m: number;
-                    quadrant: -1 | 1;
-                  }
-              ),
-              ...(
-                | {
-                    angle_rad: number;
-                    kind: "linear_segment";
-                    length_m: number;
-                  }
-                | {
-                    angle_end_rad: number;
-                    angle_start_rad: number;
-                    kind: "circular_segment";
-                    length_m: number;
-                    quadrant: -1 | 1;
-                  }
-              )[]
-            ];
-          };
-          kind: "helix_profile";
-          radius_m: number;
-          theta_offset_rad: number;
-        };
-      };
-    };
+  host: Host;
+  scenario: {
+    initial_cvt_state: CvtState;
+    /**
+     * @minItems 2
+     * @maxItems 2
+     */
+    time_span_s: [unknown, unknown];
   };
   schema_version: 1;
-}
-export interface Execution {
-  integrator: {
-    absolute_tolerance: number;
-    event_time_tolerance_s: number;
-    first_step_s: null | number;
-    max_step_s: number;
-    maximum_transitions: number;
-    method: string;
-    relative_tolerance: number;
-    retain_dense_output: boolean;
-  };
-  operating_limits: {
-    engagement_shift_m: number;
-    lower_stop_shift_m: number;
-    upper_stop_shift_m: number;
-  };
-  reporting: {
-    grid:
-      | {
-          count: null;
-          kind: "native";
-          step_seconds: null;
-        }
-      | {
-          count: number;
-          kind: "uniform_count";
-          step_seconds: null;
-        }
-      | {
-          count: null;
-          kind: "uniform_time_step";
-          step_seconds: number;
-        };
-    include_actuation: boolean;
-    include_closure_audit: boolean;
-    include_contact: boolean;
-    include_integrated_observers: boolean;
-  };
-  solve_settings: {
-    contact_tolerances: {
-      relative_acceleration_tolerance_m_per_s2: number;
-      relative_speed_tolerance_m_per_s: number;
-      stick_acceleration_tolerance_m_per_s2: number;
-    };
-    initial_guess: {
-      primary_lambda: number;
-      secondary_lambda: number;
-    };
-    lambda_search_bounds: {
-      primary_lower: number;
-      primary_upper: number;
-      secondary_lower: number;
-      secondary_upper: number;
-    };
-    maximum_closure_condition_number: number;
-    maximum_function_evaluations: number;
-    optimizer_tolerance: number;
-  };
-  switching_settings: {
-    normal_resultant_floor_N: number;
-    restick_static_margin: number;
-    stick_exit_static_margin: number;
-  };
-  traction_law: {
-    primary_kinetic_lambda_magnitude: number;
-    primary_static_lambda_limit: number;
-    secondary_kinetic_lambda_magnitude: number;
-    secondary_static_lambda_limit: number;
+  shaft_boundaries: {
+    primary: ShaftBoundary;
+    secondary: ShaftBoundary;
   };
 }
-export interface InputBoundary {
+export interface Integrator {
+  absolute_tolerance: number;
+  event_time_tolerance: number;
+  first_step: number | null;
+  max_step: number | string;
+  maximum_transitions: number;
+  method: string;
+  relative_tolerance: number;
+  retain_dense_output: boolean;
+}
+export interface Reporting {
+  [k: string]: unknown;
+}
+export interface CvtState {
+  belt_speed_m_per_s: number;
+  primary_angular_speed_rad_per_s: number;
+  secondary_angular_speed_rad_per_s: number;
+  shift_position_m: number;
+  shift_speed_m_per_s: number;
+}
+export interface FixedShaftBoundary {
+  equivalent_inertia_kg_m2: number;
+  external_torque_Nm: number;
+  kind: "fixed_shaft";
+}
+export interface FullThrottleEngineBoundary {
+  equivalent_rotational_inertia_kg_m2: number;
   high_speed_braking_torque_Nm: number;
   high_speed_braking_transition_width_rad_per_s: number;
-  kind: "full_throttle_torque_curve";
+  kind: "full_throttle_engine";
   low_speed_braking_peak_speed_rad_per_s: number;
   low_speed_braking_torque_Nm: number;
   /**
@@ -502,27 +99,26 @@ export interface InputBoundary {
     }[]
   ];
 }
-export interface Scenario {
-  initial_mode: null | {
-    contact_regime: null | {
-      mode: "stick_stick" | "primary_slip_secondary_stick" | "primary_stick_secondary_slip" | "both_slip";
-      primary_slip_direction: null | ("belt_leads_pulley" | "pulley_leads_belt" | "indeterminate");
-      secondary_slip_direction: null | ("belt_leads_pulley" | "pulley_leads_belt" | "indeterminate");
-    };
-    engagement: "deadzone" | "engaged";
-    shift_constraint: "free" | "lower_stop" | "low_ratio_seat" | "upper_stop";
+export interface LockedFinalDriveBoundary {
+  direct_secondary_shaft_inertia_kg_m2: number;
+  final_drive: {
+    reduction_ratio: number;
+    wheel_radius_m: number;
   };
-  initial_state: {
-    belt_speed_m_per_s: number;
-    primary_angular_speed_rad_per_s: number;
-    secondary_angular_speed_rad_per_s: number;
-    secondary_shaft_angle_rad: number;
-    shift_position_m: number;
-    shift_speed_m_per_s: number;
+  kind: "locked_final_drive";
+  road_load: {
+    air_density_kg_per_m3: number;
+    drag_coefficient: number;
+    frontal_area_m2: number;
+    gravity_m_per_s2: number;
+    rolling_resistance_coefficient: number;
+    rolling_speed_regularization_m_per_s: number;
   };
-  /**
-   * @minItems 2
-   * @maxItems 2
-   */
-  time_span_s: never[];
+  road_profile: RoadProfile;
+  vehicle: {
+    mass_kg: number;
+    wheel_rotational_inertia_kg_m2: number;
+  };
 }
+
+export type CINDERSimulationCaseDocument = CINDERComposedCVTSimulationCase;

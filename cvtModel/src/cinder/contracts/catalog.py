@@ -53,7 +53,7 @@ class ComponentDescriptor:
     label: str
     description: str
     parameters: tuple[ComponentParameter, ...]
-    supported_mounts: tuple[str, ...] = ("input", "output")
+    supported_mounts: tuple[str, ...] = ("primary", "secondary")
 
     def as_dict(self) -> dict[str, Any]:
         return {
@@ -134,7 +134,7 @@ def component_catalog() -> tuple[ComponentDescriptor, ...]:
                     dimension="structure",
                 ),
             ),
-            supported_mounts=("input",),
+            supported_mounts=("primary",),
         ),
         ComponentDescriptor(
             kind="helical_torque_reaction",
@@ -169,7 +169,7 @@ def component_catalog() -> tuple[ComponentDescriptor, ...]:
                     dimension="dimensionless",
                 ),
             ),
-            supported_mounts=("output",),
+            supported_mounts=("primary", "secondary"),
         ),
     )
 
@@ -230,14 +230,9 @@ def component_catalog_document() -> dict[str, Any]:
             },
             {
                 "kind": "helix_profile",
-                "description": "Secondary helix defined by a positive-opening circumferential piecewise ramp and radius.",
+                "description": "Pulley helix defined by a positive-opening circumferential piecewise ramp and radius.",
                 "parameters": [
                     {"key": "radius_m", "canonical_unit": "m", "dimension": "length"},
-                    {
-                        "key": "theta_offset_rad",
-                        "canonical_unit": "rad",
-                        "dimension": "angle",
-                    },
                 ],
             },
         ],

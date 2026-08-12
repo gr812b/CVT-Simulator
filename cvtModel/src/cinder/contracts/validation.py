@@ -114,12 +114,12 @@ def validate_assembly(
                 "geometry",
             )
         )
-    if assembly.contact.friction_coefficient == 0.0:
+    if assembly.contact.static_friction_coefficient == 0.0:
         findings.append(
             _warning(
                 "contact.zero_friction_coefficient",
                 "The contact friction coefficient is zero, so traction capacity will be zero.",
-                "contact.friction_coefficient",
+                "contact.static_friction_coefficient",
             )
         )
 
@@ -145,25 +145,28 @@ def validate_assembly(
             )
 
     _validate_pulley(
-        pulley=assembly.pulleys.input,
-        location="pulleys.input",
+        pulley=assembly.pulleys.primary,
+        location="pulleys.primary",
         local_positions=tuple(
             point.primary_axial_coordinate.value for point in endpoints
         ),
-        opening_travels=None,
+        opening_travels=(
+            tuple(-point.primary_axial_coordinate.value for point in endpoints)
+            if assembly.pulleys.primary.helical_coupling is not None
+            else None
+        ),
         findings=findings,
     )
     _validate_pulley(
-        pulley=assembly.pulleys.output,
-        location="pulleys.output",
+        pulley=assembly.pulleys.secondary,
+        location="pulleys.secondary",
         local_positions=tuple(
             point.secondary_axial_coordinate.value for point in endpoints
         ),
-        opening_travels=tuple(
-            assembly.pulleys.output.helical_coupling.opening_offset
-            + assembly.pulleys.output.helical_coupling.opening_per_axial_position
-            * point.secondary_axial_coordinate.value
-            for point in endpoints
+        opening_travels=(
+            tuple(-point.secondary_axial_coordinate.value for point in endpoints)
+            if assembly.pulleys.secondary.helical_coupling is not None
+            else None
         ),
         findings=findings,
     )
@@ -239,7 +242,7 @@ def _validate_pulley(
                 findings.append(
                     _error(
                         "actuation.helix_profile_does_not_cover_opening_travel",
-                        "Helix profile does not cover the output pulley opening-travel range.",
+                        "Helix profile does not cover the pulley opening-travel range.",
                         law_location,
                     )
                 )
@@ -314,30 +317,10 @@ def validate_simulation_case_document(
             ),
         )
 
-    report = validate_assembly(
-        decoded.case.cvt,
+    return validate_assembly(
+        decoded.assembly,
         options=options,
         document_path_prefix="/assembly",
-    )
-    findings = list(report.findings)
-    try:
-        decoded.operating_system_config.operating_limits.validate_against_geometry_spec(
-            decoded.case.cvt.geometry.spec
-        )
-    except ValueError as error:
-        findings.append(
-            ValidationFinding(
-                severity="error",
-                code="execution.operating_limits_incompatible_with_geometry",
-                message=str(error),
-                location="execution.operating_limits",
-                document_path="/execution/operating_limits",
-            )
-        )
-
-    return AssemblyValidationReport(
-        is_valid=not any(item.severity == "error" for item in findings),
-        findings=tuple(findings),
     )
 
 
@@ -354,7 +337,7 @@ def _document_path_for_location(location: str, *, prefix: str) -> str:
         return f"{root}/" + location.replace(".", "/")
     if location.startswith("contact."):
         return f"{root}/" + location.replace(".", "/")
-    match = re.fullmatch(r"pulleys\.(input|output)\.components\[(\d+)\]", location)
+    match = re.fullmatch(r"pulleys\.(primary|secondary)\.components\[(\d+)\]", location)
     if match is not None:
         return f"{root}/pulleys/{match.group(1)}/components/{match.group(2)}"
     return root or ""

@@ -1,55 +1,24 @@
-"""Row 4: total-secondary rotational dynamics."""
+"""Secondary shaft angular-momentum balance."""
 
 from __future__ import annotations
 
 from cinder.model.cvt.closure import AffineClosureScalar, ClosureEquation, ClosureGains
-
 from cinder.model.system.evaluator import DynamicsSnapshot
 
 
-def build_secondary_rotation_equation(
-    *,
-    snapshot: DynamicsSnapshot,
-) -> ClosureEquation:
-    """Build the total-secondary angular-momentum equation.
+def build_secondary_rotation_equation(*, snapshot: DynamicsSnapshot) -> ClosureEquation:
+    """Build ``T_ext,s + T_elem,s + tau_s = 0``.
 
-    In derivation notation with ``tau_load`` as a positive opposing magnitude,
-
-        tau_s - tau_load
-          = (I_s,F + I_M) alpha_s - I_M H' s_dot^2 - I_M H s_ddot.
-
-    ``DynamicsSnapshot.secondary_external_torque`` uses a signed downstream
-    attachment convention, so the code form is:
-
-        tau_s + tau_external
-          = (I_s,F + I_M) alpha_s - I_M H' s_dot^2 - I_M H s_ddot.
-
-    The returned zero-equals residual is therefore:
-
-        (I_s,F + I_M) alpha_s
-        - I_M H s_ddot
-        - tau_s
-        - tau_external
-        - I_M H' s_dot^2 = 0.
+    Positive ``tau_s`` is the CVT contact torque acting on the secondary in the
+    forward primary-to-secondary convention. ``T_elem,s`` includes shaft
+    inertial reaction and any mounted secondary element torque.
     """
-
-    movable_inertia = snapshot.movable_secondary_rotational_inertia
-    helix = snapshot.secondary_helix
-    shift_speed = snapshot.state.shift_speed
 
     return ClosureEquation(
         name="secondary_rotation",
         residual=AffineClosureScalar(
-            bias=(
-                -snapshot.secondary_external_torque
-                - movable_inertia * helix.d2theta_ds2 * shift_speed**2
-            ),
-            gains=ClosureGains(
-                secondary_angular_acceleration=(
-                    snapshot.secondary_absolute_rotational_inertia
-                ),
-                shift_acceleration=(-movable_inertia * helix.dtheta_ds),
-                secondary_torque=-1.0,
-            ),
-        ),
+            bias=snapshot.secondary_external_torque,
+            gains=ClosureGains(secondary_torque=1.0),
+        )
+        + snapshot.secondary_pulley.shaft_torque,
     )

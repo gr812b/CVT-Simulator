@@ -1,112 +1,167 @@
-"""Run one continuous CVT simulation through a scheduled grade programme.
-
-This is a **single hybrid CINDER integration**.  The CVT state, contact regime,
-and shift state continue smoothly throughout the whole scenario.  Only the
-external road grade changes.
-
-Why a time programme rather than a distance-indexed road profile?
----------------------------------------------------------------
-``CallableRoadProfile`` in CINDER is intentionally position-indexed, which is
-right for modelling a real surveyed road.  A request such as “hold 30 degrees
-for ten seconds” is instead a controlled load scenario: under a steep grade,
-the vehicle speed changes, so no fixed road length can guarantee a ten-second
-exposure.  This tool therefore uses a small time-aware adapter around the same
-road-profile interface.  It keeps CINDER's road-load equations unchanged, but
-feeds them a smooth, explicitly timed grade schedule.
-
-Default 45 s programme
------------------------
-  0–10 s   : level ground (0 deg)
- 10–12 s   : smooth 0 -> +30 deg rise
- 12–22 s   : +30 deg hold
- 22–24 s   : smooth +30 -> +15 deg easing
- 24–34 s   : +15 deg hold
- 34–36 s   : smooth +15 -> -20 deg transition
- 36–40 s   : -20 deg downhill hold
- 40–42 s   : smooth -20 -> 0 deg recovery
- 42–45 s   : level recovery
-
-Each scheduled phase receives its own dotted overlay on the primary-vs-
-secondary speed curve.  This lets the shift curve be read as one continuous
-trajectory while still showing which part occurred under each grade condition.
-
-Examples
---------
-    python tools2/run_grade_program_response.py --no-show
-
-    # Keep the same stages but remove the final level-recovery dwell.
-    python tools2/run_grade_program_response.py --duration-s 42 --no-show
-
-    # Run physical checks as well (slower than the transient itself).
-    python tools2/run_grade_program_response.py --run-audit --no-show
-"""
-
 from __future__ import annotations
 
 import argparse
 import csv
-from dataclasses import dataclass
-from math import radians
 import json
+from dataclasses import dataclass, replace
+from math import isfinite, radians
 from pathlib import Path
-import sys
-from typing import Iterable, Sequence
+from typing import Any, Mapping, Sequence
 
 import matplotlib.pyplot as plt
 import numpy as np
 from numpy.typing import NDArray
 
-_TOOLS_DIRECTORY = Path(__file__).resolve().parent
-_REPOSITORY_ROOT = _TOOLS_DIRECTORY.parent
-if str(_TOOLS_DIRECTORY) not in sys.path:
-    sys.path.insert(0, str(_TOOLS_DIRECTORY))
-for candidate_path in (
-    _REPOSITORY_ROOT / "src",
-    _REPOSITORY_ROOT,
-    _REPOSITORY_ROOT / "tools",
-):
-    if str(candidate_path) not in sys.path:
-        sys.path.append(str(candidate_path))
+# Package path is supplied by the runner through PYTHONPATH.
+from cinder.execution.hybrid import HybridIntegratorSettings, integrate_hybrid
+from cinder.execution.hybrid.composed import ComposedCVTHybridSystem
+from cinder.hosts import SecondaryShaftAngleHost
+from cinder.model.boundaries.engine import (
+    EngineTorquePoint,
+    FullThrottleTorqueCurve,
+    TorqueCurveSpec,
+)
+from cinder.model.boundaries.shaft import FullThrottleEngineBoundary, ShaftBoundaryContext
+from cinder.model.boundaries.vehicle import (
+    FixedFinalDrive,
+    RoadLoadModel,
+    VehicleInertia,
+    VehicleRoadLoadSpec,
+)
+from cinder.model.cvt.actuation import (
+    CentrifugalActuatorSpec,
+    TorqueReactiveActuatorSpec,
+    build_centrifugal_actuator,
+    build_torque_reactive_actuator,
+)
+from cinder.model.cvt.actuation.forces import (
+    AxialSpringForceSpec,
+    CentrifugalRampForceSpec,
+    HelicalTorqueReactionSpec,
+)
+from cinder.model.cvt.geometry import BeltPulleyGeometry, BeltPulleyGeometrySpec, BeltSectionSpec
+from cinder.model.cvt.inertia import (
+    BeltMass,
+    DrivetrainInertias,
+    PrimaryInertia,
+    SecondaryInertia,
+    resolve_inertias,
+)
+from cinder.model.cvt.profiles import (
+    CircularSegment,
+    HelixProfile,
+    LinearSegment,
+    PiecewiseRamp,
+    linear_helix_segment,
+)
+from cinder.model.system import (
+    BeltContactSpec,
+    CVTAssemblySpec,
+    CVTShaftBoundaryValues,
+    CVTState,
+    HelicalPulleyCoupling,
+    MechanicalCVTPlant,
+    PulleyPairSpec,
+    PulleySpec,
+    ShaftBoundaryValue,
+)
 
-from cinder.model.cvt.dynamics.shift_constraints import EngagedShiftConstraint  # noqa: E402
-from cinder.execution.hybrid import CVTDynamicState, HybridIntegratorSettings  # noqa: E402
-from cinder.results import ReportingGrid, ReportingSettings  # noqa: E402
-from cinder.execution.hybrid.cvt_contact_events import build_cvt_contact_events  # noqa: E402
-from cinder.execution.hybrid.cvt_operating_hybrid import (
-    CVTOperatingHybridSystem,
-    CVTOperatingSystemConfig,
-)  # noqa: E402
-from cinder.execution.hybrid.cvt_regime import (
-    CVTEngagementState,
-    CVTShiftConstraint,
-)  # noqa: E402
-from cinder.execution.hybrid.cvt_regime_events import (  # noqa: E402
-    build_deadzone_free_boundary_events,
-    build_engaged_free_boundary_events,
-    build_lower_stop_release_event,
-    build_low_ratio_seat_events,
-    build_upper_stop_release_event,
-)
-from cinder.model.boundaries.output.vehicle import CallableRoadProfile  # noqa: E402
-from launch_tuning_common import (  # noqa: E402
-    MILLIMETRE,
-    RPM_PER_RADIAN_PER_SECOND,
-    TuneCandidate,
-    build_operating_configuration,
-    case_with_output_road_profile,
-    launch_initial_state,
-    resolve_primary_preload,
-)
+INCH_TO_METRE = 0.0254
+FOOT_POUND_TO_NEWTON_METRE = 1.3558179483
+RPM_TO_RAD_PER_SECOND = 2.0 * np.pi / 60.0
+RPM_PER_RADIAN_PER_SECOND = 60.0 / (2.0 * np.pi)
+MILLIMETRE = 1.0e-3
+WATTS_PER_MECHANICAL_HORSEPOWER = 745.6998715822702
 
-_DEFAULT_PRESET = (
-    _TOOLS_DIRECTORY / "presets" / "circular_traction_first_reference.json"
-)
+
+@dataclass(frozen=True, slots=True)
+class TuneCandidate:
+    flyweight_mass_kg: float
+    helix_angle_degrees: float
+    secondary_torsional_pretension_degrees: float
+    secondary_compression_preload_mm: float
+    primary_ramp_kind: str = "linear"
+    primary_ramp_angle_degrees: float = 30.0
+    primary_ramp_start_angle_degrees: float = 42.0
+    primary_ramp_end_angle_degrees: float = 12.0
+
+    def label(self) -> str:
+        if self.primary_ramp_kind == "linear":
+            ramp = f"ramp=L{self.primary_ramp_angle_degrees:.0f}"
+        else:
+            ramp = (
+                f"ramp=C{self.primary_ramp_start_angle_degrees:.0f}"
+                f"→{self.primary_ramp_end_angle_degrees:.0f}"
+            )
+        return (
+            f"m={self.flyweight_mass_kg:.3f} kg, "
+            f"h={self.helix_angle_degrees:.1f} deg, "
+            f"twist={self.secondary_torsional_pretension_degrees:.0f} deg, "
+            f"sec={self.secondary_compression_preload_mm:.1f} mm, {ramp}"
+        )
+
+
+@dataclass(frozen=True, slots=True)
+class BajaTrialConstants:
+    belt_height: float = 0.613 * INCH_TO_METRE
+    belt_outer_width: float = 0.840 * INCH_TO_METRE
+    belt_inner_width: float = 0.662 * INCH_TO_METRE
+    belt_outer_length: float = 37.53 * INCH_TO_METRE
+    belt_cord_depth_from_outer: float = 0.5 * 0.613 * INCH_TO_METRE
+    sheave_half_angle_degrees: float = 11.5
+    primary_effective_radius_at_low: float = (1.625 / 2.0) * INCH_TO_METRE
+    secondary_effective_radius_at_low: float = 4.0 * INCH_TO_METRE
+    deadzone_shift: float = (0.088 + 0.010) * INCH_TO_METRE
+    max_shift: float = 0.75 * INCH_TO_METRE
+    primary_ramp_kind: str = "linear"
+    primary_ramp_angle_degrees: float = 30.0
+    primary_ramp_start_angle_degrees: float = 42.0
+    primary_ramp_end_angle_degrees: float = 12.0
+    helix_angle_degrees: float = 26.0
+    initial_flyweight_radius: float = 0.04878
+    helix_radius: float = 0.04445
+    flyweight_mass: float = 0.5
+    primary_spring_rate: float = 12_784.0
+    primary_spring_initial_compression: float = 0.1
+    secondary_torsional_spring_rate: float = 3.476
+    secondary_torsional_initial_twist: float = radians(200.0)
+    secondary_compression_spring_rate: float = 3_532.0
+    secondary_spring_initial_compression: float = 0.1
+    engine_power_limit_hp: float = 10.0
+    engine_low_speed_braking_torque: float = -5.0
+    engine_low_speed_braking_peak_rpm: float = 500.0
+    engine_governed_overspeed_torque: float = -28.0
+    engine_governed_overspeed_transition_width_rpm: float = 1500.0
+    engine_rotational_inertia: float = 0.1
+    primary_cvt_rotational_inertia: float = 0.005
+    primary_moving_sheave_mass: float = 1.0681
+    secondary_fixed_rotational_inertia: float = 0.1
+    gearbox_input_rotational_inertia: float = 0.05
+    secondary_movable_sheave_rotational_inertia: float = 0.0025139
+    secondary_moving_sheave_mass: float = 0.705141
+    rubber_density: float = 1100.0
+    belt_static_friction_coefficient: float = 0.65
+    belt_kinetic_friction_coefficient: float = 0.55
+    vehicle_mass: float = 225.0 + 75.0
+    wheel_rotational_inertia: float = 0.2
+    final_drive_ratio: float = 7.556
+    wheel_radius: float = 11.0 * INCH_TO_METRE
+    frontal_area: float = 1.11484
+    drag_coefficient: float = 0.6
+    rolling_resistance_coefficient: float = 0.015
+
+
+@dataclass(frozen=True, slots=True)
+class ResolvedTune:
+    candidate: TuneCandidate
+    constants: BajaTrialConstants
+    target_engagement_rpm: float
+    resolved_primary_preload_mm: float
+    lower_stop_reaction_at_target_n: float
 
 
 @dataclass(frozen=True, slots=True)
 class GradePhase:
-    """One named time interval in a smooth grade programme."""
-
     name: str
     start_s: float
     end_s: float
@@ -115,285 +170,292 @@ class GradePhase:
     transition: bool = False
 
     def contains(self, time_s: float, *, include_end: bool = False) -> bool:
-        if include_end:
-            return self.start_s <= time_s <= self.end_s
-        return self.start_s <= time_s < self.end_s
+        return self.start_s <= time_s <= self.end_s if include_end else self.start_s <= time_s < self.end_s
 
     def grade_radians(self, time_s: float) -> float:
-        """Return constant or C1-smooth grade over this phase."""
-
-        if self.end_s <= self.start_s:
-            return radians(self.end_degrees)
-        if not self.transition:
+        if self.end_s <= self.start_s or not self.transition:
             return radians(self.start_degrees)
-        u = _smoothstep((time_s - self.start_s) / (self.end_s - self.start_s))
+        u = smoothstep((time_s - self.start_s) / (self.end_s - self.start_s))
         return radians(self.start_degrees + (self.end_degrees - self.start_degrees) * u)
 
     @property
     def display_label(self) -> str:
-        """Compact unique legend label for this one shift-curve overlay."""
-
-        if self.transition:
-            grade = f"{self.start_degrees:+.0f}→{self.end_degrees:+.0f}°"
-        else:
-            grade = f"{self.start_degrees:+.0f}°"
+        grade = f"{self.start_degrees:+.0f}→{self.end_degrees:+.0f}°" if self.transition else f"{self.start_degrees:+.0f}°"
         return f"{self.name} ({grade})"
 
 
 @dataclass(frozen=True, slots=True)
 class GradeProgramme:
-    """Time-scheduled grade curve with C1 transitions and named phases."""
-
     phases: tuple[GradePhase, ...]
 
-    def __post_init__(self) -> None:
-        if not self.phases:
-            raise ValueError("A grade programme requires at least one phase.")
-        previous_end = 0.0
-        previous_grade = None
-        for phase in self.phases:
-            if phase.start_s < previous_end - 1.0e-12 or phase.end_s <= phase.start_s:
-                raise ValueError("Grade phases must be ordered with positive duration.")
-            if (
-                previous_grade is not None
-                and abs(phase.start_degrees - previous_grade) > 1.0e-9
-            ):
-                raise ValueError("Adjacent grade phases must be grade-continuous.")
-            previous_end = phase.end_s
-            previous_grade = phase.end_degrees
+    @classmethod
+    def default(cls, *, final_level_seconds: float = 3.0) -> "GradeProgramme":
+        t = 0.0
+        phases: list[GradePhase] = []
+        def add(name: str, duration: float, start: float, end: float, transition: bool) -> None:
+            nonlocal t
+            phases.append(GradePhase(name, t, t + duration, start, end, transition))
+            t += duration
+        add("flat launch", 10.0, 0.0, 0.0, False)
+        add("rise to 30", 2.0, 0.0, 30.0, True)
+        add("30 degree hill", 10.0, 30.0, 30.0, False)
+        add("ease to 15", 2.0, 30.0, 15.0, True)
+        add("15 degree hill", 10.0, 15.0, 15.0, False)
+        add("turn to downhill", 2.0, 15.0, -20.0, True)
+        add("20 degree downhill", 4.0, -20.0, -20.0, False)
+        add("return to level", 2.0, -20.0, 0.0, True)
+        add("flat recovery", final_level_seconds, 0.0, 0.0, False)
+        return cls(tuple(phases))
 
     @property
     def end_time_s(self) -> float:
         return self.phases[-1].end_s
 
     def grade_radians(self, time_s: float) -> float:
-        time = float(time_s)
-        for index, phase in enumerate(self.phases):
-            if phase.contains(time, include_end=index == len(self.phases) - 1):
-                return phase.grade_radians(time)
+        for i, phase in enumerate(self.phases):
+            if phase.contains(float(time_s), include_end=i == len(self.phases) - 1):
+                return phase.grade_radians(float(time_s))
         return radians(self.phases[-1].end_degrees)
 
-    def phase_index(self, time_s: float) -> int:
-        time = float(time_s)
-        for index, phase in enumerate(self.phases):
-            if phase.contains(time, include_end=index == len(self.phases) - 1):
-                return index
-        return len(self.phases) - 1
 
-    @classmethod
-    def default(cls, *, final_level_seconds: float = 3.0) -> "GradeProgramme":
-        """Build the requested 0/+30/+15/-20/0 test sequence.
-
-        The three main holds are exactly ten seconds at 0, +30, and +15 deg.
-        Two-second cubic smoothsteps avoid a finite grade-force jump.  The
-        final level dwell is separate so recovery after the downhill transition
-        is visible rather than ending at the instant grade returns to zero.
-        """
-
-        t = 0.0
-
-        def add(
-            name: str, duration: float, start: float, end: float, transition: bool
-        ) -> GradePhase:
-            nonlocal t
-            phase = GradePhase(name, t, t + duration, start, end, transition)
-            t += duration
-            return phase
-
-        return cls(
-            (
-                add("flat launch", 10.0, 0.0, 0.0, False),
-                add("rise to 30", 2.0, 0.0, 30.0, True),
-                add("30 degree hill", 10.0, 30.0, 30.0, False),
-                add("ease to 15", 2.0, 30.0, 15.0, True),
-                add("15 degree hill", 10.0, 15.0, 15.0, False),
-                add("turn to downhill", 2.0, 15.0, -20.0, True),
-                add("20 degree downhill", 4.0, -20.0, -20.0, False),
-                add("return to level", 2.0, -20.0, 0.0, True),
-                add("flat recovery", final_level_seconds, 0.0, 0.0, False),
-            )
-        )
+def smoothstep(value: float) -> float:
+    value = float(np.clip(value, 0.0, 1.0))
+    return value * value * (3.0 - 2.0 * value)
 
 
-class _TimeClockedRoadProfile:
-    """Mutable clock wrapper used only by the time-aware hybrid adapter.
+class TimeProgrammedLockedFinalDriveBoundary:
+    """Secondary shaft boundary with a time-programmed route grade."""
 
-    It intentionally implements the same ``sample(vehicle_distance=...)``
-    protocol as CINDER's standard profiles.  ``vehicle_distance`` is retained
-    in the returned sample by the wrapped ``CallableRoadProfile``; the grade
-    itself is prescribed by the current integration time.
-    """
-
-    def __init__(self, programme: GradeProgramme) -> None:
+    def __init__(self, *, road_load: RoadLoadModel, programme: GradeProgramme, direct_secondary_shaft_inertia: float = 0.0) -> None:
+        self.road_load = road_load
         self.programme = programme
-        self.current_time_s = 0.0
-        self._profile = CallableRoadProfile(
-            grade_angle_function=lambda _distance: self.programme.grade_radians(
-                self.current_time_s
-            )
+        self.direct_secondary_shaft_inertia = direct_secondary_shaft_inertia
+
+    @property
+    def reflected_rotational_inertia(self) -> float:
+        fd = self.road_load.final_drive
+        vehicle = self.road_load.vehicle
+        return (
+            self.direct_secondary_shaft_inertia
+            + fd.secondary_inertia_from_wheel_rotation(wheel_rotational_inertia=vehicle.wheel_rotational_inertia)
+            + fd.secondary_inertia_from_vehicle_mass(vehicle_mass=vehicle.mass)
         )
 
-    def set_time(self, time_s: float) -> None:
-        self.current_time_s = float(time_s)
-
-    def sample(self, *, vehicle_distance: float):
-        return self._profile.sample(vehicle_distance=vehicle_distance)
-
-
-class TimeAwareRoadHybridSystem(CVTOperatingHybridSystem):
-    """CINDER operating adapter that sets a schedule clock before every model call.
-
-    CINDER's public ``RoadProfile`` API is spatial by design.  This subclass is
-    deliberately local to this tool so a *controlled time programme* can be
-    evaluated without altering production CINDER mechanics.  Every RHS, contact
-    event, unilateral-reaction event, and transition resolves the grade at the
-    exact solver time supplied by CINDER.
-    """
-
-    def __init__(self, *, time_profile: _TimeClockedRoadProfile, **kwargs) -> None:
-        self._time_profile = time_profile
-        super().__init__(**kwargs)
-
-    @classmethod
-    def from_case(
-        cls,
-        case,
-        *,
-        time_profile: _TimeClockedRoadProfile,
-        configuration: CVTOperatingSystemConfig,
-    ) -> "TimeAwareRoadHybridSystem":
-        """Build this time-aware adapter from one editable CINDER case."""
-
-        from cinder.model.system import CVTDynamicsModel
-
-        return cls(
-            time_profile=time_profile,
-            model=CVTDynamicsModel.from_case(case),
-            traction_law=configuration.traction_law,
-            solve_settings=configuration.solve_settings,
-            operating_limits=configuration.operating_limits,
-            switching_settings=configuration.switching_settings,
+    def evaluate(self, context: ShaftBoundaryContext) -> ShaftBoundaryValue:
+        if context.shaft != "secondary":
+            raise ValueError("TimeProgrammedLockedFinalDriveBoundary must attach to secondary.")
+        secondary_angle = float(context.host["secondary_shaft_angle"])
+        distance = self.road_load.final_drive.vehicle_distance_from_secondary_angle(secondary_shaft_angle=secondary_angle)
+        grade_angle = self.programme.grade_radians(context.time)
+        road = self.road_load.evaluate(
+            secondary_angular_speed=context.cvt.secondary_angular_speed,
+            grade_angle=grade_angle,
+        )
+        return ShaftBoundaryValue(
+            external_torque=road.secondary_external_torque,
+            equivalent_inertia=self.reflected_rotational_inertia,
+            metadata={"road_load": road, "vehicle_distance": distance, "grade_angle": grade_angle},
         )
 
-    def _set_time(self, time_s: float) -> None:
-        self._time_profile.set_time(time_s)
 
-    def _evaluate_physics(self, *, time: float, state: NDArray[np.float64], mode):
-        """Apply the programmed road clock before either RHS or inspection physics."""
+def load_candidate(path: Path) -> TuneCandidate:
+    payload = json.loads(path.read_text(encoding="utf-8"))
+    data = payload["candidate"]
+    return TuneCandidate(
+        flyweight_mass_kg=float(data["flyweight_mass_kg"]),
+        helix_angle_degrees=float(data["helix_angle_degrees"]),
+        secondary_torsional_pretension_degrees=float(data["secondary_torsional_pretension_degrees"]),
+        secondary_compression_preload_mm=float(data["secondary_compression_preload_mm"]),
+        primary_ramp_kind=str(data["primary_ramp_kind"]),
+        primary_ramp_angle_degrees=float(data.get("primary_ramp_angle_degrees", 30.0)),
+        primary_ramp_start_angle_degrees=float(data["primary_ramp_start_angle_degrees"]),
+        primary_ramp_end_angle_degrees=float(data["primary_ramp_end_angle_degrees"]),
+    )
 
-        self._set_time(time)
-        return super()._evaluate_physics(time=time, state=state, mode=mode)
 
-    def events(self, time: float, state: NDArray[np.float64], mode):
-        """Build event functions whose state evaluation carries the correct time."""
+def candidate_constants(candidate: TuneCandidate, *, primary_preload_m: float | None = None) -> BajaTrialConstants:
+    updates = {
+        "flyweight_mass": candidate.flyweight_mass_kg,
+        "helix_angle_degrees": candidate.helix_angle_degrees,
+        "secondary_torsional_initial_twist": np.deg2rad(candidate.secondary_torsional_pretension_degrees),
+        "secondary_spring_initial_compression": candidate.secondary_compression_preload_mm * MILLIMETRE,
+        "primary_ramp_kind": candidate.primary_ramp_kind,
+        "primary_ramp_angle_degrees": candidate.primary_ramp_angle_degrees,
+        "primary_ramp_start_angle_degrees": candidate.primary_ramp_start_angle_degrees,
+        "primary_ramp_end_angle_degrees": candidate.primary_ramp_end_angle_degrees,
+    }
+    if primary_preload_m is not None:
+        updates["primary_spring_initial_compression"] = primary_preload_m
+    return replace(BajaTrialConstants(), **updates)
 
-        self._set_time(time)
-        if mode.engagement is CVTEngagementState.DEADZONE:
-            if mode.shift_constraint is CVTShiftConstraint.FREE:
-                return build_deadzone_free_boundary_events(limits=self.operating_limits)
-            if mode.shift_constraint is CVTShiftConstraint.LOWER_STOP:
-                return (
-                    build_lower_stop_release_event(
-                        closing_reaction=lambda event_time, vector: self._lower_stop_reaction_at_time(
-                            time=event_time, vector=vector
-                        )
-                    ),
-                )
-            raise RuntimeError(
-                f"Unsupported deadzone constraint: {mode.shift_constraint!r}."
-            )
 
-        constraint = self._engaged_constraint_for(mode)
-        assert mode.contact_regime is not None
-        contact_events = build_cvt_contact_events(
-            regime=mode.contact_regime,
-            evaluate=lambda event_time, vector: self._contact_evaluation_at_time(
-                time=event_time,
-                vector=vector,
-                regime=mode.contact_regime,
-                shift_constraint=constraint,
+def build_components(c: BajaTrialConstants):
+    belt = BeltSectionSpec(
+        height=c.belt_height,
+        outer_width=c.belt_outer_width,
+        inner_width=c.belt_inner_width,
+        cord_depth_from_outer=c.belt_cord_depth_from_outer,
+    )
+    geometry = BeltPulleyGeometry(BeltPulleyGeometrySpec(
+        belt=belt,
+        belt_outer_length=c.belt_outer_length,
+        primary_outer_radius_at_zero_shift=c.primary_effective_radius_at_low + c.belt_cord_depth_from_outer,
+        secondary_outer_radius_at_zero_shift=c.secondary_effective_radius_at_low + c.belt_cord_depth_from_outer,
+        sheave_half_angle=radians(c.sheave_half_angle_degrees),
+        deadzone_shift=c.deadzone_shift,
+        max_shift=c.max_shift,
+    ))
+    if c.primary_ramp_kind == "linear":
+        primary_ramp_segment = LinearSegment(length=c.max_shift, angle_degrees=c.primary_ramp_angle_degrees)
+    elif c.primary_ramp_kind == "circular_hard_to_soft":
+        primary_ramp_segment = CircularSegment(
+            length=c.max_shift,
+            angle_start_degrees=c.primary_ramp_start_angle_degrees,
+            angle_end_degrees=c.primary_ramp_end_angle_degrees,
+            quadrant=2,
+        )
+    else:
+        raise ValueError(f"Unsupported ramp kind {c.primary_ramp_kind!r}")
+    primary_actuator = build_centrifugal_actuator(CentrifugalActuatorSpec(
+        centrifugal_ramp=CentrifugalRampForceSpec(
+            flyweight_mass=c.flyweight_mass,
+            radius_at_zero_position=c.initial_flyweight_radius,
+            radial_displacement_profile=PiecewiseRamp((primary_ramp_segment,)),
+        ),
+        axial_spring=AxialSpringForceSpec(
+            stiffness=c.primary_spring_rate,
+            initial_compression=c.primary_spring_initial_compression,
+            compression_per_axial_position=1.0,
+        ),
+    ))
+    secondary_opening_travel = geometry.secondary_opening_travel_at_max_shift
+    helix_profile = HelixProfile(
+        circumferential_profile=PiecewiseRamp((linear_helix_segment(length=secondary_opening_travel, helix_angle_degrees=c.helix_angle_degrees),)),
+        radius=c.helix_radius,
+    )
+    secondary_actuator = build_torque_reactive_actuator(TorqueReactiveActuatorSpec(
+        axial_spring=AxialSpringForceSpec(
+            stiffness=c.secondary_compression_spring_rate,
+            initial_compression=c.secondary_spring_initial_compression,
+            compression_per_axial_position=-1.0,
+        ),
+        helical_reaction=HelicalTorqueReactionSpec(
+            torsional_stiffness=c.secondary_torsional_spring_rate,
+            initial_twist=c.secondary_torsional_initial_twist,
+            movable_member_torque_fraction=0.5,
+        ),
+    ))
+    inertias = resolve_inertias(
+        drivetrain=DrivetrainInertias(
+            primary=PrimaryInertia(
+                fixed_rotating_hardware_inertia=c.primary_cvt_rotational_inertia,
+                movable_sheave_rotational_inertia=0.0,
+                moving_sheave_mass=c.primary_moving_sheave_mass,
             ),
-            traction_law=self.traction_law,
-            switching_settings=self.switching_settings,
-            relative_speed_tolerance=self.solve_settings.contact_tolerances.relative_speed_tolerance,
-            relative_acceleration_tolerance=self.solve_settings.contact_tolerances.relative_acceleration_tolerance,
-            include_shift_boundary_events=False,
-        )
-        if mode.shift_constraint is CVTShiftConstraint.FREE:
-            return contact_events + build_engaged_free_boundary_events(
-                limits=self.operating_limits
-            )
-        if mode.shift_constraint is CVTShiftConstraint.LOW_RATIO_SEAT:
-            return contact_events + build_low_ratio_seat_events(
-                primary_clamping_force=lambda event_time, vector: self._primary_clamping_force_at_time(
-                    time=event_time, vector=vector
-                ),
-                closing_reaction=lambda event_time, vector: self._low_ratio_seat_reaction_at_time(
-                    time=event_time, vector=vector, contact_regime=mode.contact_regime
-                ),
-            )
-        if mode.shift_constraint is CVTShiftConstraint.UPPER_STOP:
-            return contact_events + (
-                build_upper_stop_release_event(
-                    opening_reaction=lambda event_time, vector: self._upper_stop_reaction_at_time(
-                        time=event_time,
-                        vector=vector,
-                        contact_regime=mode.contact_regime,
-                    )
-                ),
-            )
-        raise RuntimeError(
-            f"Unsupported engaged constraint: {mode.shift_constraint!r}."
-        )
+            secondary=SecondaryInertia(
+                fixed_rotating_hardware_inertia=c.secondary_fixed_rotational_inertia,
+                movable_sheave_rotational_inertia=c.secondary_movable_sheave_rotational_inertia,
+                moving_sheave_mass=c.secondary_moving_sheave_mass,
+            ),
+            belt=BeltMass(density=c.rubber_density),
+        ),
+        belt_section=belt,
+        belt_outer_length=c.belt_outer_length,
+    )
+    engine = FullThrottleTorqueCurve(TorqueCurveSpec(
+        points=tuple(EngineTorquePoint(angular_speed=rpm * RPM_TO_RAD_PER_SECOND, torque=ftlb * FOOT_POUND_TO_NEWTON_METRE)
+                     for rpm, ftlb in ((1000.0, 0.0), (1800.0, 18.0), (2400.0, 18.5), (2600.0, 18.1), (2800.0, 17.4), (3000.0, 16.6), (3200.0, 15.4), (3400.0, 14.5), (3600.0, 13.5), (4000.0, 0.0))),
+        low_speed_braking_torque=c.engine_low_speed_braking_torque,
+        low_speed_braking_peak_speed=c.engine_low_speed_braking_peak_rpm * RPM_TO_RAD_PER_SECOND,
+        high_speed_braking_torque=c.engine_governed_overspeed_torque,
+        high_speed_braking_transition_width=c.engine_governed_overspeed_transition_width_rpm * RPM_TO_RAD_PER_SECOND,
+    ))
+    final_drive = FixedFinalDrive(reduction_ratio=c.final_drive_ratio, wheel_radius=c.wheel_radius)
+    vehicle = VehicleInertia(mass=c.vehicle_mass, wheel_rotational_inertia=c.wheel_rotational_inertia)
+    road_load = RoadLoadModel(
+        spec=VehicleRoadLoadSpec(
+            rolling_resistance_coefficient=c.rolling_resistance_coefficient,
+            drag_coefficient=c.drag_coefficient,
+            frontal_area=c.frontal_area,
+        ),
+        vehicle=vehicle,
+        final_drive=final_drive,
+    )
+    assembly = CVTAssemblySpec(
+        geometry=geometry,
+        pulleys=PulleyPairSpec(
+            primary=PulleySpec(actuator=primary_actuator),
+            secondary=PulleySpec(
+                actuator=secondary_actuator,
+                helical_coupling=HelicalPulleyCoupling(profile=helix_profile),
+            ),
+        ),
+        inertias=inertias,
+        contact=BeltContactSpec(
+            static_friction_coefficient=c.belt_static_friction_coefficient,
+            kinetic_friction_coefficient=c.belt_kinetic_friction_coefficient,
+        ),
+    )
+    return assembly, engine, road_load
 
-    def transition(
-        self, time: float, state: NDArray[np.float64], mode, fired_event_names
-    ):
-        self._set_time(time)
-        return super().transition(time, state, mode, fired_event_names)
 
-    def classify_initial_regime(self, state: CVTDynamicState):
-        self._set_time(0.0)
-        return super().classify_initial_regime(state)
+def build_composed_system(c: BajaTrialConstants, programme: GradeProgramme | None = None) -> tuple[ComposedCVTHybridSystem, FullThrottleTorqueCurve, RoadLoadModel]:
+    assembly, engine, road_load = build_components(c)
+    plant = MechanicalCVTPlant.from_assembly(assembly)
+    host = SecondaryShaftAngleHost()
+    secondary_boundary = TimeProgrammedLockedFinalDriveBoundary(
+        road_load=road_load,
+        programme=programme or GradeProgramme.default(),
+        direct_secondary_shaft_inertia=c.gearbox_input_rotational_inertia,
+    )
+    system = ComposedCVTHybridSystem.from_plant(
+        plant=plant,
+        primary_boundary=FullThrottleEngineBoundary(
+            engine,
+            equivalent_rotational_inertia=c.engine_rotational_inertia,
+        ),
+        secondary_boundary=secondary_boundary,
+        host=host,
+    )
+    return system, engine, road_load
 
-    def _lower_stop_reaction_at_time(
-        self, *, time: float, vector: NDArray[np.float64]
-    ) -> float:
-        self._set_time(time)
-        return self._lower_stop_reaction(vector=vector)
 
-    def _primary_clamping_force_at_time(
-        self, *, time: float, vector: NDArray[np.float64]
-    ) -> float:
-        self._set_time(time)
-        return self._primary_clamping_force(time=time, vector=vector)
+def launch_cvt_state(*, primary_rpm: float = 1800.0) -> CVTState:
+    return CVTState(
+        primary_angular_speed=primary_rpm * RPM_TO_RAD_PER_SECOND,
+        secondary_angular_speed=0.0,
+        belt_speed=0.0,
+        shift_position=0.0,
+        shift_speed=0.0,
+    )
 
-    def _low_ratio_seat_reaction_at_time(
-        self, *, time: float, vector: NDArray[np.float64], contact_regime
-    ) -> float:
-        self._set_time(time)
-        return self._low_ratio_seat_reaction(
-            time=time, vector=vector, contact_regime=contact_regime
-        )
 
-    def _upper_stop_reaction_at_time(
-        self, *, time: float, vector: NDArray[np.float64], contact_regime
-    ) -> float:
-        self._set_time(time)
-        return self._upper_stop_reaction(
-            time=time, vector=vector, contact_regime=contact_regime
-        )
+def lower_stop_reaction(system: ComposedCVTHybridSystem, *, primary_rpm: float) -> float:
+    cvt_state = launch_cvt_state(primary_rpm=primary_rpm)
+    full_state = system.initial_state(cvt_state=cvt_state, host_state=system.host.initial_state(secondary_shaft_angle=0.0))
+    boundaries = system._shaft_boundaries(time=0.0, state=full_state)
+    evaluation = system.cvt.deadzone_evaluator.evaluate_lower_stop(
+        state=cvt_state,
+        lower_stop_shift=0.0,
+        shaft_boundaries=boundaries,
+    )
+    if evaluation.stop_reaction is None:
+        raise RuntimeError("Lower-stop evaluation did not recover a reaction")
+    return float(evaluation.stop_reaction)
 
-    def _contact_evaluation_at_time(
-        self, *, time: float, vector: NDArray[np.float64], regime, shift_constraint
-    ):
-        self._set_time(time)
-        return self.evaluator.evaluate_vector(
-            time=time,
-            vector=vector,
-            regime=regime,
-            shift_constraint=shift_constraint,
-        )
+
+def resolve_primary_preload(candidate: TuneCandidate, *, target_engagement_rpm: float, programme: GradeProgramme) -> ResolvedTune:
+    provisional = candidate_constants(candidate)
+    provisional_system, _, _ = build_composed_system(provisional, programme)
+    reaction = lower_stop_reaction(provisional_system, primary_rpm=target_engagement_rpm)
+    preload = provisional.primary_spring_initial_compression - reaction / provisional.primary_spring_rate
+    if preload < -1.0e-12:
+        raise ValueError("negative preload required")
+    preload = max(0.0, preload)
+    constants = candidate_constants(candidate, primary_preload_m=preload)
+    resolved_system, _, _ = build_composed_system(constants, programme)
+    resolved_reaction = lower_stop_reaction(resolved_system, primary_rpm=target_engagement_rpm)
+    return ResolvedTune(candidate, constants, target_engagement_rpm, preload / MILLIMETRE, resolved_reaction)
 
 
 @dataclass(frozen=True, slots=True)
@@ -407,594 +469,250 @@ class ProgrammeTrace:
     vehicle_distance_m: NDArray[np.float64]
 
 
-def _smoothstep(value: float) -> float:
-    value = float(np.clip(value, 0.0, 1.0))
-    return value * value * (3.0 - 2.0 * value)
-
-
-def parse_arguments() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--preset", type=Path, default=_DEFAULT_PRESET)
-    parser.add_argument("--duration-s", type=float, default=45.0)
-    parser.add_argument("--final-level-s", type=float, default=3.0)
-    parser.add_argument("--initial-primary-rpm", type=float, default=1800.0)
-    parser.add_argument("--target-engagement-rpm", type=float, default=2000.0)
-    parser.add_argument("--solver-method", default=None)
-    parser.add_argument("--max-step-ms", type=float, default=None)
-    parser.add_argument("--relative-tolerance", type=float, default=None)
-    parser.add_argument("--absolute-tolerance", type=float, default=None)
-    parser.add_argument("--maximum-transitions", type=int, default=160)
-    parser.add_argument(
-        "--report-step-ms",
-        type=float,
-        default=10.0,
-        help="Uniform result/export spacing [ms]; exact event points are retained as additional rows.",
-    )
-    parser.add_argument("--plot-samples", type=int, default=None, help="Optional plotting/export cap; omitted keeps CINDER\'s full 10 ms report grid.")
-    parser.add_argument("--run-audit", action="store_true")
-    parser.add_argument(
-        "--output-dir", type=Path, default=Path("artifacts/grade_program_response")
-    )
-    parser.add_argument("--no-show", action="store_true")
-    args = parser.parse_args()
-    for name in (
-        "duration_s",
-        "final_level_s",
-        "initial_primary_rpm",
-        "target_engagement_rpm",
-    ):
-        value = getattr(args, name)
-        if not np.isfinite(value) or value <= 0.0:
-            parser.error(f"--{name.replace('_', '-')} must be finite and positive.")
-    for name in ("max_step_ms", "relative_tolerance", "absolute_tolerance"):
-        value = getattr(args, name)
-        if value is not None and (not np.isfinite(value) or value <= 0.0):
-            parser.error(
-                f"--{name.replace('_', '-')} must be finite and positive when supplied."
-            )
-    if not np.isfinite(args.report_step_ms) or args.report_step_ms <= 0.0:
-        parser.error("--report-step-ms must be finite and positive.")
-    if args.maximum_transitions < 1 or (args.plot_samples is not None and args.plot_samples < 200):
-        parser.error(
-            "--maximum-transitions must be at least one and --plot-samples at least 200 when supplied."
-        )
-    return args
-
-
-def load_candidate(path: Path) -> tuple[TuneCandidate, dict[str, float | str]]:
-    with path.open(encoding="utf-8") as handle:
-        payload = json.load(handle)
-    data = payload["candidate"]
-    candidate = TuneCandidate(
-        flyweight_mass_kg=float(data["flyweight_mass_kg"]),
-        helix_angle_degrees=float(data["helix_angle_degrees"]),
-        secondary_torsional_pretension_degrees=float(
-            data["secondary_torsional_pretension_degrees"]
-        ),
-        secondary_compression_preload_mm=float(
-            data["secondary_compression_preload_mm"]
-        ),
-        primary_ramp_kind=str(data["primary_ramp_kind"]),
-        primary_ramp_angle_degrees=float(data.get("primary_ramp_angle_degrees", 30.0)),
-        primary_ramp_start_angle_degrees=float(
-            data["primary_ramp_start_angle_degrees"]
-        ),
-        primary_ramp_end_angle_degrees=float(data["primary_ramp_end_angle_degrees"]),
-    )
-    return candidate, dict(payload.get("integration", {}))
-
-
-def build_system(*, resolved, programme: GradeProgramme) -> TimeAwareRoadHybridSystem:
-    configuration, baseline = build_operating_configuration(resolved.constants)
-    time_profile = _TimeClockedRoadProfile(programme)
-    case = case_with_output_road_profile(baseline.case, time_profile)
-    return TimeAwareRoadHybridSystem.from_case(
-        case,
-        time_profile=time_profile,
-        configuration=configuration,
-    )
-
-
 def compact_mode(mode) -> str:
-    if mode.contact_regime is None:
-        return f"{mode.engagement.value}/{mode.shift_constraint.value}"
-    return f"{mode.engagement.value}/{mode.shift_constraint.value}/{mode.contact_regime.mode.value}"
+    cvt = getattr(mode, "cvt", mode)
+    if cvt.contact_regime is None:
+        return f"{cvt.engagement.value}/{cvt.shift_constraint.value}"
+    return f"{cvt.engagement.value}/{cvt.shift_constraint.value}/{cvt.contact_regime.mode.value}"
 
 
-def allocate_samples(sizes: Sequence[int], maximum: int | None) -> list[int]:
-    if maximum is None:
-        return list(sizes)
-    total = sum(sizes)
-    if total <= maximum:
-        return list(sizes)
-    allocation = [max(2, round(maximum * size / total)) for size in sizes]
-    while sum(allocation) > maximum:
-        index = max(range(len(allocation)), key=lambda item: allocation[item])
-        if allocation[index] <= 2:
-            break
-        allocation[index] -= 1
-    return allocation
-
-
-def sample_trace(
-    *,
-    system: TimeAwareRoadHybridSystem,
-    result,
-    programme: GradeProgramme,
-    maximum_samples: int | None,
-) -> ProgrammeTrace:
-    budgets = allocate_samples(
-        [segment.state.shape[1] for segment in result.segments], maximum_samples
-    )
-    rows = []
-    for segment, budget in zip(result.segments, budgets, strict=True):
-        indices = np.unique(
-            np.linspace(0, segment.state.shape[1] - 1, budget, dtype=int)
-        )
-        for index in indices:
-            time = float(segment.time[index])
-            vector = np.asarray(segment.state[:, index], dtype=float).copy()
-            vector[3] = np.clip(
-                vector[3], 0.0, system.operating_limits.upper_stop_shift
-            )
-            state = CVTDynamicState.from_vector(vector)
-            system._set_time(time)
-            snapshot = system.model.snapshot(state=state)
-            distance = snapshot.vehicle_distance
-            rows.append(
-                (
-                    time,
-                    vector,
-                    compact_mode(segment.mode),
-                    float(np.rad2deg(programme.grade_radians(time))),
-                    float(snapshot.vehicle_road_load.secondary_external_torque),
-                    float(snapshot.vehicle_road_load.vehicle_speed),
-                    float(distance),
-                )
-            )
-    rows.sort(key=lambda row: row[0])
+def sample_trace(system: ComposedCVTHybridSystem, result, programme: GradeProgramme, report_step_s: float = 0.01) -> ProgrammeTrace:
+    rows: list[tuple[float, NDArray[np.float64], str, float, float, float, float]] = []
+    for segment in result.segments:
+        t0, t1 = segment.start_time, segment.end_time
+        if segment.has_dense_output:
+            times = np.arange(t0, t1, report_step_s)
+            if len(times) == 0 or abs(times[0] - t0) > 1e-12:
+                times = np.r_[t0, times]
+            times = np.r_[times, t1]
+            times = np.unique(np.clip(times, t0, t1))
+            states = segment.dense_state_at(times)
+        else:
+            times = segment.time
+            states = segment.state
+        for j, time in enumerate(times):
+            full = np.asarray(states[:, j], dtype=float).copy()
+            full[3] = np.clip(full[3], 0.0, system.cvt.model.geometry.spec.max_shift)
+            cvt_state = CVTState.from_vector(system.layout.view(full, "cvt"))
+            boundaries = system._shaft_boundaries(time=float(time), state=full)
+            road = boundaries.secondary.metadata.get("road_load")
+            distance = float(boundaries.secondary.metadata.get("vehicle_distance", np.nan))
+            rows.append((
+                float(time),
+                full,
+                compact_mode(segment.mode),
+                float(np.rad2deg(programme.grade_radians(float(time)))),
+                float(getattr(road, "secondary_external_torque", np.nan)),
+                float(getattr(road, "vehicle_speed", np.nan)),
+                distance,
+            ))
+    # Deduplicate by time, preferring later segment boundary rows.
+    merged: dict[float, tuple] = {}
+    for row in rows:
+        merged[round(row[0], 12)] = row
+    rows = [merged[key] for key in sorted(merged)]
     return ProgrammeTrace(
-        time=np.asarray([row[0] for row in rows], dtype=float),
-        state=np.column_stack([row[1] for row in rows]),
-        mode=tuple(row[2] for row in rows),
-        grade_degrees=np.asarray([row[3] for row in rows], dtype=float),
-        secondary_road_torque_nm=np.asarray([row[4] for row in rows], dtype=float),
-        vehicle_speed_mps=np.asarray([row[5] for row in rows], dtype=float),
-        vehicle_distance_m=np.asarray([row[6] for row in rows], dtype=float),
+        time=np.asarray([r[0] for r in rows], dtype=float),
+        state=np.column_stack([r[1] for r in rows]),
+        mode=tuple(r[2] for r in rows),
+        grade_degrees=np.asarray([r[3] for r in rows], dtype=float),
+        secondary_road_torque_nm=np.asarray([r[4] for r in rows], dtype=float),
+        vehicle_speed_mps=np.asarray([r[5] for r in rows], dtype=float),
+        vehicle_distance_m=np.asarray([r[6] for r in rows], dtype=float),
     )
+
+
+def plot_masked_runs(axis, x, y, mask, **kwargs):
+    starts = np.flatnonzero(mask & np.r_[True, ~mask[:-1]])
+    ends = np.flatnonzero(mask & np.r_[~mask[1:], True])
+    label = kwargs.pop("label", None)
+    for k, (start, end) in enumerate(zip(starts, ends, strict=True)):
+        if end - start < 1:
+            continue
+        axis.plot(x[start:end+1], y[start:end+1], label=label if k == 0 else None, **kwargs)
 
 
 def short_event(reason: str) -> str:
-    mapping = (
-        ("lower_stop_released", "low stop"),
-        ("primary_closed_into_engaged_contact", "engage"),
-        ("low_ratio_seat_reached", "low seat"),
-        ("low_ratio_seat_released", "shift start"),
-        ("contact_restuck", "re-stick"),
-        ("upper_stop_reached", "high stop"),
-        ("upper_stop_released", "high release"),
-        ("static_capacity_exhausted", "slip"),
-    )
+    mapping = (("lower_stop_released", "low stop"), ("primary_closed_into_engaged_contact", "engage"), ("low_ratio_seat_reached", "low seat"), ("low_ratio_seat_released", "shift start"), ("contact_restuck", "re-stick"), ("upper_stop_reached", "high stop"), ("upper_stop_released", "high release"), ("static_capacity_exhausted", "slip"))
     for fragment, label in mapping:
         if fragment in reason:
             return label
     return reason.replace("_", " ")
 
 
-def plot_masked_runs(
-    axis: plt.Axes,
-    x: NDArray[np.float64],
-    y: NDArray[np.float64],
-    mask: NDArray[np.bool_],
-    **kwargs,
-) -> None:
-    starts = np.flatnonzero(mask & np.r_[True, ~mask[:-1]])
-    ends = np.flatnonzero(mask & np.r_[~mask[1:], True])
-    label = kwargs.pop("label", None)
-    for number, (start, end) in enumerate(zip(starts, ends, strict=True)):
-        if end - start < 1:
-            continue
-        axis.plot(
-            x[start : end + 1],
-            y[start : end + 1],
-            label=label if number == 0 else None,
-            **kwargs,
-        )
+def annotate_transitions(axes, label_axes, result):
+    for count, rec in enumerate(result.transitions):
+        for ax in axes:
+            ax.axvline(rec.time, linestyle="--", linewidth=0.75, alpha=0.45)
+        frac = 0.97 - 0.11 * (count % 6)
+        for ax in label_axes:
+            ax.annotate(short_event(rec.transition.reason), xy=(rec.time, frac), xycoords=("data", "axes fraction"), xytext=(2, 0), textcoords="offset points", rotation=90, va="top", ha="left", fontsize=6)
 
 
-def annotate_transitions(
-    axes: Iterable[plt.Axes], label_axes: Iterable[plt.Axes], result
-) -> None:
-    axes = tuple(axes)
-    label_axes = tuple(label_axes)
-    for count, record in enumerate(result.transitions):
-        for axis in axes:
-            axis.axvline(record.time, linestyle="--", linewidth=0.75, alpha=0.45)
-        fraction = 0.97 - 0.11 * (count % 6)
-        for axis in label_axes:
-            axis.annotate(
-                short_event(record.transition.reason),
-                xy=(record.time, fraction),
-                xycoords=("data", "axes fraction"),
-                xytext=(2, 0),
-                textcoords="offset points",
-                rotation=90,
-                va="top",
-                ha="left",
-                fontsize=6.0,
-            )
-
-
-def annotate_programme_boundaries(
-    axes: Iterable[plt.Axes], grade_axis: plt.Axes, programme: GradeProgramme
-) -> None:
+def annotate_programme(axes, grade_axis, programme):
     for phase in programme.phases[1:]:
-        for axis in axes:
-            axis.axvline(phase.start_s, linestyle=":", linewidth=0.9, alpha=0.7)
-        grade_axis.annotate(
-            phase.name,
-            xy=(phase.start_s, 0.04),
-            xycoords=("data", "axes fraction"),
-            xytext=(2, 0),
-            textcoords="offset points",
-            rotation=90,
-            va="bottom",
-            ha="left",
-            fontsize=6.0,
-        )
+        for ax in axes:
+            ax.axvline(phase.start_s, linestyle=":", linewidth=0.9, alpha=0.7)
+        grade_axis.annotate(phase.name, xy=(phase.start_s, 0.04), xycoords=("data", "axes fraction"), xytext=(2,0), textcoords="offset points", rotation=90, va="bottom", ha="left", fontsize=6)
 
 
-def plot_response(
-    *, trace: ProgrammeTrace, result, resolved, programme: GradeProgramme
-):
+def plot_response(trace: ProgrammeTrace, result, resolved: ResolvedTune, programme: GradeProgramme, output_dir: Path):
     t = trace.time
     primary_rpm = trace.state[0] * RPM_PER_RADIAN_PER_SECOND
     secondary_rpm = trace.state[1] * RPM_PER_RADIAN_PER_SECOND
     shift_mm = trace.state[3] / MILLIMETRE
     shift_speed_mmps = trace.state[4] / MILLIMETRE
+    fig, axes = plt.subplots(2, 3, figsize=(19, 10), constrained_layout=True)
+    ax1, ax2, ax3, ax4, ax5, ax6 = axes.flat
 
-    figure, axes = plt.subplots(2, 3, figsize=(19, 10), constrained_layout=True)
+    ax1.plot(t, primary_rpm, label=r"$\omega_p$")
+    ax1.plot(t, secondary_rpm, label=r"$\omega_s$")
+    ax1.set(title="Shaft speeds", xlabel="Time [s]", ylabel="Speed [rpm]")
+    ax1.grid(True, alpha=0.25); ax1.legend()
 
-    speed_axis = axes[0, 0]
-    speed_axis.plot(t, primary_rpm, label=r"$\omega_p$")
-    speed_axis.plot(t, secondary_rpm, label=r"$\omega_s$")
-    speed_axis.set_title("Shaft speeds")
-    speed_axis.set_xlabel("Time [s]")
-    speed_axis.set_ylabel("Speed [rpm]")
-    speed_axis.grid(True, alpha=0.25)
-    speed_axis.legend(loc="best")
+    ax2.plot(t, shift_mm, label=r"$s$")
+    ax2.axhline(resolved.constants.deadzone_shift/MILLIMETRE, linestyle="--", label="engage")
+    ax2.axhline(resolved.constants.max_shift/MILLIMETRE, linestyle="--", label="high stop")
+    ax2.set(title="Shift coordinate and speed", xlabel="Time [s]", ylabel="Shift [mm]")
+    ax2.grid(True, alpha=0.25)
+    ax2b = ax2.twinx(); ax2b.plot(t, shift_speed_mmps, linestyle=":", label=r"$\dot{s}$")
+    ax2b.set_ylabel("Shift speed [mm/s]")
+    h,l = ax2.get_legend_handles_labels(); h2,l2 = ax2b.get_legend_handles_labels(); ax2.legend(h+h2, l+l2, loc="best")
 
-    shift_axis = axes[0, 1]
-    shift_axis.plot(t, shift_mm, label=r"$s$")
-    shift_axis.axhline(
-        resolved.constants.deadzone_shift / MILLIMETRE, linestyle="--", label="engage"
-    )
-    shift_axis.axhline(
-        resolved.constants.max_shift / MILLIMETRE, linestyle="--", label="high stop"
-    )
-    shift_axis.set_title("Shift coordinate and speed")
-    shift_axis.set_xlabel("Time [s]")
-    shift_axis.set_ylabel("Shift [mm]")
-    shift_axis.grid(True, alpha=0.25)
-    shift_rate_axis = shift_axis.twinx()
-    shift_rate_axis.plot(t, shift_speed_mmps, linestyle=":", label=r"$\dot{s}$")
-    shift_rate_axis.set_ylabel("Shift speed [mm/s]")
-    handles, labels = shift_axis.get_legend_handles_labels()
-    right_handles, right_labels = shift_rate_axis.get_legend_handles_labels()
-    shift_axis.legend(handles + right_handles, labels + right_labels, loc="best")
+    ax3.plot(secondary_rpm, primary_rpm, alpha=0.22, label="full trajectory")
+    for i, phase in enumerate(programme.phases):
+        include_end = i == len(programme.phases) - 1
+        mask = (t >= phase.start_s) & ((t <= phase.end_s) if include_end else (t < phase.end_s))
+        plot_masked_runs(ax3, secondary_rpm, primary_rpm, mask, linestyle=":", linewidth=2.25, label=phase.display_label)
+    ax3.scatter([secondary_rpm[0]], [primary_rpm[0]], marker="o", label="launch")
+    ax3.set(title="Shift curve: phase-dotted grade programme", xlabel="Secondary speed [rpm]", ylabel="Primary speed [rpm]")
+    ax3.grid(True, alpha=0.25); ax3.legend(fontsize=6.8, ncol=2)
 
-    curve_axis = axes[0, 2]
-    curve_axis.plot(secondary_rpm, primary_rpm, alpha=0.22, label="full trajectory")
-    for index, phase in enumerate(programme.phases):
-        include_end = index == len(programme.phases) - 1
-        mask = (t >= phase.start_s) & (
-            (t <= phase.end_s) if include_end else (t < phase.end_s)
-        )
-        plot_masked_runs(
-            curve_axis,
-            secondary_rpm,
-            primary_rpm,
-            mask,
-            linestyle=":",
-            linewidth=2.25,
-            label=phase.display_label,
-        )
-    curve_axis.scatter([secondary_rpm[0]], [primary_rpm[0]], marker="o", label="launch")
-    curve_axis.set_title("Shift curve: phase-dotted grade programme")
-    curve_axis.set_xlabel("Secondary speed [rpm]")
-    curve_axis.set_ylabel("Primary speed [rpm]")
-    curve_axis.grid(True, alpha=0.25)
-    curve_axis.legend(loc="best", fontsize=6.8, ncol=2)
+    ax4.plot(t, trace.grade_degrees, label="grade")
+    ax4.axhline(0.0, linestyle="--", linewidth=0.8)
+    ax4.set(title="Route-grade programme", xlabel="Time [s]", ylabel="Grade [deg]", ylim=(-24,34))
+    ax4.grid(True, alpha=0.25); ax4.legend()
 
-    grade_axis = axes[1, 0]
-    grade_axis.plot(t, trace.grade_degrees, label="grade")
-    grade_axis.axhline(0.0, linestyle="--", linewidth=0.8)
-    grade_axis.set_title("Route-grade programme (full window)")
-    grade_axis.set_xlabel("Time [s]")
-    grade_axis.set_ylabel("Grade [deg]")
-    grade_axis.set_xlim(0.0, max(float(t[-1]), programme.end_time_s))
-    grade_axis.set_ylim(-24.0, 34.0)
-    grade_axis.grid(True, alpha=0.25)
-    grade_axis.legend(loc="best")
+    ax5.plot(t, trace.secondary_road_torque_nm, label=r"$\tau_{road,s}$")
+    ax5.axhline(0.0, linestyle="--", linewidth=0.8)
+    ax5.set(title="Secondary road-load torque", xlabel="Time [s]", ylabel="Torque [N m]")
+    ax5.grid(True, alpha=0.25); ax5.legend()
 
-    torque_axis = axes[1, 1]
-    torque_axis.plot(t, trace.secondary_road_torque_nm, label=r"$\tau_{road,s}$")
-    torque_axis.axhline(0.0, linestyle="--", linewidth=0.8)
-    torque_axis.set_title("Secondary road-load torque")
-    torque_axis.set_xlabel("Time [s]")
-    torque_axis.set_ylabel("Torque [N m]")
-    torque_axis.grid(True, alpha=0.25)
-    torque_axis.legend(loc="best")
+    ax6.plot(t, trace.vehicle_speed_mps * 3.6, label="speed")
+    ax6.set(title="Vehicle response and distance", xlabel="Time [s]", ylabel="Vehicle speed [km/h]")
+    ax6.grid(True, alpha=0.25)
+    ax6b = ax6.twinx(); ax6b.plot(t, trace.vehicle_distance_m, linestyle=":", label="distance")
+    ax6b.set_ylabel("Distance [m]")
+    h,l = ax6.get_legend_handles_labels(); h2,l2 = ax6b.get_legend_handles_labels(); ax6.legend(h+h2, l+l2)
 
-    vehicle_axis = axes[1, 2]
-    vehicle_axis.plot(t, trace.vehicle_speed_mps * 3.6, label="speed")
-    vehicle_axis.set_title("Vehicle response and distance")
-    vehicle_axis.set_xlabel("Time [s]")
-    vehicle_axis.set_ylabel("Vehicle speed [km/h]")
-    vehicle_axis.grid(True, alpha=0.25)
-    distance_axis = vehicle_axis.twinx()
-    distance_axis.plot(t, trace.vehicle_distance_m, linestyle=":", label="distance")
-    distance_axis.set_ylabel("Distance [m]")
-    handles, labels = vehicle_axis.get_legend_handles_labels()
-    right_handles, right_labels = distance_axis.get_legend_handles_labels()
-    vehicle_axis.legend(handles + right_handles, labels + right_labels, loc="best")
+    annotate_transitions((ax1, ax2, ax5, ax6), (ax1, ax2), result)
+    annotate_programme((ax1, ax2, ax4, ax5, ax6), ax4, programme)
+    fig.suptitle("CINDER composed grade programme | " + resolved.candidate.label() + f" | primary preload={resolved.resolved_primary_preload_mm:.2f} mm", fontsize=13)
 
-    annotate_transitions(
-        (speed_axis, shift_axis, torque_axis, vehicle_axis),
-        (speed_axis, shift_axis),
-        result,
-    )
-    annotate_programme_boundaries(
-        (speed_axis, shift_axis, grade_axis, torque_axis, vehicle_axis),
-        grade_axis,
-        programme,
-    )
+    combined = output_dir / "grade_program_response_composed_combined.png"
+    fig.savefig(combined, dpi=160)
 
-    figure.suptitle(
-        "CINDER circular-primary controlled grade programme | "
-        f"{resolved.candidate.label()} | primary preload={resolved.resolved_primary_preload_mm:.2f} mm",
-        fontsize=13,
-    )
-    return figure
+    # Individual exports for the six panels.
+    panel_specs = [
+        ("01_shaft_speeds.png", ax1),
+        ("02_shift_coordinate_speed.png", ax2),
+        ("03_shift_curve_phase_dotted.png", ax3),
+        ("04_grade_programme.png", ax4),
+        ("05_secondary_road_load_torque.png", ax5),
+        ("06_vehicle_response_distance.png", ax6),
+    ]
+    for filename, source_ax in panel_specs:
+        pfig, pax = plt.subplots(figsize=(8.5, 5.0), constrained_layout=True)
+        # Replot each panel directly for clean standalone images.
+        if filename.startswith("01"):
+            pax.plot(t, primary_rpm, label=r"$\omega_p$"); pax.plot(t, secondary_rpm, label=r"$\omega_s$"); pax.set(title="Shaft speeds", xlabel="Time [s]", ylabel="Speed [rpm]"); pax.legend()
+        elif filename.startswith("02"):
+            pax.plot(t, shift_mm, label=r"$s$"); pax.axhline(resolved.constants.deadzone_shift/MILLIMETRE, linestyle="--", label="engage"); pax.axhline(resolved.constants.max_shift/MILLIMETRE, linestyle="--", label="high stop"); pax.set(title="Shift coordinate", xlabel="Time [s]", ylabel="Shift [mm]"); pax.legend()
+        elif filename.startswith("03"):
+            pax.plot(secondary_rpm, primary_rpm, alpha=0.22, label="full trajectory")
+            for i, phase in enumerate(programme.phases):
+                include_end = i == len(programme.phases) - 1
+                mask = (t >= phase.start_s) & ((t <= phase.end_s) if include_end else (t < phase.end_s))
+                plot_masked_runs(pax, secondary_rpm, primary_rpm, mask, linestyle=":", linewidth=2.25, label=phase.display_label)
+            pax.scatter([secondary_rpm[0]], [primary_rpm[0]], marker="o", label="launch")
+            pax.set(title="Shift curve", xlabel="Secondary speed [rpm]", ylabel="Primary speed [rpm]"); pax.legend(fontsize=6.5, ncol=2)
+        elif filename.startswith("04"):
+            pax.plot(t, trace.grade_degrees, label="grade"); pax.axhline(0.0, linestyle="--", linewidth=0.8); pax.set(title="Route-grade programme", xlabel="Time [s]", ylabel="Grade [deg]", ylim=(-24,34)); pax.legend()
+        elif filename.startswith("05"):
+            pax.plot(t, trace.secondary_road_torque_nm, label=r"$\tau_{road,s}$"); pax.axhline(0, linestyle="--", linewidth=0.8); pax.set(title="Secondary road-load torque", xlabel="Time [s]", ylabel="Torque [N m]"); pax.legend()
+        elif filename.startswith("06"):
+            pax.plot(t, trace.vehicle_speed_mps * 3.6, label="speed"); pax.set(title="Vehicle response", xlabel="Time [s]", ylabel="Vehicle speed [km/h]"); p2 = pax.twinx(); p2.plot(t, trace.vehicle_distance_m, linestyle=":", label="distance"); p2.set_ylabel("Distance [m]"); h,l = pax.get_legend_handles_labels(); h2,l2 = p2.get_legend_handles_labels(); pax.legend(h+h2, l+l2)
+        pax.grid(True, alpha=0.25)
+        pfig.savefig(output_dir / filename, dpi=160)
+        plt.close(pfig)
+    return fig, combined
 
 
-def programme_metrics(
-    trace: ProgrammeTrace, programme: GradeProgramme
-) -> dict[str, float | None]:
-    shift_mm = trace.state[3] / MILLIMETRE
-    shift_speed = trace.state[4] / MILLIMETRE
-    metrics: dict[str, float | None] = {
-        "minimum_shift_mm": float(np.min(shift_mm)),
-        "maximum_shift_mm": float(np.max(shift_mm)),
-        "maximum_upshift_speed_mm_per_s": float(np.max(shift_speed)),
-        "maximum_backshift_speed_mm_per_s": float(np.min(shift_speed)),
-        "final_shift_mm": float(shift_mm[-1]),
+def write_trace(path: Path, trace: ProgrammeTrace):
+    with path.open("w", newline="", encoding="utf-8") as f:
+        w = csv.writer(f)
+        w.writerow(["time_s", "mode", "primary_rpm", "secondary_rpm", "belt_speed_mps", "shift_mm", "shift_speed_mmps", "secondary_shaft_angle_rad", "grade_deg", "secondary_road_torque_nm", "vehicle_speed_mps", "vehicle_distance_m"])
+        for i, time in enumerate(trace.time):
+            s = trace.state[:, i]
+            w.writerow([time, trace.mode[i], s[0]*RPM_PER_RADIAN_PER_SECOND, s[1]*RPM_PER_RADIAN_PER_SECOND, s[2], s[3]/MILLIMETRE, s[4]/MILLIMETRE, s[5], trace.grade_degrees[i], trace.secondary_road_torque_nm[i], trace.vehicle_speed_mps[i], trace.vehicle_distance_m[i]])
+
+
+def parse_args(argv: Sequence[str] | None = None):
+    parser = argparse.ArgumentParser(description="Run the composed CINDER 45 s route-grade response.")
+    parser.add_argument("--output-dir", type=Path, default=Path("outputs/route_grade"))
+    parser.add_argument("--preset", type=Path, default=Path(__file__).resolve().parent / "presets" / "circular_traction_first_reference.json")
+    parser.add_argument("--final-level-seconds", type=float, default=3.0)
+    parser.add_argument("--report-step-s", type=float, default=0.05)
+    parser.add_argument("--rtol", type=float, default=1.0e-2)
+    parser.add_argument("--atol", type=float, default=1.0e-5)
+    parser.add_argument("--max-step", type=float, default=0.050)
+    parser.add_argument("--no-show", action="store_true", help="Save plots without opening interactive plot windows.")
+    return parser.parse_args(argv)
+
+
+def main(argv: Sequence[str] | None = None):
+    args = parse_args(argv)
+    output_dir = args.output_dir
+    output_dir.mkdir(parents=True, exist_ok=True)
+    preset = args.preset
+    programme = GradeProgramme.default(final_level_seconds=args.final_level_seconds)
+    candidate = load_candidate(preset)
+    resolved = resolve_primary_preload(candidate, target_engagement_rpm=2000.0, programme=programme)
+    system, engine, road_load = build_composed_system(resolved.constants, programme)
+    initial_cvt = launch_cvt_state(primary_rpm=1800.0)
+    initial_full = system.initial_state(cvt_state=initial_cvt, host_state=system.host.initial_state(secondary_shaft_angle=0.0))
+    initial_mode = system.classify_initial_mode(initial_full)
+    settings = HybridIntegratorSettings(relative_tolerance=args.rtol, absolute_tolerance=args.atol, method="LSODA", max_step=args.max_step, maximum_transitions=160, retain_dense_output=True)
+    print("Running composed 45 s grade programme")
+    print(resolved.candidate.label())
+    print(f"primary preload={resolved.resolved_primary_preload_mm:.3f} mm; lower-stop reaction={resolved.lower_stop_reaction_at_target_n:.6g} N")
+    result = integrate_hybrid(system=system, time_span=(0.0, 45.0), initial_state=initial_full, initial_mode=initial_mode, settings=settings)
+    print("completed", result.completed, result.termination_reason, len(result.segments), "segments", len(result.transitions), "transitions")
+    if not result.completed:
+        raise RuntimeError(result.termination_reason)
+    trace = sample_trace(system, result, programme, report_step_s=args.report_step_s)
+    fig, combined = plot_response(trace, result, resolved, programme, output_dir)
+    write_trace(output_dir / "grade_program_trace_composed.csv", trace)
+    summary = {
+        "completed": result.completed,
+        "termination_reason": result.termination_reason,
+        "segments": len(result.segments),
+        "transitions": [{"time": rec.time, "reason": rec.transition.reason} for rec in result.transitions],
+        "resolved_primary_preload_mm": resolved.resolved_primary_preload_mm,
         "final_primary_rpm": float(trace.state[0, -1] * RPM_PER_RADIAN_PER_SECOND),
         "final_secondary_rpm": float(trace.state[1, -1] * RPM_PER_RADIAN_PER_SECOND),
+        "final_vehicle_speed_kmh": float(trace.vehicle_speed_mps[-1] * 3.6),
         "final_vehicle_distance_m": float(trace.vehicle_distance_m[-1]),
+        "max_shift_mm": float(np.max(trace.state[3] / MILLIMETRE)),
+        "min_shift_mm": float(np.min(trace.state[3] / MILLIMETRE)),
     }
-    for phase in programme.phases:
-        mask = (trace.time >= phase.start_s) & (trace.time <= phase.end_s)
-        if np.any(mask):
-            metrics[f"min_shift_during_{phase.name.replace(' ', '_')}_mm"] = float(
-                np.min(shift_mm[mask])
-            )
-    return metrics
-
-
-def audit_result(*, system: TimeAwareRoadHybridSystem, result) -> tuple[str, list[str]]:
-    try:
-        from hybrid_system_checks import CVTSystemCheckSettings, check_cvt_hybrid_result
-    except ImportError:
-        return "unavailable", [
-            "Physical audit unavailable: hybrid_system_checks.py not found."
-        ]
-    try:
-        report = check_cvt_hybrid_result(
-            system=system,
-            result=result,
-            settings=CVTSystemCheckSettings(maximum_samples_per_segment=32),
-        )
-    except Exception as error:
-        return "unavailable", [
-            f"Physical audit did not execute: {type(error).__name__}: {error}"
-        ]
-    if report.passed:
-        return "pass", list(report.summary_lines())
-    legacy = {
-        "mode_position_domain",
-        "upper_stop_position",
-        "upper_stop_unilateral_reaction",
-    }
-    if report.failures and all(
-        failure.invariant.value in legacy and "low_ratio_seat" in failure.location
-        for failure in report.failures
-    ):
-        return "legacy_low_ratio_audit", [
-            "Audit helper predates low-ratio-seat support; reported failures are known false positives.",
-            *report.summary_lines(),
-        ]
-    return "fail", list(report.summary_lines())
-
-
-def write_trace(path: Path, trace: ProgrammeTrace) -> None:
-    with path.open("w", newline="", encoding="utf-8") as handle:
-        writer = csv.writer(handle)
-        writer.writerow(
-            (
-                "time_s",
-                "mode",
-                "primary_rpm",
-                "secondary_rpm",
-                "belt_speed_mps",
-                "shift_mm",
-                "shift_speed_mm_per_s",
-                "secondary_shaft_angle_rad",
-                "grade_degrees",
-                "secondary_road_torque_nm",
-                "vehicle_speed_mps",
-                "vehicle_distance_m",
-            )
-        )
-        for i, time in enumerate(trace.time):
-            state = trace.state[:, i]
-            writer.writerow(
-                (
-                    time,
-                    trace.mode[i],
-                    state[0] * RPM_PER_RADIAN_PER_SECOND,
-                    state[1] * RPM_PER_RADIAN_PER_SECOND,
-                    state[2],
-                    state[3] / MILLIMETRE,
-                    state[4] / MILLIMETRE,
-                    state[5],
-                    trace.grade_degrees[i],
-                    trace.secondary_road_torque_nm[i],
-                    trace.vehicle_speed_mps[i],
-                    trace.vehicle_distance_m[i],
-                )
-            )
-
-
-def main() -> None:
-    args = parse_arguments()
-    programme = GradeProgramme.default(final_level_seconds=args.final_level_s)
-    if args.duration_s < programme.end_time_s - 1.0e-12:
-        print(
-            f"warning: duration {args.duration_s:.2f} s ends before the complete "
-            f"{programme.end_time_s:.2f} s grade programme."
-        )
-    candidate, integration = load_candidate(args.preset)
-    method = str(args.solver_method or integration.get("solver_method", "LSODA"))
-    # A 45 s programme includes slow backshift/re-upshift intervals.  These
-    # exploratory defaults are intentionally looser than the saved 10 s launch
-    # diagnostic so the one uninterrupted scenario remains practical.  Re-run
-    # accepted candidates with 1e-3 / 1e-6 (and preferably the original 20 ms
-    # cap) as a sensitivity check before drawing tuning conclusions.
-    max_step_ms = float(args.max_step_ms if args.max_step_ms is not None else 50.0)
-    rtol = float(
-        args.relative_tolerance if args.relative_tolerance is not None else 1.0e-2
-    )
-    atol = float(
-        args.absolute_tolerance if args.absolute_tolerance is not None else 1.0e-5
-    )
-    resolved = resolve_primary_preload(
-        candidate, target_engagement_rpm=args.target_engagement_rpm
-    )
-    system = build_system(resolved=resolved, programme=programme)
-    settings = HybridIntegratorSettings(
-        relative_tolerance=rtol,
-        absolute_tolerance=atol,
-        method=method,
-        max_step=max_step_ms * 1.0e-3,
-        maximum_transitions=args.maximum_transitions,
-    )
-
-    args.output_dir.mkdir(parents=True, exist_ok=True)
-    print("Controlled grade-programme response")
-    print("=" * 88)
-    print(candidate.label())
-    print(f"primary preload={resolved.resolved_primary_preload_mm:.3f} mm")
-    print(
-        f"one {args.duration_s:.3g} s CINDER integration; programme ends at {programme.end_time_s:.1f} s"
-    )
-    for phase in programme.phases:
-        print(
-            f"  {phase.start_s:5.1f}–{phase.end_s:5.1f} s  {phase.name}: {phase.start_degrees:+.0f} -> {phase.end_degrees:+.0f} deg"
-        )
-
-    result = system.run(
-        time_span=(0.0, args.duration_s),
-        initial_state=launch_initial_state(primary_rpm=args.initial_primary_rpm),
-        settings=settings,
-        reporting_settings=ReportingSettings(
-            grid=ReportingGrid.uniform_time_step(args.report_step_ms * 1.0e-3),
-        ),
-    )
-    if not result.completed:
-        raise RuntimeError(f"Integration terminated early: {result.termination_reason}")
-
-    trace = sample_trace(
-        system=system,
-        result=result,
-        programme=programme,
-        maximum_samples=args.plot_samples,
-    )
-    figure = plot_response(
-        trace=trace, result=result, resolved=resolved, programme=programme
-    )
-    figure.savefig(args.output_dir / "grade_program_response.png", dpi=160)
-    write_trace(args.output_dir / "grade_program_trace.csv", trace)
-    audit_status, audit_lines = (
-        audit_result(system=system, result=result.trace.raw)
-        if args.run_audit
-        else (
-            "not_run",
-            ["Not run by default; pass --run-audit for the slower physical audit."],
-        )
-    )
-    summary = {
-        "scenario": {
-            "description": "One continuous CINDER hybrid integration under a time-programmed grade schedule.",
-            "duration_s": args.duration_s,
-            "programme": [
-                {
-                    "name": phase.name,
-                    "start_s": phase.start_s,
-                    "end_s": phase.end_s,
-                    "start_degrees": phase.start_degrees,
-                    "end_degrees": phase.end_degrees,
-                    "transition": phase.transition,
-                }
-                for phase in programme.phases
-            ],
-        },
-        "candidate": {
-            "flyweight_mass_kg": candidate.flyweight_mass_kg,
-            "helix_angle_degrees": candidate.helix_angle_degrees,
-            "secondary_torsional_pretension_degrees": candidate.secondary_torsional_pretension_degrees,
-            "secondary_compression_preload_mm": candidate.secondary_compression_preload_mm,
-            "primary_ramp_kind": candidate.primary_ramp_kind,
-            "primary_ramp_start_angle_degrees": candidate.primary_ramp_start_angle_degrees,
-            "primary_ramp_end_angle_degrees": candidate.primary_ramp_end_angle_degrees,
-            "resolved_primary_preload_mm": resolved.resolved_primary_preload_mm,
-        },
-        "integration": {
-            "method": method,
-            "max_step_ms": max_step_ms,
-            "rtol": rtol,
-            "atol": atol,
-            "completed": result.completed,
-            "segments": len(result.segments),
-            "transitions": [record.transition.reason for record in result.transitions],
-        },
-        "programme_metrics": programme_metrics(trace, programme),
-        "audit": {"status": audit_status, "lines": audit_lines},
-    }
-    with (args.output_dir / "grade_program_summary.json").open(
-        "w", encoding="utf-8"
-    ) as handle:
-        json.dump(summary, handle, indent=2)
-
-    print(
-        f"\n{len(result.segments)} segments; {len(result.transitions)} transitions; audit={audit_status}"
-    )
-    for record in result.transitions:
-        print(f"  t={record.time:.6f} s  {short_event(record.transition.reason)}")
-    print("\nProgramme metrics")
-    for name, value in summary["programme_metrics"].items():
-        print(f"{name}: {value}")
-    for line in audit_lines:
-        print(f"  {line}")
-    print(
-        f"\nWrote {args.output_dir / 'grade_program_response.png'}, {args.output_dir / 'grade_program_trace.csv'}, and {args.output_dir / 'grade_program_summary.json'}."
-    )
-
+    (output_dir / "grade_program_summary_composed.json").write_text(json.dumps(summary, indent=2), encoding="utf-8")
+    print(json.dumps(summary, indent=2))
+    print(f"Wrote plots and trace to: {output_dir.resolve()}")
     if args.no_show:
-        plt.close(figure)
+        plt.close(fig)
     else:
         plt.show()
-
 
 if __name__ == "__main__":
     main()

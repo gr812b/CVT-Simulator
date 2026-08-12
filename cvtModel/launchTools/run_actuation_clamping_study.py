@@ -53,7 +53,7 @@ def main() -> None:
     primary = sample_pulley_clamping_force(
         PulleyClampingForceStudyRequest(
             cvt=cvt,
-            pulley=PulleyLocation.INPUT,
+            pulley=PulleyLocation.PRIMARY,
             point=ActuationOperatingPoint(shift_position=spec.deadzone_shift),
             axes=(
                 ActuationResponseAxis(
@@ -71,7 +71,7 @@ def main() -> None:
     secondary = sample_pulley_clamping_force(
         PulleyClampingForceStudyRequest(
             cvt=cvt,
-            pulley=PulleyLocation.OUTPUT,
+            pulley=PulleyLocation.SECONDARY,
             point=ActuationOperatingPoint(
                 shift_position=spec.deadzone_shift,
                 shaft_speed=1_800.0 * RPM_TO_RAD_PER_SECOND,
@@ -99,7 +99,7 @@ def main() -> None:
         output_directory=args.out_dir,
         title_prefix="Primary clamping response",
         x_label="Global shift position [mm]",
-        y_label="Input shaft speed [RPM]",
+        y_label="Primary shaft speed [RPM]",
         x_values=primary.column("shift_position_m") * 1.0e3,
         y_values=primary.column("shaft_speed_rad_per_s") / RPM_TO_RAD_PER_SECOND,
         file_prefix="primary",

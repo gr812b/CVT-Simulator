@@ -1,29 +1,23 @@
-"""Row 2: primary rotational dynamics."""
+"""Primary shaft angular-momentum balance."""
 
 from __future__ import annotations
 
 from cinder.model.cvt.closure import AffineClosureScalar, ClosureEquation, ClosureGains
-
 from cinder.model.system.evaluator import DynamicsSnapshot
 
 
-def build_primary_rotation_equation(
-    *,
-    snapshot: DynamicsSnapshot,
-) -> ClosureEquation:
-    """Build ``I_p alpha_p + tau_p - tau_eng = 0``.
+def build_primary_rotation_equation(*, snapshot: DynamicsSnapshot) -> ClosureEquation:
+    """Build ``T_ext,p + T_elem,p - tau_p = 0``.
 
-    This is fully fixed for one state snapshot because engine torque is
-    evaluated from the current primary speed before lambda trials begin.
+    ``T_elem,p`` contains the shaft inertial reaction and any mounted pulley
+    element torque, all signed in the positive primary rotation direction.
     """
 
     return ClosureEquation(
         name="primary_rotation",
         residual=AffineClosureScalar(
-            bias=-snapshot.engine_torque,
-            gains=ClosureGains(
-                primary_angular_acceleration=(snapshot.primary_rotational_inertia),
-                primary_torque=1.0,
-            ),
-        ),
+            bias=snapshot.primary_external_torque,
+            gains=ClosureGains(primary_torque=-1.0),
+        )
+        + snapshot.primary_pulley.shaft_torque,
     )

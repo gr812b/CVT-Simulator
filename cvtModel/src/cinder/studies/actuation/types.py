@@ -24,8 +24,8 @@ from cinder.model.system import CVTAssemblySpec
 class PulleyLocation(str, Enum):
     """Select one physical pulley from a complete CVT assembly."""
 
-    INPUT = "input"
-    OUTPUT = "output"
+    PRIMARY = "primary"
+    SECONDARY = "secondary"
 
 
 class ActuationStateCoordinate(str, Enum):

@@ -1,8 +1,8 @@
-import type { PresetSummary } from '@api/client';
+import type { LibraryObjectSummary } from '@api/client';
 import styles from './SimulationsTable.module.scss';
 
 interface SimulationsTableProps {
-  presets: PresetSummary[];
+  vehicleAssemblies: LibraryObjectSummary[];
   selectedId: string | null;
   onSelect: (id: string) => void;
   isLoading: boolean;
@@ -10,44 +10,44 @@ interface SimulationsTableProps {
 }
 
 export const SimulationsTable = ({
-  presets,
+  vehicleAssemblies,
   selectedId,
   onSelect,
   isLoading,
   error,
 }: SimulationsTableProps) => {
-  const message = error ?? (isLoading ? 'Loading CINDER presets…' : 'No CINDER presets are available.');
+  const message = error ?? (isLoading ? 'Loading seeded Baja baselines…' : 'No released vehicle assemblies are available.');
 
   return (
     <div className={styles.tableContainer}>
       <table className={styles.table}>
         <thead>
           <tr>
-            <th>Name</th>
+            <th>Vehicle baseline</th>
             <th>Source</th>
             <th>Description</th>
           </tr>
         </thead>
         <tbody>
-          {presets.length === 0 ? (
+          {vehicleAssemblies.length === 0 ? (
             <tr className={styles.emptyRow}>
               <td colSpan={3}>{message}</td>
             </tr>
           ) : (
             <>
               <tr className={styles.sectionHeader}>
-                <td colSpan={3}>Default Configurations</td>
+                <td colSpan={3}>Released Library Baselines</td>
               </tr>
-              {presets.map((preset) => {
+              {vehicleAssemblies.map((assembly) => {
                 const classes = [
                   styles.defaultRow,
-                  selectedId === preset.id ? styles.selected : '',
+                  selectedId === assembly.id ? styles.selected : '',
                 ].filter(Boolean).join(' ');
                 return (
-                  <tr key={preset.id} className={classes} onClick={() => onSelect(preset.id)}>
-                    <td>{preset.name}</td>
-                    <td>CINDER preset</td>
-                    <td>{preset.description}</td>
+                  <tr key={assembly.id} className={classes} onClick={() => onSelect(assembly.id)}>
+                    <td>{assembly.name}{assembly.isDefault ? ' · Default' : ''}</td>
+                    <td>{assembly.sourceLabel ?? assembly.catalogStatus}</td>
+                    <td>{assembly.description ?? 'Released database vehicle assembly.'}</td>
                   </tr>
                 );
               })}

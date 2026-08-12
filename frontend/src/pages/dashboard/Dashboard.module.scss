@@ -21,6 +21,25 @@
         .navButton {
             margin: 0;
         }
+
+        .headerCopy {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+            margin-left: 1rem;
+            color: var(--text-color);
+
+            h1 {
+                margin: 0;
+                @include fonts.title-bold;
+            }
+
+            p {
+                margin: 0;
+                @include fonts.text-small;
+                color: var(--border-color);
+            }
+        }
     }
 
     .buttonsContainer {

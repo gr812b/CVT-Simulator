@@ -5,7 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from math import isfinite
 
-from cinder.execution.hybrid import CVTDynamicState, CVTDynamicStateDerivative
+from cinder.model.system.state import CVTState, CVTStateDerivative
 
 from .snapshot import DeadzoneSnapshot
 
@@ -44,20 +44,18 @@ class DeadzoneEvaluation:
     contact closure.
     """
 
-    state: CVTDynamicState
+    state: CVTState
     snapshot: DeadzoneSnapshot
-    state_derivative: CVTDynamicStateDerivative
+    state_derivative: CVTStateDerivative
     lower_stop_reaction: LowerStopReaction | None = None
 
     def __post_init__(self) -> None:
-        if not isinstance(self.state, CVTDynamicState):
-            raise TypeError("state must be a CVTDynamicState instance.")
+        if not isinstance(self.state, CVTState):
+            raise TypeError("state must be a CVTState instance.")
         if not isinstance(self.snapshot, DeadzoneSnapshot):
             raise TypeError("snapshot must be a DeadzoneSnapshot instance.")
-        if not isinstance(self.state_derivative, CVTDynamicStateDerivative):
-            raise TypeError(
-                "state_derivative must be a CVTDynamicStateDerivative instance."
-            )
+        if not isinstance(self.state_derivative, CVTStateDerivative):
+            raise TypeError("state_derivative must be a CVTStateDerivative instance.")
 
     @property
     def primary_normal_resultant(self) -> float:

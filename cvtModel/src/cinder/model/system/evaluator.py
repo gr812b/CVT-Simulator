@@ -1,403 +1,421 @@
-"""State-frozen inputs for repeated trial-lambda closure solves."""
+"""Mechanical CVT plant evaluation.
+
+The plant evaluates only CVT-owned mechanics. Engines, vehicles, dynos,
+controllers, tires, and suspension models are external systems that provide
+signed shaft boundary values at each call.
+"""
 
 from __future__ import annotations
 
 from dataclasses import dataclass
 from math import isfinite
-from typing import TYPE_CHECKING
+from typing import Any
 
 from cinder.model.cvt.actuation import (
     HelicalCouplingState,
     PulleyActuationContext,
     PulleyActuator,
     PulleyClosureChannels,
+    PulleyElementContribution,
 )
-from cinder.model.cvt.closure import AffineClosureScalar
-from cinder.model.cvt.actuation.forces import (
-    AxialSpringForce,
-    CentrifugalRampForce,
-)
-from cinder.model.boundaries.input import InputTorqueBoundary
+from cinder.model.cvt.actuation.forces import AxialSpringForce, CentrifugalRampForce
+from cinder.model.cvt.closure import AffineClosureScalar, ClosureGains, ClosureUnknown
 from cinder.model.cvt.geometry import BeltPulleyGeometry, GeometryPosition
-from cinder.model.boundaries.output import (
-    OutputBoundary,
-    OutputBoundaryEvaluation,
-)
 from cinder.model.cvt.inertia import AxialTranslationInertias, ResolvedInertias
 from cinder.model.cvt.profiles import HelixShiftKinematics
-from cinder.model.boundaries.output.vehicle import RoadLoadResult
-from .assembly import HelicalPulleyCoupling
 
-from cinder.execution.hybrid import CVTDynamicState
-
-if TYPE_CHECKING:
-    from .case import CVTSimulationCase
+from .assembly import BeltContactSpec, CVTAssemblySpec, HelicalPulleyCoupling
+from .ports import CVTShaftBoundaryValues
+from .state import CVTState
 
 
 @dataclass(frozen=True, slots=True)
 class DynamicsSnapshot:
-    """All quantities fixed across repeated lambda trials at one ODE state.
+    """State-frozen quantities shared by closure solves."""
 
-    The snapshot intentionally contains no trial lambda pair or assembled
-    matrix.  It includes the state-evaluated secondary boundary so the contact
-    closure sees the same downstream torque and inertia during every lambda
-    trial at this ODE point.
-    """
-
-    state: CVTDynamicState
-
+    state: CVTState
     geometry: GeometryPosition
     axial_translation_inertias: AxialTranslationInertias
 
+    primary_pulley: PulleyElementContribution
+    secondary_pulley: PulleyElementContribution
     primary_actuation: AffineClosureScalar
     secondary_actuation: AffineClosureScalar
-    secondary_helix: HelixShiftKinematics
 
-    engine_torque: float
-    output_boundary_evaluation: OutputBoundaryEvaluation
+    primary_helix: HelixShiftKinematics | None
+    secondary_helix: HelixShiftKinematics | None
 
+    shaft_boundaries: CVTShaftBoundaryValues
     inertias: ResolvedInertias
     sheave_half_angle: float
 
     @property
-    def road_load(self) -> RoadLoadResult | None:
-        """Return road data when the attachment is vehicle-backed.
-
-        Direct secondary-shaft loads have no vehicle observables and return
-        ``None`` here.  Vehicle-specific callers should use
-        :attr:`vehicle_road_load` for an explicit checked access path.
-        """
-
-        return self.output_boundary_evaluation.road_load
+    def road_load(self):
+        return self.shaft_boundaries.secondary.metadata.get("road_load")
 
     @property
-    def vehicle_road_load(self) -> RoadLoadResult:
-        """Return vehicle road data or raise for a non-vehicle attachment.
-
-        This keeps launch/reporting code explicit about the fact that vehicle
-        observables belong to the locked vehicle attachment, not to every CVT
-        simulation.
-        """
-
-        road_load = self.output_boundary_evaluation.road_load
+    def vehicle_road_load(self):
+        road_load = self.road_load
         if road_load is None:
             raise RuntimeError(
-                "This secondary attachment does not provide vehicle road-load data."
+                "This shaft boundary does not provide vehicle road-load data."
             )
         return road_load
 
     @property
     def vehicle_distance(self) -> float:
-        """Return attachment vehicle distance or raise for a direct shaft load."""
-
-        distance = self.output_boundary_evaluation.vehicle_distance
-        if distance is None:
-            raise RuntimeError(
-                "This secondary attachment does not provide vehicle distance."
-            )
-        return distance
+        if "vehicle_distance" in self.shaft_boundaries.secondary.metadata:
+            return float(self.shaft_boundaries.secondary.metadata["vehicle_distance"])
+        if "vehicle_position" in self.shaft_boundaries.secondary.metadata:
+            return float(self.shaft_boundaries.secondary.metadata["vehicle_position"])
+        raise RuntimeError("This shaft boundary does not provide vehicle distance.")
 
     @property
     def belt_transport_mass(self) -> float:
-        """Return the belt mass multiplying belt-speed acceleration."""
-
         return self.inertias.belt.mass
 
     @property
     def belt_linear_density(self) -> float:
-        """Return rho_b A_b used by the wrap equations."""
-
         return self.inertias.belt.density * self.inertias.belt.cross_sectional_area
 
     @property
-    def primary_rotational_inertia(self) -> float:
-        """Return I_p."""
-
-        return self.inertias.primary.rotational_inertia
+    def primary_boundary_equivalent_inertia(self) -> float:
+        return self.shaft_boundaries.primary.equivalent_inertia
 
     @property
-    def output_boundary_added_rotational_inertia(self) -> float:
-        """Return state-frozen downstream inertia referred to the secondary."""
+    def secondary_boundary_equivalent_inertia(self) -> float:
+        return self.shaft_boundaries.secondary.equivalent_inertia
 
-        return self.output_boundary_evaluation.added_rotational_inertia
+    @property
+    def primary_rotational_inertia(self) -> float:
+        return (
+            self.inertias.primary.absolute_rotation_inertia
+            + self.primary_boundary_equivalent_inertia
+        )
 
     @property
     def secondary_fixed_rotational_inertia(self) -> float:
-        """Return core fixed-side plus downstream secondary inertia."""
-
         return (
             self.inertias.secondary.fixed_side.total
-            + self.output_boundary_added_rotational_inertia
+            + self.secondary_boundary_equivalent_inertia
         )
 
     @property
     def movable_secondary_rotational_inertia(self) -> float:
-        """Return I_M."""
-
         return self.inertias.secondary.movable_sheave_rotational_inertia
 
     @property
     def secondary_absolute_rotational_inertia(self) -> float:
-        """Return total absolute secondary inertia at this RHS evaluation."""
-
         return (
             self.secondary_fixed_rotational_inertia
             + self.movable_secondary_rotational_inertia
         )
 
     @property
-    def secondary_external_torque(self) -> float:
-        """Return signed external torque applied at the secondary."""
+    def primary_external_torque(self) -> float:
+        return self.shaft_boundaries.primary.external_torque
 
-        return self.output_boundary_evaluation.external_torque
+    @property
+    def secondary_external_torque(self) -> float:
+        return self.shaft_boundaries.secondary.external_torque
 
 
 @dataclass(frozen=True, slots=True, init=False)
-class CVTDynamicsModel:
-    """Runtime evaluator assembled exclusively from a :class:`CVTSimulationCase`.
+class MechanicalCVTPlant:
+    """Five-state mechanical CVT plant.
 
-    The evaluator owns no independent engine, vehicle, or road constructor
-    pathway. Input and output shaft behavior is supplied by the case's
-    boundaries, while CVT geometry, actuation, inertia, and contact mechanics
-    remain in the assembly.
+    The plant has no engine or vehicle fields. Every evaluation receives
+    primary/secondary shaft-port values from a host simulation.
     """
 
     geometry: BeltPulleyGeometry
     primary_actuator: PulleyActuator
     secondary_actuator: PulleyActuator
-    output_helical_coupling: HelicalPulleyCoupling
+    primary_helical_coupling: HelicalPulleyCoupling | None
+    secondary_helical_coupling: HelicalPulleyCoupling | None
     inertias: ResolvedInertias
-    input_boundary: InputTorqueBoundary
-    output_boundary: OutputBoundary
+    contact: BeltContactSpec
 
     def __init__(self) -> None:
-        raise TypeError(
-            "CVTDynamicsModel is runtime-only; construct it with "
-            "CVTDynamicsModel.from_case(case)."
-        )
+        raise TypeError("Use MechanicalCVTPlant.from_assembly().")
 
     def __post_init__(self) -> None:
-        if not callable(getattr(self.input_boundary, "evaluate", None)):
-            raise TypeError("input_boundary must implement evaluate(angular_speed).")
-        if not callable(getattr(self.output_boundary, "evaluate", None)):
-            raise TypeError("output_boundary must implement evaluate(state=...).")
-
-        operating_positions = _operating_geometry_positions(self.geometry)
-        _validate_secondary_helix_domain(
-            helix_coupling=self.output_helical_coupling,
-            positions=operating_positions,
-        )
+        positions = _operating_geometry_positions(self.geometry)
+        for name, coupling in (
+            ("primary", self.primary_helical_coupling),
+            ("secondary", self.secondary_helical_coupling),
+        ):
+            if coupling is not None:
+                _validate_helix_domain(
+                    name=name, helix_coupling=coupling, positions=positions
+                )
         _validate_primary_ramp_domain(
-            actuator=self.primary_actuator,
-            positions=operating_positions,
+            actuator=self.primary_actuator, positions=positions
         )
         _validate_compression_spring_domains(
             primary_actuator=self.primary_actuator,
             secondary_actuator=self.secondary_actuator,
-            positions=operating_positions,
+            positions=positions,
         )
 
     @classmethod
-    def from_case(cls, case: "CVTSimulationCase") -> "CVTDynamicsModel":
-        """Build the evaluator through CINDER's sole editable case contract."""
-
-        from .case import CVTSimulationCase
-
-        if not isinstance(case, CVTSimulationCase):
-            raise TypeError("case must be a CVTSimulationCase.")
+    def from_assembly(cls, assembly: CVTAssemblySpec) -> "MechanicalCVTPlant":
+        if not isinstance(assembly, CVTAssemblySpec):
+            raise TypeError("assembly must be a CVTAssemblySpec.")
         instance = object.__new__(cls)
-        object.__setattr__(instance, "geometry", case.cvt.geometry)
+        object.__setattr__(instance, "geometry", assembly.geometry)
         object.__setattr__(
-            instance, "primary_actuator", case.cvt.pulleys.input.actuator
+            instance, "primary_actuator", assembly.pulleys.primary.actuator
         )
         object.__setattr__(
-            instance, "secondary_actuator", case.cvt.pulleys.output.actuator
+            instance, "secondary_actuator", assembly.pulleys.secondary.actuator
         )
         object.__setattr__(
             instance,
-            "output_helical_coupling",
-            _require_output_helical_coupling(case),
+            "primary_helical_coupling",
+            assembly.pulleys.primary.helical_coupling,
         )
-        object.__setattr__(instance, "inertias", case.cvt.inertias)
-        object.__setattr__(instance, "input_boundary", case.input_boundary)
-        object.__setattr__(instance, "output_boundary", case.output_boundary)
+        object.__setattr__(
+            instance,
+            "secondary_helical_coupling",
+            assembly.pulleys.secondary.helical_coupling,
+        )
+        object.__setattr__(instance, "inertias", assembly.inertias)
+        object.__setattr__(instance, "contact", assembly.contact)
         instance.__post_init__()
         return instance
 
-    def primary_actuation_context(
-        self,
-        *,
-        state: CVTDynamicState,
-        geometry: GeometryPosition,
-    ) -> PulleyActuationContext:
-        """Build the generic input-pulley actuator context at one state."""
+    @property
+    def traction_law(self):
+        """Internal CVT contact law derived from the assembly contact spec."""
 
-        coordinate = geometry.primary_axial_coordinate
-        return PulleyActuationContext(
-            axial_position=coordinate.value,
-            axial_speed=coordinate.d_value_ds * state.shift_speed,
+        return self.contact.traction_law()
+
+    def primary_actuation_context(
+        self, *, state: CVTState, geometry: GeometryPosition
+    ) -> PulleyActuationContext:
+        return self._actuation_context(
+            side="primary",
+            state=state,
+            coordinate=geometry.primary_axial_coordinate,
+            coupling=self.primary_helical_coupling,
             shaft_speed=state.primary_angular_speed,
-            closure_channels=PulleyClosureChannels.input_pulley(),
+            channels=PulleyClosureChannels.primary(),
+            movable_member_rotational_inertia=self.inertias.primary.movable_sheave_rotational_inertia,
         )
 
-    def output_actuation_context(
+    def secondary_actuation_context(
+        self, *, state: CVTState, geometry: GeometryPosition
+    ) -> PulleyActuationContext:
+        return self._actuation_context(
+            side="secondary",
+            state=state,
+            coordinate=geometry.secondary_axial_coordinate,
+            coupling=self.secondary_helical_coupling,
+            shaft_speed=state.secondary_angular_speed,
+            channels=PulleyClosureChannels.secondary(),
+            movable_member_rotational_inertia=self.inertias.secondary.movable_sheave_rotational_inertia,
+        )
+
+    def _actuation_context(
         self,
         *,
-        state: CVTDynamicState,
-        geometry: GeometryPosition,
-        helical_kinematics: HelixShiftKinematics,
+        side: str,
+        state: CVTState,
+        coordinate: Any,
+        coupling: HelicalPulleyCoupling | None,
+        shaft_speed: float,
+        channels: PulleyClosureChannels,
+        movable_member_rotational_inertia: float,
     ) -> PulleyActuationContext:
-        """Build the generic output-pulley actuator context at one state."""
-
-        coordinate = geometry.secondary_axial_coordinate
+        del side
+        helical_state = None
+        if coupling is not None:
+            helical_state = HelicalCouplingState(
+                kinematics=coupling.evaluate_from_local_coordinate(
+                    axial_position=coordinate.value,
+                    d_axial_position_ds=coordinate.d_value_ds,
+                    d2_axial_position_ds2=coordinate.d2_value_ds2,
+                ),
+            )
         return PulleyActuationContext(
             axial_position=coordinate.value,
             axial_speed=coordinate.d_value_ds * state.shift_speed,
-            shaft_speed=state.secondary_angular_speed,
+            shaft_speed=shaft_speed,
             shift_speed=state.shift_speed,
-            closure_channels=PulleyClosureChannels.output_pulley(),
-            helical_coupling=HelicalCouplingState(
-                kinematics=helical_kinematics,
-                opening_per_axial_position=(
-                    self.output_helical_coupling.opening_per_axial_position
-                ),
-                opening_offset=self.output_helical_coupling.opening_offset,
-            ),
-            movable_member_rotational_inertia=(
-                self.inertias.secondary.movable_sheave_rotational_inertia
-            ),
+            closure_channels=channels,
+            helical_coupling=helical_state,
+            movable_member_rotational_inertia=movable_member_rotational_inertia,
         )
 
     def snapshot(
         self,
         *,
-        state: CVTDynamicState,
+        state: CVTState,
+        shaft_boundaries: CVTShaftBoundaryValues | None = None,
     ) -> DynamicsSnapshot:
-        """Evaluate every state-dependent, lambda-independent quantity once."""
+        if shaft_boundaries is None:
+            shaft_boundaries = CVTShaftBoundaryValues.zero()
+        if not isinstance(shaft_boundaries, CVTShaftBoundaryValues):
+            raise TypeError("shaft_boundaries must be a CVTShaftBoundaryValues.")
 
         geometry = self.geometry.evaluate(state.shift_position)
-
-        primary_coordinate = geometry.primary_axial_coordinate
-        secondary_coordinate = geometry.secondary_axial_coordinate
-
-        secondary_helix = self.output_helical_coupling.evaluate_from_local_coordinate(
-            axial_position=secondary_coordinate.value,
-            d_axial_position_ds=secondary_coordinate.d_value_ds,
-            d2_axial_position_ds2=secondary_coordinate.d2_value_ds2,
+        primary_context = self.primary_actuation_context(state=state, geometry=geometry)
+        secondary_context = self.secondary_actuation_context(
+            state=state, geometry=geometry
         )
 
-        primary_actuation = self.primary_actuator.evaluate_relation(
-            self.primary_actuation_context(state=state, geometry=geometry)
+        primary_mechanism = self.primary_actuator.evaluate_element(primary_context)
+        secondary_mechanism = self.secondary_actuator.evaluate_element(
+            secondary_context
+        )
+        primary_element = primary_mechanism
+        secondary_element = secondary_mechanism
+
+        axial_inertias = self.inertias.axial_translation.evaluate(
+            primary_axial_coordinate=geometry.primary_axial_coordinate,
+            secondary_axial_coordinate=geometry.secondary_axial_coordinate,
+            belt_axial_coordinate=geometry.belt_axial_coordinate,
         )
 
-        secondary_actuation = self.secondary_actuator.evaluate_relation(
-            self.output_actuation_context(
-                state=state,
-                geometry=geometry,
-                helical_kinematics=secondary_helix,
+        primary_element = primary_element + PulleyElementContribution(
+            closing_force=_axial_inertial_reaction(
+                axial_inertia=axial_inertias.primary,
+                shift_speed=state.shift_speed,
+            ),
+            shaft_torque=_rigid_shaft_inertial_torque(
+                unknown=ClosureUnknown.PRIMARY_ANGULAR_ACCELERATION,
+                inertia=self._primary_rigid_inertia(shaft_boundaries=shaft_boundaries),
+            ),
+        )
+
+        secondary_rigid_inertia = (
+            self.inertias.secondary.fixed_side.total
+            + shaft_boundaries.secondary.equivalent_inertia
+        )
+        if self.secondary_helical_coupling is None:
+            secondary_rigid_inertia += (
+                self.inertias.secondary.movable_sheave_rotational_inertia
             )
+        secondary_element = secondary_element + PulleyElementContribution(
+            closing_force=_axial_inertial_reaction(
+                axial_inertia=axial_inertias.secondary,
+                shift_speed=state.shift_speed,
+            ),
+            shaft_torque=_rigid_shaft_inertial_torque(
+                unknown=ClosureUnknown.SECONDARY_ANGULAR_ACCELERATION,
+                inertia=secondary_rigid_inertia,
+            ),
         )
 
-        attachment = self.output_boundary
-        if attachment is None:  # pragma: no cover - __post_init__ invariant.
-            raise RuntimeError("CVTDynamicsModel has no secondary attachment.")
-        output_boundary_evaluation = attachment.evaluate(state=state)
-        if not isinstance(output_boundary_evaluation, OutputBoundaryEvaluation):
-            raise TypeError(
-                "output_boundary.evaluate() must return OutputBoundaryEvaluation."
-            )
+        primary_helix = (
+            primary_context.helical_coupling.kinematics
+            if primary_context.helical_coupling
+            else None
+        )
+        secondary_helix = (
+            secondary_context.helical_coupling.kinematics
+            if secondary_context.helical_coupling
+            else None
+        )
 
         snapshot = DynamicsSnapshot(
             state=state,
             geometry=geometry,
-            axial_translation_inertias=self.inertias.axial_translation.evaluate(
-                primary_axial_coordinate=primary_coordinate,
-                secondary_axial_coordinate=secondary_coordinate,
-                belt_axial_coordinate=geometry.belt_axial_coordinate,
-            ),
-            primary_actuation=primary_actuation,
-            secondary_actuation=secondary_actuation,
+            axial_translation_inertias=axial_inertias,
+            primary_pulley=primary_element,
+            secondary_pulley=secondary_element,
+            primary_actuation=primary_mechanism.closing_force,
+            secondary_actuation=secondary_mechanism.closing_force,
+            primary_helix=primary_helix,
             secondary_helix=secondary_helix,
-            engine_torque=self.input_boundary.evaluate(state.primary_angular_speed),
-            output_boundary_evaluation=output_boundary_evaluation,
+            shaft_boundaries=shaft_boundaries,
             inertias=self.inertias,
             sheave_half_angle=self.geometry.spec.sheave_half_angle,
         )
-
         _validate_snapshot(snapshot)
         return snapshot
 
+    def _primary_rigid_inertia(
+        self, *, shaft_boundaries: CVTShaftBoundaryValues
+    ) -> float:
+        inertia = (
+            self.inertias.primary.fixed_rotating_hardware_inertia
+            + shaft_boundaries.primary.equivalent_inertia
+        )
+        if self.primary_helical_coupling is None:
+            inertia += self.inertias.primary.movable_sheave_rotational_inertia
+        return inertia
 
-def _require_output_helical_coupling(
-    case: "CVTSimulationCase",
-) -> HelicalPulleyCoupling:
-    coupling = case.cvt.pulleys.output.helical_coupling
-    if coupling is None:  # pragma: no cover - CVTAssemblySpec invariant.
-        raise ValueError("Current shift dynamics require output helical coupling.")
-    return coupling
+
+def _axial_inertial_reaction(
+    *, axial_inertia, shift_speed: float
+) -> AffineClosureScalar:
+    return AffineClosureScalar(
+        bias=-axial_inertia.local_known_inertial_force(shift_speed=shift_speed),
+        gains=ClosureGains(
+            shift_acceleration=-axial_inertia.local_shift_acceleration_gain
+        ),
+    )
+
+
+def _rigid_shaft_inertial_torque(
+    *, unknown: ClosureUnknown, inertia: float
+) -> AffineClosureScalar:
+    return AffineClosureScalar(gains=ClosureGains.from_by_unknown({unknown: -inertia}))
 
 
 def _operating_geometry_positions(
     geometry: BeltPulleyGeometry,
 ) -> tuple[GeometryPosition, ...]:
-    """Evaluate the reachable shift endpoints plus the deadzone boundary."""
-
     spec = geometry.spec
     shifts = tuple(sorted({0.0, spec.deadzone_shift, spec.max_shift}))
     return tuple(geometry.evaluate(shift) for shift in shifts)
 
 
-def _validate_secondary_helix_domain(
+def _validate_helix_domain(
     *,
+    name: str,
     helix_coupling: HelicalPulleyCoupling,
     positions: tuple[GeometryPosition, ...],
 ) -> None:
-    """Ensure host output geometry remains inside the installed helix profile."""
-
-    opening_travels = tuple(
-        helix_coupling.opening_offset
-        + helix_coupling.opening_per_axial_position
-        * position.secondary_axial_coordinate.value
-        for position in positions
-    )
-    minimum_opening = min(opening_travels)
-    maximum_opening = max(opening_travels)
-
+    values = []
+    for position in positions:
+        coordinate = (
+            position.primary_axial_coordinate
+            if name == "primary"
+            else position.secondary_axial_coordinate
+        )
+        values.append(-coordinate.value)
+    minimum_opening = min(values)
+    maximum_opening = max(values)
     if (
         minimum_opening < helix_coupling.profile.opening_travel_min
         or maximum_opening > helix_coupling.profile.opening_travel_max
     ):
         raise ValueError(
-            "output helical_coupling does not cover the geometry-reachable "
-            f"opening-travel interval [{minimum_opening}, {maximum_opening}]."
+            f"{name} helical_coupling does not cover the geometry-reachable opening-travel interval "
+            f"[{minimum_opening}, {maximum_opening}]."
         )
 
 
 def _validate_primary_ramp_domain(
-    *,
-    actuator: PulleyActuator,
-    positions: tuple[GeometryPosition, ...],
+    *, actuator: PulleyActuator, positions: tuple[GeometryPosition, ...]
 ) -> None:
-    """Ensure any centrifugal primary-ramp profile covers the shift interval."""
-
     primary_positions = tuple(
         position.primary_axial_coordinate.value for position in positions
     )
     minimum_position = min(primary_positions)
     maximum_position = max(primary_positions)
-
     for force_law in actuator.force_laws:
         if not isinstance(force_law, CentrifugalRampForce):
             continue
-
         profile = force_law.spec.radial_displacement_profile
         if minimum_position < profile.x_min or maximum_position > profile.x_max:
             raise ValueError(
-                "primary centrifugal-ramp profile does not cover the "
-                f"geometry-reachable axial interval "
-                f"[{minimum_position}, {maximum_position}]."
+                "primary centrifugal-ramp profile does not cover the geometry-reachable "
+                f"axial interval [{minimum_position}, {maximum_position}]."
             )
-
         for axial_position in primary_positions:
             flyweight_radius = (
                 force_law.spec.radius_at_zero_position
@@ -405,8 +423,7 @@ def _validate_primary_ramp_domain(
             )
             if flyweight_radius <= 0.0:
                 raise ValueError(
-                    "primary centrifugal-ramp profile gives a non-positive "
-                    "flyweight radius in the reachable shift range."
+                    "primary centrifugal-ramp profile gives a non-positive flyweight radius."
                 )
 
 
@@ -416,8 +433,6 @@ def _validate_compression_spring_domains(
     secondary_actuator: PulleyActuator,
     positions: tuple[GeometryPosition, ...],
 ) -> None:
-    """Reject a compression spring that would be evaluated in tension."""
-
     _validate_actuator_springs(
         name="primary",
         actuator=primary_actuator,
@@ -435,80 +450,46 @@ def _validate_compression_spring_domains(
 
 
 def _validate_actuator_springs(
-    *,
-    name: str,
-    actuator: PulleyActuator,
-    axial_positions: tuple[float, ...],
+    *, name: str, actuator: PulleyActuator, axial_positions: tuple[float, ...]
 ) -> None:
     for force_law in actuator.force_laws:
         if not isinstance(force_law, AxialSpringForce):
             continue
-
         spec = force_law.spec
         compressions = tuple(
             spec.initial_compression
             + spec.compression_per_axial_position * axial_position
             for axial_position in axial_positions
         )
-        minimum_compression = min(compressions)
-
-        if minimum_compression < 0.0:
+        if min(compressions) < 0.0:
             raise ValueError(
-                f"{name} compression spring reaches negative compression "
-                "within the geometry-reachable shift range."
+                f"{name} compression spring reaches negative compression in the shift range."
             )
 
 
 def _validate_snapshot(snapshot: DynamicsSnapshot) -> None:
-    """Fail early if a component produces a non-finite snapshot value."""
-
     scalar_values = {
-        "engine_torque": snapshot.engine_torque,
+        "primary_external_torque": snapshot.primary_external_torque,
         "secondary_external_torque": snapshot.secondary_external_torque,
         "belt_transport_mass": snapshot.belt_transport_mass,
         "belt_linear_density": snapshot.belt_linear_density,
         "primary_rotational_inertia": snapshot.primary_rotational_inertia,
-        "output_boundary_added_rotational_inertia": (
-            snapshot.output_boundary_added_rotational_inertia
-        ),
-        "secondary_fixed_rotational_inertia": (
-            snapshot.secondary_fixed_rotational_inertia
-        ),
-        "movable_secondary_rotational_inertia": (
-            snapshot.movable_secondary_rotational_inertia
-        ),
-        "secondary_absolute_rotational_inertia": (
-            snapshot.secondary_absolute_rotational_inertia
-        ),
+        "secondary_absolute_rotational_inertia": snapshot.secondary_absolute_rotational_inertia,
         "primary_axial_mass": snapshot.axial_translation_inertias.primary.mass,
         "secondary_axial_mass": snapshot.axial_translation_inertias.secondary.mass,
         "belt_axial_mass": snapshot.axial_translation_inertias.belt.mass,
-        "primary_axial_reflected_mass": (
-            snapshot.axial_translation_inertias.primary.reflected_mass
-        ),
-        "secondary_axial_reflected_mass": (
-            snapshot.axial_translation_inertias.secondary.reflected_mass
-        ),
-        "belt_axial_reflected_mass": (
-            snapshot.axial_translation_inertias.belt.reflected_mass
-        ),
-        "axial_generalized_mass": (
-            snapshot.axial_translation_inertias.generalized_mass
-        ),
-        "axial_generalized_curvature_coefficient": (
-            snapshot.axial_translation_inertias.generalized_curvature_coefficient
-        ),
-        "dtheta_ds": snapshot.secondary_helix.dtheta_ds,
-        "d2theta_ds2": snapshot.secondary_helix.d2theta_ds2,
         "sheave_half_angle": snapshot.sheave_half_angle,
     }
-
+    if snapshot.secondary_helix is not None:
+        scalar_values["secondary_dtheta_ds"] = snapshot.secondary_helix.dtheta_ds
+        scalar_values["secondary_d2theta_ds2"] = snapshot.secondary_helix.d2theta_ds2
+    if snapshot.primary_helix is not None:
+        scalar_values["primary_dtheta_ds"] = snapshot.primary_helix.dtheta_ds
+        scalar_values["primary_d2theta_ds2"] = snapshot.primary_helix.d2theta_ds2
     for name, value in scalar_values.items():
         if not isfinite(value):
             raise ValueError(f"Dynamics snapshot produced non-finite {name}.")
-
     if not 0.0 < snapshot.sheave_half_angle < 1.5707963267948966:
         raise ValueError(
-            "Dynamics snapshot sheave_half_angle must lie strictly between "
-            "zero and pi/2."
+            "Dynamics snapshot sheave_half_angle must lie strictly between zero and pi/2."
         )

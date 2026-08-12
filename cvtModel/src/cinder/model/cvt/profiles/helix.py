@@ -1,4 +1,4 @@
-"""Secondary helix-cam geometry parameterized by positive opening travel."""
+"""Pulley-local helix-cam geometry parameterized by positive opening travel."""
 
 from __future__ import annotations
 
@@ -12,7 +12,7 @@ from .types import ScalarProfile
 
 @dataclass(frozen=True, slots=True)
 class HelixSample:
-    """Secondary helix geometry at one positive opening-travel coordinate."""
+    """Helix geometry at one positive opening-travel coordinate."""
 
     circumferential_displacement: float
     theta: float
@@ -64,13 +64,10 @@ class HelixProfile:
 
     The profile coordinate ``q`` is positive secondary opening travel:
 
-        q = -x_s,
+        q = -x,
 
-    where the public pulley-local secondary coordinate ``x_s`` remains
-    positive in the closing direction. Thus:
-
-        q = 0       closed low-ratio reference,
-        q > 0       secondary opening during an upshift.
+    where the pulley-local axial coordinate ``x`` is positive in the closing
+    direction. Thus ``q`` is positive when the mounted pulley opens.
 
     ``theta(q)`` is the positive spring-winding relative rotation between
     the movable and fixed secondary sheaves. A conventional torque-reactive
@@ -81,23 +78,20 @@ class HelixProfile:
     This keeps the physical convention explicit: opening winds the torsional
     spring further, and positive forward transmitted torque increases the
     positive local closing force. The profile deliberately does not expose a
-    handedness or coordinate-sign option; an inverse torque-reactive helix is
-    outside the modeled mechanism.
+    handedness or coordinate-sign option; the local opening mapping is owned by
+    the CVT geometry convention.
 
-    ``theta_offset`` is purely geometric clocking/reference. Torsional-spring
-    preload belongs separately in ``SecondaryHelixForceSpec.initial_twist``.
+    Torsional-spring preload belongs separately in
+    :class:`HelicalTorqueReactionSpec`; the helix profile itself has no
+    clocking offset.
     """
 
     circumferential_profile: ScalarProfile
     radius: float
-    theta_offset: float = 0.0
 
     def __post_init__(self) -> None:
         if not isfinite(self.radius) or self.radius <= 0.0:
             raise ValueError("radius must be finite and positive.")
-
-        if not isfinite(self.theta_offset):
-            raise ValueError("theta_offset must be finite.")
 
     @property
     def opening_travel_min(self) -> float:
@@ -129,7 +123,7 @@ class HelixProfile:
 
         return HelixSample(
             circumferential_displacement=profile.value,
-            theta=self.theta_offset + profile.value / self.radius,
+            theta=profile.value / self.radius,
             dtheta_dopening=profile.first_derivative / self.radius,
             d2theta_dopening2=profile.second_derivative / self.radius,
             helix_angle_magnitude=atan2(
@@ -193,16 +187,16 @@ def linear_helix_segment(
     helix_angle_degrees: float,
 ) -> LinearSegment:
     """
-    Build one conventional secondary-helix segment.
+    Build one conventional torque-reactive helix segment.
 
     The helix angle beta is measured from the circumferential direction.
     Positive opening travel q therefore gives:
 
         du/dq = cot(beta) > 0.
 
-    There is intentionally no handedness parameter: CINDER's secondary helix
-    is defined around the ordinary torque-reactive orientation in which
-    opening winds the spring further and forward torque adds clamping force.
+    There is intentionally no handedness parameter: CINDER's helix convention
+    is the ordinary torque-reactive orientation in which opening winds the
+    spring further and forward torque adds local clamping force.
     """
 
     _validate_helix_angle(helix_angle_degrees)

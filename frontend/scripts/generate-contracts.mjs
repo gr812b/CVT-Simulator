@@ -1,4 +1,4 @@
-import { existsSync, mkdirSync } from 'node:fs';
+import { appendFileSync, existsSync, mkdirSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, resolve } from 'node:path';
 import { spawnSync } from 'node:child_process';
@@ -8,6 +8,7 @@ const backendArtifacts = process.env.CINDER_BACKEND_ARTIFACTS ?? resolve(root, '
 const openapi = resolve(backendArtifacts, 'openapi.json');
 const documentSchema = resolve(backendArtifacts, 'cinder_simulation_case.schema.json');
 const output = resolve(root, 'src', 'api', 'generated');
+const simulationCaseOutput = resolve(output, 'simulationCase.ts');
 
 for (const file of [openapi, documentSchema]) {
   if (!existsSync(file)) {
@@ -25,4 +26,12 @@ function run(command, args) {
 }
 
 run(localBin, [openapi, '--output', resolve(output, 'backend.ts')]);
-run(localJson2Ts, [documentSchema, '--output', resolve(output, 'simulationCase.ts'), '--cwd', root]);
+run(localJson2Ts, [documentSchema, '--output', simulationCaseOutput, '--cwd', root]);
+
+// Keep a stable application-facing document type even if json-schema-to-typescript
+// derives a different root interface name from the schema title.
+appendFileSync(
+  simulationCaseOutput,
+  '\nexport type CINDERSimulationCaseDocument = CINDERComposedCVTSimulationCase;\n',
+  'utf8',
+);

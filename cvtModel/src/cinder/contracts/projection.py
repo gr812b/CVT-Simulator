@@ -15,7 +15,7 @@ from typing import Any
 
 import numpy as np
 
-from cinder.model.system import CVTDynamicState
+from cinder.model.system import CVTState
 from cinder.results import CVTIntegrationResult
 from cinder.studies.actuation import ClampingForceResponseField
 from cinder.studies.geometry import (
@@ -300,7 +300,6 @@ def _project_raw_trace(result: CVTIntegrationResult) -> dict[str, Any]:
         ("belt_speed_m_per_s", "Belt speed", "m/s"),
         ("shift_position_m", "Shift position", "m"),
         ("shift_speed_m_per_s", "Shift speed", "m/s"),
-        ("secondary_shaft_angle_rad", "Secondary shaft angle", "rad"),
     )
     segments = []
     for segment in result.trace.segments:
@@ -377,14 +376,16 @@ def _project_mode(mode: object) -> dict[str, Any]:
 
 
 def _project_state(vector: object) -> dict[str, float]:
-    state = CVTDynamicState.from_vector(vector)
+    values = np.asarray(vector, dtype=float)
+    if values.ndim == 1 and values.size > 5:
+        values = values[:5]
+    state = CVTState.from_vector(values)
     return {
         "primary_angular_speed_rad_per_s": state.primary_angular_speed,
         "secondary_angular_speed_rad_per_s": state.secondary_angular_speed,
         "belt_speed_m_per_s": state.belt_speed,
         "shift_position_m": state.shift_position,
         "shift_speed_m_per_s": state.shift_speed,
-        "secondary_shaft_angle_rad": state.secondary_shaft_angle,
     }
 
 

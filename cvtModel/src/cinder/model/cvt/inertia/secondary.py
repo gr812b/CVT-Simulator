@@ -1,4 +1,4 @@
-"""CVT-core output-pulley inertia data."""
+"""CVT-core secondary-pulley inertia data."""
 
 from __future__ import annotations
 
@@ -8,27 +8,25 @@ from math import isfinite
 
 @dataclass(frozen=True, slots=True)
 class SecondaryInertia:
-    """Fixed CVT-side output-pulley inertia data.
+    """CVT-owned secondary-pulley inertia data.
 
-    ``fixed_rotational_inertia`` covers components rigidly attached directly to
-    the output pulley shaft. ``gearbox_input_rotational_inertia`` covers any
-    inertia on the CVT-side input of a rigid reduction. The movable sheave is
-    separate because it has both absolute pulley rotation and relative helix
-    rotation.
-
-    Wheel and vehicle inertia belong to the selected output boundary and are
-    reflected at runtime by that boundary.
+    ``fixed_rotating_hardware_inertia`` covers only CVT components rigidly
+    attached directly to the secondary shaft. Gearbox, wheel, vehicle, dyno,
+    sled, or other downstream inertia belongs to the selected shaft boundary
+    and is added at runtime. The movable sheave remains separate because it has
+    both absolute pulley rotation and relative helix rotation.
     """
 
-    fixed_rotational_inertia: float
-    gearbox_input_rotational_inertia: float
+    fixed_rotating_hardware_inertia: float
     movable_sheave_rotational_inertia: float
     moving_sheave_mass: float
 
     def __post_init__(self) -> None:
         for name, value in (
-            ("fixed_rotational_inertia", self.fixed_rotational_inertia),
-            ("gearbox_input_rotational_inertia", self.gearbox_input_rotational_inertia),
+            (
+                "fixed_rotating_hardware_inertia",
+                self.fixed_rotating_hardware_inertia,
+            ),
             (
                 "movable_sheave_rotational_inertia",
                 self.movable_sheave_rotational_inertia,
@@ -41,28 +39,25 @@ class SecondaryInertia:
 
 @dataclass(frozen=True, slots=True)
 class SecondaryFixedInertia:
-    """Resolved constant output-pulley inertia owned by the CVT core."""
+    """Resolved constant secondary-pulley inertia owned by the CVT core."""
 
-    output_fixed_rotational_inertia: float
-    gearbox_input_rotational_inertia: float
+    fixed_rotating_hardware_inertia: float
 
     @property
     def total(self) -> float:
-        return (
-            self.output_fixed_rotational_inertia + self.gearbox_input_rotational_inertia
-        )
+        return self.fixed_rotating_hardware_inertia
 
 
 @dataclass(frozen=True, slots=True)
 class ResolvedSecondaryInertia:
-    """Output-pulley rotational constants supplied by the CVT core."""
+    """Secondary-pulley rotational constants supplied by the CVT core."""
 
     fixed_side: SecondaryFixedInertia
     movable_sheave_rotational_inertia: float
 
     @property
     def absolute_rotation_inertia(self) -> float:
-        """Return fixed-side plus movable-sheave absolute rotation inertia."""
+        """Return CVT-core fixed-side plus movable-sheave inertia."""
 
         return self.fixed_side.total + self.movable_sheave_rotational_inertia
 
@@ -70,12 +65,11 @@ class ResolvedSecondaryInertia:
 def resolve_secondary_inertia(
     *, secondary: SecondaryInertia
 ) -> ResolvedSecondaryInertia:
-    """Resolve constant output-pulley inertia owned by the CVT assembly."""
+    """Resolve constant secondary-pulley inertia owned by the CVT assembly."""
 
     return ResolvedSecondaryInertia(
         fixed_side=SecondaryFixedInertia(
-            output_fixed_rotational_inertia=secondary.fixed_rotational_inertia,
-            gearbox_input_rotational_inertia=secondary.gearbox_input_rotational_inertia,
+            fixed_rotating_hardware_inertia=secondary.fixed_rotating_hardware_inertia,
         ),
         movable_sheave_rotational_inertia=secondary.movable_sheave_rotational_inertia,
     )

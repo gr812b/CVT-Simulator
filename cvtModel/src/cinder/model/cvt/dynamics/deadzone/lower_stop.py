@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from math import isclose, isfinite
 
-from cinder.execution.hybrid import CVTDynamicStateDerivative
+from cinder.model.system.state import CVTStateDerivative
 
 from .free import build_deadzone_free_derivative, require_known_primary_actuation
 from .result import DeadzoneEvaluation, LowerStopReaction
@@ -56,13 +56,12 @@ def evaluate_deadzone_lower_stop(
 
     require_known_primary_actuation(snapshot=snapshot)
     free_derivative = build_deadzone_free_derivative(snapshot=snapshot)
-    derivative = CVTDynamicStateDerivative(
+    derivative = CVTStateDerivative(
         primary_angular_acceleration=free_derivative.primary_angular_acceleration,
         secondary_angular_acceleration=free_derivative.secondary_angular_acceleration,
         belt_acceleration=free_derivative.belt_acceleration,
         shift_position_rate=0.0,
         shift_acceleration=0.0,
-        secondary_shaft_angle_rate=free_derivative.secondary_shaft_angle_rate,
     )
 
     primary_inertia = snapshot.primary_axial_inertia

@@ -1,4 +1,5 @@
 import type { SimulationCaseDocument } from '@api/client';
+import { simulationCaseGeometry } from '@api/simulationCaseGeometry';
 
 const METRES_TO_INCHES = 39.3700787402;
 
@@ -13,7 +14,7 @@ export interface SceneGeometry {
 
 /** Values are direct document dimensions transformed only into scene units. */
 export function sceneGeometry(document: SimulationCaseDocument): SceneGeometry {
-  const geometry = document.assembly.geometry;
+  const geometry = simulationCaseGeometry(document);
   const scale = METRES_TO_INCHES;
   return {
     beltOuterWidth: geometry.belt.outer_width_m * scale,

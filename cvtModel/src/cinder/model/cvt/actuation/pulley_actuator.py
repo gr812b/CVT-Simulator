@@ -10,6 +10,7 @@ from .types import (
     AxialForceLaw,
     InspectableAxialForceLaw,
     PulleyActuationContext,
+    PulleyElementContribution,
 )
 
 
@@ -31,10 +32,23 @@ class PulleyActuator:
         return self._force_laws
 
     def evaluate_relation(self, context: PulleyActuationContext) -> AffineClosureScalar:
-        relation = AffineClosureScalar.zero()
+        return self.evaluate_element(context).closing_force
+
+    def evaluate_element(
+        self, context: PulleyActuationContext
+    ) -> PulleyElementContribution:
+        contribution = PulleyElementContribution.zero()
         for force_law in self._force_laws:
-            relation = relation + force_law.evaluate(context)
-        return relation
+            if hasattr(force_law, "evaluate_element"):
+                contribution = contribution + force_law.evaluate_element(context)
+            else:
+                contribution = (
+                    contribution
+                    + PulleyElementContribution.from_closing_force(
+                        force_law.evaluate(context)
+                    )
+                )
+        return contribution
 
     def inspect(self, context: PulleyActuationContext) -> ActuatorInspection:
         """Return named terms without changing the RHS calculation path."""

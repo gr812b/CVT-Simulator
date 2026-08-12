@@ -10,7 +10,9 @@ from cinder.contracts import (
     AssemblyValidationOptions,
     component_catalog_document,
     decode_assembly_document,
+    decode_simulation_case_document,
     encode_assembly_document,
+    encode_simulation_case_document,
     project_clamping_force_response,
     project_geometry_path,
     project_radius_plane,
@@ -19,6 +21,7 @@ from cinder.contracts import (
     public_conventions,
     summarize_simulation,
     validate_assembly,
+    validate_simulation_case_document,
 )
 from cinder.execution.hybrid import HybridIntegratorSettings
 from cinder.model.cvt.closure import ClosureUnknown
@@ -171,6 +174,60 @@ class PublicContractsTest(unittest.TestCase):
                     for column in payload["columns"]
                 )
             )
+
+    def test_piecewise_constant_road_profile_document_is_executable_by_distance(
+        self,
+    ) -> None:
+        configuration, _ = build_operating_configuration(self.baseline.constants)
+        case = replace(self.baseline.case, cvt=self.assembly)
+        case = replace(
+            case,
+            scenario=replace(
+                case.scenario,
+                initial_state=launch_initial_state(primary_rpm=1800.0),
+            ),
+        )
+        document = encode_simulation_case_document(
+            case,
+            operating_system_config=configuration,
+            integrator_settings=HybridIntegratorSettings(max_step=0.01),
+        )
+        document["output_boundary"]["road_profile"] = {
+            "kind": "piecewise_constant_grade",
+            "segments": [
+                {"start_distance_m": 0.0, "grade_angle_rad": 0.0},
+                {"start_distance_m": 90.0, "grade_angle_rad": 0.5235987755982988},
+            ],
+        }
+
+        report = validate_simulation_case_document(document)
+        self.assertTrue(report.is_valid, [item.message for item in report.findings])
+
+        decoded = decode_simulation_case_document(document)
+        boundary = decoded.case.output_boundary
+        self.assertAlmostEqual(
+            boundary.road_profile.sample(vehicle_distance=0.0).grade_angle,
+            0.0,
+        )
+        self.assertAlmostEqual(
+            boundary.road_profile.sample(vehicle_distance=89.999).grade_angle,
+            0.0,
+        )
+        self.assertAlmostEqual(
+            boundary.road_profile.sample(vehicle_distance=90.0).grade_angle,
+            0.5235987755982988,
+        )
+
+        round_trip = encode_simulation_case_document(
+            decoded.case,
+            operating_system_config=decoded.operating_system_config,
+            integrator_settings=decoded.integrator_settings,
+            reporting_settings=decoded.reporting_settings,
+        )
+        self.assertEqual(
+            round_trip["output_boundary"]["road_profile"]["kind"],
+            "piecewise_constant_grade",
+        )
 
     def test_result_metrics_and_projection_are_derived_without_a_second_simulation(
         self,

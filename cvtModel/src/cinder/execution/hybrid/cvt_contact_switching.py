@@ -10,6 +10,7 @@ import numpy as np
 from numpy.typing import NDArray
 
 from cinder.model.cvt.dynamics.shift_constraints import EngagedShiftConstraint
+from cinder.model.system.ports import CVTShaftBoundaryValues
 
 from cinder.model.cvt.contact import (
     ContactInterface,
@@ -20,14 +21,14 @@ from cinder.model.cvt.contact import (
 
 from .cvt_contact_events import CVTContactEvent
 from .hybrid import HybridTransition
-from .state import CVTDynamicState
+from .state import CVTState
 
 if TYPE_CHECKING:
     from .cvt_contact import CVTContactEvaluation, EngagedCVTContactEvaluator
 
 
 @dataclass(frozen=True, slots=True)
-class CVTContactSwitchSettings:
+class CVTEventSwitchingTolerances:
     """Hybrid event thresholds for engaged contact, separate from the contact law.
 
     ``stick_exit_static_margin`` may be zero: a sticking contact leaves only at
@@ -56,17 +57,24 @@ class CVTContactSwitchSettings:
             )
 
 
+# Backwards internal alias while neighboring modules are migrated. The public
+# name describes what these values are: event/switching tolerances, not branch
+# rules or physical contact laws.
+CVTContactSwitchSettings = CVTEventSwitchingTolerances
+
+
 def resolve_initial_engaged_regime(
     *,
     evaluator: "EngagedCVTContactEvaluator",
-    state: CVTDynamicState,
-    switching_settings: CVTContactSwitchSettings,
+    state: CVTState,
+    switching_settings: CVTEventSwitchingTolerances,
     shift_constraint: EngagedShiftConstraint = EngagedShiftConstraint.FREE,
+    shaft_boundaries: CVTShaftBoundaryValues | None = None,
 ) -> ContactRegime:
     """Choose a post-engagement initial contact regime from a supplied state."""
 
     vector = state.as_vector()
-    snapshot = evaluator.model.snapshot(state=state)
+    snapshot = evaluator.model.snapshot(state=state, shaft_boundaries=shaft_boundaries)
     tolerance = evaluator.solve_settings.contact_tolerances.relative_speed_tolerance
     primary_speed = (
         state.belt_speed
@@ -99,6 +107,7 @@ def resolve_initial_engaged_regime(
         vector=vector,
         regime=ContactRegime.stick_stick(),
         shift_constraint=shift_constraint,
+        shaft_boundaries=shaft_boundaries,
     )
     if _candidate_is_admissible(
         stick,
@@ -127,6 +136,7 @@ def resolve_initial_engaged_regime(
         fired_event_names=tuple(fired),
         switching_settings=switching_settings,
         shift_constraint=shift_constraint,
+        shaft_boundaries=shaft_boundaries,
     )
     if transition.next_mode is None:
         raise RuntimeError(
@@ -142,8 +152,9 @@ def resolve_cvt_contact_transition(
     vector: NDArray[np.float64],
     old_regime: ContactRegime,
     fired_event_names: tuple[str, ...],
-    switching_settings: CVTContactSwitchSettings,
+    switching_settings: CVTEventSwitchingTolerances,
     shift_constraint: EngagedShiftConstraint = EngagedShiftConstraint.FREE,
+    shaft_boundaries: CVTShaftBoundaryValues | None = None,
 ) -> HybridTransition[ContactRegime]:
     """Resolve a terminal engaged-contact event using its physical cause.
 
@@ -189,6 +200,7 @@ def resolve_cvt_contact_transition(
             restick_interfaces=restick_interfaces,
             switching_settings=switching_settings,
             shift_constraint=shift_constraint,
+            shaft_boundaries=shaft_boundaries,
         )
         if candidate is not None:
             return HybridTransition(
@@ -208,6 +220,7 @@ def resolve_cvt_contact_transition(
             zero_crossing_interfaces=restick_interfaces,
             switching_settings=switching_settings,
             shift_constraint=shift_constraint,
+            shaft_boundaries=shaft_boundaries,
         )
         if continuation is None:
             return HybridTransition(
@@ -235,6 +248,7 @@ def resolve_cvt_contact_transition(
             capacity_interfaces=capacity_interfaces,
             switching_settings=switching_settings,
             shift_constraint=shift_constraint,
+            shaft_boundaries=shaft_boundaries,
         )
         if candidate is None:
             return HybridTransition(
@@ -262,8 +276,9 @@ def _select_capacity_loss_candidate(
     vector: NDArray[np.float64],
     old_regime: ContactRegime,
     capacity_interfaces: tuple[ContactInterface, ...],
-    switching_settings: CVTContactSwitchSettings,
+    switching_settings: CVTEventSwitchingTolerances,
     shift_constraint: EngagedShiftConstraint,
+    shaft_boundaries: CVTShaftBoundaryValues | None = None,
 ) -> ContactRegime | None:
     """Choose the least-relaxed direction-consistent kinetic successor.
 
@@ -284,6 +299,7 @@ def _select_capacity_loss_candidate(
             required_static_margin=switching_settings.stick_exit_static_margin,
             require_outgoing_directions=True,
             shift_constraint=shift_constraint,
+            shaft_boundaries=shaft_boundaries,
         )
 
     if old_regime.mode is EngagedContactMode.STICK_STICK:
@@ -338,8 +354,9 @@ def _select_zero_crossing_kinetic_continuation(
     vector: NDArray[np.float64],
     old_regime: ContactRegime,
     zero_crossing_interfaces: tuple[ContactInterface, ...],
-    switching_settings: CVTContactSwitchSettings,
+    switching_settings: CVTEventSwitchingTolerances,
     shift_constraint: EngagedShiftConstraint,
+    shaft_boundaries: CVTShaftBoundaryValues | None = None,
 ) -> ContactRegime | None:
     """Select outgoing Coulomb direction(s) when stick remains unavailable."""
 
@@ -384,6 +401,7 @@ def _select_zero_crossing_kinetic_continuation(
         required_static_margin=switching_settings.stick_exit_static_margin,
         require_outgoing_directions=True,
         shift_constraint=shift_constraint,
+        shaft_boundaries=shaft_boundaries,
     )
 
 
@@ -393,8 +411,9 @@ def _select_restick_candidate(
     vector: NDArray[np.float64],
     old_regime: ContactRegime,
     restick_interfaces: tuple[ContactInterface, ...],
-    switching_settings: CVTContactSwitchSettings,
+    switching_settings: CVTEventSwitchingTolerances,
     shift_constraint: EngagedShiftConstraint,
+    shaft_boundaries: CVTShaftBoundaryValues | None = None,
 ) -> ContactRegime | None:
     """Attempt only topology-tightening candidates after a velocity event."""
 
@@ -434,6 +453,7 @@ def _select_restick_candidate(
         required_static_margin=switching_settings.restick_static_margin,
         require_outgoing_directions=False,
         shift_constraint=shift_constraint,
+        shaft_boundaries=shaft_boundaries,
     )
 
 
@@ -442,10 +462,11 @@ def _best_admissible_candidate(
     evaluator: "EngagedCVTContactEvaluator",
     vector: NDArray[np.float64],
     candidates: Iterable[ContactRegime],
-    switching_settings: CVTContactSwitchSettings,
+    switching_settings: CVTEventSwitchingTolerances,
     required_static_margin: float,
     require_outgoing_directions: bool,
     shift_constraint: EngagedShiftConstraint,
+    shaft_boundaries: CVTShaftBoundaryValues | None = None,
 ) -> ContactRegime | None:
     accepted: list[tuple[float, ContactRegime]] = []
     for candidate in candidates:
@@ -454,6 +475,7 @@ def _best_admissible_candidate(
             vector=vector,
             regime=candidate,
             shift_constraint=shift_constraint,
+            shaft_boundaries=shaft_boundaries,
         )
         if not _candidate_is_admissible(
             evaluation,
@@ -477,7 +499,7 @@ def _candidate_is_admissible(
     evaluator: "EngagedCVTContactEvaluator",
     required_static_margin: float,
     require_outgoing_directions: bool,
-    switching_settings: CVTContactSwitchSettings,
+    switching_settings: CVTEventSwitchingTolerances,
 ) -> bool:
     if (
         evaluation.normal_primary <= switching_settings.normal_resultant_floor

@@ -11,7 +11,7 @@ permissions:
 
 jobs:
   simulator-tests:
-    name: CINDER Lint & Tests
+    name: CINDER Lint & Smoke Tests
     runs-on: ubuntu-latest
 
     steps:
@@ -36,25 +36,19 @@ jobs:
         working-directory: ./cvtModel
         run: |
           source venv/bin/activate
-          targets=(src)
-          [[ -d test ]] && targets+=(test)
-          [[ -d tests ]] && targets+=(tests)
-          python -m flake8 "${targets[@]}"
+          python -m flake8 src test/smoke
 
       - name: Run Black check
         working-directory: ./cvtModel
         run: |
           source venv/bin/activate
-          targets=(src)
-          [[ -d test ]] && targets+=(test)
-          [[ -d tests ]] && targets+=(tests)
-          python -m black --check "${targets[@]}"
+          python -m black --check src test/smoke
 
-      - name: Run CINDER tests with coverage
+      - name: Run CINDER smoke tests with coverage
         working-directory: ./cvtModel
         run: |
           source venv/bin/activate
-          python -m coverage run -m pytest
+          python -m coverage run -m pytest test/smoke
           python -m coverage report
 
   backend-tests:

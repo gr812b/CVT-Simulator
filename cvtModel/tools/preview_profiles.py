@@ -36,7 +36,7 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 import numpy as np
 
-from cinder.profiles import (
+from cinder.model.cvt.profiles import (
     CircularSegment,
     HelixProfile,
     LinearSegment,

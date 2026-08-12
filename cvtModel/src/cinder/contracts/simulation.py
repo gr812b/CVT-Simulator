@@ -37,8 +37,8 @@ class SimulationMetrics:
     ratio_final: float | None
     primary_traction_utilization_max: float | None
     secondary_traction_utilization_max: float | None
-    engine_work_final_J: float | None
-    output_boundary_work_final_J: float | None
+    primary_boundary_work_final_J: float | None
+    secondary_boundary_work_final_J: float | None
     primary_slip_dissipation_final_J: float | None
     secondary_slip_dissipation_final_J: float | None
 
@@ -63,7 +63,7 @@ def summarize_simulation(result: CVTIntegrationResult) -> SimulationMetrics:
     primary_slip_duration = 0.0
     secondary_slip_duration = 0.0
     first_engagement_time: float | None = None
-    for segment in result.trace.segments:
+    for segment in result.segments:
         mode = segment.mode
         if (
             mode.engagement is CVTEngagementState.ENGAGED
@@ -97,8 +97,8 @@ def summarize_simulation(result: CVTIntegrationResult) -> SimulationMetrics:
         ratio_final=final("geometry.effective_ratio_secondary_over_primary"),
         primary_traction_utilization_max=maximum("contact.primary_lambda"),
         secondary_traction_utilization_max=maximum("contact.secondary_lambda"),
-        engine_work_final_J=final("observer.engine_work"),
-        output_boundary_work_final_J=final("observer.output_boundary_work"),
+        primary_boundary_work_final_J=final("observer.primary_boundary_work"),
+        secondary_boundary_work_final_J=final("observer.secondary_boundary_work"),
         primary_slip_dissipation_final_J=final("observer.primary_slip_dissipation"),
         secondary_slip_dissipation_final_J=final("observer.secondary_slip_dissipation"),
     )

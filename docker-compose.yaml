@@ -1,21 +1,70 @@
 services:
-  cvt-backend:
-    image: ghcr.io/gr812b/cvt-simulator-backend:latest
+  postgres:
+    image: postgres:17-alpine
     restart: unless-stopped
+    environment:
+      POSTGRES_DB: cvt_simulator
+      POSTGRES_USER: cvt
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - cvt-postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U cvt -d cvt_simulator"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    labels:
+      - "com.centurylinklabs.watchtower.enable=false"
+    networks:
+      - cvt-network
+
+  cvt-backend:
+    image: ghcr.io/gr812b/cvt-simulator-backend:${CVT_TAG:-latest}
+    restart: unless-stopped
+    environment:
+      CVT_DATABASE_URL: postgresql+psycopg://cvt:${POSTGRES_PASSWORD}@postgres:5432/cvt_simulator
+      CVT_DATABASE_ECHO: "0"
+      CVT_RUN_EXECUTOR_MODE: process
+      CVT_RUN_TIMEOUT_SECONDS: "120"
+    command:
+      - sh
+      - -c
+      - |
+        alembic upgrade head
+        exec uvicorn app.main:app --host 0.0.0.0 --port 8000
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/v1/health', timeout=3)"
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 10s
     networks:
       - cvt-network
 
   cvt-frontend:
-    image: ghcr.io/gr812b/cvt-simulator-frontend:latest
+    image: ghcr.io/gr812b/cvt-simulator-frontend:${CVT_TAG:-latest}
     restart: unless-stopped
     depends_on:
-      - cvt-backend
+      cvt-backend:
+        condition: service_healthy
     networks:
       - cvt-network
       - web
 
+volumes:
+  cvt-postgres-data:
+
 networks:
   cvt-network:
     driver: bridge
-  web: # Set this to your existing external network name for reverse proxying
+
+  web:
     external: true
+    name: ${WEB_NETWORK:-web}
