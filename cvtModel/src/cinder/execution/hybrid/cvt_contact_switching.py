@@ -66,15 +66,20 @@ CVTContactSwitchSettings = CVTEventSwitchingTolerances
 def resolve_initial_engaged_regime(
     *,
     evaluator: "EngagedCVTContactEvaluator",
+    time: float,
     state: CVTState,
     switching_settings: CVTEventSwitchingTolerances,
     shift_constraint: EngagedShiftConstraint = EngagedShiftConstraint.FREE,
     shaft_boundaries: CVTShaftBoundaryValues | None = None,
 ) -> ContactRegime:
-    """Choose a post-engagement initial contact regime from a supplied state."""
+    """Choose a post-engagement contact regime from a supplied state and time."""
 
+    if not isfinite(time):
+        raise ValueError("time must be finite.")
     vector = state.as_vector()
-    snapshot = evaluator.model.snapshot(state=state, shaft_boundaries=shaft_boundaries)
+    snapshot = evaluator.model.snapshot_at_time(
+        time=time, state=state, shaft_boundaries=shaft_boundaries
+    )
     tolerance = evaluator.solve_settings.contact_tolerances.relative_speed_tolerance
     primary_speed = (
         state.belt_speed
@@ -103,7 +108,7 @@ def resolve_initial_engaged_regime(
         )
 
     stick = evaluator.evaluate_vector(
-        time=0.0,
+        time=time,
         vector=vector,
         regime=ContactRegime.stick_stick(),
         shift_constraint=shift_constraint,
@@ -130,7 +135,7 @@ def resolve_initial_engaged_regime(
         )
     transition = resolve_cvt_contact_transition(
         evaluator=evaluator,
-        time=0.0,
+        time=time,
         vector=vector,
         old_regime=ContactRegime.stick_stick(),
         fired_event_names=tuple(fired),
@@ -164,6 +169,8 @@ def resolve_cvt_contact_transition(
     existing branch solver before it is accepted.
     """
 
+    if not isfinite(time):
+        raise ValueError("time must be finite.")
     if not isinstance(shift_constraint, EngagedShiftConstraint):
         raise TypeError("shift_constraint must be an EngagedShiftConstraint.")
 
@@ -195,6 +202,7 @@ def resolve_cvt_contact_transition(
     if restick_interfaces:
         candidate = _select_restick_candidate(
             evaluator=evaluator,
+            time=time,
             vector=vector,
             old_regime=old_regime,
             restick_interfaces=restick_interfaces,
@@ -215,6 +223,7 @@ def resolve_cvt_contact_transition(
 
         continuation = _select_zero_crossing_kinetic_continuation(
             evaluator=evaluator,
+            time=time,
             vector=vector,
             old_regime=old_regime,
             zero_crossing_interfaces=restick_interfaces,
@@ -243,6 +252,7 @@ def resolve_cvt_contact_transition(
     if capacity_interfaces:
         candidate = _select_capacity_loss_candidate(
             evaluator=evaluator,
+            time=time,
             vector=vector,
             old_regime=old_regime,
             capacity_interfaces=capacity_interfaces,
@@ -273,6 +283,7 @@ def resolve_cvt_contact_transition(
 def _select_capacity_loss_candidate(
     *,
     evaluator: "EngagedCVTContactEvaluator",
+    time: float,
     vector: NDArray[np.float64],
     old_regime: ContactRegime,
     capacity_interfaces: tuple[ContactInterface, ...],
@@ -293,6 +304,7 @@ def _select_capacity_loss_candidate(
     def choose(candidates: Iterable[ContactRegime]) -> ContactRegime | None:
         return _best_admissible_candidate(
             evaluator=evaluator,
+            time=time,
             vector=vector,
             candidates=candidates,
             switching_settings=switching_settings,
@@ -351,6 +363,7 @@ def _select_capacity_loss_candidate(
 def _select_zero_crossing_kinetic_continuation(
     *,
     evaluator: "EngagedCVTContactEvaluator",
+    time: float,
     vector: NDArray[np.float64],
     old_regime: ContactRegime,
     zero_crossing_interfaces: tuple[ContactInterface, ...],
@@ -395,6 +408,7 @@ def _select_zero_crossing_kinetic_continuation(
 
     return _best_admissible_candidate(
         evaluator=evaluator,
+        time=time,
         vector=vector,
         candidates=candidates,
         switching_settings=switching_settings,
@@ -408,6 +422,7 @@ def _select_zero_crossing_kinetic_continuation(
 def _select_restick_candidate(
     *,
     evaluator: "EngagedCVTContactEvaluator",
+    time: float,
     vector: NDArray[np.float64],
     old_regime: ContactRegime,
     restick_interfaces: tuple[ContactInterface, ...],
@@ -447,6 +462,7 @@ def _select_restick_candidate(
 
     return _best_admissible_candidate(
         evaluator=evaluator,
+        time=time,
         vector=vector,
         candidates=candidates,
         switching_settings=switching_settings,
@@ -460,6 +476,7 @@ def _select_restick_candidate(
 def _best_admissible_candidate(
     *,
     evaluator: "EngagedCVTContactEvaluator",
+    time: float,
     vector: NDArray[np.float64],
     candidates: Iterable[ContactRegime],
     switching_settings: CVTEventSwitchingTolerances,
@@ -471,7 +488,7 @@ def _best_admissible_candidate(
     accepted: list[tuple[float, ContactRegime]] = []
     for candidate in candidates:
         evaluation = evaluator.evaluate_vector(
-            time=0.0,
+            time=time,
             vector=vector,
             regime=candidate,
             shift_constraint=shift_constraint,

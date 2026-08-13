@@ -30,6 +30,7 @@ class ActuationStudiesTest(unittest.TestCase):
                 cvt=self.cvt,
                 pulley=PulleyLocation.INPUT,
                 point=ActuationOperatingPoint(
+                    time=0.0,
                     shift_position=self.cvt.geometry.spec.deadzone_shift,
                 ),
                 axes=(
@@ -75,6 +76,7 @@ class ActuationStudiesTest(unittest.TestCase):
                 cvt=self.cvt,
                 pulley=PulleyLocation.OUTPUT,
                 point=ActuationOperatingPoint(
+                    time=0.0,
                     shift_position=(
                         self.cvt.geometry.spec.deadzone_shift
                         + 0.5
@@ -131,6 +133,7 @@ class ActuationStudiesTest(unittest.TestCase):
                     cvt=self.cvt,
                     pulley=PulleyLocation.INPUT,
                     point=ActuationOperatingPoint(
+                        time=0.0,
                         shift_position=self.cvt.geometry.spec.max_shift + 1.0e-3,
                     ),
                     axes=(
@@ -141,6 +144,10 @@ class ActuationStudiesTest(unittest.TestCase):
                     ),
                 )
             )
+
+    def test_operating_point_requires_finite_time(self) -> None:
+        with self.assertRaises(ValueError):
+            ActuationOperatingPoint(time=float("nan"), shift_position=0.0)
 
 
 if __name__ == "__main__":

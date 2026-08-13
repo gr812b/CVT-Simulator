@@ -64,18 +64,12 @@ class PublicContractsTest(unittest.TestCase):
             self.assembly.geometry.spec.center_distance,
         )
         self.assertEqual(
-            tuple(
-                type(item) for item in reconstructed.pulleys.input.actuator.force_laws
-            ),
-            tuple(
-                type(item) for item in self.assembly.pulleys.input.actuator.force_laws
-            ),
+            tuple(type(item) for item in reconstructed.pulleys.input.actuator.force_laws),
+            tuple(type(item) for item in self.assembly.pulleys.input.actuator.force_laws),
         )
         self.assertEqual(validate_assembly(reconstructed).errors, ())
 
-    def test_catalog_and_conventions_are_json_safe_and_useful_without_a_ui(
-        self,
-    ) -> None:
+    def test_catalog_and_conventions_are_json_safe_and_useful_without_a_ui(self) -> None:
         conventions = public_conventions().as_dict()
         catalog = component_catalog_document()
         json.dumps(conventions)
@@ -149,7 +143,10 @@ class PublicContractsTest(unittest.TestCase):
             PulleyClampingForceStudyRequest(
                 cvt=self.assembly,
                 pulley=PulleyLocation.OUTPUT,
-                point=ActuationOperatingPoint(shift_position=spec.deadzone_shift),
+                point=ActuationOperatingPoint(
+                    time=0.0,
+                    shift_position=spec.deadzone_shift,
+                ),
                 axes=(
                     ActuationResponseAxis(
                         ClosureUnknown.SECONDARY_TORQUE,
@@ -169,10 +166,7 @@ class PublicContractsTest(unittest.TestCase):
             self.assertIn("columns", payload)
             self.assertTrue(payload["columns"])
             self.assertTrue(
-                all(
-                    "key" in column and "unit" in column
-                    for column in payload["columns"]
-                )
+                all("key" in column and "unit" in column for column in payload["columns"])
             )
 
     def test_piecewise_constant_road_profile_document_is_executable_by_distance(
@@ -205,13 +199,9 @@ class PublicContractsTest(unittest.TestCase):
 
         decoded = decode_simulation_case_document(document)
         boundary = decoded.case.output_boundary
+        self.assertAlmostEqual(boundary.road_profile.sample(vehicle_distance=0.0).grade_angle, 0.0)
         self.assertAlmostEqual(
-            boundary.road_profile.sample(vehicle_distance=0.0).grade_angle,
-            0.0,
-        )
-        self.assertAlmostEqual(
-            boundary.road_profile.sample(vehicle_distance=89.999).grade_angle,
-            0.0,
+            boundary.road_profile.sample(vehicle_distance=89.999).grade_angle, 0.0
         )
         self.assertAlmostEqual(
             boundary.road_profile.sample(vehicle_distance=90.0).grade_angle,
