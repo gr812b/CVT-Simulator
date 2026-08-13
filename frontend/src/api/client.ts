@@ -941,6 +941,20 @@ export async function validateSimulationCase(document: SimulationCaseDocument): 
   return parseValidation(data.validation);
 }
 
+export async function resolveSimulationCaseFromLibrarySelection(selection: LibraryRunSelection): Promise<SimulationCaseDocument> {
+  const data = await apiJson<unknown>('/api/v1/simulation-cases/resolve-from-library', {
+    method: 'POST',
+    body: JSON.stringify({
+      vehicle_assembly_version_id: selection.vehicleAssemblyVersionId,
+      tune_id: selection.tuneId,
+      load_case_id: selection.loadCaseId,
+      execution_preset_id: selection.executionPresetId,
+    }),
+  });
+  const envelope = object(data, 'resolved simulation-case response');
+  return object(envelope.simulation_case, 'resolved simulation_case') as unknown as SimulationCaseDocument;
+}
+
 export async function runEndpointRadiiGeometryStudy(request: GeometryEndpointRadiiRequest): Promise<GeometryStudyResult> {
   const data = dataOrThrow(await client.POST('/api/v1/studies/geometry/endpoint-radii', { body: request }));
   return parseGeometryStudy(data.study);
