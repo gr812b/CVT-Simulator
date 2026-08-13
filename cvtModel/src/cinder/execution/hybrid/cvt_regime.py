@@ -1,11 +1,11 @@
 """Top-level CVT operating regimes independent of contact topology.
 
 The contact topology is meaningful only while the primary has physically
-closed enough to engage the belt.  Primary travel constraints are a separate
-axis.  The low-ratio seat at the engagement boundary is distinct from the
-lower *mechanical* stop below the deadzone: it retains engaged contact but
-prevents the belt/contact closure from using its normal reaction alone to
-force a neutral transition.
+closed enough to engage the belt. Primary travel constraints are a separate
+axis. With a positive-width deadzone, the engaged low-ratio seat at the
+engagement boundary is distinct from the lower mechanical stop below neutral.
+With a zero-width deadzone those positions coincide physically, but the active
+regime is still the engaged low-ratio-seat closure rather than a deadzone stop.
 """
 
 from __future__ import annotations
@@ -44,10 +44,12 @@ class CVTOperatingRegime:
     * ``engaged + low_ratio_seat + ContactRegime``; and
     * ``engaged + upper_stop + ContactRegime``.
 
-    The low-ratio seat is not a deadzone contact mode and not the lower
-    mechanical stop.  It is the engaged minimum-radius boundary at which the
-    primary may still clamp the belt.  It releases to deadzone only after the
-    primary actuator itself loses closing force.
+    The low-ratio seat is an engaged minimum-radius boundary at which the
+    primary may still clamp the belt. For a positive-width deadzone it is
+    distinct from the lower deadzone stop and may release to neutral only after
+    the primary actuator itself loses closing force. For a zero-width deadzone
+    it is also the physical lower travel boundary and there is no neutral
+    successor.
     """
 
     engagement: CVTEngagementState

@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from math import isclose, pi
 from pathlib import Path
 
-from cinder.hosts import SecondaryShaftAngleHost
+from cinder.hosts import CVTHost, SecondaryShaftAngleHost
 from cinder.model.boundaries.shaft import (
     FixedShaftBoundary,
     LockedFinalDriveShaftBoundary,
@@ -43,6 +43,8 @@ from belt import (
     solve_initial_shift_from_published_speeds,
 )
 from constants import (
+    CINDER_KINETIC_TRACTION_LAMBDA_MAGNITUDE,
+    CINDER_STATIC_TRACTION_LAMBDA_LIMIT,
     DIRECT_SECONDARY_BOUNDARY_INERTIA_KG_M2,
     PUBLISHED,
     RECONSTRUCTED_AIR_DENSITY_KG_PER_M3,
@@ -57,7 +59,7 @@ class BallewBoundarySetup:
 
     primary: FixedShaftBoundary
     secondary: LockedFinalDriveShaftBoundary
-    host: SecondaryShaftAngleHost
+    host: CVTHost
     road_load: RoadLoadModel
 
 
@@ -141,8 +143,11 @@ def build_ballew_assembly(
         ),
         inertias=inertias,
         contact=BeltContactSpec(
-            static_friction_coefficient=PUBLISHED.static_friction_coefficient,
-            kinetic_friction_coefficient=PUBLISHED.kinetic_friction_coefficient,
+            # Reconstruction A10: these fields feed CINDER's reduced lambda
+            # traction limits. Ballew's published 0.55/0.40 multiply node F_Z
+            # directly, so the benchmark translates them before construction.
+            static_friction_coefficient=CINDER_STATIC_TRACTION_LAMBDA_LIMIT,
+            kinetic_friction_coefficient=CINDER_KINETIC_TRACTION_LAMBDA_MAGNITUDE,
         ),
     )
     return assembly, mapping
@@ -187,7 +192,7 @@ def build_initial_cvt_state(geometry=None) -> CVTState:
     )
 
 
-def build_boundary_setup() -> BallewBoundarySetup:
+def build_boundary_setup(*, host: CVTHost | None = None) -> BallewBoundarySetup:
     """Build Ballew's fixed input torque and simulated ATV output boundary."""
 
     # Reconstruction A1: the combined 0.008 kg m^2 input pulley + engine inertia
@@ -240,6 +245,6 @@ def build_boundary_setup() -> BallewBoundarySetup:
     return BallewBoundarySetup(
         primary=primary,
         secondary=secondary,
-        host=SecondaryShaftAngleHost(),
+        host=host or SecondaryShaftAngleHost(),
         road_load=road_load,
     )

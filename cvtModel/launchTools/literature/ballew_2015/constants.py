@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from math import radians, tan
 
 
 INCH_TO_METRE = 0.0254
@@ -76,6 +77,34 @@ class BallewPublishedParameters:
 
 
 PUBLISHED = BallewPublishedParameters()
+
+
+# Reconstruction A10: Ballew's published mu values multiply each node's axial
+# sheave-compression reaction F_Z directly (his Eqs. 29-31). CINDER's reduced
+# traction relation instead uses F_t = lambda N with N = 2 F_clamp tan(beta)
+# for the algebraic zero-sheave-mass clamp row. Since Ballew's search enforces
+# sum(F_Z) = F_clamp, preserving the same gross tangential capacity requires
+# lambda = mu / (2 tan(beta)). These are translation-layer traction limits, not
+# reinterpreted material Coulomb coefficients. See RECONSTRUCTION.md A10.
+def _ballew_mu_to_cinder_lambda(mu: float) -> float:
+    return mu / (2.0 * tan(radians(PUBLISHED.sheave_half_angle_deg)))
+
+
+CINDER_STATIC_TRACTION_LAMBDA_LIMIT = _ballew_mu_to_cinder_lambda(
+    PUBLISHED.static_friction_coefficient
+)
+CINDER_KINETIC_TRACTION_LAMBDA_MAGNITUDE = _ballew_mu_to_cinder_lambda(
+    PUBLISHED.kinetic_friction_coefficient
+)
+
+# Reconstruction A11: the thesis publishes PI gains and a dimensionless
+# feed-forward gain but not the controller equation. The source-native closed-
+# loop reconstruction uses the simplest dimensionally consistent interpretation:
+# feed-forward primary clamp = K_ff * fixed secondary clamp. This is deliberately
+# isolated here and documented as an inference, not source fact or fitted value.
+RECONSTRUCTED_CONTROLLER_FEED_FORWARD_FORCE_N = (
+    PUBLISHED.feed_forward_gain * PUBLISHED.output_axial_force_n
+)
 
 # Reconstruction A2: Ballew does not report air density. See RECONSTRUCTION.md.
 RECONSTRUCTED_AIR_DENSITY_KG_PER_M3 = 1.225

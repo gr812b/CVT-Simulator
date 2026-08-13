@@ -8,10 +8,13 @@ not.  This adapter dispatches only between already-derived evaluators:
     engaged/free/contact branch <-> engaged/low-ratio-seat/contact branch
                                  <-> engaged/upper-stop/contact branch.
 
-Deadzone remains a reduced primary-disengaged model; it does not call the
-engaged lambda/tension closure.  Conversely, the upper stop remains an
-engaged fixed-shift closure and retains the contact topology.  Event functions
-are built only for boundaries reachable from the active physical regime.
+When a positive-width deadzone exists it remains a reduced primary-
+disengaged model and does not call the engaged lambda/tension closure. A
+zero-width deadzone is also supported; then the legal shift domain is always
+engaged and its lower boundary is the engaged low-ratio seat. Conversely, the
+upper stop remains an engaged fixed-shift closure and retains the contact
+topology. Event functions are built only for boundaries reachable from the
+active physical regime.
 """
 
 from __future__ import annotations
@@ -216,6 +219,11 @@ class CVTOperatingHybridSystem:
         )
 
         if mode.engagement is CVTEngagementState.DEADZONE:
+            if not self.operating_limits.has_deadzone:
+                raise RuntimeError(
+                    "Deadzone mechanics are unreachable when lower_stop_shift equals "
+                    "engagement_shift (zero-width deadzone)."
+                )
             deadzone_state = CVTState.from_vector(state)
             if mode.shift_constraint is CVTShiftConstraint.FREE:
                 return self.deadzone_evaluator.evaluate_free_at_time(
@@ -359,6 +367,11 @@ class CVTOperatingHybridSystem:
             )
 
         if mode.engagement is CVTEngagementState.DEADZONE:
+            if not self.operating_limits.has_deadzone:
+                raise RuntimeError(
+                    "Deadzone mode is unreachable when lower_stop_shift equals "
+                    "engagement_shift (zero-width deadzone)."
+                )
             if mode.shift_constraint is CVTShiftConstraint.FREE:
                 return build_deadzone_free_boundary_events(limits=self.operating_limits)
             if mode.shift_constraint is CVTShiftConstraint.LOWER_STOP:
@@ -411,6 +424,10 @@ class CVTOperatingHybridSystem:
                     contact_regime=mode.contact_regime,
                     shaft_boundaries=boundaries_at(event_time, vector),
                 ),
+                # A zero-width deadzone is an always-engaged topology. There is
+                # no neutral regime below the low-ratio seat, so loss of the
+                # primary actuator's own clamp cannot be a disengagement event.
+                include_primary_clamp_loss=self.operating_limits.has_deadzone,
             )
 
         if mode.shift_constraint is CVTShiftConstraint.UPPER_STOP:

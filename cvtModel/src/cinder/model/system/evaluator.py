@@ -283,7 +283,11 @@ class MechanicalCVTPlant:
         if not isinstance(shaft_boundaries, CVTShaftBoundaryValues):
             raise TypeError("shaft_boundaries must be a CVTShaftBoundaryValues.")
 
-        geometry = self.geometry.evaluate(state.shift_position)
+        # This snapshot is the engaged/contact mechanics snapshot.  At the
+        # engagement kink, use the engaged-side one-sided geometry derivatives
+        # rather than the deadzone-side derivatives.  The deadzone evaluator
+        # owns its own snapshot path and intentionally keeps ``evaluate()``.
+        geometry = self.geometry.evaluate_engaged(state.shift_position)
         primary_context = self.primary_actuation_context(
             time=time, state=state, geometry=geometry
         )

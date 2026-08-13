@@ -10,7 +10,7 @@ from math import isfinite
 class CVTShiftOperatingLimits:
     """Ordered lower stop, engagement boundary, and upper stop positions.
 
-    The interval is intentionally divided as
+    The interval is normally divided as
 
     ``lower_stop <= s < engagement_shift``
         deadzone / neutral;
@@ -18,7 +18,13 @@ class CVTShiftOperatingLimits:
     ``engagement_shift <= s <= upper_stop``
         engaged primary-belt contact.
 
-    This object describes physical regime boundaries.  It does not prescribe
+    ``lower_stop_shift == engagement_shift`` is also valid.  It represents a
+    zero-width deadzone: the CVT is engaged throughout its legal shift travel,
+    and the shared lower boundary is the engaged low-ratio seat.  This is the
+    appropriate topology for an always-engaged variator such as the Ballew
+    (2015) benchmark reconstruction.
+
+    This object describes physical regime boundaries. It does not prescribe
     any stop reaction or deadzone dynamics; those belong to the corresponding
     RHS implementations.
     """
@@ -35,20 +41,31 @@ class CVTShiftOperatingLimits:
         ):
             if not isfinite(value):
                 raise ValueError(f"{name} must be finite.")
-        if not self.lower_stop_shift < self.engagement_shift < self.upper_stop_shift:
+        if not (
+            self.lower_stop_shift
+            <= self.engagement_shift
+            < self.upper_stop_shift
+        ):
             raise ValueError(
-                "Shift limits must satisfy lower_stop_shift < engagement_shift < upper_stop_shift."
+                "Shift limits must satisfy "
+                "lower_stop_shift <= engagement_shift < upper_stop_shift."
             )
 
     @classmethod
     def from_geometry_spec(cls, geometry_spec) -> "CVTShiftOperatingLimits":
-        """Use the geometry domain endpoints as temporary physical stops."""
+        """Use the geometry domain endpoints as physical operating limits."""
 
         return cls(
             lower_stop_shift=0.0,
             engagement_shift=float(geometry_spec.deadzone_shift),
             upper_stop_shift=float(geometry_spec.max_shift),
         )
+
+    @property
+    def has_deadzone(self) -> bool:
+        """Return whether the neutral/deadzone interval has positive width."""
+
+        return self.engagement_shift > self.lower_stop_shift
 
     def validate_against_geometry_spec(self, geometry_spec) -> None:
         """Ensure every physical boundary lies in the geometry's legal domain."""
