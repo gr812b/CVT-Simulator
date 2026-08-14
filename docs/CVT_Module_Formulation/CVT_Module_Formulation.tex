@@ -5067,40 +5067,167 @@ translation along the pulley shafts to rotation about them.
 \section{Rotational Dynamics of the Pulley Assemblies}
 \label{sec:pulley_rotational_dynamics}
 
-The external torque path through the CVT is straightforward. Engine torque
-drives the primary pulley, the belt removes torque from the primary and applies
-it to the secondary, and the downstream drivetrain resists the secondary. The
-rotational dynamics follow from the angular-momentum balance about each pulley
-shaft,
+The preceding section established how forces along the pulley shafts move the
+sheaves, but its equations still contain quantities belonging to rotation about
+those shafts. The primary flyweight force depends on the primary speed
+\(\omega_p\), while the secondary balance contains the transmitted torque
+\(\tau_s\) and the secondary acceleration \(\dot{\omega}_s\). The axial
+equations can use these quantities, but cannot supply them.
+
+The primary pulley is carried around the primary shaft at \(\omega_p\), while
+the secondary rotates about its own shaft at \(\omega_s\). These are separate
+rotations, so their speeds need not change together. The mechanisms inside each 
+pulley also move relative to these underlying shaft
+rotations. The primary flyweights pivot as the primary rotates, while the
+secondary movable sheave translates and rotates relative to its shaft through
+the helix. These internal motions are already tied to the shift coordinate,
+but they also change how angular momentum is distributed within each pulley as
+the CVT shifts.
+
+The remaining question is therefore what governs the evolution of
+\(\omega_p\) and \(\omega_s\), and consequently how shifting affects that
+evolution.
+
+% --------------------------------------------------------------
+
+\subsection{Following the Torque}
+\label{sec:pulley_assembly_torque_path}
+
+To determine how \(\omega_p\) and \(\omega_s\) evolve, each pulley side
+requires a rotational equation of motion. That equation must account for the
+angular momentum carried about the corresponding shaft and the torques capable
+of changing it. The first step is therefore to identify the rotating systems
+represented by the two shaft speeds.
+
+The primary-side system contains the primary shaft and the complete primary
+pulley assembly. The movable assembly and flyweights remain part of this
+system even while they move relative to the fixed sheave, since they continue
+to carry angular momentum about the primary axis. The secondary-side system is
+defined in the same way: it contains the secondary shaft and the complete
+secondary pulley assembly, including the helix-guided motion of the movable
+sheave. The belt passes between these two systems and is not included in either
+one.
+
+The resulting division is shown in
+\Cref{fig:pulley_assembly_torque_path}.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.88\linewidth]
+    {./illustrations/torque/cvt_overview_forces.png}
+    \caption{
+    Rotating systems and torque path of the engaged CVT. The shaft-side
+    boundaries represent the torque and equivalent inertia presented by the
+    attached systems. The belt remains outside the two pulley-side systems and
+    interacts with them through the contact torques \(\tau_p\) and \(\tau_s\).
+    The arrows show the signed directions associated with forward power
+    transfer.
+    }
+    \label{fig:pulley_assembly_torque_path}
+\end{figure}
+
+Begin with the primary. When its speed changes, the primary shaft must
+accelerate not only the pulley itself, but also the rotating hardware attached
+beyond the CVT boundary. As established in
+\Cref{sec:external_boundary_contract}, that external hardware is represented
+at the shaft by the equivalent inertia \(I_{\mathrm{B},p}\), while
+\(\tau_{\mathrm{B},p}\) is the torque it applies to the primary side. The
+remaining external interaction is the belt, which exerts the torque \(\tau_p\)
+on the primary pulley.
+
+The secondary follows the same construction. Its attached hardware contributes
+the equivalent inertia \(I_{\mathrm{B},s}\) and applies the boundary torque
+\(\tau_{\mathrm{B},s}\), while the belt exerts \(\tau_s\) on the secondary
+pulley.
+
+The signs follow directly from the convention established in
+\Cref{sec:rotational_sign}. During forward power transfer, the primary boundary
+drives the primary pulley and the belt resists it. The belt then drives the
+secondary pulley against the resisting secondary boundary. Thus,
+
+\[
+    \tau_{\mathrm{B},p}>0,
+    \qquad
+    \tau_p<0,
+    \qquad
+    \tau_s>0,
+    \qquad
+    \tau_{\mathrm{B},s}<0.
+\]
+
+Although the primary and secondary contain different mechanisms, their
+rotational balances now have the same outer structure. Let \(j\in\{p,s\}\)
+denote the pulley side under consideration.
+
+The angular momentum on side \(j\) has two contributions. The fixed equivalent
+boundary inertia rotates at \(\omega_j\), so it carries angular momentum
+\(I_{\mathrm{B},j}\omega_j\). Let \(H_{\mathrm{CVT},j}\) denote the angular
+momentum carried by the corresponding shaft and pulley assembly, including the
+internal motions of its components. The total is therefore
+
 \begin{equation}
-    \sum \tau = \frac{dH}{dt}.
-    \label{eq:angular_momentum_balance}
+    H_j
+    =
+    I_{\mathrm{B},j}\omega_j
+    +
+    H_{\mathrm{CVT},j}.
+    \label{eq:pulley_side_total_angular_momentum}
 \end{equation}
 
-If every component remained fixed relative to its shaft and its mass
-distribution did not change, then \(H=I\omega\), and
-\Cref{eq:angular_momentum_balance} would reduce to the familiar form
-\begin{equation}
-    \sum \tau = I\dot{\omega}.
-    \label{eq:fixed_inertia_rotational_balance}
-\end{equation}
-Most of each pulley assembly can be treated in exactly this way. Shifting, however,
-alters the angular momentum in two specific places.
+Under \AssRef{assump:no_parasitic_losses}, the boundary torque and belt torque
+are the only external torques retained in this pulley-side balance. Newton's
+second law for rotation therefore gives
 
-On the primary, the flyweights move outward as the actuator deploys. Their
-changing radius changes the angular momentum carried at a given primary speed.
-On the secondary, the helix causes the movable sheave to rotate relative to the
-shaft-side assembly as it translates, so its angular speed is not generally
-equal to \(\omega_s\).
+\[
+    \tau_{\mathrm{B},j}
+    +
+    \tau_j
+    =
+    \frac{dH_j}{dt}.
+\]
 
-The positions of both moving components were already determined by the shared
-shift coordinate in \Cref{sec:axial_dynamics}. Their motions therefore
-introduce no additional independent coordinates. They must nevertheless be
-retained in the rotational balances because, as the CVT shifts, they change
-the angular momentum carried by the corresponding pulley assemblies. This
-leaves a precise question: with these internal motions already constrained by
-the shift coordinate, what angular momentum does each complete pulley assembly
-carry, and how does it change with time?
+Substituting \Cref{eq:pulley_side_total_angular_momentum} writes this as
+
+\[
+    \tau_{\mathrm{B},j}
+    +
+    \tau_j
+    =
+    \frac{d}{dt}
+    \left(
+        I_{\mathrm{B},j}\omega_j
+        +
+        H_{\mathrm{CVT},j}
+    \right).
+\]
+
+The equivalent boundary inertia is fixed, so differentiating yields the common
+pulley-side equation of motion:
+
+\bigeq{eq:pulley_assembly_common_rotational_balance}
+{Common Pulley-Side Rotational Balance}
+{
+\begin{aligned}
+    \tau_{\mathrm{B},j}
+    +
+    \tau_j
+    &=
+    I_{\mathrm{B},j}\dot{\omega}_j
+    +
+    \frac{dH_{\mathrm{CVT},j}}{dt},
+    \qquad
+    j\in\{p,s\}.
+\end{aligned}
+}
+
+The way shifting changes the angular momentum carried within a pulley is
+contained in \(H_{\mathrm{CVT},j}\). On the primary, the flyweights
+redistribute mass relative to the shaft as they pivot. On the secondary, the
+movable sheave rotates relative to the shaft-side assembly as it follows the
+helix. The two pulley sides therefore share the balance in
+\Cref{eq:pulley_assembly_common_rotational_balance}, but require separate
+expressions for their internal angular momentum. Beginning with the primary,
+each assembly can now be examined in turn.
 
 
 \section{Rotational and Belt Transport Dynamics}
