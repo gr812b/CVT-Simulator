@@ -33,3 +33,19 @@ trace rather than tuning the model to continue.
 
 `legacy_raw_mu_replay/` remains historical only because it used Ballew's raw `0.55/0.40` directly as
 CINDER lambda limits before A10 corrected the convention translation.
+
+## Final numerical-convergence audit
+
+`convergence/` contains the frozen-physics four-case closed-loop refinement study. The macroscopic speed, ratio, force-error, shift envelope, and mode occupancy are converged. Raw transition-count variation is isolated to tolerance-sensitive kinetic slip-direction zero-crossing bookkeeping; all runs contain 1411 substantive contact/constraint transitions. See `../FINAL_STUDY.md` for the combined interpretation.
+
+
+## Numerical-stability figure
+
+`numerical_stability/` recasts the archived convergence sweep against the integration scale reported by Ballew (2015). The figure marks Ballew's roughly `0.01 ms` fixed-step scale and shows that CINDER's headline errors remain effectively invariant across tested `max_step` values of `0.25--1.00 ms`. Because CINDER uses adaptive LSODA, this is a convergence/operating-scale comparison rather than a direct fixed-step or wall-clock speedup. See `numerical_stability/NUMERICAL_STABILITY_NOTE.md`.
+
+
+## Broad numerical-stability stress test
+
+`numerical_stability/stress_test/` contains the 72-case solver-control stress test used to map the numerical operating envelope beyond the original four-point convergence audit. The canonical interpretation is `../NUMERICAL_STABILITY_RESULTS.md`.
+
+For paper use, emphasize numerical accuracy, actual adaptive timestep scale, accepted integration-step count, and the separation between substantive topology transitions and kinetic slip-direction zero-crossing bookkeeping. Wall-clock/Pareto timing is intentionally not part of the headline comparison because the original Ballew implementation was not benchmarked on the same hardware.
