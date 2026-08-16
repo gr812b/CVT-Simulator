@@ -5230,37 +5230,33 @@ expressions for their internal angular momentum. Beginning with the primary,
 each assembly can now be examined in turn.
 
 
-% Review draft: Subsections 3.3.2 and 3.3.3.
-% This fragment follows Subsection 3.3.1 and uses its common pulley-side
-% rotational balance, Eq. (\ref{eq:pulley_assembly_common_rotational_balance}).
-
 % --------------------------------------------------------------
-
 \subsection{Primary Pulley Assembly}
 \label{sec:primary_pulley_rotational_dynamics}
 
-Beginning with the primary, the common balance in
-\Cref{eq:pulley_assembly_common_rotational_balance} requires the angular
-momentum \(H_{\mathrm{CVT},p}\) carried by the primary shaft and pulley
-assembly. About the shaft axis, this momentum separates naturally into the
-hardware whose inertia remains fixed and the flyweights whose inertia changes
-as the primary shifts.
+The primary is the simpler of the two pulley assemblies because nearly all of
+its hardware shares the shaft speed \(\omega_p\). The shaft, sheaves, ramp
+carrier, and other coaxial components may translate during a shift, but that
+translation is along the shaft and therefore does not change their distance
+from its axis. Their combined shaft-axis inertia can consequently be collected
+into one constant quantity, \(I_{p,\mathrm{const}}\).
 
-The shaft, sheaves, ramp carrier, and other coaxial hardware all turn at
-\(\omega_p\). Some of these components translate during a shift, but motion
-along the shaft does not change their distance from its axis. Let
-\(I_{p,\mathrm{const}}\) denote their combined shaft-axis inertia inside the
-CVT boundary. Their contribution to the primary angular momentum is therefore
-\(I_{p,\mathrm{const}}\omega_p\).
+The flyweights are different. They are carried around the primary shaft at
+\(\omega_p\), but their mass moves radially as they pivot. The same motion was
+already used in \Cref{sec:primary_movable_sheave_balance} to determine the
+centrifugal action that closes the primary. There, the flyweight geometry was
+summarized by the shaft-axis inertia map \(J_{f,p}(x_p)\). Since
+\(x_p=s\), that map is now \(J_{f,p}(s)\).
 
-The flyweights are also carried around the shaft at \(\omega_p\), but their
-radial mass distribution changes as they pivot. This effect is already
-contained in the shaft-axis inertia map \(J_{f,p}(x_p)\) introduced in
-\Cref{eq:primary_flyweight_geometry_maps}. Since the primary displacement is
-the shared shift coordinate, \(x_p=s\) by
-\Cref{eq:primary_local_to_shift_map}, and the flyweight contribution is
-\(J_{f,p}(s)\omega_p\). Adding the fixed and configuration-dependent parts
-gives
+It is useful to recall what this inertia represents. The quantity
+\(J_{f,p}\) measures the flyweight mass distribution about the \emph{primary
+shaft}. It is therefore distinct from the constant pivot-axis inertia \(I_f\)
+that appeared in the flyweight moment balance of
+\Cref{eq:primary_flyweight_moment_balance}. The two quantities describe the
+same flyweights about different axes and enter different equations of motion.
+
+At a given shift position, the angular momentum carried inside the primary CVT
+boundary is therefore
 
 \begin{equation}
     H_{\mathrm{CVT},p}
@@ -5274,9 +5270,10 @@ gives
     \label{eq:primary_pulley_angular_momentum}
 \end{equation}
 
-The torque balance requires the rate of this angular momentum. Differentiating
-\Cref{eq:primary_pulley_angular_momentum} gives one contribution from the
-changing shaft speed and another from the changing flyweight inertia:
+If the shift position were fixed, differentiating this expression would simply
+multiply the current inertia by \(\dot\omega_p\). During a shift, however,
+\(J_{f,p}\) changes as well. Because its only configuration variable is
+\(s\), differentiating \Cref{eq:primary_pulley_angular_momentum} gives
 
 \begin{equation}
     \frac{dH_{\mathrm{CVT},p}}{dt}
@@ -5286,43 +5283,19 @@ changing shaft speed and another from the changing flyweight inertia:
         +
         J_{f,p}(s)
     \right]
-    \dot{\omega}_p
+    \dot\omega_p
     +
-    \omega_p\frac{dJ_{f,p}}{dt}.
-    \label{eq:primary_pulley_angular_momentum_rate_unmapped}
-\end{equation}
-
-Because the flyweight inertia changes only through the shift position, the
-chain rule supplies
-
-\begin{equation}
-    \frac{dJ_{f,p}}{dt}
-    =
-    \frac{dJ_{f,p}}{ds}\dot{s}.
-    \label{eq:primary_flyweight_inertia_rate}
-\end{equation}
-
-Substituting \Cref{eq:primary_flyweight_inertia_rate} into
-\Cref{eq:primary_pulley_angular_momentum_rate_unmapped} therefore yields
-
-\begin{equation}
-    \frac{dH_{\mathrm{CVT},p}}{dt}
-    =
-    \left[
-        I_{p,\mathrm{const}}
-        +
-        J_{f,p}(s)
-    \right]
-    \dot{\omega}_p
-    +
-    \frac{dJ_{f,p}}{ds}\dot{s}\,\omega_p.
+    \frac{dJ_{f,p}}{ds}\dot s\,\omega_p.
     \label{eq:primary_pulley_angular_momentum_rate}
 \end{equation}
 
-The first term changes the angular momentum by accelerating the primary at its
-current configuration. The second is present because shifting moves the
-flyweight mass radially while that mass is already rotating. Inserting the
-complete rate into the common pulley-side balance gives the primary equation
+The two terms describe different ways of changing the same angular momentum.
+The first accelerates the primary with the flyweights held at their current
+configuration. The second changes the angular momentum because the flyweight
+mass itself moves toward or away from the shaft while already rotating.
+
+Substituting this result into the common pulley-side balance from
+\Cref{eq:pulley_assembly_common_rotational_balance} gives the primary equation
 of motion:
 
 \bigeq{eq:primary_rotational_eom_belt}
@@ -5340,23 +5313,30 @@ of motion:
         +
         J_{f,p}(s)
     \right]
-    \dot{\omega}_p
+    \dot\omega_p
     \\
     &+
-    \frac{dJ_{f,p}}{ds}\dot{s}\,\omega_p.
+    \frac{dJ_{f,p}}{ds}\dot s\,\omega_p.
 \end{aligned}
 }
 
-The bracket contains every inertia accelerated with the primary shaft at the
-current shift position. The remaining term is the angular momentum gained or
-released as the flyweights move. For the conventional primary mechanism,
-outward flyweight motion increases \(J_{f,p}\). During an upshift, the net
-torque must supply this increase in angular momentum; during a backshift, the
-same mass motion is reversed and angular momentum is released.
+The connection to the axial flyweight balance is now explicit. In
+\Cref{eq:primary_balance_in_shift_coordinate}, the derivative
+\(dJ_{f,p}/ds\) determined how shaft rotation produces a centrifugal closing
+action. Here, the same derivative determines how that closing motion changes
+the shaft-axis angular momentum. The two appearances are not separate
+flyweight corrections: they are the axial and rotational consequences of the
+same radial redistribution of flyweight mass.
 
-If the shift position is fixed, \(\dot{s}=0\) and the flyweight distribution
-no longer changes. The additional term vanishes, leaving the familiar
-fixed-inertia balance
+For the conventional primary mechanism, outward flyweight motion increases
+\(J_{f,p}\). During an upshift, \(\dot s>0\), so the rotating primary must
+supply the angular momentum required by that outward motion in addition to
+accelerating the shaft. During a backshift the redistribution reverses, and
+the flyweights return angular momentum to the shaft-side motion.
+
+If the shift is held fixed, \(\dot s=0\), and the flyweight mass distribution
+no longer changes. The additional term vanishes and the familiar fixed-inertia
+form is recovered:
 
 \begin{equation}
     \tau_{\mathrm{B},p}
@@ -5370,9 +5350,9 @@ fixed-inertia balance
         +
         J_{f,p}(s)
     \right]
-    \dot{\omega}_p,
+    \dot\omega_p,
     \qquad
-    \dot{s}=0.
+    \dot s=0.
     \label{eq:primary_rotational_fixed_configuration_limit}
 \end{equation}
 
@@ -5381,34 +5361,29 @@ fixed-inertia balance
 \subsection{Secondary Pulley Assembly}
 \label{sec:secondary_pulley_rotational_dynamics}
 
-The secondary follows the same angular-momentum balance, but its momentum
-cannot be formed from one angular speed during a shift. The secondary shaft,
-fixed sheave, and shaft-locked hardware rotate at \(\omega_s\). Let
-\(I_{s,F}\) denote their combined shaft-axis inertia inside the CVT boundary.
-The movable sheave and the components rigidly attached to it have inertia
-\(I_{s,M}\), introduced in \Cref{sec:secondary_rotational_loading}, but the
-helix allows this assembly to rotate relative to the shaft as it moves
-axially.
+The secondary differs from the primary in one important way. During a shift,
+the complete secondary remains one mechanical assembly, but not every part of
+that assembly has the same angular speed.
 
-Let \(\theta_s\) retain its earlier definition as the angle of the movable
-assembly relative to the shaft-side assembly. Its absolute angular speed is
-therefore
+The secondary shaft, fixed sheave, and hardware locked to them rotate at
+\(\omega_s\). Let their combined shaft-axis inertia inside the CVT boundary be
+\(I_{s,F}\). The movable sheave and the components rigidly attached to it have
+inertia \(I_{s,M}\). As established while deriving the secondary axial balance,
+the helix makes this movable assembly rotate relative to the shaft-side
+assembly as it translates. Its absolute angular speed is therefore
 
 \begin{equation}
     \omega_{s,M}
     =
     \omega_s
     +
-    \dot{\theta}_s,
-    \qquad
-    \dot{\theta}_s
-    =
-    \frac{d\theta_s}{dx_s}\dot{x}_s,
+    \frac{d\theta_s}{dx_s}\dot x_s,
     \label{eq:secondary_movable_sheave_speed_recalled}
 \end{equation}
 
-as established in \Cref{eq:secondary_movable_sheave_speed}. The two parts of
-the assembly must therefore contribute separately to its angular momentum:
+which is the relation already obtained in
+\Cref{eq:secondary_movable_sheave_speed}. The angular momentum carried by the
+secondary must therefore retain the two angular speeds separately:
 
 \begin{equation}
     H_{\mathrm{CVT},s}
@@ -5419,83 +5394,77 @@ the assembly must therefore contribute separately to its angular momentum:
     \label{eq:secondary_pulley_angular_momentum}
 \end{equation}
 
-Substituting the first relation in
-\Cref{eq:secondary_movable_sheave_speed_recalled} makes the two motions in
-this momentum explicit:
+The free body here is larger than the movable-sheave free body used in
+\Cref{sec:secondary_rotational_loading}. There, only the movable assembly was
+isolated, so the spring and helix torques crossed the boundary and had to
+appear explicitly. Here, the shaft-side and movable-side hardware are enclosed
+together. The torque exerted by the helix on the movable side is accompanied
+by an equal-and-opposite torque on the shaft-side assembly, and both actions
+lie inside the same free body. The torsional spring produces the same kind of
+internal pair. These torques therefore cancel from the moment balance of the
+complete secondary. Their mechanical effect has not disappeared: the helix
+still allows the movable side to rotate at \(\omega_{s,M}\) rather than
+\(\omega_s\), and that difference remains in
+\Cref{eq:secondary_pulley_angular_momentum}.
 
-\begin{equation}
-    H_{\mathrm{CVT},s}
-    =
-    \left(I_{s,F}+I_{s,M}\right)\omega_s
-    +
-    I_{s,M}\dot{\theta}_s.
-    \label{eq:secondary_pulley_angular_momentum_expanded}
-\end{equation}
-
-Both parts still belong to the same secondary free body. The spring and helix
-transfer torque between them, while the external torque sum remains
-\(\tau_{\mathrm{B},s}+\tau_s\). Differentiating
-\Cref{eq:secondary_pulley_angular_momentum_expanded} gives the momentum rate
-carried inside the CVT boundary,
+The common pulley-side balance in
+\Cref{eq:pulley_assembly_common_rotational_balance} requires the time rate of
+change of the angular momentum inside this boundary. Because
+\Cref{eq:secondary_pulley_angular_momentum} contains two angular velocities,
+differentiating it requires the corresponding two angular accelerations:
 
 \begin{equation}
     \frac{dH_{\mathrm{CVT},s}}{dt}
     =
-    \left(I_{s,F}+I_{s,M}\right)\dot{\omega}_s
+    I_{s,F}\dot\omega_s
     +
-    I_{s,M}\ddot{\theta}_s.
-    \label{eq:secondary_pulley_angular_momentum_rate}
+    I_{s,M}\dot\omega_{s,M}.
+    \label{eq:secondary_pulley_angular_momentum_rate_unmapped}
 \end{equation}
 
-Adding the boundary contribution
-\(I_{\mathrm{B},s}\dot{\omega}_s\) from the common balance gives a compact
-secondary equation before the helix motion is expanded:
+The first acceleration, \(\dot\omega_s\), is the shaft acceleration governed
+by the present rotational balance. The second is not another independent
+degree of freedom. The helix already tied the movable-side rotation to the
+axial sheave motion in \Cref{sec:secondary_movable_sheave_balance}. In
+particular, differentiating the helix kinematics there gave
+\Cref{eq:secondary_movable_sheave_acceleration}:
 
 \begin{equation}
-    \tau_{\mathrm{B},s}
-    +
-    \tau_s
+    \dot\omega_{s,M}
     =
-    \left(
-        I_{\mathrm{B},s}
-        +
-        I_{s,F}
-        +
-        I_{s,M}
-    \right)
-    \dot{\omega}_s
+    \dot\omega_s
     +
-    I_{s,M}\ddot{\theta}_s.
-    \label{eq:secondary_rotational_balance_relative_angle}
+    \frac{d\theta_s}{dx_s}\ddot x_s
+    +
+    \frac{d^2\theta_s}{dx_s^2}\dot x_s^2.
+    \label{eq:secondary_movable_sheave_acceleration_recalled}
 \end{equation}
 
-It remains to express the relative angular acceleration through the shift
-motion. From \Cref{eq:secondary_movable_sheave_speed_recalled},
-\(\dot{\theta}_s=(d\theta_s/dx_s)\dot{x}_s\). Applying the product and chain
-rules gives
+The rotational balance has therefore led back to a kinematic relation already
+established by the axial mechanism. Substituting
+\Cref{eq:secondary_movable_sheave_acceleration_recalled} into
+\Cref{eq:secondary_pulley_angular_momentum_rate_unmapped} gives
 
 \begin{equation}
 \begin{aligned}
-    \ddot{\theta}_s
-    &={}
-    \frac{d}{dt}
-    \left(
-        \frac{d\theta_s}{dx_s}\dot{x}_s
-    \right)
+    \frac{dH_{\mathrm{CVT},s}}{dt}
+    ={}&
+    \left(I_{s,F}+I_{s,M}\right)\dot\omega_s
     \\
-    &={}
-    \frac{d\theta_s}{dx_s}\ddot{x}_s
-    +
-    \frac{d^2\theta_s}{dx_s^2}\dot{x}_s^2.
+    &+
+    I_{s,M}
+    \left[
+        \frac{d\theta_s}{dx_s}\ddot x_s
+        +
+        \frac{d^2\theta_s}{dx_s^2}\dot x_s^2
+    \right].
 \end{aligned}
-    \label{eq:secondary_relative_angular_acceleration}
+    \label{eq:secondary_pulley_angular_momentum_rate}
 \end{equation}
 
-The first term is the relative angular acceleration produced by axial
-acceleration along the current helix. The second appears when the helix motion
-ratio changes with position. Substitution into
-\Cref{eq:secondary_rotational_balance_relative_angle} gives the local
-secondary balance:
+Substituting this rate into the common pulley-side rotational balance in
+\Cref{eq:pulley_assembly_common_rotational_balance} produces the local
+secondary equation of motion:
 
 \bigeq{eq:secondary_rotational_eom_local}
 {Secondary Pulley Rotational Balance}
@@ -5512,93 +5481,43 @@ secondary balance:
         +
         I_{s,M}
     \right)
-    \dot{\omega}_s
+    \dot\omega_s
     \\
     &+
     I_{s,M}
     \left[
-        \frac{d\theta_s}{dx_s}\ddot{x}_s
+        \frac{d\theta_s}{dx_s}\ddot x_s
         +
-        \frac{d^2\theta_s}{dx_s^2}\dot{x}_s^2
+        \frac{d^2\theta_s}{dx_s^2}\dot x_s^2
     \right].
 \end{aligned}
 }
 
-The first term accelerates every secondary component through the rotation they
-share with the shaft. The bracketed terms change only the movable assembly's
-motion relative to that shaft.
+The first term accelerates the rotation shared by the complete secondary. The
+bracketed terms change only the movable side's rotation relative to the shaft.
+They are the rotational counterpart of the helix-reflected inertia already
+encountered in the secondary axial balance.
 
-The local coordinate \(x_s\) is itself fixed by the shared shift coordinate.
-From \Cref{eq:secondary_local_to_shift_map},
+The complete CVT uses the shared shift coordinate rather than \(x_s\) as an
+independent coordinate. The required mapping was already established in
+\Cref{eq:secondary_local_to_shift_map}. Substituting
 
-\begin{equation}
-    \dot{x}_s
+\[
+    \dot x_s
     =
-    \frac{dx_s}{ds}\dot{s},
+    \frac{dx_s}{ds}\dot s,
     \qquad
-    \ddot{x}_s
+    \ddot x_s
     =
-    \frac{dx_s}{ds}\ddot{s}
+    \frac{dx_s}{ds}\ddot s
     +
-    \frac{d^2x_s}{ds^2}\dot{s}^2.
-    \label{eq:secondary_local_to_shift_rates_recalled}
-\end{equation}
+    \frac{d^2x_s}{ds^2}\dot s^2
+\]
 
-Substituting these rates into
-\Cref{eq:secondary_relative_angular_acceleration} first gives
-
-\begin{equation}
-\begin{aligned}
-    \ddot{\theta}_s
-    ={}&
-    \frac{d\theta_s}{dx_s}
-    \left(
-        \frac{dx_s}{ds}\ddot{s}
-        +
-        \frac{d^2x_s}{ds^2}\dot{s}^2
-    \right)
-    \\
-    &+
-    \frac{d^2\theta_s}{dx_s^2}
-    \left(
-        \frac{dx_s}{ds}\dot{s}
-    \right)^2,
-\end{aligned}
-    \label{eq:secondary_relative_angular_acceleration_substitution}
-\end{equation}
-
-which collects to
+into \Cref{eq:secondary_rotational_eom_local} gives the same rotational
+balance in the coordinate used by the complete model:
 
 \begin{equation}
-\begin{aligned}
-    \ddot{\theta}_s
-    ={}&
-    \frac{d\theta_s}{dx_s}
-    \frac{dx_s}{ds}\ddot{s}
-    \\
-    &+
-    \left[
-        \frac{d\theta_s}{dx_s}
-        \frac{d^2x_s}{ds^2}
-        +
-        \frac{d^2\theta_s}{dx_s^2}
-        \left(
-            \frac{dx_s}{ds}
-        \right)^2
-    \right]
-    \dot{s}^2.
-\end{aligned}
-    \label{eq:secondary_relative_angular_acceleration_shared_coordinate}
-\end{equation}
-
-All local functions and derivatives in this expression are evaluated at
-\(x_s=x_s(s)\). Inserting it into
-\Cref{eq:secondary_rotational_balance_relative_angle} gives the secondary
-equation in the coordinate used by the complete CVT model:
-
-\bigeq{eq:secondary_rotational_eom_belt}
-{Secondary Rotational Balance in the Shared Coordinate}
-{
 \begin{aligned}
     \tau_{\mathrm{B},s}
     +
@@ -5611,12 +5530,13 @@ equation in the coordinate used by the complete CVT model:
         +
         I_{s,M}
     \right)
-    \dot{\omega}_s
+    \dot\omega_s
     \\
     &+
     I_{s,M}
     \frac{d\theta_s}{dx_s}
-    \frac{dx_s}{ds}\ddot{s}
+    \frac{dx_s}{ds}
+    \ddot s
     \\
     &+
     I_{s,M}
@@ -5625,23 +5545,35 @@ equation in the coordinate used by the complete CVT model:
         \frac{d^2x_s}{ds^2}
         +
         \frac{d^2\theta_s}{dx_s^2}
-        \left(
-            \frac{dx_s}{ds}
-        \right)^2
+        \left(\frac{dx_s}{ds}\right)^2
     \right]
-    \dot{s}^2.
+    \dot s^2.
 \end{aligned}
-}
+    \label{eq:secondary_rotational_eom_belt}
+\end{equation}
 
-The shift-acceleration term carries the direct helix coupling. The
-velocity-squared term records how that coupling changes with both belt
-geometry and helix geometry. Their signs require no separate assignment: for
-the adopted directions, \(d\theta_s/dx_s>0\) and \(dx_s/ds<0\), so primary
-closure produces the corresponding negative relative rotation of the
-secondary movable sheave.
+All local helix quantities in this expression are evaluated at
+\(x_s=x_s(s)\). Its signs follow directly from the kinematics already chosen.
+For the conventional helix,
+\(d\theta_s/dx_s>0\), while the belt geometry gives \(dx_s/ds<0\) over the
+engaged shift range. Hence
 
-If the shift is held fixed, \(\dot{s}=\ddot{s}=0\). The movable sheave then
-has no motion relative to the shaft, and the balance reduces to
+\[
+    \frac{d\theta_s}{ds}
+    =
+    \frac{d\theta_s}{dx_s}
+    \frac{dx_s}{ds}
+    <0.
+\]
+
+During an upshift, \(\dot s>0\), so \(\dot\theta_s<0\): the secondary opens
+and the movable side rotates more slowly than the shaft-side assembly. The
+sign of the corresponding angular-momentum term is therefore carried by the
+mechanism maps rather than assigned separately in the rotational balance.
+
+If the shift is held fixed, \(\dot s=\ddot s=0\). The helix then produces no
+relative motion, and the fixed and movable sides rotate together. The balance
+reduces to
 
 \begin{equation}
     \tau_{\mathrm{B},s}
@@ -5655,15 +5587,100 @@ has no motion relative to the shaft, and the balance reduces to
         +
         I_{s,M}
     \right)
-    \dot{\omega}_s.
+    \dot\omega_s.
     \label{eq:secondary_rotational_fixed_configuration_limit}
 \end{equation}
 
-In this limit, the fixed and movable parts recover the familiar response of a
-single rigidly rotating assembly. With both pulley equations established, the
-remaining questions are what belt motion can support the two pulley torques
-and how the belt--pulley contacts create them.
+% --------------------------------------------------------------
 
+\subsection{What the Rotational Balances Establish}
+\label{sec:rotational_balance_synthesis}
+
+The primary and secondary now have complete shaft-axis equations of motion.
+Both remain direct statements of \(\sum\tau=dH/dt\). The additional terms
+appear because the hardware that actuates the pulleys continues to move while
+the pulley assemblies rotate, so shifting changes the angular momentum stored
+inside the assemblies themselves.
+
+On the primary, this connection is carried by the same flyweight inertia map
+\(J_{f,p}(s)\) that appeared in the axial derivation. There,
+\(dJ_{f,p}/ds\) contributes to the centrifugal closing action because the
+flyweights move outward as the primary closes. Here, \(J_{f,p}(s)\) and its
+derivative determine how much shaft-axis angular momentum those same
+flyweights carry as their radial mass distribution changes. The axial and
+rotational balances are therefore two views of the same flyweight motion: one
+asks how rotation drives the movable sheave, while the other asks how that
+moving flyweight mass changes the rotational response of the pulley.
+
+The secondary shows the same reciprocity through \(I_{s,M}\) and the helix map
+\(\theta_s(x_s)\). In the axial balance, the helix reflects the movable
+assembly's rotational inertia into the sheave motion, so part of the available
+torque is required to change the movable side's rotation before the remainder
+appears as axial force. In the rotational balance, that same relative motion
+means the movable side carries angular momentum at a speed different from the
+shaft-side assembly, so the axial shift acceleration enters the shaft-axis
+balance. Again, the two equations are describing one constrained piece of
+hardware from different free bodies.
+
+Mechanical actuation therefore creates a direct coupling between the axial and
+rotational dynamics inside each pulley assembly. This is distinct from the
+coupling carried by the belt reaction. Belt contact can connect the two kinds
+of balance because its normal action loads the sheaves axially while its
+tangential action transmits torque about the shafts. The present terms add a
+second path: the flyweight and helix mechanisms that generate the clamping
+response also carry inertia, so their own motion appears directly in the
+rotational equations. The actuator is therefore part of both balances, rather
+than acting only as a source of clamping force whose influence reaches shaft
+rotation through the belt.
+
+This distinction gives a precise comparison with earlier transient models.
+In the rubber-belt formulation of \citet{Ballew2015}, belt-contact torque
+changes pulley speed through a fixed lumped pulley inertia, while pulley axial
+force is supplied to the belt model. Axial and rotational behaviour can still
+interact through the belt solution, but motion of the clamping hardware does
+not alter the pulley angular momentum itself. \citet{DuanEtAl2016} provide a
+stronger adjacent precedent in a chain CVT: rotational dynamics, movable-pulley
+axial dynamics, chain motion, and contact forces are solved as a coupled
+system. Their shaft balance nevertheless retains a fixed pulley inertia, while
+the movable-pulley mass appears in a separate axial equation. The coupling is
+therefore carried through the chain, contact forces, and changing radius rather
+than through actuator motion entering both balances.
+
+A mechanically actuated rubber-belt comparison is provided by
+\citet{SilvaEtAl2023}, who retain axial equations for both movable sheaves and
+reduce their translations to a shared shift coordinate. Their rotational
+treatment uses a fixed primary-pulley inertia. This establishes direct
+precedent for mechanical clamping, movable-sheave inertia, and coupled shift
+motion, but not for the additional shaft-axis angular-momentum terms produced
+by the moving actuator hardware.
+
+The helical model of \citet{SorgeCammalleri2011} provides a complementary
+secondary comparison. Their formulation resolves the relative motion of the
+driven sheaves and the generally unequal belt torques acting on the two faces
+in substantially greater local detail. That work therefore captures secondary
+helix and face-contact mechanics that are reduced here. The distinction in the
+present balance is different: the helix-constrained movable assembly is
+retained as part of the complete secondary angular momentum, so the same
+relative motion that appears in its axial dynamics also appears in the
+shaft-axis equation.
+
+Taken together, these comparisons show that axial--rotational coupling itself
+is not the new ingredient. Existing formulations can produce that coupling
+through belt or chain reactions, changing radii, and shared shift motion. Among
+the reviewed reduced-order formulations for mechanically actuated rubber-belt
+CVTs, however, no equivalent pair of pulley balances was identified in which
+the moving clamping hardware itself provides this additional inertial coupling
+on both sides: the primary flyweights change their shaft-axis mass distribution
+as they generate closing action, while the secondary movable assembly changes
+its shaft-axis angular momentum through the same helix motion that produces
+its axial response.
+
+The result is a single mechanical picture of each pulley rather than separate
+axial and rotational descriptions joined only through transmitted load. The
+same mechanism maps that determine how the pulley clamps also determine how
+its internal motion changes the shaft dynamics. When those actuator motions
+cease, the additional terms vanish and the familiar fixed-configuration
+inertia balances are recovered.
 
 \section{Rotational and Belt Transport Dynamics}
 \label{sec:rot-belt-dynamics}
