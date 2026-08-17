@@ -5770,6 +5770,184 @@ its internal motion changes the shaft dynamics. When those actuator motions
 cease, the additional terms vanish and the familiar fixed-configuration
 inertia balances are recovered.
 
+
+\section{Belt Transport and Pulley Contact Mechanics}
+\label{sec:belt_transport_contact}
+
+The preceding sections established the axial and rotational equations of
+motion of the two pulley assemblies, but in both cases the belt still appears
+through actions that those equations cannot determine. The axial balances
+contain the belt normal loads \(N_p\) and \(N_s\), while the rotational
+balances contain the belt torques \(\tau_p\) and \(\tau_s\). The belt also
+carries the transport state \(v_b\), whose acceleration has not yet been
+established.
+
+These quantities cannot be assigned independently. The contact that loads the
+sheave faces is also the contact through which torque is exchanged with the
+belt, and the same forces must account for the changing momentum of the belt
+itself. The remaining question is therefore how the motion and tension of one
+closed belt determine its own transport dynamics while producing the normal
+reactions and torques acting on both pulley assemblies.
+
+% --------------------------------------------------------------
+\subsection{Following Tension Around the Closed Belt}
+\label{sec:closed_belt_tension_path}
+
+The belt transfers power between the pulleys through forces exchanged at the
+two belt--sheave interfaces. For power to cross either interface, the pulley
+and belt must exert tangential forces on one another. Those forces transmit
+torque, and the tension entering a pulley wrap will therefore generally differ
+from the tension leaving it.
+
+The pulley contacts are not the only places where tension can change. The
+straight spans also contain belt mass. If the belt transport speed changes, a
+net tangential force is required to accelerate the belt contained within each
+span, so its two endpoint tensions can differ as well. The closed belt thus
+contains two repeated types of mechanical region: two pulley wraps, where load
+is exchanged with the sheaves through contact, and two free spans, where belt
+mass is carried between those contacts. The tangent points between the regions
+provide convenient boundaries at which to record the tension, as shown in
+\Cref{fig:belt_loop_tensions}.
+
+\begin{figure}[H]
+    \centering
+    \IfFileExists{figures/belt/belt_loop_tensions.png}{%
+        \includegraphics[width=\linewidth]{figures/belt/belt_loop_tensions.png}%
+    }{%
+        \fbox{\parbox[c][0.27\textheight][c]{0.90\linewidth}{\centering
+        \textit{Draft figure placeholder: complete CVT belt loop showing the
+        primary and secondary wraps, upper and lower straight spans, positive
+        belt-travel direction, wrap angles, and the four boundary tensions
+        \(T_{p,u}\), \(T_{s,u}\), \(T_{s,l}\), and \(T_{p,l}\).}}}%
+    }
+    \caption{Complete belt loop and the four tension values at the boundaries
+    between the pulley wraps and straight spans. The arrows indicate the
+    positive belt-transport direction.}
+    \label{fig:belt_loop_tensions}
+\end{figure}
+
+The four tensions in \Cref{fig:belt_loop_tensions} are not additional dynamic
+states. They are the values taken by one continuous belt-tension field at the
+four boundaries between the spans and wraps. With the positive belt path
+introduced in \Cref{sec:rotational_sign}, the upper span is traversed from the
+secondary to the primary, from \(T_{s,u}\) to \(T_{p,u}\), while the lower span
+is traversed from the primary back to the secondary, from \(T_{p,l}\) to
+\(T_{s,l}\).
+
+Begin with a free span, where the belt is no longer in contact with either
+pulley and is acted on tangentially only through the tensions at its ends.
+Consider either span \(i\in\{u,l\}\), with instantaneous length \(l_i\), and
+orient its local tangential direction with positive belt travel. Under
+\AssRef{assump:single_belt_speed}, the retained motion along the span is the
+common belt transport speed \(v_b\). Under
+\AssRef{assump:prescribed_belt_path}, the span remains the instantaneous
+straight tangent joining the two pulley wraps. Its mass per unit length is
+\(\rho_b A_b\).
+
+Isolate the belt occupying this span. Its tangential equation of motion follows
+from Newton's second law in momentum form,
+
+\begin{equation}
+    \sum F_{i,t}
+    =
+    \frac{dP^{\mathrm{sys}}_{i,t}}{dt}.
+    \label{eq:straight_span_newton_momentum}
+\end{equation}
+
+The force side is immediate from the free body: the two endpoint tensions pull
+in opposite directions, so
+\(\sum F_{i,t}=T_{i,\mathrm{out}}-T_{i,\mathrm{in}}\). The momentum side
+requires more care. The tangent points that bound the span move as the pulley
+radii change, so the spatial region between them does not contain a fixed set
+of belt material. Its length changes while belt enters and leaves through the
+moving endpoint stations.
+
+Let
+\(v_{\mathrm{st},i}^{\mathrm{in}}\) and
+\(v_{\mathrm{st},i}^{\mathrm{out}}\) denote the velocities of those stations
+projected along the instantaneous span direction. Evaluating the system
+momentum rate in \Cref{eq:straight_span_newton_momentum} with that moving
+control volume gives
+
+\begin{equation}
+\begin{aligned}
+    T_{i,\mathrm{out}}-T_{i,\mathrm{in}}
+    ={}&
+    \frac{d}{dt}\left(\rho_b A_b l_i v_b\right)
+    \\
+    &+
+    \rho_b A_b v_b
+    \left[
+        \left(v_b-v_{\mathrm{st},i}^{\mathrm{out}}\right)
+        -
+        \left(v_b-v_{\mathrm{st},i}^{\mathrm{in}}\right)
+    \right].
+    \label{eq:straight_span_moving_cv_balance}
+\end{aligned}
+\end{equation}
+
+The first term is the change of tangential momentum stored between the two
+stations; the second is the net tangential momentum carried through those
+moving boundaries. The span-length rate is set by the same endpoint motion,
+
+\begin{equation}
+    \dot l_i
+    =
+    v_{\mathrm{st},i}^{\mathrm{out}}
+    -
+    v_{\mathrm{st},i}^{\mathrm{in}}.
+    \label{eq:straight_span_length_rate}
+\end{equation}
+
+Substituting \Cref{eq:straight_span_length_rate} into
+\Cref{eq:straight_span_moving_cv_balance} cancels the term produced by the
+changing amount of belt stored in the span with the corresponding momentum
+flux through its moving endpoints. What remains is
+
+\begin{equation}
+\boxed{
+    T_{i,\mathrm{out}}-T_{i,\mathrm{in}}
+    =
+    \rho_b A_b l_i\dot v_b.
+}
+    \label{eq:straight_span_tangential_balance}
+\end{equation}
+
+The compact result therefore does not require fixed tangent points. Their
+motion was retained in \Cref{eq:straight_span_moving_cv_balance}; it simply
+makes no additional contribution to the final tangential balance once the
+associated momentum flux is included. The balance is only along the
+instantaneous span. As the pulley radii change, the span direction also changes
+in the pulley plane; the transverse dynamics associated with that prescribed
+reorientation are not retained under
+\AssRef{assump:prescribed_belt_path}.
+
+Applying \Cref{eq:straight_span_tangential_balance} to the two spans in
+\Cref{fig:belt_loop_tensions} gives
+
+\begin{equation}
+\boxed{
+\begin{aligned}
+    T_{p,u}-T_{s,u}
+    &=
+    \rho_b A_b l_u\dot v_b,
+    \\
+    T_{s,l}-T_{p,l}
+    &=
+    \rho_b A_b l_l\dot v_b.
+\end{aligned}
+}
+    \label{eq:straight_span_balances}
+\end{equation}
+
+The straight spans can therefore be related from their endpoint tensions and
+the common belt transport acceleration. A pulley wrap is different. Between
+its two tangent points the belt is continuously redirected while the sheave
+faces apply distributed contact forces, so the entry and exit tensions cannot
+be related from the endpoints alone. Determining how the tension changes
+through the wrap requires a free body taken from within the contact itself.
+
+
 \section{Rotational and Belt Transport Dynamics}
 \label{sec:rot-belt-dynamics}
 
