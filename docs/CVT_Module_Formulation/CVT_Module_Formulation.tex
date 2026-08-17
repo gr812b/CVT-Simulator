@@ -228,14 +228,18 @@
   \def\currentassumptitle{#2}
   \begin{tcolorbox}[
       enhanced,
+      breakable,
       sharp corners,
       colback=white,
+      colbacklower=black!2,
       colframe=black,
       boxrule=0.6pt,
       left=10pt,
       right=10pt,
       top=10pt,
-      bottom=10pt
+      bottom=10pt,
+      before skip=10pt,
+      after skip=10pt
   ]
   \phantomsection
   % Ensure \nameref uses the assumption title (not the surrounding section title)
@@ -247,11 +251,22 @@
   \vspace{6pt}
   \hrule
   \vspace{8pt}
+  {\small\textbf{Model statement}}\par
+  \vspace{3pt}
 }
 {
   \end{tcolorbox}
 }
 \makeatother
+
+% Begin the consequence portion of an assumption block.  The split is visual
+% rather than semantic: both parts remain inside the same numbered assumption.
+\NewDocumentCommand{\AssumptionConsequences}{}{%
+  \par\vspace{7pt}%
+  \tcblower
+  {\small\textbf{Consequences for model fidelity}}\par
+  \vspace{3pt}%
+}
 
 % Custom reference command for assumptions (matches theoryRef pattern)
 \NewDocumentCommand{\AssRef}{m}{%
@@ -1247,17 +1262,15 @@ vehicle road load; and
 histories.
 \end{itemize}
 
-The belt is represented through a lumped geometric and traction model rather
-than a fully distributed contact formulation. The model determines whether the
-belt--pulley contacts can support the torque required by the coupled system, but
-it does not separately resolve detailed belt-slip and loss mechanisms such as
-creep, radial compliance, shear deformation, seating and unseating, local rubber
-hysteresis, or thermal effects. Local belt deformation, detailed radial
-penetration, belt wear, sheave compliance, detailed tribology, and
-three-dimensional vehicle dynamics are also outside the present scope.
-Tire--ground contact is assumed to provide sufficient traction for the
-longitudinal force demanded by the drivetrain; wheel slip and tire-force limits
-are not represented.
+The belt is represented through a reduced fixed-length geometry and
+wrap-level contact description rather than a fully distributed deformable-belt
+formulation. The principal consequences of this and the other model
+idealizations are collected in \Sec{sec:assumptions}; they include omitted local
+belt deformation and migration, detailed actuator and contact tribology,
+flexible-hardware response, and thermal or wear evolution. Three-dimensional
+vehicle dynamics are also outside the present scope. Tire--ground contact is
+assumed to provide sufficient traction for the longitudinal force demanded by
+the drivetrain; wheel slip and tire-force limits are not represented.
 
 The formulation retains these assumptions explicitly so that their consequences
 remain clear when interpreting a simulation result. Its structure also permits
@@ -1458,156 +1471,226 @@ system that can supply the torque--inertia description in
 \section{Modeling Assumptions}
 \label{sec:assumptions}
 
-The following assumptions define the physical resolution of the formulation
-and the operating scope within which its results are interpreted.
+The assumptions below define the physical resolution of the formulation rather
+than a particular operating case. Each assumption is stated together with its
+principal consequence for the mechanics that can and cannot be represented.
+The consequence summaries are not intended to enumerate every secondary effect
+of an idealization; they identify the main physical resolution removed by that
+choice so that later results can be interpreted against a clear model boundary.
 
 % --------------------------------------------------------------
-\subsection{Material and Structural Idealizations}
+\subsection{Material and Mechanism Idealizations}
 
-\begin{assumptionblock}{assump:material_constancy}{Constant Material Properties}
-The material properties assigned to the modeled components remain constant
-during a simulation. Temperature-dependent material variation and thermal
-state evolution are outside the present formulation.
+\begin{assumptionblock}{assump:material_surface_state}{Time-Invariant Material and Surface State}
+% Legacy aliases retained until downstream references are revised.
+\label{assump:material_constancy}
+\label{assump:no_wear}
+The material properties and surface condition assigned to the CVT remain
+unchanged during a simulation. Intrinsic component dimensions are likewise not
+allowed to evolve through wear or thermal growth. The selected properties
+describe the hardware for the duration of the simulated event rather than
+evolving with its operating history.
+
+\AssumptionConsequences
+Temperature-dependent stiffness or friction, thermal state evolution, wear,
+glazing, conditioning, degradation, and other feedback from accumulated contact
+history are not represented. The formulation therefore describes short-term
+mechanical response for a specified material and surface state rather than the
+progressive evolution of that state.
 \end{assumptionblock}
 
-\begin{assumptionblock}{assump:rigid_components}{Rigid Structural Components}
-The pulleys, shafts, housing, and actuation hardware are represented as rigid
-bodies. The belt is inextensible along its length while remaining free to bend
-around the pulleys. Elastic deformation of the hardware and longitudinal belt
-stretch are neglected.
+\begin{assumptionblock}{assump:rigid_hardware}{Rigid Pulley and Actuation Hardware}
+% Legacy alias retained until downstream references are revised.
+\label{assump:rigid_components}
+The pulleys, shafts, actuation hardware, guides, and supporting CVT structure are
+represented as rigid bodies. Their prescribed geometry does not deform under
+the loads developed during operation.
+
+\AssumptionConsequences
+Pulley bending, shaft bending or torsion, guide and housing deflection,
+load-dependent groove geometry, and structural vibration generated by those
+compliances are outside the model. More detailed CVT formulations show that
+pulley deformation can alter local belt mechanics and axial loading; those
+effects would require compliant component models rather than changes to the
+rigid-body balances alone \citep{CarboneMangialardiMantriota2005,DuanEtAl2016}.
 \end{assumptionblock}
 
-\begin{assumptionblock}{assump:no_wear}{Negligible Wear and Surface Evolution}
-Component wear, belt degradation, and pulley-surface evolution are negligible
-over the simulated interval. Component geometry and surface condition are
-therefore treated as unchanged.
-\end{assumptionblock}
+\begin{assumptionblock}{assump:ideal_actuator_mechanics}{Idealized Actuator Mechanics}
+The primary ramp and flyweight mechanism, secondary helix, guides, and springs
+follow their prescribed kinematic and force laws without additional contact
+friction, backlash, or local compliance unless such an effect is introduced
+explicitly by the selected component law.
 
-% --------------------------------------------------------------
-\subsection{Contact and Friction Modeling}
-
-\begin{assumptionblock}{assump:ideal_friction}{Idealized Belt--Pulley Friction Law}
-Each belt--pulley contact is represented by a gross stick--slip law. A sticking
-contact develops the tangential traction required by the coupled motion up to
-its static limit. A slipping contact develops signed kinetic traction opposing
-the relative motion. Microscopic contact mechanics, rubber hysteresis, local
-creep, partial slip within a wrap, lubrication, and detailed Stribeck behavior
-are not resolved.
-\end{assumptionblock}
-
-\begin{assumptionblock}{assump:constant_friction}{Constant Effective Friction Coefficients}
-The effective static and kinetic belt--pulley friction coefficients remain
-constant during a simulation. Their dependence on temperature, wear, belt
-conditioning, contamination, normal pressure, and slip speed is neglected.
-\end{assumptionblock}
-
-\begin{assumptionblock}{assump:averaged_contact}{Integrated Contact Representation}
-The distributed loading over each pulley wrap is represented through its
-integrated normal and tangential effects. Local pressure variation, edge
-loading, and spatial redistribution of contact stress are not resolved
-separately.
-\end{assumptionblock}
-
-\begin{assumptionblock}{assump:gross_tangential_traction}{Circumferential Traction Approximation}
-Belt--pulley traction is resolved in the circumferential transport direction.
-Radial belt migration through the sheave groove is not assigned a separate
-friction demand. Local radial sliding, local creep, and traction redistribution
-associated with radial motion are outside the present contact representation.
-\end{assumptionblock}
-
-\begin{assumptionblock}{assump:equal_sheave_normal_load}{Equal Normal Load on Both Sheave Faces}
-At each pulley, the total belt normal load is assumed to be shared equally 
-between the fixed and movable sheave faces. Face-to-face redistribution of 
-the normal load is not resolved.
-\end{assumptionblock}
-
-\begin{assumptionblock}{assump:equal_torque_share}{Equal Torque Share on Both Sheave Faces}
-On the secondary pulley, the torque transmitted by the belt is assumed 
-to be shared equally between the fixed and movable sheave faces. Face-to-face 
-redistribution of the torque is not resolved.
-\end{assumptionblock}
-
-% --------------------------------------------------------------
-\subsection{Geometric and Kinematic Idealizations}
-
-\begin{assumptionblock}{assump:axis_alignment}{Aligned Pulley Axes and Fixed Center Distance}
-The primary and secondary pulley axes remain parallel, and their center
-distance remains fixed. Shaft misalignment, eccentricity, bearing motion, and
-geometric runout are neglected.
+\AssumptionConsequences
+Ramp or roller friction, pin--helix friction, roller or pin spin, guide friction,
+backlash, helix-flank transitions, contact compliance, and unmodelled spring
+hysteresis or internal damping are omitted. Relaxing this assumption would add
+actuator-specific tribology and compliance to the same mechanism free bodies;
+for example, contact friction appears explicitly in more detailed centrifugal
+and helix treatments \citep{KimEtAl2002,SorgeCammalleri2011}.
 \end{assumptionblock}
 
 \begin{assumptionblock}{assump:fixed-belt-cross-section}{Fixed Belt Cross-Section}
-The belt retains the same cross-sectional shape and dimensions as it shifts.
-Its inner width $b_{\mathrm{in}}$ and radial height $h_b$ remain constant.
-Compression between the sheave faces, lateral bulging, and centrifugal growth
-of the cross-section are neglected, while bending along the belt path remains
-permitted.
-\end{assumptionblock}
+The belt retains its prescribed cross-sectional shape and dimensions while it
+runs and shifts. It may bend along the modeled belt path, but its local
+cross-section does not deform under centrifugal or sheave loading.
 
-\begin{assumptionblock}{assump:constant_belt_length}{Constant Belt Length}
-The belt length remains constant. Longitudinal elasticity, transient stretch,
-permanent creep, and progressive elongation are neglected. Every admissible
-pulley configuration must therefore satisfy the same closed belt length.
-\end{assumptionblock}
-
-\begin{assumptionblock}{assump:single_belt_speed}{Single Belt Transport Speed}
-The belt is represented by one transport speed around the complete loop.
-Internal shear, span vibration, local stretch, and different transport speeds
-on the two sheave faces are not resolved.
-\end{assumptionblock}
-
-\begin{assumptionblock}{assump:uniform_contact_radius}{Uniform Contact Radius Around Each Wrap}
-At any instant, the belt follows one contact radius around each pulley wrap.
-Spiral or progressive radial variation through a wrap is neglected. The radius
-may evolve as the CVT shifts while remaining spatially uniform around the
-contact at that instant.
+\AssumptionConsequences
+Lateral and radial compression, bulging, cross-sectional shear and warping,
+centrifugal growth, and local cog or rib deformation are not resolved. The
+resulting load-dependent changes in belt width, height, contact geometry, and
+internal strain energy therefore lie outside the present formulation; detailed
+belt models retain some of these compliance effects explicitly
+\citep{Gerbert1996,KongParker2005,Messick2018}.
 \end{assumptionblock}
 
 % --------------------------------------------------------------
-\subsection{Dynamic and Inertial Modeling}
+\subsection{Belt Geometry and Kinematics}
 
-\begin{assumptionblock}{assump:lumped_inertia}{Lumped Inertia Representation}
-The inertia of each retained CVT component is represented by an equivalent
-lumped mass or rotational inertia. Inertia belonging to an attached system is
-supplied separately through $I_{\mathrm{B},p}$ or $I_{\mathrm{B},s}$.
-Distributed shaft flexibility and torsional compliance are neglected.
+\begin{assumptionblock}{assump:axis_alignment}{Aligned Pulley Axes and Fixed Center Distance}
+The primary and secondary pulley axes remain parallel at a fixed spacing. The
+pulley centers and shaft directions therefore do not change as the CVT shifts.
+
+\AssumptionConsequences
+Shaft misalignment, eccentricity, geometric runout, bearing-center motion, and
+the associated changes in belt path and face loading are not represented.
+Removing this assumption would require the belt geometry and contact loading to
+respond to the additional shaft and bearing motion.
 \end{assumptionblock}
 
-\begin{assumptionblock}{assump:no_vibration}{Negligible High-Frequency Vibration}
-High-frequency belt, shaft, and structural vibration is neglected. The
-formulation retains the dominant rigid-body shaft rotation, belt transport,
-and sheave-shift dynamics.
+\begin{assumptionblock}{assump:constant_belt_length}{Fixed Belt Length}
+The modeled belt has a fixed total length. Longitudinal extension is not treated
+as an independent deformation of the belt, so every admissible pulley
+configuration must be compatible with the same installed length.
+
+\AssumptionConsequences
+Tension-dependent elongation, longitudinal strain energy, extension waves,
+permanent elongation, and the longitudinal component of elastic creep are not
+represented. Detailed traction-belt models can retain these effects through a
+longitudinal compliance field; the present formulation instead assigns ratio
+change to the pulley and contact motions of a fixed-length belt
+\citep{Gerbert1996,KongParker2005,Messick2018}.
 \end{assumptionblock}
 
-\begin{assumptionblock}{assump:no_parasitic_losses}{Negligible Unmodeled Parasitic Friction}
-Bearing, seal, and auxiliary-hardware losses are neglected unless introduced
-explicitly through an actuator or boundary model. Belt traction remains part
-of the core CVT mechanics.
+\begin{assumptionblock}{assump:single_belt_speed}{Single Belt Transport Coordinate}
+The circumferential motion of the complete belt is represented by one global
+transport coordinate. Individual material points are not tracked around the
+loop, and the local tangential belt speed is not given an independent spatial
+field.
+
+\AssumptionConsequences
+The geometry-induced redistribution of local tangential material speed during
+shift, material-point migration through the wraps, and the additional momentum
+transport associated with that spatially varying velocity field are not
+resolved. The model still retains acceleration of the global belt transport and
+the motion of the prescribed wrap geometry. Shift-mechanics and discretized
+belt formulations resolve the omitted local transport in greater detail
+\citep{Sorge2008,CammalleriSorge2009,JulioPlante2011}.
 \end{assumptionblock}
 
-\begin{assumptionblock}{assump:no_explicit_loss_model}{No Separate Empirical Loss or Thermal Model}
-The formulation resolves torque transfer and gross sliding at the belt
-contacts. Sliding work is not propagated into temperature, wear, or
-temperature-dependent properties, and additional loss mechanisms such as belt
-hysteresis and flexural loss are not represented by an empirical efficiency
-model.
+\begin{assumptionblock}{assump:prescribed_belt_path}{Prescribed Planar Belt Path}
+% Legacy alias retained until downstream references are revised.
+\label{assump:uniform_contact_radius}
+At each instant, the belt centerline follows the path prescribed by the current
+pulley geometry: a circular wrap on each pulley joined by straight tangent spans
+in one common plane. The belt path is therefore determined kinematically rather
+than solved as a flexible dynamic curve.
+
+\AssumptionConsequences
+Progressive or spiral radial migration within a wrap, seating and unseating
+trajectories, bending-stiffness-dependent entry and exit geometry, span sag,
+transverse belt vibration, and transverse inertia associated with straight-span
+reorientation are omitted. The same planar description also excludes the
+out-of-plane span skew, twist, and axial belt inertia that would arise when the
+two physical groove centerplanes move differently during shift. More detailed
+belt and shift-mechanics models resolve subsets of these path effects explicitly
+\citep{Sorge2008,KongParker2005,Messick2018}.
 \end{assumptionblock}
 
 % --------------------------------------------------------------
-\subsection{Boundary and Operational Scope}
+\subsection{Belt--Pulley Contact Representation}
 
-\begin{assumptionblock}{assump:gravity_internal}{Negligible Gravitational Influence on CVT Internals}
-Gravitational forces on internal CVT components are negligible relative to the
-centrifugal, spring, inertial, and contact loads developed during operation.
+\begin{assumptionblock}{assump:gross_coulomb_traction}{Gross Tangential Coulomb Traction}
+% Legacy aliases retained until downstream references are revised.
+\label{assump:ideal_friction}
+\label{assump:constant_friction}
+\label{assump:gross_tangential_traction}
+Each belt--pulley interface is represented by a dry gross stick--slip law with
+fixed static and kinetic traction capacities for the selected surface state.
+The frictional contact action retained by the model acts in the circumferential
+belt-transport direction.
+
+\AssumptionConsequences
+The formulation can distinguish torque-carrying stick from gross kinetic slip,
+but it does not resolve radial friction, local creep or microslip, detailed
+presliding behaviour, lubrication or Stribeck effects, or friction variation
+with pressure, temperature, conditioning, or local sliding speed. Friction
+associated specifically with radial migration, seating, and unseating is also
+outside the retained contact direction. These mechanisms are treated separately
+in higher-fidelity rubber-belt contact models \citep{Gerbert1996,KongParker2006}.
 \end{assumptionblock}
 
-\begin{assumptionblock}{assump:full_throttle_model}{Reference Full-Throttle Engine Boundary}
-The reference vehicle simulations use a prescribed full-throttle engine torque
-curve. Engine speed remains dynamically coupled to the CVT, while part-throttle
-and throttle-transient states are outside that particular boundary model. Other
-primary-side boundary models may be coupled through
-\Cref{eq:boundary_contract}.
+\begin{assumptionblock}{assump:wrap_contact_resolution}{Wrap-Level Contact Resolution}
+% Legacy alias retained until downstream references are revised.
+\label{assump:averaged_contact}
+The model may resolve how belt tension and normal loading vary around a pulley
+wrap, but each wrap is assigned one overall traction state at an instant. The
+contact is not resolved through the belt width or depth, and no separate local
+traction state is carried for different portions of the same wrap.
+
+\AssumptionConsequences
+Local adhesion and sliding subregions, spatial traction reversals, detailed
+pressure concentrations, edge loading, and cross-sectional contact-stress
+fields cannot be predicted. Resolving those effects requires a distributed or
+discretized contact description of the type used in higher-fidelity belt
+models \citep{KongParker2006,Messick2018,JulioPlante2011}.
 \end{assumptionblock}
+
+\begin{assumptionblock}{assump:symmetric_face_sharing}{Symmetric Sheave-Face Load Sharing}
+% Legacy aliases retained until downstream references are revised.
+\label{assump:equal_sheave_normal_load}
+\label{assump:equal_torque_share}
+The two sheave faces at a pulley are assumed to share the total normal contact
+load equally. On the secondary pulley, the belt torque is also divided equally
+between the fixed and movable faces for the purpose of the movable-sheave
+balance.
+
+\AssumptionConsequences
+Face-to-face differences in normal loading and transmitted torque are not
+resolved. On the secondary, this removes the possibility that unequal local
+sliding on the fixed and movable faces changes the torque reacted by the helix.
+Face-resolved shift models show that the two secondary face torques can depart
+substantially from an equal split during shifting \citep{SorgeCammalleri2011}.
+\end{assumptionblock}
+
+% --------------------------------------------------------------
+\subsection{Other Omitted Losses}
+
+\begin{assumptionblock}{assump:no_parasitic_losses}{Negligible Unmodeled Parasitic Losses}
+Bearing, seal, windage, and auxiliary-hardware losses are neglected unless they
+are introduced explicitly by a component or external boundary model. No global
+empirical efficiency factor is inserted to represent these omitted mechanisms.
+
+\AssumptionConsequences
+Energy loss and damping arise only from mechanisms that are represented
+explicitly by the formulation. Absolute efficiency may therefore be optimistic,
+and real hardware may exhibit additional damping or resisting torque when these
+parasitic losses are significant. Adding such losses does not require changing
+the kinematic structure of the CVT; it requires supplying the corresponding
+physical torque or force laws.
+\end{assumptionblock}
+
+\paragraph{Resulting fidelity}
+Taken together, these assumptions retain the dominant rigid-body actuation,
+pulley rotation, sheave-shift motion, global belt transport, wrap tension and
+contact resultants, clamping, traction limitation, and gross stick--slip
+mechanics of the CVT. They do not attempt to reproduce the complete deformable
+belt and local contact problem, actuator tribology, flexible-structure
+response, thermal or wear evolution, or miscellaneous parasitic losses. The
+assumptions are separated by physical mechanism so that a higher-fidelity model
+can replace one of these closures without obscuring which additional behaviour
+that change is intended to recover.
+
 
 % ==============================================================
 \section{Coordinate and Sign Conventions}
@@ -1789,12 +1872,13 @@ is the belt transport speed.
 
 These are the quantities whose current values must be carried into the next
 instant. The rotational mechanics depend on shaft speed rather than absolute
-shaft angle, so absolute angular positions need not be stored. Similarly, the
-lumped belt representation depends on transport speed rather than which
-material point occupies a particular location, so no belt-phase coordinate is
-required. Shift position is retained because the current geometry and
-actuation depend on where the pulleys are in their travel, and $\dot{s}$ is
-retained because the shift motion is governed by second-order dynamics.
+shaft angle, so absolute angular positions need not be stored. Similarly,
+under \AssRef{assump:single_belt_speed}, the belt state records its global
+transport motion rather than the identity or phase of individual material
+points, so no belt-phase coordinate is required. Shift position is retained
+because the current geometry and actuation depend on where the pulleys are in
+their travel, and $\dot{s}$ is retained because the shift motion is governed by
+second-order dynamics.
 
 \subsection{Initial-Value Problem and Time Integration}
 
@@ -2215,12 +2299,12 @@ The local pulley geometry describes how axial motion changes the radius on
 each pulley. The belt, however, passes around both pulleys. To connect the two
 radii, the belt must now be followed around the complete loop.
 
-The belt path consists of four parts: a wrapped arc on the primary pulley, a
-wrapped arc on the secondary pulley, and two equal straight spans. Under
-\AssRef{assump:uniform_contact_radius}, each wrapped portion is represented by
-a single radius over its full contact angle. If each straight span has length
-\(l\), and the primary and secondary wrap angles are \(\phi_p\) and \(\phi_s\),
-the total geometric length of the loop is
+Under \AssRef{assump:prescribed_belt_path}, the modeled belt path consists
+of a circular wrap on each pulley joined by two straight tangent spans. The
+aligned, fixed-center geometry of \AssRef{assump:axis_alignment} makes the two
+spans equal. If each straight span has length \(l\), and the primary and
+secondary wrap angles are \(\phi_p\) and \(\phi_s\), the total geometric length
+of the loop is
 
 \begin{equation}
     L_{\mathrm{geo}}
@@ -3495,16 +3579,14 @@ those radii move. Thus, for any admissible shift state,
     \right).
 \]
 
-These results follow from the geometric representation used throughout the
-section. The belt cross-section is fixed under
-\AssRef{assump:fixed-belt-cross-section}, the belt length is fixed under
-\AssRef{assump:constant_belt_length}, and
-\AssRef{assump:uniform_contact_radius} represents the belt path on each pulley
-by a single radius over its wrap. The centre distance is established once by
-\Cref{eq:center_distance_root} and then remains fixed by the pulley-shaft
-spacing. Under these conditions, the two wrapped arcs and straight tangent
-spans in \Fig{fig:belt_loop_geometry} can form only one modeled belt path for
-each admissible value of \(s\).
+These results follow from the geometry derived above under the idealizations
+stated in \Sec{sec:assumptions}. The belt cross-section and total length remain
+fixed under \AssRef{assump:fixed-belt-cross-section} and
+\AssRef{assump:constant_belt_length}, while
+\AssRef{assump:prescribed_belt_path} constrains the belt to circular wraps and
+straight tangent spans. Together with the aligned pulley axes and fixed centre
+distance of \AssRef{assump:axis_alignment}, these conditions leave one modeled
+belt path for each admissible value of \(s\).
 
 \paragraph{Relation to prior transient models}
 
@@ -3519,10 +3601,10 @@ nominal radius motion. Their chain-CVT formulation retains additional internal
 deformation. Chain extension and its rate contribute to the span tension, and
 pulley deformation allows the local radius followed by a chain element to
 differ from the nominal pulley radius. The present formulation instead fixes
-the belt length through \AssRef{assump:constant_belt_length} and uses one contact
-radius over each pulley through \AssRef{assump:uniform_contact_radius}.
-Consequently, elastic path-length change and deformation-induced variation of
-the local contact radius are not represented in this geometric closure.
+the belt length through \AssRef{assump:constant_belt_length} and prescribes the
+arc-and-tangent belt path through \AssRef{assump:prescribed_belt_path}. Consequently, elastic
+path-length change and deformation-driven departure from that prescribed path
+are not represented in this geometric closure.
 
 Rubber-belt transient models resolve the same shifting process at several
 levels of detail. Analytical shift-mechanics models, such as those of
@@ -3795,9 +3877,10 @@ work \(F\,d\ell\). The movable sheave moves axially through \(dx_p\), so only
 the axial component of the ramp-contact force performs work. This component
 is \(F_{p,\mathrm{fly}}\), the closing force introduced by the movable-sheave
 free body, and its work is therefore \(F_{p,\mathrm{fly}}\,dx_p\). Under
-\AssRef{assump:no_parasitic_losses}, no work is lost through the contact, so
-this equals the work of the contact moment. Using the positive magnitudes
-defined above,
+\AssRef{assump:ideal_actuator_mechanics}, the ramp contact is treated as an
+ideal frictionless constraint, so no work is dissipated at the contact. The
+work of the contact moment therefore appears entirely as axial work on the
+movable assembly. Using the positive magnitudes defined above,
 
 \begin{equation}
     \tau_{f,\mathrm{contact}}\,dq_f
@@ -3940,9 +4023,9 @@ compression when the primary is open at \(x_p=0\). Closing the sheave by
 Let \(N_p\) be the total integrated normal load over both primary sheave
 faces. This load is coupled to the belt and the secondary balance, so it
 remains an unknown at this stage. Under
-\AssRef{assump:equal_sheave_normal_load}, the movable face carries \(N_p/2\).
-Its normal is inclined by the sheave half-angle \(\beta\) from the axial
-direction, so the opening force on the movable face is
+\AssRef{assump:symmetric_face_sharing}, the movable face carries one half of
+this total load. Its normal is inclined by the sheave half-angle
+\(\beta\) from the axial direction, so the opening force on the movable face is
 
 \begin{equation}
     F_{p,\mathrm{belt}}
@@ -4107,12 +4190,13 @@ reflection of the flyweights' pivoting inertia was identified in the reviewed
 mechanically actuated rubber-belt CVT formulations.
 
 This extension does not retain every effect represented in the earlier
-models. The components and contact surfaces remain rigid, and the ramp
-contacts are frictionless under \AssRef{assump:no_parasitic_losses}; the model
-also omits roller spin and contact compliance. In particular, the
-roller-contact friction retained by \citet{KimEtAl2002} lies outside the
-present force law. The added fidelity is in the coupled mechanism dynamics,
-not in frictional or compliant contact detail.
+models. Structural deformation is excluded by \AssRef{assump:rigid_hardware},
+while \AssRef{assump:ideal_actuator_mechanics} treats the ramp contact as an
+ideal constraint rather than resolving its tribology or local compliance. The
+roller-contact friction retained by \citet{KimEtAl2002}, for example,
+therefore lies outside the present force law; roller spin and contact compliance
+are likewise not resolved. The added fidelity is in the coupled
+mechanism dynamics, not in frictional or compliant contact detail.
 
 
 \subsection{Secondary Movable-Sheave Balance}
@@ -4302,7 +4386,7 @@ The belt term follows immediately from the face-torque assumption.
 Let \(\tau_s\) be the total signed torque exerted by the belt on the secondary,
 so
 \(\tau_s=\tau_{s,F}+\tau_{s,M}\). Under
-\AssRef{assump:equal_torque_share}, the two faces receive equal
+\AssRef{assump:symmetric_face_sharing}, the two faces receive equal torque
 shares. Only the movable-face share appears in its free body:
 
 \begin{equation}
@@ -4495,11 +4579,12 @@ The torque above is the moment produced by the circumferential component of
 the contact normal. Let \(F_{s,\mathrm{helix}}\) denote the signed axial force
 produced by the helix reaction, positive in \(+x_s\).
 
-With helix friction neglected under
-\AssRef{assump:no_parasitic_losses}, the same compatible-work argument used
-for the primary converts the rotational contact load into its axial effect.
-Consider the motion of the movable sheave relative to the helix carrier. The
-contact normal does no net work in this relative motion. Its axial component
+Under \AssRef{assump:ideal_actuator_mechanics}, the pin--helix contact is
+treated as an ideal frictionless constraint. The same compatible-work argument
+used for the primary therefore converts the rotational contact load into its
+axial effect without contact dissipation. Consider the motion of the movable
+sheave relative to the helix carrier. The contact normal does no net work in
+this relative motion. Its axial component
 contributes \(F_{s,\mathrm{helix}}\,dx_s\), while its circumferential
 component contributes
 \(-\tau_{s,\mathrm{helix}}\,d\theta_s\). Their sum is zero, so
@@ -4606,17 +4691,17 @@ This force and the torque in
 \Cref{eq:secondary_torsional_spring_torque} come from the same installed
 spring. Following the reduced decomposition of \citet{KimEtAl2002}, the model
 represents its axial compression and torsional twist with separate linear
-laws. Compression--twist coupling, hysteresis, and end-contact friction are
-neglected.
+laws. This use of prescribed, uncoupled spring laws is part of
+\AssRef{assump:ideal_actuator_mechanics}; compression--twist coupling,
+hysteresis, and end-contact friction are not retained.
 
 \paragraph{Belt opening reaction}
 \label{sec:secondary_belt_opening_reaction}
 
 The belt opening force follows the same projection already used on the
 primary. Let \(N_s\) be the integrated normal load over both secondary faces.
-Under
-\AssRef{assump:equal_sheave_normal_load}, the movable face carries \(N_s/2\),
-giving
+Under \AssRef{assump:symmetric_face_sharing}, the movable face carries one
+half of this total load, giving
 
 \begin{equation}
     F_{s,\mathrm{belt}}
@@ -4813,12 +4898,14 @@ actuated rubber-belt formulations, no equivalent explicit projection of the
 movable side's rotational inertia through a mechanical secondary helix was
 identified.
 
-This distinction is deliberately narrow. The present balance assumes rigid
-components, frictionless pin--helix contact, equal belt normal and torque shares
-between the two sheave faces, and separate linear axial and torsional spring
-laws. It does not resolve guide friction, compression--twist coupling, spring
-hysteresis, contact compliance, pin or roller spin, backlash, or helix-flank
-transitions.
+This distinction is deliberately narrow. The rigid-hardware,
+ideal-actuator, and symmetric-face idealizations are stated explicitly in
+\AssRef{assump:rigid_hardware}, \AssRef{assump:ideal_actuator_mechanics}, and
+\AssRef{assump:symmetric_face_sharing}. They leave the compliant and frictional
+actuator details, and the face-resolved load redistribution of the models
+above, outside the present balance. The comparison is therefore not a claim of
+greater local contact fidelity; it isolates the added treatment of the movable
+assembly's inertia and helix-constrained dynamics.
 
 % --------------------------------------------------------------
 \subsection{Coupling Through the Shared Shift Coordinate}
@@ -5174,9 +5261,10 @@ internal motions of its components. The total is therefore
     \label{eq:pulley_side_total_angular_momentum}
 \end{equation}
 
-Under \AssRef{assump:no_parasitic_losses}, the boundary torque and belt torque
-are the only external torques retained in this pulley-side balance. Newton's
-second law for rotation therefore gives
+Bearing, seal, windage, and other unmodeled resisting torques are omitted
+under \AssRef{assump:no_parasitic_losses}. Within the resulting pulley-side
+free body, the applied boundary torque and belt torque are therefore the only
+external torques retained. Newton's second law for rotation gives
 
 \[
     \tau_{\mathrm{B},j}
@@ -10764,5 +10852,4 @@ off, even without a change in axial shift speed.
 Placeholder
 
 \end{document}
-
 
