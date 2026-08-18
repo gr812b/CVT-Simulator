@@ -5948,6 +5948,490 @@ be related from the endpoints alone. Determining how the tension changes
 through the wrap requires a free body taken from within the contact itself.
 
 
+% --------------------------------------------------------------
+
+
+% --------------------------------------------------------------
+
+
+% --------------------------------------------------------------
+
+
+\subsection{Local Equations of Motion on a Pulley Wrap}
+\label{sec:local_wrap_dynamics}
+
+The straight-span balances in \Cref{eq:straight_span_balances} describe the
+parts of the belt whose direction is constant between their two tangent
+points. Inside a pulley wrap, the belt direction changes continuously and the
+sheave faces act on it throughout the contact arc. Consider therefore the
+infinitesimal belt element shown in
+\Cref{fig:infinitesimal_belt_element} on a generic pulley
+\(j\in\{p,s\}\). Let \(\theta\) increase through the wrap in the direction of
+belt travel, and let the element subtend the angle \(d\theta\).
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\linewidth]
+    {./figures/belt/infinitesimal_belt_element.png}
+    \caption{Free-body diagram of an infinitesimal belt element within the
+    wrap of a generic pulley \(j\). The local radial direction is positive
+    outward from the pulley axis and the tangential direction is positive with
+    belt travel. The belt tensions act at the two cut faces, while the sheave
+    faces supply the normal contact and tangential traction.}
+    \label{fig:infinitesimal_belt_element}
+\end{figure}
+
+The local axes are taken through the midpoint of the element. The belt entering
+it pulls with tension \(T_j\), and the belt leaving it pulls with
+\(T_j+dT_j\). Because the two tension directions are tangent to the wrap at
+opposite ends of the element, each is inclined by \(d\theta/2\) from the
+midpoint tangent. The sheave faces apply a combined physical normal load
+\(dN_j\). Under \AssRef{assump:symmetric_face_sharing}, each face carries
+\(dN_j/2\); their axial components oppose one another on the belt, while their
+radial components add to \(dN_j\sin\beta\). The retained tangential contact force is denoted by \(dF_{t,j}\), taken as
+positive in the direction of belt travel.
+
+The belt element can therefore accelerate in two in-plane directions. Applying
+Newton's second law in the midpoint radial and tangential directions gives,
+directly from the free body,
+
+\begin{align}
+    dN_j\sin\beta
+    &-
+    T_j\sin\!\left(\frac{d\theta}{2}\right)
+    -
+    \left(T_j+dT_j\right)
+    \sin\!\left(\frac{d\theta}{2}\right)
+    = dm_j a_{r,j},
+    \label{eq:wrap_radial_balance_start}
+    \\
+    \left(T_j+dT_j\right)
+    \cos\!\left(\frac{d\theta}{2}\right)
+    &-
+    T_j\cos\!\left(\frac{d\theta}{2}\right)
+    +dF_{t,j}
+    = dm_j a_{\theta,j}.
+    \label{eq:wrap_tangential_balance_start}
+\end{align}
+
+These balances expose what the free body alone does not determine. Both
+right-hand sides require the mass and acceleration of the belt element, and
+the tangential balance contains the additional contact force \(dF_{t,j}\).
+The inertial quantities are common to both directions, so they can be
+established first.
+
+\paragraph{Mass and motion of the belt element}
+
+The radius \(r_j\) defined in \Cref{eq:geometry_radius_convention} follows the
+outer surface of the belt. The mass of the belt element instead travels with
+the centroid of its trapezoidal cross-section. Let \(y\) measure radially
+inward from the outer surface through the belt height \(h_b\). Under
+\AssRef{assump:fixed-belt-cross-section}, the cross-section retains the outer
+and inner widths \(b_{\mathrm{out}}\) and \(b_{\mathrm{in}}\), so its width at
+\(y\) is
+
+\begin{equation}
+    b(y)
+    =
+    b_{\mathrm{out}}
+    -
+    \frac{b_{\mathrm{out}}-b_{\mathrm{in}}}{h_b}\,y.
+    \label{eq:belt_cross_section_width_distribution}
+\end{equation}
+
+The cross-sectional area and its first moment about the outer surface are
+
+\begin{align}
+    A_b
+    &=
+    \int_0^{h_b} b(y)\,dy
+    =
+    \frac{h_b}{2}
+    \left(b_{\mathrm{out}}+b_{\mathrm{in}}\right),
+    \label{eq:belt_trapezoid_area}
+    \\
+    A_b y_{\mathrm{cm}}
+    &=
+    \int_0^{h_b} y\,b(y)\,dy.
+    \label{eq:belt_trapezoid_first_moment}
+\end{align}
+
+Substitution of \Cref{eq:belt_cross_section_width_distribution} gives
+
+\begin{equation}
+    y_{\mathrm{cm}}
+    =
+    h_b
+    \frac{b_{\mathrm{out}}+2b_{\mathrm{in}}}
+    {3\left(b_{\mathrm{out}}+b_{\mathrm{in}}\right)}.
+    \label{eq:belt_cross_section_centroid}
+\end{equation}
+
+The belt mass therefore follows the radius
+
+\begin{equation}
+    r_{j,\mathrm{cm}}
+    =
+    r_j-y_{\mathrm{cm}}.
+    \label{eq:belt_mass_centroid_radius}
+\end{equation}
+
+Since the cross-section is fixed, \(y_{\mathrm{cm}}\) is constant. The
+centroid consequently inherits the radius rate and acceleration already
+obtained from the pulley geometry,
+
+\begin{equation}
+    \dot r_{j,\mathrm{cm}}=\dot r_j,
+    \qquad
+    \ddot r_{j,\mathrm{cm}}=\ddot r_j.
+    \label{eq:belt_mass_centroid_radius_derivatives}
+\end{equation}
+
+This is the first place where the radius derivatives developed in
+\Cref{sec:geometry} enter the belt dynamics directly: the same changing pulley
+geometry that moves the belt radially also accelerates its mass.
+
+Under \AssRef{assump:prescribed_belt_path}, the centroid follows a circular arc
+through the wrap. The element length is therefore
+\(r_{j,\mathrm{cm}}d\theta\), and its mass is
+
+\begin{equation}
+    dm_j
+    =
+    \rho_b A_b r_{j,\mathrm{cm}}\,d\theta.
+    \label{eq:wrap_element_mass}
+\end{equation}
+
+The same element moves radially with the changing wrap and tangentially with
+the belt transport. Under \AssRef{assump:single_belt_speed}, its velocity is
+
+\begin{equation}
+    \mathbf v_{b,j}
+    =
+    \dot r_j\,\hat{\mathbf e}_r
+    +
+    v_b\,\hat{\mathbf e}_\theta.
+    \label{eq:wrap_element_velocity}
+\end{equation}
+
+As the element travels around the pulley, the local basis rotates at
+
+\begin{equation}
+    \dot\theta_j
+    =
+    \frac{v_b}{r_{j,\mathrm{cm}}},
+    \qquad
+    \dot{\hat{\mathbf e}}_r
+    =
+    \frac{v_b}{r_{j,\mathrm{cm}}}\hat{\mathbf e}_\theta,
+    \qquad
+    \dot{\hat{\mathbf e}}_\theta
+    =
+    -\frac{v_b}{r_{j,\mathrm{cm}}}\hat{\mathbf e}_r.
+    \label{eq:wrap_element_basis_rates}
+\end{equation}
+
+Differentiating the radial part of
+\Cref{eq:wrap_element_velocity} gives
+
+\begin{equation}
+    \frac{d}{dt}
+    \left(
+        \dot r_j\hat{\mathbf e}_r
+    \right)
+    =
+    \ddot r_j\hat{\mathbf e}_r
+    +
+    \frac{\dot r_j v_b}{r_{j,\mathrm{cm}}}
+    \hat{\mathbf e}_\theta,
+    \label{eq:wrap_radial_velocity_derivative}
+\end{equation}
+
+while differentiating its tangential part gives
+
+\begin{equation}
+    \frac{d}{dt}
+    \left(
+        v_b\hat{\mathbf e}_\theta
+    \right)
+    =
+    \dot v_b\hat{\mathbf e}_\theta
+    -
+    \frac{v_b^2}{r_{j,\mathrm{cm}}}
+    \hat{\mathbf e}_r.
+    \label{eq:wrap_tangential_velocity_derivative}
+\end{equation}
+
+Adding the two contributions separates the acceleration into
+
+\begin{align}
+    a_{r,j}
+    &=
+    \ddot r_j
+    -
+    \frac{v_b^2}{r_{j,\mathrm{cm}}},
+    \label{eq:wrap_radial_acceleration}
+    \\
+    a_{\theta,j}
+    &=
+    \dot v_b
+    +
+    \frac{\dot r_j}{r_{j,\mathrm{cm}}}v_b.
+    \label{eq:wrap_tangential_acceleration}
+\end{align}
+
+The radial acceleration therefore contains both the motion of the shifting
+wrap and the centripetal acceleration required to turn the belt. The
+tangential acceleration contains the direct change in belt transport together
+with the contribution created as the belt moves radially through the rotating
+local basis.
+
+\paragraph{Radial balance}
+
+With the mass and radial acceleration known, return to
+\Cref{eq:wrap_radial_balance_start}. Combining the two inward tension
+projections gives
+
+\begin{align}
+    dN_j\sin\beta
+    -
+    \left(2T_j+dT_j\right)
+    \sin\!\left(\frac{d\theta}{2}\right)
+    &\notag\\
+    =
+    \rho_b A_b r_{j,\mathrm{cm}}d\theta
+    \left(
+        \ddot r_j
+        -
+        \frac{v_b^2}{r_{j,\mathrm{cm}}}
+    \right).
+    \label{eq:wrap_radial_balance_expanded}
+\end{align}
+
+Dividing through by \(d\theta\) gives
+
+\begin{align}
+    \sin\beta\frac{dN_j}{d\theta}
+    -
+    \left(2T_j+dT_j\right)
+    \frac{\sin\left(d\theta/2\right)}{d\theta}
+    =
+    \rho_b A_b
+    \left(
+        r_{j,\mathrm{cm}}\ddot r_j-v_b^2
+    \right).
+    \label{eq:wrap_radial_balance_before_limit}
+\end{align}
+
+As the belt element shrinks,
+
+\begin{equation}
+    \frac{\sin\left(d\theta/2\right)}{d\theta}
+    =
+    \frac{1}{2}
+    \frac{\sin\left(d\theta/2\right)}{d\theta/2}
+    \longrightarrow
+    \frac{1}{2}.
+    \label{eq:wrap_radial_small_angle_limit}
+\end{equation}
+
+Over the same vanishing interval,
+\(dT_j=(dT_j/d\theta)d\theta\rightarrow0\). The \(dT_j\) contribution to
+the radial projection therefore disappears, while the two leading tension
+terms leave one \(T_j\). The radial equation of motion becomes
+
+\begin{equation}
+\boxed{
+    \sin\beta\,
+    \frac{dN_j}{d\theta}
+    =
+    T_j
+    -
+    \rho_b A_b
+    \left(
+        v_b^2-r_{j,\mathrm{cm}}\ddot r_j
+    \right).
+}
+    \label{eq:wrap_radial_balance}
+\end{equation}
+
+The tension provides part of the inward force needed to curve the belt. The
+normal contact supplies the remainder required by the actual radial
+acceleration of the moving belt path.
+
+\paragraph{Tangential balance and traction}
+
+The tangential balance in \Cref{eq:wrap_tangential_balance_start} begins more
+simply. The common \(T_j\) terms cancel, leaving only the tension change across
+the element,
+
+\begin{equation}
+    dT_j\cos\!\left(\frac{d\theta}{2}\right)
+    +
+    dF_{t,j}
+    =
+    dm_j a_{\theta,j}.
+    \label{eq:wrap_tangential_balance_reduced}
+\end{equation}
+
+The remaining contact term is frictional. Under
+\AssRef{assump:gross_coulomb_traction}, the usual Coulomb description bounds
+its magnitude by the available static friction while sticking and fixes it at
+the kinetic-friction magnitude while sliding,
+
+\begin{equation}
+    \begin{cases}
+        \left|dF_{t,j}\right|\leq \mu_s dN_j,
+        & \text{sticking},\\[4pt]
+        \left|dF_{t,j}\right|=\mu_k dN_j,
+        & \text{sliding}.
+    \end{cases}
+    \label{eq:local_coulomb_law}
+\end{equation}
+
+That statement is naturally written as a magnitude inequality, but the
+force balance requires a signed force. A single signed traction utilization
+\(\lambda_j\) carries both pieces of information without introducing separate
+positive- and negative-friction balances:
+
+\bigeq{eq:lambda_local_definition}
+{Signed Traction Utilization}
+{
+    dF_{t,j}=\lambda_j dN_j,
+    \qquad
+    \lambda_j=
+    \begin{cases}
+        \lambda_{j,\mathrm{st}},
+        \quad \left|\lambda_{j,\mathrm{st}}\right|\leq\mu_s,
+        & \text{sticking},\\[5pt]
+        \sigma_j\mu_k,
+        \quad \sigma_j\in\{-1,+1\},
+        & \text{sliding}.
+    \end{cases}
+}
+
+For sliding contact, \(\sigma_j\) takes the sign that makes the traction oppose
+the relative sliding motion. Under \AssRef{assump:wrap_contact_resolution},
+the same \(\lambda_j\) represents the complete wrap at a given instant.
+
+Substituting \Cref{eq:wrap_element_mass,eq:wrap_tangential_acceleration,
+                   eq:lambda_local_definition}
+into \Cref{eq:wrap_tangential_balance_reduced} and dividing by \(d\theta\)
+gives
+
+\begin{equation}
+    \frac{dT_j}{d\theta}
+    \cos\!\left(\frac{d\theta}{2}\right)
+    +
+    \lambda_j\frac{dN_j}{d\theta}
+    =
+    \rho_b A_b
+    \left(
+        r_{j,\mathrm{cm}}\dot v_b
+        +
+        \dot r_jv_b
+    \right).
+    \label{eq:wrap_tangential_balance_before_limit}
+\end{equation}
+
+As \(d\theta\rightarrow0\),
+\(\cos(d\theta/2)\rightarrow1\). The tangential equation of motion therefore
+reduces to
+
+\begin{equation}
+\boxed{
+    \frac{dT_j}{d\theta}
+    +
+    \lambda_j\frac{dN_j}{d\theta}
+    =
+    \rho_b A_b
+    \left(
+        r_{j,\mathrm{cm}}\dot v_b
+        +
+        \dot r_jv_b
+    \right).
+}
+    \label{eq:wrap_tangential_balance}
+\end{equation}
+
+\paragraph{Generic pulley-wrap equation}
+
+The radial and tangential equations now describe the same belt element in
+terms of the same normal-load gradient. Solving
+\Cref{eq:wrap_radial_balance} for that gradient gives
+
+\begin{equation}
+    \frac{dN_j}{d\theta}
+    =
+    \frac{1}{\sin\beta}
+    \left[
+        T_j
+        -
+        \rho_b A_b
+        \left(
+            v_b^2-r_{j,\mathrm{cm}}\ddot r_j
+        \right)
+    \right].
+    \label{eq:wrap_normal_gradient}
+\end{equation}
+
+Substitution into \Cref{eq:wrap_tangential_balance} removes the internal normal
+load and leaves a single differential equation for the belt tension through
+the wrap,
+
+\begin{equation}
+    \frac{dT_j}{d\theta}
+    +
+    \frac{\lambda_j}{\sin\beta}
+    \left[
+        T_j
+        -
+        \rho_b A_b
+        \left(
+            v_b^2-r_{j,\mathrm{cm}}\ddot r_j
+        \right)
+    \right]
+    =
+    \rho_b A_b
+    \left(
+        r_{j,\mathrm{cm}}\dot v_b
+        +
+        \dot r_jv_b
+    \right).
+    \label{eq:generic_wrap_tension_ode_uncollected}
+\end{equation}
+
+Collecting the tension term gives the standard linear first-order form,
+
+\bigeq{eq:generic_wrap_tension_ode}
+{Generic Pulley-Wrap Tension Equation}
+{
+    \frac{dT_j}{d\theta}
+    +
+    \frac{\lambda_j}{\sin\beta}T_j
+    =
+    \rho_b A_b
+    \left[
+        r_{j,\mathrm{cm}}\dot v_b
+        +
+        \dot r_jv_b
+        +
+        \frac{\lambda_j}{\sin\beta}
+        \left(
+            v_b^2-r_{j,\mathrm{cm}}\ddot r_j
+        \right)
+    \right],
+    \qquad
+    j\in\{p,s\}.
+}
+
+The coordinate \(\theta\) increases with belt travel on either pulley, and the
+sign of the tangential contact is carried by \(\lambda_j\). The same equation
+therefore governs tension evolution through the primary and secondary wraps
+without a separate sign convention for each pulley.
+
+
+
 \section{Rotational and Belt Transport Dynamics}
 \label{sec:rot-belt-dynamics}
 
