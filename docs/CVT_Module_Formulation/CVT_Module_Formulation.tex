@@ -6354,11 +6354,28 @@ reduces to
     \label{eq:wrap_tangential_balance}
 \end{equation}
 
-\paragraph{Generic pulley-wrap equation}
+The two equations describe different parts of the same local motion. The radial
+balance relates the belt tension, normal contact, and radial acceleration,
+while the tangential balance relates the tension change and tangential
+traction to the acceleration of belt transport. Within the adopted reduced
+wrap description, these are the radial and tangential equations of motion for
+an infinitesimal belt element on either pulley.
 
-The radial and tangential equations now describe the same belt element in
-terms of the same normal-load gradient. Solving
-\Cref{eq:wrap_radial_balance} for that gradient gives
+% --------------------------------------------------------------
+
+
+\subsection{Tension Evolution Through a Pulley Wrap}
+\label{sec:wrap_tension_evolution}
+
+The local balances now describe the mechanics at every point within a pulley
+wrap. The four tensions introduced in \Cref{sec:closed_belt_tension_path},
+however, are boundary values at the entrance and exit of those wraps. To
+connect the local mechanics back to the complete belt, the two local balances
+must therefore be reduced to a relation that describes how the tension changes
+with position through the contact.
+
+Both local equations contain the same normal-load gradient. Solving the radial
+balance, \Cref{eq:wrap_radial_balance}, for that gradient gives
 
 \begin{equation}
     \frac{dN_j}{d\theta}
@@ -6375,9 +6392,9 @@ terms of the same normal-load gradient. Solving
     \label{eq:wrap_normal_gradient}
 \end{equation}
 
-Substitution into \Cref{eq:wrap_tangential_balance} removes the internal normal
-load and leaves a single differential equation for the belt tension through
-the wrap,
+Substituting this expression into the tangential balance,
+\Cref{eq:wrap_tangential_balance}, removes the local normal load and leaves a
+single differential equation for the belt tension,
 
 \begin{equation}
     \frac{dT_j}{d\theta}
@@ -6396,517 +6413,1064 @@ the wrap,
     \left(
         r_{j,\mathrm{cm}}\dot v_b
         +
-        \dot r_jv_b
+        \dot r_j v_b
     \right).
     \label{eq:generic_wrap_tension_ode_uncollected}
 \end{equation}
 
-Collecting the tension term gives the standard linear first-order form,
+Collecting the tension term gives
 
 \bigeq{eq:generic_wrap_tension_ode}
 {Generic Pulley-Wrap Tension Equation}
 {
+    \begin{aligned}
     \frac{dT_j}{d\theta}
     +
     \frac{\lambda_j}{\sin\beta}T_j
-    =
+    &={}
     \rho_b A_b
     \left[
         r_{j,\mathrm{cm}}\dot v_b
         +
         \dot r_jv_b
+    \right.\\[-2pt]
+    &\hspace{2.6cm}\left.
         +
         \frac{\lambda_j}{\sin\beta}
         \left(
             v_b^2-r_{j,\mathrm{cm}}\ddot r_j
         \right)
     \right],
-    \qquad
-    j\in\{p,s\}.
+    \qquad j\in\{p,s\}.
+    \end{aligned}
 }
 
-The coordinate \(\theta\) increases with belt travel on either pulley, and the
-sign of the tangential contact is carried by \(\lambda_j\). The same equation
-therefore governs tension evolution through the primary and secondary wraps
-without a separate sign convention for each pulley.
+At a fixed instant, the pulley geometry and its radius rates are fixed with
+respect to the spatial coordinate \(\theta\). The belt transport quantities
+\(v_b\) and \(\dot v_b\) are likewise common to the reduced belt, and
+\AssRef{assump:wrap_contact_resolution} assigns one traction utilization
+\(\lambda_j\) to the complete wrap. The coefficients in
+\Cref{eq:generic_wrap_tension_ode} are therefore constant as the equation is
+followed from the entrance of one wrap to its exit. The remaining problem is a
+first-order linear ordinary differential equation in \(\theta\).
 
-
-
-\section{Rotational and Belt Transport Dynamics}
-\label{sec:rot-belt-dynamics}
-
-The axial force model developed in \Sec{sec:axial} gives one equation for the
-shift coordinate \(s(t)\). That equation depends on the transmitted secondary
-torque \(\tau_s\) and on the secondary angular acceleration \(\dot{\omega}_s\).
-Those quantities are determined by the torque path through the CVT.
-
-This section derives the common equations of motion for the rotating and
-translating bodies in that torque path. The primary pulley, belt, and secondary
-pulley are treated as coupled dynamic bodies. Engine torque enters at the
-primary pulley, torque is exchanged between the primary pulley and the belt,
-the belt exchanges torque with the secondary pulley, and the secondary pulley
-drives the downstream drivetrain.
-
-The equations derived here are independent of whether the belt is sticking or
-slipping at either pulley. They describe the bodies being accelerated; the
-contact state supplies the remaining closure equations later.
-
-% --------------------------------------------------------------
-\subsection{System Definition and Torque Path}
-\label{sec:belt-torque-path}
-
-\begin{figure}[H]
-\centering
-\includegraphics[width=1.1\linewidth]{./illustrations/torque/cvt_overview_forces.png}
-\caption{Torque path through the CVT. Engine torque
-\(\tau_{\mathrm{eng}}\) drives the primary pulley with angular speed
-\(\omega_p\). The primary pulley exchanges torque with the belt, the belt
-exchanges torque with the secondary pulley, and the secondary pulley drives the
-downstream drivetrain while opposing the reflected load torque
-\(\tau_{\mathrm{load}}\).}
-\label{fig:torque_path}
-\end{figure}
-
-The torque path shown in \Fig{fig:torque_path} is described using three contact
-torques and three dynamic motions:
-\begin{itemize}
-    \item the primary pulley rotates with angular speed \(\omega_p\),
-    \item the belt translates with transport speed \(v_b\),
-    \item the secondary shaft and fixed sheave rotate with angular speed
-    \(\omega_s\).
-\end{itemize}
-
-The primary pulley receives engine torque \(\tau_{\mathrm{eng}}\). Let
-\(\tau_p\) denote the torque exerted by the belt contact on the primary pulley.
-With the rotational sign convention from \Sec{sec:rotational_sign},
-\(\tau_p\) opposes positive engine-driven primary rotation.
-
-The belt receives torque from the primary contact and applies torque to the
-secondary contact. Let \(\tau_s\) denote the total signed torque exerted by the
-belt on the secondary pulley. This torque acts in the positive secondary
-rotational direction, while the reflected drivetrain load
-\(\tau_{\mathrm{load}}\) opposes it.
-
-% --------------------------------------------------------------
-\subsection{Engine Torque Model}
-\label{sec:tau_eng_model}
-
-The engine provides the driving torque \(\tau_{\mathrm{eng}}(t)\) acting on the
-primary pulley. Under \AssRef{assump:full_throttle_model}, engine torque is
-represented as a prescribed full-throttle function of primary angular speed:
+It is useful to solve that mathematical form once before restoring the CVT
+quantities. Consider
 
 \begin{equation}
-\tau_{\mathrm{eng}}(t)
-=
-\tau_{\mathrm{eng}}\!\big(\omega_p(t)\big).
-\label{eq:tau_eng_from_curve}
+    \frac{dT}{d\theta}+aT=b,
+    \label{eq:generic_first_order_linear_ode}
 \end{equation}
 
-No specific analytic form is required. The model only requires that the mapping
-\(\omega_p \mapsto \tau_{\mathrm{eng}}\) be finite over the operating range used
-in simulation. Outside the supplied range, the torque curve is either saturated
-or the state is constrained to remain within the admissible engine-speed domain.
-
-\begin{figure}[H]
-\centering
-\includegraphics[width=0.75\linewidth]{./illustrations/torque/kohler_ch440_torque_power_curve.png}
-\caption{Representative torque and power curves for the Kohler CH440 engine.
-Torque is supplied as a function of angular velocity and serves as the input
-mapping in \Eq{eq:tau_eng_from_curve}.}
-\label{fig:ch440_torque_curve}
-\end{figure}
-
-In simulation, the discrete torque curve is interpolated to provide a continuous
-input torque over the operating range.
-
-% --------------------------------------------------------------
-\subsection{Load Torque Model}
-\label{sec:tau_load_model}
-
-The resisting torque \(\tau_{\mathrm{load}}(t)\) represents the longitudinal
-vehicle load reflected back to the secondary pulley.
-
-Let \(r_w\) denote the effective wheel rolling radius and let \(G>0\) denote the
-fixed gear ratio defined by
-
-\[
-\omega_s = G\,\omega_w .
-\]
-
-The vehicle speed is therefore
+where \(a\) and \(b\) are constants with respect to \(\theta\). Multiplying by
+\(e^{a\theta}\) gives
 
 \begin{equation}
-v(t)
-=
-r_w\omega_w(t)
-=
-\frac{r_w}{G}\omega_s(t).
-\label{eq:v_from_secondary}
+    e^{a\theta}\frac{dT}{d\theta}
+    +
+    a e^{a\theta}T
+    =
+    b e^{a\theta}.
+    \label{eq:generic_first_order_integrating_factor}
 \end{equation}
 
-The total longitudinal road force is modeled as the sum of rolling resistance,
-grade resistance, and aerodynamic drag:
+The left-hand side is now the derivative of a single product. From the usual
+product rule, together with the chain rule for the exponential,
 
 \begin{equation}
-F_{\mathrm{road}}
-=
-F_{\mathrm{rr}}
-+
-F_{\mathrm{grade}}
-+
-F_{\mathrm{drag}}.
-\label{eq:Froad_total}
+    \frac{d}{d\theta}
+    \left(e^{a\theta}T\right)
+    =
+    e^{a\theta}\frac{dT}{d\theta}
+    +
+    a e^{a\theta}T.
+    \label{eq:integrating_factor_product_rule}
 \end{equation}
 
-\begin{figure}[H]
-\centering
-\includegraphics[width=0.75\linewidth]{./illustrations/torque/car_free_body_diagram.png}
-\caption{Free-body diagram of a vehicle on an incline. The weight \(mg\)
-resolves into \(mg\sin\alpha\) along the slope and \(mg\cos\alpha\) normal to
-the surface. Rolling resistance and aerodynamic drag oppose motion.}
-\label{fig:car_fbd}
-\end{figure}
-
-Using \theoryRef{th:rolling_resistance}, \theoryRef{th:gravity_force}, and
-\theoryRef{th:air_resistance}, the road-load components are
+Equation \eqref{eq:generic_first_order_integrating_factor} can therefore be
+written as
 
 \begin{equation}
-F_{\mathrm{rr}}(v,\alpha)
-=
-C_{\mathrm{rr}}mg\cos\alpha\,\mathrm{sgn}(v),
-\label{eq:Frr_final}
+    \frac{d}{d\theta}
+    \left(e^{a\theta}T\right)
+    =
+    b e^{a\theta}.
 \end{equation}
 
-\begin{equation}
-F_{\mathrm{grade}}(\alpha)
-=
-mg\sin\alpha,
-\label{eq:Fgrade}
-\end{equation}
-
-and
-
-\begin{equation}
-F_{\mathrm{drag}}(v)
-=
-\frac{1}{2}\rho C_d A_f v^2\,\mathrm{sgn}(v).
-\label{eq:Fdrag_final}
-\end{equation}
-
-Substituting these terms into \Eq{eq:Froad_total} gives
+Let the belt enter the wrap at \(\theta=0\) with tension
+\(T_{\mathrm{in}}\). Integrating from the entrance to an arbitrary position
+\(\theta\) gives
 
 \begin{align}
-F_{\mathrm{road}}(t)
-&=
-C_{\mathrm{rr}}mg\cos\alpha\,
-\mathrm{sgn}\!\left(v(t)\right)
-+
-mg\sin\alpha
-\nonumber\\
-&\quad
-+
-\frac{1}{2}\rho C_d A_f
-v(t)^2\,
-\mathrm{sgn}\!\left(v(t)\right).
-\label{eq:Froad_expanded}
+    \int_0^\theta
+    \frac{d}{d\xi}
+    \left(e^{a\xi}T(\xi)\right)d\xi
+    &=
+    \int_0^\theta b e^{a\xi}\,d\xi,
+    \notag\\
+    e^{a\theta}T(\theta)-T_{\mathrm{in}}
+    &=
+    \frac{b}{a}
+    \left(e^{a\theta}-1\right),
+    \qquad a\neq0.
+    \label{eq:generic_linear_ode_integrated}
 \end{align}
 
-The wheel torque associated with this road load is
+Solving for the tension gives the familiar constant-coefficient result
 
 \begin{equation}
-\tau_{\mathrm{road},w}(t)
-=
-r_wF_{\mathrm{road}}(t).
-\label{eq:tau_wheel}
+    T(\theta)
+    =
+    T_{\mathrm{in}}e^{-a\theta}
+    +
+    \frac{b}{a}
+    \left(1-e^{-a\theta}\right).
+    \label{eq:generic_linear_ode_solution}
 \end{equation}
 
-With the downstream fixed-ratio drive treated as ideal under
-\AssRef{assump:no_explicit_loss_model}, the resisting torque reflected to the
-secondary pulley is
+For the pulley wrap,
 
 \begin{equation}
-\tau_{\mathrm{load}}(t)
-=
-\frac{1}{G}\tau_{\mathrm{road},w}(t)
-=
-\frac{r_w}{G}F_{\mathrm{road}}(t).
-\label{eq:tau_load_basic}
+    a=\frac{\lambda_j}{\sin\beta},
 \end{equation}
 
-Using \(v=(r_w/G)\omega_s\), this becomes
+and the ratio \(b/a\) obtained from
+\Cref{eq:generic_wrap_tension_ode} is
+
+\begin{equation}
+    \frac{b}{a}
+    =
+    \rho_b A_b
+    \left[
+        v_b^2-r_{j,\mathrm{cm}}\ddot r_j
+        +
+        \frac{\sin\beta}{\lambda_j}
+        \left(
+            r_{j,\mathrm{cm}}\dot v_b
+            +
+            \dot r_jv_b
+        \right)
+    \right].
+    \label{eq:wrap_ode_b_over_a}
+\end{equation}
+
+Substitution into \Cref{eq:generic_linear_ode_solution} gives the tension at
+any position through the wrap,
+
+\bigeq{eq:wrap_tension_distribution}
+{Pulley-Wrap Tension Distribution}
+{
+    \begin{aligned}
+    T_j(\theta)
+    &={}
+    T_{j,\mathrm{in}}
+    \exp\!\left(-\frac{\lambda_j}{\sin\beta}\theta\right)\\
+    &\quad+
+    \rho_b A_b
+    \left[
+        v_b^2-r_{j,\mathrm{cm}}\ddot r_j
+        +
+        \frac{\sin\beta}{\lambda_j}
+        \left(
+            r_{j,\mathrm{cm}}\dot v_b+\dot r_jv_b
+        \right)
+    \right]\\[-2pt]
+    &\qquad\times
+    \left[
+        1-
+        \exp\!\left(-\frac{\lambda_j}{\sin\beta}\theta\right)
+    \right].
+    \end{aligned}
+}
+
+The division by \(\lambda_j\) in this closed form does not make zero traction
+singular. It entered only because \Cref{eq:generic_linear_ode_solution} was
+written for \(a\neq0\). If \(\lambda_j=0\), the original wrap equation
+\eqref{eq:generic_wrap_tension_ode} simply becomes
+
+\begin{equation}
+    \frac{dT_j}{d\theta}
+    =
+    \rho_b A_b
+    \left(
+        r_{j,\mathrm{cm}}\dot v_b
+        +
+        \dot r_jv_b
+    \right),
+\end{equation}
+
+and direct integration gives
+
+\begin{equation}
+    T_j(\theta)
+    =
+    T_{j,\mathrm{in}}
+    +
+    \rho_b A_b
+    \left(
+        r_{j,\mathrm{cm}}\dot v_b
+        +
+        \dot r_jv_b
+    \right)\theta.
+    \label{eq:wrap_tension_zero_lambda}
+\end{equation}
+
+This is also the continuous limit of
+\Cref{eq:wrap_tension_distribution} as \(\lambda_j\rightarrow0\).
+
+The exit of the wrap occurs at \(\theta=\phi_j\). Evaluating the tension
+field there converts the local solution into the boundary relation needed by
+the complete belt,
+
+\bigeq{eq:wrap_entry_exit_tension}
+{Pulley-Wrap Entry-to-Exit Tension Relation}
+{
+    \begin{aligned}
+    T_{j,\mathrm{out}}
+    &={}
+    T_{j,\mathrm{in}}
+    \exp\!\left(-\frac{\lambda_j\phi_j}{\sin\beta}\right)\\
+    &\quad+
+    \rho_b A_b
+    \left[
+        v_b^2-r_{j,\mathrm{cm}}\ddot r_j
+        +
+        \frac{\sin\beta}{\lambda_j}
+        \left(
+            r_{j,\mathrm{cm}}\dot v_b+\dot r_jv_b
+        \right)
+    \right]\\[-2pt]
+    &\qquad\times
+    \left[
+        1-
+        \exp\!\left(-\frac{\lambda_j\phi_j}{\sin\beta}\right)
+    \right],
+    \qquad \lambda_j\neq0.
+    \end{aligned}
+}
+
+The additional terms in this expression come from the transient belt motion
+retained in the local balances. Their relation to the familiar belt result is
+seen by holding the pulley geometry fixed and making the belt transport steady,
+so that \(\dot r_j=\ddot r_j=\dot v_b=0\). The generic wrap equation then
+reduces to
+
+\begin{equation}
+    \frac{dT_j}{d\theta}
+    +
+    \frac{\lambda_j}{\sin\beta}
+    \left(T_j-\rho_b A_b v_b^2\right)
+    =0.
+    \label{eq:steady_wrap_tension_ode}
+\end{equation}
+
+Thus the inertia-corrected, or tractive, tension
+\(T_j-\rho_b A_b v_b^2\) follows the exponential law
+
+\begin{equation}
+    T_j(\theta)-\rho_b A_b v_b^2
+    =
+    \left(T_{j,\mathrm{in}}-\rho_b A_b v_b^2\right)
+    \exp\!\left(-\frac{\lambda_j}{\sin\beta}\theta\right).
+    \label{eq:steady_wrap_tractive_tension}
+\end{equation}
+
+At the wrap exit,
+
+\begin{equation}
+    \frac{
+        T_{j,\mathrm{out}}-\rho_b A_b v_b^2
+    }{
+        T_{j,\mathrm{in}}-\rho_b A_b v_b^2
+    }
+    =
+    \exp\!\left(-\frac{\lambda_j\phi_j}{\sin\beta}\right).
+    \label{eq:inertia_corrected_capstan_relation}
+\end{equation}
+
+If belt inertia is neglected as well, the remaining relation is
 
 \begin{equation}
 \boxed{
-\tau_{\mathrm{load}}(t)
-=
-\frac{r_w}{G}
+    \frac{T_{j,\mathrm{out}}}{T_{j,\mathrm{in}}}
+    =
+    \exp\!\left(-\frac{\lambda_j\phi_j}{\sin\beta}\right).
+}
+    \label{eq:classical_vbelt_capstan_relation}
+\end{equation}
+
+This is the familiar V-belt capstan structure, with the direction of tension
+change carried by the sign of \(\lambda_j\). For a wrap along which tension
+rises in the direction of belt travel, \(\lambda_j<0\) under the present
+pulley-on-belt sign convention, so the exponential ratio is greater than one.
+At a friction limit, the magnitude of \(\lambda_j\) becomes the corresponding
+Coulomb coefficient. The classical exponential law is therefore recovered as
+a limiting case of the transient wrap balance rather than replaced by it
+\citep{Gerbert1996}.
+
+
+\subsection{Completing the Pulley Wrap}
+\label{sec:completing_pulley_wrap}
+
+The tension field in \Cref{sec:wrap_tension_evolution} was obtained by
+eliminating the distributed normal contact from the two local equations of
+motion. That elimination let the tension be followed from the entrance of the
+wrap to its exit, but the removed quantity is also the contact through which
+the belt and pulley press against one another. With \(T_j(\theta)\) now known,
+the radial balance can be read in the opposite direction to recover that
+contact and complete the local description of the wrap.
+
+From \Cref{eq:wrap_normal_gradient}, the normal load accumulated per unit wrap
+angle is
+
+\begin{equation}
+    \frac{dN_j}{d\theta}
+    =
+    \frac{1}{\sin\beta}
+    \left[
+        T_j(\theta)
+        -
+        \rho_b A_b
+        \left(
+            v_b^2-r_{j,\mathrm{cm}}\ddot r_j
+        \right)
+    \right].
+    \label{eq:wrap_normal_loading_distribution}
+\end{equation}
+
+Here \(dN_j\) is the same physical quantity defined on the infinitesimal belt
+free body: the sum of the magnitudes of the normal loads applied by the two
+sheave faces. Equation \eqref{eq:wrap_normal_loading_distribution} therefore
+recovers how that contact is distributed around the wrap. The total normal
+resultant over both faces follows by accumulation from the entrance to the
+exit,
+
+\begin{equation}
+    N_j
+    =
+    \frac{1}{\sin\beta}
+    \int_0^{\phi_j}
+    \left[
+        T_j(\theta)
+        -
+        \rho_b A_b
+        \left(
+            v_b^2-r_{j,\mathrm{cm}}\ddot r_j
+        \right)
+    \right]d\theta.
+    \label{eq:wrap_normal_resultant_integral}
+\end{equation}
+
+The integrand also gives a useful contact check. The belt and sheave can press
+against one another but cannot sustain a tensile normal force, so the
+prescribed continuous wrap requires \(dN_j/d\theta\geq0\) throughout the
+contact arc. A negative value would indicate loss of the assumed full-wrap
+contact rather than a negative physical pressure.
+
+Because the complete tension field is known from
+\Cref{eq:wrap_tension_distribution},
+\Cref{eq:wrap_normal_resultant_integral} already determines \(N_j\). The same
+resultant can be written more compactly by returning to the tangential equation
+of motion in \Cref{eq:wrap_tangential_balance}. Integrating that balance from
+\(\theta=0\) to \(\theta=\phi_j\) gives
+
+\begin{align}
+    \int_0^{\phi_j}\frac{dT_j}{d\theta}\,d\theta
+    +
+    \lambda_j
+    \int_0^{\phi_j}\frac{dN_j}{d\theta}\,d\theta
+    &={}
+    \rho_b A_b
+    \left(
+        r_{j,\mathrm{cm}}\dot v_b+\dot r_jv_b
+    \right)
+    \int_0^{\phi_j}d\theta,
+    \notag\\[3pt]
+    T_{j,\mathrm{out}}-T_{j,\mathrm{in}}
+    +\lambda_j N_j
+    &={}
+    \rho_b A_b\phi_j
+    \left(
+        r_{j,\mathrm{cm}}\dot v_b+\dot r_jv_b
+    \right).
+    \label{eq:integrated_wrap_tangential_balance}
+\end{align}
+
+The first term is the change in tension through the wrap, the second is the
+complete tangential contact action, and the right-hand side is the tangential
+momentum change of the wrapped belt. For nonzero traction utilization, the
+normal resultant is therefore
+
+\bigeq{eq:wrap_normal_resultant}
+{Pulley-Wrap Normal Resultant}
+{
+    N_j
+    =
+    \frac{
+        T_{j,\mathrm{in}}-T_{j,\mathrm{out}}
+        +
+        \rho_b A_b\phi_j
+        \left(
+            r_{j,\mathrm{cm}}\dot v_b+\dot r_jv_b
+        \right)
+    }{\lambda_j},
+    \qquad
+    \lambda_j\neq0.
+}
+
+This compact relation and the radial integral in
+\Cref{eq:wrap_normal_resultant_integral} describe the same resultant. The
+second form is especially useful once the entry-to-exit tension relation is
+known; the first retains the local contact distribution as well.
+
+Zero traction again requires no singular physics. When \(\lambda_j=0\), the
+tangential balance no longer contains \(N_j\), so it cannot determine the
+normal loading. The radial balance still does. Substituting the zero-traction
+tension field from \Cref{eq:wrap_tension_zero_lambda} into
+\Cref{eq:wrap_normal_resultant_integral} gives
+
+\begin{equation}
+\boxed{
+\begin{aligned}
+N_j
+={}&
+\frac{\phi_j}{\sin\beta}
 \left[
-C_{\mathrm{rr}}mg\cos\alpha\,
-\mathrm{sgn}\!\left(\frac{r_w}{G}\omega_s(t)\right)
-+
-mg\sin\alpha
-+
-\frac{1}{2}\rho C_d A_f
-\left(\frac{r_w}{G}\omega_s(t)\right)^2
-\mathrm{sgn}\!\left(\frac{r_w}{G}\omega_s(t)\right)
-\right].
-}
-\label{eq:tau_load_final}
-\end{equation}
-
-% --------------------------------------------------------------
-\subsection{Inertia Definitions}
-\label{sec:rotational-inertia-definitions}
-
-The rotational equations require inertias expressed about the primary and
-secondary axes. Under \AssRef{assump:lumped_inertia}, these inertias are treated
-as lumped scalar quantities about their corresponding shafts.
-
-% --------------------------------------------------------------
-\subsubsection{Primary-Side Inertia}
-
-The primary pulley is rigidly connected to the engine side. All components in
-this lump rotate with angular speed \(\omega_p\), so the primary-side inertia is
-
-\begin{equation}
-I_p
-=
-I_{\mathrm{eng}}
-+
-I_{\mathrm{prim}},
-\label{eq:Ip_def}
-\end{equation}
-
-where \(I_{\mathrm{eng}}\) is the engine rotational inertia and
-\(I_{\mathrm{prim}}\) is the primary pulley inertia.
-
-% --------------------------------------------------------------
-\subsubsection{Secondary Fixed-Side and Downstream Inertia}
-
-The secondary side requires one additional distinction. The fixed secondary
-sheave and downstream drivetrain rotate with \(\omega_s\). The movable secondary
-sheave does not generally rotate with exactly \(\omega_s\) during shift, because
-the helix couples axial motion to relative rotation. Its rotational motion is
-therefore handled separately using the helix kinematics from
-\Eq{eq:secondary_movable_omega} and \Eq{eq:secondary_movable_alpha}.
-
-Let \(I_{s,F}\) denote the inertia that rotates directly with the fixed
-secondary sheave and shaft, excluding the movable secondary sheave inertia
-\(I_M\). This fixed-side inertia includes the fixed secondary components,
-gearbox-side inertia, wheel inertia reflected through the fixed ratio, and the
-vehicle translational inertia reflected to the secondary axis.
-
-The vehicle translational kinetic energy is
-
-\[
-T_{\mathrm{trans}}
-=
-\frac{1}{2}mv^2
-=
-\frac{1}{2}m(r_w\omega_w)^2,
-\]
-
-so the vehicle mass appears as an equivalent wheel-axis inertia
-\(mr_w^2\). Since \(\omega_s=G\omega_w\), wheel-axis inertias reflect to the
-secondary axis by division by \(G^2\). Thus,
-
-\begin{equation}
-I_{s,F}
-=
-I_{\mathrm{sec},F}
-+
-I_{\mathrm{gb}}
-+
-\frac{I_{\mathrm{wheel}}+mr_w^2}{G^2}.
-\label{eq:Is_fixed_def}
-\end{equation}
-
-Here \(I_{\mathrm{sec},F}\) includes the fixed secondary sheave and other
-secondary components that rotate directly with the secondary shaft. The movable
-secondary sheave inertia \(I_M\) is not included in \(I_{s,F}\).
-
-% --------------------------------------------------------------
-\subsection{Common Equations of Motion}
-\label{sec:common-eoms}
-
-The primary pulley, belt, secondary fixed-side assembly, and shift coordinate
-provide the four common dynamic equations used in every contact state. The
-contact state will later determine the two additional closure equations.
-
-% --------------------------------------------------------------
-\subsubsection{Primary Pulley Rotational Dynamics}
-
-Applying \theoryRef{th:newton-rot} to the primary pulley gives
-
-\bigeq{eq:primary_rotational_eom_belt}{Primary Pulley Rotational Dynamics}{
-\tau_{\mathrm{eng}}(t)
--
-\tau_p(t)
-=
-I_p\dot{\omega}_p(t)
-}
-
-The engine torque drives positive primary rotation, while the belt contact
-torque opposes it.
-
-% --------------------------------------------------------------
-\subsubsection{Belt Transport Dynamics}
-
-The belt is represented by the transport speed \(v_b(t)\) introduced in
-\Sec{sec:state}. Under \AssRef{assump:constant_belt_length} and
-\AssRef{assump:single_belt_speed}, the belt is modeled as a single moving path
-with one lumped transport speed.
-
-A contact torque produces an equivalent belt-line force when divided by the
-effective torque radius from \Sec{sec:effective-radius-placeholder}. The primary
-contact contributes \(\tau_p/r_{p,\mathrm{eff}}\) to the belt-line motion, while
-the secondary contact contributes \(\tau_s/r_{s,\mathrm{eff}}\) in the opposing
-direction. Applying \theoryRef{th:newton-trans} to the belt gives
-
-\bigeq{eq:belt_transport_eom}{Belt Transport Dynamics}{
-m_b\dot v_b(t)
-=
-\frac{\tau_p(t)}{r_{p,\mathrm{eff}}(s)}
--
-\frac{\tau_s(t)}{r_{s,\mathrm{eff}}(s)}
-}
-
-where \(m_b\) is the total belt mass from \Eq{eq:mb_def}.
-
-% --------------------------------------------------------------
-\subsubsection{Secondary Rotational Dynamics}
-
-The secondary side is not treated as a single rigid body during shift. The fixed
-secondary sheave and downstream drivetrain rotate with the secondary shaft speed
-\(\omega_s\), while the movable secondary sheave rotates with \(\omega_M\).
-These two angular speeds are equal only when the secondary is not shifting. When
-the helix is active, axial motion of the movable sheave is accompanied by
-relative rotation, so the movable sheave must be counted with its own angular
-acceleration.
-
-The cleanest way to write the secondary rotational balance is to consider the
-fixed-side secondary assembly and the movable sheave together as one system. The
-external torques on this combined secondary system are the total belt-applied
-secondary torque \(\tau_s\) and the reflected load torque
-\(\tau_{\mathrm{load}}\). The helix and spring torques between the fixed and
-movable sheaves are internal to this combined system, so they do not appear in
-the net external torque balance.
-
-Let \(I_{s,F}\) denote the inertia of the fixed-side secondary assembly, excluding
-the movable secondary sheave inertia \(I_M\). The angular momentum of the
-secondary system about the shaft axis is then
-
-\[
-L_s
-=
-I_{s,F}\omega_s
-+
-I_M\omega_M .
-\]
-
-Applying \theoryRef{th:newton-rot} in angular-momentum form gives
-
-\begin{equation}
-\tau_s
--
-\tau_{\mathrm{load}}
-=
-\frac{dL_s}{dt}
-=
-I_{s,F}\dot{\omega}_s
-+
-I_M\dot{\omega}_M .
-\label{eq:secondary_rotational_eom_two_body}
-\end{equation}
-
-The movable-sheave acceleration is not independent. From the helix kinematics
-derived in \Eq{eq:secondary_movable_alpha},
-
-\[
-\dot{\omega}_M
-=
-\dot{\omega}_s
--
-\frac{d^2\theta_s}{ds^2}\dot{s}^2
--
-\frac{d\theta_s}{ds}\ddot{s}.
-\]
-
-Substituting this relation into
-\Eq{eq:secondary_rotational_eom_two_body} gives the secondary rotational
-equation in terms of the common dynamic variables:
-
-\bigeq{eq:secondary_rotational_eom_belt}{Secondary Rotational Dynamics}{
-\tau_s
--
-\tau_{\mathrm{load}}
-=
+    T_{j,\mathrm{in}}
+    -
+    \rho_b A_b
+    \left(
+        v_b^2-r_{j,\mathrm{cm}}\ddot r_j
+    \right)
+\right]
+\\
+&+
+\frac{\rho_b A_b\phi_j^2}{2\sin\beta}
 \left(
-I_{s,F}
-+
-I_M
-\right)
-\dot{\omega}_s
--
-I_M
-\frac{d^2\theta_s}{ds^2}\dot{s}^{2}
--
-I_M
-\frac{d\theta_s}{ds}\ddot{s}
+    r_{j,\mathrm{cm}}\dot v_b+\dot r_jv_b
+\right).
+\end{aligned}
+}
+\label{eq:wrap_normal_resultant_zero_lambda}
+\end{equation}
+
+The isolated wrap therefore provides a relation between its tension level and
+its total normal loading; neither absolute level is fixed by the wrap alone.
+What has been recovered is the contact resultant that was removed while the
+tension equation was being solved.
+
+\paragraph{Axial reaction on the movable sheave}
+
+The connection back to the pulley follows directly from the same normal
+resultant. Under \AssRef{assump:symmetric_face_sharing}, each sheave face
+carries one half of \(N_j\). The face normal is inclined by the sheave
+half-angle \(\beta\) from the shaft axis, so the axial component exerted by the
+belt on the movable face is
+
+\begin{equation}
+\boxed{
+    F_{j,\mathrm{belt}}
+    =
+    \frac{N_j}{2}\cos\beta,
+    \qquad j\in\{p,s\}.
+}
+    \label{eq:generic_belt_axial_reaction}
+\end{equation}
+
+For the primary and secondary, this is exactly the opening reaction introduced
+in
+\Cref{eq:primary_belt_axial_reaction,eq:secondary_belt_axial_reaction}. The
+belt force that remained unknown in those axial balances is therefore the
+axial projection of the wrap contact recovered above.
+
+\paragraph{Torque exerted by the belt}
+
+The same contact has a tangential component. From the signed traction
+definition in \Cref{eq:lambda_local_definition}, the pulley exerts
+\(dF_{t,j}=\lambda_j dN_j\) on the belt. Since \(\lambda_j\) is common to the
+reduced wrap, the total pulley-on-belt tangential force is
+
+\begin{equation}
+    F_{t,j}
+    =
+    \lambda_j N_j.
+    \label{eq:wrap_total_tangential_force}
+\end{equation}
+
+Let \(r_{j,\mathrm{eff}}\) denote the effective moment arm of this tangential
+belt--sheave contact. It is distinct from \(r_{j,\mathrm{cm}}\), which follows
+the belt mass and therefore appears in the inertial terms above. The belt
+exerts the equal-and-opposite tangential force on the pulley, so the signed
+belt torque used in the rotational balances is
+
+\begin{equation}
+\boxed{
+    \tau_j
+    =
+    -r_{j,\mathrm{eff}}\lambda_j N_j,
+    \qquad j\in\{p,s\}.
+}
+    \label{eq:generic_belt_contact_torque}
+\end{equation}
+
+No separate primary and secondary sign rule is needed; the traction direction
+is already carried by \(\lambda_j\). A nonzero normal resultant can also exist
+with \(\lambda_j=0\), in which case the pulley remains clamped while the
+modeled tangential contact transmits no torque.
+
+The belt reaction in the axial equations and the belt torque in the rotational
+equations are therefore not separate contact descriptions. They are the axial
+and tangential consequences of the same distributed wrap loading. Conditional
+on the tension entering the wrap and the instantaneous belt motion, the
+isolated pulley wrap is now characterized by its tension field, exit tension,
+normal resultant, and corresponding axial and rotational actions.
+
+
+\subsection{Reassembling the Closed Belt}
+\label{sec:reassembling_closed_belt}
+
+The two straight spans and the two pulley wraps have now been described
+individually. The span balance in \Cref{eq:straight_span_tangential_balance}
+relates the tensions at the ends of a free span, while the wrap relations in
+\Cref{sec:wrap_tension_evolution,sec:completing_pulley_wrap} describe how the
+tension and contact evolve from one tangent point to the next. The actual belt
+has no free ends. The tension leaving each region is the tension entering the
+next, so the four local descriptions must now fit together around the single
+closed loop introduced in \Cref{fig:belt_loop_tensions}.
+
+Returning to that loop imposes two requirements that no isolated region can
+supply by itself. First, the tangential actions accumulated around the entire
+belt must account for the acceleration of the belt as a whole. Second, the
+tension changes predicted through the two wraps and two spans must be mutually
+compatible when the path closes on itself.
+
+Following the positive belt-travel direction around that loop fixes the wrap
+boundary values introduced earlier. The belt enters the primary from the upper
+span and leaves into the lower span, so
+
+\begin{equation}
+    T_{p,\mathrm{in}}=T_{p,u},
+    \qquad
+    T_{p,\mathrm{out}}=T_{p,l}.
+    \label{eq:primary_wrap_boundary_mapping}
+\end{equation}
+
+The lower span then carries the belt to the secondary, which returns it to the
+upper span. Hence,
+
+\begin{equation}
+    T_{s,\mathrm{in}}=T_{s,l},
+    \qquad
+    T_{s,\mathrm{out}}=T_{s,u}.
+    \label{eq:secondary_wrap_boundary_mapping}
+\end{equation}
+
+With these identifications, every part of the belt can be written in the same
+sequence in which the belt is traversed. The complete-belt geometry in \Cref{sec:belt_loop_geometry} already showed
+that the two external tangent spans have the same instantaneous length. Thus
+\(l_u=l_l=l\), using the same span length \(l\) introduced there. The two
+span balances from
+\Cref{eq:straight_span_balances}, together with the integrated wrap balance
+from \Cref{eq:integrated_wrap_tangential_balance}, are therefore
+
+\begin{align}
+    T_{p,u}-T_{s,u}
+    &={}
+    \rho_b A_b l\dot v_b,
+    \label{eq:closed_loop_upper_span_balance}
+    \\
+    T_{p,l}-T_{p,u}+\lambda_p N_p
+    &={}
+    \rho_b A_b\phi_p
+    \left(
+        r_{p,\mathrm{cm}}\dot v_b+\dot r_p v_b
+    \right),
+    \label{eq:closed_loop_primary_wrap_balance}
+    \\
+    T_{s,l}-T_{p,l}
+    &={}
+    \rho_b A_b l\dot v_b,
+    \label{eq:closed_loop_lower_span_balance}
+    \\
+    T_{s,u}-T_{s,l}+\lambda_s N_s
+    &={}
+    \rho_b A_b\phi_s
+    \left(
+        r_{s,\mathrm{cm}}\dot v_b+\dot r_s v_b
+    \right).
+    \label{eq:closed_loop_secondary_wrap_balance}
+\end{align}
+
+These four relations contain the same four boundary tensions that were
+introduced when the belt was first divided into spans and wraps. When the four
+segment balances are added, each boundary tension appears once as the force on
+one region and once with the opposite sign on its neighbour. Adding
+\Cref{eq:closed_loop_upper_span_balance,eq:closed_loop_primary_wrap_balance,%
+      eq:closed_loop_lower_span_balance,eq:closed_loop_secondary_wrap_balance}
+indeed cancels every boundary tension and gives
+
+\begin{align}
+    \lambda_p N_p+\lambda_s N_s
+    ={}&
+    \rho_b A_b
+    \left(
+        2l
+        +r_{p,\mathrm{cm}}\phi_p
+        +r_{s,\mathrm{cm}}\phi_s
+    \right)\dot v_b
+    \notag\\
+    &+
+    \rho_b A_b v_b
+    \left(
+        \phi_p\dot r_p+\phi_s\dot r_s
+    \right).
+    \label{eq:closed_belt_momentum_before_geometry}
+\end{align}
+
+The two terms on the right have different origins. The first is the direct
+transport acceleration of all belt mass contained in the two spans and two
+wraps. The second comes from the local tangential acceleration created as the
+wrapped belt moves radially while travelling around the pulleys. That second
+term was essential in each local wrap balance; whether it survives for the
+complete belt is decided by the geometry already established in
+\Cref{sec:pulley_radius_rates}.
+
+Within the engaged shift branch,
+\Cref{eq:primary_radius_rate,eq:secondary_radius_rate} gives
+
+\begin{equation}
+    \dot r_s
+    =
+    -\frac{\phi_p}{\phi_s}\dot r_p,
+\end{equation}
+
+and therefore
+
+\begin{equation}
+    \phi_p\dot r_p+\phi_s\dot r_s=0.
+    \label{eq:closed_belt_wrap_shift_cancellation}
+\end{equation}
+
+The same relation is trivially satisfied in the primary deadzone, where both
+belt radii are fixed. Thus, shifting redistributes the local tangential inertia
+between the two wraps, but contributes no additional net circumferential force
+to the complete fixed-length belt.
+
+The coefficient multiplying \(\dot v_b\) in
+\Cref{eq:closed_belt_momentum_before_geometry} is likewise the total belt mass
+represented by the transport coordinate. The outer-surface belt length used in
+\Cref{sec:geometry} is
+
+\begin{equation}
+    L_b
+    =
+    2l+r_p\phi_p+r_s\phi_s.
+\end{equation}
+
+The mass centroid lies the fixed distance \(y_{\mathrm{cm}}\) inward from that
+surface, so \Cref{eq:belt_mass_centroid_radius} and
+\(\phi_p+\phi_s=2\pi\) give the corresponding centroid-path length
+
+\begin{align}
+    L_{b,\mathrm{cm}}
+    &={}
+    2l+r_{p,\mathrm{cm}}\phi_p+r_{s,\mathrm{cm}}\phi_s
+    \notag\\
+    &={}
+    L_b-y_{\mathrm{cm}}\left(\phi_p+\phi_s\right)
+    =
+    L_b-2\pi y_{\mathrm{cm}}.
+    \label{eq:belt_centroid_path_length}
+\end{align}
+
+Both \(L_b\) and \(y_{\mathrm{cm}}\) are constant under the adopted belt
+geometry, so this centroid-path length is constant as well. Defining the total
+belt mass represented by the transport coordinate as
+
+\begin{equation}
+    m_b
+    =
+    \rho_b A_b L_{b,\mathrm{cm}},
+    \label{eq:total_belt_mass_transport}
+\end{equation}
+
+and applying \Cref{eq:closed_belt_wrap_shift_cancellation} reduces
+\Cref{eq:closed_belt_momentum_before_geometry} to the complete-belt equation
+of motion,
+
+\bigeq{eq:closed_belt_transport_momentum}
+{Complete-Belt Transport Momentum}
+{
+    m_b\dot v_b
+    =
+    \lambda_p N_p+\lambda_s N_s.
 }
 
-This form preserves the distinction between the fixed secondary components and
-the movable sheave. If the CVT is not shifting, then \(\dot{s}=0\) and
-\(\ddot{s}=0\), so the movable sheave rotates with the fixed sheave and the
-secondary inertia reduces to \(I_{s,F}+I_M\). During shift, the helix introduces
-the additional coupling terms shown above.
+This equation has a direct force interpretation. The quantities
+\(\lambda_pN_p\) and \(\lambda_sN_s\) are the signed tangential forces exerted
+by the two pulleys on the belt. Their sum accelerates the total belt mass along
+the retained transport coordinate. Using the belt-on-pulley torque relation in
+\Cref{eq:generic_belt_contact_torque} gives the equivalent torque form
 
-% --------------------------------------------------------------
-\subsection{Common Dynamic Relations and Remaining Closure}
-\label{sec:common-dynamics-unknowns}
+\begin{equation}
+\boxed{
+    m_b\dot v_b
+    =
+    -\frac{\tau_p}{r_{p,\mathrm{eff}}}
+    -\frac{\tau_s}{r_{s,\mathrm{eff}}}.
+}
+    \label{eq:closed_belt_transport_momentum_torque}
+\end{equation}
 
-At this point, the model has four dynamic relations that are used regardless of
-the belt contact state. These are:
-\begin{itemize}
-    \item primary rotational dynamics, \Eq{eq:primary_rotational_eom_belt},
-    \item belt transport dynamics, \Eq{eq:belt_transport_eom},
-    \item secondary rotational dynamics, \Eq{eq:secondary_rotational_eom_belt},
-    \item axial shift dynamics, \Eq{eq:s_ddot_final}.
-\end{itemize}
+The complete-belt momentum equation answers what net tangential force changes
+\(v_b\), but the addition that produced it deliberately removed the internal
+tension pattern. Each boundary tension appeared once on either side of an
+internal cut and cancelled. The same four segment equations therefore contain
+more information than their sum alone: the two straight spans must also be able
+to connect the boundary tensions predicted by the two pulley wraps.
 
-The first three equations describe the torque path through the primary pulley,
-belt, and secondary pulley. The fourth equation carries the axial force balance
-into the same coupled system. 
+The two span balances isolate that remaining information cleanly. Because the
+upper and lower spans have the same instantaneous length and carry the same
+belt transport acceleration, they require the same tension change,
 
-Together, the common dynamics involve the six unknown quantities
+\begin{equation}
+    T_{p,u}-T_{s,u}
+    =
+    T_{s,l}-T_{p,l}.
+    \label{eq:span_tension_change_equality}
+\end{equation}
 
-\[
-\dot{\omega}_p,
+Rearranging gives
+
+\begin{equation}
+    T_{p,u}+T_{p,l}
+    =
+    T_{s,u}+T_{s,l}.
+    \label{eq:closed_belt_boundary_tension_compatibility}
+\end{equation}
+
+This is already a different statement from the complete-belt momentum balance.
+The momentum equation retains only the net tangential action on the belt; the
+relation above retains information about how the internal tension levels on the
+two sides of the loop must match. It does not require uniform belt tension.
+Instead, the two wrap solutions and the two accelerating spans must meet at the
+same four tangent points without assigning contradictory boundary tensions.
+
+Those four tensions were introduced only to divide the continuous belt into
+manageable regions, so they should not remain in the final whole-loop
+relation. For a generic pulley \(j\), the wrap relations already provide the
+information needed to remove them. From
+\Cref{eq:integrated_wrap_tangential_balance},
+
+\begin{equation}
+    T_{j,\mathrm{out}}-T_{j,\mathrm{in}}
+    =
+    \rho_b A_b\phi_j
+    \left(
+        r_{j,\mathrm{cm}}\dot v_b+\dot r_jv_b
+    \right)
+    -\lambda_jN_j.
+    \label{eq:wrap_boundary_tension_difference}
+\end{equation}
+
+The entry-to-exit solution in \Cref{eq:wrap_entry_exit_tension} supplies the
+second relation between the same two boundary tensions. Solving those two
+relations for the entering tension gives, for \(\lambda_j\neq0\),
+
+\begin{align}
+    T_{j,\mathrm{in}}
+    ={}&
+    \rho_b A_b
+    \left[
+        v_b^2-r_{j,\mathrm{cm}}\ddot r_j
+        +
+        \frac{\sin\beta}{\lambda_j}
+        \left(
+            r_{j,\mathrm{cm}}\dot v_b+\dot r_jv_b
+        \right)
+    \right]
+    \notag\\
+    &+
+    \frac{
+        \lambda_jN_j
+        -
+        \rho_b A_b\phi_j
+        \left(
+            r_{j,\mathrm{cm}}\dot v_b+\dot r_jv_b
+        \right)
+    }{
+        1-
+        \exp\!\left(
+            -\dfrac{\lambda_j\phi_j}{\sin\beta}
+        \right)
+    }.
+    \label{eq:wrap_entry_tension_from_resultant}
+\end{align}
+
+Adding \Cref{eq:wrap_boundary_tension_difference} to this result gives the
+corresponding exit tension. Their sum, which is the combination required by
+\Cref{eq:closed_belt_boundary_tension_compatibility}, is therefore
+
+\begin{align}
+    T_{j,\mathrm{in}}+T_{j,\mathrm{out}}
+    ={}&
+    2\rho_b A_b
+    \left[
+        v_b^2-r_{j,\mathrm{cm}}\ddot r_j
+        +
+        \frac{\sin\beta}{\lambda_j}
+        \left(
+            r_{j,\mathrm{cm}}\dot v_b+\dot r_jv_b
+        \right)
+    \right]
+    \notag\\
+    &+
+    \frac{
+        1+
+        \exp\!\left(
+            -\dfrac{\lambda_j\phi_j}{\sin\beta}
+        \right)
+    }{
+        1-
+        \exp\!\left(
+            -\dfrac{\lambda_j\phi_j}{\sin\beta}
+        \right)
+    }
+    \notag\\[-2pt]
+    &\qquad\times
+    \left[
+        \lambda_jN_j
+        -
+        \rho_b A_b\phi_j
+        \left(
+            r_{j,\mathrm{cm}}\dot v_b+\dot r_jv_b
+        \right)
+    \right].
+    \label{eq:wrap_boundary_tension_sum}
+\end{align}
+
+Equation \eqref{eq:wrap_boundary_tension_sum} removes the artificial boundary
+tensions from the compatibility condition. Applying it once to the primary
+wrap and once to the secondary wrap gives the second complete-belt relation,
+
+\bigeq{eq:closed_belt_tension_compatibility}
+{Closed-Loop Tension Compatibility}
+{
+\begin{aligned}
+&2\rho_b A_b
+\left[
+    v_b^2-r_{p,\mathrm{cm}}\ddot r_p
+    +
+    \frac{\sin\beta}{\lambda_p}
+    \left(
+        r_{p,\mathrm{cm}}\dot v_b+\dot r_pv_b
+    \right)
+\right]
+\\[-1pt]
+&\quad+
+\frac{
+    1+\exp\!\left(-\dfrac{\lambda_p\phi_p}{\sin\beta}\right)
+}{
+    1-\exp\!\left(-\dfrac{\lambda_p\phi_p}{\sin\beta}\right)
+}
+\left[
+    \lambda_pN_p
+    -
+    \rho_b A_b\phi_p
+    \left(
+        r_{p,\mathrm{cm}}\dot v_b+\dot r_pv_b
+    \right)
+\right]
+\\[4pt]
+={}&
+2\rho_b A_b
+\left[
+    v_b^2-r_{s,\mathrm{cm}}\ddot r_s
+    +
+    \frac{\sin\beta}{\lambda_s}
+    \left(
+        r_{s,\mathrm{cm}}\dot v_b+\dot r_sv_b
+    \right)
+\right]
+\\[-1pt]
+&\quad+
+\frac{
+    1+\exp\!\left(-\dfrac{\lambda_s\phi_s}{\sin\beta}\right)
+}{
+    1-\exp\!\left(-\dfrac{\lambda_s\phi_s}{\sin\beta}\right)
+}
+\left[
+    \lambda_sN_s
+    -
+    \rho_b A_b\phi_s
+    \left(
+        r_{s,\mathrm{cm}}\dot v_b+\dot r_sv_b
+    \right)
+\right],
 \qquad
-\dot{\omega}_s,
-\qquad
-\dot v_b,
-\qquad
-\ddot{s},
-\qquad
-\tau_p,
-\qquad
-\tau_s.
-\]
+\lambda_p\lambda_s\neq0.
+\end{aligned}
+}
 
-The four equations above therefore describe the body dynamics, but they do not
-yet determine all six unknowns. Two additional relations are still needed to
-specify how torque is exchanged at the primary and secondary belt--pulley
-contacts.
+As with the wrap solution itself, the apparent singularity at zero traction is
+only a consequence of writing the exponential solution in a form divided by
+\(\lambda_j\). The original local balances remain regular. Taking the
+continuous limit of \Cref{eq:wrap_boundary_tension_sum} gives, for any wrap
+with \(\lambda_j=0\),
 
-This is where the belt contact state enters the model. The equations derived so
-far describe how the bodies respond to applied forces and torques; the contact
-relations determine what forces and torques can actually be exchanged between
-the belt and each pulley. The following section begins with the gross sticking
-case, where the belt is assumed to remain kinematically compatible with both
-pulley contacts.
+\begin{equation}
+\boxed{
+    T_{j,\mathrm{in}}+T_{j,\mathrm{out}}
+    =
+    2\rho_b A_b
+    \left(
+        v_b^2-r_{j,\mathrm{cm}}\ddot r_j
+    \right)
+    +
+    \frac{2N_j\sin\beta}{\phi_j}.
+}
+    \label{eq:wrap_boundary_tension_sum_zero_lambda}
+\end{equation}
 
-% ==============================================================
+That limiting expression replaces the corresponding primary or secondary side
+of \Cref{eq:closed_belt_tension_compatibility} whenever its traction
+utilization is zero.
+
+The closed belt has therefore supplied two independent whole-loop relations in
+terms of the retained mechanical quantities rather than the four temporary
+boundary tensions. The transport balance in
+\Cref{eq:closed_belt_transport_momentum} determines how the net tangential
+contact action accelerates the belt as a whole. The tension compatibility in
+\Cref{eq:closed_belt_tension_compatibility} preserves the independent internal
+information lost when those segment equations were added, requiring the two
+wrap tension solutions to be connectable by the same pair of straight spans.
+Together they complete the closed-belt mechanics that motivated the return to
+the full loop.
+
+\subsection{What the Belt Mechanics Establish}
+\label{sec:belt_mechanics_synthesis}
+
+The belt now has a complete reduced mechanical description of its own. The
+straight spans and pulley wraps were separated only because tension can change
+for different reasons in each region. In a free span, the endpoint tension
+difference accelerates the belt mass carried between the moving tangent
+points. The motion of those tangent points does not introduce another
+circumferential inertia term: once the associated momentum flux is included,
+the changing span mass and moving-boundary contributions cancel. On a pulley
+wrap, the belt is instead redirected while exchanging distributed normal and
+tangential forces with the sheaves, so the endpoint tensions could only be
+related after the local belt-element dynamics were resolved.
+
+Those local wrap balances show how much of the familiar belt relation survives
+when the adopted transient kinematics are retained. The radial balance links
+tension to the normal loading required to redirect and radially accelerate the belt,
+while the tangential balance links tension change and traction to the
+circumferential acceleration of the belt material. Combining the two produces
+one first-order tension equation containing the direct transport acceleration
+\(\dot v_b\), the coupling \(\dot r_j v_b\) created as the wrap radius changes,
+and the radial acceleration contribution through
+\(v_b^2-r_{j,\mathrm{cm}}\ddot r_j\). When those transient terms vanish, the
+solution reduces to the inertia-corrected tractive-tension form and then to the
+classical V-belt capstan relation. Neither the exponential tension law nor the
+use of belt inertia in that steady relation is new; both belong to the
+established belt-mechanics lineage \citep{Gerbert1996,Messick2018}. Reduced
+engineering models may use this familiar structure directly. For example,
+\citet{Skinner2020} combines an exponential wrap-tension relation with a
+centrifugal belt-force correction in a quasi-static Baja-CVT force-balance
+model. The distinction here is therefore not the capstan form itself, but that
+the transient accelerations implied by the retained belt kinematics remain in
+the local equations before the wrap is reduced analytically.
+
+Solving the tension field also makes the pulley contact mechanically complete.
+The normal load was temporarily eliminated to obtain the tension equation; once
+\(T_j(\theta)\) is known, the radial balance recovers that distributed contact
+and its resultant \(N_j\). The axial belt reaction and transmitted pulley
+torque then follow as two components of the same contact resultant rather than
+as independent constitutive laws. This idea also has strong precedent. Detailed
+rubber-belt models such as \citet{KongParker2005,KongParker2006} resolve
+local distributed belt and contact mechanics at substantially greater spatial
+fidelity, while \citet{Messick2018} uses that type of solution to recover the
+distributed pulley loading and integrated axial force. \citet{DuanEtAl2016}
+provide an adjacent chain-CVT example in which distributed normal and friction
+forces are integrated into the axial and rotational dynamics. The
+present result is therefore not that belt contact can produce both thrust and
+torque. Its role is to obtain those two pulley actions from the same compact
+transient wrap description that also governs belt transport.
+
+The final closure appears only after the four belt regions are returned to one
+continuous loop. Whole-belt compatibility is likewise not a new physical
+requirement: the steady belt--pulley formulation of \citet{KongParker2005},
+and the rubber-belt extension developed and validated by
+\citet{Messick2018}, solve the pulley contacts and free spans together as one
+boundary-value problem. The reduction obtained here is different in form and
+purpose. The four temporary endpoint tensions disappear when the local regions
+are reassembled, leaving two independent whole-belt relations. Their sum gives
+the complete-belt momentum balance,
+\(m_b\dot v_b=\lambda_pN_p+\lambda_sN_s\), which determines the net force that
+changes the retained transport state. A second relation survives because that
+sum discards the internal tension levels: the closed-loop tension compatibility
+requires the tension changes through both pulley wraps and both accelerating
+spans to coexist on one continuous belt. The first relation therefore governs
+the net circumferential motion of the belt, while the second preserves the
+independent internal information lost when the four segment balances are simply
+added.
+
+This reassembly also clarifies the role of the shifting-radius inertia. Terms
+proportional to \(\dot r_j v_b\) are required locally because a belt element
+travelling around a moving wrap has a tangential acceleration even when
+\(v_b\) itself is instantaneously constant. They influence the local tension
+and normal-contact fields, but their contributions from the two pulley wraps
+cancel from the complete-belt momentum equation once the fixed-length geometry
+is enforced. Their disappearance from the global balance is therefore a result
+of the closed-belt geometry, not an assumption made before the local mechanics
+are formed. A term can consequently be important to the load distribution
+within each wrap while producing no additional net circumferential inertia for
+the complete belt.
+
+The model resolution that makes this compact closure possible also defines what
+it cannot predict. \citet{Gerbert1996} shows that rubber-belt slip can depend on
+longitudinal creep, radial compliance, shear deformation, and seating and
+unseating effects. The distributed models of
+\citet{KongParker2005,KongParker2006} and \citet{Messick2018} additionally
+resolve belt deformation, local path and pressure variation, and spatial
+sliding behaviour at a level intentionally absent here. Transient shift models
+also retain effects beyond the present one-speed, prescribed-path description:
+\citet{Sorge2008} resolves radial belt migration and sliding during ratio
+change, while \citet{JulioPlante2011} and \citet{Ballew2015} obtain transient
+belt motion from spatially discretized elements with local inertia and
+compliance. These approaches can therefore resolve local stress, creep, seating, loss,
+material-point migration, and contact-state variation within a wrap that the
+present reduction cannot. Incorporating those effects here would require relaxing the
+fixed-cross-section, fixed-length, single-transport-coordinate, prescribed-path,
+and wrap-level traction assumptions, and would replace part of the present
+analytical closure with additional distributed or spatial states.
+
+The comparison therefore places the present belt model between the usual
+reduced capstan-style closures and the higher-fidelity distributed or
+discretized belt formulations. Transient belt mechanics, radial migration,
+whole-loop compatibility, axial-thrust prediction, and distributed contact are
+all established ideas individually. Among the reviewed reduced-order rubber
+V-belt CVT formulations, however, no equivalent combination was identified in
+which the radial and tangential accelerations implied by a shifting prescribed
+belt path are carried through an analytical wrap-tension solution, the same
+contact field supplies both pulley normal reactions and transmitted torques,
+and the two pulley wraps and two moving straight spans reduce to complete-belt
+transport and tension-compatibility relations without spatial discretization.
+The contribution is therefore the particular dynamic closure and level of
+reduction, not a new capstan law or a higher-fidelity local contact theory.
+
+The physical picture established by this section is consequently compact. Belt
+tension is no longer an externally assigned tight--slack pair, and the belt is
+not merely a kinematic constraint between pulley radii. It carries its own
+transport momentum; its tension evolves through each pulley contact; that same
+contact supplies the axial reactions required by the sheave balances and the
+torques required by the shaft balances; and the four local belt regions must
+satisfy both whole-loop momentum and tension compatibility. Together with the
+geometry and pulley balances already derived, the remaining accelerations,
+normal loads, torques, and traction utilizations belong to one simultaneous
+mechanical problem rather than to separate subsystem closures.
+
+
 \section{Gross Stick Compatibility and No-Slip Candidate}
 \label{sec:no-slip-candidate}
 
