@@ -7470,6 +7470,506 @@ geometry and pulley balances already derived, the remaining accelerations,
 normal loads, torques, and traction utilizations belong to one simultaneous
 mechanical problem rather than to separate subsystem closures.
 
+\section{Dynamic Closure of the Freely Shifting Engaged CVT}
+\label{sec:engaged_dynamic_closure}
+
+The preceding sections have now supplied the mechanical description of each
+part of the engaged CVT. The axial balances describe motion along the pulley
+shafts, the rotational balances describe motion about them, and the belt
+mechanics supply both the contact resultants acting on the pulleys and the two
+relations that govern the closed belt itself. Each relation was derived on the
+free body where its origin was clearest. The remaining question is whether,
+when those relations are brought together, they are sufficient to determine
+the instantaneous motion of the complete engaged system.
+
+No additional free body remains to be introduced. The issue is now one of
+closure: which quantities remain unknown after the equations already derived
+are assembled, and what physical relations are still missing?
+
+% --------------------------------------------------------------
+\subsection{Assembling the Engaged Equations}
+\label{sec:assembling_engaged_equations}
+
+The clearest way to identify what remains is to begin with the equations already
+available. The primary and secondary pulley assemblies contribute the two
+rotational balances in
+\Cref{eq:primary_rotational_eom_belt,eq:secondary_rotational_eom_belt} and the
+two axial balances in
+\Cref{eq:primary_balance_in_shift_coordinate,eq:secondary_balance_in_shift_coordinate}.
+The belt contributes the complete transport balance in
+\Cref{eq:closed_belt_transport_momentum} and the independent closed-loop tension
+compatibility in \Cref{eq:closed_belt_tension_compatibility}. These are six
+simultaneous mechanical equations: two rotational, two axial, and two belonging
+to the belt.
+
+The rotational equations were originally written using the belt torques
+\(\tau_p\) and \(\tau_s\), and the secondary axial balance also contains
+\(\tau_s\). Those torques are no longer independent quantities. The wrap
+mechanics established
+
+\begin{equation}
+\boxed{
+    \tau_j
+    =
+    -r_{j,\mathrm{eff}}\lambda_jN_j,
+    \qquad j\in\{p,s\},
+}
+    \label{eq:engaged_contact_torque_substitution}
+\end{equation}
+
+so this result can be inserted wherever a belt torque appears. The axial belt
+reactions are likewise already expressed through the normal resultants
+\(N_p\) and \(N_s\). After these substitutions, no separate belt torque or
+axial-reaction unknown remains.
+
+The six equations therefore contain the eight instantaneous unknowns
+
+\begin{equation}
+\boxed{
+    \mathbf{u}_{\mathrm{eng}}
+    =
+    \begin{bmatrix}
+        \dot\omega_p &
+        \dot\omega_s &
+        \dot v_b &
+        \ddot s &
+        N_p &
+        N_s &
+        \lambda_p &
+        \lambda_s
+    \end{bmatrix}^{\mathsf T}.
+}
+    \label{eq:engaged_instantaneous_unknowns}
+\end{equation}
+
+There are thus two fewer equations than unknowns. The missing relations cannot
+come from another equation of motion. Rotation about both shafts has already
+been balanced, the shared axial motion has already been balanced on both
+pulley assemblies, and the retained belt motion has already supplied its two
+independent whole-loop conditions. The normal resultants \(N_p\) and \(N_s\)
+are ordinary contact forces appearing in those balances and are determined as
+part of the simultaneous mechanical solution.
+
+The remaining quantities, \(\lambda_p\) and \(\lambda_s\), entered differently.
+They were introduced in the belt mechanics through
+\(dF_{t,j}=\lambda_j\,dN_j\): each \(\lambda_j\) states how much signed
+tangential action accompanies the normal contact on one pulley wrap. That
+definition allowed the belt equations to be derived without yet specifying
+what instantaneous contact condition fixes the value of \(\lambda_j\). The two
+missing relations must therefore come from the tangential belt--pulley contact
+itself.
+
+The most restrictive contact condition is adhesion, in which the belt and
+pulley surface move together. It provides the natural place to determine what
+the complete coupled problem requires.
+
+% --------------------------------------------------------------
+\subsection{Sticking Contact and the Full Coupled Problem}
+\label{sec:sticking_engaged_closure}
+
+If the belt adheres to pulley \(j\), the two surfaces cannot have different
+tangential speeds at the contact radius. The sticking condition is therefore
+
+\begin{equation}
+\boxed{
+    v_b
+    =
+    r_{j,\mathrm{eff}}\omega_j.
+}
+    \label{eq:engaged_stick_velocity_constraint}
+\end{equation}
+
+During an established sticking interval this equality is already satisfied by
+the current state. The instantaneous accelerations must preserve it.
+Differentiating \Cref{eq:engaged_stick_velocity_constraint} gives
+
+\begin{equation}
+\boxed{
+    \dot v_b
+    -
+    r_{j,\mathrm{eff}}\dot\omega_j
+    -
+    \dot r_{j,\mathrm{eff}}\omega_j
+    =0.
+}
+    \label{eq:engaged_stick_acceleration_constraint}
+\end{equation}
+
+The first two terms compare the circumferential accelerations of the belt and
+pulley at the current radius. The final term is required because that radius
+itself moves during a shift. Even if \(\omega_j\) were instantaneously
+constant, a changing radius changes the tangential speed of the pulley surface
+that the belt must follow.
+
+If both pulley contacts stick, applying
+\Cref{eq:engaged_stick_acceleration_constraint} at the primary and secondary
+supplies the two relations missing from the six mechanical equations above.
+The freely shifting engaged CVT now has eight equations for the eight
+quantities in \Cref{eq:engaged_instantaneous_unknowns}. The next question is
+whether those eight equations can simply be solved together.
+
+Their algebra gives the answer. The six quantities
+
+\[
+    \dot\omega_p,
+    \qquad
+    \dot\omega_s,
+    \qquad
+    \dot v_b,
+    \qquad
+    \ddot s,
+    \qquad
+    N_p,
+    \qquad
+    N_s
+\]
+
+each enter the assembled equations linearly. The nonlinear dependence is
+confined to \(\lambda_p\) and \(\lambda_s\). Besides multiplying the normal
+resultants in the tangential contact forces and pulley torques, the traction
+utilizations enter the closed-loop tension relation through the analytical wrap
+solution, including factors of the form
+
+\begin{equation}
+    \exp\!\left(
+        -\frac{\lambda_j\phi_j}{\sin\beta}
+    \right)
+\end{equation}
+
+and the corresponding reciprocal combinations shown in
+\Cref{eq:closed_belt_tension_compatibility}. The explicit zero-traction limit
+established in \Cref{eq:wrap_boundary_tension_sum_zero_lambda} keeps that
+relation finite at \(\lambda_j=0\), but does not remove its nonlinear dependence
+on \(\lambda_j\).
+
+The complete sticking problem is therefore not an \(8\times8\) linear system.
+Six unknowns belong to a linear mechanical block, while the two static traction
+utilizations enter that block nonlinearly. Because the two \(\lambda_j\) values
+occur inside coupled exponential and reciprocal terms, there is no useful
+algebraic isolation that reduces the sticking equations to a closed-form pair
+for \(\lambda_p\) and \(\lambda_s\). Their values must instead be found from a
+root condition.
+
+The structure of that root follows directly from the equations. A trial pair
+\((\lambda_p,\lambda_s)\) turns every nonlinear coefficient in the six
+mechanical equations into a known number. The six remaining unknowns can then
+be collected as
+
+\begin{equation}
+\boxed{
+    \mathbf{z}
+    =
+    \begin{bmatrix}
+        \dot\omega_p &
+        \dot\omega_s &
+        \dot v_b &
+        \ddot s &
+        N_p &
+        N_s
+    \end{bmatrix}^{\mathsf T},
+}
+    \label{eq:engaged_linear_unknowns}
+\end{equation}
+
+and the six previously derived equations take the linear form
+
+\begin{equation}
+\boxed{
+    \mathbf{A}(\lambda_p,\lambda_s)\mathbf{z}
+    =
+    \mathbf{b}(\lambda_p,\lambda_s).
+}
+    \label{eq:engaged_six_by_six_mechanical_core}
+\end{equation}
+
+No new physical equation has been introduced in
+\Cref{eq:engaged_six_by_six_mechanical_core}. Its six rows are simply the two
+rotational balances, two axial balances, belt transport balance, and belt
+closed-loop compatibility already identified above. For one trial traction
+pair, solving this \(6\times6\) system determines the complete mechanical
+response associated with that pair.
+
+That response can now be tested against the condition that motivated the
+static traction in the first place. For pulley \(j\), define the sticking
+residual
+
+\begin{equation}
+    R_j(\lambda_p,\lambda_s)
+    =
+    \dot v_b
+    -
+    r_{j,\mathrm{eff}}\dot\omega_j
+    -
+    \dot r_{j,\mathrm{eff}}\omega_j,
+    \label{eq:engaged_stick_residual}
+\end{equation}
+
+where the accelerations on the right are those returned by
+\Cref{eq:engaged_six_by_six_mechanical_core} for the trial pair. A single
+trial in the stick--stick root therefore has the sequence
+
+\begin{equation}
+\boxed{
+    (\lambda_p^{(k)},\lambda_s^{(k)})
+    \;\longrightarrow\;
+    \mathbf{A}(\lambda_p^{(k)},\lambda_s^{(k)})\mathbf{z}^{(k)}
+    =
+    \mathbf{b}(\lambda_p^{(k)},\lambda_s^{(k)})
+    \;\longrightarrow\;
+    (R_p^{(k)},R_s^{(k)}).
+}
+    \label{eq:stick_root_trial_map}
+\end{equation}
+
+The trial traction pair first produces one complete mechanical solution. The
+resulting two residuals then state how much that solution would separate the
+belt and pulley accelerations at the two contacts. The root search changes the
+trial values until
+
+\begin{equation}
+\boxed{
+    R_p(\lambda_p,\lambda_s)=0,
+    \qquad
+    R_s(\lambda_p,\lambda_s)=0.
+}
+    \label{eq:stick_stick_lambda_root}
+\end{equation}
+
+The resulting \(\lambda_p\) and \(\lambda_s\) are therefore not prescribed
+static friction forces. They are the contact reactions required to make the
+six mechanical balances compatible with adhesion at both pulleys.
+
+A zero residual establishes kinematic compatibility, but static contact can
+supply only a finite tangential reaction. The required value at each sticking
+interface must also satisfy
+
+\begin{equation}
+\boxed{
+    \left|\lambda_{j,\mathrm{st}}^{\mathrm{req}}\right|
+    \leq
+    \mu_s,
+    \qquad j\in\{p,s\}.
+}
+    \label{eq:engaged_static_lambda_admissibility}
+\end{equation}
+
+The distinction is important. The root determines what traction would be
+required to maintain zero relative motion; the inequality determines whether
+the contact can actually provide it. A converged root outside the static
+interval is therefore not discarded as a failed numerical solve. It states
+that the assumed sticking condition is mechanically incompatible with the
+available static traction.
+
+This identifies what must change when adhesion cannot be supported: the
+belt and pulley must be allowed to move relative to one another.
+
+% --------------------------------------------------------------
+\subsection{Sliding Contact and the Common Mechanical Solve}
+\label{sec:sliding_engaged_closure}
+
+Once relative sliding exists, the no-slip acceleration condition no longer
+determines the tangential contact reaction. The relative motion itself fixes
+the direction of kinetic friction, and the Coulomb law fixes its magnitude.
+For pulley \(j\), the relative tangential speed is
+
+\begin{equation}
+    v_{\mathrm{rel},j}
+    =
+    v_b-r_{j,\mathrm{eff}}\omega_j,
+    \label{eq:engaged_relative_contact_speed}
+\end{equation}
+
+and a sliding interface has
+
+\begin{equation}
+\boxed{
+    \lambda_j
+    =
+    \sigma_j\mu_k,
+}
+    \label{eq:engaged_kinetic_lambda}
+\end{equation}
+
+where \(\sigma_j=\pm1\) is chosen so that the tangential contact action opposes
+the established relative motion. Unlike the static case, \(\lambda_j\) is now
+known directly from the contact state rather than determined as an unknown
+reaction.
+
+Suppose both contacts slide. Then both traction utilizations are known, so the
+mechanical solution is obtained by inserting those two values into
+\Cref{eq:engaged_six_by_six_mechanical_core}:
+
+\begin{equation}
+\boxed{
+    \mathbf{A}(\sigma_p\mu_k,\sigma_s\mu_k)\mathbf{z}
+    =
+    \mathbf{b}(\sigma_p\mu_k,\sigma_s\mu_k).
+}
+    \label{eq:both_slip_six_by_six}
+\end{equation}
+
+This is the same calculation that appeared inside every trial of the
+stick--stick root. In sticking, a trial \((\lambda_p,\lambda_s)\) was inserted,
+the \(6\times6\) mechanical system was solved, and the result was then checked
+against the two no-slip residuals. In sliding, Coulomb friction supplies that
+traction pair immediately. The same \(6\times6\) system is solved once, and no
+no-slip residual is imposed because relative motion is permitted.
+
+The two pulley contacts need not share the same contact state. If the primary
+slides while the secondary sticks, the primary value
+\(\lambda_p=\sigma_p\mu_k\) is known, while \(\lambda_s\) must still take the
+static value that preserves the secondary no-slip condition. A trial
+\(\lambda_s^{(k)}\) therefore produces the same sequence as before,
+
+\begin{equation}
+\boxed{
+    \lambda_s^{(k)}
+    \;\longrightarrow\;
+    \mathbf{A}(\sigma_p\mu_k,\lambda_s^{(k)})\mathbf{z}^{(k)}
+    =
+    \mathbf{b}(\sigma_p\mu_k,\lambda_s^{(k)})
+    \;\longrightarrow\;
+    R_s^{(k)},
+}
+    \label{eq:primary_slip_secondary_stick_root_map}
+\end{equation}
+
+until \(R_s=0\). Only one static utilization remains unknown, so this is a
+one-dimensional root rather than the two-dimensional root required when both
+contacts stick. If the primary sticks while the secondary slides, the same
+argument gives a one-dimensional root in \(\lambda_p\) with
+\(\lambda_s=\sigma_s\mu_k\).
+
+The four possible engaged contact combinations therefore differ only in how
+many traction utilizations must be found from static compatibility:
+
+\begin{equation}
+\boxed{
+\begin{array}{c|c|c}
+    \text{contact state}
+    &
+    \text{unknown static }\lambda\text{s}
+    &
+    \text{outer solve}
+    \\ \hline
+    \text{slip--slip}  & 0 & \text{none}
+    \\[2pt]
+    \text{stick--slip} & 1 & \text{one-dimensional root}
+    \\[2pt]
+    \text{slip--stick} & 1 & \text{one-dimensional root}
+    \\[2pt]
+    \text{stick--stick}& 2 & \text{two-dimensional root}
+\end{array}
+}
+    \label{eq:engaged_contact_solve_summary}
+\end{equation}
+
+Every entry in the final column uses the same \(6\times6\) mechanical solve at
+each evaluation; the table counts only the additional search required to obtain
+static traction utilizations. The branching therefore does not create four
+different mechanical models. It changes how \(\lambda_p\) and \(\lambda_s\)
+are obtained. A sliding contact supplies its value directly from kinetic
+friction. A sticking contact leaves its value unknown and supplies a no-slip
+condition instead, so that value must be found by repeatedly applying the same
+mechanical solve until the condition is satisfied.
+
+% --------------------------------------------------------------
+\subsection{Admissibility and Changes of Contact State}
+\label{sec:engaged_contact_state_changes}
+
+The equations above determine an instantaneous solution for an assumed contact
+combination. That assumption can persist only while the solution remains
+consistent with the physical condition used to construct it. The same
+quantities already obtained from the closure therefore determine when a
+contact description must change.
+
+For a sticking interface, the relevant quantity is the static utilization
+required by the no-slip root. While
+\Cref{eq:engaged_static_lambda_admissibility} is satisfied, the contact can
+supply the tangential reaction needed to preserve adhesion. If continued
+sticking would require
+
+\begin{equation}
+    \left|\lambda_{j,\mathrm{st}}^{\mathrm{req}}\right|
+    >
+    \mu_s,
+    \label{eq:engaged_stick_capacity_exceeded}
+\end{equation}
+
+then no admissible static reaction can satisfy the no-slip condition. The
+interface must release into sliding contact, where its traction is instead set
+by \Cref{eq:engaged_kinetic_lambda} with a direction consistent with the
+emerging relative motion.
+
+That release changes the coupled solution, not merely one entry in it. The new
+kinetic \(\lambda_j\) changes the belt tangential force and pulley torque, which
+changes the accelerations, normal resultants, and closed-loop tension balance.
+If the other pulley remains a candidate for sticking, its required static
+utilization must therefore be solved again under the new contact combination.
+Loss of adhesion at one interface does not by itself require loss of adhesion
+at the other.
+
+A sliding interface reaches the opposite question when its relative speed in
+\Cref{eq:engaged_relative_contact_speed} returns to zero. At that instant the
+belt and pulley no longer have an established velocity difference, so adhesion
+is again kinematically possible. The corresponding sticking closure is then
+formed at that same state. If its root gives a required static utilization
+within \Cref{eq:engaged_static_lambda_admissibility}, the contact can reattach.
+If not, zero relative speed does not create a sustainable sticking state and
+sliding must continue with the direction required by the subsequent relative
+motion.
+
+The two transition tests therefore ask complementary questions. A sticking
+contact asks whether the required static reaction still lies within the
+available traction capacity. A sliding contact asks, when its relative motion
+vanishes, whether an admissible static reaction exists that can keep it there.
+Each candidate contact state is evaluated by the same coupled mechanical
+closure developed above.
+
+% --------------------------------------------------------------
+\subsection{What the Engaged Closure Establishes}
+\label{sec:engaged_closure_synthesis}
+
+The freely shifting engaged CVT now has a complete instantaneous closure. The
+two pulley assemblies and the belt contribute six mechanical equations, while
+the two tangential contacts supply the remaining information needed to close
+the system.
+
+Sticking reveals the structure of that closure most clearly. The two no-slip
+acceleration conditions complete the eight-equation problem, but the eight
+unknowns do not enter in the same way. The pulley accelerations, belt
+acceleration, shift acceleration, and two normal resultants form a linear
+six-variable mechanical block. The two traction utilizations enter that block
+nonlinearly through the contact resultants and analytical wrap solution. Their
+required static values are therefore found from a low-dimensional root: each
+trial traction pair is inserted into the same \(6\times6\) mechanical system,
+and the resulting accelerations are tested against the no-slip conditions.
+
+Sliding changes only how the traction utilization is supplied. Kinetic friction
+fixes \(\lambda_j\) directly from the established relative-motion direction, so
+a sliding contact removes one static unknown and one no-slip root condition.
+The mechanical calculation itself is unchanged. Two sliding contacts require
+one \(6\times6\) solve, one sticking contact requires a one-dimensional root
+whose every trial performs that same solve, and two sticking contacts require
+a two-dimensional root built from the same calculation.
+
+The static friction limit then decides whether a mathematically compatible
+sticking solution is physically supportable. The root determines the traction
+required to preserve adhesion; \(|\lambda_j^{\mathrm{req}}|\leq\mu_s\)
+determines whether the interface can supply it. Conversely, a sliding
+interface can return to sticking only when its relative speed reaches zero and
+the corresponding static requirement is admissible. Because either change in
+contact state alters the complete coupled solution, the remaining contact must
+be reevaluated rather than carrying forward its previous traction requirement.
+
+For any admissible freely shifting engaged contact combination, the current
+state and applied shaft boundaries therefore determine
+\(\dot\omega_p\), \(\dot\omega_s\), \(\dot v_b\), \(\ddot s\),
+\(N_p\), \(N_s\), \(\lambda_p\), and \(\lambda_s\). The corresponding belt
+torques and axial reactions then follow from the contact resultants already
+derived. The geometry, pulley balances, belt mechanics, and tangential contact
+conditions have thus become one simultaneous description of the freely
+shifting engaged CVT.
 
 \section{Gross Stick Compatibility and No-Slip Candidate}
 \label{sec:no-slip-candidate}
