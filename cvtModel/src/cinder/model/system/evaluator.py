@@ -149,8 +149,11 @@ class MechanicalCVTPlant:
                 _validate_helix_domain(
                     name=name, helix_coupling=coupling, positions=positions
                 )
-        _validate_primary_ramp_domain(
-            actuator=self.primary_actuator, positions=positions
+        _validate_ramp_domain(
+            name="primary", actuator=self.primary_actuator, positions=positions
+        )
+        _validate_ramp_domain(
+            name="secondary", actuator=self.secondary_actuator, positions=positions
         )
         _validate_compression_spring_domains(
             primary_actuator=self.primary_actuator,
@@ -237,6 +240,8 @@ class MechanicalCVTPlant:
                     d_axial_position_ds=coordinate.d_value_ds,
                     d2_axial_position_ds2=coordinate.d2_value_ds2,
                 ),
+                opening_per_axial_position=coupling.opening_per_axial_position,
+                opening_offset=coupling.opening_offset,
             )
         return PulleyActuationContext(
             axial_position=coordinate.value,
@@ -386,7 +391,10 @@ def _validate_helix_domain(
             if name == "primary"
             else position.secondary_axial_coordinate
         )
-        values.append(-coordinate.value)
+        values.append(
+            helix_coupling.opening_offset
+            + helix_coupling.opening_per_axial_position * coordinate.value
+        )
     minimum_opening = min(values)
     maximum_opening = max(values)
     if (
@@ -399,33 +407,37 @@ def _validate_helix_domain(
         )
 
 
-def _validate_primary_ramp_domain(
-    *, actuator: PulleyActuator, positions: tuple[GeometryPosition, ...]
+def _validate_ramp_domain(
+    *, name: str, actuator: PulleyActuator, positions: tuple[GeometryPosition, ...]
 ) -> None:
-    primary_positions = tuple(
-        position.primary_axial_coordinate.value for position in positions
+    axial_positions = tuple(
+        (
+            position.primary_axial_coordinate.value
+            if name == "primary"
+            else position.secondary_axial_coordinate.value
+        )
+        for position in positions
     )
-    minimum_position = min(primary_positions)
-    maximum_position = max(primary_positions)
+    minimum_position = min(axial_positions)
+    maximum_position = max(axial_positions)
     for force_law in actuator.force_laws:
         if not isinstance(force_law, CentrifugalRampForce):
             continue
         profile = force_law.spec.radial_displacement_profile
         if minimum_position < profile.x_min or maximum_position > profile.x_max:
             raise ValueError(
-                "primary centrifugal-ramp profile does not cover the geometry-reachable "
+                f"{name} centrifugal-ramp profile does not cover the geometry-reachable "
                 f"axial interval [{minimum_position}, {maximum_position}]."
             )
-        for axial_position in primary_positions:
+        for axial_position in axial_positions:
             flyweight_radius = (
                 force_law.spec.radius_at_zero_position
                 + profile.evaluate(axial_position).value
             )
             if flyweight_radius <= 0.0:
                 raise ValueError(
-                    "primary centrifugal-ramp profile gives a non-positive flyweight radius."
+                    f"{name} centrifugal-ramp profile gives a non-positive flyweight radius."
                 )
-
 
 def _validate_compression_spring_domains(
     *,

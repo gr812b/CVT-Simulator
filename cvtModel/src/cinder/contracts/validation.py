@@ -151,7 +151,12 @@ def validate_assembly(
             point.primary_axial_coordinate.value for point in endpoints
         ),
         opening_travels=(
-            tuple(-point.primary_axial_coordinate.value for point in endpoints)
+            tuple(
+                assembly.pulleys.primary.helical_coupling.opening_offset
+                + assembly.pulleys.primary.helical_coupling.opening_per_axial_position
+                * point.primary_axial_coordinate.value
+                for point in endpoints
+            )
             if assembly.pulleys.primary.helical_coupling is not None
             else None
         ),
@@ -164,7 +169,12 @@ def validate_assembly(
             point.secondary_axial_coordinate.value for point in endpoints
         ),
         opening_travels=(
-            tuple(-point.secondary_axial_coordinate.value for point in endpoints)
+            tuple(
+                assembly.pulleys.secondary.helical_coupling.opening_offset
+                + assembly.pulleys.secondary.helical_coupling.opening_per_axial_position
+                * point.secondary_axial_coordinate.value
+                for point in endpoints
+            )
             if assembly.pulleys.secondary.helical_coupling is not None
             else None
         ),

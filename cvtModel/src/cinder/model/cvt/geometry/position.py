@@ -15,6 +15,8 @@ class RadiusAtShift:
 
     d_effective_ds: float
     d2_effective_ds2: float
+    d_center_of_mass_ds: float
+    d2_center_of_mass_ds2: float
 
 
 @dataclass(frozen=True, slots=True)

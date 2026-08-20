@@ -68,17 +68,30 @@ class BeltContactSpec:
 class HelicalPulleyCoupling:
     """Relative-rotation geometry installed on one pulley.
 
-    The coupling belongs to its host :class:`PulleySpec`. The profile coordinate
-    is the pulley-local opening travel ``q = -x``, where the pulley-local axial
-    coordinate ``x`` is positive closing. This mapping is part of the CVT
-    geometry convention and is not user-configurable.
+    The local pulley coordinate ``x`` is positive closing. The helix profile is
+    parameterized by a nonnegative geometric coordinate ``q`` and this adapter
+    supplies the signed affine map
+
+        q = opening_offset + opening_per_axial_position * x.
+
+    The conventional secondary uses ``q = -x`` (defaults below). A primary
+    torque-reactive helix can instead use ``q = +x``; because primary and
+    secondary belt torques have opposite signs in forward power transfer, this
+    also provides the appropriate opposite helix handedness without any
+    primary/secondary special case in the force law.
     """
 
     profile: HelixProfile
+    opening_per_axial_position: float = -1.0
+    opening_offset: float = 0.0
 
     def __post_init__(self) -> None:
         if not isinstance(self.profile, HelixProfile):
             raise TypeError("profile must be a HelixProfile.")
+        if not isfinite(self.opening_per_axial_position) or self.opening_per_axial_position == 0.0:
+            raise ValueError("opening_per_axial_position must be finite and nonzero.")
+        if not isfinite(self.opening_offset):
+            raise ValueError("opening_offset must be finite.")
 
     def evaluate_from_local_coordinate(
         self,
@@ -87,10 +100,11 @@ class HelicalPulleyCoupling:
         d_axial_position_ds: float,
         d2_axial_position_ds2: float,
     ) -> HelixShiftKinematics:
+        gain = self.opening_per_axial_position
         return self.profile.evaluate_shift_kinematics(
-            opening_travel=-axial_position,
-            d_opening_ds=-d_axial_position_ds,
-            d2_opening_ds2=-d2_axial_position_ds2,
+            opening_travel=self.opening_offset + gain * axial_position,
+            d_opening_ds=gain * d_axial_position_ds,
+            d2_opening_ds2=gain * d2_axial_position_ds2,
         )
 
 

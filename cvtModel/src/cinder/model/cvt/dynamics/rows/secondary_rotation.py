@@ -9,8 +9,8 @@ from cinder.model.system.evaluator import DynamicsSnapshot
 def build_secondary_rotation_equation(*, snapshot: DynamicsSnapshot) -> ClosureEquation:
     """Build ``T_ext,s + T_elem,s + tau_s = 0``.
 
-    Positive ``tau_s`` is the CVT contact torque acting on the secondary in the
-    forward primary-to-secondary convention. ``T_elem,s`` includes shaft
+    ``tau_s`` is the signed belt-on-secondary torque. In ordinary forward
+    power transfer ``lambda_s < 0`` and therefore ``tau_s > 0``. ``T_elem,s`` includes shaft
     inertial reaction and any mounted secondary element torque.
     """
 

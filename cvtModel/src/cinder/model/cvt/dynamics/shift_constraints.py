@@ -21,7 +21,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from enum import Enum
-from math import isfinite, tan
+from math import cos, isfinite
 
 from cinder.model.cvt.closure import (
     AffineClosureScalar,
@@ -124,12 +124,13 @@ def recover_low_ratio_seat_reaction(
 
     The unconstrained primary balance is
 
-        m_p s_ddot + C_p + N_p / (2 tan(beta)) - F_p = 0.
+        m_p s_ddot + C_p + N_p cos(beta) / 2 - F_p = 0.
 
-    At the low-ratio seat, a positive reaction acts in the closing/global
+    Here ``N_p`` is the physical integrated face-normal resultant. At the
+    low-ratio seat, a positive reaction acts in the closing/global
     positive-shift direction.  Therefore
 
-        R_seat = m_p s_ddot + C_p + N_p/(2 tan(beta)) - F_p.
+        R_seat = m_p s_ddot + C_p + N_p cos(beta)/2 - F_p.
 
     The seat can hold only while ``R_seat >= 0``.  The separate engagement
     transition policy decides when a nonnegative primary clamp is sufficient to
@@ -167,15 +168,15 @@ def _free_primary_axial_residual(
     if not isinstance(unknowns, ClosureUnknowns):
         raise TypeError("unknowns must be a ClosureUnknowns instance.")
 
-    tangent = tan(snapshot.sheave_half_angle)
-    if not isfinite(tangent) or tangent <= 0.0:
-        raise ValueError("sheave_half_angle must produce a positive finite tangent.")
+    cosine = cos(snapshot.sheave_half_angle)
+    if not isfinite(cosine) or cosine <= 0.0:
+        raise ValueError("sheave_half_angle must produce a positive finite cosine.")
 
     inertia = snapshot.axial_translation_inertias.primary
     primary_force = snapshot.primary_actuation.evaluate(unknowns)
     return (
         inertia.local_known_inertial_force(shift_speed=snapshot.state.shift_speed)
         + inertia.local_shift_acceleration_gain * unknowns.shift_acceleration
-        + unknowns.primary_normal_resultant / (2.0 * tangent)
+        + 0.5 * cosine * unknowns.primary_normal_resultant
         - primary_force
     )

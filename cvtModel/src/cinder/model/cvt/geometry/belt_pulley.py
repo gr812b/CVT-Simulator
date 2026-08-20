@@ -251,6 +251,8 @@ class BeltPulleyGeometry:
             ),
             d_effective_ds=d_radius_ds,
             d2_effective_ds2=d2_radius_ds2,
+            d_center_of_mass_ds=d_radius_ds,
+            d2_center_of_mass_ds2=d2_radius_ds2,
         )
 
     def _coerce_shift_to_domain(self, shift: float) -> float:

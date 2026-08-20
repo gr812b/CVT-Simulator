@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from math import sin
+
 from cinder.model.cvt.closure import AffineClosureScalar, ClosureEquation, ClosureGains
 
 from ..equation_context import TrialEquationContext
@@ -16,8 +18,12 @@ def build_tension_loop_equation(
     The one-speed reduced wrap model retains the radial and tangential
     shift-acceleration corrections
 
-        C_j = q [v_b^2 - r_j r_j_ddot],
-        A_j = q [r_j v_b_dot + r_j' s_dot v_b].
+        C_j = q [v_b^2 - r_j,cm r_j_ddot],
+        A_j = q [r_j,cm v_b_dot + r_j' s_dot v_b].
+
+    The normal-resultant unknown is the physical integrated face-normal load
+    ``N_j = integral(dN_j)``. The V-groove projection is therefore carried
+    explicitly by ``sin(beta)`` rather than hidden inside ``N_j``.
 
     For a fixed trial lambda pair, the integrated normal resultants reconstruct
     the four wrap endpoint tensions without divisions by ``lambda``. The two
@@ -39,48 +45,50 @@ def build_tension_loop_equation(
 
     primary_c = _radial_offset(
         linear_density=q,
-        radius=geometry.primary.effective,
-        d_radius_ds=geometry.primary.d_effective_ds,
-        d2_radius_ds2=geometry.primary.d2_effective_ds2,
+        radius=geometry.primary.center_of_mass,
+        d_radius_ds=geometry.primary.d_center_of_mass_ds,
+        d2_radius_ds2=geometry.primary.d2_center_of_mass_ds2,
         belt_speed=state.belt_speed,
         shift_speed=state.shift_speed,
     )
     secondary_c = _radial_offset(
         linear_density=q,
-        radius=geometry.secondary.effective,
-        d_radius_ds=geometry.secondary.d_effective_ds,
-        d2_radius_ds2=geometry.secondary.d2_effective_ds2,
+        radius=geometry.secondary.center_of_mass,
+        d_radius_ds=geometry.secondary.d_center_of_mass_ds,
+        d2_radius_ds2=geometry.secondary.d2_center_of_mass_ds2,
         belt_speed=state.belt_speed,
         shift_speed=state.shift_speed,
     )
 
     primary_a = _tangential_offset(
         linear_density=q,
-        radius=geometry.primary.effective,
-        d_radius_ds=geometry.primary.d_effective_ds,
+        radius=geometry.primary.center_of_mass,
+        d_radius_ds=geometry.primary.d_center_of_mass_ds,
         belt_speed=state.belt_speed,
         shift_speed=state.shift_speed,
     )
     secondary_a = _tangential_offset(
         linear_density=q,
-        radius=geometry.secondary.effective,
-        d_radius_ds=geometry.secondary.d_effective_ds,
+        radius=geometry.secondary.center_of_mass,
+        d_radius_ds=geometry.secondary.d_center_of_mass_ds,
         belt_speed=state.belt_speed,
         shift_speed=state.shift_speed,
     )
 
     primary_wrap = geometry.primary_wrap_angle
     secondary_wrap = geometry.secondary_wrap_angle
+    sin_beta = sin(snapshot.sheave_half_angle)
 
     # Primary map, reconstructed from N_p:
     #
-    # T_u,p = C_p + N_p/(phi_p Phi_-) - A_p phi_p Psi_-/Phi_-.
+    # Physical normal resultant form:
+    # T_u,p = C_p + N_p sin(beta)/(phi_p Phi_-) - A_p phi_p Psi_-/Phi_-.
     primary_entry = (
         primary_c
         + AffineClosureScalar(
             gains=ClosureGains(
                 primary_normal_resultant=(
-                    1.0 / (primary_wrap * contact.primary_phi_minus)
+                    sin_beta / (primary_wrap * contact.primary_phi_minus)
                 )
             )
         )
@@ -98,26 +106,27 @@ def build_tension_loop_equation(
 
     # Secondary map, reconstructed from N_s:
     #
-    # T_l,s = C_s + N_s/(phi_s Phi_+) - A_s phi_s Psi_+/Phi_+.
+    # Physical normal resultant form:
+    # T_l,s = C_s + N_s sin(beta)/(phi_s Phi_-) - A_s phi_s Psi_-/Phi_-.
     secondary_entry = (
         secondary_c
         + AffineClosureScalar(
             gains=ClosureGains(
                 secondary_normal_resultant=(
-                    1.0 / (secondary_wrap * contact.secondary_phi_plus)
+                    sin_beta / (secondary_wrap * contact.secondary_phi_minus)
                 )
             )
         )
         - secondary_a.scaled(
-            secondary_wrap * contact.secondary_psi_plus / contact.secondary_phi_plus
+            secondary_wrap * contact.secondary_psi_minus / contact.secondary_phi_minus
         )
     )
 
-    # T_u,s = C_s + exp(z_s)(T_l,s - C_s) + A_s phi_s Phi_+.
+    # T_u,s = C_s + exp(-z_s)(T_l,s - C_s) + A_s phi_s Phi_-.
     secondary_exit = (
         secondary_c
-        + (secondary_entry - secondary_c).scaled(contact.secondary_exp_pos)
-        + secondary_a.scaled(secondary_wrap * contact.secondary_phi_plus)
+        + (secondary_entry - secondary_c).scaled(contact.secondary_exp_neg)
+        + secondary_a.scaled(secondary_wrap * contact.secondary_phi_minus)
     )
 
     return ClosureEquation(

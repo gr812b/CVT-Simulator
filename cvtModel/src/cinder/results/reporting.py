@@ -756,7 +756,7 @@ def _add_contact_signals(
     unknowns = [item.closure_unknowns for item in inspections]
     add(
         "contact.primary_lambda",
-        "Primary traction utilization",
+        "Primary signed traction utilization",
         "1",
         "contact",
         np.array(
@@ -768,7 +768,7 @@ def _add_contact_signals(
     )
     add(
         "contact.secondary_lambda",
-        "Secondary traction utilization",
+        "Secondary signed traction utilization",
         "1",
         "contact",
         np.array(
@@ -818,14 +818,14 @@ def _add_contact_signals(
     )
     add(
         "contact.primary_transmitted_torque",
-        "Primary transmitted torque",
+        "Belt-on-primary signed torque",
         "N m",
         "contact",
         np.array([np.nan if row is None else row.primary_torque for row in unknowns]),
     )
     add(
         "contact.secondary_transmitted_torque",
-        "Secondary transmitted torque",
+        "Belt-on-secondary signed torque",
         "N m",
         "contact",
         np.array([np.nan if row is None else row.secondary_torque for row in unknowns]),
@@ -961,6 +961,20 @@ def _add_audit_signals(add, inspections: tuple[CVTStateInspection, ...]) -> None
         "audit",
         np.array(
             [np.nan if item is None else item.condition_number for item in audits]
+        ),
+    )
+    add(
+        "audit.closure_scaled_condition_number",
+        "Equilibrated closure condition number",
+        "1",
+        "audit",
+        np.array(
+            [
+                np.nan
+                if item is None or item.scaled_condition_number is None
+                else item.scaled_condition_number
+                for item in audits
+            ]
         ),
     )
     add(

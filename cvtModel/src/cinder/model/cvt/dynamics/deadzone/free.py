@@ -7,6 +7,7 @@ from math import isclose
 
 import numpy as np
 
+from cinder.model.cvt.closure import AffineClosureScalar, ClosureGains, ClosureUnknown
 from cinder.model.system.evaluator import MechanicalCVTPlant
 from cinder.model.system.ports import CVTShaftBoundaryValues
 from cinder.model.system.state import CVTState, CVTStateDerivative
@@ -17,13 +18,7 @@ from .snapshot import DeadzoneSnapshot, build_deadzone_snapshot
 
 @dataclass(slots=True)
 class DeadzoneDynamicsEvaluator:
-    """Evaluate neutral/free and neutral/lower-stop CVT mechanics.
-
-    This evaluator is intentionally independent of the engaged lambda closure.
-    It treats the primary as a free rotational/axial subsystem and imposes the
-    chosen deadzone assumption that the belt is locked to the secondary at the
-    low-ratio geometry.
-    """
+    """Evaluate neutral/free and neutral/lower-stop CVT mechanics."""
 
     model: MechanicalCVTPlant
     belt_secondary_lock_absolute_tolerance: float = 1.0e-9
@@ -47,16 +42,6 @@ class DeadzoneDynamicsEvaluator:
         state: CVTState,
         shaft_boundaries: CVTShaftBoundaryValues | None = None,
     ) -> DeadzoneSnapshot:
-        """Construct and validate one deadzone frozen snapshot.
-
-        During event localization, a rejected Runge--Kutta stage can lie just
-        beyond the deadzone geometry interval before ``solve_ivp`` locates an
-        engagement or lower-stop event.  The snapshot is evaluated at the
-        nearest legal deadzone coordinate for that rejected stage only.  Event
-        functions retain the raw state, and accepted segments still terminate
-        at the physical boundary; this is not a continuous-state clamp.
-        """
-
         snapshot = build_deadzone_snapshot(
             model=self.model,
             state=self._geometry_safe_state(state),
@@ -66,8 +51,6 @@ class DeadzoneDynamicsEvaluator:
         return snapshot
 
     def _geometry_safe_state(self, state: CVTState) -> CVTState:
-        """Project only out-of-domain integration stages into deadzone geometry."""
-
         spec = self.model.geometry.spec
         safe_shift = float(np.clip(state.shift_position, 0.0, spec.deadzone_shift))
         if safe_shift == state.shift_position:
@@ -80,17 +63,18 @@ class DeadzoneDynamicsEvaluator:
         state: CVTState,
         shaft_boundaries: CVTShaftBoundaryValues | None = None,
     ) -> DeadzoneEvaluation:
-        """Return the reduced RHS for free primary travel below engagement.
+        """Return free deadzone dynamics.
 
-        The governing equations are
+        The primary is contact-free, so ``tau_p = N_p = lambda_p = 0``. Its
+        installed mechanism may nevertheless couple shaft acceleration and
+        axial acceleration. Those two equations are solved together:
 
-            I_p alpha_p = tau_eng,
-            m_p x_p'' s_dot^2 + m_p x_p' s_ddot = F_p,
-            (I_s + m_b r_s^2) alpha_s = tau_ext,s,
-            v_b_dot = r_s alpha_s.
+            T_ext,p + T_mech,p - I_rigid alpha_p = 0,
+            F_mech,p - F_inertia,p = 0.
 
-        No primary belt torque, primary normal resultant, lambda utilization,
-        or tension-loop equation is present.
+        For a mechanism with no acceleration coupling this reduces exactly to
+        the old direct divisions. The secondary/belt lock remains the same
+        reduced fixed-geometry relation.
         """
 
         snapshot = self.snapshot(state=state, shaft_boundaries=shaft_boundaries)
@@ -108,8 +92,6 @@ class DeadzoneDynamicsEvaluator:
         lower_stop_shift: float,
         shaft_boundaries: CVTShaftBoundaryValues | None = None,
     ) -> DeadzoneEvaluation:
-        """Return constrained deadzone dynamics at the lower mechanical stop."""
-
         from .lower_stop import evaluate_deadzone_lower_stop
 
         snapshot = self.snapshot(state=state, shaft_boundaries=shaft_boundaries)
@@ -134,26 +116,97 @@ class DeadzoneDynamicsEvaluator:
             )
 
 
+def _primary_deadzone_relations(
+    snapshot: DeadzoneSnapshot,
+) -> tuple[AffineClosureScalar, AffineClosureScalar]:
+    """Return free primary rotational and axial residual relations."""
+
+    rotation = (
+        AffineClosureScalar(bias=snapshot.primary_external_torque)
+        + snapshot.primary_mechanism.shaft_torque
+        + AffineClosureScalar(
+            gains=ClosureGains(
+                primary_angular_acceleration=-snapshot.primary_rotational_inertia
+            )
+        )
+    )
+
+    inertia = snapshot.primary_axial_inertia
+    axial_inertial_reaction = AffineClosureScalar(
+        bias=-inertia.local_known_inertial_force(
+            shift_speed=snapshot.state.shift_speed
+        ),
+        gains=ClosureGains(
+            shift_acceleration=-inertia.local_shift_acceleration_gain
+        ),
+    )
+    axial = snapshot.primary_mechanism.closing_force + axial_inertial_reaction
+    return rotation, axial
+
+
+def solve_deadzone_primary_free(
+    snapshot: DeadzoneSnapshot,
+) -> tuple[float, float]:
+    """Solve the mechanism-equivalent 2x2 deadzone primary closure."""
+
+    rotation, axial = _primary_deadzone_relations(snapshot)
+    unknowns = (
+        ClosureUnknown.PRIMARY_ANGULAR_ACCELERATION,
+        ClosureUnknown.SHIFT_ACCELERATION,
+    )
+    matrix = np.asarray(
+        [[relation.gains[unknown] for unknown in unknowns] for relation in (rotation, axial)],
+        dtype=float,
+    )
+    rhs = -np.asarray([rotation.bias, axial.bias], dtype=float)
+
+    # Row scaling changes only numerical conditioning, never the physical
+    # residuals or recovered unknowns.
+    scales = np.maximum(np.max(np.abs(matrix), axis=1), np.abs(rhs))
+    scales = np.where(scales > 0.0, scales, 1.0)
+    try:
+        solution = np.linalg.solve(matrix / scales[:, None], rhs / scales)
+    except np.linalg.LinAlgError as exc:
+        raise RuntimeError(
+            "Deadzone primary rotation/shift closure is singular for the installed mechanism."
+        ) from exc
+    if not np.all(np.isfinite(solution)):
+        raise RuntimeError("Deadzone primary closure produced non-finite accelerations.")
+    return float(solution[0]), float(solution[1])
+
+
+def solve_deadzone_primary_rotation_at_fixed_shift(
+    snapshot: DeadzoneSnapshot,
+) -> float:
+    """Solve primary shaft acceleration with ``s_ddot = 0`` at a deadzone stop."""
+
+    rotation, _ = _primary_deadzone_relations(snapshot)
+    coefficient = rotation.gains.primary_angular_acceleration
+    if coefficient == 0.0:
+        raise RuntimeError("Fixed-shift deadzone primary rotational closure is singular.")
+    return float(-rotation.bias / coefficient)
+
+
+def deadzone_primary_axial_residual(
+    *, snapshot: DeadzoneSnapshot, primary_angular_acceleration: float, shift_acceleration: float
+) -> float:
+    """Evaluate the free primary axial residual at selected accelerations."""
+
+    _, axial = _primary_deadzone_relations(snapshot)
+    return (
+        axial.bias
+        + axial.gains.primary_angular_acceleration * primary_angular_acceleration
+        + axial.gains.shift_acceleration * shift_acceleration
+    )
+
+
 def build_deadzone_free_derivative(
     *,
     snapshot: DeadzoneSnapshot,
 ) -> CVTStateDerivative:
-    """Assemble the direct reduced deadzone derivative from one snapshot."""
-
-    require_known_primary_actuation(snapshot=snapshot)
-
-    primary_angular_acceleration = (
-        snapshot.primary_external_torque / snapshot.primary_rotational_inertia
+    primary_angular_acceleration, shift_acceleration = solve_deadzone_primary_free(
+        snapshot
     )
-
-    primary_inertia = snapshot.primary_axial_inertia
-    shift_acceleration = (
-        snapshot.primary_actuation.bias
-        - primary_inertia.local_known_inertial_force(
-            shift_speed=snapshot.state.shift_speed,
-        )
-    ) / primary_inertia.local_shift_acceleration_gain
-
     secondary_angular_acceleration = (
         snapshot.secondary_external_torque / snapshot.secondary_belt_locked_inertia
     )
@@ -167,15 +220,3 @@ def build_deadzone_free_derivative(
         shift_position_rate=snapshot.state.shift_speed,
         shift_acceleration=shift_acceleration,
     )
-
-
-def require_known_primary_actuation(*, snapshot: DeadzoneSnapshot) -> None:
-    """Reject an un-derived deadzone coupling hidden in primary actuation."""
-
-    gains = snapshot.primary_actuation.gains.as_tuple()
-    if any(value != 0.0 for value in gains):
-        raise NotImplementedError(
-            "Deadzone free dynamics currently requires primary actuation to be a "
-            "known force. Add an explicit reduced deadzone closure before using "
-            "a primary force law with closure-unknown gains."
-        )

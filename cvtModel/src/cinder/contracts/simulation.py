@@ -56,6 +56,10 @@ def summarize_simulation(result: CVTIntegrationResult) -> SimulationMetrics:
         values = _signal_values(result, key)
         return _finite_max(values)
 
+    def maximum_absolute(key: str) -> float | None:
+        values = _signal_values(result, key)
+        return _finite_max(np.abs(values))
+
     def final(key: str) -> float | None:
         values = _signal_values(result, key)
         return _finite_last(values)
@@ -95,8 +99,8 @@ def summarize_simulation(result: CVTIntegrationResult) -> SimulationMetrics:
         ),
         ratio_max=maximum("geometry.effective_ratio_secondary_over_primary"),
         ratio_final=final("geometry.effective_ratio_secondary_over_primary"),
-        primary_traction_utilization_max=maximum("contact.primary_lambda"),
-        secondary_traction_utilization_max=maximum("contact.secondary_lambda"),
+        primary_traction_utilization_max=maximum_absolute("contact.primary_lambda"),
+        secondary_traction_utilization_max=maximum_absolute("contact.secondary_lambda"),
         primary_boundary_work_final_J=final("observer.primary_boundary_work"),
         secondary_boundary_work_final_J=final("observer.secondary_boundary_work"),
         primary_slip_dissipation_final_J=final("observer.primary_slip_dissipation"),

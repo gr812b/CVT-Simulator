@@ -28,7 +28,7 @@ class CVTRegimeEvent(str, Enum):
     LOW_RATIO_SEAT_REACHED = "low_ratio_seat_reached"
     LOWER_STOP_REACHED = "lower_stop_reached"
     UPPER_STOP_REACHED = "upper_stop_reached"
-    PRIMARY_CLAMP_LOST = "primary_clamp_lost"
+    PRIMARY_CONTACT_SEPARATION = "primary_contact_separation"
     LOW_RATIO_SEAT_RELEASE = "low_ratio_seat_release"
     LOWER_STOP_RELEASE = "lower_stop_release"
     UPPER_STOP_RELEASE = "upper_stop_release"
@@ -36,7 +36,7 @@ class CVTRegimeEvent(str, Enum):
 
 LowerStopReactionIndicator = Callable[[float, NDArray[np.float64]], float]
 LowRatioSeatReactionIndicator = Callable[[float, NDArray[np.float64]], float]
-PrimaryClampIndicator = Callable[[float, NDArray[np.float64]], float]
+PrimarySeparationIndicator = Callable[[float, NDArray[np.float64]], float]
 UpperStopReactionIndicator = Callable[[float, NDArray[np.float64]], float]
 
 
@@ -84,10 +84,9 @@ def build_engaged_free_boundary_events(
 ) -> tuple[HybridEvent, HybridEvent]:
     """Return the low-ratio seat and upper-stop arrivals from free engagement.
 
-    Reaching ``s_engage`` is not itself a disengagement decision.  The event
-    first enters the engaged low-ratio seat.  That seat then releases to
-    deadzone only when the *primary actuator's own* clamp force crosses below
-    zero.
+    Reaching ``s_engage`` is not itself a disengagement decision. The event
+    first enters the engaged low-ratio seat. Primary separation is decided by
+    the seated normal force together with the no-contact opening tendency.
     """
 
     def low_ratio_seat_indicator(_time: float, vector: NDArray[np.float64]) -> float:
@@ -127,21 +126,24 @@ def build_engaged_free_boundary_events(
 
 def build_low_ratio_seat_events(
     *,
-    primary_clamping_force: PrimaryClampIndicator,
+    primary_separation: PrimarySeparationIndicator,
     closing_reaction: LowRatioSeatReactionIndicator,
 ) -> tuple[HybridEvent, HybridEvent]:
     """Return the two distinct exits from an engaged low-ratio seat.
 
-    ``PRIMARY_CLAMP_LOST`` is the engagement/disengagement criterion: the
-    primary's own signed actuator force crosses from closing to opening.
-    ``LOW_RATIO_SEAT_RELEASE`` instead means the unilateral seat would need to
-    pull; its successor is free *engaged* motion, not deadzone.
+    ``PRIMARY_CONTACT_SEPARATION`` is the engagement/disengagement criterion.
+    Its scalar indicator is supplied by the operating adapter and combines the
+    physical primary normal-resultant floor with the no-contact opening
+    tendency, so a seated primary is not released merely because one force
+    term crosses zero. ``LOW_RATIO_SEAT_RELEASE`` instead means the unilateral
+    seat would need to pull; its successor is free *engaged* motion, not
+    deadzone.
     """
 
     return (
         HybridEvent(
-            name=CVTRegimeEvent.PRIMARY_CLAMP_LOST.value,
-            function=lambda time, vector: float(primary_clamping_force(time, vector)),
+            name=CVTRegimeEvent.PRIMARY_CONTACT_SEPARATION.value,
+            function=lambda time, vector: float(primary_separation(time, vector)),
             direction=-1.0,
         ),
         HybridEvent(

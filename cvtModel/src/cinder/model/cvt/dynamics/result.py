@@ -67,6 +67,7 @@ class TrialClosureResult:
     equation_residuals: tuple[ClosureEquationResidual, ...]
     condition_number: float
     matrix_rank: int
+    scaled_condition_number: float | None = None
 
     def __post_init__(self) -> None:
         equation_count = len(self.equations)
@@ -104,6 +105,16 @@ class TrialClosureResult:
             raise ValueError("condition_number must be finite or positive infinity.")
         if self.condition_number < 0.0:
             raise ValueError("condition_number must be non-negative.")
+        if self.scaled_condition_number is not None:
+            if (
+                not isfinite(self.scaled_condition_number)
+                and self.scaled_condition_number != float("inf")
+            ):
+                raise ValueError(
+                    "scaled_condition_number must be finite or positive infinity."
+                )
+            if self.scaled_condition_number < 0.0:
+                raise ValueError("scaled_condition_number must be non-negative.")
         if not 0 <= self.matrix_rank <= CLOSURE_UNKNOWN_COUNT:
             raise ValueError(
                 "matrix_rank must lie between 0 and " f"{CLOSURE_UNKNOWN_COUNT}."

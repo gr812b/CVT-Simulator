@@ -186,6 +186,10 @@ def _build_pulley_context(
                 d_axial_position_ds=coordinate.d_value_ds,
                 d2_axial_position_ds2=coordinate.d2_value_ds2,
             ),
+            opening_per_axial_position=(
+                pulley_spec.helical_coupling.opening_per_axial_position
+            ),
+            opening_offset=pulley_spec.helical_coupling.opening_offset,
         )
 
     context = PulleyActuationContext(

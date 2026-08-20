@@ -52,7 +52,7 @@ from .cvt_regime_events import (
 )
 from .cvt_regime_switching import (
     classify_initial_cvt_regime,
-    primary_independent_clamping_force_at_engagement,
+    primary_contact_separation_at_engagement,
     resolve_cvt_operating_transition,
 )
 from .hybrid import (
@@ -384,6 +384,9 @@ class CVTOperatingHybridSystem:
             relative_speed_tolerance=self.solve_settings.contact_tolerances.relative_speed_tolerance,
             relative_acceleration_tolerance=self.solve_settings.contact_tolerances.relative_acceleration_tolerance,
             include_shift_boundary_events=False,
+            include_primary_normal_floor=(
+                mode.shift_constraint is not CVTShiftConstraint.LOW_RATIO_SEAT
+            ),
         )
 
         if mode.shift_constraint is CVTShiftConstraint.FREE:
@@ -393,9 +396,10 @@ class CVTOperatingHybridSystem:
 
         if mode.shift_constraint is CVTShiftConstraint.LOW_RATIO_SEAT:
             return contact_events + build_low_ratio_seat_events(
-                primary_clamping_force=lambda event_time, vector: self._primary_clamping_force(
+                primary_separation=lambda event_time, vector: self._primary_separation_indicator(
                     time=event_time,
                     vector=vector,
+                    contact_regime=mode.contact_regime,
                     shaft_boundaries=boundaries_at(event_time, vector),
                 ),
                 closing_reaction=lambda event_time, vector: self._low_ratio_seat_reaction(
@@ -653,22 +657,28 @@ class CVTOperatingHybridSystem:
             raise RuntimeError("Lower-stop evaluation did not recover a stop reaction.")
         return reaction
 
-    def _primary_clamping_force(
+    def _primary_separation_indicator(
         self,
         *,
         time: float,
         vector: NDArray[np.float64],
+        contact_regime: ContactRegime,
         shaft_boundaries: CVTShaftBoundaryValues | None = None,
     ) -> float:
-        """Return the primary mechanism's own signed clamp at engagement."""
+        """Return the low-seat primary unilateral separation indicator."""
 
-        del time
-        return primary_independent_clamping_force_at_engagement(
-            evaluator=self.evaluator,
-            state=CVTState.from_vector(vector),
-            limits=self.operating_limits,
-            shaft_boundaries=shaft_boundaries,
+        indicator, _normal, _opening_acceleration = (
+            primary_contact_separation_at_engagement(
+                evaluator=self.evaluator,
+                time=time,
+                vector=vector,
+                contact_regime=contact_regime,
+                limits=self.operating_limits,
+                switching_settings=self.switching_settings,
+                shaft_boundaries=shaft_boundaries,
+            )
         )
+        return indicator
 
     def _low_ratio_seat_reaction(
         self,
@@ -738,12 +748,13 @@ class CVTOperatingHybridSystem:
 
         if mode.shift_constraint is CVTShiftConstraint.LOW_RATIO_SEAT:
             assert mode.contact_regime is not None
-            clamp = self._primary_clamping_force(
+            separation = self._primary_separation_indicator(
                 time=0.0,
                 vector=state.as_vector(),
+                contact_regime=mode.contact_regime,
                 shaft_boundaries=shaft_boundaries,
             )
-            if clamp < 0.0:
+            if separation <= 0.0:
                 return CVTOperatingRegime.deadzone_free()
             reaction = self._low_ratio_seat_reaction(
                 time=0.0,

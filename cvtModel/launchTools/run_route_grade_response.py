@@ -107,10 +107,10 @@ class BajaTrialConstants:
     belt_outer_width: float = 0.840 * INCH_TO_METRE
     belt_inner_width: float = 0.662 * INCH_TO_METRE
     belt_outer_length: float = 37.53 * INCH_TO_METRE
-    belt_cord_depth_from_outer: float = 0.5 * 0.613 * INCH_TO_METRE
+    belt_cord_depth_from_outer: float = 0.1 * INCH_TO_METRE
     sheave_half_angle_degrees: float = 11.5
-    primary_effective_radius_at_low: float = (1.625 / 2.0) * INCH_TO_METRE
-    secondary_effective_radius_at_low: float = 4.0 * INCH_TO_METRE
+    primary_inner_radius_at_low: float = (1.625 / 2.0) * INCH_TO_METRE
+    secondary_outer_radius_at_low: float = 4.0 * INCH_TO_METRE
     deadzone_shift: float = (0.088 + 0.010) * INCH_TO_METRE
     max_shift: float = 0.75 * INCH_TO_METRE
     primary_ramp_kind: str = "linear"
@@ -299,8 +299,8 @@ def build_components(c: BajaTrialConstants):
     geometry = BeltPulleyGeometry(BeltPulleyGeometrySpec(
         belt=belt,
         belt_outer_length=c.belt_outer_length,
-        primary_outer_radius_at_zero_shift=c.primary_effective_radius_at_low + c.belt_cord_depth_from_outer,
-        secondary_outer_radius_at_zero_shift=c.secondary_effective_radius_at_low + c.belt_cord_depth_from_outer,
+        primary_outer_radius_at_zero_shift=c.primary_inner_radius_at_low + c.belt_height,
+        secondary_outer_radius_at_zero_shift=c.secondary_outer_radius_at_low,
         sheave_half_angle=radians(c.sheave_half_angle_degrees),
         deadzone_shift=c.deadzone_shift,
         max_shift=c.max_shift,

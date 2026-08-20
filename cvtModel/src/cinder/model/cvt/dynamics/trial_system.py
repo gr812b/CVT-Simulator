@@ -138,24 +138,12 @@ class TrialClosureSystem:
 
         _validate_condition_limit(maximum_condition_number)
         matrix, right_hand_side = self.assemble()
-        if maximum_condition_number is not None:
-            condition_number = float(np.linalg.cond(matrix))
-            if (
-                not isfinite(condition_number)
-                or condition_number > maximum_condition_number
-            ):
-                raise TrialClosureConditionError(
-                    "Trial closure matrix condition number "
-                    f"{condition_number:.6g} exceeds configured limit "
-                    f"{maximum_condition_number:.6g}."
-                )
-        try:
-            solution_vector = np.linalg.solve(matrix, right_hand_side)
-        except np.linalg.LinAlgError as error:
-            raise TrialClosureSolveError(
-                "Trial closure matrix is singular and cannot be solved."
-            ) from error
-        _require_finite_array(solution_vector, name="closure solution")
+        solution_vector, scaled_condition_number = _solve_equilibrated(
+            matrix, right_hand_side
+        )
+        _check_condition_limit(
+            scaled_condition_number, maximum_condition_number=maximum_condition_number
+        )
         return TrialClosureRuntimeResult(
             unknowns=ClosureUnknowns.from_ordered_values(solution_vector)
         )
@@ -171,22 +159,12 @@ class TrialClosureSystem:
         matrix, right_hand_side = self.assemble()
         condition_number = float(np.linalg.cond(matrix))
         matrix_rank = int(np.linalg.matrix_rank(matrix))
-        if maximum_condition_number is not None and (
-            not isfinite(condition_number)
-            or condition_number > maximum_condition_number
-        ):
-            raise TrialClosureConditionError(
-                "Trial closure matrix condition number "
-                f"{condition_number:.6g} exceeds configured limit "
-                f"{maximum_condition_number:.6g}."
-            )
-        try:
-            solution_vector = np.linalg.solve(matrix, right_hand_side)
-        except np.linalg.LinAlgError as error:
-            raise TrialClosureSolveError(
-                "Trial closure matrix is singular and cannot be solved."
-            ) from error
-        _require_finite_array(solution_vector, name="closure solution")
+        solution_vector, scaled_condition_number = _solve_equilibrated(
+            matrix, right_hand_side
+        )
+        _check_condition_limit(
+            scaled_condition_number, maximum_condition_number=maximum_condition_number
+        )
         unknowns = ClosureUnknowns.from_ordered_values(solution_vector)
         equation_residuals = tuple(
             ClosureEquationResidual(
@@ -204,6 +182,55 @@ class TrialClosureSystem:
             equation_residuals=equation_residuals,
             condition_number=condition_number,
             matrix_rank=matrix_rank,
+            scaled_condition_number=scaled_condition_number,
+        )
+
+
+def _solve_equilibrated(
+    matrix: NDArray[np.float64],
+    right_hand_side: NDArray[np.float64],
+) -> tuple[NDArray[np.float64], float]:
+    """Solve an algebraically identical row/column-equilibrated system.
+
+    The physical closure remains ``A z = b``. Numerical scaling constructs
+
+        A_s = D_r A D_c,    b_s = D_r b,    z = D_c y,
+
+    solves ``A_s y = b_s``, and maps back to the original physical unknowns.
+    Residual auditing therefore still uses the unscaled equations.
+    """
+
+    row_norm = np.maximum(np.max(np.abs(matrix), axis=1), np.abs(right_hand_side))
+    row_scale = np.where(row_norm > 0.0, 1.0 / row_norm, 1.0)
+    row_matrix = row_scale[:, None] * matrix
+    row_rhs = row_scale * right_hand_side
+
+    column_norm = np.max(np.abs(row_matrix), axis=0)
+    column_scale = np.where(column_norm > 0.0, 1.0 / column_norm, 1.0)
+    scaled_matrix = row_matrix * column_scale[None, :]
+
+    scaled_condition_number = float(np.linalg.cond(scaled_matrix))
+    try:
+        scaled_solution = np.linalg.solve(scaled_matrix, row_rhs)
+    except np.linalg.LinAlgError as error:
+        raise TrialClosureSolveError(
+            "Trial closure matrix is singular and cannot be solved."
+        ) from error
+    solution = column_scale * scaled_solution
+    _require_finite_array(solution, name="closure solution")
+    return solution, scaled_condition_number
+
+
+def _check_condition_limit(
+    condition_number: float, *, maximum_condition_number: float | None
+) -> None:
+    if maximum_condition_number is None:
+        return
+    if not isfinite(condition_number) or condition_number > maximum_condition_number:
+        raise TrialClosureConditionError(
+            "Equilibrated trial closure matrix condition number "
+            f"{condition_number:.6g} exceeds configured limit "
+            f"{maximum_condition_number:.6g}."
         )
 
 

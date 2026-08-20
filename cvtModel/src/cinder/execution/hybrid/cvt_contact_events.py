@@ -38,6 +38,8 @@ def build_cvt_contact_events(
     minimum_shift: float | None = None,
     maximum_shift: float | None = None,
     include_shift_boundary_events: bool = True,
+    include_primary_normal_floor: bool = True,
+    include_secondary_normal_floor: bool = True,
 ) -> tuple[HybridEvent, ...]:
     """Build only the events meaningful to the active engaged contact regime.
 
@@ -52,20 +54,25 @@ def build_cvt_contact_events(
     if relative_acceleration_tolerance <= 0.0:
         raise ValueError("relative_acceleration_tolerance must be strictly positive.")
 
-    events: list[HybridEvent] = [
-        HybridEvent(
-            name=CVTContactEvent.PRIMARY_NORMAL_FLOOR.value,
-            function=lambda time, vector: evaluate(time, vector).normal_primary
-            - switching_settings.normal_resultant_floor,
-            direction=-1.0,
-        ),
-        HybridEvent(
-            name=CVTContactEvent.SECONDARY_NORMAL_FLOOR.value,
-            function=lambda time, vector: evaluate(time, vector).normal_secondary
-            - switching_settings.normal_resultant_floor,
-            direction=-1.0,
-        ),
-    ]
+    events: list[HybridEvent] = []
+    if include_primary_normal_floor:
+        events.append(
+            HybridEvent(
+                name=CVTContactEvent.PRIMARY_NORMAL_FLOOR.value,
+                function=lambda time, vector: evaluate(time, vector).normal_primary
+                - switching_settings.normal_resultant_floor,
+                direction=-1.0,
+            )
+        )
+    if include_secondary_normal_floor:
+        events.append(
+            HybridEvent(
+                name=CVTContactEvent.SECONDARY_NORMAL_FLOOR.value,
+                function=lambda time, vector: evaluate(time, vector).normal_secondary
+                - switching_settings.normal_resultant_floor,
+                direction=-1.0,
+            )
+        )
     if include_shift_boundary_events:
         if minimum_shift is None or maximum_shift is None:
             raise ValueError(
