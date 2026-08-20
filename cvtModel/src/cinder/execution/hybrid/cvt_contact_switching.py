@@ -313,7 +313,9 @@ def resolve_cvt_contact_transition(
             next_mode=None,
             reason="no_admissible_stick_or_direction_consistent_kinetic_branch_at_slip_zero_crossing",
             metadata={
-                "interfaces": tuple(interface.value for interface in restick_interfaces),
+                "interfaces": tuple(
+                    interface.value for interface in restick_interfaces
+                ),
                 "requested_restick_margin": switching_settings.restick_static_margin,
                 "physical_stick_margin_floor": switching_settings.stick_exit_static_margin,
                 "zero_crossing_candidate_diagnostics": _zero_crossing_candidate_diagnostics(
@@ -399,9 +401,7 @@ def _select_zero_crossing_topology_exchange(
         and ContactInterface.SECONDARY in requested
     ):
         mixed.extend(
-            ContactRegime.primary_slip_secondary_stick(
-                primary_direction=direction
-            )
+            ContactRegime.primary_slip_secondary_stick(primary_direction=direction)
             for direction in _slip_directions()
         )
     elif (
@@ -409,9 +409,7 @@ def _select_zero_crossing_topology_exchange(
         and ContactInterface.PRIMARY in requested
     ):
         mixed.extend(
-            ContactRegime.primary_stick_secondary_slip(
-                secondary_direction=direction
-            )
+            ContactRegime.primary_stick_secondary_slip(secondary_direction=direction)
             for direction in _slip_directions()
         )
     else:
@@ -486,46 +484,56 @@ def _zero_crossing_candidate_diagnostics(
 
     if old_regime.mode is EngagedContactMode.PRIMARY_STICK_SECONDARY_SLIP:
         for direction in _slip_directions():
-            candidates.append((
-                f"continue_secondary_slip:{direction.value}",
-                ContactRegime.primary_stick_secondary_slip(
-                    secondary_direction=direction
-                ),
-            ))
+            candidates.append(
+                (
+                    f"continue_secondary_slip:{direction.value}",
+                    ContactRegime.primary_stick_secondary_slip(
+                        secondary_direction=direction
+                    ),
+                )
+            )
             # A secondary zero crossing can make stick--stick impossible only
             # because the newly constrained solution overloads the primary.
             # This swap is therefore a physically plausible simultaneous
             # successor even though the current policy does not yet select it.
-            candidates.append((
-                f"swap_to_primary_slip_secondary_stick:{direction.value}",
-                ContactRegime.primary_slip_secondary_stick(
-                    primary_direction=direction
-                ),
-            ))
+            candidates.append(
+                (
+                    f"swap_to_primary_slip_secondary_stick:{direction.value}",
+                    ContactRegime.primary_slip_secondary_stick(
+                        primary_direction=direction
+                    ),
+                )
+            )
     elif old_regime.mode is EngagedContactMode.PRIMARY_SLIP_SECONDARY_STICK:
         for direction in _slip_directions():
-            candidates.append((
-                f"continue_primary_slip:{direction.value}",
-                ContactRegime.primary_slip_secondary_stick(
-                    primary_direction=direction
-                ),
-            ))
-            candidates.append((
-                f"swap_to_primary_stick_secondary_slip:{direction.value}",
-                ContactRegime.primary_stick_secondary_slip(
-                    secondary_direction=direction
-                ),
-            ))
+            candidates.append(
+                (
+                    f"continue_primary_slip:{direction.value}",
+                    ContactRegime.primary_slip_secondary_stick(
+                        primary_direction=direction
+                    ),
+                )
+            )
+            candidates.append(
+                (
+                    f"swap_to_primary_stick_secondary_slip:{direction.value}",
+                    ContactRegime.primary_stick_secondary_slip(
+                        secondary_direction=direction
+                    ),
+                )
+            )
 
     # Both-slip is the least constrained local topology and is useful as a
     # diagnostic even when the current event policy would not jump to it.
     for regime in _both_slip_regimes():
-        candidates.append((
-            "both_slip:"
-            f"{regime.primary_slip_direction.value}/"
-            f"{regime.secondary_slip_direction.value}",
-            regime,
-        ))
+        candidates.append(
+            (
+                "both_slip:"
+                f"{regime.primary_slip_direction.value}/"
+                f"{regime.secondary_slip_direction.value}",
+                regime,
+            )
+        )
 
     seen: set[ContactRegime] = set()
     rendered: dict[str, object] = {}
@@ -551,9 +559,7 @@ def _zero_crossing_candidate_diagnostics(
                 )
             rendered[label] = {
                 "mode": candidate.mode.value,
-                "primary_lambda": float(
-                    evaluation.traction_utilization.primary_lambda
-                ),
+                "primary_lambda": float(evaluation.traction_utilization.primary_lambda),
                 "secondary_lambda": float(
                     evaluation.traction_utilization.secondary_lambda
                 ),
@@ -608,17 +614,13 @@ def _zero_crossing_candidate_diagnostics(
                     evaluation.slipped_directions_are_consistent()
                 ),
                 "outgoing_if_slipping": bool(
-                    _slip_directions_are_outgoing(
-                        evaluation, candidate, evaluator
-                    )
+                    _slip_directions_are_outgoing(evaluation, candidate, evaluator)
                     if candidate.mode.slipping_interfaces
                     else True
                 ),
             }
         except Exception as exc:  # diagnostic path must not mask root failure
-            rendered[label] = {
-                "evaluation_error": f"{type(exc).__name__}: {exc}"
-            }
+            rendered[label] = {"evaluation_error": f"{type(exc).__name__}: {exc}"}
 
     return {
         "event_time_s": float(time),

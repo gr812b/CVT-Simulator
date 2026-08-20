@@ -41,11 +41,7 @@ class CVTShiftOperatingLimits:
         ):
             if not isfinite(value):
                 raise ValueError(f"{name} must be finite.")
-        if not (
-            self.lower_stop_shift
-            <= self.engagement_shift
-            < self.upper_stop_shift
-        ):
+        if not (self.lower_stop_shift <= self.engagement_shift < self.upper_stop_shift):
             raise ValueError(
                 "Shift limits must satisfy "
                 "lower_stop_shift <= engagement_shift < upper_stop_shift."

@@ -115,8 +115,7 @@ def test_zero_crossing_falls_back_to_physically_admissible_stick() -> None:
 
     assert transition.next_mode == ContactRegime.stick_stick()
     assert (
-        transition.reason
-        == "contact_restuck_at_physical_limit_no_kinetic_continuation"
+        transition.reason == "contact_restuck_at_physical_limit_no_kinetic_continuation"
     )
     assert transition.metadata["requested_restick_margin"] == 1.0e-3
     assert transition.metadata["accepted_static_margin_floor"] == 0.0

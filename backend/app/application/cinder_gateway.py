@@ -144,18 +144,10 @@ class CinderGateway:
                     secondary_angular_acceleration=_number(
                         closure, "secondary_angular_acceleration_rad_per_s2", default=0.0
                     ),
-                    belt_acceleration=_number(
-                        closure, "belt_acceleration_m_per_s2", default=0.0
-                    ),
-                    shift_acceleration=_number(
-                        closure, "shift_acceleration_m_per_s2", default=0.0
-                    ),
-                    primary_torque=_number(
-                        closure, "primary_torque_Nm", default=0.0
-                    ),
-                    secondary_torque=_number(
-                        closure, "secondary_torque_Nm", default=0.0
-                    ),
+                    belt_acceleration=_number(closure, "belt_acceleration_m_per_s2", default=0.0),
+                    shift_acceleration=_number(closure, "shift_acceleration_m_per_s2", default=0.0),
+                    primary_torque=_number(closure, "primary_torque_Nm", default=0.0),
+                    secondary_torque=_number(closure, "secondary_torque_Nm", default=0.0),
                     primary_normal_resultant=_number(
                         closure, "primary_normal_resultant_N", default=0.0
                     ),
@@ -194,17 +186,13 @@ class CinderGateway:
         )
 
     @staticmethod
-    def _project_geometry_design(
-        design: object, payload: Mapping[str, Any]
-    ) -> dict[str, Any]:
+    def _project_geometry_design(design: object, payload: Mapping[str, Any]) -> dict[str, Any]:
         sample_count = int(payload.get("sample_count", 301))
         result: dict[str, Any] = {
             "contract_version": 1,
             "kind": "geometry_design_response",
             "summary": project_geometry_summary(summarize_geometry_design(design)),
-            "path": project_geometry_path(
-                sample_geometry_path(design, sample_count=sample_count)
-            ),
+            "path": project_geometry_path(sample_geometry_path(design, sample_count=sample_count)),
             "feasibility": project_geometry_feasibility(
                 evaluate_geometry_feasibility(
                     design,
@@ -220,9 +208,7 @@ class CinderGateway:
         sampling = payload.get("field_sampling")
         if sampling is not None:
             field = _mapping(sampling, "field_sampling")
-            primary_axis = np.asarray(
-                _number_list(field, "primary_outer_radius_m"), dtype=float
-            )
+            primary_axis = np.asarray(_number_list(field, "primary_outer_radius_m"), dtype=float)
             secondary_axis = np.asarray(
                 _number_list(field, "secondary_outer_radius_m"), dtype=float
             )

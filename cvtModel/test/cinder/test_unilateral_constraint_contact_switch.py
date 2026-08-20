@@ -21,7 +21,9 @@ class _ReactionEvaluator:
         )
 
 
-def test_contact_switch_releases_low_ratio_seat_when_successor_reaction_is_tensile() -> None:
+def test_contact_switch_releases_low_ratio_seat_when_successor_reaction_is_tensile() -> (
+    None
+):
     contact = ContactRegime.stick_stick()
     result = cvt_regime_switching._constraint_release_after_contact_transition(
         time=0.0,
@@ -51,7 +53,9 @@ def test_contact_switch_keeps_low_ratio_seat_when_successor_reaction_can_push() 
     assert result is None
 
 
-def test_contact_switch_releases_upper_stop_when_successor_reaction_is_tensile() -> None:
+def test_contact_switch_releases_upper_stop_when_successor_reaction_is_tensile() -> (
+    None
+):
     contact = ContactRegime.stick_stick()
     result = cvt_regime_switching._constraint_release_after_contact_transition(
         time=0.0,

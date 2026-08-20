@@ -52,7 +52,9 @@ class ConstructionAndActuationTest(unittest.TestCase):
             baseline.case,
             traction_law=build_operating_system(baseline.constants)[0].traction_law,
             solve_settings=build_operating_system(baseline.constants)[0].solve_settings,
-            operating_limits=build_operating_system(baseline.constants)[0].operating_limits,
+            operating_limits=build_operating_system(baseline.constants)[
+                0
+            ].operating_limits,
         ).model
         snapshot = model.snapshot_at_time(time=0.0, state=baseline.active_shift_state)
         helix = next(
