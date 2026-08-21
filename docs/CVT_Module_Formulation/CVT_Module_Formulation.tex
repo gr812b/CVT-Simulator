@@ -2037,8 +2037,7 @@ together as one coupled instantaneous problem.
 
 The conceptual overview introduced the CVT as two variable-radius pulleys
 connected by a single belt. Moving the pulley sheaves changes where the belt
-sits on each pulley, and the resulting pair of pulley radii determines the
-transmission ratio.
+sits on each pulley and therefore changes the transmission ratio.
 
 Both pulleys contain a movable sheave. Let \(x_p\) denote the axial position of
 the movable primary sheave and \(x_s\) the axial position of the movable
@@ -2382,9 +2381,9 @@ The linear axial-to-radial relationship in
 is seated, while \Cref{eq:primary_local_radius_map} extends the primary
 description through the deadzone before contact.
 
-The local geometry now tells us the pulley radius associated with either
-movable-sheave position. The two local descriptions belong to the same closed
-belt, so only certain primary and secondary positions are geometrically
+The local geometry now tells us the outer-surface radius associated with
+either movable-sheave position. The two local descriptions belong to the same
+closed belt, so only certain primary and secondary positions are geometrically
 compatible.
 
 
@@ -2396,9 +2395,10 @@ compatible.
 \subsection{Complete Belt-Loop Geometry}
 \label{sec:belt_loop_geometry}
 
-The local pulley geometry describes how axial motion changes the radius on
-each pulley. The belt, however, passes around both pulleys. To connect the two
-radii, the belt must now be followed around the complete loop.
+The local pulley geometry describes how axial motion changes the belt's
+outer-surface radius on each pulley. The belt, however, passes around both
+pulleys. To connect those radii, the belt must now be followed around the
+complete loop.
 
 Under \AssRef{assump:prescribed_belt_path}, the modeled belt path consists
 of a circular wrap on each pulley joined by two straight tangent spans. The
@@ -2542,8 +2542,8 @@ therefore satisfy
     \label{eq:belt_length_compatibility}
 \end{equation}
 
-where \(L_b\) is the fixed belt length expressed using the same outer-surface
-reference adopted for \(r_p\) and \(r_s\) in
+where \(L_b\) is the fixed length of the same outer-surface path described by
+\(r_p\) and \(r_s\), consistent with the convention in
 \Cref{eq:geometry_radius_convention}. This is the geometric compatibility
 condition for the belt loop. Once any two of \(r_p\), \(r_s\), and \(C\) are
 known, the condition determines the third.
@@ -3196,17 +3196,36 @@ rate:
 \end{cases}
 }
 
-The two pulley-radius rates are now determined by \(s\) and \(\dot s\).
-However, the secondary multiplier \(-\phi_p/\phi_s\) changes as the radii and
-wrap angles change. Even if \(\dot s\) is constant, the secondary rate is not.
-Its acceleration must therefore include the changing slope of the
-compatibility curve.
-% --------------------------------------------------------------
+The rates above were written for \(r_p\) and \(r_s\), which denote the
+outer-surface radii. The inner surface, cord line, and mass centre remain at
+fixed depths within the belt cross-section. When the belt moves radially on
+either pulley, all four reference radii therefore change by exactly the same
+amount. For either pulley \(j\in\{p,s\}\),
 
+\[
+    r'_j
+    =
+    r'_{j,\mathrm{inner}}
+    =
+    r'_{j,\mathrm{eff}}
+    =
+    r'_{j,\mathrm{cm}},
+    \qquad
+    \dot r_j
+    =
+    \dot r_{j,\mathrm{inner}}
+    =
+    \dot r_{j,\mathrm{eff}}
+    =
+    \dot r_{j,\mathrm{cm}}.
+\]
 
-% --------------------------------------------------------------
-
-% --------------------------------------------------------------
+The choice of reference changes the absolute radius, but not how quickly that
+radius changes. The two pulley-radius rates are now determined by \(s\) and
+\(\dot s\). However, the secondary multiplier
+\(-\phi_p/\phi_s\) changes as the radii and wrap angles change. Even if
+\(\dot s\) is constant, the secondary rate is not. Its acceleration must
+therefore include the changing slope of the compatibility curve.
 
 
 % --------------------------------------------------------------
@@ -3666,7 +3685,8 @@ geometry. The definition in \Cref{eq:system_shift_coordinate} sets the primary
 position directly, while \Cref{eq:secondary_coordinate_map} gives the unique
 compatible secondary position. The local pulley maps in
 \Cref{eq:local_radius_map,eq:primary_local_radius_map} convert those two
-positions into pulley radii. Finally, the rate and acceleration relations in
+positions into the outer-surface radii used to describe the belt path.
+Finally, the rate and acceleration relations in
 \Cref{eq:primary_radius_rate,eq:secondary_radius_rate,%
 eq:primary_radius_acceleration,eq:secondary_radius_acceleration} determine how
 those radii move. Thus, for any admissible shift state,
@@ -3679,6 +3699,11 @@ those radii move. Thus, for any admissible shift state,
         r_s,\dot r_s,\ddot r_s
     \right).
 \]
+
+Here \(r_p\) and \(r_s\) retain the outer-surface convention used throughout
+the geometric development. The corresponding inner-surface, effective, and
+centre-of-mass radii follow directly from their fixed positions within the
+belt cross-section. Nothing else has to be solved for.
 
 These results follow from the geometry derived above under the idealizations
 stated in \Sec{sec:assumptions}. The belt cross-section and total length remain
