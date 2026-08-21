@@ -103,12 +103,8 @@ def _build_trial_contact_terms(
     # lambda is the physical signed Coulomb utilization in dF_t = lambda dN.
     # The V-groove radial projection therefore appears explicitly as sin(beta)
     # in the wrap ODE: dT/dtheta + (lambda/sin(beta)) T = ... .
-    z_primary = (
-        lambda_primary * snapshot.geometry.primary_wrap_angle / sin_beta
-    )
-    z_secondary = (
-        lambda_secondary * snapshot.geometry.secondary_wrap_angle / sin_beta
-    )
+    z_primary = lambda_primary * snapshot.geometry.primary_wrap_angle / sin_beta
+    z_secondary = lambda_secondary * snapshot.geometry.secondary_wrap_angle / sin_beta
 
     return TrialContactTerms(
         primary_lambda=lambda_primary,

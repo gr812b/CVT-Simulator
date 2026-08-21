@@ -78,13 +78,9 @@ def build_state_fixed_equations(
 
     if shift_constraint is EngagedShiftConstraint.LOW_RATIO_SEAT:
         shift_coordinate = primary_axial
-        secondary_axial = build_shift_constraint_equation(
-            constraint=shift_constraint
-        )
+        secondary_axial = build_shift_constraint_equation(constraint=shift_constraint)
     elif shift_constraint is EngagedShiftConstraint.UPPER_STOP:
-        shift_coordinate = build_shift_constraint_equation(
-            constraint=shift_constraint
-        )
+        shift_coordinate = build_shift_constraint_equation(constraint=shift_constraint)
     else:
         shift_coordinate = primary_axial
 

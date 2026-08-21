@@ -136,9 +136,7 @@ def _primary_deadzone_relations(
         bias=-inertia.local_known_inertial_force(
             shift_speed=snapshot.state.shift_speed
         ),
-        gains=ClosureGains(
-            shift_acceleration=-inertia.local_shift_acceleration_gain
-        ),
+        gains=ClosureGains(shift_acceleration=-inertia.local_shift_acceleration_gain),
     )
     axial = snapshot.primary_mechanism.closing_force + axial_inertial_reaction
     return rotation, axial
@@ -155,7 +153,10 @@ def solve_deadzone_primary_free(
         ClosureUnknown.SHIFT_ACCELERATION,
     )
     matrix = np.asarray(
-        [[relation.gains[unknown] for unknown in unknowns] for relation in (rotation, axial)],
+        [
+            [relation.gains[unknown] for unknown in unknowns]
+            for relation in (rotation, axial)
+        ],
         dtype=float,
     )
     rhs = -np.asarray([rotation.bias, axial.bias], dtype=float)
@@ -171,7 +172,9 @@ def solve_deadzone_primary_free(
             "Deadzone primary rotation/shift closure is singular for the installed mechanism."
         ) from exc
     if not np.all(np.isfinite(solution)):
-        raise RuntimeError("Deadzone primary closure produced non-finite accelerations.")
+        raise RuntimeError(
+            "Deadzone primary closure produced non-finite accelerations."
+        )
     return float(solution[0]), float(solution[1])
 
 
@@ -183,12 +186,17 @@ def solve_deadzone_primary_rotation_at_fixed_shift(
     rotation, _ = _primary_deadzone_relations(snapshot)
     coefficient = rotation.gains.primary_angular_acceleration
     if coefficient == 0.0:
-        raise RuntimeError("Fixed-shift deadzone primary rotational closure is singular.")
+        raise RuntimeError(
+            "Fixed-shift deadzone primary rotational closure is singular."
+        )
     return float(-rotation.bias / coefficient)
 
 
 def deadzone_primary_axial_residual(
-    *, snapshot: DeadzoneSnapshot, primary_angular_acceleration: float, shift_acceleration: float
+    *,
+    snapshot: DeadzoneSnapshot,
+    primary_angular_acceleration: float,
+    shift_acceleration: float,
 ) -> float:
     """Evaluate the free primary axial residual at selected accelerations."""
 

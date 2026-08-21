@@ -88,7 +88,10 @@ class HelicalPulleyCoupling:
     def __post_init__(self) -> None:
         if not isinstance(self.profile, HelixProfile):
             raise TypeError("profile must be a HelixProfile.")
-        if not isfinite(self.opening_per_axial_position) or self.opening_per_axial_position == 0.0:
+        if (
+            not isfinite(self.opening_per_axial_position)
+            or self.opening_per_axial_position == 0.0
+        ):
             raise ValueError("opening_per_axial_position must be finite and nonzero.")
         if not isfinite(self.opening_offset):
             raise ValueError("opening_offset must be finite.")

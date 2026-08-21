@@ -310,7 +310,6 @@ class BeltPulleyGeometry:
             d2_center_of_mass_ds2=d2_radius_ds2,
         )
 
-
     def _coerce_shift_to_topology_side(
         self,
         shift: float,

@@ -71,9 +71,7 @@ class CentrifugalRampForce:
         """
 
         _radius, _shaft_inertia, d_inertia_dx = self._kinematics(context)
-        return AffineClosureScalar(
-            bias=(0.5 * context.shaft_speed**2 * d_inertia_dx)
-        )
+        return AffineClosureScalar(bias=(0.5 * context.shaft_speed**2 * d_inertia_dx))
 
     def evaluate_element(
         self, context: PulleyActuationContext
@@ -128,9 +126,7 @@ class CentrifugalRampForce:
             )
         mass = self._spec.flyweight_mass
         shaft_inertia = mass * flyweight_radius**2
-        d_inertia_dx = (
-            2.0 * mass * flyweight_radius * ramp.first_derivative
-        )
+        d_inertia_dx = 2.0 * mass * flyweight_radius * ramp.first_derivative
         return flyweight_radius, shaft_inertia, d_inertia_dx
 
 

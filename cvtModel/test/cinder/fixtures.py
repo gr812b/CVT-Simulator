@@ -226,9 +226,7 @@ def build_baja_trial_baseline(
         primary_outer_radius_at_zero_shift=(
             c.primary_inner_radius_at_low + c.belt_height
         ),
-        secondary_outer_radius_at_zero_shift=(
-            c.secondary_outer_radius_at_low
-        ),
+        secondary_outer_radius_at_zero_shift=(c.secondary_outer_radius_at_low),
         sheave_half_angle=radians(c.sheave_half_angle_degrees),
         deadzone_shift=c.deadzone_shift,
         max_shift=c.max_shift,

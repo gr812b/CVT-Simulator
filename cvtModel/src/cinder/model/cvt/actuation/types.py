@@ -108,7 +108,10 @@ class HelicalCouplingState:
     def __post_init__(self) -> None:
         if not isinstance(self.kinematics, HelixShiftKinematics):
             raise TypeError("kinematics must be a HelixShiftKinematics instance.")
-        if not isfinite(self.opening_per_axial_position) or self.opening_per_axial_position == 0.0:
+        if (
+            not isfinite(self.opening_per_axial_position)
+            or self.opening_per_axial_position == 0.0
+        ):
             raise ValueError("opening_per_axial_position must be finite and nonzero.")
         if not isfinite(self.opening_offset):
             raise ValueError("opening_offset must be finite.")
@@ -119,10 +122,7 @@ class HelicalCouplingState:
 
     @property
     def d2theta_daxial2(self) -> float:
-        return (
-            self.kinematics.d2theta_dopening2
-            * self.opening_per_axial_position**2
-        )
+        return self.kinematics.d2theta_dopening2 * self.opening_per_axial_position**2
 
     def validate_local_position(self, axial_position: float) -> None:
         if not isfinite(axial_position):

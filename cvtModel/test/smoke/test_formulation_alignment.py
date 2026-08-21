@@ -25,10 +25,21 @@ from cinder.model.cvt.contact import (
 )
 from cinder.model.cvt.dynamics.equation_context import TrialEquationContext
 from cinder.model.cvt.dynamics.rows.primary_axial import build_primary_axial_equation
-from cinder.model.cvt.dynamics.rows.primary_traction import build_primary_traction_equation
-from cinder.model.cvt.dynamics.rows.secondary_axial import build_secondary_axial_equation
-from cinder.model.cvt.dynamics.rows.secondary_traction import build_secondary_traction_equation
-from cinder.model.cvt.profiles import HelixProfile, LinearSegment, PiecewiseRamp, linear_helix_segment
+from cinder.model.cvt.dynamics.rows.primary_traction import (
+    build_primary_traction_equation,
+)
+from cinder.model.cvt.dynamics.rows.secondary_axial import (
+    build_secondary_axial_equation,
+)
+from cinder.model.cvt.dynamics.rows.secondary_traction import (
+    build_secondary_traction_equation,
+)
+from cinder.model.cvt.profiles import (
+    HelixProfile,
+    LinearSegment,
+    PiecewiseRamp,
+    linear_helix_segment,
+)
 from cinder.model.system import HelicalPulleyCoupling, MechanicalCVTPlant
 from cinder.model.system.state import CVTState
 
@@ -64,10 +75,15 @@ def test_baseline_radius_roles_ratio_range_and_centroid_belt_mass() -> None:
     assert not isclose(low.primary.effective, low.primary.center_of_mass)
 
     assert isclose(low.secondary.effective / low.primary.effective, 2.9422859298377966)
-    assert isclose(high.secondary.effective / high.primary.effective, 0.8559696296255629)
+    assert isclose(
+        high.secondary.effective / high.primary.effective, 0.8559696296255629
+    )
 
     resolved_belt = assembly.inertias.belt
-    expected_l_cm = geometry.spec.belt_outer_length - 2.0 * pi * belt.center_of_mass_depth_from_outer
+    expected_l_cm = (
+        geometry.spec.belt_outer_length
+        - 2.0 * pi * belt.center_of_mass_depth_from_outer
+    )
     assert isclose(resolved_belt.center_of_mass_path_length, expected_l_cm)
     assert isclose(
         resolved_belt.mass,
@@ -99,15 +115,21 @@ def test_physical_normal_resultant_and_signed_lambda_rows_match_formulation() ->
 
     p_axial = build_primary_axial_equation(snapshot=snapshot).residual.gains
     s_axial = build_secondary_axial_equation(snapshot=snapshot).residual.gains
-    assert isclose(p_axial.primary_normal_resultant, -0.5 * cos(snapshot.sheave_half_angle))
-    assert isclose(s_axial.secondary_normal_resultant, -0.5 * cos(snapshot.sheave_half_angle))
+    assert isclose(
+        p_axial.primary_normal_resultant, -0.5 * cos(snapshot.sheave_half_angle)
+    )
+    assert isclose(
+        s_axial.secondary_normal_resultant, -0.5 * cos(snapshot.sheave_half_angle)
+    )
 
     p_traction = build_primary_traction_equation(context=context).residual.gains
     s_traction = build_secondary_traction_equation(context=context).residual.gains
     assert isclose(p_traction.primary_normal_resultant, 0.20)
     assert isclose(s_traction.secondary_normal_resultant, -0.15)
     assert isclose(p_traction.primary_torque, 1.0 / snapshot.geometry.primary.effective)
-    assert isclose(s_traction.secondary_torque, 1.0 / snapshot.geometry.secondary.effective)
+    assert isclose(
+        s_traction.secondary_torque, 1.0 / snapshot.geometry.secondary.effective
+    )
 
     sin_beta = np.sin(snapshot.sheave_half_angle)
     assert isclose(
@@ -122,16 +144,22 @@ def test_physical_normal_resultant_and_signed_lambda_rows_match_formulation() ->
 
 def test_kinetic_lambda_sign_is_global_not_pulley_specific() -> None:
     for interface in (ContactInterface.PRIMARY, ContactInterface.SECONDARY):
-        assert KineticSlipSpecification(
-            interface=interface,
-            direction=SlipDirection.PULLEY_LEADS_BELT,
-            kinetic_lambda_magnitude=0.55,
-        ).signed_lambda == 0.55
-        assert KineticSlipSpecification(
-            interface=interface,
-            direction=SlipDirection.BELT_LEADS_PULLEY,
-            kinetic_lambda_magnitude=0.55,
-        ).signed_lambda == -0.55
+        assert (
+            KineticSlipSpecification(
+                interface=interface,
+                direction=SlipDirection.PULLEY_LEADS_BELT,
+                kinetic_lambda_magnitude=0.55,
+            ).signed_lambda
+            == 0.55
+        )
+        assert (
+            KineticSlipSpecification(
+                interface=interface,
+                direction=SlipDirection.BELT_LEADS_PULLEY,
+                kinetic_lambda_magnitude=0.55,
+            ).signed_lambda
+            == -0.55
+        )
 
 
 def test_point_mass_flyweight_contributes_axial_force_and_shaft_inertia() -> None:
@@ -251,7 +279,9 @@ def test_engagement_boundary_uses_explicit_one_sided_tangents() -> None:
     assert geometry.evaluate_engaged(below).primary.d_effective_ds > 0.0
 
 
-def test_mass_metric_engagement_capture_redistributes_shift_momentum_without_energy_creation() -> None:
+def test_mass_metric_engagement_capture_redistributes_shift_momentum_without_energy_creation() -> (
+    None
+):
     from cinder.execution.hybrid.cvt_impact import (
         CVTVelocityTopology,
         project_cvt_velocity_topology,
@@ -291,7 +321,9 @@ def test_mass_metric_engagement_capture_redistributes_shift_momentum_without_ene
     assert capture.momentum_residual < 1e-11
 
 
-def test_upper_stop_projection_transfers_helix_relative_momentum_into_secondary_shaft() -> None:
+def test_upper_stop_projection_transfers_helix_relative_momentum_into_secondary_shaft() -> (
+    None
+):
     from cinder.execution.hybrid.cvt_impact import (
         CVTVelocityTopology,
         project_cvt_velocity_topology,
@@ -332,9 +364,13 @@ def test_upper_stop_projection_transfers_helix_relative_momentum_into_secondary_
     assert impact.momentum_residual < 1e-11
 
 
-def test_low_ratio_seat_constrains_secondary_axial_row_not_primary_axial_balance() -> None:
+def test_low_ratio_seat_constrains_secondary_axial_row_not_primary_axial_balance() -> (
+    None
+):
     from cinder.model.cvt.dynamics.shift_constraints import EngagedShiftConstraint
-    from cinder.model.cvt.dynamics.state_fixed_equations import build_state_fixed_equations
+    from cinder.model.cvt.dynamics.state_fixed_equations import (
+        build_state_fixed_equations,
+    )
 
     plant = MechanicalCVTPlant.from_assembly(_assembly())
     s_e = plant.geometry.spec.deadzone_shift
@@ -355,7 +391,9 @@ def test_low_ratio_seat_constrains_secondary_axial_row_not_primary_axial_balance
     assert rows.secondary_axial.name == "low_ratio_seat_constraint"
 
 
-def test_geometry_event_surfaces_snap_only_roundoff_sized_boundary_differences() -> None:
+def test_geometry_event_surfaces_snap_only_roundoff_sized_boundary_differences() -> (
+    None
+):
     from cinder.execution.hybrid.cvt_operating_limits import CVTShiftOperatingLimits
     from cinder.execution.hybrid.cvt_regime_events import (
         CVTRegimeEvent,
@@ -368,7 +406,9 @@ def test_geometry_event_surfaces_snap_only_roundoff_sized_boundary_differences()
         engagement_shift=s_e,
         upper_stop_shift=_assembly().geometry.spec.max_shift,
     )
-    events = {event.name: event for event in build_engaged_free_boundary_events(limits=limits)}
+    events = {
+        event.name: event for event in build_engaged_free_boundary_events(limits=limits)
+    }
     low = events[CVTRegimeEvent.LOW_RATIO_SEAT_REACHED.value]
 
     vector = np.array([0.0, 0.0, 0.0, s_e, 0.0], dtype=float)

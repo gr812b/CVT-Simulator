@@ -181,9 +181,7 @@ def project_cvt_velocity_topology(
         solution = np.linalg.solve(kkt, rhs)
         velocity_plus = solution[:4]
         multipliers = solution[4:]
-        constraint_residual = float(
-            np.max(np.abs(constraint_matrix @ velocity_plus))
-        )
+        constraint_residual = float(np.max(np.abs(constraint_matrix @ velocity_plus)))
         momentum_residual = float(
             np.max(
                 np.abs(
@@ -304,7 +302,9 @@ def _physical_velocity_map(
 
     def add(weight: float, row: tuple[float, float, float, float]) -> None:
         if not isfinite(weight) or weight < 0.0:
-            raise ValueError("Physical impact inertia weights must be finite/nonnegative.")
+            raise ValueError(
+                "Physical impact inertia weights must be finite/nonnegative."
+            )
         if weight == 0.0:
             return
         rows.append(row)

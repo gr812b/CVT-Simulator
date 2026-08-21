@@ -8,14 +8,16 @@ side: each reset is returned through ``HybridTransition.successor_state``.
 
 from __future__ import annotations
 
-from dataclasses import replace
 from typing import TYPE_CHECKING
 
 import numpy as np
 from numpy.typing import NDArray
 
 from cinder.model.cvt.contact import ContactInterface, ContactRegime
-from cinder.model.cvt.dynamics.deadzone import DeadzoneDynamicsEvaluator, build_deadzone_snapshot
+from cinder.model.cvt.dynamics.deadzone import (
+    DeadzoneDynamicsEvaluator,
+    build_deadzone_snapshot,
+)
 from cinder.model.cvt.dynamics.deadzone.free import solve_deadzone_primary_free
 from cinder.model.cvt.dynamics.shift_constraints import EngagedShiftConstraint
 from cinder.model.system.ports import CVTShaftBoundaryValues
@@ -38,8 +40,6 @@ from .state import CVTState
 
 if TYPE_CHECKING:
     from .cvt_contact import CVTContactEvaluation, EngagedCVTContactEvaluator
-
-
 
 
 def classify_initial_cvt_regime(
@@ -189,9 +189,7 @@ def primary_contact_separation_at_engagement(
         shift_constraint=EngagedShiftConstraint.LOW_RATIO_SEAT,
         shaft_boundaries=shaft_boundaries,
     )
-    normal_margin = (
-        seat.normal_primary - switching_settings.normal_resultant_floor
-    )
+    normal_margin = seat.normal_primary - switching_settings.normal_resultant_floor
 
     contact_free_state = CVTState.from_vector(projected)
     deadzone_snapshot = build_deadzone_snapshot(
@@ -533,9 +531,7 @@ def _resolve_low_ratio_seat_arrival(
         lock_secondary_belt=lock_secondary,
     )
     energy_resolution = (
-        8192.0
-        * np.finfo(float).eps
-        * max(1.0, hypothetical_seat.pre_kinetic_energy)
+        8192.0 * np.finfo(float).eps * max(1.0, hypothetical_seat.pre_kinetic_energy)
     )
 
     if hypothetical_seat.dissipated_energy > energy_resolution:
@@ -661,6 +657,7 @@ def _resolve_low_ratio_seat_arrival(
         successor_state=projected,
     )
 
+
 def _resolve_low_ratio_seat_disengagement(
     *,
     time: float,
@@ -729,7 +726,6 @@ def _resolve_low_ratio_seat_release(
         vector=vector,
         shift_position=limits.engagement_shift,
     )
-    projected_state = CVTState.from_vector(projected)
     separation_indicator, primary_normal, opening_acceleration = (
         primary_contact_separation_at_engagement(
             evaluator=evaluator,

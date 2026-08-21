@@ -90,7 +90,9 @@ class ResolvedBeltMass:
     def mass(self) -> float:
         """Return ``m_b = rho_b A_b L_b,cm``."""
 
-        return self.density * self.cross_sectional_area * self.center_of_mass_path_length
+        return (
+            self.density * self.cross_sectional_area * self.center_of_mass_path_length
+        )
 
     @property
     def linear_density(self) -> float:

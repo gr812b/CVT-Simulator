@@ -16,6 +16,7 @@ from numpy.typing import NDArray
 from .cvt_operating_limits import CVTShiftOperatingLimits
 from .hybrid import HybridEvent
 
+
 class CVTRegimeEvent(str, Enum):
     """Events that change engagement or a unilateral shift constraint."""
 

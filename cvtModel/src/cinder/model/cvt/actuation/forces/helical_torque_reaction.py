@@ -79,9 +79,7 @@ class HelicalTorqueReactionForce:
             ActuationContribution(
                 key="helix_torsional_preload",
                 label="Helix torsional spring",
-                relation=AffineClosureScalar(
-                    bias=motion_ratio * terms.spring_torque
-                ),
+                relation=AffineClosureScalar(bias=motion_ratio * terms.spring_torque),
             ),
             ActuationContribution(
                 key="helix_shift_speed_curvature_force",
@@ -100,11 +98,7 @@ class HelicalTorqueReactionForce:
                 label="Helix force from shaft acceleration",
                 relation=AffineClosureScalar(
                     gains=ClosureGains.from_by_unknown(
-                        {
-                            channels.shaft_angular_acceleration: (
-                                -motion_ratio * inertia
-                            )
-                        }
+                        {channels.shaft_angular_acceleration: (-motion_ratio * inertia)}
                     )
                 ),
             ),
@@ -159,9 +153,7 @@ class HelicalTorqueReactionForce:
         spring_torque = self._spec.torsional_stiffness * (
             self._spec.initial_twist - kinematics.theta
         )
-        curvature_angular_acceleration = (
-            kinematics.d2theta_ds2 * context.shift_speed**2
-        )
+        curvature_angular_acceleration = kinematics.d2theta_ds2 * context.shift_speed**2
 
         closing_force = AffineClosureScalar(
             bias=(
@@ -173,15 +165,12 @@ class HelicalTorqueReactionForce:
                     {
                         channels.shaft_angular_acceleration: -motion_ratio * inertia,
                         channels.shaft_torque: (
-                            motion_ratio
-                            * self._spec.movable_member_torque_fraction
+                            motion_ratio * self._spec.movable_member_torque_fraction
                         ),
                     }
                 )
                 + ClosureGains(
-                    shift_acceleration=(
-                        -motion_ratio * inertia * kinematics.dtheta_ds
-                    )
+                    shift_acceleration=(-motion_ratio * inertia * kinematics.dtheta_ds)
                 )
             ),
         )
@@ -192,9 +181,7 @@ class HelicalTorqueReactionForce:
                 ClosureGains.from_by_unknown(
                     {channels.shaft_angular_acceleration: -inertia}
                 )
-                + ClosureGains(
-                    shift_acceleration=(-inertia * kinematics.dtheta_ds)
-                )
+                + ClosureGains(shift_acceleration=(-inertia * kinematics.dtheta_ds))
             ),
         )
         return _HelixTerms(

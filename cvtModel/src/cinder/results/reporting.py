@@ -970,9 +970,11 @@ def _add_audit_signals(add, inspections: tuple[CVTStateInspection, ...]) -> None
         "audit",
         np.array(
             [
-                np.nan
-                if item is None or item.scaled_condition_number is None
-                else item.scaled_condition_number
+                (
+                    np.nan
+                    if item is None or item.scaled_condition_number is None
+                    else item.scaled_condition_number
+                )
                 for item in audits
             ]
         ),

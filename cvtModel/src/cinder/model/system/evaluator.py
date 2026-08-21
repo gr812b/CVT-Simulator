@@ -449,6 +449,7 @@ def _validate_ramp_domain(
                     f"{name} centrifugal-ramp profile gives a non-positive flyweight radius."
                 )
 
+
 def _validate_compression_spring_domains(
     *,
     primary_actuator: PulleyActuator,
