@@ -16,11 +16,6 @@ from numpy.typing import NDArray
 from .cvt_operating_limits import CVTShiftOperatingLimits
 from .hybrid import HybridEvent
 
-_BOUNDARY_REARM_TIME_SECONDS = 1.0e-6
-_BOUNDARY_REST_POSITION_TOLERANCE = 1.0e-12
-_BOUNDARY_REST_SPEED_TOLERANCE = 1.0e-12
-
-
 class CVTRegimeEvent(str, Enum):
     """Events that change engagement or a unilateral shift constraint."""
 
@@ -40,6 +35,36 @@ PrimarySeparationIndicator = Callable[[float, NDArray[np.float64]], float]
 UpperStopReactionIndicator = Callable[[float, NDArray[np.float64]], float]
 
 
+def _geometry_boundary_distance(value: float, boundary: float) -> float:
+    """Return ``value - boundary`` with only roundoff-sized root snapping.
+
+    ``solve_ivp`` detects an event from the step endpoint states, then Brent
+    localizes it using the segment dense interpolant.  At a hybrid boundary
+    those two representations can differ by one floating-point ULP even at
+    the same time.  For a terminal event that can turn an exact zero seen by
+    the stepper into a tiny same-sign value seen by Brent, invalidating an
+    otherwise legitimate root bracket.
+
+    Treat values within a few representable spacings of the *same physical
+    boundary* as exactly on that boundary.  This is intentionally unrelated
+    to velocity, solver tolerances, or any physical re-arm distance: it moves
+    no event surface and is many orders of magnitude below the model's length
+    resolution.
+    """
+
+    value = float(value)
+    boundary = float(boundary)
+    distance = value - boundary
+    spacing = max(
+        abs(float(np.spacing(value))),
+        abs(float(np.spacing(boundary))),
+        np.finfo(float).tiny,
+    )
+    if abs(distance) <= 8.0 * spacing:
+        return 0.0
+    return float(distance)
+
+
 def build_deadzone_free_boundary_events(
     *,
     limits: CVTShiftOperatingLimits,
@@ -47,22 +72,10 @@ def build_deadzone_free_boundary_events(
     """Return the only two geometry boundaries reachable from free deadzone."""
 
     def engagement_indicator(_time: float, vector: NDArray[np.float64]) -> float:
-        displacement = float(vector[3] - limits.engagement_shift)
-        shift_speed = float(vector[4])
-        # An engaged-to-deadzone transition begins at this boundary while
-        # opening. Keep the newly deadzone segment on its valid side until a
-        # later genuine closing crossing.
-        return displacement - _BOUNDARY_REARM_TIME_SECONDS * max(-shift_speed, 0.0)
+        return _geometry_boundary_distance(vector[3], limits.engagement_shift)
 
     def lower_stop_indicator(_time: float, vector: NDArray[np.float64]) -> float:
-        displacement = float(vector[3] - limits.lower_stop_shift)
-        shift_speed = float(vector[4])
-        if (
-            abs(displacement) <= _BOUNDARY_REST_POSITION_TOLERANCE
-            and abs(shift_speed) <= _BOUNDARY_REST_SPEED_TOLERANCE
-        ):
-            return _BOUNDARY_REST_POSITION_TOLERANCE
-        return displacement + _BOUNDARY_REARM_TIME_SECONDS * max(shift_speed, 0.0)
+        return _geometry_boundary_distance(vector[3], limits.lower_stop_shift)
 
     return (
         HybridEvent(
@@ -90,25 +103,10 @@ def build_engaged_free_boundary_events(
     """
 
     def low_ratio_seat_indicator(_time: float, vector: NDArray[np.float64]) -> float:
-        displacement = float(vector[3] - limits.engagement_shift)
-        shift_speed = float(vector[4])
-        if (
-            abs(displacement) <= _BOUNDARY_REST_POSITION_TOLERANCE
-            and abs(shift_speed) <= _BOUNDARY_REST_SPEED_TOLERANCE
-        ):
-            # A low-seat release begins at rest and accelerates inward.
-            return _BOUNDARY_REST_POSITION_TOLERANCE
-        return displacement + _BOUNDARY_REARM_TIME_SECONDS * max(shift_speed, 0.0)
+        return _geometry_boundary_distance(vector[3], limits.engagement_shift)
 
     def upper_stop_indicator(_time: float, vector: NDArray[np.float64]) -> float:
-        displacement = float(limits.upper_stop_shift - vector[3])
-        shift_speed = float(vector[4])
-        if (
-            abs(displacement) <= _BOUNDARY_REST_POSITION_TOLERANCE
-            and abs(shift_speed) <= _BOUNDARY_REST_SPEED_TOLERANCE
-        ):
-            return _BOUNDARY_REST_POSITION_TOLERANCE
-        return displacement + _BOUNDARY_REARM_TIME_SECONDS * max(-shift_speed, 0.0)
+        return -_geometry_boundary_distance(vector[3], limits.upper_stop_shift)
 
     return (
         HybridEvent(

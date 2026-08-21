@@ -74,7 +74,11 @@ def resolve_initial_engaged_regime(
     """Choose a post-engagement initial contact regime from a supplied state."""
 
     vector = state.as_vector()
-    snapshot = evaluator.model.snapshot(state=state, shaft_boundaries=shaft_boundaries)
+    snapshot = evaluator.model.snapshot(
+        state=state,
+        shaft_boundaries=shaft_boundaries,
+        geometry_side="engaged",
+    )
     tolerance = evaluator.solve_settings.contact_tolerances.relative_speed_tolerance
     primary_speed = (
         state.belt_speed
@@ -88,18 +92,63 @@ def resolve_initial_engaged_regime(
     primary_direction = _direction_from_established_speed(primary_speed, tolerance)
     secondary_direction = _direction_from_established_speed(secondary_speed, tolerance)
 
-    if primary_direction is not None and secondary_direction is not None:
-        return ContactRegime.both_slip(
-            primary_direction=primary_direction,
-            secondary_direction=secondary_direction,
+    # Established velocity selects kinetic direction, but a zero relative
+    # speed only makes stick *eligible*.  Never declare the other interface
+    # sticking until its constrained closure is actually admissible.  This is
+    # especially important at first engagement, where the exact boundary has
+    # a one-sided geometry tangent.
+    if primary_direction is not None or secondary_direction is not None:
+        candidates: list[ContactRegime] = []
+        if primary_direction is not None and secondary_direction is not None:
+            candidates.append(
+                ContactRegime.both_slip(
+                    primary_direction=primary_direction,
+                    secondary_direction=secondary_direction,
+                )
+            )
+        elif primary_direction is not None:
+            candidates.append(
+                ContactRegime.primary_slip_secondary_stick(
+                    primary_direction=primary_direction
+                )
+            )
+            candidates.extend(
+                ContactRegime.both_slip(
+                    primary_direction=primary_direction,
+                    secondary_direction=direction,
+                )
+                for direction in _slip_directions()
+            )
+        else:
+            assert secondary_direction is not None
+            candidates.append(
+                ContactRegime.primary_stick_secondary_slip(
+                    secondary_direction=secondary_direction
+                )
+            )
+            candidates.extend(
+                ContactRegime.both_slip(
+                    primary_direction=direction,
+                    secondary_direction=secondary_direction,
+                )
+                for direction in _slip_directions()
+            )
+
+        candidate = _best_admissible_candidate(
+            evaluator=evaluator,
+            vector=vector,
+            candidates=candidates,
+            switching_settings=switching_settings,
+            required_static_margin=switching_settings.stick_exit_static_margin,
+            require_outgoing_directions=True,
+            shift_constraint=shift_constraint,
+            shaft_boundaries=shaft_boundaries,
         )
-    if primary_direction is not None:
-        return ContactRegime.primary_slip_secondary_stick(
-            primary_direction=primary_direction
-        )
-    if secondary_direction is not None:
-        return ContactRegime.primary_stick_secondary_slip(
-            secondary_direction=secondary_direction
+        if candidate is not None:
+            return candidate
+        raise RuntimeError(
+            "No admissible engaged contact branch exists for the established "
+            "relative-speed directions at engagement."
         )
 
     stick = evaluator.evaluate_vector(
@@ -511,6 +560,18 @@ def _candidate_is_admissible(
         required_margin=required_static_margin,
     ):
         return False
+    # Acceleration compatibility can only preserve a stick constraint that is
+    # already satisfied at velocity level.  Without this guard, a branch can
+    # be labelled ``stick`` while carrying a finite sliding speed forever.
+    relative_speed_tolerance = (
+        evaluator.solve_settings.contact_tolerances.relative_speed_tolerance
+    )
+    for interface in evaluation.regime.mode.sticking_interfaces:
+        if (
+            abs(evaluation.relative_motion.relative_speed_at(interface))
+            > relative_speed_tolerance
+        ):
+            return False
     if require_outgoing_directions:
         return _slip_directions_are_outgoing(evaluation, evaluation.regime, evaluator)
     return evaluation.slipped_directions_are_consistent()

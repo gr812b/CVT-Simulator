@@ -1,20 +1,19 @@
 """Engaged-shift constraints and recovered unilateral reactions.
 
-The free engaged closure solves the primary axial equation for ``s_ddot``.
-Two non-free constraints can instead hold the primary coordinate:
+Two non-free constraints can hold the shared shift coordinate:
 
-* the low-ratio engagement seat at ``s = s_engage``; and
-* the high-ratio mechanical stop at ``s = s_upper``.
+* at low ratio, the *secondary* movable sheave is against its fully-closed
+  hardware stop;
+* at high ratio, the primary shift coordinate is against its upper stop.
 
 Both constraints impose
 
     s_dot = 0,
     s_ddot = 0.
 
-The primary axial balance is not discarded.  It is recovered after the
-8-by-8 solve as a unilateral reaction, preserving the canonical closure
-unknown basis and keeping the constraint force visible rather than hiding a
-state clamp inside the RHS.
+The physical axial equation belonging to the stopped member is replaced by
+that kinematic row and recovered after the 8-by-8 solve as a unilateral stop
+reaction.  The other pulley axial balance remains active.
 """
 
 from __future__ import annotations
@@ -89,9 +88,11 @@ def build_shift_constraint_equation(
     """Build the fourth state-fixed closure row for one fixed-shift constraint.
 
     The free case is represented by the ordinary primary axial row elsewhere.
-    Both non-free constraints replace it with the exact kinematic row
-    ``s_ddot = 0``.  The omitted primary axial balance is recovered after the
-    solve with the direction appropriate to the active unilateral boundary.
+    At the low-ratio seat the *secondary* movable sheave is on its fully closed
+    hardware stop, so the secondary axial row is replaced by ``s_ddot = 0``
+    while the primary axial balance remains physical.  At the upper stop the
+    primary axial row is replaced instead.  The omitted physical row is then
+    recovered after the solve as the appropriate unilateral stop reaction.
     """
 
     if constraint is EngagedShiftConstraint.FREE:
@@ -120,24 +121,22 @@ def recover_low_ratio_seat_reaction(
     snapshot: DynamicsSnapshot,
     unknowns: ClosureUnknowns,
 ) -> LowRatioSeatReaction:
-    """Recover the low-ratio seat reaction from the omitted primary row.
+    """Recover the low-ratio reaction from the omitted secondary axial row.
 
-    The unconstrained primary balance is
+    At minimum ratio the secondary movable sheave is at its fully-closed
+    hardware limit.  Its unconstrained local closing-direction balance is
 
-        m_p s_ddot + C_p + N_p cos(beta) / 2 - F_p = 0.
+        F_elem,s - N_s cos(beta)/2 = 0.
 
-    Here ``N_p`` is the physical integrated face-normal resultant. At the
-    low-ratio seat, a positive reaction acts in the closing/global
-    positive-shift direction.  Therefore
-
-        R_seat = m_p s_ddot + C_p + N_p cos(beta)/2 - F_p.
-
-    The seat can hold only while ``R_seat >= 0``.  The separate engagement
-    transition policy decides when a nonnegative primary clamp is sufficient to
-    keep the belt engaged instead of allowing a deadzone transition.
+    A positive residual therefore requires the stop to push in the local
+    opening direction.  That is the physically admissible compressive stop
+    reaction, so ``R_seat >= 0`` means the secondary closed stop can hold.
     """
 
-    residual = _free_primary_axial_residual(snapshot=snapshot, unknowns=unknowns)
+    residual = _free_secondary_axial_residual(
+        snapshot=snapshot,
+        unknowns=unknowns,
+    )
     return LowRatioSeatReaction(closing_direction_magnitude=residual)
 
 
@@ -179,4 +178,31 @@ def _free_primary_axial_residual(
         + inertia.local_shift_acceleration_gain * unknowns.shift_acceleration
         + 0.5 * cosine * unknowns.primary_normal_resultant
         - primary_force
+    )
+
+
+def _free_secondary_axial_residual(
+    *,
+    snapshot: DynamicsSnapshot,
+    unknowns: ClosureUnknowns,
+) -> float:
+    """Return the omitted secondary-row residual in local closing sign.
+
+    ``snapshot.secondary_pulley.closing_force`` already contains actuator,
+    translating-mass, and helix inertial terms in the same sign convention as
+    :func:`build_secondary_axial_equation`.
+    """
+
+    if not isinstance(snapshot, DynamicsSnapshot):
+        raise TypeError("snapshot must be a DynamicsSnapshot instance.")
+    if not isinstance(unknowns, ClosureUnknowns):
+        raise TypeError("unknowns must be a ClosureUnknowns instance.")
+
+    cosine = cos(snapshot.sheave_half_angle)
+    if not isfinite(cosine) or cosine <= 0.0:
+        raise ValueError("sheave_half_angle must produce a positive finite cosine.")
+
+    return (
+        snapshot.secondary_pulley.closing_force.evaluate(unknowns)
+        - 0.5 * cosine * unknowns.secondary_normal_resultant
     )

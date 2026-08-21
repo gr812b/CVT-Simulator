@@ -16,14 +16,14 @@ cvtModel/
 │  ├─ cinder/                   # installed CINDER package
 │  └─ cvt_simulator/            # legacy package; retained temporarily, not installed
 ├─ test/
-│  ├─ cinder/                   # CINDER regression tests
+│  ├─ smoke/                    # default formulation/alignment smoke tests
+│  ├─ cinder/                   # retained broader CINDER regression tests
 │  └─ cvt_simulator/            # legacy tests; retained temporarily
 ├─ docs/                        # public CINDER documentation
 ├─ examples/                    # small CINDER-only runnable examples
 ├─ README.md
 ├─ setup.py
-├─ setup.cfg
-└─ pyproject.toml
+└─ setup.cfg
 ```
 
 `launchTools` is intentionally outside the package. It may import CINDER, but
@@ -64,8 +64,9 @@ python -m coverage run -m pytest
 python -m coverage report
 ```
 
-The default test target is `test/cinder`. The retained legacy tests are not run
-by default.
+The default pytest target is `test/smoke`, as configured in `setup.cfg`.  The
+retained broader/legacy suites are not run by default and still contain stale
+migration-era imports.
 
 ## Format and lint CINDER
 
@@ -84,3 +85,20 @@ flake8 src/cinder test/cinder examples
 CINDER’s stable external boundary is `cinder.contracts`. It provides versioned
 assembly documents, component discovery, preflight validation, JSON-safe
 study/result projection, and standard simulation summaries.
+
+## Hybrid impact / energy validation
+
+The current rigid hybrid model uses a generalized mass-metric momentum
+projection for belt captures and metal-stop impacts.  See
+[`docs/HYBRID_IMPACT_MECHANICS.md`](docs/HYBRID_IMPACT_MECHANICS.md) for the
+mechanical interpretation and the remaining explicit approximations.
+
+Reproduce the 45 s mechanical-energy audit with:
+
+```bash
+PYTHONPATH=src MPLBACKEND=Agg python tools/audit_energy_balance.py \
+  --output-dir validation/energy_audit \
+  --rtol 1e-4 --atol 1e-7 --max-step 0.02 --audit-step 0.05
+```
+
+The packaged reference outputs live under `validation/energy_audit/`.

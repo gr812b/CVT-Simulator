@@ -120,8 +120,8 @@ def build_deadzone_snapshot(
     if not isinstance(shaft_boundaries, CVTShaftBoundaryValues):
         raise TypeError("shaft_boundaries must be a CVTShaftBoundaryValues.")
 
-    primary_geometry = model.geometry.evaluate(state.shift_position)
-    locked_geometry = model.geometry.evaluate(engagement_shift)
+    primary_geometry = model.geometry.evaluate_deadzone(state.shift_position)
+    locked_geometry = model.geometry.evaluate_deadzone(engagement_shift)
     primary_coordinate = primary_geometry.primary_axial_coordinate
 
     primary_context = model.primary_actuation_context(

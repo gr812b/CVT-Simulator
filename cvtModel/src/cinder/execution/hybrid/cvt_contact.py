@@ -233,6 +233,7 @@ class EngagedCVTContactEvaluator:
         snapshot = self.model.snapshot(
             state=snapshot_state,
             shaft_boundaries=shaft_boundaries,
+            geometry_side="engaged",
         )
         closure = EngagedContactClosure(
             snapshot=snapshot,
@@ -308,10 +309,19 @@ class EngagedCVTContactEvaluator:
         return evaluation
 
     def _geometry_safe_state(self, state: CVTState) -> CVTState:
-        """Project only out-of-domain integrator stages to valid geometry."""
+        """Project rejected integrator stages onto the active engaged domain.
+
+        A trial stage can cross either the engagement surface or the upper
+        travel stop before solve_ivp localizes the terminal event.  Closure for
+        that rejected stage must still use the engaged-side tangent, so clip to
+        ``[deadzone_shift, max_shift]`` while leaving the raw integration vector
+        untouched for event localization.
+        """
 
         spec = self.model.geometry.spec
-        safe_shift = float(np.clip(state.shift_position, 0.0, spec.max_shift))
+        safe_shift = float(
+            np.clip(state.shift_position, spec.deadzone_shift, spec.max_shift)
+        )
         if safe_shift == state.shift_position:
             return state
         return replace(state, shift_position=safe_shift)

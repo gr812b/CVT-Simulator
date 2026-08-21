@@ -227,3 +227,159 @@ def test_helix_same_element_can_be_mounted_on_either_pulley() -> None:
     # contribution on either mounting.
     assert resolved_force(primary=True) > 0.0
     assert resolved_force(primary=False) > 0.0
+
+
+def test_engagement_boundary_uses_explicit_one_sided_tangents() -> None:
+    assembly = _assembly()
+    geometry = assembly.geometry
+    s_e = geometry.spec.deadzone_shift
+
+    deadzone = geometry.evaluate_deadzone(s_e)
+    engaged = geometry.evaluate_engaged(s_e)
+    assert deadzone.primary.d_effective_ds == 0.0
+    assert deadzone.secondary.d_effective_ds == 0.0
+    assert deadzone.belt_axial_coordinate.d_value_ds == 0.0
+    assert engaged.primary.d_effective_ds > 0.0
+    assert engaged.secondary.d_effective_ds < 0.0
+    assert engaged.belt_axial_coordinate.d_value_ds == 0.5
+
+    # Event localization may land a few ULPs across the common position; that
+    # must snap to the requested topology rather than selecting the other side.
+    above = np.nextafter(s_e, np.inf)
+    below = np.nextafter(s_e, -np.inf)
+    assert geometry.evaluate_deadzone(above).primary.d_effective_ds == 0.0
+    assert geometry.evaluate_engaged(below).primary.d_effective_ds > 0.0
+
+
+def test_mass_metric_engagement_capture_redistributes_shift_momentum_without_energy_creation() -> None:
+    from cinder.execution.hybrid.cvt_impact import (
+        CVTVelocityTopology,
+        project_cvt_velocity_topology,
+    )
+
+    plant = MechanicalCVTPlant.from_assembly(_assembly())
+    s_e = plant.geometry.spec.deadzone_shift
+    incoming = CVTState(
+        primary_angular_speed=210.0,
+        secondary_angular_speed=0.0,
+        belt_speed=0.0,
+        shift_position=s_e,
+        shift_speed=0.30,
+    )
+    capture = project_cvt_velocity_topology(
+        model=plant,
+        vector=incoming.as_vector(),
+        shift_position=s_e,
+        from_topology=CVTVelocityTopology.DEADZONE,
+        to_topology=CVTVelocityTopology.ENGAGED,
+        lock_secondary_belt=True,
+    )
+    outgoing = CVTState.from_vector(capture.successor_state)
+    r_s = plant.geometry.evaluate_engaged(s_e).secondary.effective
+
+    assert 0.0 < outgoing.shift_speed < incoming.shift_speed
+    assert outgoing.secondary_angular_speed != incoming.secondary_angular_speed
+    assert isclose(
+        outgoing.belt_speed,
+        r_s * outgoing.secondary_angular_speed,
+        rel_tol=0.0,
+        abs_tol=1e-12,
+    )
+    assert capture.dissipated_energy >= 0.0
+    assert capture.post_kinetic_energy <= capture.pre_kinetic_energy + 1e-11
+    assert capture.constraint_residual < 1e-12
+    assert capture.momentum_residual < 1e-11
+
+
+def test_upper_stop_projection_transfers_helix_relative_momentum_into_secondary_shaft() -> None:
+    from cinder.execution.hybrid.cvt_impact import (
+        CVTVelocityTopology,
+        project_cvt_velocity_topology,
+    )
+
+    plant = MechanicalCVTPlant.from_assembly(_assembly())
+    s_hi = plant.geometry.spec.max_shift
+    geometry = plant.geometry.evaluate_engaged(s_hi)
+    incoming = CVTState(
+        primary_angular_speed=430.0,
+        secondary_angular_speed=390.0,
+        belt_speed=geometry.secondary.effective * 390.0,
+        shift_position=s_hi,
+        shift_speed=0.002,
+    )
+    impact = project_cvt_velocity_topology(
+        model=plant,
+        vector=incoming.as_vector(),
+        shift_position=s_hi,
+        from_topology=CVTVelocityTopology.ENGAGED,
+        to_topology=CVTVelocityTopology.ENGAGED,
+        stop_shift_velocity=True,
+    )
+    outgoing = CVTState.from_vector(impact.successor_state)
+
+    assert abs(outgoing.shift_speed) < 1e-15
+    # A nonzero secondary helix dtheta/ds means killing s_dot must redistribute
+    # some angular momentum into the common secondary shaft speed.
+    assert not isclose(
+        outgoing.secondary_angular_speed,
+        incoming.secondary_angular_speed,
+        rel_tol=0.0,
+        abs_tol=1e-10,
+    )
+    assert impact.dissipated_energy >= 0.0
+    assert impact.post_kinetic_energy <= impact.pre_kinetic_energy + 1e-11
+    assert impact.constraint_residual < 1e-12
+    assert impact.momentum_residual < 1e-11
+
+
+def test_low_ratio_seat_constrains_secondary_axial_row_not_primary_axial_balance() -> None:
+    from cinder.model.cvt.dynamics.shift_constraints import EngagedShiftConstraint
+    from cinder.model.cvt.dynamics.state_fixed_equations import build_state_fixed_equations
+
+    plant = MechanicalCVTPlant.from_assembly(_assembly())
+    s_e = plant.geometry.spec.deadzone_shift
+    state = CVTState(
+        primary_angular_speed=210.0,
+        secondary_angular_speed=5.0,
+        belt_speed=plant.geometry.evaluate_engaged(s_e).secondary.effective * 5.0,
+        shift_position=s_e,
+        shift_speed=0.0,
+    )
+    snapshot = plant.snapshot(state=state, geometry_side="engaged")
+    rows = build_state_fixed_equations(
+        snapshot=snapshot,
+        shift_constraint=EngagedShiftConstraint.LOW_RATIO_SEAT,
+    )
+
+    assert rows.shift_coordinate.name == "primary_axial"
+    assert rows.secondary_axial.name == "low_ratio_seat_constraint"
+
+
+def test_geometry_event_surfaces_snap_only_roundoff_sized_boundary_differences() -> None:
+    from cinder.execution.hybrid.cvt_operating_limits import CVTShiftOperatingLimits
+    from cinder.execution.hybrid.cvt_regime_events import (
+        CVTRegimeEvent,
+        build_engaged_free_boundary_events,
+    )
+
+    s_e = _assembly().geometry.spec.deadzone_shift
+    limits = CVTShiftOperatingLimits(
+        lower_stop_shift=0.0,
+        engagement_shift=s_e,
+        upper_stop_shift=_assembly().geometry.spec.max_shift,
+    )
+    events = {event.name: event for event in build_engaged_free_boundary_events(limits=limits)}
+    low = events[CVTRegimeEvent.LOW_RATIO_SEAT_REACHED.value]
+
+    vector = np.array([0.0, 0.0, 0.0, s_e, 0.0], dtype=float)
+    vector[3] = np.nextafter(s_e, -np.inf)
+    assert low.function(0.0, vector) == 0.0
+    vector[3] = np.nextafter(s_e, np.inf)
+    assert low.function(0.0, vector) == 0.0
+
+    # The snap is strictly floating-point bookkeeping, not a shifted physical
+    # event surface: a materially different position retains its real sign.
+    vector[3] = s_e + 1.0e-12
+    assert low.function(0.0, vector) > 0.0
+    vector[3] = s_e - 1.0e-12
+    assert low.function(0.0, vector) < 0.0

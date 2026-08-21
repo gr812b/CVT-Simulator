@@ -134,19 +134,6 @@ def build_cvt_contact_events(
         ) -> float:
             evaluation = evaluate(time, vector)
             relative_speed = evaluation.relative_motion.relative_speed_at(interface)
-            relative_acceleration = evaluation.relative_motion.relative_acceleration_at(
-                interface
-            )
-            # A kinetic trajectory can only touch v_rel = 0 and return in the
-            # same Coulomb direction.  That is not a physical re-stick or a
-            # slip-direction reversal.  Re-arm the event at the exact root so
-            # a segmented integrator does not create a no-op transition.
-            if (
-                abs(relative_speed) <= relative_speed_tolerance
-                and direction_sign * relative_acceleration
-                > relative_acceleration_tolerance
-            ):
-                return relative_speed_tolerance
             return direction_sign * relative_speed
 
         events.append(

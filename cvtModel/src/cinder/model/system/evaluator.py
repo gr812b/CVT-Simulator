@@ -258,13 +258,23 @@ class MechanicalCVTPlant:
         *,
         state: CVTState,
         shaft_boundaries: CVTShaftBoundaryValues | None = None,
+        geometry_side: str = "auto",
     ) -> DynamicsSnapshot:
         if shaft_boundaries is None:
             shaft_boundaries = CVTShaftBoundaryValues.zero()
         if not isinstance(shaft_boundaries, CVTShaftBoundaryValues):
             raise TypeError("shaft_boundaries must be a CVTShaftBoundaryValues.")
 
-        geometry = self.geometry.evaluate(state.shift_position)
+        if geometry_side == "auto":
+            geometry = self.geometry.evaluate(state.shift_position)
+        elif geometry_side == "deadzone":
+            geometry = self.geometry.evaluate_deadzone(state.shift_position)
+        elif geometry_side == "engaged":
+            geometry = self.geometry.evaluate_engaged(state.shift_position)
+        else:
+            raise ValueError(
+                "geometry_side must be one of {'auto', 'deadzone', 'engaged'}."
+            )
         primary_context = self.primary_actuation_context(state=state, geometry=geometry)
         secondary_context = self.secondary_actuation_context(
             state=state, geometry=geometry
