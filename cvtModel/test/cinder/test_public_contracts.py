@@ -149,7 +149,10 @@ class PublicContractsTest(unittest.TestCase):
             PulleyClampingForceStudyRequest(
                 cvt=self.assembly,
                 pulley=PulleyLocation.OUTPUT,
-                point=ActuationOperatingPoint(shift_position=spec.deadzone_shift),
+                point=ActuationOperatingPoint(
+                    time=0.0,
+                    shift_position=spec.deadzone_shift,
+                ),
                 axes=(
                     ActuationResponseAxis(
                         ClosureUnknown.SECONDARY_TORQUE,
@@ -206,12 +209,10 @@ class PublicContractsTest(unittest.TestCase):
         decoded = decode_simulation_case_document(document)
         boundary = decoded.case.output_boundary
         self.assertAlmostEqual(
-            boundary.road_profile.sample(vehicle_distance=0.0).grade_angle,
-            0.0,
+            boundary.road_profile.sample(vehicle_distance=0.0).grade_angle, 0.0
         )
         self.assertAlmostEqual(
-            boundary.road_profile.sample(vehicle_distance=89.999).grade_angle,
-            0.0,
+            boundary.road_profile.sample(vehicle_distance=89.999).grade_angle, 0.0
         )
         self.assertAlmostEqual(
             boundary.road_profile.sample(vehicle_distance=90.0).grade_angle,

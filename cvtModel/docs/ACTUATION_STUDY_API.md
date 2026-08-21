@@ -9,9 +9,10 @@ field = sample_pulley_clamping_force(
         cvt=assembly,
         pulley=PulleyLocation.SECONDARY,
         point=ActuationOperatingPoint(
-            shift_position=...,            # global CVT shift coordinate [m]
-            shaft_speed=...,               # selected-pulley speed [rad/s]
-            closure_unknowns=...,          # fixed affine unknown values
+            time=0.0,                    # explicit actuator evaluation time [s]
+            shift_position=...,          # global CVT shift coordinate [m]
+            shaft_speed=...,             # selected-pulley speed [rad/s]
+            closure_unknowns=...,        # fixed affine unknown values
         ),
         axes=(
             ActuationResponseAxis(
@@ -30,6 +31,8 @@ field = sample_pulley_clamping_force(
 `axes` selects one or two real quantities to vary. State quantities use
 `ActuationStateCoordinate`; affine quantities use CINDER's existing
 `ClosureUnknown` enum directly. Every other value stays fixed at `point`.
+`time` is required even for a static study so a time-dependent actuator is
+sampled at a deliberate physical time rather than through an implicit default.
 
 The result contains only self-describing numeric columns, for example:
 

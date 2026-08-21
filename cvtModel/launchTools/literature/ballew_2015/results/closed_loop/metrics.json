@@ -1,0 +1,74 @@
+{
+  "benchmark": "Ballew 2015 closed-loop controller portability comparison",
+  "completed": true,
+  "controller": {
+    "error_definition": "primary_rpm - target_rpm",
+    "feed_forward_force_n": 2400.0,
+    "initial_error_integral_rpm_s": 0.0,
+    "kff": 1.2,
+    "ki": 75.0,
+    "kp": 5.0,
+    "saturation_or_anti_windup": "none added; not published",
+    "target_rpm": 2500.0
+  },
+  "final_state": {
+    "controller_primary_force_n": 845.4327095994498,
+    "error_integral_rpm_s": -11.718728074163327,
+    "mode": "engaged/free/both_slip",
+    "primary_rpm": 2364.86746303234,
+    "secondary_rpm": 1204.5306475590423,
+    "shift_mm": 19.625663352428155,
+    "speed_ratio": 1.9633103298987842
+  },
+  "final_time_s": 5.0,
+  "friction_translation": {
+    "ballew_mu_kinetic": 0.4,
+    "ballew_mu_static": 0.55,
+    "cinder_kinetic_lambda_magnitude": 0.7464101615137755,
+    "cinder_static_lambda_limit": 1.0263139720814414
+  },
+  "metrics": {
+    "primary_force": {
+      "count": 207,
+      "max_absolute_error": 1877.4930117983934,
+      "mean_absolute_error": 1049.2651623060137,
+      "mean_error": -1046.3920829206781,
+      "rmse_percent_of_reference_mean": 46.036393153324916,
+      "root_mean_square_error": 1180.2275546433493
+    },
+    "primary_rpm": {
+      "count": 113,
+      "max_absolute_error": 222.09541912861232,
+      "mean_absolute_error": 95.75116334601893,
+      "mean_error": -8.176187093120108,
+      "rmse_percent_of_reference_mean": 4.3887897485113445,
+      "root_mean_square_error": 109.66510967962864
+    },
+    "secondary_rpm": {
+      "count": 64,
+      "max_absolute_error": 70.24726078442905,
+      "mean_absolute_error": 27.98164398369899,
+      "mean_error": -8.090975890031128,
+      "rmse_percent_of_reference_mean": 2.7426670678952667,
+      "root_mean_square_error": 32.92155449116345
+    },
+    "speed_ratio": {
+      "count": 158,
+      "max_absolute_error": 0.28024245938447256,
+      "mean_absolute_error": 0.08883539930592385,
+      "mean_error": 0.0075101890603555856,
+      "rmse_percent_of_reference_mean": 5.241956605751242,
+      "root_mean_square_error": 0.10929942366273752
+    }
+  },
+  "segment_count": 1630,
+  "solver": {
+    "absolute_tolerance": 1e-09,
+    "max_step_s": 0.001,
+    "maximum_transitions": 2000,
+    "method": "LSODA",
+    "relative_tolerance": 1e-07,
+    "uniform_report_step_s": 0.0002
+  },
+  "transition_count": 1629
+}

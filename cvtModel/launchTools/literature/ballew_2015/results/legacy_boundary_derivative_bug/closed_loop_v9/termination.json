@@ -1,0 +1,34 @@
+{
+  "benchmark": "Ballew 2015 closed-loop controller portability comparison",
+  "completed": false,
+  "controller": {
+    "error_definition": "primary_rpm - target_rpm",
+    "feed_forward_force_n": 2400.0,
+    "initial_error_integral_rpm_s": 0.0,
+    "kff": 1.2,
+    "ki": 75.0,
+    "kp": 5.0,
+    "saturation_or_anti_windup": "none added; not published",
+    "target_rpm": 2500.0
+  },
+  "final_safe_state": {
+    "controller_primary_force_n": 1194.207013368156,
+    "mode": "engaged/free/both_slip",
+    "primary_rpm": 2299.06509765623,
+    "secondary_rpm": 1140.3589208300457,
+    "shift_mm": 0.0035732188806789637
+  },
+  "friction_translation": {
+    "ballew_mu_kinetic": 0.4,
+    "ballew_mu_static": 0.55,
+    "cinder_kinetic_lambda_magnitude": 0.7464101615137755,
+    "cinder_static_lambda_limit": 1.0263139720814414
+  },
+  "full_run_error": "TrialClosureSolveError: Trial closure matrix is singular and cannot be solved.",
+  "interpretation": "The source-constrained Ballew controller is applied to unchanged CINDER. Failure before the published traces become visible is retained as a model/controller compatibility result; controller gains and CINDER physics are not altered to continue.",
+  "last_reproducibly_successful_horizon_s": 0.017200147594757083,
+  "reference_visibility": {
+    "figure_41_primary_first_visible_s": 0.11037527593818997,
+    "figure_45_first_visible_s": 0.09554140127388533
+  }
+}

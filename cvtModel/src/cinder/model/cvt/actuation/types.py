@@ -145,11 +145,14 @@ class HelicalCouplingState:
 class PulleyActuationContext:
     """All local information available to a mounted actuator at one RHS point.
 
-    Basic laws such as springs and centrifugal ramps consume only the local
-    position/speed fields.  A helical torque-reaction law additionally consumes
+    ``time`` is the physical evaluation time and is required for every
+    context, even when the installed actuator is time independent. Basic laws
+    such as springs and centrifugal ramps consume only the local
+    position/speed fields. A helical torque-reaction law additionally consumes
     the host closure channels and :attr:`helical_coupling`.
     """
 
+    time: float
     axial_position: float
     axial_speed: float
     shaft_speed: float
@@ -160,6 +163,7 @@ class PulleyActuationContext:
 
     def __post_init__(self) -> None:
         for name, value in (
+            ("time", self.time),
             ("axial_position", self.axial_position),
             ("axial_speed", self.axial_speed),
             ("shaft_speed", self.shaft_speed),

@@ -1,0 +1,68 @@
+{
+  "benchmark": "Ballew 2015 simulated vehicle-acceleration case",
+  "comparison_kind": "model-to-model; no parameter tuning to Figure 41",
+  "completed": true,
+  "final_cvt_state": {
+    "belt_speed_m_per_s": 4.495199029454553,
+    "primary_rpm": 519.1897098401106,
+    "secondary_rpm": 1222.9047415466546,
+    "shift_m": 0.026275877410433676,
+    "shift_speed_m_per_s": -0.003920970343116586
+  },
+  "final_time_s": 5.0,
+  "initial_conditions": {
+    "belt_speed_m_per_s": 9.666082043620058,
+    "primary_rpm": 2500.0,
+    "secondary_rpm": 1136.0,
+    "shift_m": 0.0017544968868704585
+  },
+  "metrics": {
+    "primary_rpm": {
+      "count": 113,
+      "max_absolute_error": 2047.8807615001965,
+      "mean_absolute_error": 1744.2042377569026,
+      "mean_error": -1744.2042377569026,
+      "rmse_percent_of_reference_mean": 71.88001395404399,
+      "root_mean_square_error": 1796.1055474843045
+    },
+    "secondary_rpm": {
+      "count": 64,
+      "max_absolute_error": 52.22484850182195,
+      "mean_absolute_error": 36.159864883549226,
+      "mean_error": -36.159864883549226,
+      "rmse_percent_of_reference_mean": 3.1870098550252552,
+      "root_mean_square_error": 38.2552150912746
+    },
+    "speed_ratio": {
+      "count": 158,
+      "max_absolute_error": 1.733736335715662,
+      "mean_absolute_error": 1.4090001719737912,
+      "mean_error": -1.4090001719737912,
+      "rmse_percent_of_reference_mean": 69.60571106273594,
+      "root_mean_square_error": 1.4513405346478947
+    }
+  },
+  "reconstruction_warnings": [
+    "A1/A9 output inertia/final-drive interpretation remains an explicit reconstruction assumption.",
+    "A6 holds the first visible Figure 45 force backward over 0-0.095541 s.",
+    "A8 CINDER cannot reproduce Ballew's exact zero-longitudinal-tension distributed belt state."
+  ],
+  "reference_visibility": {
+    "input_rpm_end_s": 4.988962472406182,
+    "input_rpm_start_s": 0.11037527593818997,
+    "output_rpm_end_s": 4.988962472406182,
+    "output_rpm_start_s": 0.11037527593818997
+  },
+  "segment_count": 252,
+  "solver": {
+    "absolute_tolerance": 1e-09,
+    "dense_output_for_reference_sampling": true,
+    "max_step_s": 0.001,
+    "maximum_transitions": 2000,
+    "method": "LSODA",
+    "relative_tolerance": 1e-07,
+    "uniform_report_step_s": 0.005
+  },
+  "termination_reason": "final_time_reached",
+  "transition_count": 251
+}

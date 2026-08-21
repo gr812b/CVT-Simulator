@@ -30,14 +30,7 @@ from .types import (
 def sample_pulley_clamping_force(
     request: PulleyClampingForceStudyRequest,
 ) -> ClampingForceResponseField:
-    """Sample one mounted actuator's real clamping-force relation.
-
-    This is deliberately a thin static wrapper around the production actuator
-    path.  It constructs a local context from the selected CVT geometry,
-    evaluates ``PulleyActuator.inspect()``, resolves that exact affine relation
-    against the requested closure unknowns, and returns numeric columns.  No
-    force law is duplicated here.
-    """
+    """Sample one mounted actuator's real clamping-force relation."""
 
     _validate_shift_position(request.cvt, request.point.shift_position)
     shape = tuple(len(axis.values) for axis in request.axes)
@@ -193,6 +186,7 @@ def _build_pulley_context(
         )
 
     context = PulleyActuationContext(
+        time=point.time,
         axial_position=coordinate.value,
         axial_speed=coordinate.d_value_ds * point.shift_speed,
         shaft_speed=point.shaft_speed,
