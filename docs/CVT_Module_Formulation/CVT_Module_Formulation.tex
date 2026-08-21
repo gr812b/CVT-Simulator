@@ -2097,8 +2097,7 @@ additional axial distance \(d\) on each side.
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=\linewidth]
-{figures/geometry/local_pulley_geometry.png}
+\includegraphics[width=\linewidth]{figures/geometry/local_pulley_geometry.png}
 \caption{
 Local geometry of a belt moving outward between the sheave faces of pulley
 \(j\). Closing the pulley by \(\Delta x\) reduces the available width at
@@ -2191,15 +2190,11 @@ r_{j,\mathrm{inner}}+h_b.
 \end{equation}
 
 The fixed-cross-section assumption in
-\AssRef{assump:fixed-belt-cross-section} also makes \(h_b\) constant.
-Consequently, the inner and outer surfaces undergo the same radial
-displacement, and the axial-to-radial relationship derived above applies to
-either one.
-
-An absolute pulley radius must nevertheless identify which belt surface is
-being measured. The outer surface is used here because it provides a
-convenient and directly measurable reference. Throughout the geometric
-development,
+\AssRef{assump:fixed-belt-cross-section} makes \(h_b\) constant, so the
+axial-to-radial displacement derived above can be read from either surface.
+An absolute pulley radius must nevertheless identify which surface is being
+measured. The outer surface is used here because it provides a convenient and
+directly measurable reference. Throughout the geometric development,
 
 \begin{equation}
 r_j
@@ -2208,12 +2203,114 @@ r_{j,\mathrm{outer}}.
 \label{eq:geometry_radius_convention}
 \end{equation}
 
-The derivative in \Cref{eq:local_radius_position_derivative} describes how
-this radius changes, but one known configuration is needed to establish its
-absolute value. Let \(x_{j,\mathrm{ref}}\) denote a known axial position at
-which the belt is seated, and let \(r_{j,\mathrm{ref}}\) denote the outer
-pulley radius measured at that same position. The outer radius at any other seated
-position is then
+Using the outer surface gives a clear measure of where the belt is seated. It
+does not mean that every physical property of the belt acts at that radius.
+
+The belt tension is carried along the cords embedded within the belt, so it
+acts through the centre of the cord layer. The distance from the pulley shaft
+to this line is therefore the lever arm through which belt tension transmits
+torque, making it the effective radius for gearing. This cord-line radius is
+commonly called the pitch radius \citep{Gerbert1996}.
+
+Let \(d_{\mathrm{cord}}\) denote the radial depth of the cord-layer centre from
+the outer surface, with \(0<d_{\mathrm{cord}}<h_b\). Because the cord line
+lies this far inside the outer surface, its effective radius is
+
+\begin{equation}
+r_{j,\mathrm{eff}}
+=
+r_{j,\mathrm{outer}}-d_{\mathrm{cord}}.
+\label{eq:local_belt_effective_radius}
+\end{equation}
+
+The belt mass is spread throughout the whole cross-section rather than
+concentrated at the outer surface or the cord line. To describe where this
+mass is with one radius, we use its centre of mass and denote the radius to
+that point by \(r_{j,\mathrm{cm}}\). Under the uniform-density approximation,
+the centre of mass is the geometric centroid of the trapezoid.
+
+Let \(y\) measure radially inward from the outer surface, with \(y=0\) at the
+outer surface and \(y=h_b\) at the inner surface, and let
+\(y_{\mathrm{cm}}\) denote the depth of the centre of mass. These two depths
+and their corresponding radii are shown in
+\Cref{fig:belt_cross_section_radial_references}.
+
+\begin{figure}[H]
+\centering
+\IfFileExists{figures/geometry/belt_cross_section_radial_references.png}{%
+\includegraphics[width=0.72\linewidth]
+{figures/geometry/belt_cross_section_radial_references.png}%
+}{%
+\fbox{\parbox[c][0.30\textheight][c]{0.86\linewidth}{\centering
+\textit{Draft figure placeholder: trapezoidal belt cross-section showing the
+outer and inner surfaces, \(b_{\mathrm{out}}\), \(b_{\mathrm{in}}\), and
+\(h_b\). Measure \(y\) radially inward from the outer surface. Mark the
+cord-layer centre at \(d_{\mathrm{cord}}\) and the mass centroid at
+\(y_{\mathrm{cm}}\), together with the radial lines
+\(r_j=r_{j,\mathrm{outer}}\), \(r_{j,\mathrm{eff}}\), and
+\(r_{j,\mathrm{cm}}\).}}}%
+}
+\caption{
+Radial reference lines within the belt cross-section. The outer-surface radius
+\(r_j\) locates the seated belt. The cord-line radius
+\(r_{j,\mathrm{eff}}\) is the lever arm through which belt tension transmits
+torque, while \(r_{j,\mathrm{cm}}\) locates the belt's centre of mass. The
+depths \(d_{\mathrm{cord}}\) and \(y_{\mathrm{cm}}\) are measured radially
+inward from the outer surface.
+}
+\label{fig:belt_cross_section_radial_references}
+\end{figure}
+
+If \(b_{\mathrm{out}}\) and \(b_{\mathrm{in}}\) are the outer and inner
+widths, respectively, the straight sides of the trapezoid give
+
+\begin{equation}
+b(y)
+=
+b_{\mathrm{out}}
+-
+\frac{b_{\mathrm{out}}-b_{\mathrm{in}}}{h_b}\,y.
+\label{eq:local_belt_cross_section_width_distribution}
+\end{equation}
+
+Because the density is uniform, a thin strip at depth \(y\) contains mass in
+proportion to its area \(b(y)\,dy\). The centroid depth is therefore the
+weighted average of \(y\) over the cross-section:
+
+\begin{equation}
+\begin{aligned}
+y_{\mathrm{cm}}
+&=
+\frac{\displaystyle\int_0^{h_b} y\,b(y)\,dy}
+{\displaystyle\int_0^{h_b} b(y)\,dy}
+\\[4pt]
+&=
+h_b
+\frac{b_{\mathrm{out}}+2b_{\mathrm{in}}}
+{3\left(b_{\mathrm{out}}+b_{\mathrm{in}}\right)}.
+\end{aligned}
+\label{eq:local_belt_cross_section_centroid}
+\end{equation}
+
+The result has the expected limiting behaviour. If
+\(b_{\mathrm{out}}=b_{\mathrm{in}}\), the cross-section is rectangular and
+\(y_{\mathrm{cm}}=h_b/2\). For the usual trapezoid with
+\(b_{\mathrm{out}}>b_{\mathrm{in}}\), the additional area near the outer
+surface places the centroid slightly closer to that surface, so
+\(y_{\mathrm{cm}}<h_b/2\). The belt mass therefore follows the radius
+
+\begin{equation}
+r_{j,\mathrm{cm}}
+=
+r_{j,\mathrm{outer}}-y_{\mathrm{cm}}.
+\label{eq:local_belt_mass_centroid_radius}
+\end{equation}
+
+The outer-surface radius map still requires one known configuration to
+establish its absolute placement. Let \(x_{j,\mathrm{ref}}\) denote a known
+axial position at which the belt is seated, and let
+\(r_{j,\mathrm{ref}}\) denote the outer radius measured at that same position.
+The outer radius at any other seated position is then
 
 \begin{equation}
 r_j(x_j)
@@ -2281,17 +2378,21 @@ r_{p,\min}
 
 The linear axial-to-radial relationship in
 \Cref{eq:local_radius_map} is standard in reduced CVT geometry models
-\cite{duan,ballew}. It applies to both pulleys whenever the belt is seated,
-while \Cref{eq:primary_local_radius_map} extends the primary description
-through the deadzone before contact.
+\citep{DuanEtAl2016,Ballew2015}. It applies to both pulleys whenever the belt
+is seated, while \Cref{eq:primary_local_radius_map} extends the primary
+description through the deadzone before contact.
 
 The local geometry now tells us the pulley radius associated with either
-movable-sheave position. To determine which primary and secondary positions
-can occur together, the two local descriptions must next be joined through the
-geometry of the complete belt.
+movable-sheave position. The two local descriptions belong to the same closed
+belt, so only certain primary and secondary positions are geometrically
+compatible.
 
 
 % --------------------------------------------------------------
+
+
+
+
 \subsection{Complete Belt-Loop Geometry}
 \label{sec:belt_loop_geometry}
 
@@ -10219,372 +10320,6 @@ can still produce materially inaccurate dynamics near maximum shift.
 This analysis justifies the use of exact numerical solutions for all
 geometric computations in this work.
 
-\chapter{Common Ramp Profile Designs}\label{sec:appendix-ramp-profiles}
-
-This appendix presents common ramp profile parameterizations for CVT
-primary pulley actuation. From \Eq{eq:primary_centrifugal_axial}, the
-centrifugal axial force is
-\begin{equation}
-F_{p,\mathrm{cent}}(s,\omega_p)
-=
-m_f \omega_p^2 \bigl(r_{f,0} + r_f(s)\bigr) \frac{dr_f}{ds},
-\label{eq:centrifugal_product_form}
-\end{equation}
-where $m_f$ is the flyweight mass, $r_{f,0}$ is the initial flyweight
-radius, and $r_f(s)$ is the radial displacement along the ramp as a
-function of axial shift $s$.
-
-The profile $r_f(s)$ must satisfy the admissibility conditions from
-\Sec{sec:axial}: continuously differentiable, non-negative slope,
-and finite slope throughout $[0, s_{\max}]$.
-
-% --------------------------------------------------------------
-\section{Linear Ramp}
-\label{sec:ramp_linear}
-
-A linear ramp with slope $k_r$ (radial displacement per unit axial shift):
-\begin{equation}
-r_f(s) = k_r \cdot s,
-\qquad
-\frac{dr_f}{ds} = k_r = \text{const}.
-\label{eq:linear_ramp}
-\end{equation}
-
-Substituting into \Eq{eq:centrifugal_product_form}:
-\begin{equation}
-F_{p,\mathrm{cent}}(s,\omega_p)
-= m_f \omega_p^2 k_r (r_{f,0} + k_r s)
-= m_f \omega_p^2 k_r r_{f,0} + m_f \omega_p^2 k_r^2 s.
-\label{eq:linear_ramp_force}
-\end{equation}
-
-At constant $\omega_p$, axial force increases linearly with $s$ because
-the growing radius is multiplied by a constant slope. Simple to manufacture,
-but may cause aggressive shifting at high ratio.
-
-% --------------------------------------------------------------
-\section{Circular Arc Ramp}
-\label{sec:ramp_circular}
-
-A circular arc ramp is designed to reduce force variation across the shift
-range by achieving \emph{partial} cancellation. The key insight is to parameterize
-the arc by desired slope angles $\alpha_1$ and $\alpha_2$ at the start and end
-of the segment, where $|dr_f/ds| = \tan\alpha$ specifies the force multiplier.
-This provides direct control over actuation behavior at engagement (high slope)
-versus overdrive (low slope).
-
-For a circle of radius $R_c$ centered at $(s_c, r_c)$, the ramp profile
-satisfies:
-\begin{equation}
-(s - s_c)^2 + (r_f - r_c)^2 = R_c^2.
-\end{equation}
-
-Solving for $r_f(s)$ on the upper arc:
-\begin{equation}
-r_f(s) = r_c + \sqrt{R_c^2 - (s - s_c)^2}.
-\label{eq:circ_ramp}
-\end{equation}
-
-Implicit differentiation yields:
-\begin{equation}
-\frac{dr_f}{ds}
-= \frac{-(s - s_c)}{\sqrt{R_c^2 - (s - s_c)^2}}
-= \frac{-(s - s_c)}{r_f - r_c}.
-\label{eq:circ_slope}
-\end{equation}
-
-\paragraph{Parameterization from slope angles.}
-
-At any point on the arc where the local slope angle is $\alpha$
-(i.e.\ $dr_f/ds = \tan\alpha$), the circle constraint combined with
-\Eq{eq:circ_slope} gives the parametric form:
-\begin{align}
-s &= s_c - R_c\sin\alpha,
-&
-r_f &= r_c + R_c\cos\alpha.
-\label{eq:circ_parametric}
-\end{align}
-The slope angle $\alpha$ decreases monotonically from $\alpha_1$ (entry) to
-$\alpha_2 < \alpha_1$ (exit) as $s$ increases along the ramp. Applying
-\Eq{eq:circ_parametric} at both boundary shifts $s_1$ and $s_2$ and
-subtracting:
-\begin{equation}
-s_2 - s_1 = R_c(\sin\alpha_1 - \sin\alpha_2).
-\end{equation}
-With $\Delta s = s_2 - s_1$ as the total axial span of the ramp segment,
-the arc radius and center are determined entirely by the two slope angles:
-\begin{equation}
-R_c = \frac{\Delta s}{\sin\alpha_1 - \sin\alpha_2},
-\qquad
-s_c = s_1 + R_c\sin\alpha_1.
-\label{eq:circ_params}
-\end{equation}
-The boundary condition $r_f(s_1) = 0$ (flyweights at their initial radius at
-ramp entry) then fixes the radial center:
-\begin{equation}
-r_c = -R_c\cos\alpha_1.
-\label{eq:circ_rc}
-\end{equation}
-
-Substituting into \Eq{eq:centrifugal_product_form}:
-\begin{equation}
-F_{p,\mathrm{cent}}(s,\omega_p)
-= m_f \omega_p^2 (r_{f,0} + r_f) \cdot \frac{-(s - s_c)}{r_f - r_c}.
-\label{eq:circ_force}
-\end{equation}
-
-To see the cancellation explicitly, split
-$r_{f,0} + r_f = (r_{f,0} + r_c) + (r_f - r_c)$:
-\begin{align}
-F_{p,\mathrm{cent}}
-&=
-m_f \omega_p^2
-\left[
-\underbrace{(r_f - r_c)}_{\text{cancels}} \cdot \frac{-(s-s_c)}{r_f - r_c}
-+
-(r_{f,0} + r_c) \cdot \frac{-(s-s_c)}{r_f - r_c}
-\right]
-\nonumber\\[6pt]
-&=
--m_f \omega_p^2\,(s - s_c)
-\left[
-1 + \frac{r_{f,0} + r_c}{r_f - r_c}
-\right].
-\label{eq:circ_split}
-\end{align}
-
-This form reveals the structure clearly. The dominant factor is $-(s - s_c)$,
-which is linear in shift: the $(r_f - r_c)$ terms cancel exactly in the first
-part of the split. The bracket $\left[1 + \dfrac{r_{f,0}+r_c}{r_f-r_c}\right]$
-is a nonlinear correction multiplier. Using the parametric form
-\Eq{eq:circ_parametric} with \Eq{eq:circ_rc}, the bracket evaluates to
-\begin{equation}
-1 + \frac{r_{f,0}+r_c}{r_f-r_c}
-=
-1 + \frac{r_{f,0} - R_c\cos\alpha_1}{R_c\cos\alpha},
-\label{eq:circ_bracket}
-\end{equation}
-where $\alpha$ is the local slope angle at shift $s$, sweeping from $\alpha_1$
-at entry to $\alpha_2$ at exit. This makes the effective proportionality between
-force and $(s-s_c)$ position-dependent.
-
-The numerator $r_{f,0} - R_c\cos\alpha_1$ is the key residual: it is
-controlled entirely by the choice of $\alpha_1$, $\alpha_2$, and $\Delta s$
-through $R_c = \Delta s/(\sin\alpha_1 - \sin\alpha_2)$. Increasing either $\alpha_1$
-or $\Delta s$ raises $R_c$, making $R_c\cos\alpha_1$ larger and the residual
-smaller (or negative). The entry force scale, the exit force scale, and the
-degree of position-dependence between them are therefore all coupled to the
-same two angle choices. There is no freedom to set the overall force scale
-independently of the nonlinearity — changing $\alpha_1$ and $\alpha_2$ adjusts
-both simultaneously.
-
-The condition $r_{f,0} = R_c\cos\alpha_1$ makes the residual zero, so the
-bracket equals 1 everywhere and force is exactly proportional to shift. This
-is the angle configuration at which the circular arc best approximates the
-hyperbolic ideal — it gives a practical design rule for tuning.
-
-The practical consequence is important: at a fixed engine speed $\omega_p$,
-the centrifugal force is approximately proportional to $(s - s_c)$, growing
-linearly with shift. This directly matches the linear restoring force of the
-primary spring (force $\propto k_s \cdot s$). A spring-loaded primary can
-therefore be tuned to balance the centrifugal flyweights at a target shift,
-and the linear character of the circular arc ensures the equilibrium is
-stable across the shift range rather than concentrated at a single point.
-
-Circular arcs are widely used in practice due to ease of manufacture and
-sufficient compensation. The nonlinear residual is small when the ramp center
-offset $(r_{f,0} + r_c)$ is small relative to the arc radius $R_c$, but it
-cannot be eliminated entirely. The following section shows how to \emph{exactly}
-achieve the linear target by choosing a different ramp geometry.
-
-% --------------------------------------------------------------
-\section{Hyperbolic Ramp (Perfect Cancellation)}
-\label{sec:ramp_hyperbolic}
-
-From \Eq{eq:circ_bracket}, the circular arc force-to-shift proportionality
-constant is:
-\begin{equation}
-\frac{F_{p,\mathrm{cent}}}{-m_f\omega_p^2(s-s_c)}
-= 1 + \frac{r_{f,0} - R_c\cos\alpha_1}{R_c\cos\alpha}.
-\end{equation}
-This varies with position because $\alpha$ changes along the arc. The natural
-question is: what ramp profile makes this ratio a \emph{true constant}?
-That constant is what we call $K$, and the profile that achieves it satisfies:
-\begin{equation}
-(r_{f,0} + r_f(s))\frac{dr_f}{ds} = K s,
-\label{eq:target_ode}
-\end{equation}
-where $K > 0$. This produces centrifugal force exactly proportional to shift:
-\begin{equation}
-F_{p,\mathrm{cent}}(s,\omega_p)
-= m_f \omega_p^2 K s.
-\label{eq:target_force}
-\end{equation}
-
-$K$ is not a free parameter any more than $R_c$ is for the circular arc: just
-as $R_c$ is uniquely determined by $\alpha_1$, $\alpha_2$, and $\Delta s$
-(\Eq{eq:circ_params}), $K$ is uniquely determined by $\alpha_1$, $\alpha_2$,
-$s_1$, and $s_2$ (derived in the parameterization below). What differs is not
-the design inputs, but that the hyperbolic profile makes $K$ exactly constant
-along the entire ramp, whereas the circular arc's equivalent ratio changes
-with position.
-
-\paragraph{Deriving the profile.}
-
-Equation~\eqref{eq:target_ode} is separable. Substituting $u = r_{f,0} + r_f$,
-so $du/ds = dr_f/ds$:
-\begin{equation}
-u \, du = K s \, ds.
-\end{equation}
-
-Integrating both sides and writing the constant of integration as
-$\tfrac{1}{2}K s_0^2$:
-\begin{equation}
-\tfrac{1}{2}u^2 = \tfrac{1}{2}K(s^2 + s_0^2).
-\end{equation}
-
-Substituting back $u = r_{f,0} + r_f$:
-\begin{equation}
-\boxed{
-(r_{f,0} + r_f(s))^2 = K(s^2 + s_0^2),
-}
-\label{eq:hyperbolic_ramp}
-\end{equation}
-
-giving the explicit profile:
-\begin{equation}
-r_f(s) = \sqrt{K(s^2 + s_0^2)} - r_{f,0}.
-\label{eq:hyperbolic_profile}
-\end{equation}
-
-In the $(s, r_f)$ plane, the locus $(r_{f,0}+r_f)^2 = Ks^2$ (taking $s_0 = 0$)
-is a branch of a \emph{hyperbola} — hence the name. Unlike the circular arc,
-where the residual multiplier in \Eq{eq:circ_split} could not be removed, this
-profile forces the product $(r_{f,0}+r_f)\cdot dr_f/ds = Ks$ exactly for all
-$s$.
-
-\paragraph{Local slope and its variation.}
-
-To see how $K$ relates to actual ramp angles, differentiate
-\Eq{eq:hyperbolic_ramp} implicitly:
-\begin{equation}
-\frac{dr_f}{ds}
-= \frac{K s}{r_{f,0}+r_f}
-= \frac{\sqrt{K}\, s}{\sqrt{s^2 + s_0^2}}.
-\label{eq:hyperbolic_slope}
-\end{equation}
-
-Since $dr_f/ds = \tan\alpha(s)$ by definition of the ramp slope angle, the
-local angle satisfies:
-\begin{equation}
-\tan\alpha(s) = \frac{\sqrt{K}\, s}{\sqrt{s^2 + s_0^2}}.
-\label{eq:hyperbolic_angle}
-\end{equation}
-
-Two observations follow. First, the slope is zero at $s = 0$ and grows
-monotonically toward the asymptote $\sqrt{K}$ as $s \to \infty$. This is the
-opposite trend from a circular arc, where the slope decreases from entry to
-exit. The reason is that the growing lever arm $(r_{f,0}+r_f)$ at large shift
-would otherwise amplify force super-linearly; a rising slope exactly compensates
-to keep the product $Ks$ linear. Second, the asymptotic slope
-$\lim_{s\to\infty} \tan\alpha(s) = \sqrt{K}$ gives a simple interpretation: $K
-= \tan^2\!\alpha_\infty$ where $\alpha_\infty$ is the slope the profile
-approaches at large shift.
-
-\paragraph{Parameterization by entry and exit angles.}
-
-Following the same convention as \Sec{sec:ramp_circular}, specify desired slope
-angles $\alpha_1$ and $\alpha_2$ at entry shift $s_1$ and exit shift $s_2$.
-From \Eq{eq:hyperbolic_angle}:
-\begin{align}
-\tan^2\!\alpha_1 &= \frac{K s_1^2}{s_1^2 + s_0^2},
-&
-\tan^2\!\alpha_2 &= \frac{K s_2^2}{s_2^2 + s_0^2}.
-\label{eq:hyperbolic_angle_conditions}
-\end{align}
-
-Dividing the two equations eliminates $K$:
-\begin{equation}
-\frac{\tan^2\!\alpha_1}{\tan^2\!\alpha_2}
-=
-\frac{s_1^2\,(s_2^2 + s_0^2)}{s_2^2\,(s_1^2 + s_0^2)}.
-\end{equation}
-
-Solving for $s_0^2$:
-\begin{equation}
-s_0^2
-=
-\frac{s_1^2 s_2^2\,(\tan^2\!\alpha_2 - \tan^2\!\alpha_1)}
-     {\tan^2\!\alpha_1\, s_2^2 - \tan^2\!\alpha_2\, s_1^2}.
-\label{eq:hyperbolic_s0}
-\end{equation}
-
-Then $K$ follows from either condition in \Eq{eq:hyperbolic_angle_conditions}:
-\begin{equation}
-K
-=
-\frac{\tan^2\!\alpha_1\,(s_1^2 + s_0^2)}{s_1^2}.
-\label{eq:hyperbolic_K}
-\end{equation}
-
-For $s_0^2 > 0$ a consistent solution requires the numerator and denominator of
-\Eq{eq:hyperbolic_s0} to have the same sign. Since the hyperbolic slope
-increases with $s$ (Eq.~\eqref{eq:hyperbolic_slope}), the physically consistent
-case is $\alpha_2 > \alpha_1$ (exit angle larger than entry), with
-$\tan^2\!\alpha_1 s_2^2 > \tan^2\!\alpha_2 s_1^2$ ensuring a positive
-denominator. No solution exists when the two angle conditions give a
-degenerate system ($\tan^2\!\alpha_1 s_2^2 = \tan^2\!\alpha_2 s_1^2$).
-
-\paragraph{Practical impact.}
-
-In most cases the difference between circular and hyperbolic profiles is
-negligible. For the specific ramps implemented in this work, the integrated
-force deviation across the full shift range is less than $1\%$. The hyperbolic
-derivation is nonetheless useful: it establishes the theoretical ideal and
-shows that the circular arc's partial cancellation is not a fundamental
-limitation but rather a small correction from the constant offset $(r_{f,0}+r_c)$.
-
-\paragraph{Limitations.}
-
-Both profiles address only the centrifugal force term. The secondary pulley
-torque feedback ($F_{s,\mathrm{ax}}(s,\tau_s)$ in \Eq{eq:s_ddot_complete})
-introduces load-dependent nonlinear terms that no ramp geometry alone can
-cancel. Circular arcs therefore remain the practical standard—simpler to
-manufacture, well-understood, and sufficient given these irreducible
-secondary-side effects.
-
-% --------------------------------------------------------------
-\section{Piecewise Ramps and Smoothing}
-\label{sec:ramp_piecewise}
-
-Any of the profiles above can be combined in a piecewise fashion: multiple
-linear segments, multiple circular arcs with different angle pairs, or a mix
-of profile types joined at transition shifts $s_1, s_2, \ldots, s_{n-1}$.
-This allows region-specific tuning — steeper slopes at engagement, moderate for
-cruise, gentler near overdrive — without committing to a single global geometry.
-
-\paragraph{Admissibility at junctions.}
-
-The admissibility conditions from \Sec{sec:axial} require $r_f(s)$ to be
-continuously differentiable ($C^1$). A piecewise ramp satisfies $C^0$ by
-construction (the profile value is continuous if segments are joined at a common
-point), but slope continuity may be violated: if the left-segment slope at
-$s_k$ differs from the right-segment slope, Eq.~\eqref{eq:centrifugal_product_form}
-gives a finite force jump at that point. No kinematic singularity occurs, but
-the force has a step discontinuity.
-
-\paragraph{Numerical stiffness considerations.}
-
-A sharp slope discontinuity is not the same as a smooth rapid transition:
-many real implementations use a finite but steep blend region, which the ODE
-solver sees as an extremely large second derivative $d^2r_f/ds^2$ near the
-junction. This can create a locally stiff region and force an adaptive
-integrator to take very small steps near the knot, even if the discontinuity
-is physically mild. If simulation performance is a concern, slope transitions
-should be blended — a short circular arc segment tangent to both adjoining
-profiles is sufficient, as it restores $C^1$ continuity and bounds $d^2r_f/ds^2$
-throughout the ramp.
-
 \chapter{Numerical Methods Summary}\label{sec:appendix-numerics}
 
 This section documents the numerical algorithms used for belt-geometry root
@@ -11414,8 +11149,676 @@ primary radius progressively weakens as the primary radius grows. The ratio
 therefore often changes rapidly at the beginning of the shift and then eases
 off, even without a change in axial shift speed.
 
-\chapter{Primary Flyweight Geometry Examples}\label{sec:primary_flyweight_geometry_examples}
-Placeholder
+% Appendix B replacement: Construction of Primary Flyweight Geometry Maps
+% Intended to be inserted after \appendix in the main document.
+% If this is the second appendix in the main document, LaTeX will number it Appendix B.
+%
+% Required packages in the parent document:
+% \usepackage{amsmath,amssymb,bm}
+
+\chapter{Construction of Primary Flyweight Geometry Maps}
+\label{app:primary_flyweight_geometry}
+
+The primary axial and rotational balances developed in the main derivation do not require the detailed flyweight geometry directly. They require only the configuration maps
+\begin{equation}
+    q_f = q_f(x_p),
+    \qquad
+    J_{f,p} = J_{f,p}(x_p),
+    \label{eq:appB_required_maps}
+\end{equation}
+together with the constant pivot-axis inertia \(I_f\). The first map describes how the flyweight pose changes as the movable primary sheave translates. The second describes how that motion redistributes the flyweight mass about the primary shaft.
+
+These maps form the interface between a particular physical actuator and the general primary equations. Different flyweight mechanisms may therefore be introduced by deriving different geometry maps while leaving the surrounding CVT formulation unchanged.
+
+The first mechanism class treated here is a rigid flyweight pinned to the fixed primary assembly, with a roller near its outer end contacting a ramp rigidly attached to the movable sheave. The ramp may have a general smooth profile and may itself be assembled from several smooth profile segments.
+
+\section{Pivoted Flyweight with a Roller Follower}
+\label{app:flyweight_pivoted_roller}
+
+Consider the radial--axial plane of one primary flyweight. Let \(+\bm e_x\) denote the positive primary closing direction and \(+\bm e_r\) the radially outward direction. The flyweight pivots about the fixed point
+\begin{equation}
+    P = (x_P,r_P).
+\end{equation}
+
+Let \(C\) denote the center of the roller bearing and let
+\begin{equation}
+    \ell = |PC|
+\end{equation}
+be the fixed distance from the flyweight pivot to the roller center. The roller has radius \(R_{\mathrm{roll}}\).
+
+The flyweight pose is described by the same coordinate \(q_f\) used in the main derivation, measured from \(+\bm e_x\) to the body-fixed line from \(P\) to \(C\). The roller-center position implied by a flyweight angle \(q_f\) is therefore
+\begin{equation}
+    \boxed{
+    \bm C(q_f)
+    =
+    \begin{bmatrix}
+        x_P+\ell\cos q_f\\[1mm]
+        r_P+\ell\sin q_f
+    \end{bmatrix}.
+    }
+    \label{eq:appB_roller_center_from_q}
+\end{equation}
+
+The roller center is therefore constrained to a circle of radius \(\ell\) about the pivot. The ramp contact selects the point on this circle that is compatible with the current movable-sheave position.
+
+\subsection{General Ramp Representation}
+\label{app:flyweight_general_ramp}
+
+Rather than assigning the flyweight radius directly as a function of primary shift, the physical ramp itself is described. Introduce a local axial coordinate \(\xi\) fixed to the movable ramp carrier and write the ramp as the graph
+\begin{equation}
+    \boxed{
+    \eta = f(\xi),
+    \qquad
+    \xi\in\mathcal I,
+    }
+    \label{eq:appB_general_ramp}
+\end{equation}
+where \(\eta\) is the radial coordinate in the same local plane.
+
+If the reference axial location of the ramp carrier is \(x_{R,0}\), translation of the movable sheave through \(x_p\) places the physical ramp at
+\begin{equation}
+    \boxed{
+    \bm \Gamma(\xi;x_p)
+    =
+    \begin{bmatrix}
+        x_{R,0}+x_p+\xi\\[1mm]
+        f(\xi)
+    \end{bmatrix}.
+    }
+    \label{eq:appB_ramp_global}
+\end{equation}
+
+The profile \(f\) may be any sufficiently smooth function satisfying the geometric admissibility conditions developed below. Simple profile families remain useful as convenient ways to define the physical ramp. For example,
+\begin{equation}
+    f(\xi)=a+b\xi
+    \label{eq:appB_linear_ramp}
+\end{equation}
+gives a straight ramp, while a circular-arc segment may be written
+\begin{equation}
+    f(\xi)
+    =
+    r_c
+    +
+    \sigma_c
+    \sqrt{
+        R_c^2-(\xi-\xi_c)^2
+    },
+    \qquad
+    \sigma_c\in\{-1,+1\},
+    \label{eq:appB_circular_ramp}
+\end{equation}
+over an interval that remains on one branch of the circle. A hyperbolic segment may similarly be written
+\begin{equation}
+    f(\xi)
+    =
+    r_c
+    +
+    \sigma_h
+    \sqrt{
+        K\left[(\xi-\xi_c)^2+\xi_0^2\right]
+    },
+    \label{eq:appB_hyperbolic_ramp}
+\end{equation}
+and polynomial, spline, or CAD-derived profiles may be used in exactly the same way.
+
+These shapes are used here only to specify the physical contact surface. No force law is implied directly by the choice of \(f\). In particular, the radial motion of the flyweight mass is not generally equal to \(f(x_p)\). For the pivoted mechanism considered here, that motion emerges only after the roller radius, arm length, pivot location, and contact geometry have been applied.
+
+Piecewise profiles are permitted. If
+\begin{equation}
+    f(\xi)=f_i(\xi),
+    \qquad
+    \xi_i\le \xi\le \xi_{i+1},
+    \label{eq:appB_piecewise_ramp}
+\end{equation}
+the pieces must join smoothly enough that the resulting flyweight map satisfies the differentiability requirements of the main model. A geometric corner is not admissible within the active ramp region because the roller normal would change discontinuously there, producing a discontinuity in the flyweight motion ratio. In practice, transitions between straight lines, circular arcs, or other simple primitives may be replaced by smooth polynomial or spline blends.
+
+\subsection{From the Physical Ramp to the Roller-Center Locus}
+\label{app:flyweight_offset_curve}
+
+The roller center does not lie on the physical ramp. At contact it lies one roller radius away in the local normal direction.
+
+The unit tangent of the ramp is
+\begin{equation}
+    \widehat{\bm t}(\xi)
+    =
+    \frac{1}{\sqrt{1+[f'(\xi)]^2}}
+    \begin{bmatrix}
+        1\\
+        f'(\xi)
+    \end{bmatrix},
+    \label{eq:appB_ramp_tangent}
+\end{equation}
+and a corresponding unit normal is
+\begin{equation}
+    \widehat{\bm n}(\xi)
+    =
+    \sigma_n
+    \frac{1}{\sqrt{1+[f'(\xi)]^2}}
+    \begin{bmatrix}
+        -f'(\xi)\\
+        1
+    \end{bmatrix},
+    \qquad
+    \sigma_n\in\{-1,+1\},
+    \label{eq:appB_ramp_normal}
+\end{equation}
+where \(\sigma_n\) selects the side of the ramp on which the physical roller lies.
+
+The locus traced by the center of a roller tangent to the ramp is therefore the offset curve
+\begin{equation}
+    \boxed{
+    \bm \Gamma_R(\xi;x_p)
+    =
+    \bm \Gamma(\xi;x_p)
+    +
+    R_{\mathrm{roll}}\widehat{\bm n}(\xi).
+    }
+    \label{eq:appB_offset_curve}
+\end{equation}
+
+This removes the roller radius from the remaining contact problem. The physical mechanism may now be viewed as the intersection of two curves: a circle of radius \(\ell\) centered at the fixed pivot \(P\), and the roller-center ramp \(\bm\Gamma_R\), which translates axially with the movable sheave.
+
+\subsection{Solving for the Flyweight Angle}
+\label{app:flyweight_solve_q}
+
+A point on the roller-center locus is compatible with the rigid flyweight when its distance from \(P\) is exactly \(\ell\). Define
+\begin{equation}
+    \boxed{
+    g(\xi,x_p)
+    =
+    \left\|
+        \bm \Gamma_R(\xi;x_p)-\bm P
+    \right\|^2
+    -
+    \ell^2.
+    }
+    \label{eq:appB_contact_residual}
+\end{equation}
+
+For a prescribed movable-sheave position \(x_p\), the contact coordinate \(\xi^\star\) is obtained from
+\begin{equation}
+    \boxed{
+    g(\xi^\star,x_p)=0.
+    }
+    \label{eq:appB_contact_root}
+\end{equation}
+
+The corresponding roller center is
+\begin{equation}
+    \bm C(x_p)
+    =
+    \bm \Gamma_R(\xi^\star(x_p);x_p),
+    \label{eq:appB_contact_center}
+\end{equation}
+and the flyweight angle follows immediately:
+\begin{equation}
+    \boxed{
+    q_f(x_p)
+    =
+    \operatorname{atan2}
+    \left(
+        C_r(x_p)-r_P,\,
+        C_x(x_p)-x_P
+    \right).
+    }
+    \label{eq:appB_q_map}
+\end{equation}
+
+Thus the physical ramp profile produces the required configuration map through
+\begin{equation}
+    \boxed{
+    f(\xi)
+    \;\longrightarrow\;
+    \bm \Gamma_R(\xi;x_p)
+    \;\longrightarrow\;
+    \xi^\star(x_p)
+    \;\longrightarrow\;
+    q_f(x_p).
+    }
+    \label{eq:appB_geometry_chain}
+\end{equation}
+
+The roller radius enters through the offset curve, while the arm length and pivot location enter through the circle constraint. None of these quantities needs to be absorbed into an empirical ramp factor.
+
+\subsection{Geometric Admissibility}
+\label{app:flyweight_admissibility}
+
+Equation~\eqref{eq:appB_contact_root} is only an algebraic contact condition. A mathematically valid root need not represent an acceptable physical mechanism. The ramp geometry is therefore restricted so that one continuous, non-interfering contact configuration exists throughout the required primary travel
+\begin{equation}
+    x_p\in\mathcal X_p.
+\end{equation}
+
+The following conditions define the admissible geometry used here.
+
+\paragraph{Existence.}
+For every \(x_p\in\mathcal X_p\), Equation~\eqref{eq:appB_contact_root} must possess a contact solution \(\xi^\star\) inside the active ramp domain.
+
+\paragraph{Unique physical contact.}
+The roller may touch the ramp at only one geometric point. For the center obtained from Equation~\eqref{eq:appB_contact_center},
+\begin{equation}
+    \boxed{
+    \left\|
+        \bm C(x_p)
+        -
+        \bm \Gamma(\xi;x_p)
+    \right\|
+    \ge
+    R_{\mathrm{roll}}
+    \qquad
+    \forall\,\xi\in\mathcal I,
+    }
+    \label{eq:appB_nonpenetration}
+\end{equation}
+with equality only at the physical contact point \(\xi^\star\). Equality at two parameter values representing the same smooth junction is equivalent to one geometric contact and is not considered a second contact.
+
+Equation~\eqref{eq:appB_nonpenetration} prevents both penetration into another portion of the ramp and separated two-point support of the same roller. The model therefore does not choose between two simultaneously admissible contacts by proximity or by a numerical root-selection rule. A ramp that permits two distinct physical contacts at the same \(x_p\) lies outside the present single-contact mechanism class.
+
+\paragraph{Regular roller offset.}
+The offset curve itself must remain regular. Let \(\kappa_n(\xi)\) denote the signed ramp curvature measured toward the selected roller normal. The local offset becomes singular if the roller radius equals the corresponding radius of curvature. The admissible profile therefore satisfies
+\begin{equation}
+    \boxed{
+    1-R_{\mathrm{roll}}\kappa_n(\xi)\neq0
+    }
+    \label{eq:appB_offset_regular}
+\end{equation}
+throughout the contacted region. In practical profile design, a positive margin from zero is preferable to operation arbitrarily close to this limit.
+
+\paragraph{Nonsingular mechanism branch.}
+The circle and roller-center locus must intersect transversely. From Equation~\eqref{eq:appB_contact_residual},
+\begin{equation}
+    \boxed{
+    \frac{\partial g}{\partial \xi}\neq0
+    }
+    \label{eq:appB_branch_regular}
+\end{equation}
+along the operating branch.
+
+If \(g_\xi=0\), the circle is tangent to the roller-center locus. The implicit map \(\xi^\star(x_p)\) then loses regularity and the mechanism approaches a fold or dead-center configuration. Such a point can create an unbounded motion ratio or cause the existing contact branch to disappear.
+
+\paragraph{Correct motion direction and smoothness.}
+The resulting map must satisfy the requirements imposed by the primary dynamics,
+\begin{equation}
+    \boxed{
+    q_f\in C^2,
+    \qquad
+    0<
+    \frac{dq_f}{dx_p}
+    <
+    \infty.
+    }
+    \label{eq:appB_q_admissible}
+\end{equation}
+
+Thus primary closure corresponds continuously to outward flyweight rotation, without a reversal or singular motion ratio.
+
+Together, Equations~\eqref{eq:appB_nonpenetration}--\eqref{eq:appB_q_admissible} provide a stronger criterion than merely selecting the root nearest the previous time step. Continuation from a known assembled state remains useful numerically, but an admissible ramp is designed so that the physical solution itself is unique throughout the modeled travel.
+
+Ramp endpoints may coincide with physical limits of the actuator. Such endpoints are acceptable provided the contact remains regular when approached from inside the modeled interval; the map is not extended beyond a physical stop.
+
+\subsection{Derivatives of the Geometry Map}
+\label{app:flyweight_q_derivatives}
+
+The primary force law requires both \(dq_f/dx_p\) and \(d^2q_f/dx_p^2\). These derivatives may be obtained from the same implicit contact equation rather than by finite-differencing a sampled angle map.
+
+Differentiating
+\begin{equation}
+    g(\xi^\star(x_p),x_p)=0
+\end{equation}
+gives
+\begin{equation}
+    \boxed{
+    \frac{d\xi^\star}{dx_p}
+    =
+    -\frac{g_{x_p}}{g_\xi}.
+    }
+    \label{eq:appB_xi_prime}
+\end{equation}
+
+Differentiating again gives
+\begin{equation}
+    \boxed{
+    \frac{d^2\xi^\star}{dx_p^2}
+    =
+    -
+    \frac{
+        g_{x_px_p}
+        +
+        2g_{x_p\xi}\dfrac{d\xi^\star}{dx_p}
+        +
+        g_{\xi\xi}
+        \left(\dfrac{d\xi^\star}{dx_p}\right)^2
+    }{
+        g_\xi
+    }.
+    }
+    \label{eq:appB_xi_double_prime}
+\end{equation}
+
+The denominator in both expressions shows directly why the nonsingularity condition in Equation~\eqref{eq:appB_branch_regular} is required.
+
+Let
+\begin{equation}
+    \bm v(x_p)
+    =
+    \bm C(x_p)-\bm P
+    =
+    \begin{bmatrix}
+        v_x\\
+        v_r
+    \end{bmatrix},
+    \qquad
+    \|\bm v\|=\ell.
+    \label{eq:appB_v_def}
+\end{equation}
+
+Since
+\begin{equation}
+    q_f=\operatorname{atan2}(v_r,v_x),
+\end{equation}
+its first derivative is
+\begin{equation}
+    \boxed{
+    \frac{dq_f}{dx_p}
+    =
+    \frac{
+        v_x\dfrac{dv_r}{dx_p}
+        -
+        v_r\dfrac{dv_x}{dx_p}
+    }{
+        \ell^2
+    }.
+    }
+    \label{eq:appB_q_prime}
+\end{equation}
+
+Because \(\|\bm v\|=\ell\) is constant, the second derivative simplifies to
+\begin{equation}
+    \boxed{
+    \frac{d^2q_f}{dx_p^2}
+    =
+    \frac{
+        v_x\dfrac{d^2v_r}{dx_p^2}
+        -
+        v_r\dfrac{d^2v_x}{dx_p^2}
+    }{
+        \ell^2
+    }.
+    }
+    \label{eq:appB_q_double_prime}
+\end{equation}
+
+The required derivatives of \(\bm v\) follow from Equation~\eqref{eq:appB_contact_center}:
+\begin{equation}
+    \frac{d\bm C}{dx_p}
+    =
+    \bm e_x
+    +
+    \frac{\partial\bm\Gamma_R}{\partial\xi}
+    \frac{d\xi^\star}{dx_p},
+    \label{eq:appB_C_prime}
+\end{equation}
+and
+\begin{equation}
+    \frac{d^2\bm C}{dx_p^2}
+    =
+    \frac{\partial^2\bm\Gamma_R}{\partial\xi^2}
+    \left(
+        \frac{d\xi^\star}{dx_p}
+    \right)^2
+    +
+    \frac{\partial\bm\Gamma_R}{\partial\xi}
+    \frac{d^2\xi^\star}{dx_p^2}.
+    \label{eq:appB_C_double_prime}
+\end{equation}
+
+Equations~\eqref{eq:appB_xi_prime}--\eqref{eq:appB_C_double_prime} therefore provide the complete \(C^2\) flyweight-angle map required by the transient primary balance.
+
+\section{Shaft-Axis Inertia from the Flyweight Mass Geometry}
+\label{app:flyweight_mass_geometry}
+
+Once \(q_f(x_p)\) is known, constructing \(J_{f,p}(x_p)\) is comparatively direct.
+
+Consider one rigid flyweight and introduce body-fixed coordinates \((u,v,z)\) relative to its pivot. Let the \(u\)-axis coincide with the reference line defining \(q_f\), let \(v\) lie in the axial--radial plane, and let \(z\) point circumferentially along the pivot axis.
+
+Rotation through \(q_f\) gives the radial coordinate of a mass element \(dm\) as
+\begin{equation}
+    r(q_f)
+    =
+    r_P
+    +
+    u\sin q_f
+    +
+    v\cos q_f.
+    \label{eq:appB_mass_radial_coordinate}
+\end{equation}
+
+Its squared perpendicular distance from the primary shaft is
+\begin{equation}
+    r_\perp^2
+    =
+    \left(
+        r_P+u\sin q_f+v\cos q_f
+    \right)^2
+    +
+    z^2.
+    \label{eq:appB_mass_perp_distance}
+\end{equation}
+
+For \(n_f\) identical flyweights arranged symmetrically around the primary, their complete shaft-axis inertia is therefore
+\begin{equation}
+    \boxed{
+    J_{f,p}(q_f)
+    =
+    n_f
+    \int_{\mathcal B}
+    \left[
+        \left(
+            r_P+u\sin q_f+v\cos q_f
+        \right)^2
+        +
+        z^2
+    \right]dm.
+    }
+    \label{eq:appB_J_general}
+\end{equation}
+
+Composition with the geometry map gives the quantity required by the main model:
+\begin{equation}
+    \boxed{
+    J_{f,p}(x_p)
+    =
+    J_{f,p}\!\left(q_f(x_p)\right).
+    }
+    \label{eq:appB_J_map}
+\end{equation}
+
+The same body description gives the constant pivot-axis inertia
+\begin{equation}
+    \boxed{
+    I_f
+    =
+    n_f
+    \int_{\mathcal B}
+    \left(
+        u^2+v^2
+    \right)dm.
+    }
+    \label{eq:appB_If_general}
+\end{equation}
+
+Any freely spinning motion of the roller about its own bearing axis is excluded from Equation~\eqref{eq:appB_If_general}. If roller spin losses or roller rotational dynamics are of interest, that motion constitutes an additional internal degree of freedom rather than part of the rigid flyweight coordinate \(q_f\).
+
+\subsection{Uniform Arm with Concentrated End Mass}
+\label{app:flyweight_simple_mass_model}
+
+For the common case in which most of the moving mass is concentrated along the line from \(P\) to the roller center, the general inertia expression simplifies considerably.
+
+Let a uniform arm of mass \(m_a\) extend from \(u=0\) to \(u=\ell\), and let an additional mass \(m_e\), representing the weights, roller, bolt, and associated outer hardware, be concentrated at \(u=\ell\). Taking \(v=0\) for this simplified geometry gives, for one flyweight,
+\begin{equation}
+    \boxed{
+    J_{f,p}^{(1)}(q_f)
+    =
+    m_a
+    \left[
+        r_P^2
+        +
+        r_P\ell\sin q_f
+        +
+        \frac{\ell^2}{3}\sin^2 q_f
+    \right]
+    +
+    m_e
+    \left(
+        r_P+\ell\sin q_f
+    \right)^2
+    +
+    J_{\mathrm{const}}.
+    }
+    \label{eq:appB_J_simple}
+\end{equation}
+
+Here \(J_{\mathrm{const}}\) collects configuration-independent contributions. These contributions may be retained in the total shaft inertia but vanish from \(dJ_{f,p}/dx_p\).
+
+It is useful to collect the same result in terms of the first and second mass moments measured from the pivot,
+\begin{equation}
+    S_1
+    =
+    \int u\,dm,
+    \qquad
+    S_2
+    =
+    \int u^2\,dm.
+    \label{eq:appB_mass_moments}
+\end{equation}
+
+For the uniform arm and concentrated end mass,
+\begin{equation}
+    S_1
+    =
+    \frac{m_a\ell}{2}
+    +
+    m_e\ell,
+    \label{eq:appB_S1}
+\end{equation}
+and
+\begin{equation}
+    S_2
+    =
+    \frac{m_a\ell^2}{3}
+    +
+    m_e\ell^2.
+    \label{eq:appB_S2}
+\end{equation}
+
+Writing \(M=m_a+m_e\), Equation~\eqref{eq:appB_J_simple} becomes
+\begin{equation}
+    \boxed{
+    J_{f,p}^{(1)}(q_f)
+    =
+    Mr_P^2
+    +
+    2r_PS_1\sin q_f
+    +
+    S_2\sin^2 q_f
+    +
+    J_{\mathrm{const}}.
+    }
+    \label{eq:appB_J_mass_moments}
+\end{equation}
+
+For the complete symmetric flyweight set,
+\begin{equation}
+    \boxed{
+    J_{f,p}(x_p)
+    =
+    n_f
+    J_{f,p}^{(1)}
+    \!\left(q_f(x_p)\right).
+    }
+    \label{eq:appB_J_total}
+\end{equation}
+
+Likewise, under the same slender-arm and concentrated-end-mass approximation,
+\begin{equation}
+    \boxed{
+    I_f
+    =
+    n_f
+    \left(
+        \frac{m_a\ell^2}{3}
+        +
+        m_e\ell^2
+    \right),
+    }
+    \label{eq:appB_If_simple}
+\end{equation}
+with any additional pivot-axis inertia of hardware rigidly rotating with the flyweight added if required.
+
+Mass located very near the pivot illustrates why this representation is useful. A mass centered at \(P\) remains at the constant shaft radius \(r_P\). It therefore contributes to the absolute shaft inertia \(J_{f,p}\), but not to its configuration derivative and hence not to the centrifugal closing term. Its contribution to \(I_f\) is similarly small if its extent about the pivot is small.
+
+\section{Resulting Mechanism Interface}
+\label{app:flyweight_interface}
+
+The geometry developed above reduces the complete pivoted flyweight and roller-ramp mechanism to the same quantities assumed in the general primary derivation:
+\begin{equation}
+    \boxed{
+    q_f=q_f(x_p),
+    \qquad
+    J_{f,p}=J_{f,p}(x_p),
+    \qquad
+    I_f=\mathrm{constant}.
+    }
+    \label{eq:appB_final_interface}
+\end{equation}
+
+The first map follows from rigid-arm compatibility with the roller-center offset of the translating ramp. The second follows by evaluating the flyweight mass distribution at that pose. Their required derivatives follow directly from the same construction.
+
+For the present mechanism class, the complete chain is therefore
+\begin{equation}
+    \boxed{
+    f(\xi)
+    \;\longrightarrow\;
+    \bm\Gamma_R
+    \;\longrightarrow\;
+    q_f(x_p)
+    \;\longrightarrow\;
+    J_{f,p}(x_p).
+    }
+    \label{eq:appB_complete_chain}
+\end{equation}
+
+The physical ramp is consequently separated from the dynamical quantities it ultimately produces. Straight, circular, hyperbolic, spline, or piecewise profiles are merely different choices of \(f\); the roller and pivot geometry determine how each such surface becomes a flyweight motion, while the mass geometry determines how that motion becomes a changing shaft-axis inertia.
+
+This separation is also what allows other primary-actuator geometries to be introduced without altering the equations in the main derivation. A different mechanism need only provide its own construction of the same interface in Equation~\eqref{eq:appB_final_interface}, subject to the same map-level admissibility requirements.
+
+\section{Alternative Flyweight Geometry}
+\label{app:flyweight_alternative_placeholder}
+
+\textit{Placeholder.}
+
+A second primary flyweight mechanism class will be developed here. Its internal geometry, contact constraints, and admissibility conditions may differ from the pivoted roller-follower mechanism above, but the derivation will terminate at the same actuator interface:
+\begin{equation}
+    \boxed{
+    q_f=q_f(x_p),
+    \qquad
+    J_{f,p}=J_{f,p}(x_p),
+    \qquad
+    I_f=\mathrm{constant}.
+    }
+    \label{eq:appB_alternative_interface}
+\end{equation}
+
+The purpose of this section is therefore not to alter the primary force or rotational equations, but only to supply a different mechanism-specific construction of the quantities in Equation~\eqref{eq:appB_alternative_interface}. Any future geometry introduced here should establish:
+
+\begin{enumerate}
+    \item the physical configuration constraint that determines \(q_f(x_p)\);
+    \item the admissibility conditions required for that map to remain unique and regular over the modeled travel;
+    \item the derivatives \(dq_f/dx_p\) and \(d^2q_f/dx_p^2\);
+    \item the corresponding shaft-axis inertia \(J_{f,p}(x_p)\); and
+    \item the constant pivot- or mechanism-coordinate inertia \(I_f\), where applicable.
+\end{enumerate}
+
+Once these quantities are available, the mechanism can be substituted into the same general primary equations without any further change to the CVT model.
 
 \end{document}
 
