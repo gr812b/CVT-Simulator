@@ -195,9 +195,10 @@ class MechanicalCVTPlant:
         return self.contact.traction_law()
 
     def primary_actuation_context(
-        self, *, state: CVTState, geometry: GeometryPosition
+        self, *, time: float, state: CVTState, geometry: GeometryPosition
     ) -> PulleyActuationContext:
         return self._actuation_context(
+            time=time,
             side="primary",
             state=state,
             coordinate=geometry.primary_axial_coordinate,
@@ -208,9 +209,10 @@ class MechanicalCVTPlant:
         )
 
     def secondary_actuation_context(
-        self, *, state: CVTState, geometry: GeometryPosition
+        self, *, time: float, state: CVTState, geometry: GeometryPosition
     ) -> PulleyActuationContext:
         return self._actuation_context(
+            time=time,
             side="secondary",
             state=state,
             coordinate=geometry.secondary_axial_coordinate,
@@ -223,6 +225,7 @@ class MechanicalCVTPlant:
     def _actuation_context(
         self,
         *,
+        time: float,
         side: str,
         state: CVTState,
         coordinate: Any,
@@ -244,6 +247,7 @@ class MechanicalCVTPlant:
                 opening_offset=coupling.opening_offset,
             )
         return PulleyActuationContext(
+            time=time,
             axial_position=coordinate.value,
             axial_speed=coordinate.d_value_ds * state.shift_speed,
             shaft_speed=shaft_speed,
@@ -260,6 +264,25 @@ class MechanicalCVTPlant:
         shaft_boundaries: CVTShaftBoundaryValues | None = None,
         geometry_side: str = "auto",
     ) -> DynamicsSnapshot:
+        """Build a frozen snapshot at the explicit static time origin ``t = 0``."""
+
+        return self.snapshot_at_time(
+            time=0.0,
+            state=state,
+            shaft_boundaries=shaft_boundaries,
+            geometry_side=geometry_side,
+        )
+
+    def snapshot_at_time(
+        self,
+        *,
+        time: float,
+        state: CVTState,
+        shaft_boundaries: CVTShaftBoundaryValues | None = None,
+        geometry_side: str = "auto",
+    ) -> DynamicsSnapshot:
+        if not isfinite(time):
+            raise ValueError("time must be finite.")
         if shaft_boundaries is None:
             shaft_boundaries = CVTShaftBoundaryValues.zero()
         if not isinstance(shaft_boundaries, CVTShaftBoundaryValues):
@@ -275,9 +298,11 @@ class MechanicalCVTPlant:
             raise ValueError(
                 "geometry_side must be one of {'auto', 'deadzone', 'engaged'}."
             )
-        primary_context = self.primary_actuation_context(state=state, geometry=geometry)
+        primary_context = self.primary_actuation_context(
+            time=time, state=state, geometry=geometry
+        )
         secondary_context = self.secondary_actuation_context(
-            state=state, geometry=geometry
+            time=time, state=state, geometry=geometry
         )
 
         primary_mechanism = self.primary_actuator.evaluate_element(primary_context)

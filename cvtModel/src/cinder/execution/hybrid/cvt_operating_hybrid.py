@@ -214,14 +214,21 @@ class CVTOperatingHybridSystem:
         )
 
         if mode.engagement is CVTEngagementState.DEADZONE:
+            if not self.operating_limits.has_deadzone:
+                raise RuntimeError(
+                    "Deadzone mechanics are unreachable when lower_stop_shift equals "
+                    "engagement_shift (zero-width deadzone)."
+                )
             deadzone_state = CVTState.from_vector(state)
             if mode.shift_constraint is CVTShiftConstraint.FREE:
-                return self.deadzone_evaluator.evaluate_free(
+                return self.deadzone_evaluator.evaluate_free_at_time(
+                    time=time,
                     state=deadzone_state,
                     shaft_boundaries=resolved_boundaries,
                 )
             if mode.shift_constraint is CVTShiftConstraint.LOWER_STOP:
-                return self.deadzone_evaluator.evaluate_lower_stop(
+                return self.deadzone_evaluator.evaluate_lower_stop_at_time(
+                    time=time,
                     state=deadzone_state,
                     lower_stop_shift=self.operating_limits.lower_stop_shift,
                     shaft_boundaries=resolved_boundaries,
@@ -353,12 +360,18 @@ class CVTOperatingHybridSystem:
             )
 
         if mode.engagement is CVTEngagementState.DEADZONE:
+            if not self.operating_limits.has_deadzone:
+                raise RuntimeError(
+                    "Deadzone mode is unreachable when lower_stop_shift equals "
+                    "engagement_shift (zero-width deadzone)."
+                )
             if mode.shift_constraint is CVTShiftConstraint.FREE:
                 return build_deadzone_free_boundary_events(limits=self.operating_limits)
             if mode.shift_constraint is CVTShiftConstraint.LOWER_STOP:
                 return (
                     build_lower_stop_release_event(
                         closing_reaction=lambda event_time, vector: self._lower_stop_reaction(
+                            time=event_time,
                             vector=vector,
                             shaft_boundaries=boundaries_at(event_time, vector),
                         )
@@ -408,6 +421,7 @@ class CVTOperatingHybridSystem:
                     contact_regime=mode.contact_regime,
                     shaft_boundaries=boundaries_at(event_time, vector),
                 ),
+                include_primary_separation=self.operating_limits.has_deadzone,
             )
 
         if mode.shift_constraint is CVTShiftConstraint.UPPER_STOP:
@@ -514,43 +528,58 @@ class CVTOperatingHybridSystem:
             boundary_provider=boundary_provider,
         )
 
-    def classify_initial_regime(
+    def classify_initial_regime_at_time(
         self,
+        *,
+        time: float,
         state: CVTState,
         shaft_boundaries: CVTShaftBoundaryValues | None = None,
         boundary_provider: ShaftBoundaryProvider | None = None,
     ) -> CVTOperatingRegime:
-        """Classify an initial state across deadzone and engaged operation.
-
-        A state placed exactly at a unilateral stop is checked against that
-        stop's recovered reaction.  An inadmissible stop is started as its
-        corresponding free mode, never as a silently tensile constraint.
-        """
+        """Classify an initial state at an explicit simulation time."""
 
         if not isinstance(state, CVTState):
             raise TypeError("state must be a CVTState instance.")
         resolved_boundaries = self._resolve_boundaries(
-            time=0.0,
+            time=time,
             state=state.as_vector(),
             shaft_boundaries=shaft_boundaries,
             boundary_provider=boundary_provider,
         )
         mode = classify_initial_cvt_regime(
             evaluator=self.evaluator,
+            time=time,
             state=state,
             limits=self.operating_limits,
             switching_settings=self.switching_settings,
             shaft_boundaries=resolved_boundaries,
         )
         self._validate_initial_mode_state(
+            time=time,
             mode=mode,
             state=state,
             shaft_boundaries=resolved_boundaries,
         )
         return self._release_inadmissible_initial_stop(
+            time=time,
             mode=mode,
             state=state,
             shaft_boundaries=resolved_boundaries,
+        )
+
+    def classify_initial_regime(
+        self,
+        state: CVTState,
+        shaft_boundaries: CVTShaftBoundaryValues | None = None,
+        boundary_provider: ShaftBoundaryProvider | None = None,
+    ) -> CVTOperatingRegime:
+        """Classify a standalone initial state at the explicit local origin t=0."""
+
+        return self.classify_initial_regime_at_time(
+            time=0.0,
+            state=state,
+            shaft_boundaries=shaft_boundaries,
+            boundary_provider=boundary_provider,
         )
 
     def integrate(
@@ -565,12 +594,21 @@ class CVTOperatingHybridSystem:
 
         if not isinstance(initial_state, CVTState):
             raise TypeError("initial_state must be a CVTState instance.")
-        mode = initial_regime or self.classify_initial_regime(initial_state)
+        start_time = float(time_span[0])
+        mode = initial_regime or self.classify_initial_regime_at_time(
+            time=start_time, state=initial_state
+        )
         if not isinstance(mode, CVTOperatingRegime):
             raise TypeError("initial_regime must be a CVTOperatingRegime instance.")
-        self._validate_initial_mode_state(mode=mode, state=initial_state)
-        mode = self._release_inadmissible_initial_stop(mode=mode, state=initial_state)
-        self._validate_initial_mode_state(mode=mode, state=initial_state)
+        self._validate_initial_mode_state(
+            time=start_time, mode=mode, state=initial_state
+        )
+        mode = self._release_inadmissible_initial_stop(
+            time=start_time, mode=mode, state=initial_state
+        )
+        self._validate_initial_mode_state(
+            time=start_time, mode=mode, state=initial_state
+        )
 
         return integrate_hybrid(
             system=self,
@@ -643,11 +681,13 @@ class CVTOperatingHybridSystem:
     def _lower_stop_reaction(
         self,
         *,
+        time: float,
         vector: NDArray[np.float64],
         shaft_boundaries: CVTShaftBoundaryValues | None = None,
     ) -> float:
         state = CVTState.from_vector(vector)
-        evaluation = self.deadzone_evaluator.evaluate_lower_stop(
+        evaluation = self.deadzone_evaluator.evaluate_lower_stop_at_time(
+            time=time,
             state=state,
             lower_stop_shift=self.operating_limits.lower_stop_shift,
             shaft_boundaries=shaft_boundaries,
@@ -723,6 +763,7 @@ class CVTOperatingHybridSystem:
     def _release_inadmissible_initial_stop(
         self,
         *,
+        time: float,
         mode: CVTOperatingRegime,
         state: CVTState,
         shaft_boundaries: CVTShaftBoundaryValues | None = None,
@@ -736,7 +777,8 @@ class CVTOperatingHybridSystem:
         """
 
         if mode.shift_constraint is CVTShiftConstraint.LOWER_STOP:
-            reaction = self.deadzone_evaluator.evaluate_lower_stop(
+            reaction = self.deadzone_evaluator.evaluate_lower_stop_at_time(
+                time=time,
                 state=state,
                 lower_stop_shift=self.operating_limits.lower_stop_shift,
                 shaft_boundaries=shaft_boundaries,
@@ -748,16 +790,17 @@ class CVTOperatingHybridSystem:
 
         if mode.shift_constraint is CVTShiftConstraint.LOW_RATIO_SEAT:
             assert mode.contact_regime is not None
-            separation = self._primary_separation_indicator(
-                time=0.0,
-                vector=state.as_vector(),
-                contact_regime=mode.contact_regime,
-                shaft_boundaries=shaft_boundaries,
-            )
-            if separation <= 0.0:
-                return CVTOperatingRegime.deadzone_free()
+            if self.operating_limits.has_deadzone:
+                separation = self._primary_separation_indicator(
+                    time=time,
+                    vector=state.as_vector(),
+                    contact_regime=mode.contact_regime,
+                    shaft_boundaries=shaft_boundaries,
+                )
+                if separation <= 0.0:
+                    return CVTOperatingRegime.deadzone_free()
             reaction = self._low_ratio_seat_reaction(
-                time=0.0,
+                time=time,
                 vector=state.as_vector(),
                 contact_regime=mode.contact_regime,
                 shaft_boundaries=shaft_boundaries,
@@ -771,7 +814,7 @@ class CVTOperatingHybridSystem:
         if mode.shift_constraint is CVTShiftConstraint.UPPER_STOP:
             assert mode.contact_regime is not None
             reaction = self._upper_stop_reaction(
-                time=0.0,
+                time=time,
                 vector=state.as_vector(),
                 contact_regime=mode.contact_regime,
                 shaft_boundaries=shaft_boundaries,
@@ -803,6 +846,7 @@ class CVTOperatingHybridSystem:
     def _validate_initial_mode_state(
         self,
         *,
+        time: float,
         mode: CVTOperatingRegime,
         state: CVTState,
         shaft_boundaries: CVTShaftBoundaryValues | None = None,
@@ -823,6 +867,10 @@ class CVTOperatingHybridSystem:
             )
 
         if mode.engagement is CVTEngagementState.DEADZONE:
+            if not self.operating_limits.has_deadzone:
+                raise ValueError(
+                    "A zero-width deadzone topology cannot start in DEADZONE mode."
+                )
             if mode.shift_constraint is CVTShiftConstraint.FREE:
                 at_engagement_opening = (
                     isclose(
@@ -845,7 +893,8 @@ class CVTOperatingHybridSystem:
                 # Validate the imposed neutral lock only after confirming this
                 # is a legal deadzone coordinate; stage-safe geometry must not
                 # mask an invalid initial operating regime.
-                self.deadzone_evaluator.snapshot(
+                self.deadzone_evaluator.snapshot_at_time(
+                    time=time,
                     state=state,
                     shaft_boundaries=shaft_boundaries,
                 )
@@ -865,7 +914,8 @@ class CVTOperatingHybridSystem:
                     raise ValueError(
                         "A lower-stop segment must start with zero shift_speed."
                     )
-                self.deadzone_evaluator.snapshot(
+                self.deadzone_evaluator.snapshot_at_time(
+                    time=time,
                     state=state,
                     shaft_boundaries=shaft_boundaries,
                 )

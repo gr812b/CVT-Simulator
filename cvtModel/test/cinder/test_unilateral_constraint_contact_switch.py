@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from types import SimpleNamespace
-
 import numpy as np
 
 from cinder.execution.hybrid import cvt_regime_switching
@@ -32,7 +31,6 @@ def test_contact_switch_releases_low_ratio_seat_when_successor_reaction_is_tensi
         contact_regime=contact,
         evaluator=_ReactionEvaluator(low_ratio=-1.0),
     )
-
     assert result is not None
     mode, reason, reaction_name, reaction = result
     assert mode.shift_constraint is CVTShiftConstraint.FREE
@@ -64,7 +62,6 @@ def test_contact_switch_releases_upper_stop_when_successor_reaction_is_tensile()
         contact_regime=contact,
         evaluator=_ReactionEvaluator(upper=-2.0),
     )
-
     assert result is not None
     mode, reason, reaction_name, reaction = result
     assert mode.shift_constraint is CVTShiftConstraint.FREE

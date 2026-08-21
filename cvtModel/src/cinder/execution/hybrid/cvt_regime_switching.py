@@ -8,6 +8,7 @@ side: each reset is returned through ``HybridTransition.successor_state``.
 
 from __future__ import annotations
 
+from math import isfinite
 from typing import TYPE_CHECKING
 
 import numpy as np
@@ -45,6 +46,7 @@ if TYPE_CHECKING:
 def classify_initial_cvt_regime(
     *,
     evaluator: "EngagedCVTContactEvaluator",
+    time: float,
     state: CVTState,
     limits: CVTShiftOperatingLimits,
     switching_settings: CVTContactSwitchSettings,
@@ -59,22 +61,28 @@ def classify_initial_cvt_regime(
     reaction admissibility before integration begins.
     """
 
+    if not isfinite(time):
+        raise ValueError("time must be finite.")
     _validate_state_within_limits(state=state, limits=limits)
     s = state.shift_position
-    if s == limits.lower_stop_shift:
-        return CVTOperatingRegime.deadzone_lower_stop()
-    if s < limits.engagement_shift or (
-        s == limits.engagement_shift and state.shift_speed < 0.0
-    ):
-        return CVTOperatingRegime.deadzone_free()
+    if limits.has_deadzone:
+        if s == limits.lower_stop_shift:
+            return CVTOperatingRegime.deadzone_lower_stop()
+        if s < limits.engagement_shift or (
+            s == limits.engagement_shift and state.shift_speed < 0.0
+        ):
+            return CVTOperatingRegime.deadzone_free()
 
-    contact = evaluator.classify_initial_regime(
+    contact = evaluator.classify_initial_regime_at_time(
+        time=time,
         state=state,
         switching_settings=switching_settings,
         shaft_boundaries=shaft_boundaries,
     )
     if s == limits.upper_stop_shift:
         return CVTOperatingRegime.engaged_upper_stop(contact_regime=contact)
+    if not limits.has_deadzone and s == limits.lower_stop_shift:
+        return CVTOperatingRegime.engaged_low_ratio_seat(contact_regime=contact)
     return CVTOperatingRegime.engaged_free(contact_regime=contact)
 
 
@@ -98,6 +106,8 @@ def resolve_cvt_operating_transition(
     into the same free/upper-stop operating constraint.
     """
 
+    if not isfinite(time):
+        raise ValueError("time must be finite.")
     state = CVTState.from_vector(vector)
     _validate_state_within_limits(state=state, limits=limits, tolerance=1.0e-8)
     fired = set(fired_event_names)
@@ -107,7 +117,12 @@ def resolve_cvt_operating_transition(
     )
 
     if old_regime.engagement is CVTEngagementState.DEADZONE:
+        if not limits.has_deadzone:
+            raise RuntimeError(
+                "Deadzone transition requested for a zero-width deadzone topology."
+            )
         return _resolve_deadzone_transition(
+            time=time,
             state=state,
             vector=vector,
             old_regime=old_regime,
@@ -193,6 +208,7 @@ def primary_contact_separation_at_engagement(
 
     contact_free_state = CVTState.from_vector(projected)
     deadzone_snapshot = build_deadzone_snapshot(
+        time=time,
         model=evaluator.model,
         state=contact_free_state,
         shaft_boundaries=shaft_boundaries,
@@ -235,6 +251,7 @@ def capture_belt_to_secondary_at_disengagement(
 
 def _resolve_deadzone_transition(
     *,
+    time: float,
     state: CVTState,
     vector: NDArray[np.float64],
     old_regime: CVTOperatingRegime,
@@ -252,6 +269,7 @@ def _resolve_deadzone_transition(
     if old_regime.shift_constraint is CVTShiftConstraint.FREE:
         if CVTRegimeEvent.LOWER_STOP_REACHED in geometry_events:
             return _resolve_lower_stop_arrival(
+                time=time,
                 vector=vector,
                 limits=limits,
                 deadzone_evaluator=deadzone_evaluator,
@@ -274,7 +292,8 @@ def _resolve_deadzone_transition(
             )
             engaged_vector = capture.successor_state
             engaged_state = CVTState.from_vector(engaged_vector)
-            contact = evaluator.classify_initial_regime(
+            contact = evaluator.classify_initial_regime_at_time(
+                time=time,
                 state=engaged_state,
                 switching_settings=switching_settings,
                 shaft_boundaries=shaft_boundaries,
@@ -306,6 +325,7 @@ def _resolve_deadzone_transition(
 
 def _resolve_lower_stop_arrival(
     *,
+    time: float,
     vector: NDArray[np.float64],
     limits: CVTShiftOperatingLimits,
     deadzone_evaluator: DeadzoneDynamicsEvaluator,
@@ -330,7 +350,8 @@ def _resolve_lower_stop_arrival(
         lock_secondary_belt=True,
     )
     projected = impact.successor_state
-    evaluation = deadzone_evaluator.evaluate_lower_stop(
+    evaluation = deadzone_evaluator.evaluate_lower_stop_at_time(
+        time=time,
         state=CVTState.from_vector(projected),
         lower_stop_shift=limits.lower_stop_shift,
         shaft_boundaries=shaft_boundaries,
@@ -466,9 +487,37 @@ def _resolve_engaged_transition(
             metadata=contact_transition.metadata,
         )
     assert contact_transition.next_mode is not None
+    next_contact_regime = contact_transition.next_mode
+
+    # A discrete contact-topology change can jump the recovered reaction of an
+    # already-active unilateral seat/stop across zero. Recheck the successor
+    # branch at the same event time so the next segment never starts with a
+    # constraint that would have to pull rather than push.
+    constraint_release = _constraint_release_after_contact_transition(
+        time=time,
+        vector=vector,
+        shift_constraint=old_regime.shift_constraint,
+        contact_regime=next_contact_regime,
+        evaluator=evaluator,
+        shaft_boundaries=shaft_boundaries,
+    )
+    if constraint_release is not None:
+        release_mode, release_reason, reaction_name, reaction_value = constraint_release
+        return HybridTransition(
+            next_mode=release_mode,
+            reason=release_reason,
+            metadata={
+                **contact_transition.metadata,
+                "contact_transition_reason": contact_transition.reason,
+                reaction_name: reaction_value,
+                "constraint_release": "contact_topology_changed_unilateral_reaction_sign",
+            },
+            successor_state=np.array(vector, dtype=float, copy=True),
+        )
+
     next_mode = _engaged_regime_for_constraint(
         constraint=old_regime.shift_constraint,
-        contact_regime=contact_transition.next_mode,
+        contact_regime=next_contact_regime,
     )
     if next_mode == old_regime:
         # A re-stick zero can be a grazing contact-velocity root rather than a
@@ -490,6 +539,64 @@ def _resolve_engaged_transition(
         reason=contact_transition.reason,
         metadata=contact_transition.metadata,
     )
+
+
+def _constraint_release_after_contact_transition(
+    *,
+    time: float,
+    vector: NDArray[np.float64],
+    shift_constraint: CVTShiftConstraint,
+    contact_regime: ContactRegime,
+    evaluator: "EngagedCVTContactEvaluator",
+    shaft_boundaries: CVTShaftBoundaryValues | None = None,
+) -> tuple[CVTOperatingRegime, str, str, float] | None:
+    """Release a unilateral shift constraint invalidated by a contact switch."""
+
+    if shift_constraint is CVTShiftConstraint.LOW_RATIO_SEAT:
+        evaluation = evaluator.evaluate_vector(
+            time=time,
+            vector=vector,
+            regime=contact_regime,
+            shift_constraint=EngagedShiftConstraint.LOW_RATIO_SEAT,
+            shaft_boundaries=shaft_boundaries,
+        )
+        reaction = evaluation.low_ratio_seat_reaction
+        if reaction is None:
+            raise RuntimeError(
+                "Low-ratio seat evaluation did not recover a seat reaction after contact transition."
+            )
+        if reaction < 0.0:
+            return (
+                CVTOperatingRegime.engaged_free(contact_regime=contact_regime),
+                "contact_transition_released_low_ratio_seat_by_tensile_reaction",
+                "low_ratio_seat_reaction",
+                float(reaction),
+            )
+        return None
+
+    if shift_constraint is CVTShiftConstraint.UPPER_STOP:
+        evaluation = evaluator.evaluate_vector(
+            time=time,
+            vector=vector,
+            regime=contact_regime,
+            shift_constraint=EngagedShiftConstraint.UPPER_STOP,
+            shaft_boundaries=shaft_boundaries,
+        )
+        reaction = evaluation.upper_stop_reaction
+        if reaction is None:
+            raise RuntimeError(
+                "Upper-stop evaluation did not recover a stop reaction after contact transition."
+            )
+        if reaction < 0.0:
+            return (
+                CVTOperatingRegime.engaged_free(contact_regime=contact_regime),
+                "contact_transition_released_upper_stop_by_tensile_reaction",
+                "upper_stop_reaction",
+                float(reaction),
+            )
+        return None
+
+    return None
 
 
 def _resolve_low_ratio_seat_arrival(

@@ -1,6 +1,6 @@
 # 45 s mechanical-energy audit
 
-Generated with:
+Generated from the PR #471 mechanics + current `develop` semantic merge with:
 
 ```bash
 PYTHONPATH=src MPLBACKEND=Agg python tools/audit_energy_balance.py \
@@ -10,20 +10,19 @@ PYTHONPATH=src MPLBACKEND=Agg python tools/audit_energy_balance.py \
 
 Final audit from this package:
 
-- primary boundary work: +233.234141 kJ
-- secondary/road boundary work: -155.054621 kJ
-- net external work: +78.179520 kJ
+- primary boundary work: +233.227806 kJ
+- secondary/road boundary work: -155.068029 kJ
+- net external work: +78.159777 kJ
 - kinetic-slip dissipation: 2.161453 kJ
-- discrete capture/stop dissipation: 0.057928820 J
-- stored mechanical-energy increase: 75.998012 kJ
-- residual: 19.996850 J
-- residual / net external work: 0.025578%
-- residual / primary input work: 0.008573%
+- discrete capture/stop dissipation: 0.057932958 J
+- stored mechanical-energy increase: 75.998521 kJ
+- residual: -0.255713 J
+- residual / net external work: 0.000327%
+- residual / primary input work: 0.000110%
 
-`transition_energy_audit.csv` records every momentum projection.  All discrete
-losses are non-negative.  The largest event momentum residual is about
-`2.84e-14`; the upper-stop event now dissipates a small positive amount instead
-of creating energy.
+`transition_energy_audit.csv` records every momentum projection. All discrete
+capture/impact losses are non-negative and the finite-speed stop/capture maps
+use the generalized mass-metric momentum projection.
 
-The remaining global residual is a continuous ODE/quadrature error distributed
-over the 45 s run rather than a transition-localized energy jump.
+The residual is sub-joule on a ~78 kJ net-work balance and is not localized to
+an unmodelled transition loss.

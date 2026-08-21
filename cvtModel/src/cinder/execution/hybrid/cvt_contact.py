@@ -364,6 +364,32 @@ class EngagedCVTContactEvaluator:
             shaft_boundaries=shaft_boundaries,
         ).state_derivative.as_vector()
 
+    def classify_initial_regime_at_time(
+        self,
+        *,
+        time: float,
+        state: CVTState,
+        switching_settings: "CVTContactSwitchSettings",
+        shift_constraint: EngagedShiftConstraint = EngagedShiftConstraint.FREE,
+        shaft_boundaries: CVTShaftBoundaryValues | None = None,
+    ) -> ContactRegime:
+        """Classify established slip or a stick candidate at explicit time."""
+
+        from .cvt_contact_switching import resolve_initial_engaged_regime
+
+        if not isfinite(time):
+            raise ValueError("time must be finite.")
+        if not isinstance(shift_constraint, EngagedShiftConstraint):
+            raise TypeError("shift_constraint must be an EngagedShiftConstraint.")
+        return resolve_initial_engaged_regime(
+            evaluator=self,
+            time=time,
+            state=state,
+            switching_settings=switching_settings,
+            shift_constraint=shift_constraint,
+            shaft_boundaries=shaft_boundaries,
+        )
+
     def classify_initial_regime(
         self,
         *,
@@ -372,18 +398,9 @@ class EngagedCVTContactEvaluator:
         shift_constraint: EngagedShiftConstraint = EngagedShiftConstraint.FREE,
         shaft_boundaries: CVTShaftBoundaryValues | None = None,
     ) -> ContactRegime:
-        """Classify established slip or a stick candidate at initial time.
+        """Static-origin compatibility wrapper for initial contact classification."""
 
-        This helper deliberately does not replace an application-specific
-        clutch/engagement model.  It is only valid once both wraps are engaged.
-        """
-
-        from .cvt_contact_switching import resolve_initial_engaged_regime
-
-        if not isinstance(shift_constraint, EngagedShiftConstraint):
-            raise TypeError("shift_constraint must be an EngagedShiftConstraint.")
-        return resolve_initial_engaged_regime(
-            evaluator=self,
+        return self.classify_initial_regime_at_time(
             time=0.0,
             state=state,
             switching_settings=switching_settings,

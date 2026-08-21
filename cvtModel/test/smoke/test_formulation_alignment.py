@@ -177,6 +177,7 @@ def test_point_mass_flyweight_contributes_axial_force_and_shaft_inertia() -> Non
     omega = 200.0
     xdot = 0.02
     context = PulleyActuationContext(
+        time=0.0,
         axial_position=x,
         axial_speed=xdot,
         shaft_speed=omega,
@@ -223,6 +224,7 @@ def test_helix_same_element_can_be_mounted_on_either_pulley() -> None:
             d2_axial_position_ds2=0.0,
         )
         context = PulleyActuationContext(
+            time=0.0,
             axial_position=x,
             axial_speed=0.0,
             shaft_speed=100.0,

@@ -96,12 +96,15 @@ class DeadzoneSnapshot:
 
 def build_deadzone_snapshot(
     *,
+    time: float,
     model: MechanicalCVTPlant,
     state: CVTState,
     shaft_boundaries: CVTShaftBoundaryValues | None = None,
 ) -> DeadzoneSnapshot:
     """Build one frozen deadzone snapshot without invoking engaged contact."""
 
+    if not isfinite(time):
+        raise ValueError("time must be finite.")
     if not isinstance(model, MechanicalCVTPlant):
         raise TypeError("model must be a MechanicalCVTPlant instance.")
     if not isinstance(state, CVTState):
@@ -125,6 +128,7 @@ def build_deadzone_snapshot(
     primary_coordinate = primary_geometry.primary_axial_coordinate
 
     primary_context = model.primary_actuation_context(
+        time=time,
         state=state,
         geometry=primary_geometry,
     )

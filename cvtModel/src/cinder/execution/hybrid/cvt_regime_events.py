@@ -127,7 +127,8 @@ def build_low_ratio_seat_events(
     *,
     primary_separation: PrimarySeparationIndicator,
     closing_reaction: LowRatioSeatReactionIndicator,
-) -> tuple[HybridEvent, HybridEvent]:
+    include_primary_separation: bool = True,
+) -> tuple[HybridEvent, ...]:
     """Return the two distinct exits from an engaged low-ratio seat.
 
     ``PRIMARY_CONTACT_SEPARATION`` is the engagement/disengagement criterion.
@@ -139,18 +140,23 @@ def build_low_ratio_seat_events(
     deadzone.
     """
 
-    return (
-        HybridEvent(
-            name=CVTRegimeEvent.PRIMARY_CONTACT_SEPARATION.value,
-            function=lambda time, vector: float(primary_separation(time, vector)),
-            direction=-1.0,
-        ),
+    events: list[HybridEvent] = []
+    if include_primary_separation:
+        events.append(
+            HybridEvent(
+                name=CVTRegimeEvent.PRIMARY_CONTACT_SEPARATION.value,
+                function=lambda time, vector: float(primary_separation(time, vector)),
+                direction=-1.0,
+            )
+        )
+    events.append(
         HybridEvent(
             name=CVTRegimeEvent.LOW_RATIO_SEAT_RELEASE.value,
             function=lambda time, vector: float(closing_reaction(time, vector)),
             direction=-1.0,
-        ),
+        )
     )
+    return tuple(events)
 
 
 def build_lower_stop_release_event(

@@ -10,9 +10,9 @@ field = sample_pulley_clamping_force(
         pulley=PulleyLocation.SECONDARY,
         point=ActuationOperatingPoint(
             time=0.0,                    # explicit actuator evaluation time [s]
-            shift_position=...,          # global CVT shift coordinate [m]
-            shaft_speed=...,             # selected-pulley speed [rad/s]
-            closure_unknowns=...,        # fixed affine unknown values
+            shift_position=...,            # global CVT shift coordinate [m]
+            shaft_speed=...,               # selected-pulley speed [rad/s]
+            closure_unknowns=...,          # fixed affine unknown values
         ),
         axes=(
             ActuationResponseAxis(
