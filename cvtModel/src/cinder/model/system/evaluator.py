@@ -192,9 +192,10 @@ class MechanicalCVTPlant:
         return self.contact.traction_law()
 
     def primary_actuation_context(
-        self, *, state: CVTState, geometry: GeometryPosition
+        self, *, time: float, state: CVTState, geometry: GeometryPosition
     ) -> PulleyActuationContext:
         return self._actuation_context(
+            time=time,
             side="primary",
             state=state,
             coordinate=geometry.primary_axial_coordinate,
@@ -205,9 +206,10 @@ class MechanicalCVTPlant:
         )
 
     def secondary_actuation_context(
-        self, *, state: CVTState, geometry: GeometryPosition
+        self, *, time: float, state: CVTState, geometry: GeometryPosition
     ) -> PulleyActuationContext:
         return self._actuation_context(
+            time=time,
             side="secondary",
             state=state,
             coordinate=geometry.secondary_axial_coordinate,
@@ -220,6 +222,7 @@ class MechanicalCVTPlant:
     def _actuation_context(
         self,
         *,
+        time: float,
         side: str,
         state: CVTState,
         coordinate: Any,
@@ -239,6 +242,7 @@ class MechanicalCVTPlant:
                 ),
             )
         return PulleyActuationContext(
+            time=time,
             axial_position=coordinate.value,
             axial_speed=coordinate.d_value_ds * state.shift_speed,
             shaft_speed=shaft_speed,
@@ -254,15 +258,41 @@ class MechanicalCVTPlant:
         state: CVTState,
         shaft_boundaries: CVTShaftBoundaryValues | None = None,
     ) -> DynamicsSnapshot:
+        """Build a frozen snapshot at the explicit static time origin ``t = 0``.
+
+        Runtime and any time-dependent study should call :meth:`snapshot_at_time`.
+        This wrapper preserves the established static diagnostic API without
+        giving ``PulleyActuationContext.time`` a default.
+        """
+
+        return self.snapshot_at_time(
+            time=0.0, state=state, shaft_boundaries=shaft_boundaries
+        )
+
+    def snapshot_at_time(
+        self,
+        *,
+        time: float,
+        state: CVTState,
+        shaft_boundaries: CVTShaftBoundaryValues | None = None,
+    ) -> DynamicsSnapshot:
+        if not isfinite(time):
+            raise ValueError("time must be finite.")
         if shaft_boundaries is None:
             shaft_boundaries = CVTShaftBoundaryValues.zero()
         if not isinstance(shaft_boundaries, CVTShaftBoundaryValues):
             raise TypeError("shaft_boundaries must be a CVTShaftBoundaryValues.")
 
-        geometry = self.geometry.evaluate(state.shift_position)
-        primary_context = self.primary_actuation_context(state=state, geometry=geometry)
+        # This snapshot is the engaged/contact mechanics snapshot.  At the
+        # engagement kink, use the engaged-side one-sided geometry derivatives
+        # rather than the deadzone-side derivatives.  The deadzone evaluator
+        # owns its own snapshot path and intentionally keeps ``evaluate()``.
+        geometry = self.geometry.evaluate_engaged(state.shift_position)
+        primary_context = self.primary_actuation_context(
+            time=time, state=state, geometry=geometry
+        )
         secondary_context = self.secondary_actuation_context(
-            state=state, geometry=geometry
+            time=time, state=state, geometry=geometry
         )
 
         primary_mechanism = self.primary_actuator.evaluate_element(primary_context)

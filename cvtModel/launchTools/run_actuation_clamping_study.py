@@ -54,7 +54,7 @@ def main() -> None:
         PulleyClampingForceStudyRequest(
             cvt=cvt,
             pulley=PulleyLocation.PRIMARY,
-            point=ActuationOperatingPoint(shift_position=spec.deadzone_shift),
+            point=ActuationOperatingPoint(time=0.0, shift_position=spec.deadzone_shift),
             axes=(
                 ActuationResponseAxis(
                     ActuationStateCoordinate.SHIFT_POSITION,
@@ -73,6 +73,7 @@ def main() -> None:
             cvt=cvt,
             pulley=PulleyLocation.SECONDARY,
             point=ActuationOperatingPoint(
+                time=0.0,
                 shift_position=spec.deadzone_shift,
                 shaft_speed=1_800.0 * RPM_TO_RAD_PER_SECOND,
                 closure_unknowns=ClosureUnknowns.zeros(),

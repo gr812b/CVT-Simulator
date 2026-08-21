@@ -121,6 +121,7 @@ class DeadzoneSnapshot:
 
 def build_deadzone_snapshot(
     *,
+    time: float,
     model: MechanicalCVTPlant,
     state: CVTState,
     shaft_boundaries: CVTShaftBoundaryValues | None = None,
@@ -133,6 +134,8 @@ def build_deadzone_snapshot(
     primary coordinate lies below engagement.
     """
 
+    if not isfinite(time):
+        raise ValueError("time must be finite.")
     if not isinstance(model, MechanicalCVTPlant):
         raise TypeError("model must be a MechanicalCVTPlant instance.")
     if not isinstance(state, CVTState):
@@ -153,6 +156,7 @@ def build_deadzone_snapshot(
 
     primary_actuation = model.primary_actuator.evaluate_relation(
         PulleyActuationContext(
+            time=time,
             axial_position=primary_coordinate.value,
             axial_speed=primary_coordinate.d_value_ds * state.shift_speed,
             shaft_speed=state.primary_angular_speed,

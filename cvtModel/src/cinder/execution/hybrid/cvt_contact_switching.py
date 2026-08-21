@@ -66,15 +66,20 @@ CVTContactSwitchSettings = CVTEventSwitchingTolerances
 def resolve_initial_engaged_regime(
     *,
     evaluator: "EngagedCVTContactEvaluator",
+    time: float,
     state: CVTState,
     switching_settings: CVTEventSwitchingTolerances,
     shift_constraint: EngagedShiftConstraint = EngagedShiftConstraint.FREE,
     shaft_boundaries: CVTShaftBoundaryValues | None = None,
 ) -> ContactRegime:
-    """Choose a post-engagement initial contact regime from a supplied state."""
+    """Choose a post-engagement contact regime from a supplied state and time."""
 
+    if not isfinite(time):
+        raise ValueError("time must be finite.")
     vector = state.as_vector()
-    snapshot = evaluator.model.snapshot(state=state, shaft_boundaries=shaft_boundaries)
+    snapshot = evaluator.model.snapshot_at_time(
+        time=time, state=state, shaft_boundaries=shaft_boundaries
+    )
     tolerance = evaluator.solve_settings.contact_tolerances.relative_speed_tolerance
     primary_speed = (
         state.belt_speed
@@ -103,7 +108,7 @@ def resolve_initial_engaged_regime(
         )
 
     stick = evaluator.evaluate_vector(
-        time=0.0,
+        time=time,
         vector=vector,
         regime=ContactRegime.stick_stick(),
         shift_constraint=shift_constraint,
@@ -130,7 +135,7 @@ def resolve_initial_engaged_regime(
         )
     transition = resolve_cvt_contact_transition(
         evaluator=evaluator,
-        time=0.0,
+        time=time,
         vector=vector,
         old_regime=ContactRegime.stick_stick(),
         fired_event_names=tuple(fired),
@@ -164,6 +169,8 @@ def resolve_cvt_contact_transition(
     existing branch solver before it is accepted.
     """
 
+    if not isfinite(time):
+        raise ValueError("time must be finite.")
     if not isinstance(shift_constraint, EngagedShiftConstraint):
         raise TypeError("shift_constraint must be an EngagedShiftConstraint.")
 
@@ -195,6 +202,7 @@ def resolve_cvt_contact_transition(
     if restick_interfaces:
         candidate = _select_restick_candidate(
             evaluator=evaluator,
+            time=time,
             vector=vector,
             old_regime=old_regime,
             restick_interfaces=restick_interfaces,
@@ -215,6 +223,7 @@ def resolve_cvt_contact_transition(
 
         continuation = _select_zero_crossing_kinetic_continuation(
             evaluator=evaluator,
+            time=time,
             vector=vector,
             old_regime=old_regime,
             zero_crossing_interfaces=restick_interfaces,
@@ -222,16 +231,103 @@ def resolve_cvt_contact_transition(
             shift_constraint=shift_constraint,
             shaft_boundaries=shaft_boundaries,
         )
-        if continuation is None:
+        if continuation is not None:
             return HybridTransition(
-                next_mode=None,
-                reason="no_direction_consistent_kinetic_branch_at_slip_zero_crossing",
+                next_mode=continuation,
+                reason="kinetic_slip_direction_updated_at_zero_crossing",
+                metadata={
+                    "interfaces": tuple(
+                        interface.value for interface in restick_interfaces
+                    )
+                },
             )
+
+        # The positive re-stick reserve above is numerical hysteresis, not an
+        # additional physical friction law.  At v_rel = 0 it is possible for
+        # the stick solution to lie inside the actual static-capacity boundary
+        # while still failing that extra reserve.  If neither Coulomb kinetic
+        # direction accelerates away from zero, rejecting stick as well leaves
+        # an artificial hole in the hybrid mode graph.  In that corner, fall
+        # back to the same topology-tightening candidate using the physical
+        # stick-exit margin.  This does not prefer stick over an available
+        # kinetic continuation: the hysteretic stick test and both outgoing
+        # kinetic directions have already been tried first.
+        physical_stick = _select_restick_candidate(
+            evaluator=evaluator,
+            time=time,
+            vector=vector,
+            old_regime=old_regime,
+            restick_interfaces=restick_interfaces,
+            switching_settings=switching_settings,
+            shift_constraint=shift_constraint,
+            shaft_boundaries=shaft_boundaries,
+            required_static_margin=switching_settings.stick_exit_static_margin,
+        )
+        if physical_stick is not None:
+            return HybridTransition(
+                next_mode=physical_stick,
+                reason="contact_restuck_at_physical_limit_no_kinetic_continuation",
+                metadata={
+                    "interfaces": tuple(
+                        interface.value for interface in restick_interfaces
+                    ),
+                    "requested_restick_margin": switching_settings.restick_static_margin,
+                    "accepted_static_margin_floor": (
+                        switching_settings.stick_exit_static_margin
+                    ),
+                },
+            )
+
+        # A zero crossing can require two topology changes at the same instant.
+        # Example: primary-stick/secondary-slip reaches v_rel,s = 0; enforcing
+        # secondary stick can overload the primary static requirement even though
+        # the old mixed branch still had primary reserve.  The physically valid
+        # successor can then be primary-slip/secondary-stick.  The old resolver
+        # never considered that simultaneous exchange, leaving a false no-mode
+        # state.  Test it only after all ordinary successors above have failed,
+        # and accept it through the same static/normal/outgoing checks used
+        # everywhere else.
+        exchanged = _select_zero_crossing_topology_exchange(
+            evaluator=evaluator,
+            time=time,
+            vector=vector,
+            old_regime=old_regime,
+            restick_interfaces=restick_interfaces,
+            switching_settings=switching_settings,
+            shift_constraint=shift_constraint,
+            shaft_boundaries=shaft_boundaries,
+        )
+        if exchanged is not None:
+            return HybridTransition(
+                next_mode=exchanged,
+                reason="zero_crossing_simultaneous_contact_topology_exchange",
+                metadata={
+                    "interfaces": tuple(
+                        interface.value for interface in restick_interfaces
+                    ),
+                    "successor_mode": exchanged.mode.value,
+                },
+            )
+
         return HybridTransition(
-            next_mode=continuation,
-            reason="kinetic_slip_direction_updated_at_zero_crossing",
+            next_mode=None,
+            reason="no_admissible_stick_or_direction_consistent_kinetic_branch_at_slip_zero_crossing",
             metadata={
-                "interfaces": tuple(interface.value for interface in restick_interfaces)
+                "interfaces": tuple(
+                    interface.value for interface in restick_interfaces
+                ),
+                "requested_restick_margin": switching_settings.restick_static_margin,
+                "physical_stick_margin_floor": switching_settings.stick_exit_static_margin,
+                "zero_crossing_candidate_diagnostics": _zero_crossing_candidate_diagnostics(
+                    evaluator=evaluator,
+                    time=time,
+                    vector=vector,
+                    old_regime=old_regime,
+                    restick_interfaces=restick_interfaces,
+                    switching_settings=switching_settings,
+                    shift_constraint=shift_constraint,
+                    shaft_boundaries=shaft_boundaries,
+                ),
             },
         )
 
@@ -243,6 +339,7 @@ def resolve_cvt_contact_transition(
     if capacity_interfaces:
         candidate = _select_capacity_loss_candidate(
             evaluator=evaluator,
+            time=time,
             vector=vector,
             old_regime=old_regime,
             capacity_interfaces=capacity_interfaces,
@@ -270,9 +367,275 @@ def resolve_cvt_contact_transition(
     )
 
 
+def _select_zero_crossing_topology_exchange(
+    *,
+    evaluator: "EngagedCVTContactEvaluator",
+    time: float,
+    vector: NDArray[np.float64],
+    old_regime: ContactRegime,
+    restick_interfaces: tuple[ContactInterface, ...],
+    switching_settings: CVTEventSwitchingTolerances,
+    shift_constraint: EngagedShiftConstraint,
+    shaft_boundaries: CVTShaftBoundaryValues | None = None,
+) -> ContactRegime | None:
+    """Try a simultaneous restick/release after ordinary successors fail.
+
+    A contact that reaches zero slip may become sticking while a contact that
+    was sticking in the incoming branch simultaneously exceeds static capacity
+    under the newly constrained closure.  That is a legitimate complementarity
+    transition, not a finite-speed spontaneous release: the newly slipping
+    interface starts from zero relative speed because it was constrained in the
+    incoming mode, and its kinetic direction must accelerate outward.
+
+    Mixed exchange candidates are preferred over both-slip because they retain
+    the maximum number of constraints.  This helper is called only after the
+    normal re-stick, kinetic continuation, and physical-limit stick attempts
+    have all failed, so it cannot displace an already-valid ordinary successor.
+    """
+
+    requested = set(restick_interfaces)
+    mixed: list[ContactRegime] = []
+
+    if (
+        old_regime.mode is EngagedContactMode.PRIMARY_STICK_SECONDARY_SLIP
+        and ContactInterface.SECONDARY in requested
+    ):
+        mixed.extend(
+            ContactRegime.primary_slip_secondary_stick(primary_direction=direction)
+            for direction in _slip_directions()
+        )
+    elif (
+        old_regime.mode is EngagedContactMode.PRIMARY_SLIP_SECONDARY_STICK
+        and ContactInterface.PRIMARY in requested
+    ):
+        mixed.extend(
+            ContactRegime.primary_stick_secondary_slip(secondary_direction=direction)
+            for direction in _slip_directions()
+        )
+    else:
+        # Both-slip restick logic already considers the corresponding mixed
+        # topology; there is no previously sticking interface to release.
+        return None
+
+    candidate = _best_admissible_candidate(
+        evaluator=evaluator,
+        time=time,
+        vector=vector,
+        candidates=mixed,
+        switching_settings=switching_settings,
+        required_static_margin=switching_settings.stick_exit_static_margin,
+        require_outgoing_directions=True,
+        shift_constraint=shift_constraint,
+        shaft_boundaries=shaft_boundaries,
+    )
+    if candidate is not None:
+        return candidate
+
+    # If the newly sticking interface itself cannot remain static after the
+    # other contact releases, both contacts may need to slide.  At this event
+    # both relative speeds are at (or inherited from) valid kinetic states; the
+    # standard outgoing-direction test rejects any branch that does not depart
+    # consistently from the zero-speed manifold.
+    return _best_admissible_candidate(
+        evaluator=evaluator,
+        time=time,
+        vector=vector,
+        candidates=_both_slip_regimes(),
+        switching_settings=switching_settings,
+        required_static_margin=switching_settings.stick_exit_static_margin,
+        require_outgoing_directions=True,
+        shift_constraint=shift_constraint,
+        shaft_boundaries=shaft_boundaries,
+    )
+
+
+def _zero_crossing_candidate_diagnostics(
+    *,
+    evaluator: "EngagedCVTContactEvaluator",
+    time: float,
+    vector: NDArray[np.float64],
+    old_regime: ContactRegime,
+    restick_interfaces: tuple[ContactInterface, ...],
+    switching_settings: CVTEventSwitchingTolerances,
+    shift_constraint: EngagedShiftConstraint,
+    shaft_boundaries: CVTShaftBoundaryValues | None = None,
+) -> dict[str, object]:
+    """Return detailed candidate mechanics for an otherwise unresolved zero crossing.
+
+    This is diagnostic only.  It deliberately evaluates a wider candidate set
+    than the current transition policy, including a simultaneous exchange of
+    which interface is slipping.  The results let a caller distinguish a true
+    Coulomb no-solution state from an incomplete successor candidate set before
+    changing hybrid policy.
+    """
+
+    candidates: list[tuple[str, ContactRegime]] = []
+    requested = set(restick_interfaces)
+
+    # Candidate(s) already considered by the transition resolver.
+    if old_regime.mode in (
+        EngagedContactMode.PRIMARY_SLIP_SECONDARY_STICK,
+        EngagedContactMode.PRIMARY_STICK_SECONDARY_SLIP,
+    ):
+        candidates.append(("stick_stick", ContactRegime.stick_stick()))
+    elif old_regime.mode is EngagedContactMode.BOTH_SLIP:
+        if requested == {ContactInterface.PRIMARY, ContactInterface.SECONDARY}:
+            candidates.append(("stick_stick", ContactRegime.stick_stick()))
+
+    if old_regime.mode is EngagedContactMode.PRIMARY_STICK_SECONDARY_SLIP:
+        for direction in _slip_directions():
+            candidates.append(
+                (
+                    f"continue_secondary_slip:{direction.value}",
+                    ContactRegime.primary_stick_secondary_slip(
+                        secondary_direction=direction
+                    ),
+                )
+            )
+            # A secondary zero crossing can make stick--stick impossible only
+            # because the newly constrained solution overloads the primary.
+            # This swap is therefore a physically plausible simultaneous
+            # successor even though the current policy does not yet select it.
+            candidates.append(
+                (
+                    f"swap_to_primary_slip_secondary_stick:{direction.value}",
+                    ContactRegime.primary_slip_secondary_stick(
+                        primary_direction=direction
+                    ),
+                )
+            )
+    elif old_regime.mode is EngagedContactMode.PRIMARY_SLIP_SECONDARY_STICK:
+        for direction in _slip_directions():
+            candidates.append(
+                (
+                    f"continue_primary_slip:{direction.value}",
+                    ContactRegime.primary_slip_secondary_stick(
+                        primary_direction=direction
+                    ),
+                )
+            )
+            candidates.append(
+                (
+                    f"swap_to_primary_stick_secondary_slip:{direction.value}",
+                    ContactRegime.primary_stick_secondary_slip(
+                        secondary_direction=direction
+                    ),
+                )
+            )
+
+    # Both-slip is the least constrained local topology and is useful as a
+    # diagnostic even when the current event policy would not jump to it.
+    for regime in _both_slip_regimes():
+        candidates.append(
+            (
+                "both_slip:"
+                f"{regime.primary_slip_direction.value}/"
+                f"{regime.secondary_slip_direction.value}",
+                regime,
+            )
+        )
+
+    seen: set[ContactRegime] = set()
+    rendered: dict[str, object] = {}
+    for label, candidate in candidates:
+        if candidate in seen:
+            continue
+        seen.add(candidate)
+        try:
+            evaluation = evaluator.evaluate_vector(
+                time=time,
+                vector=vector,
+                regime=candidate,
+                shift_constraint=shift_constraint,
+                shaft_boundaries=shaft_boundaries,
+            )
+            branch = evaluation.branch_result
+            static_margins: dict[str, float] = {}
+            for interface in candidate.mode.sticking_interfaces:
+                static_margins[interface.value] = float(
+                    evaluation.static_margin_at(
+                        interface, traction_law=evaluator.traction_law
+                    )
+                )
+            rendered[label] = {
+                "mode": candidate.mode.value,
+                "primary_lambda": float(evaluation.traction_utilization.primary_lambda),
+                "secondary_lambda": float(
+                    evaluation.traction_utilization.secondary_lambda
+                ),
+                "primary_normal_n": float(evaluation.normal_primary),
+                "secondary_normal_n": float(evaluation.normal_secondary),
+                "primary_relative_speed_mps": float(
+                    evaluation.relative_motion.relative_speed_at(
+                        ContactInterface.PRIMARY
+                    )
+                ),
+                "secondary_relative_speed_mps": float(
+                    evaluation.relative_motion.relative_speed_at(
+                        ContactInterface.SECONDARY
+                    )
+                ),
+                "primary_relative_acceleration_mps2": float(
+                    evaluation.relative_motion.relative_acceleration_at(
+                        ContactInterface.PRIMARY
+                    )
+                ),
+                "secondary_relative_acceleration_mps2": float(
+                    evaluation.relative_motion.relative_acceleration_at(
+                        ContactInterface.SECONDARY
+                    )
+                ),
+                "static_margins": static_margins,
+                "stick_solver_accepted": (
+                    bool(branch.accepted) if hasattr(branch, "accepted") else None
+                ),
+                "optimizer_success": (
+                    bool(branch.optimizer_success)
+                    if hasattr(branch, "optimizer_success")
+                    else None
+                ),
+                "optimizer_cost": (
+                    float(branch.optimizer_cost)
+                    if hasattr(branch, "optimizer_cost")
+                    else None
+                ),
+                "jacobian_condition_number": (
+                    float(branch.jacobian_condition_number)
+                    if hasattr(branch, "jacobian_condition_number")
+                    else None
+                ),
+                "physical_static_admissible": bool(
+                    evaluation.sticks_are_admissible(
+                        traction_law=evaluator.traction_law,
+                        required_margin=switching_settings.stick_exit_static_margin,
+                    )
+                ),
+                "slipped_directions_consistent": bool(
+                    evaluation.slipped_directions_are_consistent()
+                ),
+                "outgoing_if_slipping": bool(
+                    _slip_directions_are_outgoing(evaluation, candidate, evaluator)
+                    if candidate.mode.slipping_interfaces
+                    else True
+                ),
+            }
+        except Exception as exc:  # diagnostic path must not mask root failure
+            rendered[label] = {"evaluation_error": f"{type(exc).__name__}: {exc}"}
+
+    return {
+        "event_time_s": float(time),
+        "old_mode": old_regime.mode.value,
+        "restick_interfaces": tuple(
+            interface.value for interface in restick_interfaces
+        ),
+        "candidates": rendered,
+    }
+
+
 def _select_capacity_loss_candidate(
     *,
     evaluator: "EngagedCVTContactEvaluator",
+    time: float,
     vector: NDArray[np.float64],
     old_regime: ContactRegime,
     capacity_interfaces: tuple[ContactInterface, ...],
@@ -293,6 +656,7 @@ def _select_capacity_loss_candidate(
     def choose(candidates: Iterable[ContactRegime]) -> ContactRegime | None:
         return _best_admissible_candidate(
             evaluator=evaluator,
+            time=time,
             vector=vector,
             candidates=candidates,
             switching_settings=switching_settings,
@@ -351,6 +715,7 @@ def _select_capacity_loss_candidate(
 def _select_zero_crossing_kinetic_continuation(
     *,
     evaluator: "EngagedCVTContactEvaluator",
+    time: float,
     vector: NDArray[np.float64],
     old_regime: ContactRegime,
     zero_crossing_interfaces: tuple[ContactInterface, ...],
@@ -395,6 +760,7 @@ def _select_zero_crossing_kinetic_continuation(
 
     return _best_admissible_candidate(
         evaluator=evaluator,
+        time=time,
         vector=vector,
         candidates=candidates,
         switching_settings=switching_settings,
@@ -408,14 +774,21 @@ def _select_zero_crossing_kinetic_continuation(
 def _select_restick_candidate(
     *,
     evaluator: "EngagedCVTContactEvaluator",
+    time: float,
     vector: NDArray[np.float64],
     old_regime: ContactRegime,
     restick_interfaces: tuple[ContactInterface, ...],
     switching_settings: CVTEventSwitchingTolerances,
     shift_constraint: EngagedShiftConstraint,
     shaft_boundaries: CVTShaftBoundaryValues | None = None,
+    required_static_margin: float | None = None,
 ) -> ContactRegime | None:
-    """Attempt only topology-tightening candidates after a velocity event."""
+    """Attempt only topology-tightening candidates after a velocity event.
+
+    ``required_static_margin`` defaults to the configured positive re-stick
+    reserve.  The transition resolver may explicitly retry with the physical
+    stick-exit margin only after no outgoing kinetic continuation exists.
+    """
 
     requested = set(restick_interfaces)
     candidates: list[ContactRegime] = []
@@ -445,12 +818,19 @@ def _select_restick_candidate(
                 )
             )
 
+    margin = (
+        switching_settings.restick_static_margin
+        if required_static_margin is None
+        else float(required_static_margin)
+    )
+    _require_finite_nonnegative(required_static_margin=margin)
     return _best_admissible_candidate(
         evaluator=evaluator,
+        time=time,
         vector=vector,
         candidates=candidates,
         switching_settings=switching_settings,
-        required_static_margin=switching_settings.restick_static_margin,
+        required_static_margin=margin,
         require_outgoing_directions=False,
         shift_constraint=shift_constraint,
         shaft_boundaries=shaft_boundaries,
@@ -460,6 +840,7 @@ def _select_restick_candidate(
 def _best_admissible_candidate(
     *,
     evaluator: "EngagedCVTContactEvaluator",
+    time: float,
     vector: NDArray[np.float64],
     candidates: Iterable[ContactRegime],
     switching_settings: CVTEventSwitchingTolerances,
@@ -471,7 +852,7 @@ def _best_admissible_candidate(
     accepted: list[tuple[float, ContactRegime]] = []
     for candidate in candidates:
         evaluation = evaluator.evaluate_vector(
-            time=0.0,
+            time=time,
             vector=vector,
             regime=candidate,
             shift_constraint=shift_constraint,

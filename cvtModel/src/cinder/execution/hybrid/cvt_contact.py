@@ -230,7 +230,8 @@ class EngagedCVTContactEvaluator:
         # still terminate exactly at the configured physical stop; this is not
         # a substitute for the future stop-reaction model.
         snapshot_state = self._geometry_safe_state(state)
-        snapshot = self.model.snapshot(
+        snapshot = self.model.snapshot_at_time(
+            time=time,
             state=snapshot_state,
             shaft_boundaries=shaft_boundaries,
         )
@@ -361,7 +362,7 @@ class EngagedCVTContactEvaluator:
         shift_constraint: EngagedShiftConstraint = EngagedShiftConstraint.FREE,
         shaft_boundaries: CVTShaftBoundaryValues | None = None,
     ) -> ContactRegime:
-        """Classify established initial slip, otherwise test a stick candidate.
+        """Classify established slip or a stick candidate at initial time.
 
         This helper deliberately does not replace an application-specific
         clutch/engagement model.  It is only valid once both wraps are engaged.
@@ -373,6 +374,7 @@ class EngagedCVTContactEvaluator:
             raise TypeError("shift_constraint must be an EngagedShiftConstraint.")
         return resolve_initial_engaged_regime(
             evaluator=self,
+            time=0.0,
             state=state,
             switching_settings=switching_settings,
             shift_constraint=shift_constraint,

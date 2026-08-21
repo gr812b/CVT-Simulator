@@ -47,6 +47,19 @@ class DeadzoneDynamicsEvaluator:
         state: CVTState,
         shaft_boundaries: CVTShaftBoundaryValues | None = None,
     ) -> DeadzoneSnapshot:
+        """Build the deadzone snapshot at the explicit static time origin ``t = 0``."""
+
+        return self.snapshot_at_time(
+            time=0.0, state=state, shaft_boundaries=shaft_boundaries
+        )
+
+    def snapshot_at_time(
+        self,
+        *,
+        time: float,
+        state: CVTState,
+        shaft_boundaries: CVTShaftBoundaryValues | None = None,
+    ) -> DeadzoneSnapshot:
         """Construct and validate one deadzone frozen snapshot.
 
         During event localization, a rejected Runge--Kutta stage can lie just
@@ -58,6 +71,7 @@ class DeadzoneDynamicsEvaluator:
         """
 
         snapshot = build_deadzone_snapshot(
+            time=time,
             model=self.model,
             state=self._geometry_safe_state(state),
             shaft_boundaries=shaft_boundaries,
@@ -80,6 +94,19 @@ class DeadzoneDynamicsEvaluator:
         state: CVTState,
         shaft_boundaries: CVTShaftBoundaryValues | None = None,
     ) -> DeadzoneEvaluation:
+        """Evaluate free deadzone mechanics at the static time origin ``t = 0``."""
+
+        return self.evaluate_free_at_time(
+            time=0.0, state=state, shaft_boundaries=shaft_boundaries
+        )
+
+    def evaluate_free_at_time(
+        self,
+        *,
+        time: float,
+        state: CVTState,
+        shaft_boundaries: CVTShaftBoundaryValues | None = None,
+    ) -> DeadzoneEvaluation:
         """Return the reduced RHS for free primary travel below engagement.
 
         The governing equations are
@@ -93,7 +120,9 @@ class DeadzoneDynamicsEvaluator:
         or tension-loop equation is present.
         """
 
-        snapshot = self.snapshot(state=state, shaft_boundaries=shaft_boundaries)
+        snapshot = self.snapshot_at_time(
+            time=time, state=state, shaft_boundaries=shaft_boundaries
+        )
         derivative = build_deadzone_free_derivative(snapshot=snapshot)
         return DeadzoneEvaluation(
             state=state,
@@ -108,11 +137,30 @@ class DeadzoneDynamicsEvaluator:
         lower_stop_shift: float,
         shaft_boundaries: CVTShaftBoundaryValues | None = None,
     ) -> DeadzoneEvaluation:
+        """Evaluate the lower-stop constraint at static time origin ``t = 0``."""
+
+        return self.evaluate_lower_stop_at_time(
+            time=0.0,
+            state=state,
+            lower_stop_shift=lower_stop_shift,
+            shaft_boundaries=shaft_boundaries,
+        )
+
+    def evaluate_lower_stop_at_time(
+        self,
+        *,
+        time: float,
+        state: CVTState,
+        lower_stop_shift: float,
+        shaft_boundaries: CVTShaftBoundaryValues | None = None,
+    ) -> DeadzoneEvaluation:
         """Return constrained deadzone dynamics at the lower mechanical stop."""
 
         from .lower_stop import evaluate_deadzone_lower_stop
 
-        snapshot = self.snapshot(state=state, shaft_boundaries=shaft_boundaries)
+        snapshot = self.snapshot_at_time(
+            time=time, state=state, shaft_boundaries=shaft_boundaries
+        )
         return evaluate_deadzone_lower_stop(
             snapshot=snapshot,
             lower_stop_shift=lower_stop_shift,

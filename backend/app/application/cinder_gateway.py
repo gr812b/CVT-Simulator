@@ -131,6 +131,9 @@ class CinderGateway:
             cvt=assembly,
             pulley=PulleyLocation(str(payload["pulley"])),
             point=ActuationOperatingPoint(
+                # This API remains a static clamping map; time is therefore
+                # explicitly fixed rather than hidden behind a context default.
+                time=0.0,
                 shift_position=_number(payload, "shift_position_m"),
                 shaft_speed=_number(payload, "shaft_speed_rad_per_s"),
                 shift_speed=_number(payload, "shift_speed_m_per_s"),
@@ -230,9 +233,7 @@ class CinderGateway:
         return result
 
 
-def _actuation_coordinate(
-    value: str,
-) -> ActuationStateCoordinate | ClosureUnknown:
+def _actuation_coordinate(value: str) -> ActuationStateCoordinate | ClosureUnknown:
     state_coordinates = {
         "shift_position": ActuationStateCoordinate.SHIFT_POSITION,
         "shaft_speed": ActuationStateCoordinate.SHAFT_SPEED,

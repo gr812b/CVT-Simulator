@@ -1,7 +1,7 @@
 """Geometry, engagement, and unilateral-constraint events for CVT regimes.
 
 Event factories encode only boundaries and scalar release indicators that are
-physically meaningful for the active operating regime.  They deliberately do
+physically meaningful for the active operating regime. They deliberately do
 not contain an RHS or duplicate contact mechanics.
 """
 
@@ -84,10 +84,11 @@ def build_engaged_free_boundary_events(
 ) -> tuple[HybridEvent, HybridEvent]:
     """Return the low-ratio seat and upper-stop arrivals from free engagement.
 
-    Reaching ``s_engage`` is not itself a disengagement decision.  The event
-    first enters the engaged low-ratio seat.  That seat then releases to
-    deadzone only when the *primary actuator's own* clamp force crosses below
-    zero.
+    Reaching ``s_engage`` is not itself a disengagement decision. The event
+    first enters the engaged low-ratio seat. With a positive-width deadzone,
+    that seat may later release to deadzone when the primary actuator loses its
+    own closing clamp. With a zero-width deadzone, the seat is simply the lower
+    engaged travel stop.
     """
 
     def low_ratio_seat_indicator(_time: float, vector: NDArray[np.float64]) -> float:
@@ -129,27 +130,38 @@ def build_low_ratio_seat_events(
     *,
     primary_clamping_force: PrimaryClampIndicator,
     closing_reaction: LowRatioSeatReactionIndicator,
-) -> tuple[HybridEvent, HybridEvent]:
-    """Return the two distinct exits from an engaged low-ratio seat.
+    include_primary_clamp_loss: bool = True,
+) -> tuple[HybridEvent, ...]:
+    """Return physically reachable exits from an engaged low-ratio seat.
 
-    ``PRIMARY_CLAMP_LOST`` is the engagement/disengagement criterion: the
-    primary's own signed actuator force crosses from closing to opening.
-    ``LOW_RATIO_SEAT_RELEASE`` instead means the unilateral seat would need to
-    pull; its successor is free *engaged* motion, not deadzone.
+    ``PRIMARY_CLAMP_LOST`` exists only when a positive-width deadzone is
+    available: it is the engagement/disengagement criterion. For an always-
+    engaged CVT with ``lower_stop == engagement``, there is no neutral state to
+    enter and this event must be omitted.
+
+    ``LOW_RATIO_SEAT_RELEASE`` means the unilateral seat would need to pull;
+    its successor is free *engaged* motion in either topology.
     """
 
-    return (
-        HybridEvent(
-            name=CVTRegimeEvent.PRIMARY_CLAMP_LOST.value,
-            function=lambda time, vector: float(primary_clamping_force(time, vector)),
-            direction=-1.0,
-        ),
+    events: list[HybridEvent] = []
+    if include_primary_clamp_loss:
+        events.append(
+            HybridEvent(
+                name=CVTRegimeEvent.PRIMARY_CLAMP_LOST.value,
+                function=lambda time, vector: float(
+                    primary_clamping_force(time, vector)
+                ),
+                direction=-1.0,
+            )
+        )
+    events.append(
         HybridEvent(
             name=CVTRegimeEvent.LOW_RATIO_SEAT_RELEASE.value,
             function=lambda time, vector: float(closing_reaction(time, vector)),
             direction=-1.0,
-        ),
+        )
     )
+    return tuple(events)
 
 
 def build_lower_stop_release_event(
