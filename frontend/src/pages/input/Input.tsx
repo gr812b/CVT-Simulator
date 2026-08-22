@@ -17,6 +17,7 @@ import {
   type DefaultRunSetup,
   type ExecutionPresetSummary,
   type LoadCaseSummary,
+  type SimulationCaseDocument,
   type TuneSummary,
 } from '@api/client';
 import { editorToRamp, rampToEditor } from '@utils/rampEditor';
@@ -226,7 +227,7 @@ export const Input = () => {
 
     if (useCustomLoadCase) {
       const resolvedDocument = await resolveSimulationCaseFromLibrarySelection(selection);
-      const document = JSON.parse(JSON.stringify(resolvedDocument)) as Record<string, any>;
+      const document = JSON.parse(JSON.stringify(resolvedDocument)) as Record<string, unknown>;
       const customRoadProfile = makeCustomLoadCaseRoadProfile(customLoadCaseSegments);
       const shaftBoundaries = typeof document.shaft_boundaries === 'object' && document.shaft_boundaries !== null
         ? document.shaft_boundaries as Record<string, unknown>
@@ -263,7 +264,7 @@ export const Input = () => {
         }
       }
 
-      await runSimulationDocument(document as any);
+      await runSimulationDocument(document as unknown as SimulationCaseDocument);
       return;
     }
 
