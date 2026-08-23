@@ -12,10 +12,12 @@ import {
   buildLibraryRunSelection,
   buildRunSetupForVehicle,
   getDefaultRunSetup,
+  resolveSimulationCaseFromLibrarySelection,
   updateTuneValues,
   type DefaultRunSetup,
   type ExecutionPresetSummary,
   type LoadCaseSummary,
+  type SimulationCaseDocument,
   type TuneSummary,
 } from '@api/client';
 import { editorToRamp, rampToEditor } from '@utils/rampEditor';
@@ -40,6 +42,13 @@ import styles from './Input.module.scss';
 const expandedState = Object.fromEntries(GROUPS.map((group) => [group, true])) as Record<TuningGroup, boolean>;
 const collapsedState = Object.fromEntries(GROUPS.map((group) => [group, false])) as Record<TuningGroup, boolean>;
 
+type CustomLoadCaseSegment = {
+  distanceM: number;
+  gradeDeg: number;
+};
+
+const POUNDS_TO_KG = 0.45359237;
+
 function selectValue<T extends { id: string }>(items: T[], id: string | null): T | null {
   if (id === null) return null;
   return items.find((item) => item.id === id) ?? null;
@@ -53,6 +62,39 @@ function numberValue(value: unknown): number | null {
   return typeof value === 'number' && Number.isFinite(value) ? value : null;
 }
 
+function makeCustomLoadCaseRoadProfile(segments: CustomLoadCaseSegment[]) {
+  const normalized = segments
+    .map((segment) => ({
+      distanceM: Number.isFinite(segment.distanceM) ? Math.max(0, segment.distanceM) : 0,
+      gradeDeg: Number.isFinite(segment.gradeDeg) ? segment.gradeDeg : 0,
+    }))
+    .filter((segment) => segment.distanceM > 0);
+
+  if (normalized.length === 0) {
+    return { kind: 'constant_grade', grade_angle_rad: 0 };
+  }
+
+  if (normalized.length === 1) {
+    return {
+      kind: 'constant_grade',
+      grade_angle_rad: (normalized[0].gradeDeg * Math.PI) / 180,
+    };
+  }
+
+  let cumulativeDistanceM = 0;
+  return {
+    kind: 'piecewise_constant_grade',
+    segments: normalized.map((segment) => {
+      const startDistanceM = cumulativeDistanceM;
+      cumulativeDistanceM += segment.distanceM;
+      return {
+        start_distance_m: startDistanceM,
+        grade_angle_rad: (segment.gradeDeg * Math.PI) / 180,
+      };
+    }),
+  };
+}
+
 /**
  * Run setup edits DB tune values only. Engine/CVT hardware/output-system data
  * remain pinned by the released seeded Baja assembly, while load and execution
@@ -61,7 +103,7 @@ function numberValue(value: unknown): number | null {
 export const Input = () => {
   const navigate = useNavigate();
   const { isLoading, loadingMessage, setLoading } = useLoading();
-  const { runLibrarySetup } = useRunSimulation();
+  const { runLibrarySetup, runSimulationDocument } = useRunSimulation();
   const [setup, setSetup] = useState<DefaultRunSetup | null>(null);
   const [setupError, setSetupError] = useState<string | null>(null);
   const [expanded, setExpanded] = useState<Record<TuningGroup, boolean>>(expandedState);
@@ -72,6 +114,14 @@ export const Input = () => {
   const [selectedExecutionPresetId, setSelectedExecutionPresetId] = useState<string | null>(null);
   const [tuneValues, setTuneValues] = useState<Record<string, unknown>>({});
   const [savedTuneValues, setSavedTuneValues] = useState<Record<string, unknown>>({});
+  const [useCustomLoadCase, setUseCustomLoadCase] = useState(false);
+  const [customLoadCaseSegments, setCustomLoadCaseSegments] = useState<CustomLoadCaseSegment[]>([
+    { distanceM: 60, gradeDeg: 0 },
+    { distanceM: 90, gradeDeg: 20 },
+  ]);
+  const [useCustomVehicleMass, setUseCustomVehicleMass] = useState(false);
+  const [customVehicleMassKg, setCustomVehicleMassKg] = useState(300);
+  const [customVehicleMassUnit, setCustomVehicleMassUnit] = useState<'kg' | 'lb'>('kg');
 
   const refreshSetup = useCallback(async () => {
     setLoading(true, 'Loading seeded Baja run setup...');
@@ -167,14 +217,59 @@ export const Input = () => {
   const run = useCallback(async () => {
     if (setup === null) return;
     if (selectedTune !== null && hasUnsavedTuneChanges) await saveTune();
+
     const selection = buildLibraryRunSelection(setup, {
       vehicleAssemblyId: selectedVehicleAssemblyId ?? undefined,
       tuneId: selectedTuneId,
       loadCaseId: selectedLoadCaseId,
       executionPresetId: selectedExecutionPresetId,
     });
+
+    if (useCustomLoadCase) {
+      const resolvedDocument = await resolveSimulationCaseFromLibrarySelection(selection);
+      const document = JSON.parse(JSON.stringify(resolvedDocument)) as Record<string, unknown>;
+      const customRoadProfile = makeCustomLoadCaseRoadProfile(customLoadCaseSegments);
+      const shaftBoundaries = typeof document.shaft_boundaries === 'object' && document.shaft_boundaries !== null
+        ? document.shaft_boundaries as Record<string, unknown>
+        : null;
+      const secondaryBoundary = shaftBoundaries !== null && typeof shaftBoundaries.secondary === 'object' && shaftBoundaries.secondary !== null
+        ? shaftBoundaries.secondary as Record<string, unknown>
+        : null;
+      if (secondaryBoundary !== null) {
+        secondaryBoundary.road_profile = customRoadProfile;
+      }
+
+      // Keep V1 compatibility alias in sync when present.
+      const previousOutputBoundary = typeof document.output_boundary === 'object' && document.output_boundary !== null
+        ? document.output_boundary as Record<string, unknown>
+        : null;
+      if (previousOutputBoundary !== null) {
+        previousOutputBoundary.road_profile = customRoadProfile;
+      }
+
+      if (useCustomVehicleMass) {
+        if (!Number.isFinite(customVehicleMassKg) || customVehicleMassKg <= 0) {
+          alert('Custom vehicle mass must be a positive number.');
+          return;
+        }
+
+        const validMass = customVehicleMassUnit === 'lb'
+          ? customVehicleMassKg * POUNDS_TO_KG
+          : customVehicleMassKg;
+        if (secondaryBoundary !== null && typeof secondaryBoundary.vehicle === 'object' && secondaryBoundary.vehicle !== null) {
+          (secondaryBoundary.vehicle as Record<string, unknown>).mass_kg = validMass;
+        }
+        if (previousOutputBoundary !== null && typeof previousOutputBoundary.vehicle === 'object' && previousOutputBoundary.vehicle !== null) {
+          (previousOutputBoundary.vehicle as Record<string, unknown>).mass_kg = validMass;
+        }
+      }
+
+      await runSimulationDocument(document as unknown as SimulationCaseDocument);
+      return;
+    }
+
     await runLibrarySetup(selection);
-  }, [hasUnsavedTuneChanges, runLibrarySetup, saveTune, selectedExecutionPresetId, selectedLoadCaseId, selectedTune, selectedTuneId, selectedVehicleAssemblyId, setup]);
+  }, [customLoadCaseSegments, customVehicleMassKg, customVehicleMassUnit, hasUnsavedTuneChanges, runLibrarySetup, runSimulationDocument, saveTune, selectedExecutionPresetId, selectedLoadCaseId, selectedTune, selectedTuneId, selectedVehicleAssemblyId, setup, useCustomLoadCase, useCustomVehicleMass]);
 
   if (setup === null) {
     return (
@@ -233,6 +328,76 @@ export const Input = () => {
                 {setup.executionPresets.map((preset) => <option key={preset.id} value={preset.id}>{preset.name}</option>)}
               </select>
             </label>
+
+            <label className={styles.selectField}>
+              <span>Custom run load case</span>
+              <label className={styles.customLoadCaseCheckbox}>
+                <input type="checkbox" checked={useCustomLoadCase} onChange={(event) => setUseCustomLoadCase(event.target.checked)} />
+                Use a one-off custom road profile for this run only
+              </label>
+            </label>
+
+            {useCustomLoadCase && (
+              <div className={styles.setupCard} style={{ width: '100%', marginBottom: 0 }}>
+                <h3>Road profile</h3>
+                <label className={styles.selectField}>
+                  <span>Vehicle mass override</span>
+                  <label className={styles.customLoadCaseCheckbox}>
+                    <input type="checkbox" checked={useCustomVehicleMass} onChange={(event) => setUseCustomVehicleMass(event.target.checked)} />
+                    Override vehicle mass for this run only
+                  </label>
+                </label>
+                {useCustomVehicleMass && (
+                  <div className={styles.customMassRow}>
+                    <label className={`${styles.selectField} ${styles.customMassField}`}>
+                      <span>Unit</span>
+                      <select value={customVehicleMassUnit} onChange={(event) => setCustomVehicleMassUnit(event.target.value === 'lb' ? 'lb' : 'kg')}>
+                        <option value="kg">kg</option>
+                        <option value="lb">lb</option>
+                      </select>
+                    </label>
+                    <label className={`${styles.selectField} ${styles.customMassField}`}>
+                      <span>Mass ({customVehicleMassUnit})</span>
+                      <input
+                        type="number"
+                        min={0}
+                        step={1}
+                        value={customVehicleMassKg}
+                        onChange={(event) => setCustomVehicleMassKg(Number(event.target.value))}
+                      />
+                    </label>
+                  </div>
+                )}
+
+                {customLoadCaseSegments.map((segment, index) => (
+                  <div key={`${index}-${segment.distanceM}-${segment.gradeDeg}`} className={styles.customSegmentRow}>
+                    <label className={`${styles.selectField} ${styles.customLoadCaseField}`}>
+                      <span>Distance (m)</span>
+                      <input
+                        type="number"
+                        min={0}
+                        step={0.1}
+                        value={segment.distanceM}
+                        onChange={(event) => setCustomLoadCaseSegments((current) => current.map((item, itemIndex) => itemIndex === index ? { ...item, distanceM: Number(event.target.value) } : item))}
+                      />
+                    </label>
+                    <label className={`${styles.selectField} ${styles.customLoadCaseField}`}>
+                      <span>Grade (°)</span>
+                      <input
+                        type="number"
+                        step={0.1}
+                        value={segment.gradeDeg}
+                        onChange={(event) => setCustomLoadCaseSegments((current) => current.map((item, itemIndex) => itemIndex === index ? { ...item, gradeDeg: Number(event.target.value) } : item))}
+                      />
+                    </label>
+                    <Button text="Remove" icon={ArrowLeft} onClick={() => setCustomLoadCaseSegments((current) => current.filter((_, itemIndex) => itemIndex !== index))} disabled={customLoadCaseSegments.length === 1} />
+                  </div>
+                ))}
+                <Button text="Add segment" icon={ArrowDownCircle} onClick={() => setCustomLoadCaseSegments((current) => [...current, { distanceM: 25, gradeDeg: 0 }])} />
+                <p className={styles.helperText}>This custom profile only affects the next run. It is not saved to the library or database.</p>
+              </div>
+            )}
+
             <p className={styles.helperText}>Engine and CVT hardware stay shared by the seeded Baja baselines. The vehicle dropdown changes the pinned output-system mass; the boxes below update the selected CVT tune only.</p>
           </section>
 

@@ -1929,6 +1929,68 @@
         "title": "RerunStoredRunRequest",
         "type": "object"
       },
+      "ResolveLibrarySimulationCaseRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "execution_preset_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Execution Preset Id"
+          },
+          "load_case_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Load Case Id"
+          },
+          "tune_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tune Id"
+          },
+          "vehicle_assembly_version_id": {
+            "title": "Vehicle Assembly Version Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "vehicle_assembly_version_id"
+        ],
+        "title": "ResolveLibrarySimulationCaseRequest",
+        "type": "object"
+      },
+      "ResolveLibrarySimulationCaseResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "simulation_case": {
+            "additionalProperties": true,
+            "title": "Simulation Case",
+            "type": "object"
+          }
+        },
+        "required": [
+          "simulation_case"
+        ],
+        "title": "ResolveLibrarySimulationCaseResponse",
+        "type": "object"
+      },
       "RunInputResponse": {
         "additionalProperties": false,
         "properties": {
@@ -4381,6 +4443,47 @@
         "summary": "Get Run Result",
         "tags": [
           "runs"
+        ]
+      }
+    },
+    "/api/v1/simulation-cases/resolve-from-library": {
+      "post": {
+        "operationId": "resolve_from_library_selection_api_v1_simulation_cases_resolve_from_library_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResolveLibrarySimulationCaseRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResolveLibrarySimulationCaseResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Resolve From Library Selection",
+        "tags": [
+          "simulation cases"
         ]
       }
     },
