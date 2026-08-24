@@ -54,43 +54,56 @@ class BeltPulleyGeometry:
         return self._spec
 
     def evaluate(self, shift: float) -> GeometryPosition:
-        """Evaluate geometry with the deadzone-side derivative convention.
+        """Evaluate geometry using the ordinary piecewise convention.
 
-        At ``shift == deadzone_shift`` the position is continuous but the
-        kinematic derivative is one-sided.  This general geometry accessor
-        retains the historical deadzone-side convention; engaged dynamics must
-        use :meth:`evaluate_engaged` so the active branch owns the derivative at
-        the shared hybrid boundary.
+        At the deadzone/engaged boundary this retains the historical
+        deadzone-side derivative.  Hybrid code that already knows which side
+        of the topology boundary is active should call :meth:`evaluate_deadzone`
+        or :meth:`evaluate_engaged` instead so the correct one-sided tangent is
+        used at the exact same position.
         """
 
-        return self._evaluate(shift, engaged_at_deadzone=False)
+        return self._evaluate(shift, engaged_side_at_boundary=None)
+
+    def evaluate_deadzone(self, shift: float) -> GeometryPosition:
+        """Evaluate the deadzone-side geometry/tangent at ``shift``.
+
+        In particular, at ``shift == deadzone_shift`` the primary/belt radius
+        and belt-axial derivatives remain zero because belt contact has not yet
+        been activated in the deadzone topology.
+        """
+
+        return self._evaluate(shift, engaged_side_at_boundary=False)
 
     def evaluate_engaged(self, shift: float) -> GeometryPosition:
-        """Evaluate geometry with engaged-side derivatives at engagement.
+        """Evaluate the engaged-side geometry/tangent at ``shift``.
 
-        Values at ``shift == deadzone_shift`` are identical to
-        :meth:`evaluate`, but ``dr/ds`` and the derived axial-coordinate gains
-        are taken from the engaged side.  This matters for a zero-width
-        deadzone and for hybrid event localization, where an engaged ODE stage
-        may be projected exactly onto the engagement boundary.
+        The geometry is position-continuous at ``deadzone_shift`` but its
+        derivative is intentionally discontinuous.  Once engaged contact is
+        active, the exact boundary must therefore use the right-hand tangent.
         """
 
-        return self._evaluate(shift, engaged_at_deadzone=True)
+        return self._evaluate(shift, engaged_side_at_boundary=True)
 
     def _evaluate(
         self,
         shift: float,
         *,
-        engaged_at_deadzone: bool,
+        engaged_side_at_boundary: bool | None,
     ) -> GeometryPosition:
         shift = self._coerce_shift_to_domain(shift)
+        if engaged_side_at_boundary is not None:
+            shift = self._coerce_shift_to_topology_side(
+                shift, engaged_side_at_boundary=engaged_side_at_boundary
+            )
 
         (
             primary_outer_radius,
             d_primary_radius_ds,
             d2_primary_radius_ds2,
         ) = self._primary_outer_radius_kinematics(
-            shift, engaged_at_deadzone=engaged_at_deadzone
+            shift,
+            engaged_side_at_boundary=bool(engaged_side_at_boundary),
         )
 
         secondary_outer_radius = solve_secondary_outer_radius(
@@ -146,7 +159,8 @@ class BeltPulleyGeometry:
                 )
             ),
             belt_axial_coordinate=self._belt_axial_coordinate(
-                shift, engaged_at_deadzone=engaged_at_deadzone
+                shift,
+                engaged_side_at_boundary=bool(engaged_side_at_boundary),
             ),
         )
 
@@ -165,14 +179,13 @@ class BeltPulleyGeometry:
         self,
         shift: float,
         *,
-        engaged_at_deadzone: bool,
+        engaged_side_at_boundary: bool = False,
     ) -> tuple[float, float, float]:
         """Return r_p,out, dr_p,out/ds, and d²r_p,out/ds²."""
 
-        in_deadzone = shift < self._spec.deadzone_shift or (
-            shift == self._spec.deadzone_shift and not engaged_at_deadzone
-        )
-        if in_deadzone:
+        if shift < self._spec.deadzone_shift or (
+            shift == self._spec.deadzone_shift and not engaged_side_at_boundary
+        ):
             return (
                 self._spec.primary_outer_radius_at_zero_shift,
                 0.0,
@@ -253,14 +266,13 @@ class BeltPulleyGeometry:
         self,
         shift: float,
         *,
-        engaged_at_deadzone: bool,
+        engaged_side_at_boundary: bool = False,
     ) -> AxialCoordinateAtShift:
         """Return present lumped belt axial coordinate x_b(s)."""
 
-        in_deadzone = shift < self._spec.deadzone_shift or (
-            shift == self._spec.deadzone_shift and not engaged_at_deadzone
-        )
-        if in_deadzone:
+        if shift < self._spec.deadzone_shift or (
+            shift == self._spec.deadzone_shift and not engaged_side_at_boundary
+        ):
             return AxialCoordinateAtShift(
                 value=0.0,
                 d_value_ds=0.0,
@@ -294,7 +306,42 @@ class BeltPulleyGeometry:
             ),
             d_effective_ds=d_radius_ds,
             d2_effective_ds2=d2_radius_ds2,
+            d_center_of_mass_ds=d_radius_ds,
+            d2_center_of_mass_ds2=d2_radius_ds2,
         )
+
+    def _coerce_shift_to_topology_side(
+        self,
+        shift: float,
+        *,
+        engaged_side_at_boundary: bool,
+    ) -> float:
+        """Snap only roundoff-sized excursions across the active topology boundary.
+
+        ``evaluate_deadzone`` and ``evaluate_engaged`` represent different
+        one-sided tangents at ``s_deadzone``.  A caller that is genuinely on
+        the wrong side must not silently receive the opposite derivative, but
+        event localization can land one or a few ULPs across the exact surface.
+        Those roundoff-sized excursions are snapped back to the common position.
+        """
+
+        boundary = self._spec.deadzone_shift
+        tolerance = 256.0 * max(1.0, abs(boundary)) * 2.220446049250313e-16
+        if engaged_side_at_boundary:
+            if shift < boundary - tolerance:
+                raise ValueError(
+                    f"engaged geometry requires shift >= {boundary}; got {shift}."
+                )
+            if shift < boundary:
+                return boundary
+        else:
+            if shift > boundary + tolerance:
+                raise ValueError(
+                    f"deadzone geometry requires shift <= {boundary}; got {shift}."
+                )
+            if shift > boundary:
+                return boundary
+        return shift
 
     def _coerce_shift_to_domain(self, shift: float) -> float:
         """Return ``shift`` clipped to the geometry domain within roundoff.

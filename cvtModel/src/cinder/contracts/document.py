@@ -218,6 +218,8 @@ def _encode_pulley(pulley: PulleySpec) -> dict[str, Any]:
         coupling = pulley.helical_coupling
         payload["helical_coupling"] = {
             "profile": _encode_helix_profile(coupling.profile),
+            "opening_per_axial_position": coupling.opening_per_axial_position,
+            "opening_offset_m": coupling.opening_offset,
         }
     return payload
 
@@ -246,7 +248,13 @@ def _decode_pulley(payload: Mapping[str, Any], *, location: str) -> PulleySpec:
                     _require(coupling_data, "profile"),
                     f"pulleys.{location}.helical_coupling.profile",
                 )
-            )
+            ),
+            opening_per_axial_position=_optional_number(
+                coupling_data, "opening_per_axial_position", default=-1.0
+            ),
+            opening_offset=_optional_number(
+                coupling_data, "opening_offset_m", default=0.0
+            ),
         )
     return PulleySpec(actuator=PulleyActuator(*force_laws), helical_coupling=coupling)
 

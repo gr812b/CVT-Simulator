@@ -23,14 +23,17 @@ class StateFixedEquationBlock:
     """Five lambda-independent mechanics rows for one engaged constraint.
 
     In free shift, ``shift_coordinate`` is the primary axial balance and
-    determines ``s_ddot``.  At either fixed-shift engaged boundary—the
-    low-ratio seat or upper mechanical stop—it is replaced by the exact
-    kinematic row ``s_ddot = 0``; the omitted primary axial balance is then
-    used solely to recover the corresponding unilateral reaction after solve.
+    ``secondary_axial`` is the secondary axial balance.  The two physical
+    fixed-shift boundaries act on different hardware:
 
-    The remaining four rows are unchanged.  In particular, the secondary axial
-    balance remains active at the stop because the secondary has no separate
-    axial stop reaction.
+    * at the low-ratio limit the *secondary* movable sheave is against its
+      closed stop, so the secondary axial row is replaced by ``s_ddot = 0``
+      and the primary axial balance remains physical;
+    * at the high-ratio limit the primary shift coordinate is against its
+      upper stop, so the primary axial row is replaced by ``s_ddot = 0``.
+
+    The omitted physical axial row is recovered after solve as the matching
+    unilateral stop reaction.
     """
 
     primary_rotation: ClosureEquation
@@ -70,17 +73,22 @@ def build_state_fixed_equations(
     if not isinstance(shift_constraint, EngagedShiftConstraint):
         raise TypeError("shift_constraint must be an EngagedShiftConstraint.")
 
-    shift_coordinate = (
-        build_primary_axial_equation(snapshot=snapshot)
-        if shift_constraint is EngagedShiftConstraint.FREE
-        else build_shift_constraint_equation(constraint=shift_constraint)
-    )
+    primary_axial = build_primary_axial_equation(snapshot=snapshot)
+    secondary_axial = build_secondary_axial_equation(snapshot=snapshot)
+
+    if shift_constraint is EngagedShiftConstraint.LOW_RATIO_SEAT:
+        shift_coordinate = primary_axial
+        secondary_axial = build_shift_constraint_equation(constraint=shift_constraint)
+    elif shift_constraint is EngagedShiftConstraint.UPPER_STOP:
+        shift_coordinate = build_shift_constraint_equation(constraint=shift_constraint)
+    else:
+        shift_coordinate = primary_axial
 
     return StateFixedEquationBlock(
         primary_rotation=build_primary_rotation_equation(snapshot=snapshot),
         belt_transport=build_belt_transport_equation(snapshot=snapshot),
         secondary_rotation=build_secondary_rotation_equation(snapshot=snapshot),
         shift_coordinate=shift_coordinate,
-        secondary_axial=build_secondary_axial_equation(snapshot=snapshot),
+        secondary_axial=secondary_axial,
         shift_constraint=shift_constraint,
     )

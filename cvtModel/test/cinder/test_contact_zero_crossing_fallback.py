@@ -34,9 +34,6 @@ class _RelativeMotion:
             return 0.0
         direction = self._regime.slip_direction_at(interface)
         sign = 1.0 if direction is SlipDirection.BELT_LEADS_PULLEY else -1.0
-        # For the no-continuation case, each imposed kinetic direction drives
-        # back toward v_rel=0 and is therefore self-inconsistent.  For the
-        # continuation case, BELT_LEADS_PULLEY is a valid outgoing branch.
         if self._kinetic_outgoing and direction is SlipDirection.BELT_LEADS_PULLEY:
             return sign
         return -sign
@@ -44,11 +41,7 @@ class _RelativeMotion:
 
 class _Evaluation:
     def __init__(
-        self,
-        regime: ContactRegime,
-        *,
-        stick_margin: float,
-        kinetic_outgoing: bool,
+        self, regime: ContactRegime, *, stick_margin: float, kinetic_outgoing: bool
     ) -> None:
         self.regime = regime
         self.normal_primary = 1000.0
@@ -88,10 +81,7 @@ class _Evaluator:
 
 
 def _transition(*, stick_margin: float, kinetic_outgoing: bool):
-    evaluator = _Evaluator(
-        stick_margin=stick_margin,
-        kinetic_outgoing=kinetic_outgoing,
-    )
+    evaluator = _Evaluator(stick_margin=stick_margin, kinetic_outgoing=kinetic_outgoing)
     return resolve_cvt_contact_transition(
         evaluator=evaluator,
         time=1.0,
@@ -109,10 +99,7 @@ def _transition(*, stick_margin: float, kinetic_outgoing: bool):
 
 
 def test_zero_crossing_falls_back_to_physically_admissible_stick() -> None:
-    # Stick is physically inside the static boundary but has not recovered the
-    # extra 0.001 hysteresis reserve. Neither kinetic direction is outgoing.
     transition = _transition(stick_margin=5.0e-4, kinetic_outgoing=False)
-
     assert transition.next_mode == ContactRegime.stick_stick()
     assert (
         transition.reason == "contact_restuck_at_physical_limit_no_kinetic_continuation"
@@ -122,11 +109,7 @@ def test_zero_crossing_falls_back_to_physically_admissible_stick() -> None:
 
 
 def test_zero_crossing_keeps_outgoing_kinetic_branch_before_fallback() -> None:
-    # The same under-reserved stick candidate must not pre-empt an available
-    # kinetic continuation; the positive re-stick reserve still supplies the
-    # intended hysteresis.
     transition = _transition(stick_margin=5.0e-4, kinetic_outgoing=True)
-
     assert transition.next_mode is not None
     assert transition.next_mode.mode is EngagedContactMode.PRIMARY_SLIP_SECONDARY_STICK
     assert transition.reason == "kinetic_slip_direction_updated_at_zero_crossing"
@@ -134,7 +117,6 @@ def test_zero_crossing_keeps_outgoing_kinetic_branch_before_fallback() -> None:
 
 def test_zero_crossing_still_terminates_when_no_physical_mode_exists() -> None:
     transition = _transition(stick_margin=-1.0e-4, kinetic_outgoing=False)
-
     assert transition.next_mode is None
     assert (
         transition.reason
@@ -156,12 +138,8 @@ class _ExchangeRelativeMotion:
         direction = self._regime.slip_direction_at(interface)
         sign = 1.0 if direction is SlipDirection.BELT_LEADS_PULLEY else -1.0
         if self._regime.mode is EngagedContactMode.PRIMARY_STICK_SECONDARY_SLIP:
-            # Neither continuation/reversal of the secondary kinetic branch is
-            # self-consistent at this zero crossing.
             return -sign
         if self._regime.mode is EngagedContactMode.PRIMARY_SLIP_SECONDARY_STICK:
-            # Releasing the formerly sticking primary creates one valid
-            # outgoing mixed exchange branch.
             return sign if direction is SlipDirection.BELT_LEADS_PULLEY else -sign
         return -sign
 
@@ -175,8 +153,6 @@ class _ExchangeEvaluation:
 
     def sticks_are_admissible(self, *, traction_law, required_margin: float) -> bool:
         del traction_law, required_margin
-        # Enforcing both contacts to stick overloads one static requirement;
-        # the exchanged mixed topology remains statically admissible.
         return self.regime.mode is not EngagedContactMode.STICK_STICK
 
     def slipped_directions_are_consistent(self) -> bool:
@@ -213,7 +189,6 @@ def test_zero_crossing_can_exchange_which_contact_is_slipping() -> None:
         ),
         shift_constraint=EngagedShiftConstraint.FREE,
     )
-
     assert transition.next_mode is not None
     assert transition.next_mode.mode is EngagedContactMode.PRIMARY_SLIP_SECONDARY_STICK
     assert transition.reason == "zero_crossing_simultaneous_contact_topology_exchange"

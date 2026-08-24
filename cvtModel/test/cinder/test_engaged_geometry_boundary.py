@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from math import radians
-
 import pytest
 
 from cinder.model.cvt.geometry import (
@@ -53,15 +52,12 @@ def test_engaged_geometry_uses_right_hand_derivatives_at_engagement(
     deadzone_shift: float,
 ) -> None:
     geometry = _geometry(deadzone_shift=deadzone_shift)
-
     deadzone_side = geometry.evaluate(deadzone_shift)
     engaged_side = geometry.evaluate_engaged(deadzone_shift)
     _assert_same_position(deadzone_side, engaged_side)
-
     assert deadzone_side.primary.d_effective_ds == pytest.approx(0.0)
     assert deadzone_side.secondary.d_effective_ds == pytest.approx(0.0)
     assert deadzone_side.belt_axial_coordinate.d_value_ds == pytest.approx(0.0)
-
     assert engaged_side.primary.d_effective_ds > 0.0
     assert engaged_side.secondary.d_effective_ds < 0.0
     assert engaged_side.belt_axial_coordinate.d_value_ds == pytest.approx(0.5)
@@ -71,13 +67,11 @@ def test_engaged_side_matches_limit_from_inside_engaged_domain() -> None:
     geometry = _geometry(deadzone_shift=0.0)
     at_boundary = geometry.evaluate_engaged(0.0)
     just_inside = geometry.evaluate(1.0e-10)
-
     assert at_boundary.primary.d_effective_ds == pytest.approx(
         just_inside.primary.d_effective_ds
     )
     assert at_boundary.secondary.d_effective_ds == pytest.approx(
-        just_inside.secondary.d_effective_ds,
-        rel=1.0e-7,
+        just_inside.secondary.d_effective_ds, rel=1.0e-7
     )
     assert at_boundary.belt_axial_coordinate.d_value_ds == pytest.approx(
         just_inside.belt_axial_coordinate.d_value_ds

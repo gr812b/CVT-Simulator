@@ -12,9 +12,14 @@ from .relative_motion import ContactInterface
 class ContactTractionUtilization:
     """One signed pair of effective contact traction utilizations.
 
-    Each value is the resolved or imposed effective ratio
+    Each value is the physical signed Coulomb utilization in
 
-        lambda_j = Q_j / N_j = tau_j / (r_tau,j N_j).
+        dF_t,j = lambda_j dN_j,
+
+    where ``dF_t,j`` is pulley-on-belt traction in the positive belt-travel
+    direction. With ``tau_j`` defined as belt-on-pulley torque,
+
+        tau_j = -r_eff,j lambda_j N_j.
 
     It is not a commanded percentage of a friction coefficient. During stick,
     lambda is solved as the traction *required* by compatibility. During

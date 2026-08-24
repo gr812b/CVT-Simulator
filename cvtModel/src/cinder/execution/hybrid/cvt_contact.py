@@ -234,6 +234,7 @@ class EngagedCVTContactEvaluator:
             time=time,
             state=snapshot_state,
             shaft_boundaries=shaft_boundaries,
+            geometry_side="engaged",
         )
         closure = EngagedContactClosure(
             snapshot=snapshot,
@@ -309,10 +310,19 @@ class EngagedCVTContactEvaluator:
         return evaluation
 
     def _geometry_safe_state(self, state: CVTState) -> CVTState:
-        """Project only out-of-domain integrator stages to valid geometry."""
+        """Project rejected integrator stages onto the active engaged domain.
+
+        A trial stage can cross either the engagement surface or the upper
+        travel stop before solve_ivp localizes the terminal event.  Closure for
+        that rejected stage must still use the engaged-side tangent, so clip to
+        ``[deadzone_shift, max_shift]`` while leaving the raw integration vector
+        untouched for event localization.
+        """
 
         spec = self.model.geometry.spec
-        safe_shift = float(np.clip(state.shift_position, 0.0, spec.max_shift))
+        safe_shift = float(
+            np.clip(state.shift_position, spec.deadzone_shift, spec.max_shift)
+        )
         if safe_shift == state.shift_position:
             return state
         return replace(state, shift_position=safe_shift)
@@ -354,6 +364,32 @@ class EngagedCVTContactEvaluator:
             shaft_boundaries=shaft_boundaries,
         ).state_derivative.as_vector()
 
+    def classify_initial_regime_at_time(
+        self,
+        *,
+        time: float,
+        state: CVTState,
+        switching_settings: "CVTContactSwitchSettings",
+        shift_constraint: EngagedShiftConstraint = EngagedShiftConstraint.FREE,
+        shaft_boundaries: CVTShaftBoundaryValues | None = None,
+    ) -> ContactRegime:
+        """Classify established slip or a stick candidate at explicit time."""
+
+        from .cvt_contact_switching import resolve_initial_engaged_regime
+
+        if not isfinite(time):
+            raise ValueError("time must be finite.")
+        if not isinstance(shift_constraint, EngagedShiftConstraint):
+            raise TypeError("shift_constraint must be an EngagedShiftConstraint.")
+        return resolve_initial_engaged_regime(
+            evaluator=self,
+            time=time,
+            state=state,
+            switching_settings=switching_settings,
+            shift_constraint=shift_constraint,
+            shaft_boundaries=shaft_boundaries,
+        )
+
     def classify_initial_regime(
         self,
         *,
@@ -362,18 +398,9 @@ class EngagedCVTContactEvaluator:
         shift_constraint: EngagedShiftConstraint = EngagedShiftConstraint.FREE,
         shaft_boundaries: CVTShaftBoundaryValues | None = None,
     ) -> ContactRegime:
-        """Classify established slip or a stick candidate at initial time.
+        """Static-origin compatibility wrapper for initial contact classification."""
 
-        This helper deliberately does not replace an application-specific
-        clutch/engagement model.  It is only valid once both wraps are engaged.
-        """
-
-        from .cvt_contact_switching import resolve_initial_engaged_regime
-
-        if not isinstance(shift_constraint, EngagedShiftConstraint):
-            raise TypeError("shift_constraint must be an EngagedShiftConstraint.")
-        return resolve_initial_engaged_regime(
-            evaluator=self,
+        return self.classify_initial_regime_at_time(
             time=0.0,
             state=state,
             switching_settings=switching_settings,

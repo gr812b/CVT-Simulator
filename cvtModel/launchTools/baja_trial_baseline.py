@@ -101,12 +101,12 @@ def build_baja_trial_baseline(constants: BajaTrialConstants | None = None) -> Ba
             secondary_speed=60.0,
             shift_speed=0.006,
         ),
-        default_trial=ContactTractionUtilization(primary_lambda=0.10, secondary_lambda=0.10),
+        default_trial=ContactTractionUtilization(primary_lambda=0.10, secondary_lambda=-0.10),
         lambda_sweep=(
-            ContactTractionUtilization(primary_lambda=0.05, secondary_lambda=0.05),
-            ContactTractionUtilization(primary_lambda=0.10, secondary_lambda=0.10),
-            ContactTractionUtilization(primary_lambda=0.15, secondary_lambda=0.10),
-            ContactTractionUtilization(primary_lambda=0.10, secondary_lambda=0.15),
-            ContactTractionUtilization(primary_lambda=0.20, secondary_lambda=0.20),
+            ContactTractionUtilization(primary_lambda=0.05, secondary_lambda=-0.05),
+            ContactTractionUtilization(primary_lambda=0.10, secondary_lambda=-0.10),
+            ContactTractionUtilization(primary_lambda=0.15, secondary_lambda=-0.10),
+            ContactTractionUtilization(primary_lambda=0.10, secondary_lambda=-0.15),
+            ContactTractionUtilization(primary_lambda=0.20, secondary_lambda=-0.20),
         ),
     )

@@ -1,4 +1,4 @@
-"""Row 3: belt transport dynamics."""
+"""Row 3: complete-belt transport momentum."""
 
 from __future__ import annotations
 
@@ -11,7 +11,13 @@ def build_belt_transport_equation(
     *,
     snapshot: DynamicsSnapshot,
 ) -> ClosureEquation:
-    """Build ``m_b v_b_dot - tau_p/r_p + tau_s/r_s = 0``."""
+    """Build ``m_b v_b_dot + tau_p/r_eff,p + tau_s/r_eff,s = 0``.
+
+    The shaft torques are belt-on-pulley torques. Since pulley-on-belt traction
+    is their equal-and-opposite reaction, this is identical to
+
+        m_b v_b_dot = lambda_p N_p + lambda_s N_s.
+    """
 
     primary_radius = snapshot.geometry.primary.effective
     secondary_radius = snapshot.geometry.secondary.effective
@@ -21,7 +27,7 @@ def build_belt_transport_equation(
         residual=AffineClosureScalar(
             gains=ClosureGains(
                 belt_acceleration=snapshot.belt_transport_mass,
-                primary_torque=-1.0 / primary_radius,
+                primary_torque=1.0 / primary_radius,
                 secondary_torque=1.0 / secondary_radius,
             ),
         ),

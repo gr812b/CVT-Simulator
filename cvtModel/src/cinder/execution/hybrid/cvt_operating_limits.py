@@ -18,13 +18,11 @@ class CVTShiftOperatingLimits:
     ``engagement_shift <= s <= upper_stop``
         engaged primary-belt contact.
 
-    ``lower_stop_shift == engagement_shift`` is also valid.  It represents a
-    zero-width deadzone: the CVT is engaged throughout its legal shift travel,
-    and the shared lower boundary is the engaged low-ratio seat.  This is the
-    appropriate topology for an always-engaged variator such as the Ballew
-    (2015) benchmark reconstruction.
+    ``lower_stop_shift == engagement_shift`` is also valid and represents an
+    always-engaged, zero-width deadzone whose shared lower boundary is the
+    engaged low-ratio seat.
 
-    This object describes physical regime boundaries. It does not prescribe
+    This object describes physical regime boundaries.  It does not prescribe
     any stop reaction or deadzone dynamics; those belong to the corresponding
     RHS implementations.
     """
@@ -43,13 +41,12 @@ class CVTShiftOperatingLimits:
                 raise ValueError(f"{name} must be finite.")
         if not (self.lower_stop_shift <= self.engagement_shift < self.upper_stop_shift):
             raise ValueError(
-                "Shift limits must satisfy "
-                "lower_stop_shift <= engagement_shift < upper_stop_shift."
+                "Shift limits must satisfy lower_stop_shift <= engagement_shift < upper_stop_shift."
             )
 
     @classmethod
     def from_geometry_spec(cls, geometry_spec) -> "CVTShiftOperatingLimits":
-        """Use the geometry domain endpoints as physical operating limits."""
+        """Use the geometry domain endpoints as temporary physical stops."""
 
         return cls(
             lower_stop_shift=0.0,

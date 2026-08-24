@@ -6,11 +6,11 @@
       "height_m": 0.0155702,
       "outer_width_m": 0.021335999999999997,
       "inner_width_m": 0.0168148,
-      "cord_depth_from_outer_m": 0.0077851
+      "cord_depth_from_outer_m": 0.00254
     },
     "belt_outer_length_m": 0.9532619999999999,
-    "primary_outer_radius_at_zero_shift_m": 0.0284226,
-    "secondary_outer_radius_at_zero_shift_m": 0.1093851,
+    "primary_outer_radius_at_zero_shift_m": 0.0362077,
+    "secondary_outer_radius_at_zero_shift_m": 0.1016,
     "sheave_half_angle_rad": 0.2007128639793479,
     "deadzone_shift_m": 0.0024891999999999996,
     "max_shift_m": 0.019049999999999997
@@ -81,7 +81,7 @@
             "segments": [
               {
                 "kind": "linear_segment",
-                "length_m": 0.01312196399554005,
+                "length_m": 0.014406035859741248,
                 "angle_rad": 1.117010721276371
               }
             ]

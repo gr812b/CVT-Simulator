@@ -29,8 +29,8 @@ def build_closure_equations(
     or a fixed-shift kinematic constraint ``s_ddot = 0``. The last three are
     rebuilt for the current signed lambda trial:
 
-        tau_p / r_tau,p - lambda_p N_p = 0,
-        tau_s / r_tau,s - lambda_s N_s = 0,
+        tau_p / r_eff,p + lambda_p N_p = 0,
+        tau_s / r_eff,s + lambda_s N_s = 0,
         C_T(lambda_p, lambda_s) = 0.
     """
 

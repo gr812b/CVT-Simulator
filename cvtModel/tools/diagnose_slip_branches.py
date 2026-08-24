@@ -234,7 +234,7 @@ def _settings(*, static_limit: float) -> EngagedContactSolveSettings:
         ),
         initial_guess=TrialFrictionUtilization(
             primary_lambda=0.5 * static_limit,
-            secondary_lambda=0.5 * static_limit,
+            secondary_lambda=-0.5 * static_limit,
         ),
     )
 

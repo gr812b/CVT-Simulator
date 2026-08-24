@@ -8,19 +8,16 @@ not.  This adapter dispatches only between already-derived evaluators:
     engaged/free/contact branch <-> engaged/low-ratio-seat/contact branch
                                  <-> engaged/upper-stop/contact branch.
 
-When a positive-width deadzone exists it remains a reduced primary-
-disengaged model and does not call the engaged lambda/tension closure. A
-zero-width deadzone is also supported; then the legal shift domain is always
-engaged and its lower boundary is the engaged low-ratio seat. Conversely, the
-upper stop remains an engaged fixed-shift closure and retains the contact
-topology. Event functions are built only for boundaries reachable from the
-active physical regime.
+Deadzone remains a reduced primary-disengaged model; it does not call the
+engaged lambda/tension closure.  Conversely, the upper stop remains an
+engaged fixed-shift closure and retains the contact topology.  Event functions
+are built only for boundaries reachable from the active physical regime.
 """
 
 from __future__ import annotations
 
 from dataclasses import dataclass, field, replace
-from math import isclose, isfinite
+from math import isclose
 from typing import TYPE_CHECKING, Callable, TypeAlias
 
 import numpy as np
@@ -55,7 +52,7 @@ from .cvt_regime_events import (
 )
 from .cvt_regime_switching import (
     classify_initial_cvt_regime,
-    primary_independent_clamping_force_at_engagement,
+    primary_contact_separation_at_engagement,
     resolve_cvt_operating_transition,
 )
 from .hybrid import (
@@ -206,8 +203,6 @@ class CVTOperatingHybridSystem:
     ) -> CVTRegimeEvaluation:
         """Evaluate active mechanics for runtime, events, or explicit inspection."""
 
-        if not isfinite(time):
-            raise ValueError("time must be finite.")
         if not isinstance(mode, CVTOperatingRegime):
             raise TypeError("mode must be a CVTOperatingRegime instance.")
 
@@ -350,9 +345,7 @@ class CVTOperatingHybridSystem:
     ) -> tuple[HybridEvent, ...]:
         """Build exactly the physical events reachable from ``mode``."""
 
-        del state
-        if not isfinite(time):
-            raise ValueError("time must be finite.")
+        del time, state
         if not isinstance(mode, CVTOperatingRegime):
             raise TypeError("mode must be a CVTOperatingRegime instance.")
 
@@ -404,6 +397,9 @@ class CVTOperatingHybridSystem:
             relative_speed_tolerance=self.solve_settings.contact_tolerances.relative_speed_tolerance,
             relative_acceleration_tolerance=self.solve_settings.contact_tolerances.relative_acceleration_tolerance,
             include_shift_boundary_events=False,
+            include_primary_normal_floor=(
+                mode.shift_constraint is not CVTShiftConstraint.LOW_RATIO_SEAT
+            ),
         )
 
         if mode.shift_constraint is CVTShiftConstraint.FREE:
@@ -413,9 +409,10 @@ class CVTOperatingHybridSystem:
 
         if mode.shift_constraint is CVTShiftConstraint.LOW_RATIO_SEAT:
             return contact_events + build_low_ratio_seat_events(
-                primary_clamping_force=lambda event_time, vector: self._primary_clamping_force(
+                primary_separation=lambda event_time, vector: self._primary_separation_indicator(
                     time=event_time,
                     vector=vector,
+                    contact_regime=mode.contact_regime,
                     shaft_boundaries=boundaries_at(event_time, vector),
                 ),
                 closing_reaction=lambda event_time, vector: self._low_ratio_seat_reaction(
@@ -424,10 +421,7 @@ class CVTOperatingHybridSystem:
                     contact_regime=mode.contact_regime,
                     shaft_boundaries=boundaries_at(event_time, vector),
                 ),
-                # A zero-width deadzone is an always-engaged topology. There is
-                # no neutral regime below the low-ratio seat, so loss of the
-                # primary actuator's own clamp cannot be a disengagement event.
-                include_primary_clamp_loss=self.operating_limits.has_deadzone,
+                include_primary_separation=self.operating_limits.has_deadzone,
             )
 
         if mode.shift_constraint is CVTShiftConstraint.UPPER_STOP:
@@ -544,8 +538,6 @@ class CVTOperatingHybridSystem:
     ) -> CVTOperatingRegime:
         """Classify an initial state at an explicit simulation time."""
 
-        if not isfinite(time):
-            raise ValueError("time must be finite.")
         if not isinstance(state, CVTState):
             raise TypeError("state must be a CVTState instance.")
         resolved_boundaries = self._resolve_boundaries(
@@ -705,22 +697,28 @@ class CVTOperatingHybridSystem:
             raise RuntimeError("Lower-stop evaluation did not recover a stop reaction.")
         return reaction
 
-    def _primary_clamping_force(
+    def _primary_separation_indicator(
         self,
         *,
         time: float,
         vector: NDArray[np.float64],
+        contact_regime: ContactRegime,
         shaft_boundaries: CVTShaftBoundaryValues | None = None,
     ) -> float:
-        """Return the primary mechanism's own signed clamp at engagement."""
+        """Return the low-seat primary unilateral separation indicator."""
 
-        return primary_independent_clamping_force_at_engagement(
-            evaluator=self.evaluator,
-            time=time,
-            state=CVTState.from_vector(vector),
-            limits=self.operating_limits,
-            shaft_boundaries=shaft_boundaries,
+        indicator, _normal, _opening_acceleration = (
+            primary_contact_separation_at_engagement(
+                evaluator=self.evaluator,
+                time=time,
+                vector=vector,
+                contact_regime=contact_regime,
+                limits=self.operating_limits,
+                switching_settings=self.switching_settings,
+                shaft_boundaries=shaft_boundaries,
+            )
         )
+        return indicator
 
     def _low_ratio_seat_reaction(
         self,
@@ -792,13 +790,15 @@ class CVTOperatingHybridSystem:
 
         if mode.shift_constraint is CVTShiftConstraint.LOW_RATIO_SEAT:
             assert mode.contact_regime is not None
-            clamp = self._primary_clamping_force(
-                time=time,
-                vector=state.as_vector(),
-                shaft_boundaries=shaft_boundaries,
-            )
-            if clamp < 0.0:
-                return CVTOperatingRegime.deadzone_free()
+            if self.operating_limits.has_deadzone:
+                separation = self._primary_separation_indicator(
+                    time=time,
+                    vector=state.as_vector(),
+                    contact_regime=mode.contact_regime,
+                    shaft_boundaries=shaft_boundaries,
+                )
+                if separation <= 0.0:
+                    return CVTOperatingRegime.deadzone_free()
             reaction = self._low_ratio_seat_reaction(
                 time=time,
                 vector=state.as_vector(),
@@ -867,6 +867,10 @@ class CVTOperatingHybridSystem:
             )
 
         if mode.engagement is CVTEngagementState.DEADZONE:
+            if not self.operating_limits.has_deadzone:
+                raise ValueError(
+                    "A zero-width deadzone topology cannot start in DEADZONE mode."
+                )
             if mode.shift_constraint is CVTShiftConstraint.FREE:
                 at_engagement_opening = (
                     isclose(
