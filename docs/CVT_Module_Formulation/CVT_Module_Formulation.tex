@@ -1331,17 +1331,25 @@ acceleration can then be examined within the assumptions of the model.
 \chapter{Model Definition and Simulation Problem}
 \label{chap:model_setup}
 
-The motion of a CVT can only be described once the mechanical system itself is
-clear. A physical CVT is connected to other machinery and contains more detail
-than a model can usefully resolve. A model must therefore identify which
-hardware belongs to the CVT, how the surrounding machinery acts on it, and
-which features of the real hardware are retained.
+To predict the motion of a CVT from an arbitrary initial condition, the
+formulation must first turn the physical mechanism into a well-defined
+simulation problem. This requires a clear account of what the model contains,
+how the surrounding machinery acts on it, and what information describes the
+CVT at a given instant.
 
-This chapter establishes that shared mechanical description. It defines the
-modeled CVT and its connections to the surrounding machinery, states the
-assumptions used to idealize the hardware, and fixes the coordinates and sign
-conventions used to describe its motion. Together, these choices define the
-mechanical problem represented by the formulation.
+This chapter builds that description in the order required by the model. It
+first defines the CVT and its two shaft interfaces, then states the assumptions
+that determine the physical detail retained. Coordinates and sign conventions
+establish how the resulting motions are measured. From these definitions, the
+internal quantities that must be carried from one instant to the next are
+identified, together with the mechanical conditions that determine how those
+quantities may evolve.
+
+The chapter concludes by separating the quantities used during a model
+evaluation according to their roles: fixed CVT data, the current internal
+condition, loading supplied at the shaft interfaces, and quantities solved
+only for the present instant. Together, these definitions establish the
+simulation problem used throughout the component-level derivation.
 
 % ==============================================================
 \section{Modeled CVT and Shaft Interfaces}
@@ -1448,7 +1456,6 @@ driver or load therefore changes the loading at the interface, not the
 definition of the modeled CVT.
 
 % ==============================================================
-
 \section{Modeling Assumptions}
 \label{sec:assumptions}
 
@@ -1463,9 +1470,6 @@ choice so that later results can be interpreted against a clear model boundary.
 \subsection{Material and Mechanism Idealizations}
 
 \begin{assumptionblock}{assump:material_surface_state}{Time-Invariant Material and Surface State}
-% Legacy aliases retained until downstream references are revised.
-% \label{assump:material_constancy}
-% \label{assump:no_wear}
 The material properties and surface condition assigned to the CVT remain
 unchanged during a simulation. Intrinsic component dimensions are likewise not
 allowed to evolve through wear or thermal growth. The selected properties
@@ -1481,8 +1485,6 @@ rather than the progressive evolution of that state.
 \end{assumptionblock}
 
 \begin{assumptionblock}{assump:rigid_hardware}{Rigid Pulley and Actuation Hardware}
-% Legacy alias retained until downstream references are revised.
-% \label{assump:rigid_components}
 The pulleys, shafts, actuation hardware, guides, and supporting CVT structure
 are represented as rigid bodies. Their prescribed geometry does not deform
 under the loads developed during operation.
@@ -1514,33 +1516,33 @@ centrifugal and helix treatments
 \end{assumptionblock}
 
 \begin{assumptionblock}{assump:fixed-belt-cross-section}{Fixed, Uniform Belt Cross-Section}
-The belt is represented everywhere along its length by the same prescribed
-cross-sectional shape and dimensions. This cross-section remains unchanged as
-the belt runs and shifts. It follows the curved modeled belt path, but it does
-not compress, bulge, shear, or warp under centrifugal or sheave loading.
 
-Mass density is taken to be uniform through this idealized cross-section and
-along the belt. The belt therefore has one constant mass per unit length, and
-its cross-sectional centre of mass lies at the geometric centroid. The cord
-layer is retained as a prescribed tension-carrying line at the fixed depth
-\(d_{\mathrm{cord}}\), but the different density of the cords and surrounding
-rubber is not resolved in the mass distribution.
+The same prescribed cross-section is assigned everywhere along the belt and is
+carried unchanged as the belt runs and shifts. This description fixes the
+cross-sectional shape and dimensions and treats mass density as uniform through
+the section and along the belt. The belt therefore has a constant mass per unit
+length, and its cross-sectional centre of mass coincides with the geometric
+centroid. The cord layer is retained only as a prescribed tension-carrying line
+at the fixed depth \(d_{\mathrm{cord}}\); its distinct density and contribution
+to the through-section mass distribution are not resolved. As the section
+follows the curved modeled belt path, it does not compress, bulge, shear, warp,
+or grow under centrifugal or sheave loading.
 
 \AssumptionConsequences
-The smooth, uniform section replaces spatial variations caused by cogs, ribs,
-joints, local reinforcement, manufacturing variation, or nonuniform wear.
-Concentrated cord mass and differences between the densities of the belt
-layers cannot shift the modeled centre of mass away from the geometric
-centroid.
-
-Lateral and radial compression, bulging, cross-sectional shear and warping,
-centrifugal growth, and local cog or rib deformation are also not resolved.
-The resulting load-dependent changes in belt width, height, contact geometry,
-mass distribution, and internal strain energy therefore lie outside the
-present formulation. Detailed belt models retain some of these spatial and
-compliance effects explicitly
+Accordingly, neither spatial variations caused by cogs, ribs, joints, local
+reinforcement, manufacturing variation, or nonuniform wear nor load-induced
+changes caused by lateral and radial compression, bulging, cross-sectional
+shear and warping, centrifugal growth, or local cog and rib deformation are
+represented. Concentrated cord mass and differences between the densities of
+the belt layers cannot shift the modeled centre of mass away from the geometric
+centroid. Changes in belt width, height, contact geometry, mass distribution,
+and internal strain energy caused by these omitted effects therefore lie
+outside the present formulation. Detailed belt models retain some of these
+spatial and compliance effects explicitly
 \citep{Gerbert1996,KongParker2005,Messick2018}.
+
 \end{assumptionblock}
+
 
 % --------------------------------------------------------------
 \subsection{Belt Geometry and Kinematics}
@@ -1799,9 +1801,10 @@ parasitic losses. The assumptions are separated by physical mechanism so that
 a higher-fidelity model can replace one closure without obscuring which
 additional behaviour that change is intended to recover.
 % ==============================================================
-
 \section{Coordinate and Sign Conventions}
 \label{sec:coordinate_sign_conventions}
+% \label{sec:notation}
+% \label{sec:sign}
 
 This section defines the coordinates and sign conventions used throughout the
 formulation.
@@ -1941,9 +1944,10 @@ a Cartesian pair.
 \end{figure}
 
 % ==============================================================
-
 \section{CVT State Variables}
-\label{sec:state}
+\label{sec:continuous_state_variables}
+% \label{sec:state}
+% \label{sec:state_vector}
 
 At any instant, the modeled CVT's motion and configuration are described by
 five internal numerical quantities. These quantities are collected in the
@@ -1987,9 +1991,9 @@ around the loop. No belt-phase or accumulated belt-displacement coordinate is
 therefore required.
 
 Together, these five values contain all of the internal position and velocity
-information that must be carried from one instant to the next. Combined with
-the fixed model data, the current shaft-interface conditions, and the active
-mechanical constraints, they are sufficient for the formulation to determine
+information that must be carried from one instant to the next. For the
+selected CVT, these values, the current shaft-interface conditions, and the
+active mechanical constraints are sufficient for the formulation to determine
 
 \begin{equation}
 \dot{\vect{x}}(t)
@@ -2014,101 +2018,218 @@ vehicle, dynamometer, or other attached system may carry additional states in
 its own model and use them when determining the torque and equivalent inertia
 presented at a shaft interface.
 
-\section{Model Quantity Roles and Evaluation Flow}
+% ==============================================================
+\section{Mechanical Regimes and State Evolution}
+\label{sec:mechanical_regimes_state_evolution}
+
+Consider the shift coordinate at one of its travel limits with
+\(\dot{s}=0\). The same position and velocity can describe two different
+mechanical conditions. If the surrounding forces press the movable sheave
+against the limit, a stop reaction is required and further motion into the
+stop is prevented. If the unconstrained tendency is away from the limit, the
+stop reaction vanishes and the sheave is free to accelerate away. The values
+stored in \(\vect{x}\) are identical in both cases, but the motion that is
+allowed is not.
+
+The missing information is which contacts and mechanical constraints are
+currently active. Their active set is called the \emph{mechanical regime}.
+For the modeled CVT, a regime identifies which belt--pulley contacts exist,
+whether the shift coordinate is free or supported at a unilateral boundary,
+and whether each existing tangential contact is sticking or sliding. Let
+\(q(t)\) denote the current regime. This label is not another position or
+velocity and does not introduce another moving part; it records the mechanical
+arrangement under which the state is evolving.
+
+The complete internal condition needed to continue the model is therefore the
+pair \(\bigl(\vect{x}(t),q(t)\bigr)\). The state vector records the current
+motion and configuration, while the regime identifies the constraints that
+determine which motion is admissible. For the selected CVT and a fixed regime,
+the current state and shaft-interface conditions determine the state
+derivative. At this level, that relation may be written as
+
+\begin{equation}
+\dot{\vect{x}}
+=
+\mathcal{F}_{q}
+\!\left(
+t,\vect{x},
+\tau_{\mathrm{B},p},I_{\mathrm{B},p},
+\tau_{\mathrm{B},s},I_{\mathrm{B},s}
+\right),
+\label{eq:regime_dependent_evolution}
+\end{equation}
+
+The function \(\mathcal{F}_{q}\) represents the mechanics of the selected CVT
+under the current mechanical arrangement. Its subscript indicates that the
+active contacts and constraints select the applicable form of the mechanical
+balances. While that regime remains admissible, the state advances
+continuously according to \Cref{eq:regime_dependent_evolution}.
+
+Every regime is defined by physical conditions that must remain satisfied.
+An event occurs when the evolving motion reaches the boundary of those
+conditions: a contact forms or separates, a travel limit is reached or
+released, or an existing tangential contact can no longer maintain its current
+stick--slip condition. At that instant, the old mechanical arrangement no
+longer provides the admissible continuation of the motion and the regime must
+change.
+
+Not every regime change alters the state instantaneously. If the event changes
+the active force or constraint description without producing an impulse, the
+positions and velocities pass through the event unchanged,
+
+\begin{equation}
+    \vect{x}^{+}=\vect{x}^{-},
+    \label{eq:nonimpulsive_regime_transition}
+\end{equation}
+
+where the superscripts \((-)\) and \((+)\) denote the values immediately
+before and after the event. The new regime changes the derivative obtained
+from \Cref{eq:regime_dependent_evolution}, even though the state itself is
+continuous.
+
+A different transition is required when a rigid kinematic constraint becomes
+active with a nonzero velocity into that constraint. The configuration remains
+continuous, but one or more velocity components may change over the
+effectively instantaneous event. In general, the compatible post-event state
+may be written as
+
+\begin{equation}
+    \vect{x}^{+}
+    =
+    \Delta_{q^{-}\rightarrow q^{+}}
+    \!\left(\vect{x}^{-}\right).
+    \label{eq:impulsive_regime_transition}
+\end{equation}
+
+The transition law enforces the newly active kinematic constraint together
+with impulse--momentum balance for the retained inertia. It does not require
+each velocity or each coordinate momentum to remain unchanged. A constraint
+impulse can change the velocity components, and kinetic energy may decrease
+when the capture is inelastic. Once the transition is complete, continuous
+evolution resumes under the new regime.
+
+The resulting motion has the repeated structure
+
+\begin{equation}
+\text{continuous evolution}
+\;\longrightarrow\;
+\text{event}
+\;\longrightarrow\;
+\text{constraint-consistent transition}
+\;\longrightarrow\;
+\text{new continuous evolution}.
+\label{eq:hybrid_evolution_sequence}
+\end{equation}
+
+Because the CVT combines continuous state evolution with discrete changes in
+its active mechanical arrangement, its motion forms a \emph{hybrid
+initial-value problem}. A complete initial condition specifies both an initial
+state and an initial regime,
+
+\begin{equation}
+    \vect{x}(t_0)=\vect{x}_0,
+    \qquad
+    q(t_0)=q_0,
+    \label{eq:hybrid_initial_condition}
+\end{equation}
+
+with \(\vect{x}_0\) satisfying the contacts and constraints represented by
+\(q_0\). The regimes are therefore not separate CVT models. They are different
+admissible arrangements of the same pulley assemblies, belt, actuation
+mechanisms, and shaft interfaces. The state vector records how that mechanism
+is moving; the regime records which motion is presently allowed.
+
+% ==============================================================
+\section{Model Quantities and Evaluation Flow}
 \label{sec:model_evaluation_flow}
 
-The constants and parameters collected in \Cref{tab:physical_constants} and
-\Cref{tab:model_parameters} serve different computational roles from the state
-and boundary data. \Cref{tab:model_quantity_roles} places these quantities in
-the high-level simulation workflow.
+Advancing the CVT from one instant to the next requires more than the stored
+internal condition alone. The calculation also uses data that define the
+selected CVT and loading supplied through the two shaft interfaces, and it
+produces quantities that are needed only for the current evaluation. These
+quantities serve different roles in the model and should not all be treated as
+state.
+
+\Cref{tab:model_quantity_roles} separates the four roles used throughout the
+formulation. The fixed data represented by its first row are collected in
+\Cref{tab:cvt_fixed_data}, while the instantaneous quantities represented by
+its final row are listed by mechanical regime in
+\Cref{tab:cvt_instantaneous_results_by_regime}.
+% TODO: Reorganize the nomenclature parameter table as a CVT-only fixed-data
+% table and assign it the label tab:cvt_fixed_data.
+% TODO: Align the later regime table with the instantaneous-result role used
+% here and assign it the label tab:cvt_instantaneous_results_by_regime.
+Fixed CVT data may be specified directly or calculated once from the selected
+hardware during initialization. In either case, they define the CVT being
+modeled and remain unchanged while that simulation is advanced. The
+time-varying internal condition is instead carried by the state and regime
+introduced in the preceding sections.
 
 \begin{table}[H]
 \centering
-\caption{High-level roles of quantities used in the simulation.}
+\caption{Roles of the quantities used during a CVT model evaluation.}
 \label{tab:model_quantity_roles}
 \begin{tabular}{
 >{\raggedright\arraybackslash}p{0.19\linewidth}
->{\raggedright\arraybackslash}p{0.25\linewidth}
->{\raggedright\arraybackslash}p{0.45\linewidth}}
+>{\raggedright\arraybackslash}p{0.28\linewidth}
+>{\raggedright\arraybackslash}p{0.43\linewidth}}
 \toprule
-\textbf{Quantity role} & \textbf{Source} & \textbf{Use during simulation} \\
+\textbf{Quantity role} & \textbf{Contents} & \textbf{Use during evaluation} \\
 \midrule
-Fixed model data
-& Reference data and selected CVT configuration
-& Define the modeled hardware and remain fixed for the selected simulation.
-  \\[5pt]
+Fixed CVT data
+& Physical and geometric data for the selected hardware, including any
+  values calculated once during initialization
+& Define the particular CVT and the mechanical relations used to represent
+  it; they are not advanced through time. \\[5pt]
 
-Initialized data
-& Fixed model data
-& Established once for the selected configuration and reused during time
-  integration. \\[5pt]
+Current CVT condition
+& State vector \(\vect{x}(t)\) and mechanical regime \(q(t)\)
+& Record the time-varying internal information retained from the preceding
+  instant and identify the currently active constraints. \\[5pt]
 
-State variables
-& Initial condition and integrator
-& Record the current CVT motion and shift configuration at time $t$. \\[5pt]
+Shaft-interface data
+& Applied torque \(\tau_{\mathrm{B},j}\) and equivalent inertia
+  \(I_{\mathrm{B},j}\) at each shaft
+& Supply the current mechanical effect of the systems attached to the primary
+  and secondary shafts. \\[5pt]
 
-Boundary data
-& Attached-system models evaluated at the current shaft speeds
-& Give the applied torque and attached or reflected inertia seen at each shaft
-  cut for the current evaluation. \\[5pt]
-
-Instantaneous results
-& Current model evaluation
-& Provide the state derivative and event information requested by the
-  integrator. \\
+Instantaneous CVT results
+& State derivative, current internal mechanical quantities, and regime
+  admissibility measures
+& Determine how the state can advance from the current instant and whether
+  the active regime can continue; they are recomputed rather than retained as
+  independent state. \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-The simulation proceeds at two levels. Initialization checks the selected CVT
-data, establishes quantities fixed by that configuration, assigns the initial
-state, and identifies the initial mechanical regime. Time integration then
-repeats the following high-level evaluation:
+The pair \(\bigl(\vect{x},q\bigr)\) is therefore the only time-varying
+internal CVT condition passed from one model evaluation to the next. The
+shaft-interface quantities are supplied for the current evaluation. An
+attached system may use time, shaft speed, and states belonging to its own
+model to determine those quantities, but those external states do not become
+states of the CVT.
+
+Using these roles, one evaluation proceeds as follows:
 
 \begin{enumerate}
-    \item The integrator supplies a trial time and the corresponding current
-          state $\vect{x}(t)$, including $\omega_p$ and $\omega_s$.
-    \item Each attached system uses the corresponding current shaft speed to
-          evaluate the torque and equivalent inertia it presents at the shaft
-          cut.
-    \item The coupled CVT mechanics use the current state, fixed model data,
-          and both boundary pairs to evaluate $\dot{\vect{x}}(t)$ and the event
-          conditions for the current mechanical regime.
-    \item The integrator advances every state variable, including both shaft
-          speeds. If an event is encountered, the applicable regime is updated
-          and integration continues from that event state.
+    \item The current time, state \(\vect{x}(t)\), and regime \(q(t)\) identify
+          the internal CVT condition at the start of the evaluation.
+    \item The systems attached to the primary and secondary shafts supply the
+          torque and equivalent inertia presented at their respective
+          interfaces under the current shaft conditions.
+    \item The CVT mechanics use the fixed CVT data, current internal condition,
+          and shaft-interface data to determine the instantaneous mechanical
+          solution. This solution provides \(\dot{\vect{x}}(t)\) together with
+          the conditions used to test whether the current regime remains
+          admissible.
+    \item If the regime remains admissible, the state is advanced using
+          \(\dot{\vect{x}}\) and the regime is retained. If an event is reached,
+          the event state is established, the applicable transition is applied
+          when required, and the new regime is selected.
+    \item The resulting state and regime become the current internal condition
+          for the next evaluation, and the cycle repeats.
 \end{enumerate}
-
-This process can be summarized as
-
-\begin{equation}
-\begin{aligned}
-\omega_p(t)\longrightarrow\mathcal{B}_p,
-\qquad
-\omega_s(t)\longrightarrow\mathcal{B}_s
-&\phantom{\longrightarrow}
-&&\text{boundary evaluation},\\
-\left\{t,\ \vect{x}(t),\ \vect{\theta},\
-\mathcal{B}_p,\ \mathcal{B}_s\right\}
-&\longrightarrow
-\dot{\vect{x}}(t)
-&&\text{coupled CVT mechanics},\\
-\dot{\vect{x}}(t)
-&\longrightarrow
-\vect{x}(t')
-&&\text{time integration}.
-\end{aligned}
-\label{eq:model_evaluation_flow}
-\end{equation}
-
-Chapter~3 supplies the mechanics contained in the first arrow. Geometry is
-developed first because the current shift state fixes the instantaneous pulley
-configuration. The axial, rotational, belt-loop, and contact relations are
-then exposed in sequence before they are assembled into the evolution law.
-This ordering supports the derivation; the completed relations are evaluated
-together as one coupled instantaneous problem.
-
-
 \chapter{Derivation}
 \section{Pulley Geometry}\label{sec:geometry}
 
