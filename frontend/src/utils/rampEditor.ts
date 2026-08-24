@@ -1,7 +1,16 @@
 import type { JsonValue } from '@utils/jsonPointer';
+
+export type RampQuadrant = 1 | 2 | 3 | 4;
+
 export type RampEditorSegment =
   | { type: 'linear'; length: number; angle: number }
-  | { type: 'circular'; length: number; angle_start: number; angle_end: number; quadrant: 1 | 2 };
+  | {
+      type: 'circular';
+      length: number;
+      angle_start: number;
+      angle_end: number;
+      quadrant: RampQuadrant;
+    };
 
 export interface RampEditorValue { segments: RampEditorSegment[]; }
 
@@ -9,6 +18,22 @@ type CinderSegment = Record<string, unknown>;
 type CinderRamp = { kind: 'piecewise_ramp'; segments: CinderSegment[] };
 const RAD_TO_DEG = 180 / Math.PI;
 const DEG_TO_RAD = Math.PI / 180;
+
+/**
+ * CINDER's canonical circular-segment quadrants are the integers 1..4.
+ *
+ * Older versions of the frontend accidentally serialized editor quadrant 2 as
+ * -1. Keep that one read-time compatibility mapping so a legacy tune can be
+ * opened and re-saved, but never emit -1 again.
+ */
+function normalizeQuadrant(value: unknown): RampQuadrant {
+  const quadrant = Number(value);
+  if (quadrant === -1) return 2;
+  if (quadrant === 1 || quadrant === 2 || quadrant === 3 || quadrant === 4) {
+    return quadrant;
+  }
+  throw new Error(`Unsupported CINDER circular-segment quadrant: ${String(value)}`);
+}
 
 export function rampToEditor(value: unknown): RampEditorValue {
   const ramp = value as CinderRamp;
@@ -21,10 +46,14 @@ export function rampToEditor(value: unknown): RampEditorValue {
           length: Number(segment.length_m ?? 0),
           angle_start: Number(segment.angle_start_rad ?? 0) * RAD_TO_DEG,
           angle_end: Number(segment.angle_end_rad ?? 0) * RAD_TO_DEG,
-          quadrant: Number(segment.quadrant) === -1 ? 2 : 1,
+          quadrant: normalizeQuadrant(segment.quadrant),
         };
       }
-      return { type: 'linear', length: Number(segment.length_m ?? 0), angle: Number(segment.angle_rad ?? 0) * RAD_TO_DEG };
+      return {
+        type: 'linear',
+        length: Number(segment.length_m ?? 0),
+        angle: Number(segment.angle_rad ?? 0) * RAD_TO_DEG,
+      };
     }),
   };
 }
@@ -34,12 +63,17 @@ export function editorToRamp(value: RampEditorValue): JsonValue {
     kind: 'piecewise_ramp',
     segments: value.segments.map((segment) => segment.type === 'circular'
       ? {
-          kind: 'circular_segment', length_m: segment.length,
+          kind: 'circular_segment',
+          length_m: segment.length,
           angle_start_rad: segment.angle_start * DEG_TO_RAD,
           angle_end_rad: segment.angle_end * DEG_TO_RAD,
-          quadrant: segment.quadrant === 2 ? -1 : 1,
+          quadrant: segment.quadrant,
         }
-      : { kind: 'linear_segment', length_m: segment.length, angle_rad: segment.angle * DEG_TO_RAD }),
+      : {
+          kind: 'linear_segment',
+          length_m: segment.length,
+          angle_rad: segment.angle * DEG_TO_RAD,
+        }),
   } as unknown as JsonValue;
 }
 
