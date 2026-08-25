@@ -1689,21 +1689,31 @@ models
 \citep{KongParker2006,Messick2018,JulioPlante2011}.
 \end{assumptionblock}
 
-\begin{assumptionblock}{assump:symmetric_face_sharing}{Symmetric Sheave-Face Load Sharing}
+\begin{assumptionblock}{assump:symmetric_face_sharing}{Symmetric Sheave-Face Sharing}
 % Legacy aliases retained until downstream references are revised.
 % \label{assump:equal_sheave_normal_load}
 % \label{assump:equal_torque_share}
 The two sheave faces at a pulley are assumed to share the total normal contact
 load equally. On the secondary pulley, the belt torque is also divided equally
 between the fixed and movable faces for the purpose of the movable-sheave
-balance.
+balance. The primary sheave faces rotate together with their shaft and
+therefore have one common angular speed. On the secondary, the wrap-level
+tangential contact law does not resolve the separate surface speeds produced
+by helix motion of the movable face. The secondary shaft speed is used as the
+representative speed for the complete secondary wrap.
 
 \AssumptionConsequences
 Face-to-face differences in normal loading and transmitted torque are not
-resolved. On the secondary, this removes the possibility that unequal local
-sliding on the fixed and movable faces changes the torque reacted by the helix.
-Face-resolved shift models show that the two secondary face torques can depart
-substantially from an equal split during shifting
+resolved. On the secondary, the equal torque split and the use of one
+shaft-referenced contact speed also remove any difference between the
+tangential states of the two faces. The helix-induced rotation of the movable
+face relative to the shaft remains in the actuation and rotational balances,
+but it is not carried as a second surface speed in the stick--slip law.
+Secondary sticking therefore denotes shaft-referenced gross sticking of the
+reduced wrap, rather than simultaneous pointwise adhesion to both physical
+faces during helix motion. Face-resolved shift models show that the two
+secondary face torques and sliding conditions can depart substantially from
+this aggregate description during shifting
 \citep{SorgeCammalleri2011}.
 \end{assumptionblock}
 
@@ -2475,11 +2485,36 @@ proportion to its area \(b(y)\,dy\). The centroid depth is therefore the
 weighted average of \(y\) over the cross-section:
 
 \begin{equation}
+y_{\mathrm{cm}}
+=
+\frac{
+    \displaystyle\int_0^{h_b} y\,b(y)\,dy
+}{
+    \displaystyle\int_0^{h_b} b(y)\,dy
+}.
+\label{eq:local_belt_cross_section_centroid_definition}
+\end{equation}
+
+The denominator is the belt cross-sectional area,
+
+\begin{equation}
+A_b
+=
+\int_0^{h_b} b(y)\,dy
+=
+\frac{h_b}{2}
+\left(b_{\mathrm{out}}+b_{\mathrm{in}}\right).
+\label{eq:local_belt_cross_section_area}
+\end{equation}
+
+Using this area in the weighted average gives
+
+\begin{equation}
 \begin{aligned}
 y_{\mathrm{cm}}
 &=
-\frac{\displaystyle\int_0^{h_b} y\,b(y)\,dy}
-{\displaystyle\int_0^{h_b} b(y)\,dy}
+\frac{1}{A_b}
+\int_0^{h_b} y\,b(y)\,dy
 \\[4pt]
 &=
 h_b
@@ -3418,9 +3453,9 @@ amount. For either pulley \(j\in\{p,s\}\),
     \dot r_{j,\mathrm{cm}}.
 \]
 
-The choice of reference changes the absolute radius, but not how quickly that
-radius changes. The two pulley-radius rates are now determined by \(s\) and
-\(\dot s\). However, the secondary multiplier
+The choice of reference changes the absolute radius, but not its rate. The two
+pulley-radius rates are now determined by \(s\) and \(\dot s\). However, the
+secondary multiplier
 \(-\phi_p/\phi_s\) changes as the radii and wrap angles change. Even if
 \(\dot s\) is constant, the secondary rate is not. Its acceleration must
 therefore include the changing slope of the compatibility curve.
@@ -3851,6 +3886,20 @@ imposed shift acceleration, converted through the coordinate slope in
 curvature in \Cref{eq:secondary_coordinate_curvature}: even when
 \(\ddot s=0\), moving through the engaged branch changes
 \(-\phi_p/\phi_s\), so the secondary velocity continues to change.
+
+As with the radius rates, the fixed offsets between the four radial references
+give, for either pulley \(j\in\{p,s\}\),
+
+\begin{equation}
+    \ddot r_j
+    =
+    \ddot r_{j,\mathrm{inner}}
+    =
+    \ddot r_{j,\mathrm{eff}}
+    =
+    \ddot r_{j,\mathrm{cm}}.
+    \label{eq:local_radius_acceleration_equivalence}
+\end{equation}
 
 \begin{remarkbox}[Remark (Deadzone Boundary)]
 The idealized maps in
@@ -6165,8 +6214,9 @@ orient its local tangential direction with positive belt travel. Under
 \AssRef{assump:single_belt_speed}, the retained motion along the span is the
 common belt transport speed \(v_b\). Under
 \AssRef{assump:prescribed_belt_path}, the span remains the instantaneous
-straight tangent joining the two pulley wraps. Its mass per unit length is
-\(\rho_b A_b\).
+straight tangent joining the two pulley wraps. With the belt cross-sectional
+area \(A_b\) defined in \Cref{eq:local_belt_cross_section_area}, its mass per
+unit length is \(\rho_b A_b\).
 
 Isolate the belt occupying this span. Its tangential equation of motion follows
 from Newton's second law in momentum form,
@@ -6275,12 +6325,6 @@ through the wrap requires a free body taken from within the contact itself.
 % --------------------------------------------------------------
 
 
-% --------------------------------------------------------------
-
-
-% --------------------------------------------------------------
-
-
 \subsection{Local Equations of Motion on a Pulley Wrap}
 \label{sec:local_wrap_dynamics}
 
@@ -6346,63 +6390,17 @@ established first.
 
 \paragraph{Mass and motion of the belt element}
 
-The radius \(r_j\) defined in \Cref{eq:geometry_radius_convention} follows the
-outer surface of the belt. The mass of the belt element instead travels with
-the centroid of its trapezoidal cross-section. Let \(y\) measure radially
-inward from the outer surface through the belt height \(h_b\). Under
-\AssRef{assump:fixed-belt-cross-section}, the cross-section retains the outer
-and inner widths \(b_{\mathrm{out}}\) and \(b_{\mathrm{in}}\), so its width at
-\(y\) is
+The radial references needed for this free body were established in
+\Cref{sec:local_pulley_geometry}. The geometric radius \(r_j\) locates the
+outer surface of the belt, while \(r_{j,\mathrm{cm}}\) locates its mass
+centroid. Because the present free body follows the belt mass, its arc length
+and inertia must be formed at \(r_{j,\mathrm{cm}}\). The required area and
+centroid radius are given by
+\Cref{eq:local_belt_cross_section_area,eq:local_belt_mass_centroid_radius}.
 
-\begin{equation}
-    b(y)
-    =
-    b_{\mathrm{out}}
-    -
-    \frac{b_{\mathrm{out}}-b_{\mathrm{in}}}{h_b}\,y.
-    \label{eq:belt_cross_section_width_distribution}
-\end{equation}
-
-The cross-sectional area and its first moment about the outer surface are
-
-\begin{align}
-    A_b
-    &=
-    \int_0^{h_b} b(y)\,dy
-    =
-    \frac{h_b}{2}
-    \left(b_{\mathrm{out}}+b_{\mathrm{in}}\right),
-    \label{eq:belt_trapezoid_area}
-    \\
-    A_b y_{\mathrm{cm}}
-    &=
-    \int_0^{h_b} y\,b(y)\,dy.
-    \label{eq:belt_trapezoid_first_moment}
-\end{align}
-
-Substitution of \Cref{eq:belt_cross_section_width_distribution} gives
-
-\begin{equation}
-    y_{\mathrm{cm}}
-    =
-    h_b
-    \frac{b_{\mathrm{out}}+2b_{\mathrm{in}}}
-    {3\left(b_{\mathrm{out}}+b_{\mathrm{in}}\right)}.
-    \label{eq:belt_cross_section_centroid}
-\end{equation}
-
-The belt mass therefore follows the radius
-
-\begin{equation}
-    r_{j,\mathrm{cm}}
-    =
-    r_j-y_{\mathrm{cm}}.
-    \label{eq:belt_mass_centroid_radius}
-\end{equation}
-
-Since the cross-section is fixed, \(y_{\mathrm{cm}}\) is constant. The
-centroid consequently inherits the radius rate and acceleration already
-obtained from the pulley geometry,
+Under \AssRef{assump:fixed-belt-cross-section}, the centroid remains at a
+fixed depth within the belt. It therefore shares the radial motion of the
+outer surface:
 
 \begin{equation}
     \dot r_{j,\mathrm{cm}}=\dot r_j,
@@ -6410,6 +6408,10 @@ obtained from the pulley geometry,
     \ddot r_{j,\mathrm{cm}}=\ddot r_j.
     \label{eq:belt_mass_centroid_radius_derivatives}
 \end{equation}
+
+The rate relation follows from \Cref{sec:pulley_radius_rates}, and the
+corresponding acceleration relation is stated in
+\Cref{eq:local_radius_acceleration_equivalence}.
 
 This is the first place where the radius derivatives developed in
 \Cref{sec:geometry} enter the belt dynamics directly: the same changing pulley
@@ -7085,11 +7087,24 @@ exit,
     \label{eq:wrap_normal_resultant_integral}
 \end{equation}
 
-The integrand also gives a useful contact check. The belt and sheave can press
-against one another but cannot sustain a tensile normal force, so the
-prescribed continuous wrap requires \(dN_j/d\theta\geq0\) throughout the
-contact arc. A negative value would indicate loss of the assumed full-wrap
-contact rather than a negative physical pressure.
+The recovered fields also show whether the prescribed wrap is physically
+admissible. Under \AssRef{assump:prescribed_belt_path}, the belt carries
+tension but not compression, and the belt and sheave faces can press against
+one another but cannot pull one another together. The complete wrap therefore
+requires
+
+\begin{equation}
+    T_j(\theta)\geq0,
+    \qquad
+    \frac{dN_j}{d\theta}\geq0,
+    \qquad
+    0\leq\theta\leq\phi_j.
+    \label{eq:wrap_contact_admissibility}
+\end{equation}
+
+A negative tension would invalidate the assumed taut belt path, while a
+negative normal-load gradient would indicate local lift-off rather than a
+physical negative belt load.\par
 
 Because the complete tension field is known from
 \Cref{eq:wrap_tension_distribution},
@@ -7221,11 +7236,14 @@ reduced wrap, the total pulley-on-belt tangential force is
     \label{eq:wrap_total_tangential_force}
 \end{equation}
 
-Let \(r_{j,\mathrm{eff}}\) denote the effective moment arm of this tangential
-belt--sheave contact. It is distinct from \(r_{j,\mathrm{cm}}\), which follows
-the belt mass and therefore appears in the inertial terms above. The belt
-exerts the equal-and-opposite tangential force on the pulley, so the signed
-belt torque used in the rotational balances is
+The moment arm used to convert this tangential contact force into pulley torque
+is the radius of the tension-carrying cord line. This effective radius
+\(r_{j,\mathrm{eff}}\) was defined in
+\Cref{eq:local_belt_effective_radius}. It is distinct from
+\(r_{j,\mathrm{cm}}\), which follows the belt mass and therefore appears in
+the inertial terms above. The belt exerts the equal-and-opposite tangential
+force on the pulley, so the signed belt torque used in the rotational balances
+is
 
 \begin{equation}
 \boxed{
@@ -7392,7 +7410,7 @@ represented by the transport coordinate. The outer-surface belt length used in
 \end{equation}
 
 The mass centroid lies the fixed distance \(y_{\mathrm{cm}}\) inward from that
-surface, so \Cref{eq:belt_mass_centroid_radius} and
+surface, so \Cref{eq:local_belt_mass_centroid_radius} and
 \(\phi_p+\phi_s=2\pi\) give the corresponding centroid-path length
 
 \begin{align}
@@ -7423,7 +7441,7 @@ and applying \Cref{eq:closed_belt_wrap_shift_cancellation} reduces
 of motion,
 
 \bigeq{eq:closed_belt_transport_momentum}
-{Complete-Belt Transport Momentum}
+{Complete-Belt Momentum Balance}
 {
     m_b\dot v_b
     =
@@ -7708,9 +7726,13 @@ the local equations before the wrap is reduced analytically.
 Solving the tension field also makes the pulley contact mechanically complete.
 The normal load was temporarily eliminated to obtain the tension equation; once
 \(T_j(\theta)\) is known, the radial balance recovers that distributed contact
-and its resultant \(N_j\). The axial belt reaction and transmitted pulley
-torque then follow as two components of the same contact resultant rather than
-as independent constitutive laws. This idea also has strong precedent. Detailed
+and its resultant \(N_j\). Only fields that keep both the belt tension and the
+distributed normal loading non-negative are compatible with the assumed taut,
+continuously wrapped path, as stated in
+\Cref{eq:wrap_contact_admissibility}. The axial belt reaction and transmitted
+pulley torque then follow as two components of the same contact resultant
+rather than as independent constitutive laws. This idea also has strong
+precedent. Detailed
 rubber-belt models such as \citet{KongParker2005,KongParker2006} resolve
 local distributed belt and contact mechanics at substantially greater spatial
 fidelity, while \citet{Messick2018} uses that type of solution to recover the
@@ -7883,16 +7905,21 @@ what instantaneous contact condition fixes the value of \(\lambda_j\). The two
 missing relations must therefore come from the tangential belt--pulley contact
 itself.
 
-The most restrictive contact condition is adhesion, in which the belt and
-pulley surface move together. It provides the natural place to determine what
-the complete coupled problem requires.
+The most restrictive tangential contact state is sticking. In that state, the
+reduced contact law must keep the belt transport speed matched to the
+representative pulley surface speed. It therefore provides the natural place
+to determine what the complete coupled problem requires.
 
 % --------------------------------------------------------------
 \subsection{Sticking Contact and the Full Coupled Problem}
 \label{sec:sticking_engaged_closure}
 
-If the belt adheres to pulley \(j\), the two surfaces cannot have different
-tangential speeds at the contact radius. The sticking condition is therefore
+Both primary sheaves rotate at the primary shaft speed \(\omega_p\). On the
+secondary, \AssRef{assump:symmetric_face_sharing} specifies the shaft speed
+\(\omega_s\) as the representative speed of the aggregated wrap contact.
+Sticking in this reduced description means that the belt transport speed
+matches the corresponding shaft-referenced surface speed at the effective
+radius. For either pulley, the sticking condition is therefore
 
 \begin{equation}
 \boxed{
@@ -7903,8 +7930,9 @@ tangential speeds at the contact radius. The sticking condition is therefore
     \label{eq:engaged_stick_velocity_constraint}
 \end{equation}
 
-During an established sticking interval this equality is already satisfied by
-the current state. The instantaneous accelerations must preserve it.
+During an established shaft-referenced sticking interval this equality is
+already satisfied by the current state. The instantaneous accelerations must
+preserve it.
 Differentiating \Cref{eq:engaged_stick_velocity_constraint} gives
 
 \begin{equation}
@@ -8011,18 +8039,14 @@ No new physical equation has been introduced in
 rotational balances, two axial balances, belt transport balance, and belt
 closed-loop compatibility already identified above. To make that statement
 explicit, the equations can be assembled directly in the order just listed.
-The only additional expansion needed is the radius acceleration already implied
-by the geometry,
-
-\begin{equation}
-    \ddot r_j
-    =
-    \frac{dr_j}{ds}\ddot s
-    +
-    \frac{d^2r_j}{ds^2}\dot s^2,
-    \qquad j\in\{p,s\}.
-    \label{eq:engaged_radius_acceleration_expansion}
-\end{equation}
+The radius accelerations appearing in the closed-loop compatibility are the
+primary and secondary results already established in
+\Cref{eq:primary_radius_acceleration,eq:secondary_radius_acceleration}. Because
+the effective and mass-centroid radii remain at fixed depths within the belt,
+their accelerations follow the same results by
+\Cref{eq:local_radius_acceleration_equivalence}.
+% Legacy label retired after reusing the Section 3.1 acceleration results.
+% \label{eq:engaged_radius_acceleration_expansion}
 
 With the columns ordered according to \Cref{eq:engaged_linear_unknowns}, the
 coefficient matrix is, for \(\lambda_p\lambda_s\neq0\),
@@ -8241,10 +8265,13 @@ v_b^2
 \end{equation}
 
 so the same six unknowns remain linear and the matrix stays finite through
-zero traction.
+zero traction. In a numerical evaluation, the divided nonzero-traction form
+should be replaced by this limit, or by its local series expansion, before its
+cancelling terms approach floating-point resolution.
 
-For one trial traction pair, solving this \(6\times6\) system determines the
-complete mechanical response associated with that pair.
+Provided the matrix is nonsingular for the trial pair, solving this
+\(6\times6\) system determines the complete mechanical response associated
+with that pair.
 
 That response can now be tested against the condition that motivated the
 static traction in the first place. For pulley \(j\), define the sticking
@@ -8292,9 +8319,9 @@ trial values until
     \label{eq:stick_stick_lambda_root}
 \end{equation}
 
-The resulting \(\lambda_p\) and \(\lambda_s\) are therefore not prescribed
-static friction forces. They are the contact reactions required to make the
-six mechanical balances compatible with adhesion at both pulleys.
+When the root exists, the resulting \(\lambda_p\) and \(\lambda_s\) are not
+prescribed static friction forces. They are the contact reactions required to
+make the six mechanical balances compatible with adhesion at both pulleys.
 
 A zero residual establishes kinematic compatibility, but static contact can
 supply only a finite tangential reaction. The required value at each sticking
@@ -8327,7 +8354,10 @@ belt and pulley must be allowed to move relative to one another.
 Once relative sliding exists, the no-slip acceleration condition no longer
 determines the tangential contact reaction. The relative motion itself fixes
 the direction of kinetic friction, and the Coulomb law fixes its magnitude.
-For pulley \(j\), the relative tangential speed is
+The primary surface speed follows directly from the common motion of its two
+sheaves. For the secondary, the shaft-referenced surface speed is the
+representative speed specified in \AssRef{assump:symmetric_face_sharing}.
+Accordingly, the relative tangential speed at either pulley \(j\) is
 
 \begin{equation}
     v_{\mathrm{rel},j}
@@ -8340,17 +8370,24 @@ and a sliding interface has
 
 \begin{equation}
 \boxed{
+\begin{aligned}
+    \sigma_j
+    &=-\operatorname{sgn}\!\left(v_{\mathrm{rel},j}\right),\\
     \lambda_j
-    =
-    \sigma_j\mu_k,
+    &=\sigma_j\mu_k,
+    \qquad v_{\mathrm{rel},j}\neq0.
+\end{aligned}
 }
     \label{eq:engaged_kinetic_lambda}
 \end{equation}
 
-where \(\sigma_j=\pm1\) is chosen so that the tangential contact action opposes
-the established relative motion. Unlike the static case, \(\lambda_j\) is now
-known directly from the contact state rather than determined as an unknown
-reaction.
+Here \(\sigma_j\) is the sign of the pulley-on-belt tangential action. The
+minus sign makes that action oppose the established relative motion. Unlike
+the static case, \(\lambda_j\) is therefore known directly from a sliding
+contact state rather than determined as an unknown reaction. At
+\(v_{\mathrm{rel},j}=0\), no established sliding direction exists, so the
+appropriate successor branch must instead be selected from the relative
+acceleration returned by the candidate coupled solutions.
 
 Suppose both contacts slide. Then both traction utilizations are known, so the
 mechanical solution is obtained by inserting those two values into
@@ -8431,14 +8468,14 @@ condition instead, so that value must be found by repeatedly applying the same
 mechanical solve until the condition is satisfied.
 
 % --------------------------------------------------------------
-\subsection{Admissibility and Changes of Contact State}
+\subsection{Stick--Slip Admissibility and Contact-State Changes}
 \label{sec:engaged_contact_state_changes}
 
 The equations above determine an instantaneous solution for an assumed contact
-combination. That assumption can persist only while the solution remains
-consistent with the physical condition used to construct it. The same
-quantities already obtained from the closure therefore determine when a
-contact description must change.
+combination. The admissibility considered here is specifically whether each
+wrap can remain in its assumed tangential stick or slip state. That state can
+persist only while the solution remains consistent with the contact condition
+used to construct it.
 
 For a sticking interface, the relevant quantity is the static utilization
 required by the no-slip root. While
@@ -8456,7 +8493,19 @@ sticking would require
 then no admissible static reaction can satisfy the no-slip condition. The
 interface must release into sliding contact, where its traction is instead set
 by \Cref{eq:engaged_kinetic_lambda} with a direction consistent with the
-emerging relative motion.
+emerging relative motion. At the release instant,
+\(v_{\mathrm{rel},j}=0\), so this direction cannot be read from the current
+speed. For a candidate kinetic sign \(\sigma_j\), the coupled sliding closure
+must instead predict a relative acceleration into that branch. Because
+\(R_j=\dot v_{\mathrm{rel},j}\) at zero relative speed, the branch-consistency
+condition is
+
+\begin{equation}
+    \boxed{
+        \sigma_j R_j<0.
+    }
+    \label{eq:engaged_slip_branch_consistency}
+\end{equation}
 
 That release changes the coupled solution, not merely one entry in it. The new
 kinetic \(\lambda_j\) changes the belt tangential force and pulley torque, which
@@ -8473,8 +8522,9 @@ is again kinematically possible. The corresponding sticking closure is then
 formed at that same state. If its root gives a required static utilization
 within \Cref{eq:engaged_static_lambda_admissibility}, the contact can reattach.
 If not, zero relative speed does not create a sustainable sticking state and
-sliding must continue with the direction required by the subsequent relative
-motion.
+the candidate kinetic branches are evaluated using
+\Cref{eq:engaged_slip_branch_consistency}; sliding continues on the branch whose
+coupled solution produces a consistent subsequent relative motion.
 
 The two transition tests therefore ask complementary questions. A sticking
 contact asks whether the required static reaction still lies within the
@@ -8487,10 +8537,12 @@ closure developed above.
 \subsection{What the Engaged Closure Establishes}
 \label{sec:engaged_closure_synthesis}
 
-The freely shifting engaged CVT now has a complete instantaneous closure. The
-two pulley assemblies and the belt contribute six mechanical equations, while
-the two tangential contacts supply the remaining information needed to close
-the system.
+For an assumed tangential contact combination, the freely shifting engaged CVT
+has a complete instantaneous closure whenever the common mechanical matrix is
+nonsingular and any required static-traction root exists. The two pulley
+assemblies and the belt contribute six mechanical equations, while the two
+tangential contacts supply the remaining information needed to close the
+system.
 
 Sticking reveals the structure of that closure most clearly. The two no-slip
 acceleration conditions complete the eight-equation problem, but the eight
@@ -8519,8 +8571,9 @@ the corresponding static requirement is admissible. Because either change in
 contact state alters the complete coupled solution, the remaining contact must
 be reevaluated rather than carrying forward its previous traction requirement.
 
-For any admissible freely shifting engaged contact combination, the current
-state and applied shaft boundaries therefore determine
+For any stick--slip-admissible freely shifting contact combination with a
+nonsingular mechanical solve and an applicable static root, the current state
+and applied shaft boundaries therefore determine
 \(\dot\omega_p\), \(\dot\omega_s\), \(\dot v_b\), \(\ddot s\),
 \(N_p\), \(N_s\), \(\lambda_p\), and \(\lambda_s\). The corresponding belt
 torques and axial reactions then follow from the contact resultants already
@@ -8530,384 +8583,140 @@ shifting engaged CVT.
 
 
 
-\section{Shift Limits, Engagement, and Deadzone Dynamics}
+\section{Shift Boundaries and Regime Transitions}
 \label{sec:shift_limits_deadzone}
 
-The freely shifting closure developed in \Cref{sec:engaged_dynamic_closure}
-describes the CVT only while the belt is engaged with both pulleys and the
-primary movable sheave remains between its physical travel limits. Real
-hardware has two additional features that this interior solution does not
-contain. The primary can open far enough that its sheaves no longer touch the
-belt, and it can close only until its hardware reaches a mechanical stop.
-Between those two limits, first belt contact introduces another boundary: the
-primary can touch and clamp the belt while the belt is still supported at its
-minimum primary radius.
-
-These boundaries do not require a new CVT model at every operating point.
-Instead, they determine which parts of the formulation developed above remain
-active, which kinematic quantities are constrained, and which reactions appear
-when a physical boundary prevents further motion. The useful question is
-therefore not how to construct several unrelated regimes, but how the complete
-equations reduce as the primary travels from fully open, through first contact
-and free shift, to fully closed.
-
-The natural place to begin is the range of the shift coordinate itself.
+The engaged closure of the preceding section determines the instantaneous CVT
+motion while both pulley contacts exist and the shift coordinate is free. That
+solution can be advanced only until the mechanism reaches a physical boundary
+or an active unilateral constraint can no longer supply an admissible
+reaction. The remaining task is therefore to define how the same pulley, belt,
+and contact equations reduce at the shift boundaries and how the state is
+transferred when the active mechanical arrangement changes.
 
 % ---------------------------------------------------------------------------
-\subsection{Physical Boundaries of the Shift Coordinate}
+\subsection{Shift Domain and Structural Regimes}
 \label{sec:shift_coordinate_boundaries}
 
-The shared coordinate \(s\) is the axial displacement of the primary movable
-sheave. Three positions divide its physically meaningful range. Let
-
-\[
-    s_0
-\]
-
-denote the fully open primary position,
-
-\[
-    s_{\mathrm e}
-\]
-
-the position at which the primary sheave first reaches the belt, and
-
-\[
-    s_{\mathrm u}
-\]
-
-the fully closed primary position. With the convention established in
-\Cref{sec:geometry}, the lower mechanical stop is chosen as the origin,
+The geometry developed in \Cref{sec:geometry} already establishes the three
+positions needed here. The fully open primary is the coordinate origin,
+first primary belt contact occurs at \(x_{p,\mathrm{dz}}\), and the maximum
+permitted primary travel is \(x_{p,\max}\). Because the shared shift
+coordinate satisfies \(s\equiv x_p\) by
+\Cref{eq:system_shift_coordinate}, write
 
 \begin{equation}
-    \boxed{
-        s_0=0.
-    }
-    \label{eq:lower_shift_stop_position}
-\end{equation}
-
-For
-
-\[
-    s_0 < s < s_{\mathrm e},
-\]
-
-the movable primary sheave travels toward or away from the belt without
-changing the belt running radii. The belt remains supported at the low-ratio
-geometry: its primary-side path is fixed at the minimum radius and the
-secondary remains fully closed at its maximum belt radius. The distance
-\(s_{\mathrm e}-s_0\) is therefore a primary deadzone in axial travel rather
-than a ratio change.
-
-Once \(s=s_{\mathrm e}\), the movable primary face first reaches the belt.
-Further primary closure can then force the belt away from its minimum primary
-radius and, through the fixed-length geometry, open the secondary. Under the
-fixed-cross-section idealization used throughout the model, the primary can
-continue closing only until the gap consumed after first contact equals the
-belt width at its inner surface. The available engaged primary travel is
-therefore
-
-\begin{equation}
-    \boxed{
-        s_{\mathrm u}-s_{\mathrm e}
-        =
-        b_{\mathrm{in}},
-    }
-    \label{eq:active_shift_travel_limit}
-\end{equation}
-
-or
-
-\begin{equation}
-    \boxed{
-        s_{\mathrm u}
-        =
-        s_{\mathrm e}+b_{\mathrm{in}}.
-    }
-    \label{eq:upper_shift_stop_position}
-\end{equation}
-
-Equation \eqref{eq:upper_shift_stop_position} represents the idealized case in
-which the primary reaches its geometric closing limit when the sheave hardware
-at the base of the groove meets. If a real variator contains an earlier
-mechanical stop, its measured travel replaces \(b_{\mathrm{in}}\) in
-\Cref{eq:active_shift_travel_limit}. The present formulation also assumes that
-the secondary has not reached an independent shaft or opening stop at
-\(s=s_{\mathrm u}\). The upper travel limit is therefore set by the primary
-alone.
-
-Two additional reductions are required at the low-ratio end. First, belt
-pretension is neglected while the primary is disengaged. The primary shaft may
-support the belt radially, but that support is not assigned a tangential
-traction law and transmits no primary belt torque. Second, the slack-belt
-shape is not introduced as a new distributed degree of freedom. The belt is
-taken to remain seated on the fully closed secondary and to move with its
-surface at the fixed low-ratio radius \(r_{s,\mathrm e}\). Thus
-
-\begin{equation}
-    \boxed{
-        v_b
-        =
-        r_{s,\mathrm e}\omega_s
-        \qquad
-        \text{while the primary is disengaged}.
-    }
-    \label{eq:deadzone_secondary_lock}
-\end{equation}
-
-This is a deadzone closure assumption, not a consequence of the engaged wrap
-equations. It replaces the tension-loop and two-contact description that no
-longer applies once the primary sheaves have separated from the belt.
-
-A final distinction concerns what happens when a boundary is reached with
-nonzero \(\dot s\). The fully open and fully closed limits are metal-on-metal
-mechanical stops. Their axial impacts are treated as perfectly inelastic, so
-arrival resets the shift velocity to zero. First belt contact at
-\(s=s_{\mathrm e}\) is different. The sheave is meeting the compliant belt and
-coupling into the secondary rather than striking a rigid travel stop. No
-kinematic reset of \(\dot s\) is imposed there. The incoming primary axial
-momentum is carried into the newly active engaged equations, which determine
-whether the sheave continues to close, is decelerated by the belt and
-secondary, or subsequently separates again.
-
-With these boundaries established, the complete operating range can be built
-from the fully open configuration upward.
-
-% ---------------------------------------------------------------------------
-\subsection{Fully Open Primary Stop}
-\label{sec:fully_open_primary_stop}
-
-At the lowest shift coordinate, the primary movable assembly cannot travel any
-farther in the opening direction. The belt is not in contact with the primary
-sheave faces, so the stop acts only on the primary mechanism. This makes the
-fully open configuration the simplest constrained regime.
-
-At
-
-\[
-    s=s_0,
-\]
-
-the metal stop imposes
-
-\begin{equation}
-    \boxed{
-        s=s_0,
-        \qquad
-        \dot s=0,
-        \qquad
-        \ddot s=0.
-    }
-    \label{eq:lower_stop_kinematic_constraint}
-\end{equation}
-
-The primary belt resultant and belt torque are absent,
-
-\begin{equation}
-    \boxed{
-        N_p=0,
-        \qquad
-        \tau_p=0,
-    }
-    \label{eq:lower_stop_primary_disengaged}
-\end{equation}
-
-and \(\lambda_p\) has no meaning because no primary belt--sheave contact
-exists.
-
-The primary rotational balance from
-\Cref{eq:primary_rotational_eom_belt} therefore reduces to
-
-\begin{equation}
-    \boxed{
-        \tau_{\mathrm B,p}
-        =
-        \left[
-            I_{\mathrm B,p}
-            +
-            I_{p,\mathrm{const}}
-            +
-            J_{f,p}(s_0)
-        \right]
-        \dot\omega_p.
-    }
-    \label{eq:lower_stop_primary_rotation}
-\end{equation}
-
-The term proportional to \(\dot s\,\omega_p\) vanishes because the movable
-assembly is fixed at the stop.
-
-The primary axial equation is not discarded. Instead, the stop supplies the
-reaction required to satisfy that equation with \(\ddot s=0\). Let
-\(R_0\) denote the stop reaction acting in the positive, closing direction.
-Substituting \(N_p=0\), \(\dot s=0\), and \(\ddot s=0\) into the primary
-balance gives
-
-\begin{equation}
-    0
-    =
-    \frac{1}{2}\omega_p^2
-    \frac{dJ_{f,p}}{ds}\bigg|_{s_0}
-    -
-    k_p\left(x_{p,\mathrm{pre}}+s_0\right)
-    +
-    R_0,
-\end{equation}
-
-and therefore
-
-\begin{equation}
-    \boxed{
-        R_0
-        =
-        k_p\left(x_{p,\mathrm{pre}}+s_0\right)
-        -
-        \frac{1}{2}\omega_p^2
-        \frac{dJ_{f,p}}{ds}\bigg|_{s_0}.
-    }
-    \label{eq:lower_stop_reaction}
-\end{equation}
-
-The stop is unilateral. It may push the movable assembly closed, but it cannot
-pull it open. The constrained state is therefore admissible only while
-
-\begin{equation}
-    \boxed{
-        R_0\geq 0.
-    }
-    \label{eq:lower_stop_admissibility}
-\end{equation}
-
-At low primary speed, the spring tends to hold the sheave against the open
-stop and \(R_0>0\). As \(\omega_p\) rises, the flyweight closing action grows
-until \(R_0=0\). Beyond that point, holding the sheave at \(s_0\) would require
-the stop to pull in the opening direction. The constraint must release, and
-the primary enters free deadzone motion.
-
-The belt and secondary remain governed by the deadzone lock in
-\Cref{eq:deadzone_secondary_lock}. Since the secondary geometry is fixed in
-this regime, the belt transport mass can be reflected directly to the
-secondary shaft. The remaining equations are
-
-\begin{equation}
-    \boxed{
-        \tau_{\mathrm B,s}
-        =
-        \left[
-            I_{\mathrm B,s}
-            +
-            I_{s,F}
-            +
-            I_{s,M}
-            +
-            m_b r_{s,\mathrm e}^{\,2}
-        \right]
-        \dot\omega_s,
-    }
-    \label{eq:deadzone_secondary_rotation}
-\end{equation}
-
-and
-
-\begin{equation}
-    \boxed{
-        \dot v_b
-        =
-        r_{s,\mathrm e}\dot\omega_s.
-    }
-    \label{eq:deadzone_belt_acceleration_lock}
-\end{equation}
-
-Thus the only free accelerations at the fully open stop are
-\(\dot\omega_p\), \(\dot\omega_s\), and \(\dot v_b\). The shift acceleration
-is fixed to zero, and \(R_0\) is recovered from the omitted free primary axial
-motion.
-
-% ---------------------------------------------------------------------------
-\subsection{Free Motion Through the Primary Deadzone}
-\label{sec:free_primary_deadzone}
-
-Once the lower stop releases, the primary movable assembly can travel toward
-the belt. The belt has still not been reached, so none of the primary
-belt-contact equations should be retained merely because the sheave is moving.
-The free deadzone is therefore obtained by restoring the primary axial degree
-of freedom while leaving the primary belt reactions absent.
-
-For
-
-\begin{equation}
-    s_0<s<s_{\mathrm e},
-    \label{eq:deadzone_shift_interval}
-\end{equation}
-
-the primary again has
-
-\[
-    N_p=0,
+    s_{\mathrm{dz}}\equiv x_{p,\mathrm{dz}},
     \qquad
-    \tau_p=0,
-\]
-
-while \(s\) and \(\dot s\) are free state variables. The full moving-primary
-rotational balance remains active:
-
-\begin{equation}
-\boxed{
-\begin{aligned}
-    \tau_{\mathrm B,p}
-    ={}&
-    \left[
-        I_{\mathrm B,p}
-        +
-        I_{p,\mathrm{const}}
-        +
-        J_{f,p}(s)
-    \right]
-    \dot\omega_p
-    \\
-    &+
-    \frac{dJ_{f,p}}{ds}\dot s\,\omega_p.
-\end{aligned}
-}
-    \label{eq:deadzone_primary_rotation}
+    s_{\max}\equiv x_{p,\max}.
+    \label{eq:shift_boundary_coordinate_names}
 \end{equation}
 
-The second term is retained because the flyweights can redistribute their mass
-about the shaft while the movable sheave travels through the deadzone. Loss of
-belt contact does not freeze the primary actuation mechanism.
-
-The primary axial balance is likewise the ordinary balance from
-\Cref{eq:primary_balance_in_shift_coordinate} with the belt load removed:
+The admissible shift domain is therefore
 
 \begin{equation}
-\boxed{
-\begin{aligned}
-    \left[
-        m_p
-        +
-        I_f
-        \left(\frac{dq_f}{ds}\right)^2
-    \right]\ddot s
-    ={}&
-    \frac{1}{2}\omega_p^2\frac{dJ_{f,p}}{ds}
-    \\
-    &-
-    I_f
-    \frac{dq_f}{ds}
-    \frac{d^2q_f}{ds^2}
-    \dot s^2
-    \\
-    &-
-    k_p\left(x_{p,\mathrm{pre}}+s\right).
-\end{aligned}
-}
-    \label{eq:deadzone_primary_axial}
+    \boxed{
+        0\leq s\leq s_{\max},
+        \qquad
+        s=s_{\mathrm{dz}}
+        \text{ is the primary engagement boundary}.
+    }
+    \label{eq:shift_operating_domain}
 \end{equation}
 
-The secondary and belt do not acquire independent deadzone dynamics. They
-continue to satisfy
-\Cref{eq:deadzone_secondary_rotation,eq:deadzone_belt_acceleration_lock}.
-Consequently the free deadzone has four instantaneous derivatives,
+The upper limit \(s_{\max}\) is fixed by the permitted travel of the selected
+hardware. It is not inferred again from the belt width in this section. The
+belt dimensions have already entered the pulley-radius and belt-loop geometry;
+the travel limit states where that geometry is physically terminated.
+
+For \(0\leq s<s_{\mathrm{dz}}\), the primary movable sheave has not reached
+the belt and the deadzone geometry applies. For
+\(s_{\mathrm{dz}}<s\leq s_{\max}\), both pulley contacts exist and the engaged
+geometry applies. At \(s=s_{\mathrm{dz}}\), the positions calculated from the
+two descriptions agree, but their allowed motions do not. Immediately before
+engagement, the belt radii and secondary position are fixed while the primary
+crosses the remaining clearance. Immediately after engagement, further
+primary motion changes both pulley radii and opens the secondary. In the
+one-sided notation introduced by these two mechanical arrangements,
+
+\begin{equation}
+    r_j^{-}(s_{\mathrm{dz}})
+    =
+    r_j^{+}(s_{\mathrm{dz}}),
+    \qquad
+    \left.\frac{dr_j}{ds}\right|_{-}
+    \neq
+    \left.\frac{dr_j}{ds}\right|_{+}
+    \quad\text{in general},
+    \label{eq:engagement_one_sided_geometry}
+\end{equation}
+
+where superscripts \(-\) and \(+\) denote the deadzone- and engaged-side
+mappings, respectively. The coordinate is therefore position-continuous at
+engagement, but the tangent relating \(\dot s\) to the physical component
+velocities changes.
+This distinction is what makes engagement a mechanical transition rather than
+an ordinary point inside one set of differential equations.
+
+Position alone also does not determine whether a boundary is active. A state
+at \(s=s_{\mathrm{dz}}\), for example, may be leaving the boundary in free
+engaged shift, held there by the fully closed secondary stop, or opening into
+the deadzone after primary separation. The mechanical regime introduced in
+\Cref{sec:mechanical_regimes_state_evolution} records that additional
+information. Over the complete shift domain, five structural arrangements are
+retained: free and lower-stop motion in the deadzone, together with free,
+low-ratio-seat, and upper-stop motion while engaged. Each engaged arrangement
+also carries one of the tangential contact branches derived in
+\Cref{sec:engaged_dynamic_closure}.
+
+The engaged arrangements follow most directly from the closure already in
+hand.
+
+% ---------------------------------------------------------------------------
+\subsection{Continuous Engaged Regimes}
+\label{sec:engaged_shift_constraints}
+
+The six mechanical rows assembled in
+\Cref{eq:engaged_six_by_six_mechanical_core} contain two axial balances. A
+free shift retains both. When a sheave is held at a hardware stop, the axial
+balance belonging to that stopped member is replaced by the kinematic row
+\(\ddot s=0\). After the constrained mechanical solution is known, the omitted
+axial balance is evaluated as a residual; that residual is the reaction the
+stop must supply.
+
+It is useful to state the reaction signs directly from the two movable-sheave
+free bodies. Define the non-stop closing-force residual of each local balance
+by
+
+\begin{equation}
+\begin{aligned}
+    F_{p,\mathrm{free}}
+    &\equiv
+    F_{p,\mathrm{fly}}
+    -F_{p,\mathrm{spring}}
+    -F_{p,\mathrm{belt}},
+    \\
+    F_{s,\mathrm{free}}
+    &\equiv
+    F_{s,\mathrm{helix}}
+    +F_{s,\mathrm{spring}}
+    -F_{s,\mathrm{belt}}.
+\end{aligned}
+    \label{eq:free_axial_force_residuals}
+\end{equation}
+
+These are the right-hand sides of
+\Cref{eq:primary_movable_sheave_balance,eq:secondary_movable_sheave_balance}
+before a stop reaction is added. At a constrained state they are evaluated
+using the accelerations, normal resultants, and belt torques returned by that
+constrained closure.
+
+\subsubsection{Free Engaged Shift}
+\label{sec:free_engaged_interior}
+
+When neither axial stop is active, no boundary reaction acts. The complete
+instantaneous problem is exactly the freely shifting engaged closure of
+\Cref{sec:engaged_dynamic_closure}. Its mechanical unknowns remain
 
 \[
     \dot\omega_p,
@@ -8917,116 +8726,37 @@ Consequently the free deadzone has four instantaneous derivatives,
     \dot v_b,
     \qquad
     \ddot s,
+    \qquad
+    N_p,
+    \qquad
+    N_s,
 \]
 
-and the four equations
-\Cref{eq:deadzone_primary_rotation,eq:deadzone_primary_axial,%
-eq:deadzone_secondary_rotation,eq:deadzone_belt_acceleration_lock}
-determine them directly. No \(N_p\), \(\lambda_p\), primary belt torque, or
-closed-loop tension compatibility is present.
-
-This regime ends when the moving primary sheave reaches
-\(s=s_{\mathrm e}\). At that point the reason for the reduced equations
-disappears: a primary belt contact now exists.
-
-% ---------------------------------------------------------------------------
-\subsection{First Belt Contact and the Low-Ratio Boundary}
-\label{sec:first_contact_low_ratio}
-
-First contact changes the topology of the mechanical problem. Before
-\(s_{\mathrm e}\), the primary movable sheave and the belt evolve without a
-sheave-face contact between them. At \(s_{\mathrm e}\), a primary normal
-reaction and tangential traction can appear, and the primary motion can begin
-to drive the belt against the fully closed secondary. The important point is
-that contact alone is not a rigid axial stop.
-
-\subsubsection{First Contact With Continuous Shift Momentum}
-\label{sec:first_contact_momentum}
-
-Let \(t_{\mathrm e}\) be the instant at which a closing primary first reaches
-
-\[
-    s(t_{\mathrm e})=s_{\mathrm e}.
-\]
-
-No impact projection is imposed on the shift velocity. The continuous state is
-carried through the event,
+while \(\lambda_p\) and \(\lambda_s\) are supplied by the applicable
+stick--slip construction. Away from the boundaries this regime occupies
 
 \begin{equation}
-\boxed{
-\begin{aligned}
-    \omega_p^+ &= \omega_p^-,
-    &
-    \omega_s^+ &= \omega_s^-,
-    \\
-    v_b^+ &= v_b^-,
-    &
-    s^+ &= s^- = s_{\mathrm e},
-    \\
-    \dot s^+ &= \dot s^-.
-\end{aligned}
-}
-    \label{eq:first_contact_state_continuity}
+    s_{\mathrm{dz}}<s<s_{\max}.
+    \label{eq:free_engaged_shift_interval}
 \end{equation}
 
-The superscripts \((-)\) and \((+)\) denote the states immediately before and
-after first contact. The accelerations are allowed to change discontinuously
-because the belt normal force and traction become active at the event, but no
-finite amount of axial momentum is deleted by setting \(\dot s\) to zero.
+The same free closure may also be evaluated at either endpoint when the
+corresponding stop is inactive and the motion points back into the engaged
+domain. The strict interval in \Cref{eq:free_engaged_shift_interval} therefore
+locates its ordinary interior; it is not a rule that every endpoint state must
+be constrained.
 
-The engaged equations from \Cref{sec:engaged_dynamic_closure} are then
-evaluated at the same state. In particular, the eight engaged unknowns
-
-\[
-    \dot\omega_p,\;
-    \dot\omega_s,\;
-    \dot v_b,\;
-    \ddot s,\;
-    N_p,\;
-    N_s,\;
-    \lambda_p,\;
-    \lambda_s
-\]
-
-are again determined by the six engaged mechanical equations and the two
-contact relations appropriate to the instantaneous stick--slip combination.
-The primary relative speed need not vanish at first contact. If it does not,
-the primary begins in a sliding contact state; adhesion is not imposed merely
-because the surfaces have touched.
-
-This treatment lets the mechanics decide what first contact does. The incoming
-primary axial momentum may be sufficient to continue into \(s>s_{\mathrm e}\)
-and begin moving the belt radially outward. Alternatively, the belt,
-secondary spring, helix, and reflected inertias may decelerate the primary
-motion. Any dissipation comes from mechanisms already retained in the model,
-most directly kinetic slip, rather than from an artificial zero-velocity reset
-at the engagement event.
-
-If the trajectory leaves \(s_{\mathrm e}\) in the closing direction, the belt
-lifts from its minimum-radius support and the CVT enters ordinary free engaged
-shift. If instead the system is at \(s=s_{\mathrm e}\) with zero shift speed
-and the low-ratio support is still required, the boundary itself becomes an
-active unilateral constraint.
-
-\subsubsection{Sustained Low-Ratio Seat}
+\subsubsection{Engaged Low-Ratio Seat}
 \label{sec:sustained_low_ratio_seat}
 
-A sustained low-ratio state exists only when the belt is engaged with the
-primary while remaining at the minimum primary radius. The secondary is then
-also at its fully closed, maximum-radius configuration. Physically, this
-limiting geometry can be supported by the primary shaft beneath the belt and
-by the secondary hardware at its closed limit. The reduced one-coordinate
-formulation does not attempt to resolve how that support load is distributed
-between those physical contacts. Their net effect is represented by a single
-generalized low-ratio reaction \(R_{\mathrm e}\), acting in the positive shift
-direction and preventing motion to a ratio lower than the geometric engagement
-limit.
-
-For a continuous seated interval,
+At minimum engaged ratio, the secondary movable sheave is fully closed against
+its hardware stop. That secondary stop, rather than an unresolved reaction in
+the primary balance, prevents motion toward a ratio below the engagement
+geometry. During a sustained seated interval,
 
 \begin{equation}
     \boxed{
-        s=s_{\mathrm e},
+        s=s_{\mathrm{dz}},
         \qquad
         \dot s=0,
         \qquad
@@ -9035,252 +8765,61 @@ For a continuous seated interval,
     \label{eq:low_ratio_seat_kinematics}
 \end{equation}
 
-This condition does not contradict
-\Cref{eq:first_contact_state_continuity}: a first-contact event with
-\(\dot s>0\) is not projected into
-\Cref{eq:low_ratio_seat_kinematics}. The seated equations apply only once the
-system is actually at rest on the low-ratio boundary.
+Both belt--pulley contacts remain present. The rotational balances, primary
+axial balance, complete-belt transport relation, closed-loop tension
+compatibility, and the two tangential contact relations therefore remain the
+same equations used in free engaged shift. Only the secondary axial row is
+replaced by \(\ddot s=0\). Since \(\dot s=\ddot s=0\), the radius rates and
+accelerations established in
+\Cref{sec:pulley_radius_rates,sec:pulley_radius_accelerations} also vanish at
+the seat.
 
-Both pulley contacts exist in the seated regime, so the tangential contact
-logic of \Cref{sec:engaged_dynamic_closure} remains active. For a chosen
-\((\lambda_p,\lambda_s)\), the free linear unknowns are now
-
-\[
-    \dot\omega_p,
-    \qquad
-    \dot\omega_s,
-    \qquad
-    \dot v_b,
-    \qquad
-    N_p,
-    \qquad
-    N_s,
-    \qquad
-    R_{\mathrm e}.
-\]
-
-The primary rotational balance becomes
+The omitted secondary equation recovers the force exerted by the fully closed
+secondary stop. A positive reaction acts in the local opening direction and
+balances a non-stop tendency to close the secondary farther. With the sign in
+\Cref{eq:free_axial_force_residuals}, its magnitude is
 
 \begin{equation}
     \boxed{
-        \tau_{\mathrm B,p}
-        -
-        r_{p,\mathrm{eff}}\lambda_pN_p
+        F_{\mathrm{stop,LR}}
         =
-        \left[
-            I_{\mathrm B,p}
-            +
-            I_{p,\mathrm{const}}
-            +
-            J_{f,p}(s_{\mathrm e})
-        \right]
-        \dot\omega_p.
+        \left.
+        F_{s,\mathrm{free}}
+        \right|_{s=s_{\mathrm{dz}},\,\dot s=\ddot s=0}.
     }
-    \label{eq:low_seat_primary_rotation}
+    \label{eq:low_ratio_stop_reaction}
 \end{equation}
 
-The secondary has no relative helix motion while \(s\) is fixed, so its
-rotational balance reduces to
+The stop is unilateral: it can push the secondary open, but it cannot pull the
+secondary closed. The seated constraint is therefore admissible only while
 
 \begin{equation}
     \boxed{
-        \tau_{\mathrm B,s}
-        -
-        r_{s,\mathrm{eff}}\lambda_sN_s
-        =
-        \left(
-            I_{\mathrm B,s}
-            +
-            I_{s,F}
-            +
-            I_{s,M}
-        \right)
-        \dot\omega_s.
-    }
-    \label{eq:low_seat_secondary_rotation}
-\end{equation}
-
-The secondary axial balance remains a physical force balance even though the
-shared shift coordinate is fixed. Setting \(\dot s=\ddot s=0\) in
-\Cref{eq:secondary_balance_in_shift_coordinate} and substituting
-\(\tau_s=-r_{s,\mathrm{eff}}\lambda_sN_s\) gives
-
-\begin{equation}
-\boxed{
-\begin{aligned}
-    0
-    ={}&
-    \frac{d\theta_s}{dx_s}
-    \left[
-        -\frac{r_{s,\mathrm{eff}}\lambda_sN_s}{2}
-        +
-        k_{s,\theta}
-        \left(
-            \theta_{s,\mathrm{pre}}-\theta_s
-        \right)
-        -
-        I_{s,M}\dot\omega_s
-    \right]
-    \\
-    &+
-    k_{s,x}
-    \left(x_{s,\mathrm{pre}}-x_s\right)
-    -
-    \frac{N_s}{2}\cos\beta,
-\end{aligned}
-}
-    \label{eq:low_seat_secondary_axial}
-\end{equation}
-
-with all secondary geometry evaluated at \(s=s_{\mathrm e}\).
-
-The belt continues to satisfy the complete transport relation,
-
-\begin{equation}
-    \boxed{
-        m_b\dot v_b
-        =
-        \lambda_pN_p+\lambda_sN_s,
-    }
-    \label{eq:low_seat_belt_transport}
-\end{equation}
-
-and the closed-loop tension compatibility from
-\Cref{eq:closed_belt_tension_compatibility}, evaluated at the fixed
-low-ratio geometry with
-
-\[
-    \dot r_p=\dot r_s=0,
-    \qquad
-    \ddot r_p=\ddot r_s=0.
-\]
-
-The primary axial balance supplies the remaining equation by recovering the
-generalized low-ratio support reaction. This choice assigns the unresolved
-boundary reaction to the primary shared-coordinate balance; it should not be
-read as a face-resolved prediction of the separate shaft and secondary-stop
-loads. With \(\dot s=\ddot s=0\),
-
-\begin{equation}
-\boxed{
-    0
-    =
-    \frac{1}{2}\omega_p^2\frac{dJ_{f,p}}{ds}
-    -
-    k_p\left(x_{p,\mathrm{pre}}+s_{\mathrm e}\right)
-    -
-    \frac{N_p}{2}\cos\beta
-    +
-    R_{\mathrm e}.
-}
-    \label{eq:low_ratio_support_reaction_balance}
-\end{equation}
-
-The low-ratio support can prevent the belt from moving farther inward, but it
-cannot pull the belt away from the shaft. With \(R_{\mathrm e}\) defined in
-the closing direction,
-
-\begin{equation}
-    \boxed{
-        R_{\mathrm e}\geq 0
+        F_{\mathrm{stop,LR}}\geq0.
     }
     \label{eq:low_ratio_support_admissibility}
 \end{equation}
 
-is therefore the condition for a sustained seated state. If the constrained
-solution would require \(R_{\mathrm e}<0\), the support would have to act in
-the opposite direction to keep the belt at its minimum radius. The seat must
-release and the ordinary freely shifting engaged equations become active.
+If the constrained solution gives \(F_{\mathrm{stop,LR}}<0\), the secondary
+would have to be pulled against its stop. The constraint releases and the free
+engaged closure supplies the subsequent upshift acceleration.
 
-Primary belt contact is separately unilateral. A seated solution also
-requires
+The stop reaction and the belt-face normal resultant are different physical
+loads. The belt still opens the movable secondary through
+\(F_{s,\mathrm{belt}}=N_s\cos\beta/2\), while
+\(F_{\mathrm{stop,LR}}\) acts between the secondary hardware and its travel
+stop. The latter is not added to \(N_s\) and does not increase the secondary
+traction capacity.
 
-\begin{equation}
-    \boxed{
-        N_p\geq 0.
-    }
-    \label{eq:low_ratio_primary_contact_admissibility}
-\end{equation}
-
-If the primary normal resultant falls to zero and the sheave motion is opening,
-the primary can separate from the belt and the deadzone equations again
-become the appropriate description.
-
-For the \(\lambda_j\) values, nothing new is introduced at the low-ratio
-seat. A slipping contact supplies its kinetic value directly, while a sticking
-contact supplies the no-slip acceleration condition and requires the same
-one- or two-dimensional root logic developed in \Cref{sec:engaged_dynamic_closure}.
-The only change inside each trial is that \(\ddot s\) is fixed at zero and the
-boundary reaction \(R_{\mathrm e}\) replaces it among the linear unknowns.
-
-% ---------------------------------------------------------------------------
-\subsection{Freely Shifting Engaged Interior}
-\label{sec:free_engaged_interior}
-
-Once the low-ratio support is no longer required, the belt has lifted from its
-minimum-radius support and the primary is free to move through the engaged
-range
-
-\begin{equation}
-    s_{\mathrm e}<s<s_{\mathrm u}.
-    \label{eq:free_engaged_shift_interval}
-\end{equation}
-
-No boundary reaction acts on the shift coordinate. The free variables are
-exactly the eight instantaneous quantities collected in
-\Cref{eq:engaged_instantaneous_unknowns},
-
-\[
-    \dot\omega_p,\;
-    \dot\omega_s,\;
-    \dot v_b,\;
-    \ddot s,\;
-    N_p,\;
-    N_s,\;
-    \lambda_p,\;
-    \lambda_s.
-\]
-
-The governing equations are likewise exactly those assembled in
-\Cref{sec:engaged_dynamic_closure}: the primary and secondary rotational
-balances, the two axial balances, complete-belt transport, closed-loop tension
-compatibility, and the two stick-or-slip contact relations. No additional
-equation is needed in the interior because no travel boundary is active.
-
-This interval therefore requires no new derivation. Its importance here is
-only to locate the freely shifting system within the complete physical travel:
-it is the interior solution between the low-ratio support and the upper
-primary stop.
-
-% ---------------------------------------------------------------------------
-\subsection{Fully Closed Primary Stop}
+\subsubsection{Engaged Upper Primary Stop}
 \label{sec:fully_closed_primary_stop}
 
-The freely shifting equations cease to apply once the primary reaches its
-maximum closing travel. At
-
-\[
-    s=s_{\mathrm u},
-\]
-
-the primary hardware reaches a rigid metal stop. Unlike first belt contact,
-this is a true kinematic termination of the shift coordinate. Arrival is
-therefore treated as a perfectly inelastic axial impact,
+At maximum shift, the primary movable assembly reaches its closing travel
+limit. A continuous upper-stop interval satisfies
 
 \begin{equation}
     \boxed{
-        s^+=s_{\mathrm u},
-        \qquad
-        \dot s^+=0.
-    }
-    \label{eq:upper_stop_impact}
-\end{equation}
-
-During a continuous upper-stop interval,
-
-\begin{equation}
-    \boxed{
-        s=s_{\mathrm u},
+        s=s_{\max},
         \qquad
         \dot s=0,
         \qquad
@@ -9289,284 +8828,689 @@ During a continuous upper-stop interval,
     \label{eq:upper_stop_kinematics}
 \end{equation}
 
-Both pulley contacts remain engaged, and the secondary is assumed not to have
-reached an independent shaft or opening limit. The governing equations are
-therefore the same fixed-shift engaged equations used at the low-ratio seat,
-with all geometry evaluated at \(s=s_{\mathrm u}\). For a chosen
-\((\lambda_p,\lambda_s)\), the free linear unknowns are
-
-\[
-    \dot\omega_p,
-    \qquad
-    \dot\omega_s,
-    \qquad
-    \dot v_b,
-    \qquad
-    N_p,
-    \qquad
-    N_s,
-    \qquad
-    R_{\mathrm u},
-\]
-
-where \(R_{\mathrm u}\) is the upper-stop reaction acting in the opening
-direction.
-
-The primary and secondary rotational equations are
+The engaged contact and belt equations again remain active. Here the primary
+axial row is replaced by \(\ddot s=0\), while the secondary axial balance
+remains part of the simultaneous mechanical solve. The omitted primary row
+recovers the opening-direction force supplied by the upper stop:
 
 \begin{equation}
     \boxed{
-        \tau_{\mathrm B,p}
-        -
-        r_{p,\mathrm{eff}}\lambda_pN_p
+        F_{\mathrm{stop,max}}
         =
-        \left[
-            I_{\mathrm B,p}
-            +
-            I_{p,\mathrm{const}}
-            +
-            J_{f,p}(s_{\mathrm u})
-        \right]
-        \dot\omega_p,
+        \left.
+        F_{p,\mathrm{free}}
+        \right|_{s=s_{\max},\,\dot s=\ddot s=0}.
     }
-    \label{eq:upper_stop_primary_rotation}
+    \label{eq:upper_stop_reaction}
 \end{equation}
 
-and
+A positive value means the unconstrained primary would continue closing and
+the stop must push it open. The upper-stop regime is therefore admissible
+while
 
 \begin{equation}
     \boxed{
-        \tau_{\mathrm B,s}
-        -
-        r_{s,\mathrm{eff}}\lambda_sN_s
-        =
-        \left(
-            I_{\mathrm B,s}
-            +
-            I_{s,F}
-            +
-            I_{s,M}
-        \right)
-        \dot\omega_s.
-    }
-    \label{eq:upper_stop_secondary_rotation}
-\end{equation}
-
-The secondary axial balance is
-\Cref{eq:low_seat_secondary_axial} evaluated at \(s=s_{\mathrm u}\), while
-the belt obeys
-
-\begin{equation}
-    \boxed{
-        m_b\dot v_b
-        =
-        \lambda_pN_p+\lambda_sN_s,
-    }
-    \label{eq:upper_stop_belt_transport}
-\end{equation}
-
-together with the fixed-geometry form of
-\Cref{eq:closed_belt_tension_compatibility}.
-
-The primary axial balance now recovers the stop reaction with the opposite
-sign from the low-ratio support. A positive \(R_{\mathrm u}\) acts in the
-opening direction and opposes further closure:
-
-\begin{equation}
-\boxed{
-    0
-    =
-    \frac{1}{2}\omega_p^2\frac{dJ_{f,p}}{ds}
-    -
-    k_p\left(x_{p,\mathrm{pre}}+s_{\mathrm u}\right)
-    -
-    \frac{N_p}{2}\cos\beta
-    -
-    R_{\mathrm u}.
-}
-    \label{eq:upper_stop_reaction_balance}
-\end{equation}
-
-The stop may push open but cannot pull closed, so the constrained state is
-admissible only while
-
-\begin{equation}
-    \boxed{
-        R_{\mathrm u}\geq 0.
+        F_{\mathrm{stop,max}}\geq0.
     }
     \label{eq:upper_stop_admissibility}
 \end{equation}
 
-If the recovered reaction reaches zero and the unconstrained tendency is
-toward decreasing \(s\), the metal stop is no longer needed and the CVT
-releases directly into free engaged backshift. The stick--slip logic at the
-two pulley contacts is unchanged by this release; only the shift constraint is
-removed and \(\ddot s\) again becomes an unknown of the free engaged closure.
+When this reaction reaches zero and the free tendency is toward decreasing
+\(s\), the stop releases without an impulse. The free engaged equations are
+then reevaluated at the same position and velocity state.
 
 % ---------------------------------------------------------------------------
-\subsection{Complete Operating-Regime Map}
-\label{sec:complete_operating_regime_map}
+\subsection{Continuous Deadzone Regimes}
+\label{sec:deadzone_continuous_regimes}
 
-The physical travel limits now complete the formulation over the entire
-primary range. What initially appears to be a collection of special cases
-reduces to five operating regimes connected by the same few ideas: loss or
-creation of primary belt contact, free motion of the shared shift coordinate,
-and unilateral reactions at physical boundaries.
+When the primary sheaves are separated from the belt, the primary contact
+resultant and belt torque are absent:
 
-The complete sequence is
+\begin{equation}
+    \boxed{
+        N_p=0,
+        \qquad
+        \tau_p=0.
+    }
+    \label{eq:deadzone_primary_disengaged}
+\end{equation}
+
+No primary traction utilization exists in this topology. The two-wrap tension
+closure also no longer describes the slack primary side. Under
+\AssRef{assump:deadzone_belt_closure}, the entire belt is instead carried by
+the fully closed secondary at its effective radius. Define
+
+\begin{equation}
+    r_{s,\mathrm{eff,dz}}
+    \equiv
+    r_{s,\mathrm{eff}}(s_{\mathrm{dz}}).
+    \label{eq:deadzone_secondary_effective_radius}
+\end{equation}
+
+The deadzone lock is then
+
+\begin{equation}
+    \boxed{
+        v_b
+        =
+        r_{s,\mathrm{eff,dz}}\omega_s.
+    }
+    \label{eq:deadzone_secondary_lock}
+\end{equation}
+
+The secondary radius is fixed throughout the deadzone, so differentiating the
+constraint gives
+
+\begin{equation}
+    \boxed{
+        \dot v_b
+        =
+        r_{s,\mathrm{eff,dz}}\dot\omega_s.
+    }
+    \label{eq:deadzone_belt_acceleration_lock}
+\end{equation}
+
+The belt transport inertia can consequently be reflected to the secondary
+shaft. The secondary and belt obey
+
+\begin{equation}
+    \boxed{
+        \tau_{\mathrm B,s}
+        =
+        \left[
+            I_{\mathrm B,s}
+            +I_{s,F}
+            +I_{s,M}
+            +m_b r_{s,\mathrm{eff,dz}}^{2}
+        \right]
+        \dot\omega_s.
+    }
+    \label{eq:deadzone_secondary_rotation}
+\end{equation}
+
+The effective radius appears in both
+\Cref{eq:deadzone_secondary_lock,eq:deadzone_secondary_rotation} because it is
+the tangential no-slip radius relating belt transport to shaft rotation. The
+belt mass itself remains the complete belt mass \(m_b\); only its transport
+speed has been referred to the shaft.
+
+\subsubsection{Free Primary Motion Through the Deadzone}
+\label{sec:free_primary_deadzone}
+
+For
+
+\begin{equation}
+    0<s<s_{\mathrm{dz}},
+    \label{eq:deadzone_shift_interval}
+\end{equation}
+
+the primary movable assembly is free. Its previously derived rotational and
+axial balances are evaluated with the belt quantities in
+\Cref{eq:deadzone_primary_disengaged} removed. Those two balances determine
+\(\dot\omega_p\) and \(\ddot s\) from the same primary mechanism used while
+engaged; entering the deadzone does not freeze the flyweights, ramp, spring,
+or retained primary inertia. The secondary relation in
+\Cref{eq:deadzone_secondary_rotation} determines \(\dot\omega_s\), and
+\Cref{eq:deadzone_belt_acceleration_lock} then determines \(\dot v_b\).
+
+Thus the free deadzone returns
+
+\begin{equation}
+    \boxed{
+        \dot\omega_p,
+        \qquad
+        \dot\omega_s,
+        \qquad
+        \dot v_b,
+        \qquad
+        \ddot s,
+    }
+    \label{eq:deadzone_free_instantaneous_results}
+\end{equation}
+
+without solving for \(N_p\), \(N_s\), \(\lambda_p\), \(\lambda_s\), or a
+closed-loop tension field. The deadzone belt--secondary lock replaces those
+contact-level quantities rather than introducing another contact branch.
+
+As in the engaged case, the strict interval in
+\Cref{eq:deadzone_shift_interval} identifies the ordinary interior. The free
+deadzone closure may also be evaluated at \(s=0\) while the lower stop is
+releasing, or at \(s=s_{\mathrm{dz}}\) while the primary is opening away from
+the engagement boundary.
+
+\subsubsection{Fully Open Primary Stop}
+\label{sec:fully_open_primary_stop}
+
+At the fully open primary stop,
+
+\begin{equation}
+    \boxed{
+        s=0,
+        \qquad
+        \dot s=0,
+        \qquad
+        \ddot s=0.
+    }
+    \label{eq:lower_stop_kinematic_constraint}
+\end{equation}
+
+The primary remains disengaged and the secondary--belt lock remains active.
+The primary axial row is replaced by \(\ddot s=0\); its rotational balance is
+evaluated at fixed shift, and the omitted axial row recovers the force exerted
+by the lower stop. This stop pushes in the positive, closing direction, so
+
+\begin{equation}
+    \boxed{
+        F_{\mathrm{stop},0}
+        =
+        -
+        \left.
+        F_{p,\mathrm{free}}
+        \right|_{s=0,\,\dot s=\ddot s=0,\,N_p=0}.
+    }
+    \label{eq:lower_stop_reaction}
+\end{equation}
+
+The minus sign appears because the lower stop supports an unconstrained
+opening tendency, opposite the positive primary closing direction. Its
+unilateral admissibility condition is
+
+\begin{equation}
+    \boxed{
+        F_{\mathrm{stop},0}\geq0.
+    }
+    \label{eq:lower_stop_admissibility}
+\end{equation}
+
+If this reaction becomes negative, holding the primary open would require the
+stop to pull. The constraint releases and the free deadzone closure is
+evaluated at the same state.
+
+The equations above define continuous evolution within each structural
+arrangement. Reaching a boundary with finite speed requires one additional
+piece: the velocities must be transferred into the tangent space allowed by
+the new arrangement.
+
+% ---------------------------------------------------------------------------
+\subsection{Momentum-Consistent Boundary Transitions}
+\label{sec:boundary_transition_law}
+
+Collect the four retained generalized velocities as
+
+\begin{equation}
+    \boldsymbol{\nu}
+    =
+    \begin{bmatrix}
+        \omega_p &
+        \omega_s &
+        v_b &
+        \dot s
+    \end{bmatrix}^{\mathsf T}.
+    \label{eq:boundary_event_velocity_vector}
+\end{equation}
+
+At a fixed event configuration, these four quantities determine the physical
+velocities of every retained inertial component. Let
+
+\begin{equation}
+    \mathbf{y}_q
+    =
+    \mathbf{J}_q\boldsymbol{\nu},
+    \label{eq:boundary_event_physical_velocity_map}
+\end{equation}
+
+collect those component velocities in mechanical regime \(q\). The rows of
+\(\mathbf{J}_q\) contain the kinematic maps already derived for shaft
+rotation, primary translation and flyweight motion, secondary translation and
+helix-relative rotation, and belt transport. The diagonal matrix
+\(\mathbf{W}\) contains the corresponding masses and inertias, including the
+equivalent inertias supplied through the shaft interfaces. The kinetic energy
+represented by a regime is therefore
+
+\begin{equation}
+    \mathcal{T}_q
+    =
+    \frac{1}{2}
+    \boldsymbol{\nu}^{\mathsf T}
+    \mathbf{J}_q^{\mathsf T}
+    \mathbf{W}
+    \mathbf{J}_q
+    \boldsymbol{\nu}.
+    \label{eq:boundary_event_kinetic_energy}
+\end{equation}
+
+The physical components do not change identity when a boundary is crossed,
+but the matrix mapping the reduced velocities into their motion can change.
+At engagement, for example, the deadzone-side mapping holds the secondary
+axial and helix motion fixed, whereas the engaged-side mapping makes those
+motions depend on \(\dot s\). Copying the four entries of
+\(\boldsymbol{\nu}\) across that change would not, in general, preserve the
+momentum of the physical components and can create kinetic energy.
+
+Let \(\mathbf{C}_{+}\boldsymbol{\nu}^{+}=\mathbf{0}\) collect any velocity
+constraints active immediately after an event. Projecting the incoming
+physical momentum onto every admissible post-event virtual velocity gives
+
+\begin{equation}
+    \mathbf{J}_{+}^{\mathsf T}\mathbf{W}
+    \left(
+        \mathbf{J}_{+}\boldsymbol{\nu}^{+}
+        -
+        \mathbf{J}_{-}\boldsymbol{\nu}^{-}
+    \right)
+    +
+    \mathbf{C}_{+}^{\mathsf T}\boldsymbol{\Gamma}
+    =
+    \mathbf{0},
+    \label{eq:boundary_event_impulse_balance}
+\end{equation}
+
+where \(\boldsymbol{\Gamma}\) contains the impulses enforcing the newly active
+constraints. Together with
+\(\mathbf{C}_{+}\boldsymbol{\nu}^{+}=\mathbf{0}\), this gives the
+mass-metric projection
 
 \begin{equation}
 \boxed{
-\begin{array}{c}
-\text{deadzone lower stop}
-\\[4pt]
-\updownarrow
-\\[4pt]
-\text{deadzone free}
-\\[4pt]
-\updownarrow
-\\[4pt]
-\text{engaged low-ratio seat}
-\\[4pt]
-\updownarrow
-\\[4pt]
-\text{engaged free shift}
-\\[4pt]
-\updownarrow
-\\[4pt]
-\text{engaged upper stop}.
-\end{array}
+\begin{bmatrix}
+    \mathbf{J}_{+}^{\mathsf T}\mathbf{W}\mathbf{J}_{+}
+    &
+    \mathbf{C}_{+}^{\mathsf T}
+    \\
+    \mathbf{C}_{+}
+    &
+    \mathbf{0}
+\end{bmatrix}
+\begin{bmatrix}
+    \boldsymbol{\nu}^{+}
+    \\
+    \boldsymbol{\Gamma}
+\end{bmatrix}
+=
+\begin{bmatrix}
+    \mathbf{J}_{+}^{\mathsf T}\mathbf{W}\mathbf{J}_{-}
+    \boldsymbol{\nu}^{-}
+    \\
+    \mathbf{0}
+\end{bmatrix}.
 }
-    \label{eq:complete_cvt_regime_map}
+    \label{eq:boundary_event_velocity_projection}
 \end{equation}
 
-The diagram describes the physical ordering of the five regimes, not a demand
-that every boundary event contain a finite-duration intermediate state. In
-particular, a closing deadzone trajectory that reaches first belt contact with
-\(\dot s>0\) carries that velocity through
-\Cref{eq:first_contact_state_continuity}. If the newly engaged equations admit
-continued closing motion, the low-ratio boundary releases immediately and the
-trajectory enters free engaged shift without an artificial pause at
-\(\dot s=0\).
+The configuration remains continuous through this instantaneous event, so
+\(s^{+}=s^{-}\). The components of \(\boldsymbol{\nu}\), however, are solved
+together rather than copied or reset independently. Under the perfectly
+inelastic event idealization of
+\AssRef{assump:inelastic_constraint_activation}, the projection satisfies
 
-For clarity, the governing content of each regime is summarized below.
+\begin{equation}
+    \boxed{
+        \mathcal{T}^{+}\leq\mathcal{T}^{-}.
+    }
+    \label{eq:boundary_event_energy_nonincrease}
+\end{equation}
+
+Applied torques and other bounded forces contribute no finite impulse over the
+unresolved event duration. Their associated equivalent inertias remain in
+\(\mathbf{W}\), but their continuous torques return only when evolution resumes.
+
+For the ordering in \Cref{eq:boundary_event_velocity_vector}, the elementary
+velocity constraints used below have rows
+
+\begin{equation}
+\begin{aligned}
+    \mathbf{c}_{\mathrm{stop}}
+    &=
+    \begin{bmatrix}0&0&0&1\end{bmatrix},
+    \\
+    \mathbf{c}_{p,\mathrm{stick}}
+    &=
+    \begin{bmatrix}-r_{p,\mathrm{eff}}&0&1&0\end{bmatrix},
+    \\
+    \mathbf{c}_{s,\mathrm{stick}}
+    &=
+    \begin{bmatrix}0&-r_{s,\mathrm{eff}}&1&0\end{bmatrix}.
+\end{aligned}
+    \label{eq:boundary_event_constraint_rows}
+\end{equation}
+
+The stop row imposes \(\dot s^{+}=0\). The other two rows impose the
+shaft-referenced no-slip conditions of
+\Cref{eq:engaged_stick_velocity_constraint}. In accordance with
+\AssRef{assump:impact_tangential_contact}, a contact already sticking before
+the event retains its corresponding row during the projection. A sliding
+contact does not. A newly created primary contact is likewise not assigned an
+impulsive stick row merely because normal contact has formed.
+
+\subsection{Transitions at the Engagement Boundary}
+\label{sec:first_contact_low_ratio}
+
+The two directions through \(s=s_{\mathrm{dz}}\) describe different physical
+events. Closing motion from the deadzone creates primary belt contact and
+activates the engaged geometry. Opening motion from the engaged side brings
+the secondary movable sheave back to its fully closed stop and may allow the
+primary to separate.
+
+\subsubsection{Primary Engagement}
+\label{sec:primary_engagement_transition}
+% Legacy label retired with the velocity-continuity model.
+% \label{sec:first_contact_momentum}
+
+When a deadzone trajectory reaches \(s=s_{\mathrm{dz}}\) with
+\(\dot s^{-}>0\), the pre-event map in
+\Cref{eq:boundary_event_velocity_projection} is the deadzone-side
+\(\mathbf{J}_{-}\), and the post-event map is the engaged-side
+\(\mathbf{J}_{+}\). The deadzone secondary--belt lock already exists and is
+retained through the capture, so \(\mathbf{C}_{+}\) includes the same
+secondary no-slip row \(\mathbf{c}_{s,\mathrm{stick}}\). It does not include
+\(\mathbf{c}_{p,\mathrm{stick}}\), because the primary contact is new.
+
+The event therefore preserves the engagement position while redistributing
+the incoming momentum among primary rotation, secondary rotation, belt
+transport, secondary helix motion, and the remaining shift motion. In
+particular,
+
+\begin{equation}
+    \boxed{
+        s^{+}=s^{-}=s_{\mathrm{dz}},
+        \qquad
+        \boldsymbol{\nu}^{+}
+        =
+        \Delta_{\mathrm{dz}\rightarrow\mathrm{eng}}
+        \left(\boldsymbol{\nu}^{-}\right),
+    }
+    \label{eq:first_contact_state_projection}
+\end{equation}
+
+where \(\Delta_{\mathrm{dz}\rightarrow\mathrm{eng}}\) is the projection in
+\Cref{eq:boundary_event_velocity_projection} with the constraints just
+described. The post-event shift speed may remain positive, but it is not
+assumed equal to its incoming value.
+
+The engaged closure is then solved at the projected state. The new primary
+relative speed from \Cref{eq:engaged_relative_contact_speed} determines
+whether its continuous contact begins in slip or is a candidate for stick. A
+new normal contact therefore activates the primary belt force and torque
+without artificially gluing the two tangential velocities together.
+
+\subsubsection{Backshift to Minimum Ratio}
+\label{sec:low_ratio_return_transition}
+
+When free engaged motion reaches \(s=s_{\mathrm{dz}}\) with
+\(\dot s^{-}<0\), the secondary movable sheave reaches its fully closed metal
+stop. This is not the reverse of first engagement. The impact arrests the
+secondary axial and helix-relative motion, and the corresponding momentum can
+be transferred into the secondary shaft and belt. The primary movable
+assembly is not itself attached to that stop and must not have its velocity
+independently set to zero.
+
+Under the present rigid topology, a finite-speed return continues through
+primary separation while retaining the primary motion compatible with the
+deadzone topology. That transition uses
+\Cref{eq:boundary_event_velocity_projection} with the engaged map before the
+event, the deadzone map afterward, and the secondary--belt lock imposed on the
+post-event velocity. If the motion instead reaches the zero-speed limiting
+state while primary contact and the secondary stop reaction remain
+admissible, the sustained low-ratio seat of
+\Cref{sec:sustained_low_ratio_seat} becomes the continuous successor.
+
+The two possible departures from an established seat are distinct. If
+\(F_{\mathrm{stop,LR}}\) reaches zero and the free engaged tendency is toward
+increasing \(s\), the secondary stop releases into free engaged upshift. If
+the primary contact instead separates, the system enters the deadzone and the
+secondary--belt lock is activated by the same momentum-consistent projection.
+
+Primary separation is not authorized by one signed actuator force or by
+\(N_p=0\) alone. At the seated boundary it requires both
+
+\begin{equation}
+    \boxed{
+        N_p=0,
+        \qquad
+        \ddot s_{\mathrm{cf}}<0,
+    }
+    \label{eq:primary_separation_conditions}
+\end{equation}
+
+where \(\ddot s_{\mathrm{cf}}\) is the acceleration obtained from the
+contact-free primary deadzone balance at the same state. The first condition
+removes the compressive belt support; the second verifies that, once that
+support is removed, the primary actually accelerates open. Requiring both
+prevents a momentary zero normal resultant from causing disengagement when the
+free mechanism would immediately close the contact again.
+
+\begin{remarkbox}[Remark (Rigid low-ratio capture)]
+A perfectly rigid, perfectly inelastic description can generate a shrinking
+sequence of secondary-stop impacts and primary make--break events as the
+remaining shift kinetic energy approaches zero. This sequence introduces no
+additional continuous mechanical regime. A numerical implementation may
+complete the limiting capture once the remaining removable kinetic energy is
+indistinguishable from zero at its working precision; that threshold is a
+numerical completion criterion, not a new physical parameter.
+\end{remarkbox}
+
+% ---------------------------------------------------------------------------
+\subsection{Metal-Stop Arrival and Release}
+\label{sec:metal_stop_transitions}
+
+The lower primary stop is reached from free deadzone motion at \(s=0\) with
+\(\dot s^{-}<0\). The pre- and post-event topology is deadzone, while
+\(\mathbf{C}_{+}\) contains both the stop row and the existing
+secondary--belt lock. The projection sets the compatible post-event shift
+speed to zero without deleting momentum stored in the other retained
+components. The lower-stop closure is then solved and
+\(F_{\mathrm{stop},0}\) is recovered. If that reaction is negative, the
+impact still occurred, but the stop cannot support the following continuous
+motion and releases immediately into free deadzone motion.
+
+The upper primary stop is reached from engaged motion at \(s=s_{\max}\) with
+\(\dot s^{-}>0\). Here the topology remains engaged, the stop row is added,
+and any primary or secondary contact already sticking retains its no-slip row
+through the impact. The complete velocity projection is required because
+removing \(\dot s\) also removes the secondary movable sheave's
+helix-relative velocity. Its angular momentum is redistributed through the
+same impulse balance rather than being discarded by a scalar
+\(\dot s\leftarrow0\) reset.
+
+After the upper-stop projection, the contact branch is reevaluated using the
+fixed-shift closure and \(F_{\mathrm{stop,max}}\) is recovered. A negative
+reaction causes immediate release into free engaged motion. During an
+established stop interval, a reaction reaching zero produces a nonimpulsive
+release: the position and velocities pass through unchanged, and only the
+continuous acceleration law changes.
+
+The physical event surfaces are the exact boundaries
+
+\begin{equation}
+    s=0,
+    \qquad
+    s=s_{\mathrm{dz}},
+    \qquad
+    s=s_{\max}.
+    \label{eq:shift_event_surfaces}
+\end{equation}
+
+Their crossing direction distinguishes arrival from departure and engagement
+from backshift. Numerical event localization may identify a value differing
+from one of these surfaces by roundoff, but that does not move the physical
+boundary or create a tolerance-width regime.
+
+% ---------------------------------------------------------------------------
+\subsection{Successor Admissibility and Complete Regime Map}
+\label{sec:complete_operating_regime_map}
+
+An event does not end when a candidate successor label has been chosen. The
+mechanical closure associated with that successor must be solved at the event
+state, because changing a shift constraint or tangential contact branch
+changes the accelerations, normal resultants, required static tractions, and
+recovered stop reactions together.
+
+The successor can begin a continuous segment only when all conditions that
+define that regime are satisfied:
+
+\begin{itemize}
+    \item every active metal-stop or low-ratio-seat reaction is nonnegative;
+    \item both normal resultants are nonnegative in an engaged regime, with
+          primary separation at the low-ratio boundary governed by
+          \Cref{eq:primary_separation_conditions};
+    \item every sticking or sliding contact satisfies the branch conditions of
+          \Cref{sec:engaged_contact_state_changes}; and
+    \item every imposed velocity constraint is satisfied by the post-event
+          state.
+\end{itemize}
+
+If a candidate contact change makes an already-active stop reaction negative,
+the stop releases at the same event time. Likewise, if a new fixed-shift
+closure changes the admissible contact branch, that branch is selected before
+continuous integration resumes. The model therefore never begins a segment
+under a constraint that would have to pull or under a tangential contact state
+that its own coupled solution cannot support.
+
+The nonnegative belt tension and distributed normal loading required by
+\AssRef{assump:prescribed_belt_path} remain validity conditions on every
+engaged solution. They do not create additional structural regimes in the
+present model: violation means that the prescribed engaged belt path itself is
+no longer an admissible description.
+
+\Cref{tab:cvt_instantaneous_results_by_regime} collects the five structural
+arrangements and the quantities returned by their continuous closures. The
+three engaged rows are each paired with one of the four contact combinations
+in \Cref{eq:engaged_contact_solve_summary}; those contact combinations are
+subregimes of the same structural mechanics rather than additional pulley
+configurations.
 
 \begin{table}[H]
 \centering
 \small
-\begin{tabular}{|p{0.14\textwidth}|p{0.16\textwidth}|p{0.22\textwidth}|p{0.28\textwidth}|}
-\hline
-\textbf{Regime}
+\begin{tabular}{@{}
+>{\raggedright\arraybackslash}p{0.16\textwidth}
+>{\raggedright\arraybackslash}p{0.20\textwidth}
+>{\raggedright\arraybackslash}p{0.31\textwidth}
+>{\raggedright\arraybackslash}p{0.24\textwidth}@{}}
+\toprule
+\textbf{Structural regime}
 &
-\textbf{Shift condition}
+\textbf{Active mechanical condition}
 &
-\textbf{Free instantaneous quantities}
+\textbf{Instantaneous CVT results}
 &
-\textbf{Governing relations}
+\textbf{Continuation condition}
 \\
-\hline
+\midrule
 
 Deadzone lower stop
 &
-\(s=s_0,\ \dot s=\ddot s=0\)
+Primary disengaged; secondary--belt lock;
+\(s=0\), \(\dot s=\ddot s=0\)
 &
-\(\dot\omega_p,\dot\omega_s,\dot v_b,R_0\)
+\(\dot\omega_p\), \(\dot\omega_s\), \(\dot v_b\), and
+\(F_{\mathrm{stop},0}\)
 &
-Primary rotation with \(\tau_p=0\);
-deadzone secondary--belt rotation;
-\(\dot v_b=r_{s,\mathrm e}\dot\omega_s\);
-primary axial balance recovers \(R_0\).
-\\
-\hline
+\(F_{\mathrm{stop},0}\geq0\)
+\\[7pt]
 
 Deadzone free
 &
-\(s_0<s<s_{\mathrm e}\);
-\(s,\dot s\) free
+Primary disengaged; secondary--belt lock; shift unconstrained
 &
-\(\dot\omega_p,\dot\omega_s,\dot v_b,\ddot s\)
+\(\dot\omega_p\), \(\dot\omega_s\), \(\dot v_b\), and \(\ddot s\)
 &
-Primary rotation and axial motion with
-\(N_p=\tau_p=0\);
-deadzone secondary--belt rotation;
-\(\dot v_b=r_{s,\mathrm e}\dot\omega_s\).
-\\
-\hline
+State remains inside the deadzone until a directed boundary event
+\\[7pt]
 
 Engaged low-ratio seat
 &
-\(s=s_{\mathrm e},\ \dot s=\ddot s=0\)
-for a sustained seated interval
+Both pulley contacts; fully closed secondary stop;
+\(s=s_{\mathrm{dz}}\), \(\dot s=\ddot s=0\)
 &
-\(\dot\omega_p,\dot\omega_s,\dot v_b,N_p,N_s,R_{\mathrm e}\),
-plus any static \(\lambda_j\)
+\(\dot\omega_p\), \(\dot\omega_s\), \(\dot v_b\), \(N_p\), \(N_s\),
+\(\lambda_p\), \(\lambda_s\), and \(F_{\mathrm{stop,LR}}\)
 &
-Fixed-shift engaged rotational, secondary axial, belt transport, and
-tension-loop equations; primary axial balance recovers
-\(R_{\mathrm e}\); two contact relations determine the \(\lambda_j\).
-\\
-\hline
+Admissible contact branch,
+\(F_{\mathrm{stop,LR}}\geq0\), and no primary separation
+\\[7pt]
 
 Engaged free shift
 &
-\(s_{\mathrm e}<s<s_{\mathrm u}\);
-\(s,\dot s\) free
+Both pulley contacts; shift unconstrained
 &
-\(\dot\omega_p,\dot\omega_s,\dot v_b,\ddot s,N_p,N_s,\lambda_p,\lambda_s\)
+The eight quantities in \Cref{eq:engaged_instantaneous_unknowns}
 &
-The complete freely shifting engaged closure of
-\Cref{sec:engaged_dynamic_closure}.
-\\
-\hline
+Admissible contact branch and no directed shift-boundary arrival
+\\[7pt]
 
 Engaged upper stop
 &
-\(s=s_{\mathrm u},\ \dot s=\ddot s=0\)
+Both pulley contacts; primary upper stop;
+\(s=s_{\max}\), \(\dot s=\ddot s=0\)
 &
-\(\dot\omega_p,\dot\omega_s,\dot v_b,N_p,N_s,R_{\mathrm u}\),
-plus any static \(\lambda_j\)
+\(\dot\omega_p\), \(\dot\omega_s\), \(\dot v_b\), \(N_p\), \(N_s\),
+\(\lambda_p\), \(\lambda_s\), and \(F_{\mathrm{stop,max}}\)
 &
-Fixed-shift engaged rotational, secondary axial, belt transport, and
-tension-loop equations; primary axial balance recovers
-\(R_{\mathrm u}\); two contact relations determine the \(\lambda_j\).
+Admissible contact branch and
+\(F_{\mathrm{stop,max}}\geq0\)
 \\
-\hline
+\bottomrule
 \end{tabular}
-\caption{Governing content of the five CVT operating regimes. A slipping
-contact supplies its \(\lambda_j\) directly, while each sticking contact adds
-the static traction unknown and corresponding no-slip root condition developed
-in \Cref{sec:engaged_dynamic_closure}.}
-\label{tab:complete_cvt_regime_summary}
+\caption{Instantaneous CVT results and continuation conditions for the five
+structural operating regimes. Quantities fixed by an active constraint, such
+as \(\ddot s=0\), are shown in the mechanical-condition column rather than as
+free results.}
+\label{tab:cvt_instantaneous_results_by_regime}
+% Legacy table label retained as a comment until downstream references are revised.
+% \label{tab:complete_cvt_regime_summary}
 \end{table}
 
-Three types of transition can now be distinguished without introducing new
-continuous mechanics. A metal stop is reached when \(s\) reaches \(s_0\) or
-\(s_{\mathrm u}\); the axial impact is taken as perfectly inelastic and the
-corresponding unilateral reaction determines whether the stop can continue to
-hold. Primary belt contact appears or disappears at \(s=s_{\mathrm e}\);
-first contact preserves the incoming shift velocity rather than replacing it
-with an impact condition. Finally, the low-ratio support is active only while
-the belt remains engaged at the minimum primary radius and its generalized
-reaction is nonnegative.
+The transition graph is consequently branched rather than a reversible linear
+sequence. Deadzone engagement can capture directly into free engaged motion.
+Return to the low-ratio boundary can produce secondary-stop impact followed by
+primary separation, while an established low-ratio seat can release either to
+free engaged upshift or to the deadzone for different physical reasons. The
+upper and lower metal stops likewise retain the system only when their
+post-event reactions remain compressive.
 
-The five regimes are therefore not five independent models. The deadzone uses
-one reduced primary-disengaged system in which the primary sheave moves without
-belt load and the belt is kinematically carried by the fully closed secondary.
-The three engaged regimes all use the contact closure of
-\Cref{sec:engaged_dynamic_closure}; the low-ratio and upper boundaries simply
-replace the free shift acceleration by a boundary reaction when the
-corresponding unilateral constraint is active. Between them lies the
-unconstrained engaged system already derived.
+If \(s_{\mathrm{dz}}=0\), the deadzone has zero width. The two deadzone rows in
+\Cref{tab:cvt_instantaneous_results_by_regime} then disappear, and the shared
+lower boundary is the engaged low-ratio seat. No separate neutral successor is
+introduced.
 
-The operating limits complete the mechanical domain of the CVT. The primary
-may begin at rest against its open stop, release when the flyweights overcome
-the spring, cross the deadzone, contact the belt without losing its axial
-momentum, remain at or depart from the low-ratio boundary according to the
-coupled belt--secondary response, shift freely while both pulley contacts are
-engaged, and finally terminate its closing travel against the upper mechanical
-stop. Every continuous segment is therefore governed by an explicit reduction
-of the same pulley, belt, and contact mechanics developed in the preceding
-sections.
+The complete CVT evolution is now determined by one consistent rule. The
+current state and regime select a continuous closure; that closure advances
+the state until one of its defining conditions reaches a boundary; any newly
+active kinematic constraint then transfers the retained momentum through
+\Cref{eq:boundary_event_velocity_projection}; and the successor closure is
+accepted only after its own contact and unilateral-reaction conditions have
+been satisfied.
+
+% ---------------------------------------------------------------------------
+% Retired labels from the previous Section 3.6 draft. They remain commented so
+% downstream references can be reconciled explicitly if required.
+% \label{eq:lower_shift_stop_position}
+% \label{eq:active_shift_travel_limit}
+% \label{eq:upper_shift_stop_position}
+% \label{eq:lower_stop_primary_disengaged}
+% \label{eq:lower_stop_primary_rotation}
+% \label{eq:deadzone_primary_rotation}
+% \label{eq:deadzone_primary_axial}
+% \label{eq:first_contact_state_continuity}
+% \label{eq:low_seat_primary_rotation}
+% \label{eq:low_seat_secondary_rotation}
+% \label{eq:low_seat_secondary_axial}
+% \label{eq:low_seat_belt_transport}
+% \label{eq:low_ratio_support_reaction_balance}
+% \label{eq:low_ratio_primary_contact_admissibility}
+% \label{eq:upper_stop_impact}
+% \label{eq:upper_stop_primary_rotation}
+% \label{eq:upper_stop_secondary_rotation}
+% \label{eq:upper_stop_belt_transport}
+% \label{eq:upper_stop_reaction_balance}
+% \label{eq:complete_cvt_regime_map}
+
+% Implementation note: exact event surfaces use only roundoff-sized identity
+% snapping. The floating-point energy criterion used to complete the rigid
+% low-ratio capture limit belongs with the implementation details rather than
+% being introduced as another physical regime here.
+
 
 \chapter{Results and Discussion}
 \section{Simulation Results}
@@ -12044,4 +11988,3 @@ The purpose of this section is therefore not to alter the primary force or rotat
 Once these quantities are available, the mechanism can be substituted into the same general primary equations without any further change to the CVT model.
 
 \end{document}
-
