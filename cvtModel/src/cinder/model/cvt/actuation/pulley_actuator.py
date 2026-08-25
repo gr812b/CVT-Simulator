@@ -9,8 +9,10 @@ from .types import (
     ActuatorInspection,
     AxialForceLaw,
     InspectableAxialForceLaw,
+    KineticPulleyElement,
     PulleyActuationContext,
     PulleyElementContribution,
+    PulleyKineticMode,
 )
 
 
@@ -49,6 +51,17 @@ class PulleyActuator:
                     )
                 )
         return contribution
+
+    def kinetic_modes(
+        self, context: PulleyActuationContext
+    ) -> tuple[PulleyKineticMode, ...]:
+        """Collect kinetic modes from every mounted element that provides them."""
+
+        modes: list[PulleyKineticMode] = []
+        for force_law in self._force_laws:
+            if isinstance(force_law, KineticPulleyElement):
+                modes.extend(force_law.kinetic_modes(context))
+        return tuple(modes)
 
     def inspect(self, context: PulleyActuationContext) -> ActuatorInspection:
         """Return named terms without changing the RHS calculation path."""

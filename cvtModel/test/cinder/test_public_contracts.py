@@ -83,7 +83,12 @@ class PublicContractsTest(unittest.TestCase):
         self.assertEqual(conventions["canonical_unit_system"], "SI")
         self.assertEqual(
             {item["kind"] for item in catalog["components"]},
-            {"axial_spring", "centrifugal_ramp", "helical_torque_reaction"},
+            {
+                "axial_spring",
+                "centrifugal_ramp",
+                "fixed_pivot_roller_flyweight",
+                "helical_torque_reaction",
+            },
         )
 
     def test_validator_reports_optional_wrap_thresholds_as_structured_findings(

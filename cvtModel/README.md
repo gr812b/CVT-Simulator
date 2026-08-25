@@ -81,6 +81,7 @@ flake8 src/cinder test/cinder examples
 - [Public Contract API](docs/PUBLIC_CONTRACT_API.md)
 - [Geometry Study API](docs/GEOMETRY_STUDY_API.md)
 - [Actuation Study API](docs/ACTUATION_STUDY_API.md)
+- [Fixed-pivot Flyweight](docs/FIXED_PIVOT_FLYWEIGHT.md)
 
 CINDER’s stable external boundary is `cinder.contracts`. It provides versioned
 assembly documents, component discovery, preflight validation, JSON-safe

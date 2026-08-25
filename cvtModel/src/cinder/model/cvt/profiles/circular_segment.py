@@ -93,6 +93,9 @@ class CircularSegment(RampSegment):
             value=self.radius * (sin_theta - sin(self._theta_start)),
             first_derivative=-cos_theta / sin_theta,
             second_derivative=-1.0 / (self.radius * sin_theta**3),
+            third_derivative=(
+                -3.0 * cos_theta / (self.radius**2 * sin_theta**5)
+            ),
         )
 
     def inverse_local_value(self, value: float) -> float:

@@ -263,9 +263,7 @@ def build_deadzone_free_derivative(
     primary_angular_acceleration, shift_acceleration = solve_deadzone_primary_free(
         snapshot
     )
-    secondary_angular_acceleration = (
-        snapshot.secondary_external_torque / snapshot.secondary_belt_locked_inertia
-    )
+    secondary_angular_acceleration = solve_deadzone_secondary_rotation(snapshot)
 
     return CVTStateDerivative(
         primary_angular_acceleration=primary_angular_acceleration,
@@ -276,3 +274,38 @@ def build_deadzone_free_derivative(
         shift_position_rate=snapshot.state.shift_speed,
         shift_acceleration=shift_acceleration,
     )
+
+
+def solve_deadzone_secondary_rotation(snapshot: DeadzoneSnapshot) -> float:
+    """Solve the belt-locked secondary shaft with all mounted element torques.
+
+    Secondary local axial travel is fixed in deadzone. A helix therefore
+    contributes its movable-member absolute inertia, while any flyweight
+    contributes its current shaft-axis inertia. The rigid term excludes
+    inertia already returned by those mounted elements.
+    """
+
+    rotation = (
+        AffineClosureScalar(bias=snapshot.secondary_external_torque)
+        + snapshot.secondary_mechanism.shaft_torque
+        + AffineClosureScalar(
+            gains=ClosureGains(
+                secondary_angular_acceleration=(
+                    -snapshot.secondary_rigid_belt_locked_inertia
+                )
+            )
+        )
+    )
+    gains = rotation.gains
+    for unknown in ClosureUnknown:
+        if unknown is ClosureUnknown.SECONDARY_ANGULAR_ACCELERATION:
+            continue
+        if gains[unknown] != 0.0:
+            raise RuntimeError(
+                "A secondary-mounted element introduced a deadzone coupling "
+                f"to unsupported closure unknown {unknown.name}."
+            )
+    coefficient = gains.secondary_angular_acceleration
+    if coefficient == 0.0:
+        raise RuntimeError("Deadzone secondary rotational closure is singular.")
+    return float(-rotation.bias / coefficient)

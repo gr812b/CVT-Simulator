@@ -45,6 +45,7 @@ class LinearSegment(RampSegment):
             value=self._slope * x_local,
             first_derivative=self._slope,
             second_derivative=0.0,
+            third_derivative=0.0,
         )
 
     def inverse_local_value(self, value: float) -> float:

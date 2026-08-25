@@ -13,6 +13,8 @@ from .forces import (
     AxialSpringForceSpec,
     CentrifugalRampForce,
     CentrifugalRampForceSpec,
+    FixedPivotFlyweightForce,
+    FixedPivotFlyweightForceSpec,
     HelicalTorqueReactionForce,
     HelicalTorqueReactionSpec,
 )
@@ -28,6 +30,21 @@ class CentrifugalActuatorSpec:
 def build_centrifugal_actuator(spec: CentrifugalActuatorSpec) -> PulleyActuator:
     return PulleyActuator(
         CentrifugalRampForce(spec.centrifugal_ramp),
+        AxialSpringForce(spec.axial_spring),
+    )
+
+
+@dataclass(frozen=True, slots=True)
+class FixedPivotCentrifugalActuatorSpec:
+    fixed_pivot_flyweight: FixedPivotFlyweightForceSpec
+    axial_spring: AxialSpringForceSpec
+
+
+def build_fixed_pivot_centrifugal_actuator(
+    spec: FixedPivotCentrifugalActuatorSpec,
+) -> PulleyActuator:
+    return PulleyActuator(
+        FixedPivotFlyweightForce(spec.fixed_pivot_flyweight),
         AxialSpringForce(spec.axial_spring),
     )
 

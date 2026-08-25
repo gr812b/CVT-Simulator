@@ -73,6 +73,59 @@ class PulleyElement(Protocol):
 
 
 @dataclass(frozen=True, slots=True)
+class PulleyKineticMode:
+    """One physical velocity mode retained by a mounted pulley element.
+
+    The mode contributes
+
+        T = 1/2 * inertia * (a_omega * omega + a_x * x_dot)^2
+
+    in the pulley-local shaft and closing-coordinate velocities.  Keeping this
+    contract on the element lets continuous dynamics and hybrid event metrics
+    consume the same mechanism without testing for concrete force-law classes.
+    """
+
+    inertia: float
+    shaft_speed_coefficient: float = 0.0
+    axial_speed_coefficient: float = 0.0
+
+    def __post_init__(self) -> None:
+        for name, value in (
+            ("inertia", self.inertia),
+            ("shaft_speed_coefficient", self.shaft_speed_coefficient),
+            ("axial_speed_coefficient", self.axial_speed_coefficient),
+        ):
+            if not isfinite(value):
+                raise ValueError(f"{name} must be finite.")
+        if self.inertia < 0.0:
+            raise ValueError("inertia must be non-negative.")
+        if (
+            self.inertia > 0.0
+            and self.shaft_speed_coefficient == 0.0
+            and self.axial_speed_coefficient == 0.0
+        ):
+            raise ValueError(
+                "A nonzero kinetic mode requires a shaft or axial velocity coefficient."
+            )
+
+    def local_speed(self, *, shaft_speed: float, axial_speed: float) -> float:
+        return (
+            self.shaft_speed_coefficient * shaft_speed
+            + self.axial_speed_coefficient * axial_speed
+        )
+
+
+@runtime_checkable
+class KineticPulleyElement(Protocol):
+    """Optional kinetic-energy contract for a mounted pulley element."""
+
+    def kinetic_modes(
+        self, context: "PulleyActuationContext"
+    ) -> tuple[PulleyKineticMode, ...]:
+        """Return the element's physical velocity modes at one configuration."""
+
+
+@dataclass(frozen=True, slots=True)
 class PulleyClosureChannels:
     """Closure unknowns belonging to one mounted pulley shaft."""
 
@@ -157,6 +210,7 @@ class PulleyActuationContext:
     axial_speed: float
     shaft_speed: float
     shift_speed: float = 0.0
+    axial_acceleration: AffineClosureScalar | None = None
     closure_channels: PulleyClosureChannels | None = None
     helical_coupling: HelicalCouplingState | None = None
     movable_member_rotational_inertia: float | None = None
@@ -175,6 +229,12 @@ class PulleyActuationContext:
             self.closure_channels, PulleyClosureChannels
         ):
             raise TypeError("closure_channels must be a PulleyClosureChannels or None.")
+        if self.axial_acceleration is not None and not isinstance(
+            self.axial_acceleration, AffineClosureScalar
+        ):
+            raise TypeError(
+                "axial_acceleration must be an AffineClosureScalar or None."
+            )
         if self.helical_coupling is not None:
             if not isinstance(self.helical_coupling, HelicalCouplingState):
                 raise TypeError(

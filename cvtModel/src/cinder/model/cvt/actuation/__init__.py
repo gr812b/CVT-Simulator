@@ -2,15 +2,28 @@
 
 from .conventional import (
     CentrifugalActuatorSpec,
+    FixedPivotCentrifugalActuatorSpec,
     TorqueReactiveActuatorSpec,
     build_centrifugal_actuator,
+    build_fixed_pivot_centrifugal_actuator,
     build_torque_reactive_actuator,
+)
+from .fixed_pivot_flyweight import (
+    FixedPivotFlyweightMap,
+    FixedPivotFlyweightSample,
+    FlyweightMassGeometry,
+    PivotedRollerContactSample,
+    PivotedRollerFollowerFlyweightMap,
+    PivotedRollerFollowerGeometry,
+    PivotedRollerFollowerGeometrySpec,
 )
 from .forces import (
     AxialSpringForce,
     AxialSpringForceSpec,
     CentrifugalRampForce,
     CentrifugalRampForceSpec,
+    FixedPivotFlyweightForce,
+    FixedPivotFlyweightForceSpec,
     HelicalTorqueReactionForce,
     HelicalTorqueReactionSpec,
 )
@@ -19,12 +32,14 @@ from .types import (
     ActuationContribution,
     ActuatorInspection,
     AxialForceLaw,
-    InspectableAxialForceLaw,
     HelicalCouplingState,
+    InspectableAxialForceLaw,
+    KineticPulleyElement,
     PulleyActuationContext,
     PulleyClosureChannels,
     PulleyElement,
     PulleyElementContribution,
+    PulleyKineticMode,
 )
 
 __all__ = [
@@ -37,15 +52,28 @@ __all__ = [
     "CentrifugalActuatorSpec",
     "CentrifugalRampForce",
     "CentrifugalRampForceSpec",
+    "FixedPivotCentrifugalActuatorSpec",
+    "FixedPivotFlyweightForce",
+    "FixedPivotFlyweightForceSpec",
+    "FixedPivotFlyweightMap",
+    "FixedPivotFlyweightSample",
+    "FlyweightMassGeometry",
     "HelicalCouplingState",
     "HelicalTorqueReactionForce",
     "HelicalTorqueReactionSpec",
+    "KineticPulleyElement",
     "PulleyActuationContext",
     "PulleyActuator",
     "PulleyClosureChannels",
     "PulleyElement",
     "PulleyElementContribution",
+    "PulleyKineticMode",
+    "PivotedRollerContactSample",
+    "PivotedRollerFollowerFlyweightMap",
+    "PivotedRollerFollowerGeometry",
+    "PivotedRollerFollowerGeometrySpec",
     "TorqueReactiveActuatorSpec",
     "build_centrifugal_actuator",
+    "build_fixed_pivot_centrifugal_actuator",
     "build_torque_reactive_actuator",
 ]

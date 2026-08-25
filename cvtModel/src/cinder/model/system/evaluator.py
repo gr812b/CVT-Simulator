@@ -18,7 +18,11 @@ from cinder.model.cvt.actuation import (
     PulleyClosureChannels,
     PulleyElementContribution,
 )
-from cinder.model.cvt.actuation.forces import AxialSpringForce, CentrifugalRampForce
+from cinder.model.cvt.actuation.forces import (
+    AxialSpringForce,
+    CentrifugalRampForce,
+    FixedPivotFlyweightForce,
+)
 from cinder.model.cvt.closure import AffineClosureScalar, ClosureGains, ClosureUnknown
 from cinder.model.cvt.geometry import BeltPulleyGeometry, GeometryPosition
 from cinder.model.cvt.inertia import AxialTranslationInertias, ResolvedInertias
@@ -252,6 +256,12 @@ class MechanicalCVTPlant:
             axial_speed=coordinate.d_value_ds * state.shift_speed,
             shaft_speed=shaft_speed,
             shift_speed=state.shift_speed,
+            axial_acceleration=AffineClosureScalar(
+                bias=coordinate.d2_value_ds2 * state.shift_speed**2,
+                gains=ClosureGains(
+                    shift_acceleration=coordinate.d_value_ds,
+                ),
+            ),
             closure_channels=channels,
             helical_coupling=helical_state,
             movable_member_rotational_inertia=movable_member_rotational_inertia,
@@ -456,6 +466,18 @@ def _validate_ramp_domain(
     minimum_position = min(axial_positions)
     maximum_position = max(axial_positions)
     for force_law in actuator.force_laws:
+        if isinstance(force_law, FixedPivotFlyweightForce):
+            mechanism_map = force_law.spec.mechanism_map
+            if (
+                minimum_position < mechanism_map.axial_position_min
+                or maximum_position > mechanism_map.axial_position_max
+            ):
+                raise ValueError(
+                    f"{name} fixed-pivot flyweight map does not cover the "
+                    "geometry-reachable axial interval "
+                    f"[{minimum_position}, {maximum_position}]."
+                )
+            continue
         if not isinstance(force_law, CentrifugalRampForce):
             continue
         profile = force_law.spec.radial_displacement_profile

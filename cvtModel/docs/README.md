@@ -4,6 +4,7 @@ Start with:
 
 - `GETTING_STARTED.md` for the composed plant/boundary/host API.
 - `PUBLIC_CONTRACT_API.md` for saved JSON documents.
+- `FIXED_PIVOT_FLYWEIGHT.md` for the appendix roller-follower mechanism and its pulley-agnostic coupling.
 - `REPOSITORY_LAYOUT.md` for package organization.
 
 The public API uses primary/secondary shaft

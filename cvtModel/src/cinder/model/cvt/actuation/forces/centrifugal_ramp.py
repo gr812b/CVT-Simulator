@@ -12,6 +12,7 @@ from ..types import (
     ActuationContribution,
     PulleyActuationContext,
     PulleyElementContribution,
+    PulleyKineticMode,
 )
 
 
@@ -109,6 +110,19 @@ class CentrifugalRampForce:
                 key="centrifugal_ramp",
                 label="Centrifugal ramp closing force",
                 relation=self.evaluate(context),
+            ),
+        )
+
+    def kinetic_modes(
+        self, context: PulleyActuationContext
+    ) -> tuple[PulleyKineticMode, ...]:
+        """Return the point mass's shaft-axis kinetic mode."""
+
+        _radius, shaft_inertia, _d_inertia_dx = self._kinematics(context)
+        return (
+            PulleyKineticMode(
+                inertia=shaft_inertia,
+                shaft_speed_coefficient=1.0,
             ),
         )
 

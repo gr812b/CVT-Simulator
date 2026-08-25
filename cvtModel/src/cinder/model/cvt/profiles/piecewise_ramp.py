@@ -87,6 +87,7 @@ class PiecewiseRamp(ScalarProfile):
             value=placement.value_start + local.value,
             first_derivative=local.first_derivative,
             second_derivative=local.second_derivative,
+            third_derivative=local.third_derivative,
         )
 
     def height(self, x: float) -> float:

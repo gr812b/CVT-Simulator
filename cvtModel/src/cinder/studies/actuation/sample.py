@@ -13,7 +13,12 @@ from cinder.model.cvt.actuation import (
     PulleyActuationContext,
     PulleyClosureChannels,
 )
-from cinder.model.cvt.closure import ClosureUnknown, ClosureUnknowns
+from cinder.model.cvt.closure import (
+    AffineClosureScalar,
+    ClosureGains,
+    ClosureUnknown,
+    ClosureUnknowns,
+)
 from cinder.model.system import CVTAssemblySpec, PulleySpec
 
 from .types import (
@@ -198,6 +203,12 @@ def _build_pulley_context(
         axial_speed=coordinate.d_value_ds * point.shift_speed,
         shaft_speed=point.shaft_speed,
         shift_speed=point.shift_speed,
+        axial_acceleration=AffineClosureScalar(
+            bias=coordinate.d2_value_ds2 * point.shift_speed**2,
+            gains=ClosureGains(
+                shift_acceleration=coordinate.d_value_ds,
+            ),
+        ),
         closure_channels=closure_channels,
         helical_coupling=coupling_state,
         movable_member_rotational_inertia=movable_member_rotational_inertia,
