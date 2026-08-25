@@ -77,27 +77,41 @@ export function editorToRamp(value: RampEditorValue): JsonValue {
   } as unknown as JsonValue;
 }
 
+const circularSlopeSign = (quadrant: RampQuadrant): number =>
+  quadrant === 1 || quadrant === 3 ? -1 : 1;
+
 /** Browser-local preview only; no preview endpoint or solver dependence. */
-export function previewRamp(value: RampEditorValue, samplesPerSegment = 40): { x: number[]; y: number[]; slopes: number[] } {
+export function previewRamp(
+  value: RampEditorValue,
+  samplesPerSegment = 40,
+): { x: number[]; y: number[]; slopes: number[] } {
   let x = 0;
   let y = 0;
   const xs = [x]; const ys = [y]; const slopes = [0];
+
   value.segments.forEach((segment) => {
     const count = Math.max(2, samplesPerSegment);
+    const slopeSign = segment.type === 'circular'
+      ? circularSlopeSign(segment.quadrant)
+      : 1;
+
     for (let index = 1; index <= count; index += 1) {
       const t0 = (index - 1) / count;
       const t1 = index / count;
       const angle0 = segment.type === 'linear'
-        ? segment.angle : segment.angle_start + (segment.angle_end - segment.angle_start) * t0;
+        ? segment.angle
+        : segment.angle_start + (segment.angle_end - segment.angle_start) * t0;
       const angle1 = segment.type === 'linear'
-        ? segment.angle : segment.angle_start + (segment.angle_end - segment.angle_start) * t1;
+        ? segment.angle
+        : segment.angle_start + (segment.angle_end - segment.angle_start) * t1;
       const dx = segment.length / count;
-      const slope0 = Math.tan(angle0 * DEG_TO_RAD);
-      const slope1 = Math.tan(angle1 * DEG_TO_RAD);
+      const slope0 = slopeSign * Math.tan(angle0 * DEG_TO_RAD);
+      const slope1 = slopeSign * Math.tan(angle1 * DEG_TO_RAD);
       y += 0.5 * (slope0 + slope1) * dx;
       x += dx;
       xs.push(x); ys.push(y); slopes.push(slope1);
     }
   });
+
   return { x: xs, y: ys, slopes };
 }

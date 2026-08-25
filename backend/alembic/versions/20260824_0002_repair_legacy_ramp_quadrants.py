@@ -61,7 +61,11 @@ def upgrade() -> None:
         sa.column("values", sa.JSON()),
     )
 
-    rows = bind.execute(sa.select(tunes.c.id, tunes.c.values)).mappings().all()
+    # ColumnCollection.values is a method, so access the JSON column by key.
+    rows = bind.execute(
+        sa.select(tunes.c.id, tunes.c["values"])
+    ).mappings().all()
+
     for row in rows:
         repaired_values, changed = _repair_legacy_ramp_quadrants(row["values"])
         if changed:

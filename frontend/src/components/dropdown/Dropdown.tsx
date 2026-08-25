@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useId } from 'react';
 import styles from './Dropdown.module.scss';
 import cx from 'classnames';
 import ChevronDown from '@assets/icons/chevron_down.svg?react';
@@ -25,6 +25,7 @@ export const Dropdown = <T extends string>({
 }: DropdownProps<T>) => {
     const [open, setOpen] = useState(false);
     const ref = useRef<HTMLDivElement>(null);
+    const generatedId = useId();
 
     useEffect(() => {
         const onClickOutside = (e: MouseEvent) => {
@@ -49,7 +50,7 @@ export const Dropdown = <T extends string>({
     }, []);
 
     const selected = options.find(o => o.value === value);
-    const triggerId = `dropdown-trigger-${value}`;
+    const triggerId = `dropdown-trigger-${generatedId}`;
 
     return (
         <div ref={ref} className={cx(styles.dropdown, className)}>
