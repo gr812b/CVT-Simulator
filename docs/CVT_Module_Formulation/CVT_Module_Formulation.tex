@@ -1067,16 +1067,13 @@ trajectory. This is a different requirement from accurately modelling any one
 of those operating conditions: it requires the same physical formulation to
 remain valid as the active mechanical constraints change.
 
-The remaining modelling opportunity is therefore defined by two independent
-forms of closure. The first is system-level closure of the complete
-mechanically actuated CVT, so that its internal state evolves as one coupled
-mechanical system in response to the loading applied at the primary and
-secondary shafts. The second is operating-domain closure, so that the same
-model remains valid as the transmission moves between its major mechanical
-regimes rather than being constructed around one specified phase or trajectory.
-These needs do not require maximum local belt-contact detail; instead, they
-motivate a reduced formulation that retains the mechanics needed to represent
-the complete transmission as a general transient component.
+The remaining modelling opportunity is therefore defined by two independent 
+forms of closure. The first is system-level closure of the complete mechanically 
+actuated CVT, so that its internal state evolves as one coupled mechanical 
+system in response to the loading applied at the primary and secondary shafts. 
+The second is operating-domain closure, so that the same model remains valid as 
+the transmission moves between its major mechanical regimes rather than being 
+constructed around one specified phase or trajectory.
 
 Table~\ref{tab:lit-comparison} summarizes selected formulations that most
 directly establish this progression. The table is not a ranking of model
@@ -1180,144 +1177,127 @@ objective.}
 \section{Aim, Scope, and Contributions}
 \label{sec:aim-scope-contributions}
 
-The literature review in Section~\ref{sec:literature-review} motivates a
-specific modelling objective: to develop a physically interpretable dynamic
-formulation for a mechanically actuated dry rubber V-belt CVT coupled to a
-vehicle drivetrain. The formulation is intended to close the dominant
-system-level interactions within a single time-domain model, allowing the
-transmission and vehicle response to evolve together under changing operating
-conditions. It is not intended to provide the highest-fidelity representation
-of local rubber-belt contact or a complete efficiency-loss model; instead, it
-focuses on the coupled mechanisms needed to understand how actuation, shift
-behaviour, torque transfer, and vehicle loading produce transient CVT
-behaviour.
+The literature review identifies two remaining modelling needs for mechanically
+actuated rubber V-belt CVTs: closure of the transmission as one coupled dynamic
+system, and a formulation that remains valid as the CVT moves between its
+different operating regimes. The present work addresses these needs with a
+first-principles transient model of the CVT itself.
 
 \subsection{Aim}
 \label{sec:aim}
 
-The aim of this work is to derive a coupled nonlinear dynamic model of a
-mechanically actuated rubber V-belt CVT and its longitudinal vehicle drivetrain.
-The model extends from the engine-side pulley, through the belt and downstream
-driveline, to the vehicle response. Pulley speeds, belt transport, torque
-transfer, axial shift position, and vehicle motion evolve from the governing
-equations rather than being prescribed independently.
+The aim of this work is to develop a general transient model of a mechanically
+actuated dry rubber V-belt CVT whose behaviour follows from its internal
+mechanics and from the mechanical loading applied at the primary and secondary
+shafts. The model is intended to determine its own ratio motion, clamping
+response, pulley dynamics, belt behaviour, and traction state rather than
+requiring those quantities to be prescribed as an operating history. External
+systems may therefore be coupled to either shaft without changing the internal
+CVT formulation.
 
-The formulation is intended to describe how the drivetrain responds from
-specified admissible initial conditions under changing engine torque, road
-grade, external load, and other time-varying inputs. Primary actuation,
-secondary torque reaction, belt traction, ratio change, rotational inertia, and
-vehicle loading are treated as interacting parts of the same system: a change
-in one mechanism alters the conditions under which the others act. This allows
-launch, clutching, shifting, backshift, gross slip, engine braking, and vehicle
-acceleration to be studied as outcomes of a common coupled response.
+The same physical model is also intended to remain applicable as the
+transmission moves between its different operating conditions. Engagement,
+operation at the ratio limits, free shifting, and changes in traction state are
+treated as different admissible states of the same CVT rather than as separate
+scenario-specific models. The direction and sequence of those transitions are
+determined by the evolving mechanical conditions.
 
-A further aim is to preserve the physical interpretation of that response. The
-derivation is organized so that the role of pulley geometry, primary
-speed-sensitive actuation, secondary torque-reactive actuation, belt traction,
-rotational inertia, and vehicle loading remains visible throughout the model.
-Its assumptions are stated explicitly, together with the mechanisms they
-exclude, so that simulation results can be interpreted in terms of both the
-physics retained and the limits of the formulation. The goal is therefore not
-only to predict system behaviour, but also to clarify why a particular response
-occurs and how a mechanical or operating change propagates through the
-drivetrain.
+A further aim is physical interpretability. The derivation is organized so
+that predicted behaviour can be traced back to the geometry, actuation,
+inertial response, belt mechanics, and active constraints that produced it. The
+assumptions, numerical implementation, and reported simulation cases are also
+documented so that the formulation can be reproduced and independently
+examined.
 
 \subsection{Scope}
 \label{sec:scope}
 
-The system considered in this work is a mechanically actuated dry rubber
-V-belt CVT coupled to a simplified longitudinal vehicle drivetrain. The CVT
-consists of a speed-sensitive primary pulley, a torque-sensitive secondary
-pulley, a rubber V-belt, and a downstream fixed-ratio driveline that transmits
-power to the vehicle wheels. The vehicle is represented through
-one-dimensional longitudinal motion.
+The modeled system is the mechanically actuated CVT itself. It includes the
+primary and secondary pulley assemblies, the mechanical hardware that produces
+their clamping forces, and the complete rubber V-belt loop. The model is
+deliberately independent of any particular engine, motor, dynamometer, vehicle
+driveline, or other surrounding system. Instead, those systems may be coupled
+to the CVT through the primary and secondary shafts without changing the
+internal transmission formulation.
 
-The model includes the following effects:
+The formulation retains the rotational motion of both pulley assemblies, the
+axial motions required for ratio change, the motion of the retained actuation
+hardware, and the transport motion of the belt. The retained component masses
+and inertias participate in the corresponding dynamic balances, while the
+actuation mechanisms and belt--pulley contacts provide the forces and reactions
+through which these motions influence one another.
 
-\begin{itemize}
-\item variable pulley geometry, belt-length closure, and ratio kinematics;
-\item a dynamic shift coordinate relating sheave motion to pulley radii, wrap
-angles, and transmission ratio;
-\item mechanically generated primary and secondary axial forces;
-\item flyweight, ramp, spring, helix, and torque-reactive effects within the
-pulley actuation mechanisms;
-\item effective inertia associated with axial shift motion;
-\item explicit rotational dynamics of the primary pulley, belt, and secondary
-pulley;
-\item belt--pulley torque transfer subject to traction limits and gross-slip
-conditions;
-\item engine torque and engine-side inertia;
-\item downstream fixed reduction, reflected driveline inertia, and longitudinal
-vehicle road load; and
-\item transient response to specified initial conditions and time-varying input
-histories.
-\end{itemize}
-
-The belt is represented through a reduced fixed-length geometry and
-wrap-level contact description rather than a fully distributed deformable-belt
-formulation. The principal consequences of this and the other model
-idealizations are collected in \Sec{sec:assumptions}; they include omitted local
-belt deformation and migration, detailed actuator and contact tribology,
-flexible-hardware response, and thermal or wear evolution. Three-dimensional
-vehicle dynamics are also outside the present scope. Tire--ground contact is
-assumed to provide sufficient traction for the longitudinal force demanded by
-the drivetrain; wheel slip and tire-force limits are not represented.
-
-The formulation retains these assumptions explicitly so that their consequences
-remain clear when interpreting a simulation result. Its structure also permits
-individual closures to be refined in later work. For example, the traction
-relation could be replaced by a distributed contact model, belt elasticity or
-pulley deformation could be introduced, or thermal, efficiency-loss, and
-tire-traction models could be incorporated while preserving the surrounding
-drivetrain framework.
+The belt and contact mechanics are intentionally represented at lower order
+than in distributed deformable-belt formulations. The model does not attempt to
+resolve the complete spatial deformation of the rubber belt, local creep and
+shear fields, detailed seating and unseating behaviour, full actuator
+tribology, flexible pulley and shaft deformation, thermal evolution, wear, or
+a complete transmission-loss model. The principal consequences of these and
+the other idealizations are stated explicitly in \Sec{sec:assumptions}. These
+choices define the physical resolution of the present formulation; they do not
+prevent more detailed component laws from being introduced in future work.
 
 \subsection{Contributions}
 \label{sec:contributions}
 
-The primary contribution of this work is the closure of a coupled mechanism
-chain for a mechanically actuated dry rubber V-belt CVT operating within a
-vehicle drivetrain. Individual elements of the formulation build on established
-ideas in CVT and belt-drive modelling. The contribution lies in combining these
-elements into a physically interpretable time-domain framework in which the
-response of the transmission and vehicle emerges from their interaction.
+The principal contribution of this work is a first-principles transient
+formulation of the mechanically actuated rubber V-belt CVT as a complete
+dynamic component. Its internal response is solved as one coupled mechanical
+system under the loading applied at the primary and secondary shafts, without
+requiring prescribed histories of ratio, clamping force, pulley speed, or
+shift direction. The same formulation is constructed to remain valid across
+the major operating regimes of the transmission rather than around one
+predefined shift or operating sequence.
 
-The main contributions are as follows:
+Realizing this overall capability requires several specific mechanical and
+formulation developments. These are contributions in their own right, while
+also providing the physical closure needed by the complete CVT model:
 
 \begin{enumerate}
-\item A vehicle-coupled dynamic formulation that closes the speed-sensitive
-primary mechanism, torque-reactive secondary mechanism, belt-mediated
-torque transfer, ratio change, pulley dynamics, and longitudinal vehicle
-response within a single system of governing equations.
 
-\item A dynamic ratio-change and belt-transport treatment in which axial sheave
-motion, pulley radii, belt geometry, and belt speed evolve as physical
-states of the system rather than being imposed through a prescribed ratio
-map or instantaneous equilibrium condition.
+\item \textbf{Dynamic primary centrifugal actuation.}
+The primary flyweight mechanism is treated as a moving inertial subsystem rather
+than as an instantaneous centrifugal-force relation. The derivation retains the
+effect of flyweight acceleration in the axial force balance and the
+configuration-dependent contribution of the flyweights to primary shaft angular
+momentum. The same actuator motion therefore participates consistently in both
+the shift and rotational dynamics.
 
-\item A traction-limited torque-transfer formulation that compares the torque
-required for no-slip motion with the torque supportable by the belt--pulley
-contacts. This permits gross-slip behaviour to be represented when the
-sticking response is not admissible.
+\item \textbf{Dynamic axial--rotational coupling of the torque-reactive
+secondary.}
+The movable secondary sheave is allowed to rotate relative to the shaft as
+required by the helix geometry while translating axially. Its retained
+rotational inertia consequently enters both the axial dynamics of the movable
+assembly and the angular-momentum balance of the secondary shaft. This produces
+the reciprocal coupling required between shift motion, helix reaction,
+movable-sheave rotation, and shaft dynamics.
 
-\item A transient drivetrain framework that evolves from specified admissible
-initial conditions under changing engine torque, road grade, external
-load, and other time-varying inputs. Launch, clutching, shifting,
-backshift, engine braking, traction loss, and vehicle acceleration can
-therefore be studied as responses of the same coupled system.
+\item \textbf{Reduced transient belt, geometry, and traction closure.}
+The pulley geometry and fixed belt length are carried through position,
+velocity, and acceleration level so that the evolving pulley radii enter the
+dynamic balances consistently. The belt retains an independent transport
+motion, and the reduced wrap mechanics preserve the radial and tangential
+acceleration terms implied by the selected kinematics. Belt reactions and traction admissibility are then coupled directly to the
+pulley and shift dynamics.
 
-\item A derivation structure that preserves the physical role of the major
-mechanisms and states the modelling assumptions explicitly. This supports
-interpretation of the predicted response and provides a modular basis for
-future extensions, including distributed belt contact, belt elasticity,
-pulley deformation, thermal effects, efficiency losses, and tire-traction
-limits.
+\item \textbf{Common mechanics across CVT operating regimes.}
+The formulation includes the mechanical constraints associated with
+disengaged or deadzone motion, engagement, seated ratio limits, free shift, and
+traction-limited stick--slip operation within one regime-dependent model.
+Transitions are selected from the admissibility of the current mechanical state
+rather than from a scripted operating sequence. When activation of a rigid
+constraint changes the allowable velocity, the post-transition motion is
+obtained from the retained inertia and impulse--momentum balance rather than an
+arbitrary state reset.
+
 \end{enumerate}
 
-Together, these contributions provide a framework for tracing how a change in
-component geometry, spring loading, actuator parameters, operating conditions,
-or vehicle load propagates through the CVT. The resulting effect on clamping,
-traction state, shift behaviour, torque transfer, engine speed, and vehicle
-acceleration can then be examined within the assumptions of the model.
+Together, these developments provide the system-level and operating-domain
+closure identified as missing in \Cref{sec:lit-synthesis}. They also preserve a
+direct mechanical interpretation of the model: changes in the predicted CVT
+response can be traced to specific actuator, inertial, geometric, belt, or
+contact effects within the formulation.
+
 
 \chapter{Model Definition and Simulation Problem}
 \label{chap:model_setup}
