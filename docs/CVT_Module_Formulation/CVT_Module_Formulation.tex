@@ -1299,50 +1299,72 @@ response can be traced to specific actuator, inertial, geometric, belt, or
 contact effects within the formulation.
 
 
+\section{Document Roadmap}
+\label{sec:document-roadmap}
+
+The remainder of this work develops the model from system definition through
+simulation results. \Cref{chap:model_setup} formalizes the CVT as a simulation
+problem by defining the modeled transmission, its interaction with surrounding
+systems, the retained assumptions and coordinates, the state variables, and
+the mechanical regimes through which the model evolves.
+\Cref{chap:derivation} then derives the governing mechanics, proceeding from
+pulley and belt geometry to axial actuation, pulley rotational dynamics, belt
+transport and contact, and finally the coupled transient model and its regime
+transitions.
+
+\Cref{chap:results} presents the simulation results and discussion using
+representative launch cases to examine the model behaviour and its response to
+targeted CVT tuning changes. It also documents the implementation and
+reproducibility artifacts and concludes the present study. The appendices
+collect supporting derivations and numerical details that are useful for
+reproducing or extending the formulation but would interrupt the main
+development.
+
+
 \chapter{Model Definition and Simulation Problem}
 \label{chap:model_setup}
 
-To predict the motion of a CVT from an arbitrary initial condition, the
-formulation must first turn the physical mechanism into a well-defined
-simulation problem. This requires a clear account of what the model contains,
-how the surrounding machinery acts on it, and what information describes the
-CVT at a given instant.
+With the aim and scope established in
+\Cref{sec:aim-scope-contributions}, the next step is to define the CVT as a
+precise simulation problem. This requires a clear account of what belongs to
+the modeled transmission, how surrounding systems interact with it
+mechanically, and what information describes the CVT at a given instant.
 
-This chapter builds that description in the order required by the model. It
-first defines the CVT and its two shaft interfaces, then states the assumptions
-that determine the physical detail retained. Coordinates and sign conventions
-establish how the resulting motions are measured. From these definitions, the
-internal quantities that must be carried from one instant to the next are
-identified, together with the mechanical conditions that determine how those
-quantities may evolve.
+The definition proceeds from the outside inward. The CVT boundary and its
+external mechanical interfaces are established first, followed by the
+assumptions that determine the physical detail retained. Coordinates and sign
+conventions then define how the retained motions are measured. From these
+choices, the internal state, operating regimes, and instantaneous unknowns of
+the model can be identified.
 
-The chapter concludes by separating the quantities used during a model
-evaluation according to their roles: fixed CVT data, the current internal
-condition, loading supplied at the shaft interfaces, and quantities solved
-only for the present instant. Together, these definitions establish the
-simulation problem used throughout the component-level derivation.
+These definitions provide the common problem statement used by the derivation
+in \Cref{chap:derivation}. At any instant, the fixed CVT data, current internal
+state, and mechanical loading presented at the two shafts are known. The
+governing mechanics determine the corresponding instantaneous response and
+state derivatives, which may then be advanced through time by numerical
+integration.
 
 % ==============================================================
 \section{Modeled CVT and Shaft Interfaces}
 \label{sec:system_definition}
 
-The CVT exchanges torque and rotational motion with the surrounding machinery
-through its primary and secondary shafts. An engine, motor, or test machine may
-be connected to the primary shaft, while a vehicle, dynamometer, or other load
-may be connected to the secondary. These two shaft connections therefore
-provide the natural interfaces between the CVT and the systems attached to it.
+The CVT is connected to the surrounding machinery through its primary and
+secondary shafts. These two connections form the external mechanical
+interfaces of the modeled transmission. Everything that physically belongs to
+the CVT between them is retained inside the model boundary.
 
 The modeled CVT includes the primary and secondary pulley assemblies, the
 complete belt loop, and both belt--pulley contacts. It also includes the
 primary flyweights, ramp, and spring and the secondary spring and helix. Any
-masses and inertias retained for these components are included with them. Their
-forces and inertias act together as parts of the same coupled mechanism.
+masses and inertias retained for these components are included with them.
+Their forces and inertias therefore act together as parts of the same coupled
+mechanism.
 
-The machinery attached to either shaft is not included as part of this
-mechanism. Instead, its effect is represented by the mechanical loading that it
-presents at the corresponding shaft interface. The two interfaces therefore
-mark the extent of the modeled CVT while allowing the same CVT description to
-be connected to different engines, vehicles, or test equipment.
+Placing the model boundary at the two shafts keeps the CVT description
+independent of any particular surrounding system. An attached system supplies
+the mechanical loading that it presents at the corresponding shaft, so
+changing what is connected to the CVT changes the loading seen by the model
+rather than the definition of the transmission itself.
 
 \begin{figure}[H]
 \centering
@@ -1353,8 +1375,8 @@ be connected to different engines, vehicles, or test equipment.
 \fbox{%
 \parbox[c][2.9cm][c]{0.17\textwidth}{%
 \centering
-\textbf{Attached primary-side system}\\[4pt]
-Engine, motor, dynamometer, or other attached system
+\textbf{Attached primary-side system}\\[6pt]
+Mechanical loading at the primary shaft
 }}
 & $\longleftrightarrow$ &
 \fbox{%
@@ -1372,16 +1394,16 @@ Both contacts, both actuation mechanisms, and retained CVT inertia
 \fbox{%
 \parbox[c][2.9cm][c]{0.17\textwidth}{%
 \centering
-\textbf{Attached secondary-side system}\\[4pt]
-Vehicle, dynamometer, or other attached system
+\textbf{Attached secondary-side system}\\[6pt]
+Mechanical loading at the secondary shaft
 }}
 \end{tabular}
 }
 \caption{
-The modeled CVT and its two shaft interfaces. Everything in the centre box is
-resolved as part of the CVT. The attached system on either side supplies its
-mechanical loading through the corresponding shaft, while the shaft motion
-remains part of the modeled response.
+The modeled CVT and its external mechanical interfaces. Everything in the
+centre box is resolved as part of the transmission. An attached system acts on
+the CVT through the corresponding shaft, while the shaft motion remains part
+of the modeled response.
 }
 \label{fig:cvt_system_boundary}
 \end{figure}
@@ -1405,12 +1427,10 @@ inertia reflected to the shaft.
 
 These quantities describe how the attached system loads the CVT, not how the
 shaft must move. The shaft speed remains part of the modeled motion. An
-attached system may use the current shaft speed, time, and its own
-internal state to determine the torque and equivalent inertia that it presents
-at the interface. Those quantities then act together with the inertia and
-mechanics inside the CVT to determine the shaft acceleration. A prescribed
-engine-torque curve or vehicle-load law therefore supplies a mechanical load;
-it does not prescribe either shaft speed.
+attached system may use the current shaft speed, time, and its own internal
+state to determine the torque and equivalent inertia that it presents at the
+interface. Those quantities then act together with the inertia and mechanics
+inside the CVT to determine the shaft acceleration.
 
 A positive applied torque acts in the positive rotational direction defined
 for the corresponding shaft, and the equivalent inertia is expressed about
@@ -2212,6 +2232,8 @@ Using these roles, one evaluation proceeds as follows:
           for the next evaluation, and the cycle repeats.
 \end{enumerate}
 \chapter{Derivation}
+\label{chap:derivation}
+
 \section{Pulley Geometry}\label{sec:geometry}
 
 The conceptual overview introduced the CVT as two variable-radius pulleys
@@ -9484,6 +9506,8 @@ been satisfied.
 
 
 \chapter{Results and Discussion}
+\label{chap:results}
+
 \section{Simulation Results}
 \label{sec:results}
 
