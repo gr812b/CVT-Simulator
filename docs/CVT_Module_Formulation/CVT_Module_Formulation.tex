@@ -527,13 +527,14 @@ $g$ & Gravitational acceleration & \si{\meter\per\second\squared} & Gravity cons
 \label{sec:problem-motivation}
 
 Mechanically actuated rubber V-belt continuously variable transmissions (CVTs) are
-widely used in compact powersport drivetrains because they can vary the speed
-ratio automatically while transmitting power through a relatively simple
-mechanical assembly. Their visible layout is straightforward: two variable-radius
-pulleys are connected by a belt. Their transient behaviour, however, is not.
-The operating state of the transmission emerges from the interaction of its
-internal mechanisms, the belt-pulley contacts, and the vehicle drivetrain to
-which it is attached.
+widely used in compact powersport drivetrains, including snowmobiles,
+all-terrain vehicles (ATVs), and utility terrain vehicles (UTVs)
+\citep{Messick2018}, because they can vary the speed ratio automatically while
+transmitting power through a relatively simple mechanical assembly. Their visible
+layout is straightforward: two variable-radius pulleys are connected by a belt.
+Their transient behaviour, however, is not. The operating state of the
+transmission emerges from the interaction of its internal mechanisms, the
+belt--pulley contacts, and the mechanical conditions under which it operates.
 
 Several coupled effects determine that response. Engine speed influences the
 centrifugal actuation of the primary pulley, while transmitted torque influences
@@ -542,43 +543,43 @@ generate the clamping forces that press the belt into the sheave grooves.
 Clamping force determines the traction available at the belt--pulley contacts,
 which in turn determines how torque is carried and whether the belt and pulleys
 can remain coupled without gross slip. At the same time, pulley motion changes
-the belt radii and therefore the transmission ratio, while drivetrain inertia,
-road grade, and external vehicle load react back through the secondary side.
-These effects do not occur independently; each changes the conditions under
-which the others act.
+the belt radii and therefore the transmission ratio, which changes the speed and
+torque relationships between the two pulleys. These effects do not occur
+independently; each changes the conditions under which the others act.
 
 This coupling makes the behaviour of a mechanically actuated CVT difficult to
-interpret from vehicle response alone. A shift curve, engine-speed trace, or
-loss of acceleration may reflect the combined effect of primary engagement,
-secondary reaction, belt traction, shift motion, and changing drivetrain load.
-The underlying states responsible for that behaviour are largely internal to the
-transmission and are not usually available directly during vehicle testing.
-This is especially consequential in racing-oriented applications such as Baja
-SAE, where launch behaviour, shift response, and torque transfer strongly
-affect performance, while changes to springs, flyweights, ramps, helices, or
-other hardware may require fabrication and repeated vehicle testing before
-their effect can be assessed.
+interpret from external measurements alone. A shift curve, pulley-speed trace,
+or observed loss of traction may reflect the combined effect of primary
+actuation, secondary reaction, belt traction, and shift motion. The underlying
+states responsible for that behaviour are largely internal to the transmission
+and are not usually available directly during testing. This is especially
+consequential because mechanically actuated CVTs are tuned by changing physical
+components such as springs, flyweights, ramps, and helices; determining the
+effect of a change can therefore require repeated hardware changes and testing
+\citep{Skinner2020}.
 
 Addressing this problem requires a physically interpretable dynamic framework
-that connects the internal CVT mechanisms to the vehicle-level response they
-produce. The model should be able to begin from varied initial
-conditions and respond to changing engine torque, road grade, external load,
-and other time-varying inputs, so that launch, clutching, shifting, backshift,
-traction loss, and vehicle acceleration emerge from the same coupled system
-response.
+that preserves the connection between the internal CVT mechanisms and the
+behaviour they produce. A useful model should do more than reproduce an output
+trace: it should make it possible to follow how actuation, clamping, belt
+traction, shift motion, and inertia combine as the transmission responds to
+changing operating conditions. If an undesirable response can be traced to its
+mechanical cause, changes to the hardware or operating conditions can be made
+deliberately rather than through trial and error. The motivation is therefore
+not only to predict transient CVT behaviour, but to make that behaviour
+understandable enough to diagnose and improve.
 
-The remainder of this chapter develops the context for that framework. \Cref{sec:cvt_overview}
-introduces the physical layout and operating principles of the
-belt-sheave CVT, including ratio change, traction, mechanical actuation, and
-the surrounding drivetrain. \Cref{sec:literature-review} contains a literature review 
-that organizes prior work by modelling emphasis and identifies the foundations available for
-mechanical actuation, belt contact, shift dynamics, and drivetrain coupling.
-Given this context, \Cref{sec:aim-scope-contributions}
-then states the aim, scope, assumptions, and contributions of the
-present formulation.
-
-
+The remainder of this chapter develops the context for that framework.
+\Cref{sec:cvt_overview} introduces the physical layout and operating principles
+of the belt--sheave CVT, including ratio change, traction, and mechanical
+actuation. \Cref{sec:literature-review} contains a literature review that
+organizes prior work by modelling emphasis and identifies the foundations
+available for mechanical actuation, belt contact, and transient CVT dynamics.
+Given this context, \Cref{sec:aim-scope-contributions} then states the aim,
+scope, assumptions, and contributions of the present formulation.
 % --------------------------------------------------------------
+
+
 \section{Conceptual Overview of a Continuously Variable Transmission}
 \label{sec:cvt_overview}
 
@@ -587,8 +588,8 @@ transmission (CVT) considered in this work. The goal is not yet to derive the
 model equations, but to build the mechanical intuition needed to understand
 them. In particular, this section explains why a CVT is useful, how a rubber
 V-belt CVT changes ratio, why clamping and traction matter, how the primary
-and secondary pulleys generate their forces, and why the CVT must be understood
-as part of a larger drivetrain system.
+and secondary pulleys generate their forces, and how these mechanisms interact
+to determine the transmission operating state.
 
 % --------------------------------------------------------------
 \subsection{Why Use a Continuously Variable Transmission?}
@@ -899,63 +900,13 @@ mainly torque-reactive. \citep{JulioPlante2011}}
 
 Although the primary and secondary mechanisms respond most strongly to
 different physical quantities, they act on the same belt and the same shift
-process. The primary is mainly driven by speed, the secondary is mainly driven
-by transmitted torque, and the resulting CVT behavior depends on their combined
-interaction with the belt, pulley geometry, drivetrain inertia, external load,
-and available clamping force.
-
-\subsection{Full Drivetrain Architecture}
-\label{subsec:full_drivetrain_context}
-
-The CVT does not operate in isolation. The physical drivetrain architecture
-considered in this work is shown in \Cref{fig:drivetrain_overview}. The figure
-shows the CVT within the complete vehicle context, including the downstream
-gearbox, disconnect, shafts, bevel units, axles, and all four wheels.
-
-Engine torque enters the primary pulley, passes through the belt to the
-secondary pulley, and then enters the downstream driveline. This driveline
-contains a fixed-ratio gearbox and the remaining shaft, bevel, and axle
-components that transmit torque to the wheels. At the tire--ground interface,
-tractive force accelerates the vehicle, while vehicle inertia, grade resistance,
-rolling resistance, and aerodynamic drag produce the load that feeds back into
-the drivetrain through the secondary side.
-
-Although the full physical architecture is shown in
-\Cref{fig:drivetrain_overview}, the dynamic model does not resolve the
-individual motion of every U-joint, bevel unit, axle, or wheel. Instead, their
-combined effect is represented through the downstream fixed reduction,
-equivalent drivetrain inertia, and vehicle longitudinal load. This preserves the
-coupling that matters to the CVT while avoiding unnecessary detail outside the
-scope of the present model.
-
-Many drivetrain architectures are possible, but the engine--CVT--downstream
-driveline--wheel arrangement shown here is the system modeled in this work.
-This system-level view is important because the CVT ratio is not simply chosen
-independently of the rest of the vehicle. Engine speed affects primary
-actuation. Transmitted torque affects secondary clamping. Vehicle load affects
-the torque carried by the secondary. Belt traction determines whether that
-torque can be carried without slip. All of these quantities evolve together
-during a launch.
-
-\begin{figure}[H]
-\centering
-\includegraphics[width=\textwidth]{figures/overview/drivetrain_overview.png}
-\caption{Physical drivetrain architecture considered in this work. The figure
-shows the CVT within the complete four-wheel vehicle layout, including the
-downstream gearbox, disconnect, shaft, bevel, and axle components. In the
-dynamic model, these downstream elements are represented by an equivalent
-fixed reduction, reflected inertia, and vehicle load acting through the
-secondary side of the CVT.}
-\label{fig:drivetrain_overview}
-\end{figure}
-
-The rest of this document turns this physical picture into a dynamic model.
-The geometry describes how pulley radii change during shift. The force models
-describe how the primary and secondary sheaves are driven. The traction model
-describes when torque transfer can stick and when slip occurs. The drivetrain
-model closes the loop between engine torque, CVT behavior, vehicle load, and
-vehicle acceleration. Together, these pieces explain how the CVT behaves as a
-coupled mechanical system during launch.
+process. Primary speed affects centrifugal actuation, transmitted torque affects
+the torque-reactive secondary, the resulting clamping forces determine the
+available belt traction, and the belt geometry couples motion of the two
+pulleys. As the operating conditions change, the balance among these effects
+can change as well, allowing the transmission to shift in either direction or
+to enter a different traction state. These coupled relationships form the
+physical foundation for the dynamic behaviour developed later in this work.
 
 \section{Motivation and Literature Review}
 \label{sec:literature-review}
@@ -975,7 +926,7 @@ A second choice is how axial force is produced. Some models take pulley clamping
 
 A third choice is how much of the belt-pulley contact is represented. At low fidelity, the belt may be treated through a capstan-style tension relation, often adjusted for the wedge action of the V-groove. More detailed models include radial and tangential friction, sliding angle, belt penetration, bending stiffness, local normal pressure, tension variation, slip mechanisms, and efficiency losses \citep{Gerbert1996,KimKim1989,Sorge1996,KongParker2005,KongParker2006,ChenLeeSung1998,Bertini2014,Messick2018}. At still higher fidelity, the belt may be discretized into nodes or elements so that local belt motion and contact behaviour are solved directly \citep{JulioPlante2011,Ballew2015}. Increasing contact fidelity can make the local mechanics more realistic, but it also changes the purpose of the model: a model built for efficiency or local belt force prediction may not be the most transparent way to study the full drivetrain response.
 
-A fourth choice is how the rotating system is coupled. Many models prescribe one or both pulley speeds, or impose the speed ratio algebraically. This is often appropriate for steady contact analysis, efficiency prediction, or controlled operating-point studies. Other models solve rotational equations of motion so that input speed, output speed, and transmitted torque evolve together \citep{SrivastavaHaque2006,Ballew2015,DuanEtAl2016}. Extending this further, the input may be coupled to an engine model and the output may be coupled to a dynamometer or vehicle load. This determines whether the CVT is being studied as an isolated variator or as one part of a larger powertrain.
+A fourth choice is how the rotating system is coupled. Many models prescribe one or both pulley speeds, or impose the speed ratio algebraically. This is often appropriate for steady contact analysis, efficiency prediction, or controlled operating-point studies. Other models solve rotational equations of motion so that input speed, output speed, and transmitted torque evolve together \citep{SrivastavaHaque2007,Ballew2015,DuanEtAl2016}. Extending this further, the input may be coupled to an engine model and the output may be coupled to a dynamometer or vehicle load. This determines whether the CVT is being studied as an isolated variator or as one part of a larger powertrain.
 
 These choices build on one another. A model can have detailed belt contact but prescribed pulley speeds. Another can include vehicle dynamics but use a simplified belt law. Another can model mechanical actuation carefully but treat shifting as quasi-static. None of these choices is inherently wrong; they reflect the question being asked. The important point is that the assumptions define the model's domain of usefulness.
 
@@ -987,7 +938,7 @@ Launch and clutching sit near the intersection of these choices. In that regime,
 
 The practical understanding of mechanically actuated rubber V-belt CVTs developed largely through machine design and tuning practice. General machine design references such as \citet{BudynasNisbett2015} provide the background needed to treat the CVT as a real mechanical assembly involving belts, springs, clutches, shafts, friction interfaces, uncertainty, and design iteration. Not all of these effects are included in a compact model, but they provide useful context for deciding which behaviours are retained and which are idealized.
 
-Practical tuning literature provides a more application-specific foundation. \citet{Aaen1979} describes powersport CVTs using the language of engagement speed, shift speed, flyweights, primary springs, secondary springs, torque sensing, backshift, and speed variance. Its value is not that it provides a complete dynamic model, but that it builds component-level intuition from the perspective of a tuner or racer. It explains how changes to weights, springs, ramps, and helices are expected to affect behaviour, while leaving much of the coupled system response to experience and testing.
+Practical tuning literature provides a more application-specific foundation. \citet{Aaen2007} describes powersport CVTs using the language of engagement speed, shift speed, flyweights, primary springs, secondary springs, torque sensing, backshift, and speed variance. Its value is not that it provides a complete dynamic model, but that it builds component-level intuition from the perspective of a tuner or racer. It explains how changes to weights, springs, ramps, and helices are expected to affect behaviour, while leaving much of the coupled system response to experience and testing.
 
 These sources are valuable because they describe the physical machine before it is reduced to equations. They also show why prediction is difficult: the same hardware change can affect engagement, shift rate, belt grip, backshift, engine speed, and vehicle acceleration at the same time. Qualitative tuning rules are therefore useful starting points, but they are not enough to determine the full system response under changing operating conditions.
 
@@ -1054,9 +1005,9 @@ The broader CVT literature contains an extensive dynamic modelling tradition for
 
 \citet{SrivastavaHaque2009} review the dynamics and control of belt and chain CVTs, covering modelling and control strategies for friction-limited transmissions. Their review is useful not only because it summarizes the field, but because it shows that CVT modelling has developed unevenly across architectures. Different CVT types are modelled with different assumptions, and fully dynamic, experimentally validated models remain less common than steady-state or control-oriented formulations. The review also reinforces an important distinction: rubber V-belts, metal push belts, and chains should not be treated interchangeably because their contact mechanics, actuation methods, deformation behaviour, torque capacity, and control objectives differ.
 
-For metal belt CVTs, \citet{CarboneMangialardiMantriota2005} study the influence of pulley deformation on shifting behaviour. Their model explains the distinction between creep-mode and slip-mode shifting and shows that pulley deformation can be essential to reproducing slow-shift behaviour under Coulomb-friction assumptions. \citet{YildizEtAl2017} later validate the Carbone--Mangialardi--Mantriota model under steady-state conditions and shift manoeuvres with torque load, supporting the usefulness of this modelling framework for controlled metal-belt or chain CVTs.
+For metal belt CVTs, \citet{CarboneMangialardiMantriota2005} study the influence of pulley deformation on shifting behaviour. Their model explains the distinction between creep-mode and slip-mode shifting and shows that pulley deformation can be essential to reproducing slow-shift behaviour under Coulomb-friction assumptions. \citet{YildizEtAl2018} later validate the Carbone--Mangialardi--Mantriota model under steady-state conditions and shift manoeuvres with torque load, supporting the usefulness of this modelling framework for controlled metal-belt or chain CVTs.
 
-Other metal-belt studies provide useful analogues for traction-limited behaviour and ratio-change dynamics. \citet{SrivastavaHaque2006} model the dynamics of metal V-belt CVTs, while \citet{Bonsen2004} analyze slip behaviour and the relationship between slip and transmitted torque. These works are relevant because they treat slip and dynamic ratio change as part of the variator mechanics, even though the transmission architecture differs from a dry rubber V-belt system.
+Other metal-belt studies provide useful analogues for traction-limited behaviour and ratio-change dynamics. \citet{SrivastavaHaque2007} model the dynamics of metal V-belt CVTs, while \citet{Bonsen2003} analyze slip behaviour and the relationship between slip and transmitted torque. These works are relevant because they treat slip and dynamic ratio change as part of the variator mechanics, even though the transmission architecture differs from a dry rubber V-belt system.
 
 Chain CVTs provide another adjacent comparison. \citet{DuanEtAl2016} develop a physics-based chain CVT model beginning from the kinematics and dynamics of an infinitesimal chain segment. Their model includes speed-dependent friction, pulley axial dynamics coupled with chain radial movement, and pulley deformation. This makes the work a useful example of a physically coupled CVT formulation in which rotational dynamics, axial dynamics, contact mechanics, and friction state are treated together.
 
