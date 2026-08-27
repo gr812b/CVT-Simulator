@@ -9,9 +9,13 @@ from .conventional import (
     build_torque_reactive_actuator,
 )
 from .fixed_pivot_flyweight import (
+    FixedPivotValidationReport,
+    FixedPivotValidationFinding,
+    ConcentratedTipHardwareMass,
     FixedPivotFlyweightMap,
     FixedPivotFlyweightSample,
     FlyweightMassGeometry,
+    PivotedRollerContactCandidate,
     PivotedRollerContactSample,
     PivotedRollerFollowerFlyweightMap,
     PivotedRollerFollowerGeometry,
@@ -43,6 +47,9 @@ from .types import (
 )
 
 __all__ = [
+    "FixedPivotValidationReport",
+    "FixedPivotValidationFinding",
+    "ConcentratedTipHardwareMass",
     "ActuationContribution",
     "ActuatorInspection",
     "AxialForceLaw",
@@ -68,6 +75,7 @@ __all__ = [
     "PulleyElement",
     "PulleyElementContribution",
     "PulleyKineticMode",
+    "PivotedRollerContactCandidate",
     "PivotedRollerContactSample",
     "PivotedRollerFollowerFlyweightMap",
     "PivotedRollerFollowerGeometry",

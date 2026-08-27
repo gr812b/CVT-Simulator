@@ -49,7 +49,7 @@ python -m pip install -e ".[dev]"
 On macOS/Linux, activate with:
 
 ```bash
-source .venv/bin/activate
+source venv/bin/activate
 ```
 
 An editable install means imports resolve to the current `src/cinder` source;

@@ -94,7 +94,7 @@ class TuneCandidate:
                 f"→{self.primary_ramp_end_angle_degrees:.0f}"
             )
         return (
-            f"m={self.flyweight_mass_kg:.3f} kg, "
+            f"tip={self.flyweight_mass_kg:.3f} kg/flyweight, "
             f"h={self.helix_angle_degrees:.1f} deg, "
             f"twist={self.secondary_torsional_pretension_degrees:.0f} deg, "
             f"sec={self.secondary_compression_preload_mm:.1f} mm, {ramp}"
@@ -290,114 +290,13 @@ def candidate_constants(candidate: TuneCandidate, *, primary_preload_m: float | 
 
 
 def build_components(c: BajaTrialConstants):
-    belt = BeltSectionSpec(
-        height=c.belt_height,
-        outer_width=c.belt_outer_width,
-        inner_width=c.belt_inner_width,
-        cord_depth_from_outer=c.belt_cord_depth_from_outer,
-    )
-    geometry = BeltPulleyGeometry(BeltPulleyGeometrySpec(
-        belt=belt,
-        belt_outer_length=c.belt_outer_length,
-        primary_outer_radius_at_zero_shift=c.primary_inner_radius_at_low + c.belt_height,
-        secondary_outer_radius_at_zero_shift=c.secondary_outer_radius_at_low,
-        sheave_half_angle=radians(c.sheave_half_angle_degrees),
-        deadzone_shift=c.deadzone_shift,
-        max_shift=c.max_shift,
-    ))
-    if c.primary_ramp_kind == "linear":
-        primary_ramp_segment = LinearSegment(length=c.max_shift, angle_degrees=c.primary_ramp_angle_degrees)
-    elif c.primary_ramp_kind == "circular_hard_to_soft":
-        primary_ramp_segment = CircularSegment(
-            length=c.max_shift,
-            angle_start_degrees=c.primary_ramp_start_angle_degrees,
-            angle_end_degrees=c.primary_ramp_end_angle_degrees,
-            quadrant=2,
-        )
-    else:
-        raise ValueError(f"Unsupported ramp kind {c.primary_ramp_kind!r}")
-    primary_actuator = build_centrifugal_actuator(CentrifugalActuatorSpec(
-        centrifugal_ramp=CentrifugalRampForceSpec(
-            flyweight_mass=c.flyweight_mass,
-            radius_at_zero_position=c.initial_flyweight_radius,
-            radial_displacement_profile=PiecewiseRamp((primary_ramp_segment,)),
-        ),
-        axial_spring=AxialSpringForceSpec(
-            stiffness=c.primary_spring_rate,
-            initial_compression=c.primary_spring_initial_compression,
-            compression_per_axial_position=1.0,
-        ),
-    ))
-    secondary_opening_travel = geometry.secondary_opening_travel_at_max_shift
-    helix_profile = HelixProfile(
-        circumferential_profile=PiecewiseRamp((linear_helix_segment(length=secondary_opening_travel, helix_angle_degrees=c.helix_angle_degrees),)),
-        radius=c.helix_radius,
-    )
-    secondary_actuator = build_torque_reactive_actuator(TorqueReactiveActuatorSpec(
-        axial_spring=AxialSpringForceSpec(
-            stiffness=c.secondary_compression_spring_rate,
-            initial_compression=c.secondary_spring_initial_compression,
-            compression_per_axial_position=-1.0,
-        ),
-        helical_reaction=HelicalTorqueReactionSpec(
-            torsional_stiffness=c.secondary_torsional_spring_rate,
-            initial_twist=c.secondary_torsional_initial_twist,
-            movable_member_torque_fraction=0.5,
-        ),
-    ))
-    inertias = resolve_inertias(
-        drivetrain=DrivetrainInertias(
-            primary=PrimaryInertia(
-                fixed_rotating_hardware_inertia=c.primary_cvt_rotational_inertia,
-                movable_sheave_rotational_inertia=0.0,
-                moving_sheave_mass=c.primary_moving_sheave_mass,
-            ),
-            secondary=SecondaryInertia(
-                fixed_rotating_hardware_inertia=c.secondary_fixed_rotational_inertia,
-                movable_sheave_rotational_inertia=c.secondary_movable_sheave_rotational_inertia,
-                moving_sheave_mass=c.secondary_moving_sheave_mass,
-            ),
-            belt=BeltMass(density=c.rubber_density),
-        ),
-        belt_section=belt,
-        belt_outer_length=c.belt_outer_length,
-    )
-    engine = FullThrottleTorqueCurve(TorqueCurveSpec(
-        points=tuple(EngineTorquePoint(angular_speed=rpm * RPM_TO_RAD_PER_SECOND, torque=ftlb * FOOT_POUND_TO_NEWTON_METRE)
-                     for rpm, ftlb in ((1000.0, 0.0), (1800.0, 18.0), (2400.0, 18.5), (2600.0, 18.1), (2800.0, 17.4), (3000.0, 16.6), (3200.0, 15.4), (3400.0, 14.5), (3600.0, 13.5), (4000.0, 0.0))),
-        low_speed_braking_torque=c.engine_low_speed_braking_torque,
-        low_speed_braking_peak_speed=c.engine_low_speed_braking_peak_rpm * RPM_TO_RAD_PER_SECOND,
-        high_speed_braking_torque=c.engine_governed_overspeed_torque,
-        high_speed_braking_transition_width=c.engine_governed_overspeed_transition_width_rpm * RPM_TO_RAD_PER_SECOND,
-    ))
-    final_drive = FixedFinalDrive(reduction_ratio=c.final_drive_ratio, wheel_radius=c.wheel_radius)
-    vehicle = VehicleInertia(mass=c.vehicle_mass, wheel_rotational_inertia=c.wheel_rotational_inertia)
-    road_load = RoadLoadModel(
-        spec=VehicleRoadLoadSpec(
-            rolling_resistance_coefficient=c.rolling_resistance_coefficient,
-            drag_coefficient=c.drag_coefficient,
-            frontal_area=c.frontal_area,
-        ),
-        vehicle=vehicle,
-        final_drive=final_drive,
-    )
-    assembly = CVTAssemblySpec(
-        geometry=geometry,
-        pulleys=PulleyPairSpec(
-            primary=PulleySpec(actuator=primary_actuator),
-            secondary=PulleySpec(
-                actuator=secondary_actuator,
-                helical_coupling=HelicalPulleyCoupling(profile=helix_profile),
-            ),
-        ),
-        inertias=inertias,
-        contact=BeltContactSpec(
-            static_friction_coefficient=c.belt_static_friction_coefficient,
-            kinetic_friction_coefficient=c.belt_kinetic_friction_coefficient,
-        ),
-    )
-    return assembly, engine, road_load
+    """Build the shared physical fixed-pivot Baja default assembly."""
 
+    from fixed_pivot_default_support import (
+        build_components as _build_fixed_pivot_components,
+    )
+
+    return _build_fixed_pivot_components(c)
 
 def build_composed_system(c: BajaTrialConstants, programme: GradeProgramme | None = None) -> tuple[ComposedCVTHybridSystem, FullThrottleTorqueCurve, RoadLoadModel]:
     assembly, engine, road_load = build_components(c)

@@ -1,0 +1,66 @@
+{
+  "name": "Baja primary fixed-pivot flyweight \u2014 provisional measured geometry",
+  "status": "provisional_measurements_2026-08-27_c3_hardened",
+  "coordinate_convention": {
+    "pivot_axial_position_m": 0.0,
+    "point_a_definition": "physical start/tip of active ramp at fully open",
+    "point_a_axial_offset_definition": "distance from pivot to A along the drawn axial reference direction",
+    "point_a_radial_offset_definition": "distance from pivot to A radially outward from shaft centre",
+    "ramp_angle_definition": "angle from axial reference line; 0 deg is axial, positive angle moves radially outward as profile coordinate increases"
+  },
+  "measurements": {
+    "pivot_radius_in": 1.675,
+    "pivot_to_roller_center_in": 1.241,
+    "roller_radius_mm": 6.5,
+    "point_a_from_pivot_axial_in": 1.5,
+    "point_a_from_pivot_radial_in": 0.2776,
+    "number_of_flyweights": 3
+  },
+  "mass_model": {
+    "kind": "uniform_slender_arm_plus_concentrated_tip_hardware",
+    "status": "incomplete_until_tip_hardware_masses_are_measured",
+    "arm_mass_per_flyweight_g": 13.646,
+    "tip_hardware_per_flyweight_g": {
+      "roller_bearing": null,
+      "bolt": null,
+      "nut_washer": null,
+      "other_fixed_hardware": null,
+      "variable_tuning_mass": null
+    },
+    "ignored_in_simplified_mode": [
+      "finite roller/bearing centroidal inertia",
+      "finite bolt/nut/washer centroidal inertia",
+      "arm thickness and detailed outline",
+      "cut-outs and nonuniform arm mass distribution"
+    ],
+    "higher_fidelity_option": "direct CAD/measured first and second mass moments"
+  },
+  "ramp": {
+    "source": "provisional piecewise physical-ramp hypothesis with derivative-matched blend",
+    "kind": "piecewise_ramp",
+    "ramp_axial_direction": -1,
+    "roller_side_sign": 1,
+    "segments": [
+      {
+        "kind": "linear_segment",
+        "axial_span_mm": 5.0,
+        "angle_degrees": 20.0
+      },
+      {
+        "kind": "auto_c3_transition",
+        "axial_span_mm": 3.0
+      },
+      {
+        "kind": "circular_segment",
+        "axial_span_mm": 30.0,
+        "angle_start_degrees": 35.0,
+        "angle_end_degrees": 10.0,
+        "quadrant": 2
+      }
+    ]
+  },
+  "local_closure_travel": {
+    "minimum_in": 0.0,
+    "maximum_in": 0.75
+  }
+}

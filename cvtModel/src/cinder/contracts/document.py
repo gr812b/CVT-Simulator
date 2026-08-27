@@ -39,6 +39,7 @@ from cinder.model.cvt.inertia import (
     resolve_inertias,
 )
 from cinder.model.cvt.profiles import (
+    C3TransitionSegment,
     CircularSegment,
     HelixProfile,
     LinearSegment,
@@ -304,6 +305,7 @@ def _encode_force_law(force_law: object) -> dict[str, Any]:
                 ),
                 "ramp_reference_radius_m": geometry.ramp_reference_radius,
                 "ramp_profile": _encode_piecewise_ramp(geometry.ramp_profile),
+                "ramp_axial_direction": geometry.ramp_axial_direction,
                 "axial_position_min_m": geometry.axial_position_min,
                 "axial_position_max_m": geometry.axial_position_max,
                 "roller_side_sign": geometry.roller_side_sign,
@@ -376,6 +378,11 @@ def _decode_force_law(payload: Mapping[str, Any]) -> object:
             ramp_reference_radius=_number(geometry, "ramp_reference_radius_m"),
             ramp_profile=_decode_piecewise_ramp(
                 _mapping(_require(geometry, "ramp_profile"), "geometry.ramp_profile")
+            ),
+            ramp_axial_direction=(
+                _integer(geometry, "ramp_axial_direction")
+                if "ramp_axial_direction" in geometry
+                else 1
             ),
             axial_position_min=_number(geometry, "axial_position_min_m"),
             axial_position_max=_number(geometry, "axial_position_max_m"),
@@ -469,6 +476,17 @@ def _encode_ramp_segment(segment: object) -> dict[str, Any]:
             "length_m": segment.length,
             "angle_rad": radians(segment.angle_degrees),
         }
+    if isinstance(segment, C3TransitionSegment):
+        return {
+            "kind": "c3_transition_segment",
+            "length_m": segment.length,
+            "slope_start": segment.slope_start,
+            "curvature_start_per_m": segment.curvature_start,
+            "third_derivative_start_per_m2": segment.third_derivative_start,
+            "slope_end": segment.slope_end,
+            "curvature_end_per_m": segment.curvature_end,
+            "third_derivative_end_per_m2": segment.third_derivative_end,
+        }
     if isinstance(segment, CircularSegment):
         return {
             "kind": "circular_segment",
@@ -482,12 +500,26 @@ def _encode_ramp_segment(segment: object) -> dict[str, Any]:
     )
 
 
-def _decode_ramp_segment(payload: Mapping[str, Any]) -> LinearSegment | CircularSegment:
+def _decode_ramp_segment(payload: Mapping[str, Any]) -> LinearSegment | CircularSegment | C3TransitionSegment:
     kind = _string(payload, "kind")
     if kind == "linear_segment":
         return LinearSegment(
             length=_number(payload, "length_m"),
             angle_degrees=degrees(_number(payload, "angle_rad")),
+        )
+    if kind == "c3_transition_segment":
+        return C3TransitionSegment(
+            length=_number(payload, "length_m"),
+            slope_start=_number(payload, "slope_start"),
+            curvature_start=_number(payload, "curvature_start_per_m"),
+            third_derivative_start=_number(
+                payload, "third_derivative_start_per_m2"
+            ),
+            slope_end=_number(payload, "slope_end"),
+            curvature_end=_number(payload, "curvature_end_per_m"),
+            third_derivative_end=_number(
+                payload, "third_derivative_end_per_m2"
+            ),
         )
     if kind == "circular_segment":
         quadrant = _integer(payload, "quadrant")
