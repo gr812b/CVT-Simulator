@@ -649,10 +649,14 @@ occurring at a lower engine speed than peak power. \citep{BajaSAEKohlerEngine202
 \vspace{0.4cm}
 \end{minipage}
 }
-\caption{Conceptual comparison of engine-speed behavior during acceleration.
-A stepped gearbox requires repeated engine-speed sweeps and drops between
-gears, whereas a CVT can vary its ratio continuously to keep the engine closer
-to a desired operating speed as vehicle speed increases. \citep{Aaen2007}}
+\caption{Conceptual comparison of engine-speed behavior during acceleration. Solid 
+lines show the engine-speed–vehicle-speed relationship imposed by the available 
+transmission ratios, while the dotted line illustrates a representative engine-speed 
+trajectory during acceleration. With a stepped gearbox (left), the engine repeatedly 
+sweeps through a speed range and drops in speed at each gear change. With a CVT (right), 
+engine speed can rise to a desired operating speed and remain approximately constant 
+while the transmission continuously changes ratio, increasing again only after the 
+high-ratio limit is reached. \citep{Aaen2007} }
 \label{fig:transmission_shift_motivation}
 \end{figure}
 
@@ -1011,9 +1015,9 @@ The broader CVT literature contains an extensive modelling tradition for metal p
 
 \citet{SrivastavaHaque2009} review the dynamics and control of belt and chain CVTs and summarize a wide range of steady and transient formulations, including slip and traction models, control-oriented shift laws, and detailed belt or chain mechanics. The review illustrates both the maturity of dynamic CVT modelling outside the rubber-belt literature and the importance of keeping the underlying transmission architecture in view when comparing models.
 
-The Carbone--Mangialardi--Mantriota (CMM) family provides a well-developed example of mechanically derived shift dynamics for metal-belt and chain variators. \citet{CarboneMangialardiMantriota2001,CarboneMangialardiMantriota2005} derive ratio-changing behaviour from belt or chain kinematics, mass conservation, friction, and pulley deformation, including creep-mode and slip-mode shifting. Experimental work by \citet{YildizEtAl2017} validates the resulting CMM shift dynamics under load. In these tests, the predicted quantity is the speed-ratio response to a prescribed change in clamping-force ratio, while drive-pulley angular speed, driven-side clamping force, and load torque are specified operating quantities. The formulation is therefore directed at the variator shift response under known actuation and loading.
+The Carbone--Mangialardi--Mantriota (CMM) family provides a well-developed example of mechanically derived shift dynamics for metal-belt and chain variators. \citet{CarboneMangialardiMantriota2001,CarboneMangialardiMantriota2005} derive ratio-changing behaviour from belt or chain kinematics, mass conservation, friction, and pulley deformation, including creep-mode and slip-mode shifting. Experimental work by \citet{YildizEtAl2018} validates the resulting CMM shift dynamics under load. In these tests, the predicted quantity is the speed-ratio response to a prescribed change in clamping-force ratio, while drive-pulley angular speed, driven-side clamping force, and load torque are specified operating quantities. The formulation is therefore directed at the variator shift response under known actuation and loading.
 
-Other metal-belt studies similarly treat transient ratio change and traction behaviour directly. \citet{SrivastavaHaque2006,SrivastavaHaque2008} develop dynamic formulations that retain transient belt motion and examine the effects of friction characteristics and band-pack slip. \citet{Bonsen2004} study variator slip and its relationship to transmitted torque and clamping. These works extend the treatment of shift and traction beyond steady operating-point analysis while retaining the controlled clamping architecture typical of metal-belt automotive CVTs.
+Other metal-belt studies similarly treat transient ratio change and traction behaviour directly. \citet{SrivastavaHaque2005,SrivastavaHaque2008} develop dynamic formulations that retain transient belt motion and examine the effects of friction characteristics and band-pack slip. \citet{Bonsen2003} study variator slip and its relationship to transmitted torque and clamping. These works extend the treatment of shift and traction beyond steady operating-point analysis while retaining the controlled clamping architecture typical of metal-belt automotive CVTs.
 
 \citet{SchindlerEtAl2012} develop a spatial transient multibody model of a pushbelt variator with detailed representation of the pulley sheaves, ring packages, friction, and unilateral contact. The model is used to study the internal transient response of the pushbelt system, including deformation and three-dimensional contact behaviour. In the simulations presented, the output pulley receives prescribed clamping force and load torque, while the input pulley is assigned angular-velocity and clamping-velocity histories. The detailed belt and pulley response is therefore resolved under a specified global variator excitation.
 
@@ -1142,7 +1146,7 @@ Primary axial force controlled; secondary axial force fixed in reported cases &
 Axial-force inputs; actuator mechanism remains separate &
 Engaged transient operation with dynamic shaft response \\[6pt]
 
-\citet{CarboneMangialardiMantriota2001,CarboneMangialardiMantriota2005,YildizEtAl2017} &
+\citet{CarboneMangialardiMantriota2001,CarboneMangialardiMantriota2005,YildizEtAl2018} &
 Mechanically derived metal-variator ratio dynamics including creep and slip modes &
 Clamping-force ratio prescribed &
 Drive speed, clamping quantities, and load torque &
