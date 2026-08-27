@@ -38,6 +38,13 @@ if str(HERE) not in sys.path:
     sys.path.insert(0, str(HERE))
 
 import run_route_grade_response as route  # noqa: E402
+from cad_drivetrain_inertias import (  # noqa: E402
+    ENGINE_EQUIVALENT_INERTIA_DEFAULT_KG_M2,
+    PCVT_TOTAL_MOI_KG_M2,
+    SCVT_TOTAL_MOI_KG_M2,
+    SECONDARY_TO_OUTPUT_RATIO,
+    TOTAL_WHEEL_ROTATIONAL_INERTIA_KG_M2,
+)
 from cinder.execution.hybrid import HybridIntegratorSettings, integrate_hybrid  # noqa: E402
 from cinder.model.cvt.actuation import (  # noqa: E402
     FixedPivotFlyweightForce,
@@ -185,6 +192,16 @@ def main() -> None:
     helix_cross_energy = np.empty(n)
     helix_relative_energy = np.empty(n)
 
+    # Direct generalized shift-inertia contributions.  These are the diagonal
+    # M_ss terms before the coupled shaft rows are solved.  They are the
+    # clearest at-a-glance measure of how large the axial/rotational correction
+    # is relative to the literal translating masses.
+    shift_mass_primary_axial = np.empty(n)
+    shift_mass_secondary_axial = np.empty(n)
+    shift_mass_belt_axial = np.empty(n)
+    shift_mass_flyweight = np.empty(n)
+    shift_mass_helix = np.empty(n)
+
     for i, time_s in enumerate(trace.time):
         full_state = trace.state[:, i]
         cvt = CVTState.from_vector(
@@ -195,6 +212,21 @@ def main() -> None:
         pcoord = geometry.primary_axial_coordinate
         scoord = geometry.secondary_axial_coordinate
 
+        axial_inertias = model.inertias.axial_translation.evaluate(
+            primary_axial_coordinate=geometry.primary_axial_coordinate,
+            secondary_axial_coordinate=geometry.secondary_axial_coordinate,
+            belt_axial_coordinate=geometry.belt_axial_coordinate,
+        )
+        shift_mass_primary_axial[i] = (
+            axial_inertias.primary.reflected_mass
+        )
+        shift_mass_secondary_axial[i] = (
+            axial_inertias.secondary.reflected_mass
+        )
+        shift_mass_belt_axial[i] = (
+            axial_inertias.belt.reflected_mass
+        )
+
         xdot_p = pcoord.d_value_ds * cvt.shift_speed
         primary_xdot[i] = xdot_p
 
@@ -203,6 +235,12 @@ def main() -> None:
         )
         q[i] = fw_sample.angle
         qdot[i] = fw_sample.angle_gradient * xdot_p
+        dq_ds = (
+            fw_sample.angle_gradient * pcoord.d_value_ds
+        )
+        shift_mass_flyweight[i] = (
+            fw_sample.pivot_inertia * dq_ds**2
+        )
 
         omega_p = cvt.primary_angular_speed
         fly_shaft_energy[i] = (
@@ -240,6 +278,9 @@ def main() -> None:
         )
         theta[i] = kin.theta
         theta_dot[i] = kin.dtheta_ds * cvt.shift_speed
+        shift_mass_helix[i] = (
+            movable_secondary_inertia * kin.dtheta_ds**2
+        )
 
         omega_s = cvt.secondary_angular_speed
         movable_speed = omega_s + theta_dot[i]
@@ -296,6 +337,33 @@ def main() -> None:
     helix_movable_total_power = _gradient(
         helix_movable_total_energy,
         trace.time,
+    )
+
+    shift_mass_base = (
+        shift_mass_primary_axial
+        + shift_mass_secondary_axial
+        + shift_mass_belt_axial
+    )
+    shift_mass_coupled = (
+        shift_mass_base
+        + shift_mass_flyweight
+        + shift_mass_helix
+    )
+    same_force_acceleration_fraction = np.divide(
+        shift_mass_base,
+        shift_mass_coupled,
+        out=np.ones_like(shift_mass_base),
+        where=shift_mass_coupled > 0.0,
+    )
+    shift_acceleration = _gradient(
+        trace.state[4],
+        trace.time,
+    )
+    direct_flyweight_inertial_force = (
+        -shift_mass_flyweight * shift_acceleration
+    )
+    direct_helix_inertial_force = (
+        -shift_mass_helix * shift_acceleration
     )
 
     primary_rpm = (
@@ -366,6 +434,27 @@ def main() -> None:
                 "secondary_movable_total_storage_power_W": float(
                     helix_movable_total_power[i]
                 ),
+                "base_axial_generalized_mass_kg": float(
+                    shift_mass_base[i]
+                ),
+                "flyweight_reflected_shift_mass_kg": float(
+                    shift_mass_flyweight[i]
+                ),
+                "helix_reflected_shift_mass_kg": float(
+                    shift_mass_helix[i]
+                ),
+                "total_direct_shift_mass_kg": float(
+                    shift_mass_coupled[i]
+                ),
+                "same_force_shift_acceleration_fraction": float(
+                    same_force_acceleration_fraction[i]
+                ),
+                "direct_flyweight_inertial_force_N": float(
+                    direct_flyweight_inertial_force[i]
+                ),
+                "direct_helix_inertial_force_N": float(
+                    direct_helix_inertial_force[i]
+                ),
             }
         )
 
@@ -374,6 +463,165 @@ def main() -> None:
         writer = csv.DictWriter(handle, fieldnames=list(rows[0]))
         writer.writeheader()
         writer.writerows(rows)
+
+    # ------------------------------------------------------------------
+    # At-a-glance coupling impact across the physical shift range.
+    # ------------------------------------------------------------------
+    shift_grid = np.linspace(
+        model.geometry.spec.deadzone_shift,
+        model.geometry.spec.max_shift,
+        240,
+    )
+    grid_base = np.empty_like(shift_grid)
+    grid_primary = np.empty_like(shift_grid)
+    grid_secondary = np.empty_like(shift_grid)
+    grid_belt = np.empty_like(shift_grid)
+    grid_fly = np.empty_like(shift_grid)
+    grid_helix = np.empty_like(shift_grid)
+
+    for index, shift_value in enumerate(shift_grid):
+        geometry = model.geometry.evaluate_engaged(
+            float(shift_value)
+        )
+        axial = model.inertias.axial_translation.evaluate(
+            primary_axial_coordinate=geometry.primary_axial_coordinate,
+            secondary_axial_coordinate=geometry.secondary_axial_coordinate,
+            belt_axial_coordinate=geometry.belt_axial_coordinate,
+        )
+        grid_primary[index] = axial.primary.reflected_mass
+        grid_secondary[index] = axial.secondary.reflected_mass
+        grid_belt[index] = axial.belt.reflected_mass
+        grid_base[index] = (
+            grid_primary[index]
+            + grid_secondary[index]
+            + grid_belt[index]
+        )
+
+        fw = flyweight.spec.mechanism_map.evaluate(
+            geometry.primary_axial_coordinate.value
+        )
+        dq_ds = (
+            fw.angle_gradient
+            * geometry.primary_axial_coordinate.d_value_ds
+        )
+        grid_fly[index] = fw.pivot_inertia * dq_ds**2
+
+        hk = helix_coupling.evaluate_from_local_coordinate(
+            axial_position=geometry.secondary_axial_coordinate.value,
+            d_axial_position_ds=(
+                geometry.secondary_axial_coordinate.d_value_ds
+            ),
+            d2_axial_position_ds2=(
+                geometry.secondary_axial_coordinate.d2_value_ds2
+            ),
+        )
+        grid_helix[index] = (
+            movable_secondary_inertia * hk.dtheta_ds**2
+        )
+
+    grid_total = grid_base + grid_fly + grid_helix
+    grid_accel_fraction = grid_base / grid_total
+    shift_percent = (
+        100.0
+        * (shift_grid - model.geometry.spec.deadzone_shift)
+        / (
+            model.geometry.spec.max_shift
+            - model.geometry.spec.deadzone_shift
+        )
+    )
+
+    mid = len(shift_grid) // 2
+    helix_to_base = grid_helix[mid] / grid_base[mid]
+    fly_to_base = grid_fly[mid] / grid_base[mid]
+    accel_percent_mid = 100.0 * grid_accel_fraction[mid]
+    helix_share_mid = 100.0 * grid_helix[mid] / grid_total[mid]
+
+    impact_figure, (impact_mass_ax, impact_accel_ax) = plt.subplots(
+        2,
+        1,
+        figsize=(10.0, 7.5),
+        sharex=True,
+        constrained_layout=True,
+    )
+    impact_mass_ax.stackplot(
+        shift_percent,
+        grid_primary,
+        grid_secondary,
+        grid_belt,
+        grid_fly,
+        grid_helix,
+        labels=(
+            "primary translation",
+            "secondary translation",
+            "belt translation",
+            "flyweight pivot reflection",
+            "secondary helix rotation",
+        ),
+        alpha=0.82,
+    )
+    impact_mass_ax.plot(
+        shift_percent,
+        grid_total,
+        linewidth=2.0,
+        label="total direct generalized shift inertia",
+    )
+    impact_mass_ax.set_ylabel(r"$M_{ss}$ contribution [kg]")
+    impact_mass_ax.set_title(
+        "Axial/rotational coupling impact at a glance\n"
+        f"mid-shift: helix = {grid_helix[mid]:.2f} kg "
+        f"({helix_to_base:.1f}× literal axial mass), "
+        f"flyweight = {grid_fly[mid]:.2f} kg; "
+        f"helix share = {helix_share_mid:.0f}%"
+    )
+    impact_mass_ax.legend(
+        loc="upper left",
+        fontsize=8,
+        ncols=2,
+    )
+    impact_mass_ax.grid(True, alpha=0.25)
+
+    impact_accel_ax.plot(
+        shift_percent,
+        100.0 * grid_accel_fraction,
+        linewidth=2.2,
+        label="full coupling",
+    )
+    impact_accel_ax.plot(
+        shift_percent,
+        100.0 * grid_base / (grid_base + grid_fly),
+        linestyle="--",
+        label="flyweight coupling only",
+    )
+    impact_accel_ax.plot(
+        shift_percent,
+        100.0 * grid_base / (grid_base + grid_helix),
+        linestyle=":",
+        label="helix coupling only",
+    )
+    impact_accel_ax.axhline(
+        100.0,
+        linewidth=0.8,
+        label="ignore rotational coupling",
+    )
+    impact_accel_ax.set_xlabel("Engaged shift travel [%]")
+    impact_accel_ax.set_ylabel(
+        "same-force shift acceleration [% of uncoupled]"
+    )
+    impact_accel_ax.set_ylim(
+        0.0,
+        max(105.0, 1.05 * np.max(100.0 * grid_accel_fraction)),
+    )
+    impact_accel_ax.set_title(
+        "Equivalent acceleration penalty from added generalized inertia\n"
+        f"At mid-shift, the same generalized force gives only "
+        f"{accel_percent_mid:.0f}% of the uncoupled shift acceleration."
+    )
+    impact_accel_ax.legend(fontsize=8)
+    impact_accel_ax.grid(True, alpha=0.25)
+    impact_figure.savefig(
+        args.output_dir / "00_coupling_impact_at_a_glance.png",
+        dpi=180,
+    )
 
     # Context.
     fig1, ax = plt.subplots(figsize=(9.0, 5.0), constrained_layout=True)
@@ -560,6 +808,21 @@ def main() -> None:
 
     print(f"completed: {result.completed}")
     print(
+        "CAD drivetrain: "
+        f"PCVT={PCVT_TOTAL_MOI_KG_M2:.8f} kg m^2, "
+        f"SCVT={SCVT_TOTAL_MOI_KG_M2:.8f} kg m^2, "
+        f"wheels(total)={TOTAL_WHEEL_ROTATIONAL_INERTIA_KG_M2:.6f} kg m^2, "
+        f"FD={SECONDARY_TO_OUTPUT_RATIO:.4g}, "
+        f"engine={ENGINE_EQUIVALENT_INERTIA_DEFAULT_KG_M2:.3f} kg m^2"
+    )
+    print(
+        "mid-shift coupling impact: "
+        f"base axial={grid_base[mid]:.3f} kg, "
+        f"flyweight={grid_fly[mid]:.3f} kg, "
+        f"helix={grid_helix[mid]:.3f} kg, "
+        f"same-force acceleration={accel_percent_mid:.1f}%"
+    )
+    print(
         "max flyweight kinetic energy: "
         f"{np.max(fly_total_energy):.6g} J"
     )
@@ -575,7 +838,13 @@ def main() -> None:
     print(f"Wrote {csv_path}")
 
     if args.no_show:
-        for figure in (fig1, fig2, fig3, fig4):
+        for figure in (
+            impact_figure,
+            fig1,
+            fig2,
+            fig3,
+            fig4,
+        ):
             plt.close(figure)
     else:
         plt.show()

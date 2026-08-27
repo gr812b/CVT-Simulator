@@ -1,7 +1,7 @@
 {
   "id": "baja-launch-baseline",
   "name": "Baja Tuned Launch",
-  "description": "Physical fixed-pivot Baja default: 3 flyweights, measured 31.5214 mm arm and 6.5 mm roller, explicit uniform-arm + concentrated-tip mass approximation, dynamic axial/rotational flyweight coupling, and dynamic secondary helix coupling. Starting performance tune targets prompt re-stick and an approximately 3200 rpm main shift.",
+  "description": "Physical fixed-pivot Baja default with CAD drivetrain MOIs from Drivetrain Inertias.xlsx; 0.050 kg m^2 engine equivalent inertia; 20 deg late primary ramp; dynamic flyweight and secondary-helix axial/rotational coupling.",
   "simulation_case": {
     "schema_version": 1,
     "document_type": "cinder_simulation_case",
@@ -28,12 +28,12 @@
       },
       "inertias": {
         "primary": {
-          "fixed_rotating_hardware_inertia_kg_m2": 0.005,
+          "fixed_rotating_hardware_inertia_kg_m2": 0.0032202838346490647,
           "movable_sheave_rotational_inertia_kg_m2": 0.0,
           "moving_sheave_mass_kg": 1.0681
         },
         "secondary": {
-          "fixed_rotating_hardware_inertia_kg_m2": 0.1,
+          "fixed_rotating_hardware_inertia_kg_m2": 0.0023262599999999997,
           "movable_sheave_rotational_inertia_kg_m2": 0.0025139,
           "moving_sheave_mass_kg": 0.705141
         },
@@ -66,14 +66,14 @@
                       "curvature_start_per_m": 0.0,
                       "third_derivative_start_per_m2": 0.0,
                       "slope_end": 0.7002075382097099,
-                      "curvature_end_per_m": -24.253101214974826,
-                      "third_derivative_end_per_m2": 829.1090085098461
+                      "curvature_end_per_m": -14.042414082433282,
+                      "third_derivative_end_per_m2": 277.9461266190616
                     },
                     {
                       "kind": "circular_segment",
                       "length_m": 0.03,
                       "angle_start_rad": 0.6108652381980153,
-                      "angle_end_rad": 0.17453292519943295,
+                      "angle_end_rad": 0.3490658503988659,
                       "quadrant": 2
                     }
                   ]

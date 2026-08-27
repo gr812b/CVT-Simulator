@@ -1,6 +1,6 @@
 {
   "name": "fixed_pivot_3200_reference",
-  "purpose": "Physical fixed-pivot primary default. Tip-hardware mass is per flyweight. Performance-shaped starting tune: strong early clamping for prompt re-stick, hard-to-soft ramp for a ~3200 rpm main shift, then full shift.",
+  "purpose": "Physical fixed-pivot primary default using CAD drivetrain inertias. Late primary ramp strengthened to 20 deg after observed primary-RPM rise through shift; target remains prompt re-stick and approximately 3200 rpm main shift.",
   "candidate": {
     "flyweight_mass_kg": 0.25,
     "helix_angle_degrees": 20.0,
@@ -9,7 +9,7 @@
     "primary_ramp_kind": "fixed_pivot_piecewise",
     "primary_ramp_angle_degrees": 35.0,
     "primary_ramp_start_angle_degrees": 35.0,
-    "primary_ramp_end_angle_degrees": 10.0
+    "primary_ramp_end_angle_degrees": 20.0
   },
   "fixed_pivot_mass_semantics": {
     "flyweight_mass_kg": "concentrated roller/bolt/nut/fixed-hardware/tuning mass PER flyweight; 13.646 g arm/body is added separately",
@@ -30,5 +30,18 @@
     "max_step_ms": 20.0,
     "relative_tolerance": 0.0001,
     "absolute_tolerance": 1e-07
+  },
+  "cad_inertia_update": {
+    "source": "Drivetrain Inertias.xlsx",
+    "pcvt_total_kg_m2": 0.00491861,
+    "scvt_total_kg_m2": 0.00484016,
+    "wheel_total_kg_m2": 1.10781744,
+    "secondary_to_output_ratio": 13.44,
+    "downstream_nonwheel_reflected_to_secondary_kg_m2": 0.0006357267789690019,
+    "engine_equivalent_default_kg_m2": 0.05,
+    "engine_sensitivity_range_kg_m2": [
+      0.035,
+      0.07
+    ]
   }
 }

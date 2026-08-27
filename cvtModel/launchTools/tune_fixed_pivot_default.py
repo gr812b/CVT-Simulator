@@ -48,7 +48,7 @@ def default_candidate() -> route.TuneCandidate:
         primary_ramp_kind="fixed_pivot_piecewise",
         primary_ramp_angle_degrees=35.0,
         primary_ramp_start_angle_degrees=35.0,
-        primary_ramp_end_angle_degrees=10.0,
+        primary_ramp_end_angle_degrees=20.0,
     )
 
 
@@ -302,7 +302,7 @@ def main() -> None:
             "circle_end",
             [
                 replace(current, primary_ramp_end_angle_degrees=value)
-                for value in (8.0, 10.0, 14.0)
+                for value in (16.0, 20.0, 24.0, 28.0)
             ],
         ),
         (
@@ -360,7 +360,7 @@ def main() -> None:
                     current,
                     primary_ramp_end_angle_degrees=value,
                 )
-                for value in (8.0, 10.0, 14.0)
+                for value in (16.0, 20.0, 24.0, 28.0)
             ]
         elif stage_name == "helix_angle":
             variants = [

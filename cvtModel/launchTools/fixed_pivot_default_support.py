@@ -62,6 +62,12 @@ from cinder.model.cvt.profiles import (
     PiecewiseRamp,
     linear_helix_segment,
 )
+from cad_drivetrain_inertias import (
+    PCVT_TOTAL_MOI_KG_M2,
+    SCVT_FIXED_SIDE_MOI_KG_M2,
+    SCVT_MOVABLE_SHEAVE_MOI_KG_M2,
+)
+
 from cinder.model.system import (
     BeltContactSpec,
     CVTAssemblySpec,
@@ -213,10 +219,12 @@ def build_components(c):
         )
     )
 
+    primary_mechanism_map = build_primary_mechanism_map(c)
+
     primary_actuator = build_fixed_pivot_centrifugal_actuator(
         FixedPivotCentrifugalActuatorSpec(
             fixed_pivot_flyweight=FixedPivotFlyweightForceSpec(
-                mechanism_map=build_primary_mechanism_map(c)
+                mechanism_map=primary_mechanism_map
             ),
             axial_spring=AxialSpringForceSpec(
                 stiffness=c.primary_spring_rate,
@@ -255,21 +263,40 @@ def build_components(c):
         )
     )
 
+    # The CAD PCVT number is a complete rotating-assembly inertia.  The
+    # fixed-pivot flyweights now contribute their own configuration-dependent
+    # J_f(q), so using the complete CAD value as fixed hardware would double
+    # count them.  Anchor the complete CAD total at the zero-shift CAD/reference
+    # configuration and let J_f(q) vary dynamically away from that point.
+    flyweight_reference_inertia = (
+        primary_mechanism_map.evaluate(0.0).shaft_inertia
+    )
+    primary_fixed_hardware_inertia = (
+        PCVT_TOTAL_MOI_KG_M2 - flyweight_reference_inertia
+    )
+    if primary_fixed_hardware_inertia < 0.0:
+        raise ValueError(
+            "Fixed-pivot flyweight J_f(0) exceeds the complete PCVT CAD MOI; "
+            "the PCVT CAD inertia/flyweight mass interpretation is inconsistent."
+        )
+
     inertias = resolve_inertias(
         drivetrain=DrivetrainInertias(
             primary=PrimaryInertia(
                 fixed_rotating_hardware_inertia=(
-                    c.primary_cvt_rotational_inertia
+                    primary_fixed_hardware_inertia
                 ),
                 movable_sheave_rotational_inertia=0.0,
                 moving_sheave_mass=c.primary_moving_sheave_mass,
             ),
             secondary=SecondaryInertia(
+                # The supplied SCVT CAD total is split rather than added:
+                # fixed-side remainder + movable sheave == CAD total.
                 fixed_rotating_hardware_inertia=(
-                    c.secondary_fixed_rotational_inertia
+                    SCVT_FIXED_SIDE_MOI_KG_M2
                 ),
                 movable_sheave_rotational_inertia=(
-                    c.secondary_movable_sheave_rotational_inertia
+                    SCVT_MOVABLE_SHEAVE_MOI_KG_M2
                 ),
                 moving_sheave_mass=c.secondary_moving_sheave_mass,
             ),
@@ -371,6 +398,18 @@ def fixed_pivot_summary(c) -> dict[str, float | str]:
     )
     return {
         "tip_mass_per_flyweight_kg": float(c.flyweight_mass),
+        "pcvt_cad_total_inertia_kg_m2": PCVT_TOTAL_MOI_KG_M2,
+        "flyweight_reference_inertia_kg_m2": zero.shaft_inertia,
+        "primary_fixed_hardware_remainder_kg_m2": (
+            PCVT_TOTAL_MOI_KG_M2 - zero.shaft_inertia
+        ),
+        "scvt_cad_total_inertia_kg_m2": (
+            SCVT_FIXED_SIDE_MOI_KG_M2
+            + SCVT_MOVABLE_SHEAVE_MOI_KG_M2
+        ),
+        "scvt_movable_helix_inertia_kg_m2": (
+            SCVT_MOVABLE_SHEAVE_MOI_KG_M2
+        ),
         "total_modeled_flyweight_mass_kg": total_mass,
         "arm_length_mm": FIXED_ARM_LENGTH_M / MILLIMETRE,
         "roller_radius_mm": FIXED_ROLLER_RADIUS_M / MILLIMETRE,
