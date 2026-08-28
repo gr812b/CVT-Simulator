@@ -11,7 +11,6 @@ from cinder.model.cvt.profiles import (
     PiecewiseRamp,
 )
 
-
 INCH = 0.0254
 MM = 1.0e-3
 

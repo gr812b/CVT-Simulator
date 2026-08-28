@@ -10,7 +10,6 @@ from cinder.model.cvt.actuation import (
 )
 from cinder.model.cvt.profiles import CircularSegment, LinearSegment, PiecewiseRamp
 
-
 INCH = 0.0254
 MM = 1.0e-3
 
