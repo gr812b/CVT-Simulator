@@ -54,22 +54,14 @@ def _geometry(*, smooth: bool) -> PivotedRollerFollowerGeometry:
 
 
 def test_dynamic_audit_rejects_raw_derivative_discontinuity() -> None:
-    report = _geometry(smooth=False).audit_operating_interval(
-        sample_count=129
-    )
+    report = _geometry(smooth=False).audit_operating_interval(sample_count=129)
     assert not report.is_valid
-    assert "profile.not_c3" in {
-        item.code for item in report.errors
-    }
+    assert "profile.not_c3" in {item.code for item in report.errors}
 
 
 def test_smoothed_provisional_geometry_passes_full_range_audit() -> None:
-    report = _geometry(smooth=True).audit_operating_interval(
-        sample_count=257
-    )
-    assert report.is_valid, [
-        item.as_dict() for item in report.findings
-    ]
+    report = _geometry(smooth=True).audit_operating_interval(sample_count=257)
+    assert report.is_valid, [item.as_dict() for item in report.findings]
     assert report.traced_positions == report.requested_positions
     assert report.minimum_angle_gradient is not None
     assert report.minimum_angle_gradient > 0.0

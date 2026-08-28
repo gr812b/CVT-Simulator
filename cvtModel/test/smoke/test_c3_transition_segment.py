@@ -66,6 +66,5 @@ def test_piecewise_continuity_distinguishes_raw_and_smoothed_join() -> None:
     smooth = PiecewiseRamp((left, transition, right))
     smooth.require_continuity(order=3)
     assert all(
-        junction.is_continuous(order=3)
-        for junction in smooth.junction_continuity()
+        junction.is_continuous(order=3) for junction in smooth.junction_continuity()
     )

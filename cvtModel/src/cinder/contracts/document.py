@@ -500,7 +500,9 @@ def _encode_ramp_segment(segment: object) -> dict[str, Any]:
     )
 
 
-def _decode_ramp_segment(payload: Mapping[str, Any]) -> LinearSegment | CircularSegment | C3TransitionSegment:
+def _decode_ramp_segment(
+    payload: Mapping[str, Any],
+) -> LinearSegment | CircularSegment | C3TransitionSegment:
     kind = _string(payload, "kind")
     if kind == "linear_segment":
         return LinearSegment(
@@ -512,14 +514,10 @@ def _decode_ramp_segment(payload: Mapping[str, Any]) -> LinearSegment | Circular
             length=_number(payload, "length_m"),
             slope_start=_number(payload, "slope_start"),
             curvature_start=_number(payload, "curvature_start_per_m"),
-            third_derivative_start=_number(
-                payload, "third_derivative_start_per_m2"
-            ),
+            third_derivative_start=_number(payload, "third_derivative_start_per_m2"),
             slope_end=_number(payload, "slope_end"),
             curvature_end=_number(payload, "curvature_end_per_m"),
-            third_derivative_end=_number(
-                payload, "third_derivative_end_per_m2"
-            ),
+            third_derivative_end=_number(payload, "third_derivative_end_per_m2"),
         )
     if kind == "circular_segment":
         quadrant = _integer(payload, "quadrant")

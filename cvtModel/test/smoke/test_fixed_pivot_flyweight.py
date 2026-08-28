@@ -52,9 +52,7 @@ def _fixed_pivot_map(
     # A transparent, regular straight-ramp mechanism used only for regression.
     # The physical ramp has negative local slope; translating it in +x makes
     # the fixed-pivot arm rotate outward with q'(x) > 0.
-    profile = PiecewiseRamp(
-        (LinearSegment(length=0.12, angle_degrees=-30.0),)
-    )
+    profile = PiecewiseRamp((LinearSegment(length=0.12, angle_degrees=-30.0),))
     geometry = PivotedRollerFollowerGeometrySpec(
         pivot_axial_position=0.0,
         pivot_radius=0.05,
@@ -84,9 +82,7 @@ def _fixed_pivot_map(
 
 def _fixed_pivot_force(**map_kwargs) -> FixedPivotFlyweightForce:
     return FixedPivotFlyweightForce(
-        FixedPivotFlyweightForceSpec(
-            mechanism_map=_fixed_pivot_map(**map_kwargs)
-        )
+        FixedPivotFlyweightForceSpec(mechanism_map=_fixed_pivot_map(**map_kwargs))
     )
 
 
@@ -100,12 +96,8 @@ def test_appendix_geometry_returns_q_j_i_and_verified_derivatives() -> None:
     upper = mechanism.evaluate_exact(x + step)
 
     q_gradient_fd = (upper.angle - lower.angle) / (2.0 * step)
-    q_curvature_fd = (
-        upper.angle_gradient - lower.angle_gradient
-    ) / (2.0 * step)
-    inertia_gradient_fd = (
-        upper.shaft_inertia - lower.shaft_inertia
-    ) / (2.0 * step)
+    q_curvature_fd = (upper.angle_gradient - lower.angle_gradient) / (2.0 * step)
+    inertia_gradient_fd = (upper.shaft_inertia - lower.shaft_inertia) / (2.0 * step)
 
     assert isclose(exact.angle_gradient, q_gradient_fd, rel_tol=2.0e-7)
     assert isclose(exact.angle_curvature, q_curvature_fd, rel_tol=2.0e-6, abs_tol=1e-7)
@@ -240,9 +232,7 @@ def test_event_metric_collects_fixed_pivot_modes_from_either_pulley() -> None:
 
     geometry = baseline.geometry.evaluate_engaged(shift)
     primary_coordinate = geometry.primary_axial_coordinate
-    primary_sample = primary_force.spec.mechanism_map.evaluate(
-        primary_coordinate.value
-    )
+    primary_sample = primary_force.spec.mechanism_map.evaluate(primary_coordinate.value)
     expected_primary = (
         0.5 * primary_sample.shaft_inertia * state.primary_angular_speed**2
         + 0.5

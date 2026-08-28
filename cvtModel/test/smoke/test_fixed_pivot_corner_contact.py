@@ -70,8 +70,7 @@ def test_corner_contact_keeps_arm_and_roller_radii_exact() -> None:
     )
 
     arm_length = hypot(
-        candidate.roller_center_axial_position
-        - geometry.spec.pivot_axial_position,
+        candidate.roller_center_axial_position - geometry.spec.pivot_axial_position,
         candidate.roller_center_radius - geometry.spec.pivot_radius,
     )
     roller_radius = hypot(
@@ -103,8 +102,7 @@ def test_selected_branch_crosses_line_corner_and_circle_without_stretching() -> 
 
     for sample in trace:
         arm_length = hypot(
-            sample.roller_center_axial_position
-            - geometry.spec.pivot_axial_position,
+            sample.roller_center_axial_position - geometry.spec.pivot_axial_position,
             sample.roller_center_radius - geometry.spec.pivot_radius,
         )
         assert isclose(

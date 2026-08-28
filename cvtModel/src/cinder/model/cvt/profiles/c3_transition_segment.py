@@ -1,4 +1,4 @@
-'''C3 derivative-matched transition for acceleration-level ramp mechanics.'''
+"""C3 derivative-matched transition for acceleration-level ramp mechanics."""
 
 from __future__ import annotations
 
@@ -11,7 +11,7 @@ from .types import ProfileSample, require_finite
 
 @dataclass(frozen=True, slots=True)
 class C3TransitionSegment(RampSegment):
-    '''Polynomial ramp segment matching derivatives through third order.
+    """Polynomial ramp segment matching derivatives through third order.
 
     The profile itself is a sixth-order polynomial. It is parameterized by
     the first, second, and third profile derivatives at both ends.
@@ -19,7 +19,7 @@ class C3TransitionSegment(RampSegment):
     ``between_segments`` is the preferred constructor: it copies endpoint
     derivatives from the neighboring physical segments so the assembled
     PiecewiseRamp is C3 at both joins.
-    '''
+    """
 
     slope_start: float
     curvature_start: float
@@ -72,7 +72,7 @@ class C3TransitionSegment(RampSegment):
         right: RampSegment,
         length: float,
     ) -> "C3TransitionSegment":
-        '''Construct a C3 blend from exact neighboring endpoint data.'''
+        """Construct a C3 blend from exact neighboring endpoint data."""
 
         if not isinstance(left, RampSegment) or not isinstance(right, RampSegment):
             raise TypeError("left and right must be RampSegment instances.")
@@ -112,26 +112,12 @@ class C3TransitionSegment(RampSegment):
             + 0.2 * a4 * t**5
             + (a5 / 6.0) * t**6
         )
-        first = (
-            a0
-            + a1 * t
-            + a2 * t**2
-            + a3 * t**3
-            + a4 * t**4
-            + a5 * t**5
-        )
+        first = a0 + a1 * t + a2 * t**2 + a3 * t**3 + a4 * t**4 + a5 * t**5
         second = (
-            a1
-            + 2.0 * a2 * t
-            + 3.0 * a3 * t**2
-            + 4.0 * a4 * t**3
-            + 5.0 * a5 * t**4
+            a1 + 2.0 * a2 * t + 3.0 * a3 * t**2 + 4.0 * a4 * t**3 + 5.0 * a5 * t**4
         ) / length
         third = (
-            2.0 * a2
-            + 6.0 * a3 * t
-            + 12.0 * a4 * t**2
-            + 20.0 * a5 * t**3
+            2.0 * a2 + 6.0 * a3 * t + 12.0 * a4 * t**2 + 20.0 * a5 * t**3
         ) / length**2
 
         return ProfileSample(

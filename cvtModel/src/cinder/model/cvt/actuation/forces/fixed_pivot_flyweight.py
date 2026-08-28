@@ -70,9 +70,7 @@ class FixedPivotFlyweightForce:
             * context.axial_speed**2
         )
         return AffineClosureScalar.constant(known_force) + (
-            axial_acceleration.scaled(
-                -pivot_inertia * motion_ratio**2
-            )
+            axial_acceleration.scaled(-pivot_inertia * motion_ratio**2)
         )
 
     def evaluate_element(
@@ -92,11 +90,7 @@ class FixedPivotFlyweightForce:
                 * context.shaft_speed
             ),
             gains=ClosureGains.from_by_unknown(
-                {
-                    channels.shaft_angular_acceleration: (
-                        -sample.shaft_inertia
-                    )
-                }
+                {channels.shaft_angular_acceleration: (-sample.shaft_inertia)}
             ),
         )
         return PulleyElementContribution(
@@ -133,17 +127,13 @@ class FixedPivotFlyweightForce:
                 key="fixed_pivot_flyweight_centrifugal",
                 label="Fixed-pivot flyweight centrifugal drive",
                 relation=AffineClosureScalar.constant(
-                    0.5
-                    * context.shaft_speed**2
-                    * sample.shaft_inertia_gradient
+                    0.5 * context.shaft_speed**2 * sample.shaft_inertia_gradient
                 ),
             ),
             ActuationContribution(
                 key="fixed_pivot_flyweight_axial_inertia",
                 label="Fixed-pivot flyweight reflected axial inertia",
-                relation=axial_acceleration.scaled(
-                    -pivot_inertia * motion_ratio**2
-                ),
+                relation=axial_acceleration.scaled(-pivot_inertia * motion_ratio**2),
             ),
             ActuationContribution(
                 key="fixed_pivot_flyweight_motion_ratio_curvature",

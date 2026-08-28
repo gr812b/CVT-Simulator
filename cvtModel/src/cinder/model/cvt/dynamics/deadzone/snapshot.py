@@ -141,9 +141,7 @@ def build_deadzone_snapshot(
         state=state,
         geometry=locked_geometry,
     )
-    secondary_mechanism = model.secondary_actuator.evaluate_element(
-        secondary_context
-    )
+    secondary_mechanism = model.secondary_actuator.evaluate_element(secondary_context)
 
     primary_axial_inertia = model.inertias.axial_translation.evaluate(
         primary_axial_coordinate=primary_coordinate,
@@ -166,8 +164,7 @@ def build_deadzone_snapshot(
     secondary_rigid_belt_locked_inertia = (
         model.inertias.secondary.fixed_side.total
         + shaft_boundaries.secondary.equivalent_inertia
-        + model.inertias.belt.mass
-        * locked_geometry.secondary.effective**2
+        + model.inertias.belt.mass * locked_geometry.secondary.effective**2
     )
     if model.secondary_helical_coupling is None:
         secondary_rigid_belt_locked_inertia += (
@@ -182,9 +179,7 @@ def build_deadzone_snapshot(
         primary_mechanism=primary_mechanism,
         secondary_mechanism=secondary_mechanism,
         primary_rigid_rotational_inertia=primary_rigid_rotational_inertia,
-        secondary_rigid_belt_locked_inertia=(
-            secondary_rigid_belt_locked_inertia
-        ),
+        secondary_rigid_belt_locked_inertia=(secondary_rigid_belt_locked_inertia),
         shaft_boundaries=shaft_boundaries,
         inertias=model.inertias,
     )

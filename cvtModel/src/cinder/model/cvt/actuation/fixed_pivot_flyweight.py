@@ -71,12 +71,12 @@ class FixedPivotFlyweightMap(Protocol):
 
 @dataclass(frozen=True, slots=True)
 class ConcentratedTipHardwareMass:
-    '''Per-flyweight masses approximated at the roller-centre station.
+    """Per-flyweight masses approximated at the roller-centre station.
 
     This is explicitly an input approximation. The finite size and
     centroidal inertia of the individual tip parts are not implied to be
     zero; they are omitted by this convenience reduction.
-    '''
+    """
 
     roller_bearing_mass_per_flyweight: float = 0.0
     bolt_mass_per_flyweight: float = 0.0
@@ -102,9 +102,7 @@ class ConcentratedTipHardwareMass:
             ("tuning_mass_per_flyweight", self.tuning_mass_per_flyweight),
         ):
             if not isfinite(value) or value < 0.0:
-                raise ValueError(
-                    f"{name} must be finite and non-negative."
-                )
+                raise ValueError(f"{name} must be finite and non-negative.")
 
     @property
     def total_mass_per_flyweight(self) -> float:
@@ -179,7 +177,9 @@ class FlyweightMassGeometry:
         if self.product_moment_uv**2 > (
             self.second_moment_u * self.second_moment_v
         ) * (1.0 + tolerance):
-            raise ValueError("product_moment_uv is inconsistent with the second moments.")
+            raise ValueError(
+                "product_moment_uv is inconsistent with the second moments."
+            )
 
     @classmethod
     def uniform_arm_with_end_mass(
@@ -216,9 +216,7 @@ class FlyweightMassGeometry:
         second_u += end_mass_per_flyweight * arm_length**2
         return cls(
             number_of_flyweights=number_of_flyweights,
-            mass_per_flyweight=(
-                arm_mass_per_flyweight + end_mass_per_flyweight
-            ),
+            mass_per_flyweight=(arm_mass_per_flyweight + end_mass_per_flyweight),
             first_moment_u=first_u,
             first_moment_v=0.0,
             second_moment_u=second_u,
@@ -226,7 +224,6 @@ class FlyweightMassGeometry:
             product_moment_uv=0.0,
             second_moment_z=second_moment_z_per_flyweight,
         )
-
 
     @classmethod
     def uniform_slender_arm_with_concentrated_tip_hardware(
@@ -238,7 +235,7 @@ class FlyweightMassGeometry:
         tip_hardware: ConcentratedTipHardwareMass,
         second_moment_z_per_flyweight: float = 0.0,
     ) -> "FlyweightMassGeometry":
-        '''Build the explicit simplified hardware mass model.
+        """Build the explicit simplified hardware mass model.
 
         Assumptions:
         - arm/body is a uniform slender member from pivot to roller centre;
@@ -250,35 +247,28 @@ class FlyweightMassGeometry:
 
         For higher fidelity, construct FlyweightMassGeometry directly from
         CAD or measured first/second mass moments.
-        '''
+        """
 
         if not isinstance(
             tip_hardware,
             ConcentratedTipHardwareMass,
         ):
             raise TypeError(
-                "tip_hardware must be a "
-                "ConcentratedTipHardwareMass instance."
+                "tip_hardware must be a " "ConcentratedTipHardwareMass instance."
             )
         return cls.uniform_arm_with_end_mass(
             number_of_flyweights=number_of_flyweights,
             arm_length=arm_length,
             arm_mass_per_flyweight=arm_mass_per_flyweight,
-            end_mass_per_flyweight=(
-                tip_hardware.total_mass_per_flyweight
-            ),
-            second_moment_z_per_flyweight=(
-                second_moment_z_per_flyweight
-            ),
+            end_mass_per_flyweight=(tip_hardware.total_mass_per_flyweight),
+            second_moment_z_per_flyweight=(second_moment_z_per_flyweight),
         )
 
     @property
     def pivot_inertia(self) -> float:
         """Return total ``I_f`` about the circumferential pivot axes."""
 
-        return self.number_of_flyweights * (
-            self.second_moment_u + self.second_moment_v
-        )
+        return self.number_of_flyweights * (self.second_moment_u + self.second_moment_v)
 
     def shaft_inertia(self, *, angle: float, pivot_radius: float) -> float:
         """Return total shaft-axis inertia ``J_f(q)``."""
@@ -308,13 +298,8 @@ class FlyweightMassGeometry:
             2.0
             * pivot_radius
             * (self.first_moment_u * cosine - self.first_moment_v * sine)
-            + 2.0
-            * (self.second_moment_u - self.second_moment_v)
-            * sine
-            * cosine
-            + 2.0
-            * self.product_moment_uv
-            * (cosine**2 - sine**2)
+            + 2.0 * (self.second_moment_u - self.second_moment_v) * sine * cosine
+            + 2.0 * self.product_moment_uv * (cosine**2 - sine**2)
         )
         return self.number_of_flyweights * one
 
@@ -400,10 +385,6 @@ class PivotedRollerContactSample:
     offset_regular_factor: float
 
 
-
-
-
-
 @dataclass(frozen=True, slots=True)
 class PivotedRollerContactCandidate:
     """One instantaneous mathematical arm/roller contact configuration.
@@ -427,7 +408,7 @@ class PivotedRollerContactCandidate:
 
 @dataclass(frozen=True, slots=True)
 class FixedPivotValidationFinding:
-    '''One geometry/map preflight finding suitable for a UI or CLI.'''
+    """One geometry/map preflight finding suitable for a UI or CLI."""
 
     severity: str
     code: str
@@ -437,9 +418,7 @@ class FixedPivotValidationFinding:
 
     def __post_init__(self) -> None:
         if self.severity not in ("error", "warning", "info"):
-            raise ValueError(
-                "severity must be 'error', 'warning', or 'info'."
-            )
+            raise ValueError("severity must be 'error', 'warning', or 'info'.")
         if not self.code or not self.code.strip():
             raise ValueError("code must be non-empty.")
         if not self.message or not self.message.strip():
@@ -449,9 +428,7 @@ class FixedPivotValidationFinding:
             ("contact_coordinate", self.contact_coordinate),
         ):
             if value is not None and not isfinite(value):
-                raise ValueError(
-                    f"{name} must be finite when supplied."
-                )
+                raise ValueError(f"{name} must be finite when supplied.")
 
     def as_dict(self) -> dict[str, object]:
         payload: dict[str, object] = {
@@ -468,7 +445,7 @@ class FixedPivotValidationFinding:
 
 @dataclass(frozen=True, slots=True)
 class FixedPivotValidationReport:
-    '''Full-range construction audit for one fixed-pivot geometry.'''
+    """Full-range construction audit for one fixed-pivot geometry."""
 
     findings: tuple[FixedPivotValidationFinding, ...]
     requested_positions: int
@@ -482,46 +459,27 @@ class FixedPivotValidationReport:
 
     @property
     def errors(self) -> tuple[FixedPivotValidationFinding, ...]:
-        return tuple(
-            item
-            for item in self.findings
-            if item.severity == "error"
-        )
+        return tuple(item for item in self.findings if item.severity == "error")
 
     @property
     def warnings(self) -> tuple[FixedPivotValidationFinding, ...]:
-        return tuple(
-            item
-            for item in self.findings
-            if item.severity == "warning"
-        )
+        return tuple(item for item in self.findings if item.severity == "warning")
 
     @property
     def infos(self) -> tuple[FixedPivotValidationFinding, ...]:
-        return tuple(
-            item
-            for item in self.findings
-            if item.severity == "info"
-        )
+        return tuple(item for item in self.findings if item.severity == "info")
 
     @property
     def is_valid(self) -> bool:
-        return (
-            not self.errors
-            and self.traced_positions == self.requested_positions
-        )
+        return not self.errors and self.traced_positions == self.requested_positions
 
     def require_valid(self) -> None:
         if self.is_valid:
             return
-        details = "\n".join(
-            f"  - [{item.code}] {item.message}"
-            for item in self.errors
-        )
+        details = "\n".join(f"  - [{item.code}] {item.message}" for item in self.errors)
         raise ValueError(
             "Fixed-pivot flyweight geometry failed "
-            "construction audit:"
-            + (f"\n{details}" if details else "")
+            "construction audit:" + (f"\n{details}" if details else "")
         )
 
     def as_dict(self) -> dict[str, object]:
@@ -529,27 +487,17 @@ class FixedPivotValidationReport:
             "is_valid": self.is_valid,
             "requested_positions": self.requested_positions,
             "traced_positions": self.traced_positions,
-            "minimum_angle_gradient_per_m": (
-                self.minimum_angle_gradient
-            ),
+            "minimum_angle_gradient_per_m": (self.minimum_angle_gradient),
             "maximum_absolute_angle_curvature_per_m2": (
                 self.maximum_absolute_angle_curvature
             ),
-            "maximum_arm_length_error_m": (
-                self.maximum_arm_length_error
-            ),
+            "maximum_arm_length_error_m": (self.maximum_arm_length_error),
             "minimum_absolute_offset_regular_factor": (
                 self.minimum_absolute_offset_regular_factor
             ),
-            "minimum_ramp_endpoint_margin_m": (
-                self.minimum_ramp_endpoint_margin
-            ),
-            "maximum_mathematical_candidates": (
-                self.maximum_mathematical_candidates
-            ),
-            "findings": [
-                item.as_dict() for item in self.findings
-            ],
+            "minimum_ramp_endpoint_margin_m": (self.minimum_ramp_endpoint_margin),
+            "maximum_mathematical_candidates": (self.maximum_mathematical_candidates),
+            "findings": [item.as_dict() for item in self.findings],
         }
 
 
@@ -574,9 +522,7 @@ class PivotedRollerFollowerGeometry:
         profile = self._spec.ramp_profile
         tolerance = self._spec.coordinate_tolerance
         if not (
-            profile.x_min - tolerance
-            <= contact_coordinate
-            <= profile.x_max + tolerance
+            profile.x_min - tolerance <= contact_coordinate <= profile.x_max + tolerance
         ):
             raise ValueError(
                 "contact_coordinate is outside the physical ramp profile "
@@ -644,11 +590,7 @@ class PivotedRollerFollowerGeometry:
                         - other.roller_center_axial_position
                     )
                     ** 2
-                    + (
-                        candidate.roller_center_radius
-                        - other.roller_center_radius
-                    )
-                    ** 2
+                    + (candidate.roller_center_radius - other.roller_center_radius) ** 2
                 )
                 if center_distance <= 8.0 * tolerance:
                     duplicate = True
@@ -772,9 +714,8 @@ class PivotedRollerFollowerGeometry:
             ranked.sort(key=lambda item: (item[0], item[1]))
             angle_error, _coordinate_error, unwrapped, candidate = ranked[0]
 
-            expected_motion = (
-                abs(previous_sample.angle_gradient * delta)
-                + 0.5 * abs(previous_sample.angle_curvature * delta**2)
+            expected_motion = abs(previous_sample.angle_gradient * delta) + 0.5 * abs(
+                previous_sample.angle_curvature * delta**2
             )
             continuity_tolerance = max(0.05, 16.0 * expected_motion)
             if angle_error > continuity_tolerance:
@@ -829,33 +770,26 @@ class PivotedRollerFollowerGeometry:
         )
         return self.trace_contact_branch(positions, require_complete=True)
 
-
     def audit_operating_interval(
         self,
         *,
         sample_count: int | None = None,
         require_profile_c3: bool = True,
     ) -> FixedPivotValidationReport:
-        '''Audit geometry and selected branch across declared travel.
+        """Audit geometry and selected branch across declared travel.
 
         Multiple instantaneous mathematical arm configurations are allowed.
         The physical branch is still the smallest-q initial configuration
         followed continuously through travel.
-        '''
+        """
 
         count = (
             max(257, self._spec.validation_positions)
             if sample_count is None
             else sample_count
         )
-        if (
-            isinstance(count, bool)
-            or not isinstance(count, int)
-            or count < 9
-        ):
-            raise ValueError(
-                "sample_count must be an integer of at least 9."
-            )
+        if isinstance(count, bool) or not isinstance(count, int) or count < 9:
+            raise ValueError("sample_count must be an integer of at least 9.")
 
         findings: list[FixedPivotValidationFinding] = []
         profile = self._spec.ramp_profile
@@ -878,9 +812,7 @@ class PivotedRollerFollowerGeometry:
                                 "jump exists at profile coordinate "
                                 f"{junction.coordinate:.12g} m."
                             ),
-                            contact_coordinate=(
-                                junction.coordinate
-                            ),
+                            contact_coordinate=(junction.coordinate),
                         )
                     )
 
@@ -931,9 +863,7 @@ class PivotedRollerFollowerGeometry:
 
         traced_count = len(samples)
         if traced_count != count:
-            failed_position = float(
-                positions[min(traced_count, count - 1)]
-            )
+            failed_position = float(positions[min(traced_count, count - 1)])
             findings.append(
                 FixedPivotValidationFinding(
                     severity="error",
@@ -965,23 +895,17 @@ class PivotedRollerFollowerGeometry:
 
         for index, sample in enumerate(samples):
             axial_position = float(positions[index])
-            candidate_count = len(
-                self.contact_candidates(axial_position)
-            )
+            candidate_count = len(self.contact_candidates(axial_position))
             maximum_candidates = max(
                 maximum_candidates,
                 candidate_count,
             )
 
             arm_length = hypot(
-                sample.roller_center_axial_position
-                - self._spec.pivot_axial_position,
-                sample.roller_center_radius
-                - self._spec.pivot_radius,
+                sample.roller_center_axial_position - self._spec.pivot_axial_position,
+                sample.roller_center_radius - self._spec.pivot_radius,
             )
-            arm_error = abs(
-                arm_length - self._spec.arm_length
-            )
+            arm_error = abs(arm_length - self._spec.arm_length)
             maximum_arm_error = (
                 arm_error
                 if maximum_arm_error is None
@@ -1004,9 +928,7 @@ class PivotedRollerFollowerGeometry:
 
             regular = abs(sample.offset_regular_factor)
             minimum_regular = (
-                regular
-                if minimum_regular is None
-                else min(minimum_regular, regular)
+                regular if minimum_regular is None else min(minimum_regular, regular)
             )
 
             endpoint_margin = min(
@@ -1033,32 +955,25 @@ class PivotedRollerFollowerGeometry:
                             f"{arm_error:.6g} m."
                         ),
                         axial_position=axial_position,
-                        contact_coordinate=(
-                            sample.contact_coordinate
-                        ),
+                        contact_coordinate=(sample.contact_coordinate),
                     )
                 )
                 break
 
         if minimum_gradient is not None and (
-            not isfinite(minimum_gradient)
-            or minimum_gradient <= 0.0
+            not isfinite(minimum_gradient) or minimum_gradient <= 0.0
         ):
             findings.append(
                 FixedPivotValidationFinding(
                     severity="error",
                     code="kinematics.nonpositive_motion_ratio",
                     message=(
-                        "Selected branch reaches a non-finite or "
-                        "non-positive dq/dx."
+                        "Selected branch reaches a non-finite or " "non-positive dq/dx."
                     ),
                 )
             )
 
-        if (
-            maximum_curvature is not None
-            and not isfinite(maximum_curvature)
-        ):
+        if maximum_curvature is not None and not isfinite(maximum_curvature):
             findings.append(
                 FixedPivotValidationFinding(
                     severity="error",
@@ -1067,10 +982,7 @@ class PivotedRollerFollowerGeometry:
                 )
             )
 
-        if (
-            minimum_regular is not None
-            and minimum_regular < 0.05
-        ):
+        if minimum_regular is not None and minimum_regular < 0.05:
             findings.append(
                 FixedPivotValidationFinding(
                     severity="warning",
@@ -1116,19 +1028,11 @@ class PivotedRollerFollowerGeometry:
             requested_positions=count,
             traced_positions=traced_count,
             minimum_angle_gradient=minimum_gradient,
-            maximum_absolute_angle_curvature=(
-                maximum_curvature
-            ),
+            maximum_absolute_angle_curvature=(maximum_curvature),
             maximum_arm_length_error=maximum_arm_error,
-            minimum_absolute_offset_regular_factor=(
-                minimum_regular
-            ),
-            minimum_ramp_endpoint_margin=(
-                minimum_endpoint_margin
-            ),
-            maximum_mathematical_candidates=(
-                maximum_candidates
-            ),
+            minimum_absolute_offset_regular_factor=(minimum_regular),
+            minimum_ramp_endpoint_margin=(minimum_endpoint_margin),
+            maximum_mathematical_candidates=(maximum_candidates),
         )
 
     def _evaluate_candidate(
@@ -1179,11 +1083,9 @@ class PivotedRollerFollowerGeometry:
         g_xx = 2.0
         g_x_q = 2.0 * length * sin(q)
         g_q_q = 2.0 * length * (dx * cos(q) + dr * sin(q))
-        angle_curvature = -(
-            g_xx
-            + 2.0 * g_x_q * angle_gradient
-            + g_q_q * angle_gradient**2
-        ) / g_q
+        angle_curvature = (
+            -(g_xx + 2.0 * g_x_q * angle_gradient + g_q_q * angle_gradient**2) / g_q
+        )
 
         if not isfinite(angle_gradient) or angle_gradient <= 0.0:
             raise ValueError(
@@ -1240,21 +1142,17 @@ class PivotedRollerFollowerGeometry:
             )
 
         xi_gradient = -g_x / g_xi
-        xi_curvature = -(
-            g_xx
-            + 2.0 * g_x_xi * xi_gradient
-            + g_xi_xi * xi_gradient**2
-        ) / g_xi
+        xi_curvature = (
+            -(g_xx + 2.0 * g_x_xi * xi_gradient + g_xi_xi * xi_gradient**2) / g_xi
+        )
 
         center_x_gradient = 1.0 + curve.dx_dxi * xi_gradient
         center_r_gradient = curve.dr_dxi * xi_gradient
         center_x_curvature = (
-            curve.d2x_dxi2 * xi_gradient**2
-            + curve.dx_dxi * xi_curvature
+            curve.d2x_dxi2 * xi_gradient**2 + curve.dx_dxi * xi_curvature
         )
         center_r_curvature = (
-            curve.d2r_dxi2 * xi_gradient**2
-            + curve.dr_dxi * xi_curvature
+            curve.d2r_dxi2 * xi_gradient**2 + curve.dr_dxi * xi_curvature
         )
 
         arm_length_squared = self._spec.arm_length**2
@@ -1347,9 +1245,7 @@ class PivotedRollerFollowerGeometry:
             ):
                 continue
 
-            along = (
-                length**2 - roller**2 + distance**2
-            ) / (2.0 * distance)
+            along = (length**2 - roller**2 + distance**2) / (2.0 * distance)
             height_squared = length**2 - along**2
             h_tolerance = tolerance * max(length, roller, distance)
             if height_squared < -h_tolerance:
@@ -1495,15 +1391,17 @@ class PivotedRollerFollowerGeometry:
         normal_x = -sign * slope / norm
         normal_r = sign * direction / norm
         normal_x_gradient = -sign * second / norm**3
-        normal_r_gradient = (
-            -sign * direction * slope * second / norm**3
-        )
+        normal_r_gradient = -sign * direction * slope * second / norm**3
         normal_x_curvature = -sign * (
             third / norm**3 - 3.0 * slope * second**2 / norm**5
         )
-        normal_r_curvature = -sign * direction * (
-            (second**2 + slope * third) / norm**3
-            - 3.0 * slope**2 * second**2 / norm**5
+        normal_r_curvature = (
+            -sign
+            * direction
+            * (
+                (second**2 + slope * third) / norm**3
+                - 3.0 * slope**2 * second**2 / norm**5
+            )
         )
 
         roller = self._spec.roller_radius
@@ -1563,10 +1461,7 @@ class PivotedRollerFollowerGeometry:
             )
         ]
         for index in range(1, len(grid) - 1):
-            if (
-                values[index] > values[index - 1]
-                or values[index] > values[index + 1]
-            ):
+            if values[index] > values[index - 1] or values[index] > values[index + 1]:
                 continue
             result = minimize_scalar(
                 clearance_squared,
@@ -1603,7 +1498,6 @@ class PivotedRollerFollowerGeometry:
                     "simultaneous physical ramp contact at local axial "
                     f"position {axial_position:.12g}."
                 )
-
 
 
 @dataclass(frozen=True, slots=True)
@@ -1759,9 +1653,7 @@ class PivotedRollerFollowerFlyweightMap:
                 f"axial_position={axial_position:.12g}."
             )
 
-        ranked: list[
-            tuple[float, float, PivotedRollerContactCandidate]
-        ] = []
+        ranked: list[tuple[float, float, PivotedRollerContactCandidate]] = []
         for candidate in candidates:
             unwrapped = candidate.angle + 2.0 * pi * round(
                 (reference - candidate.angle) / (2.0 * pi)
@@ -1822,4 +1714,3 @@ class PivotedRollerFollowerFlyweightMap:
             shaft_inertia_gradient=shaft_inertia_gradient,
             pivot_inertia=self._mass_geometry.pivot_inertia,
         )
-

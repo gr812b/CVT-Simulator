@@ -58,9 +58,7 @@ def _two_solution_geometry() -> PivotedRollerFollowerGeometrySpec:
         roller_radius=0.005,
         ramp_reference_axial_position=0.02,
         ramp_reference_radius=0.08,
-        ramp_profile=PiecewiseRamp(
-            (LinearSegment(length=0.15, angle_degrees=5.0),)
-        ),
+        ramp_profile=PiecewiseRamp((LinearSegment(length=0.15, angle_degrees=5.0),)),
         ramp_axial_direction=-1,
         axial_position_min=0.0,
         axial_position_max=0.005,
