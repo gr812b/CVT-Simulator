@@ -685,12 +685,10 @@ def _mechanism_terms(
     axial = model.inertias.axial_translation.evaluate(
         primary_axial_coordinate=pcoord,
         secondary_axial_coordinate=scoord,
-        belt_axial_coordinate=geometry.belt_axial_coordinate,
     )
     base_mass = (
         axial.primary.reflected_mass
         + axial.secondary.reflected_mass
-        + axial.belt.reflected_mass
     )
 
     fly_law = _find_flyweight(model.primary_actuator)
@@ -717,9 +715,6 @@ def _mechanism_terms(
         ),
         "mass_secondary_translation_kg": (
             axial.secondary.reflected_mass
-        ),
-        "mass_belt_translation_kg": (
-            axial.belt.reflected_mass
         ),
         "mass_base_axial_total_kg": base_mass,
         "mass_flyweight_reflected_candidate_kg": fly_mass,
@@ -1404,12 +1399,10 @@ def effective_mass_map(
         axial = full_model.inertias.axial_translation.evaluate(
             primary_axial_coordinate=pcoord,
             secondary_axial_coordinate=scoord,
-            belt_axial_coordinate=geometry.belt_axial_coordinate,
         )
         base = (
             axial.primary.reflected_mass
             + axial.secondary.reflected_mass
-            + axial.belt.reflected_mass
         )
 
         fly_law = _find_flyweight(
@@ -1468,9 +1461,6 @@ def effective_mass_map(
                     ),
                     "mass_secondary_translation_kg": (
                         axial.secondary.reflected_mass
-                    ),
-                    "mass_belt_translation_kg": (
-                        axial.belt.reflected_mass
                     ),
                     "mass_base_axial_total_kg": base,
                     "mass_flyweight_physical_candidate_kg": fly,
@@ -2108,13 +2098,11 @@ def _plot_effective_mass(
         x,
         _array(full_rows, "mass_primary_translation_kg"),
         _array(full_rows, "mass_secondary_translation_kg"),
-        _array(full_rows, "mass_belt_translation_kg"),
         _array(full_rows, "mass_flyweight_active_kg"),
         _array(full_rows, "mass_helix_active_kg"),
         labels=(
             "primary translation",
             "secondary translation",
-            "belt translation",
             "flyweight pivot rotation",
             "secondary helix rotation",
         ),
