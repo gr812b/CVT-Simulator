@@ -265,6 +265,19 @@ class CVTOperatingHybridSystem:
             shaft_boundaries=shaft_boundaries,
             boundary_provider=boundary_provider,
         )
+        if (
+            isinstance(physics, CVTContactEvaluation)
+            and not physics.mechanism_contacts_are_admissible()
+        ):
+            failed = ", ".join(
+                f"{key}={margin:.9g}"
+                for key, margin in physics.mechanism_contact_margins
+                if margin < 0.0
+            )
+            raise RuntimeError(
+                "Unilateral pulley-mechanism contact became inadmissible: "
+                f"{failed}. A lift-off/opposite-flank topology is not modeled."
+            )
         return RuntimeEvaluation(state_derivative=physics.state_derivative)
 
     def inspect(

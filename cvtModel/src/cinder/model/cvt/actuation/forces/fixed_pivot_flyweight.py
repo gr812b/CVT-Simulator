@@ -163,7 +163,20 @@ class FixedPivotFlyweightForce:
 
         if not isfinite(tolerance) or tolerance < 0.0:
             raise ValueError("tolerance must be finite and non-negative.")
-        return self.evaluate(context).evaluate(unknowns) >= -tolerance
+        return self.compressive_contact_margin(
+            context=context,
+            unknowns=unknowns,
+        ) >= -tolerance
+
+    def compressive_contact_margin(
+        self,
+        *,
+        context: PulleyActuationContext,
+        unknowns: ClosureUnknowns,
+    ) -> float:
+        """Return signed force carried by the selected roller/ramp branch."""
+
+        return float(self.evaluate(context).evaluate(unknowns))
 
 
 def _require_axial_acceleration(

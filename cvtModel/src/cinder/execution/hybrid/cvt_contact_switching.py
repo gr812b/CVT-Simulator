@@ -696,6 +696,8 @@ def _candidate_is_admissible(
     require_outgoing_directions: bool,
     switching_settings: CVTEventSwitchingTolerances,
 ) -> bool:
+    if not evaluation.mechanism_contacts_are_admissible():
+        return False
     if (
         evaluation.normal_primary <= switching_settings.normal_resultant_floor
         or evaluation.normal_secondary <= switching_settings.normal_resultant_floor

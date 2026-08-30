@@ -42,7 +42,6 @@ from cad_drivetrain_inertias import (  # noqa: E402
     ENGINE_EQUIVALENT_INERTIA_DEFAULT_KG_M2,
     PCVT_TOTAL_MOI_KG_M2,
     SCVT_TOTAL_MOI_KG_M2,
-    SECONDARY_TO_OUTPUT_RATIO,
     TOTAL_WHEEL_ROTATIONAL_INERTIA_KG_M2,
 )
 from cinder.execution.hybrid import HybridIntegratorSettings, integrate_hybrid  # noqa: E402
@@ -198,7 +197,6 @@ def main() -> None:
     # is relative to the literal translating masses.
     shift_mass_primary_axial = np.empty(n)
     shift_mass_secondary_axial = np.empty(n)
-    shift_mass_belt_axial = np.empty(n)
     shift_mass_flyweight = np.empty(n)
     shift_mass_helix = np.empty(n)
 
@@ -215,16 +213,12 @@ def main() -> None:
         axial_inertias = model.inertias.axial_translation.evaluate(
             primary_axial_coordinate=geometry.primary_axial_coordinate,
             secondary_axial_coordinate=geometry.secondary_axial_coordinate,
-            belt_axial_coordinate=geometry.belt_axial_coordinate,
         )
         shift_mass_primary_axial[i] = (
             axial_inertias.primary.reflected_mass
         )
         shift_mass_secondary_axial[i] = (
             axial_inertias.secondary.reflected_mass
-        )
-        shift_mass_belt_axial[i] = (
-            axial_inertias.belt.reflected_mass
         )
 
         xdot_p = pcoord.d_value_ds * cvt.shift_speed
@@ -342,7 +336,6 @@ def main() -> None:
     shift_mass_base = (
         shift_mass_primary_axial
         + shift_mass_secondary_axial
-        + shift_mass_belt_axial
     )
     shift_mass_coupled = (
         shift_mass_base
@@ -475,7 +468,6 @@ def main() -> None:
     grid_base = np.empty_like(shift_grid)
     grid_primary = np.empty_like(shift_grid)
     grid_secondary = np.empty_like(shift_grid)
-    grid_belt = np.empty_like(shift_grid)
     grid_fly = np.empty_like(shift_grid)
     grid_helix = np.empty_like(shift_grid)
 
@@ -486,15 +478,12 @@ def main() -> None:
         axial = model.inertias.axial_translation.evaluate(
             primary_axial_coordinate=geometry.primary_axial_coordinate,
             secondary_axial_coordinate=geometry.secondary_axial_coordinate,
-            belt_axial_coordinate=geometry.belt_axial_coordinate,
         )
         grid_primary[index] = axial.primary.reflected_mass
         grid_secondary[index] = axial.secondary.reflected_mass
-        grid_belt[index] = axial.belt.reflected_mass
         grid_base[index] = (
             grid_primary[index]
             + grid_secondary[index]
-            + grid_belt[index]
         )
 
         fw = flyweight.spec.mechanism_map.evaluate(
@@ -547,13 +536,11 @@ def main() -> None:
         shift_percent,
         grid_primary,
         grid_secondary,
-        grid_belt,
         grid_fly,
         grid_helix,
         labels=(
             "primary translation",
             "secondary translation",
-            "belt translation",
             "flyweight pivot reflection",
             "secondary helix rotation",
         ),
@@ -569,7 +556,7 @@ def main() -> None:
     impact_mass_ax.set_title(
         "Axial/rotational coupling impact at a glance\n"
         f"mid-shift: helix = {grid_helix[mid]:.2f} kg "
-        f"({helix_to_base:.1f}× literal axial mass), "
+        f"({helix_to_base:.1f}Ã— literal axial mass), "
         f"flyweight = {grid_fly[mid]:.2f} kg; "
         f"helix share = {helix_share_mid:.0f}%"
     )
@@ -700,7 +687,7 @@ def main() -> None:
     ax22.axhline(0.0, linewidth=0.8)
     ax22.set_xlabel("Time [s]")
     ax22.set_ylabel("Power [W]")
-    ax22.set_title("Fixed-pivot axial ↔ rotational energy exchange")
+    ax22.set_title("Fixed-pivot axial â†” rotational energy exchange")
     ax22.legend(fontsize=8)
     ax22.grid(True, alpha=0.25)
     fig2.savefig(
@@ -812,7 +799,6 @@ def main() -> None:
         f"PCVT={PCVT_TOTAL_MOI_KG_M2:.8f} kg m^2, "
         f"SCVT={SCVT_TOTAL_MOI_KG_M2:.8f} kg m^2, "
         f"wheels(total)={TOTAL_WHEEL_ROTATIONAL_INERTIA_KG_M2:.6f} kg m^2, "
-        f"FD={SECONDARY_TO_OUTPUT_RATIO:.4g}, "
         f"engine={ENGINE_EQUIVALENT_INERTIA_DEFAULT_KG_M2:.3f} kg m^2"
     )
     print(

@@ -325,7 +325,6 @@ class MechanicalCVTPlant:
         axial_inertias = self.inertias.axial_translation.evaluate(
             primary_axial_coordinate=geometry.primary_axial_coordinate,
             secondary_axial_coordinate=geometry.secondary_axial_coordinate,
-            belt_axial_coordinate=geometry.belt_axial_coordinate,
         )
 
         primary_element = primary_element + PulleyElementContribution(

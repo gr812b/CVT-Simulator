@@ -5,7 +5,11 @@ from __future__ import annotations
 from dataclasses import dataclass
 from math import isfinite
 
-from cinder.model.cvt.closure import AffineClosureScalar, ClosureGains
+from cinder.model.cvt.closure import (
+    AffineClosureScalar,
+    ClosureGains,
+    ClosureUnknowns,
+)
 
 from ..types import (
     ActuationContribution,
@@ -128,6 +132,30 @@ class HelicalTorqueReactionForce:
             ),
         )
 
+    def compressive_contact_margin(
+        self,
+        *,
+        context: PulleyActuationContext,
+        unknowns: ClosureUnknowns,
+    ) -> float:
+        """Return signed reacted torque on the selected helix flank."""
+
+        return float(self._terms(context).reacted_torque.evaluate(unknowns))
+
+    def has_compressive_contact(
+        self,
+        *,
+        context: PulleyActuationContext,
+        unknowns: ClosureUnknowns,
+        tolerance: float = 0.0,
+    ) -> bool:
+        if not isfinite(tolerance) or tolerance < 0.0:
+            raise ValueError("tolerance must be finite and non-negative.")
+        return self.compressive_contact_margin(
+            context=context,
+            unknowns=unknowns,
+        ) >= -tolerance
+
     def _terms(self, context: PulleyActuationContext) -> "_HelixTerms":
         coupling = context.helical_coupling
         channels = context.closure_channels
@@ -155,25 +183,21 @@ class HelicalTorqueReactionForce:
         )
         curvature_angular_acceleration = kinematics.d2theta_ds2 * context.shift_speed**2
 
-        closing_force = AffineClosureScalar(
-            bias=(
-                motion_ratio
-                * (spring_torque - inertia * curvature_angular_acceleration)
-            ),
+        reacted_torque = AffineClosureScalar(
+            bias=(spring_torque - inertia * curvature_angular_acceleration),
             gains=(
                 ClosureGains.from_by_unknown(
                     {
-                        channels.shaft_angular_acceleration: -motion_ratio * inertia,
-                        channels.shaft_torque: (
-                            motion_ratio * self._spec.movable_member_torque_fraction
-                        ),
+                        channels.shaft_angular_acceleration: -inertia,
+                        channels.shaft_torque: self._spec.movable_member_torque_fraction,
                     }
                 )
                 + ClosureGains(
-                    shift_acceleration=(-motion_ratio * inertia * kinematics.dtheta_ds)
+                    shift_acceleration=(-inertia * kinematics.dtheta_ds)
                 )
             ),
         )
+        closing_force = reacted_torque.scaled(motion_ratio)
 
         movable_member_shaft_torque = AffineClosureScalar(
             bias=(-inertia * curvature_angular_acceleration),
@@ -186,6 +210,7 @@ class HelicalTorqueReactionForce:
         )
         return _HelixTerms(
             closing_force=closing_force,
+            reacted_torque=reacted_torque,
             movable_member_shaft_torque=movable_member_shaft_torque,
             motion_ratio=motion_ratio,
             spring_torque=spring_torque,
@@ -198,6 +223,7 @@ class HelicalTorqueReactionForce:
 @dataclass(frozen=True, slots=True)
 class _HelixTerms:
     closing_force: AffineClosureScalar
+    reacted_torque: AffineClosureScalar
     movable_member_shaft_torque: AffineClosureScalar
     motion_ratio: float
     spring_torque: float

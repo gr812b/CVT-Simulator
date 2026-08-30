@@ -191,13 +191,13 @@
       "low_speed_braking_peak_speed_rad_per_s": 52.35987755982988,
       "high_speed_braking_torque_Nm": -28.0,
       "high_speed_braking_transition_width_rad_per_s": 157.07963267948966,
-      "equivalent_rotational_inertia_kg_m2": 0.1
+      "equivalent_rotational_inertia_kg_m2": 0.05
     },
     "output_boundary": {
       "kind": "locked_final_drive_vehicle",
       "vehicle": {
         "mass_kg": 300.0,
-        "wheel_rotational_inertia_kg_m2": 0.2
+        "wheel_rotational_inertia_kg_m2": 1.10781744
       },
       "final_drive": {
         "reduction_ratio": 7.556,
@@ -215,7 +215,7 @@
         "kind": "constant_grade",
         "grade_angle_rad": 0.0
       },
-      "direct_secondary_shaft_inertia_kg_m2": 0.05,
+      "direct_secondary_shaft_inertia_kg_m2": 0.002011338398044471,
       "drivetrain_loss_model": {
         "kind": "none"
       }

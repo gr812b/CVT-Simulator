@@ -36,8 +36,6 @@
     "pcvt_total_kg_m2": 0.00491861,
     "scvt_total_kg_m2": 0.00484016,
     "wheel_total_kg_m2": 1.10781744,
-    "secondary_to_output_ratio": 13.44,
-    "downstream_nonwheel_reflected_to_secondary_kg_m2": 0.0006357267789690019,
     "engine_equivalent_default_kg_m2": 0.05,
     "engine_sensitivity_range_kg_m2": [
       0.035,

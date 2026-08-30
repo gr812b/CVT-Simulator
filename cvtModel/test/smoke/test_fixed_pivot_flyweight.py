@@ -25,7 +25,11 @@ from cinder.model.cvt.actuation import (
     PulleyActuator,
     PulleyClosureChannels,
 )
-from cinder.model.cvt.closure import AffineClosureScalar, ClosureGains
+from cinder.model.cvt.closure import (
+    AffineClosureScalar,
+    ClosureGains,
+    ClosureUnknowns,
+)
 from cinder.model.cvt.dynamics.deadzone.free import (
     solve_deadzone_secondary_rotation,
 )
@@ -186,6 +190,27 @@ def test_fixed_pivot_force_targets_whichever_pulley_owns_it() -> None:
     expected_redistribution = -sample.shaft_inertia_gradient * x_dot * omega
     assert isclose(primary.shaft_torque.bias, expected_redistribution)
     assert isclose(secondary.shaft_torque.bias, expected_redistribution)
+
+
+def test_fixed_pivot_unilateral_contact_margin_is_not_clipped() -> None:
+    law = _fixed_pivot_force()
+    context = PulleyActuationContext(
+        time=0.0,
+        axial_position=0.01,
+        axial_speed=0.0,
+        shaft_speed=0.0,
+        shift_speed=0.0,
+        axial_acceleration=AffineClosureScalar(
+            gains=ClosureGains(shift_acceleration=1.0)
+        ),
+        closure_channels=PulleyClosureChannels.primary(),
+    )
+    compressive = ClosureUnknowns(shift_acceleration=-1.0)
+    tensile = ClosureUnknowns(shift_acceleration=1.0)
+    assert law.compressive_contact_margin(context=context, unknowns=compressive) > 0.0
+    assert law.compressive_contact_margin(context=context, unknowns=tensile) < 0.0
+    assert law.has_compressive_contact(context=context, unknowns=compressive)
+    assert not law.has_compressive_contact(context=context, unknowns=tensile)
 
 
 def test_event_metric_collects_fixed_pivot_modes_from_either_pulley() -> None:

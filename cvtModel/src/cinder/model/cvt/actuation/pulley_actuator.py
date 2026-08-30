@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from cinder.model.cvt.closure import AffineClosureScalar
+from cinder.model.cvt.closure import AffineClosureScalar, ClosureUnknowns
 
 from .types import (
     ActuationContribution,
@@ -62,6 +62,36 @@ class PulleyActuator:
             if isinstance(force_law, KineticPulleyElement):
                 modes.extend(force_law.kinetic_modes(context))
         return tuple(modes)
+
+    def compressive_contact_margins(
+        self,
+        context: PulleyActuationContext,
+        unknowns: ClosureUnknowns,
+    ) -> tuple[tuple[str, float], ...]:
+        """Return unilateral-contact margins exposed by mounted elements."""
+
+        margins: list[tuple[str, float]] = []
+        for index, force_law in enumerate(self._force_laws):
+            margin = getattr(force_law, "compressive_contact_margin", None)
+            if margin is None:
+                continue
+            value = float(margin(context=context, unknowns=unknowns))
+            margins.append((f"{index}:{type(force_law).__name__}", value))
+        return tuple(margins)
+
+    def has_compressive_contacts(
+        self,
+        context: PulleyActuationContext,
+        unknowns: ClosureUnknowns,
+        *,
+        tolerance: float = 0.0,
+    ) -> bool:
+        if tolerance < 0.0:
+            raise ValueError("tolerance must be non-negative.")
+        return all(
+            margin >= -tolerance
+            for _key, margin in self.compressive_contact_margins(context, unknowns)
+        )
 
     def inspect(self, context: PulleyActuationContext) -> ActuatorInspection:
         """Return named terms without changing the RHS calculation path."""

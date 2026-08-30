@@ -146,7 +146,6 @@ def build_deadzone_snapshot(
     primary_axial_inertia = model.inertias.axial_translation.evaluate(
         primary_axial_coordinate=primary_coordinate,
         secondary_axial_coordinate=locked_geometry.secondary_axial_coordinate,
-        belt_axial_coordinate=locked_geometry.belt_axial_coordinate,
     ).primary
 
     # If a helical coupling is present, its element already carries the movable
