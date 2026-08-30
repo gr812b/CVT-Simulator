@@ -163,10 +163,13 @@ class FixedPivotFlyweightForce:
 
         if not isfinite(tolerance) or tolerance < 0.0:
             raise ValueError("tolerance must be finite and non-negative.")
-        return self.compressive_contact_margin(
-            context=context,
-            unknowns=unknowns,
-        ) >= -tolerance
+        return (
+            self.compressive_contact_margin(
+                context=context,
+                unknowns=unknowns,
+            )
+            >= -tolerance
+        )
 
     def compressive_contact_margin(
         self,

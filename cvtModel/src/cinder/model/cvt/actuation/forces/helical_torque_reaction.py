@@ -151,10 +151,13 @@ class HelicalTorqueReactionForce:
     ) -> bool:
         if not isfinite(tolerance) or tolerance < 0.0:
             raise ValueError("tolerance must be finite and non-negative.")
-        return self.compressive_contact_margin(
-            context=context,
-            unknowns=unknowns,
-        ) >= -tolerance
+        return (
+            self.compressive_contact_margin(
+                context=context,
+                unknowns=unknowns,
+            )
+            >= -tolerance
+        )
 
     def _terms(self, context: PulleyActuationContext) -> "_HelixTerms":
         coupling = context.helical_coupling
@@ -192,9 +195,7 @@ class HelicalTorqueReactionForce:
                         channels.shaft_torque: self._spec.movable_member_torque_fraction,
                     }
                 )
-                + ClosureGains(
-                    shift_acceleration=(-inertia * kinematics.dtheta_ds)
-                )
+                + ClosureGains(shift_acceleration=(-inertia * kinematics.dtheta_ds))
             ),
         )
         closing_force = reacted_torque.scaled(motion_ratio)

@@ -546,7 +546,6 @@ def _validate_snapshot(snapshot: DynamicsSnapshot) -> None:
         "secondary_absolute_rotational_inertia": snapshot.secondary_absolute_rotational_inertia,
         "primary_axial_mass": snapshot.axial_translation_inertias.primary.mass,
         "secondary_axial_mass": snapshot.axial_translation_inertias.secondary.mass,
-        "belt_axial_mass": snapshot.axial_translation_inertias.belt.mass,
         "sheave_half_angle": snapshot.sheave_half_angle,
     }
     if snapshot.secondary_helix is not None:
