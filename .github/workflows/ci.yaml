@@ -29,7 +29,7 @@ jobs:
           python -m venv venv
           source venv/bin/activate
           python -m pip install --upgrade pip
-          python -m pip install -e .
+          python -m pip install -e ".[results]"
           python -m pip install "black>=24" "coverage>=7" "flake8>=7" "pytest>=8"
 
       - name: Run flake8

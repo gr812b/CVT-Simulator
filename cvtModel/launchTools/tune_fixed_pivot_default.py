@@ -40,16 +40,7 @@ MILLIMETRE = 1.0e-3
 
 
 def default_candidate() -> route.TuneCandidate:
-    return route.TuneCandidate(
-        flyweight_mass_kg=0.25,
-        helix_angle_degrees=20.0,
-        secondary_torsional_pretension_degrees=300.0,
-        secondary_compression_preload_mm=110.0,
-        primary_ramp_kind="fixed_pivot_piecewise",
-        primary_ramp_angle_degrees=35.0,
-        primary_ramp_start_angle_degrees=35.0,
-        primary_ramp_end_angle_degrees=20.0,
-    )
+    return route.TuneCandidate()
 
 
 def parse_args() -> argparse.Namespace:
@@ -63,7 +54,7 @@ def parse_args() -> argparse.Namespace:
         "--install",
         action="store_true",
         help=(
-            "Overwrite launchTools/presets/circular_traction_first_reference.json "
+            "Overwrite launchTools/presets/fixed_pivot_3200_reference.json "
             "with the best candidate."
         ),
     )
@@ -241,7 +232,7 @@ def candidate_payload(candidate: route.TuneCandidate) -> dict[str, object]:
             "approximately 3200 rpm main shift, and complete flat-launch shift."
         ),
         "candidate": {
-            "flyweight_mass_kg": candidate.flyweight_mass_kg,
+            "tip_hardware_mass_per_flyweight_kg": candidate.tip_hardware_mass_per_flyweight_kg,
             "helix_angle_degrees": candidate.helix_angle_degrees,
             "secondary_torsional_pretension_degrees": (
                 candidate.secondary_torsional_pretension_degrees
@@ -249,19 +240,18 @@ def candidate_payload(candidate: route.TuneCandidate) -> dict[str, object]:
             "secondary_compression_preload_mm": (
                 candidate.secondary_compression_preload_mm
             ),
-            "primary_ramp_kind": candidate.primary_ramp_kind,
-            "primary_ramp_angle_degrees": (
-                candidate.primary_ramp_angle_degrees
+            "primary_linear_ramp_angle_degrees": (
+                candidate.primary_linear_ramp_angle_degrees
             ),
-            "primary_ramp_start_angle_degrees": (
-                candidate.primary_ramp_start_angle_degrees
+            "primary_circular_ramp_start_angle_degrees": (
+                candidate.primary_circular_ramp_start_angle_degrees
             ),
-            "primary_ramp_end_angle_degrees": (
-                candidate.primary_ramp_end_angle_degrees
+            "primary_circular_ramp_end_angle_degrees": (
+                candidate.primary_circular_ramp_end_angle_degrees
             ),
         },
         "fixed_pivot_mass_semantics": {
-            "flyweight_mass_kg": (
+            "tip_hardware_mass_per_flyweight_kg": (
                 "concentrated tip-hardware mass per flyweight; "
                 "13.646 g arm/body is added separately"
             )
@@ -280,28 +270,28 @@ def main() -> None:
         (
             "tip_mass",
             [
-                replace(current, flyweight_mass_kg=value)
+                replace(current, tip_hardware_mass_per_flyweight_kg=value)
                 for value in (0.20, 0.225, 0.25, 0.275, 0.30)
             ],
         ),
         (
             "linear_angle",
             [
-                replace(current, primary_ramp_angle_degrees=value)
+                replace(current, primary_linear_ramp_angle_degrees=value)
                 for value in (30.0, 35.0, 40.0)
             ],
         ),
         (
             "circle_start",
             [
-                replace(current, primary_ramp_start_angle_degrees=value)
+                replace(current, primary_circular_ramp_start_angle_degrees=value)
                 for value in (32.0, 35.0, 38.0)
             ],
         ),
         (
             "circle_end",
             [
-                replace(current, primary_ramp_end_angle_degrees=value)
+                replace(current, primary_circular_ramp_end_angle_degrees=value)
                 for value in (16.0, 20.0, 24.0, 28.0)
             ],
         ),
@@ -338,19 +328,19 @@ def main() -> None:
     for stage_name, _initial_variants in stages:
         if stage_name == "tip_mass":
             variants = [
-                replace(current, flyweight_mass_kg=value)
+                replace(current, tip_hardware_mass_per_flyweight_kg=value)
                 for value in (0.20, 0.225, 0.25, 0.275, 0.30)
             ]
         elif stage_name == "linear_angle":
             variants = [
-                replace(current, primary_ramp_angle_degrees=value)
+                replace(current, primary_linear_ramp_angle_degrees=value)
                 for value in (30.0, 35.0, 40.0)
             ]
         elif stage_name == "circle_start":
             variants = [
                 replace(
                     current,
-                    primary_ramp_start_angle_degrees=value,
+                    primary_circular_ramp_start_angle_degrees=value,
                 )
                 for value in (32.0, 35.0, 38.0)
             ]
@@ -358,7 +348,7 @@ def main() -> None:
             variants = [
                 replace(
                     current,
-                    primary_ramp_end_angle_degrees=value,
+                    primary_circular_ramp_end_angle_degrees=value,
                 )
                 for value in (16.0, 20.0, 24.0, 28.0)
             ]
@@ -459,11 +449,7 @@ def main() -> None:
     print(f"Wrote {best_path}")
 
     if args.install:
-        target = (
-            HERE
-            / "presets"
-            / "circular_traction_first_reference.json"
-        )
+        target = route.DEFAULT_FIXED_PIVOT_PRESET
         target.write_text(
             json.dumps(best_payload, indent=2) + "\n",
             encoding="utf-8",

@@ -72,11 +72,7 @@ def parse_args() -> argparse.Namespace:
 
 
 def _default_candidate() -> route.TuneCandidate:
-    preset = (
-        HERE
-        / "presets"
-        / "circular_traction_first_reference.json"
-    )
+    preset = route.DEFAULT_FIXED_PIVOT_PRESET
     return route.load_candidate(preset)
 
 

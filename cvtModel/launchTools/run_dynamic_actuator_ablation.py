@@ -109,22 +109,16 @@ class QuasiStaticFixedPivotFlyweightForce(FixedPivotFlyweightForce):
         self,
         context: PulleyActuationContext,
     ) -> AffineClosureScalar:
-        sample = self.spec.mechanism_map.evaluate(
-            context.axial_position
-        )
+        sample = self.spec.mechanism_map.evaluate(context.axial_position)
         return AffineClosureScalar.constant(
-            0.5
-            * context.shaft_speed**2
-            * sample.shaft_inertia_gradient
+            0.5 * context.shaft_speed**2 * sample.shaft_inertia_gradient
         )
 
     def evaluate_element(
         self,
         context: PulleyActuationContext,
     ) -> PulleyElementContribution:
-        return PulleyElementContribution.from_closing_force(
-            self.evaluate(context)
-        )
+        return PulleyElementContribution.from_closing_force(self.evaluate(context))
 
     def kinetic_modes(
         self,
@@ -145,9 +139,7 @@ class QuasiStaticFixedPivotFlyweightForce(FixedPivotFlyweightForce):
         )
 
 
-class QuasiStaticHelicalTorqueReactionForce(
-    HelicalTorqueReactionForce
-):
+class QuasiStaticHelicalTorqueReactionForce(HelicalTorqueReactionForce):
     """Classical torque-reactive helix with no dynamic movable-member term."""
 
     def evaluate(
@@ -157,13 +149,9 @@ class QuasiStaticHelicalTorqueReactionForce(
         coupling = context.helical_coupling
         channels = context.closure_channels
         if coupling is None:
-            raise ValueError(
-                "Quasi-static helix requires helical coupling."
-            )
+            raise ValueError("Quasi-static helix requires helical coupling.")
         if channels is None:
-            raise ValueError(
-                "Quasi-static helix requires closure channels."
-            )
+            raise ValueError("Quasi-static helix requires closure channels.")
 
         motion_ratio = coupling.dtheta_daxial
         theta = coupling.kinematics.theta
@@ -175,8 +163,7 @@ class QuasiStaticHelicalTorqueReactionForce(
             gains=ClosureGains.from_by_unknown(
                 {
                     channels.shaft_torque: (
-                        motion_ratio
-                        * self.spec.movable_member_torque_fraction
+                        motion_ratio * self.spec.movable_member_torque_fraction
                     )
                 }
             ),
@@ -186,9 +173,7 @@ class QuasiStaticHelicalTorqueReactionForce(
         self,
         context: PulleyActuationContext,
     ) -> PulleyElementContribution:
-        return PulleyElementContribution.from_closing_force(
-            self.evaluate(context)
-        )
+        return PulleyElementContribution.from_closing_force(self.evaluate(context))
 
     def inspect(
         self,
@@ -210,9 +195,7 @@ class QuasiStaticHelicalTorqueReactionForce(
             ActuationContribution(
                 key="quasi_static_helix_torsional_spring",
                 label="Quasi-static helix torsional spring",
-                relation=AffineClosureScalar.constant(
-                    motion_ratio * spring_torque
-                ),
+                relation=AffineClosureScalar.constant(motion_ratio * spring_torque),
             ),
             ActuationContribution(
                 key="quasi_static_helix_reacted_belt_torque",
@@ -221,8 +204,7 @@ class QuasiStaticHelicalTorqueReactionForce(
                     gains=ClosureGains.from_by_unknown(
                         {
                             channels.shaft_torque: (
-                                motion_ratio
-                                * self.spec.movable_member_torque_fraction
+                                motion_ratio * self.spec.movable_member_torque_fraction
                             )
                         }
                     )
@@ -314,9 +296,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--output-dir",
         type=Path,
-        default=Path(
-            "outputs/dynamic_actuator_ablation_rich"
-        ),
+        default=Path("outputs/dynamic_actuator_ablation_rich"),
     )
     parser.add_argument("--rtol", type=float, default=1.0e-3)
     parser.add_argument("--atol", type=float, default=1.0e-6)
@@ -330,11 +310,7 @@ def programme_for_scenario(
     duration_override: float | None,
 ):
     if scenario == "launch":
-        duration = (
-            10.0
-            if duration_override is None
-            else float(duration_override)
-        )
+        duration = 10.0 if duration_override is None else float(duration_override)
         return (
             route.GradeProgramme(
                 (
@@ -353,9 +329,7 @@ def programme_for_scenario(
 
     programme = route.GradeProgramme.default()
     duration = (
-        programme.end_time_s
-        if duration_override is None
-        else float(duration_override)
+        programme.end_time_s if duration_override is None else float(duration_override)
     )
     return programme, duration
 
@@ -376,18 +350,13 @@ def _replace_flyweight_law(
         if isinstance(law, FixedPivotFlyweightForce):
             found += 1
             laws.append(
-                law
-                if dynamic
-                else QuasiStaticFixedPivotFlyweightForce(
-                    law.spec
-                )
+                law if dynamic else QuasiStaticFixedPivotFlyweightForce(law.spec)
             )
         else:
             laws.append(law)
     if found != 1:
         raise RuntimeError(
-            "Expected exactly one fixed-pivot flyweight law; "
-            f"found {found}."
+            "Expected exactly one fixed-pivot flyweight law; " f"found {found}."
         )
     return PulleyActuator(*laws)
 
@@ -403,19 +372,12 @@ def _replace_helix_law(
         if isinstance(law, HelicalTorqueReactionForce):
             found += 1
             laws.append(
-                law
-                if dynamic
-                else QuasiStaticHelicalTorqueReactionForce(
-                    spec=law.spec
-                )
+                law if dynamic else QuasiStaticHelicalTorqueReactionForce(spec=law.spec)
             )
         else:
             laws.append(law)
     if found != 1:
-        raise RuntimeError(
-            "Expected exactly one helix force law; "
-            f"found {found}."
-        )
+        raise RuntimeError("Expected exactly one helix force law; " f"found {found}.")
     return PulleyActuator(*laws)
 
 
@@ -437,13 +399,9 @@ def ablate_assembly(
 
     if not variant.dynamic_flyweight:
         primary_inertia = PrimaryInertia(
-            fixed_rotating_hardware_inertia=(
-                PCVT_TOTAL_MOI_KG_M2
-            ),
+            fixed_rotating_hardware_inertia=(PCVT_TOTAL_MOI_KG_M2),
             movable_sheave_rotational_inertia=0.0,
-            moving_sheave_mass=(
-                full.inertias.primary.moving_sheave_mass
-            ),
+            moving_sheave_mass=(full.inertias.primary.moving_sheave_mass),
         )
 
     if not variant.dynamic_helix:
@@ -468,15 +426,11 @@ def ablate_assembly(
         pulleys=PulleyPairSpec(
             primary=PulleySpec(
                 actuator=primary_actuator,
-                helical_coupling=(
-                    full.pulleys.primary.helical_coupling
-                ),
+                helical_coupling=(full.pulleys.primary.helical_coupling),
             ),
             secondary=PulleySpec(
                 actuator=secondary_actuator,
-                helical_coupling=(
-                    full.pulleys.secondary.helical_coupling
-                ),
+                helical_coupling=(full.pulleys.secondary.helical_coupling),
             ),
         ),
         inertias=replace(
@@ -497,22 +451,16 @@ def build_system_from_assembly(
 ) -> ComposedCVTHybridSystem:
     plant = MechanicalCVTPlant.from_assembly(assembly)
     host = SecondaryShaftAngleHost()
-    secondary_boundary = (
-        route.TimeProgrammedLockedFinalDriveBoundary(
-            road_load=road_load,
-            programme=programme,
-            direct_secondary_shaft_inertia=(
-                constants.gearbox_input_rotational_inertia
-            ),
-        )
+    secondary_boundary = route.TimeProgrammedLockedFinalDriveBoundary(
+        road_load=road_load,
+        programme=programme,
+        direct_secondary_shaft_inertia=(constants.gearbox_input_rotational_inertia),
     )
     return ComposedCVTHybridSystem.from_plant(
         plant=plant,
         primary_boundary=FullThrottleEngineBoundary(
             engine,
-            equivalent_rotational_inertia=(
-                constants.engine_rotational_inertia
-            ),
+            equivalent_rotational_inertia=(constants.engine_rotational_inertia),
         ),
         secondary_boundary=secondary_boundary,
         host=host,
@@ -531,14 +479,10 @@ def _mode_name(value: object) -> str:
 
 def _find_flyweight(actuator: PulleyActuator):
     laws = [
-        law
-        for law in actuator.force_laws
-        if isinstance(law, FixedPivotFlyweightForce)
+        law for law in actuator.force_laws if isinstance(law, FixedPivotFlyweightForce)
     ]
     if len(laws) != 1:
-        raise RuntimeError(
-            f"Expected one flyweight law; found {len(laws)}."
-        )
+        raise RuntimeError(f"Expected one flyweight law; found {len(laws)}.")
     return laws[0]
 
 
@@ -549,9 +493,7 @@ def _find_helix(actuator: PulleyActuator):
         if isinstance(law, HelicalTorqueReactionForce)
     ]
     if len(laws) != 1:
-        raise RuntimeError(
-            f"Expected one helix law; found {len(laws)}."
-        )
+        raise RuntimeError(f"Expected one helix law; found {len(laws)}.")
     return laws[0]
 
 
@@ -560,16 +502,9 @@ def _geometry_for_mode(
     state: CVTState,
     composed_mode,
 ):
-    if (
-        composed_mode.cvt.engagement
-        is CVTEngagementState.ENGAGED
-    ):
-        return model.geometry.evaluate_engaged(
-            state.shift_position
-        )
-    return model.geometry.evaluate_deadzone(
-        state.shift_position
-    )
+    if composed_mode.cvt.engagement is CVTEngagementState.ENGAGED:
+        return model.geometry.evaluate_engaged(state.shift_position)
+    return model.geometry.evaluate_deadzone(state.shift_position)
 
 
 def _segment_sample_times(segment, step: float) -> np.ndarray:
@@ -611,26 +546,14 @@ def _closure_dict(
             "normal_secondary_N": NAN,
         }
     return {
-        "alpha_primary_rad_s2": (
-            closure.primary_angular_acceleration
-        ),
-        "alpha_secondary_rad_s2": (
-            closure.secondary_angular_acceleration
-        ),
-        "belt_acceleration_closure_m_s2": (
-            closure.belt_acceleration
-        ),
-        "shift_acceleration_closure_m_s2": (
-            closure.shift_acceleration
-        ),
+        "alpha_primary_rad_s2": (closure.primary_angular_acceleration),
+        "alpha_secondary_rad_s2": (closure.secondary_angular_acceleration),
+        "belt_acceleration_closure_m_s2": (closure.belt_acceleration),
+        "shift_acceleration_closure_m_s2": (closure.shift_acceleration),
         "tau_primary_belt_Nm": closure.primary_torque,
         "tau_secondary_belt_Nm": closure.secondary_torque,
-        "normal_primary_N": (
-            closure.primary_normal_resultant
-        ),
-        "normal_secondary_N": (
-            closure.secondary_normal_resultant
-        ),
+        "normal_primary_N": (closure.primary_normal_resultant),
+        "normal_secondary_N": (closure.secondary_normal_resultant),
     }
 
 
@@ -658,9 +581,7 @@ def _contribution_rows(
             "bias_force_N": relation.bias,
         }
         for unknown in ClosureUnknown:
-            row[
-                f"gain__{unknown.name.lower()}"
-            ] = relation.gains[unknown]
+            row[f"gain__{unknown.name.lower()}"] = relation.gains[unknown]
         rows.append(row)
     return rows
 
@@ -686,10 +607,7 @@ def _mechanism_terms(
         primary_axial_coordinate=pcoord,
         secondary_axial_coordinate=scoord,
     )
-    base_mass = (
-        axial.primary.reflected_mass
-        + axial.secondary.reflected_mass
-    )
+    base_mass = axial.primary.reflected_mass + axial.secondary.reflected_mass
 
     fly_law = _find_flyweight(model.primary_actuator)
     fw = fly_law.spec.mechanism_map.evaluate(pcoord.value)
@@ -704,18 +622,11 @@ def _mechanism_terms(
         d_axial_position_ds=scoord.d_value_ds,
         d2_axial_position_ds2=scoord.d2_value_ds2,
     )
-    helix_mass = (
-        SCVT_MOVABLE_SHEAVE_MOI_KG_M2
-        * hk.dtheta_ds**2
-    )
+    helix_mass = SCVT_MOVABLE_SHEAVE_MOI_KG_M2 * hk.dtheta_ds**2
 
     result = {
-        "mass_primary_translation_kg": (
-            axial.primary.reflected_mass
-        ),
-        "mass_secondary_translation_kg": (
-            axial.secondary.reflected_mass
-        ),
+        "mass_primary_translation_kg": (axial.primary.reflected_mass),
+        "mass_secondary_translation_kg": (axial.secondary.reflected_mass),
         "mass_base_axial_total_kg": base_mass,
         "mass_flyweight_reflected_candidate_kg": fly_mass,
         "mass_helix_reflected_candidate_kg": helix_mass,
@@ -724,15 +635,11 @@ def _mechanism_terms(
         "flyweight_q_second_rad_per_m2": fw.angle_curvature,
         "flyweight_pivot_inertia_kg_m2": fw.pivot_inertia,
         "flyweight_shaft_inertia_kg_m2": fw.shaft_inertia,
-        "flyweight_shaft_inertia_gradient_kg_m": (
-            fw.shaft_inertia_gradient
-        ),
+        "flyweight_shaft_inertia_gradient_kg_m": (fw.shaft_inertia_gradient),
         "helix_theta_rad": hk.theta,
         "helix_dtheta_ds_rad_per_m": hk.dtheta_ds,
         "helix_d2theta_ds2_rad_per_m2": hk.d2theta_ds2,
-        "helix_dtheta_dopening_rad_per_m": (
-            hk.dtheta_dopening
-        ),
+        "helix_dtheta_dopening_rad_per_m": (hk.dtheta_dopening),
     }
 
     if closure is None:
@@ -762,53 +669,28 @@ def _mechanism_terms(
     sddot = closure.shift_acceleration
 
     xdot_p = pcoord.d_value_ds * sdot
-    xddot_p = (
-        pcoord.d_value_ds * sddot
-        + pcoord.d2_value_ds2 * sdot**2
-    )
-    fly_qs = (
-        0.5
-        * state.primary_angular_speed**2
-        * fw.shaft_inertia_gradient
-    )
-    fly_axial = (
-        -fw.pivot_inertia
-        * fw.angle_gradient**2
-        * xddot_p
-    )
+    xddot_p = pcoord.d_value_ds * sddot + pcoord.d2_value_ds2 * sdot**2
+    fly_qs = 0.5 * state.primary_angular_speed**2 * fw.shaft_inertia_gradient
+    fly_axial = -fw.pivot_inertia * fw.angle_gradient**2 * xddot_p
     fly_curvature = (
-        -fw.pivot_inertia
-        * fw.angle_gradient
-        * fw.angle_curvature
-        * xdot_p**2
+        -fw.pivot_inertia * fw.angle_gradient * fw.angle_curvature * xdot_p**2
     )
     fly_delta = fly_axial + fly_curvature
     j0 = fly_law.spec.mechanism_map.evaluate(0.0).shaft_inertia
     fly_shaft_delta = (
-        -(fw.shaft_inertia - j0)
-        * closure.primary_angular_acceleration
-        - fw.shaft_inertia_gradient
-        * xdot_p
-        * state.primary_angular_speed
+        -(fw.shaft_inertia - j0) * closure.primary_angular_acceleration
+        - fw.shaft_inertia_gradient * xdot_p * state.primary_angular_speed
     )
 
     helix_law = _find_helix(model.secondary_actuator)
     opening_gain = coupling.opening_per_axial_position
     dtheta_dx = hk.dtheta_dopening * opening_gain
-    theta_ddot = (
-        hk.dtheta_ds * sddot
-        + hk.d2theta_ds2 * sdot**2
-    )
-    spring_torque = (
-        helix_law.spec.torsional_stiffness
-        * (
-            helix_law.spec.initial_twist
-            - hk.theta
-        )
+    theta_ddot = hk.dtheta_ds * sddot + hk.d2theta_ds2 * sdot**2
+    spring_torque = helix_law.spec.torsional_stiffness * (
+        helix_law.spec.initial_twist - hk.theta
     )
     qs_helix_torque = (
-        helix_law.spec.movable_member_torque_fraction
-        * closure.secondary_torque
+        helix_law.spec.movable_member_torque_fraction * closure.secondary_torque
         + spring_torque
     )
     helix_qs_force = dtheta_dx * qs_helix_torque
@@ -818,26 +700,15 @@ def _mechanism_terms(
         * closure.secondary_angular_acceleration
     )
     helix_shift_accel_force = (
-        -dtheta_dx
-        * SCVT_MOVABLE_SHEAVE_MOI_KG_M2
-        * hk.dtheta_ds
-        * sddot
+        -dtheta_dx * SCVT_MOVABLE_SHEAVE_MOI_KG_M2 * hk.dtheta_ds * sddot
     )
     helix_curvature_force = (
-        -dtheta_dx
-        * SCVT_MOVABLE_SHEAVE_MOI_KG_M2
-        * hk.d2theta_ds2
-        * sdot**2
+        -dtheta_dx * SCVT_MOVABLE_SHEAVE_MOI_KG_M2 * hk.d2theta_ds2 * sdot**2
     )
     helix_delta = (
-        helix_shaft_accel_force
-        + helix_shift_accel_force
-        + helix_curvature_force
+        helix_shaft_accel_force + helix_shift_accel_force + helix_curvature_force
     )
-    helix_shaft_delta = (
-        -SCVT_MOVABLE_SHEAVE_MOI_KG_M2
-        * theta_ddot
-    )
+    helix_shaft_delta = -SCVT_MOVABLE_SHEAVE_MOI_KG_M2 * theta_ddot
 
     result.update(
         {
@@ -847,35 +718,21 @@ def _mechanism_terms(
             "fly_dynamic_total_correction_N": fly_delta,
             "fly_full_force_N": fly_qs + fly_delta,
             "fly_dynamic_correction_pct_of_qs_force": (
-                100.0 * fly_delta / fly_qs
-                if abs(fly_qs) > 1.0e-12
-                else NAN
+                100.0 * fly_delta / fly_qs if abs(fly_qs) > 1.0e-12 else NAN
             ),
-            "fly_dynamic_shaft_torque_correction_vs_constant_Nm": (
-                fly_shaft_delta
-            ),
+            "fly_dynamic_shaft_torque_correction_vs_constant_Nm": (fly_shaft_delta),
             "helix_qs_reaction_force_N": helix_qs_force,
-            "helix_dynamic_shaft_accel_force_N": (
-                helix_shaft_accel_force
-            ),
-            "helix_dynamic_shift_accel_force_N": (
-                helix_shift_accel_force
-            ),
-            "helix_dynamic_curvature_force_N": (
-                helix_curvature_force
-            ),
+            "helix_dynamic_shaft_accel_force_N": (helix_shaft_accel_force),
+            "helix_dynamic_shift_accel_force_N": (helix_shift_accel_force),
+            "helix_dynamic_curvature_force_N": (helix_curvature_force),
             "helix_dynamic_total_correction_N": helix_delta,
-            "helix_full_reaction_force_N": (
-                helix_qs_force + helix_delta
-            ),
+            "helix_full_reaction_force_N": (helix_qs_force + helix_delta),
             "helix_dynamic_correction_pct_of_qs_force": (
                 100.0 * helix_delta / helix_qs_force
                 if abs(helix_qs_force) > 1.0e-12
                 else NAN
             ),
-            "helix_dynamic_shaft_torque_correction_vs_constant_Nm": (
-                helix_shaft_delta
-            ),
+            "helix_dynamic_shaft_torque_correction_vs_constant_Nm": (helix_shaft_delta),
             "helix_theta_ddot_rad_s2": theta_ddot,
         }
     )
@@ -948,108 +805,63 @@ def sample_variant(
                     "segment_start"
                     if local_index == 0
                     else (
-                        "segment_end"
-                        if local_index == len(times) - 1
-                        else "interior"
+                        "segment_end" if local_index == len(times) - 1 else "interior"
                     )
                 ),
-                "segment_has_event": bool(
-                    segment.fired_event_names
-                ),
-                "segment_event_names": "|".join(
-                    segment.fired_event_names
-                ),
+                "segment_has_event": bool(segment.fired_event_names),
+                "segment_event_names": "|".join(segment.fired_event_names),
                 "mode": str(mode),
                 "cvt_mode": str(mode.cvt),
-                "engagement_state": _mode_name(
-                    mode.cvt.engagement
-                ),
-                "primary_omega_rad_s": (
-                    cvt_state.primary_angular_speed
-                ),
+                "engagement_state": _mode_name(mode.cvt.engagement),
+                "primary_omega_rad_s": (cvt_state.primary_angular_speed),
                 "primary_rpm": (
-                    cvt_state.primary_angular_speed
-                    * RPM_PER_RADIAN_PER_SECOND
+                    cvt_state.primary_angular_speed * RPM_PER_RADIAN_PER_SECOND
                 ),
-                "secondary_omega_rad_s": (
-                    cvt_state.secondary_angular_speed
-                ),
+                "secondary_omega_rad_s": (cvt_state.secondary_angular_speed),
                 "secondary_rpm": (
-                    cvt_state.secondary_angular_speed
-                    * RPM_PER_RADIAN_PER_SECOND
+                    cvt_state.secondary_angular_speed * RPM_PER_RADIAN_PER_SECOND
                 ),
                 "belt_speed_m_s": cvt_state.belt_speed,
                 "shift_m": cvt_state.shift_position,
-                "shift_mm": (
-                    cvt_state.shift_position
-                    / MILLIMETRE
-                ),
+                "shift_mm": (cvt_state.shift_position / MILLIMETRE),
                 "shift_speed_m_s": cvt_state.shift_speed,
-                "shift_speed_mm_s": (
-                    cvt_state.shift_speed
-                    / MILLIMETRE
-                ),
+                "shift_speed_mm_s": (cvt_state.shift_speed / MILLIMETRE),
                 # Continuous RHS values: no numerical differentiation.
                 "rhs_alpha_primary_rad_s2": float(cvt_rhs[0]),
                 "rhs_alpha_secondary_rad_s2": float(cvt_rhs[1]),
                 "rhs_belt_acceleration_m_s2": float(cvt_rhs[2]),
                 "rhs_shift_speed_m_s": float(cvt_rhs[3]),
                 "rhs_shift_acceleration_m_s2": float(cvt_rhs[4]),
-                "primary_external_torque_Nm": (
-                    boundaries.primary.external_torque
-                ),
+                "primary_external_torque_Nm": (boundaries.primary.external_torque),
                 "primary_boundary_inertia_kg_m2": (
                     boundaries.primary.equivalent_inertia
                 ),
-                "secondary_external_torque_Nm": (
-                    boundaries.secondary.external_torque
-                ),
+                "secondary_external_torque_Nm": (boundaries.secondary.external_torque),
                 "secondary_boundary_inertia_kg_m2": (
                     boundaries.secondary.equivalent_inertia
                 ),
                 "ratio_secondary_over_primary": (
-                    inspection.geometry
-                    .effective_ratio_secondary_over_primary
+                    inspection.geometry.effective_ratio_secondary_over_primary
                 ),
-                "primary_effective_radius_m": (
-                    inspection.geometry.primary.effective
-                ),
+                "primary_effective_radius_m": (inspection.geometry.primary.effective),
                 "secondary_effective_radius_m": (
                     inspection.geometry.secondary.effective
                 ),
-                "primary_wrap_rad": (
-                    inspection.geometry.primary_wrap_angle
-                ),
-                "secondary_wrap_rad": (
-                    inspection.geometry.secondary_wrap_angle
-                ),
-                "primary_axial_x_m": (
-                    geometry.primary_axial_coordinate.value
-                ),
-                "primary_dx_ds": (
-                    geometry.primary_axial_coordinate.d_value_ds
-                ),
+                "primary_wrap_rad": (inspection.geometry.primary_wrap_angle),
+                "secondary_wrap_rad": (inspection.geometry.secondary_wrap_angle),
+                "primary_axial_x_m": (geometry.primary_axial_coordinate.value),
+                "primary_dx_ds": (geometry.primary_axial_coordinate.d_value_ds),
                 "primary_d2x_ds2_per_m": (
                     geometry.primary_axial_coordinate.d2_value_ds2
                 ),
-                "secondary_axial_x_m": (
-                    geometry.secondary_axial_coordinate.value
-                ),
-                "secondary_dx_ds": (
-                    geometry.secondary_axial_coordinate.d_value_ds
-                ),
+                "secondary_axial_x_m": (geometry.secondary_axial_coordinate.value),
+                "secondary_dx_ds": (geometry.secondary_axial_coordinate.d_value_ds),
                 "secondary_d2x_ds2_per_m": (
                     geometry.secondary_axial_coordinate.d2_value_ds2
                 ),
-                "belt_axial_x_m": (
-                    geometry.belt_axial_coordinate.value
-                ),
-                "belt_dx_ds": (
-                    geometry.belt_axial_coordinate.d_value_ds
-                ),
-                "belt_d2x_ds2_per_m": (
-                    geometry.belt_axial_coordinate.d2_value_ds2
-                ),
+                "belt_axial_x_m": (geometry.belt_axial_coordinate.value),
+                "belt_dx_ds": (geometry.belt_axial_coordinate.d_value_ds),
+                "belt_d2x_ds2_per_m": (geometry.belt_axial_coordinate.d2_value_ds2),
             }
             row.update(_closure_dict(closure))
             row.update(
@@ -1079,32 +891,20 @@ def sample_variant(
             )
 
             if closure is not None:
-                primary_total = (
-                    inspection.primary_actuation
-                    .resolve_total(closure)
-                )
+                primary_total = inspection.primary_actuation.resolve_total(closure)
                 secondary_total = (
-                    inspection.secondary_actuation
-                    .resolve_total(closure)
+                    inspection.secondary_actuation.resolve_total(closure)
                     if inspection.secondary_actuation is not None
                     else NAN
                 )
-                row["primary_actuator_closing_force_N"] = (
-                    primary_total
-                )
-                row["secondary_actuator_closing_force_N"] = (
-                    secondary_total
-                )
+                row["primary_actuator_closing_force_N"] = primary_total
+                row["secondary_actuator_closing_force_N"] = secondary_total
 
                 contact = inspection.contact
                 if contact is not None:
                     traction = contact.traction_utilization
-                    row["lambda_primary"] = (
-                        traction.primary_lambda
-                    )
-                    row["lambda_secondary"] = (
-                        traction.secondary_lambda
-                    )
+                    row["lambda_primary"] = traction.primary_lambda
+                    row["lambda_secondary"] = traction.secondary_lambda
                     row["low_ratio_seat_reaction_N"] = (
                         contact.low_ratio_seat_reaction
                         if contact.low_ratio_seat_reaction is not None
@@ -1201,10 +1001,7 @@ def direct_prediction_on_full_trajectory(
     list[dict[str, Any]],
     list[dict[str, Any]],
 ]:
-    full = next(
-        item for item in results
-        if item.variant.key == "full"
-    )
+    full = next(item for item in results if item.variant.key == "full")
     by_key = {item.variant.key: item for item in results}
     rows: list[dict[str, Any]] = []
     long_contrib: list[dict[str, Any]] = []
@@ -1220,24 +1017,12 @@ def direct_prediction_on_full_trajectory(
             "shift_speed_mm_s": sample.row["shift_speed_mm_s"],
             "primary_rpm": sample.row["primary_rpm"],
             "secondary_rpm": sample.row["secondary_rpm"],
-            "alpha_primary_rad_s2": (
-                sample.closure.primary_angular_acceleration
-            ),
-            "alpha_secondary_rad_s2": (
-                sample.closure.secondary_angular_acceleration
-            ),
-            "shift_acceleration_m_s2": (
-                sample.closure.shift_acceleration
-            ),
-            "tau_primary_belt_Nm": (
-                sample.closure.primary_torque
-            ),
-            "tau_secondary_belt_Nm": (
-                sample.closure.secondary_torque
-            ),
-            "normal_primary_full_solution_N": (
-                sample.closure.primary_normal_resultant
-            ),
+            "alpha_primary_rad_s2": (sample.closure.primary_angular_acceleration),
+            "alpha_secondary_rad_s2": (sample.closure.secondary_angular_acceleration),
+            "shift_acceleration_m_s2": (sample.closure.shift_acceleration),
+            "tau_primary_belt_Nm": (sample.closure.primary_torque),
+            "tau_secondary_belt_Nm": (sample.closure.secondary_torque),
+            "normal_primary_full_solution_N": (sample.closure.primary_normal_resultant),
             "normal_secondary_full_solution_N": (
                 sample.closure.secondary_normal_resultant
             ),
@@ -1247,10 +1032,7 @@ def direct_prediction_on_full_trajectory(
             model = item.system.cvt.model
             # Every variant has identical belt/pulley geometry; use that
             # model's own geometry object at the full state.
-            if (
-                sample.composed_mode.cvt.engagement
-                is CVTEngagementState.ENGAGED
-            ):
+            if sample.composed_mode.cvt.engagement is CVTEngagementState.ENGAGED:
                 geometry = model.geometry.evaluate_engaged(
                     sample.cvt_state.shift_position
                 )
@@ -1268,12 +1050,8 @@ def direct_prediction_on_full_trajectory(
 
             ptotal = pinspect.resolve_total(sample.closure)
             stotal = sinspect.resolve_total(sample.closure)
-            row[
-                f"primary_total_clamp__{key}_N"
-            ] = ptotal
-            row[
-                f"secondary_total_clamp__{key}_N"
-            ] = stotal
+            row[f"primary_total_clamp__{key}_N"] = ptotal
+            row[f"secondary_total_clamp__{key}_N"] = stotal
 
             for pulley, inspection in (
                 ("primary", pinspect),
@@ -1283,63 +1061,39 @@ def direct_prediction_on_full_trajectory(
                     relation = contribution.relation
                     c_row = {
                         "counterfactual_variant": key,
-                        "counterfactual_variant_label": (
-                            item.variant.label
-                        ),
+                        "counterfactual_variant_label": (item.variant.label),
                         "time_s": sample.time,
-                        "segment_index": (
-                            sample.row["segment_index"]
-                        ),
+                        "segment_index": (sample.row["segment_index"]),
                         "shift_mm": sample.row["shift_mm"],
                         "primary_rpm": sample.row["primary_rpm"],
                         "pulley": pulley,
                         "contribution_key": contribution.key,
                         "contribution_label": contribution.label,
-                        "resolved_force_N": (
-                            relation.evaluate(sample.closure)
-                        ),
+                        "resolved_force_N": (relation.evaluate(sample.closure)),
                         "bias_force_N": relation.bias,
                     }
                     for unknown in ClosureUnknown:
-                        c_row[
-                            f"gain__{unknown.name.lower()}"
-                        ] = relation.gains[unknown]
+                        c_row[f"gain__{unknown.name.lower()}"] = relation.gains[unknown]
                     long_contrib.append(c_row)
 
         # Direct dynamic prediction deltas, same state and same closure values.
         row["primary_dynamic_correction_to_total_clamp_N"] = (
             row["primary_total_clamp__full_N"]
-            - row[
-                "primary_total_clamp__quasi_static_flyweight_N"
-            ]
+            - row["primary_total_clamp__quasi_static_flyweight_N"]
         )
         row["secondary_dynamic_correction_to_total_clamp_N"] = (
             row["secondary_total_clamp__full_N"]
-            - row[
-                "secondary_total_clamp__quasi_static_helix_N"
-            ]
+            - row["secondary_total_clamp__quasi_static_helix_N"]
         )
-        pden = row[
-            "primary_total_clamp__quasi_static_flyweight_N"
-        ]
-        sden = row[
-            "secondary_total_clamp__quasi_static_helix_N"
-        ]
-        row[
-            "primary_dynamic_correction_pct_of_qs_total_clamp"
-        ] = (
-            100.0
-            * row["primary_dynamic_correction_to_total_clamp_N"]
-            / pden
+        pden = row["primary_total_clamp__quasi_static_flyweight_N"]
+        sden = row["secondary_total_clamp__quasi_static_helix_N"]
+        row["primary_dynamic_correction_pct_of_qs_total_clamp"] = (
+            100.0 * row["primary_dynamic_correction_to_total_clamp_N"] / pden
             if abs(pden) > 1.0e-12
             else NAN
         )
-        row[
-            "secondary_dynamic_correction_pct_of_qs_total_clamp"
-        ] = (
-            100.0
-            * row["secondary_dynamic_correction_to_total_clamp_N"]
-            / sden
+        row["secondary_dynamic_correction_pct_of_qs_total_clamp"] = (
+            100.0 * row["secondary_dynamic_correction_to_total_clamp_N"] / sden
             if abs(sden) > 1.0e-12
             else NAN
         )
@@ -1376,10 +1130,7 @@ def effective_mass_map(
     results: list[VariantResult],
     points: int = 301,
 ) -> list[dict[str, Any]]:
-    full = next(
-        item for item in results
-        if item.variant.key == "full"
-    )
+    full = next(item for item in results if item.variant.key == "full")
     full_model = full.system.cvt.model
     spec = full_model.geometry.spec
 
@@ -1391,33 +1142,18 @@ def effective_mass_map(
     rows = []
 
     for shift_value in shift_values:
-        geometry = full_model.geometry.evaluate_engaged(
-            float(shift_value)
-        )
+        geometry = full_model.geometry.evaluate_engaged(float(shift_value))
         pcoord = geometry.primary_axial_coordinate
         scoord = geometry.secondary_axial_coordinate
         axial = full_model.inertias.axial_translation.evaluate(
             primary_axial_coordinate=pcoord,
             secondary_axial_coordinate=scoord,
         )
-        base = (
-            axial.primary.reflected_mass
-            + axial.secondary.reflected_mass
-        )
+        base = axial.primary.reflected_mass + axial.secondary.reflected_mass
 
-        fly_law = _find_flyweight(
-            full_model.primary_actuator
-        )
-        fw = fly_law.spec.mechanism_map.evaluate(
-            pcoord.value
-        )
-        fly = (
-            fw.pivot_inertia
-            * (
-                fw.angle_gradient
-                * pcoord.d_value_ds
-            ) ** 2
-        )
+        fly_law = _find_flyweight(full_model.primary_actuator)
+        fw = fly_law.spec.mechanism_map.evaluate(pcoord.value)
+        fly = fw.pivot_inertia * (fw.angle_gradient * pcoord.d_value_ds) ** 2
 
         coupling = full_model.secondary_helical_coupling
         if coupling is None:
@@ -1427,10 +1163,7 @@ def effective_mass_map(
             d_axial_position_ds=scoord.d_value_ds,
             d2_axial_position_ds2=scoord.d2_value_ds2,
         )
-        helix = (
-            SCVT_MOVABLE_SHEAVE_MOI_KG_M2
-            * hk.dtheta_ds**2
-        )
+        helix = SCVT_MOVABLE_SHEAVE_MOI_KG_M2 * hk.dtheta_ds**2
 
         full_total = base + fly + helix
         pct = (
@@ -1440,28 +1173,18 @@ def effective_mass_map(
         )
 
         for item in results:
-            active_fly = (
-                fly if item.variant.dynamic_flyweight else 0.0
-            )
-            active_helix = (
-                helix if item.variant.dynamic_helix else 0.0
-            )
+            active_fly = fly if item.variant.dynamic_flyweight else 0.0
+            active_helix = helix if item.variant.dynamic_helix else 0.0
             total = base + active_fly + active_helix
             rows.append(
                 {
                     "variant": item.variant.key,
                     "variant_label": item.variant.label,
                     "shift_m": float(shift_value),
-                    "shift_mm": float(
-                        shift_value / MILLIMETRE
-                    ),
+                    "shift_mm": float(shift_value / MILLIMETRE),
                     "engaged_shift_percent": pct,
-                    "mass_primary_translation_kg": (
-                        axial.primary.reflected_mass
-                    ),
-                    "mass_secondary_translation_kg": (
-                        axial.secondary.reflected_mass
-                    ),
+                    "mass_primary_translation_kg": (axial.primary.reflected_mass),
+                    "mass_secondary_translation_kg": (axial.secondary.reflected_mass),
                     "mass_base_axial_total_kg": base,
                     "mass_flyweight_physical_candidate_kg": fly,
                     "mass_helix_physical_candidate_kg": helix,
@@ -1481,15 +1204,9 @@ def effective_mass_map(
                     "helix_share_of_active_total_percent": (
                         100.0 * active_helix / total
                     ),
-                    "flyweight_q_prime_rad_per_m": (
-                        fw.angle_gradient
-                    ),
-                    "flyweight_q_second_rad_per_m2": (
-                        fw.angle_curvature
-                    ),
-                    "helix_dtheta_ds_rad_per_m": (
-                        hk.dtheta_ds
-                    ),
+                    "flyweight_q_prime_rad_per_m": (fw.angle_gradient),
+                    "flyweight_q_second_rad_per_m2": (fw.angle_curvature),
+                    "helix_dtheta_ds_rad_per_m": (hk.dtheta_ds),
                     "secondary_dx_ds": scoord.d_value_ds,
                 }
             )
@@ -1508,9 +1225,7 @@ def transition_rows(
     rows = []
     segments = result.hybrid_result.segments
 
-    for index, record in enumerate(
-        result.hybrid_result.transitions
-    ):
+    for index, record in enumerate(result.hybrid_result.transitions):
         pre = np.asarray(
             segments[index].state[:, -1],
             dtype=float,
@@ -1519,12 +1234,8 @@ def transition_rows(
             record.post_transition_state,
             dtype=float,
         )
-        pre_cvt = CVTState.from_vector(
-            result.system.layout.view(pre, "cvt")
-        )
-        post_cvt = CVTState.from_vector(
-            result.system.layout.view(post, "cvt")
-        )
+        pre_cvt = CVTState.from_vector(result.system.layout.view(pre, "cvt"))
+        post_cvt = CVTState.from_vector(result.system.layout.view(post, "cvt"))
 
         rows.append(
             {
@@ -1533,70 +1244,39 @@ def transition_rows(
                 "transition_index": index,
                 "time_s": record.time,
                 "previous_mode": str(record.previous_mode),
-                "next_mode": str(
-                    record.transition.next_mode
-                ),
-                "fired_events": "|".join(
-                    record.fired_event_names
-                ),
+                "next_mode": str(record.transition.next_mode),
+                "fired_events": "|".join(record.fired_event_names),
                 "reason": record.transition.reason,
-                "has_state_reset": (
-                    record.transition.has_successor_state
-                ),
+                "has_state_reset": (record.transition.has_successor_state),
                 "pre_primary_rpm": (
-                    pre_cvt.primary_angular_speed
-                    * RPM_PER_RADIAN_PER_SECOND
+                    pre_cvt.primary_angular_speed * RPM_PER_RADIAN_PER_SECOND
                 ),
                 "post_primary_rpm": (
-                    post_cvt.primary_angular_speed
-                    * RPM_PER_RADIAN_PER_SECOND
+                    post_cvt.primary_angular_speed * RPM_PER_RADIAN_PER_SECOND
                 ),
                 "delta_primary_rpm": (
-                    (
-                        post_cvt.primary_angular_speed
-                        - pre_cvt.primary_angular_speed
-                    )
+                    (post_cvt.primary_angular_speed - pre_cvt.primary_angular_speed)
                     * RPM_PER_RADIAN_PER_SECOND
                 ),
                 "pre_secondary_rpm": (
-                    pre_cvt.secondary_angular_speed
-                    * RPM_PER_RADIAN_PER_SECOND
+                    pre_cvt.secondary_angular_speed * RPM_PER_RADIAN_PER_SECOND
                 ),
                 "post_secondary_rpm": (
-                    post_cvt.secondary_angular_speed
-                    * RPM_PER_RADIAN_PER_SECOND
+                    post_cvt.secondary_angular_speed * RPM_PER_RADIAN_PER_SECOND
                 ),
-                "pre_shift_mm": (
-                    pre_cvt.shift_position / MILLIMETRE
-                ),
-                "post_shift_mm": (
-                    post_cvt.shift_position / MILLIMETRE
-                ),
+                "pre_shift_mm": (pre_cvt.shift_position / MILLIMETRE),
+                "post_shift_mm": (post_cvt.shift_position / MILLIMETRE),
                 "delta_shift_mm": (
-                    (
-                        post_cvt.shift_position
-                        - pre_cvt.shift_position
-                    )
-                    / MILLIMETRE
+                    (post_cvt.shift_position - pre_cvt.shift_position) / MILLIMETRE
                 ),
-                "pre_shift_speed_mm_s": (
-                    pre_cvt.shift_speed / MILLIMETRE
-                ),
-                "post_shift_speed_mm_s": (
-                    post_cvt.shift_speed / MILLIMETRE
-                ),
+                "pre_shift_speed_mm_s": (pre_cvt.shift_speed / MILLIMETRE),
+                "post_shift_speed_mm_s": (post_cvt.shift_speed / MILLIMETRE),
                 "delta_shift_speed_mm_s": (
-                    (
-                        post_cvt.shift_speed
-                        - pre_cvt.shift_speed
-                    )
-                    / MILLIMETRE
+                    (post_cvt.shift_speed - pre_cvt.shift_speed) / MILLIMETRE
                 ),
                 "pre_belt_speed_m_s": pre_cvt.belt_speed,
                 "post_belt_speed_m_s": post_cvt.belt_speed,
-                "delta_belt_speed_m_s": (
-                    post_cvt.belt_speed - pre_cvt.belt_speed
-                ),
+                "delta_belt_speed_m_s": (post_cvt.belt_speed - pre_cvt.belt_speed),
             }
         )
     return rows
@@ -1619,11 +1299,7 @@ def compute_metrics(
     samples: list[SampleRecord],
     max_shift: float,
 ) -> dict[str, Any]:
-    engaged = [
-        sample
-        for sample in samples
-        if sample.closure is not None
-    ]
+    engaged = [sample for sample in samples if sample.closure is not None]
     full_rows = [sample.row for sample in samples]
 
     shift_values = np.asarray(
@@ -1634,14 +1310,8 @@ def compute_metrics(
         [row["time_s"] for row in full_rows],
         dtype=float,
     )
-    full_indices = np.flatnonzero(
-        shift_values >= max_shift - 0.20 * MILLIMETRE
-    )
-    time_to_full = (
-        float(time_values[full_indices[0]])
-        if full_indices.size
-        else NAN
-    )
+    full_indices = np.flatnonzero(shift_values >= max_shift - 0.20 * MILLIMETRE)
+    time_to_full = float(time_values[full_indices[0]]) if full_indices.size else NAN
 
     rpm = _finite_values(engaged, "primary_rpm")
     clamp_p = _finite_values(
@@ -1667,34 +1337,16 @@ def compute_metrics(
         "time_to_full_shift_s": time_to_full,
         "hybrid_transition_count": len(result.transitions),
         "engaged_sample_count": len(engaged),
-        "primary_rpm_mean_engaged": (
-            float(np.mean(rpm)) if rpm.size else NAN
-        ),
-        "primary_rpm_peak_engaged": (
-            float(np.max(rpm)) if rpm.size else NAN
-        ),
-        "primary_clamp_mean_N": (
-            float(np.mean(clamp_p)) if clamp_p.size else NAN
-        ),
-        "primary_clamp_peak_N": (
-            float(np.max(clamp_p)) if clamp_p.size else NAN
-        ),
-        "secondary_clamp_mean_N": (
-            float(np.mean(clamp_s)) if clamp_s.size else NAN
-        ),
-        "secondary_clamp_peak_N": (
-            float(np.max(clamp_s)) if clamp_s.size else NAN
-        ),
-        "normal_primary_mean_N": (
-            float(np.mean(normal_p)) if normal_p.size else NAN
-        ),
-        "normal_secondary_mean_N": (
-            float(np.mean(normal_s)) if normal_s.size else NAN
-        ),
+        "primary_rpm_mean_engaged": (float(np.mean(rpm)) if rpm.size else NAN),
+        "primary_rpm_peak_engaged": (float(np.max(rpm)) if rpm.size else NAN),
+        "primary_clamp_mean_N": (float(np.mean(clamp_p)) if clamp_p.size else NAN),
+        "primary_clamp_peak_N": (float(np.max(clamp_p)) if clamp_p.size else NAN),
+        "secondary_clamp_mean_N": (float(np.mean(clamp_s)) if clamp_s.size else NAN),
+        "secondary_clamp_peak_N": (float(np.max(clamp_s)) if clamp_s.size else NAN),
+        "normal_primary_mean_N": (float(np.mean(normal_p)) if normal_p.size else NAN),
+        "normal_secondary_mean_N": (float(np.mean(normal_s)) if normal_s.size else NAN),
         "max_abs_continuous_shift_acceleration_m_s2": (
-            float(np.max(np.abs(sddot)))
-            if sddot.size
-            else NAN
+            float(np.max(np.abs(sddot))) if sddot.size else NAN
         ),
     }
 
@@ -1730,17 +1382,13 @@ def run_variant(
     initial_cvt = route.launch_cvt_state(primary_rpm=1800.0)
     initial_full = system.initial_state(
         cvt_state=initial_cvt,
-        host_state=system.host.initial_state(
-            secondary_shaft_angle=0.0
-        ),
+        host_state=system.host.initial_state(secondary_shaft_angle=0.0),
     )
     result = integrate_hybrid(
         system=system,
         time_span=(0.0, duration_s),
         initial_state=initial_full,
-        initial_mode=system.classify_initial_mode(
-            initial_full
-        ),
+        initial_mode=system.classify_initial_mode(initial_full),
         settings=HybridIntegratorSettings(
             relative_tolerance=rtol,
             absolute_tolerance=atol,
@@ -1751,10 +1399,7 @@ def run_variant(
         ),
     )
     if not result.completed:
-        raise RuntimeError(
-            f"{variant.label} failed: "
-            f"{result.termination_reason}"
-        )
+        raise RuntimeError(f"{variant.label} failed: " f"{result.termination_reason}")
 
     samples, contributions = sample_variant(
         variant=variant,
@@ -1822,7 +1467,7 @@ def _manifest(
         "study": "dynamic_actuator_ablation_rich",
         "sample_step_s": sample_step_s,
         "candidate": {
-            "flyweight_mass_kg": candidate.flyweight_mass_kg,
+            "tip_hardware_mass_per_flyweight_kg": candidate.tip_hardware_mass_per_flyweight_kg,
             "helix_angle_degrees": candidate.helix_angle_degrees,
             "secondary_torsional_pretension_degrees": (
                 candidate.secondary_torsional_pretension_degrees
@@ -1830,26 +1475,21 @@ def _manifest(
             "secondary_compression_preload_mm": (
                 candidate.secondary_compression_preload_mm
             ),
-            "primary_ramp_kind": candidate.primary_ramp_kind,
-            "primary_ramp_angle_degrees": (
-                candidate.primary_ramp_angle_degrees
+            "primary_linear_ramp_angle_degrees": (
+                candidate.primary_linear_ramp_angle_degrees
             ),
-            "primary_ramp_start_angle_degrees": (
-                candidate.primary_ramp_start_angle_degrees
+            "primary_circular_ramp_start_angle_degrees": (
+                candidate.primary_circular_ramp_start_angle_degrees
             ),
-            "primary_ramp_end_angle_degrees": (
-                candidate.primary_ramp_end_angle_degrees
+            "primary_circular_ramp_end_angle_degrees": (
+                candidate.primary_circular_ramp_end_angle_degrees
             ),
         },
         "inertia_reference": {
             "PCVT_total_CAD_kg_m2": PCVT_TOTAL_MOI_KG_M2,
             "SCVT_total_CAD_kg_m2": SCVT_TOTAL_MOI_KG_M2,
-            "SCVT_movable_sheave_kg_m2": (
-                SCVT_MOVABLE_SHEAVE_MOI_KG_M2
-            ),
-            "engine_boundary_kg_m2": (
-                constants.engine_rotational_inertia
-            ),
+            "SCVT_movable_sheave_kg_m2": (SCVT_MOVABLE_SHEAVE_MOI_KG_M2),
+            "engine_boundary_kg_m2": (constants.engine_rotational_inertia),
             "secondary_downstream_boundary_kg_m2": (
                 constants.gearbox_input_rotational_inertia
             ),
@@ -1864,40 +1504,25 @@ def _manifest(
         "full_dynamic_flyweight": {
             "quasi_static_force": "0.5 * omega_p^2 * J_f'(x_p)",
             "dynamic_axial_inertia": "-I_f * q_f'^2 * x_p_ddot",
-            "dynamic_curvature": (
-                "-I_f * q_f' * q_f'' * x_p_dot^2"
-            ),
+            "dynamic_curvature": ("-I_f * q_f' * q_f'' * x_p_dot^2"),
             "shaft_correction_relative_to_constant_CAD": (
-                "-(J_f(q)-J_f(0))*alpha_p "
-                "- J_f'(x_p)*x_p_dot*omega_p"
+                "-(J_f(q)-J_f(0))*alpha_p " "- J_f'(x_p)*x_p_dot*omega_p"
             ),
         },
         "full_dynamic_helix": {
-            "quasi_static_reacted_torque": (
-                "tau_s/2 + k_theta*(theta_pre-theta)"
-            ),
+            "quasi_static_reacted_torque": ("tau_s/2 + k_theta*(theta_pre-theta)"),
             "quasi_static_force": (
-                "[tau_s/2 + k_theta*(theta_pre-theta)] "
-                "* dtheta/dx_s"
+                "[tau_s/2 + k_theta*(theta_pre-theta)] " "* dtheta/dx_s"
             ),
-            "dynamic_clamp_correction": (
-                "-I_M*(alpha_s + theta_ddot)*dtheta/dx_s"
-            ),
-            "theta_ddot": (
-                "(dtheta/ds)*s_ddot "
-                "+ (d2theta/ds2)*s_dot^2"
-            ),
-            "shaft_correction_relative_to_constant_CAD": (
-                "-I_M*theta_ddot"
-            ),
+            "dynamic_clamp_correction": ("-I_M*(alpha_s + theta_ddot)*dtheta/dx_s"),
+            "theta_ddot": ("(dtheta/ds)*s_ddot " "+ (d2theta/ds2)*s_dot^2"),
+            "shaft_correction_relative_to_constant_CAD": ("-I_M*theta_ddot"),
         },
         "variants": [
             {
                 "key": item.variant.key,
                 "label": item.variant.label,
-                "dynamic_flyweight": (
-                    item.variant.dynamic_flyweight
-                ),
+                "dynamic_flyweight": (item.variant.dynamic_flyweight),
                 "dynamic_helix": item.variant.dynamic_helix,
             }
             for item in results
@@ -1921,11 +1546,7 @@ def _array(
 
 
 def _engaged_rows(result: VariantResult):
-    return [
-        sample.row
-        for sample in result.samples
-        if sample.closure is not None
-    ]
+    return [sample.row for sample in result.samples if sample.closure is not None]
 
 
 def _plot_direct_clamp(
@@ -1960,9 +1581,7 @@ def _plot_direct_clamp(
         label="QS flyweight",
     )
     ax11.set_ylabel("Primary actuator clamp [N]")
-    ax11.set_title(
-        "Direct primary clamp prediction on identical operating points"
-    )
+    ax11.set_title("Direct primary clamp prediction on identical operating points")
     ax11.legend()
     ax11.grid(True, alpha=0.25)
 
@@ -2027,9 +1646,7 @@ def _plot_direct_clamp(
         label="QS helix",
     )
     ax21.set_ylabel("Secondary actuator clamp [N]")
-    ax21.set_title(
-        "Direct secondary clamp prediction on identical operating points"
-    )
+    ax21.set_title("Direct secondary clamp prediction on identical operating points")
     ax21.legend()
     ax21.grid(True, alpha=0.25)
 
@@ -2081,10 +1698,7 @@ def _plot_effective_mass(
     mass_rows: list[dict[str, Any]],
     output_dir: Path,
 ) -> None:
-    full_rows = [
-        row for row in mass_rows
-        if row["variant"] == "full"
-    ]
+    full_rows = [row for row in mass_rows if row["variant"] == "full"]
     x = _array(full_rows, "engaged_shift_percent")
 
     fig, (ax1, ax2) = plt.subplots(
@@ -2109,9 +1723,7 @@ def _plot_effective_mass(
         alpha=0.82,
     )
     ax1.set_ylabel(r"Generalized $M_{ss}$ [kg]")
-    ax1.set_title(
-        "Full-model direct generalized shift-inertia composition"
-    )
+    ax1.set_title("Full-model direct generalized shift-inertia composition")
     ax1.legend(fontsize=8, ncols=2)
     ax1.grid(True, alpha=0.25)
 
@@ -2129,9 +1741,7 @@ def _plot_effective_mass(
         )
     ax2.set_xlabel("Engaged shift travel [%]")
     ax2.set_ylabel(r"Direct generalized $M_{ss}$ [kg]")
-    ax2.set_title(
-        "Effective-mass prediction of each model"
-    )
+    ax2.set_title("Effective-mass prediction of each model")
     ax2.legend()
     ax2.grid(True, alpha=0.25)
     fig.savefig(
@@ -2164,9 +1774,7 @@ def _plot_actual_clamp_and_normal(
             label=item.variant.label,
         )
     ax11.set_ylabel("Primary actuator clamp [N]")
-    ax11.set_title(
-        "Actual clamp prediction on each model's own trajectory"
-    )
+    ax11.set_title("Actual clamp prediction on each model's own trajectory")
     ax11.legend(fontsize=8)
     ax11.grid(True, alpha=0.25)
     ax12.set_xlabel("Time [s]")
@@ -2198,9 +1806,7 @@ def _plot_actual_clamp_and_normal(
             label=item.variant.label,
         )
     ax21.set_ylabel(r"$N_p$ [N]")
-    ax21.set_title(
-        "Solved belt-contact normal resultants"
-    )
+    ax21.set_title("Solved belt-contact normal resultants")
     ax21.legend(fontsize=8)
     ax21.grid(True, alpha=0.25)
     ax22.set_xlabel("Time [s]")
@@ -2258,9 +1864,7 @@ def _plot_trajectory(
     # Engagement zoom uses actual continuous RHS acceleration; no finite
     # differencing across hybrid resets.
     first_transition_times = [
-        record.time
-        for item in results
-        for record in item.hybrid_result.transitions
+        record.time for item in results for record in item.hybrid_result.transitions
     ]
     zoom_end = (
         min(0.30, max(first_transition_times) + 0.03)
@@ -2275,11 +1879,7 @@ def _plot_trajectory(
         constrained_layout=True,
     )
     for item in results:
-        rows = [
-            sample.row
-            for sample in item.samples
-            if sample.time <= zoom_end
-        ]
+        rows = [sample.row for sample in item.samples if sample.time <= zoom_end]
         ax21.plot(
             _array(rows, "time_s"),
             _array(rows, "shift_speed_mm_s"),
@@ -2291,9 +1891,7 @@ def _plot_trajectory(
             label=item.variant.label,
         )
     ax21.set_ylabel("Shift speed [mm/s]")
-    ax21.set_title(
-        "Engagement transient: where mechanism inertia matters"
-    )
+    ax21.set_title("Engagement transient: where mechanism inertia matters")
     ax21.legend(fontsize=8)
     ax21.grid(True, alpha=0.25)
     ax22.set_xlabel("Time [s]")
@@ -2327,9 +1925,7 @@ def _plot_direct_percent(
     )
     ax1.axhline(0.0, linewidth=0.8)
     ax1.set_ylabel("Flyweight dynamic correction [%]")
-    ax1.set_title(
-        "Dynamic clamp correction as a fraction of quasi-static total clamp"
-    )
+    ax1.set_title("Dynamic clamp correction as a fraction of quasi-static total clamp")
     ax1.grid(True, alpha=0.25)
 
     ax2.plot(
@@ -2368,21 +1964,9 @@ def write_outputs(
 ) -> None:
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    trajectory_rows = [
-        sample.row
-        for item in results
-        for sample in item.samples
-    ]
-    contribution_rows = [
-        row
-        for item in results
-        for row in item.contribution_rows
-    ]
-    transitions = [
-        row
-        for item in results
-        for row in transition_rows(item)
-    ]
+    trajectory_rows = [sample.row for item in results for sample in item.samples]
+    contribution_rows = [row for item in results for row in item.contribution_rows]
+    transitions = [row for item in results for row in transition_rows(item)]
     summaries = [item.metrics for item in results]
 
     _write_dict_rows(
@@ -2398,8 +1982,7 @@ def write_outputs(
         direct_rows,
     )
     _write_dict_rows(
-        output_dir
-        / "direct_counterfactual_contributions.csv",
+        output_dir / "direct_counterfactual_contributions.csv",
         counterfactual_contrib,
     )
     _write_dict_rows(
@@ -2415,8 +1998,7 @@ def write_outputs(
         summaries,
     )
     (output_dir / "summary.json").write_text(
-        json.dumps(summaries, indent=2, allow_nan=True)
-        + "\n",
+        json.dumps(summaries, indent=2, allow_nan=True) + "\n",
         encoding="utf-8",
     )
     (output_dir / "model_manifest.json").write_text(
@@ -2486,32 +2068,21 @@ def write_outputs(
 
 def main() -> None:
     args = parse_args()
-    if (
-        not isfinite(args.sample_step_s)
-        or args.sample_step_s <= 0.0
-    ):
-        raise ValueError(
-            "--sample-step-s must be finite and positive."
-        )
+    if not isfinite(args.sample_step_s) or args.sample_step_s <= 0.0:
+        raise ValueError("--sample-step-s must be finite and positive.")
 
     programme, duration_s = programme_for_scenario(
         args.scenario,
         args.duration_s,
     )
-    preset = (
-        HERE
-        / "presets"
-        / "circular_traction_first_reference.json"
-    )
+    preset = route.DEFAULT_FIXED_PIVOT_PRESET
     candidate = route.load_candidate(preset)
     resolved = route.resolve_primary_preload(
         candidate,
         target_engagement_rpm=2000.0,
         programme=programme,
     )
-    full_assembly, engine, road_load = route.build_components(
-        resolved.constants
-    )
+    full_assembly, engine, road_load = route.build_components(resolved.constants)
 
     results: list[VariantResult] = []
     for variant in VARIANTS:
@@ -2532,9 +2103,7 @@ def main() -> None:
             )
         )
 
-    direct_rows, counterfactual_contrib = (
-        direct_prediction_on_full_trajectory(results)
-    )
+    direct_rows, counterfactual_contrib = direct_prediction_on_full_trajectory(results)
     mass_rows = effective_mass_map(results)
 
     write_outputs(

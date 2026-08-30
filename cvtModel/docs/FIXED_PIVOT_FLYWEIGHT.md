@@ -83,9 +83,9 @@ neighboring ramp segments at both ends.
 The current provisional Baja geometry uses:
 
 ```text
-linear:      20 deg, 5 mm
+linear:      35 deg, 5 mm
 C3 blend:             3 mm
-circular:    35 deg -> 10 deg, 30 mm
+circular:    35 deg -> 20 deg, 30 mm
 ```
 
 The 3 mm blend is a provisional geometry approximation, not a measured

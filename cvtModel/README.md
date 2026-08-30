@@ -71,8 +71,8 @@ migration-era imports.
 ## Format and lint CINDER
 
 ```powershell
-black --check src/cinder test/cinder examples
-flake8 src/cinder test/cinder examples
+black --check src/cinder test/smoke examples
+flake8 src/cinder test/smoke examples
 ```
 
 ## Learn the public API

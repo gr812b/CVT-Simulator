@@ -1,6 +1,6 @@
 """Shared physical fixed-pivot Baja default used by launch/grade tools.
 
-The route tools historically called their tuning field ``flyweight_mass_kg``.
+The route tools historically called their tuning field ``tip_hardware_mass_per_flyweight_kg``.
 For this fixed-pivot default that field has one explicit meaning:
 
     total concentrated tip-hardware mass PER FLYWEIGHT [kg]
@@ -100,28 +100,22 @@ DEFAULT_CIRCULAR_LENGTH_M = 30.0 * MILLIMETRE
 def build_primary_physical_ramp(c) -> PiecewiseRamp:
     """Build the provisional hard-to-soft physical roller ramp.
 
-    Tuning fields inherited from the launch tool mean:
-      primary_ramp_angle_degrees       -> initial straight-ramp angle
-      primary_ramp_start_angle_degrees -> circular-section start angle
-      primary_ramp_end_angle_degrees   -> circular-section end angle
+    Fixed-pivot physical geometry fields mean:
+      primary_linear_ramp_angle_degrees       -> initial straight-ramp angle
+      primary_circular_ramp_start_angle_degrees -> circular-section start angle
+      primary_circular_ramp_end_angle_degrees   -> circular-section end angle
 
     All angles use the physical fixed-pivot convention: 0 deg is axial.
     """
 
-    if c.primary_ramp_kind != "fixed_pivot_piecewise":
-        raise ValueError(
-            "The fixed-pivot default requires "
-            "primary_ramp_kind='fixed_pivot_piecewise'."
-        )
-
     linear = LinearSegment(
         length=DEFAULT_LINEAR_LENGTH_M,
-        angle_degrees=c.primary_ramp_angle_degrees,
+        angle_degrees=c.primary_linear_ramp_angle_degrees,
     )
     circular = CircularSegment(
         length=DEFAULT_CIRCULAR_LENGTH_M,
-        angle_start_degrees=c.primary_ramp_start_angle_degrees,
-        angle_end_degrees=c.primary_ramp_end_angle_degrees,
+        angle_start_degrees=c.primary_circular_ramp_start_angle_degrees,
+        angle_end_degrees=c.primary_circular_ramp_end_angle_degrees,
         quadrant=2,
     )
     blend = C3TransitionSegment.between_segments(
@@ -137,10 +131,10 @@ def build_primary_physical_ramp(c) -> PiecewiseRamp:
 def build_primary_mass_geometry(c) -> FlyweightMassGeometry:
     """Build the explicit uniform-arm + concentrated-tip mass approximation."""
 
-    tip_hardware_mass_per_flyweight = float(c.flyweight_mass)
+    tip_hardware_mass_per_flyweight = float(c.tip_hardware_mass_per_flyweight)
     if tip_hardware_mass_per_flyweight <= 0.0:
         raise ValueError(
-            "flyweight_mass must be positive; for the fixed-pivot default it "
+            "tip_hardware_mass_per_flyweight must be positive; for the fixed-pivot default it "
             "means concentrated tip-hardware mass per flyweight."
         )
 
@@ -393,11 +387,11 @@ def fixed_pivot_summary(c) -> dict[str, float | str]:
         FIXED_NUMBER_OF_FLYWEIGHTS
         * (
             FIXED_ARM_MASS_PER_FLYWEIGHT_KG
-            + float(c.flyweight_mass)
+            + float(c.tip_hardware_mass_per_flyweight)
         )
     )
     return {
-        "tip_mass_per_flyweight_kg": float(c.flyweight_mass),
+        "tip_mass_per_flyweight_kg": float(c.tip_hardware_mass_per_flyweight),
         "pcvt_cad_total_inertia_kg_m2": PCVT_TOTAL_MOI_KG_M2,
         "flyweight_reference_inertia_kg_m2": zero.shaft_inertia,
         "primary_fixed_hardware_remainder_kg_m2": (
@@ -410,7 +404,7 @@ def fixed_pivot_summary(c) -> dict[str, float | str]:
         "scvt_movable_helix_inertia_kg_m2": (
             SCVT_MOVABLE_SHEAVE_MOI_KG_M2
         ),
-        "total_modeled_flyweight_mass_kg": total_mass,
+        "total_modeled_tip_hardware_mass_per_flyweight_kg": total_mass,
         "arm_length_mm": FIXED_ARM_LENGTH_M / MILLIMETRE,
         "roller_radius_mm": FIXED_ROLLER_RADIUS_M / MILLIMETRE,
         "q_at_zero_deg": zero.angle * 180.0 / 3.141592653589793,

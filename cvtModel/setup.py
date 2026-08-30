@@ -26,11 +26,15 @@ setup(
         "scipy>=1.10",
     ],
     extras_require={
+        "results": [
+            "matplotlib>=3.8",
+        ],
         "dev": [
             "black>=24.0",
             "coverage>=7.0",
             "flake8>=7.0",
             "pytest>=8.0",
+            "matplotlib>=3.8",
         ],
     },
 )

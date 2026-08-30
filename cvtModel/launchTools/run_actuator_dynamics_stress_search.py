@@ -2197,11 +2197,7 @@ def main() -> None:
     selected_root = args.output_dir / "selected_cases"
     selected_root.mkdir(parents=True, exist_ok=True)
 
-    preset = (
-        HERE
-        / "presets"
-        / "circular_traction_first_reference.json"
-    )
+    preset = route.DEFAULT_FIXED_PIVOT_PRESET
     tune_candidate = route.load_candidate(preset)
     conditioning_programme = flat_programme(
         args.conditioning_s

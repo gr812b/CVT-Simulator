@@ -1,18 +1,17 @@
 {
   "name": "fixed_pivot_3200_reference",
-  "purpose": "Physical fixed-pivot primary default using CAD drivetrain inertias. Late primary ramp strengthened to 20 deg after observed primary-RPM rise through shift; target remains prompt re-stick and approximately 3200 rpm main shift.",
+  "purpose": "Physical fixed-pivot primary reference using current CAD drivetrain inertias, current measured geometry, prompt re-stick, and approximately 3200 rpm main shift.",
   "candidate": {
-    "flyweight_mass_kg": 0.25,
+    "tip_hardware_mass_per_flyweight_kg": 0.25,
     "helix_angle_degrees": 20.0,
     "secondary_torsional_pretension_degrees": 300.0,
     "secondary_compression_preload_mm": 110.0,
-    "primary_ramp_kind": "fixed_pivot_piecewise",
-    "primary_ramp_angle_degrees": 35.0,
-    "primary_ramp_start_angle_degrees": 35.0,
-    "primary_ramp_end_angle_degrees": 20.0
+    "primary_linear_ramp_angle_degrees": 35.0,
+    "primary_circular_ramp_start_angle_degrees": 35.0,
+    "primary_circular_ramp_end_angle_degrees": 20.0
   },
   "fixed_pivot_mass_semantics": {
-    "flyweight_mass_kg": "concentrated roller/bolt/nut/fixed-hardware/tuning mass PER flyweight; 13.646 g arm/body is added separately",
+    "tip_hardware_mass_per_flyweight_kg": "concentrated roller/bolt/nut/fixed-hardware/tuning mass PER flyweight; 13.646 g arm/body is added separately",
     "number_of_flyweights": 3
   },
   "fixed_geometry": {

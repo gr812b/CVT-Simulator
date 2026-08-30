@@ -1633,11 +1633,7 @@ def main() -> None:
 
     args.output_dir.mkdir(parents=True, exist_ok=True)
 
-    preset = (
-        HERE
-        / "presets"
-        / "circular_traction_first_reference.json"
-    )
+    preset = route.DEFAULT_FIXED_PIVOT_PRESET
     tune_candidate = route.load_candidate(preset)
     resolved = route.resolve_primary_preload(
         tune_candidate,
