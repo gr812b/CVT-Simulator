@@ -1,43 +1,67 @@
-# Ballew 2015 reference package
+# Ballew reference data
 
-This directory is the permanent results-tree home for the benchmark's source
-material and digitization. It is intentionally not a runtime link back to
-`cvtModel/launchTools`.
+This directory contains both the **raw digitization provenance** and the
+**benchmark-ready reference traces** consumed by the study.
 
-Already bundled in the drop-in:
+## Benchmark-ready files
 
-- `source/Ballew_2015_thesis.pdf` — exact thesis used by the legacy benchmark;
-- `.legacy-lfs-pointers/` — provenance for the three prepared comparison CSVs;
-- `digitization/README.md` — digitization inventory and preparation rules.
+- `figure_41_input_rpm.csv`
+  - Figure 41 input/primary pulley speed.
+  - columns: `time_s,input_rpm`.
+- `figure_41_output_rpm.csv`
+  - Figure 41 output/secondary pulley speed.
+  - columns: `time_s,output_rpm`.
+- `figure_45_primary_force.csv`
+  - Figure 45 undamped primary axial force.
+  - columns: `time_s,primary_axial_force_n`.
 
-Materialized from the frozen `cinder-v1.0.0` tag by `../migrate_legacy.py`:
+The Figure 41 traces intentionally remain on their own native digitized time
+grids. The benchmark does not resample them onto a common grid before computing
+the individual speed errors.
 
-```text
-reference/
-├── figure_41_input_rpm.csv
-├── figure_41_output_rpm.csv
-├── figure_45_primary_force.csv
-├── prepare_reference_data.py
-├── digitization/
-│   ├── README.md
-│   ├── input_rpm.csv
-│   ├── output_rpm.csv
-│   ├── axial_force.csv
-│   ├── rpms_ballew.json
-│   └── axial_force_ballew.json
-└── source/
-    ├── Ballew_2015_thesis.pdf
-    └── README.md
+## Raw provenance
+
+`digitization/` contains the immutable WebPlotDigitizer source bundle:
+
+- `input_rpm.csv`
+- `output_rpm.csv`
+- `axial_force.csv`
+- `rpms_ballew.json`
+- `axial_force_ballew.json`
+
+`source/Ballew_2015_thesis.pdf` is the exact thesis PDF used for the
+digitization and reconstruction.
+
+Do not edit the raw digitization files in place.
+
+## Regenerating the prepared traces
+
+From the study directory:
+
+```powershell
+python reference/prepare_reference_data.py
+python reference/prepare_reference_data.py --check
 ```
 
-The migration verifies every Git-LFS object against its pointer SHA-256 and
-records the complete source/target integrity mapping under
-`provenance/migration_manifest.json`.
+`--check` verifies that the committed benchmark-ready files are exactly
+reproducible from the raw digitization without modifying them.
 
-Source page map:
+The preparation is deliberately minimal:
 
-- Figure 39: printed p. 54 / PDF p. 64;
-- Figure 41: printed p. 58 / PDF p. 68;
-- Figure 45: printed p. 62 / PDF p. 72;
-- Table A1: printed p. 69 / PDF p. 79;
-- Table B1: printed p. 70 / PDF p. 80.
+1. add explicit headers;
+2. preserve the native Figure 41 point sets independently;
+3. average the four exact duplicate Figure 45 time coordinates caused by
+   near-vertical segments being clicked twice in the same pixel column;
+4. prepend Figure 45 at `t=0` using a zero-order hold of the first visible force
+   point (`t≈0.095541 s`) so force replay has an input at the initial state.
+
+Step 4 is Reconstruction A6. It is an explicit boundary assumption, not source
+data. No smoothing, filtering, curve fitting, or resampling is performed.
+
+## Figure 45 has two roles
+
+The digitization itself is single-source and unchanged:
+
+- **force replay:** Figure 45 is the prescribed primary-clamp input;
+- **closed loop:** Figure 45 is an output reference only and is never fed into
+  the reconstructed controller.

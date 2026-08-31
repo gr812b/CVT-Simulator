@@ -118,55 +118,75 @@ def plot_protocol(
     plt.close(fig)
 
 
-HISTORICAL_V1_0_0 = {
-    "force_replay": {
-        "primary_rpm_rmse": 1796.1055474843045,
-        "secondary_rpm_rmse": 38.2552150912746,
-        "speed_ratio_rmse": 1.4513405346478947,
-        "transition_count": 251,
-    },
-    "closed_loop": {
-        "primary_rpm_rmse": 109.66510967962864,
-        "secondary_rpm_rmse": 32.92155449116345,
-        "speed_ratio_rmse": 0.10929942366273752,
-        "primary_force_rmse_n": 1180.2275546433493,
-        "transition_count": 1629,
-    },
-}
+def plot_protocol_full_scale(
+    path: Path,
+    *,
+    protocol_name: str,
+    input_ref: ReferenceSeries,
+    input_pred,
+    output_ref: ReferenceSeries,
+    output_pred,
+    ratio_ref: ReferenceSeries,
+    ratio_pred,
+    force_ref: ReferenceSeries,
+    force_pred=None,
+) -> None:
+    """Plot the same comparison with every y-axis anchored at zero.
 
+    The ordinary comparison intentionally autoscales so residual shape is easy
+    to inspect. This companion view prevents that autoscaling from visually
+    exaggerating small relative differences in the closed-loop case.
+    """
 
-def historical_regression(
-    *, protocol: str, metrics: dict[str, object], transition_count: int
-) -> dict[str, object]:
-    expected = HISTORICAL_V1_0_0[protocol]
-    actual = {
-        "primary_rpm_rmse": metrics["primary_rpm"]["root_mean_square_error"],
-        "secondary_rpm_rmse": metrics["secondary_rpm"]["root_mean_square_error"],
-        "speed_ratio_rmse": metrics["speed_ratio"]["root_mean_square_error"],
-        "transition_count": transition_count,
-    }
-    if protocol == "closed_loop":
-        actual["primary_force_rmse_n"] = metrics["primary_force"][
-            "root_mean_square_error"
-        ]
+    def upper(*series, step: float, headroom: float = 1.08) -> float:
+        values = np.concatenate(
+            [np.asarray(item, dtype=float).reshape(-1) for item in series]
+        )
+        values = values[np.isfinite(values)]
+        if not values.size:
+            return step
+        maximum = max(0.0, float(np.max(values))) * headroom
+        return max(step, float(np.ceil(maximum / step) * step))
 
-    comparison: dict[str, object] = {}
-    for key, expected_value in expected.items():
-        actual_value = actual[key]
-        if isinstance(expected_value, int):
-            comparison[key] = {
-                "historical": expected_value,
-                "rerun": actual_value,
-                "delta": int(actual_value) - expected_value,
-                "note": "raw hybrid transition count can be tolerance-sensitive",
-            }
-        else:
-            comparison[key] = {
-                "historical": expected_value,
-                "rerun": actual_value,
-                "absolute_delta": float(actual_value) - expected_value,
-                "relative_delta_percent": 100.0
-                * (float(actual_value) - expected_value)
-                / expected_value,
-            }
-    return comparison
+    fig, axes = plt.subplots(4, 1, figsize=(9.0, 10.5), sharex=False)
+
+    axes[0].plot(input_ref.time_s, input_ref.value, label="Ballew")
+    axes[0].plot(input_ref.time_s, input_pred, label="CINDER")
+    axes[0].set_ylabel("Primary rpm")
+    axes[0].set_ylim(0.0, upper(input_ref.value, input_pred, step=500.0))
+    axes[0].grid(True, alpha=0.25)
+    axes[0].legend()
+
+    axes[1].plot(output_ref.time_s, output_ref.value, label="Ballew")
+    axes[1].plot(output_ref.time_s, output_pred, label="CINDER")
+    axes[1].set_ylabel("Secondary rpm")
+    axes[1].set_ylim(0.0, upper(output_ref.value, output_pred, step=500.0))
+    axes[1].grid(True, alpha=0.25)
+    axes[1].legend()
+
+    axes[2].plot(ratio_ref.time_s, ratio_ref.value, label="Ballew")
+    axes[2].plot(ratio_ref.time_s, ratio_pred, label="CINDER")
+    axes[2].set_ylabel("Speed ratio")
+    axes[2].set_ylim(0.0, upper(ratio_ref.value, ratio_pred, step=0.5))
+    axes[2].grid(True, alpha=0.25)
+    axes[2].legend()
+
+    axes[3].plot(force_ref.time_s, force_ref.value, label="Ballew Figure 45")
+    force_for_scale = [force_ref.value]
+    if force_pred is not None:
+        axes[3].plot(
+            force_ref.time_s[1:],
+            force_pred,
+            label="CINDER controller",
+        )
+        force_for_scale.append(force_pred)
+    axes[3].set_ylabel("Primary clamp [N]")
+    axes[3].set_xlabel("Time [s]")
+    axes[3].set_ylim(0.0, upper(*force_for_scale, step=500.0))
+    axes[3].grid(True, alpha=0.25)
+    axes[3].legend()
+
+    fig.suptitle(protocol_name + " — full scale")
+    fig.tight_layout()
+    fig.savefig(path, dpi=180)
+    plt.close(fig)

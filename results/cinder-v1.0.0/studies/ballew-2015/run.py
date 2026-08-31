@@ -1,4 +1,4 @@
-"""Re-run the Ballew (2015) model-to-model benchmark against cinder-cvt==1.0.0."""
+"""Run the Ballew (2015) model-to-model benchmark with cinder-cvt==1.0.0."""
 
 from __future__ import annotations
 
@@ -19,23 +19,20 @@ from cinder.contracts import (
     validate_assembly,
 )
 
-from benchmark.constants import PUBLISHED, resolved_parameter_document
+from benchmark.constants import resolved_parameter_document
 from benchmark.metrics import (
     compute_error_metrics,
-    historical_regression,
     metric_document,
     plot_protocol,
+    plot_protocol_full_scale,
     write_comparison_csv,
 )
 from benchmark.reference import (
-    REFERENCE_FILES,
     build_reference_ratio,
     load_series,
-    materialize_reference_data,
     reference_hash_document,
+    validate_reference_data,
 )
-from migrate_legacy import ensure_reference_assets
-
 from benchmark.simulation import (
     build_closed_loop_setup,
     build_force_replay_setup,
@@ -46,10 +43,10 @@ from benchmark.simulation import (
 
 STUDY_ROOT = Path(__file__).resolve().parent
 RELEASE_ROOT = STUDY_ROOT.parents[1]
-VERIFY = RELEASE_ROOT / "verify_environment.py"
+VERIFY_ENVIRONMENT = RELEASE_ROOT / "verify_environment.py"
+VERIFY_STUDY = STUDY_ROOT / "verify_study.py"
 STUDY_FILE = STUDY_ROOT / "study.json"
-ARTIFACTS_ROOT = STUDY_ROOT / "artifacts"
-ARTIFACTS = ARTIFACTS_ROOT / "rerun-v1.0.0"
+ARTIFACTS = STUDY_ROOT / "artifacts"
 EXPECTED_CINDER_VERSION = "1.0.0"
 
 
@@ -61,7 +58,11 @@ def parse_args() -> argparse.Namespace:
         default="both",
     )
     parser.add_argument("--no-plots", action="store_true")
-    parser.add_argument("--keep-artifacts", action="store_true")
+    parser.add_argument(
+        "--keep-artifacts",
+        action="store_true",
+        help="do not clear the study artifact directory before this run",
+    )
     parser.add_argument("--rtol", type=float)
     parser.add_argument("--atol", type=float)
     parser.add_argument("--max-step", type=float)
@@ -85,14 +86,17 @@ def _validate_setup(setup, output_dir: Path) -> None:
     report = validate_assembly(setup.assembly)
     projected = project_assembly_validation(report)
     (output_dir / "assembly_validation.json").write_text(
-        json.dumps(projected, indent=2) + "\n", encoding="utf-8"
+        json.dumps(projected, indent=2) + "\n",
+        encoding="utf-8",
     )
     if not report.is_valid:
         messages = [
             f"[{finding.severity}] {finding.document_path or '/'}: {finding.message}"
             for finding in report.findings
         ]
-        raise RuntimeError("Ballew assembly failed CINDER validation:\n" + "\n".join(messages))
+        raise RuntimeError(
+            "Ballew assembly failed CINDER validation:\n" + "\n".join(messages)
+        )
 
 
 def _solver_for(spec: dict, protocol: str, args: argparse.Namespace) -> dict[str, object]:
@@ -116,14 +120,17 @@ def _run_protocol(
     make_plots: bool,
     args: argparse.Namespace,
 ) -> dict[str, object]:
-    output_dir = ARTIFACTS / protocol
+    output_name = "force-replay" if protocol == "force_replay" else "closed-loop"
+    output_dir = ARTIFACTS / output_name
     output_dir.mkdir(parents=True, exist_ok=True)
 
     input_ref = load_series(
-        reference_dir / "figure_41_input_rpm.csv", value_column="input_rpm"
+        reference_dir / "figure_41_input_rpm.csv",
+        value_column="input_rpm",
     )
     output_ref = load_series(
-        reference_dir / "figure_41_output_rpm.csv", value_column="output_rpm"
+        reference_dir / "figure_41_output_rpm.csv",
+        value_column="output_rpm",
     )
     force_ref = load_series(
         reference_dir / "figure_45_primary_force.csv",
@@ -132,7 +139,9 @@ def _run_protocol(
     ratio_ref = build_reference_ratio(input_ref, output_ref)
 
     if protocol == "force_replay":
-        setup = build_force_replay_setup(reference_dir / "figure_45_primary_force.csv")
+        setup = build_force_replay_setup(
+            reference_dir / "figure_45_primary_force.csv"
+        )
     elif protocol == "closed_loop":
         setup = build_closed_loop_setup()
     else:
@@ -152,11 +161,12 @@ def _run_protocol(
 
     projected = project_simulation_result(result)
     (output_dir / "result.json").write_text(
-        json.dumps(projected, indent=2) + "\n", encoding="utf-8"
+        json.dumps(projected, indent=2) + "\n",
+        encoding="utf-8",
     )
     _write_report_csv(projected, output_dir / "report.csv")
 
-    base_payload: dict[str, object] = {
+    payload: dict[str, object] = {
         "protocol": protocol,
         "completed": bool(result.completed),
         "termination_reason": str(result.termination_reason),
@@ -167,9 +177,10 @@ def _run_protocol(
     }
     if not result.completed:
         (output_dir / "metrics.json").write_text(
-            json.dumps(base_payload, indent=2) + "\n", encoding="utf-8"
+            json.dumps(payload, indent=2) + "\n",
+            encoding="utf-8",
         )
-        return base_payload
+        return payload
 
     input_pred = sample_dense(setup, result, input_ref.time_s)
     output_pred = sample_dense(setup, result, output_ref.time_s)
@@ -177,15 +188,22 @@ def _run_protocol(
 
     metrics: dict[str, object] = {
         "primary_rpm": metric_document(
-            compute_error_metrics(reference=input_ref.value, predicted=input_pred.primary_rpm)
+            compute_error_metrics(
+                reference=input_ref.value,
+                predicted=input_pred.primary_rpm,
+            )
         ),
         "secondary_rpm": metric_document(
             compute_error_metrics(
-                reference=output_ref.value, predicted=output_pred.secondary_rpm
+                reference=output_ref.value,
+                predicted=output_pred.secondary_rpm,
             )
         ),
         "speed_ratio": metric_document(
-            compute_error_metrics(reference=ratio_ref.value, predicted=ratio_pred.speed_ratio)
+            compute_error_metrics(
+                reference=ratio_ref.value,
+                predicted=ratio_pred.speed_ratio,
+            )
         ),
     }
 
@@ -216,11 +234,17 @@ def _run_protocol(
 
     force_pred = None
     if protocol == "closed_loop":
+        # The prepared t=0 Figure 45 sample is a reconstruction-only hold added
+        # for force replay. Closed-loop force comparison therefore starts at the
+        # first actually digitized Figure 45 point.
         force_times = force_ref.time_s[1:]
         force_sample = sample_dense(setup, result, force_times)
         force_pred = controller_force_for_sample(setup, force_sample)
         metrics["primary_force"] = metric_document(
-            compute_error_metrics(reference=force_ref.value[1:], predicted=force_pred)
+            compute_error_metrics(
+                reference=force_ref.value[1:],
+                predicted=force_pred,
+            )
         )
         write_comparison_csv(
             output_dir / "primary_force_comparison.csv",
@@ -230,27 +254,26 @@ def _run_protocol(
             reference_name="ballew_primary_force_n",
             predicted_name="cinder_primary_force_n",
         )
-        base_payload["mean_cinder_primary_force_n"] = float(np.mean(force_pred))
-        base_payload["mean_ballew_primary_force_n"] = float(np.mean(force_ref.value[1:]))
+        payload["mean_cinder_primary_force_n"] = float(np.mean(force_pred))
+        payload["mean_ballew_primary_force_n"] = float(
+            np.mean(force_ref.value[1:])
+        )
 
-    base_payload["metrics"] = metrics
-    base_payload["historical_v1_0_0_regression"] = historical_regression(
-        protocol=protocol,
-        metrics=metrics,
-        transition_count=len(result.transitions),
-    )
+    payload["metrics"] = metrics
     (output_dir / "metrics.json").write_text(
-        json.dumps(base_payload, indent=2) + "\n", encoding="utf-8"
+        json.dumps(payload, indent=2) + "\n",
+        encoding="utf-8",
     )
 
     if make_plots:
+        title = (
+            "Ballew 2015 force replay"
+            if protocol == "force_replay"
+            else "Ballew 2015 reconstructed closed loop"
+        )
         plot_protocol(
             output_dir / "comparison.png",
-            protocol_name=(
-                "Ballew 2015 force replay"
-                if protocol == "force_replay"
-                else "Ballew 2015 reconstructed closed loop"
-            ),
+            protocol_name=title,
             input_ref=input_ref,
             input_pred=input_pred.primary_rpm,
             output_ref=output_ref,
@@ -260,87 +283,125 @@ def _run_protocol(
             force_ref=force_ref,
             force_pred=force_pred,
         )
-    return base_payload
+        if protocol == "closed_loop":
+            plot_protocol_full_scale(
+                output_dir / "comparison_full_scale.png",
+                protocol_name=title,
+                input_ref=input_ref,
+                input_pred=input_pred.primary_rpm,
+                output_ref=output_ref,
+                output_pred=output_pred.secondary_rpm,
+                ratio_ref=ratio_ref,
+                ratio_pred=ratio_pred.speed_ratio,
+                force_ref=force_ref,
+                force_pred=force_pred,
+            )
+    return payload
 
 
 def _write_headline(results: dict[str, dict[str, object]]) -> None:
-    rows = []
+    rows: list[dict[str, object]] = []
     for protocol, payload in results.items():
         metrics = payload.get("metrics", {})
-        row = {
-            "protocol": protocol,
-            "completed": payload["completed"],
-            "primary_rpm_rmse": metrics.get("primary_rpm", {}).get(
-                "root_mean_square_error"
-            ),
-            "secondary_rpm_rmse": metrics.get("secondary_rpm", {}).get(
-                "root_mean_square_error"
-            ),
-            "speed_ratio_rmse": metrics.get("speed_ratio", {}).get(
-                "root_mean_square_error"
-            ),
-            "primary_force_rmse_n": metrics.get("primary_force", {}).get(
-                "root_mean_square_error"
-            ),
-            "transition_count": payload.get("transition_count"),
-        }
-        rows.append(row)
+        rows.append(
+            {
+                "protocol": protocol,
+                "completed": payload["completed"],
+                "primary_rpm_rmse": metrics.get("primary_rpm", {}).get(
+                    "root_mean_square_error"
+                ),
+                "secondary_rpm_rmse": metrics.get("secondary_rpm", {}).get(
+                    "root_mean_square_error"
+                ),
+                "speed_ratio_rmse": metrics.get("speed_ratio", {}).get(
+                    "root_mean_square_error"
+                ),
+                "primary_force_rmse_n": metrics.get("primary_force", {}).get(
+                    "root_mean_square_error"
+                ),
+                "transition_count": payload.get("transition_count"),
+            }
+        )
+
     with (ARTIFACTS / "headline_metrics.csv").open(
-        "w", newline="", encoding="utf-8"
+        "w",
+        newline="",
+        encoding="utf-8",
     ) as handle:
         writer = csv.DictWriter(handle, fieldnames=list(rows[0]))
         writer.writeheader()
         writer.writerows(rows)
 
-    summary = {
-        "cinder_version": cinder.__version__,
-        "results": results,
-    }
     (ARTIFACTS / "summary.json").write_text(
-        json.dumps(summary, indent=2) + "\n", encoding="utf-8"
+        json.dumps(
+            {"cinder_version": cinder.__version__, "results": results},
+            indent=2,
+        )
+        + "\n",
+        encoding="utf-8",
     )
 
     lines = [
-        "# Ballew 2015 rerun summary",
+        "# Ballew 2015 benchmark summary",
         "",
         f"CINDER: `{cinder.__version__}`",
         "",
-        "| Protocol | Primary RPM RMSE | Secondary RPM RMSE | Ratio RMSE | Force RMSE |",
+        "This is a model-to-model comparison against Ballew's simulated Figure 41/45 outputs.",
+        "",
+        "| Protocol | Primary RPM RMSE | Secondary RPM RMSE | Ratio RMSE | Primary-force RMSE |",
         "|---|---:|---:|---:|---:|",
     ]
     for row in rows:
         def fmt(value, suffix=""):
             return "—" if value is None else f"{float(value):.6g}{suffix}"
+
         lines.append(
             f"| {row['protocol']} | {fmt(row['primary_rpm_rmse'], ' rpm')} | "
-            f"{fmt(row['secondary_rpm_rmse'], ' rpm')} | {fmt(row['speed_ratio_rmse'])} | "
+            f"{fmt(row['secondary_rpm_rmse'], ' rpm')} | "
+            f"{fmt(row['speed_ratio_rmse'])} | "
             f"{fmt(row['primary_force_rmse_n'], ' N')} |"
         )
-    lines.extend(
-        [
-            "",
-            "Historical v1.0.0 values are stored in each protocol's `metrics.json` as a regression reference.",
-            "A nonzero raw transition-count delta is not by itself a physics regression because zero-crossing bookkeeping is tolerance-sensitive.",
-        ]
+    (ARTIFACTS / "summary.md").write_text(
+        "\n".join(lines) + "\n",
+        encoding="utf-8",
     )
-    (ARTIFACTS / "summary.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
 
 
 def main() -> int:
     args = parse_args()
-    subprocess.run([sys.executable, str(VERIFY)], check=True)
+    subprocess.run([sys.executable, str(VERIFY_ENVIRONMENT)], check=True)
+    subprocess.run([sys.executable, str(VERIFY_STUDY)], check=True)
     if cinder.__version__ != EXPECTED_CINDER_VERSION:
         raise SystemExit(
             f"Expected CINDER {EXPECTED_CINDER_VERSION}, found {cinder.__version__}."
         )
 
     spec = json.loads(STUDY_FILE.read_text(encoding="utf-8"))
-    ensure_reference_assets()
-    reference_dir = materialize_reference_data(study_root=STUDY_ROOT)
+    reference_dir = validate_reference_data(study_root=STUDY_ROOT)
 
-    if ARTIFACTS.exists() and not args.keep_artifacts:
-        shutil.rmtree(ARTIFACTS)
+    protocols = (
+        ("force_replay", "closed_loop")
+        if args.protocol == "both"
+        else (
+            ("force_replay",)
+            if args.protocol == "force-replay"
+            else ("closed_loop",)
+        )
+    )
+
     ARTIFACTS.mkdir(parents=True, exist_ok=True)
+    if not args.keep_artifacts:
+        for protocol in protocols:
+            directory_name = (
+                "force-replay" if protocol == "force_replay" else "closed-loop"
+            )
+            directory = ARTIFACTS / directory_name
+            if directory.exists():
+                shutil.rmtree(directory)
+        for filename in ("resolved_study.json", "headline_metrics.csv", "summary.json", "summary.md"):
+            path = ARTIFACTS / filename
+            if path.exists():
+                path.unlink()
 
     resolved = {
         "study": spec,
@@ -348,17 +409,19 @@ def main() -> int:
         "cinder_module_path": str(Path(cinder.__file__).resolve()),
         "parameters": resolved_parameter_document(),
         "reference_files": reference_hash_document(reference_dir),
-        "reference_runtime_directory": str(reference_dir.resolve()),
+        "command_overrides": {
+            "rtol": args.rtol,
+            "atol": args.atol,
+            "max_step_s": args.max_step,
+            "maximum_transitions": args.maximum_transitions,
+            "protocol": args.protocol,
+        },
     }
     (ARTIFACTS / "resolved_study.json").write_text(
-        json.dumps(resolved, indent=2) + "\n", encoding="utf-8"
+        json.dumps(resolved, indent=2) + "\n",
+        encoding="utf-8",
     )
 
-    protocols = (
-        ("force_replay", "closed_loop")
-        if args.protocol == "both"
-        else (("force_replay",) if args.protocol == "force-replay" else ("closed_loop",))
-    )
     results: dict[str, dict[str, object]] = {}
     for protocol in protocols:
         print(f"Running {protocol}...")

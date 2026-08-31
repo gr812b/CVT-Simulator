@@ -1,35 +1,17 @@
-"""Reference-data discovery and integrity checks for the Ballew benchmark."""
+"""Reference-data loading and integrity checks for the Ballew benchmark."""
 
 from __future__ import annotations
 
 import csv
 from dataclasses import dataclass
 import hashlib
+import json
 from pathlib import Path
 
 import numpy as np
 from numpy.typing import NDArray
 
-
-REFERENCE_FILES = {
-    "figure_41_input_rpm.csv": {
-        "sha256": "ad16629a0cefd308e7df0d4c79b00a08f295a7efff2cbf0f4173dca1929e0dd9",
-        "size": 4325,
-        "value_column": "input_rpm",
-    },
-    "figure_41_output_rpm.csv": {
-        "sha256": "47dc6da83cae77ce0bef49277983120086ed577dcd1c84fdbc4ddb684b154d8a",
-        "size": 2467,
-        "value_column": "output_rpm",
-    },
-    "figure_45_primary_force.csv": {
-        "sha256": "e61467317a884e0d75a32c52b0688fbaa4bde5fd327b3aaab9625ec16de282e8",
-        "size": 7905,
-        "value_column": "primary_axial_force_n",
-    },
-}
-
-SOURCE_PDF_SHA256 = "cafead74895bbfaf092fe0354f0572064f44c6b4ff10c422877c5ae587f8df44"
+REFERENCE_MANIFEST = "manifest.json"
 
 
 @dataclass(frozen=True, slots=True)
@@ -38,7 +20,7 @@ class ReferenceSeries:
     value: NDArray[np.float64]
 
 
-def _sha256(path: Path) -> str:
+def sha256(path: Path) -> str:
     digest = hashlib.sha256()
     with path.open("rb") as handle:
         for chunk in iter(lambda: handle.read(1024 * 1024), b""):
@@ -46,7 +28,7 @@ def _sha256(path: Path) -> str:
     return digest.hexdigest()
 
 
-def _is_lfs_pointer(path: Path) -> bool:
+def is_lfs_pointer(path: Path) -> bool:
     try:
         head = path.read_bytes()[:128]
     except OSError:
@@ -54,54 +36,64 @@ def _is_lfs_pointer(path: Path) -> bool:
     return head.startswith(b"version https://git-lfs.github.com/spec/v1")
 
 
-def _validate_one(path: Path, expected: dict[str, object]) -> None:
+def load_reference_manifest(reference_dir: Path) -> dict[str, object]:
+    manifest_path = reference_dir / REFERENCE_MANIFEST
+    if not manifest_path.exists():
+        raise FileNotFoundError(manifest_path)
+    return json.loads(manifest_path.read_text(encoding="utf-8"))
+
+
+def _validate_hashed_file(path: Path, expected: dict[str, object]) -> None:
     if not path.exists():
         raise FileNotFoundError(path)
-    if _is_lfs_pointer(path):
+    if is_lfs_pointer(path):
         raise RuntimeError(
-            f"{path} is a Git LFS pointer, not materialized data. Run `git lfs pull`."
+            f"{path} is not materialized data in this checkout."
         )
-    actual = _sha256(path)
-    if actual != expected["sha256"]:
+    expected_size = expected.get("size_bytes")
+    if expected_size is not None and path.stat().st_size != int(expected_size):
         raise RuntimeError(
-            f"Reference SHA-256 mismatch for {path.name}: {actual} != {expected['sha256']}"
+            f"Reference size mismatch for {path.name}: "
+            f"{path.stat().st_size} != {expected_size}"
         )
+    expected_sha = expected.get("sha256")
+    if expected_sha is not None:
+        actual = sha256(path)
+        if actual != expected_sha:
+            raise RuntimeError(
+                f"Reference SHA-256 mismatch for {path.name}: "
+                f"{actual} != {expected_sha}"
+            )
 
 
-def materialize_reference_data(*, study_root: Path) -> Path:
-    """Return the exact, migrated Ballew reference directory.
+def validate_reference_data(*, study_root: Path) -> Path:
+    """Validate and return this study's self-contained reference directory."""
 
-    This results study is intentionally self-contained after ``migrate_legacy.py``.
-    Runtime fallback to ``cvtModel/launchTools`` is forbidden so the old location
-    can be deleted after the migration is verified.
-    """
+    reference_dir = study_root / "reference"
+    manifest = load_reference_manifest(reference_dir)
+    prepared = manifest.get("prepared_reference_files", {})
+    if not isinstance(prepared, dict) or not prepared:
+        raise RuntimeError("Reference manifest has no prepared_reference_files.")
 
-    packaged = study_root / "reference"
-    missing: list[str] = []
-    for name, expected in REFERENCE_FILES.items():
-        path = packaged / name
-        if not path.exists():
-            missing.append(name)
-            continue
-        _validate_one(path, expected)
-    if missing:
-        raise FileNotFoundError(
-            "Ballew reference assets are not materialized in the results study: "
-            + ", ".join(missing)
-            + ". Run `python studies/ballew-2015/migrate_legacy.py` first."
-        )
-    return packaged
+    for name, expected in prepared.items():
+        if not isinstance(expected, dict):
+            raise RuntimeError(f"Invalid manifest entry for {name}.")
+        _validate_hashed_file(reference_dir / name, expected)
+    return reference_dir
 
 
 def reference_hash_document(reference_dir: Path) -> dict[str, object]:
+    """Return the hashes of the exact benchmark-ready files used by a run."""
+
+    manifest = load_reference_manifest(reference_dir)
+    prepared = manifest["prepared_reference_files"]
     payload: dict[str, object] = {}
-    for name, expected in REFERENCE_FILES.items():
+    for name, expected in prepared.items():
         path = reference_dir / name
-        _validate_one(path, expected)
+        _validate_hashed_file(path, expected)
         payload[name] = {
-            "sha256": _sha256(path),
+            "sha256": sha256(path),
             "size_bytes": path.stat().st_size,
-            "legacy_git_lfs_oid_sha256": expected["sha256"],
         }
     return payload
 
@@ -119,6 +111,7 @@ def load_series(path: Path, *, value_column: str) -> ReferenceSeries:
         for row in reader:
             times.append(float(row["time_s"]))
             values.append(float(row[value_column]))
+
     t = np.asarray(times, dtype=float)
     y = np.asarray(values, dtype=float)
     if t.ndim != 1 or t.size < 2 or y.shape != t.shape:
@@ -127,14 +120,18 @@ def load_series(path: Path, *, value_column: str) -> ReferenceSeries:
         raise RuntimeError(f"Non-finite reference data in {path}.")
     if np.any(np.diff(t) <= 0.0):
         raise RuntimeError(f"Reference times must be strictly increasing in {path}.")
+
     t.setflags(write=False)
     y.setflags(write=False)
     return ReferenceSeries(time_s=t, value=y)
 
 
 def build_reference_ratio(
-    input_rpm: ReferenceSeries, output_rpm: ReferenceSeries
+    input_rpm: ReferenceSeries,
+    output_rpm: ReferenceSeries,
 ) -> ReferenceSeries:
+    """Build a ratio trace on the union of the two native Figure 41 grids."""
+
     start = max(float(input_rpm.time_s[0]), float(output_rpm.time_s[0]))
     end = min(float(input_rpm.time_s[-1]), float(output_rpm.time_s[-1]))
     merged = np.unique(np.r_[input_rpm.time_s, output_rpm.time_s])

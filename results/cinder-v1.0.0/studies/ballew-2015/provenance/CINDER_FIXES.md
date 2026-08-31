@@ -6,10 +6,6 @@ implementation defects become obvious. These corrections are already part of
 the frozen `cinder-v1.0.0` mechanics; they are **not study-local patches** and
 must not be re-applied by the results code.
 
-The exact historical diagnostic document is copied by `migrate_legacy.py` to
-`provenance/legacy-docs/SINGULARITY_DIAGNOSIS.md`, and the exact legacy benchmark
-code is preserved under `provenance/legacy-code/`.
-
 ## 1. Regime-aware one-sided geometry derivatives at engagement
 
 ### Failure
@@ -44,9 +40,9 @@ The geometry API now distinguishes the one-sided derivative by active regime:
 This is a piecewise-smooth coordinate correction, not an epsilon/`nextafter`
 workaround and not a change to any Ballew parameter.
 
-The legacy diagnosis reports the previously failing matrix improving from rank 7
-and exact singularity to rank 8, with the missing tension-loop `s_ddot`
-coefficient restored.
+The decisive regression is structural: the engaged closure must retain full rank
+at the boundary and the tension-loop row must retain its `s_ddot` coefficient.
+This is checked in CINDER itself rather than patched by the study.
 
 Frozen source location: `cvtModel/src/cinder/model/cvt/geometry/belt_pulley.py`
 and the engaged mechanical snapshot path in the v1.0.0 plant.
@@ -77,8 +73,8 @@ This is hybrid admissibility bookkeeping. It changes no force law, no physical
 parameter, and no event location.
 
 The Ballew benchmark consequently exercises many legitimate stop impacts and
-releases; its benchmark safety cap was raised from 200 to 2000 transitions only
-as a runaway guard.
+releases. The study uses a 2000-transition safety cap only as a runaway guard;
+the cap does not alter the equations or event locations.
 
 ## 3. Complete successor search at kinetic slip zero crossings
 
@@ -104,9 +100,9 @@ Nothing special. The results environment must install exactly
 study should not vendor alternate CINDER mechanics or insert `cvtModel/src` onto
 `sys.path`.
 
-The migrated study therefore:
+The study therefore:
 
 1. verifies the clean 1.0.0 environment;
-2. retains the old diagnostics and exact legacy implementation as provenance;
-3. runs the cleaned comparison against the released wheel;
-4. regression-compares the new run against the historical v1.0.0 outputs.
+2. constructs only benchmark-specific extension objects locally;
+3. runs the comparison against the released wheel;
+4. leaves the corrected CINDER mechanics entirely inside the installed package.

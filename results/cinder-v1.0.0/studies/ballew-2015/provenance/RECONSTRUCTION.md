@@ -1,8 +1,9 @@
 # Ballew 2015 reconstruction contract
 
-This document is the concise, current reconstruction contract for the migrated
-Ballew study. The exact legacy `RECONSTRUCTION.md` is preserved by
-`migrate_legacy.py` under `provenance/legacy-docs/`.
+This document is the normative reconstruction contract for the Ballew study.
+It records every important bridge required because Ballew and CINDER do not use
+identical coordinates, force normalizations, inertia ownership, or controller
+representations.
 
 The benchmark is a **model-to-model comparison** against Ballew's Chapter 5
 simulated vehicle-acceleration case. Figure 41 and Figure 45 are Ballew
@@ -66,7 +67,7 @@ This is an explicit reconstruction bridge, not a fitted parameter.
 
 Ballew gives vehicle mass, tire radius, frontal area, Cd and rolling resistance,
 but does not report every environmental/numerical constant needed by the CINDER
-road-load implementation. The migration retains the legacy explicit choices:
+road-load implementation. The study therefore makes the following explicit reconstruction choices:
 
 - air density: `1.225 kg/m³`;
 - gravity: `9.80665 m/s²`;
@@ -133,8 +134,9 @@ belt equations.
 
 ## A6/A7 — digitized Figure 41 and Figure 45 data
 
-The exact legacy WebPlotDigitizer projects, raw exports, prepared CSVs and
-source thesis are moved into `reference/` by `migrate_legacy.py`.
+The exact WebPlotDigitizer project files, raw exports, prepared CSVs, and source
+thesis are stored directly under `reference/`. The benchmark-ready CSVs are
+regenerated deterministically by `reference/prepare_reference_data.py`.
 
 Preparation of Figure 45 is deliberately minimal:
 
@@ -212,6 +214,6 @@ state is added to CINDER's physical five-state CVT model.
 Ballew's node friction has a finite near-zero layer: kinetic Coulomb friction for
 `|v_rel| >= 0.02 m/s`, and a static/impending-motion rule below that threshold.
 CINDER does not silently copy this threshold into its gross pulley-contact hybrid
-switching tolerances. The migrated benchmark retains CINDER's normal contact
+switching tolerances. The benchmark retains CINDER's normal contact
 mode graph and treats any remaining difference as model-form difference unless a
 separate sensitivity study explicitly changes that assumption.

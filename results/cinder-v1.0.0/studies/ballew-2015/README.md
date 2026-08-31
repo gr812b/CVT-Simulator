@@ -1,166 +1,195 @@
-# Ballew 2015 benchmark — permanent CINDER 1.0.0 results home
+# Ballew 2015 model-to-model benchmark
 
-This directory replaces the legacy
-`cvtModel/launchTools/literature/ballew_2015` location. It deliberately carries
-**the whole study**, not just a new runner:
+This study reconstructs the five-second simulated ATV/CVT acceleration case from
+Ballew (2015) and compares it with CINDER 1.0.0.
 
-- the Ballew thesis used by the benchmark;
-- raw WebPlotDigitizer exports and project JSONs;
-- prepared Figure 41 / Figure 45 comparison traces;
-- every reconstruction assumption and bridge into CINDER;
-- the exact legacy benchmark implementation for auditability;
-- force-replay and closed-loop historical results;
-- convergence and numerical-stability results;
-- legacy bug/fix diagnostic artifacts;
-- the benchmark-driven CINDER-fix provenance;
-- a cleaned runner that executes the published `cinder-cvt==1.0.0` distribution
-  without adding the live repository source tree to `sys.path`.
+It is the complete, maintained home of the benchmark. Everything required to
+understand and re-run the comparison belongs here: source provenance,
+digitization provenance, deterministic reference-data preparation, reconstruction
+assumptions, benchmark-specific CINDER extension objects, numerical-robustness
+checks, and fresh generated artifacts.
 
-The only legacy material intentionally excluded is Python cache/bytecode.
+**No generated benchmark results are part of the clean study.** `artifacts/` is
+populated only when a runner is executed.
 
-## 1. Materialize the exact legacy study into its new home
+This is a **model-to-model comparison**, not experimental validation. Figure 41
+and Figure 45 are outputs of Ballew's discretized-belt simulation. No CINDER
+physical parameter or controller gain is fitted to those traces.
 
-After unzipping this drop-in at the repository root, run:
+## Comparison protocols
 
-```powershell
-python results/cinder-v1.0.0/studies/ballew-2015/migrate_legacy.py
-```
+The study retains the two complementary comparisons from the original Ballew
+work.
 
-This reads the frozen `cinder-v1.0.0` tag at commit
-`ee21850034a58df73ffc4238936ffece8102c4f1`, resolves Git-LFS objects, and maps
-the old tree as follows:
+### 1. Force replay
+
+The digitized Figure 45 primary axial-force history is imposed on CINDER. CINDER
+primary speed, secondary speed, and derived speed ratio are then compared with
+Ballew Figure 41.
+
+This isolates the plant response: given approximately the same primary clamp
+history, do the two models produce the same macroscopic shift trajectory?
+
+### 2. Reconstructed closed loop
+
+Ballew publishes a 2500 rpm primary-speed objective and controller gains
+`Kff = 1.2`, `Kp = 5`, `Ki = 75`, but not a complete executable controller
+equation. The source-constrained reconstruction documented in
+`provenance/RECONSTRUCTION.md` is applied around unchanged CINDER. Figure 45 is
+then an **output reference**, never an input to the controller.
+
+`run_controller_reconstruction.py` separately audits the controller sign and
+error-unit interpretation against the digitized Ballew traces. Diagnostic fitted
+gains reported by that audit are never fed back into the benchmark.
+
+## Study layout
 
 ```text
 ballew-2015/
-├── benchmark/                         # cleaned canonical benchmark code
-├── reference/                         # exact source + digitization
-├── provenance/
-│   ├── RECONSTRUCTION.md              # current reconstruction contract
-│   ├── CINDER_FIXES.md                # fixes exposed by Ballew
-│   ├── CURRENT_STUDY_SUMMARY.md       # carried final interpretation
-│   ├── legacy-docs/                   # exact old root Markdown files
-│   ├── legacy-code/                   # exact old root Python implementation
-│   └── migration_manifest.json        # byte/hash provenance for every moved file
-├── artifacts/
-│   ├── historical-v1.0.0/             # exact old results/** tree
-│   └── rerun-v1.0.0/                  # newly generated clean rerun
-├── migrate_legacy.py
+├── README.md
+├── study.json
+├── verify_study.py
 ├── run.py
+├── run_controller_reconstruction.py
 ├── run_convergence.py
-└── study.json
+├── run_stability_sweep.py
+│
+├── benchmark/
+│   ├── constants.py        # published values + explicit reconstructed constants
+│   ├── belt.py             # A4 equivalent-belt/geometry bridge
+│   ├── actuation.py        # constant and tabulated axial-force extensions
+│   ├── controller.py       # A11 PI host/state/force-law reconstruction
+│   ├── case.py             # CINDER assembly, boundaries, inertias, initial state
+│   ├── simulation.py       # high-level CINDER execution and dense sampling
+│   ├── reference.py        # reference integrity/loading helpers
+│   └── metrics.py          # comparison metrics/plots
+│
+├── reference/
+│   ├── source/
+│   │   └── Ballew_2015_thesis.pdf
+│   ├── digitization/
+│   │   ├── input_rpm.csv
+│   │   ├── output_rpm.csv
+│   │   ├── axial_force.csv
+│   │   ├── rpms_ballew.json
+│   │   └── axial_force_ballew.json
+│   ├── prepare_reference_data.py
+│   ├── figure_41_input_rpm.csv
+│   ├── figure_41_output_rpm.csv
+│   └── figure_45_primary_force.csv
+│
+├── provenance/
+│   ├── README.md
+│   ├── RECONSTRUCTION.md
+│   ├── CINDER_FIXES.md
+│   └── NUMERICAL_STABILITY.md
+│
+└── artifacts/              # generated fresh; not source material
 ```
 
-The migration does **not** need the old directory to remain in the working tree:
-it reads the tagged Git objects directly. If a CSV is stored through Git LFS, the
-script smudges the pointer and verifies the materialized content against the
-pointer SHA-256. The resulting `migration_manifest.json` records source path,
-source Git blob, target path, byte count and SHA-256.
+The five files under `reference/digitization/` are immutable source provenance.
+The three benchmark-ready CSVs one directory above them are reproducibly derived
+by `prepare_reference_data.py`.
 
-Verify at any time with:
+## Reference-data preparation
+
+From the study directory:
 
 ```powershell
-python results/cinder-v1.0.0/studies/ballew-2015/migrate_legacy.py --verify
+python reference/prepare_reference_data.py
+python reference/prepare_reference_data.py --check
 ```
 
-Once that passes and the clean rerun matches the historical regression, the old
-`launchTools/literature/ballew_2015` directory can be retired without creating a
-runtime dependency here.
+Preparation is intentionally minimal:
 
-## 2. What the comparison actually is
+1. add explicit headers to the raw WebPlotDigitizer CSV exports;
+2. retain the two Figure 41 traces on their own native digitized time grids;
+3. average exact duplicate Figure 45 time coordinates;
+4. prepend a `t=0` Figure 45 value by holding the first visible force point
+   backward over the short unsupported initial interval.
 
-This is **not experimental validation**. Ballew Figure 41 and Figure 45 are
-outputs from Ballew's own 2015 discretized-belt simulation.
+There is no smoothing, filtering, resampling, curve fitting, or controller
+reconstruction in this step. See `reference/README.md` and Reconstruction A6/A7.
 
-Two complementary protocols are retained:
+## Why this is a Python study instead of a serialized baseline override
 
-1. **Force replay** — Figure 45 primary clamp force is imposed on CINDER and the
-   resulting primary RPM, secondary RPM and speed ratio are compared with Figure
-   41.
-2. **Closed loop** — Ballew's published `Kff=1.2`, `Kp=5`, `Ki=75` controller is
-   reconstructed around unchanged CINDER. Figure 45 is then an output reference,
-   not an input.
+PR #476's ordinary results studies derive from a frozen serialized simulation
+case. Ballew cannot be represented honestly as only a JSON override because the
+benchmark requires two legitimate CINDER 1.0.0 Python extension points:
 
-No CINDER physical parameter or controller gain is fitted to the digitized
-curves.
+- a tabulated primary axial-force law for force replay;
+- a PI-controlled primary force law with an integrated host state for the
+  closed-loop reconstruction.
 
-See `provenance/RECONSTRUCTION.md` for every important source-to-CINDER bridge.
+The study therefore keeps those **benchmark-specific extension objects local**
+while using the published CINDER package for the mechanics. It:
 
-## 3. Why the new study is not a fake all-JSON simulation case
+- verifies the release environment;
+- never adds the repository's live `cvtModel/src` tree to `sys.path`;
+- validates the assembled CVT through `cinder.contracts.validate_assembly`;
+- executes through `ComposedCVTHybridSystem.run`;
+- projects the standard result through `cinder.contracts.project_simulation_result`;
+- writes the complete resolved published/reconstructed parameter document and
+  reference hashes with each fresh run.
 
-CINDER 1.0.0's serialized simulation-case contract supports built-in
-boundaries/hosts/actuators. Ballew needs a tabulated primary-force replay and a
-PI controller with an integral host state; those are legitimate Python extension
-points but are intentionally not serializable as pretend built-ins.
+This is the study-level exception to the ordinary serialized-default pattern;
+it should be treated explicitly rather than pretending the custom objects are
+built-in JSON contracts.
 
-The cleaned study therefore:
+## Re-running the benchmark
 
-- runs only the verified installed `cinder-cvt==1.0.0` wheel;
-- never inserts `cvtModel/src` into `sys.path`;
-- constructs only the benchmark-specific extension force/host objects locally;
-- validates the assembled physical CVT with `cinder.contracts.validate_assembly`;
-- runs through `ComposedCVTHybridSystem.run`;
-- projects the result through `cinder.contracts.project_simulation_result`;
-- writes `resolved_study.json` containing every published/reconstructed input and
-  source hash.
+First create/activate the frozen CINDER 1.0.0 results environment described by
+`results/cinder-v1.0.0/README.md`.
 
-That is the honest v1.0.0 public-boundary implementation.
-
-## 4. Historical results carried with the study
-
-A visible compact copy is already in
-`artifacts/historical-v1.0.0/headline/`. The migration then fills in the exact
-legacy result tree beneath the same historical directory.
-
-| Protocol | Primary RPM RMSE | Secondary RPM RMSE | Ratio RMSE | Primary-force RMSE |
-|---|---:|---:|---:|---:|
-| Force replay | 1796.1055 rpm (71.88%) | 38.2552 rpm (3.19%) | 1.4513405 (69.61%) | imposed input |
-| Closed loop | 109.6651 rpm (4.39%) | 32.9216 rpm (2.74%) | 0.1092994 (5.24%) | 1180.2276 N (46.04%) |
-
-The force-replay result shows that the two plant models do not have the same
-clamp-force-to-shift mapping. The much closer closed-loop speed/ratio result shows
-that feedback can place the two different plants on similar macroscopic
-trajectories while demanding substantially different clamp histories.
-
-`provenance/CURRENT_STUDY_SUMMARY.md` carries the final interpretation,
-convergence result, raw-transition-count caveat and numerical-stability result.
-
-## 5. Re-run against the published release
-
-First bootstrap the release-level environment exactly as PR #476 requires, then
-activate it. From `results/cinder-v1.0.0/`:
+From `results/cinder-v1.0.0/`:
 
 ```powershell
+python verify_environment.py
+python studies/ballew-2015/verify_study.py
 python studies/ballew-2015/run.py
 ```
 
-Optional:
+Optional audits/studies:
 
 ```powershell
-python studies/ballew-2015/run.py --protocol force-replay
-python studies/ballew-2015/run.py --protocol closed-loop
-python studies/ballew-2015/run.py --no-plots
+# Source-only audit of the incompletely published PI controller equation.
+python studies/ballew-2015/run_controller_reconstruction.py
+
+# Four-point refinement check around the nominal closed-loop settings.
 python studies/ballew-2015/run_convergence.py
+
+# Broader numerical operating-envelope study.
 python studies/ballew-2015/run_stability_sweep.py --preset smoke
-# Broad repeat of the numerical operating-envelope study:
 python studies/ballew-2015/run_stability_sweep.py --preset quick
 ```
 
-Fresh outputs go only to:
+All generated files are written beneath `artifacts/`. Re-running the canonical
+comparison clears only the canonical protocol outputs unless `--keep-artifacts`
+is supplied.
 
-```text
-artifacts/rerun-v1.0.0/
-```
+## Reconstruction documentation
 
-They never delete or overwrite the migrated historical evidence.
+`provenance/RECONSTRUCTION.md` is normative for the source-to-CINDER bridge. It
+separates values published by Ballew from quantities that must be reconstructed
+because the two models use different coordinates, inertia ownership, friction
+normalizations, or controller representations.
 
-## 6. Benchmark-driven CINDER corrections
+The main bridges are:
 
-The original Ballew work exposed implementation defects around:
+- inertia ownership and vehicle-load reconstruction;
+- exact initial state from the published shaft speeds;
+- Figure 39 equivalent belt-core/cord-line geometry mapping;
+- zero moving-sheave masses to represent Ballew's algebraic clamp balance;
+- Figure 41/45 digitization handling;
+- friction-capacity translation between Ballew's node convention and CINDER's
+  reduced pulley-contact convention;
+- the incompletely published PI + feed-forward controller reconstruction.
 
-- one-sided engaged geometry derivatives at a zero-width deadzone boundary;
-- unilateral stop release after a discrete contact-topology change;
-- completeness of admissible contact successors around kinetic zero crossings.
+## CINDER implementation corrections exposed by this benchmark
 
-Those corrections are already part of `cinder-v1.0.0`; the results study does
-not vendor or alter CINDER mechanics. Exact historical diagnosis is retained by
-the migration and a cleaned explanation lives in `provenance/CINDER_FIXES.md`.
+The Ballew reconstruction also exposed several general CINDER implementation
+issues around piecewise-smooth geometry and hybrid admissibility. They were
+fixed in CINDER itself before v1.0.0 and are **not benchmark-local patches**.
+`provenance/CINDER_FIXES.md` records why those corrections are physically and
+mathematically necessary so the benchmark remains auditable without carrying an
+alternate copy of CINDER mechanics.

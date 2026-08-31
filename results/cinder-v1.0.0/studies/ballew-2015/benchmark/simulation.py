@@ -201,7 +201,7 @@ def sample_dense(
     times = np.asarray(times_s, dtype=float)
     if times.ndim != 1 or times.size == 0 or not np.all(np.isfinite(times)):
         raise ValueError("times_s must be a finite non-empty vector.")
-    raw = result.trace.raw
+    raw = result.trace
     if times[0] < -1e-12 or times[-1] > raw.final_time + 1e-12:
         raise ValueError("Requested dense-sample time lies outside integration interval.")
     states = np.empty((setup.initial_full_state.size, times.size), dtype=float)
