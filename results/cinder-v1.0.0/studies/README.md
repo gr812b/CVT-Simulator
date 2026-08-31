@@ -1,20 +1,29 @@
 # CINDER 1.0.0 studies
 
-Create one subdirectory per independent result study or tightly related result
-family.
+Each study derives from a frozen document in `../defaults/` and records only
+its intentional changes in `study.json`.
 
-Recommended minimal layout:
+Recommended layout:
 
 ```text
 study-name/
 ├── README.md
+├── study.json
 ├── run.py
-├── inputs/
-└── artifacts/
+├── artifacts/
+└── work/
 ```
 
-Use a study-local `work/` directory for temporary or exploratory files;
-`work/` is ignored by Git.
+`run.py` should:
 
-Every study must run from the CINDER 1.0.0 result virtual environment and
-import `cinder` from the published `cinder-cvt==1.0.0` installation.
+1. verify the release environment;
+2. load the named baseline;
+3. apply only the declared study overrides;
+4. validate through `cinder.contracts`;
+5. run CINDER;
+6. save the fully resolved simulation document;
+7. save machine-readable result data;
+8. generate the study's plots/tables.
+
+This makes the baseline tune common and reviewable while leaving each result
+with a complete record of the exact input it executed.

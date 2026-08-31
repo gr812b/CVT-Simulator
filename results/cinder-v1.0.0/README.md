@@ -1,20 +1,19 @@
 # Results against CINDER 1.0.0
 
-This result series is frozen to:
+Frozen execution environment:
 
 ```text
 CINDER source tag: cinder-v1.0.0
-PyPI distribution: cinder-cvt==1.0.0
+PyPI package:       cinder-cvt==1.0.0
 Python:             3.12
 NumPy:              2.5.2
 SciPy:              1.18.1
+Matplotlib:         3.11.1
 ```
 
-The local `cvtModel/` source tree is deliberately not part of this environment.
+## Environment
 
-## Create the clean environment
-
-Windows:
+From repository root:
 
 ```powershell
 py -3.12 results/cinder-v1.0.0/bootstrap.py
@@ -28,45 +27,34 @@ python3.12 results/cinder-v1.0.0/bootstrap.py
 source results/cinder-v1.0.0/.venv/bin/activate
 ```
 
-`bootstrap.py` deletes and recreates only this directory's `.venv`, then
-installs the frozen requirements with isolated pip configuration from the
-explicit public PyPI index `https://pypi.org/simple`.
+The bootstrap recreates only this release's `.venv`, installs from the public
+PyPI index, and runs `verify_environment.py`.
 
-It finishes by running `verify_environment.py`.
+## Frozen defaults
 
-## Verify an existing environment
+See [`defaults/README.md`](defaults/README.md).
+
+`defaults/baja_reference_simulation_case.json` is the authoritative complete
+executable baseline. It contains geometry, friction, inertias, primary and
+secondary mechanisms, engine curve/inertia, vehicle/final-drive/road-load
+inputs, initial state, solver settings, and report settings.
+
+`defaults/baja_reference_tuning.json` preserves the more intuitive physical
+tuning quantities used to construct the encoded mechanism inputs.
+
+## Sample study
+
+Run:
 
 ```bash
-python results/cinder-v1.0.0/verify_environment.py
+python results/cinder-v1.0.0/studies/launch-hill-climb/run.py
 ```
 
-The verifier requires Python 3.12, exact package versions, an interpreter from
-this directory's `.venv`, a `cinder` import from that `.venv`, no
-`cvtModel/src` entry on `sys.path`, and no local/direct-install provenance for
-`cinder-cvt`.
+It starts from the frozen baseline and changes only:
 
-If verification fails, fix/recreate the environment rather than letting a
-study fall back to repository source.
+- total simulation time: 10 s;
+- road: 0° from 0–15 m;
+- road: 15° from 15 m onward.
 
-## Add a study
-
-Create a directory under `studies/`:
-
-```text
-studies/
-└── launch-baseline/
-    ├── README.md
-    ├── run.py
-    ├── inputs/
-    └── artifacts/
-```
-
-The study README should state the question, inputs, regeneration command, and
-meaning of each committed artifact.
-
-If a study adds plotting or analysis dependencies, add them to this release's
-`requirements.txt` with exact pins. Do not add result-only dependencies back
-into the `cinder-cvt` package.
-
-If a study requires newer CINDER mechanics, create a new
-`results/cinder-vX.Y.Z/` tree instead of changing the CINDER pin here.
+The study writes the resolved complete input, projected CINDER result, CSV
+report, summary, and individual PNG plots under its `artifacts/` directory.

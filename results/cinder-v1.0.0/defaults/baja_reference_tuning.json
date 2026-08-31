@@ -1,0 +1,60 @@
+{
+  "name": "Baja fixed-pivot reference tune for CINDER 1.0.0 results",
+  "status": "frozen_reference_inputs",
+  "executable_document": "baja_reference_simulation_case.json",
+  "primary": {
+    "flyweights": {
+      "count": 3,
+      "arm_body_mass_per_flyweight_kg": 0.013646,
+      "tip_hardware_mass_per_flyweight_kg": 0.25,
+      "total_mass_per_flyweight_kg": 0.263646,
+      "pivot_radius_m": 0.042545,
+      "pivot_to_roller_center_m": 0.0315214,
+      "roller_radius_m": 0.0065,
+      "ramp_reference_axial_position_m": 0.0381,
+      "ramp_reference_radial_offset_from_pivot_m": 0.00705104,
+      "ramp_reference_radius_m": 0.04959604
+    },
+    "ramp": {
+      "linear_angle_deg": 35.0,
+      "linear_span_m": 0.005,
+      "c3_blend_span_m": 0.003,
+      "circular_start_angle_deg": 35.0,
+      "circular_end_angle_deg": 20.0,
+      "circular_span_m": 0.03,
+      "circular_quadrant": 2
+    },
+    "spring": {
+      "stiffness_N_per_m": 12784.0,
+      "initial_compression_m": 0.09409049026972177
+    },
+    "engine_equivalent_inertia_kg_m2": 0.05
+  },
+  "secondary": {
+    "axial_spring": {
+      "stiffness_N_per_m": 3532.0,
+      "initial_compression_m": 0.11
+    },
+    "helix": {
+      "torsional_stiffness_Nm_per_rad": 3.476,
+      "initial_twist_deg": 300.0,
+      "initial_twist_rad": 5.235987755982989,
+      "helix_radius_m": 0.04445,
+      "helix_angle_from_circumferential_deg": 20.0,
+      "encoded_profile_angle_rad": 1.2217304763960306,
+      "movable_member_torque_fraction": 0.5
+    }
+  },
+  "vehicle": {
+    "mass_kg": 300.0,
+    "wheel_rotational_inertia_kg_m2": 1.10781744,
+    "wheel_radius_m": 0.2794,
+    "final_drive_reduction_ratio": 7.556,
+    "direct_secondary_shaft_inertia_kg_m2": 0.002011338398044471
+  },
+  "notes": [
+    "The executable simulation-case JSON is authoritative for solver inputs.",
+    "This manifest preserves physical/tuning-level quantities that are less obvious after conversion to mass moments or profile conventions.",
+    "Do not independently edit this manifest and the executable document for a study; derive a study from the executable document and document the physical knob being changed."
+  ]
+}

@@ -12,6 +12,7 @@ EXPECTED = {
     "cinder-cvt": "1.0.0",
     "numpy": "2.5.2",
     "scipy": "1.18.1",
+    "matplotlib": "3.11.1",
 }
 
 ROOT = Path(__file__).resolve().parent
@@ -67,10 +68,8 @@ def main() -> int:
             fail(f"local CINDER source is on sys.path: {path}")
 
     print("Environment verification passed.")
-    print(f"Python:      {sys.version_info.major}.{sys.version_info.minor}")
-    print(f"cinder-cvt: {installed['cinder-cvt']}")
-    print(f"NumPy:       {installed['numpy']}")
-    print(f"SciPy:       {installed['scipy']}")
+    for package in EXPECTED:
+        print(f"{package}: {installed[package]}")
     print(f"cinder path: {module_path}")
     return 0
 
