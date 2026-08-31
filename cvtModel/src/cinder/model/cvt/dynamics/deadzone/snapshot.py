@@ -27,6 +27,9 @@ class DeadzoneSnapshot:
     engaged plant. It may contain affine coupling to primary shaft acceleration
     and global shift acceleration, which is why deadzone free motion uses a
     small coupled solve rather than assuming the actuator is a known force.
+    ``secondary_mechanism`` remains in the belt-locked rotational equation, so
+    configuration-dependent inertia from any secondary-mounted element is not
+    lost merely because secondary axial travel is fixed.
     """
 
     state: CVTState
@@ -34,7 +37,9 @@ class DeadzoneSnapshot:
     locked_geometry: GeometryPosition
     primary_axial_inertia: AxialTranslationInertia
     primary_mechanism: PulleyElementContribution
+    secondary_mechanism: PulleyElementContribution
     primary_rigid_rotational_inertia: float
+    secondary_rigid_belt_locked_inertia: float
     shaft_boundaries: CVTShaftBoundaryValues
     inertias: ResolvedInertias
 
@@ -56,13 +61,11 @@ class DeadzoneSnapshot:
 
     @property
     def secondary_belt_locked_inertia(self) -> float:
-        """Return fixed-shift secondary plus belt transport inertia."""
+        """Total instantaneous inertia in the reduced secondary rotation."""
 
-        radius = self.belt_secondary_lock_radius
         return (
-            self.inertias.secondary.absolute_rotation_inertia
-            + self.shaft_boundaries.secondary.equivalent_inertia
-            + self.inertias.belt.mass * radius * radius
+            self.secondary_rigid_belt_locked_inertia
+            - self.secondary_mechanism.shaft_torque.gains.secondary_angular_acceleration
         )
 
     @property
@@ -133,11 +136,16 @@ def build_deadzone_snapshot(
         geometry=primary_geometry,
     )
     primary_mechanism = model.primary_actuator.evaluate_element(primary_context)
+    secondary_context = model.secondary_actuation_context(
+        time=time,
+        state=state,
+        geometry=locked_geometry,
+    )
+    secondary_mechanism = model.secondary_actuator.evaluate_element(secondary_context)
 
     primary_axial_inertia = model.inertias.axial_translation.evaluate(
         primary_axial_coordinate=primary_coordinate,
         secondary_axial_coordinate=locked_geometry.secondary_axial_coordinate,
-        belt_axial_coordinate=locked_geometry.belt_axial_coordinate,
     ).primary
 
     # If a helical coupling is present, its element already carries the movable
@@ -152,13 +160,25 @@ def build_deadzone_snapshot(
             model.inertias.primary.movable_sheave_rotational_inertia
         )
 
+    secondary_rigid_belt_locked_inertia = (
+        model.inertias.secondary.fixed_side.total
+        + shaft_boundaries.secondary.equivalent_inertia
+        + model.inertias.belt.mass * locked_geometry.secondary.effective**2
+    )
+    if model.secondary_helical_coupling is None:
+        secondary_rigid_belt_locked_inertia += (
+            model.inertias.secondary.movable_sheave_rotational_inertia
+        )
+
     snapshot = DeadzoneSnapshot(
         state=state,
         primary_geometry=primary_geometry,
         locked_geometry=locked_geometry,
         primary_axial_inertia=primary_axial_inertia,
         primary_mechanism=primary_mechanism,
+        secondary_mechanism=secondary_mechanism,
         primary_rigid_rotational_inertia=primary_rigid_rotational_inertia,
+        secondary_rigid_belt_locked_inertia=(secondary_rigid_belt_locked_inertia),
         shaft_boundaries=shaft_boundaries,
         inertias=model.inertias,
     )

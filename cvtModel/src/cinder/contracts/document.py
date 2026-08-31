@@ -17,9 +17,14 @@ from cinder.model.cvt.actuation import (
     AxialSpringForceSpec,
     CentrifugalRampForce,
     CentrifugalRampForceSpec,
+    FixedPivotFlyweightForce,
+    FixedPivotFlyweightForceSpec,
+    FlyweightMassGeometry,
     HelicalTorqueReactionForce,
     HelicalTorqueReactionSpec,
     PulleyActuator,
+    PivotedRollerFollowerFlyweightMap,
+    PivotedRollerFollowerGeometrySpec,
 )
 from cinder.model.cvt.geometry import (
     BeltPulleyGeometry,
@@ -34,6 +39,7 @@ from cinder.model.cvt.inertia import (
     resolve_inertias,
 )
 from cinder.model.cvt.profiles import (
+    C3TransitionSegment,
     CircularSegment,
     HelixProfile,
     LinearSegment,
@@ -278,6 +284,48 @@ def _encode_force_law(force_law: object) -> dict[str, Any]:
                 spec.radial_displacement_profile
             ),
         }
+    if isinstance(force_law, FixedPivotFlyweightForce):
+        mechanism_map = force_law.spec.mechanism_map
+        if not isinstance(mechanism_map, PivotedRollerFollowerFlyweightMap):
+            raise UnsupportedDesignDocumentError(
+                "Only PivotedRollerFollowerFlyweightMap is serializable for "
+                "the fixed-pivot flyweight force law."
+            )
+        geometry = mechanism_map.geometry_spec
+        mass = mechanism_map.mass_geometry
+        return {
+            "kind": "fixed_pivot_roller_flyweight",
+            "geometry": {
+                "pivot_axial_position_m": geometry.pivot_axial_position,
+                "pivot_radius_m": geometry.pivot_radius,
+                "arm_length_m": geometry.arm_length,
+                "roller_radius_m": geometry.roller_radius,
+                "ramp_reference_axial_position_m": (
+                    geometry.ramp_reference_axial_position
+                ),
+                "ramp_reference_radius_m": geometry.ramp_reference_radius,
+                "ramp_profile": _encode_piecewise_ramp(geometry.ramp_profile),
+                "ramp_axial_direction": geometry.ramp_axial_direction,
+                "axial_position_min_m": geometry.axial_position_min,
+                "axial_position_max_m": geometry.axial_position_max,
+                "roller_side_sign": geometry.roller_side_sign,
+                "root_scan_points": geometry.root_scan_points,
+                "validation_positions": geometry.validation_positions,
+                "root_residual_tolerance_m2": geometry.root_residual_tolerance,
+                "coordinate_tolerance_m": geometry.coordinate_tolerance,
+                "compilation_points": mechanism_map.compilation_points,
+            },
+            "mass_geometry": {
+                "number_of_flyweights": mass.number_of_flyweights,
+                "mass_per_flyweight_kg": mass.mass_per_flyweight,
+                "first_moment_u_kg_m": mass.first_moment_u,
+                "first_moment_v_kg_m": mass.first_moment_v,
+                "second_moment_u_kg_m2": mass.second_moment_u,
+                "second_moment_v_kg_m2": mass.second_moment_v,
+                "product_moment_uv_kg_m2": mass.product_moment_uv,
+                "second_moment_z_kg_m2": mass.second_moment_z,
+            },
+        }
     if isinstance(force_law, HelicalTorqueReactionForce):
         spec = force_law.spec
         return {
@@ -314,6 +362,73 @@ def _decode_force_law(payload: Mapping[str, Any]) -> object:
                         "radial_displacement_profile",
                     )
                 ),
+            )
+        )
+    if kind == "fixed_pivot_roller_flyweight":
+        geometry = _mapping(_require(payload, "geometry"), "geometry")
+        mass = _mapping(_require(payload, "mass_geometry"), "mass_geometry")
+        geometry_spec = PivotedRollerFollowerGeometrySpec(
+            pivot_axial_position=_number(geometry, "pivot_axial_position_m"),
+            pivot_radius=_number(geometry, "pivot_radius_m"),
+            arm_length=_number(geometry, "arm_length_m"),
+            roller_radius=_number(geometry, "roller_radius_m"),
+            ramp_reference_axial_position=_number(
+                geometry, "ramp_reference_axial_position_m"
+            ),
+            ramp_reference_radius=_number(geometry, "ramp_reference_radius_m"),
+            ramp_profile=_decode_piecewise_ramp(
+                _mapping(_require(geometry, "ramp_profile"), "geometry.ramp_profile")
+            ),
+            ramp_axial_direction=(
+                _integer(geometry, "ramp_axial_direction")
+                if "ramp_axial_direction" in geometry
+                else 1
+            ),
+            axial_position_min=_number(geometry, "axial_position_min_m"),
+            axial_position_max=_number(geometry, "axial_position_max_m"),
+            roller_side_sign=_integer(geometry, "roller_side_sign"),
+            root_scan_points=(
+                _integer(geometry, "root_scan_points")
+                if "root_scan_points" in geometry
+                else 257
+            ),
+            validation_positions=(
+                _integer(geometry, "validation_positions")
+                if "validation_positions" in geometry
+                else 33
+            ),
+            root_residual_tolerance=_optional_number(
+                geometry, "root_residual_tolerance_m2", default=1.0e-14
+            ),
+            coordinate_tolerance=_optional_number(
+                geometry, "coordinate_tolerance_m", default=1.0e-10
+            ),
+        )
+        mass_geometry = FlyweightMassGeometry(
+            number_of_flyweights=_integer(mass, "number_of_flyweights"),
+            mass_per_flyweight=_number(mass, "mass_per_flyweight_kg"),
+            first_moment_u=_number(mass, "first_moment_u_kg_m"),
+            first_moment_v=_number(mass, "first_moment_v_kg_m"),
+            second_moment_u=_number(mass, "second_moment_u_kg_m2"),
+            second_moment_v=_number(mass, "second_moment_v_kg_m2"),
+            product_moment_uv=_optional_number(
+                mass, "product_moment_uv_kg_m2", default=0.0
+            ),
+            second_moment_z=_optional_number(
+                mass, "second_moment_z_kg_m2", default=0.0
+            ),
+        )
+        return FixedPivotFlyweightForce(
+            FixedPivotFlyweightForceSpec(
+                mechanism_map=PivotedRollerFollowerFlyweightMap(
+                    geometry_spec=geometry_spec,
+                    mass_geometry=mass_geometry,
+                    compilation_points=(
+                        _integer(geometry, "compilation_points")
+                        if "compilation_points" in geometry
+                        else 257
+                    ),
+                )
             )
         )
     if kind == "helical_torque_reaction":
@@ -361,6 +476,17 @@ def _encode_ramp_segment(segment: object) -> dict[str, Any]:
             "length_m": segment.length,
             "angle_rad": radians(segment.angle_degrees),
         }
+    if isinstance(segment, C3TransitionSegment):
+        return {
+            "kind": "c3_transition_segment",
+            "length_m": segment.length,
+            "slope_start": segment.slope_start,
+            "curvature_start_per_m": segment.curvature_start,
+            "third_derivative_start_per_m2": segment.third_derivative_start,
+            "slope_end": segment.slope_end,
+            "curvature_end_per_m": segment.curvature_end,
+            "third_derivative_end_per_m2": segment.third_derivative_end,
+        }
     if isinstance(segment, CircularSegment):
         return {
             "kind": "circular_segment",
@@ -374,12 +500,24 @@ def _encode_ramp_segment(segment: object) -> dict[str, Any]:
     )
 
 
-def _decode_ramp_segment(payload: Mapping[str, Any]) -> LinearSegment | CircularSegment:
+def _decode_ramp_segment(
+    payload: Mapping[str, Any],
+) -> LinearSegment | CircularSegment | C3TransitionSegment:
     kind = _string(payload, "kind")
     if kind == "linear_segment":
         return LinearSegment(
             length=_number(payload, "length_m"),
             angle_degrees=degrees(_number(payload, "angle_rad")),
+        )
+    if kind == "c3_transition_segment":
+        return C3TransitionSegment(
+            length=_number(payload, "length_m"),
+            slope_start=_number(payload, "slope_start"),
+            curvature_start=_number(payload, "curvature_start_per_m"),
+            third_derivative_start=_number(payload, "third_derivative_start_per_m2"),
+            slope_end=_number(payload, "slope_end"),
+            curvature_end=_number(payload, "curvature_end_per_m"),
+            third_derivative_end=_number(payload, "third_derivative_end_per_m2"),
         )
     if kind == "circular_segment":
         quadrant = _integer(payload, "quadrant")

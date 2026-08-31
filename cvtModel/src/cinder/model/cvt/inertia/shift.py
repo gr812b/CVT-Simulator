@@ -64,52 +64,43 @@ class AxialTranslationInertia:
 
 @dataclass(frozen=True, slots=True)
 class AxialTranslationInertias:
-    """Current individual axial inertias for primary, secondary, and belt.
+    """Current individual axial inertias retained by the shift model.
 
-    ``primary`` and ``secondary`` feed their respective physical pulley axial
-    rows directly. ``belt`` remains explicit so a later belt axial-force model
-    can use the same geometry-owned representative coordinate without hiding
-    that mass inside either pulley row.
+    Only the primary and secondary movable members participate in axial shift
+    inertia. Belt mass belongs to the belt-transport equation and is
+    intentionally absent here.
     """
 
     primary: AxialTranslationInertia
     secondary: AxialTranslationInertia
-    belt: AxialTranslationInertia
 
     @property
     def generalized_mass(self) -> float:
-        """Return the sum of individual reflected masses, if needed later."""
+        """Return the retained translational contribution to M_ss."""
 
-        return (
-            self.primary.reflected_mass
-            + self.secondary.reflected_mass
-            + self.belt.reflected_mass
-        )
+        return self.primary.reflected_mass + self.secondary.reflected_mass
 
     @property
     def generalized_curvature_coefficient(self) -> float:
-        """Return the sum of individual generalized curvature coefficients."""
+        """Return the retained translational curvature coefficient."""
 
         return (
             self.primary.generalized_curvature_coefficient
             + self.secondary.generalized_curvature_coefficient
-            + self.belt.generalized_curvature_coefficient
         )
 
 
 @dataclass(frozen=True, slots=True)
 class AxialTranslationMasses:
-    """Fixed physical masses participating in the present axial-motion model."""
+    """Fixed physical masses participating in the retained shift inertia."""
 
     primary_moving_sheave_mass: float
     secondary_moving_sheave_mass: float
-    belt_mass: float
 
     def __post_init__(self) -> None:
         for name, value in (
             ("primary_moving_sheave_mass", self.primary_moving_sheave_mass),
             ("secondary_moving_sheave_mass", self.secondary_moving_sheave_mass),
-            ("belt_mass", self.belt_mass),
         ):
             _require_nonnegative(name, value)
 
@@ -118,9 +109,8 @@ class AxialTranslationMasses:
         *,
         primary_axial_coordinate: AxialCoordinate,
         secondary_axial_coordinate: AxialCoordinate,
-        belt_axial_coordinate: AxialCoordinate,
     ) -> AxialTranslationInertias:
-        """Resolve each literal axial inertia at the current geometry state."""
+        """Resolve the two literal axial inertias retained by the model."""
 
         return AxialTranslationInertias(
             primary=AxialTranslationInertia(
@@ -133,11 +123,6 @@ class AxialTranslationMasses:
                 d_coordinate_ds=secondary_axial_coordinate.d_value_ds,
                 d2_coordinate_ds2=secondary_axial_coordinate.d2_value_ds2,
             ),
-            belt=AxialTranslationInertia(
-                mass=self.belt_mass,
-                d_coordinate_ds=belt_axial_coordinate.d_value_ds,
-                d2_coordinate_ds2=belt_axial_coordinate.d2_value_ds2,
-            ),
         )
 
 
@@ -145,14 +130,12 @@ def resolve_axial_translation_masses(
     *,
     primary_moving_sheave_mass: float,
     secondary_moving_sheave_mass: float,
-    belt_mass: float,
 ) -> AxialTranslationMasses:
-    """Store physical masses for later live-geometry axial-inertia evaluation."""
+    """Store the physical masses retained in shift translation inertia."""
 
     return AxialTranslationMasses(
         primary_moving_sheave_mass=primary_moving_sheave_mass,
         secondary_moving_sheave_mass=secondary_moving_sheave_mass,
-        belt_mass=belt_mass,
     )
 
 

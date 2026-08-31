@@ -9,6 +9,7 @@ from cinder.model.system.state import CVTStateDerivative
 from .free import (
     deadzone_primary_axial_residual,
     solve_deadzone_primary_rotation_at_fixed_shift,
+    solve_deadzone_secondary_rotation,
 )
 from .result import DeadzoneEvaluation, LowerStopReaction
 from .snapshot import DeadzoneSnapshot
@@ -53,9 +54,7 @@ def evaluate_deadzone_lower_stop(
     primary_angular_acceleration = solve_deadzone_primary_rotation_at_fixed_shift(
         snapshot
     )
-    secondary_angular_acceleration = (
-        snapshot.secondary_external_torque / snapshot.secondary_belt_locked_inertia
-    )
+    secondary_angular_acceleration = solve_deadzone_secondary_rotation(snapshot)
     derivative = CVTStateDerivative(
         primary_angular_acceleration=primary_angular_acceleration,
         secondary_angular_acceleration=secondary_angular_acceleration,

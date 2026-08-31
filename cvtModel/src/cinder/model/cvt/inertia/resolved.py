@@ -27,9 +27,9 @@ class DrivetrainInertias:
 class ResolvedInertias:
     """Fixed CVT quantities ready for the dynamic equations.
 
-    ``axial_translation`` stores literal primary, secondary, and belt
-    translation masses. Their coordinate mappings are evaluated from live
-    geometry on each RHS call.
+    ``axial_translation`` stores only the literal primary and secondary
+    translating masses retained by the shift model. Belt mass remains in the
+    independent belt-transport dynamics.
     """
 
     primary: PrimaryInertia
@@ -58,6 +58,5 @@ def resolve_inertias(
         axial_translation=resolve_axial_translation_masses(
             primary_moving_sheave_mass=drivetrain.primary.moving_sheave_mass,
             secondary_moving_sheave_mass=drivetrain.secondary.moving_sheave_mass,
-            belt_mass=belt.mass,
         ),
     )

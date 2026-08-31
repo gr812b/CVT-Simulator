@@ -30,7 +30,6 @@ from math import isfinite
 import numpy as np
 from numpy.typing import NDArray
 
-from cinder.model.cvt.actuation import CentrifugalRampForce
 from cinder.model.system.evaluator import MechanicalCVTPlant
 from cinder.model.system.ports import CVTShaftBoundaryValues
 from cinder.model.system.state import CVTState
@@ -272,9 +271,10 @@ def _physical_velocity_map(
 
     Belt axial kinetic energy is intentionally absent because the present
     formulation does not retain belt axial inertia in the dynamics.  The
-    point-mass flyweight model contributes its shaft-axis inertia ``m r^2``;
-    its future pivot/radial kinetic energy should be added here when that
-    geometry is introduced.
+    Mounted elements supply their own local physical velocity modes through
+    ``PulleyActuator.kinetic_modes``. The impact layer maps those local modes
+    to the owning shaft and the current topology's ``dx/ds`` without testing
+    for a concrete flyweight class.
     """
 
     geometry = _geometry_for_topology(
@@ -338,16 +338,36 @@ def _physical_velocity_map(
         (0.0, 0.0, 0.0, secondary_coordinate.d_value_ds),
     )
 
-    for inertia in _flyweight_shaft_inertias(
-        actuator=model.primary_actuator,
-        axial_position=primary_coordinate.value,
-    ):
-        add(inertia, (1.0, 0.0, 0.0, 0.0))
-    for inertia in _flyweight_shaft_inertias(
-        actuator=model.secondary_actuator,
-        axial_position=secondary_coordinate.value,
-    ):
-        add(inertia, (0.0, 1.0, 0.0, 0.0))
+    primary_context = model.primary_actuation_context(
+        time=0.0,
+        state=state,
+        geometry=geometry,
+    )
+    secondary_context = model.secondary_actuation_context(
+        time=0.0,
+        state=state,
+        geometry=geometry,
+    )
+    for mode in model.primary_actuator.kinetic_modes(primary_context):
+        add(
+            mode.inertia,
+            (
+                mode.shaft_speed_coefficient,
+                0.0,
+                0.0,
+                mode.axial_speed_coefficient * primary_coordinate.d_value_ds,
+            ),
+        )
+    for mode in model.secondary_actuator.kinetic_modes(secondary_context):
+        add(
+            mode.inertia,
+            (
+                0.0,
+                mode.shaft_speed_coefficient,
+                0.0,
+                mode.axial_speed_coefficient * secondary_coordinate.d_value_ds,
+            ),
+        )
 
     matrix = np.asarray(rows, dtype=float)
     weight_vector = np.asarray(weights, dtype=float)
@@ -401,18 +421,3 @@ def _helix_shift_ratio(*, model: MechanicalCVTPlant, side: str, coordinate) -> f
             d2_axial_position_ds2=coordinate.d2_value_ds2,
         ).dtheta_ds
     )
-
-
-def _flyweight_shaft_inertias(*, actuator, axial_position: float) -> tuple[float, ...]:
-    inertias: list[float] = []
-    for law in actuator.force_laws:
-        if not isinstance(law, CentrifugalRampForce):
-            continue
-        spec = law.spec
-        ramp = spec.radial_displacement_profile.evaluate(axial_position)
-        radius = spec.radius_at_zero_position + ramp.value
-        inertia = spec.flyweight_mass * radius * radius
-        if not isfinite(inertia) or inertia < 0.0:
-            raise ValueError("Flyweight impact inertia must be finite/nonnegative.")
-        inertias.append(float(inertia))
-    return tuple(inertias)

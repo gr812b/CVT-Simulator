@@ -26,6 +26,7 @@ from play_tire_slip_trace import launch_playback_from_trace
 
 from run_route_grade_response import (
     BajaTrialConstants,
+    DEFAULT_FIXED_PIVOT_PRESET,
     GradeProgramme,
     ResolvedTune,
     TuneCandidate,
@@ -748,74 +749,13 @@ def terrain_gauntlet_case() -> TerrainCase:
     )
 
 
-def legacy_short_cases() -> tuple[TerrainCase, ...]:
-    return (
-        TerrainCase(
-            name="flat grippy",
-            duration_s=8.0,
-            terrain=PiecewiseConstantTerrainProfile((
-                TerrainSegment(0.0, 0.0, 0.85, "flat high-mu"),
-            )),
-        ),
-        TerrainCase(
-            name="flat loose",
-            duration_s=8.0,
-            terrain=PiecewiseConstantTerrainProfile((
-                TerrainSegment(0.0, 0.0, 0.28, "flat loose"),
-            )),
-        ),
-        TerrainCase(
-            name="uphill grippy",
-            duration_s=10.0,
-            terrain=PiecewiseConstantTerrainProfile((
-                TerrainSegment(0.0, 18.0, 0.85, "18 deg grippy climb"),
-            )),
-        ),
-        TerrainCase(
-            name="uphill loose",
-            duration_s=10.0,
-            terrain=PiecewiseConstantTerrainProfile((
-                TerrainSegment(0.0, 18.0, 0.32, "18 deg loose climb"),
-            )),
-        ),
-        TerrainCase(
-            name="downhill grippy",
-            duration_s=8.0,
-            terrain=PiecewiseConstantTerrainProfile((
-                TerrainSegment(0.0, -15.0, 0.85, "15 deg grippy descent"),
-            )),
-        ),
-        TerrainCase(
-            name="downhill loose",
-            duration_s=8.0,
-            terrain=PiecewiseConstantTerrainProfile((
-                TerrainSegment(0.0, -15.0, 0.28, "15 deg loose descent"),
-            )),
-        ),
-        TerrainCase(
-            name="mixed terrain",
-            duration_s=12.0,
-            terrain=PiecewiseConstantTerrainProfile((
-                TerrainSegment(0.0, 0.0, 0.85, "flat launch"),
-                TerrainSegment(18.0, 0.0, 0.28, "loose patch"),
-                TerrainSegment(30.0, 16.0, 0.42, "loose climb"),
-                TerrainSegment(42.0, -12.0, 0.65, "downhill recovery"),
-                TerrainSegment(58.0, 0.0, 0.85, "flat finish"),
-            )),
-        ),
-    )
-
 
 def all_cases() -> tuple[TerrainCase, ...]:
-    # This playback-focused artifact intentionally exposes only the long gauntlet by default.
-    # The old short-case sweep is not returned here to avoid accidentally running many cases.
     return (terrain_gauntlet_case(),)
 
 
 def default_cases() -> tuple[TerrainCase, ...]:
-    # The normal script path is now one large playback-oriented terrain story.
-    # Short regression cases remain available by name through --case.
-    return (terrain_gauntlet_case(),)
+    return all_cases()
 
 
 def select_cases(names: Sequence[str] | None) -> tuple[TerrainCase, ...]:
@@ -911,7 +851,7 @@ def parse_args(argv: Sequence[str] | None = None):
         description="Run CINDER launch cases with independent vehicle speed and tire slip over distance-indexed terrain."
     )
     parser.add_argument("--output-dir", type=Path, default=Path("outputs/tire_slip_terrain"))
-    parser.add_argument("--preset", type=Path, default=Path(__file__).resolve().parent / "presets" / "circular_traction_first_reference.json")
+    parser.add_argument("--preset", type=Path, default=DEFAULT_FIXED_PIVOT_PRESET)
     parser.add_argument("--case", action="append", help="Run only a named case. Repeat for multiple cases. Defaults to all built-in cases.")
     parser.add_argument("--tire-slip-stiffness", type=float, default=2500.0, help="Linearized tire force slope dF/dv_slip near zero slip [N/(m/s)].")
     parser.add_argument("--report-step-s", type=float, default=0.01)

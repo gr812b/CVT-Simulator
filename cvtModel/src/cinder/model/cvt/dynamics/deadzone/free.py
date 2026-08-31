@@ -7,7 +7,12 @@ from math import isclose
 
 import numpy as np
 
-from cinder.model.cvt.closure import AffineClosureScalar, ClosureGains, ClosureUnknown
+from cinder.model.cvt.closure import (
+    AffineClosureScalar,
+    ClosureGains,
+    ClosureUnknown,
+    ClosureUnknowns,
+)
 from cinder.model.system.evaluator import MechanicalCVTPlant
 from cinder.model.system.ports import CVTShaftBoundaryValues
 from cinder.model.system.state import CVTState, CVTStateDerivative
@@ -108,6 +113,11 @@ class DeadzoneDynamicsEvaluator:
             time=time, state=state, shaft_boundaries=shaft_boundaries
         )
         derivative = build_deadzone_free_derivative(snapshot=snapshot)
+        self._require_mechanism_contacts(
+            time=time,
+            snapshot=snapshot,
+            derivative=derivative,
+        )
         return DeadzoneEvaluation(
             state=state,
             snapshot=snapshot,
@@ -143,10 +153,66 @@ class DeadzoneDynamicsEvaluator:
         snapshot = self.snapshot_at_time(
             time=time, state=state, shaft_boundaries=shaft_boundaries
         )
-        return evaluate_deadzone_lower_stop(
+        evaluation = evaluate_deadzone_lower_stop(
             snapshot=snapshot,
             lower_stop_shift=lower_stop_shift,
         )
+        self._require_mechanism_contacts(
+            time=time,
+            snapshot=snapshot,
+            derivative=evaluation.state_derivative,
+        )
+        return evaluation
+
+    def _require_mechanism_contacts(
+        self,
+        *,
+        time: float,
+        snapshot: DeadzoneSnapshot,
+        derivative: CVTStateDerivative,
+    ) -> None:
+        """Fail if a unilateral mounted mechanism would have to pull."""
+
+        radius = snapshot.belt_secondary_lock_radius
+        secondary_belt_torque = (
+            -snapshot.inertias.belt.mass * radius * derivative.belt_acceleration
+        )
+        unknowns = ClosureUnknowns.from_components(
+            primary_angular_acceleration=derivative.primary_angular_acceleration,
+            secondary_angular_acceleration=derivative.secondary_angular_acceleration,
+            belt_acceleration=derivative.belt_acceleration,
+            shift_acceleration=derivative.shift_acceleration,
+            primary_torque=0.0,
+            secondary_torque=secondary_belt_torque,
+        )
+        primary_context = self.model.primary_actuation_context(
+            time=time,
+            state=snapshot.state,
+            geometry=snapshot.primary_geometry,
+        )
+        secondary_context = self.model.secondary_actuation_context(
+            time=time,
+            state=snapshot.state,
+            geometry=snapshot.locked_geometry,
+        )
+        margins = tuple(
+            (f"primary/{key}", value)
+            for key, value in self.model.primary_actuator.compressive_contact_margins(
+                primary_context, unknowns
+            )
+        ) + tuple(
+            (f"secondary/{key}", value)
+            for key, value in self.model.secondary_actuator.compressive_contact_margins(
+                secondary_context, unknowns
+            )
+        )
+        failed = tuple((key, value) for key, value in margins if value < 0.0)
+        if failed:
+            detail = ", ".join(f"{key}={value:.9g}" for key, value in failed)
+            raise RuntimeError(
+                "Unilateral pulley-mechanism contact became inadmissible in "
+                f"deadzone: {detail}. The missing contact topology is not modeled."
+            )
 
     def _validate_belt_secondary_lock(self, *, snapshot: DeadzoneSnapshot) -> None:
         expected_speed = (
@@ -263,9 +329,7 @@ def build_deadzone_free_derivative(
     primary_angular_acceleration, shift_acceleration = solve_deadzone_primary_free(
         snapshot
     )
-    secondary_angular_acceleration = (
-        snapshot.secondary_external_torque / snapshot.secondary_belt_locked_inertia
-    )
+    secondary_angular_acceleration = solve_deadzone_secondary_rotation(snapshot)
 
     return CVTStateDerivative(
         primary_angular_acceleration=primary_angular_acceleration,
@@ -276,3 +340,38 @@ def build_deadzone_free_derivative(
         shift_position_rate=snapshot.state.shift_speed,
         shift_acceleration=shift_acceleration,
     )
+
+
+def solve_deadzone_secondary_rotation(snapshot: DeadzoneSnapshot) -> float:
+    """Solve the belt-locked secondary shaft with all mounted element torques.
+
+    Secondary local axial travel is fixed in deadzone. A helix therefore
+    contributes its movable-member absolute inertia, while any flyweight
+    contributes its current shaft-axis inertia. The rigid term excludes
+    inertia already returned by those mounted elements.
+    """
+
+    rotation = (
+        AffineClosureScalar(bias=snapshot.secondary_external_torque)
+        + snapshot.secondary_mechanism.shaft_torque
+        + AffineClosureScalar(
+            gains=ClosureGains(
+                secondary_angular_acceleration=(
+                    -snapshot.secondary_rigid_belt_locked_inertia
+                )
+            )
+        )
+    )
+    gains = rotation.gains
+    for unknown in ClosureUnknown:
+        if unknown is ClosureUnknown.SECONDARY_ANGULAR_ACCELERATION:
+            continue
+        if gains[unknown] != 0.0:
+            raise RuntimeError(
+                "A secondary-mounted element introduced a deadzone coupling "
+                f"to unsupported closure unknown {unknown.name}."
+            )
+    coefficient = gains.secondary_angular_acceleration
+    if coefficient == 0.0:
+        raise RuntimeError("Deadzone secondary rotational closure is singular.")
+    return float(-rotation.bias / coefficient)

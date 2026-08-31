@@ -1,108 +1,88 @@
-# CINDER launchTools — circular-primary / traction-first update
+# CINDER launchTools — physical fixed-pivot results surface
 
-These launch tools are written against the composed CINDER architecture. They build a CVT assembly, attach primary/secondary shaft boundaries, and run the resulting `ComposedCVTHybridSystem`.
+`launchTools` is the thesis/results entry surface for the current Baja CINDER
+model. It is intentionally **fixed-pivot only**: result-generation scripts do
+not expose the retired point-mass centrifugal-ramp tune or legacy launch
+presets.
 
-## What changed
+## Authoritative physical default
 
-- The primary ramp can now be either `linear` or `circular_hard_to_soft`.
-  The circular option uses a single quadrant-2 circular segment, so the
-  flyweight radial slope stays positive but decreases continuously with shift.
-- The default manual run is a traction-first circular reference:
-  `m=0.80 kg`, `helix=20°`, `twist=300°`, `secondary preload=110 mm`,
-  circular ramp `38° → 30°`.
-- Primary preload is still solved from the 2000 rpm lower-stop-release target.
-  It is not a free sweep variable.
-- The full-run metrics now report `primary_restuck_time_s`,
-  `primary_restuck_primary_rpm`, `primary_restuck_shift_mm`, and
-  `primary_slip_duration_s`. The dynamic preflight ranks earlier re-stick
-  rather than only shift onset and shift duration.
-- Transition labels are compact: `low stop`, `engage`, `low seat`,
-  `shift start`, `re-stick`, and `high stop`. Labels on the dotted event lines
-  use a smaller font.
-- Each detailed run writes `primary_ramp_profile.png`, showing radial
-  displacement, local slope, and centrifugal axial-force curves.
-- The prior linear slow-shift result is preserved under
-  `saved_runs/linear_slow_reference/`, including its original PNG, CSV, and
-  JSON. It can be reproduced with the command below.
+Every normal result path resolves to:
 
-## Current circular reference
+- fixed-pivot roller flyweight primary;
+- 3 flyweights;
+- 13.646 g arm/body mass per flyweight;
+- 0.250 kg concentrated tip-hardware/tuning mass per flyweight;
+- 35 deg initial straight ramp over 5 mm;
+- 3 mm C3 transition;
+- circular ramp from 35 deg to 20 deg;
+- 20 deg secondary helix;
+- 300 deg secondary torsional preload;
+- 110 mm secondary compression preload;
+- primary compression preload resolved for lower-stop release at 2000 rpm;
+- 0.050 kg m^2 engine equivalent inertia;
+- current CAD CVT/wheel inertias;
+- final-drive reduction 7.556;
+- belt contact coefficients mu_s = 0.65 and mu_k = 0.55.
 
-With the supplied updated reorganized CINDER source and LSODA, the 10 s reference run
-completed with:
+The single launch preset is:
 
-- main low-ratio-seat release: **3071 rpm**;
-- primary re-stick: **2.20 s** after launch (about **2.09 s** in primary slip);
-- main 10–90% shift: **3.97 s**;
-- peak main-shift speed: **52.4 mm/s**;
-- high-stop impact: **6.06 s**;
-- one engagement and no re-disengagement.
-
-For comparison, the archived linear reference remained in primary slip until
-about 6.29 s. The new reference is deliberately not presented as a final
-physical tune: the `300°` secondary pretension and `110 mm` secondary preload
-are an exploratory traction-first setting that should be checked against your
-actual spring travel and hardware limits.
-
-## Run the circular reference
-
-```powershell
-python launchTools/run_tuned_launch.py --duration-s 10 --no-show `
-  --output-dir artifacts/circular_traction_first
+```text
+launchTools/presets/fixed_pivot_3200_reference.json
 ```
 
-The defaults already select the circular reference and LSODA settings.
+`TuneCandidate()` and `BajaTrialConstants()` also default directly to this
+physical model. There is no legacy ramp-kind selector in the result-layer
+configuration.
 
-## Re-run the saved linear reference
+The tuning field is named `tip_hardware_mass_per_flyweight_kg` deliberately:
+it is the concentrated roller/bolt/nut/fixed-hardware/tuning mass at the
+roller-centre station. The 13.646 g arm/body mass is added separately by the
+fixed-pivot mass model.
+
+## Results environment
+
+The core `cinder-cvt` package keeps plotting optional, but the launch/result
+scripts require the `results` extra:
 
 ```powershell
-python launchTools/run_tuned_launch.py --manual `
-  --flyweight-mass-kg 0.55 --helix-angle-deg 20 `
-  --secondary-twist-deg 140 --secondary-preload-mm 70 `
-  --primary-ramp-kind linear --primary-ramp-angle-deg 30 `
-  --duration-s 10 --max-step-ms 10 --relative-tolerance 3e-5 `
-  --no-show --output-dir artifacts/linear_slow_reference_rerun
+cd cvtModel
+python -m pip install -e ".[results]"
 ```
 
-## Search workflow
+A development environment may instead use `.[dev]`; that extra also includes
+the result plotting dependency.
+
+## Canonical result scripts
+
+Use these directly rather than historical wrapper names:
 
 ```powershell
-python launchTools/screen_launch_tuning.py --no-show `
-  --output-dir artifacts/circular_screen
-
-python launchTools/preflight_launch_sweep.py `
-  --ranked-csv artifacts/circular_screen/ranked_tunes.csv `
-  --top-n 6 --duration-s 10 --no-show `
-  --output-dir artifacts/circular_preflight
-
-python launchTools/run_tuned_launch.py `
-  --ranked-csv artifacts/circular_preflight/full_launch_ranked.csv --rank 1 `
-  --duration-s 10 --no-show --output-dir artifacts/circular_selected
+python launchTools/run_route_grade_response.py --no-show
+python launchTools/run_actuation_clamping_study.py --no-show
+python launchTools/run_geometry_design_study.py --no-show
+python launchTools/run_coupling_energy_flow.py --no-show
+python launchTools/run_dynamic_actuator_ablation.py --scenario launch --no-show
+python launchTools/run_actuator_dynamics_stress_search.py --quick --no-show
+python launchTools/run_helix_inertia_torque_scaling_sweep.py --quick --no-show
+python launchTools/run_tire_slip_terrain_response.py --no-show
+python launchTools/tune_fixed_pivot_default.py
 ```
 
-The default static screen studies 20° helix, 0.75–0.85 kg flyweights,
-260–300° secondary twist, 100–110 mm secondary preload, and 38–40° →
-28–30° circular profiles. Narrow or widen those command-line ranges rather
-than editing the tool code.
+Ablation/stress scripts may deliberately compare the full dynamic
+fixed-pivot/helix model with quasi-static reductions of the **same hardware**.
+Those are mechanism-ablation studies, not legacy hardware defaults.
 
-## Composed simulation architecture
+## Safety rule for thesis/results work
 
-The launch tools build the same physical Baja baseline through the current public path:
+Do not add compatibility fallbacks for retired launch presets or the old
+point-mass centrifugal-ramp tuning interface. If an old results command or
+preset no longer works, translate the intended experiment onto the current
+fixed-pivot baseline rather than restoring old defaults.
 
-1. construct a `CVTAssemblySpec`;
-2. create `MechanicalCVTPlant.from_assembly(assembly)`;
-3. connect `FullThrottleEngineBoundary` on the primary shaft;
-4. connect `LockedFinalDriveShaftBoundary` on the secondary shaft;
-5. carry secondary shaft angle in `SecondaryShaftAngleHost`;
-6. run the resulting `ComposedCVTHybridSystem`.
+The active smoke suite contains `test_launch_tools_fixed_pivot_defaults.py`.
+Run:
 
-The CVT core receives only primary/secondary shaft-port values. Vehicle speed, distance, road load, and reflected road torque are reported from secondary-boundary metadata. A dyno, brake, motor, tire-coupled vehicle, or custom host can be connected by replacing the shaft boundary and host without changing the CVT plant.
-
-## Uniform exported traces
-
-The normal diagnostic tools use the composed hybrid runner directly and export a uniform report grid sampled from SciPy's per-segment dense solution. The adaptive solver trace is still kept internally for audits and exact event timing. Every hybrid transition is added as its own exact pre/post pair even if it falls between report-grid points, so a CSV may contain repeated timestamps at a real reset or impact.
-
-`--plot-samples` / `--diagnostic-samples` are optional display/export caps.
-When omitted, the full 10 ms report grid is written. Wrapper scripts forward to the canonical composed route-grade runner unless they add their own study-specific post-processing.
-
-
-The route-grade default report step is 50 ms. Use `--report-step-s` for denser exported CSV/plots when needed.
+```powershell
+python -m pytest cvtModel/test/smoke
+```

@@ -91,6 +91,20 @@ def test_baseline_radius_roles_ratio_range_and_centroid_belt_mass() -> None:
     )
 
 
+def test_shift_translation_inertia_excludes_belt_mass_by_construction() -> None:
+    assembly = _assembly()
+    geometry = assembly.geometry.evaluate_engaged(assembly.geometry.spec.deadzone_shift)
+    axial = assembly.inertias.axial_translation.evaluate(
+        primary_axial_coordinate=geometry.primary_axial_coordinate,
+        secondary_axial_coordinate=geometry.secondary_axial_coordinate,
+    )
+    assert not hasattr(axial, "belt")
+    assert isclose(
+        axial.generalized_mass,
+        axial.primary.reflected_mass + axial.secondary.reflected_mass,
+    )
+
+
 def test_physical_normal_resultant_and_signed_lambda_rows_match_formulation() -> None:
     assembly = _assembly()
     plant = MechanicalCVTPlant.from_assembly(assembly)
@@ -257,6 +271,51 @@ def test_helix_same_element_can_be_mounted_on_either_pulley() -> None:
     # contribution on either mounting.
     assert resolved_force(primary=True) > 0.0
     assert resolved_force(primary=False) > 0.0
+
+
+def test_helix_contact_margin_rejects_opposite_flank_requirement() -> None:
+    profile = HelixProfile(
+        circumferential_profile=PiecewiseRamp(
+            (linear_helix_segment(length=0.03, helix_angle_degrees=30.0),)
+        ),
+        radius=0.05,
+    )
+    law = HelicalTorqueReactionForce(
+        spec=HelicalTorqueReactionSpec(
+            torsional_stiffness=3.0,
+            initial_twist=1.0,
+            movable_member_torque_fraction=0.5,
+        )
+    )
+    coupling = HelicalPulleyCoupling(
+        profile=profile,
+        opening_per_axial_position=-1.0,
+    )
+    x = -0.01
+    kin = coupling.evaluate_from_local_coordinate(
+        axial_position=x,
+        d_axial_position_ds=-1.0,
+        d2_axial_position_ds2=0.0,
+    )
+    context = PulleyActuationContext(
+        time=0.0,
+        axial_position=x,
+        axial_speed=0.0,
+        shaft_speed=100.0,
+        shift_speed=0.0,
+        closure_channels=PulleyClosureChannels.secondary(),
+        helical_coupling=HelicalCouplingState(
+            kinematics=kin,
+            opening_per_axial_position=-1.0,
+        ),
+        movable_member_rotational_inertia=0.003,
+    )
+    compressive = ClosureUnknowns(secondary_torque=20.0)
+    opposite = ClosureUnknowns(secondary_torque=-100.0)
+    assert law.compressive_contact_margin(context=context, unknowns=compressive) > 0.0
+    assert law.compressive_contact_margin(context=context, unknowns=opposite) < 0.0
+    assert law.has_compressive_contact(context=context, unknowns=compressive)
+    assert not law.has_compressive_contact(context=context, unknowns=opposite)
 
 
 def test_engagement_boundary_uses_explicit_one_sided_tangents() -> None:

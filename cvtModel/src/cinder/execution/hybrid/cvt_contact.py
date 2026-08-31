@@ -43,10 +43,14 @@ class CVTContactEvaluation:
     snapshot: DynamicsSnapshot
     branch_result: EngagedContactSolveResult | BothSlipResult
     shift_constraint: EngagedShiftConstraint = EngagedShiftConstraint.FREE
+    mechanism_contact_margins: tuple[tuple[str, float], ...] = ()
 
     def __post_init__(self) -> None:
         if not isinstance(self.shift_constraint, EngagedShiftConstraint):
             raise TypeError("shift_constraint must be an EngagedShiftConstraint.")
+        for key, margin in self.mechanism_contact_margins:
+            if not key or not isfinite(margin):
+                raise ValueError("mechanism contact margins must be named and finite.")
 
     @property
     def mode(self) -> EngagedContactMode:
@@ -152,6 +156,13 @@ class CVTContactEvaluation:
                 tolerances=self.branch_result.settings.contact_tolerances,
             )
             for specification in self.branch_result.fixed_slip_specifications
+        )
+
+    def mechanism_contacts_are_admissible(self, *, tolerance: float = 0.0) -> bool:
+        if tolerance < 0.0:
+            raise ValueError("tolerance must be non-negative.")
+        return all(
+            margin >= -tolerance for _key, margin in self.mechanism_contact_margins
         )
 
 
@@ -295,6 +306,29 @@ class EngagedCVTContactEvaluator:
             branch_result=result,
             shift_constraint=shift_constraint,
         )
+        unknowns = evaluation.closure_unknowns
+        primary_context = self.model.primary_actuation_context(
+            time=time,
+            state=snapshot.state,
+            geometry=snapshot.geometry,
+        )
+        secondary_context = self.model.secondary_actuation_context(
+            time=time,
+            state=snapshot.state,
+            geometry=snapshot.geometry,
+        )
+        margins = tuple(
+            (f"primary/{key}", value)
+            for key, value in self.model.primary_actuator.compressive_contact_margins(
+                primary_context, unknowns
+            )
+        ) + tuple(
+            (f"secondary/{key}", value)
+            for key, value in self.model.secondary_actuator.compressive_contact_margins(
+                secondary_context, unknowns
+            )
+        )
+        evaluation = replace(evaluation, mechanism_contact_margins=margins)
         if isinstance(result, EngagedContactSolveResult) and result.accepted:
             # The required lambdas vary smoothly while an ODE segment remains
             # in one contact regime. Reusing the last accepted pair only changes

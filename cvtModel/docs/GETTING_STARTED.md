@@ -1,57 +1,104 @@
 # Getting started with CINDER
 
-CINDER's simulation API is now built around a five-state mechanical CVT plant
-hosted inside a composed system.
+## Install
+
+```bash
+python -m pip install cinder-cvt==1.0.0
+```
+
+Verify the installed version:
+
+```bash
+python -c "import cinder; print(cinder.__version__)"
+```
+
+## Mechanical composition
+
+CINDER separates the CVT itself from the machines and vehicle attached to its
+shafts:
 
 ```text
-CVTAssemblySpec      physical CVT: geometry, inertias, contact, actuators
+CVTAssemblySpec      physical CVT hardware and contact data
 MechanicalCVTPlant   five-state CVT mechanics
-Shaft boundaries     engine, vehicle, dyno, tire, brake, motor, etc.
-Host                 non-CVT states required by the boundaries
+Shaft boundaries     engine, vehicle, dyno, brake, motor, etc.
+Host                 non-CVT states required by those boundaries
 Composed system      CVT + shaft boundaries + host state
 ```
 
-The CVT state is:
+The CVT state is
 
 ```text
 [primary speed, secondary speed, belt speed, shift position, shift speed]
 ```
 
-Shaft angle, vehicle position, and tire/suspension states are host states, not
-CVT states.
+Shaft angle, vehicle position, and other external states belong to the host,
+not to the five-state CVT plant.
 
-## Run the example
+## Main Python surface
 
-```bash
-PYTHONPATH=src python examples/quickstart.py --run
+Core mechanics and execution objects are available from `cinder`:
+
+```python
+from cinder import (
+    ComposedCVTHybridSystem,
+    FullThrottleEngineBoundary,
+    LockedFinalDriveShaftBoundary,
+    MechanicalCVTPlant,
+    SecondaryShaftAngleHost,
+)
 ```
 
-The example loads `examples/baja_baseline_simulation_case.json`, validates it,
-decodes a `ComposedCVTHybridSystem`, runs it, and prints report columns.
-
-## Build directly in Python
+A plant can be composed with external shaft boundaries:
 
 ```python
 plant = MechanicalCVTPlant.from_assembly(assembly)
 
 system = ComposedCVTHybridSystem.from_plant(
     plant=plant,
-    primary_boundary=FullThrottleEngineBoundary(
-        engine_curve,
-        equivalent_rotational_inertia=engine_inertia,
-    ),
-    secondary_boundary=LockedFinalDriveShaftBoundary(
-        road_load=road_load,
-        road_profile=ConstantGradeRoadProfile(),
-        direct_secondary_shaft_inertia=gearbox_input_inertia,
-    ),
+    primary_boundary=primary_boundary,
+    secondary_boundary=secondary_boundary,
     host=SecondaryShaftAngleHost(),
 )
 ```
 
-Shift stops and the dead zone are not solver knobs. They are read from the
-assembly geometry: lower stop is `s = 0`, engagement is
-`geometry.spec.deadzone_shift`, and upper stop is `geometry.spec.max_shift`.
+Shift stops and the primary dead zone are physical geometry, not solver knobs:
 
-Friction coefficients belong to `BeltContactSpec`; CINDER constructs the
-internal traction closure from those physical contact values.
+```text
+lower stop        s = 0
+engagement        s = geometry.deadzone_shift
+upper stop        s = geometry.max_shift
+```
+
+Belt traction limits come from `BeltContactSpec`; the runtime contact closure is
+constructed from those physical contact values.
+
+## Public saved documents
+
+Use `cinder.contracts` when a simulation must be saved, validated, exchanged, or
+reproduced from JSON:
+
+```python
+from cinder.contracts import (
+    decode_simulation_case_document,
+    validate_simulation_case_document,
+)
+```
+
+See `PUBLIC_CONTRACTS.md` for the version-one document format.
+
+## Static studies
+
+Use `cinder.studies` for supported geometry and actuator studies that do not
+require a time integration.
+
+## Reference case
+
+A checkout of the source repository contains a current physical fixed-pivot
+reference simulation:
+
+```bash
+python cvtModel/examples/quickstart.py --run
+```
+
+That script imports the installed CINDER distribution; it does not use the
+frontend or backend.

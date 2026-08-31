@@ -14,7 +14,9 @@ is mapped to the physical velocities that actually carry kinetic energy.  The
 instantaneous kinetic metric includes the shaft inertias, movable-sheave axial
 masses, belt transport mass, movable-sheave rotational inertias, helix
 cross-motion, referred boundary inertias, and the current point-mass flyweight
-shaft inertias.
+shaft inertias. Mounted fixed-pivot flyweights additionally supply their pivot
+coordinate kinetic mode `I_f [q_f'(x) x_dot]^2` through the same element
+interface.
 
 For pre/post physical-velocity maps `z_- = J_- u_-` and `z_+ = J_+ u_+`, a
 plastic topology capture solves
@@ -102,9 +104,10 @@ re-arm the physical event surface.
 
 These are not hidden conservation errors, but they should remain explicit:
 
-1. **Point-mass flyweights.**  The current model includes their instantaneous
-   shaft-axis inertia `m r^2`.  Pivot/radial kinetic energy awaits the future
-   `q_f(x), I_f, J_f(x)` geometry derivation.
+1. **Legacy point-mass flyweights.** The compatibility component retains only
+   its instantaneous shaft-axis inertia `m r^2`. The fixed-pivot roller
+   component instead includes `q_f(x)`, `I_f`, `J_f(x)`, and both of its
+   retained kinetic modes.
 2. **Rigid belt engagement.**  The primary/belt topology change is represented
    as a plastic tangent-space capture, i.e. the zero-compliance limit.  A real
    belt establishes contact over finite compliance/contact time.

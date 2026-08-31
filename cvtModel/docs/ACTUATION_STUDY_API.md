@@ -1,26 +1,31 @@
-# Static Actuator Clamping Study
+# Static actuator clamping study
 
-This study samples **one actuator on one existing CVT assembly**. It does not
-need an engine, vehicle boundary, contact solve, or time integration.
+The actuation study samples one existing pulley actuator without constructing
+an engine, vehicle boundary, belt-contact solve, or time integration.
 
 ```python
+from cinder.studies import (
+    ActuationOperatingPoint,
+    ActuationResponseAxis,
+    ActuationStateCoordinate,
+    PulleyClampingForceStudyRequest,
+    PulleyLocation,
+    sample_pulley_clamping_force,
+)
+
 field = sample_pulley_clamping_force(
     PulleyClampingForceStudyRequest(
         cvt=assembly,
         pulley=PulleyLocation.SECONDARY,
         point=ActuationOperatingPoint(
-            time=0.0,                    # explicit actuator evaluation time [s]
-            shift_position=...,            # global CVT shift coordinate [m]
-            shaft_speed=...,               # selected-pulley speed [rad/s]
-            closure_unknowns=...,          # fixed affine unknown values
+            time=0.0,
+            shift_position=...,
+            shaft_speed=...,
+            closure_unknowns=...,
         ),
         axes=(
             ActuationResponseAxis(
                 ActuationStateCoordinate.SHIFT_POSITION,
-                ...,
-            ),
-            ActuationResponseAxis(
-                ClosureUnknown.SECONDARY_TORQUE,
                 ...,
             ),
         ),
@@ -28,29 +33,13 @@ field = sample_pulley_clamping_force(
 )
 ```
 
-`axes` selects one or two real quantities to vary. State quantities use
-`ActuationStateCoordinate`; affine quantities use CINDER's existing
-`ClosureUnknown` enum directly. Every other value stays fixed at `point`.
-`time` is required even for a static study so a time-dependent actuator is
-sampled at a deliberate physical time rather than through an implicit default.
+`axes` selects one or two physical quantities to vary. All other values remain
+fixed at the supplied operating point. Time is explicit even for a nominally
+static study so time-dependent actuator laws are sampled deliberately.
 
-The result contains only self-describing numeric columns, for example:
+The returned field is numeric and self-describing. Depending on the actuator,
+columns can include individual clamping-force contributions, total clamping
+force, and gains with respect to selected closure unknowns.
 
-```text
-shift_position_m
-secondary_torque_Nm
-axial_spring_clamping_force_N
-helix_torsional_preload_clamping_force_N
-helix_reacted_shaft_torque_clamping_force_N
-total_clamping_force_N
-total_gain_secondary_torque_N_per_Nm
-```
-
-The frontend or backend can inspect these columns, choose the axes, and plot
-any returned force columns. The study performs no actuator-specific plotting
-or force calculations outside the production `PulleyActuator` path.
-
-The repository-level internal tool `launchTools/run_actuation_clamping_study.py` is a smoke-test consumer:
-it calls the study, writes raw CSV tables, checks that returned contribution
-columns sum to the returned total, and plots only non-constant returned force
-columns.
+The study uses the same production `PulleyActuator` force laws as the dynamic
+solver; it does not maintain a second actuator model for plotting.

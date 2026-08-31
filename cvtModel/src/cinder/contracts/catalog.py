@@ -104,7 +104,7 @@ def component_catalog() -> tuple[ComponentDescriptor, ...]:
         ComponentDescriptor(
             kind="centrifugal_ramp",
             label="Centrifugal ramp",
-            description="Quasi-static centrifugal flyweight force projected through a radial-displacement profile.",
+            description="Equivalent point-mass flyweight with axial force and configuration-dependent shaft inertia.",
             parameters=(
                 ComponentParameter(
                     "flyweight_mass_kg",
@@ -134,7 +134,37 @@ def component_catalog() -> tuple[ComponentDescriptor, ...]:
                     dimension="structure",
                 ),
             ),
-            supported_mounts=("primary",),
+            supported_mounts=("primary", "secondary"),
+        ),
+        ComponentDescriptor(
+            kind="fixed_pivot_roller_flyweight",
+            label="Fixed-pivot roller flyweight",
+            description=(
+                "Rigid fixed-pivot flyweights following a translating physical "
+                "ramp, including pivot inertia, motion-ratio curvature, shaft "
+                "inertia, and hybrid-event kinetic modes."
+            ),
+            parameters=(
+                ComponentParameter(
+                    "geometry",
+                    "Roller-follower geometry",
+                    "object",
+                    True,
+                    "Pivot, roller, physical ramp, active travel, and map compilation settings.",
+                    value_kind="object",
+                    dimension="structure",
+                ),
+                ComponentParameter(
+                    "mass_geometry",
+                    "Flyweight mass geometry",
+                    "object",
+                    True,
+                    "Per-flyweight body moments and circumferential flyweight count.",
+                    value_kind="object",
+                    dimension="structure",
+                ),
+            ),
+            supported_mounts=("primary", "secondary"),
         ),
         ComponentDescriptor(
             kind="helical_torque_reaction",
