@@ -1,16 +1,17 @@
-# CINDER static geometry study API
+# Static geometry study API
 
-The static geometry study layer is intentionally separate from simulation and plotting:
+The geometry study layer solves and evaluates pulley/belt geometry independently
+of time integration.
 
-```text
-Case A / Case B solve -> ResolvedGeometryDesign
-ResolvedGeometryDesign -> independent path, field, and feasibility evaluations
-```
-
-## Case A
+## Solve from endpoint radii
 
 ```python
-solve_geometry_from_endpoint_radii(
+from cinder.studies import (
+    EndpointRadiiDesignRequest,
+    solve_geometry_from_endpoint_radii,
+)
+
+design = solve_geometry_from_endpoint_radii(
     EndpointRadiiDesignRequest(
         context=context,
         primary_outer_radius_at_zero_shift=...,
@@ -19,13 +20,15 @@ solve_geometry_from_endpoint_radii(
 )
 ```
 
-The existing `BeltPulleyGeometrySpec` construction performs the belt-length
-closure and computes the opposite endpoint.
-
-## Case B
+## Solve from target ratios
 
 ```python
-solve_geometry_from_target_ratios(
+from cinder.studies import (
+    TargetRatioDesignRequest,
+    solve_geometry_from_target_ratios,
+)
+
+design = solve_geometry_from_target_ratios(
     TargetRatioDesignRequest(
         context=context,
         maximum_ratio=...,
@@ -34,14 +37,21 @@ solve_geometry_from_target_ratios(
 )
 ```
 
-With CINDER's fixed active primary radial travel, Case B is one scalar solve
-and returns one valid design or raises `GeometryDesignInfeasibleError`. The
-implementation scans the physical interval before refining the scalar root, so
-it verifies the expected unique root rather than assuming one.
+With fixed active primary radial travel, the target-ratio route performs the
+required scalar solve and raises `GeometryDesignInfeasibleError` when the
+requested geometry cannot be satisfied.
 
-## Independent downstream evaluators
+## Evaluate a resolved design
 
 ```python
+from cinder.studies import (
+    evaluate_geometry_feasibility,
+    evaluate_radius_plane,
+    evaluate_ratio_sensitivity_field,
+    sample_geometry_path,
+    summarize_geometry_design,
+)
+
 summary = summarize_geometry_design(design)
 path = sample_geometry_path(design, sample_count=301)
 report = evaluate_geometry_feasibility(design)
@@ -62,12 +72,6 @@ sensitivity = evaluate_ratio_sensitivity_field(
 )
 ```
 
-The radius plane returns effective-radius ratio and implied belt outer length
-for a selected center distance. Constant contours of the latter are the
-constant-belt-length families.
-
-The sensitivity field returns `dR/ds` in ratio per metre and ratio per
-millimetre of **active** axial shift. It has no selected-path data; callers
-compose it with the independently sampled path.
-
-The repository-level `launchTools/run_geometry_design_study.py` is an internal consumer of this API. It is not part of the installed CINDER package or its setup path.
+The radius plane reports effective-radius ratio and implied belt outer length.
+The sensitivity field reports `dR/ds` for active axial shift. Callers can
+combine those independent fields with the sampled physical path as needed.

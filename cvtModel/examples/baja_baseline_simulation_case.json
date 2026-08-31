@@ -12,7 +12,7 @@
         "cord_depth_from_outer_m": 0.00254
       },
       "belt_outer_length_m": 0.9532619999999999,
-      "primary_outer_radius_at_zero_shift_m": 0.0362077,
+      "primary_outer_radius_at_zero_shift_m": 0.036207699999999995,
       "secondary_outer_radius_at_zero_shift_m": 0.1016,
       "sheave_half_angle_rad": 0.2007128639793479,
       "deadzone_shift_m": 0.0024891999999999996,
@@ -24,12 +24,12 @@
     },
     "inertias": {
       "primary": {
-        "fixed_rotating_hardware_inertia_kg_m2": 0.005,
+        "fixed_rotating_hardware_inertia_kg_m2": 0.0032202838346490647,
         "movable_sheave_rotational_inertia_kg_m2": 0.0,
         "moving_sheave_mass_kg": 1.0681
       },
       "secondary": {
-        "fixed_rotating_hardware_inertia_kg_m2": 0.1,
+        "fixed_rotating_hardware_inertia_kg_m2": 0.0023262599999999997,
         "movable_sheave_rotational_inertia_kg_m2": 0.0025139,
         "moving_sheave_mass_kg": 0.705141
       },
@@ -39,24 +39,66 @@
       "primary": {
         "components": [
           {
-            "kind": "centrifugal_ramp",
-            "flyweight_mass_kg": 0.5,
-            "radius_at_zero_position_m": 0.04878,
-            "radial_displacement_profile": {
-              "kind": "piecewise_ramp",
-              "segments": [
-                {
-                  "kind": "linear_segment",
-                  "length_m": 0.019049999999999997,
-                  "angle_rad": 0.5235987755982988
-                }
-              ]
+            "kind": "fixed_pivot_roller_flyweight",
+            "geometry": {
+              "pivot_axial_position_m": 0.0,
+              "pivot_radius_m": 0.042545,
+              "arm_length_m": 0.0315214,
+              "roller_radius_m": 0.006500000000000001,
+              "ramp_reference_axial_position_m": 0.038099999999999995,
+              "ramp_reference_radius_m": 0.04959604,
+              "ramp_profile": {
+                "kind": "piecewise_ramp",
+                "segments": [
+                  {
+                    "kind": "linear_segment",
+                    "length_m": 0.005,
+                    "angle_rad": 0.6108652381980153
+                  },
+                  {
+                    "kind": "c3_transition_segment",
+                    "length_m": 0.003,
+                    "slope_start": 0.7002075382097097,
+                    "curvature_start_per_m": 0.0,
+                    "third_derivative_start_per_m2": 0.0,
+                    "slope_end": 0.7002075382097099,
+                    "curvature_end_per_m": -14.042414082433282,
+                    "third_derivative_end_per_m2": 277.9461266190616
+                  },
+                  {
+                    "kind": "circular_segment",
+                    "length_m": 0.03,
+                    "angle_start_rad": 0.6108652381980153,
+                    "angle_end_rad": 0.3490658503988659,
+                    "quadrant": 2
+                  }
+                ]
+              },
+              "ramp_axial_direction": -1,
+              "axial_position_min_m": 0.0,
+              "axial_position_max_m": 0.019049999999999997,
+              "roller_side_sign": 1,
+              "root_scan_points": 513,
+              "validation_positions": 129,
+              "root_residual_tolerance_m2": 1e-14,
+              "coordinate_tolerance_m": 1e-10,
+              "compilation_points": 257
+            },
+            "mass_geometry": {
+              "number_of_flyweights": 3,
+              "mass_per_flyweight_kg": 0.263646,
+              "first_moment_u_kg_m": 0.0080954205122,
+              "first_moment_v_kg_m": 0.0,
+              "second_moment_u_kg_m2": 0.00025291921358550735,
+              "second_moment_v_kg_m2": 0.0,
+              "product_moment_uv_kg_m2": 0.0,
+              "second_moment_z_kg_m2": 0.0
             }
           },
           {
             "kind": "axial_spring",
             "stiffness_N_per_m": 12784.0,
-            "initial_compression_m": 0.1,
+            "initial_compression_m": 0.09409049026972177,
             "compression_per_axial_position": 1.0
           }
         ]
@@ -66,13 +108,13 @@
           {
             "kind": "axial_spring",
             "stiffness_N_per_m": 3532.0,
-            "initial_compression_m": 0.1,
+            "initial_compression_m": 0.11,
             "compression_per_axial_position": -1.0
           },
           {
             "kind": "helical_torque_reaction",
             "torsional_stiffness_Nm_per_rad": 3.476,
-            "initial_twist_rad": 3.490658503988659,
+            "initial_twist_rad": 5.235987755982989,
             "movable_member_torque_fraction": 0.5
           }
         ],
@@ -84,13 +126,15 @@
               "segments": [
                 {
                   "kind": "linear_segment",
-                  "length_m": 0.014406035859741248,
-                  "angle_rad": 1.117010721276371
+                  "length_m": 0.014406035859741255,
+                  "angle_rad": 1.2217304763960306
                 }
               ]
             },
             "radius_m": 0.04445
-          }
+          },
+          "opening_per_axial_position": -1.0,
+          "opening_offset_m": 0.0
         }
       }
     }
@@ -144,13 +188,13 @@
       "low_speed_braking_peak_speed_rad_per_s": 52.35987755982988,
       "high_speed_braking_torque_Nm": -28.0,
       "high_speed_braking_transition_width_rad_per_s": 157.07963267948966,
-      "equivalent_rotational_inertia_kg_m2": 0.1
+      "equivalent_rotational_inertia_kg_m2": 0.05
     },
     "secondary": {
       "kind": "locked_final_drive",
       "vehicle": {
         "mass_kg": 300.0,
-        "wheel_rotational_inertia_kg_m2": 0.2
+        "wheel_rotational_inertia_kg_m2": 1.10781744
       },
       "final_drive": {
         "reduction_ratio": 7.556,
@@ -168,7 +212,7 @@
         "kind": "constant_grade",
         "grade_angle_rad": 0.0
       },
-      "direct_secondary_shaft_inertia_kg_m2": 0.05
+      "direct_secondary_shaft_inertia_kg_m2": 0.002011338398044471
     }
   },
   "host": {
@@ -197,7 +241,7 @@
       "method": "LSODA",
       "max_step": 0.05,
       "first_step": null,
-      "maximum_transitions": 80,
+      "maximum_transitions": 120,
       "event_time_tolerance": 1e-10,
       "retain_dense_output": true
     },

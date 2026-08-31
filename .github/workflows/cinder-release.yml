@@ -1,0 +1,186 @@
+name: CINDER Release
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - "cinder-v*"
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build and verify CINDER distribution
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Read package version and verify tag
+        id: version
+        shell: bash
+        run: |
+          VERSION="$(python - <<'PY'
+          import tomllib
+          from pathlib import Path
+
+          data = tomllib.loads(Path("cvtModel/pyproject.toml").read_text(encoding="utf-8"))
+          print(data["project"]["version"])
+          PY
+          )"
+          echo "version=${VERSION}" >> "${GITHUB_OUTPUT}"
+          echo "CINDER_VERSION=${VERSION}" >> "${GITHUB_ENV}"
+
+          if [[ "${GITHUB_REF_TYPE}" == "tag" ]]; then
+            TAG_VERSION="${GITHUB_REF_NAME#cinder-v}"
+            if [[ "${TAG_VERSION}" != "${VERSION}" ]]; then
+              echo "Tag ${GITHUB_REF_NAME} does not match package version ${VERSION}."
+              exit 1
+            fi
+          fi
+
+      - name: Install build tooling
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install build twine
+
+      - name: Build wheel and source distribution
+        working-directory: ./cvtModel
+        run: python -m build
+
+      - name: Check package metadata
+        working-directory: ./cvtModel
+        run: python -m twine check dist/*
+
+      - name: Inspect distribution contents
+        working-directory: ./cvtModel
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import tarfile
+          import zipfile
+
+          dist = Path("dist")
+          wheel = next(dist.glob("*.whl"))
+          sdist = next(dist.glob("*.tar.gz"))
+
+          with zipfile.ZipFile(wheel) as archive:
+              wheel_names = archive.namelist()
+
+          with tarfile.open(sdist, "r:gz") as archive:
+              sdist_names = archive.getnames()
+
+          forbidden = (
+              "launchTools/",
+              "tools/",
+              "validation/",
+              "test/",
+              "backend/",
+              "frontend/",
+          )
+          for token in forbidden:
+              assert not any(token in name for name in wheel_names), (
+                  f"{token} leaked into wheel"
+              )
+              assert not any(f"/{token}" in name for name in sdist_names), (
+                  f"{token} leaked into source distribution"
+              )
+
+          assert any(name.endswith("/py.typed") for name in wheel_names)
+          assert any("/docs/GETTING_STARTED.md" in name for name in sdist_names)
+          assert any("/examples/quickstart.py" in name for name in sdist_names)
+          assert any(name.endswith("/licenses/LICENSE") for name in wheel_names)
+
+          print(f"Verified {wheel.name}")
+          print(f"Verified {sdist.name}")
+          PY
+
+      - name: Smoke-test installed wheel outside repository
+        shell: bash
+        run: |
+          python -m venv /tmp/cinder-release-smoke
+          /tmp/cinder-release-smoke/bin/python -m pip install --upgrade pip
+          /tmp/cinder-release-smoke/bin/python -m pip install cvtModel/dist/*.whl
+
+          cd /tmp
+          /tmp/cinder-release-smoke/bin/python - <<'PY'
+          import os
+          from pathlib import Path
+
+          import cinder
+
+          expected = os.environ["CINDER_VERSION"]
+          module_path = Path(cinder.__file__).resolve()
+          repo_path = Path(os.environ["GITHUB_WORKSPACE"]).resolve()
+
+          assert cinder.__version__ == expected, (cinder.__version__, expected)
+          assert repo_path not in module_path.parents, module_path
+          print(f"Installed CINDER {cinder.__version__} from {module_path}")
+          PY
+
+          /tmp/cinder-release-smoke/bin/python \
+            "${GITHUB_WORKSPACE}/cvtModel/examples/quickstart.py" \
+            --run \
+            --case "${GITHUB_WORKSPACE}/cvtModel/examples/baja_baseline_simulation_case.json"
+
+      - name: Upload verified distributions
+        uses: actions/upload-artifact@v4
+        with:
+          name: cinder-cvt-${{ steps.version.outputs.version }}
+          path: cvtModel/dist/*
+          if-no-files-found: error
+
+  publish-pypi:
+    name: Publish CINDER to PyPI
+    if: startsWith(github.ref, 'refs/tags/cinder-v')
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: pypi
+      url: https://pypi.org/p/cinder-cvt
+    permissions:
+      id-token: write
+
+    steps:
+      - name: Download verified distributions
+        uses: actions/download-artifact@v4
+        with:
+          name: cinder-cvt-${{ needs.build.outputs.version }}
+          path: dist
+
+      - name: Publish to PyPI with trusted publishing
+        uses: pypa/gh-action-pypi-publish@release/v1
+
+  github-release:
+    name: Create GitHub release
+    if: startsWith(github.ref, 'refs/tags/cinder-v')
+    needs:
+      - build
+      - publish-pypi
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Download verified distributions
+        uses: actions/download-artifact@v4
+        with:
+          name: cinder-cvt-${{ needs.build.outputs.version }}
+          path: dist
+
+      - name: Create GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "${GITHUB_REF_NAME}" dist/* \
+            --title "CINDER ${{ needs.build.outputs.version }}" \
+            --generate-notes
