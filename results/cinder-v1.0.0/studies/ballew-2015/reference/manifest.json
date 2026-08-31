@@ -1,0 +1,14 @@
+{
+  "figure_41_input_rpm.csv": {
+    "sha256": "ad16629a0cefd308e7df0d4c79b00a08f295a7efff2cbf0f4173dca1929e0dd9",
+    "size_bytes": 4325
+  },
+  "figure_41_output_rpm.csv": {
+    "sha256": "47dc6da83cae77ce0bef49277983120086ed577dcd1c84fdbc4ddb684b154d8a",
+    "size_bytes": 2467
+  },
+  "figure_45_primary_force.csv": {
+    "sha256": "e61467317a884e0d75a32c52b0688fbaa4bde5fd327b3aaab9625ec16de282e8",
+    "size_bytes": 7905
+  }
+}

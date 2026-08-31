@@ -1,0 +1,77 @@
+{
+  "name": "Ballew 2015 CINDER model-to-model benchmark",
+  "description": "Re-run the source-constrained Ballew simulated vehicle-acceleration comparison against the published cinder-cvt 1.0.0 distribution. This is not experimental validation.",
+  "cinder_release": {
+    "distribution": "cinder-cvt",
+    "version": "1.0.0",
+    "source_tag": "cinder-v1.0.0",
+    "source_commit_sha": "ee21850034a58df73ffc4238936ffece8102c4f1"
+  },
+  "source": {
+    "citation": "Brian Gene Ballew, Investigation Of A Numerical Algorithm For A Discretized Rubber-Belt Continuously Variable Transmission Dynamic Model And Techniques For The Measurement Of Belt Material Properties, M.S. thesis, University of Arkansas, 2015.",
+    "source_pdf_sha256": "cafead74895bbfaf092fe0354f0572064f44c6b4ff10c422877c5ae587f8df44",
+    "reference_locations": {
+      "table_A1": "printed p. 69 / PDF p. 79",
+      "table_B1": "printed p. 70 / PDF p. 80",
+      "figure_39": "printed p. 54 / PDF p. 64",
+      "figure_41": "printed p. 58 / PDF p. 68",
+      "figure_45": "printed p. 62 / PDF p. 72"
+    }
+  },
+  "comparison_scope": {
+    "kind": "model-to-model benchmark",
+    "parameter_fitting": false,
+    "force_replay": "Impose digitized Ballew Figure 45 primary clamp force on unchanged CINDER and compare Figure 41 shaft speeds and derived speed ratio.",
+    "closed_loop": "Apply Ballew's published PI + feed-forward gains through the documented A11 controller reconstruction around unchanged CINDER; compare Figure 41 speeds/ratio and Figure 45 primary clamp demand."
+  },
+  "contract_note": "Ballew requires prescribed/tabulated and PI-controlled primary axial-force laws. CINDER 1.0.0 intentionally leaves custom Python force laws and hosts as Python extension points rather than serializing them in cinder_composed_simulation_case JSON. This study therefore validates the assembled CVT through cinder.contracts.validate_assembly, runs only the installed cinder-cvt==1.0.0 package, and freezes every extension parameter in resolved_study.json.",
+  "protocols": {
+    "force_replay": {
+      "solver": {
+        "method": "LSODA",
+        "relative_tolerance": 1e-07,
+        "absolute_tolerance": 1e-09,
+        "max_step_s": 0.001,
+        "maximum_transitions": 2000,
+        "report_step_s": 0.005
+      }
+    },
+    "closed_loop": {
+      "controller": {
+        "target_rpm": 2500.0,
+        "error_definition": "primary_rpm - target_rpm",
+        "Kff": 1.2,
+        "Kp": 5.0,
+        "Ki": 75.0,
+        "feed_forward_interpretation": "Kff * fixed secondary clamp = 2400 N",
+        "initial_error_integral_rpm_s": 0.0,
+        "saturation_or_anti_windup": "none added; not published"
+      },
+      "solver": {
+        "method": "LSODA",
+        "relative_tolerance": 1e-07,
+        "absolute_tolerance": 1e-09,
+        "max_step_s": 0.001,
+        "maximum_transitions": 2000,
+        "report_step_s": 0.0002
+      }
+    }
+  },
+  "migration": {
+    "legacy_source_prefix": "cvtModel/launchTools/literature/ballew_2015",
+    "materialization_source": "frozen cinder-v1.0.0 Git tag + Git LFS objects",
+    "exclude_only": [
+      "**/__pycache__/**",
+      "**/*.pyc"
+    ],
+    "historical_artifact_destination": "artifacts/historical-v1.0.0",
+    "fresh_rerun_destination": "artifacts/rerun-v1.0.0",
+    "integrity_manifest": "provenance/migration_manifest.json"
+  },
+  "provenance_documents": [
+    "provenance/RECONSTRUCTION.md",
+    "provenance/CINDER_FIXES.md",
+    "provenance/CURRENT_STUDY_SUMMARY.md",
+    "provenance/MIGRATION_LAYOUT.md"
+  ]
+}
