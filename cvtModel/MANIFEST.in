@@ -1,0 +1,19 @@
+include README.md
+include LICENSE
+include pyproject.toml
+include setup.cfg
+
+recursive-include src/cinder *.py py.typed
+recursive-include docs *.md
+recursive-include examples *.py *.json
+
+prune launchTools
+prune tools
+prune validation
+prune test
+prune build
+prune dist
+prune venv
+
+global-exclude __pycache__
+global-exclude *.py[cod]

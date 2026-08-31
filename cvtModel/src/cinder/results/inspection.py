@@ -126,9 +126,10 @@ def inspect_cvt_state(
         assert isinstance(evaluation, CVTContactEvaluation)
         snapshot = evaluation.snapshot
         primary_context = system.model.primary_actuation_context(
-            state=state, geometry=snapshot.geometry
+            time=time, state=state, geometry=snapshot.geometry
         )
         secondary_context = system.model.secondary_actuation_context(
+            time=time,
             state=state,
             geometry=snapshot.geometry,
         )
@@ -173,6 +174,7 @@ def inspect_cvt_state(
     assert isinstance(evaluation, DeadzoneEvaluation)
     snapshot = evaluation.snapshot
     primary_context = system.model.primary_actuation_context(
+        time=time,
         state=state,
         geometry=snapshot.primary_geometry,
     )

@@ -130,7 +130,7 @@ def main() -> int:
         ),
         initial_guess=TrialFrictionUtilization(
             primary_lambda=0.50,
-            secondary_lambda=0.36,
+            secondary_lambda=-0.36,
         ),
     )
 

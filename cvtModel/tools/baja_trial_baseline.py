@@ -71,13 +71,13 @@ class BajaTrialConstants:
     belt_outer_width: float = 0.840 * INCH_TO_METRE  # legacy belt dimension
     belt_inner_width: float = 0.662 * INCH_TO_METRE  # legacy belt dimension
     belt_outer_length: float = 37.53 * INCH_TO_METRE  # legacy belt length
-    belt_cord_depth_from_outer: float = 0.5 * 0.613 * INCH_TO_METRE
+    belt_cord_depth_from_outer: float = 0.1 * INCH_TO_METRE
     # placeholder: old defaults did not specify cord-depth location.
 
     sheave_half_angle_degrees: float = 11.5  # legacy 23 degree included angle
-    primary_effective_radius_at_low: float = (1.625 / 2.0) * INCH_TO_METRE
-    secondary_effective_radius_at_low: float = 4.0 * INCH_TO_METRE
-    # legacy geometry values interpreted as effective cord radii.
+    primary_inner_radius_at_low: float = (1.625 / 2.0) * INCH_TO_METRE
+    secondary_outer_radius_at_low: float = 4.0 * INCH_TO_METRE
+    # legacy primary value is the groove-bottom/inner radius; the 4 in secondary value is the outer belt-surface radius.
 
     deadzone_shift: float = (0.088 + 0.010) * INCH_TO_METRE  # legacy value
     max_shift: float = 0.75 * INCH_TO_METRE  # legacy value
@@ -170,10 +170,10 @@ def build_baja_trial_baseline(
         belt=belt,
         belt_outer_length=c.belt_outer_length,
         primary_outer_radius_at_zero_shift=(
-            c.primary_effective_radius_at_low + c.belt_cord_depth_from_outer
+            c.primary_inner_radius_at_low + c.belt_height
         ),
         secondary_outer_radius_at_zero_shift=(
-            c.secondary_effective_radius_at_low + c.belt_cord_depth_from_outer
+            c.secondary_outer_radius_at_low
         ),
         sheave_half_angle=radians(c.sheave_half_angle_degrees),
         deadzone_shift=c.deadzone_shift,
@@ -350,14 +350,14 @@ def build_baja_trial_baseline(
         ),
         default_trial=ContactTractionUtilization(
             primary_lambda=0.10,
-            secondary_lambda=0.10,
+            secondary_lambda=-0.10,
         ),
         lambda_sweep=(
-            ContactTractionUtilization(primary_lambda=0.05, secondary_lambda=0.05),
-            ContactTractionUtilization(primary_lambda=0.10, secondary_lambda=0.10),
-            ContactTractionUtilization(primary_lambda=0.15, secondary_lambda=0.10),
-            ContactTractionUtilization(primary_lambda=0.10, secondary_lambda=0.15),
-            ContactTractionUtilization(primary_lambda=0.20, secondary_lambda=0.20),
+            ContactTractionUtilization(primary_lambda=0.05, secondary_lambda=-0.05),
+            ContactTractionUtilization(primary_lambda=0.10, secondary_lambda=-0.10),
+            ContactTractionUtilization(primary_lambda=0.15, secondary_lambda=-0.10),
+            ContactTractionUtilization(primary_lambda=0.10, secondary_lambda=-0.15),
+            ContactTractionUtilization(primary_lambda=0.20, secondary_lambda=-0.20),
         ),
     )
 

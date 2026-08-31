@@ -17,6 +17,7 @@ class ProfileSample:
     value: float
     first_derivative: float
     second_derivative: float
+    third_derivative: float | None = None
 
 
 class ScalarProfile(ABC):

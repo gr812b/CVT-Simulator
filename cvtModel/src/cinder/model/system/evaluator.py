@@ -18,7 +18,11 @@ from cinder.model.cvt.actuation import (
     PulleyClosureChannels,
     PulleyElementContribution,
 )
-from cinder.model.cvt.actuation.forces import AxialSpringForce, CentrifugalRampForce
+from cinder.model.cvt.actuation.forces import (
+    AxialSpringForce,
+    CentrifugalRampForce,
+    FixedPivotFlyweightForce,
+)
 from cinder.model.cvt.closure import AffineClosureScalar, ClosureGains, ClosureUnknown
 from cinder.model.cvt.geometry import BeltPulleyGeometry, GeometryPosition
 from cinder.model.cvt.inertia import AxialTranslationInertias, ResolvedInertias
@@ -149,8 +153,11 @@ class MechanicalCVTPlant:
                 _validate_helix_domain(
                     name=name, helix_coupling=coupling, positions=positions
                 )
-        _validate_primary_ramp_domain(
-            actuator=self.primary_actuator, positions=positions
+        _validate_ramp_domain(
+            name="primary", actuator=self.primary_actuator, positions=positions
+        )
+        _validate_ramp_domain(
+            name="secondary", actuator=self.secondary_actuator, positions=positions
         )
         _validate_compression_spring_domains(
             primary_actuator=self.primary_actuator,
@@ -192,9 +199,10 @@ class MechanicalCVTPlant:
         return self.contact.traction_law()
 
     def primary_actuation_context(
-        self, *, state: CVTState, geometry: GeometryPosition
+        self, *, time: float, state: CVTState, geometry: GeometryPosition
     ) -> PulleyActuationContext:
         return self._actuation_context(
+            time=time,
             side="primary",
             state=state,
             coordinate=geometry.primary_axial_coordinate,
@@ -205,9 +213,10 @@ class MechanicalCVTPlant:
         )
 
     def secondary_actuation_context(
-        self, *, state: CVTState, geometry: GeometryPosition
+        self, *, time: float, state: CVTState, geometry: GeometryPosition
     ) -> PulleyActuationContext:
         return self._actuation_context(
+            time=time,
             side="secondary",
             state=state,
             coordinate=geometry.secondary_axial_coordinate,
@@ -220,6 +229,7 @@ class MechanicalCVTPlant:
     def _actuation_context(
         self,
         *,
+        time: float,
         side: str,
         state: CVTState,
         coordinate: Any,
@@ -237,12 +247,21 @@ class MechanicalCVTPlant:
                     d_axial_position_ds=coordinate.d_value_ds,
                     d2_axial_position_ds2=coordinate.d2_value_ds2,
                 ),
+                opening_per_axial_position=coupling.opening_per_axial_position,
+                opening_offset=coupling.opening_offset,
             )
         return PulleyActuationContext(
+            time=time,
             axial_position=coordinate.value,
             axial_speed=coordinate.d_value_ds * state.shift_speed,
             shaft_speed=shaft_speed,
             shift_speed=state.shift_speed,
+            axial_acceleration=AffineClosureScalar(
+                bias=coordinate.d2_value_ds2 * state.shift_speed**2,
+                gains=ClosureGains(
+                    shift_acceleration=coordinate.d_value_ds,
+                ),
+            ),
             closure_channels=channels,
             helical_coupling=helical_state,
             movable_member_rotational_inertia=movable_member_rotational_inertia,
@@ -253,16 +272,47 @@ class MechanicalCVTPlant:
         *,
         state: CVTState,
         shaft_boundaries: CVTShaftBoundaryValues | None = None,
+        geometry_side: str = "auto",
     ) -> DynamicsSnapshot:
+        """Build a frozen snapshot at the explicit static time origin ``t = 0``."""
+
+        return self.snapshot_at_time(
+            time=0.0,
+            state=state,
+            shaft_boundaries=shaft_boundaries,
+            geometry_side=geometry_side,
+        )
+
+    def snapshot_at_time(
+        self,
+        *,
+        time: float,
+        state: CVTState,
+        shaft_boundaries: CVTShaftBoundaryValues | None = None,
+        geometry_side: str = "auto",
+    ) -> DynamicsSnapshot:
+        if not isfinite(time):
+            raise ValueError("time must be finite.")
         if shaft_boundaries is None:
             shaft_boundaries = CVTShaftBoundaryValues.zero()
         if not isinstance(shaft_boundaries, CVTShaftBoundaryValues):
             raise TypeError("shaft_boundaries must be a CVTShaftBoundaryValues.")
 
-        geometry = self.geometry.evaluate(state.shift_position)
-        primary_context = self.primary_actuation_context(state=state, geometry=geometry)
+        if geometry_side == "auto":
+            geometry = self.geometry.evaluate(state.shift_position)
+        elif geometry_side == "deadzone":
+            geometry = self.geometry.evaluate_deadzone(state.shift_position)
+        elif geometry_side == "engaged":
+            geometry = self.geometry.evaluate_engaged(state.shift_position)
+        else:
+            raise ValueError(
+                "geometry_side must be one of {'auto', 'deadzone', 'engaged'}."
+            )
+        primary_context = self.primary_actuation_context(
+            time=time, state=state, geometry=geometry
+        )
         secondary_context = self.secondary_actuation_context(
-            state=state, geometry=geometry
+            time=time, state=state, geometry=geometry
         )
 
         primary_mechanism = self.primary_actuator.evaluate_element(primary_context)
@@ -275,7 +325,6 @@ class MechanicalCVTPlant:
         axial_inertias = self.inertias.axial_translation.evaluate(
             primary_axial_coordinate=geometry.primary_axial_coordinate,
             secondary_axial_coordinate=geometry.secondary_axial_coordinate,
-            belt_axial_coordinate=geometry.belt_axial_coordinate,
         )
 
         primary_element = primary_element + PulleyElementContribution(
@@ -386,7 +435,10 @@ def _validate_helix_domain(
             if name == "primary"
             else position.secondary_axial_coordinate
         )
-        values.append(-coordinate.value)
+        values.append(
+            helix_coupling.opening_offset
+            + helix_coupling.opening_per_axial_position * coordinate.value
+        )
     minimum_opening = min(values)
     maximum_opening = max(values)
     if (
@@ -399,31 +451,48 @@ def _validate_helix_domain(
         )
 
 
-def _validate_primary_ramp_domain(
-    *, actuator: PulleyActuator, positions: tuple[GeometryPosition, ...]
+def _validate_ramp_domain(
+    *, name: str, actuator: PulleyActuator, positions: tuple[GeometryPosition, ...]
 ) -> None:
-    primary_positions = tuple(
-        position.primary_axial_coordinate.value for position in positions
+    axial_positions = tuple(
+        (
+            position.primary_axial_coordinate.value
+            if name == "primary"
+            else position.secondary_axial_coordinate.value
+        )
+        for position in positions
     )
-    minimum_position = min(primary_positions)
-    maximum_position = max(primary_positions)
+    minimum_position = min(axial_positions)
+    maximum_position = max(axial_positions)
     for force_law in actuator.force_laws:
+        if isinstance(force_law, FixedPivotFlyweightForce):
+            mechanism_map = force_law.spec.mechanism_map
+            if (
+                minimum_position < mechanism_map.axial_position_min
+                or maximum_position > mechanism_map.axial_position_max
+            ):
+                raise ValueError(
+                    f"{name} fixed-pivot flyweight map does not cover the "
+                    "geometry-reachable axial interval "
+                    f"[{minimum_position}, {maximum_position}]."
+                )
+            continue
         if not isinstance(force_law, CentrifugalRampForce):
             continue
         profile = force_law.spec.radial_displacement_profile
         if minimum_position < profile.x_min or maximum_position > profile.x_max:
             raise ValueError(
-                "primary centrifugal-ramp profile does not cover the geometry-reachable "
+                f"{name} centrifugal-ramp profile does not cover the geometry-reachable "
                 f"axial interval [{minimum_position}, {maximum_position}]."
             )
-        for axial_position in primary_positions:
+        for axial_position in axial_positions:
             flyweight_radius = (
                 force_law.spec.radius_at_zero_position
                 + profile.evaluate(axial_position).value
             )
             if flyweight_radius <= 0.0:
                 raise ValueError(
-                    "primary centrifugal-ramp profile gives a non-positive flyweight radius."
+                    f"{name} centrifugal-ramp profile gives a non-positive flyweight radius."
                 )
 
 
@@ -477,7 +546,6 @@ def _validate_snapshot(snapshot: DynamicsSnapshot) -> None:
         "secondary_absolute_rotational_inertia": snapshot.secondary_absolute_rotational_inertia,
         "primary_axial_mass": snapshot.axial_translation_inertias.primary.mass,
         "secondary_axial_mass": snapshot.axial_translation_inertias.secondary.mass,
-        "belt_axial_mass": snapshot.axial_translation_inertias.belt.mass,
         "sheave_half_angle": snapshot.sheave_half_angle,
     }
     if snapshot.secondary_helix is not None:

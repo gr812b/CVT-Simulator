@@ -15,7 +15,12 @@ def apply_perfectly_inelastic_lower_stop_impact(
 ) -> CVTState:
     """Project deadzone arrival onto the low-ratio mechanical stop.
 
-    This is the symmetric first-order stop model used at the upper stop:
+    LEGACY KINEMATIC HELPER ONLY.  Production hybrid transitions use the
+    mass-metric momentum projector in ``cvt_impact``; this helper is retained
+    for old preview/API compatibility and does not redistribute coupled
+    momentum.
+
+    This legacy first-order helper applies:
 
         s^+ = s_lower,
         s_dot^+ = 0.

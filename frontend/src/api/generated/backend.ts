@@ -535,6 +535,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/simulation-cases/resolve-from-library": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Resolve From Library Selection */
+        post: operations["resolve_from_library_selection_api_v1_simulation_cases_resolve_from_library_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/simulation-cases/validate": {
         parameters: {
             query?: never;
@@ -1324,6 +1341,24 @@ export interface components {
              * @default false
              */
             include_reported_segments: boolean;
+        };
+        /** ResolveLibrarySimulationCaseRequest */
+        ResolveLibrarySimulationCaseRequest: {
+            /** Execution Preset Id */
+            execution_preset_id?: string | null;
+            /** Load Case Id */
+            load_case_id?: string | null;
+            /** Tune Id */
+            tune_id?: string | null;
+            /** Vehicle Assembly Version Id */
+            vehicle_assembly_version_id: string;
+        };
+        /** ResolveLibrarySimulationCaseResponse */
+        ResolveLibrarySimulationCaseResponse: {
+            /** Simulation Case */
+            simulation_case: {
+                [key: string]: unknown;
+            };
         };
         /** RunInputResponse */
         RunInputResponse: {
@@ -2612,6 +2647,39 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["RunResultResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    resolve_from_library_selection_api_v1_simulation_cases_resolve_from_library_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ResolveLibrarySimulationCaseRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ResolveLibrarySimulationCaseResponse"];
                 };
             };
             /** @description Validation Error */

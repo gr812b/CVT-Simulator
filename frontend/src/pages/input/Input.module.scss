@@ -187,6 +187,68 @@
     }
 }
 
+.customLoadCaseCard {
+    width: 100%;
+    max-width: 18rem;
+}
+
+.customSegmentRow {
+    display: grid;
+    grid-template-columns: minmax(0, 6.2rem) minmax(0, 6.2rem) auto;
+    gap: 0.4rem;
+    align-items: end;
+    width: 100%;
+}
+
+.customLoadCaseField {
+    width: 100%;
+    max-width: 6.2rem;
+}
+
+.customLoadCaseField input {
+    width: 100%;
+    background: #ffffff;
+    color: #111111;
+    padding: 0.5rem 0.625rem;
+    border: 1px solid var(--border-color);
+    border-radius: 0.25rem;
+    box-sizing: border-box;
+}
+
+.customMassRow {
+    display: flex;
+    gap: 0.5rem;
+    align-items: end;
+    flex-wrap: wrap;
+    width: 100%;
+}
+
+.customMassField {
+    width: 100%;
+    max-width: 8rem;
+}
+
+.customMassField input {
+    width: 100%;
+    background: #ffffff;
+    color: #111111;
+    padding: 0.5rem 0.625rem;
+    border: 1px solid var(--border-color);
+    border-radius: 0.25rem;
+    box-sizing: border-box;
+}
+
+.customLoadCaseCheckbox {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: #111111;
+}
+
+.customLoadCaseCheckbox input {
+    accent-color: #111111;
+}
+
 .helperText {
     @include fonts.text-small;
     color: var(--border-color);

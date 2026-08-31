@@ -1,0 +1,44 @@
+{
+  "name": "fixed_pivot_3200_reference",
+  "purpose": "Physical fixed-pivot primary reference using current CAD drivetrain inertias, current measured geometry, prompt re-stick, and approximately 3200 rpm main shift.",
+  "candidate": {
+    "tip_hardware_mass_per_flyweight_kg": 0.25,
+    "helix_angle_degrees": 20.0,
+    "secondary_torsional_pretension_degrees": 300.0,
+    "secondary_compression_preload_mm": 110.0,
+    "primary_linear_ramp_angle_degrees": 35.0,
+    "primary_circular_ramp_start_angle_degrees": 35.0,
+    "primary_circular_ramp_end_angle_degrees": 20.0
+  },
+  "fixed_pivot_mass_semantics": {
+    "tip_hardware_mass_per_flyweight_kg": "concentrated roller/bolt/nut/fixed-hardware/tuning mass PER flyweight; 13.646 g arm/body is added separately",
+    "number_of_flyweights": 3
+  },
+  "fixed_geometry": {
+    "pivot_radius_in": 1.675,
+    "pivot_to_roller_center_in": 1.241,
+    "roller_radius_mm": 6.5,
+    "point_a_from_pivot_axial_in": 1.5,
+    "point_a_from_pivot_radial_in": 0.2776,
+    "arm_mass_per_flyweight_g": 13.646,
+    "c3_blend_length_mm": 3.0
+  },
+  "integration": {
+    "duration_s": 10.0,
+    "solver_method": "LSODA",
+    "max_step_ms": 20.0,
+    "relative_tolerance": 0.0001,
+    "absolute_tolerance": 1e-07
+  },
+  "cad_inertia_update": {
+    "source": "Drivetrain Inertias.xlsx",
+    "pcvt_total_kg_m2": 0.00491861,
+    "scvt_total_kg_m2": 0.00484016,
+    "wheel_total_kg_m2": 1.10781744,
+    "engine_equivalent_default_kg_m2": 0.05,
+    "engine_sensitivity_range_kg_m2": [
+      0.035,
+      0.07
+    ]
+  }
+}

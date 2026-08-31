@@ -1,3 +1,4 @@
+from .c3_transition_segment import C3TransitionSegment
 from .circular_segment import CircularSegment
 from .helix import (
     HelixProfile,
@@ -12,6 +13,7 @@ from .ramp_segment import RampSegment
 from .types import ProfileSample, ScalarProfile
 
 __all__ = [
+    "C3TransitionSegment",
     "CircularSegment",
     "HelixProfile",
     "HelixSample",

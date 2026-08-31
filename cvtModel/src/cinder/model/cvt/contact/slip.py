@@ -17,23 +17,17 @@ from .tolerances import ContactKinematicTolerances
 class KineticSlipSpecification:
     """A known kinetic lambda magnitude at one slipping interface.
 
-    The branch selector/event logic supplies ``direction``. This object does
-    not decide whether an interface should slip; it only maps the selected
-    kinematic direction to the signed lambda required by the present
-    pulley-torque convention.
+    The signed traction convention is identical on both pulleys:
 
-    Positive forward-drive variables mean:
+        dF_t,j = lambda_j dN_j
 
-        lambda_p > 0: primary pulley transfers traction to the belt;
-        lambda_s > 0: belt transfers traction to the secondary pulley.
+    is the force exerted by pulley ``j`` on the belt in the positive belt-travel
+    direction. Friction therefore always opposes ``v_rel = v_b - r_eff omega``:
 
-    Therefore the mapping from global relative motion is intentionally
-    asymmetric:
+        belt leads pulley   -> lambda = -mu_k,
+        pulley leads belt   -> lambda = +mu_k.
 
-        primary, pulley leads belt -> +mu_k;
-        primary, belt leads pulley -> -mu_k;
-        secondary, belt leads pulley -> +mu_k;
-        secondary, pulley leads belt -> -mu_k.
+    No primary/secondary sign exception is required.
     """
 
     interface: ContactInterface
@@ -57,17 +51,11 @@ class KineticSlipSpecification:
     def signed_lambda(self) -> float:
         """Return the fixed non-zero lambda imposed by this kinetic branch."""
 
-        if self.interface is ContactInterface.PRIMARY:
-            if self.direction is SlipDirection.PULLEY_LEADS_BELT:
-                return self.kinetic_lambda_magnitude
-            return -self.kinetic_lambda_magnitude
-
-        if self.interface is ContactInterface.SECONDARY:
-            if self.direction is SlipDirection.BELT_LEADS_PULLEY:
-                return self.kinetic_lambda_magnitude
-            return -self.kinetic_lambda_magnitude
-
-        raise ValueError(f"Unsupported contact interface: {self.interface!r}.")
+        if self.interface not in (ContactInterface.PRIMARY, ContactInterface.SECONDARY):
+            raise ValueError(f"Unsupported contact interface: {self.interface!r}.")
+        if self.direction is SlipDirection.PULLEY_LEADS_BELT:
+            return self.kinetic_lambda_magnitude
+        return -self.kinetic_lambda_magnitude
 
     def direction_is_consistent(
         self,

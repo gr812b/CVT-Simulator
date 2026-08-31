@@ -1,17 +1,4 @@
-"""State-frozen mechanics for the primary-disengaged CVT deadzone.
-
-Deadzone deliberately does *not* reuse the engaged contact snapshot.  Below
-primary engagement, the primary actuator coordinate continues to move, while
-belt geometry and the secondary/belt lock remain frozen at the engagement
-configuration:
-
-    x_p = s,
-    geometry_belt = geometry(s_engage),
-    v_b = r_s,engage omega_s.
-
-This module contains only known-state quantities.  It carries no lambda,
-normal-resultant, tension-loop, or engaged traction quantities.
-"""
+"""State-frozen mechanics for the primary-disengaged CVT deadzone."""
 
 from __future__ import annotations
 
@@ -19,7 +6,7 @@ from dataclasses import dataclass, replace
 from math import isfinite
 from typing import Final
 
-from cinder.model.cvt.actuation import PulleyActuationContext, PulleyClosureChannels
+from cinder.model.cvt.actuation import PulleyElementContribution
 from cinder.model.cvt.geometry import GeometryPosition
 from cinder.model.cvt.inertia import AxialTranslationInertia, ResolvedInertias
 from cinder.model.cvt.closure import AffineClosureScalar
@@ -36,60 +23,57 @@ _DEADZONE_SHIFT_DOMAIN_TOLERANCE: Final[float] = 1.0e-12
 class DeadzoneSnapshot:
     """Known-state data for the reduced primary-disengaged model.
 
-    ``primary_geometry`` is evaluated at the live primary actuator coordinate
-    ``s``.  ``locked_geometry`` is evaluated once at ``s_engage`` and owns the
-    low-ratio secondary radius used by the imposed belt-secondary lock.
+    ``primary_mechanism`` is the same pulley-element contribution used by the
+    engaged plant. It may contain affine coupling to primary shaft acceleration
+    and global shift acceleration, which is why deadzone free motion uses a
+    small coupled solve rather than assuming the actuator is a known force.
+    ``secondary_mechanism`` remains in the belt-locked rotational equation, so
+    configuration-dependent inertia from any secondary-mounted element is not
+    lost merely because secondary axial travel is fixed.
     """
 
     state: CVTState
     primary_geometry: GeometryPosition
     locked_geometry: GeometryPosition
     primary_axial_inertia: AxialTranslationInertia
-    primary_actuation: AffineClosureScalar
+    primary_mechanism: PulleyElementContribution
+    secondary_mechanism: PulleyElementContribution
+    primary_rigid_rotational_inertia: float
+    secondary_rigid_belt_locked_inertia: float
     shaft_boundaries: CVTShaftBoundaryValues
     inertias: ResolvedInertias
 
     @property
-    def belt_secondary_lock_radius(self) -> float:
-        """Return the fixed secondary effective radius in deadzone."""
+    def primary_actuation(self) -> AffineClosureScalar:
+        """Compatibility alias for the mechanism's local closing-force relation."""
 
+        return self.primary_mechanism.closing_force
+
+    @property
+    def belt_secondary_lock_radius(self) -> float:
         return self.locked_geometry.secondary.effective
 
     @property
     def primary_rotational_inertia(self) -> float:
-        """Return the directly rotating primary inertia."""
+        """Rigid primary inertia not already carried by a mounted coupling."""
 
-        return (
-            self.inertias.primary.absolute_rotation_inertia
-            + self.shaft_boundaries.primary.equivalent_inertia
-        )
+        return self.primary_rigid_rotational_inertia
 
     @property
     def secondary_belt_locked_inertia(self) -> float:
-        """Return secondary absolute inertia plus belt transport inertia.
+        """Total instantaneous inertia in the reduced secondary rotation."""
 
-        The belt is represented as a lumped transport mass moving at
-        ``v_b = r_s omega_s``.  Its kinetic energy therefore contributes
-        ``m_b r_s^2`` to the locked secondary rotational inertia.
-        """
-
-        radius = self.belt_secondary_lock_radius
         return (
-            self.inertias.secondary.absolute_rotation_inertia
-            + self.shaft_boundaries.secondary.equivalent_inertia
-            + self.inertias.belt.mass * radius * radius
+            self.secondary_rigid_belt_locked_inertia
+            - self.secondary_mechanism.shaft_torque.gains.secondary_angular_acceleration
         )
 
     @property
     def road_load(self) -> RoadLoadResult | None:
-        """Return vehicle road data when supplied by the shaft boundary."""
-
         return self.shaft_boundaries.secondary.metadata.get("road_load")
 
     @property
     def vehicle_road_load(self) -> RoadLoadResult:
-        """Return vehicle road data or raise for a direct shaft boundary."""
-
         road_load = self.road_load
         if road_load is None:
             raise RuntimeError(
@@ -99,20 +83,14 @@ class DeadzoneSnapshot:
 
     @property
     def primary_external_torque(self) -> float:
-        """Return the signed torque applied to the primary shaft."""
-
         return self.shaft_boundaries.primary.external_torque
 
     @property
     def secondary_external_torque(self) -> float:
-        """Return the signed torque applied to the secondary shaft."""
-
         return self.shaft_boundaries.secondary.external_torque
 
     @property
     def belt_secondary_speed_residual(self) -> float:
-        """Return ``v_b - r_s omega_s`` for the imposed neutral lock."""
-
         return (
             self.state.belt_speed
             - self.belt_secondary_lock_radius * self.state.secondary_angular_speed
@@ -121,18 +99,15 @@ class DeadzoneSnapshot:
 
 def build_deadzone_snapshot(
     *,
+    time: float,
     model: MechanicalCVTPlant,
     state: CVTState,
     shaft_boundaries: CVTShaftBoundaryValues | None = None,
 ) -> DeadzoneSnapshot:
-    """Build one frozen deadzone snapshot without invoking engaged contact.
+    """Build one frozen deadzone snapshot without invoking engaged contact."""
 
-    The live geometry evaluation is used only for the primary movable-sheave
-    actuator coordinate and its axial inertia.  The belt/secondary quantities
-    intentionally come from the fixed engagement geometry, even when the live
-    primary coordinate lies below engagement.
-    """
-
+    if not isfinite(time):
+        raise ValueError("time must be finite.")
     if not isinstance(model, MechanicalCVTPlant):
         raise TypeError("model must be a MechanicalCVTPlant instance.")
     if not isinstance(state, CVTState):
@@ -143,40 +118,67 @@ def build_deadzone_snapshot(
         raise ValueError(
             "Deadzone snapshot requires shift_position <= geometry.spec.deadzone_shift."
         )
-
     if state.shift_position > engagement_shift:
         state = replace(state, shift_position=engagement_shift)
-
-    primary_geometry = model.geometry.evaluate(state.shift_position)
-    locked_geometry = model.geometry.evaluate(engagement_shift)
-    primary_coordinate = primary_geometry.primary_axial_coordinate
-
-    primary_actuation = model.primary_actuator.evaluate_relation(
-        PulleyActuationContext(
-            axial_position=primary_coordinate.value,
-            axial_speed=primary_coordinate.d_value_ds * state.shift_speed,
-            shaft_speed=state.primary_angular_speed,
-            closure_channels=PulleyClosureChannels.primary(),
-        )
-    )
 
     if shaft_boundaries is None:
         shaft_boundaries = CVTShaftBoundaryValues.zero()
     if not isinstance(shaft_boundaries, CVTShaftBoundaryValues):
         raise TypeError("shaft_boundaries must be a CVTShaftBoundaryValues.")
 
+    primary_geometry = model.geometry.evaluate_deadzone(state.shift_position)
+    locked_geometry = model.geometry.evaluate_deadzone(engagement_shift)
+    primary_coordinate = primary_geometry.primary_axial_coordinate
+
+    primary_context = model.primary_actuation_context(
+        time=time,
+        state=state,
+        geometry=primary_geometry,
+    )
+    primary_mechanism = model.primary_actuator.evaluate_element(primary_context)
+    secondary_context = model.secondary_actuation_context(
+        time=time,
+        state=state,
+        geometry=locked_geometry,
+    )
+    secondary_mechanism = model.secondary_actuator.evaluate_element(secondary_context)
+
     primary_axial_inertia = model.inertias.axial_translation.evaluate(
         primary_axial_coordinate=primary_coordinate,
         secondary_axial_coordinate=locked_geometry.secondary_axial_coordinate,
-        belt_axial_coordinate=locked_geometry.belt_axial_coordinate,
     ).primary
+
+    # If a helical coupling is present, its element already carries the movable
+    # member's rotational inertia and relative-motion terms. Otherwise the
+    # movable sheave rotates rigidly with the shaft in deadzone.
+    primary_rigid_rotational_inertia = (
+        model.inertias.primary.fixed_rotating_hardware_inertia
+        + shaft_boundaries.primary.equivalent_inertia
+    )
+    if model.primary_helical_coupling is None:
+        primary_rigid_rotational_inertia += (
+            model.inertias.primary.movable_sheave_rotational_inertia
+        )
+
+    secondary_rigid_belt_locked_inertia = (
+        model.inertias.secondary.fixed_side.total
+        + shaft_boundaries.secondary.equivalent_inertia
+        + model.inertias.belt.mass * locked_geometry.secondary.effective**2
+    )
+    if model.secondary_helical_coupling is None:
+        secondary_rigid_belt_locked_inertia += (
+            model.inertias.secondary.movable_sheave_rotational_inertia
+        )
 
     snapshot = DeadzoneSnapshot(
         state=state,
         primary_geometry=primary_geometry,
         locked_geometry=locked_geometry,
         primary_axial_inertia=primary_axial_inertia,
-        primary_actuation=primary_actuation,
+        primary_mechanism=primary_mechanism,
+        secondary_mechanism=secondary_mechanism,
+        primary_rigid_rotational_inertia=primary_rigid_rotational_inertia,
+        secondary_rigid_belt_locked_inertia=(secondary_rigid_belt_locked_inertia),
         shaft_boundaries=shaft_boundaries,
         inertias=model.inertias,
     )

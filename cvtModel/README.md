@@ -1,86 +1,78 @@
-# CVT Model — CINDER
+# CINDER
 
-This repository contains **CINDER**, a mechanics-first Python package for
-rubber V-belt CVTs, together with project-local tools used to exercise and
-compare the model.
+**CINDER** is a mechanics-first Python model for rubber V-belt continuously
+variable transmissions (CVTs). The installed package is imported as `cinder`.
 
-The public Python package is imported as `cinder`. Its installed code lives
-only under `src/cinder`.
+CINDER models the CVT as a mechanical plant with explicit pulley geometry,
+belt contact, clamping mechanisms, inertias, shaft boundaries, and hybrid
+contact/operating modes. The package is independent of the CVT-Simulator web
+frontend and backend.
 
-## Repository layout
-
-```text
-cvtModel/
-├─ launchTools/                 # project-local launch/tuning/plotting tooling
-├─ src/
-│  ├─ cinder/                   # installed CINDER package
-│  └─ cvt_simulator/            # legacy package; retained temporarily, not installed
-├─ test/
-│  ├─ cinder/                   # CINDER regression tests
-│  └─ cvt_simulator/            # legacy tests; retained temporarily
-├─ docs/                        # public CINDER documentation
-├─ examples/                    # small CINDER-only runnable examples
-├─ README.md
-├─ setup.py
-├─ setup.cfg
-└─ pyproject.toml
-```
-
-`launchTools` is intentionally outside the package. It may import CINDER, but
-it is not imported by CINDER and is not part of the CINDER installation or
-public API.
-
-`src/cvt_simulator` remains on disk during migration, but this setup installs
-only `cinder`. That prevents the retired package from becoming an accidental
-runtime dependency. Once the migration is complete, remove
-`src/cvt_simulator` and `test/cvt_simulator` in one cleanup change.
-
-## Setup
-
-From this repository root:
-
-```powershell
-python -m venv venv
-.\venv\Scripts\Activate.ps1
-python -m pip install --upgrade pip
-python -m pip install -e ".[dev]"
-```
-
-On macOS/Linux, activate with:
+## Install
 
 ```bash
-source .venv/bin/activate
+python -m pip install cinder-cvt==1.0.0
 ```
 
-An editable install means imports resolve to the current `src/cinder` source;
-you do not need to set `PYTHONPATH` for normal development.
+Verify the installed distribution:
 
-## Verify CINDER
-
-```powershell
-python examples/quickstart.py
-python -m pytest
-python -m coverage run -m pytest
-python -m coverage report
+```bash
+python -c "import cinder; print(cinder.__version__)"
 ```
 
-The default test target is `test/cinder`. The retained legacy tests are not run
-by default.
+Expected output for this release:
 
-## Format and lint CINDER
-
-```powershell
-black --check src/cinder test/cinder examples
-flake8 src/cinder test/cinder examples
+```text
+1.0.0
 ```
 
-## Learn the public API
+Runtime dependencies are intentionally small:
 
-- [Getting Started](docs/GETTING_STARTED.md)
-- [Public Contract API](docs/PUBLIC_CONTRACT_API.md)
-- [Geometry Study API](docs/GEOMETRY_STUDY_API.md)
-- [Actuation Study API](docs/ACTUATION_STUDY_API.md)
+- NumPy
+- SciPy
 
-CINDER’s stable external boundary is `cinder.contracts`. It provides versioned
-assembly documents, component discovery, preflight validation, JSON-safe
-study/result projection, and standard simulation summaries.
+## Public Python API
+
+CINDER v1 has three supported import surfaces:
+
+- `cinder` — core mechanics, composed systems, shaft boundaries, hosts, and
+  hybrid execution entry points.
+- `cinder.contracts` — versioned JSON-safe assembly/simulation documents,
+  validation, schema information, and result projection.
+- `cinder.studies` — supported static geometry and actuation study APIs.
+
+Modules beneath these public surfaces remain available to advanced users, but
+deep implementation-module paths are not the compatibility boundary for v1.
+
+## Run the reference example
+
+The source repository contains a current fixed-pivot Baja reference case:
+
+```bash
+python cvtModel/examples/quickstart.py --run
+```
+
+The example imports the installed `cinder` package. It does not require the
+frontend or backend.
+
+## Documentation
+
+- [Getting started](https://github.com/gr812b/CVT-Simulator/blob/cinder-v1.0.0/cvtModel/docs/GETTING_STARTED.md)
+- [Public document contracts](https://github.com/gr812b/CVT-Simulator/blob/cinder-v1.0.0/cvtModel/docs/PUBLIC_CONTRACTS.md)
+- [Simulation-document JSON Schema](https://github.com/gr812b/CVT-Simulator/blob/cinder-v1.0.0/cvtModel/docs/DOCUMENT_SCHEMA.md)
+- [Geometry study API](https://github.com/gr812b/CVT-Simulator/blob/cinder-v1.0.0/cvtModel/docs/GEOMETRY_STUDY_API.md)
+- [Actuation study API](https://github.com/gr812b/CVT-Simulator/blob/cinder-v1.0.0/cvtModel/docs/ACTUATION_STUDY_API.md)
+- [Fixed-pivot flyweight mechanics](https://github.com/gr812b/CVT-Simulator/blob/cinder-v1.0.0/cvtModel/docs/FIXED_PIVOT_FLYWEIGHT.md)
+- [Hybrid impact mechanics](https://github.com/gr812b/CVT-Simulator/blob/cinder-v1.0.0/cvtModel/docs/HYBRID_IMPACT_MECHANICS.md)
+
+## Repository-only material
+
+The monorepo also contains `launchTools`, `tools`, validation artifacts, the
+backend, and the frontend. Those directories are useful to the project but are
+not part of the `cinder-cvt` wheel or source distribution.
+
+## License
+
+CINDER is licensed under the Creative Commons
+Attribution-NonCommercial 4.0 International license (CC BY-NC 4.0).
+Commercial use requires separate permission. See `LICENSE`.

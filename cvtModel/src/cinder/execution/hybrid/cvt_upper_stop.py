@@ -21,8 +21,12 @@ def apply_perfectly_inelastic_upper_stop_impact(
 ) -> CVTState:
     """Project one free engaged arrival onto the high-ratio mechanical stop.
 
-    This first stop model is intentionally perfectly inelastic in the axial
-    coordinate:
+    LEGACY KINEMATIC HELPER ONLY.  Production hybrid transitions use the
+    mass-metric momentum projector in ``cvt_impact``; this helper is retained
+    for old preview/API compatibility and does not redistribute coupled
+    momentum.
+
+    This legacy helper is perfectly inelastic only in the axial coordinate:
 
         s^+ = s_upper,
         s_dot^+ = 0.

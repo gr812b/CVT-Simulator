@@ -1,10 +1,12 @@
-"""Quickstart for the composed CINDER CVT API.
+"""Run the bundled CINDER reference simulation case.
 
-Run from the repository root after installing the package or by setting
-``PYTHONPATH=src``:
+Install CINDER first, then run from any checkout of this repository:
 
-    python examples/quickstart.py
-    python examples/quickstart.py --run
+    python -m pip install cinder-cvt==1.0.0
+    python cvtModel/examples/quickstart.py
+    python cvtModel/examples/quickstart.py --run
+
+Use --case to point at another public CINDER simulation-case document.
 """
 
 from __future__ import annotations
@@ -13,27 +15,40 @@ import argparse
 import json
 from pathlib import Path
 
+import cinder
 from cinder.contracts import (
     decode_simulation_case_document,
     project_simulation_result,
     validate_simulation_case_document,
 )
 
+HERE = Path(__file__).resolve().parent
+DEFAULT_CASE = HERE / "baja_baseline_simulation_case.json"
+
 
 def main() -> None:
     parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--case",
+        type=Path,
+        default=DEFAULT_CASE,
+        help="Public CINDER simulation-case JSON document to load.",
+    )
     parser.add_argument("--run", action="store_true", help="Run the decoded case.")
     args = parser.parse_args()
 
-    root = Path(__file__).resolve().parents[1]
-    document_path = root / "examples" / "baja_baseline_simulation_case.json"
+    document_path = args.case.resolve()
     document = json.loads(document_path.read_text(encoding="utf-8"))
 
     validation = validate_simulation_case_document(document)
-    print(f"Document: {document_path.name}")
+    print(f"CINDER: {cinder.__version__}")
+    print(f"Document: {document_path}")
     print(f"Validation: {'valid' if validation.is_valid else 'invalid'}")
     for finding in validation.findings:
-        print(f"  [{finding.severity}] {finding.document_path or '/'}: {finding.message}")
+        print(
+            f"  [{finding.severity}] "
+            f"{finding.document_path or '/'}: {finding.message}"
+        )
     if not validation.is_valid:
         raise SystemExit(1)
 

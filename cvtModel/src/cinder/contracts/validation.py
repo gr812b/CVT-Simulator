@@ -16,6 +16,7 @@ from typing import Literal
 from cinder.model.cvt.actuation import (
     AxialSpringForce,
     CentrifugalRampForce,
+    FixedPivotFlyweightForce,
     HelicalTorqueReactionForce,
 )
 from cinder.model.system import CVTAssemblySpec, PulleySpec
@@ -151,7 +152,12 @@ def validate_assembly(
             point.primary_axial_coordinate.value for point in endpoints
         ),
         opening_travels=(
-            tuple(-point.primary_axial_coordinate.value for point in endpoints)
+            tuple(
+                assembly.pulleys.primary.helical_coupling.opening_offset
+                + assembly.pulleys.primary.helical_coupling.opening_per_axial_position
+                * point.primary_axial_coordinate.value
+                for point in endpoints
+            )
             if assembly.pulleys.primary.helical_coupling is not None
             else None
         ),
@@ -164,7 +170,12 @@ def validate_assembly(
             point.secondary_axial_coordinate.value for point in endpoints
         ),
         opening_travels=(
-            tuple(-point.secondary_axial_coordinate.value for point in endpoints)
+            tuple(
+                assembly.pulleys.secondary.helical_coupling.opening_offset
+                + assembly.pulleys.secondary.helical_coupling.opening_per_axial_position
+                * point.secondary_axial_coordinate.value
+                for point in endpoints
+            )
             if assembly.pulleys.secondary.helical_coupling is not None
             else None
         ),
@@ -206,6 +217,19 @@ def _validate_pulley(
                     _error(
                         "actuation.profile_does_not_cover_local_travel",
                         "Centrifugal-ramp profile does not cover the pulley local travel range.",
+                        law_location,
+                    )
+                )
+        if isinstance(force_law, FixedPivotFlyweightForce):
+            mechanism_map = force_law.spec.mechanism_map
+            if (
+                mechanism_map.axial_position_min > local_min
+                or mechanism_map.axial_position_max < local_max
+            ):
+                findings.append(
+                    _error(
+                        "actuation.fixed_pivot_map_does_not_cover_local_travel",
+                        "Fixed-pivot flyweight map does not cover the pulley local travel range.",
                         law_location,
                     )
                 )

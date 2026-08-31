@@ -12,7 +12,7 @@ from .types import ScalarProfile
 
 @dataclass(frozen=True, slots=True)
 class HelixSample:
-    """Helix geometry at one positive opening-travel coordinate."""
+    """Helix geometry at one positive profile-travel coordinate."""
 
     circumferential_displacement: float
     theta: float
@@ -60,26 +60,15 @@ class HelixShiftKinematics:
 @dataclass(frozen=True, slots=True)
 class HelixProfile:
     """
-    Conventional torque-reactive secondary helix geometry.
+    Torque-reactive helix geometry parameterized by a positive profile travel ``q``.
 
-    The profile coordinate ``q`` is positive secondary opening travel:
-
-        q = -x,
-
-    where the pulley-local axial coordinate ``x`` is positive in the closing
-    direction. Thus ``q`` is positive when the mounted pulley opens.
-
-    ``theta(q)`` is the positive spring-winding relative rotation between
-    the movable and fixed secondary sheaves. A conventional torque-reactive
-    secondary therefore requires:
-
-        dtheta / dq > 0.
-
-    This keeps the physical convention explicit: opening winds the torsional
-    spring further, and positive forward transmitted torque increases the
-    positive local closing force. The profile deliberately does not expose a
-    handedness or coordinate-sign option; the local opening mapping is owned by
-    the CVT geometry convention.
+    The mounted :class:`HelicalPulleyCoupling` maps the pulley-local axial
+    coordinate ``x`` into ``q``. The profile itself returns the relative angle
+    with the rotational sign used by the shaft equations. For the conventional
+    secondary mapping ``q = -x``, opening increases ``q`` while the movable
+    sheave rotates in negative relative angle, so ``dtheta/dx > 0`` as in the
+    formulation. A primary mounting can reverse the signed q(x) mapping to
+    represent the opposite helix handedness without changing the force law.
 
     Torsional-spring preload belongs separately in
     :class:`HelicalTorqueReactionSpec`; the helix profile itself has no
@@ -117,15 +106,18 @@ class HelixProfile:
 
         if profile.first_derivative <= 0.0:
             raise ValueError(
-                "A torque-reactive secondary helix requires positive "
+                "A torque-reactive helix profile requires positive "
                 "circumferential slope du/dq."
             )
 
+        # q is a positive geometric travel coordinate, not the signed relative
+        # sheave angle. With the rotational convention used by the formulation,
+        # conventional secondary opening rotates the movable member negatively.
         return HelixSample(
             circumferential_displacement=profile.value,
-            theta=profile.value / self.radius,
-            dtheta_dopening=profile.first_derivative / self.radius,
-            d2theta_dopening2=profile.second_derivative / self.radius,
+            theta=-profile.value / self.radius,
+            dtheta_dopening=-profile.first_derivative / self.radius,
+            d2theta_dopening2=-profile.second_derivative / self.radius,
             helix_angle_magnitude=atan2(
                 1.0,
                 profile.first_derivative,

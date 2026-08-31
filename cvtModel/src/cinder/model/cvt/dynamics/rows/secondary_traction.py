@@ -11,11 +11,11 @@ def build_secondary_traction_equation(
     *,
     context: TrialEquationContext,
 ) -> ClosureEquation:
-    """Build ``tau_s / r_tau,s - lambda_s N_s = 0``.
+    """Build ``tau_s / r_eff,s + lambda_s N_s = 0``.
 
-    The forward-drive sign convention is already contained in the definitions
-    of ``tau_s`` and ``lambda_s``, so the integrated traction product has the
-    same algebraic sign form as the primary relation.
+    One signed definition is used on both pulleys:
+    ``dF_t,j = lambda_j dN_j`` is pulley-on-belt traction along positive belt
+    travel, and ``tau_j`` is the equal-and-opposite belt-on-pulley shaft torque.
     """
 
     torque_radius = context.snapshot.geometry.secondary.effective
@@ -24,7 +24,7 @@ def build_secondary_traction_equation(
         residual=AffineClosureScalar(
             gains=ClosureGains(
                 secondary_torque=1.0 / torque_radius,
-                secondary_normal_resultant=-context.contact_terms.secondary_lambda,
+                secondary_normal_resultant=context.contact_terms.secondary_lambda,
             )
         ),
     )

@@ -43,12 +43,14 @@ ActuationResponseCoordinate: TypeAlias = ActuationStateCoordinate | ClosureUnkno
 class ActuationOperatingPoint:
     """One state-frozen point used as the baseline for a clamping study.
 
+    ``time`` is the physical evaluation time supplied to the actuator.
     ``shaft_speed`` belongs to the selected pulley.  ``closure_unknowns`` are
     the instantaneous values used to resolve any affine force terms.  They are
     normally zero for a simple static force map, except when, for example, a
     torque-reactive helix is evaluated against a chosen shaft torque.
     """
 
+    time: float
     shift_position: float
     shaft_speed: float = 0.0
     shift_speed: float = 0.0
@@ -56,6 +58,7 @@ class ActuationOperatingPoint:
 
     def __post_init__(self) -> None:
         for name, value in (
+            ("time", self.time),
             ("shift_position", self.shift_position),
             ("shaft_speed", self.shaft_speed),
             ("shift_speed", self.shift_speed),

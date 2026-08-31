@@ -96,15 +96,25 @@ class ComposedCVTHybridSystem:
             cvt=cvt_state.as_vector(), **{self.host.state_block.name: host_state}
         )
 
-    def classify_initial_mode(self, state: NDArray[np.float64]) -> ComposedCVTMode:
+    def classify_initial_mode_at_time(
+        self, *, time: float, state: NDArray[np.float64]
+    ) -> ComposedCVTMode:
+        """Classify a composed initial state at an explicit simulation time."""
+
         cvt_state = CVTState.from_vector(self.layout.view(state, "cvt"))
-        shaft_values = self._shaft_boundaries(time=0.0, state=state)
+        shaft_values = self._shaft_boundaries(time=time, state=state)
         return ComposedCVTMode(
-            cvt=self.cvt.classify_initial_regime(
-                cvt_state,
+            cvt=self.cvt.classify_initial_regime_at_time(
+                time=time,
+                state=cvt_state,
                 shaft_boundaries=shaft_values,
             )
         )
+
+    def classify_initial_mode(self, state: NDArray[np.float64]) -> ComposedCVTMode:
+        """Classify a standalone initial state at the explicit local origin t=0."""
+
+        return self.classify_initial_mode_at_time(time=0.0, state=state)
 
     def rhs(
         self, time: float, state: NDArray[np.float64], mode: ComposedCVTMode
@@ -251,7 +261,9 @@ class ComposedCVTHybridSystem:
 
         if settings is None:
             settings = HybridIntegratorSettings()
-        mode = initial_mode or self.classify_initial_mode(initial_state)
+        mode = initial_mode or self.classify_initial_mode_at_time(
+            time=float(time_span[0]), state=initial_state
+        )
         return CVTIntegrationTrace(
             raw=integrate_hybrid(
                 system=self,

@@ -73,6 +73,59 @@ class PulleyElement(Protocol):
 
 
 @dataclass(frozen=True, slots=True)
+class PulleyKineticMode:
+    """One physical velocity mode retained by a mounted pulley element.
+
+    The mode contributes
+
+        T = 1/2 * inertia * (a_omega * omega + a_x * x_dot)^2
+
+    in the pulley-local shaft and closing-coordinate velocities.  Keeping this
+    contract on the element lets continuous dynamics and hybrid event metrics
+    consume the same mechanism without testing for concrete force-law classes.
+    """
+
+    inertia: float
+    shaft_speed_coefficient: float = 0.0
+    axial_speed_coefficient: float = 0.0
+
+    def __post_init__(self) -> None:
+        for name, value in (
+            ("inertia", self.inertia),
+            ("shaft_speed_coefficient", self.shaft_speed_coefficient),
+            ("axial_speed_coefficient", self.axial_speed_coefficient),
+        ):
+            if not isfinite(value):
+                raise ValueError(f"{name} must be finite.")
+        if self.inertia < 0.0:
+            raise ValueError("inertia must be non-negative.")
+        if (
+            self.inertia > 0.0
+            and self.shaft_speed_coefficient == 0.0
+            and self.axial_speed_coefficient == 0.0
+        ):
+            raise ValueError(
+                "A nonzero kinetic mode requires a shaft or axial velocity coefficient."
+            )
+
+    def local_speed(self, *, shaft_speed: float, axial_speed: float) -> float:
+        return (
+            self.shaft_speed_coefficient * shaft_speed
+            + self.axial_speed_coefficient * axial_speed
+        )
+
+
+@runtime_checkable
+class KineticPulleyElement(Protocol):
+    """Optional kinetic-energy contract for a mounted pulley element."""
+
+    def kinetic_modes(
+        self, context: "PulleyActuationContext"
+    ) -> tuple[PulleyKineticMode, ...]:
+        """Return the element's physical velocity modes at one configuration."""
+
+
+@dataclass(frozen=True, slots=True)
 class PulleyClosureChannels:
     """Closure unknowns belonging to one mounted pulley shaft."""
 
@@ -99,22 +152,37 @@ class PulleyClosureChannels:
 
 @dataclass(frozen=True, slots=True)
 class HelicalCouplingState:
-    """Live local state supplied by a pulley-mounted helical coupling.
-
-    The opening coordinate is always ``q = -x`` for local axial coordinate
-    ``x`` positive closing. The mapping is not a tunable actuator parameter.
-    """
+    """Live local state supplied by a pulley-mounted helical coupling."""
 
     kinematics: HelixShiftKinematics
+    opening_per_axial_position: float = -1.0
+    opening_offset: float = 0.0
 
     def __post_init__(self) -> None:
         if not isinstance(self.kinematics, HelixShiftKinematics):
             raise TypeError("kinematics must be a HelixShiftKinematics instance.")
+        if (
+            not isfinite(self.opening_per_axial_position)
+            or self.opening_per_axial_position == 0.0
+        ):
+            raise ValueError("opening_per_axial_position must be finite and nonzero.")
+        if not isfinite(self.opening_offset):
+            raise ValueError("opening_offset must be finite.")
+
+    @property
+    def dtheta_daxial(self) -> float:
+        return self.kinematics.dtheta_dopening * self.opening_per_axial_position
+
+    @property
+    def d2theta_daxial2(self) -> float:
+        return self.kinematics.d2theta_dopening2 * self.opening_per_axial_position**2
 
     def validate_local_position(self, axial_position: float) -> None:
         if not isfinite(axial_position):
             raise ValueError("axial_position must be finite.")
-        expected_opening = -axial_position
+        expected_opening = (
+            self.opening_offset + self.opening_per_axial_position * axial_position
+        )
         if not isclose(
             self.kinematics.opening_travel,
             expected_opening,
@@ -122,7 +190,7 @@ class HelicalCouplingState:
             abs_tol=1.0e-12,
         ):
             raise ValueError(
-                "helical coupling opening travel must match q = -axial_position."
+                "helical coupling profile coordinate does not match its local axial mapping."
             )
 
 
@@ -130,21 +198,26 @@ class HelicalCouplingState:
 class PulleyActuationContext:
     """All local information available to a mounted actuator at one RHS point.
 
-    Basic laws such as springs and centrifugal ramps consume only the local
-    position/speed fields.  A helical torque-reaction law additionally consumes
+    ``time`` is the physical evaluation time and is required for every
+    context, even when the installed actuator is time independent. Basic laws
+    such as springs and centrifugal ramps consume only the local
+    position/speed fields. A helical torque-reaction law additionally consumes
     the host closure channels and :attr:`helical_coupling`.
     """
 
+    time: float
     axial_position: float
     axial_speed: float
     shaft_speed: float
     shift_speed: float = 0.0
+    axial_acceleration: AffineClosureScalar | None = None
     closure_channels: PulleyClosureChannels | None = None
     helical_coupling: HelicalCouplingState | None = None
     movable_member_rotational_inertia: float | None = None
 
     def __post_init__(self) -> None:
         for name, value in (
+            ("time", self.time),
             ("axial_position", self.axial_position),
             ("axial_speed", self.axial_speed),
             ("shaft_speed", self.shaft_speed),
@@ -156,6 +229,12 @@ class PulleyActuationContext:
             self.closure_channels, PulleyClosureChannels
         ):
             raise TypeError("closure_channels must be a PulleyClosureChannels or None.")
+        if self.axial_acceleration is not None and not isinstance(
+            self.axial_acceleration, AffineClosureScalar
+        ):
+            raise TypeError(
+                "axial_acceleration must be an AffineClosureScalar or None."
+            )
         if self.helical_coupling is not None:
             if not isinstance(self.helical_coupling, HelicalCouplingState):
                 raise TypeError(

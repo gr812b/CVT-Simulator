@@ -1,6 +1,12 @@
 """CINDER: mechanics-first dynamic modelling for belt CVTs."""
 
-__version__ = "0.1.0"
+from importlib.metadata import PackageNotFoundError, version as _distribution_version
+
+try:
+    __version__ = _distribution_version("cinder-cvt")
+except PackageNotFoundError:
+    # Source trees are expected to be installed (normally editable) before use.
+    __version__ = "0+unknown"
 
 from .core import StateBlock, StateLayout, StatePatch
 from .execution.hybrid import ComposedCVTHybridSystem, ComposedCVTMode, integrate_hybrid

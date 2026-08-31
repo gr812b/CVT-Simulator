@@ -38,6 +38,8 @@ def build_cvt_contact_events(
     minimum_shift: float | None = None,
     maximum_shift: float | None = None,
     include_shift_boundary_events: bool = True,
+    include_primary_normal_floor: bool = True,
+    include_secondary_normal_floor: bool = True,
 ) -> tuple[HybridEvent, ...]:
     """Build only the events meaningful to the active engaged contact regime.
 
@@ -52,20 +54,25 @@ def build_cvt_contact_events(
     if relative_acceleration_tolerance <= 0.0:
         raise ValueError("relative_acceleration_tolerance must be strictly positive.")
 
-    events: list[HybridEvent] = [
-        HybridEvent(
-            name=CVTContactEvent.PRIMARY_NORMAL_FLOOR.value,
-            function=lambda time, vector: evaluate(time, vector).normal_primary
-            - switching_settings.normal_resultant_floor,
-            direction=-1.0,
-        ),
-        HybridEvent(
-            name=CVTContactEvent.SECONDARY_NORMAL_FLOOR.value,
-            function=lambda time, vector: evaluate(time, vector).normal_secondary
-            - switching_settings.normal_resultant_floor,
-            direction=-1.0,
-        ),
-    ]
+    events: list[HybridEvent] = []
+    if include_primary_normal_floor:
+        events.append(
+            HybridEvent(
+                name=CVTContactEvent.PRIMARY_NORMAL_FLOOR.value,
+                function=lambda time, vector: evaluate(time, vector).normal_primary
+                - switching_settings.normal_resultant_floor,
+                direction=-1.0,
+            )
+        )
+    if include_secondary_normal_floor:
+        events.append(
+            HybridEvent(
+                name=CVTContactEvent.SECONDARY_NORMAL_FLOOR.value,
+                function=lambda time, vector: evaluate(time, vector).normal_secondary
+                - switching_settings.normal_resultant_floor,
+                direction=-1.0,
+            )
+        )
     if include_shift_boundary_events:
         if minimum_shift is None or maximum_shift is None:
             raise ValueError(
@@ -127,19 +134,6 @@ def build_cvt_contact_events(
         ) -> float:
             evaluation = evaluate(time, vector)
             relative_speed = evaluation.relative_motion.relative_speed_at(interface)
-            relative_acceleration = evaluation.relative_motion.relative_acceleration_at(
-                interface
-            )
-            # A kinetic trajectory can only touch v_rel = 0 and return in the
-            # same Coulomb direction.  That is not a physical re-stick or a
-            # slip-direction reversal.  Re-arm the event at the exact root so
-            # a segmented integrator does not create a no-op transition.
-            if (
-                abs(relative_speed) <= relative_speed_tolerance
-                and direction_sign * relative_acceleration
-                > relative_acceleration_tolerance
-            ):
-                return relative_speed_tolerance
             return direction_sign * relative_speed
 
         events.append(

@@ -1,6 +1,6 @@
-# CINDER public simulation-document JSON Schema
+# CINDER simulation-document JSON Schema
 
-CINDER exposes the complete version-one `cinder_simulation_case` document as
+CINDER exposes the version-one `cinder_composed_simulation_case` document as
 standard JSON Schema:
 
 ```python
@@ -9,16 +9,17 @@ from cinder.contracts import simulation_case_document_json_schema
 schema = simulation_case_document_json_schema()
 ```
 
-The schema is an adapter over CINDER's stable public document contract. It does
-not inspect or expose mechanics dataclasses. It is suitable for:
+The schema describes the public JSON shape, discriminators, and basic scalar
+bounds. It deliberately does not expose internal mechanics dataclasses.
 
-- frontend TypeScript generation;
-- non-Python API clients;
-- JSON-editor tooling;
-- contract snapshots in CI.
+Useful consumers include:
 
-The canonical document remains SI-only. Decode/validation remains authoritative
-for constructor-level and engineering validation:
+- non-Python clients;
+- JSON editors and configuration tools;
+- generated client types;
+- saved-case validation before decode.
+
+Decode/validation remains authoritative for engineering checks:
 
 ```python
 from cinder.contracts import (
@@ -27,7 +28,8 @@ from cinder.contracts import (
 )
 ```
 
-The schema describes JSON shape, supported discriminators, and basic scalar
-bounds. CINDER validation still detects mechanics-specific invalidity such as
-incompatible geometry, incomplete ramp/helix travel, and operating-limit
-inconsistency.
+CINDER validation can reject mechanics-specific invalidity that a structural
+JSON Schema alone cannot establish, such as incompatible pulley geometry or
+invalid mechanism travel.
+
+All canonical document values are SI.

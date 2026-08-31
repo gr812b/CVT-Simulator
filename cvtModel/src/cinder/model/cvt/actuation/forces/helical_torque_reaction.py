@@ -1,16 +1,15 @@
-"""Helical torque-reaction pulley element.
-
-The helix is implemented as a pulley-mounted affine element. It contributes a
-local closing force and the movable member's shaft-torque inertia. The CVT
-balance rows do not special-case where the helix is mounted.
-"""
+"""Pulley-agnostic helical torque-reaction element."""
 
 from __future__ import annotations
 
 from dataclasses import dataclass
 from math import isfinite
 
-from cinder.model.cvt.closure import AffineClosureScalar, ClosureGains, ClosureUnknown
+from cinder.model.cvt.closure import (
+    AffineClosureScalar,
+    ClosureGains,
+    ClosureUnknowns,
+)
 
 from ..types import (
     ActuationContribution,
@@ -38,10 +37,19 @@ class HelicalTorqueReactionSpec:
 
 
 class HelicalTorqueReactionForce:
-    """Pulley-agnostic helix element.
+    """Dynamic helix element that contributes both clamp and shaft inertia.
 
-    The closing force is positive in the host pulley's closing direction. The
-    shaft torque is positive in the host shaft's positive rotation direction.
+    Let ``theta(x)`` be the relative movable-member angle in the same signed
+    rotational sense as the host shaft, with local axial ``x`` positive
+    closing. The ideal helix contact converts its reacted torque through
+    ``dtheta/dx``. For a movable-member inertia ``I_M`` the reacted torque is
+
+        tau_h = f*tau_belt + k_theta(theta_pre - theta)
+                - I_M [alpha + theta_ddot],
+
+    and the local closing force is ``F_h = tau_h dtheta/dx``. The same
+    ``I_M[alpha + theta_ddot]`` appears with opposite sign as a shaft inertial
+    reaction, so the axial and rotational equations cannot silently diverge.
     """
 
     def __init__(self, *, spec: HelicalTorqueReactionSpec) -> None:
@@ -69,21 +77,24 @@ class HelicalTorqueReactionForce:
         terms = self._terms(context)
         channels = terms.channels
         inertia = terms.movable_member_inertia
+        motion_ratio = terms.motion_ratio
         kinematics = terms.kinematics
-        force_per_reacted_torque = terms.force_per_reacted_torque
         return (
             ActuationContribution(
                 key="helix_torsional_preload",
-                label="Helix torsional preload",
-                relation=AffineClosureScalar(
-                    bias=force_per_reacted_torque * terms.spring_torque
-                ),
+                label="Helix torsional spring",
+                relation=AffineClosureScalar(bias=motion_ratio * terms.spring_torque),
             ),
             ActuationContribution(
                 key="helix_shift_speed_curvature_force",
                 label="Helix curvature force from shift speed",
                 relation=AffineClosureScalar(
-                    bias=force_per_reacted_torque * terms.curvature_torque
+                    bias=(
+                        -motion_ratio
+                        * inertia
+                        * kinematics.d2theta_ds2
+                        * context.shift_speed**2
+                    )
                 ),
             ),
             ActuationContribution(
@@ -91,10 +102,7 @@ class HelicalTorqueReactionForce:
                 label="Helix force from shaft acceleration",
                 relation=AffineClosureScalar(
                     gains=ClosureGains.from_by_unknown(
-                        {
-                            channels.shaft_angular_acceleration: -force_per_reacted_torque
-                            * inertia
-                        }
+                        {channels.shaft_angular_acceleration: (-motion_ratio * inertia)}
                     )
                 ),
             ),
@@ -102,31 +110,53 @@ class HelicalTorqueReactionForce:
                 key="helix_shift_acceleration_force",
                 label="Helix force from shift acceleration",
                 relation=AffineClosureScalar(
-                    gains=ClosureGains.from_by_unknown(
-                        {
-                            ClosureUnknown.SHIFT_ACCELERATION: (
-                                force_per_reacted_torque
-                                * inertia
-                                * kinematics.dtheta_ds
-                            )
-                        }
+                    gains=ClosureGains(
+                        shift_acceleration=(
+                            -motion_ratio * inertia * kinematics.dtheta_ds
+                        )
                     )
                 ),
             ),
             ActuationContribution(
-                key="helix_reacted_shaft_torque_force",
-                label="Helix force from reacted shaft torque",
+                key="helix_reacted_belt_torque_force",
+                label="Helix force from movable-face belt torque",
                 relation=AffineClosureScalar(
                     gains=ClosureGains.from_by_unknown(
                         {
                             channels.shaft_torque: (
-                                force_per_reacted_torque
-                                * self._spec.movable_member_torque_fraction
+                                motion_ratio * self._spec.movable_member_torque_fraction
                             )
                         }
                     )
                 ),
             ),
+        )
+
+    def compressive_contact_margin(
+        self,
+        *,
+        context: PulleyActuationContext,
+        unknowns: ClosureUnknowns,
+    ) -> float:
+        """Return signed reacted torque on the selected helix flank."""
+
+        return float(self._terms(context).reacted_torque.evaluate(unknowns))
+
+    def has_compressive_contact(
+        self,
+        *,
+        context: PulleyActuationContext,
+        unknowns: ClosureUnknowns,
+        tolerance: float = 0.0,
+    ) -> bool:
+        if not isfinite(tolerance) or tolerance < 0.0:
+            raise ValueError("tolerance must be finite and non-negative.")
+        return (
+            self.compressive_contact_margin(
+                context=context,
+                unknowns=unknowns,
+            )
+            >= -tolerance
         )
 
     def _terms(self, context: PulleyActuationContext) -> "_HelixTerms":
@@ -147,42 +177,44 @@ class HelicalTorqueReactionForce:
             )
 
         kinematics = coupling.kinematics
+        motion_ratio = coupling.dtheta_daxial
+        if not isfinite(motion_ratio) or motion_ratio == 0.0:
+            raise ValueError("Helical coupling requires finite nonzero dtheta/dx.")
+
         spring_torque = self._spec.torsional_stiffness * (
-            self._spec.initial_twist + kinematics.theta
+            self._spec.initial_twist - kinematics.theta
         )
-        curvature_torque = inertia * kinematics.d2theta_ds2 * context.shift_speed**2
-        force_per_reacted_torque = kinematics.dtheta_dopening
-        closing_force = AffineClosureScalar(
-            bias=force_per_reacted_torque * (spring_torque + curvature_torque),
-            gains=ClosureGains.from_by_unknown(
-                {
-                    channels.shaft_angular_acceleration: -force_per_reacted_torque
-                    * inertia,
-                    ClosureUnknown.SHIFT_ACCELERATION: (
-                        force_per_reacted_torque * inertia * kinematics.dtheta_ds
-                    ),
-                    channels.shaft_torque: (
-                        force_per_reacted_torque
-                        * self._spec.movable_member_torque_fraction
-                    ),
-                }
+        curvature_angular_acceleration = kinematics.d2theta_ds2 * context.shift_speed**2
+
+        reacted_torque = AffineClosureScalar(
+            bias=(spring_torque - inertia * curvature_angular_acceleration),
+            gains=(
+                ClosureGains.from_by_unknown(
+                    {
+                        channels.shaft_angular_acceleration: -inertia,
+                        channels.shaft_torque: self._spec.movable_member_torque_fraction,
+                    }
+                )
+                + ClosureGains(shift_acceleration=(-inertia * kinematics.dtheta_ds))
             ),
         )
+        closing_force = reacted_torque.scaled(motion_ratio)
+
         movable_member_shaft_torque = AffineClosureScalar(
-            bias=inertia * kinematics.d2theta_ds2 * context.shift_speed**2,
-            gains=ClosureGains.from_by_unknown(
-                {
-                    channels.shaft_angular_acceleration: -inertia,
-                    ClosureUnknown.SHIFT_ACCELERATION: inertia * kinematics.dtheta_ds,
-                }
+            bias=(-inertia * curvature_angular_acceleration),
+            gains=(
+                ClosureGains.from_by_unknown(
+                    {channels.shaft_angular_acceleration: -inertia}
+                )
+                + ClosureGains(shift_acceleration=(-inertia * kinematics.dtheta_ds))
             ),
         )
         return _HelixTerms(
             closing_force=closing_force,
+            reacted_torque=reacted_torque,
             movable_member_shaft_torque=movable_member_shaft_torque,
-            force_per_reacted_torque=force_per_reacted_torque,
+            motion_ratio=motion_ratio,
             spring_torque=spring_torque,
-            curvature_torque=curvature_torque,
             channels=channels,
             movable_member_inertia=inertia,
             kinematics=kinematics,
@@ -192,10 +224,10 @@ class HelicalTorqueReactionForce:
 @dataclass(frozen=True, slots=True)
 class _HelixTerms:
     closing_force: AffineClosureScalar
+    reacted_torque: AffineClosureScalar
     movable_member_shaft_torque: AffineClosureScalar
-    force_per_reacted_torque: float
+    motion_ratio: float
     spring_torque: float
-    curvature_torque: float
     channels: object
     movable_member_inertia: float
     kinematics: object

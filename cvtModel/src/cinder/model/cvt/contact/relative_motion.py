@@ -32,9 +32,10 @@ class SlipDirection(str, Enum):
 
         v_rel = v_b - r omega.
 
-    It is deliberately a kinematic fact, not a friction-torque sign. The
-    primary and secondary map the same kinematic direction to opposite
-    action--reaction torque roles, which is handled by ``KineticSlipSpecification``.
+    It is deliberately a kinematic fact, not a pulley-specific torque sign.
+    With the global physical definition ``dF_t = lambda dN``, the same mapping
+    from relative-motion direction to signed ``lambda`` is used on both
+    pulleys.
     """
 
     BELT_LEADS_PULLEY = "belt_leads_pulley"

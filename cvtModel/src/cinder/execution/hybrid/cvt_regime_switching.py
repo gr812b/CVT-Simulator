@@ -8,14 +8,18 @@ side: each reset is returned through ``HybridTransition.successor_state``.
 
 from __future__ import annotations
 
-from dataclasses import replace
+from math import isfinite
 from typing import TYPE_CHECKING
 
 import numpy as np
 from numpy.typing import NDArray
 
 from cinder.model.cvt.contact import ContactInterface, ContactRegime
-from cinder.model.cvt.dynamics.deadzone import DeadzoneDynamicsEvaluator
+from cinder.model.cvt.dynamics.deadzone import (
+    DeadzoneDynamicsEvaluator,
+    build_deadzone_snapshot,
+)
+from cinder.model.cvt.dynamics.deadzone.free import solve_deadzone_primary_free
 from cinder.model.cvt.dynamics.shift_constraints import EngagedShiftConstraint
 from cinder.model.system.ports import CVTShaftBoundaryValues
 
@@ -23,6 +27,11 @@ from .cvt_contact_events import CVTContactEvent
 from .cvt_contact_switching import (
     CVTContactSwitchSettings,
     resolve_cvt_contact_transition,
+)
+from .cvt_impact import (
+    CVTImpactProjection,
+    CVTVelocityTopology,
+    project_cvt_velocity_topology,
 )
 from .cvt_operating_limits import CVTShiftOperatingLimits
 from .cvt_regime import CVTEngagementState, CVTOperatingRegime, CVTShiftConstraint
@@ -34,12 +43,10 @@ if TYPE_CHECKING:
     from .cvt_contact import CVTContactEvaluation, EngagedCVTContactEvaluator
 
 
-_PRIMARY_CLAMP_EVENT_TOLERANCE = 1.0e-8
-
-
 def classify_initial_cvt_regime(
     *,
     evaluator: "EngagedCVTContactEvaluator",
+    time: float,
     state: CVTState,
     limits: CVTShiftOperatingLimits,
     switching_settings: CVTContactSwitchSettings,
@@ -54,22 +61,28 @@ def classify_initial_cvt_regime(
     reaction admissibility before integration begins.
     """
 
+    if not isfinite(time):
+        raise ValueError("time must be finite.")
     _validate_state_within_limits(state=state, limits=limits)
     s = state.shift_position
-    if s == limits.lower_stop_shift:
-        return CVTOperatingRegime.deadzone_lower_stop()
-    if s < limits.engagement_shift or (
-        s == limits.engagement_shift and state.shift_speed < 0.0
-    ):
-        return CVTOperatingRegime.deadzone_free()
+    if limits.has_deadzone:
+        if s == limits.lower_stop_shift:
+            return CVTOperatingRegime.deadzone_lower_stop()
+        if s < limits.engagement_shift or (
+            s == limits.engagement_shift and state.shift_speed < 0.0
+        ):
+            return CVTOperatingRegime.deadzone_free()
 
-    contact = evaluator.classify_initial_regime(
+    contact = evaluator.classify_initial_regime_at_time(
+        time=time,
         state=state,
         switching_settings=switching_settings,
         shaft_boundaries=shaft_boundaries,
     )
     if s == limits.upper_stop_shift:
         return CVTOperatingRegime.engaged_upper_stop(contact_regime=contact)
+    if not limits.has_deadzone and s == limits.lower_stop_shift:
+        return CVTOperatingRegime.engaged_low_ratio_seat(contact_regime=contact)
     return CVTOperatingRegime.engaged_free(contact_regime=contact)
 
 
@@ -93,6 +106,8 @@ def resolve_cvt_operating_transition(
     into the same free/upper-stop operating constraint.
     """
 
+    if not isfinite(time):
+        raise ValueError("time must be finite.")
     state = CVTState.from_vector(vector)
     _validate_state_within_limits(state=state, limits=limits, tolerance=1.0e-8)
     fired = set(fired_event_names)
@@ -102,7 +117,12 @@ def resolve_cvt_operating_transition(
     )
 
     if old_regime.engagement is CVTEngagementState.DEADZONE:
+        if not limits.has_deadzone:
+            raise RuntimeError(
+                "Deadzone transition requested for a zero-width deadzone topology."
+            )
         return _resolve_deadzone_transition(
+            time=time,
             state=state,
             vector=vector,
             old_regime=old_regime,
@@ -134,7 +154,13 @@ def project_inelastic_shift_constraint(
     vector: NDArray[np.float64],
     shift_position: float,
 ) -> NDArray[np.float64]:
-    """Project any fixed-shift boundary arrival to a perfectly inelastic axial state."""
+    """Snap an already constrained/evaluation state onto an exact shift boundary.
+
+    This is *not* the physical impact map.  Finite-speed arrivals use the
+    mass-metric projection in :mod:`cvt_impact`.  This helper is used after a
+    constraint is already active (or for endpoint admissibility checks), where
+    ``s_dot`` should be zero apart from numerical roundoff.
+    """
 
     projected = np.array(vector, dtype=float, copy=True)
     projected[3] = float(shift_position)
@@ -142,37 +168,58 @@ def project_inelastic_shift_constraint(
     return projected
 
 
-def primary_independent_clamping_force_at_engagement(
+def primary_contact_separation_at_engagement(
     *,
     evaluator: "EngagedCVTContactEvaluator",
-    state: CVTState,
+    time: float,
+    vector: NDArray[np.float64],
+    contact_regime: ContactRegime,
     limits: CVTShiftOperatingLimits,
+    switching_settings: CVTContactSwitchSettings,
     shaft_boundaries: CVTShaftBoundaryValues | None = None,
-) -> float:
-    """Return the primary actuator's signed force at the engagement boundary.
+) -> tuple[float, float, float]:
+    """Return the seated-primary separation indicator and its two margins.
 
-    This is intentionally the primary mechanism's own known force, excluding
-    the engaged belt normal resultant.  The latter may oppose primary closure
-    while a belt is seated, but it does not by itself authorize a transition to
-    deadzone.  The current conventional primary is a known-force actuator; a
-    force law with closure-unknown gains requires an explicit release model.
+    Primary disengagement is a unilateral contact decision, not an actuator
+    sign test. At the low-ratio seat it is permitted only when both
+
+      * the solved physical primary normal resultant has fallen to its floor;
+      * the primary, re-evaluated with belt contact removed, tends to accelerate
+        in the opening direction (negative global ``s`` acceleration).
+
+    The returned scalar has force units and is non-positive only when both
+    conditions hold. The acceleration condition is converted to an equivalent
+    axial-force margin using the primary local shift-inertia gain, so the
+    ``max`` combines like-dimensional quantities. This produces one meaningful
+    hybrid event rather than a normal-force event followed by a no-op guard.
     """
 
-    boundary_state = replace(
-        state,
-        shift_position=limits.engagement_shift,
-        shift_speed=0.0,
+    projected = project_inelastic_shift_constraint(
+        vector=vector, shift_position=limits.engagement_shift
     )
-    snapshot = evaluator.model.snapshot(
-        state=boundary_state, shaft_boundaries=shaft_boundaries
+    seat = evaluator.evaluate_vector(
+        time=time,
+        vector=projected,
+        regime=contact_regime,
+        shift_constraint=EngagedShiftConstraint.LOW_RATIO_SEAT,
+        shaft_boundaries=shaft_boundaries,
     )
-    if any(value != 0.0 for value in snapshot.primary_actuation.gains.as_tuple()):
-        raise NotImplementedError(
-            "Primary-clamp disengagement gating requires an independently known "
-            "primary actuator force. Add an explicit release law before using a "
-            "primary actuation model with closure-unknown gains."
-        )
-    return snapshot.primary_actuation.bias
+    normal_margin = seat.normal_primary - switching_settings.normal_resultant_floor
+
+    contact_free_state = CVTState.from_vector(projected)
+    deadzone_snapshot = build_deadzone_snapshot(
+        time=time,
+        model=evaluator.model,
+        state=contact_free_state,
+        shaft_boundaries=shaft_boundaries,
+    )
+    _alpha_p, opening_acceleration = solve_deadzone_primary_free(deadzone_snapshot)
+    opening_force_margin = (
+        deadzone_snapshot.primary_axial_inertia.local_shift_acceleration_gain
+        * opening_acceleration
+    )
+    indicator = max(normal_margin, opening_force_margin)
+    return float(indicator), float(seat.normal_primary), float(opening_acceleration)
 
 
 def capture_belt_to_secondary_at_disengagement(
@@ -181,44 +228,30 @@ def capture_belt_to_secondary_at_disengagement(
     state: CVTState,
     limits: CVTShiftOperatingLimits,
     shaft_boundaries: CVTShaftBoundaryValues | None = None,
-) -> NDArray[np.float64]:
-    """Apply the temporary perfectly inelastic belt-secondary capture map.
+) -> CVTImpactProjection:
+    """Enter deadzone with a momentum-consistent belt/secondary capture.
 
-    Deadzone assumes the belt remains locked to the secondary.  If a slipping
-    secondary reaches primary disengagement, this map conserves angular
-    momentum about the secondary shaft for a lumped belt mass at the secondary
-    effective radius, then imposes ``v_b = r_s omega_s``.  The approximation is
-    explicit here so the later neutral RHS can replace it without touching the
-    transition graph.
+    This generalized projection also transfers any secondary movable-sheave
+    helix-relative angular momentum into the secondary shaft when the closed
+    stop removes that relative motion.  It replaces the old scalar lumped
+    inertia average, which could not account for helix cross momentum.
     """
 
-    boundary_state = replace(state, shift_position=limits.engagement_shift)
-    snapshot = evaluator.model.snapshot(
-        state=boundary_state, shaft_boundaries=shaft_boundaries
+    projection = project_cvt_velocity_topology(
+        model=evaluator.model,
+        vector=state.as_vector(),
+        shift_position=limits.engagement_shift,
+        from_topology=CVTVelocityTopology.ENGAGED,
+        to_topology=CVTVelocityTopology.DEADZONE,
+        shaft_boundaries=shaft_boundaries,
+        lock_secondary_belt=True,
     )
-    radius = snapshot.geometry.secondary.effective
-    belt_mass = snapshot.belt_transport_mass
-    secondary_inertia = (
-        snapshot.secondary_absolute_rotational_inertia
-        + snapshot.shaft_boundaries.secondary.equivalent_inertia
-    )
-    combined_inertia = secondary_inertia + belt_mass * radius * radius
-    if combined_inertia <= 0.0:
-        raise RuntimeError("Deadzone belt-secondary capture has non-positive inertia.")
-
-    captured_secondary_speed = (
-        secondary_inertia * state.secondary_angular_speed
-        + belt_mass * radius * state.belt_speed
-    ) / combined_inertia
-
-    projected = boundary_state.as_vector().copy()
-    projected[1] = captured_secondary_speed
-    projected[2] = radius * captured_secondary_speed
-    return projected
+    return projection
 
 
 def _resolve_deadzone_transition(
     *,
+    time: float,
     state: CVTState,
     vector: NDArray[np.float64],
     old_regime: CVTOperatingRegime,
@@ -236,25 +269,31 @@ def _resolve_deadzone_transition(
     if old_regime.shift_constraint is CVTShiftConstraint.FREE:
         if CVTRegimeEvent.LOWER_STOP_REACHED in geometry_events:
             return _resolve_lower_stop_arrival(
+                time=time,
                 vector=vector,
                 limits=limits,
                 deadzone_evaluator=deadzone_evaluator,
                 shaft_boundaries=shaft_boundaries,
             )
         if CVTRegimeEvent.ENGAGEMENT_REACHED in geometry_events:
-            boundary_state = CVTState.from_vector(
-                project_inelastic_shift_constraint(
-                    vector=vector,
-                    shift_position=limits.engagement_shift,
-                )
+            # Rigid contact activates secondary axial/helix kinematics that do
+            # not exist in deadzone.  Carry the incoming generalized momentum
+            # into that larger moving set instead of copying s_dot unchanged,
+            # which would create kinetic energy.  The pre-existing
+            # belt-secondary lock remains active through the capture.
+            capture = project_cvt_velocity_topology(
+                model=evaluator.model,
+                vector=vector,
+                shift_position=limits.engagement_shift,
+                from_topology=CVTVelocityTopology.DEADZONE,
+                to_topology=CVTVelocityTopology.ENGAGED,
+                shaft_boundaries=shaft_boundaries,
+                lock_secondary_belt=True,
             )
-            # Engagement is reached while closing.  The axial velocity is not
-            # an impact target, so restore the event velocity after using the
-            # common boundary-position projection above.
-            engaged_vector = boundary_state.as_vector().copy()
-            engaged_vector[4] = vector[4]
+            engaged_vector = capture.successor_state
             engaged_state = CVTState.from_vector(engaged_vector)
-            contact = evaluator.classify_initial_regime(
+            contact = evaluator.classify_initial_regime_at_time(
+                time=time,
                 state=engaged_state,
                 switching_settings=switching_settings,
                 shaft_boundaries=shaft_boundaries,
@@ -262,6 +301,10 @@ def _resolve_deadzone_transition(
             return HybridTransition(
                 next_mode=CVTOperatingRegime.engaged_free(contact_regime=contact),
                 reason="primary_closed_into_engaged_contact",
+                metadata={
+                    **capture.metadata(),
+                    "capture": "deadzone_to_engaged_mass_metric_projection",
+                },
                 successor_state=engaged_state.as_vector(),
             )
         raise RuntimeError(
@@ -282,6 +325,7 @@ def _resolve_deadzone_transition(
 
 def _resolve_lower_stop_arrival(
     *,
+    time: float,
     vector: NDArray[np.float64],
     limits: CVTShiftOperatingLimits,
     deadzone_evaluator: DeadzoneDynamicsEvaluator,
@@ -295,11 +339,19 @@ def _resolve_lower_stop_arrival(
     endpoint would never produce a downward crossing event.
     """
 
-    projected = project_inelastic_shift_constraint(
+    impact = project_cvt_velocity_topology(
+        model=deadzone_evaluator.model,
         vector=vector,
         shift_position=limits.lower_stop_shift,
+        from_topology=CVTVelocityTopology.DEADZONE,
+        to_topology=CVTVelocityTopology.DEADZONE,
+        shaft_boundaries=shaft_boundaries,
+        stop_shift_velocity=True,
+        lock_secondary_belt=True,
     )
-    evaluation = deadzone_evaluator.evaluate_lower_stop(
+    projected = impact.successor_state
+    evaluation = deadzone_evaluator.evaluate_lower_stop_at_time(
+        time=time,
         state=CVTState.from_vector(projected),
         lower_stop_shift=limits.lower_stop_shift,
         shaft_boundaries=shaft_boundaries,
@@ -310,7 +362,8 @@ def _resolve_lower_stop_arrival(
 
     metadata = {
         "lower_stop_reaction": reaction,
-        "impact": "perfectly_inelastic_axial_projection",
+        "impact": "perfectly_inelastic_mass_metric_projection",
+        **impact.metadata(),
     }
     if reaction < 0.0:
         return HybridTransition(
@@ -341,11 +394,12 @@ def _resolve_engaged_transition(
     switching_settings: CVTContactSwitchSettings,
     shaft_boundaries: CVTShaftBoundaryValues | None = None,
 ) -> HybridTransition[CVTOperatingRegime]:
-    """Resolve one engaged event without letting belt reaction select neutral.
+    """Resolve one engaged event with unilateral seat/contact separation.
 
-    Free engagement first reaches the low-ratio seat at ``s_engage``.  Only a
-    later loss of the primary actuator's own closing force releases that seat
-    to deadzone.  Contact events remain entirely inside the engaged closure.
+    Free engagement first reaches the low-ratio seat at ``s_engage``. The seat
+    releases to deadzone only when primary normal support is exhausted *and*
+    the contact-free primary tends to accelerate open. Other contact events
+    remain inside the engaged closure.
     """
 
     assert old_regime.contact_regime is not None
@@ -375,12 +429,14 @@ def _resolve_engaged_transition(
             )
 
     if old_regime.shift_constraint is CVTShiftConstraint.LOW_RATIO_SEAT:
-        if CVTRegimeEvent.PRIMARY_CLAMP_LOST in geometry_events:
+        if CVTRegimeEvent.PRIMARY_CONTACT_SEPARATION in geometry_events:
             return _resolve_low_ratio_seat_disengagement(
+                time=time,
                 vector=vector,
                 old_contact_regime=old_regime.contact_regime,
                 limits=limits,
                 evaluator=evaluator,
+                switching_settings=switching_settings,
                 shaft_boundaries=shaft_boundaries,
             )
         if CVTRegimeEvent.LOW_RATIO_SEAT_RELEASE in geometry_events:
@@ -431,9 +487,37 @@ def _resolve_engaged_transition(
             metadata=contact_transition.metadata,
         )
     assert contact_transition.next_mode is not None
+    next_contact_regime = contact_transition.next_mode
+
+    # A discrete contact-topology change can jump the recovered reaction of an
+    # already-active unilateral seat/stop across zero. Recheck the successor
+    # branch at the same event time so the next segment never starts with a
+    # constraint that would have to pull rather than push.
+    constraint_release = _constraint_release_after_contact_transition(
+        time=time,
+        vector=vector,
+        shift_constraint=old_regime.shift_constraint,
+        contact_regime=next_contact_regime,
+        evaluator=evaluator,
+        shaft_boundaries=shaft_boundaries,
+    )
+    if constraint_release is not None:
+        release_mode, release_reason, reaction_name, reaction_value = constraint_release
+        return HybridTransition(
+            next_mode=release_mode,
+            reason=release_reason,
+            metadata={
+                **contact_transition.metadata,
+                "contact_transition_reason": contact_transition.reason,
+                reaction_name: reaction_value,
+                "constraint_release": "contact_topology_changed_unilateral_reaction_sign",
+            },
+            successor_state=np.array(vector, dtype=float, copy=True),
+        )
+
     next_mode = _engaged_regime_for_constraint(
         constraint=old_regime.shift_constraint,
-        contact_regime=contact_transition.next_mode,
+        contact_regime=next_contact_regime,
     )
     if next_mode == old_regime:
         # A re-stick zero can be a grazing contact-velocity root rather than a
@@ -457,6 +541,64 @@ def _resolve_engaged_transition(
     )
 
 
+def _constraint_release_after_contact_transition(
+    *,
+    time: float,
+    vector: NDArray[np.float64],
+    shift_constraint: CVTShiftConstraint,
+    contact_regime: ContactRegime,
+    evaluator: "EngagedCVTContactEvaluator",
+    shaft_boundaries: CVTShaftBoundaryValues | None = None,
+) -> tuple[CVTOperatingRegime, str, str, float] | None:
+    """Release a unilateral shift constraint invalidated by a contact switch."""
+
+    if shift_constraint is CVTShiftConstraint.LOW_RATIO_SEAT:
+        evaluation = evaluator.evaluate_vector(
+            time=time,
+            vector=vector,
+            regime=contact_regime,
+            shift_constraint=EngagedShiftConstraint.LOW_RATIO_SEAT,
+            shaft_boundaries=shaft_boundaries,
+        )
+        reaction = evaluation.low_ratio_seat_reaction
+        if reaction is None:
+            raise RuntimeError(
+                "Low-ratio seat evaluation did not recover a seat reaction after contact transition."
+            )
+        if reaction < 0.0:
+            return (
+                CVTOperatingRegime.engaged_free(contact_regime=contact_regime),
+                "contact_transition_released_low_ratio_seat_by_tensile_reaction",
+                "low_ratio_seat_reaction",
+                float(reaction),
+            )
+        return None
+
+    if shift_constraint is CVTShiftConstraint.UPPER_STOP:
+        evaluation = evaluator.evaluate_vector(
+            time=time,
+            vector=vector,
+            regime=contact_regime,
+            shift_constraint=EngagedShiftConstraint.UPPER_STOP,
+            shaft_boundaries=shaft_boundaries,
+        )
+        reaction = evaluation.upper_stop_reaction
+        if reaction is None:
+            raise RuntimeError(
+                "Upper-stop evaluation did not recover a stop reaction after contact transition."
+            )
+        if reaction < 0.0:
+            return (
+                CVTOperatingRegime.engaged_free(contact_regime=contact_regime),
+                "contact_transition_released_upper_stop_by_tensile_reaction",
+                "upper_stop_reaction",
+                float(reaction),
+            )
+        return None
+
+    return None
+
+
 def _resolve_low_ratio_seat_arrival(
     *,
     time: float,
@@ -468,11 +610,67 @@ def _resolve_low_ratio_seat_arrival(
     switching_settings: CVTContactSwitchSettings,
     shaft_boundaries: CVTShaftBoundaryValues | None = None,
 ) -> HybridTransition[CVTOperatingRegime]:
-    """Enter the low-ratio seat before deciding whether neutral is permitted."""
+    """Resolve return to minimum ratio as a secondary closed-stop impact.
 
-    projected = project_inelastic_shift_constraint(
+    The secondary movable sheave, not the primary, physically reaches a hard
+    stop at this boundary.  For finite opening shift speed the stop arrests the
+    secondary axial/helix motion and transfers its relative angular momentum
+    into the secondary shaft, while the primary is free to separate and carry
+    its remaining axial momentum into deadzone.
+
+    Repeated rigid make/break captures can converge geometrically to zero
+    velocity (the usual Zeno limit of a plastic impact model).  Only once the
+    kinetic energy that would be removed by additionally seating the shared
+    shift coordinate falls below floating-point energy resolution do we close
+    that mathematical limit and enter the ordinary fixed low-ratio seat.
+    """
+
+    lock_primary, lock_secondary = _sticking_belt_locks(old_contact_regime)
+    hypothetical_seat = project_cvt_velocity_topology(
+        model=evaluator.model,
         vector=vector,
         shift_position=limits.engagement_shift,
+        from_topology=CVTVelocityTopology.ENGAGED,
+        to_topology=CVTVelocityTopology.ENGAGED,
+        shaft_boundaries=shaft_boundaries,
+        stop_shift_velocity=True,
+        lock_primary_belt=lock_primary,
+        lock_secondary_belt=lock_secondary,
+    )
+    energy_resolution = (
+        8192.0 * np.finfo(float).eps * max(1.0, hypothetical_seat.pre_kinetic_energy)
+    )
+
+    if hypothetical_seat.dissipated_energy > energy_resolution:
+        # This is a real secondary-stop collision followed by primary
+        # separation, not a shared-coordinate impact.  The deadzone topology
+        # removes secondary axial/helix motion, keeps the primary axial degree
+        # of freedom, and retains the imposed belt-secondary lock.
+        impact = project_cvt_velocity_topology(
+            model=evaluator.model,
+            vector=vector,
+            shift_position=limits.engagement_shift,
+            from_topology=CVTVelocityTopology.ENGAGED,
+            to_topology=CVTVelocityTopology.DEADZONE,
+            shaft_boundaries=shaft_boundaries,
+            lock_secondary_belt=True,
+        )
+        return HybridTransition(
+            next_mode=CVTOperatingRegime.deadzone_free(),
+            reason="secondary_closed_stop_impact_primary_separated_into_deadzone",
+            metadata={
+                **impact.metadata(),
+                "impact": "secondary_closed_stop_mass_metric_projection",
+                "z_to_seat_energy_resolution_J": energy_resolution,
+            },
+            successor_state=impact.successor_state,
+        )
+
+    projected = hypothetical_seat.successor_state
+    contact_events = tuple(
+        name
+        for name in contact_events
+        if name != CVTContactEvent.PRIMARY_NORMAL_FLOOR.value
     )
     contact_regime, contact_transition = _resolve_contact_at_constraint(
         time=time,
@@ -483,6 +681,7 @@ def _resolve_low_ratio_seat_arrival(
         evaluator=evaluator,
         switching_settings=switching_settings,
         shaft_boundaries=shaft_boundaries,
+        ignore_primary_normal_floor=True,
     )
     if contact_transition is not None and contact_transition.terminates:
         return HybridTransition(
@@ -490,7 +689,8 @@ def _resolve_low_ratio_seat_arrival(
             reason=contact_transition.reason,
             metadata={
                 **contact_transition.metadata,
-                "during": "low_ratio_seat_arrival_after_perfectly_inelastic_projection",
+                **hypothetical_seat.metadata(),
+                "during": "low_ratio_seat_z_limit_completion",
             },
             successor_state=projected,
         )
@@ -506,47 +706,51 @@ def _resolve_low_ratio_seat_arrival(
     if seat_reaction is None:  # pragma: no cover - constrained evaluator invariant.
         raise RuntimeError("Low-ratio seat evaluation did not recover a seat reaction.")
 
-    projected_state = CVTState.from_vector(projected)
-    primary_clamp = primary_independent_clamping_force_at_engagement(
-        evaluator=evaluator,
-        state=projected_state,
-        limits=limits,
-        shaft_boundaries=shaft_boundaries,
+    separation_indicator, primary_normal, opening_acceleration = (
+        primary_contact_separation_at_engagement(
+            evaluator=evaluator,
+            time=time,
+            vector=projected,
+            contact_regime=contact_regime,
+            limits=limits,
+            switching_settings=switching_settings,
+            shaft_boundaries=shaft_boundaries,
+        )
     )
     metadata: dict[str, object] = {
         "low_ratio_seat_reaction": seat_reaction,
-        "primary_independent_clamping_force": primary_clamp,
-        "impact": "perfectly_inelastic_axial_projection",
+        "primary_normal_resultant": primary_normal,
+        "contact_free_primary_shift_acceleration": opening_acceleration,
+        "primary_separation_indicator": separation_indicator,
+        "impact": "zero_velocity_z_limit_secondary_stop_seat_completion",
+        "z_to_seat_energy_resolution_J": energy_resolution,
+        **hypothetical_seat.metadata(),
     }
     if contact_transition is not None:
         metadata["contact_transition_reason"] = contact_transition.reason
         metadata.update(contact_transition.metadata)
 
-    # A negative primary mechanism force is the only route from the engaged
-    # low-ratio seat into neutral.  The belt normal reaction is intentionally
-    # diagnostic here, not a substitute disengagement trigger.
-    if primary_clamp < 0.0:
+    if separation_indicator <= 0.0:
+        deadzone_capture = project_cvt_velocity_topology(
+            model=evaluator.model,
+            vector=projected,
+            shift_position=limits.engagement_shift,
+            from_topology=CVTVelocityTopology.ENGAGED,
+            to_topology=CVTVelocityTopology.DEADZONE,
+            shaft_boundaries=shaft_boundaries,
+            lock_secondary_belt=True,
+        )
         return HybridTransition(
             next_mode=CVTOperatingRegime.deadzone_free(),
-            reason="primary_lost_clamp_at_low_ratio_seat_entered_deadzone",
-            metadata={
-                **metadata,
-                "secondary_capture": "perfectly_inelastic_lumped_belt_secondary_capture",
-            },
-            successor_state=capture_belt_to_secondary_at_disengagement(
-                evaluator=evaluator,
-                state=projected_state,
-                limits=limits,
-                shaft_boundaries=shaft_boundaries,
-            ),
+            reason="primary_contact_separated_at_low_ratio_seat_entered_deadzone",
+            metadata={**metadata, **deadzone_capture.metadata()},
+            successor_state=deadzone_capture.successor_state,
         )
 
-    # The seat itself is unilateral.  When it would need to pull open, release
-    # to free *engaged* motion; the primary still has nonnegative clamp.
     if seat_reaction < 0.0:
         return HybridTransition(
             next_mode=CVTOperatingRegime.engaged_free(contact_regime=contact_regime),
-            reason="low_ratio_seat_impact_immediately_released_into_engaged_shift",
+            reason="low_ratio_secondary_stop_immediately_released_into_engaged_shift",
             metadata=metadata,
             successor_state=projected,
         )
@@ -555,7 +759,7 @@ def _resolve_low_ratio_seat_arrival(
         next_mode=CVTOperatingRegime.engaged_low_ratio_seat(
             contact_regime=contact_regime,
         ),
-        reason="low_ratio_seat_reached_perfectly_inelastic_projection",
+        reason="low_ratio_secondary_stop_seated_after_z_limit",
         metadata=metadata,
         successor_state=projected,
     )
@@ -563,43 +767,52 @@ def _resolve_low_ratio_seat_arrival(
 
 def _resolve_low_ratio_seat_disengagement(
     *,
+    time: float,
     vector: NDArray[np.float64],
     old_contact_regime: ContactRegime,
     limits: CVTShiftOperatingLimits,
     evaluator: "EngagedCVTContactEvaluator",
+    switching_settings: CVTContactSwitchSettings,
     shaft_boundaries: CVTShaftBoundaryValues | None = None,
 ) -> HybridTransition[CVTOperatingRegime]:
-    """Release the seated belt to deadzone after primary clamp is lost."""
+    """Release the seated primary only after unilateral contact separates."""
 
-    del old_contact_regime
     projected = project_inelastic_shift_constraint(
-        vector=vector,
-        shift_position=limits.engagement_shift,
+        vector=vector, shift_position=limits.engagement_shift
     )
+    indicator, primary_normal, opening_acceleration = (
+        primary_contact_separation_at_engagement(
+            evaluator=evaluator,
+            time=time,
+            vector=projected,
+            contact_regime=old_contact_regime,
+            limits=limits,
+            switching_settings=switching_settings,
+            shaft_boundaries=shaft_boundaries,
+        )
+    )
+    if indicator > 0.0:
+        raise RuntimeError(
+            "PRIMARY_CONTACT_SEPARATION fired while unilateral contact remained admissible."
+        )
     projected_state = CVTState.from_vector(projected)
-    primary_clamp = primary_independent_clamping_force_at_engagement(
+    capture = capture_belt_to_secondary_at_disengagement(
         evaluator=evaluator,
         state=projected_state,
         limits=limits,
         shaft_boundaries=shaft_boundaries,
     )
-    if primary_clamp > _PRIMARY_CLAMP_EVENT_TOLERANCE:
-        raise RuntimeError(
-            "PRIMARY_CLAMP_LOST transition received a materially positive primary clamp force."
-        )
     return HybridTransition(
         next_mode=CVTOperatingRegime.deadzone_free(),
-        reason="primary_clamp_lost_released_low_ratio_seat_into_deadzone",
+        reason="primary_contact_separated_released_low_ratio_seat_into_deadzone",
         metadata={
-            "primary_independent_clamping_force": primary_clamp,
-            "secondary_capture": "perfectly_inelastic_lumped_belt_secondary_capture",
+            "primary_normal_resultant": primary_normal,
+            "contact_free_primary_shift_acceleration": opening_acceleration,
+            "primary_separation_indicator": indicator,
+            "secondary_capture": "mass_metric_belt_secondary_capture",
+            **capture.metadata(),
         },
-        successor_state=capture_belt_to_secondary_at_disengagement(
-            evaluator=evaluator,
-            state=projected_state,
-            limits=limits,
-            shaft_boundaries=shaft_boundaries,
-        ),
+        successor_state=capture.successor_state,
     )
 
 
@@ -620,22 +833,33 @@ def _resolve_low_ratio_seat_release(
         vector=vector,
         shift_position=limits.engagement_shift,
     )
-    projected_state = CVTState.from_vector(projected)
-    primary_clamp = primary_independent_clamping_force_at_engagement(
-        evaluator=evaluator,
-        state=projected_state,
-        limits=limits,
-        shaft_boundaries=shaft_boundaries,
+    separation_indicator, primary_normal, opening_acceleration = (
+        primary_contact_separation_at_engagement(
+            evaluator=evaluator,
+            time=time,
+            vector=projected,
+            contact_regime=old_contact_regime,
+            limits=limits,
+            switching_settings=switching_settings,
+            shaft_boundaries=shaft_boundaries,
+        )
     )
-    if primary_clamp < 0.0:
+    if separation_indicator <= 0.0:
         return _resolve_low_ratio_seat_disengagement(
+            time=time,
             vector=projected,
             old_contact_regime=old_contact_regime,
             limits=limits,
             evaluator=evaluator,
+            switching_settings=switching_settings,
             shaft_boundaries=shaft_boundaries,
         )
 
+    contact_events = tuple(
+        name
+        for name in contact_events
+        if name != CVTContactEvent.PRIMARY_NORMAL_FLOOR.value
+    )
     contact_regime, contact_transition = _resolve_contact_at_constraint(
         time=time,
         vector=projected,
@@ -659,7 +883,9 @@ def _resolve_low_ratio_seat_release(
 
     metadata: dict[str, object] = {
         "release": "low_ratio_seat_reaction_crossed_zero",
-        "primary_independent_clamping_force": primary_clamp,
+        "primary_normal_resultant": primary_normal,
+        "contact_free_primary_shift_acceleration": opening_acceleration,
+        "primary_separation_indicator": separation_indicator,
     }
     if contact_transition is not None:
         metadata["contact_transition_reason"] = contact_transition.reason
@@ -700,6 +926,16 @@ def _engaged_regime_for_constraint(
     raise ValueError(f"Unsupported engaged shift constraint: {constraint!r}.")
 
 
+def _sticking_belt_locks(contact_regime: ContactRegime) -> tuple[bool, bool]:
+    """Return which no-slip constraints should survive an axial impact."""
+
+    sticking = set(contact_regime.mode.sticking_interfaces)
+    return (
+        ContactInterface.PRIMARY in sticking,
+        ContactInterface.SECONDARY in sticking,
+    )
+
+
 def _resolve_upper_stop_arrival(
     *,
     time: float,
@@ -718,10 +954,19 @@ def _resolve_upper_stop_arrival(
     ratio need not equal their free-shift values at the instant of impact.
     """
 
-    projected = project_inelastic_shift_constraint(
+    lock_primary, lock_secondary = _sticking_belt_locks(old_contact_regime)
+    impact = project_cvt_velocity_topology(
+        model=evaluator.model,
         vector=vector,
         shift_position=limits.upper_stop_shift,
+        from_topology=CVTVelocityTopology.ENGAGED,
+        to_topology=CVTVelocityTopology.ENGAGED,
+        shaft_boundaries=shaft_boundaries,
+        stop_shift_velocity=True,
+        lock_primary_belt=lock_primary,
+        lock_secondary_belt=lock_secondary,
     )
+    projected = impact.successor_state
     contact_regime, contact_transition = _resolve_contact_at_constraint(
         time=time,
         vector=projected,
@@ -756,7 +1001,8 @@ def _resolve_upper_stop_arrival(
 
     metadata = {
         "upper_stop_reaction": reaction,
-        "impact": "perfectly_inelastic_axial_projection",
+        "impact": "perfectly_inelastic_mass_metric_projection",
+        **impact.metadata(),
     }
     if contact_transition is not None:
         metadata["contact_transition_reason"] = contact_transition.reason
@@ -857,6 +1103,7 @@ def _resolve_contact_at_constraint(
     evaluator: "EngagedCVTContactEvaluator",
     switching_settings: CVTContactSwitchSettings,
     shaft_boundaries: CVTShaftBoundaryValues | None = None,
+    ignore_primary_normal_floor: bool = False,
 ) -> tuple[ContactRegime, HybridTransition[ContactRegime] | None]:
     """Resolve supplied plus immediately-active contact violations once.
 
@@ -882,6 +1129,12 @@ def _resolve_contact_at_constraint(
             switching_settings=switching_settings,
         )
     )
+    if ignore_primary_normal_floor:
+        event_names = [
+            name
+            for name in event_names
+            if name != CVTContactEvent.PRIMARY_NORMAL_FLOOR.value
+        ]
     event_names = list(dict.fromkeys(event_names))
     if not event_names:
         return old_contact_regime, None
