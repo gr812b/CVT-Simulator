@@ -1,0 +1,4 @@
+# Frozen base environment for results generated against CINDER 1.0.0.
+cinder-cvt==1.0.0
+numpy==2.5.2
+scipy==1.18.1
