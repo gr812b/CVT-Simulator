@@ -618,6 +618,10 @@ def _resolve_low_ratio_seat_arrival(
     into the secondary shaft, while the primary is free to separate and carry
     its remaining axial momentum into deadzone.
 
+    When a real deadzone exists, a finite secondary-stop impact may separate
+    the primary into that topology.  With a zero-width deadzone the CVT is
+    always engaged, so the same impact must remain in the engaged topology.
+
     Repeated rigid make/break captures can converge geometrically to zero
     velocity (the usual Zeno limit of a plastic impact model).  Only once the
     kinetic energy that would be removed by additionally seating the shared
@@ -641,7 +645,7 @@ def _resolve_low_ratio_seat_arrival(
         8192.0 * np.finfo(float).eps * max(1.0, hypothetical_seat.pre_kinetic_energy)
     )
 
-    if hypothetical_seat.dissipated_energy > energy_resolution:
+    if limits.has_deadzone and hypothetical_seat.dissipated_energy > energy_resolution:
         # This is a real secondary-stop collision followed by primary
         # separation, not a shared-coordinate impact.  The deadzone topology
         # removes secondary axial/helix motion, keeps the primary axial degree
@@ -690,7 +694,11 @@ def _resolve_low_ratio_seat_arrival(
             metadata={
                 **contact_transition.metadata,
                 **hypothetical_seat.metadata(),
-                "during": "low_ratio_seat_z_limit_completion",
+                "during": (
+                    "low_ratio_seat_z_limit_completion"
+                    if hypothetical_seat.dissipated_energy <= energy_resolution
+                    else "zero_width_deadzone_low_ratio_seat_arrival"
+                ),
             },
             successor_state=projected,
         )
@@ -706,31 +714,51 @@ def _resolve_low_ratio_seat_arrival(
     if seat_reaction is None:  # pragma: no cover - constrained evaluator invariant.
         raise RuntimeError("Low-ratio seat evaluation did not recover a seat reaction.")
 
-    separation_indicator, primary_normal, opening_acceleration = (
-        primary_contact_separation_at_engagement(
-            evaluator=evaluator,
-            time=time,
-            vector=projected,
-            contact_regime=contact_regime,
-            limits=limits,
-            switching_settings=switching_settings,
-            shaft_boundaries=shaft_boundaries,
-        )
+    seat_completion_is_z_limit = (
+        hypothetical_seat.dissipated_energy <= energy_resolution
     )
     metadata: dict[str, object] = {
         "low_ratio_seat_reaction": seat_reaction,
-        "primary_normal_resultant": primary_normal,
-        "contact_free_primary_shift_acceleration": opening_acceleration,
-        "primary_separation_indicator": separation_indicator,
-        "impact": "zero_velocity_z_limit_secondary_stop_seat_completion",
+        "primary_normal_resultant": seat_evaluation.normal_primary,
+        "impact": (
+            "zero_velocity_z_limit_secondary_stop_seat_completion"
+            if seat_completion_is_z_limit
+            else "zero_width_deadzone_secondary_stop_mass_metric_projection"
+        ),
         "z_to_seat_energy_resolution_J": energy_resolution,
         **hypothetical_seat.metadata(),
     }
+
+    separation_indicator: float | None = None
+    if limits.has_deadzone:
+        separation_indicator, primary_normal, opening_acceleration = (
+            primary_contact_separation_at_engagement(
+                evaluator=evaluator,
+                time=time,
+                vector=projected,
+                contact_regime=contact_regime,
+                limits=limits,
+                switching_settings=switching_settings,
+                shaft_boundaries=shaft_boundaries,
+            )
+        )
+        metadata.update(
+            {
+                "primary_normal_resultant": primary_normal,
+                "contact_free_primary_shift_acceleration": opening_acceleration,
+                "primary_separation_indicator": separation_indicator,
+            }
+        )
+
     if contact_transition is not None:
         metadata["contact_transition_reason"] = contact_transition.reason
         metadata.update(contact_transition.metadata)
 
-    if separation_indicator <= 0.0:
+    if (
+        limits.has_deadzone
+        and separation_indicator is not None
+        and separation_indicator <= 0.0
+    ):
         deadzone_capture = project_cvt_velocity_topology(
             model=evaluator.model,
             vector=projected,
@@ -759,7 +787,11 @@ def _resolve_low_ratio_seat_arrival(
         next_mode=CVTOperatingRegime.engaged_low_ratio_seat(
             contact_regime=contact_regime,
         ),
-        reason="low_ratio_secondary_stop_seated_after_z_limit",
+        reason=(
+            "low_ratio_secondary_stop_seated_after_z_limit"
+            if seat_completion_is_z_limit
+            else "zero_width_deadzone_low_ratio_secondary_stop_seated_after_impact"
+        ),
         metadata=metadata,
         successor_state=projected,
     )
@@ -776,6 +808,11 @@ def _resolve_low_ratio_seat_disengagement(
     shaft_boundaries: CVTShaftBoundaryValues | None = None,
 ) -> HybridTransition[CVTOperatingRegime]:
     """Release the seated primary only after unilateral contact separates."""
+
+    if not limits.has_deadzone:
+        raise RuntimeError(
+            "Primary separation is unreachable for a zero-width deadzone topology."
+        )
 
     projected = project_inelastic_shift_constraint(
         vector=vector, shift_position=limits.engagement_shift
@@ -833,26 +870,37 @@ def _resolve_low_ratio_seat_release(
         vector=vector,
         shift_position=limits.engagement_shift,
     )
-    separation_indicator, primary_normal, opening_acceleration = (
-        primary_contact_separation_at_engagement(
-            evaluator=evaluator,
-            time=time,
-            vector=projected,
-            contact_regime=old_contact_regime,
-            limits=limits,
-            switching_settings=switching_settings,
-            shaft_boundaries=shaft_boundaries,
+    metadata: dict[str, object] = {
+        "release": "low_ratio_seat_reaction_crossed_zero",
+    }
+    if limits.has_deadzone:
+        separation_indicator, primary_normal, opening_acceleration = (
+            primary_contact_separation_at_engagement(
+                evaluator=evaluator,
+                time=time,
+                vector=projected,
+                contact_regime=old_contact_regime,
+                limits=limits,
+                switching_settings=switching_settings,
+                shaft_boundaries=shaft_boundaries,
+            )
         )
-    )
-    if separation_indicator <= 0.0:
-        return _resolve_low_ratio_seat_disengagement(
-            time=time,
-            vector=projected,
-            old_contact_regime=old_contact_regime,
-            limits=limits,
-            evaluator=evaluator,
-            switching_settings=switching_settings,
-            shaft_boundaries=shaft_boundaries,
+        if separation_indicator <= 0.0:
+            return _resolve_low_ratio_seat_disengagement(
+                time=time,
+                vector=projected,
+                old_contact_regime=old_contact_regime,
+                limits=limits,
+                evaluator=evaluator,
+                switching_settings=switching_settings,
+                shaft_boundaries=shaft_boundaries,
+            )
+        metadata.update(
+            {
+                "primary_normal_resultant": primary_normal,
+                "contact_free_primary_shift_acceleration": opening_acceleration,
+                "primary_separation_indicator": separation_indicator,
+            }
         )
 
     contact_events = tuple(
@@ -881,12 +929,6 @@ def _resolve_low_ratio_seat_release(
             successor_state=projected,
         )
 
-    metadata: dict[str, object] = {
-        "release": "low_ratio_seat_reaction_crossed_zero",
-        "primary_normal_resultant": primary_normal,
-        "contact_free_primary_shift_acceleration": opening_acceleration,
-        "primary_separation_indicator": separation_indicator,
-    }
     if contact_transition is not None:
         metadata["contact_transition_reason"] = contact_transition.reason
         metadata.update(contact_transition.metadata)

@@ -53,9 +53,12 @@ without creating kinetic energy.
 On a return to minimum ratio the secondary movable member strikes its actual
 closed hardware stop.  Relative secondary axial/helix motion is arrested by a
 perfectly inelastic impact.  Its angular momentum is transferred into the
-secondary shaft/belt system by the same mass-metric projection.  The primary is
-not automatically stopped; if unilateral belt contact cannot hold, it separates
-and carries its admissible remaining axial momentum into deadzone.
+secondary shaft/belt system by the same mass-metric projection.  When a finite
+deadzone exists, the primary is not automatically stopped; if unilateral belt
+contact cannot hold, it separates and carries its admissible remaining axial
+momentum into deadzone.  When the deadzone has zero width, that separated
+topology does not exist: the impact remains engaged and the low-ratio seat is
+either accepted or immediately released according to its unilateral reaction.
 
 The shrinking make/break sequence at this boundary is the rigid-model analogue
 of a dissipative bouncing-contact (a Zeno sequence).  It is completed only when

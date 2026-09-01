@@ -176,19 +176,41 @@ case.
 ## A10 — friction convention translation
 
 Ballew's `mu_s=0.55` and `mu_k=0.40` multiply each node's axial sheave-compression
-reaction `F_Z`. CINDER's reduced contact law uses `Q = lambda N`, with the
-zero-sheave-mass clamp row giving gross normal load proportional to
-`2 F_clamp tan(beta)`.
+reaction `F_Z`, and Ballew's axial search enforces the summed node reaction
+`sum(F_Z) = F_clamp`. His gross tangential capacity is therefore
 
-To preserve gross tangential capacity rather than blindly copy numbers between
-different normal-force definitions, the benchmark uses
+`Q_max = mu F_clamp`.
 
-`lambda = mu / (2 tan(beta))`.
+CINDER 1.0.0 uses a different normal-force convention. Its reduced contact law
+uses `Q = lambda N`, where `N` is the **physical integrated normal load over both
+sheave faces**. With equal face-load sharing, the zero-moving-sheave-mass axial
+balance used by this benchmark is
 
-At `beta = 15 deg` this gives approximately:
+`F_clamp - N cos(beta)/2 = 0`,
 
-- static CINDER traction limit: `1.0263139720814414`;
-- kinetic CINDER traction magnitude: `0.7464101615137755`.
+so
+
+`N = 2 F_clamp / cos(beta)`.
+
+To preserve Ballew's gross tangential capacity rather than blindly copy numbers
+between the two normal-force definitions,
+
+`lambda N = mu F_clamp`,
+
+which gives the CINDER 1.0.0 translation
+
+`lambda = mu cos(beta) / 2`.
+
+The benchmark derives these values directly from Ballew's published `mu` values
+and published `beta = 15 deg`; they are not independently entered constants. At
+`beta = 15 deg` this gives approximately:
+
+- static CINDER traction limit: `0.26562960222949383`;
+- kinetic CINDER traction magnitude: `0.19318516525781368`.
+
+The earlier Ballew-study bridge `lambda = mu/(2 tan(beta))` belonged to CINDER's
+pre-PR471 normal-force convention and must not be used with the released 1.0.0
+axial balance.
 
 This is a convention bridge, not a friction fit and not a claim that CINDER's
 single reduced contact interface reproduces Ballew's 2-D node friction field.

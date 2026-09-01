@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import asdict, dataclass
-from math import radians, tan
+from math import cos, radians
 
 INCH_TO_METRE = 0.0254
 
@@ -66,9 +66,24 @@ PUBLISHED = BallewPublishedParameters()
 
 
 def _ballew_mu_to_cinder_lambda(mu: float) -> float:
-    """A10: preserve gross tangential capacity across the two conventions."""
+    """A10: preserve Ballew gross tangential capacity in CINDER 1.0.0.
 
-    return mu / (2.0 * tan(radians(PUBLISHED.sheave_half_angle_deg)))
+    Ballew's nodal friction uses ``F_t = mu F_Z`` and his axial search enforces
+    ``sum(F_Z) = F_clamp``. CINDER 1.0.0 instead defines ``N`` as the physical
+    integrated normal load over both sheave faces. With symmetric face sharing,
+    its zero-sheave-mass axial row is
+
+        F_clamp - N cos(beta) / 2 = 0,
+
+    so ``N = 2 F_clamp / cos(beta)``. Since CINDER traction is ``Q = lambda N``,
+    preserving Ballew's gross capacity ``Q_max = mu F_clamp`` requires
+
+        lambda = mu cos(beta) / 2.
+
+    This is a force-normalization bridge, not a fitted friction coefficient.
+    """
+
+    return 0.5 * mu * cos(radians(PUBLISHED.sheave_half_angle_deg))
 
 
 CINDER_STATIC_TRACTION_LAMBDA_LIMIT = _ballew_mu_to_cinder_lambda(
