@@ -150,7 +150,9 @@ def test_positive_width_finite_arrival_can_still_enter_deadzone(monkeypatch) -> 
     assert transition.next_mode.shift_constraint is CVTShiftConstraint.FREE
 
 
-def test_zero_width_primary_disengagement_is_rejected_before_deadzone_mechanics() -> None:
+def test_zero_width_primary_disengagement_is_rejected_before_deadzone_mechanics() -> (
+    None
+):
     limits = CVTShiftOperatingLimits(0.0, 0.0, 0.02)
     with pytest.raises(RuntimeError, match="zero-width deadzone"):
         switching._resolve_low_ratio_seat_disengagement(
