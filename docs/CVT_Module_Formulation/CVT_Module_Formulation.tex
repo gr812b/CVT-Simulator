@@ -6140,6 +6140,157 @@ its internal motion changes the shaft dynamics. When those actuator motions
 cease, the additional terms vanish and the familiar fixed-configuration
 inertia balances are recovered.
 
+\section{Belt Transport and Pulley Contact Mechanics}
+\label{sec:belt_transport_contact}
+
+The preceding sections established the axial and rotational equations of
+motion for the two pulley assemblies, but both stop at the same remaining
+mechanical body: the belt. The axial balances still contain the belt normal
+loads \(N_p\) and \(N_s\), while the rotational balances contain the belt
+torques \(\tau_p\) and \(\tau_s\). The belt transport speed \(v_b\) is also
+retained as a state, but its acceleration has not yet been established.
+
+So far, each of these quantities has appeared only through the action of the
+belt on one of the pulley assemblies. Newton's third law gives the same
+interactions from the opposite side. The force and torque exerted by the belt
+on a pulley are accompanied by equal-and-opposite actions on the belt itself.
+The remaining mechanics can therefore be viewed from the belt rather than
+from either pulley.
+
+This change of free body is important because the belt is not two independent
+contacts. It is one closed body connecting both pulley assemblies. Whatever
+forces and torques are exchanged at the primary must coexist with those at the
+secondary and with the motion of the belt between them. The belt mechanics
+must therefore be self-consistent around the complete loop.
+
+\subsection{Complete-Belt Transport}
+
+\label{sec:complete_belt_transport}
+
+The belt speed \(v_b\) can change only if something pushes or pulls the belt
+along its path. Those tangential actions come from the primary and secondary
+pulley contacts. The belt's transport acceleration must therefore come from
+the two pulley wraps.
+
+At either wrap, the mechanism is simple. Frictional traction is spread over
+the contact, and at each small part of the wrap it acts tangent to the belt.
+On the pulley, each of these small forces produces a small moment about the
+shaft. Adding those moments around the wrap gives the contact torque \(\tau_j\)
+already used in the pulley balance. Thus, \(\tau_j\) is simply the accumulated
+turning effect of the tangential contact forces.
+
+Newton's third law places equal-and-opposite forces on the belt. Their total
+moment is therefore \(-\tau_j\), and at the effective contact radius
+\(r_{j,\mathrm{eff}}\) they are equivalent to the net tangential pull
+\(-\tau_j/r_{j,\mathrm{eff}}\). There is no need to find the small contact
+forces one by one here; the torque has already added their effects for us.
+
+Viewed from the belt, these two pulls determine whether its transport motion
+gains or loses energy. A force acting in the direction of belt travel does
+work on the belt, while a force acting against the direction of travel removes
+work from it. If one pulley supplies exactly the power removed by the other,
+the belt simply carries that power between them and \(v_b\) remains unchanged.
+If the two actions do not balance, the excess remains with the belt.
+
+The belt assumptions leave that excess only one place to go. The fixed length
+of \AssRef{assump:constant_belt_length} excludes longitudinal extension and the
+strain energy it would store. The single transport coordinate of
+\AssRef{assump:single_belt_speed} gives every belt region the same speed
+\(v_b\), so one region cannot speed up independently of the rest. The belt's
+only retained longitudinal energy is therefore
+\(\tfrac{1}{2}m_bv_b^2\). Net power into the belt increases \(v_b\); net power
+out decreases it.
+
+This makes the complete belt a particularly simple free body. Place one
+boundary around the entire loop. For the transport motion, the tension forces
+exerted internally between neighbouring portions of the belt cancel around
+the closed loop. The remaining tangential actions are the two pulley pulls
+derived above, acting on the complete belt mass \(m_b\). The complete-belt
+transport balance is therefore
+
+\bigeq{eq:complete_belt_transport_newton}
+{Complete-Belt Transport Balance}
+{
+  \begin{aligned}
+    \sum F_{b,t}^{\mathrm{ext}}
+    &=
+    -\frac{\tau_p}{r_{p,\mathrm{eff}}}
+    -\frac{\tau_s}{r_{s,\mathrm{eff}}}
+    \\
+    &=
+    \frac{d}{dt}\left(m_bv_b\right)
+    =
+    m_b\dot v_b.
+  \end{aligned}
+}
+
+This balance gives the basic longitudinal motion of the belt. If the two
+pulley contacts exert a net force in the positive belt direction, the belt
+speeds up; if they exert a net force in the opposite direction, it slows down.
+If the two actions balance, the belt can carry power between the pulleys
+without changing \(v_b\).
+
+\medskip
+
+\noindent{\large\bfseries Interpreting the Transport Balance}
+
+\par\smallskip
+
+As far as speeding up or slowing down the complete belt is concerned, this
+result is sufficient. The quantity \(v_b\), however, describes only how quickly
+belt material travels along its prescribed path. Consider one marked piece of
+belt. It approaches a pulley along one straight span and leaves along the
+other. Its direction of travel has changed. The complete-belt balance says how
+its speed changes, but contains nothing that explains this change in direction.
+Left to itself, the marked piece would continue straight past the pulley. Its
+motion around the wrap is therefore possible only because forces act on it
+throughout that turn.
+
+The clearest way to separate these forces from the transport motion is to
+remove the motion altogether. Consider first the familiar case of a rope
+wrapped around a classical pulley. Pull equally on the two ends of the rope.
+If both pulls are increased together, the tension throughout the rope rises
+and the pulley becomes more heavily loaded, even though no tension difference
+has been introduced. The taut rope is redirected around the pulley, and in
+doing so it exerts a resultant load on it. The pulley supplies the
+corresponding equal-and-opposite contact reaction.
+
+The same basic effect occurs when the CVT belt is wrapped around a sheave.
+Suppose the belt and pulley are stationary and the entry and exit tensions are
+both \(500\,\mathrm{N}\). Their difference is zero, so there is no transmitted
+torque or longitudinal acceleration, yet the tensioned belt still loads the
+pulley through the wrap. Raising both the entry and exit tensions to
+\(1000\,\mathrm{N}\) changes neither the tension difference nor the belt's
+motion, but the belt now loads the pulley more strongly and the corresponding
+normal contact increases. The geometry and motion have not changed; the pulley
+loading has.
+
+The loading described above is carried through the belt--sheave contact around
+the wrap. In the model, the resultant normal contact loads on the primary and
+secondary pulleys are denoted by \(N_p\) and \(N_s\). Their axial components
+already appear in the primary and secondary movable-sheave balances; see
+\Cref{eq:completed_primary_axial_balance,eq:completed_secondary_axial_balance}.
+The static example therefore has an important consequence: even with no
+transmitted torque or belt acceleration, changing the belt tension changes
+\(N_p\) and \(N_s\), and can therefore change the shift balance. Determining
+these normal loads requires knowing the tension carried around each pulley.
+The remaining difficulty is that this tension is not generally constant around
+the pulley.
+
+As established above, a pulley transfers torque through tangential traction
+distributed around its wrap. As the belt passes through the contact, this
+traction changes how strongly the belt is being pulled. The tension leaving
+the wrap therefore generally differs from the tension entering it. In the
+simplest steady, inertia-free picture, the transmitted torque is equal to the
+pulley radius multiplied by this tension difference. Retaining the inertia of
+the wrapped belt modifies that balance, but not the basic interpretation:
+torque transfer tells us how the tension changes through the contact.
+
+The quantity needed to determine the normal loading is therefore itself
+changing as the belt moves through the wrap. Knowing the entry and exit
+tensions tells us only how that process begins and ends, not what tension is
+carried at each point between them. The normal contact must therefore be
+determined locally as well.
 
 \section{Belt Transport and Pulley Contact Mechanics}
 \label{sec:belt_transport_contact}
