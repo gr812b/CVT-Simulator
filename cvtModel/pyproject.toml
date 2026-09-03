@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "cinder-cvt"
-version = "1.0.0"
+version = "1.0.1"
 description = "Mechanics-first dynamic modelling for rubber V-belt continuously variable transmissions."
 readme = "README.md"
 requires-python = ">=3.10"
@@ -34,8 +34,8 @@ dev = [
 
 [project.urls]
 Homepage = "https://github.com/gr812b/CVT-Simulator"
-Source = "https://github.com/gr812b/CVT-Simulator/tree/cinder-v1.0.0/cvtModel"
-Documentation = "https://github.com/gr812b/CVT-Simulator/tree/cinder-v1.0.0/cvtModel/docs"
+Source = "https://github.com/gr812b/CVT-Simulator/tree/cinder-v1.0.1/cvtModel"
+Documentation = "https://github.com/gr812b/CVT-Simulator/tree/cinder-v1.0.1/cvtModel/docs"
 Issues = "https://github.com/gr812b/CVT-Simulator/issues"
 
 [tool.setuptools]

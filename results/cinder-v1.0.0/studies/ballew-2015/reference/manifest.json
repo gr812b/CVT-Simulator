@@ -1,0 +1,61 @@
+{
+  "prepared_reference_files": {
+    "figure_41_input_rpm.csv": {
+      "sha256": "ad16629a0cefd308e7df0d4c79b00a08f295a7efff2cbf0f4173dca1929e0dd9",
+      "size_bytes": 4325,
+      "value_column": "input_rpm"
+    },
+    "figure_41_output_rpm.csv": {
+      "sha256": "47dc6da83cae77ce0bef49277983120086ed577dcd1c84fdbc4ddb684b154d8a",
+      "size_bytes": 2467,
+      "value_column": "output_rpm"
+    },
+    "figure_45_primary_force.csv": {
+      "sha256": "e61467317a884e0d75a32c52b0688fbaa4bde5fd327b3aaab9625ec16de282e8",
+      "size_bytes": 7905,
+      "value_column": "primary_axial_force_n"
+    }
+  },
+  "raw_digitization_files": {
+    "input_rpm.csv": {
+      "sha256": "4452590ecedfa71c99c86c47bd346043935f750ff6cc6b670c09122f47970a99",
+      "size_bytes": 4307,
+      "role": "WebPlotDigitizer headerless Figure 41 input-RPM export"
+    },
+    "output_rpm.csv": {
+      "sha256": "4383e3660a7c9dcba677a9fe3bd789b15acbeedb1caccda7def664fc921d5728",
+      "size_bytes": 2448,
+      "role": "WebPlotDigitizer headerless Figure 41 output-RPM export"
+    },
+    "axial_force.csv": {
+      "sha256": "2f93396c8ddb88ba2220fba4fbb389053965916a30e94cdebee7b64a0facd191",
+      "size_bytes": 8009,
+      "role": "WebPlotDigitizer headerless Figure 45 primary-force export"
+    },
+    "rpms_ballew.json": {
+      "size_bytes": 17401,
+      "git_blob_sha1": "749f64f09736d773023732b2287167a5e3fdb361",
+      "role": "WebPlotDigitizer Figure 41 project"
+    },
+    "axial_force_ballew.json": {
+      "size_bytes": 14738,
+      "git_blob_sha1": "4b550504d9071c0f3b8316f1fab4cea6f4b2bcea",
+      "role": "WebPlotDigitizer Figure 45 project"
+    }
+  },
+  "source_thesis": {
+    "path": "source/Ballew_2015_thesis.pdf",
+    "sha256": "cafead74895bbfaf092fe0354f0572064f44c6b4ff10c422877c5ae587f8df44",
+    "size_bytes": 6313938
+  },
+  "preparation": {
+    "script": "prepare_reference_data.py",
+    "rules": [
+      "add explicit headers",
+      "preserve Figure 41 native time grids",
+      "average exact duplicate Figure 45 time coordinates",
+      "prepend t=0 force by zero-order hold of the first visible Figure 45 point",
+      "no smoothing, filtering, resampling, curve fitting, or controller reconstruction"
+    ]
+  }
+}

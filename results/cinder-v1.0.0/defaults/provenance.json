@@ -1,0 +1,10 @@
+{
+  "repository": "gr812b/CVT-Simulator",
+  "cinder_source_tag": "cinder-v1.0.0",
+  "cinder_source_tag_commit_sha": "ee21850034a58df73ffc4238936ffece8102c4f1",
+  "source_path": "cvtModel/examples/baja_baseline_simulation_case.json",
+  "source_blob_sha": "d9592cc664c8dfe095bda2cacdb9140beffb340b",
+  "pypi_distribution": "cinder-cvt",
+  "pypi_version": "1.0.0",
+  "purpose": "Frozen reference inputs for reproducible CINDER 1.0.0 result studies"
+}
