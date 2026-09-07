@@ -2240,7 +2240,8 @@ Using these roles, one evaluation proceeds as follows:
 
 TODO: Roadmap
 
-\section{Pulley Geometry}\label{sec:geometry}
+\section{Pulley Geometry}
+\label{sec:geometry}
 
 The conceptual overview introduced the CVT as two variable-radius pulleys
 connected by a single belt. Moving the pulley sheaves changes where the belt
@@ -4007,6 +4008,7 @@ and inertias acting on the two movable pulley assemblies.
 
 
 % --------------------------------------------------------------
+
 \section{Axial Actuation and Sheave Balances}
 \label{sec:axial_actuation_balances}
 
@@ -4076,11 +4078,11 @@ other component that translates rigidly with them. The three axial forces
 shown in \Cref{fig:primary_clamping_mechanism} are:
 
 \begin{itemize}
-    \item \(F_{p,\mathrm{fly}}\), the closing force delivered to the
+    \item \(F_{\mathrm{fw},x_p}\), the closing force delivered to the
           ramp carrier by the flyweight contacts;
-    \item \(F_{p,\mathrm{spring}}\), the opening force exerted by the primary
+    \item \(F_{\mathrm{spring},x_p}\), the opening force exerted by the primary
           spring; and
-    \item \(F_{p,\mathrm{belt}}\), the opening force exerted by the belt on
+    \item \(F_{\mathrm{belt},x_p}\), the opening force exerted by the belt on
           the movable face.
 \end{itemize}
 
@@ -4089,11 +4091,11 @@ Newton's second law along the shaft is therefore
 \begin{equation}
     m_p\ddot x_p
     =
-    F_{p,\mathrm{fly}}
+    F_{\mathrm{fw},x_p}
     -
-    F_{p,\mathrm{spring}}
+    F_{\mathrm{spring},x_p}
     -
-    F_{p,\mathrm{belt}}.
+    F_{\mathrm{belt},x_p}.
     \label{eq:primary_movable_sheave_balance}
 \end{equation}
 
@@ -4101,7 +4103,7 @@ This free body tells us exactly what remains to be found. The spring force
 will follow from its compression, and the belt force from the normal reaction
 on the conical face. The flyweight force is harder. It is the axial result of
 a contact on a body that pivots rather than translating rigidly with the
-sheave. We therefore determine \(F_{p,\mathrm{fly}}\) first.
+sheave. We therefore determine \(F_{\mathrm{fw},x_p}\) first.
 
 % --------------------------------------------------------------
 \subsubsection{Force Transmitted by the Flyweights}
@@ -4248,8 +4250,8 @@ associated with a change \(dJ\) in shaft-axis inertia is
 For the contact moment, the corresponding work is the force--displacement
 work \(F\,d\ell\). The movable sheave moves axially through \(dx_p\), so only
 the axial component of the ramp-contact force performs work. This component
-is \(F_{p,\mathrm{fly}}\), the closing force introduced by the movable-sheave
-free body, and its work is therefore \(F_{p,\mathrm{fly}}\,dx_p\). Under
+is \(F_{\mathrm{fw},x_p}\), the closing force introduced by the movable-sheave
+free body, and its work is therefore \(F_{\mathrm{fw},x_p}\,dx_p\). Under
 \AssRef{assump:ideal_actuator_mechanics}, the ramp contact is treated as an
 ideal frictionless constraint, so no work is dissipated at the contact. The
 work of the contact moment therefore appears entirely as axial work on the
@@ -4260,7 +4262,7 @@ movable assembly. Using the positive magnitudes defined above,
     =
     \delta W_{f,\mathrm{contact}}
     =
-    F_{p,\mathrm{fly}}\,dx_p.
+    F_{\mathrm{fw},x_p}\,dx_p.
     \label{eq:primary_contact_work}
 \end{equation}
 
@@ -4305,7 +4307,7 @@ eq:primary_flyweight_angular_acceleration} brings them together,
 \begin{equation}
     \frac{1}{2}\omega_p^2dJ_{f,p}
     -
-    F_{p,\mathrm{fly}}dx_p
+    F_{\mathrm{fw},x_p}dx_p
     =
     I_f
     \left(
@@ -4322,7 +4324,7 @@ Rearranging for the force transmitted to the movable sheave gives
 \begin{equation}
 \boxed{
 \begin{aligned}
-    F_{p,\mathrm{fly}}
+    F_{\mathrm{fw},x_p}
     ={}&
     \frac{1}{2}\omega_p^2\frac{dJ_{f,p}}{dx_p}
     -
@@ -4367,7 +4369,7 @@ equations of motion.
 
 The one-sided flyweight contact can transmit compression but not tension, so
 the force predicted by \Cref{eq:primary_flyweight_axial_force} must satisfy
-\(F_{p,\mathrm{fly}}\geq0\).
+\(F_{\mathrm{fw},x_p}\geq0\).
 
 
 % --------------------------------------------------------------
@@ -4385,7 +4387,7 @@ compression when the primary is open at \(x_p=0\). Closing the sheave by
 \(x_p\) adds the same amount of compression, so the spring opening force is
 
 \begin{equation}
-    F_{p,\mathrm{spring}}
+    F_{\mathrm{spring},x_p}
     =
     k_p\left(x_{p,\mathrm{pre}}+x_p\right).
     \label{eq:primary_spring_force}
@@ -4401,7 +4403,7 @@ this total load. Its normal is inclined by the sheave half-angle
 \(\beta\) from the axial direction, so the opening force on the movable face is
 
 \begin{equation}
-    F_{p,\mathrm{belt}}
+    F_{\mathrm{belt},x_p}
     =
     \frac{N_p}{2}\cos\beta.
     \label{eq:primary_belt_axial_reaction}
@@ -4481,7 +4483,7 @@ Substituting this point-mass inertia into the centrifugal term of
 terms, gives
 
 \begin{equation}
-    F_{p,\mathrm{fly}}^{\mathrm{pm}}
+    F_{\mathrm{fw},x_p}^{\mathrm{pm}}
     =
     m_f r_f\omega_p^2
     \frac{dr_f}{dx_p}.
@@ -4643,14 +4645,14 @@ axial direction.
     \caption{Axial free body of the complete movable secondary assembly. The
     axial spring force and belt reaction act directly on the translating
     assembly, while the secondary's torque-reactive behaviour enters through the
-    pin--helix force \(F_{s,\mathrm{helix}}\).}
+    pin--helix force \(F_{\mathrm{helix},x_s}\).}
     \label{fig:secondary_axial_free_body}
 \end{figure}
 
 Let \(m_s\) be the mass of the movable sheave and every component that
 translates rigidly with it. Three axial loads act on this assembly. The
 pin--helix contact contributes the signed force
-\(F_{s,\mathrm{helix}}\). The compressed spring pushes the movable sheave
+\(F_{\mathrm{helix},x_s}\). The compressed spring pushes the movable sheave
 toward the fixed sheave in \(+x_s\). The belt pushes the two sheave faces
 apart, so its reaction on the movable face acts in \(-x_s\), just as on the
 primary. Newton's second law therefore gives
@@ -4658,9 +4660,9 @@ primary. Newton's second law therefore gives
 \begin{equation}
     m_s\ddot x_s
     =
-    F_{s,\mathrm{helix}}
-    +F_{s,\mathrm{spring}}
-    -F_{s,\mathrm{belt}}.
+    F_{\mathrm{helix},x_s}
+    +F_{\mathrm{spring},x_s}
+    -F_{\mathrm{belt},x_s}.
     \label{eq:secondary_movable_sheave_balance}
 \end{equation}
 
@@ -4949,7 +4951,7 @@ torque.
 \label{sec:secondary_helix_closing_force}
 
 The torque above is the moment produced by the circumferential component of
-the contact normal. Let \(F_{s,\mathrm{helix}}\) denote the signed axial force
+the contact normal. Let \(F_{\mathrm{helix},x_s}\) denote the signed axial force
 produced by the helix reaction, positive in \(+x_s\).
 
 Under \AssRef{assump:ideal_actuator_mechanics}, the pin--helix contact is
@@ -4958,12 +4960,12 @@ used for the primary therefore converts the rotational contact load into its
 axial effect without contact dissipation. Consider the motion of the movable
 sheave relative to the helix carrier. The contact normal does no net work in
 this relative motion. Its axial component
-contributes \(F_{s,\mathrm{helix}}\,dx_s\), while its circumferential
+contributes \(F_{\mathrm{helix},x_s}\,dx_s\), while its circumferential
 component contributes
 \(-\tau_{s,\mathrm{helix}}\,d\theta_s\). Their sum is zero, so
 
 \begin{equation}
-    F_{s,\mathrm{helix}}\,dx_s
+    F_{\mathrm{helix},x_s}\,dx_s
     =
     \tau_{s,\mathrm{helix}}\,d\theta_s.
     \label{eq:secondary_helix_work_conversion}
@@ -4972,7 +4974,7 @@ component contributes
 Using the motion ratio gives
 
 \begin{equation}
-    F_{s,\mathrm{helix}}
+    F_{\mathrm{helix},x_s}
     =
     \tau_{s,\mathrm{helix}}
     \frac{d\theta_s}{dx_s}.
@@ -4990,7 +4992,7 @@ terms of the model variables:
 \begin{equation}
 \boxed{
 \begin{aligned}
-    F_{s,\mathrm{helix}}
+    F_{\mathrm{helix},x_s}
     ={}&
     \frac{d\theta_s}{dx_s}
     \Bigg\{
@@ -5016,7 +5018,7 @@ terms of the model variables:
     \label{eq:secondary_helix_closing_force}
 \end{equation}
 
-This gives \(F_{s,\mathrm{helix}}\). The belt and wound spring provide the
+This gives \(F_{\mathrm{helix},x_s}\). The belt and wound spring provide the
 driving torques inside the braces; part of that torque may be required to
 accelerate the movable assembly, and only the remainder is converted into
 axial thrust.
@@ -5053,7 +5055,7 @@ Closing the secondary by \(x_s\) lets the spring extend by the same amount, so
 its remaining compression is \(x_{s,\mathrm{pre}}-x_s\). Hence,
 
 \begin{equation}
-    F_{s,\mathrm{spring}}
+    F_{\mathrm{spring},x_s}
     =
     k_{s,x}
     \left(x_{s,\mathrm{pre}}-x_s\right).
@@ -5077,7 +5079,7 @@ Under \AssRef{assump:symmetric_face_sharing}, the movable face carries one
 half of this total load, giving
 
 \begin{equation}
-    F_{s,\mathrm{belt}}
+    F_{\mathrm{belt},x_s}
     =
     \frac{N_s}{2}\cos\beta.
     \label{eq:secondary_belt_axial_reaction}
@@ -5167,7 +5169,7 @@ secondary configuration at constant shaft speed,
 adopted here, the helix force reduces to
 
 \begin{equation}
-    F_{s,\mathrm{helix}}
+    F_{\mathrm{helix},x_s}
     =
     \left[
         \frac{\tau_s}{2}
@@ -5523,7 +5525,6 @@ simultaneous dynamic solution for the engaged CVT.
 
 This completes the axial force description. Attention now turns from
 translation along the pulley shafts to rotation about them.
-
 \section{Rotational Dynamics of the Pulley Assemblies}
 \label{sec:pulley_rotational_dynamics}
 
