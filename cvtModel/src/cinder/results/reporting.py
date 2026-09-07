@@ -294,7 +294,9 @@ class CVTIntegrationResult:
         fields = dict(self.fields)
         for key, definition in domains.items():
             if key != definition.key:
-                raise ValueError("domain mapping keys must equal SpatialDomainDefinition.key.")
+                raise ValueError(
+                    "domain mapping keys must equal SpatialDomainDefinition.key."
+                )
         for key, definition in fields.items():
             if key != definition.key:
                 raise ValueError(

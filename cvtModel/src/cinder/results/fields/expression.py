@@ -14,7 +14,6 @@ from typing import Any, Mapping
 
 import numpy as np
 
-
 _UNARY_OPS = {"neg", "abs", "exp", "expm1", "sin", "cos", "sqrt"}
 _BINARY_OPS = {"add", "sub", "mul", "div", "lt"}
 _TERNARY_OPS = {"where"}
@@ -47,16 +46,14 @@ class FieldExpression:
         expected = (
             1
             if self.op in _UNARY_OPS
-            else 2
-            if self.op in _BINARY_OPS
-            else 3
-            if self.op in _TERNARY_OPS
-            else None
+            else 2 if self.op in _BINARY_OPS else 3 if self.op in _TERNARY_OPS else None
         )
         if expected is None:
             raise ValueError(f"Unsupported field-expression operator: {self.op!r}.")
         if len(self.args) != expected or self.value is not None or self.key is not None:
-            raise ValueError(f"{self.op} expressions require exactly {expected} arguments.")
+            raise ValueError(
+                f"{self.op} expressions require exactly {expected} arguments."
+            )
 
     @classmethod
     def literal(cls, value: float) -> "FieldExpression":
@@ -118,7 +115,9 @@ class FieldExpression:
             condition = self.args[0].evaluate(coordinate=coordinate, signals=signals)
             true_value = self.args[1].evaluate(coordinate=coordinate, signals=signals)
             with np.errstate(all="ignore"):
-                false_value = self.args[2].evaluate(coordinate=coordinate, signals=signals)
+                false_value = self.args[2].evaluate(
+                    coordinate=coordinate, signals=signals
+                )
             return np.where(condition, true_value, false_value)
 
         left = self.args[0].evaluate(coordinate=coordinate, signals=signals)

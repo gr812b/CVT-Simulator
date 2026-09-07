@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from math import isfinite
 from typing import TYPE_CHECKING, Mapping
 
 import numpy as np
@@ -64,10 +63,18 @@ class SpatialFieldDefinition:
     regions: Mapping[str, FieldExpression]
 
     def __post_init__(self) -> None:
-        if not self.key or not self.label or not self.unit or not self.group or not self.domain_key:
+        if (
+            not self.key
+            or not self.label
+            or not self.unit
+            or not self.group
+            or not self.domain_key
+        ):
             raise ValueError("Spatial field metadata must be non-empty.")
         if not self.regions:
-            raise ValueError("SpatialFieldDefinition requires at least one region expression.")
+            raise ValueError(
+                "SpatialFieldDefinition requires at least one region expression."
+            )
         object.__setattr__(self, "regions", dict(self.regions))
 
 
@@ -155,7 +162,9 @@ class SpatialFieldSeries:
 class BoundSpatialDomain:
     """A spatial-domain definition bound to one materialized CINDER result."""
 
-    def __init__(self, result: "CVTIntegrationResult", definition: SpatialDomainDefinition) -> None:
+    def __init__(
+        self, result: "CVTIntegrationResult", definition: SpatialDomainDefinition
+    ) -> None:
         self.result = result
         self.definition = definition
 
@@ -171,7 +180,9 @@ class BoundSpatialDomain:
             dtype=float,
         )
         if not np.all(np.isfinite(lengths)) or np.any(lengths <= 0.0):
-            raise ValueError("Spatial domain region lengths must be positive and finite.")
+            raise ValueError(
+                "Spatial domain region lengths must be positive and finite."
+            )
         cumulative = np.concatenate(([0.0], np.cumsum(lengths)))
         total_length = float(cumulative[-1])
         distances = np.linspace(
@@ -208,7 +219,9 @@ class BoundSpatialDomain:
 class BoundSpatialField:
     """A field definition bound to one result with lazy sample/materialize APIs."""
 
-    def __init__(self, result: "CVTIntegrationResult", definition: SpatialFieldDefinition) -> None:
+    def __init__(
+        self, result: "CVTIntegrationResult", definition: SpatialFieldDefinition
+    ) -> None:
         self.result = result
         self.definition = definition
 
@@ -229,7 +242,9 @@ class BoundSpatialField:
         signals = _frame_signals(self.result, frame_index)
         values = np.full(count, np.nan, dtype=float)
         for region_key, expr in self.definition.regions.items():
-            mask = np.asarray([key == region_key for key in domain.region_keys], dtype=bool)
+            mask = np.asarray(
+                [key == region_key for key in domain.region_keys], dtype=bool
+            )
             if np.any(mask):
                 values[mask] = expr.evaluate(
                     coordinate=domain.local_coordinate[mask], signals=signals
@@ -268,12 +283,16 @@ class BoundSpatialField:
 def _flatten_time(result: "CVTIntegrationResult") -> NDArray[np.float64]:
     if not result.segments:
         return np.empty(0, dtype=float)
-    values = np.concatenate([np.asarray(segment.time, dtype=float) for segment in result.segments])
+    values = np.concatenate(
+        [np.asarray(segment.time, dtype=float) for segment in result.segments]
+    )
     values.setflags(write=False)
     return values
 
 
-def _frame_signals(result: "CVTIntegrationResult", frame_index: int) -> dict[str, float]:
+def _frame_signals(
+    result: "CVTIntegrationResult", frame_index: int
+) -> dict[str, float]:
     if not isinstance(frame_index, int):
         raise TypeError("frame_index must be an integer.")
     total = sum(segment.time.size for segment in result.segments)

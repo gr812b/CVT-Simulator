@@ -2,7 +2,7 @@
 
 Install CINDER first, then run from any checkout of this repository:
 
-    python -m pip install cinder-cvt==1.0.0
+    python -m pip install cinder-cvt==1.1.0
     python cvtModel/examples/quickstart.py
     python cvtModel/examples/quickstart.py --run
 

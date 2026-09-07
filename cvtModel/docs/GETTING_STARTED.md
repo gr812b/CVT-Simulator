@@ -3,7 +3,7 @@
 ## Install
 
 ```bash
-python -m pip install cinder-cvt==1.0.0
+python -m pip install cinder-cvt==1.1.0
 ```
 
 Verify the installed version:

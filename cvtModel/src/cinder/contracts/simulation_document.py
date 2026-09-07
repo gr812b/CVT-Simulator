@@ -49,7 +49,7 @@ from ._decode import (
     require_sequence as _sequence,
     require_string as _string,
 )
-from .conventions import PUBLIC_CONTRACT_VERSION
+from .versions import SIMULATION_CASE_SCHEMA_VERSION
 from .document import (
     UnsupportedDesignDocumentError,
     decode_assembly_document,
@@ -97,7 +97,7 @@ def encode_simulation_case_document(
     if reporting_settings is None:
         reporting_settings = ReportingSettings.standard()
     return {
-        "schema_version": PUBLIC_CONTRACT_VERSION,
+        "schema_version": SIMULATION_CASE_SCHEMA_VERSION,
         "document_type": SIMULATION_CASE_DOCUMENT_TYPE,
         "assembly": encode_assembly_document(assembly),
         "shaft_boundaries": {
@@ -485,9 +485,9 @@ def _decode_reporting_settings(payload: Mapping[str, Any]) -> ReportingSettings:
 
 def _require_document_header(root: Mapping[str, Any]) -> None:
     version = _integer(root, "schema_version")
-    if version != PUBLIC_CONTRACT_VERSION:
+    if version != SIMULATION_CASE_SCHEMA_VERSION:
         raise UnsupportedSimulationDocumentError(
-            f"Unsupported schema_version {version}; expected {PUBLIC_CONTRACT_VERSION}."
+            f"Unsupported schema_version {version}; expected {SIMULATION_CASE_SCHEMA_VERSION}."
         )
     if _string(root, "document_type") != SIMULATION_CASE_DOCUMENT_TYPE:
         raise UnsupportedSimulationDocumentError(

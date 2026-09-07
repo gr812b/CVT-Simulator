@@ -65,20 +65,24 @@ class CinderGateway:
         v2 explicit as soon as that CINDER release is installed.
         """
 
-        input_schema_version = int(
-            getattr(
-                cinder_contracts,
-                "SIMULATION_CASE_SCHEMA_VERSION",
-                cinder_contracts.PUBLIC_CONTRACT_VERSION,
-            )
+        legacy_version = getattr(cinder_contracts, "PUBLIC_CONTRACT_VERSION", None)
+        input_schema_version = getattr(
+            cinder_contracts,
+            "SIMULATION_CASE_SCHEMA_VERSION",
+            legacy_version,
         )
-        result_contract_version = int(
-            getattr(
-                cinder_contracts,
-                "SIMULATION_RESULT_CONTRACT_VERSION",
-                input_schema_version,
-            )
+        result_contract_version = getattr(
+            cinder_contracts,
+            "SIMULATION_RESULT_CONTRACT_VERSION",
+            legacy_version,
         )
+        if input_schema_version is None or result_contract_version is None:
+            raise RuntimeError(
+                "Installed CINDER does not expose recognized simulation-case and "
+                "simulation-result contract versions."
+            )
+        input_schema_version = int(input_schema_version)
+        result_contract_version = int(result_contract_version)
         return {
             "package": "cinder-cvt",
             "package_version": str(cinder.__version__),

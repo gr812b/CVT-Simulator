@@ -9,7 +9,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any, Literal
 
-from .conventions import PUBLIC_CONTRACT_VERSION, describe_public_field
+from .conventions import describe_public_field
+from .versions import COMPONENT_CATALOG_CONTRACT_VERSION
 
 
 @dataclass(frozen=True, slots=True)
@@ -208,7 +209,7 @@ def component_catalog_document() -> dict[str, Any]:
     """Return a JSON-safe factual catalog for a backend or frontend."""
 
     return {
-        "contract_version": PUBLIC_CONTRACT_VERSION,
+        "contract_version": COMPONENT_CATALOG_CONTRACT_VERSION,
         "document_type": "cinder_component_catalog",
         "components": [component.as_dict() for component in component_catalog()],
         "profile_kinds": [

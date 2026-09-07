@@ -120,9 +120,11 @@ All public numeric values are SI.
 
 ## Simulation-result fields
 
-`project_simulation_result(result)` uses the same top-level contract version for
-scalar report data and compact spatial results.  In addition to `report_table`,
-a projected result can contain:
+Simulation-case documents and simulation-result projections are versioned
+independently. The current simulation-case schema remains version 1, while
+`project_simulation_result(result)` emits simulation-result contract version 2.
+The result contract covers both scalar report data and compact spatial results.
+In addition to `report_table`, a projected result can contain:
 
 ```text
 domains   reusable spatial domains and their geometry expressions

@@ -21,6 +21,7 @@ router = APIRouter(prefix="/metadata", tags=["metadata"])
 def runtime(container: ApplicationContainer = Depends(get_container)) -> CinderRuntimeResponse:
     return CinderRuntimeResponse(**container.gateway.runtime_identity())
 
+
 @router.get("/conventions", response_model=ConventionsResponse)
 def conventions(container: ApplicationContainer = Depends(get_container)) -> ConventionsResponse:
     return ConventionsResponse(document=container.gateway.conventions())

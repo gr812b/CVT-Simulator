@@ -30,10 +30,10 @@ from cinder.studies.geometry import (
     RatioSensitivityField,
 )
 
-from .conventions import (
-    PUBLIC_CONTRACT_VERSION,
-    describe_public_field,
-    public_conventions,
+from .conventions import describe_public_field, public_conventions
+from .versions import (
+    SIMULATION_RESULT_CONTRACT_VERSION,
+    STUDY_RESULT_CONTRACT_VERSION,
 )
 from .simulation import summarize_simulation
 from .validation import AssemblyValidationReport
@@ -174,7 +174,7 @@ def project_simulation_result(
         raise TypeError("result must be a CVTIntegrationResult.")
 
     payload: dict[str, Any] = {
-        "contract_version": PUBLIC_CONTRACT_VERSION,
+        "contract_version": SIMULATION_RESULT_CONTRACT_VERSION,
         "kind": "simulation_result",
         "conventions": public_conventions().as_dict(),
         "metrics": to_jsonable(summarize_simulation(result).as_dict()),
@@ -191,8 +191,7 @@ def project_simulation_result(
             for definition in result.domains.values()
         ],
         "fields": [
-            _project_spatial_field(definition)
-            for definition in result.fields.values()
+            _project_spatial_field(definition) for definition in result.fields.values()
         ],
         "transitions": [
             {
@@ -404,7 +403,7 @@ def _project_columns(
     columns: Mapping[str, np.ndarray],
 ) -> dict[str, Any]:
     return {
-        "contract_version": PUBLIC_CONTRACT_VERSION,
+        "contract_version": STUDY_RESULT_CONTRACT_VERSION,
         "kind": kind,
         "shape": list(shape),
         "axis_keys": list(axis_keys),
@@ -420,7 +419,7 @@ def _project_columns(
 
 def _project_scalars(kind: str, values: Mapping[str, float]) -> dict[str, Any]:
     return {
-        "contract_version": PUBLIC_CONTRACT_VERSION,
+        "contract_version": STUDY_RESULT_CONTRACT_VERSION,
         "kind": kind,
         "scalars": [
             {**describe_public_field(key).as_dict(), "value": to_jsonable(value)}

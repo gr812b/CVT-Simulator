@@ -11,7 +11,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any
 
-PUBLIC_CONTRACT_VERSION = 1
+from .versions import CONVENTIONS_CONTRACT_VERSION
 
 
 @dataclass(frozen=True, slots=True)
@@ -45,7 +45,7 @@ class PublicFieldDescriptor:
 class PublicConventions:
     """Readable conventions frozen for public CINDER consumers."""
 
-    contract_version: int = PUBLIC_CONTRACT_VERSION
+    contract_version: int = CONVENTIONS_CONTRACT_VERSION
     canonical_unit_system: str = "SI"
     ratio_definition: str = (
         "effective secondary radius divided by effective primary radius"

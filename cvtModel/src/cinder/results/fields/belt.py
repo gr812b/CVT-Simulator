@@ -18,7 +18,11 @@ from .expression import (
     sqrt_expr,
     where,
 )
-from .types import SpatialDomainDefinition, SpatialFieldDefinition, SpatialRegionDefinition
+from .types import (
+    SpatialDomainDefinition,
+    SpatialFieldDefinition,
+    SpatialRegionDefinition,
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -31,7 +35,9 @@ class BeltTensionBoundaries:
     secondary_out: float
 
 
-def recover_belt_tension_boundaries(inspection: CVTStateInspection) -> BeltTensionBoundaries | None:
+def recover_belt_tension_boundaries(
+    inspection: CVTStateInspection,
+) -> BeltTensionBoundaries | None:
     """Recover exact reduced-model wrap endpoint tensions after integration.
 
     This is post-processing only.  It evaluates the same closed-form quantities
@@ -79,10 +85,7 @@ def recover_belt_tension_boundaries(inspection: CVTStateInspection) -> BeltTensi
         + unknowns.primary_normal_resultant
         * sin_beta
         / (primary_wrap * terms.primary_phi_minus)
-        - primary_a
-        * primary_wrap
-        * terms.primary_psi_minus
-        / terms.primary_phi_minus
+        - primary_a * primary_wrap * terms.primary_psi_minus / terms.primary_phi_minus
     )
     primary_out = (
         primary_c
