@@ -49,7 +49,7 @@ jobs:
 
           required_files=(
             "backend/Dockerfile"
-            "backend/requirements-runtime.txt"
+            ""backend/requirements.txt""
             "frontend/Dockerfile"
             "frontend/package-lock.json"
             "frontend/nginx.conf"
