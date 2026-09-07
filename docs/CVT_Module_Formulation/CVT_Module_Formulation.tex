@@ -2238,7 +2238,29 @@ Using these roles, one evaluation proceeds as follows:
 \chapter{Derivation}
 \label{chap:derivation}
 
-TODO: Roadmap
+\Cref{chap:model_setup} established the CVT as a hybrid initial-value problem: at a given
+instant, the current state, mechanical regime, and shaft-interface loading are
+known, and the model must determine the corresponding instantaneous response.
+This chapter derives the mechanics required to perform that evaluation. The
+development begins with the most general continuous configuration, in which the
+belt is fully engaged and the CVT is free to shift, and then returns to the
+mechanical boundaries and regime changes that connect successive intervals of
+continuous motion.
+
+\Cref{sec:geometry} first develops the pulley and belt-loop kinematics, reducing
+the motion of both sheaves and both pulley radii to the shared shift coordinate.
+Using that kinematic structure, \Cref{sec:axial_actuation_balances} derives the
+axial actuation and movable-sheave dynamics, while
+\Cref{sec:pulley_rotational_dynamics} develops the corresponding rotational
+dynamics of the two pulley assemblies. \Cref{sec:belt_transport_contact} then
+closes the mechanics of the belt itself, relating its transport motion,
+tension, pulley loading, and transmitted torque. These pieces are assembled in
+\Cref{sec:engaged_dynamic_closure}, where the admissible belt--pulley contact
+state completes the instantaneous dynamics of the freely shifting engaged CVT.
+Finally, \Cref{sec:shift_limits_deadzone} extends this result to the remaining
+mechanical regimes, showing how the continuous equations reduce when additional
+constraints become active and how the state is carried consistently through
+transitions between them.
 
 \section{Pulley Geometry}
 \label{sec:geometry}
