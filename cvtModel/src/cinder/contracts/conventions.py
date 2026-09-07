@@ -149,6 +149,36 @@ _EXACT: dict[str, tuple[str, str, str, str]] = {
         "length_rate",
         "Time derivative of secondary outer radius.",
     ),
+    "contact.primary_tension_in": (
+        "Primary wrap entry tension",
+        "N",
+        "force",
+        "Belt tension at entry to the primary pulley wrap in the modeled belt-travel ordering.",
+    ),
+    "contact.primary_tension_out": (
+        "Primary wrap exit tension",
+        "N",
+        "force",
+        "Belt tension at exit from the primary pulley wrap in the modeled belt-travel ordering.",
+    ),
+    "contact.secondary_tension_in": (
+        "Secondary wrap entry tension",
+        "N",
+        "force",
+        "Belt tension at entry to the secondary pulley wrap in the modeled belt-travel ordering.",
+    ),
+    "contact.secondary_tension_out": (
+        "Secondary wrap exit tension",
+        "N",
+        "force",
+        "Belt tension at exit from the secondary pulley wrap in the modeled belt-travel ordering.",
+    ),
+    "belt.tension": (
+        "Belt tension",
+        "N",
+        "force",
+        "Continuous tensile force around the reduced closed belt loop.",
+    ),
     "observer.primary_boundary_power": (
         "Primary boundary power",
         "W",

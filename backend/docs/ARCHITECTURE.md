@@ -26,3 +26,38 @@ The production default is a spawned local process. The parent can kill it after
 `CVT_RUN_TIMEOUT_SECONDS` (default `120`). Tests select the inline executor.
 No continuous progress is fabricated because CINDER does not expose meaningful
 integrator progress yet.
+
+
+## CINDER package and result-contract boundary
+
+The backend depends on an immutable PyPI release of `cinder-cvt`, pinned in
+`requirements.txt`. `app/application/cinder_gateway.py` remains the only
+module that imports CINDER directly. The gateway exposes the installed package
+version, simulation-input schema version, and simulation-result contract version
+as runtime identity.
+
+These are intentionally separate concepts:
+
+```text
+CINDER package version              implementation/provenance of the mechanics package
+simulation case schema version      schema of the frozen input document
+simulation result contract version  schema of the projected result artifact
+```
+
+A result-contract change therefore does not require changing how the mechanical
+solver is called. Database-backed runs record all three identities, and cache
+lookups include them. The projected result's own `contract_version` is checked
+before it is persisted, preventing a result from being stored under the wrong
+version metadata.
+
+The backend does not reinterpret new result fields. Additions such as compact
+CINDER domains/fields are part of the JSON-safe result projection returned by
+`CinderGateway.run_simulation()` and are persisted/passed through as ordinary
+result artifact data.
+
+Current CINDER v1 releases expose one `PUBLIC_CONTRACT_VERSION`. The gateway
+therefore uses it as a compatibility fallback. A CINDER release that evolves the
+contracts independently can expose `SIMULATION_CASE_SCHEMA_VERSION` and
+`SIMULATION_RESULT_CONTRACT_VERSION`; in particular, a result-only change can
+leave the saved input document at schema v1 while the result projection advances
+to v2.

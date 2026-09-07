@@ -74,6 +74,7 @@ def main() -> None:
     print("Termination:", payload["metrics"]["termination_reason"])
     print("Transitions:", len(payload["transitions"]))
     print("Report rows:", payload["report_table"]["row_count"])
+    print("Derived fields:", ", ".join(result.field_keys) or "(none)")
     print("First report columns:")
     for column in payload["report_table"]["columns"][:8]:
         print(f"  {column['key']} [{column['canonical_unit']}]")

@@ -16,7 +16,11 @@ from typing import Any
 import numpy as np
 
 from cinder.model.system import CVTState
-from cinder.results import CVTIntegrationResult
+from cinder.results import (
+    CVTIntegrationResult,
+    SpatialDomainDefinition,
+    SpatialFieldDefinition,
+)
 from cinder.studies.actuation import ClampingForceResponseField
 from cinder.studies.geometry import (
     GeometryDesignSummary,
@@ -182,6 +186,14 @@ def project_simulation_result(
         },
         "warnings": list(result.warnings),
         "report_table": _project_report_table(result),
+        "domains": [
+            _project_spatial_domain(definition)
+            for definition in result.domains.values()
+        ],
+        "fields": [
+            _project_spatial_field(definition)
+            for definition in result.fields.values()
+        ],
         "transitions": [
             {
                 "time_s": record.time,
@@ -201,6 +213,62 @@ def project_simulation_result(
         ]
     if include_raw_trace:
         payload["raw_trace"] = _project_raw_trace(result)
+    return payload
+
+
+def _project_spatial_domain(definition: SpatialDomainDefinition) -> dict[str, Any]:
+    """Project one reusable spatial domain using the public result contract."""
+
+    return {
+        "key": definition.key,
+        "label": definition.label,
+        "description": definition.description,
+        "periodic": definition.periodic,
+        "coordinate": {
+            "key": "u",
+            "minimum": 0.0,
+            "maximum": 1.0,
+            "dimension": "dimensionless",
+            "meaning": "local normalized coordinate within each region",
+        },
+        "embedding": {
+            "dimensions": 2,
+            "canonical_unit": definition.embedding_unit,
+        },
+        "regions": [
+            {
+                "key": region.key,
+                "label": region.label,
+                "length": region.length.as_dict(),
+                "position": {
+                    "x": region.x.as_dict(),
+                    "y": region.y.as_dict(),
+                },
+            }
+            for region in definition.regions
+        ],
+    }
+
+
+def _project_spatial_field(definition: SpatialFieldDefinition) -> dict[str, Any]:
+    """Project one compact derived-field definition for generic consumers."""
+
+    descriptor = describe_public_field(
+        definition.key, unit=definition.unit, label=definition.label
+    )
+    payload = descriptor.as_dict()
+    payload.update(
+        {
+            "group": definition.group,
+            "domain": definition.domain_key,
+            "representation": "expression",
+            "description": definition.description or descriptor.description,
+            "regions": [
+                {"key": key, "expression": expression.as_dict()}
+                for key, expression in definition.regions.items()
+            ],
+        }
+    )
     return payload
 
 

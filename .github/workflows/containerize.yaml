@@ -48,8 +48,6 @@ jobs:
           set -euo pipefail
 
           required_files=(
-            "cvtModel/pyproject.toml"
-            "cvtModel/setup.cfg"
             "backend/Dockerfile"
             "backend/requirements-runtime.txt"
             "frontend/Dockerfile"

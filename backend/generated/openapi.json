@@ -88,6 +88,35 @@
         "title": "BeltSectionRequest",
         "type": "object"
       },
+      "CinderRuntimeResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "package": {
+            "title": "Package",
+            "type": "string"
+          },
+          "package_version": {
+            "title": "Package Version",
+            "type": "string"
+          },
+          "simulation_case_schema_version": {
+            "title": "Simulation Case Schema Version",
+            "type": "integer"
+          },
+          "simulation_result_contract_version": {
+            "title": "Simulation Result Contract Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "package",
+          "package_version",
+          "simulation_case_schema_version",
+          "simulation_result_contract_version"
+        ],
+        "title": "CinderRuntimeResponse",
+        "type": "object"
+      },
       "ClampingResponseStudyRequest": {
         "additionalProperties": false,
         "properties": {
@@ -2093,6 +2122,17 @@
             ],
             "title": "Cache Hit"
           },
+          "cinder_package_version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cinder Package Version"
+          },
           "completed_at": {
             "anyOf": [
               {
@@ -2131,6 +2171,28 @@
           "id": {
             "title": "Id",
             "type": "string"
+          },
+          "input_schema_version": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Input Schema Version"
+          },
+          "result_contract_version": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Result Contract Version"
           },
           "source": {
             "default": "direct",
@@ -3967,6 +4029,27 @@
           }
         },
         "summary": "Editor Schema",
+        "tags": [
+          "metadata"
+        ]
+      }
+    },
+    "/api/v1/metadata/runtime": {
+      "get": {
+        "operationId": "runtime_api_v1_metadata_runtime_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CinderRuntimeResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Runtime",
         "tags": [
           "metadata"
         ]

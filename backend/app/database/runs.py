@@ -18,11 +18,6 @@ from app.database.models import Run, RunArtifact, RunCacheEntry, VehicleAssembly
 from app.database.resolver import resolve_simulation_case
 from app.database.run_previews import DEFAULT_PREVIEW_PROFILE, build_run_preview
 
-try:  # pragma: no cover - covered indirectly when CINDER is importable.
-    from cinder import __version__ as CINDER_MODEL_VERSION
-except Exception:  # pragma: no cover - defensive for docs/import-only tooling.
-    CINDER_MODEL_VERSION = "unknown"
-
 JsonDict = dict[str, Any]
 
 
@@ -105,8 +100,10 @@ def submit_library_run(
         ) from exc
     contract_hash = canonical_json_hash(executable_contract(document))
     document["contract_hash"] = contract_hash
-    cinder_model_version = str(CINDER_MODEL_VERSION)
-    contract_schema_version = int(document.get("schema_version", 1))
+    runtime = gateway.runtime_identity()
+    cinder_model_version = str(runtime["package_version"])
+    input_schema_version = int(document.get("schema_version", 1))
+    result_contract_version = int(runtime["simulation_result_contract_version"])
 
     validation = gateway.validate_simulation_case(document)
     if not bool(validation.get("is_valid")):
@@ -121,7 +118,8 @@ def submit_library_run(
         session,
         contract_hash=contract_hash,
         cinder_model_version=cinder_model_version,
-        contract_schema_version=contract_schema_version,
+        input_schema_version=input_schema_version,
+        result_contract_version=result_contract_version,
     )
     if cached is not None:
         run = _create_completed_cache_hit_run(
@@ -135,7 +133,8 @@ def submit_library_run(
             input_contract=document,
             contract_hash=contract_hash,
             cinder_model_version=cinder_model_version,
-            contract_schema_version=contract_schema_version,
+            input_schema_version=input_schema_version,
+            result_contract_version=result_contract_version,
             cache_entry=cached,
         )
         return SubmittedLibraryRun(run=run, cache_hit=True)
@@ -144,7 +143,8 @@ def submit_library_run(
         session,
         contract_hash=contract_hash,
         cinder_model_version=cinder_model_version,
-        contract_schema_version=contract_schema_version,
+        input_schema_version=input_schema_version,
+        result_contract_version=result_contract_version,
     )
 
     run = _create_queued_run(
@@ -158,7 +158,8 @@ def submit_library_run(
         input_contract=document,
         contract_hash=contract_hash,
         cinder_model_version=cinder_model_version,
-        contract_schema_version=contract_schema_version,
+        input_schema_version=input_schema_version,
+        result_contract_version=result_contract_version,
     )
     _mark_running(run)
     session.flush()
@@ -169,6 +170,7 @@ def submit_library_run(
             include_reported_segments=include_reported_segments,
             include_raw_trace=include_raw_trace,
         )
+        _verify_result_contract(result, expected_version=result_contract_version)
     except Exception as exc:  # keep the DB run as a durable failed record.
         _mark_failed(run, message=str(exc), code=type(exc).__name__)
         session.flush()
@@ -187,7 +189,8 @@ def submit_library_run(
         cache_entry = RunCacheEntry(
             contract_hash=contract_hash,
             cinder_model_version=cinder_model_version,
-            contract_schema_version=contract_schema_version,
+            input_schema_version=input_schema_version,
+            result_contract_version=result_contract_version,
             status="completed",
             full_result_artifact_id=full_result_artifact.id,
             summary_scalars=_summary_scalars(result),
@@ -240,10 +243,12 @@ def submit_rerun_from_database_run(
     document = copy.deepcopy(source_run.input_contract)
     contract_hash = source_run.contract_hash or canonical_json_hash(executable_contract(document))
     document["contract_hash"] = contract_hash
-    cinder_model_version = source_run.cinder_model_version or str(CINDER_MODEL_VERSION)
-    contract_schema_version = int(
-        source_run.contract_schema_version or document.get("schema_version", 1)
-    )
+    # A stored rerun freezes the old input, but it executes with the CINDER
+    # package pinned in this deployment. Record/cache against what actually ran.
+    runtime = gateway.runtime_identity()
+    cinder_model_version = str(runtime["package_version"])
+    input_schema_version = int(document.get("schema_version", 1))
+    result_contract_version = int(runtime["simulation_result_contract_version"])
 
     validation = gateway.validate_simulation_case(document)
     if not bool(validation.get("is_valid")):
@@ -258,7 +263,8 @@ def submit_rerun_from_database_run(
         session,
         contract_hash=contract_hash,
         cinder_model_version=cinder_model_version,
-        contract_schema_version=contract_schema_version,
+        input_schema_version=input_schema_version,
+        result_contract_version=result_contract_version,
     )
     if cached is not None:
         run = _create_completed_cache_hit_run_from_source(
@@ -268,7 +274,8 @@ def submit_rerun_from_database_run(
             input_contract=document,
             contract_hash=contract_hash,
             cinder_model_version=cinder_model_version,
-            contract_schema_version=contract_schema_version,
+            input_schema_version=input_schema_version,
+            result_contract_version=result_contract_version,
             cache_entry=cached,
         )
         return SubmittedLibraryRun(run=run, cache_hit=True)
@@ -277,7 +284,8 @@ def submit_rerun_from_database_run(
         session,
         contract_hash=contract_hash,
         cinder_model_version=cinder_model_version,
-        contract_schema_version=contract_schema_version,
+        input_schema_version=input_schema_version,
+        result_contract_version=result_contract_version,
     )
 
     run = _create_queued_run_from_source(
@@ -287,7 +295,8 @@ def submit_rerun_from_database_run(
         input_contract=document,
         contract_hash=contract_hash,
         cinder_model_version=cinder_model_version,
-        contract_schema_version=contract_schema_version,
+        input_schema_version=input_schema_version,
+        result_contract_version=result_contract_version,
     )
     _mark_running(run)
     session.flush()
@@ -298,6 +307,7 @@ def submit_rerun_from_database_run(
             include_reported_segments=include_reported_segments,
             include_raw_trace=include_raw_trace,
         )
+        _verify_result_contract(result, expected_version=result_contract_version)
     except Exception as exc:  # keep the DB run as a durable failed record.
         _mark_failed(run, message=str(exc), code=type(exc).__name__)
         session.flush()
@@ -316,7 +326,8 @@ def submit_rerun_from_database_run(
         cache_entry = RunCacheEntry(
             contract_hash=contract_hash,
             cinder_model_version=cinder_model_version,
-            contract_schema_version=contract_schema_version,
+            input_schema_version=input_schema_version,
+            result_contract_version=result_contract_version,
             status="completed",
             full_result_artifact_id=full_result_artifact.id,
             summary_scalars=_summary_scalars(result),
@@ -428,6 +439,15 @@ def list_database_runs(
     return list(session.scalars(stmt).all())
 
 
+def _verify_result_contract(result: JsonDict, *, expected_version: int) -> None:
+    actual = result.get("contract_version")
+    if actual != expected_version:
+        raise RuntimeError(
+            "Installed CINDER projected simulation-result contract "
+            f"version {actual!r}; backend expected {expected_version}."
+        )
+
+
 def executable_contract(document: JsonDict) -> JsonDict:
     """Return the pure CINDER-executable subset used for run cache hashing."""
 
@@ -441,12 +461,14 @@ def _completed_cache_entry(
     *,
     contract_hash: str,
     cinder_model_version: str,
-    contract_schema_version: int,
+    input_schema_version: int,
+    result_contract_version: int,
 ) -> RunCacheEntry | None:
     stmt = select(RunCacheEntry).where(
         RunCacheEntry.contract_hash == contract_hash,
         RunCacheEntry.cinder_model_version == cinder_model_version,
-        RunCacheEntry.contract_schema_version == contract_schema_version,
+        RunCacheEntry.input_schema_version == input_schema_version,
+        RunCacheEntry.result_contract_version == result_contract_version,
         RunCacheEntry.status == "completed",
     )
     cache_entry = session.scalar(stmt)
@@ -466,12 +488,14 @@ def _cache_entry_by_contract(
     *,
     contract_hash: str,
     cinder_model_version: str,
-    contract_schema_version: int,
+    input_schema_version: int,
+    result_contract_version: int,
 ) -> RunCacheEntry | None:
     stmt = select(RunCacheEntry).where(
         RunCacheEntry.contract_hash == contract_hash,
         RunCacheEntry.cinder_model_version == cinder_model_version,
-        RunCacheEntry.contract_schema_version == contract_schema_version,
+        RunCacheEntry.input_schema_version == input_schema_version,
+        RunCacheEntry.result_contract_version == result_contract_version,
     )
     return session.scalar(stmt)
 
@@ -488,7 +512,8 @@ def _create_queued_run(
     input_contract: JsonDict,
     contract_hash: str,
     cinder_model_version: str,
-    contract_schema_version: int,
+    input_schema_version: int,
+    result_contract_version: int,
 ) -> Run:
     resolution = input_contract.get("database_resolution", {})
     run = Run(
@@ -507,7 +532,8 @@ def _create_queued_run(
         input_contract=copy.deepcopy(input_contract),
         contract_hash=contract_hash,
         cinder_model_version=cinder_model_version,
-        contract_schema_version=contract_schema_version,
+        input_schema_version=input_schema_version,
+        result_contract_version=result_contract_version,
         status="queued",
     )
     session.add(run)
@@ -523,7 +549,8 @@ def _create_queued_run_from_source(
     input_contract: JsonDict,
     contract_hash: str,
     cinder_model_version: str,
-    contract_schema_version: int,
+    input_schema_version: int,
+    result_contract_version: int,
 ) -> Run:
     run = Run(
         account_id=source_run.account_id,
@@ -541,7 +568,8 @@ def _create_queued_run_from_source(
         input_contract=copy.deepcopy(input_contract),
         contract_hash=contract_hash,
         cinder_model_version=cinder_model_version,
-        contract_schema_version=contract_schema_version,
+        input_schema_version=input_schema_version,
+        result_contract_version=result_contract_version,
         status="queued",
     )
     session.add(run)
@@ -557,7 +585,8 @@ def _create_completed_cache_hit_run_from_source(
     input_contract: JsonDict,
     contract_hash: str,
     cinder_model_version: str,
-    contract_schema_version: int,
+    input_schema_version: int,
+    result_contract_version: int,
     cache_entry: RunCacheEntry,
 ) -> Run:
     run = _create_queued_run_from_source(
@@ -567,7 +596,8 @@ def _create_completed_cache_hit_run_from_source(
         input_contract=input_contract,
         contract_hash=contract_hash,
         cinder_model_version=cinder_model_version,
-        contract_schema_version=contract_schema_version,
+        input_schema_version=input_schema_version,
+        result_contract_version=result_contract_version,
     )
     cache_artifact = session.get(RunArtifact, cache_entry.full_result_artifact_id)
     if cache_artifact is None or cache_artifact.inline_payload is None:
@@ -608,7 +638,8 @@ def _create_completed_cache_hit_run(
     input_contract: JsonDict,
     contract_hash: str,
     cinder_model_version: str,
-    contract_schema_version: int,
+    input_schema_version: int,
+    result_contract_version: int,
     cache_entry: RunCacheEntry,
 ) -> Run:
     run = _create_queued_run(
@@ -622,7 +653,8 @@ def _create_completed_cache_hit_run(
         input_contract=input_contract,
         contract_hash=contract_hash,
         cinder_model_version=cinder_model_version,
-        contract_schema_version=contract_schema_version,
+        input_schema_version=input_schema_version,
+        result_contract_version=result_contract_version,
     )
     cache_artifact = session.get(RunArtifact, cache_entry.full_result_artifact_id)
     if cache_artifact is None or cache_artifact.inline_payload is None:

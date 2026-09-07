@@ -1,6 +1,6 @@
 """Write backend OpenAPI plus CINDER's public document schema for type generation.
 
-Run from the backend root after installing the local CINDER package:
+Run from the backend root after installing the backend dependencies:
 
     python -m app.scripts.export_contract_artifacts --output-dir generated
 

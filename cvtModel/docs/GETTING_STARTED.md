@@ -72,6 +72,35 @@ upper stop        s = geometry.max_shift
 Belt traction limits come from `BeltContactSpec`; the runtime contact closure is
 constructed from those physical contact values.
 
+
+## Post-integration results and derived fields
+
+A normal `system.run(...)` returns a `CVTIntegrationResult`.  The existing
+`segments`/`NumericSignal` report remains the scalar time-history surface.
+Analytical spatial results are available lazily through the same result:
+
+```python
+print(result.field_keys)
+# ('belt.tension',)
+
+sample = result.field("belt.tension").sample(frame_index=120, count=200)
+xy = sample.domain.position   # shape (200, 2), metres
+T = sample.values             # shape (200,), newtons
+```
+
+For Python analysis that prefers a fully materialized array:
+
+```python
+series = result.field("belt.tension").materialize(count=200)
+
+series.time       # (n_report_frames,)
+series.position   # (n_report_frames, 200, 2)
+series.values     # (n_report_frames, 200)
+```
+
+This reconstruction occurs after integration and does not add solver states or
+RHS work.  See `SOURCE_LAYOUT.md` for the result-layer boundary.
+
 ## Public saved documents
 
 Use `cinder.contracts` when a simulation must be saved, validated, exchanged, or

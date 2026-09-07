@@ -1,4 +1,4 @@
-# Build from repository root so the backend and CINDER package are both available:
+# Build from repository root:
 #   docker build -f backend/Dockerfile -t cvt-simulator-api .
 FROM python:3.12-slim
 
@@ -8,15 +8,11 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 
 WORKDIR /app
 
-# Production image: install CINDER as a normal package, not an editable install.
-COPY cvtModel /opt/cvtModel
+# CINDER and all backend runtime dependencies come from the backend's pinned
+# requirements file. No repository-local CINDER source is copied into the image.
+COPY backend/requirements.txt /app/requirements.txt
 RUN python -m pip install --no-cache-dir --upgrade pip \
-    && python -m pip install --no-cache-dir /opt/cvtModel
-
-# Install only backend runtime dependencies. This file deliberately does not
-# contain the local editable CINDER path used during development.
-COPY backend/requirements-runtime.txt /app/requirements-runtime.txt
-RUN python -m pip install --no-cache-dir -r /app/requirements-runtime.txt
+    && python -m pip install --no-cache-dir -r /app/requirements.txt
 
 # Includes app/, presets/, and the rest of the runtime backend package.
 COPY backend /app
