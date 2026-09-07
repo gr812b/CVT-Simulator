@@ -1334,12 +1334,18 @@ precise simulation problem. This requires a clear account of what belongs to
 the modeled transmission, how surrounding systems interact with it
 mechanically, and what information describes the CVT at a given instant.
 
-The definition proceeds from the outside inward. The CVT boundary and its
-external mechanical interfaces are established first, followed by the
-assumptions that determine the physical detail retained. Coordinates and sign
-conventions then define how the retained motions are measured. From these
-choices, the internal state, operating regimes, and instantaneous unknowns of
-the model can be identified.
+The definition proceeds from the outside inward. \Cref{sec:system_definition}
+first establishes the modeled CVT and its shaft interfaces, after which
+\Cref{sec:assumptions} states the physical idealizations that set the
+resolution of the formulation. \Cref{sec:coordinate_sign_conventions} then defines the
+coordinates and sign conventions used to describe the retained motions.
+With those choices fixed, \Cref{sec:continuous_state_variables} identifies the internal
+state carried from one instant to the next, while
+\Cref{sec:mechanical_regimes_state_evolution} introduces the active mechanical constraints
+that distinguish the admissible operating regimes. Finally,
+\Cref{sec:model_evaluation_flow} separates the roles of fixed data, current state,
+shaft-interface loading, and instantaneous model results, completing the
+simulation problem used by the derivation in Chapter~3.
 
 These definitions provide the common problem statement used by the derivation
 in \Cref{chap:derivation}. At any instant, the fixed CVT data, current internal
@@ -1808,8 +1814,6 @@ additional behaviour that change is intended to recover.
 % ==============================================================
 \section{Coordinate and Sign Conventions}
 \label{sec:coordinate_sign_conventions}
-% \label{sec:notation}
-% \label{sec:sign}
 
 This section defines the coordinates and sign conventions used throughout the
 formulation.
@@ -1951,8 +1955,6 @@ a Cartesian pair.
 % ==============================================================
 \section{CVT State Variables}
 \label{sec:continuous_state_variables}
-% \label{sec:state}
-% \label{sec:state_vector}
 
 At any instant, the modeled CVT's motion and configuration are described by
 five internal numerical quantities. These quantities are collected in the
@@ -2235,6 +2237,7 @@ Using these roles, one evaluation proceeds as follows:
     \item The resulting state and regime become the current internal condition
           for the next evaluation, and the cycle repeats.
 \end{enumerate}
+
 \chapter{Derivation}
 \label{chap:derivation}
 
