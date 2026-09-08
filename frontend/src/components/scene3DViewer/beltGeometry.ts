@@ -84,6 +84,12 @@ function scenePath(sample: SpatialDomainSample, axialPosition: number): {
   };
 }
 
+
+/** Return path-derived pulley centers without reconstructing belt mechanics. */
+export function beltSceneLayout(sample: SpatialDomainSample): BeltSceneLayout | null {
+  return scenePath(sample, 0).layout;
+}
+
 function tensionColor(value: number, range: NumericRange): THREE.Color {
   const span = range.maximum - range.minimum;
   const normalized = span > 0
@@ -188,6 +194,7 @@ export function createBeltMesh(): THREE.Mesh {
       roughness: 0.8,
       clearcoat: 0.1,
       clearcoatRoughness: 0.8,
+      flatShading: true,
       side: THREE.DoubleSide,
     }),
   );
