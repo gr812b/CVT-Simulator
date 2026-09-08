@@ -1,4 +1,11 @@
-# Local backend installation.
-# Keep CINDER editable locally so source changes take effect without rebuilding.
--r requirements-runtime.txt
--e ../cvtModel
+# Backend runtime dependencies.
+# Keep CINDER pinned exactly so persisted run provenance and cache identity are reproducible.
+# After CINDER 1.1.0 is published, the follow-up integration PR changes only this pin.
+cinder-cvt==1.0.1
+
+fastapi>=0.116,<1.0
+uvicorn[standard]>=0.35,<1.0
+pydantic>=2.11,<3.0
+sqlalchemy>=2.0,<3.0
+alembic>=1.13,<2.0
+psycopg[binary]>=3.2,<4.0

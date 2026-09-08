@@ -537,7 +537,12 @@ class RunCacheEntry(StringUUIDPrimaryKeyMixin, Base):
 
     contract_hash: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
     cinder_model_version: Mapped[str] = mapped_column(String(80), nullable=False)
-    contract_schema_version: Mapped[int] = mapped_column(Integer, nullable=False)
+    # Physical column name retained for compatibility with the existing V1 DB.
+    # Semantically this is the schema version of the frozen simulation input.
+    input_schema_version: Mapped[int] = mapped_column(
+        "contract_schema_version", Integer, nullable=False
+    )
+    result_contract_version: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
     status: Mapped[str] = mapped_column(String(40), nullable=False)
     full_result_artifact_id: Mapped[str | None] = mapped_column(String(36), nullable=True)
     summary_scalars: Mapped[JsonDict] = mapped_column(JsonPayload, nullable=False, default=dict)
@@ -586,7 +591,12 @@ class Run(StringUUIDPrimaryKeyMixin, Base):
     input_contract: Mapped[JsonDict] = mapped_column(JsonPayload, nullable=False)
     contract_hash: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
     cinder_model_version: Mapped[str] = mapped_column(String(80), nullable=False)
-    contract_schema_version: Mapped[int] = mapped_column(Integer, nullable=False)
+    # Physical column name retained for compatibility with the existing V1 DB.
+    # Semantically this is the schema version of the frozen simulation input.
+    input_schema_version: Mapped[int] = mapped_column(
+        "contract_schema_version", Integer, nullable=False
+    )
+    result_contract_version: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
     status: Mapped[str] = mapped_column(String(40), nullable=False)
     submitted_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=utc_now, nullable=False

@@ -85,6 +85,9 @@ class RunStatusResponse(ApiModel):
     cache_entry_id: str | None = None
     cache_hit: bool | None = None
     vehicle_assembly_version_id: str | None = None
+    cinder_package_version: str | None = None
+    input_schema_version: int | None = None
+    result_contract_version: int | None = None
     summary_scalars: JsonObject = Field(default_factory=dict)
 
 

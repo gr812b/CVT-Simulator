@@ -117,3 +117,44 @@ Shift stops and dead-zone limits are derived from geometry rather than repeated
 as execution parameters.
 
 All public numeric values are SI.
+
+## Simulation-result fields
+
+Simulation-case documents and simulation-result projections are versioned
+independently. The current simulation-case schema remains version 1, while
+`project_simulation_result(result)` emits simulation-result contract version 2.
+The result contract covers both scalar report data and compact spatial results.
+In addition to `report_table`, a projected result can contain:
+
+```text
+domains   reusable spatial domains and their geometry expressions
+fields    scalar derived fields attached to those domains
+```
+
+The initial built-ins are:
+
+```text
+belt.path       planar closed effective-radius belt path
+belt.tension    continuous reduced-model belt tension on belt.path
+```
+
+Expressions are JSON-safe trees.  Their leaves are literals, the local region
+coordinate `u`, or references to existing report-table signal keys.  Operators
+are ordinary generic math (`add`, `sub`, `mul`, `div`, `neg`, `abs`, `expm1`,
+`sin`, `cos`, `sqrt`, `lt`, and `where`).  A web backend may therefore pass the
+projected result through unchanged; a client needs only one generic expression
+evaluator rather than field-specific CVT equations.
+
+For belt tension, four additional ordinary report columns are emitted when
+contact reporting is enabled:
+
+```text
+contact.primary_tension_in
+contact.primary_tension_out
+contact.secondary_tension_in
+contact.secondary_tension_out
+```
+
+The field definition is transmitted once and references these columns together
+with the existing wrap-angle, effective-radius, and traction-utilization
+columns.

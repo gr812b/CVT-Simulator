@@ -17,7 +17,7 @@ through the important library lifecycle paths:
 * rerun after full-result eviction
 
 Usage:
-    PYTHONPATH=.:../cvtModel/src python -m app.scripts.smoke_library_database
+    python -m app.scripts.smoke_library_database
 """
 
 from __future__ import annotations

@@ -331,6 +331,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/metadata/runtime": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Runtime */
+        get: operations["runtime_api_v1_metadata_runtime_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/metadata/simulation-case-schema": {
         parameters: {
             query?: never;
@@ -653,6 +670,17 @@ export interface components {
             inner_width_m: number;
             /** Outer Width M */
             outer_width_m: number;
+        };
+        /** CinderRuntimeResponse */
+        CinderRuntimeResponse: {
+            /** Package */
+            package: string;
+            /** Package Version */
+            package_version: string;
+            /** Simulation Case Schema Version */
+            simulation_case_schema_version: number;
+            /** Simulation Result Contract Version */
+            simulation_result_contract_version: number;
         };
         /** ClampingResponseStudyRequest */
         ClampingResponseStudyRequest: {
@@ -1399,6 +1427,8 @@ export interface components {
             cache_entry_id?: string | null;
             /** Cache Hit */
             cache_hit?: boolean | null;
+            /** Cinder Package Version */
+            cinder_package_version?: string | null;
             /** Completed At */
             completed_at?: string | null;
             /** Contract Hash */
@@ -1409,6 +1439,10 @@ export interface components {
             } | null;
             /** Id */
             id: string;
+            /** Input Schema Version */
+            input_schema_version?: number | null;
+            /** Result Contract Version */
+            result_contract_version?: number | null;
             /**
              * Source
              * @default direct
@@ -2327,6 +2361,26 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["EditorSchemaResponse"];
+                };
+            };
+        };
+    };
+    runtime_api_v1_metadata_runtime_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CinderRuntimeResponse"];
                 };
             };
         };

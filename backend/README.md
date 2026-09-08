@@ -39,9 +39,16 @@ python -m pip install -r requirements-dev.txt
 uvicorn app.main:app --reload
 ```
 
-`requirements.txt` is the local-development entry point. It installs CINDER
-from the sibling `../cvtModel` directory in editable mode, so CINDER source
-changes are available immediately without rebuilding a package.
+`requirements.txt` is the backend runtime dependency list. CINDER is installed
+from PyPI at the exact version pinned there, so local, CI, and production runs
+use the same immutable package release. `requirements-dev.txt` simply extends
+that runtime list with developer/test tooling. When adopting a new CINDER
+release, bump the CINDER pin in `requirements.txt` deliberately and run the
+backend migration and test suite before deployment.
+
+For simultaneous CINDER/backend development you can still temporarily install a
+local CINDER checkout into your virtual environment with `pip install -e`, but
+that is an explicit developer override rather than the checked-in dependency.
 
 The API is served at `http://localhost:8000/api/v1`; Swagger UI is at
 `http://localhost:8000/docs`.
@@ -132,9 +139,9 @@ alembic downgrade -1
 ```
 
 For unit tests and disposable SQLite files, `app.database.bootstrap.create_database`
-uses the ORM metadata directly. The initial migration remains revision `20260708_0001`;
-the database has no external consumers yet, so this V1 baseline can still be refined
-without introducing a V2 migration.
+uses the ORM metadata directly. Production databases should always advance through
+Alembic. Revision `20260907_0003` adds independent CINDER result-contract version
+tracking while preserving the existing input-schema column.
 
 ## Database design notes
 
@@ -172,18 +179,17 @@ ownership.
 
 ## Production container
 
-Build from the repository root, not from `backend/`, so Docker can copy both
-the backend and the sibling CINDER package:
+Build from the repository root:
 
 ```bash
 docker build -f backend/Dockerfile -t cvt-simulator-api .
 docker run --rm -p 8000:8000 cvt-simulator-api
 ```
 
-The container installs CINDER normally from the copied `cvtModel/` source. It
-uses `requirements-runtime.txt`, which intentionally excludes the local
-editable `-e ../cvtModel` dependency. This makes the deployed image independent
-of the host checkout path while preserving the convenient local workflow.
+The container installs the exact `cinder-cvt` release pinned in
+`requirements.txt`; it no longer copies or installs a repository-local
+`cvtModel/` tree. This makes the deployed CINDER version explicit and identical
+to the normal backend dependency.
 
 The backend preset files are copied with `backend/`; for example, the tuned
 launch preset is available at `/app/presets/baja-launch-baseline.json` inside
@@ -202,13 +208,14 @@ A manual end-to-end test plan is included in [`docs/BLACK_BOX_TESTING.md`](docs/
 For the automated version of the same flow, run:
 
 ```bash
-PYTHONPATH=.:../cvtModel/src python -m app.scripts.smoke_library_database
+python -m app.scripts.smoke_library_database
 ```
 
 ## Main endpoints
 
 ```text
 GET  /api/v1/health
+GET  /api/v1/metadata/runtime
 GET  /api/v1/metadata/conventions
 GET  /api/v1/metadata/catalog
 GET  /api/v1/metadata/editor-schema

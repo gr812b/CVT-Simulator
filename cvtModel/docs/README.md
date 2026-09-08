@@ -3,6 +3,7 @@
 Start here:
 
 - `GETTING_STARTED.md` — installation, model composition, and the main Python API.
+- `SOURCE_LAYOUT.md` — source-tree responsibilities and dependency boundaries.
 - `PUBLIC_CONTRACTS.md` — versioned JSON-safe assembly and simulation documents.
 - `DOCUMENT_SCHEMA.md` — JSON Schema for the public simulation document.
 - `GEOMETRY_STUDY_API.md` — static geometry design/evaluation tools.

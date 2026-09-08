@@ -15,6 +15,15 @@ from cinder.execution.hybrid.cvt_regime import CVTOperatingRegime
 from cinder.execution.hybrid.composed import ComposedCVTHybridSystem, ComposedCVTMode
 
 from .inspection import CVTStateInspection, inspect_cvt_state
+from .fields import (
+    BoundSpatialDomain,
+    BoundSpatialField,
+    SpatialDomainDefinition,
+    SpatialFieldDefinition,
+    build_belt_path_domain,
+    build_belt_tension_field,
+    recover_belt_tension_boundaries,
+)
 from .trace import CVTIntegrationTrace
 
 if TYPE_CHECKING:
@@ -277,6 +286,73 @@ class CVTIntegrationResult:
     segments: tuple[CVTReportedSegment, ...]
     summary: CVTResultSummary
     warnings: tuple[str, ...] = ()
+    domains: Mapping[str, SpatialDomainDefinition] = field(default_factory=dict)
+    fields: Mapping[str, SpatialFieldDefinition] = field(default_factory=dict)
+
+    def __post_init__(self) -> None:
+        domains = dict(self.domains)
+        fields = dict(self.fields)
+        for key, definition in domains.items():
+            if key != definition.key:
+                raise ValueError(
+                    "domain mapping keys must equal SpatialDomainDefinition.key."
+                )
+        for key, definition in fields.items():
+            if key != definition.key:
+                raise ValueError(
+                    "field mapping keys must equal SpatialFieldDefinition.key."
+                )
+            if definition.domain_key not in domains:
+                raise ValueError(
+                    f"Field {key!r} references unknown domain {definition.domain_key!r}."
+                )
+            domain_region_keys = {
+                region.key for region in domains[definition.domain_key].regions
+            }
+            unknown_regions = set(definition.regions) - domain_region_keys
+            if unknown_regions:
+                raise ValueError(
+                    f"Field {key!r} references unknown regions: "
+                    + ", ".join(sorted(unknown_regions))
+                )
+        object.__setattr__(self, "domains", domains)
+        object.__setattr__(self, "fields", fields)
+
+    @property
+    def domain_keys(self) -> tuple[str, ...]:
+        """Return available spatial-domain keys in deterministic order."""
+
+        return tuple(self.domains)
+
+    @property
+    def field_keys(self) -> tuple[str, ...]:
+        """Return available derived-field keys in deterministic order."""
+
+        return tuple(self.fields)
+
+    def domain(self, key: str) -> BoundSpatialDomain:
+        """Bind one named spatial domain to this result."""
+
+        try:
+            definition = self.domains[key]
+        except KeyError as error:
+            available = ", ".join(self.domains)
+            raise KeyError(
+                f"Unknown result domain {key!r}; available keys: {available}."
+            ) from error
+        return BoundSpatialDomain(self, definition)
+
+    def field(self, key: str) -> BoundSpatialField:
+        """Bind one named derived spatial field to this result."""
+
+        try:
+            definition = self.fields[key]
+        except KeyError as error:
+            available = ", ".join(self.fields)
+            raise KeyError(
+                f"Unknown result field {key!r}; available keys: {available}."
+            ) from error
+        return BoundSpatialField(self, definition)
 
     @property
     def transitions(self):
@@ -419,6 +495,22 @@ class CVTResultBuilder:
                 )
             )
 
+        geometry_spec = self._cvt_system.model.geometry.spec
+        domains = {
+            "belt.path": build_belt_path_domain(
+                center_distance=geometry_spec.center_distance
+            )
+        }
+        fields = (
+            {
+                "belt.tension": build_belt_tension_field(
+                    sheave_half_angle=geometry_spec.sheave_half_angle
+                )
+            }
+            if settings.include_contact
+            else {}
+        )
+
         return CVTIntegrationResult(
             trace=trace,
             segments=tuple(reported),
@@ -433,6 +525,8 @@ class CVTResultBuilder:
                 ),
             ),
             warnings=tuple(warnings),
+            domains=domains,
+            fields=fields,
         )
 
 
@@ -815,6 +909,43 @@ def _add_contact_signals(
         "N",
         "contact",
         np.array([np.nan if row is None else row.normal_secondary for row in contact]),
+    )
+    tension_boundaries = [recover_belt_tension_boundaries(item) for item in inspections]
+    add(
+        "contact.primary_tension_in",
+        "Primary wrap entry tension",
+        "N",
+        "contact",
+        np.array(
+            [np.nan if row is None else row.primary_in for row in tension_boundaries]
+        ),
+    )
+    add(
+        "contact.primary_tension_out",
+        "Primary wrap exit tension",
+        "N",
+        "contact",
+        np.array(
+            [np.nan if row is None else row.primary_out for row in tension_boundaries]
+        ),
+    )
+    add(
+        "contact.secondary_tension_in",
+        "Secondary wrap entry tension",
+        "N",
+        "contact",
+        np.array(
+            [np.nan if row is None else row.secondary_in for row in tension_boundaries]
+        ),
+    )
+    add(
+        "contact.secondary_tension_out",
+        "Secondary wrap exit tension",
+        "N",
+        "contact",
+        np.array(
+            [np.nan if row is None else row.secondary_out for row in tension_boundaries]
+        ),
     )
     add(
         "contact.primary_transmitted_torque",

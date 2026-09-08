@@ -245,5 +245,8 @@ def _database_status(run: object, *, cache_hit: bool | None = None) -> RunStatus
         cache_entry_id=run.cache_entry_id,
         cache_hit=cache_hit,
         vehicle_assembly_version_id=run.vehicle_assembly_version_id,
+        cinder_package_version=run.cinder_model_version,
+        input_schema_version=run.input_schema_version,
+        result_contract_version=run.result_contract_version,
         summary_scalars=run.summary_scalars or {},
     )

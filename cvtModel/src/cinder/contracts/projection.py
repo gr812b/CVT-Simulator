@@ -16,7 +16,11 @@ from typing import Any
 import numpy as np
 
 from cinder.model.system import CVTState
-from cinder.results import CVTIntegrationResult
+from cinder.results import (
+    CVTIntegrationResult,
+    SpatialDomainDefinition,
+    SpatialFieldDefinition,
+)
 from cinder.studies.actuation import ClampingForceResponseField
 from cinder.studies.geometry import (
     GeometryDesignSummary,
@@ -26,10 +30,10 @@ from cinder.studies.geometry import (
     RatioSensitivityField,
 )
 
-from .conventions import (
-    PUBLIC_CONTRACT_VERSION,
-    describe_public_field,
-    public_conventions,
+from .conventions import describe_public_field, public_conventions
+from .versions import (
+    SIMULATION_RESULT_CONTRACT_VERSION,
+    STUDY_RESULT_CONTRACT_VERSION,
 )
 from .simulation import summarize_simulation
 from .validation import AssemblyValidationReport
@@ -170,7 +174,7 @@ def project_simulation_result(
         raise TypeError("result must be a CVTIntegrationResult.")
 
     payload: dict[str, Any] = {
-        "contract_version": PUBLIC_CONTRACT_VERSION,
+        "contract_version": SIMULATION_RESULT_CONTRACT_VERSION,
         "kind": "simulation_result",
         "conventions": public_conventions().as_dict(),
         "metrics": to_jsonable(summarize_simulation(result).as_dict()),
@@ -182,6 +186,13 @@ def project_simulation_result(
         },
         "warnings": list(result.warnings),
         "report_table": _project_report_table(result),
+        "domains": [
+            _project_spatial_domain(definition)
+            for definition in result.domains.values()
+        ],
+        "fields": [
+            _project_spatial_field(definition) for definition in result.fields.values()
+        ],
         "transitions": [
             {
                 "time_s": record.time,
@@ -201,6 +212,62 @@ def project_simulation_result(
         ]
     if include_raw_trace:
         payload["raw_trace"] = _project_raw_trace(result)
+    return payload
+
+
+def _project_spatial_domain(definition: SpatialDomainDefinition) -> dict[str, Any]:
+    """Project one reusable spatial domain using the public result contract."""
+
+    return {
+        "key": definition.key,
+        "label": definition.label,
+        "description": definition.description,
+        "periodic": definition.periodic,
+        "coordinate": {
+            "key": "u",
+            "minimum": 0.0,
+            "maximum": 1.0,
+            "dimension": "dimensionless",
+            "meaning": "local normalized coordinate within each region",
+        },
+        "embedding": {
+            "dimensions": 2,
+            "canonical_unit": definition.embedding_unit,
+        },
+        "regions": [
+            {
+                "key": region.key,
+                "label": region.label,
+                "length": region.length.as_dict(),
+                "position": {
+                    "x": region.x.as_dict(),
+                    "y": region.y.as_dict(),
+                },
+            }
+            for region in definition.regions
+        ],
+    }
+
+
+def _project_spatial_field(definition: SpatialFieldDefinition) -> dict[str, Any]:
+    """Project one compact derived-field definition for generic consumers."""
+
+    descriptor = describe_public_field(
+        definition.key, unit=definition.unit, label=definition.label
+    )
+    payload = descriptor.as_dict()
+    payload.update(
+        {
+            "group": definition.group,
+            "domain": definition.domain_key,
+            "representation": "expression",
+            "description": definition.description or descriptor.description,
+            "regions": [
+                {"key": key, "expression": expression.as_dict()}
+                for key, expression in definition.regions.items()
+            ],
+        }
+    )
     return payload
 
 
@@ -336,7 +403,7 @@ def _project_columns(
     columns: Mapping[str, np.ndarray],
 ) -> dict[str, Any]:
     return {
-        "contract_version": PUBLIC_CONTRACT_VERSION,
+        "contract_version": STUDY_RESULT_CONTRACT_VERSION,
         "kind": kind,
         "shape": list(shape),
         "axis_keys": list(axis_keys),
@@ -352,7 +419,7 @@ def _project_columns(
 
 def _project_scalars(kind: str, values: Mapping[str, float]) -> dict[str, Any]:
     return {
-        "contract_version": PUBLIC_CONTRACT_VERSION,
+        "contract_version": STUDY_RESULT_CONTRACT_VERSION,
         "kind": kind,
         "scalars": [
             {**describe_public_field(key).as_dict(), "value": to_jsonable(value)}

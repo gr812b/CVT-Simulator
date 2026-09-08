@@ -12,11 +12,18 @@ from .catalog import (
     component_catalog_document,
 )
 from .conventions import (
-    PUBLIC_CONTRACT_VERSION,
     PublicConventions,
     PublicFieldDescriptor,
     describe_public_field,
     public_conventions,
+)
+from .versions import (
+    ASSEMBLY_DOCUMENT_SCHEMA_VERSION,
+    COMPONENT_CATALOG_CONTRACT_VERSION,
+    CONVENTIONS_CONTRACT_VERSION,
+    SIMULATION_CASE_SCHEMA_VERSION,
+    SIMULATION_RESULT_CONTRACT_VERSION,
+    STUDY_RESULT_CONTRACT_VERSION,
 )
 from .document import (
     ASSEMBLY_DOCUMENT_TYPE,
@@ -60,6 +67,9 @@ from .validation import (
 
 __all__ = [
     "ASSEMBLY_DOCUMENT_TYPE",
+    "ASSEMBLY_DOCUMENT_SCHEMA_VERSION",
+    "COMPONENT_CATALOG_CONTRACT_VERSION",
+    "CONVENTIONS_CONTRACT_VERSION",
     "SIMULATION_CASE_DOCUMENT_TYPE",
     "AssemblyValidationOptions",
     "AssemblyValidationReport",
@@ -68,7 +78,9 @@ __all__ = [
     "DecodedSimulationCase",
     "DesignDocumentError",
     "EditableFieldDescriptor",
-    "PUBLIC_CONTRACT_VERSION",
+    "SIMULATION_CASE_SCHEMA_VERSION",
+    "SIMULATION_RESULT_CONTRACT_VERSION",
+    "STUDY_RESULT_CONTRACT_VERSION",
     "PublicConventions",
     "PublicFieldDescriptor",
     "SimulationMetrics",

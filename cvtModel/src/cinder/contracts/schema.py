@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from .conventions import PUBLIC_CONTRACT_VERSION
+from .versions import SIMULATION_CASE_SCHEMA_VERSION
 from .simulation_document import SIMULATION_CASE_DOCUMENT_TYPE
 
 
@@ -30,7 +30,7 @@ def simulation_case_document_json_schema() -> dict[str, Any]:
             "execution",
         ],
         "properties": {
-            "schema_version": {"const": PUBLIC_CONTRACT_VERSION},
+            "schema_version": {"const": SIMULATION_CASE_SCHEMA_VERSION},
             "document_type": {"const": SIMULATION_CASE_DOCUMENT_TYPE},
             "assembly": {"type": "object"},
             "shaft_boundaries": {

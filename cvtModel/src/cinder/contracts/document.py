@@ -53,7 +53,7 @@ from cinder.model.system import (
     PulleySpec,
 )
 
-from .conventions import PUBLIC_CONTRACT_VERSION
+from .versions import ASSEMBLY_DOCUMENT_SCHEMA_VERSION
 from ._decode import (
     DesignDocumentError,
     optional_number as _optional_number,
@@ -85,7 +85,7 @@ def encode_assembly_document(assembly: CVTAssemblySpec) -> dict[str, Any]:
     masses = assembly.inertias.axial_translation
 
     return {
-        "schema_version": PUBLIC_CONTRACT_VERSION,
+        "schema_version": ASSEMBLY_DOCUMENT_SCHEMA_VERSION,
         "document_type": ASSEMBLY_DOCUMENT_TYPE,
         "geometry": {
             "belt": {
@@ -558,9 +558,9 @@ def _decode_helix_profile(payload: Mapping[str, Any]) -> HelixProfile:
 
 def _require_exact_schema(document: Mapping[str, Any]) -> None:
     version = _integer(document, "schema_version")
-    if version != PUBLIC_CONTRACT_VERSION:
+    if version != ASSEMBLY_DOCUMENT_SCHEMA_VERSION:
         raise UnsupportedDesignDocumentError(
-            f"Unsupported CINDER design-document schema_version {version}; expected {PUBLIC_CONTRACT_VERSION}."
+            f"Unsupported CINDER design-document schema_version {version}; expected {ASSEMBLY_DOCUMENT_SCHEMA_VERSION}."
         )
     if _string(document, "document_type") != ASSEMBLY_DOCUMENT_TYPE:
         raise UnsupportedDesignDocumentError(

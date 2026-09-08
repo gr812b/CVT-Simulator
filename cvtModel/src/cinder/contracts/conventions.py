@@ -11,7 +11,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any
 
-PUBLIC_CONTRACT_VERSION = 1
+from .versions import CONVENTIONS_CONTRACT_VERSION
 
 
 @dataclass(frozen=True, slots=True)
@@ -45,7 +45,7 @@ class PublicFieldDescriptor:
 class PublicConventions:
     """Readable conventions frozen for public CINDER consumers."""
 
-    contract_version: int = PUBLIC_CONTRACT_VERSION
+    contract_version: int = CONVENTIONS_CONTRACT_VERSION
     canonical_unit_system: str = "SI"
     ratio_definition: str = (
         "effective secondary radius divided by effective primary radius"
@@ -148,6 +148,36 @@ _EXACT: dict[str, tuple[str, str, str, str]] = {
         "m/s",
         "length_rate",
         "Time derivative of secondary outer radius.",
+    ),
+    "contact.primary_tension_in": (
+        "Primary wrap entry tension",
+        "N",
+        "force",
+        "Belt tension at entry to the primary pulley wrap in the modeled belt-travel ordering.",
+    ),
+    "contact.primary_tension_out": (
+        "Primary wrap exit tension",
+        "N",
+        "force",
+        "Belt tension at exit from the primary pulley wrap in the modeled belt-travel ordering.",
+    ),
+    "contact.secondary_tension_in": (
+        "Secondary wrap entry tension",
+        "N",
+        "force",
+        "Belt tension at entry to the secondary pulley wrap in the modeled belt-travel ordering.",
+    ),
+    "contact.secondary_tension_out": (
+        "Secondary wrap exit tension",
+        "N",
+        "force",
+        "Belt tension at exit from the secondary pulley wrap in the modeled belt-travel ordering.",
+    ),
+    "belt.tension": (
+        "Belt tension",
+        "N",
+        "force",
+        "Continuous tensile force around the reduced closed belt loop.",
     ),
     "observer.primary_boundary_power": (
         "Primary boundary power",

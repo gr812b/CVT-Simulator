@@ -187,12 +187,26 @@ computes a stable executable-contract hash, checks `run_cache_entries`, and then
 either reuses the cached result or runs CINDER. Every persisted run stores:
 
 ```text
-input_contract        frozen resolved simulation case
-contract_hash         executable physics hash
-summary_scalars       metrics, summary, warnings, transitions
-summary_series        current default durable preview payload
-run_artifacts         preview_series plus evictable full_result artifacts
+input_contract           frozen resolved simulation case
+contract_hash            executable physics hash
+cinder_model_version     exact CINDER package release that executed the run
+contract_schema_version  physical legacy column: schema version of the frozen input document
+result_contract_version  contract version of the projected full-result artifact
+summary_scalars          metrics, summary, warnings, transitions
+summary_series           current default durable preview payload
+run_artifacts            preview_series plus evictable full_result artifacts
 ```
+
+`contract_schema_version` predates the result-contract split and keeps its
+physical database name for compatibility; the ORM exposes it as
+`input_schema_version`. New result shapes are tracked independently with
+`result_contract_version`. Migration `20260907_0003` adds that column to both
+`runs` and `run_cache_entries` and backfills existing rows as result contract v1.
+
+The run cache is matched against the executable contract hash, installed CINDER
+package version, input schema version, and result contract version. A rerun keeps
+the old frozen input but records the CINDER package/result contract that actually
+executes the rerun rather than copying stale provenance from the source run.
 
 The full-result artifact currently uses `storage_backend = inline_json`. That is
 intentionally simple for V1 and can later become S3/R2/local-file storage without

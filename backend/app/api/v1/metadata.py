@@ -7,6 +7,7 @@ from fastapi import APIRouter, Depends
 from app.api.v1.dependencies import get_container
 from app.application.container import ApplicationContainer
 from app.schemas.metadata import (
+    CinderRuntimeResponse,
     ComponentCatalogResponse,
     ConventionsResponse,
     EditorSchemaResponse,
@@ -14,6 +15,11 @@ from app.schemas.metadata import (
 )
 
 router = APIRouter(prefix="/metadata", tags=["metadata"])
+
+
+@router.get("/runtime", response_model=CinderRuntimeResponse)
+def runtime(container: ApplicationContainer = Depends(get_container)) -> CinderRuntimeResponse:
+    return CinderRuntimeResponse(**container.gateway.runtime_identity())
 
 
 @router.get("/conventions", response_model=ConventionsResponse)
