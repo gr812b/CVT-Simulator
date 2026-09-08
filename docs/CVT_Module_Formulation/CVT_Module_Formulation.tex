@@ -8009,29 +8009,27 @@ tangentially at \(r_{j,\mathrm{eff}}\omega_j\). Their difference defines the
 relative tangential speed,
 
 \begin{equation}
-\boxed{
     v_{\mathrm{rel},j}
     =
     v_b-r_{j,\mathrm{eff}}\omega_j,
     \qquad
     j\in\{p,s\}.
-}
 \label{eq:tangential_relative_speed}
 \end{equation}
 
-The signs follow the common belt-transport and rotational directions defined
-in \Cref{sec:rotational_sign}. For the secondary wrap,
+The sign follows the common belt-transport and rotational directions defined
+in \Cref{sec:rotational_sign}. Positive \(v_{\mathrm{rel},j}\) means the belt
+moves ahead of the pulley surface in the positive belt direction, while a
+negative value means it moves the other way. For the secondary wrap,
 \AssRef{assump:symmetric_face_sharing} uses the shaft speed \(\omega_s\) as
 the representative speed of the aggregated secondary contact.
 
-During established sliding, \(v_{\mathrm{rel},j}\neq0\). Its sign gives the
-direction in which the belt is moving relative to the pulley, so the
-pulley-on-belt traction acts in the opposite direction. Kinetic friction fixes
-the magnitude, and the sliding branch of
-\Cref{eq:lambda_local_definition} becomes
+If \(v_{\mathrm{rel},j}\neq0\), the contact is already sliding. Its relative
+motion fixes the direction of friction, and kinetic Coulomb friction fixes the
+magnitude. The sliding branch of \Cref{eq:lambda_local_definition} therefore
+gives
 
 \begin{equation}
-\boxed{
 \begin{aligned}
     \sigma_j
     &=
@@ -8043,86 +8041,253 @@ the magnitude, and the sliding branch of
     \qquad
     v_{\mathrm{rel},j}\neq0.
 \end{aligned}
-}
 \label{eq:sliding_traction_utilization}
 \end{equation}
 
-The relative motion supplies the direction and kinetic friction supplies the
-magnitude. For a sliding contact, the current contact motion therefore fixes
-\(\lambda_j\) directly.
+Sliding therefore closes \(\lambda_j\) directly from the current contact
+motion.
 
-For sticking, the belt and pulley surface instead move together tangentially,
+Sticking begins at the opposite kinematic condition,
 
 \begin{equation}
-\boxed{
     v_{\mathrm{rel},j}=0
     \qquad\Longleftrightarrow\qquad
     v_b=r_{j,\mathrm{eff}}\omega_j.
-}
 \label{eq:sticking_velocity_compatibility}
 \end{equation}
 
-This equality does not determine the tangential force. It says only that the
-two surfaces have no relative tangential motion at that instant. Static
-friction can still carry a nonzero reaction, with the value of \(\lambda_j\)
-set by whatever the mechanics require to maintain sticking, provided the
-static limit in \Cref{eq:lambda_local_definition} is not exceeded.
+The important point is that zero relative speed does not imply zero tangential
+force. It only says that the belt and pulley surface are moving together at
+that instant. Static friction may still supply a nonzero reaction, with
+\(\lambda_j\) taking whatever signed value is required to maintain sticking
+so long as the static limit in \Cref{eq:lambda_local_definition} is not
+exceeded.
 
-Matching the two speeds at one instant is not enough to keep them matched. If
-the belt speed and pulley-surface speed begin changing at different rates,
-relative motion appears immediately. For sticking to persist, the relative
-speed must remain zero. Differentiating
-\Cref{eq:tangential_relative_speed} gives
+That speed match must also persist. If the belt speed and pulley-surface speed
+begin changing at different rates, relative motion appears immediately.
+Differentiating \Cref{eq:tangential_relative_speed} gives the relative
+tangential acceleration,
 
 \begin{equation}
-\boxed{
-    \frac{d v_{\mathrm{rel},j}}{dt}
-    =
+\begin{aligned}
+    a_{\mathrm{rel},j}
+    &\equiv
+    \dot v_{\mathrm{rel},j}
+    \\
+    &=
     \dot v_b
     -
     r_{j,\mathrm{eff}}\dot\omega_j
     -
     \dot r_{j,\mathrm{eff}}\omega_j .
-}
+\end{aligned}
 \label{eq:tangential_relative_acceleration}
 \end{equation}
 
-The first term is the belt transport acceleration. The second is the change in
-pulley-surface speed produced by angular acceleration at the current effective
-radius. The final term appears because that radius also changes during a
-shift. As established in
-\Cref{eq:radial_reference_rate_equivalence}, the effective contact radius
-moves with the pulley radius. Even if \(\omega_j\) were momentarily constant,
-changing \(r_{j,\mathrm{eff}}\) would still change the pulley-surface speed
-\(r_{j,\mathrm{eff}}\omega_j\). A sticking belt must follow that change as
-well.
+The first two terms are the direct comparison between belt acceleration and
+the acceleration of a pulley surface at fixed radius. The final term appears
+because the contact radius is not fixed during a shift. As established in
+\Cref{eq:radial_reference_rate_equivalence}, the effective radius moves with
+the pulley radius, so \(r_{j,\mathrm{eff}}\omega_j\) can change even when
+\(\omega_j\) is momentarily constant. A sticking belt must follow that change
+as well.
 
-Denote this relative tangential acceleration by
+Established sticking therefore requires
 
 \begin{equation}
-\boxed{
-    a_{\mathrm{rel},j}
-    \equiv
-    \frac{d v_{\mathrm{rel},j}}{dt}.
-}
-\label{eq:tangential_relative_acceleration_definition}
-\end{equation}
-
-An established sticking contact must then satisfy
-
-\begin{equation}
-\boxed{
     a_{\mathrm{rel},j}=0.
-}
 \label{eq:sticking_acceleration_compatibility}
 \end{equation}
 
-The two contact regimes now leave the mechanics with two different kinds of
-information. Sliding fixes \(\lambda_j\) directly from the current relative
-motion. Sticking instead fixes the required relative acceleration,
-\(a_{\mathrm{rel},j}=0\), and leaves \(\lambda_j\) as the static reaction
-needed to satisfy that condition while remaining within the static friction
-limit.
+The two Coulomb branches now leave different things to determine. Sliding
+already supplies \(\lambda_j\). Sticking instead supplies the condition that
+the mechanics must satisfy, \(a_{\mathrm{rel},j}=0\), while \(\lambda_j\)
+remains the static reaction required to make that condition hold within the
+available friction limit.
+
+\subsection{Determining the Sticking Traction}
+\label{sec:sticking_traction_closure}
+
+For a sticking contact, the previous subsection leaves a simple-looking pair:
+\(\lambda_j\) is unknown, while the contact must satisfy
+\(a_{\mathrm{rel},j}=0\). At first, this seems no different from any other
+unknown and equation already added to the model. If \(\lambda_j\) entered the
+mechanics linearly, it could simply be solved algebraically alongside the
+other instantaneous unknowns.
+
+Whether that is possible can be read directly from the equations already
+derived. The pulley torque in \Cref{eq:generic_belt_contact_torque}, for
+example, contains
+
+\begin{equation}
+    \tau_j
+    =
+    -r_{j,\mathrm{eff}}\lambda_jN_j,
+\label{eq:sticking_closure_contact_product}
+\end{equation}
+
+so an unknown \(\lambda_j\) multiplies the unknown normal resultant \(N_j\).
+The equation is therefore no longer linear in the unknowns. If this product
+were the only complication, however, another rearrangement might still isolate
+\(\lambda_j\). The stronger obstacle comes from the wrap relation carried into
+the closed-loop belt compatibility. Through
+\Cref{eq:generic_wrap_boundary_tension_sum}, the same \(\lambda_j\) also
+appears reciprocally and inside terms such as
+
+\begin{equation}
+    \frac{\sin\beta}{\lambda_j},
+    \qquad
+    \frac{
+        1+e^{-\frac{\lambda_j\phi_j}{\sin\beta}}
+    }{
+        1-e^{-\frac{\lambda_j\phi_j}{\sin\beta}}
+    }.
+\label{eq:sticking_closure_nonlinear_terms}
+\end{equation}
+
+With the same unknown appearing both
+in products with other unknowns and inside reciprocal and exponential terms,
+there is no useful algebraic rearrangement that isolates the required static
+utilization.
+
+There is one important simplification. This nonlinear dependence comes from
+the unknown static \(\lambda_j\) itself; the other remaining accelerations and
+contact loads appear linearly. If the static utilization were known, those
+quantities could be obtained directly from the balances already derived.
+
+That suggests turning the problem around. Rather than trying to isolate
+\(\lambda_j\) explicitly, choose a candidate static utilization and determine
+the response it would produce. The resulting accelerations give
+\(a_{\mathrm{rel},j}\) through
+\Cref{eq:tangential_relative_acceleration}. Since sticking requires the
+relative acceleration to vanish, \(a_{\mathrm{rel},j}\) can be used directly
+as the residual for the static-traction solve,
+
+\begin{equation}
+    a_{\mathrm{rel},j}=0.
+\label{eq:sticking_traction_root_condition}
+\end{equation}
+
+This is the same basic idea used for the geometric compatibility roots in
+\Cref{sec:geometry}. A nonzero residual means that the candidate traction
+would make the belt and pulley surface begin accelerating relative to one
+another. The required static utilization is the value for which the residual
+vanishes. Finding that value is therefore a root solve in the unknown static
+traction.
+
+If only one wrap is sticking, the other utilization is already fixed by its
+sliding branch. One static \(\lambda_j\) and one sticking residual remain, so
+the root is one-dimensional. If both wraps are sticking, the two static
+utilizations influence the same mechanical response and must be varied
+together until both residuals vanish,
+
+\begin{equation}
+    a_{\mathrm{rel},p}(\lambda_p,\lambda_s)=0,
+    \qquad
+    a_{\mathrm{rel},s}(\lambda_p,\lambda_s)=0.
+\label{eq:stick_stick_root_condition}
+\end{equation}
+
+This leaves only a one- or two-dimensional nonlinear search in the static
+traction utilizations. For each candidate value or pair, everything else is
+obtained from the linear balances already derived.
+
+\subsection{The Common Mechanical Solve}
+\label{sec:engaged_mechanical_core}
+
+The two Coulomb branches now meet again in one useful way. A sliding contact
+supplies a numerical \(\lambda_j\) directly, while the sticking solve tests
+candidate values of \(\lambda_j\). Once one value is available for each wrap,
+the mechanical balances use them in exactly the same way. Beneath either
+contact branch is therefore the same simpler problem: determine the
+instantaneous response associated with a specified pair
+\((\lambda_p,\lambda_s)\).
+
+With that pair specified, the belt torques are not additional unknowns.
+\Cref{eq:generic_belt_contact_torque} already gives
+
+\[
+    \tau_j
+    =
+    -r_{j,\mathrm{eff}}\lambda_jN_j,
+    \qquad
+    j\in\{p,s\},
+\]
+
+so each torque follows directly from the corresponding normal resultant
+\(N_j\). The axial belt reactions are likewise already written in terms of
+\(N_p\) and \(N_s\). The geometry has reduced both sheave motions to the
+single shift coordinate \(s\), and the four temporary belt-boundary tensions
+were eliminated when the loop was closed in
+\Cref{eq:closed_loop_tension_compatibility}. What remains to be determined at
+the current instant is therefore
+
+\begin{equation}
+    \mathbf z
+    =
+    \begin{bmatrix}
+        \dot\omega_p &
+        \dot\omega_s &
+        \dot v_b &
+        \ddot s &
+        N_p &
+        N_s
+    \end{bmatrix}^{\mathsf T}.
+\label{eq:engaged_linear_unknowns}
+\end{equation}
+
+These six quantities are already tied together by six relations derived on
+their natural free bodies. The two shaft accelerations appear in the primary
+and secondary rotational balances,
+\Cref{eq:primary_rotational_eom_belt,eq:secondary_rotational_eom_belt}. The
+shared shift acceleration and the two normal resultants enter the primary and
+secondary axial balances,
+\Cref{eq:primary_balance_in_shift_coordinate,eq:secondary_balance_in_shift_coordinate}.
+The belt transport balance in \Cref{eq:complete_belt_transport_newton}
+determines \(\dot v_b\) from the net tangential action of the two wraps, while
+\Cref{eq:closed_loop_tension_compatibility} supplies the second independent
+condition carried by the closed belt.
+
+Once \(\lambda_p\) and \(\lambda_s\) are treated as specified values, their
+nonlinear dependence is no longer part of this inner calculation. They appear
+only as known coefficients. Substituting the contact torques above, together
+with the radius accelerations already obtained in
+\Cref{eq:primary_radius_acceleration,eq:secondary_radius_acceleration}, leaves
+the six existing relations linear in the six entries of \(\mathbf z\).
+Collecting them gives
+
+\begin{equation}
+    \mathbf A(\lambda_p,\lambda_s)\mathbf z
+    =
+    \mathbf b(\lambda_p,\lambda_s).
+\label{eq:engaged_six_by_six_mechanical_core}
+\end{equation}
+
+The \(6\times6\) form is simply the assembled version of mechanics already
+derived: two rotational balances, two axial balances, the complete-belt
+transport balance, and the closed-loop belt compatibility. The current state,
+geometry, applied boundary loads, and specified traction pair set the
+coefficients; solving the system returns the accelerations and normal
+resultants for that instant.
+
+This is the calculation used inside the sticking root of
+\Cref{sec:sticking_traction_closure}. A candidate static traction pair is
+inserted into \Cref{eq:engaged_six_by_six_mechanical_core}, the resulting
+mechanical response is solved, and the corresponding
+\(a_{\mathrm{rel},j}\) values provide the sticking residuals. When a contact is
+sliding, the same calculation applies without that outer search because
+kinetic friction has already supplied its \(\lambda_j\).
+
+One technical point matters when a sticking root passes through zero traction.
+The nonzero-\(\lambda_j\) wrap relation contains reciprocal terms, but its
+combined limit at \(\lambda_j=0\) is finite. The zero-traction form already
+derived in \Cref{eq:generic_wrap_boundary_tension_sum_zero_lambda} should
+therefore be used at that point, so the mechanical solve remains continuous as
+a trial static utilization changes sign.
+
+The different engaged contact combinations do not require different
+mechanical equations. They differ only in how the pair
+\((\lambda_p,\lambda_s)\) supplied to this common solve is obtained.
 
 \section{Dynamic Closure of the Freely Shifting Engaged CVT}
 \label{sec:engaged_dynamic_closure}
