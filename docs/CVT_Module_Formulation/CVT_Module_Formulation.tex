@@ -5550,6 +5550,7 @@ simultaneous dynamic solution for the engaged CVT.
 
 This completes the axial force description. Attention now turns from
 translation along the pulley shafts to rotation about them.
+
 \section{Rotational Dynamics of the Pulley Assemblies}
 \label{sec:pulley_rotational_dynamics}
 
@@ -8201,12 +8202,22 @@ as its root is found. In either case, evaluating the instantaneous response
 begins with one traction utilization for each wrap. The remaining step is to
 solve the mechanics for that pair.
 
-To see what that response actually consists of, return to the balances already
-derived. The primary and secondary rotational equations,
-\Cref{eq:primary_rotational_eom_belt,eq:secondary_rotational_eom_belt},
-contain the shaft accelerations \(\dot\omega_p\) and \(\dot\omega_s\), together
-with the belt torques \(\tau_p\) and \(\tau_s\). Once the traction pair is
-specified, however, those torques are not independent unknowns. From
+With \(\lambda_p\) and \(\lambda_s\) specified, the equations already
+derived can now be read simply for the quantities they still have to
+determine. The axial balances expose the first of these unknowns. The primary balance in
+\Cref{eq:primary_balance_in_shift_coordinate} relates the shared shift
+acceleration \(\ddot s\) to the primary normal resultant \(N_p\). The
+secondary balance in \Cref{eq:secondary_balance_in_shift_coordinate} contains
+the same \(\ddot s\), the secondary normal resultant \(N_s\), and also the
+secondary shaft acceleration \(\dot\omega_s\) and belt torque \(\tau_s\).
+
+The rotational balances add the shaft dynamics. The primary and secondary
+relations in
+\Cref{eq:primary_rotational_eom_belt,eq:secondary_rotational_eom_belt}
+contain \(\dot\omega_p\) and \(\dot\omega_s\), together with the belt torques
+\(\tau_p\) and \(\tau_s\); the secondary relation also contains the same
+\(\ddot s\) through the helix kinematics. The torques may look like two more
+unknowns, but the specified traction pair removes them immediately. From
 \Cref{eq:generic_belt_contact_torque},
 
 \begin{equation}
@@ -8217,25 +8228,26 @@ specified, however, those torques are not independent unknowns. From
     j\in\{p,s\},
 \end{equation}
 
-so each belt torque follows directly from the corresponding normal resultant
-\(N_j\).
+so each pulley torque is set by the same normal resultant already appearing in
+the axial balances.
 
-The two axial balances,
-\Cref{eq:primary_balance_in_shift_coordinate,eq:secondary_balance_in_shift_coordinate},
-then contain the shared shift acceleration \(\ddot s\) and the two normal
-resultants \(N_p\) and \(N_s\); the secondary balance also uses
-\(\dot\omega_s\), which is already present in the rotational equations. The
-complete-belt transport balance in
-\Cref{eq:complete_belt_transport_newton} adds the belt acceleration
-\(\dot v_b\). Finally, the closed-loop tension compatibility in
-\Cref{eq:closed_loop_tension_compatibility} supplies the remaining independent
-relation among the belt acceleration, shift acceleration, and normal
-resultants.
+The complete-belt transport balance in
+\Cref{eq:complete_belt_transport_newton} brings in the belt acceleration
+\(\dot v_b\). Its two tangential pulley actions are again the belt torques, so
+after the relation above is substituted the transport equation involves
+\(\dot v_b\), \(N_p\), and \(N_s\) for the specified traction pair.
 
-The radial accelerations appearing in the belt relations are not additional
-unknowns: \Cref{eq:primary_radius_acceleration,eq:secondary_radius_acceleration}
-already express them through \(s\), \(\dot s\), and \(\ddot s\). For a specified 
-\((\lambda_p,\lambda_s)\), the instantaneous mechanical response is therefore described by
+Finally, the closed-loop tension compatibility in
+\Cref{eq:closed_loop_tension_compatibility} relates the same belt acceleration
+and normal resultants to the radial accelerations of the two wraps. Those
+radial accelerations introduce no new degree of freedom:
+\Cref{eq:primary_radius_acceleration,eq:secondary_radius_acceleration} already
+express them in terms of the current geometry, \(\dot s\), and the same shift
+acceleration \(\ddot s\). The four temporary boundary tensions have likewise
+already disappeared from the closed-loop relation.
+
+No new unknown appears as these equations are brought together. The quantities
+left to determine are exactly
 
 \begin{equation}
     \mathbf z
@@ -8251,9 +8263,10 @@ already express them through \(s\), \(\dot s\), and \(\ddot s\). For a specified
 \label{eq:engaged_linear_unknowns}
 \end{equation}
 
-These are exactly the quantities carried by the six relations above. With
-\(\lambda_p\) and \(\lambda_s\) fixed, each relation is linear in
-\(\mathbf z\), so they can be collected as
+At this point, every other term in the six equations is fixed by the current
+state, the specified traction pair, and the component relations already
+derived. Each equation is also linear in the six entries of \(\mathbf z\).
+Collecting them therefore gives
 
 \begin{equation}
     \mathbf A(\lambda_p,\lambda_s)\mathbf z
@@ -8262,13 +8275,13 @@ These are exactly the quantities carried by the six relations above. With
 \label{eq:engaged_six_by_six_mechanical_core}
 \end{equation}
 
-Writing the six rows explicitly requires a little additional notation. For
-this matrix only, primes shorten derivatives: \(x_s'\), \(r_j'\), \(q_f'\),
-and \(J_{f,p}'\) denote derivatives with respect to \(s\), while
-\(\theta_s'\) denotes differentiation with respect to \(x_s\); double primes
-follow the same convention. The only expressions worth abbreviating are the
-two analytical wrap factors repeated in the closed-loop row, which are written
-as
+To write \(\mathbf A\) and \(\mathbf b\) out cleanly, a small amount of
+temporary notation is useful. For this matrix only, primes shorten
+derivatives: \(x_s'\), \(r_j'\), \(q_f'\), and \(J_{f,p}'\) denote
+derivatives with respect to \(s\), while \(\theta_s'\) denotes
+differentiation with respect to \(x_s\); double primes follow the same
+convention. The only additional symbols are the two analytical wrap factors
+repeated in the closed-loop row,
 
 \begin{equation}
 \begin{aligned}
@@ -8443,10 +8456,10 @@ k_{s,x}(x_{s,\mathrm{pre}}-x_s)
 \end{equation}
 \endgroup
 
-Read from top to bottom, the matrix follows the same mechanics just gathered
-above: the first two rows are the pulley rotational balances, the next two are
-the axial balances, the fifth is the complete-belt transport balance, and the
-sixth is the closed-loop tension compatibility.
+The row order follows the derivation: the first two rows are the pulley
+rotational balances, the next two are the axial balances, the fifth is the
+complete-belt transport balance, and the sixth is the closed-loop tension
+compatibility.
 
 For a specified traction pair, every entry of \(\mathbf A\) and
 \(\mathbf b\) is fixed by the current state and the component relations already
@@ -8555,6 +8568,7 @@ representative pulley surface speed. It therefore provides the natural place
 to determine what the complete coupled problem requires.
 
 % --------------------------------------------------------------
+
 \subsection{Sticking Contact and the Full Coupled Problem}
 \label{sec:sticking_engaged_closure}
 
@@ -8992,6 +9006,7 @@ This identifies what must change when adhesion cannot be supported: the
 belt and pulley must be allowed to move relative to one another.
 
 % --------------------------------------------------------------
+
 \subsection{Sliding Contact and the Common Mechanical Solve}
 \label{sec:sliding_engaged_closure}
 
