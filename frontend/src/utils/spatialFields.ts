@@ -26,6 +26,23 @@ export interface NumericRange {
 type ExpressionValue = number | boolean;
 type SignalFrame = ReadonlyMap<string, number>;
 
+type UnaryFieldOperator = 'neg' | 'abs' | 'exp' | 'expm1' | 'sin' | 'cos' | 'sqrt';
+type BinaryFieldOperator = 'add' | 'sub' | 'mul' | 'div' | 'lt';
+
+/**
+ * json-schema-to-typescript preserves the outer discriminated union from
+ * CINDER's schema but currently emits recursive expression children as
+ * `unknown`. Keep the generated type as the public wire boundary and normalize
+ * it once into the exact recursive shape used by the evaluator.
+ */
+type EvaluatorExpression =
+  | { op: 'literal'; value: number }
+  | { op: 'coordinate' }
+  | { op: 'signal'; key: string }
+  | { op: UnaryFieldOperator; args: [EvaluatorExpression] }
+  | { op: BinaryFieldOperator; args: [EvaluatorExpression, EvaluatorExpression] }
+  | { op: 'where'; args: [EvaluatorExpression, EvaluatorExpression, EvaluatorExpression] };
+
 function numeric(value: ExpressionValue): number {
   return typeof value === 'boolean' ? (value ? 1 : 0) : value;
 }
@@ -34,9 +51,8 @@ function condition(value: ExpressionValue): boolean {
   return typeof value === 'boolean' ? value : Number.isFinite(value) && value !== 0;
 }
 
-/** Evaluate CINDER's portable scalar field-expression language at one coordinate. */
-export function evaluateFieldExpression(
-  expression: FieldExpression,
+function evaluateExpression(
+  expression: EvaluatorExpression,
   coordinate: number,
   signals: SignalFrame,
 ): ExpressionValue {
@@ -50,45 +66,60 @@ export function evaluateFieldExpression(
     case 'where': {
       // Deliberately short-circuit. This keeps inactive singular branches such
       // as the z=0 wrap expression from evaluating 0/0 in scalar playback.
-      const selected = condition(evaluateFieldExpression(expression.args[0], coordinate, signals))
+      const selected = condition(evaluateExpression(expression.args[0], coordinate, signals))
         ? expression.args[1]
         : expression.args[2];
-      return evaluateFieldExpression(selected, coordinate, signals);
+      return evaluateExpression(selected, coordinate, signals);
     }
     case 'neg':
-      return -numeric(evaluateFieldExpression(expression.args[0], coordinate, signals));
+      return -numeric(evaluateExpression(expression.args[0], coordinate, signals));
     case 'abs':
-      return Math.abs(numeric(evaluateFieldExpression(expression.args[0], coordinate, signals)));
+      return Math.abs(numeric(evaluateExpression(expression.args[0], coordinate, signals)));
     case 'exp':
-      return Math.exp(numeric(evaluateFieldExpression(expression.args[0], coordinate, signals)));
+      return Math.exp(numeric(evaluateExpression(expression.args[0], coordinate, signals)));
     case 'expm1':
-      return Math.expm1(numeric(evaluateFieldExpression(expression.args[0], coordinate, signals)));
+      return Math.expm1(numeric(evaluateExpression(expression.args[0], coordinate, signals)));
     case 'sin':
-      return Math.sin(numeric(evaluateFieldExpression(expression.args[0], coordinate, signals)));
+      return Math.sin(numeric(evaluateExpression(expression.args[0], coordinate, signals)));
     case 'cos':
-      return Math.cos(numeric(evaluateFieldExpression(expression.args[0], coordinate, signals)));
+      return Math.cos(numeric(evaluateExpression(expression.args[0], coordinate, signals)));
     case 'sqrt':
-      return Math.sqrt(numeric(evaluateFieldExpression(expression.args[0], coordinate, signals)));
+      return Math.sqrt(numeric(evaluateExpression(expression.args[0], coordinate, signals)));
     case 'add':
-      return numeric(evaluateFieldExpression(expression.args[0], coordinate, signals))
-        + numeric(evaluateFieldExpression(expression.args[1], coordinate, signals));
+      return numeric(evaluateExpression(expression.args[0], coordinate, signals))
+        + numeric(evaluateExpression(expression.args[1], coordinate, signals));
     case 'sub':
-      return numeric(evaluateFieldExpression(expression.args[0], coordinate, signals))
-        - numeric(evaluateFieldExpression(expression.args[1], coordinate, signals));
+      return numeric(evaluateExpression(expression.args[0], coordinate, signals))
+        - numeric(evaluateExpression(expression.args[1], coordinate, signals));
     case 'mul':
-      return numeric(evaluateFieldExpression(expression.args[0], coordinate, signals))
-        * numeric(evaluateFieldExpression(expression.args[1], coordinate, signals));
+      return numeric(evaluateExpression(expression.args[0], coordinate, signals))
+        * numeric(evaluateExpression(expression.args[1], coordinate, signals));
     case 'div':
-      return numeric(evaluateFieldExpression(expression.args[0], coordinate, signals))
-        / numeric(evaluateFieldExpression(expression.args[1], coordinate, signals));
+      return numeric(evaluateExpression(expression.args[0], coordinate, signals))
+        / numeric(evaluateExpression(expression.args[1], coordinate, signals));
     case 'lt':
-      return numeric(evaluateFieldExpression(expression.args[0], coordinate, signals))
-        < numeric(evaluateFieldExpression(expression.args[1], coordinate, signals));
+      return numeric(evaluateExpression(expression.args[0], coordinate, signals))
+        < numeric(evaluateExpression(expression.args[1], coordinate, signals));
     default: {
       const exhaustive: never = expression;
-      throw new Error(`Unsupported CINDER field-expression operator: ${String((exhaustive as { op?: unknown }).op)}`);
+      throw new Error(
+        `Unsupported CINDER field-expression operator: ${String((exhaustive as { op?: unknown }).op)}`,
+      );
     }
   }
+}
+
+/** Evaluate CINDER's portable scalar field-expression language at one coordinate. */
+export function evaluateFieldExpression(
+  expression: FieldExpression,
+  coordinate: number,
+  signals: SignalFrame,
+): ExpressionValue {
+  return evaluateExpression(
+    expression as unknown as EvaluatorExpression,
+    coordinate,
+    signals,
+  );
 }
 
 export function findSpatialDomain(
