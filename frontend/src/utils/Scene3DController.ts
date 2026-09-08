@@ -5,8 +5,18 @@ import { Model3D } from './Model3D';
 
 const SHUTTER_EXPOSURE_SECONDS = 1 / 120; // 180° shutter at a 60 Hz virtual camera.
 const BLUR_MIN_TRAVEL_RAD = THREE.MathUtils.degToRad(5);
-const BLUR_TARGET_STEP_RAD = THREE.MathUtils.degToRad(15);
-const BLUR_MAX_SAMPLES = 24;
+const BLUR_MAX_SAMPLES = 72;
+const BLUR_MIN_ADAPTIVE_CAP = 18;
+const BLUR_INITIAL_ADAPTIVE_CAP = 48;
+const BLUR_TARGET_STEP_RAD = THREE.MathUtils.degToRad(3.5);
+
+// Numerical budget only: the virtual camera exposure remains 1/120 s.
+// The controller reduces this cap if a device cannot sustain the work and
+// slowly restores quality when there is headroom.
+const BLUR_SLOW_FRAME_MS = 24;
+const BLUR_VERY_SLOW_FRAME_MS = 40;
+const BLUR_FAST_FRAME_MS = 13;
+const BLUR_FAST_FRAMES_TO_RAISE_QUALITY = 30;
 
 export interface TemporalRotationTarget {
   object: THREE.Object3D;
@@ -47,6 +57,8 @@ export class Scene3DController {
   private blurAccumulateMaterial: THREE.ShaderMaterial | null = null;
   private blurCopyMaterial: THREE.MeshBasicMaterial | null = null;
   private blurSupported: boolean | null = null;
+  private adaptiveBlurSampleCap = BLUR_INITIAL_ADAPTIVE_CAP;
+  private fastBlurFrameCount = 0;
 
   constructor(config: Scene3DConfig) {
     this.container = config.container;
@@ -227,10 +239,66 @@ export class Scene3DController {
       0,
     );
 
+    if (maximumTravel < BLUR_MIN_TRAVEL_RAD) return 1;
+
+    // Temporal supersampling is the actual camera-exposure integrator. Aim for
+    // about 3.5 degrees of shaft travel between samples so sharp radial CAD
+    // features do not resolve into visible copies. The adaptive cap is purely a
+    // performance ceiling and never changes the physical shutter duration.
+    const desired = Math.max(
+      4,
+      Math.ceil(maximumTravel / BLUR_TARGET_STEP_RAD) + 1,
+    );
+
     return Math.min(
       BLUR_MAX_SAMPLES,
-      Math.max(2, Math.ceil(maximumTravel / BLUR_TARGET_STEP_RAD) + 1),
+      this.adaptiveBlurSampleCap,
+      desired,
     );
+  }
+
+  private updateAdaptiveBlurBudget(renderMilliseconds: number): void {
+    if (!Number.isFinite(renderMilliseconds)) return;
+
+    // A severe miss should recover in one or two frames rather than stepping
+    // slowly through an unusable quality level.
+    if (renderMilliseconds > BLUR_VERY_SLOW_FRAME_MS) {
+      this.adaptiveBlurSampleCap = Math.max(
+        BLUR_MIN_ADAPTIVE_CAP,
+        Math.floor(this.adaptiveBlurSampleCap * 0.65),
+      );
+      this.fastBlurFrameCount = 0;
+      return;
+    }
+
+    if (renderMilliseconds > BLUR_SLOW_FRAME_MS) {
+      this.adaptiveBlurSampleCap = Math.max(
+        BLUR_MIN_ADAPTIVE_CAP,
+        this.adaptiveBlurSampleCap - 4,
+      );
+      this.fastBlurFrameCount = 0;
+      return;
+    }
+
+    // Restore quality slowly so the controller does not oscillate around the
+    // machine's limit. Two samples every sustained fast window is intentionally
+    // conservative compared with the fast down-ramp above.
+    if (renderMilliseconds < BLUR_FAST_FRAME_MS) {
+      this.fastBlurFrameCount += 1;
+      if (
+        this.fastBlurFrameCount >= BLUR_FAST_FRAMES_TO_RAISE_QUALITY
+        && this.adaptiveBlurSampleCap < BLUR_MAX_SAMPLES
+      ) {
+        this.adaptiveBlurSampleCap = Math.min(
+          BLUR_MAX_SAMPLES,
+          this.adaptiveBlurSampleCap + 2,
+        );
+        this.fastBlurFrameCount = 0;
+      }
+      return;
+    }
+
+    this.fastBlurFrameCount = 0;
   }
 
   /**
@@ -263,6 +331,7 @@ export class Scene3DController {
     }
 
     const sampleCount = this.blurSampleCount(targets);
+    const renderStartedAt = performance.now();
     const bases = targets.map((target) => target.object.quaternion.clone());
     const delta = new THREE.Quaternion();
 
@@ -282,7 +351,9 @@ export class Scene3DController {
     this.blurAccumulateMaterial.uniforms.weight.value = 1 / sampleCount;
 
     for (let sampleIndex = 0; sampleIndex < sampleCount; sampleIndex += 1) {
-      // Stratified midpoint samples across a centered box shutter.
+      // Midpoint stratification keeps the finite-shutter estimate clean and
+      // low-noise at ordinary 1x playback, while the sample-count schedule and
+      // physical shutter duration control the remaining approximation quality.
       const wallOffset = (
         (sampleIndex + 0.5) / sampleCount - 0.5
       ) * SHUTTER_EXPOSURE_SECONDS;
@@ -327,6 +398,8 @@ export class Scene3DController {
 
     this.renderer.autoClear = previousAutoClear;
     this.renderer.setClearColor(previousClearColor, previousClearAlpha);
+
+    this.updateAdaptiveBlurBudget(performance.now() - renderStartedAt);
   }
 
   private ensureBlurResources(): void {

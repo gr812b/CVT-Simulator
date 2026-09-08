@@ -145,6 +145,7 @@ export const Scene3DViewer = ({
   const [beltVisible, setBeltVisible] = useState(true);
   const [showTension, setShowTension] = useState(false);
   const [showAngularRotation, setShowAngularRotation] = useState(true);
+  const [showMotionBlur, setShowMotionBlur] = useState(false);
   const [gridsVisible, setGridsVisible] = useState(false);
   const [crossSectionEnabled, setCrossSectionEnabled] = useState(false);
   const [modelsTransparent, setModelsTransparent] = useState(false);
@@ -337,7 +338,7 @@ export const Scene3DViewer = ({
     const primaryFixed = sceneController.getModel('primaryFixed')?.object3D;
     const secondaryFixed = sceneController.getModel('secondaryFixed')?.object3D;
     const secondaryMoving = sceneController.getModel('secondaryMoving')?.object3D;
-    const wallSpeedScale = sample.playing ? sample.speed : 0;
+    const blurActive = sample.playing && showMotionBlur;
 
     const primaryAngularSpeed = finite(
       interpolatedValue(
@@ -369,43 +370,43 @@ export const Scene3DViewer = ({
       ) / (upperTime - lowerTime)
       : 0;
 
-    const sampleAtWallOffset = (wallOffsetSeconds: number) => (
+    const sampleAtShutterOffset = (wallOffsetSeconds: number) => (
       replayController.sampleAtSimulationTime(
-        sample.simulationTime + wallOffsetSeconds * wallSpeedScale,
+        sample.simulationTime + wallOffsetSeconds,
       )
     );
 
     const targets: TemporalRotationTarget[] = [];
 
-    if (primaryFixed && showAngularRotation && wallSpeedScale > 0) {
+    if (primaryFixed && showAngularRotation && blurActive) {
       targets.push({
         object: primaryFixed,
         axisLocal: LOCAL_Z_AXIS,
-        angularSpeedRadPerSecond: -primaryAngularSpeed * wallSpeedScale,
+        angularSpeedRadPerSecond: -primaryAngularSpeed,
         angleOffsetAt: (wallOffset) => (
-          -(primaryAngleAt(sampleAtWallOffset(wallOffset)) - primaryAngle)
+          -(primaryAngleAt(sampleAtShutterOffset(wallOffset)) - primaryAngle)
         ),
       });
     }
 
-    if (secondaryFixed && showAngularRotation && wallSpeedScale > 0) {
+    if (secondaryFixed && showAngularRotation && blurActive) {
       targets.push({
         object: secondaryFixed,
         axisLocal: LOCAL_Z_AXIS,
-        angularSpeedRadPerSecond: secondaryAngularSpeed * wallSpeedScale,
+        angularSpeedRadPerSecond: secondaryAngularSpeed,
         angleOffsetAt: (wallOffset) => (
-          secondaryAngleAt(sampleAtWallOffset(wallOffset)) - secondaryAngle
+          secondaryAngleAt(sampleAtShutterOffset(wallOffset)) - secondaryAngle
         ),
       });
     }
 
-    if (secondaryMoving && wallSpeedScale > 0 && Math.abs(helixRate) > 0) {
+    if (secondaryMoving && blurActive && Math.abs(helixRate) > 0) {
       targets.push({
         object: secondaryMoving,
         axisLocal: LOCAL_Z_AXIS,
-        angularSpeedRadPerSecond: helixRate * wallSpeedScale,
+        angularSpeedRadPerSecond: helixRate,
         angleOffsetAt: (wallOffset) => (
-          helixAngleAt(sampleAtWallOffset(wallOffset)) - secondaryHelixAngle
+          helixAngleAt(sampleAtShutterOffset(wallOffset)) - secondaryHelixAngle
         ),
       });
     }
@@ -424,6 +425,7 @@ export const Scene3DViewer = ({
     sceneController,
     secondaryAngleAt,
     showAngularRotation,
+    showMotionBlur,
     showTension,
     table,
     tensionAvailable,
@@ -437,14 +439,16 @@ export const Scene3DViewer = ({
     sceneController.setFrameUpdate((now) => {
       updateScene(replayController.visualSample(now));
     });
-    sceneController.setTemporalRotationProvider(() => motionTargetsRef.current);
+    sceneController.setTemporalRotationProvider(
+      showMotionBlur ? (() => motionTargetsRef.current) : null,
+    );
 
     return () => {
       sceneController.setFrameUpdate(null);
       sceneController.setTemporalRotationProvider(null);
       motionTargetsRef.current = [];
     };
-  }, [beltMesh, replayController, sceneController, updateScene]);
+  }, [beltMesh, replayController, sceneController, showMotionBlur, updateScene]);
 
   useEffect(() => {
     if (beltMesh) beltMesh.visible = beltVisible && beltDomain !== undefined;
@@ -513,6 +517,14 @@ export const Scene3DViewer = ({
           title={showAngularRotation ? 'Hide Angular Rotation' : 'Show Angular Rotation'}
         >
           {showAngularRotation ? '●' : '○'} Rotation
+        </button>
+        <button
+          type="button"
+          className={styles.controlButton}
+          onClick={() => setShowMotionBlur((current) => !current)}
+          title={showMotionBlur ? 'Disable Motion Blur' : 'Enable Motion Blur'}
+        >
+          {showMotionBlur ? '●' : '○'} Blur
         </button>
         <button
           type="button"
