@@ -47,7 +47,11 @@ from .projection import (
     project_simulation_result,
     to_jsonable,
 )
-from .schema import simulation_case_document_json_schema
+from .schema import (
+    assembly_document_json_schema,
+    simulation_case_document_json_schema,
+    simulation_result_json_schema,
+)
 from .simulation import SimulationMetrics, summarize_simulation
 from .simulation_document import (
     SIMULATION_CASE_DOCUMENT_TYPE,
@@ -87,6 +91,7 @@ __all__ = [
     "UnsupportedDesignDocumentError",
     "UnsupportedSimulationDocumentError",
     "ValidationFinding",
+    "assembly_document_json_schema",
     "component_catalog",
     "component_catalog_document",
     "decode_assembly_document",
@@ -105,6 +110,7 @@ __all__ = [
     "project_simulation_result",
     "public_conventions",
     "simulation_case_document_json_schema",
+    "simulation_result_json_schema",
     "summarize_simulation",
     "to_jsonable",
     "validate_assembly",
