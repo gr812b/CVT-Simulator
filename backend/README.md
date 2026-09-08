@@ -36,6 +36,9 @@ python -m venv venv
 venv\Scripts\activate             # macOS/Linux: source venv/bin/activate
 python -m pip install --upgrade pip
 python -m pip install -r requirements-dev.txt
+
+alembic upgrade head
+python -m app.scripts.init_database
 uvicorn app.main:app --reload
 ```
 

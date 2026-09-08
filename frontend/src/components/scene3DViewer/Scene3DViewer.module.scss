@@ -1,5 +1,3 @@
-// TODO: Most of these styles need to be rewritten cleanly
-
 .scene3dViewer {
   width: 100%;
   height: 100%;
@@ -12,10 +10,7 @@
 
 .loadingOverlay {
   position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
+  inset: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -35,156 +30,98 @@
   width: 50px;
   height: 50px;
   border: 4px solid rgba(255, 255, 255, 0.3);
-  border-top: 4px solid #fff;
+  border-top-color: #fff;
   border-radius: 50%;
   animation: spin 1s linear infinite;
 }
 
 @keyframes spin {
-  0% {
-    transform: rotate(0deg);
-  }
-  100% {
+  to {
     transform: rotate(360deg);
   }
 }
 
-.toggleBeltButton {
+.controls {
   position: absolute;
   top: 10px;
   right: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  z-index: 5;
+}
+
+.controlButton {
   padding: 8px 12px;
-  background-color: rgba(42, 42, 42, 0.8);
+  background-color: rgba(42, 42, 42, 0.82);
   color: #fff;
   border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: 6px;
   cursor: pointer;
   font-size: 14px;
   font-family: inherit;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  z-index: 5;
-  transition: background-color 0.2s, border-color 0.2s;
+  text-align: left;
+  transition: background-color 0.2s, border-color 0.2s, opacity 0.2s;
 
-  &:hover {
-    background-color: rgba(42, 42, 42, 0.95);
+  &:hover:not(:disabled) {
+    background-color: rgba(42, 42, 42, 0.96);
     border-color: rgba(255, 255, 255, 0.4);
   }
 
-  &:active {
+  &:active:not(:disabled) {
     transform: scale(0.98);
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.45;
   }
 }
 
-.toggleRotationButton {
+.tensionLegend {
   position: absolute;
-  top: 50px;
-  right: 10px;
-  padding: 8px 12px;
-  background-color: rgba(42, 42, 42, 0.8);
-  color: #fff;
+  left: 14px;
+  bottom: 14px;
+  width: 220px;
+  padding: 10px 12px;
   border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 14px;
-  font-family: inherit;
-  display: flex;
-  align-items: center;
-  gap: 6px;
+  border-radius: 7px;
+  background: rgba(32, 32, 32, 0.86);
+  color: #fff;
   z-index: 5;
-  transition: background-color 0.2s, border-color 0.2s;
-
-  &:hover {
-    background-color: rgba(42, 42, 42, 0.95);
-    border-color: rgba(255, 255, 255, 0.4);
-  }
-
-  &:active {
-    transform: scale(0.98);
-  }
+  backdrop-filter: blur(4px);
 }
 
-.toggleGridsButton {
-  position: absolute;
-  top: 90px;
-  right: 10px;
-  padding: 8px 12px;
-  background-color: rgba(42, 42, 42, 0.8);
-  color: #fff;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 14px;
-  font-family: inherit;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  z-index: 5;
-  transition: background-color 0.2s, border-color 0.2s;
-
-  &:hover {
-    background-color: rgba(42, 42, 42, 0.95);
-    border-color: rgba(255, 255, 255, 0.4);
-  }
-
-  &:active {
-    transform: scale(0.98);
-  }
+.legendTitle {
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 7px;
 }
 
-.toggleSectionButton {
-  position: absolute;
-  top: 130px;
-  right: 10px;
-  padding: 8px 12px;
-  background-color: rgba(42, 42, 42, 0.8);
-  color: #fff;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 14px;
-  font-family: inherit;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  z-index: 5;
-  transition: background-color 0.2s, border-color 0.2s;
-
-  &:hover {
-    background-color: rgba(42, 42, 42, 0.95);
-    border-color: rgba(255, 255, 255, 0.4);
-  }
-
-  &:active {
-    transform: scale(0.98);
-  }
+.legendBar {
+  height: 10px;
+  border-radius: 999px;
+  background: linear-gradient(
+    90deg,
+    hsl(240deg 90% 50%),
+    hsl(180deg 90% 50%),
+    hsl(120deg 90% 50%),
+    hsl(60deg 90% 50%),
+    hsl(0deg 90% 50%)
+  );
 }
 
-.toggleGridsButton {
-  position: absolute;
-  top: 90px;
-  right: 10px;
-  padding: 8px 12px;
-  background-color: rgba(42, 42, 42, 0.8);
-  color: #fff;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 14px;
-  font-family: inherit;
+.legendValues {
   display: flex;
-  align-items: center;
-  gap: 6px;
-  z-index: 5;
-  transition: background-color 0.2s, border-color 0.2s;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 5px;
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
 
-  &:hover {
-    background-color: rgba(42, 42, 42, 0.95);
-    border-color: rgba(255, 255, 255, 0.4);
-  }
-
-  &:active {
-    transform: scale(0.98);
-  }
+.legendNote {
+  margin-top: 3px;
+  color: rgba(255, 255, 255, 0.65);
+  font-size: 10px;
 }
