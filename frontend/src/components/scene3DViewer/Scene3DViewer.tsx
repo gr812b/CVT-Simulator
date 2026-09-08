@@ -21,6 +21,7 @@ import {
   setupSceneGrid,
   setupSceneLighting,
   setupVerticalGrid,
+  setCVTModelsTransparent,
 } from './sceneElements';
 import { updateBeltMesh } from './beltGeometry';
 import { sceneDistance, sceneGeometry } from './sceneSpec';
@@ -78,14 +79,15 @@ export const Scene3DViewer = ({
   const [isLoading, setLoading] = useState(true);
   const [beltMesh, setBeltMesh] = useState<THREE.Mesh | null>(null);
   const [beltVisible, setBeltVisible] = useState(true);
-  const [showTension, setShowTension] = useState(true);
+  const [showTension, setShowTension] = useState(false);
   const [showAngularRotation, setShowAngularRotation] = useState(true);
   const [gridsVisible, setGridsVisible] = useState(false);
   const [crossSectionEnabled, setCrossSectionEnabled] = useState(false);
+  const [modelsTransparent, setModelsTransparent] = useState(false);
   const [gridObjects, setGridObjects] = useState<THREE.Object3D[]>([]);
   const pulleyCentersRef = useRef({
-    primaryX: -geometry.centreDistance / 2,
-    secondaryX: geometry.centreDistance / 2,
+    primaryY: 0,
+    secondaryY: 0,
   });
 
   const shiftKey = 'state.shift_position';
@@ -140,15 +142,17 @@ export const Scene3DViewer = ({
     return setup.cleanup;
   }, [sceneController]);
 
-  const applyCrossSection = useCallback((primaryX: number, secondaryX: number) => {
+  const applyCrossSection = useCallback((primaryY: number, secondaryY: number) => {
     if (!sceneController) return;
     const renderer = sceneController.getRenderer();
     renderer.localClippingEnabled = crossSectionEnabled;
 
-    const apply = (id: string, x: number) => {
+    const apply = (id: string, centerY: number) => {
       const model = sceneController.getModel(id);
       if (!model) return;
-      const plane = new THREE.Plane(new THREE.Vector3(1, 0, 0), -x);
+      // Three.js clips the negative half-space. With a downward normal, points
+      // above the pulley centre have negative plane distance and disappear.
+      const plane = new THREE.Plane(new THREE.Vector3(0, -1, 0), centerY);
       model.object3D.traverse((object) => {
         if (!(object instanceof THREE.Mesh)) return;
         const materials = Array.isArray(object.material) ? object.material : [object.material];
@@ -159,8 +163,8 @@ export const Scene3DViewer = ({
       });
     };
 
-    apply('primaryFixed', primaryX);
-    apply('secondaryFixed', secondaryX);
+    apply('primaryFixed', primaryY);
+    apply('secondaryFixed', secondaryY);
   }, [crossSectionEnabled, sceneController]);
 
   const updateScene = useCallback((index: number) => {
@@ -213,8 +217,8 @@ export const Scene3DViewer = ({
     }
 
     pulleyCentersRef.current = {
-      primaryX: primaryCenter[0],
-      secondaryX: secondaryCenter[0],
+      primaryY: primaryCenter[1],
+      secondaryY: secondaryCenter[1],
     };
 
     sceneController.updateModels({
@@ -235,7 +239,7 @@ export const Scene3DViewer = ({
       },
     });
 
-    applyCrossSection(primaryCenter[0], secondaryCenter[0]);
+    applyCrossSection(primaryCenter[1], secondaryCenter[1]);
   }, [
     applyCrossSection,
     beltDomain,
@@ -275,10 +279,15 @@ export const Scene3DViewer = ({
 
   useEffect(() => {
     applyCrossSection(
-      pulleyCentersRef.current.primaryX,
-      pulleyCentersRef.current.secondaryX,
+      pulleyCentersRef.current.primaryY,
+      pulleyCentersRef.current.secondaryY,
     );
   }, [applyCrossSection]);
+
+  useEffect(() => {
+    if (!sceneController) return;
+    setCVTModelsTransparent(sceneController, modelsTransparent);
+  }, [modelsTransparent, models, sceneController]);
 
   const tensionUnit = tensionField?.canonical_unit ?? 'N';
 
@@ -308,6 +317,14 @@ export const Scene3DViewer = ({
           title={tensionAvailable ? 'Toggle belt tension colouring' : 'Belt tension field unavailable'}
         >
           {showTension && tensionAvailable ? '●' : '○'} Tension
+        </button>
+        <button
+          type="button"
+          className={styles.controlButton}
+          onClick={() => setModelsTransparent((current) => !current)}
+          title={modelsTransparent ? 'Restore solid pulley models' : 'Ghost pulley models'}
+        >
+          {modelsTransparent ? '●' : '○'} Transparent
         </button>
         <button
           type="button"

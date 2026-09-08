@@ -7,6 +7,8 @@ import type { SceneGeometry } from './sceneSpec';
 import { CVT_MODEL_CONFIGS } from './modelConfigs';
 import { createBeltMesh } from './beltGeometry';
 
+const GHOST_OPACITY = 0.22;
+
 export async function loadCVTModels(geometry: SceneGeometry): Promise<Model3DConfig[]> {
   const loader = new GLTFLoader();
   const draco = new DRACOLoader();
@@ -51,6 +53,27 @@ export async function loadCVTModels(geometry: SceneGeometry): Promise<Model3DCon
     }
   }
   return models;
+}
+
+/** Toggle a translucent "ghosted" view of the pulley CAD without touching the belt. */
+export function setCVTModelsTransparent(
+  controller: Scene3DController,
+  transparent: boolean,
+): void {
+  CVT_MODEL_CONFIGS.forEach((config) => {
+    const model = controller.getModel(config.id);
+    if (!model) return;
+    model.object3D.traverse((object) => {
+      if (!(object instanceof THREE.Mesh)) return;
+      const materials = Array.isArray(object.material) ? object.material : [object.material];
+      materials.forEach((material) => {
+        material.transparent = transparent;
+        material.opacity = transparent ? GHOST_OPACITY : 1;
+        material.depthWrite = !transparent;
+        material.needsUpdate = true;
+      });
+    });
+  });
 }
 
 export function setupSceneLighting(controller: Scene3DController): () => void {

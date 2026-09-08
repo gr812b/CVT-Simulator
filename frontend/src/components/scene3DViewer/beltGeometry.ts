@@ -89,7 +89,6 @@ function tensionColor(value: number, range: NumericRange): THREE.Color {
   const normalized = span > 0
     ? Math.min(1, Math.max(0, (value - range.minimum) / span))
     : 0.5;
-  // Cool-to-hot hue sweep: blue -> cyan/green -> yellow -> red.
   return new THREE.Color().setHSL((1 - normalized) * 2 / 3, 0.9, 0.5);
 }
 
@@ -116,14 +115,22 @@ function createGeometry(
     const tangentX = next.x - previous.x;
     const tangentY = next.y - previous.y;
     const tangentLength = Math.hypot(tangentX, tangentY);
-    const normalX = tangentLength > 0 ? -tangentY / tangentLength : 0;
-    const normalY = tangentLength > 0 ? tangentX / tangentLength : 1;
 
+    // CINDER belt.path is ordered counter-clockwise around the loop, so the
+    // left-hand path normal points inward toward the pulley centres. A rubber
+    // V-belt is narrower on that inner/radial face and wider on its outer face.
+    const inwardNormalX = tangentLength > 0 ? -tangentY / tangentLength : 0;
+    const inwardNormalY = tangentLength > 0 ? tangentX / tangentLength : 1;
+    const outerRadial = -geometry.beltHeight / 2;
+    const innerRadial = geometry.beltHeight / 2;
+
+    // Four corners of the physical trapezoidal section, viewed along belt
+    // travel: wide outer face first, then the narrow inner face.
     const radialOffsets = [
-      -geometry.beltHeight / 2,
-      -geometry.beltHeight / 2,
-      geometry.beltHeight / 2,
-      geometry.beltHeight / 2,
+      outerRadial,
+      outerRadial,
+      innerRadial,
+      innerRadial,
     ];
     const axialOffsets = [
       -geometry.beltOuterWidth / 2,
@@ -131,6 +138,7 @@ function createGeometry(
       geometry.beltInnerWidth / 2,
       -geometry.beltInnerWidth / 2,
     ];
+
     const value = tensionValues?.[index];
     const color = !tensionEnabled
       ? neutral
@@ -140,8 +148,8 @@ function createGeometry(
 
     for (let corner = 0; corner < ringSize; corner += 1) {
       const vertex = (index * ringSize + corner) * 3;
-      positions[vertex] = current.x + normalX * radialOffsets[corner];
-      positions[vertex + 1] = current.y + normalY * radialOffsets[corner];
+      positions[vertex] = current.x + inwardNormalX * radialOffsets[corner];
+      positions[vertex + 1] = current.y + inwardNormalY * radialOffsets[corner];
       positions[vertex + 2] = current.z + axialOffsets[corner];
       colors[vertex] = color.r;
       colors[vertex + 1] = color.g;
