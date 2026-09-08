@@ -65,9 +65,7 @@ class CinderGateway:
             "package": "cinder-cvt",
             "package_version": str(cinder.__version__),
             "simulation_case_schema_version": int(SIMULATION_CASE_SCHEMA_VERSION),
-            "simulation_result_contract_version": int(
-                SIMULATION_RESULT_CONTRACT_VERSION
-            ),
+            "simulation_result_contract_version": int(SIMULATION_RESULT_CONTRACT_VERSION),
         }
 
     def conventions(self) -> dict[str, Any]:
