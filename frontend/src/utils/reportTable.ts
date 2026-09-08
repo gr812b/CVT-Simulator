@@ -56,3 +56,30 @@ export function reportRows(table: ReportTable): Array<Record<string, number | nu
 export function valueAt(table: ReportTable, key: string, index: number): number | null {
   return reportValue(reportColumn(table, key), index);
 }
+
+export function interpolatedValue(
+  table: ReportTable,
+  key: string,
+  lowerIndex: number,
+  upperIndex: number,
+  alpha: number,
+): number | null {
+  const lower = valueAt(table, key, lowerIndex);
+  if (lowerIndex === upperIndex) return lower;
+
+  const upper = valueAt(table, key, upperIndex);
+  const mix = Math.min(1, Math.max(0, alpha));
+
+  if (mix <= 0) return lower;
+  if (mix >= 1) return upper;
+  if (
+    typeof lower !== 'number'
+    || !Number.isFinite(lower)
+    || typeof upper !== 'number'
+    || !Number.isFinite(upper)
+  ) {
+    return null;
+  }
+
+  return lower + (upper - lower) * mix;
+}

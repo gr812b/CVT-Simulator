@@ -145,25 +145,47 @@ function signalFrame(table: ReportTable, frameIndex: number): SignalFrame {
   return signals;
 }
 
+function interpolatedSignalFrame(
+  table: ReportTable,
+  lowerIndex: number,
+  upperIndex: number,
+  alpha: number,
+): SignalFrame {
+  if (lowerIndex === upperIndex) return signalFrame(table, lowerIndex);
+
+  const mix = Math.min(1, Math.max(0, alpha));
+  const signals = new Map<string, number>();
+  table.columns.forEach((column) => {
+    const lower = column.values[lowerIndex];
+    const upper = column.values[upperIndex];
+    if (
+      typeof lower === 'number'
+      && Number.isFinite(lower)
+      && typeof upper === 'number'
+      && Number.isFinite(upper)
+    ) {
+      signals.set(column.key, lower + (upper - lower) * mix);
+    } else {
+      signals.set(column.key, Number.NaN);
+    }
+  });
+  return signals;
+}
+
 /**
  * Sample a CINDER spatial domain exactly like BoundSpatialDomain.sample():
  * lengths at u=0, uniform physical-distance spacing, and no duplicate endpoint
  * for periodic domains.
  */
-export function sampleSpatialDomain(
+function sampleSpatialDomainWithSignals(
   definition: SpatialDomainDefinition,
-  table: ReportTable,
-  frameIndex: number,
-  count = 200,
+  signals: SignalFrame,
+  count: number,
 ): SpatialDomainSample {
   if (!Number.isInteger(count) || count < 4) {
     throw new Error('Spatial sample count must be an integer of at least 4.');
   }
-  if (frameIndex < 0 || frameIndex >= table.row_count) {
-    throw new Error(`Spatial frame index ${frameIndex} is outside [0, ${table.row_count}).`);
-  }
 
-  const signals = signalFrame(table, frameIndex);
   const lengths = definition.regions.map((region) => numeric(
     evaluateFieldExpression(region.length, 0, signals),
   ));
@@ -209,14 +231,39 @@ export function sampleSpatialDomain(
   return { coordinate, localCoordinate, regionKeys, position };
 }
 
-/** Evaluate one field lazily on an already-sampled domain at the same frame. */
-export function sampleSpatialField(
-  definition: SpatialFieldDefinition,
-  domain: SpatialDomainSample,
+export function sampleSpatialDomain(
+  definition: SpatialDomainDefinition,
   table: ReportTable,
   frameIndex: number,
+  count = 200,
+): SpatialDomainSample {
+  if (frameIndex < 0 || frameIndex >= table.row_count) {
+    throw new Error(`Spatial frame index ${frameIndex} is outside [0, ${table.row_count}).`);
+  }
+  return sampleSpatialDomainWithSignals(definition, signalFrame(table, frameIndex), count);
+}
+
+export function sampleSpatialDomainInterpolated(
+  definition: SpatialDomainDefinition,
+  table: ReportTable,
+  lowerIndex: number,
+  upperIndex: number,
+  alpha: number,
+  count = 200,
+): SpatialDomainSample {
+  return sampleSpatialDomainWithSignals(
+    definition,
+    interpolatedSignalFrame(table, lowerIndex, upperIndex, alpha),
+    count,
+  );
+}
+
+/** Evaluate one field lazily on an already-sampled domain. */
+function sampleSpatialFieldWithSignals(
+  definition: SpatialFieldDefinition,
+  domain: SpatialDomainSample,
+  signals: SignalFrame,
 ): SpatialFieldSample {
-  const signals = signalFrame(table, frameIndex);
   const expressions = new Map(definition.regions.map((region) => [region.key, region.expression]));
   const values = domain.regionKeys.map((regionKey, index) => {
     const expression = expressions.get(regionKey);
@@ -230,6 +277,30 @@ export function sampleSpatialField(
     domain,
     values,
   };
+}
+
+export function sampleSpatialField(
+  definition: SpatialFieldDefinition,
+  domain: SpatialDomainSample,
+  table: ReportTable,
+  frameIndex: number,
+): SpatialFieldSample {
+  return sampleSpatialFieldWithSignals(definition, domain, signalFrame(table, frameIndex));
+}
+
+export function sampleSpatialFieldInterpolated(
+  definition: SpatialFieldDefinition,
+  domain: SpatialDomainSample,
+  table: ReportTable,
+  lowerIndex: number,
+  upperIndex: number,
+  alpha: number,
+): SpatialFieldSample {
+  return sampleSpatialFieldWithSignals(
+    definition,
+    domain,
+    interpolatedSignalFrame(table, lowerIndex, upperIndex, alpha),
+  );
 }
 
 /** Scan selected ordinary report columns once to obtain a fixed whole-run scale. */

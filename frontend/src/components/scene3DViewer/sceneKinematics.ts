@@ -1,5 +1,6 @@
 import type { SimulationCaseDocument, ReportTable } from '@api/client';
-import { valueAt } from '@utils/reportTable';
+import { interpolatedValue } from '@utils/reportTable';
+import type { VisualReplaySample } from '@utils/reportReplay';
 
 interface LinearHelixSegment {
   kind: 'linear_segment';
@@ -36,13 +37,6 @@ function finiteNumber(value: number | null | undefined): value is number {
   return typeof value === 'number' && Number.isFinite(value);
 }
 
-/**
- * Integrate a reported angular-speed channel once for visualization.
- *
- * The report grid may contain duplicate transition timestamps; those simply
- * contribute zero angle because dt=0. Missing/non-finite speed samples hold the
- * previous visual angle rather than inventing a jump.
- */
 export function integratedAngularPosition(
   table: ReportTable,
   speedKey: string,
@@ -73,6 +67,16 @@ export function integratedAngularPosition(
   }
 
   return angles;
+}
+
+export function interpolatedArrayValue(
+  values: readonly number[],
+  sample: Pick<VisualReplaySample, 'lowerIndex' | 'upperIndex' | 'alpha'>,
+): number {
+  const lower = values[sample.lowerIndex] ?? 0;
+  if (sample.lowerIndex === sample.upperIndex) return lower;
+  const upper = values[sample.upperIndex] ?? lower;
+  return lower + (upper - lower) * Math.min(1, Math.max(0, sample.alpha));
 }
 
 function linearProfileDisplacement(
@@ -113,37 +117,15 @@ function helixTheta(coupling: HelixCouplingView, openingTravel: number): number 
   return displacement === null ? null : -displacement / coupling.profile.radius_m;
 }
 
-/**
- * Relative movable-secondary clocking caused by the physical helix.
- *
- * CINDER's conventional secondary coordinate is positive closing:
- *   x_s = 2 tan(beta) [r_s,out - r_s,out(0)]
- * and the installed coupling maps x_s into positive opening travel q.
- *
- * This helper restores the visual relative rotation that the legacy playback
- * received directly from the helix-force breakdown. It is intentionally
- * separate from shaft spin so hiding shaft rotation still leaves the mechanism
- * motion visible.
- *
- * Current released/seeded CINDER helix documents use linear piecewise-ramp
- * segments. If a future assembly uses a nonlinear segment, this visual helper
- * safely returns zero until CINDER exports relative helix angle directly.
- */
-export function secondaryHelixRelativeAngle(
+export function secondaryHelixRelativeAngleFromRadius(
   document: SimulationCaseDocument,
-  table: ReportTable,
-  frameIndex: number,
+  secondaryOuterRadius: number | null,
 ): number {
+  if (!finiteNumber(secondaryOuterRadius)) return 0;
+
   const assembly = document.assembly as unknown as HelixAssemblyView;
   const coupling = assembly.pulleys?.secondary?.helical_coupling;
   if (coupling === undefined) return 0;
-
-  const secondaryOuterRadius = valueAt(
-    table,
-    'geometry.secondary_outer_radius',
-    frameIndex,
-  );
-  if (!finiteNumber(secondaryOuterRadius)) return 0;
 
   const geometry = assembly.geometry;
   const localAxialPosition = 2
@@ -162,4 +144,19 @@ export function secondaryHelixRelativeAngle(
   if (currentTheta === null || initialTheta === null) return 0;
 
   return currentTheta - initialTheta;
+}
+
+export function secondaryHelixRelativeAngleAtSample(
+  document: SimulationCaseDocument,
+  table: ReportTable,
+  sample: Pick<VisualReplaySample, 'lowerIndex' | 'upperIndex' | 'alpha'>,
+): number {
+  const radius = interpolatedValue(
+    table,
+    'geometry.secondary_outer_radius',
+    sample.lowerIndex,
+    sample.upperIndex,
+    sample.alpha,
+  );
+  return secondaryHelixRelativeAngleFromRadius(document, radius);
 }

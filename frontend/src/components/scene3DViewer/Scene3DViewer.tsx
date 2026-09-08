@@ -1,14 +1,16 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import * as THREE from 'three';
 import type { SimulationCaseDocument, SimulationResult } from '@api/client';
-import { valueAt } from '@utils/reportTable';
-import type { ReportReplayController } from '@utils/reportReplay';
+import { interpolatedValue, valueAt } from '@utils/reportTable';
+import type { ReportReplayController, VisualReplaySample } from '@utils/reportReplay';
+import type { TemporalRotationTarget } from '@utils/Scene3DController';
 import {
   findSpatialDomain,
   findSpatialField,
   reportSignalRange,
   sampleSpatialDomain,
-  sampleSpatialField,
+  sampleSpatialDomainInterpolated,
+  sampleSpatialFieldInterpolated,
 } from '@utils/spatialFields';
 import { useScene3D } from '@hooks/useScene3D';
 import type { Model3DConfig } from '@utils/sceneTypes';
@@ -26,13 +28,16 @@ import {
 import { beltSceneLayout, updateBeltMesh } from './beltGeometry';
 import {
   integratedAngularPosition,
-  secondaryHelixRelativeAngle,
+  interpolatedArrayValue,
+  secondaryHelixRelativeAngleAtSample,
 } from './sceneKinematics';
 import { sceneDistance, sceneGeometry } from './sceneSpec';
 
 const BELT_DOMAIN_KEY = 'belt.path';
 const TENSION_FIELD_KEY = 'belt.tension';
 const BELT_SAMPLE_COUNT = 200;
+const LOCAL_Z_AXIS = new THREE.Vector3(0, 0, 1);
+
 const TENSION_BOUNDARY_KEYS = [
   'contact.primary_tension_in',
   'contact.primary_tension_out',
@@ -47,6 +52,8 @@ interface Scene3DViewerProps {
   className?: string;
 }
 
+type ReplayBracket = Pick<VisualReplaySample, 'lowerIndex' | 'upperIndex' | 'alpha'>;
+
 const finite = (value: number | null | undefined, fallback: number) => (
   typeof value === 'number' && Number.isFinite(value) ? value : fallback
 );
@@ -55,11 +62,6 @@ function formatScaleValue(value: number): string {
   return new Intl.NumberFormat(undefined, { maximumFractionDigits: 0 }).format(value);
 }
 
-/**
- * CAD presentation driven by CINDER's report table and portable spatial fields.
- * Belt mechanics are no longer reconstructed in the frontend: belt.path owns
- * the centerline and belt.tension owns the scalar field painted on that path.
- */
 export const Scene3DViewer = ({
   replayController,
   result,
@@ -79,9 +81,6 @@ export const Scene3DViewer = ({
     && tensionField.domain === beltDomain.key
     && tensionRange !== null;
 
-  // Resolve the physical C2C from CINDER's belt.path before the CAD models are
-  // loaded. This prevents the old presentation-only spacing from flashing and
-  // then snapping into the path-derived positions on the first playback update.
   const initialBeltSample = useMemo(() => {
     if (beltDomain === undefined || table.row_count === 0) return null;
     try {
@@ -115,6 +114,31 @@ export const Scene3DViewer = ({
     [table],
   );
 
+  const primaryAngleAt = useCallback((sample: ReplayBracket): number => finite(
+    interpolatedValue(
+      table,
+      'observer.primary_shaft_angle',
+      sample.lowerIndex,
+      sample.upperIndex,
+      sample.alpha,
+    ),
+    interpolatedArrayValue(primaryIntegratedAngle, sample),
+  ), [primaryIntegratedAngle, table]);
+
+  const secondaryAngleAt = useCallback(
+    (sample: ReplayBracket): number => interpolatedArrayValue(secondaryIntegratedAngle, sample),
+    [secondaryIntegratedAngle],
+  );
+
+  const helixAngleAt = useCallback(
+    (sample: ReplayBracket): number => secondaryHelixRelativeAngleAtSample(
+      document,
+      table,
+      sample,
+    ),
+    [document, table],
+  );
+
   const [models, setModels] = useState<Model3DConfig[]>([]);
   const [isLoading, setLoading] = useState(true);
   const [beltMesh, setBeltMesh] = useState<THREE.Mesh | null>(null);
@@ -126,13 +150,12 @@ export const Scene3DViewer = ({
   const [modelsTransparent, setModelsTransparent] = useState(false);
   const [gridObjects, setGridObjects] = useState<THREE.Object3D[]>([]);
 
-  const currentFrameRef = useRef(0);
+  const motionTargetsRef = useRef<TemporalRotationTarget[]>([]);
+  const crossSectionStateRef = useRef<{ enabled: boolean; primaryY: number; secondaryY: number } | null>(null);
   const pulleyCentersRef = useRef({
     primaryY: initialLayout?.primaryCenter[1] ?? 0,
     secondaryY: initialLayout?.secondaryCenter[1] ?? 0,
   });
-
-  const shiftKey = 'state.shift_position';
 
   useEffect(() => {
     setLoading(true);
@@ -181,14 +204,24 @@ export const Scene3DViewer = ({
 
   const applyCrossSection = useCallback((primaryY: number, secondaryY: number) => {
     if (!sceneController) return;
+
+    const previous = crossSectionStateRef.current;
+    if (
+      previous !== null
+      && previous.enabled === crossSectionEnabled
+      && Math.abs(previous.primaryY - primaryY) < 1e-9
+      && Math.abs(previous.secondaryY - secondaryY) < 1e-9
+    ) {
+      return;
+    }
+    crossSectionStateRef.current = { enabled: crossSectionEnabled, primaryY, secondaryY };
+
     const renderer = sceneController.getRenderer();
     renderer.localClippingEnabled = crossSectionEnabled;
 
     const apply = (id: string, centerY: number) => {
       const model = sceneController.getModel(id);
       if (!model) return;
-      // Three.js clips the negative half-space. With a downward normal, points
-      // above the pulley centre have negative plane distance and disappear.
       const plane = new THREE.Plane(new THREE.Vector3(0, -1, 0), centerY);
       model.object3D.traverse((object) => {
         if (!(object instanceof THREE.Mesh)) return;
@@ -204,21 +237,23 @@ export const Scene3DViewer = ({
     apply('secondaryFixed', secondaryY);
   }, [crossSectionEnabled, sceneController]);
 
-  const updateScene = useCallback((index: number) => {
+  const updateScene = useCallback((sample: VisualReplaySample) => {
     if (!sceneController || !beltMesh) return;
 
-    const shiftMeters = finite(valueAt(table, shiftKey, index), 0);
+    const shiftMeters = finite(
+      interpolatedValue(
+        table,
+        'state.shift_position',
+        sample.lowerIndex,
+        sample.upperIndex,
+        sample.alpha,
+      ),
+      0,
+    );
     const shift = sceneDistance(shiftMeters);
-    const primaryAngle = finite(
-      valueAt(table, 'observer.primary_shaft_angle', index),
-      primaryIntegratedAngle[index] ?? 0,
-    );
-    const secondaryAngle = secondaryIntegratedAngle[index] ?? 0;
-    const secondaryHelixAngle = secondaryHelixRelativeAngle(
-      document,
-      table,
-      index,
-    );
+    const primaryAngle = primaryAngleAt(sample);
+    const secondaryAngle = secondaryAngleAt(sample);
+    const secondaryHelixAngle = helixAngleAt(sample);
 
     const secondaryShift = Math.max(0, shift - geometry.deadzoneShift);
     const beltAxialPosition = -Math.max(geometry.deadzoneShift, shift) / 2;
@@ -230,14 +265,23 @@ export const Scene3DViewer = ({
 
     if (beltDomain !== undefined) {
       try {
-        const domainSample = sampleSpatialDomain(
+        const domainSample = sampleSpatialDomainInterpolated(
           beltDomain,
           table,
-          index,
+          sample.lowerIndex,
+          sample.upperIndex,
+          sample.alpha,
           BELT_SAMPLE_COUNT,
         );
         const tensionSample = tensionField !== undefined && tensionField.domain === beltDomain.key
-          ? sampleSpatialField(tensionField, domainSample, table, index)
+          ? sampleSpatialFieldInterpolated(
+            tensionField,
+            domainSample,
+            table,
+            sample.lowerIndex,
+            sample.upperIndex,
+            sample.alpha,
+          )
           : undefined;
         const layout = updateBeltMesh(
           beltMesh,
@@ -255,9 +299,7 @@ export const Scene3DViewer = ({
         beltMesh.visible = beltVisible;
       } catch (error) {
         beltMesh.visible = false;
-        if (index === 0) {
-          console.warn('Unable to sample CINDER belt.path for 3D playback.', error);
-        }
+        console.warn('Unable to sample CINDER belt.path for smooth 3D playback.', error);
       }
     } else {
       beltMesh.visible = false;
@@ -282,31 +324,105 @@ export const Scene3DViewer = ({
           secondaryCenter[1],
           secondaryOffset - geometry.deadzoneShift / 2,
         ],
-        // Shaft spin belongs to the complete secondary assembly and is the only
-        // part controlled by the Rotation toggle.
         rotation: [0, 0, showAngularRotation ? secondaryAngle : 0],
       },
       secondaryMoving: {
         position: [0, 0, -(secondaryOffset + secondaryShift)],
-        // Helix clocking is relative mechanism motion. Because this model is a
-        // child of secondaryFixed, it inherits any shaft spin automatically and
-        // keeps this relative twist even when shaft Rotation is hidden.
         rotation: [0, 0, secondaryHelixAngle],
       },
     });
 
     applyCrossSection(primaryCenter[1], secondaryCenter[1]);
+
+    const primaryFixed = sceneController.getModel('primaryFixed')?.object3D;
+    const secondaryFixed = sceneController.getModel('secondaryFixed')?.object3D;
+    const secondaryMoving = sceneController.getModel('secondaryMoving')?.object3D;
+    const wallSpeedScale = sample.playing ? sample.speed : 0;
+
+    const primaryAngularSpeed = finite(
+      interpolatedValue(
+        table,
+        'state.primary_angular_speed',
+        sample.lowerIndex,
+        sample.upperIndex,
+        sample.alpha,
+      ),
+      0,
+    );
+    const secondaryAngularSpeed = finite(
+      interpolatedValue(
+        table,
+        'state.secondary_angular_speed',
+        sample.lowerIndex,
+        sample.upperIndex,
+        sample.alpha,
+      ),
+      0,
+    );
+
+    const lowerTime = finite(valueAt(table, table.axis_key, sample.lowerIndex), sample.simulationTime);
+    const upperTime = finite(valueAt(table, table.axis_key, sample.upperIndex), lowerTime);
+    const helixRate = upperTime > lowerTime
+      ? (
+        helixAngleAt({ lowerIndex: sample.upperIndex, upperIndex: sample.upperIndex, alpha: 0 })
+        - helixAngleAt({ lowerIndex: sample.lowerIndex, upperIndex: sample.lowerIndex, alpha: 0 })
+      ) / (upperTime - lowerTime)
+      : 0;
+
+    const sampleAtWallOffset = (wallOffsetSeconds: number) => (
+      replayController.sampleAtSimulationTime(
+        sample.simulationTime + wallOffsetSeconds * wallSpeedScale,
+      )
+    );
+
+    const targets: TemporalRotationTarget[] = [];
+
+    if (primaryFixed && showAngularRotation && wallSpeedScale > 0) {
+      targets.push({
+        object: primaryFixed,
+        axisLocal: LOCAL_Z_AXIS,
+        angularSpeedRadPerSecond: -primaryAngularSpeed * wallSpeedScale,
+        angleOffsetAt: (wallOffset) => (
+          -(primaryAngleAt(sampleAtWallOffset(wallOffset)) - primaryAngle)
+        ),
+      });
+    }
+
+    if (secondaryFixed && showAngularRotation && wallSpeedScale > 0) {
+      targets.push({
+        object: secondaryFixed,
+        axisLocal: LOCAL_Z_AXIS,
+        angularSpeedRadPerSecond: secondaryAngularSpeed * wallSpeedScale,
+        angleOffsetAt: (wallOffset) => (
+          secondaryAngleAt(sampleAtWallOffset(wallOffset)) - secondaryAngle
+        ),
+      });
+    }
+
+    if (secondaryMoving && wallSpeedScale > 0 && Math.abs(helixRate) > 0) {
+      targets.push({
+        object: secondaryMoving,
+        axisLocal: LOCAL_Z_AXIS,
+        angularSpeedRadPerSecond: helixRate * wallSpeedScale,
+        angleOffsetAt: (wallOffset) => (
+          helixAngleAt(sampleAtWallOffset(wallOffset)) - secondaryHelixAngle
+        ),
+      });
+    }
+
+    motionTargetsRef.current = targets;
   }, [
     applyCrossSection,
     beltDomain,
     beltMesh,
     beltVisible,
-    document,
     geometry,
+    helixAngleAt,
     initialLayout,
-    primaryIntegratedAngle,
+    primaryAngleAt,
+    replayController,
     sceneController,
-    secondaryIntegratedAngle,
+    secondaryAngleAt,
     showAngularRotation,
     showTension,
     table,
@@ -316,17 +432,19 @@ export const Scene3DViewer = ({
   ]);
 
   useEffect(() => {
-    // Redraw whichever frame is currently displayed. Visual toggles such as
-    // Tension/Rotation can recreate updateScene; they must not jump playback
-    // back to frame zero.
-    updateScene(currentFrameRef.current);
-    return replayController.on((event) => {
-      if (event.type === 'Progress') {
-        currentFrameRef.current = event.currentIndex;
-        updateScene(event.currentIndex);
-      }
+    if (!sceneController || !beltMesh) return;
+
+    sceneController.setFrameUpdate((now) => {
+      updateScene(replayController.visualSample(now));
     });
-  }, [replayController, updateScene]);
+    sceneController.setTemporalRotationProvider(() => motionTargetsRef.current);
+
+    return () => {
+      sceneController.setFrameUpdate(null);
+      sceneController.setTemporalRotationProvider(null);
+      motionTargetsRef.current = [];
+    };
+  }, [beltMesh, replayController, sceneController, updateScene]);
 
   useEffect(() => {
     if (beltMesh) beltMesh.visible = beltVisible && beltDomain !== undefined;
@@ -339,11 +457,12 @@ export const Scene3DViewer = ({
   }, [gridObjects, gridsVisible]);
 
   useEffect(() => {
+    crossSectionStateRef.current = null;
     applyCrossSection(
       pulleyCentersRef.current.primaryY,
       pulleyCentersRef.current.secondaryY,
     );
-  }, [applyCrossSection]);
+  }, [applyCrossSection, models]);
 
   useEffect(() => {
     if (!sceneController) return;
