@@ -8513,45 +8513,47 @@ static-traction root, or from the two sticking conditions together.
 \subsection{Contact Admissibility and Regime Transitions}
 \label{sec:contact_admissibility_transitions}
 
-The four contact combinations above show how to obtain an instantaneous
-response for any assumed tangential regime. They do not yet show whether that
-regime can actually be maintained, nor what to do when it cannot.
+The four contact combinations above are enough to obtain an instantaneous
+response for any assumed tangential regime. They do not yet tell us whether
+that regime can actually be maintained, or what should happen when it cannot.
 
-For a sticking contact, the root in
-\Cref{sec:sticking_traction_closure} gives the static utilization required to
-keep the belt and pulley moving together. Sticking is possible only if the
-contact can supply that reaction,
+For a sticking contact, \(\lambda_j\) is the static reaction required to keep
+the belt and pulley moving together, as introduced in
+\Cref{eq:lambda_local_definition}. The root in
+\Cref{sec:sticking_traction_closure} finds the value of that reaction that
+satisfies \(a_{\mathrm{rel},j}=0\). Sticking is physically available only while the
+required reaction lies within the static Coulomb limit,
 
 \begin{equation}
     \left|\lambda_j\right|\leq\mu_s .
 \label{eq:sticking_admissibility}
 \end{equation}
 
-If the required utilization lies inside this limit, the contact can supply
-the reaction needed to remain stuck. If it would have to exceed the limit, no
-admissible static reaction can keep the belt and pulley moving together, and
-the contact must begin to slide.
+If this condition is satisfied, the contact can supply the traction needed to
+remain stuck. If the required \(\left|\lambda_j\right|\) would exceed
+\(\mu_s\), no admissible static reaction can preserve zero relative motion and
+the sticking regime must end.
 
-A sliding contact is simpler while
-\(v_{\mathrm{rel},j}\neq0\). The sign of the relative velocity fixes the
-sliding direction, and \Cref{eq:sliding_traction_utilization} fixes the
-corresponding kinetic traction. The next decision only appears when the
-relative velocity returns to zero. At that instant its sign no longer tells us
-what happens next: the belt and pulley may remain together, or relative motion
-may develop again.
+Sliding is simpler away from zero relative speed. While
+\(v_{\mathrm{rel},j}\neq0\), its sign identifies the sliding direction and
+\Cref{eq:sliding_traction_utilization} fixes the corresponding kinetic
+traction. The next ambiguity appears only when \(v_{\mathrm{rel},j}\) reaches
+zero. At that instant the belt and pulley are momentarily moving together, so
+the first possibility to test is sticking. The required static
+\(\lambda_j\) is found from \(a_{\mathrm{rel},j}=0\) and checked against
+\Cref{eq:sticking_admissibility}. If it is admissible, the contact captures
+into sticking.
 
-The first possibility to test is sticking. With
-\(v_{\mathrm{rel},j}=0\), solve the sticking condition
-\(a_{\mathrm{rel},j}=0\) for the static utilization required at that instant,
-then check \Cref{eq:sticking_admissibility}. If the required
-\(\lambda_j\) is admissible, the contact captures into sticking. If it is not,
-sticking is unavailable and the contact must continue on a kinetic branch.
+If sticking is not admissible, the contact must leave
+\(v_{\mathrm{rel},j}=0\) on a sliding branch. For a contact that arrived at
+zero while already sliding, two continuations are possible: the relative
+velocity may grow again in the same direction as before, or the sliding
+direction may reverse and grow in the opposite direction. At the event itself,
+\(v_{\mathrm{rel},j}=0\), so the relative velocity cannot distinguish between
+those two possibilities. The relative acceleration does: its sign tells which
+way \(v_{\mathrm{rel},j}\) begins to move away from zero.
 
-At the instant of release or slip reversal,
-\(v_{\mathrm{rel},j}=0\), so the relative velocity itself cannot yet choose
-that kinetic branch. The relative acceleration does. It tells which way the
-relative velocity will begin to move away from zero. For a candidate kinetic
-sign \(\sigma_j\), consistency therefore requires
+For a candidate kinetic sign \(\sigma_j\), consistency therefore requires
 
 \begin{equation}
     \sigma_j\,a_{\mathrm{rel},j}<0,
@@ -8560,27 +8562,31 @@ sign \(\sigma_j\), consistency therefore requires
 \label{eq:sliding_onset_sign_consistency}
 \end{equation}
 
-because \(\sigma_j\) is defined opposite to the sliding direction. The valid
-kinetic branch is the one whose solved acceleration sends
-\(v_{\mathrm{rel},j}\) into the corresponding direction of slip.
+because \(\sigma_j\) is defined opposite to the direction of sliding. The
+valid kinetic branch is the one whose solved acceleration produces the
+relative-motion direction assumed by that branch. The same check selects the
+initial sliding direction when a sticking contact first releases.
 
-The order of the regime checks follows directly from these two tests. Suppose,
-for example, that the CVT is in sliding--sliding and the primary relative
-velocity reaches zero. The secondary sliding branch is retained provisionally
-while the primary is tested as sticking. If the resulting static
+Together, these checks also make the order of a regime update clear. Consider a
+sliding--sliding solution in which the primary relative velocity reaches zero.
+The secondary contact can initially be left on its current kinetic branch
+while the primary is tested as sticking. If the required static
 \(\lambda_p\) is admissible, the candidate regime becomes
 sticking--sliding. If it is not, the primary remains sliding and the kinetic
-branch consistent with \Cref{eq:sliding_onset_sign_consistency} is used
-instead. In either case, the resulting traction pair defines a new common mechanical
-response, and the conditions at both contacts are rechecked. If both contacts reach a regime boundary together, the
-same logic is applied to the combined candidate regime rather than resolving
-the two contacts independently.
+branch consistent with
+\Cref{eq:sliding_onset_sign_consistency} is selected instead. The resulting
+traction pair changes the common mechanical response, so that response is
+solved again and the contact conditions at both wraps are checked once more.
+If both contacts reach a regime boundary at the same instant, the same logic
+is applied to the combined candidate regime rather than updating the two wraps
+independently.
 
-These tangential transitions are nonimpulsive in the sense introduced in
-\Cref{sec:mechanical_regimes_state_evolution}. The belt and pulley reach the
-event with continuous position and velocity; changing the active contact law
-changes the acceleration that follows rather than resetting the state
-instantaneously.
+These tangential contact changes are nonimpulsive regime transitions in the
+sense introduced in \Cref{sec:mechanical_regimes_state_evolution}. The belt
+and pulley reach the event with continuous position and velocity; changing the
+active contact law changes the acceleration that follows rather than resetting
+the state instantaneously. The remaining structural regime changes associated
+with engagement and shift boundaries require a separate treatment.
 
 
 \section{Shift Boundaries and Regime Transitions}
