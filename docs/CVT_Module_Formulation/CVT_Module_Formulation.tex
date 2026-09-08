@@ -8195,32 +8195,47 @@ obtained from the linear balances already derived.
 \subsection{The Common Mechanical Solve}
 \label{sec:engaged_mechanical_core}
 
-The two Coulomb branches now meet again in one useful way. A sliding contact
-supplies a numerical \(\lambda_j\) directly, while the sticking solve tests
-candidate values of \(\lambda_j\). Once one value is available for each wrap,
-the mechanical balances use them in exactly the same way. Beneath either
-contact branch is therefore the same simpler problem: determine the
-instantaneous response associated with a specified pair
-\((\lambda_p,\lambda_s)\).
+The two contact branches now reduce to the same mechanical calculation.
+Sliding supplies \(\lambda_j\) directly, while sticking tests candidate values
+as its root is found. In either case, evaluating the instantaneous response
+begins with one traction utilization for each wrap. The remaining step is to
+solve the mechanics for that pair.
 
-With that pair specified, the belt torques are not additional unknowns.
-\Cref{eq:generic_belt_contact_torque} already gives
+To see what that response actually consists of, return to the balances already
+derived. The primary and secondary rotational equations,
+\Cref{eq:primary_rotational_eom_belt,eq:secondary_rotational_eom_belt},
+contain the shaft accelerations \(\dot\omega_p\) and \(\dot\omega_s\), together
+with the belt torques \(\tau_p\) and \(\tau_s\). Once the traction pair is
+specified, however, those torques are not independent unknowns. From
+\Cref{eq:generic_belt_contact_torque},
 
-\[
+\begin{equation}
     \tau_j
     =
     -r_{j,\mathrm{eff}}\lambda_jN_j,
     \qquad
     j\in\{p,s\},
-\]
+\end{equation}
 
-so each torque follows directly from the corresponding normal resultant
-\(N_j\). The axial belt reactions are likewise already written in terms of
-\(N_p\) and \(N_s\). The geometry has reduced both sheave motions to the
-single shift coordinate \(s\), and the four temporary belt-boundary tensions
-were eliminated when the loop was closed in
-\Cref{eq:closed_loop_tension_compatibility}. What remains to be determined at
-the current instant is therefore
+so each belt torque follows directly from the corresponding normal resultant
+\(N_j\).
+
+The two axial balances,
+\Cref{eq:primary_balance_in_shift_coordinate,eq:secondary_balance_in_shift_coordinate},
+then contain the shared shift acceleration \(\ddot s\) and the two normal
+resultants \(N_p\) and \(N_s\); the secondary balance also uses
+\(\dot\omega_s\), which is already present in the rotational equations. The
+complete-belt transport balance in
+\Cref{eq:complete_belt_transport_newton} adds the belt acceleration
+\(\dot v_b\). Finally, the closed-loop tension compatibility in
+\Cref{eq:closed_loop_tension_compatibility} supplies the remaining independent
+relation among the belt acceleration, shift acceleration, and normal
+resultants.
+
+The radial accelerations appearing in the belt relations are not additional
+unknowns: \Cref{eq:primary_radius_acceleration,eq:secondary_radius_acceleration}
+already express them through \(s\), \(\dot s\), and \(\ddot s\). For a specified 
+\((\lambda_p,\lambda_s)\), the instantaneous mechanical response is therefore described by
 
 \begin{equation}
     \mathbf z
@@ -8236,25 +8251,9 @@ the current instant is therefore
 \label{eq:engaged_linear_unknowns}
 \end{equation}
 
-These six quantities are already tied together by six relations derived on
-their natural free bodies. The two shaft accelerations appear in the primary
-and secondary rotational balances,
-\Cref{eq:primary_rotational_eom_belt,eq:secondary_rotational_eom_belt}. The
-shared shift acceleration and the two normal resultants enter the primary and
-secondary axial balances,
-\Cref{eq:primary_balance_in_shift_coordinate,eq:secondary_balance_in_shift_coordinate}.
-The belt transport balance in \Cref{eq:complete_belt_transport_newton}
-determines \(\dot v_b\) from the net tangential action of the two wraps, while
-\Cref{eq:closed_loop_tension_compatibility} supplies the second independent
-condition carried by the closed belt.
-
-Once \(\lambda_p\) and \(\lambda_s\) are treated as specified values, their
-nonlinear dependence is no longer part of this inner calculation. They appear
-only as known coefficients. Substituting the contact torques above, together
-with the radius accelerations already obtained in
-\Cref{eq:primary_radius_acceleration,eq:secondary_radius_acceleration}, leaves
-the six existing relations linear in the six entries of \(\mathbf z\).
-Collecting them gives
+These are exactly the quantities carried by the six relations above. With
+\(\lambda_p\) and \(\lambda_s\) fixed, each relation is linear in
+\(\mathbf z\), so they can be collected as
 
 \begin{equation}
     \mathbf A(\lambda_p,\lambda_s)\mathbf z
@@ -8263,31 +8262,203 @@ Collecting them gives
 \label{eq:engaged_six_by_six_mechanical_core}
 \end{equation}
 
-The \(6\times6\) form is simply the assembled version of mechanics already
-derived: two rotational balances, two axial balances, the complete-belt
-transport balance, and the closed-loop belt compatibility. The current state,
-geometry, applied boundary loads, and specified traction pair set the
-coefficients; solving the system returns the accelerations and normal
-resultants for that instant.
+Writing the six rows explicitly requires a little additional notation. For
+this matrix only, primes shorten derivatives: \(x_s'\), \(r_j'\), \(q_f'\),
+and \(J_{f,p}'\) denote derivatives with respect to \(s\), while
+\(\theta_s'\) denotes differentiation with respect to \(x_s\); double primes
+follow the same convention. The only expressions worth abbreviating are the
+two analytical wrap factors repeated in the closed-loop row, which are written
+as
 
-This is the calculation used inside the sticking root of
-\Cref{sec:sticking_traction_closure}. A candidate static traction pair is
-inserted into \Cref{eq:engaged_six_by_six_mechanical_core}, the resulting
-mechanical response is solved, and the corresponding
-\(a_{\mathrm{rel},j}\) values provide the sticking residuals. When a contact is
-sliding, the same calculation applies without that outer search because
-kinetic friction has already supplied its \(\lambda_j\).
+\begin{equation}
+\begin{aligned}
+    \mathcal C_{v,j}
+    &\equiv
+    \begin{cases}
+        \displaystyle
+        \frac{2\sin\beta}{\lambda_j}
+        -
+        \phi_j
+        \frac{
+            1+e^{-\frac{\lambda_j\phi_j}{\sin\beta}}
+        }{
+            1-e^{-\frac{\lambda_j\phi_j}{\sin\beta}}
+        },
+        & \lambda_j\neq0,
+        \\[8pt]
+        0,
+        & \lambda_j=0,
+    \end{cases}
+    \\[8pt]
+    \mathcal C_{N,j}
+    &\equiv
+    \begin{cases}
+        \displaystyle
+        \lambda_j
+        \frac{
+            1+e^{-\frac{\lambda_j\phi_j}{\sin\beta}}
+        }{
+            1-e^{-\frac{\lambda_j\phi_j}{\sin\beta}}
+        },
+        & \lambda_j\neq0,
+        \\[8pt]
+        \displaystyle
+        \frac{2\sin\beta}{\phi_j},
+        & \lambda_j=0.
+    \end{cases}
+\end{aligned}
+\label{eq:engaged_wrap_matrix_coefficients}
+\end{equation}
 
-One technical point matters when a sticking root passes through zero traction.
-The nonzero-\(\lambda_j\) wrap relation contains reciprocal terms, but its
-combined limit at \(\lambda_j=0\) is finite. The zero-traction form already
-derived in \Cref{eq:generic_wrap_boundary_tension_sum_zero_lambda} should
-therefore be used at that point, so the mechanical solve remains continuous as
-a trial static utilization changes sign.
+These two symbols are temporary assembly notation only. Their
+\(\lambda_j=0\) branches are the finite limits already established in
+\Cref{eq:generic_wrap_boundary_tension_sum_zero_lambda}.
 
-The different engaged contact combinations do not require different
-mechanical equations. They differ only in how the pair
-\((\lambda_p,\lambda_s)\) supplied to this common solve is obtained.
+The coefficient matrix is then
+
+\begin{equation}
+\resizebox{0.98\textwidth}{!}{$
+\mathbf A
+=
+\begin{bmatrix}
+I_{\mathrm B,p}+I_{p,\mathrm{const}}+J_{f,p}
+&0
+&0
+&0
+&r_{p,\mathrm{eff}}\lambda_p
+&0
+\\
+0
+&I_{\mathrm B,s}+I_{s,F}+I_{s,M}
+&0
+&I_{s,M}\theta_s'x_s'
+&0
+&r_{s,\mathrm{eff}}\lambda_s
+\\
+0
+&0
+&0
+&m_p+I_f(q_f')^2
+&\tfrac12\cos\beta
+&0
+\\
+0
+&I_{s,M}\theta_s'
+&0
+&\bigl[m_s+I_{s,M}(\theta_s')^2\bigr]x_s'
+&0
+&\tfrac12
+ \bigl(
+    \cos\beta+r_{s,\mathrm{eff}}\lambda_s\theta_s'
+ \bigr)
+\\
+0
+&0
+&m_b
+&0
+&-\lambda_p
+&-\lambda_s
+\\
+0
+&0
+&\rho_bA_b
+ \bigl(
+    r_{p,\mathrm{cm}}\mathcal C_{v,p}
+    -
+    r_{s,\mathrm{cm}}\mathcal C_{v,s}
+ \bigr)
+&2\rho_bA_b
+ \bigl(
+    r_{s,\mathrm{cm}}r_s'
+    -
+    r_{p,\mathrm{cm}}r_p'
+ \bigr)
+&\mathcal C_{N,p}
+&-\mathcal C_{N,s}
+\end{bmatrix}
+$}.
+\label{eq:engaged_mechanical_matrix}
+\end{equation}
+
+The corresponding known-side vector is
+
+\begingroup
+\small
+\begin{equation}
+\mathbf b
+=
+\begin{bmatrix}
+\displaystyle
+\tau_{\mathrm B,p}
+-
+J_{f,p}'\dot s\,\omega_p
+\\[9pt]
+\displaystyle
+\tau_{\mathrm B,s}
+-
+I_{s,M}
+\bigl[
+    \theta_s'x_s''
+    +
+    \theta_s''(x_s')^2
+\bigr]\dot s^2
+\\[9pt]
+\displaystyle
+\frac12\omega_p^2J_{f,p}'
+-
+I_fq_f'q_f''\dot s^2
+-
+k_p(x_{p,\mathrm{pre}}+s)
+\\[9pt]
+\displaystyle
+\theta_s'k_{s,\theta}
+(\theta_{s,\mathrm{pre}}-\theta_s)
++
+k_{s,x}(x_{s,\mathrm{pre}}-x_s)
+-
+\Bigl\{
+    \bigl[m_s+I_{s,M}(\theta_s')^2\bigr]x_s''
+    +
+    I_{s,M}\theta_s'\theta_s''(x_s')^2
+\Bigr\}\dot s^2
+\\[9pt]
+0
+\\[9pt]
+\displaystyle
+2\rho_bA_b
+\bigl(
+    r_{p,\mathrm{cm}}r_p''
+    -
+    r_{s,\mathrm{cm}}r_s''
+\bigr)\dot s^2
++
+\rho_bA_bv_b
+\bigl(
+    \dot r_s\mathcal C_{v,s}
+    -
+    \dot r_p\mathcal C_{v,p}
+\bigr)
+\end{bmatrix}.
+\label{eq:engaged_mechanical_rhs}
+\end{equation}
+\endgroup
+
+Read from top to bottom, the matrix follows the same mechanics just gathered
+above: the first two rows are the pulley rotational balances, the next two are
+the axial balances, the fifth is the complete-belt transport balance, and the
+sixth is the closed-loop tension compatibility.
+
+For a specified traction pair, every entry of \(\mathbf A\) and
+\(\mathbf b\) is fixed by the current state and the component relations already
+derived. Solving \Cref{eq:engaged_six_by_six_mechanical_core} gives the two
+shaft accelerations, belt acceleration, shift acceleration, and the two normal
+resultants. A sliding \(\lambda_j\) reaches this solve directly from kinetic
+friction; a candidate sticking \(\lambda_j\) enters in the same place, after
+which the resulting \(a_{\mathrm{rel},j}\) is returned to the sticking
+residual from \Cref{sec:sticking_traction_closure}.
+
+The contact regime therefore changes how each \(\lambda_j\) is obtained, but
+not the six mechanical balances solved once the traction pair is specified.
 
 \section{Dynamic Closure of the Freely Shifting Engaged CVT}
 \label{sec:engaged_dynamic_closure}
