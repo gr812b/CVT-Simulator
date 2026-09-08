@@ -1,6 +1,7 @@
 import createClient from 'openapi-fetch';
 import type { components, paths } from './generated/backend';
 import type { CINDERSimulationCaseDocument } from './generated/simulationCase';
+import type { CINDERSimulationResultDocument } from './generated/simulationResult';
 
 /**
  * The only frontend module that names backend routes or consumes OpenAPI
@@ -93,51 +94,10 @@ export interface EditorSchema {
   components: ComponentDescriptor[];
 }
 
-export interface ReportColumn {
-  key: string;
-  label: string;
-  description: string;
-  group: string;
-  dimension: string;
-  canonicalUnit: string;
-  values: Array<number | null>;
-}
-
-export interface ReportSegmentRange {
-  segmentIndex: number;
-  startIndex: number;
-  endIndex: number;
-  mode: Record<string, string | null>;
-}
-
-export interface ReportTable {
-  axisKey: string;
-  rowCount: number;
-  columns: ReportColumn[];
-  segmentRanges: ReportSegmentRange[];
-  preservesDuplicateTransitionTimes: boolean;
-}
-
-export interface SimulationTransition {
-  timeS: number;
-  previousMode: Record<string, string | null>;
-  firedEventNames: string[];
-  reason: string;
-  terminates: boolean;
-  metadata: unknown;
-  postTransitionState: Record<string, number>;
-}
-
-export interface SimulationResult {
-  contractVersion: number;
-  kind: 'simulation_result';
-  conventions: Record<string, unknown>;
-  metrics: Record<string, unknown>;
-  summary: Record<string, unknown>;
-  warnings: string[];
-  reportTable: ReportTable;
-  transitions: SimulationTransition[];
-}
+export type SimulationResult = CINDERSimulationResultDocument;
+export type ReportTable = SimulationResult['report_table'];
+export type ReportColumn = ReportTable['columns'][number];
+export type SimulationTransition = SimulationResult['transitions'][number];
 
 export interface CompletedSimulationRun {
   run: RunStatus;
@@ -679,59 +639,12 @@ function parseEditorSchema(raw: unknown): EditorSchema {
   };
 }
 
-function parseReportColumn(raw: unknown): ReportColumn {
-  const column = object(raw, 'report column');
-  return {
-    key: string(column.key, 'report column.key'),
-    label: string(column.label, 'report column.label'),
-    description: typeof column.description === 'string' ? column.description : '',
-    group: string(column.group, 'report column.group'),
-    dimension: string(column.dimension, 'report column.dimension'),
-    canonicalUnit: string(column.canonical_unit ?? column.unit, 'report column.canonical_unit'),
-    values: array(column.values, 'report column.values').map((value) => numberOrNull(value, 'report column value')),
-  };
-}
-
 function parseSimulationResult(raw: unknown): SimulationResult {
   const value = object(raw, 'simulation result');
   if (value.kind !== 'simulation_result') throw new ApiClientError('Unexpected result kind.');
-  const table = object(value.report_table, 'simulation result.report_table');
-  return {
-    contractVersion: number(value.contract_version, 'simulation result.contract_version'),
-    kind: 'simulation_result',
-    conventions: object(value.conventions, 'simulation result.conventions'),
-    metrics: object(value.metrics, 'simulation result.metrics'),
-    summary: object(value.summary, 'simulation result.summary'),
-    warnings: array(value.warnings, 'simulation result.warnings').map((warning) => string(warning, 'simulation warning')),
-    reportTable: {
-      axisKey: string(table.axis_key, 'report table.axis_key'),
-      rowCount: number(table.row_count, 'report table.row_count'),
-      columns: array(table.columns, 'report table.columns').map(parseReportColumn),
-      segmentRanges: array(table.segment_ranges, 'report table.segment_ranges').map((item) => {
-        const range = object(item, 'report segment range');
-        return {
-          segmentIndex: number(range.segment_index, 'report segment range.segment_index'),
-          startIndex: number(range.start_index, 'report segment range.start_index'),
-          endIndex: number(range.end_index, 'report segment range.end_index'),
-          mode: object(range.mode, 'report segment range.mode') as Record<string, string | null>,
-        };
-      }),
-      preservesDuplicateTransitionTimes: boolean(table.preserves_duplicate_transition_times, 'report table.preserves_duplicate_transition_times'),
-    },
-    transitions: array(value.transitions, 'simulation result.transitions').map((item) => {
-      const transition = object(item, 'simulation transition');
-      return {
-        timeS: number(transition.time_s, 'simulation transition.time_s'),
-        previousMode: object(transition.previous_mode, 'simulation transition.previous_mode') as Record<string, string | null>,
-        firedEventNames: array(transition.fired_event_names, 'simulation transition.fired_event_names').map((name) => string(name, 'transition event name')),
-        reason: string(transition.reason, 'simulation transition.reason'),
-        terminates: boolean(transition.terminates, 'simulation transition.terminates'),
-        metadata: transition.metadata,
-        postTransitionState: object(transition.post_transition_state, 'simulation transition.post_transition_state') as Record<string, number>,
-      };
-    }),
-  };
+  return value as unknown as SimulationResult;
 }
+
 
 
 export async function listVehicleAssemblies(options: { publicOnly?: boolean } = {}): Promise<LibraryObjectSummary[]> {

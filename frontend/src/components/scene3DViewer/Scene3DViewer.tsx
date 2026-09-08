@@ -27,7 +27,7 @@ export const Scene3DViewer = ({ replayController, table, document, className }: 
   const secondaryAngleKey = 'state.secondary_shaft_angle';
   const primaryWrapKey = 'geometry.primary_wrap_angle_rad';
   const secondaryWrapKey = 'geometry.secondary_wrap_angle_rad';
-  const timeKey = table.axisKey;
+  const timeKey = table.axis_key;
 
   useEffect(() => { setLoading(true); void loadCVTModels(geometry).then(setModels).finally(() => setLoading(false)); }, [geometry]);
   const { containerRef, sceneController } = useScene3D({ sceneConfig: { camera: { type: 'perspective', fov: 50, position: [7, 7, 12], lookAt: [0, 0, 0] }, enableControls: true, backgroundColor: 0x2a2a2a, antialias: true }, models });

@@ -25,3 +25,8 @@ __pycache__/
 node_modules/
 dist/
 build/
+
+# Local/generated contract and environment artifacts
+**/venv/
+backend/generated/
+frontend/src/api/generated/

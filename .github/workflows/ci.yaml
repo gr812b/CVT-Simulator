@@ -168,16 +168,8 @@ jobs:
         working-directory: ./frontend
         run: npm ci
 
-      - name: Verify generated frontend contracts are current
-        run: |
-          npm --prefix frontend run contracts:generate
-          if [[ -n "$(git status --porcelain -- frontend/src/api/generated)" ]]; then
-            echo "Generated frontend contract files are stale."
-            echo "Run: npm --prefix frontend run contracts:generate"
-            git status --short -- frontend/src/api/generated
-            git diff -- frontend/src/api/generated
-            exit 1
-          fi
+      - name: Generate frontend contracts
+        run: npm --prefix frontend run contracts:generate
 
       - name: Run ESLint
         working-directory: ./frontend

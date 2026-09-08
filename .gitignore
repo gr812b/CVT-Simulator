@@ -313,3 +313,7 @@ outputs/
 
 # Production deployment secrets
 /.env
+
+# Generated API/CINDER contract artifacts
+backend/generated/
+frontend/src/api/generated/

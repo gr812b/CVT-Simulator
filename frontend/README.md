@@ -47,7 +47,13 @@ npm run lint
 npm run build
 ```
 
-When the backend OpenAPI contract changes, regenerate and commit the generated types:
+API/CINDER TypeScript contracts are generated build artifacts and are not committed.
+`npm run dev` and `npm run build` refresh them automatically. The generator uses
+`backend/venv` when available (or `CINDER_BACKEND_PYTHON` / system Python) to
+export backend OpenAPI plus CINDER assembly, simulation-case, and
+simulation-result schemas before generating TypeScript.
+
+You can still regenerate explicitly when debugging the contract boundary:
 
 ```powershell
 npm run contracts:generate
@@ -60,7 +66,7 @@ The production image serves the static Vite build with nginx. It calls the backe
 Build from the repository root:
 
 ```powershell
-docker build -f frontend/Dockerfile -t cvt-simulator-frontend frontend
+docker build -f frontend/Dockerfile -t cvt-simulator-frontend .
 ```
 
 The frontend and backend containers must share a Docker network, and the backend container/service must be named `cvt-backend`:
@@ -84,7 +90,7 @@ For a deployment where the API is deliberately hosted at a separate public origi
 ```powershell
 docker build -f frontend/Dockerfile `
   --build-arg VITE_API_BASE_URL=https://api.example.com `
-  -t cvt-simulator-frontend frontend
+  -t cvt-simulator-frontend .
 ```
 
 Do not use runtime environment variables for `VITE_API_BASE_URL`; Vite embeds `VITE_*` values while building the static files.

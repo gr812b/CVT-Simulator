@@ -69,7 +69,7 @@ function shownXAxis(columnValue: ReportColumn): number[] | null {
 function unit(columnValue: ReportColumn): string {
   return isQuantityDimension(columnValue.dimension)
     ? defaultDisplayUnit(columnValue.dimension)
-    : columnValue.canonicalUnit;
+    : columnValue.canonical_unit;
 }
 
 export function buildReportGraphs(table: ReportTable): GraphCategory[] {
