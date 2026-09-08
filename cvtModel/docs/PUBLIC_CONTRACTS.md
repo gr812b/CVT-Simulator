@@ -2,9 +2,25 @@
 
 `cinder.contracts` is the stable versioned document boundary over CINDER's
 mechanical core. It owns JSON-safe assembly/simulation documents, validation
-findings, editable-field metadata, result projection, and standard metrics.
+findings, editable-field metadata, result projection, standard metrics, and
+machine-readable JSON Schemas for the core simulation boundaries.
 
 Core mechanics do not depend on the document layer.
+
+## Public JSON Schemas
+
+```python
+from cinder.contracts import (
+    assembly_document_json_schema,
+    simulation_case_document_json_schema,
+    simulation_result_json_schema,
+)
+```
+
+These describe the CINDER-owned structure of the reusable CVT assembly, composed
+simulation case, and projected simulation result respectively. The composed case
+keeps host and shaft-boundary payload contents opaque because those are extension
+slots rather than fixed CINDER-core implementations.
 
 ## Composed simulation-case document
 
@@ -18,29 +34,14 @@ A version-one document contains:
 
 ```text
 assembly          physical CVT hardware
-shaft_boundaries  primary and secondary external boundary definitions
-host              non-CVT state required by those boundaries
+shaft_boundaries  primary and secondary external boundary slots
+host              composed-system host slot
 scenario          time span and five-state CVT initial condition
 execution         integrator and reporting settings
 ```
 
 The complete current shape is demonstrated by
 `examples/baja_baseline_simulation_case.json`.
-
-## Supported serialized built-ins
-
-| Area | Supported kind |
-|---|---|
-| Shaft boundary | `fixed_shaft` |
-| Primary shaft boundary | `full_throttle_engine` |
-| Secondary shaft boundary | `locked_final_drive` |
-| Host | `secondary_shaft_angle` |
-| Road profile | `constant_grade`, `piecewise_constant_grade` |
-| Reporting grid | `native`, `uniform_count`, `uniform_time_step` |
-
-Custom Python shaft boundaries, hosts, and force laws remain normal Python
-extension points. The JSON encoder serializes only built-ins it can reproduce
-unambiguously.
 
 ## Decode and validate
 
@@ -102,19 +103,16 @@ primary and secondary actuator components
 helical couplings
 ```
 
-The composed simulation owns external context:
+The composed simulation adds external context and execution configuration:
 
 ```text
-shaft boundaries
-host state
+shaft-boundary slots
+host slot
 initial conditions
 time span
 integrator settings
 reporting settings
 ```
-
-Shift stops and dead-zone limits are derived from geometry rather than repeated
-as execution parameters.
 
 All public numeric values are SI.
 
@@ -138,12 +136,11 @@ belt.path       planar closed effective-radius belt path
 belt.tension    continuous reduced-model belt tension on belt.path
 ```
 
-Expressions are JSON-safe trees.  Their leaves are literals, the local region
-coordinate `u`, or references to existing report-table signal keys.  Operators
-are ordinary generic math (`add`, `sub`, `mul`, `div`, `neg`, `abs`, `expm1`,
-`sin`, `cos`, `sqrt`, `lt`, and `where`).  A web backend may therefore pass the
-projected result through unchanged; a client needs only one generic expression
-evaluator rather than field-specific CVT equations.
+Expressions are JSON-safe trees. Their leaves are literals, the local region
+coordinate `u`, or references to existing report-table signal keys. Operators
+are ordinary generic math (`add`, `sub`, `mul`, `div`, `neg`, `abs`, `exp`,
+`expm1`, `sin`, `cos`, `sqrt`, `lt`, and `where`). A consumer therefore needs
+only one generic expression evaluator rather than field-specific CVT equations.
 
 For belt tension, four additional ordinary report columns are emitted when
 contact reporting is enabled:
@@ -156,5 +153,4 @@ contact.secondary_tension_out
 ```
 
 The field definition is transmitted once and references these columns together
-with the existing wrap-angle, effective-radius, and traction-utilization
-columns.
+with existing geometry/contact signals.
