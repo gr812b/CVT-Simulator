@@ -7899,13 +7899,13 @@ through each wrap.
 \subsection{Belt-Mechanics Closure and Scope}
 \label{sec:belt_mechanics_synthesis}
 
-At this point, every free body retained in the engaged CVT model has been
-balanced. The movable sheaves have their axial equations of motion, the two
-pulley assemblies have their rotational equations of motion, and the belt has
-been treated through both pulley wraps and both massive straight spans. The
-wrap balances provide the tension and normal-loading distributions from which
-the belt axial reactions and pulley torques are obtained, while the
-straight-span balances complete the dynamics of the closed belt.
+The closed-loop compatibility in
+\Cref{eq:closed_loop_tension_compatibility} is the final relation required
+from the belt itself. Rather than fixing the absolute tension level through a
+prescribed tight- or slack-side boundary condition, it makes that level
+emerge from the two pulley-wrap solutions together with the momentum balances
+of the two straight spans. This way of closing the loop also defines the level
+of belt resolution retained by the present model.
 
 This treatment combines ideas that more commonly appear at different levels
 of resolution. Classical belt relations describe the tension change through a
@@ -7963,10 +7963,179 @@ dynamics, and pulley rotation through the complete belt loop. This reduced
 description avoids introducing a spatially discretized belt state while
 retaining the mechanism-level transient coupling required here.
 
-With the belt loop now closed, every retained mechanical free body has been
-balanced. The only remaining unknowns are the two wrap-level traction
-utilizations, \(\lambda_p\) and \(\lambda_s\). The next section establishes
-the contact-state relations needed to determine them.
+The comparison above makes the resulting tradeoff explicit. The present model
+does not resolve the detailed tangential contact field within either wrap;
+under \AssRef{assump:wrap_contact_resolution}, that distributed action is
+represented by the single signed utilization \(\lambda_j\). Section~3.4 has
+established how this quantity enters the wrap tension, normal loading, pulley
+torque, and ultimately the closed belt. What the belt free-body equations
+cannot determine on their own is the value that each pulley contact must carry
+at the current instant. That remaining contact-level question is taken up
+next.
+
+\section{Tangential Contact-State Closure}
+\label{sec:engaged_dynamic_closure}
+
+The fully engaged CVT has now been followed through every retained motion and
+free body. \Cref{sec:geometry} relates the sheave positions and pulley radii,
+\Cref{sec:axial_actuation_balances} balances the two movable assemblies,
+\Cref{sec:pulley_rotational_dynamics} balances the two rotating assemblies,
+and \Cref{sec:belt_transport_contact} balances the belt around both wraps and
+straight spans. No additional free body or degree of freedom remains to be
+introduced.
+
+Looking across those relations, only two quantities remain without relations
+that fix their values at the current instant: \(\lambda_p\) and
+\(\lambda_s\). The reason lies in how \(\lambda_j\) was introduced in
+\Cref{eq:lambda_local_definition}. There, the separate Coulomb conditions on
+traction magnitude, direction, and whether the contact is sticking or sliding
+were collected into the single signed utilization \(\lambda_j\). That
+compression let the remainder of the belt derivation carry one contact
+quantity through the wrap tension, normal loading, pulley torque, and
+closed-loop belt relations without reopening the piecewise contact law at
+every step.
+
+Now, however, \(\lambda_j\) itself must be determined. The contact behavior
+collected into that compact definition can no longer remain hidden inside a
+single symbol. Importantly, this is different from adding one more balance:
+the equations derived so far keep the same form as the mechanism moves,
+whereas changing between sticking and sliding changes the actual relation used
+to determine \(\lambda_j\). That is a mechanical regime change. As introduced
+in \Cref{sec:mechanical_regimes_state_evolution}, the regime determines which
+physical equations govern the mechanism. Here, the sticking or sliding regime
+at each wrap determines how its \(\lambda_j\) must be found.
+
+Closing the fully engaged mechanism thus comes down to resolving
+\(\lambda_p\) and \(\lambda_s\) under those active contact regimes and using
+the resulting values in the balances already derived. If a contact can no
+longer satisfy the conditions of its current regime, the relation used to
+determine its \(\lambda_j\) must change with it.
+
+% --------------------------------------------------------------
+\subsection{Relative Motion at the Pulley Contacts}
+\label{sec:tangential_contact_states}
+
+At one pulley, the belt moves through the wrap with signed transport speed
+\(v_b\), while the pulley surface at the effective contact radius moves
+tangentially at \(r_{j,\mathrm{eff}}\omega_j\). The kinematic distinction
+between sticking and sliding begins with whether these two motions match.
+Their difference defines the relative tangential speed,
+
+\begin{equation}
+\boxed{
+    v_{\mathrm{rel},j}
+    =
+    v_b-r_{j,\mathrm{eff}}\omega_j,
+    \qquad
+    j\in\{p,s\}.
+}
+\label{eq:tangential_relative_speed}
+\end{equation}
+
+The signs follow the common belt-transport and rotational directions defined
+in \Cref{sec:rotational_sign}. For the secondary wrap,
+\AssRef{assump:symmetric_face_sharing} uses the shaft speed \(\omega_s\) as
+the representative speed of the aggregated secondary contact.
+
+During established sliding, \(v_{\mathrm{rel},j}\neq0\). Its sign gives the
+direction in which the belt is moving relative to the pulley, so the
+pulley-on-belt traction acts in the opposite direction. Kinetic friction fixes
+the magnitude, and the sliding branch of
+\Cref{eq:lambda_local_definition} becomes
+
+\begin{equation}
+\boxed{
+\begin{aligned}
+    \sigma_j
+    &=
+    -\operatorname{sgn}\!\left(v_{\mathrm{rel},j}\right),
+    \\
+    \lambda_j
+    &=
+    \sigma_j\mu_k,
+    \qquad
+    v_{\mathrm{rel},j}\neq0.
+\end{aligned}
+}
+\label{eq:sliding_traction_utilization}
+\end{equation}
+
+The relative motion supplies the direction and kinetic friction supplies the
+magnitude. For a sliding contact, the current contact motion therefore fixes
+\(\lambda_j\) directly.
+
+For sticking, the belt and pulley surface instead move together tangentially,
+
+\begin{equation}
+\boxed{
+    v_{\mathrm{rel},j}=0
+    \qquad\Longleftrightarrow\qquad
+    v_b=r_{j,\mathrm{eff}}\omega_j.
+}
+\label{eq:sticking_velocity_compatibility}
+\end{equation}
+
+This equality does not determine the tangential force. It says only that the
+two surfaces have no relative tangential motion at that instant. Static
+friction can still carry a nonzero reaction, with the value of \(\lambda_j\)
+set by whatever the mechanics require to maintain sticking, provided the
+static limit in \Cref{eq:lambda_local_definition} is not exceeded.
+
+Matching the two speeds at one instant is not enough to keep them matched. If
+the belt speed and pulley-surface speed begin changing at different rates,
+relative motion appears immediately. For sticking to persist, the relative
+speed must remain zero. Differentiating
+\Cref{eq:tangential_relative_speed} gives
+
+\begin{equation}
+\boxed{
+    \frac{d v_{\mathrm{rel},j}}{dt}
+    =
+    \dot v_b
+    -
+    r_{j,\mathrm{eff}}\dot\omega_j
+    -
+    \dot r_{j,\mathrm{eff}}\omega_j .
+}
+\label{eq:tangential_relative_acceleration}
+\end{equation}
+
+The first term is the belt transport acceleration. The second is the change in
+pulley-surface speed produced by angular acceleration at the current effective
+radius. The final term appears because that radius also changes during a
+shift. As established in
+\Cref{eq:radial_reference_rate_equivalence}, the effective contact radius
+moves with the pulley radius. Even if \(\omega_j\) were momentarily constant,
+changing \(r_{j,\mathrm{eff}}\) would still change the pulley-surface speed
+\(r_{j,\mathrm{eff}}\omega_j\). A sticking belt must follow that change as
+well.
+
+Denote this relative tangential acceleration by
+
+\begin{equation}
+\boxed{
+    a_{\mathrm{rel},j}
+    \equiv
+    \frac{d v_{\mathrm{rel},j}}{dt}.
+}
+\label{eq:tangential_relative_acceleration_definition}
+\end{equation}
+
+An established sticking contact must then satisfy
+
+\begin{equation}
+\boxed{
+    a_{\mathrm{rel},j}=0.
+}
+\label{eq:sticking_acceleration_compatibility}
+\end{equation}
+
+The two contact regimes now leave the mechanics with two different kinds of
+information. Sliding fixes \(\lambda_j\) directly from the current relative
+motion. Sticking instead fixes the required relative acceleration,
+\(a_{\mathrm{rel},j}=0\), and leaves \(\lambda_j\) as the static reaction
+needed to satisfy that condition while remaining within the static friction
+limit.
 
 \section{Dynamic Closure of the Freely Shifting Engaged CVT}
 \label{sec:engaged_dynamic_closure}
