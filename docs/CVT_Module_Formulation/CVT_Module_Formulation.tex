@@ -7959,19 +7959,10 @@ model places its resolution. Duan resolves the local contact, friction, chain
 elasticity, and pulley deformation in greater detail. The present formulation
 uses a coarser contact description, but carries radial acceleration, both
 straight-span inertias, moving-boundary momentum transport, movable-sheave
-dynamics, and pulley rotation through the complete belt loop. This reduced
-description avoids introducing a spatially discretized belt state while
-retaining the mechanism-level transient coupling required here.
-
-The comparison above makes the resulting tradeoff explicit. The present model
-does not resolve the detailed tangential contact field within either wrap;
-under \AssRef{assump:wrap_contact_resolution}, that distributed action is
-represented by the single signed utilization \(\lambda_j\). Section~3.4 has
-established how this quantity enters the wrap tension, normal loading, pulley
-torque, and ultimately the closed belt. What the belt free-body equations
-cannot determine on their own is the value that each pulley contact must carry
-at the current instant. That remaining contact-level question is taken up
-next.
+dynamics, and pulley rotation through the complete belt loop. The distributed
+tangential action within each wrap is reduced to the single signed utilization
+\(\lambda_j\), allowing these mechanism-level transients to be retained
+without introducing a spatially discretized belt state.
 
 \section{Tangential Contact-State Closure}
 \label{sec:engaged_dynamic_closure}
@@ -7995,31 +7986,27 @@ quantity through the wrap tension, normal loading, pulley torque, and
 closed-loop belt relations without reopening the piecewise contact law at
 every step.
 
-Now, however, \(\lambda_j\) itself must be determined. The contact behavior
-collected into that compact definition can no longer remain hidden inside a
-single symbol. Importantly, this is different from adding one more balance:
-the equations derived so far keep the same form as the mechanism moves,
-whereas changing between sticking and sliding changes the actual relation used
-to determine \(\lambda_j\). That is a mechanical regime change. As introduced
-in \Cref{sec:mechanical_regimes_state_evolution}, the regime determines which
-physical equations govern the mechanism. Here, the sticking or sliding regime
-at each wrap determines how its \(\lambda_j\) must be found.
-
-Closing the fully engaged mechanism thus comes down to resolving
-\(\lambda_p\) and \(\lambda_s\) under those active contact regimes and using
-the resulting values in the balances already derived. If a contact can no
-longer satisfy the conditions of its current regime, the relation used to
-determine its \(\lambda_j\) must change with it.
+Importantly, this is different from adding one more balance. The equations
+derived so far keep the same form as the CVT moves. Changing a belt--pulley
+contact between sticking and sliding, however, is a change of mechanical
+regime: the actual relation used to determine \(\lambda_j\) changes with the
+contact state. This is the type of regime change introduced in
+\Cref{sec:mechanical_regimes_state_evolution}, where a change in the active
+contact or constraint state changes the equations governing the mechanism.
+What remains is therefore not another motion or free-body balance, but the 
+choice of which tangential contact relation governs each wrap.
 
 % --------------------------------------------------------------
 \subsection{Relative Motion at the Pulley Contacts}
 \label{sec:tangential_contact_states}
 
-At one pulley, the belt moves through the wrap with signed transport speed
+With the remaining ambiguity reduced to the two Coulomb branches, the first
+useful distinction is the contact motion itself. Sticking and sliding differ
+simply in whether the belt and pulley surface have relative tangential motion.
+At pulley \(j\), the belt moves through the wrap with signed transport speed
 \(v_b\), while the pulley surface at the effective contact radius moves
-tangentially at \(r_{j,\mathrm{eff}}\omega_j\). The kinematic distinction
-between sticking and sliding begins with whether these two motions match.
-Their difference defines the relative tangential speed,
+tangentially at \(r_{j,\mathrm{eff}}\omega_j\). Their difference defines the
+relative tangential speed,
 
 \begin{equation}
 \boxed{
