@@ -2080,9 +2080,10 @@ stick--slip condition. At that instant, the old mechanical arrangement no
 longer provides the admissible continuation of the motion and the regime must
 change.
 
-Not every regime change alters the state instantaneously. If the event changes
-the active force or constraint description without producing an impulse, the
-positions and velocities pass through the event unchanged,
+Not every regime change alters the state instantaneously. he simplest case is
+a nonimpulsive regime change: the active force or constraint description
+changes without producing an impulse, so the positions and velocities pass
+through the event unchanged,
 
 \begin{equation}
     \vect{x}^{+}=\vect{x}^{-},
@@ -8463,15 +8464,130 @@ compatibility.
 
 For a specified traction pair, every entry of \(\mathbf A\) and
 \(\mathbf b\) is fixed by the current state and the component relations already
-derived. Solving \Cref{eq:engaged_six_by_six_mechanical_core} gives the two
-shaft accelerations, belt acceleration, shift acceleration, and the two normal
-resultants. A sliding \(\lambda_j\) reaches this solve directly from kinetic
-friction; a candidate sticking \(\lambda_j\) enters in the same place, after
-which the resulting \(a_{\mathrm{rel},j}\) is returned to the sticking
-residual from \Cref{sec:sticking_traction_closure}.
+derived. Solving \Cref{eq:engaged_six_by_six_mechanical_core} then gives the
+two shaft accelerations, belt acceleration, shift acceleration, and the two
+normal resultants. A sliding \(\lambda_j\) reaches this solve directly from
+kinetic friction; a sticking \(\lambda_j\) reaches the same solve as a
+candidate value whose resulting \(a_{\mathrm{rel},j}\) is returned to the
+root described in \Cref{sec:sticking_traction_closure}.
 
-The contact regime therefore changes how each \(\lambda_j\) is obtained, but
-not the six mechanical balances solved once the traction pair is specified.
+The four contact combinations can now be read off directly:
+
+\begin{center}
+\small
+\renewcommand{\arraystretch}{1.35}
+\begin{tabular}{c|p{0.34\textwidth}|p{0.34\textwidth}}
+    &
+    \textbf{Secondary sliding}
+    &
+    \textbf{Secondary sticking}
+    \\ \hline
+
+    \textbf{Primary sliding}
+    &
+    Both \(\lambda_p\) and \(\lambda_s\) are fixed by kinetic friction.
+    One \(6\times6\) solve gives the instantaneous response.
+    &
+    \(\lambda_p\) is fixed by kinetic friction, while \(\lambda_s\) is found
+    from the one-dimensional root \(a_{\mathrm{rel},s}=0\). Each candidate
+    \(\lambda_s\) is evaluated through the same \(6\times6\) solve.
+    \\ \hline
+
+    \textbf{Primary sticking}
+    &
+    \(\lambda_s\) is fixed by kinetic friction, while \(\lambda_p\) is found
+    from the one-dimensional root \(a_{\mathrm{rel},p}=0\). Each candidate
+    \(\lambda_p\) is evaluated through the same \(6\times6\) solve.
+    &
+    \(\lambda_p\) and \(\lambda_s\) are found together from
+    \(a_{\mathrm{rel},p}=0\) and \(a_{\mathrm{rel},s}=0\). Each candidate
+    pair is evaluated through the same \(6\times6\) solve.
+\end{tabular}
+\end{center}
+
+The six mechanical balances are therefore common to all four cases. What
+changes with the contact regime is only how the traction pair supplied to
+those balances is obtained: directly from kinetic friction, from one
+static-traction root, or from the two sticking conditions together.
+
+\subsection{Contact Admissibility and Regime Transitions}
+\label{sec:contact_admissibility_transitions}
+
+At this point, each assumed contact regime produces a complete instantaneous
+response. For a sticking contact, however, satisfying
+\(a_{\mathrm{rel},j}=0\) only identifies the static traction required to
+maintain that state; it does not yet show that the contact can supply it. The
+remaining question is therefore whether the required reaction is admissible,
+and how to respond when it is not.
+
+The static branch of \Cref{eq:lambda_local_definition} gives that first check
+directly. A sticking solution is admissible only while
+
+\begin{equation}
+    \left|\lambda_j\right|\leq\mu_s .
+\label{eq:sticking_admissibility}
+\end{equation}
+
+If the root found in \Cref{sec:sticking_traction_closure} lies inside this
+bound, the contact can supply the reaction needed to keep
+\(a_{\mathrm{rel},j}=0\), and sticking may continue. If the required
+\(\left|\lambda_j\right|\) exceeds \(\mu_s\), no admissible static reaction can
+preserve the sticking constraint. The assumed sticking regime has then reached
+its limit and the contact must release into sliding.
+
+A sliding contact has no analogous static-capacity check. While
+\(v_{\mathrm{rel},j}\neq0\), its sign selects the kinetic branch through
+\Cref{eq:sliding_traction_utilization}, and the contact remains sliding as long
+as that relative motion persists. The next ambiguity appears only when
+\(v_{\mathrm{rel},j}\) returns to zero. At that instant the previous sliding
+direction disappears, so the kinetic branch alone no longer determines the
+continuation of the contact.
+
+At \(v_{\mathrm{rel},j}=0\), the sticking solution provides the natural
+test. Solving for the static \(\lambda_j\) with
+\(a_{\mathrm{rel},j}=0\) asks whether the belt and pulley can continue moving
+together from that instant onward. If the resulting utilization satisfies
+\Cref{eq:sticking_admissibility}, the contact transitions to sticking. If it
+does not, sticking is unavailable and a kinetic branch must carry the contact
+away from zero relative speed.
+
+At the instant of release or slip reversal,
+\(v_{\mathrm{rel},j}=0\), so its sign cannot select that kinetic branch
+directly. Instead, the branch must be consistent with the relative acceleration
+it produces. Since \(\sigma_j\) is opposite the sliding direction, an emerging
+sliding branch must satisfy
+
+\begin{equation}
+    \sigma_j\,a_{\mathrm{rel},j}<0,
+    \qquad
+    v_{\mathrm{rel},j}=0.
+\label{eq:sliding_onset_sign_consistency}
+\end{equation}
+
+The resulting \(a_{\mathrm{rel},j}\) then gives the sign of the relative
+motion immediately after the transition.
+
+These tangential transitions are therefore nonimpulsive. The belt and pulley
+reach the regime boundary with compatible position and velocity, and the
+change of contact state changes the force relation—and hence the subsequent
+acceleration—rather than requiring an instantaneous velocity reset. This is
+the nonimpulsive regime transition described in
+\Cref{sec:mechanical_regimes_state_evolution}.
+
+The two contact checks cannot be applied independently. Changing the state
+of either wrap changes its \(\lambda_j\), which changes the entries of
+\(\mathbf A\) and \(\mathbf b\) and therefore the response at both pulley
+contacts. A transition at one wrap can consequently change the static traction
+required at the other. After any contact changes state, the new traction pair
+must be resolved, the mechanical response recomputed, and both contacts checked
+again.
+
+An admissible fully engaged regime is therefore one in which every sticking
+contact can supply the static reaction required to maintain
+\(a_{\mathrm{rel},j}=0\), while every sliding contact has relative motion
+consistent with its kinetic branch. When either condition fails, the contact
+regime changes and the common mechanical response is solved again under the new
+traction pair.
 
 \section{Dynamic Closure of the Freely Shifting Engaged CVT}
 \label{sec:engaged_dynamic_closure}
