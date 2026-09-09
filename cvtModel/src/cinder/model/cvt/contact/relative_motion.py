@@ -256,9 +256,7 @@ def _representative_angular_speed(
         snapshot=snapshot,
         interface=interface,
     )
-    return float(
-        shaft_speed + coefficients.dtheta_ds_weighted * state.shift_speed
-    )
+    return float(shaft_speed + coefficients.dtheta_ds_weighted * state.shift_speed)
 
 
 def _representative_angular_motion(
@@ -352,7 +350,6 @@ def _representative_contact_coefficients(
         dtheta_ds_weighted=float(weighted_dtheta_ds),
         d2theta_ds2_weighted=(fraction * float(helix.d2theta_ds2)),
     )
-
 
 
 def infer_slip_direction(

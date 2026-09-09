@@ -419,12 +419,8 @@ def _physical_velocity_map(
     # velocity rows.
     if topology is CVTVelocityTopology.ENGAGED:
         radial_reference = geometry
-        primary_radial_speed_per_shift_speed = (
-            geometry.primary.d_center_of_mass_ds
-        )
-        secondary_radial_speed_per_shift_speed = (
-            geometry.secondary.d_center_of_mass_ds
-        )
+        primary_radial_speed_per_shift_speed = geometry.primary.d_center_of_mass_ds
+        secondary_radial_speed_per_shift_speed = geometry.secondary.d_center_of_mass_ds
     else:
         radial_reference = model.geometry.evaluate_engaged(
             model.geometry.spec.deadzone_shift
@@ -529,7 +525,6 @@ def _geometry_for_topology(
     raise ValueError(f"Unsupported velocity topology: {topology!r}.")
 
 
-
 def _representative_contact_shift_gain(
     *,
     model: MechanicalCVTPlant,
@@ -554,7 +549,9 @@ def _representative_contact_shift_gain(
 def _movable_member_torque_fraction(*, model: MechanicalCVTPlant, side: str) -> float:
     actuator = model.primary_actuator if side == "primary" else model.secondary_actuator
     laws = tuple(
-        law for law in actuator.force_laws if isinstance(law, HelicalTorqueReactionForce)
+        law
+        for law in actuator.force_laws
+        if isinstance(law, HelicalTorqueReactionForce)
     )
     if not laws:
         return 0.0
@@ -563,6 +560,7 @@ def _movable_member_torque_fraction(*, model: MechanicalCVTPlant, side: str) -> 
             f"Expected at most one helical torque-reaction law on {side}; found {len(laws)}."
         )
     return float(laws[0].spec.movable_member_torque_fraction)
+
 
 def _helix_shift_ratio(*, model: MechanicalCVTPlant, side: str, coordinate) -> float:
     coupling = (

@@ -47,16 +47,18 @@ def _helix_shift_ratio(model, side: str, coordinate) -> float:
     )
 
 
-
 def _torque_fraction(model, side: str) -> float:
     actuator = model.primary_actuator if side == "primary" else model.secondary_actuator
     laws = tuple(
-        law for law in actuator.force_laws if isinstance(law, HelicalTorqueReactionForce)
+        law
+        for law in actuator.force_laws
+        if isinstance(law, HelicalTorqueReactionForce)
     )
     if not laws:
         return 0.0
     assert len(laws) == 1
     return float(laws[0].spec.movable_member_torque_fraction)
+
 
 def _independent_shift_only_energy(model, state: CVTState) -> float:
     geometry = model.geometry.evaluate_engaged(state.shift_position)
@@ -65,12 +67,16 @@ def _independent_shift_only_energy(model, state: CVTState) -> float:
     scoord = geometry.secondary_axial_coordinate
 
     energy = 0.0
-    energy += 0.5 * model.inertias.primary.movable_sheave_rotational_inertia * (
-        _helix_shift_ratio(model, "primary", pcoord) * sdot
-    ) ** 2
-    energy += 0.5 * model.inertias.secondary.movable_sheave_rotational_inertia * (
-        _helix_shift_ratio(model, "secondary", scoord) * sdot
-    ) ** 2
+    energy += (
+        0.5
+        * model.inertias.primary.movable_sheave_rotational_inertia
+        * (_helix_shift_ratio(model, "primary", pcoord) * sdot) ** 2
+    )
+    energy += (
+        0.5
+        * model.inertias.secondary.movable_sheave_rotational_inertia
+        * (_helix_shift_ratio(model, "secondary", scoord) * sdot) ** 2
+    )
 
     energy += (
         0.5
@@ -83,18 +89,18 @@ def _independent_shift_only_energy(model, state: CVTState) -> float:
         * (scoord.d_value_ds * sdot) ** 2
     )
 
-    energy += 0.5 * belt_wrap_radial_shift_inertia(
-        model=model,
-        shift_position=state.shift_position,
-        topology=CVTVelocityTopology.ENGAGED,
-    ) * sdot**2
+    energy += (
+        0.5
+        * belt_wrap_radial_shift_inertia(
+            model=model,
+            shift_position=state.shift_position,
+            topology=CVTVelocityTopology.ENGAGED,
+        )
+        * sdot**2
+    )
 
-    pctx = model.primary_actuation_context(
-        time=0.0, state=state, geometry=geometry
-    )
-    sctx = model.secondary_actuation_context(
-        time=0.0, state=state, geometry=geometry
-    )
+    pctx = model.primary_actuation_context(time=0.0, state=state, geometry=geometry)
+    sctx = model.secondary_actuation_context(time=0.0, state=state, geometry=geometry)
     for mode in model.primary_actuator.kinetic_modes(pctx):
         speed = mode.axial_speed_coefficient * pcoord.d_value_ds * sdot
         energy += 0.5 * mode.inertia * speed**2
@@ -166,7 +172,9 @@ def test_deadzone_and_engaged_impact_bases_match_at_first_contact() -> None:
     assert not np.allclose(rows_minus, rows_plus)
 
 
-def test_engagement_capture_with_wrap_radial_inertia_is_dissipative_and_constrained() -> None:
+def test_engagement_capture_with_wrap_radial_inertia_is_dissipative_and_constrained() -> (
+    None
+):
     model = _plant()
     s_e = model.geometry.spec.deadzone_shift
     geometry = model.geometry.evaluate_deadzone(s_e)

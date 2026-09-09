@@ -140,7 +140,6 @@ def test_primary_without_helix_remains_shaft_referenced() -> None:
     )
 
 
-
 def test_public_slip_direction_helper_is_preserved() -> None:
     from cinder.model.cvt.contact import (
         ContactKinematicTolerances,
