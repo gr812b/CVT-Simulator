@@ -1698,25 +1698,27 @@ The two sheave faces at a pulley are assumed to share the total normal contact
 load equally. On the secondary pulley, the belt torque is also divided equally
 between the fixed and movable faces for the purpose of the movable-sheave
 balance. The primary sheave faces rotate together with their shaft and
-therefore have one common angular speed. On the secondary, the wrap-level
-tangential contact law does not resolve the separate surface speeds produced
-by helix motion of the movable face. The secondary shaft speed is used as the
-representative speed for the complete secondary wrap.
+therefore have one common angular speed. On the secondary, helix motion gives
+the movable face a different instantaneous angular speed from the fixed face.
+Under \AssRef{assump:wrap_contact_resolution}, the wrap-level tangential law
+does not retain those two face contacts separately. It therefore uses one
+representative secondary contact speed, defined so that the aggregate contact
+retains the pulley-side tangential power implied by the two equal face-torque
+paths.
 
 \AssumptionConsequences
-Face-to-face differences in normal loading and transmitted torque are not
-resolved. On the secondary, the equal torque split and the use of one
-shaft-referenced contact speed also remove any difference between the
-tangential states of the two faces. The helix-induced rotation of the movable
-face relative to the shaft remains in the actuation and rotational balances,
-but it is not carried as a second surface speed in the stick--slip law.
-Secondary sticking therefore denotes shaft-referenced gross sticking of the
-reduced wrap, rather than simultaneous pointwise adhesion to both physical
-faces during helix motion. Face-resolved shift models show that the two
-secondary face torques and sliding conditions can depart substantially from
-this aggregate description during shifting
-\citep{SorgeCammalleri2011}.
+Face-to-face differences in normal loading, transmitted torque, and local
+sliding state are not resolved. The power-equivalent representative speed preserves the pulley-side torque
+power implied by the equal-share reduction, but it does not make the two
+physical face speeds equal or recover their separate contact states. The helix-induced rotation of the movable face remains in the
+actuation and rotational balances and also enters the representative contact
+speed. Secondary sticking therefore denotes gross sticking of this aggregate
+contact, rather than simultaneous pointwise adhesion to both physical faces
+during helix motion. Face-resolved shift models show that the two secondary
+face torques and sliding conditions can depart substantially from this
+aggregate description during shifting \citep{SorgeCammalleri2011}.
 \end{assumptionblock}
+
 
 % --------------------------------------------------------------
 \subsection{Boundary and Transition Idealizations}
@@ -8004,16 +8006,86 @@ choice of which tangential contact relation governs each wrap.
 
 With the remaining ambiguity reduced to the two Coulomb branches, the first
 useful distinction is the contact motion itself. Sticking and sliding differ
-simply in whether the belt and pulley surface have relative tangential motion.
-At pulley \(j\), the belt moves through the wrap with signed transport speed
-\(v_b\), while the pulley surface at the effective contact radius moves
-tangentially at \(r_{j,\mathrm{eff}}\omega_j\). Their difference defines the
-relative tangential speed,
+in whether the belt has relative tangential motion with respect to the pulley
+contact represented by a wrap. Before that relative motion can be written, the
+surface speed represented by each reduced contact must therefore be identified.
+
+For the primary, this comparison is direct. Both sheave faces rotate with the
+primary shaft, so their angular speed is \(\omega_p\). The secondary is
+different. Under \AssRef{assump:wrap_contact_resolution}, the complete wrap
+carries one traction state rather than separate states for the fixed and
+movable faces, while the helix kinematics already established that the two
+physical faces do not generally have the same speed during a shift. The fixed
+face rotates at \(\omega_s\), whereas
+\Cref{eq:secondary_movable_sheave_speed} gives the movable-face speed
+\(\omega_{s,M}=\omega_s+\dot\theta_s\).
+
+One representative secondary surface speed is therefore required. Its value
+is fixed by the same face-torque reduction already used in
+\AssRef{assump:symmetric_face_sharing}. In particular,
+\Cref{eq:secondary_movable_face_belt_torque} gives
+\(\tau_{s,M}=\tau_s/2\), and therefore
+\(\tau_{s,F}=\tau_s/2\). The instantaneous power delivered by the belt
+torque to the two faces is
+
+\begin{equation}
+\begin{aligned}
+    P_{s,\mathrm{faces}}
+    &=
+    \tau_{s,F}\omega_s
+    +
+    \tau_{s,M}\omega_{s,M}
+    \\
+    &=
+    \frac{\tau_s}{2}\omega_s
+    +
+    \frac{\tau_s}{2}
+    \left(\omega_s+\dot\theta_s\right)
+    \\
+    &=
+    \tau_s
+    \left(
+        \omega_s+\frac{1}{2}\dot\theta_s
+    \right).
+\end{aligned}
+\label{eq:secondary_face_tangential_power}
+\end{equation}
+
+Let \(\bar\omega_s\) be the angular speed assigned to the single aggregate
+secondary contact. The same total torque represented by that contact carries
+power \(\tau_s\bar\omega_s\). Equating this power with
+\Cref{eq:secondary_face_tangential_power} fixes the representative speed. The
+primary and secondary contact speeds can therefore be written together as
+
+\begin{equation}
+\boxed{
+    \bar\omega_p=\omega_p,
+    \qquad
+    \bar\omega_s
+    =
+    \omega_s+\frac{1}{2}\dot\theta_s
+    =
+    \frac{\omega_s+\omega_{s,M}}{2}.
+}
+\label{eq:representative_contact_angular_speed}
+\end{equation}
+
+Thus the average in \Cref{eq:representative_contact_angular_speed} is not an
+additional empirical approximation. Once one secondary traction state and the
+equal face-torque split have been adopted, power consistency fixes this
+representative speed. The arithmetic mean appears specifically because the
+two torque shares are equal. It remains an aggregate quantity: the model still
+does not determine the separate sliding states of the fixed and movable faces.
+
+Returning now to relative motion, look at pulley \(j\). The belt moves through
+the wrap with signed transport speed \(v_b\), while the represented pulley surface 
+moves tangentially at \(r_{j,\mathrm{eff}}\bar\omega_j\). Their difference defines 
+the relative tangential speed,
 
 \begin{equation}
     v_{\mathrm{rel},j}
     =
-    v_b-r_{j,\mathrm{eff}}\omega_j,
+    v_b-r_{j,\mathrm{eff}}\bar\omega_j,
     \qquad
     j\in\{p,s\}.
 \label{eq:tangential_relative_speed}
@@ -8021,10 +8093,8 @@ relative tangential speed,
 
 The sign follows the common belt-transport and rotational directions defined
 in \Cref{sec:rotational_sign}. Positive \(v_{\mathrm{rel},j}\) means the belt
-moves ahead of the pulley surface in the positive belt direction, while a
-negative value means it moves the other way. For the secondary wrap,
-\AssRef{assump:symmetric_face_sharing} uses the shaft speed \(\omega_s\) as
-the representative speed of the aggregated secondary contact.
+moves ahead of the represented pulley contact in the positive belt direction,
+while a negative value means it moves the other way.
 
 If \(v_{\mathrm{rel},j}\neq0\), the contact is already sliding. Its relative
 motion fixes the direction of friction, and kinetic Coulomb friction fixes the
@@ -8047,28 +8117,54 @@ gives
 \end{equation}
 
 Sliding therefore closes \(\lambda_j\) directly from the current contact
-motion.
-
-Sticking begins at the opposite kinematic condition,
+motion. Sticking begins at the opposite kinematic condition,
 
 \begin{equation}
     v_{\mathrm{rel},j}=0
     \qquad\Longleftrightarrow\qquad
-    v_b=r_{j,\mathrm{eff}}\omega_j.
+    v_b=r_{j,\mathrm{eff}}\bar\omega_j.
 \label{eq:sticking_velocity_compatibility}
 \end{equation}
 
 The important point is that zero relative speed does not imply zero tangential
-force. It only says that the belt and pulley surface are moving together at
-that instant. Static friction may still supply a nonzero reaction, with
+force. It only says that the belt and represented pulley contact move together
+at that instant. Static friction may still supply a nonzero reaction, with
 \(\lambda_j\) taking whatever signed value is required to maintain sticking
 so long as the static limit in \Cref{eq:lambda_local_definition} is not
 exceeded.
 
-That speed match must also persist. If the belt speed and pulley-surface speed
-begin changing at different rates, relative motion appears immediately.
-Differentiating \Cref{eq:tangential_relative_speed} gives the relative
-tangential acceleration,
+That speed match must also persist. If the belt speed and represented
+pulley-surface speed begin changing at different rates, relative motion appears
+immediately. Differentiating
+\Cref{eq:representative_contact_angular_speed} gives
+
+\begin{equation}
+\begin{aligned}
+    \dot{\bar\omega}_p
+    &=
+    \dot\omega_p,
+    \\
+    \dot{\bar\omega}_s
+    &=
+    \dot\omega_s+\frac{1}{2}\ddot\theta_s
+    \\
+    &=
+    \dot\omega_s
+    +
+    \frac{1}{2}
+    \left[
+        \frac{d\theta_s}{dx_s}\ddot x_s
+        +
+        \frac{d^2\theta_s}{dx_s^2}\dot x_s^2
+    \right],
+\end{aligned}
+\label{eq:representative_contact_angular_acceleration}
+\end{equation}
+
+where the final line follows directly from
+\Cref{eq:secondary_movable_sheave_acceleration}. Differentiating
+\Cref{eq:tangential_relative_speed} then gives the relative tangential
+acceleration,
 
 \begin{equation}
 \begin{aligned}
@@ -8079,15 +8175,15 @@ tangential acceleration,
     &=
     \dot v_b
     -
-    r_{j,\mathrm{eff}}\dot\omega_j
+    r_{j,\mathrm{eff}}\dot{\bar\omega}_j
     -
-    \dot r_{j,\mathrm{eff}}\omega_j .
+    \dot r_{j,\mathrm{eff}}\bar\omega_j .
 \end{aligned}
 \label{eq:tangential_relative_acceleration}
 \end{equation}
 
 The first two terms are the direct comparison between belt acceleration and
-the acceleration of a pulley surface at fixed radius. The final term appears
+the acceleration of a represented pulley surface at fixed radius. The final term appears
 because the contact radius is not fixed during a shift. As established in
 \Cref{eq:radial_reference_rate_equivalence}, the effective radius moves with
 the pulley radius, so \(r_{j,\mathrm{eff}}\omega_j\) can change even when
@@ -8588,6 +8684,153 @@ active contact law changes the acceleration that follows rather than resetting
 the state instantaneously. The remaining structural regime changes associated
 with engagement and shift boundaries require a separate treatment.
 
+\section{3.6}
+
+With the tangential contact states resolved, the equations now determine how the freely 
+shifting, engaged CVT moves under the loading applied at its two shafts. The pulley 
+rotations, belt transport, and sheave motion are coupled through the balances derived above.
+
+But the pulley geometry already established limits on that axial travel. The predicted 
+motion can bring a sheave against a metal stop, or open the primary far enough to lose 
+belt contact and enter the deadzone. The stop can hold a sheave that was previously 
+moving, while primary separation allows it to travel without loading the belt. The mechanism 
+has therefore entered a different mechanical regime, with different forces and permitted 
+motions. Its behaviour must be established under these conditions, including how changes in
+loading allow it to leave a stop or engage the belt again.
+
+Reaching a stop also exposes a second issue: the sheave need not arrive at rest. Knowing how 
+it behaves once held does not explain how its incoming motion is brought to an end. That 
+motion carries momentum and is coupled, through the actuator mechanisms, to rotation of other 
+components. Preventing further axial travel therefore leaves a momentum exchange to account 
+for. The transition itself must be described alongside the motion that follows, so that momentum 
+is carried consistently through the change in mechanical regime.
+
+
+\subsection{Shift Domain and Structural Regimes}
+\label{sec:shift_coordinate_boundaries}
+
+The first question is where the freely shifting, engaged motion must change.
+The geometry has already established the travel limits of both sheaves and
+the primary clearance, through which the primary can move while the secondary
+remains fully closed. We can follow that same travel through \(s\), now
+examining where the primary loses belt contact and where a stop can support a
+sheave. Each change alters the forces acting on the mechanism, giving a
+different mechanical regime to describe.
+
+Consider first the primary closing during engaged upshift. Its groove
+narrows, moving the belt outward. The fixed belt length requires the secondary
+radius to decrease, so the secondary opens. This motion can continue until
+the primary reaches its closing stop at \(x_p=x_{p,\max}\). Further upshift
+would require the primary to close farther, into the stop. The belt remains
+between both pairs of sheave faces, so the mechanism can be held at this
+ratio with both pulley contacts present.
+
+Opening the primary reverses these motions. The belt moves inward on the
+primary and outward on the secondary, bringing the secondary toward its
+fully closed stop. The secondary reaches that stop when the primary is at
+\(x_p=x_{p,\mathrm{dz}}\), as given by
+\Cref{eq:secondary_coordinate_map}. Now try to continue the same engaged
+backshift: the belt would have to move farther outward on the secondary,
+which would require its sheave to close beyond the stop. With shift motion
+at rest and primary belt contact maintained, the secondary stop can therefore
+hold the mechanism at its minimum ratio. This is the
+\emph{engaged low-ratio seat}.
+
+Yet the primary has not reached its own opening stop. Its groove can open
+wider than the belt, leaving the clearance introduced in
+\Cref{eq:primary_local_radius_map}. The primary can therefore open farther
+if it separates from the belt. That opening no longer moves the belt inward
+or requires the secondary to close farther. Under the deadzone mapping, the
+secondary stays fully closed and both prescribed belt radii remain fixed
+while the primary crosses its clearance. Only when the primary reaches
+\(x_p=0\) does its own opening stop prevent further travel.
+
+The secondary stop thus limits the engaged backshift before the primary
+exhausts its opening travel. Closing the primary through the same clearance
+first brings it back to the belt; further closure then moves the belt outward
+and opens the secondary away from its stop.
+
+Since \(s\equiv x_p\) by \Cref{eq:system_shift_coordinate}, the same travel
+and boundary positions in the generalized shift coordinate are
+
+\begin{equation}
+    0\leq s\leq s_{\max},
+    \qquad
+    s_{\mathrm{dz}}\equiv x_{p,\mathrm{dz}},
+    \qquad
+    s_{\max}\equiv x_{p,\max}.
+    \label{eq:shift_operating_domain}
+\end{equation}
+
+\Cref{tab:shift_structural_arrangements} collects the two intervals of free
+primary motion and the three positions at which a stop can hold the shift.
+
+\begin{table}[H]
+    \centering
+    \small
+    \renewcommand{\arraystretch}{1.18}
+    \begin{tabular}{@{}
+        >{\raggedright\arraybackslash}p{0.24\linewidth}
+        >{\raggedright\arraybackslash}p{0.18\linewidth}
+        >{\raggedright\arraybackslash}p{0.48\linewidth}
+        @{}}
+        \toprule
+        \textbf{Structural regime}
+        & \textbf{Primary belt contact}
+        & \textbf{Axial motion or support}
+        \\
+        \midrule
+        Fully open primary stop
+        & Absent
+        & Primary held at \(s=0\); secondary remains fully closed.
+        \\[4pt]
+        Free deadzone
+        & Absent
+        & Primary free for \(0<s<s_{\mathrm{dz}}\); secondary remains
+          fully closed.
+        \\[4pt]
+        Engaged low-ratio seat
+        & Present
+        & Fully closed secondary stop holds the engaged mechanism at
+          \(s=s_{\mathrm{dz}}\).
+        \\[4pt]
+        Free engaged shift
+        & Present
+        & Free shift for \(s_{\mathrm{dz}}<s<s_{\max}\); both sheaves
+          follow the belt geometry.
+        \\[4pt]
+        Engaged upper primary stop
+        & Present
+        & Primary closing stop holds the engaged mechanism at \(s=s_{\max}\).
+        \\
+        \bottomrule
+    \end{tabular}
+    \caption{Structural arrangements over the primary travel. The secondary
+    retains belt contact in all five arrangements.}
+    \label{tab:shift_structural_arrangements}
+\end{table}
+
+The table locates where each arrangement is possible. Reaching a listed
+boundary, however, does not establish that its stop is holding the mechanism.
+At \(s=s_{\mathrm{dz}}\), the primary can remain seated against the belt,
+begin closing and open the secondary away from its stop, or begin opening
+into the clearance. The mechanical regime defined in
+\Cref{sec:mechanical_regimes_state_evolution} records which of these contacts
+and constraints are active.
+
+Even when the mechanism remains seated, the stop has only fixed the axial
+condition. Its reaction holds the sheave while the pulleys and belt can keep
+moving. The belt may move with a pulley surface or slide relative to it, so
+selecting the seat has left the tangential contact states undecided. Each of
+the three arrangements with primary belt contact must therefore also carry
+the sticking or sliding state of each pulley contact from
+\Cref{sec:engaged_dynamic_closure}.
+
+Those sticking and sliding states are possible only while the contact
+remains. If the primary instead opens into its clearance, there is no primary
+contact left to stick or slide, and no belt load acts on it. The belt still
+contacts the secondary. Continuing into the deadzone therefore requires
+revising the governing balances with the primary belt interaction removed.
 
 \section{Shift Boundaries and Regime Transitions}
 \label{sec:shift_limits_deadzone}
