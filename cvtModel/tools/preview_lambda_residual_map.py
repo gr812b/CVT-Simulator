@@ -357,8 +357,7 @@ def _no_slip_acceleration_errors(*, snapshot, unknowns) -> tuple[float, float]:
     """Return the canonical acceleration-level stick residuals."""
 
     relative_motion = evaluate_contact_relative_motion(
-        state=snapshot.state,
-        geometry=snapshot.geometry,
+        snapshot=snapshot,
         unknowns=unknowns,
     )
     return (
