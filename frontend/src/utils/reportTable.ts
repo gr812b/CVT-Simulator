@@ -11,17 +11,17 @@ export function requireReportColumn(table: ReportTable, key: string): ReportColu
 }
 
 export function reportAxisTimes(table: ReportTable): number[] {
-  const axis = requireReportColumn(table, table.axisKey);
-  if (axis.values.length !== table.rowCount) {
-    throw new Error(`CINDER report axis '${table.axisKey}' has ${axis.values.length} rows; expected ${table.rowCount}.`);
+  const axis = requireReportColumn(table, table.axis_key);
+  if (axis.values.length !== table.row_count) {
+    throw new Error(`CINDER report axis '${table.axis_key}' has ${axis.values.length} rows; expected ${table.row_count}.`);
   }
   let previous = 0;
   return axis.values.map((value, index) => {
     if (typeof value !== 'number' || !Number.isFinite(value)) {
-      throw new Error(`CINDER report axis '${table.axisKey}' contains a non-finite time at row ${index}.`);
+      throw new Error(`CINDER report axis '${table.axis_key}' contains a non-finite time at row ${index}.`);
     }
     if (index > 0 && value < previous) {
-      throw new Error(`CINDER report axis '${table.axisKey}' is not time ordered at row ${index}.`);
+      throw new Error(`CINDER report axis '${table.axis_key}' is not time ordered at row ${index}.`);
     }
     previous = value;
     return value;
@@ -48,11 +48,38 @@ export function numericPairs(table: ReportTable, xKey: string, yKey: string): Ar
 }
 
 export function reportRows(table: ReportTable): Array<Record<string, number | null>> {
-  return Array.from({ length: table.rowCount }, (_, index) => Object.fromEntries(
+  return Array.from({ length: table.row_count }, (_, index) => Object.fromEntries(
     table.columns.map((column) => [column.key, column.values[index] ?? null]),
   ));
 }
 
 export function valueAt(table: ReportTable, key: string, index: number): number | null {
   return reportValue(reportColumn(table, key), index);
+}
+
+export function interpolatedValue(
+  table: ReportTable,
+  key: string,
+  lowerIndex: number,
+  upperIndex: number,
+  alpha: number,
+): number | null {
+  const lower = valueAt(table, key, lowerIndex);
+  if (lowerIndex === upperIndex) return lower;
+
+  const upper = valueAt(table, key, upperIndex);
+  const mix = Math.min(1, Math.max(0, alpha));
+
+  if (mix <= 0) return lower;
+  if (mix >= 1) return upper;
+  if (
+    typeof lower !== 'number'
+    || !Number.isFinite(lower)
+    || typeof upper !== 'number'
+    || !Number.isFinite(upper)
+  ) {
+    return null;
+  }
+
+  return lower + (upper - lower) * mix;
 }

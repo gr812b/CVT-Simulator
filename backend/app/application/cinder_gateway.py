@@ -13,8 +13,10 @@ from typing import Any
 import numpy as np
 
 import cinder
-import cinder.contracts as cinder_contracts
 from cinder.contracts import (
+    SIMULATION_CASE_SCHEMA_VERSION,
+    SIMULATION_RESULT_CONTRACT_VERSION,
+    assembly_document_json_schema,
     component_catalog_document,
     decode_assembly_document,
     decode_simulation_case_document,
@@ -28,6 +30,7 @@ from cinder.contracts import (
     project_simulation_result,
     public_conventions,
     simulation_case_document_json_schema,
+    simulation_result_json_schema,
     validate_simulation_case_document,
 )
 from cinder.model.cvt.closure import ClosureUnknown, ClosureUnknowns
@@ -56,38 +59,13 @@ class CinderGateway:
     """Small application-facing façade over CINDER's public API."""
 
     def runtime_identity(self) -> dict[str, Any]:
-        """Return the installed CINDER package and public contract versions.
+        """Return the installed CINDER package and public contract versions."""
 
-        Older CINDER releases exposed one shared public contract version. Newer
-        releases version simulation-result projections independently from the
-        saved simulation-document schema. The fallback keeps the backend able to
-        inspect an older pinned release while making adoption of result-contract
-        v2 explicit as soon as that CINDER release is installed.
-        """
-
-        legacy_version = getattr(cinder_contracts, "PUBLIC_CONTRACT_VERSION", None)
-        input_schema_version = getattr(
-            cinder_contracts,
-            "SIMULATION_CASE_SCHEMA_VERSION",
-            legacy_version,
-        )
-        result_contract_version = getattr(
-            cinder_contracts,
-            "SIMULATION_RESULT_CONTRACT_VERSION",
-            legacy_version,
-        )
-        if input_schema_version is None or result_contract_version is None:
-            raise RuntimeError(
-                "Installed CINDER does not expose recognized simulation-case and "
-                "simulation-result contract versions."
-            )
-        input_schema_version = int(input_schema_version)
-        result_contract_version = int(result_contract_version)
         return {
             "package": "cinder-cvt",
             "package_version": str(cinder.__version__),
-            "simulation_case_schema_version": input_schema_version,
-            "simulation_result_contract_version": result_contract_version,
+            "simulation_case_schema_version": int(SIMULATION_CASE_SCHEMA_VERSION),
+            "simulation_result_contract_version": int(SIMULATION_RESULT_CONTRACT_VERSION),
         }
 
     def conventions(self) -> dict[str, Any]:
@@ -99,8 +77,14 @@ class CinderGateway:
     def editor_schema(self) -> dict[str, Any]:
         return editable_simulation_case_schema()
 
+    def assembly_json_schema(self) -> dict[str, Any]:
+        return assembly_document_json_schema()
+
     def simulation_case_json_schema(self) -> dict[str, Any]:
         return simulation_case_document_json_schema()
+
+    def simulation_result_json_schema(self) -> dict[str, Any]:
+        return simulation_result_json_schema()
 
     def validate_simulation_case(self, document: Mapping[str, Any]) -> dict[str, Any]:
         return validate_simulation_case_document(document).as_dict()

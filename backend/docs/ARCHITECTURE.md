@@ -55,9 +55,13 @@ CINDER domains/fields are part of the JSON-safe result projection returned by
 `CinderGateway.run_simulation()` and are persisted/passed through as ordinary
 result artifact data.
 
-Current CINDER v1 releases expose one `PUBLIC_CONTRACT_VERSION`. The gateway
-therefore uses it as a compatibility fallback. A CINDER release that evolves the
-contracts independently can expose `SIMULATION_CASE_SCHEMA_VERSION` and
-`SIMULATION_RESULT_CONTRACT_VERSION`; in particular, a result-only change can
-leave the saved input document at schema v1 while the result projection advances
-to v2.
+CINDER exposes `SIMULATION_CASE_SCHEMA_VERSION` and
+`SIMULATION_RESULT_CONTRACT_VERSION` directly. The backend pins one exact CINDER
+package version and does not carry compatibility aliases for older package
+contracts.
+
+CINDER also owns machine-readable JSON Schema for its assembly, simulation-case,
+and simulation-result documents. `export_contract_artifacts` writes those
+schemas together with backend OpenAPI as ephemeral build artifacts. Frontend
+TypeScript generation consumes them directly; the backend does not re-declare
+CINDER result/domain/field structures.
