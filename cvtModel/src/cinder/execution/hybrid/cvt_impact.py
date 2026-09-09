@@ -15,9 +15,10 @@ physical inertia matrix ``W``, the unconstrained plastic capture solves
 
     (J_+^T W J_+) u_+ = J_+^T W J_- u_-.
 
-Additional post-event velocity constraints (metal stop, belt/secondary lock,
+Additional post-event velocity constraints (metal stop, belt/pulley lock,
 or a sticking belt interface that is intentionally retained through an
-impact) are imposed with a KKT solve.  This is the multidimensional form of
+impact) are imposed with a KKT solve.  A helical contact lock uses the
+same power-equivalent representative surface speed as continuous contact.  This is the multidimensional form of
 the familiar one-DOF ``m_old v_old = m_new v_new`` momentum projection.
 """
 
@@ -30,6 +31,7 @@ from math import isfinite
 import numpy as np
 from numpy.typing import NDArray
 
+from cinder.model.cvt.actuation import HelicalTorqueReactionForce
 from cinder.model.system.evaluator import MechanicalCVTPlant
 from cinder.model.system.ports import CVTShaftBoundaryValues
 from cinder.model.system.state import CVTState
@@ -149,16 +151,36 @@ def project_cvt_velocity_topology(
         topology=to_topology,
     )
     if lock_primary_belt:
+        primary_contact_shift_gain = _representative_contact_shift_gain(
+            model=model,
+            side="primary",
+            coordinate=geometry_plus.primary_axial_coordinate,
+        )
         constraints.append(
             np.asarray(
-                (-geometry_plus.primary.effective, 0.0, 1.0, 0.0),
+                (
+                    -geometry_plus.primary.effective,
+                    0.0,
+                    1.0,
+                    -geometry_plus.primary.effective * primary_contact_shift_gain,
+                ),
                 dtype=float,
             )
         )
     if lock_secondary_belt:
+        secondary_contact_shift_gain = _representative_contact_shift_gain(
+            model=model,
+            side="secondary",
+            coordinate=geometry_plus.secondary_axial_coordinate,
+        )
         constraints.append(
             np.asarray(
-                (0.0, -geometry_plus.secondary.effective, 1.0, 0.0),
+                (
+                    0.0,
+                    -geometry_plus.secondary.effective,
+                    1.0,
+                    -geometry_plus.secondary.effective * secondary_contact_shift_gain,
+                ),
                 dtype=float,
             )
         )
@@ -260,6 +282,46 @@ def kinetic_energy_for_topology(
     return 0.5 * float(np.dot(weights, physical**2))
 
 
+def belt_wrap_radial_shift_inertia(
+    *,
+    model: MechanicalCVTPlant,
+    shift_position: float,
+    topology: CVTVelocityTopology = CVTVelocityTopology.ENGAGED,
+) -> float:
+    """Return the generalized shift inertia from belt radial wrap motion.
+
+    In engaged motion the material currently carried on pulley wrap ``j`` has
+    radial speed
+
+        rdot_j = (dr_j,cm/ds) sdot.
+
+    Integrating ``1/2 dm rdot_j^2`` over each circular wrap gives
+
+        M_b,radial^(s)
+          = sum_j rho A r_j,cm phi_j (dr_j,cm/ds)^2.
+
+    The deadzone keeps both belt radii fixed, so this contribution is zero.
+    """
+
+    geometry = _geometry_for_topology(
+        model=model,
+        shift_position=float(shift_position),
+        topology=topology,
+    )
+    if topology is CVTVelocityTopology.DEADZONE:
+        return 0.0
+
+    q = model.inertias.belt.linear_density
+    primary_mass = q * geometry.primary.center_of_mass * geometry.primary_wrap_angle
+    secondary_mass = (
+        q * geometry.secondary.center_of_mass * geometry.secondary_wrap_angle
+    )
+    return float(
+        primary_mass * geometry.primary.d_center_of_mass_ds**2
+        + secondary_mass * geometry.secondary.d_center_of_mass_ds**2
+    )
+
+
 def _physical_velocity_map(
     *,
     model: MechanicalCVTPlant,
@@ -269,12 +331,28 @@ def _physical_velocity_map(
 ) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
     """Return ``(J, Wdiag)`` for all kinetic terms retained by the model.
 
-    Belt axial kinetic energy is intentionally absent because the present
-    formulation does not retain belt axial inertia in the dynamics.  The
-    Mounted elements supply their own local physical velocity modes through
-    ``PulleyActuator.kinetic_modes``. The impact layer maps those local modes
-    to the owning shaft and the current topology's ``dx/ds`` without testing
-    for a concrete flyweight class.
+    The full-belt transport mode accounts for the common tangential belt speed
+    ``v_b``.  While engaged, belt material carried on each circular pulley wrap
+    also has the orthogonal radial velocity
+
+        rdot_j = (dr_j,cm/ds) sdot,
+
+    which is already retained in the smooth wrap Newton balances.  Two radial
+    wrap modes therefore belong in the same kinetic metric used for impacts,
+    topology capture, and stored-energy accounting.
+
+    In deadzone the belt radii are fixed, so those radial rows are zero.  Their
+    positive component weights are nevertheless retained using the common
+    engagement-boundary allocation.  That keeps the physical component basis
+    identical on the two sides of first contact while assigning zero radial
+    velocity to the deadzone side.
+
+    The representative ``belt_axial_coordinate`` is intentionally not a kinetic
+    mode: the current reduced formulation does not retain a distributed belt
+    axial inertia.  Mounted elements supply their own local physical velocity
+    modes through ``PulleyActuator.kinetic_modes``.  The impact layer maps those
+    local modes to the owning shaft and the current topology's ``dx/ds`` without
+    testing for a concrete flyweight class.
     """
 
     geometry = _geometry_for_topology(
@@ -328,7 +406,52 @@ def _physical_velocity_map(
         model.inertias.secondary.movable_sheave_rotational_inertia,
         (0.0, 1.0, 0.0, secondary_h),
     )
+
+    # Common tangential transport of the complete belt.
     add(model.inertias.belt.mass, (0.0, 0.0, 1.0, 0.0))
+
+    # Radial motion of the belt material currently carried on each pulley wrap.
+    #
+    # At the engagement boundary, deadzone and engaged positions are identical
+    # while their one-sided radius derivatives differ.  The weights must still
+    # describe the same physical material basis on both sides of the projection,
+    # so deadzone uses the engagement-boundary wrap allocation with zero radial
+    # velocity rows.
+    if topology is CVTVelocityTopology.ENGAGED:
+        radial_reference = geometry
+        primary_radial_speed_per_shift_speed = (
+            geometry.primary.d_center_of_mass_ds
+        )
+        secondary_radial_speed_per_shift_speed = (
+            geometry.secondary.d_center_of_mass_ds
+        )
+    else:
+        radial_reference = model.geometry.evaluate_engaged(
+            model.geometry.spec.deadzone_shift
+        )
+        primary_radial_speed_per_shift_speed = 0.0
+        secondary_radial_speed_per_shift_speed = 0.0
+
+    belt_line_density = model.inertias.belt.linear_density
+    primary_wrap_mass = (
+        belt_line_density
+        * radial_reference.primary.center_of_mass
+        * radial_reference.primary_wrap_angle
+    )
+    secondary_wrap_mass = (
+        belt_line_density
+        * radial_reference.secondary.center_of_mass
+        * radial_reference.secondary_wrap_angle
+    )
+    add(
+        primary_wrap_mass,
+        (0.0, 0.0, 0.0, primary_radial_speed_per_shift_speed),
+    )
+    add(
+        secondary_wrap_mass,
+        (0.0, 0.0, 0.0, secondary_radial_speed_per_shift_speed),
+    )
+
     add(
         model.inertias.axial_translation.primary_moving_sheave_mass,
         (0.0, 0.0, 0.0, primary_coordinate.d_value_ds),
@@ -405,6 +528,41 @@ def _geometry_for_topology(
         )
     raise ValueError(f"Unsupported velocity topology: {topology!r}.")
 
+
+
+def _representative_contact_shift_gain(
+    *,
+    model: MechanicalCVTPlant,
+    side: str,
+    coordinate,
+) -> float:
+    """Return ``f * dtheta/ds`` for the reduced contact surface speed.
+
+    The same movable-member belt-torque fraction used by the mounted helical
+    torque-reaction law determines the power-equivalent wrap speed.  A pulley
+    without a helical torque-reaction element has zero differential surface
+    speed and therefore zero shift gain.
+    """
+
+    dtheta_ds = _helix_shift_ratio(model=model, side=side, coordinate=coordinate)
+    if dtheta_ds == 0.0:
+        return 0.0
+    fraction = _movable_member_torque_fraction(model=model, side=side)
+    return float(fraction * dtheta_ds)
+
+
+def _movable_member_torque_fraction(*, model: MechanicalCVTPlant, side: str) -> float:
+    actuator = model.primary_actuator if side == "primary" else model.secondary_actuator
+    laws = tuple(
+        law for law in actuator.force_laws if isinstance(law, HelicalTorqueReactionForce)
+    )
+    if not laws:
+        return 0.0
+    if len(laws) != 1:
+        raise RuntimeError(
+            f"Expected at most one helical torque-reaction law on {side}; found {len(laws)}."
+        )
+    return float(laws[0].spec.movable_member_torque_fraction)
 
 def _helix_shift_ratio(*, model: MechanicalCVTPlant, side: str, coordinate) -> float:
     coupling = (

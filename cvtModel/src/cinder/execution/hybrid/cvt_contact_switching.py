@@ -17,6 +17,7 @@ from cinder.model.cvt.contact import (
     ContactRegime,
     EngagedContactMode,
     SlipDirection,
+    evaluate_contact_relative_speed,
 )
 
 from .cvt_contact_events import CVTContactEvent
@@ -84,13 +85,13 @@ def resolve_initial_engaged_regime(
         geometry_side="engaged",
     )
     tolerance = evaluator.solve_settings.contact_tolerances.relative_speed_tolerance
-    primary_speed = (
-        state.belt_speed
-        - snapshot.geometry.primary.effective * state.primary_angular_speed
+    primary_speed = evaluate_contact_relative_speed(
+        snapshot=snapshot,
+        interface=ContactInterface.PRIMARY,
     )
-    secondary_speed = (
-        state.belt_speed
-        - snapshot.geometry.secondary.effective * state.secondary_angular_speed
+    secondary_speed = evaluate_contact_relative_speed(
+        snapshot=snapshot,
+        interface=ContactInterface.SECONDARY,
     )
 
     primary_direction = _direction_from_established_speed(primary_speed, tolerance)

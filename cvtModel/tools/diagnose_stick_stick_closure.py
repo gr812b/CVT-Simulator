@@ -446,8 +446,7 @@ def _print_selected_root(*, selected: RootCandidate) -> None:
 
 def _print_contact_kinematics(*, snapshot, selected: RootCandidate) -> None:
     relative_motion = evaluate_contact_relative_motion(
-        state=snapshot.state,
-        geometry=snapshot.geometry,
+        snapshot=snapshot,
         unknowns=selected.solve_result.closure.unknowns,
     )
     print("\nContact kinematics")

@@ -366,13 +366,27 @@ def test_mass_metric_engagement_capture_redistributes_shift_momentum_without_ene
         lock_secondary_belt=True,
     )
     outgoing = CVTState.from_vector(capture.successor_state)
-    r_s = plant.geometry.evaluate_engaged(s_e).secondary.effective
+    engaged = plant.geometry.evaluate_engaged(s_e)
+    r_s = engaged.secondary.effective
+    snapshot = plant.snapshot(state=outgoing, geometry_side="engaged")
+    assert snapshot.secondary_helix is not None
+    helix_laws = tuple(
+        law
+        for law in plant.secondary_actuator.force_laws
+        if isinstance(law, HelicalTorqueReactionForce)
+    )
+    assert len(helix_laws) == 1
+    f_s = helix_laws[0].spec.movable_member_torque_fraction
+    representative_omega_s = (
+        outgoing.secondary_angular_speed
+        + f_s * snapshot.secondary_helix.dtheta_ds * outgoing.shift_speed
+    )
 
     assert 0.0 < outgoing.shift_speed < incoming.shift_speed
     assert outgoing.secondary_angular_speed != incoming.secondary_angular_speed
     assert isclose(
         outgoing.belt_speed,
-        r_s * outgoing.secondary_angular_speed,
+        r_s * representative_omega_s,
         rel_tol=0.0,
         abs_tol=1e-12,
     )
