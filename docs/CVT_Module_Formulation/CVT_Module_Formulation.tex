@@ -8854,24 +8854,28 @@ boundary, the active contacts, supports, and direction of continuation still
 matter. The active shift regime and tangential contact regimes together specify
 the mechanical regime that the model must track as the CVT evolves.
 
-\subsection{Governing Equations in Each Structural Regime}
+% ---------------------------------------------------------------------------
+
+\subsection{Governing Equations in Each Shift Regime}
 \label{sec:structural_regime_governing_equations}
 
-The cleanest way to see how those two structural changes alter the mechanics
-is to follow the primary from fully open into engagement and then through
-upshift. Along that path, only two things modify a previously derived free
-body: the primary belt contact can appear or disappear, and a travel stop can
-add the support reaction required to prevent further axial motion. The rest
-of the pulley, belt, and contact mechanics remain the same.
+Knowing which shift regime is active tells us which contacts and supports exist,
+but it does not yet determine how the CVT moves within that regime. The continuous
+equations must reflect those physical conditions. In the deadzone, primary belt
+contact is absent, so its belt force and torque disappear from the primary free
+body. At a travel stop, the stopped sheave can no longer accelerate through the
+boundary, so the hardware supplies the reaction required to hold it there. The
+pulley, belt, and actuator mechanics that remain active continue to follow the
+balances already developed.
 
 \subsubsection{Disengaged Primary and Deadzone Motion}
 \label{sec:deadzone_continuous_regimes}
 
-At the fully open end of travel, the primary sheaves do not touch the belt.
-The same remains true while the primary crosses the clearance toward
-\(s=s_{\mathrm{dz}}\). The first modification is therefore direct: every
-interaction that requires primary belt contact is removed, while the primary
-hardware itself remains dynamically active. Hence,
+Begin at the fully open end of travel, where the primary sheaves do not touch the belt,
+and the same remains true while the primary crosses the clearance toward
+\(s=s_{\mathrm{dz}}\). With the sheave faces separated, every interaction that
+requires primary belt contact is absent, while the primary hardware itself
+remains dynamically active. Hence,
 
 \begin{equation}
     N_p=0,
@@ -8929,23 +8933,21 @@ while removing the primary belt force from
 \end{equation}
 
 Primary separation creates a second issue on the belt side. The engaged
-belt mechanics relied on a closed path carrying tension through both pulley
-wraps. In the deadzone, the secondary is already fully closed, so it cannot
-close farther to take up belt length and generate additional tension against
-the primary-side support. At the same time, the present belt model contains
-no longitudinal strain state or pretension law from which such a tension
-could otherwise be recovered. Although the loose belt may still rest on the
-minimum-radius primary support, that contact is not represented as a clamped
-belt--sheave interaction.
+belt mechanics relied on a taut closed path carrying tension through both
+pulley wraps. In the deadzone, the secondary is already fully closed, so it
+cannot close farther to take up the remaining belt slack and establish that
+taut path. The present belt model also has no longitudinal strain or pretension
+state from which a residual tension could be recovered while the geometry
+remains slack. Although the belt may still rest on the minimum-radius primary
+support, that contact is not represented as a clamped belt--sheave interaction.
 
-Resolving the actual slack-belt shape and the loads created as slack is taken
-up would therefore require additional belt elasticity, pretension, and
-free-span geometry beyond the reduced model adopted here. The deadzone
-description instead uses the single approximation declared in
-\AssRef{assump:deadzone_belt_closure}: the belt remains seated on the fully
-closed secondary and is carried with its represented contact surface. Because
-the secondary has no axial or helix-relative motion in this regime,
-\(\dot\theta_s=0\), and
+Capturing the forces that develop as a slack or pretensioned belt is taken up
+would therefore require additional belt elasticity and slack-span geometry
+beyond the reduced description used here. The adopted deadzone closure in
+\AssRef{assump:deadzone_belt_closure} instead keeps the belt seated on the
+fully closed secondary and carries it with the represented secondary contact
+surface. Because the secondary has no axial or helix-relative motion in this
+regime, \(\dot\theta_s=0\), and
 \Cref{eq:representative_contact_angular_speed} reduces to
 \(\bar\omega_s=\omega_s\). The deadzone lock is therefore
 
@@ -8996,14 +8998,9 @@ fixed secondary radius. Primary disengagement therefore removes the primary
 belt load without making the belt dynamically irrelevant: the secondary must
 still accelerate the transport motion of the entire belt.
 
-For \(0<s<s_{\mathrm{dz}}\), the primary is free to move through the
-clearance, so
-\Cref{eq:deadzone_primary_rotation,eq:deadzone_primary_axial_motion,%
-eq:deadzone_belt_acceleration_lock,eq:deadzone_secondary_rotation}
-determine
-\(\dot\omega_p\), \(\dot\omega_s\), \(\dot v_b\), and \(\ddot s\).
-At \(s=0\), the same contact-free mechanics meet the primary opening stop.
-A sustained stop condition requires
+These contact-free equations govern the deadzone unless the primary is
+supported by its opening stop. At \(s=0\), that support prevents further
+opening, so a sustained stop condition requires
 
 \begin{equation}
     s=0,
@@ -9044,6 +9041,13 @@ balanced by the flyweights. If the required reaction is negative, the hardware
 would have to pull the primary open rather than push it closed, so the fully
 open stop cannot support that continuous state.
 
+Once the primary is free of this support, \(0<s<s_{\mathrm{dz}}\), the same
+contact-free equations determine
+\(\dot\omega_p\), \(\dot\omega_s\), \(\dot v_b\), and \(\ddot s\) through
+\Cref{eq:deadzone_primary_rotation,eq:deadzone_primary_axial_motion,%
+eq:deadzone_belt_acceleration_lock,eq:deadzone_secondary_rotation}.
+The primary can then cross the clearance until belt contact is recovered.
+
 \subsubsection{Engagement and the Low-Ratio Seat}
 \label{sec:low_ratio_supported_regime}
 
@@ -9068,7 +9072,7 @@ For a sustained low-ratio seat,
 The fixed shift also gives \(\dot\theta_s=0\), so the representative secondary
 contact speed again reduces to \(\bar\omega_s=\omega_s\). The shafts and belt
 may nevertheless continue to rotate and accelerate, and the two pulley
-contacts retain the sticking or sliding closure developed in
+contacts retain the sticking or sliding regimes developed in
 \Cref{sec:engaged_dynamic_closure}.
 
 The hardware supporting this boundary is the fully closed secondary stop.
@@ -9109,28 +9113,31 @@ the sheave is free, the imbalance of these three modeled loads determines its
 axial acceleration. Once the stop requires that acceleration to vanish, the
 same imbalance determines the support force that the hardware must carry.
 
-That reaction cannot be evaluated before the rest of the engaged mechanism is
-solved. The belt term is
-\(F_{\mathrm{belt},x_s}=N_s\cos\beta/2\), so it depends on the unknown
-secondary normal resultant. Even with the shift fixed, the helix force in
-\Cref{eq:secondary_helix_closing_force} still depends on the transmitted
-secondary torque and on \(\dot\omega_s\). The belt loading, shaft
-acceleration, and stop reaction are therefore parts of the same coupled
-response rather than three quantities that can be found independently.
+The stop reaction is not known from the spring preload alone. In
+\Cref{eq:low_ratio_stop_reaction}, the belt term contains the unknown normal
+resultant \(N_s\), while the helix term contains the transmitted secondary
+torque and \(\dot\omega_s\) through
+\Cref{eq:secondary_helix_closing_force}. Those quantities are determined only
+together with the rest of the engaged response.
 
-The constraint tells us how to reorganize that response. In the mechanical
-core of \Cref{eq:engaged_six_by_six_mechanical_core}, set
-\(\ddot s=0\) and replace the secondary axial row by this imposed condition.
-The primary axial row remains: no primary stop is available to absorb its
-force imbalance, so at the held geometry that balance instead helps determine
-the primary belt load. The remaining rotational and belt equations then
-determine
-\(\dot\omega_p\), \(\dot\omega_s\), \(\dot v_b\), \(N_p\), and \(N_s\)
-for the proposed traction pair. Substituting those solved quantities back
-into \Cref{eq:low_ratio_stop_reaction} gives the force carried by the
-secondary stop. The sticking or sliding values of \(\lambda_p\) and
-\(\lambda_s\) are selected with the same tangential-regime logic already developed
-in \Cref{sec:engaged_dynamic_closure}.
+The low-ratio constraint changes how that coupled response is solved. For a
+trial traction pair \((\lambda_p,\lambda_s)\), the free engaged mechanical
+core in \Cref{eq:engaged_six_by_six_mechanical_core} normally determines
+\(\ddot s\) together with
+\(\dot\omega_p\), \(\dot\omega_s\), \(\dot v_b\), \(N_p\), and \(N_s\).
+At the seat, \(\ddot s=0\) is already prescribed by the stop. The secondary
+axial row is therefore replaced by that constraint, while the primary axial
+row remains active because the primary itself is not supported by a stop.
+Together with the rotational and belt equations, the constrained system
+determines the remaining engaged response at the fixed geometry.
+
+Once those quantities are known, the original secondary axial balance has a
+new role: substituting the solved \(N_s\), secondary torque, and
+\(\dot\omega_s\) into \Cref{eq:low_ratio_stop_reaction} gives
+\(F_{\mathrm{stop,LR}}\). For sticking contacts, each trial traction value is
+tested with this constrained mechanical solve inside the same root logic
+developed in \Cref{sec:engaged_dynamic_closure}; a sliding contact supplies
+its kinetic traction utilization directly.
 
 The distinction between stop reaction and belt load is important. The stop
 can carry part of the secondary spring and helix loading directly into the
@@ -9144,11 +9151,11 @@ only while
     \label{eq:low_ratio_stop_admissibility}
 \end{equation}
 
-Once the secondary is away from its closing stop while primary belt contact
-is retained, this support reaction is absent and both sheaves again follow
-the shared belt geometry. That is precisely the free engaged arrangement
-already closed in \Cref{sec:engaged_dynamic_closure}; no additional
-continuous equation is introduced for the interior shift.
+Away from the low-ratio seat, the secondary stop supplies no reaction. If
+primary belt contact is retained, both sheaves are again free to follow the
+shared belt geometry, so all six rows of the engaged mechanical core become
+active exactly as derived in \Cref{sec:engaged_dynamic_closure}. The interior
+shift therefore needs no additional continuous equation.
 
 \subsubsection{Upper Primary Stop}
 \label{sec:upper_primary_stop_regime}
@@ -9196,16 +9203,16 @@ so the required reaction is
     \label{eq:upper_stop_reaction}
 \end{equation}
 
-The same constrained-solve idea now applies with the opposite axial row.
-Set \(\ddot s=0\) in
-\Cref{eq:engaged_six_by_six_mechanical_core} and replace the primary axial
-row, because that is the balance containing the new stop reaction. The
-secondary axial row remains active and, together with the rotational and belt
-equations, determines the coupled fixed-shift response. The solved primary
-belt load is then substituted into
-\Cref{eq:upper_stop_reaction} to recover the force carried by the stop.
+Here the primary, rather than the secondary, is the stopped member. The
+constraint \(\ddot s=0\) therefore replaces the primary axial row of
+\Cref{eq:engaged_six_by_six_mechanical_core}, while the secondary axial balance
+remains part of the coupled solve. The rotational, secondary axial, and belt
+equations determine the fixed-shift engaged response for the chosen
+tangential contact regimes. The original primary axial balance is then
+evaluated through \Cref{eq:upper_stop_reaction} to recover the force carried
+by the upper stop.
 
-As at low ratio, the stop reaction is a separate hardware load path rather
+As at low ratio, the stop reaction is a separate structural load path rather
 than additional belt clamp force. The upper stop can sustain the regime only
 while
 
@@ -9214,7 +9221,7 @@ while
     \label{eq:upper_stop_admissibility}
 \end{equation}
 
-The three supported arrangements are summarized in
+The three supported shift regimes are summarized in
 \Cref{tab:structural_stop_reactions}.
 
 \begin{table}[H]
@@ -9251,7 +9258,7 @@ The three supported arrangements are summarized in
         \\
         \bottomrule
     \end{tabular}
-    \caption{Hardware reactions for the three stop-supported structural
+    \caption{Hardware reactions for the three stop-supported shift
     regimes. In each case, the stopped member's original axial balance is
     evaluated after the corresponding constrained continuous response has
     been obtained.}
@@ -9270,14 +9277,12 @@ supported regimes therefore require
     \label{eq:structural_stop_admissibility}
 \end{equation}
 
-The continuous mechanics are now defined for all five structural
-arrangements: the fully open stop, free deadzone, low-ratio seat, free engaged
-shift, and upper primary stop. These equations determine the accelerations and
-support reactions once a regime is established. A different issue remains
-whenever a boundary is reached with nonzero incoming shift speed:
-\(\dot s=0\) describes the supported state, but it does not account for the
-velocity that existed immediately before contact with the constraint. That
-velocity change is not part of the continuous force balance derived here.
+The continuous mechanics are now defined for all five shift regimes: the
+fully open stop, free deadzone, low-ratio seat, free engaged shift, and upper
+primary stop. Within any one of them, the active balances determine the
+instantaneous accelerations and any support reaction required by the hardware.
+These continuous equations do not, by themselves, determine an instantaneous
+change in velocity when a new kinematic constraint is reached.
 \section{Shift Boundaries and Regime Transitions}
 \label{sec:shift_limits_deadzone}
 
