@@ -1,0 +1,58 @@
+{
+  "name": "CINDER 1.1.2 mechanical-energy consistency",
+  "description": "Release-level audit of mechanical-energy closure for the frozen Baja reference during a 10 s flat launch and shift. The study accounts for external shaft work, stored kinetic and conservative actuator energy, kinetic-slip dissipation, and discrete impact/capture losses, then checks quadrature and solver refinement.",
+  "cinder_release": {
+    "distribution": "cinder-cvt",
+    "version": "1.1.2",
+    "source_tag": "cinder-v1.1.2",
+    "source_commit_sha": "7637a38b4fb9ec21dfb953c1c80a27ec5f389654"
+  },
+  "base_document": "../../defaults/baja_reference_simulation_case.json",
+  "question": "Within the physics retained by CINDER 1.1.2, does the mechanical-energy balance close across continuous contact regimes and discrete hybrid transitions, and does the remaining residual behave consistently under quadrature and ODE refinement?",
+  "intentional_changes_from_base": {
+    "time_span_s": [
+      0.0,
+      10.0
+    ],
+    "road_profile": "unchanged flat road",
+    "mechanical_parameters": "none",
+    "nominal_integrator": {
+      "method": "LSODA",
+      "relative_tolerance": 3e-05,
+      "absolute_tolerance": 3e-08,
+      "max_step_s": 0.01,
+      "maximum_transitions": 400,
+      "retain_dense_output": true
+    },
+    "tight_integrator": {
+      "method": "LSODA",
+      "relative_tolerance": 9e-06,
+      "absolute_tolerance": 9e-09,
+      "max_step_s": 0.005,
+      "maximum_transitions": 400,
+      "retain_dense_output": true
+    }
+  },
+  "audit_quadrature_steps_s": [
+    0.005,
+    0.0025,
+    0.00125,
+    0.000625
+  ],
+  "acceptance_criteria": {
+    "max_final_balance_fraction_of_abs_external_work": 0.0001,
+    "max_abs_event_energy_defect_J": 1e-08,
+    "max_impact_momentum_residual": 1e-07,
+    "max_impact_constraint_residual": 1e-08,
+    "max_normalized_final_state_delta": 0.01,
+    "negative_impact_loss_tolerance_J": 1e-09,
+    "max_finest_to_previous_abs_continuous_defect_ratio": 1.25
+  },
+  "accounting_identity": "W_external = Delta(E_kinetic + E_conservative_actuators) + E_kinetic_slip + E_impact_capture + R",
+  "numerical_diagnostic": "Signed lambda*N*v_rel work at contacts declared sticking is reported separately as a velocity-level invariant-drift diagnostic. It is not counted as physical static-friction dissipation and is not used to hide the raw balance residual.",
+  "scope_boundary": "Passing this study establishes energy consistency only for mechanics explicitly retained by CINDER 1.1.2. It does not establish negligibility of omitted physics such as belt longitudinal elasticity, local seating/creep, radial face friction, straight-span transverse path motion, or other higher-fidelity effects.",
+  "generated_artifacts": {
+    "directory": "artifacts",
+    "committed_results_in_clean_study": false
+  }
+}
