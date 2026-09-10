@@ -33,7 +33,13 @@ A normal study runner should:
 - `energy-consistency/` — release-level mechanical-energy closure, event
   consistency, quadrature refinement, and solver refinement.
 - `ballew-2015/` — source-constrained model-to-model literature benchmark.
-- `launch-hill-climb/` — simple baseline-derived dynamic example.
+- `actuator-dynamics/` — one study family for the primary fixed-pivot
+  flyweight and secondary helix dynamic couplings. The baseline four-model
+  ablation and coupling-energy decomposition are canonical; tagged stress and
+  scaling tools are retained only as exploratory infrastructure pending a
+  stronger equation-led off-baseline design.
+- `launch-hill-climb/` — simple baseline-derived dynamic example; retained for
+  later mechanism-resolved narrative work.
 
 ## Studies requiring Python extension points
 
@@ -48,26 +54,28 @@ Instead it must:
 1. document why the required object is outside the built-in serialization
    contract;
 2. run only the frozen release environment for this results version;
-3. keep the smallest possible study-specific extension implementation local to
-   the study;
-4. validate the assembled CINDER specification through public contracts;
-5. save a complete JSON-safe resolved parameter/provenance document alongside
-   the result;
-6. keep all source/reference data required for the study reproducible from the
-   study directory itself.
+3. keep the smallest possible study-specific extension implementation local or
+   source-locked to the frozen release tag;
+4. validate or verify the assembled CINDER specification where the relevant
+   public audit surface exists;
+5. save complete resolved parameter/provenance information;
+6. keep all source/reference data required for the study reproducible.
 
-`ballew-2015/` is the reference example for this pattern.
+`ballew-2015/` is the reference example for fully study-local custom
+extensions. `actuator-dynamics/` uses a different but still frozen strategy:
+the exact tagged launch/result utility blobs are materialized from the local Git
+object database and verified by blob SHA before execution.
 
 ## Release-internal inspection
 
-A correctness study may need to inspect quantities that are not currently
-serialized as ordinary report signals—for example, exact transition kinetic
-energy or arbitrary-time solved contact power. Such inspection is acceptable
-only when it:
+A correctness or mechanism study may need to inspect quantities that are not
+currently serialized as ordinary report signals—for example, exact transition
+kinetic energy, arbitrary-time solved contact power, or dynamic actuator
+closure contributions. Such inspection is acceptable only when it:
 
 - runs against the frozen published package;
-- does not alter the mechanics or inject a local source tree;
+- does not alter the mechanics or inject a mutable local `src/cinder` tree;
 - documents the internal hooks it reads;
 - records the exact release provenance.
 
-`energy-consistency/` follows this pattern.
+`energy-consistency/` and `actuator-dynamics/` follow this pattern.

@@ -1,0 +1,54 @@
+{
+  "schema_version": 1,
+  "study": "actuator-dynamics",
+  "title": "Dynamic actuator coupling in a mechanically actuated rubber-belt CVT",
+  "status": "baseline-promoted_off-baseline-exploratory",
+  "cinder_version": "1.1.2",
+  "release_tag": "cinder-v1.1.2",
+  "release_commit_sha": "7637a38b4fb9ec21dfb953c1c80a27ec5f389654",
+  "question": "What changes when the primary fixed-pivot flyweight and secondary helical torque-reaction mechanisms are treated dynamically rather than quasi-statically, and what physical energy/inertia channels produce those differences?",
+  "canonical_experiments": {
+    "baseline_ablation": {
+      "purpose": "Separate same-state constitutive corrections from independently integrated trajectory consequences using full, QS-flyweight, QS-helix, and fully-QS variants.",
+      "scenario": "launch",
+      "duration_s": 10.0,
+      "sample_step_s": 0.001,
+      "solver": {
+        "method": "LSODA",
+        "relative_tolerance": 0.0001,
+        "absolute_tolerance": 1e-07,
+        "max_step_s": 0.01
+      }
+    },
+    "coupling_energy": {
+      "purpose": "Expose flyweight and helix kinetic/potential energy, configuration power, and generalized shift-inertia contributions on the unchanged full-dynamic baseline.",
+      "duration_s": 10.0,
+      "report_step_s": 0.001,
+      "solver": {
+        "method": "LSODA",
+        "relative_tolerance": 0.0001,
+        "absolute_tolerance": 1e-07,
+        "max_step_s": 0.01
+      }
+    }
+  },
+  "exploratory_experiments": {
+    "stress_search": {
+      "status": "exploratory_only_not_a_frozen_final_result",
+      "purpose": "Reuse the tagged broad search machinery to discover regions where actuator dynamic corrections become large. The final off-baseline study will be redesigned around explicit equation-derived physical scales.",
+      "quick_mode_is_default_from_results_runner": true
+    },
+    "helix_scaling": {
+      "status": "exploratory_only_not_a_frozen_final_result",
+      "purpose": "Reuse the tagged movable-inertia/secondary-torque sweep as exploratory infrastructure. Its present threshold grid is not intended to define the final scientific claim.",
+      "quick_mode_is_default_from_results_runner": true
+    }
+  },
+  "interpretation_boundaries": [
+    "The four quasi-static variants are model reductions of the same hardware, not alternative tunes.",
+    "Removed mechanism-relative rotational inertia is returned to the classical shaft inertia rather than deleted.",
+    "Baseline ablation and coupling-energy decomposition are canonical study components.",
+    "Stress-search and helix-scaling outputs are exploratory until redesigned around explicit physical questions.",
+    "Subtle actuator conclusions should be revisited after the release-level solver-convergence study is complete."
+  ]
+}
