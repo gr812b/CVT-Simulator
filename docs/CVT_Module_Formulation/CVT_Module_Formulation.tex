@@ -8687,7 +8687,7 @@ with engagement and shift boundaries require a separate treatment.
 \section{3.6}
 
 The freely shifting engaged CVT is now mechanically closed.
-For any admissible tangential contact state,
+For any admissible tangential contact regime,
 \Cref{sec:engaged_dynamic_closure} determines how the pulley speeds,
 belt transport, and shift coordinate evolve from the current state.
 But that solution does more than describe the mechanism at one instant:
@@ -8703,8 +8703,8 @@ but once one is reached, the physical problem has changed.
 A sheave that was free to move may now be supported by a stop,
 or a belt--sheave interaction that previously transmitted force may no longer exist.
 
-Reaching one of these boundaries therefore changes the structural regime of the CVT,
-in the same sense that a change of sticking or sliding state changed the tangential regime
+Reaching one of these boundaries therefore changes the shift regime of the CVT,
+in the same sense that a change between sticking and sliding changes a tangential contact regime
 in \Cref{sec:engaged_dynamic_closure}.
 That structural change has two separate consequences.
 First, the active contacts, supports, and permitted motions are different,
@@ -8715,13 +8715,13 @@ cannot support, so the incoming motion must be transferred into a compatible out
 These are different mechanical problems.
 The first determines how the CVT accelerates once the new regime is active.
 The second determines how its velocity changes at the instant the regime is entered.
-Both are required if the model is to pass through a structural boundary
+Both are required if the model is to pass through a shift-regime boundary
 without replacing the mechanics by an imposed reset.
 
 \subsection{Shift Domain and Structural Regimes}
 \label{sec:shift_coordinate_boundaries}
 
-Before the governing equations can change with the structural regime,
+Before the governing equations can change with the shift regime,
 the boundaries between those regimes must first be located along the shift motion.
 The shift coordinate already traces the primary through its full travel, so the
 geometry derived in \Cref{sec:geometry} identifies where contact is gained or
@@ -8824,26 +8824,26 @@ arrangements summarized in
     \label{tab:shift_structural_arrangements}
 \end{table}
 
-A boundary position does not, by itself, determine which structural regime
+A boundary position does not, by itself, determine which shift regime
 is active. At \(s=s_{\mathrm{dz}}\), the secondary may be held against its
 fully closed stop while the primary remains in contact with the belt. The
 primary may instead begin closing, opening the secondary away from that stop,
 or it may begin opening and separate from the belt into the clearance. All
 three continuations pass through the same value of \(s\). What changes is
 which contacts and supports are active and which motions they permit. The
-structural regime must therefore be carried as part of the mechanical
+shift regime must therefore be carried as part of the mechanical
 description; it cannot be inferred from the shift coordinate alone. This is
 the same regime-dependent logic introduced in
 \Cref{sec:mechanical_regimes_state_evolution}, now applied to the changing
 mechanical arrangement of the CVT.
 
-The same boundary also shows that structural regime and tangential contact
-regime describe different parts of the mechanics. While the secondary stop
+The same boundary also shows that shift regime and tangential contact
+state describe different parts of the mechanics. While the secondary stop
 holds the engaged mechanism at \(s=s_{\mathrm{dz}}\), the two shafts and the
 belt can continue moving. The stop determines whether further axial motion is
 available, but it does not determine whether the belt sticks to either pulley
-or slides relative to it. Each engaged structural regime must therefore still
-be combined with the corresponding tangential contact states from
+or slides relative to it. Each engaged shift regime must therefore still
+be combined with the corresponding tangential contact regimes from
 \Cref{sec:engaged_dynamic_closure}.
 
 The three boundary positions and the five arrangements in
@@ -8851,27 +8851,18 @@ The three boundary positions and the five arrangements in
 regime changes may occur and which arrangements are physically admissible
 there. They do not assign a unique regime to each value of \(s\); at a shared
 boundary, the active contacts, supports, and direction of continuation still
-matter. The structural map and the tangential contact states together define
-the set of mechanical regimes that the model must track as the CVT evolves.
+matter. The active shift regime and tangential contact regimes together specify
+the mechanical regime that the model must track as the CVT evolves.
 
-% ---------------------------------------------------------------------------
 \subsection{Governing Equations in Each Structural Regime}
 \label{sec:structural_regime_governing_equations}
 
-Knowing the active structural regime still does not determine how the state
-evolves within it. Each arrangement needs a continuous set of balances and
-kinematic conditions that determine the accelerations it permits. Most of
-the mechanics need not be derived again, because the underlying pulley,
-belt, and actuator models have not changed.
-
-Only the free bodies and constraints that physically change need to be
-updated. With the primary in the deadzone, the belt--sheave interaction is
-absent and its force and torque must be removed. At a travel stop, the
-relevant contact remains, but the stopped sheave can no longer accelerate
-through the boundary and the hardware supplies the reaction required to hold
-it there. Following the mechanism from fully open, through engagement and
-free shift, to the upper stop lets each of these changes enter exactly where
-it occurs.
+The cleanest way to see how those two structural changes alter the mechanics
+is to follow the primary from fully open into engagement and then through
+upshift. Along that path, only two things modify a previously derived free
+body: the primary belt contact can appear or disappear, and a travel stop can
+add the support reaction required to prevent further axial motion. The rest
+of the pulley, belt, and contact mechanics remain the same.
 
 \subsubsection{Disengaged Primary and Deadzone Motion}
 \label{sec:deadzone_continuous_regimes}
@@ -9138,7 +9129,7 @@ determine
 for the proposed traction pair. Substituting those solved quantities back
 into \Cref{eq:low_ratio_stop_reaction} gives the force carried by the
 secondary stop. The sticking or sliding values of \(\lambda_p\) and
-\(\lambda_s\) are selected with the same contact-state logic already developed
+\(\lambda_s\) are selected with the same tangential-regime logic already developed
 in \Cref{sec:engaged_dynamic_closure}.
 
 The distinction between stop reaction and belt load is important. The stop
@@ -9214,7 +9205,7 @@ equations, determines the coupled fixed-shift response. The solved primary
 belt load is then substituted into
 \Cref{eq:upper_stop_reaction} to recover the force carried by the stop.
 
-As at low ratio, the stop reaction is a separate structural load path rather
+As at low ratio, the stop reaction is a separate hardware load path rather
 than additional belt clamp force. The upper stop can sustain the regime only
 while
 
@@ -9287,7 +9278,6 @@ whenever a boundary is reached with nonzero incoming shift speed:
 \(\dot s=0\) describes the supported state, but it does not account for the
 velocity that existed immediately before contact with the constraint. That
 velocity change is not part of the continuous force balance derived here.
-
 \section{Shift Boundaries and Regime Transitions}
 \label{sec:shift_limits_deadzone}
 
