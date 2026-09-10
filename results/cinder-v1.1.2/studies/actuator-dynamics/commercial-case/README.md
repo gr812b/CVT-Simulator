@@ -15,3 +15,28 @@ The result regenerates:
 Nothing in this directory claims the prescribed kinematics are measured Sidewinder behavior. Better measurements can replace individual input fields without changing the analysis architecture.
 
 Run: `python results/cinder-v1.1.2/studies/actuator-dynamics/commercial-case/run.py`.
+
+
+## System-level trajectory demonstration
+
+The component sensitivity result is followed by one final experiment:
+`run_trajectory_demo.py`.
+
+It replaces only the secondary helix geometry and movable-member rotational
+inertia in the otherwise frozen Baja reference machine, then compares the full
+dynamic helix with a mechanically matched quasi-static helix under one
+preregistered clean load transient.
+
+This is deliberately a **mechanism transplant**, not a Sidewinder simulation.
+The unknown Sidewinder spring, primary, track inertia, and other machine
+parameters are not invented.
+
+See `TRAJECTORY_DEMONSTRATION.md` and `trajectory_demo.json`.
+
+Run only this result:
+
+```powershell
+python .\studies\actuator-dynamics\commercial-case\run_trajectory_demo.py
+```
+
+when your current directory is `results/cinder-v1.1.2`.

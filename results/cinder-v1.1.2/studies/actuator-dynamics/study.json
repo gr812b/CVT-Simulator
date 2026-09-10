@@ -1,5 +1,5 @@
 {
-  "schema_version": 3,
+  "schema_version": 4,
   "study": "actuator-dynamics",
   "title": "Dynamic flyweight and helix coupling: Baja consequence, quasi-static validity, and commercial secondary scaling",
   "status": "official_release_scoped_results_study",
@@ -126,6 +126,12 @@
       "selected_hardware": "Yamaha Sidewinder YSRC roller secondary with Dalton YSR31 straight helix",
       "alternate_local_angle_case": "Dalton YSR36/28 progressive helix, using the published 28 degree segment only as a local constant-angle sensitivity calculation",
       "status": "hardware identity/angle/power context sourced; mass properties, effective helix radius, and prescribed transient kinematics provisional"
+    },
+    "commercial_trajectory_demo": {
+      "role": "official_provisional_system_level_demonstration",
+      "question": "Can the commercial-secondary dynamic correction produce a tangible difference in a complete CVT trajectory when only the secondary helix geometry and movable rotational inertia are transplanted into the frozen reference machine?",
+      "configuration_file": "commercial-case/trajectory_demo.json",
+      "status": "ready_to_run"
     }
   },
   "dimensionless_measures": {
@@ -152,6 +158,7 @@
     "Subtle trajectory conclusions should be cross-checked against the separate solver-convergence study before manuscript claims are frozen.",
     "The representative commercial case is a physically anchored sensitivity example, not a validated Sidewinder reconstruction.",
     "Sourced facts, derived quantities, and engineering assumptions are stored separately.",
-    "The commercial case is deliberately selected for sensitivity to the secondary dynamic terms rather than as a population-average CVT."
+    "The commercial case is deliberately selected for sensitivity to the secondary dynamic terms rather than as a population-average CVT.",
+    "The commercial trajectory demo is a mechanism transplant into the frozen Baja host, not a Sidewinder reconstruction."
   ]
 }

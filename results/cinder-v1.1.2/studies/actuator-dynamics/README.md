@@ -24,3 +24,23 @@ python results/cinder-v1.1.2/studies/actuator-dynamics/run.py
 ```
 
 Incremental stages may stop at `baseline`, `components`, `coupling`, `envelopes`, `commercial`, or `transients`.
+
+
+## Commercial-secondary trajectory demonstration
+
+The final actuator result now includes a mechanism-transplant trajectory test.
+It uses the frozen Baja machine as the known host and replaces only the
+secondary helix geometry and movable-member rotational inertia with the
+provisional OTS values. A clean secondary load transient is selected by an
+auditable 10–20% dynamic-correction criterion and replayed on full-dynamic and
+quasi-static helix models.
+
+This closes the scientific chain from equation-level correction to a complete
+system-level trajectory consequence without claiming a fully reconstructed
+Sidewinder.
+
+Run only this stage from `results/cinder-v1.1.2`:
+
+```powershell
+python .\studies\actuator-dynamics\commercial-case\run_trajectory_demo.py
+```

@@ -22,7 +22,11 @@ def main():
     if missing: raise RuntimeError(f"Missing tagged support files: {missing}")
     subprocess.run([sys.executable, str(STUDY_ROOT/"tests"/"test_controlled_target_selection.py")], check=True)
     subprocess.run([sys.executable, str(STUDY_ROOT/"tests"/"test_validity_helix_derivatives.py")], check=True)
-    print("PASS actuator-dynamics v3 study verification")
+    subprocess.run(
+        [sys.executable, str(STUDY_ROOT / "tests" / "test_commercial_trajectory_selection.py")],
+        check=True,
+    )
+    print("PASS actuator-dynamics v3.2 study verification")
     print(f"  CINDER: {EXPECTED_VERSION}")
     print(f"  release commit: {commit}")
     print("  official experiments: baseline ablation, dimensionless components, coupling energy, validity envelopes, commercial secondary scaling, controlled transients")
