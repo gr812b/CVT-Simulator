@@ -9450,8 +9450,10 @@ admit.
 \subsubsection{Finite-Speed Arrival at a Boundary}
 \label{sec:finite_speed_shift_boundary_arrival}
 
-Consider free engaged upshift reaching the upper primary stop at \(s=s_{\max}\) with
-\(\dot s^- > 0\). Immediately after the stop becomes active, the supported regime
+Consider free engaged upshift reaching the upper primary stop at
+\(s=s_{\max}\) with \(\dot s^- > 0\). Here and throughout the event analysis,
+the superscripts \(-\) and \(+\) denote the limiting states immediately before
+and after the boundary event. Once the stop is active, the supported state
 requires
 
 \begin{equation}
@@ -9459,50 +9461,29 @@ requires
     \label{eq:upper_stop_post_event_velocity}
 \end{equation}
 
-The continuous upper-stop equations cannot produce this change. They begin with the stop
-already active and use \(\dot s=\ddot s=0\) to determine the subsequent shaft and belt
-accelerations. The finite change from \(\dot s^-\) to \(\dot s^+\) occurs before that
-continuous solution can begin.
+The continuous upper-stop equations cannot produce this finite change. They
+begin with the stop already active and use \(\dot s=\ddot s=0\) to determine the
+accelerations that follow. The incoming shift velocity must therefore be dealt
+with at the boundary itself before that continuous solution can begin.
 
-Setting \(\dot s\) to zero by itself would satisfy the stop kinematically, but it would
-not describe what the impact did. During engaged shift, \(\dot s\) is also the primary
-movable-sheave speed, drives the flyweight pivot motion, moves the secondary through
-\(x_s(s)\), rotates the secondary movable assembly through \(\theta_s(x_s)\), and gives
-the belt material on both wraps a radial velocity through \(r_j(s)\). Each of those
-motions belongs to a mass or rotational inertia. One instant before impact they
-therefore store kinetic energy and contribute inertially to the impulse--momentum
-balance. Arresting the shift must account for that stored motion rather than simply
-deleting the scalar state entry that describes it.
+Simply replacing \(\dot s^-\) by zero would satisfy the stop kinematically, but
+it would erase more than one physical motion. During engaged shift, the same
+\(\dot s\) translates the primary movable assembly, drives the primary
+actuation mechanism, translates the secondary movable assembly, rotates that
+assembly relative to its shaft through the helix, and moves belt material
+radially as both running radii change. Each of those motions belongs to a real
+mass or rotational inertia retained by the continuous model.
 
-The fully open primary stop at \(s=0\) presents the same basic problem in the deadzone:
-an incoming primary shift velocity is incompatible with the stopped state. The low-ratio
-boundary at \(s=s_{\mathrm{dz}}\) shows why the state transfer cannot be reduced to a
-stop rule for \(\dot s\). During engaged backshift, \(\dot s^-<0\) means that the
-primary is opening while the secondary is closing and rotating relative to its shaft
-through the helix. When the secondary reaches its fully closed stop, the secondary axial
-and helix-relative motions cannot continue, but there is no primary stop preventing the
-primary from opening farther into the deadzone.
+Before any of that motion can be redistributed or removed consistently, its
+physical content must be identified: which retained masses and inertias are
+moving, and at what speeds. Those velocities come directly from the kinematics
+already used throughout the continuous derivation.
 
-A blanket reset \(\dot s^+=0\) would therefore arrest primary motion that the outgoing
-deadzone can support. Copying \(\dot s^-\) unchanged would do the opposite: it would
-continue secondary axial, helix-relative, and belt-wrap radial motions that the deadzone
-does not support. The stop acts on physical hardware, not on the symbol \(s\). The
-shared coordinate is useful because it describes the coupled shift, but it does not
-itself carry momentum.
-
-The post-event state must therefore be built from the motions of the physical masses and
-inertias represented by the reduced state. Their incoming motion can redistribute into
-physical velocities that remain available after the event, while the newly active
-constraint supplies the impulse needed to remove incompatible motion. Under the
-perfectly inelastic idealization of \AssRef{assump:inelastic_constraint_activation}, any
-kinetic energy not retained in the compatible outgoing motion is the unresolved impact
-loss.
-
-\subsubsection{Physical Velocities Carried into the Event}
+\subsubsection{Kinetic Motion Carried by the Reduced State}
 \label{sec:boundary_event_physical_velocities}
 
-The state already contains the four rates from which those physical motions are
-constructed. Collect them as
+The CVT state carries only four independent velocities relevant to an
+instantaneous boundary event. Collect them as
 
 \begin{equation}
     \boldsymbol{\nu}
@@ -9516,15 +9497,10 @@ constructed. Collect them as
     \label{eq:boundary_event_velocity_vector}
 \end{equation}
 
-Here \(\boldsymbol{\nu}\) is only the reduced velocity vector carried by the CVT state.
-Its entries are not a list of all material velocities in the mechanism. A single entry,
-especially \(\dot s\), can appear in several different physical motions.
-
-The primary provides the simplest examples. The shaft-carried hardware and flyweight
-mass distribution rotate at \(\omega_p\), with the configuration-dependent shaft-axis
-inertia \(J_{f,p}(s)\) introduced in \Cref{sec:primary_pulley_rotational_dynamics}. The
-primary movable assembly translates at \(\dot s\), and the flyweight pivot motion
-follows the same mechanism map used in the axial balance,
+These four entries are enough to reconstruct every kinetic motion retained by
+the reduced model, but they are not themselves a list of those motions. The
+shift velocity provides the clearest example. The primary movable assembly has
+axial speed \(\dot s\), while the flyweight pivot motion follows
 
 \begin{equation}
     \dot q_f
@@ -9533,51 +9509,25 @@ follows the same mechanism map used in the axial balance,
     \label{eq:boundary_event_flyweight_velocity}
 \end{equation}
 
-The secondary adds a rotational coupling. From \Cref{eq:secondary_movable_sheave_speed},
-its movable assembly has absolute angular speed
-
-\begin{equation}
-    \omega_{s,M}
-    =
-    \omega_s
-    +
-    \frac{d\theta_s}{ds}\dot s,
-    \qquad
-    \frac{d\theta_s}{ds}
-    =
-    \frac{d\theta_s}{dx_s}\frac{dx_s}{ds},
-    \label{eq:boundary_event_secondary_movable_speed}
-\end{equation}
-
-while its axial speed is
+On the secondary, the same shift velocity produces both translation and
+helix-relative rotation,
 
 \begin{equation}
     \dot x_s
     =
-    \frac{dx_s}{ds}\dot s.
-    \label{eq:boundary_event_secondary_axial_speed}
-\end{equation}
-
-The distinction matters at a stop. Removing \(\dot s\) removes both the secondary
-translation and the helix-relative part of \(\omega_{s,M}\), but it need not remove the
-shaft speed \(\omega_s\). The angular momentum carried by the movable assembly can
-therefore participate in the impulsive redistribution instead of being silently
-discarded.
-
-The belt carries one more shift-associated motion. For the belt element on pulley \(j\),
-\Cref{eq:wrap_element_velocity} gives
-
-\begin{equation}
-    \mathbf v_{b,j}
+    \frac{dx_s}{ds}\dot s,
+    \qquad
+    \omega_{s,M}
     =
-    \dot r_j\hat{\mathbf e}_r
+    \omega_s
     +
-    v_b\hat{\mathbf e}_\theta.
-    \label{eq:boundary_event_wrap_velocity_recall}
+    \frac{d\theta_s}{ds}\dot s.
+    \label{eq:boundary_event_secondary_velocities}
 \end{equation}
 
-The tangential component \(v_b\) is the transport speed of the complete belt. During
-engaged shift, the material carried on each circular wrap also moves radially with
+The belt contributes one more shift-dependent motion. From
+\Cref{eq:wrap_element_velocity}, material carried on wrap \(j\) has tangential
+speed \(v_b\) and radial speed
 
 \begin{equation}
     \dot r_j
@@ -9586,19 +9536,18 @@ engaged shift, the material carried on each circular wrap also moves radially wi
     \label{eq:boundary_event_wrap_radial_speed}
 \end{equation}
 
-Using the element mass in \Cref{eq:wrap_element_mass}, the belt mass carried on wrap
-\(j\) is
+The mass currently carried on that wrap is
 
 \begin{equation}
     m_{\mathrm{wrap},j}
     =
     \rho_b A_b r_{j,\mathrm{cm}}\phi_j,
     \qquad
-    j\in\{p,s\},
+    j\in\{p,s\}.
     \label{eq:boundary_event_wrap_mass}
 \end{equation}
 
-so the retained wrap-radial kinetic energy is
+Thus the associated radial kinetic energy is
 
 \begin{equation}
     \mathcal T_{b,r}
@@ -9612,31 +9561,33 @@ so the retained wrap-radial kinetic energy is
     \label{eq:boundary_event_wrap_radial_energy}
 \end{equation}
 
-This term is distinct from the complete-belt transport energy \(m_bv_b^2/2\): the two
-speeds are the orthogonal components already visible in
-\Cref{eq:boundary_event_wrap_velocity_recall}. It also reflects the fidelity of the
-prescribed belt path rather than a claim that these are the only motions a real belt can
-possess. Under \AssRef{assump:prescribed_belt_path}, the model retains the radial motion
-of material carried on the circular wraps but omits additional distributed inertia from
-straight-span reorientation, out-of-plane skew and twist, and axial belt motion. The
-straight spans still participate in the common tangential transport represented by
-\(v_b\).
+This term is separate from the complete-belt transport energy
+\(m_bv_b^2/2\). It is the radial component already present in the wrap-element
+velocity, not an additional belt degree of freedom. Under the prescribed
+belt-path assumptions, the reduced model retains this wrap-radial motion but
+not additional distributed inertia from straight-span reorientation,
+out-of-plane belt motion, or longitudinal belt deformation. The straight spans
+still participate in the common tangential transport represented by \(v_b\).
 
-The retained physical velocity modes are collected in
-\Cref{tab:boundary_event_physical_velocity_inventory}.
+The same exercise can be applied to every retained inertia. Reading the
+continuous kinetic terms in this way gives
+\Cref{tab:boundary_event_physical_velocity_inventory}. Each row identifies one
+physical motion whose momentum and kinetic energy exist immediately before an
+impact, the velocity of that motion during engaged shift, and the mass or
+rotational inertia attached to it.
 
 \begin{table}[H]
     \centering
     \small
     \renewcommand{\arraystretch}{1.18}
     \begin{tabular}{@{}
-        >{\raggedright\arraybackslash}p{0.34\linewidth}
-        >{\raggedright\arraybackslash}p{0.30\linewidth}
-        >{\raggedright\arraybackslash}p{0.27\linewidth}
+        >{\raggedright\arraybackslash}p{0.33\linewidth}
+        >{\raggedright\arraybackslash}p{0.29\linewidth}
+        >{\raggedright\arraybackslash}p{0.29\linewidth}
         @{}}
         \toprule
         \textbf{Retained motion}
-        & \textbf{Physical velocity}
+        & \textbf{Engaged physical velocity}
         & \textbf{Mass or inertia}
         \\
         \midrule
@@ -9678,150 +9629,325 @@ The retained physical velocity modes are collected in
         \\
         \bottomrule
     \end{tabular}
-    \caption{Physical velocity modes retained during a shift-regime boundary event. Equivalent inertias supplied through the primary or secondary shaft boundary are included with the corresponding shaft-side rotational mode.}
+    \caption{Physical velocity modes retained during an engaged boundary event.
+    Equivalent inertias supplied through either shaft boundary are included
+    with the corresponding shaft-side rotational mode.}
     \label{tab:boundary_event_physical_velocity_inventory}
 \end{table}
 
-The primary flyweight entries use the mechanism maps \(q_f(s)\), \(J_{f,p}(s)\), and
-\(I_f\) already introduced in the main actuator and pulley dynamics rather than the
-detailed roller geometry that generated them. The event law therefore depends on the
-kinetic modes supplied by the actuator model, not on the geometry of one particular
-flyweight implementation. An alternative actuator described by its own
-configuration-dependent velocity and inertia maps enters the same projection without
-changing its form.
-
-The second column of \Cref{tab:boundary_event_physical_velocity_inventory} is the
-physical information needed by the event law. Stack those scalar linear and angular
-velocities into a vector \(\mathbf y\). For the engaged-side ordering shown in the
-table,
+The table is the kinetic inventory needed at an impact. If the velocity in row
+\(k\) is denoted \(u_k\) and its matching mass or rotational inertia is
+\(w_k\), then that row carries the ordinary kinetic energy
 
 \begin{equation}
-    \mathbf y_{\mathrm{eng}}
+    \mathcal T_k
     =
-    \begin{bmatrix}
-        \omega_p \\
-        \dot s \\
-        (dq_f/ds)\dot s \\
-        \omega_s \\
-        \omega_s+(d\theta_s/ds)\dot s \\
-        (dx_s/ds)\dot s \\
-        v_b \\
-        (dr_p/ds)\dot s \\
-        (dr_s/ds)\dot s
-    \end{bmatrix}.
-    \label{eq:boundary_event_engaged_physical_velocity_vector}
+    \frac{1}{2}w_k u_k^2.
+    \label{eq:boundary_event_single_mode_energy}
 \end{equation}
 
-Each entry \(y_k\) is therefore one physical velocity mode paired with the mass or
-rotational inertia in the third column of the table. In the deadzone, the same physical
-inventory is retained, but the secondary axial, helix-relative, and two wrap-radial
-shift coefficients are zero. At a fixed event configuration every listed speed is linear
-in the four reduced rates of \(\boldsymbol\nu\), so define the kinematic velocity map
-\(\mathbf J\) by
+Each row therefore carries exactly the kinetic energy already present in the
+continuous model. An impact must account for this same physical inventory when
+its velocities change.
+
+\subsubsection{From the Physical Inventory to Reduced Inertia}
+\label{sec:boundary_event_reduced_inertia}
+
+Every velocity in the second column of
+\Cref{tab:boundary_event_physical_velocity_inventory} is a linear combination
+of the four entries of \(\boldsymbol\nu\) at a fixed configuration. For
+compactness, define
 
 \begin{equation}
-    \mathbf y
-    =
-    \mathbf J\boldsymbol\nu,
-    \qquad
-    J_{k\ell}
+    q_f'
     \equiv
-    \frac{\partial y_k}{\partial \nu_\ell}.
-    \label{eq:boundary_event_physical_velocity_map}
+    \frac{dq_f}{ds},
+    \qquad
+    x_s'
+    \equiv
+    \frac{dx_s}{ds},
+    \qquad
+    \theta_s'
+    \equiv
+    \frac{d\theta_s}{ds},
+    \qquad
+    r_j'
+    \equiv
+    \frac{dr_j}{ds}.
+    \label{eq:boundary_event_kinematic_derivative_shorthand}
 \end{equation}
 
-\(\mathbf y\) therefore records how the retained physical masses and inertias are
-actually moving, while \(\mathbf J\) records how the reduced state velocities produce
-those motions. The matrix is only a compact stacking of the kinematic relations already
-shown. For example, during engaged shift the secondary movable rotation and primary-wrap
-radial motion contribute the rows
+Stacking the coefficients of those velocity expressions gives the engaged
+velocity map
 
 \begin{equation}
-    \mathbf j_{s,M,\mathrm{eng}}
+    \mathbf J_{\mathrm{eng}}
     =
     \begin{bmatrix}
-        0 & 1 & 0 & d\theta_s/ds
-    \end{bmatrix},
-    \qquad
-    \mathbf j_{b,r,p,\mathrm{eng}}
-    =
-    \begin{bmatrix}
-        0 & 0 & 0 & dr_p/ds
+        1 & 0 & 0 & 0 \\
+        0 & 0 & 0 & 1 \\
+        0 & 0 & 0 & q_f' \\
+        0 & 1 & 0 & 0 \\
+        0 & 1 & 0 & \theta_s' \\
+        0 & 0 & 0 & x_s' \\
+        0 & 0 & 1 & 0 \\
+        0 & 0 & 0 & r_p' \\
+        0 & 0 & 0 & r_s'
     \end{bmatrix}.
-    \label{eq:boundary_event_representative_J_rows}
+    \label{eq:boundary_event_engaged_velocity_map}
 \end{equation}
 
-In the deadzone, the corresponding shift couplings vanish because the secondary axial
-position, helix angle, and represented belt radii are fixed. The same physical
-components are retained, but the relevant rows of the deadzone-side map contain zero
-shift coefficients. An event crossing between two such kinematic descriptions therefore
-uses one map for the incoming motion and one for the outgoing motion:
+The nine rows of \(\mathbf J_{\mathrm{eng}}\) correspond exactly to the nine
+physical motions in
+\Cref{tab:boundary_event_physical_velocity_inventory}; its four columns
+correspond to \(\omega_p\), \(\omega_s\), \(v_b\), and \(\dot s\). Thus
+the first row returns \(\omega_p\), the fifth returns
+\(\omega_s+\theta_s'\dot s\), the eighth returns \(r_p'\dot s\), and so on.
+The matrix is simply the velocity column of the table written in coefficient
+form.
+
+The inertia column can be written just as directly. With the same row ordering,
+define
 
 \begin{equation}
-    \mathbf y^-
+    \mathbf W(s)
     =
-    \mathbf J^-\boldsymbol\nu^-,
-    \qquad
-    \mathbf y^+
+    \operatorname{diag}
+    \left(
+        I_{\mathrm B,p}+I_{p,\mathrm{const}}+J_{f,p}(s),
+        m_p,
+        I_f,
+        I_{\mathrm B,s}+I_{s,F},
+        I_{s,M},
+        m_s,
+        m_b,
+        m_{\mathrm{wrap},p},
+        m_{\mathrm{wrap},s}
+    \right).
+    \label{eq:boundary_event_weight_matrix}
+\end{equation}
+
+Equivalent inertias supplied through either shaft boundary are added to the
+corresponding shaft-side entry when present. At a fixed event position, write
+this instantaneous matrix simply as \(\mathbf W\). Multiplying
+\(\mathbf J_{\mathrm{eng}}\boldsymbol\nu\) by \(\mathbf W\) attaches the
+matching mass or rotational inertia to every physical velocity in the table,
+giving its row-by-row linear or angular momentum. These entries are not
+components of one Cartesian momentum vector; they belong to different physical
+translations and rotations.
+
+The same notation also collects the total kinetic energy without changing its
+physical meaning:
+
+\begin{equation}
+    \mathcal T_{\mathrm{eng}}
     =
+    \frac{1}{2}
+    \left(
+        \mathbf J_{\mathrm{eng}}\boldsymbol\nu
+    \right)^{\mathsf T}
+    \mathbf W
+    \left(
+        \mathbf J_{\mathrm{eng}}\boldsymbol\nu
+    \right)
+    =
+    \frac{1}{2}
+    \boldsymbol\nu^{\mathsf T}
+    \mathbf J_{\mathrm{eng}}^{\mathsf T}
+    \mathbf W
+    \mathbf J_{\mathrm{eng}}
+    \boldsymbol\nu.
+    \label{eq:boundary_event_engaged_kinetic_energy}
+\end{equation}
+
+The appearance of \(\mathbf J^{\mathsf T}\mathbf W\mathbf J\) is the same
+reflected-inertia result already encountered in the scalar mechanism terms.
+If one physical mass \(m\) moves with
+
+\begin{equation}
+    v=a\dot q,
+    \label{eq:boundary_event_scalar_velocity_ratio}
+\end{equation}
+
+then
+
+\begin{equation}
+    \frac{1}{2}mv^2
+    =
+    \frac{1}{2}m(a\dot q)^2
+    =
+    \frac{1}{2}\left(a m a\right)\dot q^2.
+    \label{eq:boundary_event_scalar_reflected_inertia}
+\end{equation}
+
+The physical mass therefore appears to coordinate \(q\) as the reflected
+inertia \(a^2m\). The product
+
+\begin{equation}
+    \mathbf J_q^{\mathsf T}\mathbf W\mathbf J_q
+    \label{eq:boundary_event_reduced_inertia_matrix}
+\end{equation}
+
+is the multidimensional version of exactly that operation. The rightmost
+\(\mathbf J_q\) converts the reduced velocities into the physical motions in
+the table, \(\mathbf W\) attaches the corresponding masses and inertias, and
+\(\mathbf J_q^{\mathsf T}\) reflects their inertial effect back into the four
+reduced velocity directions. Cross terms appear automatically whenever one
+physical velocity depends on more than one entry of \(\boldsymbol\nu\), as for
+\(\omega_{s,M}=\omega_s+\theta_s'\dot s\). Thus this product is simply the
+combined physical inertia of the table expressed in the reduced velocity
+coordinates.
+
+At the upper primary stop, this is already enough to identify the inertia
+carried into the impact. The mechanism is engaged immediately before and after
+contact with the stop, so its physical velocity map does not change. What
+changes is only which outgoing velocity is allowed. A different boundary can
+change the map itself.
+
+\subsubsection{Topology Changes the Velocity Map}
+\label{sec:boundary_event_topology_maps}
+
+The low-ratio boundary exposes that second possibility without introducing a
+new kind of inertia. During engaged backshift, \(\dot s<0\) opens the primary,
+closes the secondary, rotates the secondary movable assembly through the
+helix, and changes both belt running radii. If the primary then separates into
+the deadzone, the same reduced coordinate continues to move the primary, but
+the secondary remains fully closed and both represented belt radii remain
+fixed.
+
+The physical components in the kinetic inventory have not disappeared. What
+changes is how the reduced state moves them. The affected rows are shown in
+\Cref{tab:boundary_event_topology_velocity_comparison}.
+
+\begin{table}[H]
+    \centering
+    \small
+    \renewcommand{\arraystretch}{1.18}
+    \begin{tabular}{@{}
+        >{\raggedright\arraybackslash}p{0.34\linewidth}
+        >{\raggedright\arraybackslash}p{0.28\linewidth}
+        >{\raggedright\arraybackslash}p{0.28\linewidth}
+        @{}}
+        \toprule
+        \textbf{Physical motion}
+        & \textbf{Engaged topology}
+        & \textbf{Deadzone topology}
+        \\
+        \midrule
+        Primary movable axial motion
+        & \(\dot s\)
+        & \(\dot s\)
+        \\[4pt]
+        Primary flyweight pivot motion
+        & \(q_f'\dot s\)
+        & \(q_f'\dot s\)
+        \\[4pt]
+        Secondary movable-side rotation
+        & \(\omega_s+\theta_s'\dot s\)
+        & \(\omega_s\)
+        \\[4pt]
+        Secondary movable axial motion
+        & \(x_s'\dot s\)
+        & \(0\)
+        \\[4pt]
+        Primary-wrap radial motion
+        & \(r_p'\dot s\)
+        & \(0\)
+        \\[4pt]
+        Secondary-wrap radial motion
+        & \(r_s'\dot s\)
+        & \(0\)
+        \\
+        \bottomrule
+    \end{tabular}
+    \caption{Shift-coupled physical velocities that change between the engaged
+    and deadzone kinematic topologies. The shaft rotations and complete-belt
+    tangential transport retain the same velocity expressions.}
+    \label{tab:boundary_event_topology_velocity_comparison}
+\end{table}
+
+The deadzone column corresponds to
+
+\begin{equation}
+    \mathbf J_{\mathrm{dz}}
+    =
+    \begin{bmatrix}
+        1 & 0 & 0 & 0 \\
+        0 & 0 & 0 & 1 \\
+        0 & 0 & 0 & q_f' \\
+        0 & 1 & 0 & 0 \\
+        0 & 1 & 0 & 0 \\
+        0 & 0 & 0 & 0 \\
+        0 & 0 & 1 & 0 \\
+        0 & 0 & 0 & 0 \\
+        0 & 0 & 0 & 0
+    \end{bmatrix}.
+    \label{eq:boundary_event_deadzone_velocity_map}
+\end{equation}
+
+There are therefore only two kinematic velocity maps required by the present
+shift model:
+
+\begin{equation}
+    \mathbf J_q
+    \in
+    \left\{
+        \mathbf J_{\mathrm{eng}},
+        \mathbf J_{\mathrm{dz}}
+    \right\}.
+    \label{eq:boundary_event_topology_map_set}
+\end{equation}
+
+A metal stop does not create another topology. The fully open primary stop uses
+the deadzone map, while the low-ratio seat and upper primary stop use the
+engaged map. Those stops restrict motion within an existing topology; they do
+not change the physical meaning of the reduced coordinates.
+
+This distinction is what makes the low-ratio event different from merely
+setting \(\dot s\) to zero. An engaged-to-deadzone transition changes the
+velocity formulas themselves. In particular, the outgoing primary can retain a
+nonzero \(\dot s\) even though the secondary axial, helix-relative, and
+wrap-radial velocities become zero. That behavior cannot be represented by a
+global shift stop while keeping \(\mathbf J_{\mathrm{eng}}\) unchanged.
+
+At an instantaneous event, position remains continuous, so the physical masses
+and inertias in \(\mathbf W\) are evaluated at the same configuration on both
+sides. What may change discontinuously is the compatible velocity field:
+
+\begin{equation}
+    \mathbf J^-\boldsymbol\nu^-
+    \longrightarrow
     \mathbf J^+\boldsymbol\nu^+,
+    \qquad
+    \mathbf J^-
+    =
+    \mathbf J_{q^-},
+    \quad
+    \mathbf J^+
+    =
+    \mathbf J_{q^+}.
     \label{eq:boundary_event_pre_post_velocity_maps}
 \end{equation}
 
-where the superscripts \(-\) and \(+\) denote the instants immediately before and after
-the event. A physical mode that becomes kinematically inactive is represented by a zero
-row coefficient in \(\mathbf J^+\), rather than by deleting its mass or inertia from the
-event. A change in \(\mathbf J\) can therefore remove or activate physical motion as the
-kinematic topology changes. Additional relations among the outgoing reduced velocities,
-such as a metal stop that arrests the entire shift coordinate or a retained no-slip
-condition, are imposed separately below.
-
-Let \(\mathbf W\) be the diagonal kinetic-weight matrix associated with the same
-ordering of \(\mathbf y\): a linear velocity entry is weighted by its mass, and an
-angular velocity entry by its rotational inertia. The same physical component basis is
-used on both sides of the event. Its kinetic energy is therefore
-
-\begin{equation}
-    \mathcal T^{\pm}
-    =
-    \frac{1}{2}
-    (\mathbf y^{\pm})^{\mathsf T}
-    \mathbf W
-    \mathbf y^{\pm}
-    =
-    \frac{1}{2}
-    (\boldsymbol\nu^{\pm})^{\mathsf T}
-    (\mathbf J^{\pm})^{\mathsf T}
-    \mathbf W
-    \mathbf J^{\pm}
-    \boldsymbol\nu^{\pm}.
-    \label{eq:boundary_event_kinetic_energy}
-\end{equation}
-
-The combination \((\mathbf J^{\pm})^{\mathsf T}\mathbf W\mathbf J^{\pm}\) is the reduced
-kinetic metric seen by \(\boldsymbol\nu^{\pm}\). It is not an independently assumed
-inertia. It is what results after the masses and inertias in
-\Cref{tab:boundary_event_physical_velocity_inventory} are expressed through the four
-state velocities.
+With the kinetic inventory and both topology maps established, the remaining
+question is what additional velocity relations the newly active hardware or
+contact requires at the end of the event.
 
 \subsubsection{Impulse and the Outgoing Velocity Constraints}
 \label{sec:boundary_event_impulse_projection}
 
-The physical velocity map tells us how every retained mass and inertia is moving as the
-boundary is reached. The outgoing regime supplies a different kind of information: which
-velocities are forbidden after the event. A metal stop requires the stopped shift
-velocity to vanish; an impulsively retained sticking contact requires its belt--pulley
-relative velocity to vanish; the deadzone closure requires the secondary--belt relative
-velocity to vanish. Each is a scalar linear condition on the outgoing reduced velocity.
-Represent one such condition by a row vector \(\mathbf c^+\), chosen so that
+A topology tells us what motion is available. A constraint tells us which of
+those available motions the newly active interaction refuses to admit. At the
+upper primary stop, for example, the engaged topology is unchanged, but the
+stop requires \(\dot s^+=0\). Write one such outgoing velocity condition as
 
 \begin{equation}
-    \mathbf c^+\boldsymbol\nu^+=0
+    \mathbf c^+\boldsymbol\nu^+=0,
     \label{eq:boundary_event_single_constraint}
 \end{equation}
 
-is the physical velocity condition imposed immediately after the event. Stacking every
-active row gives the outgoing constraint matrix \(\mathbf C^+\):
+where the row \(\mathbf c^+\) contains the coefficients of that physical
+velocity relation. Stacking all simultaneously active conditions gives
 
 \begin{equation}
     \mathbf C^+\boldsymbol\nu^+
@@ -9830,24 +9956,25 @@ active row gives the outgoing constraint matrix \(\mathbf C^+\):
     \label{eq:boundary_event_outgoing_constraints}
 \end{equation}
 
-Thus \(\mathbf C^+\) does not describe inertia or force. Its rows identify the outgoing
-relative velocities that the newly active mechanical constraints require to vanish.
+Thus \(\mathbf C^+\) has a different role from \(\mathbf J_q\). The topology
+map reconstructs the physical velocities of the retained masses and inertias.
+The constraint matrix contains extra velocity relations imposed by the
+interactions active through the event.
 
-For the ordering in \Cref{eq:boundary_event_velocity_vector}, a metal stop contributes
+For the ordering in \Cref{eq:boundary_event_velocity_vector}, a metal stop that
+arrests the shared shift coordinate contributes
 
 \begin{equation}
     \mathbf c_{\mathrm{stop}}
     =
     \begin{bmatrix}
         0 & 0 & 0 & 1
-    \end{bmatrix},
+    \end{bmatrix}.
     \label{eq:boundary_event_stop_constraint_row}
 \end{equation}
 
-which imposes \(\dot s^+=0\) when the complete engaged or deadzone shift coordinate is
-arrested. Tangential no-slip constraints are written using the same representative
-contact velocities as the continuous contact mechanics. Since the primary has no
-helix-relative face rotation,
+Tangential no-slip constraints use the same representative contact velocities
+as the continuous contact mechanics. The primary row is
 
 \begin{equation}
     \mathbf c_{p,\mathrm{stick}}
@@ -9858,8 +9985,7 @@ helix-relative face rotation,
     \label{eq:boundary_event_primary_stick_row}
 \end{equation}
 
-while \Cref{eq:representative_contact_angular_speed} gives
-\(\bar\omega_s=\omega_s+\dot\theta_s/2\) on the secondary, so
+while \Cref{eq:representative_contact_angular_speed} gives the secondary row
 
 \begin{equation}
     \mathbf c_{s,\mathrm{stick}}
@@ -9868,22 +9994,21 @@ while \Cref{eq:representative_contact_angular_speed} gives
         0 &
         -r_{s,\mathrm{eff}} &
         1 &
-        -\dfrac{r_{s,\mathrm{eff}}}{2}\dfrac{d\theta_s}{ds}
+        -\dfrac{r_{s,\mathrm{eff}}}{2}\theta_s'
     \end{bmatrix}.
     \label{eq:boundary_event_secondary_stick_row}
 \end{equation}
 
-These rows impose the instantaneous no-slip relation
-\(v_b=r_{j,\mathrm{eff}}\bar\omega_j\). Under \AssRef{assump:impact_tangential_contact},
-only a pulley contact already sticking immediately before the event contributes its
-no-slip row to the impulse problem. A sliding contact contributes no impulsive stick
-condition, and a newly formed pulley contact is not automatically made to stick. The
-ordinary tangential contact closure is evaluated again after the projection to determine
-the continuous regime that follows.
+Under \AssRef{assump:impact_tangential_contact}, a pulley contact already
+sticking immediately before the event retains its no-slip relation through the
+impulse. A sliding contact contributes no impulsive stick condition, and a
+newly formed pulley contact is not automatically made to stick. The ordinary
+tangential contact closure is evaluated again after the event to determine the
+continuous regime that follows.
 
-The deadzone secondary-belt lock is different. It is not a preserved stick/slip state
-but the reduced belt closure that defines deadzone motion. Whenever the outgoing shift
-regime is deadzone, it contributes
+The deadzone secondary-belt lock is different. It is not the continuation of a
+particular stick/slip state, but the reduced belt closure adopted for deadzone
+motion. Whenever the outgoing topology is deadzone, it contributes
 
 \begin{equation}
     \mathbf c_{s,\mathrm{dz}}
@@ -9897,27 +10022,35 @@ regime is deadzone, it contributes
     \label{eq:boundary_event_deadzone_lock_row}
 \end{equation}
 
-so that \(v_b^+=r_{s,\mathrm{eff,dz}}\omega_s^+\), consistent with
+which enforces
+\(v_b^+=r_{s,\mathrm{eff,dz}}\omega_s^+\), consistent with
 \Cref{eq:deadzone_secondary_lock}.
 
-Each row of \(\mathbf C^+\) is enforced by an impulsive reaction during the unresolved
-event. Let \(\boldsymbol\Gamma\) collect those constraint impulses, with one entry
-corresponding to each row of \(\mathbf C^+\). Applied shaft torques, springs, and other
-bounded forces act over no resolved duration and therefore contribute no finite impulse
-under \AssRef{assump:inelastic_constraint_activation}.
+Each row of \(\mathbf C^+\) is enforced by an impulsive reaction during the
+idealized zero-duration event. Let \(\boldsymbol\Gamma\) collect those
+constraint impulses, one for each row. The same coefficients that define a
+forbidden relative velocity also determine how its scalar impulse acts on the
+reduced velocities, so their combined contribution is
+\((\mathbf C^+)^{\mathsf T}\boldsymbol\Gamma\). Applied shaft torques,
+springs, and other bounded forces contribute no finite impulse over the
+unresolved event duration.
 
-Multiplying a physical velocity change by its corresponding entry of \(\mathbf W\) gives
-the linear or angular momentum change of that retained mode. The vector
+The kinetic inventory now provides the momentum side of the balance. Before
+the event, the physical mode velocities are
+\(\mathbf J^-\boldsymbol\nu^-\), so multiplying by \(\mathbf W\) gives their
+row-by-row linear or angular momenta. After the event, the corresponding
+inventory is \(\mathbf W\mathbf J^+\boldsymbol\nu^+\).
 
-\[
-\mathbf W \left( \mathbf y^+-\mathbf y^- \right)
-\]
-
-therefore collects the mass- or inertia-weighted velocity changes of the physical
-inventory in \Cref{tab:boundary_event_physical_velocity_inventory}. Because the outgoing
-reduced velocity \(\boldsymbol\nu^+\) moves those physical components through \(\mathbf
-J^+\), premultiplying by \((\mathbf J^+)^{\mathsf T}\) gathers the same momentum changes
-into the outgoing reduced directions. Impulse--momentum balance then gives
+After a topology change, only physical motions compatible with the outgoing
+kinematics remain available. The momentum balance is therefore written in those
+four outgoing reduced directions, which requires reflecting the physical
+momentum change back through \(\mathbf J^+\). The same scalar idea used in
+\Cref{eq:boundary_event_scalar_reflected_inertia}
+shows why the transpose appears. If \(v=a\dot q\), then physical momentum is
+\(mv\), but its momentum contribution in coordinate \(q\) is
+\(a(mv)\). In multiple dimensions, \((\mathbf J^+)^{\mathsf T}\) performs that
+same reflection for every physical mode at once. Impulse--momentum balance is
+therefore
 
 \begin{equation}
     (\mathbf J^+)^{\mathsf T}\mathbf W
@@ -9933,14 +10066,15 @@ into the outgoing reduced directions. Impulse--momentum balance then gives
     \label{eq:boundary_event_impulse_balance}
 \end{equation}
 
-The first term accounts for the combined inertial momentum change of all retained
-physical modes. The second accounts for the impulses supplied by the velocity
-constraints that become active through the event. The stop is therefore allowed to
-absorb momentum in the motion it arrests, while coupled shaft, belt, and mechanism
-velocities can change together wherever the outgoing kinematics permit it.
+The first term is the change in momentum of every retained physical mode,
+reflected into the outgoing reduced directions. The second is the impulse
+supplied by the velocity constraints. Momentum in a direction that the active
+constraints cannot oppose is therefore redistributed among the compatible
+outgoing motions rather than discarded; momentum in a constrained direction
+can be taken by the stop or contact impulse.
 
-Combining \Cref{eq:boundary_event_impulse_balance} with the outgoing constraints in
-\Cref{eq:boundary_event_outgoing_constraints} gives
+Combining the momentum balance with
+\Cref{eq:boundary_event_outgoing_constraints} gives the simultaneous solve
 
 \begin{equation}
 \begin{bmatrix}
@@ -9959,20 +10093,41 @@ Combining \Cref{eq:boundary_event_impulse_balance} with the outgoing constraints
 \end{bmatrix}
 =
 \begin{bmatrix}
-    (\mathbf J^+)^{\mathsf T}\mathbf W\mathbf J^-\boldsymbol\nu^-
+    (\mathbf J^+)^{\mathsf T}\mathbf W
+    \mathbf J^-\boldsymbol\nu^-
     \\
     \mathbf 0
 \end{bmatrix}.
 \label{eq:boundary_event_velocity_projection}
 \end{equation}
 
-The position is continuous through the event, so \(s^+=s^-\). The four outgoing
-velocities are not copied or reset independently;
-\Cref{eq:boundary_event_velocity_projection} solves them together with the impulses
-required by the outgoing constraints.
+The event therefore solves all four outgoing state velocities together. It does
+not decide separately what happens to \(\dot s\), \(\omega_s\), or \(v_b\).
+The topology map says which physical motions those variables can produce after
+the event, while the impulses enforce only the velocity relations that the new
+constraints require.
 
-The perfectly inelastic idealization does not require kinetic energy to be conserved.
-Instead,
+Because the capture is modeled as perfectly inelastic, kinetic energy need not
+be conserved. Using the same physical inventory on both sides,
+
+\begin{equation}
+    \mathcal T^+
+    =
+    \frac{1}{2}
+    (\mathbf J^+\boldsymbol\nu^+)^{\mathsf T}
+    \mathbf W
+    (\mathbf J^+\boldsymbol\nu^+),
+    \qquad
+    \mathcal T^-
+    =
+    \frac{1}{2}
+    (\mathbf J^-\boldsymbol\nu^-)^{\mathsf T}
+    \mathbf W
+    (\mathbf J^-\boldsymbol\nu^-),
+    \label{eq:boundary_event_pre_post_kinetic_energy}
+\end{equation}
+
+with
 
 \begin{equation}
     \mathcal T^+
@@ -9986,111 +10141,103 @@ Instead,
     \label{eq:boundary_event_energy_nonincrease}
 \end{equation}
 
-The momentum projection determines how much of the incoming motion remains as compatible
-shaft, belt, and shift motion. The difference \(E_{\mathrm{event}}\) is the kinetic
-energy removed by the unresolved capture and represents the local deformation, damping,
-heat, sound, and structural vibration excluded by the instantaneous rigid-event model.
-This energy check is also essential numerically: the state transfer may dissipate
-kinetic energy, but it must not create it.
+The projection determines which part of the incoming kinetic motion can remain
+in the compatible outgoing shaft, belt, and shift velocities. The remainder is
+removed by the perfectly inelastic event and represents unresolved local
+deformation, damping, heat, sound, and structural vibration. The energy balance
+is therefore not an extra equation used to choose \(\boldsymbol\nu^+\); it is
+the physical accounting of the modeled capture and a check that the event has
+not created kinetic energy.
 
 \subsubsection{Shift-Regime Event Rules}
 \label{sec:shift_regime_transition_applications}
 
-Each physical boundary now reduces to the same information: which kinematic map
-describes the moving components immediately before the event, which map describes them
-immediately afterward, and which outgoing relative velocities must vanish. Those choices
-determine \(\mathbf J^-\), \(\mathbf J^+\), and the rows of \(\mathbf C^+\) in
-\Cref{eq:boundary_event_velocity_projection}.
+The general event law can now be applied by identifying only two pieces of
+mechanics: the topology on either side, which selects \(\mathbf J^-\) and
+\(\mathbf J^+\), and any velocity constraints that must hold through the
+capture, which supply the rows of \(\mathbf C^+\). The resulting projection
+produces a candidate outgoing state. The ordinary continuous-regime
+admissibility conditions then determine whether that state can persist.
 
 \paragraph{Fully open primary stop.}
-Free deadzone opening reaches \(s=0\) with \(\dot s^-<0\). The physical topology remains
-deadzone on both sides, so \(\mathbf J^-\) and \(\mathbf J^+\) use the same deadzone
-mapping. The outgoing constraints contain the primary stop row and the already active
-deadzone secondary-belt lock. The projection arrests the primary shift motion without
-independently resetting \(\omega_p\), \(\omega_s\), or \(v_b\). The lower-stop closure
-is then evaluated at the projected state to recover \(F_{\mathrm{stop},0}\). If the
-required reaction is already inadmissible, the impact has still occurred, but no
-sustained stop-supported interval follows and the system immediately returns to free
-deadzone motion.
+Free deadzone opening reaches \(s=0\) with \(\dot s^-<0\). The topology remains
+deadzone on both sides, so
+\(\mathbf J^-=\mathbf J^+=\mathbf J_{\mathrm{dz}}\). The outgoing constraints
+contain the primary stop row and the deadzone secondary-belt lock. The
+projection arrests primary shift motion while allowing the coupled shaft and
+belt velocities to respond consistently. The stop reaction
+\(F_{\mathrm{stop},0}\) is then recovered from the constrained continuous
+balance. If it is already inadmissible, the impact has still occurred, but no
+finite stop-supported interval follows.
 
 \paragraph{Closing from deadzone into engagement.}
-Closing motion reaches \(s=s_{\mathrm{dz}}\) with \(\dot s^->0\). Before contact, \(\dot
-s\) moves the primary only; the secondary axial position, helix-relative angle, and
-represented belt radii are fixed. Immediately after engagement, those physical motions
-become coupled to the outgoing shift speed through the engaged mapping. Thus \(\mathbf
-J^-\) is the deadzone map and \(\mathbf J^+\) is the engaged map. Carrying \(\dot s^-\)
-straight across would instantaneously create secondary and wrap-radial kinetic energy
-without accounting for the momentum needed to accelerate those modes.
+Closing motion reaches \(s=s_{\mathrm{dz}}\) with \(\dot s^->0\). The physical
+inventory is unchanged, but its velocity map changes from
+\(\mathbf J_{\mathrm{dz}}\) to \(\mathbf J_{\mathrm{eng}}\). Carrying the
+incoming \(\dot s\) straight across would instantaneously create secondary
+axial motion, helix-relative rotation, and wrap-radial motion without supplying
+the momentum required to accelerate those modes. The topology projection
+provides that state transfer.
 
-The secondary-belt relation already imposed in the deadzone is retained through the
-capture, expressed on the engaged side with the representative secondary contact speed.
-The new primary contact contributes no impulsive stick row merely because the sheaves
-have touched. After the projection, the engaged closure evaluates the primary and
-secondary relative speeds and selects the admissible continuous tangential contact
-regime.
+The secondary-belt relation already imposed in deadzone is retained through the
+capture, expressed with the engaged representative secondary contact speed. The
+new primary contact is not made impulsively sticking merely because contact has
+formed. After projection, the ordinary engaged contact closure selects the
+admissible tangential contact regimes.
 
 \paragraph{Engaged backshift to the low-ratio boundary.}
-Free engaged backshift reaches \(s=s_{\mathrm{dz}}\) with \(\dot s^-<0\). The secondary
-movable sheave is the member that reaches the metal stop. Its axial motion and its
-helix-relative rotation cannot continue beyond the boundary, while the primary has no
-opening stop and can continue into the deadzone.
+Free engaged backshift reaches \(s=s_{\mathrm{dz}}\) with \(\dot s^-<0\). The
+secondary movable sheave is the member that reaches its fully closed stop, but
+the primary has no opening stop. With a finite incoming shift speed and a real
+deadzone, the outgoing topology is therefore deadzone rather than an engaged
+state obtained by globally imposing \(\dot s^+=0\).
 
-For a finite-speed return with a real deadzone, the outgoing map is therefore the
-deadzone map rather than an engaged map with a global \(\dot s^+=0\) constraint. Here
-\(\mathbf J^-\) uses the engaged kinematics and \(\mathbf J^+\) the deadzone kinematics.
-That change removes secondary axial motion, secondary helix-relative rotation, and both
-retained wrap-radial velocities while leaving primary axial motion available. The
-outgoing deadzone secondary-belt lock is imposed through \(\mathbf c_{s,\mathrm{dz}}\).
+Accordingly,
+\(\mathbf J^-=\mathbf J_{\mathrm{eng}}\) and
+\(\mathbf J^+=\mathbf J_{\mathrm{dz}}\). The change in topology removes
+secondary axial motion, helix-relative rotation, and both retained wrap-radial
+motions while leaving primary axial motion available. The outgoing deadzone
+secondary-belt lock is imposed through \(\mathbf c_{s,\mathrm{dz}}\).
 
-This projection also clarifies where the incoming secondary movable-sheave motion goes.
-The axial component that is incompatible with the fully closed secondary is taken by the
-structural impact. The helix-relative angular component is not assigned solely to the
-secondary shaft: \(\omega_s^+\) and \(v_b^+\) are coupled by the outgoing secondary-belt
-lock, so the compatible secondary shaft and belt transport velocities are solved
-together. The primary shift velocity and its coupled flyweight motion remain available
-degrees of freedom in the deadzone. The belt itself does not stop; only the radial wrap
-motion associated with changing radii disappears because those radii are fixed after
-separation.
+The secondary axial momentum that cannot continue is taken by the structural
+impact. The helix-relative angular contribution is not assigned independently
+to the secondary shaft; the projection solves the compatible
+\(\omega_s^+\) and \(v_b^+\) together with the remaining degrees of freedom.
+The primary can continue opening because that physical motion remains present
+in \(\mathbf J_{\mathrm{dz}}\). The belt transport likewise remains present;
+only the wrap-radial motion associated with changing radii disappears.
 
-If the return reaches the limiting state with no finite shift motion left to remove and
-both the primary contact and secondary stop remain admissible, the continuous successor
-is the engaged low-ratio seat rather than free deadzone motion.
+If the boundary is reached with no incoming shift velocity to remove, no
+velocity transfer is required. When both primary contact and the secondary
+stop are admissible at that state, the continuous successor is the engaged
+low-ratio seat.
 
-\begin{remarkbox}[Remark (Rigid low-ratio capture)]
-With perfectly rigid geometry and perfectly inelastic captures, repeated secondary-stop impacts and primary make--break events can form a shrinking sequence as the remaining removable shift kinetic energy approaches zero. This sequence does not introduce another mechanical regime. A numerical implementation may complete the limiting capture when the additional kinetic energy removed by seating falls below its working energy resolution; that threshold closes the rigid-event limit numerically rather than introducing a new physical parameter.
-\end{remarkbox}
-
-An established low-ratio seat can later leave by either release mechanism derived
-earlier. If the secondary stop reaction crosses zero, the seat releases into free
-engaged shift without an impact. If primary contact separates, loss of that contact is
-itself nonimpulsive because the seated shift velocity is already zero. Entering the
-adopted deadzone closure, however, also imposes the secondary-belt lock. When the
-pre-event secondary contact already satisfies that relation, the complete transition
-remains velocity-continuous. If it was sliding, the lock activation requires the same
-impulse projection even though the primary-contact release itself did not.
+An established low-ratio seat later leaves by either release mechanism derived
+above. Secondary-stop release into free engaged shift is nonimpulsive. Primary
+separation is likewise nonimpulsive in the axial direction because the seated
+state already has \(\dot s=0\). If the outgoing deadzone secondary-belt lock is
+not already satisfied, however, imposing that separate tangential relation
+requires the same impulse projection. Thus the loss of primary normal contact
+does not itself create an axial impact, even though the adopted outgoing
+belt closure can require a tangential capture.
 
 \paragraph{Upper primary stop.}
-Free engaged upshift reaches \(s=s_{\max}\) with \(\dot s^->0\). The engaged kinematic
-map remains active, but the stop adds \(\mathbf c_{\mathrm{stop}}\), so \(\dot s^+=0\).
-A pulley contact already sticking contributes its corresponding no-slip row under
-\AssRef{assump:impact_tangential_contact}; a sliding contact does not.
+Free engaged upshift reaches \(s=s_{\max}\) with \(\dot s^->0\), the example
+used to motivate the event mechanics. Here
+\(\mathbf J^-=\mathbf J^+=\mathbf J_{\mathrm{eng}}\); only the outgoing
+constraints change. The stop contributes \(\mathbf c_{\mathrm{stop}}\), and an
+already-sticking belt contact contributes its no-slip row under
+\AssRef{assump:impact_tangential_contact}.
 
-Although the metal stop acts on the primary, arresting \(\dot s\) also removes every
-engaged motion coupled to the shared shift coordinate: primary translation and flyweight
-pivot motion, secondary translation, secondary helix-relative rotation, and both
-belt-wrap radial velocities. Their incoming momenta therefore participate in the common
-projection. In particular, the secondary movable assembly can transfer part of its
-helix-associated angular momentum into compatible secondary-shaft motion; when a
-sticking belt constraint is active, that redistribution can also couple into belt
-transport and the opposite shaft. None of these velocities is reset independently.
+Arresting \(\dot s\) removes every engaged physical motion coupled to that
+coordinate, not only primary translation. The common projection therefore
+accounts for the simultaneous loss of secondary axial and helix-relative
+motion, flyweight pivot motion, and both wrap-radial velocities while allowing
+compatible shaft and belt velocities to adjust. The resulting
+\(F_{\mathrm{stop,max}}\) then determines whether the upper-stop regime can be
+sustained or must release immediately back into free engaged shift.
 
-The fixed-shift engaged closure is then evaluated at the projected state. The tangential
-contact regime is selected from that state, and \(F_{\mathrm{stop,max}}\) is recovered
-from \Cref{eq:upper_stop_reaction}. A nonnegative reaction admits the sustained
-upper-stop regime; an inadmissible reaction gives an immediate nonimpulsive release back
-into free engaged shift after the impact state has been established.
-
-The exact geometric arrival surfaces are
+The geometric arrival surfaces are
 
 \begin{equation}
     s=0,
@@ -10101,16 +10248,15 @@ The exact geometric arrival surfaces are
     \label{eq:shift_event_surfaces}
 \end{equation}
 
-Their physical meaning depends on the active regime and crossing direction. After every
-impulsive projection, the candidate outgoing continuous closure is evaluated at
-\(\boldsymbol\nu^+\). Stop reactions must remain nonnegative, the low-ratio primary
-contact must satisfy the separation conditions already derived, and each engaged pulley
-contact must satisfy the tangential admissibility conditions of
-\Cref{sec:contact_admissibility_transitions}. The projection determines the mechanically
-compatible instantaneous state; these admissibility conditions determine which
-continuous mechanical regime can actually continue from it.
+Their effect depends on the active topology, crossing direction, and contact
+constraints. After every impulsive state transfer, the candidate outgoing
+continuous closure is evaluated at \(\boldsymbol\nu^+\). Stop reactions must
+remain nonnegative, the low-ratio primary contact must satisfy the separation
+conditions already derived, and engaged pulley contacts must satisfy the
+tangential admissibility conditions of
+\Cref{sec:contact_admissibility_transitions}.
 
-The resulting shift-regime transitions are summarized in
+The complete shift-regime boundary rules are summarized in
 \Cref{tab:shift_regime_transition_summary}.
 
 \begin{table}[H]
@@ -10130,19 +10276,26 @@ The resulting shift-regime transitions are summarized in
         \midrule
         Free deadzone to fully open stop
         & \(s=0\), \(\dot s^-<0\)
-        & Deadzone-to-deadzone inelastic projection with \(\dot s^+=0\); retain the secondary-belt lock.
+        & Deadzone-to-deadzone inelastic projection with \(\dot s^+=0\);
+        retain the secondary-belt lock.
         \\[4pt]
         Fully open stop to free deadzone
         & \(F_{\mathrm{stop},0}=0\), crossing toward inadmissibility
-        & Nonimpulsive release; the free deadzone equations resume from the same position and velocity.
+        & Nonimpulsive release; the free deadzone equations resume from the
+        same position and velocity.
         \\[4pt]
         Deadzone to engaged motion
         & \(s=s_{\mathrm{dz}}\), \(\dot s^->0\)
-        & Project from the deadzone to the engaged kinematic map; carry the existing secondary-belt relation through the capture; do not impose primary stick.
+        & Project from \(\mathbf J_{\mathrm{dz}}\) to
+        \(\mathbf J_{\mathrm{eng}}\); retain the existing secondary-belt
+        relation through capture; do not impose primary stick.
         \\[4pt]
         Engaged backshift to low-ratio boundary
         & \(s=s_{\mathrm{dz}}\), \(\dot s^-<0\)
-        & At finite speed, project from engaged to deadzone so the secondary stop arrests its axial/helix motion while primary opening motion remains available; the zero-motion limit can settle on the engaged seat.
+        & At finite speed, project from \(\mathbf J_{\mathrm{eng}}\) to
+        \(\mathbf J_{\mathrm{dz}}\) so secondary axial and helix-relative
+        motion is removed while primary opening remains available; a zero-speed
+        arrival can settle on the engaged seat.
         \\[4pt]
         Low-ratio seat to free engaged shift
         & \(F_{\mathrm{stop,LR}}=0\), crossing toward inadmissibility
@@ -10150,25 +10303,31 @@ The resulting shift-regime transitions are summarized in
         \\[4pt]
         Low-ratio seat to deadzone
         & \(N_p=0\) and \(\ddot s_{\mathrm{cf}}<0\)
-        & Primary contact releases without its own impulse; activate the deadzone secondary-belt lock, projecting only if that newly imposed lock is not already satisfied.
+        & Primary contact releases without an axial impulse; impose the
+        deadzone secondary-belt lock, projecting only if that relation is not
+        already satisfied.
         \\[4pt]
         Free engaged shift to upper stop
         & \(s=s_{\max}\), \(\dot s^->0\)
-        & Engaged-to-engaged inelastic projection with \(\dot s^+=0\); retain only no-slip constraints already active before impact.
+        & Engaged-to-engaged inelastic projection with \(\dot s^+=0\); retain
+        only no-slip conditions already active before impact.
         \\[4pt]
         Upper stop to free engaged shift
         & \(F_{\mathrm{stop,max}}=0\), crossing toward inadmissibility
-        & Nonimpulsive release; the free engaged equations resume from the same position and velocity.
+        & Nonimpulsive release; the free engaged equations resume from the same
+        position and velocity.
         \\
         \bottomrule
     \end{tabular}
-    \caption{Shift-regime event conditions and state-transfer rules. Tangential contact-regime changes remain governed by \Cref{sec:contact_admissibility_transitions}.}
+    \caption{Shift-regime boundary conditions and state-transfer rules.
+    Tangential contact-regime changes remain governed by
+    \Cref{sec:contact_admissibility_transitions}.}
     \label{tab:shift_regime_transition_summary}
 \end{table}
 
-Once the projected state satisfies the successor's unilateral and tangential
-admissibility conditions, the corresponding continuous equations resume from the
-continuous position \(s^+=s^-\) and the transferred velocity \(\boldsymbol\nu^+\).
+Once the transferred state satisfies the successor's unilateral and tangential
+admissibility conditions, the corresponding continuous equations resume from
+\(s^+=s^-\) and the compatible outgoing velocity \(\boldsymbol\nu^+\).
 
 \chapter{Results and Discussion}
 \label{chap:results}
