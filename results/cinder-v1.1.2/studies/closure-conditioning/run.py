@@ -539,7 +539,7 @@ def plot_map(data, actual, label, domain, path):
     panels = [
         ("R_p", r"Primary stick residual $R_p$", SymLogNorm(linthresh=1.0, vmin=-rp_lim, vmax=rp_lim), data["R_p"]),
         ("R_s", r"Secondary stick residual $R_s$", SymLogNorm(linthresh=1.0, vmin=-rs_lim, vmax=rs_lim), data["R_s"]),
-        ("R_norm", r"Residual norm $\|\mathbf R\|_2$", LogNorm(vmin=rn_lo, vmax=rn_hi), data["R_norm"]),
+        ("R_norm", r"Residual norm $\|\mathbf{R}\|_2$", LogNorm(vmin=rn_lo, vmax=rn_hi), data["R_norm"]),
         ("cond_A_scaled", r"Equilibrated 8×8 $\kappa(A)$", LogNorm(vmin=ca_lo, vmax=ca_hi), data["cond_A_scaled"]),
         ("sigma_min_J", r"$\sigma_{\min}(J_R)$", LogNorm(vmin=sm_lo, vmax=sm_hi), data["sigma_min_J"]),
         ("kappa_J", r"$\kappa(J_R)$", LogNorm(vmin=kj_lo, vmax=kj_hi), data["kappa_J"]),
