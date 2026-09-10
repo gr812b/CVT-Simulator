@@ -1,0 +1,76 @@
+{
+  "name": "Closure conditioning",
+  "description": "Separate conditioning and uniqueness audit for the production 8x8 mechanical closure and the 2x2 stick-root map.",
+  "cinder_release": {
+    "distribution": "cinder-cvt",
+    "version": "1.1.2",
+    "source_tag": "cinder-v1.1.2",
+    "source_commit_sha": "7637a38b4fb9ec21dfb953c1c80a27ec5f389654"
+  },
+  "schema_version": 1,
+  "base_document": "../../defaults/baja_reference_simulation_case.json",
+  "reference_runs": {
+    "launch": {
+      "time_span_s": [
+        0.0,
+        10.0
+      ],
+      "sample_step_s": 0.002,
+      "integrator": {
+        "relative_tolerance": 0.0001,
+        "absolute_tolerance": 1e-07,
+        "max_step": 0.01
+      }
+    },
+    "load_disturbed": {
+      "time_span_s": [
+        0.0,
+        10.0
+      ],
+      "sample_step_s": 0.002,
+      "road_grade_segments": [
+        {
+          "start_distance_m": 0.0,
+          "grade_angle_deg": 0.0
+        },
+        {
+          "start_distance_m": 15.0,
+          "grade_angle_deg": 10.0
+        }
+      ],
+      "integrator": {
+        "relative_tolerance": 0.0001,
+        "absolute_tolerance": 1e-07,
+        "max_step": 0.01
+      }
+    }
+  },
+  "lambda_domains": {
+    "physical": {
+      "samples": 121,
+      "definition": "exact static-capacity intervals from the frozen contact law"
+    },
+    "expanded": {
+      "samples": 141,
+      "definition": "signed half-width max(2.5, 4x largest physical static magnitude)"
+    },
+    "broad": {
+      "samples": 181,
+      "definition": "signed [-10,+10] structural diagnostic domain"
+    }
+  },
+  "multistart": {
+    "samples_per_axis": 7,
+    "root_cluster_tolerance": 1e-06
+  },
+  "interpretation_boundaries": [
+    "Only the physical lambda domain is interpreted as statically admissible for the frozen Baja model.",
+    "Expanded and broad domains are mathematical diagnostics, not claimed operating regions.",
+    "det(J_R) is retained as a geometric diagnostic; singular values and kappa(J_R) are the formal conditioning measures.",
+    "Broad-domain feature associations are not automatically promoted to causal physical explanations."
+  ],
+  "generated_artifacts": {
+    "directory": "artifacts",
+    "committed_results_in_clean_study": false
+  }
+}

@@ -1,0 +1,44 @@
+{
+  "name": "Mechanical invariants",
+  "description": "Release-level audit that the frozen Baja reference trajectory satisfies the local geometry, 8x8 closure, contact, friction, unilateral-force, stop, and active kinematic constraints of CINDER 1.1.2.",
+  "cinder_release": {
+    "distribution": "cinder-cvt",
+    "version": "1.1.2",
+    "source_tag": "cinder-v1.1.2",
+    "source_commit_sha": "7637a38b4fb9ec21dfb953c1c80a27ec5f389654"
+  },
+  "schema_version": 1,
+  "base_document": "../../defaults/baja_reference_simulation_case.json",
+  "overrides": {
+    "time_span_s": [
+      0.0,
+      10.0
+    ],
+    "audit_time_step_s": 0.002,
+    "integrator": {
+      "relative_tolerance": 3e-05,
+      "absolute_tolerance": 3e-08,
+      "max_step": 0.01
+    }
+  },
+  "review_guards": {
+    "belt_length_residual_m": 1e-09,
+    "closure_equation_residual": 1e-07,
+    "stick_velocity_drift_m_s": 0.001,
+    "stick_acceleration_residual_m_s2": 1e-07,
+    "static_margin_negative_tolerance": 1e-09,
+    "positive_slip_pair_power_W": 0.001,
+    "negative_normal_tolerance_N": 1e-06,
+    "negative_stop_reaction_tolerance_N": 1e-06,
+    "fixed_shift_speed_m_s": 1e-08,
+    "fixed_shift_acceleration_m_s2": 1e-07,
+    "deadzone_secondary_lock_speed_m_s": 1e-07,
+    "deadzone_secondary_lock_acceleration_m_s2": 1e-07,
+    "closure_scaled_equation_residual": 1e-10
+  },
+  "interpretation": "Review guards are reporting thresholds, not new physical parameters. Raw extrema and complete sampled histories are always retained.",
+  "generated_artifacts": {
+    "directory": "artifacts",
+    "committed_results_in_clean_study": false
+  }
+}
