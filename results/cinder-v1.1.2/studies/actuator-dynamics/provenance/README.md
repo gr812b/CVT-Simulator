@@ -1,23 +1,15 @@
 # Provenance
 
-The promoted actuator study depends on four result-generation scripts and their
-three shared Baja setup/support files from the frozen `cinder-v1.1.2` tag.
+The CINDER mechanics implementation is the published `cinder-cvt==1.1.2`
+package.
 
-They are not copied from the mutable working tree at run time. `verify_study.py`
-resolves the annotated tag to commit
+The existing baseline ablation and coupling-energy utilities are materialized
+from the frozen `cinder-v1.1.2` tag and checked against the Git blob SHAs in
+`../upstream_manifest.json`.
 
-`7637a38b4fb9ec21dfb953c1c80a27ec5f389654`
+The new equation-derived validity envelopes and controlled-transient selection
+logic are release-scoped study code stored directly in this directory. They do
+not modify CINDER mechanics.
 
-and `study_support.py` obtains each source blob using local `git show`, checking
-the exact Git blob SHA recorded in `../upstream_manifest.json`.
-
-The scripts are then executed with the active
-`results/cinder-v1.1.2/.venv` Python interpreter, whose environment verifier
-requires the published `cinder-cvt==1.1.2` package.
-
-This split is deliberate:
-- published CINDER wheel = frozen mechanics implementation;
-- tagged launch/result utilities = frozen study construction and comparator
-  definitions;
-- this results study = release-scoped orchestration, status boundaries, and
-  artifact organization.
+The broad exploratory stress-search and movable-inertia/torque scaling scripts
+from `launchTools` are deliberately not part of this official study.

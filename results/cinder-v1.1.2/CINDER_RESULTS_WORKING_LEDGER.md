@@ -13,7 +13,7 @@
 | Ballew model-to-model comparison | **DONE / INTERPRETATION RECORDED** | Return during Chapter 4 drafting; do not present as direct experimental validation. |
 | Mechanical-energy consistency | **DONE / PASS** | Keep as release-level verification evidence. |
 | Canonical launch / hill narrative | **DEFERRED** | Revisit later when assembling the mechanism-resolved results narrative. |
-| Actuator dynamics / coupling | **PROMOTED — AWAITING v1.1.2 RUN / INTERPRETATION** | Run canonical baseline ablation + coupling-energy study; retain stress/scaling only as exploratory infrastructure. |
+| Actuator dynamics / coupling | **OFFICIAL STUDY DESIGNED — RUN NEXT** | Run baseline ablation, coupling-energy decomposition, equation-derived validity envelopes, and controlled transient validation. |
 | Mechanical invariants | **PLANNED** | Build release-scoped invariant audit. |
 | Closure conditioning | **PLANNED** | Promote and extend residual/Jacobian/conditioning work across representative states. |
 | Solver convergence | **PLANNED** | Build controlled tolerance/max-step sweeps against a tight reference trajectory. |
@@ -395,8 +395,8 @@ Do not build a mode-count result. Use targeted physical questions such as:
 
 1. Preserve `CINDER_RESULTS_CONTEXT_2026-09-09.md` unchanged as a historical snapshot.
 2. Replace this working ledger with the current version.
-3. **DONE: promotion packaged.** Run and interpret the canonical **baseline actuator ablation + coupling-energy decomposition** in `actuator-dynamics/`.
-4. Keep existing stress/scaling infrastructure available, but redesign the final off-baseline actuator experiments before promoting them as final results.
+3. **DONE: official actuator-dynamics study designed.** Run baseline ablation, coupling-energy decomposition, equation-derived validity envelopes, and controlled transient validation.
+4. **DONE: off-baseline actuator study redesigned.** Arbitrary stress/scaling result wrappers are retired; the official study uses exact dynamic numbers and controlled target-level transients.
 5. Build `mechanical-invariants/`.
 6. Build `closure-conditioning/` with 8×8 closure metrics, 2×2 stick-root singular values/conditioning, multiple lambda-domain scales, representative states, multi-start root tests, and equation-level explanation of conditioning spikes/asymptotes.
 7. Build `solver-convergence/` using controlled `rtol × max_step` sweeps plus an independent `atol` sensitivity study.

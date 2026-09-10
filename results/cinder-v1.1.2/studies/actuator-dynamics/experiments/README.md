@@ -1,15 +1,11 @@
-# Actuator-dynamics experiment entry points
+# Official actuator-dynamics experiments
 
-These wrappers all materialize and verify the exact `cinder-v1.1.2` tagged
-study utilities before execution.
+All four entry points are part of the scientific study:
 
-Canonical:
-- `run_baseline_ablation.py`
-- `run_coupling_energy.py`
+- `run_baseline_ablation.py` — actual Baja four-model ablation;
+- `run_coupling_energy.py` — energy and generalized-inertia explanation;
+- `run_validity_envelopes.py` — exact equation-derived quasi-static validity boundaries;
+- `run_controlled_transients.py` — controlled response validation at achieved dynamic-number levels.
 
-Exploratory:
-- `run_stress_search.py` (quick by default; add `--full` for the original grid)
-- `run_helix_scaling.py` (quick by default; add `--full` for the original grid)
-
-The exploratory scripts are retained to discover useful regimes. Their present
-grid axes/thresholds are intentionally **not** treated as final-result design.
+The previous exploratory `run_stress_search.py` and `run_helix_scaling.py`
+wrappers are intentionally retired and should not exist in this directory.

@@ -1,18 +1,20 @@
 {
-  "schema_version": 1,
+  "schema_version": 2,
   "study": "actuator-dynamics",
-  "title": "Dynamic actuator coupling in a mechanically actuated rubber-belt CVT",
-  "status": "baseline-promoted_off-baseline-exploratory",
+  "title": "Dynamic flyweight and helix coupling: baseline consequence and quasi-static validity",
+  "status": "official_release_scoped_results_study",
   "cinder_version": "1.1.2",
   "release_tag": "cinder-v1.1.2",
   "release_commit_sha": "7637a38b4fb9ec21dfb953c1c80a27ec5f389654",
-  "question": "What changes when the primary fixed-pivot flyweight and secondary helical torque-reaction mechanisms are treated dynamically rather than quasi-statically, and what physical energy/inertia channels produce those differences?",
-  "canonical_experiments": {
+  "scientific_question": "How important are the retained primary flyweight and secondary helical axial-rotational dynamics in the Baja baseline, what energy/inertia channels produce them, and what equation-derived conditions define the boundary of a quasi-static actuator approximation?",
+  "experiments": {
     "baseline_ablation": {
-      "purpose": "Separate same-state constitutive corrections from independently integrated trajectory consequences using full, QS-flyweight, QS-helix, and fully-QS variants.",
+      "role": "official",
+      "question": "At the actual Baja baseline, how much do the retained dynamic actuator terms change same-state force predictions and independently integrated trajectories?",
       "scenario": "launch",
       "duration_s": 10.0,
       "sample_step_s": 0.001,
+      "post_capture_report_start_s": 0.1,
       "solver": {
         "method": "LSODA",
         "relative_tolerance": 0.0001,
@@ -21,7 +23,8 @@
       }
     },
     "coupling_energy": {
-      "purpose": "Expose flyweight and helix kinetic/potential energy, configuration power, and generalized shift-inertia contributions on the unchanged full-dynamic baseline.",
+      "role": "official",
+      "question": "Which kinetic, potential, configuration-power, and reflected-inertia channels explain the baseline actuator-dynamics corrections?",
       "duration_s": 10.0,
       "report_step_s": 0.001,
       "solver": {
@@ -30,25 +33,104 @@
         "absolute_tolerance": 1e-07,
         "max_step_s": 0.01
       }
+    },
+    "validity_envelopes": {
+      "role": "official",
+      "question": "What exact dimensionless correction measures follow from the actuator equations, and where do 1%, 5%, 10%, and 20% departures from quasi-static force prediction occur?",
+      "shift_percent_samples": [
+        10.0,
+        50.0,
+        90.0
+      ],
+      "threshold_fractions": [
+        0.01,
+        0.05,
+        0.1,
+        0.2
+      ],
+      "primary_rpm_range": [
+        1500.0,
+        4500.0
+      ],
+      "primary_rpm_samples": 241,
+      "secondary_belt_torque_range_Nm": [
+        -120.0,
+        160.0
+      ],
+      "secondary_belt_torque_samples": 281
+    },
+    "controlled_transients": {
+      "role": "official",
+      "question": "When controlled shaft-torque ramps drive the exact dynamic correction measures through low-to-material values, how much does the full model response differ from the corresponding quasi-static reduction?",
+      "restart_shift_percents": [
+        20.0,
+        50.0,
+        80.0
+      ],
+      "conditioning_duration_s": 8.0,
+      "onset_s": 0.05,
+      "hold_s": 0.3,
+      "ramp_times_s": [
+        0.005,
+        0.02,
+        0.1,
+        0.25
+      ],
+      "primary_added_torques_Nm": [
+        -20.0,
+        -10.0,
+        -5.0,
+        5.0,
+        10.0,
+        20.0
+      ],
+      "secondary_added_torques_Nm": [
+        -120.0,
+        -80.0,
+        -40.0,
+        -20.0,
+        20.0,
+        40.0,
+        80.0,
+        120.0
+      ],
+      "target_dynamic_numbers": [
+        0.01,
+        0.05,
+        0.1,
+        0.2
+      ],
+      "screen_solver": {
+        "relative_tolerance": 0.0003,
+        "absolute_tolerance": 3e-07,
+        "sample_step_s": 0.002
+      },
+      "validation_solver": {
+        "relative_tolerance": 0.0001,
+        "absolute_tolerance": 1e-07,
+        "sample_step_s": 0.0005
+      },
+      "selection_policy": "For each actuator and target dynamic number, select the unique clean-continuous candidate minimizing logarithmic distance between achieved peak dynamic number and the target. Report the achieved value explicitly; never relabel it as the target. If no clean-continuous candidate exists, report the target as unreached rather than silently selecting a hybrid-reset case."
     }
   },
-  "exploratory_experiments": {
-    "stress_search": {
-      "status": "exploratory_only_not_a_frozen_final_result",
-      "purpose": "Reuse the tagged broad search machinery to discover regions where actuator dynamic corrections become large. The final off-baseline study will be redesigned around explicit equation-derived physical scales.",
-      "quick_mode_is_default_from_results_runner": true
+  "dimensionless_measures": {
+    "primary": {
+      "symbol": "Pi_fw",
+      "definition": "|Delta F_fw,dyn| / |F_fw,QS| = |I_f q_x^2 x_ddot + I_f q_x q_xx x_dot^2| / |0.5 omega_p^2 J_f'(x)|",
+      "meaning": "fractional correction to the quasi-static flyweight axial force"
     },
-    "helix_scaling": {
-      "status": "exploratory_only_not_a_frozen_final_result",
-      "purpose": "Reuse the tagged movable-inertia/secondary-torque sweep as exploratory infrastructure. Its present threshold grid is not intended to define the final scientific claim.",
-      "quick_mode_is_default_from_results_runner": true
+    "secondary": {
+      "symbol": "Pi_h",
+      "definition": "|Delta F_h,dyn| / |F_h,QS| = |I_M (alpha_s + theta_ddot)| / |f tau_s + k_theta(theta_pre-theta)|",
+      "meaning": "fractional correction to the quasi-static helix axial reaction; the common dtheta/dx factor cancels exactly"
     }
   },
   "interpretation_boundaries": [
-    "The four quasi-static variants are model reductions of the same hardware, not alternative tunes.",
-    "Removed mechanism-relative rotational inertia is returned to the classical shaft inertia rather than deleted.",
-    "Baseline ablation and coupling-energy decomposition are canonical study components.",
-    "Stress-search and helix-scaling outputs are exploratory until redesigned around explicit physical questions.",
-    "Subtle actuator conclusions should be revisited after the release-level solver-convergence study is complete."
+    "Baseline ablation and energy decomposition quantify the actual Baja machine.",
+    "Validity-envelope plots are equation-derived parametric results, not simulated operating claims.",
+    "Controlled-transient screening exists only to choose cases by achieved dimensionless correction; final figures use the selected validated cases, not an arbitrary ranking score.",
+    "Only clean-continuous perturbations are used for quasi-static-validity trajectory comparisons; hybrid/reset cases remain separately identifiable in the screening table.",
+    "Primary and secondary actuator dynamics are treated as one scientific family because both are axial-rotational couplings in the same mechanically actuated CVT.",
+    "Subtle trajectory conclusions should be cross-checked against the separate solver-convergence study before manuscript claims are frozen."
   ]
 }
