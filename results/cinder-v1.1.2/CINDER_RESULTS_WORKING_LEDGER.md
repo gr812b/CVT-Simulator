@@ -13,7 +13,7 @@
 | Ballew model-to-model comparison | **DONE / INTERPRETATION RECORDED** | Return during Chapter 4 drafting; do not present as direct experimental validation. |
 | Mechanical-energy consistency | **DONE / PASS** | Keep as release-level verification evidence. |
 | Canonical launch / hill narrative | **DEFERRED** | Revisit later when assembling the mechanism-resolved results narrative. |
-| Actuator dynamics / coupling | **OFFICIAL STUDY DESIGNED — RUN NEXT** | Run baseline ablation, coupling-energy decomposition, equation-derived validity envelopes, and controlled transient validation. |
+| Actuator dynamics / coupling | **OFFICIAL STUDY v3 — RUN / REFINE COMMERCIAL INPUTS** | Baja ablation/coupling are healthy; component Pi metrics, corrected target selection, and provisional Sidewinder/YSR commercial scaling are integrated. |
 | Mechanical invariants | **PLANNED** | Build release-scoped invariant audit. |
 | Closure conditioning | **PLANNED** | Promote and extend residual/Jacobian/conditioning work across representative states. |
 | Solver convergence | **PLANNED** | Build controlled tolerance/max-step sweeps against a tight reference trajectory. |

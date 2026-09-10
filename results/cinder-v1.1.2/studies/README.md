@@ -8,12 +8,7 @@ frozen `cinder-cvt==1.1.2` release environment.
 - `energy-consistency/` — release-level mechanical-energy closure, event
   consistency, quadrature refinement, and solver refinement.
 - `ballew-2015/` — source-constrained model-to-model literature benchmark.
-- `actuator-dynamics/` — official four-part study of the primary flyweight and
-  secondary helix dynamic couplings:
-  1. Baja baseline ablation;
-  2. coupling-energy/generalized-inertia decomposition;
-  3. equation-derived quasi-static validity envelopes;
-  4. controlled transient validation at achieved dynamic-correction levels.
+- `actuator-dynamics/` — Baja ablation, component dynamic numbers, coupling-energy decomposition, equation-derived validity envelopes, corrected controlled-transient validation, and a source-registered provisional Sidewinder/YSR commercial-secondary scaling case.
 - `launch-hill-climb/` — retained for later mechanism-resolved narrative work.
 
 ## Result-study rules

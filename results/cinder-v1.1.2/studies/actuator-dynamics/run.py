@@ -15,28 +15,50 @@ def run(script):
 
 def main():
     parser=argparse.ArgumentParser(description=__doc__)
+    stage_names=("baseline","components","coupling","envelopes","commercial","transients")
     parser.add_argument(
         "--through",
-        choices=("baseline","coupling","envelopes","transients","all"),
+        choices=(*stage_names,"all"),
         default="all",
         help="Stop after a named stage. `all` runs the complete official study.",
+    )
+    parser.add_argument(
+        "--start-at",
+        choices=stage_names,
+        default="baseline",
+        help=(
+            "Resume at a later stage without deleting existing earlier artifacts. "
+            "Use this only when those artifacts were produced by the same v1.1.2 study."
+        ),
     )
     args=parser.parse_args()
 
     verify_environment()
     materialize_tagged_upstream(clean=True)
-    reset_artifacts()
+    if args.start_at == "baseline":
+        reset_artifacts()
+    else:
+        ARTIFACTS.mkdir(parents=True,exist_ok=True)
 
     stages=[
-        ("baseline","run_baseline_ablation.py"),
-        ("coupling","run_coupling_energy.py"),
-        ("envelopes","run_validity_envelopes.py"),
-        ("transients","run_controlled_transients.py"),
+        ("baseline", lambda: run("run_baseline_ablation.py")),
+        ("components", lambda: run("run_dimensionless_components.py")),
+        ("coupling", lambda: run("run_coupling_energy.py")),
+        ("envelopes", lambda: run("run_validity_envelopes.py")),
+        ("commercial", lambda: subprocess.run([sys.executable, str(STUDY_ROOT/"commercial-case"/"run.py")], check=True)),
+        ("transients", lambda: run("run_controlled_transients.py")),
     ]
-    order={"baseline":0,"coupling":1,"envelopes":2,"transients":3,"all":3}
-    for i,(_,script) in enumerate(stages):
-        run(script)
-        if i>=order[args.through]:
+    order={name:i for i,(name,_) in enumerate(stages)}
+    order["all"]=len(stages)-1
+    start_index=order[args.start_at]
+    end_index=order[args.through]
+    if start_index>end_index:
+        parser.error("--start-at must not come after --through")
+    for i,(_,action) in enumerate(stages):
+        if i<start_index:
+            continue
+        action()
+        if i>=end_index:
             break
 
     # Summary requires baseline+coupling; build whenever both exist.

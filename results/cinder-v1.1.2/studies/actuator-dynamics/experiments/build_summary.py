@@ -42,6 +42,13 @@ def main():
     coupling=read_rows(ARTIFACTS/"coupling-energy"/"coupling_energy_flow.csv")
     controlled_path=ARTIFACTS/"controlled-transients"/"summary.json"
     controlled=json.loads(controlled_path.read_text()) if controlled_path.is_file() else None
+    components_dir=ARTIFACTS/"dimensionless-components"
+    components_all_path=components_dir/"summary_all.json"
+    components_post_path=components_dir/"summary_post_capture.json"
+    components_all=json.loads(components_all_path.read_text()) if components_all_path.is_file() else None
+    components_post=json.loads(components_post_path.read_text()) if components_post_path.is_file() else None
+    commercial_path=STUDY_ROOT/"commercial-case"/"artifacts"/"summary.json"
+    commercial=json.loads(commercial_path.read_text()) if commercial_path.is_file() else None
 
     t0=float(spec["experiments"]["baseline_ablation"]["post_capture_report_start_s"])
     post=lambda r: f(r.get("time_s")) is not None and float(r["time_s"])>=t0
@@ -91,6 +98,8 @@ def main():
         "cinder_version": spec["cinder_version"],
         "headline": headline,
         "baseline_variants": variants,
+        "component_dynamic_numbers": {"all": components_all, "post_capture": components_post},
+        "commercial_secondary": commercial,
         "controlled_transients": controlled,
         "interpretation_notes": [
             (
@@ -98,9 +107,9 @@ def main():
                 f"Post-capture statistics are reported separately for t >= {t0:.2f} s."
             ),
             (
-                "Pi_fw and Pi_h normalize dynamic correction by the corresponding quasi-static "
-                "mechanism force, avoiding misleading amplification when unrelated clamp-force "
-                "components nearly cancel."
+                "The component Pi metrics normalize each retained actuator correction by the corresponding "
+                "quasi-static mechanism force. Secondary shaft, axial-reflection and curvature components "
+                "are reported separately so cancellation or reinforcement is visible."
             ),
             (
                 "The large direct helix generalized shift-mass contribution is not by itself a "
@@ -129,11 +138,23 @@ def main():
         "## Study logic",
         "",
         "1. baseline ablation quantifies actual Baja consequence;",
-        "2. coupling-energy decomposition explains the retained mechanisms;",
-        "3. equation-derived validity envelopes define quasi-static departure directly;",
-        "4. controlled torque-ramp cases test how achieved dynamic number maps to trajectory consequence.",
+        "2. component Pi metrics separate the individual dynamic terms;",
+        "3. coupling-energy decomposition explains the retained mechanisms;",
+        "4. equation-derived validity envelopes define quasi-static departure directly;",
+        "5. the source-registered commercial secondary anchors machine generality;",
+        "6. controlled torque-ramp cases map achieved dynamic number to trajectory consequence.",
         "",
     ]
+    if commercial is not None:
+        nom=[r for r in commercial.get("angle_sensitivity",[]) if r.get("estimate_level")=="high" and float(r.get("helix_angle_deg",0))==28.0]
+        lines += [
+            "## Provisional commercial-secondary scaling",
+            "",
+            "- hardware anchor: Yamaha Sidewinder YSRC + Dalton YSR31;",
+        ]
+        if nom:
+            lines.append(f"- high-estimate local YSR36/28 28-degree segment reflected inertia: `{nom[0]['relative_to_baja_reflected_axial_inertia']:.3g}x Baja`.")
+        lines.append("")
     if controlled is not None:
         lines += [
             "## Controlled-transient status",

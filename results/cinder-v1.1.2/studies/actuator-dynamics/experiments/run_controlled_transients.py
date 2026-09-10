@@ -347,7 +347,7 @@ def screen_candidate(ab, route, full_variant, restart, *, assembly, engine, road
     }
 
 
-def select_targets(screen_rows, actuator: str, targets):
+def select_targets(screen_rows, actuator: str, targets, *, maximum_relative_error: float):
     pool = [
         r for r in screen_rows
         if r.get("actuator") == actuator
@@ -374,13 +374,24 @@ def select_targets(screen_rows, actuator: str, targets):
             })
             continue
         _, row = min(candidates, key=lambda item: item[0])
+        achieved = float(row["peak_dynamic_number"])
+        relative_error = abs(achieved-float(target))/float(target)
+        if relative_error > maximum_relative_error:
+            selected.append({
+                "actuator": actuator,
+                "target_dynamic_number": float(target),
+                "selection_status": "unreached_outside_target_tolerance",
+                "nearest_case_id": row["case_id"],
+                "nearest_achieved_dynamic_number": achieved,
+                "nearest_relative_target_error": relative_error,
+            })
+            continue
         used.add(row["case_id"])
         selected.append({
             **row,
             "target_dynamic_number": float(target),
-            "selection_log10_error": abs(
-                math.log10(float(row["peak_dynamic_number"]) / float(target))
-            ),
+            "selection_log10_error": abs(math.log10(achieved/float(target))),
+            "selection_relative_target_error": relative_error,
             "selection_status": "selected",
         })
     return selected
@@ -562,7 +573,7 @@ def plot_validation(rows, out):
         ax.scatter(x, y, s=70)
         for r, xx, yy in zip(group, x, y):
             ax.annotate(
-                f"{100*float(r['target_dynamic_number']):g}% target",
+                f"target {100*float(r['target_dynamic_number']):g}%, achieved {100*xx:.3g}%",
                 (xx, yy),
                 xytext=(5, 4),
                 textcoords="offset points",
@@ -582,7 +593,7 @@ def plot_validation(rows, out):
         ax.scatter(x, y, s=70)
         for r, xx, yy in zip(group, x, y):
             ax.annotate(
-                f"{100*float(r['target_dynamic_number']):g}% target",
+                f"target {100*float(r['target_dynamic_number']):g}%, achieved {100*xx:.3g}%",
                 (xx, yy),
                 xytext=(5, 4),
                 textcoords="offset points",
@@ -690,10 +701,11 @@ def main() -> int:
     plot_screen(screen_rows, "primary", out)
     plot_screen(screen_rows, "secondary", out)
 
-    targets = [float(x) for x in cfg["target_dynamic_numbers"]]
+    targets_by_actuator = cfg["target_dynamic_numbers_by_actuator"]
+    max_rel = float(cfg["maximum_relative_target_error"])
     selections = (
-        select_targets(screen_rows, "primary", targets)
-        + select_targets(screen_rows, "secondary", targets)
+        select_targets(screen_rows, "primary", [float(x) for x in targets_by_actuator["primary"]], maximum_relative_error=max_rel)
+        + select_targets(screen_rows, "secondary", [float(x) for x in targets_by_actuator["secondary"]], maximum_relative_error=max_rel)
     )
     write_rows(out / "selected_cases.csv", selections)
 

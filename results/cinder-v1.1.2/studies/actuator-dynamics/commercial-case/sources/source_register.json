@@ -1,0 +1,97 @@
+{
+  "case": "Yamaha Sidewinder YSRC roller secondary with Dalton YSR31 straight helix",
+  "accessed": "2026-09-10",
+  "selection_intent": "High-performance real OTS torque-reactive secondary selected deliberately to test sensitivity of retained helix-inertia terms.",
+  "sources": [
+    {
+      "id": "dalton_ysr",
+      "authority": "component manufacturer",
+      "url": "https://daltonindustries.com/product_detail.php?product_id=277",
+      "supports": [
+        "2017+ Sidewinder roller secondary",
+        "YSR31 straight option",
+        "YSR36/28 progressive option with 28 degree terminal segment",
+        "angles machined using Yamaha convention",
+        "no individual custom cuts beyond listed options"
+      ],
+      "confidence": "high"
+    },
+    {
+      "id": "yamaha_oem_secondary_parts",
+      "authority": "manufacturer parts catalogue",
+      "url": "https://yamaha-motor.com/parts/diagram/14058888/322205415",
+      "supports": [
+        "secondary sliding sheave is a distinct component",
+        "secondary sliding sheave part number 8KC-17670-00-00"
+      ],
+      "confidence": "high"
+    },
+    {
+      "id": "stm_sidewinder_helix",
+      "authority": "component manufacturer",
+      "url": "https://stmpowersports.com/yamaha-sidewinder-helix-for-stock-secondary/",
+      "supports": [
+        "stock-Sidewinder replacement helix",
+        "stocked options begin at 33/38 or 34 deg",
+        "custom angle offered separately",
+        "billet 6061 aluminum"
+      ],
+      "confidence": "high"
+    },
+    {
+      "id": "yamaha_sidewinder",
+      "authority": "manufacturer",
+      "url": "https://cdn2.yamaha-motor.eu/prod/product-assets/2022/SIDEWINDER-X-TX/Factsheets/2022-SIDEWINDER-X-TX_uk-UA.pdf",
+      "supports": [
+        "180 hp-class Sidewinder context",
+        "YSRC clutch/high-torque application",
+        "fast backshift context"
+      ],
+      "confidence": "high"
+    },
+    {
+      "id": "precision_efi",
+      "authority": "aftermarket tuner",
+      "url": "https://precisionefi.com/products/stage-1r-sidewinder-1",
+      "supports": [
+        "250 hp Sidewinder package",
+        "9000 rpm target speed"
+      ],
+      "confidence": "high_for_advertised_spec"
+    },
+    {
+      "id": "tapp_secondary",
+      "authority": "component manufacturer",
+      "url": "https://tappclutch.com/products/tapp-yamaha-secondary-11",
+      "supports": [
+        "11 inch Sidewinder-compatible secondary",
+        "spring options advertised for 135-350 hp and 350-650 hp"
+      ],
+      "confidence": "high_for_product_description"
+    },
+    {
+      "id": "ezgo_28",
+      "authority": "OEM parts retailer",
+      "url": "https://ezgolfcart.com/i-5770392-e-z-go-driven-clutch-4-cycle-28-deg.html",
+      "supports": [
+        "genuine E-Z-GO complete 28 degree driven clutch exists",
+        "listed shipping weight 5.0 lb"
+      ],
+      "confidence": "medium_high",
+      "use": "context: 28 degree torque-reactive driven clutches are not unique to Sidewinder, but this low-power application is not the main commercial anchor"
+    },
+    {
+      "id": "hitorque_sidewinder_roller",
+      "authority": "aftermarket roller manufacturer",
+      "url": "https://hitorquerollers.ca/product/2017-current-sidewinder/",
+      "supports": [
+        "approximate OEM Sidewinder secondary roller size 0.870 in OD x 0.530 in wide",
+        "replacement for OEM roller 8KC-18178-01-00"
+      ],
+      "confidence": "medium_high",
+      "use": "future photographic/CAD scale reference for effective helix radius"
+    }
+  ],
+  "search_conclusion": "For the stock Sidewinder roller secondary, the lowest pre-programmed Dalton angle found is the 28 degree segment of YSR36/28; the lowest straight listed option is YSR31. STM offers custom cuts, but those are not a stocked OTS angle and are not used as the paper anchor.",
+  "copyright_note": "No third-party page/PDF is redistributed; only URLs and narrowly supported facts are stored."
+}

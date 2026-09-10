@@ -6,8 +6,9 @@ normalized by the corresponding quasi-static mechanism force:
     Pi_fw = |Delta F_fw,dyn| / |F_fw,QS|
     Pi_h  = |Delta F_h,dyn|  / |F_h,QS|
 
-For the helix, dtheta/dx cancels exactly, leaving an especially transparent
-ratio of inertial torque to quasi-static reacted torque.
+For the helix shaft-acceleration component, the common dtheta/dx force
+multiplier cancels after normalization. The axial-acceleration and curvature
+components retain the local helix geometry explicitly.
 """
 
 from __future__ import annotations
@@ -37,6 +38,21 @@ def _find_one(actuator, cls):
         raise RuntimeError(f"Expected exactly one {cls.__name__}; found {len(matches)}.")
     return matches[0]
 
+
+
+
+def _local_helix_derivatives(coupling, kinematics):
+    """Return dtheta/dx and d2theta/dx2 for the pulley-local axial coordinate.
+
+    CINDER v1.1.2 exposes HelixShiftKinematics derivatives with respect to the
+    profile opening coordinate q and the global shift coordinate s. The local
+    mounting is affine, q = opening_offset + gain*x, so the local derivatives
+    follow exactly from the chain rule without dividing by dq/ds or dx/ds.
+    """
+    gain = float(coupling.opening_per_axial_position)
+    H = float(kinematics.dtheta_dopening) * gain
+    Hp = float(kinematics.d2theta_dopening2) * gain**2
+    return H, Hp
 
 def _build_baseline():
     _, ab, route = load_tagged_modules()
@@ -194,6 +210,7 @@ def main() -> int:
             helix.spec.initial_twist - hk.theta
         )
         f = helix.spec.movable_member_torque_fraction
+        H_local, Hp_local = _local_helix_derivatives(coupling, hk)
 
         for tau in tau_grid:
             t_qs = f * float(tau) + spring_torque
@@ -204,6 +221,8 @@ def main() -> int:
                 "helix_theta_rad": float(hk.theta),
                 "helix_dtheta_ds_rad_per_m": float(hk.dtheta_ds),
                 "helix_d2theta_ds2_rad_per_m2": float(hk.d2theta_ds2),
+                "helix_dtheta_daxial_rad_per_m": float(H_local),
+                "helix_d2theta_daxial2_rad_per_m2": float(Hp_local),
                 "torsional_spring_reaction_torque_Nm": float(spring_torque),
                 "movable_member_torque_fraction": float(f),
                 "quasi_static_reacted_torque_Nm": float(t_qs),
@@ -211,8 +230,16 @@ def main() -> int:
             }
             for eps in thresholds:
                 key = f"{100*eps:g}pct"
-                row[f"movable_angular_acceleration_for_{key}_correction_rad_s2"] = (
+                row[f"shaft_acceleration_for_{key}_correction_rad_s2"] = (
                     eps * abs(t_qs) / I_M if I_M > 0.0 else float("inf")
+                )
+                H = abs(H_local)
+                row[f"axial_acceleration_for_{key}_correction_m_s2"] = (
+                    eps * abs(t_qs) / (I_M * H) if I_M > 0.0 and H > 0.0 else float("inf")
+                )
+                Hp = abs(Hp_local)
+                row[f"axial_speed_for_{key}_curvature_correction_m_s"] = (
+                    math.sqrt(eps * abs(t_qs) / (I_M * Hp)) if I_M > 0.0 and Hp > 0.0 else float("inf")
                 )
             secondary_rows.append(row)
 
@@ -220,7 +247,7 @@ def main() -> int:
 
     for eps in thresholds:
         fig, ax = plt.subplots(figsize=(8.8, 5.6))
-        key = f"movable_angular_acceleration_for_{100*eps:g}pct_correction_rad_s2"
+        key = f"shaft_acceleration_for_{100*eps:g}pct_correction_rad_s2"
         for pct in cfg["shift_percent_samples"]:
             rows = [r for r in secondary_rows if r["shift_percent"] == float(pct)]
             ax.plot(
@@ -230,10 +257,10 @@ def main() -> int:
             )
         ax.set_xlabel(r"Secondary belt torque $\tau_s$ [N m]")
         ax.set_ylabel(
-            r"Required $|\alpha_s+\ddot{\theta}|$ [rad/s$^2$]"
+            r"Required $|\dot{\omega}_s|$ [rad/s$^2$]"
         )
         ax.set_title(
-            f"Secondary helix: movable-member acceleration producing {100*eps:g}% correction"
+            f"Secondary helix shaft term: {100*eps:g}% dynamic correction"
         )
         ax.grid(True, alpha=0.25)
         ax.legend()
@@ -241,17 +268,32 @@ def main() -> int:
         fig.savefig(out / f"secondary_acceleration_{100*eps:g}pct_threshold.png", dpi=180)
         plt.close(fig)
 
+    for eps in thresholds:
+        fig, ax = plt.subplots(figsize=(8.8, 5.6))
+        key = f"axial_acceleration_for_{100*eps:g}pct_correction_m_s2"
+        for pct in cfg["shift_percent_samples"]:
+            rows = [r for r in secondary_rows if r["shift_percent"] == float(pct)]
+            ax.plot([r["secondary_belt_torque_Nm"] for r in rows], [r[key] for r in rows], label=f"{pct:g}% engaged shift")
+        ax.set_xlabel(r"Secondary belt torque $\tau_s$ [N m]")
+        ax.set_ylabel(r"Required $|\ddot{x}_s|$ [m/s$^2$]")
+        ax.set_title(f"Secondary helix axial-reflection term: {100*eps:g}% dynamic correction")
+        ax.grid(True, alpha=0.25); ax.legend(); fig.tight_layout()
+        fig.savefig(out / f"secondary_axial_acceleration_{100*eps:g}pct_threshold.png", dpi=180)
+        plt.close(fig)
+
     metadata = {
-        "primary_measure": spec["dimensionless_measures"]["primary"],
-        "secondary_measure": spec["dimensionless_measures"]["secondary"],
+        "primary_measures": spec["dimensionless_measures"]["primary_components"],
+        "secondary_measures": spec["dimensionless_measures"]["secondary_components"],
+        "normalization_note": spec["dimensionless_measures"]["normalization_note"],
         "interpretation": {
             "primary": (
                 "Acceleration and curvature thresholds are shown separately because their "
                 "signed contributions can reinforce or cancel on a real trajectory."
             ),
             "secondary": (
-                "The helix motion-ratio multiplier cancels from the fractional force correction. "
-                "Geometry still enters through theta, theta_ddot, and the torsional spring state."
+                "The common helix motion-ratio factor cancels only for the normalized "
+                "shaft-acceleration component. The axial-acceleration and curvature "
+                "components retain dtheta/dx and d2theta/dx2 explicitly."
             ),
         },
         "resolved_baseline_constants": {
