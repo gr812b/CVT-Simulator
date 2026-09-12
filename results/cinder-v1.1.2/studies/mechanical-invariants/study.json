@@ -7,7 +7,7 @@
     "source_tag": "cinder-v1.1.2",
     "source_commit_sha": "7637a38b4fb9ec21dfb953c1c80a27ec5f389654"
   },
-  "schema_version": 3,
+  "schema_version": 4,
   "base_document": "../../defaults/baja_reference_simulation_case.json",
   "nominal_run": {
     "time_span_s": [
@@ -24,106 +24,6 @@
       "event_time_tolerance": 1e-10
     }
   },
-  "bench_search": {
-    "shift_fractions": [
-      0.5,
-      0.25,
-      0.75
-    ],
-    "belt_speeds_m_s": [
-      8.0,
-      12.0,
-      5.0,
-      16.0
-    ],
-    "slip_speeds_m_s": [
-      1.0,
-      3.0,
-      0.3
-    ],
-    "primary_torques_Nm": [
-      0.0,
-      5.0,
-      -5.0,
-      10.0,
-      -10.0,
-      20.0,
-      -20.0,
-      35.0,
-      -35.0
-    ],
-    "secondary_torques_Nm": [
-      0.0,
-      -5.0,
-      5.0,
-      -10.0,
-      10.0,
-      -20.0,
-      20.0,
-      -35.0,
-      35.0
-    ],
-    "primary_inertia_kg_m2": 0.03,
-    "secondary_inertia_kg_m2": 0.05,
-    "contact_case_duration_s": 0.03,
-    "audit_time_step_s": 0.0005,
-    "integrator": {
-      "relative_tolerance": 3e-05,
-      "absolute_tolerance": 3e-08,
-      "method": "LSODA",
-      "max_step": 0.001,
-      "maximum_transitions": 100,
-      "event_time_tolerance": 1e-11
-    },
-    "minimum_branch_time_s": 1e-08
-  },
-  "static_rest": {
-    "primary_inertia_kg_m2": 0.03,
-    "secondary_inertia_kg_m2": 0.05,
-    "duration_s": 0.05,
-    "audit_time_step_s": 0.001,
-    "integrator": {
-      "relative_tolerance": 3e-05,
-      "absolute_tolerance": 3e-08,
-      "method": "LSODA",
-      "max_step": 0.002,
-      "maximum_transitions": 50,
-      "event_time_tolerance": 1e-11
-    }
-  },
-  "boundary_cases": {
-    "distance_from_boundary_m": 5e-05,
-    "shift_speeds_m_s": [
-      0.01,
-      0.02,
-      0.05
-    ],
-    "duration_s": 0.03,
-    "audit_time_step_s": 0.00025,
-    "deadzone_primary_speed_rad_s": 350.0,
-    "deadzone_secondary_speed_rad_s": 35.0,
-    "engaged_belt_speed_m_s": 10.0,
-    "integrator": {
-      "relative_tolerance": 3e-05,
-      "absolute_tolerance": 3e-08,
-      "method": "LSODA",
-      "max_step": 0.0005,
-      "maximum_transitions": 100,
-      "event_time_tolerance": 1e-11
-    },
-    "lower_primary_speeds_rad_s": [
-      0.0,
-      50.0,
-      100.0,
-      200.0,
-      350.0
-    ],
-    "lower_secondary_speeds_rad_s": [
-      0.0,
-      10.0,
-      35.0
-    ]
-  },
   "geometry_sweep": {
     "points": 401,
     "finite_difference_step_m": 1e-06
@@ -131,11 +31,6 @@
   "negative_controls": {
     "shift_violation_m": 0.0001,
     "deadzone_lock_violation_m_s": 0.1
-  },
-  "classifier_controls": {
-    "primary_speed_rad_s": 350.0,
-    "secondary_speed_rad_s": 35.0,
-    "shift_speed_m_s": 0.01
   },
   "review_guards": {
     "belt_length_residual_m": 1e-09,
@@ -163,64 +58,6 @@
     "directory": "artifacts",
     "committed_results_in_clean_study": false
   },
-  "free_shift_cases": {
-    "shift_fractions": [
-      0.5,
-      0.3,
-      0.7
-    ],
-    "belt_speeds_m_s": [
-      10.0,
-      14.0,
-      7.0
-    ],
-    "shift_speeds_m_s": [
-      0.01,
-      0.02,
-      0.04
-    ],
-    "duration_s": 0.02,
-    "audit_time_step_s": 0.0005,
-    "integrator": {
-      "relative_tolerance": 3e-05,
-      "absolute_tolerance": 3e-08,
-      "method": "LSODA",
-      "max_step": 0.001,
-      "maximum_transitions": 100,
-      "event_time_tolerance": 1e-11
-    }
-  },
-  "extended_contact_search": {
-    "shift_fractions": [
-      0.1,
-      0.9
-    ],
-    "belt_speeds_m_s": [
-      3.0,
-      20.0
-    ],
-    "slip_speeds_m_s": [
-      0.1,
-      5.0
-    ],
-    "primary_torques_Nm": [
-      0.0,
-      20.0,
-      -20.0,
-      35.0,
-      -35.0,
-      60.0,
-      -60.0
-    ],
-    "secondary_torques_Nm": [
-      0.0,
-      -20.0,
-      20.0,
-      -35.0,
-      35.0,
-      -60.0,
-      60.0
-    ]
-  },
-  "coverage_speed_epsilon_m_s": 1e-06
+  "coverage_speed_epsilon_m_s": 1e-06,
+  "shared_case_library": "../../defaults/verification_operating_cases.json"
 }

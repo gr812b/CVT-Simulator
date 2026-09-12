@@ -1,0 +1,452 @@
+{
+  "schema_version": 2,
+  "name": "CINDER v1.1.2 shared verification operating-case library",
+  "source": {
+    "description": "Canonical reusable operating-case/search definitions extracted from the current mechanical-invariants operating-domain audit on PR #487. Mechanical invariants and closure conditioning consume this file so shared state classes cannot silently drift.",
+    "pull_request": 487,
+    "pull_request_head_sha": "821ac10aff001a3e59ddb5e6f48b23740f4fa00c",
+    "cinder_source_sha": "7637a38b4fb9ec21dfb953c1c80a27ec5f389654"
+  },
+  "base_document": "baja_reference_simulation_case.json",
+  "fixed_boundary_bench": {
+    "primary_inertia_kg_m2": 0.03,
+    "secondary_inertia_kg_m2": 0.05,
+    "primary_torques_Nm": [
+      0.0,
+      5.0,
+      -5.0,
+      10.0,
+      -10.0,
+      20.0,
+      -20.0,
+      35.0,
+      -35.0
+    ],
+    "secondary_torques_Nm": [
+      0.0,
+      -5.0,
+      5.0,
+      -10.0,
+      10.0,
+      -20.0,
+      20.0,
+      -35.0,
+      35.0
+    ],
+    "belt_speeds_m_s": [
+      8.0,
+      12.0,
+      5.0,
+      16.0
+    ],
+    "extended_belt_speeds_m_s": [
+      3.0,
+      20.0
+    ],
+    "integrator": {
+      "relative_tolerance": 3e-05,
+      "absolute_tolerance": 3e-08,
+      "method": "LSODA",
+      "max_step": 0.001,
+      "maximum_transitions": 100,
+      "event_time_tolerance": 1e-11
+    }
+  },
+  "contact_branch_requests": [
+    {
+      "id": "stick_stick_forward",
+      "mode": "stick_stick",
+      "primary_vrel_sign": 0,
+      "secondary_vrel_sign": 0,
+      "rotation_sign": 1
+    },
+    {
+      "id": "stick_stick_reverse",
+      "mode": "stick_stick",
+      "primary_vrel_sign": 0,
+      "secondary_vrel_sign": 0,
+      "rotation_sign": -1
+    },
+    {
+      "id": "primary_slip_plus",
+      "mode": "primary_slip_secondary_stick",
+      "primary_vrel_sign": 1,
+      "secondary_vrel_sign": 0,
+      "rotation_sign": 1
+    },
+    {
+      "id": "primary_slip_minus",
+      "mode": "primary_slip_secondary_stick",
+      "primary_vrel_sign": -1,
+      "secondary_vrel_sign": 0,
+      "rotation_sign": 1
+    },
+    {
+      "id": "secondary_slip_plus",
+      "mode": "primary_stick_secondary_slip",
+      "primary_vrel_sign": 0,
+      "secondary_vrel_sign": 1,
+      "rotation_sign": 1
+    },
+    {
+      "id": "secondary_slip_minus",
+      "mode": "primary_stick_secondary_slip",
+      "primary_vrel_sign": 0,
+      "secondary_vrel_sign": -1,
+      "rotation_sign": 1
+    },
+    {
+      "id": "both_slip_pp",
+      "mode": "both_slip",
+      "primary_vrel_sign": 1,
+      "secondary_vrel_sign": 1,
+      "rotation_sign": 1
+    },
+    {
+      "id": "both_slip_pm",
+      "mode": "both_slip",
+      "primary_vrel_sign": 1,
+      "secondary_vrel_sign": -1,
+      "rotation_sign": 1
+    },
+    {
+      "id": "both_slip_mp",
+      "mode": "both_slip",
+      "primary_vrel_sign": -1,
+      "secondary_vrel_sign": 1,
+      "rotation_sign": 1
+    },
+    {
+      "id": "both_slip_mm",
+      "mode": "both_slip",
+      "primary_vrel_sign": -1,
+      "secondary_vrel_sign": -1,
+      "rotation_sign": 1
+    }
+  ],
+  "stick_state_search": {
+    "shift_fractions": [
+      0.5,
+      0.25,
+      0.75,
+      0.1,
+      0.9
+    ],
+    "belt_speeds_m_s": [
+      8.0,
+      12.0,
+      5.0,
+      16.0,
+      3.0,
+      20.0
+    ],
+    "shift_speeds_m_s": [
+      0.0,
+      0.01,
+      0.02,
+      0.04,
+      -0.01,
+      -0.02,
+      -0.04
+    ],
+    "minimum_static_margin": 0.0,
+    "minimum_normal_N": 0.0,
+    "minimum_tension_N": 0.0,
+    "minimum_local_normal_N_per_rad": 0.0
+  },
+  "free_shift_cases": [
+    {
+      "id": "free_shift_closing_30",
+      "shift_fraction": 0.3,
+      "shift_speed_m_s": 0.02,
+      "rotation_sign": 1,
+      "purpose": "engaged free-shift closing/upshift"
+    },
+    {
+      "id": "free_shift_closing_50",
+      "shift_fraction": 0.5,
+      "shift_speed_m_s": 0.02,
+      "rotation_sign": 1,
+      "purpose": "mid-ratio engaged closing/upshift"
+    },
+    {
+      "id": "free_shift_closing_70",
+      "shift_fraction": 0.7,
+      "shift_speed_m_s": 0.02,
+      "rotation_sign": 1,
+      "purpose": "late-ratio engaged closing/upshift"
+    },
+    {
+      "id": "free_shift_opening_30",
+      "shift_fraction": 0.3,
+      "shift_speed_m_s": -0.02,
+      "rotation_sign": 1,
+      "purpose": "engaged opening/backshift"
+    },
+    {
+      "id": "free_shift_opening_50",
+      "shift_fraction": 0.5,
+      "shift_speed_m_s": -0.02,
+      "rotation_sign": 1,
+      "purpose": "mid-ratio engaged opening/backshift"
+    },
+    {
+      "id": "free_shift_opening_70",
+      "shift_fraction": 0.7,
+      "shift_speed_m_s": -0.02,
+      "rotation_sign": 1,
+      "purpose": "late-ratio engaged opening/backshift"
+    }
+  ],
+  "stick_cases": [
+    {
+      "id": "stick_mid_forward",
+      "shift_fraction": 0.5,
+      "shift_speed_m_s": 0.0,
+      "rotation_sign": 1,
+      "purpose": "interior forward stick-stick"
+    },
+    {
+      "id": "stick_mid_reverse",
+      "shift_fraction": 0.5,
+      "shift_speed_m_s": 0.0,
+      "rotation_sign": -1,
+      "purpose": "interior reverse-rotation stick-stick"
+    },
+    {
+      "id": "stick_low_forward",
+      "shift_fraction": 0.2,
+      "shift_speed_m_s": 0.0,
+      "rotation_sign": 1,
+      "purpose": "low-ratio interior stick-stick"
+    },
+    {
+      "id": "stick_high_forward",
+      "shift_fraction": 0.8,
+      "shift_speed_m_s": 0.0,
+      "rotation_sign": 1,
+      "purpose": "high-ratio interior stick-stick"
+    },
+    {
+      "id": "stick_mid_stressed",
+      "shift_fraction": 0.5,
+      "shift_speed_m_s": 0.0,
+      "rotation_sign": 1,
+      "prefer_high_boundary_load": true,
+      "purpose": "stress-state search using largest admissible fixed shaft torques"
+    }
+  ],
+  "structural_boundary_cases": {
+    "distance_from_boundary_m": 5e-05,
+    "shift_speeds_m_s": [
+      0.01,
+      0.02,
+      0.05
+    ],
+    "duration_s": 0.03,
+    "audit_time_step_s": 0.00025,
+    "deadzone_primary_speed_rad_s": 350.0,
+    "deadzone_secondary_speed_rad_s": 35.0,
+    "engaged_belt_speed_m_s": 10.0,
+    "integrator": {
+      "relative_tolerance": 3e-05,
+      "absolute_tolerance": 3e-08,
+      "method": "LSODA",
+      "max_step": 0.0005,
+      "maximum_transitions": 100,
+      "event_time_tolerance": 1e-11
+    },
+    "lower_primary_speeds_rad_s": [
+      0.0,
+      50.0,
+      100.0,
+      200.0,
+      350.0
+    ],
+    "lower_secondary_speeds_rad_s": [
+      0.0,
+      10.0,
+      35.0
+    ]
+  },
+  "notes": [
+    "This file owns reusable operating-case/search recipes. Study-specific numerical guards and pass/fail metrics remain in each study.json.",
+    "The library is a reusable case/search definition, not a claim that every listed recipe is admissible for every future hardware tune.",
+    "Studies must use CINDER's production classifier and physical admissibility checks before accepting a searched state.",
+    "Closure-conditioning intentionally ignores deadzone cases because the 2x2 engaged stick-root map does not exist there.",
+    "Mechanical-invariants additionally uses deadzone/static and structural-boundary cases from this same library."
+  ],
+  "contact_search": {
+    "standard": {
+      "shift_fractions": [
+        0.5,
+        0.25,
+        0.75
+      ],
+      "belt_speeds_m_s": [
+        8.0,
+        12.0,
+        5.0,
+        16.0
+      ],
+      "slip_speeds_m_s": [
+        1.0,
+        3.0,
+        0.3
+      ],
+      "primary_torques_Nm": [
+        0.0,
+        5.0,
+        -5.0,
+        10.0,
+        -10.0,
+        20.0,
+        -20.0,
+        35.0,
+        -35.0
+      ],
+      "secondary_torques_Nm": [
+        0.0,
+        -5.0,
+        5.0,
+        -10.0,
+        10.0,
+        -20.0,
+        20.0,
+        -35.0,
+        35.0
+      ],
+      "primary_inertia_kg_m2": 0.03,
+      "secondary_inertia_kg_m2": 0.05,
+      "contact_case_duration_s": 0.03,
+      "audit_time_step_s": 0.0005,
+      "integrator": {
+        "relative_tolerance": 3e-05,
+        "absolute_tolerance": 3e-08,
+        "method": "LSODA",
+        "max_step": 0.001,
+        "maximum_transitions": 100,
+        "event_time_tolerance": 1e-11
+      },
+      "minimum_branch_time_s": 1e-08
+    },
+    "extended": {
+      "shift_fractions": [
+        0.1,
+        0.9
+      ],
+      "belt_speeds_m_s": [
+        3.0,
+        20.0
+      ],
+      "slip_speeds_m_s": [
+        0.1,
+        5.0
+      ],
+      "primary_torques_Nm": [
+        0.0,
+        20.0,
+        -20.0,
+        35.0,
+        -35.0,
+        60.0,
+        -60.0
+      ],
+      "secondary_torques_Nm": [
+        0.0,
+        -20.0,
+        20.0,
+        -35.0,
+        35.0,
+        -60.0,
+        60.0
+      ]
+    }
+  },
+  "static_rest_case": {
+    "primary_inertia_kg_m2": 0.03,
+    "secondary_inertia_kg_m2": 0.05,
+    "duration_s": 0.05,
+    "audit_time_step_s": 0.001,
+    "integrator": {
+      "relative_tolerance": 3e-05,
+      "absolute_tolerance": 3e-08,
+      "method": "LSODA",
+      "max_step": 0.002,
+      "maximum_transitions": 50,
+      "event_time_tolerance": 1e-11
+    }
+  },
+  "free_shift_search": {
+    "shift_fractions": [
+      0.5,
+      0.3,
+      0.7
+    ],
+    "belt_speeds_m_s": [
+      10.0,
+      14.0,
+      7.0
+    ],
+    "shift_speeds_m_s": [
+      0.01,
+      0.02,
+      0.04
+    ],
+    "duration_s": 0.02,
+    "audit_time_step_s": 0.0005,
+    "integrator": {
+      "relative_tolerance": 3e-05,
+      "absolute_tolerance": 3e-08,
+      "method": "LSODA",
+      "max_step": 0.001,
+      "maximum_transitions": 100,
+      "event_time_tolerance": 1e-11
+    }
+  },
+  "classifier_controls": {
+    "primary_speed_rad_s": 350.0,
+    "secondary_speed_rad_s": 35.0,
+    "shift_speed_m_s": 0.01
+  },
+  "deadzone_free_snapshot": {
+    "id": "deadzone_free_static_snapshot",
+    "primary_speed_rad_s": 50.0,
+    "secondary_speed_rad_s": 25.0,
+    "purpose": "interior deadzone snapshot satisfying the secondary belt lock"
+  },
+  "free_shift_direction_requests": [
+    {
+      "id": "free_shift_closing",
+      "direction": 1,
+      "purpose": "find any admissible engaged-free state with positive shift speed"
+    },
+    {
+      "id": "free_shift_opening",
+      "direction": -1,
+      "purpose": "find any admissible engaged-free state with negative shift speed"
+    }
+  ],
+  "structural_boundary_requests": [
+    {
+      "id": "boundary_lower_stop_arrival",
+      "target_event": "cvt:lower_stop_reached",
+      "side": "lower"
+    },
+    {
+      "id": "boundary_engagement_arrival",
+      "target_event": "cvt:engagement_reached",
+      "side": "engagement"
+    },
+    {
+      "id": "boundary_low_ratio_arrival",
+      "target_event": "cvt:low_ratio_seat_reached",
+      "side": "low_ratio"
+    },
+    {
+      "id": "boundary_upper_stop_arrival",
+      "target_event": "cvt:upper_stop_reached",
+      "side": "upper"
+    }
+  ]
+}

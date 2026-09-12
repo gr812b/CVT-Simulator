@@ -93,6 +93,42 @@ def load_json(path: Path) -> dict:
     return json.loads(path.read_text(encoding="utf-8"))
 
 
+def resolve_case_library(spec: dict) -> tuple[dict, Path]:
+    """Load the release-scoped shared operating-case library.
+
+    Mechanical invariants owns its guards and pass/fail policy; reusable bench
+    search recipes live under ``defaults`` so other verification studies can
+    challenge the same operating classes without copy/paste drift.
+    """
+    path = (HERE / spec["shared_case_library"]).resolve()
+    if not path.is_file():
+        raise FileNotFoundError(f"Shared verification operating-case library missing: {path}")
+    library = load_json(path)
+    if int(library.get("schema_version", 0)) < 2:
+        raise RuntimeError(
+            "Mechanical invariants requires verification_operating_cases schema_version >= 2."
+        )
+    return library, path
+
+
+def hydrate_case_recipes(spec: dict, library: dict) -> dict:
+    """Attach shared case/search recipes under the legacy internal keys.
+
+    Keeping these aliases local means the scientific study code below does not
+    duplicate case definitions while avoiding a large unrelated refactor of the
+    existing audit implementation.
+    """
+    resolved = copy.deepcopy(spec)
+    resolved["bench_search"] = copy.deepcopy(library["contact_search"]["standard"])
+    resolved["extended_contact_search"] = copy.deepcopy(library["contact_search"]["extended"])
+    resolved["static_rest"] = copy.deepcopy(library["static_rest_case"])
+    resolved["free_shift_cases"] = copy.deepcopy(library["free_shift_search"])
+    resolved["boundary_cases"] = copy.deepcopy(library["structural_boundary_cases"])
+    resolved["classifier_controls"] = copy.deepcopy(library["classifier_controls"])
+    resolved["deadzone_free_snapshot"] = copy.deepcopy(library["deadzone_free_snapshot"])
+    return resolved
+
+
 def write_json(path: Path, payload: Any, *, allow_nan: bool = False) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(payload, indent=2, allow_nan=allow_nan) + "\n", encoding="utf-8")
@@ -644,19 +680,20 @@ def mode_and_directions_match(mode, request: ContactRequest) -> bool:
     return True
 
 
-def contact_requests() -> list[ContactRequest]:
-    return [
-        ContactRequest("stick_stick_forward", EngagedContactMode.STICK_STICK, 0, 0, +1),
-        ContactRequest("stick_stick_reverse", EngagedContactMode.STICK_STICK, 0, 0, -1),
-        ContactRequest("primary_slip_plus", EngagedContactMode.PRIMARY_SLIP_SECONDARY_STICK, +1, 0, +1),
-        ContactRequest("primary_slip_minus", EngagedContactMode.PRIMARY_SLIP_SECONDARY_STICK, -1, 0, +1),
-        ContactRequest("secondary_slip_plus", EngagedContactMode.PRIMARY_STICK_SECONDARY_SLIP, 0, +1, +1),
-        ContactRequest("secondary_slip_minus", EngagedContactMode.PRIMARY_STICK_SECONDARY_SLIP, 0, -1, +1),
-        ContactRequest("both_slip_pp", EngagedContactMode.BOTH_SLIP, +1, +1, +1),
-        ContactRequest("both_slip_pm", EngagedContactMode.BOTH_SLIP, +1, -1, +1),
-        ContactRequest("both_slip_mp", EngagedContactMode.BOTH_SLIP, -1, +1, +1),
-        ContactRequest("both_slip_mm", EngagedContactMode.BOTH_SLIP, -1, -1, +1),
-    ]
+def contact_requests(case_library: dict) -> list[ContactRequest]:
+    """Return canonical tangential-contact requests from release defaults."""
+    requests: list[ContactRequest] = []
+    for item in case_library["contact_branch_requests"]:
+        requests.append(
+            ContactRequest(
+                str(item["id"]),
+                EngagedContactMode(str(item["mode"])),
+                int(item["primary_vrel_sign"]),
+                int(item["secondary_vrel_sign"]),
+                int(item["rotation_sign"]),
+            )
+        )
+    return requests
 
 
 def candidate_cvt_state(model, *, shift_fraction: float, belt_speed: float, slip_speed: float,
@@ -1007,17 +1044,18 @@ def static_rest_case(decoded, spec: dict) -> FoundCase:
 
 def deadzone_free_case(decoded, spec: dict) -> FoundCase:
     bench = spec["static_rest"]
+    recipe = spec["deadzone_free_snapshot"]
     system = make_bench_system(decoded, primary_torque=0.0, secondary_torque=0.0,
                                primary_inertia=bench["primary_inertia_kg_m2"], secondary_inertia=bench["secondary_inertia_kg_m2"])
     limits = system.cvt.operating_limits
     s = 0.5 * (limits.lower_stop_shift + limits.engagement_shift)
-    g = decoded.plant.geometry.evaluate_deadzone(s)
     locked = decoded.plant.geometry.evaluate_deadzone(limits.engagement_shift)
-    omega_s = 25.0
+    omega_s = float(recipe["secondary_speed_rad_s"])
+    omega_p = float(recipe["primary_speed_rad_s"])
     vb = locked.secondary.effective * omega_s
-    state = full_state(system, CVTState(50.0, omega_s, vb, s, 0.0))
+    state = full_state(system, CVTState(omega_p, omega_s, vb, s, 0.0))
     mode = system.classify_initial_mode(state)
-    return FoundCase("deadzone_free_static_snapshot", system, state, mode, {"shift_m": s})
+    return FoundCase(str(recipe["id"]), system, state, mode, {"shift_m": s, "purpose":recipe.get("purpose","")})
 
 
 def find_boundary_case(decoded, *, case_id: str, target_event: str, side: str, spec: dict, guards: dict) -> tuple[FoundCase | None, Any | None, list[dict[str, Any]]]:
@@ -1332,11 +1370,16 @@ def build_coverage(found_ids: set[str], sample_rows: list[dict[str, Any]], trans
 
 
 def main() -> int:
-    started=time.time(); verify_environment(); spec=load_json(SPEC_FILE); guards=spec["review_guards"]
+    started=time.time(); verify_environment()
+    raw_spec=load_json(SPEC_FILE)
+    case_library, case_library_path = resolve_case_library(raw_spec)
+    spec=hydrate_case_recipes(raw_spec, case_library)
+    guards=spec["review_guards"]
     decoded, base_path, resolved_doc = load_frozen_reference(spec)
     if ARTIFACTS.exists(): shutil.rmtree(ARTIFACTS)
     ARTIFACTS.mkdir(parents=True)
     write_json(ARTIFACTS/"resolved_nominal_simulation_case.json",resolved_doc)
+    write_json(ARTIFACTS/"resolved_shared_operating_cases.json",case_library)
 
     sample_rows=[]; equation_rows=[]; mechanism_rows=[]; transition_rows=[]; attempts=[]; case_meta=[]; found_ids=set()
 
@@ -1357,7 +1400,7 @@ def main() -> int:
 
     # 3) Deliberately populate contact modes and slip quadrants.
     found_contact: dict[str,FoundCase]={}
-    for request in contact_requests():
+    for request in contact_requests(case_library):
         print(f"Searching admissible IC: {request.case_id}")
         found, tried=find_contact_case(decoded,request,spec,guards); attempts.extend(tried)
         if found is None:
@@ -1368,7 +1411,8 @@ def main() -> int:
         accumulate_case(found.case_id,found.system,trace,float(spec["bench_search"]["audit_time_step_s"]),sample_rows,equation_rows,mechanism_rows,transition_rows)
 
     # 4) Interior free-shift motion in both coordinate directions.
-    for cid,direction in (("free_shift_closing",+1),("free_shift_opening",-1)):
+    for request in case_library["free_shift_direction_requests"]:
+        cid=str(request["id"]); direction=int(request["direction"])
         print(f"Searching free-shift case: {cid}")
         found,trace,tried=find_free_shift_direction_case(decoded,case_id=cid,direction=direction,spec=spec,guards=guards); attempts.extend(tried)
         if found is None:
@@ -1378,13 +1422,8 @@ def main() -> int:
         accumulate_case(cid,found.system,trace,float(spec["free_shift_cases"]["audit_time_step_s"]),sample_rows,equation_rows,mechanism_rows,transition_rows)
 
     # 5) Directed structural-boundary arrivals.
-    boundary_specs=[
-        ("boundary_lower_stop_arrival","cvt:lower_stop_reached","lower"),
-        ("boundary_engagement_arrival","cvt:engagement_reached","engagement"),
-        ("boundary_low_ratio_arrival","cvt:low_ratio_seat_reached","low_ratio"),
-        ("boundary_upper_stop_arrival","cvt:upper_stop_reached","upper"),
-    ]
-    for cid,event,side in boundary_specs:
+    for request in case_library["structural_boundary_requests"]:
+        cid=str(request["id"]); event=str(request["target_event"]); side=str(request["side"])
         print(f"Searching boundary case: {cid}")
         found,trace,tried=find_boundary_case(decoded,case_id=cid,target_event=event,side=side,spec=spec,guards=guards); attempts.extend(tried)
         if found is None:
@@ -1459,6 +1498,8 @@ def main() -> int:
         "study":"Mechanical invariants — operating-domain audit",
         "cinder_version":cinder.__version__, "overall_status":overall,
         "elapsed_s":time.time()-started, "base_document":str(base_path), "base_sha256":sha256(base_path),
+        "shared_case_library":str(case_library_path), "shared_case_library_sha256":sha256(case_library_path),
+        "shared_case_library_schema_version":case_library.get("schema_version"),
         "geometry_points":len(geometry_rows), "audited_samples":len(sample_rows), "transitions":len(transition_rows),
         "candidate_attempts":len(attempts), "found_case_ids":sorted(found_ids),
         "missing_coverage":missing, "sample_failure_count":len(sample_failures), "post_transition_failure_count":len(post_fail),

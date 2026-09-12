@@ -33,3 +33,11 @@ The first domain run returned no hard invariant failures but exposed five covera
 - nonzero-sdot engaged probes now use CINDER's production representative-contact-speed definition to initialize zero relative motion, including the secondary helical member kinematics;
 - lower-stop arrival probes now include low/zero primary and secondary speeds instead of only the high-RPM deadzone setup that tended to reverse before reaching the stop;
 - positive/negative free-shift coverage is credited from any audited engaged-free trajectory, including the frozen nominal case, rather than only from a dedicated synthetic case ID.
+
+## Shared operating-case library revision
+
+- moved reusable contact-search, free-shift, static-rest, and structural-boundary recipes to `../../defaults/verification_operating_cases.json`;
+- mechanical invariants now resolves those shared recipes at runtime instead of duplicating them in `study.json`;
+- contact-branch request IDs/modes/signs are also sourced from the shared library;
+- the targeted missing-coverage explorer uses the same resolved shared search block;
+- the artifact set records the fully resolved shared case library and its SHA-256 for reproducibility.

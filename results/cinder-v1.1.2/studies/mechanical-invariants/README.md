@@ -9,6 +9,14 @@ python verify_study.py
 python run.py
 ```
 
+
+The reusable operating-case/search recipes are now owned by
+`../../defaults/verification_operating_cases.json`. This study keeps only its
+invariant-specific guards, geometry sweep, negative controls, and reporting policy
+in `study.json`; it resolves the shared library at runtime. Closure conditioning
+uses the same case vocabulary, so a later edit to a torque/speed/shift search domain
+cannot silently diverge between the two studies.
+
 The study intentionally uses two kinds of systems. The realistic reference case is decoded from `../../defaults/baja_reference_simulation_case.json`. Controlled mechanics cases reuse the **same decoded production CVT assembly** but attach CINDER's existing `FixedShaftBoundary` to both shafts and `NoHost`. No alternative test-only CVT equations are introduced.
 
 The controlled cases exist because a nominal launch cannot exercise the full initial-value capability of the model. The harness deliberately searches for admissible initial conditions covering stick-stick, both mixed stick/slip modes, both kinetic directions at each interface, all four both-slip relative-velocity quadrants, forward/reverse overall rotation, deadzone/static states, and directed arrivals at each structural boundary. Candidate states only count when CINDER's **production initial classifier** selects the requested branch and a short production hybrid integration remains mechanically admissible. Slip-direction searches try both overall rotation signs; rejected classified candidates retain the field-level margins needed to determine whether a missing class is a search limitation or a genuinely inadmissible topology.

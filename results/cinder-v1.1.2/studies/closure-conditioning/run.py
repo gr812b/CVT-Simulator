@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, replace
+from types import SimpleNamespace
 import argparse
 import copy
 import csv
@@ -18,7 +19,8 @@ from typing import Any
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
-from matplotlib.colors import LogNorm, SymLogNorm, TwoSlopeNorm
+from matplotlib.colors import LogNorm, SymLogNorm, TwoSlopeNorm, ListedColormap
+from matplotlib.patches import Rectangle
 import numpy as np
 
 import cinder
@@ -27,6 +29,7 @@ from cinder.contracts import (
     validate_simulation_case_document,
 )
 from cinder.execution.hybrid import integrate_hybrid
+from cinder.execution.hybrid.composed import ComposedCVTHybridSystem
 from cinder.execution.hybrid.cvt_regime import (
     CVTEngagementState,
     CVTShiftConstraint,
@@ -35,18 +38,25 @@ from cinder.model.cvt.contact import (
     ContactInterface,
     ContactTractionUtilization,
     EngagedContactMode,
+    evaluate_contact_relative_speed,
 )
-from cinder.model.cvt.dynamics.engaged_contact import EngagedContactClosure
+from cinder.model.cvt.dynamics.engaged_contact import EngagedContactClosure, LambdaSearchBounds
+from cinder.model.cvt.dynamics.equation_context import TrialEquationContext
 from cinder.model.cvt.dynamics.shift_constraints import EngagedShiftConstraint
 from cinder.model.system import CVTState
+from cinder.model.boundaries.shaft import FixedShaftBoundary
+from cinder.hosts import NoHost
+from cinder.results.fields import recover_belt_tension_boundaries
 from cinder.results.inspection import inspect_cvt_state
 
 from conditioning_math import finite_difference_jacobian
+from case_library import load_case_library, search_named_stick_case
 
 HERE = Path(__file__).resolve().parent
 RELEASE_ROOT = HERE.parents[1]
 VERIFY = RELEASE_ROOT / "verify_environment.py"
 SPEC_FILE = HERE / "study.json"
+CASE_LIBRARY_FILE = RELEASE_ROOT / "defaults" / "verification_operating_cases.json"
 ARTIFACTS = HERE / "artifacts"
 EXPECTED_CINDER_VERSION = "1.1.2"
 
@@ -241,54 +251,63 @@ def shift_fraction(ref: ReferenceRun, sample: FrozenSample) -> float:
     return (sample.cvt_state.shift_position - spec.deadzone_shift) / span
 
 
-def select_states(launch: ReferenceRun, disturbed: ReferenceRun | None):
+def select_nominal_states(launch: ReferenceRun):
     candidates = [s for s in launch.samples if is_stick_stick(s)]
     selected = []
-
-    low = [
-        s for s in candidates
-        if s.composed_mode.cvt.shift_constraint is CVTShiftConstraint.LOW_RATIO_SEAT
-    ]
+    low = [s for s in candidates if s.composed_mode.cvt.shift_constraint is CVTShiftConstraint.LOW_RATIO_SEAT]
     if low:
         selected.append(("low_ratio_seat", launch, max(low, key=lambda s: s.time)))
-
-    free = [
-        s for s in candidates
-        if s.composed_mode.cvt.shift_constraint is CVTShiftConstraint.FREE
-    ]
+    free = [s for s in candidates if s.composed_mode.cvt.shift_constraint is CVTShiftConstraint.FREE]
     if free:
-        mid = min(free, key=lambda s: abs(shift_fraction(launch, s) - 0.50))
+        selected.append(("mid_shift", launch, min(free, key=lambda s: abs(shift_fraction(launch, s) - 0.50))))
         late = min(free, key=lambda s: abs(shift_fraction(launch, s) - 0.85))
-        selected.append(("mid_shift", launch, mid))
-        if late is not mid:
-            selected.append(("late_shift", launch, late))
-
-    upper = [
-        s for s in candidates
-        if s.composed_mode.cvt.shift_constraint is CVTShiftConstraint.UPPER_STOP
-    ]
+        selected.append(("late_shift", launch, late))
+    upper = [s for s in candidates if s.composed_mode.cvt.shift_constraint is CVTShiftConstraint.UPPER_STOP]
     if upper:
         selected.append(("upper_stop", launch, upper[len(upper)//2]))
-
-    if disturbed is not None:
-        dfree = [
-            s for s in disturbed.samples
-            if is_stick_stick(s)
-            and s.composed_mode.cvt.shift_constraint is CVTShiftConstraint.FREE
-        ]
-        if dfree:
-            chosen = min(dfree, key=lambda s: s.cvt_state.shift_speed)
-            selected.append(("load_disturbed_or_backshift", disturbed, chosen))
-
-    # De-duplicate source/time points while keeping the most descriptive first label.
     out, seen = [], set()
     for label, ref, sample in selected:
         key = (ref.name, round(sample.time, 12))
-        if key in seen:
-            continue
-        seen.add(key)
-        out.append((label, ref, sample))
+        if key not in seen:
+            seen.add(key)
+            out.append((label, ref, sample))
     return out
+
+
+def searched_case_as_reference(found):
+    decoded_like = SimpleNamespace(system=found.system, plant=found.system.cvt.model)
+    sample = FrozenSample(
+        time=0.0,
+        full_state=np.asarray(found.full_state, dtype=float),
+        composed_mode=found.mode,
+        cvt_state=found.cvt_state,
+    )
+    return ReferenceRun(name=found.case_id, decoded=decoded_like, result=None, samples=(sample,)), sample
+
+
+def build_controlled_states(base_decoded, library: dict):
+    selected = []
+    search_rows = []
+    recipes = list(library.get("stick_cases", [])) + list(library.get("free_shift_cases", []))
+    for recipe in recipes:
+        print(f"Searching shared operating case: {recipe['id']}")
+        found, attempts = search_named_stick_case(base_decoded, library, recipe)
+        for row in attempts:
+            row = dict(row)
+            row["case_id"] = recipe["id"]
+            search_rows.append(row)
+        if found is None:
+            print(f"  unavailable: {recipe['id']}")
+            continue
+        ref, sample = searched_case_as_reference(found)
+        selected.append((found.case_id, ref, sample))
+        print(
+            f"  accepted at shift={1000*found.cvt_state.shift_position:.3f} mm, "
+            f"sdot={1000*found.cvt_state.shift_speed:.3f} mm/s, "
+            f"Tp={found.metadata['primary_torque_Nm']:.3g} Nm, "
+            f"Ts={found.metadata['secondary_torque_Nm']:.3g} Nm"
+        )
+    return selected, search_rows
 
 
 def engaged_constraint(sample: FrozenSample):
@@ -317,6 +336,33 @@ def domain_bounds(ref: ReferenceRun, domain: str):
     raise ValueError(domain)
 
 
+def reconstructed_root_jacobian(ref, sample, lambda_p: float, lambda_s: float, step: float = 1.0e-5):
+    inspection = reconstruct(ref, sample, closure_audit=False)
+    contact = inspection.contact
+    if contact is None:
+        raise RuntimeError("Root Jacobian reconstruction requires engaged contact.")
+    closure = EngagedContactClosure(snapshot=contact.snapshot, shift_constraint=engaged_constraint(sample))
+
+    def residual(lp, ls):
+        trial = closure.evaluate_trial(
+            traction_utilization=ContactTractionUtilization(primary_lambda=float(lp), secondary_lambda=float(ls)),
+            maximum_closure_condition_number=None,
+            capture_diagnostics=False,
+        )
+        return np.asarray([
+            trial.relative_motion.primary_relative_acceleration,
+            trial.relative_motion.secondary_relative_acceleration,
+        ], dtype=float)
+
+    rp = residual(lambda_p + step, lambda_s)
+    rm = residual(lambda_p - step, lambda_s)
+    sp = residual(lambda_p, lambda_s + step)
+    sm = residual(lambda_p, lambda_s - step)
+    J = np.column_stack(((rp - rm) / (2.0 * step), (sp - sm) / (2.0 * step)))
+    singular = np.linalg.svd(J, compute_uv=False)
+    return J, float(singular[-1]), float(singular[0]), float(singular[0] / singular[-1]), float(np.linalg.det(J))
+
+
 def actual_root_metrics(label, ref, sample):
     inspection = reconstruct(ref, sample, closure_audit=True)
     contact = inspection.contact
@@ -325,17 +371,19 @@ def actual_root_metrics(label, ref, sample):
         raise RuntimeError("Selected state did not reconstruct an engaged closure.")
 
     branch = contact.branch_result
-    jac = getattr(branch, "jacobian", None)
-    if jac is None:
-        sigma_min = sigma_max = kappa = determinant = float("nan")
+    production_jac = getattr(branch, "jacobian", None)
+    if production_jac is None:
+        p_sigma_min = p_sigma_max = p_kappa = p_det = float("nan")
     else:
-        singular = np.linalg.svd(np.asarray(jac, dtype=float), compute_uv=False)
-        sigma_max = float(singular[0])
-        sigma_min = float(singular[-1])
-        kappa = sigma_max / sigma_min if sigma_min > 0 else float("inf")
-        determinant = float(np.linalg.det(jac))
+        ps = np.linalg.svd(np.asarray(production_jac, dtype=float), compute_uv=False)
+        p_sigma_max = float(ps[0]); p_sigma_min = float(ps[-1])
+        p_kappa = p_sigma_max / p_sigma_min if p_sigma_min > 0 else float("inf")
+        p_det = float(np.linalg.det(production_jac))
 
     u = contact.traction_utilization
+    _J, sigma_min, sigma_max, kappa, determinant = reconstructed_root_jacobian(
+        ref, sample, u.primary_lambda, u.secondary_lambda
+    )
     law = ref.decoded.system.cvt.traction_law
     return {
         "label": label,
@@ -357,9 +405,97 @@ def actual_root_metrics(label, ref, sample):
         "J_sigma_max": sigma_max,
         "J_condition": kappa,
         "J_determinant": determinant,
+        "J_sigma_min_production": p_sigma_min,
+        "J_sigma_max_production": p_sigma_max,
+        "J_condition_production": p_kappa,
+        "J_determinant_production": p_det,
+        "J_condition_relative_difference": abs(kappa - p_kappa) / max(abs(kappa), 1.0) if math.isfinite(p_kappa) else float("nan"),
         "N_p": contact.normal_primary,
         "N_s": contact.normal_secondary,
     }
+
+
+def equilibrated_matrix_singulars(matrix, right_hand_side):
+    matrix = np.asarray(matrix, dtype=float)
+    rhs = np.asarray(right_hand_side, dtype=float)
+    row_norm = np.maximum(np.max(np.abs(matrix), axis=1), np.abs(rhs))
+    row_scale = np.where(row_norm > 0.0, 1.0 / row_norm, 1.0)
+    row_matrix = row_scale[:, None] * matrix
+    column_norm = np.max(np.abs(row_matrix), axis=0)
+    column_scale = np.where(column_norm > 0.0, 1.0 / column_norm, 1.0)
+    scaled = row_matrix * column_scale[None, :]
+    singular = np.linalg.svd(scaled, compute_uv=False)
+    return float(singular[-1]), float(singular[0]), float(np.linalg.det(scaled))
+
+
+def trial_belt_metrics(snapshot, unknowns, utilization):
+    terms = TrialEquationContext(snapshot=snapshot, traction_utilization=utilization).contact_terms
+    geometry = snapshot.geometry
+    state = snapshot.state
+    q = snapshot.belt_linear_density
+    sin_beta = math.sin(snapshot.sheave_half_angle)
+
+    def offsets(radius):
+        rddot = radius.d2_center_of_mass_ds2 * state.shift_speed**2 + radius.d_center_of_mass_ds * unknowns.shift_acceleration
+        c = q * (state.belt_speed**2 - radius.center_of_mass * rddot)
+        a = q * (radius.center_of_mass * unknowns.belt_acceleration + radius.d_center_of_mass_ds * state.shift_speed * state.belt_speed)
+        return c, a
+
+    pc, pa = offsets(geometry.primary)
+    sc, sa = offsets(geometry.secondary)
+    pp = geometry.primary_wrap_angle
+    sp = geometry.secondary_wrap_angle
+
+    p_in = pc + unknowns.primary_normal_resultant * sin_beta / (pp * terms.primary_phi_minus) - pa * pp * terms.primary_psi_minus / terms.primary_phi_minus
+    p_out = pc + terms.primary_exp_neg * (p_in - pc) + pa * pp * terms.primary_phi_minus
+    s_in = sc + unknowns.secondary_normal_resultant * sin_beta / (sp * terms.secondary_phi_minus) - sa * sp * terms.secondary_psi_minus / terms.secondary_phi_minus
+    s_out = sc + terms.secondary_exp_neg * (s_in - sc) + sa * sp * terms.secondary_phi_minus
+
+    p_min_t = min(p_in, p_out)
+    s_min_t = min(s_in, s_out)
+    p_local = (p_min_t - pc) / sin_beta
+    s_local = (s_min_t - sc) / sin_beta
+    return {
+        "T_p_in": float(p_in), "T_p_out": float(p_out),
+        "T_s_in": float(s_in), "T_s_out": float(s_out),
+        "min_tension": float(min(p_min_t, s_min_t)),
+        "min_local_normal_p": float(p_local),
+        "min_local_normal_s": float(s_local),
+    }
+
+
+def trial_mechanism_margin(ref, sample, snapshot, unknowns):
+    model = ref.decoded.system.cvt.model
+    pctx = model.primary_actuation_context(time=sample.time, state=snapshot.state, geometry=snapshot.geometry)
+    sctx = model.secondary_actuation_context(time=sample.time, state=snapshot.state, geometry=snapshot.geometry)
+    margins = tuple(float(v) for _k, v in model.primary_actuator.compressive_contact_margins(pctx, unknowns)) + tuple(
+        float(v) for _k, v in model.secondary_actuator.compressive_contact_margins(sctx, unknowns)
+    )
+    return min(margins) if margins else float("inf")
+
+
+def topology_failure_code(ref, sample, trial, utilization, snapshot):
+    """Bit mask: 1 resultant normal, 2 tension, 4 local lift-off, 8 mechanism, 16 support."""
+    audit = trial.closure
+    belt = trial_belt_metrics(snapshot, audit.unknowns, utilization)
+    code = 0
+    if audit.unknowns.primary_normal_resultant < 0.0 or audit.unknowns.secondary_normal_resultant < 0.0:
+        code |= 1
+    if belt["min_tension"] < 0.0:
+        code |= 2
+    if belt["min_local_normal_p"] < 0.0 or belt["min_local_normal_s"] < 0.0:
+        code |= 4
+    mechanism = trial_mechanism_margin(ref, sample, snapshot, audit.unknowns)
+    if mechanism < 0.0:
+        code |= 8
+    support = float("inf")
+    if engaged_constraint(sample) is EngagedShiftConstraint.LOW_RATIO_SEAT:
+        support = float(trial.low_ratio_seat_reaction)
+    elif engaged_constraint(sample) is EngagedShiftConstraint.UPPER_STOP:
+        support = float(trial.upper_stop_reaction)
+    if support < 0.0:
+        code |= 16
+    return code, {**belt, "mechanism_margin": float(mechanism), "support_reaction": float(support)}
 
 
 def build_map(ref, sample, domain, samples):
@@ -367,34 +503,36 @@ def build_map(ref, sample, domain, samples):
     contact = inspection.contact
     if contact is None:
         raise RuntimeError("Conditioning map requires engaged contact.")
-    closure = EngagedContactClosure(
-        snapshot=contact.snapshot,
-        shift_constraint=engaged_constraint(sample),
-    )
+    snapshot = contact.snapshot
+    closure = EngagedContactClosure(snapshot=snapshot, shift_constraint=engaged_constraint(sample))
 
     p0, p1, s0, s1 = domain_bounds(ref, domain)
     lp = np.linspace(p0, p1, samples)
     ls = np.linspace(s0, s1, samples)
     shape = (samples, samples)
-    arrays = {
-        key: np.full(shape, np.nan)
-        for key in (
-            "R_p", "R_s", "cond_A_raw", "cond_A_scaled", "rank_A",
-            "N_p", "N_s", "tau_p", "tau_s"
-        )
-    }
+    float_keys = (
+        "R_p", "R_s", "cond_A_raw", "cond_A_scaled", "rank_A", "N_p", "N_s", "tau_p", "tau_s",
+        "sigma_min_A_scaled", "sigma_max_A_scaled", "det_A_scaled", "min_belt_tension",
+        "min_local_normal_p", "min_local_normal_s", "mechanism_margin", "support_reaction",
+    )
+    arrays = {key: np.full(shape, np.nan) for key in float_keys}
+    arrays["topology_failure_code"] = np.full(shape, -1, dtype=np.int16)
+    arrays["static_capacity_admissible"] = np.zeros(shape, dtype=bool)
+    arrays["topology_admissible"] = np.zeros(shape, dtype=bool)
+    arrays["full_static_admissible"] = np.zeros(shape, dtype=bool)
 
+    law = ref.decoded.system.cvt.traction_law
+    p_static = law.primary_static_interval
+    s_static = law.secondary_static_interval
     solved = 0
     for i, lam_s in enumerate(ls):
         if i % max(1, samples // 10) == 0:
             print(f"      row {i+1}/{samples}")
         for j, lam_p in enumerate(lp):
+            utilization = ContactTractionUtilization(primary_lambda=float(lam_p), secondary_lambda=float(lam_s))
             try:
                 trial = closure.evaluate_trial(
-                    traction_utilization=ContactTractionUtilization(
-                        primary_lambda=float(lam_p),
-                        secondary_lambda=float(lam_s),
-                    ),
+                    traction_utilization=utilization,
                     maximum_closure_condition_number=None,
                     capture_diagnostics=True,
                 )
@@ -411,12 +549,25 @@ def build_map(ref, sample, domain, samples):
             arrays["N_s"][i, j] = audit.unknowns.secondary_normal_resultant
             arrays["tau_p"][i, j] = audit.unknowns.primary_torque
             arrays["tau_s"][i, j] = audit.unknowns.secondary_torque
+            amin, amax, adet = equilibrated_matrix_singulars(audit.matrix, audit.right_hand_side)
+            arrays["sigma_min_A_scaled"][i, j] = amin
+            arrays["sigma_max_A_scaled"][i, j] = amax
+            arrays["det_A_scaled"][i, j] = adet
+            try:
+                code, extra = topology_failure_code(ref, sample, trial, utilization, snapshot)
+                arrays["topology_failure_code"][i, j] = code
+                arrays["topology_admissible"][i, j] = code == 0
+                for key in ("min_belt_tension", "min_local_normal_p", "min_local_normal_s", "mechanism_margin", "support_reaction"):
+                    arrays[key][i, j] = extra[key]
+            except Exception:
+                arrays["topology_failure_code"][i, j] = 31
+            static_ok = p_static.lower <= lam_p <= p_static.upper and s_static.lower <= lam_s <= s_static.upper
+            arrays["static_capacity_admissible"][i, j] = static_ok
+            arrays["full_static_admissible"][i, j] = static_ok and arrays["topology_admissible"][i, j]
             solved += 1
 
     arrays["R_norm"] = np.hypot(arrays["R_p"], arrays["R_s"])
-    smin, smax, kappa, det = finite_difference_jacobian(
-        lp, ls, arrays["R_p"], arrays["R_s"]
-    )
+    smin, smax, kappa, det = finite_difference_jacobian(lp, ls, arrays["R_p"], arrays["R_s"])
     arrays["sigma_min_J"] = smin
     arrays["sigma_max_J"] = smax
     arrays["kappa_J"] = kappa
@@ -428,7 +579,7 @@ def build_map(ref, sample, domain, samples):
     return arrays
 
 
-def multistart(ref, sample, n, cluster_tol):
+def multistart(ref, sample, n, cluster_tol, *, domain="physical"):
     inspection = reconstruct(ref, sample, closure_audit=False)
     contact = inspection.contact
     if contact is None:
@@ -439,8 +590,18 @@ def multistart(ref, sample, n, cluster_tol):
     )
     law = ref.decoded.system.cvt.traction_law
     base = ref.decoded.system.cvt.solve_settings
-    p = np.linspace(law.primary_static_interval.lower, law.primary_static_interval.upper, n)
-    s = np.linspace(law.secondary_static_interval.lower, law.secondary_static_interval.upper, n)
+    if domain == "physical":
+        p0,p1 = law.primary_static_interval.lower, law.primary_static_interval.upper
+        s0,s1 = law.secondary_static_interval.lower, law.secondary_static_interval.upper
+        search_bounds = base.lambda_search_bounds
+    else:
+        p0,p1,s0,s1 = domain_bounds(ref, domain)
+        search_bounds = LambdaSearchBounds(
+            primary_lower=float(p0), primary_upper=float(p1),
+            secondary_lower=float(s0), secondary_upper=float(s1),
+        )
+    p = np.linspace(p0, p1, n)
+    s = np.linspace(s0, s1, n)
 
     roots = []
     rows = []
@@ -462,6 +623,7 @@ def multistart(ref, sample, n, cluster_tol):
             try:
                 settings = replace(
                     base,
+                    lambda_search_bounds=search_bounds,
                     initial_guess=ContactTractionUtilization(
                         primary_lambda=float(lam_p),
                         secondary_lambda=float(lam_s),
@@ -523,48 +685,113 @@ def signed_limit(values):
     return max(float(np.percentile(a, 99)) if a.size else 1.0, 1e-12)
 
 
-def plot_map(data, actual, label, domain, path):
+def _static_box(ref):
+    law = ref.decoded.system.cvt.traction_law
+    return (
+        law.primary_static_interval.lower,
+        law.primary_static_interval.upper,
+        law.secondary_static_interval.lower,
+        law.secondary_static_interval.upper,
+    )
+
+
+def plot_map(data, actual, label, domain, path, *, ref, mask_topology: bool = False):
     lp, ls = data["lambda_p"], data["lambda_s"]
     LP, LS = np.meshgrid(lp, ls)
     normal = np.maximum(np.abs(data["N_p"]), np.abs(data["N_s"]))
-    rp_lim = signed_limit(data["R_p"])
-    rs_lim = signed_limit(data["R_s"])
+    rp_lim = signed_limit(data["R_p"]); rs_lim = signed_limit(data["R_s"])
     rn_lo, rn_hi = positive_limits(data["R_norm"])
     ca_lo, ca_hi = positive_limits(data["cond_A_scaled"])
     sm_lo, sm_hi = positive_limits(data["sigma_min_J"])
     kj_lo, kj_hi = positive_limits(data["kappa_J"])
-    det_lim = signed_limit(data["det_J"])
-    n_lo, n_hi = positive_limits(normal)
+    det_lim = signed_limit(data["det_J"]); n_lo, n_hi = positive_limits(normal)
 
     panels = [
-        ("R_p", r"Primary stick residual $R_p$", SymLogNorm(linthresh=1.0, vmin=-rp_lim, vmax=rp_lim), data["R_p"]),
-        ("R_s", r"Secondary stick residual $R_s$", SymLogNorm(linthresh=1.0, vmin=-rs_lim, vmax=rs_lim), data["R_s"]),
-        ("R_norm", r"Residual norm $\|\mathbf{R}\|_2$", LogNorm(vmin=rn_lo, vmax=rn_hi), data["R_norm"]),
-        ("cond_A_scaled", r"Equilibrated 8×8 $\kappa(A)$", LogNorm(vmin=ca_lo, vmax=ca_hi), data["cond_A_scaled"]),
-        ("sigma_min_J", r"$\sigma_{\min}(J_R)$", LogNorm(vmin=sm_lo, vmax=sm_hi), data["sigma_min_J"]),
-        ("kappa_J", r"$\kappa(J_R)$", LogNorm(vmin=kj_lo, vmax=kj_hi), data["kappa_J"]),
-        ("det_J", r"Signed $\det(J_R)$", TwoSlopeNorm(vcenter=0.0, vmin=-det_lim, vmax=det_lim), data["det_J"]),
-        ("normal", r"max$(|N_p|,|N_s|)$", LogNorm(vmin=n_lo, vmax=n_hi), normal),
+        (r"Primary stick residual $R_p$", SymLogNorm(linthresh=1.0, vmin=-rp_lim, vmax=rp_lim), data["R_p"], "Rp"),
+        (r"Secondary stick residual $R_s$", SymLogNorm(linthresh=1.0, vmin=-rs_lim, vmax=rs_lim), data["R_s"], "Rs"),
+        (r"Residual norm $\|\mathbf R\|_2$", LogNorm(vmin=rn_lo, vmax=rn_hi), data["R_norm"], "Rnorm"),
+        (r"Equilibrated 8×8 $\kappa(A)$", LogNorm(vmin=ca_lo, vmax=ca_hi), data["cond_A_scaled"], "Acond"),
+        (r"$\sigma_{\min}(J_R)$", LogNorm(vmin=sm_lo, vmax=sm_hi), data["sigma_min_J"], "Jmin"),
+        (r"$\kappa(J_R)$", LogNorm(vmin=kj_lo, vmax=kj_hi), data["kappa_J"], "Jcond"),
+        (r"Signed $\det(J_R)$", TwoSlopeNorm(vcenter=0.0, vmin=-det_lim, vmax=det_lim), data["det_J"], "Jdet"),
+        (r"max$(|N_p|,|N_s|)$", LogNorm(vmin=n_lo, vmax=n_hi), normal, "N"),
     ]
-
-    fig, axes = plt.subplots(2, 4, figsize=(18, 9.5), constrained_layout=True)
-    for ax, (key, title, norm, values) in zip(axes.ravel(), panels):
-        im = ax.pcolormesh(LP, LS, values, shading="auto", norm=norm)
-        if key == "R_norm":
-            with np.errstate(all="ignore"):
-                try:
-                    ax.contour(LP, LS, data["R_p"], levels=[0.0], linewidths=1.2)
-                    ax.contour(LP, LS, data["R_s"], levels=[0.0], linewidths=1.2, linestyles="--")
-                except ValueError:
-                    pass
-        ax.plot(actual["lambda_p"], actual["lambda_s"], marker="x", markersize=8, mew=2)
-        ax.set_xlabel(r"$\lambda_p$")
-        ax.set_ylabel(r"$\lambda_s$")
-        ax.set_title(title)
-        fig.colorbar(im, ax=ax, shrink=0.82)
-    fig.suptitle(f"{label}: {domain} lambda domain")
-    fig.savefig(path, dpi=175)
+    invalid = ~np.asarray(data["topology_admissible"], dtype=bool)
+    fig, axes = plt.subplots(2, 4, figsize=(22, 11.5), constrained_layout=True)
+    for ax, (title, norm, source, key) in zip(axes.ravel(), panels):
+        values = np.asarray(source, dtype=float)
+        if mask_topology:
+            values = np.ma.masked_where(invalid, values)
+        im = ax.pcolormesh(LP, LS, values, shading="auto", norm=norm, rasterized=True)
+        if key in ("Rp", "Rs", "Rnorm"):
+            try:
+                if key == "Rp":
+                    ax.contour(LP, LS, data["R_p"], levels=[0.0], colors="black", linewidths=1.2)
+                elif key == "Rs":
+                    ax.contour(LP, LS, data["R_s"], levels=[0.0], colors="black", linewidths=1.2, linestyles="--")
+                else:
+                    ax.contour(LP, LS, data["R_p"], levels=[0.0], colors="black", linewidths=1.2)
+                    ax.contour(LP, LS, data["R_s"], levels=[0.0], colors="black", linewidths=1.2, linestyles="--")
+            except ValueError:
+                pass
+        # For expanded/broad views show the actual static-capacity box without
+        # deleting the mathematical continuation outside it.
+        if domain != "physical":
+            p0,p1,s0,s1 = _static_box(ref)
+            ax.add_patch(Rectangle((p0,s0),p1-p0,s1-s0,fill=False,linestyle=":",linewidth=1.2,edgecolor="black"))
+        ax.plot(actual["lambda_p"], actual["lambda_s"], marker="x", markersize=9, mew=2.2, color="tab:blue")
+        ax.set_xlabel(r"$\lambda_p$"); ax.set_ylabel(r"$\lambda_s$"); ax.set_title(title)
+        fig.colorbar(im, ax=ax, shrink=0.84)
+    suffix = "topology-admissible only" if mask_topology else "all computed points"
+    fig.suptitle(f"{label}: {domain} lambda domain — {suffix}", fontsize=15)
+    fig.savefig(path, dpi=240)
     plt.close(fig)
+
+
+def plot_inadmissibility(data, actual, label, domain, path, *, ref):
+    lp, ls = data["lambda_p"], data["lambda_s"]
+    LP, LS = np.meshgrid(lp, ls)
+    code = np.asarray(data["topology_failure_code"], dtype=int)
+    masks = [
+        ("Fully topology-admissible", code == 0),
+        ("Negative integrated normal", (code & 1) != 0),
+        ("Negative belt tension", (code & 2) != 0),
+        ("Local wrap lift-off", (code & 4) != 0),
+        ("Unilateral mechanism violation", (code & 8) != 0),
+        ("Active stop/support would pull", (code & 16) != 0),
+    ]
+    fig, axes = plt.subplots(2, 3, figsize=(15, 9.5), constrained_layout=True)
+    cmap = ListedColormap(["white", "black"])
+    for ax,(title,mask) in zip(axes.ravel(),masks):
+        ax.pcolormesh(LP,LS,mask.astype(int),shading="auto",cmap=cmap,vmin=0,vmax=1,rasterized=True)
+        if domain != "physical":
+            p0,p1,s0,s1=_static_box(ref)
+            ax.add_patch(Rectangle((p0,s0),p1-p0,s1-s0,fill=False,linestyle=":",linewidth=1.2,edgecolor="tab:blue"))
+        ax.plot(actual["lambda_p"],actual["lambda_s"],marker="x",markersize=8,mew=2,color="tab:red")
+        ax.set_xlabel(r"$\lambda_p$"); ax.set_ylabel(r"$\lambda_s$"); ax.set_title(title)
+    fig.suptitle(f"{label}: mechanical topology admissibility ({domain})")
+    fig.savefig(path,dpi=240); plt.close(fig)
+
+
+def plot_feature_overlay(data, actual, label, path, *, ref):
+    lp,ls=data["lambda_p"],data["lambda_s"]; LP,LS=np.meshgrid(lp,ls)
+    cond=np.asarray(data["cond_A_scaled"],float)
+    invalid=~np.asarray(data["topology_admissible"],bool)
+    fig,ax=plt.subplots(figsize=(9.2,7.6))
+    finite=cond[np.isfinite(cond)&(cond>0)]
+    lo=max(np.nanpercentile(finite,1),1.0); hi=max(np.nanpercentile(finite,99.8),lo*1.01)
+    im=ax.pcolormesh(LP,LS,cond,shading="auto",norm=LogNorm(vmin=lo,vmax=hi),rasterized=True)
+    # gray transparent overlay = topology inadmissible but still computed underneath
+    ax.contourf(LP,LS,invalid.astype(float),levels=[0.5,1.5],colors=["0.7"],alpha=0.32)
+    ax.contour(LP,LS,data["R_p"],levels=[0.0],colors="black",linewidths=1.5)
+    ax.contour(LP,LS,data["R_s"],levels=[0.0],colors="black",linewidths=1.5,linestyles="--")
+    p0,p1,s0,s1=_static_box(ref)
+    ax.add_patch(Rectangle((p0,s0),p1-p0,s1-s0,fill=False,linestyle=":",linewidth=1.6,edgecolor="tab:blue"))
+    ax.plot(actual["lambda_p"],actual["lambda_s"],"x",markersize=10,mew=2.5,color="tab:red",label="actual root")
+    ax.set_xlabel(r"$\lambda_p$");ax.set_ylabel(r"$\lambda_s$")
+    ax.set_title(f"{label}: closure ridges, zero contours, and admissibility")
+    ax.legend(loc="best");fig.colorbar(im,ax=ax,label=r"equilibrated $\kappa(A)$")
+    fig.tight_layout();fig.savefig(path,dpi=260);plt.close(fig)
 
 
 def plot_slices(data, actual, label, path):
@@ -613,7 +840,7 @@ def plot_slices(data, actual, label, path):
     axes[1,1].grid(True, alpha=0.25)
     axes[1,1].legend()
 
-    fig.suptitle(f"{label}: broad-domain slices through the physical root")
+    fig.suptitle(f"{label}: lambda-domain slices through the actual root")
     fig.savefig(path, dpi=175)
     plt.close(fig)
 
@@ -649,6 +876,33 @@ def plot_multistart(rows, roots, label, path):
     plt.close(fig)
 
 
+def ridge_candidate_rows(data, label, domain, *, percentile=99.5, max_rows=600):
+    cond = np.asarray(data["cond_A_scaled"], dtype=float)
+    finite = np.isfinite(cond)
+    if not np.any(finite):
+        return []
+    threshold = float(np.percentile(cond[finite], percentile))
+    idx = np.argwhere(finite & (cond >= threshold))
+    if idx.shape[0] > max_rows:
+        # retain the strongest candidates while keeping the raw NPZ complete
+        scores = cond[idx[:,0], idx[:,1]]
+        idx = idx[np.argsort(scores)[-max_rows:]]
+    lp,ls=data["lambda_p"],data["lambda_s"]
+    rows=[]
+    for i,j in idx:
+        rows.append({
+            "state":label,"domain":domain,"lambda_p":float(lp[j]),"lambda_s":float(ls[i]),
+            "cond_A_scaled":float(cond[i,j]),
+            "sigma_min_A_scaled":float(data["sigma_min_A_scaled"][i,j]),
+            "det_A_scaled":float(data["det_A_scaled"][i,j]),
+            "R_p":float(data["R_p"][i,j]),"R_s":float(data["R_s"][i,j]),
+            "N_p":float(data["N_p"][i,j]),"N_s":float(data["N_s"][i,j]),
+            "topology_failure_code":int(data["topology_failure_code"][i,j]),
+            "topology_admissible":bool(data["topology_admissible"][i,j]),
+        })
+    return rows
+
+
 def feature_rows(data, label):
     rows = []
     lp, ls = data["lambda_p"], data["lambda_s"]
@@ -674,10 +928,17 @@ def feature_rows(data, label):
         for key in (
             "R_p", "R_s", "R_norm",
             "cond_A_raw", "cond_A_scaled", "rank_A",
+            "sigma_min_A_scaled", "sigma_max_A_scaled", "det_A_scaled",
             "sigma_min_J", "sigma_max_J", "kappa_J", "det_J",
             "N_p", "N_s", "tau_p", "tau_s",
+            "min_belt_tension", "min_local_normal_p", "min_local_normal_s",
+            "mechanism_margin", "support_reaction",
         ):
             row[key] = float(data[key][i,j])
+        row["topology_failure_code"] = int(data["topology_failure_code"][i,j])
+        row["topology_admissible"] = bool(data["topology_admissible"][i,j])
+        row["static_capacity_admissible"] = bool(data["static_capacity_admissible"][i,j])
+        row["full_static_admissible"] = bool(data["full_static_admissible"][i,j])
         rows.append(row)
 
     point("maximum_scaled_8x8_condition", data["cond_A_scaled"])
@@ -692,78 +953,117 @@ def main():
     args = parse_args()
     verify_environment()
     spec = load_json(SPEC_FILE)
+    case_library = load_case_library(CASE_LIBRARY_FILE)
     base_path = (HERE / spec["base_document"]).resolve()
 
     if ARTIFACTS.exists():
         shutil.rmtree(ARTIFACTS)
     ARTIFACTS.mkdir(parents=True)
 
-    print("Running baseline launch reference...")
+    print("Running frozen baseline launch reference...")
     launch = build_reference(spec, "launch")
+    nominal_states = select_nominal_states(launch)
 
-    disturbed = None
-    disturbed_status = {"available": False, "error": None}
-    print("Running mild load-disturbed reference...")
-    try:
-        disturbed = build_reference(spec, "load_disturbed")
-        disturbed_status["available"] = True
-    except Exception as exc:
-        disturbed_status["error"] = f"{type(exc).__name__}: {exc}"
-        print("  load-disturbed reference unavailable:", disturbed_status["error"])
+    print("\nSearching controlled shared operating cases...")
+    controlled_states, search_rows = build_controlled_states(launch.decoded, case_library)
+    write_rows(ARTIFACTS / "shared_case_search.csv", search_rows)
 
-    states = select_states(launch, disturbed)
-    if len(states) < 3:
-        raise RuntimeError(
-            f"Only {len(states)} representative stick-stick states found; need at least three."
-        )
+    states = nominal_states + controlled_states
+    if len(states) < 5:
+        raise RuntimeError(f"Only {len(states)} usable stick-stick states found; need at least five.")
 
-    actual_rows = [
-        actual_root_metrics(label, ref, sample)
-        for label, ref, sample in states
-    ]
-    write_rows(ARTIFACTS / "representative_states.csv", actual_rows)
+    # One actual-root conditioning scan over every mechanically distinct state.
+    actual_rows = [actual_root_metrics(label, ref, sample) for label, ref, sample in states]
+    write_rows(ARTIFACTS / "actual_root_state_scan.csv", actual_rows)
+
+    # Choose the smaller subset that deserves the expensive lambda-plane maps.
+    by_label = {label: (label, ref, sample, actual) for (label, ref, sample), actual in zip(states, actual_rows)}
+    requested = list(spec["map_selection"]["named_cases"])
+    if spec["map_selection"].get("include_worst_actual_A", True):
+        worst_a = max(actual_rows, key=lambda r: float(r["A_condition_scaled"]))
+        requested.append(worst_a["label"])
+    if spec["map_selection"].get("include_worst_actual_J", True):
+        finite_j = [r for r in actual_rows if math.isfinite(float(r["J_condition"]))]
+        if finite_j:
+            requested.append(max(finite_j, key=lambda r: float(r["J_condition"]))["label"])
+    map_labels = []
+    for label in requested:
+        if label in by_label and label not in map_labels:
+            map_labels.append(label)
+    write_rows(
+        ARTIFACTS / "mapped_state_selection.csv",
+        [{"label": label, "mapped": label in map_labels, "reason": "configured_or_worst_actual" if label in map_labels else "actual_root_scan_only"} for label in by_label],
+    )
 
     multistart_all = []
     multistart_summary = []
-    domain_summary = []
-    broad_features = []
-
-    for (label, ref, sample), actual in zip(states, actual_rows):
-        state_dir = ARTIFACTS / "states" / label
-        state_dir.mkdir(parents=True, exist_ok=True)
-        print(f"\nState: {label} at t={sample.time:.6f}s")
-
+    # Multi-start remains cheap enough to run for every actual stick state.
+    for label, ref, sample in states:
         n_start = int(spec["multistart"]["samples_per_axis"])
         if args.quick:
-            n_start = 5
-        ms_rows, roots = multistart(
-            ref,
-            sample,
-            n_start,
-            float(spec["multistart"]["root_cluster_tolerance"]),
-        )
-        for row in ms_rows:
+            n_start = min(5, n_start)
+        rows, roots = multistart(ref, sample, n_start, float(spec["multistart"]["root_cluster_tolerance"]))
+        for row in rows:
             row["state"] = label
-        multistart_all.extend(ms_rows)
-        multistart_summary.append(
-            {
-                "state": label,
-                "start_count": len(ms_rows),
-                "accepted_count": sum(bool(r["accepted"]) for r in ms_rows),
-                "statically_admissible_accepted_count": sum(
-                    bool(r["accepted"]) and bool(r["statically_admissible"])
-                    for r in ms_rows
-                ),
-                "distinct_accepted_roots": len(roots),
-                "all_accepted_one_root": len(roots) == 1,
-            }
-        )
-        plot_multistart(ms_rows, roots, label, state_dir / "multistart_basin.png")
+        multistart_all.extend(rows)
+        multistart_summary.append({
+            "state": label,
+            "start_count": len(rows),
+            "accepted_count": sum(bool(r["accepted"]) for r in rows),
+            "statically_admissible_accepted_count": sum(bool(r["accepted"]) and bool(r["statically_admissible"]) for r in rows),
+            "distinct_accepted_roots": len(roots),
+            "all_accepted_one_root": len(roots) == 1,
+        })
+        state_dir = ARTIFACTS / "states" / label
+        state_dir.mkdir(parents=True, exist_ok=True)
+        plot_multistart(rows, roots, label, state_dir / "multistart_basin.png")
 
-        for domain in ("physical", "expanded", "broad"):
+    # Expanded-domain root census: mathematical roots outside static capacity
+    # are catalogued separately so they cannot be confused with the physical root.
+    expanded_multistart_all = []
+    expanded_multistart_summary = []
+    n_expanded = int(spec["multistart"].get("expanded_samples_per_axis", 9))
+    if args.quick:
+        n_expanded = min(5, n_expanded)
+    for label in map_labels:
+        _label, ref, sample, _actual = by_label[label]
+        rows, roots = multistart(
+            ref, sample, n_expanded,
+            float(spec["multistart"]["root_cluster_tolerance"]),
+            domain="expanded",
+        )
+        for row in rows:
+            row["state"] = label
+            row["search_domain"] = "expanded"
+        expanded_multistart_all.extend(rows)
+        expanded_multistart_summary.append({
+            "state": label,
+            "start_count": len(rows),
+            "accepted_count": sum(bool(r["accepted"]) for r in rows),
+            "statically_admissible_accepted_count": sum(bool(r["accepted"]) and bool(r["statically_admissible"]) for r in rows),
+            "distinct_mathematical_root_clusters": len(roots),
+        })
+    write_rows(ARTIFACTS / "expanded_multistart_results.csv", expanded_multistart_all)
+    write_rows(ARTIFACTS / "expanded_multistart_summary.csv", expanded_multistart_summary)
+
+    domain_summary = []
+    feature_table = []
+    ridge_table = []
+    broad_showcase = str(spec["map_selection"]["broad_showcase_case"])
+
+    for label in map_labels:
+        _label, ref, sample, actual = by_label[label]
+        state_dir = ARTIFACTS / "states" / label
+        state_dir.mkdir(parents=True, exist_ok=True)
+        print(f"\nHigh-resolution maps: {label}")
+
+        domains = ["physical", "expanded"]
+        if label == broad_showcase:
+            domains.append("broad")
+        for domain in domains:
             n = int(spec["lambda_domains"][domain]["samples"])
             if args.quick:
-                n = max(51, (n + 1) // 2)
+                n = int(spec["lambda_domains"][domain].get("quick_samples", max(61, (n + 3)//4)))
                 if n % 2 == 0:
                     n += 1
             print(f"  {domain}: {n}×{n}")
@@ -772,105 +1072,109 @@ def main():
                 state_dir / f"{domain}_map.npz",
                 **{k: v for k, v in data.items() if isinstance(v, np.ndarray)},
             )
-            plot_map(
-                data, actual, label, domain,
-                state_dir / f"{domain}_conditioning_map.png",
-            )
+            plot_map(data, actual, label, domain, state_dir / f"{domain}_conditioning_map.png", ref=ref, mask_topology=False)
+            plot_map(data, actual, label, domain, state_dir / f"{domain}_conditioning_map_topology_masked.png", ref=ref, mask_topology=True)
+            plot_inadmissibility(data, actual, label, domain, state_dir / f"{domain}_inadmissibility_map.png", ref=ref)
+            if domain == "expanded":
+                plot_feature_overlay(data, actual, label, state_dir / "expanded_feature_overlay.png", ref=ref)
+                plot_slices(data, actual, label, state_dir / "expanded_root_slices.png")
+            if domain == "broad":
+                plot_feature_overlay(data, actual, label, state_dir / "broad_feature_overlay.png", ref=ref)
+                plot_slices(data, actual, label, state_dir / "broad_root_slices.png")
 
             finite_A = data["cond_A_scaled"][np.isfinite(data["cond_A_scaled"])]
             finite_J = data["kappa_J"][np.isfinite(data["kappa_J"])]
             finite_s = data["sigma_min_J"][np.isfinite(data["sigma_min_J"])]
-            domain_summary.append(
-                {
-                    "state": label,
-                    "domain": domain,
-                    "samples_per_axis": n,
-                    "solved_fraction": data["solved_count"] / data["total_count"],
-                    "A_scaled_condition_max": float(np.max(finite_A)) if finite_A.size else float("nan"),
-                    "A_scaled_condition_p99": float(np.percentile(finite_A, 99)) if finite_A.size else float("nan"),
-                    "J_condition_max": float(np.max(finite_J)) if finite_J.size else float("nan"),
-                    "J_condition_p99": float(np.percentile(finite_J, 99)) if finite_J.size else float("nan"),
-                    "J_sigma_min_min": float(np.min(finite_s)) if finite_s.size else float("nan"),
-                    "rank_deficient_grid_points": int(
-                        np.count_nonzero(
-                            np.isfinite(data["rank_A"]) & (data["rank_A"] < 8)
-                        )
-                    ),
-                }
-            )
-            if domain == "broad":
-                broad_features.extend(feature_rows(data, label))
-                plot_slices(
-                    data, actual, label,
-                    state_dir / "broad_root_slices.png",
-                )
+            topo = np.asarray(data["topology_admissible"], dtype=bool)
+            static = np.asarray(data["full_static_admissible"], dtype=bool)
+            domain_summary.append({
+                "state": label,
+                "domain": domain,
+                "samples_per_axis": n,
+                "solved_fraction": data["solved_count"] / data["total_count"],
+                "topology_admissible_fraction": float(np.mean(topo)),
+                "full_static_admissible_fraction": float(np.mean(static)),
+                "A_scaled_condition_max": float(np.max(finite_A)) if finite_A.size else float("nan"),
+                "A_scaled_condition_p99": float(np.percentile(finite_A, 99)) if finite_A.size else float("nan"),
+                "J_condition_max": float(np.max(finite_J)) if finite_J.size else float("nan"),
+                "J_condition_p99": float(np.percentile(finite_J, 99)) if finite_J.size else float("nan"),
+                "J_sigma_min_min": float(np.min(finite_s)) if finite_s.size else float("nan"),
+                "rank_deficient_grid_points": int(np.count_nonzero(np.isfinite(data["rank_A"]) & (data["rank_A"] < 8))),
+                "topology_inadmissible_grid_points": int(np.count_nonzero(~topo)),
+            })
+            if domain in ("expanded", "broad"):
+                rows = feature_rows(data, label)
+                for row in rows:
+                    row["domain"] = domain
+                feature_table.extend(rows)
+                ridge_table.extend(ridge_candidate_rows(data, label, domain))
 
     write_rows(ARTIFACTS / "multistart_results.csv", multistart_all)
     write_rows(ARTIFACTS / "multistart_summary.csv", multistart_summary)
     write_rows(ARTIFACTS / "domain_conditioning_summary.csv", domain_summary)
-    write_rows(ARTIFACTS / "broad_feature_peaks.csv", broad_features)
+    write_rows(ARTIFACTS / "feature_peaks.csv", feature_table)
+    write_rows(ARTIFACTS / "closure_singularity_ridge_candidates.csv", ridge_table)
 
     physical = [r for r in domain_summary if r["domain"] == "physical"]
     overall = {
+        "actual_state_count": len(actual_rows),
+        "mapped_state_count": len(map_labels),
         "all_actual_A_rank_8": all(int(r["A_rank"]) == 8 for r in actual_rows),
-        "all_multistart_states_single_accepted_root": all(
-            bool(r["all_accepted_one_root"]) for r in multistart_summary
-        ),
-        "physical_domain_rank_deficient_points": sum(
-            int(r["rank_deficient_grid_points"]) for r in physical
-        ),
-        "physical_domain_max_scaled_A_condition": max(
-            float(r["A_scaled_condition_max"]) for r in physical
-        ),
-        "physical_domain_max_J_condition": max(
-            float(r["J_condition_max"]) for r in physical
-        ),
-        "physical_domain_min_J_sigma_min": min(
-            float(r["J_sigma_min_min"]) for r in physical
-        ),
+        "all_multistart_states_single_accepted_root": all(bool(r["all_accepted_one_root"]) for r in multistart_summary),
+        "physical_domain_rank_deficient_points": sum(int(r["rank_deficient_grid_points"]) for r in physical),
+        "physical_domain_topology_inadmissible_points": sum(int(r["topology_inadmissible_grid_points"]) for r in physical),
+        "physical_domain_max_scaled_A_condition": max(float(r["A_scaled_condition_max"]) for r in physical) if physical else float("nan"),
+        "physical_domain_max_J_condition": max(float(r["J_condition_max"]) for r in physical) if physical else float("nan"),
+        "physical_domain_min_J_sigma_min": min(float(r["J_sigma_min_min"]) for r in physical) if physical else float("nan"),
+        "max_root_J_reconstruction_disagreement": max(float(r["J_condition_relative_difference"]) for r in actual_rows if math.isfinite(float(r["J_condition_relative_difference"]))),
     }
 
     summary = {
         "study": spec,
+        "shared_case_library": case_library,
         "cinder_version": cinder.__version__,
         "base_document": str(base_path),
         "base_document_sha256": sha256(base_path),
-        "load_disturbed_reference": disturbed_status,
-        "representative_states": actual_rows,
+        "actual_root_states": actual_rows,
+        "mapped_states": map_labels,
         "multistart_summary": multistart_summary,
         "domain_summary": domain_summary,
-        "broad_feature_peaks": broad_features,
+        "feature_peaks": feature_table,
+        "ridge_candidates": ridge_table,
+        "expanded_multistart_summary": expanded_multistart_summary,
         "overall": overall,
     }
     write_json(ARTIFACTS / "summary.json", summary, allow_nan=True)
 
     lines = [
-        "# CINDER v1.1.2 closure-conditioning study",
+        "# CINDER v1.1.2 closure-conditioning study — operating-domain upgrade",
         "",
-        "## Physical roots",
+        "The actual-root scan uses the frozen nominal launch plus reusable controlled cases from `defaults/verification_operating_cases.json`. Full lambda-plane maps are generated only for the configured representative/worst states.",
         "",
-        "| State | λp | λs | scaled κ(A) | κ(J_R) | σmin(J_R) |",
-        "|---|---:|---:|---:|---:|---:|",
+        "## Actual solved roots",
+        "",
+        "| State | shift [mm] | sdot [mm/s] | λp | λs | scaled κ(A) | κ(J_R), reconstructed |",
+        "|---|---:|---:|---:|---:|---:|---:|",
     ]
     for row in actual_rows:
         lines.append(
-            f"| {row['label']} | {row['lambda_p']:.5g} | {row['lambda_s']:.5g} | "
-            f"{row['A_condition_scaled']:.4g} | {row['J_condition']:.4g} | "
-            f"{row['J_sigma_min']:.4g} |"
+            f"| {row['label']} | {row['shift_mm']:.4g} | {row['shift_speed_mm_s']:.4g} | {row['lambda_p']:.5g} | {row['lambda_s']:.5g} | {row['A_condition_scaled']:.4g} | {row['J_condition']:.4g} |"
         )
     lines += [
         "",
+        f"- actual stick states scanned: **{len(actual_rows)}**",
+        f"- states receiving full maps: **{len(map_labels)}** ({', '.join(map_labels)})",
         f"- all actual 8×8 closures rank 8: **{overall['all_actual_A_rank_8']}**",
-        f"- physical-domain rank-deficient points: **{overall['physical_domain_rank_deficient_points']}**",
         f"- all multi-start state tests found one accepted root cluster: **{overall['all_multistart_states_single_accepted_root']}**",
-        f"- worst physical-domain scaled κ(A): `{overall['physical_domain_max_scaled_A_condition']:.6g}`",
-        f"- worst physical-domain κ(J_R): `{overall['physical_domain_max_J_condition']:.6g}`",
-        f"- minimum physical-domain σmin(J_R): `{overall['physical_domain_min_J_sigma_min']:.6g}`",
+        f"- Coulomb-box topology-inadmissible grid points across mapped states: **{overall['physical_domain_topology_inadmissible_points']}**",
         "",
-        "Expanded and broad lambda maps are structural diagnostics only. Use the broad feature table and root-slice figures to interpret spikes rather than assigning a cause from condition number alone.",
+        "## Map interpretation",
+        "",
+        "Every NPZ stores the complete unmasked calculation. The ordinary conditioning map shows all computed points. The `_topology_masked` version hides trial points that violate integrated normal compression, belt tension, local wrap compression, actuator unilateral contact, or an active shift support. The separate inadmissibility figure shows which test rejected each point.",
+        "",
+        "The expanded and broad domains are mathematical continuations, not friction-admissible operating regions. The dotted rectangle on those plots is the actual static Coulomb-capacity box.",
     ]
     (ARTIFACTS / "summary.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
-
     print(f"\nClosure-conditioning complete: {ARTIFACTS}")
     return 0
 

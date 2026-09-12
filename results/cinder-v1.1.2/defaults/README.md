@@ -31,6 +31,24 @@ simulation:
 - integration tolerances/method/event settings;
 - reporting grid and included observers.
 
+## Shared verification operating cases
+
+`verification_operating_cases.json` is a second kind of release default: it is
+**not** one executable simulation, but the canonical vocabulary of controlled
+verification case/search recipes used by multiple studies. It owns the common
+fixed-boundary inertias, torque/speed/shift search ranges, tangential contact
+branch requests, free-shift directions, static-rest recipe, and structural
+boundary-arrival recipes.
+
+Mechanical invariants and closure conditioning both consume this same file.
+Each study still owns its own numerical guards, maps, convergence settings,
+metrics, and PASS/REVIEW/FAIL interpretation. A shared recipe only counts as an
+accepted case after CINDER's production classifier and that study's physical
+admissibility checks accept the resulting state.
+
+See `verification_operating_cases.README.md` for the ownership split and case
+semantics.
+
 ## Human tuning manifest
 
 `baja_reference_tuning.json` is deliberately secondary to the executable JSON.

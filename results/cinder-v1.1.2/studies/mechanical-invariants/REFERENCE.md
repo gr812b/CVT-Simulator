@@ -41,7 +41,22 @@ The study sweeps the full physical shift range rather than checking geometry onl
 
 This is still primarily a production self-consistency check: the same geometry mapping used by the dynamics is being audited, with finite differences providing a local derivative cross-check. It is not independent experimental validation of the geometric assumptions.
 
-## 5. Controlled bench boundaries
+## 5. Shared operating-case ownership
+
+Reusable operating-case and search recipes live in
+`../../defaults/verification_operating_cases.json`. The mechanical-invariants
+study is the original source of those case classes, but it no longer owns a
+private duplicate of their torque, inertia, speed, shift, or contact-branch
+search ranges. Other verification studies may consume the same recipes while
+applying different diagnostics and pass/fail policies.
+
+This separation is intentional: an *operating case* describes the mechanical
+state/load class to challenge, while an *invariant* describes what this study
+requires of an accepted state. Changing a numerical guard therefore does not
+change the shared scenario, and changing a shared scenario is visible to every
+consumer.
+
+## 6. Controlled bench boundaries
 
 The domain cases reuse the decoded frozen Baja CVT plant but replace the realistic engine/vehicle environment with CINDER's existing constant shaft-port boundaries:
 
@@ -51,7 +66,7 @@ A `NoHost` supplies no additional dynamics. This does **not** modify belt, pulle
 
 The signed torque pair is searched only to find an admissible example of a requested topology. A topology is never forced to pass: the production classifier must select it, the instantaneous invariant audit must pass, and a short production hybrid continuation must remain admissible.
 
-## 6. Tangential contact coverage matrix
+## 7. Tangential contact coverage matrix
 
 At an interior engaged shift with `sdot = 0`, requested relative speeds are constructed from
 
@@ -75,7 +90,7 @@ The required cases are:
 
 A case counts only if the production classifier returns the requested `EngagedContactMode` and stored slip direction(s), the requested branch persists for a resolved nonzero interval above the event-time numerical scale, and the complete short hybrid continuation plus exact successor states satisfy the full invariant audit. A kinetic branch is not required to survive an arbitrary 0.5 ms simply to be considered mechanically real; rapid restick or direction exchange is itself legitimate hybrid behavior when the successor is admissible. Slip-direction requests are searched with both overall rotation signs before being reported missing.
 
-## 7. Structural-regime coverage
+## 8. Structural-regime coverage
 
 The five operating structures are challenged explicitly:
 
@@ -87,13 +102,13 @@ The five operating structures are challenged explicitly:
 
 Additional directed boundary cases approach the lower deadzone stop and first engagement so that the event/reset path, not merely an exact constrained snapshot, is exercised. The lower-stop search explicitly includes low and zero shaft speeds because a high primary flyweight speed can physically reverse an opening approach before the lower stop is reached. Two additional interior engaged cases prescribe positive and negative `sdot` and require a short admissible free-shift continuation, so both upshift and backshift coordinate directions are challenged away from the stops. Their zero-relative-motion initialization uses the production representative contact speed, including secondary helical-member motion for nonzero `sdot`. Coverage of the sign of free shift is credited from any audited engaged-free state, including the realistic nominal trajectory; the dedicated bench cases remain stress probes rather than artificial gatekeepers.
 
-## 8. Exact hybrid successor states
+## 9. Exact hybrid successor states
 
 Every hybrid transition record with a successor is inspected at the exact post-transition state. This is a hard criterion. A reset is not considered verified merely because the preceding continuous segment was healthy.
 
 The exact terminal point of an outgoing kinetic-slip segment is treated carefully: at a restick or kinetic-direction reversal, relative speed is exactly zero and the outgoing branch may become direction-inconsistent by construction. That endpoint is not counted as an interior slip-direction failure. The exact successor state must still pass independently.
 
-## 9. Static case
+## 10. Static case
 
 The static case uses
 
@@ -101,13 +116,13 @@ The static case uses
 
 at the deadzone lower stop. This checks whether the installed spring/mechanism and stop reactions support an actual stationary CVT under the retained model, rather than calling a slowly varying driven state “static.”
 
-## 10. Negative and classifier controls
+## 11. Negative and classifier controls
 
 The checker deliberately supplies states outside the physical shift interval and a deadzone state that violates `v_b = r_s,e omega_s`. Those states must be rejected rather than silently projected into a valid accepted state.
 
 At the exact engagement coordinate the one-sided rule is also checked: opening velocity belongs to deadzone; closing velocity belongs to the engaged side. This verifies an important initial-state classification convention separately from the dynamic event path.
 
-## 11. Hard invariant metrics on every accepted engaged sample
+## 12. Hard invariant metrics on every accepted engaged sample
 
 The audit records and checks:
 
