@@ -1,4 +1,5 @@
 """LSODA trajectory and hybrid-event convergence study for CINDER v1.1.2."""
+# solver-convergence dense-phase event alignment patch v3
 # solver-convergence event-aligned hybrid metrics patch v2
 # solver-convergence failure-aware sweep patch v1
 
@@ -145,10 +146,11 @@ def config(spec, *, rtol, atol, max_step, comparison_step):
     return {
         "cinder_version": EXPECTED_CINDER_VERSION,
         "base_document_sha256": file_sha256(base),
-        # Revision 3 adds per-segment traces and hybrid event-aligned metrics.
-        # Bumping this intentionally invalidates older numerical caches because
-        # those caches do not preserve the two sides of hybrid resets.
-        "analysis_revision": 3,
+        # Revision 4 evaluates corresponding hybrid segments directly from each
+        # solver dense interpolant on one common normalized phase grid. This
+        # intentionally invalidates revision-3 sampled segment caches.
+        "analysis_revision": 4,
+        "event_aligned_phase_points": 2049,
         "base_document": spec["base_document"],
         "time_span_s": list(spec["reference"]["time_span_s"]),
         "relative_tolerance": float(rtol),
@@ -239,25 +241,44 @@ def compact_trace(result, comparison_step_s):
 
 
 def segment_trace_payload(result, comparison_step_s):
-    """Sample every hybrid segment separately, preserving both event sides."""
-    payload = {"segment_count": np.asarray([len(result.segments)], dtype=int)}
+    """Evaluate each hybrid segment directly on a common normalized phase grid.
+
+    ``comparison_step_s`` still controls the separate raw absolute-time diagnostic
+    trace. It does not enter the paper-facing event-aligned metric.
+
+    Every positive-duration segment is evaluated from its retained SciPy dense
+    interpolant at the same 2049 normalized phase locations u in [0, 1]. Thus
+    candidate/reference values are compared directly at corresponding within-regime
+    phase without a secondary piecewise-linear interpolation or 1-ms/2-ms mismatch.
+    """
+    phase = np.linspace(0.0, 1.0, 2049, dtype=float)
+    payload = {
+        "segment_count": np.asarray([len(result.segments)], dtype=int),
+        "phase": phase,
+    }
     for i, segment in enumerate(result.segments):
-        if segment.has_dense_output:
-            times = uniform_segment_times(
-                segment.start_time,
-                segment.end_time,
-                comparison_step_s,
-            )
-            states = segment.dense_state_at(times)
+        start = float(segment.start_time)
+        end = float(segment.end_time)
+        duration = end - start
+
+        if duration > 0.0:
+            if not segment.has_dense_output:
+                raise RuntimeError(
+                    "Event-aligned convergence requires retained dense output for "
+                    f"positive-duration hybrid segment {i}."
+                )
+            times = start + phase * duration
+            states = np.asarray(segment.dense_state_at(times), dtype=float)
         else:
-            times = np.asarray(segment.time, dtype=float)
-            states = np.asarray(segment.state, dtype=float)
+            state = np.asarray(segment.state[:, -1], dtype=float)
+            states = np.repeat(state[:, None], phase.size, axis=1)
+
         prefix = f"segment_{i:03d}_"
-        payload[prefix + "time_s"] = np.asarray(times, dtype=float)
+        payload[prefix + "start_time_s"] = np.asarray([start], dtype=float)
+        payload[prefix + "end_time_s"] = np.asarray([end], dtype=float)
         for k, key in enumerate(STATE_KEYS):
             payload[prefix + key] = np.asarray(states[k], dtype=float)
     return payload
-
 
 def save_segment_traces(path, payload):
     np.savez_compressed(path, **payload)
@@ -271,7 +292,9 @@ def load_segment_traces(path):
 def unpack_segment_trace(payload, index):
     prefix = f"segment_{index:03d}_"
     return {
-        "time_s": np.asarray(payload[prefix + "time_s"], dtype=float),
+        "phase": np.asarray(payload["phase"], dtype=float),
+        "start_time_s": float(payload[prefix + "start_time_s"][0]),
+        "end_time_s": float(payload[prefix + "end_time_s"][0]),
         **{
             key: np.asarray(payload[prefix + key], dtype=float)
             for key in STATE_KEYS
@@ -288,7 +311,7 @@ def load_trace(path):
 
 
 def cache_status(path, cfg):
-    """Return cached run status when the revision-3 cache is complete."""
+    """Return cached run status when the revision-4 cache is complete."""
     config_path = path / "config.json"
     metadata_path = path / "metadata.json"
     if not config_path.is_file() or not metadata_path.is_file():
@@ -470,11 +493,13 @@ def compare_trace(candidate, reference, scales):
 
 
 def compare_event_aligned_segments(candidate_path, reference_path, scales):
-    """Compare corresponding hybrid segments on normalized within-segment time.
+    """Compare corresponding hybrid segments directly on one dense-output phase grid.
 
-    This removes the artificial O(1) pointwise error produced when two otherwise
-    converged trajectories execute the same finite reset a few microseconds apart.
-    Event-time error is reported independently by ``compare_cache``.
+    Candidate and reference trajectories have already been evaluated from their
+    own retained solver dense interpolants at identical normalized phase points.
+    This removes both finite-reset timing artifacts and the secondary interpolation
+    floor caused by storing candidate/reference segments at different time spacings.
+    Event-time error remains an independent hybrid metric in ``compare_cache``.
     """
     candidate = load_segment_traces(candidate_path / "segment_traces.npz")
     reference = load_segment_traces(reference_path / "segment_traces.npz")
@@ -486,6 +511,14 @@ def compare_event_aligned_segments(candidate_path, reference_path, scales):
             f"candidate={c_count}, reference={r_count}."
         )
 
+    c_phase = np.asarray(candidate["phase"], dtype=float)
+    r_phase = np.asarray(reference["phase"], dtype=float)
+    if c_phase.shape != r_phase.shape or not np.array_equal(c_phase, r_phase):
+        raise ValueError(
+            "Candidate/reference event-aligned caches do not share the same phase grid."
+        )
+    phase = r_phase
+
     integrals = {key: 0.0 for key in STATE_KEYS}
     maxima = {key: 0.0 for key in STATE_KEYS}
     total_reference_time = 0.0
@@ -493,42 +526,21 @@ def compare_event_aligned_segments(candidate_path, reference_path, scales):
     for i in range(r_count):
         c_seg = unpack_segment_trace(candidate, i)
         r_seg = unpack_segment_trace(reference, i)
-        c_t = c_seg["time_s"]
-        r_t = r_seg["time_s"]
-        c_duration = float(c_t[-1] - c_t[0]) if c_t.size > 1 else 0.0
-        r_duration = float(r_t[-1] - r_t[0]) if r_t.size > 1 else 0.0
-
-        # Use a shared phase grid. Separate segment storage means u=0 and u=1
-        # retain the correct post-/pre-reset states for this particular segment.
-        n = max(int(c_t.size), int(r_t.size), 2)
-        u = np.linspace(0.0, 1.0, n)
-        c_phase = (
-            (c_t - c_t[0]) / c_duration
-            if c_duration > 0.0
-            else np.zeros_like(c_t)
-        )
-        r_phase = (
-            (r_t - r_t[0]) / r_duration
-            if r_duration > 0.0
-            else np.zeros_like(r_t)
-        )
+        r_duration = float(r_seg["end_time_s"] - r_seg["start_time_s"])
 
         for key in STATE_KEYS:
-            if c_duration > 0.0 and c_t.size > 1:
-                c_values = np.interp(u, c_phase, c_seg[key])
-            else:
-                c_values = np.full_like(u, float(c_seg[key][-1]), dtype=float)
-            if r_duration > 0.0 and r_t.size > 1:
-                r_values = np.interp(u, r_phase, r_seg[key])
-            else:
-                r_values = np.full_like(u, float(r_seg[key][-1]), dtype=float)
-
+            c_values = np.asarray(c_seg[key], dtype=float)
+            r_values = np.asarray(r_seg[key], dtype=float)
+            if c_values.shape != phase.shape or r_values.shape != phase.shape:
+                raise ValueError(
+                    f"Unexpected phase-sample shape in segment {i}, state {key}."
+                )
             error = (c_values - r_values) / scales[key]
             maxima[key] = max(maxima[key], float(np.max(np.abs(error))))
             if r_duration > 0.0:
-                integrals[key] += float(np.trapezoid(error**2, u)) * r_duration
+                integrals[key] += float(np.trapezoid(error**2, phase)) * r_duration
 
-        total_reference_time += r_duration
+        total_reference_time += max(r_duration, 0.0)
 
     if total_reference_time <= 0.0:
         raise ValueError("Reference trajectory has zero total segment duration.")
@@ -540,7 +552,6 @@ def compare_event_aligned_segments(candidate_path, reference_path, scales):
         )
         result[f"{key}_max_abs_normalized"] = maxima[key]
 
-    # Final-state error is evaluated from the final side of the final segment.
     c_final = unpack_segment_trace(candidate, c_count - 1)
     r_final = unpack_segment_trace(reference, r_count - 1)
     final_errors = []
@@ -559,7 +570,10 @@ def compare_event_aligned_segments(candidate_path, reference_path, scales):
     result["final_state_rms_normalized"] = float(
         math.sqrt(np.mean(np.asarray(final_errors, dtype=float) ** 2))
     )
-    result["comparison_method"] = "event_aligned_piecewise_linear_segment_time"
+    result["comparison_method"] = (
+        "event_aligned_direct_dense_output_common_phase_grid_2049"
+    )
+    result["event_aligned_phase_points"] = int(phase.size)
     return result
 
 def signature(rows):
@@ -1197,8 +1211,8 @@ def main():
         "cinder_version": cinder.__version__,
         "run_mode": "quick" if args.quick else "full",
         "continuous_comparison_method": (
-            "event-aligned corresponding hybrid segments; piecewise-linear time "
-            "normalization within each segment"
+            "event-aligned corresponding hybrid segments; direct dense-output "
+            "evaluation on a common 2049-point normalized phase grid"
         ),
         "regime_mismatch_method": (
             "exact duration over union of candidate/reference hybrid boundaries"

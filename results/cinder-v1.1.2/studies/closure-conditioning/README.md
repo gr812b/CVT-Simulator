@@ -116,3 +116,27 @@ Mechanical invariants consumes that same defaults file directly; closure conditi
 does not maintain a private duplicate of the fixed-boundary case/search ranges. The
 shared file owns the scenario vocabulary, while this study owns lambda-domain
 resolution, conditioning diagnostics, root-census logic, and map selection.
+
+## Optional singular-vector ridge diagnostic
+
+After a normal closure-conditioning run has produced the expanded `.npz` maps,
+`singular_vector_diagnostics.py` can interrogate the weak direction of the
+8×8 closure without repeating any lambda-plane sweep:
+
+```powershell
+python .\studies\closure-conditioning\singular_vector_diagnostics.py
+```
+
+By default it analyzes `upper_stop` and `mid_shift`.  For each state it compares
+the actual root with the expanded-domain maximum of scaled `kappa(A)`, the
+worst topology-admissible expanded point, and the nearest point on the top
+0.5% high-conditioning ridge.  It writes the weakest right singular vector,
+the matching left singular vector, and a focused `(tau_s,N_s)` row-alignment
+diagnostic under `artifacts/singular_vector_diagnostics/`.
+
+The singular vectors are taken from the same row/column-equilibrated matrix
+used by the study's scaled closure condition number.  Therefore the vector
+components show the weak *equilibrated* direction rather than being dominated
+by the incompatible physical units of angular acceleration, torque, and force.
+The back-scaled physical direction is saved for sign/response interpretation,
+but its raw component magnitudes must not be compared across different units.

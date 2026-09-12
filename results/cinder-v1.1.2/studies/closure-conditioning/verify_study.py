@@ -67,3 +67,9 @@ fig.canvas.draw()
 plt.close(fig)
 
 print("PASS upgraded closure-conditioning preflight")
+
+# Optional ridge-anatomy diagnostic must remain import/syntax clean.  It is not
+# executed here because it intentionally depends on map artifacts from run.py.
+_diag = HERE / "singular_vector_diagnostics.py"
+assert _diag.is_file(), _diag
+compile(_diag.read_text(encoding="utf-8"), str(_diag), "exec")
