@@ -66,3 +66,28 @@ Delete this study's cache and rerun:
 ```powershell
 python .\studies\solver-convergence\run.py --fresh
 ```
+
+<!-- solver-convergence finalization companions v1 -->
+## Publication polish and optional dense explorer
+
+The formal revision-4 numerical sweep is intentionally left unchanged.
+
+Paper-facing figures can be regenerated from the frozen artifacts without
+rerunning CINDER:
+
+```powershell
+python .\studies\solver-convergence\publication_plots.py
+```
+
+A separate exploratory dense sweep is available for high-resolution heatmaps,
+contours, breakdown-boundary exploration, and high-density cost plots. It is
+**never called by `run.py`** and writes only beneath `artifacts/dense-overnight/`:
+
+```powershell
+python .\studies\solver-convergence\overnight_dense.py --plan-only
+python .\studies\solver-convergence\overnight_dense.py
+```
+
+The dense explorer is supplementary/exploratory and does not replace the frozen
+formal verification dataset.
+
