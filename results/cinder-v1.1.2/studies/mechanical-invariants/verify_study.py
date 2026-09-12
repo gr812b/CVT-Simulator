@@ -1,5 +1,4 @@
-"""Cheap preflight for the CINDER 1.1.2 mechanical-invariants study."""
-
+"""Cheap preflight for the CINDER 1.1.2 operating-domain invariant study."""
 from __future__ import annotations
 import json
 from pathlib import Path
@@ -8,31 +7,26 @@ import sys
 
 import cinder
 from cinder.contracts import validate_simulation_case_document
+from cinder.execution.hybrid.composed import ComposedCVTHybridSystem
+from cinder.hosts import NoHost
+from cinder.model.boundaries.shaft import FixedShaftBoundary
+from cinder.model.cvt.contact import EngagedContactMode, SlipDirection, evaluate_contact_relative_speed
+from cinder.results.fields import recover_belt_tension_boundaries
 from cinder.results.inspection import inspect_cvt_state
-from cinder.model.cvt.geometry.belt_length import belt_length_residual
-from cinder.execution.hybrid.cvt_contact import CVTContactEvaluation
 
-HERE = Path(__file__).resolve().parent
-RELEASE_ROOT = HERE.parents[1]
-VERIFY = RELEASE_ROOT / "verify_environment.py"
-
-subprocess.run([sys.executable, str(VERIFY)], check=True)
-assert cinder.__version__ == "1.1.2"
-
-spec = json.loads((HERE / "study.json").read_text(encoding="utf-8"))
-base = (HERE / spec["base_document"]).resolve()
-assert base.is_file(), base
-document = json.loads(base.read_text(encoding="utf-8"))
-report = validate_simulation_case_document(document)
-assert report.is_valid, report.findings
-
-for name in (
-    "slipped_directions_are_consistent",
-    "mechanism_contacts_are_admissible",
-    "normal_at",
-):
-    assert hasattr(CVTContactEvaluation, name), name
-
-assert callable(inspect_cvt_state)
-assert callable(belt_length_residual)
-print("PASS mechanical-invariants preflight")
+HERE=Path(__file__).resolve().parent
+RELEASE_ROOT=HERE.parents[1]
+subprocess.run([sys.executable,str(RELEASE_ROOT/"verify_environment.py")],check=True)
+assert cinder.__version__=="1.1.2"
+spec=json.loads((HERE/"study.json").read_text(encoding="utf-8"))
+base=(HERE/spec["base_document"]).resolve(); assert base.is_file(),base
+doc=json.loads(base.read_text(encoding="utf-8")); report=validate_simulation_case_document(doc); assert report.is_valid,report.findings
+assert callable(inspect_cvt_state); assert callable(recover_belt_tension_boundaries); assert callable(evaluate_contact_relative_speed)
+assert ComposedCVTHybridSystem is not None and NoHost is not None and FixedShaftBoundary is not None
+assert {m.value for m in EngagedContactMode} == {"stick_stick","primary_slip_secondary_stick","primary_stick_secondary_slip","both_slip"}
+assert SlipDirection.BELT_LEADS_PULLEY.value=="belt_leads_pulley"
+assert float(spec["bench_search"]["minimum_branch_time_s"]) > 0.0
+assert "extended_contact_search" in spec
+assert 0.0 in spec["boundary_cases"]["lower_primary_speeds_rad_s"]
+assert 0.0 in spec["boundary_cases"]["lower_secondary_speeds_rad_s"]
+print("PASS mechanical-invariants operating-domain preflight")
