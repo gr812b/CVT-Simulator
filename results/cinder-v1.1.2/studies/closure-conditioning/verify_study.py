@@ -43,4 +43,27 @@ assert np.max(np.abs(smax[interior]-exact[0])) < 1e-10
 assert np.max(np.abs(smin[interior]-exact[-1])) < 1e-10
 assert np.max(np.abs(kappa[interior]-np.linalg.cond(J))) < 1e-10
 assert np.max(np.abs(det[interior]-np.linalg.det(J))) < 1e-10
+
+# Plot-label smoke test.  Matplotlib mathtext support changes independently of
+# CINDER; draw the exact symbolic labels used by run.py so verify_study catches
+# presentation/parser failures before a long conditioning sweep is started.
+import matplotlib
+matplotlib.use("Agg")
+import matplotlib.pyplot as plt
+fig, axes = plt.subplots(2, 4, figsize=(8, 4))
+labels = [
+    r"Primary stick residual $R_p$",
+    r"Secondary stick residual $R_s$",
+    r"Residual norm $\|R\|_2$",
+    r"Equilibrated 8×8 $\kappa(A)$",
+    r"$\sigma_{\min}(J_R)$",
+    r"$\kappa(J_R)$",
+    r"Signed $\det(J_R)$",
+    r"max$(|N_p|,|N_s|)$",
+]
+for ax, label in zip(axes.ravel(), labels):
+    ax.set_title(label)
+fig.canvas.draw()
+plt.close(fig)
+
 print("PASS upgraded closure-conditioning preflight")

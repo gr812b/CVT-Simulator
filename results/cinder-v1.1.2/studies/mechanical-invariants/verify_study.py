@@ -5,6 +5,11 @@ from pathlib import Path
 import subprocess
 import sys
 
+HERE=Path(__file__).resolve().parent
+RELEASE_ROOT=HERE.parents[1]
+if str(RELEASE_ROOT) not in sys.path:
+    sys.path.insert(0,str(RELEASE_ROOT))
+
 import cinder
 from cinder.contracts import validate_simulation_case_document
 from cinder.execution.hybrid.composed import ComposedCVTHybridSystem
@@ -13,17 +18,20 @@ from cinder.model.boundaries.shaft import FixedShaftBoundary
 from cinder.model.cvt.contact import EngagedContactMode, SlipDirection, evaluate_contact_relative_speed
 from cinder.results.fields import recover_belt_tension_boundaries
 from cinder.results.inspection import inspect_cvt_state
+from support.reference_model import decode_results_simulation_case_document, reference_model_status
 
-HERE=Path(__file__).resolve().parent
-RELEASE_ROOT=HERE.parents[1]
 subprocess.run([sys.executable,str(RELEASE_ROOT/"verify_environment.py")],check=True)
 assert cinder.__version__=="1.1.2"
 spec=json.loads((HERE/"study.json").read_text(encoding="utf-8"))
 base=(HERE/spec["base_document"]).resolve(); assert base.is_file(),base
+policy_path=(HERE/spec["reference_model_policy"]).resolve(); assert policy_path.is_file(),policy_path
 case_library_path=(HERE/spec["shared_case_library"]).resolve(); assert case_library_path.is_file(),case_library_path
 case_library=json.loads(case_library_path.read_text(encoding="utf-8"))
-assert int(case_library.get("schema_version",0)) >= 2
+assert int(case_library.get("schema_version",0)) >= 3
+assert set(case_library.get("targeted_contact_states",{})) == {"both_slip_mp","secondary_slip_plus"}
 doc=json.loads(base.read_text(encoding="utf-8")); report=validate_simulation_case_document(doc); assert report.is_valid,report.findings
+decoded=decode_results_simulation_case_document(doc)
+assert reference_model_status(decoded.plant).secondary_helix_topology=="bilateral_zero_clearance_slot"
 assert callable(inspect_cvt_state); assert callable(recover_belt_tension_boundaries); assert callable(evaluate_contact_relative_speed)
 assert ComposedCVTHybridSystem is not None and NoHost is not None and FixedShaftBoundary is not None
 assert {m.value for m in EngagedContactMode} == {"stick_stick","primary_slip_secondary_stick","primary_stick_secondary_slip","both_slip"}
@@ -44,5 +52,9 @@ assert not any(key in spec for key in ("bench_search","extended_contact_search",
 assert {item["id"] for item in case_library["free_shift_direction_requests"]} == {"free_shift_closing","free_shift_opening"}
 assert len(case_library["structural_boundary_requests"]) == 4
 assert case_library["deadzone_free_snapshot"]["id"] == "deadzone_free_static_snapshot"
+assert (HERE/"run_reference.py").is_file()
+assert (HERE/"CAPABILITY_INTERPRETATION.md").is_file()
+assert (HERE/"run_capability_probes.py").is_file()
 print("PASS mechanical-invariants operating-domain preflight")
 print(f"Shared cases: {case_library_path}")
+print("Results secondary helix: bilateral_zero_clearance_slot")

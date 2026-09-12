@@ -1,0 +1,28 @@
+{
+  "schema_version": 1,
+  "name": "CINDER v1.1.2 results reference-model policy",
+  "cinder_release": {
+    "distribution": "cinder-cvt",
+    "version": "1.1.2",
+    "source_commit_sha": "7637a38b4fb9ec21dfb953c1c80a27ec5f389654"
+  },
+  "base_simulation_document": "baja_reference_simulation_case.json",
+  "secondary_helix": {
+    "results_topology": "bilateral_zero_clearance_slot",
+    "published_topology": "selected_unilateral_flank",
+    "preserve_signed_reacted_torque": true,
+    "preserve_axial_force_equation": true,
+    "preserve_torsional_spring": true,
+    "preserve_movable_member_inertia": true,
+    "remove_only_selected_flank_compression_inequality": true
+  },
+  "rationale": "The general v1.1.2 results programme is intended to stress belt, closure, hybrid-contact and actuator dynamics over a wide operating domain. A bilateral/slotted torque-reactive helix is a valid CVT design and prevents selected-flank lift-off from obscuring those questions. Unilateral-versus-slotted behavior should be isolated in its own dedicated topology study.",
+  "activation": {
+    "support_module": "support.reference_model",
+    "decoder": "decode_results_simulation_case_document",
+    "process_global_hook": false,
+    "installation_required": false,
+    "stock_unilateral_opt_in": "Use cinder.contracts.decode_simulation_case_document directly in a study that explicitly wants the published unilateral topology."
+  },
+  "provenance_note": "The frozen public JSON still encodes the published unilateral helix element. Studies using the shared results decoder apply the declared bilateral/slotted topology after public decoding and should record that choice beside generated artifacts."
+}

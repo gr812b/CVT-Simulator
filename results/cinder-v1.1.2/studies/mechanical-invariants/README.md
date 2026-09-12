@@ -1,28 +1,69 @@
 # Mechanical invariants — operating-domain audit
 
-This folder **replaces** the earlier nominal-trajectory-only `mechanical-invariants` study for CINDER 1.1.2.
-
-Run from this directory with the same frozen release environment used by the other v1.1.2 studies:
+This study replaces the earlier nominal-trajectory-only mechanical-invariants
+check for CINDER 1.1.2. The canonical policy-aware run is:
 
 ```bash
 python verify_study.py
-python run.py
+python run_reference.py
+python run_capability_probes.py
+python build_capability_map.py
 ```
 
+`run.py` remains the core audit implementation. `run_reference.py` is the
+results-reference entry point: it decodes the frozen case through the shared
+results helper, tries shared rare-contact reproduction anchors before the
+ordinary search, then runs the unchanged core audit and records the active
+reference model beside the artifacts. Nothing is installed or applied globally.
 
-The reusable operating-case/search recipes are now owned by
-`../../defaults/verification_operating_cases.json`. This study keeps only its
-invariant-specific guards, geometry sweep, negative controls, and reporting policy
-in `study.json`; it resolves the shared library at runtime. Closure conditioning
-uses the same case vocabulary, so a later edit to a torque/speed/shift search domain
-cannot silently diverge between the two studies.
+## Reference topology
 
-The study intentionally uses two kinds of systems. The realistic reference case is decoded from `../../defaults/baja_reference_simulation_case.json`. Controlled mechanics cases reuse the **same decoded production CVT assembly** but attach CINDER's existing `FixedShaftBoundary` to both shafts and `NoHost`. No alternative test-only CVT equations are introduced.
+For general result studies the secondary torque-reactive helix is a
+zero-clearance **bilateral/slotted** contact. The signed production helix torque,
+axial force, torsional spring and movable-member inertia are untouched. Only the
+selected-flank unilateral admissibility check is removed. This is intentional:
+this study is primarily trying to find the limits of the belt/contact reduction,
+not the limits of one particular helix flank design.
 
-The controlled cases exist because a nominal launch cannot exercise the full initial-value capability of the model. The harness deliberately searches for admissible initial conditions covering stick-stick, both mixed stick/slip modes, both kinetic directions at each interface, all four both-slip relative-velocity quadrants, forward/reverse overall rotation, deadzone/static states, and directed arrivals at each structural boundary. Candidate states only count when CINDER's **production initial classifier** selects the requested branch and a short production hybrid integration remains mechanically admissible. Slip-direction searches try both overall rotation signs; rejected classified candidates retain the field-level margins needed to determine whether a missing class is a search limitation or a genuinely inadmissible topology.
+Other unilateral contacts and travel-stop reactions remain hard physical
+constraints. A dedicated helix-topology study can later compare unilateral and
+slotted behavior directly.
 
-For nonzero-shift-speed engaged probes, the harness initializes tangential compatibility using CINDER's production representative-contact-speed definition, so secondary helix motion is included rather than approximated away. The field-level engaged checks include the complete recovered belt tension field and distributed wrap normal loading, not only the integrated pulley normal resultants. See `REFERENCE.md` for the precise scientific claim and pass logic.
+## Shared case vocabulary
 
-`PASS` is intentionally demanding: every required coverage class must be found, all accepted samples and exact successor states must satisfy the invariant checks, and invalid-state controls must be rejected. `REVIEW` means no hard invariant failed but at least one requested coverage class could not be populated by the deterministic search. `FAIL` means an accepted state violated a hard invariant or a negative/classifier control failed.
+Reusable operating cases live in
+`../../defaults/verification_operating_cases.json`. In addition to the standard
+search domains, that file now contains deterministic reproduction anchors for
+the two contact classes that the broad missing-coverage exploration showed were
+valid but unusually difficult to discover:
 
-Generated results live in `artifacts/` and are not committed by the clean-study package.
+- `secondary_slip_plus`;
+- `both_slip_mp`.
+
+The anchors do **not** bypass classification or mechanics. They count only when
+CINDER's production initial classifier selects the requested branch, the exact
+initial state passes every hard invariant, a real hybrid continuation completes,
+and exact successor states remain admissible. If an anchor ever stops passing,
+the ordinary deterministic search still runs and the study remains REVIEW/FAIL
+rather than forcing coverage.
+
+## Scientific scope
+
+The harness challenges the nominal Baja trajectory, static rest, deadzone and
+engaged structural states, both shift directions, forward/reverse rotation, both
+single-interface slip directions, all four both-slip quadrants, full geometry
+range, belt tension field, distributed normal loading, stop/mechanism reactions,
+8x8 closure self-consistency, and exact hybrid successors.
+
+`PASS` means every required deterministic class was found and every accepted
+state/successor satisfied the retained topology. It is broad operating-domain
+evidence, not proof over the continuum of every real-valued initial condition.
+
+The more interesting follow-on is **capability**, not just coverage.
+`CAPABILITY_INTERPRETATION.md` records the assumption-to-consequence map and the
+planned local-neighbourhood refinement needed to describe which regimes are
+broad/easy, valid but transient, or extreme/narrow. `build_capability_map.py`
+turns each run's raw artifacts into a preliminary diagnostic table without
+pretending those provisional labels are already publication-grade.
+
+Generated results live in `artifacts/` and are not committed by the clean study.

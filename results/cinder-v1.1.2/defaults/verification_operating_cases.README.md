@@ -3,28 +3,35 @@
 `verification_operating_cases.json` is the canonical reusable operating-case
 vocabulary for release-level CINDER v1.1.2 verification studies.
 
-It was extracted from the current mechanical-invariants operating-domain design
-on PR #487 (head `821ac10a...`). Mechanical invariants now **consumes this file
-itself**, rather than keeping a second private copy of its case ranges. Closure
-conditioning consumes the same library. Solver convergence and later studies can
-reuse selected classes where appropriate.
+Mechanical invariants and closure conditioning consume this same library so a
+common state class cannot silently drift between studies. The library is
+release-scoped and may contain two kinds of entry:
 
-The file stores case/search recipes, not pre-baked solved states. A recipe only
-becomes evidence after CINDER's production classifier accepts the requested
-topology and the consuming study applies its own physical/admissibility checks.
-That lets one shared case mean the same thing across studies without forcing every
-study to share the same metric or pass/fail rule.
+1. **search recipes**, which describe a reproducible state/load class but only
+   become evidence after the consuming study's production classifier and
+   admissibility checks accept a candidate; and
+2. **targeted reproduction anchors**, used only for rare classes that a broader
+   exploratory search already demonstrated to be valid. These anchors are still
+   fully reclassified, reintegrated and re-audited every time; they are not
+   forced modes or cached answers.
 
-The main ownership split is:
+Current ownership split:
 
-- `contact_search`: canonical standard + extended fixed-boundary search domains;
-- `contact_branch_requests`: stick/slip branch and sign vocabulary;
+- `contact_search`: standard + extended deterministic search domains;
+- `contact_branch_requests`: the ten stick/slip/sign requests;
+- `targeted_contact_states`: deterministic anchors for `secondary_slip_plus`
+  and `both_slip_mp` discovered by the missing-coverage exploration;
+- `capability_probe_states`: states that previously terminated only on the
+  unilateral helix and should be revisited under the slotted results topology;
 - `free_shift_search`: positive/negative `s_dot` search domain;
-- `static_rest_case`: common zero-speed lower-stop hold recipe;
-- `structural_boundary_cases`: directed lower-stop / engagement / low-ratio / upper-stop arrivals;
-- `stick_cases` and named `free_shift_cases`: compact engaged cases used heavily by closure conditioning;
-- study-specific guards, convergence grids, lambda-map resolution, and report policy remain in each study.
+- `static_rest_case`: zero-speed lower-stop hold recipe;
+- `structural_boundary_cases`: directed lower-stop / engagement / low-ratio /
+  upper-stop arrivals;
+- `stick_cases` and named `free_shift_cases`: compact engaged cases used by
+  closure conditioning;
+- study-specific guards, convergence grids, maps and report policy remain in
+  each study.
 
-Closure conditioning intentionally ignores deadzone cases because the engaged
-2x2 stick-root map does not exist there. Mechanical invariants still uses the
-deadzone/static and structural-boundary portions of the library.
+The shared library points to `results_reference_model.json`; general v1.1.2
+result studies therefore use the bilateral/slotted secondary helix unless an
+explicit helix-topology comparison opts out in a fresh process.

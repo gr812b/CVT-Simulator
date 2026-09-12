@@ -363,6 +363,91 @@ def reconstructed_root_jacobian(ref, sample, lambda_p: float, lambda_s: float, s
     return J, float(singular[-1]), float(singular[0]), float(singular[0] / singular[-1]), float(np.linalg.det(J))
 
 
+ROOT_JACOBIAN_STEPS = (1.0e-2, 3.0e-3, 1.0e-3, 3.0e-4, 1.0e-4, 3.0e-5, 1.0e-5, 3.0e-6, 1.0e-6, 3.0e-7)
+
+
+def root_jacobian_step_rows(label, ref, sample):
+    """Return a controlled finite-difference convergence sweep for the physical J_R.
+
+    Important: ``EngagedContactSolveResult.jacobian`` is intentionally *not* used
+    as a reference value here.  In production it is solver working state: a
+    terminal least-squares Jacobian on a fresh solve, or a Broyden-updated
+    continuation Jacobian after an accepted continuation step.  That object is
+    useful to the nonlinear solver, but it is path-dependent and is not the
+    canonical derivative of the frozen residual map at the reported root.
+
+    Closure conditioning therefore defines J_R directly as the derivative of
+    [R_p, R_s] with respect to [lambda_p, lambda_s] at the frozen state/root and
+    verifies that derivative by a central-difference step sweep.
+    """
+    inspection = reconstruct(ref, sample, closure_audit=False)
+    contact = inspection.contact
+    if contact is None:
+        return []
+    u = contact.traction_utilization
+    rows = []
+    for step in ROOT_JACOBIAN_STEPS:
+        try:
+            J, smin, smax, kappa, det = reconstructed_root_jacobian(
+                ref, sample, u.primary_lambda, u.secondary_lambda, step=step
+            )
+            error = ""
+        except Exception as exc:
+            smin = smax = kappa = det = float("nan")
+            J = np.full((2, 2), np.nan)
+            error = f"{type(exc).__name__}: {exc}"
+        rows.append({
+            "state": label,
+            "step": float(step),
+            "lambda_p": float(u.primary_lambda),
+            "lambda_s": float(u.secondary_lambda),
+            "J00": float(J[0,0]), "J01": float(J[0,1]),
+            "J10": float(J[1,0]), "J11": float(J[1,1]),
+            "sigma_min": float(smin), "sigma_max": float(smax),
+            "kappa": float(kappa), "determinant": float(det),
+            "error": error,
+        })
+    return rows
+
+
+def jacobian_convergence_rows(step_rows):
+    """Summarize whether the canonical 1e-5 Jacobian lies on a stable plateau."""
+    by_state = {}
+    for row in step_rows:
+        by_state.setdefault(row["state"], []).append(row)
+    out=[]
+    canonical_step=1.0e-5
+    # Avoid the very coarsest truncation-error points and the very smallest
+    # roundoff-sensitive endpoint.  This window is deliberately much wider
+    # than needed for the observed v1.1.2 states.
+    stable_lower=1.0e-6
+    stable_upper=3.0e-4
+    for state, rows in sorted(by_state.items()):
+        finite=[r for r in rows if not r.get("error") and math.isfinite(float(r["kappa"]))]
+        canonical=min(finite, key=lambda r: abs(float(r["step"])-canonical_step)) if finite else None
+        plateau=[r for r in finite if stable_lower <= float(r["step"]) <= stable_upper]
+        if canonical is None or not plateau:
+            out.append({
+                "state":state,"canonical_step":canonical_step,"canonical_kappa":float("nan"),
+                "plateau_min_kappa":float("nan"),"plateau_max_kappa":float("nan"),
+                "plateau_relative_span":float("nan"),"converged":False,
+            })
+            continue
+        vals=[float(r["kappa"]) for r in plateau]
+        k0=float(canonical["kappa"])
+        span=(max(vals)-min(vals))/max(abs(k0),1.0)
+        out.append({
+            "state":state,
+            "canonical_step":canonical_step,
+            "canonical_kappa":k0,
+            "plateau_min_kappa":min(vals),
+            "plateau_max_kappa":max(vals),
+            "plateau_relative_span":span,
+            "converged":bool(span <= 1.0e-5),
+        })
+    return out
+
+
 def actual_root_metrics(label, ref, sample):
     inspection = reconstruct(ref, sample, closure_audit=True)
     contact = inspection.contact
@@ -370,19 +455,12 @@ def actual_root_metrics(label, ref, sample):
     if contact is None or audit is None:
         raise RuntimeError("Selected state did not reconstruct an engaged closure.")
 
-    branch = contact.branch_result
-    production_jac = getattr(branch, "jacobian", None)
-    if production_jac is None:
-        p_sigma_min = p_sigma_max = p_kappa = p_det = float("nan")
-    else:
-        ps = np.linalg.svd(np.asarray(production_jac, dtype=float), compute_uv=False)
-        p_sigma_max = float(ps[0]); p_sigma_min = float(ps[-1])
-        p_kappa = p_sigma_max / p_sigma_min if p_sigma_min > 0 else float("inf")
-        p_det = float(np.linalg.det(production_jac))
-
+    # Canonical physical stick-root Jacobian: state-frozen central derivative of
+    # the actual residual map.  Do not substitute branch_result.jacobian here;
+    # that is solver working state and may be a Broyden continuation estimate.
     u = contact.traction_utilization
     _J, sigma_min, sigma_max, kappa, determinant = reconstructed_root_jacobian(
-        ref, sample, u.primary_lambda, u.secondary_lambda
+        ref, sample, u.primary_lambda, u.secondary_lambda, step=1.0e-5
     )
     law = ref.decoded.system.cvt.traction_law
     return {
@@ -405,11 +483,8 @@ def actual_root_metrics(label, ref, sample):
         "J_sigma_max": sigma_max,
         "J_condition": kappa,
         "J_determinant": determinant,
-        "J_sigma_min_production": p_sigma_min,
-        "J_sigma_max_production": p_sigma_max,
-        "J_condition_production": p_kappa,
-        "J_determinant_production": p_det,
-        "J_condition_relative_difference": abs(kappa - p_kappa) / max(abs(kappa), 1.0) if math.isfinite(p_kappa) else float("nan"),
+        "J_definition": "central_difference_of_frozen_R_at_root",
+        "J_step": 1.0e-5,
         "N_p": contact.normal_primary,
         "N_s": contact.normal_secondary,
     }
@@ -495,7 +570,12 @@ def topology_failure_code(ref, sample, trial, utilization, snapshot):
         support = float(trial.upper_stop_reaction)
     if support < 0.0:
         code |= 16
-    return code, {**belt, "mechanism_margin": float(mechanism), "support_reaction": float(support)}
+    return code, {
+        **belt,
+        "min_belt_tension": float(belt["min_tension"]),
+        "mechanism_margin": float(mechanism),
+        "support_reaction": float(support),
+    }
 
 
 def build_map(ref, sample, domain, samples):
@@ -555,12 +635,15 @@ def build_map(ref, sample, domain, samples):
             arrays["det_A_scaled"][i, j] = adet
             try:
                 code, extra = topology_failure_code(ref, sample, trial, utilization, snapshot)
-                arrays["topology_failure_code"][i, j] = code
-                arrays["topology_admissible"][i, j] = code == 0
-                for key in ("min_belt_tension", "min_local_normal_p", "min_local_normal_s", "mechanism_margin", "support_reaction"):
-                    arrays[key][i, j] = extra[key]
-            except Exception:
-                arrays["topology_failure_code"][i, j] = 31
+            except Exception as exc:
+                raise RuntimeError(
+                    f"Topology-admissibility evaluation failed at "
+                    f"lambda_p={lam_p:.9g}, lambda_s={lam_s:.9g}."
+                ) from exc
+            arrays["topology_failure_code"][i, j] = code
+            arrays["topology_admissible"][i, j] = code == 0
+            for key in ("min_belt_tension", "min_local_normal_p", "min_local_normal_s", "mechanism_margin", "support_reaction"):
+                arrays[key][i, j] = extra[key]
             static_ok = p_static.lower <= lam_p <= p_static.upper and s_static.lower <= lam_s <= s_static.upper
             arrays["static_capacity_admissible"][i, j] = static_ok
             arrays["full_static_admissible"][i, j] = static_ok and arrays["topology_admissible"][i, j]
@@ -709,7 +792,7 @@ def plot_map(data, actual, label, domain, path, *, ref, mask_topology: bool = Fa
     panels = [
         (r"Primary stick residual $R_p$", SymLogNorm(linthresh=1.0, vmin=-rp_lim, vmax=rp_lim), data["R_p"], "Rp"),
         (r"Secondary stick residual $R_s$", SymLogNorm(linthresh=1.0, vmin=-rs_lim, vmax=rs_lim), data["R_s"], "Rs"),
-        (r"Residual norm $\|\mathbf R\|_2$", LogNorm(vmin=rn_lo, vmax=rn_hi), data["R_norm"], "Rnorm"),
+        (r"Residual norm $\|R\|_2$", LogNorm(vmin=rn_lo, vmax=rn_hi), data["R_norm"], "Rnorm"),
         (r"Equilibrated 8×8 $\kappa(A)$", LogNorm(vmin=ca_lo, vmax=ca_hi), data["cond_A_scaled"], "Acond"),
         (r"$\sigma_{\min}(J_R)$", LogNorm(vmin=sm_lo, vmax=sm_hi), data["sigma_min_J"], "Jmin"),
         (r"$\kappa(J_R)$", LogNorm(vmin=kj_lo, vmax=kj_hi), data["kappa_J"], "Jcond"),
@@ -975,6 +1058,14 @@ def main():
     # One actual-root conditioning scan over every mechanically distinct state.
     actual_rows = [actual_root_metrics(label, ref, sample) for label, ref, sample in states]
     write_rows(ARTIFACTS / "actual_root_state_scan.csv", actual_rows)
+    jacobian_step_rows = [
+        row
+        for label, ref, sample in states
+        for row in root_jacobian_step_rows(label, ref, sample)
+    ]
+    write_rows(ARTIFACTS / "root_jacobian_step_sweep.csv", jacobian_step_rows)
+    jacobian_convergence = jacobian_convergence_rows(jacobian_step_rows)
+    write_rows(ARTIFACTS / "root_jacobian_convergence_summary.csv", jacobian_convergence)
 
     # Choose the smaller subset that deserves the expensive lambda-plane maps.
     by_label = {label: (label, ref, sample, actual) for (label, ref, sample), actual in zip(states, actual_rows)}
@@ -1126,7 +1217,8 @@ def main():
         "physical_domain_max_scaled_A_condition": max(float(r["A_scaled_condition_max"]) for r in physical) if physical else float("nan"),
         "physical_domain_max_J_condition": max(float(r["J_condition_max"]) for r in physical) if physical else float("nan"),
         "physical_domain_min_J_sigma_min": min(float(r["J_sigma_min_min"]) for r in physical) if physical else float("nan"),
-        "max_root_J_reconstruction_disagreement": max(float(r["J_condition_relative_difference"]) for r in actual_rows if math.isfinite(float(r["J_condition_relative_difference"]))),
+        "all_root_J_step_sweeps_converged": all(bool(r["converged"]) for r in jacobian_convergence),
+        "max_root_J_plateau_relative_span": max(float(r["plateau_relative_span"]) for r in jacobian_convergence if math.isfinite(float(r["plateau_relative_span"]))),
     }
 
     summary = {
@@ -1136,6 +1228,8 @@ def main():
         "base_document": str(base_path),
         "base_document_sha256": sha256(base_path),
         "actual_root_states": actual_rows,
+        "root_jacobian_step_sweep": jacobian_step_rows,
+        "root_jacobian_convergence": jacobian_convergence,
         "mapped_states": map_labels,
         "multistart_summary": multistart_summary,
         "domain_summary": domain_summary,

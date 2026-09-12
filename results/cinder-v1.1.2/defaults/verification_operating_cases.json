@@ -1,13 +1,14 @@
 {
-  "schema_version": 2,
+  "schema_version": 3,
   "name": "CINDER v1.1.2 shared verification operating-case library",
   "source": {
-    "description": "Canonical reusable operating-case/search definitions extracted from the current mechanical-invariants operating-domain audit on PR #487. Mechanical invariants and closure conditioning consume this file so shared state classes cannot silently drift.",
+    "description": "Canonical reusable operating-case/search definitions extracted from the mechanical-invariants operating-domain audit on PR #487. Mechanical invariants and closure conditioning consume this file so shared state classes cannot silently drift. Two rare contact states are retained as deterministic reproduction anchors after the dedicated missing-coverage exploration.",
     "pull_request": 487,
-    "pull_request_head_sha": "821ac10aff001a3e59ddb5e6f48b23740f4fa00c",
+    "pull_request_head_sha_at_promotion": "f532fc0c3feac1fdd2537d376fe65d5364aab8a2",
     "cinder_source_sha": "7637a38b4fb9ec21dfb953c1c80a27ec5f389654"
   },
   "base_document": "baja_reference_simulation_case.json",
+  "reference_model_policy": "results_reference_model.json",
   "fixed_boundary_bench": {
     "primary_inertia_kg_m2": 0.03,
     "secondary_inertia_kg_m2": 0.05,
@@ -122,6 +123,100 @@
       "primary_vrel_sign": -1,
       "secondary_vrel_sign": -1,
       "rotation_sign": 1
+    }
+  ],
+  "targeted_contact_state_integrator": {
+    "duration_s": 0.03,
+    "audit_time_step_s": 0.00025,
+    "minimum_branch_time_s": 1e-08,
+    "relative_tolerance": 3e-05,
+    "absolute_tolerance": 3e-08,
+    "method": "LSODA",
+    "max_step": 0.0005,
+    "maximum_transitions": 150,
+    "event_time_tolerance": 1e-11
+  },
+  "targeted_contact_states": {
+    "both_slip_mp": [
+      {
+        "id": "both_slip_mp_exploration_full_pass_3951",
+        "role": "canonical_reproduction_anchor",
+        "source": "missing-coverage exploration; attempt 3951; full dynamic pass under the original unilateral helix",
+        "primary_speed_rad_s": 536.870016852889,
+        "secondary_speed_rad_s": 173.98800727701902,
+        "belt_speed_m_s": 17.245402640197394,
+        "shift_position_m": 0.0029223568650515,
+        "shift_speed_m_s": 0.0,
+        "primary_torque_Nm": -105.5809606447166,
+        "secondary_torque_Nm": -282.07358924935374,
+        "primary_inertia_kg_m2": 0.0646801421379349,
+        "secondary_inertia_kg_m2": 0.0025056948574856,
+        "observed_primary_vrel_m_s": -1.401283288833865,
+        "observed_secondary_vrel_m_s": 0.1429057789627229,
+        "historical_requested_branch_dwell_s": 9.82319326605176e-06,
+        "interpretation_flags": [
+          "rare_opposing_slip_quadrant",
+          "very_short_lived",
+          "stress_state",
+          "taut_full_wrap_constraints_material"
+        ]
+      }
+    ],
+    "secondary_slip_plus": [
+      {
+        "id": "secondary_slip_plus_exploration_full_pass_2535",
+        "role": "canonical_reproduction_anchor",
+        "source": "missing-coverage exploration; attempt 2535; full dynamic pass under the original unilateral helix",
+        "primary_speed_rad_s": 272.7864016567093,
+        "secondary_speed_rad_s": 223.0144587864204,
+        "belt_speed_m_s": 17.211386654195262,
+        "shift_position_m": 0.0144631972592792,
+        "shift_speed_m_s": 0.0,
+        "primary_torque_Nm": -38.5969217123823,
+        "secondary_torque_Nm": -17.984371460917572,
+        "primary_inertia_kg_m2": 0.0127909337472896,
+        "secondary_inertia_kg_m2": 0.0412725141676225,
+        "observed_primary_vrel_m_s": 0.0,
+        "observed_secondary_vrel_m_s": 0.5081910880381133,
+        "historical_requested_branch_dwell_s": 0.0004144389450092,
+        "interpretation_flags": [
+          "rare_secondary_positive_slip",
+          "short_lived",
+          "rapid_restick_tendency"
+        ]
+      }
+    ]
+  },
+  "capability_probe_states": [
+    {
+      "id": "both_slip_mp_unilateral_helix_limited_2423",
+      "target": "both_slip_mp",
+      "purpose": "Revisit under the slotted results policy; the forced branch and classifier were healthy but the original continuation terminated only when the selected helix flank became tensile.",
+      "primary_speed_rad_s": -264.10210448256464,
+      "secondary_speed_rad_s": -120.29184760149111,
+      "belt_speed_m_s": -11.101813302646256,
+      "shift_position_m": 0.0027376119999999,
+      "shift_speed_m_s": 0.0630372207670928,
+      "primary_torque_Nm": 6.330575502999295,
+      "secondary_torque_Nm": 107.5691365992956,
+      "primary_inertia_kg_m2": 0.0090288383260035,
+      "secondary_inertia_kg_m2": 0.0080232972220575,
+      "historical_termination": "secondary unilateral helix selected-flank lift-off"
+    },
+    {
+      "id": "secondary_slip_plus_unilateral_helix_limited_2369",
+      "target": "secondary_slip_plus",
+      "purpose": "Revisit under the slotted results policy; the forced branch and classifier were healthy but the original continuation terminated only when the selected helix flank became tensile.",
+      "primary_speed_rad_s": 296.5975858622175,
+      "secondary_speed_rad_s": 196.1817958535352,
+      "belt_speed_m_s": 16.231184091154628,
+      "shift_position_m": 0.0110573492332863,
+      "shift_speed_m_s": 0.0,
+      "primary_torque_Nm": -96.08546809200236,
+      "secondary_torque_Nm": 102.18272931826785,
+      "primary_inertia_kg_m2": 0.0090608192262809,
+      "secondary_inertia_kg_m2": 0.1738296842979167,
+      "historical_termination": "secondary unilateral helix selected-flank lift-off"
     }
   ],
   "stick_state_search": {
@@ -270,11 +365,11 @@
     ]
   },
   "notes": [
-    "This file owns reusable operating-case/search recipes. Study-specific numerical guards and pass/fail metrics remain in each study.json.",
-    "The library is a reusable case/search definition, not a claim that every listed recipe is admissible for every future hardware tune.",
-    "Studies must use CINDER's production classifier and physical admissibility checks before accepting a searched state.",
-    "Closure-conditioning intentionally ignores deadzone cases because the 2x2 engaged stick-root map does not exist there.",
-    "Mechanical-invariants additionally uses deadzone/static and structural-boundary cases from this same library."
+    "This file owns reusable operating-case/search recipes and the two deterministic rare-contact reproduction anchors. Study-specific numerical guards and pass/fail metrics remain in each study.json.",
+    "A targeted contact state is a release-scoped reproduction anchor discovered by a broader search; it still counts only after the production classifier, invariant audit, hybrid continuation, and exact successor checks pass in the consuming study.",
+    "The library is not a claim that every listed recipe/state is admissible for every future hardware tune.",
+    "General v1.1.2 result studies use defaults/results_reference_model.json, which promotes the secondary helix to a bilateral/slotted topology without altering its signed force/torque equations.",
+    "Closure-conditioning intentionally ignores deadzone cases because the 2x2 engaged stick-root map does not exist there."
   ],
   "contact_search": {
     "standard": {

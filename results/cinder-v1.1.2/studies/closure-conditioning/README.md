@@ -76,6 +76,17 @@ The baseline physical root is the simultaneous intersection that is also statica
 - the physical static box, for the production physical-root uniqueness claim;
 - the expanded mathematical box, to catalogue additional mathematical root clusters without confusing them with physical solutions.
 
+
+## Definition of the stick-root Jacobian
+
+The conditioning quantity reported as `J_R` is the derivative of the **frozen physical residual map**
+
+`[R_p, R_s]` with respect to `[lambda_p, lambda_s]`
+
+at the reported root. The study reconstructs it directly with a symmetric central difference and verifies the result over a decade-spanning step sweep (`root_jacobian_step_sweep.csv`, summarized by `root_jacobian_convergence_summary.csv`).
+
+Do not use `EngagedContactSolveResult.jacobian` as the canonical conditioning metric. In CINDER 1.1.2 that field is solver working state: a fresh least-squares solve stores the optimizer's terminal finite-difference Jacobian, while an accepted continuation step can store a Broyden-updated Jacobian carried from the preceding state. It is intentionally useful for continuation, but can depend on solver history and therefore is not a unique property of one frozen CVT state.
+
 ## Outputs worth inspecting
 
 - `actual_root_state_scan.csv` — conditioning at every mechanically distinct accepted state;

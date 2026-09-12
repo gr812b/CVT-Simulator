@@ -62,7 +62,8 @@
     "Every grid point is computed and retained in NPZ even when the masked presentation hides it.",
     "Expanded and broad domains are mathematical diagnostics, not claimed operating regions.",
     "Finite-lambda walls are not assumed to be poles of the wrap functions. The regular Phi/Psi formulation has no finite real singularity; sharp finite-lambda walls must be checked against the assembled 8x8 singular values and topology diagnostics.",
-    "det(J_R) is retained as a geometric diagnostic; singular values and kappa(J_R) are the formal stick-root conditioning measures."
+    "det(J_R) is retained as a geometric diagnostic; singular values and kappa(J_R) are the formal stick-root conditioning measures.",
+    "J_R is defined by an independent central derivative of the frozen stick residual map at the root. EngagedContactSolveResult.jacobian is solver working state and may be Broyden-updated by continuation, so it is not used as the physical conditioning reference."
   ],
   "generated_artifacts": {
     "directory": "artifacts",

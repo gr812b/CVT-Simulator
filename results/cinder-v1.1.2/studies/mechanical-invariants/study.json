@@ -1,14 +1,15 @@
 {
   "name": "Mechanical invariants \u2014 operating-domain audit",
-  "description": "Release-level operating-domain audit for CINDER 1.1.2. Combines the frozen nominal trajectory with prescribed bench initial conditions, both overall rotation signs for slip searches, short-lived contact-branch checks, static rest, structural-boundary arrivals, field-level belt admissibility, exact transition checks, geometry-domain checks, and invalid-state controls.",
+  "description": "Release-level operating-domain audit for CINDER 1.1.2 using the v1.1.2 results reference topology. Combines the frozen nominal trajectory with prescribed bench initial conditions, targeted rare-contact reproduction anchors, both overall rotation signs, short-lived contact-branch checks, static rest, structural-boundary arrivals, field-level belt admissibility, exact transition checks, geometry-domain checks, and invalid-state controls.",
   "cinder_release": {
     "distribution": "cinder-cvt",
     "version": "1.1.2",
     "source_tag": "cinder-v1.1.2",
     "source_commit_sha": "7637a38b4fb9ec21dfb953c1c80a27ec5f389654"
   },
-  "schema_version": 4,
+  "schema_version": 5,
   "base_document": "../../defaults/baja_reference_simulation_case.json",
+  "reference_model_policy": "../../defaults/results_reference_model.json",
   "nominal_run": {
     "time_span_s": [
       0.0,
@@ -53,7 +54,7 @@
     "geometry_first_derivative_fd_residual": 1e-07,
     "geometry_second_derivative_fd_residual_per_m": 0.005
   },
-  "interpretation": "Review guards are numerical/reporting thresholds, not physical model parameters. Physical admissibility remains nonnegative belt tension, nonnegative local and integrated normal loading, nonnegative unilateral mechanism/stop reactions, Coulomb-consistent contact states, and exact active kinematic constraints.",
+  "interpretation": "Review guards are numerical/reporting thresholds, not physical model parameters. Physical admissibility remains nonnegative belt tension, nonnegative local and integrated normal loading, admissible retained unilateral contacts/stops, Coulomb-consistent contact states, and exact active kinematic constraints. The results reference secondary helix is bilateral/slotted, so its signed reaction is not a unilateral admissibility gate.",
   "generated_artifacts": {
     "directory": "artifacts",
     "committed_results_in_clean_study": false

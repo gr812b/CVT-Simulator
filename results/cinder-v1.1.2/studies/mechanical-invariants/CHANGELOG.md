@@ -1,43 +1,38 @@
 # Replacement notes
 
-This package is intended to replace the earlier CINDER v1.1.2 `mechanical-invariants` folder.
+This package is the operating-domain replacement for the earlier nominal-only
+CINDER v1.1.2 mechanical-invariants study.
 
-Major changes:
+Earlier revisions added controlled fixed-boundary initial-condition searches,
+all gross contact modes/signs, reverse rotation, free shift both ways, static
+rest, structural boundary arrivals, full-domain geometry checks, exact belt
+field admissibility, exact successor audits, negative controls, and the shared
+release-level operating-case library.
 
-- nominal Baja run retained but no longer treated as sufficient coverage;
-- controlled bench uses production `FixedShaftBoundary` + `NoHost` around the exact frozen plant;
-- deterministic initial-condition search for all four engaged contact modes;
-- both kinetic directions at each pulley and all four both-slip quadrants;
-- forward and reverse overall rotation cases;
-- interior free-shift continuations with both positive and negative shift velocity;
-- true zero-speed / zero-external-torque static lower-stop case integrated as a hold test;
-- full-domain geometry sweep with one-sided deadzone checks and finite-difference derivative cross-checks;
-- explicit deadzone-free case and directed lower-stop, engagement, low-ratio-seat, and upper-stop arrivals;
-- exact minimum full-loop belt tension check;
-- exact minimum distributed wrap normal-loading check;
-- reconstructed wrap-normal integral cross-check against solved `N_p,N_s`;
-- generic unilateral mounted-mechanism margin audit;
-- exact post-transition states are hard pass criteria;
-- outgoing slip segment endpoints are excluded only from the narrow direction-consistency check at a zero-crossing event;
-- invalid-state negative controls and engagement one-sided classifier controls;
-- explicit PASS / REVIEW / FAIL distinction based on hard mechanics vs missing coverage.
+## Results-reference / rare-contact revision
 
-## Follow-up revision after first operating-domain run
+This revision incorporates the conclusions of the dedicated missing-coverage
+exploration:
 
-The first domain run returned no hard invariant failures but exposed five coverage gaps. This revision changes the harness, not the CVT mechanics:
+- general v1.1.2 result studies now use a results-local zero-clearance
+  **bilateral/slotted secondary helix**; the production signed force/torque law
+  is unchanged and only the selected-flank unilateral margin is removed;
+- the policy lives under `results/cinder-v1.1.2/support/` as an ordinary shared decoder/helper; nothing is auto-installed or applied process-wide, and no `cvtModel/` or published wheel source is modified;
+- the active policy is declared in `../../defaults/results_reference_model.json`;
+- two rare but fully demonstrated contact states are promoted into the shared
+  operating-case defaults as deterministic reproduction anchors:
+  `secondary_slip_plus` (exploration attempt 2535) and `both_slip_mp`
+  (attempt 3951);
+- `run_reference.py` tries those anchors first, but still requires the production
+  classifier, full hard-invariant audit, real hybrid continuation and exact
+  successor checks; it falls back to the ordinary deterministic search if an
+  anchor fails;
+- two states whose earlier continuations terminated only on unilateral helix
+  lift-off are retained as slotted-topology capability probes;
+- `CAPABILITY_INTERPRETATION.md` freezes the assumption-to-consequence framing
+  and the next local-neighbourhood refinement needed to turn coverage into a
+  defensible broad/easy vs constrained/extreme operating-domain map;
+- `build_capability_map.py` produces a preliminary artifact-level diagnostic
+  table without treating its provisional labels as publication-grade claims.
 
-- slip-direction searches now try both signs of overall rotation before declaring a requested relative-slip class missing;
-- a short-lived kinetic branch may count when it persists for a resolved nonzero interval above the event-time scale and the complete short hybrid continuation plus exact successor states remain admissible; the previous 0.5 ms dwell requirement was an arbitrary verification artifact;
-- rejected classified candidates now retain field-level diagnostics (minimum tension, local normal loading, resultants, static margins, mechanism margin, closure residual) and full classifier error text;
-- a small edge-domain fallback search probes low/high shift, speed, slip, and wider signed shaft torque values without exploding the main grid;
-- nonzero-sdot engaged probes now use CINDER's production representative-contact-speed definition to initialize zero relative motion, including the secondary helical member kinematics;
-- lower-stop arrival probes now include low/zero primary and secondary speeds instead of only the high-RPM deadzone setup that tended to reverse before reaching the stop;
-- positive/negative free-shift coverage is credited from any audited engaged-free trajectory, including the frozen nominal case, rather than only from a dedicated synthetic case ID.
-
-## Shared operating-case library revision
-
-- moved reusable contact-search, free-shift, static-rest, and structural-boundary recipes to `../../defaults/verification_operating_cases.json`;
-- mechanical invariants now resolves those shared recipes at runtime instead of duplicating them in `study.json`;
-- contact-branch request IDs/modes/signs are also sourced from the shared library;
-- the targeted missing-coverage explorer uses the same resolved shared search block;
-- the artifact set records the fully resolved shared case library and its SHA-256 for reproducibility.
+- `run_capability_probes.py` directly replays the two states that previously terminated only on unilateral helix lift-off under the slotted policy; these probes are descriptive and do not gate invariant PASS.

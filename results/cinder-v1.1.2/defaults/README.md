@@ -1,6 +1,6 @@
 # Frozen Baja reference defaults
 
-The authoritative solver input is:
+The authoritative public solver input is:
 
 ```text
 baja_reference_simulation_case.json
@@ -11,64 +11,63 @@ released `cinder-v1.1.2` example. `provenance.json` records the source tag,
 commit, path, blob SHA, and PyPI package version.
 
 The document contains every runtime input category required for the reference
-simulation:
+simulation, including belt/pulley geometry, friction law, inertias, flyweight and
+spring hardware, the torque-reactive secondary helix, engine/vehicle boundaries,
+initial state, solver settings and reporting settings.
 
-- belt and pulley geometry;
-- contact friction coefficients;
-- primary/secondary rotating and translating inertias;
-- belt density;
-- fixed-pivot flyweight geometry and compiled mass moments;
-- primary axial spring;
-- secondary axial spring;
-- secondary torsional spring and helix;
-- full-throttle engine torque curve and engine equivalent inertia;
-- vehicle mass and wheel rotational inertia;
-- final-drive ratio and wheel radius;
-- rolling resistance, drag, frontal area, air density, and gravity;
-- road profile;
-- host initial state;
-- five CINDER initial states;
-- integration tolerances/method/event settings;
-- reporting grid and included observers.
+## Results reference-model policy
+
+`results_reference_model.json` declares the one deliberate results-side topology
+override used by the general v1.1.2 results programme: the secondary
+ torque-reactive helix is treated as a zero-clearance **bilateral/slotted**
+reaction rather than a selected unilateral flank.
+
+The override does **not** change the helix's signed torque or axial-force law,
+torsional preload, movable-sheave inertia, or shaft reaction. It removes only the
+selected-flank compression inequality. The public simulation document remains
+unchanged and therefore remains valid CINDER 1.1.2 input; the results support
+layer records the additional topology choice separately.
+
+This makes unusual belt/contact stress tests answer questions about the belt and
+closure formulation instead of terminating on a particular helix hardware
+flank. A dedicated future study should compare unilateral and slotted designs
+explicitly.
 
 ## Shared verification operating cases
 
 `verification_operating_cases.json` is a second kind of release default: it is
-**not** one executable simulation, but the canonical vocabulary of controlled
-verification case/search recipes used by multiple studies. It owns the common
-fixed-boundary inertias, torque/speed/shift search ranges, tangential contact
-branch requests, free-shift directions, static-rest recipe, and structural
-boundary-arrival recipes.
+not one executable simulation, but the canonical vocabulary of controlled
+verification cases used by multiple studies. It owns common fixed-boundary
+inertias, torque/speed/shift search ranges, tangential contact branch requests,
+free-shift directions, static-rest and structural-boundary recipes.
 
-Mechanical invariants and closure conditioning both consume this same file.
-Each study still owns its own numerical guards, maps, convergence settings,
-metrics, and PASS/REVIEW/FAIL interpretation. A shared recipe only counts as an
-accepted case after CINDER's production classifier and that study's physical
-admissibility checks accept the resulting state.
+After the dedicated missing-coverage exploration, it also owns two deterministic
+**rare-contact reproduction anchors** (`secondary_slip_plus` and
+`both_slip_mp`). Those states are not pre-approved solutions: a consuming study
+must still let the production classifier select the requested topology and must
+re-run its complete physical/invariant checks and hybrid continuation. They are
+kept so later studies can reproduce the same difficult operating classes instead
+of rediscovering them through thousands of search attempts.
 
-See `verification_operating_cases.README.md` for the ownership split and case
-semantics.
+Two additional states that previously failed only on unilateral helix flank
+lift-off are kept as capability probes for the slotted reference topology.
+
+Mechanical invariants and closure conditioning consume the shared case library;
+other studies may reuse the same operating vocabulary while keeping their own
+metrics and pass/fail policy.
 
 ## Human tuning manifest
 
 `baja_reference_tuning.json` is deliberately secondary to the executable JSON.
-It records physical knobs that are obscured by the runtime representation,
-including:
+It records physical knobs obscured by the runtime representation, including
+flyweight masses/ramp, primary spring, secondary spring/torsional preload, helix
+angle, final drive and engine equivalent inertia.
 
-- three flyweights;
-- 13.646 g arm/body + 250 g tip hardware per flyweight;
-- 35° linear primary ramp, 3 mm C3 blend, 35°→20° circular ramp;
-- primary spring stiffness/preload;
-- 110 mm secondary spring compression;
-- 300° secondary torsional preload;
-- 20° helix angle from the circumferential direction;
-- 7.556 final drive;
-- 0.050 kg·m² engine equivalent inertia.
-
-A study must execute the public simulation document, not this human manifest.
-When tuning is swept later, the study should document the physical knob and
-construct the corresponding public CINDER input explicitly.
+A study must execute the public simulation document and explicitly record any
+results-side topology/configuration policy applied after decode.
 
 ## Release provenance
 
-This baseline is re-frozen for the CINDER 1.1.2 results tree. The source release is `cinder-v1.1.2` at commit `7637a38b4fb9ec21dfb953c1c80a27ec5f389654`; exact source identifiers are recorded in `provenance.json`.
+The source release is `cinder-v1.1.2` at commit
+`7637a38b4fb9ec21dfb953c1c80a27ec5f389654`; exact source identifiers are
+recorded in `provenance.json`.
