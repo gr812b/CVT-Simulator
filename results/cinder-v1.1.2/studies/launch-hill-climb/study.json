@@ -1,0 +1,21 @@
+{
+  "name": "Launch then 15 degree hill climb",
+  "description": "Full-throttle launch from the frozen Baja reference configuration. The vehicle starts on flat ground and encounters a 15 degree constant grade at 15 m travelled distance.",
+  "base_document": "../../defaults/baja_reference_simulation_case.json",
+  "overrides": {
+    "time_span_s": [
+      0.0,
+      10.0
+    ],
+    "road_grade_segments": [
+      {
+        "start_distance_m": 0.0,
+        "grade_angle_deg": 0.0
+      },
+      {
+        "start_distance_m": 15.0,
+        "grade_angle_deg": 15.0
+      }
+    ]
+  }
+}

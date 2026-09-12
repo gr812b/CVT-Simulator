@@ -1,0 +1,38 @@
+{
+  "schema_version": 2,
+  "release_tag": "cinder-v1.1.2",
+  "release_commit_sha": "7637a38b4fb9ec21dfb953c1c80a27ec5f389654",
+  "materialization_method": "Use local `git show <release_tag>:<path>` and verify Git blob SHA. Only baseline/energy study utilities and their frozen Baja support are materialized. The retired exploratory stress-search and helix-scaling scripts are not part of this study.",
+  "files": [
+    {
+      "path": "cvtModel/launchTools/run_dynamic_actuator_ablation.py",
+      "git_blob_sha": "fe8b2c85a7149678a35cea6be43d014b6589ee96",
+      "role": "baseline four-variant ablation and reusable model-inspection helpers"
+    },
+    {
+      "path": "cvtModel/launchTools/run_coupling_energy_flow.py",
+      "git_blob_sha": "89bbfd246188c7b024c6be289b8bddb18cfaa291",
+      "role": "baseline coupling energy / generalized-inertia decomposition"
+    },
+    {
+      "path": "cvtModel/launchTools/run_route_grade_response.py",
+      "git_blob_sha": "e816b75d73172ecb5a7124357938734b45ef075a",
+      "role": "frozen Baja system construction utilities"
+    },
+    {
+      "path": "cvtModel/launchTools/fixed_pivot_default_support.py",
+      "git_blob_sha": "e5e5979c1b57c2c570d4db5f9f75834f83c4ef50",
+      "role": "frozen physical fixed-pivot assembly builder"
+    },
+    {
+      "path": "cvtModel/launchTools/cad_drivetrain_inertias.py",
+      "git_blob_sha": "08220f9a9411bc1ab76294c87c8259ed47985e9d",
+      "role": "frozen CAD inertia constants"
+    },
+    {
+      "path": "cvtModel/launchTools/presets/fixed_pivot_3200_reference.json",
+      "git_blob_sha": "e279f2a0e3c9f15b19239db7286f04f458187e1a",
+      "role": "frozen physical reference tune"
+    }
+  ]
+}

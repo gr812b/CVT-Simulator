@@ -1,0 +1,142 @@
+{
+  "baja": {
+    "helix_motion_ratio_rad_per_m": 61.81051562327609,
+    "reflected_axial_inertia_kg": 9.604455107836595
+  },
+  "estimates": [
+    {
+      "estimate_level": "low",
+      "helix_angle_deg": 31.0,
+      "face_mass_kg": 0.544887714654988,
+      "hub_mass_kg": 0.5,
+      "estimated_total_movable_mass_kg": 1.044887714654988,
+      "face_polar_inertia_kg_m2": 0.005155999999922824,
+      "hub_polar_inertia_kg_m2": 0.0004,
+      "movable_member_polar_inertia_kg_m2": 0.005555999999922824,
+      "helix_radius_m": 0.06,
+      "helix_motion_ratio_rad_per_m": 27.73799137250863,
+      "reflected_axial_inertia_kg": 4.274765094799475,
+      "relative_to_baja_reflected_axial_inertia": 0.4450814800843363
+    },
+    {
+      "estimate_level": "nominal",
+      "helix_angle_deg": 31.0,
+      "face_mass_kg": 1.1247347402361576,
+      "hub_mass_kg": 0.8,
+      "estimated_total_movable_mass_kg": 1.9247347402361576,
+      "face_polar_inertia_kg_m2": 0.01187500000047666,
+      "hub_polar_inertia_kg_m2": 0.0010000000000000002,
+      "movable_member_polar_inertia_kg_m2": 0.012875000000476661,
+      "helix_radius_m": 0.05,
+      "helix_motion_ratio_rad_per_m": 33.28558964701036,
+      "reflected_axial_inertia_kg": 14.264604906698587,
+      "relative_to_baja_reflected_axial_inertia": 1.485207098845162
+    },
+    {
+      "estimate_level": "high",
+      "helix_angle_deg": 31.0,
+      "face_mass_kg": 1.7521274882294464,
+      "hub_mass_kg": 1.0,
+      "estimated_total_movable_mass_kg": 2.7521274882294464,
+      "face_polar_inertia_kg_m2": 0.018956499999586412,
+      "hub_polar_inertia_kg_m2": 0.0015125,
+      "movable_member_polar_inertia_kg_m2": 0.020468999999586412,
+      "helix_radius_m": 0.045,
+      "helix_motion_ratio_rad_per_m": 36.98398849667818,
+      "reflected_axial_inertia_kg": 27.99781352688518,
+      "relative_to_baja_reflected_axial_inertia": 2.9150860941648666
+    }
+  ],
+  "angle_sensitivity": [
+    {
+      "estimate_level": "low",
+      "helix_angle_deg": 31.0,
+      "face_mass_kg": 0.544887714654988,
+      "hub_mass_kg": 0.5,
+      "estimated_total_movable_mass_kg": 1.044887714654988,
+      "face_polar_inertia_kg_m2": 0.005155999999922824,
+      "hub_polar_inertia_kg_m2": 0.0004,
+      "movable_member_polar_inertia_kg_m2": 0.005555999999922824,
+      "helix_radius_m": 0.06,
+      "helix_motion_ratio_rad_per_m": 27.73799137250863,
+      "reflected_axial_inertia_kg": 4.274765094799475,
+      "angle_case": "YSR31 straight",
+      "relative_to_baja_reflected_axial_inertia": 0.4450814800843363
+    },
+    {
+      "estimate_level": "low",
+      "helix_angle_deg": 28.0,
+      "face_mass_kg": 0.544887714654988,
+      "hub_mass_kg": 0.5,
+      "estimated_total_movable_mass_kg": 1.044887714654988,
+      "face_polar_inertia_kg_m2": 0.005155999999922824,
+      "hub_polar_inertia_kg_m2": 0.0004,
+      "movable_member_polar_inertia_kg_m2": 0.005555999999922824,
+      "helix_radius_m": 0.06,
+      "helix_motion_ratio_rad_per_m": 31.34544108910553,
+      "reflected_axial_inertia_kg": 5.458973777728344,
+      "angle_case": "YSR36/28 local 28-degree segment",
+      "relative_to_baja_reflected_axial_inertia": 0.5683793319283866
+    },
+    {
+      "estimate_level": "nominal",
+      "helix_angle_deg": 31.0,
+      "face_mass_kg": 1.1247347402361576,
+      "hub_mass_kg": 0.8,
+      "estimated_total_movable_mass_kg": 1.9247347402361576,
+      "face_polar_inertia_kg_m2": 0.01187500000047666,
+      "hub_polar_inertia_kg_m2": 0.0010000000000000002,
+      "movable_member_polar_inertia_kg_m2": 0.012875000000476661,
+      "helix_radius_m": 0.05,
+      "helix_motion_ratio_rad_per_m": 33.28558964701036,
+      "reflected_axial_inertia_kg": 14.264604906698587,
+      "angle_case": "YSR31 straight",
+      "relative_to_baja_reflected_axial_inertia": 1.485207098845162
+    },
+    {
+      "estimate_level": "nominal",
+      "helix_angle_deg": 28.0,
+      "face_mass_kg": 1.1247347402361576,
+      "hub_mass_kg": 0.8,
+      "estimated_total_movable_mass_kg": 1.9247347402361576,
+      "face_polar_inertia_kg_m2": 0.01187500000047666,
+      "hub_polar_inertia_kg_m2": 0.0010000000000000002,
+      "movable_member_polar_inertia_kg_m2": 0.012875000000476661,
+      "helix_radius_m": 0.05,
+      "helix_motion_ratio_rad_per_m": 37.614529306926634,
+      "reflected_axial_inertia_kg": 18.216229993563054,
+      "angle_case": "YSR36/28 local 28-degree segment",
+      "relative_to_baja_reflected_axial_inertia": 1.8966437751059742
+    },
+    {
+      "estimate_level": "high",
+      "helix_angle_deg": 31.0,
+      "face_mass_kg": 1.7521274882294464,
+      "hub_mass_kg": 1.0,
+      "estimated_total_movable_mass_kg": 2.7521274882294464,
+      "face_polar_inertia_kg_m2": 0.018956499999586412,
+      "hub_polar_inertia_kg_m2": 0.0015125,
+      "movable_member_polar_inertia_kg_m2": 0.020468999999586412,
+      "helix_radius_m": 0.045,
+      "helix_motion_ratio_rad_per_m": 36.98398849667818,
+      "reflected_axial_inertia_kg": 27.99781352688518,
+      "angle_case": "YSR31 straight",
+      "relative_to_baja_reflected_axial_inertia": 2.9150860941648666
+    },
+    {
+      "estimate_level": "high",
+      "helix_angle_deg": 28.0,
+      "face_mass_kg": 1.7521274882294464,
+      "hub_mass_kg": 1.0,
+      "estimated_total_movable_mass_kg": 2.7521274882294464,
+      "face_polar_inertia_kg_m2": 0.018956499999586412,
+      "hub_polar_inertia_kg_m2": 0.0015125,
+      "movable_member_polar_inertia_kg_m2": 0.020468999999586412,
+      "helix_radius_m": 0.045,
+      "helix_motion_ratio_rad_per_m": 41.79392145214071,
+      "reflected_axial_inertia_kg": 35.753854653424796,
+      "angle_case": "YSR36/28 local 28-degree segment",
+      "relative_to_baja_reflected_axial_inertia": 3.722632283871267
+    }
+  ]
+}

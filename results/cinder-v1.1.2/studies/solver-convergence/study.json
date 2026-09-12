@@ -1,0 +1,80 @@
+{
+  "name": "Solver convergence",
+  "description": "Release-level LSODA convergence study for the frozen Baja reference trajectory, including continuous-state, hybrid-sequence, event-time, regime-history, absolute-tolerance, and computational-cost diagnostics.",
+  "cinder_release": {
+    "distribution": "cinder-cvt",
+    "version": "1.1.2",
+    "source_tag": "cinder-v1.1.2",
+    "source_commit_sha": "7637a38b4fb9ec21dfb953c1c80a27ec5f389654"
+  },
+  "schema_version": 1,
+  "base_document": "../../defaults/baja_reference_simulation_case.json",
+  "reference": {
+    "time_span_s": [
+      0.0,
+      10.0
+    ],
+    "relative_tolerance": 1e-07,
+    "absolute_tolerance": 1e-10,
+    "max_step": 0.0025,
+    "comparison_step_s": 0.001
+  },
+  "main_sweep": {
+    "relative_tolerances": [
+      0.01,
+      0.003,
+      0.001,
+      0.0003,
+      0.0001,
+      3e-05,
+      1e-05,
+      3e-06
+    ],
+    "max_steps_s": [
+      0.1,
+      0.05,
+      0.02,
+      0.01,
+      0.005
+    ],
+    "absolute_tolerance_ratio": 0.001,
+    "comparison_step_s": 0.002
+  },
+  "absolute_tolerance_sweep": {
+    "relative_tolerance": 0.0001,
+    "max_step": 0.01,
+    "absolute_tolerances": [
+      1e-05,
+      3e-06,
+      1e-06,
+      3e-07,
+      1e-07,
+      3e-08,
+      1e-08
+    ],
+    "comparison_step_s": 0.002
+  },
+  "canonical": {
+    "relative_tolerance": 0.0001,
+    "absolute_tolerance": 1e-07,
+    "max_step": 0.01
+  },
+  "review_guards": {
+    "trajectory_rms_normalized": 0.0001,
+    "trajectory_max_abs_normalized": 0.001,
+    "maximum_event_time_error_s": 0.001,
+    "regime_mismatch_fraction": 0.001,
+    "require_exact_transition_signature": true
+  },
+  "interpretation_boundaries": [
+    "The tight reference is a numerical reference solution, not an analytical exact solution.",
+    "Wall-clock time is machine dependent.",
+    "Native solve_ivp points are reported only as a transparent cost proxy; they are not called function evaluations.",
+    "A close final state is not sufficient for hybrid convergence if the transition signature or regime history differs.",
+    "A coarsest passing grid point is descriptive and does not automatically replace solver settings used by other frozen studies."
+  ],
+  "generated_artifacts": {
+    "directory": "artifacts",
+    "committed_results_in_clean_study": false
+  }
+}

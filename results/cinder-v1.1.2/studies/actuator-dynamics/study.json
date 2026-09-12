@@ -1,0 +1,164 @@
+{
+  "schema_version": 4,
+  "study": "actuator-dynamics",
+  "title": "Dynamic flyweight and helix coupling: Baja consequence, quasi-static validity, and commercial secondary scaling",
+  "status": "official_release_scoped_results_study",
+  "cinder_version": "1.1.2",
+  "release_tag": "cinder-v1.1.2",
+  "release_commit_sha": "7637a38b4fb9ec21dfb953c1c80a27ec5f389654",
+  "scientific_question": "How important are the retained primary flyweight and secondary helical axial-rotational dynamics in the Baja baseline, which individual terms cause those corrections, when is a quasi-static actuator approximation justified, and can physically existing commercial secondary hardware occupy a regime where the retained helix dynamics are materially non-negligible?",
+  "experiments": {
+    "baseline_ablation": {
+      "role": "official",
+      "question": "At the actual Baja baseline, how much do the retained dynamic actuator terms change same-state force predictions and independently integrated trajectories?",
+      "scenario": "launch",
+      "duration_s": 10.0,
+      "sample_step_s": 0.001,
+      "post_capture_report_start_s": 0.1,
+      "solver": {
+        "method": "LSODA",
+        "relative_tolerance": 0.0001,
+        "absolute_tolerance": 1e-07,
+        "max_step_s": 0.01
+      }
+    },
+    "coupling_energy": {
+      "role": "official",
+      "question": "Which kinetic, potential, configuration-power, and reflected-inertia channels explain the baseline actuator-dynamics corrections?",
+      "duration_s": 10.0,
+      "report_step_s": 0.001,
+      "solver": {
+        "method": "LSODA",
+        "relative_tolerance": 0.0001,
+        "absolute_tolerance": 1e-07,
+        "max_step_s": 0.01
+      }
+    },
+    "validity_envelopes": {
+      "role": "official",
+      "question": "What exact dimensionless correction measures follow from the actuator equations, and where do 1%, 5%, 10%, and 20% departures from quasi-static force prediction occur?",
+      "shift_percent_samples": [
+        10.0,
+        50.0,
+        90.0
+      ],
+      "threshold_fractions": [
+        0.01,
+        0.05,
+        0.1,
+        0.2
+      ],
+      "primary_rpm_range": [
+        1500.0,
+        4500.0
+      ],
+      "primary_rpm_samples": 241,
+      "secondary_belt_torque_range_Nm": [
+        -120.0,
+        160.0
+      ],
+      "secondary_belt_torque_samples": 281
+    },
+    "controlled_transients": {
+      "role": "official",
+      "question": "When controlled shaft-torque ramps drive the exact dynamic correction measures through low-to-material values, how much does the full model response differ from the corresponding quasi-static reduction?",
+      "restart_shift_percents": [
+        20.0,
+        50.0,
+        80.0
+      ],
+      "conditioning_duration_s": 8.0,
+      "onset_s": 0.05,
+      "hold_s": 0.3,
+      "ramp_times_s": [
+        0.005,
+        0.02,
+        0.1,
+        0.25
+      ],
+      "primary_added_torques_Nm": [
+        -20.0,
+        -10.0,
+        -5.0,
+        5.0,
+        10.0,
+        20.0
+      ],
+      "secondary_added_torques_Nm": [
+        -120.0,
+        -80.0,
+        -40.0,
+        -20.0,
+        20.0,
+        40.0,
+        80.0,
+        120.0
+      ],
+      "screen_solver": {
+        "relative_tolerance": 0.0003,
+        "absolute_tolerance": 3e-07,
+        "sample_step_s": 0.002
+      },
+      "validation_solver": {
+        "relative_tolerance": 0.0001,
+        "absolute_tolerance": 1e-07,
+        "sample_step_s": 0.0005
+      },
+      "selection_policy": "For each actuator and target dynamic number, select the unused clean-continuous candidate minimizing logarithmic target distance only if |achieved-target|/target <= 0.25. Otherwise report the target as unreached and record the nearest achieved clean value. Never relabel a distant nearest case as the requested target, and never substitute an impact/reset case.",
+      "target_dynamic_numbers_by_actuator": {
+        "primary": [
+          0.0001,
+          0.00025,
+          0.0005
+        ],
+        "secondary": [
+          0.005,
+          0.01,
+          0.02,
+          0.025
+        ]
+      },
+      "maximum_relative_target_error": 0.25
+    },
+    "commercial_case": {
+      "role": "official_provisional_hardware_scaling",
+      "question": "Can a real high-performance OTS helix secondary have sufficiently large movable-member inertia and transient scales for the retained secondary dynamic terms to become materially non-negligible?",
+      "selected_hardware": "Yamaha Sidewinder YSRC roller secondary with Dalton YSR31 straight helix",
+      "alternate_local_angle_case": "Dalton YSR36/28 progressive helix, using the published 28 degree segment only as a local constant-angle sensitivity calculation",
+      "status": "hardware identity/angle/power context sourced; mass properties, effective helix radius, and prescribed transient kinematics provisional"
+    },
+    "commercial_trajectory_demo": {
+      "role": "official_provisional_system_level_demonstration",
+      "question": "Can the commercial-secondary dynamic correction produce a tangible difference in a complete CVT trajectory when only the secondary helix geometry and movable rotational inertia are transplanted into the frozen reference machine?",
+      "configuration_file": "commercial-case/trajectory_demo.json",
+      "status": "ready_to_run"
+    }
+  },
+  "dimensionless_measures": {
+    "primary_components": {
+      "Pi_p_accel": "|I_f (dq_f/dx_p)^2 x_p_ddot| / |0.5 omega_p^2 dJ_f,p/dx_p|",
+      "Pi_p_curvature": "|I_f (dq_f/dx_p)(d2q_f/dx_p2) x_p_dot^2| / |0.5 omega_p^2 dJ_f,p/dx_p|",
+      "Pi_p_total": "|F_dynamic_primary_total| / |F_flyweight_QS|"
+    },
+    "secondary_components": {
+      "Pi_s_omega": "|I_s,M omega_s_dot| / |tau_s/2 + k_s,theta(theta_s,pre-theta_s)|",
+      "Pi_s_axial": "|I_s,M (dtheta_s/dx_s) x_s_ddot| / |tau_s/2 + k_s,theta(theta_s,pre-theta_s)|",
+      "Pi_s_curvature": "|I_s,M (d2theta_s/dx_s2) x_s_dot^2| / |tau_s/2 + k_s,theta(theta_s,pre-theta_s)|",
+      "Pi_s_total": "|I_s,M[omega_s_dot + (dtheta_s/dx_s)x_s_ddot + (d2theta_s/dx_s2)x_s_dot^2]| / |tau_s/2 + k_s,theta(theta_s,pre-theta_s)|",
+      "reflected_axial_inertia": "M_h,ref = I_s,M (dtheta_s/dx_s)^2"
+    },
+    "normalization_note": "The common helix motion-ratio factor cancels only from the normalized shaft-acceleration term. It remains in the axial-acceleration, curvature, movable-face kinematics, and reflected-inertia terms."
+  },
+  "interpretation_boundaries": [
+    "Baseline ablation and energy decomposition quantify the actual Baja machine.",
+    "Validity-envelope plots are equation-derived parametric results, not simulated operating claims.",
+    "Controlled-transient screening exists only to choose cases by achieved dimensionless correction; final figures use the selected validated cases, not an arbitrary ranking score.",
+    "Only clean-continuous perturbations are used for quasi-static-validity trajectory comparisons; hybrid/reset cases remain separately identifiable in the screening table.",
+    "Primary and secondary actuator dynamics are treated as one scientific family because both are axial-rotational couplings in the same mechanically actuated CVT.",
+    "Subtle trajectory conclusions should be cross-checked against the separate solver-convergence study before manuscript claims are frozen.",
+    "The representative commercial case is a physically anchored sensitivity example, not a validated Sidewinder reconstruction.",
+    "Sourced facts, derived quantities, and engineering assumptions are stored separately.",
+    "The commercial case is deliberately selected for sensitivity to the secondary dynamic terms rather than as a population-average CVT.",
+    "The commercial trajectory demo is a mechanism transplant into the frozen Baja host, not a Sidewinder reconstruction."
+  ]
+}
