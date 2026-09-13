@@ -4,3 +4,8 @@
 **/.pytest_cache/
 **/.cache/
 **/work/
+
+# Version folders like cinder-v1.1.2 incidentally match LaTeX aux-file
+# patterns (e.g. *.[1-9]) in the root .gitignore; un-ignore the folder itself
+# (contents still subject to the exclude rules above, e.g. .venv/, __pycache__/).
+!cinder-*/

@@ -1,0 +1,64 @@
+{
+  "name": "Mechanical invariants \u2014 operating-domain audit",
+  "description": "Release-level operating-domain audit for CINDER 1.1.2 using the v1.1.2 results reference topology. Combines the frozen nominal trajectory with prescribed bench initial conditions, targeted rare-contact reproduction anchors, both overall rotation signs, short-lived contact-branch checks, static rest, structural-boundary arrivals, field-level belt admissibility, exact transition checks, geometry-domain checks, and invalid-state controls.",
+  "cinder_release": {
+    "distribution": "cinder-cvt",
+    "version": "1.1.2",
+    "source_tag": "cinder-v1.1.2",
+    "source_commit_sha": "7637a38b4fb9ec21dfb953c1c80a27ec5f389654"
+  },
+  "schema_version": 5,
+  "base_document": "../../defaults/baja_reference_simulation_case.json",
+  "reference_model_policy": "../../defaults/results_reference_model.json",
+  "nominal_run": {
+    "time_span_s": [
+      0.0,
+      10.0
+    ],
+    "audit_time_step_s": 0.002,
+    "integrator": {
+      "relative_tolerance": 3e-05,
+      "absolute_tolerance": 3e-08,
+      "method": "LSODA",
+      "max_step": 0.01,
+      "maximum_transitions": 200,
+      "event_time_tolerance": 1e-10
+    }
+  },
+  "geometry_sweep": {
+    "points": 401,
+    "finite_difference_step_m": 1e-06
+  },
+  "negative_controls": {
+    "shift_violation_m": 0.0001,
+    "deadzone_lock_violation_m_s": 0.1
+  },
+  "review_guards": {
+    "belt_length_residual_m": 1e-09,
+    "closure_scaled_equation_residual": 1e-10,
+    "stick_velocity_drift_m_s": 0.001,
+    "stick_acceleration_residual_m_s2": 1e-07,
+    "static_margin_negative_tolerance": 1e-09,
+    "positive_slip_pair_power_W": 0.001,
+    "negative_normal_tolerance_N": 1e-06,
+    "negative_tension_tolerance_N": 1e-06,
+    "negative_distributed_normal_tolerance_N_per_rad": 1e-06,
+    "field_normal_integral_residual_N": 1e-06,
+    "negative_stop_reaction_tolerance_N": 1e-06,
+    "fixed_shift_speed_m_s": 1e-08,
+    "fixed_shift_acceleration_m_s2": 1e-07,
+    "deadzone_secondary_lock_speed_m_s": 1e-07,
+    "deadzone_secondary_lock_acceleration_m_s2": 1e-07,
+    "static_rest_state_drift": 1e-10,
+    "deadzone_radius_derivative_abs": 1e-12,
+    "geometry_first_derivative_fd_residual": 1e-07,
+    "geometry_second_derivative_fd_residual_per_m": 0.005
+  },
+  "interpretation": "Review guards are numerical/reporting thresholds, not physical model parameters. Physical admissibility remains nonnegative belt tension, nonnegative local and integrated normal loading, admissible retained unilateral contacts/stops, Coulomb-consistent contact states, and exact active kinematic constraints. The results reference secondary helix is bilateral/slotted, so its signed reaction is not a unilateral admissibility gate.",
+  "generated_artifacts": {
+    "directory": "artifacts",
+    "committed_results_in_clean_study": false
+  },
+  "coverage_speed_epsilon_m_s": 1e-06,
+  "shared_case_library": "../../defaults/verification_operating_cases.json"
+}
