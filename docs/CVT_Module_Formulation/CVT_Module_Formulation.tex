@@ -914,34 +914,6 @@ larger and the secondary radius is smaller. This coupled motion is shown in
 \centering
 \includegraphics[width=\textwidth]{figures/overview/cvt_low_med_high_ratio.png}
 
-% \fbox{
-% \begin{minipage}{0.9\textwidth}
-% \centering
-% \vspace{0.8cm}
-% \textbf{Placeholder: Full CVT in low, middle, and high ratio states}
-
-% \vspace{0.5cm}
-% Show the primary and secondary pulleys connected by the same belt in three
-% states:
-% \begin{enumerate}
-%     \item launch/low-speed state: primary radius small, secondary radius large,
-%     \item intermediate state: primary radius increasing, secondary radius decreasing,
-%     \item shifted/high-speed state: primary radius large, secondary radius small.
-% \end{enumerate}
-
-% Label:
-% \begin{itemize}
-%     \item primary pulley,
-%     \item secondary pulley,
-%     \item belt,
-%     \item direction of upshift,
-%     \item primary radius increasing,
-%     \item secondary radius decreasing.
-% \end{itemize}
-% \vspace{0.8cm}
-% \end{minipage}
-% }
-
 \caption{Low-, intermediate-, and high-ratio states of a belt--sheave CVT. 
 As the belt moves outward on the primary pulley and inward on the secondary pulley, 
 the effective radii vary in opposite directions while the belt length remains 
@@ -1747,8 +1719,6 @@ detail
 \end{assumptionblock}
 
 \begin{assumptionblock}{assump:prescribed_belt_path}{Prescribed Planar Belt Path}
-% Legacy alias retained until downstream references are revised.
-% \label{assump:uniform_contact_radius}
 At each instant, the belt is taken to wrap each pulley along a circular arc and
 to pass between the pulleys along two straight tangent spans in one common
 plane. The belt path is therefore set by the current pulley geometry rather
@@ -1805,10 +1775,6 @@ the entire belt moves at the speed imposed by the secondary contact.
 \subsection{Belt--Pulley Contact Representation}
 
 \begin{assumptionblock}{assump:gross_coulomb_traction}{Gross Tangential Coulomb Traction}
-% Legacy aliases retained until downstream references are revised.
-% \label{assump:ideal_friction}
-% \label{assump:constant_friction}
-% \label{assump:gross_tangential_traction}
 During continuous motion, each belt--pulley interface is represented by a dry
 gross stick--slip law with fixed static and kinetic traction capacities for the
 selected surface state. The frictional contact action retained by the model
@@ -1830,8 +1796,6 @@ instantaneous change in mechanical constraint.
 \end{assumptionblock}
 
 \begin{assumptionblock}{assump:wrap_contact_resolution}{Wrap-Level Contact Resolution}
-% Legacy alias retained until downstream references are revised.
-% \label{assump:averaged_contact}
 The model may resolve how belt tension and normal loading vary around a pulley
 wrap, but each wrap is assigned one overall traction state at an instant. The
 contact is not resolved through the belt width or depth, and no separate local
@@ -1847,9 +1811,6 @@ models
 \end{assumptionblock}
 
 \begin{assumptionblock}{assump:symmetric_face_sharing}{Symmetric Sheave-Face Sharing}
-% Legacy aliases retained until downstream references are revised.
-% \label{assump:equal_sheave_normal_load}
-% \label{assump:equal_torque_share}
 The two sheave faces at a pulley are assumed to share the total normal contact
 load equally. On the secondary pulley, the belt torque is also divided equally
 between the fixed and movable faces for the purpose of the movable-sheave
@@ -2621,6 +2582,7 @@ outer surface and \(y=h_b\) at the inner surface, and let
 and their corresponding radii are shown in
 \Cref{fig:belt_cross_section_radial_references}.
 
+% TODO: Replace the temporary belt-cross-section fallback with the final figure asset.
 \begin{figure}[H]
 \centering
 \IfFileExists{figures/geometry/belt_cross_section_radial_references.png}{%
@@ -4088,10 +4050,8 @@ when the primary first reaches the belt at \(s=x_{p,\mathrm{dz}}\). Their
 first derivatives therefore change discontinuously, and their ordinary second
 derivatives are not defined at that single point. The acceleration relations
 in \Cref{eq:primary_radius_acceleration,eq:secondary_radius_acceleration}
-apply within the deadzone and engaged branches, while first contact is treated
-as the transition between them.
-
-% TODO: Add a cross-reference once the numerical transition section exists.
+apply within the deadzone and engaged branches, while crossing the boundary
+between them is treated as a regime transition.
 \end{remarkbox}
 
 \begin{remarkbox}[Remark (Practical Consequences of the Pulley Geometry)]
@@ -10948,8 +10908,10 @@ described in \Sec{sec:appendix-slip-regularization}.
 To support reproducibility, the exact version used to generate the figures and
 tables in this manuscript will be archived as a tagged release:
 \begin{itemize}
+    % TODO: Replace the placeholder release tag with the final archived version.
     \item repository release (to be finalized):
       \url{https://github.com/gr812b/CVT-Simulator/releases/tag/vX.Y.Z},
+    % TODO: Replace the placeholder DOI with the final archival DOI before submission.
     \item archival DOI landing page (placeholder):
       \url{https://doi.org/XX.XXXX/zenodo.XXXXXXX}.
 \end{itemize}
@@ -11778,16 +11740,6 @@ For an upshift, \(\dot s>0\), so the available geometric reduction decreases as
 the belt moves outward on the primary pulley.
 
 
-% Insert this subsection after ``Rate of Change of the Geometric CVT Ratio''
-% and before ``Acceleration of the Geometric CVT Ratio''.
-%
-% The figure paths below assume the image files have been copied to
-% ./illustrations/geometry/. Update the paths if your illustration directory differs.
-
-% Drop-in replacement for the exploratory part of the appendix.
-% Intended to follow the subsection ``Rate of Change of the Geometric CVT Ratio''
-% and to precede ``Acceleration of the Geometric CVT Ratio''.
-
 \subsection{Geometry Families in the Radius Plane}
 \label{app}
 
@@ -12269,13 +12221,6 @@ usual upshift direction, the large ratio sensitivity associated with small
 primary radius progressively weakens as the primary radius grows. The ratio
 therefore often changes rapidly at the beginning of the shift and then eases
 off, even without a change in axial shift speed.
-
-% Appendix B replacement: Construction of Primary Flyweight Geometry Maps
-% Intended to be inserted after \appendix in the main document.
-% If this is the second appendix in the main document, LaTeX will number it Appendix B.
-%
-% Required packages in the parent document:
-% \usepackage{amsmath,amssymb,bm}
 
 \chapter{Construction of Primary Flyweight Geometry Maps}
 \label{app:primary_flyweight_geometry}
