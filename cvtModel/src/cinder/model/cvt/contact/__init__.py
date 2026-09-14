@@ -12,6 +12,7 @@ from .relative_motion import (
     ContactRelativeMotion,
     SlipDirection,
     evaluate_contact_relative_motion,
+    evaluate_contact_relative_speed,
     infer_slip_direction,
 )
 from .slip import KineticSlipSpecification
@@ -31,5 +32,6 @@ __all__ = [
     "SlipDirection",
     "StaticLambdaAssessment",
     "evaluate_contact_relative_motion",
+    "evaluate_contact_relative_speed",
     "infer_slip_direction",
 ]

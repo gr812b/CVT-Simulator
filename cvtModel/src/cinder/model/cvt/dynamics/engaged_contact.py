@@ -613,8 +613,7 @@ class EngagedContactClosure:
             traction_utilization=traction_utilization,
             closure=closure,
             relative_motion=evaluate_contact_relative_motion(
-                state=self.snapshot.state,
-                geometry=self.snapshot.geometry,
+                snapshot=self.snapshot,
                 unknowns=closure.unknowns,
             ),
             state_derivative=state_derivative,

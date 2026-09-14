@@ -59,6 +59,7 @@ export class Scene3DController {
   private blurSupported: boolean | null = null;
   private adaptiveBlurSampleCap = BLUR_INITIAL_ADAPTIVE_CAP;
   private fastBlurFrameCount = 0;
+  private perspectiveFov = 75;
 
   constructor(config: Scene3DConfig) {
     this.container = config.container;
@@ -172,6 +173,93 @@ export class Scene3DController {
     return this.controls;
   }
 
+  public getCameraProjection(): 'perspective' | 'orthographic' {
+    return this.camera instanceof THREE.OrthographicCamera ? 'orthographic' : 'perspective';
+  }
+
+  /**
+   * Switch projection without changing the apparent framing.
+   *
+   * Perspective -> orthographic uses the current target distance and effective
+   * field of view to construct the equivalent orthographic frustum.
+   * Orthographic -> perspective moves the camera along the same view ray so the
+   * current orthographic scale maps back to the saved perspective field of view.
+   */
+  public setCameraProjection(type: 'perspective' | 'orthographic'): void {
+    if (this.getCameraProjection() === type) return;
+
+    const width = Math.max(1, this.container.clientWidth);
+    const height = Math.max(1, this.container.clientHeight);
+    const aspect = width / height;
+    const oldCamera = this.camera;
+
+    const target = this.controls?.target.clone()
+      ?? oldCamera.position.clone().add(oldCamera.getWorldDirection(new THREE.Vector3()));
+
+    const viewDirection = oldCamera.position.clone().sub(target);
+    const targetDistance = Math.max(viewDirection.length(), 1e-6);
+    viewDirection.normalize();
+
+    let nextCamera: THREE.PerspectiveCamera | THREE.OrthographicCamera;
+
+    if (type === 'orthographic') {
+      const perspective = oldCamera as THREE.PerspectiveCamera;
+      this.perspectiveFov = perspective.fov;
+
+      const effectiveFov = THREE.MathUtils.degToRad(perspective.getEffectiveFOV());
+      const visibleHeight = Math.max(
+        1e-6,
+        2 * targetDistance * Math.tan(effectiveFov / 2),
+      );
+
+      nextCamera = new THREE.OrthographicCamera(
+        (-visibleHeight * aspect) / 2,
+        (visibleHeight * aspect) / 2,
+        visibleHeight / 2,
+        -visibleHeight / 2,
+        perspective.near,
+        perspective.far,
+      );
+      nextCamera.position.copy(perspective.position);
+      nextCamera.quaternion.copy(perspective.quaternion);
+      nextCamera.up.copy(perspective.up);
+    } else {
+      const orthographic = oldCamera as THREE.OrthographicCamera;
+      const visibleHeight = Math.max(
+        1e-6,
+        (orthographic.top - orthographic.bottom) / orthographic.zoom,
+      );
+      const fovRadians = THREE.MathUtils.degToRad(this.perspectiveFov);
+      const matchedDistance = visibleHeight / (2 * Math.tan(fovRadians / 2));
+
+      nextCamera = new THREE.PerspectiveCamera(
+        this.perspectiveFov,
+        aspect,
+        orthographic.near,
+        orthographic.far,
+      );
+      nextCamera.position.copy(target).addScaledVector(viewDirection, matchedDistance);
+      nextCamera.quaternion.copy(orthographic.quaternion);
+      nextCamera.up.copy(orthographic.up);
+    }
+
+    this.camera = nextCamera;
+    this.camera.updateProjectionMatrix();
+
+    if (this.controls) {
+      const previousControls = this.controls;
+      const enableDamping = previousControls.enableDamping;
+      const dampingFactor = previousControls.dampingFactor;
+
+      previousControls.dispose();
+
+      this.controls = new OrbitControls(this.camera, this.renderer.domElement);
+      this.controls.target.copy(target);
+      this.controls.enableDamping = enableDamping;
+      this.controls.dampingFactor = dampingFactor;
+      this.controls.update();
+    }
+  }
   /** Register an animation-only update that runs once per browser frame. */
   public setFrameUpdate(update: FrameUpdate | null): void {
     this.frameUpdate = update;
@@ -529,11 +617,13 @@ export class Scene3DController {
       this.camera.updateProjectionMatrix();
     } else if (this.camera instanceof THREE.OrthographicCamera) {
       const aspect = width / height;
-      const frustumSize = 10;
-      this.camera.left = (frustumSize * aspect) / -2;
-      this.camera.right = (frustumSize * aspect) / 2;
-      this.camera.top = frustumSize / 2;
-      this.camera.bottom = frustumSize / -2;
+      const frustumHeight = this.camera.top - this.camera.bottom;
+      const halfHeight = frustumHeight / 2;
+      const halfWidth = halfHeight * aspect;
+      this.camera.left = -halfWidth;
+      this.camera.right = halfWidth;
+      this.camera.top = halfHeight;
+      this.camera.bottom = -halfHeight;
       this.camera.updateProjectionMatrix();
     }
 
