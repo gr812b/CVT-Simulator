@@ -400,18 +400,18 @@ $v_{\Delta}$ & slip metric: primary-imposed minus secondary-imposed belt-line sp
 \multicolumn{2}{@{}l}{\textbf{Geometry}} \\
 $r_{p,\mathrm{outer}}(s),\ r_{s,\mathrm{outer}}(s)$ & primary and secondary outer radius \\
 $r_{p,\mathrm{eff}}(s),\ r_{s,\mathrm{eff}}(s)$ & primary and secondary effective torque radius \\
-$r_{p,\text{outer},\min}$ & minimum primary outer radius \\
-$r_{s,\text{outer},\max}$ & maximum secondary outer radius \\
+$r_{p,\mathrm{outer},\min}$ & minimum primary outer radius \\
+$r_{s,\mathrm{outer},\max}$ & maximum secondary outer radius \\
 $s_{\mathrm{dz}},\ s_{\max}$ & deadzone threshold and maximum shift \\
 $\beta$ & sheave face half-angle (radial reference) \\
-$C$ & pulley center distance \\
+$d_c$ & pulley center distance \\
 $L_b$ & total belt length \\
 $\phi$ & belt wrap angle used in distributed contact model \\
 $r,\ \dot r$ & local belt path radius and its time derivative \\
 $r_{\mathrm{cm}}$ & belt element center-of-mass radius \\
 \addlinespace
 \multicolumn{2}{@{}l}{\textbf{Constraint and mapping functions}} \\
-$f(r_p,r_s,C)$ & belt-length compatibility root function ($f=0$) \\
+$f(r_p,r_s,d_c)$ & belt-length compatibility root function ($f=0$) \\
 $\operatorname*{root}_{r_s}(\cdot)$ & numerical root solve for secondary radius \\
 $r_f(s),\ \dfrac{dr_f}{ds}$ & primary flyweight radius map and gradient \\
 \addlinespace
@@ -434,7 +434,7 @@ $\tau_{c,p,\pm}^{\mathrm{slip}},\ \tau_{c,s,\pm}^{\mathrm{slip}}$ & primary/seco
 \addlinespace
 \multicolumn{2}{@{}l}{\textbf{Mass/inertia and material parameters}} \\
 $I_p,\ I_s$ & primary and secondary rotational inertia \\
-$m_f$ & effective flyweight mass \\
+$m_f$ & total flyweight-set mass \\
 $m_{p,m},\ m_{s,m}$ & equivalent primary and secondary translating mechanism mass \\
 $\rho_b$ & belt material density \\
 $A_b$ & belt cross-sectional area \\
@@ -476,13 +476,13 @@ $\beta$ & Sheave half-angle & \si{\radian} & Cone half-angle used for radial/axi
 $h_b$ & Belt thickness & \si{\meter} & Radial belt thickness \\
 $b_{\mathrm{out}}$ & Belt outer width & \si{\meter} & Belt width at outer face \\
 $b_{\mathrm{in}}$ & Belt inner width & \si{\meter} & Belt width at inner face \\
-$r_{p,\text{outer},\min}$ & Primary minimum outer radius & \si{\meter} & Radius at fully open primary \\
-$r_{s,\text{outer},\max}$ & Secondary maximum outer radius & \si{\meter} & Radius at fully closed secondary \\
+$r_{p,\mathrm{outer},\min}$ & Primary minimum outer radius & \si{\meter} & Radius at fully open primary \\
+$r_{s,\mathrm{outer},\max}$ & Secondary maximum outer radius & \si{\meter} & Radius at fully closed secondary \\
 $s_{\mathrm{dz}}$ & Shift deadzone threshold & \si{\meter} & Onset of effective radial motion \\
 $s_{\max}$ & Maximum shift & \si{\meter} & Physical upper travel bound \\
 \addlinespace
 \multicolumn{4}{@{}l}{\textbf{Primary/secondary actuation}} \\
-$m_f$ & Flyweight mass & \si{\kilogram} & Effective flyweight mass \\
+$m_f$ & Flyweight-set mass & \si{\kilogram} & Total mass of the symmetric flyweight set \\
 $r_{f,0}$ & Initial flyweight radius & \si{\meter} & Flyweight radius offset at $s=0$ \\
 $k_p$ & Primary spring stiffness & \si{\newton\per\meter} & Primary compression spring rate \\
 $x_{p,0}$ & Primary spring preload & \si{\meter} & Initial compression of primary spring \\
@@ -2693,7 +2693,7 @@ geometry shown in \Fig{fig:belt_loop_geometry}.
 
 Consider the right triangle in the upper span in
 \Fig{fig:belt_loop_geometry}. The line joining the pulley centres forms its
-hypotenuse and has length \(C\). One side lies along the straight belt span
+hypotenuse and has length \(d_c\). One side lies along the straight belt span
 and therefore has length \(l\).
 
 The other side is perpendicular to the span. The primary and secondary radii
@@ -2703,7 +2703,7 @@ and are therefore parallel. As shown by the orange construction in
 remaining side of the triangle, \(r_s-r_p\). The triangle therefore satisfies
 
 \begin{equation}
-    l^2+\left(r_s-r_p\right)^2=C^2,
+    l^2+\left(r_s-r_p\right)^2=d_c^2,
 \end{equation}
 
 and the length of either straight span is
@@ -2711,19 +2711,19 @@ and the length of either straight span is
 \begin{equation}
     l
     =
-    \sqrt{C^2-\left(r_s-r_p\right)^2}.
+    \sqrt{d_c^2-\left(r_s-r_p\right)^2}.
     \label{eq:belt_straight_span_length}
 \end{equation}
 
 This expression requires
 
 \begin{equation}
-    \left|r_s-r_p\right|<C.
+    \left|r_s-r_p\right|<d_c.
 \end{equation}
 
 This condition is already enforced by the physical separation of the
 pulleys. The pulley circles must remain apart, requiring
-\(C>r_s+r_p\), and \(r_s+r_p\) is necessarily greater than
+\(d_c>r_s+r_p\), and \(r_s+r_p\) is necessarily greater than
 \(\left|r_s-r_p\right|\).
 
 The straight-span length accounts for only two parts of the belt path. The
@@ -2738,7 +2738,7 @@ When the radii differ, the straight spans rotate through the angle
 \begin{equation}
     \sin\delta
     =
-    \frac{r_s-r_p}{C},
+    \frac{r_s-r_p}{d_c},
 \end{equation}
 
 and therefore
@@ -2746,7 +2746,7 @@ and therefore
 \begin{equation}
     \delta
     =
-    \sin^{-1}\!\left(\frac{r_s-r_p}{C}\right).
+    \sin^{-1}\!\left(\frac{r_s-r_p}{d_c}\right).
     \label{eq:belt_span_angle}
 \end{equation}
 
@@ -2774,16 +2774,16 @@ into \Cref{eq:belt_length_components} gives
 {Exact geometric belt length}
 {
 \begin{aligned}
-L_{\mathrm{geo}}(r_p,r_s,C)
+L_{\mathrm{geo}}(r_p,r_s,d_c)
 ={}&
 \pi\left(r_p+r_s\right)
 \\
 &+
 2\left(r_s-r_p\right)
-\sin^{-1}\!\left(\frac{r_s-r_p}{C}\right)
+\sin^{-1}\!\left(\frac{r_s-r_p}{d_c}\right)
 \\
 &+
-2\sqrt{C^2-\left(r_s-r_p\right)^2}
+2\sqrt{d_c^2-\left(r_s-r_p\right)^2}
 \end{aligned}
 }
 
@@ -2792,46 +2792,46 @@ the combined half-circle contribution from the two pulley wraps. The second
 accounts for the unequal wrap angles, and the third is the combined length of
 the two straight spans.
 
-For any chosen values of \(r_p\), \(r_s\), and \(C\),
+For any chosen values of \(r_p\), \(r_s\), and \(d_c\),
 \Cref{eq:belt_length_exact} tells us how much belt is required to follow that
 path. The installed belt cannot change its total length as the pulleys shift.
 Under \AssRef{assump:constant_belt_length}, every possible pulley position must
 therefore satisfy
 
 \begin{equation}
-    L_{\mathrm{geo}}(r_p,r_s,C)=L_b,
+    L_{\mathrm{geo}}(r_p,r_s,d_c)=L_b,
     \label{eq:belt_length_compatibility}
 \end{equation}
 
 where \(L_b\) is the fixed length of the same outer-surface path described by
 \(r_p\) and \(r_s\), consistent with the convention in
 \Cref{eq:geometry_radius_convention}. This is the geometric compatibility
-condition for the belt loop. Once any two of \(r_p\), \(r_s\), and \(C\) are
+condition for the belt loop. Once any two of \(r_p\), \(r_s\), and \(d_c\) are
 known, the condition determines the third.
 
 For a particular CVT, the first quantity to determine is the centre distance
-\(C\). The pulley radii change as the sheaves move, but the pulley shafts do
-not move with them. Once the CVT is assembled, \(C\) remains fixed throughout
+\(d_c\). The pulley radii change as the sheaves move, but the pulley shafts do
+not move with them. Once the CVT is assembled, \(d_c\) remains fixed throughout
 operation.
 
 The fixed centre distance can be found from any installed pulley position
 that can be measured. At that position, the belt length and the two pulley
 radii are known. Denoting the measured radii by
 \(r_{p,\mathrm{ref}}\) and \(r_{s,\mathrm{ref}}\), the only unknown in
-\Cref{eq:belt_length_compatibility} is \(C\).
+\Cref{eq:belt_length_compatibility} is \(d_c\).
 
-In the general unequal-radius case, \(C\) appears both inside the square root
+In the general unequal-radius case, \(d_c\) appears both inside the square root
 and inside the inverse sine. The exact relation therefore cannot be
-rearranged into a useful explicit expression for \(C\). Instead, the centre
+rearranged into a useful explicit expression for \(d_c\). Instead, the centre
 distance is found with a one-dimensional root solve.
 
 For a trial centre distance, the difference between the belt length required
 by the geometry and the belt length actually available is
 
 \begin{equation}
-    \mathcal{R}_L(r_p,r_s,C)
+    \mathcal{R}_L(r_p,r_s,d_c)
     =
-    L_{\mathrm{geo}}(r_p,r_s,C)-L_b.
+    L_{\mathrm{geo}}(r_p,r_s,d_c)-L_b.
     \label{eq:belt_length_residual}
 \end{equation}
 
@@ -2845,13 +2845,13 @@ match:
     \left(
         r_{p,\mathrm{ref}},
         r_{s,\mathrm{ref}},
-        C
+        d_c
     \right)
     =0.
     \label{eq:center_distance_root}
 \end{equation}
 
-The root solver varies \(C\) until this condition is satisfied.
+The root solver varies \(d_c\) until this condition is satisfied.
 
 \begin{remarkbox}[Remark (Simplified Belt-Length Relation)]
 
@@ -2860,7 +2860,7 @@ straight-span lengths and the wrap angles. When the radius difference is
 small relative to the centre distance,
 
 \[
-\frac{\left|r_s-r_p\right|}{C}\ll 1,
+\frac{\left|r_s-r_p\right|}{d_c}\ll 1,
 \]
 
 the straight-span angle is also small:
@@ -2868,7 +2868,7 @@ the straight-span angle is also small:
 \[
 \delta
 =
-\sin^{-1}\!\left(\frac{r_s-r_p}{C}\right)
+\sin^{-1}\!\left(\frac{r_s-r_p}{d_c}\right)
 \approx 0.
 \]
 
@@ -2881,14 +2881,14 @@ L_b
 \approx
 \pi\left(r_p+r_s\right)
 +
-2\sqrt{C^2-\left(r_s-r_p\right)^2}.
+2\sqrt{d_c^2-\left(r_s-r_p\right)^2}.
 \]
 
 Unlike the exact relation, this approximation can be rearranged directly.
 For example, the centre distance is
 
 \[
-C
+d_c
 \approx
 \sqrt{
     \left(r_s-r_p\right)^2
@@ -2906,16 +2906,16 @@ simplified form is examined in
 
 \end{remarkbox}
 
-Once the initial root solve has determined \(C\), both the centre distance and
+Once the initial root solve has determined \(d_c\), both the centre distance and
 the belt length are known constants. The compatibility condition can then be
 used to connect the two pulley radii at every subsequent position.
 
-Suppose the primary radius \(r_p\) is known. Substituting \(r_p\), \(C\), and
+Suppose the primary radius \(r_p\) is known. Substituting \(r_p\), \(d_c\), and
 \(L_b\) into \Cref{eq:belt_length_residual} leaves the secondary radius as the
 only unknown. Its compatible value is found from
 
 \begin{equation}
-    \mathcal{R}_L(r_p,r_s,C)=0
+    \mathcal{R}_L(r_p,r_s,d_c)=0
     \qquad
     \text{solved for } r_s.
     \label{eq:secondary_radius_compatibility}
@@ -2927,13 +2927,13 @@ direction. If \(r_s\) is known instead, the compatible primary radius follows
 from
 
 \begin{equation}
-    \mathcal{R}_L(r_p,r_s,C)=0
+    \mathcal{R}_L(r_p,r_s,d_c)=0
     \qquad
     \text{solved for } r_p.
     \label{eq:primary_radius_compatibility}
 \end{equation}
 
-Thus, once \(C\) has been established, either pulley radius can be used to
+Thus, once \(d_c\) has been established, either pulley radius can be used to
 determine the other. The two radii remain local geometric quantities, but
 they cannot vary independently while belonging to the same fixed-length belt
 loop.
@@ -2972,7 +2972,7 @@ Substituting those radii into the belt-length residual gives
     \!\left(
         r_p(x_p),
         r_s(x_s),
-        C
+        d_c
     \right)
     =0.
     \label{eq:axial_coordinate_compatibility}
@@ -2984,7 +2984,7 @@ compatibility curve.
 
 To reveal the shape of this curve, either local coordinate could be chosen as
 a starting point. Take $x_p$ simply as an arbitrary choice. For each value of
-$x_p$, the primary relation gives $r_p(x_p)$. The shaft spacing fixes $C$, and
+$x_p$, the primary relation gives $r_p(x_p)$. The shaft spacing fixes $d_c$, and
 $L_b$ remains fixed by \AssRef{assump:constant_belt_length}, so the belt-length
 residual can then be solved for the required secondary radius $r_s$. The local
 secondary relation finally gives the corresponding position $x_s$:
@@ -3009,7 +3009,7 @@ compatibility curve in \Fig{fig:pulley_coordinate_compatibility}.
     \caption{
     Representative compatibility curve between the local primary and
     secondary axial coordinates for an admissible belt--pulley geometry. Both
-    coordinates are normalized by the same centre distance $C$, so their
+    coordinates are normalized by the same centre distance $d_c$, so their
     relative travel and the changing slope of the engaged branch are shown on
     a common scale. The dimensions are illustrative and do not represent a
     particular CVT.
@@ -3152,11 +3152,11 @@ secondary must move. That motion is set by the fixed belt loop.
 At every compatible position,
 
 \begin{equation}
-    L_{\mathrm{geo}}\!\left(r_p(s),r_s(s),C\right)=L_b.
+    L_{\mathrm{geo}}\!\left(r_p(s),r_s(s),d_c\right)=L_b.
     \label{eq:belt_length_along_shift}
 \end{equation}
 
-The centre distance \(C\) is fixed by the pulley shafts, while \(L_b\) is
+The centre distance \(d_c\) is fixed by the pulley shafts, while \(L_b\) is
 constant under \AssRef{assump:constant_belt_length}. A small change in \(s\)
 therefore cannot change the geometric length of the belt path:
 
@@ -3191,11 +3191,11 @@ in the form needed for differentiation,
 \begin{equation}
     \delta
     =
-    \sin^{-1}\!\left(\frac{r_s-r_p}{C}\right),
+    \sin^{-1}\!\left(\frac{r_s-r_p}{d_c}\right),
     \qquad
     l
     =
-    \sqrt{C^2-(r_s-r_p)^2},
+    \sqrt{d_c^2-(r_s-r_p)^2},
     \label{eq:belt_rate_geometry_recalled}
 \end{equation}
 
@@ -3215,7 +3215,7 @@ span. Using these quantities, the exact path length from
     \label{eq:belt_length_rate_form}
 \end{equation}
 
-First, hold \(r_s\) and \(C\) fixed and increase \(r_p\). The radius difference
+First, hold \(r_s\) and \(d_c\) fixed and increase \(r_p\). The radius difference
 \(r_s-r_p\) then decreases at the same rate:
 
 \begin{equation}
@@ -3229,19 +3229,19 @@ Using this result in the definitions of \(\delta\) and \(l\) gives
     \frac{\partial\delta}{\partial r_p}
     &=
     \frac{1}
-    {\sqrt{1-\left(\dfrac{r_s-r_p}{C}\right)^2}}
-    \left(-\frac{1}{C}\right)
+    {\sqrt{1-\left(\dfrac{r_s-r_p}{d_c}\right)^2}}
+    \left(-\frac{1}{d_c}\right)
     \nonumber\\
     &=
     -\frac{1}
-    {\sqrt{C^2-(r_s-r_p)^2}}
+    {\sqrt{d_c^2-(r_s-r_p)^2}}
     =
     -\frac{1}{l},
     \label{eq:span_angle_primary_derivative}\\[8pt]
     \frac{\partial l}{\partial r_p}
     &=
     \frac{1}
-    {2\sqrt{C^2-(r_s-r_p)^2}}
+    {2\sqrt{d_c^2-(r_s-r_p)^2}}
     \left[2(r_s-r_p)\right]
     \nonumber\\
     &=
@@ -3292,8 +3292,8 @@ The corresponding derivatives of \(\delta\) and \(l\) are
     \frac{\partial\delta}{\partial r_s}
     &=
     \frac{1}
-    {\sqrt{1-\left(\dfrac{r_s-r_p}{C}\right)^2}}
-    \left(\frac{1}{C}\right)
+    {\sqrt{1-\left(\dfrac{r_s-r_p}{d_c}\right)^2}}
+    \left(\frac{1}{d_c}\right)
     \nonumber\\
     &=
     \frac{1}{l},
@@ -3301,7 +3301,7 @@ The corresponding derivatives of \(\delta\) and \(l\) are
     \frac{\partial l}{\partial r_s}
     &=
     \frac{1}
-    {2\sqrt{C^2-(r_s-r_p)^2}}
+    {2\sqrt{d_c^2-(r_s-r_p)^2}}
     \left[-2(r_s-r_p)\right]
     \nonumber\\
     &=
@@ -3622,7 +3622,7 @@ The required geometric quantities were defined in
 \begin{equation}
     \delta
     =
-    \sin^{-1}\!\left(\frac{r_s-r_p}{C}\right),
+    \sin^{-1}\!\left(\frac{r_s-r_p}{d_c}\right),
     \qquad
     \phi_p=\pi-2\delta,
     \qquad
@@ -3647,14 +3647,14 @@ Applying the chain rule to \(\delta\), and using the straight-span length from
     \delta'
     &=
     \frac{1}
-    {\sqrt{1-\left(\dfrac{r_s-r_p}{C}\right)^2}}
+    {\sqrt{1-\left(\dfrac{r_s-r_p}{d_c}\right)^2}}
     \left(
-        \frac{r_s'-r_p'}{C}
+        \frac{r_s'-r_p'}{d_c}
     \right)
     \nonumber\\
     &=
     \frac{r_s'-r_p'}
-    {\sqrt{C^2-(r_s-r_p)^2}}
+    {\sqrt{d_c^2-(r_s-r_p)^2}}
     \nonumber\\
     &=
     \frac{r_s'-r_p'}{l}.
@@ -8373,12 +8373,23 @@ Collecting them therefore gives
 \end{equation}
 
 To write \(\mathbf A\) and \(\mathbf b\) out cleanly, a small amount of
-temporary notation is useful. For this matrix only, primes shorten
-derivatives: \(x_s'\), \(r_j'\), \(q_f'\), and \(J_{f,p}'\) denote
-derivatives with respect to \(s\), while \(\theta_s'\) denotes
-differentiation with respect to \(x_s\); double primes follow the same
-convention. The only additional symbols are the two analytical wrap factors
-repeated in the closed-loop row,
+temporary notation is useful. The prime notation retains the independent
+variables already established by the corresponding maps:
+\[
+    x_s'\equiv\frac{dx_s}{ds},
+    \qquad
+    r_j'\equiv\frac{dr_j}{ds},
+    \qquad
+    q_f'\equiv\frac{dq_f}{dx_p},
+\]
+\[
+    J_{f,p}'\equiv\frac{dJ_{f,p}}{dx_p},
+    \qquad
+    \theta_s'\equiv\frac{d\theta_s}{dx_s},
+\]
+with double primes taken with respect to the same established arguments.
+The only additional symbols are the two analytical wrap factors repeated in
+the closed-loop row,
 
 \begin{equation}
 \begin{aligned}
@@ -8431,7 +8442,7 @@ The coefficient matrix is then
 \mathbf A
 =
 \begin{bmatrix}
-I_{\mathrm B,p}+I_{p,\mathrm{const}}+J_{f,p}
+I_{\mathrm{B},p}+I_{p,\mathrm{const}}+J_{f,p}
 &0
 &0
 &0
@@ -8439,7 +8450,7 @@ I_{\mathrm B,p}+I_{p,\mathrm{const}}+J_{f,p}
 &0
 \\
 0
-&I_{\mathrm B,s}+I_{s,F}+I_{s,M}
+&I_{\mathrm{B},s}+I_{s,F}+I_{s,M}
 &0
 &I_{s,M}\theta_s'x_s'
 &0
@@ -8499,12 +8510,12 @@ The corresponding known-side vector is
 =
 \begin{bmatrix}
 \displaystyle
-\tau_{\mathrm B,p}
+\tau_{\mathrm{B},p}
 -
 J_{f,p}'\dot s\,\omega_p
 \\[9pt]
 \displaystyle
-\tau_{\mathrm B,s}
+\tau_{\mathrm{B},s}
 -
 I_{s,M}
 \bigl[
@@ -8894,10 +8905,10 @@ becomes
 
 \begin{equation}
 \begin{aligned}
-    \tau_{\mathrm B,p}
+    \tau_{\mathrm{B},p}
     ={}&
     \left[
-        I_{\mathrm B,p}
+        I_{\mathrm{B},p}
         +
         I_{p,\mathrm{const}}
         +
@@ -8992,10 +9003,10 @@ secondary contact torque can be eliminated by combining the balances. This
 gives
 
 \begin{equation}
-    \tau_{\mathrm B,s}
+    \tau_{\mathrm{B},s}
     =
     \left[
-        I_{\mathrm B,s}
+        I_{\mathrm{B},s}
         +
         I_{s,F}
         +
@@ -9637,7 +9648,7 @@ corresponding mass or inertia beside each one.
         & \textbf{Deadzone velocity} \\
         \midrule
         Primary shaft-carried rotation
-        & \(I_{\mathrm B,p}+I_{p,\mathrm{const}}+J_{f,p}(s)\)
+        & \(I_{\mathrm{B},p}+I_{p,\mathrm{const}}+J_{f,p}(s)\)
         & \(\omega_p\)
         & \(\omega_p\) \\[5pt]
         Primary movable axial motion
@@ -9649,7 +9660,7 @@ corresponding mass or inertia beside each one.
         & \(\dfrac{dq_f}{ds}\dot s\)
         & \(\dfrac{dq_f}{ds}\dot s\) \\[5pt]
         Secondary shaft-side rotation
-        & \(I_{\mathrm B,s}+I_{s,F}\)
+        & \(I_{\mathrm{B},s}+I_{s,F}\)
         & \(\omega_s\)
         & \(\omega_s\) \\[5pt]
         Secondary movable-side rotation
@@ -9704,11 +9715,11 @@ In the deadzone, the same row becomes \(
 adds helix-relative rotation. Stacking the nine rows in table order gives the
 engaged and deadzone velocity maps
 \begin{equation}
-    J_{\mathrm{eng}},\,J_{\mathrm{dz}}
+    \mathbf J_{\mathrm{eng}},\,\mathbf J_{\mathrm{dz}}
     \in \mathbb{R}^{9\times4}.
     \label{eq:finite_event_velocity_map_dimensions}
 \end{equation}
-For either topology, \(J\boldsymbol{\nu}\) therefore contains the nine
+For either topology, \(\mathbf J\boldsymbol{\nu}\) therefore contains the nine
 physical velocities produced by the four state velocities. Read by columns,
 the same matrix shows where each retained velocity appears through the
 mechanism; in particular, the fourth column gives the coefficients multiplying
@@ -9717,15 +9728,15 @@ mechanism; in particular, the fourth column gives the coefficients multiplying
 The linear or angular momentum carried by each motion is obtained by
 multiplying its velocity by the corresponding mass or inertia. Placing the
 masses and inertias from \Cref{tab:finite_event_motion_inventory} on the
-diagonal of \(W\in\mathbb{R}^{9\times9}\), in the same row order, performs
+diagonal of \(\mathbf W\in\mathbb{R}^{9\times9}\), in the same row order, performs
 these multiplications together:
 \begin{equation}
     \boldsymbol p
     =
-    WJ\boldsymbol\nu
+    \mathbf W\mathbf J\boldsymbol{\nu}
     \in\mathbb{R}^{9},
     \qquad
-    J\in\{J_{\mathrm{eng}},J_{\mathrm{dz}}\}.
+    \mathbf J\in\{\mathbf J_{\mathrm{eng}},\mathbf J_{\mathrm{dz}}\}.
     \label{eq:finite_event_physical_momentum_inventory}
 \end{equation}
 The entries are the linear and angular momenta of the individual translations
@@ -9735,32 +9746,32 @@ momentum vector.
 The same construction gives the momentum immediately before and after the
 boundary event. Positions remain continuous through the instantaneous
 transition, so the masses and inertias are evaluated at the same configuration
-and \(W\) is common to both sides. The incoming and outgoing connections
-determine \(J_-\) and \(J_+\), respectively, so both maps are known for the
+and \(\mathbf W\) is common to both sides. The incoming and outgoing connections
+determine \(\mathbf J_-\) and \(\mathbf J_+\), respectively, so both maps are known for the
 transition being considered:
 \begin{equation}
-    J_-
-    \in\{J_{\mathrm{eng}},J_{\mathrm{dz}}\},
+    \mathbf J_-
+    \in\{\mathbf J_{\mathrm{eng}},\mathbf J_{\mathrm{dz}}\},
     \qquad
-    J_+
-    \in\{J_{\mathrm{eng}},J_{\mathrm{dz}}\}.
+    \mathbf J_+
+    \in\{\mathbf J_{\mathrm{eng}},\mathbf J_{\mathrm{dz}}\}.
     \label{eq:finite_event_side_maps}
 \end{equation}
 A crossing between engaged and deadzone motion uses different maps, whereas
-arrival at the upper primary stop has \(J_-=J_+=J_{\mathrm{eng}}\). At the
-fully open primary stop, both sides instead use \(J_{\mathrm{dz}}\).
+arrival at the upper primary stop has \(\mathbf J_-=\mathbf J_+=\mathbf J_{\mathrm{eng}}\). At the
+fully open primary stop, both sides instead use \(\mathbf J_{\mathrm{dz}}\).
 
-The incoming state supplies the known velocity \(\boldsymbol\nu^-\), while
-\(\boldsymbol\nu^+\) remains to be found. The corresponding physical momenta
+The incoming state supplies the known velocity \(\boldsymbol{\nu}^-\), while
+\(\boldsymbol{\nu}^+\) remains to be found. The corresponding physical momenta
 are therefore
 \begin{equation}
     \boldsymbol p^-
     =
-    WJ_-\boldsymbol\nu^-,
+    \mathbf W\mathbf J_-\boldsymbol{\nu}^-,
     \qquad
     \boldsymbol p^+
     =
-    WJ_+\boldsymbol\nu^+.
+    \mathbf W\mathbf J_+\boldsymbol{\nu}^+.
     \label{eq:finite_event_side_momenta}
 \end{equation}
 Because each row follows the same physical translation or rotation on both
@@ -9768,24 +9779,24 @@ sides, subtracting the two gives its momentum change through the event:
 \begin{equation}
     \Delta\boldsymbol p
     =
-    WJ_+\boldsymbol{\nu}^+
+    \mathbf W\mathbf J_+\boldsymbol{\nu}^+
     -
-    WJ_-\boldsymbol{\nu}^-
+    \mathbf W\mathbf J_-\boldsymbol{\nu}^-
     \in\mathbb{R}^{9}.
     \label{eq:finite_event_body_momentum_change}
 \end{equation}
-If \(J_-\neq J_+\), even identical state-velocity vectors can correspond to
+If \(\mathbf J_-\neq \mathbf J_+\), even identical state-velocity vectors can correspond to
 different physical motions and therefore different momenta.
 
 \paragraph{Velocities allowed after the event}
 
-With the momentum on both sides now expressed through \(J_-\) and \(J_+\), the
+With the momentum on both sides now expressed through \(\mathbf J_-\) and \(\mathbf J_+\), the
 effect of changing the kinematic connection is accounted for in the momentum
 inventory. The boundary examples established a second possibility as well:
-even after the appropriate outgoing map \(J_+\) is known, the new regime can
+even after the appropriate outgoing map \(\mathbf J_+\) is known, the new regime can
 impose additional relations on the outgoing velocities \(\boldsymbol{\nu}^+\)
 themselves. At the upper primary stop, for example, the engaged connection
-remains valid, so \(J_-=J_+=J_{\mathrm{eng}}\), while the already-established
+remains valid, so \(\mathbf J_-=\mathbf J_+=\mathbf J_{\mathrm{eng}}\), while the already-established
 stop condition is
 \begin{equation}
     \dot s^+=0.
@@ -9795,19 +9806,19 @@ The shift rate \(\dot s^+\) is the fourth entry of \(\boldsymbol{\nu}^+\).
 Writing the stop condition's coefficients in that state order gives a row that
 selects this entry, so the required relation becomes
 \begin{equation}
-    c_{\mathrm{stop}}
+    \mathbf c_{\mathrm{stop}}
     =
     \begin{bmatrix}
         0 & 0 & 0 & 1
     \end{bmatrix},
     \qquad
-    c_{\mathrm{stop}}\boldsymbol{\nu}^+=0.
+    \mathbf c_{\mathrm{stop}}\boldsymbol{\nu}^+=0.
     \label{eq:finite_event_stop_constraint}
 \end{equation}
 The engaged low-ratio seat and fully open primary stop arrest the same shift
 coordinate and therefore use the same row. The engaged low-ratio seat uses
-\(J_{\mathrm{eng}}\), while the fully open primary stop uses
-\(J_{\mathrm{dz}}\).
+\(\mathbf J_{\mathrm{eng}}\), while the fully open primary stop uses
+\(\mathbf J_{\mathrm{dz}}\).
 
 A belt--pulley contact can restrict the outgoing velocities for a different
 physical reason. If a contact that was already sticking remains stuck through
@@ -9824,13 +9835,13 @@ requires
 In the state ordering of \Cref{eq:finite_event_velocity_vector}, this
 condition is
 \begin{equation}
-    c_{p,\mathrm{stick}}
+    \mathbf c_{p,\mathrm{stick}}
     =
     \begin{bmatrix}
         -r_{p,\mathrm{eff}} & 0 & 1 & 0
     \end{bmatrix},
     \qquad
-    c_{p,\mathrm{stick}}\boldsymbol{\nu}^+=0.
+    \mathbf c_{p,\mathrm{stick}}\boldsymbol{\nu}^+=0.
     \label{eq:finite_event_primary_stick_constraint}
 \end{equation}
 
@@ -9853,7 +9864,7 @@ requires
 \end{equation}
 which gives
 \begin{equation}
-    c_{s,\mathrm{stick}}
+    \mathbf c_{s,\mathrm{stick}}
     =
     \begin{bmatrix}
         0 &
@@ -9862,7 +9873,7 @@ which gives
         -\dfrac{r_{s,\mathrm{eff}}}{2}\dfrac{d\theta_s}{ds}
     \end{bmatrix},
     \qquad
-    c_{s,\mathrm{stick}}\boldsymbol{\nu}^+=0.
+    \mathbf c_{s,\mathrm{stick}}\boldsymbol{\nu}^+=0.
     \label{eq:finite_event_secondary_stick_constraint}
 \end{equation}
 These rows apply only to sticking contacts retained through the collision. An
@@ -9877,7 +9888,7 @@ impulses to be resolved together during the event.
 
 For outgoing deadzone motion, the reduced model's prescribed belt--secondary
 lock replaces the engaged secondary sticking condition. The outgoing map is
-\(J_+=J_{\mathrm{dz}}\), and the belt remains locked to the fully closed
+\(\mathbf J_+=\mathbf J_{\mathrm{dz}}\), and the belt remains locked to the fully closed
 secondary after primary separation. The closure already derived in
 \Cref{eq:deadzone_secondary_lock} requires
 \begin{equation}
@@ -9889,13 +9900,13 @@ secondary after primary separation. The closure already derived in
 \end{equation}
 so an outgoing deadzone state must satisfy
 \begin{equation}
-    c_{s,\mathrm{dz}}
+    \mathbf c_{s,\mathrm{dz}}
     =
     \begin{bmatrix}
         0 & -r_{s,\mathrm{eff,dz}} & 1 & 0
     \end{bmatrix},
     \qquad
-    c_{s,\mathrm{dz}}\boldsymbol{\nu}^+=0.
+    \mathbf c_{s,\mathrm{dz}}\boldsymbol{\nu}^+=0.
     \label{eq:finite_event_deadzone_lock_constraint}
 \end{equation}
 The lock applies even when entry into the deadzone must first bring unequal
@@ -9907,16 +9918,16 @@ condition and the two sticking conditions must all hold for the same
 stacking them into a single matrix. More generally, for the \(n_c\)
 restrictions present in a given event,
 \begin{equation}
-    C_+
+    \mathbf C_+
     =
     \begin{bmatrix}
-        c_1\\
+        \mathbf c_1\\
         \vdots\\
-        c_{n_c}
+        \mathbf c_{n_c}
     \end{bmatrix}
     \in\mathbb{R}^{n_c\times4},
     \qquad
-    C_+\boldsymbol{\nu}^+=0.
+    \mathbf C_+\boldsymbol{\nu}^+=0.
     \label{eq:finite_event_outgoing_constraints}
 \end{equation}
 
@@ -9932,11 +9943,11 @@ further closing.  Over the instantaneous event, that reaction appears as a
 finite impulse associated with the stop constraint.
 
 Let \(\Gamma_{\mathrm{stop}}\) denote this impulse, signed positive toward
-increasing \(s\).  Since \(c_{\mathrm{stop}}\) identifies the retained
+increasing \(s\).  Since \(\mathbf c_{\mathrm{stop}}\) identifies the retained
 direction in which the stop acts, its impulse is
 
 \begin{equation}
-    c_{\mathrm{stop}}^{\mathsf T}\Gamma_{\mathrm{stop}}
+    \mathbf c_{\mathrm{stop}}^{\mathsf T}\Gamma_{\mathrm{stop}}
     =
     \begin{bmatrix}
         0\\
@@ -9948,7 +9959,7 @@ direction in which the stop acts, its impulse is
 \end{equation}
 
 A retained sticking condition has the same structure.  The condition
-\(c_{p,\mathrm{stick}}\boldsymbol{\nu}^+=0\) requires the belt and primary
+\(\mathbf c_{p,\mathrm{stick}}\boldsymbol{\nu}^+=0\) requires the belt and primary
 surface to leave with zero relative velocity; the tangential contact can
 supply the impulse required to maintain that relation through the collision.
 Let \(\Gamma_p\) be positive when the impulse on the belt acts in the positive
@@ -9961,7 +9972,7 @@ opposite action on the primary gives angular impulse
         -r_{p,\mathrm{eff}}\Gamma_p\\0\\\Gamma_p\\0
     \end{bmatrix}
     =
-    c_{p,\mathrm{stick}}^{\mathsf T}\Gamma_p.
+    \mathbf c_{p,\mathrm{stick}}^{\mathsf T}\Gamma_p.
     \label{eq:finite_event_primary_constraint_impulse}
 \end{equation}
 
@@ -9969,26 +9980,26 @@ opposite action on the primary gives angular impulse
 When both contacts remain sticking, both tangential impulses contribute
 to the belt's momentum change. Contributions from the active restrictions
 therefore add wherever they act on the same retained motion. Associate each 
-row \(c_i\) of \(C_+\) with an unknown signed impulse amplitude 
+row \(\mathbf c_i\) of \(\mathbf C_+\) with an unknown signed impulse amplitude 
 \(\Gamma_i\), and collect these amplitudes in
 
 \begin{equation}
-    \boldsymbol\Gamma=
+    \boldsymbol{\Gamma}=
     [\Gamma_1,\ldots,\Gamma_{n_c}]^{\mathsf T}\in\mathbb R^{n_c},
 \end{equation}
 
 Their combined generalized impulse is then
 
 \begin{equation}
-    C_+^{\mathsf T}\boldsymbol\Gamma
+    \mathbf C_+^{\mathsf T}\boldsymbol{\Gamma}
     \in\mathbb R^4.
     \label{eq:finite_event_generalized_constraint_impulse}
 \end{equation}
 
 Each row therefore carries both the velocity restriction it imposes and the
 unknown impulse required to enforce it:
-\(c_i\boldsymbol\nu^+=0\) specifies the outgoing velocity relation, while
-\(c_i^{\mathsf T}\Gamma_i\) gives the corresponding generalized impulse.
+\(\mathbf c_i\boldsymbol{\nu}^+=0\) specifies the outgoing velocity relation, while
+\(\mathbf c_i^{\mathsf T}\Gamma_i\) gives the corresponding generalized impulse.
 
 \paragraph{Momentum balance in the retained velocity directions}
 
@@ -9998,25 +10009,25 @@ resulting speeds remain unknown.  Determining them requires balancing
 those impulses against the momentum changes of the moving hardware.
 The difficulty is that \(\Delta\boldsymbol p\in\mathbb R^9\) still
 lists the nine physical translations and rotations separately, whereas
-\(C_+^{\mathsf T}\boldsymbol\Gamma\in\mathbb R^4\) already acts in the
+\(\mathbf C_+^{\mathsf T}\boldsymbol{\Gamma}\in\mathbb R^4\) already acts in the
 four retained velocity directions.  The body momentum changes must
 therefore be gathered into those same four directions before the two
 can be balanced.
 
 % F5
 That gathering is already encoded in the outgoing velocity map. Each
-column of \(J_+\) states how one retained velocity appears among the
+column of \(\mathbf J_+\) states how one retained velocity appears among the
 nine outgoing body velocities; the same coefficients therefore state
 how the corresponding body momentum changes contribute back to that
 retained direction. For secondary rotation, for example, the
 \(\omega_s\) column has coefficient one in both the shaft-side and
 movable-side rotation rows. Denote their angular-momentum changes by
 \(\Delta H_{s,F}\) and \(\Delta H_{s,M}\), with the shaft-side term
-including the boundary inertia \(I_{\mathrm B,s}\). These changes
+including the boundary inertia \(I_{\mathrm{B},s}\). These changes
 therefore enter together:
 
 \begin{equation}
-    \left[J_+^{\mathsf T}\Delta\boldsymbol p\right]_{\omega_s}
+    \left[\mathbf J_+^{\mathsf T}\Delta\boldsymbol p\right]_{\omega_s}
     =
     \Delta H_{s,F}+\Delta H_{s,M}.
     \label{eq:finite_event_secondary_momentum_gathering}
@@ -10048,13 +10059,13 @@ makes its weighted angular and axial impulse contributions equal and
 opposite in this balance. Their cancellation here, together with the
 angular cancellation in the secondary rotational balance, explains why
 the helix reaction requires no additional component of
-\(\boldsymbol\Gamma\), even though its momentum transfer remains present
+\(\boldsymbol{\Gamma}\), even though its momentum transfer remains present
 in \(\Delta\boldsymbol p\).
 
 Applying this operation to all four columns collects the nine physical
 momentum changes into
 \begin{equation}
-    J_+^{\mathsf T}\Delta\boldsymbol p
+    \mathbf J_+^{\mathsf T}\Delta\boldsymbol p
     \in\mathbb R^4,
     \label{eq:finite_event_generalized_momentum_change}
 \end{equation}
@@ -10063,12 +10074,12 @@ with one balance associated with each of
 
 Taken together, the gathered balance has a useful interpretation.
 Motion that exists only on the incoming side is still retained in
-\(\Delta\boldsymbol p\) through \(WJ_-\boldsymbol\nu^-\), while
+\(\Delta\boldsymbol p\) through \(\mathbf W\mathbf J_-\boldsymbol{\nu}^-\), while
 reactions internal to the ideal kinematic connections cancel when the
 body balances are combined, as the helix exchange does above.  The stop
 and contact impulses enforce additional restrictions rather than those
 kinematic connections, so they remain explicitly as
-\(C_+^{\mathsf T}\boldsymbol\Gamma\).
+\(\mathbf C_+^{\mathsf T}\boldsymbol{\Gamma}\).
 
 \paragraph{Coupled event solve}
 
@@ -10076,12 +10087,12 @@ kinematic connections, so they remain explicitly as
 The physical momentum changes and the explicit constraint impulses are now
 expressed in the same four retained directions.  They can therefore be
 balanced directly, while the outgoing velocities must simultaneously satisfy
-the restrictions already collected in \(C_+\):
+the restrictions already collected in \(\mathbf C_+\):
 \begin{equation}
     \begin{aligned}
-        J_+^{\mathsf T}\Delta\boldsymbol p
-        &=C_+^{\mathsf T}\boldsymbol\Gamma,\\
-        C_+\boldsymbol\nu^+&=0.
+        \mathbf J_+^{\mathsf T}\Delta\boldsymbol p
+        &=\mathbf C_+^{\mathsf T}\boldsymbol{\Gamma},\\
+        \mathbf C_+\boldsymbol{\nu}^+&=0.
     \end{aligned}
     \label{eq:finite_event_generalized_impulse_momentum}
 \end{equation}
@@ -10098,12 +10109,12 @@ yet written directly in the unknowns. Substituting the momentum difference from
 incoming term on the right collects both sets of unknowns:
 \begin{equation}
     \begin{bmatrix}
-        J_+^{\mathsf T}WJ_+&-C_+^{\mathsf T}\\
-        C_+&0
+        \mathbf J_+^{\mathsf T}\mathbf W\mathbf J_+&-\mathbf C_+^{\mathsf T}\\
+        \mathbf C_+&0
     \end{bmatrix}
-    \begin{bmatrix}\boldsymbol\nu^+\\\boldsymbol\Gamma\end{bmatrix}
+    \begin{bmatrix}\boldsymbol{\nu}^+\\\boldsymbol{\Gamma}\end{bmatrix}
     =
-    \begin{bmatrix}J_+^{\mathsf T}WJ_-\boldsymbol\nu^-\\0\end{bmatrix}.
+    \begin{bmatrix}\mathbf J_+^{\mathsf T}\mathbf W\mathbf J_-\boldsymbol{\nu}^-\\0\end{bmatrix}.
     \label{eq:finite_event_kkt_system}
 \end{equation}
 At this point the event can be solved in one step.  For a known incoming
@@ -10117,9 +10128,9 @@ constrained mechanical system \citep{BenziGolubLiesen2005}.  Here the
 constraint multipliers are impulses rather than continuous reaction forces,
 because the balance is taken across an instantaneous transition
 \citep{Stewart2000RigidImpact}.  The block
-\(J_+^{\mathsf T}WJ_+\) is the generalized inertia seen in the outgoing
-velocity directions, \(C_+^{\mathsf T}\) places the unknown constraint
-impulses into those directions, and \(C_+\) imposes the required outgoing
+\(\mathbf J_+^{\mathsf T}\mathbf W\mathbf J_+\) is the generalized inertia seen in the outgoing
+velocity directions, \(\mathbf C_+^{\mathsf T}\) places the unknown constraint
+impulses into those directions, and \(\mathbf C_+\) imposes the required outgoing
 velocity relations.  The right-hand side carries the known incoming momentum
 into the same directions.
 
@@ -10135,20 +10146,20 @@ not mechanically admissible.
 % F10
 
 \paragraph{Completing the upper primary stop} The final system can now resolve the secondary-speed
-question posed at the outset. Take \(J_-=J_+=J_{\mathrm{eng}}\) and first
+question posed at the outset. Take \(\mathbf J_-=\mathbf J_+=\mathbf J_{\mathrm{eng}}\) and first
 consider the case in which the belt supplies no angular impulse to the
 secondary.  The shaft-side and movable-side secondary rotations contribute
 the following \((\omega_s,\dot s)\) block to the generalized inertia matrix:
 
 \begin{equation}
     \left[
-        J_{\mathrm{eng}}^{\mathsf T}
-        W
-        J_{\mathrm{eng}}
+        \mathbf J_{\mathrm{eng}}^{\mathsf T}
+        \mathbf W
+        \mathbf J_{\mathrm{eng}}
     \right]_{\omega_s,\dot s}^{\mathrm{secondary\ rotation}}
     =
     \begin{bmatrix}
-        I_{\mathrm B,s}+I_{s,F}+I_{s,M}
+        I_{\mathrm{B},s}+I_{s,F}+I_{s,M}
         &
         I_{s,M}\dfrac{d\theta_s}{ds}
         \\[6pt]
@@ -10180,11 +10191,11 @@ secondary belt impulse, the \(\omega_s\) row of the same system becomes
 
 \begin{equation}
     \left(
-        I_{\mathrm B,s}+I_{s,F}+I_{s,M}
+        I_{\mathrm{B},s}+I_{s,F}+I_{s,M}
     \right)\omega_s^+
     =
     \left(
-        I_{\mathrm B,s}+I_{s,F}+I_{s,M}
+        I_{\mathrm{B},s}+I_{s,F}+I_{s,M}
     \right)\omega_s^-
     +
     I_{s,M}\frac{d\theta_s}{ds}\dot s^- .
@@ -10209,11 +10220,11 @@ the same row gives
     \omega_s^+
     =
     \frac{
-        (I_{\mathrm B,s}+I_{s,F})\omega_s^-
+        (I_{\mathrm{B},s}+I_{s,F})\omega_s^-
         +
         I_{s,M}\omega_{s,M}^-
     }{
-        I_{\mathrm B,s}+I_{s,F}+I_{s,M}
+        I_{\mathrm{B},s}+I_{s,F}+I_{s,M}
     }.
     \label{eq:finite-event-upper-stop-common-speed}
 \end{equation}
@@ -10227,29 +10238,29 @@ pin--track impulse that transfers angular momentum between the shaft-side
 and movable-side assemblies is internal to the engaged connection; its
 equal-and-opposite actions cancel from the combined \(\omega_s\) balance
 rather than appearing as another component of
-\(\boldsymbol\Gamma\).
+\(\boldsymbol{\Gamma}\).
 
 \begin{remarkbox}[Remark (Energy consistency check)]
 
 The completed event solution also provides a useful consistency check.
 Because the physical velocities on both sides are already known from
-\(J_-\boldsymbol\nu^-\) and \(J_+\boldsymbol\nu^+\), the kinetic energy
+\(\mathbf J_-\boldsymbol{\nu}^-\) and \(\mathbf J_+\boldsymbol{\nu}^+\), the kinetic energy
 before and after the transition follows directly:
 
 \begin{equation}
     T^-
     =
     \frac{1}{2}
-    (J_-\boldsymbol\nu^-)^{\mathsf T}
-    W
-    (J_-\boldsymbol\nu^-),
+    (\mathbf J_-\boldsymbol{\nu}^-)^{\mathsf T}
+    \mathbf W
+    (\mathbf J_-\boldsymbol{\nu}^-),
     \qquad
     T^+
     =
     \frac{1}{2}
-    (J_+\boldsymbol\nu^+)^{\mathsf T}
-    W
-    (J_+\boldsymbol\nu^+).
+    (\mathbf J_+\boldsymbol{\nu}^+)^{\mathsf T}
+    \mathbf W
+    (\mathbf J_+\boldsymbol{\nu}^+).
     \label{eq:finite_event_kinetic_energies}
 \end{equation}
 
@@ -10257,27 +10268,27 @@ For the perfectly inelastic event model, the solved transition should not
 increase the total kinetic energy.  This follows directly from the event
 balance.  Premultiplying the first relation in
 \Cref{eq:finite_event_generalized_impulse_momentum} by
-\((\boldsymbol\nu^+)^{\mathsf T}\) gives
+\((\boldsymbol{\nu}^+)^{\mathsf T}\) gives
 
 \[
-    (J_+\boldsymbol\nu^+)^{\mathsf T}\Delta\boldsymbol p
+    (\mathbf J_+\boldsymbol{\nu}^+)^{\mathsf T}\Delta\boldsymbol p
     =
-    (C_+\boldsymbol\nu^+)^{\mathsf T}\boldsymbol\Gamma
+    (\mathbf C_+\boldsymbol{\nu}^+)^{\mathsf T}\boldsymbol{\Gamma}
     =
     0,
 \]
 
 because the outgoing solution satisfies
-\(C_+\boldsymbol\nu^+=0\).  Substituting the momentum change from
+\(\mathbf C_+\boldsymbol{\nu}^+=0\).  Substituting the momentum change from
 \Cref{eq:finite_event_body_momentum_change} then gives
 
 \begin{equation}
     T^- - T^+
     =
     \frac{1}{2}
-    (J_+\boldsymbol\nu^+-J_-\boldsymbol\nu^-)^{\mathsf T}
-    W
-    (J_+\boldsymbol\nu^+-J_-\boldsymbol\nu^-)
+    (\mathbf J_+\boldsymbol{\nu}^+-\mathbf J_-\boldsymbol{\nu}^-)^{\mathsf T}
+    \mathbf W
+    (\mathbf J_+\boldsymbol{\nu}^+-\mathbf J_-\boldsymbol{\nu}^-)
     \geq 0.
     \label{eq:finite_event_energy_loss}
 \end{equation}
@@ -10881,17 +10892,17 @@ center-to-center distance, then further in the ratio, which is critical for accu
 
 Many simplified treatments assume
 \[
-\frac{r_s - r_p}{C} \ll 1,
+\frac{r_s - r_p}{d_c} \ll 1,
 \]
-which implies $\lambda \approx 0$ and therefore
+which implies $\delta \approx 0$ and therefore
 \[
-\sin^{-1}\!\left(\frac{r_s - r_p}{C}\right) \approx 0.
+\sin^{-1}\!\left(\frac{r_s - r_p}{d_c}\right) \approx 0.
 \]
 
 Under this approximation, the belt-length constraint
 \Eq{eq:belt_length_final} reduces to
 \begin{equation}
-L_b \approx \pi(r_p + r_s) + 2\sqrt{C^2 - (r_s - r_p)^2}.
+L_b \approx \pi(r_p + r_s) + 2\sqrt{d_c^2 - (r_s - r_p)^2}.
 \label{eq:belt_length_approx}
 \end{equation}
 
@@ -10899,36 +10910,36 @@ L_b \approx \pi(r_p + r_s) + 2\sqrt{C^2 - (r_s - r_p)^2}.
 \section{Derivation of the Approximate Center Distance}
 
 To determine the center-to-center distance at the initial configuration,
-we substitute $r_p = r_{p,\text{outer},\min}$ and $r_s = r_{s,\text{outer},\max}$ into
-\Eq{eq:belt_length_approx} and solve for $C$.
+we substitute $r_p = r_{p,\mathrm{outer},\min}$ and $r_s = r_{s,\mathrm{outer},\max}$ into
+\Eq{eq:belt_length_approx} and solve for $d_c$.
 
 \paragraph{Step 1: Isolate the square root.}
 
 Rearranging \Eq{eq:belt_length_approx}:
 \begin{equation}
-L_b - \pi(r_{p,\text{outer},\min} + r_{s,\text{outer},\max})
+L_b - \pi(r_{p,\mathrm{outer},\min} + r_{s,\mathrm{outer},\max})
 =
-2\sqrt{C^2 - (r_{s,\text{outer},\max} - r_{p,\text{outer},\min})^2}.
+2\sqrt{d_c^2 - (r_{s,\mathrm{outer},\max} - r_{p,\mathrm{outer},\min})^2}.
 \label{eq:approx_step1}
 \end{equation}
 
 \paragraph{Step 2: Square both sides.}
 
 \begin{equation}
-\bigl[L_b - \pi(r_{p,\text{outer},\min} + r_{s,\text{outer},\max})\bigr]^2
+\bigl[L_b - \pi(r_{p,\mathrm{outer},\min} + r_{s,\mathrm{outer},\max})\bigr]^2
 =
-4\bigl[C^2 - (r_{s,\text{outer},\max} - r_{p,\text{outer},\min})^2\bigr].
+4\bigl[d_c^2 - (r_{s,\mathrm{outer},\max} - r_{p,\mathrm{outer},\min})^2\bigr].
 \label{eq:approx_step2}
 \end{equation}
 
-\paragraph{Step 3: Solve for $C^2$.}
+\paragraph{Step 3: Solve for $d_c^2$.}
 
 \begin{equation}
-C^2
+d_c^2
 =
-\frac{\bigl[L_b - \pi(r_{p,\text{outer},\min} + r_{s,\text{outer},\max})\bigr]^2}{4}
+\frac{\bigl[L_b - \pi(r_{p,\mathrm{outer},\min} + r_{s,\mathrm{outer},\max})\bigr]^2}{4}
 +
-(r_{s,\text{outer},\max} - r_{p,\text{outer},\min})^2.
+(r_{s,\mathrm{outer},\max} - r_{p,\mathrm{outer},\min})^2.
 \label{eq:approx_step3}
 \end{equation}
 
@@ -10936,20 +10947,20 @@ C^2
 
 Expanding the squared term in the numerator:
 \[
-\bigl[L_b - \pi(r_{p,\text{outer},\min} + r_{s,\text{outer},\max})\bigr]^2
+\bigl[L_b - \pi(r_{p,\mathrm{outer},\min} + r_{s,\mathrm{outer},\max})\bigr]^2
 =
-L_b^2 - 2L_b\pi(r_{p,\text{outer},\min} + r_{s,\text{outer},\max}) + \pi^2(r_{p,\text{outer},\min} + r_{s,\text{outer},\max})^2,
+L_b^2 - 2L_b\pi(r_{p,\mathrm{outer},\min} + r_{s,\mathrm{outer},\max}) + \pi^2(r_{p,\mathrm{outer},\min} + r_{s,\mathrm{outer},\max})^2,
 \]
 the approximate center distance becomes
 
 \begin{equation}
 \boxed{
-C_{\mathrm{approx}}
+d_{c,\mathrm{approx}}
 =
 \sqrt{
-\frac{L_b^2 - 2L_b\pi(r_{p,\text{outer},\min} + r_{s,\text{outer},\max}) + \pi^2(r_{p,\text{outer},\min} + r_{s,\text{outer},\max})^2}{4}
+\frac{L_b^2 - 2L_b\pi(r_{p,\mathrm{outer},\min} + r_{s,\mathrm{outer},\max}) + \pi^2(r_{p,\mathrm{outer},\min} + r_{s,\mathrm{outer},\max})^2}{4}
 +
-(r_{s,\text{outer},\max} - r_{p,\text{outer},\min})^2
+(r_{s,\mathrm{outer},\max} - r_{p,\mathrm{outer},\min})^2
 }.
 }
 \label{eq:C_approx}
@@ -10975,38 +10986,38 @@ Belt length $L_b$ & \SI{37.538}{in} & \SI{0.9535}{m} \\
 Belt height $h_b$ & \SI{0.613}{in} & \SI{0.01557}{m} \\
 Groove half-angle $\beta$ & \SI{11.5}{\degree} & \SI{0.2007}{rad} \\
 Inner primary radius & \SI{0.8125}{in} & \SI{0.0206375}{m} \\
-Primary outer radius $r_{p,\text{outer},\min}$ & \SI{1.4255}{in} & \SI{0.03621}{m} \\
-Secondary outer radius $r_{s,\text{outer},\max}$ & \SI{4.0}{in} & \SI{0.1016}{m} \\
+Primary outer radius $r_{p,\mathrm{outer},\min}$ & \SI{1.4255}{in} & \SI{0.03621}{m} \\
+Secondary outer radius $r_{s,\mathrm{outer},\max}$ & \SI{4.0}{in} & \SI{0.1016}{m} \\
 \bottomrule
 \end{tabular}
 \end{center}
 
 \noindent
 The primary outer radius is computed as the inner radius plus belt height:
-$r_{p,\text{outer},\min} = 0.8125 + 0.613 = \SI{1.4255}{in}$.
+$r_{p,\mathrm{outer},\min} = 0.8125 + 0.613 = \SI{1.4255}{in}$.
 
 \paragraph{Computed Center Distances}
 
 Solving the exact belt-length constraint \Eq{eq:belt_length_constraint}
 numerically yields
 \[
-C_{\mathrm{exact}} = \SI{0.25174}{m} \approx \SI{9.911}{in}.
+d_{c,\mathrm{exact}} = \SI{0.25174}{m} \approx \SI{9.911}{in}.
 \]
 
 Evaluating the approximate formula \Eq{eq:C_approx} yields
 \[
-C_{\mathrm{approx}} = \SI{0.26837}{m} \approx \SI{10.566}{in}.
+d_{c,\mathrm{approx}} = \SI{0.26837}{m} \approx \SI{10.566}{in}.
 \]
 
 \paragraph{Error Metrics}
 
 The absolute and relative errors are:
 \begin{align}
-\Delta C &= C_{\mathrm{approx}} - C_{\mathrm{exact}}
+\Delta d_c &= d_{c,\mathrm{approx}} - d_{c,\mathrm{exact}}
 = \SI{0.01663}{m}
 = \SI{0.655}{in}, \\[4pt]
 \varepsilon_{\mathrm{rel}}
-&= \frac{\Delta C}{C_{\mathrm{exact}}}
+&= \frac{\Delta d_c}{d_{c,\mathrm{exact}}}
 = \frac{0.01663}{0.25174}
 = 6.61\%.
 \end{align}
@@ -11017,18 +11028,18 @@ The small-angle approximation introduces a relative error of nearly 7\%
 in the center-to-center distance for this system. This error arises because
 the ratio
 \[
-\frac{r_{s,\text{outer},\max} - r_{p,\text{outer},\min}}{C}
+\frac{r_{s,\mathrm{outer},\max} - r_{p,\mathrm{outer},\min}}{d_c}
 =
 \frac{0.1016 - 0.03621}{0.25174}
 =
 0.260
 \]
-is not small. The assumption $\lambda \approx 0$ is therefore not
+is not small. The assumption $\delta \approx 0$ is therefore not
 justified for this CVT geometry.
 
-Since the center distance $C$ propagates into all subsequent geometric
+Since the center distance $d_c$ propagates into all subsequent geometric
 calculations---wrap angles, tangent span lengths, and derived quantities
-such as the transmission ratio---a 7\% error in $C$ can compound into
+such as the transmission ratio---a 7\% error in $d_c$ can compound into
 larger errors in predicted system behavior.
 
 % --------------------------------------------------------------
@@ -11041,7 +11052,7 @@ at two shift positions: zero shift and maximum shift.
 % --------------------------------------------------------------
 \subsection{Derivation of the Approximate Secondary Radius}
 
-Given a known primary outer radius $r_{p,\text{outer}}$ and center distance $C$,
+Given a known primary outer radius $r_{p,\mathrm{outer}}$ and center distance $d_c$,
 the secondary outer radius can be obtained by solving the belt-length
 constraint. Under the small-angle approximation \Eq{eq:belt_length_approx},
 this yields a closed-form expression.
@@ -11050,38 +11061,38 @@ this yields a closed-form expression.
 
 From \Eq{eq:belt_length_approx}:
 \begin{equation}
-L_b - \pi(r_{p,\text{outer}} + r_{s,\text{outer}})
+L_b - \pi(r_{p,\mathrm{outer}} + r_{s,\mathrm{outer}})
 =
-2\sqrt{C^2 - (r_{s,\text{outer}} - r_{p,\text{outer}})^2}.
+2\sqrt{d_c^2 - (r_{s,\mathrm{outer}} - r_{p,\mathrm{outer}})^2}.
 \end{equation}
 
 \paragraph{Step 2: Square both sides.}
 
 \begin{equation}
-\bigl[L_b - \pi r_{p,\text{outer}} - \pi r_{s,\text{outer}}\bigr]^2
+\bigl[L_b - \pi r_{p,\mathrm{outer}} - \pi r_{s,\mathrm{outer}}\bigr]^2
 =
-4\bigl[C^2 - (r_{s,\text{outer}} - r_{p,\text{outer}})^2\bigr].
+4\bigl[d_c^2 - (r_{s,\mathrm{outer}} - r_{p,\mathrm{outer}})^2\bigr].
 \end{equation}
 
 \paragraph{Step 3: Expand and collect terms.}
 
 Expanding the left side:
 \[
-(L_b - \pi r_{p,\text{outer}})^2
-- 2\pi(L_b - \pi r_{p,\text{outer}}) r_{s,\text{outer}}
-+ \pi^2 r_{s,\text{outer}}^2.
+(L_b - \pi r_{p,\mathrm{outer}})^2
+- 2\pi(L_b - \pi r_{p,\mathrm{outer}}) r_{s,\mathrm{outer}}
++ \pi^2 r_{s,\mathrm{outer}}^2.
 \]
 
 Expanding the right side:
 \[
-4C^2 - 4r_{s,\text{outer}}^2 + 8 r_{p,\text{outer}} r_{s,\text{outer}} - 4r_{p,\text{outer}}^2.
+4d_c^2 - 4r_{s,\mathrm{outer}}^2 + 8 r_{p,\mathrm{outer}} r_{s,\mathrm{outer}} - 4r_{p,\mathrm{outer}}^2.
 \]
 
-Collecting powers of $r_{s,\text{outer}}$ yields a quadratic equation:
+Collecting powers of $r_{s,\mathrm{outer}}$ yields a quadratic equation:
 \begin{equation}
-(\pi^2 + 4) r_{s,\text{outer}}^2
-- 2\bigl[\pi L_b - \pi^2 r_{p,\text{outer}} + 4 r_{p,\text{outer}}\bigr] r_{s,\text{outer}}
-+ \bigl[(L_b - \pi r_{p,\text{outer}})^2 + 4r_{p,\text{outer}}^2 - 4C^2\bigr]
+(\pi^2 + 4) r_{s,\mathrm{outer}}^2
+- 2\bigl[\pi L_b - \pi^2 r_{p,\mathrm{outer}} + 4 r_{p,\mathrm{outer}}\bigr] r_{s,\mathrm{outer}}
++ \bigl[(L_b - \pi r_{p,\mathrm{outer}})^2 + 4r_{p,\mathrm{outer}}^2 - 4d_c^2\bigr]
 = 0.
 \end{equation}
 
@@ -11095,9 +11106,9 @@ configuration) is
 r_{s,\mathrm{approx}}
 =
 \frac{
-\pi L_b + (4 - \pi^2) r_{p,\text{outer}}
+\pi L_b + (4 - \pi^2) r_{p,\mathrm{outer}}
 -
-2\sqrt{(\pi^2 + 4)C^2 - L_b^2 + 4\pi L_b r_{p,\text{outer}} - 4\pi^2 r_{p,\text{outer}}^2}
+2\sqrt{(\pi^2 + 4)d_c^2 - L_b^2 + 4\pi L_b r_{p,\mathrm{outer}} - 4\pi^2 r_{p,\mathrm{outer}}^2}
 }{
 \pi^2 + 4
 }.
@@ -11113,7 +11124,7 @@ secondary radius without numerical root finding.
 
 At zero shift, the CVT is in its lowest ratio (maximum reduction)
 configuration. This is also the geometry used to compute the approximate
-center distance $C_{\mathrm{approx}}$, so much of that initial center-distance
+center distance $d_{c,\mathrm{approx}}$, so much of that initial center-distance
 error cancels when the same configuration is used again to recover the
 secondary radius.
 
@@ -11121,18 +11132,18 @@ secondary radius.
 
 At $s = 0$, the primary is within the deadzone, so from \Eq{eq:primary_radius}:
 \[
-r_{p,\text{outer}}(0) = r_{p,\text{outer},\min} = \SI{0.03621}{m}.
+r_{p,\mathrm{outer}}(0) = r_{p,\mathrm{outer},\min} = \SI{0.03621}{m}.
 \]
 
 \paragraph{Secondary Radius Comparison}
 
-Solving the exact belt-length constraint with $C_{\mathrm{exact}}$ yields
+Solving the exact belt-length constraint with $d_{c,\mathrm{exact}}$ yields
 \[
 r_{s,\mathrm{exact}} = \SI{0.10160}{m}.
 \]
 
 Evaluating the approximate formula \Eq{eq:rs_approx} with
-$C_{\mathrm{approx}} = \SI{0.26837}{m}$ yields
+$d_{c,\mathrm{approx}} = \SI{0.26837}{m}$ yields
 \[
 r_{s,\mathrm{approx}} = \SI{0.10160}{m}.
 \]
@@ -11146,9 +11157,9 @@ Computing effective radii with $h_b/2 = \SI{0.00779}{m}$:
 \toprule
 \textbf{Quantity} & \textbf{Exact} & \textbf{Approximate} \\
 \midrule
-$r_{p,\text{eff}}$ & \SI{0.0284}{m} & \SI{0.0284}{m} \\
-$r_{s,\text{eff}}$ & \SI{0.0938}{m} & \SI{0.0938}{m} \\
-$R = r_{s,\text{eff}}/r_{p,\text{eff}}$ & 3.300 & 3.300 \\
+$r_{p,\mathrm{eff}}$ & \SI{0.0284}{m} & \SI{0.0284}{m} \\
+$r_{s,\mathrm{eff}}$ & \SI{0.0938}{m} & \SI{0.0938}{m} \\
+$R = r_{s,\mathrm{eff}}/r_{p,\mathrm{eff}}$ & 3.300 & 3.300 \\
 \bottomrule
 \end{tabular}
 \end{center}
@@ -11158,7 +11169,7 @@ The ratio error at zero shift is
 \varepsilon_R = \frac{|3.300 - 3.300|}{3.300} \approx 0.000\%.
 \]
 
-Thus, although $C_{\mathrm{approx}}$ is already 6.61\% too large, the induced
+Thus, although $d_{c,\mathrm{approx}}$ is already 6.61\% too large, the induced
 error has little visible effect at minimum shift because the radius calculation
 is being evaluated at the same operating point used to construct that
 approximate center distance in the first place.
@@ -11186,8 +11197,8 @@ representing a near-crossover configuration.
 Using \Eq{eq:primary_radius} with $s = s_{\max} = \SI{0.75}{in} = \SI{0.01905}{m}$
 and deadzone $s_{\mathrm{dz}} = \SI{0.0024892}{m}$:
 \begin{align}
-r_{p,\text{outer}}(s_{\max})
-&= r_{p,\text{outer},\min} + \frac{s_{\max} - s_{\mathrm{dz}}}{2\tan\beta} \nonumber\\[4pt]
+r_{p,\mathrm{outer}}(s_{\max})
+&= r_{p,\mathrm{outer},\min} + \frac{s_{\max} - s_{\mathrm{dz}}}{2\tan\beta} \nonumber\\[4pt]
 &= 0.03621 + \frac{0.01905 - 0.0024892}{2 \times \tan(11.5^\circ)} \nonumber\\[4pt]
 &= 0.03621 + \frac{0.01656}{0.4070} \nonumber\\[4pt]
 &= \SI{0.0769}{m}.
@@ -11196,13 +11207,13 @@ r_{p,\text{outer}}(s_{\max})
 \paragraph{Secondary Radius Comparison}
 
 Solving the exact belt-length constraint \Eq{eq:belt_length_constraint}
-numerically with $C_{\mathrm{exact}} = \SI{0.25174}{m}$ yields
+numerically with $d_{c,\mathrm{exact}} = \SI{0.25174}{m}$ yields
 \[
 r_{s,\mathrm{exact}} = \SI{0.06673}{m}.
 \]
 
 Evaluating the approximate formula \Eq{eq:rs_approx} with
-$C_{\mathrm{approx}} = \SI{0.26837}{m}$ yields
+$d_{c,\mathrm{approx}} = \SI{0.26837}{m}$ yields
 \[
 r_{s,\mathrm{approx}} = \SI{0.05626}{m}.
 \]
@@ -11212,7 +11223,7 @@ r_{s,\mathrm{approx}} = \SI{0.05626}{m}.
 The CVT ratio is defined using effective radii, which account for
 belt seating depth (\Eq{eq:cvt_ratio}):
 \[
-r_{\text{eff}} = r_{\text{outer}} - \frac{h_b}{2}.
+r_{\mathrm{eff}} = r_{\mathrm{outer}} - \frac{h_b}{2}.
 \]
 
 With $h_b/2 = \SI{0.00779}{m}$:
@@ -11222,9 +11233,9 @@ With $h_b/2 = \SI{0.00779}{m}$:
 \midrule[\heavyrulewidth]
 Quantity & \textbf{Exact} & \textbf{Approximate} \\
 \midrule
-$r_{p,\text{eff}}$ & \SI{0.0691}{m} & \SI{0.0691}{m} \\
-$r_{s,\text{eff}}$ & \SI{0.0589}{m} & \SI{0.0485}{m} \\
-$R = r_{s,\text{eff}}/r_{p,\text{eff}}$ & 0.853 & 0.701 \\
+$r_{p,\mathrm{eff}}$ & \SI{0.0691}{m} & \SI{0.0691}{m} \\
+$r_{s,\mathrm{eff}}$ & \SI{0.0589}{m} & \SI{0.0485}{m} \\
+$R = r_{s,\mathrm{eff}}/r_{p,\mathrm{eff}}$ & 0.853 & 0.701 \\
 \bottomrule
 \end{tabular}
 \end{center}
@@ -11289,22 +11300,22 @@ strategies, and solver configurations employed in the implementation.
 \section{Root Finding for Belt-Length Constraint}
 
 Given a known primary outer radius $r_1$ and fixed center-to-center distance
-$C$, the secondary outer radius $r_2$ is the unique root of the belt-length
+$d_c$, the secondary outer radius $r_2$ is the unique root of the belt-length
 constraint. This scalar root problem is obtained by rearranging the exact belt
 length closure from \Eq{eq:belt_length_constraint} into the residual form:
 \begin{equation}
 g(r_2;\,r_1)
 =
 \pi(r_1+r_2)
-+ 2(r_2-r_1)\arcsin\!\left(\frac{r_2-r_1}{C}\right)
-+ 2\sqrt{C^2-(r_2-r_1)^2}
++ 2(r_2-r_1)\arcsin\!\left(\frac{r_2-r_1}{d_c}\right)
++ 2\sqrt{d_c^2-(r_2-r_1)^2}
 - L_b
 = 0,
 \label{eq:belt_constraint_g}
 \end{equation}
 where $L_b$ is the fixed belt length. A separate invocation solves for the
-center-to-center distance $C$ itself at initialization, using the same equation
-evaluated at the boundary radii $(r_{1,\min},\, r_{2,\max})$ with $C$ as the
+center-to-center distance $d_c$ itself at initialization, using the same equation
+evaluated at the boundary radii $(r_{1,\min},\, r_{2,\max})$ with $d_c$ as the
 unknown; this is exactly the initialization step implied by
 \Eq{eq:belt_length_constraint} before the ratio law \Eq{eq:R_of_s_complete} can be
 evaluated over the shift range.
@@ -11312,13 +11323,13 @@ evaluated over the shift range.
 \paragraph{Bracketing strategy.}
 
 The $\arcsin$ term in \Eq{eq:belt_constraint_g} is real only when
-$|r_2 - r_1| \le C$, so the natural domain for $r_2$ is the open interval
-$(r_1 - C,\, r_1 + C)$. Within this interval a sign change is guaranteed:
-at the lower boundary $r_2 \to r_1 - C$, the $\arcsin$ saturates to $-\pi/2$
+$|r_2 - r_1| \le d_c$, so the natural domain for $r_2$ is the open interval
+$(r_1 - d_c,\, r_1 + d_c)$. Within this interval a sign change is guaranteed:
+at the lower boundary $r_2 \to r_1 - d_c$, the $\arcsin$ saturates to $-\pi/2$
 and the square root vanishes, giving
-$g \to 2\pi r_1 - 2\pi C - L_b < 0$ for all physically valid parameters.
-At the upper boundary $r_2 \to r_1 + C$, by symmetry
-$g \to 2\pi r_1 + 2\pi C - L_b > 0$, satisfied whenever the belt length is
+$g \to 2\pi r_1 - 2\pi d_c - L_b < 0$ for all physically valid parameters.
+At the upper boundary $r_2 \to r_1 + d_c$, by symmetry
+$g \to 2\pi r_1 + 2\pi d_c - L_b > 0$, satisfied whenever the belt length is
 less than the circumference subtended by the wider pulley pair --- a
 requirement any real CVT must satisfy. A small safety margin
 $\varepsilon = \num{e-9}$~m is applied at both ends to keep $\arcsin$ away
@@ -11657,7 +11668,7 @@ different design questions that are easy to blur together:
 The first question is answered by the constant-\(R_g\) contours. The other two
 come from the belt-length compatibility relation. Once one of the global
 geometric quantities---belt length \(L_b\) or center-to-center distance
-\(C\)---is fixed, the compatibility relation defines a family of allowable
+\(d_c\)---is fixed, the compatibility relation defines a family of allowable
 radius pairs in the same plane.
 
 \Cref{fig:ratio_plane_geometry_families} compares these two views directly.
@@ -11686,7 +11697,7 @@ endpoint ratios. The selected belt and installed geometry determine which
 radius pairs are even reachable. A longer or shorter belt shifts the compatible
 family through the plane, and so does a change in center distance. Since the
 constant-ratio lines are not parallel to those compatibility families, changing
-\(L_b\) or \(C\) changes not only the reachable endpoints, but also the
+\(L_b\) or \(d_c\) changes not only the reachable endpoints, but also the
 geometric route between them.
 
 Second, the figure makes the roles of belt selection and packaging easier to
@@ -11983,7 +11994,7 @@ The main derivation gives the required coupled secondary motion in
 -\frac{\phi_p}{\phi_s}\ddot r_p
 -
 \frac{8\pi^2}
-{\phi_s^3\sqrt{C^2-(r_s-r_p)^2}}
+{\phi_s^3\sqrt{d_c^2-(r_s-r_p)^2}}
 \dot r_p^2.
 \label{eq:geometric_ratio_secondary_acceleration_recalled}
 \end{align}
@@ -11998,7 +12009,7 @@ Substituting these into \Cref{eq:geometric_ratio_acceleration_general} gives
 -\frac{\phi_p}{\phi_s}\ddot r_p
 -
 \frac{8\pi^2}
-{\phi_s^3\sqrt{C^2-(r_s-r_p)^2}}
+{\phi_s^3\sqrt{d_c^2-(r_s-r_p)^2}}
 \dot r_p^2
 \right]
 -
@@ -12032,7 +12043,7 @@ Substituting these into \Cref{eq:geometric_ratio_acceleration_general} gives
 \right)
 -
 \frac{8\pi^2}
-{\phi_s^3r_p\sqrt{C^2-(r_s-r_p)^2}}
+{\phi_s^3r_p\sqrt{d_c^2-(r_s-r_p)^2}}
 \right]
 \dot r_p^2
 \nonumber\\
@@ -12054,7 +12065,7 @@ R_g
 \right)
 -
 \frac{8\pi^2}
-{\phi_s^3r_p\sqrt{C^2-(r_s-r_p)^2}}
+{\phi_s^3r_p\sqrt{d_c^2-(r_s-r_p)^2}}
 \right]
 \dot r_p^2.
 \label{eq:geometric_ratio_acceleration_primary_form}
@@ -12088,7 +12099,7 @@ R_g
 -
 \frac{2\pi^2\dot s^2}
 {\phi_s^3r_p\tan^2\beta
-\sqrt{C^2-(r_s-r_p)^2}},
+\sqrt{d_c^2-(r_s-r_p)^2}},
 & s_{\mathrm{dz}}<s\leq s_{\max}.
 \end{cases}
 }
@@ -12518,7 +12529,7 @@ centre, \(v\) perpendicular to \(u\) in the axial--radial mechanism plane, and
 
 For one flyweight define
 \begin{align}
-    m_f &= \int dm,\\
+    m_{f,1} &= \int dm,\\
     M_u &= \int u\,dm,
     &M_v &= \int v\,dm,\\
     S_u &= \int u^2\,dm,
@@ -12528,7 +12539,11 @@ For one flyweight define
     \label{eq:appB_general_mass_moments}
 \end{align}
 These first and second moments may be obtained from a simplified analytic mass
-model, direct measurement, or CAD.
+model, direct measurement, or CAD. With \(n_f\) identical flyweights, the total
+flyweight-set mass used in the main derivation is
+\[
+    m_f=n_fm_{f,1}.
+\]
 
 For \(n_f\) identical flyweights, the inertia about their individual pivot axes
 is
@@ -12554,7 +12569,7 @@ flyweight inertia about the primary shaft:
 \begin{aligned}
     J_{f,p}(q_f)
     =n_f\Big[{}
-    &m_f r_P^2
+    &m_{f,1} r_P^2
     +2r_P(M_u\sin q_f+M_v\cos q_f)\\
     &+S_u\sin^2q_f
     +S_v\cos^2q_f\\
@@ -12637,7 +12652,7 @@ with
 \begin{equation}
     M_v=S_v=S_{uv}=S_z=0,
     \qquad
-    m_f=m_a+m_t.
+    m_{f,1}=m_a+m_t.
 \end{equation}
 
 The resulting pivot inertia is
@@ -12781,7 +12796,7 @@ Substitution into the main actuator result in
 \Cref{eq:primary_flyweight_axial_force} gives
 \begin{equation}
 \boxed{
-    F_{p,\mathrm{fly}}
+    F_{\mathrm{fw},x_p}
     =
     \frac{1}{2}\omega_p^2J'_{f,p}
     -I_f(q_f')^2\ddot x_p
@@ -12938,20 +12953,20 @@ constrained roller contact during every dynamic state. Under the sign convention
 used in the main text, compressive ramp contact requires
 \begin{equation}
     \boxed{
-    F_{p,\mathrm{fly}}\ge0.
+    F_{\mathrm{fw},x_p}\ge0.
     }
     \label{eq:appB_contact_force_admissible}
 \end{equation}
-If \(F_{p,\mathrm{fly}}<0\), the constrained solution would require the ramp to
+If \(F_{\mathrm{fw},x_p}<0\), the constrained solution would require the ramp to
 pull on the roller. That state is physically inadmissible. The result is not
-replaced by \(\max(0,F_{p,\mathrm{fly}})\), since clipping the force would hide
+replaced by \(\max(0,F_{\mathrm{fw},x_p})\), since clipping the force would hide
 a change in mechanism topology.
 
 A complete treatment of such a state would introduce flyweight lift-off,
 free-flight, re-contact, and any associated impact dynamics. Those modes are
 not retained here. Until such an extension is introduced, negative contact
 force is treated as an explicit admissibility failure. The condition
-\(F_{p,\mathrm{fly}}=0\) marks the unilateral-contact boundary.
+\(F_{\mathrm{fw},x_p}=0\) marks the unilateral-contact boundary.
 
 \subsection{Mechanism and Contact Assumptions}
 
@@ -12995,7 +13010,8 @@ working radii. These approaches establish the use of reduced mass and geometry
 information for detailed actuator force prediction.
 
 If the pivot inertia is neglected and the mass distribution is reduced to a
-point or centre-of-mass description at radius \(r_f(x_p)\), then
+point or centre-of-mass description at radius \(r_f(x_p)\), then the total
+flyweight-set mass \(m_f=n_fm_{f,1}\) gives
 \begin{equation}
     J_{f,p}=m_fr_f^2
 \end{equation}
