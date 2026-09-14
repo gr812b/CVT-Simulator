@@ -58,6 +58,17 @@
 \numberwithin{equation}{section}
 
 \newcommand{\vect}[1]{\bm{#1}}
+% Preserve longtable reference metadata when the public \label is placed
+% after \end{longtable}. longtable steps the table counter internally, but
+% its reference context is otherwise lost when the environment closes.
+\makeatletter
+\newcommand{\labelcurrentlongtable}[1]{%
+  \edef\@currentlabel{\p@table\thetable}%
+  \edef\cref@currentlabel{[table][\arabic{table}][\arabic{chapter}]\thetable}%
+  \edef\@currentHref{table.\theHtable}%
+  \label{#1}%
+}
+\makeatother
 \newcommand{\dd}{\,\mathrm{d}}
 \newcommand{\sgn}{\operatorname{sgn}}
 \newcommand{\abs}[1]{\left|#1\right|}
@@ -361,162 +372,307 @@ traceable back to clear mechanical causes.
 
 \chapter*{Nomenclature and Notation}
 \addcontentsline{toc}{chapter}{Nomenclature and Notation}
-% notation table here
 
-All quantities are expressed in SI units unless otherwise stated.
-Angles are expressed in radians. Angular velocities are expressed in rad/s.
-Torques are expressed in N\,m, forces in N, lengths in m, and masses in kg.
+% Give front-matter nomenclature tables their own numbering series (N.1, N.2, ...).
+% The document's normal chapter-based table numbering is restored before Chapter 1.
+\let\bodythetable\thetable
+\let\bodytheHtable\theHtable
+\setcounter{table}{0}
+\renewcommand{\thetable}{N.\arabic{table}}
+\renewcommand{\theHtable}{N.\arabic{table}}
 
-\section*{Symbol Summary}\label{sec:symbols}
+All quantities are expressed in SI units unless otherwise stated. Angles are
+expressed in radians. \Cref{tab:notation_conventions} establishes the notation
+conventions used throughout the formulation. The remaining tables are organized
+by the role each quantity plays in a model evaluation rather than alphabetically:
+fixed CVT data define the selected hardware, the current CVT condition is retained
+from one instant to the next, shaft-interface conditions are supplied by the
+systems attached to the two shafts, and instantaneous CVT quantities are
+recomputed from those inputs.
 
-Symbols used throughout the derivation are summarized in \autoref{tab:symbols_core}.
-
-\begin{center}
-\small
-\setlength{\LTleft}{0pt}
-\setlength{\LTright}{0pt}
-\begin{longtable}{@{}p{0.34\textwidth}p{0.62\textwidth}@{}}
-\toprule
-Symbol & Meaning \\ \midrule
-\endfirsthead
-\toprule
-Symbol & Meaning \\ \midrule
-\endhead
-\bottomrule
-\endfoot
-\bottomrule
-\caption{Core symbols used throughout the derivation.}\label{tab:symbols_core}\\
-\endlastfoot
-\multicolumn{2}{@{}l}{\textbf{State and kinematics}} \\
-$\vect{x}(t)$ & state vector \\
-$t$ & time \\
-$\omega_p,\ \omega_s$ & primary and secondary angular speed \\
-$s,\ \dot s,\ \ddot s$ & shift position, velocity, and acceleration \\
-$R,\ \dot R$ & CVT ratio and ratio rate \\
-$v_b$ & belt transport speed \\
-$v_b^\ast,\ T_b$ & slip-branch target belt speed and belt-speed relaxation time constant \\
-$v_{\Delta}$ & slip metric: primary-imposed minus secondary-imposed belt-line speed \\
-\addlinespace
-\multicolumn{2}{@{}l}{\textbf{Geometry}} \\
-$r_{p,\mathrm{outer}}(s),\ r_{s,\mathrm{outer}}(s)$ & primary and secondary outer radius \\
-$r_{p,\mathrm{eff}}(s),\ r_{s,\mathrm{eff}}(s)$ & primary and secondary effective torque radius \\
-$r_{p,\mathrm{outer},\min}$ & minimum primary outer radius \\
-$r_{s,\mathrm{outer},\max}$ & maximum secondary outer radius \\
-$s_{\mathrm{dz}},\ s_{\max}$ & deadzone threshold and maximum shift \\
-$\beta$ & sheave face half-angle (radial reference) \\
-$d_c$ & pulley center distance \\
-$L_b$ & total belt length \\
-$\phi$ & belt wrap angle used in distributed contact model \\
-$r,\ \dot r$ & local belt path radius and its time derivative \\
-$r_{\mathrm{cm}}$ & belt element center-of-mass radius \\
-\addlinespace
-\multicolumn{2}{@{}l}{\textbf{Constraint and mapping functions}} \\
-$f(r_p,r_s,d_c)$ & belt-length compatibility root function ($f=0$) \\
-$\operatorname*{root}_{r_s}(\cdot)$ & numerical root solve for secondary radius \\
-$r_f(s),\ \dfrac{dr_f}{ds}$ & primary flyweight radius map and gradient \\
-\addlinespace
-$\theta_s(s),\ \dfrac{d\theta_s}{ds}$ & secondary helix angle map and gradient \\
-\addlinespace
-\multicolumn{2}{@{}l}{\textbf{Forces and torques}} \\
-$F_{p,\mathrm{ax}},\ F_{s,\mathrm{ax}}$ & primary and secondary axial mechanism force \\
-$F_{c,p},\ F_{c,s}$ & primary and secondary belt centrifugal axial contribution \\
-$F_{\mathrm{ax}}$ & generic axial clamp force at one pulley contact \\
-$\tau_{\mathrm{eng}},\ \tau_{\mathrm{load}}$ & engine input torque and reflected load torque \\
-$\tau_p,\ \tau_s$ & coupling torque seen at primary and secondary \\
-$\tau,\ \tau_c$ & generic interface torque and applied coupling/friction torque \\
-$\tau_{\mathrm{ns}}$ & no-slip requested coupling torque \\
-$\tau_-^{\mathrm{stick}},\ \tau_+^{\mathrm{stick}}$ & aggregate lower and upper coupling-torque bounds for stick admissibility \\
-$\tau_-^{\mathrm{slip}},\ \tau_+^{\mathrm{slip}}$ & aggregate lower and upper coupling-torque bounds on slip branches \\
-\addlinespace
-$\tau_{c,p,\pm}^{\mathrm{stick}},\ \tau_{c,s,\pm}^{\mathrm{stick}}$ & primary/secondary pulley-wise stick-branch lower/upper bounds \\
-\addlinespace
-$\tau_{c,p,\pm}^{\mathrm{slip}},\ \tau_{c,s,\pm}^{\mathrm{slip}}$ & primary/secondary pulley-wise slip-branch lower/upper bounds \\
-\addlinespace
-\multicolumn{2}{@{}l}{\textbf{Mass/inertia and material parameters}} \\
-$I_p,\ I_s$ & primary and secondary rotational inertia \\
-$m_f$ & total flyweight-set mass \\
-$m_{p,m},\ m_{s,m}$ & equivalent primary and secondary translating mechanism mass \\
-$\rho_b$ & belt material density \\
-$A_b$ & belt cross-sectional area \\
-$\mu$ & belt--pulley traction coefficient \\
-$k_p,\ x_{p,0}$ & primary spring stiffness and preload displacement \\
-$k_{s,\theta},\ \theta_{s,0}$ & secondary torsional stiffness and preload angle \\
-$k_{s,x},\ x_{s,0}$ & secondary axial stiffness and preload displacement \\
-\end{longtable}
-\normalsize
-\end{center}
-
-\section*{Constants and Parameters}\label{sec:constants}
-
-All parameters in \autoref{tab:constants} are treated as constant values that
-do not vary through the model. They are either physical constants, fixed by 
-the physical design of the CVT and vehicle or else are tuning parameters that 
-are set and held constant during a given simulation run. 
+\section*{Notation and Conventions}
 
 \begin{center}
 \small
 \setlength{\LTleft}{0pt}
 \setlength{\LTright}{0pt}
-\begin{longtable}{@{}p{0.15\textwidth}p{0.25\textwidth}p{0.15\textwidth}p{0.39\textwidth}@{}}
+\begin{longtable}{@{}p{0.27\textwidth}p{0.69\textwidth}@{}}
 \toprule
-Symbol & Name & Unit & Description \\ \midrule
+Notation & Convention \\ \midrule
 \endfirsthead
 \toprule
-Symbol & Name & Unit & Description \\ \midrule
+Notation & Convention \\ \midrule
 \endhead
 \bottomrule
 \endfoot
-\bottomrule
-\caption{Canonical non-varying parameters used by the CVT model equations.}
-\label{tab:constants}\\
 \endlastfoot
-\multicolumn{4}{@{}l}{\textbf{Geometry and belt}} \\
-$L_b$ & Belt length & \si{\meter} & Fixed total belt length \\
-$\beta$ & Sheave half-angle & \si{\radian} & Cone half-angle used for radial/axial conversion \\
-$h_b$ & Belt thickness & \si{\meter} & Radial belt thickness \\
-$b_{\mathrm{out}}$ & Belt outer width & \si{\meter} & Belt width at outer face \\
-$b_{\mathrm{in}}$ & Belt inner width & \si{\meter} & Belt width at inner face \\
-$r_{p,\mathrm{outer},\min}$ & Primary minimum outer radius & \si{\meter} & Radius at fully open primary \\
-$r_{s,\mathrm{outer},\max}$ & Secondary maximum outer radius & \si{\meter} & Radius at fully closed secondary \\
-$s_{\mathrm{dz}}$ & Shift deadzone threshold & \si{\meter} & Onset of effective radial motion \\
-$s_{\max}$ & Maximum shift & \si{\meter} & Physical upper travel bound \\
+
+$ j\in\{p,s\} $ & Generic pulley index; $p$ denotes the primary and $s$ the secondary. \\
+$ i\in\{u,l\} $ & Straight-span index; $u$ denotes the upper span and $l$ the lower span. \\
+$\mathrm{M},\ \mathrm{F}$ & Movable-side and fixed/shaft-side secondary assemblies, respectively. \\
+$\mathrm{B}$ & Shaft boundary; quantities carrying this subscript belong to the external system as presented at a CVT shaft interface. \\
 \addlinespace
-\multicolumn{4}{@{}l}{\textbf{Primary/secondary actuation}} \\
-$m_f$ & Flyweight-set mass & \si{\kilogram} & Total mass of the symmetric flyweight set \\
-$r_{f,0}$ & Initial flyweight radius & \si{\meter} & Flyweight radius offset at $s=0$ \\
-$k_p$ & Primary spring stiffness & \si{\newton\per\meter} & Primary compression spring rate \\
-$x_{p,0}$ & Primary spring preload & \si{\meter} & Initial compression of primary spring \\
-$k_{s,\theta}$ & Secondary torsional stiffness & \si{\newton\meter\per\radian} & Torsional spring rate in helix assembly \\
-$\theta_{s,0}$ & Secondary torsional preload & \si{\radian} & Initial torsional deflection preload \\
-$r_h$ & Helix reference radius & \si{\meter} & Effective cylindrical radius in helix kinematics \\
-$k_{s,x}$ & Secondary axial stiffness & \si{\newton\per\meter} & Secondary axial compression spring rate \\
-$x_{s,0}$ & Secondary axial preload & \si{\meter} & Initial compression of secondary axial spring \\
+$\dot{(\,)}$, $\ddot{(\,)}$ & First and second derivatives with respect to time. \\
+$(\,)'$, $(\,)''$ & First and second derivatives with respect to a quantity's established independent variable. The independent variable is stated when it is not already clear from the defining map or local context. \\
+$({\cdot})^-$, $({\cdot})^+$ & Values immediately before and immediately after a finite boundary event. \\
+$\Delta({\cdot})$ & Finite change across an event, defined as outgoing minus incoming. \\
 \addlinespace
-\multicolumn{4}{@{}l}{\textbf{Inertia and drivetrain}} \\
-$I_{\mathrm{eng}}$ & Engine inertia & \si{\kilogram\meter\squared} & Engine rotational inertia \\
-$I_{\mathrm{prim}}$ & Primary pulley inertia & \si{\kilogram\meter\squared} & Primary CVT pulley inertia \\
-$I_p$ & Effective primary inertia & \si{\kilogram\meter\squared} & Implemented primary-side inertia in current setup \\
-$I_{\mathrm{sec}}$ & Secondary pulley inertia & \si{\kilogram\meter\squared} & Secondary CVT pulley inertia \\
-$I_{\mathrm{gb}}$ & Gearbox inertia & \si{\kilogram\meter\squared} & Gearbox/intermediate shaft inertia \\
-$I_{\mathrm{wheel}}$ & Wheel inertia & \si{\kilogram\meter\squared} & Wheel/hub inertia about wheel axis \\
-$I_s$ & Effective secondary inertia & \si{\kilogram\meter\squared} & Lumped secondary-side inertia about secondary axis \\
-$G$ & Final drive ratio & 1 & Fixed ratio defined by $\omega_s = G\,\omega_w$ \\
-$m$ & Vehicle mass & \si{\kilogram} & Total vehicle mass \\
-$r_w$ & Wheel rolling radius & \si{\meter} & Effective tire rolling radius \\
-\addlinespace
-\multicolumn{4}{@{}l}{\textbf{Contact and environment}} \\
-$\rho_b$ & Belt density & \si{\kilogram\per\meter\cubed} & Belt material density \\
-$\mu_s$ & Belt--pulley static friction coefficient & 1 & Static traction coefficient used at impending slip \\
-$\mu_k$ & Belt--pulley kinetic friction coefficient & 1 & Kinetic traction coefficient used on slip branches \\
-$C_{\mathrm{rr}}$ & Rolling resistance coefficient & 1 & Tire-road rolling resistance coefficient \\
-$C_d$ & Drag coefficient & 1 & Aerodynamic drag coefficient \\
-$A_f$ & Frontal area & \si{\meter\squared} & Vehicle aerodynamic reference area \\
-$\rho$ & Air density & \si{\kilogram\per\meter\cubed} & Ambient air density used in drag model \\
-$g$ & Gravitational acceleration & \si{\meter\per\second\squared} & Gravity constant \\
+$\vect{x},\ \mathbf z,\ \boldsymbol{\nu},\ \boldsymbol{\Gamma}$ & Vector quantities are bold. Greek vectors retain the case of their scalar components. \\
+$\mathbf A,\ \mathbf J,\ \mathbf W,\ \mathbf C$ & Matrix quantities are bold uppercase. \\
+$[\,\cdot\,]^{\mathsf T}$ & Transpose. \\
+$\hat{\mathbf e}_{(\cdot)}$ & Unit vector in the direction indicated by its subscript. \\
+
+\bottomrule
+\caption{Mathematical and index conventions used throughout the formulation.}
 \end{longtable}
+\labelcurrentlongtable{tab:notation_conventions}
 \normalsize
 \end{center}
 
+\section*{Fixed CVT Data}
+
+The quantities in \Cref{tab:cvt_fixed_data} define the CVT selected for a
+simulation. They include directly specified hardware properties as well as
+geometry, mass properties, and configuration maps calculated once during
+initialization. They are not advanced as model state.
+
+\begin{center}
+\small
+\setlength{\LTleft}{0pt}
+\setlength{\LTright}{0pt}
+\begin{longtable}{@{}p{0.21\textwidth}p{0.13\textwidth}p{0.60\textwidth}@{}}
+\toprule
+Symbol & Unit & Meaning \\ \midrule
+\endfirsthead
+\toprule
+Symbol & Unit & Meaning \\ \midrule
+\endhead
+\bottomrule
+\endfoot
+\endlastfoot
+
+\multicolumn{3}{@{}l}{\textbf{Belt and common geometry}} \\
+$d_c$ & \si{\meter} & Pulley centre-to-centre distance. \\
+$L_b$ & \si{\meter} & Total belt length. \\
+$\beta$ & \si{\radian} & Sheave-face half-angle used for axial--radial conversion. \\
+$h_b$ & \si{\meter} & Radial belt height. \\
+$b_{\mathrm{out}},\ b_{\mathrm{in}}$ & \si{\meter} & Belt widths at the outer and inner radial surfaces. \\
+$d_{\mathrm{cord}}$ & \si{\meter} & Radial depth of the cord-layer centre measured inward from the outer belt surface. \\
+$\rho_b$ & \si{\kilogram\per\meter\cubed} & Belt material density. \\
+$A_b$ & \si{\meter\squared} & Belt cross-sectional area; fixed once the belt section is specified. \\
+$y_{\mathrm{cm}}$ & \si{\meter} & Radial depth of the belt cross-section centroid measured inward from the outer surface. \\
+$m_b$ & \si{\kilogram} & Total belt mass used in the complete-belt transport balance. \\
+\addlinespace
+
+\multicolumn{3}{@{}l}{\textbf{Pulley geometry and travel}} \\
+$x_{j,\max}$ & \si{\meter} & Maximum closing travel of pulley $j$. \\
+$x_{j,\mathrm{ref}},\ r_{j,\mathrm{ref}}$ & \si{\meter} & Known seated axial position and corresponding outer-surface radius used to anchor the local radius map. \\
+$r_{p,\min}$ & \si{\meter} & Minimum primary outer-surface belt radius, retained through the primary deadzone. \\
+$x_{p,\mathrm{dz}}$ & \si{\meter} & Primary position at which the movable sheave first reaches the belt. \\
+$s_{\mathrm{dz}}$ & \si{\meter} & System-coordinate deadzone boundary; $s_{\mathrm{dz}}\equiv x_{p,\mathrm{dz}}$. \\
+$s_{\max}$ & \si{\meter} & Upper system shift bound; $s_{\max}\equiv x_{p,\max}$. \\
+$r_j(x_j)$ & \si{\meter} & Hardware-defined outer-surface radius map for pulley $j$. \\
+$x_s(s)$ & \si{\meter} & Secondary movable-sheave position imposed by belt-length compatibility for a given system shift coordinate. \\
+$L_{\mathrm{geo}}(r_p,r_s,d_c)$ & \si{\meter} & Exact geometric belt-path length associated with a proposed pair of pulley radii. \\
+$\mathcal{R}_L(r_p,r_s,d_c)$ & \si{\meter} & Belt-length residual $L_{\mathrm{geo}}-L_b$, used to determine compatible installed geometry. \\
+$\mathcal{R}_x(x_p,x_s)$ & \si{\meter} & Belt-length residual after the local pulley radius maps are substituted; its zero defines compatible pulley positions. \\
+\addlinespace
+
+\multicolumn{3}{@{}l}{\textbf{Primary actuation and inertia}} \\
+$m_p$ & \si{\kilogram} & Translating mass of the primary movable sheave, ramp carrier, and components moving rigidly with them. \\
+$I_f$ & \si{\kilogram\meter\squared} & Total flyweight-set mass moment of inertia about the flyweight pivot axes. \\
+$m_f$ & \si{\kilogram} & Total flyweight-set mass; used explicitly in the classical point-mass reduction and flyweight construction appendix. \\
+$q_f(x_p)$ & \si{\radian} & Flyweight pivot-angle map as a function of primary position. \\
+$J_{f,p}(x_p)$ & \si{\kilogram\meter\squared} & Flyweight-set mass moment of inertia about the primary shaft axis as a function of primary position. \\
+$I_{p,\mathrm{const}}$ & \si{\kilogram\meter\squared} & Constant shaft-axis inertia of primary CVT hardware excluding the configuration-dependent flyweight contribution $J_{f,p}$. \\
+$k_p$ & \si{\newton\per\meter} & Primary compression-spring stiffness. \\
+$x_{p,\mathrm{pre}}$ & \si{\meter} & Installed primary spring compression at $x_p=0$. \\
+\addlinespace
+
+\multicolumn{3}{@{}l}{\textbf{Secondary actuation and inertia}} \\
+$m_s$ & \si{\kilogram} & Translating mass of the secondary movable sheave and components translating rigidly with it. \\
+$I_{s,F}$ & \si{\kilogram\meter\squared} & Shaft-axis inertia of the secondary fixed/shaft-side assembly inside the CVT boundary. \\
+$I_{s,M}$ & \si{\kilogram\meter\squared} & Shaft-axis inertia of the secondary movable assembly. \\
+$r_h$ & \si{\meter} & Effective cylindrical radius used to unwrap the secondary helix. \\
+$\alpha_s$ & \si{\radian} & Local unwrapped helix-track angle profile measured from the circumferential direction. \\
+$\theta_s(x_s)$ & \si{\radian} & Relative movable-sheave rotation imposed by the helix as a function of secondary axial position. \\
+$k_{s,\theta}$ & \si{\newton\meter\per\radian} & Secondary torsional spring stiffness. \\
+$\theta_{s,\mathrm{pre}}$ & \si{\radian} & Signed installed torsional preload at $x_s=0$. \\
+$k_{s,x}$ & \si{\newton\per\meter} & Secondary axial spring stiffness. \\
+$x_{s,\mathrm{pre}}$ & \si{\meter} & Installed secondary axial spring compression at $x_s=0$. \\
+\addlinespace
+
+\multicolumn{3}{@{}l}{\textbf{Belt--pulley contact}} \\
+$\mu_s$ & 1 & Static belt--pulley traction coefficient used to test sticking admissibility. \\
+$\mu_k$ & 1 & Kinetic belt--pulley traction coefficient used on sliding branches. \\
+\bottomrule
+\caption{Fixed CVT data and hardware-defined maps used by the model.}
+\end{longtable}
+\labelcurrentlongtable{tab:cvt_fixed_data}
+\normalsize
+\end{center}
+
+\section*{Current CVT Condition}
+
+Only the continuous state and discrete mechanical regime are retained as the
+CVT's time-varying internal condition from one evaluation to the next.
+
+\begin{center}
+\small
+\begin{longtable}{@{}p{0.21\textwidth}p{0.13\textwidth}p{0.60\textwidth}@{}}
+\toprule
+Symbol & Unit & Meaning \\ \midrule
+\endfirsthead
+\toprule
+Symbol & Unit & Meaning \\ \midrule
+\endhead
+\bottomrule
+\endfoot
+\endlastfoot
+$\vect{x}(t)$ & mixed & Continuous CVT state vector $[\omega_p,\ \omega_s,\ s,\ \dot s,\ v_b]^{\mathsf T}$. \\
+$\omega_p,\ \omega_s$ & \si{\radian\per\second} & Primary and secondary shaft angular speeds. \\
+$s$ & \si{\meter} & System shift coordinate, equal to the primary movable-sheave position $x_p$. \\
+$\dot s$ & \si{\meter\per\second} & Shift velocity. \\
+$v_b$ & \si{\meter\per\second} & Signed belt transport speed. \\
+$q(t)$ & -- & Discrete mechanical regime identifying the currently active structural and tangential contact constraints. \\
+\bottomrule
+\caption{Quantities retained as the current internal CVT condition.}
+\end{longtable}
+\labelcurrentlongtable{tab:cvt_current_condition}
+\normalsize
+\end{center}
+
+\section*{Shaft-Interface Conditions}
+
+The attached systems communicate with the CVT only through the mechanical
+conditions in \Cref{tab:cvt_shaft_interface_conditions}. These quantities are
+supplied for the current evaluation and are not additional CVT state variables.
+
+\begin{center}
+\small
+\begin{longtable}{@{}p{0.21\textwidth}p{0.13\textwidth}p{0.60\textwidth}@{}}
+\toprule
+Symbol & Unit & Meaning \\ \midrule
+\endfirsthead
+\toprule
+Symbol & Unit & Meaning \\ \midrule
+\endhead
+\bottomrule
+\endfoot
+\endlastfoot
+$\tau_{\mathrm{B},j}$ & \si{\newton\meter} & Signed external torque presented to shaft $j$ by the attached system. \\
+$I_{\mathrm{B},j}$ & \si{\kilogram\meter\squared} & Equivalent rotational inertia of the attached system presented at shaft $j$. \\
+\bottomrule
+\caption{Mechanical conditions supplied at the primary and secondary shaft interfaces.}
+\end{longtable}
+\labelcurrentlongtable{tab:cvt_shaft_interface_conditions}
+\normalsize
+\end{center}
+
+\section*{Instantaneous CVT Quantities}
+
+The quantities in \Cref{tab:cvt_instantaneous_quantities} are evaluated from
+the fixed CVT data, current CVT condition, shaft-interface conditions, and active
+regime. They are useful throughout the mechanics and results but are recomputed
+rather than retained as independent state. Purely local dummy variables and
+temporary algebraic abbreviations are defined where they are used and are not
+repeated here.
+
+\begin{center}
+\small
+\setlength{\LTleft}{0pt}
+\setlength{\LTright}{0pt}
+\begin{longtable}{@{}p{0.21\textwidth}p{0.13\textwidth}p{0.60\textwidth}@{}}
+\toprule
+Symbol & Unit & Meaning \\ \midrule
+\endfirsthead
+\toprule
+Symbol & Unit & Meaning \\ \midrule
+\endhead
+\bottomrule
+\endfoot
+\endlastfoot
+
+\multicolumn{3}{@{}l}{\textbf{Geometry and kinematics}} \\
+$x_p,\ x_s$ & \si{\meter} & Current primary and secondary movable-sheave positions; $x_p=s$ and $x_s=x_s(s)$. \\
+$r_j\equiv r_{j,\mathrm{outer}}$ & \si{\meter} & Current belt outer-surface radius on pulley $j$. \\
+$r_{j,\mathrm{inner}}$ & \si{\meter} & Current belt inner-surface radius on pulley $j$. \\
+$r_{j,\mathrm{eff}}$ & \si{\meter} & Cord-line effective radius used as the belt-torque lever arm. \\
+$r_{j,\mathrm{cm}}$ & \si{\meter} & Radius of the belt cross-section centre of mass on pulley $j$. \\
+$\ell$ & \si{\meter} & Length of either straight belt span for the current two-pulley geometry. \\
+$\delta$ & \si{\radian} & Signed angle of the straight spans relative to the pulley-centre line. \\
+$\phi_p,\ \phi_s$ & \si{\radian} & Primary and secondary belt wrap angles. \\
+$\theta$ & \si{\radian} & Local angular coordinate through a pulley wrap, increasing in the positive belt-transport direction. \\
+$R_g$ & 1 & Instantaneous geometric CVT ratio $r_s/r_p$ used in the ratio analysis. \\
+$\omega_{s,M}$ & \si{\radian\per\second} & Absolute angular speed of the secondary movable assembly. \\
+$\bar\omega_j$ & \si{\radian\per\second} & Representative angular speed of the belt-contact surface on pulley $j$. \\
+$v_{\mathrm{rel},j}$ & \si{\meter\per\second} & Relative tangential belt--pulley speed at contact $j$. \\
+$a_{\mathrm{rel},j}$ & \si{\meter\per\second\squared} & Relative tangential acceleration used as the sticking residual. \\
+\addlinespace
+
+\multicolumn{3}{@{}l}{\textbf{Belt contact, tension, and torque}} \\
+$N_p,\ N_s$ & \si{\newton} & Total integrated belt normal resultants over both sheave faces of the primary and secondary. \\
+$\lambda_j$ & 1 & Signed traction utilization defined by $dF_{t,j}=\lambda_j\,dN_j$. \\
+$\lambda_{j,\mathrm{st}}$ & 1 & Static traction utilization candidate on a sticking wrap; admissible when $|\lambda_{j,\mathrm{st}}|\leq\mu_s$. \\
+$\sigma_j$ & 1 & Sliding-direction sign, with $\lambda_j=\sigma_j\mu_k$ on a sliding wrap. \\
+$T_j(\theta)$ & \si{\newton} & Belt tension distribution through wrap $j$. \\
+$T_{j,\mathrm{in}},\ T_{j,\mathrm{out}}$ & \si{\newton} & Belt tensions entering and leaving wrap $j$ in the positive transport direction. \\
+$\tau_j$ & \si{\newton\meter} & Total signed belt torque acting on pulley $j$. \\
+$H_{\mathrm{CVT},j}$ & \si{\kilogram\meter\squared\per\second} & Angular momentum of CVT hardware inside the boundary on shaft side $j$. \\
+$H_j$ & \si{\kilogram\meter\squared\per\second} & Total pulley-side angular momentum including the equivalent boundary inertia. \\
+\addlinespace
+
+\multicolumn{3}{@{}l}{\textbf{Primary and secondary actuation}} \\
+$F_{\mathrm{fw},x_p}$ & \si{\newton} & Axial closing force transmitted by the primary flyweights. \\
+$F_{\mathrm{spring},x_p}$ & \si{\newton} & Primary spring opening force. \\
+$F_{\mathrm{belt},x_p}$ & \si{\newton} & Axial belt reaction on the primary movable sheave. \\
+$\tau_{s,F},\ \tau_{s,M}$ & \si{\newton\meter} & Belt-torque shares applied to the fixed/shaft-side and movable secondary faces. \\
+$\tau_{s,\mathrm{spring}}$ & \si{\newton\meter} & Torque applied to the secondary movable assembly by the wound spring. \\
+$\tau_{s,\mathrm{helix}}$ & \si{\newton\meter} & Circumferential reaction torque at the secondary pin--helix contact. \\
+$F_{\mathrm{helix},x_s}$ & \si{\newton} & Axial force transmitted through the secondary helix. \\
+$F_{\mathrm{spring},x_s}$ & \si{\newton} & Secondary axial spring closing force. \\
+$F_{\mathrm{belt},x_s}$ & \si{\newton} & Axial belt reaction on the secondary movable sheave. \\
+\addlinespace
+
+\multicolumn{3}{@{}l}{\textbf{Instantaneous mechanical solve}} \\
+$\dot{\vect{x}}$ & mixed & State derivative returned by the active-regime mechanics. \\
+$\mathcal{F}_q$ & -- & Regime-dependent evolution map relating the current state and shaft-interface conditions to $\dot{\vect{x}}$. \\
+$\mathbf z$ & mixed & Engaged mechanical unknown vector $[\dot\omega_p,\ \dot\omega_s,\ \dot v_b,\ \ddot s,\ N_p,\ N_s]^{\mathsf T}$. \\
+$\mathbf A$ & mixed & Coefficient matrix of the common engaged linear mechanical solve. \\
+$\mathbf b$ & mixed & Known-side vector of the common engaged linear mechanical solve. \\
+$\mathbf z_{\mathrm{dz}}$ & mixed & Free-deadzone unknown vector $[\dot\omega_p,\ \dot\omega_s,\ \dot v_b,\ \ddot s]^{\mathsf T}$. \\
+$\mathbf A_{\mathrm{dz}},\ \mathbf b_{\mathrm{dz}}$ & mixed & Coefficient matrix and known-side vector of the reduced free-deadzone mechanical solve. \\
+\addlinespace
+
+\multicolumn{3}{@{}l}{\textbf{Structural-regime quantities}} \\
+$F_{\mathrm{stop},0}$ & \si{\newton} & Reaction at the fully open primary stop. \\
+$F_{\mathrm{stop},\mathrm{LR}}$ & \si{\newton} & Reaction associated with the engaged low-ratio structural seat. \\
+$F_{\mathrm{stop},\max}$ & \si{\newton} & Reaction at the upper primary closing stop. \\
+$\ddot s_{\mathrm{cf}}$ & \si{\meter\per\second\squared} & Contact-free shift acceleration used to test release from an active structural stop. \\
+\addlinespace
+
+\multicolumn{3}{@{}l}{\textbf{Finite boundary events}} \\
+$\boldsymbol{\nu}$ & mixed & Retained event-velocity vector $[\omega_p,\ \omega_s,\ v_b,\ \dot s]^{\mathsf T}$. \\
+$\mathbf J_{\mathrm{eng}},\ \mathbf J_{\mathrm{dz}}$ & mixed & Maps from retained event velocities to physical body velocities in the engaged and deadzone structural arrangements. \\
+$\mathbf J_-,\ \mathbf J_+$ & mixed & Incoming and outgoing physical-motion maps selected for a finite event. \\
+$\mathbf W$ & mixed & Diagonal physical mass/inertia weighting matrix used in the event momentum construction. \\
+$\boldsymbol p$ & mixed & Physical momentum vector associated with the body-velocity inventory, $\boldsymbol p=\mathbf W\mathbf J\boldsymbol\nu$. \\
+$\Delta\boldsymbol p$ & mixed & Physical momentum change across a finite event. \\
+$\mathbf C_+$ & mixed & Matrix whose rows impose the active outgoing velocity constraints. \\
+$\mathbf c_i$ & mixed & One outgoing event-constraint row; examples include stop, pulley-stick, and deadzone-lock constraints. \\
+$\Gamma_i,\ \boldsymbol{\Gamma}$ & \si{\newton\second} & Scalar constraint impulse and assembled vector of active event impulses. \\
+$T^-,\ T^+$ & \si{\joule} & Total retained kinetic energy immediately before and after a finite event. \\
+
+\bottomrule
+\caption{Principal instantaneous and derived quantities used by the CVT formulation.}
+\end{longtable}
+\labelcurrentlongtable{tab:cvt_instantaneous_quantities}
+\normalsize
+\end{center}
+
+% Restore the normal chapter-based table numbering for the body of the manuscript.
+\let\thetable\bodythetable
+\let\theHtable\bodytheHtable
 
 \clearpage
 \newpage
@@ -2153,27 +2309,16 @@ is moving; the regime records which motion is presently allowed.
 \section{Model Quantities and Evaluation Flow}
 \label{sec:model_evaluation_flow}
 
-Advancing the CVT from one instant to the next requires more than the stored
-internal condition alone. The calculation also uses data that define the
-selected CVT and loading supplied through the two shaft interfaces, and it
-produces quantities that are needed only for the current evaluation. These
-quantities serve different roles in the model and should not all be treated as
-state.
+Advancing the CVT from one instant to the next requires four kinds of
+information that differ in where they originate and whether they persist between
+evaluations. Fixed CVT data define the selected mechanism and remain unchanged
+while the simulation is advanced. The current CVT condition carries the internal
+state and regime retained from the preceding instant. Shaft-interface conditions
+are supplied by the systems attached to the two shafts for the present
+evaluation. The CVT mechanics then determine the instantaneous quantities needed
+to advance that condition and test whether the active regime remains admissible.
 
-\Cref{tab:model_quantity_roles} separates the four roles used throughout the
-formulation. The fixed data represented by its first row are collected in
-\Cref{tab:cvt_fixed_data}, while the instantaneous quantities represented by
-its final row are listed by mechanical regime in
-\Cref{tab:cvt_instantaneous_results_by_regime}.
-% TODO: Reorganize the nomenclature parameter table as a CVT-only fixed-data
-% table and assign it the label tab:cvt_fixed_data.
-% TODO: Align the later regime table with the instantaneous-result role used
-% here and assign it the label tab:cvt_instantaneous_results_by_regime.
-Fixed CVT data may be specified directly or calculated once from the selected
-hardware during initialization. In either case, they define the CVT being
-modeled and remain unchanged while that simulation is advanced. The
-time-varying internal condition is instead carried by the state and regime
-introduced in the preceding sections.
+\Cref{tab:model_quantity_roles} summarizes these four roles.
 
 \begin{table}[H]
 \centering
@@ -2197,13 +2342,13 @@ Current CVT condition
 & Record the time-varying internal information retained from the preceding
   instant and identify the currently active constraints. \\[5pt]
 
-Shaft-interface data
+Shaft-interface conditions
 & Applied torque \(\tau_{\mathrm{B},j}\) and equivalent inertia
   \(I_{\mathrm{B},j}\) at each shaft
 & Supply the current mechanical effect of the systems attached to the primary
   and secondary shafts. \\[5pt]
 
-Instantaneous CVT results
+Instantaneous CVT quantities
 & State derivative, current internal mechanical quantities, and regime
   admissibility measures
 & Determine how the state can advance from the current instant and whether
@@ -2212,6 +2357,12 @@ Instantaneous CVT results
 \bottomrule
 \end{tabular}
 \end{table}
+
+The corresponding symbols are collected in the front-matter lookup tables:
+fixed CVT data in \Cref{tab:cvt_fixed_data}, the current CVT condition in
+\Cref{tab:cvt_current_condition}, shaft-interface conditions in
+\Cref{tab:cvt_shaft_interface_conditions}, and instantaneous CVT quantities in
+\Cref{tab:cvt_instantaneous_quantities}.
 
 The pair \(\bigl(\vect{x},q\bigr)\) is therefore the only time-varying
 internal CVT condition passed from one model evaluation to the next. The
@@ -2229,7 +2380,7 @@ Using these roles, one evaluation proceeds as follows:
           torque and equivalent inertia presented at their respective
           interfaces under the current shaft conditions.
     \item The CVT mechanics use the fixed CVT data, current internal condition,
-          and shaft-interface data to determine the instantaneous mechanical
+          and shaft-interface conditions to determine the instantaneous mechanical
           solution. This solution provides \(\dot{\vect{x}}(t)\) together with
           the conditions used to test whether the current regime remains
           admissible.
