@@ -2263,7 +2263,7 @@ closes the mechanics of the belt itself, relating its transport motion,
 tension, pulley loading, and transmitted torque. These pieces are assembled in
 \Cref{sec:engaged_dynamic_closure}, where the admissible belt--pulley contact
 state completes the instantaneous dynamics of the freely shifting engaged CVT.
-Finally, \Cref{sec:shift_limits_deadzone} extends this result to the remaining
+Finally, \Cref{sec:shift_regime_dynamics} extends this result to the remaining
 mechanical regimes, showing how the continuous equations reduce when additional
 constraints become active and how the state is carried consistently through
 transitions between them.
@@ -8072,8 +8072,8 @@ primary and secondary contact speeds can therefore be written together as
 
 Thus the average in \Cref{eq:representative_contact_angular_speed} is not an
 additional empirical approximation. Once one secondary traction state and the
-equal face-torque split have been adopted, power consistency fixes this
-representative speed. The arithmetic mean appears specifically because the
+equal face-torque split have been adopted, power consistency selects this
+representative surface speed. The arithmetic mean appears specifically because the
 two torque shares are equal. It remains an aggregate quantity: the model still
 does not determine the separate sliding states of the fixed and movable faces.
 
@@ -8684,7 +8684,8 @@ active contact law changes the acceleration that follows rather than resetting
 the state instantaneously. The remaining structural regime changes associated
 with engagement and shift boundaries require a separate treatment.
 
-\section{3.6}
+\section{Shift-Regime Dynamics and Boundary Transitions}
+\label{sec:shift_regime_dynamics}
 
 The freely shifting engaged CVT is now mechanically closed.
 For any admissible tangential contact regime,
@@ -9868,6 +9869,12 @@ These rows apply only to sticking contacts retained through the collision. An
 incoming sliding contact contributes no sticking relation, and a contact
 created by the event is not assigned one automatically.
 
+Retained sticking through the event is treated here as an ideal impulsive
+constraint under \AssRef{assump:impact_tangential_contact}.  The resulting
+tangential impulse is therefore not re-tested against a separate impulsive
+Coulomb bound; doing so would require the normal and tangential contact
+impulses to be resolved together during the event.
+
 For outgoing deadzone motion, the reduced model's prescribed belt--secondary
 lock replaces the engaged secondary sticking condition. The outgoing map is
 \(J_+=J_{\mathrm{dz}}\), and the belt remains locked to the fully closed
@@ -9912,8 +9919,6 @@ restrictions present in a given event,
     C_+\boldsymbol{\nu}^+=0.
     \label{eq:finite_event_outgoing_constraints}
 \end{equation}
-
-
 
 
 \paragraph{Constraint impulses}
@@ -9999,13 +10004,17 @@ therefore be gathered into those same four directions before the two
 can be balanced.
 
 % F5
-That gathering is already encoded in the outgoing velocity map.  Each
+That gathering is already encoded in the outgoing velocity map. Each
 column of \(J_+\) states how one retained velocity appears among the
 nine outgoing body velocities; the same coefficients therefore state
 how the corresponding body momentum changes contribute back to that
-retained direction.  For secondary rotation, the \(\omega_s\) column
-has coefficient one in both the shaft-side and movable-side rotation
-rows.  Their angular-momentum changes therefore enter together:
+retained direction. For secondary rotation, for example, the
+\(\omega_s\) column has coefficient one in both the shaft-side and
+movable-side rotation rows. Denote their angular-momentum changes by
+\(\Delta H_{s,F}\) and \(\Delta H_{s,M}\), with the shaft-side term
+including the boundary inertia \(I_{\mathrm B,s}\). These changes
+therefore enter together:
+
 \begin{equation}
     \left[J_+^{\mathsf T}\Delta\boldsymbol p\right]_{\omega_s}
     =
@@ -10013,29 +10022,34 @@ rows.  Their angular-momentum changes therefore enter together:
     \label{eq:finite_event_secondary_momentum_gathering}
 \end{equation}
 
-This is also where the upper-stop exchange described at the outset
-reappears in the reduced balance.  The pin--track reaction changes the
-shaft-side and movable-side angular momenta by equal and opposite
-amounts as their relative rotation is removed.  Because both changes
-enter the \(\omega_s\) direction with the same coefficient, that
-internal helix impulse cancels from their sum.  It therefore requires
-no additional component of \(\boldsymbol\Gamma\), even though the
-transfer remains present in the two individual momentum changes.
+The upper-stop exchange described at the outset reappears here: the
+pin--track reaction transfers angular momentum between the two secondary
+assemblies, and its equal and opposite angular impulses cancel from their
+combined rotational balance. That transfer remains present in the
+individual momentum changes. The shift balance, however, also contains
+the reaction's axial contribution, so the angular and axial impulses
+must be expressed in the same shift direction before they can be combined.
 
-% F6
-The shift column shows why the coefficients need not be unity.  In the
-engaged map, a shift rate contributes
-\((d\theta_s/ds)\dot s\) to the movable secondary's angular velocity,
-so its angular-momentum change contributes
+The compatible-work relation already derived for the helix in
+\Cref{eq:secondary_helix_work_conversion} supplies this conversion.
+A torque contributes to the shift balance through the relative rotation
+produced per unit shift, \(d\theta_s/ds\). Because the geometry is fixed
+through the instantaneous event, integrating the balance preserves this
+factor: the movable secondary's angular-momentum change contributes
 \[
     \frac{d\theta_s}{ds}\Delta H_{s,M}
 \]
-to the shift-direction balance.  The other entries of the shift column
-act in the same way on the translational and rotational momentum
-changes produced by shift.  These are the same kinematic conversion
-factors used by the compatible-work relations: a coefficient that maps
-a retained velocity into a physical velocity also maps that physical
-momentum change back into the corresponding retained direction.
+to the shift-direction balance. The other rotational and translational
+momentum changes enter with their corresponding motion ratios, which
+are precisely the entries of the shift column.
+
+For the ideal pin--track reaction, the same compatible-work relation
+makes its weighted angular and axial impulse contributions equal and
+opposite in this balance. Their cancellation here, together with the
+angular cancellation in the secondary rotational balance, explains why
+the helix reaction requires no additional component of
+\(\boldsymbol\Gamma\), even though its momentum transfer remains present
+in \(\Delta\boldsymbol p\).
 
 Applying this operation to all four columns collects the nine physical
 momentum changes into
@@ -10109,10 +10123,19 @@ impulses into those directions, and \(C_+\) imposes the required outgoing
 velocity relations.  The right-hand side carries the known incoming momentum
 into the same directions.
 
+The resulting event state must still respect the unilateral character of
+any active stop.  With \(\Gamma_{\mathrm{stop}}\) signed positive toward
+increasing \(s\), an impulse at the fully open stop or engaged low-ratio
+seat must satisfy
+\(\Gamma_{\mathrm{stop}}\geq0\), whereas the upper primary stop can act
+only toward decreasing \(s\) and therefore requires
+\(\Gamma_{\mathrm{stop}}\leq0\).  A solution requiring the opposite sign
+cannot be supplied by that stop, so the proposed outgoing constraint is
+not mechanically admissible.
 % F10
 
-For the upper primary stop, the same system now resolves the secondary-speed
-question posed at the outset.  Take \(J_-=J_+=J_{\mathrm{eng}}\) and first
+\paragraph{Completing the upper primary stop} The final system can now resolve the secondary-speed
+question posed at the outset. Take \(J_-=J_+=J_{\mathrm{eng}}\) and first
 consider the case in which the belt supplies no angular impulse to the
 secondary.  The shaft-side and movable-side secondary rotations contribute
 the following \((\omega_s,\dot s)\) block to the generalized inertia matrix:
@@ -10137,15 +10160,16 @@ the following \((\omega_s,\dot s)\) block to the generalized inertia matrix:
     \label{eq:finite_event-secondary-helix-inertia-block}
 \end{equation}
 
-The rows identify the retained direction in which the generalized momentum
-acts, while the columns identify the retained velocity that causes it.  The
-upper-left entry is therefore caused by \(\omega_s\) and acts in the
-\(\omega_s\) direction: both secondary assemblies rotate with the shaft.
-The upper-right entry is caused by \(\dot s\) but also acts in the
-\(\omega_s\) direction, because shift rotates the movable assembly through
-the helix.  The lower-left entry is the reciprocal coupling, in which shaft
-rotation contributes to the shift-direction momentum.  The lower-right entry
-is caused by \(\dot s\) and acts in the shift direction, giving the movable
+The rows identify the retained direction in which momentum is counted,
+while the columns identify the retained velocity contributing that
+momentum. The upper-left entry therefore describes the contribution from
+\(\omega_s\) to momentum in the \(\omega_s\) direction: both secondary
+assemblies rotate with the shaft. The upper-right entry describes the
+contribution from \(\dot s\) to that same momentum, because shift rotates
+the movable assembly through the helix. The lower-left entry is the
+reciprocal coupling, in which shaft rotation contributes to the
+shift-direction momentum. The lower-right entry describes the contribution
+from \(\dot s\) to the shift-direction momentum, giving the movable
 secondary's rotational inertia reflected through the helix into shift.
 
 At the upper stop, the constraint row in
@@ -10266,6 +10290,16 @@ energy through the momentum exchange, as the movable secondary does at the
 upper stop; only the total must not increase.
 
 \end{remarkbox}
+
+Together, these rules determine how the state passes from one mechanical
+regime to the next.  While the current regime remains admissible, its
+continuous balances advance the state.  Loss of a support or contact
+admissibility condition ends that interval and determines which neighboring
+mechanics can become active.  If the new regime already admits the incoming
+velocity, the state passes into it continuously; if a newly active constraint
+does not, \Cref{eq:finite_event_kkt_system} supplies the compatible outgoing
+velocity and the impulse required to establish it.  That outgoing state then
+provides the initial condition for the next interval of continuous motion.
 
 \chapter{Results and Discussion}
 \label{chap:results}
