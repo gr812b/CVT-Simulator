@@ -30,8 +30,10 @@ class RampDesign:
     kind: RampKind
     anchor_axial_from_pivot_m: float
     anchor_radial_from_pivot_m: float
-    start_angle_deg: float
-    end_angle_deg: float
+    linear_angle_deg: float
+    circular_start_angle_deg: float
+    circular_end_angle_deg: float
+    constant_length_m: float
     linear_length_m: float
     blend_length_m: float
     circular_length_m: float

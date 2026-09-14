@@ -1,16 +1,21 @@
 """Exact CINDER-facing mechanics for the fixed-pivot primary design tool.
 
 This module is the only part of the feature that imports CINDER mechanics.
-Geometry is solved once for a concrete ramp, then operating-condition response
-is evaluated from the cached geometry path without re-solving roller contact.
-The actual flyweight closing-force law remains CINDER's
-``FixedPivotFlyweightForce`` rather than being duplicated here.
+The requested ramp is always materialized first. Exact contact is then traced
+for as much of the requested travel as the mechanism admits. A failed physical
+branch therefore still produces a useful design response and drawable ramp.
+
+The production ``PivotedRollerFollowerFlyweightMap`` is compiled as a separate
+runtime-compatibility check. Its spline fit is not used as the design tool's
+source of truth: the concrete explorer samples the exact CINDER contact branch
+and uses CINDER's real ``FixedPivotFlyweightForce`` for load evaluation.
 """
 
 from __future__ import annotations
 
 from dataclasses import dataclass
 from math import atan2, cos, degrees, hypot, pi, sin, sqrt
+
 import numpy as np
 
 from cinder.model.cvt.actuation import (
@@ -18,6 +23,7 @@ from cinder.model.cvt.actuation import (
     FixedPivotFlyweightForceSpec,
     FixedPivotFlyweightSample,
     FlyweightMassGeometry,
+    PivotedRollerContactSample,
     PivotedRollerFollowerFlyweightMap,
     PivotedRollerFollowerGeometry,
     PivotedRollerFollowerGeometrySpec,
@@ -62,6 +68,11 @@ class GeometryAnalysis:
     requested_travel_m: float
     contact_valid_travel_m: float
     contact_range_complete: bool
+    failure_code: str | None
+    failure_message: str | None
+    failure_shift_m: float | None
+    runtime_map_compiled: bool
+    runtime_map_compile_error: str | None
     ramp_surface_open_x_m: tuple[float, ...]
     ramp_surface_open_r_m: tuple[float, ...]
 
@@ -85,20 +96,20 @@ def build_ramp(design: RampDesign) -> PiecewiseRamp:
         return PiecewiseRamp(
             (
                 LinearSegment(
-                    length=design.total_length_m,
-                    angle_degrees=design.start_angle_deg,
+                    length=design.constant_length_m,
+                    angle_degrees=design.linear_angle_deg,
                 ),
             )
         )
 
     linear = LinearSegment(
         length=design.linear_length_m,
-        angle_degrees=design.start_angle_deg,
+        angle_degrees=design.linear_angle_deg,
     )
     circular = CircularSegment(
         length=design.circular_length_m,
-        angle_start_degrees=design.start_angle_deg,
-        angle_end_degrees=design.end_angle_deg,
+        angle_start_degrees=design.circular_start_angle_deg,
+        angle_end_degrees=design.circular_end_angle_deg,
         quadrant=2,
     )
     blend = C3TransitionSegment.between_segments(
@@ -117,6 +128,13 @@ def analyze_geometry(
     *,
     sample_count: int,
 ) -> GeometryAnalysis:
+    """Analyze one requested physical ramp without hiding rejected geometry.
+
+    Input/profile construction errors still raise. Physical inadmissibility does
+    not: the returned analysis contains the requested ramp, the exact valid
+    contact prefix (possibly empty), and a structured failure reason/location.
+    """
+
     _validate_architecture(architecture)
     if sample_count < 3:
         raise ValueError("sample_count must be at least 3.")
@@ -131,60 +149,84 @@ def analyze_geometry(
     )
     provisional = PivotedRollerFollowerGeometry(full_spec)
 
-    probe_count = max(1025, 8 * sample_count + 1)
+    open_x, open_r = _sample_ramp_surface(full_spec, ramp, max(161, sample_count))
+
+    probe_count = max(2049, 12 * sample_count + 1)
     probe = np.linspace(0.0, requested_max, probe_count)
-    trace = provisional.trace_contact_branch(probe, require_complete=False)
-    if len(trace) < 2:
-        raise ValueError(
-            "No continuous roller/ramp contact branch exists from the fully-open position."
-        )
 
-    complete = len(trace) == len(probe)
-    if complete:
-        valid_max = requested_max
+    branch_error: str | None = None
+    try:
+        provisional.trace_contact_branch(probe, require_complete=True)
+    except (TypeError, ValueError, RuntimeError) as error:
+        branch_error = str(error)
+
+    try:
+        probe_trace = provisional.trace_contact_branch(probe, require_complete=False)
+    except (TypeError, ValueError, RuntimeError) as error:
+        if branch_error is None:
+            branch_error = str(error)
+        probe_trace = ()
+
+    complete = len(probe_trace) == len(probe)
+    if probe_trace:
+        valid_max = float(probe[len(probe_trace) - 1])
     else:
-        # Leave one full probe interval before the first failed point so the
-        # stricter production map is not compiled on the loss-of-contact edge.
-        safe_index = max(1, len(trace) - 2)
-        valid_max = float(probe[safe_index])
+        valid_max = 0.0
 
-    mechanism_map = _build_production_map(
-        architecture,
-        ramp_design,
+    failure_code: str | None = None
+    failure_message: str | None = None
+    failure_shift: float | None = None
+    if not complete:
+        failure_code, failure_message = _classify_branch_failure(branch_error)
+        failed_index = min(len(probe_trace), len(probe) - 1)
+        failure_shift = float(probe[failed_index])
+
+    points = _sample_exact_geometry_points(
+        provisional,
+        full_spec,
         ramp,
-        axial_position_max=valid_max,
-        compilation_points=max(129, min(513, 2 * sample_count + 1)),
+        contact_valid_travel_m=valid_max,
+        contact_range_complete=complete,
+        requested_travel_m=requested_max,
+        sample_count=sample_count,
     )
 
-    shifts = np.linspace(0.0, valid_max, sample_count)
-    points = tuple(
-        _geometry_point(mechanism_map, ramp, float(shift))
-        for shift in shifts
-    )
-
-    xi = np.linspace(ramp.x_min, ramp.x_max, max(161, sample_count))
-    open_x: list[float] = []
-    open_r: list[float] = []
-    spec = mechanism_map.geometry_spec
-    for coordinate in xi:
-        profile = ramp.evaluate(float(coordinate))
-        open_x.append(
-            spec.ramp_reference_axial_position
-            + spec.ramp_axial_direction * float(coordinate)
-        )
-        open_r.append(spec.ramp_reference_radius + profile.value)
+    runtime_map_compiled = False
+    runtime_map_compile_error: str | None = None
+    if complete and points and all(point.angle_rad <= HALF_PI + 1.0e-10 for point in points):
+        try:
+            _build_production_map(
+                architecture,
+                ramp_design,
+                ramp,
+                axial_position_max=requested_max,
+                compilation_points=max(129, min(513, 2 * sample_count + 1)),
+            )
+            runtime_map_compiled = True
+        except (TypeError, ValueError, RuntimeError) as error:
+            # This is intentionally not folded into physical geometry validity.
+            # In particular, CINDER's clamped cubic runtime interpolation can
+            # overshoot between perfectly admissible exact samples and produce a
+            # non-positive spline dq/dx. The design tool keeps showing/evaluating
+            # the exact branch while reporting that runtime-compatibility issue.
+            runtime_map_compile_error = str(error)
 
     return GeometryAnalysis(
         architecture=architecture,
         ramp_design=ramp_design,
         ramp=ramp,
-        geometry_spec=mechanism_map.geometry_spec,
+        geometry_spec=full_spec,
         points=points,
         requested_travel_m=requested_max,
-        contact_valid_travel_m=valid_max,
+        contact_valid_travel_m=(requested_max if complete else valid_max),
         contact_range_complete=complete,
-        ramp_surface_open_x_m=tuple(open_x),
-        ramp_surface_open_r_m=tuple(open_r),
+        failure_code=failure_code,
+        failure_message=failure_message,
+        failure_shift_m=failure_shift,
+        runtime_map_compiled=runtime_map_compiled,
+        runtime_map_compile_error=runtime_map_compile_error,
+        ramp_surface_open_x_m=open_x,
+        ramp_surface_open_r_m=open_r,
     )
 
 
@@ -192,7 +234,7 @@ def evaluate_response(
     analysis: GeometryAnalysis,
     operating: OperatingCondition,
 ) -> dict[str, list[float | bool | None]]:
-    """Evaluate one operating condition over an already-solved geometry path."""
+    """Evaluate one operating condition over the exact admitted geometry path."""
     if operating.tip_mass_per_flyweight_kg < 0.0:
         raise ValueError("tip mass per flyweight must be non-negative.")
 
@@ -322,13 +364,9 @@ def evaluate_response(
             pivot_x = m * com_x_accel + per_ramp_axial
             pivot_r = m * com_r_accel + per_ramp_radial
             pivot_theta = m * com_theta_accel
-            pivot_resultant = sqrt(
-                pivot_x**2 + pivot_r**2 + pivot_theta**2
-            )
+            pivot_resultant = sqrt(pivot_x**2 + pivot_r**2 + pivot_theta**2)
 
-        equivalent_centrifugal = (
-            m * operating.shaft_speed_rad_s**2 * com_r
-        )
+        equivalent_centrifugal = m * operating.shaft_speed_rad_s**2 * com_r
 
         output["flyweight_centrifugal_force_N"].append(
             float(contributions["fixed_pivot_flyweight_centrifugal"])
@@ -352,9 +390,7 @@ def evaluate_response(
         )
         output["com_x_m"].append(float(com_x))
         output["com_r_m"].append(float(com_r))
-        output["equivalent_centrifugal_force_N"].append(
-            float(equivalent_centrifugal)
-        )
+        output["equivalent_centrifugal_force_N"].append(float(equivalent_centrifugal))
         output["pivot_reaction_axial_N"].append(
             None if pivot_x is None else float(pivot_x)
         )
@@ -379,6 +415,98 @@ def _append_invalid_load_point(
 ) -> None:
     for key, values in output.items():
         values.append(False if key == "compressive_contact" else None)
+
+
+def _sample_exact_geometry_points(
+    geometry: PivotedRollerFollowerGeometry,
+    spec: PivotedRollerFollowerGeometrySpec,
+    ramp: PiecewiseRamp,
+    *,
+    contact_valid_travel_m: float,
+    contact_range_complete: bool,
+    requested_travel_m: float,
+    sample_count: int,
+) -> tuple[GeometryPoint, ...]:
+    end = requested_travel_m if contact_range_complete else contact_valid_travel_m
+    if end <= 0.0:
+        positions = np.asarray([0.0], dtype=float)
+    else:
+        positions = np.linspace(0.0, end, sample_count)
+    try:
+        trace = geometry.trace_contact_branch(positions, require_complete=False)
+    except (TypeError, ValueError, RuntimeError):
+        return ()
+
+    return tuple(
+        _geometry_point_from_contact(
+            spec,
+            ramp,
+            float(positions[index]),
+            contact,
+        )
+        for index, contact in enumerate(trace)
+    )
+
+
+def _sample_ramp_surface(
+    spec: PivotedRollerFollowerGeometrySpec,
+    ramp: PiecewiseRamp,
+    sample_count: int,
+) -> tuple[tuple[float, ...], tuple[float, ...]]:
+    coordinates = np.linspace(ramp.x_min, ramp.x_max, sample_count)
+    xs: list[float] = []
+    rs: list[float] = []
+    for coordinate in coordinates:
+        profile = ramp.evaluate(float(coordinate))
+        xs.append(
+            spec.ramp_reference_axial_position
+            + spec.ramp_axial_direction * float(coordinate)
+        )
+        rs.append(spec.ramp_reference_radius + profile.value)
+    return tuple(xs), tuple(rs)
+
+
+def _classify_branch_failure(error_message: str | None) -> tuple[str, str]:
+    detail = (error_message or "").lower()
+    if "no roller/ramp contact exists at the beginning" in detail:
+        return (
+            "NO_INITIAL_CONTACT",
+            "No roller/ramp contact exists at the fully-open position.",
+        )
+    if "no mathematical contact exists" in detail:
+        return (
+            "CONTACT_LOST",
+            "The continuous roller/ramp contact branch ends before the required travel is complete.",
+        )
+    if "second simultaneous physical ramp contact" in detail:
+        return (
+            "SECOND_CONTACT",
+            "The roller reaches a second simultaneous physical contact with the ramp.",
+        )
+    if "penetrates another portion" in detail:
+        return (
+            "RAMP_INTERFERENCE",
+            "The selected roller configuration intersects another portion of the physical ramp.",
+        )
+    if "jumping to a disconnected" in detail:
+        return (
+            "CONTACT_BRANCH_DISCONTINUITY",
+            "The selected contact branch would have to jump to a disconnected mathematical solution.",
+        )
+    if "fold or dead-centre" in detail:
+        return (
+            "SINGULAR_CONTACT_KINEMATICS",
+            "The roller/ramp branch reaches a fold or dead-centre, so q is no longer a regular function of shift.",
+        )
+    if "positive outward rotation" in detail:
+        return (
+            "NON_OUTWARD_ARM_MOTION",
+            "The selected contact branch no longer produces finite positive outward flyweight rotation with closure.",
+        )
+    return (
+        "CONTACT_BRANCH_INVALID",
+        "The selected roller/ramp contact branch cannot be continued through the requested travel.",
+    )
 
 
 def _build_production_map(
@@ -442,14 +570,12 @@ def _geometry_spec(
     )
 
 
-def _geometry_point(
-    mechanism_map: PivotedRollerFollowerFlyweightMap,
+def _geometry_point_from_contact(
+    spec: PivotedRollerFollowerGeometrySpec,
     ramp: PiecewiseRamp,
     shift_m: float,
+    contact: PivotedRollerContactSample,
 ) -> GeometryPoint:
-    sample = mechanism_map.evaluate(shift_m)
-    contact = mechanism_map.contact_at(shift_m)
-    spec = mechanism_map.geometry_spec
     profile = ramp.evaluate(contact.contact_coordinate)
     contact_x = (
         spec.ramp_reference_axial_position
@@ -466,14 +592,12 @@ def _geometry_point(
     normal_on_ramp_x = -dx / length
     normal_on_ramp_r = -dr / length
 
-    tangent_angle = degrees(
-        atan2(abs(profile.first_derivative), 1.0)
-    )
+    tangent_angle = degrees(atan2(abs(profile.first_derivative), 1.0))
     return GeometryPoint(
         shift_m=shift_m,
-        angle_rad=sample.angle,
-        angle_gradient_rad_per_m=sample.angle_gradient,
-        angle_curvature_rad_per_m2=sample.angle_curvature,
+        angle_rad=contact.angle,
+        angle_gradient_rad_per_m=contact.angle_gradient,
+        angle_curvature_rad_per_m2=contact.angle_curvature,
         contact_coordinate_m=contact.contact_coordinate,
         contact_x_m=contact_x,
         contact_r_m=contact_r,
@@ -506,19 +630,25 @@ def _validate_architecture(architecture: ArchitectureDesign) -> None:
 
 
 def _validate_ramp_design(design: RampDesign) -> None:
-    if design.total_length_m <= 0.0:
-        raise ValueError("Ramp length must be positive.")
-    if not 0.0 < design.start_angle_deg < 90.0:
-        raise ValueError("start_angle_deg must lie strictly between 0 and 90 degrees.")
+    if not 0.0 < design.linear_angle_deg < 90.0:
+        raise ValueError("linear_angle_deg must lie strictly between 0 and 90 degrees.")
     if design.kind == "constant":
+        if design.constant_length_m <= 0.0:
+            raise ValueError("constant_length_m must be positive for a constant ramp.")
         return
-    if design.start_angle_deg <= design.end_angle_deg:
+    if not 0.0 < design.circular_start_angle_deg < 90.0:
         raise ValueError(
-            "Progressive ramp requires start_angle_deg > end_angle_deg; "
-            "use the constant profile when the tangents are equal."
+            "circular_start_angle_deg must lie strictly between 0 and 90 degrees."
         )
-    if not 0.0 < design.end_angle_deg < 90.0:
-        raise ValueError("end_angle_deg must lie strictly between 0 and 90 degrees.")
+    if not 0.0 < design.circular_end_angle_deg < 90.0:
+        raise ValueError(
+            "circular_end_angle_deg must lie strictly between 0 and 90 degrees."
+        )
+    if design.circular_start_angle_deg < design.circular_end_angle_deg:
+        raise ValueError(
+            "The Q2 circular section requires circular_start_angle_deg >= "
+            "circular_end_angle_deg."
+        )
     if design.linear_length_m <= 0.0:
         raise ValueError("linear_length_m must be positive for a progressive ramp.")
     if design.blend_length_m <= 0.0:

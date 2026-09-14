@@ -25,18 +25,23 @@ class FixedPivotRampRequest(ApiModel):
     kind: Literal["progressive", "constant"] = "progressive"
     anchor_axial_from_pivot_m: float
     anchor_radial_from_pivot_m: float
-    start_angle_deg: float = Field(gt=0.0, lt=90.0)
-    end_angle_deg: float = Field(gt=0.0, lt=90.0)
+    linear_angle_deg: float = Field(gt=0.0, lt=90.0)
+    circular_start_angle_deg: float = Field(gt=0.0, lt=90.0)
+    circular_end_angle_deg: float = Field(gt=0.0, lt=90.0)
+    constant_length_m: float = Field(gt=0.0)
     linear_length_m: float = Field(gt=0.0)
     blend_length_m: float = Field(gt=0.0)
     circular_length_m: float = Field(gt=0.0)
 
     @model_validator(mode="after")
     def _check_progressive_order(self) -> "FixedPivotRampRequest":
-        if self.kind == "progressive" and self.start_angle_deg <= self.end_angle_deg:
+        if (
+            self.kind == "progressive"
+            and self.circular_start_angle_deg < self.circular_end_angle_deg
+        ):
             raise ValueError(
-                "progressive ramps require start_angle_deg > end_angle_deg; "
-                "use kind=constant when the tangents are equal"
+                "the Q2 circular section requires circular_start_angle_deg >= "
+                "circular_end_angle_deg"
             )
         return self
 
@@ -71,7 +76,7 @@ class FixedPivotConcreteAnalysisResponse(ApiModel):
     contact_valid_travel_m: float
     geometry: dict[str, Any]
     ramp_surface_open: dict[str, list[float]]
-    summary: dict[str, float]
+    summary: dict[str, Any]
 
 
 class FixedPivotOperatingResponse(ApiModel):

@@ -26,8 +26,9 @@ function interpolateNullable(
 ): number | null {
   const numeric = values.map((value) => typeof value === 'number' ? value : null);
   if (!axis.length || axis.length !== numeric.length) return null;
-  if (x <= axis[0]) return numeric[0];
-  if (x >= axis[axis.length - 1]) return numeric[numeric.length - 1];
+  if (x < axis[0] || x > axis[axis.length - 1]) return null;
+  if (x === axis[0]) return numeric[0];
+  if (x === axis[axis.length - 1]) return numeric[numeric.length - 1];
   let lo = 0;
   let hi = axis.length - 1;
   while (hi - lo > 1) {
@@ -70,10 +71,9 @@ export const PrimaryDesign = () => {
     try {
       const nextAnalysis = await analyzeConcretePrimaryDesign(nextArchitecture, nextRamp, 161);
       setAnalysis(nextAnalysis);
+      setResponse(null);
       setGeometryDirty(false);
-      const axisValues = nextAnalysis.geometry.axis_values;
-      const end = axisValues.length ? axisValues[axisValues.length - 1] : 0;
-      setShiftM((value) => Math.min(value, end));
+      setShiftM((value) => Math.min(value, nextArchitecture.required_travel_m));
       setResponseLoading(true);
       const nextResponse = await evaluateConcretePrimaryDesign(
         nextAnalysis.analysis_id,
@@ -81,6 +81,8 @@ export const PrimaryDesign = () => {
       );
       setResponse(nextResponse);
     } catch (caught) {
+      setAnalysis(null);
+      setResponse(null);
       setError(caught instanceof Error ? caught.message : 'Primary design analysis failed.');
     } finally {
       setGeometryLoading(false);
@@ -142,10 +144,9 @@ export const PrimaryDesign = () => {
   const updateOperating = (patch: Partial<PrimaryDesignOperating>) => {
     setOperating((value) => value ? { ...value, ...patch } : value);
   };
-  const analysisAxis = analysis?.geometry.axis_values ?? [];
-  const maxShift = analysisAxis.length
-    ? analysisAxis[analysisAxis.length - 1]
-    : architecture.required_travel_m;
+  const contactActive = analysis
+    ? shiftM <= analysis.contact_valid_travel_m + 1.0e-10
+    : false;
 
   return (
     <div className={styles.page}>
@@ -155,7 +156,7 @@ export const PrimaryDesign = () => {
           <h1>Fixed-Pivot Primary Design</h1>
           <p>Concrete ramp geometry, exact roller contact, flyweight force, and structural load inspection.</p>
         </div>
-        <div className={styles.phaseBadge}>Concrete design · Phase 1</div>
+        <div className={styles.phaseBadge}>Concrete design · Phase 1.2</div>
       </header>
 
       {error && <div className={styles.error}>{error}</div>}
@@ -185,23 +186,61 @@ export const PrimaryDesign = () => {
             <label className={styles.field}>
               <span>Profile</span>
               <select value={ramp.kind} onChange={(event) => updateRamp({ kind: event.target.value as FixedPivotRamp['kind'] })}>
-                <option value="progressive">Progressive start → end</option>
+                <option value="progressive">Linear + C³ blend + circular</option>
                 <option value="constant">Constant tangent</option>
               </select>
             </label>
-            <NumberField label="Start tangent" suffix="°" value={ramp.start_angle_deg} min={1} max={89} step={0.5} onChange={(value) => updateRamp({ start_angle_deg: value })} />
+            <NumberField
+              label={ramp.kind === 'constant' ? 'Tangent' : 'Linear tangent'}
+              suffix="°"
+              value={ramp.linear_angle_deg}
+              min={1}
+              max={89}
+              step={0.5}
+              onChange={(value) => updateRamp({ linear_angle_deg: value })}
+            />
             {ramp.kind === 'progressive' && (
-              <NumberField label="End tangent" suffix="°" value={ramp.end_angle_deg} min={1} max={89} step={0.5} onChange={(value) => updateRamp({ end_angle_deg: value })} />
+              <div className={styles.twoCol}>
+                <NumberField
+                  label="Circular start tangent"
+                  suffix="°"
+                  value={ramp.circular_start_angle_deg}
+                  min={1}
+                  max={89}
+                  step={0.5}
+                  onChange={(value) => updateRamp({ circular_start_angle_deg: value })}
+                />
+                <NumberField
+                  label="Circular end tangent"
+                  suffix="°"
+                  value={ramp.circular_end_angle_deg}
+                  min={1}
+                  max={89}
+                  step={0.5}
+                  onChange={(value) => updateRamp({ circular_end_angle_deg: value })}
+                />
+              </div>
             )}
             <div className={styles.twoCol}>
               <NumberField label="Ramp A axial" suffix="mm" value={ramp.anchor_axial_from_pivot_m * MM} step={0.5} onChange={(value) => updateRamp({ anchor_axial_from_pivot_m: value / MM })} />
               <NumberField label="Ramp A radial" suffix="mm" value={ramp.anchor_radial_from_pivot_m * MM} step={0.5} onChange={(value) => updateRamp({ anchor_radial_from_pivot_m: value / MM })} />
             </div>
-            <div className={styles.threeCol}>
-              <NumberField label="Linear" suffix="mm" value={ramp.linear_length_m * MM} min={0.5} step={0.5} onChange={(value) => updateRamp({ linear_length_m: value / MM })} />
-              <NumberField label="C³ blend" suffix="mm" value={ramp.blend_length_m * MM} min={0.5} step={0.5} onChange={(value) => updateRamp({ blend_length_m: value / MM })} />
-              <NumberField label="Circular" suffix="mm" value={ramp.circular_length_m * MM} min={0.5} step={0.5} onChange={(value) => updateRamp({ circular_length_m: value / MM })} />
-            </div>
+            {ramp.kind === 'progressive' ? (
+              <div className={styles.threeCol}>
+                <NumberField label="Linear" suffix="mm" value={ramp.linear_length_m * MM} min={0.5} step={0.5} onChange={(value) => updateRamp({ linear_length_m: value / MM })} />
+                <NumberField label="C³ blend" suffix="mm" value={ramp.blend_length_m * MM} min={0.5} step={0.5} onChange={(value) => updateRamp({ blend_length_m: value / MM })} />
+                <NumberField label="Circular" suffix="mm" value={ramp.circular_length_m * MM} min={0.5} step={0.5} onChange={(value) => updateRamp({ circular_length_m: value / MM })} />
+              </div>
+            ) : (
+              <NumberField
+                label="Ramp length"
+                suffix="mm"
+                value={ramp.constant_length_m * MM}
+                min={0.5}
+                step={0.5}
+                onChange={(value) => updateRamp({ constant_length_m: value / MM })}
+              />
+            )}
             <button
               type="button"
               className={styles.primaryButton}
@@ -265,15 +304,19 @@ export const PrimaryDesign = () => {
                 <h2>Shift position</h2>
                 <span>{(shiftM * MM).toFixed(2)} / {(architecture.required_travel_m * MM).toFixed(2)} mm requested</span>
               </div>
-              {analysis && <ValidityBadge analysis={analysis} />}
+              {analysis && (!contactActive
+                ? <span className={styles.invalid}>No contact at selected shift</span>
+                : current?.q !== null && current?.q !== undefined && current.q > 90
+                  ? <span className={styles.invalid}>q &gt; 90° at selected shift</span>
+                  : <ValidityBadge analysis={analysis} />)}
             </div>
             <input
               className={styles.shiftSlider}
               type="range"
               min={0}
-              max={Math.max(0.001, maxShift * MM)}
+              max={Math.max(0.001, architecture.required_travel_m * MM)}
               step={0.05}
-              value={Math.min(shiftM, maxShift) * MM}
+              value={Math.min(shiftM, architecture.required_travel_m) * MM}
               onChange={(event) => setShiftM(Number(event.target.value) / MM)}
             />
             <div className={styles.metrics}>
@@ -292,7 +335,12 @@ export const PrimaryDesign = () => {
                 <span>Geometry is solved on the backend; moving the shift cursor is local and instantaneous.</span>
               </div>
             </div>
-            <ForceChart response={response} shiftM={shiftM} />
+            <ForceChart
+              response={response}
+              shiftM={shiftM}
+              requestedTravelM={architecture.required_travel_m}
+              contactValidTravelM={analysis?.contact_valid_travel_m ?? null}
+            />
           </section>
         </div>
       </main>
@@ -363,6 +411,12 @@ function SliderField({
 
 function ValidityBadge({ analysis }: { analysis: ConcreteDesignAnalysis }) {
   if (analysis.validity.valid) {
+    const runtimeWarning = analysis.validity.warnings.some(
+      (warning) => warning.code === 'RUNTIME_MAP_COMPILE_FAILED',
+    );
+    if (runtimeWarning) {
+      return <span className={styles.dirty}>Exact path valid · runtime-map warning</span>;
+    }
     return <span className={styles.valid}>Admissible full travel</span>;
   }
   return <span className={styles.invalid}>{analysis.validity.failure?.code ?? 'Inadmissible'}</span>;

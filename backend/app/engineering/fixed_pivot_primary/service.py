@@ -59,8 +59,10 @@ class FixedPivotPrimaryDesignService:
             kind="progressive",
             anchor_axial_from_pivot_m=1.5 * INCH,
             anchor_radial_from_pivot_m=0.2776 * INCH,
-            start_angle_deg=35.0,
-            end_angle_deg=20.0,
+            linear_angle_deg=35.0,
+            circular_start_angle_deg=35.0,
+            circular_end_angle_deg=20.0,
+            constant_length_m=38.0 * MM,
             linear_length_m=5.0 * MM,
             blend_length_m=3.0 * MM,
             circular_length_m=30.0 * MM,
@@ -147,7 +149,11 @@ class FixedPivotPrimaryDesignService:
             )
             for point in geometry.points
         ]
-        max_q = max(degrees(point.angle_rad) for point in geometry.points)
+        max_q = (
+            max(degrees(point.angle_rad) for point in geometry.points)
+            if geometry.points
+            else None
+        )
 
         return {
             "analysis_id": analysis_id,
@@ -169,11 +175,14 @@ class FixedPivotPrimaryDesignService:
             },
             "summary": {
                 "max_arm_angle_deg": max_q,
-                "q90_margin_deg": 90.0 - max_q,
-                "minimum_ramp_endpoint_margin_m": min(endpoint_margins),
+                "q90_margin_deg": None if max_q is None else 90.0 - max_q,
+                "minimum_ramp_endpoint_margin_m": (
+                    min(endpoint_margins) if endpoint_margins else None
+                ),
                 "contact_valid_fraction": (
                     geometry.contact_valid_travel_m / geometry.requested_travel_m
                 ),
+                "runtime_map_compiled": geometry.runtime_map_compiled,
             },
         }
 
@@ -247,15 +256,32 @@ class FixedPivotPrimaryDesignService:
 
 
 def _validity_document(geometry: GeometryAnalysis) -> dict[str, object]:
+    warnings: list[dict[str, object]] = []
+
+    if geometry.runtime_map_compile_error is not None:
+        warnings.append(
+            {
+                "code": "RUNTIME_MAP_COMPILE_FAILED",
+                "message": (
+                    "The exact contact branch is usable for this design inspection, "
+                    "but CINDER's compiled runtime q(x) spline could not preserve "
+                    "a positive motion ratio. The exact branch is shown instead."
+                ),
+                "shift_m": None,
+                "detail": geometry.runtime_map_compile_error,
+            }
+        )
+
     if not geometry.contact_range_complete:
         return {
             "valid": False,
             "failure": {
-                "code": "CONTACT_LOST",
-                "message": "Continuous roller/ramp contact does not survive the required shift travel.",
-                "shift_m": geometry.contact_valid_travel_m,
+                "code": geometry.failure_code or "CONTACT_BRANCH_INVALID",
+                "message": geometry.failure_message
+                or "The selected roller/ramp branch cannot complete the required travel.",
+                "shift_m": geometry.failure_shift_m,
             },
-            "warnings": [],
+            "warnings": warnings,
         }
 
     for point in geometry.points:
@@ -267,12 +293,15 @@ def _validity_document(geometry: GeometryAnalysis) -> dict[str, object]:
                     "message": "The flyweight arm would deploy past 90 degrees.",
                     "shift_m": point.shift_m,
                 },
-                "warnings": [],
+                "warnings": warnings,
             }
 
-    warnings: list[dict[str, object]] = []
-    max_q_deg = max(degrees(point.angle_rad) for point in geometry.points)
-    if max_q_deg >= 88.0:
+    max_q_deg = (
+        max(degrees(point.angle_rad) for point in geometry.points)
+        if geometry.points
+        else None
+    )
+    if max_q_deg is not None and max_q_deg >= 88.0:
         warnings.append(
             {
                 "code": "Q_NEAR_90",
@@ -281,21 +310,22 @@ def _validity_document(geometry: GeometryAnalysis) -> dict[str, object]:
             }
         )
 
-    endpoint_margin = min(
-        min(
-            point.contact_coordinate_m - geometry.ramp.x_min,
-            geometry.ramp.x_max - point.contact_coordinate_m,
+    if geometry.points:
+        endpoint_margin = min(
+            min(
+                point.contact_coordinate_m - geometry.ramp.x_min,
+                geometry.ramp.x_max - point.contact_coordinate_m,
+            )
+            for point in geometry.points
         )
-        for point in geometry.points
-    )
-    if endpoint_margin < 1.0e-3:
-        warnings.append(
-            {
-                "code": "RAMP_ENDPOINT_MARGIN_LOW",
-                "message": "The selected contact branch approaches a physical ramp endpoint.",
-                "shift_m": None,
-            }
-        )
+        if endpoint_margin < 1.0e-3:
+            warnings.append(
+                {
+                    "code": "RAMP_ENDPOINT_MARGIN_LOW",
+                    "message": "The selected contact branch approaches a physical ramp endpoint.",
+                    "shift_m": None,
+                }
+            )
 
     return {"valid": True, "failure": None, "warnings": warnings}
 
@@ -319,8 +349,10 @@ def _ramp_document(value: RampDesign) -> dict[str, object]:
         "kind": value.kind,
         "anchor_axial_from_pivot_m": value.anchor_axial_from_pivot_m,
         "anchor_radial_from_pivot_m": value.anchor_radial_from_pivot_m,
-        "start_angle_deg": value.start_angle_deg,
-        "end_angle_deg": value.end_angle_deg,
+        "linear_angle_deg": value.linear_angle_deg,
+        "circular_start_angle_deg": value.circular_start_angle_deg,
+        "circular_end_angle_deg": value.circular_end_angle_deg,
+        "constant_length_m": value.constant_length_m,
         "linear_length_m": value.linear_length_m,
         "blend_length_m": value.blend_length_m,
         "circular_length_m": value.circular_length_m,

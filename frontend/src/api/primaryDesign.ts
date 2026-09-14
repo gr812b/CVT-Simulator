@@ -18,8 +18,10 @@ export interface FixedPivotRamp {
   kind: RampKind;
   anchor_axial_from_pivot_m: number;
   anchor_radial_from_pivot_m: number;
-  start_angle_deg: number;
-  end_angle_deg: number;
+  linear_angle_deg: number;
+  circular_start_angle_deg: number;
+  circular_end_angle_deg: number;
+  constant_length_m: number;
   linear_length_m: number;
   blend_length_m: number;
   circular_length_m: number;
@@ -60,6 +62,7 @@ export interface DesignWarning {
   code: string;
   message: string;
   shift_m: number | null;
+  detail?: string;
 }
 
 export interface ConcreteDesignAnalysis {
@@ -79,10 +82,11 @@ export interface ConcreteDesignAnalysis {
     r_m: number[];
   };
   summary: {
-    max_arm_angle_deg: number;
-    q90_margin_deg: number;
-    minimum_ramp_endpoint_margin_m: number;
+    max_arm_angle_deg: number | null;
+    q90_margin_deg: number | null;
+    minimum_ramp_endpoint_margin_m: number | null;
     contact_valid_fraction: number;
+    runtime_map_compiled: boolean;
   };
 }
 
