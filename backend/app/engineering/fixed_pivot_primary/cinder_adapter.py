@@ -14,9 +14,11 @@ and uses CINDER's real ``FixedPivotFlyweightForce`` for load evaluation.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from math import atan2, cos, degrees, hypot, pi, sin, sqrt
+from math import atan2, cos, degrees, hypot, isfinite, pi, sin, sqrt
 
 import numpy as np
+from scipy.optimize import least_squares
+from scipy.spatial import cKDTree
 
 from cinder.model.cvt.actuation import (
     FixedPivotFlyweightForce,
@@ -59,6 +61,20 @@ class GeometryPoint:
 
 
 @dataclass(frozen=True, slots=True)
+class DoubleContactEvent:
+    shift_m: float
+    angle_rad: float
+    roller_center_x_m: float
+    roller_center_r_m: float
+    contact_coordinate_1_m: float
+    contact_x_1_m: float
+    contact_r_1_m: float
+    contact_coordinate_2_m: float
+    contact_x_2_m: float
+    contact_r_2_m: float
+
+
+@dataclass(frozen=True, slots=True)
 class GeometryAnalysis:
     architecture: ArchitectureDesign
     ramp_design: RampDesign
@@ -71,6 +87,7 @@ class GeometryAnalysis:
     failure_code: str | None
     failure_message: str | None
     failure_shift_m: float | None
+    double_contact_event: DoubleContactEvent | None
     runtime_map_compiled: bool
     runtime_map_compile_error: str | None
     ramp_surface_open_x_m: tuple[float, ...]
@@ -181,6 +198,31 @@ def analyze_geometry(
         failed_index = min(len(probe_trace), len(probe) - 1)
         failure_shift = float(probe[failed_index])
 
+    # A two-point roller contact can be an isolated event in shift, so a
+    # discrete branch trace may step across it and only notice a later
+    # penetration/contact-loss failure. Detect the event from the geometry
+    # itself: two distinct ramp coordinates have the same finite-radius roller
+    # centre exactly when CINDER's roller-centre offset curve self-intersects.
+    # Candidate intersections are refined as continuous roots and then checked
+    # against the history-selected CINDER contact branch.
+    double_contact_event = _first_selected_double_contact_event(
+        provisional,
+        full_spec,
+        ramp,
+        requested_travel_m=requested_max,
+    )
+    if double_contact_event is not None and (
+        failure_shift is None or double_contact_event.shift_m < failure_shift
+    ):
+        complete = False
+        valid_max = double_contact_event.shift_m
+        failure_code = "SECOND_CONTACT"
+        failure_message = (
+            "The roller reaches two distinct points on the physical ramp at "
+            "the same instant; the continuous single-contact branch ends here."
+        )
+        failure_shift = double_contact_event.shift_m
+
     points = _sample_exact_geometry_points(
         provisional,
         full_spec,
@@ -223,6 +265,9 @@ def analyze_geometry(
         failure_code=failure_code,
         failure_message=failure_message,
         failure_shift_m=failure_shift,
+        double_contact_event=double_contact_event
+        if failure_code == "SECOND_CONTACT"
+        else None,
         runtime_map_compiled=runtime_map_compiled,
         runtime_map_compile_error=runtime_map_compile_error,
         ramp_surface_open_x_m=open_x,
@@ -465,6 +510,292 @@ def _sample_ramp_surface(
         rs.append(spec.ramp_reference_radius + profile.value)
     return tuple(xs), tuple(rs)
 
+
+
+def _first_selected_double_contact_event(
+    geometry: PivotedRollerFollowerGeometry,
+    spec: PivotedRollerFollowerGeometrySpec,
+    ramp: PiecewiseRamp,
+    *,
+    requested_travel_m: float,
+) -> DoubleContactEvent | None:
+    """Return the earliest exact two-point contact on the selected branch.
+
+    The moving ramp translates rigidly in the axial direction. Consequently,
+    two distinct physical ramp points can touch one finite-radius roller at the
+    same instant only if their zero-shift roller-centre offset points coincide.
+    This routine therefore finds self-intersections of CINDER's exact offset
+    curve, converts each intersection into the fixed-arm shift(s) that can reach
+    it, and asks CINDER's existing branch/non-interference logic whether that
+    event belongs to the history-selected physical branch.
+
+    A private CINDER offset-curve primitive is used here deliberately because
+    CINDER does not yet expose this design/event query publicly. Keeping that
+    dependency isolated in the adapter makes it straightforward to replace with
+    a public CINDER API later without leaking mechanics into the service/UI.
+    """
+
+    intersections = _offset_curve_self_intersections(geometry, spec, ramp)
+    events: list[DoubleContactEvent] = []
+    for xi_1, xi_2, center_x_zero, center_r in intersections:
+        radial = center_r - spec.pivot_radius
+        radicand = spec.arm_length**2 - radial**2
+        reach_tolerance = max(
+            128.0 * spec.coordinate_tolerance * max(spec.arm_length, 1.0),
+            1.0e-14,
+        )
+        if radicand < -reach_tolerance:
+            continue
+        axial_magnitude = sqrt(max(0.0, radicand))
+
+        for signed_axial in (-axial_magnitude, axial_magnitude):
+            shift = spec.pivot_axial_position + signed_axial - center_x_zero
+            if (
+                shift < spec.axial_position_min - spec.coordinate_tolerance
+                or shift > requested_travel_m + spec.coordinate_tolerance
+            ):
+                continue
+            shift = min(requested_travel_m, max(spec.axial_position_min, shift))
+            angle = atan2(radial, signed_axial)
+            if not _cinder_confirms_selected_double_contact(
+                geometry,
+                shift_m=shift,
+            ):
+                continue
+
+            contact_1_x, contact_1_r = geometry.ramp_surface_point(
+                contact_coordinate=xi_1,
+                axial_position=shift,
+            )
+            contact_2_x, contact_2_r = geometry.ramp_surface_point(
+                contact_coordinate=xi_2,
+                axial_position=shift,
+            )
+            events.append(
+                DoubleContactEvent(
+                    shift_m=float(shift),
+                    angle_rad=float(angle),
+                    roller_center_x_m=float(center_x_zero + shift),
+                    roller_center_r_m=float(center_r),
+                    contact_coordinate_1_m=float(xi_1),
+                    contact_x_1_m=float(contact_1_x),
+                    contact_r_1_m=float(contact_1_r),
+                    contact_coordinate_2_m=float(xi_2),
+                    contact_x_2_m=float(contact_2_x),
+                    contact_r_2_m=float(contact_2_r),
+                )
+            )
+
+    if not events:
+        return None
+    return min(events, key=lambda event: event.shift_m)
+
+
+def _offset_curve_self_intersections(
+    geometry: PivotedRollerFollowerGeometry,
+    spec: PivotedRollerFollowerGeometrySpec,
+    ramp: PiecewiseRamp,
+) -> tuple[tuple[float, float, float, float], ...]:
+    """Find exact distinct-coordinate self-intersections of the offset curve.
+
+    A deterministic geometric discretization is used only to seed candidate
+    roots. Acceptance is based on the continuous two-equation root
+
+        C(xi_1) - C(xi_2) = 0,  xi_1 != xi_2,
+
+    evaluated with CINDER's exact offset geometry. Therefore the detected event
+    location does not depend on the concrete-design shift sampling grid or on a
+    heuristic 'large contact-coordinate jump'.
+    """
+
+    if ramp.x_max <= ramp.x_min:
+        return ()
+
+    # Preserve piece boundaries in the seed mesh. Transverse crossings are
+    # caught by chord/chord intersections; near-tangent self-touches are also
+    # seeded from spatially-near nonlocal samples. Root refinement below is the
+    # authority in both cases.
+    coordinates: list[float] = []
+    start = ramp.x_min
+    for segment in ramp.segments:
+        end = start + segment.length
+        local = np.linspace(start, end, 257)
+        if coordinates:
+            local = local[1:]
+        coordinates.extend(float(value) for value in local)
+        start = end
+
+    center_rows: list[tuple[float, float]] = []
+    for xi in coordinates:
+        curve = geometry._offset_curve(xi=xi, axial_position=0.0)
+        center_rows.append((curve.x, curve.radius))
+    centers = np.asarray(center_rows, dtype=float)
+    xis = np.asarray(coordinates, dtype=float)
+    seeds: list[tuple[float, float]] = []
+    seed_keys: set[tuple[int, int]] = set()
+    seed_resolution = max((ramp.x_max - ramp.x_min) / 1024.0, 1.0e-8)
+
+    def add_seed(value_1: float, value_2: float) -> None:
+        xi_1, xi_2 = sorted((float(value_1), float(value_2)))
+        key = (
+            int(round((xi_1 - ramp.x_min) / seed_resolution)),
+            int(round((xi_2 - ramp.x_min) / seed_resolution)),
+        )
+        if key in seed_keys:
+            return
+        seed_keys.add(key)
+        seeds.append((xi_1, xi_2))
+
+    def cross_2d(a: np.ndarray, b: np.ndarray) -> float:
+        return float(a[0] * b[1] - a[1] * b[0])
+
+    # Exact crossings of the seed chords. Adjacent parameter intervals describe
+    # the same local branch and are intentionally ignored.
+    chord_count = len(xis) - 1
+    for i in range(chord_count):
+        p = centers[i]
+        r = centers[i + 1] - p
+        for j in range(i + 2, chord_count):
+            if j == i + 1:
+                continue
+            q = centers[j]
+            s = centers[j + 1] - q
+            denominator = cross_2d(r, s)
+            scale = max(float(np.linalg.norm(r) * np.linalg.norm(s)), 1.0e-30)
+            if abs(denominator) <= 1.0e-12 * scale:
+                continue
+            delta = q - p
+            t = cross_2d(delta, s) / denominator
+            u = cross_2d(delta, r) / denominator
+            if -1.0e-12 <= t <= 1.0 + 1.0e-12 and -1.0e-12 <= u <= 1.0 + 1.0e-12:
+                seed_1 = xis[i] + min(1.0, max(0.0, t)) * (xis[i + 1] - xis[i])
+                seed_2 = xis[j] + min(1.0, max(0.0, u)) * (xis[j + 1] - xis[j])
+                add_seed(float(seed_1), float(seed_2))
+
+    # A tangential self-touch need not make two chords cross. Search only for
+    # spatially-near *nonlocal* samples to provide additional root seeds. The
+    # radius is derived from the geometric seed spacing and is not an event
+    # acceptance threshold.
+    if len(centers) >= 3:
+        chord_lengths = np.linalg.norm(np.diff(centers, axis=0), axis=1)
+        finite_lengths = chord_lengths[np.isfinite(chord_lengths)]
+        if finite_lengths.size:
+            seed_radius = max(8.0 * float(np.max(finite_lengths)), 1.0e-8)
+            tree = cKDTree(centers)
+            neighbor_count = min(24, len(centers))
+            distances, neighbors = tree.query(centers, k=neighbor_count)
+            distances = np.atleast_2d(distances)
+            neighbors = np.atleast_2d(neighbors)
+            for i in range(len(centers)):
+                for distance, raw_j in zip(distances[i], neighbors[i], strict=True):
+                    j = int(raw_j)
+                    if j <= i or abs(i - j) <= 12:
+                        continue
+                    if not isfinite(float(distance)) or float(distance) > seed_radius:
+                        continue
+                    add_seed(float(xis[i]), float(xis[j]))
+
+    if not seeds:
+        return ()
+
+    separation_tolerance = max(
+        256.0 * spec.coordinate_tolerance,
+        1.0e-10,
+    )
+    center_tolerance = max(
+        256.0 * spec.coordinate_tolerance,
+        5.0e-11,
+    )
+
+    def residual(values: np.ndarray) -> np.ndarray:
+        xi_1 = float(values[0])
+        xi_2 = float(values[1])
+        c1 = geometry._offset_curve(xi=xi_1, axial_position=0.0)
+        c2 = geometry._offset_curve(xi=xi_2, axial_position=0.0)
+        return np.asarray([c1.x - c2.x, c1.radius - c2.radius], dtype=float)
+
+    def jacobian(values: np.ndarray) -> np.ndarray:
+        xi_1 = float(values[0])
+        xi_2 = float(values[1])
+        c1 = geometry._offset_curve(xi=xi_1, axial_position=0.0)
+        c2 = geometry._offset_curve(xi=xi_2, axial_position=0.0)
+        return np.asarray(
+            [
+                [c1.dx_dxi, -c2.dx_dxi],
+                [c1.dr_dxi, -c2.dr_dxi],
+            ],
+            dtype=float,
+        )
+
+    roots: list[tuple[float, float, float, float]] = []
+    for raw_seed_1, raw_seed_2 in seeds:
+        seed_1, seed_2 = sorted((raw_seed_1, raw_seed_2))
+        if seed_2 - seed_1 <= separation_tolerance:
+            continue
+        try:
+            solved = least_squares(
+                residual,
+                np.asarray([seed_1, seed_2], dtype=float),
+                jac=jacobian,
+                bounds=(
+                    np.asarray([ramp.x_min, ramp.x_min], dtype=float),
+                    np.asarray([ramp.x_max, ramp.x_max], dtype=float),
+                ),
+                xtol=1.0e-14,
+                ftol=1.0e-14,
+                gtol=1.0e-14,
+                max_nfev=200,
+            )
+        except (TypeError, ValueError, RuntimeError):
+            continue
+        xi_1, xi_2 = sorted((float(solved.x[0]), float(solved.x[1])))
+        if xi_2 - xi_1 <= separation_tolerance:
+            continue
+        delta = residual(np.asarray([xi_1, xi_2], dtype=float))
+        if not np.all(np.isfinite(delta)) or float(np.linalg.norm(delta)) > center_tolerance:
+            continue
+        c1 = geometry._offset_curve(xi=xi_1, axial_position=0.0)
+        c2 = geometry._offset_curve(xi=xi_2, axial_position=0.0)
+        center_x = 0.5 * (c1.x + c2.x)
+        center_r = 0.5 * (c1.radius + c2.radius)
+        if not (isfinite(center_x) and isfinite(center_r)):
+            continue
+
+        duplicate = any(
+            abs(xi_1 - existing[0]) <= 32.0 * separation_tolerance
+            and abs(xi_2 - existing[1]) <= 32.0 * separation_tolerance
+            for existing in roots
+        )
+        if not duplicate:
+            roots.append((xi_1, xi_2, float(center_x), float(center_r)))
+
+    roots.sort(key=lambda item: (item[0], item[1]))
+    return tuple(roots)
+
+
+def _cinder_confirms_selected_double_contact(
+    geometry: PivotedRollerFollowerGeometry,
+    *,
+    shift_m: float,
+) -> bool:
+    """Use CINDER's existing physical non-interference check as confirmation."""
+
+    if shift_m < geometry.spec.axial_position_min:
+        return False
+    if shift_m == geometry.spec.axial_position_min:
+        positions = np.asarray([shift_m], dtype=float)
+    else:
+        positions = np.linspace(
+            geometry.spec.axial_position_min,
+            shift_m,
+            1025,
+        )
+    try:
+        geometry.trace_contact_branch(positions, require_complete=True)
+    except (TypeError, ValueError, RuntimeError) as error:
+        detail = str(error).lower()
+        return "second simultaneous physical ramp contact" in detail
+    return False
 
 def _classify_branch_failure(error_message: str | None) -> tuple[str, str]:
     detail = (error_message or "").lower()

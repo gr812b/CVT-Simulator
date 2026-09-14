@@ -151,3 +151,40 @@ def test_runtime_map_compile_failure_is_warning_not_physical_geometry_failure(mo
     assert "RUNTIME_MAP_COMPILE_FAILED" in warning_codes
     assert analysis["summary"]["runtime_map_compiled"] is False
     assert analysis["contact_valid_travel_m"] == analysis["requested_travel_m"]
+
+
+def test_exact_double_contact_event_preempts_later_sampled_branch_result(monkeypatch) -> None:
+    import app.engineering.fixed_pivot_primary.cinder_adapter as adapter
+
+    service = FixedPivotPrimaryDesignService()
+    architecture, ramp, _ = _design_from_defaults(service)
+    event = adapter.DoubleContactEvent(
+        shift_m=4.25e-3,
+        angle_rad=0.42,
+        roller_center_x_m=25.0e-3,
+        roller_center_r_m=55.0e-3,
+        contact_coordinate_1_m=7.0e-3,
+        contact_x_1_m=22.0e-3,
+        contact_r_1_m=50.0e-3,
+        contact_coordinate_2_m=24.0e-3,
+        contact_x_2_m=28.0e-3,
+        contact_r_2_m=51.0e-3,
+    )
+
+    monkeypatch.setattr(
+        adapter,
+        "_first_selected_double_contact_event",
+        lambda *args, **kwargs: event,
+    )
+    analysis = service.analyze_concrete(
+        architecture=architecture,
+        ramp=ramp,
+        sample_count=81,
+    )
+
+    failure = analysis["validity"]["failure"]
+    assert analysis["validity"]["valid"] is False
+    assert failure["code"] == "SECOND_CONTACT"
+    assert abs(failure["shift_m"] - event.shift_m) < 1.0e-12
+    assert failure["geometry"]["kind"] == "double_contact"
+    assert {item["label"] for item in failure["geometry"]["contacts"]} == {"C1", "C2"}

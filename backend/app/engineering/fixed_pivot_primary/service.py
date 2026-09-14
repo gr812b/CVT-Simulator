@@ -273,14 +273,37 @@ def _validity_document(geometry: GeometryAnalysis) -> dict[str, object]:
         )
 
     if not geometry.contact_range_complete:
+        failure: dict[str, object] = {
+            "code": geometry.failure_code or "CONTACT_BRANCH_INVALID",
+            "message": geometry.failure_message
+            or "The selected roller/ramp branch cannot complete the required travel.",
+            "shift_m": geometry.failure_shift_m,
+        }
+        if geometry.double_contact_event is not None:
+            event = geometry.double_contact_event
+            failure["geometry"] = {
+                "kind": "double_contact",
+                "arm_angle_deg": degrees(event.angle_rad),
+                "roller_center_x_m": event.roller_center_x_m,
+                "roller_center_r_m": event.roller_center_r_m,
+                "contacts": [
+                    {
+                        "label": "C1",
+                        "contact_coordinate_m": event.contact_coordinate_1_m,
+                        "x_m": event.contact_x_1_m,
+                        "r_m": event.contact_r_1_m,
+                    },
+                    {
+                        "label": "C2",
+                        "contact_coordinate_m": event.contact_coordinate_2_m,
+                        "x_m": event.contact_x_2_m,
+                        "r_m": event.contact_r_2_m,
+                    },
+                ],
+            }
         return {
             "valid": False,
-            "failure": {
-                "code": geometry.failure_code or "CONTACT_BRANCH_INVALID",
-                "message": geometry.failure_message
-                or "The selected roller/ramp branch cannot complete the required travel.",
-                "shift_m": geometry.failure_shift_m,
-            },
+            "failure": failure,
             "warnings": warnings,
         }
 

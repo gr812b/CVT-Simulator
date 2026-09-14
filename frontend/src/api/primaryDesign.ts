@@ -52,10 +52,24 @@ export interface SampledFieldSet {
   fields: Record<string, Array<number | boolean | null>>;
 }
 
+export interface DoubleContactFailureGeometry {
+  kind: 'double_contact';
+  arm_angle_deg: number;
+  roller_center_x_m: number;
+  roller_center_r_m: number;
+  contacts: Array<{
+    label: 'C1' | 'C2';
+    contact_coordinate_m: number;
+    x_m: number;
+    r_m: number;
+  }>;
+}
+
 export interface DesignFailure {
   code: string;
   message: string;
   shift_m: number | null;
+  geometry?: DoubleContactFailureGeometry;
 }
 
 export interface DesignWarning {

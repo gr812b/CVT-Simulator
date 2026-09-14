@@ -80,6 +80,10 @@ export function MechanismScene({ analysis, shiftM }: Props) {
     const failureRampX = failureShiftM === null
       ? []
       : openRampX.map((x) => x + failureShiftM);
+    const doubleContact = analysis.validity.failure?.geometry?.kind === 'double_contact'
+      ? analysis.validity.failure.geometry
+      : null;
+    const doubleContactPoints = doubleContact?.contacts ?? [];
     let lastAdmittedIndex = cx.length - 1;
     if (failureShiftM !== null && axis.length) {
       const beforeFailure = axis.findIndex((value) => value >= failureShiftM - EPS);
@@ -92,6 +96,8 @@ export function MechanismScene({ analysis, shiftM }: Props) {
       ...openRampX,
       ...fullRampX,
       ...cx.filter(Number.isFinite),
+      ...(doubleContact ? [doubleContact.roller_center_x_m] : []),
+      ...doubleContactPoints.map((point) => point.x_m),
       pivotX - analysis.architecture.arm_length_m,
       pivotX + analysis.architecture.arm_length_m,
     ].map((value) => value * MM);
@@ -99,6 +105,8 @@ export function MechanismScene({ analysis, shiftM }: Props) {
       0,
       ...rampR.map((value) => value * MM),
       ...cr.filter(Number.isFinite).map((value) => value * MM),
+      ...(doubleContact ? [doubleContact.roller_center_r_m * MM] : []),
+      ...doubleContactPoints.map((point) => point.r_m * MM),
       (pivotR + analysis.architecture.arm_length_m + analysis.architecture.roller_radius_m) * MM,
     ];
 
@@ -149,6 +157,8 @@ export function MechanismScene({ analysis, shiftM }: Props) {
       failureShiftM,
       lastValidRollerX,
       lastValidRollerR,
+      doubleContact,
+      doubleContactPoints,
     };
   }, [analysis, shiftM]);
 
@@ -298,6 +308,64 @@ export function MechanismScene({ analysis, shiftM }: Props) {
           stroke={mechanismStroke}
           strokeWidth="3"
         />
+        {scene.doubleContact && scene.doubleContactPoints.length === 2 && (
+          <g>
+            <line
+              x1={scene.sx(scene.pivotX)}
+              y1={scene.sy(scene.pivotR)}
+              x2={scene.sx(scene.doubleContact.roller_center_x_m)}
+              y2={scene.sy(scene.doubleContact.roller_center_r_m)}
+              stroke="#ff5f6d"
+              strokeWidth="4"
+              opacity="0.86"
+            />
+            <circle
+              cx={scene.sx(scene.doubleContact.roller_center_x_m)}
+              cy={scene.sy(scene.doubleContact.roller_center_r_m)}
+              r={scene.rollerRadiusPx}
+              fill="none"
+              stroke="#ff5f6d"
+              strokeWidth="3"
+            />
+            {scene.doubleContactPoints.map((point) => (
+              <g key={point.label}>
+                <line
+                  x1={scene.sx(scene.doubleContact!.roller_center_x_m)}
+                  y1={scene.sy(scene.doubleContact!.roller_center_r_m)}
+                  x2={scene.sx(point.x_m)}
+                  y2={scene.sy(point.r_m)}
+                  stroke="#ff9b9b"
+                  strokeWidth="2"
+                  strokeDasharray="5 4"
+                />
+                <circle
+                  cx={scene.sx(point.x_m)}
+                  cy={scene.sy(point.r_m)}
+                  r="5"
+                  fill="#ff5f6d"
+                />
+                <text
+                  x={scene.sx(point.x_m) + 8}
+                  y={scene.sy(point.r_m) - 8}
+                  fill="#ffb1b1"
+                  fontSize="12"
+                  fontWeight="700"
+                >
+                  {point.label}
+                </text>
+              </g>
+            ))}
+            <text
+              x={scene.sx(scene.doubleContact.roller_center_x_m) + 12}
+              y={scene.sy(scene.doubleContact.roller_center_r_m) + scene.rollerRadiusPx + 18}
+              fill="#ff9b9b"
+              fontSize="12"
+              fontWeight="700"
+            >
+              instantaneous double contact
+            </text>
+          </g>
+        )}
         {!analysis.validity.valid
           && Number.isFinite(scene.lastValidRollerX)
           && Number.isFinite(scene.lastValidRollerR) && (
