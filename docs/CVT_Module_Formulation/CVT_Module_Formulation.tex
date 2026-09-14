@@ -9447,135 +9447,825 @@ admit.
 \subsubsection{Finite-Speed Arrival at a Boundary}
 \label{sec:finite_speed_shift_boundary_arrival}
 
-The reverse crossing exposes a different problem. Consider free engaged
-upshift reaching the upper primary stop at $s=s_{\max}$ with
-$\dot s^- > 0$, where superscripts $-$ and $+$ denote the limiting states
-immediately before and after the boundary event. The mechanism arrives while
-still shifting into the stop, whereas the supported regime admits only
+The release conditions determine when a stop can cease supporting the
+mechanism. Shift is then already at rest, so the free axial balance
+determines the acceleration away from the stop. For the reverse crossing,
+arrival is detected simply by reaching the stop position. The difficulty
+is the shift velocity with which the sheaves arrive. Bringing that motion
+to rest requires an impulse, and the motion immediately after the event
+must be determined before the continuous solution can proceed.
 
+At the upper primary stop, for example, free upshift can reach
+\(s=s_{\max}\) while the primary is still closing. The movable sheave
+strikes the fixed sheave, metal on metal. Under the perfectly inelastic
+impact model of \AssRef{assump:inelastic_constraint_activation}, this
+collision arrests its axial motion without rebound. With superscripts
+\(-\) and \(+\) denoting values immediately before and after the event,
+an arrival with \(\dot s^->0\) therefore gives
 \begin{equation}
-    \dot s^+ = 0.
+    \dot x_p^+=\dot s^+=0.
     \label{eq:upper_stop_post_event_velocity}
 \end{equation}
+The belt remains seated between both pairs of sheaves. The secondary
+cannot keep opening while the primary holds its radius fixed: the two
+radii must still fit the same belt length. The belt therefore brings the
+secondary's axial travel to rest with the primary's.
 
-The incoming velocity therefore cannot simply be carried into the next
-continuous solution. Unlike the releases above, the boundary itself must
-change the velocity state before the upper-stop equations can take over.
+During this travel, however, the movable secondary has also been turning
+relative to its shaft as its pin follows the helix. With axial travel
+blocked, the pin can no longer move along the inclined track. Continued
+relative rotation would drive it into the side of the track, which pushes
+back on the pin. The force exerts a torque on the movable sheave; the pin
+exerts an equal and opposite force on the track attached to the shaft.
+Unlike the axially fixed stop, the shaft and fixed sheave remain free to
+change their angular speed. The reaction therefore changes their rotation
+too, until the movable sheave and shaft turn together.
 
-The incoming motion can become inadmissible for two different reasons. The
-first is that the relation between the state velocities and the physical
-hardware itself changes. At the low-ratio boundary $s=s_{\rm dz}$, an
-engaged-to-deadzone transition has exactly this character. During engaged
-shift, a nonzero $\dot s$ moves both pulley mechanisms: in particular,
+To see how this exchange changes the shaft speed, follow the angular
+momentum through the collision. During this upshift, the movable sheave
+arrives rotating more slowly than the shaft, as established in
+\Cref{sec:secondary_pulley_rotational_dynamics}. If the belt supplies no
+angular impulse during the collision, the faster shaft must supply the
+angular momentum that brings the movable sheave up to their common speed.
+The movable assembly gains exactly what the shaft and its attached
+rotating hardware lose. The shaft slows while the movable assembly speeds
+up, conserving their combined angular momentum. Their common speed lies
+between the two incoming speeds.
 
+The incoming state supplies the shaft speed \(\omega_s^-\) and shift
+rate \(\dot s^-\). The helix relation then gives the known angular
+speed of the movable assembly before impact:
 \begin{equation}
-    \dot x_s
+    \omega_{s,M}^-
+    =\omega_s^-+\frac{d\theta_s}{ds}\dot s^-.
+    \label{eq:finite_event_secondary_movable_incoming_speed}
+\end{equation}
+After impact the relative
+rotation has ended, and the two assemblies share the unknown speed
+\(\omega_s^+\):
+\begin{equation}
+    \omega_{s,M}^+=\omega_s^+.
+    \label{eq:finite_event_secondary_common_outgoing_speed}
+\end{equation}
+The stop condition has fixed the axial velocities, but this common
+rotation speed still has to be found from the incoming angular momentum
+and the inertias that now turn together.
+
+The belt can take part in the same exchange. If an existing secondary
+sticking contact remains stuck, changing the pulley speed while keeping
+the belt speed unchanged would create slip. A tangential contact impulse
+must change their momenta together so that
+\(v_b^+=r_{s,\mathrm{eff}}\omega_s^+\). If the primary contact remains
+stuck too, the same belt speed must also satisfy
+\(v_b^+=r_{p,\mathrm{eff}}\omega_p^+\), extending the exchange to the
+primary. These are the retained sticking conditions of
+\AssRef{assump:impact_tangential_contact}; sliding interfaces and newly
+formed contacts receive no automatic impulsive sticking condition. The
+shaft and belt speeds must therefore be found together, with the stop and
+every retained contact condition satisfied by the same outgoing state.
+
+Arrival at the engaged low-ratio seat or the fully open primary stop
+requires the same accounting. The stop position locates the event, and
+the stop condition specifies the motion that must end. The remaining
+velocities depend on which bodies exchange momentum as that motion ends.
+A complete stop transition must supply those velocities before the
+continuous balances can be used again.
+
+\paragraph{Changing the coupling}
+
+At these stops, the connections between the bodies remain in place.
+Primary separation introduces a related difficulty: the primary can keep
+moving while its connection to the secondary is lost. At the low-ratio
+boundary \(s=s_{\mathrm{dz}}\), the secondary is fully closed, but the
+primary still has room to open. If the primary separates from the belt,
+it can continue through the deadzone while the secondary remains at its
+seat. The shift rate still gives \(\dot x_p=\dot s\), but no longer
+produces secondary translation, helix-relative rotation, or changing belt
+radii.
+
+For a backshift that reaches this boundary at finite speed, simply
+carrying all the state velocities across unchanged would keep the primary
+moving while secondary translation and radial belt motion ceased. The
+movable secondary would also lose the helix contribution to its angular
+speed. The same state-velocity values would thus describe different
+physical motions on the two sides. Those changes still involve momentum:
+the secondary seat arrests its translation, while the helix can transfer
+angular momentum into the continuing shaft rotation. The event balance
+must use the actual body velocities produced by the connections on each
+side of the boundary.
+
+The same separation can impose a velocity restriction as well. In the
+deadzone, the belt and secondary must satisfy the lock
+\(v_b^+=r_{s,\mathrm{eff,dz}}\omega_s^+\) from
+\Cref{eq:deadzone_secondary_lock}. If the incoming belt and secondary
+surface speeds differ, bringing them into agreement requires an impulse
+even when the shift rate is zero. Entry into the deadzone can change the
+coupling between bodies and impose a tangential restriction at the same
+instant.
+
+\paragraph{The general boundary problem}
+
+A boundary can thus change how the state velocities move the bodies,
+restrict which velocities are allowed, or do both. These two effects
+account for all five structural regimes. Free engaged shift, the
+low-ratio seat, and the upper primary stop share the engaged relations
+between state velocities and body motion. Free deadzone motion and the
+fully open primary stop share the deadzone relations. There are only two
+sets of these relations; the stops impose \(\dot s=0\) within them, and
+tangential locks impose conditions on the shaft and belt speeds.
+
+These examples leave two separate pieces of mechanics that a general boundary
+law must carry together.  The state velocities do not by themselves specify the
+physical momentum; the current connections determine which masses and inertias
+those velocities move.  The outgoing regime can also restrict the velocity
+state beyond those connections.  A finite-speed transition must therefore carry
+the physical momentum from the incoming connection to the outgoing one and, when
+the outgoing state is more restricted, account for the impulse that establishes
+those restrictions.
+
+% Final synthesis -- momentum block only
+
+The two effects identified above enter the boundary problem differently.
+Momentum is carried by the physical hardware in motion, so its contribution can
+be made explicit before any additional stop or contact restriction is imposed.
+That accounting begins with the velocities already retained by the model.
+
+\paragraph{Momentum carried through the boundary}
+
+The first part of the boundary problem is to identify the momentum carried by
+the moving hardware. For each retained translation or rotation, that requires
+its physical velocity together with the mass or inertia moving at that speed.
+The model describes these motions through two shaft speeds, a belt transport
+speed, and the shift rate, collected as
+\begin{equation}
+    \boldsymbol{\nu}
     =
-    \frac{dx_s}{ds}\dot s,
-    \qquad \text{engaged},
-    \label{eq:finite_event_secondary_engaged_motion}
+    \begin{bmatrix}
+        \omega_p &
+        \omega_s &
+        v_b &
+        \dot s
+    \end{bmatrix}^{\mathsf T}.
+    \label{eq:finite_event_velocity_vector}
 \end{equation}
 
-and the same shift motion also drives the secondary helix rotation and the
-changes in the represented belt radii. In the deadzone, $\dot s$ still moves
-the primary, but the secondary remains fully closed,
+The upper-stop example already showed that the movable secondary's angular
+speed contains both shaft rotation and helix-relative rotation, while its
+axial travel carries a separate linear momentum. The separation example
+established the complementary point: the physical motion produced by a given
+\(\boldsymbol{\nu}\) depends on which kinematic connection is active. Applying
+the established kinematics to the remaining translations and rotations gives
+the physical velocities in \Cref{tab:finite_event_motion_inventory}, with the
+corresponding mass or inertia beside each one.
 
-\begin{equation}
-    \dot x_p = \dot s,
-    \qquad
-    \dot x_s = 0,
-    \qquad \text{deadzone}.
-    \label{eq:finite_event_deadzone_motion}
-\end{equation}
+\begin{table}[H]
+    \centering
+    \small
+    \renewcommand{\arraystretch}{1.35}
+    \setlength{\tabcolsep}{4pt}
+    \begin{tabular}{@{}
+        >{\raggedright\arraybackslash}p{0.25\linewidth}
+        >{\centering\arraybackslash}p{0.29\linewidth}
+        >{\centering\arraybackslash}p{0.25\linewidth}
+        >{\centering\arraybackslash}p{0.13\linewidth}
+        @{}}
+        \toprule
+        \textbf{Physical motion}
+        & \textbf{Mass or inertia}
+        & \textbf{Engaged velocity}
+        & \textbf{Deadzone velocity} \\
+        \midrule
+        Primary shaft-carried rotation
+        & \(I_{\mathrm B,p}+I_{p,\mathrm{const}}+J_{f,p}(s)\)
+        & \(\omega_p\)
+        & \(\omega_p\) \\[5pt]
+        Primary movable axial motion
+        & \(m_p\)
+        & \(\dot s\)
+        & \(\dot s\) \\[5pt]
+        Primary flyweight pivot motion
+        & \(I_f\)
+        & \(\dfrac{dq_f}{ds}\dot s\)
+        & \(\dfrac{dq_f}{ds}\dot s\) \\[5pt]
+        Secondary shaft-side rotation
+        & \(I_{\mathrm B,s}+I_{s,F}\)
+        & \(\omega_s\)
+        & \(\omega_s\) \\[5pt]
+        Secondary movable-side rotation
+        & \(I_{s,M}\)
+        & \(\omega_s+\dfrac{d\theta_s}{ds}\dot s\)
+        & \(\omega_s\) \\[5pt]
+        Secondary movable axial motion
+        & \(m_s\)
+        & \(\dfrac{dx_s}{ds}\dot s\)
+        & \(0\) \\[5pt]
+        Complete-belt transport
+        & \(m_b\)
+        & \(v_b\)
+        & \(v_b\) \\[5pt]
+        Primary-wrap radial motion
+        & \(\rho_b A_b r_{p,\mathrm{cm}}\phi_p\)
+        & \(\dfrac{dr_p}{ds}\dot s\)
+        & \(0\) \\[5pt]
+        Secondary-wrap radial motion
+        & \(\rho_b A_b r_{s,\mathrm{cm}}\phi_s\)
+        & \(\dfrac{dr_s}{ds}\dot s\)
+        & \(0\) \\
+        \bottomrule
+    \end{tabular}
+    \caption{Retained physical motions and their momentum-carrying masses
+    and inertias. Each row identifies one physical motion, the mass or
+    inertia carried with it, and the velocity produced by the engaged
+    and deadzone kinematics.}
+    \label{tab:finite_event_motion_inventory}
+\end{table}
 
-Thus the same numerical shift velocity represents different physical motion
-on the two sides of this boundary. A finite-speed crossing cannot be handled
-by merely retaining the same velocity numbers: momentum carried by secondary
-shift, helix, or radial belt motion on the engaged side must be reconciled
-with a deadzone state in which $\dot s$ no longer produces those motions.
-
-A metal stop creates a different incompatibility. Reaching the upper primary
-stop does not change what $\dot s$ means physically. If the stop were absent,
-the same nonzero $\dot s$ would continue to produce the engaged shift motion.
-The stop instead forbids that otherwise meaningful motion by imposing
-\Cref{eq:upper_stop_post_event_velocity}. What happens to the momentum carried
-into the event then depends on whether each physical motion has another
-allowed way to continue.
-
-The primary movable sheave provides the simplest case. Its axial velocity is
-
-\begin{equation}
-    \dot x_p = \dot s.
-    \label{eq:finite_event_primary_axial_velocity}
-\end{equation}
-
-Once the stop requires $\dot s^+=0$, no remaining velocity can produce
-primary axial motion, so $\dot x_p^+=0$. That motion has no surviving outlet;
-its momentum must be arrested by the impulsive stop reaction.
-
-The secondary movable sheave behaves differently because its absolute
-rotation has two kinematic contributions. During engaged shift,
-
+Each velocity in the table is a linear combination of the same four state
+entries. For the engaged movable secondary, for example,
 \begin{equation}
     \omega_{s,M}
     =
     \omega_s
     +
-    \frac{d\theta_s}{ds}\dot s.
-    \label{eq:finite_event_secondary_movable_velocity}
+    \frac{d\theta_s}{ds}\dot s
+    =
+    \begin{bmatrix}
+        0 & 1 & 0 & \dfrac{d\theta_s}{ds}
+    \end{bmatrix}
+    \boldsymbol{\nu}.
+    \label{eq:finite_event_secondary_velocity_row_example}
+\end{equation}
+In the deadzone, the same row becomes \(
+    \begin{bmatrix}
+        0 & 1 & 0 & 0
+    \end{bmatrix}
+\): the shaft still turns the movable assembly, but primary travel no longer
+adds helix-relative rotation. Stacking the nine rows in table order gives the
+engaged and deadzone velocity maps
+\begin{equation}
+    J_{\mathrm{eng}},\,J_{\mathrm{dz}}
+    \in \mathbb{R}^{9\times4}.
+    \label{eq:finite_event_velocity_map_dimensions}
+\end{equation}
+For either topology, \(J\boldsymbol{\nu}\) therefore contains the nine
+physical velocities produced by the four state velocities. Read by columns,
+the same matrix shows where each retained velocity appears through the
+mechanism; in particular, the fourth column gives the coefficients multiplying
+\(\dot s\) in each retained physical velocity.
+
+The linear or angular momentum carried by each motion is obtained by
+multiplying its velocity by the corresponding mass or inertia. Placing the
+masses and inertias from \Cref{tab:finite_event_motion_inventory} on the
+diagonal of \(W\in\mathbb{R}^{9\times9}\), in the same row order, performs
+these multiplications together:
+\begin{equation}
+    \boldsymbol p
+    =
+    WJ\boldsymbol\nu
+    \in\mathbb{R}^{9},
+    \qquad
+    J\in\{J_{\mathrm{eng}},J_{\mathrm{dz}}\}.
+    \label{eq:finite_event_physical_momentum_inventory}
+\end{equation}
+The entries are the linear and angular momenta of the individual translations
+and rotations in the table; they are not the components of one spatial
+momentum vector.
+
+The same construction gives the momentum immediately before and after the
+boundary event. Positions remain continuous through the instantaneous
+transition, so the masses and inertias are evaluated at the same configuration
+and \(W\) is common to both sides. The incoming and outgoing connections
+determine \(J_-\) and \(J_+\), respectively, so both maps are known for the
+transition being considered:
+\begin{equation}
+    J_-
+    \in\{J_{\mathrm{eng}},J_{\mathrm{dz}}\},
+    \qquad
+    J_+
+    \in\{J_{\mathrm{eng}},J_{\mathrm{dz}}\}.
+    \label{eq:finite_event_side_maps}
+\end{equation}
+A crossing between engaged and deadzone motion uses different maps, whereas
+arrival at the upper primary stop has \(J_-=J_+=J_{\mathrm{eng}}\). At the
+fully open primary stop, both sides instead use \(J_{\mathrm{dz}}\).
+
+The incoming state supplies the known velocity \(\boldsymbol\nu^-\), while
+\(\boldsymbol\nu^+\) remains to be found. The corresponding physical momenta
+are therefore
+\begin{equation}
+    \boldsymbol p^-
+    =
+    WJ_-\boldsymbol\nu^-,
+    \qquad
+    \boldsymbol p^+
+    =
+    WJ_+\boldsymbol\nu^+.
+    \label{eq:finite_event_side_momenta}
+\end{equation}
+Because each row follows the same physical translation or rotation on both
+sides, subtracting the two gives its momentum change through the event:
+\begin{equation}
+    \Delta\boldsymbol p
+    =
+    WJ_+\boldsymbol{\nu}^+
+    -
+    WJ_-\boldsymbol{\nu}^-
+    \in\mathbb{R}^{9}.
+    \label{eq:finite_event_body_momentum_change}
+\end{equation}
+If \(J_-\neq J_+\), even identical state-velocity vectors can correspond to
+different physical motions and therefore different momenta.
+
+\paragraph{Velocities allowed after the event}
+
+With the momentum on both sides now expressed through \(J_-\) and \(J_+\), the
+effect of changing the kinematic connection is accounted for in the momentum
+inventory. The boundary examples established a second possibility as well:
+even after the appropriate outgoing map \(J_+\) is known, the new regime can
+impose additional relations on the outgoing velocities \(\boldsymbol{\nu}^+\)
+themselves. At the upper primary stop, for example, the engaged connection
+remains valid, so \(J_-=J_+=J_{\mathrm{eng}}\), while the already-established
+stop condition is
+\begin{equation}
+    \dot s^+=0.
 \end{equation}
 
-Immediately before the stop, the movable sheave therefore carries rotational
-motion at
+The shift rate \(\dot s^+\) is the fourth entry of \(\boldsymbol{\nu}^+\).
+Writing the stop condition's coefficients in that state order gives a row that
+selects this entry, so the required relation becomes
+\begin{equation}
+    c_{\mathrm{stop}}
+    =
+    \begin{bmatrix}
+        0 & 0 & 0 & 1
+    \end{bmatrix},
+    \qquad
+    c_{\mathrm{stop}}\boldsymbol{\nu}^+=0.
+    \label{eq:finite_event_stop_constraint}
+\end{equation}
+The engaged low-ratio seat and fully open primary stop arrest the same shift
+coordinate and therefore use the same row. The engaged low-ratio seat uses
+\(J_{\mathrm{eng}}\), while the fully open primary stop uses
+\(J_{\mathrm{dz}}\).
+
+A belt--pulley contact can restrict the outgoing velocities for a different
+physical reason. If a contact that was already sticking remains stuck through
+the collision, the two represented surface speeds must still agree afterward.
+At the primary, both sheave faces rotate with the shaft, so retained sticking
+requires
+\begin{equation}
+    v_b^+
+    -
+    r_{p,\mathrm{eff}}\omega_p^+
+    =0.
+    \label{eq:finite_event_primary_stick_velocity}
+\end{equation}
+In the state ordering of \Cref{eq:finite_event_velocity_vector}, this
+condition is
+\begin{equation}
+    c_{p,\mathrm{stick}}
+    =
+    \begin{bmatrix}
+        -r_{p,\mathrm{eff}} & 0 & 1 & 0
+    \end{bmatrix},
+    \qquad
+    c_{p,\mathrm{stick}}\boldsymbol{\nu}^+=0.
+    \label{eq:finite_event_primary_stick_constraint}
+\end{equation}
+
+The same no-slip requirement applies at the secondary, but the represented
+surface speed there also contains the movable sheave's helix-relative
+rotation. Using the representative contact speed from
+\Cref{eq:representative_contact_angular_speed}, retained secondary sticking
+requires
+\begin{equation}
+    v_b^+
+    -
+    r_{s,\mathrm{eff}}
+    \left(
+        \omega_s^+
+        +
+        \frac{1}{2}\frac{d\theta_s}{ds}\dot s^+
+    \right)
+    =0,
+    \label{eq:finite_event_secondary_stick_velocity}
+\end{equation}
+which gives
+\begin{equation}
+    c_{s,\mathrm{stick}}
+    =
+    \begin{bmatrix}
+        0 &
+        -r_{s,\mathrm{eff}} &
+        1 &
+        -\dfrac{r_{s,\mathrm{eff}}}{2}\dfrac{d\theta_s}{ds}
+    \end{bmatrix},
+    \qquad
+    c_{s,\mathrm{stick}}\boldsymbol{\nu}^+=0.
+    \label{eq:finite_event_secondary_stick_constraint}
+\end{equation}
+These rows apply only to sticking contacts retained through the collision. An
+incoming sliding contact contributes no sticking relation, and a contact
+created by the event is not assigned one automatically.
+
+For outgoing deadzone motion, the reduced model's prescribed belt--secondary
+lock replaces the engaged secondary sticking condition. The outgoing map is
+\(J_+=J_{\mathrm{dz}}\), and the belt remains locked to the fully closed
+secondary after primary separation. The closure already derived in
+\Cref{eq:deadzone_secondary_lock} requires
+\begin{equation}
+    v_b^+
+    -
+    r_{s,\mathrm{eff,dz}}\omega_s^+
+    =0,
+    \label{eq:finite_event_deadzone_lock_velocity}
+\end{equation}
+so an outgoing deadzone state must satisfy
+\begin{equation}
+    c_{s,\mathrm{dz}}
+    =
+    \begin{bmatrix}
+        0 & -r_{s,\mathrm{eff,dz}} & 1 & 0
+    \end{bmatrix},
+    \qquad
+    c_{s,\mathrm{dz}}\boldsymbol{\nu}^+=0.
+    \label{eq:finite_event_deadzone_lock_constraint}
+\end{equation}
+The lock applies even when entry into the deadzone must first bring unequal
+incoming belt and secondary surface speeds into agreement.
+
+At the upper primary stop, if both belt contacts remain sticking, the stop
+condition and the two sticking conditions must all hold for the same
+\(\boldsymbol{\nu}^+\). Their rows can therefore be imposed together by
+stacking them into a single matrix. More generally, for the \(n_c\)
+restrictions present in a given event,
+\begin{equation}
+    C_+
+    =
+    \begin{bmatrix}
+        c_1\\
+        \vdots\\
+        c_{n_c}
+    \end{bmatrix}
+    \in\mathbb{R}^{n_c\times4},
+    \qquad
+    C_+\boldsymbol{\nu}^+=0.
+    \label{eq:finite_event_outgoing_constraints}
+\end{equation}
+
+
+
+
+\paragraph{Constraint impulses}
+
+These relations determine which combinations of outgoing velocities are
+allowed, but they do not themselves supply the momentum change required to
+establish them.  At the upper primary stop, that distinction has a direct
+physical source: the movable sheave strikes the axially fixed sheave, and
+the metal contact develops whatever axial reaction is required to prevent
+further closing.  Over the instantaneous event, that reaction appears as a
+finite impulse associated with the stop constraint.
+
+Let \(\Gamma_{\mathrm{stop}}\) denote this impulse, signed positive toward
+increasing \(s\).  Since \(c_{\mathrm{stop}}\) identifies the retained
+direction in which the stop acts, its impulse is
+
+\begin{equation}
+    c_{\mathrm{stop}}^{\mathsf T}\Gamma_{\mathrm{stop}}
+    =
+    \begin{bmatrix}
+        0\\
+        0\\
+        0\\
+        \Gamma_{\mathrm{stop}}
+    \end{bmatrix}.
+    \label{eq:finite_event_stop_impulse}
+\end{equation}
+
+A retained sticking condition has the same structure.  The condition
+\(c_{p,\mathrm{stick}}\boldsymbol{\nu}^+=0\) requires the belt and primary
+surface to leave with zero relative velocity; the tangential contact can
+supply the impulse required to maintain that relation through the collision.
+Let \(\Gamma_p\) be positive when the impulse on the belt acts in the positive
+\(v_b\) direction.  The belt then receives \(+\Gamma_p\), while the equal and
+opposite action on the primary gives angular impulse
+\(-r_{p,\mathrm{eff}}\Gamma_p\):
+
+\begin{equation}
+    \begin{bmatrix}
+        -r_{p,\mathrm{eff}}\Gamma_p\\0\\\Gamma_p\\0
+    \end{bmatrix}
+    =
+    c_{p,\mathrm{stick}}^{\mathsf T}\Gamma_p.
+    \label{eq:finite_event_primary_constraint_impulse}
+\end{equation}
+
+% F3
+When both contacts remain sticking, both tangential impulses contribute
+to the belt's momentum change. Contributions from the active restrictions
+therefore add wherever they act on the same retained motion. Associate each 
+row \(c_i\) of \(C_+\) with an unknown signed impulse amplitude 
+\(\Gamma_i\), and collect these amplitudes in
+
+\begin{equation}
+    \boldsymbol\Gamma=
+    [\Gamma_1,\ldots,\Gamma_{n_c}]^{\mathsf T}\in\mathbb R^{n_c},
+\end{equation}
+
+Their combined generalized impulse is then
+
+\begin{equation}
+    C_+^{\mathsf T}\boldsymbol\Gamma
+    \in\mathbb R^4.
+    \label{eq:finite_event_generalized_constraint_impulse}
+\end{equation}
+
+Each row therefore carries both the velocity restriction it imposes and the
+unknown impulse required to enforce it:
+\(c_i\boldsymbol\nu^+=0\) specifies the outgoing velocity relation, while
+\(c_i^{\mathsf T}\Gamma_i\) gives the corresponding generalized impulse.
+
+\paragraph{Momentum balance in the retained velocity directions}
+
+% F4
+The impulses have known places to act, but their magnitudes and the
+resulting speeds remain unknown.  Determining them requires balancing
+those impulses against the momentum changes of the moving hardware.
+The difficulty is that \(\Delta\boldsymbol p\in\mathbb R^9\) still
+lists the nine physical translations and rotations separately, whereas
+\(C_+^{\mathsf T}\boldsymbol\Gamma\in\mathbb R^4\) already acts in the
+four retained velocity directions.  The body momentum changes must
+therefore be gathered into those same four directions before the two
+can be balanced.
+
+% F5
+That gathering is already encoded in the outgoing velocity map.  Each
+column of \(J_+\) states how one retained velocity appears among the
+nine outgoing body velocities; the same coefficients therefore state
+how the corresponding body momentum changes contribute back to that
+retained direction.  For secondary rotation, the \(\omega_s\) column
+has coefficient one in both the shaft-side and movable-side rotation
+rows.  Their angular-momentum changes therefore enter together:
+\begin{equation}
+    \left[J_+^{\mathsf T}\Delta\boldsymbol p\right]_{\omega_s}
+    =
+    \Delta H_{s,F}+\Delta H_{s,M}.
+    \label{eq:finite_event_secondary_momentum_gathering}
+\end{equation}
+
+This is also where the upper-stop exchange described at the outset
+reappears in the reduced balance.  The pin--track reaction changes the
+shaft-side and movable-side angular momenta by equal and opposite
+amounts as their relative rotation is removed.  Because both changes
+enter the \(\omega_s\) direction with the same coefficient, that
+internal helix impulse cancels from their sum.  It therefore requires
+no additional component of \(\boldsymbol\Gamma\), even though the
+transfer remains present in the two individual momentum changes.
+
+% F6
+The shift column shows why the coefficients need not be unity.  In the
+engaged map, a shift rate contributes
+\((d\theta_s/ds)\dot s\) to the movable secondary's angular velocity,
+so its angular-momentum change contributes
+\[
+    \frac{d\theta_s}{ds}\Delta H_{s,M}
+\]
+to the shift-direction balance.  The other entries of the shift column
+act in the same way on the translational and rotational momentum
+changes produced by shift.  These are the same kinematic conversion
+factors used by the compatible-work relations: a coefficient that maps
+a retained velocity into a physical velocity also maps that physical
+momentum change back into the corresponding retained direction.
+
+Applying this operation to all four columns collects the nine physical
+momentum changes into
+\begin{equation}
+    J_+^{\mathsf T}\Delta\boldsymbol p
+    \in\mathbb R^4,
+    \label{eq:finite_event_generalized_momentum_change}
+\end{equation}
+with one balance associated with each of
+\(\omega_p\), \(\omega_s\), \(v_b\), and \(\dot s\).
+
+Taken together, the gathered balance has a useful interpretation.
+Motion that exists only on the incoming side is still retained in
+\(\Delta\boldsymbol p\) through \(WJ_-\boldsymbol\nu^-\), while
+reactions internal to the ideal kinematic connections cancel when the
+body balances are combined, as the helix exchange does above.  The stop
+and contact impulses enforce additional restrictions rather than those
+kinematic connections, so they remain explicitly as
+\(C_+^{\mathsf T}\boldsymbol\Gamma\).
+
+\paragraph{Coupled event solve}
+
+% F8
+The physical momentum changes and the explicit constraint impulses are now
+expressed in the same four retained directions.  They can therefore be
+balanced directly, while the outgoing velocities must simultaneously satisfy
+the restrictions already collected in \(C_+\):
+\begin{equation}
+    \begin{aligned}
+        J_+^{\mathsf T}\Delta\boldsymbol p
+        &=C_+^{\mathsf T}\boldsymbol\Gamma,\\
+        C_+\boldsymbol\nu^+&=0.
+    \end{aligned}
+    \label{eq:finite_event_generalized_impulse_momentum}
+\end{equation}
+The first relation determines the velocity response to an impulse
+exchange, but the amplitudes remain unknown until the second relation
+is satisfied. The second fixes the required speed relationships, but
+in the upper-stop example their common value still depends on the
+incoming momentum in the first.
+
+% F9
+These two relations contain the complete event mechanics, but they are not
+yet written directly in the unknowns. Substituting the momentum difference from
+\Cref{eq:finite_event_body_momentum_change} and placing the known
+incoming term on the right collects both sets of unknowns:
+\begin{equation}
+    \begin{bmatrix}
+        J_+^{\mathsf T}WJ_+&-C_+^{\mathsf T}\\
+        C_+&0
+    \end{bmatrix}
+    \begin{bmatrix}\boldsymbol\nu^+\\\boldsymbol\Gamma\end{bmatrix}
+    =
+    \begin{bmatrix}J_+^{\mathsf T}WJ_-\boldsymbol\nu^-\\0\end{bmatrix}.
+    \label{eq:finite_event_kkt_system}
+\end{equation}
+At this point the event can be solved in one step.  For a known incoming
+state and a selected outgoing regime, every block in
+\Cref{eq:finite_event_kkt_system} is known; solving the system returns the
+outgoing velocities \(\boldsymbol{\nu}^+\) and the constraint impulses
+\(\boldsymbol{\Gamma}\) together.
+
+The block matrix has the standard saddle-point, or KKT, structure of a
+constrained mechanical system \citep{BenziGolubLiesen2005}.  Here the
+constraint multipliers are impulses rather than continuous reaction forces,
+because the balance is taken across an instantaneous transition
+\citep{Stewart2000RigidImpact}.  The block
+\(J_+^{\mathsf T}WJ_+\) is the generalized inertia seen in the outgoing
+velocity directions, \(C_+^{\mathsf T}\) places the unknown constraint
+impulses into those directions, and \(C_+\) imposes the required outgoing
+velocity relations.  The right-hand side carries the known incoming momentum
+into the same directions.
+
+% F10
+
+For the upper primary stop, the same system now resolves the secondary-speed
+question posed at the outset.  Take \(J_-=J_+=J_{\mathrm{eng}}\) and first
+consider the case in which the belt supplies no angular impulse to the
+secondary.  The shaft-side and movable-side secondary rotations contribute
+the following \((\omega_s,\dot s)\) block to the generalized inertia matrix:
+
+\begin{equation}
+    \left[
+        J_{\mathrm{eng}}^{\mathsf T}
+        W
+        J_{\mathrm{eng}}
+    \right]_{\omega_s,\dot s}^{\mathrm{secondary\ rotation}}
+    =
+    \begin{bmatrix}
+        I_{\mathrm B,s}+I_{s,F}+I_{s,M}
+        &
+        I_{s,M}\dfrac{d\theta_s}{ds}
+        \\[6pt]
+        I_{s,M}\dfrac{d\theta_s}{ds}
+        &
+        I_{s,M}
+        \left(\dfrac{d\theta_s}{ds}\right)^2
+    \end{bmatrix}.
+    \label{eq:finite_event-secondary-helix-inertia-block}
+\end{equation}
+
+The rows identify the retained direction in which the generalized momentum
+acts, while the columns identify the retained velocity that causes it.  The
+upper-left entry is therefore caused by \(\omega_s\) and acts in the
+\(\omega_s\) direction: both secondary assemblies rotate with the shaft.
+The upper-right entry is caused by \(\dot s\) but also acts in the
+\(\omega_s\) direction, because shift rotates the movable assembly through
+the helix.  The lower-left entry is the reciprocal coupling, in which shaft
+rotation contributes to the shift-direction momentum.  The lower-right entry
+is caused by \(\dot s\) and acts in the shift direction, giving the movable
+secondary's rotational inertia reflected through the helix into shift.
+
+At the upper stop, the constraint row in
+\Cref{eq:finite_event_kkt_system} imposes \(\dot s^+=0\).  The outgoing
+terms multiplied by \(\dot s^+\) therefore vanish, while the incoming
+shift-induced rotation remains in the known right-hand side.  With no
+secondary belt impulse, the \(\omega_s\) row of the same system becomes
+
+\begin{equation}
+    \left(
+        I_{\mathrm B,s}+I_{s,F}+I_{s,M}
+    \right)\omega_s^+
+    =
+    \left(
+        I_{\mathrm B,s}+I_{s,F}+I_{s,M}
+    \right)\omega_s^-
+    +
+    I_{s,M}\frac{d\theta_s}{ds}\dot s^- .
+    \label{eq:finite-event-upper-stop-secondary-row}
+\end{equation}
+
+The final term on the right is the angular momentum carried into the event
+by the movable secondary's helix-relative rotation.  Using
 
 \begin{equation}
     \omega_{s,M}^-
     =
     \omega_s^-
     +
-    \frac{d\theta_s}{ds}\dot s^-,
-    \qquad
-    \omega_{s,M}^+ = \omega_s^+.
-    \label{eq:finite_event_secondary_movable_before_after}
+    \frac{d\theta_s}{ds}\dot s^- ,
+    \label{eq:finite-event-secondary-movable-incoming-speed}
 \end{equation}
 
-The two sides of \Cref{eq:finite_event_secondary_movable_before_after} are not
-being set equal. They identify the physical rotation available to the movable
-sheave on each side of the event; the unknown value $\omega_s^+$ is still to
-be determined. The helix-relative part cannot survive because $\dot s^+=0$,
-but rotation with the secondary shaft can. If the helix-relative contribution
-is positive, the movable sheave therefore arrives with more angular momentum
-than it would carry at $\omega_s^-$ alone. Because the sheave can still rotate
-through $\omega_s^+$, that additional angular momentum tends to increase the
-outgoing secondary speed; a negative contribution tends to decrease it. The
-exact change depends on the remaining coupled inertia and any other impulsive
-restrictions active at the same event.
+the same row gives
 
-Tangential sticking is another restriction of this same kind, but it need not
-involve $\dot s$. If a pulley interface is already sticking and that lock is
-retained through the zero-duration event, its outgoing belt and pulley contact
-velocities must remain equal. The two motions are therefore not free to emerge
-with independent speeds, and the contact may exchange a tangential impulse to
-maintain the lock. A metal stop and one or both retained sticking conditions
-may act during the same event. Sliding interfaces and newly formed contacts
-are not automatically constrained to stick.
+\begin{equation}
+    \omega_s^+
+    =
+    \frac{
+        (I_{\mathrm B,s}+I_{s,F})\omega_s^-
+        +
+        I_{s,M}\omega_{s,M}^-
+    }{
+        I_{\mathrm B,s}+I_{s,F}+I_{s,M}
+    }.
+    \label{eq:finite-event-upper-stop-common-speed}
+\end{equation}
 
-A finite-speed regime change can therefore alter the admissible motion in two
-distinct ways. It can change how the state velocities move the physical
-hardware, as between engaged operation and the deadzone, and it can restrict
-motions whose physical meaning is otherwise unchanged, as at a metal stop or
-a retained sticking contact. Either effect changes where the momentum carried
-into the boundary is able to go. Physical motions with an allowed outgoing
-route can contribute their momentum to the surviving motion; when every such
-route is removed, the required momentum change must instead be supplied by the
-impulsive reactions that establish the outgoing regime.
+The common secondary speed introduced at the beginning of the boundary
+example has therefore emerged directly from
+\Cref{eq:finite_event_kkt_system}.  The incoming helix-relative motion is
+carried into the solve through the off-diagonal coupling, while the stop
+condition removes that relative motion from the outgoing state.  The
+pin--track impulse that transfers angular momentum between the shaft-side
+and movable-side assemblies is internal to the engaged connection; its
+equal-and-opposite actions cancel from the combined \(\omega_s\) balance
+rather than appearing as another component of
+\(\boldsymbol\Gamma\).
 
-Immediately before such an event, the incoming velocity state and the momentum
-carried by the moving hardware are known. Immediately after it, the velocity
-state is unknown but must obey the kinematics and restrictions of the outgoing
-regime. The impact calculation must determine that outgoing state while
-accounting for where each incoming physical motion can still exist and where
-an impulsive reaction is required to remove or couple it.
+\begin{remarkbox}[Remark (Energy consistency check)]
+
+The completed event solution also provides a useful consistency check.
+Because the physical velocities on both sides are already known from
+\(J_-\boldsymbol\nu^-\) and \(J_+\boldsymbol\nu^+\), the kinetic energy
+before and after the transition follows directly:
+
+\begin{equation}
+    T^-
+    =
+    \frac{1}{2}
+    (J_-\boldsymbol\nu^-)^{\mathsf T}
+    W
+    (J_-\boldsymbol\nu^-),
+    \qquad
+    T^+
+    =
+    \frac{1}{2}
+    (J_+\boldsymbol\nu^+)^{\mathsf T}
+    W
+    (J_+\boldsymbol\nu^+).
+    \label{eq:finite_event_kinetic_energies}
+\end{equation}
+
+For the perfectly inelastic event model, the solved transition should not
+increase the total kinetic energy.  This follows directly from the event
+balance.  Premultiplying the first relation in
+\Cref{eq:finite_event_generalized_impulse_momentum} by
+\((\boldsymbol\nu^+)^{\mathsf T}\) gives
+
+\[
+    (J_+\boldsymbol\nu^+)^{\mathsf T}\Delta\boldsymbol p
+    =
+    (C_+\boldsymbol\nu^+)^{\mathsf T}\boldsymbol\Gamma
+    =
+    0,
+\]
+
+because the outgoing solution satisfies
+\(C_+\boldsymbol\nu^+=0\).  Substituting the momentum change from
+\Cref{eq:finite_event_body_momentum_change} then gives
+
+\begin{equation}
+    T^- - T^+
+    =
+    \frac{1}{2}
+    (J_+\boldsymbol\nu^+-J_-\boldsymbol\nu^-)^{\mathsf T}
+    W
+    (J_+\boldsymbol\nu^+-J_-\boldsymbol\nu^-)
+    \geq 0.
+    \label{eq:finite_event_energy_loss}
+\end{equation}
+
+The right-hand side is a sum of one half of each retained mass or inertia
+times the square of its physical velocity change.  The result therefore
+provides a direct check that the event solution is dissipative even when
+the kinematic connection changes.  Individual bodies can still gain kinetic
+energy through the momentum exchange, as the movable secondary does at the
+upper stop; only the total must not increase.
+
+\end{remarkbox}
 
 \chapter{Results and Discussion}
 \label{chap:results}
