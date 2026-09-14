@@ -1,0 +1,49 @@
+"""Tool-domain models for the fixed-pivot primary design explorer.
+
+These are deliberately independent of FastAPI/Pydantic and of the frontend.
+All dimensions use SI units internally.
+"""
+
+from __future__ import annotations
+
+from dataclasses import dataclass
+from typing import Literal
+
+RampKind = Literal["progressive", "constant"]
+
+
+@dataclass(frozen=True, slots=True)
+class ArchitectureDesign:
+    pivot_axial_position_m: float
+    pivot_radius_m: float
+    arm_length_m: float
+    roller_radius_m: float
+    required_travel_m: float
+    number_of_flyweights: int
+    arm_mass_per_flyweight_kg: float
+    ramp_axial_direction: int = -1
+    roller_side_sign: int = 1
+
+
+@dataclass(frozen=True, slots=True)
+class RampDesign:
+    kind: RampKind
+    anchor_axial_from_pivot_m: float
+    anchor_radial_from_pivot_m: float
+    start_angle_deg: float
+    end_angle_deg: float
+    linear_length_m: float
+    blend_length_m: float
+    circular_length_m: float
+
+    @property
+    def total_length_m(self) -> float:
+        return self.linear_length_m + self.blend_length_m + self.circular_length_m
+
+
+@dataclass(frozen=True, slots=True)
+class OperatingCondition:
+    tip_mass_per_flyweight_kg: float
+    shaft_speed_rad_s: float
+    shift_speed_m_s: float = 0.0
+    shift_acceleration_m_s2: float = 0.0
