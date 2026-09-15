@@ -57,3 +57,26 @@ def test_primary_design_concrete_round_trip() -> None:
     loads = response.json()["loads"]
     assert len(loads["axis_values"]) == 61
     assert "flyweight_total_closing_force_N" in loads["fields"]
+
+
+def test_primary_design_architecture_workspace_round_trip() -> None:
+    client = _client()
+    defaults = client.get(
+        "/api/v1/engineering/fixed-pivot-primary/defaults"
+    ).json()
+    response = client.post(
+        "/api/v1/engineering/fixed-pivot-primary/architecture/analyze",
+        json={
+            "architecture": defaults["architecture"],
+            "ramp": defaults["ramp"],
+            "zones": [],
+            "reach_sample_count": 181,
+        },
+    )
+    assert response.status_code == 200
+    workspace = response.json()
+    assert workspace["validity"]["valid"] is True
+    assert len(workspace["reach"]["q_deg"]) == 181
+    assert workspace["reach"]["admissible_intervals_deg"] == [[0.0, 90.0]]
+    assert workspace["envelopes"]["flyweight_swept"]
+    assert workspace["ramp_surface"]["open"]["x_m"]

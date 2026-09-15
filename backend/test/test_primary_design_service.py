@@ -188,3 +188,80 @@ def test_exact_double_contact_event_preempts_later_sampled_branch_result(monkeyp
     assert abs(failure["shift_m"] - event.shift_m) < 1.0e-12
     assert failure["geometry"]["kind"] == "double_contact"
     assert {item["label"] for item in failure["geometry"]["contacts"]} == {"C1", "C2"}
+
+
+def test_architecture_workspace_reports_reach_and_packaging_restrictions() -> None:
+    from math import cos, pi, sin
+
+    from app.engineering.fixed_pivot_primary import PackagingZone
+
+    service = FixedPivotPrimaryDesignService()
+    architecture, ramp, _ = _design_from_defaults(service)
+
+    clear = service.analyze_architecture(
+        architecture=architecture,
+        ramp=ramp,
+        zones=(),
+        reach_sample_count=181,
+    )
+    assert clear["validity"]["valid"] is True
+    assert clear["summary"]["admissible_fraction"] == 1.0
+    assert clear["reach"]["admissible_intervals_deg"][0][0] == 0.0
+    assert abs(clear["reach"]["admissible_intervals_deg"][0][1] - 90.0) < 1.0e-7
+
+    q = pi / 4.0
+    cx = architecture.pivot_axial_position_m + architecture.arm_length_m * cos(q)
+    cr = architecture.pivot_radius_m + architecture.arm_length_m * sin(q)
+    half = 4.0e-3
+    keepout = PackagingZone(
+        id="roller-keepout",
+        label="Roller keep-out",
+        subject="flyweight",
+        rule="forbid",
+        polygon_m=(
+            (cx - half, cr - half),
+            (cx + half, cr - half),
+            (cx + half, cr + half),
+            (cx - half, cr + half),
+        ),
+    )
+    restricted = service.analyze_architecture(
+        architecture=architecture,
+        ramp=ramp,
+        zones=(keepout,),
+        reach_sample_count=181,
+    )
+    assert restricted["validity"]["valid"] is True
+    assert 0.0 < restricted["summary"]["admissible_fraction"] < 1.0
+    assert restricted["zone_diagnostics"][0]["status"] == "restricts"
+    assert len(restricted["reach"]["admissible_intervals_deg"]) >= 1
+
+
+def test_architecture_workspace_checks_current_ramp_against_ramp_zones() -> None:
+    from app.engineering.fixed_pivot_primary import PackagingZone
+
+    service = FixedPivotPrimaryDesignService()
+    architecture, ramp, _ = _design_from_defaults(service)
+    ax = architecture.pivot_axial_position_m + ramp.anchor_axial_from_pivot_m
+    ar = architecture.pivot_radius_m + ramp.anchor_radial_from_pivot_m
+    keepout = PackagingZone(
+        id="ramp-tip-keepout",
+        label="Ramp tip keep-out",
+        subject="ramp",
+        rule="forbid",
+        polygon_m=(
+            (ax - 2.0e-3, ar - 2.0e-3),
+            (ax + 2.0e-3, ar - 2.0e-3),
+            (ax + 2.0e-3, ar + 2.0e-3),
+            (ax - 2.0e-3, ar + 2.0e-3),
+        ),
+    )
+    result = service.analyze_architecture(
+        architecture=architecture,
+        ramp=ramp,
+        zones=(keepout,),
+        reach_sample_count=181,
+    )
+    assert result["validity"]["valid"] is True
+    assert result["validity"]["current_ramp_packaging_valid"] is False
+    assert result["zone_diagnostics"][0]["status"] == "violation"

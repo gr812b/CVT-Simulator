@@ -170,3 +170,201 @@
   .sidebar > :last-child { grid-column: auto; }
   .readoutGrid, .twoCol, .threeCol, .metrics { grid-template-columns: 1fr 1fr; }
 }
+
+.modeTabs {
+  max-width: 1540px;
+  margin: 0 auto 18px;
+  display: flex;
+  gap: 8px;
+}
+.modeTab, .modeTabActive {
+  border: 1px solid rgba(255,255,255,0.09);
+  border-radius: 10px;
+  padding: 9px 14px;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.modeTab { background: rgba(255,255,255,0.035); color: rgba(237,243,247,0.58); }
+.modeTabActive { background: #e9f1f5; color: #0d1319; }
+
+.helpText {
+  margin: 10px 0 0;
+  color: rgba(237,243,247,0.48);
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.architectureSceneWrap { display: grid; gap: 10px; }
+.architectureToolbar {
+  display: flex;
+  align-items: end;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.toolGroup { display: flex; gap: 6px; }
+.toolButton, .toolActive {
+  border-radius: 9px;
+  border: 1px solid rgba(255,255,255,0.10);
+  padding: 8px 10px;
+  font: inherit;
+  font-size: 11px;
+  cursor: pointer;
+}
+.toolButton { background: #0d1319; color: rgba(237,243,247,0.68); }
+.toolActive { background: rgba(233,241,245,0.94); color: #0d1319; font-weight: 700; }
+.toolButton:disabled { opacity: 0.35; cursor: default; }
+.toolbarSpacer { flex: 1; }
+.compactField {
+  display: grid;
+  gap: 4px;
+  span { color: rgba(237,243,247,0.46); font-size: 10px; }
+  select {
+    min-width: 110px;
+    border: 1px solid rgba(255,255,255,0.10);
+    border-radius: 8px;
+    padding: 7px 8px;
+    background: #0d1319;
+    color: inherit;
+  }
+}
+.engineeringCanvas, .crosshairCanvas {
+  width: 100%;
+  height: auto;
+  display: block;
+  touch-action: none;
+  user-select: none;
+}
+.crosshairCanvas { cursor: crosshair; }
+.engineeringGrid line { stroke: rgba(237,243,247,0.055); stroke-width: 1; }
+.sceneFooter {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  color: rgba(237,243,247,0.44);
+  font-size: 11px;
+  strong { color: rgba(237,243,247,0.68); font-weight: 600; }
+}
+
+.flyweightEnvelope {
+  fill: rgba(94, 174, 221, 0.12);
+  stroke: rgba(94, 174, 221, 0.34);
+  stroke-width: 1.5;
+}
+.rampEnvelope {
+  fill: rgba(210, 172, 94, 0.10);
+  stroke: rgba(210, 172, 94, 0.32);
+  stroke-width: 1.5;
+}
+.archRampOpen { fill: none; stroke: rgba(238, 215, 154, 0.9); stroke-width: 3; }
+.archRampFull { fill: none; stroke: rgba(238, 215, 154, 0.55); stroke-width: 2; stroke-dasharray: 8 6; }
+.reachBase { fill: none; stroke: rgba(237,243,247,0.34); stroke-width: 6; }
+.reachAdmissible { stroke: #76d7a2; stroke-width: 4; }
+.reachBlocked { stroke: rgba(255, 108, 108, 0.72); stroke-width: 3; stroke-dasharray: 3 3; }
+.q90Boundary { stroke: rgba(255, 209, 102, 0.82); stroke-width: 2.5; stroke-dasharray: 8 6; }
+.archArm { stroke: rgba(237,243,247,0.86); stroke-width: 5; stroke-linecap: round; }
+.dragPivot { fill: #edf3f7; stroke: #0d1319; stroke-width: 2.5; cursor: grab; }
+.dragHandle { fill: #77c8f2; stroke: #0d1319; stroke-width: 2.5; cursor: grab; }
+.pointA { fill: #f0c56f; stroke: #0d1319; stroke-width: 2; }
+.travelDimension { stroke: rgba(119, 200, 242, 0.75); stroke-width: 2; stroke-dasharray: 6 5; }
+.svgLabel { fill: rgba(237,243,247,0.62); font-size: 12px; pointer-events: none; }
+
+.zoneForbid, .zoneContainFlyweight, .zoneContainRamp {
+  stroke-width: 2;
+  cursor: pointer;
+}
+.zoneForbid { fill: rgba(232, 92, 92, 0.13); stroke: rgba(255, 117, 117, 0.74); }
+.zoneContainFlyweight { fill: rgba(93, 206, 147, 0.09); stroke: rgba(110, 224, 166, 0.66); }
+.zoneContainRamp { fill: rgba(223, 180, 91, 0.08); stroke: rgba(239, 199, 115, 0.66); }
+.zoneSelected { stroke-width: 4; filter: drop-shadow(0 0 5px rgba(255,255,255,0.25)); }
+.zoneDraft { fill: none; stroke: rgba(255,255,255,0.78); stroke-width: 2; stroke-dasharray: 6 4; }
+.zoneDraftPoint { fill: #edf3f7; stroke: #0d1319; stroke-width: 2; }
+
+.zoneList { display: grid; gap: 10px; }
+.zoneEditor, .zoneEditorSelected {
+  border-radius: 10px;
+  padding: 10px;
+  border: 1px solid rgba(255,255,255,0.07);
+  background: rgba(255,255,255,0.025);
+}
+.zoneEditorSelected { border-color: rgba(119,200,242,0.55); background: rgba(119,200,242,0.055); }
+.zoneSelectButton {
+  display: block;
+  width: 100%;
+  border: 0;
+  background: transparent;
+  color: rgba(237,243,247,0.62);
+  text-align: left;
+  font: inherit;
+  font-size: 11px;
+  cursor: pointer;
+  margin-bottom: 6px;
+}
+.inlineInput {
+  width: 100%;
+  color: inherit;
+  background: #0d1319;
+  border: 1px solid rgba(255,255,255,0.10);
+  border-radius: 8px;
+  padding: 8px 9px;
+  margin-bottom: 8px;
+}
+
+.archMetrics { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+.intervalRow {
+  margin-top: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  strong { font-size: 11px; color: rgba(237,243,247,0.52); }
+}
+.intervalChip {
+  border-radius: 999px;
+  padding: 5px 9px;
+  background: rgba(90,205,137,0.11);
+  color: #99e2b8;
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+.legendRow {
+  margin-top: 14px;
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+  color: rgba(237,243,247,0.48);
+  font-size: 10px;
+  span { display: inline-flex; align-items: center; gap: 5px; }
+  i { width: 18px; height: 4px; border-radius: 999px; display: inline-block; }
+}
+.legendReach { background: rgba(237,243,247,0.42); }
+.legendAdmissible { background: #76d7a2; }
+.legendBlocked { background: rgba(255,108,108,0.72); }
+.legendEnvelope { background: rgba(94,174,221,0.55); }
+.legendRamp { background: rgba(210,172,94,0.58); }
+
+.diagnosticList { display: grid; gap: 8px; }
+.diagnosticRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 10px 12px;
+  border: 1px solid rgba(255,255,255,0.055);
+  border-radius: 10px;
+  background: rgba(255,255,255,0.025);
+  > div { display: grid; gap: 2px; }
+  strong { font-size: 12px; }
+  div span { color: rgba(237,243,247,0.43); font-size: 10px; }
+}
+
+@media (max-width: 1100px) {
+  .archMetrics { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 700px) {
+  .architectureToolbar { align-items: stretch; }
+  .compactField { flex: 1; min-width: 120px; }
+  .archMetrics { grid-template-columns: 1fr 1fr; }
+}

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any, Literal
 
-from pydantic import Field, model_validator
+from pydantic import Field, field_validator, model_validator
 
 from .common import ApiModel
 
@@ -19,6 +19,26 @@ class FixedPivotArchitectureRequest(ApiModel):
     arm_mass_per_flyweight_kg: float = Field(ge=0.0)
     ramp_axial_direction: Literal[-1, 1] = -1
     roller_side_sign: Literal[-1, 1] = 1
+    max_tip_mass_per_flyweight_kg: float = Field(default=0.650, ge=0.0)
+
+
+class PackagingZoneRequest(ApiModel):
+    id: str = Field(min_length=1, max_length=80)
+    label: str = Field(min_length=1, max_length=120)
+    subject: Literal["flyweight", "ramp"]
+    rule: Literal["forbid", "contain"]
+    polygon_m: list[tuple[float, float]] = Field(min_length=3, max_length=128)
+    clearance_m: float = Field(default=0.0, ge=0.0)
+
+    @field_validator("polygon_m")
+    @classmethod
+    def _no_duplicate_closing_vertex(
+        cls,
+        points: list[tuple[float, float]],
+    ) -> list[tuple[float, float]]:
+        if len(points) > 3 and points[0] == points[-1]:
+            return points[:-1]
+        return points
 
 
 class FixedPivotRampRequest(ApiModel):
@@ -46,6 +66,13 @@ class FixedPivotRampRequest(ApiModel):
         return self
 
 
+class FixedPivotArchitectureAnalyzeRequest(ApiModel):
+    architecture: FixedPivotArchitectureRequest
+    ramp: FixedPivotRampRequest
+    zones: list[PackagingZoneRequest] = Field(default_factory=list, max_length=32)
+    reach_sample_count: int = Field(default=361, ge=91, le=1441)
+
+
 class FixedPivotConcreteAnalyzeRequest(ApiModel):
     architecture: FixedPivotArchitectureRequest
     ramp: FixedPivotRampRequest
@@ -63,8 +90,23 @@ class FixedPivotOperatingRequest(ApiModel):
 class FixedPivotDefaultsResponse(ApiModel):
     architecture: dict[str, Any]
     ramp: dict[str, Any]
+    packaging_zones: list[dict[str, Any]]
     operating: dict[str, float]
     ui_limits: dict[str, list[float]]
+
+
+class FixedPivotArchitectureAnalysisResponse(ApiModel):
+    architecture: dict[str, Any]
+    ramp: dict[str, Any]
+    zones: list[dict[str, Any]]
+    validity: dict[str, Any]
+    reach: dict[str, Any]
+    envelopes: dict[str, Any]
+    ramp_surface: dict[str, Any]
+    zone_diagnostics: list[dict[str, Any]]
+    manipulators: dict[str, float]
+    viewport: dict[str, float]
+    summary: dict[str, Any]
 
 
 class FixedPivotConcreteAnalysisResponse(ApiModel):

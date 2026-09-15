@@ -139,6 +139,31 @@ def build_ramp(design: RampDesign) -> PiecewiseRamp:
     return ramp
 
 
+def requested_ramp_surface(
+    architecture: ArchitectureDesign,
+    ramp_design: RampDesign,
+    *,
+    sample_count: int = 241,
+) -> tuple[tuple[float, ...], tuple[float, ...]]:
+    """Return the requested physical ramp surface at zero local shift.
+
+    This is the small public adapter used by the architecture/package layer so
+    that frontend/design code never has to reproduce CINDER profile placement.
+    """
+
+    _validate_architecture(architecture)
+    if sample_count < 2:
+        raise ValueError("sample_count must be at least 2.")
+    ramp = build_ramp(ramp_design)
+    spec = _geometry_spec(
+        architecture,
+        ramp_design,
+        ramp,
+        axial_position_max=architecture.required_travel_m,
+    )
+    return _sample_ramp_surface(spec, ramp, sample_count)
+
+
 def analyze_geometry(
     architecture: ArchitectureDesign,
     ramp_design: RampDesign,
@@ -954,6 +979,8 @@ def _validate_architecture(architecture: ArchitectureDesign) -> None:
         raise ValueError("number_of_flyweights must be positive.")
     if architecture.arm_mass_per_flyweight_kg < 0.0:
         raise ValueError("arm_mass_per_flyweight_kg must be non-negative.")
+    if architecture.max_tip_mass_per_flyweight_kg < 0.0:
+        raise ValueError("max_tip_mass_per_flyweight_kg must be non-negative.")
     if architecture.ramp_axial_direction not in (-1, 1):
         raise ValueError("ramp_axial_direction must be -1 or +1.")
     if architecture.roller_side_sign not in (-1, 1):

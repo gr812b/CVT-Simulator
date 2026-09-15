@@ -1,6 +1,8 @@
 import { ApiClientError } from './client';
 
 export type RampKind = 'progressive' | 'constant';
+export type PackagingZoneSubject = 'flyweight' | 'ramp';
+export type PackagingZoneRule = 'forbid' | 'contain';
 
 export interface FixedPivotArchitecture {
   pivot_axial_position_m: number;
@@ -12,6 +14,16 @@ export interface FixedPivotArchitecture {
   arm_mass_per_flyweight_kg: number;
   ramp_axial_direction: -1 | 1;
   roller_side_sign: -1 | 1;
+  max_tip_mass_per_flyweight_kg: number;
+}
+
+export interface PackagingZone {
+  id: string;
+  label: string;
+  subject: PackagingZoneSubject;
+  rule: PackagingZoneRule;
+  polygon_m: Array<[number, number]>;
+  clearance_m: number;
 }
 
 export interface FixedPivotRamp {
@@ -37,6 +49,7 @@ export interface PrimaryDesignOperating {
 export interface PrimaryDesignDefaults {
   architecture: FixedPivotArchitecture;
   ramp: FixedPivotRamp;
+  packaging_zones: PackagingZone[];
   operating: PrimaryDesignOperating;
   ui_limits: {
     tip_mass_per_flyweight_kg: [number, number];
@@ -110,6 +123,74 @@ export interface ConcreteDesignResponse {
   loads: SampledFieldSet;
 }
 
+export interface WorkspacePolygon {
+  x_m: number[];
+  r_m: number[];
+}
+
+export interface ArchitectureFinding {
+  severity: 'error' | 'warning' | 'info';
+  code: string;
+  message: string;
+}
+
+export interface PackagingZoneDiagnostic {
+  zone_id: string;
+  label: string;
+  subject: PackagingZoneSubject;
+  rule: PackagingZoneRule;
+  status: 'pass' | 'restricts' | 'blocks' | 'violation';
+  admissible_intervals_deg: Array<[number, number]>;
+}
+
+export interface ArchitectureAnalysis {
+  architecture: FixedPivotArchitecture;
+  ramp: FixedPivotRamp;
+  zones: PackagingZone[];
+  validity: {
+    valid: boolean;
+    current_ramp_packaging_valid: boolean;
+    findings: ArchitectureFinding[];
+  };
+  reach: {
+    q_deg: number[];
+    roller_center_x_m: number[];
+    roller_center_r_m: number[];
+    admissible: boolean[];
+    admissible_intervals_deg: Array<[number, number]>;
+  };
+  envelopes: {
+    flyweight_swept: WorkspacePolygon[];
+    ramp_swept: WorkspacePolygon[];
+  };
+  ramp_surface: {
+    open: { x_m: number[]; r_m: number[] };
+    full_shift: { x_m: number[]; r_m: number[] };
+  };
+  zone_diagnostics: PackagingZoneDiagnostic[];
+  manipulators: {
+    arm_endpoint_x_m: number;
+    arm_endpoint_r_m: number;
+    arm_direction_x: number;
+    arm_direction_r: number;
+    q90_endpoint_x_m: number;
+    q90_endpoint_r_m: number;
+  };
+  viewport: {
+    x_min_m: number;
+    x_max_m: number;
+    r_min_m: number;
+    r_max_m: number;
+  };
+  summary: {
+    admissible_fraction: number;
+    admissible_interval_count: number;
+    zone_count: number;
+    ramp_zone_count: number;
+    flyweight_zone_count: number;
+  };
+}
+
 const baseUrl = (import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8000').replace(/\/+$/, '');
 const PREFIX = '/api/v1/engineering/fixed-pivot-primary';
 
@@ -136,6 +217,23 @@ function extractMessage(payload: unknown): string | null {
 
 export function getPrimaryDesignDefaults(): Promise<PrimaryDesignDefaults> {
   return request<PrimaryDesignDefaults>('/defaults');
+}
+
+export function analyzePrimaryArchitecture(
+  architecture: FixedPivotArchitecture,
+  ramp: FixedPivotRamp,
+  zones: PackagingZone[],
+  reachSampleCount = 361,
+): Promise<ArchitectureAnalysis> {
+  return request<ArchitectureAnalysis>('/architecture/analyze', {
+    method: 'POST',
+    body: JSON.stringify({
+      architecture,
+      ramp,
+      zones,
+      reach_sample_count: reachSampleCount,
+    }),
+  });
 }
 
 export function analyzeConcretePrimaryDesign(

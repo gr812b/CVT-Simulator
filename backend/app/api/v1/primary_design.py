@@ -10,10 +10,13 @@ from app.core.errors import ApiProblem
 from app.engineering.fixed_pivot_primary import (
     ArchitectureDesign,
     OperatingCondition,
+    PackagingZone,
     PrimaryDesignError,
     RampDesign,
 )
 from app.schemas.primary_design import (
+    FixedPivotArchitectureAnalysisResponse,
+    FixedPivotArchitectureAnalyzeRequest,
     FixedPivotConcreteAnalysisResponse,
     FixedPivotConcreteAnalyzeRequest,
     FixedPivotDefaultsResponse,
@@ -32,6 +35,35 @@ def defaults(
     container: ApplicationContainer = Depends(get_container),
 ) -> FixedPivotDefaultsResponse:
     return FixedPivotDefaultsResponse(**container.primary_design.defaults())
+
+
+@router.post(
+    "/architecture/analyze",
+    response_model=FixedPivotArchitectureAnalysisResponse,
+)
+def analyze_architecture(
+    request: FixedPivotArchitectureAnalyzeRequest,
+    container: ApplicationContainer = Depends(get_container),
+) -> FixedPivotArchitectureAnalysisResponse:
+    architecture = ArchitectureDesign(**request.architecture.model_dump())
+    ramp = RampDesign(**request.ramp.model_dump())
+    zones = tuple(
+        PackagingZone(
+            **zone.model_dump(exclude={"polygon_m"}),
+            polygon_m=tuple(tuple(point) for point in zone.polygon_m),
+        )
+        for zone in request.zones
+    )
+    try:
+        result = container.primary_design.analyze_architecture(
+            architecture=architecture,
+            ramp=ramp,
+            zones=zones,
+            reach_sample_count=request.reach_sample_count,
+        )
+    except PrimaryDesignError as error:
+        raise ApiProblem(422, error.code.lower(), str(error), error.details) from error
+    return FixedPivotArchitectureAnalysisResponse(**result)
 
 
 @router.post("/concrete/analyze", response_model=FixedPivotConcreteAnalysisResponse)

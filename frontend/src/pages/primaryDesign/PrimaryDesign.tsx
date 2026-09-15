@@ -2,14 +2,18 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   analyzeConcretePrimaryDesign,
+  analyzePrimaryArchitecture,
   evaluateConcretePrimaryDesign,
   getPrimaryDesignDefaults,
+  type ArchitectureAnalysis,
   type ConcreteDesignAnalysis,
   type ConcreteDesignResponse,
   type FixedPivotArchitecture,
   type FixedPivotRamp,
+  type PackagingZone,
   type PrimaryDesignOperating,
 } from '@api/primaryDesign';
+import { ArchitectureScene } from './ArchitectureScene';
 import { ForceChart } from './ForceChart';
 import { MechanismScene } from './MechanismScene';
 import styles from './PrimaryDesign.module.scss';
@@ -18,6 +22,8 @@ const MM = 1000;
 const G = 1000;
 const RPM_PER_RAD_S = 60 / (2 * Math.PI);
 const RAD_S_PER_RPM = 2 * Math.PI / 60;
+
+type DesignMode = 'architecture' | 'concrete';
 
 function interpolateNullable(
   axis: number[],
@@ -50,18 +56,42 @@ function fmt(value: number | null, digits = 1): string {
 
 export const PrimaryDesign = () => {
   const navigate = useNavigate();
+  const [mode, setMode] = useState<DesignMode>('architecture');
   const [architecture, setArchitecture] = useState<FixedPivotArchitecture | null>(null);
   const [ramp, setRamp] = useState<FixedPivotRamp | null>(null);
+  const [zones, setZones] = useState<PackagingZone[]>([]);
   const [operating, setOperating] = useState<PrimaryDesignOperating | null>(null);
+  const [architectureAnalysis, setArchitectureAnalysis] = useState<ArchitectureAnalysis | null>(null);
   const [analysis, setAnalysis] = useState<ConcreteDesignAnalysis | null>(null);
   const [response, setResponse] = useState<ConcreteDesignResponse | null>(null);
+  const [selectedZoneId, setSelectedZoneId] = useState<string | null>(null);
   const [shiftM, setShiftM] = useState(0);
+  const [architectureDirty, setArchitectureDirty] = useState(false);
   const [geometryDirty, setGeometryDirty] = useState(false);
+  const [architectureLoading, setArchitectureLoading] = useState(false);
   const [geometryLoading, setGeometryLoading] = useState(false);
   const [responseLoading, setResponseLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const analyze = useCallback(async (
+  const analyzeArchitecture = useCallback(async (
+    nextArchitecture: FixedPivotArchitecture,
+    nextRamp: FixedPivotRamp,
+    nextZones: PackagingZone[],
+  ) => {
+    setArchitectureLoading(true);
+    setError(null);
+    try {
+      const next = await analyzePrimaryArchitecture(nextArchitecture, nextRamp, nextZones, 361);
+      setArchitectureAnalysis(next);
+      setArchitectureDirty(false);
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : 'Architecture analysis failed.');
+    } finally {
+      setArchitectureLoading(false);
+    }
+  }, []);
+
+  const analyzeConcrete = useCallback(async (
     nextArchitecture: FixedPivotArchitecture,
     nextRamp: FixedPivotRamp,
     nextOperating: PrimaryDesignOperating,
@@ -75,10 +105,7 @@ export const PrimaryDesign = () => {
       setGeometryDirty(false);
       setShiftM((value) => Math.min(value, nextArchitecture.required_travel_m));
       setResponseLoading(true);
-      const nextResponse = await evaluateConcretePrimaryDesign(
-        nextAnalysis.analysis_id,
-        nextOperating,
-      );
+      const nextResponse = await evaluateConcretePrimaryDesign(nextAnalysis.analysis_id, nextOperating);
       setResponse(nextResponse);
     } catch (caught) {
       setAnalysis(null);
@@ -97,14 +124,18 @@ export const PrimaryDesign = () => {
         if (!active) return;
         setArchitecture(defaults.architecture);
         setRamp(defaults.ramp);
+        setZones(defaults.packaging_zones);
         setOperating(defaults.operating);
-        await analyze(defaults.architecture, defaults.ramp, defaults.operating);
+        await Promise.all([
+          analyzeArchitecture(defaults.architecture, defaults.ramp, defaults.packaging_zones),
+          analyzeConcrete(defaults.architecture, defaults.ramp, defaults.operating),
+        ]);
       })
       .catch((caught: unknown) => {
         if (active) setError(caught instanceof Error ? caught.message : 'Could not load primary design defaults.');
       });
     return () => { active = false; };
-  }, [analyze]);
+  }, [analyzeArchitecture, analyzeConcrete]);
 
   useEffect(() => {
     if (!analysis || !operating || geometryDirty) return undefined;
@@ -137,9 +168,22 @@ export const PrimaryDesign = () => {
     return <div className={styles.page}><div className={styles.loading}>Loading primary design tool…</div></div>;
   }
 
+  const updateArchitecture = (patch: Partial<FixedPivotArchitecture>) => {
+    setArchitecture((value) => value ? { ...value, ...patch } : value);
+    setArchitectureDirty(true);
+    setGeometryDirty(true);
+  };
   const updateRamp = (patch: Partial<FixedPivotRamp>) => {
     setRamp((value) => value ? { ...value, ...patch } : value);
+    setArchitectureDirty(true);
     setGeometryDirty(true);
+  };
+  const updateZones = (nextZones: PackagingZone[]) => {
+    setZones(nextZones);
+    setArchitectureDirty(true);
+  };
+  const updateZone = (zoneId: string, patch: Partial<PackagingZone>) => {
+    updateZones(zones.map((zone) => zone.id === zoneId ? { ...zone, ...patch } : zone));
   };
   const updateOperating = (patch: Partial<PrimaryDesignOperating>) => {
     setOperating((value) => value ? { ...value, ...patch } : value);
@@ -154,199 +198,353 @@ export const PrimaryDesign = () => {
         <div>
           <button type="button" className={styles.back} onClick={() => navigate('/')}>← Simulator</button>
           <h1>Fixed-Pivot Primary Design</h1>
-          <p>Concrete ramp geometry, exact roller contact, flyweight force, and structural load inspection.</p>
+          <p>Architecture packaging, exact roller contact, flyweight force, and structural-load inspection.</p>
         </div>
-        <div className={styles.phaseBadge}>Concrete design · Phase 1.2</div>
+        <div className={styles.phaseBadge}>Architecture + packaging · Phase 2</div>
       </header>
+
+      <div className={styles.modeTabs}>
+        <button type="button" className={mode === 'architecture' ? styles.modeTabActive : styles.modeTab} onClick={() => setMode('architecture')}>
+          Architecture
+        </button>
+        <button type="button" className={mode === 'concrete' ? styles.modeTabActive : styles.modeTab} onClick={() => setMode('concrete')}>
+          Concrete design
+        </button>
+      </div>
 
       {error && <div className={styles.error}>{error}</div>}
 
-      <main className={styles.layout}>
-        <aside className={styles.sidebar}>
-          <section className={styles.card}>
-            <div className={styles.cardTitleRow}>
-              <h2>Architecture</h2>
-              <span className={styles.locked}>fixed for Phase 1</span>
-            </div>
-            <div className={styles.readoutGrid}>
-              <Readout label="Pivot radius" value={`${(architecture.pivot_radius_m * MM).toFixed(2)} mm`} />
-              <Readout label="Arm length" value={`${(architecture.arm_length_m * MM).toFixed(2)} mm`} />
-              <Readout label="Roller radius" value={`${(architecture.roller_radius_m * MM).toFixed(2)} mm`} />
-              <Readout label="Required travel" value={`${(architecture.required_travel_m * MM).toFixed(2)} mm`} />
-              <Readout label="Flyweights" value={String(architecture.number_of_flyweights)} />
-              <Readout label="Arm mass / flyweight" value={`${(architecture.arm_mass_per_flyweight_kg * G).toFixed(3)} g`} />
-            </div>
-          </section>
-
-          <section className={styles.card}>
-            <div className={styles.cardTitleRow}>
-              <h2>Ramp geometry</h2>
-              {geometryDirty && <span className={styles.dirty}>reanalyze</span>}
-            </div>
-            <label className={styles.field}>
-              <span>Profile</span>
-              <select value={ramp.kind} onChange={(event) => updateRamp({ kind: event.target.value as FixedPivotRamp['kind'] })}>
-                <option value="progressive">Linear + C³ blend + circular</option>
-                <option value="constant">Constant tangent</option>
-              </select>
-            </label>
-            <NumberField
-              label={ramp.kind === 'constant' ? 'Tangent' : 'Linear tangent'}
-              suffix="°"
-              value={ramp.linear_angle_deg}
-              min={1}
-              max={89}
-              step={0.5}
-              onChange={(value) => updateRamp({ linear_angle_deg: value })}
-            />
-            {ramp.kind === 'progressive' && (
-              <div className={styles.twoCol}>
-                <NumberField
-                  label="Circular start tangent"
-                  suffix="°"
-                  value={ramp.circular_start_angle_deg}
-                  min={1}
-                  max={89}
-                  step={0.5}
-                  onChange={(value) => updateRamp({ circular_start_angle_deg: value })}
-                />
-                <NumberField
-                  label="Circular end tangent"
-                  suffix="°"
-                  value={ramp.circular_end_angle_deg}
-                  min={1}
-                  max={89}
-                  step={0.5}
-                  onChange={(value) => updateRamp({ circular_end_angle_deg: value })}
-                />
-              </div>
-            )}
-            <div className={styles.twoCol}>
-              <NumberField label="Ramp A axial" suffix="mm" value={ramp.anchor_axial_from_pivot_m * MM} step={0.5} onChange={(value) => updateRamp({ anchor_axial_from_pivot_m: value / MM })} />
-              <NumberField label="Ramp A radial" suffix="mm" value={ramp.anchor_radial_from_pivot_m * MM} step={0.5} onChange={(value) => updateRamp({ anchor_radial_from_pivot_m: value / MM })} />
-            </div>
-            {ramp.kind === 'progressive' ? (
-              <div className={styles.threeCol}>
-                <NumberField label="Linear" suffix="mm" value={ramp.linear_length_m * MM} min={0.5} step={0.5} onChange={(value) => updateRamp({ linear_length_m: value / MM })} />
-                <NumberField label="C³ blend" suffix="mm" value={ramp.blend_length_m * MM} min={0.5} step={0.5} onChange={(value) => updateRamp({ blend_length_m: value / MM })} />
-                <NumberField label="Circular" suffix="mm" value={ramp.circular_length_m * MM} min={0.5} step={0.5} onChange={(value) => updateRamp({ circular_length_m: value / MM })} />
-              </div>
-            ) : (
-              <NumberField
-                label="Ramp length"
-                suffix="mm"
-                value={ramp.constant_length_m * MM}
-                min={0.5}
-                step={0.5}
-                onChange={(value) => updateRamp({ constant_length_m: value / MM })}
-              />
-            )}
-            <button
-              type="button"
-              className={styles.primaryButton}
-              disabled={geometryLoading}
-              onClick={() => void analyze(architecture, ramp, operating)}
-            >
-              {geometryLoading ? 'Analyzing geometry…' : 'Analyze ramp'}
-            </button>
-          </section>
-
-          <section className={styles.card}>
-            <h2>Operating condition</h2>
-            <SliderField
-              label="Tip mass / flyweight"
-              suffix="g"
-              value={operating.tip_mass_per_flyweight_kg * G}
-              min={0}
-              max={650}
-              step={1}
-              onChange={(value) => updateOperating({ tip_mass_per_flyweight_kg: value / G })}
-            />
-            <SliderField
-              label="Primary speed"
-              suffix="rpm"
-              value={operating.shaft_speed_rad_s * RPM_PER_RAD_S}
-              min={0}
-              max={6000}
-              step={25}
-              onChange={(value) => updateOperating({ shaft_speed_rad_s: value * RAD_S_PER_RPM })}
-            />
-            <NumberField
-              label="Shift speed"
-              suffix="mm/s"
-              value={operating.shift_speed_m_s * MM}
-              step={1}
-              onChange={(value) => updateOperating({ shift_speed_m_s: value / MM })}
-            />
-            <NumberField
-              label="Shift acceleration"
-              suffix="m/s²"
-              value={operating.shift_acceleration_m_s2}
-              step={0.1}
-              onChange={(value) => updateOperating({ shift_acceleration_m_s2: value })}
-            />
-            {responseLoading && <div className={styles.muted}>updating loads…</div>}
-          </section>
-        </aside>
-
-        <div className={styles.workspace}>
-          <section className={styles.card}>
-            {analysis ? (
-              <MechanismScene analysis={analysis} shiftM={shiftM} />
-            ) : (
-              <div className={styles.loading}>Analyze a ramp to build the mechanism.</div>
-            )}
-          </section>
-
-          <section className={styles.card}>
-            <div className={styles.shiftHeader}>
-              <div>
-                <h2>Shift position</h2>
-                <span>{(shiftM * MM).toFixed(2)} / {(architecture.required_travel_m * MM).toFixed(2)} mm requested</span>
-              </div>
-              {analysis && (!contactActive
-                ? <span className={styles.invalid}>No contact at selected shift</span>
-                : current?.q !== null && current?.q !== undefined && current.q > 90
-                  ? <span className={styles.invalid}>q &gt; 90° at selected shift</span>
-                  : <ValidityBadge analysis={analysis} />)}
-            </div>
-            <input
-              className={styles.shiftSlider}
-              type="range"
-              min={0}
-              max={Math.max(0.001, architecture.required_travel_m * MM)}
-              step={0.05}
-              value={Math.min(shiftM, architecture.required_travel_m) * MM}
-              onChange={(event) => setShiftM(Number(event.target.value) / MM)}
-            />
-            <div className={styles.metrics}>
-              <Metric label="Arm angle q" value={`${fmt(current?.q ?? null, 2)}°`} />
-              <Metric label="Ramp tangent" value={`${fmt(current?.tangent ?? null, 2)}°`} />
-              <Metric label="Flyweight closing" value={`${fmt(current?.closing ?? null)} N`} />
-              <Metric label="Ramp normal / ramp" value={`${fmt(current?.normal ?? null)} N`} />
-              <Metric label="Pivot resultant / flyweight" value={`${fmt(current?.pivot ?? null)} N`} />
-            </div>
-          </section>
-
-          <section className={styles.card}>
-            <div className={styles.chartHeader}>
-              <div>
-                <h2>Loads through shift</h2>
-                <span>Geometry is solved on the backend; moving the shift cursor is local and instantaneous.</span>
-              </div>
-            </div>
-            <ForceChart
-              response={response}
-              shiftM={shiftM}
-              requestedTravelM={architecture.required_travel_m}
-              contactValidTravelM={analysis?.contact_valid_travel_m ?? null}
-            />
-          </section>
-        </div>
-      </main>
+      {mode === 'architecture' ? (
+        <ArchitectureMode
+          architecture={architecture}
+          ramp={ramp}
+          zones={zones}
+          analysis={architectureAnalysis}
+          dirty={architectureDirty}
+          loading={architectureLoading}
+          selectedZoneId={selectedZoneId}
+          onArchitectureChange={updateArchitecture}
+          onZonesChange={updateZones}
+          onZoneChange={updateZone}
+          onSelectedZoneChange={setSelectedZoneId}
+          onAnalyze={() => void analyzeArchitecture(architecture, ramp, zones)}
+        />
+      ) : (
+        <ConcreteMode
+          architecture={architecture}
+          ramp={ramp}
+          operating={operating}
+          analysis={analysis}
+          response={response}
+          shiftM={shiftM}
+          geometryDirty={geometryDirty}
+          geometryLoading={geometryLoading}
+          responseLoading={responseLoading}
+          contactActive={contactActive}
+          current={current}
+          onRampChange={updateRamp}
+          onOperatingChange={updateOperating}
+          onShiftChange={setShiftM}
+          onAnalyze={() => void analyzeConcrete(architecture, ramp, operating)}
+        />
+      )}
     </div>
   );
 };
+
+function ArchitectureMode({
+  architecture,
+  ramp,
+  zones,
+  analysis,
+  dirty,
+  loading,
+  selectedZoneId,
+  onArchitectureChange,
+  onZonesChange,
+  onZoneChange,
+  onSelectedZoneChange,
+  onAnalyze,
+}: {
+  architecture: FixedPivotArchitecture;
+  ramp: FixedPivotRamp;
+  zones: PackagingZone[];
+  analysis: ArchitectureAnalysis | null;
+  dirty: boolean;
+  loading: boolean;
+  selectedZoneId: string | null;
+  onArchitectureChange: (patch: Partial<FixedPivotArchitecture>) => void;
+  onZonesChange: (zones: PackagingZone[]) => void;
+  onZoneChange: (zoneId: string, patch: Partial<PackagingZone>) => void;
+  onSelectedZoneChange: (zoneId: string | null) => void;
+  onAnalyze: () => void;
+}) {
+  return (
+    <main className={styles.layout}>
+      <aside className={styles.sidebar}>
+        <section className={styles.card}>
+          <div className={styles.cardTitleRow}>
+            <h2>Architecture</h2>
+            {dirty && <span className={styles.dirty}>reanalyze</span>}
+          </div>
+          <div className={styles.twoCol}>
+            <NumberField label="Pivot axial" suffix="mm" value={architecture.pivot_axial_position_m * MM} step={0.5} onChange={(value) => onArchitectureChange({ pivot_axial_position_m: value / MM })} />
+            <NumberField label="Pivot radius" suffix="mm" value={architecture.pivot_radius_m * MM} min={0.5} step={0.5} onChange={(value) => onArchitectureChange({ pivot_radius_m: value / MM })} />
+          </div>
+          <div className={styles.twoCol}>
+            <NumberField label="Arm length" suffix="mm" value={architecture.arm_length_m * MM} min={2} step={0.5} onChange={(value) => onArchitectureChange({ arm_length_m: value / MM })} />
+            <NumberField label="Roller radius" suffix="mm" value={architecture.roller_radius_m * MM} min={0.5} step={0.25} onChange={(value) => onArchitectureChange({ roller_radius_m: value / MM })} />
+          </div>
+          <div className={styles.twoCol}>
+            <NumberField label="Required travel" suffix="mm" value={architecture.required_travel_m * MM} min={0.5} step={0.5} onChange={(value) => onArchitectureChange({ required_travel_m: value / MM })} />
+            <NumberField label="Max tip mass" suffix="g" value={architecture.max_tip_mass_per_flyweight_kg * G} min={0} step={5} onChange={(value) => onArchitectureChange({ max_tip_mass_per_flyweight_kg: value / G })} />
+          </div>
+          <div className={styles.twoCol}>
+            <NumberField label="Flyweights" suffix="#" value={architecture.number_of_flyweights} min={1} step={1} onChange={(value) => onArchitectureChange({ number_of_flyweights: Math.max(1, Math.round(value)) })} />
+            <NumberField label="Arm mass / flyweight" suffix="g" value={architecture.arm_mass_per_flyweight_kg * G} min={0} step={0.25} onChange={(value) => onArchitectureChange({ arm_mass_per_flyweight_kg: value / G })} />
+          </div>
+          <button type="button" className={styles.primaryButton} disabled={loading} onClick={onAnalyze}>
+            {loading ? 'Analyzing architecture…' : 'Analyze architecture'}
+          </button>
+          <p className={styles.helpText}>Dragging the mechanism updates the draft only. Reach, envelopes, and packaging admissibility remain backend-owned and refresh when you analyze.</p>
+        </section>
+
+        <section className={styles.card}>
+          <div className={styles.cardTitleRow}>
+            <h2>Packaging zones</h2>
+            <span>{zones.length}</span>
+          </div>
+          {zones.length === 0 && <p className={styles.helpText}>Draw allowed regions or keep-outs directly in the engineering view. Coordinates are stored in the same axial–radial frame as the mechanism.</p>}
+          <div className={styles.zoneList}>
+            {zones.map((zone) => (
+              <div key={zone.id} className={zone.id === selectedZoneId ? styles.zoneEditorSelected : styles.zoneEditor}>
+                <button type="button" className={styles.zoneSelectButton} onClick={() => onSelectedZoneChange(zone.id)}>{zone.label}</button>
+                <input className={styles.inlineInput} value={zone.label} onChange={(event) => onZoneChange(zone.id, { label: event.target.value })} />
+                <div className={styles.twoCol}>
+                  <label className={styles.field}>
+                    <span>Subject</span>
+                    <select value={zone.subject} onChange={(event) => onZoneChange(zone.id, { subject: event.target.value as PackagingZone['subject'] })}>
+                      <option value="flyweight">Flyweight</option>
+                      <option value="ramp">Ramp</option>
+                    </select>
+                  </label>
+                  <label className={styles.field}>
+                    <span>Rule</span>
+                    <select value={zone.rule} onChange={(event) => onZoneChange(zone.id, { rule: event.target.value as PackagingZone['rule'] })}>
+                      <option value="forbid">Keep-out</option>
+                      <option value="contain">Must stay inside</option>
+                    </select>
+                  </label>
+                </div>
+                <NumberField label="Clearance" suffix="mm" value={zone.clearance_m * MM} min={0} step={0.25} onChange={(value) => onZoneChange(zone.id, { clearance_m: value / MM })} />
+              </div>
+            ))}
+          </div>
+        </section>
+
+        <section className={styles.card}>
+          <h2>Current ramp overlay</h2>
+          <div className={styles.readoutGrid}>
+            <Readout label="Profile" value={ramp.kind === 'progressive' ? 'linear + C³ + circular' : 'constant'} />
+            <Readout label="Point A axial" value={`${(ramp.anchor_axial_from_pivot_m * MM).toFixed(1)} mm`} />
+            <Readout label="Point A radial" value={`${(ramp.anchor_radial_from_pivot_m * MM).toFixed(1)} mm`} />
+          </div>
+          <p className={styles.helpText}>Edit the physical ramp in Concrete design. Here it is only an overlay for packaging checks.</p>
+        </section>
+      </aside>
+
+      <div className={styles.workspace}>
+        <section className={styles.card}>
+          <ArchitectureScene
+            architecture={architecture}
+            analysis={analysis}
+            zones={zones}
+            stale={dirty}
+            selectedZoneId={selectedZoneId}
+            onArchitectureChange={onArchitectureChange}
+            onZonesChange={onZonesChange}
+            onSelectedZoneChange={onSelectedZoneChange}
+          />
+        </section>
+
+        <section className={styles.card}>
+          <div className={styles.cardTitleRow}>
+            <h2>Architecture admissibility</h2>
+            {analysis && <ArchitectureBadge analysis={analysis} stale={dirty} />}
+          </div>
+          {analysis ? (
+            <>
+              <div className={styles.archMetrics}>
+                <Metric label="Reach admitted" value={`${(analysis.summary.admissible_fraction * 100).toFixed(1)} %`} />
+                <Metric label="Admissible q intervals" value={String(analysis.summary.admissible_interval_count)} />
+                <Metric label="Flyweight zones" value={String(analysis.summary.flyweight_zone_count)} />
+                <Metric label="Ramp zones" value={String(analysis.summary.ramp_zone_count)} />
+              </div>
+              <div className={styles.intervalRow}>
+                <strong>Admissible q</strong>
+                {analysis.reach.admissible_intervals_deg.length === 0
+                  ? <span className={styles.invalid}>none</span>
+                  : analysis.reach.admissible_intervals_deg.map(([start, end], index) => (
+                    <span key={`${start}-${end}-${index}`} className={styles.intervalChip}>{start.toFixed(2)}° → {end.toFixed(2)}°</span>
+                  ))}
+              </div>
+              <div className={styles.legendRow}>
+                <span><i className={styles.legendReach} />pure roller-centre reach</span>
+                <span><i className={styles.legendAdmissible} />zone-admissible reach</span>
+                <span><i className={styles.legendBlocked} />blocked by zones</span>
+                <span><i className={styles.legendEnvelope} />swept flyweight envelope</span>
+                <span><i className={styles.legendRamp} />current ramp sweep</span>
+              </div>
+            </>
+          ) : <div className={styles.loading}>Analyze the architecture to build its reach and packaging workspace.</div>}
+        </section>
+
+        {analysis && analysis.zone_diagnostics.length > 0 && (
+          <section className={styles.card}>
+            <h2>Zone diagnostics</h2>
+            <div className={styles.diagnosticList}>
+              {analysis.zone_diagnostics.map((diagnostic) => (
+                <div key={diagnostic.zone_id} className={styles.diagnosticRow}>
+                  <div><strong>{diagnostic.label}</strong><span>{diagnostic.subject} · {diagnostic.rule}</span></div>
+                  <span className={diagnostic.status === 'pass' ? styles.valid : diagnostic.status === 'restricts' ? styles.dirty : styles.invalid}>{diagnostic.status}</span>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
+      </div>
+    </main>
+  );
+}
+
+function ConcreteMode({
+  architecture,
+  ramp,
+  operating,
+  analysis,
+  response,
+  shiftM,
+  geometryDirty,
+  geometryLoading,
+  responseLoading,
+  contactActive,
+  current,
+  onRampChange,
+  onOperatingChange,
+  onShiftChange,
+  onAnalyze,
+}: {
+  architecture: FixedPivotArchitecture;
+  ramp: FixedPivotRamp;
+  operating: PrimaryDesignOperating;
+  analysis: ConcreteDesignAnalysis | null;
+  response: ConcreteDesignResponse | null;
+  shiftM: number;
+  geometryDirty: boolean;
+  geometryLoading: boolean;
+  responseLoading: boolean;
+  contactActive: boolean;
+  current: { q: number | null; tangent: number | null; closing: number | null; normal: number | null; pivot: number | null } | null;
+  onRampChange: (patch: Partial<FixedPivotRamp>) => void;
+  onOperatingChange: (patch: Partial<PrimaryDesignOperating>) => void;
+  onShiftChange: (value: number) => void;
+  onAnalyze: () => void;
+}) {
+  return (
+    <main className={styles.layout}>
+      <aside className={styles.sidebar}>
+        <section className={styles.card}>
+          <div className={styles.cardTitleRow}>
+            <h2>Architecture</h2>
+            {geometryDirty && <span className={styles.dirty}>changed</span>}
+          </div>
+          <div className={styles.readoutGrid}>
+            <Readout label="Pivot radius" value={`${(architecture.pivot_radius_m * MM).toFixed(2)} mm`} />
+            <Readout label="Arm length" value={`${(architecture.arm_length_m * MM).toFixed(2)} mm`} />
+            <Readout label="Roller radius" value={`${(architecture.roller_radius_m * MM).toFixed(2)} mm`} />
+            <Readout label="Required travel" value={`${(architecture.required_travel_m * MM).toFixed(2)} mm`} />
+            <Readout label="Flyweights" value={String(architecture.number_of_flyweights)} />
+            <Readout label="Arm mass / flyweight" value={`${(architecture.arm_mass_per_flyweight_kg * G).toFixed(3)} g`} />
+          </div>
+        </section>
+
+        <section className={styles.card}>
+          <div className={styles.cardTitleRow}>
+            <h2>Ramp geometry</h2>
+            {geometryDirty && <span className={styles.dirty}>reanalyze</span>}
+          </div>
+          <label className={styles.field}>
+            <span>Profile</span>
+            <select value={ramp.kind} onChange={(event) => onRampChange({ kind: event.target.value as FixedPivotRamp['kind'] })}>
+              <option value="progressive">Linear + C³ blend + circular</option>
+              <option value="constant">Constant tangent</option>
+            </select>
+          </label>
+          <NumberField label={ramp.kind === 'constant' ? 'Tangent' : 'Linear tangent'} suffix="°" value={ramp.linear_angle_deg} min={1} max={89} step={0.5} onChange={(value) => onRampChange({ linear_angle_deg: value })} />
+          {ramp.kind === 'progressive' && (
+            <div className={styles.twoCol}>
+              <NumberField label="Circular start tangent" suffix="°" value={ramp.circular_start_angle_deg} min={1} max={89} step={0.5} onChange={(value) => onRampChange({ circular_start_angle_deg: value })} />
+              <NumberField label="Circular end tangent" suffix="°" value={ramp.circular_end_angle_deg} min={1} max={89} step={0.5} onChange={(value) => onRampChange({ circular_end_angle_deg: value })} />
+            </div>
+          )}
+          <div className={styles.twoCol}>
+            <NumberField label="Ramp A axial" suffix="mm" value={ramp.anchor_axial_from_pivot_m * MM} step={0.5} onChange={(value) => onRampChange({ anchor_axial_from_pivot_m: value / MM })} />
+            <NumberField label="Ramp A radial" suffix="mm" value={ramp.anchor_radial_from_pivot_m * MM} step={0.5} onChange={(value) => onRampChange({ anchor_radial_from_pivot_m: value / MM })} />
+          </div>
+          {ramp.kind === 'progressive' ? (
+            <div className={styles.threeCol}>
+              <NumberField label="Linear" suffix="mm" value={ramp.linear_length_m * MM} min={0.5} step={0.5} onChange={(value) => onRampChange({ linear_length_m: value / MM })} />
+              <NumberField label="C³ blend" suffix="mm" value={ramp.blend_length_m * MM} min={0.5} step={0.5} onChange={(value) => onRampChange({ blend_length_m: value / MM })} />
+              <NumberField label="Circular" suffix="mm" value={ramp.circular_length_m * MM} min={0.5} step={0.5} onChange={(value) => onRampChange({ circular_length_m: value / MM })} />
+            </div>
+          ) : (
+            <NumberField label="Ramp length" suffix="mm" value={ramp.constant_length_m * MM} min={0.5} step={0.5} onChange={(value) => onRampChange({ constant_length_m: value / MM })} />
+          )}
+          <button type="button" className={styles.primaryButton} disabled={geometryLoading} onClick={onAnalyze}>
+            {geometryLoading ? 'Analyzing geometry…' : 'Analyze ramp'}
+          </button>
+        </section>
+
+        <section className={styles.card}>
+          <h2>Operating condition</h2>
+          <SliderField label="Tip mass / flyweight" suffix="g" value={operating.tip_mass_per_flyweight_kg * G} min={0} max={Math.max(1, architecture.max_tip_mass_per_flyweight_kg * G)} step={1} onChange={(value) => onOperatingChange({ tip_mass_per_flyweight_kg: value / G })} />
+          <SliderField label="Primary speed" suffix="rpm" value={operating.shaft_speed_rad_s * RPM_PER_RAD_S} min={0} max={6000} step={25} onChange={(value) => onOperatingChange({ shaft_speed_rad_s: value * RAD_S_PER_RPM })} />
+          <NumberField label="Shift speed" suffix="mm/s" value={operating.shift_speed_m_s * MM} step={1} onChange={(value) => onOperatingChange({ shift_speed_m_s: value / MM })} />
+          <NumberField label="Shift acceleration" suffix="m/s²" value={operating.shift_acceleration_m_s2} step={0.1} onChange={(value) => onOperatingChange({ shift_acceleration_m_s2: value })} />
+          {responseLoading && <div className={styles.muted}>updating loads…</div>}
+        </section>
+      </aside>
+
+      <div className={styles.workspace}>
+        <section className={styles.card}>
+          {analysis ? <MechanismScene analysis={analysis} shiftM={shiftM} /> : <div className={styles.loading}>Analyze a ramp to build the mechanism.</div>}
+        </section>
+        <section className={styles.card}>
+          <div className={styles.shiftHeader}>
+            <div><h2>Shift position</h2><span>{(shiftM * MM).toFixed(2)} / {(architecture.required_travel_m * MM).toFixed(2)} mm requested</span></div>
+            {analysis && (!contactActive
+              ? <span className={styles.invalid}>No contact at selected shift</span>
+              : current?.q !== null && current?.q !== undefined && current.q > 90
+                ? <span className={styles.invalid}>q &gt; 90° at selected shift</span>
+                : <ValidityBadge analysis={analysis} />)}
+          </div>
+          <input className={styles.shiftSlider} type="range" min={0} max={Math.max(0.001, architecture.required_travel_m * MM)} step={0.05} value={Math.min(shiftM, architecture.required_travel_m) * MM} onChange={(event) => onShiftChange(Number(event.target.value) / MM)} />
+          <div className={styles.metrics}>
+            <Metric label="Arm angle q" value={`${fmt(current?.q ?? null, 2)}°`} />
+            <Metric label="Ramp tangent" value={`${fmt(current?.tangent ?? null, 2)}°`} />
+            <Metric label="Flyweight closing" value={`${fmt(current?.closing ?? null)} N`} />
+            <Metric label="Ramp normal / ramp" value={`${fmt(current?.normal ?? null)} N`} />
+            <Metric label="Pivot resultant / flyweight" value={`${fmt(current?.pivot ?? null)} N`} />
+          </div>
+        </section>
+        <section className={styles.card}>
+          <div className={styles.chartHeader}><div><h2>Loads through shift</h2><span>Geometry is solved on the backend; moving the shift cursor is local and instantaneous.</span></div></div>
+          <ForceChart response={response} shiftM={shiftM} requestedTravelM={architecture.required_travel_m} contactValidTravelM={analysis?.contact_valid_travel_m ?? null} />
+        </section>
+      </div>
+    </main>
+  );
+}
 
 function Readout({ label, value }: { label: string; value: string }) {
   return <div className={styles.readout}><span>{label}</span><strong>{value}</strong></div>;
@@ -411,13 +609,16 @@ function SliderField({
 
 function ValidityBadge({ analysis }: { analysis: ConcreteDesignAnalysis }) {
   if (analysis.validity.valid) {
-    const runtimeWarning = analysis.validity.warnings.some(
-      (warning) => warning.code === 'RUNTIME_MAP_COMPILE_FAILED',
-    );
-    if (runtimeWarning) {
-      return <span className={styles.dirty}>Exact path valid · runtime-map warning</span>;
-    }
+    const runtimeWarning = analysis.validity.warnings.some((warning) => warning.code === 'RUNTIME_MAP_COMPILE_FAILED');
+    if (runtimeWarning) return <span className={styles.dirty}>Exact path valid · runtime-map warning</span>;
     return <span className={styles.valid}>Admissible full travel</span>;
   }
   return <span className={styles.invalid}>{analysis.validity.failure?.code ?? 'Inadmissible'}</span>;
+}
+
+function ArchitectureBadge({ analysis, stale }: { analysis: ArchitectureAnalysis; stale: boolean }) {
+  if (stale) return <span className={styles.dirty}>stale</span>;
+  if (!analysis.validity.valid) return <span className={styles.invalid}>architecture blocked</span>;
+  if (!analysis.validity.current_ramp_packaging_valid) return <span className={styles.dirty}>architecture valid · ramp violates zone</span>;
+  return <span className={styles.valid}>packaging workspace valid</span>;
 }

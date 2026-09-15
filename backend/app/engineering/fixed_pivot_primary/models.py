@@ -10,6 +10,8 @@ from dataclasses import dataclass
 from typing import Literal
 
 RampKind = Literal["progressive", "constant"]
+PackagingZoneRule = Literal["forbid", "contain"]
+PackagingZoneSubject = Literal["flyweight", "ramp"]
 
 
 @dataclass(frozen=True, slots=True)
@@ -23,6 +25,17 @@ class ArchitectureDesign:
     arm_mass_per_flyweight_kg: float
     ramp_axial_direction: int = -1
     roller_side_sign: int = 1
+    max_tip_mass_per_flyweight_kg: float = 0.650
+
+
+@dataclass(frozen=True, slots=True)
+class PackagingZone:
+    id: str
+    label: str
+    subject: PackagingZoneSubject
+    rule: PackagingZoneRule
+    polygon_m: tuple[tuple[float, float], ...]
+    clearance_m: float = 0.0
 
 
 @dataclass(frozen=True, slots=True)
@@ -40,6 +53,8 @@ class RampDesign:
 
     @property
     def total_length_m(self) -> float:
+        if self.kind == "constant":
+            return self.constant_length_m
         return self.linear_length_m + self.blend_length_m + self.circular_length_m
 
 

@@ -8,8 +8,14 @@ from math import degrees, pi
 from threading import RLock
 from uuid import uuid4
 
-from .cinder_adapter import GeometryAnalysis, analyze_geometry, evaluate_response
-from .models import ArchitectureDesign, OperatingCondition, RampDesign
+from .architecture import analyze_architecture_workspace
+from .cinder_adapter import (
+    GeometryAnalysis,
+    analyze_geometry,
+    evaluate_response,
+    requested_ramp_surface,
+)
+from .models import ArchitectureDesign, OperatingCondition, PackagingZone, RampDesign
 
 INCH = 0.0254
 MM = 1.0e-3
@@ -36,7 +42,7 @@ class CachedConcreteAnalysis:
 
 
 class FixedPivotPrimaryDesignService:
-    """Own concrete-design analysis and short-lived compiled geometry cache."""
+    """Own architecture/packaging analysis and cached concrete-design mechanics."""
 
     def __init__(self, *, max_cached_analyses: int = 32) -> None:
         self._max_cached_analyses = max_cached_analyses
@@ -54,6 +60,7 @@ class FixedPivotPrimaryDesignService:
             arm_mass_per_flyweight_kg=13.646e-3,
             ramp_axial_direction=-1,
             roller_side_sign=1,
+            max_tip_mass_per_flyweight_kg=0.650,
         )
         ramp = RampDesign(
             kind="progressive",
@@ -70,6 +77,7 @@ class FixedPivotPrimaryDesignService:
         return {
             "architecture": _architecture_document(architecture),
             "ramp": _ramp_document(ramp),
+            "packaging_zones": [],
             "operating": {
                 "tip_mass_per_flyweight_kg": 0.250,
                 "shaft_speed_rad_s": 3800.0 * RPM_TO_RAD_PER_SECOND,
@@ -80,6 +88,47 @@ class FixedPivotPrimaryDesignService:
                 "tip_mass_per_flyweight_kg": [0.0, 0.650],
                 "shaft_speed_rad_s": [0.0, 6000.0 * RPM_TO_RAD_PER_SECOND],
             },
+        }
+
+    def analyze_architecture(
+        self,
+        *,
+        architecture: ArchitectureDesign,
+        ramp: RampDesign,
+        zones: tuple[PackagingZone, ...],
+        reach_sample_count: int = 361,
+    ) -> dict[str, object]:
+        """Analyze architecture reach and polygonal packaging constraints.
+
+        No design search happens here.  The result is the deterministic
+        workspace used by the Phase 2 editor and later by the architecture
+        explorer.
+        """
+
+        try:
+            ramp_x, ramp_r = requested_ramp_surface(
+                architecture,
+                ramp,
+                sample_count=max(161, min(501, reach_sample_count)),
+            )
+            workspace = analyze_architecture_workspace(
+                architecture,
+                zones,
+                ramp_surface_open_x_m=ramp_x,
+                ramp_surface_open_r_m=ramp_r,
+                reach_sample_count=reach_sample_count,
+            )
+        except (TypeError, ValueError, RuntimeError) as error:
+            raise PrimaryDesignError(
+                "INVALID_ARCHITECTURE_WORKSPACE",
+                str(error),
+            ) from error
+
+        return {
+            "architecture": _architecture_document(architecture),
+            "ramp": _ramp_document(ramp),
+            "zones": [_zone_document(zone) for zone in zones],
+            **workspace,
         }
 
     def analyze_concrete(
@@ -364,6 +413,7 @@ def _architecture_document(value: ArchitectureDesign) -> dict[str, object]:
         "arm_mass_per_flyweight_kg": value.arm_mass_per_flyweight_kg,
         "ramp_axial_direction": value.ramp_axial_direction,
         "roller_side_sign": value.roller_side_sign,
+        "max_tip_mass_per_flyweight_kg": value.max_tip_mass_per_flyweight_kg,
     }
 
 
@@ -380,3 +430,14 @@ def _ramp_document(value: RampDesign) -> dict[str, object]:
         "blend_length_m": value.blend_length_m,
         "circular_length_m": value.circular_length_m,
     }
+
+def _zone_document(value: PackagingZone) -> dict[str, object]:
+    return {
+        "id": value.id,
+        "label": value.label,
+        "subject": value.subject,
+        "rule": value.rule,
+        "polygon_m": [[point[0], point[1]] for point in value.polygon_m],
+        "clearance_m": value.clearance_m,
+    }
+
