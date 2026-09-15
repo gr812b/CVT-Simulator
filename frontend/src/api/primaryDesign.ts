@@ -142,19 +142,6 @@ export interface PackagingZoneDiagnostic {
   retained_fraction: number;
 }
 
-export interface ArchitectureSlice {
-  shift_m: number;
-  pivot_x_m: number;
-  pivot_r_m: number;
-  q_deg: number[];
-  roller_center_x_m: number[];
-  roller_center_r_m: number[];
-  admissible: boolean[];
-  admissible_intervals_deg: Array<[number, number]>;
-  potential_ramp_surface: WorkspacePolygon[];
-  packaging_feasible_ramp_surface: WorkspacePolygon[];
-}
-
 export interface ArchitectureAnalysis {
   architecture: FixedPivotArchitecture;
   zones: PackagingZone[];
@@ -170,13 +157,8 @@ export interface ArchitectureAnalysis {
     roller_center: WorkspacePolygon[];
     potential_ramp_surface: WorkspacePolygon[];
     packaging_feasible_ramp_surface: WorkspacePolygon[];
-    flyweight_swept: WorkspacePolygon[];
     open_roller_arc: { x_m: number[]; r_m: number[] };
     full_shift_roller_arc: { x_m: number[]; r_m: number[] };
-  };
-  slices: {
-    shift_m: number[];
-    items: ArchitectureSlice[];
   };
   boundaries: {
     q_min_flat_ramp: { x_m: number[]; r_m: number[] };
@@ -184,14 +166,6 @@ export interface ArchitectureAnalysis {
     pivot_travel: { x_m: number[]; r_m: number[] };
   };
   zone_diagnostics: PackagingZoneDiagnostic[];
-  manipulators: {
-    arm_endpoint_x_m: number;
-    arm_endpoint_r_m: number;
-    arm_direction_x: number;
-    arm_direction_r: number;
-    travel_endpoint_x_m: number;
-    travel_endpoint_r_m: number;
-  };
   viewport: {
     x_min_m: number;
     x_max_m: number;

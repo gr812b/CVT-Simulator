@@ -79,4 +79,9 @@ def test_primary_design_architecture_workspace_round_trip() -> None:
     assert workspace["limits"] == {"q_min_deg": -30.0, "q_max_deg": 90.0}
     assert workspace["workspace"]["roller_center"]
     assert workspace["workspace"]["potential_ramp_surface"]
-    assert len(workspace["slices"]["items"]) == 21
+    q90_r = workspace["boundaries"]["q_max_flat_ramp"]["r_m"][0]
+    potential_max_r = max(
+        max(polygon["r_m"])
+        for polygon in workspace["workspace"]["potential_ramp_surface"]
+    )
+    assert abs(potential_max_r - q90_r) < 1.0e-9

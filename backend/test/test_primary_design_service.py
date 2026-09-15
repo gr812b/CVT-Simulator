@@ -208,11 +208,22 @@ def test_architecture_workspace_spans_negative_30_to_90_and_required_travel() ->
     assert clear["workspace"]["roller_center"]
     assert clear["workspace"]["potential_ramp_surface"]
     assert clear["workspace"]["packaging_feasible_ramp_surface"]
-    assert len(clear["slices"]["items"]) == 21
-    assert abs(clear["slices"]["shift_m"][-1] - architecture.required_travel_m) < 1.0e-12
-    first = clear["slices"]["items"][0]
-    assert abs(first["q_deg"][0] + 30.0) < 1.0e-12
-    assert abs(first["q_deg"][-1] - 90.0) < 1.0e-12
+
+    # The q=90 flat ramp is a true architecture boundary.  The old mapped-
+    # perimeter polygon folded over itself and polygon repair silently dropped
+    # this upper lobe.  Both the un-clipped and no-zone feasible workspaces must
+    # reach the exact q=90 flat limit.
+    q90_r = clear["boundaries"]["q_max_flat_ramp"]["r_m"][0]
+    potential_max_r = max(
+        max(polygon["r_m"])
+        for polygon in clear["workspace"]["potential_ramp_surface"]
+    )
+    feasible_max_r = max(
+        max(polygon["r_m"])
+        for polygon in clear["workspace"]["packaging_feasible_ramp_surface"]
+    )
+    assert abs(potential_max_r - q90_r) < 1.0e-9
+    assert abs(feasible_max_r - q90_r) < 1.0e-9
 
 
 def test_architecture_flyweight_keepout_restricts_pose_space() -> None:

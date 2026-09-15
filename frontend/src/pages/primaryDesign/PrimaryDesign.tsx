@@ -301,7 +301,7 @@ function ArchitectureMode({
           <button type="button" className={styles.primaryButton} disabled={loading} onClick={onAnalyze}>
             {loading ? 'Analyzing architecture…' : 'Analyze architecture'}
           </button>
-          <p className={styles.helpText}>Architecture is ramp-independent: q spans -30° to 90° and the full required travel. Dragging updates only the draft; the backend refreshes the actual roller and possible-ramp workspaces.</p>
+          <p className={styles.helpText}>Architecture is ramp-independent: q spans -30° to 90° over the full required travel. Drag either dotted roller path to change only the arm radius; the backend refreshes the roller and possible-ramp workspaces when you analyze.</p>
         </section>
 
         <section className={styles.card}>

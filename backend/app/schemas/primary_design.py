@@ -100,10 +100,8 @@ class FixedPivotArchitectureAnalysisResponse(ApiModel):
     validity: dict[str, Any]
     limits: dict[str, float]
     workspace: dict[str, Any]
-    slices: dict[str, Any]
     boundaries: dict[str, Any]
     zone_diagnostics: list[dict[str, Any]]
-    manipulators: dict[str, float]
     viewport: dict[str, float]
     summary: dict[str, Any]
 

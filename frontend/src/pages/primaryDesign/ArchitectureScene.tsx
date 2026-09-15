@@ -1,7 +1,6 @@
 import { useMemo, useRef, useState } from 'react';
 import type {
   ArchitectureAnalysis,
-  ArchitectureSlice,
   FixedPivotArchitecture,
   PackagingZone,
   PackagingZoneRule,
@@ -15,15 +14,19 @@ const HEIGHT = 640;
 const PAD = 34;
 const MIN_ARM_M = 2e-3;
 const MIN_TRAVEL_M = 0.5e-3;
-const MM = 1000;
 
 type DrawTool = 'select' | 'draw-zone';
-type DragKind = 'pivot-radius' | 'arm' | 'travel';
-type WorkspaceView = 'full' | 'slice';
+type DragKind = 'pivot-radius' | 'arm-radius' | 'roller-radius' | 'travel';
 
 interface WorldPoint {
   x: number;
   r: number;
+}
+
+interface DragState {
+  kind: DragKind;
+  pointerId: number;
+  shiftM?: number;
 }
 
 interface ArchitectureSceneProps {
@@ -49,44 +52,51 @@ export function ArchitectureScene({
 }: ArchitectureSceneProps) {
   const svgRef = useRef<SVGSVGElement | null>(null);
   const [tool, setTool] = useState<DrawTool>('select');
-  const [viewMode, setViewMode] = useState<WorkspaceView>('full');
-  const [sliceShiftM, setSliceShiftM] = useState(0);
   const [drawSubject, setDrawSubject] = useState<PackagingZoneSubject>('flyweight');
   const [drawRule, setDrawRule] = useState<PackagingZoneRule>('forbid');
   const [draftPoints, setDraftPoints] = useState<WorldPoint[]>([]);
-  const [drag, setDrag] = useState<{ kind: DragKind; pointerId: number } | null>(null);
+  const [drag, setDrag] = useState<DragState | null>(null);
 
-  const currentSlice = useMemo(
-    () => nearestSlice(analysis, Math.min(sliceShiftM, architecture.required_travel_m)),
-    [analysis, architecture.required_travel_m, sliceShiftM],
+  const qMinDeg = analysis?.limits.q_min_deg ?? -30;
+  const qMaxDeg = analysis?.limits.q_max_deg ?? 90;
+
+  const draftOpenArc = useMemo(
+    () => rollerArc(architecture, 0, qMinDeg, qMaxDeg),
+    [architecture, qMinDeg, qMaxDeg],
+  );
+  const draftFullArc = useMemo(
+    () => rollerArc(architecture, architecture.required_travel_m, qMinDeg, qMaxDeg),
+    [architecture, qMinDeg, qMaxDeg],
+  );
+
+  const openRollerEnvelope = useMemo(
+    () => rollerEnvelope(architecture, 0, qMinDeg, qMaxDeg),
+    [architecture, qMinDeg, qMaxDeg],
+  );
+  const fullRollerEnvelope = useMemo(
+    () => rollerEnvelope(architecture, architecture.required_travel_m, qMinDeg, qMaxDeg),
+    [architecture, qMinDeg, qMaxDeg],
   );
 
   const view = useMemo(() => {
+    const draftXs = [...draftOpenArc.x_m, ...draftFullArc.x_m];
+    const draftRs = [...draftOpenArc.r_m, ...draftFullArc.r_m];
     const fallback = {
-      x_min_m: architecture.pivot_axial_position_m - architecture.required_travel_m - architecture.arm_length_m - 0.02,
-      x_max_m: architecture.pivot_axial_position_m + architecture.arm_length_m + architecture.roller_radius_m + 0.02,
-      r_min_m: Math.max(0, architecture.pivot_radius_m - architecture.arm_length_m - architecture.roller_radius_m - 0.02),
-      r_max_m: architecture.pivot_radius_m + architecture.arm_length_m + architecture.roller_radius_m + 0.02,
+      x_min_m: Math.min(...draftXs) - architecture.roller_radius_m - 0.02,
+      x_max_m: Math.max(...draftXs) + architecture.roller_radius_m + 0.02,
+      r_min_m: Math.max(0, Math.min(...draftRs) - architecture.roller_radius_m - 0.02),
+      r_max_m: Math.max(...draftRs) + architecture.roller_radius_m + 0.02,
     };
     if (!analysis) return fallback;
-    const fullPivotX = architecture.pivot_axial_position_m - architecture.required_travel_m;
-    const armHandle = draftArmEndpoint(architecture, analysis);
     return {
-      x_min_m: Math.min(analysis.viewport.x_min_m, fullPivotX - architecture.arm_length_m - 0.01),
-      x_max_m: Math.max(analysis.viewport.x_max_m, architecture.pivot_axial_position_m + architecture.arm_length_m + 0.01, armHandle.x + 0.01),
-      r_min_m: Math.max(0, Math.min(analysis.viewport.r_min_m, architecture.pivot_radius_m - architecture.arm_length_m - 0.01)),
-      r_max_m: Math.max(analysis.viewport.r_max_m, architecture.pivot_radius_m + architecture.arm_length_m + architecture.roller_radius_m + 0.01),
+      x_min_m: Math.min(analysis.viewport.x_min_m, fallback.x_min_m),
+      x_max_m: Math.max(analysis.viewport.x_max_m, fallback.x_max_m),
+      r_min_m: Math.max(0, Math.min(analysis.viewport.r_min_m, fallback.r_min_m)),
+      r_max_m: Math.max(analysis.viewport.r_max_m, fallback.r_max_m),
     };
-  }, [analysis, architecture]);
+  }, [analysis, architecture.roller_radius_m, draftOpenArc, draftFullArc]);
 
   const scene = useMemo(() => createScene(view), [view]);
-  const armEndpoint = useMemo(
-    () => analysis ? draftArmEndpoint(architecture, analysis) : {
-      x: architecture.pivot_axial_position_m + architecture.arm_length_m / Math.sqrt(2),
-      r: architecture.pivot_radius_m + architecture.arm_length_m / Math.sqrt(2),
-    },
-    [analysis, architecture],
-  );
   const travelHandle = {
     x: architecture.pivot_axial_position_m - architecture.required_travel_m,
     r: architecture.pivot_radius_m,
@@ -103,29 +113,54 @@ export function ArchitectureScene({
     return scene.world(local.x, local.y);
   };
 
-  const beginDrag = (event: React.PointerEvent<SVGElement>, kind: DragKind) => {
-    if (tool !== 'select' || viewMode !== 'full') return;
+  const beginDrag = (
+    event: React.PointerEvent<SVGElement>,
+    kind: DragKind,
+    shiftM?: number,
+  ) => {
+    if (tool !== 'select') return;
     event.stopPropagation();
     svgRef.current?.setPointerCapture(event.pointerId);
-    setDrag({ kind, pointerId: event.pointerId });
+    setDrag({ kind, pointerId: event.pointerId, shiftM });
   };
 
   const onPointerMove = (event: React.PointerEvent<SVGSVGElement>) => {
     if (!drag || drag.pointerId !== event.pointerId) return;
     const world = worldFromPointer(event);
     if (!world) return;
+
     if (drag.kind === 'pivot-radius') {
       onArchitectureChange({ pivot_radius_m: Math.max(0.5e-3, world.r) });
       return;
     }
-    if (drag.kind === 'arm') {
-      const dx = world.x - architecture.pivot_axial_position_m;
+
+    if (drag.kind === 'arm-radius') {
+      const shift = drag.shiftM ?? 0;
+      const pivotX = architecture.pivot_axial_position_m - shift;
+      const dx = world.x - pivotX;
       const dr = world.r - architecture.pivot_radius_m;
       onArchitectureChange({ arm_length_m: Math.max(MIN_ARM_M, Math.hypot(dx, dr)) });
       return;
     }
+
+    if (drag.kind === 'roller-radius') {
+      const shift = drag.shiftM ?? 0;
+      const pivotX = architecture.pivot_axial_position_m - shift;
+      const dx = world.x - pivotX;
+      const dr = world.r - architecture.pivot_radius_m;
+      const radialDistance = Math.hypot(dx, dr);
+      const requestedRadius = radialDistance - architecture.arm_length_m;
+      onArchitectureChange({
+        roller_radius_m: Math.max(0.5e-3, Math.min(0.95 * architecture.arm_length_m, requestedRadius)),
+      });
+      return;
+    }
+
     onArchitectureChange({
-      required_travel_m: Math.max(MIN_TRAVEL_M, architecture.pivot_axial_position_m - world.x),
+      required_travel_m: Math.max(
+        MIN_TRAVEL_M,
+        architecture.pivot_axial_position_m - world.x,
+      ),
     });
   };
 
@@ -171,22 +206,31 @@ export function ArchitectureScene({
     onSelectedZoneChange(null);
   };
 
+  const openArcPath = scene.path(draftOpenArc.x_m, draftOpenArc.r_m);
+  const fullArcPath = scene.path(draftFullArc.x_m, draftFullArc.r_m);
+  const openInnerPath = scene.path(openRollerEnvelope.inner.x_m, openRollerEnvelope.inner.r_m);
+  const openOuterPath = scene.path(openRollerEnvelope.outer.x_m, openRollerEnvelope.outer.r_m);
+  const fullInnerPath = scene.path(fullRollerEnvelope.inner.x_m, fullRollerEnvelope.inner.r_m);
+  const fullOuterPath = scene.path(fullRollerEnvelope.outer.x_m, fullRollerEnvelope.outer.r_m);
+  const openQMaxCenter = pointAtAngle(architecture, 0, qMaxDeg, architecture.arm_length_m);
+  const rollerRadiusPx = architecture.roller_radius_m * scene.scale;
+
   return (
     <div className={styles.architectureSceneWrap}>
       <div className={styles.architectureToolbar}>
         <div className={styles.toolGroup}>
-          <button type="button" className={viewMode === 'full' ? styles.toolActive : styles.toolButton} onClick={() => setViewMode('full')}>
-            Full workspace
-          </button>
-          <button type="button" className={viewMode === 'slice' ? styles.toolActive : styles.toolButton} onClick={() => setViewMode('slice')}>
-            Shift slice
-          </button>
-        </div>
-        <div className={styles.toolGroup}>
-          <button type="button" className={tool === 'select' ? styles.toolActive : styles.toolButton} onClick={() => { setTool('select'); setDraftPoints([]); }}>
+          <button
+            type="button"
+            className={tool === 'select' ? styles.toolActive : styles.toolButton}
+            onClick={() => { setTool('select'); setDraftPoints([]); }}
+          >
             Select / move
           </button>
-          <button type="button" className={tool === 'draw-zone' ? styles.toolActive : styles.toolButton} onClick={() => setTool('draw-zone')}>
+          <button
+            type="button"
+            className={tool === 'draw-zone' ? styles.toolActive : styles.toolButton}
+            onClick={() => setTool('draw-zone')}
+          >
             Draw zone
           </button>
         </div>
@@ -215,25 +259,11 @@ export function ArchitectureScene({
         <span className={stale ? styles.dirty : styles.valid}>{stale ? 'workspace stale' : 'workspace current'}</span>
       </div>
 
-      {viewMode === 'slice' && (
-        <div className={styles.archSliceControl}>
-          <div><strong>Shift slice</strong><span>{(Math.min(sliceShiftM, architecture.required_travel_m) * MM).toFixed(2)} / {(architecture.required_travel_m * MM).toFixed(2)} mm</span></div>
-          <input
-            type="range"
-            min={0}
-            max={Math.max(0.001, architecture.required_travel_m * MM)}
-            step={0.05}
-            value={Math.min(sliceShiftM, architecture.required_travel_m) * MM}
-            onChange={(event) => setSliceShiftM(Number(event.target.value) / MM)}
-          />
-        </div>
-      )}
-
       <svg
         ref={svgRef}
         viewBox={`0 0 ${WIDTH} ${HEIGHT}`}
         role="img"
-        aria-label={viewMode === 'full' ? 'Full fixed-pivot architecture workspace' : 'Fixed-pivot architecture shift slice'}
+        aria-label="Full fixed-pivot architecture workspace"
         className={tool === 'draw-zone' ? styles.crosshairCanvas : styles.engineeringCanvas}
         onPointerDown={addDraftPoint}
         onPointerMove={onPointerMove}
@@ -243,22 +273,51 @@ export function ArchitectureScene({
         <rect width={WIDTH} height={HEIGHT} rx="12" fill="var(--primary-design-canvas, #0d1319)" />
         <EngineeringGrid scene={scene} />
 
-        {viewMode === 'full' ? (
-          <FullWorkspaceView
-            scene={scene}
-            architecture={architecture}
-            analysis={analysis}
-            stale={stale}
+        <FullWorkspaceView
+          scene={scene}
+          architecture={architecture}
+          analysis={analysis}
+          stale={stale}
+        />
+
+        {/* Finite roller sweep: exact tube around the roller-centre loci. */}
+        <g pointerEvents="none">
+          <path
+            d={openArcPath}
+            className={styles.rollerSweepBand}
+            style={{ strokeWidth: Math.max(1, 2 * rollerRadiusPx) }}
           />
-        ) : (
-          <ShiftSliceView
-            scene={scene}
-            architecture={architecture}
-            analysis={analysis}
-            slice={currentSlice}
-            stale={stale}
+          <path
+            d={fullArcPath}
+            className={styles.rollerSweepBandGhost}
+            style={{ strokeWidth: Math.max(1, 2 * rollerRadiusPx) }}
           />
-        )}
+          <path d={openInnerPath} className={styles.rollerRadiusBoundary} />
+          <path d={openOuterPath} className={styles.rollerRadiusBoundary} />
+          <path d={fullInnerPath} className={styles.rollerRadiusBoundaryGhost} />
+          <path d={fullOuterPath} className={styles.rollerRadiusBoundaryGhost} />
+
+          <circle
+            cx={scene.sx(openQMaxCenter.x)}
+            cy={scene.sy(openQMaxCenter.r)}
+            r={rollerRadiusPx}
+            className={styles.representativeRoller}
+          />
+          <line
+            x1={scene.sx(openQMaxCenter.x)}
+            y1={scene.sy(openQMaxCenter.r)}
+            x2={scene.sx(openQMaxCenter.x)}
+            y2={scene.sy(openQMaxCenter.r + architecture.roller_radius_m)}
+            className={styles.rollerRadiusDimension}
+          />
+          <text
+            x={scene.sx(openQMaxCenter.x) + 9}
+            y={scene.sy(openQMaxCenter.r + 0.52 * architecture.roller_radius_m)}
+            className={styles.svgLabel}
+          >
+            Rᵣ = {(architecture.roller_radius_m * 1000).toFixed(2)} mm
+          </text>
+        </g>
 
         {zones.map((zone) => (
           <polygon
@@ -280,46 +339,43 @@ export function ArchitectureScene({
           </>
         )}
 
-        {viewMode === 'full' && (
+        {/* Live architecture manipulators. Centre arcs set arm length; outer envelope arcs set roller radius. */}
+        <path d={openArcPath} className={styles.workspaceArcDraft} />
+        <path d={fullArcPath} className={styles.workspaceArcDraftGhost} />
+        {tool === 'select' && (
           <>
-            <line
-              x1={scene.sx(architecture.pivot_axial_position_m)}
-              y1={scene.sy(architecture.pivot_radius_m)}
-              x2={scene.sx(armEndpoint.x)}
-              y2={scene.sy(armEndpoint.r)}
-              className={styles.archArm}
-              opacity="0.72"
-            />
-            <circle
-              cx={scene.sx(architecture.pivot_axial_position_m)}
-              cy={scene.sy(architecture.pivot_radius_m)}
-              r="7"
-              className={styles.dragPivot}
-              onPointerDown={(event) => beginDrag(event, 'pivot-radius')}
-            />
-            <circle cx={scene.sx(armEndpoint.x)} cy={scene.sy(armEndpoint.r)} r="8" className={styles.dragHandle} onPointerDown={(event) => beginDrag(event, 'arm')} />
-            <circle cx={scene.sx(travelHandle.x)} cy={scene.sy(travelHandle.r)} r="8" className={styles.dragHandle} onPointerDown={(event) => beginDrag(event, 'travel')} />
-            <text x={scene.sx(architecture.pivot_axial_position_m) + 10} y={scene.sy(architecture.pivot_radius_m) - 10} className={styles.svgLabel}>P₀</text>
-            <text x={scene.sx(travelHandle.x) + 10} y={scene.sy(travelHandle.r) + 18} className={styles.svgLabel}>P at full shift</text>
+            <path d={openArcPath} className={styles.arcDragTarget} onPointerDown={(event) => beginDrag(event, 'arm-radius', 0)} />
+            <path d={fullArcPath} className={styles.arcDragTarget} onPointerDown={(event) => beginDrag(event, 'arm-radius', architecture.required_travel_m)} />
+            <path d={openOuterPath} className={styles.rollerRadiusDragTarget} onPointerDown={(event) => beginDrag(event, 'roller-radius', 0)} />
+            <path d={fullOuterPath} className={styles.rollerRadiusDragTarget} onPointerDown={(event) => beginDrag(event, 'roller-radius', architecture.required_travel_m)} />
           </>
         )}
+
+        <circle
+          cx={scene.sx(architecture.pivot_axial_position_m)}
+          cy={scene.sy(architecture.pivot_radius_m)}
+          r="7"
+          className={styles.dragPivot}
+          onPointerDown={(event) => beginDrag(event, 'pivot-radius')}
+        />
+        <circle
+          cx={scene.sx(travelHandle.x)}
+          cy={scene.sy(travelHandle.r)}
+          r="8"
+          className={styles.dragHandle}
+          onPointerDown={(event) => beginDrag(event, 'travel')}
+        />
+        <text x={scene.sx(architecture.pivot_axial_position_m) + 10} y={scene.sy(architecture.pivot_radius_m) - 10} className={styles.svgLabel}>P₀</text>
+        <text x={scene.sx(travelHandle.x) + 10} y={scene.sy(travelHandle.r) + 18} className={styles.svgLabel}>P at full shift</text>
       </svg>
 
       <div className={styles.sceneFooter}>
-        {viewMode === 'full' ? (
-          <>
-            <span><strong>blue</strong> roller-centre workspace</span>
-            <span><strong>gold</strong> any positive-tangent ramp surface</span>
-            <span><strong>green</strong> ramp workspace after packaging</span>
-            <span><strong>flat dashed</strong> q = -30° / 90° limiting ramps</span>
-          </>
-        ) : (
-          <>
-            <span><strong>solid arc</strong> roller-centre reach at this shift</span>
-            <span><strong>green/red</strong> flyweight poses allowed/blocked by packaging</span>
-            <span><strong>gold/green</strong> potential / packaging-feasible ramp surface</span>
-          </>
-        )}
+        <span><strong>blue</strong> full roller-centre workspace</span>
+        <span><strong>dotted centre arcs</strong> draggable arm length</span>
+        <span><strong>dashed roller edges + faint band</strong> finite roller radius; drag outer edge to resize</span>
+        <span><strong>gold</strong> any positive-tangent ramp surface</span>
+        <span><strong>green</strong> ramp workspace after ramp packaging</span>
+        <span><strong>flat dashed</strong> q = -30° / 90° limiting ramps</span>
       </div>
     </div>
   );
@@ -340,12 +396,9 @@ function FullWorkspaceView({
   const opacity = stale ? 0.22 : 1;
   return (
     <g opacity={opacity}>
-      <PolygonSet scene={scene} polygons={analysis.workspace.flyweight_swept} className={styles.flyweightEnvelope} opacity={0.20} />
-      <PolygonSet scene={scene} polygons={analysis.workspace.roller_center} className={styles.rollerWorkspace} opacity={0.46} />
-      <PolygonSet scene={scene} polygons={analysis.workspace.potential_ramp_surface} className={styles.rampOpportunity} opacity={0.34} />
-      <PolygonSet scene={scene} polygons={analysis.workspace.packaging_feasible_ramp_surface} className={styles.rampFeasible} opacity={0.42} />
-      <path d={scene.path(analysis.workspace.open_roller_arc.x_m, analysis.workspace.open_roller_arc.r_m)} className={styles.workspaceArc} />
-      <path d={scene.path(analysis.workspace.full_shift_roller_arc.x_m, analysis.workspace.full_shift_roller_arc.r_m)} className={styles.workspaceArcGhost} />
+      <PolygonSet scene={scene} polygons={analysis.workspace.roller_center} className={styles.rollerWorkspace} opacity={0.38} />
+      <PolygonSet scene={scene} polygons={analysis.workspace.potential_ramp_surface} className={styles.rampOpportunity} opacity={0.30} />
+      <PolygonSet scene={scene} polygons={analysis.workspace.packaging_feasible_ramp_surface} className={styles.rampFeasible} opacity={0.38} />
       <path d={scene.path(analysis.boundaries.q_min_flat_ramp.x_m, analysis.boundaries.q_min_flat_ramp.r_m)} className={styles.qLimitFlat} />
       <path d={scene.path(analysis.boundaries.q_max_flat_ramp.x_m, analysis.boundaries.q_max_flat_ramp.r_m)} className={styles.qLimitFlat} />
       <path d={scene.path(analysis.boundaries.pivot_travel.x_m, analysis.boundaries.pivot_travel.r_m)} className={styles.travelDimension} />
@@ -353,53 +406,6 @@ function FullWorkspaceView({
       <text x={scene.sx(analysis.boundaries.q_max_flat_ramp.x_m[0]) + 8} y={scene.sy(analysis.boundaries.q_max_flat_ramp.r_m[0]) - 9} className={styles.svgLabel}>q = {analysis.limits.q_max_deg.toFixed(0)}° flat limit</text>
       <line x1={scene.sx(architecture.pivot_axial_position_m)} y1={scene.sy(0)} x2={scene.sx(architecture.pivot_axial_position_m)} y2={scene.sy(architecture.pivot_radius_m)} className={styles.shaftReference} />
       <text x={scene.sx(architecture.pivot_axial_position_m) + 8} y={scene.sy(0) - 7} className={styles.svgLabel}>shaft r = 0</text>
-    </g>
-  );
-}
-
-function ShiftSliceView({
-  scene,
-  architecture,
-  analysis,
-  slice,
-  stale,
-}: {
-  scene: ReturnType<typeof createScene>;
-  architecture: FixedPivotArchitecture;
-  analysis: ArchitectureAnalysis | null;
-  slice: ArchitectureSlice | null;
-  stale: boolean;
-}) {
-  if (!analysis || !slice) return null;
-  const opacity = stale ? 0.22 : 1;
-  const pivotX = slice.pivot_x_m;
-  const pivotR = slice.pivot_r_m;
-  const qMin = analysis.limits.q_min_deg * Math.PI / 180;
-  const qMax = analysis.limits.q_max_deg * Math.PI / 180;
-  const qMinEnd = {
-    x: pivotX + architecture.arm_length_m * Math.cos(qMin),
-    r: pivotR + architecture.arm_length_m * Math.sin(qMin),
-  };
-  const qMaxEnd = {
-    x: pivotX + architecture.arm_length_m * Math.cos(qMax),
-    r: pivotR + architecture.arm_length_m * Math.sin(qMax),
-  };
-  return (
-    <g opacity={opacity}>
-      <PolygonSet scene={scene} polygons={slice.potential_ramp_surface} className={styles.rampOpportunity} opacity={0.32} />
-      <PolygonSet scene={scene} polygons={slice.packaging_feasible_ramp_surface} className={styles.rampFeasible} opacity={0.44} />
-      <path d={scene.path(slice.roller_center_x_m, slice.roller_center_r_m)} className={styles.reachBase} />
-      {segmentedReach(slice).map((segment, index) => (
-        <path key={index} d={scene.path(segment.x, segment.r)} className={segment.ok ? styles.reachAdmissible : styles.reachBlocked} />
-      ))}
-      <line x1={scene.sx(pivotX)} y1={scene.sy(pivotR)} x2={scene.sx(qMinEnd.x)} y2={scene.sy(qMinEnd.r)} className={styles.archArmBoundary} />
-      <line x1={scene.sx(pivotX)} y1={scene.sy(pivotR)} x2={scene.sx(qMaxEnd.x)} y2={scene.sy(qMaxEnd.r)} className={styles.q90Boundary} />
-      <circle cx={scene.sx(pivotX)} cy={scene.sy(pivotR)} r="7" className={styles.fixedPivot} />
-      <circle cx={scene.sx(qMinEnd.x)} cy={scene.sy(qMinEnd.r)} r={Math.max(3, architecture.roller_radius_m * scene.scale)} className={styles.limitRoller} />
-      <circle cx={scene.sx(qMaxEnd.x)} cy={scene.sy(qMaxEnd.r)} r={Math.max(3, architecture.roller_radius_m * scene.scale)} className={styles.limitRoller} />
-      <text x={scene.sx(pivotX) + 10} y={scene.sy(pivotR) - 10} className={styles.svgLabel}>P · x = {(slice.shift_m * MM).toFixed(2)} mm</text>
-      <text x={scene.sx(qMinEnd.x) + 7} y={scene.sy(qMinEnd.r) + 18} className={styles.svgLabel}>q = {analysis.limits.q_min_deg.toFixed(0)}°</text>
-      <text x={scene.sx(qMaxEnd.x) + 7} y={scene.sy(qMaxEnd.r) - 8} className={styles.svgLabel}>q = 90°</text>
     </g>
   );
 }
@@ -418,42 +424,54 @@ function PolygonSet({
   return <>{polygons.map((polygon, index) => <path key={index} d={scene.path(polygon.x_m, polygon.r_m, true)} className={className} opacity={opacity} />)}</>;
 }
 
-function segmentedReach(slice: ArchitectureSlice): Array<{ x: number[]; r: number[]; ok: boolean }> {
-  const result: Array<{ x: number[]; r: number[]; ok: boolean }> = [];
-  if (slice.roller_center_x_m.length < 2) return result;
-  let start = 0;
-  let state = slice.admissible[0] ?? false;
-  for (let index = 1; index < slice.roller_center_x_m.length; index += 1) {
-    const next = slice.admissible[index] ?? false;
-    if (next === state) continue;
-    result.push({
-      x: slice.roller_center_x_m.slice(start, index + 1),
-      r: slice.roller_center_r_m.slice(start, index + 1),
-      ok: state,
-    });
-    start = Math.max(0, index - 1);
-    state = next;
+function rollerArc(
+  architecture: FixedPivotArchitecture,
+  shiftM: number,
+  qMinDeg: number,
+  qMaxDeg: number,
+  radiusM = architecture.arm_length_m,
+): { x_m: number[]; r_m: number[] } {
+  const count = 241;
+  const pivotX = architecture.pivot_axial_position_m - shiftM;
+  const qMin = qMinDeg * Math.PI / 180;
+  const qMax = qMaxDeg * Math.PI / 180;
+  const x_m: number[] = [];
+  const r_m: number[] = [];
+  for (let index = 0; index < count; index += 1) {
+    const fraction = index / (count - 1);
+    const q = qMin + fraction * (qMax - qMin);
+    x_m.push(pivotX + radiusM * Math.cos(q));
+    r_m.push(architecture.pivot_radius_m + radiusM * Math.sin(q));
   }
-  result.push({
-    x: slice.roller_center_x_m.slice(start),
-    r: slice.roller_center_r_m.slice(start),
-    ok: state,
-  });
-  return result;
+  return { x_m, r_m };
 }
 
-function nearestSlice(analysis: ArchitectureAnalysis | null, shiftM: number): ArchitectureSlice | null {
-  if (!analysis || analysis.slices.items.length === 0) return null;
-  let best = analysis.slices.items[0];
-  let bestError = Math.abs(best.shift_m - shiftM);
-  for (const item of analysis.slices.items.slice(1)) {
-    const error = Math.abs(item.shift_m - shiftM);
-    if (error < bestError) {
-      best = item;
-      bestError = error;
-    }
-  }
-  return best;
+function rollerEnvelope(
+  architecture: FixedPivotArchitecture,
+  shiftM: number,
+  qMinDeg: number,
+  qMaxDeg: number,
+): { inner: { x_m: number[]; r_m: number[] }; outer: { x_m: number[]; r_m: number[] } } {
+  const innerRadius = Math.max(1e-6, architecture.arm_length_m - architecture.roller_radius_m);
+  const outerRadius = architecture.arm_length_m + architecture.roller_radius_m;
+  return {
+    inner: rollerArc(architecture, shiftM, qMinDeg, qMaxDeg, innerRadius),
+    outer: rollerArc(architecture, shiftM, qMinDeg, qMaxDeg, outerRadius),
+  };
+}
+
+function pointAtAngle(
+  architecture: FixedPivotArchitecture,
+  shiftM: number,
+  qDeg: number,
+  radiusM: number,
+): WorldPoint {
+  const q = qDeg * Math.PI / 180;
+  const pivotX = architecture.pivot_axial_position_m - shiftM;
+  return {
+    x: pivotX + radiusM * Math.cos(q),
+    r: architecture.pivot_radius_m + radiusM * Math.sin(q),
+  };
 }
 
 function EngineeringGrid({ scene }: { scene: ReturnType<typeof createScene> }) {
@@ -481,13 +499,6 @@ function zoneClass(zone: PackagingZone, selected: boolean): string {
       ? styles.zoneContainRamp
       : styles.zoneContainFlyweight;
   return selected ? `${base} ${styles.zoneSelected}` : base;
-}
-
-function draftArmEndpoint(architecture: FixedPivotArchitecture, analysis: ArchitectureAnalysis): WorldPoint {
-  return {
-    x: architecture.pivot_axial_position_m + analysis.manipulators.arm_direction_x * architecture.arm_length_m,
-    r: architecture.pivot_radius_m + analysis.manipulators.arm_direction_r * architecture.arm_length_m,
-  };
 }
 
 function createScene(view: ArchitectureAnalysis['viewport']) {

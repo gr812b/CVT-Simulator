@@ -38,7 +38,7 @@ def analyze_architecture_workspace(
     reach_sample_count: int = 361,
     shift_sample_count: int = 41,
 ) -> dict[str, object]:
-    """Return full-travel and single-shift architecture workspaces.
+    """Return the full-travel architecture and packaging workspace.
 
     The result deliberately contains no concrete ramp.  The potential ramp
     surface workspace is the one-sided finite-roller offset of the complete
@@ -87,22 +87,14 @@ def analyze_architecture_workspace(
     if not roller_center_workspace.is_valid:
         roller_center_workspace = roller_center_workspace.buffer(0)
 
-    # The full flyweight swept envelope is for packaging context only.  The arm
-    # is infinitesimally thin; the roller is finite.  Because shift is a pure
-    # axial translation in this frame, the complete sweep can be constructed
-    # directly rather than sampled in shift.
-    open_sector = _arm_sector(architecture, q_values, 0.0)
-    arm_sweep = _sweep_geometry_x(open_sector, -architecture.required_travel_m)
-    roller_sweep = roller_center_workspace.buffer(
-        architecture.roller_radius_m, quad_segs=12
-    )
-    flyweight_swept = unary_union((arm_sweep, roller_sweep))
-
-    # At one shift, q and the positive ramp tangent angle alpha form a simple
-    # two-parameter contact surface.  Its four parameter-space edges give the
-    # exact boundary polygon.  Full travel is then only a horizontal sweep of
-    # this slice polygon.
-    open_ramp_slice = _ramp_surface_slice_polygon(
+    # The possible physical ramp surface at one shift is the image of two
+    # independent continuous parameters: flyweight angle q and local ramp
+    # tangent angle alpha.  That image can fold over itself, so constructing a
+    # polygon from only the mapped outer parameter boundary is incorrect: a
+    # self-intersection can make polygon repair discard a legitimate lobe
+    # (most visibly the region approaching q = 90 deg).  Tessellate the
+    # parameter domain instead and union the mapped cells.
+    open_ramp_slice = _ramp_surface_slice_workspace(
         architecture, q_values, shift_m=0.0
     )
     potential_ramp_workspace = _sweep_geometry_x(
@@ -113,51 +105,19 @@ def analyze_architecture_workspace(
         ramp_zones,
     )
 
-    # Precompute shift slices so the frontend can scrub instantly without
-    # recreating mechanism geometry in TypeScript.
-    slice_documents: list[dict[str, object]] = []
+    # Flyweight packaging is still audited across the full q x travel domain,
+    # but the architecture UI no longer exposes a single-shift slice view.
     admitted_pose_count = 0
     total_pose_count = len(q_values) * len(shift_values)
     for raw_shift in shift_values:
         shift = float(raw_shift)
-        arc_points = _roller_center_arc(architecture, q_values, shift)
-        admissible = tuple(
-            _subject_satisfies_zone_set(
+        admitted_pose_count += sum(
+            1
+            for q in q_values
+            if _subject_satisfies_zone_set(
                 _flyweight_pose_geometry(architecture, float(q), shift),
                 flyweight_zones,
             )
-            for q in q_values
-        )
-        admitted_pose_count += sum(1 for item in admissible if item)
-        intervals = _admissible_intervals(
-            tuple(float(q) for q in q_values),
-            admissible,
-            lambda q, x=shift: _subject_satisfies_zone_set(
-                _flyweight_pose_geometry(architecture, q, x),
-                flyweight_zones,
-            ),
-        )
-        slice_ramp_workspace = affinity.translate(
-            open_ramp_slice, xoff=-shift, yoff=0.0
-        )
-        slice_feasible_ramp = _clip_subject_workspace(slice_ramp_workspace, ramp_zones)
-        pivot_x = architecture.pivot_axial_position_m - shift
-        slice_documents.append(
-            {
-                "shift_m": shift,
-                "pivot_x_m": pivot_x,
-                "pivot_r_m": architecture.pivot_radius_m,
-                "q_deg": [float(q * 180.0 / pi) for q in q_values],
-                "roller_center_x_m": [float(point[0]) for point in arc_points],
-                "roller_center_r_m": [float(point[1]) for point in arc_points],
-                "admissible": list(admissible),
-                "admissible_intervals_deg": [
-                    [start * 180.0 / pi, end * 180.0 / pi]
-                    for start, end in intervals
-                ],
-                "potential_ramp_surface": _geometry_polygons(slice_ramp_workspace),
-                "packaging_feasible_ramp_surface": _geometry_polygons(slice_feasible_ramp),
-            }
         )
 
     zone_diagnostics = _zone_diagnostics(
@@ -200,7 +160,7 @@ def analyze_architecture_workspace(
             geometry
             for geometry in (
                 potential_ramp_workspace,
-                flyweight_swept,
+                roller_center_workspace,
                 *(polygon for polygon, _zone in zone_geometries),
             )
             if not geometry.is_empty
@@ -210,12 +170,6 @@ def analyze_architecture_workspace(
     span = max(max_x - min_x, max_r - min_r, 0.050)
     pad = max(0.010, 0.12 * span)
 
-    manipulator_q = pi / 4.0
-    manipulator_endpoint = _roller_center(
-        architecture,
-        manipulator_q,
-        shift_m=0.0,
-    )
     full_shift_pivot_x = (
         architecture.pivot_axial_position_m - architecture.required_travel_m
     )
@@ -239,13 +193,8 @@ def analyze_architecture_workspace(
             "roller_center": _geometry_polygons(roller_center_workspace),
             "potential_ramp_surface": _geometry_polygons(potential_ramp_workspace),
             "packaging_feasible_ramp_surface": _geometry_polygons(feasible_ramp_workspace),
-            "flyweight_swept": _geometry_polygons(flyweight_swept),
             "open_roller_arc": _polyline_document(open_arc),
             "full_shift_roller_arc": _polyline_document(full_arc),
-        },
-        "slices": {
-            "shift_m": [float(value) for value in shift_values],
-            "items": slice_documents,
         },
         "boundaries": {
             "q_min_flat_ramp": _polyline_document(q_min_flat),
@@ -259,14 +208,6 @@ def analyze_architecture_workspace(
             },
         },
         "zone_diagnostics": zone_diagnostics,
-        "manipulators": {
-            "arm_endpoint_x_m": manipulator_endpoint[0],
-            "arm_endpoint_r_m": manipulator_endpoint[1],
-            "arm_direction_x": cos(manipulator_q),
-            "arm_direction_r": sin(manipulator_q),
-            "travel_endpoint_x_m": full_shift_pivot_x,
-            "travel_endpoint_r_m": architecture.pivot_radius_m,
-        },
         "viewport": {
             "x_min_m": min_x - pad,
             "x_max_m": max_x + pad,
@@ -309,20 +250,6 @@ def _roller_center_arc(
     )
 
 
-def _arm_sector(
-    architecture: ArchitectureDesign,
-    q_values: np.ndarray,
-    shift_m: float,
-) -> Polygon:
-    pivot = (
-        architecture.pivot_axial_position_m - shift_m,
-        architecture.pivot_radius_m,
-    )
-    arc = _roller_center_arc(architecture, q_values, shift_m)
-    polygon = Polygon((pivot, *arc, pivot))
-    return polygon if polygon.is_valid else polygon.buffer(0)
-
-
 def _flyweight_pose_geometry(
     architecture: ArchitectureDesign,
     q: float,
@@ -336,56 +263,73 @@ def _flyweight_pose_geometry(
     return unary_union((arm, roller))
 
 
-def _ramp_surface_slice_polygon(
+def _ramp_surface_slice_workspace(
     architecture: ArchitectureDesign,
     q_values: np.ndarray,
     *,
     shift_m: float,
-) -> Polygon:
-    """Possible physical ramp-surface region at one fixed shift.
+) -> BaseGeometry:
+    """Return every geometrically reachable physical ramp-surface point.
 
-    The roller centre is parameterized by q.  A positive ramp tangent angle
-    alpha in [0, 90 deg] moves the contact point around the one physical side
-    of the finite roller.  The image of the (q, alpha) rectangle is bounded by
-    its four parameter-space edges, so no two-dimensional sampling heuristic is
-    needed.
+    At a fixed shift the finite roller centre follows the arm arc ``q``. For
+    any positive physical ramp tangent, ``alpha in [0, pi/2]``, the contact
+    point is one roller radius away on the CINDER-selected roller side. The
+    map ``(q, alpha) -> contact point`` can fold over itself, so its image must
+    not be reconstructed from only the mapped perimeter.
+
+    Tessellating the compact parameter domain and unioning the mapped cells
+    preserves both exact endpoint limits, including the q = 90 degree flat
+    ramp boundary. This is architecture geometry only; Phase 3 still decides
+    which complete ramp curves are mechanically admissible.
     """
+
+    q_count = min(max(121, int(q_values.size)), 181)
+    q_mesh = np.linspace(float(q_values[0]), float(q_values[-1]), q_count)
+    alpha_mesh = np.linspace(0.0, 0.5 * pi, 41)
 
     sign = float(architecture.roller_side_sign)
     direction = float(architecture.ramp_axial_direction)
     roller = architecture.roller_radius_m
-    centers = _roller_center_arc(architecture, q_values, shift_m)
 
-    def offset(alpha: float) -> tuple[float, float]:
-        return (
-            sign * roller * sin(alpha),
-            -sign * direction * roller * cos(alpha),
+    rows: list[list[tuple[float, float]]] = []
+    for raw_q in q_mesh:
+        center_x, center_r = _roller_center(
+            architecture, float(raw_q), shift_m=shift_m
         )
+        row: list[tuple[float, float]] = []
+        for raw_alpha in alpha_mesh:
+            alpha = float(raw_alpha)
+            # CINDER: roller centre = surface + R*n, with
+            # n=(-sign*sin(alpha), sign*direction*cos(alpha)).
+            row.append(
+                (
+                    center_x + sign * roller * sin(alpha),
+                    center_r - sign * direction * roller * cos(alpha),
+                )
+            )
+        rows.append(row)
 
-    alpha_values = np.linspace(0.0, 0.5 * pi, 65)
-    flat_dx, flat_dr = offset(0.0)
-    steep_dx, steep_dr = offset(0.5 * pi)
+    cells: list[BaseGeometry] = []
+    for q_index in range(len(rows) - 1):
+        lower = rows[q_index]
+        upper = rows[q_index + 1]
+        for alpha_index in range(len(alpha_mesh) - 1):
+            cell = Polygon(
+                (
+                    lower[alpha_index],
+                    upper[alpha_index],
+                    upper[alpha_index + 1],
+                    lower[alpha_index + 1],
+                )
+            )
+            if not cell.is_valid:
+                cell = cell.buffer(0)
+            if not cell.is_empty and cell.area > 1.0e-18:
+                cells.append(cell)
 
-    edge_flat = [(x + flat_dx, r + flat_dr) for x, r in centers]
-    q_max_center = centers[-1]
-    edge_q_max = [
-        (q_max_center[0] + offset(float(alpha))[0],
-         q_max_center[1] + offset(float(alpha))[1])
-        for alpha in alpha_values
-    ]
-    edge_steep = [
-        (x + steep_dx, r + steep_dr)
-        for x, r in reversed(centers)
-    ]
-    q_min_center = centers[0]
-    edge_q_min = [
-        (q_min_center[0] + offset(float(alpha))[0],
-         q_min_center[1] + offset(float(alpha))[1])
-        for alpha in reversed(alpha_values)
-    ]
-    polygon = Polygon((*edge_flat, *edge_q_max[1:], *edge_steep[1:], *edge_q_min[1:]))
-    return polygon if polygon.is_valid else polygon.buffer(0)
-
+    if not cells:
+        return GeometryCollection()
+    return unary_union(tuple(cells)).buffer(0)
 
 def _sweep_geometry_x(geometry: BaseGeometry, delta_x: float) -> BaseGeometry:
     """Exact union of a polygonal geometry translated continuously in x."""
@@ -564,44 +508,6 @@ def _zone_diagnostics(
             }
         )
     return diagnostics
-
-
-def _admissible_intervals(
-    q_values: tuple[float, ...],
-    mask: tuple[bool, ...],
-    predicate,
-) -> tuple[tuple[float, float], ...]:
-    if len(q_values) != len(mask) or not q_values:
-        return ()
-
-    transitions: list[tuple[float, bool]] = []
-    for left_q, right_q, left_ok, right_ok in zip(
-        q_values[:-1], q_values[1:], mask[:-1], mask[1:], strict=True
-    ):
-        if left_ok == right_ok:
-            continue
-        lo = left_q
-        hi = right_q
-        lo_ok = left_ok
-        for _ in range(48):
-            mid = 0.5 * (lo + hi)
-            if bool(predicate(mid)) == lo_ok:
-                lo = mid
-            else:
-                hi = mid
-        transitions.append((0.5 * (lo + hi), right_ok))
-
-    intervals: list[tuple[float, float]] = []
-    start: float | None = q_values[0] if mask[0] else None
-    for q, becomes_ok in transitions:
-        if becomes_ok:
-            start = q
-        elif start is not None:
-            intervals.append((start, q))
-            start = None
-    if start is not None:
-        intervals.append((start, q_values[-1]))
-    return tuple(intervals)
 
 
 def _zone_polygon(zone: PackagingZone) -> Polygon:

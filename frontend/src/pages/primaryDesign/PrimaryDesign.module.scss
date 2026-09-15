@@ -440,3 +440,77 @@
 @media (max-width: 760px) {
   .archSliceControl { grid-template-columns: 1fr; }
 }
+
+/* Phase 2.2 architecture interaction cleanup */
+.workspaceArcDraft {
+  fill: none;
+  stroke: rgba(218, 236, 247, 0.88);
+  stroke-width: 2.3;
+  stroke-linecap: round;
+  stroke-dasharray: 2 7;
+  pointer-events: none;
+}
+.workspaceArcDraftGhost {
+  fill: none;
+  stroke: rgba(218, 236, 247, 0.46);
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-dasharray: 2 7;
+  pointer-events: none;
+}
+.arcDragTarget {
+  fill: none;
+  stroke: transparent;
+  stroke-width: 18;
+  pointer-events: stroke;
+  cursor: grab;
+}
+.arcDragTarget:active { cursor: grabbing; }
+
+
+/* Phase 2.3 finite-roller visibility */
+.rollerSweepBand {
+  fill: none;
+  stroke: rgba(119, 200, 242, 0.085);
+  stroke-linecap: round;
+  pointer-events: none;
+}
+.rollerSweepBandGhost {
+  fill: none;
+  stroke: rgba(119, 200, 242, 0.040);
+  stroke-linecap: round;
+  pointer-events: none;
+}
+.rollerRadiusBoundary {
+  fill: none;
+  stroke: rgba(145, 210, 245, 0.72);
+  stroke-width: 1.7;
+  stroke-dasharray: 9 5;
+  pointer-events: none;
+}
+.rollerRadiusBoundaryGhost {
+  fill: none;
+  stroke: rgba(145, 210, 245, 0.34);
+  stroke-width: 1.5;
+  stroke-dasharray: 9 5;
+  pointer-events: none;
+}
+.representativeRoller {
+  fill: rgba(119, 200, 242, 0.065);
+  stroke: rgba(176, 224, 249, 0.82);
+  stroke-width: 2;
+  stroke-dasharray: 4 3;
+}
+.rollerRadiusDimension {
+  stroke: rgba(176, 224, 249, 0.88);
+  stroke-width: 1.8;
+  stroke-dasharray: 3 3;
+}
+.rollerRadiusDragTarget {
+  fill: none;
+  stroke: transparent;
+  stroke-width: 14;
+  pointer-events: stroke;
+  cursor: ew-resize;
+}
+.rollerRadiusDragTarget:active { cursor: grabbing; }
