@@ -34,7 +34,7 @@ E1–E4 preserve those terms exactly.
 
 ## Slotted results reference topology
 
-Source: `results/cinder-v1.1.2/support/reference_model.py`.
+Source: `results/cinder-v1.1.2/defaults/reference_model/slotted_helix.py`.
 
 `BilateralHelicalTorqueReactionForce` inherits `HelicalTorqueReactionForce` and removes only the unilateral compression-margin hooks. It does not absolute, clip, or delete the signed helix reaction. Consequently:
 

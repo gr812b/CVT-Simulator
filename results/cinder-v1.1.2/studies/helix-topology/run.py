@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 from pathlib import Path
 import shutil
 import subprocess
@@ -19,6 +20,7 @@ import sys
 from datetime import datetime, timezone
 
 STUDY_ROOT = Path(__file__).resolve().parent
+RELEASE_ROOT = STUDY_ROOT.parents[1]
 if str(STUDY_ROOT) not in sys.path:
     sys.path.insert(0, str(STUDY_ROOT))
 
@@ -32,9 +34,17 @@ from study_support import (  # noqa: E402
 
 
 def run_script(name: str, *extra: str) -> None:
+    env = os.environ.copy()
+    existing = env.get("PYTHONPATH", "")
+    env["PYTHONPATH"] = (
+        str(RELEASE_ROOT)
+        if not existing
+        else str(RELEASE_ROOT) + os.pathsep + existing
+    )
     subprocess.run(
         [sys.executable, str(STUDY_ROOT / "experiments" / name), *extra],
         check=True,
+        env=env,
     )
 
 

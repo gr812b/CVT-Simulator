@@ -6,7 +6,7 @@
 
 When the secondary helix reaction changes sign, when does the assumed helix contact topology matter to the CVT response?
 
-The shared CINDER results reference model is the **zero-clearance bilateral/slotted secondary helix** defined in `../../support/reference_model.py`. It keeps the production signed helix equations unchanged and permits either reaction sign; a sign reversal is interpreted as transfer to the opposite slot flank. The released one-flank model remains useful as a contact-admissibility reference, but a physically meaningful one-flank comparison must release the helix kinematic constraint when contact is lost. Simply clipping the helix force to zero while retaining the constraint is not the primary comparator.
+The shared CINDER results reference model is the **zero-clearance bilateral/slotted secondary helix** defined in `../../defaults/reference_model/slotted_helix.py`. It keeps the production signed helix equations unchanged and permits either reaction sign; a sign reversal is interpreted as transfer to the opposite slot flank. The released one-flank model remains useful as a contact-admissibility reference, but a physically meaningful one-flank comparison must release the helix kinematic constraint when contact is lost. Simply clipping the helix force to zero while retaining the constraint is not the primary comparator.
 
 This study therefore starts by discovering **where and why** sign reversal occurs before asking whether it improves or degrades any vehicle-level metric.
 

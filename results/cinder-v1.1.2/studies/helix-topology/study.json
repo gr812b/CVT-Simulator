@@ -10,7 +10,7 @@
   "reference_topology": {
     "name": "bilateral_zero_clearance_slot",
     "policy": "Use the shared results reference model. Preserve the production signed helix torque/force law, torsional spring, movable-member inertia, shaft reaction, and kinematic coupling. Negative selected-flank reaction is carried by the opposite slot flank.",
-    "implementation": "../../support/reference_model.py"
+    "implementation": "../../defaults/reference_model/slotted_helix.py"
   },
   "primary_contact_quantity": {
     "name": "helix_reacted_torque_margin_Nm",

@@ -288,10 +288,14 @@ def build_slotted_system(
     from cinder.hosts import SecondaryShaftAngleHost
     from cinder.model.boundaries.shaft import FullThrottleEngineBoundary
     from cinder.model.system import MechanicalCVTPlant
-    from support.reference_model import use_slotted_secondary_helix
+    from defaults.reference_model import (
+        reference_model_status,
+        use_bilateral_secondary_helix,
+    )
 
     plant = MechanicalCVTPlant.from_assembly(assembly)
-    topology_status = use_slotted_secondary_helix(plant)
+    use_bilateral_secondary_helix(plant)
+    topology_status = reference_model_status(plant)
     host = SecondaryShaftAngleHost()
     primary = primary_boundary
     if primary is None:
@@ -802,7 +806,7 @@ def finite_float(value: Any) -> float | None:
 
 
 def write_reference_provenance(directory: Path, *, plant, extra=None) -> Path:
-    from support.reference_model import write_reference_model_provenance
+    from defaults.reference_model import write_reference_model_provenance
 
     return write_reference_model_provenance(
         Path(directory), plant=plant, extra=extra

@@ -37,10 +37,10 @@ def main() -> int:
 
     from cinder.model.cvt.actuation import HelicalTorqueReactionForce
     from cinder.model.system import MechanicalCVTPlant
-    from support.reference_model import use_slotted_secondary_helix
+    from defaults.reference_model import use_bilateral_secondary_helix
 
     plant = MechanicalCVTPlant.from_assembly(assembly)
-    use_slotted_secondary_helix(plant)
+    use_bilateral_secondary_helix(plant)
     laws = [
         law for law in plant.secondary_actuator.force_laws
         if isinstance(law, HelicalTorqueReactionForce)
