@@ -183,6 +183,62 @@ export interface ArchitectureAnalysis {
   };
 }
 
+
+export interface PathDomainStationProjection {
+  station: number;
+  viable_state_count: number;
+  q_min_deg: number | null;
+  q_max_deg: number | null;
+  active_q_min_deg: number | null;
+  active_q_max_deg: number | null;
+}
+
+export interface HistoryCertifiedRampPath {
+  state_indices: number[];
+  shift_m: number[];
+  q_deg: number[];
+  ramp_tangent_deg: number[];
+  roller_center: { x_m: number[]; r_m: number[] };
+  ramp_surface: { x_m: number[]; r_m: number[] };
+  history: {
+    max_contact_root_count: number;
+    multiple_root_shift_count: number;
+    trace_shift_m: number[];
+    trace_parameter_m: number[];
+    trace_q_deg: number[];
+  };
+}
+
+export interface PrimaryPathDomainAnalysis {
+  architecture: FixedPivotArchitecture;
+  zones: PackagingZone[];
+  validity: { valid: boolean; findings: ArchitectureFinding[] };
+  graph: {
+    shift_station_count: number;
+    q_sample_count: number;
+    alpha_sample_count: number;
+    state_count: number;
+    local_transition_template_count: number;
+    layer_edge_counts: number[];
+    viable_layer_edge_counts: number[];
+    viable_node_counts: number[];
+    station_projection: PathDomainStationProjection[];
+  };
+  history: {
+    candidate_complete_path_count: number;
+    certified_representative_path_count: number;
+    history_rejection_count: number;
+    rejections: Array<Record<string, unknown>>;
+    selection_rule: string;
+  };
+  representative_paths: HistoryCertifiedRampPath[];
+  deferred_checks: string[];
+  numerics: {
+    edge_audit_sample_count: number;
+    history_trace_sample_count: number;
+  };
+}
+
 const baseUrl = (import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8000').replace(/\/+$/, '');
 const PREFIX = '/api/v1/engineering/fixed-pivot-primary';
 
@@ -246,5 +302,24 @@ export function evaluateConcretePrimaryDesign(
   return request<ConcreteDesignResponse>('/concrete/response', {
     method: 'POST',
     body: JSON.stringify({ analysis_id: analysisId, ...operating }),
+  });
+}
+
+
+export function analyzePrimaryPathDomain(
+  architecture: FixedPivotArchitecture,
+  zones: PackagingZone[],
+  options: Partial<{
+    shift_station_count: number;
+    q_sample_count: number;
+    alpha_sample_count: number;
+    representative_path_count: number;
+    edge_audit_sample_count: number;
+    history_trace_sample_count: number;
+  }> = {},
+): Promise<PrimaryPathDomainAnalysis> {
+  return request<PrimaryPathDomainAnalysis>('/architecture/path-domain', {
+    method: 'POST',
+    body: JSON.stringify({ architecture, zones, ...options }),
   });
 }

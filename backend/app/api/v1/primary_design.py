@@ -22,6 +22,8 @@ from app.schemas.primary_design import (
     FixedPivotDefaultsResponse,
     FixedPivotOperatingRequest,
     FixedPivotOperatingResponse,
+    FixedPivotPathDomainRequest,
+    FixedPivotPathDomainResponse,
 )
 
 router = APIRouter(
@@ -63,6 +65,38 @@ def analyze_architecture(
     except PrimaryDesignError as error:
         raise ApiProblem(422, error.code.lower(), str(error), error.details) from error
     return FixedPivotArchitectureAnalysisResponse(**result)
+
+
+@router.post(
+    "/architecture/path-domain",
+    response_model=FixedPivotPathDomainResponse,
+)
+def analyze_path_domain(
+    request: FixedPivotPathDomainRequest,
+    container: ApplicationContainer = Depends(get_container),
+) -> FixedPivotPathDomainResponse:
+    architecture = ArchitectureDesign(**request.architecture.model_dump())
+    zones = tuple(
+        PackagingZone(
+            **zone.model_dump(exclude={"polygon_m"}),
+            polygon_m=tuple(tuple(point) for point in zone.polygon_m),
+        )
+        for zone in request.zones
+    )
+    try:
+        result = container.primary_design.analyze_path_domain(
+            architecture=architecture,
+            zones=zones,
+            shift_station_count=request.shift_station_count,
+            q_sample_count=request.q_sample_count,
+            alpha_sample_count=request.alpha_sample_count,
+            representative_path_count=request.representative_path_count,
+            edge_audit_sample_count=request.edge_audit_sample_count,
+            history_trace_sample_count=request.history_trace_sample_count,
+        )
+    except PrimaryDesignError as error:
+        raise ApiProblem(422, error.code.lower(), str(error), error.details) from error
+    return FixedPivotPathDomainResponse(**result)
 
 
 @router.post("/concrete/analyze", response_model=FixedPivotConcreteAnalysisResponse)

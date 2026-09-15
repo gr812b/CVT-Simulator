@@ -514,3 +514,137 @@
   cursor: ew-resize;
 }
 .rollerRadiusDragTarget:active { cursor: grabbing; }
+
+/* Phase 3.3 path-domain exploration */
+.checkboxStack {
+  display: grid;
+  gap: 8px;
+  margin: 10px 0 14px;
+}
+.checkboxRow {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 12px;
+  color: rgba(237,243,247,0.66);
+  input { accent-color: #9fd6f2; }
+}
+
+.domainPathFaintScene {
+  fill: none;
+  stroke: rgba(237,243,247,0.42);
+  stroke-width: 2;
+  stroke-linecap: round;
+}
+.domainPathSelectedScene {
+  fill: none;
+  stroke: rgba(137, 224, 255, 0.96);
+  stroke-width: 3.2;
+  stroke-linecap: round;
+  filter: drop-shadow(0 0 3px rgba(137,224,255,0.25));
+}
+.domainRollerSelectedScene {
+  fill: none;
+  stroke: rgba(205, 186, 255, 0.92);
+  stroke-width: 2.2;
+  stroke-dasharray: 8 5;
+}
+.domainPathStart {
+  fill: #9bffc5;
+  stroke: #0d1319;
+  stroke-width: 1.5;
+}
+.domainPathEnd {
+  fill: #ffd58d;
+  stroke: #0d1319;
+  stroke-width: 1.5;
+}
+
+.domainPlotWrap { display: grid; gap: 10px; }
+.domainPlot {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+.domainGrid {
+  stroke: rgba(237,243,247,0.08);
+  stroke-width: 1;
+}
+.domainGridVertical {
+  stroke: rgba(237,243,247,0.06);
+  stroke-width: 1;
+}
+.domainAxisLabel {
+  fill: rgba(237,243,247,0.48);
+  font-size: 11px;
+}
+.domainAxisTitle {
+  fill: rgba(237,243,247,0.70);
+  font-size: 12px;
+}
+.domainCorridor {
+  fill: rgba(110, 224, 166, 0.13);
+  stroke: rgba(110, 224, 166, 0.52);
+  stroke-width: 1.6;
+}
+.domainStationCount {
+  fill: none;
+  stroke: rgba(255, 209, 102, 0.82);
+  stroke-width: 2;
+  stroke-dasharray: 5 4;
+}
+.domainPathFaintPlot {
+  fill: none;
+  stroke: rgba(237,243,247,0.35);
+  stroke-width: 1.8;
+}
+.domainPathSelectedPlot {
+  fill: none;
+  stroke: rgba(137,224,255,0.97);
+  stroke-width: 3;
+}
+.domainBranchTrace {
+  fill: none;
+  stroke: rgba(205, 186, 255, 0.95);
+  stroke-width: 1.8;
+  stroke-dasharray: 6 4;
+}
+.domainLegend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  color: rgba(237,243,247,0.50);
+  font-size: 11px;
+  span { display: inline-flex; align-items: center; gap: 6px; }
+  i { width: 18px; height: 4px; border-radius: 999px; display: inline-block; }
+}
+.domainLegendCorridor { background: rgba(110, 224, 166, 0.72); }
+.domainLegendFamily { background: rgba(237,243,247,0.45); }
+.domainLegendSelected { background: rgba(137,224,255,0.95); }
+.domainLegendTrace { background: rgba(205,186,255,0.95); }
+.domainLegendCounts { background: rgba(255,209,102,0.82); }
+
+.rejectionList {
+  display: grid;
+  gap: 8px;
+  margin-top: 14px;
+}
+.rejectionRow {
+  display: grid;
+  gap: 3px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(255,255,255,0.06);
+  background: rgba(255,255,255,0.025);
+  strong { font-size: 12px; color: #ffbf9f; }
+  span { font-size: 11px; color: rgba(237,243,247,0.70); }
+  em { font-style: normal; font-size: 10px; color: rgba(237,243,247,0.44); }
+}
+.deferredList {
+  margin: 14px 0 0 18px;
+  padding: 0;
+  color: rgba(237,243,247,0.60);
+  font-size: 12px;
+  display: grid;
+  gap: 6px;
+}

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import {
   analyzeConcretePrimaryDesign,
   analyzePrimaryArchitecture,
+  analyzePrimaryPathDomain,
   evaluateConcretePrimaryDesign,
   getPrimaryDesignDefaults,
   type ArchitectureAnalysis,
@@ -10,8 +11,10 @@ import {
   type ConcreteDesignResponse,
   type FixedPivotArchitecture,
   type FixedPivotRamp,
+  type HistoryCertifiedRampPath,
   type PackagingZone,
   type PrimaryDesignOperating,
+  type PrimaryPathDomainAnalysis,
 } from '@api/primaryDesign';
 import { ArchitectureScene } from './ArchitectureScene';
 import { ForceChart } from './ForceChart';
@@ -54,6 +57,17 @@ function fmt(value: number | null, digits = 1): string {
   return value === null || !Number.isFinite(value) ? '—' : value.toFixed(digits);
 }
 
+function minmax(values: number[]): { min: number; max: number } | null {
+  if (!values.length) return null;
+  let min = values[0];
+  let max = values[0];
+  for (const value of values) {
+    if (value < min) min = value;
+    if (value > max) max = value;
+  }
+  return { min, max };
+}
+
 export const PrimaryDesign = () => {
   const navigate = useNavigate();
   const [mode, setMode] = useState<DesignMode>('architecture');
@@ -62,13 +76,19 @@ export const PrimaryDesign = () => {
   const [zones, setZones] = useState<PackagingZone[]>([]);
   const [operating, setOperating] = useState<PrimaryDesignOperating | null>(null);
   const [architectureAnalysis, setArchitectureAnalysis] = useState<ArchitectureAnalysis | null>(null);
+  const [pathDomain, setPathDomain] = useState<PrimaryPathDomainAnalysis | null>(null);
   const [analysis, setAnalysis] = useState<ConcreteDesignAnalysis | null>(null);
   const [response, setResponse] = useState<ConcreteDesignResponse | null>(null);
   const [selectedZoneId, setSelectedZoneId] = useState<string | null>(null);
+  const [selectedRepresentativeIndex, setSelectedRepresentativeIndex] = useState(0);
+  const [showLocalWorkspace, setShowLocalWorkspace] = useState(true);
+  const [showRepresentativeFamily, setShowRepresentativeFamily] = useState(true);
   const [shiftM, setShiftM] = useState(0);
   const [architectureDirty, setArchitectureDirty] = useState(false);
+  const [pathDomainDirty, setPathDomainDirty] = useState(true);
   const [geometryDirty, setGeometryDirty] = useState(false);
   const [architectureLoading, setArchitectureLoading] = useState(false);
+  const [pathDomainLoading, setPathDomainLoading] = useState(false);
   const [geometryLoading, setGeometryLoading] = useState(false);
   const [responseLoading, setResponseLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -87,6 +107,32 @@ export const PrimaryDesign = () => {
       setError(caught instanceof Error ? caught.message : 'Architecture analysis failed.');
     } finally {
       setArchitectureLoading(false);
+    }
+  }, []);
+
+  const analyzePathDomain = useCallback(async (
+    nextArchitecture: FixedPivotArchitecture,
+    nextZones: PackagingZone[],
+  ) => {
+    setPathDomainLoading(true);
+    setError(null);
+    try {
+      const next = await analyzePrimaryPathDomain(nextArchitecture, nextZones, {
+        shift_station_count: 9,
+        q_sample_count: 61,
+        alpha_sample_count: 7,
+        representative_path_count: 8,
+        edge_audit_sample_count: 65,
+        history_trace_sample_count: 65,
+      });
+      setPathDomain(next);
+      setPathDomainDirty(false);
+      setSelectedRepresentativeIndex(0);
+    } catch (caught) {
+      setPathDomain(null);
+      setError(caught instanceof Error ? caught.message : 'Path-domain analysis failed.');
+    } finally {
+      setPathDomainLoading(false);
     }
   }, []);
 
@@ -148,6 +194,11 @@ export const PrimaryDesign = () => {
     return () => window.clearTimeout(handle);
   }, [analysis, operating, geometryDirty]);
 
+  useEffect(() => {
+    const maxIndex = Math.max(0, (pathDomain?.representative_paths.length ?? 1) - 1);
+    setSelectedRepresentativeIndex((current) => Math.min(current, maxIndex));
+  }, [pathDomain]);
+
   const current = useMemo(() => {
     if (!analysis) return null;
     const axis = analysis.geometry.axis_values;
@@ -170,6 +221,7 @@ export const PrimaryDesign = () => {
   const updateArchitecture = (patch: Partial<FixedPivotArchitecture>) => {
     setArchitecture((value) => value ? { ...value, ...patch } : value);
     setArchitectureDirty(true);
+    setPathDomainDirty(true);
     setGeometryDirty(true);
   };
   const updateRamp = (patch: Partial<FixedPivotRamp>) => {
@@ -179,6 +231,7 @@ export const PrimaryDesign = () => {
   const updateZones = (nextZones: PackagingZone[]) => {
     setZones(nextZones);
     setArchitectureDirty(true);
+    setPathDomainDirty(true);
   };
   const updateZone = (zoneId: string, patch: Partial<PackagingZone>) => {
     updateZones(zones.map((zone) => zone.id === zoneId ? { ...zone, ...patch } : zone));
@@ -198,7 +251,7 @@ export const PrimaryDesign = () => {
           <h1>Fixed-Pivot Primary Design</h1>
           <p>Architecture packaging, exact roller contact, flyweight force, and structural-load inspection.</p>
         </div>
-        <div className={styles.phaseBadge}>Architecture workspace · Phase 2.1</div>
+        <div className={styles.phaseBadge}>Path-domain exploration · Phase 3.3</div>
       </header>
 
       <div className={styles.modeTabs}>
@@ -217,14 +270,24 @@ export const PrimaryDesign = () => {
           architecture={architecture}
           zones={zones}
           analysis={architectureAnalysis}
+          pathDomain={pathDomain}
           dirty={architectureDirty}
+          pathDomainDirty={pathDomainDirty}
           loading={architectureLoading}
+          pathDomainLoading={pathDomainLoading}
           selectedZoneId={selectedZoneId}
+          selectedRepresentativeIndex={selectedRepresentativeIndex}
+          showLocalWorkspace={showLocalWorkspace}
+          showRepresentativeFamily={showRepresentativeFamily}
           onArchitectureChange={updateArchitecture}
           onZonesChange={updateZones}
           onZoneChange={updateZone}
           onSelectedZoneChange={setSelectedZoneId}
+          onSelectedRepresentativeIndexChange={setSelectedRepresentativeIndex}
+          onShowLocalWorkspaceChange={setShowLocalWorkspace}
+          onShowRepresentativeFamilyChange={setShowRepresentativeFamily}
           onAnalyze={() => void analyzeArchitecture(architecture, zones)}
+          onAnalyzePathDomain={() => void analyzePathDomain(architecture, zones)}
         />
       ) : (
         <ConcreteMode
@@ -253,27 +316,51 @@ function ArchitectureMode({
   architecture,
   zones,
   analysis,
+  pathDomain,
   dirty,
+  pathDomainDirty,
   loading,
+  pathDomainLoading,
   selectedZoneId,
+  selectedRepresentativeIndex,
+  showLocalWorkspace,
+  showRepresentativeFamily,
   onArchitectureChange,
   onZonesChange,
   onZoneChange,
   onSelectedZoneChange,
+  onSelectedRepresentativeIndexChange,
+  onShowLocalWorkspaceChange,
+  onShowRepresentativeFamilyChange,
   onAnalyze,
+  onAnalyzePathDomain,
 }: {
   architecture: FixedPivotArchitecture;
   zones: PackagingZone[];
   analysis: ArchitectureAnalysis | null;
+  pathDomain: PrimaryPathDomainAnalysis | null;
   dirty: boolean;
+  pathDomainDirty: boolean;
   loading: boolean;
+  pathDomainLoading: boolean;
   selectedZoneId: string | null;
+  selectedRepresentativeIndex: number;
+  showLocalWorkspace: boolean;
+  showRepresentativeFamily: boolean;
   onArchitectureChange: (patch: Partial<FixedPivotArchitecture>) => void;
   onZonesChange: (zones: PackagingZone[]) => void;
   onZoneChange: (zoneId: string, patch: Partial<PackagingZone>) => void;
   onSelectedZoneChange: (zoneId: string | null) => void;
+  onSelectedRepresentativeIndexChange: (value: number) => void;
+  onShowLocalWorkspaceChange: (value: boolean) => void;
+  onShowRepresentativeFamilyChange: (value: boolean) => void;
   onAnalyze: () => void;
+  onAnalyzePathDomain: () => void;
 }) {
+  const selectedPath = pathDomain?.representative_paths[selectedRepresentativeIndex] ?? null;
+  const selectedQRange = selectedPath ? minmax(selectedPath.q_deg) : null;
+  const selectedTangentRange = selectedPath ? minmax(selectedPath.ramp_tangent_deg) : null;
+
   return (
     <main className={styles.layout}>
       <aside className={styles.sidebar}>
@@ -337,6 +424,58 @@ function ArchitectureMode({
           </div>
         </section>
 
+        <section className={styles.card}>
+          <div className={styles.cardTitleRow}>
+            <h2>Path-domain explorer</h2>
+            {pathDomainDirty ? <span className={styles.dirty}>stale</span> : pathDomain ? <PathDomainBadge analysis={pathDomain} /> : <span className={styles.locked}>not analyzed</span>}
+          </div>
+          <button type="button" className={styles.primaryButton} disabled={pathDomainLoading} onClick={onAnalyzePathDomain}>
+            {pathDomainLoading ? 'Analyzing ramp paths…' : 'Analyze ramp domain'}
+          </button>
+          <p className={styles.helpText}>This is the first exact-valid ramp-family exploration layer. It shows representative complete paths that survive the local graph plus the Phase-3.2 history checks, rather than only the Phase-2 local geometric workspace.</p>
+          {pathDomain && (
+            <>
+              <div className={styles.archMetrics}>
+                <Metric label="Certified paths" value={String(pathDomain.history.certified_representative_path_count)} />
+                <Metric label="Candidate paths" value={String(pathDomain.history.candidate_complete_path_count)} />
+                <Metric label="Local templates" value={String(pathDomain.graph.local_transition_template_count)} />
+                <Metric label="History rejections" value={String(pathDomain.history.history_rejection_count)} />
+              </div>
+              {pathDomain.representative_paths.length > 0 && (
+                <>
+                  <label className={styles.field}>
+                    <span>Representative path</span>
+                    <select value={selectedRepresentativeIndex} onChange={(event) => onSelectedRepresentativeIndexChange(Number(event.target.value))}>
+                      {pathDomain.representative_paths.map((path, index) => (
+                        <option key={index} value={index}>
+                          Path {index + 1} · q {path.q_deg[0].toFixed(1)}° → {path.q_deg[path.q_deg.length - 1].toFixed(1)}°
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  <div className={styles.checkboxStack}>
+                    <label className={styles.checkboxRow}>
+                      <input type="checkbox" checked={showLocalWorkspace} onChange={(event) => onShowLocalWorkspaceChange(event.target.checked)} />
+                      <span>Show Phase-2 local workspace underneath</span>
+                    </label>
+                    <label className={styles.checkboxRow}>
+                      <input type="checkbox" checked={showRepresentativeFamily} onChange={(event) => onShowRepresentativeFamilyChange(event.target.checked)} />
+                      <span>Show all representative ramps</span>
+                    </label>
+                  </div>
+                </>
+              )}
+              {selectedPath && (
+                <div className={styles.readoutGrid}>
+                  <Readout label="q range" value={selectedQRange ? `${selectedQRange.min.toFixed(1)}° → ${selectedQRange.max.toFixed(1)}°` : '—'} />
+                  <Readout label="Tangent range" value={selectedTangentRange ? `${selectedTangentRange.min.toFixed(1)}° → ${selectedTangentRange.max.toFixed(1)}°` : '—'} />
+                  <Readout label="Max math roots" value={String(selectedPath.history.max_contact_root_count)} />
+                  <Readout label="Multi-root shifts" value={String(selectedPath.history.multiple_root_shift_count)} />
+                </div>
+              )}
+            </>
+          )}
+        </section>
       </aside>
 
       <div className={styles.workspace}>
@@ -344,6 +483,10 @@ function ArchitectureMode({
           <ArchitectureScene
             architecture={architecture}
             analysis={analysis}
+            pathDomain={pathDomain}
+            selectedRepresentativePathIndex={selectedRepresentativeIndex}
+            showLocalWorkspace={showLocalWorkspace}
+            showRepresentativeFamily={showRepresentativeFamily}
             zones={zones}
             stale={dirty}
             selectedZoneId={selectedZoneId}
@@ -366,7 +509,7 @@ function ArchitectureMode({
                 <Metric label="Angle range" value={`${analysis.limits.q_min_deg.toFixed(0)}° → ${analysis.limits.q_max_deg.toFixed(0)}°`} />
                 <Metric label="Travel" value={`${(architecture.required_travel_m * MM).toFixed(2)} mm`} />
               </div>
-              <p className={styles.helpText}>Gold is the purely geometric one-sided finite-roller ramp-surface opportunity region. Green is what remains after ramp packaging zones. It is not yet the Phase-3 exact CINDER-admissible ramp corridor.</p>
+              <p className={styles.helpText}>Gold is the purely geometric one-sided finite-roller ramp-surface opportunity region. Green is what remains after ramp packaging zones. When the path-domain explorer is turned on, the exact-valid representative ramps are shown on top of this as a stronger subset.</p>
               <div className={styles.legendRow}>
                 <span><i className={styles.legendReach} />roller-centre workspace</span>
                 <span><i className={styles.legendRamp} />potential ramp surface</span>
@@ -376,6 +519,48 @@ function ArchitectureMode({
             </>
           ) : <div className={styles.loading}>Analyze the architecture to build its reach and packaging workspace.</div>}
         </section>
+
+        {pathDomain && (
+          <section className={styles.card}>
+            <div className={styles.cardTitleRow}>
+              <h2>Ramp-path exploration</h2>
+              <span>{pathDomain.representative_paths.length} representative valid ramps</span>
+            </div>
+            <PathDomainPlot analysis={pathDomain} selectedRepresentativeIndex={selectedRepresentativeIndex} />
+          </section>
+        )}
+
+        {pathDomain && (
+          <section className={styles.card}>
+            <div className={styles.cardTitleRow}>
+              <h2>History and manual-test notes</h2>
+              <span>{pathDomain.history.selection_rule}</span>
+            </div>
+            <div className={styles.readoutGrid}>
+              <Readout label="Shift stations" value={String(pathDomain.graph.shift_station_count)} />
+              <Readout label="q samples" value={String(pathDomain.graph.q_sample_count)} />
+              <Readout label="Tangent samples" value={String(pathDomain.graph.alpha_sample_count)} />
+              <Readout label="Trace samples" value={String(pathDomain.numerics.history_trace_sample_count)} />
+            </div>
+            {pathDomain.history.rejections.length > 0 && (
+              <div className={styles.rejectionList}>
+                {pathDomain.history.rejections.map((rejection, index) => {
+                  const failure = (rejection.failure ?? null) as { code?: string; message?: string; shift_m?: number | null } | null;
+                  return (
+                    <div key={index} className={styles.rejectionRow}>
+                      <strong>{failure?.code ?? 'REJECTED'}</strong>
+                      <span>{failure?.message ?? 'This complete path did not survive the Phase-3.2 history checks.'}</span>
+                      <em>{failure?.shift_m == null ? 'shift —' : `near ${(failure.shift_m * MM).toFixed(2)} mm`}</em>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+            <ul className={styles.deferredList}>
+              {pathDomain.deferred_checks.map((item, index) => <li key={index}>{item}</li>)}
+            </ul>
+          </section>
+        )}
 
         {analysis && analysis.zone_diagnostics.length > 0 && (
           <section className={styles.card}>
@@ -522,6 +707,99 @@ function ConcreteMode({
   );
 }
 
+function PathDomainPlot({
+  analysis,
+  selectedRepresentativeIndex,
+}: {
+  analysis: PrimaryPathDomainAnalysis;
+  selectedRepresentativeIndex: number;
+}) {
+  const selectedPath = analysis.representative_paths[selectedRepresentativeIndex] ?? null;
+  const width = 920;
+  const height = 280;
+  const padLeft = 50;
+  const padRight = 18;
+  const padTop = 16;
+  const padBottom = 38;
+  const qMin = -30;
+  const qMax = 90;
+  const innerWidth = width - padLeft - padRight;
+  const innerHeight = height - padTop - padBottom;
+  const xScale = (shiftM: number) => padLeft + (analysis.architecture.required_travel_m <= 0 ? 0 : (shiftM / analysis.architecture.required_travel_m) * innerWidth);
+  const yScale = (qDeg: number) => padTop + (qMax - qDeg) / (qMax - qMin) * innerHeight;
+  const guideTicks = [-30, 0, 30, 60, 90];
+
+  const corridor = (() => {
+    const valid = analysis.graph.station_projection.filter((station) => station.active_q_min_deg !== null && station.active_q_max_deg !== null);
+    if (valid.length < 2) return '';
+    const xs = valid.map((station) => xScale((station.station / (analysis.graph.shift_station_count - 1)) * analysis.architecture.required_travel_m));
+    const top = valid.map((station, index) => `${index === 0 ? 'M' : 'L'} ${xs[index]} ${yScale(station.active_q_max_deg as number)}`);
+    const bottom = valid.slice().reverse().map((station, reverseIndex) => {
+      const index = valid.length - 1 - reverseIndex;
+      return `L ${xs[index]} ${yScale(station.active_q_min_deg as number)}`;
+    });
+    return [...top, ...bottom, 'Z'].join(' ');
+  })();
+
+  const stationCountPath = (() => {
+    const values = analysis.graph.station_projection.map((station) => station.viable_state_count);
+    const max = Math.max(...values, 1);
+    const baseY = padTop + innerHeight;
+    return analysis.graph.station_projection.map((station, index) => {
+      const shift = (station.station / (analysis.graph.shift_station_count - 1)) * analysis.architecture.required_travel_m;
+      const x = xScale(shift);
+      const y = baseY - (station.viable_state_count / max) * 28;
+      return `${index === 0 ? 'M' : 'L'} ${x} ${y}`;
+    }).join(' ');
+  })();
+
+  return (
+    <div className={styles.domainPlotWrap}>
+      <svg viewBox={`0 0 ${width} ${height}`} className={styles.domainPlot} role="img" aria-label="Validated ramp-path domain plot">
+        <rect width={width} height={height} rx="12" fill="var(--primary-design-canvas, #0d1319)" />
+        {guideTicks.map((tick) => (
+          <g key={tick}>
+            <line x1={padLeft} y1={yScale(tick)} x2={width - padRight} y2={yScale(tick)} className={styles.domainGrid} />
+            <text x={12} y={yScale(tick) + 4} className={styles.domainAxisLabel}>{tick}°</text>
+          </g>
+        ))}
+        {[0, 0.25, 0.5, 0.75, 1].map((fraction) => {
+          const shift = fraction * analysis.architecture.required_travel_m;
+          const x = xScale(shift);
+          return (
+            <g key={fraction}>
+              <line x1={x} y1={padTop} x2={x} y2={padTop + innerHeight} className={styles.domainGridVertical} />
+              <text x={x} y={height - 12} textAnchor="middle" className={styles.domainAxisLabel}>{(shift * MM).toFixed(1)}</text>
+            </g>
+          );
+        })}
+        {corridor && <path d={corridor} className={styles.domainCorridor} />}
+        <path d={stationCountPath} className={styles.domainStationCount} />
+        {analysis.representative_paths.map((path, index) => {
+          const d = path.shift_m.map((shift, pointIndex) => `${pointIndex === 0 ? 'M' : 'L'} ${xScale(shift)} ${yScale(path.q_deg[pointIndex])}`).join(' ');
+          const className = index === selectedRepresentativeIndex ? styles.domainPathSelectedPlot : styles.domainPathFaintPlot;
+          return <path key={index} d={d} className={className} />;
+        })}
+        {selectedPath && selectedPath.history.trace_shift_m.length > 0 && (
+          <polyline
+            points={selectedPath.history.trace_shift_m.map((shift, index) => `${xScale(shift)},${yScale(selectedPath.history.trace_q_deg[index])}`).join(' ')}
+            className={styles.domainBranchTrace}
+          />
+        )}
+        <text x={padLeft} y={height - 12} className={styles.domainAxisTitle}>shift (mm)</text>
+        <text x={18} y={padTop + 10} className={styles.domainAxisTitle}>q(x)</text>
+      </svg>
+      <div className={styles.domainLegend}>
+        <span><i className={styles.domainLegendCorridor} />stationwise active-q corridor</span>
+        <span><i className={styles.domainLegendFamily} />representative valid ramps</span>
+        <span><i className={styles.domainLegendSelected} />selected representative ramp</span>
+        <span><i className={styles.domainLegendTrace} />history-selected branch trace</span>
+        <span><i className={styles.domainLegendCounts} />viable-state count trend</span>
+      </div>
+    </div>
+  );
+}
+
 function Readout({ label, value }: { label: string; value: string }) {
   return <div className={styles.readout}><span>{label}</span><strong>{value}</strong></div>;
 }
@@ -596,4 +874,9 @@ function ArchitectureBadge({ analysis, stale }: { analysis: ArchitectureAnalysis
   if (stale) return <span className={styles.dirty}>stale</span>;
   if (!analysis.validity.valid) return <span className={styles.invalid}>workspace blocked</span>;
   return <span className={styles.valid}>architecture workspace valid</span>;
+}
+
+function PathDomainBadge({ analysis }: { analysis: PrimaryPathDomainAnalysis }) {
+  if (!analysis.validity.valid) return <span className={styles.invalid}>no certified path</span>;
+  return <span className={styles.valid}>history-certified domain</span>;
 }

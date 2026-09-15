@@ -15,6 +15,7 @@ from .cinder_adapter import (
     evaluate_response,
 )
 from .models import ArchitectureDesign, OperatingCondition, PackagingZone, RampDesign
+from .path_domain import analyze_path_domain
 
 INCH = 0.0254
 MM = 1.0e-3
@@ -115,6 +116,43 @@ class FixedPivotPrimaryDesignService:
             "architecture": _architecture_document(architecture),
             "zones": [_zone_document(zone) for zone in zones],
             **workspace,
+        }
+
+    def analyze_path_domain(
+        self,
+        *,
+        architecture: ArchitectureDesign,
+        zones: tuple[PackagingZone, ...],
+        shift_station_count: int = 9,
+        q_sample_count: int = 61,
+        alpha_sample_count: int = 7,
+        representative_path_count: int = 5,
+        edge_audit_sample_count: int = 65,
+        history_trace_sample_count: int = 65,
+    ) -> dict[str, object]:
+        """Build the local viability graph and history-certified ramp atlas."""
+
+        try:
+            domain = analyze_path_domain(
+                architecture,
+                zones,
+                shift_station_count=shift_station_count,
+                q_sample_count=q_sample_count,
+                alpha_sample_count=alpha_sample_count,
+                representative_path_count=representative_path_count,
+                edge_audit_sample_count=edge_audit_sample_count,
+                history_trace_sample_count=history_trace_sample_count,
+            )
+        except (TypeError, ValueError, RuntimeError) as error:
+            raise PrimaryDesignError(
+                "INVALID_PATH_DOMAIN",
+                str(error),
+            ) from error
+
+        return {
+            "architecture": _architecture_document(architecture),
+            "zones": [_zone_document(zone) for zone in zones],
+            **domain,
         }
 
     def analyze_concrete(

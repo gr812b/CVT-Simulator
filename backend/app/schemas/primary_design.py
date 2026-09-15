@@ -72,6 +72,17 @@ class FixedPivotArchitectureAnalyzeRequest(ApiModel):
     shift_sample_count: int = Field(default=41, ge=9, le=161)
 
 
+class FixedPivotPathDomainRequest(ApiModel):
+    architecture: FixedPivotArchitectureRequest
+    zones: list[PackagingZoneRequest] = Field(default_factory=list, max_length=32)
+    shift_station_count: int = Field(default=9, ge=3, le=31)
+    q_sample_count: int = Field(default=61, ge=9, le=181)
+    alpha_sample_count: int = Field(default=7, ge=3, le=25)
+    representative_path_count: int = Field(default=5, ge=1, le=24)
+    edge_audit_sample_count: int = Field(default=65, ge=33, le=2049)
+    history_trace_sample_count: int = Field(default=65, ge=33, le=2049)
+
+
 class FixedPivotConcreteAnalyzeRequest(ApiModel):
     architecture: FixedPivotArchitectureRequest
     ramp: FixedPivotRampRequest
@@ -104,6 +115,17 @@ class FixedPivotArchitectureAnalysisResponse(ApiModel):
     zone_diagnostics: list[dict[str, Any]]
     viewport: dict[str, float]
     summary: dict[str, Any]
+
+
+class FixedPivotPathDomainResponse(ApiModel):
+    architecture: dict[str, Any]
+    zones: list[dict[str, Any]]
+    validity: dict[str, Any]
+    graph: dict[str, Any]
+    history: dict[str, Any]
+    representative_paths: list[dict[str, Any]]
+    deferred_checks: list[str]
+    numerics: dict[str, Any]
 
 
 class FixedPivotConcreteAnalysisResponse(ApiModel):
