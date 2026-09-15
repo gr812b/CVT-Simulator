@@ -19,6 +19,7 @@ import {
 import { ArchitectureScene } from './ArchitectureScene';
 import { ForceChart } from './ForceChart';
 import { MechanismScene } from './MechanismScene';
+import { RampFamilyExplorer } from './RampFamilyExplorer';
 import styles from './PrimaryDesign.module.scss';
 
 const MM = 1000;
@@ -121,7 +122,7 @@ export const PrimaryDesign = () => {
         shift_station_count: 9,
         q_sample_count: 61,
         alpha_sample_count: 7,
-        representative_path_count: 8,
+        representative_path_count: 16,
         edge_audit_sample_count: 65,
         history_trace_sample_count: 65,
       });
@@ -520,11 +521,22 @@ function ArchitectureMode({
           ) : <div className={styles.loading}>Analyze the architecture to build its reach and packaging workspace.</div>}
         </section>
 
+        {pathDomain && pathDomain.representative_paths.length > 0 && (
+          <section className={styles.card}>
+            <RampFamilyExplorer
+              architecture={architecture}
+              analysis={pathDomain}
+              selectedRepresentativeIndex={selectedRepresentativeIndex}
+              onSelectedRepresentativeIndexChange={onSelectedRepresentativeIndexChange}
+            />
+          </section>
+        )}
+
         {pathDomain && (
           <section className={styles.card}>
             <div className={styles.cardTitleRow}>
-              <h2>Ramp-path exploration</h2>
-              <span>{pathDomain.representative_paths.length} representative valid ramps</span>
+              <h2>Path-domain state view</h2>
+              <span>Derived q(x) view · secondary diagnostic</span>
             </div>
             <PathDomainPlot analysis={pathDomain} selectedRepresentativeIndex={selectedRepresentativeIndex} />
           </section>
