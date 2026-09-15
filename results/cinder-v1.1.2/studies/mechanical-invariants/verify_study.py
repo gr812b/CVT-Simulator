@@ -18,7 +18,7 @@ from cinder.model.boundaries.shaft import FixedShaftBoundary
 from cinder.model.cvt.contact import EngagedContactMode, SlipDirection, evaluate_contact_relative_speed
 from cinder.results.fields import recover_belt_tension_boundaries
 from cinder.results.inspection import inspect_cvt_state
-from support.reference_model import decode_results_simulation_case_document, reference_model_status
+from defaults.reference_model import decode_reference_case, reference_model_status
 
 subprocess.run([sys.executable,str(RELEASE_ROOT/"verify_environment.py")],check=True)
 assert cinder.__version__=="1.1.2"
@@ -27,10 +27,10 @@ base=(HERE/spec["base_document"]).resolve(); assert base.is_file(),base
 policy_path=(HERE/spec["reference_model_policy"]).resolve(); assert policy_path.is_file(),policy_path
 case_library_path=(HERE/spec["shared_case_library"]).resolve(); assert case_library_path.is_file(),case_library_path
 case_library=json.loads(case_library_path.read_text(encoding="utf-8"))
-assert int(case_library.get("schema_version",0)) >= 3
+assert int(case_library.get("schema_version",0)) >= 4
 assert set(case_library.get("targeted_contact_states",{})) == {"both_slip_mp","secondary_slip_plus"}
 doc=json.loads(base.read_text(encoding="utf-8")); report=validate_simulation_case_document(doc); assert report.is_valid,report.findings
-decoded=decode_results_simulation_case_document(doc)
+decoded=decode_reference_case(doc)
 assert reference_model_status(decoded.plant).secondary_helix_topology=="bilateral_zero_clearance_slot"
 assert callable(inspect_cvt_state); assert callable(recover_belt_tension_boundaries); assert callable(evaluate_contact_relative_speed)
 assert ComposedCVTHybridSystem is not None and NoHost is not None and FixedShaftBoundary is not None
@@ -54,7 +54,6 @@ assert len(case_library["structural_boundary_requests"]) == 4
 assert case_library["deadzone_free_snapshot"]["id"] == "deadzone_free_static_snapshot"
 assert (HERE/"run_reference.py").is_file()
 assert (HERE/"CAPABILITY_INTERPRETATION.md").is_file()
-assert (HERE/"run_capability_probes.py").is_file()
 print("PASS mechanical-invariants operating-domain preflight")
 print(f"Shared cases: {case_library_path}")
 print("Results secondary helix: bilateral_zero_clearance_slot")

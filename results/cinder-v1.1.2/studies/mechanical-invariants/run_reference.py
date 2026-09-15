@@ -27,8 +27,7 @@ RELEASE_ROOT = HERE.parents[1]
 if str(RELEASE_ROOT) not in sys.path:
     sys.path.insert(0, str(RELEASE_ROOT))
 
-from support.reference_model import (
-    decode_results_simulation_case_document,
+from defaults.reference_model import (
     reference_model_status,
     write_reference_model_provenance,
 )
@@ -42,18 +41,6 @@ sys.modules[spec.name] = core
 spec.loader.exec_module(core)
 _ORIGINAL_FIND_CONTACT_CASE = core.find_contact_case
 
-
-def _validate_and_decode_results(document: dict):
-    validation = core.validate_simulation_case_document(document)
-    if not validation.is_valid:
-        for finding in validation.findings:
-            print(f"[{finding.severity}] {finding.document_path or '/'}: {finding.message}")
-        raise RuntimeError("Invariant-study input failed CINDER document validation.")
-    return decode_results_simulation_case_document(document)
-
-
-# Only this study process sees the results reference topology.
-core.validate_and_decode = _validate_and_decode_results
 
 
 def _load_case_library(spec_dict: dict) -> dict:

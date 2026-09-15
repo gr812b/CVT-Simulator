@@ -33,7 +33,6 @@ import numpy as np
 
 import cinder
 from cinder.contracts import (
-    decode_simulation_case_document,
     validate_simulation_case_document,
 )
 from cinder.execution.hybrid import HybridIntegratorSettings
@@ -55,6 +54,10 @@ from cinder.results.inspection import inspect_cvt_state
 
 HERE = Path(__file__).resolve().parent
 RELEASE_ROOT = HERE.parents[1]
+if str(RELEASE_ROOT) not in sys.path:
+    sys.path.insert(0, str(RELEASE_ROOT))
+
+from defaults.reference_model import decode_reference_case
 VERIFY = RELEASE_ROOT / "verify_environment.py"
 SPEC_FILE = HERE / "study.json"
 ARTIFACTS = HERE / "artifacts"
@@ -175,7 +178,7 @@ def validate_and_decode(document: dict):
         for finding in validation.findings:
             print(f"[{finding.severity}] {finding.document_path or '/'}: {finding.message}")
         raise RuntimeError("Invariant-study input failed CINDER document validation.")
-    return decode_simulation_case_document(document)
+    return decode_reference_case(document)
 
 
 def load_frozen_reference(spec: dict):

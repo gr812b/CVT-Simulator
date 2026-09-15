@@ -13,7 +13,7 @@ from cinder.model.cvt.dynamics.engaged_contact import EngagedContactClosure, Eng
 HERE = Path(__file__).resolve().parent
 RELEASE_ROOT = HERE.parents[1]
 VERIFY = RELEASE_ROOT / "verify_environment.py"
-CASE_LIBRARY = RELEASE_ROOT / "defaults" / "verification_operating_cases.json"
+CASE_LIBRARY = RELEASE_ROOT / "defaults" / "operating_cases.json"
 
 subprocess.run([sys.executable, str(VERIFY)], check=True)
 assert cinder.__version__ == "1.1.2"

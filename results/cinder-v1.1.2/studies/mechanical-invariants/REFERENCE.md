@@ -74,7 +74,7 @@ differences away from one-sided boundaries.
 ## 6. Shared operating-case ownership
 
 Reusable cases live in
-`../../defaults/verification_operating_cases.json`. Search recipes describe state
+`../../defaults/verification/operating_cases.json`. Search recipes describe state
 classes; rare reproduction anchors are fully specified release-scoped states
 promoted after the missing-coverage exploration. Neither kind is evidence until
 the consuming study's production classifier, invariant audit and hybrid

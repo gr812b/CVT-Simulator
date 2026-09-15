@@ -1,7 +1,7 @@
 {
   "name": "Baja fixed-pivot reference tune for CINDER 1.1.2 results",
   "status": "frozen_reference_inputs",
-  "executable_document": "baja_reference_simulation_case.json",
+  "executable_document": "simulation_case.json",
   "primary": {
     "flyweights": {
       "count": 3,

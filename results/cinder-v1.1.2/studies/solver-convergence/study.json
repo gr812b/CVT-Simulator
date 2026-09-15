@@ -8,7 +8,7 @@
     "source_commit_sha": "7637a38b4fb9ec21dfb953c1c80a27ec5f389654"
   },
   "schema_version": 1,
-  "base_document": "../../defaults/baja_reference_simulation_case.json",
+  "base_document": "../../defaults/baja/simulation_case.json",
   "reference": {
     "time_span_s": [
       0.0,

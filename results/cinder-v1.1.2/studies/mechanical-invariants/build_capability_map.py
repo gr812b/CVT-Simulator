@@ -16,7 +16,7 @@ from typing import Any
 
 HERE = Path(__file__).resolve().parent
 ARTIFACTS = HERE / "artifacts"
-CASE_LIBRARY = (HERE / "../../defaults/verification_operating_cases.json").resolve()
+CASE_LIBRARY = (HERE / "../../defaults/verification/operating_cases.json").resolve()
 
 CONTACT_IDS = [
     "stick_stick_forward", "stick_stick_reverse",
@@ -63,7 +63,6 @@ def main() -> int:
     cases={r["case_id"]:r for r in read_csv(ARTIFACTS/"case_summary.csv")}
     attempts=read_csv(ARTIFACTS/"candidate_search_log.csv")
     transitions=read_csv(ARTIFACTS/"post_transition_audit.csv")
-    probes=read_csv(ARTIFACTS/"capability_probe_states.csv")
     targeted=set(library.get("targeted_contact_states",{}))
 
     rows=[]
@@ -86,14 +85,11 @@ def main() -> int:
             draft="standardly reachable but transient"
         else:
             draft="standardly reachable"
-        probe_hits=[p for p in probes if p.get("target")==cid]
-        probe_status="|".join(p.get("status","") for p in probe_hits)
         rows.append({
             "case_id":cid,
             "case_status":c.get("status","missing"),
             "draft_capability_flag":draft,
             "diagnostic_flags":"|".join(flags),
-            "slotted_capability_probe_status":probe_status,
             "logged_search_attempts":len(mine),
             "accepted_search_stage":chosen.get("search_stage",""),
             "requested_branch_dwell_s":dwell,

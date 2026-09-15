@@ -18,7 +18,7 @@ exploration:
   **bilateral/slotted secondary helix**; the production signed force/torque law
   is unchanged and only the selected-flank unilateral margin is removed;
 - the policy lives under `results/cinder-v1.1.2/support/` as an ordinary shared decoder/helper; nothing is auto-installed or applied process-wide, and no `cvtModel/` or published wheel source is modified;
-- the active policy is declared in `../../defaults/results_reference_model.json`;
+- the active policy is declared in `../../defaults/reference_model/policy.json`;
 - two rare but fully demonstrated contact states are promoted into the shared
   operating-case defaults as deterministic reproduction anchors:
   `secondary_slip_plus` (exploration attempt 2535) and `both_slip_mp`

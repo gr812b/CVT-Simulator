@@ -25,7 +25,6 @@ import numpy as np
 
 import cinder
 from cinder.contracts import (
-    decode_simulation_case_document,
     validate_simulation_case_document,
 )
 from cinder.execution.hybrid import integrate_hybrid
@@ -54,9 +53,13 @@ from case_library import load_case_library, search_named_stick_case
 
 HERE = Path(__file__).resolve().parent
 RELEASE_ROOT = HERE.parents[1]
+if str(RELEASE_ROOT) not in sys.path:
+    sys.path.insert(0, str(RELEASE_ROOT))
+
+from defaults.reference_model import decode_reference_case
 VERIFY = RELEASE_ROOT / "verify_environment.py"
 SPEC_FILE = HERE / "study.json"
-CASE_LIBRARY_FILE = RELEASE_ROOT / "defaults" / "verification_operating_cases.json"
+CASE_LIBRARY_FILE = RELEASE_ROOT / "defaults" / "verification" / "operating_cases.json"
 ARTIFACTS = HERE / "artifacts"
 EXPECTED_CINDER_VERSION = "1.1.2"
 
@@ -142,7 +145,7 @@ def validate_and_decode(document):
                 f"{finding.document_path or '/'}: {finding.message}"
             )
         raise RuntimeError("Resolved conditioning-study input failed validation.")
-    return decode_simulation_case_document(document)
+    return decode_reference_case(document)
 
 
 def uniform_times(start, end, step):
@@ -1243,7 +1246,7 @@ def main():
     lines = [
         "# CINDER v1.1.2 closure-conditioning study — operating-domain upgrade",
         "",
-        "The actual-root scan uses the frozen nominal launch plus reusable controlled cases from `defaults/verification_operating_cases.json`. Full lambda-plane maps are generated only for the configured representative/worst states.",
+        "The actual-root scan uses the frozen nominal launch plus reusable controlled cases from `defaults/verification/operating_cases.json`. Full lambda-plane maps are generated only for the configured representative/worst states.",
         "",
         "## Actual solved roots",
         "",

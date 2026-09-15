@@ -8,8 +8,8 @@
     "source_commit_sha": "7637a38b4fb9ec21dfb953c1c80a27ec5f389654"
   },
   "schema_version": 5,
-  "base_document": "../../defaults/baja_reference_simulation_case.json",
-  "reference_model_policy": "../../defaults/results_reference_model.json",
+  "base_document": "../../defaults/baja/simulation_case.json",
+  "reference_model_policy": "../../defaults/reference_model/policy.json",
   "nominal_run": {
     "time_span_s": [
       0.0,
@@ -54,11 +54,11 @@
     "geometry_first_derivative_fd_residual": 1e-07,
     "geometry_second_derivative_fd_residual_per_m": 0.005
   },
-  "interpretation": "Review guards are numerical/reporting thresholds, not physical model parameters. Physical admissibility remains nonnegative belt tension, nonnegative local and integrated normal loading, admissible retained unilateral contacts/stops, Coulomb-consistent contact states, and exact active kinematic constraints. The results reference secondary helix is bilateral/slotted, so its signed reaction is not a unilateral admissibility gate.",
+  "interpretation": "Review guards are numerical/reporting thresholds, not physical model parameters. Physical admissibility remains nonnegative belt tension, nonnegative local and integrated normal loading, admissible retained one-sided contacts/stops, Coulomb-consistent contact states, and exact active kinematic constraints. The results reference secondary helix is bilateral/slotted, so its signed reaction is not a unilateral admissibility gate.",
   "generated_artifacts": {
     "directory": "artifacts",
     "committed_results_in_clean_study": false
   },
   "coverage_speed_epsilon_m_s": 1e-06,
-  "shared_case_library": "../../defaults/verification_operating_cases.json"
+  "shared_case_library": "../../defaults/verification/operating_cases.json"
 }

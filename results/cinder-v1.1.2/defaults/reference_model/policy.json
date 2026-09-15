@@ -1,0 +1,28 @@
+{
+  "schema_version": 2,
+  "name": "CINDER v1.1.2 results reference model",
+  "cinder_release": {
+    "distribution": "cinder-cvt",
+    "version": "1.1.2",
+    "source_commit_sha": "7637a38b4fb9ec21dfb953c1c80a27ec5f389654"
+  },
+  "base_simulation_document": "../baja/simulation_case.json",
+  "secondary_helix": {
+    "topology": "bilateral_zero_clearance_slot",
+    "preserve_signed_reacted_torque": true,
+    "preserve_axial_force_equation": true,
+    "preserve_torsional_spring": true,
+    "preserve_movable_member_inertia": true,
+    "preserve_helix_kinematics": true,
+    "preserve_movable_member_torque_fraction": true,
+    "selected_flank_compression_inequality": false
+  },
+  "rationale": "General v1.1.2 results use a valid slotted torque-reactive secondary so belt/contact, closure, hybrid and vehicle studies are not gated by one particular helix flank topology.",
+  "activation": {
+    "module": "defaults.reference_model",
+    "decoder": "decode_reference_case",
+    "process_global_hook": false,
+    "installation_required": false
+  },
+  "serialization_note": "The CINDER 1.1.2 public document schema has no bilateral helix selector. The frozen public Baja document remains unmodified; the results loader applies this declared topology immediately after public decode."
+}

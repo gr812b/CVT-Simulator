@@ -6,7 +6,7 @@ LSODA numerical controls are tightened.
 It loads only:
 
 ```text
-../../defaults/baja_reference_simulation_case.json
+../../defaults/baja/simulation_case.json
 ```
 
 and changes only the integrator settings recorded in `study.json`; the comparison grid is a study-local postprocessing choice. It does

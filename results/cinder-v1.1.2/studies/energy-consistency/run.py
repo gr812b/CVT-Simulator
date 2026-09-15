@@ -20,7 +20,6 @@ import numpy as np
 
 import cinder
 from cinder.contracts import (
-    decode_simulation_case_document,
     validate_simulation_case_document,
 )
 from cinder.execution.hybrid import integrate_hybrid
@@ -41,6 +40,10 @@ from energy_accounting import (
 
 STUDY_ROOT = Path(__file__).resolve().parent
 RELEASE_ROOT = STUDY_ROOT.parents[1]
+if str(RELEASE_ROOT) not in sys.path:
+    sys.path.insert(0, str(RELEASE_ROOT))
+
+from defaults.reference_model import decode_reference_case
 VERIFY_ENVIRONMENT = RELEASE_ROOT / "verify_environment.py"
 STUDY_FILE = STUDY_ROOT / "study.json"
 ARTIFACTS = STUDY_ROOT / "artifacts"
@@ -123,7 +126,7 @@ def validate_and_decode(document: dict):
             "Resolved energy-study input failed CINDER validation:\n"
             + "\n".join(messages)
         )
-    return decode_simulation_case_document(document)
+    return decode_reference_case(document)
 
 
 def run_decoded(decoded):

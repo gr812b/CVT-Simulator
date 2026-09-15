@@ -8,8 +8,8 @@
     "source_commit_sha": "7637a38b4fb9ec21dfb953c1c80a27ec5f389654"
   },
   "schema_version": 2,
-  "base_document": "../../defaults/baja_reference_simulation_case.json",
-  "shared_case_library": "../../defaults/verification_operating_cases.json",
+  "base_document": "../../defaults/baja/simulation_case.json",
+  "shared_case_library": "../../defaults/verification/operating_cases.json",
   "reference_runs": {
     "launch": {
       "time_span_s": [

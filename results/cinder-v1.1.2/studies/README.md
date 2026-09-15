@@ -22,6 +22,10 @@ helix topology should opt out and compare the two designs explicitly.
   reconstruction.
 - `launch-hill-climb/` — retained for mechanism-resolved narrative work.
 
+## Shared reference-model rule
+
+Studies derived from the shared Baja default use `defaults.reference_model.decode_reference_case` and inherit the bilateral/slotted secondary helix automatically. Explicitly custom assemblies remain independent.
+
 ## Result-study rules
 
 A normal study should:

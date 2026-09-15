@@ -1,6 +1,6 @@
 """Shared operating-case search helpers for closure-conditioning.
 
-The numerical recipes live in release ``defaults/verification_operating_cases.json``.
+The numerical recipes live in release ``defaults/verification/operating_cases.json``.
 This module only turns a requested recipe into an actual CINDER production state;
 it adds no alternative CVT mechanics.
 """

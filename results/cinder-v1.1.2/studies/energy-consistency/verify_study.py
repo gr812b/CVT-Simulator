@@ -18,7 +18,7 @@ def main() -> int:
         ROOT / "run.py",
         ROOT / "energy_accounting.py",
         RELEASE_ROOT / "verify_environment.py",
-        RELEASE_ROOT / "defaults" / "baja_reference_simulation_case.json",
+        RELEASE_ROOT / "defaults" / "simulation_case.json",
     ]
     missing = [str(path) for path in required if not path.exists()]
     if missing:

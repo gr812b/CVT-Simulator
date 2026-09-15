@@ -7,7 +7,7 @@
     "source_tag": "cinder-v1.1.2",
     "source_commit_sha": "7637a38b4fb9ec21dfb953c1c80a27ec5f389654"
   },
-  "base_document": "../../defaults/baja_reference_simulation_case.json",
+  "base_document": "../../defaults/baja/simulation_case.json",
   "question": "Within the physics retained by CINDER 1.1.2, does the mechanical-energy balance close across continuous contact regimes and discrete hybrid transitions, and does the remaining residual behave consistently under quadrature and ODE refinement?",
   "intentional_changes_from_base": {
     "time_span_s": [

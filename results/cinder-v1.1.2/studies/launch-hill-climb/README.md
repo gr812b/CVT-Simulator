@@ -12,7 +12,7 @@ launch followed by a sustained uphill load?
 The study loads:
 
 ```text
-../../defaults/baja_reference_simulation_case.json
+../../defaults/baja/simulation_case.json
 ```
 
 No CINDER hardware, tune, engine, vehicle, friction, initial-state, solver, or

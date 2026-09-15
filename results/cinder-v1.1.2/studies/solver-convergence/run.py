@@ -26,13 +26,16 @@ import numpy as np
 
 import cinder
 from cinder.contracts import (
-    decode_simulation_case_document,
     validate_simulation_case_document,
 )
 from cinder.execution.hybrid import integrate_hybrid
 
 HERE = Path(__file__).resolve().parent
 RELEASE_ROOT = HERE.parents[1]
+if str(RELEASE_ROOT) not in sys.path:
+    sys.path.insert(0, str(RELEASE_ROOT))
+
+from defaults.reference_model import decode_reference_case
 VERIFY = RELEASE_ROOT / "verify_environment.py"
 SPEC_FILE = HERE / "study.json"
 ARTIFACTS = HERE / "artifacts"
@@ -112,7 +115,7 @@ def validate_and_decode(document):
                 f"{finding.document_path or '/'}: {finding.message}"
             )
         raise RuntimeError("Resolved convergence input failed CINDER validation.")
-    return decode_simulation_case_document(document)
+    return decode_reference_case(document)
 
 
 def resolved_document(spec, *, rtol, atol, max_step):

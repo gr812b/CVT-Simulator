@@ -33,7 +33,7 @@ and the unexplained remainder is reported directly.
 The study derives from
 
 ```text
-../../defaults/baja_reference_simulation_case.json
+../../defaults/baja/simulation_case.json
 ```
 
 and changes **no mechanical parameter**. The canonical audit extends the flat

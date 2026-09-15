@@ -13,7 +13,7 @@ The frozen Baja launch still contributes physically encountered low-ratio-seat, 
 
 Additional engaged stick states are searched from the shared release library:
 
-`../../defaults/verification_operating_cases.json`
+`../../defaults/verification/operating_cases.json`
 
 That library was extracted from the latest mechanical-invariants case design on PR #487. The closure study uses forward/reverse stick states, positive free-shift velocity, negative free-shift velocity/backshift, low/high interior ratio, and a stressed fixed-boundary state when those states are accepted by CINDER's production classifier and mechanical admissibility checks.
 
