@@ -368,3 +368,75 @@
   .compactField { flex: 1; min-width: 120px; }
   .archMetrics { grid-template-columns: 1fr 1fr; }
 }
+
+/* Phase 2.1 architecture workspace */
+.archSliceControl {
+  display: grid;
+  grid-template-columns: 180px 1fr;
+  gap: 12px;
+  align-items: center;
+  padding: 9px 11px;
+  border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 10px;
+  background: rgba(255,255,255,0.025);
+  > div { display: grid; gap: 2px; }
+  strong { font-size: 11px; }
+  span { color: rgba(237,243,247,0.46); font-size: 10px; }
+  input { width: 100%; }
+}
+.rollerWorkspace {
+  fill: rgba(90, 161, 214, 0.12);
+  stroke: rgba(114, 190, 238, 0.62);
+  stroke-width: 2;
+}
+.rampOpportunity {
+  fill: rgba(217, 174, 86, 0.13);
+  stroke: rgba(235, 194, 107, 0.58);
+  stroke-width: 1.5;
+}
+.rampFeasible {
+  fill: rgba(91, 205, 139, 0.16);
+  stroke: rgba(116, 224, 164, 0.70);
+  stroke-width: 1.7;
+}
+.workspaceArc {
+  fill: none;
+  stroke: rgba(218, 236, 247, 0.82);
+  stroke-width: 2.5;
+}
+.workspaceArcGhost {
+  fill: none;
+  stroke: rgba(218, 236, 247, 0.40);
+  stroke-width: 2;
+  stroke-dasharray: 7 5;
+}
+.qLimitFlat {
+  fill: none;
+  stroke: rgba(255, 209, 102, 0.82);
+  stroke-width: 2;
+  stroke-dasharray: 8 6;
+}
+.shaftReference {
+  stroke: rgba(237,243,247,0.22);
+  stroke-width: 1.5;
+  stroke-dasharray: 4 5;
+}
+.archArmBoundary {
+  stroke: rgba(237,243,247,0.48);
+  stroke-width: 2.5;
+  stroke-dasharray: 6 5;
+}
+.fixedPivot {
+  fill: #edf3f7;
+  stroke: #0d1319;
+  stroke-width: 2.5;
+}
+.limitRoller {
+  fill: none;
+  stroke: rgba(237,243,247,0.58);
+  stroke-width: 2;
+}
+
+@media (max-width: 760px) {
+  .archSliceControl { grid-template-columns: 1fr; }
+}

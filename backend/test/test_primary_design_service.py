@@ -36,6 +36,8 @@ def test_reference_concrete_design_is_full_range_and_below_90_deg() -> None:
     ) < 1.0e-9
     assert analysis["summary"]["max_arm_angle_deg"] < 90.0
     assert len(analysis["geometry"]["axis_values"]) == 81
+    initial_q = analysis["geometry"]["fields"]["arm_angle_deg"][0]
+    assert abs(initial_q - ramp.initial_flyweight_angle_deg) < 1.0e-5
 
 
 def test_zero_speed_quasistatic_force_is_zero_and_reference_speed_is_positive() -> None:
@@ -190,25 +192,36 @@ def test_exact_double_contact_event_preempts_later_sampled_branch_result(monkeyp
     assert {item["label"] for item in failure["geometry"]["contacts"]} == {"C1", "C2"}
 
 
-def test_architecture_workspace_reports_reach_and_packaging_restrictions() -> None:
+def test_architecture_workspace_spans_negative_30_to_90_and_required_travel() -> None:
+    service = FixedPivotPrimaryDesignService()
+    architecture, _ramp, _ = _design_from_defaults(service)
+
+    clear = service.analyze_architecture(
+        architecture=architecture,
+        zones=(),
+        reach_sample_count=181,
+        shift_sample_count=21,
+    )
+    assert clear["validity"]["valid"] is True
+    assert clear["limits"] == {"q_min_deg": -30.0, "q_max_deg": 90.0}
+    assert clear["summary"]["admissible_pose_fraction"] == 1.0
+    assert clear["workspace"]["roller_center"]
+    assert clear["workspace"]["potential_ramp_surface"]
+    assert clear["workspace"]["packaging_feasible_ramp_surface"]
+    assert len(clear["slices"]["items"]) == 21
+    assert abs(clear["slices"]["shift_m"][-1] - architecture.required_travel_m) < 1.0e-12
+    first = clear["slices"]["items"][0]
+    assert abs(first["q_deg"][0] + 30.0) < 1.0e-12
+    assert abs(first["q_deg"][-1] - 90.0) < 1.0e-12
+
+
+def test_architecture_flyweight_keepout_restricts_pose_space() -> None:
     from math import cos, pi, sin
 
     from app.engineering.fixed_pivot_primary import PackagingZone
 
     service = FixedPivotPrimaryDesignService()
-    architecture, ramp, _ = _design_from_defaults(service)
-
-    clear = service.analyze_architecture(
-        architecture=architecture,
-        ramp=ramp,
-        zones=(),
-        reach_sample_count=181,
-    )
-    assert clear["validity"]["valid"] is True
-    assert clear["summary"]["admissible_fraction"] == 1.0
-    assert clear["reach"]["admissible_intervals_deg"][0][0] == 0.0
-    assert abs(clear["reach"]["admissible_intervals_deg"][0][1] - 90.0) < 1.0e-7
-
+    architecture, _ramp, _ = _design_from_defaults(service)
     q = pi / 4.0
     cx = architecture.pivot_axial_position_m + architecture.arm_length_m * cos(q)
     cr = architecture.pivot_radius_m + architecture.arm_length_m * sin(q)
@@ -227,41 +240,54 @@ def test_architecture_workspace_reports_reach_and_packaging_restrictions() -> No
     )
     restricted = service.analyze_architecture(
         architecture=architecture,
-        ramp=ramp,
         zones=(keepout,),
         reach_sample_count=181,
+        shift_sample_count=21,
     )
     assert restricted["validity"]["valid"] is True
-    assert 0.0 < restricted["summary"]["admissible_fraction"] < 1.0
+    assert 0.0 < restricted["summary"]["admissible_pose_fraction"] < 1.0
     assert restricted["zone_diagnostics"][0]["status"] == "restricts"
-    assert len(restricted["reach"]["admissible_intervals_deg"]) >= 1
 
 
-def test_architecture_workspace_checks_current_ramp_against_ramp_zones() -> None:
+def test_architecture_ramp_zone_clips_possible_ramp_workspace() -> None:
     from app.engineering.fixed_pivot_primary import PackagingZone
 
     service = FixedPivotPrimaryDesignService()
-    architecture, ramp, _ = _design_from_defaults(service)
-    ax = architecture.pivot_axial_position_m + ramp.anchor_axial_from_pivot_m
-    ar = architecture.pivot_radius_m + ramp.anchor_radial_from_pivot_m
+    architecture, _ramp, _ = _design_from_defaults(service)
+    baseline = service.analyze_architecture(
+        architecture=architecture,
+        zones=(),
+        reach_sample_count=181,
+        shift_sample_count=21,
+    )
+    viewport = baseline["viewport"]
+    mid_x = 0.5 * (viewport["x_min_m"] + viewport["x_max_m"])
     keepout = PackagingZone(
-        id="ramp-tip-keepout",
-        label="Ramp tip keep-out",
+        id="ramp-keepout",
+        label="Ramp keep-out",
         subject="ramp",
         rule="forbid",
         polygon_m=(
-            (ax - 2.0e-3, ar - 2.0e-3),
-            (ax + 2.0e-3, ar - 2.0e-3),
-            (ax + 2.0e-3, ar + 2.0e-3),
-            (ax - 2.0e-3, ar + 2.0e-3),
+            (mid_x - 3.0e-3, viewport["r_min_m"]),
+            (mid_x + 3.0e-3, viewport["r_min_m"]),
+            (mid_x + 3.0e-3, viewport["r_max_m"]),
+            (mid_x - 3.0e-3, viewport["r_max_m"]),
         ),
     )
     result = service.analyze_architecture(
         architecture=architecture,
-        ramp=ramp,
         zones=(keepout,),
         reach_sample_count=181,
+        shift_sample_count=21,
     )
-    assert result["validity"]["valid"] is True
-    assert result["validity"]["current_ramp_packaging_valid"] is False
-    assert result["zone_diagnostics"][0]["status"] == "violation"
+    assert 0.0 <= result["summary"]["ramp_workspace_fraction"] < 1.0
+    assert result["zone_diagnostics"][0]["status"] in {"restricts", "blocks"}
+
+
+def test_concrete_ramp_placement_uses_initial_flyweight_angle_not_point_a() -> None:
+    service = FixedPivotPrimaryDesignService()
+    defaults = service.defaults()
+    assert "initial_flyweight_angle_deg" in defaults["ramp"]
+    assert "anchor_axial_from_pivot_m" not in defaults["ramp"]
+    assert "anchor_radial_from_pivot_m" not in defaults["ramp"]
+

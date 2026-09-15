@@ -28,8 +28,7 @@ export interface PackagingZone {
 
 export interface FixedPivotRamp {
   kind: RampKind;
-  anchor_axial_from_pivot_m: number;
-  anchor_radial_from_pivot_m: number;
+  initial_flyweight_angle_deg: number;
   linear_angle_deg: number;
   circular_start_angle_deg: number;
   circular_end_angle_deg: number;
@@ -139,33 +138,50 @@ export interface PackagingZoneDiagnostic {
   label: string;
   subject: PackagingZoneSubject;
   rule: PackagingZoneRule;
-  status: 'pass' | 'restricts' | 'blocks' | 'violation';
+  status: 'pass' | 'restricts' | 'blocks';
+  retained_fraction: number;
+}
+
+export interface ArchitectureSlice {
+  shift_m: number;
+  pivot_x_m: number;
+  pivot_r_m: number;
+  q_deg: number[];
+  roller_center_x_m: number[];
+  roller_center_r_m: number[];
+  admissible: boolean[];
   admissible_intervals_deg: Array<[number, number]>;
+  potential_ramp_surface: WorkspacePolygon[];
+  packaging_feasible_ramp_surface: WorkspacePolygon[];
 }
 
 export interface ArchitectureAnalysis {
   architecture: FixedPivotArchitecture;
-  ramp: FixedPivotRamp;
   zones: PackagingZone[];
   validity: {
     valid: boolean;
-    current_ramp_packaging_valid: boolean;
     findings: ArchitectureFinding[];
   };
-  reach: {
-    q_deg: number[];
-    roller_center_x_m: number[];
-    roller_center_r_m: number[];
-    admissible: boolean[];
-    admissible_intervals_deg: Array<[number, number]>;
+  limits: {
+    q_min_deg: number;
+    q_max_deg: number;
   };
-  envelopes: {
+  workspace: {
+    roller_center: WorkspacePolygon[];
+    potential_ramp_surface: WorkspacePolygon[];
+    packaging_feasible_ramp_surface: WorkspacePolygon[];
     flyweight_swept: WorkspacePolygon[];
-    ramp_swept: WorkspacePolygon[];
+    open_roller_arc: { x_m: number[]; r_m: number[] };
+    full_shift_roller_arc: { x_m: number[]; r_m: number[] };
   };
-  ramp_surface: {
-    open: { x_m: number[]; r_m: number[] };
-    full_shift: { x_m: number[]; r_m: number[] };
+  slices: {
+    shift_m: number[];
+    items: ArchitectureSlice[];
+  };
+  boundaries: {
+    q_min_flat_ramp: { x_m: number[]; r_m: number[] };
+    q_max_flat_ramp: { x_m: number[]; r_m: number[] };
+    pivot_travel: { x_m: number[]; r_m: number[] };
   };
   zone_diagnostics: PackagingZoneDiagnostic[];
   manipulators: {
@@ -173,8 +189,8 @@ export interface ArchitectureAnalysis {
     arm_endpoint_r_m: number;
     arm_direction_x: number;
     arm_direction_r: number;
-    q90_endpoint_x_m: number;
-    q90_endpoint_r_m: number;
+    travel_endpoint_x_m: number;
+    travel_endpoint_r_m: number;
   };
   viewport: {
     x_min_m: number;
@@ -183,11 +199,13 @@ export interface ArchitectureAnalysis {
     r_max_m: number;
   };
   summary: {
-    admissible_fraction: number;
-    admissible_interval_count: number;
+    admissible_pose_fraction: number;
+    ramp_workspace_fraction: number;
     zone_count: number;
     ramp_zone_count: number;
     flyweight_zone_count: number;
+    shift_sample_count: number;
+    q_sample_count: number;
   };
 }
 
@@ -221,17 +239,17 @@ export function getPrimaryDesignDefaults(): Promise<PrimaryDesignDefaults> {
 
 export function analyzePrimaryArchitecture(
   architecture: FixedPivotArchitecture,
-  ramp: FixedPivotRamp,
   zones: PackagingZone[],
   reachSampleCount = 361,
+  shiftSampleCount = 41,
 ): Promise<ArchitectureAnalysis> {
   return request<ArchitectureAnalysis>('/architecture/analyze', {
     method: 'POST',
     body: JSON.stringify({
       architecture,
-      ramp,
       zones,
       reach_sample_count: reachSampleCount,
+      shift_sample_count: shiftSampleCount,
     }),
   });
 }

@@ -46,7 +46,6 @@ def analyze_architecture(
     container: ApplicationContainer = Depends(get_container),
 ) -> FixedPivotArchitectureAnalysisResponse:
     architecture = ArchitectureDesign(**request.architecture.model_dump())
-    ramp = RampDesign(**request.ramp.model_dump())
     zones = tuple(
         PackagingZone(
             **zone.model_dump(exclude={"polygon_m"}),
@@ -57,9 +56,9 @@ def analyze_architecture(
     try:
         result = container.primary_design.analyze_architecture(
             architecture=architecture,
-            ramp=ramp,
             zones=zones,
             reach_sample_count=request.reach_sample_count,
+            shift_sample_count=request.shift_sample_count,
         )
     except PrimaryDesignError as error:
         raise ApiProblem(422, error.code.lower(), str(error), error.details) from error

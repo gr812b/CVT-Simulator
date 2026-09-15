@@ -14,7 +14,7 @@ and uses CINDER's real ``FixedPivotFlyweightForce`` for load evaluation.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from math import atan2, cos, degrees, hypot, isfinite, pi, sin, sqrt
+from math import atan2, cos, degrees, hypot, isfinite, pi, radians, sin, sqrt
 
 import numpy as np
 from scipy.optimize import least_squares
@@ -147,8 +147,8 @@ def requested_ramp_surface(
 ) -> tuple[tuple[float, ...], tuple[float, ...]]:
     """Return the requested physical ramp surface at zero local shift.
 
-    This is the small public adapter used by the architecture/package layer so
-    that frontend/design code never has to reproduce CINDER profile placement.
+    This helper remains useful for concrete-design visualization. Architecture
+    mode is deliberately ramp-independent as of Phase 2.1.
     """
 
     _validate_architecture(architecture)
@@ -385,15 +385,8 @@ def evaluate_response(
         else:
             normal_force = per_ramp_axial / point.ramp_normal_x
             per_ramp_radial = normal_force * point.ramp_normal_r
-            anchor_x = (
-                architecture.pivot_axial_position_m
-                + analysis.ramp_design.anchor_axial_from_pivot_m
-                + point.shift_m
-            )
-            anchor_r = (
-                architecture.pivot_radius_m
-                + analysis.ramp_design.anchor_radial_from_pivot_m
-            )
+            anchor_x = analysis.geometry_spec.ramp_reference_axial_position + point.shift_m
+            anchor_r = analysis.geometry_spec.ramp_reference_radius
             dx = point.contact_x_m - anchor_x
             dr = point.contact_r_m - anchor_r
             moment = dx * per_ramp_radial - dr * per_ramp_axial
@@ -896,6 +889,41 @@ def _build_production_map(
     )
 
 
+def _ramp_reference_from_initial_angle(
+    architecture: ArchitectureDesign,
+    ramp_design: RampDesign,
+    ramp: PiecewiseRamp,
+) -> tuple[float, float]:
+    """Place profile coordinate zero at the requested initial roller contact.
+
+    At zero sheave shift the roller centre is fixed by the architecture and the
+    requested initial flyweight angle.  The local tangent of the first ramp
+    point fixes CINDER's finite-roller contact normal, so the physical surface
+    point follows directly.  This removes the old arbitrary Point-A axial and
+    radial placement parameters.
+    """
+
+    q = radians(ramp_design.initial_flyweight_angle_deg)
+    center_x = (
+        architecture.pivot_axial_position_m
+        + architecture.arm_length_m * cos(q)
+    )
+    center_r = architecture.pivot_radius_m + architecture.arm_length_m * sin(q)
+
+    initial = ramp.evaluate(ramp.x_min)
+    slope = initial.first_derivative
+    norm = sqrt(1.0 + slope * slope)
+    sign = float(architecture.roller_side_sign)
+    direction = float(architecture.ramp_axial_direction)
+    normal_x = -sign * slope / norm
+    normal_r = sign * direction / norm
+
+    return (
+        center_x - architecture.roller_radius_m * normal_x,
+        center_r - architecture.roller_radius_m * normal_r,
+    )
+
+
 def _geometry_spec(
     architecture: ArchitectureDesign,
     ramp_design: RampDesign,
@@ -903,19 +931,16 @@ def _geometry_spec(
     *,
     axial_position_max: float,
 ) -> PivotedRollerFollowerGeometrySpec:
+    ramp_reference_x, ramp_reference_r = _ramp_reference_from_initial_angle(
+        architecture, ramp_design, ramp
+    )
     return PivotedRollerFollowerGeometrySpec(
         pivot_axial_position=architecture.pivot_axial_position_m,
         pivot_radius=architecture.pivot_radius_m,
         arm_length=architecture.arm_length_m,
         roller_radius=architecture.roller_radius_m,
-        ramp_reference_axial_position=(
-            architecture.pivot_axial_position_m
-            + ramp_design.anchor_axial_from_pivot_m
-        ),
-        ramp_reference_radius=(
-            architecture.pivot_radius_m
-            + ramp_design.anchor_radial_from_pivot_m
-        ),
+        ramp_reference_axial_position=ramp_reference_x,
+        ramp_reference_radius=ramp_reference_r,
         ramp_profile=ramp,
         ramp_axial_direction=architecture.ramp_axial_direction,
         axial_position_min=0.0,
@@ -988,6 +1013,10 @@ def _validate_architecture(architecture: ArchitectureDesign) -> None:
 
 
 def _validate_ramp_design(design: RampDesign) -> None:
+    if not -30.0 <= design.initial_flyweight_angle_deg < 90.0:
+        raise ValueError(
+            "initial_flyweight_angle_deg must lie in the architecture range [-30, 90)."
+        )
     if not 0.0 < design.linear_angle_deg < 90.0:
         raise ValueError("linear_angle_deg must lie strictly between 0 and 90 degrees.")
     if design.kind == "constant":
@@ -1002,9 +1031,9 @@ def _validate_ramp_design(design: RampDesign) -> None:
         raise ValueError(
             "circular_end_angle_deg must lie strictly between 0 and 90 degrees."
         )
-    if design.circular_start_angle_deg < design.circular_end_angle_deg:
+    if design.circular_start_angle_deg <= design.circular_end_angle_deg:
         raise ValueError(
-            "The Q2 circular section requires circular_start_angle_deg >= "
+            "The Q2 circular section requires circular_start_angle_deg > "
             "circular_end_angle_deg."
         )
     if design.linear_length_m <= 0.0:

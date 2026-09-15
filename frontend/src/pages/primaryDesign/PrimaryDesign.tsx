@@ -75,13 +75,12 @@ export const PrimaryDesign = () => {
 
   const analyzeArchitecture = useCallback(async (
     nextArchitecture: FixedPivotArchitecture,
-    nextRamp: FixedPivotRamp,
     nextZones: PackagingZone[],
   ) => {
     setArchitectureLoading(true);
     setError(null);
     try {
-      const next = await analyzePrimaryArchitecture(nextArchitecture, nextRamp, nextZones, 361);
+      const next = await analyzePrimaryArchitecture(nextArchitecture, nextZones, 361, 41);
       setArchitectureAnalysis(next);
       setArchitectureDirty(false);
     } catch (caught) {
@@ -127,7 +126,7 @@ export const PrimaryDesign = () => {
         setZones(defaults.packaging_zones);
         setOperating(defaults.operating);
         await Promise.all([
-          analyzeArchitecture(defaults.architecture, defaults.ramp, defaults.packaging_zones),
+          analyzeArchitecture(defaults.architecture, defaults.packaging_zones),
           analyzeConcrete(defaults.architecture, defaults.ramp, defaults.operating),
         ]);
       })
@@ -175,7 +174,6 @@ export const PrimaryDesign = () => {
   };
   const updateRamp = (patch: Partial<FixedPivotRamp>) => {
     setRamp((value) => value ? { ...value, ...patch } : value);
-    setArchitectureDirty(true);
     setGeometryDirty(true);
   };
   const updateZones = (nextZones: PackagingZone[]) => {
@@ -200,7 +198,7 @@ export const PrimaryDesign = () => {
           <h1>Fixed-Pivot Primary Design</h1>
           <p>Architecture packaging, exact roller contact, flyweight force, and structural-load inspection.</p>
         </div>
-        <div className={styles.phaseBadge}>Architecture + packaging · Phase 2</div>
+        <div className={styles.phaseBadge}>Architecture workspace · Phase 2.1</div>
       </header>
 
       <div className={styles.modeTabs}>
@@ -217,7 +215,6 @@ export const PrimaryDesign = () => {
       {mode === 'architecture' ? (
         <ArchitectureMode
           architecture={architecture}
-          ramp={ramp}
           zones={zones}
           analysis={architectureAnalysis}
           dirty={architectureDirty}
@@ -227,7 +224,7 @@ export const PrimaryDesign = () => {
           onZonesChange={updateZones}
           onZoneChange={updateZone}
           onSelectedZoneChange={setSelectedZoneId}
-          onAnalyze={() => void analyzeArchitecture(architecture, ramp, zones)}
+          onAnalyze={() => void analyzeArchitecture(architecture, zones)}
         />
       ) : (
         <ConcreteMode
@@ -254,7 +251,6 @@ export const PrimaryDesign = () => {
 
 function ArchitectureMode({
   architecture,
-  ramp,
   zones,
   analysis,
   dirty,
@@ -267,7 +263,6 @@ function ArchitectureMode({
   onAnalyze,
 }: {
   architecture: FixedPivotArchitecture;
-  ramp: FixedPivotRamp;
   zones: PackagingZone[];
   analysis: ArchitectureAnalysis | null;
   dirty: boolean;
@@ -288,8 +283,8 @@ function ArchitectureMode({
             {dirty && <span className={styles.dirty}>reanalyze</span>}
           </div>
           <div className={styles.twoCol}>
-            <NumberField label="Pivot axial" suffix="mm" value={architecture.pivot_axial_position_m * MM} step={0.5} onChange={(value) => onArchitectureChange({ pivot_axial_position_m: value / MM })} />
             <NumberField label="Pivot radius" suffix="mm" value={architecture.pivot_radius_m * MM} min={0.5} step={0.5} onChange={(value) => onArchitectureChange({ pivot_radius_m: value / MM })} />
+            <Readout label="Axial reference" value="pivot at x = 0" />
           </div>
           <div className={styles.twoCol}>
             <NumberField label="Arm length" suffix="mm" value={architecture.arm_length_m * MM} min={2} step={0.5} onChange={(value) => onArchitectureChange({ arm_length_m: value / MM })} />
@@ -306,7 +301,7 @@ function ArchitectureMode({
           <button type="button" className={styles.primaryButton} disabled={loading} onClick={onAnalyze}>
             {loading ? 'Analyzing architecture…' : 'Analyze architecture'}
           </button>
-          <p className={styles.helpText}>Dragging the mechanism updates the draft only. Reach, envelopes, and packaging admissibility remain backend-owned and refresh when you analyze.</p>
+          <p className={styles.helpText}>Architecture is ramp-independent: q spans -30° to 90° and the full required travel. Dragging updates only the draft; the backend refreshes the actual roller and possible-ramp workspaces.</p>
         </section>
 
         <section className={styles.card}>
@@ -314,7 +309,7 @@ function ArchitectureMode({
             <h2>Packaging zones</h2>
             <span>{zones.length}</span>
           </div>
-          {zones.length === 0 && <p className={styles.helpText}>Draw allowed regions or keep-outs directly in the engineering view. Coordinates are stored in the same axial–radial frame as the mechanism.</p>}
+          {zones.length === 0 && <p className={styles.helpText}>Draw allowed regions or keep-outs directly in the engineering view. Use a ramp keep-out around the pivot/hub or other hardware; the architecture layer intentionally does not invent a body thickness or pivot housing radius.</p>}
           <div className={styles.zoneList}>
             {zones.map((zone) => (
               <div key={zone.id} className={zone.id === selectedZoneId ? styles.zoneEditorSelected : styles.zoneEditor}>
@@ -342,15 +337,6 @@ function ArchitectureMode({
           </div>
         </section>
 
-        <section className={styles.card}>
-          <h2>Current ramp overlay</h2>
-          <div className={styles.readoutGrid}>
-            <Readout label="Profile" value={ramp.kind === 'progressive' ? 'linear + C³ + circular' : 'constant'} />
-            <Readout label="Point A axial" value={`${(ramp.anchor_axial_from_pivot_m * MM).toFixed(1)} mm`} />
-            <Readout label="Point A radial" value={`${(ramp.anchor_radial_from_pivot_m * MM).toFixed(1)} mm`} />
-          </div>
-          <p className={styles.helpText}>Edit the physical ramp in Concrete design. Here it is only an overlay for packaging checks.</p>
-        </section>
       </aside>
 
       <div className={styles.workspace}>
@@ -375,25 +361,17 @@ function ArchitectureMode({
           {analysis ? (
             <>
               <div className={styles.archMetrics}>
-                <Metric label="Reach admitted" value={`${(analysis.summary.admissible_fraction * 100).toFixed(1)} %`} />
-                <Metric label="Admissible q intervals" value={String(analysis.summary.admissible_interval_count)} />
-                <Metric label="Flyweight zones" value={String(analysis.summary.flyweight_zone_count)} />
-                <Metric label="Ramp zones" value={String(analysis.summary.ramp_zone_count)} />
+                <Metric label="Flyweight poses admitted" value={`${(analysis.summary.admissible_pose_fraction * 100).toFixed(1)} %`} />
+                <Metric label="Ramp workspace retained" value={`${(analysis.summary.ramp_workspace_fraction * 100).toFixed(1)} %`} />
+                <Metric label="Angle range" value={`${analysis.limits.q_min_deg.toFixed(0)}° → ${analysis.limits.q_max_deg.toFixed(0)}°`} />
+                <Metric label="Travel" value={`${(architecture.required_travel_m * MM).toFixed(2)} mm`} />
               </div>
-              <div className={styles.intervalRow}>
-                <strong>Admissible q</strong>
-                {analysis.reach.admissible_intervals_deg.length === 0
-                  ? <span className={styles.invalid}>none</span>
-                  : analysis.reach.admissible_intervals_deg.map(([start, end], index) => (
-                    <span key={`${start}-${end}-${index}`} className={styles.intervalChip}>{start.toFixed(2)}° → {end.toFixed(2)}°</span>
-                  ))}
-              </div>
+              <p className={styles.helpText}>Gold is the purely geometric one-sided finite-roller ramp-surface opportunity region. Green is what remains after ramp packaging zones. It is not yet the Phase-3 exact CINDER-admissible ramp corridor.</p>
               <div className={styles.legendRow}>
-                <span><i className={styles.legendReach} />pure roller-centre reach</span>
-                <span><i className={styles.legendAdmissible} />zone-admissible reach</span>
-                <span><i className={styles.legendBlocked} />blocked by zones</span>
-                <span><i className={styles.legendEnvelope} />swept flyweight envelope</span>
-                <span><i className={styles.legendRamp} />current ramp sweep</span>
+                <span><i className={styles.legendReach} />roller-centre workspace</span>
+                <span><i className={styles.legendRamp} />potential ramp surface</span>
+                <span><i className={styles.legendAdmissible} />packaging-feasible ramp surface</span>
+                <span><i className={styles.legendBlocked} />packaging-restricted pose</span>
               </div>
             </>
           ) : <div className={styles.loading}>Analyze the architecture to build its reach and packaging workspace.</div>}
@@ -487,10 +465,8 @@ function ConcreteMode({
               <NumberField label="Circular end tangent" suffix="°" value={ramp.circular_end_angle_deg} min={1} max={89} step={0.5} onChange={(value) => onRampChange({ circular_end_angle_deg: value })} />
             </div>
           )}
-          <div className={styles.twoCol}>
-            <NumberField label="Ramp A axial" suffix="mm" value={ramp.anchor_axial_from_pivot_m * MM} step={0.5} onChange={(value) => onRampChange({ anchor_axial_from_pivot_m: value / MM })} />
-            <NumberField label="Ramp A radial" suffix="mm" value={ramp.anchor_radial_from_pivot_m * MM} step={0.5} onChange={(value) => onRampChange({ anchor_radial_from_pivot_m: value / MM })} />
-          </div>
+          <NumberField label="Initial flyweight angle q₀" suffix="°" value={ramp.initial_flyweight_angle_deg} min={-30} max={89.5} step={0.25} onChange={(value) => onRampChange({ initial_flyweight_angle_deg: value })} />
+          <p className={styles.helpText}>Ramp placement is derived from q₀, the initial tangent, the fixed pivot/arm geometry, and the finite roller. Point A is no longer a placement input.</p>
           {ramp.kind === 'progressive' ? (
             <div className={styles.threeCol}>
               <NumberField label="Linear" suffix="mm" value={ramp.linear_length_m * MM} min={0.5} step={0.5} onChange={(value) => onRampChange({ linear_length_m: value / MM })} />
@@ -618,7 +594,6 @@ function ValidityBadge({ analysis }: { analysis: ConcreteDesignAnalysis }) {
 
 function ArchitectureBadge({ analysis, stale }: { analysis: ArchitectureAnalysis; stale: boolean }) {
   if (stale) return <span className={styles.dirty}>stale</span>;
-  if (!analysis.validity.valid) return <span className={styles.invalid}>architecture blocked</span>;
-  if (!analysis.validity.current_ramp_packaging_valid) return <span className={styles.dirty}>architecture valid · ramp violates zone</span>;
-  return <span className={styles.valid}>packaging workspace valid</span>;
+  if (!analysis.validity.valid) return <span className={styles.invalid}>workspace blocked</span>;
+  return <span className={styles.valid}>architecture workspace valid</span>;
 }

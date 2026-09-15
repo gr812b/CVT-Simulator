@@ -68,15 +68,15 @@ def test_primary_design_architecture_workspace_round_trip() -> None:
         "/api/v1/engineering/fixed-pivot-primary/architecture/analyze",
         json={
             "architecture": defaults["architecture"],
-            "ramp": defaults["ramp"],
             "zones": [],
             "reach_sample_count": 181,
+            "shift_sample_count": 21,
         },
     )
     assert response.status_code == 200
     workspace = response.json()
     assert workspace["validity"]["valid"] is True
-    assert len(workspace["reach"]["q_deg"]) == 181
-    assert workspace["reach"]["admissible_intervals_deg"] == [[0.0, 90.0]]
-    assert workspace["envelopes"]["flyweight_swept"]
-    assert workspace["ramp_surface"]["open"]["x_m"]
+    assert workspace["limits"] == {"q_min_deg": -30.0, "q_max_deg": 90.0}
+    assert workspace["workspace"]["roller_center"]
+    assert workspace["workspace"]["potential_ramp_surface"]
+    assert len(workspace["slices"]["items"]) == 21

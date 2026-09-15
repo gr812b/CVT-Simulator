@@ -67,15 +67,6 @@ export function MechanismScene({ analysis, shiftM }: Props) {
     const openRampX = analysis.ramp_surface_open.x_m;
     const fullRampX = openRampX.map((x) => x + analysis.requested_travel_m);
     const rampR = analysis.ramp_surface_open.r_m;
-    const pointAX = (
-      analysis.architecture.pivot_axial_position_m
-      + analysis.ramp.anchor_axial_from_pivot_m
-      + shiftM
-    );
-    const pointAR = (
-      analysis.architecture.pivot_radius_m
-      + analysis.ramp.anchor_radial_from_pivot_m
-    );
     const failureShiftM = analysis.validity.failure?.shift_m ?? null;
     const failureRampX = failureShiftM === null
       ? []
@@ -136,8 +127,6 @@ export function MechanismScene({ analysis, shiftM }: Props) {
       rollerR,
       pointX: exactPointX,
       pointR: exactPointR,
-      pointAX,
-      pointAR,
       angle,
       exactAngle,
       contactAvailable,
@@ -397,12 +386,10 @@ export function MechanismScene({ analysis, shiftM }: Props) {
           </g>
         )}
         <circle cx={scene.sx(scene.pivotX)} cy={scene.sy(scene.pivotR)} r="6" fill="currentColor" />
-        <circle cx={scene.sx(scene.pointAX)} cy={scene.sy(scene.pointAR)} r="5" fill="#f0c56f" />
         {scene.physicalPoseAvailable && Number.isFinite(scene.pointX) && Number.isFinite(scene.pointR) && (
           <circle cx={scene.sx(scene.pointX)} cy={scene.sy(scene.pointR)} r="5" fill="currentColor" />
         )}
         <text x={scene.sx(scene.pivotX) + 9} y={scene.sy(scene.pivotR) - 10} fill="currentColor" fontSize="13">P</text>
-        <text x={scene.sx(scene.pointAX) + 9} y={scene.sy(scene.pointAR) - 9} fill="#f0c56f" fontSize="13">A</text>
         {scene.physicalPoseAvailable && Number.isFinite(scene.pointX) && Number.isFinite(scene.pointR) && (
           <text x={scene.sx(scene.pointX) + 9} y={scene.sy(scene.pointR) - 9} fill="currentColor" fontSize="13">C</text>
         )}

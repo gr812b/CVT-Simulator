@@ -43,8 +43,7 @@ class PackagingZoneRequest(ApiModel):
 
 class FixedPivotRampRequest(ApiModel):
     kind: Literal["progressive", "constant"] = "progressive"
-    anchor_axial_from_pivot_m: float
-    anchor_radial_from_pivot_m: float
+    initial_flyweight_angle_deg: float = Field(ge=-30.0, lt=90.0)
     linear_angle_deg: float = Field(gt=0.0, lt=90.0)
     circular_start_angle_deg: float = Field(gt=0.0, lt=90.0)
     circular_end_angle_deg: float = Field(gt=0.0, lt=90.0)
@@ -57,10 +56,10 @@ class FixedPivotRampRequest(ApiModel):
     def _check_progressive_order(self) -> "FixedPivotRampRequest":
         if (
             self.kind == "progressive"
-            and self.circular_start_angle_deg < self.circular_end_angle_deg
+            and self.circular_start_angle_deg <= self.circular_end_angle_deg
         ):
             raise ValueError(
-                "the Q2 circular section requires circular_start_angle_deg >= "
+                "the Q2 circular section requires circular_start_angle_deg > "
                 "circular_end_angle_deg"
             )
         return self
@@ -68,9 +67,9 @@ class FixedPivotRampRequest(ApiModel):
 
 class FixedPivotArchitectureAnalyzeRequest(ApiModel):
     architecture: FixedPivotArchitectureRequest
-    ramp: FixedPivotRampRequest
     zones: list[PackagingZoneRequest] = Field(default_factory=list, max_length=32)
     reach_sample_count: int = Field(default=361, ge=91, le=1441)
+    shift_sample_count: int = Field(default=41, ge=9, le=161)
 
 
 class FixedPivotConcreteAnalyzeRequest(ApiModel):
@@ -97,12 +96,12 @@ class FixedPivotDefaultsResponse(ApiModel):
 
 class FixedPivotArchitectureAnalysisResponse(ApiModel):
     architecture: dict[str, Any]
-    ramp: dict[str, Any]
     zones: list[dict[str, Any]]
     validity: dict[str, Any]
-    reach: dict[str, Any]
-    envelopes: dict[str, Any]
-    ramp_surface: dict[str, Any]
+    limits: dict[str, float]
+    workspace: dict[str, Any]
+    slices: dict[str, Any]
+    boundaries: dict[str, Any]
     zone_diagnostics: list[dict[str, Any]]
     manipulators: dict[str, float]
     viewport: dict[str, float]

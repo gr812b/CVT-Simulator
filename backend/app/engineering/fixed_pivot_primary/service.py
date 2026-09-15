@@ -13,7 +13,6 @@ from .cinder_adapter import (
     GeometryAnalysis,
     analyze_geometry,
     evaluate_response,
-    requested_ramp_surface,
 )
 from .models import ArchitectureDesign, OperatingCondition, PackagingZone, RampDesign
 
@@ -64,8 +63,7 @@ class FixedPivotPrimaryDesignService:
         )
         ramp = RampDesign(
             kind="progressive",
-            anchor_axial_from_pivot_m=1.5 * INCH,
-            anchor_radial_from_pivot_m=0.2776 * INCH,
+            initial_flyweight_angle_deg=7.091059977,
             linear_angle_deg=35.0,
             circular_start_angle_deg=35.0,
             circular_end_angle_deg=20.0,
@@ -94,29 +92,18 @@ class FixedPivotPrimaryDesignService:
         self,
         *,
         architecture: ArchitectureDesign,
-        ramp: RampDesign,
         zones: tuple[PackagingZone, ...],
         reach_sample_count: int = 361,
+        shift_sample_count: int = 41,
     ) -> dict[str, object]:
-        """Analyze architecture reach and polygonal packaging constraints.
-
-        No design search happens here.  The result is the deterministic
-        workspace used by the Phase 2 editor and later by the architecture
-        explorer.
-        """
+        """Analyze the ramp-independent architecture/package workspace."""
 
         try:
-            ramp_x, ramp_r = requested_ramp_surface(
-                architecture,
-                ramp,
-                sample_count=max(161, min(501, reach_sample_count)),
-            )
             workspace = analyze_architecture_workspace(
                 architecture,
                 zones,
-                ramp_surface_open_x_m=ramp_x,
-                ramp_surface_open_r_m=ramp_r,
                 reach_sample_count=reach_sample_count,
+                shift_sample_count=shift_sample_count,
             )
         except (TypeError, ValueError, RuntimeError) as error:
             raise PrimaryDesignError(
@@ -126,7 +113,6 @@ class FixedPivotPrimaryDesignService:
 
         return {
             "architecture": _architecture_document(architecture),
-            "ramp": _ramp_document(ramp),
             "zones": [_zone_document(zone) for zone in zones],
             **workspace,
         }
@@ -191,11 +177,11 @@ class FixedPivotPrimaryDesignService:
             "admissible": "1",
         }
 
+        # Profile coordinate zero is now intentionally the initial contact, so
+        # only the remaining margin toward the far end is a useful endpoint
+        # manufacturing diagnostic.
         endpoint_margins = [
-            min(
-                point.contact_coordinate_m - geometry.ramp.x_min,
-                geometry.ramp.x_max - point.contact_coordinate_m,
-            )
+            geometry.ramp.x_max - point.contact_coordinate_m
             for point in geometry.points
         ]
         max_q = (
@@ -384,10 +370,7 @@ def _validity_document(geometry: GeometryAnalysis) -> dict[str, object]:
 
     if geometry.points:
         endpoint_margin = min(
-            min(
-                point.contact_coordinate_m - geometry.ramp.x_min,
-                geometry.ramp.x_max - point.contact_coordinate_m,
-            )
+            geometry.ramp.x_max - point.contact_coordinate_m
             for point in geometry.points
         )
         if endpoint_margin < 1.0e-3:
@@ -420,8 +403,7 @@ def _architecture_document(value: ArchitectureDesign) -> dict[str, object]:
 def _ramp_document(value: RampDesign) -> dict[str, object]:
     return {
         "kind": value.kind,
-        "anchor_axial_from_pivot_m": value.anchor_axial_from_pivot_m,
-        "anchor_radial_from_pivot_m": value.anchor_radial_from_pivot_m,
+        "initial_flyweight_angle_deg": value.initial_flyweight_angle_deg,
         "linear_angle_deg": value.linear_angle_deg,
         "circular_start_angle_deg": value.circular_start_angle_deg,
         "circular_end_angle_deg": value.circular_end_angle_deg,

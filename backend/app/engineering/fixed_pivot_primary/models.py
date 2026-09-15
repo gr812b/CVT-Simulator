@@ -40,9 +40,16 @@ class PackagingZone:
 
 @dataclass(frozen=True, slots=True)
 class RampDesign:
+    """One concrete physical ramp and its initial assembly angle.
+
+    ``initial_flyweight_angle_deg`` replaces the old arbitrary Point-A axial /
+    radial placement.  The CINDER adapter places the ramp so that, at zero
+    primary shift, the first point of the physical ramp is tangent to the
+    finite roller at this flyweight angle.
+    """
+
     kind: RampKind
-    anchor_axial_from_pivot_m: float
-    anchor_radial_from_pivot_m: float
+    initial_flyweight_angle_deg: float
     linear_angle_deg: float
     circular_start_angle_deg: float
     circular_end_angle_deg: float
