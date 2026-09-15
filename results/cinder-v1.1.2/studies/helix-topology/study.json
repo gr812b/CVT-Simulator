@@ -1,0 +1,220 @@
+{
+  "schema_version": 1,
+  "study": "helix-topology",
+  "title": "Secondary helix contact topology: reaction reversal and slotted-vs-selected-flank mechanics",
+  "status": "exploratory_mechanism_discovery",
+  "cinder_version": "1.1.2",
+  "release_tag": "cinder-v1.1.2",
+  "release_commit_sha": "7637a38b4fb9ec21dfb953c1c80a27ec5f389654",
+  "scientific_question": "When the required secondary helix reaction reverses sign, where does that occur, which physical terms cause it, and only after the mechanism is understood, does bilateral zero-clearance slotted support materially change transient CVT behavior relative to a physically released selected flank?",
+  "reference_topology": {
+    "name": "bilateral_zero_clearance_slot",
+    "policy": "Use the shared results reference model. Preserve the production signed helix torque/force law, torsional spring, movable-member inertia, shaft reaction, and kinematic coupling. Negative selected-flank reaction is carried by the opposite slot flank.",
+    "implementation": "../../support/reference_model.py"
+  },
+  "primary_contact_quantity": {
+    "name": "helix_reacted_torque_margin_Nm",
+    "expression": "f*tau_s + k_theta*(theta_pre-theta) - I_M*(alpha_s + theta_ddot)",
+    "interpretation": "positive = selected flank compressive; zero = lift-off boundary; negative = opposite slot flank required by the slotted solution"
+  },
+  "experiments": {
+    "reaction_map": {
+      "stage": "E1",
+      "role": "exploratory",
+      "shift_percent_samples": 101,
+      "secondary_belt_torque_range_Nm": [
+        -500.0,
+        500.0
+      ],
+      "secondary_belt_torque_samples": 201,
+      "dynamic_terms": "zero",
+      "question": "Where is the quasi-static selected-flank zero-reaction boundary in shift-position / secondary-belt-torque space?"
+    },
+    "forward_control": {
+      "stage": "E2",
+      "role": "exploratory_control",
+      "scenario": "flat full-throttle reference launch",
+      "duration_s": 10.0,
+      "sample_step_s": 0.001,
+      "solver": {
+        "method": "LSODA",
+        "relative_tolerance": 0.0001,
+        "absolute_tolerance": 1e-07,
+        "max_step_s": 0.01
+      },
+      "question": "Does ordinary forward operation approach or cross the selected-flank reaction boundary under the slotted reference topology?"
+    },
+    "stress_screen": {
+      "stage": "E3",
+      "role": "exploratory_candidate_discovery",
+      "conditioning_duration_s": 10.0,
+      "restart_shift_percents": [
+        10.0,
+        50.0,
+        90.0
+      ],
+      "onset_s": 0.05,
+      "hold_s": 0.35,
+      "ramp_times_s": [
+        0.01,
+        0.1,
+        0.25
+      ],
+      "secondary_added_torques_Nm": [
+        -480.0,
+        -240.0,
+        -120.0,
+        -80.0,
+        -40.0,
+        0.0,
+        40.0,
+        80.0,
+        120.0,
+        240.0,
+        480.0
+      ],
+      "near_boundary_margin_Nm": 1.0,
+      "solver": {
+        "method": "LSODA",
+        "relative_tolerance": 0.0003,
+        "absolute_tolerance": 3e-07,
+        "sample_step_s": 0.001,
+        "maximum_step_cap_s": 0.003
+      },
+      "question": "Which naturally reachable shift states and smooth signed secondary-torque ramps generate clean near-zero or sign-reversing helix reaction trajectories?"
+    },
+    "scenario_discovery": {
+      "stage": "E4",
+      "role": "broad_exploratory_mechanism_discovery",
+      "conditioning_duration_s": 10.0,
+      "ratio_restart_shift_percents": [
+        10.0,
+        50.0,
+        90.0
+      ],
+      "restart_maximum_error_percent": 1.0,
+      "onset_s": 0.05,
+      "hold_s": 0.5,
+      "near_boundary_margin_Nm": 1.0,
+      "bench_secondary_inertia_kg_m2": 0.002011338398044471,
+      "hill_entry": {
+        "restart_keys": [
+          "s50",
+          "s90"
+        ],
+        "ramp_times_s": [
+          0.1,
+          0.5
+        ],
+        "grade_targets_deg": [
+          15.0,
+          30.0,
+          45.0
+        ],
+        "question": "Can a sudden road-load increase create or deepen opposite-flank demand under the ordinary Baja engine and vehicle boundary?"
+      },
+      "downhill_engine_braking": {
+        "restart_keys": [
+          "s50",
+          "s90"
+        ],
+        "ramp_s": 0.25,
+        "grade_targets_deg": [
+          0.0,
+          -15.0,
+          -30.0,
+          -45.0
+        ],
+        "primary_target_torques_Nm": [
+          -5.0,
+          -20.0,
+          -40.0
+        ],
+        "question": "When the vehicle can drive the CVT and the primary boundary transitions from full throttle to resisting torque, does M_h reverse and which term causes it?"
+      },
+      "bench_backdrive": {
+        "restart_keys": [
+          "s50",
+          "s90",
+          "dynamic"
+        ],
+        "ramp_s": 0.1,
+        "primary_target_torques_Nm": [
+          -5.0,
+          -25.0
+        ],
+        "secondary_drive_torques_Nm": [
+          120.0,
+          300.0,
+          600.0
+        ],
+        "question": "With the vehicle removed, can a driven secondary shaft cleanly force reverse power flow and a helix reaction reversal?"
+      },
+      "bench_resisting_load": {
+        "restart_keys": [
+          "s10",
+          "s50",
+          "s90",
+          "dynamic"
+        ],
+        "ramp_s": 0.1,
+        "secondary_load_torques_Nm": [
+          -120.0,
+          -300.0,
+          -600.0
+        ],
+        "question": "With the vehicle removed, how does a direct resisting secondary load approach the selected-flank boundary from different ratios and a high-dynamic natural state?"
+      },
+      "dynamic_restart": {
+        "selection": "Natural engaged sample maximizing |shaft-accel term| + |shift-accel term| + |curvature term|.",
+        "purpose": "Give helix inertial terms a deliberate chance to control the zero crossing rather than only belt torque."
+      },
+      "solver": {
+        "method": "LSODA",
+        "relative_tolerance": 0.0003,
+        "absolute_tolerance": 3e-07,
+        "sample_step_s": 0.001,
+        "maximum_step_cap_s": 0.003,
+        "minimum_max_step_s": 0.00025
+      },
+      "question": "Across road-load, reverse-power-flow, engine-braking, bench-drive, and high-dynamic initial states, which mechanisms produce clean and substantial opposite-flank demand?"
+    },
+    "candidate_reruns": {
+      "stage": "E5",
+      "role": "planned_after_discovery",
+      "status": "not_implemented_until_artifacts_are_interpreted",
+      "question": "Which representative discoveries should be rerun with tighter tolerances and denser sampling before topology comparison?"
+    },
+    "selected_flank_comparator": {
+      "stage": "E6",
+      "role": "planned_physical_comparator",
+      "status": "not_implemented_until_detached_topology_is_derived",
+      "requirement": "Release both helix contact reaction and helix kinematic constraint at lift-off; introduce independent movable-member relative rotation during detachment.",
+      "forbidden_shortcut": "Do not use force clipping with theta=theta(s) as the primary physical comparator."
+    },
+    "topology_vehicle_cases": {
+      "stage": "E7",
+      "role": "planned_after_topology_closure",
+      "status": "not_implemented_until_E6",
+      "question": "For representative realistic and bench cases, what trajectory consequence follows from slotted support versus true selected-flank detachment?"
+    }
+  },
+  "discovery_metrics": {
+    "D_opp_case": "measure(M_h < 0) / total case duration",
+    "D_opp_engaged": "measure(M_h < 0) / time with a resolved engaged helix margin",
+    "I_opp_tau_Nm_s": "integral over M_h<0 of |M_h| dt",
+    "I_opp_force_N_s": "integral over M_h<0 of |F_h| dt",
+    "zero_crossing_count": "number of sign changes in M_h after duplicate event times are resolved",
+    "first_opposite_flank_time_s": "linearly interpolated first M_h=0 crossing into M_h<0",
+    "minimum_margin_Nm": "minimum signed M_h",
+    "minimum_absolute_margin_Nm": "minimum |M_h|"
+  },
+  "interpretation_boundaries": [
+    "The slotted reference is a results-programme topology, not a claim that every real CVT should use a slot.",
+    "A negative selected-flank margin in the slotted model means opposite-flank support, not a solver failure.",
+    "The released CINDER selected-flank topology detects inadmissible tensile reaction but does not model detached motion or opposite-flank capture.",
+    "The exploration stages E1-E4 find, force, classify, and decompose zero crossings across multiple boundary-condition families; they intentionally do not report slotted-vs-unilateral performance conclusions.",
+    "Real backlash, free flight, contact impact, friction, and finite capture dynamics are outside the zero-clearance slotted idealization and the first-order detached comparator.",
+    "Subtle crossing cases must be rerun under tighter tolerances before they are promoted to final results."
+  ]
+}
