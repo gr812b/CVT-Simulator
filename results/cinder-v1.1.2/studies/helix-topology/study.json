@@ -318,6 +318,84 @@
       "role": "planned_after_topology_closure",
       "status": "not_implemented_until_E6",
       "question": "For representative realistic and bench cases, what trajectory consequence follows from slotted support versus true selected-flank detachment?"
+    },
+    "dynamic_only_liftoff": {
+      "stage": "E5.5",
+      "role": "preload_and_transient_search_for_forward_power_stick_stick_dynamic_only_liftoff",
+      "status": "implemented",
+      "conditioning_duration_s": 10.0,
+      "restart_maximum_error_percent": 1.0,
+      "preload_degrees": [
+        300.0,
+        270.0,
+        240.0,
+        210.0,
+        180.0
+      ],
+      "restart_shift_percents": [
+        30.0,
+        50.0,
+        70.0
+      ],
+      "onset_s": 0.05,
+      "hold_s": 0.45,
+      "coarse_ramp_s": 0.05,
+      "trace_retention_margin_Nm": 4.0,
+      "conditioning_solver": {
+        "method": "LSODA",
+        "relative_tolerance": 0.0001,
+        "absolute_tolerance": 1e-07,
+        "sample_step_s": 0.001,
+        "max_step_s": 0.01
+      },
+      "solver": {
+        "method": "LSODA",
+        "relative_tolerance": 0.0001,
+        "absolute_tolerance": 1e-07,
+        "sample_step_s": 0.00025,
+        "maximum_step_cap_s": 0.00075,
+        "minimum_max_step_s": 0.0001,
+        "ramp_step_divisor": 10.0
+      },
+      "perturbations": {
+        "throttle_drop_scales": [
+          0.5,
+          0.0
+        ],
+        "secondary_load_steps_Nm": [
+          -10.0,
+          -20.0
+        ],
+        "throttle_raise_scales": [
+          1.5
+        ],
+        "secondary_assist_steps_Nm": [
+          20.0
+        ],
+        "note": "Target families seek rapid backshift without reverse power. Opposite-sign controls verify the sign of the shift-inertia contribution."
+      },
+      "refinement_ramp_times_s": [
+        0.005,
+        0.01,
+        0.025,
+        0.05,
+        0.1,
+        0.25
+      ],
+      "maximum_refinement_perturbations_per_preload_restart": 2,
+      "refinement_selection": {
+        "full_margin_upper_Nm": 6.0,
+        "dynamic_correction_upper_Nm": -2.0,
+        "minimum_qs_margin_Nm": 0.25,
+        "note": "Refine cases that approach the full boundary or develop a sizeable negative dynamic correction while the torque+spring margin remains positive."
+      },
+      "success_criteria": {
+        "minimum_qs_margin_at_crossing_Nm": 0.25,
+        "lambda_guard": 0.649,
+        "interior_shift_guard_percent": 2.0
+      },
+      "success_definition": "Gold case: the full M_h crosses from positive to negative while the trajectory-frozen M_h,QS remains positive by at least 0.25 N m; secondary internal belt power is positive; both belt contacts remain stick-stick with |lambda|<0.649; no hybrid transition has occurred after forcing onset before the crossing; the crossing is more than 2% of shift travel from either travel boundary; and M_h,QS remains positive over the entire resolved post-onset case.",
+      "question": "Can a physically reconditioned, lower-preload secondary produce selected-flank lift-off during ordinary forward power flow solely because of retained movable-member dynamics, and which transient type / timescale makes the shift-acceleration term large enough to do it?"
     }
   },
   "discovery_metrics": {

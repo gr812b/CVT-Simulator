@@ -236,6 +236,46 @@ class BlendToTorqueBoundary:
         )
 
 
+class BlendTorqueScaleBoundary:
+    """Smoothly scale an existing shaft boundary torque.
+
+    The underlying boundary is unchanged before ``onset_s``.  During the
+    transition its torque is multiplied by a factor moving smoothly from 1 to
+    ``target_scale`` while the boundary inertia and metadata are preserved.
+    This is useful for throttle-chop / torque-rise experiments where the
+    perturbation should remain relative to the local engine torque curve.
+    """
+
+    def __init__(
+        self,
+        base,
+        *,
+        onset_s: float,
+        ramp_s: float,
+        target_scale: float,
+        label: str = "torque_scale",
+    ):
+        self.base = base
+        self.blend = SmoothStep(onset_s=onset_s, ramp_s=ramp_s, target=1.0)
+        self.target_scale = float(target_scale)
+        self.label = str(label)
+
+    def evaluate(self, context):
+        from cinder.model.system import ShaftBoundaryValue
+
+        base = self.base.evaluate(context)
+        w = self.blend.value(context.time)
+        scale = (1.0 - w) + w * self.target_scale
+        metadata = dict(base.metadata)
+        metadata[f"helix_topology_{self.label}_blend_fraction"] = w
+        metadata[f"helix_topology_{self.label}"] = scale
+        return ShaftBoundaryValue(
+            external_torque=scale * base.external_torque,
+            equivalent_inertia=base.equivalent_inertia,
+            metadata=metadata,
+        )
+
+
 class PrescribedTorqueBoundary:
     """Standalone smooth torque boundary for bench-style discovery cases."""
 
@@ -606,6 +646,80 @@ def run_flat_slotted_reference(
         route,
     )
 
+
+
+
+def run_flat_slotted_reference_with_constants(
+    *,
+    route,
+    ab,
+    constants,
+    duration_s: float,
+    sample_step_s: float,
+    rtol: float,
+    atol: float,
+    max_step_s: float,
+):
+    """Run a flat slotted conditioning launch for an explicit constants set.
+
+    This is the coupled-hardware counterpart to ``run_flat_slotted_reference``:
+    callers may change a physical constant (for example secondary torsional
+    preload), rebuild the entire assembly, and then let that hardware develop
+    its own launch / ratio history before selecting restart states.
+    """
+
+    programme = flat_programme(route, duration_s)
+    assembly, engine, road_load = route.build_components(constants)
+    system, topology_status = build_slotted_system(
+        route=route,
+        assembly=assembly,
+        engine=engine,
+        road_load=road_load,
+        constants=constants,
+        programme=programme,
+    )
+    initial_cvt = route.launch_cvt_state(primary_rpm=1800.0)
+    initial_full = system.initial_state(
+        cvt_state=initial_cvt,
+        host_state=system.host.initial_state(secondary_shaft_angle=0.0),
+    )
+    result = integrate_system(
+        system=system,
+        initial_state=initial_full,
+        initial_mode=system.classify_initial_mode(initial_full),
+        duration_s=duration_s,
+        rtol=rtol,
+        atol=atol,
+        max_step_s=max_step_s,
+    )
+    if not result.completed:
+        return None, result, assembly, engine, road_load, topology_status
+
+    reporting_system, samples, contributions = _sample_result_with_fresh_system(
+        route=route,
+        ab=ab,
+        assembly=assembly,
+        engine=engine,
+        road_load=road_load,
+        constants=constants,
+        programme=programme,
+        result=result,
+        sample_step_s=sample_step_s,
+    )
+    return (
+        SlottedRun(
+            system=reporting_system,
+            result=result,
+            samples=samples,
+            contribution_rows=contributions,
+            topology_status=topology_status,
+        ),
+        result,
+        assembly,
+        engine,
+        road_load,
+        topology_status,
+    )
 
 @dataclass(frozen=True)
 class Restart:

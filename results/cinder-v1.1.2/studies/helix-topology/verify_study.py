@@ -37,6 +37,7 @@ def main() -> int:
         STUDY_ROOT / "experiments" / "run_stress_screen.py",
         STUDY_ROOT / "experiments" / "run_scenario_discovery.py",
         STUDY_ROOT / "experiments" / "run_liftoff_envelope.py",
+        STUDY_ROOT / "experiments" / "run_dynamic_only_liftoff.py",
         RELEASE_ROOT / "defaults" / "reference_model" / "slotted_helix.py",
     )
     missing = [str(path) for path in required if not path.is_file()]
@@ -49,6 +50,9 @@ def main() -> int:
     e5 = study["experiments"]["liftoff_envelope_refinement"]
     if e5["status"] != "implemented":
         raise RuntimeError("E5 lift-off envelope refinement must be implemented")
+    e55 = study["experiments"]["dynamic_only_liftoff"]
+    if e55["status"] != "implemented":
+        raise RuntimeError("E5.5 dynamic-only lift-off study must be implemented")
     e6 = study["experiments"]["selected_flank_comparator"]
     if e6["status"] != "not_implemented_until_detached_topology_is_derived":
         raise RuntimeError("E6 must remain gated until detached helix mechanics exist")
@@ -82,7 +86,7 @@ def main() -> int:
         "cinder_version": study["cinder_version"],
         "reference_topology": study["reference_topology"]["name"],
         "materialized_launch_tools": str(launch_tools),
-        "implemented_stages": ["E1", "E2", "E3", "E4", "E5"],
+        "implemented_stages": ["E1", "E2", "E3", "E4", "E5", "E5.5"],
         "gated_stages": ["E6", "E7"],
     }
     print(json.dumps(payload, indent=2))

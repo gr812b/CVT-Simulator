@@ -150,6 +150,25 @@ Refine the E4 inertia-dominated back-drive discovery around the naturally reache
 
 E5 is still a **topology-discovery/refinement** stage. A dynamic-only event establishes that retaining movable-member inertia changes flank admissibility on the same trajectory. It does not, by itself, establish a literature-priority claim that no previous dynamic helix model could predict the effect.
 
+### E5.5 — forward-power dynamic-only lift-off isolation
+
+E5.5 is a mechanism-isolation study aimed at the stronger condition
+
+\[
+P_{\mathrm{belt},s}>0,\qquad
+\text{stick--stick},\qquad
+M_{h,\mathrm{QS}}>0,\qquad
+M_h<0.
+\]
+
+The secondary torsional preload is swept through 300°, 270°, 240°, 210°, and 180°.  Each preload is rebuilt into the actual assembly and **reconditioned from launch** before 30%, 50%, and 70% shift restart states are selected.  This prevents preload from being treated as a fake algebraic offset: any accompanying changes in clamp force, belt traction, engagement history, and shift trajectory are retained.
+
+Two target perturbation families deliberately seek rapid backshift while preserving forward power: a smooth throttle/drive-torque drop and a sudden increase in resisting secondary load.  Opposite-sign torque-rise and secondary-assist cases are retained as sign controls.  A 50 ms coarse screen is followed only where useful by 5, 10, 25, 50, 100, and 250 ms ramp-rate refinement.
+
+A **gold case** requires the first full-dynamic zero crossing to occur with positive trajectory-frozen `M_h,QS`, positive secondary internal belt power, stick--stick belt contact inside a friction guard, no hybrid transition after perturbation onset before the crossing, and more than 2% of shift travel to either stop.  In addition, `M_h,QS` must remain positive over the complete resolved post-onset trajectory.  This deliberately excludes reverse-power, belt-slip, and travel-impact explanations for the flank change.
+
+E5.5 also records the individual shaft-acceleration, shift-acceleration, and profile-curvature contributions at the first crossing so the study can distinguish a wheel/shaft-acceleration mechanism from the much larger `-I_M theta'(s) s_ddot` rapid-shift mechanism.
+
 ### E6 — physical selected-flank comparator
 
 Only after useful lift-off candidates are established should the ideal unilateral detached topology be added. When `M_h` reaches zero and would become tensile, the selected flank must release and the helix kinematic constraint must release with it. The movable member's relative rotation then becomes an independent motion until a re-contact rule is introduced.
@@ -158,7 +177,7 @@ A `max(0, F_h)` model that leaves `\theta=\theta(s)` constrained may be retained
 
 ### E7 — topology consequence
 
-Use the E5 representative cases to compare the slotted trajectory with true selected-flank detachment. Only at that point do trajectory/performance differences become study results.
+Use the E5/E5.5 representative cases to compare the slotted trajectory with true selected-flank detachment. Only at that point do trajectory/performance differences become study results.
 
 ## Primary discovery metrics
 
@@ -191,6 +210,7 @@ That command:
 4. runs the complete E3 controlled torque screen;
 5. runs the complete E4 multi-family scenario discovery;
 6. runs E5 lift-off-envelope and dynamic-novelty refinement;
+7. runs E5.5 preload/transient dynamic-only isolation;
 7. writes provenance and raw/summary artifacts; and
 8. creates
    `results/cinder-v1.1.2/studies/helix-topology/helix_topology_discovery_artifacts.zip`.
@@ -220,6 +240,7 @@ The full runner writes:
 - `artifacts/stress-screen/` — E3 controlled secondary-torque matrix and shortlist;
 - `artifacts/scenario-discovery/` — E4 hill, downhill/engine-braking, bench-backdrive, and bench-load matrix, full trace, restart states, and shortlist;
 - `artifacts/liftoff-envelope/` — E5 vehicle threshold map, full-vs-QS diagnostics, dynamic-ramp refinement, bench dynamic-only refinement, and candidate catalogue;
+- `artifacts/dynamic-only-liftoff/` — E5.5 preload conditioning, transient/ramp-rate sweep, first-crossing audit, retained traces, and gold-candidate catalogue;
 - `artifacts/provenance/` — study configuration and pinned upstream manifest;
 - `artifacts/RUN_COMPLETE.json` — run mode and completion marker.
 
@@ -227,6 +248,6 @@ The shortlists are **discovery aids, not rankings of CVT performance**. Failed c
 
 ## Interpretation boundary
 
-No conclusion in E1–E5 should assume that the slotted topology is inherently better. A negative selected-flank margin in the slotted model means that the constrained slotted solution requires opposite-flank support. It does **not** yet show what a real one-flank mechanism would do after separation.
+No conclusion in E1–E5.5 should assume that the slotted topology is inherently better. A negative selected-flank margin in the slotted model means that the constrained slotted solution requires opposite-flank support. It does **not** yet show what a real one-flank mechanism would do after separation.
 
 Real backlash, free flight, impact, friction, and finite opposite-flank capture dynamics also remain outside the zero-clearance slotted idealization and the first detached comparator.

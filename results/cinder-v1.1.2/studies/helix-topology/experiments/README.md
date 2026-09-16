@@ -5,6 +5,7 @@
 - `run_stress_screen.py` — E3 controlled secondary-torque zero-crossing screen from low/mid/high naturally reached states.
 - `run_scenario_discovery.py` — E4 broad discovery across hill entry, downhill + engine braking, bench secondary back-drive, bench resisting load, and a high-dynamic natural restart.
 - `run_liftoff_envelope.py` — E5 targeted vehicle lift-off thresholds plus full-dynamic-vs-quasi-static novelty refinement.
+- `run_dynamic_only_liftoff.py` — E5.5 preload/transient search for forward-power, stick--stick dynamic-only helix lift-off.
 
 Prefer the parent `run.py` rather than invoking these individually. It runs the stages in causal order and produces the handoff ZIP automatically.
 
