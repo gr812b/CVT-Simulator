@@ -8,7 +8,7 @@ STUDY_ROOT = Path(__file__).resolve().parents[1]
 if str(STUDY_ROOT) not in sys.path:
     sys.path.insert(0, str(STUDY_ROOT))
 
-from protocol_support import SmoothGradeProgram, smoothstep01
+from protocol_support import SmoothGradeProgram, SmoothOverrunProgram, smoothstep01
 
 
 class ControlledGradeTests(unittest.TestCase):
@@ -33,6 +33,18 @@ class ControlledGradeTests(unittest.TestCase):
         self.assertEqual(p.grade_degrees(1.499999), 0.0)
         self.assertEqual(p.grade_degrees(1.5), 18.0)
         self.assertEqual(p.phase_name(1.5), "load_hold")
+
+    def test_overrun_program_blends_grade_and_primary_torque_phase(self):
+        p = SmoothOverrunProgram(
+            start_time_s=2.0, rise_time_s=0.2,
+            target_grade_deg=-20.0, target_primary_torque_Nm=-5.0
+        )
+        self.assertEqual(p.blend(1.9), 0.0)
+        self.assertAlmostEqual(p.blend(2.1), 0.5, places=12)
+        self.assertEqual(p.blend(2.2), 1.0)
+        self.assertEqual(p.phase_name(1.9), "pre_overrun")
+        self.assertEqual(p.phase_name(2.1), "overrun_transition")
+        self.assertEqual(p.phase_name(2.2), "overrun_hold")
 
 
 if __name__ == "__main__":

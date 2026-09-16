@@ -110,6 +110,25 @@ class FinalEquationTests(unittest.TestCase):
                 row[f"loop.{name}_N"], coefficient * driver, places=12
             )
 
+
+    def test_activity_threshold_channels_mean_exact_equation_share(self):
+        row = decompose_final_equations(sample())
+        alpha = 0.10
+        specs = (
+            ("loop.radial_shift_acceleration_N", "loop.response_coefficient.radial_shift_acceleration_N_per_mps2", "loop.activity_threshold.10pct.shift_acceleration_m_per_s2", 1),
+            ("loop.radial_geometry_curvature_N", "loop.response_coefficient.radial_geometry_curvature_N_per_m2ps2", "loop.activity_threshold.10pct.shift_speed_curvature_m_per_s", 2),
+            ("loop.tangential_belt_acceleration_N", "loop.response_coefficient.tangential_belt_acceleration_N_per_mps2", "loop.activity_threshold.10pct.belt_acceleration_m_per_s2", 1),
+            ("loop.tangential_shifting_radius_N", "loop.response_coefficient.tangential_shifting_radius_N_per_m2ps2", "loop.activity_threshold.10pct.shift_speed_times_belt_speed_m2_per_s2", 1),
+        )
+        for term_key, coeff_key, threshold_key, power in specs:
+            other = row["loop.activity_scale_N"] - abs(row[term_key])
+            target = abs(row[coeff_key]) * row[threshold_key] ** power
+            self.assertAlmostEqual(target / (other + target), alpha, places=12)
+
+        other_transport = abs(row["transport.primary_reaction_N"]) + abs(row["transport.secondary_reaction_N"])
+        target_transport = sample().belt_mass * row["transport.activity_threshold.10pct.belt_acceleration_m_per_s2"]
+        self.assertAlmostEqual(target_transport / (other_transport + target_transport), alpha, places=12)
+
     def test_equation_threshold_channels_are_self_consistent(self):
         row = decompose_final_equations(sample())
         contact_scale = row["loop.contact_scale_N"]

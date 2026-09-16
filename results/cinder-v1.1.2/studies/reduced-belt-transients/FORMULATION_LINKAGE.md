@@ -193,3 +193,16 @@ so the belt-acceleration threshold is
 
 This is a force-scale diagnostic only.  It does not by itself justify removing
 the dynamic belt-transport state.
+
+
+## Final closure extensions
+
+The Stage-5 closure experiments do not change the interpretation of the final equations. They deliberately target the unresolved regions exposed by Stage 4:
+
+- high and asymmetric \((\lambda_p,\lambda_s)\) states, including CINDER's native mixed stick/slip branches;
+- controlled reversed external power flow;
+- the asymptotic importance of the whole-belt inertia row.
+
+Equation-importance thresholds are now based on the other **surviving final-equation contributions**, not the sum of gross pulley contact forces. Gross-force thresholds remain as a separate diagnostic.
+
+The `global_transport` continuation is an isolation experiment: it scales only the coefficient of \(\dot v_b\) in the whole-belt transport row. The `coherent_density` continuation is the physically coherent asymptotic experiment: reducing belt density scales both \(m_b\) and \(q\), causing the global and local belt-inertia terms to vanish together.

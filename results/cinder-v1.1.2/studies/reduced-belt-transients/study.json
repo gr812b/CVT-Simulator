@@ -1,9 +1,9 @@
 {
   "study_id": "cinder-v1.1.2-reduced-belt-transients",
-  "title": "Reduced-belt transient mechanics: equation sensitivity and Baja operating envelope",
+  "title": "Reduced-belt transient mechanics: final closure",
   "release": "1.1.2",
-  "status": "equation-sensitivity-plus-envelope-exploration",
-  "scientific_question": "Which surviving transient terms in CINDER's final reduced-belt equations can become mechanically important, what physical variables make them grow, and does a reasonable Baja operating envelope actually reach those conditions?",
+  "status": "final-closure-experiments",
+  "scientific_question": "Which surviving reduced-belt transient terms are important across Baja operation, high/asymmetric contact, mixed slip, overrun, and the vanishing-belt-inertia limit, and which coherent simplifications are justified?",
   "governing_equations_modified": false,
   "ablation_switches_present": false,
   "analysis_lenses": [
@@ -14,7 +14,12 @@
     "smart Baja signed-load envelope",
     "ratio and belt-speed coverage through disturbance timing",
     "contact-demand coverage",
-    "documented secondary-preload robustness"
+    "documented secondary-preload robustness",
+    "high-contact stick and mixed-slip branch search",
+    "controlled true-overrun verification by boundary power sign",
+    "final-equation activity thresholds distinct from gross-force thresholds",
+    "global transport-row inertia continuation",
+    "coherent belt-density inertia continuation"
   ],
   "equation_growth_laws": {
     "shift_acceleration": "K(s) * s_ddot",
@@ -25,9 +30,18 @@
   },
   "baja_envelope": {
     "default_low_discrepancy_samples": 18,
-    "grade_bounds_deg": [-20.0, 30.0],
-    "load_start_bounds_s": [1.05, 3.35],
-    "smooth_rise_time_bounds_s": [0.05, 0.8],
+    "grade_bounds_deg": [
+      -20.0,
+      30.0
+    ],
+    "load_start_bounds_s": [
+      1.05,
+      3.35
+    ],
+    "smooth_rise_time_bounds_s": [
+      0.05,
+      0.8
+    ],
     "fixed_mechanistic_anchors": 6,
     "secondary_preload_robustness_anchors": 4,
     "negative_grade_semantics": "downhill/unloading under the normal full-throttle engine boundary; not asserted closed-throttle overrun"
@@ -35,8 +49,31 @@
   "documented_tune_robustness": {
     "reference_secondary_compression_preload_mm": 110.0,
     "reference_torsional_pretension_deg": 300.0,
-    "lower_variant": {"secondary_compression_preload_mm": 105.0, "torsional_pretension_deg": 280.0},
-    "higher_variant": {"secondary_compression_preload_mm": 115.0, "torsional_pretension_deg": 320.0}
+    "lower_variant": {
+      "secondary_compression_preload_mm": 105.0,
+      "torsional_pretension_deg": 280.0
+    },
+    "higher_variant": {
+      "secondary_compression_preload_mm": 115.0,
+      "torsional_pretension_deg": 320.0
+    }
   },
-  "decision_gate": "No belt reduction is introduced until equation-level growth thresholds and the physically bounded Baja envelope are interpreted together and a small set of trajectory cases visibly connects predicted sensitivity to observed mechanics."
+  "decision_gate": "Call discovery complete when mixed/high-contact behavior has been exercised or its absence documented, true overrun has been verified, and the inertia continuations show whether the force-small whole-belt term is trajectory-small without materially changing hybrid events.",
+  "experimental_equation_continuation_present": true,
+  "final_closure": {
+    "contact_stress_cases": 13,
+    "overrun_cases": 2,
+    "inertia_continuation_scenarios": [
+      "flat",
+      "fast_backshift",
+      "fast_unload"
+    ],
+    "inertia_scales": [
+      1.0,
+      0.1,
+      0.03
+    ],
+    "contact_friction_modified": false,
+    "overrun_semantics": "controlled primary resisting torque plus downhill road; synthesis verifies actual power-flow reversal"
+  }
 }

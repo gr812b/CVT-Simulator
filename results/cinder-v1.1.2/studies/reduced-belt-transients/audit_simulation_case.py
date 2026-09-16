@@ -56,43 +56,51 @@ def run_case(
             + "; ".join(f.message for f in validation.findings)
         )
     decoded = decode_simulation_case_document(document)
+    cleanup = None
     if configure_system is not None:
-        configure_system(decoded.system)
-    result = decoded.system.run(
-        time_span=decoded.time_span,
-        initial_state=decoded.initial_state,
-        initial_mode=decoded.initial_mode,
-        settings=decoded.integrator_settings,
-        reporting_settings=decoded.reporting_settings,
-    )
-    output = ARTIFACTS / name
-    if output.exists():
-        shutil.rmtree(output)
-    output.mkdir(parents=True)
-    (output / "simulation_case.json").write_text(
-        json.dumps(document, indent=2) + "\n", encoding="utf-8"
-    )
-    protocol_context = _protocol_context(document, name=name, protocol=protocol)
-    protocol_context["source"] = str(case_path)
-    write_json(output / "protocol.json", protocol_context)
-    summary = write_atlas(
-        system=decoded.system,
-        trace=result.trace,
-        output_dir=output,
-        protocol=protocol_context,
-        maximum_samples=max_samples,
-    )
-    write_json(
-        output / "run_summary.json",
-        {
-            "completed": bool(result.completed),
-            "termination_reason": result.termination_reason,
-            "transition_count": len(result.transitions),
-            "final_time_s": float(result.final_time),
-            "engaged_sample_count": summary["overall"]["engaged_sample_count"],
-        },
-    )
-    return summary
+        cleanup = configure_system(decoded.system)
+    try:
+        result = decoded.system.run(
+            time_span=decoded.time_span,
+            initial_state=decoded.initial_state,
+            initial_mode=decoded.initial_mode,
+            settings=decoded.integrator_settings,
+            reporting_settings=decoded.reporting_settings,
+        )
+        output = ARTIFACTS / name
+        if output.exists():
+            shutil.rmtree(output)
+        output.mkdir(parents=True)
+        (output / "simulation_case.json").write_text(
+            json.dumps(document, indent=2) + "\n", encoding="utf-8"
+        )
+        protocol_context = _protocol_context(document, name=name, protocol=protocol)
+        protocol_context["source"] = str(case_path)
+        write_json(output / "protocol.json", protocol_context)
+        # Keep any experimental equation continuation installed through
+        # post-processing so accepted-state closure reconstruction is performed
+        # with exactly the same equations that generated the trajectory.
+        summary = write_atlas(
+            system=decoded.system,
+            trace=result.trace,
+            output_dir=output,
+            protocol=protocol_context,
+            maximum_samples=max_samples,
+        )
+        write_json(
+            output / "run_summary.json",
+            {
+                "completed": bool(result.completed),
+                "termination_reason": result.termination_reason,
+                "transition_count": len(result.transitions),
+                "final_time_s": float(result.final_time),
+                "engaged_sample_count": summary["overall"]["engaged_sample_count"],
+            },
+        )
+        return summary
+    finally:
+        if callable(cleanup):
+            cleanup()
 
 
 def main() -> int:

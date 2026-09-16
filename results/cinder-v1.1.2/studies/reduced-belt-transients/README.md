@@ -1,10 +1,10 @@
-# Reduced-belt transient mechanics — equation sensitivity + Baja operating envelope
+# Reduced-belt transient mechanics — final closure study
 
 ## Scientific question
 
 Within CINDER's dynamically closed reduced whole-belt model, **which terms that survive in the final solved belt equations can become mechanically important, what physical variables make them grow, and does a reasonable Baja operating envelope actually reach those conditions?**
 
-The study is still discovery-first. It does not modify the CVT governing equations, contact law, actuator mechanics, closure, or hybrid state machine, and it contains no belt-ablation switch.
+The reference trajectory studies remain discovery-first and leave the production CINDER model untouched. The final closure stage adds two **explicit experimental continuations** for the belt-inertia question: one temporarily scales only the whole-belt transport inertia row as an isolation test, and one scales belt density coherently so global and local belt inertia vanish together. These are study-local experiments, not production model switches.
 
 The study now deliberately uses two independent lenses:
 
@@ -70,43 +70,35 @@ Therefore an idealized simultaneous drive-to-overrun traction reversal flips the
 
 ### Equation-derived importance thresholds
 
-For each accepted free-stick simulation state the code forms the non-cancelling contact-force scale
+Two different notions of "small" are now kept separate.
+
+The **gross-force threshold** compares a transient term with
 
 \[
-F_C=|G_pN_p|+|G_sN_s|.
+F_C=|G_pN_p|+|G_sN_s|,
 \]
 
-For each transient mechanism it then calculates the driver required for that term alone to reach 1%, 5%, 10%, and 25% of \(F_C\). For example,
+which answers whether the term is large compared with the underlying contact-force inventory. This is useful context, but it is not the equation-importance verdict because the two contact contributions can nearly cancel.
+
+The primary **final-equation activity threshold** instead freezes the other surviving terms. If term \(i\) is to contribute fraction \(\alpha\) of total absolute equation activity,
 
 \[
-|\ddot s|_{10\%}
-=\frac{0.1F_C}{|K_{\mathrm{shift\ accel}}|},
+\frac{|F_i|}{|F_i|+\sum_{k\ne i}|F_k|}=\alpha,
 \]
+
+then
 
 \[
-|\dot s|_{10\%,\mathrm{curvature}}
-=\sqrt{\frac{0.1F_C}{|K_{\mathrm{path\ curvature}}|}},
+|F_i|_\alpha=\frac{\alpha}{1-\alpha}\sum_{k\ne i}|F_k|.
 \]
+
+Since \(F_i=K_iD_i\), the required driver is obtained directly from this force target. The study reports 1%, 5%, 10%, and 25% activity thresholds and the dimensionless ratio
 
 \[
-|\dot v_b|_{10\%}
-=\frac{0.1F_C}{|K_{\mathrm{belt\ accel}}|},
+\chi_i=\frac{|D_i|}{|D_i|_{10\%,\mathrm{activity}}}.
 \]
 
-\[
-(|\dot s|v_b)_{10\%}
-=\frac{0.1F_C}{|K_{\mathrm{moving\ radius}}|}.
-\]
-
-Every row also records
-
-\[
-\chi_i=\frac{|D_i|}{|D_i|_{10\%}}.
-\]
-
-Thus \(\chi_i=1\) means the actual state has reached the equation-derived 10% threshold for that mechanism. This replaces vague descriptions such as "fast shifting" with a state-specific physical criterion.
-
-Whole-belt inertia is treated separately. Its force is compared with the sum of the magnitudes of the two pulley reactions, and the corresponding belt-acceleration threshold is recorded without implying that a small force fraction makes removal of the dynamic state automatically safe.
+Thus \(\chi_i=1\) now means exactly that the mechanism would be 10% of the **final solved equation activity** at that operating state if the other surviving contributions were locally frozen. The old gross-contact thresholds remain in the CSVs under explicit `gross_threshold` names.
 
 ## Existing broad and controlled cases
 
@@ -162,6 +154,39 @@ This provides the desired connection:
 \text{Baja state that does or does not reach it}.
 \]
 
+## Final closure stage
+
+The final stage resolves the remaining questions identified by the Baja-envelope and equation-sensitivity work.
+
+### High-contact and mixed-slip search
+
+Friction coefficients are held fixed. Contact demand is increased physically by weakening one clamp mechanism at a time while applying a +30° / 100 ms road-load event during active shifting. Five primary-actuation scales, five secondary-reaction scales, and three combined cases are used. CINDER's existing hybrid contact logic decides whether each trajectory remains stick-stick, enters primary-slip/secondary-stick, enters primary-stick/secondary-slip, or reaches both-slip.
+
+The primary stress family scales the fixed-pivot flyweight mass and all of its mass moments together. The secondary family scales the axial-spring and torsional-reaction stiffnesses together. These are stress-study variants, not proposed competition tunes.
+
+Principal outputs are `contact_closure_summary.csv`, `mixed_slip_examples.csv`, `contact_asymmetry_vs_moving_radius.png`, and `moving_radius_by_slip_mode.png`.
+
+### Controlled overrun
+
+Two cases retain the normal drive boundaries until 2.0 s, then smoothly ramp the road to -20° while ramping the primary boundary torque to either -5 or -12 N·m. The synthesis explicitly checks whether the resulting samples satisfy
+
+\[
+P_p<0,\qquad P_s>0,
+\]
+
+so the study reports whether true secondary-to-primary power flow was actually achieved rather than assuming that a downhill road is automatically overrun. This is a controlled boundary experiment, not a calibrated closed-throttle engine map.
+
+### Belt-inertia continuation
+
+Three representative scenarios are tested: flat acceleration, a fast +30° backshift load, and a fast -20° unloading event.
+
+For each scenario the full model is compared with two asymptotic continuations at 0.10x and 0.03x inertia:
+
+1. `global_transport` scales only the \(m_b\dot v_b\) coefficient in the whole-belt transport row. This isolates structural sensitivity to that small row term, but is not by itself a physical reduced belt.
+2. `coherent_density` scales belt density, so both whole-belt mass and local wrap linear-density inertia vanish together. This is the physically coherent massless-belt limit.
+
+Trajectory comparisons report RMSE/max errors in \(\omega_p,\omega_s,v_b,s,\dot s\), plus hybrid transition-count changes.
+
 ## Running
 
 Run the complete study, including the smart envelope:
@@ -180,6 +205,12 @@ Smart Baja envelope only (equation sensitivity is generated too):
 
 ```powershell
 python studies/reduced-belt-transients/run.py --stage envelope
+```
+
+Final unresolved closure studies only:
+
+```powershell
+python studies/reduced-belt-transients/run.py --stage closure
 ```
 
 Change the number of low-discrepancy samples while retaining the fixed anchors:
@@ -229,6 +260,19 @@ Equation-to-simulation connection:
 - `equation_to_simulation_synthesis.json`.
 
 All earlier phase-aware outputs remain.
+
+Final closure outputs:
+
+- `contact_closure_summary.csv`;
+- `contact_stick_targets.csv`;
+- `mixed_slip_examples.csv`;
+- `overrun_summary.csv`;
+- `inertia_continuation_comparison.csv`;
+- `closure_failures.csv`;
+- `closure_synthesis.json`;
+- `contact_asymmetry_vs_moving_radius.png`;
+- `moving_radius_by_slip_mode.png`;
+- `inertia_continuation_<scenario>.png`.
 
 ## Decision gate
 

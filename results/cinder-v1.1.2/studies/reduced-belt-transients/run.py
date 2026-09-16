@@ -27,9 +27,22 @@ if str(STUDY_ROOT) not in sys.path:
 
 from audit_simulation_case import run_case
 from belt_terms import inventory
+from closure_design import (
+    apply_belt_density_scale,
+    apply_contact_stress,
+    build_contact_stress_cases,
+    build_inertia_continuations,
+)
+from closure_synthesis import synthesize_closure
 from envelope_design import apply_tune_variant, build_baja_envelope
 from equation_sensitivity import build_equation_sensitivity
-from protocol_support import SmoothGradeProgram, make_time_programmed_boundary
+from protocol_support import (
+    SmoothGradeProgram,
+    SmoothOverrunProgram,
+    install_global_transport_inertia_scale,
+    make_overrun_boundaries,
+    make_time_programmed_boundary,
+)
 from sensitivity_synthesis import synthesize_sensitivity_connections
 from study_support import ARTIFACTS, write_json, write_rows
 
@@ -80,6 +93,26 @@ CONTROLLED_PROTOCOLS = (
 )
 CONTROLLED_START_TIME_S = 1.50
 CONTROLLED_DURATION_S = 4.50
+
+OVERRUN_PROTOCOLS = (
+    {
+        "name": "overrun_mild",
+        "title": "Controlled overrun: -20° downhill, -5 N·m primary",
+        "start_time_s": 2.00,
+        "rise_time_s": 0.20,
+        "target_grade_deg": -20.0,
+        "target_primary_torque_Nm": -5.0,
+    },
+    {
+        "name": "overrun_strong",
+        "title": "Controlled overrun: -20° downhill, -12 N·m primary",
+        "start_time_s": 2.00,
+        "rise_time_s": 0.20,
+        "target_grade_deg": -20.0,
+        "target_primary_torque_Nm": -12.0,
+    },
+)
+CLOSURE_DURATION_S = 5.0
 
 
 def _resolve_base_case(requested: Path | None) -> Path:
@@ -138,6 +171,22 @@ def _envelope_document(base: dict[str, Any], *, start_time_s: float, rise_time_s
         "grade_angle_rad": 0.0,
     }
     return document
+
+
+def _inertia_scenario_document(base: dict[str, Any], scenario: str) -> tuple[dict[str, Any], SmoothGradeProgram | None]:
+    document = copy.deepcopy(base)
+    document["scenario"]["time_span_s"] = [0.0, CLOSURE_DURATION_S]
+    document["shaft_boundaries"]["secondary"]["road_profile"] = {
+        "kind": "constant_grade",
+        "grade_angle_rad": 0.0,
+    }
+    if scenario == "flat":
+        return document, None
+    if scenario == "fast_backshift":
+        return document, SmoothGradeProgram(start_time_s=1.50, rise_time_s=0.05, target_grade_deg=30.0)
+    if scenario == "fast_unload":
+        return document, SmoothGradeProgram(start_time_s=1.50, rise_time_s=0.05, target_grade_deg=-20.0)
+    raise ValueError(f"unknown inertia scenario: {scenario}")
 
 
 def _free_stick(summary: dict[str, Any]) -> dict[str, Any] | None:
@@ -436,7 +485,7 @@ def main() -> int:
     parser.add_argument("--max-samples", type=int, default=6000)
     parser.add_argument(
         "--stage",
-        choices=("all", "broad", "controlled", "sensitivity", "envelope"),
+        choices=("all", "broad", "controlled", "sensitivity", "envelope", "closure"),
         default="all",
     )
     parser.add_argument(
@@ -463,7 +512,16 @@ def main() -> int:
     print(f"Base simulation case: {base_path}")
     base = json.loads(base_path.read_text(encoding="utf-8"))
     envelope_cases = build_baja_envelope(args.envelope_points)
-    valid_names = {p["name"] for p in BROAD_PROTOCOLS} | {p["name"] for p in CONTROLLED_PROTOCOLS} | {c.name for c in envelope_cases}
+    contact_cases = build_contact_stress_cases()
+    inertia_cases = build_inertia_continuations()
+    valid_names = (
+        {p["name"] for p in BROAD_PROTOCOLS}
+        | {p["name"] for p in CONTROLLED_PROTOCOLS}
+        | {p["name"] for p in OVERRUN_PROTOCOLS}
+        | {c.name for c in envelope_cases}
+        | {c.name for c in contact_cases}
+        | {c.name for c in inertia_cases}
+    )
     if args.only:
         unknown = sorted(set(args.only) - valid_names)
         if unknown:
@@ -476,7 +534,7 @@ def main() -> int:
 
     # Direct equation analysis is independent of trajectory integration.  It
     # maps the final-equation coefficients over engaged ratio/contact space.
-    if args.stage in {"all", "sensitivity", "envelope"}:
+    if args.stage in {"all", "sensitivity", "envelope", "closure"}:
         from cinder.contracts import decode_simulation_case_document
 
         decoded_for_sensitivity = decode_simulation_case_document(base)
@@ -611,20 +669,189 @@ def main() -> int:
             )
             families[case.name] = "baja_envelope"
 
+    closure_failures: list[dict[str, Any]] = []
+    if args.stage in {"all", "closure"}:
+        print(f"\n=== Focused contact closure ({len(contact_cases)} cases) ===")
+        for index, case in enumerate(contact_cases, start=1):
+            if args.only and case.name not in args.only:
+                continue
+            document = _envelope_document(
+                base, start_time_s=case.start_time_s, rise_time_s=case.rise_time_s
+            )
+            apply_contact_stress(document, case)
+            case_path = protocol_dir / f"{case.name}.json"
+            write_json(case_path, document)
+            program = SmoothGradeProgram(
+                start_time_s=case.start_time_s,
+                rise_time_s=case.rise_time_s,
+                target_grade_deg=case.target_grade_deg,
+            )
+            protocol_context = case.as_protocol()
+            protocol_context["controlled_load"] = program.as_dict()
+
+            def configure_contact(system, *, _program=program):
+                system.secondary_boundary = make_time_programmed_boundary(
+                    base_boundary=system.secondary_boundary, program=_program
+                )
+
+            print(f"[{index:02d}/{len(contact_cases):02d}] {case.title}")
+            try:
+                summaries[case.name] = run_case(
+                    case_path=case_path,
+                    name=case.name,
+                    max_samples=args.max_samples,
+                    skip_environment_check=True,
+                    protocol=protocol_context,
+                    configure_system=configure_contact,
+                )
+                families[case.name] = "contact_closure"
+            except Exception as error:
+                print(f"  CONTACT STRESS CASE FAILED: {type(error).__name__}: {error}")
+                closure_failures.append({
+                    "case": case.name,
+                    "family": "contact_closure",
+                    "error_type": type(error).__name__,
+                    "message": str(error),
+                })
+
+        print(f"\n=== Controlled overrun ({len(OVERRUN_PROTOCOLS)} cases) ===")
+        for protocol in OVERRUN_PROTOCOLS:
+            if args.only and protocol["name"] not in args.only:
+                continue
+            document = copy.deepcopy(base)
+            document["scenario"]["time_span_s"] = [0.0, CLOSURE_DURATION_S]
+            document["shaft_boundaries"]["secondary"]["road_profile"] = {
+                "kind": "constant_grade", "grade_angle_rad": 0.0
+            }
+            case_path = protocol_dir / f"{protocol['name']}.json"
+            write_json(case_path, document)
+            program = SmoothOverrunProgram(
+                start_time_s=float(protocol["start_time_s"]),
+                rise_time_s=float(protocol["rise_time_s"]),
+                target_grade_deg=float(protocol["target_grade_deg"]),
+                target_primary_torque_Nm=float(protocol["target_primary_torque_Nm"]),
+            )
+            context = {
+                **protocol,
+                "family": "overrun",
+                "purpose": (
+                    "Controlled power-flow reversal experiment. The reference engine/road boundaries "
+                    "are used before the event; primary torque is then ramped to a specified resisting "
+                    "torque while the road is ramped downhill. This is not a calibrated closed-throttle map."
+                ),
+                "controlled_overrun": program.as_dict(),
+            }
+
+            def configure_overrun(system, *, _program=program):
+                primary, secondary = make_overrun_boundaries(
+                    base_primary=system.primary_boundary,
+                    base_secondary=system.secondary_boundary,
+                    program=_program,
+                )
+                system.primary_boundary = primary
+                system.secondary_boundary = secondary
+
+            print(f"=== {protocol['title']} ===")
+            try:
+                summaries[protocol["name"]] = run_case(
+                    case_path=case_path,
+                    name=protocol["name"],
+                    max_samples=args.max_samples,
+                    skip_environment_check=True,
+                    protocol=context,
+                    configure_system=configure_overrun,
+                )
+                families[protocol["name"]] = "overrun"
+            except Exception as error:
+                print(f"  OVERRUN CASE FAILED: {type(error).__name__}: {error}")
+                closure_failures.append({
+                    "case": protocol["name"],
+                    "family": "overrun",
+                    "error_type": type(error).__name__,
+                    "message": str(error),
+                })
+
+        print(f"\n=== Belt-inertia continuations ({len(inertia_cases)} cases) ===")
+        for index, case in enumerate(inertia_cases, start=1):
+            if args.only and case.name not in args.only:
+                continue
+            document, grade_program = _inertia_scenario_document(base, case.scenario)
+            if case.kind == "coherent_density":
+                apply_belt_density_scale(document, case.scale)
+            case_path = protocol_dir / f"{case.name}.json"
+            write_json(case_path, document)
+            context = {
+                "name": case.name,
+                "title": case.title,
+                "family": "inertia_continuation",
+                "purpose": (
+                    "Asymptotic belt-inertia continuation. global_transport isolates only the whole-belt "
+                    "transport row; coherent_density scales belt density so global and local belt inertia "
+                    "vanish together."
+                ),
+                "inertia_continuation": {
+                    "scenario": case.scenario,
+                    "kind": case.kind,
+                    "scale": case.scale,
+                },
+            }
+            if grade_program is not None:
+                context["controlled_load"] = grade_program.as_dict()
+
+            def configure_inertia(system, *, _case=case, _grade=grade_program):
+                cleanup = None
+                if _grade is not None:
+                    system.secondary_boundary = make_time_programmed_boundary(
+                        base_boundary=system.secondary_boundary, program=_grade
+                    )
+                if _case.kind == "global_transport":
+                    cleanup = install_global_transport_inertia_scale(_case.scale)
+                return cleanup
+
+            print(f"[{index:02d}/{len(inertia_cases):02d}] {case.title}")
+            try:
+                summaries[case.name] = run_case(
+                    case_path=case_path,
+                    name=case.name,
+                    max_samples=args.max_samples,
+                    skip_environment_check=True,
+                    protocol=context,
+                    configure_system=configure_inertia,
+                )
+                families[case.name] = "inertia_continuation"
+            except Exception as error:
+                print(f"  INERTIA CASE FAILED: {type(error).__name__}: {error}")
+                closure_failures.append({
+                    "case": case.name,
+                    "family": "inertia_continuation",
+                    "error_type": type(error).__name__,
+                    "message": str(error),
+                })
+
     _synthesize(summaries, families)
     connection_summary = synthesize_sensitivity_connections(
         artifacts_dir=ARTIFACTS,
         families=families,
     )
+    closure_summary = synthesize_closure(
+        artifacts_dir=ARTIFACTS,
+        families=families,
+        failures=closure_failures,
+    )
     write_json(
         ARTIFACTS / "stage_status.json",
         {
-            "stage": "equation-sensitivity-plus-baja-envelope-exploration",
+            "stage": "reduced-belt-final-closure",
             "governing_model_modified": False,
             "ablation_switches_present": False,
             "broad_protocol_count": sum(1 for family in families.values() if family == "broad"),
             "controlled_protocol_count": sum(1 for family in families.values() if family == "controlled"),
             "baja_envelope_protocol_count": sum(1 for family in families.values() if family == "baja_envelope"),
+            "contact_closure_protocol_count": sum(1 for family in families.values() if family == "contact_closure"),
+            "overrun_protocol_count": sum(1 for family in families.values() if family == "overrun"),
+            "inertia_continuation_protocol_count": sum(1 for family in families.values() if family == "inertia_continuation"),
+            "mixed_slip_found": closure_summary.get("contact", {}).get("mixed_slip_found"),
+            "both_slip_found": closure_summary.get("contact", {}).get("both_slip_found"),
             "equation_sensitivity_generated": (ARTIFACTS / "equation_sensitivity" / "summary.json").is_file(),
             "baja_envelope_design": {
                 "space_filling_count": args.envelope_points,
@@ -638,9 +865,10 @@ def main() -> int:
             },
             "threshold_definition": connection_summary.get("threshold_definition"),
             "next_action": (
-                "Use equation-derived growth thresholds together with the smart Baja envelope to identify "
-                "which retained terms are never excited, transient-only, contact-demand-sensitive, or persistent; "
-                "then select a few trajectory cases that visibly cross the predicted thresholds before ablation."
+                "Inspect contact_closure_summary.csv, mixed_slip_examples.csv, overrun_summary.csv, and "
+                "inertia_continuation_comparison.csv. If mixed slip and true overrun were realized and the "
+                "inertia continuations are converged, the reduced-belt transient-mechanics discovery study is "
+                "ready for final synthesis rather than another broad search."
             ),
         },
     )

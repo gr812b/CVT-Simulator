@@ -36,11 +36,11 @@ RESPONSE_COEFFICIENTS = (
     "loop.response_coefficient.tangential_shifting_radius_N_per_m2ps2",
 )
 SENSITIVITY_RATIOS = (
-    "sensitivity.actual_to_10pct.shift_acceleration",
-    "sensitivity.actual_to_10pct.shift_speed_curvature",
-    "sensitivity.actual_to_10pct.belt_acceleration",
-    "sensitivity.actual_to_10pct.moving_radius_product",
-    "sensitivity.actual_to_10pct.transport_belt_acceleration",
+    "sensitivity.actual_to_10pct_activity.shift_acceleration",
+    "sensitivity.actual_to_10pct_activity.shift_speed_curvature",
+    "sensitivity.actual_to_10pct_activity.belt_acceleration",
+    "sensitivity.actual_to_10pct_activity.moving_radius_product",
+    "sensitivity.actual_to_10pct_activity.transport_belt_acceleration",
 )
 
 DRIVER_CHANNELS = (
@@ -81,7 +81,14 @@ def _boundary_context(builder: Any, *, time: float, full_state: np.ndarray) -> t
     context: dict[str, Any] = {}
     if boundaries is None:
         return boundaries, context
+    primary = getattr(boundaries, "primary", None)
     secondary = getattr(boundaries, "secondary", None)
+    if primary is not None:
+        context["boundary.primary_external_torque_Nm"] = float(primary.external_torque)
+        context["boundary.primary_equivalent_inertia_kg_m2"] = float(primary.equivalent_inertia)
+    if secondary is not None:
+        context["boundary.secondary_external_torque_Nm"] = float(secondary.external_torque)
+        context["boundary.secondary_equivalent_inertia_kg_m2"] = float(secondary.equivalent_inertia)
     metadata = dict(getattr(secondary, "metadata", {}) or {})
     if "vehicle_distance" in metadata:
         context["environment.vehicle_distance_m"] = float(metadata["vehicle_distance"])
@@ -108,6 +115,7 @@ def collect_rows(
     maximum_samples: int = 6000,
     max_shift_m: float | None = None,
     static_friction_coefficient: float | None = None,
+    transport_mass_scale: float = 1.0,
 ) -> list[dict[str, Any]]:
     from cinder.results import CVTResultBuilder, inspect_cvt_state
 
@@ -134,10 +142,14 @@ def collect_rows(
                 shaft_boundaries=shaft_boundaries,
                 include_closure_audit=False,
             )
-            row = inspect_final_belt_terms(inspection)
+            row = inspect_final_belt_terms(inspection, transport_mass_scale=transport_mass_scale)
             if row is None:
                 continue
             row.update(boundary_context)
+            if "boundary.primary_external_torque_Nm" in row:
+                row["boundary.primary_power_W"] = float(row["boundary.primary_external_torque_Nm"]) * float(row["state.primary_angular_speed_rad_per_s"])
+            if "boundary.secondary_external_torque_Nm" in row:
+                row["boundary.secondary_power_W"] = float(row["boundary.secondary_external_torque_Nm"]) * float(row["state.secondary_angular_speed_rad_per_s"])
             row["segment_index"] = segment_index
             row["native_index"] = int(native_index)
             row["regime.engagement"] = _enum_value(getattr(cvt_mode, "engagement", "unknown"))
@@ -152,11 +164,12 @@ def collect_rows(
             if max_shift_m is not None and max_shift_m > 0.0:
                 row["state.shift_fraction"] = float(row["state.shift_position_m"]) / float(max_shift_m)
             if static_friction_coefficient is not None and static_friction_coefficient > 0.0:
-                demand = max(
-                    abs(float(row["contact.primary_lambda"])),
-                    abs(float(row["contact.secondary_lambda"])),
-                )
-                row["contact.max_static_utilization_fraction"] = demand / float(static_friction_coefficient)
+                primary_u = abs(float(row["contact.primary_lambda"])) / float(static_friction_coefficient)
+                secondary_u = abs(float(row["contact.secondary_lambda"])) / float(static_friction_coefficient)
+                row["contact.primary_static_utilization_fraction"] = primary_u
+                row["contact.secondary_static_utilization_fraction"] = secondary_u
+                row["contact.max_static_utilization_fraction"] = max(primary_u, secondary_u)
+                row["contact.utilization_asymmetry"] = abs(primary_u - secondary_u)
             rows.append(row)
     return rows
 
@@ -402,6 +415,11 @@ def write_atlas(
         maximum_samples=maximum_samples,
         max_shift_m=protocol.get("max_shift_m"),
         static_friction_coefficient=protocol.get("static_friction_coefficient"),
+        transport_mass_scale=(
+            float(protocol.get("inertia_continuation", {}).get("scale", 1.0))
+            if protocol.get("inertia_continuation", {}).get("kind") == "global_transport"
+            else 1.0
+        ),
     )
     output_dir.mkdir(parents=True, exist_ok=True)
     write_rows(output_dir / "belt_terms.csv", rows)

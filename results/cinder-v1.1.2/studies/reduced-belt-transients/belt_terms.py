@@ -164,30 +164,70 @@ def decompose_final_equations(inputs: FinalBeltInputs) -> dict[str, float]:
 
     threshold_fractions = (0.01, 0.05, 0.10, 0.25)
     thresholds: dict[str, float] = {}
+    k_shift_accel = abs(response_coefficients["radial_shift_acceleration"])
+    k_curvature = abs(response_coefficients["radial_geometry_curvature"])
+    k_belt_accel = abs(response_coefficients["tangential_belt_acceleration"])
+    k_moving_radius = abs(response_coefficients["tangential_shifting_radius"])
+    loop_specs = {
+        "shift_acceleration": ("radial_shift_acceleration_N", k_shift_accel, 1),
+        "shift_speed_curvature": ("radial_geometry_curvature_N", k_curvature, 2),
+        "belt_acceleration": ("tangential_belt_acceleration_N", k_belt_accel, 1),
+        "shift_speed_times_belt_speed": ("tangential_shifting_radius_N", k_moving_radius, 1),
+    }
     for fraction in threshold_fractions:
         suffix = f"{int(round(100.0 * fraction)):02d}pct"
-        force_target = fraction * contact_scale
-        k_shift_accel = abs(response_coefficients["radial_shift_acceleration"])
-        k_curvature = abs(response_coefficients["radial_geometry_curvature"])
-        k_belt_accel = abs(response_coefficients["tangential_belt_acceleration"])
-        k_moving_radius = abs(response_coefficients["tangential_shifting_radius"])
-        thresholds[f"loop.threshold.{suffix}.shift_acceleration_m_per_s2"] = (
-            force_target / k_shift_accel if k_shift_accel > _EPS else float("inf")
+
+        # Gross-force threshold: retained for the separate question "is this
+        # term large relative to the underlying pulley contact forces?" This
+        # is intentionally NOT the primary measure of equation importance.
+        gross_force_target = fraction * contact_scale
+        thresholds[f"loop.gross_threshold.{suffix}.shift_acceleration_m_per_s2"] = (
+            gross_force_target / k_shift_accel if k_shift_accel > _EPS else float("inf")
         )
-        thresholds[f"loop.threshold.{suffix}.shift_speed_curvature_m_per_s"] = (
-            (force_target / k_curvature) ** 0.5 if k_curvature > _EPS else float("inf")
+        thresholds[f"loop.gross_threshold.{suffix}.shift_speed_curvature_m_per_s"] = (
+            (gross_force_target / k_curvature) ** 0.5 if k_curvature > _EPS else float("inf")
         )
-        thresholds[f"loop.threshold.{suffix}.belt_acceleration_m_per_s2"] = (
-            force_target / k_belt_accel if k_belt_accel > _EPS else float("inf")
+        thresholds[f"loop.gross_threshold.{suffix}.belt_acceleration_m_per_s2"] = (
+            gross_force_target / k_belt_accel if k_belt_accel > _EPS else float("inf")
         )
-        thresholds[f"loop.threshold.{suffix}.shift_speed_times_belt_speed_m2_per_s2"] = (
-            force_target / k_moving_radius if k_moving_radius > _EPS else float("inf")
+        thresholds[f"loop.gross_threshold.{suffix}.shift_speed_times_belt_speed_m2_per_s2"] = (
+            gross_force_target / k_moving_radius if k_moving_radius > _EPS else float("inf")
         )
-        thresholds[f"transport.threshold.{suffix}.belt_acceleration_m_per_s2"] = (
-            fraction * transport_reaction_scale / mb
-            if transport_reaction_scale > _EPS
-            else 0.0
+
+        # Equation-activity threshold. If all *other* final-equation terms are
+        # frozen, |F_i| = alpha/(1-alpha) * sum_{k!=i}|F_k| makes term i
+        # exactly alpha of the total absolute equation activity.
+        factor = fraction / (1.0 - fraction)
+        for name, (term_key, coefficient, driver_power) in loop_specs.items():
+            other_scale = max(0.0, loop_scale - abs(loop[term_key]))
+            target = factor * other_scale
+            if coefficient <= _EPS:
+                threshold = float("inf")
+            elif driver_power == 2:
+                threshold = (target / coefficient) ** 0.5
+            else:
+                threshold = target / coefficient
+            unit = {
+                "shift_acceleration": "shift_acceleration_m_per_s2",
+                "shift_speed_curvature": "shift_speed_curvature_m_per_s",
+                "belt_acceleration": "belt_acceleration_m_per_s2",
+                "shift_speed_times_belt_speed": "shift_speed_times_belt_speed_m2_per_s2",
+            }[name]
+            thresholds[f"loop.activity_threshold.{suffix}.{unit}"] = threshold
+
+        transport_other = transport_reaction_scale
+        thresholds[f"transport.activity_threshold.{suffix}.belt_acceleration_m_per_s2"] = (
+            factor * transport_other / mb if transport_other > _EPS else 0.0
         )
+
+        # Backward-compatible aliases from Stage 4. They retain their original
+        # gross-contact-force meaning and should not be used as the equation
+        # importance verdict.
+        thresholds[f"loop.threshold.{suffix}.shift_acceleration_m_per_s2"] = thresholds[f"loop.gross_threshold.{suffix}.shift_acceleration_m_per_s2"]
+        thresholds[f"loop.threshold.{suffix}.shift_speed_curvature_m_per_s"] = thresholds[f"loop.gross_threshold.{suffix}.shift_speed_curvature_m_per_s"]
+        thresholds[f"loop.threshold.{suffix}.belt_acceleration_m_per_s2"] = thresholds[f"loop.gross_threshold.{suffix}.belt_acceleration_m_per_s2"]
+        thresholds[f"loop.threshold.{suffix}.shift_speed_times_belt_speed_m2_per_s2"] = thresholds[f"loop.gross_threshold.{suffix}.shift_speed_times_belt_speed_m2_per_s2"]
+        thresholds[f"transport.threshold.{suffix}.belt_acceleration_m_per_s2"] = fraction * transport_reaction_scale / mb if transport_reaction_scale > _EPS else 0.0
 
     radial = loop["radial_shift_acceleration_N"] + loop["radial_geometry_curvature_N"]
     tangential = loop["tangential_belt_acceleration_N"] + loop["tangential_shifting_radius_N"]
@@ -245,17 +285,9 @@ def decompose_final_equations(inputs: FinalBeltInputs) -> dict[str, float]:
     }
     row.update(thresholds)
 
-    # Dimensionless proximity to a 10% contribution.  A value of one means
-    # the instantaneous kinematic driver is exactly large enough for that
-    # transient term to equal 10% of the non-cancelling contact-force scale.
+    # Dimensionless proximity to the 10% thresholds. Two distinct scales are
+    # reported: gross contact-force significance and final-equation activity.
     ten = "10pct"
-    ten_thresholds = {
-        "shift_acceleration": row[f"loop.threshold.{ten}.shift_acceleration_m_per_s2"],
-        "shift_speed_curvature": row[f"loop.threshold.{ten}.shift_speed_curvature_m_per_s"],
-        "belt_acceleration": row[f"loop.threshold.{ten}.belt_acceleration_m_per_s2"],
-        "moving_radius_product": row[f"loop.threshold.{ten}.shift_speed_times_belt_speed_m2_per_s2"],
-        "transport_belt_acceleration": row[f"transport.threshold.{ten}.belt_acceleration_m_per_s2"],
-    }
     actuals = {
         "shift_acceleration": abs(sddot),
         "shift_speed_curvature": abs(sdot),
@@ -263,8 +295,27 @@ def decompose_final_equations(inputs: FinalBeltInputs) -> dict[str, float]:
         "moving_radius_product": abs(sdot * vb),
         "transport_belt_acceleration": abs(vbdot),
     }
-    for name, threshold in ten_thresholds.items():
-        row[f"sensitivity.actual_to_10pct.{name}"] = (
+    gross_thresholds = {
+        "shift_acceleration": row[f"loop.gross_threshold.{ten}.shift_acceleration_m_per_s2"],
+        "shift_speed_curvature": row[f"loop.gross_threshold.{ten}.shift_speed_curvature_m_per_s"],
+        "belt_acceleration": row[f"loop.gross_threshold.{ten}.belt_acceleration_m_per_s2"],
+        "moving_radius_product": row[f"loop.gross_threshold.{ten}.shift_speed_times_belt_speed_m2_per_s2"],
+        "transport_belt_acceleration": row[f"transport.threshold.{ten}.belt_acceleration_m_per_s2"],
+    }
+    activity_thresholds = {
+        "shift_acceleration": row[f"loop.activity_threshold.{ten}.shift_acceleration_m_per_s2"],
+        "shift_speed_curvature": row[f"loop.activity_threshold.{ten}.shift_speed_curvature_m_per_s"],
+        "belt_acceleration": row[f"loop.activity_threshold.{ten}.belt_acceleration_m_per_s2"],
+        "moving_radius_product": row[f"loop.activity_threshold.{ten}.shift_speed_times_belt_speed_m2_per_s2"],
+        "transport_belt_acceleration": row[f"transport.activity_threshold.{ten}.belt_acceleration_m_per_s2"],
+    }
+    for name, threshold in gross_thresholds.items():
+        ratio = actuals[name] / threshold if isfinite(threshold) and threshold > _EPS else 0.0
+        row[f"sensitivity.actual_to_10pct_gross.{name}"] = ratio
+        # Backward-compatible Stage-4 alias.
+        row[f"sensitivity.actual_to_10pct.{name}"] = ratio
+    for name, threshold in activity_thresholds.items():
+        row[f"sensitivity.actual_to_10pct_activity.{name}"] = (
             actuals[name] / threshold
             if isfinite(threshold) and threshold > _EPS
             else 0.0
@@ -276,7 +327,7 @@ def decompose_final_equations(inputs: FinalBeltInputs) -> dict[str, float]:
     return row
 
 
-def inspect_final_belt_terms(inspection: Any) -> dict[str, float | str] | None:
+def inspect_final_belt_terms(inspection: Any, *, transport_mass_scale: float = 1.0) -> dict[str, float | str] | None:
     """Reconstruct final-equation terms from one accepted engaged CINDER state."""
     if inspection.contact is None or inspection.closure_unknowns is None:
         return None
@@ -295,7 +346,7 @@ def inspect_final_belt_terms(inspection: Any) -> dict[str, float | str] | None:
 
     values = decompose_final_equations(
         FinalBeltInputs(
-            belt_mass=snapshot.belt_transport_mass,
+            belt_mass=float(transport_mass_scale) * snapshot.belt_transport_mass,
             linear_density=snapshot.belt_linear_density,
             belt_speed=state.belt_speed,
             belt_acceleration=unknowns.belt_acceleration,

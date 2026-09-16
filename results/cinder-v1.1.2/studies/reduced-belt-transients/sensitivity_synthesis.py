@@ -13,47 +13,47 @@ MECHANISMS = (
     {
         "key": "shift_acceleration",
         "label": "shift acceleration",
-        "ratio": "sensitivity.actual_to_10pct.shift_acceleration",
+        "ratio": "sensitivity.actual_to_10pct_activity.shift_acceleration",
         "term": "loop.radial_shift_acceleration_N",
         "driver": "state.shift_acceleration_m_per_s2",
         "coefficient": "loop.response_coefficient.radial_shift_acceleration_N_per_mps2",
-        "threshold": "loop.threshold.10pct.shift_acceleration_m_per_s2",
+        "threshold": "loop.activity_threshold.10pct.shift_acceleration_m_per_s2",
     },
     {
         "key": "path_curvature",
         "label": "shift-path curvature",
-        "ratio": "sensitivity.actual_to_10pct.shift_speed_curvature",
+        "ratio": "sensitivity.actual_to_10pct_activity.shift_speed_curvature",
         "term": "loop.radial_geometry_curvature_N",
         "driver": "state.shift_speed_m_per_s",
         "coefficient": "loop.response_coefficient.radial_geometry_curvature_N_per_m2ps2",
-        "threshold": "loop.threshold.10pct.shift_speed_curvature_m_per_s",
+        "threshold": "loop.activity_threshold.10pct.shift_speed_curvature_m_per_s",
     },
     {
         "key": "belt_acceleration",
         "label": "belt transport acceleration",
-        "ratio": "sensitivity.actual_to_10pct.belt_acceleration",
+        "ratio": "sensitivity.actual_to_10pct_activity.belt_acceleration",
         "term": "loop.tangential_belt_acceleration_N",
         "driver": "state.belt_acceleration_m_per_s2",
         "coefficient": "loop.response_coefficient.tangential_belt_acceleration_N_per_mps2",
-        "threshold": "loop.threshold.10pct.belt_acceleration_m_per_s2",
+        "threshold": "loop.activity_threshold.10pct.belt_acceleration_m_per_s2",
     },
     {
         "key": "moving_radius",
         "label": "moving-radius transport",
-        "ratio": "sensitivity.actual_to_10pct.moving_radius_product",
+        "ratio": "sensitivity.actual_to_10pct_activity.moving_radius_product",
         "term": "loop.tangential_shifting_radius_N",
         "driver": "loop.driver.tangential_shifting_radius_m2ps2",
         "coefficient": "loop.response_coefficient.tangential_shifting_radius_N_per_m2ps2",
-        "threshold": "loop.threshold.10pct.shift_speed_times_belt_speed_m2_per_s2",
+        "threshold": "loop.activity_threshold.10pct.shift_speed_times_belt_speed_m2_per_s2",
     },
     {
         "key": "whole_belt_inertia",
         "label": "whole-belt transport inertia",
-        "ratio": "sensitivity.actual_to_10pct.transport_belt_acceleration",
+        "ratio": "sensitivity.actual_to_10pct_activity.transport_belt_acceleration",
         "term": "transport.belt_inertia_N",
         "driver": "state.belt_acceleration_m_per_s2",
         "coefficient": None,
-        "threshold": "transport.threshold.10pct.belt_acceleration_m_per_s2",
+        "threshold": "transport.activity_threshold.10pct.belt_acceleration_m_per_s2",
     },
 )
 
@@ -199,9 +199,10 @@ def synthesize_sensitivity_connections(
 
     payload = {
         "threshold_definition": (
-            "actual_to_10pct = instantaneous kinematic driver / driver required for the transient "
-            "term to equal 10% of the non-cancelling contact-force scale; whole-belt inertia uses "
-            "the two pulley reaction magnitudes as its reference scale"
+            "actual_to_10pct_activity = instantaneous kinematic driver / driver required for that "
+            "term to become exactly 10% of total absolute final-equation activity if the other "
+            "surviving terms are locally frozen. Gross contact-force thresholds are reported "
+            "separately and are not used as the equation-importance verdict."
         ),
         "per_case": per_case,
         "global_connection_examples": global_examples,
@@ -233,7 +234,7 @@ def _plot_connection_summary(*, artifacts_dir: Path, rows: list[dict[str, Any]])
             values.append(max(row["max_actual_to_10pct_threshold"] for row in group))
     fig, ax = plt.subplots(figsize=(9.0, 5.4))
     ax.bar(labels, values)
-    ax.axhline(1.0, linewidth=1.2, linestyle="--", label="10% contribution threshold")
+    ax.axhline(1.0, linewidth=1.2, linestyle="--", label="10% final-equation activity threshold")
     ax.set_yscale("log")
     ax.set_ylabel("Largest actual driver / 10% threshold [-]")
     ax.set_title("Baja envelope versus equation-derived growth thresholds")
